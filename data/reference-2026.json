@@ -1,0 +1,67 @@
+{
+  "year": 2026,
+  "source": "spec/csv/Reference data.csv",
+  "presets": {
+    "realReturn": { "values": [0.06, 0.07, 0.08, 0.12], "default": 0.07, "labels": { "0.06": "Conservative", "0.07": "Default", "0.08": "Optimistic", "0.12": "Hopeful (no inflation taken out)" } },
+    "inflation": { "values": [0.02, 0.03], "default": 0.02 },
+    "withdrawalRate": { "values": [0.03, 0.04, 0.047, 0.052], "default": 0.04 },
+    "pace": { "Likely": 0.07, "Optimistic": 0.08, "Pessimistic": 0.06 }
+  },
+  "defaults": {
+    "lifeExpectancy": 90,
+    "sessionMinutes": 60,
+    "lowBalanceLine": 500,
+    "taxSetAside": 0.25,
+    "retireAge": 60
+  },
+  "limits": {
+    "401k": { "base": 24500, "catchUp50": 8000, "catchUp60to63": 11250, "appliesTo": ["401(k)", "403(b)", "457", "TSP"] },
+    "ira": { "base": 7500, "catchUp50": 1100, "appliesTo": ["Roth IRA", "Traditional IRA"] },
+    "total415c": 72000,
+    "hsa": { "self": 4400, "family": 8750, "catchUp55": 1000 }
+  },
+  "tax": {
+    "standardDeduction": { "single": 16100, "joint": 32200 },
+    "brackets": {
+      "single": [[0, 0.10], [12400, 0.12], [50400, 0.22], [105700, 0.24], [201775, 0.32], [256225, 0.35], [640600, 0.37]],
+      "joint": [[0, 0.10], [24800, 0.12], [100800, 0.22], [211400, 0.24], [403550, 0.32], [512450, 0.35], [768700, 0.37]]
+    },
+    "socialSecurityWageBase": 184500,
+    "socialSecurityRate": 0.062,
+    "medicareRate": 0.0145,
+    "additionalMedicareRate": 0.009,
+    "additionalMedicareOver": { "single": 200000, "joint": 250000 },
+    "selfEmployedRate": 0.153,
+    "selfEmployedBase": 0.9235
+  },
+  "typicalRates": {
+    "Credit card": 0.2215,
+    "Personal loan": 0.1186,
+    "Car loan": 0.0714
+  },
+  "hoursPerMonthFallback": 173,
+  "lists": {
+    "debtTypesTop": ["Credit card", "Student loan", "Car loan", "Personal loan"],
+    "debtTypesOther": ["Medical", "Family or friend", "Buy now, pay later", "Payday or cash advance", "Tax debt", "401(k) loan", "Business"],
+    "investmentTypes": ["401(k)", "403(b)", "457", "TSP", "Roth IRA", "Traditional IRA", "Rollover IRA", "SEP", "Solo 401(k)", "HSA", "529", "Brokerage", "Crypto", "Other"],
+    "cashTypes": ["Checking", "Savings or HYSA", "Money market", "CD", "Cash on hand"],
+    "statuses": ["Know it", "Roughly", "Not sure", "Will email", "Not now", "Not for me", "Computed"],
+    "calendarStatuses": ["Planned", "Partial", "Got it / Paid", "Didn't happen", "Moved"]
+  },
+  "categoryDefaults": [
+    { "category": "Rent or mortgage", "draftt": "Accommodation", "amount": "Fixed", "timing": "Fixed date" },
+    { "category": "Electric, gas, water", "draftt": "Accommodation", "amount": "Variable", "timing": "Fixed date" },
+    { "category": "Internet, phone", "draftt": "Accommodation", "amount": "Fixed", "timing": "Fixed date" },
+    { "category": "Renters or home insurance", "draftt": "Accommodation", "amount": "Fixed", "timing": "Fixed date" },
+    { "category": "Groceries, dining out, coffee", "draftt": "Food", "amount": "Variable", "timing": "Variable date" },
+    { "category": "Car insurance", "draftt": "Transportation", "amount": "Fixed", "timing": "Fixed date", "gate": "car" },
+    { "category": "Gas or charging, tolls, parking", "draftt": "Transportation", "amount": "Variable", "timing": "Variable date", "gate": "car" },
+    { "category": "Car maintenance, registration", "draftt": "Transportation", "amount": "Variable", "timing": "Variable date", "gate": "car" },
+    { "category": "Transit, Uber", "draftt": "Transportation", "amount": "Variable", "timing": "Variable date" },
+    { "category": "Therapy", "draftt": "Therapy", "amount": "Fixed", "timing": "Fixed date" },
+    { "category": "Subscriptions", "draftt": "Other", "amount": "Fixed", "timing": "Fixed date" },
+    { "category": "Wants, travel, gifts", "draftt": "Wants", "amount": "Variable", "timing": "Variable date" },
+    { "category": "Kids", "draftt": "Other", "amount": "Variable", "timing": "Variable date", "gate": "kids" },
+    { "category": "Pets", "draftt": "Other", "amount": "Variable", "timing": "Variable date", "gate": "pets" }
+  ]
+}
