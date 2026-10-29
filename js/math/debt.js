@@ -79,7 +79,7 @@ const ORDERS = {
 export function payoffPlan(debts, { extra = 0, order = 'avalanche', maxMonths = 1200 } = {}) {
   const usable = debts.filter(d => d.balance > 0 && d.apr !== null && d.apr !== undefined && d.payment !== null && d.payment !== undefined);
   const skipped = debts.filter(d => !usable.includes(d)).map(d => d.name);
-  const list = usable.map(d => ({ ...d, left: d.balance, paidOffMonth: null, interest: 0 })).sort(ORDERS[order]);
+  const list = usable.map(d => ({ ...d, left: d.balance, paidOffMonth: null, interest: 0 })).sort(ORDERS[order] || (() => 0)); // 'given': keep the order passed in (a promo ending soon goes first, R075)
   let month = 0, total = 0;
   const path = [list.map(d => d.left)];
   while (list.some(d => d.left > 0.005) && month < maxMonths) {

@@ -6,6 +6,7 @@ import { incomeList, benefitList, variableBlock, assetList, protectionList, taxe
 import { profileScreen, profileCompletion } from './ui/profile.js';
 import { startFastTrack } from './ui/fasttrack-ui.js';
 import { budgetScreen, calendarScreen, closeScreen } from './ui/spending-ui.js';
+import { goalsScreen, timelineScreen, payoffScreen, nextYearScreen, scenariosScreen } from './ui/plan-ui.js';
 import { AREAS } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
 import { statusOf, countsAsDone } from './records.js';
@@ -138,19 +139,11 @@ export const SCREENS = {
   'spending/calendar': (app, ctx) => (app.hasClient ? calendarScreen(app, ctx) : [head('Cash flow calendar'), noClient(app)]),
   'spending/close': (app, ctx) => (app.hasClient ? closeScreen(app, ctx) : [head('Month-end close'), noClient(app)]),
 
-  'plan/goals': (app, ctx) => {
-    const m = ctx.metrics();
-    return [head('Goals', 'FI target, assumptions, milestones'), S.summaryStrip(ctx, [
-      { label: 'FI number', result: m.fiNumber }, { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi' },
-      { label: 'Coast FI today', result: m.coastFi }, { label: 'Rule of 5 cushion', result: m.ruleOf5 }])];
-  },
-  'plan/timeline': (app, ctx) => {
-    const m = ctx.metrics();
-    return [head('Timeline', 'Invested balance rising to your FI number'), m.monthsToFi.value === null ? S.chartEmpty(ctx, m.monthsToFi.needs.length ? m.monthsToFi.needs : ['a plan that reaches FI']) : center(h('span.title', {}, `FI in ${m.monthsToFi.value} months. The timeline chart is built with Plan (build phase 7).`))];
-  },
-  'plan/debt-payoff': (app, ctx) => [head('Debt payoff', 'Each debt shrinking to zero'), h('div', { style: { maxWidth: '720px' } }, S.visualsPanel(ctx, { charts: [debtCharts[1]], area: 'debt' }))],
-  'plan/next-12-months': () => [head('Next 12 months', 'Upcoming events'), listEmpty('event', 'events', 'Events are built with Plan (build phase 7)')],
-  'plan/scenarios': () => [head('Scenarios', 'Life event blocks'), listEmpty('scenario', 'scenarios', 'Scenarios are a later phase')],
+  'plan/goals': (app, ctx) => (app.hasClient ? goalsScreen(app, ctx) : [head('Goals'), noClient(app)]),
+  'plan/timeline': (app, ctx) => (app.hasClient ? timelineScreen(app, ctx) : [head('Timeline'), noClient(app)]),
+  'plan/debt-payoff': (app, ctx) => (app.hasClient ? payoffScreen(app, ctx) : [head('Debt payoff'), noClient(app)]),
+  'plan/next-12-months': (app, ctx) => (app.hasClient ? nextYearScreen(app, ctx) : [head('Next 12 months'), noClient(app)]),
+  'plan/scenarios': () => scenariosScreen(),
 
   'report/overview': (app, ctx) => {
     const m = ctx.metrics();
