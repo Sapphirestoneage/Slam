@@ -1,0 +1,10 @@
+{
+  "name": "slam-app",
+  "private": true,
+  "type": "module",
+  "description": "SLAM (Stress Less About Money): coach-operated financial planning. Static site, no build step.",
+  "scripts": {
+    "test": "node --test",
+    "serve": "python3 -m http.server 8000"
+  }
+}

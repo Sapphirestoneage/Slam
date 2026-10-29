@@ -1,0 +1,97 @@
+{
+  "name": "Demo client",
+  "about": "Made up. Safe for the public repo.",
+  "inputs": {
+    "age": 29,
+    "takeHome": 4800,
+    "spendingAllIn": 3600,
+    "rent": 1650,
+    "utilities": 120,
+    "cash": 6000,
+    "invested": 22000,
+    "carValue": 9500,
+    "carLoanBalance": 7000,
+    "carLoanApr": 0.0714,
+    "carLoanPayment": 320,
+    "studentLoanBalance": 18000,
+    "studentLoanApr": 0.055,
+    "studentLoanPayment": 210,
+    "cardBalance": 4200,
+    "cardApr": 0.2215,
+    "cardPayment": 250,
+    "realReturn": 0.07,
+    "withdrawalRate": 0.04
+  },
+  "expected": {
+    "netWorth": {
+      "label": "Total net worth (M40)",
+      "value": 8300,
+      "tolerance": "$1"
+    },
+    "runwayMonths": {
+      "label": "Liquid cash runway, months (M42)",
+      "value": 1.6666666666666667,
+      "tolerance": "1 month"
+    },
+    "surplus": {
+      "label": "Monthly surplus (M27)",
+      "value": 1200,
+      "tolerance": "$1"
+    },
+    "savingsRate": {
+      "label": "Savings rate (M28)",
+      "value": 0.25,
+      "tolerance": "$1"
+    },
+    "housingPct": {
+      "label": "Housing % of take-home (M2A)",
+      "value": 0.36875,
+      "tolerance": "$1"
+    },
+    "cardPayoffMonths": {
+      "label": "Credit card payoff months (M31)",
+      "value": 21.0,
+      "tolerance": "1 month"
+    },
+    "cardInterest": {
+      "label": "Credit card total interest (M32)",
+      "value": 873.9158770131125,
+      "tolerance": "$1"
+    },
+    "studentLoanPayoffMonths": {
+      "label": "Student loan payoff months (M31)",
+      "value": 110.0,
+      "tolerance": "1 month"
+    },
+    "carLoanPayoffMonths": {
+      "label": "Car loan payoff months (M31)",
+      "value": 24.0,
+      "tolerance": "1 month"
+    },
+    "ruleOf5Target": {
+      "label": "Rule of 5 target $ (M43)",
+      "value": 20880.0,
+      "tolerance": "$1"
+    },
+    "ruleOf5KeepPace": {
+      "label": "Rule of 5 keep-pace add / mo (M43)",
+      "value": 60.0,
+      "tolerance": "$1"
+    },
+    "fiNumber": {
+      "label": "FI number (M50)",
+      "value": 1080000.0,
+      "tolerance": "$1"
+    },
+    "monthsToFi": {
+      "label": "Months to FI, surplus fully invested (M53)",
+      "value": 303.0,
+      "tolerance": "1 month"
+    },
+    "coastFi": {
+      "label": "Coast FI number today, retire at 60 (M54)",
+      "value": 132594.8472214549,
+      "tolerance": "$1"
+    }
+  }
+}
