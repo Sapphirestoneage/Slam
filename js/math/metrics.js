@@ -4,7 +4,7 @@ import { statusOf } from '../records.js';
 import { isBlank, needs } from './result.js';
 import { monthlyFrom } from './income.js';
 import { myShare, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor } from './spending.js';
-import { cardMinimum, payoffMonths, totalInterest } from './debt.js';
+import { cardMinimum, payoffMonths, totalInterest, payoffPlan } from './debt.js';
 import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
 import { fiNumber, fiDate, coastFi, bigDeals } from './fi.js';
 import { hourlyRate } from './time.js';
@@ -104,8 +104,12 @@ export function metrics(doc, ref, { now = new Date() } = {}) {
 
 // The key numbers a snapshot keeps for 'change since last session' (R167).
 export function keyNumbers(m) {
-  const debtTotal = m.inputs.debts.length ? m.inputs.debts.reduce((s, d) => s + (d.balance ?? 0), 0) : null;
-  return { netWorth: m.netWorth.value, surplus: m.surplus.value, savingsRate: m.savingsRate.value, debtTotal, monthsToFi: m.monthsToFi.value };
+  const ds = m.inputs.debts;
+  const debtTotal = ds.length ? ds.reduce((s, d) => s + (d.balance ?? 0), 0) : null;
+  const debtPayments = ds.some(d => d.payment != null) ? ds.reduce((s, d) => s + (d.payment ?? 0), 0) : null;
+  const plan = ds.length ? payoffPlan(ds.filter(d => d.balance > 0 && d.apr != null && d.payment != null)) : null;
+  return { netWorth: m.netWorth.value, surplus: m.surplus.value, savingsRate: m.savingsRate.value, debtTotal, debtPayments,
+    debtFreeMonths: plan?.months ?? null, debtInterest: plan && plan.months !== null ? Math.round(plan.interest) : null, monthsToFi: m.monthsToFi.value };
 }
 
 export const firstDebt = (m, type) => m.debts.find(d => d.type === type) || { payoff: needs('M31', [`a ${type.toLowerCase()}`]), interest: needs('M32', [`a ${type.toLowerCase()}`]) };

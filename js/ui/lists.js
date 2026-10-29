@@ -1,6 +1,6 @@
 // List setups built from the staples: debts and spending lines. Each list is a view of the one record type.
 import { h } from './dom.js';
-import { amount, moneyInput, pctInput, textInput, perPicker, toggle, payoffCell, summaryStrip, whoPays } from './staples.js';
+import { value, amount, moneyInput, pctInput, textInput, perPicker, toggle, payoffCell, summaryStrip, whoPays, hoursChip } from './staples.js';
 import { payoffPlan, debtToIncome, utilization } from '../math/debt.js';
 import { needs } from '../math/result.js';
 import { money } from '../format.js';
@@ -18,8 +18,8 @@ export function debtList(ref) {
     coreFields: ['balance', 'apr'],
     paidWith: false,
     columns: [
-      { label: 'Debt', render: (ctx, r, m, up) => h('div.stack', {}, h('span.label', {}, r.type || 'Debt'), textInput(r.name, v => up({ name: v }), { hint: 'Add name', width: 136, key: `${r.id}:name` })) },
-      { label: 'Balance', num: true, render: (ctx, r, m, up) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, moneyInput(r.values.balance, v => up({ balance: v }), { hint: 'Add balance', key: `${r.id}:balance` })) },
+      { label: 'Debt', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 150, key: `${r.id}:name` }) },
+      { label: 'Balance', num: true, render: (ctx, r, m, up) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, moneyInput(r.values.balance, v => up({ balance: v }), { hint: 'Add balance', key: `${r.id}:balance` }), hoursChip(ctx, r.values.balance)) },
       { label: 'APR', num: true, render: (ctx, r, m, up) => {
         const d = m.debts.find(x => x.id === r.id);
         return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, d?.aprGuess ? h('span.tag.guess', {}, '? Guess') : null, pctInput(r.values.apr, v => up({ apr: v }), { key: `${r.id}:apr` }));
@@ -33,7 +33,7 @@ export function debtList(ref) {
         }
         return moneyInput(r.values.payment, v => up({ payment: v }), { hint: 'Add payment', key: `${r.id}:payment` });
       } },
-      { label: 'Payoff', render: (ctx, r, m) => {
+      { label: 'Pays off', render: (ctx, r, m) => {
         const d = m.debts.find(x => x.id === r.id);
         const longest = Math.max(0, ...m.debts.map(x => x.payoff.value ?? 0));
         return payoffCell(ctx, d, longest);
@@ -61,25 +61,42 @@ export function debtList(ref) {
   };
 }
 
-// Debt summary strip: debt-free date, interest left, debt-to-income, utilization (R157, Mockup).
+// Debt summary strip: total debt, monthly payments, debt-free, interest left, each with change since
+// last session (look preview, Polish rules). Debt-to-income and utilization live on Report > Overview.
 export function debtStrip(ctx, m) {
-  const plan = payoffPlan(m.inputs.debts);
-  const usable = m.inputs.debts.filter(d => d.balance > 0);
-  const incomplete = usable.filter(d => d.apr == null || d.payment == null);
-  const free = !usable.length ? needs('M34', ['a debt'], { unit: 'months' })
-    : incomplete.length ? needs('M34', incomplete.map(d => `${d.name} ${d.apr == null ? 'APR' : 'payment'}`), { unit: 'months' })
-      : plan.months === null ? { ...needs('M34', []), never: true } : { id: 'M34', value: plan.months, needs: [], unit: 'months', text: plan.text };
+  const debts = m.inputs.debts;
+  const usable = debts.filter(d => d.balance > 0);
+  const total = debts.some(d => d.balance != null)
+    ? { id: 'M30', value: sum(debts, d => d.balance), needs: [], unit: 'money', text: `${debts.filter(d => d.balance != null).map(d => `${d.name} ${money(d.balance)}`).join(' + ')} = ${money(sum(debts, d => d.balance))}.` }
+    : needs('M30', ['a debt balance'], { unit: 'money' });
+  const payments = debts.some(d => d.payment != null)
+    ? { id: 'M30', value: sum(debts, d => d.payment), needs: [], unit: 'money', text: `${debts.filter(d => d.payment != null).map(d => `${d.name} ${money(d.payment)}${d.paymentIsMinimum ? ' (minimum, worked out)' : ''}`).join(' + ')} = ${money(sum(debts, d => d.payment))} a month.` }
+    : needs('M30', ['a payment'], { unit: 'money' });
+  // Debts missing an APR or payment are left out of the date and interest, and named under the number.
+  const complete = usable.filter(d => d.apr != null && d.payment != null);
+  const missing = usable.filter(d => !complete.includes(d));
+  const plan = payoffPlan(complete);
+  const free = !complete.length ? needs('M34', usable.length ? missing.map(d => `${d.name} ${d.apr == null ? 'APR' : 'payment'}`) : ['a debt'], { unit: 'months' })
+    : plan.months === null ? { ...needs('M34', []), never: true } : { id: 'M34', value: plan.months, needs: [], unit: 'months', text: plan.text };
   const interest = free.value === null ? { ...free, unit: 'money' } : { id: 'M32', value: plan.interest, needs: [], unit: 'money', text: `Paying every debt as planned, the interest still to come adds up to ${money(plan.interest)}.` };
+  const note = missing.length ? `${missing.map(d => d.name).join(', ')} ${missing.length === 1 ? 'needs' : 'need'} ${missing.some(d => d.apr == null) ? 'an APR' : 'a payment'}` : null;
+  const dateOnly = r => { const t = value(r, ctx); return t.match(/\((.*)\)/)?.[1] ?? t; };
+  return summaryStrip(ctx, [
+    { label: 'Total debt', result: total, key: 'debtTotal', lowerIsGood: true },
+    { label: 'Monthly payments', result: payments, key: 'debtPayments', lowerIsGood: true },
+    { label: 'Debt-free', result: free, key: 'debtFreeMonths', lowerIsGood: true, render: dateOnly, note: free.value !== null ? note : null },
+    { label: 'Interest left', result: interest, key: 'debtInterest', lowerIsGood: true, note },
+  ]);
+}
+
+// Kept for Report > Overview: debt-to-income and utilization.
+export function debtRatios(ctx, m) {
+  const usable = m.inputs.debts.filter(d => d.balance > 0);
   const gross = ctx.store.find(r => r.kind === 'income').reduce((s, r) => (s === null || r.values.gross == null ? null : s + r.values.gross / 12), 0) || null;
   const dti = debtToIncome({ monthlyDebtPayments: usable.length ? sum(m.inputs.debts, d => d.payment) : null, grossMonthly: gross });
   const cards = ctx.store.find(r => r.kind === 'debt' && r.type === 'Credit card').map(r => ({ balance: r.values.balance, limit: r.values.limit }));
   const util = utilization(cards);
-  return summaryStrip(ctx, [
-    { label: 'Debt-free date', result: free },
-    { label: 'Total interest left', result: interest },
-    { label: 'Debt-to-income', result: dti },
-    { label: 'Utilization', result: util.hidden ? needs('M35', ['credit limits'], { unit: 'pct' }) : util },
-  ]);
+  return { dti, util: util.hidden ? needs('M35', ['credit limits'], { unit: 'pct' }) : util };
 }
 
 // Spending lines: Fixed | Variable, Fixed date | Variable date, who pays, paid with.
@@ -97,7 +114,7 @@ export function spendingList(ref) {
     coreFields: ['amount'],
     paidWith: true,
     columns: [
-      { label: 'Line', render: (ctx, r, m, up) => h('div.stack', {}, h('span.label', {}, r.values.category || 'Other'), textInput(r.name, v => up({ name: v }), { hint: 'Add name', width: 170, key: `${r.id}:name` })) },
+      { label: 'Line', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.values.category || 'Add name', tip: r.values.category, width: 170, key: `${r.id}:name` }) },
       { label: 'Amount', num: true, render: (ctx, r, m, up) => moneyInput(r.amount, v => up({ amount: v }), { key: `${r.id}:amount` }) },
       { label: 'Per', render: (ctx, r, m, up) => perPicker(r.per, v => up({ per: v }), { key: `${r.id}:per` }) },
       { label: 'Amount is', render: (ctx, r, m, up) => toggle(['Fixed', 'Variable'], r.values.amountType ?? null, v => up({ amountType: v }), { label: 'Amount is' }) },
@@ -154,7 +171,7 @@ export function incomeList() {
     picker: { top: ['Job', 'Side hustle', 'Benefits', 'Rental'], other: ['Partner job', 'Money from family', 'Self-employed'] },
     coreFields: ['amount'],
     columns: [
-      { label: 'Source', render: (ctx, r, m, up) => h('div.stack', {}, h('span.label', {}, r.type || 'Income'), textInput(r.name, v => up({ name: v }), { hint: 'Add name', width: 170, key: `${r.id}:name` })) },
+      { label: 'Source', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 170, key: `${r.id}:name` }) },
       { label: 'Take-home', num: true, render: (ctx, r, m, up) => moneyInput(r.amount, v => up({ amount: v }), { hint: 'Add take-home', key: `${r.id}:amount` }) },
       { label: 'Per', render: (ctx, r, m, up) => perPicker(r.per, v => up({ per: v }), { key: `${r.id}:per` }) },
       { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) },
@@ -175,7 +192,7 @@ export function assetList(ref) {
     picker: { top: ['Checking', 'Savings or HYSA', '401(k)', 'Roth IRA'], other: [...ref.lists.cashTypes, ...ref.lists.investmentTypes] },
     newValues: type => ({ values: { group: ref.lists.cashTypes.includes(type) ? 'cash' : 'investment' } }),
     columns: [
-      { label: 'Account', render: (ctx, r, m, up) => h('div.stack', {}, h('span.label', {}, r.type || 'Account'), textInput(r.name, v => up({ name: v }), { hint: 'Add name', width: 170, key: `${r.id}:name` })) },
+      { label: 'Account', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 170, key: `${r.id}:name` }) },
       { label: 'Balance', num: true, render: (ctx, r, m, up) => moneyInput(val(r), v => up(r.kind === 'asset' ? { value: v } : { balance: v }), { hint: 'Add balance', key: `${r.id}:balance` }) },
       { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) },
     ],

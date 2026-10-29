@@ -103,7 +103,8 @@ export const guessTag = () => h('span.tag.guess', {}, '? Guess');
 
 // Shows only when the number is not 'Know it' (DMMT: reduce noise); click to pick.
 export function statusPicker(current, onPick, { label = 'Status' } = {}) {
-  const b = h('button.status-btn', { type: 'button', 'aria-label': `${label}: ${current || 'not set'}` },
+  const quiet = !current || current === 'Know it';
+  const b = h(`button.status-btn${quiet ? '.quiet' : ''}`, { type: 'button', 'aria-label': `${label}: ${current || 'not set'}` },
     current && current !== 'Know it' ? statusTag(current) : 'Know it', icon('down'));
   b.onclick = () => popover(b, h('div.stack', {}, h('h3', {}, 'How sure is this?'),
     STATUSES.map(s => h('button.btn.small', { type: 'button', onclick: () => { closePop(); onPick(s); } }, statusTag(s))),
@@ -122,6 +123,13 @@ export function amount(ctx, value, { result = null, chip = true, cents = false }
   const body = result ? mathButton(result, text) : h('span', {}, text);
   const c = chip && ctx.timeMode === '$' ? timeChip(v, { rate: m.hourly }) : null;
   return h('span.amount', {}, body, c ? h('span.time-chip', { title: m.hourly.text }, c) : null);
+}
+// The grey hours chip on its own, for amounts typed in a box (R155: over $50).
+export function hoursChip(ctx, v) {
+  if (ctx.timeMode !== '$' || v === null || v === undefined) return null;
+  const m = ctx.metrics();
+  const c = timeChip(v, { rate: m.hourly });
+  return c ? h('span.time-chip', { title: m.hourly.text }, c) : null;
 }
 export function value(result, ctx = null) {
   if (result.value === null || result.value === undefined) return EMPTY;
@@ -156,10 +164,11 @@ function joinWordsEl(items) {
   items.forEach((el, i) => { if (i) out.push(i === items.length - 1 ? ' and ' : ', '); out.push(el); });
   return out;
 }
-export function metricCard(ctx, label, result, { key = null, render = null } = {}) {
+export function metricCard(ctx, label, result, { key = null, render = null, lowerIsGood = false, note = null } = {}) {
   const locked = result.value === null || result.value === undefined;
   const snap = ctx.store.lastSnapshot();
   const change = key && !locked ? changeSince(keyNumbers(ctx.metrics()), snap, key) : null;
+  const good = change && (change.direction === 'down') === lowerIsGood;
   return h(`div.metric${locked ? '.locked' : ''}`, {},
     h('span.label', {}, label),
     locked
@@ -168,11 +177,13 @@ export function metricCard(ctx, label, result, { key = null, render = null } = {
         result.unit === 'months' && !render ? h('span.when', {}, ` ${value(result, ctx).replace(/^.*\(/, '(')}`) : null),
     locked && !result.never ? h('span.change', {}, needLinks(ctx, result.needs)) : null,
     result.guess ? h('span', {}, guessTag()) : null,
-    change && change.direction !== 'same' ? h(`span.change.${change.direction}`, {}, `${formatDiff(change.diff, key)} since last session`) : null);
+    change && change.direction !== 'same' ? h(`span.change.${change.direction}${good ? '.good' : ''}`, {}, `${formatDiff(change.diff, key)} since last session`) : null,
+    change && change.direction === 'same' ? h('span.change', {}, 'Same as last session') : null,
+    note && !locked ? h('span.change', {}, note) : null);
 }
 function formatDiff(d, key) {
   if (key === 'savingsRate') return pct(Math.abs(d)).replace('%', ' pts');
-  if (key === 'monthsToFi') return `${Math.abs(d)} months`;
+  if (key === 'monthsToFi' || key === 'debtFreeMonths') return `${Math.abs(d)} months`;
   return money(Math.abs(d));
 }
 export function summaryStrip(ctx, items) {
@@ -194,9 +205,11 @@ function ghostChart() {
 
 // ---------- Inputs ----------
 // Amount box: $ value with a 'per' picker (R043). Empty: strong border and a hint (R163).
+// Shown with commas ($4,200; $15.99); typing accepts commas, $ or plain digits.
+export const moneyText = v => (v === null || v === undefined ? '' : Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 }));
 export function moneyInput(value, onChange, { hint = 'Add amount', cents = true, key = null } = {}) {
-  const input = h('input', { inputmode: 'decimal', placeholder: hint, 'aria-label': hint.replace(/^Add /, ''), value: value ?? '', 'data-focus': key });
-  input.onchange = () => onChange(parseNum(input.value));
+  const input = h('input', { inputmode: 'decimal', placeholder: hint, 'aria-label': hint.replace(/^Add /, ''), value: moneyText(value), 'data-focus': key });
+  input.onchange = () => { const n = parseNum(input.value); input.value = moneyText(n); onChange(n); };
   return h(`label.field.money${value !== null && value !== undefined ? '.filled' : ''}`, { style: { width: '128px' } }, h('span.pre', {}, '$'), input);
 }
 export function pctInput(value, onChange, { hint = 'Add APR', key = null } = {}) {
@@ -205,10 +218,10 @@ export function pctInput(value, onChange, { hint = 'Add APR', key = null } = {})
   input.onchange = () => { const n = parseNum(input.value); onChange(n === null ? null : n / 100); };
   return h(`label.field.pct${value !== null && value !== undefined ? '.filled' : ''}`, { style: { width: '104px' } }, input, h('span.post', {}, '%'));
 }
-export function textInput(value, onChange, { hint = 'Add name', width = 180, key = null } = {}) {
+export function textInput(value, onChange, { hint = 'Add name', width = 180, key = null, tip = null } = {}) {
   const input = h('input', { placeholder: hint, 'aria-label': hint.replace(/^Add /, ''), value: value ?? '', 'data-focus': key });
   input.onchange = () => onChange(input.value.trim() || null);
-  return h(`label.field${value ? '.filled' : ''}`, { style: { width: `${width}px` } }, input);
+  return h(`label.field${value ? '.filled' : ''}`, { style: { width: `${width}px` }, title: tip }, input);
 }
 export function perPicker(value, onChange, { key = null } = {}) {
   const s = h('select', { 'aria-label': 'per', 'data-focus': key }, ['paycheck', 'week', 'month', 'year'].map(p => h('option', { value: p, selected: p === value }, `per ${p}`)));
@@ -282,9 +295,10 @@ export function payoffCell(ctx, d, longest) {
   if (p.never) return h('div.payoff', {}, mathButton(p, `Needs ${money(p.paymentNeeded)}/mo`), h('div.bar', {}, h('span', { style: { width: '0' } })));
   if (p.value === null) return h('div.payoff', {}, h('span.muted', {}, `Needs ${joinWords(p.needs)}`), h('div.bar', {}));
   const width = longest ? Math.max(4, (p.value / longest) * 100) : 0;
+  // Grey computed box (cannot be typed in); its math includes the interest along the way (look preview).
+  const shown = d.interest.value !== null ? { ...p, text: `${p.text} Interest along the way: ${value(d.interest, ctx)}.` } : p;
   return h('div.payoff', {},
-    h('span', {}, mathButton(p, duration(p.value, ctx.now()))),
-    d.interest.value !== null ? h('span.muted', { style: { fontSize: '.875rem' } }, mathButton(d.interest, `${value(d.interest, ctx)} interest`)) : null,
+    h('span.computed', {}, mathButton(shown, duration(p.value, ctx.now()).replace(' (', ' · ').replace(/\)$/, ''))),
     h('div.bar', { role: 'img', 'aria-label': `${p.value} months` }, h('span', { style: { width: `${width}%` } })));
 }
 

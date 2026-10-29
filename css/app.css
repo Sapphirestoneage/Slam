@@ -74,6 +74,8 @@ select.plain { height: var(--input); border: 2px solid var(--border-input); bord
 .tag.good { background: var(--good); color: #fff; }
 .status-btn { white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; height: 28px; border: 1.5px solid var(--border-input); border-radius: 999px; background: var(--card); color: var(--text-2); font: inherit; font-size: .8125rem; font-weight: 600; padding: 0 10px; cursor: pointer; }
 .status-btn .tag { margin: -2px -9px; }
+.status-btn.quiet { border-color: transparent; background: transparent; font-weight: 500; }
+.status-btn.quiet:hover { border-color: var(--border-filled); }
 
 /* Time chip (R155) */
 .time-chip { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--chip); color: var(--chip-text); font-size: .75rem; font-weight: 600; margin-left: 6px; white-space: nowrap; vertical-align: middle; }
@@ -93,6 +95,7 @@ select.plain { height: var(--input); border: 2px solid var(--border-input); bord
 .metric .big { font-size: 2rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
 .metric .big .when { font-size: 1rem; font-weight: 600; color: var(--text-2); letter-spacing: 0; }
 .metric .change { font-size: .8125rem; font-weight: 600; color: var(--text-2); }
+.metric .change.good { color: var(--good); }
 .metric .change.up::before { content: '\25B2 '; } .metric .change.down::before { content: '\25BC '; }
 .metric.locked .big { font-size: 1rem; color: var(--text-2); }
 button.math { all: unset; cursor: pointer; border-bottom: 2px dotted var(--border-filled); border-radius: 2px; }
@@ -123,6 +126,7 @@ table.rows tr.more td { background: var(--bg); padding: var(--s3) var(--s4); }
 input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; margin: 0; }
 .check-cell { width: 44px; text-align: center; }
 .payoff { display: flex; flex-direction: column; gap: 4px; min-width: 190px; white-space: nowrap; }
+.payoff .computed { justify-content: flex-start; }
 .payoff .bar { height: 6px; border-radius: 3px; background: var(--computed); overflow: hidden; }
 .payoff .bar span { display: block; height: 100%; background: var(--area); border-radius: 3px; }
 .bulk-bar { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s3); background: var(--primary-light); border-radius: var(--r-card) var(--r-card) 0 0; position: sticky; top: 0; z-index: 3; }

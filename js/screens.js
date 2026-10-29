@@ -1,7 +1,7 @@
 // Every screen's first state, word for word from the Words and states tab. Later phases fill them in.
 import { h, icon } from './ui/dom.js';
 import * as S from './ui/staples.js';
-import { debtList, spendingList, incomeList, assetList, debtCharts } from './ui/lists.js';
+import { debtList, spendingList, incomeList, assetList, debtCharts, debtRatios } from './ui/lists.js';
 import { keyNumbers } from './math/metrics.js';
 import { statusOf, countsAsDone } from './records.js';
 import { money } from './format.js';
@@ -105,6 +105,7 @@ export const SCREENS = {
     return [head('Overview', 'Read only. Every number links to its home'), S.summaryStrip(ctx, [
       { label: 'Net worth', result: m.netWorth, key: 'netWorth' }, { label: 'Liquid net worth', result: m.liquidNetWorth },
       { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate' }, { label: 'Runway', result: m.runwayMonths, render: r => `${r.value.toFixed(1)} months` }]),
+    (() => { const r = debtRatios(ctx, m); return S.summaryStrip(ctx, [{ label: 'Debt-to-income', result: r.dti }, { label: 'Utilization', result: r.util }]); })(),
     m.surplus.value === null ? S.chartEmpty(ctx, m.surplus.needs) : center(h('span.title', {}, 'The cash flow chart is built with Report (build phase 8).'))];
   },
   'report/one-pager': (app, ctx) => [head('One-pager', 'Session summary'), moneyInOneLine(app, ctx)],
