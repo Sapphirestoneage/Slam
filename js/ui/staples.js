@@ -6,6 +6,7 @@ import { inView, timeChip } from '../math/time.js';
 import { money, pct, number, EMPTY, duration } from '../format.js';
 import { joinWords } from '../math/result.js';
 import { parseQuickAdd } from '../quickadd.js';
+import { canQuickFill, quickFill } from './quickfill.js';
 
 // ---------- Context: the store, the time view, the numbers, toasts ----------
 export function createCtx({ store, ref, now = () => new Date() }) {
@@ -157,7 +158,10 @@ export function showMath(anchor, result) {
 
 // ---------- Locked metric and empty states (Words and states) ----------
 export function needLinks(ctx, list) {
-  return joinWordsEl(list.map(n => h('a', { href: '#', onclick: e => { e.preventDefault(); ctx.goTo(n); } }, n)));
+  // Numbers that can be typed right here open a box in place; the rest go to where they live.
+  return joinWordsEl(list.map(n => canQuickFill(n)
+    ? h('button.btn.small.need', { type: 'button', onclick: e => quickFill(ctx, e.currentTarget, n) }, icon('plus'), `Add ${n}`)
+    : h('a', { href: '#', onclick: e => { e.preventDefault(); ctx.goTo(n); } }, n)));
 }
 function joinWordsEl(items) {
   const out = [];
