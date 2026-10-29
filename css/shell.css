@@ -1,4 +1,5 @@
 /* The shell: sticky top bar (left = where am I, middle = 5 tabs, right = tools), sub-tabs under it. */
+:root { --tb-on: #9FB9EA; --tb-on-text: #0A2A66; }
 .topbar { position: sticky; top: 0; z-index: 40; background: var(--primary-dark); color: #fff; box-shadow: var(--shadow); }
 .topbar-in { max-width: 1440px; margin: 0 auto; display: flex; align-items: center; gap: var(--s4); padding: 0 var(--s5); height: 60px; }
 .tb-left { display: flex; align-items: center; gap: var(--s3); min-width: 0; flex: 1; overflow: hidden; }
@@ -13,27 +14,32 @@
 .save-state { flex: none; font-size: .8125rem; font-weight: 700; color: #BFE8CF; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
 .save-state.unsaved { color: #fff; background: var(--guess); padding: 2px 8px; border-radius: 999px; }
 .tabs { display: flex; gap: 0; flex: none; }
-.tab { color: #fff; text-decoration: none; font-weight: 700; font-size: .9375rem; padding: 0 var(--s3); height: 40px; display: inline-flex; align-items: center; border-radius: var(--r-button); border-bottom: 3px solid transparent; }
+.tab { white-space: nowrap; color: #fff; text-decoration: none; font-weight: 700; font-size: .9375rem; padding: 0 var(--s3); height: 40px; display: inline-flex; align-items: center; border-radius: var(--r-button); border-bottom: 3px solid transparent; }
 .tab:hover { background: rgba(255,255,255,.12); }
-.tab[aria-current="page"] { background: #fff; color: var(--primary-dark); text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 3px; }
-:root[data-theme="dark"] .tab[aria-current="page"] { background: var(--primary); color: var(--on-primary); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tab[aria-current="page"] { background: var(--primary); color: var(--on-primary); } }
+.tab[aria-current="page"] { background: var(--tb-on); color: var(--tb-on-text); text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 3px; }
+:root[data-theme="dark"] { --tb-on: var(--primary); --tb-on-text: var(--on-primary); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --tb-on: var(--primary); --tb-on-text: var(--on-primary); } }
 .tb-right { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex: none; }
 .tb-right > .field { width: 132px !important; }
 .save-state .save-word { display: none; }
 @media (max-width: 1399px) { .find-btn .find-word { display: none; } .tb-right > .field { width: 104px !important; } .client-btn { max-width: 120px; } .tab { padding: 0 9px; } .topbar-in { gap: 10px; padding: 0 16px; } .tb-right { gap: 4px; } .site-id { font-size: 1.125rem; } }
-.topbar .icon-btn { background: var(--topbar-icon-bg); color: var(--topbar-icon-fg); border-color: var(--topbar-icon-bg); }
-.topbar .icon-btn[aria-pressed="true"] { outline: 3px solid #9FB9EA; outline-offset: 1px; }
-.topbar .field { background: #fff; border-color: #fff; height: 34px; color: #0A2A66; }
-.topbar .field input { color: #0A2A66; }
-.topbar .field input::placeholder { color: #26344F; }
-.topbar .field svg { color: #0A2A66; }
-.topbar .seg { border-color: #fff; background: transparent; }
-.topbar .seg button { color: #fff; min-height: 30px; padding: 0 10px; }
-.topbar .seg button + button { border-left-color: rgba(255,255,255,.5); }
-.topbar .seg button[aria-pressed="true"] { background: #fff; color: var(--primary-dark); }
-.find-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px; border-radius: var(--r-button); border: 2px solid #fff; background: #fff; color: #0A2A66; font: inherit; font-weight: 600; cursor: pointer; }
-.find-btn kbd { background: #E4E9F2; color: #0A2A66; border-color: #A9B9D6; }
+/* Top bar controls: outlined, not white blocks. Clear borders so they still read as buttons;
+   the one that is on (pressed or current) gets the light blue fill, same as the current tab. */
+.topbar .icon-btn { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,.75); box-shadow: none; }
+.topbar .icon-btn:hover { background: rgba(255,255,255,.14); border-color: #fff; }
+.topbar .icon-btn[disabled] { opacity: .4; }
+.topbar .icon-btn[aria-pressed="true"] { background: var(--tb-on); color: var(--tb-on-text); border-color: var(--tb-on); outline: none; }
+.topbar .field { background: transparent; border-color: rgba(255,255,255,.75); height: 34px; color: #fff; }
+.topbar .field input { color: #fff; }
+.topbar .field input::placeholder { color: rgba(255,255,255,.8); }
+.topbar .field svg { color: #fff; }
+.topbar .seg { border-color: rgba(255,255,255,.75); background: transparent; }
+.topbar .seg button { color: #fff; min-height: 30px; padding: 0 10px; background: transparent; }
+.topbar .seg button + button { border-left-color: rgba(255,255,255,.45); }
+.topbar .seg button[aria-pressed="true"] { background: var(--tb-on); color: var(--tb-on-text); }
+.find-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px; border-radius: var(--r-button); border: 2px solid rgba(255,255,255,.75); background: transparent; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.find-btn:hover { background: rgba(255,255,255,.14); border-color: #fff; }
+.find-btn kbd { background: transparent; color: #fff; border-color: rgba(255,255,255,.6); }
 
 .subtabs { position: sticky; top: 60px; z-index: 30; background: var(--card); border-bottom: 1.5px solid var(--border-row); }
 .subtabs-in { max-width: 1440px; margin: 0 auto; display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s5); }
