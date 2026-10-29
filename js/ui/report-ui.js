@@ -90,7 +90,7 @@ function donutCard(app, ctx, m) {
     assets.length || debtRows.length ? host : S.chartEmpty(ctx, ['an account or a debt']),
     h('p.muted.small', {}, 'Outer ring: what you own. Inner ring: what you owe. Click a ring to open it.'),
     h('div.tab-list', { role: 'tablist' }, tabs.map(k => h('button.btn.small', { type: 'button', role: 'tab', 'aria-selected': String(RUI.tab === k), 'aria-pressed': String(RUI.tab === k), onclick: () => { RUI.tab = k; app.render(); } }, k))),
-    h('div.home-rows', {}, rows.length ? rows.map(([name, v, href]) => h('div.home-row', {}, h('a', { href }, name), h('span', {}, typeof v === 'number' ? money(v) : v ?? '—'))) : h('p.muted', {}, 'Nothing here yet.')));
+    h('div.home-rows', {}, rows.length ? rows.map(([name, v, href]) => h('div.home-row', {}, h('a', { href }, name), h('span', {}, typeof v === 'number' ? money(v) : v ?? ''))) : h('p.muted', {}, 'Nothing here yet.')));
 }
 function aboutRows(ctx) {
   const p = ctx.store.doc.profile;
