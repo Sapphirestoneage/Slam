@@ -126,7 +126,7 @@ export function keyNumbers(m) {
   const debtTotal = ds.length ? ds.reduce((s, d) => s + (d.balance ?? 0), 0) : null;
   const debtPayments = ds.some(d => d.payment != null) ? ds.reduce((s, d) => s + (d.payment ?? 0), 0) : null;
   const plan = ds.length ? payoffPlan(ds.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null), { order: m.inputs.debtOrder }) : null;
-  return { netWorth: m.netWorth.value, surplus: m.surplus.value, savingsRate: m.savingsRate.value, debtTotal, debtPayments,
+  return { netWorth: m.netWorth.value, liquidNetWorth: m.liquidNetWorth.value, fiNumber: m.fiNumber.value, surplus: m.surplus.value, savingsRate: m.savingsRate.value, debtTotal, debtPayments,
     debtFreeMonths: plan?.months ?? null, debtInterest: plan && plan.months !== null ? Math.round(plan.interest) : null, monthsToFi: m.monthsToFi.value };
 }
 

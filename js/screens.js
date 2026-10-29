@@ -6,6 +6,7 @@ import { incomeList, benefitList, variableBlock, assetList, protectionList, taxe
 import { profileScreen, profileCompletion } from './ui/profile.js';
 import { startFastTrack } from './ui/fasttrack-ui.js';
 import { budgetScreen, calendarScreen, closeScreen } from './ui/spending-ui.js';
+import { overviewScreen, onePagerScreen, historyScreen } from './ui/report-ui.js';
 import { goalsScreen, timelineScreen, payoffScreen, nextYearScreen, scenariosScreen } from './ui/plan-ui.js';
 import { AREAS } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
@@ -145,22 +146,9 @@ export const SCREENS = {
   'plan/next-12-months': (app, ctx) => (app.hasClient ? nextYearScreen(app, ctx) : [head('Next 12 months'), noClient(app)]),
   'plan/scenarios': () => scenariosScreen(),
 
-  'report/overview': (app, ctx) => {
-    const m = ctx.metrics();
-    return [head('Overview', 'Read only. Every number links to its home'), S.summaryStrip(ctx, [
-      { label: 'Net worth', result: m.netWorth, key: 'netWorth' }, { label: 'Liquid net worth', result: m.liquidNetWorth },
-      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate' }, { label: 'Runway', result: m.runwayMonths, render: r => `${r.value.toFixed(1)} months` }]),
-    (() => { const r = debtRatios(ctx, m); return S.summaryStrip(ctx, [{ label: 'Debt-to-income', result: r.dti }, { label: 'Utilization', result: r.util }]); })(),
-    m.surplus.value === null ? S.chartEmpty(ctx, m.surplus.needs) : center(h('span.title', {}, 'The cash flow chart is built with Report (build phase 8).'))];
-  },
-  'report/one-pager': (app, ctx) => [head('One-pager', 'Session summary'), moneyInOneLine(app, ctx)],
-  'report/history': (app, ctx) => {
-    const snaps = ctx.store.doc.snapshots;
-    return [head('History', 'Snapshots over time'), snaps.length
-      ? h('div.card', {}, h('table.rows', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Snapshot'), h('th', {}, 'When'), h('th.num', {}, 'Net worth'))),
-        h('tbody', {}, snaps.map(s => h('tr', {}, h('td', {}, s.label), h('td', {}, new Date(s.at).toLocaleString()), h('td.num', {}, money(s.metrics?.netWorth)))))))
-      : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No snapshots yet'), S.button('Save snapshot', { iconName: 'camera', onClick: () => app.snapshot('Snapshot') })))];
-  },
+  'report/overview': (app, ctx) => (app.hasClient ? overviewScreen(app, ctx) : [head('Overview'), noClient(app)]),
+  'report/one-pager': (app, ctx) => (app.hasClient ? onePagerScreen(app, ctx) : [head('One-pager'), noClient(app)]),
+  'report/history': (app, ctx) => (app.hasClient ? historyScreen(app, ctx) : [head('History'), noClient(app)]),
 
   'tools/lists': (app, ctx) => {
     const revisit = app.dueForCheck();

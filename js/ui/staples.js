@@ -181,13 +181,13 @@ function joinWordsEl(items) {
   items.forEach((el, i) => { if (i) out.push(i === items.length - 1 ? ' and ' : ', '); out.push(el); });
   return out;
 }
-export function metricCard(ctx, label, result, { key = null, render = null, lowerIsGood = false, note = null } = {}) {
+export function metricCard(ctx, label, result, { key = null, render = null, lowerIsGood = false, note = null, home = null } = {}) {
   const locked = result.value === null || result.value === undefined;
   const snap = ctx.store.lastSnapshot();
   const change = key && !locked ? changeSince(keyNumbers(ctx.metrics()), snap, key) : null;
   const good = change && (change.direction === 'down') === lowerIsGood;
   return h(`div.metric${locked ? '.locked' : ''}`, {},
-    h('span.label', {}, label),
+    home ? h('a.label.metric-home', { href: home, title: `Open where ${label.toLowerCase()} comes from` }, label) : h('span.label', {}, label), // every number links to its home
     locked
       ? h('div.big', {}, result.never ? warnTag('Not on this path') : [icon('lock'), ` Locked: needs ${result.needs.length} ${result.needs.length === 1 ? 'number' : 'numbers'}`])
       : h('div.big', {}, mathButton(result, render ? render(result) : result.unit === 'months' ? `${Math.ceil(result.value)} months` : value(result, ctx)),
