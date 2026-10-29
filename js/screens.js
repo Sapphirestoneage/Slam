@@ -6,6 +6,8 @@ import { incomeList, benefitList, variableBlock, assetList, protectionList, taxe
 import { profileScreen, profileCompletion } from './ui/profile.js';
 import { startFastTrack } from './ui/fasttrack-ui.js';
 import { budgetScreen, calendarScreen, closeScreen } from './ui/spending-ui.js';
+import { prepScreen, liveScreen, wrapScreen } from './ui/home-ui.js';
+import { listsScreen, sessionScreen, discoveryScreen } from './ui/tools-ui.js';
 import { overviewScreen, onePagerScreen, historyScreen } from './ui/report-ui.js';
 import { goalsScreen, timelineScreen, payoffScreen, nextYearScreen, scenariosScreen } from './ui/plan-ui.js';
 import { AREAS } from './gates.js';
@@ -104,30 +106,9 @@ function moneyInOneLine(app, ctx) { // Mockup: exactly four numbers
 }
 
 export const SCREENS = {
-  'home/prep': (app, ctx) => {
-    if (!app.hasClient) return [head('Home', 'This session: before, during, after'), noClient(app)];
-    const recs = ctx.store.records;
-    const homework = recs.filter(r => r.status === 'Will email' || Object.values(r.fieldStatus).includes('Will email')).length;
-    const due = app.dueForCheck().length;
-    const notes = ctx.store.doc.parking.filter(n => !n.filedTo).length;
-    return [head('Home', `Prep for ${ctx.store.doc.client.name}`,
-      S.button('Start session', { kind: 'primary', size: 'big', onClick: () => app.go('#/home/live') })),
-    moneyInOneLine(app, ctx),
-    h('div.strip', {},
-      prepCard('What changed since last time', ctx.store.lastSnapshot() ? 'See the arrows under Money in one line' : 'Nothing yet: no snapshot to compare with'),
-      prepCard('Open homework', homework ? `${homework}` : 'None', '#/tools/lists'),
-      prepCard('Due for a check', due ? `${due}` : 'None', '#/tools/lists'),
-      prepCard('Parking lot notes', notes ? `${notes}` : 'None', null, () => app.openParking())),
-    ctx.gates().betweenJobs ? S.summaryStrip(ctx, [{ label: 'Runway (between jobs)', result: ctx.metrics().runwayMonths, render: r => `${r.value.toFixed(1)} months` }]) : null]; // R006
-  },
-  'home/live': (app, ctx) => app.hasClient
-    ? [head('Home', 'Live: the session is on'), moneyInOneLine(app, ctx), center(h('span.title', {}, 'The agenda is built with Home (build phase 9).'),
-      S.button('End session', { kind: 'primary', size: 'big', onClick: () => app.go('#/home/wrap-up') }))]
-    : [head('Home'), noClient(app)],
-  'home/wrap-up': (app, ctx) => app.hasClient
-    ? [head('Home', 'Wrap-up'), center(h('span.title', {}, 'Save a snapshot so next session can show what changed.'),
-      S.button('Save snapshot', { kind: 'primary', size: 'big', iconName: 'camera', onClick: () => app.snapshot('End of session') }))]
-    : [head('Home'), noClient(app)],
+  'home/prep': (app, ctx) => (app.hasClient ? prepScreen(app, ctx) : [head('Home', 'This session: before, during, after'), noClient(app)]),
+  'home/live': (app, ctx) => (app.hasClient ? liveScreen(app, ctx) : [head('Home'), noClient(app)]),
+  'home/wrap-up': (app, ctx) => (app.hasClient ? wrapScreen(app, ctx) : [head('Home'), noClient(app)]),
 
   'my-money/profile': myMoney('profile'),
   'my-money/income': myMoney('income'),
@@ -150,31 +131,15 @@ export const SCREENS = {
   'report/one-pager': (app, ctx) => (app.hasClient ? onePagerScreen(app, ctx) : [head('One-pager'), noClient(app)]),
   'report/history': (app, ctx) => (app.hasClient ? historyScreen(app, ctx) : [head('History'), noClient(app)]),
 
-  'tools/lists': (app, ctx) => {
-    const revisit = app.dueForCheck();
-    const homework = ctx.store.records.filter(r => r.status === 'Will email');
-    return [head('Coach tools', 'Lists'), h('div.grid2', {},
-      h('div.section', {}, h('div.section-title', {}, h('h2', {}, 'Revisit list')), revisit.length
-        ? h('div.card', {}, revisit.map(r => h('div.row-line', {}, h('span', {}, r.label), S.statusTag(r.status), h('a', { href: r.route }, 'Fix now'))))
-        : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'Nothing to revisit yet')))),
-      h('div.section', {}, h('div.section-title', {}, h('h2', {}, 'Homework list')), homework.length
-        ? h('div.card', {}, homework.map(r => h('div', {}, r.name || r.type)))
-        : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet')))))];
-  },
+  'tools/lists': (app, ctx) => (app.hasClient ? listsScreen(app, ctx) : [head('Coach tools'), noClient(app)]),
+  'tools/discovery': app => discoveryScreen(app),
   'tools/data': (app, ctx) => [head('Coach tools', 'Export, import and reset'), h('div.card', {}, h('div.row-line', {},
     S.button('Export', { kind: 'primary', iconName: 'download', onClick: () => app.exportNow() }),
     S.button('Import', { iconName: 'upload', onClick: () => app.importFile() }),
     S.button('Reset client', { kind: 'danger', iconName: 'reset', disabled: !app.hasClient, why: 'No client open', onClick: e => app.resetClient(e.currentTarget) }),
     S.button('Delete client', { kind: 'danger', iconName: 'trash', disabled: !app.hasClient, why: 'No client open', onClick: e => app.deleteClient(e.currentTarget) })),
   h('p.muted', { style: { marginTop: '12px' } }, app.backupText()))],
-  'tools/session': (app, ctx) => [head('Coach tools', 'Session and settings'), h('div.grid2', {},
-    h('div.card', {}, h('h3', {}, 'Snapshot'), S.button('Save snapshot', { kind: 'primary', iconName: 'camera', disabled: !app.hasClient, why: 'No client open', onClick: () => app.snapshot('Snapshot') }),
-      h('p.muted', { style: { marginTop: '12px' } }, ctx.store.lastSnapshot() ? `Last: ${ctx.store.lastSnapshot().label}, ${new Date(ctx.store.lastSnapshot().at).toLocaleString()}` : 'No snapshot yet.')),
-    fastTrackGap(ctx),
-    h('div.card', {}, h('h3', {}, 'Settings'), h('div.stack', { style: { gap: '12px' } },
-      h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Theme'), S.toggle(['System', 'Light', 'Dark'], app.prefs.theme === 'light' ? 'Light' : app.prefs.theme === 'dark' ? 'Dark' : 'System', v => app.setPref('theme', v.toLowerCase()), { label: 'Theme' })),
-      h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Density'), S.toggle(['Comfortable', 'Compact'], app.prefs.density === 'compact' ? 'Compact' : 'Comfortable', v => app.setPref('density', v.toLowerCase()), { label: 'Density' })),
-      h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Font'), S.toggle([['inter', 'Inter'], ['plex', 'IBM Plex Sans'], ['source', 'Source Sans 3']], app.prefs.font || 'inter', v => app.setPref('font', v), { label: 'Font' })))))],
+  'tools/session': (app, ctx) => sessionScreen(app, ctx, { fastTrackGap }),
 };
 
 // R069: Fast Track should land within $100 a month of the full answer. Its numbers are kept; this shows the gap.

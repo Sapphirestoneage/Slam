@@ -130,6 +130,7 @@ export function spendingList(ref, { pass = 'Rough', ym = null, groupBy = 'DRAFTT
       pass !== 'Rough' ? { label: 'Rough', num: true, render: (ctx, r) => h('span.muted', { title: 'The line\'s usual number, set in the Rough pass' }, r.status === 'Not for me' ? '$0' : amount(ctx, r.amount, { chip: false })) } :
       { label: 'Amount', num: true, render: (ctx, r, m, up, row) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
         moneyInput(r.amount, v => up({ amount: v, status: r.status === 'Not sure' ? null : r.status }), { key: `${r.id}:amount` }), // typing the real number clears Guess
+        r.status === 'Not sure' ? h('button.btn.small', { type: 'button', title: 'The guess is right: keep it as the real number', onclick: () => up({ status: null }) }, 'Keep') : null,
         r.status === 'Not for me'
           ? h('button.btn.small', { type: 'button', onclick: () => up({ status: null }) }, 'Bring back')
           : h('button.btn.small.nfm', { type: 'button', onclick: () => up({ status: 'Not for me' }) }, 'Not for me'),

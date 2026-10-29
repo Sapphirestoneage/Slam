@@ -19,7 +19,7 @@ export const TABS = [
 ];
 // Behind the gear, never a main tab (R076).
 export const TOOLS = { id: 'tools', name: 'Coach tools', job: 'Lists, data and session', subs: [
-  { id: 'lists', name: 'Lists' }, { id: 'data', name: 'Data' }, { id: 'session', name: 'Session' }] };
+  { id: 'lists', name: 'Lists' }, { id: 'session', name: 'Session' }, { id: 'data', name: 'Data' }, { id: 'discovery', name: 'Discovery' }] };
 
 const ALL = [...TABS, TOOLS];
 

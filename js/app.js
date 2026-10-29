@@ -48,7 +48,25 @@ const app = {
     const go = () => { const name = input.value.trim(); if (!name) return; S.closePop(); this.open(createClient(adapter, name, new Date().toISOString())); addPresets(this.store, ref); this.store.undoStack = []; this.go('#/home/prep'); }; // every new client starts with the usual list
     input.onkeydown = e => { if (e.key === 'Enter') go(); };
     S.popover(anchor, h('div.stack', { style: { gap: '12px' } }, h('strong', {}, 'New client'), h('label.field', {}, input),
-      h('div.row-line', {}, S.button('Create', { kind: 'primary', onClick: go }), S.button('Cancel', { onClick: S.closePop }))), { width: 340 });
+      h('div.row-line', {}, S.button('Create', { kind: 'primary', onClick: go }), S.button('Cancel', { onClick: S.closePop })),
+      h('a', { href: '#/tools/discovery', onclick: () => S.closePop() }, 'From a discovery call ›')), { width: 340 });
+  },
+  // Discovery table (R180): creates the client, fills each number as Roughly, opens Home in Prep.
+  newClientFromDiscovery(v) {
+    this.open(createClient(adapter, v.name, new Date().toISOString()));
+    const s = this.store;
+    s.transaction('From discovery', () => {
+      const R = 'Roughly';
+      if (v.takeHome != null) s.add('income', { name: 'Take-home pay', amount: v.takeHome, per: 'month', status: R, source: 'manual', values: { basis: 'Take-home' } }, { type: 'Job' });
+      if (v.rent != null) s.add('bill', { name: 'Rent', amount: v.rent, status: R, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date', whoPays: 'Me' } });
+      if (v.debt != null) s.add('debt', { name: 'Total debt (from discovery)', status: R, values: { balance: v.debt } }, { type: 'Credit card' });
+      if (v.savings != null) s.add('account', { name: 'Savings', status: R, values: { group: 'cash', balance: v.savings } }, { type: 'Savings or HYSA' });
+      s.setDoc('profile', { whyNow: v.why ?? null, goalWords: v.goal ?? null });
+    });
+    addPresets(s, ref);
+    s.undoStack = [];
+    this.go('#/home/prep');
+    S.toast(`${v.name} is ready. Every number from the call is marked Roughly.`);
   },
   async loadDemo() {
     const demo = await fetch('fixtures/demo.json').then(r => r.json());
