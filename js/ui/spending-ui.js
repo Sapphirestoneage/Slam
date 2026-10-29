@@ -45,9 +45,9 @@ export function budgetScreen(app, ctx) {
       S.labelled('Use for surplus and FI', S.toggle([['gut', 'Gut number'], ['lines', 'The lines']], m.inputs.spendingSource, v => ctx.store.setDoc('spending', { source: v }), { label: 'Spending used for the math' }),
         { note: m.inputs.gutTotal === null ? 'No gut number yet, so the lines are used' : `Gut ${money(m.inputs.gutTotal)} · lines ${money(m.inputs.lineTotal ?? 0)}` }),
       S.labelled('Basis', S.toggle([['accrual', 'Accrual'], ['cash', 'Cash']], doc.spending.basis || 'accrual', v => ctx.store.setDoc('spending', { basis: v }), { label: 'Cash or accrual' }),
-        { note: 'Accrual spreads yearly and prepaid costs across the months (R123)' }),
+        { note: 'Accrual spreads yearly and prepaid costs across the months' }),
       S.labelled('Period', S.select(Object.keys(PERIOD), UI.period, v => { UI.period = v || 'Monthly'; redraw(); }, { label: 'Period', hint: 'Monthly', width: 140 })),
-      S.labelled('Cards', S.checkbox('Most spending goes on cards', cardsMost, v => ctx.store.setDoc('profile', { mostOnCards: v })), { note: 'Shows Paid with on every line (R102)' })), { label: 'Settings for this budget' }));
+      S.labelled('Cards', S.checkbox('Most spending goes on cards', cardsMost, v => ctx.store.setDoc('profile', { mostOnCards: v })), { note: 'Shows Paid with on every line' })), { label: 'Settings for this budget' }));
   const view = monthView(doc, ctx.ref, UI.ym, { now: ctx.now() });
   const body = UI.pass === 'Gut' ? gutPass(app, ctx, view)
     : UI.pass === 'Basics' ? basicsPass(ctx)
@@ -235,10 +235,12 @@ export function calendarScreen(app, ctx) {
   if (bonusPaycheck(monthList)) notes.push(h('div.banner-inline.good', {}, icon('check'), ` Bonus paycheck month: three paydays land in ${monthName(UI.calYm, 'long')}.`));
   if (b.firstLow) notes.push(h('div.banner-inline', {}, '⚠ ', `Below ${money(b.low)} on ${dayLabel(b.firstLow.date)}: ${money(b.firstLow.balance)}.`));
   if (b.needs) notes.push(h('div.banner-inline', {}, `The running balance needs ${b.needs.join(' and ')}.`));
-  const risky = monthList.filter(i => i.risk && i.status === 'Planned');
-  if (risky.length) notes.push(h('div.banner-inline', {}, `Timing risk: ${[...new Set(risky.map(i => i.name))].join(', ')} ${risky.length > 1 ? 'are' : 'is'} large and on no fixed date (R142).`));
-  const guess = monthList.filter(i => i.guessDate);
-  if (guess.length) notes.push(h('div.banner-inline.soft', {}, `${new Set(guess.map(i => i.recId)).size} ${new Set(guess.map(i => i.recId)).size === 1 ? 'item has' : 'items have'} no day set and sit on a guessed day (dotted). Click one to set its day.`));
+  // One quiet line for the smaller warnings: large amounts on no fixed date (R142), and days that are guesses.
+  const risky = [...new Set(monthList.filter(i => i.risk && i.status === 'Planned').map(i => i.name))];
+  const guessN = new Set(monthList.filter(i => i.guessDate).map(i => i.recId)).size;
+  const heads = [risky.length ? `Timing risk: ${risky.slice(0, 3).join(', ')}${risky.length > 3 ? ` and ${risky.length - 3} more` : ''} are large with no fixed date` : null,
+    guessN ? `${guessN} ${guessN === 1 ? 'item sits' : 'items sit'} on a guessed day (dotted); click one to set its day` : null].filter(Boolean);
+  if (heads.length) notes.push(h('div.banner-inline.soft', {}, heads.join('. ') + '.'));
   const byDay = new Map();
   for (const i of monthList) { if (!UI.show.has(i.group)) continue; const k = i.date.startsWith(UI.calYm) ? i.date : i.origDate; if (!byDay.has(k)) byDay.set(k, []); byDay.get(k).push(i); }
   const endOf = new Map((b.rows || []).map(r => [r.date, r.balance]));

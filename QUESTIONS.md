@@ -47,3 +47,18 @@ Each one has the default used so the build could keep going. Answer here or in t
 29. **One page.** The Express form is every My Money section stacked on one page (each with its own heading); the sub-tabs scroll to their part.
 30. **Paid off with a loan that still has a balance.** Asks before removing the loan (it is the same row as on Debt), and can be undone.
 31. **Gas and tolls.** Reference data had the car gate only on the old combined category; 'Gas or charging' and 'Tolls and parking' now carry it too (R009).
+
+## Build phases 6 to 11 (Spending, Plan, Report, Home, Coach tools, dry run)
+
+32. **Which spending the math uses.** The Gut number (the All in record) is used for surplus and FI until Budget is switched to "The lines" (Budget › Settings for this budget). A client with no gut number uses the lines. When the lines include starter guesses not yet reviewed, Home says so beside Money in one line. Change the default?
+33. **Starter guesses and the lists.** The ~40 preset lines start as Guess. They each get Keep (the guess is right), Not for me and Delete on Budget. They are left off the Revisit list (one summary row points to Budget instead), and Next 3 ranks them by dollars at stake, so the biggest guess is asked first.
+34. **Days nobody typed.** A paycheck with no payday, or a bill or debt with no due day, sits on a guessed day (paychecks every 2 weeks from Fri Jan 2 2026; everything else the 1st), drawn dotted, with "set its day" in its box. Variable-date lines are spread across the weeks of the month (R140).
+35. **Gaps at close.** Closing a month with lines that have no actual asks first, then counts them as $0 so the miss shows (R094). Close carries each variable line's actual to next month's estimate when next month has none yet; Carry → does it for one line any time.
+36. **Moved to another month.** Moving an entry to a day in another month keeps it on its original month's list (faint) and leaves it out of both balances. Drag and drop on the calendar is not built; Moved is in the entry's box.
+37. **Fat FI.** No spec number, so Fat FI is 1.5 times regular spending (FAT_FACTOR in js/plan.js). Lean FI uses the Food, Accommodation and Transportation lines.
+38. **Real or nominal.** Returns are after inflation, so everything stays in today's dollars; Nominal only adds a line saying what the FI number is in future dollars.
+39. **Next 3 effect.** Each open number is measured by how far the FI date moves if it were $0 instead of its current or guessed value; core numbers (take-home, spending, invested, age, cash) always rank first; under $100 a year goes to small wins (R073).
+40. **End session.** Does all four checklist items at once: homework list from Will email, snapshot, one-pager marked ready, next session booked (a date two weeks out unless one is typed), then downloads a backup (R151). Send summary copies an email-ready text with the disclaimer; the app cannot send email itself.
+41. **Export PDF.** Uses the browser's print to PDF. It is hidden inside SLAM for Eli (an artifact cannot print); the public site shows it.
+42. **Pre-call form.** Needs a server to receive a client's answers from a link, so it is a later phase. The discovery table works now (Coach tools › Discovery, or New client › From a discovery call).
+43. **Card bills and payoff (R104).** A card's More shows the bills charged to it. Paid in full, they are spending. Carrying a balance, the payoff projection does not yet add them to the balance; the card's payment amount is used as typed.
