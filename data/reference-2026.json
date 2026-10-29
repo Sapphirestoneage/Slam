@@ -2,10 +2,42 @@
   "year": 2026,
   "source": "spec/csv/Reference data.csv",
   "presets": {
-    "realReturn": { "values": [0.06, 0.07, 0.08, 0.12], "default": 0.07, "labels": { "0.06": "Conservative", "0.07": "Default", "0.08": "Optimistic", "0.12": "Hopeful (no inflation taken out)" } },
-    "inflation": { "values": [0.02, 0.03], "default": 0.02 },
-    "withdrawalRate": { "values": [0.03, 0.04, 0.047, 0.052], "default": 0.04 },
-    "pace": { "Likely": 0.07, "Optimistic": 0.08, "Pessimistic": 0.06 }
+    "realReturn": {
+      "values": [
+        0.06,
+        0.07,
+        0.08,
+        0.12
+      ],
+      "default": 0.07,
+      "labels": {
+        "0.06": "Conservative",
+        "0.07": "Default",
+        "0.08": "Optimistic",
+        "0.12": "Hopeful (no inflation taken out)"
+      }
+    },
+    "inflation": {
+      "values": [
+        0.02,
+        0.03
+      ],
+      "default": 0.02
+    },
+    "withdrawalRate": {
+      "values": [
+        0.03,
+        0.04,
+        0.047,
+        0.052
+      ],
+      "default": 0.04
+    },
+    "pace": {
+      "Likely": 0.07,
+      "Optimistic": 0.08,
+      "Pessimistic": 0.06
+    }
   },
   "defaults": {
     "lifeExpectancy": 90,
@@ -15,22 +47,107 @@
     "retireAge": 60
   },
   "limits": {
-    "401k": { "base": 24500, "catchUp50": 8000, "catchUp60to63": 11250, "appliesTo": ["401(k)", "403(b)", "457", "TSP"] },
-    "ira": { "base": 7500, "catchUp50": 1100, "appliesTo": ["Roth IRA", "Traditional IRA"] },
+    "401k": {
+      "base": 24500,
+      "catchUp50": 8000,
+      "catchUp60to63": 11250,
+      "appliesTo": [
+        "401(k)",
+        "403(b)",
+        "457",
+        "TSP"
+      ]
+    },
+    "ira": {
+      "base": 7500,
+      "catchUp50": 1100,
+      "appliesTo": [
+        "Roth IRA",
+        "Traditional IRA"
+      ]
+    },
     "total415c": 72000,
-    "hsa": { "self": 4400, "family": 8750, "catchUp55": 1000 }
+    "hsa": {
+      "self": 4400,
+      "family": 8750,
+      "catchUp55": 1000
+    }
   },
   "tax": {
-    "standardDeduction": { "single": 16100, "joint": 32200 },
+    "standardDeduction": {
+      "single": 16100,
+      "joint": 32200
+    },
     "brackets": {
-      "single": [[0, 0.10], [12400, 0.12], [50400, 0.22], [105700, 0.24], [201775, 0.32], [256225, 0.35], [640600, 0.37]],
-      "joint": [[0, 0.10], [24800, 0.12], [100800, 0.22], [211400, 0.24], [403550, 0.32], [512450, 0.35], [768700, 0.37]]
+      "single": [
+        [
+          0,
+          0.1
+        ],
+        [
+          12400,
+          0.12
+        ],
+        [
+          50400,
+          0.22
+        ],
+        [
+          105700,
+          0.24
+        ],
+        [
+          201775,
+          0.32
+        ],
+        [
+          256225,
+          0.35
+        ],
+        [
+          640600,
+          0.37
+        ]
+      ],
+      "joint": [
+        [
+          0,
+          0.1
+        ],
+        [
+          24800,
+          0.12
+        ],
+        [
+          100800,
+          0.22
+        ],
+        [
+          211400,
+          0.24
+        ],
+        [
+          403550,
+          0.32
+        ],
+        [
+          512450,
+          0.35
+        ],
+        [
+          768700,
+          0.37
+        ]
+      ]
     },
     "socialSecurityWageBase": 184500,
     "socialSecurityRate": 0.062,
     "medicareRate": 0.0145,
     "additionalMedicareRate": 0.009,
-    "additionalMedicareOver": { "single": 200000, "joint": 250000 },
+    "additionalMedicareOver": {
+      "single": 200000,
+      "joint": 250000
+    },
     "selfEmployedRate": 0.153,
     "selfEmployedBase": 0.9235
   },
@@ -41,27 +158,709 @@
   },
   "hoursPerMonthFallback": 173,
   "lists": {
-    "debtTypesTop": ["Credit card", "Student loan", "Car loan", "Personal loan"],
-    "debtTypesOther": ["Medical", "Family or friend", "Buy now, pay later", "Payday or cash advance", "Tax debt", "401(k) loan", "Business"],
-    "investmentTypes": ["401(k)", "403(b)", "457", "TSP", "Roth IRA", "Traditional IRA", "Rollover IRA", "SEP", "Solo 401(k)", "HSA", "529", "Brokerage", "Crypto", "Other"],
-    "cashTypes": ["Checking", "Savings or HYSA", "Money market", "CD", "Cash on hand"],
-    "statuses": ["Know it", "Roughly", "Not sure", "Will email", "Not now", "Not for me", "Computed"],
-    "calendarStatuses": ["Planned", "Partial", "Got it / Paid", "Didn't happen", "Moved"]
+    "debtTypesTop": [
+      "Credit card",
+      "Student loan",
+      "Car loan",
+      "Personal loan"
+    ],
+    "debtTypesOther": [
+      "Medical",
+      "Family or friend",
+      "Buy now, pay later",
+      "Payday or cash advance",
+      "Tax debt",
+      "401(k) loan",
+      "Business"
+    ],
+    "investmentTypes": [
+      "401(k)",
+      "403(b)",
+      "457",
+      "TSP",
+      "Roth IRA",
+      "Traditional IRA",
+      "Rollover IRA",
+      "SEP",
+      "Solo 401(k)",
+      "HSA",
+      "529",
+      "Brokerage",
+      "Crypto",
+      "Other"
+    ],
+    "cashTypes": [
+      "Checking",
+      "Savings or HYSA",
+      "Money market",
+      "CD",
+      "Cash on hand"
+    ],
+    "statuses": [
+      "Know it",
+      "Roughly",
+      "Not sure",
+      "Will email",
+      "Not now",
+      "Not for me",
+      "Computed"
+    ],
+    "calendarStatuses": [
+      "Planned",
+      "Partial",
+      "Got it / Paid",
+      "Didn't happen",
+      "Moved"
+    ]
   },
   "categoryDefaults": [
-    { "category": "Rent or mortgage", "draftt": "Accommodation", "amount": "Fixed", "timing": "Fixed date" },
-    { "category": "Electric, gas, water", "draftt": "Accommodation", "amount": "Variable", "timing": "Fixed date" },
-    { "category": "Internet, phone", "draftt": "Accommodation", "amount": "Fixed", "timing": "Fixed date" },
-    { "category": "Renters or home insurance", "draftt": "Accommodation", "amount": "Fixed", "timing": "Fixed date" },
-    { "category": "Groceries, dining out, coffee", "draftt": "Food", "amount": "Variable", "timing": "Variable date" },
-    { "category": "Car insurance", "draftt": "Transportation", "amount": "Fixed", "timing": "Fixed date", "gate": "car" },
-    { "category": "Gas or charging, tolls, parking", "draftt": "Transportation", "amount": "Variable", "timing": "Variable date", "gate": "car" },
-    { "category": "Car maintenance, registration", "draftt": "Transportation", "amount": "Variable", "timing": "Variable date", "gate": "car" },
-    { "category": "Transit, Uber", "draftt": "Transportation", "amount": "Variable", "timing": "Variable date" },
-    { "category": "Therapy", "draftt": "Therapy", "amount": "Fixed", "timing": "Fixed date" },
-    { "category": "Subscriptions", "draftt": "Other", "amount": "Fixed", "timing": "Fixed date" },
-    { "category": "Wants, travel, gifts", "draftt": "Wants", "amount": "Variable", "timing": "Variable date" },
-    { "category": "Kids", "draftt": "Other", "amount": "Variable", "timing": "Variable date", "gate": "kids" },
-    { "category": "Pets", "draftt": "Other", "amount": "Variable", "timing": "Variable date", "gate": "pets" }
-  ]
+    {
+      "category": "Rent or mortgage",
+      "draftt": "Accommodation",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Electric, gas, water",
+      "draftt": "Accommodation",
+      "amount": "Variable",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Internet, phone",
+      "draftt": "Accommodation",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Renters or home insurance",
+      "draftt": "Accommodation",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Groceries, dining out, coffee",
+      "draftt": "Food",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Car insurance",
+      "draftt": "Transportation",
+      "amount": "Fixed",
+      "timing": "Fixed date",
+      "gate": "car"
+    },
+    {
+      "category": "Gas or charging, tolls, parking",
+      "draftt": "Transportation",
+      "amount": "Variable",
+      "timing": "Variable date",
+      "gate": "car"
+    },
+    {
+      "category": "Car maintenance, registration",
+      "draftt": "Transportation",
+      "amount": "Variable",
+      "timing": "Variable date",
+      "gate": "car"
+    },
+    {
+      "category": "Transit, Uber",
+      "draftt": "Transportation",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Therapy",
+      "draftt": "Therapy",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Subscriptions",
+      "draftt": "Other",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Wants, travel, gifts",
+      "draftt": "Wants",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Kids",
+      "draftt": "Other",
+      "amount": "Variable",
+      "timing": "Variable date",
+      "gate": "kids"
+    },
+    {
+      "category": "Pets",
+      "draftt": "Other",
+      "amount": "Variable",
+      "timing": "Variable date",
+      "gate": "pets"
+    },
+    {
+      "category": "Internet",
+      "draftt": "Accommodation",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Phone",
+      "draftt": "Accommodation",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Household supplies",
+      "draftt": "Accommodation",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Furniture and home",
+      "draftt": "Accommodation",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Laundry",
+      "draftt": "Accommodation",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Groceries",
+      "draftt": "Food",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Dining out",
+      "draftt": "Food",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Coffee and snacks",
+      "draftt": "Food",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Work lunches",
+      "draftt": "Food",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Gas or charging",
+      "draftt": "Transportation",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Tolls and parking",
+      "draftt": "Transportation",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Transit",
+      "draftt": "Transportation",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Rideshare",
+      "draftt": "Transportation",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Health insurance",
+      "draftt": "Therapy",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Copays",
+      "draftt": "Therapy",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Prescriptions",
+      "draftt": "Therapy",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Gym or fitness",
+      "draftt": "Therapy",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Personal care",
+      "draftt": "Therapy",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Streaming",
+      "draftt": "Other",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Music",
+      "draftt": "Other",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Apps and cloud",
+      "draftt": "Other",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Memberships",
+      "draftt": "Other",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "News",
+      "draftt": "Other",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Fees",
+      "draftt": "Other",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Yearly fees",
+      "draftt": "Other",
+      "amount": "Fixed",
+      "timing": "Fixed date"
+    },
+    {
+      "category": "Education",
+      "draftt": "Other",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Tech",
+      "draftt": "Other",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Giving",
+      "draftt": "Other",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Buffer",
+      "draftt": "Other",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Clothes",
+      "draftt": "Wants",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Entertainment",
+      "draftt": "Wants",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Nights out",
+      "draftt": "Wants",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Hobbies",
+      "draftt": "Wants",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Travel",
+      "draftt": "Wants",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Gifts",
+      "draftt": "Wants",
+      "amount": "Variable",
+      "timing": "Variable date"
+    }
+  ],
+  "spendingPresets": {
+    "about": "Starter guesses near the top 25% of what single adults spend each month, rounded. Start high and bring them down. Every line starts as Guess (Not sure).",
+    "lines": [
+      {
+        "name": "Rent",
+        "category": "Rent or mortgage",
+        "draftt": "Accommodation",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 2000
+      },
+      {
+        "name": "Electric, gas, water",
+        "category": "Electric, gas, water",
+        "draftt": "Accommodation",
+        "amount": "Variable",
+        "timing": "Fixed date",
+        "guess": 200
+      },
+      {
+        "name": "Internet",
+        "category": "Internet",
+        "draftt": "Accommodation",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 80
+      },
+      {
+        "name": "Phone",
+        "category": "Phone",
+        "draftt": "Accommodation",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 90
+      },
+      {
+        "name": "Renters insurance",
+        "category": "Renters or home insurance",
+        "draftt": "Accommodation",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 25
+      },
+      {
+        "name": "Household supplies",
+        "category": "Household supplies",
+        "draftt": "Accommodation",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 60
+      },
+      {
+        "name": "Furniture and home",
+        "category": "Furniture and home",
+        "draftt": "Accommodation",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 75
+      },
+      {
+        "name": "Laundry and dry cleaning",
+        "category": "Laundry",
+        "draftt": "Accommodation",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 40
+      },
+      {
+        "name": "Groceries",
+        "category": "Groceries",
+        "draftt": "Food",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 500
+      },
+      {
+        "name": "Dining out and takeout",
+        "category": "Dining out",
+        "draftt": "Food",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 350
+      },
+      {
+        "name": "Coffee and snacks",
+        "category": "Coffee and snacks",
+        "draftt": "Food",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 80
+      },
+      {
+        "name": "Work lunches",
+        "category": "Work lunches",
+        "draftt": "Food",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 60
+      },
+      {
+        "name": "Car insurance",
+        "category": "Car insurance",
+        "draftt": "Transportation",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 200
+      },
+      {
+        "name": "Gas or charging",
+        "category": "Gas or charging",
+        "draftt": "Transportation",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 200
+      },
+      {
+        "name": "Tolls and parking",
+        "category": "Tolls and parking",
+        "draftt": "Transportation",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 60
+      },
+      {
+        "name": "Car maintenance and registration",
+        "category": "Car maintenance, registration",
+        "draftt": "Transportation",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 100
+      },
+      {
+        "name": "Transit",
+        "category": "Transit",
+        "draftt": "Transportation",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 130
+      },
+      {
+        "name": "Uber and Lyft",
+        "category": "Rideshare",
+        "draftt": "Transportation",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 80
+      },
+      {
+        "name": "Therapy",
+        "category": "Therapy",
+        "draftt": "Therapy",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 300
+      },
+      {
+        "name": "Health insurance (not through work)",
+        "category": "Health insurance",
+        "draftt": "Therapy",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 450
+      },
+      {
+        "name": "Doctor and dental copays",
+        "category": "Copays",
+        "draftt": "Therapy",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 75
+      },
+      {
+        "name": "Prescriptions",
+        "category": "Prescriptions",
+        "draftt": "Therapy",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 40
+      },
+      {
+        "name": "Gym or fitness",
+        "category": "Gym or fitness",
+        "draftt": "Therapy",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 70
+      },
+      {
+        "name": "Haircuts and personal care",
+        "category": "Personal care",
+        "draftt": "Therapy",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 80
+      },
+      {
+        "name": "Streaming",
+        "category": "Streaming",
+        "draftt": "Other",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 50
+      },
+      {
+        "name": "Music",
+        "category": "Music",
+        "draftt": "Other",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 12
+      },
+      {
+        "name": "Apps and cloud storage",
+        "category": "Apps and cloud",
+        "draftt": "Other",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 20
+      },
+      {
+        "name": "Amazon Prime and memberships",
+        "category": "Memberships",
+        "draftt": "Other",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 15
+      },
+      {
+        "name": "News and magazines",
+        "category": "News",
+        "draftt": "Other",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 15
+      },
+      {
+        "name": "Bank and card fees",
+        "category": "Fees",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 15
+      },
+      {
+        "name": "Yearly fees, spread monthly",
+        "category": "Yearly fees",
+        "draftt": "Other",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 20
+      },
+      {
+        "name": "Courses and books",
+        "category": "Education",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 75
+      },
+      {
+        "name": "Tech and gadgets",
+        "category": "Tech",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 50
+      },
+      {
+        "name": "Pets",
+        "category": "Pets",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 150
+      },
+      {
+        "name": "Kids and childcare",
+        "category": "Kids",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 800
+      },
+      {
+        "name": "Charity and giving",
+        "category": "Giving",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 100
+      },
+      {
+        "name": "Buffer for surprises",
+        "category": "Buffer",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 100
+      },
+      {
+        "name": "Clothes and shoes",
+        "category": "Clothes",
+        "draftt": "Wants",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 150
+      },
+      {
+        "name": "Shows, events, entertainment",
+        "category": "Entertainment",
+        "draftt": "Wants",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 150
+      },
+      {
+        "name": "Drinks and nights out",
+        "category": "Nights out",
+        "draftt": "Wants",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 120
+      },
+      {
+        "name": "Hobbies",
+        "category": "Hobbies",
+        "draftt": "Wants",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 100
+      },
+      {
+        "name": "Travel",
+        "category": "Travel",
+        "draftt": "Wants",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 300
+      },
+      {
+        "name": "Gifts and holidays",
+        "category": "Gifts",
+        "draftt": "Wants",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 125
+      }
+    ]
+  }
 }

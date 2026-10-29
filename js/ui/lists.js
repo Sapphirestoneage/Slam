@@ -1,6 +1,7 @@
 // List setups built from the staples: debts and spending lines. Each list is a view of the one record type.
-import { h } from './dom.js';
-import { value, amount, moneyInput, pctInput, textInput, perPicker, toggle, payoffCell, summaryStrip, whoPays, hoursChip } from './staples.js';
+import { h, icon } from './dom.js';
+import { addPresets } from '../presets.js';
+import { value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, payoffCell, summaryStrip, whoPays, hoursChip } from './staples.js';
 import { payoffPlan, debtToIncome, utilization } from '../math/debt.js';
 import { needs } from '../math/result.js';
 import { money } from '../format.js';
@@ -8,6 +9,7 @@ import { money } from '../format.js';
 const LOAN_TYPES = new Set(['Student loan', 'Car loan', 'Personal loan']);
 const short = v => (Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
+const kept = r => (r.status === 'Not for me' ? 0 : r.amount);
 
 export function debtList(ref) {
   return {
@@ -105,7 +107,11 @@ export function spendingList(ref) {
   return {
     kind: 'bill', area: 'needs', title: 'Spending lines', thing: { one: 'line', plural: 'lines' },
     filter: r => r.kind === 'bill',
-    groupBy: r => r.values.draftt || 'Other',
+    // Eliminated lines fold away at the bottom; one tap brings one back.
+    groupBy: r => (r.status === 'Not for me' ? 'Not for me' : r.values.draftt || 'Other'),
+    lastGroups: ['Not for me'], foldedGroups: ['Not for me'],
+    headerExtra: ctx => (ctx.store.doc.settings.presetsAdded ? null
+      : h('button.btn.small', { type: 'button', title: 'About 40 common lines with high starter guesses. Bring them down or mark Not for me.', onclick: () => addPresets(ctx.store, ref) }, icon('plus'), 'Add the usual list')),
     picker: { top: ['Rent or mortgage', 'Groceries, dining out, coffee', 'Electric, gas, water', 'Subscriptions'], other: cats },
     newValues: type => {
       const d = ref.categoryDefaults.find(c => c.category === type);
@@ -115,16 +121,22 @@ export function spendingList(ref) {
     paidWith: true,
     columns: [
       { label: 'Line', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.values.category || 'Add name', tip: r.values.category, width: 170, key: `${r.id}:name` }) },
-      { label: 'Amount', num: true, render: (ctx, r, m, up) => moneyInput(r.amount, v => up({ amount: v }), { key: `${r.id}:amount` }) },
+      { label: 'Amount', num: true, render: (ctx, r, m, up, row) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
+        moneyInput(r.amount, v => up({ amount: v, status: r.status === 'Not sure' ? null : r.status }), { key: `${r.id}:amount` }), // typing the real number clears Guess
+        r.status === 'Not for me'
+          ? h('button.btn.small', { type: 'button', onclick: () => up({ status: null }) }, 'Bring back')
+          : h('button.btn.small.nfm', { type: 'button', onclick: () => up({ status: 'Not for me' }) }, 'Not for me'),
+        iconButton('trash', 'Delete', row.remove, { tiny: true })) },
       { label: 'Per', render: (ctx, r, m, up) => perPicker(r.per, v => up({ per: v }), { key: `${r.id}:per` }) },
       { label: 'Amount is', render: (ctx, r, m, up) => toggle(['Fixed', 'Variable'], r.values.amountType ?? null, v => up({ amountType: v }), { label: 'Amount is' }) },
       { label: 'Date is', render: (ctx, r, m, up) => toggle([['Fixed date', 'Fixed date'], ['Variable date', 'Variable date']], r.values.timing ?? null, v => up({ timing: v }), { label: 'Date is' }) },
       { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) },
     ],
     secondary: (ctx, r, up) => [whoPays(r, up)],
-    subtotal: (ctx, rows) => money(sum(rows, r => r.amount)),
-    footerTotal: (ctx, recs) => amount(ctx, recs.some(r => r.amount != null) ? sum(recs, r => r.amount) : null),
-    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Line' ? h('td', {}, `${recs.length} lines`) : c.label === 'Amount' ? h('td.num', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, r => r.amount) : null)) : h('td')), h('td'), h('td')],
+    // Not for me counts as $0 everywhere (R058); its group shows what was cut.
+    subtotal: (ctx, rows) => (rows.every(r => r.status === 'Not for me') ? `$0, cut ${money(sum(rows, r => r.amount))}` : money(sum(rows, kept))),
+    footerTotal: (ctx, recs) => amount(ctx, recs.some(r => r.amount != null) ? sum(recs, kept) : null),
+    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Line' ? h('td', {}, `${recs.filter(r => r.status !== 'Not for me').length} lines`) : c.label === 'Amount' ? h('td.num', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, kept) : null)) : h('td')), h('td'), h('td')],
   };
 }
 

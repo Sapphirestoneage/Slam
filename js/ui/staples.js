@@ -363,9 +363,10 @@ export function timeToggle(ctx) {
 }
 
 // ---------- Record list: rows, groups, bulk select, totals (R105, R109 to R114, R165, R171, R172) ----------
+const slug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 export function recordList(ctx, cfg) {
   const root = h('div.list-wrap');
-  const state = { selected: new Set(), folded: new Set(), open: new Set() };
+  const state = { selected: new Set(), folded: new Set(cfg.foldedGroups || []), open: new Set() };
   const draw = () => {
     // Keep the box being typed in (R165: never lose your place).
     const focus = document.activeElement?.dataset?.focus;
@@ -418,6 +419,7 @@ export function recordList(ctx, cfg) {
     const thead = h('thead', {}, h('tr', {}, h('th.check-cell', {}, allBox), cols.map(c => h(`th${c.num ? '.num' : ''}`, {}, c.label)), h('th', {}, 'Status'), h('th', {}, h('span.sr', {}, 'Actions'))));
     const groups = new Map();
     for (const r of recs) { const g = cfg.groupBy?.(r) ?? ''; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(r); }
+    for (const g of cfg.lastGroups || []) if (groups.has(g)) { const rows = groups.get(g); groups.delete(g); groups.set(g, rows); } // e.g. Not for me sits at the bottom
     const body = h('tbody');
     const multi = groups.size > 1; // R171: group headers when more than one type
     for (const [g, rows] of groups) {
@@ -434,9 +436,9 @@ export function recordList(ctx, cfg) {
         const open = state.open.has(r.id);
         const tr = h(`tr.row${state.selected.has(r.id) ? '.selected' : ''}`, { 'data-id': r.id },
           h('td.check-cell', {}, box),
-          cols.map(c => h(`td${c.num ? '.num' : ''}`, {}, c.render(ctx, r, m, p => update(r, p)))),
-          h('td', {}, statusPicker(r.status, s => update(r, { status: s }))),
-          h('td', {}, h('span.actions', {},
+          cols.map((c, i) => h(`td.col-${slug(c.label)}${i === 0 ? '.col-first' : ''}${c.num ? '.num' : ''}`, {}, c.render(ctx, r, m, p => update(r, p), { remove: e => remove([r.id], e.currentTarget) }))),
+          h('td.col-status', {}, statusPicker(r.status, s => update(r, { status: s }))),
+          h('td.col-actions', {}, h('span.actions', {},
             iconButton('copy', 'Duplicate', () => { ctx.store.duplicate(r.id); toast('Duplicated.', { undo: () => ctx.store.undo() }); }),
             iconButton('reset', 'Reset', () => reset([r.id])),
             iconButton('trash', 'Delete', e => remove([r.id], e.currentTarget)),

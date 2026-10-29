@@ -5,6 +5,7 @@ import * as S from './ui/staples.js';
 import { Store, newHousehold, exportFile, importInto, backupDue, statusOf } from './records.js';
 import { localAdapter, memoryAdapter, listClients, loadClient, saveClient, createClient, getPrefs, setPrefs, autosave } from './storage.js';
 import { householdFromInputs } from './demo.js';
+import { addPresets } from './presets.js';
 import { keyNumbers } from './math/metrics.js';
 import { TABS, parseRoute, search, routeForPlace } from './nav.js';
 import { SCREENS, progressOf } from './screens.js';
@@ -43,7 +44,7 @@ const app = {
   },
   newClient(anchor) {
     const input = h('input', { placeholder: 'Client name', 'aria-label': 'Client name' });
-    const go = () => { const name = input.value.trim(); if (!name) return; S.closePop(); this.open(createClient(adapter, name, new Date().toISOString())); this.go('#/home/prep'); };
+    const go = () => { const name = input.value.trim(); if (!name) return; S.closePop(); this.open(createClient(adapter, name, new Date().toISOString())); addPresets(this.store, ref); this.store.undoStack = []; this.go('#/home/prep'); }; // every new client starts with the usual list
     input.onkeydown = e => { if (e.key === 'Enter') go(); };
     S.popover(anchor, h('div.stack', { style: { gap: '12px' } }, h('strong', {}, 'New client'), h('label.field', {}, input),
       h('div.row-line', {}, S.button('Create', { kind: 'primary', onClick: go }), S.button('Cancel', { onClick: S.closePop }))), { width: 340 });

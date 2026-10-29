@@ -185,3 +185,4 @@ kbd { font: inherit; font-size: .75rem; font-weight: 700; border: 1.5px solid va
 .seg button:last-child { border-radius: 0 calc(var(--r-button) - 2px) calc(var(--r-button) - 2px) 0; }
 html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+.btn.small.nfm { color: var(--text-2); border-color: var(--border-filled); }
