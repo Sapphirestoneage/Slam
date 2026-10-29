@@ -42,12 +42,16 @@ export function addButton(thing, onClick) {
   return h('button.btn', { type: 'button', onclick: onClick, 'data-add': thing }, icon('plus'), `Add ${thing}`);
 }
 
-// Segmented toggle (Fixed | Variable, $ | Hours | FI days, Side | Below ...)
+// Segmented toggle (Fixed | Variable, $ | Hours | FI days, Side | Below ...). The pick colors at once,
+// even where nothing redraws (a box that only keeps the answer until Save).
 export function toggle(options, value, onChange, { label = null } = {}) {
   return h('div.seg', { role: 'group', 'aria-label': label },
     options.map(o => {
       const [v, text] = Array.isArray(o) ? o : [o, o];
-      return h('button', { type: 'button', 'aria-pressed': String(v === value), onclick: () => onChange(v) }, text);
+      return h('button', { type: 'button', 'aria-pressed': String(v === value), onclick: e => {
+        for (const b of e.currentTarget.parentNode.children) b.setAttribute('aria-pressed', String(b === e.currentTarget));
+        onChange(v);
+      } }, text);
     }));
 }
 
@@ -247,7 +251,7 @@ export function stepper(value, onChange, { min = 0, max = 20, label = 'Count' } 
 }
 
 // Who pays (every Needs line).
-export const WHO_PAYS = ['Me', 'Split', 'Included in rent', 'Covered by someone', 'N/A', 'My share'];
+export const WHO_PAYS = ['Me', 'Split', 'Included in rent', 'Covered by someone', 'N/A', 'My share', "Need it, don't have yet"];
 export function whoPays(rec, update) {
   const v = rec.values.whoPays ?? 'Me';
   return h('div.stack', {}, h('span.label', {}, 'Who pays'),
@@ -256,12 +260,21 @@ export function whoPays(rec, update) {
     v === 'Covered by someone' ? textInput(rec.values.coveredBy, x => update({ coveredBy: x }), { hint: 'Add who covers it' }) : null,
     v === 'My share' ? moneyInput(rec.values.myShare, x => update({ myShare: x }), { hint: 'Add my share' }) : null);
 }
-// Paid with: checking, savings, or a card. Card buttons if 4 or fewer, a picker with search if more (R112).
+// Paid with: checking or a credit card; no bill comes from savings. With one checking account or one card it is
+// picked for you; with more, 'Which checking' or 'Which card' asks (buttons up to 6 cards, a search after, R112).
 export function paidWith(ctx, rec, onPick) {
   const cards = ctx.store.find(r => r.kind === 'debt' && r.type === 'Credit card');
-  const opts = [['checking', 'Checking'], ['savings', 'Savings'], ...cards.map(c => [c.id, c.name || 'Credit card'])];
-  if (opts.length <= 6) return h('div.stack', {}, h('span.label', {}, 'Paid with'), toggle(opts, rec.paidWith, onPick, { label: 'Paid with' }));
-  return h('div.stack', {}, h('span.label', {}, 'Paid with'), cardSearch(cards, rec.paidWith, onPick));
+  const checking = ctx.store.find(r => r.kind === 'account' && r.type === 'Checking');
+  const p = rec.paidWith;
+  const way = p === 'card' || cards.some(c => c.id === p) ? 'card' : p === 'checking' || checking.some(c => c.id === p) ? 'checking' : null;
+  const pickWay = w => { if (w === way) return; const list = w === 'card' ? cards : checking; onPick(list.length === 1 ? list[0].id : w); };
+  const which = (label, list, name) => h('div.stack', {}, h('span.label', {}, label),
+    list.length <= 6 ? toggle(list.map((c, i) => [c.id, c.name || `${name} ${i + 1}`]), p, onPick, { label }) : cardSearch(list, p, onPick));
+  return h('div.stack', {}, h('span.label', {}, 'Paid with'),
+    toggle([['checking', 'Checking'], ['card', 'Credit card']], way, pickWay, { label: 'Paid with' }),
+    way === 'checking' && checking.length > 1 ? which('Which checking', checking, 'Checking') : null,
+    way === 'card' && cards.length > 1 ? which('Which card', cards, 'Card') : null,
+    way === 'card' && !cards.length ? h('span.muted', {}, 'No cards yet. Add them under Debt.') : null);
 }
 function cardSearch(cards, current, onPick) {
   const list = h('div.picker-other');

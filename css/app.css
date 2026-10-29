@@ -27,6 +27,8 @@ svg.i { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.25; fil
 }
 .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-lift); }
 .btn:active { transform: translateY(0); box-shadow: none; }
+/* Pressed: everything you can press darkens while held, so a click always shows. */
+.btn:active:not([disabled]), .icon-btn:active:not([disabled]), .seg button:active, .tab:active, .subtab:active, .caret:active { filter: brightness(.82); }
 .btn:focus-visible, .icon-btn:focus-visible, .seg button:focus-visible, .tab:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .btn.primary { background: var(--primary); color: var(--on-primary); }
 .btn.danger { border-color: var(--danger); color: var(--danger); }

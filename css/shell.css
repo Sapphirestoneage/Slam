@@ -82,6 +82,29 @@ textarea.note-input { width: 100%; min-height: 70px; border: 2px solid var(--bor
 .field.big { height: 48px; font-size: 1.25rem; }
 .btn.need { vertical-align: middle; margin: 2px 0; }
 
+/* Dark: the top bar's whites softened to match the page; borders quieter. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) :is(.topbar, .site-id, .client-btn, .crumbs a, .tab, .find-btn, .topbar .icon-btn, .topbar .seg button, .topbar .field input, .find-btn kbd, .topbar .field svg, .toast) { color: #E4E7EC; }
+  :root:not([data-theme="light"]) .topbar { border-bottom: 1px solid #1C2029; }
+  :root:not([data-theme="light"]) :is(.tab[aria-current="page"], .topbar .seg button[aria-pressed="true"], .topbar .icon-btn[aria-pressed="true"]) { color: var(--on-primary); }
+  :root:not([data-theme="light"]) :is(.client-btn, .find-btn, .topbar .icon-btn, .topbar .field, .topbar .seg) { border-color: rgba(228, 231, 236, .45); }
+}
+:root[data-theme="dark"] :is(.topbar, .site-id, .client-btn, .crumbs a, .tab, .find-btn, .topbar .icon-btn, .topbar .seg button, .topbar .field input, .find-btn kbd, .topbar .field svg, .toast) { color: #E4E7EC; }
+:root[data-theme="dark"] .topbar { border-bottom: 1px solid #1C2029; }
+:root[data-theme="dark"] :is(.tab[aria-current="page"], .topbar .seg button[aria-pressed="true"], .topbar .icon-btn[aria-pressed="true"]) { color: var(--on-primary); }
+:root[data-theme="dark"] :is(.client-btn, .find-btn, .topbar .icon-btn, .topbar .field, .topbar .seg) { border-color: rgba(228, 231, 236, .45); }
+
+/* Between a phone and 1280px (or a laptop with display scaling): no sideways scroll. The tools drop to a second
+   line; the left group keeps its size so the client button never clips; the sub-tabs scroll with the page. */
+@media (min-width: 761px) and (max-width: 1279px) {
+  body { min-width: 0; }
+  .topbar { position: static; }
+  .topbar-in { flex-wrap: wrap; height: auto; padding: 8px 16px; row-gap: 6px; }
+  .tb-left { flex: none; }
+  .tb-right { margin-left: auto; flex-wrap: wrap; }
+  .subtabs { top: 0; }
+}
+
 /* Phone: laptop first, but every screen works at phone width with no sideways page scroll.
    Wide tables scroll inside their own box; boxes open as a sheet at the bottom. */
 @media (max-width: 760px) {
@@ -133,4 +156,7 @@ textarea.note-input { width: 100%; min-height: 70px; border: 2px solid var(--bor
   .toast { left: 12px !important; right: 12px !important; transform: none !important; width: auto !important; max-width: none !important; bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important; }
   .find-box { width: calc(100% - 24px); }
   .find-overlay { padding-top: 24px; }
+  /* Long choice rows (Who pays) wrap inside the screen instead of running off it. */
+  .seg { flex: 0 1 auto; flex-wrap: wrap; max-width: 100%; }
+  .seg button { flex: 1 1 auto; min-height: 40px; }
 }

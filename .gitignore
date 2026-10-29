@@ -1,4 +1,5 @@
 fixtures/*.local.json
 fixtures/*private*
 .DS_Store
-node_modules/
+node_modules
+dist/

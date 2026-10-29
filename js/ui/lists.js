@@ -180,7 +180,7 @@ export function incomeList() {
   return {
     kind: 'income', area: 'income', title: 'Income', thing: { one: 'income', plural: 'income rows' }, defaultType: 'Job',
     filter: r => r.kind === 'income',
-    picker: { top: ['Job', 'Side hustle', 'Benefits', 'Rental'], other: ['Partner job', 'Money from family', 'Self-employed'] },
+    picker: { top: ['Job', 'Unemployment', 'Side hustle', 'Benefits', 'Rental'], other: ['Partner job', 'Money from family', 'Self-employed'] },
     coreFields: ['amount'],
     columns: [
       { label: 'Source', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 170, key: `${r.id}:name` }) },
