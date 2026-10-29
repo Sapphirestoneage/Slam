@@ -36,7 +36,11 @@ function completion(c) {
   const bar = (label, x) => h('span.row-line', { style: { gap: '8px', flexWrap: 'nowrap' } }, h('span.label', {}, label),
     h('div.progress', { role: 'progressbar', 'aria-valuenow': x.of ? Math.round(x.done / x.of * 100) : 0, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': label }, h('span', { style: { width: `${x.of ? x.done / x.of * 100 : 0}%` } })),
     h('span.label', {}, `${x.done} of ${x.of}`));
-  return c.core.of || c.full.of ? h('div.completion', {}, bar('Core', c.core), bar('Full detail', c.full)) : null;
+  if (!c.core.of && !c.full.of) return null;
+  // What is still missing, in words, behind a caret so the page stays calm.
+  const left = [...(c.core.missing || []).map(x => ['Core', x]), ...(c.full.missing || []).filter(x => !(c.core.missing || []).includes(x)).map(x => ['Full detail', x])];
+  return h('div.completion-wrap', {}, h('div.completion', {}, bar('Core', c.core), bar('Full detail', c.full)),
+    left.length ? S.moreBlock(`missing:${location.hash}`, () => h('ul.missing', {}, left.map(([k, x]) => h('li', {}, h('span.tag.plain', {}, k), ' ', x))), { label: `What's missing (${left.length})` }) : null);
 }
 // R015: an area turned off on the Profile leaves a slim way back.
 const addArea = (app, ctx, k, label) => h('a.add-area', { href: '#', onclick: e => {
@@ -180,7 +184,8 @@ export const SCREENS = {
   'tools/data': (app, ctx) => [head('Coach tools', 'Export, import and reset'), h('div.card', {}, h('div.row-line', {},
     S.button('Export', { kind: 'primary', iconName: 'download', onClick: () => app.exportNow() }),
     S.button('Import', { iconName: 'upload', onClick: () => app.importFile() }),
-    S.button('Reset client', { kind: 'danger', iconName: 'reset', disabled: !app.hasClient, why: 'No client open', onClick: e => app.resetClient(e.currentTarget) })),
+    S.button('Reset client', { kind: 'danger', iconName: 'reset', disabled: !app.hasClient, why: 'No client open', onClick: e => app.resetClient(e.currentTarget) }),
+    S.button('Delete client', { kind: 'danger', iconName: 'trash', disabled: !app.hasClient, why: 'No client open', onClick: e => app.deleteClient(e.currentTarget) })),
   h('p.muted', { style: { marginTop: '12px' } }, app.backupText()))],
   'tools/session': (app, ctx) => [head('Coach tools', 'Session and settings'), h('div.grid2', {},
     h('div.card', {}, h('h3', {}, 'Snapshot'), S.button('Save snapshot', { kind: 'primary', iconName: 'camera', disabled: !app.hasClient, why: 'No client open', onClick: () => app.snapshot('Snapshot') }),

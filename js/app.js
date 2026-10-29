@@ -3,7 +3,7 @@
 import { h, clear, icon } from './ui/dom.js';
 import * as S from './ui/staples.js';
 import { Store, newHousehold, exportFile, importInto, backupDue, statusOf } from './records.js';
-import { localAdapter, memoryAdapter, listClients, loadClient, saveClient, createClient, getPrefs, setPrefs, autosave } from './storage.js';
+import { localAdapter, memoryAdapter, listClients, loadClient, saveClient, createClient, removeClient, getPrefs, setPrefs, autosave } from './storage.js';
 import { householdFromInputs } from './demo.js';
 import { addPresets } from './presets.js';
 import { keyNumbers } from './math/metrics.js';
@@ -246,6 +246,25 @@ const app = {
         this.store.transaction('Reset client', () => { this.store.doc.records = []; this.store.doc.parking = []; this.store.doc.profile = {}; });
         S.toast('Client reset. A snapshot was taken first.', { undo: () => this.store.undo() });
       } }), S.button('Keep everything', { onClick: S.closePop }))), { width: 380 });
+  },
+  // Delete a whole client: type the name to confirm; Undo puts it back for 10 seconds.
+  deleteClient(anchor) {
+    const doc = this.store.doc;
+    const name = doc.client.name || 'this client';
+    const input = h('input', { placeholder: name, 'aria-label': 'Type the client name' });
+    S.popover(anchor, h('div.stack', { style: { gap: '12px' } }, h('strong', {}, `Delete ${name} and everything in it? Type the name to confirm.`), h('label.field', {}, input),
+      h('div.row-line', {}, S.button('Delete client', { kind: 'danger', iconName: 'trash', onClick: () => {
+        if (input.value.trim() !== name) { S.toast('The name does not match.'); return; }
+        S.closePop();
+        this.saver?.flush(); this.saver?.stop(); this.saver = null;
+        const kept = JSON.parse(JSON.stringify(doc));
+        removeClient(adapter, doc.id);
+        const next = listClients(adapter)[0];
+        this.open(next ? loadClient(adapter, next.id) : null, { save: false });
+        this.prefs = setPrefs(adapter, { clientId: next?.id ?? null });
+        this.go('#/home/prep');
+        S.toast(`Deleted ${name}.`, { undo: () => { saveClient(adapter, kept); this.open(loadClient(adapter, kept.id), { save: false }); S.toast(`${name} is back.`); } });
+      } }), S.button('Keep', { onClick: S.closePop }))), { width: 380 });
   },
   // Roughly older than 30 days, or any number older than 90 (R061).
   dueForCheck() {

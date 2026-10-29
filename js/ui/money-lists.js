@@ -327,11 +327,20 @@ export function listCompletion(ctx, pred, core) {
   const g = ctx.gates();
   const recs = ctx.visible(pred);
   const c = { done: 0, of: 0 }, f = { done: 0, of: 0 };
+  const WORDS = { amount: 'amount', balance: 'balance', apr: 'APR', value: 'value', have: 'have it?', payFrequency: 'pay frequency', incomeType: 'type', contributionPct: '401(k) %',
+    payment: 'payment', limit: 'limit', dueDay: 'due day', federal: 'federal or private', stress: 'stress', institution: 'institution', taxType: 'pretax or Roth', contribution: 'putting in',
+    apy: 'APY', financed: 'paid off or financed', coverage: 'coverage amount', using: 'using it?', pretaxBalance: 'balances' };
+  c.missing = []; f.missing = [];
   for (const r of recs) {
+    const name = r.name || r.type || r.kind;
     const coreF = typeof core === 'function' ? core(r) : core;
-    c.of += 1; if (coreF.every(x => done(r, x))) c.done += 1;
+    c.of += 1;
+    const coreMiss = coreF.filter(x => !done(r, x));
+    if (!coreMiss.length) c.done += 1; else c.missing.push(`${name}: ${coreMiss.map(x => WORDS[x] ?? x).join(', ')}`);
     const fullF = [...new Set([...coreF, ...(FULL[r.kind]?.(r, g) ?? [])])];
-    f.of += fullF.length; f.done += fullF.filter(x => done(r, x)).length;
+    const fullMiss = fullF.filter(x => !done(r, x));
+    f.of += fullF.length; f.done += fullF.length - fullMiss.length;
+    if (fullMiss.length) f.missing.push(`${name}: ${fullMiss.map(x => WORDS[x] ?? x).join(', ')}`);
   }
   return { core: c, full: f };
 }

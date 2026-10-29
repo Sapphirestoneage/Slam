@@ -4,7 +4,7 @@
 // A client name opens the page straight into that client. Its numbers come from the private Test client when that
 // file is here (so the page holds real numbers: publish it privately only), else from the made-up Demo client.
 import { build } from 'esbuild';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -44,5 +44,6 @@ const html = readFileSync(join(root, 'index.html'), 'utf8')
   .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
   .replace(/<link rel="stylesheet" href="css\/([^"]+)">/g, (_, f) => `<style>${css(f)}</style>`)
   .replace(/<script type="module" src="js\/app.js"><\/script>/, () => `<script type="module">${js.replace(/<\/script/gi, '<\\/script')}</script>`);
+mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, html);
 console.log(`Wrote ${out} (${Math.round(html.length / 1024)} KB)`);

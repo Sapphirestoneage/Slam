@@ -8,7 +8,9 @@ import { ageOf } from '../math/metrics.js';
 export const STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI',
   'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const yesNo = (v, on, label) => toggle([[true, 'Yes'], [false, 'No']], v ?? null, on, { label });
+// Every Profile answer can be taken back: click the picked one again.
+const yesNo = (v, on, label) => toggle([[true, 'Yes'], [false, 'No']], v ?? null, on, { label, clearable: true });
+const pick = (opts, v, on, label) => toggle(opts, v ?? null, on, { label, clearable: true });
 const section = (title, area, ...kids) => h(`section.section.area-${area}`, {}, h('div.section-title', {}, h('h2', {}, title)), h('div.card.profile-card', {}, ...kids));
 
 export function profileScreen(app, ctx) {
@@ -36,7 +38,7 @@ export function profileScreen(app, ctx) {
     if (v && !store.find(r => r.kind === 'asset' && r.type === 'Car').length) { store.add('asset', { name: 'Car', values: {} }, { type: 'Car' }); told('Car added to Assets; car lines are back in the Budget.', '#/my-money/assets'); }
     else if (v === false) told('Car rows and car lines are hidden. Nothing is deleted.');
   };
-  const setKids = v => { set({ dependents: v ? Math.max(1, p.dependents ?? 0) : 0 }); if (v) told('Kids lines are in the Budget.', '#/spending/budget'); };
+  const setKids = v => { set({ dependents: v === null ? null : v ? Math.max(1, p.dependents ?? 0) : 0 }); if (v) told('Kids lines are in the Budget.', '#/spending/budget'); };
   const setHousing = v => {
     set({ housing: v });
     if (v === 'Own' && !store.find(r => r.kind === 'asset' && r.type === 'Home').length) { store.add('asset', { name: 'Home', values: {} }, { type: 'Home' }); told('Home added to Assets, with room for the mortgage.', '#/my-money/assets'); }
@@ -52,12 +54,12 @@ export function profileScreen(app, ctx) {
       gate('Car', yesNo(g.car, setCar, 'Has a car')),
       gate('Kids', yesNo(g.kids, setKids, 'Has kids'), g.kids ? `${p.dependents} under About you` : null),
       gate('Pets', yesNo(g.pets, v => set({ hasPets: v }), 'Has pets')),
-      gate('Housing', toggle(HOUSING.slice(0, 3), g.housing, setHousing, { label: 'Housing' })),
+      gate('Housing', pick(HOUSING.slice(0, 3), g.housing, setHousing, 'Housing')),
       gate('Work', select(WORK, g.work, v => set({ workSituation: v }), { label: 'Work situation', width: 190, key: 'p:hub-work' })),
       gate('HSA-eligible plan', yesNo(p.hsaEligible ?? null, v => set({ hsaEligible: v }), 'HSA-eligible')),
       gate('FSA at work', yesNo(p.fsa ?? null, v => set({ fsa: v }), 'FSA')),
       gate('Equity pay (ESPP, RSU)', yesNo(p.equityPay ?? null, v => set({ equityPay: v }), 'Equity pay')),
-      gate('Solo or couple', toggle(['Solo', 'Couple'], g.couple ? 'Couple' : p.household ? 'Solo' : null, setCouple, { label: 'Solo or couple' }))));
+      gate('Solo or couple', pick(['Solo', 'Couple'], g.couple ? 'Couple' : p.household ? 'Solo' : null, setCouple, 'Solo or couple'))));
 
   // ---------- About you ----------
   const about = section('About you', 'needs',
@@ -66,7 +68,7 @@ export function profileScreen(app, ctx) {
       labelled('Last name', textInput(p.lastName, v => set({ lastName: v }), { hint: 'Last name', width: 200, key: 'p:lastName' })),
       labelled('Birth month and year', birth('birthMonth', 'birthYear', 'Your'), { note: age !== null ? `Age ${age}` : 'Works out age' }),
       labelled('State', select(STATES, p.state ?? null, v => set({ state: v }), { label: 'State', hint: 'State', width: 110, key: 'p:state' }), { note: 'Tax rules' }),
-      labelled('Solo or couple', toggle(['Solo', 'Couple'], g.couple ? 'Couple' : p.household ? 'Solo' : null, setCouple, { label: 'Solo or couple' }))),
+      labelled('Solo or couple', pick(['Solo', 'Couple'], g.couple ? 'Couple' : p.household ? 'Solo' : null, setCouple, 'Solo or couple'))),
     moreBlock('profile:about', () => h('div.form-grid', {},
       g.couple ? labelled('Partner first name', textInput(p.partnerName, v => set({ partnerName: v }), { hint: 'Partner name', width: 200, key: 'p:partnerName' })) : null,
       g.couple ? labelled('Partner birth month and year', birth('partnerBirthMonth', 'partnerBirthYear', 'Partner')) : null,
@@ -83,17 +85,19 @@ export function profileScreen(app, ctx) {
     h('div.form-grid', {},
       labelled('Work situation', select(WORK, g.work, v => set({ workSituation: v }), { label: 'Work situation', width: 200, key: 'p:work' }),
         { note: g.betweenJobs ? 'Unemployment and runway show on Income' : g.variable ? 'Variable income shows on Income' : null }),
-      labelled('Housing', toggle(HOUSING, g.housing, setHousing, { label: 'Housing' }))),
+      labelled('Housing', pick(HOUSING, g.housing, setHousing, 'Housing'))),
     moreBlock('profile:work', () => h('div.form-grid', {},
       labelled('Roommates', stepper(p.roommates ?? null, n => set({ roommates: n }), { label: 'Roommates', key: 'p:roommates' }), { note: 'Splits housing cost' }),
       labelled('Worst case: all on me', yesNo(p.worstCase ?? null, v => set({ worstCase: v }), 'Worst case'), { note: 'Counts housing with no roommate share' }),
-      labelled('Income stability', toggle(['Steady', 'Varies', 'Unpredictable'], p.incomeStability ?? null, v => set({ incomeStability: v }), { label: 'Income stability' }), { note: 'Moves the Rule of 5 target' }))));
+      labelled('Income stability', pick(['Steady', 'Varies', 'Unpredictable'], p.incomeStability, v => set({ incomeStability: v }), 'Income stability'), { note: 'Moves the Rule of 5 target' }))));
 
   // ---------- Accounts gate: which areas, then how many of each type (R001 to R003) ----------
   const areas = p.areas || {};
+  const rowsIn = k => store.find(r => (k === 'debt' ? r.kind === 'debt' : k === 'real' ? r.kind === 'asset' : r.kind === 'account' && (r.values.group === 'investment') === (k === 'investments'))).length;
   const setArea = (k, on) => {
-    const n = store.find(r => (k === 'debt' ? r.kind === 'debt' : k === 'real' ? r.kind === 'asset' : r.kind === 'account' && (r.values.group === 'investment') === (k === 'investments'))).length;
-    set({ areas: { ...Object.fromEntries(AREAS.map(([a]) => [a, areas[a] === true])), [k]: on }, noneOfThese: false }); // ticking one answers all four
+    const n = rowsIn(k);
+    // Ticking one answers all four; an area not answered yet counts as ticked when it already has rows.
+    set({ areas: { ...Object.fromEntries(AREAS.map(([a]) => [a, areas[a] ?? rowsIn(a) > 0])), [k]: on }, noneOfThese: false });
     if (!on && n) toast(`${n} ${n === 1 ? 'row is' : 'rows are'} hidden, not deleted. Tick it again to bring ${n === 1 ? 'it' : 'them'} back.`);
   };
   const types = { cash: ctx.ref.lists.cashTypes, investments: ctx.ref.lists.investmentTypes.filter(t => t !== 'HSA' || g.hsa), real: REAL_TYPES, debt: [...ctx.ref.lists.debtTypesTop, ...ctx.ref.lists.debtTypesOther] };
@@ -104,10 +108,10 @@ export function profileScreen(app, ctx) {
   };
   const accounts = section('Which do you have today', 'assets',
     h('div.row-line', { style: { gap: '20px' } },
-      AREAS.map(([k, label]) => checkbox(label, areas[k] === true && !p.noneOfThese, on => setArea(k, on), { key: `p:area-${k}` })),
+      AREAS.map(([k, label]) => checkbox(label, (areas[k] ?? rowsIn(k) > 0) === true && !p.noneOfThese, on => setArea(k, on), { key: `p:area-${k}` })),
       checkbox('None of these', !!p.noneOfThese, on => set({ noneOfThese: on, areas: on ? { cash: false, investments: false, real: false, debt: false } : {} }), { key: 'p:none' })),
     p.noneOfThese ? h('p.muted', { style: { marginTop: '12px' } }, 'All four count as done; net worth is $0.') : null,
-    AREAS.some(([k]) => areas[k] === true) ? h('div.type-counts', {}, AREAS.filter(([k]) => areas[k] === true).map(([k, label]) =>
+    AREAS.some(([k]) => (areas[k] ?? rowsIn(k) > 0) === true) ? h('div.type-counts', {}, AREAS.filter(([k]) => (areas[k] ?? rowsIn(k) > 0) === true).map(([k, label]) =>
       h('div.type-group', {}, h('h3', {}, `${label}: how many of each`),
         h('div.type-grid', {}, types[k].map(t => h(`div.type-count${countOf(t) ? '.on' : ''}`, {}, h('span', {}, t),
           stepper(countOf(t) || null, n => setCount(t, n), { label: `${t} count`, max: 15, key: `p:count-${t}` }))))))) : null);
@@ -115,7 +119,7 @@ export function profileScreen(app, ctx) {
   // ---------- Couples split (couples only, R177 to R179) ----------
   const couple = g.couple ? section('Couples split', 'needs',
     h('div.form-grid', {},
-      labelled('How they run money', toggle(['Joint', 'Separate', 'Mix'], p.moneyStyle ?? null, v => set({ moneyStyle: v }), { label: 'How they run money' })),
+      labelled('How they run money', pick(['Joint', 'Separate', 'Mix'], p.moneyStyle, v => set({ moneyStyle: v }), 'How they run money')),
       labelled('Split: my share', pctInput(p.splitMine ?? null, v => set({ splitMine: v }), { hint: '50', key: 'p:split' }), { note: 'Housing, food and bills. Blank is 50/50' })),
     moreBlock('profile:couple', () => {
       const accts = store.find(r => r.kind === 'account');
@@ -132,11 +136,13 @@ export function profileScreen(app, ctx) {
 export function profileCompletion(doc) {
   const p = doc.profile || {};
   const g = gatesOf(p, doc.client);
-  const has = v => v !== null && v !== undefined && v !== '';
-  const core = [p.whyNow, p.worry, p.goalWords, p.firstName, p.lastName, p.birthYear, p.state, p.household, p.workSituation, p.housing, p.hasCar, p.hasPets,
-    p.noneOfThese || Object.values(p.areas || {}).some(v => v !== null && v !== undefined) ? true : null];
-  if (g.couple) core.push(p.partnerName, p.partnerBirthYear);
-  const full = [...core, p.dependents, p.healthCoverage, p.email, p.roommates, p.incomeStability];
-  if (g.couple) full.push(p.moneyStyle);
-  return { core: { done: core.filter(has).length, of: core.length }, full: { done: full.filter(has).length, of: full.length } };
+  const has = ([, v]) => v !== null && v !== undefined && v !== '';
+  const core = [['What prompted this call', p.whyNow], ['Biggest worry', p.worry], ['Goal in their words', p.goalWords], ['First name', p.firstName], ['Last name', p.lastName],
+    ['Birth year', p.birthYear], ['State', p.state], ['Solo or couple', p.household], ['Work situation', p.workSituation], ['Housing', p.housing], ['Car', p.hasCar], ['Pets', p.hasPets],
+    ['Which do you have today', p.noneOfThese || Object.values(p.areas || {}).some(v => v !== null && v !== undefined) ? true : null]];
+  if (g.couple) core.push(['Partner name', p.partnerName], ['Partner birth year', p.partnerBirthYear]);
+  const full = [...core, ['Dependents', p.dependents], ['Health coverage', p.healthCoverage], ['Email', p.email], ['Roommates', p.roommates], ['Income stability', p.incomeStability]];
+  if (g.couple) full.push(['How they run money', p.moneyStyle]);
+  const out = list => ({ done: list.filter(has).length, of: list.length, missing: list.filter(x => !has(x)).map(([l]) => l) });
+  return { core: out(core), full: out(full) };
 }

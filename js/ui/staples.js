@@ -48,13 +48,15 @@ export function addButton(thing, onClick) {
 
 // Segmented toggle (Fixed | Variable, $ | Hours | FI days, Side | Below ...). The pick colors at once,
 // even where nothing redraws (a box that only keeps the answer until Save).
-export function toggle(options, value, onChange, { label = null } = {}) {
+// clearable: clicking the picked one again takes the answer back (an answer, not a setting).
+export function toggle(options, value, onChange, { label = null, clearable = false } = {}) {
   return h('div.seg', { role: 'group', 'aria-label': label },
     options.map(o => {
       const [v, text] = Array.isArray(o) ? o : [o, o];
-      return h('button', { type: 'button', 'aria-pressed': String(v === value), onclick: e => {
-        for (const b of e.currentTarget.parentNode.children) b.setAttribute('aria-pressed', String(b === e.currentTarget));
-        onChange(v);
+      return h('button', { type: 'button', 'aria-pressed': String(v === value), title: clearable && v === value ? 'Click again to clear' : null, onclick: e => {
+        const off = clearable && e.currentTarget.getAttribute('aria-pressed') === 'true';
+        for (const b of e.currentTarget.parentNode.children) b.setAttribute('aria-pressed', String(!off && b === e.currentTarget));
+        onChange(off ? null : v);
       } }, text);
     }));
 }
@@ -279,13 +281,18 @@ export function parseNum(s) {
   const n = Number(t);
   return Number.isFinite(n) ? n : null;
 }
+// Minus, a box you can type in, plus. The first + from blank is 1 (or the minimum, if higher).
 export function stepper(value, onChange, { min = 0, max = 20, label = 'Count', key = null } = {}) {
   const v = value ?? null;
-  const less = iconButton('down', `Fewer: ${label}`, () => onChange(Math.max(min, (v ?? min) - 1)), { tiny: true });
-  const more = iconButton('plus', `More: ${label}`, () => onChange(Math.min(max, (v ?? min - 1) + 1)), { tiny: true });
+  const clamp = n => Math.min(max, Math.max(min, n));
+  const less = iconButton('minus', `Fewer: ${label}`, () => onChange(clamp((v ?? min) - 1)), { tiny: true, disabled: v === null || v <= min });
+  const more = iconButton('plus', `More: ${label}`, () => onChange(clamp(v === null ? Math.max(min, 1) : v + 1)), { tiny: true, disabled: v !== null && v >= max });
+  const box = h('input', { inputmode: 'numeric', 'aria-label': label, placeholder: EMPTY, value: v ?? '', 'data-focus': key ? `${key}:n` : null });
+  box.onchange = () => { const n = parseNum(box.value); onChange(n === null ? null : clamp(Math.round(n))); };
+  box.onkeydown = e => { if (e.key === 'ArrowUp') { e.preventDefault(); more.click(); } if (e.key === 'ArrowDown') { e.preventDefault(); less.click(); } };
   if (key) { less.dataset.focus = `${key}:less`; more.dataset.focus = `${key}:more`; }
   return h('span.row-line.stepper', { style: { gap: '6px', flexWrap: 'nowrap' } }, less,
-    h('span.computed', { style: { minWidth: '40px', justifyContent: 'center' }, 'aria-label': label, 'aria-live': 'polite' }, v ?? EMPTY), more);
+    h(`label.field.num-box${v !== null ? '.filled' : ''}`, { style: { width: '56px' } }, box), more);
 }
 
 // Who pays (every Needs line).

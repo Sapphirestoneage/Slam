@@ -229,3 +229,10 @@ label.check { display: inline-flex; align-items: center; gap: var(--s2); min-hei
   .mm-modes { flex: none; }
 }
 .gate > .seg, .stack > .seg { align-self: flex-start; }
+/* Native dropdown lists follow the theme (they were white with pale text in dark mode). */
+select option, select optgroup { background-color: var(--card); color: var(--text); }
+select { color-scheme: inherit; }
+.num-box input { text-align: center; font-weight: 700; }
+.completion-wrap { margin: calc(-1 * var(--s2)) 0 var(--s4); }
+.completion-wrap .completion { margin: 0 0 var(--s2); }
+ul.missing { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: .9375rem; }
