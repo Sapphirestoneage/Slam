@@ -226,7 +226,7 @@ function ghostChart() {
 export const moneyText = v => (v === null || v === undefined ? '' : Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 }));
 export function moneyInput(value, onChange, { hint = 'Add amount', cents = true, key = null } = {}) {
   const input = h('input', { inputmode: 'decimal', placeholder: hint, 'aria-label': hint.replace(/^Add /, ''), value: moneyText(value), 'data-focus': key });
-  input.onchange = () => { const n = parseNum(input.value); input.value = moneyText(n); onChange(n); };
+  input.onchange = () => { const n = parseNum(input.value); input.value = moneyText(n); onChange?.(n); };
   return h(`label.field.money${value !== null && value !== undefined ? '.filled' : ''}`, { style: { width: '128px' } }, h('span.pre', {}, '$'), input);
 }
 export function pctInput(value, onChange, { hint = 'Add APR', key = null } = {}) {
@@ -474,7 +474,7 @@ export function recordList(ctx, cfg) {
     const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all', checked: sel.length === recs.length });
     allBox.indeterminate = sel.length > 0 && sel.length < recs.length;
     allBox.onchange = () => { if (allBox.checked) recs.forEach(r => state.selected.add(r.id)); else state.selected.clear(); draw(); };
-    const cols = cfg.columns.filter(c => !c.couple || ctx.couple);
+    const cols = cfg.columns.filter(c => c && (!c.couple || ctx.couple));
     const thead = h('thead', {}, h('tr', {}, h('th.check-cell', {}, allBox), cols.map(c => h(`th${c.num ? '.num' : ''}`, {}, c.label)), h('th', {}, 'Status'), h('th', {}, h('span.sr', {}, 'Actions'))));
     const groups = new Map();
     for (const r of recs) { const g = cfg.groupBy?.(r) ?? ''; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(r); }

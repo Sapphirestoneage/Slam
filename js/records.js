@@ -38,6 +38,8 @@ export function newHousehold({ name = null, now = new Date().toISOString(), id =
     assumptions: {}, // blank: defaults come from Reference data (R025)
     settings: { timeView: '$' }, // R154, remembered per client
     records: [], history: [], snapshots: [], parking: [],
+    spending: {}, // budget passes by month, calendar marks, start balance (build phase 6)
+    session: {},  // session count, agenda, notes, one-pager (build phases 8 to 10)
     createdAt: now, updatedAt: now, lastBackupAt: null,
   };
 }
@@ -93,7 +95,7 @@ export class Store {
   }
 
   _state() { return clone({ records: this.doc.records, parking: this.doc.parking, profile: this.doc.profile,
-    assumptions: this.doc.assumptions, client: this.doc.client }); }
+    assumptions: this.doc.assumptions, client: this.doc.client, spending: this.doc.spending, session: this.doc.session }); }
   _log(entry) { this.doc.history.push({ at: this._tx?.at || this.now(), ...entry }); }
 
   // after: put the new row right below that one (Enter in a row, R168).
@@ -206,7 +208,8 @@ export class Store {
     return this.transaction('Cleared section', () => this.remove(ids));
   }
 
-  setDoc(part, patch) { // profile, assumptions, client, settings
+  setDoc(part, patch) { // profile, assumptions, client, settings, spending, session
+    this.doc[part] ??= {};
     return this.transaction(`Edit ${part}`, () => {
       for (const [k, v] of Object.entries(patch)) {
         const from = this.doc[part][k];
@@ -215,6 +218,25 @@ export class Store {
         if (part !== 'settings') this._log({ op: 'set', part, field: k, from: clone(from ?? null), to: clone(v ?? null) });
       }
     });
+  }
+
+  // One value deep inside spending or session, e.g. setIn('spending', ['months', '2026-11', 'lines', id, 'actual'], 412).
+  setIn(part, path, value, label = 'Edit') {
+    return this.transaction(label, () => {
+      this.doc[part] ??= {};
+      let o = this.doc[part];
+      for (const k of path.slice(0, -1)) o = (o[k] ??= {});
+      const k = path[path.length - 1];
+      const from = o[k];
+      if (JSON.stringify(from) === JSON.stringify(value)) return;
+      if (value === undefined) delete o[k]; else o[k] = clone(value);
+      this._log({ op: 'set', part, field: path.join('.'), from: clone(from ?? null), to: clone(value ?? null) });
+    });
+  }
+  getIn(part, path) {
+    let o = this.doc[part];
+    for (const k of path) { if (o == null) return undefined; o = o[k]; }
+    return o;
   }
 
   // Parking lot (R051): a quick note, later filed to a field.
@@ -314,7 +336,7 @@ export function importFile(file) {
 export function migrate(doc) {
   // Version 1 is the first shape; later versions add steps here, oldest first.
   for (const k of ['records', 'history', 'snapshots', 'parking']) doc[k] ??= [];
-  for (const k of ['profile', 'assumptions', 'settings', 'client']) doc[k] ??= {};
+  for (const k of ['profile', 'assumptions', 'settings', 'client', 'spending', 'session']) doc[k] ??= {};
   doc.schema = SCHEMA_VERSION;
   return doc;
 }
@@ -324,7 +346,7 @@ export function importInto(store, file) {
   const incoming = importFile(file);
   store.snapshot('Before import');
   store.transaction('Import', () => {
-    for (const k of ['records', 'parking', 'profile', 'assumptions', 'client']) store.doc[k] = incoming[k];
+    for (const k of ['records', 'parking', 'profile', 'assumptions', 'client', 'spending', 'session']) store.doc[k] = incoming[k] ?? {};
     store.doc.history.push(...incoming.history.filter(h => !store.doc.history.some(x => x.at === h.at && x.id === h.id && x.field === h.field)));
   });
   return store.doc;

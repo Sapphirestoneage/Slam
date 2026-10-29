@@ -41,7 +41,9 @@ export function inputsOf(doc, ref, now = new Date()) {
   const lines = live.filter(r => r.kind === 'bill').map(r => ({ ...r, ...r.values, amount: read(r, 'amount').v }));
   const allIn = live.find(r => r.kind === 'spending' && r.type === 'All in');
   const lineTotal = lines.length ? lines.reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0) : null;
-  const spending = allIn ? read(allIn, 'amount').v : lineTotal;
+  // Spending for the math: the Gut number until the lines are chosen on Budget (R131: the gut is a test kept to compare).
+  const useLines = !allIn || (doc.spending?.source ?? 'gut') === 'lines' && lineTotal !== null;
+  const spending = useLines ? lineTotal : read(allIn, 'amount').v;
   const debts = live.filter(r => r.kind === 'debt').map(r => {
     const apr = read(r, 'apr', ref.typicalRates[r.type] ?? null);
     const balance = read(r, 'balance').v;
@@ -73,7 +75,8 @@ export function inputsOf(doc, ref, now = new Date()) {
   return {
     takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, none,
     debtOrder: doc.settings?.debtOrder ?? 'avalanche',
-    debtPaymentsOutsideSpending: spending === null ? null : (includesDebt || !allIn && lines.some(l => l.draftt === 'Debt') ? 0 : debtPayments),
+    debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || (useLines && lines.some(l => l.draftt === 'Debt')) ? 0 : debtPayments),
+    spendingSource: useLines ? 'lines' : 'gut', lineTotal, gutTotal: allIn ? read(allIn, 'amount').v : null,
     age: ageOf(doc.profile, now),
     realReturn: a.realReturn ?? ref.presets.realReturn.default,
     withdrawalRate: a.withdrawalRate ?? ref.presets.withdrawalRate.default,

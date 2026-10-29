@@ -5,6 +5,7 @@ import { debtList, spendingList, debtCharts, debtRatios } from './ui/lists.js';
 import { incomeList, benefitList, variableBlock, assetList, protectionList, taxesScreen, listCompletion, incomeCharts, assetCharts } from './ui/money-lists.js';
 import { profileScreen, profileCompletion } from './ui/profile.js';
 import { startFastTrack } from './ui/fasttrack-ui.js';
+import { budgetScreen, calendarScreen, closeScreen } from './ui/spending-ui.js';
 import { AREAS } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
 import { statusOf, countsAsDone } from './records.js';
@@ -133,11 +134,9 @@ export const SCREENS = {
   'my-money/protection': myMoney('protection'),
   'my-money/taxes': myMoney('taxes'),
 
-  'spending/budget': (app, ctx) => [head('Budget', 'Every spending line and the five passes'), S.recordList(ctx, spendingList(ctx.ref))],
-  'spending/calendar': (app, ctx) => [head('Cash flow calendar', 'Day by day, with a running balance'),
-    center(h('span.title', {}, 'Add your paychecks and bills to see your month'),
-      h('div.row-line', {}, h('a', { href: '#/my-money/income' }, 'Add a paycheck'), h('a', { href: '#/spending/budget' }, 'Add a bill')))],
-  'spending/close': (app, ctx) => [head('Month-end close', 'Actuals vs estimates'), listEmpty('closed month', 'closed months', 'Month-end close is built with Spending (build phase 6)')],
+  'spending/budget': (app, ctx) => (app.hasClient ? budgetScreen(app, ctx) : [head('Budget'), noClient(app)]),
+  'spending/calendar': (app, ctx) => (app.hasClient ? calendarScreen(app, ctx) : [head('Cash flow calendar'), noClient(app)]),
+  'spending/close': (app, ctx) => (app.hasClient ? closeScreen(app, ctx) : [head('Month-end close'), noClient(app)]),
 
   'plan/goals': (app, ctx) => {
     const m = ctx.metrics();
