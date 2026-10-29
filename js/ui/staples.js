@@ -7,6 +7,7 @@ import { money, pct, number, EMPTY, duration } from '../format.js';
 import { joinWords } from '../math/result.js';
 import { parseQuickAdd } from '../quickadd.js';
 import { canQuickFill, quickFill } from './quickfill.js';
+import { gatesOf, gatedOut } from '../gates.js';
 
 // ---------- Context: the store, the time view, the numbers, toasts ----------
 export function createCtx({ store, ref, now = () => new Date() }) {
@@ -16,7 +17,10 @@ export function createCtx({ store, ref, now = () => new Date() }) {
     store, ref, now,
     get timeMode() { return store.doc.settings.timeView || '$'; },
     setTimeMode(mode) { store.doc.settings.timeView = mode; cache = null; ctx.refresh(); store._emit({ type: 'settings' }); },
-    get couple() { return !!store.doc.client.couple; },
+    get couple() { return ctx.gates().couple; },
+    gates() { return gatesOf(store.doc.profile, store.doc.client); },
+    // Rows that apply to this household: a gate that says no takes them off every list (R001).
+    visible(pred) { const g = ctx.gates(); return store.find(r => pred(r) && !gatedOut(r, g, ref)); },
     metrics() { return (cache ??= metrics(store.doc, ref, { now: now() })); },
     // Screens register here; the shell clears them when it leaves the screen (keep: shell-level).
     onRefresh(fn, { keep = false } = {}) { fn.keep = keep; listeners.add(fn); return () => listeners.delete(fn); },
@@ -56,8 +60,10 @@ export function toggle(options, value, onChange, { label = null } = {}) {
 }
 
 // ---------- Popovers ----------
-let openPop = null;
-export function closePop() { openPop?.remove(); openPop = null; }
+let openPop = null, away = null;
+// Closing also drops its click-outside listener, so a box opened from inside another box (New client from the
+// client menu) is not closed by the first box's listener before its own buttons can be clicked.
+export function closePop() { openPop?.remove(); openPop = null; if (away) { document.removeEventListener('mousedown', away); away = null; } }
 export function popover(anchor, content, { width = null } = {}) {
   closePop();
   const r = anchor.getBoundingClientRect();
@@ -67,7 +73,8 @@ export function popover(anchor, content, { width = null } = {}) {
   if (over > 0) pop.style.left = `${Math.max(8, parseFloat(pop.style.left) - over)}px`;
   openPop = pop;
   setTimeout(() => {
-    const away = e => { if (!pop.contains(e.target) && e.target !== anchor && !anchor.contains(e.target)) { closePop(); document.removeEventListener('mousedown', away); } };
+    if (openPop !== pop) return;
+    away = e => { if (!pop.contains(e.target) && e.target !== anchor && !anchor.contains(e.target)) closePop(); };
     document.addEventListener('mousedown', away);
   });
   setTimeout(() => pop.querySelector('input, button')?.focus());
@@ -236,18 +243,49 @@ export function perPicker(value, onChange, { key = null } = {}) {
   s.onchange = () => onChange(s.value);
   return h('label.field.filled', { style: { width: '130px' } }, s);
 }
+// Dropdown: one from a short list (Mockup 'Dropdown'). Unanswered shows the hint, never a made-up pick.
+export function select(options, value, onChange, { label, hint = 'Pick one', width = 200, key = null } = {}) {
+  const s = h('select', { 'aria-label': label, 'data-focus': key },
+    h('option', { value: '', selected: value === null || value === undefined || value === '' }, hint),
+    options.map(o => { const [v, text] = Array.isArray(o) ? o : [o, o]; return h('option', { value: v, selected: v === value }, text); }),
+    value && !options.some(o => (Array.isArray(o) ? o[0] : o) === value) ? h('option', { value, selected: true }, value) : null); // the current value always shows
+  s.onchange = () => onChange(s.value === '' ? null : s.value);
+  return h(`label.field${value ? '.filled' : ''}`, { style: { width: `${width}px` } }, s);
+}
+export function checkbox(label, checked, onChange, { key = null } = {}) {
+  const box = h('input', { type: 'checkbox', checked: !!checked, 'data-focus': key });
+  box.onchange = () => onChange(box.checked);
+  return h('label.check', {}, box, h('span', {}, label));
+}
+// A labelled box: the label above, the input under it (affordance rule 3).
+export const labelled = (label, input, { note = null } = {}) => h('div.stack', {}, h('span.label', {}, label), input, note ? h('span.muted.small', {}, note) : null);
+// More / Less: Secondary and Tertiary fields stay behind a caret, closed until asked (R023). Remembers which are open.
+const OPEN = new Set();
+export function moreBlock(id, content, { label = 'More' } = {}) {
+  const open = OPEN.has(id);
+  const body = h('div.more-body', { hidden: !open }, open ? content() : null);
+  const btn = h('button.caret', { type: 'button', 'aria-expanded': String(open) }, open ? 'Less' : label, icon(open ? 'down' : 'right'));
+  btn.onclick = () => {
+    const now = !OPEN.has(id);
+    now ? OPEN.add(id) : OPEN.delete(id);
+    btn.setAttribute('aria-expanded', String(now)); clear(btn, now ? 'Less' : label, icon(now ? 'down' : 'right'));
+    body.hidden = !now; clear(body, now ? content() : null);
+  };
+  return h('div.more-wrap', {}, btn, body);
+}
 export function parseNum(s) {
   const t = String(s ?? '').replace(/[$,%\s]/g, '');
   if (t === '') return null;
   const n = Number(t);
   return Number.isFinite(n) ? n : null;
 }
-export function stepper(value, onChange, { min = 0, max = 20, label = 'Count' } = {}) {
+export function stepper(value, onChange, { min = 0, max = 20, label = 'Count', key = null } = {}) {
   const v = value ?? null;
-  return h('span.row-line', { style: { gap: '6px' } },
-    iconButton('down', `Fewer: ${label}`, () => onChange(Math.max(min, (v ?? min) - 1)), { tiny: true }),
-    h('span.computed', { style: { minWidth: '40px', justifyContent: 'center' }, 'aria-label': label }, v ?? EMPTY),
-    iconButton('plus', `More: ${label}`, () => onChange(Math.min(max, (v ?? min - 1) + 1)), { tiny: true }));
+  const less = iconButton('down', `Fewer: ${label}`, () => onChange(Math.max(min, (v ?? min) - 1)), { tiny: true });
+  const more = iconButton('plus', `More: ${label}`, () => onChange(Math.min(max, (v ?? min - 1) + 1)), { tiny: true });
+  if (key) { less.dataset.focus = `${key}:less`; more.dataset.focus = `${key}:more`; }
+  return h('span.row-line.stepper', { style: { gap: '6px', flexWrap: 'nowrap' } }, less,
+    h('span.computed', { style: { minWidth: '40px', justifyContent: 'center' }, 'aria-label': label, 'aria-live': 'polite' }, v ?? EMPTY), more);
 }
 
 // Who pays (every Needs line).
@@ -388,7 +426,7 @@ export function recordList(ctx, cfg) {
   };
   const update = (rec, patch) => { ctx.store.update(rec.id, patch); flashSaved(root.querySelector(`tr[data-id="${rec.id}"]`)); };
   const addNew = (type, name = null, after = null) => {
-    const r = ctx.store.add(cfg.kind, { name: name ?? null, ...(cfg.newValues?.(type) || {}) }, { type: type ?? cfg.defaultType ?? null, after });
+    const r = ctx.store.add(cfg.kindOf?.(type) ?? cfg.kind, { name: name ?? null, ...(cfg.newValues?.(type) || {}) }, { type: type ?? cfg.defaultType ?? null, after });
     requestAnimationFrame(() => root.querySelector(`tr[data-id="${r.id}"] input`)?.focus());
     return r;
   };
@@ -409,13 +447,14 @@ export function recordList(ctx, cfg) {
 
   function render() {
     const m = ctx.metrics();
-    const recs = ctx.store.find(cfg.filter);
+    const recs = ctx.visible(cfg.filter);
     const head = h('div.section-title', {}, h('h2', {}, cfg.title), h('span.spacer'), cfg.headerExtra?.(ctx) ?? null,
       recs.length ? iconButton('reset', `Clear all ${cfg.thing.plural}`, e => confirmBox(e.currentTarget, {
         text: `Clear all ${recs.length} ${recs.length === 1 ? cfg.thing.one : cfg.thing.plural}? You can undo this.`,
         yes: `Clear ${cfg.thing.plural}`, no: 'Keep them', onYes: () => { ctx.store.resetSection(cfg.filter); toast('Cleared.', { undo: () => ctx.store.undo() }); } })) : null);
-    const addBtn = addButton(cfg.thing.one, e => cfg.picker ? openAddPicker(e.currentTarget, { thing: cfg.thing.one, ...cfg.picker, onPick: (t, own) => addNew(t, own) }) : addNew(null));
-    if (!recs.length) return h(`div.section.area-${cfg.area}`, {}, head, h('div.list', {}, emptyList(cfg.thing, e => addBtn.click())));
+    const picker = typeof cfg.picker === 'function' ? cfg.picker(ctx) : cfg.picker;
+    const addBtn = addButton(cfg.thing.one, e => picker ? openAddPicker(e.currentTarget, { thing: cfg.thing.one, ...picker, onPick: (t, own) => addNew(t, own) }) : addNew(null));
+    if (!recs.length) return h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, h('div.list', {}, emptyList(cfg.thing, e => addBtn.click())));
 
     const sel = [...state.selected].filter(id => recs.some(r => r.id === id));
     const bulk = sel.length ? bulkBar(ctx, sel, {

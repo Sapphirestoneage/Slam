@@ -37,3 +37,13 @@ Each one has the default used so the build could keep going. Answer here or in t
 22. **Start Fast Track before phase 5.** It is the My Money empty state's main button, but Fast Track is built in phase 5. Default: shown, disabled, and it says why.
 23. **Top bar room at 1280px.** Left, five tabs and eight tools do not fit at 1280px with every label. Defaults: Saved is a green tick (the word is its tooltip; 'Unsaved' always shows in words); below 1400px Find shows its icon and '/' without the word, and the quick add box is narrower. At 1280px a long breadcrumb shortens with an ellipsis (full text on hover); the filled sub-tab under it still names the page.
 24. **Income and Assets lists before phase 5.** Built from the same staples as Debt so the shell has real rows to show; phase 5 replaces their columns with the Mockup's.
+
+## Build phase 5 (My Money)
+
+25. **Fast Track has a debt step.** No debt field is tagged Fast Track, but R068 says Fast Track turns on every lens, and net worth needs debts. Default: one step with totals by type (credit cards, student loans, other) plus the car loan and mortgage with their asset (R132: totals by area). APRs fill in as a typical Guess.
+26. **A gate jumps there with a click, not on its own.** R015 says changing a gate jumps to its section. Default: the change happens at once and a toast says where it went with 'Go there', so several gates can be answered in a row without being pulled away.
+27. **Unanswered gates.** A gate nobody has asked yet shows everything; only a 'no' takes things away. HSA and FSA are the exception (R012, R013): they show only once confirmed. The accounts checkboxes answer all four areas at once.
+28. **Two jobs and tax.** Each paycheck row is worked out as if it were the only job (federal and FICA, no state tax yet), so a second job's take-home or gross is a little off. Benefits, unemployment and money from family count as they land.
+29. **One page.** The Express form is every My Money section stacked on one page (each with its own heading); the sub-tabs scroll to their part.
+30. **Paid off with a loan that still has a balance.** Asks before removing the loan (it is the same row as on Debt), and can be undone.
+31. **Gas and tolls.** Reference data had the car gate only on the old combined category; 'Gas or charging' and 'Tolls and parking' now carry it too (R009).

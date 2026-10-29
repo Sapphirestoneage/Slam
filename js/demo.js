@@ -1,12 +1,15 @@
 // Turns a fixture's inputs (fixtures/demo.json, or the private file locally) into a household.
 // The demo is made up; the published site shows it behind 'Try with example numbers'.
 import { Store, newHousehold } from './records.js';
+import { WORK } from './gates.js';
 
 export function householdFromInputs(inputs, { name = 'Demo client', now } = {}) {
   const store = new Store(newHousehold({ name, now }), now ? { now: () => now } : {});
   const has = k => inputs[k] !== null && inputs[k] !== undefined;
   store.transaction('Example numbers', () => {
-    store.setDoc('profile', { age: inputs.age ?? null, household: inputs.household ?? 'Solo' });
+    // The Profile answers a fixture carries; a work situation with a note ('Between jobs (new job in January)') keeps its first part.
+    const work = WORK.find(w => String(inputs.workSituation ?? '').toLowerCase().startsWith(w.toLowerCase().split(' (')[0])) ?? null;
+    store.setDoc('profile', { age: inputs.age ?? null, household: inputs.household ?? 'Solo', state: inputs.state ?? null, workSituation: work });
     store.setDoc('assumptions', { realReturn: inputs.realReturn ?? null, withdrawalRate: inputs.withdrawalRate ?? null, inflation: inputs.inflation ?? null });
     store.add('income', { name: 'Take-home pay', amount: inputs.takeHome ?? null, per: 'month' }, { type: 'Job' });
     if (has('spendingAllIn') || 'spendingAllIn' in inputs) {

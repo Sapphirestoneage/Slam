@@ -1,12 +1,14 @@
 // List setups built from the staples: debts and spending lines. Each list is a view of the one record type.
 import { h, icon } from './dom.js';
 import { addPresets } from '../presets.js';
-import { value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, payoffCell, summaryStrip, whoPays, hoursChip } from './staples.js';
+import { value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, hoursChip } from './staples.js';
+import { feeApr } from '../math/debt.js';
+import { applies } from '../gates.js';
 import { payoffPlan, debtToIncome, utilization } from '../math/debt.js';
 import { needs } from '../math/result.js';
 import { money } from '../format.js';
 
-const LOAN_TYPES = new Set(['Student loan', 'Car loan', 'Personal loan']);
+const LOAN_TYPES = new Set(['Student loan', 'Car loan', 'Personal loan', 'Mortgage']);
 const short = v => (Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const kept = r => (r.status === 'Not for me' ? 0 : r.amount);
@@ -16,7 +18,11 @@ export function debtList(ref) {
     kind: 'debt', area: 'debt', title: 'Debt', thing: { one: 'debt', plural: 'debts' },
     filter: r => r.kind === 'debt',
     groupBy: r => (r.type === 'Credit card' ? 'Credit cards' : LOAN_TYPES.has(r.type) ? 'Loans' : 'Other'),
-    picker: { top: ref.lists.debtTypesTop, other: ref.lists.debtTypesOther },
+    picker: { top: ref.lists.debtTypesTop, other: [...ref.lists.debtTypesOther, 'Mortgage'] },
+    // Order drives the payoff plan everywhere (Mockup: section header).
+    headerExtra: ctx => h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Order'),
+      toggle([['avalanche', 'Avalanche'], ['snowball', 'Snowball'], ['stress', 'Stress']], ctx.store.doc.settings.debtOrder ?? 'avalanche',
+        v => { ctx.store.setDoc('settings', { debtOrder: v }); ctx.refresh(); }, { label: 'Payoff order' })),
     coreFields: ['balance', 'apr'],
     paidWith: false,
     columns: [
@@ -28,7 +34,8 @@ export function debtList(ref) {
       } },
       { label: 'Payment / mo', num: true, render: (ctx, r, m, up) => {
         const d = m.debts.find(x => x.id === r.id);
-        if (r.type === 'Credit card' && (r.values.payment === null || r.values.payment === undefined)) {
+        if (d?.inFull) return h('span.computed', { title: 'Paid in full each month' }, amount(ctx, d.payment, { chip: false }), h('span.muted', {}, '\u00a0in full'));
+        if (r.type === 'Credit card' && (d?.choice === 'Minimum' || r.values.payment === null || r.values.payment === undefined)) {
           // R036: the minimum is computed and shown; type over it with the statement number.
           return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, d?.payment ? h('span.computed', { title: 'Minimum, worked out' }, amount(ctx, d.payment, { chip: false })) : null,
             moneyInput(null, v => up({ payment: v }), { hint: d?.payment ? 'Statement' : 'Add payment', key: `${r.id}:payment` }));
@@ -42,12 +49,8 @@ export function debtList(ref) {
       } },
       { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) },
     ],
-    secondary: (ctx, r, up) => [
-      r.type === 'Credit card' ? h('div.stack', {}, h('span.label', {}, 'Credit limit'), moneyInput(r.values.limit, v => up({ limit: v }), { hint: 'Add limit' })) : null,
-      h('div.stack', {}, h('span.label', {}, 'Due day'), textInput(r.values.dueDay, v => up({ dueDay: v }), { hint: 'Add day', width: 90 })),
-      h('div.stack', {}, h('span.label', {}, 'Stress 1 to 5'), toggle(['1', '2', '3', '4', '5'], r.stress ? String(r.stress) : null, v => up({ stress: Number(v) }), { label: 'Stress' })),
-    ],
-    tertiary: (ctx, r, up) => [h('div.stack', {}, h('span.label', {}, 'Coach notes'), textInput(r.privateNote, v => up({ privateNote: v }), { hint: 'Add a private note', width: 360 }))],
+    secondary: (ctx, r, up) => debtSecondary(ctx, r, up),
+    tertiary: (ctx, r, up) => debtTertiary(ctx, r, up),
     subtotal: (ctx, rows) => money(sum(rows, r => r.values.balance)),
     footerTotal: (ctx, recs) => amount(ctx, recs.some(r => r.values.balance != null) ? sum(recs, r => r.values.balance) : null),
     totals: (ctx, recs, m, cols) => {
@@ -75,9 +78,9 @@ export function debtStrip(ctx, m) {
     ? { id: 'M30', value: sum(debts, d => d.payment), needs: [], unit: 'money', text: `${debts.filter(d => d.payment != null).map(d => `${d.name} ${money(d.payment)}${d.paymentIsMinimum ? ' (minimum, worked out)' : ''}`).join(' + ')} = ${money(sum(debts, d => d.payment))} a month.` }
     : needs('M30', ['a payment'], { unit: 'money' });
   // Debts missing an APR or payment are left out of the date and interest, and named under the number.
-  const complete = usable.filter(d => d.apr != null && d.payment != null);
-  const missing = usable.filter(d => !complete.includes(d));
-  const plan = payoffPlan(complete);
+  const complete = usable.filter(d => !d.inFull && d.apr != null && d.payment != null);
+  const missing = usable.filter(d => !d.inFull && !complete.includes(d));
+  const plan = payoffPlan(complete, { order: m.inputs.debtOrder });
   const free = !complete.length ? needs('M34', usable.length ? missing.map(d => `${d.name} ${d.apr == null ? 'APR' : 'payment'}`) : ['a debt'], { unit: 'months' })
     : plan.months === null ? { ...needs('M34', []), never: true } : { id: 'M34', value: plan.months, needs: [], unit: 'months', text: plan.text };
   const interest = free.value === null ? { ...free, unit: 'money' } : { id: 'M32', value: plan.interest, needs: [], unit: 'money', text: `Paying every debt as planned, the interest still to come adds up to ${money(plan.interest)}.` };
@@ -94,7 +97,7 @@ export function debtStrip(ctx, m) {
 // Kept for Report > Overview: debt-to-income and utilization.
 export function debtRatios(ctx, m) {
   const usable = m.inputs.debts.filter(d => d.balance > 0);
-  const gross = ctx.store.find(r => r.kind === 'income').reduce((s, r) => (s === null || r.values.gross == null ? null : s + r.values.gross / 12), 0) || null;
+  const gross = m.inputs.grossAnnual === null ? null : m.inputs.grossAnnual / 12; // typed or worked out from take-home (R046)
   const dti = debtToIncome({ monthlyDebtPayments: usable.length ? sum(m.inputs.debts, d => d.payment) : null, grossMonthly: gross });
   const cards = ctx.store.find(r => r.kind === 'debt' && r.type === 'Credit card').map(r => ({ balance: r.values.balance, limit: r.values.limit }));
   const util = utilization(cards);
@@ -159,9 +162,10 @@ export const debtCharts = [
   {
     name: 'Payoff timeline',
     data: ctx => {
-      const ds = ctx.metrics().inputs.debts.filter(d => d.balance > 0 && d.apr != null && d.payment != null);
+      const m = ctx.metrics();
+      const ds = m.inputs.debts.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null);
       if (!ds.length) return { needs: ['a balance, APR and payment'] };
-      const p = payoffPlan(ds);
+      const p = payoffPlan(ds, { order: m.inputs.debtOrder });
       return { names: p.debts.map(x => x.name), path: p.path };
     },
     option: (d, t) => ({
@@ -175,42 +179,75 @@ export const debtCharts = [
   },
 ];
 
-// Income: one row per paycheck or other money in (built out in phase 5).
-export function incomeList() {
-  return {
-    kind: 'income', area: 'income', title: 'Income', thing: { one: 'income', plural: 'income rows' }, defaultType: 'Job',
-    filter: r => r.kind === 'income',
-    picker: { top: ['Job', 'Unemployment', 'Side hustle', 'Benefits', 'Rental'], other: ['Partner job', 'Money from family', 'Self-employed'] },
-    coreFields: ['amount'],
-    columns: [
-      { label: 'Source', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 170, key: `${r.id}:name` }) },
-      { label: 'Take-home', num: true, render: (ctx, r, m, up) => moneyInput(r.amount, v => up({ amount: v }), { hint: 'Add take-home', key: `${r.id}:amount` }) },
-      { label: 'Per', render: (ctx, r, m, up) => perPicker(r.per, v => up({ per: v }), { key: `${r.id}:per` }) },
-      { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) },
-    ],
-    footerTotal: (ctx, recs, m) => h('span', {}, amount(ctx, m.inputs.takeHome), h('span.muted', {}, ' a month')),
-    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Source' ? h('td', {}, `${recs.length} ${recs.length === 1 ? 'row' : 'rows'}`) : c.label === 'Take-home' ? h('td.num', {}, amount(ctx, m.inputs.takeHome)) : h('td')), h('td'), h('td')],
+// ---------- Debt detail behind More, by type (Mockup: Debt) ----------
+const stress = (r, up) => labelled('Stress 1 to 5', toggle(['1', '2', '3', '4', '5'], r.stress ? String(r.stress) : null, v => up({ stress: Number(v) }), { label: 'Stress' }));
+const yn3 = (v, on, label) => toggle(['Yes', 'No', 'Not sure'], v ?? null, on, { label });
+function debtSecondary(ctx, r, up) {
+  const g = ctx.gates();
+  const v = r.values;
+  if (r.type === 'Credit card') {
+    const choice = v.payChoice ?? (v.payment == null ? 'Minimum' : 'Custom');
+    return [
+      labelled('Pay', toggle(['Minimum', 'Custom', 'In full'], choice, x => up({ payChoice: x }), { label: 'Pay' })),
+      choice === 'Custom' ? labelled('Custom $ a month', moneyInput(v.payment, x => up({ payment: x }), { hint: 'Add payment' })) : null, // R020
+      labelled('0% promo: rate and end', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, pctInput(v.promoApr, x => up({ promoApr: x }), { hint: '0' }),
+        textInput(v.promoEnd, x => up({ promoEnd: x }), { hint: 'YYYY-MM', width: 110 })), { note: 'Warns 60 days before it ends' }),
+      labelled('Due day', textInput(v.dueDay, x => up({ dueDay: x }), { hint: 'Add day', width: 90 }), { note: 'Shows on the cash flow calendar' }),
+      labelled('Credit limit', moneyInput(v.limit, x => up({ limit: x }), { hint: 'Add limit' }), { note: 'For utilization' }),
+      labelled('Personal or business', toggle(['Personal', 'Business'], v.use ?? null, x => up({ use: x }), { label: 'Personal or business' })),
+      stress(r, up)];
+  }
+  if (r.type === 'Student loan') {
+    return [
+      labelled('Federal or private', toggle(['Federal', 'Private'], v.federal ?? null, x => up({ federal: x }), { label: 'Federal or private' })),
+      applies('repaymentPlan', { g, r }) ? labelled('Repayment plan', select(['Standard', 'Income-driven', 'Other'], v.plan ?? null, x => up({ plan: x }), { label: 'Repayment plan', width: 170 })) : null,
+      labelled('Servicer', textInput(v.servicer, x => up({ servicer: x }), { hint: 'Add servicer', width: 170 })),
+      stress(r, up)];
+  }
+  if (r.type === 'Car loan' || r.type === 'Mortgage') {
+    const kind = r.type === 'Car loan' ? 'Car' : 'Home';
+    const things = ctx.visible(x => x.kind === 'asset' && x.type === kind);
+    return [
+      labelled(`Linked ${kind.toLowerCase()}`, select(things.map(a => [a.id, a.name || kind]), r.linkedTo, x => up({ linkedTo: x }), { label: `Linked ${kind.toLowerCase()}`, hint: things.length ? `Pick the ${kind.toLowerCase()}` : `No ${kind.toLowerCase()} on Assets yet`, width: 190 }),
+        { note: 'The same loan shows on the asset' }),
+      r.type === 'Car loan' ? labelled('Months left', textInput(v.monthsLeft, x => up({ monthsLeft: x === null ? null : Number(x) }), { hint: 'Add months', width: 110 }), { note: 'Checks the payoff date' })
+        : labelled('Fixed or adjustable', toggle(['Fixed', 'Adjustable'], v.rateType ?? null, x => up({ rateType: x }), { label: 'Fixed or adjustable' })),
+      r.type === 'Mortgage' ? labelled('Years left', textInput(v.yearsLeft, x => up({ yearsLeft: x === null ? null : Number(x) }), { hint: 'Add years', width: 100 })) : null,
+      stress(r, up)];
+  }
+  // Any other debt: the fields unique to its type (Mockup: Debt › Any other debt).
+  const unique = {
+    Medical: () => labelled('In collections', yn3(v.collections, x => up({ collections: x }), 'In collections')),
+    'Family or friend': () => labelled('Terms agreed', textInput(v.terms, x => up({ terms: x }), { hint: 'What was agreed', width: 260 })),
+    'Buy now, pay later': () => labelled('Payments left', textInput(v.paymentsLeft, x => up({ paymentsLeft: x === null ? null : Number(x) }), { hint: 'Add number', width: 110 })),
+    'Payday or cash advance': () => {
+      const apr = feeApr({ fee: v.fee ?? null, amount: v.balance ?? null, periodsPerYear: v.periods ?? null });
+      return h('span.row-line', { style: { gap: '12px' } },
+        labelled('Fee per period', moneyInput(v.fee, x => up({ fee: x }), { hint: 'Add fee' })),
+        labelled('Periods a year', textInput(v.periods, x => up({ periods: x === null ? null : Number(x) }), { hint: '26', width: 90 })),
+        labelled('As an APR', h('span.computed', {}, apr.value === null ? `Needs ${apr.needs.join(' and ')}` : value(apr))));
+    },
+    'Tax debt': () => labelled('Payment plan in place', yn3(v.taxPlan, x => up({ taxPlan: x }), 'Payment plan')),
+    '401(k) loan': () => labelled('If you leave the job', h('span.computed', {}, 'Due in full, or it counts as a withdrawal')),
+    Business: () => labelled('Personally guaranteed', yn3(v.guaranteed, x => up({ guaranteed: x }), 'Personally guaranteed')),
   };
+  return [unique[r.type]?.() ?? null, stress(r, up)];
 }
-
-// Assets: cash and investment accounts, car, home (built out in phase 5).
-export function assetList(ref) {
-  const group = r => (r.kind === 'asset' ? 'Home or car' : r.values.group === 'investment' ? 'Investments' : 'Cash');
-  const val = r => (r.kind === 'asset' ? r.values.value : r.values.balance);
-  return {
-    kind: 'account', area: 'assets', title: 'Assets', thing: { one: 'account', plural: 'accounts' },
-    filter: r => r.kind === 'account' || r.kind === 'asset',
-    groupBy: group,
-    picker: { top: ['Checking', 'Savings or HYSA', '401(k)', 'Roth IRA'], other: [...ref.lists.cashTypes, ...ref.lists.investmentTypes] },
-    newValues: type => ({ values: { group: ref.lists.cashTypes.includes(type) ? 'cash' : 'investment' } }),
-    columns: [
-      { label: 'Account', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 170, key: `${r.id}:name` }) },
-      { label: 'Balance', num: true, render: (ctx, r, m, up) => moneyInput(val(r), v => up(r.kind === 'asset' ? { value: v } : { balance: v }), { hint: 'Add balance', key: `${r.id}:balance` }) },
-      { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) },
-    ],
-    coreFields: [],
-    subtotal: (ctx, rows) => money(sum(rows, val)),
-    footerTotal: (ctx, recs) => amount(ctx, recs.some(r => val(r) != null) ? sum(recs, val) : null),
-    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Account' ? h('td', {}, `${recs.length} ${recs.length === 1 ? 'item' : 'items'}`) : c.label === 'Balance' ? h('td.num', {}, amount(ctx, recs.some(r => val(r) != null) ? sum(recs, val) : null)) : h('td')), h('td'), h('td')],
-  };
+function debtTertiary(ctx, r, up) {
+  const g = ctx.gates();
+  const v = r.values;
+  const notes = labelled('Coach notes', textInput(r.privateNote, x => up({ privateNote: x }), { hint: 'Add a private note', width: 360 }));
+  if (r.type === 'Credit card') {
+    return [labelled('Institution', textInput(v.institution, x => up({ institution: x }), { hint: 'Bank', width: 160 })),
+      labelled('Opened', textInput(v.opened, x => up({ opened: x }), { hint: 'YYYY-MM', width: 110 }), { note: 'Card age' }),
+      labelled('Annual fee', moneyInput(v.annualFee, x => up({ annualFee: x }), { hint: 'Add fee' })),
+      labelled('Sign-up bonus: $, spend, by when', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+        moneyInput(v.bonus, x => up({ bonus: x }), { hint: 'Bonus' }), moneyInput(v.bonusSpend, x => up({ bonusSpend: x }), { hint: 'Spend' }),
+        textInput(v.bonusBy, x => up({ bonusBy: x }), { hint: 'YYYY-MM-DD', width: 120 }))), notes];
+  }
+  if (r.type === 'Student loan') {
+    return [applies('pslf', { g, r }) ? labelled('PSLF eligible', yn3(v.pslf, x => up({ pslf: x }), 'PSLF')) : null,
+      labelled('Forbearance or deferment', select(['None', 'Forbearance', 'Deferment'], v.forbearance ?? null, x => up({ forbearance: x }), { label: 'Forbearance or deferment', width: 170 })), notes];
+  }
+  return [notes];
 }

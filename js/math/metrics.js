@@ -2,7 +2,8 @@
 // One place maps records to formula inputs, so every screen shows the same answer.
 import { statusOf } from '../records.js';
 import { isBlank, needs } from './result.js';
-import { monthlyFrom } from './income.js';
+import { monthlyFrom, incomeRow, defaultFilingStatus } from './income.js';
+import { gatesOf, visible } from '../gates.js';
 import { myShare, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor } from './spending.js';
 import { cardMinimum, payoffMonths, totalInterest, payoffPlan } from './debt.js';
 import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
@@ -29,11 +30,14 @@ export function ageOf(profile, now = new Date()) {
 }
 
 export function inputsOf(doc, ref, now = new Date()) {
-  const live = doc.records;
-  const income = live.filter(r => r.kind === 'income');
+  const gates = gatesOf(doc.profile, doc.client);
+  const live = visible(doc.records, gates, ref); // gated-out rows count nowhere (R001, R066)
+  const filingStatus = doc.profile.filingStatus ?? defaultFilingStatus(gates.couple); // R043
+  const income = live.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(r, { filingStatus, ref }) }));
   const takeHome = income.length
-    ? income.reduce((s, r) => (s === null || isBlank(r.amount) ? null : s + monthlyFrom(r.amount, r.per, r.values.payFrequency).value), 0)
+    ? income.reduce((s, x) => (s === null || x.takeHome.value === null ? null : s + x.takeHome.value), 0)
     : null;
+  const grossAnnual = income.some(x => x.gross !== null) ? income.reduce((s, x) => s + (x.gross ?? 0), 0) : null;
   const lines = live.filter(r => r.kind === 'bill').map(r => ({ ...r, ...r.values, amount: read(r, 'amount').v }));
   const allIn = live.find(r => r.kind === 'spending' && r.type === 'All in');
   const lineTotal = lines.length ? lines.reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0) : null;
@@ -43,25 +47,32 @@ export function inputsOf(doc, ref, now = new Date()) {
     const balance = read(r, 'balance').v;
     let payment = read(r, 'payment').v;
     let paymentIsMinimum = false;
-    if (payment === null && r.type === 'Credit card') { // R036, R037
+    // A card is paid the minimum, a custom amount, or in full (R020). In full carries no interest, and its
+    // charges are already in spending, so it adds nothing on top.
+    const choice = r.type === 'Credit card' ? r.values.payChoice ?? (payment === null ? 'Minimum' : 'Custom') : null;
+    const inFull = choice === 'In full';
+    if (inFull) payment = balance;
+    else if (r.type === 'Credit card' && (choice === 'Minimum' || payment === null)) { // R036, R037
       const min = cardMinimum({ balance, apr: apr.v });
-      if (min.value !== null) { payment = min.value; paymentIsMinimum = true; }
+      payment = min.value; paymentIsMinimum = min.value !== null;
     }
-    return { id: r.id, name: r.name ?? r.type, type: r.type, balance, apr: apr.v, aprGuess: !!apr.guess, payment, paymentIsMinimum, stress: r.stress, linkedTo: r.linkedTo };
+    return { id: r.id, name: r.name ?? r.type, type: r.type, balance, apr: apr.v, aprGuess: !!apr.guess, payment, paymentIsMinimum, inFull, choice, stress: r.stress, linkedTo: r.linkedTo };
   });
-  const debtPayments = debts.reduce((s, d) => s + (d.payment ?? 0), 0);
+  const debtPayments = debts.reduce((s, d) => s + (d.inFull ? 0 : d.payment ?? 0), 0);
   const includesDebt = allIn ? allIn.values.includesDebtPayments !== false : false;
   const accounts = live.filter(r => r.kind === 'account').map(r => ({ id: r.id, name: r.name ?? r.type, group: r.values.group, type: r.type, value: read(r, 'balance').v, unvested: r.values.unvested ?? null }));
   const things = live.filter(r => r.kind === 'asset').map(r => ({ id: r.id, name: r.name ?? r.type, type: r.type, value: read(r, 'value').v }));
-  const cash = accounts.some(a => a.group === 'cash') ? accounts.filter(a => a.group === 'cash').reduce((s, a) => s + (a.value ?? 0), 0) : null;
-  const invested = accounts.some(a => a.group === 'investment') ? accounts.filter(a => a.group === 'investment').reduce((s, a) => s + (a.value ?? 0), 0) : null;
+  const none = gates.none; // R002: 'None of these' counts as done, with zeros
+  const cash = accounts.some(a => a.group === 'cash') ? accounts.filter(a => a.group === 'cash').reduce((s, a) => s + (a.value ?? 0), 0) : none ? 0 : null;
+  const invested = accounts.some(a => a.group === 'investment') ? accounts.filter(a => a.group === 'investment').reduce((s, a) => s + (a.value ?? 0), 0) : none ? 0 : null;
   const brokerage = accounts.filter(a => a.type === 'Brokerage').reduce((s, a) => s + (a.value ?? 0), 0);
   const housingLines = lines.filter(l => HOUSING.has(l.category));
   const housing = housingLines.some(l => l.category === 'Rent or mortgage' && l.amount !== null)
     ? housingLines.reduce((s, l) => s + (myShare(l).value ?? 0), 0) : null;
   const a = doc.assumptions;
   return {
-    takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing,
+    takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, none,
+    debtOrder: doc.settings?.debtOrder ?? 'avalanche',
     debtPaymentsOutsideSpending: spending === null ? null : (includesDebt || !allIn && lines.some(l => l.draftt === 'Debt') ? 0 : debtPayments),
     age: ageOf(doc.profile, now),
     realReturn: a.realReturn ?? ref.presets.realReturn.default,
@@ -77,7 +88,9 @@ export function inputsOf(doc, ref, now = new Date()) {
 export function metrics(doc, ref, { now = new Date() } = {}) {
   const x = inputsOf(doc, ref, now);
   const out = { inputs: x };
-  out.netWorth = netWorth({ assets: [...x.accounts, ...x.things], debts: x.debts });
+  out.netWorth = x.none && !x.accounts.length && !x.things.length && !x.debts.length
+    ? { id: 'M40', value: 0, needs: [], guess: false, unit: 'money', text: 'None of these: no cash, investments, home, car or debt, so net worth is $0.' }
+    : netWorth({ assets: [...x.accounts, ...x.things], debts: x.debts });
   out.liquidNetWorth = liquidNetWorth({ cash: x.cash, brokerage: x.brokerage, consumerDebt: x.debts.filter(d => CONSUMER.has(d.type)).reduce((s, d) => s + (d.balance ?? 0), 0) });
   const floor = x.lines.length ? fixedFloor(x.lines, { roommates: x.roommates }).value : null;
   out.runwayMonths = runway({ cash: x.cash, spending: x.spending, fixedFloor: floor || null });
@@ -85,7 +98,9 @@ export function metrics(doc, ref, { now = new Date() } = {}) {
   out.savingsRate = savingsRate({ takeHome: x.takeHome, surplus: out.surplus.value });
   out.housingPct = housingPct({ housing: x.housing, takeHome: x.takeHome });
   out.supportReceived = supportReceived(x.lines, { roommates: x.roommates });
-  out.debts = x.debts.map(d => ({ ...d, payoff: payoffMonths(d, { from: now }), interest: totalInterest(d) }));
+  const paidInFull = { id: 'M31', value: 1, needs: [], guess: false, unit: 'months', text: 'Paid in full each month: no interest, nothing carried over.' };
+  out.debts = x.debts.map(d => (d.inFull ? { ...d, payoff: paidInFull, interest: { id: 'M32', value: 0, needs: [], unit: 'money', text: 'Paid in full each month, so no interest.' } }
+    : { ...d, payoff: payoffMonths(d, { from: now }), interest: totalInterest(d) }));
   const r5 = ruleOf5({ age: x.age, spending: x.spending, emergencyCash: x.cash });
   out.ruleOf5 = r5;
   out.fiNumber = fiNumber({ annualSpending: x.retirementSpending === null ? null : x.retirementSpending * 12, withdrawalRate: x.withdrawalRate });
@@ -107,7 +122,7 @@ export function keyNumbers(m) {
   const ds = m.inputs.debts;
   const debtTotal = ds.length ? ds.reduce((s, d) => s + (d.balance ?? 0), 0) : null;
   const debtPayments = ds.some(d => d.payment != null) ? ds.reduce((s, d) => s + (d.payment ?? 0), 0) : null;
-  const plan = ds.length ? payoffPlan(ds.filter(d => d.balance > 0 && d.apr != null && d.payment != null)) : null;
+  const plan = ds.length ? payoffPlan(ds.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null), { order: m.inputs.debtOrder }) : null;
   return { netWorth: m.netWorth.value, surplus: m.surplus.value, savingsRate: m.savingsRate.value, debtTotal, debtPayments,
     debtFreeMonths: plan?.months ?? null, debtInterest: plan && plan.months !== null ? Math.round(plan.interest) : null, monthsToFi: m.monthsToFi.value };
 }

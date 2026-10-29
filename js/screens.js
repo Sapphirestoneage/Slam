@@ -1,7 +1,11 @@
 // Every screen's first state, word for word from the Words and states tab. Later phases fill them in.
 import { h, icon } from './ui/dom.js';
 import * as S from './ui/staples.js';
-import { debtList, spendingList, incomeList, assetList, debtCharts, debtRatios } from './ui/lists.js';
+import { debtList, spendingList, debtCharts, debtRatios } from './ui/lists.js';
+import { incomeList, benefitList, variableBlock, assetList, protectionList, taxesScreen, listCompletion, incomeCharts, assetCharts } from './ui/money-lists.js';
+import { profileScreen, profileCompletion } from './ui/profile.js';
+import { startFastTrack } from './ui/fasttrack-ui.js';
+import { AREAS } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
 import { statusOf, countsAsDone } from './records.js';
 import { money } from './format.js';
@@ -18,14 +22,66 @@ export function noClient(app) {
     S.button('Try with example numbers', { onClick: () => app.loadDemo() }));
 }
 
-// Words: My Money tab, nothing entered.
-function fastTrack() {
+// Words: My Money tab, nothing entered. Fast Track is the one main button.
+function fastTrack(app, ctx) {
   return h('div.card', {}, h('div.empty', {},
-    S.button('Start Fast Track', { kind: 'primary', size: 'big', disabled: true, why: 'Fast Track is built with My Money, the next build phase' }),
-    h('span.muted', {}, 'about 5 minutes'),
-    h('span.muted', {}, 'Fast Track is built with My Money (build phase 5).')));
+    S.button('Start Fast Track', { kind: 'primary', size: 'big', onClick: () => startFastTrack(app, ctx) }),
+    h('span.muted', {}, 'about 5 minutes')));
 }
 const hasAny = (ctx, kinds) => ctx.store.records.some(r => kinds.includes(r.kind));
+
+// ---------- My Money (build phase 5) ----------
+// Two bars per section: core (Primary fields) and full detail (everything that applies) (R065).
+function completion(c) {
+  const bar = (label, x) => h('span.row-line', { style: { gap: '8px', flexWrap: 'nowrap' } }, h('span.label', {}, label),
+    h('div.progress', { role: 'progressbar', 'aria-valuenow': x.of ? Math.round(x.done / x.of * 100) : 0, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': label }, h('span', { style: { width: `${x.of ? x.done / x.of * 100 : 0}%` } })),
+    h('span.label', {}, `${x.done} of ${x.of}`));
+  return c.core.of || c.full.of ? h('div.completion', {}, bar('Core', c.core), bar('Full detail', c.full)) : null;
+}
+// R015: an area turned off on the Profile leaves a slim way back.
+const addArea = (app, ctx, k, label) => h('a.add-area', { href: '#', onclick: e => {
+  e.preventDefault();
+  const p = ctx.store.doc.profile;
+  ctx.store.setDoc('profile', { areas: { ...(p.areas || {}), [k]: true }, noneOfThese: false });
+  S.toast(`${label} is back.`, { undo: () => ctx.store.undo() });
+} }, `+ Add ${label.toLowerCase()}`);
+const offAreas = (app, ctx, keys) => {
+  const g = ctx.gates();
+  const off = AREAS.filter(([k]) => keys.includes(k) && g.areas[k] === false);
+  return off.length ? h('div.row-line.off-areas', {}, h('span.muted', {}, 'Turned off on the Profile:'), off.map(([k, label]) => addArea(app, ctx, k, label))) : null;
+};
+const MM = {
+  profile: { title: 'Profile', sub: 'Why now, what applies, about you', body: (app, ctx) => [completion(profileCompletion(ctx.store.doc)), ...profileScreen(app, ctx)] },
+  income: { title: 'Income', sub: 'Paychecks, benefits, variable income', body: (app, ctx) => {
+    const g = ctx.gates();
+    return [completion(listCompletion(ctx, r => r.kind === 'income' || r.kind === 'benefit', ['amount'])), hasAny(ctx, ['income']) ? null : fastTrack(app, ctx),
+      g.betweenJobs && !ctx.store.find(r => r.kind === 'income' && r.type === 'Unemployment').length
+        ? h('div.banner-inline', {}, 'Between jobs: add unemployment benefits so the runway counts them.', S.button('Add unemployment', { iconName: 'plus', onClick: () => ctx.store.add('income', { name: 'Unemployment benefits', per: 'week' }, { type: 'Unemployment' }) })) : null,
+      h('div.visuals', {}, S.recordList(ctx, incomeList()), S.visualsPanel(ctx, { charts: incomeCharts, area: 'income' })),
+      g.variable ? variableBlock(ctx) : null,
+      S.recordList(ctx, benefitList())];
+  } },
+  debt: { title: 'Debt', sub: 'Every debt and its payoff', body: (app, ctx) => (ctx.gates().areas.debt === false
+    ? [h('div.card', {}, h('div.empty', {}, h('span.title', {}, 'No debt, per the Profile'), addArea(app, ctx, 'debt', 'Debt')))]
+    : [completion(listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr'])), hasAny(ctx, ['debt']) ? null : fastTrack(app, ctx),
+      h('div.visuals', {}, S.recordList(ctx, debtList(ctx.ref)), S.visualsPanel(ctx, { charts: debtCharts, area: 'debt' }))]) },
+  assets: { title: 'Assets', sub: 'Cash, investments, car, home', body: (app, ctx) => [
+    completion(listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance'])),
+    hasAny(ctx, ['account', 'asset']) ? null : fastTrack(app, ctx), offAreas(app, ctx, ['cash', 'investments', 'real']),
+    h('div.visuals', {}, S.recordList(ctx, assetList(ctx.ref)), S.visualsPanel(ctx, { charts: assetCharts, area: 'assets' }))] },
+  protection: { title: 'Protection', sub: 'Insurance coverage and gaps', body: (app, ctx) => [completion(listCompletion(ctx, r => r.kind === 'coverage', ['have'])), S.recordList(ctx, protectionList())] },
+  taxes: { title: 'Taxes', sub: 'Filing status, last year, estimates', body: (app, ctx) => [h('div.visuals', {}, taxesScreen(ctx), S.visualsPanel(ctx, { charts: [incomeCharts[0]], area: 'taxes' }))] },
+};
+// One page (X013): every My Money section on one page, each under its own heading.
+function myMoney(id) {
+  return (app, ctx) => {
+    if (!app.hasClient) return [head('My Money'), noClient(app)];
+    if (!app.prefs.onePage) { const s = MM[id]; return [head(s.title, s.sub), ...s.body(app, ctx)]; }
+    const g = ctx.gates();
+    return [head('My Money', 'One page: every question, top to bottom'),
+      ...Object.entries(MM).filter(([k]) => k !== 'debt' || g.areas.debt !== false).map(([k, s]) => h('div.one-page-part', { id: `mm-${k}` }, h('h1.part-title', {}, s.title), ...s.body(app, ctx)))];
+  };
+}
 
 function moneyInOneLine(app, ctx) { // Mockup: exactly four numbers
   const m = ctx.metrics();
@@ -54,7 +110,8 @@ export const SCREENS = {
       prepCard('What changed since last time', ctx.store.lastSnapshot() ? 'See the arrows under Money in one line' : 'Nothing yet: no snapshot to compare with'),
       prepCard('Open homework', homework ? `${homework}` : 'None', '#/tools/lists'),
       prepCard('Due for a check', due ? `${due}` : 'None', '#/tools/lists'),
-      prepCard('Parking lot notes', notes ? `${notes}` : 'None', null, () => app.openParking()))];
+      prepCard('Parking lot notes', notes ? `${notes}` : 'None', null, () => app.openParking())),
+    ctx.gates().betweenJobs ? S.summaryStrip(ctx, [{ label: 'Runway (between jobs)', result: ctx.metrics().runwayMonths, render: r => `${r.value.toFixed(1)} months` }]) : null]; // R006
   },
   'home/live': (app, ctx) => app.hasClient
     ? [head('Home', 'Live: the session is on'), moneyInOneLine(app, ctx), center(h('span.title', {}, 'The agenda is built with Home (build phase 9).'),
@@ -65,20 +122,12 @@ export const SCREENS = {
       S.button('Save snapshot', { kind: 'primary', size: 'big', iconName: 'camera', onClick: () => app.snapshot('End of session') }))]
     : [head('Home'), noClient(app)],
 
-  'my-money/profile': (app, ctx) => [head('Profile', 'Why now, what applies, about you'), hasAny(ctx, ['income', 'debt', 'account', 'asset']) ? center(h('span.title', {}, 'Profile questions are built with My Money (build phase 5).')) : fastTrack()],
-  'my-money/income': (app, ctx) => [head('Income', 'Paychecks, benefits, variable income'), hasAny(ctx, ['income']) ? null : fastTrack(), S.recordList(ctx, incomeList(ctx.ref))],
-  'my-money/debt': (app, ctx) => [head('Debt', 'Every debt and its payoff'), hasAny(ctx, ['debt']) ? null : fastTrack(),
-    h('div.visuals', {}, S.recordList(ctx, debtList(ctx.ref)), S.visualsPanel(ctx, { charts: debtCharts, area: 'debt' }))],
-  'my-money/assets': (app, ctx) => [head('Assets', 'Cash, investments, car, home'), hasAny(ctx, ['account', 'asset']) ? null : fastTrack(), S.recordList(ctx, assetList(ctx.ref))],
-  'my-money/protection': (app, ctx) => [head('Protection', 'Insurance coverage and gaps'), fastTrack(), listEmpty('coverage', 'coverage rows', 'Protection is built with My Money (build phase 5)')],
-  'my-money/taxes': (app, ctx) => {
-    const m = ctx.metrics();
-    return [head('Taxes', 'Filing status, last year, estimates'), fastTrack(),
-      S.summaryStrip(ctx, [{ label: 'Take-home a month', result: { id: 'M12', value: m.inputs.takeHome, needs: m.inputs.takeHome === null ? ['take-home'] : [], unit: 'money', text: 'Your take-home pay, from Income.' } },
-        { label: 'Effective tax rate', result: { id: 'M14', value: null, needs: ['gross pay', 'filing status'], unit: 'pct' } },
-        { label: 'Marginal tax rate', result: { id: 'M14', value: null, needs: ['gross pay', 'filing status'], unit: 'pct' } },
-        { label: 'Federal tax a year', result: { id: 'M10', value: null, needs: ['gross pay'] } }])];
-  },
+  'my-money/profile': myMoney('profile'),
+  'my-money/income': myMoney('income'),
+  'my-money/debt': myMoney('debt'),
+  'my-money/assets': myMoney('assets'),
+  'my-money/protection': myMoney('protection'),
+  'my-money/taxes': myMoney('taxes'),
 
   'spending/budget': (app, ctx) => [head('Budget', 'Every spending line and the five passes'), S.recordList(ctx, spendingList(ctx.ref))],
   'spending/calendar': (app, ctx) => [head('Cash flow calendar', 'Day by day, with a running balance'),
@@ -136,11 +185,24 @@ export const SCREENS = {
   'tools/session': (app, ctx) => [head('Coach tools', 'Session and settings'), h('div.grid2', {},
     h('div.card', {}, h('h3', {}, 'Snapshot'), S.button('Save snapshot', { kind: 'primary', iconName: 'camera', disabled: !app.hasClient, why: 'No client open', onClick: () => app.snapshot('Snapshot') }),
       h('p.muted', { style: { marginTop: '12px' } }, ctx.store.lastSnapshot() ? `Last: ${ctx.store.lastSnapshot().label}, ${new Date(ctx.store.lastSnapshot().at).toLocaleString()}` : 'No snapshot yet.')),
+    fastTrackGap(ctx),
     h('div.card', {}, h('h3', {}, 'Settings'), h('div.stack', { style: { gap: '12px' } },
       h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Theme'), S.toggle(['System', 'Light', 'Dark'], app.prefs.theme === 'light' ? 'Light' : app.prefs.theme === 'dark' ? 'Dark' : 'System', v => app.setPref('theme', v.toLowerCase()), { label: 'Theme' })),
       h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Density'), S.toggle(['Comfortable', 'Compact'], app.prefs.density === 'compact' ? 'Compact' : 'Comfortable', v => app.setPref('density', v.toLowerCase()), { label: 'Density' })),
       h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Font'), S.toggle([['inter', 'Inter'], ['plex', 'IBM Plex Sans'], ['source', 'Source Sans 3']], app.prefs.font || 'inter', v => app.setPref('font', v), { label: 'Font' })))))],
 };
+
+// R069: Fast Track should land within $100 a month of the full answer. Its numbers are kept; this shows the gap.
+function fastTrackGap(ctx) {
+  const ft = ctx.store.doc.settings.fastTrack;
+  if (!ft?.result) return h('div.card', {}, h('h3', {}, 'Fast Track accuracy'), h('p.muted', {}, 'No Fast Track run yet.'));
+  const now = keyNumbers(ctx.metrics());
+  const gap = ft.result.surplus === null || now.surplus === null ? null : now.surplus - ft.result.surplus;
+  return h('div.card', {}, h('h3', {}, 'Fast Track accuracy'),
+    h('p', {}, `Fast Track (${new Date(ft.at).toLocaleDateString()}${ft.seconds ? `, ${Math.round(ft.seconds / 60)} min` : ''}) said ${money(ft.result.surplus)} a month surplus; now ${money(now.surplus)}.`),
+    gap === null ? h('p.muted', {}, 'Needs a surplus on both sides to compare.')
+      : h('p', {}, Math.abs(gap) <= 100 ? S.statusTag('Know it') : S.warnTag('Over $100'), ` Gap: ${money(Math.abs(gap))} a month (target: within $100).`));
+}
 
 function prepCard(label, text, href = null, onClick = null) {
   const body = h('div.big', { style: { fontSize: text.length > 6 ? '1rem' : '2rem' } }, text);
@@ -150,7 +212,7 @@ function prepCard(label, text, href = null, onClick = null) {
 
 // Sub-tab progress (R162): a small count, or a check when core is done.
 export function progressOf(ctx, tabId, subId) {
-  const recs = ctx.store.records;
+  const recs = ctx.visible(() => true);
   const core = (kinds, fields) => {
     const rows = recs.filter(r => kinds.includes(r.kind));
     if (!rows.length) return null;

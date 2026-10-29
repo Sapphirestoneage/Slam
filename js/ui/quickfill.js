@@ -10,7 +10,7 @@ const QUICK = {
   'take-home': {
     label: 'Take-home pay a month', hint: 'After taxes, what lands in your account', money: true, where: '#/my-money/income',
     get: ctx => { const r = first(ctx, r => r.kind === 'income'); return r?.per === 'month' || !r?.per ? r?.amount ?? null : null; },
-    save: (ctx, v) => { const r = first(ctx, r => r.kind === 'income'); r ? ctx.store.update(r.id, { amount: v, per: 'month' }) : ctx.store.add('income', { name: 'Take-home pay', amount: v, per: 'month' }, { type: 'Job' }); },
+    save: (ctx, v) => { const r = first(ctx, r => r.kind === 'income'); r ? ctx.store.update(r.id, { amount: v, per: 'month', basis: 'Take-home' }) : ctx.store.add('income', { name: 'Take-home pay', amount: v, per: 'month' }, { type: 'Job' }); },
   },
   spending: {
     label: 'Spending a month, all in', hint: 'Everything that goes out in a normal month', money: true, where: '#/spending/budget',

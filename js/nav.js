@@ -69,6 +69,6 @@ export function search(query, { fields = [], records = [] } = {}) {
 }
 
 export function placeOfRecord(r) {
-  return ({ income: 'My Money › Income', debt: 'My Money › Debt', account: 'My Money › Assets', asset: 'My Money › Assets',
-    bill: 'Spending › Budget', spending: 'Spending › Budget' })[r.kind] || 'My Money › Profile';
+  return ({ income: 'My Money › Income', benefit: 'My Money › Income', debt: 'My Money › Debt', account: 'My Money › Assets', asset: 'My Money › Assets',
+    coverage: 'My Money › Protection', bill: 'Spending › Budget', spending: 'Spending › Budget' })[r.kind] || 'My Money › Profile';
 }

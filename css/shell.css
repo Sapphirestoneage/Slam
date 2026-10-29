@@ -103,6 +103,7 @@ textarea.note-input { width: 100%; min-height: 70px; border: 2px solid var(--bor
   .tb-left { flex: none; }
   .tb-right { margin-left: auto; flex-wrap: wrap; }
   .subtabs { top: 0; }
+  .subtabs-in { flex-wrap: wrap; }
 }
 
 /* Phone: laptop first, but every screen works at phone width with no sideways page scroll.

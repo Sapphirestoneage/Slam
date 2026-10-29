@@ -361,13 +361,13 @@
       "category": "Gas or charging",
       "draftt": "Transportation",
       "amount": "Variable",
-      "timing": "Variable date"
+      "timing": "Variable date", "gate": "car"
     },
     {
       "category": "Tolls and parking",
       "draftt": "Transportation",
       "amount": "Variable",
-      "timing": "Variable date"
+      "timing": "Variable date", "gate": "car"
     },
     {
       "category": "Transit",

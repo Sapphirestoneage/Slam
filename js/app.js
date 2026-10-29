@@ -9,6 +9,7 @@ import { addPresets } from './presets.js';
 import { keyNumbers } from './math/metrics.js';
 import { TABS, parseRoute, search, routeForPlace } from './nav.js';
 import { SCREENS, progressOf } from './screens.js';
+import { startFastTrack } from './ui/fasttrack-ui.js';
 
 const [ref, fields] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/fields.json').then(r => r.json())]);
 
@@ -80,13 +81,19 @@ const app = {
         S.quickAdd(this.ctx, { onAdded: (r, p) => this.go(routeForPlace(p.section)) }),
         S.iconButton('note', 'Parking lot', () => this.openParking()), undo, redo,
         S.timeToggle(this.ctx), cv, gear)));
-    const subs = h('div.subtabs-in', {}, tab.subs.map(s => {
+    // A sub-tab whose area the Profile turned off is absent, not greyed (R001).
+    const off = this.hasClient && tab.id === 'my-money' && this.ctx.gates().areas.debt === false ? new Set(['debt']) : new Set();
+    // My Money modes sit beside its sub-tabs: Fast Track is a button, One page a toggle (Navigation: modes are not tabs).
+    const modes = tab.id === 'my-money' && this.hasClient ? h('span.row-line.mm-modes', { style: { gap: '8px', flexWrap: 'nowrap' } },
+      S.button('Start Fast Track', { iconName: 'right', onClick: () => startFastTrack(this, this.ctx) }),
+      S.toggle([['sections', 'By section'], ['one', 'One page']], this.prefs.onePage ? 'one' : 'sections', v => this.setPref('onePage', v === 'one'), { label: 'My Money layout' })) : null;
+    const subs = h('div.subtabs-in', {}, tab.subs.filter(s => !off.has(s.id)).map(s => {
       const p = this.hasClient ? progressOf(this.ctx, tab.id, s.id) : null;
       const complete = p && p.of > 0 && p.done === p.of;
       return h('a.subtab', { href: `#/${tab.id}/${s.id}`, 'aria-current': s.id === sub.id ? 'page' : null, class: s.area ? `area-${s.area}` : null },
         s.area ? h('span.dot') : null, s.name,
         p ? h(`span.count${complete ? '.done' : ''}`, { 'aria-label': complete ? 'core done' : `${p.done} of ${p.of} done` }, complete ? '✓' : `${p.done}/${p.of}`) : null);
-    }), h('span.spacer'), S.savedNote());
+    }), modes, h('span.spacer'), S.savedNote());
     clear($('subtabs'), subs);
     this.saveState();
     this.banner();
@@ -264,12 +271,17 @@ const app = {
     this.ctx.clearScreen();
     this.chrome();
     const screen = SCREENS[`${tab.id}/${sub.id}`];
+    const focus = document.activeElement?.dataset?.focus; // a redraw never loses your place (R165)
     clear($('main'), screen ? screen(this, this.ctx) : null);
+    if (focus) $('main').querySelector(`[data-focus="${CSS.escape(focus)}"]`)?.focus();
+    // One page: a sub-tab click scrolls to its part (only when the place changes, not on every redraw).
+    if (this.prefs.onePage && tab.id === 'my-money' && this._lastHash !== hash && this._lastHash?.startsWith('#/my-money')) document.getElementById(`mm-${sub.id}`)?.scrollIntoView({ block: 'start' });
+    this._lastHash = hash;
     document.title = `${sub.name} · ${tab.name} · SLAM`;
     if (location.hash !== hash) history.replaceState(null, '', hash);
   },
 };
-const placeOf = r => ({ income: 'My Money › Income', debt: 'My Money › Debt', account: 'My Money › Assets', asset: 'My Money › Assets', bill: 'Spending › Budget' })[r.kind] || 'My Money › Profile';
+const placeOf = r => ({ income: 'My Money › Income', benefit: 'My Money › Income', debt: 'My Money › Debt', account: 'My Money › Assets', asset: 'My Money › Assets', coverage: 'My Money › Protection', bill: 'Spending › Budget' })[r.kind] || 'My Money › Profile';
 
 // Keyboard (R168): / = Find, Ctrl+Z undo, Ctrl+Shift+Z redo (outside text boxes, so typing undo still works).
 document.addEventListener('keydown', e => {

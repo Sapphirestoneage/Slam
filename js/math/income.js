@@ -110,3 +110,29 @@ export function realHourlyWage({ takeHome, workCosts = 0, paidHours, commuteHour
   const v = (takeHome - workCosts) / allHours;
   return ok('M17', v, `${fmt.money(takeHome)} take-home minus ${fmt.money(workCosts)} work costs, divided by ${fmt.number(allHours)} hours (paid, commute and getting ready) = ${fmt.money(v, { cents: true })} an hour.`);
 }
+
+// R046: a paycheck row typed as take-home or as gross. The other is solved and marked Computed.
+// Jobs pay tax; benefits, unemployment and money from family are counted as they land. Each job is worked out
+// on its own (a second job is taxed as if it were the only one), and state tax is not in yet.
+const TAXED = { Job: 'W-2', 'Partner job': 'W-2', 'Side hustle': '1099', 'Self-employed': '1099' };
+export const taxTypeOf = r => r.values?.incomeType ?? TAXED[r.type] ?? null;
+const PAYCHECKS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
+export function incomeRow(r, { filingStatus = 'Single', ref }) {
+  const v = r.values || {};
+  const taxType = taxTypeOf(r);
+  const perYear = PAYCHECKS[v.payFrequency] ?? 26;
+  const yearly = (x, per) => (x == null ? null : monthlyFrom(x, per, v.payFrequency).value * 12);
+  const typedGross = v.basis === 'Gross' ? yearly(r.amount, r.per) : v.gross ?? null;
+  const salary = typedGross ?? null;
+  const pretax = (salary ?? 0) * (v.contributionPct ?? 0) + ((v.premium ?? 0) + (v.hsaFsa ?? 0) + (v.otherPretax ?? 0)) * perYear;
+  const selfEmployed = taxType === '1099';
+  if (taxType && salary !== null && (v.basis === 'Gross' || r.amount == null)) { // gross only: take-home is solved
+    const t = takeHomeFromGross({ gross: salary, pretax, filingStatus, selfEmployed }, ref);
+    return { takeHome: { ...t, value: t.value / 12, text: t.text, status: 'Computed' }, gross: salary, pretax, taxType, computed: 'takeHome' };
+  }
+  const th = r.amount == null ? needs('M01', ['take-home']) : monthlyFrom(r.amount, r.per, v.payFrequency);
+  if (!taxType || th.value === null) return { takeHome: th, gross: salary, pretax, taxType, computed: null };
+  if (salary !== null) return { takeHome: th, gross: salary, pretax, taxType, computed: null }; // both typed: kept as typed (R046)
+  const g = grossFromTakeHome({ takeHome: th.value * 12, pretax, filingStatus, selfEmployed }, ref);
+  return { takeHome: th, gross: g.value, grossResult: g, pretax, taxType, computed: 'gross' };
+}
