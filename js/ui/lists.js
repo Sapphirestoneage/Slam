@@ -18,7 +18,7 @@ export function debtList(ref) {
     coreFields: ['balance', 'apr'],
     paidWith: false,
     columns: [
-      { label: 'Debt', render: (ctx, r, m, up) => h('div.stack', {}, h('span.label', {}, r.type || 'Debt'), textInput(r.name, v => up({ name: v }), { hint: 'Add name', width: 150, key: `${r.id}:name` })) },
+      { label: 'Debt', render: (ctx, r, m, up) => h('div.stack', {}, h('span.label', {}, r.type || 'Debt'), textInput(r.name, v => up({ name: v }), { hint: 'Add name', width: 136, key: `${r.id}:name` })) },
       { label: 'Balance', num: true, render: (ctx, r, m, up) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, moneyInput(r.values.balance, v => up({ balance: v }), { hint: 'Add balance', key: `${r.id}:balance` })) },
       { label: 'APR', num: true, render: (ctx, r, m, up) => {
         const d = m.debts.find(x => x.id === r.id);
@@ -145,3 +145,43 @@ export const debtCharts = [
     }),
   },
 ];
+
+// Income: one row per paycheck or other money in (built out in phase 5).
+export function incomeList() {
+  return {
+    kind: 'income', area: 'income', title: 'Income', thing: { one: 'income', plural: 'income rows' }, defaultType: 'Job',
+    filter: r => r.kind === 'income',
+    picker: { top: ['Job', 'Side hustle', 'Benefits', 'Rental'], other: ['Partner job', 'Money from family', 'Self-employed'] },
+    coreFields: ['amount'],
+    columns: [
+      { label: 'Source', render: (ctx, r, m, up) => h('div.stack', {}, h('span.label', {}, r.type || 'Income'), textInput(r.name, v => up({ name: v }), { hint: 'Add name', width: 170, key: `${r.id}:name` })) },
+      { label: 'Take-home', num: true, render: (ctx, r, m, up) => moneyInput(r.amount, v => up({ amount: v }), { hint: 'Add take-home', key: `${r.id}:amount` }) },
+      { label: 'Per', render: (ctx, r, m, up) => perPicker(r.per, v => up({ per: v }), { key: `${r.id}:per` }) },
+      { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) },
+    ],
+    footerTotal: (ctx, recs, m) => h('span', {}, amount(ctx, m.inputs.takeHome), h('span.muted', {}, ' a month')),
+    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Source' ? h('td', {}, `${recs.length} ${recs.length === 1 ? 'row' : 'rows'}`) : c.label === 'Take-home' ? h('td.num', {}, amount(ctx, m.inputs.takeHome)) : h('td')), h('td'), h('td')],
+  };
+}
+
+// Assets: cash and investment accounts, car, home (built out in phase 5).
+export function assetList(ref) {
+  const group = r => (r.kind === 'asset' ? 'Home or car' : r.values.group === 'investment' ? 'Investments' : 'Cash');
+  const val = r => (r.kind === 'asset' ? r.values.value : r.values.balance);
+  return {
+    kind: 'account', area: 'assets', title: 'Assets', thing: { one: 'account', plural: 'accounts' },
+    filter: r => r.kind === 'account' || r.kind === 'asset',
+    groupBy: group,
+    picker: { top: ['Checking', 'Savings or HYSA', '401(k)', 'Roth IRA'], other: [...ref.lists.cashTypes, ...ref.lists.investmentTypes] },
+    newValues: type => ({ values: { group: ref.lists.cashTypes.includes(type) ? 'cash' : 'investment' } }),
+    columns: [
+      { label: 'Account', render: (ctx, r, m, up) => h('div.stack', {}, h('span.label', {}, r.type || 'Account'), textInput(r.name, v => up({ name: v }), { hint: 'Add name', width: 170, key: `${r.id}:name` })) },
+      { label: 'Balance', num: true, render: (ctx, r, m, up) => moneyInput(val(r), v => up(r.kind === 'asset' ? { value: v } : { balance: v }), { hint: 'Add balance', key: `${r.id}:balance` }) },
+      { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) },
+    ],
+    coreFields: [],
+    subtotal: (ctx, rows) => money(sum(rows, val)),
+    footerTotal: (ctx, recs) => amount(ctx, recs.some(r => val(r) != null) ? sum(recs, val) : null),
+    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Account' ? h('td', {}, `${recs.length} ${recs.length === 1 ? 'item' : 'items'}`) : c.label === 'Balance' ? h('td.num', {}, amount(ctx, recs.some(r => val(r) != null) ? sum(recs, val) : null)) : h('td')), h('td'), h('td')],
+  };
+}

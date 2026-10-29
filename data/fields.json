@@ -1,0 +1,2632 @@
+[
+ {
+  "id": "F001",
+  "field": "First name",
+  "area": "Profile",
+  "group": "About you",
+  "layer": "Primary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F002",
+  "field": "Last name",
+  "area": "Profile",
+  "group": "About you",
+  "layer": "Primary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F003",
+  "field": "Birth month and year",
+  "area": "Profile",
+  "group": "About you",
+  "layer": "Primary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F004",
+  "field": "State",
+  "area": "Profile",
+  "group": "About you",
+  "layer": "Primary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F005",
+  "field": "Solo or couple",
+  "area": "Profile",
+  "group": "Household",
+  "layer": "Primary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F006",
+  "field": "Partner first name",
+  "area": "Profile",
+  "group": "Household",
+  "layer": "Primary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F007",
+  "field": "Partner birth month and year",
+  "area": "Profile",
+  "group": "Household",
+  "layer": "Primary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F008",
+  "field": "Dependents (count and ages)",
+  "area": "Profile",
+  "group": "Household",
+  "layer": "Secondary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F009",
+  "field": "Work situation",
+  "area": "Profile",
+  "group": "Work",
+  "layer": "Primary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F010",
+  "field": "Has a car / has pets",
+  "area": "Profile",
+  "group": "Car and pets",
+  "layer": "Primary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F011",
+  "field": "Income stability",
+  "area": "Profile",
+  "group": "Work",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F012",
+  "field": "Housing status",
+  "area": "Profile",
+  "group": "Home",
+  "layer": "Primary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F013",
+  "field": "Roommates (count)",
+  "area": "Profile",
+  "group": "Home",
+  "layer": "Secondary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F014",
+  "field": "Health coverage type",
+  "area": "Profile",
+  "group": "Health",
+  "layer": "Secondary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F015",
+  "field": "Which do you have today",
+  "area": "Profile",
+  "group": "Accounts gate",
+  "layer": "Primary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F016",
+  "field": "How many of each type",
+  "area": "Profile",
+  "group": "Accounts gate",
+  "layer": "Primary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F017",
+  "field": "Client email and phone",
+  "area": "Profile",
+  "group": "Contact",
+  "layer": "Secondary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F018",
+  "field": "Money Mirror or personality quiz result",
+  "area": "Profile",
+  "group": "Money personality",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Profile",
+  "scope": "Later",
+  "phase": "5"
+ },
+ {
+  "id": "F019",
+  "field": "Take-home pay",
+  "area": "Income",
+  "group": "Main income",
+  "layer": "Primary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F020",
+  "field": "Pay frequency",
+  "area": "Income",
+  "group": "Main income",
+  "layer": "Primary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F021",
+  "field": "Gross salary",
+  "area": "Income",
+  "group": "Main income",
+  "layer": "Secondary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F022",
+  "field": "Employer or source name",
+  "area": "Income",
+  "group": "Main income",
+  "layer": "Secondary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F023",
+  "field": "Income type",
+  "area": "Income",
+  "group": "Main income",
+  "layer": "Secondary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F024",
+  "field": "Bonus amount and month",
+  "area": "Income",
+  "group": "Main income",
+  "layer": "Secondary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F025",
+  "field": "Expected raise %",
+  "area": "Income",
+  "group": "Main income",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F026",
+  "field": "401(k) or 403(b) contribution %",
+  "area": "Income",
+  "group": "Paycheck deductions",
+  "layer": "Secondary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F027",
+  "field": "Health premium per paycheck",
+  "area": "Income",
+  "group": "Paycheck deductions",
+  "layer": "Secondary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F028",
+  "field": "HSA or FSA per paycheck",
+  "area": "Income",
+  "group": "Paycheck deductions",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F029",
+  "field": "Other pretax deductions (commuter, life, disability)",
+  "area": "Income",
+  "group": "Paycheck deductions",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F030",
+  "field": "Match formula",
+  "area": "Income",
+  "group": "Employer match",
+  "layer": "Secondary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F031",
+  "field": "Vesting schedule",
+  "area": "Income",
+  "group": "Employer match",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F032",
+  "field": "Side hustle income",
+  "area": "Income",
+  "group": "Side income",
+  "layer": "Secondary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F033",
+  "field": "Partner take-home pay",
+  "area": "Income",
+  "group": "Partner income",
+  "layer": "Primary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F034",
+  "field": "Unemployment or other benefits",
+  "area": "Income",
+  "group": "Benefits",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F035",
+  "field": "Actual income from cash flow log",
+  "area": "Income",
+  "group": "Actuals",
+  "layer": "Secondary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F036",
+  "field": "Filing status",
+  "area": "Taxes",
+  "group": "Filing",
+  "layer": "Secondary",
+  "livesOn": "My Money › Taxes",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F037",
+  "field": "Last year refund or amount owed",
+  "area": "Taxes",
+  "group": "Filing",
+  "layer": "Secondary",
+  "livesOn": "My Money › Taxes",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F038",
+  "field": "Quarterly estimates paid (1099)",
+  "area": "Taxes",
+  "group": "Filing",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Taxes",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F039",
+  "field": "Itemizing or standard",
+  "area": "Taxes",
+  "group": "Filing",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Taxes",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F040",
+  "field": "Effective and marginal tax rate",
+  "area": "Taxes",
+  "group": "Computed results",
+  "layer": "Secondary",
+  "livesOn": "My Money › Taxes",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F041",
+  "field": "Self-employment tax",
+  "area": "Taxes",
+  "group": "Computed results",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Taxes",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F042",
+  "field": "Paystub or 1040 reader",
+  "area": "Taxes",
+  "group": "Documents",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Taxes",
+  "scope": "Parked",
+  "phase": "5"
+ },
+ {
+  "id": "F043",
+  "field": "Gut monthly spending",
+  "area": "Needs",
+  "group": "Total",
+  "layer": "Primary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F044",
+  "field": "Rent or mortgage payment",
+  "area": "Needs",
+  "group": "Accommodation",
+  "layer": "Primary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F045",
+  "field": "Electric",
+  "area": "Needs",
+  "group": "Accommodation",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F046",
+  "field": "Gas and heat",
+  "area": "Needs",
+  "group": "Accommodation",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F047",
+  "field": "Water and trash",
+  "area": "Needs",
+  "group": "Accommodation",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F048",
+  "field": "Internet",
+  "area": "Needs",
+  "group": "Accommodation",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F049",
+  "field": "Renters or home insurance",
+  "area": "Needs",
+  "group": "Accommodation",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F050",
+  "field": "Groceries",
+  "area": "Needs",
+  "group": "Food",
+  "layer": "Primary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F051",
+  "field": "Dining out and delivery",
+  "area": "Needs",
+  "group": "Food",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F052",
+  "field": "Coffee and snacks",
+  "area": "Needs",
+  "group": "Food",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F053",
+  "field": "Car insurance",
+  "area": "Needs",
+  "group": "Transportation",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F054",
+  "field": "Gas or charging",
+  "area": "Needs",
+  "group": "Transportation",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F055",
+  "field": "Car maintenance and repairs",
+  "area": "Needs",
+  "group": "Transportation",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F056",
+  "field": "Registration and inspection",
+  "area": "Needs",
+  "group": "Transportation",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F057",
+  "field": "Tolls",
+  "area": "Needs",
+  "group": "Transportation",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F058",
+  "field": "Parking",
+  "area": "Needs",
+  "group": "Transportation",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F059",
+  "field": "Car wash and supplies",
+  "area": "Needs",
+  "group": "Transportation",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F060",
+  "field": "Transit pass and fares",
+  "area": "Needs",
+  "group": "Transportation",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F061",
+  "field": "Uber, Lyft, taxis",
+  "area": "Needs",
+  "group": "Transportation",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F062",
+  "field": "Therapy or coaching",
+  "area": "Needs",
+  "group": "Therapy (optional)",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F063",
+  "field": "Out-of-pocket medical and prescriptions",
+  "area": "Needs",
+  "group": "Health",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F064",
+  "field": "Phone plan",
+  "area": "Needs",
+  "group": "Phone and subscriptions",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F065",
+  "field": "Subscriptions (list)",
+  "area": "Needs",
+  "group": "Phone and subscriptions",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F066",
+  "field": "Wants bucket (one total)",
+  "area": "Needs",
+  "group": "Wants",
+  "layer": "Primary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F067",
+  "field": "Travel",
+  "area": "Needs",
+  "group": "Wants",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F068",
+  "field": "Gifts and giving",
+  "area": "Needs",
+  "group": "Wants",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F069",
+  "field": "Money sent to family",
+  "area": "Needs",
+  "group": "Wants",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F070",
+  "field": "Childcare and babysitting",
+  "area": "Needs",
+  "group": "Kids",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F071",
+  "field": "Diapers, formula, baby supplies",
+  "area": "Needs",
+  "group": "Kids",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F072",
+  "field": "Clothes and shoes",
+  "area": "Needs",
+  "group": "Kids",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F073",
+  "field": "School tuition and fees",
+  "area": "Needs",
+  "group": "Kids",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F074",
+  "field": "Activities, camps, lessons",
+  "area": "Needs",
+  "group": "Kids",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F075",
+  "field": "Kids' medical and dental",
+  "area": "Needs",
+  "group": "Kids",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F076",
+  "field": "Toys, birthdays, school supplies",
+  "area": "Needs",
+  "group": "Kids",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F077",
+  "field": "Allowance and phone",
+  "area": "Needs",
+  "group": "Kids",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F078",
+  "field": "529 or savings for kids",
+  "area": "Needs",
+  "group": "Kids",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F079",
+  "field": "Pet food",
+  "area": "Needs",
+  "group": "Pets",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F080",
+  "field": "Vet visits and vaccines",
+  "area": "Needs",
+  "group": "Pets",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F081",
+  "field": "Pet insurance",
+  "area": "Needs",
+  "group": "Pets",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F082",
+  "field": "Medications and flea/tick",
+  "area": "Needs",
+  "group": "Pets",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F083",
+  "field": "Grooming",
+  "area": "Needs",
+  "group": "Pets",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F084",
+  "field": "Boarding, walker, daycare",
+  "area": "Needs",
+  "group": "Pets",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F085",
+  "field": "Supplies, toys, litter",
+  "area": "Needs",
+  "group": "Pets",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F086",
+  "field": "Education and courses",
+  "area": "Needs",
+  "group": "Other",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F087",
+  "field": "Who pays",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F088",
+  "field": "Covered by",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F089",
+  "field": "Amount they cover",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F090",
+  "field": "Split by how many",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F091",
+  "field": "Or just my share",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F092",
+  "field": "Should have, don't yet",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F093",
+  "field": "Reimbursed amount",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F094",
+  "field": "Total support from others",
+  "area": "Needs",
+  "group": "Support received",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F095",
+  "field": "Has a car",
+  "area": "Needs",
+  "group": "Car gate",
+  "layer": "Primary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F096",
+  "field": "Has pets (how many)",
+  "area": "Needs",
+  "group": "Pets gate",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F097",
+  "field": "Frequency",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F098",
+  "field": "Actual amount (from cash flow log)",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Secondary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F099",
+  "field": "Happiness rating",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F100",
+  "field": "Need or want tag",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Later",
+  "phase": "6"
+ },
+ {
+  "id": "F101",
+  "field": "Unavoidable or mistake tag",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Later",
+  "phase": "6"
+ },
+ {
+  "id": "F102",
+  "field": "Whose value is this",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Later",
+  "phase": "6"
+ },
+ {
+  "id": "F103",
+  "field": "Priority it serves",
+  "area": "Needs",
+  "group": "Each line",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Budget",
+  "scope": "Later",
+  "phase": "6"
+ },
+ {
+  "id": "F104",
+  "field": "Name or lender",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F105",
+  "field": "Balance",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F106",
+  "field": "Interest rate (APR)",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F107",
+  "field": "Monthly payment",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F108",
+  "field": "Minimum payment",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F109",
+  "field": "0% promo rate and end date",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F110",
+  "field": "Payment due date",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F111",
+  "field": "Credit limit",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F112",
+  "field": "Personal or business",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F113",
+  "field": "Sign-up bonus (amount, spend needed, by when)",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F114",
+  "field": "Card age (opened date)",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F115",
+  "field": "Card from library (benefits prefill)",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F116",
+  "field": "Annual fee",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F117",
+  "field": "Name or lender",
+  "area": "Debt",
+  "group": "Student loans",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F118",
+  "field": "Balance",
+  "area": "Debt",
+  "group": "Student loans",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F119",
+  "field": "Interest rate (APR)",
+  "area": "Debt",
+  "group": "Student loans",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F120",
+  "field": "Monthly payment",
+  "area": "Debt",
+  "group": "Student loans",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F121",
+  "field": "Federal or private",
+  "area": "Debt",
+  "group": "Student loans",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F122",
+  "field": "Servicer",
+  "area": "Debt",
+  "group": "Student loans",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F123",
+  "field": "Repayment plan",
+  "area": "Debt",
+  "group": "Student loans",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F124",
+  "field": "Each loan separately",
+  "area": "Debt",
+  "group": "Student loans",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F125",
+  "field": "Public Service Loan Forgiveness eligible",
+  "area": "Debt",
+  "group": "Student loans",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F126",
+  "field": "Forbearance or deferment status",
+  "area": "Debt",
+  "group": "Student loans",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F127",
+  "field": "Name or lender",
+  "area": "Debt",
+  "group": "Auto loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F128",
+  "field": "Balance",
+  "area": "Debt",
+  "group": "Auto loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F129",
+  "field": "Interest rate (APR)",
+  "area": "Debt",
+  "group": "Auto loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F130",
+  "field": "Monthly payment",
+  "area": "Debt",
+  "group": "Auto loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F131",
+  "field": "Months remaining",
+  "area": "Debt",
+  "group": "Auto loan",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F132",
+  "field": "Name or lender",
+  "area": "Debt",
+  "group": "Mortgage",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F133",
+  "field": "Balance",
+  "area": "Debt",
+  "group": "Mortgage",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F134",
+  "field": "Interest rate (APR)",
+  "area": "Debt",
+  "group": "Mortgage",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F135",
+  "field": "Monthly payment",
+  "area": "Debt",
+  "group": "Mortgage",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F136",
+  "field": "Fixed or adjustable",
+  "area": "Debt",
+  "group": "Mortgage",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F137",
+  "field": "Years remaining",
+  "area": "Debt",
+  "group": "Mortgage",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F138",
+  "field": "Name or lender",
+  "area": "Debt",
+  "group": "Personal loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F139",
+  "field": "Balance",
+  "area": "Debt",
+  "group": "Personal loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F140",
+  "field": "Interest rate (APR)",
+  "area": "Debt",
+  "group": "Personal loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F141",
+  "field": "Monthly payment",
+  "area": "Debt",
+  "group": "Personal loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F142",
+  "field": "Months remaining",
+  "area": "Debt",
+  "group": "Personal loan",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F143",
+  "field": "Name or lender",
+  "area": "Debt",
+  "group": "Medical debt",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F144",
+  "field": "Balance",
+  "area": "Debt",
+  "group": "Medical debt",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F145",
+  "field": "Interest rate (APR)",
+  "area": "Debt",
+  "group": "Medical debt",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F146",
+  "field": "Monthly payment",
+  "area": "Debt",
+  "group": "Medical debt",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F147",
+  "field": "In collections",
+  "area": "Debt",
+  "group": "Medical debt",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F148",
+  "field": "Name or lender",
+  "area": "Debt",
+  "group": "Family or friend loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F149",
+  "field": "Balance",
+  "area": "Debt",
+  "group": "Family or friend loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F150",
+  "field": "Interest rate (APR)",
+  "area": "Debt",
+  "group": "Family or friend loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F151",
+  "field": "Monthly payment",
+  "area": "Debt",
+  "group": "Family or friend loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F152",
+  "field": "Terms agreed",
+  "area": "Debt",
+  "group": "Family or friend loan",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F153",
+  "field": "Name or lender",
+  "area": "Debt",
+  "group": "Buy now, pay later",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F154",
+  "field": "Balance",
+  "area": "Debt",
+  "group": "Buy now, pay later",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F155",
+  "field": "Interest rate (APR)",
+  "area": "Debt",
+  "group": "Buy now, pay later",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F156",
+  "field": "Monthly payment",
+  "area": "Debt",
+  "group": "Buy now, pay later",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F157",
+  "field": "Payments left",
+  "area": "Debt",
+  "group": "Buy now, pay later",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F158",
+  "field": "Name or lender",
+  "area": "Debt",
+  "group": "Payday or cash advance",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F159",
+  "field": "Balance",
+  "area": "Debt",
+  "group": "Payday or cash advance",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F160",
+  "field": "Interest rate (APR)",
+  "area": "Debt",
+  "group": "Payday or cash advance",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F161",
+  "field": "Monthly payment",
+  "area": "Debt",
+  "group": "Payday or cash advance",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F162",
+  "field": "Fees per period",
+  "area": "Debt",
+  "group": "Payday or cash advance",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F163",
+  "field": "Name or lender",
+  "area": "Debt",
+  "group": "Tax debt",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F164",
+  "field": "Balance",
+  "area": "Debt",
+  "group": "Tax debt",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F165",
+  "field": "Interest rate (APR)",
+  "area": "Debt",
+  "group": "Tax debt",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F166",
+  "field": "Monthly payment",
+  "area": "Debt",
+  "group": "Tax debt",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F167",
+  "field": "Payment plan in place",
+  "area": "Debt",
+  "group": "Tax debt",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F168",
+  "field": "Name or lender",
+  "area": "Debt",
+  "group": "401(k) loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F169",
+  "field": "Balance",
+  "area": "Debt",
+  "group": "401(k) loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F170",
+  "field": "Interest rate (APR)",
+  "area": "Debt",
+  "group": "401(k) loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F171",
+  "field": "Monthly payment",
+  "area": "Debt",
+  "group": "401(k) loan",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F172",
+  "field": "Due in full if you leave job",
+  "area": "Debt",
+  "group": "401(k) loan",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F173",
+  "field": "Name or lender",
+  "area": "Debt",
+  "group": "Business debt",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F174",
+  "field": "Balance",
+  "area": "Debt",
+  "group": "Business debt",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F175",
+  "field": "Interest rate (APR)",
+  "area": "Debt",
+  "group": "Business debt",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F176",
+  "field": "Monthly payment",
+  "area": "Debt",
+  "group": "Business debt",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F177",
+  "field": "Personally guaranteed",
+  "area": "Debt",
+  "group": "Business debt",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F178",
+  "field": "Stress rating",
+  "area": "Debt",
+  "group": "Each debt",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F179",
+  "field": "Months to pay off and payoff date",
+  "area": "Debt",
+  "group": "Computed results",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F180",
+  "field": "Total interest remaining",
+  "area": "Debt",
+  "group": "Computed results",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F181",
+  "field": "Debt-to-income ratio",
+  "area": "Debt",
+  "group": "Computed results",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F182",
+  "field": "Credit utilization",
+  "area": "Debt",
+  "group": "Computed results",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F183",
+  "field": "Payoff order (avalanche, snowball, stress-weighted)",
+  "area": "Debt",
+  "group": "Computed results",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F184",
+  "field": "Checking balance",
+  "area": "Assets",
+  "group": "Cash",
+  "layer": "Primary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F185",
+  "field": "Savings or HYSA balance",
+  "area": "Assets",
+  "group": "Cash",
+  "layer": "Primary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F186",
+  "field": "Institution",
+  "area": "Assets",
+  "group": "Cash",
+  "layer": "Secondary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F187",
+  "field": "Interest rate (APY)",
+  "area": "Assets",
+  "group": "Cash",
+  "layer": "Secondary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F188",
+  "field": "Purpose bucket",
+  "area": "Assets",
+  "group": "Cash",
+  "layer": "Secondary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F189",
+  "field": "Account type",
+  "area": "Assets",
+  "group": "Investments",
+  "layer": "Primary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F190",
+  "field": "Balance",
+  "area": "Assets",
+  "group": "Investments",
+  "layer": "Primary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F191",
+  "field": "Institution",
+  "area": "Assets",
+  "group": "Investments",
+  "layer": "Secondary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F192",
+  "field": "Contributions (per paycheck or year)",
+  "area": "Assets",
+  "group": "Investments",
+  "layer": "Secondary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F193",
+  "field": "Pretax or Roth",
+  "area": "Assets",
+  "group": "Investments",
+  "layer": "Secondary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F194",
+  "field": "Stocks vs bonds split",
+  "area": "Assets",
+  "group": "Investments",
+  "layer": "Secondary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F195",
+  "field": "Holdings or index funds",
+  "area": "Assets",
+  "group": "Investments",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F196",
+  "field": "Fees (expense ratio, advisory fee)",
+  "area": "Assets",
+  "group": "Investments",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F197",
+  "field": "Cost basis",
+  "area": "Assets",
+  "group": "Investments",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F198",
+  "field": "Roth contributions basis",
+  "area": "Assets",
+  "group": "Investments",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F199",
+  "field": "HSA invested vs cash",
+  "area": "Assets",
+  "group": "Investments",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F200",
+  "field": "Unvested balance",
+  "area": "Assets",
+  "group": "Investments",
+  "layer": "Secondary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F201",
+  "field": "Beneficiary on file",
+  "area": "Assets",
+  "group": "Investments",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Assets",
+  "scope": "Later",
+  "phase": "5"
+ },
+ {
+  "id": "F202",
+  "field": "Car current value",
+  "area": "Assets",
+  "group": "Real assets",
+  "layer": "Primary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F203",
+  "field": "Car purchase price",
+  "area": "Assets",
+  "group": "Real assets",
+  "layer": "Secondary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F204",
+  "field": "Home current value",
+  "area": "Assets",
+  "group": "Real assets",
+  "layer": "Primary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F205",
+  "field": "Home purchase price and date",
+  "area": "Assets",
+  "group": "Real assets",
+  "layer": "Secondary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F206",
+  "field": "Property tax, insurance, HOA",
+  "area": "Assets",
+  "group": "Real assets",
+  "layer": "Secondary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F207",
+  "field": "Other assets (boat, collectibles, business equity)",
+  "area": "Assets",
+  "group": "Real assets",
+  "layer": "Secondary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F208",
+  "field": "Money owed to you",
+  "area": "Assets",
+  "group": "Real assets",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F209",
+  "field": "Pension",
+  "area": "Assets",
+  "group": "Future",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Assets",
+  "scope": "Later",
+  "phase": "5"
+ },
+ {
+  "id": "F210",
+  "field": "Expected inheritance",
+  "area": "Assets",
+  "group": "Future",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Assets",
+  "scope": "Later",
+  "phase": "5"
+ },
+ {
+  "id": "F211",
+  "field": "Liquid net worth",
+  "area": "Assets",
+  "group": "Computed results",
+  "layer": "Primary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F212",
+  "field": "Total net worth",
+  "area": "Assets",
+  "group": "Computed results",
+  "layer": "Primary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F213",
+  "field": "Liquidity tier per account",
+  "area": "Assets",
+  "group": "Computed results",
+  "layer": "Primary",
+  "livesOn": "My Money › Assets",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F214",
+  "field": "FI age or 'just show me'",
+  "area": "Goals",
+  "group": "FI target",
+  "layer": "Primary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F215",
+  "field": "Return (real)",
+  "area": "Goals",
+  "group": "Assumptions",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F216",
+  "field": "Withdrawal rate",
+  "area": "Goals",
+  "group": "Assumptions",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F217",
+  "field": "Pace (optimistic, likely, pessimistic)",
+  "area": "Goals",
+  "group": "Assumptions",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F218",
+  "field": "Real or nominal dollars",
+  "area": "Goals",
+  "group": "Assumptions",
+  "layer": "Tertiary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F219",
+  "field": "Life expectancy",
+  "area": "Goals",
+  "group": "Assumptions",
+  "layer": "Tertiary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F220",
+  "field": "Social Security",
+  "area": "Goals",
+  "group": "Assumptions",
+  "layer": "Tertiary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F221",
+  "field": "Spending in retirement",
+  "area": "Goals",
+  "group": "Retirement spending",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F222",
+  "field": "Go-go, slow-go, no-go phases",
+  "area": "Goals",
+  "group": "Retirement spending",
+  "layer": "Tertiary",
+  "livesOn": "Plan › Goals",
+  "scope": "Later",
+  "phase": "7"
+ },
+ {
+  "id": "F223",
+  "field": "Lean FI (FAT costs only)",
+  "area": "Goals",
+  "group": "Milestones",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F224",
+  "field": "Coast FI",
+  "area": "Goals",
+  "group": "Milestones",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F225",
+  "field": "Barista FI",
+  "area": "Goals",
+  "group": "Milestones",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F226",
+  "field": "Regular FI",
+  "area": "Goals",
+  "group": "Milestones",
+  "layer": "Primary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F227",
+  "field": "True FI (after tax)",
+  "area": "Goals",
+  "group": "Milestones",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Later",
+  "phase": "7"
+ },
+ {
+  "id": "F228",
+  "field": "Debt free date",
+  "area": "Goals",
+  "group": "Milestones",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F229",
+  "field": "Custom milestone (at a date or when a condition is true)",
+  "area": "Goals",
+  "group": "Milestones",
+  "layer": "Tertiary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F230",
+  "field": "Rule of 5 target (age / 5 months)",
+  "area": "Goals",
+  "group": "Emergency fund",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F231",
+  "field": "Scenario blocks (home, car, kid, job change, sabbatical, move, marriage, side hustle, inheritance)",
+  "area": "Goals",
+  "group": "Life events",
+  "layer": "Tertiary",
+  "livesOn": "Plan › Goals",
+  "scope": "Later",
+  "phase": "7"
+ },
+ {
+  "id": "F232",
+  "field": "Ranked priorities (fund and remove)",
+  "area": "Goals",
+  "group": "What Matters",
+  "layer": "Tertiary",
+  "livesOn": "Plan › Goals",
+  "scope": "Later",
+  "phase": "7"
+ },
+ {
+  "id": "F233",
+  "field": "Best case / dream life",
+  "area": "Goals",
+  "group": "Dream",
+  "layer": "Tertiary",
+  "livesOn": "Plan › Goals",
+  "scope": "Parked",
+  "phase": "7"
+ },
+ {
+  "id": "F234",
+  "field": "Discovery table numbers",
+  "area": "Coaching",
+  "group": "Discovery call",
+  "layer": "Secondary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F235",
+  "field": "Session date and agenda",
+  "area": "Coaching",
+  "group": "Session",
+  "layer": "Secondary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F236",
+  "field": "Session notes",
+  "area": "Coaching",
+  "group": "Session",
+  "layer": "Secondary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F237",
+  "field": "Homework list (auto from fields marked 'will email')",
+  "area": "Coaching",
+  "group": "Homework",
+  "layer": "Secondary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F238",
+  "field": "Key stats, things to know, to-dos, goals",
+  "area": "Coaching",
+  "group": "One-pager",
+  "layer": "Secondary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F239",
+  "field": "Strengths, struggles, do more of, do less of",
+  "area": "Coaching",
+  "group": "One-pager",
+  "layer": "Secondary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F240",
+  "field": "Monthly check-in notes and next check date",
+  "area": "Coaching",
+  "group": "Money date",
+  "layer": "Secondary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F241",
+  "field": "Client satisfaction score",
+  "area": "Coaching",
+  "group": "Scoreboard",
+  "layer": "Secondary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F242",
+  "field": "Next check date for rough or aged numbers",
+  "area": "Coaching",
+  "group": "Every number",
+  "layer": "Secondary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F243",
+  "field": "What prompted this call",
+  "area": "Coaching",
+  "group": "Why now",
+  "layer": "Primary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F244",
+  "field": "Biggest worry and goal in their words",
+  "area": "Coaching",
+  "group": "Why now",
+  "layer": "Primary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F245",
+  "field": "Money feeling 1-10",
+  "area": "Coaching",
+  "group": "Why now",
+  "layer": "Secondary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F246",
+  "field": "Quick notes",
+  "area": "Coaching",
+  "group": "Parking lot",
+  "layer": "Primary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F247",
+  "field": "Joint, separate or mix",
+  "area": "Profile",
+  "group": "Couples split",
+  "layer": "Secondary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F248",
+  "field": "Who pays what (% or fixed)",
+  "area": "Profile",
+  "group": "Couples split",
+  "layer": "Secondary",
+  "livesOn": "My Money › Profile",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F249",
+  "field": "Last 12 months, typical month, lowest month",
+  "area": "Income",
+  "group": "Variable income",
+  "layer": "Primary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F250",
+  "field": "Set aside for taxes %",
+  "area": "Income",
+  "group": "Variable income",
+  "layer": "Primary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F251",
+  "field": "Month by month (12 boxes)",
+  "area": "Income",
+  "group": "Variable income",
+  "layer": "Secondary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F252",
+  "field": "Benefit name, what it is, how it works, value, using it?",
+  "area": "Income",
+  "group": "Other benefits",
+  "layer": "Secondary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F253",
+  "field": "ESPP %, discount; RSU grants and vest dates",
+  "area": "Income",
+  "group": "Equity pay",
+  "layer": "Tertiary",
+  "livesOn": "My Money › Income",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F254",
+  "field": "Credit score, as-of date, source",
+  "area": "Debt",
+  "group": "Credit",
+  "layer": "Secondary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F255",
+  "field": "Payment choice: minimum, custom, in full",
+  "area": "Debt",
+  "group": "Credit cards",
+  "layer": "Primary",
+  "livesOn": "My Money › Debt",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F256",
+  "field": "Type, have it or not, premium",
+  "area": "Protection",
+  "group": "Coverage",
+  "layer": "Primary",
+  "livesOn": "My Money › Protection",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F257",
+  "field": "Coverage amount, through employer, deductible / out-of-pocket max",
+  "area": "Protection",
+  "group": "Coverage",
+  "layer": "Secondary",
+  "livesOn": "My Money › Protection",
+  "scope": "Now",
+  "phase": "5"
+ },
+ {
+  "id": "F258",
+  "field": "Yearly cost and month due (walk-the-list prompt)",
+  "area": "Needs",
+  "group": "Irregular costs",
+  "layer": "Primary",
+  "livesOn": "Spending › Budget",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F259",
+  "field": "Upcoming event, rough cost, month",
+  "area": "Goals",
+  "group": "Next 12 months",
+  "layer": "Secondary",
+  "livesOn": "Plan › Next 12 months",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F260",
+  "field": "Maybe money (expected, not certain)",
+  "area": "Needs",
+  "group": "Calendar",
+  "layer": "Secondary",
+  "livesOn": "Spending › Cash flow calendar",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F261",
+  "field": "Wins on a date",
+  "area": "Needs",
+  "group": "Calendar",
+  "layer": "Tertiary",
+  "livesOn": "Spending › Cash flow calendar",
+  "scope": "Now",
+  "phase": "6"
+ },
+ {
+  "id": "F262",
+  "field": "Private notes and shared notes",
+  "area": "Coaching",
+  "group": "Notes",
+  "layer": "Secondary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ },
+ {
+  "id": "F263",
+  "field": "Session number, next date, client status",
+  "area": "Coaching",
+  "group": "Package",
+  "layer": "Secondary",
+  "livesOn": "Home / ⚙ Coach tools",
+  "scope": "Now",
+  "phase": "9-10"
+ }
+]

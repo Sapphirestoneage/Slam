@@ -17,8 +17,10 @@ export function createCtx({ store, ref, now = () => new Date() }) {
     setTimeMode(mode) { store.doc.settings.timeView = mode; cache = null; ctx.refresh(); store._emit({ type: 'settings' }); },
     get couple() { return !!store.doc.client.couple; },
     metrics() { return (cache ??= metrics(store.doc, ref, { now: now() })); },
-    onRefresh(fn) { listeners.add(fn); return () => listeners.delete(fn); },
-    refresh() { cache = null; for (const fn of listeners) fn(); },
+    // Screens register here; the shell clears them when it leaves the screen (keep: shell-level).
+    onRefresh(fn, { keep = false } = {}) { fn.keep = keep; listeners.add(fn); return () => listeners.delete(fn); },
+    clearScreen() { for (const fn of listeners) if (!fn.keep) listeners.delete(fn); },
+    refresh() { cache = null; for (const fn of [...listeners]) fn(); },
     goTo: () => {}, // the shell replaces this; the staples page stays put
   };
   store.subscribe(() => ctx.refresh());
@@ -63,7 +65,7 @@ export function popover(anchor, content, { width = null } = {}) {
     const away = e => { if (!pop.contains(e.target) && e.target !== anchor && !anchor.contains(e.target)) { closePop(); document.removeEventListener('mousedown', away); } };
     document.addEventListener('mousedown', away);
   });
-  pop.querySelector('input, button')?.focus();
+  setTimeout(() => pop.querySelector('input, button')?.focus());
   return pop;
 }
 document.addEventListener?.('keydown', e => { if (e.key === 'Escape') closePop(); });
@@ -281,7 +283,8 @@ export function payoffCell(ctx, d, longest) {
   if (p.value === null) return h('div.payoff', {}, h('span.muted', {}, `Needs ${joinWords(p.needs)}`), h('div.bar', {}));
   const width = longest ? Math.max(4, (p.value / longest) * 100) : 0;
   return h('div.payoff', {},
-    h('span', {}, mathButton(p, duration(p.value, ctx.now())), d.interest.value !== null ? h('span.muted', {}, ' · ', mathButton(d.interest, `${value(d.interest, ctx)} interest`)) : null),
+    h('span', {}, mathButton(p, duration(p.value, ctx.now()))),
+    d.interest.value !== null ? h('span.muted', { style: { fontSize: '.875rem' } }, mathButton(d.interest, `${value(d.interest, ctx)} interest`)) : null,
     h('div.bar', { role: 'img', 'aria-label': `${p.value} months` }, h('span', { style: { width: `${width}%` } })));
 }
 
@@ -317,6 +320,7 @@ export function quickAdd(ctx, { onAdded = () => {} } = {}) {
   const wrap = h('label.field', { style: { width: '220px' } }, icon('plus'), input);
   input.onkeydown = e => {
     if (e.key !== 'Enter') return;
+    e.preventDefault(); // otherwise this same Enter would press 'Add it' once it has focus
     const p = parseQuickAdd(input.value);
     if (!p) return;
     popover(wrap, h('div.stack', { style: { gap: '12px' } }, h('strong', {}, 'Add this?'), h('span', {}, p.summary),
@@ -463,8 +467,8 @@ function bulkBar(ctx, sel, a) {
 
 // ---------- Visuals panel (ECharts, area hues) ----------
 export function visualsPanel(ctx, { charts, area }) {
-  // DMMT 'Watch': Side on wide screens, Below on narrow ones; Hide is one click.
-  const state = { pick: charts[0].name, place: window.innerWidth >= 1400 ? 'Side' : 'Below' };
+  // DMMT 'Watch': Side on wide screens (1600px and up, so a full row still fits), Below otherwise; Hide is one click.
+  const state = { pick: charts[0].name, place: window.innerWidth >= 1600 ? 'Side' : 'Below' };
   const wrap = h('div.vis-panel.card');
   queueMicrotask(() => wrap.closest('.visuals')?.classList.toggle('below', state.place === 'Below'));
   let chart = null;
