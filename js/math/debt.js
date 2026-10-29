@@ -34,7 +34,7 @@ export function payoffMonths({ balance, apr, payment }, { from = new Date() } = 
   return { ...ok('M31', n, `${fmt.money(balance)} at ${fmt.pct(apr)} paying ${fmt.money(payment)} a month: each month adds ${fmt.pct(apr)} / 12 interest and takes off the payment. It is paid off in ${duration(n, from)}.`, { unit: 'months' }), exact };
 }
 
-// Month-by-month simulation of one debt (the source of truth for interest, M32).
+// Month-by-month simulation of one debt. Used for payoff order with extra payments (M34); M32 uses the formula.
 export function simulateDebt({ balance, apr, payment }, maxMonths = 1200) {
   let b = balance, interest = 0, months = 0;
   const r = apr / 12;
@@ -53,11 +53,11 @@ export function simulateDebt({ balance, apr, payment }, maxMonths = 1200) {
 export function totalInterest({ balance, apr, payment }) {
   const p = payoffMonths({ balance, apr, payment });
   if (p.value === null) return { ...p, id: 'M32' };
-  // The headline is the spec's formula (what the Demo and Test client expect); the month-by-month
-  // simulation sits beside it and can differ by a dollar or two on the last partial payment.
+  // The formula is the source of truth (spec M32). The simulation is kept for payoff order only and can
+  // differ by a dollar or two on the last partial payment, so it is not shown to the client.
   const sim = simulateDebt({ balance, apr, payment });
   const v = (p.exact ?? p.value) * payment - balance;
-  return { ...ok('M32', v, `${fmt.number(p.exact ?? p.value, 2)} months of ${fmt.money(payment)} payments (${fmt.money((p.exact ?? p.value) * payment)}) minus the ${fmt.money(balance)} owed = ${fmt.money(v)} of interest. Month by month it comes to ${fmt.money(sim.interest)}.`), simulated: sim.interest };
+  return { ...ok('M32', v, `${fmt.number(p.exact ?? p.value, 2)} months of ${fmt.money(payment)} payments (${fmt.money((p.exact ?? p.value) * payment)}) minus the ${fmt.money(balance)} owed = ${fmt.money(v)} of interest.`), simulated: sim.interest };
 }
 
 // M33: fee to APR (payday, cash advance).

@@ -67,7 +67,7 @@ export function inputsOf(doc, ref, now = new Date()) {
     realReturn: a.realReturn ?? ref.presets.realReturn.default,
     withdrawalRate: a.withdrawalRate ?? ref.presets.withdrawalRate.default,
     inflation: a.inflation ?? ref.presets.inflation.default,
-    retireAge: a.retireAge ?? ref.defaults.retireAge,
+    retireAge: a.fiAge ?? a.retireAge ?? ref.defaults.retireAge, // FI target age if set, else Retire by, else 60
     retirementSpending: a.retirementSpending ?? spending, // R030
     hours: doc.profile.hours ?? {},
     roommates: doc.profile.roommates ?? 0,

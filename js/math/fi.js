@@ -66,13 +66,19 @@ export function pctToFi(invested, targets) {
 export function bigDeals({ invested, monthlyInvesting, annualSpending }, ref) {
   const p = ref.presets;
   const base = { r: p.realReturn.default, w: p.withdrawalRate.default };
-  const run = (r, w) => fiDate({ invested, monthlyInvesting, realReturn: r, target: isBlank(annualSpending) ? null : annualSpending / w }).value;
+  const run = (r, w, spend = annualSpending) => fiDate({ invested, monthlyInvesting, realReturn: r, target: isBlank(spend) ? null : spend / w }).value;
   const baseline = run(base.r, base.w);
+  // Spending moves both the FI number and what is left to invest each month.
+  const runSpending = k => {
+    if (isBlank(annualSpending) || isBlank(monthlyInvesting)) return null;
+    const delta = annualSpending * (k - 1) / 12;
+    return fiDate({ invested, monthlyInvesting: monthlyInvesting - delta, realReturn: base.r, target: annualSpending * k / base.w }).value;
+  };
   const rows = [
     { assumption: 'Return', presets: p.realReturn.values.map(r => ({ preset: r, months: run(r, base.w) })) },
     { assumption: 'Withdrawal rate', presets: p.withdrawalRate.values.map(w => ({ preset: w, months: run(base.r, w) })) },
-    // Inflation only changes the nominal display (M02), so the real FI date does not move.
-    { assumption: 'Inflation', presets: p.inflation.values.map(i => ({ preset: i, months: baseline })) },
+    // Returns are already after inflation, so inflation is a display setting and is not on this card.
+    { assumption: 'Spending', presets: [0.9, 1, 1.1].map(k => ({ preset: k, label: k === 1 ? 'As is' : `${k < 1 ? '−' : '+'}10%`, months: runSpending(k) })) },
   ];
   for (const row of rows) {
     const ms = row.presets.map(x => x.months).filter(x => x !== null);
@@ -80,7 +86,7 @@ export function bigDeals({ invested, monthlyInvesting, annualSpending }, ref) {
   }
   const ranked = [...rows].sort((a, b) => (b.spread ?? -1) - (a.spread ?? -1));
   return { id: 'M56', value: ranked[0].spread === null ? null : ranked[0].assumption, baseline, rows: ranked,
-    text: ranked[0].spread === null ? 'Needs invested, monthly investing and spending.' : `${ranked[0].assumption} moves the FI date the most: ${ranked[0].spread} months between its presets.` };
+    text: ranked[0].spread === null ? 'Needs invested, monthly investing and spending.' : `${ranked[0].assumption} moves the FI date the most: ${ranked[0].spread} months between its options.` };
 }
 
 // M57: solvers, by bisection on M53.

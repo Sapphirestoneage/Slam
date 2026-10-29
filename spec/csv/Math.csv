@@ -29,7 +29,7 @@ M2B,Accrual spread and prepaid balance,monthly = amount / months covered; prepai
 DEBT,,,,,
 M30,Credit card minimum payment,"max($25, 1% of balance + one month's interest), capped at the balance","balance, APR",Statement number overrides,Common issuer formula; confirm
 M31,Payoff months,"n = −ln(1 − r·B/P) / ln(1 + r), r = APR/12; round up. 0% → B/P","balance, APR, payment",P ≤ r·B → 'This payment never pays it off' and the payment needed,"Sheets: =ROUNDUP(NPER(APR/12, −P, B), 0)"
-M32,Total interest,"n (unrounded) × P − B, or a month-by-month simulation",M31,,Simulation is the source of truth
+M32,Total interest,n (unrounded) × P − B,M31,,This formula is the source of truth for one debt. The month-by-month simulation (M34) is only for payoff order with extra payments; it may differ by a few dollars from rounding
 M33,Payday or fee APR,fee / amount borrowed × periods per year,"fee, amount, period",,
 M34,Payoff order with extra payment,"Simulate monthly: pay minimums, put extra on the first debt in order; when one clears, roll its payment forward","debts, extra, order",,"Order: avalanche (APR), snowball (balance), stress (rating, ties by APR)"
 M35,Utilization,Σ card balances / Σ limits,cards,No limits → hidden,
@@ -46,7 +46,7 @@ M50,FI number,annual retirement spending / withdrawal rate,"spending, WR",,4% �
 M51,Lean FI number,annual FAT spending / withdrawal rate,"Food, Accommodation, Transportation lines",,
 M52,Barista FI number,(annual spending − annual part-time income) / withdrawal rate,part-time income,,
 M53,FI date,Monthly: invested × (1 + real return)^(1/12) + monthly investing; first month invested ≥ FI number,"invested, monthly investing, M02, M50",Never reached in 70 years → 'not on this path' plus solver,Monthly investing = surplus to investing + pretax contributions + match
-M54,Coast FI,Coast number at age a = FI number / (1 + real return)^(retire age − a); reached when invested ≥ it,"M50, M02, ages",,"Computed properly, not a fixed multiple"
+M54,Coast FI,"Coast number at age a = FI number / (1 + real return)^(retire age − a); reached when invested ≥ it. Retire age = FI target age, else 60","M50, M02, ages",,"Computed properly, not a fixed multiple"
 M55,% to each FI,invested / each FI number,M50-M54,,
 M56,These are big deals,"Run M53 once per preset (return, inflation, withdrawal) holding the rest at default; biggest mover = largest date change",M53,,
 M57,Solvers,"Bisection on M53 for spending, income or monthly saving that hits FI by a target age",M53,,

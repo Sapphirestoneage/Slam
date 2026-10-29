@@ -168,8 +168,11 @@ test('M02, M50 to M58 FI', () => {
   assert.equal(pctToFi(250000, { Regular: 1e6, Lean: 500000 }).value.Lean, 0.5);
   const bd = bigDeals({ invested: 22000, monthlyInvesting: 1200, annualSpending: 43200 }, ref);
   assert.equal(bd.rows.length, 3);
-  assert.ok(['Return', 'Withdrawal rate'].includes(bd.value));
-  assert.equal(bd.rows.find(r => r.assumption === 'Inflation').spread, 0);
+  assert.ok(['Return', 'Withdrawal rate', 'Spending'].includes(bd.value));
+  assert.equal(bd.rows.find(r => r.assumption === 'Inflation'), undefined); // inflation is display only
+  const sp10 = bd.rows.find(r => r.assumption === 'Spending').presets;
+  assert.ok(sp10[0].months < sp10[1].months && sp10[1].months < sp10[2].months, 'spending less reaches FI sooner');
+  assert.equal(sp10[1].months, bd.baseline);
   const save = solveMonthlySaving({ invested: 22000, realReturn: 0.07, target: 1080000, months: 240 });
   assert.ok(fiDate({ invested: 22000, monthlyInvesting: save.value, realReturn: 0.07, target: 1080000 }).value <= 240);
   assert.ok(fiDate({ invested: 22000, monthlyInvesting: save.value - 2, realReturn: 0.07, target: 1080000 }).value > 240);

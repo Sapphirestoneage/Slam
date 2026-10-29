@@ -1,0 +1,375 @@
+<title>SLAM Look Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky top bar, sub-tabs, one Debt screen (summary strip, grouped list, pinned totals), then sample panels and a review list. Tokens = spec Look and feel. */
+:root{
+  --primary:#1747A6; --primary-dark:#0A2A66; --primary-light:#9FB9EA; --on-primary:#FFFFFF;
+  --bg:#E4E9F2; --card:#F2F5FA; --text:#060E1F; --muted:#26344F;
+  --computed:#CBD6EA; --good:#0B7A43; --attn:#0A2A66; --attn-fg:#FFFFFF;
+  --rough:#0E6670; --rough-fg:#FFFFFF; --guess:#5B2BA6; --guess-fg:#FFFFFF;
+  --border:#4E6694; --border-soft:#8FA2C6; --line:#A9B9D6; --shadow:rgba(6,14,31,.18);
+  --ico-bg:#FFFFFF; --ico-fg:#0A2A66; --ico-border:#0A2A66; --topico-bg:#FFFFFF; --topico-fg:#0A2A66;
+  --h-income:#0B7A43; --h-debt:#8E2C8F; --h-assets:#0E6670; --h-taxes:#4338CA; --h-needs:#1747A6; --h-goals:#B0397A;
+  --saved:#BFE5CF; --pop:#FFFFFF;
+  --font:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; --scale:1; --rowh:44px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --primary:#7AA6F5; --primary-dark:#06142F; --primary-light:#2C4A85; --on-primary:#06142F;
+  --bg:#0E1729; --card:#16223D; --text:#F4F7FC; --muted:#CBD6EA;
+  --computed:#24365C; --good:#45CC8F; --attn:#7AA6F5; --attn-fg:#06142F;
+  --rough:#3CB4BE; --rough-fg:#04171A; --guess:#A88AEB; --guess-fg:#150B2B;
+  --border:#8AA2CF; --border-soft:#4D6391; --line:#344A75; --shadow:rgba(0,0,0,.5);
+  --ico-bg:#16223D; --ico-fg:#F4F7FC; --ico-border:#8AA2CF; --topico-bg:#F4F7FC; --topico-fg:#06142F;
+  --h-income:#45CC8F; --h-debt:#D27BD3; --h-assets:#3CB4BE; --h-taxes:#9A93F2; --h-needs:#7AA6F5; --h-goals:#E58AB8;
+  --saved:#1E5A3D; --pop:#1F2D4D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --primary:#7AA6F5; --primary-dark:#06142F; --primary-light:#2C4A85; --on-primary:#06142F;
+  --bg:#0E1729; --card:#16223D; --text:#F4F7FC; --muted:#CBD6EA;
+  --computed:#24365C; --good:#45CC8F; --attn:#7AA6F5; --attn-fg:#06142F;
+  --rough:#3CB4BE; --rough-fg:#04171A; --guess:#A88AEB; --guess-fg:#150B2B;
+  --border:#8AA2CF; --border-soft:#4D6391; --line:#344A75; --shadow:rgba(0,0,0,.5);
+  --ico-bg:#16223D; --ico-fg:#F4F7FC; --ico-border:#8AA2CF; --topico-bg:#F4F7FC; --topico-fg:#06142F;
+  --h-income:#45CC8F; --h-debt:#D27BD3; --h-assets:#3CB4BE; --h-taxes:#9A93F2; --h-needs:#7AA6F5; --h-goals:#E58AB8;
+  --saved:#1E5A3D; --pop:#1F2D4D; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:calc(16px * var(--scale));font-weight:500;line-height:1.45;font-variant-numeric:tabular-nums}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px;display:grid;gap:20px}
+.intro{display:grid;gap:8px}
+.intro h1{font-size:1.5em;margin:0;text-wrap:balance}
+.intro p{margin:0;color:var(--muted);max-width:70ch}
+.pickers{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.lab{font-size:.875em;color:var(--muted);font-weight:600}
+svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.app{background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 2px 10px var(--shadow)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--primary-dark);color:#fff;display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:8px 14px;border-radius:8px 8px 0 0}
+.brand{font-weight:700;letter-spacing:.06em}
+.client{background:transparent;border:1.5px solid rgba(255,255,255,.6);color:#fff;border-radius:6px;padding:4px 10px;font:inherit;font-size:.875em;cursor:pointer}
+.crumb{font-size:.875em}
+.tabs{display:flex;gap:2px;flex-wrap:wrap}
+.tab{background:transparent;border:0;color:#fff;font:inherit;font-size:.94em;padding:6px 12px;border-radius:6px;cursor:pointer}
+.tab[aria-current="page"]{background:var(--primary);color:var(--on-primary);font-weight:700}
+.tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:auto}
+.find{display:flex;align-items:center;gap:6px;background:#FFFFFF;color:#060E1F;border-radius:6px;padding:0 8px;height:32px}
+.find input{border:0;outline:none;font:inherit;font-size:.875em;width:110px;background:transparent;color:#060E1F}
+kbd{font-family:inherit;font-size:.75em;border:1px solid #8FA2C6;border-radius:4px;padding:0 4px}
+.seg{display:inline-flex;border:1.5px solid var(--border);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:var(--card);color:var(--text);font:inherit;font-size:.875em;padding:5px 10px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--primary);color:var(--on-primary);font-weight:700}
+.top .seg{border-color:rgba(255,255,255,.6)}
+.top .seg button{background:transparent;color:#fff}
+.top .seg button[aria-pressed="true"]{background:#FFFFFF;color:#0A2A66}
+.ico{width:32px;height:32px;border-radius:6px;border:2px solid var(--ico-border);background:var(--ico-bg);color:var(--ico-fg);cursor:pointer;display:inline-grid;place-items:center;transition:transform .12s,box-shadow .12s;position:relative}
+.top .ico{background:var(--topico-bg);color:var(--topico-fg);border-color:var(--topico-bg)}
+.ico[data-tip]:hover::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);font-size:12px;font-weight:600;padding:3px 7px;border-radius:4px;white-space:nowrap;z-index:9}
+.sub{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:center}
+.subtab{border:1.5px solid var(--border);background:var(--card);color:var(--text);border-radius:6px;padding:5px 12px;font:inherit;font-size:.94em;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.subtab small{font-size:.75em;font-weight:600;opacity:.85}
+.subtab[aria-current="page"]{background:var(--primary);border-color:var(--primary);color:var(--on-primary);font-weight:700}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none}
+.body{padding:16px 14px;display:grid;gap:14px}
+.sechead{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;border-left:6px solid var(--h-debt);padding-left:10px}
+.sechead h2{font-size:1.25em;margin:0}
+.ctrls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-size:.94em;font-weight:700;border-radius:6px;padding:7px 14px;cursor:pointer;transition:transform .12s,box-shadow .12s;display:inline-flex;gap:6px;align-items:center}
+.btn-main{background:var(--primary);color:var(--on-primary);border:2px solid var(--primary)}
+.btn-sec{background:var(--card);color:var(--primary);border:2px solid var(--primary)}
+.btn:hover,.ico:hover,.subtab:hover,.client:hover,.more:hover{transform:translateY(-1px);box-shadow:0 3px 8px var(--shadow)}
+:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:2px;min-width:0}
+.stat span{font-size:.8em;color:var(--muted);font-weight:600}
+.stat b{font-size:1.6em;line-height:1.2}
+.delta{font-size:.8em;font-weight:700;color:var(--good);font-style:normal}
+.delta.flat{color:var(--muted)}
+.bulk{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--primary-light);border:1.5px solid var(--primary);border-radius:8px;padding:6px 10px;font-size:.94em}
+.scroll{overflow:auto;max-height:520px;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:960px}
+thead th{position:sticky;top:0;z-index:2;background:var(--card);font-size:.875em;color:var(--muted);font-weight:700;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap;text-align:left}
+th.num,td.num{text-align:right}
+td{padding:4px 8px;border-bottom:1px solid var(--line);height:var(--rowh);vertical-align:middle;transition:background .6s}
+tr.group td{background:var(--bg);font-weight:700;height:34px}
+tr.group button{background:none;border:0;color:var(--text);font:inherit;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0}
+tr.saved td{background:var(--saved)}
+tfoot td{position:sticky;bottom:0;background:var(--card);border-top:2px solid var(--line);font-weight:700;z-index:2}
+.cell{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+input.f{height:34px;border:1.5px solid var(--border-soft);border-radius:8px;padding:0 8px;font:inherit;background:var(--card);color:var(--text);width:100%;min-width:90px}
+input.f.num{text-align:right}
+input.f:placeholder-shown{border:2px solid var(--border)}
+input.f::placeholder{color:var(--primary);font-weight:700;opacity:1}
+input.f:focus{border:2px solid var(--primary);outline:none}
+.comp{background:var(--computed);border-radius:8px;padding:0 8px;height:34px;display:inline-flex;align-items:center;gap:6px;color:var(--text);white-space:nowrap;border:0;font:inherit}
+button.comp{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+.tag{border-radius:999px;padding:3px 10px;font-size:.8em;font-weight:700;white-space:nowrap;display:inline-flex;gap:4px;align-items:center}
+.t-rough{background:var(--rough);color:var(--rough-fg)}
+.t-guess{background:var(--guess);color:var(--guess-fg)}
+.t-warn{background:var(--attn);color:var(--attn-fg)}
+.chip{font-size:.8em;color:var(--text);background:var(--computed);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.pay{display:grid;gap:4px;min-width:170px}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;display:block}
+.bar i{display:block;height:100%;background:var(--h-debt)}
+.acts{display:flex;gap:4px;align-items:center}
+.more{font:inherit;font-size:.875em;font-weight:700;color:var(--primary);background:var(--card);border:2px solid var(--primary);border-radius:6px;height:32px;padding:0 10px;cursor:pointer;white-space:nowrap;transition:transform .12s,box-shadow .12s}
+.math{position:relative;display:inline-block}
+.pop{position:absolute;right:0;top:calc(100% + 6px);z-index:8;background:var(--pop);color:var(--text);border:2px solid var(--primary);border-radius:8px;padding:10px 12px;width:280px;box-shadow:0 6px 18px var(--shadow);font-size:.875em;white-space:normal;text-align:left;display:grid;gap:4px}
+.foot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.keys{font-size:.8em;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+.lowerrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.panel{border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:8px;min-width:0;background:var(--card);align-content:start}
+.panel h3{margin:0;font-size:.875em;color:var(--text);font-weight:700;letter-spacing:.03em}
+.empty{border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;color:var(--muted);display:grid;gap:8px;justify-items:center}
+.toast{background:var(--text);color:var(--bg);border-radius:8px;padding:8px 12px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-size:.94em}
+.toast button{background:transparent;border:0;color:inherit;text-decoration:underline;font:inherit;font-weight:700;cursor:pointer}
+.toast.navy{background:var(--primary-dark);color:#fff}
+.fmt{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.94em}
+.fmt span:nth-child(odd){color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:.875em;color:var(--muted)}
+.sw{display:inline-flex;align-items:center;gap:6px}
+.sw i{width:14px;height:14px;border-radius:4px;display:inline-block}
+.review{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:10px}
+.review h2{margin:0;font-size:1.15em}
+.review ol{margin:0;padding-left:22px;display:grid;gap:6px;max-width:80ch}
+.saved-note{color:var(--good);font-weight:700;font-size:.875em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5z"/><path d="M9 12h6M9 16h4"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+</svg>
+
+<div class="wrap">
+  <header class="intro">
+    <h1>The SLAM look, version 4</h1>
+    <p>Every improvement we talked about is on this one Debt screen. Change a number to see it save, click a grey box to see the math, and try the switches below and in the top bar. Numbers are examples, not a real client.</p>
+    <div class="pickers">
+      <span class="lab">Mode</span>
+      <div class="seg" role="group" aria-label="Light or dark" id="theme"><button type="button" data-t="light" aria-pressed="true">Light</button><button type="button" data-t="dark" aria-pressed="false">Dark</button></div>
+      <span class="lab">Density</span>
+      <div class="seg" role="group" aria-label="Density" id="density"><button type="button" data-d="36px" aria-pressed="false">Compact</button><button type="button" data-d="44px" aria-pressed="true">Comfortable</button></div>
+      <span class="lab">Font</span>
+      <div class="seg" role="group" aria-label="Font" id="font">
+        <button type="button" data-font='"Inter",system-ui,sans-serif' aria-pressed="true">Inter</button>
+        <button type="button" data-font='"IBM Plex Sans",system-ui,sans-serif' aria-pressed="false">IBM Plex Sans</button>
+        <button type="button" data-font='"Source Sans 3",system-ui,sans-serif' aria-pressed="false">Source Sans 3</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="app" aria-label="Example SLAM screen">
+    <div class="top">
+      <span class="brand">SLAM</span>
+      <button class="client" type="button">Maya R. ▾</button>
+      <span class="crumb">My Money › Debt</span>
+      <nav class="tabs" aria-label="Main tabs">
+        <button class="tab" type="button">Home</button><button class="tab" type="button" aria-current="page">My Money</button><button class="tab" type="button">Spending</button><button class="tab" type="button">Plan</button><button class="tab" type="button">Report</button>
+      </nav>
+      <div class="tools">
+        <label class="find"><svg class="i"><use href="#i-search"/></svg><input id="find" placeholder="Find" aria-label="Find a field"><kbd>/</kbd></label>
+        <div class="seg" role="group" aria-label="Show amounts as" id="unit"><button type="button" data-u="$" aria-pressed="true">$</button><button type="button" data-u="h" aria-pressed="false">Hours</button><button type="button" data-u="fi" aria-pressed="false">FI days</button></div>
+        <button class="ico" type="button" data-tip="Parking lot" aria-label="Parking lot"><svg class="i"><use href="#i-note"/></svg></button>
+        <button class="ico" type="button" data-tip="Client view" aria-label="Client view" id="cview" aria-pressed="false"><svg class="i"><use href="#i-eye"/></svg></button>
+        <button class="ico" type="button" data-tip="Undo (Ctrl+Z)" aria-label="Undo"><svg class="i"><use href="#i-undo"/></svg></button>
+        <button class="ico" type="button" data-tip="Redo" aria-label="Redo"><svg class="i"><use href="#i-redo"/></svg></button>
+        <button class="ico" type="button" data-tip="Coach tools" aria-label="Coach tools"><svg class="i"><use href="#i-gear"/></svg></button>
+      </div>
+    </div>
+    <div class="sub" aria-label="My Money sections">
+      <button class="subtab" type="button"><span class="dot" style="background:var(--h-needs)"></span>Profile <small>✓</small></button>
+      <button class="subtab" type="button"><span class="dot" style="background:var(--h-income)"></span>Income <small>4/5</small></button>
+      <button class="subtab" type="button" aria-current="page"><span class="dot" style="background:var(--h-debt)"></span>Debt <small>3/4</small></button>
+      <button class="subtab" type="button"><span class="dot" style="background:var(--h-assets)"></span>Assets <small>2/6</small></button>
+      <button class="subtab" type="button"><span class="dot" style="background:var(--h-goals)"></span>Protection</button>
+      <button class="subtab" type="button"><span class="dot" style="background:var(--h-taxes)"></span>Taxes</button>
+      <button class="btn btn-sec" type="button" style="margin-left:auto">Start Fast Track</button>
+    </div>
+
+    <div class="body">
+      <div class="sechead">
+        <h2>Debt</h2>
+        <div class="ctrls">
+          <span class="lab">Payoff order</span>
+          <div class="seg" role="group" aria-label="Payoff order" data-plain><button type="button" aria-pressed="true">Avalanche</button><button type="button" aria-pressed="false">Snowball</button><button type="button" aria-pressed="false">Stress</button></div>
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="stat"><span>Total debt</span><b data-amt="34700">$34,700</b><em class="delta">▼ $640 since last session</em></div>
+        <div class="stat"><span>Monthly payments</span><b data-amt="835">$835</b><em class="delta flat">Same as last session</em></div>
+        <div class="stat"><span>Debt-free</span><b>Dec 2035</b><em class="delta">▲ 2 months sooner</em></div>
+        <div class="stat"><span>Interest left</span><b data-amt="5790">$5,790</b><em class="delta flat">Car loan needs an APR</em></div>
+      </div>
+
+      <div class="bulk" role="region" aria-label="Bulk actions"><strong>2 selected</strong>
+        <button class="ico" type="button" data-tip="Duplicate" aria-label="Duplicate selected"><svg class="i"><use href="#i-copy"/></svg></button>
+        <button class="ico" type="button" data-tip="Reset" aria-label="Reset selected"><svg class="i"><use href="#i-reset"/></svg></button>
+        <button class="ico" type="button" data-tip="Delete" aria-label="Delete selected"><svg class="i"><use href="#i-trash"/></svg></button>
+        <button class="btn btn-sec" type="button">Link to card <svg class="i"><use href="#i-down"/></svg></button>
+        <button class="ico" type="button" data-tip="Clear selection" aria-label="Clear selection" style="margin-left:auto"><svg class="i"><use href="#i-x"/></svg></button>
+      </div>
+
+      <div class="scroll">
+        <table id="debts">
+          <thead><tr><th></th><th>Debt</th><th class="num">Balance</th><th class="num">APR</th><th class="num">Min payment</th><th>Pays off</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr class="group"><td colspan="8"><button type="button" aria-expanded="true"><svg class="i"><use href="#i-down"/></svg>Credit cards · <span data-amt="9700">$9,700</span></button></td></tr>
+            <tr><td><input type="checkbox" id="c1" checked aria-label="Select Chase Freedom"></td>
+              <td><input class="f" id="n1" value="Chase Freedom"></td>
+              <td><div class="cell"><input class="f num" id="b1" value="$4,200"><span class="chip" data-amt="4200"></span></div></td>
+              <td><input class="f num" id="a1" value="22.15%"></td>
+              <td class="num"><span class="math"><button class="comp" type="button" data-pop="p1"><span data-amt="119">$119</span></button>
+                <span class="pop" id="p1" hidden><b>How $119 is worked out</b><span>1% of $4,200 = $42</span><span>+ one month's interest: $4,200 × 22.15% ÷ 12 = $78</span><span>= $119. Your statement number replaces this.</span></span></span></td>
+              <td><div class="pay"><span class="math"><button class="comp" type="button" data-pop="p2">21 months · Jul 2028</button>
+                <span class="pop" id="p2" hidden><b>How 21 months is worked out</b><span>$4,200 at 22.15%, paying $250 a month.</span><span>Interest along the way: $874.</span></span></span><span class="bar"><i style="width:19%"></i></span></div></td>
+              <td><span class="tag t-rough">≈ Roughly</span></td>
+              <td><div class="acts"><button class="ico" type="button" data-tip="Duplicate" aria-label="Duplicate"><svg class="i"><use href="#i-copy"/></svg></button><button class="ico" type="button" data-tip="Reset" aria-label="Reset"><svg class="i"><use href="#i-reset"/></svg></button><button class="ico" type="button" data-tip="Delete" aria-label="Delete"><svg class="i"><use href="#i-trash"/></svg></button><button class="more" type="button">More ▸</button></div></td></tr>
+            <tr><td><input type="checkbox" id="c3" checked aria-label="Select Amex Blue"></td>
+              <td><input class="f" id="n3" value="Amex Blue"></td>
+              <td><div class="cell"><input class="f num" id="b3" value="$5,500"><span class="chip" data-amt="5500"></span></div></td>
+              <td><input class="f num" id="a3" value="0% until Jan"></td>
+              <td class="num"><span class="comp" data-amt="55">$55</span></td>
+              <td><div class="pay"><span class="tag t-warn">⚠ Promo ends in 58 days</span><span class="bar"><i style="width:8%"></i></span></div></td>
+              <td><span class="tag t-guess">? Guess</span></td>
+              <td><div class="acts"><button class="ico" type="button" data-tip="Duplicate" aria-label="Duplicate"><svg class="i"><use href="#i-copy"/></svg></button><button class="ico" type="button" data-tip="Reset" aria-label="Reset"><svg class="i"><use href="#i-reset"/></svg></button><button class="ico" type="button" data-tip="Delete" aria-label="Delete"><svg class="i"><use href="#i-trash"/></svg></button><button class="more" type="button">More ▸</button></div></td></tr>
+            <tr class="group"><td colspan="8"><button type="button" aria-expanded="true"><svg class="i"><use href="#i-down"/></svg>Loans · <span data-amt="25000">$25,000</span></button></td></tr>
+            <tr><td><input type="checkbox" id="c2" aria-label="Select student loan"></td>
+              <td><input class="f" id="n2" value="Student loan"></td>
+              <td><div class="cell"><input class="f num" id="b2" value="$18,000"><span class="chip" data-amt="18000"></span></div></td>
+              <td><input class="f num" id="a2" value="5.5%"></td>
+              <td class="num"><span class="comp" data-amt="210">$210</span></td>
+              <td><div class="pay"><span class="comp">110 months · Dec 2035</span><span class="bar"><i style="width:100%"></i></span></div></td>
+              <td></td>
+              <td><div class="acts"><button class="ico" type="button" data-tip="Duplicate" aria-label="Duplicate"><svg class="i"><use href="#i-copy"/></svg></button><button class="ico" type="button" data-tip="Reset" aria-label="Reset"><svg class="i"><use href="#i-reset"/></svg></button><button class="ico" type="button" data-tip="Delete" aria-label="Delete"><svg class="i"><use href="#i-trash"/></svg></button><button class="more" type="button">More ▸</button></div></td></tr>
+            <tr><td><input type="checkbox" id="c4" aria-label="Select car loan"></td>
+              <td><input class="f" id="n4" value="Car loan"></td>
+              <td><div class="cell"><input class="f num" id="b4" value="$7,000"><span class="chip" data-amt="7000"></span></div></td>
+              <td><input class="f num" id="a4" value="" placeholder="Add APR"></td>
+              <td class="num"><span class="comp" data-amt="320">$320</span></td>
+              <td><div class="pay"><span class="comp">Needs APR</span><span class="bar"><i style="width:0"></i></span></div></td>
+              <td></td>
+              <td><div class="acts"><button class="ico" type="button" data-tip="Duplicate" aria-label="Duplicate"><svg class="i"><use href="#i-copy"/></svg></button><button class="ico" type="button" data-tip="Reset" aria-label="Reset"><svg class="i"><use href="#i-reset"/></svg></button><button class="ico" type="button" data-tip="Delete" aria-label="Delete"><svg class="i"><use href="#i-trash"/></svg></button><button class="more" type="button">More ▸</button></div></td></tr>
+          </tbody>
+          <tfoot><tr><td></td><td>Total · 4 debts</td><td class="num" data-amt="34700">$34,700</td><td></td><td class="num" data-amt="835">$835</td><td colspan="3"></td></tr></tfoot>
+        </table>
+      </div>
+
+      <div class="foot">
+        <button class="btn btn-main" type="button"><svg class="i"><use href="#i-plus"/></svg>Add debt</button>
+        <span class="saved-note" id="savednote" hidden>✓ Saved</span>
+        <div class="keys"><span><kbd>Tab</kbd> next box</span><span><kbd>Enter</kbd> new row</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd> undo</span><span><kbd>/</kbd> find</span></div>
+      </div>
+
+      <div class="lowerrow">
+        <div class="panel"><h3>EMPTY STATE</h3><div class="empty">No car loans yet<button class="btn btn-sec" type="button"><svg class="i"><use href="#i-plus"/></svg>Add car loan</button></div></div>
+        <div class="panel"><h3>MESSAGES</h3>
+          <div class="toast">Deleted. <button type="button">Undo</button></div>
+          <div class="toast navy">Last backup 9 days ago <button type="button">Back up now</button></div></div>
+        <div class="panel"><h3>FORMATS</h3>
+          <div class="fmt"><span>Summary</span><span>$1,240</span><span>Entry</span><span>$15.99</span><span>Negative</span><span>−$240</span><span>Percent</span><span>22.4%</span><span>Date</span><span>Nov 12, 2026</span><span>Time</span><span>14 hrs · 3 FI days</span></div></div>
+        <div class="panel"><h3>AREA COLORS</h3>
+          <svg viewBox="0 0 240 90" role="img" aria-label="Sample bars in the area colors" style="width:100%;height:auto">
+            <rect x="8" y="30" width="32" height="50" fill="var(--h-needs)"/><rect x="47" y="45" width="32" height="35" fill="var(--h-debt)"/><rect x="86" y="20" width="32" height="60" fill="var(--h-income)"/>
+            <rect x="125" y="50" width="32" height="30" fill="var(--h-assets)"/><rect x="164" y="40" width="32" height="40" fill="var(--h-taxes)"/><rect x="203" y="58" width="32" height="22" fill="var(--h-goals)"/>
+            <line x1="4" y1="80" x2="238" y2="80" stroke="var(--line)" stroke-width="2"/></svg>
+          <div class="legend"><span class="sw"><i style="background:var(--h-needs)"></i>Needs</span><span class="sw"><i style="background:var(--h-debt)"></i>Debt</span><span class="sw"><i style="background:var(--h-income)"></i>Income</span><span class="sw"><i style="background:var(--h-assets)"></i>Assets</span><span class="sw"><i style="background:var(--h-taxes)"></i>Taxes</span><span class="sw"><i style="background:var(--h-goals)"></i>Goals</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="review" aria-labelledby="rv">
+    <h2 id="rv">What's new and how to check it</h2>
+    <ol>
+      <li><strong>Icons:</strong> duplicate, reset, delete, undo and the rest are matching line icons. Hover one to see its name.</li>
+      <li><strong>Summary first:</strong> total debt, monthly payments, debt-free date and interest left sit above the list.</li>
+      <li><strong>Numbers line up on the right</strong> so you can compare down a column.</li>
+      <li><strong>Payoff bars:</strong> each debt has a small plum bar; the longest payoff is a full bar.</li>
+      <li><strong>Tags with symbols:</strong> ≈ Roughly, ? Guess, ⚠ Promo, so they read without color.</li>
+      <li><strong>Area stripe:</strong> the Debt title has a plum stripe; sub-tabs show colored dots and progress (3/4).</li>
+      <li><strong>Empty boxes stand out:</strong> filled boxes have a softer border; the car loan's empty APR has a strong border and says "Add APR".</li>
+      <li><strong>Saved moment:</strong> change any number and press Tab; the row flashes green and "✓ Saved" appears.</li>
+      <li><strong>Sticky:</strong> scroll the page and the top bar stays; scroll the list and the column names and totals stay.</li>
+      <li><strong>Show the math:</strong> click "$119" or "21 months".</li>
+      <li><strong>Change since last session:</strong> the ▲ ▼ lines under the summary numbers.</li>
+      <li><strong>Keyboard:</strong> press <kbd>/</kbd> to jump to Find; press <kbd>Enter</kbd> in a row to add a new one.</li>
+      <li><strong>Density:</strong> Compact vs Comfortable at the top of this page.</li>
+      <li><strong>Client view:</strong> the eye icon in the top bar makes text bigger for screen sharing.</li>
+      <li><strong>Groups:</strong> Credit cards and Loans with subtotals; click a group name to fold it.</li>
+      <li><strong>Totals row</strong> pinned at the bottom of the list.</li>
+      <li><strong>Print:</strong> the one-pager prints without buttons or dark backgrounds (built into the app, not shown here).</li>
+      <li><strong>Pick a font</strong> and tell me which, plus anything that still feels off.</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+(function(){
+  const hourly = 4800/173, fiDay = 3600*12/365;
+  let unit = "$";
+  function fmt(n,u){
+    if(u==="h") return Math.round(n/hourly).toLocaleString()+" hrs";
+    if(u==="fi") return (n/fiDay).toFixed(n/fiDay<10?1:0)+" FI days";
+    return "$"+Math.round(n).toLocaleString();
+  }
+  function paint(){
+    document.querySelectorAll("[data-amt]").forEach(el=>{
+      const n=+el.dataset.amt;
+      el.textContent = el.classList.contains("chip") ? (unit==="$"?fmt(n,"h"):fmt(n,unit)) : fmt(n,unit);
+    });
+  }
+  function seg(id, fn){
+    const btns=document.querySelectorAll("#"+id+" button");
+    btns.forEach(b=>b.addEventListener("click",()=>{btns.forEach(x=>x.setAttribute("aria-pressed",String(x===b)));fn(b);}));
+  }
+  seg("unit", b=>{unit=b.dataset.u;paint();});
+  seg("theme", b=>document.documentElement.setAttribute("data-theme",b.dataset.t));
+  seg("density", b=>document.documentElement.style.setProperty("--rowh",b.dataset.d));
+  seg("font", b=>document.documentElement.style.setProperty("--font",b.dataset.font));
+  document.querySelectorAll(".seg[data-plain]").forEach(g=>{const bs=g.querySelectorAll("button");bs.forEach(b=>b.addEventListener("click",()=>bs.forEach(x=>x.setAttribute("aria-pressed",String(x===b)))));});
+  try{ if(matchMedia("(prefers-color-scheme: dark)").matches){document.querySelector('#theme [data-t="dark"]').click();} }catch(e){}
+
+  const cv=document.getElementById("cview");
+  cv.addEventListener("click",()=>{const on=cv.getAttribute("aria-pressed")!=="true";cv.setAttribute("aria-pressed",String(on));document.documentElement.style.setProperty("--scale",on?"1.15":"1");});
+
+  document.querySelectorAll("[data-pop]").forEach(b=>b.addEventListener("click",e=>{
+    e.stopPropagation(); const p=document.getElementById(b.dataset.pop); const was=p.hidden;
+    document.querySelectorAll(".pop").forEach(x=>x.hidden=true); p.hidden=!was;
+  }));
+  document.addEventListener("click",()=>document.querySelectorAll(".pop").forEach(x=>x.hidden=true));
+
+  const note=document.getElementById("savednote");
+  function wire(inp){
+    inp.addEventListener("change",()=>{
+      const tr=inp.closest("tr"); tr.classList.add("saved"); note.hidden=false;
+      setTimeout(()=>tr.classList.remove("saved"),900); setTimeout(()=>{note.hidden=true;},1800);
+    });
+    inp.addEventListener("keydown",e=>{
+      if(e.key!=="Enter") return;
+      e.preventDefault(); const tr=inp.closest("tr"); const clone=tr.cloneNode(true);
+      clone.querySelectorAll("input.f").forEach(x=>{x.value="";x.removeAttribute("id");x.placeholder="Add";wire(x);});
+      clone.querySelectorAll("input[type=checkbox]").forEach(x=>{x.checked=false;x.removeAttribute("id");});
+      clone.querySelectorAll(".pop,[data-pop]").forEach(x=>x.removeAttribute("data-pop"));
+      tr.after(clone); const first=clone.querySelector("input.f"); if(first) first.focus();
+    });
+  }
+  document.querySelectorAll("#debts input.f").forEach(wire);
+  document.querySelectorAll("tr.group button").forEach(b=>b.addEventListener("click",()=>{
+    const open=b.getAttribute("aria-expanded")==="true"; b.setAttribute("aria-expanded",String(!open));
+    let r=b.closest("tr").nextElementSibling; while(r && !r.classList.contains("group")){ r.hidden=open; r=r.nextElementSibling; }
+  }));
+  document.addEventListener("keydown",e=>{
+    if(e.key==="/" && document.activeElement.tagName!=="INPUT"){ e.preventDefault(); document.getElementById("find").focus(); }
+  });
+  paint();
+})();
+</script>
