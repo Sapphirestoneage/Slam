@@ -1,0 +1,14 @@
+How you'll check each phase,,,
+Build phase,Name,What you do,What you should see
+0,Setup,Open the repo on GitHub,spec/csv has one file per tab; .gitignore lists fixtures/*.local.json; no real numbers anywhere
+1,Records,Run the tests (Claude Code reports them); open the staples page later,"Add, edit, delete, undo, history and export/import tests pass"
+2,Math,Read the report's match table,Every Demo client and Test client expected value matches within $1 or 1 month
+3,Staples,Open the staples demo page,Every staple from the Staples tab is there; it looks like the approved preview page; every box in a row lines up; time toggle changes amounts
+4,Shell,Click every tab and sub-tab; drop yourself on a random screen,"Trunk test: site, client, page, sections, search all visible; nothing says $0; empty states read like the Words tab"
+5,My Money,"Enter your own numbers with Fast Track, then in full",Under 5 minutes for Fast Track; gates add and remove sections; car loan shows on Assets and Debt
+6,Spending,"Plan, log and close one month",Calendar balance matches the budget; Partial and Maybe behave; bulk select links bills to a card in 3 clicks
+7,Plan,Change presets on the big-deals card,FI date matches the expected values; tornado names the biggest mover
+8,Report,Click every number,Each number opens its home
+9,Home,Run Start session to Send summary,One main button per moment; wrap-up does all four steps
+10,Coach tools,Create a client from discovery,Opens Home in Prep with the discovery numbers marked Roughly
+11,Dry run,A full fake session 1,"Your 'where do I put this' list is empty, or becomes the next prompt"

@@ -1,0 +1,56 @@
+Math: every computed number,,,,,
+ID,Name,Formula,Inputs,When something's missing,Notes / example
+CONVENTIONS,,,,,
+M00,Units,All money stored monthly in today's dollars; rates stored as annual decimals (7% = 0.07),,,Engine works in real dollars; nominal is a display toggle
+M01,Monthly from any period,weekly × 52/12; every 2 weeks × 26/12; twice a month × 2; yearly / 12; per paycheck uses pay frequency,"amount, period",Missing period → treat as monthly and mark Roughly,
+M02,Real return,"Return presets are already after inflation: 6%, 7%, 8% are real returns. 12% is the hopeful optimistic case with no inflation taken out",return preset,,"Inflation (2% or 3%) is used only for the nominal display toggle, Social Security and debt in today's dollars"
+INCOME AND TAXES,,,,,
+M10,Federal income tax,Taxable = annual gross − pretax deductions − standard deduction (floor 0); apply brackets from Reference data,"gross, pretax deductions, filing status, year",No filing status → Single (solo) or Married jointly (couple),v1 is federal plus FICA only
+M11,FICA,6.2% Social Security up to the wage base + 1.45% Medicare (+0.9% over $200k single),"gross, year",,"Self-employed: 15.3% on 92.35% of net earnings, half deductible"
+M12,Take-home from gross,gross − federal tax − FICA − pretax deductions (− state when added later),"M10, M11",,
+M13,Gross from take-home,Solve M12 backwards by bisection to the nearest $1,"take-home, deductions",,Marked Computed
+M14,Effective and marginal tax rate,Effective = (federal + FICA) / gross. Marginal = bracket of the last dollar + FICA rate,"M10, M11",,
+M15,Employer match ($/yr),"min(contribution %, match cap %) × match % × gross","401(k) %, match formula, gross",,Unvested part shown separately
+M16,Variable income safe budget,lowest month × (1 − tax set-aside %),"lowest month, set-aside","Missing lowest month → typical month × 0.75, marked Guess",
+M17,Real hourly wage,"(take-home − work costs) / (paid hours + commute + prep hours), monthly","income, work costs, hours",Missing hours → show 'needs hours' instead of a number,
+SPENDING,,,,,
+M20,Line monthly amount,M01 applied to each line; accrual view spreads prepaid and yearly costs across months covered,"line amount, period, covers",,
+M21,My share,If 'my share' typed → use it. Else amount × (1 − covered %) / split by,"amount, who pays, covered, split",Split by defaults to roommates + 1,
+M22,Support received,Σ (amount − my share) where covered by someone else,M21 across lines,,Shown on Report; 'what if it stops' = this added to spending
+M23,Fixed floor,Σ my share of lines with Amount = Fixed,M21,,Feeds runway and Lean FI
+M24,Irregular set-aside,yearly cost / 12,yearly cost,,
+M25,Estimate vs actual,difference = actual − estimate; % = difference / estimate,"estimate, actual",Estimate 0 → show $ only,
+M26,Gut accuracy,"Average of |actual − Gut or Rough| / actual across months, per line and overall",history,Fewer than 1 closed month → hidden,
+M27,Monthly surplus,take-home − total my-share spending − debt payments not already in spending,"M12, M21, debts",,
+M28,Savings rate (headline),(surplus + after-tax savings in the budget) / take-home,M27,,Gross version in Show the math: (all saving incl. pretax and match) / gross
+M29,DRAFTT shares,Each letter's total / take-home; Taxes and Therapy optional,lines tagged by letter,,"Proportions only, no verdict colors"
+M2A,Housing %,housing my-share / take-home,"rent or mortgage, utilities",,Reference line at 35%
+M2B,Accrual spread and prepaid balance,monthly = amount / months covered; prepaid left = amount − monthly × months elapsed,"amount, date paid, months covered",,
+DEBT,,,,,
+M30,Credit card minimum payment,"max($25, 1% of balance + one month's interest), capped at the balance","balance, APR",Statement number overrides,Common issuer formula; confirm
+M31,Payoff months,"n = −ln(1 − r·B/P) / ln(1 + r), r = APR/12; round up. 0% → B/P","balance, APR, payment",P ≤ r·B → 'This payment never pays it off' and the payment needed,"Sheets: =ROUNDUP(NPER(APR/12, −P, B), 0)"
+M32,Total interest,"n (unrounded) × P − B, or a month-by-month simulation",M31,,Simulation is the source of truth
+M33,Payday or fee APR,fee / amount borrowed × periods per year,"fee, amount, period",,
+M34,Payoff order with extra payment,"Simulate monthly: pay minimums, put extra on the first debt in order; when one clears, roll its payment forward","debts, extra, order",,"Order: avalanche (APR), snowball (balance), stress (rating, ties by APR)"
+M35,Utilization,Σ card balances / Σ limits,cards,No limits → hidden,
+M36,Debt-to-income,monthly debt payments / gross monthly income,"debts, gross",,
+M37,Promo solver,Payment needed to clear a 0% balance by the promo end = balance / months left,"balance, promo end",,
+ASSETS AND NET WORTH,,,,,
+M40,Total net worth,Σ assets (vested only) − Σ debts,all accounts,,
+M41,Liquid net worth,cash + taxable brokerage + Roth contribution basis − consumer debt,"accounts, debts",,"Excludes home, car, retirement growth"
+M42,Runway months,liquid cash / monthly spending (also shown vs fixed floor),"cash, M27",,
+M43,Rule of 5,target months = age / 5; target $ = target months × monthly spending; keep-pace add = monthly spending / 60; gap = target − emergency cash,"age, spending, cash",,Confirmed Oct 28
+M44,Contribution limit used,year-to-date contributions / limit for that account type and age,"contributions, Reference data",,
+GOALS AND PROJECTION,,,,,
+M50,FI number,annual retirement spending / withdrawal rate,"spending, WR",,4% → 25×
+M51,Lean FI number,annual FAT spending / withdrawal rate,"Food, Accommodation, Transportation lines",,
+M52,Barista FI number,(annual spending − annual part-time income) / withdrawal rate,part-time income,,
+M53,FI date,Monthly: invested × (1 + real return)^(1/12) + monthly investing; first month invested ≥ FI number,"invested, monthly investing, M02, M50",Never reached in 70 years → 'not on this path' plus solver,Monthly investing = surplus to investing + pretax contributions + match
+M54,Coast FI,Coast number at age a = FI number / (1 + real return)^(retire age − a); reached when invested ≥ it,"M50, M02, ages",,"Computed properly, not a fixed multiple"
+M55,% to each FI,invested / each FI number,M50-M54,,
+M56,These are big deals,"Run M53 once per preset (return, inflation, withdrawal) holding the rest at default; biggest mover = largest date change",M53,,
+M57,Solvers,"Bisection on M53 for spending, income or monthly saving that hits FI by a target age",M53,,
+M58,Money as time,hours = amount / real hourly wage; FI days = amount / (annual spending / 365),"M17, spending",,
+CALENDAR,,,,,
+M60,Running balance,start + Σ in − Σ out per day; Maybe entries excluded unless counted; variable-date items spread evenly,entries,,
+M61,Bonus paycheck months,Months with 3 paydays for every-2-weeks pay,pay dates,,

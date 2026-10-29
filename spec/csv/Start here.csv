@@ -1,0 +1,25 @@
+SLAM build spec,,
+Tab,What it is,Use it for
+Start here,This page,What each tab is and the order to read them
+Roadmap,Phases 1 to 8,Where we are (phase 2) and what each later phase holds
+Feature list,"Every feature, tagged","Core, Standard, Only SLAM, all 9 YMOYL steps, books/blogs/podcasts, next-level ideas; who each comes from, its time view and phase"
+Visualizations,Every chart,"What each chart looks like, what it reads, where it lives, and its time view"
+Build phases,How phase 3 gets built,"12 build steps in dependency order, each with 'done when'"
+QA checklist,How you'll check each phase,What you click and what you should see before saying 'next'
+Look and feel,"Colors, type, spacing, formats",Exact values so nothing is left to taste. Proposed values marked
+Words and states,"Tone, empty states, errors","What each screen says before anything is entered, and every confirmation"
+Navigation,Where everything lives,"Site map, one home for every thing, click paths for common tasks"
+DMMT check,Don't Make Me Think audit,"Each Krug principle, how it's applied, what was fixed, what to watch"
+Screens,The 8 screens,"Purpose, when used, who sees it"
+Mockup,What each screen looks like,"Cell by cell, left to right, Primary / Secondary / Tertiary"
+Staples,"Pieces built once, used everywhere","Add button, picker, row, caret, status tag, bulk select and more"
+Rules,How it behaves,"When X, then Y, otherwise Z. All accepted Oct 28"
+Rules summary,Rule counts,Rules per type
+Math,Every computed number,"Formula, inputs, what happens when something's missing"
+Reference data,"Presets, limits, rates, lists","Sourced 2026 figures marked Confirm; your return, inflation and withdrawal presets"
+Fields,Every input,"Layer, stage, who supplies, weight, data type, allowed values, which screen"
+Feature details,Build-level detail,"Each feature's layer, scope and which fields it reads"
+Tags and layers,Definitions,What every tag value means
+Demo client,Made-up numbers (public),Fake household with expected outputs as formulas; the math must match it even without your private file
+Test client,Separate private file,SLAM Test Client (private).xlsx stays on your laptop and in a git-ignored folder
+Open questions,Still to decide,Answer in the yellow column

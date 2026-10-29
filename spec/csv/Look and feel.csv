@@ -1,0 +1,44 @@
+Look and feel (proposed values marked),,,
+Item,Value,Used for,Status
+"COLORS (from the preview, Oct 28, version 3)",,,
+Modes,"Light and dark, both designed. Follows the computer's setting, with a Light | Dark switch in settings",,Decided (your feedback)
+Page background,Light: #E4E9F2 soft blue-grey (not bright white). Dark: #0E1729,,Decided (your feedback)
+Cards and rows,Light: #F2F5FA. Dark: #16223D,,Decided
+Text,"Light: #060E1F, weight 500. Dark: #F4F7FC",High contrast,Decided (your feedback)
+Secondary text,Light: #26344F. Dark: #CBD6EA,,Decided
+Primary (sapphire),Light: #1747A6. Dark: #7AA6F5 with dark text on it,"Main buttons, current tab and sub-tab",Decided
+Primary dark,Light: #0A2A66. Dark: #06142F,"Top bar, warnings",Decided
+Primary light,Light: #9FB9EA. Dark: #2C4A85,Selected rows (deeper than before),Decided (your feedback)
+Computed fill,Light: #CBD6EA. Dark: #24365C,Can't be typed in; text stays dark/light,Decided
+Borders,"Light: #4E6694 on inputs and buttons, #A9B9D6 row lines. Dark: #8AA2CF and #344A75",,Decided
+Small icon buttons,"32px, 2px dark outline, bold 17px icon. Top bar: solid white with navy icon","Undo, duplicate, reset, delete must be easy to spot",Decided (your feedback)
+Area hues,Income green #0B7A43 · Debt plum #8E2C8F · Assets teal #0E6670 · Taxes indigo #4338CA · Needs sapphire #1747A6 · Goals rose #B0397A (lighter versions in dark mode),"Sub-tab dots, section titles, charts",Decided (your 'other hues')
+Status: Roughly,"Solid teal pill, white text",,Decided
+Status: Guess,"Solid purple pill, white text",,Decided
+Warnings,"Solid navy pill, white text. No yellow, orange or red anywhere",,Decided
+Good,#0B7A43,"Wins, done",Decided
+TYPE AND SIZE,,,
+Font,"Inter (Google Fonts), fallback system sans-serif; IBM Plex Sans and Source Sans 3 tried as options",One font everywhere,Proposed (pick one in the preview)
+Sizes,Body 16px weight 500 · labels 14px weight 600 · section titles 18px · page titles 24px · big numbers 32px,Bigger and more solid than the first proposal,Decided (your feedback)
+Numbers,Tabular figures so columns of dollars line up,,Decided
+SHAPE AND SPACE,,,
+Corners,"8px on cards and inputs, 6px on buttons, full round on tags",,Decided
+Spacing,"4px grid: 4, 8, 12, 16, 24, 32",,Decided
+Row height,Comfortable 44px (default) or Compact 36px; 34px inputs; every box in a row sits on the same center line,Your 'fields level with one another',Decided (your feedback)
+Chips next to inputs,"Sit beside the input on the same line, never above or below it",,Decided (your feedback)
+Inputs,Filled: 1.5px #8FA2C6 border. Empty: 2px #4E6694 border with a hint like Add APR. Focused: 2px sapphire,Visible borders rule; empty boxes stand out,Decided (v4)
+Buttons,"Main: filled sapphire, white text. Secondary: white with sapphire border. Icon: 28px square. Max one main button per area",,Decided
+Row actions,"Duplicate, reset, delete as 32px line icons with tooltips, then one 'More ▸' text button. No ⋯ menu",Your 'three dots and caret' note,Decided (your feedback)
+Icons,"Line icons, 2.25 stroke, 18px, Lucide style (inline SVG or Lucide pinned from unpkg). Never emoji",,Decided (v4)
+Reference page,"spec/SLAM Look Preview.html (version 4) shows every value on this tab in use, light and dark",Match it,Decided (v4)
+Current sub-tab,Filled sapphire with white text,,Decided
+Hover,"Lift 1px with a soft shadow; pointer cursor on everything clickable, nothing else",,Decided
+Screen size,"Laptop first: designed at 1440px, must work down to 1280px. Phone layout is phase 6",,Decided
+Charts,"Apache ECharts from a CDN, using the area hues",One chart library so every chart looks related,Decided
+FORMATS,,,
+Money,"$1,240 in summaries (no cents); $15.99 in entry fields; negative as −$240, never red",,Decided
+Percent,One decimal: 22.4%,,Decided
+Dates,"Nov 12, 2026; months as Nov 2026",,Decided
+Durations,26 months (Jan 2029); never rounded to years,,Decided
+Time view,14 hrs · 3 FI days,,Decided
+Empty,"A dash or 'Add …', never $0",,Decided

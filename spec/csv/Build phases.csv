@@ -1,0 +1,14 @@
+"Build phases, in dependency order",,,
+Phase,Name,What gets built,Done when
+0,Setup,"New repo, /spec from this workbook (one CSV per tab), test runner, .gitignore for fixtures/*.local.json",Repo runs locally; spec files exist; Test client is NOT in git
+1,Records and storage,"One record type, dated history on every change, autosave, undo/redo, snapshots, export/import","Unit tests: add, edit, delete, undo, history, export → import round-trips"
+2,Math engine,Every Math tab formula as a pure function with tests,All Test client expected values match within $1 or 1 month
+3,Staples,All Staples tab pieces on one demo page,Each staple works on the demo page; affordances pass (buttons look like buttons)
+4,Shell and navigation,"Top bar (left, middle, right), 5 tabs, sub-tabs, breadcrumb, Find, quick add, parking lot, client view, gear",Trunk test passes on every empty screen
+5,My Money,"Profile with gates hub, Income, Debt, Assets, Protection, Taxes; Fast Track mode; One page toggle; visuals panel",Your test client can be entered start to finish; gates add and remove sections
+6,Spending,"Budget with five passes, fixed/variable and timing tags, who pays, bulk select, link to card, irregular costs; calendar; month-end close","A full month can be planned, logged and closed for the test client"
+7,Plan,"Goals with presets, big-deals card, milestones, timeline, debt payoff, next 12 months, solvers",FI dates match the Test client expected values
+8,Report,"Overview (donuts, metrics shelf, Sankey), one-pager, history",Every number links to its home
+9,Home,"Prep, Live, Wrap-up with one main button each",A mock session runs from Start session to Send summary
+10,Coach tools and discovery,"Revisit list, homework, snapshots, export, reset, notes, discovery table, new client",New client from discovery opens Home in Prep
+11,Dry run,Full fake session 1 end to end; screenshots; QUESTIONS.md,You do one real run-through and log every 'where do I put this'

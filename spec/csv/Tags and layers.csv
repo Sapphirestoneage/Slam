@@ -1,0 +1,29 @@
+What every tag means,,
+Tag,Value,Meaning
+Layer,Primary,Shows on the first line of the row. Needed for the core metrics
+Layer,Secondary,Behind the caret. Asked in session 1 if time allows
+Layer,Tertiary,Deep detail. Session 2+ or homework
+Stage,Pre-call,Client fills before the onboarding call (tap only)
+Stage,Discovery,Sales call numbers
+Stage,Fast Track,"The 5-minute core: enough for net worth, savings rate and an FI date"
+Stage,Session 1,"Worked through together, you driving"
+Stage,Session 2+,Later sessions or deeper passes
+Stage,Monthly,Money date and month-end close
+Stage,Computed,Never asked; the app works it out
+Stage,Later / Parked,Not in the current build
+Confidence,Know it,Exact number
+Confidence,Roughly,"Counts as done, flagged, gets a next check date"
+Confidence,Not sure,Typical value filled in and labeled Guess
+Confidence,Will email,Becomes homework
+Confidence,Not now,"Parked, stays on the revisit list"
+Confidence,Not for me,Counts as done
+Confidence,Computed,Inputs linked
+Who supplies,Client,Only the client can give it
+Who supplies,Coach infers,You can work it out from other answers
+Who supplies,Coach guesstimate,Default or typical value you set
+Who supplies,Look up,"Statement, paystub, website"
+Who supplies,Computed,App calculates
+Weight,High / Medium / Low,How much it moves FI date and the core metrics (orders the next 3)
+Stress,Yes,Row gets a 1 to 5 stress rating
+Scope,Now / Later / Parked,Is it in the current build
+Build status,Not started / Spec'd / Built / Tested,Where it stands in SLAM

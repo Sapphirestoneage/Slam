@@ -1,0 +1,45 @@
+"Reference data: presets, limits, rates, lists",,,
+Item,Value,Source,Status
+PRESETS (your numbers),,,
+Return (after inflation),6% conservative · 7% default · 8% optimistic · 12% hopeful (no inflation taken out),Your Oct 28 answers,Confirmed by you
+Inflation,2% default · 3%,Your Oct 28 defaults,Confirmed by you
+Withdrawal rate,3% · 4% default · 4.7% · 5.2%,Your Oct 28 defaults,Confirmed by you
+2026 LIMITS,,,
+"401(k), 403(b), 457, TSP deferral","$24,500; catch-up 50+ $8,000; ages 60-63 $11,250","IRS Notice 2025-67, via 401k Specialist",Confirm
+IRA (Roth or Traditional),"$7,500; catch-up 50+ $1,100",IRS Notice 2025-67,Confirm
+Total defined contribution (415c),"$72,000",IRS Notice 2025-67,Confirm
+HSA,"$4,400 self-only · $8,750 family · catch-up 55+ $1,000","IRS, via HR Morning",Confirm
+2026 TAXES,,,
+Standard deduction,"Single $16,100 · Married jointly $32,200","IRS 2026 inflation adjustments, via Journal of Accountancy",Confirm
+"Brackets, single (income over)","10% $0 · 12% $12,400 · 22% $50,400 · 24% $105,700 · 32% $201,775 · 35% $256,225 · 37% $640,600",Same,Confirm
+"Brackets, married jointly (income over)","10% $0 · 12% $24,800 · 22% $100,800 · 24% $211,400 · 32% $403,550 · 35% $512,450 · 37% $768,700",Same,Confirm
+Social Security wage base,"$184,500",SSA 2026 announcement,Confirm
+FICA rates,6.2% Social Security · 1.45% Medicare · +0.9% over $200k single / $250k joint,Statutory,Confirm
+"TYPICAL RATES (used when the client says 'not sure', always labeled Guess)",,,
+Credit card APR,22.15% (accounts paying interest); 20.94% all accounts,"Federal Reserve G.19, Q2 2026 (May 2026), released Aug 7 2026",Confirmed (Fed source)
+Personal loan APR,"11.86% (24-month, commercial banks)","Federal Reserve G.19, Q2 2026",Confirmed (Fed source)
+Car loan APR,7.14% (60-month new car); 6.97% (72-month),"Federal Reserve G.19, Q2 2026",Confirmed (Fed source)
+Federal student loan rate,Depends on year borrowed; ask,Placeholder,Confirm
+Tax set-aside (self-employed),25%,Rule of thumb,Confirm
+Low balance line,$500,Accepted rule,Confirmed
+CATEGORY DEFAULTS,,,
+Rent or mortgage,Accommodation · Fixed amount · Fixed date,,
+"Electric, gas, water",Accommodation · Variable amount · Fixed date,,
+"Internet, phone",Accommodation / Other · Fixed amount · Fixed date,,
+Renters or home insurance,Accommodation · Fixed amount · Fixed date,,
+"Groceries, dining out, coffee",Food · Variable amount · Variable date,,
+Car insurance,Transportation · Fixed amount · Fixed date · car gate,,
+"Gas or charging, tolls, parking",Transportation · Variable amount · Variable date · car gate,,
+"Car maintenance, registration",Transportation · Variable / Fixed amount · Variable date · car gate,,
+"Transit, Uber",Transportation · Variable amount · Variable date,,
+Therapy,Therapy · Fixed amount · Fixed date,,
+Subscriptions,Other · Fixed amount · Fixed date,,
+"Wants, travel, gifts",Wants · Variable amount · Variable date,,
+Kids lines,Other · mostly Variable · kids gate,,
+Pet lines,Other · mostly Variable · pets gate,,
+LISTS,,,
+Debt types (top 4 first),"Credit card, Student loan, Car loan, Personal loan · Other: medical, family or friend, BNPL, payday or cash advance, tax, 401(k) loan, business, name your own",,
+Investment account types,"401(k), 403(b), 457, TSP, Roth IRA, Traditional IRA, Rollover IRA, SEP, Solo 401(k), HSA, 529, Brokerage, Crypto, Other",,
+Cash account types,"Checking, Savings or HYSA, Money market, CD, Cash on hand",,
+Statuses,"Know it, Roughly, Not sure (Guess), Will email, Not now, Not for me, Computed",,
+Calendar entry statuses,"Planned, Partial, Got it / Paid, Didn't happen, Moved",,

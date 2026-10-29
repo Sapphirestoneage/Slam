@@ -1,0 +1,19 @@
+"Words, empty states, errors",,,
+Situation,What it says,Notes,Status
+THE ONE RULE,,,
+Every word on screen,"Understood in one glance. Short, plain, obvious. If a label needs explaining, change the label",Don't Make Me Think,Decided (Oct 28)
+EMPTY STATES (first time a screen is opened),,,
+Home (no client),'Start with a new client' + one main button,,Proposed
+"My Money tab, nothing entered","'Start Fast Track' as the one main button, with 'about 5 minutes' under it",,Proposed
+A list with no rows,'No credit cards yet' + '+ Add credit card',,Proposed
+A chart missing inputs,Grey outline of the chart + 'Needs rent and take-home' with links to both,,Proposed
+A metric missing inputs,'Locked: needs 2 numbers' with links,,Decided
+"Calendar, nothing planned",'Add your paychecks and bills to see your month',,Proposed
+CONFIRMATIONS AND ERRORS,,,
+After delete,"'Deleted. Undo' toast, 10 seconds",,Decided
+Before reset section,'Clear all 6 debts? You can undo this.' Buttons: 'Clear debts' and 'Keep them',,Proposed
+Save failed,'Not saved yet. Your last change is safe in this tab; export now to be sure.' + Export button,,Proposed
+Payment too small,'This payment never pays it off. It needs at least $417 a month.',,Proposed
+Backup reminder,'Last backup 9 days ago.' + 'Back up now',,Proposed
+SAMPLE TEXT IN THE MOCKUP,,,
+Names and amounts in the Mockup tab,"Examples only (Maya R., $1,240, Nov 12). Never hard-code them; real values come from the client's records",,Decided

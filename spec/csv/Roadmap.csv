@@ -1,0 +1,10 @@
+Roadmap: we're in phase 2,,,,
+Phase,Name,Status,What's in it,Done means
+1,Experiments,Done,"Money Rooms v1 to v3, SPARKS, SLAM in Personalfinance",Learned what works; left baggage
+2,The spec,Now,"This workbook: every field, rule, formula, screen and feature","One source of truth, nothing built from old code"
+3,Rebuild the core,Next,"Build phases 0 to 11: records, math, staples, navigation, My Money, Spending, Plan, Report, Home, coach tools, dry run. All Core, Standard and 'Now' items",Ready to run a live session 1 with a client
+4,Coaching depth,Later,"YMOYL exercises, joy per dollar, What Matters, mistake tracker, graceful degradation, small wins, Pareto, statement upload (CSV and PDF), canon checks (Baby Steps, Conscious Spending, PAW/UAW)",Every monthly money date has something new to look at
+5,"The future, in depth",Later,"True FI, decumulation, Roth ladder, 72(t), rule of 55, ACA, Social Security, life simulator, scenarios, Die With Zero, geo arbitrage, house hack, side income tools",One plan from now through retirement
+6,Clients in the app,Later,"Phone-first client view, client logging between sessions, comments, pre-call link, monthly money date, next-level features",Clients use it between sessions
+7,Delight and community,Later,"Wrapped, advice translator, shareable milestones, peer comparison, community money date",People share it
+8,Connect,Someday,"Bank connection, paystub and 1040 readers",Less typing

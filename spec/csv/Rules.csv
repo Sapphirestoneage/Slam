@@ -1,0 +1,188 @@
+"SLAM rules: when X, then Y, otherwise Z",,,,,,,,,,
+"Source = Decided (you said it, with when or where) or Proposed (my default; confirm, change or delete). Proposed rows are shaded yellow.",,,,,,,,,,
+ID,Build status,Rule type,Applies to,When,Then,Otherwise,Example,Source,Your comments,Build phase
+R001,Not started,Gate (show only if),Accounts gate,"An area (cash, investments, real assets, debt) is unchecked","That area's sub-tab, rows, totals and charts don't appear anywhere",Area appears with the rows created by the counts,,"Decided (Sept: absent, not hidden)",,5
+R002,Not started,Gate (show only if),Accounts gate,'None of these' is checked,All four areas count as complete; net worth uses zeros,,,Decided (Sept 23: every question has an 'I don't'),,5
+R003,Not started,Gate (show only if),Accounts gate,A type is picked with a count of N,N blank rows of that type are created,,,"Decided (Oct 28: count first, then rows)",,5
+R004,Not started,Gate (show only if),Work situation,"Between jobs, student or retired","Employer match, 401(k) %, paycheck deductions, vesting and equity pay don't appear",They appear for employed or mixed,,Decided (Sept: situation gate),,5
+R005,Not started,Gate (show only if),Work situation,Self-employed or mixed,"Variable income block, tax set-aside %, quarterly estimates and business expenses appear",Hidden,,Decided (accepted Oct 28; was proposed),,5
+R006,Not started,Gate (show only if),Work situation,Between jobs,Unemployment benefits and runway months appear on Income and Home,Hidden,,Decided (accepted Oct 28; was proposed),,5
+R007,Not started,Gate (show only if),Household,Solo,"No Owner dropdowns, no partner rows, no couples split","Couple: Owner on every row, partner fields, couples split block",,Decided (couples support Oct 27),,5
+R008,Not started,Gate (show only if),Housing,Rent,"Rent line, renters insurance line","Own: mortgage on home asset, property tax, insurance, HOA. Family: housing line defaults to 'covered by someone'",,Decided (accepted Oct 28; was proposed),,5
+R009,Not started,Gate (show only if),Car gate,Has a car = No,"Car insurance, gas, maintenance, registration, tolls, parking, car wash and the car asset don't appear",They appear; transit and Uber appear either way,,Decided (your Fields comment),,5
+R010,Not started,Gate (show only if),Kids gate,Dependents = 0,All Kids lines and the kid tax credits don't appear,They appear,,Decided (your Fields comment),,5
+R011,Not started,Gate (show only if),Pets gate,Pets = 0,All Pet lines don't appear,They appear,,Decided (your Fields comment),,5
+R012,Not started,Gate (show only if),Health coverage,Coverage is not confirmed as HSA-eligible,"HSA rows (contribution, invested vs cash, HSA account type) don't appear",They appear,,Decided (your Mockup comment),,5
+R013,Not started,Gate (show only if),Health coverage,Coverage doesn't include an FSA,FSA rows don't appear,They appear,,Decided (your Mockup comment),,5
+R014,Not started,Gate (show only if),Income,Employer doesn't offer ESPP or RSUs,Equity pay fields don't appear,Appear when ticked in the paycheck row's Secondary: 'Equity pay offered? ☐ ESPP ☐ RSU ☐ Options' (also listed in the gates hub),,Decided (your comment: where would this gate be),,5
+R015,Not started,Gate (show only if),Gates hub,Always,"Profile has a 'What applies to me' panel listing every gate (car, kids, pets, housing, work, health, equity pay, couple, account types) with its answer. Changing one adds or removes those sections and jumps you there","Each hidden area also shows a slim '+ Add [area]' link in its sub-tab, linked back to the hub",,Decided (your comment on R001),,5
+R016,Not started,Gate (show only if),Student loan,Private,Repayment plan and PSLF fields don't appear,Federal: they appear,,Decided (accepted Oct 28; was proposed),,5
+R017,Not started,Gate (show only if),Investment account,Account type picked,"Only the fields unique to that type appear (cost basis for brokerage, Roth basis for Roth, invested vs cash for HSA)",,,Decided (Oct 27: each type carries its own fields),,5
+R018,Not started,Gate (show only if),Investment account,Pretax | Roth | Both = Both,Two balance boxes (pretax and Roth),One balance box,,Decided (accepted Oct 28; was proposed),,5
+R019,Not started,Gate (show only if),Debt picker,Always,"Top 4 shown: credit card, student loan, car loan, personal loan; Other opens the rest with search",,,Decided (your Mockup comment),,5
+R020,Not started,Gate (show only if),Credit card,Payment = Custom,Custom $ box appears,Hidden,,Decided (your Mockup comment),,5
+R021,Not started,Gate (show only if),Taxes,Income type includes 1099 or self-employed,Quarterly estimates and self-employment tax appear,Hidden,,Decided (accepted Oct 28; was proposed),,5
+R022,Not started,Gate (show only if),Goals,Milestone = Barista FI,Part-time income field appears,Hidden,,Decided (Oct 7 FI definitions),,5
+R023,Not started,Gate (show only if),Any sub-tab,Layer = Secondary or Tertiary,"Fields stay behind the caret, collapsed by default",Primary always visible,,Decided (Oct 28: detail behind carets),,5
+R024,Not started,Default,Every new row,Row created,"All boxes start blank, never 0% or $0; computed results show '–' until inputs exist",,ProjectionLab shows '0 years to pay off' on a blank row,Decided (screen review),,2
+R025,Not started,Default,Goals,No return entered,"Return 7%, inflation 2%, withdrawal 4%",,,Decided (Oct 28: your usual numbers),,2
+R026,Not started,Default,Goals,Presets,"Return (already after inflation): 6% (conservative), 7% (default), 8% (optimistic), 12% (hopeful, no inflation taken out). Inflation: 2% (default), 3%. Withdrawal: 3%, 4% (default), 4.7%, 5.2%",,,Decided (Oct 28),,2
+R027,Not started,Default,Plan,Always,"A 'These are big deals' card shows the FI date under each preset side by side, so the client sees how much one assumption moves it",,,Decided (Oct 28),,2
+R028,Not started,Default,Goals,No pace picked,Likely (the default presets); Optimistic and Pessimistic use the 8% and 6% presets,,,"Decided (Oct 28, replaces Optimistic default)",,2
+R029,Not started,Default,Goals,No life expectancy,90,,ProjectionLab uses 85,Decided (accepted Oct 28; was proposed),,2
+R030,Not started,Default,Goals,No retirement spending,Equals current spending,,,Decided (accepted Oct 28; was proposed),,2
+R031,Not started,Default,Goals,Social Security not set,"Full scheduled benefit (likely case), never zero by default",,,Decided (Oct 2),,2
+R032,Not started,Default,Engine,Always,Real (today's) dollars; nominal is a toggle,,,Decided (Oct 2),,2
+R033,Not started,Default,Split by,Roommates entered,Every shared Needs line defaults to split by roommates + 1,Client can override per line or just type 'my share',,Decided (your Fields comment),,2
+R034,Not started,Default,Housing = Family,Housing line,Defaults to 'Covered by someone' with Covered by = Parents,,,Decided (accepted Oct 28; was proposed),,2
+R035,Not started,Default,APR = Not sure,Debt row,"Fills a typical rate for that debt type, status Roughly",,"Credit card 24%, personal loan 12%, car 7% (rates to confirm in the Math pass)",Decided (screen review),,2
+R036,Not started,Default,Min payment,Credit card balance and APR exist,Minimum is computed and shown in Primary; client can overwrite with the statement number,,,Decided (your Mockup comment),,2
+R037,Not started,Default,Credit card payment,No choice made,Minimum,,,Decided (accepted Oct 28; was proposed),,2
+R038,Not started,Default,Tax set-aside,"Self-employed, no % entered",25%,,,Decided (accepted Oct 28; was proposed),,2
+R039,Not started,Default,Session length,Not set,60 minutes,,,Decided (accepted Oct 28; was proposed),,2
+R040,Not started,Default,Low balance line,Not set,$500,,,Decided (accepted Oct 28; was proposed),,2
+R041,Not started,Default,Filing status,"Solo, not set",Single (marked Coach infers),Couple: Married filing jointly (marked Coach infers),,Decided (accepted Oct 28; was proposed),,2
+R042,Not started,Default,Period selector,Spending opened,Monthly,,,Decided (Oct 22: monthly default),,2
+R043,Not started,Entry,Any amount with a 'per' picker,"Amount entered per paycheck, week, month or year",Stored as monthly; shown back in the unit it was entered,,,Decided (Sept 23: any way a number can be given),,3-6
+R044,Not started,Entry,Income,Only take-home entered,Gross is solved and marked Computed,"Only gross entered: take-home solved. Both: both kept, difference flagged if they don't reconcile",,Decided (Oct 2),,3-6
+R045,Not started,Entry,Pickers,Typing,Matches start after 1 letter; Enter picks the top match; free text allowed as 'Other',,,Decided (Oct 27: type a little and pick),,3-6
+R046,Not started,Entry,Every section,Client has something not on the list,"'Other' row with name, amount, type is always available",,,Decided (session gaps),,3-6
+R047,Not started,Entry,Car loan / mortgage,Entered on either the asset or the debt,Same record shows in both places; editing one edits the other,,,Decided (screen review),,3-6
+R048,Not started,Entry,Calendar,Credit card or loan has a due day,"Payment appears on the calendar automatically, repeating monthly",,,Decided (screen review),,3-6
+R049,Not started,Entry,Irregular costs,Yearly cost and month entered,Lands on the calendar in that month and creates a monthly set-aside,,,Decided (accepted Oct 28; was proposed),,3-6
+R050,Not started,Entry,Budget actuals,Calendar entries marked Got it / Paid,Feed the budget line's Actual,,,Decided (Oct 16 ice cream sandwich),,3-6
+R051,Not started,Entry,Parking lot,Note converted to a field,Note is struck through and links to that field,,,Decided (accepted Oct 28; was proposed),,3-6
+R052,Not started,Status and confidence,Every input,Value typed,Status = Know it unless changed,,,Decided (accepted Oct 28; was proposed),,1-3
+R053,Not started,Status and confidence,Every input,Status picked,"One of: Know it, Roughly, Not sure, Will email, Not now, Not for me, Computed",,,"Decided (Oct 27, list pending your final OK)",,1-3
+R054,Not started,Status and confidence,Status = Roughly,Any field,"Counts as done, shows ≈, gets a next check date",,,Decided (Oct 27),,1-3
+R055,Not started,Status and confidence,Status = Not sure,Any field,"App fills a typical value labeled Guess. Different from Roughly: Roughly is the client's own ballpark, Guess is the app's number. Counts toward core but flagged",,,Decided (accepted Oct 28; was proposed),,1-3
+R056,Not started,Status and confidence,Status = Will email,Any field,Added to homework list with the field name; counts as not done,,,Decided (homework),,1-3
+R057,Not started,Status and confidence,Status = Not now,Any field,Parked; stays on the revisit list; not done,,,Decided (Oct 27),,1-3
+R058,Not started,Status and confidence,Status = Not for me / N/A,Any field or line,Counts as done; value treated as zero,,,Decided (Oct 27),,1-3
+R059,Not started,Status and confidence,Row status,Row-level status set,Applies to every field in the row unless a field has its own,,,Decided (accepted Oct 28; was proposed),,1-3
+R060,Not started,Status and confidence,Computed fields,Always,Can't be typed over except min payment (statement number) and gross/take-home; an overwrite turns status to Know it and shows a reset-to-computed icon,,,Decided (accepted Oct 28; was proposed),,1-3
+R061,Not started,Status and confidence,Aging,"Roughly number older than 30 days, or any number older than 90 days",Shows on revisit list and 'Due for a check' on Home,,,Decided (accepted Oct 28; was proposed),,1-3
+R062,Not started,Status and confidence,Stress rating,Debts and accounts,"1 to 5, blank allowed; blank is ignored by the stress payoff order",,,Decided (Oct 2),,1-3
+R063,Not started,Completion,Section bars,Always,Two bars per section: core (Primary fields) and full detail (all fields that apply),,,Decided (Oct 27),,5
+R064,Not started,Completion,Counting,Field is gated out,Not counted at all,,,Decided,,5
+R065,Not started,Completion,Counting,"Know it, Roughly, Not for me, Computed",Done,Not sure counts for core only; Will email and Not now are not done,,Decided (accepted Oct 28; was proposed),,5
+R066,Not started,Completion,Fast Track,All Fast Track fields done,"Every lens turns on (net worth, savings rate, DRAFTT, FI date)",,,Decided (your comment: enough to turn on every lens),,5
+R067,Not started,Completion,Fast Track accuracy,Fast Track result vs full-detail result,Target: within $100/month of the full answer. Track the gap after each full session,,,Decided (your comment),,5
+R068,Not started,Completion,Metrics,Inputs missing,Metric card shows 'Locked: needs 2 numbers' and jumps to them,,,Decided (metrics unlocked),,5
+R069,Not started,Order and priority,Next 3 numbers,Always,"Rank empty, Not sure and Not now fields by how much they move FI date and core metrics; ignore gated-out fields",,,Decided (Oct 7 dependency ranking),,7
+R070,Not started,Order and priority,Next 3 numbers,Two fields tie,"Primary before Secondary, then the order the field appears on screen",,,Decided (accepted Oct 28; was proposed),,7
+R071,Not started,Order and priority,Materiality,A field's effect is under $100/year,Never in Next 3; goes to the Small wins tab,,,Decided (Oct 2),,7
+R072,Not started,Order and priority,Debt payoff order,Avalanche,Highest APR first,"Snowball: smallest balance first. Stress: highest stress first, ties by APR",,Decided (Oct 2),,7
+R073,Not started,Order and priority,Promo rates,0% promo ends within 60 days,Card jumps to the top of payoff order and shows a warning,,,Decided (accepted Oct 28; was proposed),,7
+R074,Not started,Order and priority,Guide me,Turned on,Follows the session 1 curriculum order; skips gated-out and done fields,,,Decided (Oct 7),,7
+R075,Not started,Visibility,Client view,On,"Hides private notes, stress ratings, coach-only fields, the gear, other clients' names; text 15% bigger",,,Decided (session gaps),,4
+R076,Not started,Visibility,Coach tools,Always,"Behind the gear, never on a main tab",,,Decided (Oct 27),,4
+R077,Not started,Visibility,Private notes,Always,"Never shown in client view, the one-pager, exports to the client or the pre-call form",,,Decided (session gaps),,4
+R078,Not started,Visibility,Colors,Any difference or warning,Never red; use neutral and calm tones,,,Decided (nine tiles never red),,4
+R079,Not started,Visibility,Pre-call form,Start of the client program,You fill Level 1 yourself in session 1; the client-facing link is built later with the same questions,,,Decided (your comment: I'll be filling it out to start),,4
+R080,Not started,Data safety,Delete row,Clicked,"Row removed, 'Undo' toast for 10 seconds",,,Decided (screen review),,1
+R081,Not started,Data safety,Reset row,Clicked,"All fields blank, status cleared, row kept; Undo toast",,,Decided,,1
+R082,Not started,Data safety,Reset section,Clicked,Confirm dialog naming the section; Undo toast,,,Decided,,1
+R083,Not started,Data safety,Reset client,Clicked,Must type the client's name; snapshot taken first,,,Decided,,1
+R084,Not started,Data safety,Autosave,Any change,Saved within 1 second; 'Unsaved' shown if it fails; warning before closing the tab,,,Decided (session gaps),,1
+R085,Not started,Data safety,Import,File imported,Snapshot taken first so it can be undone,,,Decided (Sept export/import),,1
+R086,Not started,Data safety,Undo / redo,Always,"Covers every change on every screen, including deletes and resets",,,Decided (Sept),,1
+R087,Not started,Data safety,Linked records,A debt linked to an asset is deleted,"Ask: delete the loan only, or the asset too",,,Decided (accepted Oct 28; was proposed),,1
+R088,Not started,Calendar,Maybe entries,Always,Dashed chip; left out of the running balance unless 'Count maybe' is on,,,Decided (your comment),,6
+R089,Not started,Calendar,Got it / Paid,Clicked,Planned or maybe becomes actual on the real date and amount,,,Decided (your comment),,6
+R090,Not started,Calendar,Entry status,Always,"Each calendar entry is Planned, Partial, Got it / Paid, Didn't happen, or Moved",,,Decided (your comment on R048),,6
+R091,Not started,Calendar,Partial,Some of the money came or was paid,Enter the amount so far; the rest stays Planned on the same entry. Update it later instead of starting over,,,Decided (your comment on R048),,6
+R092,Not started,Calendar,Didn't happen,Clicked,"Entry kept, greyed, counted as $0 actual so the miss shows in month-end close","Moved: pick a new date, original date keeps a faint marker",,Decided (accepted Oct 28; was proposed),,6
+R093,Not started,Calendar,Wins,"A payoff date, milestone or FI step is reached in the projection",Win chip appears on that date automatically,,,Decided (your comment),,6
+R094,Not started,Calendar,Low balance,End-of-day balance below the line,Day shows ⚠ and Home shows the first such day,,,Decided (accepted Oct 28; was proposed),,6
+R095,Not started,Calendar,Repeats,Twice a month,1st and 15th unless days are set,,,Decided (accepted Oct 28; was proposed),,6
+R096,Not started,Calendar,Paychecks,Every-2-weeks pay lands 3 times in a month,Month marked 'bonus paycheck month',,,Decided (Oct 22),,6
+R097,Not started,Paid with (bill to card),"Needs lines, calendar entries, irregular costs",Always,"Every bill can carry 'Paid with ▾': checking, savings, or any credit card on file. Tertiary by default",,,"Decided (your message: link a bill to a credit card, tertiary)",,6
+R098,Not started,Paid with (bill to card),Where it lives,Always,"Paid with sits at the top of the row's More ▸ area, so it's 3 clicks from any bill",,,Decided (Oct 28),,6
+R099,Not started,Paid with (bill to card),Paid with = a credit card,Bill linked,"The charge adds to that card's expected balance on its date; the calendar shows it on the card, not on checking; the card's payment day pulls the total",,,Decided (accepted Oct 28; was proposed),,6
+R100,Not started,Paid with (bill to card),Promote to Secondary,Client says most spending goes on cards (Profile toggle),'Paid with' moves up to Secondary on every line,Stays Tertiary,,Decided (accepted Oct 28; was proposed),,6
+R101,Not started,Paid with (bill to card),Card row,Bills are linked to the card,"Card's Secondary shows 'Bills on this card: 6, $412/mo' with a list",,,Decided (accepted Oct 28; was proposed),,6
+R102,Not started,Paid with (bill to card),Card paid in full monthly,Pay = In full,"Linked bills count as spending, not debt; no interest",Carrying a balance: linked bills add to the payoff projection,,Decided (accepted Oct 28; was proposed),,6
+R103,Not started,Staples (same everywhere),Every section,Always,"One '+ Add [thing]' button in the same spot (bottom left of the section), same look",,,Decided (your message: uniform staples),,3
+R104,Not started,Staples (same everywhere),Every add picker,Clicked,"Top 4 types as big buttons, Other opens the rest with search, 'Name your own' at the end",,,"Decided (your Mockup comment, made universal)",,3
+R105,Not started,Staples (same everywhere),Every row,Always,"Same anatomy left to right: type/name, amount, per, owner (couples), status, ⧉ ↺ 🗑, ▸ More",,,Decided,,3
+R106,Not started,Staples (same everywhere),Quick add,Top bar,'+ Add anything' box: type 'Netflix 15.99 monthly' or 'Chase card 3200 at 24%' and it picks the type and section; you confirm,,,Decided (accepted Oct 28; was proposed),,3
+R107,Not started,Staples (same everywhere),Add from anywhere,"Adding from Home, calendar or a chart",Opens the same add picker and drops the row in its home section; no screen switch,,,Decided (accepted Oct 28; was proposed),,3
+R108,Not started,Staples (same everywhere),Every section footer,Always,"Total, count, completion bar in the same spot",,,Decided (accepted Oct 28; was proposed),,3
+R109,Not started,Bulk select,Every multi-item list,Always,Each row has a checkbox on the far left; the list header has 'Select all',,,Decided (your message: multi-select like bills),,3
+R110,Not started,Bulk select,One or more rows checked,Always,"A slim bar appears at the top of the list: Duplicate, Delete, Reset, Set status, Link to card, Clear selection",Bar disappears when nothing is checked,,Decided,,3
+R111,Not started,Bulk select,Bulk delete or reset,Clicked,One undo toast covers all of them ('Deleted 5. Undo'),,,Decided,,3
+R112,Not started,Bulk select,Link to card (bulk or row),Clicked,Shows the client's cards as buttons if there are 4 or fewer; a picker with search if more. One click links every selected bill,,,Decided (your message: easier with a couple of cards),,3
+R113,Not started,Bulk select,Link to card (single row),More ▸ on the row,"Paid with shows the card buttons, so it's 3 clicks: More ▸ › Paid with › card name",,,Decided (your message: about three links away; no ⋯ menu),,3
+R114,Not started,Bulk select,Set status (bulk),Clicked,"Applies one status (Roughly, Will email, etc.) to every selected row",,,Decided (accepted Oct 28; was proposed),,3
+R115,Not started,Data and timing,Every record,Always,"One record type for bills, paychecks, debt payments, yearly costs: name, amount, how often, owner, status, paid with, linked to, source, covers period. Budget, calendar, card row and Needs are views of these records",,,Decided (accepted Oct 28; was proposed),,1-6
+R116,Not started,Data and timing,Source,Always,"Every record notes where it came from: manual, statement, or bank (future)",,,"Decided (manual now, statements next, bank one day)",,1-6
+R117,Not started,Data and timing,Statement upload,Later (phase 4),"Upload a statement as CSV or PDF; lines are read and matched to existing records. Matches update actuals, new lines are offered as new records, likely duplicates are flagged for you to confirm",,,Decided (you want statement upload and consolidation),,1-6
+R118,Not started,Data and timing,Bank connection,Not planned,Not built; records keep a 'bank' source value so it can slot in later without redesign,,,"Decided (one day, not soon)",,1-6
+R119,Not started,Data and timing,Paid in advance,"A payment covers future months (yearly insurance, prepaid rent, annual subscription)","Enter the amount, the date paid, and the months it covers",,,Decided (your 'paying in advance'),,1-6
+R120,Not started,Data and timing,Cash vs accrual,Paid-in-advance or yearly record,Calendar always shows cash basis (the day money left). Budget has a Cash | Accrual toggle: accrual spreads the cost across the months it covers,,,Decided (you want both views),,1-6
+R121,Not started,Data and timing,Budget default basis,Spending opened,"Accrual (monthly equivalent), so a yearly bill doesn't wreck one month",Cash view shows the real month it hit,,Decided (accepted Oct 28; was proposed),,1-6
+R122,Not started,Data and timing,Prepaid balance,"Paid in advance, accrual on",Unused portion shows as a small 'prepaid' asset that runs down each month,,,Decided (accepted Oct 28; was proposed),,1-6
+R123,Not started,Data and timing,History,Any number changes,Old value is kept with its date (not overwritten). Snapshots sit on top for session comparisons,,,Decided (accepted Oct 28; was proposed),,1-6
+R124,Not started,Data and timing,Year in review (Wrapped),12 months of history exist,"Wrapped-style recap: biggest wins, debt paid, savings rate trend, top categories, estimate accuracy",,,Decided (you want Wrapped),,1-6
+R125,Not started,Data and timing,Household,Always,One client file = one household; couples are two people inside one file,,,Decided (Oct 28),,1-6
+R126,Not started,Data and timing,Device,Now,"Laptop only. If clients get access later, their view is built phone-first",,,Decided (Oct 28),,1-6
+R127,Not started,Data and timing,Client logging,Now,Only you edit. Client logging between sessions is a later phase,,,Decided (Oct 28),,1-6
+R128,Not started,Data and timing,Budget passes,Always,"Five passes in order: Gut, Basics, Rough, Estimate, Actual",,,Decided (Oct 28),,1-6
+R129,Not started,Data and timing,Pass: Gut,First minutes,"One number: 'what do you think you spend?' A test, kept to compare later",,,Decided (Oct 28),,1-6
+R130,Not started,Data and timing,Pass: Basics,Fast Track,"Sum totals by area, not line items",,,Decided (Oct 28: Fast Track = Basics),,1-6
+R131,Not started,Data and timing,Pass: Rough,Going through line items in session,Temporary placeholders for what it usually is; meant to be replaced,,,Decided (Oct 28),,1-6
+R132,Not started,Data and timing,Pass: Estimate,Planning the coming month,"What we expect this month, including the known amounts (rent, subscriptions); a plan, not a placeholder",,,Decided (Oct 28),,1-6
+R133,Not started,Data and timing,Pass: Actual,Month closes,Confirms or changes each estimate; differences show at month-end close,,,Decided (Oct 28),,1-6
+R134,Not started,Data and timing,Rough vs Estimate,A line has a Rough number when a month is planned,Rough carries over as the starting Estimate and is marked 'from Rough' until you confirm it,,,Decided (accepted Oct 28; was proposed),,1-6
+R135,Not started,Fixed vs variable,Every spending line,Always,"Tagged Fixed or Variable (default by category, editable)",,"Rent, subscriptions, insurance = Fixed. Food, lattes, gas = Variable",Decided (Oct 28),,6
+R136,Not started,Fixed vs variable,"Two tags, not three",Every spending line,"Amount: Fixed | Variable. Timing: Fixed date | Variable date. Electric = variable amount, fixed date",,,Decided (Oct 28: amount and timing are separate),,6
+R137,Not started,Fixed vs variable,Four kinds,Both tags set,"Fixed amount + fixed date (rent, subscriptions). Variable amount + fixed date (electric, phone overages). Fixed amount + variable date (haircut, oil change). Variable amount + variable date (groceries, lattes, gas)",,,Decided (Oct 28),,6
+R138,Not started,Fixed vs variable,Calendar placement,Timing = Fixed date,Placed on its exact day,Variable date: spread evenly (weekly or per visit) so the running balance stays realistic,,Decided (accepted Oct 28; was proposed),,6
+R139,Not started,Fixed vs variable,Estimate accuracy,Amount = Variable,Tracked for how far off it runs; most attention at month-end close,Fixed amount: a change is flagged as 'price went up',,Decided (accepted Oct 28; was proposed),,6
+R140,Not started,Fixed vs variable,Timing risk,Timing = Variable date and amount is large,Flagged as a cash-flow risk on the calendar,,,Decided (accepted Oct 28; was proposed),,6
+R141,Not started,Fixed vs variable,Fixed line suggestions,Looking for savings,"Offer: keep, cancel, renegotiate, or switch (easy to eliminate, hard to lower)",,,Decided (Oct 28 reasoning),,6
+R142,Not started,Fixed vs variable,Variable line suggestions,Looking for savings,"Offer: set a lower target or a cap (easy to lower, hard to eliminate)",,,Decided (Oct 28 reasoning),,6
+R143,Not started,Fixed vs variable,Focus,Estimate vs actual at month end,Variable lines get more attention: their misses are listed first and they're tracked for how far off they usually are,,,Decided (Oct 28: variable is higher risk),,6
+R144,Not started,Fixed vs variable,Totals,Budget and Report,"Show fixed total and variable total side by side, with % of take-home each",,,Decided (accepted Oct 28; was proposed),,6
+R145,Not started,Fixed vs variable,Fixed cost floor,Always,Fixed total = the monthly floor; feeds runway and Lean FI checks,,,Decided (accepted Oct 28; was proposed),,6
+R146,Not started,Data and timing,DRAFTT,Always,"Budget lines are plain categories; each carries a DRAFTT tag (from its category, editable). DRAFTT is a view built from the tags, so graceful degradation and DRAFTT shares can be measured",,,Decided (Oct 28),,1-6
+R147,Not started,Data and timing,Guess vs Roughly,Always,"Kept separate: Roughly = client's ballpark, Guess = app's typical number",,,Decided (Oct 28),,1-6
+R148,Not started,Data and timing,Tab names,Always,"Home, My Money, Spending, Plan, Report",,,Decided (Oct 28: rename Numbers and Results),,1-6
+R149,Not started,Data and timing,Backups,"Last export older than 7 days, or End session",Show 'Last backup 9 days ago' with 'Back up now'; End session downloads a backup file automatically,,,Decided (audit: browser storage can be wiped),,1-6
+R150,Not started,Data and timing,Rule conflicts,Two rules disagree,The rule with the later date wins; log the conflict in QUESTIONS.md,,,Decided (audit),,1-6
+R151,Not started,Data and timing,Old data,Moving from the old SLAM,No import from the old app. Your numbers come from the private Test client file,,,Decided (audit: no baggage),,1-6
+R152,Not started,Time view,Every money number,Toggle set to Hours of work or FI days,Every amount converts: hours = amount / real hourly wage; FI days = amount / (annual spending / 365),Missing hourly wage: toggle explains what's needed,,Decided (Oct 28: everything converts to time),,2-3
+R153,Not started,Time view,No hours entered yet,Real hourly wage missing,"Use take-home / 173 hours (40 a week) labeled Guess, so the toggle works from day one; real hours replace it once entered",,,Decided (audit: otherwise the toggle does nothing),,2-3
+R154,Not started,Time view,Toggle,Always,One global toggle in the top bar: $ | Hours | FI days; remembered per client,,,Decided,,2-3
+R155,Not started,Time view,Chips,Toggle on $,Big amounts (over $50) still show a small grey hours chip,,,Decided,,2-3
+R156,Not started,Polish (v4 preview),Icons,Always,"Matching line icons (Lucide style, 2.25 stroke, 18px) for duplicate, reset, delete, undo, redo, find, parking lot, client view, gear, add, close. Never emoji or text symbols",,,Decided (Oct 28),,3
+R157,Not started,Polish (v4 preview),Every list screen,Always,"Summary strip above the list: the 3 to 4 numbers that answer 'so what' (Debt: total, monthly payments, debt-free date, interest left)",,,Decided (Oct 28),,3
+R158,Not started,Polish (v4 preview),Numbers in tables,Always,Money and percent right-aligned; text left-aligned,,,Decided (Oct 28),,3
+R159,Not started,Polish (v4 preview),Debt rows,Payoff known,Small bar under the payoff date in the area color; longest payoff = full width,Payoff unknown: empty bar and 'Needs APR',,Decided (Oct 28),,3
+R160,Not started,Polish (v4 preview),Status tags,Always,"Each tag carries a symbol as well as a color: ≈ Roughly, ? Guess, ⚠ warning",,,Decided (Oct 28),,3
+R161,Not started,Polish (v4 preview),Area color,Always,"Each area's color shows as a dot on its sub-tab, a 6px stripe on its section title, and in its charts",,,Decided (Oct 28),,3
+R162,Not started,Polish (v4 preview),Sub-tab progress,Always,Each sub-tab shows a small count (3/4) or ✓ when core is done,,,Decided (Oct 28),,3
+R163,Not started,Polish (v4 preview),Input borders,Box has a value,Softer border (#8FA2C6),Empty: strong 2px border with a hint like 'Add APR',,Decided (Oct 28: you said add them all),,3
+R164,Not started,Polish (v4 preview),Saved moment,A value changes,Row flashes soft green for under a second and '✓ Saved' shows near the main button,,,Decided (Oct 28),,3
+R165,Not started,Polish (v4 preview),Sticky,Scrolling,Top bar stays at the top of the page; column names and the totals row stay inside long lists,,,Decided (Oct 28),,3
+R166,Not started,Polish (v4 preview),Show the math,Click any computed number,"Small panel with the formula filled in with the client's numbers, in plain words",,,Decided (Oct 28),,3
+R167,Not started,Polish (v4 preview),Change since last session,A snapshot exists,"▲ or ▼ with the difference under key numbers (summary strips, net worth, savings rate)",No snapshot: nothing shown,,Decided (Oct 28),,3
+R168,Not started,Polish (v4 preview),Keyboard,Always,"Tab = next box, Enter in a row = new row below, Ctrl+Z = undo, Ctrl+Shift+Z = redo, / = Find. Shown as a small hint line under each list",,,Decided (Oct 28),,3
+R169,Not started,Polish (v4 preview),Density,Settings,"Compact (36px rows) or Comfortable (44px, default); remembered",,,Decided (Oct 28),,3
+R170,Not started,Polish (v4 preview),Client view,On,"Text 15% bigger, plus the hiding rules already in Visibility",,,Decided (Oct 28),,3
+R171,Not started,Polish (v4 preview),Long lists,More than one type in a list,"Group headers (Credit cards, Loans, Other) with subtotals; click to fold",,,Decided (Oct 28),,3
+R172,Not started,Polish (v4 preview),Totals row,Every list,"Pinned at the bottom: count, total balance, total monthly",,,Decided (Oct 28),,3
+R173,Not started,Polish (v4 preview),Print,One-pager or any screen printed or saved as PDF,"No buttons, no dark backgrounds, solid lines, black text",,,Decided (Oct 28),,3
+R174,Not started,Polish (v4 preview),Reference look,Always,spec/SLAM Look Preview.html is the visual reference; match it,,,Decided (Oct 28),,3
+R175,Not started,Couples,Owner,Couple,"Every row has Owner: me, partner, joint; joint counts for both",,,Decided,,1-5
+R176,Not started,Couples,Totals,Couple,Household totals by default; 'Me | Partner | Household' toggle on totals,,,Decided (accepted Oct 28; was proposed),,1-5
+R177,Not started,Couples,Split,Joint | Separate | Mix,Separate: each person's Needs share comes from the split table,,,Decided (accepted Oct 28; was proposed),,1-5
+R178,Not started,Session flow,Discovery table,Send to client file,Creates the client; each number fills its field with status Roughly,,,Decided (Oct 7),,9-10
+R179,Not started,Session flow,Session end,End session clicked,"Snapshot saved, one-pager filled, homework list built from Will email",,,Decided (accepted Oct 28; was proposed),,9-10
+R180,Not started,Session flow,One-pager,Always,Includes the disclaimer line,,,Decided (session gaps),,9-10
+R181,Not started,Session flow,Prep view,Next session opened,"Shows changes since last snapshot, open homework, numbers due for a check",,,Decided (session gaps),,9-10
+R182,Not started,Copy and look,All on-screen text,Always,"Written from the user's side: what it means and what to do, never how the app works",,,Decided (Oct 25),,3
+R183,Not started,Copy and look,Clickable things,Always,"Buttons look like buttons, inputs have visible borders, small lift on hover",,,Decided (Oct),,3
+R184,Not started,Copy and look,Row actions,Always,"Small icons: ⧉ duplicate, ↺ reset, 🗑 delete, with tooltips, then one 'More ▸' text button. No ⋯ menu",,,Decided (your comments),,3
+R185,Not started,Copy and look,Durations,Any payoff or time-to-goal,"Shown in months and a date, never rounded to years",,,Decided (screen review),,3

@@ -1,0 +1,29 @@
+Every chart and what it looks like,,,,,,
+Chart,Type,What you see,Reads,Where it lives,Interaction,Time view
+Net worth donuts,Rings,"Big ring for net worth split by account type; smaller rings for assets, liabilities, equity; tabs underneath open each list","Accounts, debts",Report > Overview,Hover shows the item; click jumps to its home,Months of freedom in the center
+Net worth over time,Line,One line per snapshot date; dots where sessions happened; dashed line for liquid net worth,"Snapshots, history",Report > History,Drag to zoom a range,Months of freedom on the second axis
+Cash flow Sankey,Sankey,"Income on the left flows into taxes, needs, wants, debt, saving on the right; width = dollars","Income, spending lines",Report > Overview,Click a branch to filter the budget,Branch width in hours
+Gross to take-home,Waterfall,"Gross bar steps down through federal, FICA, pretax deductions to take-home","Income, Math M10-M12",My Money > Income,Hover shows each amount,Hours of each workday spent on each
+DRAFTT shares,100% bar,"One horizontal bar split into Debt, Retirement, Accommodation, Food, Transportation, (Taxes, Therapy)",Spending lines,"My Money visuals panel, Report",Click a letter to see its lines,Hours per letter
+Amount and timing grid,2x2 bubbles,Four boxes (fixed/variable amount x fixed/variable date); bubble size = dollars; bottom-right box shaded as risk,Spending lines,Spending > Budget,Click a box to filter,Bubble labels in hours
+Estimate vs actual,Bullet bars,"Per line: grey estimate bar, solid actual bar, a tick for Gut",Budget passes,Spending > Month-end close,Sort by biggest miss,Misses in hours
+Gut accuracy over time,Line,Average % off per month falling over time,History,Report > History,,
+Running balance,Line under the calendar,Thin line of end-of-day balance with the low balance line dashed; maybe money as a dotted band,Calendar entries,Spending > Cash flow calendar,Hover a day,Days of runway
+Debt payoff,Stacked area,Each debt's balance shrinking to zero; flags at each payoff date,"Debts, Math M34",Plan > Debt payoff,Extra payment slider moves the flags,Interest in hours
+Payoff order compare,Grouped bars,Avalanche vs snowball vs stress: months and total interest side by side,Math M34,Plan > Debt payoff,,Hours of interest
+FI timeline,Line with fan,Invested balance rising to the FI line; pessimistic to optimistic band; milestone flags,Math M53,Plan > Timeline,Savings slider moves the date,Years of work left
+These are big deals,Tornado,One bar per assumption showing how far it moves the FI date; biggest on top,Math M56,Plan > Goals,Click a bar to set that preset,Years per assumption
+Milestone ladder,Steps,"Lean, Coast, Barista, Regular, Fat FI as stairs, each filled by %",Math M55,Plan > Goals,,Months to each step
+Savings rate to years,Curve,MMM's curve of savings rate vs years to FI with your dot on it,Math,Plan > Timeline,Drag your dot,This is in years
+Crossover point,Two lines,Monthly investment income rising to meet monthly spending (YMOYL wall chart),Math,Plan > Timeline,,
+Fulfillment curve,Curve,"Survival, comforts, luxuries, enough; each category placed on it",Three questions,Spending (phase 4),,
+Rule of 5 gauge,Gauge,Emergency cash vs age/5 months target; keep-pace add shown under it,Math M43,"My Money > Assets, Home",,Months held
+Graceful degradation,Staircase,"Months at full spending, DRAFTT, FAT, food and housing only",Math,Report (phase 4),,Months at each step
+Joy per dollar,Scatter,"Cost on x, happiness on y; top-left = cheap joy, bottom-right = expensive and joyless",Happiness ratings,Spending (phase 4),Click a dot to open the line,Cost in hours
+Pareto,Bars plus line,Biggest spends as bars with the cumulative % line,Calendar actuals,Report (phase 4),,Hours per spend
+Life Pyramid,Pyramid bars,Maslow levels as bars showing spending at each,Spending lines,Report (phase 4),,
+Support received,Stacked bar,Your share vs others' share for each covered line,Who pays,Report > Overview,,Hours others cover
+Contribution limits,Progress bars,Each account's year-to-date vs its limit,Reference data,My Money > Assets,,
+Expected net worth,Gauge,Actual net worth vs age x income / 10,PAW/UAW formula,Report (phase 4),,
+Money as time chips,Inline chips,Small grey chip next to any amount: '14 hrs' or '3 FI days',Real hourly wage,Everywhere,Global toggle,This is the time view
+Wrapped,Story cards,"Swipeable cards: biggest win, debt paid, accuracy, top categories, hours saved",History,Report (phase 7),,Hours saved this year
