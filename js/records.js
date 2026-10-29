@@ -96,14 +96,16 @@ export class Store {
     assumptions: this.doc.assumptions, client: this.doc.client }); }
   _log(entry) { this.doc.history.push({ at: this._tx?.at || this.now(), ...entry }); }
 
-  add(kind, fields = {}, { type = fields.type ?? null } = {}) {
+  // after: put the new row right below that one (Enter in a row, R168).
+  add(kind, fields = {}, { type = fields.type ?? null, after = null } = {}) {
     return this.transaction(`Add ${kind}`, () => {
       const r = blankRecord(kind, type);
       const { values = {}, ...top } = fields;
       Object.assign(r, clone(top), { values: { ...clone(values) } });
       r.id = this.makeId();
       r.createdAt = r.updatedAt = this.now();
-      this.doc.records.push(r);
+      const at = after ? this.doc.records.findIndex(x => x.id === after) : -1;
+      if (at >= 0) this.doc.records.splice(at + 1, 0, r); else this.doc.records.push(r);
       this._log({ op: 'add', id: r.id, kind });
       for (const [f, v] of Object.entries({ ...top, ...values })) if (v !== null && v !== undefined) this._log({ op: 'set', id: r.id, field: f, from: null, to: clone(v) });
       return r;

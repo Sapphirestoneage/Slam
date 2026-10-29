@@ -1,0 +1,71 @@
+/* Look and feel tab, exact values. Light and dark; follows the computer unless set in the gear. */
+:root {
+  color-scheme: light;
+  --bg: #E4E9F2;
+  --card: #F2F5FA;
+  --text: #060E1F;
+  --text-2: #26344F;
+  --primary: #1747A6;
+  --on-primary: #FFFFFF;
+  --primary-dark: #0A2A66;
+  --primary-light: #9FB9EA;
+  --computed: #CBD6EA;
+  --border-input: #4E6694;
+  --border-row: #A9B9D6;
+  --border-filled: #8FA2C6;
+  --topbar-icon-bg: #FFFFFF;
+  --topbar-icon-fg: #0A2A66;
+  --income: #0B7A43;
+  --debt: #8E2C8F;
+  --assets: #0E6670;
+  --taxes: #4338CA;
+  --needs: #1747A6;
+  --goals: #B0397A;
+  --roughly: #0E6670;
+  --guess: #6B2FB3;
+  --warn: #0A2A66;
+  --danger: #0A2A66;
+  --good: #0B7A43;
+  --saved: #D6EEDF;
+  --shadow: 0 1px 2px rgba(6, 14, 31, .10), 0 2px 6px rgba(6, 14, 31, .08);
+  --shadow-lift: 0 3px 10px rgba(6, 14, 31, .16);
+  --chip: #D5DDEB;
+  --chip-text: #26344F;
+
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --fs-body: 16px; --fs-label: 14px; --fs-section: 18px; --fs-page: 24px; --fs-big: 32px;
+  --r-card: 8px; --r-input: 8px; --r-button: 6px;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+  --row: 44px; --input: 34px; --icon-btn: 32px;
+  --scale: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0E1729; --card: #16223D; --text: #F4F7FC; --text-2: #CBD6EA;
+    --primary: #7AA6F5; --on-primary: #06142F; --primary-dark: #06142F; --primary-light: #2C4A85;
+    --computed: #24365C; --border-input: #8AA2CF; --border-row: #344A75; --border-filled: #5E77A6;
+    --topbar-icon-bg: #F4F7FC; --topbar-icon-fg: #06142F;
+    --income: #5CCB8F; --debt: #D687D7; --assets: #4FC3CC; --taxes: #A49DF7; --needs: #7AA6F5; --goals: #EE8DC0;
+    --roughly: #0E6670; --guess: #6B2FB3; --warn: #2C4A85; --good: #5CCB8F; --saved: #1D4A35; --danger: #CBD6EA;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 6px rgba(0, 0, 0, .3); --shadow-lift: 0 3px 12px rgba(0, 0, 0, .5);
+    --chip: #2A3B5F; --chip-text: #CBD6EA;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0E1729; --card: #16223D; --text: #F4F7FC; --text-2: #CBD6EA;
+  --primary: #7AA6F5; --on-primary: #06142F; --primary-dark: #06142F; --primary-light: #2C4A85;
+  --computed: #24365C; --border-input: #8AA2CF; --border-row: #344A75; --border-filled: #5E77A6;
+  --topbar-icon-bg: #F4F7FC; --topbar-icon-fg: #06142F;
+  --income: #5CCB8F; --debt: #D687D7; --assets: #4FC3CC; --taxes: #A49DF7; --needs: #7AA6F5; --goals: #EE8DC0;
+  --roughly: #0E6670; --guess: #6B2FB3; --warn: #2C4A85; --good: #5CCB8F; --saved: #1D4A35; --danger: #CBD6EA;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 6px rgba(0, 0, 0, .3); --shadow-lift: 0 3px 12px rgba(0, 0, 0, .5);
+  --chip: #2A3B5F; --chip-text: #CBD6EA;
+}
+
+/* Density (R169): Compact 36px rows, Comfortable 44px. */
+:root[data-density="compact"] { --row: 36px; --input: 30px; }
+/* Client view (R170): text 15% bigger. */
+:root[data-client-view="on"] { --scale: 1.15; }
