@@ -138,7 +138,8 @@ export const SCREENS = {
       h('p.muted', { style: { marginTop: '12px' } }, ctx.store.lastSnapshot() ? `Last: ${ctx.store.lastSnapshot().label}, ${new Date(ctx.store.lastSnapshot().at).toLocaleString()}` : 'No snapshot yet.')),
     h('div.card', {}, h('h3', {}, 'Settings'), h('div.stack', { style: { gap: '12px' } },
       h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Theme'), S.toggle(['System', 'Light', 'Dark'], app.prefs.theme === 'light' ? 'Light' : app.prefs.theme === 'dark' ? 'Dark' : 'System', v => app.setPref('theme', v.toLowerCase()), { label: 'Theme' })),
-      h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Density'), S.toggle(['Comfortable', 'Compact'], app.prefs.density === 'compact' ? 'Compact' : 'Comfortable', v => app.setPref('density', v.toLowerCase()), { label: 'Density' })))))],
+      h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Density'), S.toggle(['Comfortable', 'Compact'], app.prefs.density === 'compact' ? 'Compact' : 'Comfortable', v => app.setPref('density', v.toLowerCase()), { label: 'Density' })),
+      h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Font'), S.toggle([['inter', 'Inter'], ['plex', 'IBM Plex Sans'], ['source', 'Source Sans 3']], app.prefs.font || 'inter', v => app.setPref('font', v), { label: 'Font' })))))],
 };
 
 function prepCard(label, text, href = null, onClick = null) {

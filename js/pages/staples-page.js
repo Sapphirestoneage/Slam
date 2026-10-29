@@ -25,6 +25,7 @@ const apply = () => {
   if (prefs.theme && prefs.theme !== 'System') root.dataset.theme = prefs.theme.toLowerCase(); else delete root.dataset.theme;
   root.dataset.density = prefs.density === 'Compact' ? 'compact' : 'comfortable';
   root.dataset.clientView = prefs.clientView ? 'on' : 'off';
+  root.dataset.font = prefs.font || 'inter';
 };
 apply();
 
@@ -48,6 +49,7 @@ function controls() {
   const draw = () => clear(box,
     h('span.label', {}, 'Theme'), S.toggle(['System', 'Light', 'Dark'], prefs.theme || 'System', v => { prefs.theme = v; savePrefs(); apply(); ctx.refresh(); draw(); }, { label: 'Theme' }),
     h('span.label', {}, 'Density'), S.toggle(['Comfortable', 'Compact'], prefs.density || 'Comfortable', v => { prefs.density = v; savePrefs(); apply(); draw(); }, { label: 'Density' }),
+    h('span.label', {}, 'Font'), S.toggle([['inter', 'Inter'], ['plex', 'IBM Plex Sans'], ['source', 'Source Sans 3']], prefs.font || 'inter', v => { prefs.font = v; savePrefs(); apply(); draw(); }, { label: 'Font' }),
     h('span.label', {}, 'Client view'), S.toggle(['Off', 'On'], prefs.clientView ? 'On' : 'Off', v => { prefs.clientView = v === 'On'; savePrefs(); apply(); draw(); }, { label: 'Client view' }),
     h('span.label', {}, 'Amounts'), S.timeToggle(ctx));
   ctx.onRefresh(draw);

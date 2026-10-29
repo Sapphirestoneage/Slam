@@ -65,6 +65,10 @@
   --chip: #2A3B5F; --chip-text: #CBD6EA;
 }
 
+/* Font: Inter by default. To change it for everyone, change --font above; each person can also pick one in the gear. */
+:root[data-font="plex"] { --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+:root[data-font="source"] { --font: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+
 /* Density (R169): Compact 36px rows, Comfortable 44px. */
 :root[data-density="compact"] { --row: 36px; --input: 30px; }
 /* Client view (R170): text 15% bigger. */

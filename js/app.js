@@ -196,6 +196,7 @@ const app = {
     if (this.prefs.theme === 'light' || this.prefs.theme === 'dark') root.dataset.theme = this.prefs.theme; else delete root.dataset.theme;
     root.dataset.density = this.prefs.density === 'compact' ? 'compact' : 'comfortable';
     root.dataset.clientView = this.prefs.clientView ? 'on' : 'off';
+    root.dataset.font = this.prefs.font || 'inter';
   },
   snapshot(label) {
     this.store.snapshot(label, keyNumbers(this.ctx.metrics()));
