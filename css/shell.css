@@ -1,11 +1,13 @@
 /* The shell: sticky top bar (left = where am I, middle = 5 tabs, right = tools), sub-tabs under it. */
 .topbar { position: sticky; top: 0; z-index: 40; background: var(--primary-dark); color: #fff; box-shadow: var(--shadow); }
 .topbar-in { max-width: 1440px; margin: 0 auto; display: flex; align-items: center; gap: var(--s4); padding: 0 var(--s5); height: 60px; }
-.tb-left { display: flex; align-items: center; gap: var(--s3); min-width: 0; flex: 1; }
+.tb-left { display: flex; align-items: center; gap: var(--s3); min-width: 0; flex: 1; overflow: hidden; }
 .site-id { color: #fff; font-weight: 800; font-size: 1.25rem; letter-spacing: .04em; text-decoration: none; }
 .client-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px; border: 2px solid rgba(255,255,255,.7); border-radius: var(--r-button); background: transparent; color: #fff; font: inherit; font-weight: 700; cursor: pointer; max-width: 130px; }
 .client-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.crumbs { display: flex; align-items: center; gap: 6px; font-size: .875rem; font-weight: 600; white-space: nowrap; flex: none; }
+.crumbs { display: flex; align-items: center; gap: 6px; font-size: .875rem; font-weight: 600; white-space: nowrap; flex: 0 1 auto; min-width: 72px; overflow: hidden; }
+.crumbs a { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.crumbs a:first-child { flex: none; }
 .crumbs a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
 .crumbs .sep { opacity: .7; }
 .save-state { flex: none; font-size: .8125rem; font-weight: 700; color: #BFE8CF; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }

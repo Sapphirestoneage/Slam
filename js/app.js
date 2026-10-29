@@ -71,7 +71,7 @@ const app = {
     clear($('topbar'), h('div.topbar-in', {},
       h('div.tb-left', {},
         h('a.site-id', { href: '#/home/prep', title: 'Stress Less About Money' }, 'SLAM'), clientBtn,
-        h('nav.crumbs', { 'aria-label': 'Breadcrumb' }, h('a', { href: `#/${tab.id}/${tab.subs[0].id}` }, tab.name), h('span.sep', {}, '›'), h('a', { href: `#/${tab.id}/${sub.id}`, 'aria-current': 'page' }, sub.name)),
+        h('nav.crumbs', { 'aria-label': 'Breadcrumb', title: `${tab.name} \u203A ${sub.name}` }, h('a', { href: `#/${tab.id}/${tab.subs[0].id}` }, tab.name), h('span.sep', {}, '›'), h('a', { href: `#/${tab.id}/${sub.id}`, 'aria-current': 'page' }, sub.name)),
         h('span.save-state', { id: 'save-state' })),
       h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: `#/${t.id}/${t.subs[0].id}`, 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),
       h('div.tb-right', {},
