@@ -104,7 +104,7 @@ button.math:focus-visible { outline: 3px solid var(--primary); outline-offset: 2
 
 /* Lists: rows share one center line; headers and totals stick (R165). */
 .list { background: var(--card); border-radius: var(--r-card); box-shadow: var(--shadow); position: relative; }
-.list-scroll { max-height: 520px; overflow: auto; overscroll-behavior: contain; border-radius: var(--r-card); }
+.list-scroll { max-height: 520px; overflow: auto; overscroll-behavior: auto; border-radius: var(--r-card); }
 table.rows { width: 100%; border-collapse: separate; border-spacing: 0; }
 table.rows th { position: sticky; top: 0; z-index: 2; background: var(--card); font-size: .875rem; font-weight: 600; color: var(--text-2); text-align: left; padding: var(--s2) var(--s2); border-bottom: 2px solid var(--border-row); white-space: nowrap; }
 table.rows th.num { text-align: right; }
@@ -177,3 +177,11 @@ kbd { font: inherit; font-size: .75rem; font-weight: 700; border: 1.5px solid va
   .card, .list, .metric { box-shadow: none; border: 1px solid #000; }
   table.rows td, table.rows th { border-color: #000; border-style: solid; }
 }
+
+/* Smooth: soft motion on everything you can press, rounder segments. */
+.btn, .icon-btn, .seg button, .tab, .subtab, .field, .status-btn, button.math { transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.seg button { white-space: nowrap; }
+.seg button:first-child { border-radius: calc(var(--r-button) - 2px) 0 0 calc(var(--r-button) - 2px); }
+.seg button:last-child { border-radius: 0 calc(var(--r-button) - 2px) calc(var(--r-button) - 2px) 0; }
+html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }

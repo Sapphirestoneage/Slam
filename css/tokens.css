@@ -27,14 +27,14 @@
   --danger: #0A2A66;
   --good: #0B7A43;
   --saved: #D6EEDF;
-  --shadow: 0 1px 2px rgba(6, 14, 31, .10), 0 2px 6px rgba(6, 14, 31, .08);
+  --shadow: 0 1px 2px rgba(6, 14, 31, .06), 0 4px 14px rgba(6, 14, 31, .07);
   --shadow-lift: 0 3px 10px rgba(6, 14, 31, .16);
   --chip: #D5DDEB;
   --chip-text: #26344F;
 
   --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --fs-body: 16px; --fs-label: 14px; --fs-section: 18px; --fs-page: 24px; --fs-big: 32px;
-  --r-card: 8px; --r-input: 8px; --r-button: 6px;
+  --r-card: 16px; --r-input: 12px; --r-button: 12px;
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
   --row: 44px; --input: 34px; --icon-btn: 32px;
   --scale: 1;
