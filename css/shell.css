@@ -106,20 +106,49 @@ textarea.note-input { width: 100%; min-height: 70px; border: 2px solid var(--bor
   .subtabs-in { flex-wrap: wrap; }
 }
 
+/* Touch screens: no hover labels (a tap shows them stuck on). */
+@media (hover: none) { [data-tip]:hover::after { display: none; } }
+
+/* Phone-only Tools and Find (folded utilities); the dot means a backup is due. */
+.phone-tools { display: none; }
+.has-dot::before { content: ''; position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; border-radius: 50%; background: #E39A9A; border: 2px solid var(--primary-dark); }
+.tools-sheet { display: flex; flex-direction: column; gap: var(--s3); }
+.tools-sheet > .field { width: 100% !important; }
+.tool-rows { display: flex; flex-direction: column; gap: 6px; }
+.tool-pair { gap: 6px; flex-wrap: nowrap; }
+.tool-pair .tool-row { flex: 1; }
+.tool-row { display: flex; align-items: center; gap: var(--s3); min-height: 48px; padding: 0 var(--s3); border: 1.5px solid var(--border-input); border-radius: var(--r-button); background: var(--card); color: var(--text); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.tool-row .muted { margin-left: auto; font-weight: 500; }
+.tool-row:active:not([disabled]) { filter: brightness(.82); }
+.tool-row[disabled] { opacity: .45; cursor: not-allowed; }
+
 /* Phone: laptop first, but every screen works at phone width with no sideways page scroll.
    Wide tables scroll inside their own box; boxes open as a sheet at the bottom. */
 @media (max-width: 760px) {
   body { min-width: 0; }
-  .topbar { position: static; }
-  .topbar-in { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 8px; }
-  .tb-left { flex: 1 1 100%; }
+  /* One slim row on top (SLAM, client, saved, Find, Tools); the five tabs sit in a bar at the bottom. */
+  body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  .topbar { position: sticky; top: 0; }
+  .topbar-in { flex-wrap: nowrap; height: 52px; padding: 0 12px; gap: 8px; }
+  .tb-left { flex: 1 1 auto; gap: 8px; overflow: visible; }
+  .site-id { font-size: 1.0625rem; }
   .crumbs { display: none; }
-  .tabs { order: 2; width: 100%; overflow-x: auto; }
-  .tb-right { order: 3; width: 100%; overflow-x: auto; justify-content: flex-start; padding-bottom: 2px; }
-  .tb-right > .field { display: none; }
-  .subtabs { top: 0; }
-  .subtabs-in { overflow-x: auto; padding: 8px 12px; }
-  .subtab { flex: none; }
+  .tb-right { display: none; }
+  .phone-tools { display: inline-flex; gap: 8px; margin-left: auto; }
+  .phone-tools .icon-btn { width: 40px; height: 40px; }
+  .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); background: var(--primary-dark); border-top: 1px solid rgba(228, 231, 236, .14); }
+  .tab { justify-content: center; height: 44px; padding: 0 2px; font-size: .8125rem; text-decoration: none !important; }
+  .subtabs { position: static; }
+  .subtabs-in { overflow-x: auto; padding: 6px 12px; gap: 4px; scrollbar-width: none; }
+  .subtabs-in::-webkit-scrollbar { display: none; }
+  .subtab { flex: none; height: 34px; padding: 0 10px; font-size: .9375rem; }
+  .subtabs .saved-note { display: none; }
+  .mm-modes .btn { min-height: 34px; padding: 0 10px; }
+  /* The sub-tab and client line already name the page: a smaller title, no subtitle. */
+  .page-head { margin-bottom: var(--s3); }
+  .page-head h1 { font-size: 1.25rem; }
+  .page-head p { display: none; }
   .banner { padding: 0 12px; }
   .banner > div { flex-wrap: wrap; }
   .shell-page { padding: 16px 12px 96px; }
@@ -128,6 +157,8 @@ textarea.note-input { width: 100%; min-height: 70px; border: 2px solid var(--bor
   .metric { min-height: 0; padding: 10px 12px; }
   .metric .big { font-size: 1.5rem; }
   .metric.locked .big { font-size: .9375rem; }
+  .metric { min-width: 0; }
+  .metric .btn.need { white-space: normal; max-width: 100%; text-align: left; }
   .card { padding: 12px; }
   .row-line { flex-wrap: wrap; }
   .pop { position: fixed !important; left: 8px !important; right: 8px !important; top: auto !important; bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important; width: auto !important; min-width: 0; max-height: 80vh; overflow: auto; }
@@ -154,7 +185,7 @@ textarea.note-input { width: 100%; min-height: 70px; border: 2px solid var(--bor
   .footer { flex-wrap: wrap; gap: 8px 12px; padding: 12px; }
   .footer .spacer { flex-basis: 100%; height: 0; }
   .grid2 { grid-template-columns: 1fr !important; }
-  .toast { left: 12px !important; right: 12px !important; transform: none !important; width: auto !important; max-width: none !important; bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important; }
+  .toast { left: 12px !important; right: 12px !important; transform: none !important; width: auto !important; max-width: none !important; bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important; flex-wrap: wrap; gap: 8px 12px !important; }
   .find-box { width: calc(100% - 24px); }
   .find-overlay { padding-top: 24px; }
   /* Long choice rows (Who pays) wrap inside the screen instead of running off it. */
