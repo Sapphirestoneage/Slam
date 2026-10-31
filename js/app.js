@@ -88,11 +88,17 @@ const app = {
     cv.setAttribute('aria-pressed', String(!!this.prefs.clientView));
     const gear = S.iconButton('gear', 'Coach tools', () => this.go('#/tools/lists'));
     gear.classList.add('coach-only');
+    // Phones: the utilities fold into one Tools button that opens a sheet; Find stays one tap away.
+    const backupDot = this.hasClient && !this.prefs.clientView && backupDue(this.store.doc).due && this.store.records.length > 0;
+    const tools = S.iconButton('more', 'Tools', () => this.openTools(tools));
+    tools.classList.add('phone-only');
+    for (const b of [tools, gear]) b.classList.toggle('has-dot', backupDot);
     clear($('topbar'), h('div.topbar-in', {},
       h('div.tb-left', {},
         h('a.site-id', { href: '#/home/prep', title: 'Stress Less About Money' }, 'SLAM'), clientBtn,
         h('nav.crumbs', { 'aria-label': 'Breadcrumb', title: `${tab.name} \u203A ${sub.name}` }, h('a', { href: `#/${tab.id}/${tab.subs[0].id}` }, tab.name), h('span.sep', {}, '›'), h('a', { href: `#/${tab.id}/${sub.id}`, 'aria-current': 'page' }, sub.name)),
-        h('span.save-state', { id: 'save-state' })),
+        h('span.save-state', { id: 'save-state' }),
+        h('span.phone-tools', {}, S.iconButton('search', 'Find', () => this.find()), tools)),
       h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: `#/${t.id}/${t.subs[0].id}`, 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),
       h('div.tb-right', {},
         h('button.find-btn', { type: 'button', onclick: () => this.find(), 'aria-label': 'Find (press /)' }, icon('search'), h('span.find-word', {}, 'Find'), h('kbd', {}, '/')),
@@ -126,17 +132,40 @@ const app = {
     clear(el, st === 'unsaved' ? 'Unsaved' : st === 'saving' ? 'Saving' : [icon('check'), h('span.save-word', {}, 'Saved')]);
     if (st === 'unsaved') this.banner();
   },
+  // Only 'not saved' takes a row on the page. The backup reminder floats once per visit per client, and a dot
+  // stays on Tools (phone) and the gear until a backup is made.
   banner() {
     const b = $('banner');
     if (!this.hasClient) return clear(b);
     if (this.saver?.state === 'unsaved') {
       return clear(b, h('div', {}, 'Not saved yet. Your last change is safe in this tab; export now to be sure.', S.button('Export', { iconName: 'download', onClick: () => this.exportNow() })));
     }
-    const due = backupDue(this.store.doc);
-    if (due.due && this.store.records.length) {
-      return clear(b, h('div.coach-only', {}, due.days === null ? 'No backup yet.' : `Last backup ${due.days} days ago.`, S.button('Back up now', { iconName: 'download', onClick: () => this.exportNow() })));
-    }
     clear(b);
+    const doc = this.store.doc;
+    const due = backupDue(doc);
+    this._nudged ??= new Set();
+    if (due.due && this.store.records.length && !this.prefs.clientView && !this._nudged.has(doc.id)) {
+      this._nudged.add(doc.id);
+      setTimeout(() => S.toast(this.backupText(), { action: { label: 'Back up now', run: () => this.exportNow() } }), 600);
+    }
+  },
+  // The Tools sheet (phones): everything from the top bar's right side, in one place.
+  openTools(anchor) {
+    document.querySelector('.toast')?.remove(); // the sheet has Back up now itself
+    const row = (iconName, label, run, { disabled = false, note = null } = {}) => h('button.tool-row', { type: 'button', disabled, onclick: () => { S.closePop(); run(); } },
+      icon(iconName), h('span', {}, label), note ? h('span.muted.small', {}, note) : null);
+    const cv = this.prefs.clientView;
+    const due = this.hasClient ? backupDue(this.store.doc) : { due: false };
+    S.popover(anchor, h('div.tools-sheet', {},
+      h('div.row-line', { style: { justifyContent: 'space-between' } }, h('strong', {}, 'Tools'), S.iconButton('x', 'Close', S.closePop, { tiny: true })),
+      S.quickAdd(this.ctx, { onAdded: (r, p) => this.go(routeForPlace(p.section)) }),
+      h('div.stack', {}, h('span.label', {}, 'Show amounts as'), S.timeToggle(this.ctx)),
+      h('div.tool-rows', {},
+        row('note', 'Parking lot', () => this.openParking()),
+        h('div.row-line.tool-pair', {}, row('undo', 'Undo', () => this.undo(), { disabled: !this.store.canUndo }), row('redo', 'Redo', () => this.redo(), { disabled: !this.store.canRedo })),
+        row('monitor', cv ? 'Client view: on' : 'Client view', () => this.setPref('clientView', !cv)),
+        cv ? null : row('download', 'Back up now', () => this.exportNow(), { note: due.due ? this.backupText() : null }),
+        cv ? null : row('gear', 'Coach tools', () => this.go('#/tools/lists')))), { width: 360 });
   },
   backupText() {
     const d = backupDue(this.store.doc);

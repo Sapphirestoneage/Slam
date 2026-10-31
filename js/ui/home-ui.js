@@ -19,16 +19,23 @@ const sessionNo = ctx => (ses(ctx).count || 0) + 1;
 const isoDay = d => d.toISOString().slice(0, 10);
 
 // Client strip: package tracking on every Home screen.
+// One line; the next date and status are edited in a small box so they do not take a row of fields.
 function clientStrip(app, ctx) {
   const s = ses(ctx);
-  const next = h('input', { type: 'date', value: s.next || '', 'aria-label': 'Next session' });
-  next.onchange = () => ctx.store.setIn('session', ['next'], next.value || undefined, 'Next session');
-  return h('div.card.client-strip', {},
+  const nextText = s.next ? new Date(`${s.next}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'not set';
+  const edit = S.iconButton('edit', 'Edit next session and status', () => {
+    const next = h('input', { type: 'date', value: s.next || '', 'aria-label': 'Next session' });
+    next.onchange = () => ctx.store.setIn('session', ['next'], next.value || undefined, 'Next session');
+    S.popover(edit, h('div.stack', { style: { gap: '12px' } }, h('strong', {}, 'This client'),
+      S.labelled('Next session', h(`label.field${s.next ? '.filled' : ''}`, { style: { width: '190px' } }, next)),
+      S.labelled('Status', S.select(['Active', 'Maintenance', 'Paused'], s.state || 'Active', v => ctx.store.setIn('session', ['state'], v || 'Active', 'Client status'), { label: 'Client status', hint: 'Active', width: 190 })),
+      S.button('Done', { kind: 'primary', onClick: S.closePop })), { width: 300 });
+  }, { tiny: true });
+  return h('div.client-strip', {},
     h('span.who', {}, ctx.store.doc.client.name || 'Client'),
     h('span.tag.plain', {}, `Session ${sessionNo(ctx)} of ${s.planned || 6}`),
-    h('span.row-line', { style: { gap: '6px' } }, h('span.label', {}, 'Next:'), h(`label.field${s.next ? '.filled' : ''}`, { style: { width: '170px' } }, next)),
-    S.select(['Active', 'Maintenance', 'Paused'], s.state || 'Active', v => ctx.store.setIn('session', ['state'], v || 'Active', 'Client status'), { label: 'Client status', hint: 'Active', width: 150 }),
-    inSession(ctx) ? h('span.tag.good', {}, '● Session on') : null);
+    h('span.muted', {}, `Next: ${nextText}`), h('span.muted', {}, s.state || 'Active'),
+    inSession(ctx) ? h('span.tag.good', {}, '● Session on') : null, edit);
 }
 
 // Exactly four numbers, one plain sentence (Mockup: Money in one line). Each opens its home.

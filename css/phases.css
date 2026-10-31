@@ -106,7 +106,7 @@
 .op-list li { margin: 4px 0; }
 
 /* ---------- Home ---------- */
-.client-strip { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; margin-bottom: var(--s4); padding: var(--s2) var(--s4); }
+.client-strip { display: flex; align-items: center; gap: 6px var(--s3); flex-wrap: wrap; margin-bottom: var(--s3); font-size: .9375rem; }
 .client-strip .who { font-weight: 800; font-size: 1.125rem; }
 .agenda { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s3); margin-bottom: var(--s4); }
 .step { all: unset; box-sizing: border-box; cursor: pointer; background: var(--card); border-radius: var(--r-card); box-shadow: var(--shadow); padding: var(--s3) var(--s4); border: 2px solid transparent; display: flex; flex-direction: column; gap: 4px; }
