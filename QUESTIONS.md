@@ -131,3 +131,7 @@ Each one has the default used so the build could keep going. Answer here or in t
 
 87. **Sub-tab order: Nov 2 or Nov 3.** This request lists Net worth as Profile, Debt, Assets, Protection and Cash flow as Income, Budget, Calendar, Month-end close, Taxes (decided Nov 2). The reorganize pass on Nov 3 put About you first in Home and Taxes right after Income, so Cash flow reads in waterfall order, and that is what is built. Switch to the Nov 2 order? It is a few lines in js/nav.js.
 
+88. **Not sure and Will email under Missing.** The request lists Missing as Not sure, Not now, Will email and I'll find it later. In the stored data Not sure is the Guess status (a typical value is used, so it sits under Rough) and Will email is the value behind "I'll find it later", so Missing shows two choices: Not now and I'll find it later. Add a separate "Not sure, no guess" status (a data change)?
+89. **Plan pass columns.** Plan shows each line's usual Amount and this month's Plan side by side (a blank Plan uses the usual number). Hide the Plan column unless someone picks a different month?
+90. **Focus mode trigger.** Focus mode is on while a session runs with Guide me on (Start session turns both on). Should the coach be able to turn it off mid-session from Live?
+91. **"A month in" on Assets.** In focus mode the contribution is typed per month and stored as a yearly amount (contributionPer Year), replacing a per-paycheck entry if one was there. OK, or keep per paycheck when it was typed that way?

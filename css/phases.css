@@ -208,3 +208,12 @@ table.rows tr.row-note td { height: auto; padding: 6px var(--s3) 10px; backgroun
 .open-row { display: grid; grid-template-columns: 150px 1fr auto; gap: var(--s3); align-items: center; padding: 6px 0; border-top: 1px solid var(--border-row); min-height: 36px; }
 .open-row a { font-weight: 600; white-space: nowrap; }
 @media (max-width: 760px) { .open-row { grid-template-columns: 1fr auto; } .open-row .muted { grid-column: 1 / -1; grid-row: 2; } }
+/* Polish item 8: the guided close's step indicator. */
+.close-steps { list-style: none; display: flex; gap: var(--s2); padding: 0; margin: 0 0 var(--s2); flex-wrap: wrap; }
+.close-steps button { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border: 2px solid var(--border-input); border-radius: 999px; cursor: pointer; font-weight: 600; background: var(--card); }
+.close-steps .n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--chip); font-size: .8125rem; font-weight: 700; }
+.close-steps li.on button { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
+.close-steps li.on .n { background: var(--on-primary); color: var(--primary); }
+.close-steps li.done .n { background: var(--good); color: #fff; }
+.close-steps button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.close-nav { margin-top: var(--s3); }
