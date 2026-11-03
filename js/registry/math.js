@@ -68,7 +68,7 @@ export const MATH = [
         f: (rec, c) => {
           const premium = c.x.health ? `${c.x.health.jobId === rec.id ? c.x.health.perPaycheck : 0}` : 'N({premium})';
           const perPay = c.x.link.job?.id === rec.id && rec.values.contributionPct == null ? c.x.link.incomePerPaycheck ?? 0 : 0;
-          return `IF(OR(${SKIP},{Kind}<>"Income"),"",(${premium}+N({hsaFsa})+N({otherPretax}))*${PAYS_A_YEAR}+N({@M13})*N({@pct})+IF({contributionPct}="",${perPay},0)*${PAYS_A_YEAR}-{app:roth})`;
+          return `IF(OR(${SKIP},{Kind}<>"Income"),"",(${premium}+N({hsaFsa})+N({otherPretax}))*${PAYS_A_YEAR}+N({@M13})*N({@pct})+IF({contributionPct}="",${perPay},0)*${PAYS_A_YEAR}-N({app:roth}))`;
         },
         app: { roth: (rec, c) => inc(rec, c)?.roth ?? 0 } },
       { area: 'income', key: 'taxable', label: 'Taxable a year (federal)', unit: 'money',
@@ -88,7 +88,7 @@ export const MATH = [
       { area: 'income', key: 'state', label: 'State and city tax a year', unit: 'money',
         f: `IF(OR({@M13}="",{@taxType}="",Profile_state<>"NY"),IF({@M13}="","",0),${['NY', 'NYC'].map(t => `IF(${t === 'NYC' ? 'Profile_nyc="Yes"' : 'TRUE'},IF(Taxes_filing="Married jointly",${bracket(`MAX(0,{@M13}-{@pretax}-NY_std_joint)`, `${t}_joint`)},IF(Taxes_filing="Head of household",${bracket(`MAX(0,{@M13}-{@pretax}-NY_std_head)`, `${t}_head`)},${bracket(`MAX(0,{@M13}-{@pretax}-NY_std_single)`, `${t}_single`)})),0)`).join('+')})` },
       { area: 'income', key: 'M12', label: 'Take-home a month (M12)', unit: 'money',
-        f: `IF(OR(${SKIP},{Kind}<>"Income"),"",IF(AND({@taxType}<>"",{@M13}<>"",OR({basis}="Gross",{amount}="")),({@M13}-{@M10}-{@M11}-{@state}-{@pretax}-{app:roth})/12,{@M01}))`,
+        f: `IF(OR(${SKIP},{Kind}<>"Income"),"",IF(AND({@taxType}<>"",{@M13}<>"",OR({basis}="Gross",{amount}="")),({@M13}-{@M10}-{@M11}-{@state}-{@pretax}-N({app:roth}))/12,{@M01}))`,
         app: { roth: (rec, c) => inc(rec, c)?.roth ?? 0 } },
     ],
     sheet: 'IF(COUNTIFS(Income_Kind,"Income",Income_InMath,"<>No")=0,"",SUM(Income_M12))', label: 'Take-home a month, all income',
@@ -171,8 +171,10 @@ export const MATH = [
       sheet: `IF(OR(Math_M12="",N(Math_M12)=0),"",(SUMIFS(Spend_M21,Spend_draftt,"${k}",Spend_InMath,"Yes")${k === 'Debt' ? '+SUM(Debt_auto)' : ''})/Math_M12)`,
       app: c => (c.x.takeHome ? sum(c.x.lines.filter(l => l.draftt === k), l => myShare(l, { roommates: c.x.roommates }).value) / c.x.takeHome : null) })) },
   { id: 'M2A', name: 'Housing %', inputs: 'rent or mortgage, utilities', unit: 'pct', fns: ['spending.housingPct'],
-    cols: [{ area: 'spending', key: 'housing', label: 'Housing line', unit: 'number', f: 'IF(COUNTIF(Housing_category,{category})>0,1,0)' }],
-    sheet: 'IF(OR(Math_M12="",COUNTIFS(Spend_category,"Rent or mortgage",Spend_amount,"<>",Spend_InMath,"Yes")=0),"",SUMIFS(Spend_M21,Spend_housing,1,Spend_InMath,"Yes")/Math_M12)',
+    // As the app works it out today: a Split line is divided by Split by only, not by the roommates (QUESTIONS 103).
+    cols: [{ area: 'spending', key: 'housing', label: 'Housing share a month (M2A)', unit: 'money',
+      f: `IF(OR(COUNTIF(Housing_category,{category})=0,{InMath}<>"Yes"),"",IF({myShare}<>"",{myShare},IF({Status}="Not for me",0,IF({@M20}="","",{@M20}*(1-IF({whoPays}="Covered by someone",1,0))/IF({splitBy}<>"",{splitBy},1)))))` }],
+    sheet: 'IF(OR(Math_M12="",COUNTIFS(Spend_category,"Rent or mortgage",Spend_amount,"<>",Spend_InMath,"Yes")=0),"",SUM(Spend_housing)/Math_M12)',
     label: 'Your share of rent and utilities over take-home (the reference line is Housing_line)', app: c => c.m.housingPct.value },
   { id: 'M2B', name: 'Accrual spread and prepaid balance', inputs: 'amount, date paid, months covered', unit: 'money', fns: ['spending.prepaidLeft'],
     fromApp: 'needs the date each prepayment was made, kept on the Budget line in SLAM', app: () => null },
@@ -185,10 +187,11 @@ export const MATH = [
         app: { guess: (rec, c) => (debtOf(rec, c)?.aprGuess ? debtOf(rec, c).apr : '') } },
       { area: 'debt', key: 'payUsed', label: 'Payment used a month (M30)', unit: 'money',
         f: `IF(${SKIP},"",IF({Status}="Not for me",0,IF({Type}="Credit card",IF({payChoice}="In full",{@balUsed},IF(OR({payChoice}="Minimum",{payment}=""),IF(OR({@balUsed}="",{@aprUsed}=""),"",MIN({@balUsed},MAX(CardMin_floor,{@balUsed}*CardMin_pct+{@balUsed}*{@aprUsed}/12))),{payment})),{payment})))` },
+      { area: 'debt', key: 'isMin', label: 'On the card minimum', unit: 'number', f: 'IF(AND({Type}="Credit card",{payChoice}<>"In full",OR({payChoice}="Minimum",{payment}=""),ISNUMBER({@payUsed})),1,0)' },
       { area: 'debt', key: 'payOut', label: 'Payment counted a month', unit: 'money', f: 'IF(OR({@payUsed}="",{payChoice}="In full"),"",{@payUsed})' },
       { area: 'debt', key: 'auto', label: 'Budget line From Debt', unit: 'money', f: 'IF(AND(N({@payUsed})>0,{payChoice}<>"In full",N({@balUsed})<>0),{@payUsed},"")' },
     ],
-    sheet: 'IF(COUNTIFS(Debt_Type,"Credit card",Debt_payment,"")=0,"",SUMIFS(Debt_payUsed,Debt_Type,"Credit card",Debt_payment,""))', label: 'Card minimums a month (cards with no payment typed)',
+    sheet: 'IF(COUNTIFS(Debt_isMin,1)=0,"",SUMIFS(Debt_payUsed,Debt_isMin,1))', label: 'Card minimums a month (cards on the minimum, or with no payment typed)',
     app: c => { const l = c.x.debts.filter(d => d.paymentIsMinimum); return l.length ? sum(l, d => d.payment) : null; } },
   { id: 'M31', name: 'Payoff months', inputs: 'balance, APR, payment', unit: 'months', fns: ['debt.payoffMonths', 'debt.paymentNeeded'],
     cols: [{ area: 'debt', key: 'M31', label: 'Payoff months (M31)', unit: 'months',
@@ -296,7 +299,7 @@ export const MATH = [
     fromApp: 'compares the month\'s plan with what was paid, line by line, from the calendar', app: c => c.statements()?.tie.accrualVsCash.difference ?? null },
   { id: 'M68', name: 'Cash layers', inputs: 'cash, deductibles, gaps, lines', unit: 'money', fns: ['layers.LITTLE_E', 'layers.STABILITY', 'layers.littleE', 'layers.gapStep', 'layers.cashLayers', 'layers.backupRunway', 'layers.layersOf'],
     parts: [{ key: 'littleE', name: 'little e: the highest deductible, at most LittleE', unit: 'money',
-      sheet: 'IF(COUNTIFS(Protection_deductible,">0")+COUNTIFS(Protection_deductibleOut,">0")=0,LittleE,MIN(LittleE,MAX(MAXIFS(Protection_deductible,Protection_InMath,"<>No"),MAXIFS(Protection_deductibleOut,Protection_InMath,"<>No"))))',
+      sheet: 'IF(COUNTIFS(Protection_deductible,">0")+COUNTIFS(Protection_deductibleOut,">0")=0,LittleE,MIN(LittleE,MAX(SUMPRODUCT(MAX((Protection_InMath<>"No")*Protection_deductible)),SUMPRODUCT(MAX((Protection_InMath<>"No")*Protection_deductibleOut)))))',
       app: c => c.layers().littleE.target }],
     fromApp: 'fills little e, income gaps, big e (FAT, DRAFTT and full) and sinking funds in order from cash; on Net worth › Assets', app: c => sum(c.layers().layers, l => l.target) },
   { id: 'M69', name: 'FOO placement', inputs: 'every number', unit: 'text', fns: ['foo.foo', 'foo.forgiveness', 'foo.ORIGINAL'],
