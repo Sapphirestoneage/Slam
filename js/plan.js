@@ -22,7 +22,8 @@ export function fiTargets(m, doc) {
   return {
     'Lean FI': fat ? leanFiNumber({ annualFat: fat * 12, withdrawalRate: w }) : { id: 'M51', value: null, needs: ['food, housing or transportation lines'] },
     'Coast FI': m.coastFi,
-    'Barista FI': baristaFiNumber({ annualSpending: x.retirementSpending === null ? null : x.retirementSpending * 12, partTimeIncome: partTime === null ? null : partTime * 12, withdrawalRate: w }),
+    // After launch, will you keep a job? No: Barista FI is not on this path (asked once, on Plan › FOO).
+    'Barista FI': doc.profile?.keepJobAfterLaunch === 'No' ? { id: 'M52', value: null, needs: [], never: true, text: 'No job after launch, so Barista FI is not on this path.' } : baristaFiNumber({ annualSpending: x.retirementSpending === null ? null : x.retirementSpending * 12, partTimeIncome: partTime === null ? null : partTime * 12, withdrawalRate: w }),
     'Regular FI': m.fiNumber,
     'Fat FI': m.fiNumber.value === null ? m.fiNumber : { id: 'M50', value: m.fiNumber.value * FAT_FACTOR, needs: [], unit: 'money', text: `Regular FI ${Math.round(m.fiNumber.value).toLocaleString()} times ${FAT_FACTOR} for a roomier life.` },
   };

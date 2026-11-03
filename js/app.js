@@ -17,7 +17,7 @@ import { keepPlace } from './ui/place.js';
 import { opened } from './ui/dismiss.js';
 import { parseQuickAdd } from './quickadd.js';
 
-const [ref, fields] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/fields.json').then(r => r.json())]);
+const [ref, fields, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/fields.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
 
 let adapter;
 try { localStorage.setItem('slam.test', '1'); localStorage.removeItem('slam.test'); adapter = localAdapter(); }
@@ -27,6 +27,7 @@ const $ = id => document.getElementById(id);
 const root = document.documentElement;
 
 const app = {
+  flags, // efficiency flags (data/flags.json), read by the FOO
   prefs: getPrefs(adapter),
   store: null, ctx: null, saver: null, hasClient: false,
 

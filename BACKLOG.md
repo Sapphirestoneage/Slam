@@ -3,7 +3,7 @@
 Feature list rows for roadmap phases 4 to 8. Not built in phase 3.
 Made by `python3 tools/backlog.py` from the spec; do not edit by hand.
 
-## Phase 4: Later (33)
+## Phase 4: Later (45)
 
 | Tier | Feature | What it does | Inspired by | Source | Time view |
 |---|---|---|---|---|---|
@@ -40,8 +40,20 @@ Made by `python3 tools/backlog.py` from the spec; do not edit by hand.
 | Canon | Afford anything, not everything | Every choice shows what it costs elsewhere | Paula Pant | Afford Anything | Hours of other goals given up |
 | Canon | Savings rate ladder | How each 5% of savings rate cuts years of work | Jacob Lund Fisker | Early Retirement Extreme | Years per 5% |
 | Next level | Every subscription's FI cost | Each recurring bill shown as days added to your FI date | Eli | Never built | FI days per bill |
+| Beta | BL.7 Virtual envelopes inside one account (maaser, fun money), fill-until-empty view, | Virtual envelopes inside one account (maaser, fun money), fill-until-empty view, maaser credit for early giving, volunteer hours toward maaser |  | Brandon beta (Nov 2) |  |
+| Beta | BL.9 Goal calendar (ring, honeymoon, house, car) with monthly-needed math | Goal calendar (ring, honeymoon, house, car) with monthly-needed math |  | Brandon beta (Nov 2) |  |
+| Beta | BL.15 Rich-life list with prices, joy score per expense, memory dividends, marginal-ut | Rich-life list with prices, joy score per expense, memory dividends, marginal-utility ranking, lifestyle inflation tool, regret view, Money Wrapped |  | Brandon beta (Nov 2) |  |
+| Beta | BL.16 Group several expenses into one event (a day trip) | Group several expenses into one event (a day trip) |  | Brandon beta (Nov 2) |  |
+| Beta | BL.17 Drag and drop needs vs wants | Drag and drop needs vs wants; custom splits instead of 50/30/20 |  | Brandon beta (Nov 2) |  |
+| Beta | BL.22 NY rates 2027 to 2032: the scheduled cuts (3.8, 4.3, 5.05, 5.3, 5.8, then 6.85 a | NY rates 2027 to 2032: the scheduled cuts (3.8, 4.3, 5.05, 5.3, 5.8, then 6.85 and up at the same thresholds), by tax year. 2026 single brackets already match NY Tax Law 601(c)(1)(vii) |  | Brandon beta (Nov 2) |  |
+| Beta | BL.23 NY high-income recapture (the benefit of the lower brackets clawed back over abo | NY high-income recapture (the benefit of the lower brackets clawed back over about $107k AGI) |  | Brandon beta (Nov 2) |  |
+| Beta | BL.24 NY joint brackets and NYC rates checked against the law (marked "not yet confirm | NY joint brackets and NYC rates checked against the law (marked "not yet confirmed against the law" until then) |  | Brandon beta (Nov 2) |  |
+| Beta | BL.1 "I'll find it later" on Debt, Protection and Spending fields (row status already | "I'll find it later" on Debt, Protection and Spending fields (row status already has it) |  | Brandon beta (Nov 2) |  |
+| Beta | BL.3 Allocation and drift rolled up across every account (household mix) | Allocation and drift rolled up across every account (household mix) |  | Brandon beta (Nov 2) |  |
+| Beta | BL.4 Purpose tags feeding Plan › Goals, so a tagged account funds its goal there | Purpose tags feeding Plan › Goals, so a tagged account funds its goal there |  | Brandon beta (Nov 2) |  |
+| Beta | BL.6 Vesting schedule driving the unvested amount by date | Vesting schedule driving the unvested amount by date |  | Brandon beta (Nov 2) |  |
 
-## Phase 5: Later (27)
+## Phase 5: Later (32)
 
 | Tier | Feature | What it does | Inspired by | Source | Time view |
 |---|---|---|---|---|---|
@@ -72,8 +84,13 @@ Made by `python3 tools/backlog.py` from the spec; do not edit by hand.
 | Next level | Social Security for early retirees | How zero-earning years change the benefit | FIRE community | Rarely built |  |
 | Next level | Sandwich generation planner | Money to parents and kids at the same time | Eli (aging parents) | Rarely built |  |
 | Next level | Guardrails withdrawal | Raise or cut spending when the portfolio drifts, with rules | Jonathan Guyton, William Klinger | Pro tools only |  |
+| Beta | BL.10 Scenario toggle (now, engaged, married, house) changing bills, filing status, in | Scenario toggle (now, engaged, married, house) changing bills, filing status, insurance; couples splits (joint, 50/50, proportional) |  | Brandon beta (Nov 2) |  |
+| Beta | BL.12 Real FIRE dashboard calcs with show-the-math, pace presets, FIRE type explainer, | Real FIRE dashboard calcs with show-the-math, pace presets, FIRE type explainer, milestones timeline |  | Brandon beta (Nov 2) |  |
+| Beta | ML.1 Roth vs traditional per account: federal + state + local marginal rate now vs an | Roth vs traditional per account: federal + state + local marginal rate now vs an estimated rate in retirement |  | Missed ideas (Nov 2) |  |
+| Beta | ML.2 Spend-more number: how much more a month you could spend and still reach FI at t | Spend-more number: how much more a month you could spend and still reach FI at the same age (Die With Zero), from the projection engine |  | Missed ideas (Nov 2) |  |
+| Beta | ML.3 Full W-4 withholding calculator | Full W-4 withholding calculator |  | Missed ideas (Nov 2) |  |
 
-## Phase 6: Later (9)
+## Phase 6: Later (14)
 
 | Tier | Feature | What it does | Inspired by | Source | Time view |
 |---|---|---|---|---|---|
@@ -86,8 +103,13 @@ Made by `python3 tools/backlog.py` from the spec; do not edit by hand.
 | Next level | Couples fairness split | Fun money and bills split by income share, shown both ways | Ramit Sethi; couples community | Talked about |  |
 | Next level | Accountability and body doubling | Short sessions to do money tasks together | Eli | Never built into a planning app |  |
 | Next level | Kakeibo reflection | Four monthly questions: what you have, want to save, spend, can improve | Hani Motoko | Kakeibo |  |
+| Beta | BL.8 Safe-to-spend number and a mid-month check-in on the 15th | Safe-to-spend number and a mid-month check-in on the 15th |  | Brandon beta (Nov 2) |  |
+| Beta | BL.14 Rocket Money and spreadsheet import, export to Excel, private shareable app | Rocket Money and spreadsheet import, export to Excel, private shareable app |  | Brandon beta (Nov 2) |  |
+| Beta | BL.19 Auto session summary: top 10 takeaways and the client's next 5 steps | Auto session summary: top 10 takeaways and the client's next 5 steps |  | Brandon beta (Nov 2) |  |
+| Beta | BL.20 Rough / privacy mode: ranges instead of exact balances | Rough / privacy mode: ranges instead of exact balances |  | Brandon beta (Nov 2) |  |
+| Beta | BL.2 Look up ticker prices and fund data (what it tracks, expense ratio) instead of t | Look up ticker prices and fund data (what it tracks, expense ratio) instead of typing them |  | Brandon beta (Nov 2) |  |
 
-## Phase 7: Later (5)
+## Phase 7: Later (9)
 
 | Tier | Feature | What it does | Inspired by | Source | Time view |
 |---|---|---|---|---|---|
@@ -96,3 +118,7 @@ Made by `python3 tools/backlog.py` from the spec; do not edit by hand.
 | Next level | Regret minimization check | Big decisions scored by future regret | Jeff Bezos (framework); Bill Perkins | Talked about |  |
 | Next level | Shareable milestones with no balances | Celebrate debt-free or Coast FI without showing numbers | Eli | Rarely built |  |
 | Next level | Peer comparison by age | Where you stand vs people your age and income, privately | Thomas Stanley; BiggerPockets Money | Talked about |  |
+| Beta | BL.13 Duolingo mode (1 to 2 questions a day) | Duolingo mode (1 to 2 questions a day); money personality quiz routing to skills and reading |  | Brandon beta (Nov 2) |  |
+| Beta | BL.21 Defined beta stages and version notes for testers | Defined beta stages and version notes for testers |  | Brandon beta (Nov 2) |  |
+| Beta | ML.4 Credit card rewards optimizer | Credit card rewards optimizer |  | Missed ideas (Nov 2) |  |
+| Beta | ML.5 Think-aloud test mode: a tester-drives view with "Report this" pinned open | Think-aloud test mode: a tester-drives view with "Report this" pinned open |  | Missed ideas (Nov 2) |  |
