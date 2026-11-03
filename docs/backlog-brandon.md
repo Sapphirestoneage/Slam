@@ -15,9 +15,8 @@ detail behind a closed More caret; copy written from the user's side; never show
 boxes or a clear "Example" label, and no total uses an example value); synthetic test data only; lean changes, one
 commit per section.
 
-> The request was cut off partway through section 3 (after "HSA: cash vs invested, self-directed vs managed with
-> a fee comparison, per-pay"). Everything after that point is missing, including any LATER list. See
-> QUESTIONS.md, Brandon batch.
+> The first copy of this request was cut off in section 3. The full batch arrived Nov 3; sections 3 (rest) to 9
+> and the LATER list below come from it.
 
 ## 1. Profile and intake
 
@@ -65,8 +64,82 @@ commit per section.
 | B3.4 | 401(k): vesting schedule; vested vs unvested shown apart | NOW | 401(k) › More › Match |
 | B3.5 | HSA: cash vs invested | NOW | HSA › More (already there; now feeds the uninvested alert) |
 | B3.6 | HSA: self-directed vs managed, with a fee comparison | NOW | HSA › More |
-| B3.7 | HSA: "per-pay…" (cut off; read as per-paycheck contribution) | NOW, partly | HSA › More › Putting in |
-| B3.8 | Anything after B3.7 | ? | Missing from the request |
+| B3.7 | HSA: per-paycheck contribution | NOW | HSA › More › Putting in |
+| B3.8 | HSA: progress to the annual limit and paychecks left to max | NOW | HSA › More |
+| B3.9 | Roth IRA: contribution log by tax year and date; maxed-for-year status | NOW | Roth IRA › More › Contributions |
+| B3.10 | Employer match and 401(k) %: Income and the 401(k) fill each other, whichever is blank (answer to QUESTIONS 47) | NOW | Income › More; 401(k) › More |
+
+## 4. Protection (cash flow, not net worth)
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| B4.1 | Premiums per paycheck or per month | NOW | Coverage row |
+| B4.2 | Health: in-network and out-of-network deductible and OOP max, copays; no generic coverage amount | NOW | Health › More |
+| B4.3 | Disability: short-term vs long-term, benefit %, duration, waiting period | NOW | Disability › More |
+| B4.4 | Life: coverage amount and a planned-change note (e.g. increase at marriage) | NOW | Life › More |
+| B4.5 | Renters insurance line | NOW | In the usual list |
+
+## 5. Taxes
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| B5.1 | NY state brackets and NYC local tax | NOW | Take-home math; Taxes |
+| B5.2 | Filing status; refund history with "don't know"; effective vs marginal rate | NOW | Taxes › Filing |
+
+## 6. Spending
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| B6.1 | Who covers it: me / someone else (with an optional date it becomes mine) / not for me | NOW | Line › More |
+| B6.2 | Not for me folds the line away into a closed section at the bottom, where it can be restored | NOW | Budget |
+| B6.3 | Per paycheck, month, quarter, year; low / average / high for variable bills | NOW | Line |
+| B6.4 | Amount and date each fixed or variable | NOW (already there) | Line |
+| B6.5 | My share vs the total bill, for roommates | NOW | Line › More |
+| B6.6 | Add a line in every section; "Other" under Wants; a "Dates" line; Therapy apart from personal care, section renamed "Personal care and hygiene" | NOW | Budget |
+| B6.7 | Several tags on one line (friends + dates) | NOW | Line › More |
+| B6.8 | Recurring irregular costs (flights, trips) as their own type | NOW | Irregular and yearly costs |
+| B6.9 | Pre-tax rule: insurance premiums are spending; HSA and 401(k) are not | NOW | Savings rate and surplus |
+| B6.10 | Fix yearly-to-monthly conversion and slow recalculation after edits | NOW | Budget |
+| B6.11 | Estimated vs actual with %, and a one-tap check to confirm an estimate as actual | NOW | Budget › Actual |
+| B6.12 | Use the full screen width | NOW | Every screen |
+
+## 7. Payday card
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| B7.1 | "You get $X on [date]. $Y covers fixed bills. $Z is free to spend." Per pay period and per month | NOW | Home › Prep |
+
+## 8. Plain-language tooltips
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| B8.1 | Every jargon term (pace, coverage, buffer, surplus, Coast FI, …) gets a short tooltip | NOW | Everywhere |
+
+## 9. Beta feedback
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| B9.1 | A small "Report this" button on every screen; the note is saved with screen and time in the export | NOW | Every screen |
+
+## LATER from the Brandon batch (logged, not built)
+
+| # | Item | Tag |
+|---|---|---|
+| BL.7 | Virtual envelopes inside one account (maaser, fun money), fill-until-empty view, maaser credit for early giving, volunteer hours toward maaser | LATER |
+| BL.8 | Safe-to-spend number and a mid-month check-in on the 15th | LATER |
+| BL.9 | Goal calendar (ring, honeymoon, house, car) with monthly-needed math | LATER |
+| BL.10 | Scenario toggle (now, engaged, married, house) changing bills, filing status, insurance; couples splits (joint, 50/50, proportional) | LATER |
+| BL.11 | FOO auto-placement, including Life FOO step zeros (generosity, bedazzle your basic life) | LATER |
+| BL.12 | Real FIRE dashboard calcs with show-the-math, pace presets, FIRE type explainer, milestones timeline | LATER |
+| BL.13 | Duolingo mode (1 to 2 questions a day); money personality quiz routing to skills and reading | LATER |
+| BL.14 | Rocket Money and spreadsheet import, export to Excel, private shareable app | LATER |
+| BL.15 | Rich-life list with prices, joy score per expense, memory dividends, marginal-utility ranking, lifestyle inflation tool, regret view, Money Wrapped | LATER |
+| BL.16 | Group several expenses into one event (a day trip) | LATER |
+| BL.17 | Drag and drop needs vs wants; custom splits instead of 50/30/20 | LATER |
+| BL.18 | Money calendar and month-end close (partly built: cash flow calendar, month-end close, Your year) | LATER |
+| BL.19 | Auto session summary: top 10 takeaways and the client's next 5 steps | LATER |
+| BL.20 | Rough / privacy mode: ranges instead of exact balances | LATER |
+| BL.21 | Defined beta stages and version notes for testers | LATER |
 
 ## LATER found while building
 
@@ -76,7 +149,7 @@ commit per section.
 | BL.2 | Look up ticker prices and fund data (what it tracks, expense ratio) instead of typing them | LATER |
 | BL.3 | Allocation and drift rolled up across every account (household mix) | LATER |
 | BL.4 | Purpose tags feeding Plan › Goals, so a tagged account funds its goal there | LATER |
-| BL.5 | One source for the employer match: Income › More still has the simple "% up to %"; the 401(k) tiers are the fuller version | LATER |
+| BL.5 | One source for the employer match: now built as fill-each-other (B3.10) | Done |
 | BL.6 | Vesting schedule driving the unvested amount by date | LATER |
 
 ---
