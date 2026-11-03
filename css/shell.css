@@ -193,4 +193,13 @@ textarea.note-input { width: 100%; min-height: 70px; border: 2px solid var(--bor
 .page-head:not(:has(p)):has(> .row-line:empty) { display: none; }
 /* Toast: bottom left, out of the way. */
 .toast { left: 24px; right: auto; transform: none; max-width: 440px; }
-@media (max-width: 760px) { .tb-right > .field.time-pick { display: inline-flex; } }
+@media (max-width: 760px) { .tb-right > .field.time-pick { display: inline-flex; flex: none; min-width: 76px; } }
+/* Phones: the five tabs (Home, Net worth, Cash flow, Plan, Report) sit in a bar at the bottom. The top bar is unchanged. */
+@media (max-width: 760px) {
+  body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; order: 0; width: auto; overflow: visible; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); background: var(--primary-dark); border-top: 1px solid rgba(228, 231, 236, .14); }
+  .tab { justify-content: center; height: 44px; padding: 0 2px; font-size: .8125rem; text-align: center; line-height: 1.1; text-decoration: none !important; }
+  .toast { bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important; }
+  .report-this { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+}
