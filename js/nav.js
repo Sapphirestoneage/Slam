@@ -1,15 +1,15 @@
 // Where everything lives (Navigation tab): five tabs, their sub-tabs, and the gear's pages.
 
+// The DATING spine: Debt + Assets = Net worth; Taxes + Income + Needs = Cash flow; Goals = Plan.
+// Cash flow sub-tabs read in waterfall order: Income, Taxes, then Budget, Calendar and Close.
 export const TABS = [
-  { id: 'home', name: 'Home', job: 'This session: before, during, after', subs: [
-    { id: 'prep', name: 'Prep' }, { id: 'live', name: 'Live' }, { id: 'wrap-up', name: 'Wrap-up' }] },
-  { id: 'my-money', name: 'My Money', job: 'Facts about today', subs: [
-    { id: 'profile', name: 'Profile', area: 'needs' }, { id: 'income', name: 'Income', area: 'income' },
-    { id: 'debt', name: 'Debt', area: 'debt' }, { id: 'assets', name: 'Assets', area: 'assets' },
-    { id: 'protection', name: 'Protection', area: 'goals' }, { id: 'taxes', name: 'Taxes', area: 'taxes' }] },
-  { id: 'spending', name: 'Spending', job: 'This month: budget, calendar, close', subs: [
-    { id: 'budget', name: 'Budget', area: 'needs' }, { id: 'calendar', name: 'Cash flow calendar', area: 'needs' },
-    { id: 'close', name: 'Month-end close', area: 'needs' }] },
+  { id: 'home', name: 'Home', job: 'This session: who they are, before, during, after', subs: [
+    { id: 'profile', name: 'About you', area: 'needs' }, { id: 'prep', name: 'Prep' }, { id: 'live', name: 'Live' }, { id: 'wrap-up', name: 'Wrap-up' }] },
+  { id: 'net-worth', name: 'Net worth', job: 'What you own and owe', subs: [
+    { id: 'assets', name: 'Assets', area: 'assets' }, { id: 'debt', name: 'Debt', area: 'debt' }, { id: 'protection', name: 'Protection', area: 'goals' }] },
+  { id: 'cash-flow', name: 'Cash flow', job: 'Money in and out: income, taxes, budget, calendar, close', subs: [
+    { id: 'income', name: 'Income', area: 'income' }, { id: 'taxes', name: 'Taxes', area: 'taxes' }, { id: 'budget', name: 'Budget', area: 'needs' },
+    { id: 'calendar', name: 'Calendar', area: 'needs' }, { id: 'close', name: 'Month-end close', area: 'needs' }] },
   { id: 'plan', name: 'Plan', job: 'The future: goals, timeline, events', subs: [
     { id: 'goals', name: 'Goals', area: 'goals' }, { id: 'timeline', name: 'Timeline', area: 'goals' },
     { id: 'debt-payoff', name: 'Debt payoff', area: 'debt' }, { id: 'next-12-months', name: 'Next 12 months', area: 'goals' },
@@ -17,6 +17,15 @@ export const TABS = [
   { id: 'report', name: 'Report', job: 'The report: net worth, metrics, one-pager', subs: [
     { id: 'overview', name: 'Overview' }, { id: 'one-pager', name: 'One-pager' }, { id: 'history', name: 'History' }] },
 ];
+// Old homes (My Money and Spending) still open: bookmarks, saved links and old Lives on text land on the new home.
+export const MOVED = {
+  'my-money': 'home/profile', 'my-money/profile': 'home/profile', 'my-money/income': 'cash-flow/income', 'my-money/taxes': 'cash-flow/taxes',
+  'my-money/debt': 'net-worth/debt', 'my-money/assets': 'net-worth/assets', 'my-money/protection': 'net-worth/protection',
+  spending: 'cash-flow/budget', 'spending/budget': 'cash-flow/budget', 'spending/calendar': 'cash-flow/calendar', 'spending/close': 'cash-flow/close',
+};
+const MOVED_PLACES = { 'My Money': 'my-money', Spending: 'spending' };
+const OLD_SUBS = { Profile: 'profile', Income: 'income', Taxes: 'taxes', Debt: 'debt', Assets: 'assets', Protection: 'protection',
+  Budget: 'budget', 'Cash flow calendar': 'calendar', 'Month-end close': 'close' };
 // Behind the gear, never a main tab (R076).
 export const TOOLS = { id: 'tools', name: 'Coach tools', job: 'Lists, data and session', subs: [
   { id: 'lists', name: 'Lists' }, { id: 'session', name: 'Session' }, { id: 'data', name: 'Data' }, { id: 'discovery', name: 'Discovery' }] };
@@ -24,7 +33,9 @@ export const TOOLS = { id: 'tools', name: 'Coach tools', job: 'Lists, data and s
 const ALL = [...TABS, TOOLS];
 
 export function parseRoute(hash) {
-  const [tabId, subId] = String(hash || '').replace(/^#\/?/, '').split(/[/?]/);
+  let [tabId, subId] = String(hash || '').replace(/^#\/?/, '').split(/[/?]/);
+  const moved = MOVED[`${tabId}/${subId}`] ?? MOVED[tabId];
+  if (moved) [tabId, subId] = moved.split('/');
   const tab = ALL.find(t => t.id === tabId) || TABS[0];
   const sub = tab.subs.find(s => s.id === subId) || tab.subs[0];
   return { tab, sub, hash: `#/${tab.id}/${sub.id}` };
@@ -35,6 +46,7 @@ export const routeOf = (tabId, subId) => `#/${tabId}/${subId}`;
 export function routeForPlace(place) {
   const [tabName, subName] = String(place).split('›').map(s => s.trim());
   if (/coach tools/i.test(place)) return routeOf('tools', 'lists');
+  if (MOVED_PLACES[tabName]) return parseRoute(`#/${MOVED_PLACES[tabName]}/${OLD_SUBS[subName] ?? ''}`).hash; // an old Lives on
   const tab = ALL.find(t => t.name === tabName);
   if (!tab) return null;
   const sub = tab.subs.find(s => s.name === subName) || tab.subs[0];
@@ -69,6 +81,6 @@ export function search(query, { fields = [], records = [] } = {}) {
 }
 
 export function placeOfRecord(r) {
-  return ({ income: 'My Money › Income', benefit: 'My Money › Income', debt: 'My Money › Debt', account: 'My Money › Assets', asset: 'My Money › Assets',
-    coverage: 'My Money › Protection', bill: 'Spending › Budget', spending: 'Spending › Budget' })[r.kind] || 'My Money › Profile';
+  return ({ income: 'Cash flow › Income', benefit: 'Cash flow › Income', debt: 'Net worth › Debt', account: 'Net worth › Assets', asset: 'Net worth › Assets',
+    coverage: 'Net worth › Protection', bill: 'Cash flow › Budget', spending: 'Cash flow › Budget' })[r.kind] || 'Home › About you';
 }

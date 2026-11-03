@@ -95,7 +95,7 @@ function budgetStrip(ctx, view) {
   const res = (v, text) => ({ id: 'M23', value: v * k, needs: [], unit: 'money', text });
   const share = v => (th ? ` · ${pct(v / th)} of take-home` : '');
   const items = [
-    { label: `Fixed${k > 1 ? `, ${UI.period}` : ''}`, result: res(fixed, `Lines tagged Fixed amount, ${UI.pass === 'Rough' ? 'their usual number' : `the ${monthName(UI.ym)} estimate`}: ${money(fixed)} a month. This is the floor you pay no matter what; it feeds runway and Lean FI.`), note: `The floor${share(fixed)}`, home: '#/spending/budget' },
+    { label: `Fixed${k > 1 ? `, ${UI.period}` : ''}`, result: res(fixed, `Lines tagged Fixed amount, ${UI.pass === 'Rough' ? 'their usual number' : `the ${monthName(UI.ym)} estimate`}: ${money(fixed)} a month. This is the floor you pay no matter what; it feeds runway and Lean FI.`), note: `The floor${share(fixed)}`, home: '#/cash-flow/budget' },
     { label: `Variable${k > 1 ? `, ${UI.period}` : ''}`, result: res(variable, `Lines tagged Variable amount: ${money(variable)} a month.`), note: share(variable).replace(' · ', '') || null },
     { label: `Yearly costs set aside${k > 1 ? `, ${UI.period}` : ''}`, result: res(setAside, cash ? `Yearly costs due in ${monthName(UI.ym)}: ${money(setAside)} (cash view).` : `Each yearly cost divided by 12: ${money(setAside)} a month.`) },
   ];
@@ -243,9 +243,9 @@ export function calendarScreen(app, ctx) {
   const list = b.list || instances(doc, ctx.ref, UI.calYm, { now: ctx.now() });
   const monthList = list.filter(i => i.date.startsWith(UI.calYm) || i.origDate?.startsWith(UI.calYm));
   if (!monthList.some(i => i.kind !== 'win')) {
-    return [head('Cash flow calendar', 'Day by day, with a running balance'), h('div.card', {}, h('div.empty.center', {},
+    return [head('Calendar', 'Day by day, with a running balance'), h('div.card', {}, h('div.empty.center', {},
       h('span.title', {}, 'Add your paychecks and bills to see your month'),
-      h('div.row-line', {}, S.button('Add a paycheck', { iconName: 'plus', onClick: () => app.go('#/my-money/income') }), S.button('Add a bill', { iconName: 'plus', onClick: () => app.go('#/spending/budget') }),
+      h('div.row-line', {}, S.button('Add a paycheck', { iconName: 'plus', onClick: () => app.go('#/cash-flow/income') }), S.button('Add a bill', { iconName: 'plus', onClick: () => app.go('#/cash-flow/budget') }),
         S.button('Add entry', { iconName: 'plus', onClick: e => entryForm(ctx, e.currentTarget, { date: dateOf(UI.calYm, 1) }) }))))];
   }
   const st = startBalance(doc, ctx.ref, ctx.now());
@@ -279,7 +279,7 @@ export function calendarScreen(app, ctx) {
   const byDay = new Map();
   for (const i of monthList) { if (!UI.show.has(i.group)) continue; const k = i.date.startsWith(UI.calYm) ? i.date : i.origDate; if (!byDay.has(k)) byDay.set(k, []); byDay.get(k).push(i); }
   const endOf = new Map((b.rows || []).map(r => [r.date, r.balance]));
-  return [head('Cash flow calendar', 'Day by day, with a running balance'), header, ...notes,
+  return [head('Calendar', 'Day by day, with a running balance'), header, ...notes,
     monthGrid(ctx, byDay, endOf, b.low), dayList(ctx, byDay, endOf, b.low),
     h('div.card.cal-chart', {}, h('div.bar-top', {}, h('strong', {}, `Running balance, ${UI.range === 'Month' ? monthName(UI.calYm) : `${UI.range} from ${monthName(UI.calYm)}`}`)), balanceChart(ctx, b))];
 }
@@ -352,7 +352,7 @@ function instancePanel(ctx, anchor, i) {
         i.status !== 'Planned' ? S.button('Back to planned', { onClick: () => set({ status: 'Planned' }, 'Back to planned.') }) : null),
       i.guessDate && rec ? setDay(ctx, rec, i) : null,
       rec?.kind === 'entry' ? S.button('Edit entry', { iconName: 'note', onClick: e => entryForm(ctx, anchor, { rec }) }) : null,
-      rec && rec.kind !== 'entry' ? h('a', { href: { income: '#/my-money/income', debt: '#/my-money/debt', bill: '#/spending/budget', event: '#/plan/next-12-months' }[rec.kind] || '#/spending/budget', onclick: () => S.closePop() }, `Open ${rec.name || rec.type || 'it'} where it lives`) : null);
+      rec && rec.kind !== 'entry' ? h('a', { href: { income: '#/cash-flow/income', debt: '#/net-worth/debt', bill: '#/cash-flow/budget', event: '#/plan/next-12-months' }[rec.kind] || '#/cash-flow/budget', onclick: () => S.closePop() }, `Open ${rec.name || rec.type || 'it'} where it lives`) : null);
   };
   draw();
   S.popover(anchor, box, { width: 380 });
@@ -444,7 +444,7 @@ export function closeScreen(app, ctx) {
   const views = months.map(ym => monthView(doc, ctx.ref, ym, { now: ctx.now() }));
   const any = views.some(v => v.rows.some(r => (r.estimate ?? 0) > 0));
   if (!any) return [head('Month-end close', 'Actuals vs estimates'), h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No closed months yet'),
-    h('span.muted', {}, 'Plan a month on Budget, mark what was paid on the calendar, then close it here.'), S.button('Open Budget', { iconName: 'right', onClick: () => app.go('#/spending/budget') })))];
+    h('span.muted', {}, 'Plan a month on Budget, mark what was paid on the calendar, then close it here.'), S.button('Open Budget', { iconName: 'right', onClick: () => app.go('#/cash-flow/budget') })))];
   UI.review ??= views.find(v => !v.closed)?.ym ?? now;
   const acc = gutAccuracy(closedMonths(doc));
   return [head('Month-end close', 'Actuals vs estimates'),

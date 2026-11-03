@@ -239,7 +239,7 @@ export function assetList(ref) {
     footerTotal: (ctx, recs) => amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null),
     totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Account' ? h('td', {}, `${recs.length} ${recs.length === 1 ? 'item' : 'items'}`) : c.label === 'Balance' ? h('td.num', {}, amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null)) : h('td')), h('td'), h('td')],
     strip: (ctx, m) => h('div', {}, summaryStrip(ctx, [
-      { label: 'Total net worth', result: m.netWorth, key: 'netWorth' }, { label: 'Liquid net worth', result: m.liquidNetWorth },
+      // Total and liquid net worth sit in the Net worth headline above.
       { label: 'Cash', result: m.inputs.cash === null ? needs('M41', ['cash']) : { id: 'M41', value: m.inputs.cash, needs: [], unit: 'money', text: `Checking, savings and other cash: ${money(m.inputs.cash)}.` } },
       { label: 'Rule of 5 cushion', result: m.ruleOf5 }]), assetChecks(ctx, m)),
     stripWhenEmpty: true,
