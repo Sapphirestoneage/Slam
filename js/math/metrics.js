@@ -11,10 +11,11 @@ import { link401k, matchFromTiers } from './portfolio.js';
 import { fiNumber, fiDate, coastFi, bigDeals } from './fi.js';
 import { hourlyRate } from './time.js';
 import { debtLines, premiumSources, duplicates, afterTaxContributions } from './linked.js';
+import { LISTS } from '../registry/assumptions.js';
 
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
-const HOUSING = new Set(['Rent or mortgage', 'Electric, gas, water']);
-const CONSUMER = new Set(['Credit card', 'Personal loan', 'Buy now, pay later', 'Payday or cash advance', 'Medical', 'Family or friend']);
+const HOUSING = new Set(LISTS.housing);
+const CONSUMER = new Set(LISTS.consumerDebt);
 
 // A value as the math should see it: Not for me is zero (R058); Not sure with nothing typed is a Guess (R055).
 function read(record, field, guessValue = null) {

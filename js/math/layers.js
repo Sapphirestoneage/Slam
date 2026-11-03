@@ -10,9 +10,10 @@ import { monthsBetween, ymOf } from '../month.js';
 import { metrics } from './metrics.js';
 import { yearItems, sinkingOf } from '../year.js';
 import { gatesOf, visible } from '../gates.js';
+import { RULES } from '../registry/assumptions.js';
 
 const FAT = new Set(['Food', 'Accommodation', 'Transportation']);
-export const LITTLE_E = 1000;
+export const LITTLE_E = RULES.littleE;
 export const STABILITY = { Steady: 1, Varies: 1.25, Unpredictable: 1.5 }; // more months when income moves
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 
@@ -36,7 +37,7 @@ export function cashLayers(x, { deductibles = [], gaps = [], stability = null, m
   const mine = l => myShare(l, { roommates: x.roommates ?? 0 }).value ?? 0;
   const lines = (x.lines || []).filter(l => l.status !== 'Not for me');
   const monthly = { fat: sum(lines.filter(l => FAT.has(l.draftt)), mine), draftt: sum(lines.filter(l => DRAFTT.includes(l.draftt)), mine), full: x.spending ?? sum(lines, mine) };
-  const months = x.age == null ? null : (x.age / 5) * (STABILITY[stability] ?? 1);
+  const months = x.age == null ? null : (x.age / RULES.ruleOf5Divisor) * (STABILITY[stability] ?? 1);
   const e = littleE(deductibles);
   const layers = [
     { id: 'little-e', name: 'little e', target: e.target, guess: e.guess, note: e.note, step: 1 },

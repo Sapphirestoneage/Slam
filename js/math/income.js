@@ -1,8 +1,9 @@
 // M01, M10 to M17: periods, taxes, take-home, match, variable income, real hourly wage.
 import { ok, needs, missing, fmt } from './result.js';
+import { RULES, LISTS } from '../registry/assumptions.js';
 
 // M01: any period to monthly.
-const PER_MONTH = { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, quarter: 1 / 3, year: 1 / 12 };
+const PER_MONTH = LISTS.perMonth; // the Per table in the assumptions registry
 export function monthlyFrom(amount, per, payFrequency = null) {
   if (amount === null || amount === undefined) return needs('M01', ['amount']);
   let p = per;
@@ -127,7 +128,7 @@ export function variableSafeBudget({ lowestMonth, typicalMonth, setAside }, ref)
     return ok('M16', v, `Lowest month ${fmt.money(lowestMonth)} minus ${fmt.pct(rate)} set aside for taxes = ${fmt.money(v)} a month you can count on.`);
   }
   if (typicalMonth === null || typicalMonth === undefined) return needs('M16', ['the lowest month']);
-  const v = typicalMonth * 0.75 * (1 - rate);
+  const v = typicalMonth * RULES.variableGuessShare * (1 - rate);
   return ok('M16', v, `No lowest month yet, so 75% of a typical month (${fmt.money(typicalMonth)}) is used as a guess, minus ${fmt.pct(rate)} for taxes = ${fmt.money(v)} a month.`, { guess: true });
 }
 

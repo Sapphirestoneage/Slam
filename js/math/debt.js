@@ -1,13 +1,14 @@
 // M30 to M37: minimums, payoff months, interest, fee APR, payoff order, utilization, DTI, promo.
 import { ok, needs, missing, fmt } from './result.js';
 import { duration } from '../format.js';
+import { RULES } from '../registry/assumptions.js';
 
 // M30: credit card minimum. A statement number overrides it (R036, R060).
 export function cardMinimum({ balance, apr }) {
   const m = missing({ balance, APR: apr });
   if (m.length) return needs('M30', m);
   const interest = balance * apr / 12;
-  const v = Math.min(balance, Math.max(25, balance * 0.01 + interest));
+  const v = Math.min(balance, Math.max(RULES.cardMinimumFloor, balance * RULES.cardMinimumPct + interest));
   return ok('M30', v, `The larger of $25 or 1% of the ${fmt.money(balance)} balance plus one month's interest (${fmt.money(interest)}) = ${fmt.money(v)} a month.`, { parts: { interest } });
 }
 

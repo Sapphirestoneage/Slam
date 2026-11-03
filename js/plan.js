@@ -8,9 +8,10 @@ import { myShare } from './math/spending.js';
 import { statusOf } from './records.js';
 import { gatesOf, visible } from './gates.js';
 import { addMonths, ymOf, dateOf, monthName } from './month.js';
+import { RULES } from './registry/assumptions.js';
 
 export const MILESTONES = ['Lean FI', 'Coast FI', 'Barista FI', 'Regular FI', 'Fat FI', 'Debt free', 'Custom'];
-export const FAT_FACTOR = 1.5; // Fat FI: 1.5 times regular spending (QUESTIONS: confirm)
+export const FAT_FACTOR = RULES.fatFactor; // Fat FI: 1.5 times regular spending (QUESTIONS: confirm)
 const FAT_LETTERS = new Set(['Food', 'Accommodation', 'Transportation']);
 
 // Every FI number the plan talks about.

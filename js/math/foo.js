@@ -7,12 +7,13 @@ import { layersOf } from './layers.js';
 import { monthsTo } from '../plan.js';
 import { addMonths, ymOf, instances } from '../month.js';
 import { yearItems, sinkingOf } from '../year.js';
+import { RULES, LISTS } from '../registry/assumptions.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
-const HIGH = new Set(['Credit card', 'Payday or cash advance', 'Personal loan', 'Buy now, pay later', 'Medical', 'Tax debt']);
-const HIGH_APR = 0.08;
+const HIGH = new Set(LISTS.heavyDebt);
+const HIGH_APR = RULES.heavyApr;
 const PAYDAY = new Set(['Payday or cash advance']);
-const TRUE_FI_TAX = 0.15; // a rough tax on withdrawals until retirement taxes are modelled
+const TRUE_FI_TAX = RULES.trueFiTax; // a rough tax on withdrawals until retirement taxes are modelled
 export const forgiveness = r => r?.values?.pslf === 'Yes' || r?.values?.forgiveness === true || r?.values?.forgiveness === 'Yes';
 
 // M70: the invested amount today after which the yearly minimum alone reaches the FI number by the FI age.
