@@ -123,6 +123,7 @@ function startSession(app, ctx) {
     ctx.store.transaction('Start session', () => {
       ctx.store.setIn('session', ['startedAt'], new Date().toISOString());
       ctx.store.setIn('session', ['guide'], true); // Guide me turns on (R076)
+      ctx.store.setIn('session', ['allFields'], false); // answer 90: each session starts in focus mode
     });
   }
   app.go('#/home/live');
@@ -182,6 +183,8 @@ export function liveScreen(app, ctx) {
   return [clientStrip(app, ctx),
     head('Home', inSession(ctx) ? 'Live: the session is on' : 'Live: start the session from Prep',
       left != null ? h('span.time-left', {}, left >= 0 ? `${left} min left` : `${-left} min over`) : null,
+      // Answer 90: focus mode (core columns only) is on by default; this shows every field mid-session, and back.
+      inSession(ctx) && doc.session.guide ? S.checkbox('Show all fields', !!doc.session.allFields, v => ctx.store.setIn('session', ['allFields'], v, v ? 'Show all fields' : 'Focus mode'), { key: 'live:all-fields' }) : null,
       S.button('Next step', { kind: 'primary', size: 'big', iconName: 'right', onClick: nextStep })),
     h('div.agenda', {}, a.steps.map((s, i) => h(`button.step${s.done ? '.done' : ''}${a.current?.id === s.id ? '.current' : ''}`, { type: 'button', onclick: () => { PUI.reveal = s.id === 'fi'; app.go(s.route); } },
       h('span.step-n', {}, `${i + 1}`), h('span.step-name', {}, s.name), h('span.muted.small', {}, s.done ? 'Done' : a.current?.id === s.id ? "You're here" : 'Up next')))),
