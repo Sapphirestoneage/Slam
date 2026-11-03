@@ -125,3 +125,122 @@ Next level,Shareable milestones with no balances,Celebrate debt-free or Coast FI
 Next level,Guardrails withdrawal,"Raise or cut spending when the portfolio drifts, with rules","Jonathan Guyton, William Klinger",Pro tools only,,5,No,
 Next level,Peer comparison by age,"Where you stand vs people your age and income, privately",Thomas Stanley; BiggerPockets Money,Talked about,,7,No,
 Next level,Kakeibo reflection,"Four monthly questions: what you have, want to save, spend, can improve",Hani Motoko,Kakeibo,,6,No,
+"FROM THE BETA (Brandon, Nov 2): built in phase 3 unless marked",,,,,,,,
+Beta,"B1.1 Next button once core Profile fields are done (""Next: Income"")","Next button once core Profile fields are done (""Next: Income""); before that, a line saying what's left",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B1.2 Every field gets ""I'll find it later""","Every field gets ""I'll find it later"". It adds the field to the Homework list",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B1.3 Each Homework item has a ""where to find this"" hint (pay stub, benefits portal, i","Each Homework item has a ""where to find this"" hint (pay stub, benefits portal, insurance card)",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B1.4 Pay frequency with its count: weekly 52, every 2 weeks 26, twice a month 24, mon","Pay frequency with its count: weekly 52, every 2 weeks 26, twice a month 24, monthly 12",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B1.5 Specific paydays (e.g,Specific paydays (e.g. the 7th and 22nd; a next payday for weekly and every-2-weeks),,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B1.6 Income given as take-home, gross, or both","Income given as take-home, gross, or both. The app solves for the one that's missing",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B2.1 Allocation: US stocks, intl stocks, bonds, cash, real estate, commodities, crypt","Allocation: US stocks, intl stocks, bonds, cash, real estate, commodities, crypto, other. Must total 100%. Live total that flags until it hits 100. Dollars filled in from the balance",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B2.2 Optional target allocation, with a drift flag over 5 points","Optional target allocation, with a drift flag over 5 points",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B2.3 Holdings: ticker, name, shares, price, value, % of account, expense ratio, what ","Holdings: ticker, name, shares, price, value, % of account, expense ratio, what it tracks, asset class",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B2.4 Holdings' asset classes feed the allocation,Holdings' asset classes feed the allocation,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B2.5 Flag overlap (more than one S&P 500 / NASDAQ / Dow fund) and any holding or them,Flag overlap (more than one S&P 500 / NASDAQ / Dow fund) and any holding or theme over a set % (default 25%),,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B2.6 Purpose tags with a price tag: name, target amount, target date, % funded, month","Purpose tags with a price tag: name, target amount, target date, % funded, monthly needed. One account can carry several tags with split dollars",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B2.7 Flag a goal under 5 years out that is held in stocks,Flag a goal under 5 years out that is held in stocks,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B2.8 Growth and basis: contributions to date, cost basis, gain $ and %, unrealized vs","Growth and basis: contributions to date, cost basis, gain $ and %, unrealized vs realized, dividends",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B2.9 Roth IRA: contribution basis tracked apart from earnings,Roth IRA: contribution basis tracked apart from earnings,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B2.10 Taxable: short-term vs long-term gains,Taxable: short-term vs long-term gains,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B2.11 Tax treatment,Tax treatment; penalty-free access age or rule,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B2.12 Account fee plus weighted expense ratio, in $ a year","Account fee plus weighted expense ratio, in $ a year",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B2.13 Auto-invest on/off,Auto-invest on/off; dividend reinvest on/off,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B2.14 Contribution-limit progress (uses the real pay frequency, not 26)","Contribution-limit progress (uses the real pay frequency, not 26)",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B2.15 Beneficiary named (yes/no),Beneficiary named (yes/no); owner (individual/joint),,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B2.16 Last updated, with a stale flag after 30 days","Last updated, with a stale flag after 30 days",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B2.17 Institution plus last 4 digits,Institution plus last 4 digits,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B2.18 Cash: account type apart from institution (money market vs HYSA), APY or 7-day y","Cash: account type apart from institution (money market vs HYSA), APY or 7-day yield, purpose tag",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B2.19 Uninvested-cash alert for retirement accounts and HSAs sitting in cash,Uninvested-cash alert for retirement accounts and HSAs sitting in cash,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B2.20 Net worth must equal the sum of entered balances,Net worth must equal the sum of entered balances; warn if it doesn't,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B3.1 401(k): Roth or traditional,401(k): Roth or traditional,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B3.2 401(k): contribution per paycheck and as % of salary (each worked out from the o,401(k): contribution per paycheck and as % of salary (each worked out from the other),,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B3.3 401(k): match tiers (e.g,"401(k): match tiers (e.g. 100% of the first 3%, 50% of the 4th)",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B3.4 401(k): vesting schedule,401(k): vesting schedule; vested vs unvested shown apart,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B3.5 HSA: cash vs invested,HSA: cash vs invested,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B3.6 HSA: self-directed vs managed, with a fee comparison","HSA: self-directed vs managed, with a fee comparison",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B3.7 HSA: per-paycheck contribution,HSA: per-paycheck contribution,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B3.8 HSA: progress to the annual limit and paychecks left to max,HSA: progress to the annual limit and paychecks left to max,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B3.9 Roth IRA: contribution log by tax year and date,Roth IRA: contribution log by tax year and date; maxed-for-year status,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B3.10 Employer match and 401(k) %: Income and the 401(k) fill each other, whichever is","Employer match and 401(k) %: Income and the 401(k) fill each other, whichever is blank (answer to QUESTIONS 47)",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B4.1 Premiums per paycheck or per month,Premiums per paycheck or per month,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B4.2 Health: in-network and out-of-network deductible and OOP max, copays","Health: in-network and out-of-network deductible and OOP max, copays; no generic coverage amount",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B4.3 Disability: short-term vs long-term, benefit %, duration, waiting period","Disability: short-term vs long-term, benefit %, duration, waiting period",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B4.4 Life: coverage amount and a planned-change note (e.g,Life: coverage amount and a planned-change note (e.g. increase at marriage),,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B4.5 Renters insurance line,Renters insurance line,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B5.1 NY state brackets and NYC local tax,NY state brackets and NYC local tax,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B5.2 Filing status,"Filing status; refund history with ""don't know""; effective vs marginal rate",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B6.1 Who covers it: me / someone else (with an optional date it becomes mine) / not f,Who covers it: me / someone else (with an optional date it becomes mine) / not for me,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B6.2 Not for me folds the line away into a closed section at the bottom, where it can","Not for me folds the line away into a closed section at the bottom, where it can be restored",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B6.3 Per paycheck, month, quarter, year","Per paycheck, month, quarter, year; low / average / high for variable bills",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B6.5 My share vs the total bill, for roommates","My share vs the total bill, for roommates",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B6.6 Add a line in every section,"Add a line in every section; ""Other"" under Wants; a ""Dates"" line; Therapy apart from personal care, section renamed ""Personal care and hygiene""",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B6.7 Several tags on one line (friends + dates),Several tags on one line (friends + dates),,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B6.8 Recurring irregular costs (flights, trips) as their own type","Recurring irregular costs (flights, trips) as their own type",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B6.9 Pre-tax rule: insurance premiums are spending,Pre-tax rule: insurance premiums are spending; HSA and 401(k) are not,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B6.10 Fix yearly-to-monthly conversion and slow recalculation after edits,Fix yearly-to-monthly conversion and slow recalculation after edits,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B6.11 Estimated vs actual with %, and a one-tap check to confirm an estimate as actual","Estimated vs actual with %, and a one-tap check to confirm an estimate as actual",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,B6.12 Use the full screen width,Use the full screen width,,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B7.1 ""You get $X on [date]","""You get $X on [date]. $Y covers fixed bills. $Z is free to spend."" Per pay period and per month",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B8.1 Every jargon term (pace, coverage, buffer, surplus, Coast FI, …) gets a short to","Every jargon term (pace, coverage, buffer, surplus, Coast FI, …) gets a short tooltip",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"B9.1 A small ""Report this"" button on every screen","A small ""Report this"" button on every screen; the note is saved with screen and time in the export",,Brandon beta (Nov 2),,3,Yes,Built
+Beta,"M1.1 Credit cards with name, institution, limit, balance, APR, 0% promo end, annual f","Credit cards with name, institution, limit, balance, APR, 0% promo end, annual fee, rewards type, autopay, statement date, due date",,Missed ideas (Nov 2),,3,Yes,Built
+Beta,"M1.2 Utilization per card and overall, computed","Utilization per card and overall, computed",,Missed ideas (Nov 2),,3,Yes,Built
+Beta,M1.3 Credit score with source and date checked,Credit score with source and date checked,,Missed ideas (Nov 2),,3,Yes,Built
+Beta,"M2.1 One Benefits card: yes / no / don't know for commuter, health FSA, dependent car","One Benefits card: yes / no / don't know for commuter, health FSA, dependent care FSA, ESPP, tuition reimbursement, employer HSA contribution, after-tax 401(k)",,Missed ideas (Nov 2),,3,Yes,Built
+Beta,"M2.2 A yes opens only that benefit's fields (amount, per paycheck or per year, ESPP d","A yes opens only that benefit's fields (amount, per paycheck or per year, ESPP discount %)",,Missed ideas (Nov 2),,3,Yes,Built
+Beta,M2.3 Employer HSA contribution counts toward the HSA limit,Employer HSA contribution counts toward the HSA limit,,Missed ideas (Nov 2),,3,Yes,Built
+Beta,M2.4 Commuter nudge with yearly tax savings at the marginal rate,Commuter nudge with yearly tax savings at the marginal rate,,Missed ideas (Nov 2),,3,Yes,Built
+Beta,M3.1 Last year's refund or owed (or don't know),Last year's refund or owed (or don't know); W-4 filing status and extra withholding,,Missed ideas (Nov 2),,3,Yes,Built
+Beta,M3.2 Flag only: large refund = may be over-withholding,Flag only: large refund = may be over-withholding; owed = check withholding,,Missed ideas (Nov 2),,3,Yes,Built
+Beta,"M4.1 Year view of known yearly events: lease renewal with rent increase, open enrollm","Year view of known yearly events: lease renewal with rent increase, open enrollment, IRA deadline, tax day, insurance renewals, card annual fees, your own events",,Missed ideas (Nov 2),,3,Yes,Built
+Beta,M4.2 Each event can carry a cost that feeds a sinking fund,Each event can carry a cost that feeds a sinking fund,,Missed ideas (Nov 2),,3,Yes,Built
+Beta,M5.1 Any yearly or irregular cost (Spending or the calendar) can become a sinking fun,"Any yearly or irregular cost (Spending or the calendar) can become a sinking fund: target, due date, monthly needed, % funded",,Missed ideas (Nov 2),,3,Yes,Built
+Beta,M5.2 A sinking fund can link to an account's purpose tag,A sinking fund can link to an account's purpose tag,,Missed ideas (Nov 2),,3,Yes,Built
+Beta,M6.1 Save snapshot button (already there) plus an automatic one at each month-end clo,Save snapshot button (already there) plus an automatic one at each month-end close,,Missed ideas (Nov 2),,3,Yes,Built
+Beta,"M6.2 Line chart of total and liquid net worth over time, collapsed on Home","Line chart of total and liquid net worth over time, collapsed on Home",,Missed ideas (Nov 2),,3,Yes,Built
+Beta,"M7.1 Covered by someone: who (parents, partner, employer, other) and an optional take","Covered by someone: who (parents, partner, employer, other) and an optional takeover date",,Missed ideas (Nov 2),,3,Yes,Built
+Beta,"M7.2 One ""Taking over"" list: each covered item, its cost, its date, and the monthly t","One ""Taking over"" list: each covered item, its cost, its date, and the monthly total added on each date",,Missed ideas (Nov 2),,3,Yes,Built
+Beta,"M8.1 Done / not yet / not for me: beneficiaries on each account, basic will, healthca","Done / not yet / not for me: beneficiaries on each account, basic will, healthcare proxy, credit freeze at all three bureaus, renters insurance",,Missed ideas (Nov 2),,3,Yes,Built
+Beta,M8.2 Not yet shows on the Homework list,Not yet shows on the Homework list,,Missed ideas (Nov 2),,3,Yes,Built
+Beta,"M9.1 When on: yom tov and Pesach cost lines, a kosher grocery note, future tuition as","When on: yom tov and Pesach cost lines, a kosher grocery note, future tuition as a goal type",,Missed ideas (Nov 2),,3,Yes,Built
+Beta,"M9.2 Maaser: on gross or take-home, a % (default 10%)","Maaser: on gross or take-home, a % (default 10%)",,Missed ideas (Nov 2),,3,Yes,Built
+Beta,"M10.1 Times for profile started, first computed number shown, core profile done, full ","Times for profile started, first computed number shown, core profile done, full profile done",,Missed ideas (Nov 2),,3,Yes,Built
+Beta,M10.2 Durations in the coach view and in the export,Durations in the coach view and in the export,,Missed ideas (Nov 2),,3,Yes,Built
+CLOSE THE BOOKS: phase 3.5,,,,,,,,
+Only SLAM,Three statements,"Net worth statement, income and spending statement (accrual) and cash flow statement (cash), month or year, this period vs last","Balance sheet, income statement, statement of cash flows",Phase 3.5 spec,,3.5,Yes,
+Only SLAM,Tie-out,"Ending cash ties to cash on the net worth statement; change in net worth explained; accrual vs cash surplus, line by line; any gap shows as unexplained cash with Find it",Bookkeeping reconciliation,Phase 3.5 spec,,3.5,Yes,
+Only SLAM,FOO path,"The SLAM order of operations, steps 0a to 9, placed from the client numbers, with a path of dated stops and the original nine beside it",Money Guy Show (Financial Order of Operations),Phase 3.5 spec,,3.5,Yes,
+Only SLAM,Cash layers,"little e, income-gap buffers, big e in FAT, DRAFTT and full layers, sinking funds; one account with virtual layers or one per layer; backups of the backups add runway",SLAM,Phase 3.5 spec,,3.5,Yes,
+Only SLAM,Quiet Quitting FI,The invested amount today after which the Roth IRA limit (plus a kept job match) each year reaches the FI number by the FI age,SLAM,Phase 3.5 spec,,3.5,Yes,
+Only SLAM,Efficiency flags,One calm line on the FOO stop when money could work harder; kept as data so more can be added,SLAM,Phase 3.5 spec,,3.5,Yes,
+Only SLAM,Calendar upgrades,Drag (or Move) an item to another day; each item carries its cash flow bucket; FOO dates and month-end days as markers,SLAM,Phase 3.5 spec,,3.5,Yes,
+"FROM THE BETA (Brandon, Nov 2): built in phase 3 unless marked",,,,,,,,
+Beta,"BL.7 Virtual envelopes inside one account (maaser, fun money), fill-until-empty view,","Virtual envelopes inside one account (maaser, fun money), fill-until-empty view, maaser credit for early giving, volunteer hours toward maaser",,Brandon beta (Nov 2),,4,No,Logged LATER
+Beta,BL.8 Safe-to-spend number and a mid-month check-in on the 15th,Safe-to-spend number and a mid-month check-in on the 15th,,Brandon beta (Nov 2),,6,No,Logged LATER
+Beta,"BL.9 Goal calendar (ring, honeymoon, house, car) with monthly-needed math","Goal calendar (ring, honeymoon, house, car) with monthly-needed math",,Brandon beta (Nov 2),,4,No,Logged LATER
+Beta,"BL.10 Scenario toggle (now, engaged, married, house) changing bills, filing status, in","Scenario toggle (now, engaged, married, house) changing bills, filing status, insurance; couples splits (joint, 50/50, proportional)",,Brandon beta (Nov 2),,5,No,Logged LATER
+Beta,"BL.11 FOO auto-placement, including Life FOO step zeros (generosity, bedazzle your bas","FOO auto-placement, including Life FOO step zeros (generosity, bedazzle your basic life)",,Brandon beta (Nov 2),,3.5,No,Logged LATER
+Beta,"BL.12 Real FIRE dashboard calcs with show-the-math, pace presets, FIRE type explainer,","Real FIRE dashboard calcs with show-the-math, pace presets, FIRE type explainer, milestones timeline",,Brandon beta (Nov 2),,5,No,Logged LATER
+Beta,BL.13 Duolingo mode (1 to 2 questions a day),Duolingo mode (1 to 2 questions a day); money personality quiz routing to skills and reading,,Brandon beta (Nov 2),,7,No,Logged LATER
+Beta,"BL.14 Rocket Money and spreadsheet import, export to Excel, private shareable app","Rocket Money and spreadsheet import, export to Excel, private shareable app",,Brandon beta (Nov 2),,6,No,Logged LATER
+Beta,"BL.15 Rich-life list with prices, joy score per expense, memory dividends, marginal-ut","Rich-life list with prices, joy score per expense, memory dividends, marginal-utility ranking, lifestyle inflation tool, regret view, Money Wrapped",,Brandon beta (Nov 2),,4,No,Logged LATER
+Beta,BL.16 Group several expenses into one event (a day trip),Group several expenses into one event (a day trip),,Brandon beta (Nov 2),,4,No,Logged LATER
+Beta,BL.17 Drag and drop needs vs wants,Drag and drop needs vs wants; custom splits instead of 50/30/20,,Brandon beta (Nov 2),,4,No,Logged LATER
+Beta,"BL.18 Money calendar and month-end close (partly built: cash flow calendar, month-end ","Money calendar and month-end close (partly built: cash flow calendar, month-end close, Your year)",,Brandon beta (Nov 2),,3.5,No,Logged LATER
+Beta,BL.19 Auto session summary: top 10 takeaways and the client's next 5 steps,Auto session summary: top 10 takeaways and the client's next 5 steps,,Brandon beta (Nov 2),,6,No,Logged LATER
+Beta,BL.20 Rough / privacy mode: ranges instead of exact balances,Rough / privacy mode: ranges instead of exact balances,,Brandon beta (Nov 2),,6,No,Logged LATER
+Beta,BL.21 Defined beta stages and version notes for testers,Defined beta stages and version notes for testers,,Brandon beta (Nov 2),,7,No,Logged LATER
+Beta,"BL.22 NY rates 2027 to 2032: the scheduled cuts (3.8, 4.3, 5.05, 5.3, 5.8, then 6.85 a","NY rates 2027 to 2032: the scheduled cuts (3.8, 4.3, 5.05, 5.3, 5.8, then 6.85 and up at the same thresholds), by tax year. 2026 single brackets already match NY Tax Law 601(c)(1)(vii)",,Brandon beta (Nov 2),,4,No,Logged LATER
+Beta,BL.23 NY high-income recapture (the benefit of the lower brackets clawed back over abo,NY high-income recapture (the benefit of the lower brackets clawed back over about $107k AGI),,Brandon beta (Nov 2),,4,No,Logged LATER
+Beta,"BL.24 NY joint brackets and NYC rates checked against the law (marked ""not yet confirm","NY joint brackets and NYC rates checked against the law (marked ""not yet confirmed against the law"" until then)",,Brandon beta (Nov 2),,4,No,Logged LATER
+Beta,"BL.1 ""I'll find it later"" on Debt, Protection and Spending fields (row status already","""I'll find it later"" on Debt, Protection and Spending fields (row status already has it)",,Brandon beta (Nov 2),,4,No,Logged LATER
+Beta,"BL.2 Look up ticker prices and fund data (what it tracks, expense ratio) instead of t","Look up ticker prices and fund data (what it tracks, expense ratio) instead of typing them",,Brandon beta (Nov 2),,6,No,Logged LATER
+Beta,BL.3 Allocation and drift rolled up across every account (household mix),Allocation and drift rolled up across every account (household mix),,Brandon beta (Nov 2),,4,No,Logged LATER
+Beta,"BL.4 Purpose tags feeding Plan › Goals, so a tagged account funds its goal there","Purpose tags feeding Plan › Goals, so a tagged account funds its goal there",,Brandon beta (Nov 2),,4,No,Logged LATER
+Beta,BL.6 Vesting schedule driving the unvested amount by date,Vesting schedule driving the unvested amount by date,,Brandon beta (Nov 2),,4,No,Logged LATER
+Beta,ML.1 Roth vs traditional per account: federal + state + local marginal rate now vs an,Roth vs traditional per account: federal + state + local marginal rate now vs an estimated rate in retirement,,Missed ideas (Nov 2),,5,No,Logged LATER
+Beta,ML.2 Spend-more number: how much more a month you could spend and still reach FI at t,"Spend-more number: how much more a month you could spend and still reach FI at the same age (Die With Zero), from the projection engine",,Missed ideas (Nov 2),,5,No,Logged LATER
+Beta,ML.3 Full W-4 withholding calculator,Full W-4 withholding calculator,,Missed ideas (Nov 2),,5,No,Logged LATER
+Beta,ML.4 Credit card rewards optimizer,Credit card rewards optimizer,,Missed ideas (Nov 2),,7,No,Logged LATER
+Beta,"ML.5 Think-aloud test mode: a tester-drives view with ""Report this"" pinned open","Think-aloud test mode: a tester-drives view with ""Report this"" pinned open",,Missed ideas (Nov 2),,7,No,Logged LATER
+CLOSE THE BOOKS: phase 3.5,,,,,,,,

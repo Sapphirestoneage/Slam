@@ -135,3 +135,8 @@ Each one has the default used so the build could keep going. Answer here or in t
 89. **Plan pass columns.** Plan shows each line's usual Amount and this month's Plan side by side (a blank Plan uses the usual number). Hide the Plan column unless someone picks a different month?
 90. **Focus mode trigger.** Focus mode is on while a session runs with Guide me on (Start session turns both on). Should the coach be able to turn it off mid-session from Live?
 91. **"A month in" on Assets.** In focus mode the contribution is typed per month and stored as a yearly amount (contributionPer Year), replacing a per-paycheck entry if one was there. OK, or keep per paycheck when it was typed that way?
+
+## Answered (Phase 3.5, Nov 3 2026)
+
+- 70 Savings rate headline: answered. The headline counts 401(k) and HSA money from the paycheck plus the employer match (built in the reorganize pass; the old M28 is the second line).
+- The employer match: answered. It is its own income line (it shows as its own line on the income and spending statement, M63, above taxes).
