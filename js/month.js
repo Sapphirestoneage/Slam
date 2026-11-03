@@ -310,6 +310,6 @@ export function closedMonths(doc) {
 export function mark(store, key, patch) {
   const cur = store.getIn('spending', ['calendar', 'marks', key]) || {};
   const next = { ...cur, ...patch };
-  if (next.status === 'Planned') return store.setIn('spending', ['calendar', 'marks', key], undefined, 'Back to planned');
+  if (next.status === 'Planned') return store.setIn('spending', ['calendar', 'marks', key], next.bucket ? { bucket: next.bucket } : undefined, 'Back to planned'); // a chosen bucket stays
   return store.setIn('spending', ['calendar', 'marks', key], next, patch.status ? `Marked ${patch.status}` : 'Edit');
 }

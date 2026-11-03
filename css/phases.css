@@ -274,3 +274,10 @@ ul.find-days { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
 .foo-part { display: flex; justify-content: space-between; gap: var(--s3); font-size: .9375rem; }
 .foo-original ol { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
 @media (max-width: 760px) { .foo-stops { flex-direction: column; } .foo-stop { border-top: 0; border-left: 4px solid var(--border-row); } .foo-stop.done { border-left-color: var(--good); } .foo-stop.in-progress, .foo-stop.next { border-left-color: var(--goals); } .foo-cols.two { grid-template-columns: 1fr; } }
+/* Phase 3.5: calendar markers and drag to move. */
+.day-marks { display: flex; flex-direction: column; gap: 2px; margin: 2px 0; }
+.day-mark { font-size: .6875rem; line-height: 1.2; padding: 1px 6px; border-left: 3px solid var(--goals); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.day-mark.close { border-left-color: var(--report, var(--text-2)); }
+.day.drop { outline: 2px dashed var(--goals); outline-offset: -2px; }
+.chip[draggable="true"] { cursor: grab; -webkit-user-drag: element; } /* all: unset on .chip drops the browser default */
+.chip[role="button"]:focus-visible { outline: 2px solid var(--focus, var(--goals)); outline-offset: 1px; }
