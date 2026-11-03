@@ -17,16 +17,18 @@ const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 // B6.10: totals add each line's monthly amount, never the raw number (a $1,200-a-year line is $100 a month).
 const freqOf = ctx => ctx?.metrics?.().inputs.income.find(x => x.r.values.payFrequency)?.r.values.payFrequency ?? null;
 export const lineMonthlyOf = (r, freq = null) => (r.amount == null ? null : monthlyFrom(r.amount, r.per, freq).value);
-// A line flagged as the same payment as a debt or a premium counts as $0 until someone picks (enter once).
+// A line someone confirmed as the same payment as a debt or a premium counts as $0 (enter once); a question alone does not.
 const keptIn = ctx => { const f = freqOf(ctx); const dup = ctx?.metrics?.().inputs.dupOf ?? {}; return r => (r.status === 'Not for me' || dup[r.id] ? 0 : lineMonthlyOf(r, f)); };
 const withAutos = (ctx, recs) => [...recs, ...(ctx.metrics().inputs.autoLines ?? [])];
 // A premium's own Budget line (Brandon section 4) is entered on Protection: its amount opens the coverage row.
 const premiumOf = (ctx, r) => (r.linkedTo ? ctx.store.get(r.linkedTo) : null)?.kind === 'coverage' ? ctx.store.get(r.linkedTo) : null;
-function dupNote(ctx, r, dup) {
-  const from = dup.from === 'Debt' ? 'Debt' : 'Protection';
-  return h('div.dup-note', {}, warnTag(`Looks like the same payment: keep one. ${r.name || 'This line'} and ${dup.name} (from ${from}). This line is not counted until you pick.`),
-    button(`Keep the one from ${from}`, { size: 'small', onClick: () => { ctx.store.remove(r.id); toast(`Kept ${dup.name}. The typed line is gone.`, { undo: () => ctx.store.undo() }); } }),
-    button("They're different", { size: 'small', onClick: () => ctx.store.update(r.id, { notSame: [...(r.values.notSame || []), dup.sourceId] }) }));
+function dupNote(ctx, r, ask, { confirmed = false } = {}) {
+  const what = ask.from === 'Debt' ? `${ask.name} payment` : `${ask.name} premium`;
+  if (confirmed) return h('div.dup-note', {}, h('span.tag.plain', {}, ask.own ? `Your paycheck pays this ${ask.name} premium now; this line is not counted.` : `Counted once, as your ${what}.`),
+    ask.own ? null : button('Not the same', { size: 'small', onClick: () => ctx.store.update(r.id, { sameAs: null, notSame: [...(r.values.notSame || []), ask.sourceId] }) }));
+  return h('div.dup-note', {}, h('span.dup-q', {}, `Same as your ${what}?`),
+    button('Yes', { size: 'small', onClick: () => { ctx.store.update(r.id, { sameAs: ask.sourceId }); toast(`Counted once, as your ${what}.`, { undo: () => ctx.store.undo() }); } }),
+    button('No', { size: 'small', onClick: () => ctx.store.update(r.id, { notSame: [...(r.values.notSame || []), ask.sourceId] }) }));
 }
 
 export function debtList(ref) {
@@ -181,7 +183,7 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
       : ['Amount', 'Plan'].includes(c.label) && (c.label === 'Amount' || pass === 'Actual') ? fromButton(`From ${r.auto.from}`, r.auto.route, r.auto.sourceId, { value: amount(ctx, r.amount, { chip: false }) })
         : c.label === 'Plan' ? h('span.muted', {}, amount(ctx, r.amount, { chip: false })) // the same every month
         : c.label === 'Per' ? h('span.muted', {}, 'per month') : null),
-    rowNote: (ctx, r, m) => (m.inputs.dupOf?.[r.id] ? dupNote(ctx, r, m.inputs.dupOf[r.id]) : null),
+    rowNote: (ctx, r, m) => (m.inputs.dupOf?.[r.id] ? dupNote(ctx, r, m.inputs.dupOf[r.id], { confirmed: true }) : m.inputs.askOf?.[r.id] ? dupNote(ctx, r, m.inputs.askOf[r.id]) : null),
     // Not for me counts as $0 everywhere (R058); its group shows what was cut.
     subtotal: (ctx, rows) => (rows.every(r => r.status === 'Not for me') ? `$0, cut ${money(sum(rows, r => lineMonthlyOf(r, freqOf(ctx))))} a month` : `${money(sum(rows, keptIn(ctx)))} a month`),
     footerTotal: (ctx, recs) => { const all = withAutos(ctx, recs); return h('span', {}, amount(ctx, all.some(r => r.amount != null) ? sum(all, keptIn(ctx)) : null), h('span.muted', {}, ' a month')); },

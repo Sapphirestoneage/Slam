@@ -217,3 +217,4 @@ table.rows tr.row-note td { height: auto; padding: 6px var(--s3) 10px; backgroun
 .close-steps li.done .n { background: var(--good); color: #fff; }
 .close-steps button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .close-nav { margin-top: var(--s3); }
+.dup-q { font-weight: 700; }

@@ -1,8 +1,8 @@
 // Enter once, show in both (reorganize pass item 2). An item that is a balance and a flow is typed in one place
 // and shows on both tabs: a debt's payment becomes a Cash flow line "From Debt"; a premium taken from the
 // paycheck is already out of take-home; a contribution to an account is savings in the waterfall.
-// A typed Budget line that looks like one of these is flagged once ("Looks like the same payment: keep one")
-// and left out of every total until someone picks. Pure: no DOM, so Node tests drive it.
+// A typed Budget line that looks like one of these asks once ("Same as your Car loan? Yes / No"); only Yes
+// leaves it out of the totals. Pure: no DOM, so Node tests drive it.
 import { monthlyFrom } from './income.js';
 
 const STOP = new Set(['payment', 'payments', 'loan', 'loans', 'the', 'my', 'and', 'bill', 'bills', 'monthly', 'month', 'for', 'not', 'through',
@@ -32,34 +32,38 @@ export function premiumSources(coverages, payFrequency = null) {
     monthly: c.per === 'paycheck' ? monthlyFrom(c.amount, 'paycheck', payFrequency).value : c.amount }));
 }
 
-// lines: typed spending lines (name, category, draftt, amount, per, status, linkedTo, values.notSame).
-// Returns { dupOf: { lineId: { sourceId, from, name } } }: each flagged line counts as $0 until someone picks.
+// lines: typed spending lines (name, draftt, amount, per, status, linkedTo, values.sameAs, values.notSame).
+// Evidence is the line's own name, never its group's (a payment, loan, mortgage, insurance or premium word plus a word
+// shared with the debt or coverage), an exact amount match, or sitting in the Debt group. Nothing merges silently:
+// a match is a question ("Same as your Car loan?") in askOf; only a Yes (values.sameAs) leaves the line out, in dupOf.
+// A premium's own linked line, once the coverage says the paycheck pays it, is the same item by construction: dupOf.
 export function duplicates(lines, { debts = [], autos = [], premiums = [], payFrequency = null } = {}) {
-  const dupOf = {};
+  const dupOf = {}, askOf = {};
   const monthly = l => (l.amount == null ? null : monthlyFrom(l.amount, l.per, payFrequency).value);
+  const exact = (a, b) => a != null && b != null && Math.abs(a - b) < 0.005;
+  const sources = [
+    ...autos.map(a => ({ sourceId: a.auto.sourceId, from: 'Debt', name: a.name.replace(/ payment$/, ''), amount: a.amount, debt: true,
+      words: words(a.name, debts.find(d => d.id === a.auto.sourceId)?.type) })),
+    ...premiums.filter(p => p.paidFrom === 'Paycheck' || lines.some(x => x.linkedTo === p.sourceId))
+      .map(p => ({ sourceId: p.sourceId, from: p.from, name: p.from, amount: p.monthly, debt: false, words: new Set([p.type.toLowerCase(), ...(COVER_WORDS[p.type] || [])]) })),
+  ];
   for (const l of lines) {
     if (l.status === 'Not for me' || l.irregular || isAuto(l)) continue;
-    // Its own linked line, while the coverage now says the paycheck pays it: out of take-home already.
     const own = premiums.find(p => l.linkedTo === p.sourceId && p.paidFrom === 'Paycheck');
-    if (own) { dupOf[l.id] = { sourceId: own.sourceId, from: own.from, name: own.from }; continue; }
+    if (own) { dupOf[l.id] = { sourceId: own.sourceId, from: own.from, name: own.from, own: true }; continue; }
+    const sameAs = l.sameAs ?? l.values?.sameAs ?? null;
+    const confirmed = sameAs && sources.find(x => x.sourceId === sameAs);
+    if (confirmed) { dupOf[l.id] = { sourceId: confirmed.sourceId, from: confirmed.from, name: confirmed.name }; continue; }
     const notSame = new Set(l.notSame ?? l.values?.notSame ?? []);
-    const lw = words(l.name, l.category);
-    const text = `${l.name ?? ''} ${l.category ?? ''}`;
-    // A debt payment typed as a line: the Debt letter, or a payment-sounding name that shares a word or the amount.
-    const debtLike = l.draftt === 'Debt' || /payment|loan|mortgage/i.test(text);
-    if (debtLike) {
-      const hit = autos.find(a => !notSame.has(a.auto.sourceId) && (shares(lw, words(a.name, debts.find(d => d.id === a.auto.sourceId)?.type)) || near(monthly(l), a.amount)))
-        ?? (l.draftt === 'Debt' ? autos.find(a => !notSame.has(a.auto.sourceId)) : null); // the Debt letter is the debts, now on Debt
-      if (hit) { dupOf[l.id] = { sourceId: hit.auto.sourceId, from: 'Debt', name: hit.name.replace(/ payment$/, '') }; continue; }
-    }
-    // A premium typed as a line while the coverage already pays it (from the paycheck, or its own linked line).
-    if (/insurance|premium/i.test(text)) {
-      const hit = premiums.find(p => !notSame.has(p.sourceId) && l.linkedTo !== p.sourceId && (p.paidFrom === 'Paycheck' || lines.some(x => x.linkedTo === p.sourceId))
-        && (shares(lw, new Set([p.type.toLowerCase(), ...(COVER_WORDS[p.type] || [])])) || near(monthly(l), p.monthly)));
-      if (hit) dupOf[l.id] = { sourceId: hit.sourceId, from: hit.from, name: hit.from };
-    }
+    const open = sources.filter(x => !notSame.has(x.sourceId) && l.linkedTo !== x.sourceId);
+    const lw = words(l.name);
+    const name = l.name ?? '';
+    const byName = x => (x.debt ? /payment|loan|mortgage/i : /insurance|premium/i).test(name) && shares(lw, x.words);
+    const hit = open.find(byName) ?? open.find(x => exact(monthly(l), x.amount))
+      ?? (l.draftt === 'Debt' ? open.find(x => x.debt) : null); // sitting in the Debt group still counts
+    if (hit) askOf[l.id] = { sourceId: hit.sourceId, from: hit.from, name: hit.name };
   }
-  return { dupOf };
+  return { dupOf, askOf };
 }
 
 // After-tax savings into accounts (IRA, Roth IRA, brokerage, 529, an HSA paid on its own), a month. 401(k)-type

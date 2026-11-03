@@ -71,13 +71,13 @@ export function inputsOf(doc, ref, now = new Date()) {
     }
     return { id: r.id, name: r.name ?? r.type, type: r.type, balance, apr: apr.v, aprGuess: !!apr.guess, payment, paymentIsMinimum, inFull, choice, stress: r.stress, linkedTo: r.linkedTo };
   });
-  // Enter once, show in both: each debt's payment is a line From Debt; a typed line that repeats a debt payment or a
-  // premium already paid is flagged and left out until someone picks (js/math/linked.js).
+  // Enter once, show in both: each debt's payment is a line From Debt; a typed line that looks like a debt payment or
+  // a premium already paid asks "Same as your ...?" and is left out only after Yes (js/math/linked.js).
   const payFrequency = income.find(i => i.r.values.payFrequency)?.r.values.payFrequency ?? null;
   const typedLines = live.filter(r => r.kind === 'bill').map(r => ({ ...r, ...r.values, amount: read(r, 'amount').v }));
   const autoLines = debtLines(debts);
   const premiums = premiumSources(live.filter(r => r.kind === 'coverage'), payFrequency);
-  const { dupOf } = duplicates(typedLines, { debts, autos: autoLines, premiums, payFrequency });
+  const { dupOf, askOf } = duplicates(typedLines, { debts, autos: autoLines, premiums, payFrequency });
   const lines = [...typedLines.filter(l => !dupOf[l.id]), ...autoLines];
   const allIn = live.find(r => r.kind === 'spending' && r.type === 'All in');
   const lineTotal = typedLines.length ? lines.reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0) : null;
@@ -100,7 +100,7 @@ export function inputsOf(doc, ref, now = new Date()) {
     place, link, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, none,
     debtOrder: doc.settings?.debtOrder ?? 'avalanche',
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || useLines ? 0 : debtPayments), // the lines hold each payment, From Debt
-    autoLines, dupOf, typedLines, premiums, payFrequency, health: health ? { id: health.id, perPaycheck: healthPerPay, fromPay: !!healthFromPay, jobId: healthJob?.id ?? null } : null,
+    autoLines, dupOf, askOf, typedLines, premiums, payFrequency, health: health ? { id: health.id, perPaycheck: healthPerPay, fromPay: !!healthFromPay, jobId: healthJob?.id ?? null } : null,
     paycheckPremiums: premiums.filter(p => p.paidFrom === 'Paycheck').reduce((s, p) => s + (p.monthly ?? 0), 0),
     afterTaxSaving: afterTaxContributions(live.filter(r => r.kind === 'account'), { payFrequency, payrollHsa: gates.hsa && income.some(i => (i.r.values.hsaFsa ?? 0) > 0) }).total,
     spendingSource: useLines ? 'lines' : 'gut', lineTotal,

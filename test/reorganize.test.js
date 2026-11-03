@@ -31,46 +31,58 @@ test('a debt payment shows in Cash flow as a line From Debt, counted once', () =
   assert.equal(m(s).surplus.value, 5000 - 1820);
 });
 
-test('a typed line that repeats a debt payment is flagged once and never double counted', () => {
+test('a typed line that repeats a debt payment asks once, and only Yes keeps it from counting twice', () => {
   const s = fresh();
   const loan = s.add('debt', { name: 'Car loan', values: { balance: 9000, apr: 0.07, payment: 320 } }, { type: 'Car loan' });
   const typed = s.add('bill', { name: 'Car payment', amount: 320, values: { draftt: 'Transportation', amountType: 'Fixed' } });
   let x = m(s).inputs;
-  assert.deepEqual(Object.keys(x.dupOf), [typed.id]);
-  assert.equal(x.dupOf[typed.id].sourceId, loan.id);
-  assert.equal(x.spending, 1820, 'counted once');
-  // The calendar does not land it twice either.
-  const ym = '2026-11';
-  const out = instances(s.doc, ref, ym, { now }).filter(i => i.planned < 0 && Math.abs(i.planned + 320) < 1);
-  assert.equal(out.length, 1);
-  // "They're different": both count.
-  s.update(typed.id, { notSame: [loan.id] });
+  assert.equal(x.askOf[typed.id].sourceId, loan.id, 'asked: Same as your Car loan payment?');
+  assert.deepEqual(x.dupOf, {}, 'never merged silently');
+  assert.equal(x.spending, 2140, 'both count until someone answers');
+  // Yes: counted once, everywhere, the calendar too.
+  s.update(typed.id, { sameAs: loan.id });
   x = m(s).inputs;
-  assert.deepEqual(x.dupOf, {});
+  assert.equal(x.dupOf[typed.id].sourceId, loan.id);
+  assert.equal(x.askOf[typed.id], undefined);
+  assert.equal(x.spending, 1820);
+  const out = instances(s.doc, ref, '2026-11', { now }).filter(i => i.planned < 0 && Math.abs(i.planned + 320) < 1);
+  assert.equal(out.length, 1);
+  // No: both count and it does not ask again.
+  s.update(typed.id, { sameAs: null, notSame: [loan.id] });
+  x = m(s).inputs;
+  assert.deepEqual([x.dupOf, x.askOf], [{}, {}]);
   assert.equal(x.spending, 2140);
 });
 
-test('the duplicate check: a payment-sounding line or the Debt letter, not fees on a card', () => {
-  const debts = [{ id: 'd1', name: 'Chase', type: 'Credit card', payment: 75, balance: 2000 }, { id: 'd2', name: 'Navient', type: 'Student loan', payment: 210, balance: 15000 }];
+test("the match: the line's own name (not its group), an exact amount, or the Debt group", () => {
+  const debts = [{ id: 'd1', name: 'Chase', type: 'Credit card', payment: 75, balance: 2000 }, { id: 'd2', name: 'Navient', type: 'Student loan', payment: 210, balance: 15000 },
+    { id: 'd3', name: 'Home loan', type: 'Mortgage', payment: 1800, balance: 300000 }];
   const autos = debtLines(debts);
   const lines = [
     { id: 'a', name: 'Bank and card fees', category: 'Fees', draftt: 'Other', amount: 15, per: 'month' },
-    { id: 'b', name: 'Student loan payment', category: null, draftt: 'Debt', amount: 200, per: 'month' },
+    { id: 'b', name: 'Student loan payment', draftt: 'Other', amount: 200, per: 'month' },
     { id: 'c', name: 'Loans', draftt: 'Debt', amount: 500, per: 'month' },
     { id: 'd', name: 'Gym', draftt: 'Therapy', amount: 75, per: 'month' },
+    { id: 'e', name: 'Rent', category: 'Rent or mortgage', draftt: 'Accommodation', amount: 1650, per: 'month' },
+    { id: 'f', name: 'Gym', draftt: 'Therapy', amount: 75.5, per: 'month' },
   ];
-  const { dupOf } = duplicates(lines, { debts, autos });
-  assert.deepEqual(Object.keys(dupOf).sort(), ['b', 'c']);
-  assert.equal(dupOf.b.sourceId, 'd2', 'matched by its words');
+  const { askOf, dupOf } = duplicates(lines, { debts, autos });
+  assert.deepEqual(Object.keys(askOf).sort(), ['b', 'c', 'd']);
+  assert.equal(askOf.b.sourceId, 'd2', 'its own words: student loan');
+  assert.equal(askOf.d.sourceId, 'd1', 'the exact amount');
+  assert.equal(askOf.e, undefined, 'the Rent or mortgage group is not evidence');
+  assert.equal(askOf.f, undefined, 'close is not exact');
+  assert.deepEqual(dupOf, {});
 });
 
-test('the health premium: a typed line for it is flagged when the paycheck already pays it', () => {
+test('the health premium: a typed line for it asks, and Yes keeps the premium from being spent twice', () => {
   const s = fresh();
-  s.add('coverage', { amount: 120, per: 'paycheck', values: { have: 'Have it', paidFrom: 'Paycheck' } }, { type: 'Health' });
+  const health = s.add('coverage', { amount: 120, per: 'paycheck', values: { have: 'Have it', paidFrom: 'Paycheck' } }, { type: 'Health' });
   const typed = s.add('bill', { name: 'Health insurance (not through work)', amount: 260, values: { draftt: 'Therapy', category: 'Health insurance', amountType: 'Fixed' } });
-  const x = m(s).inputs;
-  assert.equal(x.dupOf[typed.id]?.from, 'Health');
-  assert.equal(x.spending, 1500, 'the premium is not spent twice');
+  assert.equal(m(s).inputs.askOf[typed.id]?.from, 'Health');
+  assert.equal(m(s).inputs.spending, 1760);
+  s.update(typed.id, { sameAs: health.id });
+  assert.equal(m(s).inputs.spending, 1500, 'the premium is not spent twice');
 });
 
 test('after-tax contributions are savings; a 401(k) is before-tax and stays on Income', () => {
