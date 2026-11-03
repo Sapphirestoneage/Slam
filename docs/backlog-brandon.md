@@ -78,3 +78,93 @@ commit per section.
 | BL.4 | Purpose tags feeding Plan › Goals, so a tagged account funds its goal there | LATER |
 | BL.5 | One source for the employer match: Income › More still has the simple "% up to %"; the 401(k) tiers are the fuller version | LATER |
 | BL.6 | Vesting schedule driving the unvested amount by date | LATER |
+
+---
+
+# Missed-ideas batch (Nov 2 2026, follow-up)
+
+Same rules as above, plus: every new field offers "I don't have this" and "I'll find it later" (the latter adds it
+to Homework). Status: every NOW row is built (commits "Missed ideas section 1" to "section 10").
+
+## M1. Credit cards and credit
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| M1.1 | Credit cards with name, institution, limit, balance, APR, 0% promo end, annual fee, rewards type, autopay, statement date, due date | NOW | Debt › Credit cards (kept as a Debt type: one record, R049, R115) |
+| M1.2 | Utilization per card and overall, computed | NOW | Card row More; a line under the Debt strip |
+| M1.3 | Credit score with source and date checked | NOW | Debt, Credit score card |
+
+## M2. Employer benefits
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| M2.1 | One Benefits card: yes / no / don't know for commuter, health FSA, dependent care FSA, ESPP, tuition reimbursement, employer HSA contribution, after-tax 401(k) | NOW | Profile › Benefits at work |
+| M2.2 | A yes opens only that benefit's fields (amount, per paycheck or per year, ESPP discount %) | NOW | Profile › Benefits at work |
+| M2.3 | Employer HSA contribution counts toward the HSA limit | NOW | Assets › HSA, Limit used |
+| M2.4 | Commuter nudge with yearly tax savings at the marginal rate | NOW | Profile › Benefits at work; Budget |
+
+## M3. Tax withholding flag
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| M3.1 | Last year's refund or owed (or don't know); W-4 filing status and extra withholding | NOW | Taxes › Filing |
+| M3.2 | Flag only: large refund = may be over-withholding; owed = check withholding | NOW | Taxes › Filing |
+
+## M4. Annual money calendar
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| M4.1 | Year view of known yearly events: lease renewal with rent increase, open enrollment, IRA deadline, tax day, insurance renewals, card annual fees, your own events | NOW | Plan › Next 12 months, Your year |
+| M4.2 | Each event can carry a cost that feeds a sinking fund | NOW | Plan › Next 12 months |
+
+## M5. Sinking funds
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| M5.1 | Any yearly or irregular cost (Spending or the calendar) can become a sinking fund: target, due date, monthly needed, % funded | NOW | Plan › Next 12 months, Sinking funds |
+| M5.2 | A sinking fund can link to an account's purpose tag | NOW | Sinking funds; dollars come from the tag |
+
+## M6. Net worth snapshots
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| M6.1 | Save snapshot button (already there) plus an automatic one at each month-end close | NOW | Home; Spending › Month-end close |
+| M6.2 | Line chart of total and liquid net worth over time, collapsed on Home | NOW | Home › Prep |
+
+## M7. Who covers what
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| M7.1 | Covered by someone: who (parents, partner, employer, other) and an optional takeover date | NOW | Spending line › Who pays |
+| M7.2 | One "Taking over" list: each covered item, its cost, its date, and the monthly total added on each date | NOW | Plan › Next 12 months |
+
+## M8. Life admin checklist
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| M8.1 | Done / not yet / not for me: beneficiaries on each account, basic will, healthcare proxy, credit freeze at all three bureaus, renters insurance | NOW | Protection › Life admin |
+| M8.2 | Not yet shows on the Homework list | NOW | Coach tools › Lists |
+
+## M9. Community presets (off by default)
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| M9.1 | When on: yom tov and Pesach cost lines, a kosher grocery note, future tuition as a goal type | NOW | Coach tools › Session setting; Budget; Plan › Goals |
+| M9.2 | Maaser: on gross or take-home, a % (default 10%) | NOW | Budget, Maaser card |
+
+## M10. Onboarding timer (builder only, behind the gear)
+
+| # | Item | Tag | Where |
+|---|---|---|---|
+| M10.1 | Times for profile started, first computed number shown, core profile done, full profile done | NOW | Coach tools › Session |
+| M10.2 | Durations in the coach view and in the export | NOW | Coach tools › Session; export file |
+
+## LATER (logged, not built)
+
+| # | Item | Tag |
+|---|---|---|
+| ML.1 | Roth vs traditional per account: federal + state + local marginal rate now vs an estimated rate in retirement | LATER |
+| ML.2 | Spend-more number: how much more a month you could spend and still reach FI at the same age (Die With Zero), from the projection engine | LATER |
+| ML.3 | Full W-4 withholding calculator | LATER |
+| ML.4 | Credit card rewards optimizer | LATER |
+| ML.5 | Think-aloud test mode: a tester-drives view with "Report this" pinned open | LATER |
