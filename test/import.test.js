@@ -112,14 +112,14 @@ test('a value changed in SLAM after the export is flagged and not ticked; a bad 
   assert.equal(s.find(r => r.name === 'Student loan')[0].values.apr, 0.055);
 });
 
-test('a file from somewhere else (no SLAM data tab) is compared with what SLAM has now, and says so', () => {
+test('a file from somewhere else (no _meta tab) is compared with what SLAM has now, and says so', () => {
   const s = fresh();
   const grid = gridOf(buildWorkbook(s.doc, ref, { now: NOW }));
-  delete grid['SLAM data'];
+  delete grid['_meta'];
   at(grid, 'Assets', 'Balance', byName('Savings')).set(6500);
   const { changes, warnings } = changesFrom(grid, s.doc);
   assert.equal(changes.length, 1);
-  assert.match(warnings[0], /no SLAM data tab/);
+  assert.match(warnings[0], /no _meta tab/);
 });
 
 test('cells read back the way people type them', () => {

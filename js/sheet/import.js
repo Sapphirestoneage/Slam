@@ -4,7 +4,7 @@
 // Reads the field registry only, like the export: a tab, column or field is found by its registry label.
 import { AREAS, sheetFields } from '../registry/fields.js';
 import { ASSUMPTIONS } from '../registry/assumptions.js';
-import { DATA_TAB, STATUS_WORDS, toCell, partOf, rowsForArea } from './workbook.js';
+import { DATA_TAB, OLD_DATA_TAB, STATUS_WORDS, toCell, partOf, rowsForArea } from './workbook.js';
 
 const STATUS_BACK = Object.fromEntries(Object.entries(STATUS_WORDS).map(([k, v]) => [v.toLowerCase(), k]));
 const getPath = (o, path) => path.split('.').reduce((v, k) => (v == null ? undefined : v[k]), o);
@@ -54,9 +54,10 @@ const asStored = (type, v, fld) => { const c = toCell(type, v); return fromCell(
 
 // The baseline the export kept in the hidden tab, or null.
 export function baselineOf(grid) {
-  const rows = grid[DATA_TAB];
+  const meta = grid[DATA_TAB], old = grid[OLD_DATA_TAB];
+  const rows = meta ? meta.slice(meta.findIndex(r => r?.[0] === 'Baseline') + 1) : old ? old.slice(1) : null;
   if (!rows) return null;
-  try { return JSON.parse(rows.slice(1).map(r => r?.[0] ?? '').join('')); } catch { return null; }
+  try { return JSON.parse(rows.map(r => r?.[0] ?? '').join('')); } catch { return null; }
 }
 
 // Every change in the workbook. Each: { id, tab, area, op ('edit' | 'add' | 'remove' | 'status'), recId, field, label,
@@ -65,7 +66,7 @@ export function baselineOf(grid) {
 export function changesFrom(grid, doc) {
   const base = baselineOf(grid);
   const warnings = [], ignored = [];
-  if (!base) warnings.push('This file has no SLAM data tab (it was not made by Open in a spreadsheet, or the tab was deleted), so every cell is compared with what SLAM has now.');
+  if (!base) warnings.push('This file has no _meta tab (it was not made by Open in a spreadsheet, or the tab was deleted), so every cell is compared with what SLAM has now.');
   else if (base.clientId && base.clientId !== doc.id) warnings.push(`This file was made for a different client file. Check every change before you save.`);
   const out = [];
   let n = 0;

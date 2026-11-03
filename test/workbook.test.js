@@ -96,21 +96,25 @@ async function recalculated(doc) {
   return wb;
 }
 const CHECK_TABS = ['Math', 'Statements', 'FOO', 'Projections'];
+// Every Check cell under each table's header row that is not Matches (or From the app).
+export function offChecks(ws, off = []) {
+  let col = null;
+  ws.eachRow((row, n) => {
+    const vals = row.values;
+    if (vals.includes('Check')) { col = vals.indexOf('Check'); return; }
+    if (!col) return;
+    const v = row.getCell(col).value;
+    const shown = v && typeof v === 'object' ? v.result ?? v.error : v;
+    if (shown != null && shown !== 'Matches' && shown !== 'From the app') off.push(`${ws.name} row ${n} (${row.getCell(1).value} ${row.getCell(2).value}): ${JSON.stringify(shown)}`);
+  });
+  return off;
+}
 
 for (const [label, make] of [['the Demo client', demoDoc], ['a household using most of the math', richHousehold]]) {
   test(`opened in a spreadsheet, every formula gives the app's number (${label})`, { skip: (!ExcelJS || !soffice) && 'needs ExcelJS and LibreOffice', timeout: 180000 }, async () => {
     const wb = await recalculated(make());
     const off = [];
-    for (const tab of CHECK_TABS) {
-      const ws = wb.getWorksheet(tab);
-      const col = ws.getRow(3).values.indexOf('Check');
-      ws.eachRow((row, n) => {
-        if (n <= 3) return;
-        const v = row.getCell(col).value;
-        const shown = v && typeof v === 'object' ? v.result ?? v.error : v;
-        if (shown != null && shown !== 'Matches' && shown !== 'From the app') off.push(`${tab} row ${n} (${row.getCell(1).value} ${row.getCell(2).value}): ${JSON.stringify(shown)}`);
-      });
-    }
+    for (const tab of CHECK_TABS) offChecks(wb.getWorksheet(tab), off);
     assert.deepEqual(off, []);
   });
 }

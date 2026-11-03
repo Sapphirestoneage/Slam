@@ -7,17 +7,18 @@ import { MATH, rowsOf } from '../registry/math.js';
 import { ASSUMPTIONS, TABLES, sourceOf } from '../registry/assumptions.js';
 import { REPORTS } from '../registry/reports.js';
 import { sheetContext } from './context.js';
+import { FORMAT_VERSION, APP_VERSION, shapeOf, fingerprint } from './format.js';
 
-export const SHEET_VERSION = 1;
 export const BLANK_ROWS = 20;
 export const REPO = 'https://github.com/sapphirestoneage/slam';
-export const DATA_TAB = 'SLAM data';
+export const DATA_TAB = '_meta';
+export const OLD_DATA_TAB = 'SLAM data'; // the first files made (Nov 3 2026) kept it here
 export const COACH_TAB = 'Coach notes';
 // The stored statuses as the sheet shows them (one sureness system: Not sure is a Guess).
 export const STATUS_WORDS = { 'Know it': 'Know it', Roughly: 'Roughly', 'Not sure': 'Guess', 'Not for me': 'Not for me', 'Will email': "I'll find it later", 'Not now': 'Not now', Computed: 'Worked out' };
 export const STATUS_LIST = ['Know it', 'Roughly', 'Guess', 'Not for me', "I'll find it later", 'Not now'];
 const FMT = { money: '"$"#,##0.00', pct: '0.00%', months: '0', number: 'General', years: '0.0', day: '0', date: 'yyyy-mm-dd', month: 'yyyy-mm', text: '@', choice: '@', yesno: '@', list: '@' };
-const TOL = { money: 1, pct: 0.0005, months: 0.5, number: 0.01, years: 0.05 };
+const TOL = { money: 1, pct: 0.0005, months: 1, number: 0.01, years: 0.05 }; // within $1 or 1 month
 const BUILTIN = { Kind: 'Kind', Type: 'Type', Status: 'Status', InMath: 'In the math' };
 
 export const colLetter = n => { let s = ''; for (let i = n; i > 0; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + ((i - 1) % 26)) + s; return s; };
@@ -54,7 +55,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, flags
   const c = sheetContext(doc, ref, { now, flags });
   const names = new Map(); // name -> absolute reference
   const sheets = [];
-  const baseline = { version: SHEET_VERSION, exportedAt: now.toISOString(), clientId: doc.id, coach, areas: {}, assumptions: {} };
+  const baseline = { version: FORMAT_VERSION, exportedAt: now.toISOString(), clientId: doc.id, client: null, coach, areas: {}, assumptions: {} };
   const define = (name, ref1) => {
     if (!nameOk(name)) throw new Error(`Not a usable range name: ${name}`);
     if (names.has(name)) throw new Error(`Range name used twice: ${name}`);
@@ -64,6 +65,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, flags
 
   // ---------- Start here ----------
   const client = doc.client?.name || [doc.profile?.firstName, doc.profile?.lastName].filter(Boolean).join(' ') || 'Client';
+  baseline.client = client;
   const day = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   sheets.push({ name: 'Start here', kind: 'start', widths: [100], rows: [
     [{ v: `SLAM: the books for ${client}`, s: 'title' }],
@@ -119,7 +121,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, flags
     const myCols = cols.filter(x => x.area === area.id);
     const layout = []; // { key, label, kind: 'id'|'builtin'|'field'|'formula', fld, col }
     const isRecords = area.source === 'records';
-    if (area.source !== 'doc') layout.push({ key: '_id', label: 'SLAM id (leave as is)', kind: 'id' });
+    layout.push({ key: '_id', label: 'SLAM id (leave as is)', kind: 'id' }); // every row carries its record ID, hidden
     if (isRecords) for (const b of ['Kind', 'Type', 'Status', 'InMath']) layout.push({ key: b, label: BUILTIN[b], kind: 'builtin' });
     if (area.source === 'months') layout.push({ key: 'month', label: 'Month (YYYY-MM)', kind: 'month' }, { key: 'line', label: 'Budget line', kind: 'line' });
     for (const fld of fields) layout.push({ key: fld.key, label: fld.label, kind: 'field', fld });
@@ -127,7 +129,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, flags
     layout.forEach((l, i) => { l.letter = colLetter(i + 1); });
     const letterOf = new Map(layout.map(l => [l.key, l.letter]));
     const rows = [layout.map(l => ({ v: l.label, s: 'head', key: l.key }))];
-    const sheet = { name: area.tab, kind: 'inputs', area: area.id, layout, rows, freeze: { rows: 1, cols: area.source === 'doc' ? 0 : isRecords ? 5 : 1 },
+    const sheet = { name: area.tab, kind: 'inputs', area: area.id, layout, rows, freeze: { rows: 1, cols: isRecords ? 5 : 1 },
       hiddenCols: layout.filter(l => l.kind === 'id').map(l => l.letter), widths: layout.map(l => (l.kind === 'id' ? 10 : Math.min(36, Math.max(11, l.label.length + 2)))), validations: [] };
     const base = baseline.areas[area.id] = {};
     const data = rowsForArea(area, doc, c);
@@ -138,7 +140,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, flags
       const r = i + 2;
       const rowBase = item ? (base[item.id] = {}) : null;
       const cells = layout.map(l => {
-        if (l.kind === 'id') return { v: item?.id ?? null, s: 'hidden' };
+        if (l.kind === 'id') return { v: item?.id ?? null, s: 'hidden', fmt: 'text' };
         if (l.kind === 'month') return { v: item?.ym ?? null, s: item ? 'text' : 'input', fmt: 'text' };
         if (l.kind === 'line') return { v: item?.lineName ?? null, s: item ? 'text' : 'input', fmt: 'text' };
         if (l.kind === 'builtin') {
@@ -160,7 +162,8 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, flags
     }
     const last = total + 1;
     for (const l of layout) {
-      if (l.kind === 'id' || l.kind === 'month' || l.kind === 'line') continue;
+      if (l.kind === 'id') { define(`${area.prefix}_Id`, area.source === 'doc' ? absRange(sheet.name, l.letter, 2) : absRange(sheet.name, l.letter, 2, last)); continue; }
+      if (l.kind === 'month' || l.kind === 'line') continue;
       const name = l.kind === 'field' ? fieldName(area, l.fld) : l.kind === 'builtin' ? `${area.prefix}_${l.key}` : `${area.prefix}_${l.key}`;
       define(name, area.source === 'doc' ? absRange(sheet.name, l.letter, 2) : absRange(sheet.name, l.letter, 2, last));
       const list = l.kind === 'builtin' ? (l.key === 'Status' ? STATUS_LIST : l.key === 'Kind' && kindNames.length > 1 ? kindNames : l.key === 'Type' ? [...new Set(Object.values(area.types || {}).flat())] : null)
@@ -196,41 +199,47 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, flags
   }
   sheets.push(mathSheet);
 
-  // ---------- Statements, FOO, Projections ----------
+  // ---------- Statements, FOO, Projections: each a tab of one or more tables ----------
   for (const rep of REPORTS) {
-    const head = rep.columns;
-    const letterOf = new Map(head.map((h, i) => [h.key, colLetter(i + 1)]));
-    const rows = [[{ v: rep.tab, s: 'title' }], [{ v: rep.about, s: 'about' }], head.map(h => ({ v: h.label, s: 'head' }))];
-    const sheet = { name: rep.tab, kind: 'report', widths: head.map(h => h.width ?? 16), freeze: { rows: 3 }, rows };
-    const sections = rep.sections(c);
-    const first = rows.length + 1;
-    const flat = [];
-    for (const sec of sections) {
-      if (sec.title) { rows.push([{ v: sec.title, s: 'section' }]); flat.push(null); }
-      for (const row of sec.rows) { rows.push(null); flat.push({ row, r: rows.length }); }
-    }
-    const last = rows.length;
-    let prevRow = null;
-    for (const item of flat) {
-      if (!item) { prevRow = null; continue; }
-      const { row, r } = item;
-      const cells = normalizeReportRow(row);
-      rows[r - 1] = head.map(h => {
-        if (h.check) return { f: reportCheck(h, letterOf, r, row.unit ?? head.find(x => x.key === h.check[0]).unit), s: 'check' };
-        const cell = cells[h.key];
-        const unit = h.unit === 'row' ? row.unit : h.unit;
-        if (!cell) return { v: null };
-        if (cell.f) {
-          const f = compileReportFormula(cell.f, { letterOf, row: r, prev: prevRow, first, last, where: `${rep.tab}: ${row.name ?? row.key ?? r}` });
-          pending.push({ f, where: `${rep.tab} row ${r}` });
-          return { f, s: row.total ? 'total' : 'formula', fmt: unit, cached: cells.app?.v };
-        }
-        const v = unit === 'month' ? toCell('month', cell.v) : cell.v;
-        return { v, s: cell.fromApp || h.key === 'app' || h.key.startsWith('app') ? 'app' : cell.note ? 'note' : 'text', fmt: unit };
-      });
-      const namedCol = head.find(h => cells[h.key]?.named) ?? head.find(h => h.named);
-      if (row.key && namedCol) define(`${rep.prefix}_${row.key}`, absRange(sheet.name, letterOf.get(namedCol.key), r));
-      prevRow = r;
+    const rows = [[{ v: rep.tab, s: 'title' }], [{ v: rep.about, s: 'about' }]];
+    const sheet = { name: rep.tab, kind: 'report', widths: [], freeze: { rows: 3 }, rows };
+    for (const t of rep.tables ? rep.tables(c) : [{ columns: rep.columns, sections: rep.sections(c) }]) {
+      const head = t.columns;
+      head.forEach((h, i) => { sheet.widths[i] = Math.max(sheet.widths[i] ?? 0, h.width ?? 16); });
+      if (t.title) rows.push([{ v: t.title, s: 'section' }]);
+      if (t.note) rows.push([{ v: t.note, s: 'note' }]);
+      const letterOf = new Map(head.map((h, i) => [h.key, colLetter(i + 1)]));
+      rows.push(head.map(h => ({ v: h.label, s: 'head' })));
+      const first = rows.length + 1;
+      const flat = [];
+      for (const sec of t.sections) {
+        if (sec.title) { rows.push([{ v: sec.title, s: 'section' }]); flat.push(null); }
+        for (const row of sec.rows) { rows.push(null); flat.push({ row, r: rows.length }); }
+      }
+      const last = rows.length;
+      let prevRow = null;
+      for (const item of flat) {
+        if (!item) { prevRow = null; continue; }
+        const { row, r } = item;
+        const cells = normalizeReportRow(row);
+        rows[r - 1] = head.map(h => {
+          if (h.check) return { f: reportCheck(h, letterOf, r, row.unit ?? head.find(x => x.key === h.check[0]).unit), s: 'check' };
+          const cell = cells[h.key];
+          const unit = h.unit === 'row' ? row.unit : h.unit;
+          if (!cell) return { v: null };
+          if (cell.f) {
+            const f = compileReportFormula(cell.f, { letterOf, row: r, prev: prevRow, first, last, where: `${rep.tab}: ${row.name ?? row.key ?? r}` });
+            pending.push({ f, where: `${rep.tab} row ${r}` });
+            return { f, s: row.total ? 'total' : 'formula', fmt: unit, cached: cells.app?.v };
+          }
+          const v = unit === 'month' ? toCell('month', cell.v) : cell.v;
+          return { v, s: cell.fromApp || h.key === 'app' || h.key.startsWith('app') ? 'app' : cell.note ? 'note' : 'text', fmt: unit };
+        });
+        const namedCol = head.find(h => cells[h.key]?.named) ?? head.find(h => h.named);
+        if (row.key && namedCol) define(`${rep.prefix}_${row.key}`, absRange(sheet.name, letterOf.get(namedCol.key), r));
+        prevRow = r;
+      }
+      rows.push([]);
     }
     sheets.push(sheet);
   }
@@ -248,10 +257,29 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, flags
     ] });
   }
 
-  // ---------- SLAM data (hidden): what each cell held when the file was made, so the import sees only real edits ----------
+  // ---------- _meta (hidden, protected): who and when, the format version, a fingerprint of each record, and what
+  // each cell held, so the import sees only real edits and knows what SLAM changed since ----------
   const json = JSON.stringify(baseline);
   const chunks = json.match(/[\s\S]{1,30000}/g) || [''];
-  sheets.push({ name: DATA_TAB, kind: 'data', hidden: true, widths: [100], rows: [[{ v: 'SLAM keeps what this file held when it was made here. Leave this tab as it is.', s: 'note' }], ...chunks.map(ch => [{ v: ch, s: 'hidden' }])] });
+  const prints = [...doc.records.map(r => [r.id, fingerprint(r)]), ...['profile', 'client', 'assumptions', 'settings'].map(p => [`doc:${p}`, fingerprint(doc[p] || {})])];
+  sheets.push({ name: DATA_TAB, kind: 'data', hidden: true, protect: true, widths: [28, 40], rows: [
+    [{ v: 'SLAM keeps what this file held when it was made here. Leave this tab as it is.', s: 'note' }],
+    [{ v: 'Client ID', s: 'text' }, { v: doc.id, s: 'text', fmt: 'text' }],
+    [{ v: 'Client', s: 'text' }, { v: client, s: 'text' }],
+    [{ v: 'Export format version', s: 'text' }, { v: FORMAT_VERSION, s: 'text' }],
+    [{ v: 'Exported at', s: 'text' }, { v: now.toISOString(), s: 'text', fmt: 'text' }],
+    [{ v: 'App version', s: 'text' }, { v: APP_VERSION, s: 'text', fmt: 'text' }],
+    [{ v: 'Registry shape', s: 'text' }, { v: shapeOf(), s: 'text', fmt: 'text' }],
+    [{ v: 'Coach copy', s: 'text' }, { v: coach ? 'Yes' : 'No', s: 'text' }],
+    [],
+    [{ v: 'Fingerprints', s: 'section' }],
+    [{ v: 'Record ID', s: 'head' }, { v: 'Fingerprint of its values', s: 'head' }],
+    ...prints.map(([id, fp]) => [{ v: id, s: 'text', fmt: 'text' }, { v: fp, s: 'text', fmt: 'text' }]),
+    [],
+    [{ v: 'Baseline', s: 'section' }],
+    ...chunks.map(ch => [{ v: ch, s: 'hidden', fmt: 'text' }]),
+  ] });
+  baseline.fingerprints = Object.fromEntries(prints);
 
   // Every name a formula uses must exist: the build fails here, never in the client's spreadsheet.
   for (const s of inputTabs) for (const row of s.rows.slice(1)) for (const cell of row) if (cell?.f) pending.push({ f: cell.f, where: s.name });

@@ -23,9 +23,10 @@ const STYLE = {
   hidden: { font: { color: { argb: GREY }, size: 8 } },
 };
 const fill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
-const thin = { style: 'thin', color: { argb: 'FFD1D5DB' } };
+const thin = { style: 'thin', color: { argb: 'FF9CA3AF' } }; // visible input borders
+const NUMERIC = new Set(['money', 'pct', 'months', 'number', 'years', 'day', 'date', 'month']);
 
-export function writeWorkbook(ExcelJS, plan, { cache = true } = {}) {
+export async function writeWorkbook(ExcelJS, plan, { cache = true } = {}) {
   const wb = new ExcelJS.Workbook();
   wb.creator = 'SLAM';
   wb.created = plan.at;
@@ -46,6 +47,7 @@ export function writeWorkbook(ExcelJS, plan, { cache = true } = {}) {
         if (st.fill) c.fill = fill(st.fill);
         if (st.border) c.border = { top: thin, left: thin, bottom: thin, right: thin };
         if (st.wrap) c.alignment = { wrapText: true, vertical: 'top' };
+        else if (NUMERIC.has(cell.fmt) || typeof cell.v === 'number') c.alignment = { horizontal: 'right' }; // numbers right-aligned
         const fmt = FMT[cell.fmt];
         if (fmt && fmt !== '@' && (cell.f || typeof cell.v === 'number' || cell.v instanceof Date || cell.s === 'input')) c.numFmt = fmt;
         if (cell.s === 'input' && (cell.fmt === 'date' || cell.fmt === 'month')) c.numFmt = FMT[cell.fmt];
@@ -56,23 +58,31 @@ export function writeWorkbook(ExcelJS, plan, { cache = true } = {}) {
     }
   }
   for (const n of plan.names) wb.definedNames.add(n.ref, n.name);
+  for (const s of plan.sheets.filter(x => x.protect)) await wb.getWorksheet(s.name).protect('', { selectLockedCells: true, selectUnlockedCells: true });
   return wb;
 }
 
 export async function workbookBuffer(ExcelJS, plan, opts) {
-  return writeWorkbook(ExcelJS, plan, opts).xlsx.writeBuffer();
+  return (await writeWorkbook(ExcelJS, plan, opts)).xlsx.writeBuffer();
 }
 
 // An .xlsx back to { sheetName: rows of plain values } (a formula cell gives its result; a date stays a Date).
+// grid._formulas[sheetName] holds 'row:col' (0-based) for every cell that is still a formula, so the import can tell
+// a number typed over a formula.
 export async function readWorkbook(ExcelJS, data) {
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(data);
   const out = {};
+  Object.defineProperty(out, '_formulas', { value: {}, enumerable: false });
   wb.eachSheet(ws => {
     const rows = [];
+    const f = out._formulas[ws.name] = new Set();
     ws.eachRow({ includeEmpty: true }, (row, rn) => {
       const vals = [];
-      row.eachCell({ includeEmpty: true }, (cell, cn) => { vals[cn - 1] = plain(cell.value); });
+      row.eachCell({ includeEmpty: true }, (cell, cn) => {
+        vals[cn - 1] = plain(cell.value);
+        if (cell.value && typeof cell.value === 'object' && ('formula' in cell.value || 'sharedFormula' in cell.value)) f.add(`${rn - 1}:${cn - 1}`);
+      });
       rows[rn - 1] = vals;
     });
     out[ws.name] = rows;

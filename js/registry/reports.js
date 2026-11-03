@@ -5,6 +5,9 @@
 import { ASSET_ORDER, DEBT_ORDER, assetGroup, debtGroup } from '../math/statements.js';
 import { payYourselfFirst } from '../math/simple.js';
 import { fiDate } from '../math/fi.js';
+import { simulateDebt } from '../math/debt.js';
+
+const MAX_ROWS = 600; // a table longer than this is written as values, marked From the app
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const slug = s => s.replace(/[^A-Za-z0-9]+/g, '');
@@ -108,31 +111,60 @@ export const REPORTS = [
   },
   {
     tab: 'Projections', prefix: 'Proj',
-    about: 'Your investments year by year at the return, with the surplus invested every month (the FI date path, M53).',
-    columns: [
-      { key: 'year', label: 'Year', unit: 'number', width: 7 }, { key: 'age', label: 'Age', unit: 'number', width: 7 },
-      { key: 'start', label: 'Invested at the start', unit: 'money' }, { key: 'added', label: 'Put in this year', unit: 'money' },
-      { key: 'growth', label: 'Growth this year', unit: 'money' }, { key: 'end', label: 'Invested at the end', unit: 'money' },
-      { key: 'fi', label: 'FI number', unit: 'money' }, { key: 'reached', label: 'FI reached', unit: 'text', width: 10 },
-      { key: 'app', label: "The app's path", unit: 'money' }, { key: 'check', label: 'Check', check: ['end', 'app'] },
-    ],
-    sections: c => {
+    about: 'Year by year to FI, and each debt month by month to paid off, as row formulas. A table that would pass 600 rows is written as values and marked From the app.',
+    tables: c => {
       const YEARS = 50;
-      const path = (() => {
-        if (c.x.invested == null || c.m.surplus.value == null) return [];
-        return fiDate({ invested: c.x.invested, monthlyInvesting: c.m.surplus.value, realReturn: c.x.realReturn, target: Number.MAX_VALUE }, { from: c.now, path: true }).points || [];
-      })();
-      return [{ title: null, rows: Array.from({ length: YEARS }, (_, i) => ({ cells: {
+      const path = c.x.invested == null || c.m.surplus.value == null ? []
+        : fiDate({ invested: c.x.invested, monthlyInvesting: c.m.surplus.value, realReturn: c.x.realReturn, target: Number.MAX_VALUE }, { from: c.now, path: true }).points || [];
+      const years = { title: 'Year by year: investments, the surplus invested every month (M53)', columns: [
+        { key: 'year', label: 'Year', unit: 'number', width: 9 }, { key: 'age', label: 'Age', unit: 'number', width: 9 },
+        { key: 'start', label: 'Balance at the start', unit: 'money' }, { key: 'added', label: 'Contributions', unit: 'money' },
+        { key: 'growth', label: 'Growth', unit: 'money' }, { key: 'end', label: 'Balance at the end', unit: 'money' },
+        { key: 'fi', label: 'FI target', unit: 'money' }, { key: 'reached', label: 'FI reached', unit: 'text', width: 11 },
+        { key: 'app', label: "The app's balance", unit: 'money' }, { key: 'check', label: 'Check', check: ['end', 'app'] },
+      ], sections: [{ title: null, rows: Array.from({ length: YEARS }, (_, i) => ({ cells: {
         year: { v: i + 1 },
         age: { f: 'IF(Profile_ageUsed="","",Profile_ageUsed+{col:year})' },
         start: { f: i === 0 ? 'N(Math_M41_invested)' : '{prev:end}' },
         added: { f: 'N(Math_M27)*12' },
-        end: { f: '{col:start}*(1+Math_M53_growth)^12+IF(Math_M53_growth=0,N(Math_M27)*12,N(Math_M27)*((1+Math_M53_growth)^12-1)/Math_M53_growth)' },
+        end: { f: 'FV(Math_M53_growth,12,-N(Math_M27),-{col:start})' },
         growth: { f: '{col:end}-{col:start}-{col:added}' },
         fi: { f: 'Math_M50' },
         reached: { f: 'IF(Math_M50="","",IF({col:end}>=Math_M50,"Yes","No"))' },
         app: { v: path[(i + 1) * 12] ?? null },
-      } })) }];
+      } })) }] };
+      // Each debt, month by month at today's payment (M31 and M32), its numbers read from the Debt tab by ID.
+      const debts = c.m.debts.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment > 0);
+      const tables = debts.map(d => {
+        const sim = simulateDebt({ balance: d.balance, apr: d.apr, payment: d.payment }, MAX_ROWS + 1);
+        const never = !sim.paidOff;
+        const n = never ? 24 : sim.months;
+        const big = n > MAX_ROWS;
+        const of = col => `INDEX(Debt_${col},MATCH("${d.id}",Debt_Id,0))`;
+        const cols = [
+          { key: 'month', label: 'Month', unit: 'number', width: 9 }, { key: 'start', label: big ? 'Balance at the start (From the app)' : 'Balance at the start', unit: 'money' },
+          { key: 'interest', label: big ? 'Interest (From the app)' : 'Interest', unit: 'money' }, { key: 'pay', label: big ? 'Payment (From the app)' : 'Payment', unit: 'money' },
+          { key: 'end', label: big ? 'Balance after (From the app)' : 'Balance after', unit: 'money' }, { key: 'app', label: "The app's balance", unit: 'money' },
+          { key: 'check', label: 'Check', check: ['end', 'app'] },
+        ];
+        let b = d.balance;
+        const rows = Array.from({ length: Math.min(n, MAX_ROWS * 2) }, (_, i) => {
+          const app = sim.path[i + 1] ?? null;
+          if (big) { const i0 = b * d.apr / 12, p = Math.min(d.payment, b + i0); const row = { month: { v: i + 1 }, start: { v: b, fromApp: true }, interest: { v: i0, fromApp: true }, pay: { v: p, fromApp: true }, end: { v: b + i0 - p, fromApp: true }, app: { v: app } }; b = b + i0 - p; return { cells: row }; }
+          return { cells: {
+            month: { v: i + 1 },
+            start: { f: i === 0 ? of('balUsed') : '{prev:end}' },
+            interest: { f: `{col:start}*${of('aprUsed')}/12` },
+            pay: { f: `MIN(${of('payUsed')},{col:start}+{col:interest})` },
+            end: { f: '{col:start}+{col:interest}-{col:pay}' },
+            app: { v: app },
+          } };
+        });
+        return { title: `${d.name}: month by month at today's payment`, columns: cols,
+          note: never ? 'This payment never pays it off: the first 24 months are shown.' : big ? `From the app: ${n} months is more than ${MAX_ROWS} rows, so these are the app's numbers, not formulas.` : `Paid off in month ${n}. The rows run to the payoff month as of the day this file was made.`,
+          sections: [{ title: null, rows }] };
+      });
+      return [years, ...tables];
     },
   },
 ];
