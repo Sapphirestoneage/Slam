@@ -338,3 +338,19 @@ test('B6.10: the month list is built once per change, and rebuilt after one', ()
   s.add('bill', { name: 'Gym', amount: 50, values: { dueDay: 3 } }, { type: 'Bill' });
   assert.notEqual(monthList(s.doc, ref, '2026-12'), a);
 });
+
+// ---------- B7: payday card ----------
+import { paydayOf } from '../js/payday.js';
+test('B7: next paycheck, fixed bills per paycheck, and what is free, per period and per month', () => {
+  const s = fresh();
+  s.add('income', { name: 'Job', amount: 2000, per: 'paycheck', values: { basis: 'Take-home', payFrequency: 'twice a month', payDays: [7, 22] } }, { type: 'Job' });
+  s.add('bill', { name: 'Rent', amount: 1600, values: { category: 'Rent or mortgage', amountType: 'Fixed', timing: 'Fixed date' } }, { type: 'Bill' });
+  s.add('bill', { name: 'Groceries', amount: 400, values: { category: 'Groceries', amountType: 'Variable' } }, { type: 'Bill' });
+  s.setDoc('spending', { source: 'lines' });
+  const d = paydayOf(s.doc, ref, new Date('2026-11-10T12:00:00Z'));
+  assert.equal(d.date, '2026-11-22');
+  assert.equal(d.period.in, 2000);
+  assert.equal(d.period.fixed, 800);
+  assert.equal(d.period.free, 1200);
+  assert.deepEqual([d.month.in, d.month.fixed, d.month.free], [4000, 1600, 2400]);
+});

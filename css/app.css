@@ -261,3 +261,4 @@ table.rows.mini th, table.rows.mini td { padding: 4px 6px; white-space: nowrap; 
 .group-add { min-height: 24px; font-size: .75rem; }
 .tag-chip { display: inline-flex; align-items: center; gap: 4px; }
 .chip-x { border: 0; background: none; color: inherit; font: inherit; font-weight: 700; cursor: pointer; padding: 0 2px; }
+.payday { margin: var(--s3) 0; display: flex; flex-direction: column; gap: 4px; }

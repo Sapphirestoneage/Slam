@@ -1,6 +1,7 @@
 // Home (build phase 9): the session cockpit. Prep before the call, Live during, Wrap-up after, each with one
 // main button. Answers: where is this client now, what are we doing today, what is the one next thing.
 import { h, clear, icon } from './dom.js';
+import { paydayOf } from '../payday.js';
 import * as S from './staples.js';
 import { quickFill, canQuickFill } from './quickfill.js';
 import { listCompletion } from './money-lists.js';
@@ -50,6 +51,22 @@ export function moneyInOneLine(app, ctx) {
 }
 
 // ---------- Prep ----------
+// B7: the next paycheck, what the fixed bills take, and what is free, per pay period and per month.
+function paydayCard(app, ctx) {
+  const d = paydayOf(ctx.store.doc, ctx.ref, ctx.now());
+  if (d.needs) return h('div.card.payday', {}, h('strong', {}, 'Payday'), h('span.muted', {}, ` Add ${d.needs} on Income to see what each paycheck covers.`),
+    S.button('Open Income', { size: 'small', onClick: () => app.go('#/my-money/income') }));
+  const when = new Date(`${d.date}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const line = (k, v) => h('span.stack', { style: { gap: '2px' } }, h('span.label', {}, k), h('strong', {}, money(v)));
+  return h('div.card.payday', {},
+    h('p', { style: { fontSize: '1.0625rem', margin: 0 } }, `You get ${money(d.period.in)} on ${when}${d.guessDate ? ' (day not set yet)' : ''}. `,
+      d.hasFixed ? `${money(d.period.fixed)} covers fixed bills. ` : '', h('strong', {}, `${money(d.period.free)} is free to spend.`)),
+    !d.hasFixed ? h('span.muted.small', {}, 'Mark bills Fixed on the Budget to see what they take from each paycheck.') : null,
+    h('div.row-line', { style: { gap: '24px', marginTop: '10px' } },
+      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each paycheck'), line('In', d.period.in), line('Fixed bills', d.period.fixed), line('Free', d.period.free)),
+    h('div.row-line', { style: { gap: '24px', marginTop: '6px' } },
+      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each month'), line('In', d.month.in), line('Fixed bills', d.month.fixed), line('Free', d.month.free)));
+}
 // M6: net worth over time, closed until asked; snapshots come from Save snapshot, End session and month-end close.
 function netWorthOverTime(app, ctx) {
   const snaps = ctx.store.doc.snapshots.filter(x => x.metrics && x.metrics.netWorth != null);
@@ -76,6 +93,7 @@ export function prepScreen(app, ctx) {
     inSession(ctx) ? h('div.banner-inline.good', {}, 'The session is on.', S.button('Back to Live', { iconName: 'right', onClick: () => app.go('#/home/live') })) : null,
     head('Home', `Prep for ${doc.client.name || 'this client'}`, S.button(inSession(ctx) ? 'Back to Live' : 'Start session', { kind: 'primary', size: 'big', onClick: () => startSession(app, ctx) })),
     moneyInOneLine(app, ctx),
+    paydayCard(app, ctx),
     netWorthOverTime(app, ctx),
     h('div.strip', {},
       card('What changed since last time', !snap ? 'Nothing yet' : changes.length ? `${changes.length} ${changes.length === 1 ? 'number' : 'numbers'}` : 'No change',
