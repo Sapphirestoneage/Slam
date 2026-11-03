@@ -1,7 +1,7 @@
 // List setups built from the staples: debts and spending lines. Each list is a view of the one record type.
 import { h, icon } from './dom.js';
 import { addPresets } from '../presets.js';
-import { fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, hoursChip, park, parkProfile, metricCard } from './staples.js';
+import { moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, hoursChip, park, parkProfile, metricCard } from './staples.js';
 import { pct } from '../format.js';
 import { feeApr } from '../math/debt.js';
 import { monthlyFrom } from '../math/income.js';
@@ -17,17 +17,7 @@ const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 // B6.10: totals add each line's monthly amount, never the raw number (a $1,200-a-year line is $100 a month).
 const freqOf = ctx => ctx?.metrics?.().inputs.income.find(x => x.r.values.payFrequency)?.r.values.payFrequency ?? null;
 export const lineMonthlyOf = (r, freq = null) => (r.amount == null ? null : monthlyFrom(r.amount, r.per, freq).value);
-// A line flagged as the same payment as a debt or a premium counts as $0 until someone picks (enter once).
-const keptIn = ctx => { const f = freqOf(ctx); const dup = ctx?.metrics?.().inputs.dupOf ?? {}; return r => (r.status === 'Not for me' || dup[r.id] ? 0 : lineMonthlyOf(r, f)); };
-const withAutos = (ctx, recs) => [...recs, ...(ctx.metrics().inputs.autoLines ?? [])];
-// A premium's own Budget line (Brandon section 4) is entered on Protection: its amount opens the coverage row.
-const premiumOf = (ctx, r) => (r.linkedTo ? ctx.store.get(r.linkedTo) : null)?.kind === 'coverage' ? ctx.store.get(r.linkedTo) : null;
-function dupNote(ctx, r, dup) {
-  const from = dup.from === 'Debt' ? 'Debt' : 'Protection';
-  return h('div.dup-note', {}, warnTag(`Looks like the same payment: keep one. ${r.name || 'This line'} and ${dup.name} (from ${from}). This line is not counted until you pick.`),
-    button(`Keep the one from ${from}`, { size: 'small', onClick: () => { ctx.store.remove(r.id); toast(`Kept ${dup.name}. The typed line is gone.`, { undo: () => ctx.store.undo() }); } }),
-    button("They're different", { size: 'small', onClick: () => ctx.store.update(r.id, { notSame: [...(r.values.notSame || []), dup.sourceId] }) }));
-}
+const keptIn = ctx => { const f = freqOf(ctx); return r => (r.status === 'Not for me' ? 0 : lineMonthlyOf(r, f)); };
 
 export function debtList(ref) {
   return {
@@ -65,8 +55,7 @@ export function debtList(ref) {
       } },
       { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) },
     ],
-    // Enter once: the payment also shows in Cash flow as a Budget line From Debt.
-    secondary: (ctx, r, up) => [labelled('In Cash flow', fromButton('Payment on the Budget', '#/cash-flow/budget', `auto:${r.id}`), { note: 'Entered here once; the Budget shows it From Debt' }), ...[debtSecondary(ctx, r, up)].flat()],
+    secondary: (ctx, r, up) => debtSecondary(ctx, r, up),
     tertiary: (ctx, r, up) => debtTertiary(ctx, r, up),
     subtotal: (ctx, rows) => money(sum(rows, r => r.values.balance)),
     footerTotal: (ctx, recs) => amount(ctx, recs.some(r => r.values.balance != null) ? sum(recs, r => r.values.balance) : null),
@@ -104,7 +93,7 @@ export function debtStrip(ctx, m) {
   const note = missing.length ? `${missing.map(d => d.name).join(', ')} ${missing.length === 1 ? 'needs' : 'need'} ${missing.some(d => d.apr == null) ? 'an APR' : 'a payment'}` : null;
   const dateOnly = r => { const t = value(r, ctx); return t.match(/\((.*)\)/)?.[1] ?? t; };
   return summaryStrip(ctx, [
-    // Total debt sits in the Net worth headline above.
+    { label: 'Total debt', result: total, key: 'debtTotal', lowerIsGood: true },
     { label: 'Monthly payments', result: payments, key: 'debtPayments', lowerIsGood: true },
     { label: 'Debt-free', result: free, key: 'debtFreeMonths', lowerIsGood: true, render: dateOnly, note: free.value !== null ? note : null },
     { label: 'Interest left', result: interest, key: 'debtInterest', lowerIsGood: true, note },
@@ -135,7 +124,7 @@ export function spendingList(ref, { pass = 'Rough', ym = null, groupBy = 'DRAFTT
       : r.values.draftt === 'Therapy' && r.values.category !== 'Therapy' ? 'Personal care and hygiene' : r.values.category === 'Therapy' ? 'Therapy' : r.values.draftt || 'Other'),
     groupLabel: g => (g === 'Not for me' ? 'Hidden: not for me' : g),
     // B6.6: every section takes a new line, filed under that section.
-    groupAdd: g => (g === 'Not for me' || g === 'Debt' || groupBy === 'Category' ? null // debts are added on Net worth
+    groupAdd: g => (g === 'Not for me' || groupBy === 'Category' ? null
       : { name: null, values: { draftt: g === 'Personal care and hygiene' ? 'Therapy' : g, ...(g === 'Therapy' ? { category: 'Therapy' } : {}), amountType: 'Variable', timing: 'Variable date' } }),
     key: 'spending-lines', notForMe: true,
     // Groups start folded, showing their subtotal; open or closed is kept for the session.
@@ -153,7 +142,7 @@ export function spendingList(ref, { pass = 'Rough', ym = null, groupBy = 'DRAFTT
       { label: 'Line', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.values.category || 'Add name', tip: r.values.category, width: 170, key: `${r.id}:name` }) },
       pass !== 'Rough' ? { label: 'Rough', num: true, render: (ctx, r) => h('span.muted', { title: 'The line\'s usual number, set in the Rough pass' }, r.status === 'Not for me' ? '$0' : amount(ctx, r.amount, { chip: false })) } :
       { label: 'Amount', num: true, render: (ctx, r, m, up) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
-        premiumOf(ctx, r) ? fromButton(`From ${premiumOf(ctx, r).type}`, '#/net-worth/protection', r.linkedTo, { value: amount(ctx, r.amount, { chip: false }) }) : moneyInput(r.amount, v => up({ amount: v, status: r.status === 'Not sure' ? null : r.status }), { key: `${r.id}:amount` }), // typing the real number clears Guess
+        moneyInput(r.amount, v => up({ amount: v, status: r.status === 'Not sure' ? null : r.status }), { key: `${r.id}:amount` }), // typing the real number clears Guess
         h('span.keep-slot', {}, r.status === 'Not sure' ? h('button.btn.small', { type: 'button', 'data-focus': 'keep', title: 'The guess is right: keep it as the real number', onclick: () => up({ status: null }) }, 'Keep') : null)) }, // the slot keeps amounts lined up
       ...monthCols,
       paidWithColumn ? { label: 'Paid with', render: (ctx, r, m, up) => {
@@ -174,17 +163,9 @@ export function spendingList(ref, { pass = 'Rough', ym = null, groupBy = 'DRAFTT
       { note: r.values.low != null && r.values.high != null ? `The amount above is your average${r.amount == null ? '; add it' : ''}` : 'A light month and a heavy one', ...park(ctx, r, 'low') }) : null,
       tagsField(r, up)],
     // Not for me counts as $0 everywhere (R058); its group shows what was cut.
-    // Enter once: each debt's payment shows here From Debt, in the Debt letter; its number opens the debt.
-    autoRows: (ctx, m) => m.inputs.autoLines ?? [],
-    autoCell: (ctx, r, c) => (c.label === 'Line' ? h('span.auto-name', {}, r.name)
-      : ['Amount', 'Rough'].includes(c.label) ? fromButton(`From ${r.auto.from}`, r.auto.route, r.auto.sourceId, { value: amount(ctx, r.amount, { chip: false }) })
-        : c.label === 'Estimate' ? h('span.muted', {}, amount(ctx, r.amount, { chip: false })) // the same every month
-        : c.label === 'Per' ? h('span.muted', {}, 'per month') : null),
-    rowNote: (ctx, r, m) => (m.inputs.dupOf?.[r.id] ? dupNote(ctx, r, m.inputs.dupOf[r.id]) : null),
-    // Not for me counts as $0 everywhere (R058); its group shows what was cut.
     subtotal: (ctx, rows) => (rows.every(r => r.status === 'Not for me') ? `$0, cut ${money(sum(rows, r => lineMonthlyOf(r, freqOf(ctx))))} a month` : `${money(sum(rows, keptIn(ctx)))} a month`),
-    footerTotal: (ctx, recs) => { const all = withAutos(ctx, recs); return h('span', {}, amount(ctx, all.some(r => r.amount != null) ? sum(all, keptIn(ctx)) : null), h('span.muted', {}, ' a month')); },
-    totals: (ctx, recs, m, cols) => { const all = withAutos(ctx, recs); return [...cols.map(c => c.label === 'Line' ? h('td', {}, `${all.filter(r => r.status !== 'Not for me').length} lines`) : c.label === 'Amount' ? h('td.num', {}, amount(ctx, all.some(r => r.amount != null) ? sum(all, keptIn(ctx)) : null)) : h('td')), h('td'), h('td')]; },
+    footerTotal: (ctx, recs) => h('span', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, keptIn(ctx)) : null), h('span.muted', {}, ' a month')),
+    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Line' ? h('td', {}, `${recs.filter(r => r.status !== 'Not for me').length} lines`) : c.label === 'Amount' ? h('td.num', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, keptIn(ctx)) : null)) : h('td')), h('td'), h('td')],
   };
 }
 
@@ -400,7 +381,7 @@ function billsOnCard(ctx, card) {
   if (!bills.length) return labelled('Bills on this card', h('span.muted', {}, 'None yet. Link one from a bill\'s More ▸ Paid with.'));
   const total = sum(bills, b => lineMonthlyOf(b, freqOf(ctx)) ?? 0);
   const inFull = card.values.payChoice === 'In full';
-  return labelled(`Bills on this card: ${bills.length}, ${money(total)}/mo`, h('span.row-line', { style: { gap: '6px' } }, bills.map(b => h('a.tag.plain', { href: '#/cash-flow/budget' }, b.name || b.values.category))),
+  return labelled(`Bills on this card: ${bills.length}, ${money(total)}/mo`, h('span.row-line', { style: { gap: '6px' } }, bills.map(b => h('a.tag.plain', { href: '#/spending/budget' }, b.name || b.values.category))),
     { note: inFull ? 'Paid in full: these count as spending, no interest' : 'Carrying a balance: these add to what you owe each month' });
 }
 function debtTertiary(ctx, r, up) {

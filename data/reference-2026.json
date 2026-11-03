@@ -154,7 +154,7 @@
     "selfEmployedBase": 0.9235,
     "state": {
       "NY": {
-        "source": "NY 2026 single brackets match NY Tax Law 601(c)(1)(vii) (checked Nov 3 2026). Joint brackets: not yet confirmed against the law. The recapture over about $107k AGI and the 2027 to 2032 schedule are not modeled (LATER).",
+        "source": "NY 2026 rates after the FY2026 budget cut (first five brackets down 0.1 pt). Verify against NY DTF 2026 tables; the high-income recapture is not modeled.",
         "standardDeduction": {
           "single": 8000,
           "joint": 16050,
@@ -280,7 +280,7 @@
     },
     "local": {
       "NYC": {
-        "source": "NYC resident income tax, on NY taxable income. Rates: not yet confirmed against the law.",
+        "source": "NYC resident income tax, on NY taxable income. Verify against NY DTF 2026 tables.",
         "brackets": {
           "single": [
             [

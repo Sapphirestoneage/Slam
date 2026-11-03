@@ -252,8 +252,8 @@ export function planDebts(ctx, { order, extra = 0 } = {}) {
 export function payoffScreen(app, ctx) {
   const m = ctx.metrics();
   const ds = m.inputs.debts.filter(d => !d.inFull && d.balance > 0);
-  if (!ds.length) return [head('Debt payoff', 'Each debt shrinking to zero'), h('div.card', {}, h('div.empty.center', {}, h('span.title', {}, ctx.gates().areas.debt === false ? 'No debt, per About you' : 'No debts to pay off'),
-    S.button('Open Debt', { iconName: 'right', onClick: () => app.go('#/net-worth/debt') })))];
+  if (!ds.length) return [head('Debt payoff', 'Each debt shrinking to zero'), h('div.card', {}, h('div.empty.center', {}, h('span.title', {}, ctx.gates().areas.debt === false ? 'No debt, per the Profile' : 'No debts to pay off'),
+    S.button('Open Debt', { iconName: 'right', onClick: () => app.go('#/my-money/debt') })))];
   const usable = ds.filter(d => d.apr != null && d.payment != null);
   if (!usable.length) return [head('Debt payoff', 'Each debt shrinking to zero'), h('div.card', {}, S.chartEmpty(ctx, ['a balance, APR and payment']))];
   const order = m.inputs.debtOrder;
@@ -390,7 +390,7 @@ function takingOverList(app, ctx) {
   const line = x => h('div.year-item', {}, h('span', { style: { fontWeight: 600 } }, x.name), x.who ? h('span.tag.plain', {}, x.who) : null,
     x.monthly != null ? h('span.computed', {}, `${money(x.monthly)} a month`) : h('span.muted.small', {}, 'No amount yet'));
   return h('section.section.area-goals', {}, h('div.section-title', {}, h('h2', {}, 'Taking over'), h('span.muted', {}, `${money(t.total)} a month covered by others today`), h('span.spacer'),
-    S.button('Open the budget', { size: 'small', onClick: () => app.go('#/cash-flow/budget') })),
+    S.button('Open the budget', { size: 'small', onClick: () => app.go('#/spending/budget') })),
   h('div.card', {}, h('div.stack', { style: { gap: '12px' } },
     ...t.steps.map(st => h('div.year-month', {}, h('div.year-head', {}, h('strong', {}, monthName(st.ym)), h('span.muted.small', {}, `+${money(st.added)} a month · ${money(st.total)} in all`)),
       h('div.stack', { style: { gap: '6px' } }, st.items.map(line)))),

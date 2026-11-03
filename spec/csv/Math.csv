@@ -22,7 +22,7 @@ M24,Irregular set-aside,yearly cost / 12,yearly cost,,
 M25,Estimate vs actual,difference = actual − estimate; % = difference / estimate,"estimate, actual",Estimate 0 → show $ only,
 M26,Gut accuracy,"Average of |actual − Gut or Rough| / actual across months, per line and overall",history,Fewer than 1 closed month → hidden,
 M27,Monthly surplus,take-home − total my-share spending − debt payments not already in spending,"M12, M21, debts",,
-M28,Savings rate (headline),(surplus + after-tax savings in the budget + 401(k) and HSA money from the paycheck + employer match) / (take-home + 401(k) and HSA money from the paycheck + employer match),M27,,Second line under the headline: (surplus + after-tax savings in the budget) / take-home (the old M28). Gross version in Show the math: (all saving incl. pretax and match) / gross. With nothing from the paycheck the two are the same
+M28,Savings rate (headline),(surplus + after-tax savings in the budget) / take-home,M27,,Gross version in Show the math: (all saving incl. pretax and match) / gross
 M29,DRAFTT shares,Each letter's total / take-home; Taxes and Therapy optional,lines tagged by letter,,"Proportions only, no verdict colors"
 M2A,Housing %,housing my-share / take-home,"rent or mortgage, utilities",,Reference line at 35%
 M2B,Accrual spread and prepaid balance,monthly = amount / months covered; prepaid left = amount − monthly × months elapsed,"amount, date paid, months covered",,

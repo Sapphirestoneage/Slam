@@ -140,9 +140,6 @@ commit per section.
 | BL.19 | Auto session summary: top 10 takeaways and the client's next 5 steps | LATER |
 | BL.20 | Rough / privacy mode: ranges instead of exact balances | LATER |
 | BL.21 | Defined beta stages and version notes for testers | LATER |
-| BL.22 | NY rates 2027 to 2032: the scheduled cuts (3.8, 4.3, 5.05, 5.3, 5.8, then 6.85 and up at the same thresholds), by tax year. 2026 single brackets already match NY Tax Law 601(c)(1)(vii) | LATER |
-| BL.23 | NY high-income recapture (the benefit of the lower brackets clawed back over about $107k AGI) | LATER |
-| BL.24 | NY joint brackets and NYC rates checked against the law (marked "not yet confirmed against the law" until then) | LATER |
 
 ## LATER found while building
 

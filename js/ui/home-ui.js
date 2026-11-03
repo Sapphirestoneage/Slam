@@ -42,11 +42,11 @@ export function moneyInOneLine(app, ctx) {
   return h('section.section', {}, h('div.section-title', {}, h('h2', {}, 'Money in one line')),
     sentence ? h('p', { style: { fontSize: '1.125rem', fontWeight: 600 } }, sentence) : null,
     m.inputs.spendingSource === 'lines' && m.inputs.guessLines ? h('div.banner-inline.soft', {}, `Spending includes ${m.inputs.guessLines} starter ${m.inputs.guessLines === 1 ? 'guess' : 'guesses'} at the high end (${money(m.inputs.guessTotal)} a month), so the surplus looks low until they are reviewed.`,
-      S.button('Review on Budget', { iconName: 'right', onClick: () => app.go('#/cash-flow/budget') })) : null,
+      S.button('Review on Budget', { iconName: 'right', onClick: () => app.go('#/spending/budget') })) : null,
     S.summaryStrip(ctx, [
       { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: '#/report/overview' },
-      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: '#/cash-flow/budget' },
-      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: '#/report/overview', note: m.savingsRate.second },
+      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: '#/spending/budget' },
+      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: '#/report/overview' },
       fiCard(ctx, m) && { ...fiCard(ctx, m), home: '#/plan/goals' }]));
 }
 
@@ -55,20 +55,17 @@ export function moneyInOneLine(app, ctx) {
 function paydayCard(app, ctx) {
   const d = paydayOf(ctx.store.doc, ctx.ref, ctx.now());
   if (d.needs) return h('div.card.payday', {}, h('strong', {}, 'Payday'), h('span.muted', {}, ` Add ${d.needs} on Income to see what each paycheck covers.`),
-    S.button('Open Income', { size: 'small', onClick: () => app.go('#/cash-flow/income') }));
+    S.button('Open Income', { size: 'small', onClick: () => app.go('#/my-money/income') }));
   const when = new Date(`${d.date}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const line = (k, v) => h('span.stack', { style: { gap: '2px' } }, h('span.label', {}, k), h('strong', {}, money(v)));
   return h('div.card.payday', {},
     h('p', { style: { fontSize: '1.0625rem', margin: 0 } }, `You get ${money(d.period.in)} on ${when}${d.guessDate ? ' (day not set yet)' : ''}. `,
-      d.hasFixed ? `${money(d.period.fixed)} covers fixed bills. ` : '', d.setAside.total ? `${money(d.period.save)} goes to savings goals and sinking funds. ` : '',
-      h('strong', {}, `${money(d.setAside.total ? d.period.afterSavings : d.period.free)} is free to spend.`)),
+      d.hasFixed ? `${money(d.period.fixed)} covers fixed bills. ` : '', h('strong', {}, `${money(d.period.free)} is free to spend.`)),
     !d.hasFixed ? h('span.muted.small', {}, 'Mark bills Fixed on the Budget to see what they take from each paycheck.') : null,
     h('div.row-line', { style: { gap: '24px', marginTop: '10px' } },
-      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each paycheck'), line('In', d.period.in), line('Fixed bills', d.period.fixed), line('Free', d.period.free),
-      line('Savings goals and sinking funds', d.period.save), line('Free after savings', d.period.afterSavings)),
+      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each paycheck'), line('In', d.period.in), line('Fixed bills', d.period.fixed), line('Free', d.period.free)),
     h('div.row-line', { style: { gap: '24px', marginTop: '6px' } },
-      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each month'), line('In', d.month.in), line('Fixed bills', d.month.fixed), line('Free', d.month.free),
-      line('Savings goals and sinking funds', d.month.save), line('Free after savings', d.month.afterSavings)));
+      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each month'), line('In', d.month.in), line('Fixed bills', d.month.fixed), line('Free', d.month.free)));
 }
 // M6: net worth over time, closed until asked; snapshots come from Save snapshot, End session and month-end close.
 function netWorthOverTime(app, ctx) {
@@ -104,8 +101,8 @@ export function prepScreen(app, ctx) {
       card('Open homework', homework || 'None', homework ? "Numbers to find later" : null, () => app.go('#/tools/lists'), 'Open the list'),
       card('Due for a check', due || 'None', due ? 'Rough or aged numbers' : null, () => app.go('#/tools/lists'), 'Open the list'),
       card('Parking lot notes', notes || 'None', notes ? 'Not filed yet' : null, () => app.openParking(), 'Open the parking lot')),
-    low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below ${money(low.low)} on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/cash-flow/calendar') })) : null, // R096
-    ctx.gates().betweenJobs ? S.summaryStrip(ctx, [{ label: 'Runway (between jobs)', result: ctx.metrics().runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/net-worth/assets' }]) : null, // R006
+    low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below ${money(low.low)} on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/spending/calendar') })) : null, // R096
+    ctx.gates().betweenJobs ? S.summaryStrip(ctx, [{ label: 'Runway (between jobs)', result: ctx.metrics().runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/my-money/assets' }]) : null, // R006
     S.moreBlock('home:agenda', () => agendaEditor(ctx), { label: "Edit today's agenda" }),
     completionSlim(app, ctx)];
 }
@@ -138,11 +135,11 @@ export function completionParts(ctx) {
   const m = ctx.metrics();
   const p = profileCompletion(doc);
   const parts = [
-    ['About you', p.core, '#/home/profile'],
-    ['Income', listCompletion(ctx, r => r.kind === 'income', ['amount']).core, '#/cash-flow/income'],
-    ['Debt', ctx.gates().areas.debt === false ? { done: 1, of: 1 } : listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr']).core, '#/net-worth/debt'],
-    ['Assets', listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance']).core, '#/net-worth/assets'],
-    ['Budget', (() => { const rows = ctx.visible(r => r.kind === 'bill' && r.status !== 'Not for me'); return { done: rows.filter(r => countsAsDone(statusOf(r, 'amount')) && r.status !== 'Not sure').length, of: rows.length }; })(), '#/cash-flow/budget'],
+    ['Profile', p.core, '#/my-money/profile'],
+    ['Income', listCompletion(ctx, r => r.kind === 'income', ['amount']).core, '#/my-money/income'],
+    ['Debt', ctx.gates().areas.debt === false ? { done: 1, of: 1 } : listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr']).core, '#/my-money/debt'],
+    ['Assets', listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance']).core, '#/my-money/assets'],
+    ['Spending', (() => { const rows = ctx.visible(r => r.kind === 'bill' && r.status !== 'Not for me'); return { done: rows.filter(r => countsAsDone(statusOf(r, 'amount')) && r.status !== 'Not sure').length, of: rows.length }; })(), '#/spending/budget'],
     ['Plan', { done: [m.fiNumber.value != null, m.monthsToFi.value != null || m.monthsToFi.never, ctx.visible(r => r.kind === 'milestone').length > 0].filter(Boolean).length, of: 3 }, '#/plan/goals'],
   ];
   const tot = parts.reduce((a, [, c]) => ({ done: a.done + (c.of ? c.done / c.of : 0), of: a.of + 1 }), { done: 0, of: 0 });

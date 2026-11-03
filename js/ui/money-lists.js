@@ -1,7 +1,7 @@
 // My Money lists (build phase 5, Mockup: Income, Assets, Protection, Taxes): one record type, viewed by sub-tab.
 // Detail stays behind More (R023); fields that do not apply to this household never show (gates.js).
 import { h } from './dom.js';
-import { fromButton, amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park } from './staples.js';
+import { amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park } from './staples.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
 import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom } from '../math/income.js';
 import { limitUsed } from '../math/assets.js';
@@ -93,12 +93,7 @@ function incomeSecondary(ctx, r, up) {
       { note: link.job?.id === r.id && link.incomeTiersFrom ? 'From your 401(k)' : null, later: L(ctx, r, 'matchPct') })) : null,
     labelled('Bonus: $ and month', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.bonus, y => up({ bonus: y }), { hint: 'Bonus' }),
       select(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], v.bonusMonth ?? null, y => up({ bonusMonth: y }), { label: 'Bonus month', hint: 'Month', width: 100 })), { later: L(ctx, r, 'bonus') }),
-    // The Health coverage row owns the premium; Income borrows it (answer to Brandon question 71).
-    applies('premium', { g }) && x?.taxType ? (m.inputs.health
-      ? labelled('Health premium a paycheck', m.inputs.health.jobId === r.id && m.inputs.health.fromPay
-        ? fromButton('From Health', '#/net-worth/protection', m.inputs.health.id, { value: money(m.inputs.health.perPaycheck) })
-        : fromButton(m.inputs.health.fromPay ? 'From Health, on your main job' : 'From Health, paid as a Budget line', '#/net-worth/protection', m.inputs.health.id), { note: 'Comes out of take-home once' })
-      : labelled('Health premium a paycheck', moneyInput(v.premium, y => up({ premium: y }), { hint: 'Add premium' }), { note: 'Or add Health on Protection; it fills this in', later: L(ctx, r, 'premium') })) : null,
+    applies('premium', { g }) && x?.taxType ? labelled('Health premium a paycheck', moneyInput(v.premium, y => up({ premium: y }), { hint: 'Add premium' }), { later: L(ctx, r, 'premium') }) : null,
     labelled('Perks', button('Add other benefit', { iconName: 'plus', onClick: () => { ctx.store.add('benefit', { name: null, values: {} }, { type: 'Benefit' }); toast('Benefit row added under Other benefits.'); } }))];
 }
 function incomeTertiary(ctx, r, up) {
@@ -121,7 +116,7 @@ function incomeStrip(ctx, m) {
   const items = [
     { label: 'Take-home a month', result: x.takeHome === null ? needs('M12', ['take-home']) : { id: 'M12', value: x.takeHome, needs: [], unit: 'money', text: x.income.map(i => i.takeHome.text).filter(Boolean).join(' ') } },
     { label: 'Gross a year', result: gross },
-    { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', note: m.savingsRate.second },
+    { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', note: m.savingsRate.withPretax != null ? `${pct(m.savingsRate.withPretax)} with your 401(k) and HSA` : null },
   ];
   if (x.gates.betweenJobs) items.push({ label: 'Runway', result: m.runwayMonths, render: r => `${r.value.toFixed(1)} months` }); // R006
   return summaryStrip(ctx, items);
@@ -244,7 +239,7 @@ export function assetList(ref) {
     footerTotal: (ctx, recs) => amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null),
     totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Account' ? h('td', {}, `${recs.length} ${recs.length === 1 ? 'item' : 'items'}`) : c.label === 'Balance' ? h('td.num', {}, amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null)) : h('td')), h('td'), h('td')],
     strip: (ctx, m) => h('div', {}, summaryStrip(ctx, [
-      // Total and liquid net worth sit in the Net worth headline above.
+      { label: 'Total net worth', result: m.netWorth, key: 'netWorth' }, { label: 'Liquid net worth', result: m.liquidNetWorth },
       { label: 'Cash', result: m.inputs.cash === null ? needs('M41', ['cash']) : { id: 'M41', value: m.inputs.cash, needs: [], unit: 'money', text: `Checking, savings and other cash: ${money(m.inputs.cash)}.` } },
       { label: 'Rule of 5 cushion', result: m.ruleOf5 }]), assetChecks(ctx, m)),
     stripWhenEmpty: true,
@@ -344,9 +339,7 @@ export function protectionList() {
       const employer = labelled('Through employer?', toggle(['Yes', 'No'], v.employer ?? null, x => up({ employer: x }), { label: 'Through employer' }), { note: v.employer === 'Yes' ? 'Ends if the job ends' : null });
       const paidFrom = labelled('Paid from', toggle(['Paycheck', 'Budget line'], v.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null), x => up({ paidFrom: x }), { label: 'Paid from', clearable: true }),
         { note: (v.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null)) === 'Paycheck' ? 'Already out of your take-home' : null });
-      const from = v.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null);
-      const budget = from === 'Budget line' ? labelled('Spending line', premiumOnBudget(ctx, r))
-        : from === 'Paycheck' && r.type === 'Health' ? labelled('On Income', fromButton('Your paycheck borrows it', '#/cash-flow/income', ctx.metrics().inputs.health?.jobId ?? ''), { note: 'Out of take-home once; never a Budget line too' }) : null;
+      const budget = (v.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null)) === 'Budget line' ? labelled('Spending line', premiumOnBudget(ctx, r)) : null;
       if (r.type === 'Health') return [employer, paidFrom, budget,
         labelled('Deductible: in-network, out-of-network', pair(moneyInput(v.deductible, x => up({ deductible: x }), { hint: 'In' }), moneyInput(v.deductibleOut, x => up({ deductibleOut: x }), { hint: 'Out' })), later(ctx, r, 'deductible')),
         labelled('Out-of-pocket max: in, out', pair(moneyInput(v.oopMax, x => up({ oopMax: x }), { hint: 'In' }), moneyInput(v.oopMaxOut, x => up({ oopMaxOut: x }), { hint: 'Out' })), { note: 'The most you pay in a bad year', ...later(ctx, r, 'oopMax') }),
@@ -441,7 +434,7 @@ export function taxesScreen(ctx) {
       }),
       applies('quarterly', { g, taxTypes: taxed.map(i => i.taxType) }) ? labelled('Quarterly estimates paid this year', moneyInput(p.quarterlyPaid ?? null, v => set({ quarterlyPaid: v }), { hint: 'Add amount', key: 'tax:quarterly' })) : null,
       applies('seTax', { g, taxTypes: taxed.map(i => i.taxType) }) ? labelled('Self-employment tax a year', h('span.computed', {}, seTax ? money(seTax.value) : 'Needs 1099 income')) : null), { label: 'Earlier years and estimates' }),
-    h('p.muted', { style: { marginTop: '12px' } }, `Gross used: ${gross === null ? 'none yet (add take-home or gross on Income)' : `${money(gross)} a year`}. ${x.place ? `Federal, FICA, NY state${x.place.nyc ? ' and NYC' : ''} tax.${/joint/i.test(x.filingStatus) || x.place.nyc ? ` ${/joint/i.test(x.filingStatus) ? 'NY joint brackets' : ''}${/joint/i.test(x.filingStatus) && x.place.nyc ? ' and ' : ''}${x.place.nyc ? 'NYC rates' : ''}: not yet confirmed against the law.` : ''}` : 'Federal and FICA; state tax is in for New York only so far.'}`)));
+    h('p.muted', { style: { marginTop: '12px' } }, `Gross used: ${gross === null ? 'none yet (add take-home or gross on Income)' : `${money(gross)} a year`}. ${x.place ? `Federal, FICA, NY state${x.place.nyc ? ' and NYC' : ''} tax.` : 'Federal and FICA; state tax is in for New York only so far.'}`)));
 }
 
 // ---------- Completion (R065): core is the Primary fields; full adds the detail that applies ----------

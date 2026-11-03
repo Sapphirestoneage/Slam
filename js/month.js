@@ -86,8 +86,7 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) 
     }
   }
   // Bills: fixed date on its day; variable date spread week by week (R140). On a card: shown on the card (R101).
-  // A line flagged as the same payment as a debt or a paycheck premium stays off the calendar too (counted once).
-  for (const r of live.filter(x => x.kind === 'bill' && !inputs.dupOf[x.id])) {
+  for (const r of live.filter(x => x.kind === 'bill')) {
     if (r.status === 'Not for me') continue;
     const line = { ...r, ...r.values };
     if (r.values.irregular) { // R051: the whole yearly cost in its month
@@ -250,8 +249,7 @@ export function actualOf(doc, ym, line, list) {
 // Everything the budget and close screens show for one month.
 export function monthView(doc, ref, ym, { now = new Date() } = {}) {
   const g = gatesOf(doc.profile, doc.client);
-  const dupOf = inputsOf(doc, ref, now).dupOf; // the same payment as a debt or a premium: counted there, once
-  const lines = visible(doc.records, g, ref).filter(r => r.kind === 'bill' && !dupOf[r.id]);
+  const lines = visible(doc.records, g, ref).filter(r => r.kind === 'bill');
   const list = instances(doc, ref, ym, { now });
   const md = monthDoc(doc, ym);
   const rows = lines.map(l => {

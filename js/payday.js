@@ -4,19 +4,6 @@
 import { instances, ymOf, addMonths } from './month.js';
 import { metrics } from './math/metrics.js';
 import { fixedFloor } from './math/spending.js';
-import { tagsOf } from './math/portfolio.js';
-import { yearItems, sinkingOf } from './year.js';
-import { gatesOf, visible } from './gates.js';
-
-// Savings goals (purpose tags on accounts) and sinking funds, a month (answer to Brandon question 75). A sinking fund
-// on a yearly cost from the Budget is left out: that cost is already in spending as its set-aside.
-export function setAsideOf(doc, ref, now = new Date()) {
-  const live = visible(doc.records, gatesOf(doc.profile, doc.client), ref);
-  const goals = live.filter(r => r.kind === 'account').flatMap(a => tagsOf(a.values.tags || [], { now }).rows).reduce((s, t) => s + (t.monthly ?? 0), 0);
-  const sinking = yearItems(live, now).all.filter(x => x.rec.values.sinking && !(x.rec.kind === 'bill' && x.rec.values.irregular))
-    .reduce((s, x) => s + (sinkingOf(x, { records: live, now }).monthly ?? 0), 0);
-  return { goals, sinking, total: goals + sinking };
-}
 
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
 
@@ -34,12 +21,10 @@ export function paydayOf(doc, ref, now = new Date()) {
   const floor = x.lines.length ? fixedFloor(x.lines, { roommates: x.roommates }).value ?? 0 : 0;
   const fixedMonthly = floor + (x.debtPaymentsOutsideSpending ?? 0);
   const fixedPerPay = fixedMonthly / perMonth;
-  const save = setAsideOf(doc, ref, now);
-  const free = { period: next.planned - fixedPerPay, month: x.takeHome - fixedMonthly };
   return {
     date: next.date, guessDate: !!next.guessDate, paycheck: next.planned, name: next.name,
-    period: { in: next.planned, fixed: fixedPerPay, free: free.period, save: save.total / perMonth, afterSavings: free.period - save.total / perMonth },
-    month: { in: x.takeHome, fixed: fixedMonthly, free: free.month, save: save.total, afterSavings: free.month - save.total },
-    freq, hasFixed: fixedMonthly > 0, setAside: save,
+    period: { in: next.planned, fixed: fixedPerPay, free: next.planned - fixedPerPay },
+    month: { in: x.takeHome, fixed: fixedMonthly, free: x.takeHome - fixedMonthly },
+    freq, hasFixed: fixedMonthly > 0,
   };
 }

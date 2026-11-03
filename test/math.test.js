@@ -112,9 +112,7 @@ test('M27 surplus, M28 savings rate, M29 DRAFTT, M2A housing', () => {
   assert.equal(monthlySurplus({ takeHome: 4800, spending: 3000, debtPaymentsOutsideSpending: 500 }).value, 1300);
   assert.deepEqual(monthlySurplus({ takeHome: null, spending: null }).needs, ['take-home', 'spending']);
   const sr = savingsRate({ takeHome: 4000, surplus: 800, afterTaxSavings: 200, gross: 6000, pretaxSaving: 300, match: 100 });
-  // Headline counts the 401(k), HSA and match (answer to Brandon question 70); the old M28 is the second line.
-  near(sr.value, 1400 / 4400, 1e-9); assert.equal(sr.ofTakeHome, 0.25); near(sr.gross, 1400 / 6000, 1e-9);
-  assert.equal(savingsRate({ takeHome: 4000, surplus: 800 }).value, 0.2, 'nothing from the paycheck: the headline is surplus over take-home');
+  assert.equal(sr.value, 0.25); near(sr.gross, 1400 / 6000, 1e-9);
   const d = drafttShares([{ amount: 1000, draftt: 'Accommodation' }, { amount: 400, draftt: 'Food' }], 4000);
   assert.equal(d.value.Accommodation, 0.25); assert.equal(d.value.Food, 0.1);
   assert.equal(housingPct({ housing: 1400, takeHome: 4000 }).value, 0.35);

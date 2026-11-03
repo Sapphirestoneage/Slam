@@ -12,7 +12,7 @@ import { statusOf } from '../records.js';
 import { money, pct } from '../format.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
-const ROUTE = { income: '#/cash-flow/income', benefit: '#/cash-flow/income', debt: '#/net-worth/debt', account: '#/net-worth/assets', asset: '#/net-worth/assets', coverage: '#/net-worth/protection', bill: '#/cash-flow/budget', milestone: '#/plan/goals', event: '#/plan/next-12-months' };
+const ROUTE = { income: '#/my-money/income', benefit: '#/my-money/income', debt: '#/my-money/debt', account: '#/my-money/assets', asset: '#/my-money/assets', coverage: '#/my-money/protection', bill: '#/spending/budget', milestone: '#/plan/goals', event: '#/plan/next-12-months' };
 const DAY = 86400000;
 
 // R061: Roughly is checked after 30 days, anything after 90; Not now and Not sure go on the list at once.
@@ -26,11 +26,11 @@ export function revisitList(ctx) {
     const wait = st === 'Roughly' ? 30 : ['Not sure', 'Not now'].includes(st) ? 0 : 90;
     const next = updated + wait * DAY;
     if (st === 'Know it' && next > Date.now()) continue;
-    out.push({ r, label: r.name || r.values?.category || r.type || 'Item', status: st, next, route: ROUTE[r.kind] || '#/home/profile' });
+    out.push({ r, label: r.name || r.values?.category || r.type || 'Item', status: st, next, route: ROUTE[r.kind] || '#/my-money/profile' });
   }
   out.sort((a, b) => a.next - b.next);
   const guesses = ctx.visible(x => x.kind === 'bill' && x.values?.preset && x.status === 'Not sure').length;
-  if (guesses) out.unshift({ r: { id: null }, label: `${guesses} starter spending ${guesses === 1 ? 'guess' : 'guesses'} to review`, status: 'Not sure', next: Date.now(), route: '#/cash-flow/budget' });
+  if (guesses) out.unshift({ r: { id: null }, label: `${guesses} starter spending ${guesses === 1 ? 'guess' : 'guesses'} to review`, status: 'Not sure', next: Date.now(), route: '#/spending/budget' });
   return out;
 }
 
@@ -58,7 +58,7 @@ export function listsScreen(app, ctx) {
         return h('div.row-line', { style: { gap: '10px' } },
           h('span.stack', { style: { flex: 1, gap: '2px' } }, h('span', { style: { fontWeight: 600 } }, x.label), x.where ? h('span.muted.small', {}, `Where to find it: ${x.where}`) : null),
           h('label.field', { style: { width: '160px' } }, d),
-          S.button('Open', { size: 'small', onClick: () => (x.r ? fix({ ...x, route: ROUTE[x.r.kind] || '#/home/profile' }) : app.go(x.lifeKey ? '#/net-worth/protection' : '#/home/profile')) }));
+          S.button('Open', { size: 'small', onClick: () => (x.r ? fix({ ...x, route: ROUTE[x.r.kind] || '#/my-money/profile' }) : app.go(x.lifeKey ? '#/my-money/protection' : '#/my-money/profile')) }));
       }))
       : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, "Tap I'll find it later on any number and it lands here, with where to look.")))))];
 }

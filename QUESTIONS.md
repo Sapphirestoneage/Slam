@@ -105,23 +105,3 @@ Each one has the default used so the build could keep going. Answer here or in t
 75. **Payday card.** "Fixed bills" is your share of lines marked Fixed plus debt payments that are not lines. Savings goals and sinking funds are not taken out of "free to spend" yet.
 76. **Paychecks left to max the HSA.** Counted from today's date and the pay frequency, not the typed paydays.
 77. **Report this without a client.** It asks you to open a client first, because the note lives in the client file.
-
-## Answers logged (Nov 3 2026)
-
-- 68 Multi-tier match: no change; the text on Income stays, the tiers live on the 401(k) row.
-- 69 NY rates: the 2026 single brackets match NY Tax Law 601(c)(1)(vii). The 2027 to 2032 schedule and the recapture over about $107k AGI are logged LATER (docs/backlog-brandon.md BL.22, BL.23). Joint brackets and NYC rates say "not yet confirmed against the law" on Taxes and in the reference data (BL.24).
-- 70 Savings rate: built. The headline counts 401(k) and HSA money from the paycheck plus the employer match; surplus over take-home is the second line under it. The spec's Math tab M28 row says so.
-- 71 Health premium: built. The Health coverage row owns it; Income shows it "From Health" and it leaves take-home once, never as a Budget line too.
-- 73 Dates and Other wants: no change; the starter guesses stay.
-- 75 Payday card: built. Savings goals and sinking funds come out as "Free after savings", per paycheck and per month.
-
-## Reorganize pass (Nov 3 2026)
-
-78. **PR #4 was not merged.** The fix pass PR was still open when this pass started, and main had none of it. To keep everything it built, this pass is on the same branch, on top of the fix pass, so the open PR now carries both. Merge it as one, or say if you want them split.
-79. **"Close" or "Month-end close".** The Cash flow sub-tab reads "Month-end close"; "Close" alone looked like a button that closes something. Shorten it?
-80. **About you as Home's first sub-tab.** #/home (and a bare Home click) now lands on About you; SLAM in the top bar still opens Prep. Should Home's tab click open Prep during a session?
-81. **Which typed lines count as the same payment.** A line in the Debt letter, or a line whose name says payment, loan or mortgage and shares a word or the amount with a debt; for premiums, a line that says insurance or premium and names the coverage or matches its amount. A "Rent" line under "Rent or mortgage" is flagged against a mortgage. Too eager, or not eager enough?
-82. **Roth 401(k).** It sits in before-tax savings with the traditional 401(k), since both come from the paycheck. Split it out as savings?
-83. **Sinking funds on a yearly cost.** A sinking fund on a Budget yearly cost is not taken out of Free after savings, since the cost is already in spending as its set-aside; sinking funds on events and other costs are. Right?
-84. **Health from the paycheck with two jobs.** The premium is borrowed by the first job (the one the 401(k) links to); other jobs show "From Health, on your main job". OK?
-85. **fields.json and the Fields tab.** data/fields.json was already out of step with spec/csv/Fields.csv before this pass (some field names and groups differ). Only the Lives on column was updated in both. Regenerate fields.json from the spec with tools/fields.py?

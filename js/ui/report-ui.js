@@ -16,7 +16,7 @@ const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1
 const short = v => (Math.abs(v) >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const CONSUMER = new Set(['Credit card', 'Personal loan', 'Buy now, pay later', 'Payday or cash advance', 'Medical', 'Family or friend']);
-const HOME = { netWorth: '#/net-worth/assets', surplus: '#/cash-flow/budget', savingsRate: '#/cash-flow/budget', fi: '#/plan/goals', debt: '#/net-worth/debt', taxes: '#/cash-flow/taxes', assets: '#/net-worth/assets', budget: '#/cash-flow/budget', income: '#/cash-flow/income', profile: '#/home/profile' };
+const HOME = { netWorth: '#/my-money/assets', surplus: '#/spending/budget', savingsRate: '#/spending/budget', fi: '#/plan/goals', debt: '#/my-money/debt', taxes: '#/my-money/taxes', assets: '#/my-money/assets', budget: '#/spending/budget', income: '#/my-money/income', profile: '#/my-money/profile' };
 
 // ---------- Overview ----------
 export function overviewScreen(app, ctx) {
@@ -29,7 +29,7 @@ export function overviewScreen(app, ctx) {
   const l = ladder(m, ctx.store.doc);
   const r5 = m.ruleOf5;
   const shelf = [
-    { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate, note: m.savingsRate.second },
+    { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate },
     { label: 'Biggest DRAFTT letter', result: topLetter ? { id: 'M29', value: topLetter[1], needs: [], unit: 'pct', text: shares.text } : { ...shares, value: null, needs: shares.needs?.length ? shares.needs : ['a tagged spending line'] },
       home: HOME.budget, note: topLetter ? `${topLetter[0]}, share of take-home` : 'Share of take-home' },
     { label: 'Debt-to-income', result: ratios.dti, home: HOME.debt },
@@ -214,7 +214,7 @@ export function onePagerScreen(app, ctx) {
     S.summaryStrip(ctx, [
       { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: HOME.netWorth },
       { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: HOME.surplus },
-      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate, note: m.savingsRate.second },
+      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate },
       fiCard(ctx, m)]),
     h('div.op-grid', {},
       h('div', {}, h('h3', {}, 'To-dos'), hw.length ? h('ul.op-list', {}, hw.map(x => h('li', {}, x.label))) : h('p.muted', {}, "No homework yet. Tap I'll find it later on any number to add it.")),
