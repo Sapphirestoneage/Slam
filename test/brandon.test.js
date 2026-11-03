@@ -328,7 +328,7 @@ test('B6.9: 401(k) money is saving: the savings rate with it counts what left be
   s.add('spending', { amount: 3000, values: {} }, { type: 'All in' });
   const m = metrics(s.doc, ref, { now: new Date('2026-11-03') });
   assert.ok(Math.abs(m.savingsRate.pretaxSaving - 80000 * 0.05 / 12) < 0.01);
-  assert.ok(m.savingsRate.withPretax > m.savingsRate.value);
+  assert.ok(m.savingsRate.value > m.savingsRate.ofTakeHome, 'the headline now counts it; surplus over take-home is the second line');
 });
 test('B6.10: the month list is built once per change, and rebuilt after one', () => {
   const s = fresh();

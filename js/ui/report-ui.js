@@ -29,7 +29,7 @@ export function overviewScreen(app, ctx) {
   const l = ladder(m, ctx.store.doc);
   const r5 = m.ruleOf5;
   const shelf = [
-    { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate },
+    { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate, note: m.savingsRate.second },
     { label: 'Biggest DRAFTT letter', result: topLetter ? { id: 'M29', value: topLetter[1], needs: [], unit: 'pct', text: shares.text } : { ...shares, value: null, needs: shares.needs?.length ? shares.needs : ['a tagged spending line'] },
       home: HOME.budget, note: topLetter ? `${topLetter[0]}, share of take-home` : 'Share of take-home' },
     { label: 'Debt-to-income', result: ratios.dti, home: HOME.debt },
@@ -214,7 +214,7 @@ export function onePagerScreen(app, ctx) {
     S.summaryStrip(ctx, [
       { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: HOME.netWorth },
       { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: HOME.surplus },
-      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate },
+      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate, note: m.savingsRate.second },
       fiCard(ctx, m)]),
     h('div.op-grid', {},
       h('div', {}, h('h3', {}, 'To-dos'), hw.length ? h('ul.op-list', {}, hw.map(x => h('li', {}, x.label))) : h('p.muted', {}, "No homework yet. Tap I'll find it later on any number to add it.")),
