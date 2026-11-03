@@ -62,6 +62,10 @@ const offAreas = (app, ctx, keys) => {
   const off = AREAS.filter(([k]) => keys.includes(k) && g.areas[k] === false);
   return off.length ? h('div.row-line.off-areas', {}, h('span.muted', {}, 'Turned off in About you:'), off.map(([k, label]) => addArea(app, ctx, k, label))) : null;
 };
+// A list with its chart; in session-1 focus mode the chart waits under More detail (polish item 4).
+const withChart = (ctx, list, charts, area) => (S.focusOn(ctx)
+  ? [S.recordList(ctx, list), S.focusMore(ctx, `chart:${area}`, S.visualsPanel(ctx, { charts, area }))]
+  : h('div.visuals', {}, S.recordList(ctx, list), S.visualsPanel(ctx, { charts, area })));
 const MM = {
   profile: { title: 'About you', sub: 'Why now, what applies, about you', body: (app, ctx) => [completion(profileCompletion(ctx.store.doc)), ...profileScreen(app, ctx)] },
   income: { title: 'Income', sub: 'Paychecks, benefits, variable income', body: (app, ctx) => {
@@ -69,18 +73,17 @@ const MM = {
     return [completion(listCompletion(ctx, r => r.kind === 'income' || r.kind === 'benefit', ['amount'])), hasAny(ctx, ['income']) ? null : fastTrack(app, ctx),
       g.betweenJobs && !ctx.store.find(r => r.kind === 'income' && r.type === 'Unemployment').length
         ? h('div.banner-inline', {}, 'Between jobs: add unemployment benefits so the runway counts them.', S.button('Add unemployment', { iconName: 'plus', onClick: () => ctx.store.add('income', { name: 'Unemployment benefits', per: 'week' }, { type: 'Unemployment' }) })) : null,
-      h('div.visuals', {}, S.recordList(ctx, incomeList()), S.visualsPanel(ctx, { charts: incomeCharts, area: 'income' })),
-      g.variable ? variableBlock(ctx) : null,
-      S.recordList(ctx, benefitList())];
+      withChart(ctx, incomeList(), incomeCharts, 'income'),
+      S.focusMore(ctx, 'income:extra', [g.variable ? variableBlock(ctx) : null, S.recordList(ctx, benefitList())].filter(Boolean))];
   } },
   debt: { title: 'Debt', sub: 'Every debt and its payoff', body: (app, ctx) => (ctx.gates().areas.debt === false
     ? [h('div.card', {}, h('div.empty', {}, h('span.title', {}, 'No debt, per About you'), addArea(app, ctx, 'debt', 'Debt')))]
     : [completion(listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr'])), hasAny(ctx, ['debt']) ? null : fastTrack(app, ctx),
-      h('div.visuals', {}, S.recordList(ctx, debtList(ctx.ref)), S.visualsPanel(ctx, { charts: debtCharts, area: 'debt' })), S.live(ctx, () => creditCard(ctx))]) },
+      withChart(ctx, debtList(ctx.ref), debtCharts, 'debt'), S.focusMore(ctx, 'debt:credit', S.live(ctx, () => creditCard(ctx)))]) },
   assets: { title: 'Assets', sub: 'Cash, investments, car, home', body: (app, ctx) => [
     completion(listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance'])),
     hasAny(ctx, ['account', 'asset']) ? null : fastTrack(app, ctx), offAreas(app, ctx, ['cash', 'investments', 'real']),
-    h('div.visuals', {}, S.recordList(ctx, assetList(ctx.ref)), S.visualsPanel(ctx, { charts: assetCharts, area: 'assets' }))] },
+    withChart(ctx, assetList(ctx.ref), assetCharts, 'assets')] },
   protection: { title: 'Protection', sub: 'Insurance coverage, gaps and life admin', body: (app, ctx) => [completion(listCompletion(ctx, r => r.kind === 'coverage', ['have'])), S.recordList(ctx, protectionList()), S.live(ctx, () => lifeAdminScreen(ctx))] },
   taxes: { title: 'Taxes', sub: 'Filing status, last year, estimates', body: (app, ctx) => [h('div.visuals', {}, taxesScreen(ctx), S.visualsPanel(ctx, { charts: [incomeCharts[0]], area: 'taxes' }))] },
 };

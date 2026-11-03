@@ -505,6 +505,13 @@ export function fromButton(label, route, id, { tag = false, value = null } = {})
   return h(tag ? 'button.tag.plain.from-tag' : 'button.btn.small.from-btn', { type: 'button', 'data-focus': `from:${id}`, title: 'Entered there; open it to change it', onclick: () => openSource(route, id) },
     value, value ? ' · ' : null, label, ' ›');
 }
+// Session-1 focus mode (polish item 4): while Guide me is on in a session, lists show their core columns only and
+// the rest sits under one "More detail" per row or section.
+export const focusOn = ctx => { const s = ctx.store.doc.session || {}; return !!s.guide && !!s.startedAt && !(s.endedAt > s.startedAt); };
+export function focusMore(ctx, id, kids) {
+  if (!focusOn(ctx)) return kids;
+  return moreBlock(`focus:${id}`, () => h('div.stack', { style: { gap: '16px' } }, ...[kids].flat()), { label: 'More detail' });
+}
 const slug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 // A block that redraws itself on every change, keeping your place (for cards beside a list).
 export function live(ctx, render) {
@@ -619,9 +626,9 @@ export function recordList(ctx, cfg) {
   };
   const caretState = (tr, open) => {
     const c = tr?.querySelector('button.caret');
-    if (c) { c.setAttribute('aria-expanded', String(open)); clear(c, open ? 'Less' : 'More', icon(open ? 'down' : 'right')); }
+    if (c) { c.setAttribute('aria-expanded', String(open)); clear(c, open ? 'Less' : view?.moreLabel ?? 'More', icon(open ? 'down' : 'right')); }
   };
-  const moreRow = (r, g) => h('tr.more', { 'data-for': r.id, 'data-group': g }, h('td', { colspan: view.span }, moreLayers(ctx, r, cfg, p => update(r, p))));
+  const moreRow = (r, g) => h('tr.more', { 'data-for': r.id, 'data-group': g }, h('td', { colspan: view.span }, moreLayers(ctx, r, cfg, p => update(r, p), view.extra, ctx.metrics())));
 
   // A blank core number reads Missing on its face.
   const hasCore = r => (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields || ['amount'])
@@ -659,7 +666,10 @@ export function recordList(ctx, cfg) {
 
     const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all', 'data-focus': 'select-all' });
     allBox.onchange = () => { if (allBox.checked) recs.forEach(r => state.selected.add(r.id)); else state.selected.clear(); refreshSelection(); };
-    const cols = cfg.columns.filter(c => c && (!c.couple || ctx.couple));
+    const focus = focusOn(ctx) && cfg.focus ? cfg.focus : null;
+    const shown = cfg.columns.filter(c => c && (!c.couple || ctx.couple) && (!c.focusOnly || focus));
+    const cols = focus ? shown.filter(c => focus.includes(c.label)) : shown;
+    const extraCols = focus ? shown.filter(c => !focus.includes(c.label)) : [];
     const span = cols.length + 3;
     const thead = h('thead', {}, h('tr', {}, h('th.check-cell', {}, allBox), cols.map(c => h(`th${c.num ? '.num' : ''}`, {}, c.label)), h('th', {}, 'Status'), h('th', {}, h('span.sr', {}, 'Actions'))));
     const groups = new Map();
@@ -667,7 +677,7 @@ export function recordList(ctx, cfg) {
     for (const g of cfg.lastGroups || []) if (groups.has(g)) { const rows = groups.get(g); groups.delete(g); groups.set(g, rows); } // e.g. Not for me sits at the bottom
     const body = h('tbody');
     const rowEls = new Map(), groupEls = new Map();
-    view = { recs, rows: rowEls, groups: groupEls, body, span, allBox, bulkHost: h('div.bulk-host'), actions: sel => ({
+    view = { recs, rows: rowEls, groups: groupEls, body, span, allBox, extra: extraCols, moreLabel: focus ? 'More detail' : 'More', bulkHost: h('div.bulk-host'), actions: sel => ({
       all: recs.length, onClear: () => { state.selected.clear(); refreshSelection(); },
       onDuplicate: () => { ctx.store.duplicate(sel); toast(`Duplicated ${sel.length}.`, { undo: () => ctx.store.undo() }); },
       onDelete: e => remove(sel, e.currentTarget), onReset: () => reset(sel),
@@ -707,7 +717,7 @@ export function recordList(ctx, cfg) {
           h('td.col-status', {}, statusPicker(r.status, s => update(r, { status: s }), { hasValue: hasCore(r) })),
           h('td.col-actions', {}, h('span.actions', {},
             h('button.caret', { type: 'button', 'aria-expanded': String(open), 'data-focus': 'more', onclick: () => setOpen(r.id) },
-              open ? 'Less' : 'More', icon(open ? 'down' : 'right')),
+              open ? 'Less' : view.moreLabel, icon(open ? 'down' : 'right')),
             rowMenuButton(r))));
         // Enter in a row = new row below (R168).
         tr.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') { e.target.dispatchEvent(new Event('change')); addNew(r.type, null, r.id); } });
@@ -722,7 +732,7 @@ export function recordList(ctx, cfg) {
     const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td.check-cell', {}), cfg.totals(ctx, recs, m, cols))) : null;
     const done = recs.filter(r => (cfg.coreFields || ['amount']).every(f => countsAsDone(statusOf(r, f)))).length;
     const out = h(`div.section.area-${cfg.area}`, {}, head,
-      cfg.strip ? cfg.strip(ctx, m) : null,
+      cfg.strip ? (focus ? moreBlock(`focus:strip:${listKey}`, () => cfg.strip(ctx, ctx.metrics()), { label: 'More detail' }) : cfg.strip(ctx, m)) : null,
       h('div.list', {}, view.bulkHost, h('div.list-scroll', { 'data-scroll-key': listKey }, h('table.rows', {}, thead, body, tfoot)),
         sectionFooter(ctx, { add: addBtn, total: cfg.footerTotal?.(ctx, recs, m), count: recs.length, done, of: recs.length }),
         keyboardHint()));
@@ -735,8 +745,9 @@ export function recordList(ctx, cfg) {
 }
 
 // Secondary then Tertiary behind the caret. Paid with sits at the top (Mockup).
-function moreLayers(ctx, r, cfg, update) {
+function moreLayers(ctx, r, cfg, update, extra = [], m = null) {
   return h('div', {},
+    extra.length ? h('div.layer', {}, extra.map(c => labelled(c.label, c.render(ctx, r, m, update, {})))) : null, // focus mode: the other columns
     cfg.paidWith ? h('div.layer', {}, paidWith(ctx, r, id => update({ paidWith: id }))) : null,
     cfg.secondary ? h('div.layer', {}, cfg.secondary(ctx, r, update)) : null,
     cfg.tertiary ? h('div.layer', {}, cfg.tertiary(ctx, r, update)) : null,

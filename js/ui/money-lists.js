@@ -49,6 +49,7 @@ export function incomeList() {
     picker: ctx => ({ top: ctx.gates().betweenJobs ? ['Unemployment', 'Job', 'Side hustle', 'Benefits'] : ['Job', 'Unemployment', 'Side hustle', 'Benefits', 'Rental'],
       other: ['Partner job', 'Money from family', 'Self-employed', 'Rental'] }),
     coreFields: ['amount'],
+    focus: ['Source', 'Amount', 'Given as', 'Per', 'Pay frequency'], // session 1: take-home or gross, and how often
     columns: [
       { label: 'Source', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 170, key: `${r.id}:name` }) },
       { label: 'Amount', num: true, render: (ctx, r, m, up) => (r.values.basis === 'Both' && incomeRowOf(m, r)?.taxType
@@ -235,11 +236,18 @@ export function assetList(ref) {
         if (r.values.group === 'investment') return select(ref.lists.investmentTypes.filter(t => t !== 'HSA' || ctx.gates().hsa || r.type === 'HSA'), r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Account type', width: 160, key: `${r.id}:type` });
         return select(ref.lists.cashTypes, r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Account type', width: 160, key: `${r.id}:type` }); // B2.18: the kind of account, apart from the bank
       } },
+      // Focus mode only: what goes in each month, typed as a month (kept as a yearly contribution).
+      { label: 'A month in', num: true, focusOnly: true, render: (ctx, r, m, up) => {
+        if (r.kind !== 'account' || r.values.group !== 'investment') return null;
+        const per = yearlyContribution(r.values, m?.inputs.payFrequency ?? null);
+        return moneyInput(per == null ? null : Math.round(per / 12 * 100) / 100, v => up({ contribution: v == null ? null : v * 12, contributionPer: 'Year' }), { hint: 'Add a month', key: `${r.id}:month-in` });
+      } },
       owner,
     ],
     secondary: (ctx, r, up) => assetSecondary(ctx, r, up),
     tertiary: (ctx, r, up) => assetTertiary(ctx, r, up),
     coreFields: [],
+    focus: ['Account', 'Balance', 'Kind', 'A month in'], // session 1: type, balance, monthly contribution
     subtotal: (ctx, rows) => money(sum(rows, valOf)),
     footerTotal: (ctx, recs) => amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null),
     totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Account' ? h('td', {}, `${recs.length} ${recs.length === 1 ? 'item' : 'items'}`) : c.label === 'Balance' ? h('td.num', {}, amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null)) : h('td')), h('td'), h('td')],

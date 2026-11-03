@@ -40,6 +40,7 @@ export function debtList(ref) {
       toggle([['avalanche', 'Avalanche'], ['snowball', 'Snowball'], ['stress', 'Stress']], ctx.store.doc.settings.debtOrder ?? 'avalanche',
         v => { ctx.store.setDoc('settings', { debtOrder: v }); ctx.refresh(); }, { label: 'Payoff order' })),
     coreFields: ['balance', 'apr'],
+    focus: ['Debt', 'Balance', 'APR', 'Payment / mo'], // session 1: type, balance, APR, minimum
     paidWith: false,
     columns: [
       { label: 'Debt', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 150, key: `${r.id}:name` }) },
