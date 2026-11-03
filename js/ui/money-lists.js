@@ -312,9 +312,13 @@ function assetSecondary(ctx, r, up) {
 }
 function assetTertiary(ctx, r, up) {
   if (r.kind !== 'account') return [labelled('Coach notes', textInput(r.privateNote, x => up({ privateNote: x }), { hint: 'Add a private note', width: 320 }))];
-  const flags = accountFlags(r, { now: ctx.now() });
+  const flags = accountFlags(r, { now: ctx.now(), concentration: !ctx.store.doc.session?.concentrationOff });
   return [h('div.stack', { style: { gap: '8px', width: '100%' } },
-    flags.length ? h('div.stack', { style: { gap: '4px' } }, flags.map(f => warnTag(f))) : null,
+    flags.length ? h('div.stack', { style: { gap: '4px' } }, flags.map(f => (/sitting in cash/.test(f)
+      // Answer to 48: any cash is flagged; turn it off here when the cash is on purpose (an HSA cash floor).
+      ? h('span.row-line', { style: { gap: '8px' } }, warnTag(f), button('Cash here is on purpose', { size: 'small', onClick: () => up({ cashOk: true }) }))
+      : warnTag(f)))) : null,
+    r.values.cashOk ? h('span.row-line', { style: { gap: '8px' } }, h('span.muted.small', {}, 'Cash flag is off for this account.'), button('Turn it back on', { size: 'small', onClick: () => up({ cashOk: false }) })) : null,
     accountBlocks(ctx, r, up, f => L(ctx, r, f)),
     labelled('Coach notes', textInput(r.privateNote, x => up({ privateNote: x }), { hint: 'Add a private note', width: 320 })))];
 }
@@ -324,7 +328,7 @@ function assetChecks(ctx, m) {
   const out = [];
   const nw = netWorthCheck(m.netWorth.value, m.inputs);
   if (nw && !nw.ok) out.push(`Net worth (${money(m.netWorth.value)}) does not match your balances: ${money(nw.assets)} owned − ${money(nw.unvested)} unvested − ${money(nw.owed)} owed = ${money(nw.expected)}. Check for a balance with a status that zeroes it.`);
-  for (const r of ctx.visible(x => x.kind === 'account')) for (const f of accountFlags(r, { now: ctx.now() })) if (/sitting in cash|days old|Short goal|under 5 years/.test(f)) out.push(`${r.name || r.type}: ${f}`);
+  for (const r of ctx.visible(x => x.kind === 'account')) for (const f of accountFlags(r, { now: ctx.now(), concentration: !ctx.store.doc.session?.concentrationOff })) if (/sitting in cash|days old|Short goal|under 5 years/.test(f)) out.push(`${r.name || r.type}: ${f}`);
   return out.length ? h('div.stack.asset-checks', { style: { gap: '4px', marginBottom: '12px' } }, out.map(t => warnTag(t))) : null;
 }
 

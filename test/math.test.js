@@ -232,5 +232,5 @@ test('Not sure APR fills a typical rate labeled Guess (R055)', () => {
   const doc = householdFromInputs({ cardBalance: 3000, cardPayment: 200 });
   doc.records.find(r => r.type === 'Credit card').fieldStatus.apr = 'Not sure';
   const d = metrics(doc, ref).debts[0];
-  assert.equal(d.apr, 0.2215); assert.ok(d.aprGuess);
+  assert.equal(d.apr, 0.25); assert.ok(d.aprGuess); // card guess set to 25% on purpose (Nov 3 answer)
 });

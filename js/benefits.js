@@ -31,7 +31,7 @@ export function commuterSavings({ have, transitMonthly, marginal, limitMonthly }
 
 // Withholding flag (M3.2): a simple flag, not a W-4 calculator. A refund of $1,000 or more means you may be
 // lending the IRS money all year; any amount owed means check what comes out of each paycheck.
-export const BIG_REFUND = 1000;
+export const BIG_REFUND = 10000; // answer to 59
 export function withholdingFlag({ lastYear, amount }) {
   if (lastYear === 'Refund' && amount != null && amount >= BIG_REFUND) return { kind: 'over', text: `Your refund was large (${money(amount)}): you may be over-withholding. A smaller refund means more in each paycheck.` };
   if (lastYear === 'Owed' && (amount == null || amount > 0)) return { kind: 'under', text: 'You owed at tax time: check your withholding so it is not a surprise again.' };

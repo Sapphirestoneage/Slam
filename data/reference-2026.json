@@ -341,7 +341,7 @@
     }
   },
   "typicalRates": {
-    "Credit card": 0.2215,
+    "Credit card": 0.25,
     "Personal loan": 0.1186,
     "Car loan": 0.0714
   },
@@ -1081,5 +1081,6 @@
         "guess": 125
       }
     ]
-  }
+  },
+  "typicalRatesNote": "Credit card set to 25% on purpose (Nov 3): an unknown card APR shows a scary Guess until the real one is typed. The Fed G.19 average is 22.15%."
 }

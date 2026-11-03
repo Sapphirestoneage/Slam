@@ -111,6 +111,9 @@ export function sessionScreen(app, ctx, { fastTrackGap }) {
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Sessions planned'), S.stepper(s.planned ?? 6, v => ctx.store.setIn('session', ['planned'], v, 'Sessions planned'), { min: 1, max: 24, label: 'Sessions planned' })),
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Client view'), S.toggle([[false, 'Off'], [true, 'On']], !!app.prefs.clientView, v => app.setPref('clientView', v), { label: 'Client view' }), h('span.muted.small', {}, 'Hides coach-only items')),
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Satisfaction'), S.stepper(s.satisfaction ?? null, v => ctx.store.setIn('session', ['satisfaction'], v, 'Satisfaction'), { min: 1, max: 10, label: 'Satisfaction 1 to 10' })),
+      // Answer to 49: the one-holding-over-25% flag, on unless the coach turns it off for this client.
+      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Concentration flag'), S.toggle([[true, 'On'], [false, 'Off']], !s.concentrationOff, v => ctx.store.setIn('session', ['concentrationOff'], !v, 'Concentration flag'), { label: 'Concentration flag' }),
+        h('span.muted.small', {}, 'Flags one holding or theme over 25% of an account')),
       // M9: community presets, off unless turned on for this client.
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Community presets'), S.toggle([[false, 'Off'], [true, 'On']], !!s.community, v => setCommunity(ctx, v), { label: 'Community presets' }),
         h('span.muted.small', {}, 'Yom tov and Pesach lines, a kosher grocery note, future tuition goals, maaser')),

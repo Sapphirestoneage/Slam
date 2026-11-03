@@ -139,13 +139,13 @@ export function staleOf(asOf, now = new Date()) {
 
 // Uninvested cash (B2.19): a retirement account or HSA with money sitting in cash.
 export function uninvestedOf(type, v = {}, balance = null, alloc = null) {
-  if (!RETIREMENT.has(type)) return null;
+  // Any cash is flagged (answer to 48); the account can turn it off, e.g. an HSA that must keep a cash floor.
+  if (!RETIREMENT.has(type) || v.cashOk) return null;
   let cash = null;
   if (type === 'HSA' && !isBlank(v.hsaCash)) cash = v.hsaCash;
   else if (alloc?.ok && alloc.pcts.cash && !isBlank(balance)) cash = alloc.pcts.cash * balance;
-  if (cash === null || cash < 500) return null;
+  if (cash === null || cash < 0.5) return null;
   const share = !isBlank(balance) && balance > 0 ? cash / balance : null;
-  if (share !== null && share < 0.1 && type !== 'HSA') return null;
   return { cash, share };
 }
 

@@ -17,11 +17,11 @@ const HOUSING = new Set(['Rent or mortgage', 'Electric, gas, water']);
 const CONSUMER = new Set(['Credit card', 'Personal loan', 'Buy now, pay later', 'Payday or cash advance', 'Medical', 'Family or friend']);
 
 // A value as the math should see it: Not for me is zero (R058); Not sure with nothing typed is a Guess (R055).
-function read(record, field, guessValue = null) {
+function read(record, field, guessValue = null, { blankIsGuess = false } = {}) {
   const v = field in record && field !== 'values' ? record[field] : record.values?.[field];
   const status = statusOf(record, field);
   if (status === 'Not for me') return { v: 0 };
-  if (isBlank(v) && status === 'Not sure' && guessValue !== null) return { v: guessValue, guess: true };
+  if (isBlank(v) && (status === 'Not sure' || blankIsGuess) && guessValue !== null) return { v: guessValue, guess: true };
   return { v: isBlank(v) ? null : v };
 }
 
@@ -64,7 +64,8 @@ export function inputsOf(doc, ref, now = new Date()) {
     : null;
   const grossAnnual = income.some(x => x.gross !== null) ? income.reduce((s, x) => s + (x.gross ?? 0), 0) : null;
   const debts = live.filter(r => r.kind === 'debt').map(r => {
-    const apr = read(r, 'apr', ref.typicalRates[r.type] ?? null);
+    // A blank APR is a Guess until it is typed (answer to the APR question), not only when marked Not sure.
+    const apr = read(r, 'apr', ref.typicalRates[r.type] ?? null, { blankIsGuess: true });
     const balance = read(r, 'balance').v;
     let payment = read(r, 'payment').v;
     let paymentIsMinimum = false;

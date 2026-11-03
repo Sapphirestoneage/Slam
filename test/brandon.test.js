@@ -172,7 +172,7 @@ test('M2.4: commuter nudge is transit a year (capped) x the marginal rate, and o
 // ---------- Missed ideas M3: withholding flag ----------
 import { withholdingFlag } from '../js/benefits.js';
 test('M3.2: a large refund flags over-withholding; owing flags check withholding; small or unknown says nothing', () => {
-  assert.equal(withholdingFlag({ lastYear: 'Refund', amount: 2400 }).kind, 'over');
+  assert.equal(withholdingFlag({ lastYear: 'Refund', amount: 12000 }).kind, 'over'); assert.equal(withholdingFlag({ lastYear: 'Refund', amount: 2400 }), null); // large is over $10,000 (answer to 59)
   assert.equal(withholdingFlag({ lastYear: 'Refund', amount: 300 }), null);
   assert.equal(withholdingFlag({ lastYear: 'Owed', amount: 450 }).kind, 'under');
   assert.equal(withholdingFlag({ lastYear: "Don't know", amount: null }), null);
@@ -382,4 +382,16 @@ test('401(k) first pass on Income is dollars a paycheck; the 401(k) borrows it; 
   assert.equal(l.incomePerPaycheck, 200); assert.equal(l.incomePerPaycheckFrom, '401(k)');
   assert.equal(l.incomeTiersFrom, '401(k)');
   assert.equal(l.hasMatch, 'Yes');
+});
+
+// ---------- Nov 3 answers: cash flag, APR guess ----------
+test('48: any cash in a retirement account or HSA is flagged unless the account turns it off; a blank card APR guesses 25%', () => {
+  const a = allocationOf({ allocation: { us: 0.97, cash: 0.03 } }, 10000);
+  assert.equal(uninvestedOf('Roth IRA', {}, 10000, a).cash, 300);
+  assert.equal(uninvestedOf('HSA', { hsaCash: 200 }, 3000, null).cash, 200);
+  assert.equal(uninvestedOf('HSA', { hsaCash: 2000, cashOk: true }, 3000, null), null);
+  const s = fresh();
+  s.add('debt', { values: { balance: 3000, payment: 150 } }, { type: 'Credit card' });
+  const d = metrics(s.doc, ref, { now: new Date('2026-11-03') }).inputs.debts[0];
+  assert.equal(d.apr, 0.25); assert.equal(d.aprGuess, true);
 });

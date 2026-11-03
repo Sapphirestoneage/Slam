@@ -16,7 +16,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 export const balanceOf = r => r.values.balance ?? null;
 
 // Everything worth a flag on one account, in the user's words. Used in the row's More and on the Assets strip.
-export function accountFlags(r, { now = new Date(), payFrequency = null } = {}) {
+export function accountFlags(r, { now = new Date(), payFrequency = null, concentration = true } = {}) {
   const v = r.values, bal = balanceOf(r), out = [];
   const alloc = allocationOf(v, bal);
   if (alloc.entered && !alloc.ok) out.push(`Allocation adds to ${pct(alloc.total)}, not 100%`);
@@ -24,8 +24,8 @@ export function accountFlags(r, { now = new Date(), payFrequency = null } = {}) 
   if (alloc.ok && drift.flagged.length) out.push(`Drifted from target: ${drift.flagged.map(d => `${d.label} ${d.diff > 0 ? '+' : ''}${Math.round(d.diff * 100)} pts`).join(', ')}`);
   const hold = holdingsOf(v.positions, bal);
   if (hold.overlap.length) out.push(`Funds overlap (${hold.overlap.join(', ')}): they hold mostly the same US companies`);
-  for (const x of hold.concentrated) out.push(`${x.ticker || x.name || 'One holding'} is ${pct(x.share)} of the account (over ${pct(CONCENTRATION)})`);
-  for (const t of hold.heavyThemes) if (!hold.concentrated.some(x => (x.tracks || '').trim().toLowerCase() === t.name.toLowerCase())) out.push(`${t.name} is ${pct(t.share)} of the account (over ${pct(CONCENTRATION)})`);
+  if (concentration) for (const x of hold.concentrated) out.push(`${x.ticker || x.name || 'One holding'} is ${pct(x.share)} of the account (over ${pct(CONCENTRATION)})`);
+  if (concentration) for (const t of hold.heavyThemes) if (!hold.concentrated.some(x => (x.tracks || '').trim().toLowerCase() === t.name.toLowerCase())) out.push(`${t.name} is ${pct(t.share)} of the account (over ${pct(CONCENTRATION)})`);
   const tags = tagsOf(v.tags, { balance: bal, stocks: alloc.stocks, investment: v.group === 'investment', now });
   for (const t of tags.rows) if (t.stockRisk) out.push(`${t.name || 'A goal'} is under 5 years out and held in stocks: a drop may not recover in time`);
   if (tags.overBalance) out.push(`Goals here add up to ${money(tags.overBalance)} more than the balance`);
@@ -157,7 +157,7 @@ function detailsBlock(ctx, r, up, L) {
     inv ? labelled('Reinvest dividends', toggle(['On', 'Off'], v.drip ?? null, x => up({ drip: x }), { label: 'Reinvest dividends', clearable: true })) : null,
     inv ? labelled('Beneficiary named', toggle(['Yes', 'No'], v.beneficiary ?? null, x => up({ beneficiary: x }), { label: 'Beneficiary named', clearable: true }),
       { note: v.beneficiary === 'No' ? 'Add one in the account settings: it skips probate' : null, later: L('beneficiary') }) : null,
-    labelled('Owner', toggle(['Individual', 'Joint'], v.ownership ?? null, x => up({ ownership: x }), { label: 'Individual or joint', clearable: true })));
+    ctx.couple ? null : labelled('Owner', toggle(['Me', 'Joint'], r.owner ?? (v.ownership === 'Joint' ? 'Joint' : null), x => up({ owner: x, ownership: null }), { label: 'Owner', clearable: true }), { note: 'Joint: shared with someone' }));
 }
 
 // All the blocks for one account, each behind its own caret.
