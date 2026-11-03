@@ -23,7 +23,7 @@ export function overviewScreen(app, ctx) {
   const m = ctx.metrics();
   const x = m.inputs;
   const ratios = debtRatios(ctx, m);
-  const tax = x.grossAnnual ? taxRates({ gross: x.grossAnnual, filingStatus: x.filingStatus }, ctx.ref) : { id: 'M14', value: null, needs: ['gross pay'], unit: 'pct' };
+  const tax = x.grossAnnual ? taxRates({ gross: x.grossAnnual, filingStatus: x.filingStatus, place: x.place }, ctx.ref) : { id: 'M14', value: null, needs: ['gross pay'], unit: 'pct' };
   const shares = drafttShares(x.lines, x.takeHome, { roommates: x.roommates });
   const topLetter = shares.value ? Object.entries(shares.value).sort((a, b) => b[1] - a[1]).find(([, v]) => v > 0) : null;
   const l = ladder(m, ctx.store.doc);

@@ -400,7 +400,7 @@ export function taxesScreen(ctx) {
   const gross = taxed.length ? sum(taxed, i => i.gross) : null;
   const pretax = sum(taxed, i => i.pretax);
   const se = taxed.some(i => i.taxType === '1099');
-  const rates = taxRates({ gross, pretax, filingStatus: x.filingStatus, selfEmployed: se && taxed.every(i => i.taxType === '1099') }, ctx.ref);
+  const rates = taxRates({ gross, pretax, filingStatus: x.filingStatus, selfEmployed: se && taxed.every(i => i.taxType === '1099'), place: x.place }, ctx.ref);
   const marginal = rates.value === null ? rates : { ...rates, value: rates.marginal, text: `The last dollar earned is taxed at ${pct(rates.marginal)}: the federal bracket plus FICA.` };
   const seGross = sum(taxed.filter(i => i.taxType === '1099'), i => i.gross);
   const seTax = seGross ? fica({ gross: seGross, filingStatus: x.filingStatus, selfEmployed: true }, ctx.ref) : null;
@@ -414,7 +414,7 @@ export function taxesScreen(ctx) {
       metricCard(ctx, 'Marginal bracket', marginal)),
     // Withholding (M3): last year's result and the W-4 basics, with one plain flag.
     h('div.form-grid', { style: { marginTop: '16px' } },
-      labelled('Last year at tax time', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+      labelled(`Tax year ${ctx.now().getFullYear() - 1}: refund or owed`, h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
         toggle(['Refund', 'Owed', "Don't know"], p.lastYearTax ?? null, v => set({ lastYearTax: v }), { label: 'Refund or owed', clearable: true }),
         p.lastYearTax === 'Refund' || p.lastYearTax === 'Owed' ? moneyInput(p.lastYearAmount ?? null, v => set({ lastYearAmount: v }), { hint: 'Add amount', key: 'tax:lastYear' }) : null),
         parkProfile(ctx.store, 'lastYearAmount')),
@@ -423,9 +423,18 @@ export function taxesScreen(ctx) {
       labelled('Extra withheld a paycheck', moneyInput(p.w4Extra ?? null, v => set({ w4Extra: v }), { hint: 'Add amount', key: 'tax:w4extra' }), { note: 'Step 4(c) on your W-4', ...parkProfile(ctx.store, 'w4Extra') })),
     (() => { const f = withholdingFlag({ lastYear: p.lastYearTax, amount: p.lastYearAmount ?? null }); return f ? h('div.nudge', { style: { marginTop: '12px' } }, f.text) : null; })(),
     moreBlock('taxes:more', () => h('div.form-grid', {},
+      // Refund history (B5.2): the two years before, each with don't know.
+      ...[2, 3].map(k => {
+        const yr = ctx.now().getFullYear() - k;
+        const hist = p.taxHistory?.[yr] || {};
+        const setH = patch => set({ taxHistory: { ...(p.taxHistory || {}), [yr]: { ...hist, ...patch } } });
+        return labelled(`Tax year ${yr}`, h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+          toggle(['Refund', 'Owed', "Don't know"], hist.result ?? null, v => setH({ result: v }), { label: `Tax year ${yr}`, clearable: true }),
+          hist.result === 'Refund' || hist.result === 'Owed' ? moneyInput(hist.amount ?? null, v => setH({ amount: v }), { hint: 'Add amount', key: `tax:hist${yr}` }) : null));
+      }),
       applies('quarterly', { g, taxTypes: taxed.map(i => i.taxType) }) ? labelled('Quarterly estimates paid this year', moneyInput(p.quarterlyPaid ?? null, v => set({ quarterlyPaid: v }), { hint: 'Add amount', key: 'tax:quarterly' })) : null,
-      applies('seTax', { g, taxTypes: taxed.map(i => i.taxType) }) ? labelled('Self-employment tax a year', h('span.computed', {}, seTax ? money(seTax.value) : 'Needs 1099 income')) : null)),
-    h('p.muted', { style: { marginTop: '12px' } }, `Gross used: ${gross === null ? 'none yet (add take-home or gross on Income)' : `${money(gross)} a year`}. Federal and FICA only; state tax is not in yet.`)));
+      applies('seTax', { g, taxTypes: taxed.map(i => i.taxType) }) ? labelled('Self-employment tax a year', h('span.computed', {}, seTax ? money(seTax.value) : 'Needs 1099 income')) : null), { label: 'Earlier years and estimates' }),
+    h('p.muted', { style: { marginTop: '12px' } }, `Gross used: ${gross === null ? 'none yet (add take-home or gross on Income)' : `${money(gross)} a year`}. ${x.place ? `Federal, FICA, NY state${x.place.nyc ? ' and NYC' : ''} tax.` : 'Federal and FICA; state tax is in for New York only so far.'}`)));
 }
 
 // ---------- Completion (R065): core is the Primary fields; full adds the detail that applies ----------
@@ -469,13 +478,13 @@ export const incomeCharts = [
       const x = ctx.metrics().inputs;
       const taxed = x.income.filter(i => i.taxType && i.gross !== null);
       if (!taxed.length) return { needs: ['take-home or gross pay'] };
-      let fed = 0, fc = 0, pre = 0, gross = 0;
+      let fed = 0, fc = 0, pre = 0, gross = 0, st = 0;
       for (const i of taxed) {
-        const t = takeHomeFromGross({ gross: i.gross, pretax: i.pretax, filingStatus: x.filingStatus, selfEmployed: i.taxType === '1099' }, ctx.ref);
-        gross += i.gross; fed += t.federal.value; fc += t.fica.value; pre += i.pretax;
+        const t = takeHomeFromGross({ gross: i.gross, pretax: i.pretax, filingStatus: x.filingStatus, selfEmployed: i.taxType === '1099', place: x.place }, ctx.ref);
+        gross += i.gross; fed += t.federal.value; fc += t.fica.value; pre += i.pretax; st += t.stateTax.state + t.stateTax.local;
       }
-      const steps = [['Gross', gross / 12], ['Federal tax', -fed / 12], ['FICA', -fc / 12], ['Before-tax', -pre / 12]];
-      return { steps, takeHome: (gross - fed - fc - pre) / 12 };
+      const steps = [['Gross', gross / 12], ['Federal tax', -fed / 12], ['FICA', -fc / 12], ...(st ? [['State and city', -st / 12]] : []), ['Before-tax', -pre / 12]];
+      return { steps, takeHome: (gross - fed - fc - st - pre) / 12 };
     },
     option: (d, t) => {
       const labels = [...d.steps.map(s => s[0]), 'Take-home'];

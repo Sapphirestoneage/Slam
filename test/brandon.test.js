@@ -298,3 +298,19 @@ test('B3.9: Roth contributions by tax year; last year stays open until tax day; 
   assert.equal(r.basis, 10500);
   assert.equal(growthOf('Roth IRA', { rothLog: log }, 12000).rothEarnings, 1500);
 });
+
+// ---------- B5: NY and NYC tax ----------
+import { stateTax, takeHomeFromGross, taxRates } from '../js/math/income.js';
+test('B5.1: NY and NYC tax on NY taxable income; none outside NY; take-home and rates include them', () => {
+  const st = stateTax({ gross: 70000, pretax: 0, filingStatus: 'Single', place: { state: 'NY', nyc: true } }, ref);
+  // NY taxable 62,000: 8,500x3.9% + 3,200x4.4% + 2,200x5.15% + 48,100x5.4%
+  assert.ok(Math.abs(st.state - (8500 * 0.039 + 3200 * 0.044 + 2200 * 0.0515 + 48100 * 0.054)) < 0.01);
+  assert.ok(Math.abs(st.local - (12000 * 0.03078 + 13000 * 0.03762 + 25000 * 0.03819 + 12000 * 0.03876)) < 0.01);
+  assert.equal(stateTax({ gross: 70000, place: null }, ref).state, 0);
+  const ny = takeHomeFromGross({ gross: 70000, place: { state: 'NY', nyc: true } }, ref).value;
+  const fed = takeHomeFromGross({ gross: 70000 }, ref).value;
+  assert.ok(Math.abs(fed - ny - st.state - st.local) < 0.01);
+  const r = taxRates({ gross: 70000, place: { state: 'NY', nyc: true } }, ref);
+  assert.ok(Math.abs(r.marginal - (r.federalMarginal + 0.0765 + 0.054 + 0.03876)) < 1e-9);
+  assert.equal(r.federalMarginal, 0.22);
+});

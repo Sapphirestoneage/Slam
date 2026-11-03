@@ -23,6 +23,7 @@ function read(record, field, guessValue = null) {
   return { v: isBlank(v) ? null : v };
 }
 
+export const placeOf = p => (p?.state === 'NY' ? { state: 'NY', nyc: p.nyc === true } : null);
 export function ageOf(profile, now = new Date()) {
   if (!isBlank(profile.age)) return profile.age;
   if (isBlank(profile.birthYear)) return null;
@@ -34,10 +35,11 @@ export function inputsOf(doc, ref, now = new Date()) {
   const gates = gatesOf(doc.profile, doc.client);
   const live = visible(doc.records, gates, ref); // gated-out rows count nowhere (R001, R066)
   const filingStatus = doc.profile.filingStatus ?? defaultFilingStatus(gates.couple); // R043
+  const place = placeOf(doc.profile); // B5.1: NY and NYC tax when the Profile says so
   const link = link401k(live); // B3.10: Income and the 401(k) fill each other in
   const withLink = r => (r !== link.job || r.values.contributionPct != null ? r
     : { ...r, values: { ...r.values, contributionPct: link.incomePct, k401Paycheck: link.incomePerPaycheck } });
-  const income = live.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(withLink(r), { filingStatus, ref }) }));
+  const income = live.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(withLink(r), { filingStatus, ref, place }) }));
   const takeHome = income.length
     ? income.reduce((s, x) => (s === null || x.takeHome.value === null ? null : s + x.takeHome.value), 0)
     : null;
@@ -77,7 +79,7 @@ export function inputsOf(doc, ref, now = new Date()) {
     ? housingLines.reduce((s, l) => s + (myShare(l).value ?? 0), 0) : null;
   const a = doc.assumptions;
   return {
-    takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, none,
+    place, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, none,
     debtOrder: doc.settings?.debtOrder ?? 'avalanche',
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || (useLines && lines.some(l => l.draftt === 'Debt')) ? 0 : debtPayments),
     spendingSource: useLines ? 'lines' : 'gut', lineTotal,
