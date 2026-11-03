@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { TABS, parseRoute, routeForPlace, search } from '../js/nav.js';
+import { TABS, parseRoute, routeForPlace, search, tabRoute } from '../js/nav.js';
 
 const fields = JSON.parse(readFileSync(new URL('../data/fields.json', import.meta.url)));
 
@@ -40,7 +40,11 @@ test('old routes redirect to the new homes (bookmarks, Find, every number links 
   assert.equal(routeForPlace('Cash flow › Taxes'), '#/cash-flow/taxes');
   assert.equal(routeForPlace('Home › About you'), '#/home/profile');
   assert.equal(routeForPlace('Cash flow › Month-end close'), '#/cash-flow/close', 'a renamed sub-tab still lands');
-  assert.equal(parseRoute('#/home').sub.name, 'About you', 'About you is the first stop in Home');
+  assert.equal(parseRoute('#/home').sub.name, 'Prep', 'Home lands on Prep; About you is first in the row');
+  assert.equal(TABS[0].subs[0].name, 'About you');
+  assert.equal(tabRoute(TABS[0]), '#/home/prep');
+  assert.equal(tabRoute(TABS[0], { inSession: true }), '#/home/live', 'Home and SLAM open Live while a session is on');
+  assert.equal(tabRoute(TABS[2]), '#/cash-flow/income');
 });
 test('no field lives on an old tab', () => {
   for (const f of fields) assert.doesNotMatch(f.livesOn, /My Money|Spending ›/, f.id);

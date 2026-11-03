@@ -3,7 +3,8 @@
 // The DATING spine: Debt + Assets = Net worth; Taxes + Income + Needs = Cash flow; Goals = Plan.
 // Cash flow sub-tabs read in waterfall order: Income, Taxes, then Budget, Calendar and Close.
 export const TABS = [
-  { id: 'home', name: 'Home', job: 'This session: who they are, before, during, after', subs: [
+  // Home opens Prep (or Live while a session is on, see homeRoute); About you is first in the row, not the landing page.
+  { id: 'home', name: 'Home', job: 'This session: who they are, before, during, after', landing: 'prep', subs: [
     { id: 'profile', name: 'About you', area: 'needs' }, { id: 'prep', name: 'Prep' }, { id: 'live', name: 'Live' }, { id: 'wrap-up', name: 'Wrap-up' }] },
   { id: 'net-worth', name: 'Net worth', job: 'What you own and owe', subs: [
     { id: 'assets', name: 'Assets', area: 'assets' }, { id: 'debt', name: 'Debt', area: 'debt' }, { id: 'protection', name: 'Protection', area: 'goals' }] },
@@ -39,10 +40,12 @@ export function parseRoute(hash) {
   const moved = MOVED[`${tabId}/${subId}`] ?? MOVED[tabId];
   if (moved) [tabId, subId] = moved.split('/');
   const tab = ALL.find(t => t.id === tabId) || TABS[0];
-  const sub = tab.subs.find(s => s.id === subId) || tab.subs[0];
+  const sub = tab.subs.find(s => s.id === subId) || tab.subs.find(s => s.id === tab.landing) || tab.subs[0];
   return { tab, sub, hash: `#/${tab.id}/${sub.id}` };
 }
 export const routeOf = (tabId, subId) => `#/${tabId}/${subId}`;
+// Where a tab's own button goes: its landing page; Home goes to Live while a session is on.
+export const tabRoute = (t, { inSession = false } = {}) => (t.id === 'home' ? (inSession ? '#/home/live' : '#/home/prep') : routeOf(t.id, t.landing ?? t.subs[0].id));
 
 // 'My Money › Debt' (the Fields tab's 'Lives on') to a route.
 export function routeForPlace(place) {

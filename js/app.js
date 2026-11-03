@@ -10,7 +10,7 @@ import { localAdapter, memoryAdapter, listClients, loadClient, saveClient, creat
 import { householdFromInputs } from './demo.js';
 import { addPresets } from './presets.js';
 import { keyNumbers } from './math/metrics.js';
-import { TABS, parseRoute, search, routeForPlace } from './nav.js';
+import { TABS, parseRoute, search, routeForPlace, tabRoute } from './nav.js';
 import { SCREENS, progressOf } from './screens.js';
 import { startFastTrack } from './ui/fasttrack-ui.js';
 import { keepPlace } from './ui/place.js';
@@ -101,11 +101,14 @@ const app = {
     const time = h('select', { 'aria-label': 'Show amounts as', title: 'Show amounts as dollars, hours of work or days of FI', 'data-focus': 'time-view' },
       [['$', '$'], ['Hours', 'Hours'], ['FI days', 'FI days']].map(([v, t]) => h('option', { value: v, selected: v === this.ctx.timeMode }, t)));
     time.onchange = () => this.ctx.setTimeMode(time.value);
+    // The Home tab and SLAM do the same: Prep, or Live while a session is on.
+    const ses = this.hasClient ? this.store.doc.session || {} : {};
+    const homeHref = tabRoute(TABS[0], { inSession: !!ses.startedAt && !(ses.endedAt > ses.startedAt) });
     clear($('topbar'), h('div.topbar-in', {},
       h('div.tb-left', {},
-        h('a.site-id', { href: '#/home/prep', title: 'Stress Less About Money' }, 'SLAM'), clientBtn,
+        h('a.site-id', { href: homeHref, title: 'Stress Less About Money' }, 'SLAM'), clientBtn,
         h('span.save-state', { id: 'save-state' })),
-      h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: `#/${t.id}/${t.subs[0].id}`, 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),
+      h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: t.id === 'home' ? homeHref : tabRoute(t), 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),
       h('div.tb-right', {},
         this.findBox(),
         S.iconButton('note', 'Parking lot', () => this.openParking()), undo, redo,
