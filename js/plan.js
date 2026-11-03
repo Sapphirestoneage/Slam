@@ -1,6 +1,7 @@
 // The plan model (build phase 7): FI targets, milestone dates, the Next 3 numbers and Guide me.
 // Pure: reads a household and its metrics, never the DOM.
 import { metrics } from './math/metrics.js';
+import { monthlyFrom } from './math/income.js';
 import { fiDate, leanFiNumber, baristaFiNumber, pctToFi, solveMonthlySaving, solveSpending } from './math/fi.js';
 import { payoffPlan } from './math/debt.js';
 import { myShare } from './math/spending.js';
@@ -101,7 +102,7 @@ export function next3(doc, ref, { now = new Date(), limit = 3 } = {}) {
       if (r.kind === 'debt' && f === 'payment' && r.type === 'Credit card' && r.values.payChoice !== 'Custom') continue; // the minimum is worked out
       if (r.status === 'Not for me') continue;
       // Dollars a year at stake, for materiality (R073).
-      const dollars = r.kind === 'bill' ? (r.amount ?? 0) * (r.per === 'year' ? 1 : 12)
+      const dollars = r.kind === 'bill' ? (r.amount == null ? 0 : monthlyFrom(r.amount, r.per).value * 12)
         : r.kind === 'debt' ? f === 'apr' ? (r.values.balance ?? 0) * (r.values.apr ?? ref.typicalRates[r.type] ?? 0.1) : f === 'payment' ? (r.values.payment ?? 300) * 12 : (r.values.balance ?? 5000) * 0.1
           : r.kind === 'income' ? 12000 : (v ?? 1000) * 0.07;
       const word = { amount: r.kind === 'bill' ? '' : ' take-home', balance: ' balance', apr: ' APR', payment: ' payment', value: ' value' }[f];

@@ -46,7 +46,17 @@ function repeatDays(ym, { every, anchor = ANCHOR, days = null, day = 1 }) {
 }
 
 // ---------- What lands on the calendar this month ----------
-export function instances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) {
+// B6.10: the Actual pass asks for the month's list once per row and column; build it once per change.
+const CACHE = new WeakMap();
+export function instances(doc, ref, ym, opts = {}) {
+  const key = `${doc._rev ?? 0}|${doc.updatedAt}|${ym}|${ymOf(opts.now || new Date())}|${(opts.autoWins || []).length}`;
+  let byDoc = CACHE.get(doc);
+  const version = `${doc._rev ?? 0}|${doc.updatedAt}`;
+  if (!byDoc || byDoc.version !== version) { byDoc = { version, lists: new Map() }; CACHE.set(doc, byDoc); }
+  if (!byDoc.lists.has(key)) byDoc.lists.set(key, buildInstances(doc, ref, ym, opts));
+  return byDoc.lists.get(key);
+}
+function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) {
   const g = gatesOf(doc.profile, doc.client);
   const live = visible(doc.records, g, ref);
   const cal = doc.spending?.calendar || {};

@@ -62,3 +62,46 @@ Each one has the default used so the build could keep going. Answer here or in t
 41. **Export PDF.** Uses the browser's print to PDF. It is hidden inside SLAM for Eli (an artifact cannot print); the public site shows it.
 42. **Pre-call form.** Needs a server to receive a client's answers from a link, so it is a later phase. The discovery table works now (Coach tools › Discovery, or New client › From a discovery call).
 43. **Card bills and payoff (R104).** A card's More shows the bills charged to it. Paid in full, they are spending. Carrying a balance, the payoff projection does not yet add them to the balance; the card's payment amount is used as typed.
+
+## Brandon batch (Nov 2 2026)
+
+44. **The request was cut off.** It stops in section 3 at "HSA: cash vs invested, self-directed vs managed with a fee comparison, per-pay". Default: "per-pay" read as the HSA contribution per paycheck (already there, now counted with the real paychecks a year). Anything after it, and any LATER list, was not received. Please resend the rest.
+45. **Where the batch lives.** The spec is a spreadsheet, so the items went to `docs/backlog-brandon.md` (B1.1 to B3.8, tagged NOW or LATER) instead of the xlsx. Move them into the spec on your next refresh, or say so and the rows can be added to the Feature list tab.
+46. **"Will email" is now shown as "I'll find it later".** Same status underneath (R053), so old files and the math are unchanged; only the words on screen moved to the user's side. Profile answers park in their own list. A typed answer comes off the list by itself.
+47. **Two places for the employer match.** Income › More still has the simple "% up to %" that the math (M15) uses; the 401(k) now has tiers (100% of the first 3%, 50% of the next 1%). Default: the tiers show on the 401(k) only and do not change the FI math yet. Which should be the one source? (Backlog BL.5.)
+48. **Uninvested cash threshold.** Flagged when a retirement account or HSA has $500 or more in cash and, outside an HSA, that is at least 10% of the account. HSAs often require a cash floor; is $500 right?
+49. **"A set %" for one holding or theme.** Default 25% of the account, one value for everyone. Should the coach set it per client?
+50. **"Held in stocks" for a short goal.** Flagged when the account's mix has any stocks, or it is an investment account with no mix typed yet. Should a small stock share (say under 20%) pass?
+51. **Overlap.** Found by name, ticker or "what it tracks" matching S&P 500, NASDAQ, Dow or total US market; two or more such funds are flagged. There is no fund lookup yet (BL.2).
+52. **Stocks % field removed.** The new allocation replaces it; nothing in the math read it.
+53. **Stale balance.** Uses "Balance as of", set to today whenever a balance is typed; older rows fall back to the row's last edit date.
+54. **Owner twice for couples.** Every account now has Individual / Joint under Details; couples also keep the Me / Partner / Joint column. Fold them into one?
+55. **Next on the Profile.** Shows once every core answer is in or parked with I'll find it later, and goes to Income. Before that, it says how many are left and names the first three.
+
+## Missed-ideas batch (Nov 2 2026)
+
+56. **Credit cards as "their own account type".** Kept as the Debt type they already were (one record for each thing, R049, R115), grouped under Credit cards on Debt. Want them on Assets as well, or a sub-tab of their own?
+57. **Commuter limit.** $340 a month (IRS 2026, transit and parking each) was added to data/reference-2026.json; it is not in the spec's Reference data tab yet. The nudge uses transit lines (Transit; Transit, Uber; Tolls and parking) and the federal + FICA marginal rate; state and NYC tax are not in yet, so the saving reads low for NY.
+58. **Benefits and take-home.** The answers do not change take-home or tax yet; the Income row's before-tax boxes (health premium, HSA or FSA, other before-tax) still drive that. Should a commuter or FSA yes fill those boxes?
+59. **"Large" refund.** $1,000 or more. Owing any amount flags "check withholding".
+60. **Year view placement.** Built into Plan › Next 12 months (Your year, Sinking funds, Taking over above the events list) instead of a new tab. The tab name is unchanged.
+61. **Insurance renewals and lease renewal months.** Added with no month, since only you know them; card annual fees use the card's Opened month.
+62. **Sinking funds and Budget.** A sinking fund's monthly amount shows on Next 12 months only; it is not added to spending or the surplus yet (yearly costs already are, as their set-aside).
+63. **Taking over and the math.** Covered bills still count as $0 to you until the date; the list shows what each date adds, but the FI date does not move on those dates yet.
+64. **Life admin: one freeze or three.** Shown as three rows, one per bureau, so each can be done on its own.
+65. **Community presets.** Stored per client. Yom tov and Pesach come in as yearly costs with blank amounts and no month (the dates move each year). The kosher note is one line on the Budget, not a change to the grocery guess.
+66. **Onboarding timer for the demo client.** "First computed number" is the first time any of net worth, surplus, savings rate or runway has a value; with example numbers that is immediately.
+67. **"I don't have this".** Saved as the field's Not for me status (counts as answered, as $0 in the math), on every field added in this batch. Earlier fields still have I'll find it later only.
+
+## Brandon batch, full copy (Nov 3 2026)
+
+68. **"Fill each other in" (your answer to 47).** Read as: Income and the 401(k) each show the other's 401(k) % and employer match when their own box is blank, marked "From Income" or "From your 401(k)"; typing on either side keeps that side's own answer. A multi-tier match from the 401(k) shows on Income as text, since Income only has one "% up to %". Right reading?
+69. **NY and NYC rates.** Typed in from the 2026 rates as I know them (the five lowest NY brackets cut 0.1 point for 2026). Please check them against the NY tax department's 2026 tables. The high-income recapture and Yonkers are not modeled; other states are still federal only.
+70. **Savings rate and before-tax saving.** The headline stays M28 (surplus over take-home). 401(k) and HSA money from the paycheck shows as a second number ("X% with your 401(k) and HSA"). Should that become the headline?
+71. **Premiums as cash flow.** Each coverage row says Paid from: Paycheck (already out of take-home) or Budget line (one tap adds a linked fixed line). Health premiums typed on Income stay separate from the Health coverage row. Merge them?
+72. **"Personal care and hygiene".** Display only: the DRAFTT T letter is still Therapy in the math and the charts, and actual therapy shows as its own section. Rename the letter in the spec too?
+73. **Dates and Other wants.** Added to the usual list with starter guesses ($100, $50) marked Guess like the other 43 lines. Blank instead?
+74. **Who covers it.** Rarer answers (Included in rent, N/A, Need it, don't have yet) moved behind "Other". OK to drop any of them?
+75. **Payday card.** "Fixed bills" is your share of lines marked Fixed plus debt payments that are not lines. Savings goals and sinking funds are not taken out of "free to spend" yet.
+76. **Paychecks left to max the HSA.** Counted from today's date and the pay frequency, not the typed paydays.
+77. **Report this without a client.** It asks you to open a client first, because the note lives in the client file.

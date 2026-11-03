@@ -7,6 +7,7 @@ import { gatesOf, visible } from '../gates.js';
 import { myShare, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor } from './spending.js';
 import { cardMinimum, payoffMonths, totalInterest, payoffPlan } from './debt.js';
 import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
+import { link401k } from './portfolio.js';
 import { fiNumber, fiDate, coastFi, bigDeals } from './fi.js';
 import { hourlyRate } from './time.js';
 
@@ -22,6 +23,7 @@ function read(record, field, guessValue = null) {
   return { v: isBlank(v) ? null : v };
 }
 
+export const placeOf = p => (p?.state === 'NY' ? { state: 'NY', nyc: p.nyc === true } : null);
 export function ageOf(profile, now = new Date()) {
   if (!isBlank(profile.age)) return profile.age;
   if (isBlank(profile.birthYear)) return null;
@@ -33,7 +35,11 @@ export function inputsOf(doc, ref, now = new Date()) {
   const gates = gatesOf(doc.profile, doc.client);
   const live = visible(doc.records, gates, ref); // gated-out rows count nowhere (R001, R066)
   const filingStatus = doc.profile.filingStatus ?? defaultFilingStatus(gates.couple); // R043
-  const income = live.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(r, { filingStatus, ref }) }));
+  const place = placeOf(doc.profile); // B5.1: NY and NYC tax when the Profile says so
+  const link = link401k(live); // B3.10: Income and the 401(k) fill each other in
+  const withLink = r => (r !== link.job || r.values.contributionPct != null ? r
+    : { ...r, values: { ...r.values, contributionPct: link.incomePct, k401Paycheck: link.incomePerPaycheck } });
+  const income = live.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(withLink(r), { filingStatus, ref, place }) }));
   const takeHome = income.length
     ? income.reduce((s, x) => (s === null || x.takeHome.value === null ? null : s + x.takeHome.value), 0)
     : null;
@@ -73,7 +79,7 @@ export function inputsOf(doc, ref, now = new Date()) {
     ? housingLines.reduce((s, l) => s + (myShare(l).value ?? 0), 0) : null;
   const a = doc.assumptions;
   return {
-    takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, none,
+    place, link, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, none,
     debtOrder: doc.settings?.debtOrder ?? 'avalanche',
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || (useLines && lines.some(l => l.draftt === 'Debt')) ? 0 : debtPayments),
     spendingSource: useLines ? 'lines' : 'gut', lineTotal,
@@ -100,7 +106,15 @@ export function metrics(doc, ref, { now = new Date() } = {}) {
   const floor = x.lines.length ? fixedFloor(x.lines, { roommates: x.roommates }).value : null;
   out.runwayMonths = runway({ cash: x.cash, spending: x.spending, fixedFloor: floor || null });
   out.surplus = monthlySurplus({ takeHome: x.takeHome, spending: x.spending, debtPaymentsOutsideSpending: x.debtPaymentsOutsideSpending ?? 0 });
-  out.savingsRate = savingsRate({ takeHome: x.takeHome, surplus: out.surplus.value });
+  // B6.9: money into the 401(k) and HSA from the paycheck is saving, not spending; premiums and commuter money are spending.
+  const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
+  const pretaxSaving = x.income.reduce((s, i) => {
+    const v = i.r.values, n = PAYS[v.payFrequency] ?? 26, own = i.r === x.link.job;
+    const pct = v.contributionPct ?? (own ? x.link.incomePct : null) ?? 0;
+    const perPay = (v.contributionPct == null && own ? x.link.incomePerPaycheck ?? 0 : 0) + (x.gates.hsa ? v.hsaFsa ?? 0 : 0);
+    return s + ((i.gross ?? 0) * pct + perPay * n) / 12;
+  }, 0);
+  out.savingsRate = savingsRate({ takeHome: x.takeHome, surplus: out.surplus.value, pretaxSaving });
   out.housingPct = housingPct({ housing: x.housing, takeHome: x.takeHome });
   out.supportReceived = supportReceived(x.lines, { roommates: x.roommates });
   const paidInFull = { id: 'M31', value: 1, needs: [], guess: false, unit: 'months', text: 'Paid in full each month: no interest, nothing carried over.' };

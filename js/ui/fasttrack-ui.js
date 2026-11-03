@@ -5,9 +5,9 @@ import { moneyInput, toggle, select, textInput, labelled, summaryStrip, toast } 
 import { applyFastTrack, fastTrackAnswers, FT_DEBTS } from '../fasttrack.js';
 import { HOUSING } from '../gates.js';
 import { keyNumbers } from '../math/metrics.js';
+import { FREQ } from './money-lists.js';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const FREQ = [['week', 'Weekly'], ['2 weeks', 'Every 2 weeks'], ['twice a month', 'Twice a month'], ['month', 'Monthly']];
 
 export function startFastTrack(app, ctx) {
   const a = fastTrackAnswers(ctx.store.doc);
@@ -30,7 +30,7 @@ export function startFastTrack(app, ctx) {
     { title: 'Take-home pay', help: 'What lands in the account, after taxes. Any way they know it.', body: () => h('div.ft-grid', {},
       labelled('Take-home', big(a.takeHome, v => set({ takeHome: v }), 'Add amount', 'ft:take')),
       labelled('Per', toggle([['paycheck', 'Paycheck'], ['month', 'Month'], ['year', 'Year']], a.takePer, v => set({ takePer: v }), { label: 'Per' })),
-      labelled('Paid', select(FREQ, a.payFrequency, v => set({ payFrequency: v }), { label: 'Pay frequency', hint: 'How often', width: 170, key: 'ft:freq' }))) },
+      labelled('Paid', select(FREQ, a.payFrequency, v => set({ payFrequency: v }), { label: 'Pay frequency', hint: 'How often', width: 210, key: 'ft:freq' }))) },
     { title: 'Spending, all in', help: "Their gut: 'what do you think you spend in a month?' Kept to compare later.", body: () => h('div.ft-grid', {},
       labelled('A month, all in', big(a.gut, v => set({ gut: v }), 'Add amount', 'ft:gut')),
       labelled('Does that include debt payments?', toggle([[true, 'Yes'], [false, 'No']], a.gutIncludesDebt, v => set({ gutIncludesDebt: v }), { label: 'Includes debt payments' }))) },

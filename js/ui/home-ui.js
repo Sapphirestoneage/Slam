@@ -1,12 +1,13 @@
 // Home (build phase 9): the session cockpit. Prep before the call, Live during, Wrap-up after, each with one
 // main button. Answers: where is this client now, what are we doing today, what is the one next thing.
 import { h, clear, icon } from './dom.js';
+import { paydayOf } from '../payday.js';
 import * as S from './staples.js';
 import { quickFill, canQuickFill } from './quickfill.js';
 import { listCompletion } from './money-lists.js';
 import { profileCompletion } from './profile.js';
 import { firstLowDay } from './spending-ui.js';
-import { homeworkItems, sendSummary, fiCard } from './report-ui.js';
+import { homeworkItems, sendSummary, fiCard, netWorthChart } from './report-ui.js';
 import { next3, agenda } from '../plan.js';
 import { keyNumbers } from '../math/metrics.js';
 import { changeSince, statusOf, countsAsDone } from '../records.js';
@@ -50,6 +51,31 @@ export function moneyInOneLine(app, ctx) {
 }
 
 // ---------- Prep ----------
+// B7: the next paycheck, what the fixed bills take, and what is free, per pay period and per month.
+function paydayCard(app, ctx) {
+  const d = paydayOf(ctx.store.doc, ctx.ref, ctx.now());
+  if (d.needs) return h('div.card.payday', {}, h('strong', {}, 'Payday'), h('span.muted', {}, ` Add ${d.needs} on Income to see what each paycheck covers.`),
+    S.button('Open Income', { size: 'small', onClick: () => app.go('#/my-money/income') }));
+  const when = new Date(`${d.date}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const line = (k, v) => h('span.stack', { style: { gap: '2px' } }, h('span.label', {}, k), h('strong', {}, money(v)));
+  return h('div.card.payday', {},
+    h('p', { style: { fontSize: '1.0625rem', margin: 0 } }, `You get ${money(d.period.in)} on ${when}${d.guessDate ? ' (day not set yet)' : ''}. `,
+      d.hasFixed ? `${money(d.period.fixed)} covers fixed bills. ` : '', h('strong', {}, `${money(d.period.free)} is free to spend.`)),
+    !d.hasFixed ? h('span.muted.small', {}, 'Mark bills Fixed on the Budget to see what they take from each paycheck.') : null,
+    h('div.row-line', { style: { gap: '24px', marginTop: '10px' } },
+      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each paycheck'), line('In', d.period.in), line('Fixed bills', d.period.fixed), line('Free', d.period.free)),
+    h('div.row-line', { style: { gap: '24px', marginTop: '6px' } },
+      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each month'), line('In', d.month.in), line('Fixed bills', d.month.fixed), line('Free', d.month.free)));
+}
+// M6: net worth over time, closed until asked; snapshots come from Save snapshot, End session and month-end close.
+function netWorthOverTime(app, ctx) {
+  const snaps = ctx.store.doc.snapshots.filter(x => x.metrics && x.metrics.netWorth != null);
+  return h('div.nw-time', {}, h('div.row-line', { style: { gap: '8px' } },
+    S.moreBlock('home:nw', () => (snaps.length >= 2 ? netWorthChart(snaps, { height: 220 })
+      : h('p.muted', {}, snaps.length ? 'One snapshot so far. The line starts with the second one.' : 'No snapshots yet. Save one now; each month-end close saves one too.')),
+    { label: `Net worth over time${snaps.length ? ` (${snaps.length} snapshots)` : ''}` }),
+    S.button('Save snapshot', { size: 'small', iconName: 'camera', onClick: () => { app.snapshot('Snapshot'); S.toast('Snapshot saved.'); ctx.refresh(); } })));
+}
 export function prepScreen(app, ctx) {
   const doc = ctx.store.doc;
   const snap = ctx.store.lastSnapshot();
@@ -67,10 +93,12 @@ export function prepScreen(app, ctx) {
     inSession(ctx) ? h('div.banner-inline.good', {}, 'The session is on.', S.button('Back to Live', { iconName: 'right', onClick: () => app.go('#/home/live') })) : null,
     head('Home', `Prep for ${doc.client.name || 'this client'}`, S.button(inSession(ctx) ? 'Back to Live' : 'Start session', { kind: 'primary', size: 'big', onClick: () => startSession(app, ctx) })),
     moneyInOneLine(app, ctx),
+    paydayCard(app, ctx),
+    netWorthOverTime(app, ctx),
     h('div.strip', {},
       card('What changed since last time', !snap ? 'Nothing yet' : changes.length ? `${changes.length} ${changes.length === 1 ? 'number' : 'numbers'}` : 'No change',
         !snap ? 'No snapshot to compare with' : changes.map(x => `${x.label} ${x.c.direction === 'up' ? '▲' : '▼'} ${fmt(x.k, x.c.diff)}`).join(' · ') || `Since ${new Date(snap.at).toLocaleDateString()}`, snap ? () => app.go('#/report/history') : null, 'Open history'),
-      card('Open homework', homework || 'None', homework ? 'Numbers marked Will email' : null, () => app.go('#/tools/lists'), 'Open the list'),
+      card('Open homework', homework || 'None', homework ? "Numbers to find later" : null, () => app.go('#/tools/lists'), 'Open the list'),
       card('Due for a check', due || 'None', due ? 'Rough or aged numbers' : null, () => app.go('#/tools/lists'), 'Open the list'),
       card('Parking lot notes', notes || 'None', notes ? 'Not filed yet' : null, () => app.openParking(), 'Open the parking lot')),
     low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below ${money(low.low)} on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/spending/calendar') })) : null, // R096
@@ -177,7 +205,7 @@ export function wrapScreen(app, ctx) {
   const next = h('input', { type: 'date', value: suggested, 'aria-label': 'Next session date' });
   next.onchange = () => ctx.store.setIn('session', ['next'], next.value || undefined, 'Next session');
   const items = [
-    { what: `Homework set (${hw.length})`, done: !!s.homeworkAt && (!started || s.homeworkAt >= started), detail: hw.length ? hw.map(x => x.label).join(', ') : 'Nothing marked Will email', act: S.button('Open the list', { onClick: () => app.go('#/tools/lists') }) },
+    { what: `Homework set (${hw.length})`, done: !!s.homeworkAt && (!started || s.homeworkAt >= started), detail: hw.length ? hw.map(x => x.label).join(', ') : "Nothing marked I'll find it later", act: S.button('Open the list', { onClick: () => app.go('#/tools/lists') }) },
     { what: 'Snapshot saved', done: !!snap && (!started || snap.at >= started), detail: snap ? `Last: ${snap.label}, ${new Date(snap.at).toLocaleString()}` : 'Freezes today\'s numbers', act: S.button('Save snapshot', { iconName: 'camera', onClick: () => app.snapshot(`Session ${sessionNo(ctx)}`) }) },
     { what: 'One-pager ready', done: !!s.onePagerAt && (!started || s.onePagerAt >= started), detail: 'Key stats, to-dos, goals, strengths and struggles', act: S.button('Open one-pager', { onClick: () => app.go('#/report/one-pager') }) },
     { what: 'Next session booked', done: !!s.next && s.next >= isoDay(new Date()), detail: null, act: h(`label.field${s.next ? '.filled' : ''}`, { style: { width: '170px' } }, next) },

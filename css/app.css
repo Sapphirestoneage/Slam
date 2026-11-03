@@ -173,7 +173,7 @@ kbd { font: inherit; font-size: .75rem; font-weight: 700; border: 1.5px solid va
 .vis-panel .bar-top { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s3); flex-wrap: wrap; }
 .vis-panel .chart { height: 260px; }
 
-.page { max-width: 1360px; margin: 0 auto; padding: var(--s5) var(--s5) 96px; }
+.page { max-width: none; margin: 0 auto; padding: var(--s5) var(--s5) 96px; } /* B6.12: the full screen width */
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
 .row-line { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
 
@@ -242,6 +242,39 @@ select { color-scheme: inherit; }
 .completion-wrap .completion { margin: 0 0 var(--s2); }
 ul.missing { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: .9375rem; }
 
+/* I'll find it later (Brandon B1.2): small, outlined, under the box */
+.later-btn { min-height: 22px; font-size: .75rem; font-weight: 500; padding: 0 8px; color: var(--text-2); border-color: var(--border-filled); align-self: flex-start; }
+.stack.parked > .field { border-style: dashed; }
+.next-step { display: flex; justify-content: flex-end; margin: var(--s4) 0; }
+
+/* Account detail (Brandon section 2) */
+.acct-blocks .more-body { padding: var(--s3) 0 var(--s2) var(--s3); border-left: 2px solid var(--border-row); margin-top: var(--s2); }
+.alloc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: var(--s3); }
+table.rows.mini th, table.rows.mini td { padding: 4px 6px; white-space: nowrap; }
+.tag.ok-tag { color: var(--good, #1E7A4C); }
+.asset-checks .tag.warn, .acct-blocks .tag.warn { white-space: normal; text-align: left; }
+.benefit-list { display: flex; flex-direction: column; gap: var(--s3); }
+.benefit-row { display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; padding-bottom: var(--s3); border-bottom: 1px dashed var(--border-row); }
+.benefit-row .gate-label { min-width: 260px; align-self: center; font-weight: 600; }
+.nudge { flex-basis: 100%; font-size: .875rem; padding: 6px 10px; border-radius: var(--r-button); border: 1.5px solid var(--border-filled); background: var(--card); color: var(--text); }
+.year-month { display: grid; grid-template-columns: 180px 1fr; gap: var(--s3); padding-bottom: var(--s3); border-bottom: 1px dashed var(--border-row); }
+.year-head { display: flex; flex-direction: column; gap: 2px; }
+.year-item { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+@media (max-width: 700px) { .year-month { grid-template-columns: 1fr; } }
+.nw-time { margin: var(--s3) 0; }
+.nw-time .more-wrap { flex: 1; }
+.group-add { min-height: 24px; font-size: .75rem; }
+.tag-chip { display: inline-flex; align-items: center; gap: 4px; }
+.chip-x { border: 0; background: none; color: inherit; font: inherit; font-weight: 700; cursor: pointer; padding: 0 2px; }
+.payday { margin: var(--s3) 0; display: flex; flex-direction: column; gap: 4px; }
+/* B8: a term with a plain-language tooltip */
+.has-tip { text-decoration: underline dotted; text-underline-offset: 3px; text-decoration-thickness: 1px; cursor: help; }
+/* B9: Report this, small, bottom right, on every screen */
+.report-this { position: fixed; right: 16px; bottom: 16px; z-index: 40; min-height: 30px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--border-input);
+  background: var(--card); color: var(--text); font: inherit; font-size: .8125rem; font-weight: 600; cursor: pointer; box-shadow: var(--shadow-lift); }
+.report-this:hover { transform: translateY(-1px); }
+@media print { .report-this { display: none; } }
+
 /* Fix pass 3: rows fit. Checkboxes only in Select mode; one "..." menu per row. */
 .list-wrap:not(.selecting) .check-cell { display: none; }
 .btn.select-btn[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
@@ -268,3 +301,6 @@ table.rows tr.row .icon-btn { width: 36px; height: 36px; }
 /* Show the math: same look, a clear hover and a pointer. */
 button.math { cursor: pointer; padding: 0 2px; margin: 0 -2px; }
 button.math:hover { background: color-mix(in srgb, var(--primary-light) 45%, transparent); border-bottom: 2px solid var(--primary); }
+/* Merge with main: the group header holds the fold and "Add a line"; Report this keeps the 32px minimum. */
+table.rows tr.group .group-line .fold { width: auto; flex: 1; }
+.report-this { min-height: 32px; }
