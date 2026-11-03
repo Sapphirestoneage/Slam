@@ -1,6 +1,7 @@
 // The plan model (build phase 7): FI targets, milestone dates, the Next 3 numbers and Guide me.
 // Pure: reads a household and its metrics, never the DOM.
 import { metrics } from './math/metrics.js';
+import { debtRoute } from './nav.js';
 import { monthlyFrom } from './math/income.js';
 import { fiDate, leanFiNumber, baristaFiNumber, pctToFi, solveMonthlySaving, solveSpending } from './math/fi.js';
 import { payoffPlan } from './math/debt.js';
@@ -107,7 +108,7 @@ export function next3(doc, ref, { now = new Date(), limit = 3 } = {}) {
           : r.kind === 'income' ? 12000 : (v ?? 1000) * 0.07;
       const word = { amount: r.kind === 'bill' ? '' : ' take-home', balance: ' balance', apr: ' APR', payment: ' payment', value: ' value' }[f];
       add({ label: `${r.name || r.values?.category || r.type || 'Item'}${word}`,
-        recId: r.id, field: f, kind: f === 'apr' ? 'pct' : 'money', route: ROUTE[r.kind], status: st, dollars, guess: v });
+        recId: r.id, field: f, kind: f === 'apr' ? 'pct' : 'money', route: r.kind === 'debt' ? debtRoute(r) : ROUTE[r.kind], status: st, dollars, guess: v });
     }
   }
   // Effect on the FI date: the number as it stands (or its guess) against the number at zero.

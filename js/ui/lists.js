@@ -31,14 +31,17 @@ function dupNote(ctx, r, ask, { confirmed = false } = {}) {
     button('No', { size: 'small', onClick: () => ctx.store.update(r.id, { notSame: [...(r.values.notSame || []), ask.sourceId] }) }));
 }
 
-export function debtList(ref) {
+export function debtList(ref, { cards = null } = {}) {
+  // cards: 'only' for the Credit cards sub-tab, 'none' for Debt (answer to 56). They stay standard debt in every total.
+  const isCard = r => r.type === 'Credit card';
   return {
-    kind: 'debt', area: 'debt', title: 'Debt', thing: { one: 'debt', plural: 'debts' },
-    filter: r => r.kind === 'debt',
+    kind: 'debt', area: 'debt', title: cards === 'only' ? 'Credit cards' : 'Debt', thing: cards === 'only' ? { one: 'card', plural: 'cards' } : { one: 'debt', plural: 'debts' },
+    filter: r => r.kind === 'debt' && (cards === 'only' ? isCard(r) : cards === 'none' ? !isCard(r) : true),
+    ...(cards === 'only' ? { defaultType: 'Credit card' } : {}),
     groupBy: r => (r.type === 'Credit card' ? 'Credit cards' : LOAN_TYPES.has(r.type) ? 'Loans' : 'Other'),
-    picker: { top: ref.lists.debtTypesTop, other: [...ref.lists.debtTypesOther, 'Mortgage'] },
+    picker: cards === 'only' ? null : { top: ref.lists.debtTypesTop.filter(t => cards !== 'none' || t !== 'Credit card'), other: [...ref.lists.debtTypesOther, 'Mortgage'] },
     // Order drives the payoff plan everywhere (Mockup: section header).
-    headerExtra: ctx => h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Order'),
+    headerExtra: ctx => cards === 'only' ? null : h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Order'),
       toggle([['avalanche', 'Avalanche'], ['snowball', 'Snowball'], ['stress', 'Stress']], ctx.store.doc.settings.debtOrder ?? 'avalanche',
         v => { ctx.store.setDoc('settings', { debtOrder: v }); ctx.refresh(); }, { label: 'Payoff order' })),
     coreFields: ['balance', 'apr'],
@@ -75,14 +78,14 @@ export function debtList(ref) {
     footerTotal: (ctx, recs) => amount(ctx, recs.some(r => r.values.balance != null) ? sum(recs, r => r.values.balance) : null),
     totals: (ctx, recs, m, cols) => {
       const cells = cols.map(c => {
-        if (c.label === 'Debt') return h('td', {}, `${recs.length} ${recs.length === 1 ? 'debt' : 'debts'}`);
+        if (c.label === 'Debt') return h('td', {}, `${recs.length} ${cards === 'only' ? (recs.length === 1 ? 'card' : 'cards') : recs.length === 1 ? 'debt' : 'debts'}`);
         if (c.label === 'Balance') return h('td.num', {}, amount(ctx, recs.some(r => r.values.balance != null) ? sum(recs, r => r.values.balance) : null));
         if (c.label === 'Payment / mo') return h('td.num', {}, amount(ctx, m.debts.some(d => d.payment != null) ? sum(m.debts, d => d.payment) : null));
         return h('td');
       });
       return [...cells, h('td'), h('td')];
     },
-    strip: (ctx, m) => debtStrip(ctx, m),
+    strip: (ctx, m) => (cards === 'only' ? cardsStrip(ctx, m) : debtStrip(ctx, m)),
   };
 }
 
@@ -377,6 +380,25 @@ function debtSecondary(ctx, r, up) {
 const dayBox = (value, onChange) => textInput(value == null ? null : String(value), x => { const n = Number(x); onChange(Number.isInteger(n) && n >= 1 && n <= 31 ? n : null); }, { hint: 'Day, 1 to 31', width: 110 });
 
 // Credit cards across the board (M1.2) and the credit score (M1.3), under the Debt list.
+// Credit cards strip: what the cards add up to (the Debt strip keeps every debt, cards included).
+function cardsStrip(ctx, m) {
+  const cards = m.inputs.debts.filter(d => d.type === 'Credit card');
+  const owed = cards.some(d => d.balance != null) ? { id: 'M30', value: cards.reduce((t, d) => t + (d.balance ?? 0), 0), needs: [], unit: 'money', text: cards.map(d => `${d.name} ${money(d.balance)}`).join(' + ') + '.' } : needs('M30', ['a card balance'], { unit: 'money' });
+  const pay = cards.some(d => d.payment != null) ? { id: 'M30', value: cards.reduce((t, d) => t + (d.payment ?? 0), 0), needs: [], unit: 'money', text: cards.map(d => `${d.name} ${money(d.payment)}${d.paymentIsMinimum ? ' (minimum, worked out)' : ''}`).join(' + ') + ' a month.' } : needs('M30', ['a payment'], { unit: 'money' });
+  const guessed = cards.filter(d => d.aprGuess).length;
+  return summaryStrip(ctx, [
+    { label: 'Owed on cards', result: owed, lowerIsGood: true },
+    { label: 'Card payments a month', result: pay, lowerIsGood: true, note: guessed ? `${guessed} ${guessed === 1 ? 'APR is' : 'APRs are'} a 25% Guess until typed` : null },
+  ]);
+}
+// Debt › a line pointing at the cards, which now have their own sub-tab.
+export function cardsLink(ctx) {
+  const cards = ctx.visible(r => r.kind === 'debt' && r.type === 'Credit card');
+  const owed = cards.reduce((t, r) => t + (r.values.balance ?? 0), 0);
+  return h('div.row-line.cards-link', { style: { gap: '10px', margin: '8px 0 16px' } },
+    h('span', {}, cards.length ? `Credit cards: ${cards.length} ${cards.length === 1 ? 'card' : 'cards'}, ${money(owed)} owed. They count in the totals above.` : 'No credit cards yet.'),
+    h('button.btn.small', { type: 'button', onclick: () => { location.hash = '#/net-worth/credit-cards'; } }, cards.length ? 'Open Credit cards' : 'Add a card on Credit cards'));
+}
 export function creditCard(ctx) {
   const cards = ctx.visible(r => r.kind === 'debt' && r.type === 'Credit card');
   const util = utilization(cards.map(r => ({ balance: r.values.balance, limit: r.values.limit })));

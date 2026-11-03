@@ -7,7 +7,7 @@ export const TABS = [
   { id: 'home', name: 'Home', job: 'This session: who they are, before, during, after', landing: 'prep', subs: [
     { id: 'profile', name: 'About you', area: 'needs' }, { id: 'prep', name: 'Prep' }, { id: 'live', name: 'Live' }, { id: 'wrap-up', name: 'Wrap-up' }] },
   { id: 'net-worth', name: 'Net worth', job: 'What you own and owe', subs: [
-    { id: 'assets', name: 'Assets', area: 'assets' }, { id: 'debt', name: 'Debt', area: 'debt' }, { id: 'protection', name: 'Protection', area: 'goals' }] },
+    { id: 'assets', name: 'Assets', area: 'assets' }, { id: 'debt', name: 'Debt', area: 'debt' }, { id: 'credit-cards', name: 'Credit cards', area: 'debt' }, { id: 'protection', name: 'Protection', area: 'goals' }] },
   { id: 'cash-flow', name: 'Cash flow', job: 'Money in and out: income, taxes, budget, calendar, close', subs: [
     { id: 'income', name: 'Income', area: 'income' }, { id: 'taxes', name: 'Taxes', area: 'taxes' }, { id: 'budget', name: 'Budget', area: 'needs' },
     { id: 'calendar', name: 'Calendar', area: 'needs' }, { id: 'close', name: 'Month end', area: 'needs' }] },
@@ -35,6 +35,8 @@ export const TOOLS = { id: 'tools', name: 'Coach tools', job: 'Lists, data and s
 
 const ALL = [...TABS, TOOLS];
 
+// Cards live on their own sub-tab; every other debt on Debt.
+export const debtRoute = r => (r?.type === 'Credit card' ? '#/net-worth/credit-cards' : '#/net-worth/debt');
 export function parseRoute(hash) {
   let [tabId, subId] = String(hash || '').replace(/^#\/?/, '').split(/[/?]/);
   const moved = MOVED[`${tabId}/${subId}`] ?? MOVED[tabId];

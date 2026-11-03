@@ -18,7 +18,7 @@ export const isAuto = r => typeof r?.id === 'string' && r.id.startsWith('auto:')
 // debts: from inputsOf (name, type, payment, inFull, balance). Returns lines shaped like spending lines.
 export function debtLines(debts) {
   return debts.filter(d => !d.inFull && d.payment > 0 && d.balance !== 0).map(d => ({
-    id: autoId(d.id), kind: 'bill', auto: { from: 'Debt', sourceId: d.id, route: '#/net-worth/debt' },
+    id: autoId(d.id), kind: 'bill', auto: { from: d.type === 'Credit card' ? 'Credit cards' : 'Debt', sourceId: d.id, route: d.type === 'Credit card' ? '#/net-worth/credit-cards' : '#/net-worth/debt' },
     name: `${d.name} payment`, amount: d.payment, per: 'month', status: null,
     draftt: 'Debt', amountType: 'Fixed', timing: 'Fixed date', category: 'Debt payments',
     values: { draftt: 'Debt', amountType: 'Fixed', timing: 'Fixed date', category: 'Debt payments' } }));

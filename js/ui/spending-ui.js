@@ -351,7 +351,7 @@ function instancePanel(ctx, anchor, i) {
         i.status !== 'Planned' ? S.button('Back to planned', { onClick: () => set({ status: 'Planned' }, 'Back to planned.') }) : null),
       i.guessDate && rec ? setDay(ctx, rec, i) : null,
       rec?.kind === 'entry' ? S.button('Edit entry', { iconName: 'note', onClick: e => entryForm(ctx, anchor, { rec }) }) : null,
-      rec && rec.kind !== 'entry' ? h('a', { href: { income: '#/cash-flow/income', debt: '#/net-worth/debt', bill: '#/cash-flow/budget', event: '#/plan/next-12-months' }[rec.kind] || '#/cash-flow/budget', onclick: () => S.closePop() }, `Open ${rec.name || rec.type || 'it'} where it lives`) : null);
+      rec && rec.kind !== 'entry' ? h('a', { href: (rec.kind === 'debt' && rec.type === 'Credit card' ? '#/net-worth/credit-cards' : { income: '#/cash-flow/income', debt: '#/net-worth/debt', bill: '#/cash-flow/budget', event: '#/plan/next-12-months' }[rec.kind]) || '#/cash-flow/budget', onclick: () => S.closePop() }, `Open ${rec.name || rec.type || 'it'} where it lives`) : null);
   };
   draw();
   S.popover(anchor, box, { width: 380 });

@@ -1,7 +1,7 @@
 // Every screen's first state, word for word from the Words and states tab. Later phases fill them in.
 import { h, icon } from './ui/dom.js';
 import * as S from './ui/staples.js';
-import { creditCard, debtList, spendingList, debtCharts, debtRatios } from './ui/lists.js';
+import { creditCard, cardsLink, debtList, spendingList, debtCharts, debtRatios } from './ui/lists.js';
 import { incomeList, benefitList, variableBlock, assetList, protectionList, taxesScreen, lifeAdminScreen, listCompletion, incomeCharts, assetCharts } from './ui/money-lists.js';
 import { profileScreen, profileCompletion } from './ui/profile.js';
 import { startFastTrack } from './ui/fasttrack-ui.js';
@@ -79,7 +79,12 @@ const MM = {
   debt: { title: 'Debt', sub: 'Every debt and its payoff', body: (app, ctx) => (ctx.gates().areas.debt === false
     ? [h('div.card', {}, h('div.empty', {}, h('span.title', {}, 'No debt, per About you'), addArea(app, ctx, 'debt', 'Debt')))]
     : [completion(listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr'])), hasAny(ctx, ['debt']) ? null : fastTrack(app, ctx),
-      withChart(ctx, debtList(ctx.ref), debtCharts, 'debt'), S.focusMore(ctx, 'debt:credit', S.live(ctx, () => creditCard(ctx)))]) },
+      withChart(ctx, debtList(ctx.ref, { cards: 'none' }), debtCharts, 'debt'), S.live(ctx, () => cardsLink(ctx))]) },
+  // Answer to 56: credit cards are standard debt with a sub-tab of their own: the cards, utilization, the score.
+  'credit-cards': { title: 'Credit cards', sub: 'Every card, how much of the limits you use, your score', body: (app, ctx) => (ctx.gates().areas.debt === false
+    ? [h('div.card', {}, h('div.empty', {}, h('span.title', {}, 'No debt, per About you'), addArea(app, ctx, 'debt', 'Debt')))]
+    : [completion(listCompletion(ctx, r => r.kind === 'debt' && r.type === 'Credit card', ['balance', 'apr'])),
+      S.recordList(ctx, debtList(ctx.ref, { cards: 'only' })), S.live(ctx, () => creditCard(ctx))]) },
   assets: { title: 'Assets', sub: 'Cash, investments, car, home', body: (app, ctx) => [
     completion(listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance'])),
     hasAny(ctx, ['account', 'asset']) ? null : fastTrack(app, ctx), offAreas(app, ctx, ['cash', 'investments', 'real']),
@@ -125,7 +130,7 @@ export function cashFlowStrip(ctx) {
     step('Free', f.free, 'Take-home minus spending minus savings.', { sign: '=', total: true }));
 }
 
-const NET_WORTH = { assets: MM.assets, debt: MM.debt, protection: MM.protection };
+const NET_WORTH = { assets: MM.assets, debt: MM.debt, 'credit-cards': MM['credit-cards'], protection: MM.protection };
 const own = (title, fn) => ({ title, ownHead: true, body: (app, ctx) => [fn(app, ctx)].flat() });
 const CASH_FLOW = { income: MM.income, taxes: MM.taxes, budget: own('Budget', budgetScreen), calendar: own('Calendar', calendarScreen), close: own('Month end', closeScreen) };
 const TAB_PARTS = { 'net-worth': [NET_WORTH, netWorthStrip, 'Net worth'], 'cash-flow': [CASH_FLOW, cashFlowStrip, 'Cash flow'] };
@@ -138,7 +143,7 @@ function tabPage(tabId, id) {
     if (!app.prefs[`onePage-${tabId}`]) { const s = parts[id]; return [s.ownHead ? null : head(s.title, s.sub), top, ...s.body(app, ctx)]; }
     const g = ctx.gates();
     return [head(name, 'One page: every part, top to bottom'), top,
-      ...Object.entries(parts).filter(([k]) => k !== 'debt' || g.areas.debt !== false).map(([k, s]) => h('div.one-page-part', { id: `part-${k}` }, h('h1.part-title', {}, s.title), ...s.body(app, ctx)))];
+      ...Object.entries(parts).filter(([k]) => (k !== 'debt' && k !== 'credit-cards') || g.areas.debt !== false).map(([k, s]) => h('div.one-page-part', { id: `part-${k}` }, h('h1.part-title', {}, s.title), ...s.body(app, ctx)))];
   };
 }
 
@@ -165,6 +170,7 @@ export const SCREENS = {
 
   'net-worth/assets': tabPage('net-worth', 'assets'),
   'net-worth/debt': tabPage('net-worth', 'debt'),
+  'net-worth/credit-cards': tabPage('net-worth', 'credit-cards'),
   'net-worth/protection': tabPage('net-worth', 'protection'),
 
   'cash-flow/income': tabPage('cash-flow', 'income'),

@@ -67,7 +67,7 @@ export function soWhat(key, m, { lowDay = null, first = null, last = null } = {}
     case 'util': {
       const u = extraValue(arguments[2]);
       if (u === null) return null;
-      return u > 0.3 ? { text: `Your cards are ${pct(u)} used. Under 30% helps your credit score.`, action: { label: 'See your cards', href: '#/net-worth/debt' } }
+      return u > 0.3 ? { text: `Your cards are ${pct(u)} used. Under 30% helps your credit score.`, action: { label: 'See your cards', href: '#/net-worth/credit-cards' } }
         : { text: `Your cards are ${pct(u)} used, which helps your credit score.` };
     }
     case 'drafttTop': { const t = arguments[2]?.top; return t ? { text: `${t[0]} takes the biggest share of your pay: ${pct(t[1])}.` } : null; }

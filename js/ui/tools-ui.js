@@ -1,6 +1,7 @@
 // Coach tools behind the gear (build phase 10): revisit and homework lists, snapshots with compare, notes and
 // settings, and the discovery table that turns a sales call into a client file.
 import { h, clear, icon } from './dom.js';
+import { debtRoute } from '../nav.js';
 import * as S from './staples.js';
 import { homeworkItems } from './report-ui.js';
 import { homeworkText } from '../homework.js';
@@ -26,7 +27,7 @@ export function revisitList(ctx) {
     const wait = st === 'Roughly' ? 30 : ['Not sure', 'Not now'].includes(st) ? 0 : 90;
     const next = updated + wait * DAY;
     if (st === 'Know it' && next > Date.now()) continue;
-    out.push({ r, label: r.name || r.values?.category || r.type || 'Item', status: st, next, route: ROUTE[r.kind] || '#/home/profile' });
+    out.push({ r, label: r.name || r.values?.category || r.type || 'Item', status: st, next, route: r.kind === 'debt' ? debtRoute(r) : ROUTE[r.kind] || '#/home/profile' });
   }
   out.sort((a, b) => a.next - b.next);
   const guesses = ctx.visible(x => x.kind === 'bill' && x.values?.preset && x.status === 'Not sure').length;
@@ -58,7 +59,7 @@ export function listsScreen(app, ctx) {
         return h('div.row-line', { style: { gap: '10px' } },
           h('span.stack', { style: { flex: 1, gap: '2px' } }, h('span', { style: { fontWeight: 600 } }, x.label), x.where ? h('span.muted.small', {}, `Where to find it: ${x.where}`) : null),
           h('label.field', { style: { width: '160px' } }, d),
-          S.button('Open', { size: 'small', onClick: () => (x.r ? fix({ ...x, route: ROUTE[x.r.kind] || '#/home/profile' }) : app.go(x.lifeKey ? '#/net-worth/protection' : '#/home/profile')) }));
+          S.button('Open', { size: 'small', onClick: () => (x.r ? fix({ ...x, route: x.r.kind === 'debt' ? debtRoute(x.r) : ROUTE[x.r.kind] || '#/home/profile' }) : app.go(x.lifeKey ? '#/net-worth/protection' : '#/home/profile')) }));
       }))
       : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, "Tap I'll find it later on any number and it lands here, with where to look.")))))];
 }

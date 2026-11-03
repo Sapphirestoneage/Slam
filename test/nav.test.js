@@ -8,7 +8,7 @@ const fields = JSON.parse(readFileSync(new URL('../data/fields.json', import.met
 test('five tabs, same order, named as decided (R148)', () => {
   assert.deepEqual(TABS.map(t => t.name), ['Home', 'Net worth', 'Cash flow', 'Plan', 'Report']);
   assert.deepEqual(TABS[0].subs.map(s => s.name), ['About you', 'Prep', 'Live', 'Wrap-up']);
-  assert.deepEqual(TABS[1].subs.map(s => s.name), ['Assets', 'Debt', 'Protection']);
+  assert.deepEqual(TABS[1].subs.map(s => s.name), ['Assets', 'Debt', 'Credit cards', 'Protection']); // Credit cards: answer to 56
   assert.deepEqual(TABS[2].subs.map(s => s.name), ['Income', 'Taxes', 'Budget', 'Calendar', 'Month end'], 'waterfall order');
 });
 test('routes: unknown falls back to the first sub-tab', () => {
@@ -62,4 +62,10 @@ test('every link in the code points at a live screen, not an old home (Guide me,
     }
   }
   assert.deepEqual(bad, []);
+});
+test('a card opens Credit cards; any other debt opens Debt (answer to 56)', async () => {
+  const { debtRoute } = await import('../js/nav.js');
+  assert.equal(debtRoute({ type: 'Credit card' }), '#/net-worth/credit-cards');
+  assert.equal(debtRoute({ type: 'Student loan' }), '#/net-worth/debt');
+  assert.equal(parseRoute('#/net-worth/credit-cards').sub.name, 'Credit cards');
 });
