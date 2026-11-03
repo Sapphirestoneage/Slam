@@ -162,3 +162,50 @@ Each one has the default used so the build could keep going. Answer here or in t
 93. **Starter estimate ranges.** The usual list's starter guesses now say Accept estimate. Show a range under each (e.g. "most people $X to $Y")? That needs a source for the ranges; there is none in the spec.
 94. **63 Taking over.** It is the list of bills someone else pays today (parents, a partner, an employer) that you will start paying on a date you set, e.g. a phone plan from June 2027. Should those dates move the FI date and the surplus once they arrive?
 95. **Rates from the website.** A static site cannot fetch the NY tax tables when it runs (no server, and the tax site does not allow it). Rates stay in data/reference-2026.json, checked by hand each year. OK?
+
+## All closed (Nov 3 2026)
+
+Every question above is closed. "Kept" means the default described in the question stays, by your call to close them out.
+
+| # | Closed as |
+|---|---|
+| 1 | Resolved: the Look Preview came with the Oct 28 spec refresh |
+| 2, 3 | Kept: Inter; the Words and states rows word for word |
+| 4, 5 | Answered: a blank APR is a Guess until typed; a credit card guesses 25% (Reference data notes the Fed's 22.15%); other loans use Reference data |
+| 6 to 9 | Kept: the Mockup's 8 tools; 32px icon buttons; total interest by formula; real hourly wage with the 173-hour Guess |
+| 10 | Answered: Coast FI retires at 65 (built) |
+| 11 | Answered: the surplus stays surplus until Invest my surplus (built) |
+| 12 to 14 | Kept: an all-in total includes debt payments; the all-in total is the spending number; FICA on gross |
+| 15 | Answered: inflation is covered in the FI date (returns are after inflation; the FI date says so) |
+| 16 | Kept: the private Test client fills in when its file does |
+| 17 to 24 | Kept: dark mode values, Know it in plain text, visuals panel placement, empty states, backup banner, Fast Track button, top bar at 1280px, list columns |
+| 25 to 31 | Kept: Fast Track debt step, gates toast with Go there, unanswered gates show everything, each job taxed on its own, One page, loan removal asks, gas and tolls gated |
+| 32 | Answered: the gut number until the Budget is switched to the lines |
+| 33 to 43 | Kept: starter guesses (now Accept estimate), guessed days, gaps at close, moved entries, Fat FI 1.5x, real dollars, Next 3, End session, Export PDF, pre-call form later, card bills on payoff |
+| 44 | Answered: the full batch was resent and built |
+| 45 | Answered: the backlog is in the spec's Feature list |
+| 46 | Kept: Will email reads I'll find it later |
+| 47 | Answered: Income and the 401(k) fill each other in (now in two passes) |
+| 48 to 50 | Answered: any cash flagged with a per-account off switch; 25% concentration with a coach off switch; any stocks flag a short goal |
+| 51 to 53 | Kept: overlap by name; Stocks % removed; Balance as of |
+| 54 | Answered: Me / Partner / Joint |
+| 55 | Kept: Next counts parked answers |
+| 56 | Answered: Credit cards sub-tab under Net worth |
+| 57 | Done: the commuter limit is in the spec's Reference data; the nudge uses NY and NYC tax |
+| 58 | Answered: Comes out of your paycheck |
+| 59 | Answered: a large refund is over $10,000 |
+| 60, 61 | Kept: the year view on Next 12 months; renewal months start blank |
+| 62 | Answered: sinking funds come out of the surplus |
+| 63, 94 | Closed: a covered bill is yours from its takeover month, so the surplus and FI date follow on that date (built) |
+| 64 to 67 | Kept: three freeze rows; community presets per client; the timer for the demo client; I don't have this as Not for me |
+| 68 to 75 | Answered (see the two Answers logged sections) |
+| 76, 77 | Kept: paychecks left from today's date; Report this needs a client |
+| 78 to 86 | Answered in the reorganize and polish passes (PROGRESS.md, Answers to the polish questions) |
+| 87 | Kept: the Nov 3 waterfall order (Taxes right after Income) |
+| 88 | Kept: Missing shows Not now and I'll find it later; no extra status |
+| 89 | Kept: Plan shows the usual Amount and this month's Plan side by side |
+| 90 | Kept: focus mode as built; revisit after the next live session |
+| 91 | Kept: focus mode types a month in |
+| 92 | Closed: the T letter reads Health and self-care (built) |
+| 93 | Closed: no ranges under starter estimates (there is no source for them); Accept estimate stays |
+| 95 | Closed: rates stay in data/reference-2026.json, checked by hand each year. The NY joint and NYC rates are still to be checked once tax.ny.gov is allowed in the session's network settings |
