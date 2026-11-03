@@ -241,3 +241,10 @@ ul.missing { list-style: none; margin: 0; padding: 0; display: flex; flex-direct
 .later-btn { min-height: 22px; font-size: .75rem; font-weight: 500; padding: 0 8px; color: var(--text-2); border-color: var(--border-filled); align-self: flex-start; }
 .stack.parked > .field { border-style: dashed; }
 .next-step { display: flex; justify-content: flex-end; margin: var(--s4) 0; }
+
+/* Account detail (Brandon section 2) */
+.acct-blocks .more-body { padding: var(--s3) 0 var(--s2) var(--s3); border-left: 2px solid var(--border-row); margin-top: var(--s2); }
+.alloc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: var(--s3); }
+table.rows.mini th, table.rows.mini td { padding: 4px 6px; white-space: nowrap; }
+.tag.ok-tag { color: var(--good, #1E7A4C); }
+.asset-checks .tag.warn, .acct-blocks .tag.warn { white-space: normal; text-align: left; }

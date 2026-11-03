@@ -1,10 +1,13 @@
 // My Money lists (build phase 5, Mockup: Income, Assets, Protection, Taxes): one record type, viewed by sub-tab.
 // Detail stays behind More (R023); fields that do not apply to this household never show (gates.js).
 import { h } from './dom.js';
-import { amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox } from './staples.js';
+import { amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag } from './staples.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
 import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom } from '../math/income.js';
 import { limitUsed } from '../math/assets.js';
+import { accountBlocks, accountFlags, stampBalance } from './account-detail.js';
+import { is401k, yearly401k } from './account-specific.js';
+import { netWorthCheck, yearlyContribution } from '../math/portfolio.js';
 import { drafttShares, DRAFTT } from '../math/spending.js';
 import { needs } from '../math/result.js';
 import { statusOf, countsAsDone } from '../records.js';
@@ -207,17 +210,17 @@ export function assetList(ref) {
       { label: 'Balance', num: true, render: (ctx, r, m, up) => {
         if (r.kind === 'asset') return moneyInput(r.values.value, v => up({ value: v }), { hint: 'Add value', key: `${r.id}:balance` });
         if (r.values.taxType === 'Both') { // R018: two boxes, one balance
-          const both = (pre, roth) => up({ pretaxBalance: pre, rothBalance: roth, balance: pre == null && roth == null ? null : (pre ?? 0) + (roth ?? 0) });
+          const both = (pre, roth) => up(stampBalance({ pretaxBalance: pre, rothBalance: roth, balance: pre == null && roth == null ? null : (pre ?? 0) + (roth ?? 0) }));
           return h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap', justifyContent: 'flex-end' } },
             moneyInput(r.values.pretaxBalance, v => both(v, r.values.rothBalance ?? null), { hint: 'Pretax', key: `${r.id}:pre` }),
             moneyInput(r.values.rothBalance, v => both(r.values.pretaxBalance ?? null, v), { hint: 'Roth', key: `${r.id}:roth` }));
         }
-        return moneyInput(r.values.balance, v => up({ balance: v }), { hint: 'Add balance', key: `${r.id}:balance` });
+        return moneyInput(r.values.balance, v => up(stampBalance({ balance: v })), { hint: 'Add balance', key: `${r.id}:balance` });
       } },
       { label: 'Kind', render: (ctx, r, m, up) => {
         if (r.kind === 'asset') return LOAN_FOR[r.type] ? loanCells(ctx, r) : h('span.muted', {}, r.type || 'Other');
         if (r.values.group === 'investment') return select(ref.lists.investmentTypes.filter(t => t !== 'HSA' || ctx.gates().hsa || r.type === 'HSA'), r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Account type', width: 160, key: `${r.id}:type` });
-        return toggle(['Checking', 'Savings or HYSA'], r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Checking or savings' });
+        return select(ref.lists.cashTypes, r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Account type', width: 160, key: `${r.id}:type` }); // B2.18: the kind of account, apart from the bank
       } },
       owner,
     ],
@@ -227,10 +230,10 @@ export function assetList(ref) {
     subtotal: (ctx, rows) => money(sum(rows, valOf)),
     footerTotal: (ctx, recs) => amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null),
     totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Account' ? h('td', {}, `${recs.length} ${recs.length === 1 ? 'item' : 'items'}`) : c.label === 'Balance' ? h('td.num', {}, amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null)) : h('td')), h('td'), h('td')],
-    strip: (ctx, m) => summaryStrip(ctx, [
+    strip: (ctx, m) => h('div', {}, summaryStrip(ctx, [
       { label: 'Total net worth', result: m.netWorth, key: 'netWorth' }, { label: 'Liquid net worth', result: m.liquidNetWorth },
       { label: 'Cash', result: m.inputs.cash === null ? needs('M41', ['cash']) : { id: 'M41', value: m.inputs.cash, needs: [], unit: 'money', text: `Checking, savings and other cash: ${money(m.inputs.cash)}.` } },
-      { label: 'Rule of 5 cushion', result: m.ruleOf5 }]),
+      { label: 'Rule of 5 cushion', result: m.ruleOf5 }]), assetChecks(ctx, m)),
     stripWhenEmpty: true,
   };
 }
@@ -243,32 +246,41 @@ function assetSecondary(ctx, r, up) {
     if (r.type === 'Car') return [labelled('Purchase price', moneyInput(v.purchasePrice, x => up({ purchasePrice: x }), { hint: 'Add price' }))];
     return [labelled('Notes', textInput(r.notes, x => up({ notes: x }), { hint: 'What it is', width: 300 }))];
   }
+  const later = f => L(ctx, r, f);
   if (v.group === 'cash') return [
-    labelled('Institution', textInput(v.institution, x => up({ institution: x }), { hint: 'Bank', width: 160 })),
-    labelled('Interest (APY)', pctInput(v.apy, x => up({ apy: x }), { hint: 'e.g. 0' }), { note: v.apy != null && v.apy < 0.01 && (v.balance ?? 0) > 1000 ? 'Idle cash: a small win to move it' : null }),
+    labelled('Institution', textInput(v.institution, x => up({ institution: x }), { hint: 'Bank', width: 160 }), { later: later('institution') }),
+    labelled(v.yieldKind === '7-day yield' ? '7-day yield' : 'Interest (APY)', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+      pctInput(v.apy, x => up({ apy: x }), { hint: 'e.g. 4.2' }), toggle(['APY', '7-day yield'], v.yieldKind ?? 'APY', x => up({ yieldKind: x }), { label: 'APY or 7-day yield' })),
+    { note: v.apy != null && v.apy < 0.01 && (v.balance ?? 0) > 1000 ? 'Idle cash: a small win to move it' : r.type === 'Money market' ? 'Money market funds show a 7-day yield' : null, later: later('apy') }),
     labelled('Purpose', select(['Emergency', 'Sinking fund', 'Goal', 'General'], v.purpose ?? null, x => up({ purpose: x }), { label: 'Purpose', width: 150 }))];
   const age = ctx.metrics().inputs.age;
-  const perYear = v.contribution == null ? null : v.contributionPer === 'Paycheck' ? v.contribution * 26 : v.contribution;
+  const freq = ctx.metrics().inputs.income.find(x => x.r.values.payFrequency)?.r.values.payFrequency ?? null;
+  const perYear = is401k(r) ? yearly401k(ctx, r) : yearlyContribution(v, freq); // B2.14: real paychecks a year, not 26
   const lim = limitUsed({ contributions: perYear, type: r.type, age: age ?? 30 }, ctx.ref);
   return [
-    labelled('Institution', textInput(v.institution, x => up({ institution: x }), { hint: 'Broker', width: 160 })),
-    labelled('Putting in', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.contribution, x => up({ contribution: x }), { hint: 'Add amount' }),
-      toggle(['Paycheck', 'Year'], v.contributionPer ?? 'Year', x => up({ contributionPer: x }), { label: 'Per' }))),
-    labelled('Pretax, Roth or both', toggle(['Pretax', 'Roth', 'Both'], v.taxType ?? null, x => up({ taxType: x }), { label: 'Pretax or Roth' })),
-    labelled('Stocks %', pctInput(v.stockShare, x => up({ stockShare: x }), { hint: 'e.g. 90' }), { note: 'The rest in bonds' }),
-    labelled('Unvested', moneyInput(v.unvested, x => up({ unvested: x }), { hint: 'Add amount' }), { note: 'Shown, not counted in net worth' }),
-    lim.value !== null || lim.needs[0] !== 'an account type with a limit' ? labelled('Limit used', h('span.computed', {}, lim.value === null ? `Needs ${lim.needs[0]}` : value(lim))) : null];
+    labelled('Institution', textInput(v.institution, x => up({ institution: x }), { hint: 'Broker', width: 160 }), { later: later('institution') }),
+    is401k(r) ? null : labelled('Putting in', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.contribution, x => up({ contribution: x }), { hint: 'Add amount' }),
+      toggle(['Paycheck', 'Year'], v.contributionPer ?? 'Year', x => up({ contributionPer: x }), { label: 'Per' })), { later: later('contribution') }),
+    is401k(r) ? null : labelled('Pretax, Roth or both', toggle(['Pretax', 'Roth', 'Both'], v.taxType ?? null, x => up({ taxType: x }), { label: 'Pretax or Roth' }), { later: later('taxType') }),
+    is401k(r) ? null : labelled('Unvested', moneyInput(v.unvested, x => up({ unvested: x }), { hint: 'Add amount' }), { note: 'Shown, not counted in net worth', later: later('unvested') }),
+    limitUsed({ contributions: 0, type: r.type, age: 30 }, ctx.ref).value !== null ? labelled('Limit used this year', h('span.computed', {}, lim.value === null ? `Needs ${lim.needs[0]}` : `${value(lim)} of ${money(lim.limit)}`)) : null];
 }
 function assetTertiary(ctx, r, up) {
-  const g = ctx.gates();
-  const v = r.values;
-  if (r.kind !== 'account' || v.group !== 'investment') return [labelled('Coach notes', textInput(r.privateNote, x => up({ privateNote: x }), { hint: 'Add a private note', width: 320 }))];
-  return [
-    labelled('Holdings', textInput(v.holdings, x => up({ holdings: x }), { hint: 'VTSAX, target date 2060', width: 240 })),
-    labelled('Fees a year', pctInput(v.fees, x => up({ fees: x }), { hint: 'e.g. 0.04' }), { note: 'Expense ratio plus advisory' }),
-    applies('costBasis', { g, r }) ? labelled('Cost basis', moneyInput(v.costBasis, x => up({ costBasis: x }), { hint: 'Add amount' })) : null,
-    applies('rothBasis', { g, r }) ? labelled('Roth contributions so far', moneyInput(v.rothBasis, x => up({ rothBasis: x }), { hint: 'Add amount' }), { note: 'Can come out any time' }) : null,
-    applies('hsaInvested', { g, r }) ? labelled('HSA invested vs cash', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.hsaInvested, x => up({ hsaInvested: x }), { hint: 'Invested' }), moneyInput(v.hsaCash, x => up({ hsaCash: x }), { hint: 'Cash' }))) : null];
+  if (r.kind !== 'account') return [labelled('Coach notes', textInput(r.privateNote, x => up({ privateNote: x }), { hint: 'Add a private note', width: 320 }))];
+  const flags = accountFlags(r, { now: ctx.now() });
+  return [h('div.stack', { style: { gap: '8px', width: '100%' } },
+    flags.length ? h('div.stack', { style: { gap: '4px' } }, flags.map(f => warnTag(f))) : null,
+    accountBlocks(ctx, r, up, f => L(ctx, r, f)),
+    labelled('Coach notes', textInput(r.privateNote, x => up({ privateNote: x }), { hint: 'Add a private note', width: 320 })))];
+}
+
+// Checks under the Assets strip (B2.19, B2.20, B2.16): one line each, with the account named.
+function assetChecks(ctx, m) {
+  const out = [];
+  const nw = netWorthCheck(m.netWorth.value, m.inputs);
+  if (nw && !nw.ok) out.push(`Net worth (${money(m.netWorth.value)}) does not match your balances: ${money(nw.assets)} owned − ${money(nw.unvested)} unvested − ${money(nw.owed)} owed = ${money(nw.expected)}. Check for a balance with a status that zeroes it.`);
+  for (const r of ctx.visible(x => x.kind === 'account')) for (const f of accountFlags(r, { now: ctx.now() })) if (/sitting in cash|days old|Short goal|under 5 years/.test(f)) out.push(`${r.name || r.type}: ${f}`);
+  return out.length ? h('div.stack.asset-checks', { style: { gap: '4px', marginBottom: '12px' } }, out.map(t => warnTag(t))) : null;
 }
 
 // ---------- Protection (Mockup: Protection › Coverage row) ----------

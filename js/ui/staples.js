@@ -274,11 +274,12 @@ const OPEN = new Set();
 export function moreBlock(id, content, { label = 'More' } = {}) {
   const open = OPEN.has(id);
   const body = h('div.more-body', { hidden: !open }, open ? content() : null);
-  const btn = h('button.caret', { type: 'button', 'aria-expanded': String(open) }, open ? 'Less' : label, icon(open ? 'down' : 'right'));
+  const named = label !== 'More'; // a named block keeps its name when open
+  const btn = h('button.caret', { type: 'button', 'aria-expanded': String(open) }, open && !named ? 'Less' : label, icon(open ? 'down' : 'right'));
   btn.onclick = () => {
     const now = !OPEN.has(id);
     now ? OPEN.add(id) : OPEN.delete(id);
-    btn.setAttribute('aria-expanded', String(now)); clear(btn, now ? 'Less' : label, icon(now ? 'down' : 'right'));
+    btn.setAttribute('aria-expanded', String(now)); clear(btn, now && !named ? 'Less' : label, icon(now ? 'down' : 'right'));
     body.hidden = !now; clear(body, now ? content() : null);
   };
   return h('div.more-wrap', {}, btn, body);
