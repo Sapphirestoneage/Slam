@@ -1,10 +1,10 @@
-// Open the books, kept current forever: every field the app stores, every js/math function, every spec M number and
+// Coverage (Open the books, kept current forever): every field the app stores, every js/math function, every spec M number and
 // every Reference data value is in a registry (js/registry/). A new one that is not fails here, with what to add.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { AREAS, KINDS, NOT_IN_SHEET, sheetFields } from '../js/registry/fields.js';
-import { MATH, SUPPORT } from '../js/registry/math.js';
+import { AREAS, KINDS, NOT_IN_SHEET, sheetFields, fieldProblems } from '../js/registry/fields.js';
+import { MATH, SUPPORT, mathProblems } from '../js/registry/math.js';
 import { ASSUMPTIONS, TABLES, REFERENCE_LISTS, RULES } from '../js/registry/assumptions.js';
 import { blankRecord } from '../js/records.js';
 
@@ -87,24 +87,18 @@ test('every record area declares every field a record has', () => {
   }
 });
 
-test('every field says how it lands in the sheet', () => {
-  const TYPES = new Set(['money', 'pct', 'date', 'month', 'day', 'number', 'text', 'choice', 'yesno', 'list']);
-  for (const a of AREAS) {
-    assert.ok(a.id && a.tab && a.prefix && a.source && a.about, `${a.id}: id, tab, prefix, source and about`);
-    assert.ok(a.tab.length <= 31 && !/[[\]:*?/\\]/.test(a.tab), `${a.tab}: a tab name Excel accepts`);
-    const keys = new Set();
-    for (const f of a.fields) {
-      assert.ok(f.label && TYPES.has(f.type), `${a.tab} ${f.key}: label and a type (${[...TYPES].join(', ')})`);
-      assert.ok(f.sheet === true || (f.sheet?.skip && f.sheet.skip.length > 10), `${a.tab} ${f.key}: sheet: true, or sheet: { skip: 'why' }`);
-      if (f.type === 'choice') assert.ok(f.options?.length, `${a.tab} ${f.key}: a choice needs options`);
-      const id = `${f.part ?? ''}.${f.key}`;
-      assert.ok(!keys.has(id), `${a.tab} ${f.key}: declared twice`);
-      keys.add(id);
-    }
-    assert.ok(sheetFields(a).length > 0, `${a.tab}: at least one column`);
-  }
+test('every field says how it lands in the sheet (a column, or skip with the reason)', () => {
+  const problems = fieldProblems();
+  assert.deepEqual(problems, [], `Fix in js/registry/fields.js:\n${problems.join('\n')}`);
   assert.equal(new Set(AREAS.map(a => a.tab)).size, AREAS.length, 'tab names are unique');
   assert.equal(new Set(AREAS.map(a => a.prefix)).size, AREAS.length, 'prefixes are unique');
+  for (const a of AREAS) assert.ok(sheetFields(a).length > 0, `${a.tab}: at least one column`);
+});
+
+test('the guard works: a field with no sheet info fails with a clear message', () => {
+  const area = { ...AREAS[1], fields: [...AREAS[1].fields, { key: 'throwaway', label: 'Throwaway', type: 'money' }] };
+  assert.deepEqual(fieldProblems([area]), ['Income › Throwaway: has no sheet info. Give it sheet: true (a column on Income) or sheet: { skip: \'the reason it stays in the app\' }.']);
+  assert.deepEqual(mathProblems([{ id: 'M99', name: 'Throwaway', inputs: 'none', app: () => 0 }]), ['M99: needs a sheet formula, or fromApp with a one-line reason (not both).']);
 });
 
 test('every js/math export is in the math registry', async () => {
@@ -128,12 +122,8 @@ test('every M number in the spec is in the math registry, each with a formula or
   assert.deepEqual(spec.filter(id => !ids.includes(id)), [], 'spec M numbers missing from js/registry/math.js');
   assert.deepEqual(ids.filter(id => !spec.includes(id)), [], 'registry M numbers the spec does not have');
   assert.equal(new Set(ids).size, ids.length, 'one entry per M number');
-  for (const e of MATH) {
-    assert.ok(e.name && e.inputs && typeof e.app === 'function', `${e.id}: name, inputs and app()`);
-    assert.ok(!!e.sheet !== !!e.fromApp, `${e.id}: a sheet formula or fromApp with a reason, not both`);
-    if (e.fromApp) assert.ok(e.fromApp.length > 15, `${e.id}: say why it comes from the app`);
-    for (const p of e.parts || []) assert.ok(p.key && p.name && (!!p.sheet !== !!p.fromApp) && typeof p.app === 'function', `${e.id} ${p.key}: name, a formula or fromApp, and app()`);
-  }
+  const problems = mathProblems();
+  assert.deepEqual(problems, [], `Fix in js/registry/math.js:\n${problems.join('\n')}`);
 });
 
 test('every Reference data value is an assumption, a table, or a listed word list', () => {

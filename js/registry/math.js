@@ -344,3 +344,16 @@ export const SUPPORT = {
 export const mathById = id => MATH.find(e => e.id === id);
 export const rowsOf = e => [{ ...e, key: null, name: e.label ?? e.name }, ...(e.parts || []).map(p => ({ ...p, key: p.key, entry: e.id }))];
 export { defaultFilingStatus, PAYS };
+
+// What an entry must say to be in the registry. One plain sentence per problem (the coverage test shows them).
+export function mathProblems(entries = MATH) {
+  const out = [];
+  for (const e of entries) {
+    if (!e.id || !e.name || !e.inputs || typeof e.app !== 'function') out.push(`${e.id ?? '?'}: needs an id, a plain-words name, its inputs and app().`);
+    if (!!e.sheet === !!e.fromApp) out.push(`${e.id}: needs a sheet formula, or fromApp with a one-line reason (not both).`);
+    if (e.fromApp && String(e.fromApp).length < 15) out.push(`${e.id}: say why it comes from the app.`);
+    for (const p of e.parts || []) if (!p.key || !p.name || !!p.sheet === !!p.fromApp || typeof p.app !== 'function') out.push(`${e.id} ${p.key ?? '?'}: a part needs a key, a name, a formula or fromApp, and app().`);
+    for (const c of e.cols || []) if (!c.area || !c.key || !c.label || !c.f) out.push(`${e.id}: a formula column needs area, key, label and f.`);
+  }
+  return out;
+}

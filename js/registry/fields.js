@@ -363,3 +363,28 @@ export const NOT_IN_SHEET = {
 export const fieldsFor = (area, kind = null) => area.fields.filter(x => !x.kinds || !kind || x.kinds.includes(kind));
 export const sheetFields = (area, { coach = false } = {}) => area.fields.filter(x => x.sheet === true && (coach || !x.coach));
 export const areaOf = id => AREAS.find(a => a.id === id);
+
+// Every field's id (area.key, with its doc part when it is not the area's own) and area, set once here.
+for (const a of AREAS) for (const f of a.fields) { f.area = a.id; f.id = `${a.id}.${f.part && f.part !== (a.part ?? 'profile') ? `${f.part}.` : ''}${f.key}`; }
+
+// What a field must say to be in the registry. Returns one plain sentence per problem (the coverage test shows them).
+export const FIELD_TYPES = ['money', 'pct', 'date', 'month', 'day', 'number', 'text', 'choice', 'yesno', 'list'];
+export function fieldProblems(areas = AREAS) {
+  const out = [];
+  for (const a of areas) {
+    if (!a.id || !a.tab || !a.prefix || !a.source || !a.about) out.push(`Area ${a.id ?? '?'}: needs id, tab, prefix, source and about.`);
+    if (a.tab && (a.tab.length > 31 || /[[\]:*?/\\]/.test(a.tab))) out.push(`Area ${a.id}: "${a.tab}" is not a tab name Excel accepts.`);
+    const seen = new Set();
+    for (const f of a.fields) {
+      const name = `${a.tab} › ${f.label ?? f.key}`;
+      if (!f.key || !f.label) out.push(`${name}: needs a key and a label.`);
+      if (!FIELD_TYPES.includes(f.type)) out.push(`${name}: type must be one of ${FIELD_TYPES.join(', ')}.`);
+      if (!(f.sheet === true || (f.sheet?.skip && String(f.sheet.skip).length > 10))) out.push(`${name}: has no sheet info. Give it sheet: true (a column on ${a.tab}) or sheet: { skip: 'the reason it stays in the app' }.`);
+      if (f.type === 'choice' && !f.options?.length) out.push(`${name}: a choice needs its options.`);
+      const id = `${f.part ?? ''}.${f.key}`;
+      if (seen.has(id)) out.push(`${name}: declared twice.`);
+      seen.add(id);
+    }
+  }
+  return out;
+}
