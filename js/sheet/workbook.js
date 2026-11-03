@@ -33,7 +33,7 @@ const getPath = (o, path) => path.split('.').reduce((v, k) => (v == null ? undef
 export const fieldName = (area, fld) => fld.named ?? `${area.prefix}_${fld.part && fld.part !== (area.part ?? 'profile') ? `${fld.part}_` : ''}${fld.key}`.replace(/\./g, '_');
 export const partOf = (area, fld) => fld.part ?? area.part ?? 'profile';
 
-// A stored value as a sheet cell value, and back (js/sheet/import.js reads with the same rules).
+// A stored value as a sheet cell value, and back (js/import-sheet.js reads with the same rules).
 export function toCell(type, v) {
   if (v === null || v === undefined || v === '') return null;
   if (type === 'yesno') return v === true ? 'Yes' : v === false ? 'No' : String(v);
