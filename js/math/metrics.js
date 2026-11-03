@@ -7,6 +7,7 @@ import { gatesOf, visible } from '../gates.js';
 import { myShare, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor } from './spending.js';
 import { cardMinimum, payoffMonths, totalInterest, payoffPlan } from './debt.js';
 import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
+import { link401k } from './portfolio.js';
 import { fiNumber, fiDate, coastFi, bigDeals } from './fi.js';
 import { hourlyRate } from './time.js';
 
@@ -33,7 +34,10 @@ export function inputsOf(doc, ref, now = new Date()) {
   const gates = gatesOf(doc.profile, doc.client);
   const live = visible(doc.records, gates, ref); // gated-out rows count nowhere (R001, R066)
   const filingStatus = doc.profile.filingStatus ?? defaultFilingStatus(gates.couple); // R043
-  const income = live.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(r, { filingStatus, ref }) }));
+  const link = link401k(live); // B3.10: Income and the 401(k) fill each other in
+  const withLink = r => (r !== link.job || r.values.contributionPct != null ? r
+    : { ...r, values: { ...r.values, contributionPct: link.incomePct, k401Paycheck: link.incomePerPaycheck } });
+  const income = live.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(withLink(r), { filingStatus, ref }) }));
   const takeHome = income.length
     ? income.reduce((s, x) => (s === null || x.takeHome.value === null ? null : s + x.takeHome.value), 0)
     : null;

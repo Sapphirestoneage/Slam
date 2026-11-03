@@ -1,8 +1,9 @@
 // Brandon section 3: fields only some accounts have. 401(k): Roth or traditional, per paycheck and % of salary,
 // match tiers, vesting. HSA: cash vs invested, self-directed vs managed with a fee comparison.
 import { h } from './dom.js';
-import { moneyInput, pctInput, textInput, toggle, select, labelled, moreBlock, button, iconButton, warnTag } from './staples.js';
-import { uninvestedOf, matchFromTiers, contributionSplit, vestedOf, hsaFeeCompare, paychecksPerYear } from '../math/portfolio.js';
+import { moneyInput, pctInput, textInput, toggle, select, labelled, moreBlock, button, iconButton, warnTag, park } from './staples.js';
+import { uninvestedOf, matchFromTiers, contributionSplit, vestedOf, hsaFeeCompare, paychecksPerYear, link401k, hsaProgress, rothLog } from '../math/portfolio.js';
+import { benefitYearly } from '../benefits.js';
 import { money, pct } from '../format.js';
 
 const row = (...kids) => h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, ...kids);
@@ -18,8 +19,12 @@ function matchBlock(ctx, r, up, L) {
   const gross = job?.gross ?? null;
   const freq = job?.r.values.payFrequency ?? null;
   const perPaycheck = v.contribution != null && v.contributionPer === 'Paycheck' ? v.contribution : null;
-  const split = contributionSplit({ perPaycheck, pct: perPaycheck == null ? v.salaryPct ?? null : null, gross, payFrequency: freq });
-  const tiers = v.matchTiers || [];
+  const link = link401k(ctx.visible(() => true)); // B3.10: blank here borrows from Income
+  const own = link.acct?.id === r.id;
+  const salaryPct = v.salaryPct ?? (own ? link.acctPct : null);
+  const split = contributionSplit({ perPaycheck, pct: perPaycheck == null ? salaryPct : null, gross, payFrequency: freq });
+  const tiers = (v.matchTiers || []).length ? v.matchTiers : own ? link.acctTiers : [];
+  const fromIncome = text => h('span.tag.plain', { title: 'Filled in from Income. Type here to change it on this account.' }, text);
   const setTier = (i, patch) => up({ matchTiers: tiers.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
   const m = matchFromTiers({ contributionPct: split.pct, tiers, gross });
   const vest = vestedOf(v.balance ?? null, v.unvested);
@@ -28,9 +33,9 @@ function matchBlock(ctx, r, up, L) {
       labelled('Roth or traditional', toggle(['Traditional', 'Roth', 'Both'], { Pretax: 'Traditional', Roth: 'Roth', Both: 'Both' }[v.taxType] ?? null,
         x => up({ taxType: { Traditional: 'Pretax', Roth: 'Roth', Both: 'Both' }[x] ?? null }), { label: 'Roth or traditional', clearable: true }), { later: L('taxType') }),
       labelled('Per paycheck', split.computed === 'perPaycheck' ? shown(`${money(split.perPaycheck)} (worked out)`) : moneyInput(perPaycheck, x => up({ contribution: x, contributionPer: 'Paycheck' }), { hint: 'Add amount' }), { later: L('contribution') }),
-      labelled('% of salary', split.computed === 'pct' ? shown(`${pct(split.pct)} (worked out)`) : pctInput(v.salaryPct ?? null, x => up({ salaryPct: x, ...(x != null && v.contributionPer === 'Paycheck' ? { contribution: null } : {}) }), { hint: 'e.g. 6' }),
-        { note: gross === null ? 'Add gross pay on Income to work out the other' : freq === null ? 'Add pay frequency on Income to work out the other' : 'Type either one' })),
-    h('div.stack', { style: { gap: '6px' } }, h('span.label', {}, 'Employer match'),
+      labelled('% of salary', split.computed === 'pct' ? shown(`${pct(split.pct)} (worked out)`) : pctInput(salaryPct, x => up({ salaryPct: x, ...(x != null && v.contributionPer === 'Paycheck' ? { contribution: null } : {}) }), { hint: 'e.g. 6' }),
+        { note: own && link.acctPctFrom ? 'From Income' : gross === null ? 'Add gross pay on Income to work out the other' : freq === null ? 'Add pay frequency on Income to work out the other' : 'Type either one' })),
+    h('div.stack', { style: { gap: '6px' } }, h('span.row-line', { style: { gap: '6px' } }, h('span.label', {}, 'Employer match'), own && link.acctTiersFrom ? fromIncome('From Income') : null),
       ...tiers.map((t, i) => row(pctInput(t.rate ?? null, x => setTier(i, { rate: x }), { hint: 'e.g. 100' }), h('span.muted', {}, i === 0 ? 'of the first' : 'of the next'),
         pctInput(t.upTo ?? null, x => setTier(i, { upTo: x }), { hint: 'e.g. 3' }), h('span.muted', {}, 'of pay'),
         iconButton('trash', 'Remove this tier', () => up({ matchTiers: tiers.filter((_, j) => j !== i) }), { tiny: true }))),
@@ -47,6 +52,11 @@ function matchBlock(ctx, r, up, L) {
 // ---------- HSA: cash vs invested, managed vs self-directed (B3.5 to B3.7) ----------
 function hsaBlock(ctx, r, up, L) {
   const v = r.values;
+  const m = ctx.metrics();
+  const freq = m.inputs.income.find(x => x.r.values.payFrequency)?.r.values.payFrequency ?? null;
+  const age = m.inputs.age;
+  const limit = ctx.ref.limits.hsa.self + (age != null && age >= 55 ? ctx.ref.limits.hsa.catchUp55 : 0);
+  const prog = hsaProgress({ ytd: v.hsaYtd ?? null, employer: benefitYearly(ctx.store.doc.profile.benefits?.employerHsa, freq), limit, payFrequency: freq, now: ctx.now() });
   const cmp = hsaFeeCompare({ invested: v.hsaInvested ?? null, managedPct: v.hsaManagedFee ?? null, selfPct: v.hsaSelfFee ?? null });
   const un = uninvestedOf('HSA', v, v.balance ?? null, null);
   return h('div.form-grid', {},
@@ -55,6 +65,10 @@ function hsaBlock(ctx, r, up, L) {
     labelled('How it is invested', toggle(['Self-directed', 'Managed'], v.hsaStyle ?? null, x => up({ hsaStyle: x }), { label: 'Self-directed or managed', clearable: true })),
     labelled('Fee a year: managed vs self-directed', row(pctInput(v.hsaManagedFee ?? null, x => up({ hsaManagedFee: x }), { hint: 'Managed' }), pctInput(v.hsaSelfFee ?? null, x => up({ hsaSelfFee: x }), { hint: 'Self' })),
       { later: L('hsaManagedFee') }),
+    labelled('Put in so far this year', moneyInput(v.hsaYtd ?? null, x => up({ hsaYtd: x }), { hint: 'Add amount' }), { note: 'Yours, not the employer\'s', ...park(ctx, r, 'hsaYtd') }),
+    prog ? labelled('Progress to the limit', h('span.stack', { style: { gap: '2px' } }, shown(`${money(prog.inSoFar)} of ${money(prog.limit)}${prog.maxed ? ' ✓ maxed' : ''}`),
+      !prog.maxed && prog.paychecksLeft ? h('span.muted.small', {}, `${prog.paychecksLeft} paychecks left this year: ${money(prog.perPaycheckToMax)} each to max it`)
+        : !prog.maxed ? h('span.muted.small', {}, 'Add pay frequency on Income to see paychecks left') : null)) : null,
     cmp?.saves != null ? labelled('Difference', shown(cmp.saves > 0 ? `Self-directed saves ${money(cmp.saves)} a year` : cmp.saves < 0 ? `Managed saves ${money(-cmp.saves)} a year` : 'Same cost')) : null);
 }
 
@@ -67,7 +81,34 @@ export function yearly401k(ctx, r) {
   return v.salaryPct != null && job ? v.salaryPct * job.gross : null;
 }
 
+// ---------- Roth IRA: contribution log by tax year (B3.9) ----------
+function rothBlock(ctx, r, up) {
+  const v = r.values;
+  const age = ctx.metrics().inputs.age;
+  const limit = ctx.ref.limits.ira.base + (age != null && age >= 50 ? ctx.ref.limits.ira.catchUp50 : 0);
+  const log = v.rothLog || [];
+  const res = rothLog(log, { limit, now: ctx.now() });
+  const set = (i, patch) => up({ rothLog: log.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
+  const y = ctx.now().getFullYear();
+  const rows = log.map((e, i) => {
+    const d = h('input', { type: 'date', value: e.date || '', 'aria-label': 'Date put in' });
+    d.onchange = () => set(i, { date: d.value || null });
+    return h('tr', {}, h('td', {}, select([y, y - 1, y - 2, y - 3].map(n => [n, String(n)]), e.taxYear ?? null, x => set(i, { taxYear: x == null ? null : Number(x) }), { label: 'Tax year', width: 100 })),
+      h('td', {}, h(`label.field${e.date ? '.filled' : ''}`, { style: { width: '160px' } }, d)),
+      h('td.num', {}, moneyInput(e.amount ?? null, x => set(i, { amount: x }), { hint: 'Amount' })),
+      h('td', {}, iconButton('trash', 'Remove this contribution', () => up({ rothLog: log.filter((_, j) => j !== i) }), { tiny: true })));
+  });
+  return h('div.stack', { style: { gap: '10px' } },
+    h('div.row-line', { style: { gap: '8px' } }, res.years.filter(x => x.open || x.total).map(x => h(`span.tag${x.maxed ? '.plain.ok-tag' : '.plain'}`, {},
+      x.maxed ? `${x.taxYear}: ✓ maxed (${money(x.total)})` : `${x.taxYear}: ${money(x.total)} of ${money(limit)}, ${money(x.left)} to go${x.open && x.taxYear < y ? ' (until Apr 15)' : ''}`)),
+      ...res.years.filter(x => x.over).map(x => warnTag(`${x.taxYear}: ${money(x.over)} over the limit. Ask the broker to remove the extra before tax day to avoid a penalty`))),
+    log.length ? h('table.rows.mini', {}, h('thead', {}, h('tr', {}, ['Tax year', 'Date', 'Amount', ''].map(t => h('th', {}, t)))), h('tbody', {}, rows)) : null,
+    row(button('Log a contribution', { size: 'small', iconName: 'plus', onClick: () => up({ rothLog: [...log, { taxYear: y }] }) }),
+      res.basis && v.rothBasis == null ? h('span.muted.small', {}, `Contributions logged: ${money(res.basis)}. This is your contribution basis.`) : null));
+}
+
 export function specificBlocks(ctx, r, up, L, id) {
   return [is401k(r) ? moreBlock(id('match'), () => matchBlock(ctx, r, up, L), { label: 'Contribution, match and vesting' }) : null,
-    r.type === 'HSA' ? moreBlock(id('hsa'), () => hsaBlock(ctx, r, up, L), { label: 'HSA: cash, invested and fees' }) : null];
+    r.type === 'HSA' ? moreBlock(id('hsa'), () => hsaBlock(ctx, r, up, L), { label: 'HSA: cash, invested, fees and limit' }) : null,
+    r.type === 'Roth IRA' ? moreBlock(id('roth'), () => rothBlock(ctx, r, up), { label: `Contributions by tax year${r.values.rothLog?.length ? ` (${r.values.rothLog.length})` : ''}` }) : null];
 }

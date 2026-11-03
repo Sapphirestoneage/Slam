@@ -95,7 +95,9 @@ export function growthOf(type, v = {}, balance = null) {
   const unrealized = basis !== null && !isBlank(balance) ? balance - basis : null;
   const out = { basis, basisFrom: num(v.costBasis) !== null ? 'cost basis' : basis !== null ? 'contributions' : null, unrealized,
     unrealizedPct: unrealized !== null && basis ? unrealized / basis : null, realized: num(v.realized), dividends: num(v.dividends) };
-  if (/Roth/.test(type || '') && num(v.rothBasis) !== null && !isBlank(balance)) out.rothEarnings = balance - v.rothBasis; // contributions come out any time
+  const logged = (v.rothLog || []).reduce((s, e) => s + (e.amount ?? 0), 0);
+  const rothBasis = num(v.rothBasis) ?? (logged || null); // blank box: the contribution log is the basis (B3.9)
+  if (/Roth/.test(type || '') && rothBasis !== null && !isBlank(balance)) { out.rothEarnings = balance - rothBasis; out.rothBasis = rothBasis; } // contributions come out any time
   if (TAXABLE.has(type)) { out.shortTerm = num(v.shortTerm); out.longTerm = num(v.longTerm); }
   return out;
 }
@@ -202,4 +204,66 @@ export function hsaFeeCompare({ invested = null, managedPct = null, selfPct = nu
   const cost = (p, f) => (isBlank(p) && isBlank(f) ? null : (p ?? 0) * invested + (f ?? 0));
   const managed = cost(managedPct, managedFlat), self = cost(selfPct, selfFlat);
   return { managed, self, saves: managed !== null && self !== null ? managed - self : null };
+}
+
+// Income and the 401(k) fill each other in (B3.10): whichever side is blank borrows the other's answer.
+// Own answers always win. Pure: reads records, returns what each side should show and where it came from.
+const K401_TYPES = new Set(['401(k)', '403(b)', '457', 'TSP', 'Solo 401(k)']);
+export function link401k(records) {
+  const job = records.find(r => r.kind === 'income' && ['Job', 'Partner job'].includes(r.type) && r.values?.incomeType !== '1099') || null;
+  const acct = records.find(r => r.kind === 'account' && K401_TYPES.has(r.type)) || null;
+  const jv = job?.values || {}, av = acct?.values || {};
+  const acctPerPaycheck = av.contribution != null && av.contributionPer === 'Paycheck' ? av.contribution : null;
+  const incomeTiers = jv.matchPct != null && jv.matchCapPct != null ? [{ rate: jv.matchPct, upTo: jv.matchCapPct }] : [];
+  const acctTiers = (av.matchTiers || []).filter(t => t.rate != null && t.upTo != null);
+  return {
+    job, acct,
+    // Income side: 401(k) % and match
+    incomePct: jv.contributionPct ?? av.salaryPct ?? null,
+    incomePctFrom: jv.contributionPct == null && av.salaryPct != null ? '401(k)' : null,
+    incomePerPaycheck: jv.contributionPct == null && av.salaryPct == null ? acctPerPaycheck : null, // dollars, when the 401(k) gives only that
+    incomeTiers: incomeTiers.length ? incomeTiers : acctTiers,
+    incomeTiersFrom: !incomeTiers.length && acctTiers.length ? '401(k)' : null,
+    // 401(k) side: % of salary and match tiers
+    acctPct: av.salaryPct ?? (acctPerPaycheck == null ? jv.contributionPct ?? null : null),
+    acctPctFrom: av.salaryPct == null && acctPerPaycheck == null && jv.contributionPct != null ? 'Income' : null,
+    acctTiers: (av.matchTiers || []).length ? av.matchTiers : incomeTiers,
+    acctTiersFrom: !(av.matchTiers || []).length && incomeTiers.length ? 'Income' : null,
+  };
+}
+
+// Paychecks left this calendar year (B3.8), from today. Approximate: weekly and every 2 weeks count days left;
+// twice a month counts the 15th and the end of each month left; monthly counts month-ends left.
+export function paychecksLeft(payFrequency, now = new Date()) {
+  const y = now.getFullYear(), mo = now.getMonth(), d = now.getDate();
+  const daysLeft = Math.floor((new Date(y, 11, 31, 23) - now) / 86400000);
+  const lastDay = new Date(y, mo + 1, 0).getDate();
+  if (payFrequency === 'week') return Math.floor(daysLeft / 7) + 1;
+  if (payFrequency === '2 weeks') return Math.floor(daysLeft / 14) + 1;
+  if (payFrequency === 'twice a month') return (11 - mo) * 2 + (d <= 15 ? 2 : d < lastDay ? 1 : 0);
+  if (payFrequency === 'month') return 11 - mo + (d < lastDay ? 1 : 0);
+  return null;
+}
+
+// HSA (B3.8): this year so far plus the employer, against the limit, and what each paycheck left needs to max it.
+export function hsaProgress({ ytd = null, employer = null, limit, payFrequency = null, now = new Date() }) {
+  if (isBlank(ytd) && isBlank(employer)) return null;
+  const inSoFar = (ytd ?? 0) + (employer ?? 0);
+  const left = Math.max(0, limit - inSoFar);
+  const n = paychecksLeft(payFrequency, now);
+  return { inSoFar, limit, share: inSoFar / limit, left, paychecksLeft: n, perPaycheckToMax: n ? left / n : null, maxed: left <= 0.5 };
+}
+
+// Roth IRA contribution log (B3.9): by tax year, with maxed status. Contributions for a year can be made until
+// the April 15 after it. The log total is also the contribution basis when that box is blank.
+export function rothLog(entries = [], { limit, now = new Date() }) {
+  const by = new Map();
+  for (const e of entries) if (e.taxYear && !isBlank(e.amount)) by.set(e.taxYear, (by.get(e.taxYear) ?? 0) + e.amount);
+  const y = now.getFullYear();
+  const open = [y, ...(now < new Date(y, 3, 16) ? [y - 1] : [])]; // last year stays open until tax day
+  const years = [...new Set([...by.keys(), ...open])].sort((a, b) => b - a).map(taxYear => {
+    const total = by.get(taxYear) ?? 0;
+    return { taxYear, total, left: Math.max(0, limit - total), maxed: total >= limit - 0.5, open: open.includes(taxYear), over: total > limit + 0.5 ? total - limit : null };
+  });
+  return { years, basis: [...by.values()].reduce((s, v) => s + v, 0) };
 }

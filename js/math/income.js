@@ -124,7 +124,7 @@ export function incomeRow(r, { filingStatus = 'Single', ref }) {
   const yearly = (x, per) => (x == null ? null : monthlyFrom(x, per, v.payFrequency).value * 12);
   const typedGross = v.basis === 'Gross' ? yearly(r.amount, r.per) : v.gross ?? null;
   const salary = typedGross ?? null;
-  const pretax = (salary ?? 0) * (v.contributionPct ?? 0) + ((v.premium ?? 0) + (v.hsaFsa ?? 0) + (v.otherPretax ?? 0)) * perYear;
+  const pretax = (salary ?? 0) * (v.contributionPct ?? 0) + ((v.premium ?? 0) + (v.hsaFsa ?? 0) + (v.otherPretax ?? 0) + (v.contributionPct == null ? v.k401Paycheck ?? 0 : 0)) * perYear;
   const selfEmployed = taxType === '1099';
   if (taxType && salary !== null && (v.basis === 'Gross' || r.amount == null)) { // gross only: take-home is solved
     const t = takeHomeFromGross({ gross: salary, pretax, filingStatus, selfEmployed }, ref);
@@ -133,6 +133,14 @@ export function incomeRow(r, { filingStatus = 'Single', ref }) {
   const th = r.amount == null ? needs('M01', ['take-home']) : monthlyFrom(r.amount, r.per, v.payFrequency);
   if (!taxType || th.value === null) return { takeHome: th, gross: salary, pretax, taxType, computed: null };
   if (salary !== null) return { takeHome: th, gross: salary, pretax, taxType, computed: null }; // both typed: kept as typed (R046)
-  const g = grossFromTakeHome({ takeHome: th.value * 12, pretax, filingStatus, selfEmployed }, ref);
-  return { takeHome: th, gross: g.value, grossResult: g, pretax, taxType, computed: 'gross' };
+  // A 401(k) % is a share of the gross being solved for, so solve again with it until it settles.
+  let g = grossFromTakeHome({ takeHome: th.value * 12, pretax, filingStatus, selfEmployed }, ref);
+  let pre = pretax;
+  for (let i = 0; i < 6 && v.contributionPct; i++) {
+    pre = pretax + g.value * v.contributionPct;
+    const next = grossFromTakeHome({ takeHome: th.value * 12, pretax: pre, filingStatus, selfEmployed }, ref);
+    if (Math.abs(next.value - g.value) < 1) { g = next; break; }
+    g = next;
+  }
+  return { takeHome: th, gross: g.value, grossResult: g, pretax: pre, taxType, computed: 'gross' };
 }

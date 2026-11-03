@@ -259,3 +259,42 @@ test('M10: each mark is set once, with seconds from the first Profile answer', (
   assert.equal(timerAfter(s.doc, { metricShown: true, now: new Date('2026-11-03T10:05:00Z') }), null); // set once
   assert.equal(s.doc.session.timer.coreDone, undefined);
 });
+
+// ---------- B3.10: Income and the 401(k) fill each other in ----------
+import { link401k } from '../js/math/portfolio.js';
+test('B3.10: whichever side is blank borrows the other; own answers win; take-home math uses the borrowed %', () => {
+  const s = fresh();
+  const job = s.add('income', { name: 'Job', amount: 4000, values: { basis: 'Take-home', contributionPct: 0.06, matchPct: 1, matchCapPct: 0.04 } }, { type: 'Job' });
+  const k = s.add('account', { values: { group: 'investment', balance: 5000 } }, { type: '401(k)' });
+  let l = link401k(s.records);
+  assert.equal(l.acctPct, 0.06); assert.equal(l.acctPctFrom, 'Income');
+  assert.deepEqual(l.acctTiers, [{ rate: 1, upTo: 0.04 }]);
+  s.update(k.id, { salaryPct: 0.1, matchTiers: [{ rate: 1, upTo: 0.03 }, { rate: 0.5, upTo: 0.01 }] });
+  s.update(job.id, { contributionPct: null, matchPct: null, matchCapPct: null });
+  l = link401k(s.records);
+  assert.equal(l.incomePct, 0.1); assert.equal(l.incomePctFrom, '401(k)');
+  assert.equal(l.incomeTiers.length, 2);
+  const m = metrics(s.doc, ref, { now: new Date('2026-11-03') });
+  const row = m.inputs.income[0];
+  assert.ok(Math.abs(row.pretax - row.gross * 0.1) < 1); // the 401(k)'s 10% comes out before tax
+});
+
+// ---------- B3.8, B3.9: HSA progress, Roth IRA log ----------
+import { hsaProgress, rothLog, paychecksLeft } from '../js/math/portfolio.js';
+test('B3.8: HSA progress counts the employer; paychecks left gives what each needs to max', () => {
+  const now = new Date(2026, 9, 1, 12); // Oct 1
+  assert.equal(paychecksLeft('twice a month', now), 6);
+  assert.equal(paychecksLeft('month', now), 3);
+  const p = hsaProgress({ ytd: 2000, employer: 500, limit: 4400, payFrequency: 'twice a month', now });
+  assert.equal(p.left, 1900);
+  assert.ok(Math.abs(p.perPaycheckToMax - 1900 / 6) < 1e-9);
+  assert.equal(hsaProgress({ ytd: 4400, limit: 4400, now }).maxed, true);
+});
+test('B3.9: Roth contributions by tax year; last year stays open until tax day; the log is the basis', () => {
+  const log = [{ taxYear: 2026, date: '2026-02-01', amount: 3000 }, { taxYear: 2025, date: '2026-03-01', amount: 7500 }];
+  const r = rothLog(log, { limit: 7500, now: new Date(2026, 2, 10) });
+  assert.deepEqual(r.years.map(y => [y.taxYear, y.maxed, y.open]), [[2026, false, true], [2025, true, true]]);
+  assert.equal(rothLog(log, { limit: 7500, now: new Date(2026, 5, 1) }).years.find(y => y.taxYear === 2025).open, false);
+  assert.equal(r.basis, 10500);
+  assert.equal(growthOf('Roth IRA', { rothLog: log }, 12000).rothEarnings, 1500);
+});

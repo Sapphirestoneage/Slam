@@ -7,7 +7,7 @@ import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, month
 import { limitUsed } from '../math/assets.js';
 import { accountBlocks, accountFlags, stampBalance } from './account-detail.js';
 import { is401k, yearly401k } from './account-specific.js';
-import { netWorthCheck, yearlyContribution } from '../math/portfolio.js';
+import { netWorthCheck, yearlyContribution, link401k } from '../math/portfolio.js';
 import { benefitYearly, withholdingFlag } from '../benefits.js';
 import { lifeAdminItems, lifeAdminPatch, LIFE_STATES } from '../lifeadmin.js';
 import { drafttShares, DRAFTT } from '../math/spending.js';
@@ -72,6 +72,7 @@ export function incomeList() {
 const incomeRowOf = (m, r) => m.inputs.income.find(x => x.r.id === r.id);
 function incomeSecondary(ctx, r, up) {
   const g = ctx.gates();
+  const link = link401k(ctx.visible(() => true)); // B3.10: blank here borrows from the 401(k)
   const m = ctx.metrics();
   const x = incomeRowOf(m, r);
   const v = r.values;
@@ -82,9 +83,14 @@ function incomeSecondary(ctx, r, up) {
     labelled(v.payFrequency === 'twice a month' ? 'Paydays' : v.payFrequency === 'month' ? 'Payday' : 'Next payday', paydays(r, up),
       { note: 'Puts each paycheck on its day in the calendar', later: L(ctx, r, v.payFrequency === 'week' || v.payFrequency === '2 weeks' ? 'nextPayday' : 'paydays') }),
     labelled('Type', select(['W-2', '1099', 'Business', 'Side hustle', 'Rental', 'Benefits', 'Other'], v.incomeType ?? null, y => up({ incomeType: y }), { label: 'Income type', hint: x?.taxType ?? 'Pick one', width: 150 }), { later: L(ctx, r, 'incomeType') }),
-    applies('401k', { g }) && x?.taxType ? labelled('401(k) %', pctInput(v.contributionPct, y => up({ contributionPct: y }), { hint: 'e.g. 0' }), { later: L(ctx, r, 'contributionPct') }) : null,
-    applies('match', { g }) && x?.taxType ? labelled('Employer match: % up to %', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
-      pctInput(v.matchPct, y => up({ matchPct: y }), { hint: 'Match' }), h('span.muted', {}, 'up to'), pctInput(v.matchCapPct, y => up({ matchCapPct: y }), { hint: 'Of pay' })), { later: L(ctx, r, 'matchPct') }) : null,
+    applies('401k', { g }) && x?.taxType ? labelled('401(k) %', pctInput(v.contributionPct ?? (link.job?.id === r.id ? link.incomePct : null), y => up({ contributionPct: y }), { hint: 'e.g. 6' }),
+      { note: link.job?.id === r.id && link.incomePctFrom ? 'From your 401(k)' : link.job?.id === r.id && link.incomePerPaycheck != null ? `From your 401(k): ${money(link.incomePerPaycheck)} a paycheck` : null, later: L(ctx, r, 'contributionPct') }) : null,
+    applies('match', { g }) && x?.taxType ? (link.job?.id === r.id && link.incomeTiersFrom && link.incomeTiers.length > 1
+      ? labelled('Employer match', h('span.computed', { title: 'Set on your 401(k) under Assets' }, link.incomeTiers.map((t, i) => `${pct(t.rate)} of the ${i ? 'next' : 'first'} ${pct(t.upTo)}`).join(', ')), { note: 'From your 401(k)' })
+      : labelled('Employer match: % up to %', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+        pctInput(v.matchPct ?? (link.job?.id === r.id ? link.incomeTiers[0]?.rate : null), y => up({ matchPct: y }), { hint: 'Match' }), h('span.muted', {}, 'up to'),
+        pctInput(v.matchCapPct ?? (link.job?.id === r.id ? link.incomeTiers[0]?.upTo : null), y => up({ matchCapPct: y }), { hint: 'Of pay' })),
+      { note: link.job?.id === r.id && link.incomeTiersFrom ? 'From your 401(k)' : null, later: L(ctx, r, 'matchPct') })) : null,
     labelled('Bonus: $ and month', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.bonus, y => up({ bonus: y }), { hint: 'Bonus' }),
       select(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], v.bonusMonth ?? null, y => up({ bonusMonth: y }), { label: 'Bonus month', hint: 'Month', width: 100 })), { later: L(ctx, r, 'bonus') }),
     applies('premium', { g }) && x?.taxType ? labelled('Health premium a paycheck', moneyInput(v.premium, y => up({ premium: y }), { hint: 'Add premium' }), { later: L(ctx, r, 'premium') }) : null,
