@@ -32,6 +32,10 @@ function matchBlock(ctx, r, up, L) {
     h('div.form-grid', {},
       labelled('Roth or traditional', toggle(['Traditional', 'Roth', 'Both'], { Pretax: 'Traditional', Roth: 'Roth', Both: 'Both' }[v.taxType] ?? null,
         x => up({ taxType: { Traditional: 'Pretax', Roth: 'Roth', Both: 'Both' }[x] ?? null }), { label: 'Roth or traditional', clearable: true }), { later: L('taxType') }),
+      // Both: blank counts it all as traditional (pretax); a Roth part, as dollars a paycheck or a % of what goes in, is taxed first.
+      v.taxType === 'Both' ? labelled('Roth part', row(toggle([['Amount', '$ a paycheck'], ['Percent', '% of it']], v.rothSplitBy ?? 'Percent', x => up({ rothSplitBy: x }), { label: 'Roth part as' }),
+        (v.rothSplitBy ?? 'Percent') === 'Amount' ? moneyInput(v.rothPerPaycheck ?? null, x => up({ rothPerPaycheck: x }), { hint: 'Add amount' }) : pctInput(v.rothPct ?? null, x => up({ rothPct: x }), { hint: 'e.g. 50' })),
+        { note: (v.rothSplitBy ?? 'Percent') === 'Amount' ? (v.rothPerPaycheck == null ? 'Blank: all traditional' : 'The rest is traditional') : v.rothPct == null ? 'Blank: all traditional' : `${pct(1 - v.rothPct)} traditional` }) : null,
       labelled('Per paycheck', split.computed === 'perPaycheck' ? shown(`${money(split.perPaycheck)} (worked out)`) : moneyInput(perPaycheck, x => up({ contribution: x, contributionPer: 'Paycheck' }), { hint: 'Add amount' }), { later: L('contribution') }),
       labelled('% of salary', split.computed === 'pct' ? shown(`${pct(split.pct)} (worked out)`) : pctInput(salaryPct, x => up({ salaryPct: x, ...(x != null && v.contributionPer === 'Paycheck' ? { contribution: null } : {}) }), { hint: 'e.g. 6' }),
         { note: own && link.acctPctFrom ? 'From Income' : gross === null ? 'Add gross pay on Income to work out the other' : freq === null ? 'Add pay frequency on Income to work out the other' : 'Type either one' })),

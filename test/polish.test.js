@@ -101,3 +101,19 @@ test('fields.json from the spec: old saved clients and backups keep each filed n
   for (const to of Object.values(FIELD_MOVES)) assert.ok(name(to), to);
   assert.equal(newHousehold().fieldsVersion, 2);
 });
+
+test('a 401(k) marked Both is all traditional until a Roth part is set, as a % or as dollars a paycheck', () => {
+  const run = values => {
+    const s = new Store(newHousehold({ name: 'Synthetic', now: '2026-11-01T09:00:00.000Z' }));
+    s.add('income', { name: 'Job', amount: 78000, per: 'year', values: { basis: 'Gross', payFrequency: '2 weeks', contributionPct: 0.1 } }, { type: 'Job' });
+    s.add('account', { name: '401(k)', values: { group: 'investment', balance: 1000, taxType: 'Both', ...values } }, { type: '401(k)' });
+    return metrics(s.doc, ref, { now: new Date('2026-11-03') }).inputs.income[0];
+  };
+  const blank = run({});
+  assert.deepEqual([blank.pretax, blank.roth], [7800, 0], 'Both with no split: all pretax');
+  const half = run({ rothSplitBy: 'Percent', rothPct: 0.5 });
+  assert.deepEqual([half.pretax, half.roth], [3900, 3900]);
+  const dollars = run({ rothSplitBy: 'Amount', rothPerPaycheck: 100 });
+  assert.deepEqual([dollars.pretax, dollars.roth], [7800 - 2600, 2600], '$100 a paycheck, 26 paychecks');
+  assert.equal(run({ rothSplitBy: 'Amount', rothPerPaycheck: 1000 }).roth, 7800, 'never more than goes in');
+});

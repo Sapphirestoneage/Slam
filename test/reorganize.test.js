@@ -62,14 +62,16 @@ test("the match: the line's own name (not its group), an exact amount, or the De
     { id: 'a', name: 'Bank and card fees', category: 'Fees', draftt: 'Other', amount: 15, per: 'month' },
     { id: 'b', name: 'Student loan payment', draftt: 'Other', amount: 200, per: 'month' },
     { id: 'c', name: 'Loans', draftt: 'Debt', amount: 500, per: 'month' },
-    { id: 'd', name: 'Gym', draftt: 'Therapy', amount: 75, per: 'month' },
+    { id: 'd', name: 'Monthly payment', draftt: 'Other', amount: 75, per: 'month' },
+    { id: 'g', name: 'Gym', draftt: 'Therapy', amount: 75, per: 'month' },
     { id: 'e', name: 'Rent', category: 'Rent or mortgage', draftt: 'Accommodation', amount: 1650, per: 'month' },
-    { id: 'f', name: 'Gym', draftt: 'Therapy', amount: 75.5, per: 'month' },
+    { id: 'f', name: 'Car payment', draftt: 'Other', amount: 75.5, per: 'month' },
   ];
   const { askOf, dupOf } = duplicates(lines, { debts, autos });
   assert.deepEqual(Object.keys(askOf).sort(), ['b', 'c', 'd']);
   assert.equal(askOf.b.sourceId, 'd2', 'its own words: student loan');
-  assert.equal(askOf.d.sourceId, 'd1', 'the exact amount');
+  assert.equal(askOf.d.sourceId, 'd1', 'a payment word and the exact amount');
+  assert.equal(askOf.g, undefined, 'the same amount alone is not enough');
   assert.equal(askOf.e, undefined, 'the Rent or mortgage group is not evidence');
   assert.equal(askOf.f, undefined, 'close is not exact');
   assert.deepEqual(dupOf, {});

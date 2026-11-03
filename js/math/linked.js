@@ -34,7 +34,7 @@ export function premiumSources(coverages, payFrequency = null) {
 
 // lines: typed spending lines (name, draftt, amount, per, status, linkedTo, values.sameAs, values.notSame).
 // Evidence is the line's own name, never its group's (a payment, loan, mortgage, insurance or premium word plus a word
-// shared with the debt or coverage), an exact amount match, or sitting in the Debt group. Nothing merges silently:
+// shared with the debt or coverage), a payment word with an exact amount match, or sitting in the Debt group. Nothing merges silently:
 // a match is a question ("Same as your Car loan?") in askOf; only a Yes (values.sameAs) leaves the line out, in dupOf.
 // A premium's own linked line, once the coverage says the paycheck pays it, is the same item by construction: dupOf.
 export function duplicates(lines, { debts = [], autos = [], premiums = [], payFrequency = null } = {}) {
@@ -59,7 +59,8 @@ export function duplicates(lines, { debts = [], autos = [], premiums = [], payFr
     const lw = words(l.name);
     const name = l.name ?? '';
     const byName = x => (x.debt ? /payment|loan|mortgage/i : /insurance|premium/i).test(name) && shares(lw, x.words);
-    const hit = open.find(byName) ?? open.find(x => exact(monthly(l), x.amount))
+    const payWord = x => (x.debt ? /payment|loan|mortgage/i : /insurance|premium/i).test(name);
+    const hit = open.find(byName) ?? open.find(x => payWord(x) && exact(monthly(l), x.amount)) // an exact amount needs a payment word too
       ?? (l.draftt === 'Debt' ? open.find(x => x.debt) : null); // sitting in the Debt group still counts
     if (hit) askOf[l.id] = { sourceId: hit.sourceId, from: hit.from, name: hit.name };
   }
