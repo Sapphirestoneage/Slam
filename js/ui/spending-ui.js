@@ -1,6 +1,7 @@
 // Spending (build phase 6): Budget with five passes, irregular costs, the cash flow calendar and month-end close.
 // Every screen is a view of the same records (R117); the month model lives in js/month.js.
 import { h, clear, icon } from './dom.js';
+import { maaserOf, KOSHER_NOTE } from '../community.js';
 import * as S from './staples.js';
 import { spendingList, irregularList, IRREGULAR } from './lists.js';
 import { PASSES, ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
@@ -53,8 +54,27 @@ export function budgetScreen(app, ctx) {
     : UI.pass === 'Basics' ? basicsPass(ctx)
       : h('div.visuals', {}, S.recordList(ctx, spendingList(ctx.ref, { pass: UI.pass, ym: UI.ym, groupBy: UI.groupBy, paidWithColumn: cardsMost })),
         S.visualsPanel(ctx, { charts: budgetCharts, area: 'needs' }));
-  return [head('Budget', 'Every spending line and the five passes'), passBar, budgetStrip(ctx, view), body,
+  return [head('Budget', 'Every spending line and the five passes'), passBar, budgetStrip(ctx, view), doc.session?.community ? S.live(ctx, () => communityCard(ctx)) : null, body,
     S.recordList(ctx, irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) }))];
+}
+
+// M9: kosher grocery note and maaser, only when community presets are on.
+function communityCard(ctx) {
+  const m = ctx.metrics();
+  const mz = ctx.store.doc.session.maaser || {};
+  const r = maaserOf({ basis: mz.basis ?? 'Take-home', pct: mz.pct ?? null, grossAnnual: m.inputs.grossAnnual, takeHome: m.inputs.takeHome });
+  const line = ctx.visible(x => x.kind === 'bill' && x.values.maaser)[0];
+  const put = () => {
+    if (line) ctx.store.update(line.id, { amount: Math.round(r.value), status: 'Computed' });
+    else ctx.store.add('bill', { name: 'Maaser', amount: Math.round(r.value), status: 'Computed', values: { maaser: true, category: 'Giving', draftt: 'Other', amountType: 'Variable', timing: 'Variable date' } });
+    S.toast(line ? 'Maaser line updated.' : 'Maaser added as a spending line.');
+  };
+  return h('div.card.community-card', {}, h('div.row-line', { style: { gap: '16px' } },
+    h('span.stack', { style: { gap: '2px' } }, h('span.label', {}, 'Maaser a month'),
+      r.value == null ? h('span.muted', {}, `Needs ${r.needs}`) : h('strong', {}, money(r.value)), r.text ? h('span.muted.small', {}, r.text) : null),
+    r.value != null ? S.button(line ? (Math.round(line.amount ?? 0) === Math.round(r.value) ? 'Line is up to date' : 'Update the maaser line') : 'Add as a spending line',
+      { size: 'small', iconName: 'plus', disabled: line && Math.round(line.amount ?? 0) === Math.round(r.value), onClick: put }) : null,
+    h('span.muted.small', { style: { flex: 1 } }, KOSHER_NOTE)));
 }
 
 // R146, R147: fixed and variable side by side with % of take-home; the fixed total is the floor.

@@ -9,6 +9,7 @@ import { addMonths, ymOf, monthName, dateOf, monthsBetween } from '../month.js';
 import { winSources } from './spending-ui.js';
 import { money, pct } from '../format.js';
 import { yearItems, usualDates, sinkingOf, takingOver } from '../year.js';
+import { TUITION_GOAL } from '../community.js';
 
 export const PUI = { extra: 0, pace: null, bands: true, chart: 'FI timeline', extraDebt: 0 };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -105,8 +106,8 @@ function milestoneList() {
   return {
     kind: 'milestone', area: 'goals', title: 'Milestones', thing: { one: 'milestone', plural: 'milestones' },
     filter: r => r.kind === 'milestone',
-    picker: { top: ['Coast FI', 'Regular FI', 'Debt free', 'Lean FI'], other: MILESTONES },
-    newValues: type => ({ name: type === 'Custom' ? null : type, values: { mode: type === 'Custom' ? 'date' : 'when' } }),
+    picker: ctx => ({ top: ['Coast FI', 'Regular FI', 'Debt free', 'Lean FI'], other: ctx.store.doc.session?.community ? [...MILESTONES, TUITION_GOAL] : MILESTONES }),
+    newValues: type => ({ name: type === 'Custom' ? null : type, values: { mode: type === 'Custom' || type === TUITION_GOAL ? 'date' : 'when' } }),
     coreFields: ['name'],
     columns: [
       { label: 'Milestone', render: (ctx, r, m, up) => S.textInput(r.name, v => up({ name: v }), { hint: r.type || 'Name it', width: 170, key: `${r.id}:name` }) },

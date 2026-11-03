@@ -4,6 +4,7 @@ import { h, clear, icon } from './dom.js';
 import * as S from './staples.js';
 import { homeworkItems } from './report-ui.js';
 import { homeworkText } from '../homework.js';
+import { communityLinesToAdd } from '../community.js';
 import { keyNumbers } from '../math/metrics.js';
 import { statusOf } from '../records.js';
 import { money, pct } from '../format.js';
@@ -60,6 +61,14 @@ export function listsScreen(app, ctx) {
       : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, "Tap I'll find it later on any number and it lands here, with where to look.")))))];
 }
 
+function setCommunity(ctx, on) {
+  ctx.store.transaction('Community presets', () => {
+    ctx.store.setIn('session', ['community'], on, 'Community presets');
+    if (on) for (const l of communityLinesToAdd(ctx.store.records)) ctx.store.add('bill', l, { type: 'Yearly cost' });
+  });
+  S.toast(on ? 'Yom tov and Pesach are under yearly costs on the Budget, with blank amounts.' : 'Off. The lines it added stay; delete them on the Budget if not needed.', { undo: () => ctx.store.undo() });
+}
+
 // Snapshots with compare, notes, session settings, Fast Track accuracy and the look.
 export const TUI = { compare: null };
 export function sessionScreen(app, ctx, { fastTrackGap }) {
@@ -91,7 +100,14 @@ export function sessionScreen(app, ctx, { fastTrackGap }) {
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Session length'), S.textInput(s.length ?? null, v => ctx.store.setIn('session', ['length'], v === null ? undefined : Number(v), 'Session length'), { hint: `${ctx.ref.defaults.sessionMinutes} min`, width: 110 })),
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Sessions planned'), S.stepper(s.planned ?? 6, v => ctx.store.setIn('session', ['planned'], v, 'Sessions planned'), { min: 1, max: 24, label: 'Sessions planned' })),
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Client view'), S.toggle([[false, 'Off'], [true, 'On']], !!app.prefs.clientView, v => app.setPref('clientView', v), { label: 'Client view' }), h('span.muted.small', {}, 'Hides coach-only items')),
-      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Satisfaction'), S.stepper(s.satisfaction ?? null, v => ctx.store.setIn('session', ['satisfaction'], v, 'Satisfaction'), { min: 1, max: 10, label: 'Satisfaction 1 to 10' })))),
+      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Satisfaction'), S.stepper(s.satisfaction ?? null, v => ctx.store.setIn('session', ['satisfaction'], v, 'Satisfaction'), { min: 1, max: 10, label: 'Satisfaction 1 to 10' })),
+      // M9: community presets, off unless turned on for this client.
+      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Community presets'), S.toggle([[false, 'Off'], [true, 'On']], !!s.community, v => setCommunity(ctx, v), { label: 'Community presets' }),
+        h('span.muted.small', {}, 'Yom tov and Pesach lines, a kosher grocery note, future tuition goals, maaser')),
+      s.community ? h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Maaser'),
+        S.toggle(['Take-home', 'Gross'], s.maaser?.basis ?? 'Take-home', v => ctx.store.setIn('session', ['maaser'], { ...(s.maaser || {}), basis: v }, 'Maaser'), { label: 'Maaser on' }),
+        S.pctInput(s.maaser?.pct ?? null, v => ctx.store.setIn('session', ['maaser'], { ...(s.maaser || {}), pct: v }, 'Maaser'), { hint: 'Blank: 10' }),
+        h('span.muted.small', {}, 'Shown on the Budget')) : null)),
     fastTrackGap(ctx),
     h('div.card', {}, h('h3', {}, 'Look'), h('div.stack', { style: { gap: '12px' } },
       h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Theme'), S.toggle(['System', 'Light', 'Dark'], app.prefs.theme === 'light' ? 'Light' : app.prefs.theme === 'dark' ? 'Dark' : 'System', v => app.setPref('theme', v.toLowerCase()), { label: 'Theme' })),

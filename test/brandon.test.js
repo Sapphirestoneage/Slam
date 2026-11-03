@@ -232,3 +232,17 @@ test('M8: beneficiaries come from each account; not yet lands on homework; rente
   s.add('coverage', { values: { have: 'Have it' } }, { type: 'Renters or home' });
   assert.equal(lifeAdminItems(s.doc, s.records).find(x => x.key === 'renters').status, 'Done');
 });
+
+// ---------- Missed ideas M9: community presets ----------
+import { communityLinesToAdd, maaserOf } from '../js/community.js';
+test('M9: community lines are added once with blank amounts; maaser on gross or take-home, 10% by default', () => {
+  const s = fresh();
+  const add = communityLinesToAdd(s.records);
+  assert.equal(add.length, 2);
+  assert.ok(add.every(l => l.amount === undefined && l.values.irregular));
+  for (const l of add) s.add('bill', l, { type: 'Yearly cost' });
+  assert.equal(communityLinesToAdd(s.records).length, 0);
+  assert.equal(maaserOf({ takeHome: 4000 }).value, 400);
+  assert.equal(maaserOf({ basis: 'Gross', pct: 0.2, grossAnnual: 60000 }).value, 1000);
+  assert.equal(maaserOf({ basis: 'Gross', grossAnnual: null }).value, null);
+});
