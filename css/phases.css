@@ -245,3 +245,11 @@ ul.find-days { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
 }
 .st-group { align-items: start; }
 .st-group > .num { line-height: 36px; }
+/* Phase 3.5: cash layers. */
+.layers-card { display: flex; flex-direction: column; gap: var(--s3); }
+.layer-list { display: grid; gap: 6px; }
+.layer-row { display: grid; grid-template-columns: minmax(160px, 1.2fr) minmax(80px, 1fr) auto auto auto; gap: var(--s3); align-items: center; padding: 6px 0; border-top: 1px solid var(--border-row); }
+.layer-bar { height: 10px; border-radius: 5px; background: var(--computed); overflow: hidden; }
+.layer-bar span { display: block; height: 100%; background: var(--assets); }
+.layer-row.full .layer-bar span { background: var(--good); }
+@media (max-width: 760px) { .layer-row { grid-template-columns: 1fr auto; } .layer-row .layer-bar { grid-column: 1 / -1; } }

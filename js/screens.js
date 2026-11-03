@@ -10,6 +10,7 @@ import { prepScreen, liveScreen, wrapScreen } from './ui/home-ui.js';
 import { listsScreen, sessionScreen, discoveryScreen } from './ui/tools-ui.js';
 import { overviewScreen, onePagerScreen, historyScreen } from './ui/report-ui.js';
 import { statementsScreen } from './ui/statements-ui.js';
+import { layersCard } from './ui/layers-ui.js';
 import { goalsScreen, timelineScreen, payoffScreen, nextYearScreen, scenariosScreen } from './ui/plan-ui.js';
 import { AREAS } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
@@ -84,7 +85,8 @@ const MM = {
   assets: { title: 'Assets', sub: 'Cash, investments, car, home', body: (app, ctx) => [
     completion(listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance'])),
     hasAny(ctx, ['account', 'asset']) ? null : fastTrack(app, ctx), offAreas(app, ctx, ['cash', 'investments', 'real']),
-    withChart(ctx, assetList(ctx.ref), assetCharts, 'assets')] },
+    withChart(ctx, assetList(ctx.ref), assetCharts, 'assets'),
+    S.moreBlock('assets:layers', () => S.live(ctx, () => layersCard(ctx)), { label: 'Cash layers: little e, gaps, big e' })] },
   protection: { title: 'Protection', sub: 'Insurance coverage, gaps and life admin', body: (app, ctx) => [completion(listCompletion(ctx, r => r.kind === 'coverage', ['have'])), S.recordList(ctx, protectionList()), S.moreBlock('protection:life-admin', () => S.live(ctx, () => lifeAdminScreen(ctx)), { label: 'Life admin' })] },
   taxes: { title: 'Taxes', sub: 'Filing status, last year, estimates', body: (app, ctx) => [h('div.visuals', {}, taxesScreen(ctx), S.visualsPanel(ctx, { charts: [incomeCharts[0]], area: 'taxes' }))] },
 };
