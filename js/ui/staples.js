@@ -6,7 +6,7 @@ import { metrics, keyNumbers } from '../math/metrics.js';
 import { inView, timeChip } from '../math/time.js';
 import { money, pct, number, EMPTY, duration } from '../format.js';
 import { joinWords } from '../math/result.js';
-import { myShare, wholeBill, splitOf } from '../math/spending.js';
+import { myShare, wholeBill, splitOf, withHome } from '../math/spending.js';
 import { parseQuickAdd } from '../quickadd.js';
 import { canQuickFill, quickFill } from './quickfill.js';
 import { gatesOf, gatedOut } from '../gates.js';
@@ -369,9 +369,12 @@ export function whoOf(rec) {
   if (v === 'Split' || v === 'My share') return 'Split';
   return 'Me';
 }
-export function whoPays(rec, update, { roommates = 0 } = {}) {
-  const v = rec.values.whoPays ?? 'Me';
-  const top = whoOf(rec);
+export function whoPays(rec, update, { roommates = 0, profile = null } = {}) {
+  // A blank answer follows About you › Home and shared bills (a shared bill is split, given as your share or the whole).
+  const eff = withHome({ ...rec, ...rec.values }, profile || {});
+  const inherited = rec.values.whoPays == null && eff.whoPays === 'Split';
+  const v = rec.values.whoPays ?? eff.whoPays ?? 'Me';
+  const top = whoOf({ ...rec, values: { ...rec.values, whoPays: v } });
   const keepStatus = rec.status === 'Not for me' ? null : rec.status;
   const pick = x => update(x === 'Not for me' ? { status: 'Not for me' }
     : { status: keepStatus, whoPays: x === 'Someone else' ? (v === 'Included in rent' ? v : 'Covered by someone') : x === 'Split' ? (v === 'My share' ? 'My share' : 'Split') : 'Me' });
@@ -382,13 +385,14 @@ export function whoPays(rec, update, { roommates = 0 } = {}) {
     top === 'Split' && v !== 'My share' ? h('span.row-line', {}, h('span.label', {}, 'Split by'), stepper(rec.values.splitBy ?? null, n => update({ splitBy: n }), { min: 1, label: 'Split by' }), h('span.muted.small', {}, 'Blank: you plus each roommate')) : null,
     // People give their rent either way ("my rent is $1,500" is often their share): ask which, and show the other.
     top === 'Split' && v !== 'My share' ? (() => {
-      const line = { ...rec, ...rec.values, amount: rec.amount };
-      const split = splitOf(line, roommates);
-      const mine = (rec.values.amountIs ?? 'The whole bill') === 'Your share';
+      const line = { ...eff, amount: rec.amount };
+      const split = line.sharePct ? null : splitOf(line, roommates);
+      const mine = (rec.values.amountIs ?? eff.amountIs ?? 'The whole bill') === 'Your share';
       const other = mine ? wholeBill(line, { roommates }) : myShare(line, { roommates });
       return h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'The amount above is'),
         toggle([['Your share', 'My share'], ['The whole bill', 'The whole bill']], mine ? 'Your share' : 'The whole bill', x => update({ amountIs: x }), { label: 'The amount above is' }),
-        other.value == null ? null : h('span.computed', { title: other.text }, mine ? `Whole bill about ${money(other.value)} a month (${split} people)` : `Your share ${money(other.value)} a month (${split} people)`));
+        other.value == null ? null : h('span.computed', { title: other.text }, `${mine ? `Whole bill about ${money(other.value)}` : `Your share ${money(other.value)}`} a month (${split ? `${split} people` : `your ${pct(line.sharePct)}`})`),
+        inherited ? h('span.muted.small', {}, 'From About you: a bill you split') : null);
     })() : null,
     top === 'Split' && v === 'My share' ? h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Total bill'), h('span.computed', {}, total),
       h('span.label', {}, 'My share a month'), moneyInput(rec.values.myShare, x => update({ myShare: x }), { hint: 'Add my share' })) : null,

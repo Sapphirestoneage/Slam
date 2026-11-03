@@ -40,7 +40,7 @@ export function everyField() {
 export function richHousehold() {
   const s = new Store(newHousehold({ name: 'Rich example', now: NOW.toISOString() }), { now: () => NOW.toISOString() });
   s.transaction('x', () => {
-    s.setDoc('profile', { age: 34, household: 'Couple', state: 'NY', nyc: true, roommates: 1, incomeStability: 'Varies', variable: { lowest: 3000, typical: 4500 }, keepJobAfterLaunch: 'Yes' });
+    s.setDoc('profile', { age: 34, household: 'Couple', state: 'NY', nyc: true, roommates: 1, moneyStyle: 'Mix', shared: { internet: true, groceries: true }, billsGivenAs: 'The whole bill', incomeStability: 'Varies', variable: { lowest: 3000, typical: 4500 }, keepJobAfterLaunch: 'Yes' });
     s.setDoc('client', { couple: true });
     s.setDoc('assumptions', { realReturn: 0.06, fiAge: 55 });
     s.setDoc('spending', { source: 'lines' });

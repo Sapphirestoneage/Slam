@@ -13,7 +13,7 @@ export function addPresets(store, ref) {
   store.transaction('Add the usual list', () => {
     for (const l of missing) {
       store.add('bill', { name: l.name, amount: l.guess, per: 'month', status: 'Not sure', source: 'Usual list',
-        values: { category: l.category, draftt: l.draftt, amountType: l.amount, timing: l.timing, whoPays: 'Me', preset: true } });
+        values: { category: l.category, draftt: l.draftt, amountType: l.amount, timing: l.timing, preset: true } });
     }
     store.setDoc('settings', { presetsAdded: true });
   });

@@ -42,6 +42,7 @@ export const FORMATS = [
   { version: 1, shape: 'c1034e9f' }, // Nov 3 2026: the first export
   { version: 2, shape: '63c29a6a' }, // Nov 3 2026: Income's 401(k) a paycheck and Employer match?, Cash here is on purpose, Invest my surplus
   { version: 3, shape: 'ab31a47f' }, // Nov 3 2026: This amount is (your share or the whole bill) on Spending lines
+  { version: 4, shape: 'aadce0f5' }, // Nov 3 2026: About you › Home and shared bills; the split SLAM uses on each Budget line
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

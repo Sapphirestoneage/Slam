@@ -22,6 +22,15 @@ export const LISTS = {
   heavyDebt: ['Credit card', 'Payday or cash advance', 'Personal loan', 'Buy now, pay later', 'Medical', 'Tax debt'],
   rothTypes: ['Roth IRA'],
   pretaxTypes: ['401(k)', '403(b)', '457', 'TSP', 'Solo 401(k)', 'Traditional IRA', 'SEP IRA', 'SIMPLE IRA'],
+  // Bills a household can share, each a group of Budget categories (About you › Home and shared bills).
+  sharedGroups: {
+    rent: { label: 'Rent or mortgage', categories: ['Rent or mortgage'] },
+    utilities: { label: 'Electric, gas, water', categories: ['Electric, gas, water'] },
+    internet: { label: 'Internet and phone', categories: ['Internet, phone', 'Internet', 'Phone'] },
+    renters: { label: 'Renters or home insurance', categories: ['Renters or home insurance'] },
+    groceries: { label: 'Groceries', categories: ['Groceries, dining out, coffee', 'Groceries'] },
+    household: { label: 'Household supplies', categories: ['Household supplies', 'Laundry', 'Furniture and home'] },
+  },
   highRateTypes: ['Personal loan', 'Buy now, pay later', 'Payday or cash advance', 'Medical', 'Family or friend', 'Tax debt', 'Business', '401(k) loan'],
 };
 

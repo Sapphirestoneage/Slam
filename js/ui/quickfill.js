@@ -46,7 +46,7 @@ const QUICK = {
   'rent or mortgage': {
     label: 'Rent or mortgage a month (your share)', money: true, where: '#/cash-flow/budget',
     get: ctx => first(ctx, r => r.kind === 'bill' && r.values.category === 'Rent or mortgage')?.amount ?? null,
-    save: (ctx, v) => { const r = first(ctx, r => r.kind === 'bill' && r.values.category === 'Rent or mortgage'); r ? ctx.store.update(r.id, { amount: v }) : ctx.store.add('bill', { name: 'Rent', amount: v, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date', whoPays: 'Me' } }); },
+    save: (ctx, v) => { const r = first(ctx, r => r.kind === 'bill' && r.values.category === 'Rent or mortgage'); r ? ctx.store.update(r.id, { amount: v }) : ctx.store.add('bill', { name: 'Rent', amount: v, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date' } }); },
   },
   'gross pay': {
     label: 'Gross pay a year', hint: 'Before taxes', money: true, where: '#/cash-flow/income',

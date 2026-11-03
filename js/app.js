@@ -72,7 +72,7 @@ const app = {
     s.transaction('From discovery', () => {
       const R = 'Roughly';
       if (v.takeHome != null) s.add('income', { name: 'Take-home pay', amount: v.takeHome, per: 'month', status: R, source: 'manual', values: { basis: 'Take-home' } }, { type: 'Job' });
-      if (v.rent != null) s.add('bill', { name: 'Rent', amount: v.rent, status: R, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date', whoPays: 'Me' } });
+      if (v.rent != null) s.add('bill', { name: 'Rent', amount: v.rent, status: R, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date' } });
       if (v.debt != null) s.add('debt', { name: 'Total debt (from discovery)', status: R, values: { balance: v.debt } }, { type: 'Credit card' });
       if (v.savings != null) s.add('account', { name: 'Savings', status: R, values: { group: 'cash', balance: v.savings } }, { type: 'Savings or HYSA' });
       s.setDoc('profile', { whyNow: v.why ?? null, goalWords: v.goal ?? null });

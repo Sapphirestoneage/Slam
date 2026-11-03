@@ -36,3 +36,41 @@ test('Housing % uses your share, with your roommates, like the surplus does', ()
   assert.equal(m.housingPct.value, 0.3);
   assert.equal(m.inputs.spending, 1500);
 });
+
+// About you › Home and shared bills: every Budget line follows it unless the line says otherwise.
+import { withHome, peopleSharing } from '../js/math/spending.js';
+const share = (line, profile) => myShare(withHome(line, profile), { roommates: profile.roommates ?? 0 }).value;
+const whole = (line, profile) => wholeBill(withHome(line, profile), { roommates: profile.roommates ?? 0 }).value;
+
+test('a bill in a shared group is split with the people you live with', () => {
+  const p = { roommates: 2, shared: { rent: true } };
+  assert.equal(share({ amount: 3000, per: 'month', category: 'Rent or mortgage' }, p), 1000);
+  assert.equal(share({ amount: 120, per: 'month', category: 'Electric, gas, water' }, p), 120, 'not a shared group: all yours');
+  assert.equal(share({ amount: 3000, per: 'month', category: 'Rent or mortgage', whoPays: 'Me' }, p), 3000, 'the line\'s own answer wins');
+});
+
+test('shared bills given as your share: the whole bill is worked out', () => {
+  const p = { roommates: 1, shared: { rent: true }, billsGivenAs: 'Your share' };
+  assert.equal(share({ amount: 1500, per: 'month', category: 'Rent or mortgage' }, p), 1500);
+  assert.equal(whole({ amount: 1500, per: 'month', category: 'Rent or mortgage' }, p), 3000);
+});
+
+test('Splitting with overrides the roommates; a partner splits when money is Separate or Mix; a couple can give a percent', () => {
+  const rentLine = { amount: 3000, per: 'month', category: 'Rent or mortgage' };
+  assert.equal(share(rentLine, { roommates: 0, splitWith: 2, shared: { rent: true } }), 1000);
+  assert.equal(share(rentLine, { household: 'Couple', moneyStyle: 'Separate', shared: { rent: true } }), 1500);
+  assert.equal(share(rentLine, { household: 'Couple', moneyStyle: 'Joint', shared: { rent: true } }), 3000, 'Joint: one budget, nothing to split');
+  assert.equal(share(rentLine, { household: 'Couple', moneyStyle: 'Mix', splitMine: 0.6, shared: { rent: true } }), 1800);
+  assert.equal(whole({ ...rentLine, amount: 1800 }, { household: 'Couple', splitMine: 0.6, shared: { rent: true }, billsGivenAs: 'Your share' }), 3000);
+  assert.equal(peopleSharing({ roommates: 1, household: 'Couple', moneyStyle: 'Mix' }), 3);
+});
+
+test('the surplus follows About you', () => {
+  const s = new Store(newHousehold({ name: 'Home test' }));
+  s.add('income', { name: 'Job', amount: 5000, per: 'month', values: {} }, { type: 'Benefits' });
+  s.add('bill', { name: 'Rent', amount: 2400, values: { category: 'Rent or mortgage' } });
+  s.setDoc('spending', { source: 'lines' });
+  assert.equal(metrics(s.doc, ref).surplus.value, 2600);
+  s.setDoc('profile', { roommates: 1, shared: { rent: true } });
+  assert.equal(metrics(s.doc, ref).surplus.value, 3800);
+});

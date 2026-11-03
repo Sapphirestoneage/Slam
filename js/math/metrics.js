@@ -5,7 +5,7 @@ import { statusOf } from '../records.js';
 import { isBlank, needs } from './result.js';
 import { monthlyFrom, incomeRow, defaultFilingStatus } from './income.js';
 import { gatesOf, visible } from '../gates.js';
-import { myShare, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor } from './spending.js';
+import { myShare, withHome, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor } from './spending.js';
 import { cardMinimum, payoffMonths, totalInterest, payoffPlan } from './debt.js';
 import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
 import { link401k, matchFromTiers } from './portfolio.js';
@@ -91,7 +91,7 @@ export function inputsOf(doc, ref, now = new Date()) {
   // Enter once, show in both: each debt's payment is a line From Debt; a typed line that looks like a debt payment or
   // a premium already paid asks "Same as your ...?" and is left out only after Yes (js/math/linked.js).
   const payFrequency = income.find(i => i.r.values.payFrequency)?.r.values.payFrequency ?? null;
-  const typedLines = live.filter(r => r.kind === 'bill').map(r => ({ ...r, ...r.values, amount: read(r, 'amount').v }));
+  const typedLines = live.filter(r => r.kind === 'bill').map(r => withHome({ ...r, ...r.values, amount: read(r, 'amount').v }, doc.profile)); // About you › Home fills the blanks
   const autoLines = debtLines(debts);
   const premiums = premiumSources(live.filter(r => r.kind === 'coverage'), payFrequency);
   const { dupOf, askOf } = duplicates(typedLines, { debts, autos: autoLines, premiums, payFrequency });

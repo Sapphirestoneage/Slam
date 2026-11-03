@@ -2,7 +2,7 @@
 // The month model (build phase 6): what lands on the calendar, the budget passes for a month, and closing it.
 // Pure: reads a household doc, never touches the DOM. Budget, calendar and close are views of these records (R117).
 import { gatesOf, visible } from './gates.js';
-import { myShare } from './math/spending.js';
+import { myShare, withHome } from './math/spending.js';
 import { payoffPlan } from './math/debt.js';
 import { runningBalance } from './math/calendar.js';
 import { inputsOf } from './math/metrics.js';
@@ -91,7 +91,7 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) 
   // A line flagged as the same payment as a debt or a paycheck premium stays off the calendar too (counted once).
   for (const r of live.filter(x => x.kind === 'bill' && !inputs.dupOf[x.id])) {
     if (r.status === 'Not for me') continue;
-    const line = { ...r, ...r.values };
+    const line = withHome({ ...r, ...r.values }, doc.profile);
     if (r.values.irregular) { // R051: the whole yearly cost in its month
       if (r.amount == null || !r.values.monthDue) continue;
       const mm = String(r.values.monthDue).padStart(2, '0');
@@ -230,7 +230,7 @@ const monthDoc = (doc, ym) => doc.spending?.months?.[ym] || {};
 // Rough = the line's standing number (its monthly share). Estimate starts from Rough until confirmed (R136).
 export function roughOf(doc, line) {
   if (line.status === 'Not for me') return 0;
-  return myShare({ ...line, ...line.values }, { roommates: doc.profile?.roommates ?? 0 }).value;
+  return myShare(withHome({ ...line, ...line.values }, doc.profile), { roommates: doc.profile?.roommates ?? 0 }).value;
 }
 export function estimateOf(doc, ym, line) {
   const e = monthDoc(doc, ym).lines?.[line.id]?.estimate;

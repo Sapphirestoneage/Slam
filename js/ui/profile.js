@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Home › About you (build phase 5): why now, what applies (the gates hub, R015), about you, work and home,
 // the accounts gate with counts (R001 to R003), and the couples split (R177 to R179). Answers live in doc.profile.
+import { myShare, wholeBill, withHome, partnerSplits, peopleSharing } from '../math/spending.js';
+import { LISTS } from '../registry/assumptions.js';
 import { h } from './dom.js';
 import { textInput, toggle, select, stepper, checkbox, labelled, moreBlock, pctInput, toast, laterButton, button, moneyInput, parkProfile } from './staples.js';
 import { gatesOf, syncCount, WORK, HOUSING, COVERAGE, AREAS, REAL_TYPES, recordFor } from '../gates.js';
@@ -100,9 +102,33 @@ export function profileScreen(app, ctx) {
         { note: g.betweenJobs ? 'Unemployment and runway show on Income' : g.variable ? 'Variable income shows on Income' : null }),
       field('Housing', 'housing', pick(HOUSING, g.housing, setHousing, 'Housing'))),
     moreBlock('profile:work', () => h('div.form-grid', {},
-      field('Roommates', 'roommates', stepper(p.roommates ?? null, n => set({ roommates: n }), { label: 'Roommates', key: 'p:roommates' }), { note: 'Splits housing cost' }),
       field('Worst case: all on me', 'worstCase', yesNo(p.worstCase ?? null, v => set({ worstCase: v }), 'Worst case'), { note: 'Counts housing with no roommate share' }),
       field('Income stability', 'incomeStability', pick(['Steady', 'Varies', 'Unpredictable'], p.incomeStability, v => set({ incomeStability: v }), 'Income stability'), { note: 'Moves the Rule of 5 target' }))));
+
+  // ---------- Home and shared bills: who you live with and what you split. Every Budget line follows it unless it
+  // says otherwise (js/math/spending.js withHome), so rent and the other shared bills come out right. ----------
+  const shared = p.shared || {};
+  const rentRec = store.find(r => r.kind === 'bill' && r.values.category === 'Rent or mortgage')[0] ?? null;
+  const rentLine = rentRec ? withHome({ ...rentRec, ...rentRec.values }, p) : null;
+  const rentMine = rentLine && rentLine.amount != null ? myShare(rentLine, { roommates: p.roommates ?? 0 }) : null;
+  const rentWhole = rentLine && rentLine.amount != null ? wholeBill(rentLine, { roommates: p.roommates ?? 0 }) : null;
+  const home = section('Home and shared bills', 'needs',
+    h('p.muted', {}, 'Who you live with and which bills you split. Every Budget line follows this unless the line says otherwise.'),
+    h('div.form-grid', {},
+      field('Roommates', 'roommates', stepper(p.roommates ?? null, n => set({ roommates: n }), { label: 'Roommates', key: 'p:home-roommates' }), { note: 'People you live with, not counting a partner' }),
+      field('Splitting shared bills with', 'splitWith', stepper(p.splitWith ?? null, n => set({ splitWith: n }), { label: 'People you split with', key: 'p:home-splitWith' }),
+        { note: `Blank: ${peopleSharing({ ...p, splitWith: null }) - 1} (your roommates${partnerSplits(p) ? ' and your partner' : ''})` }),
+      field('When you give a shared bill, it is usually', 'billsGivenAs', pick([['Your share', 'My share'], ['The whole bill', 'The whole bill']], p.billsGivenAs, v => set({ billsGivenAs: v }), 'Shared bills given as'),
+        { note: 'Like "my rent is $1,500": your share, or the whole rent?' })),
+    labelled('Bills you split', h('div.row-line', { style: { gap: '12px', flexWrap: 'wrap' } },
+      Object.entries(LISTS.sharedGroups).map(([k, gr]) => checkbox(gr.label, shared[k] === true, on => {
+        // Lines of that kind that said I'm covering it now follow About you (one undo step).
+        const lines = on ? store.find(r => r.kind === 'bill' && gr.categories.includes(r.values.category) && (r.values.whoPays ?? 'Me') === 'Me' && r.values.whoPays !== undefined) : [];
+        store.transaction(on ? `Split ${gr.label.toLowerCase()}` : 'Shared bills', () => { set({ shared: { ...shared, [k]: on || undefined } }); for (const r of lines) store.update(r.id, { whoPays: null }); });
+        if (lines.length) toast(`${lines.map(r => r.name || r.values.category).join(', ')} now ${lines.length === 1 ? 'follows' : 'follow'} this.`, { undo: () => store.undo() });
+      }, { key: `p:shared-${k}` })))),
+    rentMine?.value != null && rentWhole?.value != null && rentWhole.value !== rentMine.value
+      ? h('p', { style: { marginTop: '12px' } }, h('span.computed', { title: `${rentMine.text} ${rentWhole.text}` }, `Rent: your share ${money(rentMine.value)} a month, the whole rent about ${money(rentWhole.value)}.`)) : null);
 
   // ---------- Accounts gate: which areas, then how many of each type (R001 to R003) ----------
   const areas = p.areas || {};
@@ -133,7 +159,7 @@ export function profileScreen(app, ctx) {
   const couple = g.couple ? section('Couples split', 'needs',
     h('div.form-grid', {},
       field('How they run money', 'moneyStyle', pick(['Joint', 'Separate', 'Mix'], p.moneyStyle, v => set({ moneyStyle: v }), 'How they run money')),
-      field('Split: my share', 'splitMine', pctInput(p.splitMine ?? null, v => set({ splitMine: v }), { hint: 'e.g. 50', key: 'p:split' }), { note: 'Housing, food and bills. Blank is 50/50' })),
+      field('Split: my share', 'splitMine', pctInput(p.splitMine ?? null, v => set({ splitMine: v }), { hint: 'e.g. 50', key: 'p:split' }), { note: 'Your share of the bills you split (Home and shared bills). Blank: an even split' })),
     moreBlock('profile:couple', () => {
       const accts = store.find(r => r.kind === 'account');
       const joint = new Set(p.jointAccounts || []);
@@ -175,7 +201,7 @@ export function profileScreen(app, ctx) {
   const next = h('div.next-step', {}, c.core.ready
     ? button('Next: Income', { kind: 'primary', iconName: 'right', onClick: () => app.go('#/cash-flow/income') })
     : h('p.muted', {}, `${c.core.missing.length} to go before Next (${c.core.missing.slice(0, 3).join(', ')}${c.core.missing.length > 3 ? ' and more' : ''}). Answer each, or tap I'll find it later.`));
-  return [whyNow, hub, about, work, benefits, accounts, couple, next];
+  return [whyNow, hub, about, work, home, benefits, accounts, couple, next];
 }
 
 export { profileCompletion } from '../profile-completion.js';

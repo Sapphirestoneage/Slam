@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // M20 to M2B: line amounts, my share, support, floor, set-asides, passes, surplus, savings rate, DRAFTT, housing, prepaid.
 import { ok, needs, missing, fmt, isBlank } from './result.js';
+import { LISTS } from '../registry/assumptions.js';
 import { monthlyFrom } from './income.js';
 
 // M20 and M2B: a line's monthly amount. Accrual spreads prepaid and yearly costs across the months covered.
@@ -45,6 +46,11 @@ export function myShare(line, { roommates = 0, basis = 'accrual', now = new Date
   const covered = coveredShare(line, now);
   const split = splitOf(line, roommates);
   // People often give their own share of a shared bill ("my rent is $1,500"): then the amount is already theirs.
+  if (line.sharePct != null && line.sharePct > 0) { // a couple's own split: your share is a percent of the bill
+    if (amountIsMine(line)) return ok('M21', m.value * (1 - covered), `${fmt.money(m.value)} a month is your ${fmt.pct(line.sharePct)} share (the whole bill is about ${fmt.money(m.value / line.sharePct)}).`);
+    const v = m.value * (1 - covered) * line.sharePct;
+    return ok('M21', v, `${fmt.money(m.value)} a month, your share ${fmt.pct(line.sharePct)} = ${fmt.money(v)} is yours.`);
+  }
   if (amountIsMine(line) && split > 1) return ok('M21', m.value * (1 - covered), `${fmt.money(m.value)} a month is your share of a bill split ${split} ways (the whole bill is about ${fmt.money(m.value * split)}).`);
   const v = m.value * (1 - covered) / split;
   const parts = [];
@@ -52,6 +58,33 @@ export function myShare(line, { roommates = 0, basis = 'accrual', now = new Date
   if (split > 1) parts.push(`split ${split} ways`);
   return ok('M21', v, parts.length ? `${fmt.money(m.value)} a month, ${parts.join(', ')} = ${fmt.money(v)} is yours.` : `${fmt.money(v)} a month, all yours.`);
 }
+
+// About you › Home and shared bills fills in what a Budget line leaves blank: a bill in a shared group is split; it is
+// split with the people you live with (you plus Splitting with, else your roommates); a couple can give their share as
+// a percent (Split: my share); and a shared bill is given the way you usually give it (your share or the whole bill).
+// What a line says itself always wins.
+export function withHome(line, profile = {}) {
+  const cat = line.category ?? line.values?.category;
+  const shared = profile.shared || {};
+  const inShared = Object.entries(LISTS.sharedGroups).some(([k, g]) => shared[k] === true && g.categories.includes(cat));
+  const out = { ...line };
+  const who = line.whoPays ?? line.values?.whoPays ?? null;
+  if (!who && inShared) out.whoPays = 'Split';
+  if ((out.whoPays ?? who) !== 'Split') return out;
+  if ((line.amountIs ?? line.values?.amountIs) == null && profile.billsGivenAs) out.amountIs = profile.billsGivenAs;
+  const typedSplit = line.splitBy ?? line.values?.splitBy;
+  if (typedSplit == null) {
+    if (profile.household === 'Couple' && profile.splitMine != null && profile.splitWith == null) out.sharePct = profile.splitMine;
+    else if (profile.splitWith != null) out.splitBy = profile.splitWith + 1;
+    else if (partnerSplits(profile)) out.splitBy = (profile.roommates ?? 0) + 2; // you, your partner and each roommate
+  }
+  return out;
+}
+
+// A partner splits the shared bills when the couple keeps money Separate or Mix (Joint: one budget, nothing to split).
+export const partnerSplits = profile => profile.household === 'Couple' && ['Separate', 'Mix'].includes(profile.moneyStyle);
+// The people splitting a shared bill when nothing more is said: you, your roommates, and a partner who splits.
+export const peopleSharing = profile => (profile.splitWith ?? (profile.roommates ?? 0) + (partnerSplits(profile) ? 1 : 0)) + 1;
 
 // How many ways a shared bill is split: Split by when typed, else you plus each roommate (R033).
 export const splitOf = (line, roommates = 0) => line.splitBy ?? line.values?.splitBy ?? ((line.whoPays ?? line.values?.whoPays) === 'Split' ? roommates + 1 : 1);
@@ -62,6 +95,10 @@ export function wholeBill(line, { roommates = 0, basis = 'accrual' } = {}) {
   const m = lineMonthly(line, { basis });
   if (m.value === null) return { ...m, id: 'M21' };
   const split = splitOf(line, roommates);
+  if (line.sharePct != null && line.sharePct > 0) {
+    const whole = amountIsMine(line) ? m.value / line.sharePct : m.value;
+    return ok('M21', whole, amountIsMine(line) ? `Your ${fmt.pct(line.sharePct)} share ${fmt.money(m.value)} a month = ${fmt.money(whole)} for the whole bill.` : `${fmt.money(m.value)} a month is the whole bill.`);
+  }
   return amountIsMine(line) && split > 1
     ? ok('M21', m.value * split, `Your share ${fmt.money(m.value)} a month times ${split} people = ${fmt.money(m.value * split)} a month for the whole bill.`)
     : ok('M21', m.value, `${fmt.money(m.value)} a month is the whole bill.`);

@@ -14,6 +14,7 @@
 //     {@key} another formula column on the row, {Kind} {Type} {Status} {InMath} the row's own columns, and
 //     {app:name} the app's value for that row (from app[name](rec, c)). f can be a function (rec, c) => template.
 //   fns: the js/math exports this entry is made of ('file.export').
+import { LISTS } from './assumptions.js';
 import { DRAFTT, myShare, irregularSetAside, estimateVsActual } from '../math/spending.js';
 import { takeHomeFromGross, variableSafeBudget, realHourlyWage, monthlyFrom, defaultFilingStatus } from '../math/income.js';
 import { payoffPlan, feeApr, utilization, debtToIncome, promoPayment } from '../math/debt.js';
@@ -116,10 +117,16 @@ export const MATH = [
       f: rec => `IF(OR(${SKIP},{Kind}<>"Budget line",{amount}=""),"",IF({Status}="Not for me",0,${rec.covers?.months ? `{amount}/${rec.covers.months}` : `{amount}*${MONTH_FACTOR('{per}')}`}))` }],
     sheet: 'SUMIFS(Spend_M20,Spend_InMath,"Yes")', label: 'Budget lines, each as a month, added up',
     app: c => sum(c.x.typedLines.filter(l => !c.x.dupOf[l.id]), l => (l.amount == null ? 0 : l.covers?.months ? l.amount / l.covers.months : monthlyFrom(l.amount, l.per).value)) },
-  { id: 'M21', name: 'My share', inputs: 'amount, who pays, covered, split', unit: 'money', fns: ['spending.myShare', 'spending.splitOf', 'spending.amountIsMine', 'spending.wholeBill'],
-    cols: [{ area: 'spending', key: 'M21', label: 'My share a month (M21)', unit: 'money',
-      f: `IF(OR(${SKIP},{Kind}<>"Budget line"),"",IF({myShare}<>"",{myShare},IF({Status}="Not for me",0,IF(OR({whoPays}="Included in rent",{whoPays}="N/A"),0,IF({@M20}="","",{@M20}*(1-IF(AND({whoPays}="Covered by someone",OR({takeover}="",TEXT({takeover},"yyyy-mm")>TEXT(TODAY(),"yyyy-mm"))),1,0))/IF({amountIs}="Your share",1,IF({splitBy}<>"",{splitBy},IF({whoPays}="Split",N(Profile_roommates)+1,1))))))))` },
-      { area: 'spending', key: 'whole', label: 'Whole bill a month', unit: 'money', f: `IF({@M20}="","",IF({amountIs}="Your share",{@M20}*IF({splitBy}<>"",{splitBy},IF({whoPays}="Split",N(Profile_roommates)+1,1)),{@M20}))` }],
+  { id: 'M21', name: 'My share', inputs: 'amount, who pays, covered, split', unit: 'money', fns: ['spending.myShare', 'spending.splitOf', 'spending.amountIsMine', 'spending.wholeBill', 'spending.withHome', 'spending.partnerSplits', 'spending.peopleSharing'],
+    cols: [
+      { area: 'spending', key: 'whoUsed', label: 'Who pays used', unit: 'text',
+        f: `IF({whoPays}<>"",{whoPays},IF(OR(${Object.entries(LISTS.sharedGroups).map(([k, g]) => `AND(Profile_shared_${k}="Yes",OR(${g.categories.map(c => `{category}="${c}"`).join(',')}))`).join(',')}),"Split",""))` },
+      { area: 'spending', key: 'givenUsed', label: 'Amount given as', unit: 'text', f: 'IF({amountIs}<>"",{amountIs},IF(AND({@whoUsed}="Split",Profile_billsGivenAs<>""),Profile_billsGivenAs,""))' },
+      { area: 'spending', key: 'sharePct', label: 'Couple share used', unit: 'pct', f: 'IF(AND({@whoUsed}="Split",{splitBy}="",Profile_household="Couple",Profile_splitMine<>"",Profile_splitWith=""),Profile_splitMine,"")' },
+      { area: 'spending', key: 'splitUsed', label: 'Split by used', unit: 'number', f: 'IF({splitBy}<>"",{splitBy},IF({@whoUsed}="Split",IF(Profile_splitWith<>"",Profile_splitWith,N(Profile_roommates)+IF(AND(Profile_household="Couple",OR(Profile_moneyStyle="Separate",Profile_moneyStyle="Mix")),1,0))+1,1))' },
+      { area: 'spending', key: 'M21', label: 'My share a month (M21)', unit: 'money',
+        f: `IF(OR(${SKIP},{Kind}<>"Budget line"),"",IF({myShare}<>"",{myShare},IF({Status}="Not for me",0,IF(OR({@whoUsed}="Included in rent",{@whoUsed}="N/A"),0,IF({@M20}="","",{@M20}*(1-IF(AND({@whoUsed}="Covered by someone",OR({takeover}="",TEXT({takeover},"yyyy-mm")>TEXT(TODAY(),"yyyy-mm"))),1,0))*IF({@givenUsed}="Your share",1,IF({@sharePct}<>"",{@sharePct},1/{@splitUsed})))))))` },
+      { area: 'spending', key: 'whole', label: 'Whole bill a month', unit: 'money', f: 'IF({@M20}="","",IF({@givenUsed}="Your share",IF({@sharePct}<>"",{@M20}/{@sharePct},{@M20}*{@splitUsed}),{@M20}))' }],
     sheet: 'SUMIFS(Spend_M21,Spend_InMath,"Yes")', label: 'My share of every Budget line, a month',
     app: c => sum(c.x.typedLines.filter(l => !c.x.dupOf[l.id]), l => myShare(l, { roommates: c.x.roommates }).value) },
   { id: 'M22', name: 'Support received', inputs: 'M21 across lines', unit: 'money', fns: ['spending.supportReceived'],
