@@ -6,6 +6,7 @@ import { homeworkItems } from './report-ui.js';
 import { homeworkText } from '../homework.js';
 import { communityLinesToAdd } from '../community.js';
 import { TIMER_MARKS, duration } from '../timer.js';
+import { feedbackCard } from './report-this.js';
 import { keyNumbers } from '../math/metrics.js';
 import { statusOf } from '../records.js';
 import { money, pct } from '../format.js';
@@ -119,6 +120,7 @@ export function sessionScreen(app, ctx, { fastTrackGap }) {
         h('span.muted.small', {}, 'Shown on the Budget')) : null)),
     fastTrackGap(ctx),
     timerCard(ctx),
+    feedbackCard(ctx),
     h('div.card', {}, h('h3', {}, 'Look'), h('div.stack', { style: { gap: '12px' } },
       h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Theme'), S.toggle(['System', 'Light', 'Dark'], app.prefs.theme === 'light' ? 'Light' : app.prefs.theme === 'dark' ? 'Dark' : 'System', v => app.setPref('theme', v.toLowerCase()), { label: 'Theme' })),
       h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Density'), S.toggle(['Comfortable', 'Compact'], app.prefs.density === 'compact' ? 'Compact' : 'Comfortable', v => app.setPref('density', v.toLowerCase()), { label: 'Density' })),

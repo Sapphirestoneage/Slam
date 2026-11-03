@@ -1,6 +1,7 @@
 // The shell (build phase 4): top bar, five tabs, sub-tabs, breadcrumb, Find, quick add, parking lot,
 // undo and redo, time toggle, client view, gear. Each screen shows its first state from Words and states.
 import { h, clear, icon } from './ui/dom.js';
+import { reportThis } from './ui/report-this.js';
 import { startTips } from './ui/tips.js';
 import { timerAfter } from './timer.js';
 import * as S from './ui/staples.js';
@@ -343,3 +344,4 @@ const last = app.prefs.clientId ? loadClient(adapter, app.prefs.clientId) : null
 app.open(last, { save: false });
 window.slam = app; // for the console and the screenshot script
 startTips(document.body); // B8: plain-language tooltips
+reportThis(app); // B9: Report this on every screen

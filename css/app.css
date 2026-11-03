@@ -264,3 +264,8 @@ table.rows.mini th, table.rows.mini td { padding: 4px 6px; white-space: nowrap; 
 .payday { margin: var(--s3) 0; display: flex; flex-direction: column; gap: 4px; }
 /* B8: a term with a plain-language tooltip */
 .has-tip { text-decoration: underline dotted; text-underline-offset: 3px; text-decoration-thickness: 1px; cursor: help; }
+/* B9: Report this, small, bottom right, on every screen */
+.report-this { position: fixed; right: 16px; bottom: 16px; z-index: 40; min-height: 30px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--border-input);
+  background: var(--card); color: var(--text); font: inherit; font-size: .8125rem; font-weight: 600; cursor: pointer; box-shadow: var(--shadow-lift); }
+.report-this:hover { transform: translateY(-1px); }
+@media print { .report-this { display: none; } }
