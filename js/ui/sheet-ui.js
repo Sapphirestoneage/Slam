@@ -58,7 +58,7 @@ export function importSheet(app) {
     try {
       const ExcelJS = await loadExcelJS();
       const grid = await readWorkbook(ExcelJS, await file.arrayBuffer());
-      const res = compare(grid, app.store.doc);
+      const res = compare(grid, app.store.doc, { ref: app.ctx.ref });
       if (res.wrongClient) askWhichClient(app, grid, res, file.name);
       else review(app, res, file.name);
     } catch (e) {
@@ -87,8 +87,8 @@ export function askWhichClient(app, grid, res, fileName) {
     h('h2', { style: { marginTop: 0 } }, `This file is for ${theirs}`),
     h('p', {}, `${mine} is open. Bring the spreadsheet into ${mine} anyway, or start a new client from it?`),
     h('div.ft-foot', {},
-      button(`Bring it into ${mine}`, { kind: 'primary', onClick: () => { close(); review(app, compare(grid, app.store.doc, { asNew: false, anyClient: true }), fileName); } }),
-      button('Start a new client from it', { onClick: () => { close(); const store = app.newClientNamed(res.meta?.client || 'From a spreadsheet'); review(app, compare(grid, store.doc, { asNew: true }), fileName); } }),
+      button(`Bring it into ${mine}`, { kind: 'primary', onClick: () => { close(); review(app, compare(grid, app.store.doc, { ref: app.ctx.ref }), fileName); } }),
+      button('Start a new client from it', { onClick: () => { close(); const store = app.newClientNamed(res.meta?.client || 'From a spreadsheet'); review(app, compare(grid, store.doc, { asNew: true, ref: app.ctx.ref }), fileName); } }),
       button('Cancel', { onClick: () => close() })));
   close = overlayOf('Which client', box);
   return box;
@@ -110,10 +110,25 @@ function newRowText(c) {
 }
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-// Keep and Skip on one line (a conflict: In SLAM and In your spreadsheet, and one must be picked).
+// What changed, and Yes or No on keeping it. A conflict says what each side did and needs an answer.
+function question(l) {
+  const t = l.fld?.type;
+  if (l.op === 'add') return 'Add it to SLAM?';
+  if (l.op === 'remove') return 'Delete it in SLAM too?';
+  if (l.conflict) return "Keep your spreadsheet's number?";
+  return 'Keep this change?';
+}
+function whatChanged(l) {
+  const t = l.fld?.type;
+  if (l.op === 'add') return newRowText(l);
+  if (l.op === 'remove') return 'Taken out of your spreadsheet. It stays in SLAM unless you say Yes.';
+  if (l.conflict) return `Both changed it after the file was made. In SLAM: ${shown(l.was, t)} to ${shown(l.from, t)}. In your spreadsheet: ${shown(l.was, t)} to ${shown(l.to, t)}.`;
+  return `${shown(l.from, t)} to ${shown(l.to, t)}`;
+}
 function choice(l, redraw) {
-  const seg = (opts) => h('span.seg', { role: 'group' }, opts.map(([v, label]) => h('button', { type: 'button', 'aria-pressed': String(l.decision === v), onclick: () => { l.decision = v; redraw(); } }, label)));
-  return l.conflict ? seg([['slam', `In SLAM: ${shown(l.from, l.fld?.type)}`], ['sheet', `In your spreadsheet: ${shown(l.to, l.fld?.type)}`]]) : seg([['keep', 'Keep'], ['skip', 'Skip']]);
+  return h('span.row-line', { style: { gap: '8px', flexWrap: 'nowrap' } }, h('span.small', {}, question(l)),
+    h('span.seg', { role: 'group', 'aria-label': question(l) }, [['keep', 'Yes'], ['skip', 'No']].map(([v, label]) =>
+      h('button', { type: 'button', 'aria-pressed': String(l.decision === v), onclick: () => { l.decision = v; redraw(); } }, label))));
 }
 
 // The review: grouped by area, collapsed to counts. Nothing is saved until Save these changes.
@@ -128,24 +143,23 @@ export function review(app, res, fileName = 'the spreadsheet') {
     toast(n ? `Saved ${plural(n, 'change')} from your spreadsheet. A snapshot was taken first.` : 'Nothing saved.', n ? { undo: () => app.store.undo() } : {});
   } });
   const status = h('span.muted.small');
-  const keepAll = list => { for (const l of list) if (!l.conflict && !l.needsType) l.decision = 'keep'; draw(); };
+  const keepAll = list => { for (const l of list) if (!l.conflict && !l.needsType && !l.needsCategory) l.decision = 'keep'; draw(); };
   const lineRow = l => h('div.review-line', {},
-    h('div', {}, l.op === 'add' ? [h('strong', {}, `${l.label}: ${l.name}`), h('div.muted.small', {}, newRowText(l))]
-      : l.op === 'remove' ? [h('strong', {}, l.name), h('div.muted.small', {}, 'Removed in the spreadsheet. Kept here unless you choose Keep (that deletes it in SLAM).')]
-        : [h('strong', {}, l.name), ` · ${l.label}`, l.conflict ? null : h('div.small', {}, h('span.muted', {}, `${shown(l.from, l.fld?.type)} `), '→ ', h('strong', {}, shown(l.to, l.fld?.type)))],
-      l.conflict ? h('div.small.muted', {}, 'Changed in SLAM after the file was made. Pick which one to keep.') : null,
-      l.note ? h('div.small.muted', {}, l.note) : null),
-    l.needsType ? h('span.row-line', { style: { gap: '6px' } }, typePicker(l)) : choice(l, draw));
-  const typePicker = l => {
-    const sel = h('select', { 'aria-label': `What ${l.name} is` }, h('option', { value: '' }, 'Pick the type'), l.needsType.map(t => h('option', { value: t, selected: l.type === t }, t)));
-    sel.onchange = () => { l.type = sel.value || null; l.decision = l.type ? 'keep' : 'skip'; draw(); };
-    return [sel, l.type ? choice(l, draw) : null];
+    h('div', {}, h('strong', {}, l.op === 'add' ? `${l.label}: ${l.name}` : l.op === 'remove' ? l.name : `${l.name} · ${l.label}`),
+      h('div.small', {}, whatChanged(l)), l.note ? h('div.small.muted', {}, l.note) : null),
+    l.needsType || l.needsCategory ? h('span.row-line', { style: { gap: '6px' } }, picker(l)) : choice(l, draw));
+  // A new row SLAM could not place: pick its type (or a Budget line's category), then Yes or No.
+  const picker = l => {
+    const list = l.needsType ?? l.needsCategory, now = l.needsType ? l.type : l.values.category;
+    const sel = h('select', { 'aria-label': `What ${l.name} is` }, h('option', { value: '' }, l.needsType ? 'Pick the type' : 'Pick the category'), list.map(t => h('option', { value: t, selected: now === t }, t)));
+    sel.onchange = () => { const v = sel.value || null; if (l.needsType) l.type = v; else l.values.category = v; l.decision = v ? 'keep' : 'skip'; draw(); };
+    return [sel, now ? choice(l, draw) : null];
   };
   const groupBox = (key, title, counts, lines, extra = null) => {
     const d = h('details.review-group', { open: open.has(key) });
     d.ontoggle = () => { if (d.open) open.add(key); else open.delete(key); };
     d.append(h('summary', {}, h('strong', {}, title), h('span.muted', {}, `  ${counts}`)),
-      h('div.review-body', {}, lines.length ? h('div.row-line', { style: { margin: '8px 0' } }, button('Keep all', { size: 'small', onClick: () => keepAll(lines) })) : null, extra));
+      h('div.review-body', {}, lines.length ? h('div.row-line', { style: { margin: '8px 0' } }, button('Yes to all', { size: 'small', onClick: () => keepAll(lines) })) : null, extra));
     return d;
   };
   const sub = (title, lines) => (lines.length ? [h('h4', {}, title), ...lines.map(lineRow)] : []);
@@ -155,7 +169,7 @@ export function review(app, res, fileName = 'the spreadsheet') {
     const left = unpicked(res).length;
     saveText.textContent = 'Save these changes';
     save.disabled = !kept || left > 0;
-    status.textContent = left ? `Pick one side for ${plural(left, 'change')} made in both places first.` : `${plural(kept, 'change')} to save.`;
+    status.textContent = left ? `Answer Yes or No for ${plural(left, 'number')} changed in both places first.` : `${plural(kept, 'change')} to save.`;
     body.replaceChildren(...[
       ...res.areas.map(g => groupBox(g.id, g.tab, [g.changed.length && `${g.changed.length} changed`, g.added.length && plural(g.added.length, 'new row'), g.removed.length && `${g.removed.length} removed`].filter(Boolean).join(', '),
         [...g.changed, ...g.added, ...g.removed], h('div', {}, ...sub('Changed', g.changed), ...sub('New rows', g.added), ...sub('Removed rows', g.removed)))),
@@ -168,11 +182,11 @@ export function review(app, res, fileName = 'the spreadsheet') {
   }
   const all = linesOf(res);
   const box = h('div.ft-box', { style: { width: 'min(960px, 100%)' } },
-    h('div.ft-head', {}, icon('upload'), h('h2', { style: { margin: 0 } }, 'Bring a spreadsheet back'), h('span', { style: { flex: 1 } }), button('Cancel', { onClick: () => close() })),
-    h('p.muted', {}, `${fileName}: ${plural(all.length, 'change')} found. Nothing is saved until you press Save these changes.`),
+    h('div.ft-head', {}, icon('upload'), h('h2', { style: { margin: 0 } }, "What's changed"), h('span', { style: { flex: 1 } }), button('Cancel', { onClick: () => close() })),
+    h('p.muted', {}, `${fileName}: ${plural(all.length, 'change')}. Answer Yes to keep a change, No to leave SLAM as it is. Nothing is saved until you press Save these changes.`),
     res.noMeta ? h('div.nudge', {}, 'This file has no _meta tab (it was made or rebuilt outside SLAM), so tabs and columns were matched by their headers and every cell is compared with what SLAM has now.') : null,
     res.olderFormat ? h('div.nudge', {}, `This file was made by an older SLAM (format ${res.meta.version}). Columns added since are left alone.`) : null,
-    h('div.row-line', { style: { margin: '8px 0' } }, button('Keep all', { size: 'small', onClick: () => keepAll(all.filter(l => l.op !== 'remove')) })),
+    h('div.row-line', { style: { margin: '8px 0' } }, button('Yes to all changes', { size: 'small', onClick: () => keepAll(all.filter(l => l.op !== 'remove')) })),
     body,
     h('div.ft-foot', {}, save, button('Cancel', { onClick: () => close() }), status, h('span.muted.small', {}, 'A snapshot is taken first, and Undo puts everything back.')));
   draw();

@@ -78,12 +78,37 @@ test('a record changed in SLAM after the export is a conflict that needs a pick'
   const c = linesOf(res).find(l => l.name === 'Car loan');
   assert.deepEqual([c.conflict, c.decision, c.from, c.to], [true, null, 6800, 6900]);
   assert.equal(unpicked(res).length, 1, 'Save waits for a pick');
-  c.decision = 'slam';
+  assert.equal(c.was, 7000, 'what it was when the file was made, for What changed');
+  c.decision = 'skip';
   applyChanges(s, res);
-  assert.equal(s.find(r => r.name === 'Car loan')[0].values.balance, 6800, 'In SLAM kept');
-  c.decision = 'sheet';
+  assert.equal(s.find(r => r.name === 'Car loan')[0].values.balance, 6800, 'No: SLAM keeps its number');
+  c.decision = 'keep';
   applyChanges(s, res);
-  assert.equal(s.find(r => r.name === 'Car loan')[0].values.balance, 6900, 'In your spreadsheet kept');
+  assert.equal(s.find(r => r.name === 'Car loan')[0].values.balance, 6900, "Yes: the spreadsheet's number");
+});
+
+test('only the same number changed on both sides is a conflict; another field on that record is a plain change', () => {
+  const s = fresh();
+  const grid = exported(s);
+  s.update(s.find(r => r.name === 'Car loan')[0].id, { balance: 6800 }); // SLAM changed the balance
+  set(grid, 'Debt', 'Car loan', 'APR', 0.065); // the spreadsheet changed the APR
+  const [c] = linesOf(compare(grid, s.doc));
+  assert.deepEqual([c.label, c.conflict, c.decision], ['APR', false, 'keep']);
+});
+
+test('a new Budget line needs its category; picking one brings in its letter, amount and date', () => {
+  const s = fresh();
+  const grid = exported(s);
+  const b = blankRow(grid, 'Spending lines'), c = l => col(grid, 'Spending lines', l);
+  grid['Spending lines'][b][c('Name')] = 'Gym';
+  grid['Spending lines'][b][c('Amount')] = 45;
+  const res = compare(grid, s.doc, { ref });
+  const u = res.unknown.find(x => x.name === 'Gym');
+  assert.ok(u.needsCategory.includes('Gym or fitness') && u.decision === 'skip');
+  u.values.category = 'Gym or fitness'; u.decision = 'keep';
+  applyChanges(s, res);
+  const gym = s.find(r => r.name === 'Gym')[0];
+  assert.deepEqual([gym.values.category, gym.values.draftt, gym.values.amountType], ['Gym or fitness', 'Therapy', 'Fixed']);
 });
 
 test('typing over a formula is one line and changes nothing', () => {

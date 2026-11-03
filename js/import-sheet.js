@@ -5,7 +5,8 @@
 //
 // compare(grid, doc) returns, by area: Changed (field, old, new), New rows, Removed rows; Changed assumptions;
 // Couldn't tell what this is; typed over a formula; bad values with their cell; columns left alone. Each line has a
-// decision: 'keep' or 'skip' (a conflict starts with none and needs a pick). Nothing is saved here.
+// decision: 'keep' (Yes) or 'skip' (No). A conflict (the same number changed in SLAM and in the spreadsheet) starts
+// with none and needs an answer. Nothing is saved here.
 import { AREAS, sheetFields } from './registry/fields.js';
 import { ASSUMPTIONS } from './registry/assumptions.js';
 import { DATA_TAB, OLD_DATA_TAB, STATUS_WORDS, toCell, partOf, rowsForArea, formulaCols, colLetter } from './sheet/workbook.js';
@@ -86,7 +87,8 @@ export function gridFromPlan(plan) {
   return grid;
 }
 
-export function compare(grid, doc, { asNew = false } = {}) {
+export function compare(grid, doc, { asNew = false, ref = null } = {}) {
+  const catDefaults = ref?.categoryDefaults ?? [];
   const meta = asNew ? null : metaOf(grid);
   const base = meta?.baseline ?? null;
   const fps = meta?.fingerprints ?? {};
@@ -126,14 +128,16 @@ export function compare(grid, doc, { asNew = false } = {}) {
       }
     };
     const changedInSlam = recId => !!(meta && fps[recId] && fps[recId] !== fingerprint(doc.records.find(r => r.id === recId)));
-    const fieldLine = (x, row, ri, { item, wasStored, recId, conflict }) => {
+    // A conflict only when SLAM changed this same number after the file was made (gate: the record's fingerprint moved).
+    const fieldLine = (x, row, ri, { item, wasStored, recId, conflict: gate }) => {
       const { f, i } = x;
       const r = fromCell(f.type, row[i], f);
       if (r.bad) { out.bad.push({ cell: cellOf(ri, i), tab, name: x.rowName, label: f.label, value: row[i], text: `${cellOf(ri, i)} (${x.rowName}, ${f.label}): ${r.bad}. Skipped.` }); return; }
       if (same(r.value, wasStored)) return;
       const nowV = asStored(f.type, nowOf(item, f), f);
       if (same(r.value, nowV)) return;
-      group.changed.push(line({ op: 'edit', area: area.id, tab, recId, field: f.key, fld: f, label: f.label, name: x.rowName, from: nowOf(item, f), to: r.value, note: r.note, cell: cellOf(ri, i), conflict }));
+      const conflict = !!gate && !same(nowV, wasStored);
+      group.changed.push(line({ op: 'edit', area: area.id, tab, recId, field: f.key, fld: f, label: f.label, name: x.rowName, was: wasStored, from: nowOf(item, f), to: r.value, note: r.note, cell: cellOf(ri, i), conflict }));
     };
 
     if (area.source === 'doc') {
@@ -143,7 +147,7 @@ export function compare(grid, doc, { asNew = false } = {}) {
         const was = baseArea ? baseArea.doc?.[x.f.key] ?? null : undefined;
         const wasStored = was === undefined ? asStored(x.f.type, nowOf(item, x.f), x.f) : fromCell(x.f.type, was, x.f).value ?? null;
         const nowV = asStored(x.f.type, nowOf(item, x.f), x.f);
-        fieldLine({ ...x, rowName: tab }, row, 1, { item, wasStored, recId: 'doc', conflict: was !== undefined && !same(nowV, wasStored) });
+        fieldLine({ ...x, rowName: tab }, row, 1, { item, wasStored, recId: 'doc', conflict: was !== undefined });
       }
       typedOver(1, tab);
       continue;
@@ -176,7 +180,7 @@ export function compare(grid, doc, { asNew = false } = {}) {
           const st = word === null ? null : STATUS_BACK[word.toLowerCase()];
           const wasWord = wasRow ? wasRow._status ?? null : STATUS_WORDS[item.rec.status] ?? null;
           if (word !== null && !st) out.bad.push({ cell: cellOf(ri, statusCol), tab, name: rowName, label: 'Status', value: word, text: `${cellOf(ri, statusCol)} (${rowName}, Status): ${word} is not a status. Skipped.` });
-          else if ((word ?? null) !== (wasWord ?? null) && (st ?? null) !== (item.rec.status ?? null)) group.changed.push(line({ op: 'status', area: area.id, tab, recId: id, label: 'Status', name: rowName, from: STATUS_WORDS[item.rec.status] ?? null, to: st, cell: cellOf(ri, statusCol), conflict }));
+          else if ((word ?? null) !== (wasWord ?? null) && (st ?? null) !== (item.rec.status ?? null)) group.changed.push(line({ op: 'status', area: area.id, tab, recId: id, label: 'Status', name: rowName, was: wasWord, from: STATUS_WORDS[item.rec.status] ?? null, to: st, cell: cellOf(ri, statusCol), conflict: conflict && (STATUS_WORDS[item.rec.status] ?? null) !== (wasWord ?? null) }));
         }
         if (typeWord && item.rec && typeWord !== (item.rec.type ?? '')) group.changed.push(line({ op: 'edit', area: area.id, tab, recId: id, field: 'type', fld: { key: 'type', where: 'top', type: 'text' }, label: 'Type', name: rowName, from: item.rec.type, to: typeWord, cell: cellOf(ri, typeCol), conflict }));
         continue;
@@ -191,7 +195,10 @@ export function compare(grid, doc, { asNew = false } = {}) {
         const word = statusCol >= 0 && !isBlankCell(row[statusCol]) ? String(row[statusCol]).trim().toLowerCase() : null;
         const types = area.types?.[kind] ?? null;
         const x = { op: 'add', area: area.id, tab, kind, type: typeWord, status: word ? STATUS_BACK[word] ?? null : null, values, fields, label: `New ${area.kinds[kind].toLowerCase()}`, name: values.name ?? rowName, to: values, cell: `${tab}!A${ri + 1}` };
+        // A new Budget line needs its category most: it decides the DRAFTT letter, Fixed or Variable, and the date.
+        if (kind === 'bill') x.categoryDefaults = catDefaults;
         if (types && !typeWord) out.unknown.push(line({ ...x, decision: 'skip', needsType: types, note: `A new row with no type. Pick what it is to bring it in.` }));
+        else if (kind === 'bill' && !values.category && catDefaults.length) out.unknown.push(line({ ...x, decision: 'skip', needsCategory: catDefaults.map(c => c.category), note: 'A new line with no category. Pick its category to bring it in.' }));
         else group.added.push(line(x));
       } else if (area.source === 'months') {
         const mo = colOf('Month (YYYY-MM)'), li = colOf('Budget line');
@@ -238,15 +245,15 @@ export function compare(grid, doc, { asNew = false } = {}) {
 
 // Every line in one list (the review counts and the save read this).
 export const linesOf = res => [...res.areas.flatMap(g => [...g.changed, ...g.added, ...g.removed]), ...res.assumptions, ...res.unknown.filter(u => u.op === 'add')];
-// A conflict is kept only when the spreadsheet's side was picked.
-const kept = l => l.decision === 'keep' || l.decision === 'sheet';
+// Kept: answered Yes (for a conflict, Yes keeps the spreadsheet's number).
+const kept = l => l.decision === 'keep';
 export const unpicked = res => linesOf(res).filter(l => l.conflict && !l.decision);
 
 // Save what was kept: a snapshot first, then one undo step. Every kept change is in the record's history with
 // source "spreadsheet", and the record says From your spreadsheet. A new Calendar entries row comes in logged
 // (Got it / Paid on its date), so a month tracked in the sheet can be closed in SLAM.
 export function applyChanges(store, res, { metrics = null } = {}) {
-  const list = linesOf(res).filter(l => kept(l) && (l.op !== 'add' || !l.needsType || l.type));
+  const list = linesOf(res).filter(l => kept(l) && (l.op !== 'add' || ((!l.needsType || l.type) && (!l.needsCategory || l.values.category))));
   if (!list.length) return 0;
   store.snapshot('Before spreadsheet import', metrics);
   const was = store.source;
@@ -278,6 +285,10 @@ export function applyChanges(store, res, { metrics = null } = {}) {
           else if (c.op === 'add') {
             const top = {}, values = {};
             for (const [k, v] of Object.entries(c.values)) { const f = c.fields.find(x => x.key === k); (f?.where === 'top' ? top : values)[k] = v; }
+            if (c.kind === 'bill' && values.category) { // the category's own letter, amount and date, unless typed
+              const d = (c.categoryDefaults || []).find(x => x.category === values.category);
+              if (d) { values.draftt ??= d.draftt; values.amountType ??= d.amount; values.timing ??= d.timing; }
+            }
             const type = c.type ?? (c.kind === 'entry' ? (values.direction === 'In' ? 'Money in' : values.direction === 'Maybe' ? 'Maybe' : 'Money out') : null);
             if (c.kind === 'entry') { values.direction ??= type === 'Money in' ? 'In' : type === 'Maybe' ? 'Maybe' : 'Out'; values.repeats ??= 'Never'; }
             const rec = store.add(c.kind, { ...top, status: c.status ?? null, source: 'spreadsheet', values }, { type });
