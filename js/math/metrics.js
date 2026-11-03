@@ -135,7 +135,7 @@ export function inputsOf(doc, ref, now = new Date()) {
     realReturn: a.realReturn ?? ref.presets.realReturn.default,
     withdrawalRate: a.withdrawalRate ?? ref.presets.withdrawalRate.default,
     inflation: a.inflation ?? ref.presets.inflation.default,
-    retireAge: a.fiAge ?? a.retireAge ?? ref.defaults.retireAge, // FI target age if set, else Retire by, else 60
+    retireAge: a.fiAge ?? a.retireAge ?? ref.defaults.retireAge, // FI target age if set, else Retire by, else 65 (answer to 10)
     retirementSpending: a.retirementSpending ?? spending, // R030
     hours: doc.profile.hours ?? {},
     roommates: doc.profile.roommates ?? 0,
@@ -176,7 +176,13 @@ export function metrics(doc, ref, { now = new Date() } = {}) {
   const r5 = ruleOf5({ age: x.age, spending: x.spending, emergencyCash: x.cash });
   out.ruleOf5 = r5;
   out.fiNumber = fiNumber({ annualSpending: x.retirementSpending === null ? null : x.retirementSpending * 12, withdrawalRate: x.withdrawalRate });
-  const monthlyInvesting = out.surplus.value; // R: surplus fully invested until a Plan says otherwise
+  // Answer to 11: the surplus stays surplus until you choose Invest my surplus. What already goes in counts either way:
+  // the 401(k) and HSA from the paycheck and the match; after-tax contributions count unless the surplus (which pays them) is invested.
+  const investSurplus = doc.assumptions?.investSurplus === true;
+  const alreadyIn = pretaxSaving + match;
+  const monthlyInvesting = out.surplus.value === null && !alreadyIn ? null
+    : alreadyIn + (investSurplus ? out.surplus.value ?? 0 : x.afterTaxSaving ?? 0);
+  out.investing = { investSurplus, alreadyIn, afterTax: investSurplus ? 0 : x.afterTaxSaving ?? 0, surplus: investSurplus ? out.surplus.value : 0, monthly: monthlyInvesting };
   out.monthsToFi = fiDate({ invested: x.invested, monthlyInvesting, realReturn: x.realReturn, target: out.fiNumber.value }, { from: now });
   if (out.monthsToFi.value === null && !out.monthsToFi.never) { // say what to type, not which result is missing
     const root = [...new Set([...out.surplus.needs, ...out.fiNumber.needs, ...(x.invested === null ? ['invested'] : [])])];

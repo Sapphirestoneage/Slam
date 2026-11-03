@@ -2,6 +2,7 @@
 // Every screen is a view of the same records (R117); the month model lives in js/month.js.
 import { h, clear, icon } from './dom.js';
 import { maaserOf, KOSHER_NOTE } from '../community.js';
+import { drafttName } from '../math/spending.js';
 import * as S from './staples.js';
 import { spendingList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.js';
 import { ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
@@ -152,7 +153,7 @@ function fastTrackTotals(ctx) {
   const fromLines = a => sum(lines.filter(r => (r.values.draftt || 'Other') === a), r => lineMonthlyOf(r) ?? 0);
   const total = sum(areas, a => basics[a]);
   return h('div.card', {}, h('div.basics-grid', {}, areas.map(a => h('div.basics-row', {},
-    h('span.basics-name', {}, a),
+    h('span.basics-name', {}, drafttName(a)),
     S.moneyInput(basics[a] ?? null, v => ctx.store.setIn('spending', ['basics', a], v === null ? undefined : v, `Fast Track: ${a}`), { hint: 'Add total', key: `basics:${a}` }),
     h('span.muted', {}, fromLines(a) ? `Lines say ${money(fromLines(a))}` : '')))),
   h('p', { style: { marginTop: '12px', fontWeight: 600 } }, Object.keys(basics).length ? `Fast Track total: ${money(total)} a month` : 'Type a total for each area that applies; skip the rest.'));

@@ -423,3 +423,22 @@ test('58: Benefits at work come out of the paycheck: commuter and FSAs before ta
   assert.ok(Math.abs((i.pretax - base.pretax) - 60 * 26) < 0.01); // commuter lowers taxable pay
   assert.ok(i.takeHome.value < base.takeHome.value); // and both come out before it lands
 });
+
+// ---------- Closing the questions (Nov 3) ----------
+test('94: a covered bill is yours once its takeover month arrives; 11: the surplus is invested only when chosen; 10: Coast FI at 65', async () => {
+  const { myShare } = await import('../js/math/spending.js');
+  const line = { amount: 60, per: 'month', whoPays: 'Covered by someone', takeover: '2027-06' };
+  assert.equal(myShare(line, { now: new Date('2027-05-15T12:00:00') }).value, 0);
+  assert.equal(myShare(line, { now: new Date('2027-06-02T12:00:00') }).value, 60);
+  const s = fresh();
+  s.add('income', { name: 'Job', amount: 4000, values: { basis: 'Take-home' } }, { type: 'Job' });
+  s.add('spending', { amount: 3000, values: {} }, { type: 'All in' });
+  s.add('account', { values: { group: 'investment', balance: 20000 } }, { type: 'Brokerage' });
+  const off = metrics(s.doc, ref, { now: new Date('2026-11-03') });
+  assert.equal(off.investing.monthly, 0);
+  s.setDoc('assumptions', { investSurplus: true });
+  const on = metrics(s.doc, ref, { now: new Date('2026-11-03') });
+  assert.equal(on.investing.monthly, 1000);
+  assert.ok(on.monthsToFi.value < (off.monthsToFi.value ?? Infinity));
+  assert.equal(ref.defaults.retireAge, 65);
+});

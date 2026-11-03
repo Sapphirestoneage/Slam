@@ -10,7 +10,7 @@ export function householdFromInputs(inputs, { name = 'Demo client', now } = {}) 
     // The Profile answers a fixture carries; a work situation with a note ('Between jobs (new job in January)') keeps its first part.
     const work = WORK.find(w => String(inputs.workSituation ?? '').toLowerCase().startsWith(w.toLowerCase().split(' (')[0])) ?? null;
     store.setDoc('profile', { age: inputs.age ?? null, household: inputs.household ?? 'Solo', state: inputs.state ?? null, workSituation: work });
-    store.setDoc('assumptions', { realReturn: inputs.realReturn ?? null, withdrawalRate: inputs.withdrawalRate ?? null, inflation: inputs.inflation ?? null });
+    store.setDoc('assumptions', { realReturn: inputs.realReturn ?? null, withdrawalRate: inputs.withdrawalRate ?? null, inflation: inputs.inflation ?? null, investSurplus: true }); // the Demo client's FI date assumes the surplus is invested (spec Demo client tab)
     store.add('income', { name: 'Take-home pay', amount: inputs.takeHome ?? null, per: 'month' }, { type: 'Job' });
     if (has('spendingAllIn') || 'spendingAllIn' in inputs) {
       store.add('spending', { name: 'Monthly spending, all in', amount: inputs.spendingAllIn ?? null, values: { includesDebtPayments: true } }, { type: 'All in' });

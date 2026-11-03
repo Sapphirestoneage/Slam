@@ -24,8 +24,16 @@ export function prepaidLeft({ amount, months, monthsElapsed }) {
   return ok('M2B', v, `${fmt.money(amount)} minus ${fmt.money(monthly)} a month for ${monthsElapsed} months used = ${fmt.money(v)} still prepaid.`);
 }
 
+// How much of a line someone else covers. Answer to 94: once the takeover month arrives, it is yours.
+const ymNow = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+export function coveredShare(line, now = new Date()) {
+  const takeover = line.takeover ?? line.values?.takeover ?? null;
+  if (takeover && takeover <= ymNow(now)) return 0;
+  return line.coveredPct ?? (line.whoPays === 'Covered by someone' ? 1 : 0);
+}
+
 // M21: my share of a line.
-export function myShare(line, { roommates = 0, basis = 'accrual' } = {}) {
+export function myShare(line, { roommates = 0, basis = 'accrual', now = new Date() } = {}) {
   if (!isBlank(line.myShare)) return ok('M21', line.myShare, `You said your share is ${fmt.money(line.myShare)}.`);
   if (line.status === 'Not for me') return ok('M21', 0, 'Marked Not for me, so it counts as zero.');
   // Answer to 74: Included in rent is already in the rent line; N/A is not for me. Neither counts again.
@@ -33,7 +41,7 @@ export function myShare(line, { roommates = 0, basis = 'accrual' } = {}) {
   if (line.whoPays === 'N/A') return ok('M21', 0, 'Does not apply, so it counts as zero.');
   const m = lineMonthly(line, { basis });
   if (m.value === null) return { ...m, id: 'M21' };
-  const covered = line.coveredPct ?? (line.whoPays === 'Covered by someone' ? 1 : 0);
+  const covered = coveredShare(line, now);
   const split = line.splitBy ?? (line.whoPays === 'Split' ? roommates + 1 : 1); // R033
   const v = m.value * (1 - covered) / split;
   const parts = [];
@@ -47,7 +55,7 @@ export function supportReceived(lines, opts) {
   let total = 0;
   const items = [];
   for (const l of lines) {
-    const covered = l.coveredPct ?? (l.whoPays === 'Covered by someone' ? 1 : 0);
+    const covered = coveredShare(l, opts?.now);
     if (!covered) continue;
     const full = lineMonthly(l, opts).value;
     const mine = myShare(l, opts).value;
@@ -119,12 +127,15 @@ export function savingsRate({ takeHome, surplus, afterTaxSavings = 0, gross = nu
 
 // M29: DRAFTT shares of take-home. Proportions only.
 export const DRAFTT = ['Debt', 'Retirement', 'Accommodation', 'Food', 'Transportation', 'Taxes', 'Therapy'];
+// What each letter is called on screen. The stored key stays 'Therapy'; it reads Health and self-care (answer to 92).
+export const DRAFTT_NAME = { Therapy: 'Health and self-care' };
+export const drafttName = k => DRAFTT_NAME[k] ?? k;
 export function drafttShares(lines, takeHome, opts) {
   if (isBlank(takeHome)) return needs('M29', ['take-home'], { unit: 'pct' });
   const totals = Object.fromEntries(DRAFTT.map(k => [k, 0]));
   for (const l of lines) if (l.draftt in totals) totals[l.draftt] += myShare(l, opts).value ?? 0;
   const shares = Object.fromEntries(Object.entries(totals).map(([k, v]) => [k, v / takeHome]));
-  return { ...ok('M29', shares, DRAFTT.filter(k => totals[k]).map(k => `${k} ${fmt.pct(shares[k])}`).join(', ') || 'No lines tagged yet.', { unit: 'pct' }), totals };
+  return { ...ok('M29', shares, DRAFTT.filter(k => totals[k]).map(k => `${drafttName(k)} ${fmt.pct(shares[k])}`).join(', ') || 'No lines tagged yet.', { unit: 'pct' }), totals };
 }
 
 // M2A: housing share of take-home.

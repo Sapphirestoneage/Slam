@@ -33,7 +33,8 @@ export function fiTargets(m, doc) {
 export function monthsTo(m, target, { realReturn = m.inputs.realReturn, extra = 0, now = new Date() } = {}) {
   if (target == null) return { value: null, needs: ['a target'] };
   if (m.inputs.invested != null && m.inputs.invested >= target) return { value: 0, reached: true };
-  return fiDate({ invested: m.inputs.invested, monthlyInvesting: m.surplus.value === null ? null : m.surplus.value + extra, realReturn, target }, { from: now });
+  const now$ = m.investing?.monthly ?? m.surplus.value; // what goes in today (answer to 11), plus any extra
+  return fiDate({ invested: m.inputs.invested, monthlyInvesting: now$ === null ? null : now$ + extra, realReturn, target }, { from: now });
 }
 
 // A milestone row's projected date.
@@ -72,7 +73,8 @@ export function solveFor(m, fiAge) {
   const months = Math.max(1, Math.round((fiAge - x.age) * 12));
   const save = solveMonthlySaving({ invested: x.invested, realReturn: x.realReturn, target: m.fiNumber.value, months });
   const spend = solveSpending({ invested: x.invested, monthlyIncomeLeft: x.takeHome === null ? null : x.takeHome - (x.debtPaymentsOutsideSpending ?? 0), realReturn: x.realReturn, withdrawalRate: x.withdrawalRate, months });
-  return { months, save, spend, extra: save.value == null || m.surplus.value == null ? null : save.value - m.surplus.value };
+  const now$ = m.investing?.monthly ?? m.surplus.value;
+  return { months, save, spend, extra: save.value == null || now$ == null ? null : save.value - now$ };
 }
 
 // ---------- Next 3 numbers (R071 to R073) ----------

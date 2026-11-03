@@ -44,7 +44,7 @@
     "sessionMinutes": 60,
     "lowBalanceLine": 500,
     "taxSetAside": 0.25,
-    "retireAge": 60
+    "retireAge": 65
   },
   "limits": {
     "401k": {

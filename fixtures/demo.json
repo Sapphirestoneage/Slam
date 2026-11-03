@@ -89,8 +89,8 @@
       "tolerance": "1 month"
     },
     "coastFi": {
-      "label": "Coast FI number today, retire at 60 (M54)",
-      "value": 132594.8472214549,
+      "label": "Coast FI number today, retire at 65 (M54)",
+      "value": 94538.29353964582,
       "tolerance": "$1"
     }
   }

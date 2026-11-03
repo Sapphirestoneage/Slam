@@ -136,13 +136,14 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
     kind: 'bill', area: 'needs', title: `Spending lines: ${pass}, ${monthName(ym)}`, thing: { one: 'line', plural: 'lines' },
     filter: r => r.kind === 'bill' && !r.values.irregular,
     // Eliminated lines fold away at the bottom; one tap brings one back.
-    // B6.6: Therapy is its own section; the rest of the T letter reads "Personal care and hygiene" (display only).
+    // Answer to 92: the T letter reads Health and self-care (therapy, insurance, copays, prescriptions); haircuts, personal
+    // care and the gym sit in Personal care and hygiene (B6.6). Display only: the letter's stored key stays Therapy.
     groupBy: r => (r.status === 'Not for me' ? 'Not for me' : groupBy === 'Who' ? Object.fromEntries(WHO)[whoOf(r)] : groupBy === 'Category' ? r.values.category || 'Other'
-      : r.values.draftt === 'Therapy' && r.values.category !== 'Therapy' ? 'Personal care and hygiene' : r.values.category === 'Therapy' ? 'Therapy' : r.values.draftt || 'Other'),
+      : r.values.draftt === 'Therapy' ? (['Personal care', 'Gym or fitness', 'Laundry'].includes(r.values.category) ? 'Personal care and hygiene' : 'Health and self-care') : r.values.draftt || 'Other'),
     groupLabel: g => (g === 'Not for me' ? 'Hidden: not for me' : g),
     // B6.6: every section takes a new line, filed under that section.
     groupAdd: g => (g === 'Not for me' || g === 'Debt' || groupBy === 'Category' || groupBy === 'Who' ? null // debts are added on Net worth
-      : { name: null, values: { draftt: g === 'Personal care and hygiene' ? 'Therapy' : g, ...(g === 'Therapy' ? { category: 'Therapy' } : {}), amountType: 'Variable', timing: 'Variable date' } }),
+      : { name: null, values: { draftt: g === 'Personal care and hygiene' || g === 'Health and self-care' ? 'Therapy' : g, ...(g === 'Personal care and hygiene' ? { category: 'Personal care' } : {}), amountType: 'Variable', timing: 'Variable date' } }),
     key: 'spending-lines', notForMe: true,
     // Groups start folded, showing their subtotal; open or closed is kept for the session.
     lastGroups: ['Not for me'], startFolded: true,

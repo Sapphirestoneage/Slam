@@ -31,7 +31,7 @@ export const GLOSSARY = {
   'Drift': 'How far your mix has moved from the target you set.',
   'Sinking fund': 'Saving a little each month for a known cost, so it is ready when it comes.',
   'Fixed floor': 'What you pay every month no matter what.',
-  'DRAFTT': 'Spending sorted into Debt, Retirement, Accommodation, Food, Transportation, Taxes and Therapy.',
+  'DRAFTT': 'Spending sorted into Debt, Retirement, Accommodation, Food, Transportation, Taxes, and Health and self-care.',
   'Take-home': 'What lands in your account after taxes and deductions.',
   'Gross': 'Your pay before taxes and deductions.',
   'Effective rate': 'All your income tax divided by your gross pay: what you pay on average.',

@@ -10,7 +10,7 @@ import { is401k, yearly401k } from './account-specific.js';
 import { netWorthCheck, yearlyContribution, link401k } from '../math/portfolio.js';
 import { benefitYearly, withholdingFlag } from '../benefits.js';
 import { lifeAdminItems, lifeAdminPatch, LIFE_STATES } from '../lifeadmin.js';
-import { drafttShares, DRAFTT } from '../math/spending.js';
+import { drafttShares, DRAFTT, drafttName } from '../math/spending.js';
 import { needs } from '../math/result.js';
 import { statusOf, countsAsDone } from '../records.js';
 import { money, pct } from '../format.js';
@@ -559,7 +559,7 @@ export const incomeCharts = [
       const r = drafttShares(lines, m.inputs.takeHome, { roommates: m.inputs.roommates });
       const debts = m.inputs.debts.reduce((s, d) => s + (d.inFull ? 0 : d.payment ?? 0), 0);
       const totals = { ...r.totals, Debt: r.totals.Debt + debts };
-      return { rows: DRAFTT.filter(k => totals[k] > 0).map(k => [k, totals[k]]), takeHome: m.inputs.takeHome };
+      return { rows: DRAFTT.filter(k => totals[k] > 0).map(k => [drafttName(k), totals[k]]), takeHome: m.inputs.takeHome };
     },
     option: (d, t) => ({ ...theme(t), grid: { left: 16, right: 16, top: 36, bottom: 24 }, legend: { top: 0, textStyle: { color: t.text2 } },
       xAxis: { type: 'value', max: Math.max(d.takeHome, d.rows.reduce((s, r) => s + r[1], 0)), axisLabel: { color: t.text2, formatter: v => short(v) }, splitLine: { lineStyle: { color: t.line } } },

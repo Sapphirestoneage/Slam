@@ -47,6 +47,20 @@ export function revealCard(app, ctx, m) {
       h('div', {}, h('span.label', {}, 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? S.mathButton(m.fiNumber, money(m.fiNumber.value)) : h('span.muted', { style: { fontSize: '1rem' } }, 'Needs ', S.needLinks(ctx, m.fiNumber.needs))))),
     m.fiNumber.value != null ? h('div.slider-row', { style: { marginTop: '12px' } }, h('span.label', {}, 'Save more'), slider, out, result) : null);
 }
+// Answer to 11: the surplus stays surplus until you choose to invest it; the FI date says what it counts.
+// Answer to 15: returns are after inflation, so the FI date already covers it (everything is in today's dollars).
+function investingLine(ctx, m) {
+  const iv = m.investing;
+  if (!iv) return null;
+  const on = iv.investSurplus;
+  const parts = [iv.alreadyIn ? `${money(iv.alreadyIn)} from your paycheck (401(k), HSA, match)` : null, iv.afterTax ? `${money(iv.afterTax)} you put in after tax` : null,
+    on && iv.surplus ? `your ${money(iv.surplus)} surplus` : null].filter(Boolean);
+  return h('div.stack', { style: { gap: '6px', marginTop: '8px' } },
+    h('span.muted.small', {}, parts.length ? `Counts ${money(iv.monthly ?? 0)} a month going in: ${parts.join(' + ')}. Inflation is covered: returns are after inflation.` : 'Nothing is going in yet. Inflation is covered: returns are after inflation.'),
+    h('span.row-line', { style: { gap: '8px' } },
+      S.toggle([[false, 'Surplus stays surplus'], [true, 'Invest my surplus']], on, v => ctx.store.setDoc('assumptions', { investSurplus: v }), { label: 'Invest my surplus' }),
+      !on && m.surplus.value > 0 ? h('span.muted.small', {}, `Investing your ${money(m.surplus.value)} a month moves the FI date sooner.`) : null));
+}
 export function goalsScreen(app, ctx) {
   const reveal = PUI.reveal;
   const top = h('div', {}, goalsTop(app, ctx, { reveal }));
@@ -67,11 +81,12 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
       S.button('Just show me', { onClick: () => setA({ fiAge: null }), tip: 'Skip the age and show the earliest date' })),
     h('div', {}, h('span.label', {}, 'FI date'),
       h('div.fi-big', {}, fiWhen != null ? S.mathButton(m.monthsToFi, monthName(addMonths(ymOf(ctx.now()), fiWhen))) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))),
-      fiWhen != null ? h('span.muted', {}, `${ageAt(m, fiWhen) != null ? `At ${ageAt(m, fiWhen)} · ` : ''}${(fiWhen / 12).toFixed(1)} years from now`) : null),
+      fiWhen != null ? h('span.muted', {}, `${ageAt(m, fiWhen) != null ? `At ${ageAt(m, fiWhen)} · ` : ''}${(fiWhen / 12).toFixed(1)} years from now`) : null,
+      investingLine(ctx, m)),
     h('div', {}, h('span.label', {}, 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? S.mathButton(m.fiNumber, money(m.fiNumber.value)) : h('span.muted', { style: { fontSize: '1rem' } }, 'Needs ', S.needLinks(ctx, m.fiNumber.needs)))),
     solve ? h('div.solver', {}, h('strong', {}, `To reach FI at ${fiAge}:`),
       h('ul.op-list', {},
-        h('li', {}, solve.save.value == null ? `Investing: needs ${solve.save.needs.join(' and ')}` : solve.extra != null && solve.extra <= 0 ? `On track: you already invest ${money(m.surplus.value)} a month (needs ${money(solve.save.value)}).` : `Invest ${money(solve.save.value)} a month${solve.extra != null ? `, ${money(solve.extra)} more than now` : ''}.`),
+        h('li', {}, solve.save.value == null ? `Investing: needs ${solve.save.needs.join(' and ')}` : solve.extra != null && solve.extra <= 0 ? `On track: you already invest ${money(m.investing?.monthly ?? m.surplus.value)} a month (needs ${money(solve.save.value)}).` : `Invest ${money(solve.save.value)} a month${solve.extra != null ? `, ${money(solve.extra)} more than now` : ''}.`),
         h('li', {}, solve.spend.value == null ? `Or spending: ${solve.spend.needs.join(' and ')}` : `Or spend no more than ${money(solve.spend.value)} a month.`))) : null);
   const presetRow = (label, key, values, fmt, note) => h('div.preset-row', {}, h('span.label', {}, label),
     S.toggle(values.map(v => [v, fmt(v)]), a[key] ?? ref.presets[key]?.default ?? null, v => setA({ [key]: v }), { label }), note ? h('span.muted.small', {}, note) : null);
