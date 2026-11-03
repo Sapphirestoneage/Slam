@@ -24,7 +24,14 @@ winSources.push(ctx => {
 });
 
 // ---------- Goals ----------
+// The FI card, Big deals and the ladder refresh in place when an assumption changes (the milestone list below
+// keeps its own state, so the screen is not rebuilt).
 export function goalsScreen(app, ctx) {
+  const top = h('div', {}, goalsTop(app, ctx));
+  ctx.onRefresh(() => S.keepPlace(() => clear(top, goalsTop(app, ctx))));
+  return [head('Goals', 'FI target, assumptions, milestones'), top, S.recordList(ctx, milestoneList())];
+}
+function goalsTop(app, ctx) {
   const m = ctx.metrics();
   const a = ctx.store.doc.assumptions;
   const ref = ctx.ref;
@@ -46,23 +53,28 @@ export function goalsScreen(app, ctx) {
         h('li', {}, solve.spend.value == null ? `Or spending: ${solve.spend.needs.join(' and ')}` : `Or spend no more than ${money(solve.spend.value)} a month.`))) : null);
   const presetRow = (label, key, values, fmt, note) => h('div.preset-row', {}, h('span.label', {}, label),
     S.toggle(values.map(v => [v, fmt(v)]), a[key] ?? ref.presets[key]?.default ?? null, v => setA({ [key]: v }), { label }), note ? h('span.muted.small', {}, note) : null);
-  const pace = paceOf(ref, a.realReturn ?? ref.presets.realReturn.default);
+  // One control sets the return: Pace, with each % beside it, plus Hopeful (fix pass item 6: Return and Pace did the same job).
+  const rr = a.realReturn ?? ref.presets.realReturn.default;
+  const HOPEFUL = 0.12;
+  const paces = [...['Optimistic', 'Likely', 'Pessimistic'].map(k => [ref.presets.pace[k], `${k} ${Math.round(ref.presets.pace[k] * 100)}%`]), [HOPEFUL, `Hopeful ${Math.round(HOPEFUL * 100)}%`]];
+  const inflation = a.inflation ?? ref.presets.inflation.default;
+  const nominal = (ctx.store.doc.settings.dollars || 'real') === 'nominal';
   const right = h('div.stack', { style: { gap: '12px' } },
-    presetRow('Return', 'realReturn', ref.presets.realReturn.values, v => `${Math.round(v * 100)}%`, (a.realReturn ?? 0.07) === 0.12 ? 'Hopeful: no inflation taken out' : 'After inflation'),
-    presetRow('Inflation', 'inflation', ref.presets.inflation.values, v => `${Math.round(v * 100)}%`, 'Display only; returns are already after inflation'),
+    h('div.preset-row', {}, h('span.label', {}, 'Pace'), S.toggle(paces, paces.find(([v]) => Math.abs(v - rr) < 1e-9)?.[0] ?? null, v => setA({ realReturn: v }), { label: 'Pace' }),
+      h('span.muted.small', {}, Math.abs(rr - HOPEFUL) < 1e-9 ? 'Hopeful: no inflation taken out' : 'Return a year, after inflation')),
+    // Inflation feeds no number in real dollars, so here it is plain text; it can be picked under More with Nominal.
+    h('div.preset-row', {}, h('span.label', {}, 'Inflation'), h('span', {}, `${+(inflation * 100).toFixed(1)}% a year`), h('span.muted.small', {}, nominal ? 'Used for the nominal numbers (set under More)' : 'Display only; returns are already after inflation')),
     presetRow('Withdrawal', 'withdrawalRate', ref.presets.withdrawalRate.values, v => `${+(v * 100).toFixed(1)}%`),
-    h('div.preset-row', {}, h('span.label', {}, 'Pace'), S.toggle(['Optimistic', 'Likely', 'Pessimistic'], pace, v => setA({ realReturn: ref.presets.pace[v] }), { label: 'Pace' }), h('span.muted.small', {}, 'Optimistic 8%, Likely 7%, Pessimistic 6%')),
     h('div.preset-row', {}, h('span.label', {}, 'Retirement spending'), S.moneyInput(a.retirementSpending ?? null, v => setA({ retirementSpending: v }), { hint: m.inputs.spending != null ? S.moneyText(m.inputs.spending) : 'Add a month', key: 'g:retSpend' }), h('span.muted.small', {}, 'A month. Blank uses today\'s spending')),
     S.moreBlock('goals:tertiary', () => h('div.stack', { style: { gap: '12px' } },
       h('div.preset-row', {}, h('span.label', {}, 'Show money as'), S.toggle([['real', 'Real'], ['nominal', 'Nominal']], ctx.store.doc.settings.dollars || 'real', v => { ctx.store.doc.settings.dollars = v; ctx.refresh(); app.render(); }, { label: 'Real or nominal' }),
         h('span.muted.small', {}, (ctx.store.doc.settings.dollars || 'real') === 'real' ? "Real: in today's dollars" : `Nominal: with ${pct(a.inflation ?? ref.presets.inflation.default)} inflation added${m.fiNumber.value != null && fiWhen != null ? `, the FI number is ${money(m.fiNumber.value * (1 + (a.inflation ?? ref.presets.inflation.default)) ** (fiWhen / 12))} then` : ''}`)),
+      nominal ? presetRow('Inflation', 'inflation', ref.presets.inflation.values, v => `${Math.round(v * 100)}%`, 'Feeds the nominal numbers') : null,
       h('div.preset-row', {}, h('span.label', {}, 'Life expectancy'), S.textInput(a.lifeExpectancy ?? null, v => setA({ lifeExpectancy: v === null ? null : Number(v) }), { hint: String(ref.defaults.lifeExpectancy), width: 90 })),
       h('div.preset-row', {}, h('span.label', {}, 'Social Security'), S.select(['Full scheduled', 'Reduced %', 'None'], a.socialSecurity ?? null, v => setA({ socialSecurity: v }), { label: 'Social Security', hint: 'Pick one', width: 170 }))), { label: 'More: real or nominal, life expectancy, Social Security' }));
-  return [head('Goals', 'FI target, assumptions, milestones'),
-    h('div.card.fi-card', { style: { marginBottom: '16px' } }, left, right),
+  return [h('div.card.fi-card', { style: { marginBottom: '16px' } }, left, right),
     bigDealsCard(ctx, m),
-    ladderCard(ctx, m),
-    S.recordList(ctx, milestoneList())];
+    ladderCard(ctx, m)];
 }
 
 // These are big deals (M56): one assumption at a time; click an option to use it.

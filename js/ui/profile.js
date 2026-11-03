@@ -67,8 +67,7 @@ export function profileScreen(app, ctx) {
       labelled('First name', textInput(p.firstName, v => set({ firstName: v }), { hint: 'First name', width: 200, key: 'p:firstName' })),
       labelled('Last name', textInput(p.lastName, v => set({ lastName: v }), { hint: 'Last name', width: 200, key: 'p:lastName' })),
       labelled('Birth month and year', birth('birthMonth', 'birthYear', 'Your'), { note: age !== null ? `Age ${age}` : 'Works out age' }),
-      labelled('State', select(STATES, p.state ?? null, v => set({ state: v }), { label: 'State', hint: 'State', width: 110, key: 'p:state' }), { note: 'Tax rules' }),
-      labelled('Solo or couple', pick(['Solo', 'Couple'], g.couple ? 'Couple' : p.household ? 'Solo' : null, setCouple, 'Solo or couple'))),
+      labelled('State', select(STATES, p.state ?? null, v => set({ state: v }), { label: 'State', hint: 'State', width: 110, key: 'p:state' }), { note: 'Tax rules' })), // Solo or couple is asked once, under What applies to me
     moreBlock('profile:about', () => h('div.form-grid', {},
       g.couple ? labelled('Partner first name', textInput(p.partnerName, v => set({ partnerName: v }), { hint: 'Partner name', width: 200, key: 'p:partnerName' })) : null,
       g.couple ? labelled('Partner birth month and year', birth('partnerBirthMonth', 'partnerBirthYear', 'Partner')) : null,

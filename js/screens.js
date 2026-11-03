@@ -170,6 +170,7 @@ export function progressOf(ctx, tabId, subId) {
     return { done: rows.filter(r => fields.every(f => countsAsDone(statusOf(r, f)))).length, of: rows.length };
   };
   if (tabId === 'my-money') {
+    if (subId === 'profile') { const c = profileCompletion(ctx.store.doc).core; return c.of ? { done: c.done, of: c.of } : null; }
     if (subId === 'income') return core(['income'], ['amount']);
     if (subId === 'debt') return core(['debt'], ['balance', 'apr']);
     if (subId === 'assets') {

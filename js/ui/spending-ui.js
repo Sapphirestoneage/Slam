@@ -53,7 +53,10 @@ export function budgetScreen(app, ctx) {
     : UI.pass === 'Basics' ? basicsPass(ctx)
       : h('div.visuals', {}, S.recordList(ctx, spendingList(ctx.ref, { pass: UI.pass, ym: UI.ym, groupBy: UI.groupBy, paidWithColumn: cardsMost })),
         S.visualsPanel(ctx, { charts: budgetCharts, area: 'needs' }));
-  return [head('Budget', 'Every spending line and the five passes'), passBar, budgetStrip(ctx, view), body,
+  // The strip follows the lines as they change (the lists keep their own state, so the screen is not rebuilt).
+  const strip = h('div', {}, budgetStrip(ctx, view));
+  ctx.onRefresh(() => S.keepPlace(() => clear(strip, budgetStrip(ctx, monthView(doc, ctx.ref, UI.ym, { now: ctx.now() })))));
+  return [head('Budget', 'Every spending line and the five passes'), passBar, strip, body,
     S.recordList(ctx, irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) }))];
 }
 

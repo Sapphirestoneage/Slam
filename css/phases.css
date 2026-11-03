@@ -175,3 +175,6 @@ textarea.notes-box { width: 100%; min-height: 90px; border: 2px solid var(--bord
 .more-chips { display: inline-flex; align-items: center; }
 .topbar .seg button { min-height: 32px; }
 .day-top .icon-btn { width: 32px; height: 32px; }
+/* Fix pass 6: the Prep date box reads like the other boxes: same text, a muted hint when empty, a clear picker button. */
+.field input[type="date"].no-date:not(:focus) { color: color-mix(in srgb, var(--text-2) 75%, transparent); }
+.field input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
