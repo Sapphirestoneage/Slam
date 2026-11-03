@@ -122,12 +122,12 @@ export function debtRatios(ctx, m) {
 }
 
 // Spending lines: Fixed | Variable, Fixed date | Variable date, who pays, paid with.
-// The Amount column follows the pass being filled (R130): Rough edits the line; Estimate and Actual are per month.
-export function spendingList(ref, { pass = 'Rough', ym = null, groupBy = 'DRAFTT', paidWithColumn = false } = {}) {
+// Two passes (polish item 2): Plan edits each line's usual number and this month's plan; Actual is per month.
+export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT', paidWithColumn = false } = {}) {
   const cats = ref.categoryDefaults.map(c => c.category);
   const monthCols = monthColumns(pass, ym);
   return {
-    kind: 'bill', area: 'needs', title: pass === 'Rough' ? 'Spending lines' : `Spending lines: ${pass}, ${monthName(ym)}`, thing: { one: 'line', plural: 'lines' },
+    kind: 'bill', area: 'needs', title: `Spending lines: ${pass}, ${monthName(ym)}`, thing: { one: 'line', plural: 'lines' },
     filter: r => r.kind === 'bill' && !r.values.irregular,
     // Eliminated lines fold away at the bottom; one tap brings one back.
     // B6.6: Therapy is its own section; the rest of the T letter reads "Personal care and hygiene" (display only).
@@ -151,7 +151,7 @@ export function spendingList(ref, { pass = 'Rough', ym = null, groupBy = 'DRAFTT
     paidWith: true,
     columns: [
       { label: 'Line', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.values.category || 'Add name', tip: r.values.category, width: 170, key: `${r.id}:name` }) },
-      pass !== 'Rough' ? { label: 'Rough', num: true, render: (ctx, r) => h('span.muted', { title: 'The line\'s usual number, set in the Rough pass' }, r.status === 'Not for me' ? '$0' : amount(ctx, r.amount, { chip: false })) } :
+      pass === 'Actual' ? null :
       { label: 'Amount', num: true, render: (ctx, r, m, up) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
         premiumOf(ctx, r) ? fromButton(`From ${premiumOf(ctx, r).type}`, '#/net-worth/protection', r.linkedTo, { value: amount(ctx, r.amount, { chip: false }) }) : moneyInput(r.amount, v => up({ amount: v, status: r.status === 'Not sure' ? null : r.status }), { key: `${r.id}:amount` }), // typing the real number clears Guess
         h('span.keep-slot', {}, r.status === 'Not sure' ? h('button.btn.small', { type: 'button', 'data-focus': 'keep', title: 'The guess is right: keep it as the real number', onclick: () => up({ status: null }) }, 'Keep') : null)) }, // the slot keeps amounts lined up
@@ -177,8 +177,8 @@ export function spendingList(ref, { pass = 'Rough', ym = null, groupBy = 'DRAFTT
     // Enter once: each debt's payment shows here From Debt, in the Debt letter; its number opens the debt.
     autoRows: (ctx, m) => m.inputs.autoLines ?? [],
     autoCell: (ctx, r, c) => (c.label === 'Line' ? h('span.auto-name', {}, r.name)
-      : ['Amount', 'Rough'].includes(c.label) ? fromButton(`From ${r.auto.from}`, r.auto.route, r.auto.sourceId, { value: amount(ctx, r.amount, { chip: false }) })
-        : c.label === 'Estimate' ? h('span.muted', {}, amount(ctx, r.amount, { chip: false })) // the same every month
+      : ['Amount', 'Plan'].includes(c.label) && (c.label === 'Amount' || pass === 'Actual') ? fromButton(`From ${r.auto.from}`, r.auto.route, r.auto.sourceId, { value: amount(ctx, r.amount, { chip: false }) })
+        : c.label === 'Plan' ? h('span.muted', {}, amount(ctx, r.amount, { chip: false })) // the same every month
         : c.label === 'Per' ? h('span.muted', {}, 'per month') : null),
     rowNote: (ctx, r, m) => (m.inputs.dupOf?.[r.id] ? dupNote(ctx, r, m.inputs.dupOf[r.id]) : null),
     // Not for me counts as $0 everywhere (R058); its group shows what was cut.
@@ -201,17 +201,15 @@ function tagsField(r, up) {
     h('datalist', { id: 'tag-ideas' }, TAG_IDEAS.map(t => h('option', { value: t })))), { note: 'A line can have more than one' });
 }
 
-// Estimate and Actual columns for one month (R134 to R136, R052).
+// Plan and Actual columns for one month (R134 to R136, R052). A blank month plan uses the line's usual number.
 function monthColumns(pass, ym) {
-  if (pass === 'Estimate') return [{ label: 'Estimate', num: true, render: (ctx, r) => {
+  if (pass === 'Plan') return [{ label: 'Plan', num: true, render: (ctx, r) => {
     const e = estimateOf(ctx.store.doc, ym, r);
-    const set = v => ctx.store.setIn('spending', ['months', ym, 'lines', r.id, 'estimate'], v === null ? undefined : v, 'Estimate');
-    return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
-      e.fromRough ? h('button.btn.small.from-rough', { type: 'button', title: 'Carried over from Rough. Click to confirm it as this month\'s estimate.', onclick: () => set(e.value) }, 'from Rough ✓') : null,
-      moneyInput(e.fromRough ? null : e.value, set, { hint: e.value == null ? 'Add estimate' : moneyText(e.value), key: `${r.id}:est:${ym}` }));
+    const set = v => ctx.store.setIn('spending', ['months', ym, 'lines', r.id, 'estimate'], v === null ? undefined : v, 'Plan');
+    return moneyInput(e.fromRough ? null : e.value, set, { hint: e.value == null ? 'Add plan' : moneyText(e.value), key: `${r.id}:est:${ym}` });
   } }];
   if (pass === 'Actual') return [
-    { label: 'Estimate', num: true, render: (ctx, r) => h('span.muted', {}, amount(ctx, estimateOf(ctx.store.doc, ym, r).value, { chip: false })) },
+    { label: 'Plan', num: true, render: (ctx, r) => h('span.muted', {}, amount(ctx, estimateOf(ctx.store.doc, ym, r).value, { chip: false })) },
     { label: 'Actual', num: true, render: (ctx, r) => {
       const list = instances(ctx.store.doc, ctx.ref, ym, { now: ctx.now() });
       const a = actualOf(ctx.store.doc, ym, r, list);
@@ -219,8 +217,8 @@ function monthColumns(pass, ym) {
       return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
         a.from === 'calendar' ? h('span.tag.plain', { title: 'From entries marked Paid on the cash flow calendar' }, 'calendar') : null,
         // B6.11: one tap when the estimate turned out right.
-        a.value == null && estimateOf(ctx.store.doc, ym, r).value != null ? h('button.btn.small.confirm-est', { type: 'button', title: 'It came out as estimated: use the estimate as the actual', 'aria-label': `Same as the estimate for ${r.name || 'this line'}`,
-          onclick: () => set(estimateOf(ctx.store.doc, ym, r).value) }, '✓ As estimated') : null,
+        a.value == null && estimateOf(ctx.store.doc, ym, r).value != null ? h('button.btn.small.confirm-est', { type: 'button', title: 'It came out as planned: use the plan as the actual', 'aria-label': `Same as the plan for ${r.name || 'this line'}`,
+          onclick: () => set(estimateOf(ctx.store.doc, ym, r).value) }, '✓ As planned') : null,
         moneyInput(a.from === 'typed' ? a.value : null, set, { hint: a.value == null ? 'Add actual' : moneyText(a.value), key: `${r.id}:act:${ym}` }));
     } },
     { label: 'Difference', num: true, render: (ctx, r) => {
@@ -228,7 +226,7 @@ function monthColumns(pass, ym) {
       const e = estimateOf(ctx.store.doc, ym, r).value, a = actualOf(ctx.store.doc, ym, r, list).value;
       if (e == null || a == null) return h('span.muted', {}, '');
       const d = a - e;
-      const share = e ? ` (${d > 0 ? '+' : '−'}${Math.round(Math.abs(d) / e * 100)}%)` : ''; // B6.11: and as a % of the estimate
+      const share = e ? ` (${d > 0 ? '+' : '−'}${Math.round(Math.abs(d) / e * 100)}%)` : ''; // B6.11: and as a % of the plan
       return h(`span.diff${d > 0.5 ? '.over' : d < -0.5 ? '.under' : ''}`, {}, Math.abs(d) < 0.5 ? 'On plan' : `${d > 0 ? '+' : '−'}${money(Math.abs(d))}${share}`);
     } }];
   return [];
