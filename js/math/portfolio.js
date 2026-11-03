@@ -168,6 +168,14 @@ export function yearlyContribution(v = {}, payFrequency = null) {
   return v.contribution * (PAYS[payFrequency] ?? 26);
 }
 
+// Answer 91: a monthly amount typed in "A month in", saved back in the cadence the contribution was entered in.
+// Per paycheck stays per paycheck; only a blank or yearly entry saves as yearly.
+export function contributionFromMonthly(monthly, v = {}, payFrequency = null) {
+  if (isBlank(monthly)) return { contribution: null };
+  if (v.contributionPer === 'Paycheck' && !isBlank(v.contribution)) return { contribution: Math.round(monthly * 12 / (PAYS[payFrequency] ?? 26) * 100) / 100, contributionPer: 'Paycheck' };
+  return { contribution: monthly * 12, contributionPer: 'Year' };
+}
+
 // 401(k) match tiers (B3.3): e.g. 100% of the first 3%, then 50% of the next 1%. Tiers stack in order.
 export function matchFromTiers({ contributionPct, tiers = [], gross }) {
   if (isBlank(contributionPct) || isBlank(gross) || !tiers.length) return null;

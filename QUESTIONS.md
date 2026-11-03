@@ -138,6 +138,10 @@ Each one has the default used so the build could keep going. Answer here or in t
 
 ## Answered (Phase 3.5, Nov 3 2026)
 
+- 79 to 86: answered and built in the answers commits (Month end; Home opens Prep or Live; stricter payment matching with Yes / No; Roth 401(k) in Saved from paycheck; yearly-cost fund note; Paid from on Health; fields.json from the spec with the old-name map; new names on the phone tabs).
+- 87 Keep the Nov 3 sub-tab order. 88 No new status. Both as built.
+- 89 to 91: answered and built (see PROGRESS).
+
 - 70 Savings rate headline: answered. The headline counts 401(k) and HSA money from the paycheck plus the employer match (built in the reorganize pass; the old M28 is the second line).
 - The employer match: answered. It is its own income line (it shows as its own line on the income and spending statement, M63, above taxes).
 

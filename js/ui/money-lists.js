@@ -7,7 +7,7 @@ import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, month
 import { limitUsed } from '../math/assets.js';
 import { accountBlocks, accountFlags, stampBalance } from './account-detail.js';
 import { is401k, yearly401k } from './account-specific.js';
-import { netWorthCheck, yearlyContribution, link401k } from '../math/portfolio.js';
+import { netWorthCheck, yearlyContribution, link401k, contributionFromMonthly } from '../math/portfolio.js';
 import { benefitYearly, withholdingFlag } from '../benefits.js';
 import { lifeAdminItems, lifeAdminPatch, LIFE_STATES } from '../lifeadmin.js';
 import { drafttShares, DRAFTT } from '../math/spending.js';
@@ -236,11 +236,11 @@ export function assetList(ref) {
         if (r.values.group === 'investment') return select(ref.lists.investmentTypes.filter(t => t !== 'HSA' || ctx.gates().hsa || r.type === 'HSA'), r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Account type', width: 160, key: `${r.id}:type` });
         return select(ref.lists.cashTypes, r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Account type', width: 160, key: `${r.id}:type` }); // B2.18: the kind of account, apart from the bank
       } },
-      // Focus mode only: what goes in each month, typed as a month (kept as a yearly contribution).
+      // Focus mode only: what goes in each month, typed as a month and saved in the cadence it was entered in (answer 91).
       { label: 'A month in', num: true, focusOnly: true, render: (ctx, r, m, up) => {
         if (r.kind !== 'account' || r.values.group !== 'investment') return null;
         const per = yearlyContribution(r.values, m?.inputs.payFrequency ?? null);
-        return moneyInput(per == null ? null : Math.round(per / 12 * 100) / 100, v => up({ contribution: v == null ? null : v * 12, contributionPer: 'Year' }), { hint: 'Add a month', key: `${r.id}:month-in` });
+        return moneyInput(per == null ? null : Math.round(per / 12 * 100) / 100, v => up(contributionFromMonthly(v, r.values, m?.inputs.payFrequency ?? null)), { hint: 'Add a month', key: `${r.id}:month-in` });
       } },
       owner,
     ],
