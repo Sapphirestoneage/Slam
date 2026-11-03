@@ -253,3 +253,24 @@ ul.find-days { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
 .layer-bar span { display: block; height: 100%; background: var(--assets); }
 .layer-row.full .layer-bar span { background: var(--good); }
 @media (max-width: 760px) { .layer-row { grid-template-columns: 1fr auto; } .layer-row .layer-bar { grid-column: 1 / -1; } }
+/* Phase 3.5: Plan › FOO. */
+.foo-path { margin-bottom: var(--s3); }
+.foo-stops { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; overflow-x: auto; }
+.foo-stop { flex: 1 1 0; min-width: 84px; display: flex; flex-direction: column; gap: 2px; padding: 8px; border-top: 4px solid var(--border-row); border-radius: 4px; font-size: .8125rem; position: relative; }
+.foo-stop.done { border-top-color: var(--good); }
+.foo-stop.in-progress, .foo-stop.next { border-top-color: var(--goals); }
+.foo-stop.here { background: color-mix(in srgb, var(--goals) 10%, transparent); }
+.foo-here { font-weight: 700; color: var(--goals); }
+.foo-n { font-weight: 800; color: var(--text-2); }
+.foo-name { font-weight: 600; }
+.foo-dates { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+.foo-cols.two { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--s3); align-items: start; }
+.foo-steps { display: grid; gap: 6px; }
+.foo-step { background: var(--card); border-radius: var(--r-card); box-shadow: var(--shadow); padding: var(--s2) var(--s3); }
+.foo-step.here { outline: 2px solid var(--goals); }
+.foo-step-head { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; min-height: 36px; }
+.foo-when { min-width: 72px; text-align: right; }
+.foo-flag { margin: 4px 0; font-size: .875rem; padding: 4px 10px; border-left: 3px solid var(--goals); }
+.foo-part { display: flex; justify-content: space-between; gap: var(--s3); font-size: .9375rem; }
+.foo-original ol { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+@media (max-width: 760px) { .foo-stops { flex-direction: column; } .foo-stop { border-top: 0; border-left: 4px solid var(--border-row); } .foo-stop.done { border-left-color: var(--good); } .foo-stop.in-progress, .foo-stop.next { border-left-color: var(--goals); } .foo-cols.two { grid-template-columns: 1fr; } }

@@ -11,6 +11,7 @@ import { listsScreen, sessionScreen, discoveryScreen } from './ui/tools-ui.js';
 import { overviewScreen, onePagerScreen, historyScreen } from './ui/report-ui.js';
 import { statementsScreen } from './ui/statements-ui.js';
 import { layersCard } from './ui/layers-ui.js';
+import { fooScreen } from './ui/foo-ui.js';
 import { goalsScreen, timelineScreen, payoffScreen, nextYearScreen, scenariosScreen } from './ui/plan-ui.js';
 import { AREAS } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
@@ -177,6 +178,7 @@ export const SCREENS = {
   'cash-flow/close': tabPage('cash-flow', 'close'),
 
   'plan/goals': (app, ctx) => (app.hasClient ? goalsScreen(app, ctx) : [head('Goals'), noClient(app)]),
+  'plan/foo': (app, ctx) => (app.hasClient ? fooScreen(app, ctx, { flags: app.flags }) : [head('FOO'), noClient(app)]),
   'plan/timeline': (app, ctx) => (app.hasClient ? timelineScreen(app, ctx) : [head('Timeline'), noClient(app)]),
   'plan/debt-payoff': (app, ctx) => (app.hasClient ? payoffScreen(app, ctx) : [head('Debt payoff'), noClient(app)]),
   'plan/next-12-months': (app, ctx) => (app.hasClient ? nextYearScreen(app, ctx) : [head('Next 12 months'), noClient(app)]),

@@ -1,0 +1,12 @@
+[
+  { "id": "max-401k-past-coast", "step": 6, "all": ["maxing401k", "pastCoast", "launchWaiting"],
+    "text": "Your 401(k) is still maxed past Coast FI while the launch window waits. Some of that could fund the launch instead." },
+  { "id": "extra-low-rate-before-big-e", "step": 9, "all": ["extraOnLowRateDebt", "bigENotFull"],
+    "text": "Extra payments are going to low-rate debt before big e is full. The cushion comes first; the debt can wait at its minimum." },
+  { "id": "past-quiet-quitting-no-goal", "step": 6, "all": ["pastQuietQuitting", "contributingPastNeed", "noGoalForExtra"],
+    "text": "You are putting in more than Quiet Quitting FI needs, with no goal named for the extra. Naming one keeps it on purpose." },
+  { "id": "forgiveness-loan-extra", "step": 3, "all": ["forgivenessLoanExtra"],
+    "text": "A loan headed for PSLF or forgiveness is getting extra payments. The minimum is enough; the extra could work elsewhere." },
+  { "id": "cash-above-layers", "step": 4, "all": ["cashAboveLayers"],
+    "text": "Cash is sitting above big e and your sinking funds. That extra could be invested." }
+]
