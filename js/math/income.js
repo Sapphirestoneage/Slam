@@ -155,28 +155,34 @@ export function incomeRow(r, { filingStatus = 'Single', ref, place = null }) {
   const salary = typedGross ?? null;
   // A Roth 401(k) (v.k401Roth, or the Roth part of Both, v.k401RothShare) comes out after tax: same take-home effect, no tax cut.
   const k401 = (g, pct = v.contributionPct) => (g ?? 0) * (pct ?? 0) + (v.contributionPct == null ? (v.k401Paycheck ?? 0) * perYear : 0);
-  const others = ((v.premium ?? 0) + (v.hsaFsa ?? 0) + (v.otherPretax ?? 0)) * perYear;
+  // Benefits at work (answer to 58): commuter and the FSAs come out before tax; ESPP and after-tax 401(k) after tax.
+  const others = ((v.premium ?? 0) + (v.hsaFsa ?? 0) + (v.otherPretax ?? 0) + (v.benefitPretax ?? 0)) * perYear;
+  const afterTax = (v.benefitAfterTax ?? 0) * perYear;
   // The Roth share of the 401(k) money: all of it (Roth), a part (Both, as a % or dollars a paycheck), or none.
   const rothOf = total => (v.k401Roth ? total : !v.k401RothShare ? 0
     : Math.min(total, v.k401RothShare.pct != null ? total * v.k401RothShare.pct : (v.k401RothShare.perPaycheck ?? 0) * perYear));
-  const pretax = others + k401(salary) - rothOf(k401(salary));
-  const roth = rothOf(k401(salary));
+  // Each piece taken from the paycheck, a year, for the "Comes out of your paycheck" section.
+  const partsAt = g => ({ k401: k401(g) - rothOf(k401(g)), k401Roth: rothOf(k401(g)), premium: (v.premium ?? 0) * perYear, hsaFsa: (v.hsaFsa ?? 0) * perYear,
+    otherPretax: (v.otherPretax ?? 0) * perYear, benefitPretax: (v.benefitPretax ?? 0) * perYear, afterTax, paychecks: perYear });
+  const split = g => ({ pretax: others + k401(g) - rothOf(k401(g)), roth: rothOf(k401(g)) });
+  const taxArgs = g => { const x = split(g); return { pretax: x.pretax, roth: x.roth + afterTax }; }; // after-tax money: like Roth, no tax cut
+  const pretax = split(salary).pretax;
+  const roth = split(salary).roth;
   const selfEmployed = taxType === '1099';
   if (taxType && salary !== null && (v.basis === 'Gross' || r.amount == null)) { // gross only: take-home is solved
-    const t = takeHomeFromGross({ gross: salary, pretax, roth, filingStatus, selfEmployed, place }, ref);
-    return { takeHome: { ...t, value: t.value / 12, text: t.text, status: 'Computed' }, gross: salary, pretax, roth, taxType, computed: 'takeHome' };
+    const t = takeHomeFromGross({ gross: salary, ...taxArgs(salary), filingStatus, selfEmployed, place }, ref);
+    return { takeHome: { ...t, value: t.value / 12, text: t.text, status: 'Computed' }, gross: salary, pretax, roth, afterTax, parts: partsAt(salary), taxType, computed: 'takeHome' };
   }
   const th = r.amount == null ? needs('M01', ['take-home']) : monthlyFrom(r.amount, r.per, v.payFrequency);
-  if (!taxType || th.value === null) return { takeHome: th, gross: salary, pretax, roth, taxType, computed: null };
-  if (salary !== null) return { takeHome: th, gross: salary, pretax, roth, taxType, computed: null }; // both typed: kept as typed (R046)
+  if (!taxType || th.value === null) return { takeHome: th, gross: salary, pretax, roth, afterTax, parts: partsAt(salary), taxType, computed: null };
+  if (salary !== null) return { takeHome: th, gross: salary, pretax, roth, afterTax, parts: partsAt(salary), taxType, computed: null }; // both typed: kept as typed (R046)
   // A 401(k) % is a share of the gross being solved for, so solve again with it until it settles.
-  const split = g => ({ pretax: others + k401(g) - rothOf(k401(g)), roth: rothOf(k401(g)) });
-  let g = grossFromTakeHome({ takeHome: th.value * 12, ...split(null), filingStatus, selfEmployed, place }, ref);
+  let g = grossFromTakeHome({ takeHome: th.value * 12, ...taxArgs(null), filingStatus, selfEmployed, place }, ref);
   for (let i = 0; i < 6 && v.contributionPct; i++) {
-    const next = grossFromTakeHome({ takeHome: th.value * 12, ...split(g.value), filingStatus, selfEmployed, place }, ref);
+    const next = grossFromTakeHome({ takeHome: th.value * 12, ...taxArgs(g.value), filingStatus, selfEmployed, place }, ref);
     if (Math.abs(next.value - g.value) < 1) { g = next; break; }
     g = next;
   }
   const out = split(g.value);
-  return { takeHome: th, gross: g.value, grossResult: g, pretax: out.pretax, roth: out.roth, taxType, computed: 'gross' };
+  return { takeHome: th, gross: g.value, grossResult: g, pretax: out.pretax, roth: out.roth, afterTax, parts: partsAt(g.value), taxType, computed: 'gross' };
 }

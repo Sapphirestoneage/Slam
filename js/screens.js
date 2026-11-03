@@ -1,5 +1,6 @@
 // Every screen's first state, word for word from the Words and states tab. Later phases fill them in.
 import { h, icon } from './ui/dom.js';
+import { paycheckSection } from './ui/paycheck-ui.js';
 import * as S from './ui/staples.js';
 import { creditCard, cardsLink, debtList, spendingList, debtCharts, debtRatios } from './ui/lists.js';
 import { incomeList, benefitList, variableBlock, assetList, protectionList, taxesScreen, lifeAdminScreen, listCompletion, incomeCharts, assetCharts } from './ui/money-lists.js';
@@ -74,6 +75,7 @@ const MM = {
       g.betweenJobs && !ctx.store.find(r => r.kind === 'income' && r.type === 'Unemployment').length
         ? h('div.banner-inline', {}, 'Between jobs: add unemployment benefits so the runway counts them.', S.button('Add unemployment', { iconName: 'plus', onClick: () => ctx.store.add('income', { name: 'Unemployment benefits', per: 'week' }, { type: 'Unemployment' }) })) : null,
       withChart(ctx, incomeList(), incomeCharts, 'income'),
+      S.live(ctx, () => paycheckSection(ctx)), // answer to 58: everything the paycheck pays first, in one place
       S.focusMore(ctx, 'income:extra', [g.variable ? variableBlock(ctx) : null, S.recordList(ctx, benefitList())].filter(Boolean))];
   } },
   debt: { title: 'Debt', sub: 'Every debt and its payoff', body: (app, ctx) => (ctx.gates().areas.debt === false

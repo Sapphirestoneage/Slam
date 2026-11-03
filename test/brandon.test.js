@@ -411,3 +411,15 @@ test('74: who covers it reads into four answers; included in rent and N/A count 
   assert.equal(myShare({ amount: 40, per: 'month', whoPays: 'N/A' }).value, 0);
   assert.equal(myShare({ amount: 90, per: 'month', whoPays: 'Split', splitBy: 3 }).value, 30);
 });
+test('58: Benefits at work come out of the paycheck: commuter and FSAs before tax, ESPP after tax; each piece is returned', () => {
+  const s = fresh();
+  s.add('income', { name: 'Job', amount: 78000, per: 'year', values: { basis: 'Gross', payFrequency: '2 weeks', k401Paycheck: 150 } }, { type: 'Job' });
+  const base = metrics(s.doc, ref, { now: new Date('2026-11-03') }).inputs.income[0];
+  s.setDoc('profile', { benefits: { commuter: { have: 'Yes', amount: 60, per: 'Paycheck' }, espp: { have: 'Yes', amount: 1300, per: 'Year' } } });
+  const i = metrics(s.doc, ref, { now: new Date('2026-11-03') }).inputs.income[0];
+  assert.equal(i.parts.benefitPretax / 26, 60);
+  assert.equal(i.parts.afterTax / 26, 50);
+  assert.equal(i.parts.k401 / 26, 150);
+  assert.ok(Math.abs((i.pretax - base.pretax) - 60 * 26) < 0.01); // commuter lowers taxable pay
+  assert.ok(i.takeHome.value < base.takeHome.value); // and both come out before it lands
+});

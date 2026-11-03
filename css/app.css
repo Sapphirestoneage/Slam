@@ -311,3 +311,8 @@ table.rows tr.group .group-line .fold { width: auto; flex: 1; }
 .sure-menu .btn.small[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
 .sure-menu hr { border: 0; border-top: 1px solid var(--border-row); margin: 0; }
 .metric .so { font-size: .875rem; color: var(--text); line-height: 1.35; margin-top: 4px; } .metric .so a { font-weight: 600; white-space: nowrap; }
+/* Comes out of your paycheck */
+.pay-job { padding-bottom: var(--s3); border-bottom: 1px dashed var(--border-row); }
+.pay-line { display: grid; grid-template-columns: minmax(180px, 280px) auto 1fr; gap: 10px; align-items: center; max-width: 640px; }
+.pay-line .num { text-align: right; font-variant-numeric: tabular-nums; }
+.pay-total { font-weight: 700; }

@@ -56,6 +56,12 @@ export function inputsOf(doc, ref, now = new Date()) {
       if (share) out = { ...out, values: { ...out.values, k401RothShare: share } };
     }
     if (health && r.kind === 'income') out = { ...out, values: { ...out.values, premium: r === healthJob ? healthPerPay : 0 } };
+    if (r === link.job) { // Benefits at work, a paycheck (answer to 58)
+      const ben = doc.profile?.benefits || {}, n = PAYS[r.values.payFrequency] ?? 26;
+      const per = k => (ben[k]?.have === 'Yes' && ben[k].amount != null ? (ben[k].per === 'Year' ? ben[k].amount / n : ben[k].amount) : 0);
+      const pre = per('commuter') + per('healthFsa') + per('dependentFsa'), after = per('espp') + per('afterTax401k');
+      if (pre || after) out = { ...out, values: { ...out.values, benefitPretax: pre, benefitAfterTax: after } };
+    }
     return out;
   };
   const income = live.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(withLink(r), { filingStatus, ref, place }) }));
