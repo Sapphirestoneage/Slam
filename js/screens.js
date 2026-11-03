@@ -127,7 +127,7 @@ export function cashFlowStrip(ctx) {
 
 const NET_WORTH = { assets: MM.assets, debt: MM.debt, protection: MM.protection };
 const own = (title, fn) => ({ title, ownHead: true, body: (app, ctx) => [fn(app, ctx)].flat() });
-const CASH_FLOW = { income: MM.income, taxes: MM.taxes, budget: own('Budget', budgetScreen), calendar: own('Calendar', calendarScreen), close: own('Month-end close', closeScreen) };
+const CASH_FLOW = { income: MM.income, taxes: MM.taxes, budget: own('Budget', budgetScreen), calendar: own('Calendar', calendarScreen), close: own('Month end', closeScreen) };
 const TAB_PARTS = { 'net-worth': [NET_WORTH, netWorthStrip, 'Net worth'], 'cash-flow': [CASH_FLOW, cashFlowStrip, 'Cash flow'] };
 // One page (X013): every part of a tab top to bottom, each under its own heading. Net worth and Cash flow each have one.
 function tabPage(tabId, id) {

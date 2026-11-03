@@ -15,7 +15,7 @@ Net worth,Protection,Insurance coverage and gaps,Coverage here; the premium show
 Cash flow,Taxes,"Filing status, last year, estimates",Second step of the waterfall; rates show on Report
 Cash flow,Budget,"Every spending line, the five passes, fixed/variable, who pays, irregular costs",Lines appear on the calendar
 Cash flow,Calendar,"Calendar entries, maybe money, wins, low balance line",Card due dates come from Debt
-Cash flow,Month-end close,"Close, misses, carry adjustments",Actuals feed Report > History
+Cash flow,Month end,"Close, misses, carry adjustments",Actuals feed Report > History
 Plan,Goals,"FI target, assumptions, milestones",FI date shows on Home
 Plan,Timeline,FI timeline with sliders and pace bands,
 Plan,Debt payoff,Payoff chart and extra payment slider,Reads Debt
@@ -32,7 +32,7 @@ Say the client got a car,Home › About you › gates hub › Car ✓,3 clicks; 
 Log a paycheck that arrived,Cash flow › Calendar › chip › Got it,3 clicks,
 Mark a bill as partly paid,Cash flow › Calendar › chip › Partial,3 clicks,
 Link a bill to a card,More ▸ › Paid with › card name,3 clicks from the bill,Or check several bills and use Link to card in the bulk bar
-Close the month,Cash flow › Month-end close › Review › Close month,3 clicks,
+Close the month,Cash flow › Month end › Review › Close month,3 clicks,
 See the FI date,Home (it's on Money in one line),0-1 clicks,
 Find the HSA,🔍 Find › type 'HSA',1 click,
 Jot something the client said,📝,1 click,

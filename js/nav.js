@@ -9,7 +9,7 @@ export const TABS = [
     { id: 'assets', name: 'Assets', area: 'assets' }, { id: 'debt', name: 'Debt', area: 'debt' }, { id: 'protection', name: 'Protection', area: 'goals' }] },
   { id: 'cash-flow', name: 'Cash flow', job: 'Money in and out: income, taxes, budget, calendar, close', subs: [
     { id: 'income', name: 'Income', area: 'income' }, { id: 'taxes', name: 'Taxes', area: 'taxes' }, { id: 'budget', name: 'Budget', area: 'needs' },
-    { id: 'calendar', name: 'Calendar', area: 'needs' }, { id: 'close', name: 'Month-end close', area: 'needs' }] },
+    { id: 'calendar', name: 'Calendar', area: 'needs' }, { id: 'close', name: 'Month end', area: 'needs' }] },
   { id: 'plan', name: 'Plan', job: 'The future: goals, timeline, events', subs: [
     { id: 'goals', name: 'Goals', area: 'goals' }, { id: 'timeline', name: 'Timeline', area: 'goals' },
     { id: 'debt-payoff', name: 'Debt payoff', area: 'debt' }, { id: 'next-12-months', name: 'Next 12 months', area: 'goals' },
@@ -26,6 +26,8 @@ export const MOVED = {
 const MOVED_PLACES = { 'My Money': 'my-money', Spending: 'spending' };
 const OLD_SUBS = { Profile: 'profile', Income: 'income', Taxes: 'taxes', Debt: 'debt', Assets: 'assets', Protection: 'protection',
   Budget: 'budget', 'Cash flow calendar': 'calendar', 'Month-end close': 'close' };
+// Sub-tabs renamed in place: an old name still finds its page.
+const RENAMED_SUBS = { 'Month-end close': 'Month end' };
 // Behind the gear, never a main tab (R076).
 export const TOOLS = { id: 'tools', name: 'Coach tools', job: 'Lists, data and session', subs: [
   { id: 'lists', name: 'Lists' }, { id: 'session', name: 'Session' }, { id: 'data', name: 'Data' }, { id: 'discovery', name: 'Discovery' }] };
@@ -49,7 +51,7 @@ export function routeForPlace(place) {
   if (MOVED_PLACES[tabName]) return parseRoute(`#/${MOVED_PLACES[tabName]}/${OLD_SUBS[subName] ?? ''}`).hash; // an old Lives on
   const tab = ALL.find(t => t.name === tabName);
   if (!tab) return null;
-  const sub = tab.subs.find(s => s.name === subName) || tab.subs[0];
+  const sub = tab.subs.find(s => s.name === (RENAMED_SUBS[subName] ?? subName)) || tab.subs[0];
   return routeOf(tab.id, sub.id);
 }
 

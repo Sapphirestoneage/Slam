@@ -442,11 +442,11 @@ export function closeScreen(app, ctx) {
   const months = Array.from({ length: 6 }, (_, k) => addMonths(now, -k)).filter(ym => ym >= since);
   const views = months.map(ym => monthView(doc, ctx.ref, ym, { now: ctx.now() }));
   const any = views.some(v => v.rows.some(r => (r.estimate ?? 0) > 0));
-  if (!any) return [head('Month-end close', 'Plan vs actual'), h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No closed months yet'),
+  if (!any) return [head('Month end', 'Plan vs actual'), h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No closed months yet'),
     h('span.muted', {}, 'Plan a month on Budget, mark what was paid on the calendar, then close it here.'), S.button('Open Budget', { iconName: 'right', onClick: () => app.go('#/cash-flow/budget') })))];
   UI.review ??= views.find(v => !v.closed)?.ym ?? now;
   const acc = gutAccuracy(closedMonths(doc));
-  return [head('Month-end close', 'Plan vs actual'),
+  return [head('Month end', 'Plan vs actual'),
     acc.hidden ? null : S.summaryStrip(ctx, [{ label: 'Gut accuracy', result: acc, note: 'How far the first guess was off, on average' }]),
     h('div.close-list', {}, views.map(v => closeRow(app, ctx, v)))];
 }
@@ -475,7 +475,7 @@ function closeRow(app, ctx, v) {
 const CLOSE_STEPS = ['Confirm actuals', 'Review biggest misses', 'Carry forward'];
 UI.closeStep = {};
 function stepper(app, v, step) {
-  return h('ol.close-steps', { 'aria-label': 'Month-end close steps' }, CLOSE_STEPS.map((name, i) => h(`li${i + 1 === step ? '.on' : i + 1 < step ? '.done' : ''}`, {},
+  return h('ol.close-steps', { 'aria-label': 'Month end steps' }, CLOSE_STEPS.map((name, i) => h(`li${i + 1 === step ? '.on' : i + 1 < step ? '.done' : ''}`, {},
     h('button', { type: 'button', 'aria-current': i + 1 === step ? 'step' : null, onclick: () => { UI.closeStep[v.ym] = i + 1; app.render(); } }, h('span.n', {}, String(i + 1)), name))));
 }
 function review(app, ctx, v, doClose) {

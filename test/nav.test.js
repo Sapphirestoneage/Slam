@@ -9,7 +9,7 @@ test('five tabs, same order, named as decided (R148)', () => {
   assert.deepEqual(TABS.map(t => t.name), ['Home', 'Net worth', 'Cash flow', 'Plan', 'Report']);
   assert.deepEqual(TABS[0].subs.map(s => s.name), ['About you', 'Prep', 'Live', 'Wrap-up']);
   assert.deepEqual(TABS[1].subs.map(s => s.name), ['Assets', 'Debt', 'Protection']);
-  assert.deepEqual(TABS[2].subs.map(s => s.name), ['Income', 'Taxes', 'Budget', 'Calendar', 'Month-end close'], 'waterfall order');
+  assert.deepEqual(TABS[2].subs.map(s => s.name), ['Income', 'Taxes', 'Budget', 'Calendar', 'Month end'], 'waterfall order');
 });
 test('routes: unknown falls back to the first sub-tab', () => {
   assert.equal(parseRoute('#/net-worth/debt').sub.name, 'Debt');
@@ -39,6 +39,7 @@ test('old routes redirect to the new homes (bookmarks, Find, every number links 
   assert.equal(routeForPlace('Spending › Cash flow calendar'), '#/cash-flow/calendar');
   assert.equal(routeForPlace('Cash flow › Taxes'), '#/cash-flow/taxes');
   assert.equal(routeForPlace('Home › About you'), '#/home/profile');
+  assert.equal(routeForPlace('Cash flow › Month-end close'), '#/cash-flow/close', 'a renamed sub-tab still lands');
   assert.equal(parseRoute('#/home').sub.name, 'About you', 'About you is the first stop in Home');
 });
 test('no field lives on an old tab', () => {

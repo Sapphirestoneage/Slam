@@ -59,3 +59,4 @@ Manual browser checks for this pass (the automated ones ran in Chromium; worth o
 ## Answers to the polish questions (Nov 3)
 
 - 1 Phone bottom tabs: on phones the five tabs (Home, Net worth, Cash flow, Plan, Report) sit in a bar at the bottom; the toast and Report this sit above it. The top bar is not rebuilt and there is no Tools sheet (the phone branch stays unmerged); only the $ / Hours / FI days box got a minimum width so it is not squeezed to a sliver.
+- 2 "Month-end close" is now "Month end": the sub-tab, its page, the One page part and the step list's label; the spec's Navigation and Screens tabs say the same (csv rebuilt). Old "Month-end close" Lives on text still finds the page.
