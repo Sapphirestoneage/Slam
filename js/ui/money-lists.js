@@ -1,7 +1,7 @@
 // My Money lists (build phase 5, Mockup: Income, Assets, Protection, Taxes): one record type, viewed by sub-tab.
 // Detail stays behind More (R023); fields that do not apply to this household never show (gates.js).
 import { h } from './dom.js';
-import { amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile } from './staples.js';
+import { amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park } from './staples.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
 import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom } from '../math/income.js';
 import { limitUsed } from '../math/assets.js';
@@ -293,38 +293,79 @@ function assetChecks(ctx, m) {
   return out.length ? h('div.stack.asset-checks', { style: { gap: '4px', marginBottom: '12px' } }, out.map(t => warnTag(t))) : null;
 }
 
-// ---------- Protection (Mockup: Protection › Coverage row) ----------
+// ---------- Protection (Mockup: Protection › Coverage row). Cash flow, not net worth (B4) ----------
+const premiumMonthly = (r, freq) => (r.amount == null ? null : r.per === 'paycheck' ? monthlyFrom(r.amount, 'paycheck', freq).value : r.amount);
+const payFreqOf = ctx => ctx.metrics().inputs.income.find(x => x.r.values.payFrequency)?.r.values.payFrequency ?? null;
+const premiumLine = (ctx, r) => ctx.store.find(b => b.kind === 'bill' && b.linkedTo === r.id)[0] || null;
+const PREMIUM_CAT = { Health: 'Health insurance', 'Renters or home': 'Renters or home insurance', Car: 'Car insurance' };
+// The premium's spending line: one tap adds it to the Budget; later premium edits keep it in step.
+function premiumOnBudget(ctx, r) {
+  const line = premiumLine(ctx, r);
+  const monthly = premiumMonthly(r, payFreqOf(ctx));
+  if (line) return h('span.muted.small', {}, `On the Budget as ${line.name}`);
+  if (monthly == null) return h('span.muted.small', {}, 'Add the premium first');
+  return button('Add to the Budget', { size: 'small', iconName: 'plus', onClick: () => {
+    ctx.store.add('bill', { name: `${r.type === 'Renters or home' ? 'Renters insurance' : `${r.type} insurance`}`, amount: Math.round(monthly * 100) / 100, linkedTo: r.id,
+      values: { category: PREMIUM_CAT[r.type] ?? 'Fees', draftt: r.type === 'Car' ? 'Transportation' : r.type === 'Renters or home' ? 'Accommodation' : 'Therapy', amountType: 'Fixed', timing: 'Fixed date' } });
+    toast('Premium added to the Budget as a fixed line.');
+  } });
+}
 export function protectionList() {
   const types = ctx => PROTECTION_TYPES.filter(t => t !== 'Car' || ctx.gates().car !== false);
+  const later = (ctx, r, f) => park(ctx, r, f);
+  const pair = (...kids) => h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, ...kids);
   return {
     kind: 'coverage', area: 'goals', title: 'Coverage', thing: { one: 'coverage', plural: 'coverage rows' }, defaultType: 'Health',
     filter: r => r.kind === 'coverage',
     picker: ctx => ({ top: types(ctx).slice(0, 4), other: types(ctx).slice(4) }),
-    // The usual four in one click; mark Don't for a gap.
+    // The usual list in one click (renters insurance included); mark Don't for a gap.
     headerExtra: ctx => (ctx.store.find(r => r.kind === 'coverage').length ? null : h('button.btn.small', { type: 'button', onclick: () => ctx.store.transaction('Add the usual coverage', () => {
       for (const t of types(ctx)) ctx.store.add('coverage', { name: null, values: {} }, { type: t });
     }) }, 'Add the usual list')),
     coreFields: ['have'],
     columns: [
-      { label: 'Coverage', render: (ctx, r, m, up) => select(types(ctx), r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Coverage type', width: 170, key: `${r.id}:type` }) },
+      { label: 'Coverage', render: (ctx, r, m, up) => select(types(ctx).map(t => [t, t === 'Renters or home' && ctx.gates().housing !== 'Own' ? 'Renters insurance' : t]), r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Coverage type', width: 170, key: `${r.id}:type` }) },
       { label: 'Have it?', render: (ctx, r, m, up) => toggle(['Have it', "Don't", 'Not sure'], r.values.have ?? null, v => up({ have: v }), { label: 'Have it' }) },
-      { label: 'Premium / mo', num: true, render: (ctx, r, m, up) => moneyInput(r.amount, v => up({ amount: v, per: 'month' }), { hint: 'Add premium', key: `${r.id}:amount` }) },
+      { label: 'Premium', num: true, render: (ctx, r, m, up) => pair(moneyInput(r.amount, v => {
+        up({ amount: v });
+        const line = premiumLine(ctx, r); // keep the Budget line in step
+        if (line && v != null) ctx.store.update(line.id, { amount: Math.round(premiumMonthly({ ...r, amount: v }, payFreqOf(ctx)) * 100) / 100 });
+      }, { hint: 'Add premium', key: `${r.id}:amount` }),
+        toggle([['paycheck', 'Paycheck'], ['month', 'Month']], r.per === 'paycheck' ? 'paycheck' : 'month', v => up({ per: v }), { label: 'Premium per' })) },
       owner,
     ],
-    secondary: (ctx, r, up) => [
-      labelled('Coverage amount', moneyInput(r.values.coverage, v => up({ coverage: v }), { hint: 'Add amount' })),
-      labelled('Through employer?', toggle(['Yes', 'No'], r.values.employer ?? null, v => up({ employer: v }), { label: 'Through employer' }), { note: r.values.employer === 'Yes' ? 'Ends if the job ends' : null }),
-      r.type === 'Health' ? labelled('Deductible and out-of-pocket max', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
-        moneyInput(r.values.deductible, v => up({ deductible: v }), { hint: 'Deductible' }), moneyInput(r.values.oopMax, v => up({ oopMax: v }), { hint: 'OOP max' }))) : null],
-    footerTotal: (ctx, recs) => amount(ctx, recs.some(r => r.amount != null) ? sum(recs, r => r.amount) : null),
+    secondary: (ctx, r, up) => {
+      const v = r.values;
+      const employer = labelled('Through employer?', toggle(['Yes', 'No'], v.employer ?? null, x => up({ employer: x }), { label: 'Through employer' }), { note: v.employer === 'Yes' ? 'Ends if the job ends' : null });
+      const paidFrom = labelled('Paid from', toggle(['Paycheck', 'Budget line'], v.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null), x => up({ paidFrom: x }), { label: 'Paid from', clearable: true }),
+        { note: (v.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null)) === 'Paycheck' ? 'Already out of your take-home' : null });
+      const budget = (v.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null)) === 'Budget line' ? labelled('Spending line', premiumOnBudget(ctx, r)) : null;
+      if (r.type === 'Health') return [employer, paidFrom, budget,
+        labelled('Deductible: in-network, out-of-network', pair(moneyInput(v.deductible, x => up({ deductible: x }), { hint: 'In' }), moneyInput(v.deductibleOut, x => up({ deductibleOut: x }), { hint: 'Out' })), later(ctx, r, 'deductible')),
+        labelled('Out-of-pocket max: in, out', pair(moneyInput(v.oopMax, x => up({ oopMax: x }), { hint: 'In' }), moneyInput(v.oopMaxOut, x => up({ oopMaxOut: x }), { hint: 'Out' })), { note: 'The most you pay in a bad year', ...later(ctx, r, 'oopMax') }),
+        labelled('Copays: doctor, specialist, urgent care', pair(moneyInput(v.copayPcp, x => up({ copayPcp: x }), { hint: 'Doctor' }), moneyInput(v.copaySpecialist, x => up({ copaySpecialist: x }), { hint: 'Specialist' }), moneyInput(v.copayUrgent, x => up({ copayUrgent: x }), { hint: 'Urgent' })), later(ctx, r, 'copays'))];
+      if (r.type === 'Disability') return [employer, paidFrom, budget,
+        labelled('Short-term or long-term', toggle(['Short-term', 'Long-term', 'Both'], v.term ?? null, x => up({ term: x }), { label: 'Short or long term', clearable: true }), later(ctx, r, 'term')),
+        labelled('Pays this share of your pay', pctInput(v.benefitPct, x => up({ benefitPct: x }), { hint: 'e.g. 60' }), later(ctx, r, 'benefitPct')),
+        labelled('Pays for how long', textInput(v.duration, x => up({ duration: x }), { hint: 'e.g. 26 weeks, to age 65', width: 190 }), later(ctx, r, 'duration')),
+        labelled('Waiting period', textInput(v.waiting, x => up({ waiting: x }), { hint: 'e.g. 90 days', width: 130 }), { note: 'Before the first check', ...later(ctx, r, 'waiting') })];
+      if (r.type === 'Life') return [employer, paidFrom, budget,
+        labelled('Coverage amount', moneyInput(v.coverage, x => up({ coverage: x }), { hint: 'Add amount' }), later(ctx, r, 'coverage')),
+        labelled('Planned change', textInput(v.plannedChange, x => up({ plannedChange: x }), { hint: 'e.g. raise it when we marry', width: 260 }), later(ctx, r, 'plannedChange'))];
+      return [employer, paidFrom, budget, labelled('Coverage amount', moneyInput(v.coverage, x => up({ coverage: x }), { hint: 'Add amount' }), later(ctx, r, 'coverage'))];
+    },
+    footerTotal: (ctx, recs) => { const f = payFreqOf(ctx); return h('span', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, r => premiumMonthly(r, f)) : null), h('span.muted', {}, ' a month')); },
     strip: (ctx) => {
       const recs = ctx.visible(r => r.kind === 'coverage');
+      const f = payFreqOf(ctx);
       const gaps = recs.filter(r => r.values.have === "Don't");
       const unsure = recs.filter(r => r.values.have === 'Not sure');
-      return h('div.strip', {},
+      const unbudgeted = recs.filter(r => r.amount != null && (r.values.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null)) !== 'Paycheck' && !premiumLine(ctx, r));
+      return h('div', {}, h('div.strip', {},
         h('div.metric', {}, h('span.label', {}, 'Gaps to fill'), h('div.big', {}, String(gaps.length)), h('span.change', {}, gaps.map(r => r.type).join(', ') || 'None marked')),
         h('div.metric', {}, h('span.label', {}, 'Not sure yet'), h('div.big', {}, String(unsure.length)), h('span.change', {}, unsure.map(r => r.type).join(', ') || 'None')),
-        h('div.metric', {}, h('span.label', {}, 'Premiums a month'), h('div.big', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, r => r.amount) : null))));
+        h('div.metric', {}, h('span.label', {}, 'Premiums a month'), h('div.big', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, r => premiumMonthly(r, f)) : null)), h('span.change', {}, 'Cash flow, not net worth'))),
+      unbudgeted.length ? h('div.nudge', { style: { margin: '0 0 12px' } }, `${unbudgeted.map(r => r.type).join(', ')}: say where ${unbudgeted.length === 1 ? 'it is' : 'they are'} paid from (More), so ${unbudgeted.length === 1 ? 'it counts' : 'they count'} in your spending once.`) : null);
     },
   };
 }
@@ -394,7 +435,7 @@ const FULL = {
   debt: r => ['balance', 'apr', 'payment', ...(r.type === 'Credit card' ? ['limit', 'dueDay'] : r.type === 'Student loan' ? ['federal'] : []), 'stress'],
   account: r => [r.values.taxType === 'Both' ? 'pretaxBalance' : 'balance', 'institution', ...(r.values.group === 'investment' ? ['taxType', 'contribution'] : ['apy'])],
   asset: r => ['value', ...(LOAN_FOR[r.type] ? ['financed'] : [])],
-  coverage: r => ['have', 'amount', 'coverage'],
+  coverage: r => ['have', 'amount', r.type === 'Health' ? 'deductible' : r.type === 'Disability' ? 'benefitPct' : 'coverage'], // B4.2: health has no coverage amount
   benefit: () => ['amount', 'using'],
 };
 export function listCompletion(ctx, pred, core) {
@@ -403,7 +444,7 @@ export function listCompletion(ctx, pred, core) {
   const c = { done: 0, of: 0 }, f = { done: 0, of: 0 };
   const WORDS = { amount: 'amount', balance: 'balance', apr: 'APR', value: 'value', have: 'have it?', payFrequency: 'pay frequency', incomeType: 'type', contributionPct: '401(k) %',
     payment: 'payment', limit: 'limit', dueDay: 'due day', federal: 'federal or private', stress: 'stress', institution: 'institution', taxType: 'pretax or Roth', contribution: 'putting in',
-    apy: 'APY', financed: 'paid off or financed', coverage: 'coverage amount', using: 'using it?', pretaxBalance: 'balances' };
+    apy: 'APY', financed: 'paid off or financed', coverage: 'coverage amount', deductible: 'deductible', benefitPct: 'benefit %', using: 'using it?', pretaxBalance: 'balances' };
   c.missing = []; f.missing = [];
   for (const r of recs) {
     const name = r.name || r.type || r.kind;
