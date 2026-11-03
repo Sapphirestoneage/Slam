@@ -39,6 +39,9 @@ export function duplicates(lines, { debts = [], autos = [], premiums = [], payFr
   const monthly = l => (l.amount == null ? null : monthlyFrom(l.amount, l.per, payFrequency).value);
   for (const l of lines) {
     if (l.status === 'Not for me' || l.irregular || isAuto(l)) continue;
+    // Its own linked line, while the coverage now says the paycheck pays it: out of take-home already.
+    const own = premiums.find(p => l.linkedTo === p.sourceId && p.paidFrom === 'Paycheck');
+    if (own) { dupOf[l.id] = { sourceId: own.sourceId, from: own.from, name: own.from }; continue; }
     const notSame = new Set(l.notSame ?? l.values?.notSame ?? []);
     const lw = words(l.name, l.category);
     const text = `${l.name ?? ''} ${l.category ?? ''}`;

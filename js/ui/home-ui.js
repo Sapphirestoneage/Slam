@@ -46,7 +46,7 @@ export function moneyInOneLine(app, ctx) {
     S.summaryStrip(ctx, [
       { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: '#/report/overview' },
       { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: '#/cash-flow/budget' },
-      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: '#/report/overview' },
+      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: '#/report/overview', note: m.savingsRate.second },
       fiCard(ctx, m) && { ...fiCard(ctx, m), home: '#/plan/goals' }]));
 }
 
@@ -60,12 +60,15 @@ function paydayCard(app, ctx) {
   const line = (k, v) => h('span.stack', { style: { gap: '2px' } }, h('span.label', {}, k), h('strong', {}, money(v)));
   return h('div.card.payday', {},
     h('p', { style: { fontSize: '1.0625rem', margin: 0 } }, `You get ${money(d.period.in)} on ${when}${d.guessDate ? ' (day not set yet)' : ''}. `,
-      d.hasFixed ? `${money(d.period.fixed)} covers fixed bills. ` : '', h('strong', {}, `${money(d.period.free)} is free to spend.`)),
+      d.hasFixed ? `${money(d.period.fixed)} covers fixed bills. ` : '', d.setAside.total ? `${money(d.period.save)} goes to savings goals and sinking funds. ` : '',
+      h('strong', {}, `${money(d.setAside.total ? d.period.afterSavings : d.period.free)} is free to spend.`)),
     !d.hasFixed ? h('span.muted.small', {}, 'Mark bills Fixed on the Budget to see what they take from each paycheck.') : null,
     h('div.row-line', { style: { gap: '24px', marginTop: '10px' } },
-      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each paycheck'), line('In', d.period.in), line('Fixed bills', d.period.fixed), line('Free', d.period.free)),
+      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each paycheck'), line('In', d.period.in), line('Fixed bills', d.period.fixed), line('Free', d.period.free),
+      line('Savings goals and sinking funds', d.period.save), line('Free after savings', d.period.afterSavings)),
     h('div.row-line', { style: { gap: '24px', marginTop: '6px' } },
-      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each month'), line('In', d.month.in), line('Fixed bills', d.month.fixed), line('Free', d.month.free)));
+      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each month'), line('In', d.month.in), line('Fixed bills', d.month.fixed), line('Free', d.month.free),
+      line('Savings goals and sinking funds', d.month.save), line('Free after savings', d.month.afterSavings)));
 }
 // M6: net worth over time, closed until asked; snapshots come from Save snapshot, End session and month-end close.
 function netWorthOverTime(app, ctx) {

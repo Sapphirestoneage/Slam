@@ -6,6 +6,7 @@ import { Store, newHousehold } from '../js/records.js';
 import { metrics } from '../js/math/metrics.js';
 import { duplicates, debtLines, afterTaxContributions } from '../js/math/linked.js';
 import { instances } from '../js/month.js';
+import { paydayOf, setAsideOf } from '../js/payday.js';
 
 const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
 const now = new Date('2026-11-03T12:00:00Z');
@@ -96,4 +97,53 @@ test('the waterfall adds up: gross, taxes, before-tax savings, take-home, fixed,
   assert.equal(f.variable, 400);
   assert.equal(f.savings, 100);
   assert.equal(f.free, 5000 - 1500 - 400 - 100);
+});
+
+// ---------- Item 3: answers to the Brandon questions ----------
+
+test('headline savings rate counts the 401(k), HSA and the match; surplus over take-home is the second line', () => {
+  const s = new Store(newHousehold({ name: 'Synthetic', now: '2026-11-01T09:00:00.000Z' }));
+  s.add('income', { name: 'Job', amount: 78000, per: 'year', values: { basis: 'Gross', payFrequency: '2 weeks', contributionPct: 0.06, matchPct: 1, matchCapPct: 0.04 } }, { type: 'Job' });
+  s.add('spending', { amount: 3000, values: {} }, { type: 'All in' });
+  const sr = m(s).savingsRate;
+  const pre = 78000 * 0.06 / 12, match = 78000 * 0.04 / 12;
+  assert.ok(Math.abs(sr.pretaxSaving - pre) < 0.01);
+  assert.ok(Math.abs(sr.match - match) < 0.01, 'match: 100% of the first 4%');
+  const th = m(s).inputs.takeHome, surplus = m(s).surplus.value;
+  assert.ok(Math.abs(sr.value - (surplus + pre + match) / (th + pre + match)) < 1e-9);
+  assert.ok(Math.abs(sr.ofTakeHome - surplus / th) < 1e-9);
+  assert.match(sr.second, /of take-home/);
+});
+
+test('the Health row owns the premium: Income borrows it, it leaves take-home once, never as a Budget line too', () => {
+  const s = new Store(newHousehold({ name: 'Synthetic', now: '2026-11-01T09:00:00.000Z' }));
+  const job = s.add('income', { name: 'Job', amount: 78000, per: 'year', values: { basis: 'Gross', payFrequency: '2 weeks', premium: 999 } }, { type: 'Job' });
+  const before = m(s).inputs.takeHome; // the typed 999 still counts with no Health row
+  const health = s.add('coverage', { amount: 100, per: 'paycheck', values: { have: 'Have it', paidFrom: 'Paycheck' } }, { type: 'Health' });
+  const x = m(s).inputs;
+  assert.equal(x.health.jobId, job.id);
+  assert.equal(x.health.perPaycheck, 100);
+  assert.ok(x.income[0].pretax === 100 * 26, 'the typed Income premium is set aside: Health owns it');
+  assert.ok(x.takeHome > before, 'a $100 premium leaves more take-home than the typed $999');
+  // Its own Budget line while the paycheck pays it: flagged, not counted.
+  const line = s.add('bill', { name: 'Health insurance', amount: 216.67, linkedTo: health.id, values: { draftt: 'Therapy', category: 'Health insurance', amountType: 'Fixed' } });
+  assert.ok(m(s).inputs.dupOf[line.id]);
+  // Paid as a Budget line instead: nothing comes out of the paycheck, the line counts.
+  s.update(health.id, { paidFrom: 'Budget line' });
+  const y = m(s).inputs;
+  assert.equal(y.income[0].pretax, 0);
+  assert.equal(y.dupOf[line.id], undefined);
+});
+
+test('Free after savings: savings goals and sinking funds come out of free to spend, per paycheck and per month', () => {
+  const s = new Store(newHousehold({ name: 'Synthetic', now: '2026-11-01T09:00:00.000Z' }));
+  s.add('income', { name: 'Job', amount: 2000, per: 'paycheck', values: { payFrequency: 'twice a month', paydays: [7, 22] } }, { type: 'Job' });
+  s.add('bill', { name: 'Rent', amount: 1500, values: { draftt: 'Accommodation', amountType: 'Fixed', dueDay: 1 } });
+  s.add('account', { name: 'Savings', values: { group: 'cash', balance: 1000, tags: [{ name: 'Trip', target: 2200, dollars: 1000, date: '2027-11' }] } }, { type: 'Savings or HYSA' });
+  const save = setAsideOf(s.doc, ref, now);
+  assert.equal(Math.round(save.goals), 100, '$1,200 left over 12 months');
+  const d = paydayOf(s.doc, ref, now);
+  assert.equal(Math.round(d.month.save), 100);
+  assert.equal(Math.round(d.month.afterSavings), Math.round(d.month.free - 100));
+  assert.equal(Math.round(d.period.afterSavings), Math.round(d.period.free - 50), 'two paychecks a month: $50 each');
 });

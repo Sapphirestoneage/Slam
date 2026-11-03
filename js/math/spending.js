@@ -96,14 +96,20 @@ export function monthlySurplus({ takeHome, spending, debtPaymentsOutsideSpending
 }
 
 // M28: savings rate. Headline on take-home; gross version for Show the math.
+// M28, headline (reorganize pass, answer to Brandon question 70): counts the 401(k) and HSA money taken from the
+// paycheck and the employer match, over take-home plus that money. The old M28 (surplus over take-home) is the second line.
 export function savingsRate({ takeHome, surplus, afterTaxSavings = 0, gross = null, pretaxSaving = 0, match = 0 }) {
   const m = missing({ 'take-home': takeHome, 'monthly surplus': surplus });
   if (m.length) return needs('M28', m, { unit: 'pct' });
-  const v = (surplus + afterTaxSavings) / takeHome;
-  const grossRate = isBlank(gross) || !gross ? null : (surplus + afterTaxSavings + pretaxSaving + match) / gross;
-  // B6.9: with what already went to the 401(k) and HSA before the paycheck landed (premiums stay spending).
-  const withPretax = pretaxSaving ? (surplus + afterTaxSavings + pretaxSaving + match) / (takeHome + pretaxSaving + match) : null;
-  return { ...ok('M28', v, `(${fmt.money(surplus)} surplus + ${fmt.money(afterTaxSavings)} saved in the budget) divided by ${fmt.money(takeHome)} take-home = ${fmt.pct(v)}.${withPretax === null ? '' : ` Counting the ${fmt.money(pretaxSaving)} a month into your 401(k) and HSA before payday: ${fmt.pct(withPretax)}.`}${grossRate === null ? '' : ` On gross, counting before-tax saving and the match: ${fmt.pct(grossRate)}.`}`, { unit: 'pct' }), gross: grossRate, withPretax, pretaxSaving };
+  const base = (surplus + afterTaxSavings) / takeHome;
+  const extra = (pretaxSaving || 0) + (match || 0);
+  const head = extra ? (surplus + afterTaxSavings + extra) / (takeHome + extra) : base;
+  const grossRate = isBlank(gross) || !gross ? null : (surplus + afterTaxSavings + extra) / gross;
+  const text = extra
+    ? `(${fmt.money(surplus)} surplus + ${fmt.money(pretaxSaving)} into your 401(k) and HSA from the paycheck${match ? ` + ${fmt.money(match)} employer match` : ''}) divided by (${fmt.money(takeHome)} take-home + ${fmt.money(extra)}) = ${fmt.pct(head)}. Second line: ${fmt.money(surplus)} surplus divided by ${fmt.money(takeHome)} take-home = ${fmt.pct(base)}.`
+    : `(${fmt.money(surplus)} surplus + ${fmt.money(afterTaxSavings)} saved in the budget) divided by ${fmt.money(takeHome)} take-home = ${fmt.pct(base)}.`;
+  return { ...ok('M28', head, `${text}${grossRate === null ? '' : ` On gross: ${fmt.pct(grossRate)}.`}`, { unit: 'pct' }),
+    gross: grossRate, ofTakeHome: base, second: extra ? `${fmt.pct(base)} of take-home, before the 401(k), HSA and match` : null, pretaxSaving, match };
 }
 
 // M29: DRAFTT shares of take-home. Proportions only.

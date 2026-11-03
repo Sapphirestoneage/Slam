@@ -15,6 +15,8 @@ import { keyNumbers } from './math/metrics.js';
 import { statusOf, countsAsDone } from './records.js';
 import { money } from './format.js';
 import { needs } from './math/result.js';
+import { flowOf } from './math/metrics.js';
+import { setAsideOf } from './payday.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const center = (...kids) => h('div.card', {}, h('div.empty.center', {}, ...kids));
@@ -102,7 +104,8 @@ export function netWorthStrip(ctx) {
 }
 // Every step is a Show the math button; take-home and free are the totals.
 export function cashFlowStrip(ctx) {
-  const f = ctx.metrics().flow;
+  const m = ctx.metrics();
+  const f = flowOf(m.inputs, { pretaxSaving: m.pretaxSaving, setAside: setAsideOf(ctx.store.doc, ctx.ref, ctx.now()).total }); // goals and sinking funds are savings
   const step = (label, v, text, { sign = '', total = false, home = null } = {}) => h(`div.wf-step${total ? '.total' : ''}`, {},
     home ? h('a.label.metric-home', { href: home }, label) : h('span.label', {}, label),
     h('div.wf-num', {}, v === null ? h('span.muted', {}, '–') : [sign ? h('span.wf-sign', { 'aria-hidden': 'true' }, sign) : null, S.mathButton({ id: 'Cash flow', value: v, needs: [], text }, money(v))]));
