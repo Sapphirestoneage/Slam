@@ -3,6 +3,7 @@
 import { h, clear, icon } from './dom.js';
 import { homeworkList } from '../homework.js';
 import * as S from './staples.js';
+import { soWhat } from '../sowhat.js';
 import { debtRatios } from './lists.js';
 import { taxRates, monthlyFrom } from '../math/income.js';
 import { drafttShares } from '../math/spending.js';
@@ -29,23 +30,23 @@ export function overviewScreen(app, ctx) {
   const l = ladder(m, ctx.store.doc);
   const r5 = m.ruleOf5;
   const shelf = [
-    { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate, note: m.savingsRate.second },
+    { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate, note: m.savingsRate.second, so: soWhat('savingsRate', m) },
     { label: 'Biggest DRAFTT letter', result: topLetter ? { id: 'M29', value: topLetter[1], needs: [], unit: 'pct', text: shares.text } : { ...shares, value: null, needs: shares.needs?.length ? shares.needs : ['a tagged spending line'] },
-      home: HOME.budget, note: topLetter ? `${topLetter[0]}, share of take-home` : 'Share of take-home' },
-    { label: 'Debt-to-income', result: ratios.dti, home: HOME.debt },
-    { label: 'Housing %', result: m.housingPct, home: HOME.budget, note: m.housingPct.value == null ? null : m.housingPct.value > 0.35 ? 'Over the 35% line' : 'Under the 35% line' },
-    { label: 'Rule of 5 cushion', result: r5, home: HOME.assets },
-    { label: 'Tax rate', result: tax, home: HOME.taxes, note: tax.marginal != null ? `Last dollar ${pct(tax.marginal)}` : null },
-    { label: 'Utilization', result: ratios.util, home: HOME.debt },
+      home: HOME.budget, note: topLetter ? `${topLetter[0]}, share of take-home` : 'Share of take-home', so: soWhat('drafttTop', m, { top: topLetter }) },
+    { label: 'Debt-to-income', result: ratios.dti, home: HOME.debt, so: soWhat('dti', m, ratios.dti) },
+    { label: 'Housing %', result: m.housingPct, home: HOME.budget, so: soWhat('housing', m) },
+    { label: 'Rule of 5 cushion', result: r5, home: HOME.assets, so: soWhat('ruleOf5', m) },
+    { label: 'Tax rate', result: tax, home: HOME.taxes, note: tax.marginal != null ? `Last dollar ${pct(tax.marginal)}` : null, so: soWhat('taxRate', m, tax) },
+    { label: 'Utilization', result: ratios.util, home: HOME.debt, so: soWhat('util', m, ratios.util) },
     { label: 'Of the way to FI', result: l.value === null ? l : { id: 'M55', value: l.value['Regular FI'], needs: l.value['Regular FI'] == null ? ['an FI number'] : [], unit: 'pct', text: l.text }, home: HOME.fi,
-      note: l.value?.['Coast FI'] != null ? `Coast ${pct(Math.min(1, l.value['Coast FI']))} · Lean ${pct(Math.min(1, l.value['Lean FI'] ?? 0))}` : null },
+      note: l.value?.['Coast FI'] != null ? `Coast ${pct(Math.min(1, l.value['Coast FI']))} · Lean ${pct(Math.min(1, l.value['Lean FI'] ?? 0))}` : null, so: soWhat('ofFi', m, { value: l.value?.['Regular FI'] ?? null }) },
   ];
   return [head('Overview', 'Read only. Every number links to its home'),
     S.summaryStrip(ctx, [
-      { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: HOME.netWorth },
-      { label: 'Liquid net worth', result: m.liquidNetWorth, home: HOME.assets, note: 'Cash and brokerage minus consumer debt' },
-      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: HOME.surplus },
-      { label: 'Runway', result: m.runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: HOME.assets }]),
+      { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: HOME.netWorth, so: soWhat('netWorth', m) },
+      { label: 'Liquid net worth', result: m.liquidNetWorth, home: HOME.assets, so: soWhat('liquid', m) },
+      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: HOME.surplus, so: soWhat('surplus', m) },
+      { label: 'Runway', result: m.runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: HOME.assets, so: soWhat('runway', m) }]),
     h('div.section-title', {}, h('h2', {}, 'Metrics'), h('span.muted', {}, 'Lit when the numbers behind them exist')),
     h('div.shelf', {}, shelf.map(i => S.metricCard(ctx, i.label, i.result, i))),
     h('div.report-grid', {}, donutCard(app, ctx, m), sankeyCard(ctx, m)),
@@ -212,9 +213,9 @@ export function onePagerScreen(app, ctx) {
   h('div.card.one-pager', {},
     h('h2', {}, `${doc.client.name || 'Client'}, ${new Date(ctx.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`),
     S.summaryStrip(ctx, [
-      { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: HOME.netWorth },
-      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: HOME.surplus },
-      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate, note: m.savingsRate.second },
+      { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: HOME.netWorth, so: soWhat('netWorth', m) },
+      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: HOME.surplus, so: soWhat('surplus', m) },
+      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate, note: m.savingsRate.second, so: soWhat('savingsRate', m) },
       fiCard(ctx, m)]),
     h('div.op-grid', {},
       h('div', {}, h('h3', {}, 'To-dos'), hw.length ? h('ul.op-list', {}, hw.map(x => h('li', {}, x.label))) : h('p.muted', {}, "No homework yet. Tap I'll find it later on any number to add it.")),
@@ -264,8 +265,8 @@ export function historyScreen(app, ctx) {
   const first = snaps[0].metrics, last = snaps[snaps.length - 1].metrics;
   return [head('History', 'Snapshots over time'),
     S.summaryStrip(ctx, [
-      { label: 'Net worth change', result: { id: 'M40', value: first.netWorth == null || last.netWorth == null ? null : last.netWorth - first.netWorth, needs: [], unit: 'money', text: `From the first snapshot (${new Date(snaps[0].at).toLocaleDateString()}) to the last.` } },
-      { label: 'Debt paid down', result: { id: 'M30', value: first.debtTotal == null || last.debtTotal == null ? null : first.debtTotal - last.debtTotal, needs: [], unit: 'money', text: 'Total debt at the first snapshot minus total debt now.' } },
+      { label: 'Net worth change', result: { id: 'M40', value: first.netWorth == null || last.netWorth == null ? null : last.netWorth - first.netWorth, needs: [], unit: 'money', text: `From the first snapshot (${new Date(snaps[0].at).toLocaleDateString()}) to the last.` }, so: soWhat('netWorthChange', ctx.metrics(), { first, last }) },
+      { label: 'Debt paid down', result: { id: 'M30', value: first.debtTotal == null || last.debtTotal == null ? null : first.debtTotal - last.debtTotal, needs: [], unit: 'money', text: 'Total debt at the first snapshot minus total debt now.' }, so: soWhat('debtPaid', ctx.metrics(), { first, last }) },
       { label: 'Gut accuracy', result: acc, note: acc.hidden ? 'After the first closed month' : 'Average miss of the first guess' },
       { label: 'Snapshots', result: { id: 'M00', value: snaps.length, needs: [], unit: 'count', text: 'Saved at the end of sessions and before imports or resets.' }, render: r => String(r.value) }]),
     h('div.card', {}, h('strong', {}, 'Net worth over time'), host),

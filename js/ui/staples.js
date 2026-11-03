@@ -199,7 +199,7 @@ function joinWordsEl(items) {
   items.forEach((el, i) => { if (i) out.push(i === items.length - 1 ? ' and ' : ', '); out.push(el); });
   return out;
 }
-export function metricCard(ctx, label, result, { key = null, render = null, lowerIsGood = false, note = null, home = null } = {}) {
+export function metricCard(ctx, label, result, { key = null, render = null, lowerIsGood = false, note = null, home = null, so = null } = {}) {
   const locked = result.value === null || result.value === undefined;
   const snap = ctx.store.lastSnapshot();
   const change = key && !locked ? changeSince(keyNumbers(ctx.metrics()), snap, key) : null;
@@ -214,7 +214,9 @@ export function metricCard(ctx, label, result, { key = null, render = null, lowe
     result.guess ? h('span', {}, guessTag()) : null,
     change && change.direction !== 'same' ? h(`span.change.${change.direction}${good ? '.good' : ''}`, {}, `${formatDiff(change.diff, key)} since last session`) : null,
     change && change.direction === 'same' ? h('span.change', {}, 'Same as last session') : null,
-    note && !locked ? h('span.change', {}, note) : null);
+    note && !locked ? h('span.change', {}, note) : null,
+    // So what (polish item 6): one plain sentence, and a link when something is off.
+    so && !locked ? h('span.so', {}, so.text, so.action ? [' ', h('a', { href: so.action.href }, `${so.action.label} ›`)] : null) : null);
 }
 function formatDiff(d, key) {
   if (key === 'savingsRate') return pct(Math.abs(d)).replace('%', ' pts');

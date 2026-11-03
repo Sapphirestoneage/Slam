@@ -10,6 +10,7 @@ import { firstLowDay } from './spending-ui.js';
 import { homeworkItems, sendSummary, fiCard, netWorthChart } from './report-ui.js';
 import { next3, agenda } from '../plan.js';
 import { PUI } from './plan-ui.js';
+import { soWhat } from '../sowhat.js';
 import { keyNumbers } from '../math/metrics.js';
 import { changeSince, statusOf, countsAsDone } from '../records.js';
 import { money, pct } from '../format.js';
@@ -42,13 +43,12 @@ export function moneyInOneLine(app, ctx) {
     : m.surplus.value !== null && m.surplus.value < 0 ? `You spend ${money(-m.surplus.value)} a month more than comes in.` : null;
   return h('section.section', {}, h('div.section-title', {}, h('h2', {}, 'Money in one line')),
     sentence ? h('p', { style: { fontSize: '1.125rem', fontWeight: 600 } }, sentence) : null,
-    m.inputs.spendingSource === 'lines' && m.inputs.guessLines ? h('div.banner-inline.soft', {}, `Spending includes ${m.inputs.guessLines} starter ${m.inputs.guessLines === 1 ? 'guess' : 'guesses'} at the high end (${money(m.inputs.guessTotal)} a month), so the surplus looks low until they are reviewed.`,
-      S.button('Review on Budget', { iconName: 'right', onClick: () => app.go('#/cash-flow/budget') })) : null,
+    // Guessed lines, a low savings rate or a cash dip: each card says so, with a link (polish item 6).
     S.summaryStrip(ctx, [
-      { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: '#/report/overview' },
-      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: '#/cash-flow/budget' },
-      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: '#/report/overview', note: m.savingsRate.second },
-      fiCard(ctx, m) && { ...fiCard(ctx, m), home: '#/plan/goals' }]));
+      { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: '#/report/overview', so: soWhat('netWorth', m) },
+      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: '#/cash-flow/budget', so: soWhat('surplus', m, { lowDay: firstLowDay(ctx) }) },
+      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: '#/report/overview', note: m.savingsRate.second, so: soWhat('savingsRate', m) },
+      fiCard(ctx, m) && { ...fiCard(ctx, m), home: '#/plan/goals', so: soWhat('fi', m) }]));
 }
 
 // ---------- Prep ----------
