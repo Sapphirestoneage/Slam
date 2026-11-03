@@ -5,6 +5,7 @@ import { myShare } from './math/spending.js';
 import { payoffPlan } from './math/debt.js';
 import { runningBalance } from './math/calendar.js';
 import { inputsOf } from './math/metrics.js';
+import { monthlyFrom } from './math/income.js';
 
 // ---------- Dates (UTC, so a day is a day everywhere) ----------
 export const ymOf = (d = new Date()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
@@ -235,6 +236,17 @@ export function estimateOf(doc, ym, line) {
   if (e != null) return { value: e, fromRough: false };
   const r = roughOf(doc, line);
   return { value: r, fromRough: r != null };
+}
+// Answer 89: the lines whose plan for this month differs from their usual monthly amount (a typed plan only).
+export function planDiffs(doc, ym, lines, payFrequency = null) {
+  const out = new Set();
+  for (const r of lines) {
+    const e = monthDoc(doc, ym).lines?.[r.id]?.estimate;
+    if (e == null) continue;
+    const usual = r.amount == null ? null : monthlyFrom(r.amount, r.per, payFrequency).value;
+    if (usual == null || Math.abs(e - usual) > 0.5) out.add(r.id);
+  }
+  return out;
 }
 // Actual: what was typed at close, else what the calendar marked Paid (R052). Didn't happen counts as $0 (R094).
 export function actualOf(doc, ym, line, list) {

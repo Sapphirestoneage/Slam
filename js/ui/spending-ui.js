@@ -5,7 +5,7 @@ import { maaserOf, KOSHER_NOTE } from '../community.js';
 import * as S from './staples.js';
 import { spendingList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.js';
 import { ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
-  closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS } from '../month.js';
+  closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS, planDiffs } from '../month.js';
 import { gutAccuracy, DRAFTT } from '../math/spending.js';
 import { statements, BUCKETS, defaultBucket } from '../math/statements.js';
 import { calendarMarkers } from '../math/markers.js';
@@ -51,8 +51,13 @@ export function budgetScreen(app, ctx) {
       S.labelled('Cards', S.checkbox('Most spending goes on cards', cardsMost, v => ctx.store.setDoc('profile', { mostOnCards: v })), { note: 'Shows Paid with on every line' })), { label: 'Settings for this budget' }));
   const view = monthView(doc, ctx.ref, UI.ym, { now: ctx.now() });
   if (UI.pass !== 'Actual') UI.pass = 'Plan';
+  // Answer 89: the Plan column appears once a month differs from the usual for any line, and goes when none do.
+  const payFreq = () => ctx.metrics().inputs.payFrequency ?? null;
+  const planCol = () => planDiffs(doc, UI.ym, ctx.store.find(r => r.kind === 'bill' && !r.values.irregular), payFreq()).size > 0;
+  const shownPlanCol = planCol();
+  ctx.onRefresh(() => { if (UI.pass === 'Plan' && planCol() !== shownPlanCol) S.keepPlace(() => app.render()); });
   const body = [UI.pass === 'Plan' ? S.live(ctx, () => gutBox(ctx, monthView(doc, ctx.ref, UI.ym, { now: ctx.now() }))) : null,
-    h('div.visuals', {}, S.recordList(ctx, spendingList(ctx.ref, { pass: UI.pass, ym: UI.ym, groupBy: UI.groupBy, paidWithColumn: cardsMost })),
+    h('div.visuals', {}, S.recordList(ctx, spendingList(ctx.ref, { pass: UI.pass, ym: UI.ym, groupBy: UI.groupBy, paidWithColumn: cardsMost, planColumn: shownPlanCol })),
       S.visualsPanel(ctx, { charts: budgetCharts, area: 'needs' })),
     UI.pass === 'Plan' ? S.moreBlock('budget:fast-track', () => fastTrackTotals(ctx), { label: 'Fast Track totals (by area)' }) : null];
   // The strip follows the lines as they change (the lists keep their own state, so the screen is not rebuilt).

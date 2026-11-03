@@ -9,7 +9,7 @@ import { applies } from '../gates.js';
 import { payoffPlan, debtToIncome, utilization } from '../math/debt.js';
 import { needs } from '../math/result.js';
 import { money } from '../format.js';
-import { estimateOf, actualOf, instances, monthName } from '../month.js';
+import { estimateOf, actualOf, instances, monthName, planDiffs } from '../month.js';
 
 const LOAN_TYPES = new Set(['Student loan', 'Car loan', 'Personal loan', 'Mortgage']);
 const short = v => (Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
@@ -126,9 +126,10 @@ export function debtRatios(ctx, m) {
 
 // Spending lines: Fixed | Variable, Fixed date | Variable date, who pays, paid with.
 // Two passes (polish item 2): Plan edits each line's usual number and this month's plan; Actual is per month.
-export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT', paidWithColumn = false } = {}) {
+export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT', paidWithColumn = false, planColumn = true } = {}) {
   const cats = ref.categoryDefaults.map(c => c.category);
-  const monthCols = monthColumns(pass, ym);
+  // Answer 89: on Plan the Plan column shows only when this month differs from the usual for at least one line.
+  const monthCols = pass === 'Plan' && !planColumn ? [] : monthColumns(pass, ym);
   return {
     kind: 'bill', area: 'needs', title: `Spending lines: ${pass}, ${monthName(ym)}`, thing: { one: 'line', plural: 'lines' },
     filter: r => r.kind === 'bill' && !r.values.irregular,
@@ -170,6 +171,7 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
     secondary: (ctx, r, up) => [
       labelled('Amount is', toggle(['Fixed', 'Variable'], r.values.amountType ?? null, v => up({ amountType: v }), { label: 'Amount is' }), { note: 'Fixed feeds the floor' }),
       labelled('Date is', toggle(['Fixed date', 'Variable date'], r.values.timing ?? null, v => up({ timing: v }), { label: 'Date is' }), { note: 'Fixed date lands on its due day' }),
+      pass === 'Plan' && ym ? monthPlanField(ctx, r, ym) : null,
       whoPays(r, up), lineSuggestion(r, up),
       labelled('Bedazzle', toggle([[true, 'A joy line'], [false, 'Not one']], r.values.joy === true ? true : r.values.joy === false ? false : null, v => up({ joy: v }), { label: 'Joy line', clearable: true }), { note: 'Joy lines are funded first in the FOO (step 0b)' }),
       // B6.3: low / high for a variable bill; the amount is the average.
@@ -205,12 +207,19 @@ function tagsField(r, up) {
     h('datalist', { id: 'tag-ideas' }, TAG_IDEAS.map(t => h('option', { value: t })))), { note: 'A line can have more than one' });
 }
 
+const setPlan = (ctx, r, ym) => v => ctx.store.setIn('spending', ['months', ym, 'lines', r.id, 'estimate'], v === null ? undefined : v, 'Plan');
+// Behind More on every line: a different plan for just this month (blank = the usual amount).
+function monthPlanField(ctx, r, ym) {
+  const typed = ctx.store.doc.spending?.months?.[ym]?.lines?.[r.id]?.estimate ?? null;
+  return labelled(`Plan for ${monthName(ym, 'short')}`, moneyInput(typed, setPlan(ctx, r, ym), { hint: 'Same as usual', key: `${r.id}:est-more:${ym}` }), { note: 'Only if this month is different; blank uses the usual amount' });
+}
 // Plan and Actual columns for one month (R134 to R136, R052). A blank month plan uses the line's usual number.
 function monthColumns(pass, ym) {
   if (pass === 'Plan') return [{ label: 'Plan', num: true, render: (ctx, r) => {
+    // Shown per line only where this month differs from the usual amount; the rest change it under More.
+    if (!planDiffs(ctx.store.doc, ym, [r], freqOf(ctx)).has(r.id)) return null;
     const e = estimateOf(ctx.store.doc, ym, r);
-    const set = v => ctx.store.setIn('spending', ['months', ym, 'lines', r.id, 'estimate'], v === null ? undefined : v, 'Plan');
-    return moneyInput(e.fromRough ? null : e.value, set, { hint: e.value == null ? 'Add plan' : moneyText(e.value), key: `${r.id}:est:${ym}` });
+    return moneyInput(e.fromRough ? null : e.value, setPlan(ctx, r, ym), { hint: e.value == null ? 'Add plan' : moneyText(e.value), key: `${r.id}:est:${ym}` });
   } }];
   if (pass === 'Actual') return [
     { label: 'Plan', num: true, render: (ctx, r) => h('span.muted', {}, amount(ctx, estimateOf(ctx.store.doc, ym, r).value, { chip: false })) },
