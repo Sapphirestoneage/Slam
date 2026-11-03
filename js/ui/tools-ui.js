@@ -3,6 +3,7 @@
 import { h, clear, icon } from './dom.js';
 import * as S from './staples.js';
 import { homeworkItems } from './report-ui.js';
+import { homeworkText } from '../homework.js';
 import { keyNumbers } from '../math/metrics.js';
 import { statusOf } from '../records.js';
 import { money, pct } from '../format.js';
@@ -35,7 +36,7 @@ export function listsScreen(app, ctx) {
   const hw = homeworkItems(ctx);
   const fix = x => { app.go(x.route); requestAnimationFrame(() => { const row = document.querySelector(`tr[data-id="${x.r.id}"]`); row?.classList.add('highlight'); row?.querySelector('input')?.focus(); }); };
   const copyHomework = e => {
-    const text = [`Homework for ${ctx.store.doc.client.name || 'you'}:`, ...hw.map(x => `- ${x.label}${x.r.values?.homeworkDue ? ` (by ${x.r.values.homeworkDue})` : ''}`)].join('\n');
+    const text = homeworkText(ctx.store.doc.client.name, hw);
     const fallback = () => { const ta = h('textarea.notes-box', { readonly: true }, text); S.popover(e.currentTarget, h('div.stack', {}, h('strong', {}, 'Copy and send'), ta), { width: 420 }); setTimeout(() => ta.select()); };
     try { navigator.clipboard.writeText(text).then(() => S.toast('Homework copied. Paste it into a message.'), fallback); } catch { fallback(); }
   };
@@ -48,11 +49,15 @@ export function listsScreen(app, ctx) {
       : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'Nothing to revisit yet'), h('span.muted', {}, 'Rough and not-sure numbers land here.')))),
     h('div.section', {}, h('div.section-title', {}, h('h2', {}, 'Homework list'), h('span.spacer'), hw.length ? S.button('Send to client', { size: 'small', iconName: 'mail', onClick: copyHomework }) : null), hw.length
       ? h('div.card.tool-list', {}, hw.map(x => {
-        const d = h('input', { type: 'date', value: x.r.values?.homeworkDue || '', 'aria-label': `Due date for ${x.label}` });
-        d.onchange = () => ctx.store.update(x.r.id, { homeworkDue: d.value || null });
-        return h('div.row-line', { style: { gap: '10px' } }, h('span', { style: { flex: 1, fontWeight: 600 } }, x.label), h('label.field', { style: { width: '160px' } }, d), S.button('Open', { size: 'small', onClick: () => fix({ ...x, route: ROUTE[x.r.kind] || '#/my-money/profile' }) }));
+        const d = h('input', { type: 'date', value: x.due || '', 'aria-label': `Due date for ${x.label}` });
+        const p = ctx.store.doc.profile;
+        d.onchange = () => (x.r ? ctx.store.update(x.r.id, { homeworkDue: d.value || null }) : ctx.store.setDoc('profile', { laterDue: { ...(p.laterDue || {}), [x.profileKey]: d.value || null } }));
+        return h('div.row-line', { style: { gap: '10px' } },
+          h('span.stack', { style: { flex: 1, gap: '2px' } }, h('span', { style: { fontWeight: 600 } }, x.label), x.where ? h('span.muted.small', {}, `Where to find it: ${x.where}`) : null),
+          h('label.field', { style: { width: '160px' } }, d),
+          S.button('Open', { size: 'small', onClick: () => (x.r ? fix({ ...x, route: ROUTE[x.r.kind] || '#/my-money/profile' }) : app.go('#/my-money/profile')) }));
       }))
-      : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, 'Mark any number Will email and it lands here.')))))];
+      : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, "Tap I'll find it later on any number and it lands here, with where to look.")))))];
 }
 
 // Snapshots with compare, notes, session settings, Fast Track accuracy and the look.

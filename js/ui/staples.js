@@ -104,7 +104,7 @@ export function flashSaved(rowEl) {
 
 // ---------- Status tag (R053, R160): a symbol as well as a color ----------
 const TAG = {
-  'Roughly': ['roughly', '≈ Roughly'], 'Not sure': ['guess', '? Guess'], 'Will email': ['plain', 'Will email'],
+  'Roughly': ['roughly', '≈ Roughly'], 'Not sure': ['guess', '? Guess'], 'Will email': ['plain', "I'll find it later"],
   'Not now': ['plain', 'Not now'], 'Not for me': ['plain', 'Not for me'], 'Computed': ['plain', 'Computed'], 'Know it': ['plain', 'Know it'],
 };
 export function statusTag(status) {
@@ -260,7 +260,15 @@ export function checkbox(label, checked, onChange, { key = null } = {}) {
   return h('label.check', {}, box, h('span', {}, label));
 }
 // A labelled box: the label above, the input under it (affordance rule 3).
-export const labelled = (label, input, { note = null } = {}) => h('div.stack', {}, h('span.label', {}, label), input, note ? h('span.muted.small', {}, note) : null);
+// later: { on, set } adds "I'll find it later" under the box (Brandon B1.2): it parks the field on the Homework list.
+export const labelled = (label, input, { note = null, later = null } = {}) => h(`div.stack${later?.on ? '.parked' : ''}`, {}, h('span.label', {}, label), input,
+  note ? h('span.muted.small', {}, note) : null, later ? laterButton(later, label) : null);
+export function laterButton({ on, set }, label = 'this') {
+  return on
+    ? h('span.row-line.later-on', { style: { gap: '6px', flexWrap: 'nowrap' } }, h('span.tag.plain', {}, 'On your homework'),
+      h('button.btn.small.later-btn', { type: 'button', 'aria-label': `Take ${label} off the homework list`, onclick: () => set(false) }, 'Take off'))
+    : h('button.btn.small.later-btn', { type: 'button', 'aria-label': `I'll find ${label} later`, onclick: () => { set(true); toast(`${label} is on your homework list, with where to find it.`); } }, "I'll find it later");
+}
 // More / Less: Secondary and Tertiary fields stay behind a caret, closed until asked (R023). Remembers which are open.
 const OPEN = new Set();
 export function moreBlock(id, content, { label = 'More' } = {}) {
@@ -431,7 +439,14 @@ export function recordList(ctx, cfg) {
     clear(root, render());
     if (focus) root.querySelector(`[data-focus="${CSS.escape(focus)}"]`)?.focus();
   };
-  const update = (rec, patch) => { ctx.store.update(rec.id, patch); flashSaved(root.querySelector(`tr[data-id="${rec.id}"]`)); };
+  const update = (rec, patch) => {
+    ctx.store.transaction('Edit', () => {
+      ctx.store.update(rec.id, patch);
+      // A number typed in comes off the homework list (Brandon B1.2).
+      for (const [f, v] of Object.entries(patch)) if (v !== null && v !== undefined && rec.fieldStatus?.[f] === 'Will email') ctx.store.setFieldStatus(rec.id, f, null);
+    });
+    flashSaved(root.querySelector(`tr[data-id="${rec.id}"]`));
+  };
   const addNew = (type, name = null, after = null) => {
     const r = ctx.store.add(cfg.kindOf?.(type) ?? cfg.kind, { name: name ?? null, ...(cfg.newValues?.(type) || {}) }, { type: type ?? cfg.defaultType ?? null, after });
     requestAnimationFrame(() => root.querySelector(`tr[data-id="${r.id}"] input`)?.focus());

@@ -14,7 +14,27 @@ const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const short = v => (Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
 const owner = { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) };
 const num = x => (x === null ? null : Number(x));
-const FREQ = [['week', 'Weekly'], ['2 weeks', 'Every 2 weeks'], ['twice a month', 'Twice a month'], ['month', 'Monthly']];
+// "I'll find it later" on one field of a row (Brandon B1.2): the field's own status, shown on the Homework list.
+const L = (ctx, r, field) => ({ on: r.fieldStatus?.[field] === 'Will email', set: on => ctx.store.setFieldStatus(r.id, field, on ? 'Will email' : null) });
+export const FREQ = [['week', 'Weekly (52 a year)'], ['2 weeks', 'Every 2 weeks (26 a year)'], ['twice a month', 'Twice a month (24 a year)'], ['month', 'Monthly (12 a year)']];
+// A day of the month, 1 to 31; anything else stays blank.
+const dayInput = (value, onChange, hint) => textInput(value == null ? null : String(value), v => { const n = Number(v); onChange(Number.isInteger(n) && n >= 1 && n <= 31 ? n : null); }, { hint, width: 72 });
+// Paydays (Brandon B1.5): the days the money lands. The calendar puts paychecks on them.
+function paydays(r, up) {
+  const v = r.values;
+  if (v.payFrequency === 'twice a month') {
+    const [a, b] = v.payDays || [];
+    const set = (x, y) => up({ payDays: x == null && y == null ? null : [x, y].filter(n => n != null) });
+    return h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, dayInput(a, x => set(x, b ?? null), 'e.g. 7'), h('span.muted', {}, 'and'), dayInput(b, y => set(a ?? null, y), 'e.g. 22'));
+  }
+  if (v.payFrequency === 'month') return dayInput(v.payDay, x => up({ payDay: x }), 'Day, 1 to 31');
+  if (v.payFrequency === 'week' || v.payFrequency === '2 weeks') {
+    const d = h('input', { type: 'date', value: v.nextPayday || '', 'aria-label': 'Next payday' });
+    d.onchange = () => up({ nextPayday: d.value || null });
+    return h(`label.field${v.nextPayday ? '.filled' : ''}`, { style: { width: '170px' } }, d);
+  }
+  return h('span.muted', {}, 'Pick how often you are paid first');
+}
 
 // ---------- Income ----------
 export function incomeList() {
@@ -26,12 +46,15 @@ export function incomeList() {
     coreFields: ['amount'],
     columns: [
       { label: 'Source', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 170, key: `${r.id}:name` }) },
-      { label: 'Amount', num: true, render: (ctx, r, m, up) => moneyInput(r.amount, v => up({ amount: v }), { hint: r.values.basis === 'Gross' ? 'Add gross' : 'Add take-home', key: `${r.id}:amount` }) },
+      { label: 'Amount', num: true, render: (ctx, r, m, up) => (r.values.basis === 'Both' && incomeRowOf(m, r)?.taxType
+        ? h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap', justifyContent: 'flex-end' } }, // Brandon B1.6: both typed, both kept
+          moneyInput(r.amount, v => up({ amount: v }), { hint: 'Take-home', key: `${r.id}:amount` }), moneyInput(r.values.gross, v => up({ gross: v }), { hint: 'Gross a year', key: `${r.id}:gross` }))
+        : moneyInput(r.amount, v => up({ amount: v }), { hint: r.values.basis === 'Gross' ? 'Add gross' : 'Add take-home', key: `${r.id}:amount` })) },
       { label: 'Given as', render: (ctx, r, m, up) => (incomeRowOf(m, r)?.taxType
-        ? toggle(['Take-home', 'Gross'], r.values.basis ?? 'Take-home', v => up({ basis: v }), { label: 'Given as' })
+        ? toggle(['Take-home', 'Gross', 'Both'], r.values.basis ?? 'Take-home', v => up({ basis: v }), { label: 'Given as' })
         : h('span.muted', { title: 'Counted as it lands; no tax worked out' }, 'As it lands')) },
       { label: 'Per', render: (ctx, r, m, up) => perPicker(r.per, v => up({ per: v }), { key: `${r.id}:per` }) },
-      { label: 'Pay frequency', render: (ctx, r, m, up) => select(FREQ, r.values.payFrequency ?? null, v => up({ payFrequency: v }), { label: 'Pay frequency', hint: 'How often', width: 150, key: `${r.id}:freq` }) },
+      { label: 'Pay frequency', render: (ctx, r, m, up) => select(FREQ, r.values.payFrequency ?? null, v => up({ payFrequency: v }), { label: 'Pay frequency', hint: 'How often', width: 200, key: `${r.id}:freq` }) },
       owner,
     ],
     secondary: (ctx, r, up) => incomeSecondary(ctx, r, up),
@@ -49,15 +72,17 @@ function incomeSecondary(ctx, r, up) {
   const v = r.values;
   const other = x?.computed === 'gross' ? labelled('Gross a year (worked out)', h('span.computed', {}, value(x.grossResult, ctx)))
     : x?.computed === 'takeHome' ? labelled('Take-home a month (worked out)', h('span.computed', {}, value(x.takeHome, ctx)))
-      : x?.taxType ? labelled('Gross a year', moneyInput(v.gross, y => up({ gross: y }), { hint: 'Add gross' }), { note: 'Both given: kept as typed' }) : null;
+      : x?.taxType && v.basis !== 'Both' ? labelled('Gross a year', moneyInput(v.gross, y => up({ gross: y }), { hint: 'Add gross' }), { note: 'Both given: kept as typed', later: L(ctx, r, 'gross') }) : null;
   return [other,
-    labelled('Type', select(['W-2', '1099', 'Business', 'Side hustle', 'Rental', 'Benefits', 'Other'], v.incomeType ?? null, y => up({ incomeType: y }), { label: 'Income type', hint: x?.taxType ?? 'Pick one', width: 150 })),
-    applies('401k', { g }) && x?.taxType ? labelled('401(k) %', pctInput(v.contributionPct, y => up({ contributionPct: y }), { hint: '0' })) : null,
+    labelled(v.payFrequency === 'twice a month' ? 'Paydays' : v.payFrequency === 'month' ? 'Payday' : 'Next payday', paydays(r, up),
+      { note: 'Puts each paycheck on its day in the calendar', later: L(ctx, r, v.payFrequency === 'week' || v.payFrequency === '2 weeks' ? 'nextPayday' : 'paydays') }),
+    labelled('Type', select(['W-2', '1099', 'Business', 'Side hustle', 'Rental', 'Benefits', 'Other'], v.incomeType ?? null, y => up({ incomeType: y }), { label: 'Income type', hint: x?.taxType ?? 'Pick one', width: 150 }), { later: L(ctx, r, 'incomeType') }),
+    applies('401k', { g }) && x?.taxType ? labelled('401(k) %', pctInput(v.contributionPct, y => up({ contributionPct: y }), { hint: 'e.g. 0' }), { later: L(ctx, r, 'contributionPct') }) : null,
     applies('match', { g }) && x?.taxType ? labelled('Employer match: % up to %', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
-      pctInput(v.matchPct, y => up({ matchPct: y }), { hint: 'Match' }), h('span.muted', {}, 'up to'), pctInput(v.matchCapPct, y => up({ matchCapPct: y }), { hint: 'Of pay' }))) : null,
+      pctInput(v.matchPct, y => up({ matchPct: y }), { hint: 'Match' }), h('span.muted', {}, 'up to'), pctInput(v.matchCapPct, y => up({ matchCapPct: y }), { hint: 'Of pay' })), { later: L(ctx, r, 'matchPct') }) : null,
     labelled('Bonus: $ and month', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.bonus, y => up({ bonus: y }), { hint: 'Bonus' }),
-      select(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], v.bonusMonth ?? null, y => up({ bonusMonth: y }), { label: 'Bonus month', hint: 'Month', width: 100 }))),
-    applies('premium', { g }) && x?.taxType ? labelled('Health premium a paycheck', moneyInput(v.premium, y => up({ premium: y }), { hint: 'Add premium' })) : null,
+      select(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], v.bonusMonth ?? null, y => up({ bonusMonth: y }), { label: 'Bonus month', hint: 'Month', width: 100 })), { later: L(ctx, r, 'bonus') }),
+    applies('premium', { g }) && x?.taxType ? labelled('Health premium a paycheck', moneyInput(v.premium, y => up({ premium: y }), { hint: 'Add premium' }), { later: L(ctx, r, 'premium') }) : null,
     labelled('Perks', button('Add other benefit', { iconName: 'plus', onClick: () => { ctx.store.add('benefit', { name: null, values: {} }, { type: 'Benefit' }); toast('Benefit row added under Other benefits.'); } }))];
 }
 function incomeTertiary(ctx, r, up) {
@@ -65,11 +90,11 @@ function incomeTertiary(ctx, r, up) {
   const v = r.values;
   const taxed = !!incomeRowOf(ctx.metrics(), r)?.taxType;
   return [
-    applies('vesting', { g }) && taxed ? labelled('Match vesting', select(['Immediate', 'Cliff', 'Graded'], v.vesting ?? null, y => up({ vesting: y }), { label: 'Vesting', width: 140 })) : null,
-    applies('hsaFsa', { g }) && taxed ? labelled(`${g.hsa ? 'HSA' : 'FSA'} a paycheck`, moneyInput(v.hsaFsa, y => up({ hsaFsa: y }), { hint: 'Add amount' })) : null,
-    applies('equity', { g }) && taxed ? labelled('ESPP % and discount; RSUs', textInput(v.equity, y => up({ equity: y }), { hint: 'e.g. 10%, 15% off; 200 RSUs vest Mar', width: 300 })) : null,
-    taxed ? labelled('Raise % a year', pctInput(v.raisePct, y => up({ raisePct: y }), { hint: '3' })) : null,
-    applies('otherPretax', { g }) && taxed ? labelled('Other before-tax a paycheck', moneyInput(v.otherPretax, y => up({ otherPretax: y }), { hint: 'Commuter, life' })) : null,
+    applies('vesting', { g }) && taxed ? labelled('Match vesting', select(['Immediate', 'Cliff', 'Graded'], v.vesting ?? null, y => up({ vesting: y }), { label: 'Vesting', width: 140 }), { later: L(ctx, r, 'vesting') }) : null,
+    applies('hsaFsa', { g }) && taxed ? labelled(`${g.hsa ? 'HSA' : 'FSA'} a paycheck`, moneyInput(v.hsaFsa, y => up({ hsaFsa: y }), { hint: 'Add amount' }), { later: L(ctx, r, 'hsaFsa') }) : null,
+    applies('equity', { g }) && taxed ? labelled('ESPP % and discount; RSUs', textInput(v.equity, y => up({ equity: y }), { hint: 'e.g. 10%, 15% off; 200 RSUs vest Mar', width: 300 }), { later: L(ctx, r, 'equity') }) : null,
+    taxed ? labelled('Raise % a year', pctInput(v.raisePct, y => up({ raisePct: y }), { hint: 'e.g. 3' }), { later: L(ctx, r, 'raisePct') }) : null,
+    applies('otherPretax', { g }) && taxed ? labelled('Other before-tax a paycheck', moneyInput(v.otherPretax, y => up({ otherPretax: y }), { hint: 'Commuter, life' }), { later: L(ctx, r, 'otherPretax') }) : null,
     labelled('Coach notes', textInput(r.privateNote, y => up({ privateNote: y }), { hint: 'Add a private note', width: 320 }))];
 }
 function incomeStrip(ctx, m) {
@@ -122,7 +147,7 @@ export function variableBlock(ctx) {
       labelled('Last 12 months total', moneyInput(v.last12, x => set({ last12: x }), { hint: 'Add total', key: 'var:last12' })),
       labelled('Typical month', moneyInput(v.typical, x => set({ typical: x }), { hint: 'Add amount', key: 'var:typical' })),
       labelled('Lowest month', moneyInput(v.lowest, x => set({ lowest: x }), { hint: 'Add amount', key: 'var:lowest' }), { note: 'Drives the safe budget' }),
-      labelled('Set aside for taxes', pctInput(v.setAside, x => set({ setAside: x }), { hint: String(Math.round(ctx.ref.defaults.taxSetAside * 100)), key: 'var:setAside' }), { note: 'Blank uses 25%' }),
+      labelled('Set aside for taxes', pctInput(v.setAside, x => set({ setAside: x }), { hint: `Blank: ${Math.round(ctx.ref.defaults.taxSetAside * 100)}`, key: 'var:setAside' }), { note: 'Blank uses 25%' }),
       metricCard(ctx, 'Safe to count on a month', safe)),
     moreBlock('income:variable', () => h('div', {},
       h('div.form-grid', {}, ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((mo, i) =>
@@ -220,7 +245,7 @@ function assetSecondary(ctx, r, up) {
   }
   if (v.group === 'cash') return [
     labelled('Institution', textInput(v.institution, x => up({ institution: x }), { hint: 'Bank', width: 160 })),
-    labelled('Interest (APY)', pctInput(v.apy, x => up({ apy: x }), { hint: '0' }), { note: v.apy != null && v.apy < 0.01 && (v.balance ?? 0) > 1000 ? 'Idle cash: a small win to move it' : null }),
+    labelled('Interest (APY)', pctInput(v.apy, x => up({ apy: x }), { hint: 'e.g. 0' }), { note: v.apy != null && v.apy < 0.01 && (v.balance ?? 0) > 1000 ? 'Idle cash: a small win to move it' : null }),
     labelled('Purpose', select(['Emergency', 'Sinking fund', 'Goal', 'General'], v.purpose ?? null, x => up({ purpose: x }), { label: 'Purpose', width: 150 }))];
   const age = ctx.metrics().inputs.age;
   const perYear = v.contribution == null ? null : v.contributionPer === 'Paycheck' ? v.contribution * 26 : v.contribution;
@@ -230,7 +255,7 @@ function assetSecondary(ctx, r, up) {
     labelled('Putting in', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.contribution, x => up({ contribution: x }), { hint: 'Add amount' }),
       toggle(['Paycheck', 'Year'], v.contributionPer ?? 'Year', x => up({ contributionPer: x }), { label: 'Per' }))),
     labelled('Pretax, Roth or both', toggle(['Pretax', 'Roth', 'Both'], v.taxType ?? null, x => up({ taxType: x }), { label: 'Pretax or Roth' })),
-    labelled('Stocks %', pctInput(v.stockShare, x => up({ stockShare: x }), { hint: '90' }), { note: 'The rest in bonds' }),
+    labelled('Stocks %', pctInput(v.stockShare, x => up({ stockShare: x }), { hint: 'e.g. 90' }), { note: 'The rest in bonds' }),
     labelled('Unvested', moneyInput(v.unvested, x => up({ unvested: x }), { hint: 'Add amount' }), { note: 'Shown, not counted in net worth' }),
     lim.value !== null || lim.needs[0] !== 'an account type with a limit' ? labelled('Limit used', h('span.computed', {}, lim.value === null ? `Needs ${lim.needs[0]}` : value(lim))) : null];
 }
@@ -240,7 +265,7 @@ function assetTertiary(ctx, r, up) {
   if (r.kind !== 'account' || v.group !== 'investment') return [labelled('Coach notes', textInput(r.privateNote, x => up({ privateNote: x }), { hint: 'Add a private note', width: 320 }))];
   return [
     labelled('Holdings', textInput(v.holdings, x => up({ holdings: x }), { hint: 'VTSAX, target date 2060', width: 240 })),
-    labelled('Fees a year', pctInput(v.fees, x => up({ fees: x }), { hint: '0.04' }), { note: 'Expense ratio plus advisory' }),
+    labelled('Fees a year', pctInput(v.fees, x => up({ fees: x }), { hint: 'e.g. 0.04' }), { note: 'Expense ratio plus advisory' }),
     applies('costBasis', { g, r }) ? labelled('Cost basis', moneyInput(v.costBasis, x => up({ costBasis: x }), { hint: 'Add amount' })) : null,
     applies('rothBasis', { g, r }) ? labelled('Roth contributions so far', moneyInput(v.rothBasis, x => up({ rothBasis: x }), { hint: 'Add amount' }), { note: 'Can come out any time' }) : null,
     applies('hsaInvested', { g, r }) ? labelled('HSA invested vs cash', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.hsaInvested, x => up({ hsaInvested: x }), { hint: 'Invested' }), moneyInput(v.hsaCash, x => up({ hsaCash: x }), { hint: 'Cash' }))) : null];

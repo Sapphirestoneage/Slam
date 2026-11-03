@@ -1,6 +1,7 @@
 // Report (build phase 8): Overview (donuts, metrics shelf, Sankey), One-pager, History. Read only:
 // every number links to its home, where it is typed.
 import { h, clear, icon } from './dom.js';
+import { homeworkList } from '../homework.js';
 import * as S from './staples.js';
 import { debtRatios } from './lists.js';
 import { taxRates } from '../math/income.js';
@@ -157,14 +158,7 @@ function fixedVariable(ctx, m) {
 }
 
 // ---------- One-pager ----------
-export function homeworkItems(ctx) {
-  const out = [];
-  for (const r of ctx.visible(() => true)) {
-    if (r.status === 'Will email') out.push({ r, label: r.name || r.values?.category || r.type || 'Item' });
-    for (const [f, st] of Object.entries(r.fieldStatus || {})) if (st === 'Will email' && r.status !== 'Will email') out.push({ r, field: f, label: `${r.name || r.type || 'Item'}: ${f}` });
-  }
-  return out;
-}
+export function homeworkItems(ctx) { return homeworkList(ctx.store.doc, ctx.visible(() => true)); }
 export function summaryText(ctx) {
   const m = ctx.metrics();
   const doc = ctx.store.doc;
@@ -180,7 +174,7 @@ export function summaryText(ctx) {
     line('Savings rate', m.savingsRate.value == null ? null : pct(m.savingsRate.value)),
     line('FI date', fiWhen == null ? null : monthName(ymOf(new Date(ctx.now().getTime() + fiWhen * 30.44 * 86400000)))),
     '',
-    hw.length ? 'To do:' : null, ...hw.map(x => `- ${x.label}`),
+    hw.length ? 'To do:' : null, ...hw.map(x => `- ${x.label}${x.where ? ` (look on: ${x.where})` : ''}`),
     op.strengths ? `\nStrengths: ${op.strengths}` : null, op.struggles ? `Struggles: ${op.struggles}` : null,
     op.doMore ? `Do more: ${op.doMore}` : null, op.doLess ? `Do less: ${op.doLess}` : null,
     doc.session.next ? `\nNext session: ${doc.session.next}` : null,
@@ -223,7 +217,7 @@ export function onePagerScreen(app, ctx) {
       { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate },
       fiCard(ctx, m)]),
     h('div.op-grid', {},
-      h('div', {}, h('h3', {}, 'To-dos'), hw.length ? h('ul.op-list', {}, hw.map(x => h('li', {}, x.label))) : h('p.muted', {}, 'No homework yet. Mark a number Will email to add it.')),
+      h('div', {}, h('h3', {}, 'To-dos'), hw.length ? h('ul.op-list', {}, hw.map(x => h('li', {}, x.label))) : h('p.muted', {}, "No homework yet. Tap I'll find it later on any number to add it.")),
       h('div', {}, h('h3', {}, 'Goals'), h('ul.op-list', {},
         m.monthsToFi.value != null ? h('li', {}, `FI ${monthName(ymOf(new Date(ctx.now().getTime() + m.monthsToFi.value * 30.44 * 86400000)))}${doc.assumptions.fiAge ? `, target age ${doc.assumptions.fiAge}` : ''}`) : null,
         goals.map(g => h('li', {}, g.name || g.type)), !goals.length && m.monthsToFi.value == null ? h('li.muted', {}, 'Set an FI target on Plan') : null))),

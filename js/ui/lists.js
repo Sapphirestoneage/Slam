@@ -265,7 +265,7 @@ function debtSecondary(ctx, r, up) {
     return [
       labelled('Pay', toggle(['Minimum', 'Custom', 'In full'], choice, x => up({ payChoice: x }), { label: 'Pay' })),
       choice === 'Custom' ? labelled('Custom $ a month', moneyInput(v.payment, x => up({ payment: x }), { hint: 'Add payment' })) : null, // R020
-      labelled('0% promo: rate and end', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, pctInput(v.promoApr, x => up({ promoApr: x }), { hint: '0' }),
+      labelled('0% promo: rate and end', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, pctInput(v.promoApr, x => up({ promoApr: x }), { hint: 'e.g. 0' }),
         textInput(v.promoEnd, x => up({ promoEnd: x }), { hint: 'YYYY-MM', width: 110 })), { note: 'Warns 60 days before it ends' }),
       labelled('Due day', textInput(v.dueDay, x => up({ dueDay: x }), { hint: 'Add day', width: 90 }), { note: 'Shows on the cash flow calendar' }),
       labelled('Credit limit', moneyInput(v.limit, x => up({ limit: x }), { hint: 'Add limit' }), { note: 'For utilization' }),
@@ -300,7 +300,7 @@ function debtSecondary(ctx, r, up) {
       const apr = feeApr({ fee: v.fee ?? null, amount: v.balance ?? null, periodsPerYear: v.periods ?? null });
       return h('span.row-line', { style: { gap: '12px' } },
         labelled('Fee per period', moneyInput(v.fee, x => up({ fee: x }), { hint: 'Add fee' })),
-        labelled('Periods a year', textInput(v.periods, x => up({ periods: x === null ? null : Number(x) }), { hint: '26', width: 90 })),
+        labelled('Periods a year', textInput(v.periods, x => up({ periods: x === null ? null : Number(x) }), { hint: 'e.g. 26', width: 90 })),
         labelled('As an APR', h('span.computed', {}, apr.value === null ? `Needs ${apr.needs.join(' and ')}` : value(apr))));
     },
     'Tax debt': () => labelled('Payment plan in place', yn3(v.taxPlan, x => up({ taxPlan: x }), 'Payment plan')),
