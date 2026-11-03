@@ -304,3 +304,10 @@ button.math:hover { background: color-mix(in srgb, var(--primary-light) 45%, tra
 /* Merge with main: the group header holds the fold and "Add a line"; Report this keeps the 32px minimum. */
 table.rows tr.group .group-line .fold { width: auto; flex: 1; }
 .report-this { min-height: 32px; }
+@media (max-width: 760px) { .section-title { flex-wrap: wrap; row-gap: 8px; } } /* the header buttons (Add the usual list, Select, Clear all) wrap on a phone */
+
+/* Polish item 1: Know it, Rough, Missing. */
+.tag.missing { background: transparent; color: var(--text); border: 2px dashed var(--border-input); }
+.sure-menu .btn.small[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+.sure-menu hr { border: 0; border-top: 1px solid var(--border-row); margin: 0; }
+.metric .so { font-size: .875rem; color: var(--text); line-height: 1.35; margin-top: 4px; } .metric .so a { font-weight: 600; white-space: nowrap; }

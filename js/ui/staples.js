@@ -1,6 +1,6 @@
 // Staples: pieces built once and used everywhere (Staples tab, R103 to R114, R156 to R174, R182 to R185).
 import { h, clear, icon } from './dom.js';
-import { STATUSES, statusOf, changeSince, countsAsDone } from '../records.js';
+import { STATUSES, SURE, sureOf, statusOf, changeSince, countsAsDone } from '../records.js';
 import { metrics, keyNumbers } from '../math/metrics.js';
 import { inView, timeChip } from '../math/time.js';
 import { money, pct, number, EMPTY, duration } from '../format.js';
@@ -119,14 +119,28 @@ export function statusTag(status) {
 export function warnTag(text) { return h('span.tag.warn', {}, '⚠ ', text); }
 export const guessTag = () => h('span.tag.guess', {}, '? Guess');
 
-// Shows only when the number is not 'Know it' (DMMT: reduce noise); click to pick.
-export function statusPicker(current, onPick, { label = 'Status' } = {}) {
-  const quiet = !current || current === 'Know it';
-  const b = h(`button.status-btn${quiet ? '.quiet' : ''}`, { type: 'button', 'aria-label': `${label}: ${current || 'not set'}`, 'data-focus': `status:${label}` },
-    current && current !== 'Know it' ? statusTag(current) : 'Know it', icon('down'));
-  b.onclick = () => popover(b, h('div.stack', {}, h('h3', {}, 'How sure is this?'),
-    STATUSES.map(s => h('button.btn.small', { type: 'button', onclick: () => { closePop(); onPick(s); } }, statusTag(s))),
-    h('button.btn.small', { type: 'button', onclick: () => { closePop(); onPick(null); } }, 'Clear')));
+// One sureness system: the face says Know it, Rough or Missing; the finer status is picked inside (polish item 1).
+const FACE = { 'Know it': ['plain', 'Know it'], Rough: ['roughly', '≈ Rough'], Missing: ['missing', 'Missing'], 'Not for me': ['plain', 'Not for me'] };
+export function sureTag(status, hasValue = true) {
+  const face = sureOf(status, hasValue);
+  const [cls, text] = FACE[face];
+  return h(`span.tag.${cls}`, { title: status && face !== status ? `${face}: ${TAG[status]?.[1].replace(/^[?≈] /, '') ?? status}` : null }, text);
+}
+// The menu: Know it; Rough (Roughly, Guess); Missing (Not now, I'll find it later); then Not for me, which hides it.
+export function statusMenu(onPick, current = null) {
+  const pickBtn = (s, text) => h('button.btn.small', { type: 'button', 'aria-pressed': String(s === current), onclick: () => { closePop(); onPick(s); } }, text);
+  const group = (name, list) => h('div.sure-group', {}, h('span.label', {}, name), h('div.row-line', { style: { gap: '6px' } }, list.map(s => pickBtn(s, TAG[s][1].replace(/^[?≈] /, '')))));
+  return h('div.stack.sure-menu', { style: { gap: '10px' } }, h('h3', {}, 'How sure is this?'),
+    h('div.sure-group', {}, pickBtn('Know it', 'Know it')),
+    group('Rough', SURE.Rough), group('Missing', SURE.Missing),
+    h('hr'), h('div.row-line', { style: { gap: '6px' } }, pickBtn('Not for me', 'Not for me (hide it)'),
+      h('button.btn.small', { type: 'button', onclick: () => { closePop(); onPick(null); } }, 'Clear')));
+}
+export function statusPicker(current, onPick, { label = 'Status', hasValue = true } = {}) {
+  const face = sureOf(current, hasValue);
+  const b = h(`button.status-btn${face === 'Know it' ? '.quiet' : ''}`, { type: 'button', 'aria-label': `${label}: ${face}${current && current !== face ? `, ${TAG[current]?.[1] ?? current}` : ''}`, 'data-focus': `status:${label}` },
+    face === 'Know it' ? 'Know it' : sureTag(current, hasValue), icon('down'));
+  b.onclick = () => popover(b, statusMenu(onPick, current));
   return b;
 }
 
@@ -185,7 +199,7 @@ function joinWordsEl(items) {
   items.forEach((el, i) => { if (i) out.push(i === items.length - 1 ? ' and ' : ', '); out.push(el); });
   return out;
 }
-export function metricCard(ctx, label, result, { key = null, render = null, lowerIsGood = false, note = null, home = null } = {}) {
+export function metricCard(ctx, label, result, { key = null, render = null, lowerIsGood = false, note = null, home = null, so = null } = {}) {
   const locked = result.value === null || result.value === undefined;
   const snap = ctx.store.lastSnapshot();
   const change = key && !locked ? changeSince(keyNumbers(ctx.metrics()), snap, key) : null;
@@ -200,7 +214,9 @@ export function metricCard(ctx, label, result, { key = null, render = null, lowe
     result.guess ? h('span', {}, guessTag()) : null,
     change && change.direction !== 'same' ? h(`span.change.${change.direction}${good ? '.good' : ''}`, {}, `${formatDiff(change.diff, key)} since last session`) : null,
     change && change.direction === 'same' ? h('span.change', {}, 'Same as last session') : null,
-    note && !locked ? h('span.change', {}, note) : null);
+    note && !locked ? h('span.change', {}, note) : null,
+    // So what (polish item 6): one plain sentence, and a link when something is off.
+    so && !locked ? h('span.so', {}, so.text, so.action ? [' ', h('a', { href: so.action.href }, `${so.action.label} ›`)] : null) : null);
 }
 function formatDiff(d, key) {
   if (key === 'savingsRate') return pct(Math.abs(d)).replace('%', ' pts');
@@ -434,7 +450,7 @@ export function keyboardHint() { // R168
 }
 // Hidden-area link: '+ Add [area]' linked to the gates hub.
 export function hiddenAreaLink(ctx, area) {
-  return h('a', { href: '#/my-money/profile', 'data-gate': area }, `+ Add ${area}`);
+  return h('a', { href: '#/home/profile', 'data-gate': area }, `+ Add ${area}`);
 }
 
 // ---------- Confirm dialogs (Words and states) ----------
@@ -476,6 +492,28 @@ export function timeToggle(ctx) {
 }
 
 // ---------- Record list: rows, groups, bulk select, totals (R105, R109 to R114, R165, R171, R172) ----------
+// Entered once elsewhere: the number is a button that opens its home, so it is never edited twice.
+export function openSource(route, id) {
+  location.hash = route;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const row = document.querySelector(`tr[data-id="${id}"]`);
+    if (row?.hidden) document.querySelector(`tr.group[data-group="${CSS.escape(row.dataset.group)}"] button.fold`)?.click();
+    row?.classList.add('highlight');
+    row?.querySelector('input:not([type="checkbox"])')?.focus({ preventScroll: true });
+    row?.scrollIntoView({ block: 'center' });
+  }));
+}
+export function fromButton(label, route, id, { tag = false, value = null } = {}) {
+  return h(tag ? 'button.tag.plain.from-tag' : 'button.btn.small.from-btn', { type: 'button', 'data-focus': `from:${id}`, title: 'Entered there; open it to change it', onclick: () => openSource(route, id) },
+    value, value ? ' · ' : null, label, ' ›');
+}
+// Session-1 focus mode (polish item 4): while Guide me is on in a session, lists show their core columns only and
+// the rest sits under one "More detail" per row or section.
+export const focusOn = ctx => { const s = ctx.store.doc.session || {}; return !!s.guide && !!s.startedAt && !(s.endedAt > s.startedAt); };
+export function focusMore(ctx, id, kids) {
+  if (!focusOn(ctx)) return kids;
+  return moreBlock(`focus:${id}`, () => h('div.stack', { style: { gap: '16px' } }, ...[kids].flat()), { label: 'More detail' });
+}
 const slug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 // A block that redraws itself on every change, keeping your place (for cards beside a list).
 export function live(ctx, render) {
@@ -590,10 +628,13 @@ export function recordList(ctx, cfg) {
   };
   const caretState = (tr, open) => {
     const c = tr?.querySelector('button.caret');
-    if (c) { c.setAttribute('aria-expanded', String(open)); clear(c, open ? 'Less' : 'More', icon(open ? 'down' : 'right')); }
+    if (c) { c.setAttribute('aria-expanded', String(open)); clear(c, open ? 'Less' : view?.moreLabel ?? 'More', icon(open ? 'down' : 'right')); }
   };
-  const moreRow = (r, g) => h('tr.more', { 'data-for': r.id, 'data-group': g }, h('td', { colspan: view.span }, moreLayers(ctx, r, cfg, p => update(r, p))));
+  const moreRow = (r, g) => h('tr.more', { 'data-for': r.id, 'data-group': g }, h('td', { colspan: view.span }, moreLayers(ctx, r, cfg, p => update(r, p), view.extra, ctx.metrics())));
 
+  // A blank core number reads Missing on its face.
+  const hasCore = r => (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields || ['amount'])
+    .every(f => { const v = f in r && f !== 'values' ? r[f] : r.values?.[f]; return v !== null && v !== undefined && v !== ''; });
   // One "..." per row: Reset, Duplicate, Not for me (or Bring back), then Delete on its own (R105).
   const rowMenuButton = r => {
     const name = r.name || r.type || cfg.thing.one;
@@ -622,19 +663,23 @@ export function recordList(ctx, cfg) {
         yes: `Clear ${cfg.thing.plural}`, no: 'Keep them', onYes: () => { ctx.store.resetSection(cfg.filter); toast('Cleared.', { undo: () => ctx.store.undo() }); } })) : null);
     const picker = typeof cfg.picker === 'function' ? cfg.picker(ctx) : cfg.picker;
     const addBtn = addButton(cfg.thing.one, e => picker ? openAddPicker(e.currentTarget, { thing: cfg.thing.one, ...picker, onPick: (t, own) => addNew(t, own) }) : addNew(null));
-    if (!recs.length) { view = null; return h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, h('div.list', {}, emptyList(cfg.thing, e => addBtn.click()))); }
+    const autos = cfg.autoRows?.(ctx, m) ?? []; // entered elsewhere, shown here (From Debt): no input, no menu
+    if (!recs.length && !autos.length) { view = null; return h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, h('div.list', {}, emptyList(cfg.thing, e => addBtn.click()))); }
 
     const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all', 'data-focus': 'select-all' });
     allBox.onchange = () => { if (allBox.checked) recs.forEach(r => state.selected.add(r.id)); else state.selected.clear(); refreshSelection(); };
-    const cols = cfg.columns.filter(c => c && (!c.couple || ctx.couple));
+    const focus = focusOn(ctx) && cfg.focus ? cfg.focus : null;
+    const shown = cfg.columns.filter(c => c && (!c.couple || ctx.couple) && (!c.focusOnly || focus));
+    const cols = focus ? shown.filter(c => focus.includes(c.label)) : shown;
+    const extraCols = focus ? shown.filter(c => !focus.includes(c.label)) : [];
     const span = cols.length + 3;
     const thead = h('thead', {}, h('tr', {}, h('th.check-cell', {}, allBox), cols.map(c => h(`th${c.num ? '.num' : ''}`, {}, c.label)), h('th', {}, 'Status'), h('th', {}, h('span.sr', {}, 'Actions'))));
     const groups = new Map();
-    for (const r of recs) { const g = cfg.groupBy?.(r) ?? ''; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(r); }
+    for (const r of [...recs, ...autos]) { const g = cfg.groupBy?.(r) ?? ''; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(r); }
     for (const g of cfg.lastGroups || []) if (groups.has(g)) { const rows = groups.get(g); groups.delete(g); groups.set(g, rows); } // e.g. Not for me sits at the bottom
     const body = h('tbody');
     const rowEls = new Map(), groupEls = new Map();
-    view = { recs, rows: rowEls, groups: groupEls, body, span, allBox, bulkHost: h('div.bulk-host'), actions: sel => ({
+    view = { recs, rows: rowEls, groups: groupEls, body, span, allBox, extra: extraCols, moreLabel: focus ? 'More detail' : 'More', bulkHost: h('div.bulk-host'), actions: sel => ({
       all: recs.length, onClear: () => { state.selected.clear(); refreshSelection(); },
       onDuplicate: () => { ctx.store.duplicate(sel); toast(`Duplicated ${sel.length}.`, { undo: () => ctx.store.undo() }); },
       onDelete: e => remove(sel, e.currentTarget), onReset: () => reset(sel),
@@ -659,21 +704,29 @@ export function recordList(ctx, cfg) {
         body.append(tr);
       }
       for (const r of rows) {
+        if (r.auto) {
+          body.append(h('tr.row.auto', { 'data-id': r.id, 'data-group': g, hidden: folded }, h('td.check-cell'),
+            cols.map((c, i) => h(`td.col-${slug(c.label)}${i === 0 ? '.col-first' : ''}${c.num ? '.num' : ''}`, {}, cfg.autoCell?.(ctx, r, c, m) ?? null)),
+            h('td.col-status', {}, h('span.tag.plain', {}, `From ${r.auto.from}`)), h('td.col-actions')));
+          continue;
+        }
         const box = h('input', { type: 'checkbox', 'aria-label': `Select ${r.name || r.type || cfg.thing.one}`, checked: state.selected.has(r.id), 'data-focus': 'sel' });
         box.onchange = () => { box.checked ? state.selected.add(r.id) : state.selected.delete(r.id); refreshSelection(); };
         const open = state.open === r.id;
         const tr = h(`tr.row${state.selected.has(r.id) ? '.selected' : ''}`, { 'data-id': r.id, 'data-group': g, hidden: folded },
           h('td.check-cell', {}, box),
           cols.map((c, i) => h(`td.col-${slug(c.label)}${i === 0 ? '.col-first' : ''}${c.num ? '.num' : ''}`, {}, c.render(ctx, r, m, p => update(r, p), { remove: e => remove([r.id], e.currentTarget) }))),
-          h('td.col-status', {}, statusPicker(r.status, s => update(r, { status: s }))),
+          h('td.col-status', {}, statusPicker(r.status, s => update(r, { status: s }), { hasValue: hasCore(r) })),
           h('td.col-actions', {}, h('span.actions', {},
             h('button.caret', { type: 'button', 'aria-expanded': String(open), 'data-focus': 'more', onclick: () => setOpen(r.id) },
-              open ? 'Less' : 'More', icon(open ? 'down' : 'right')),
+              open ? 'Less' : view.moreLabel, icon(open ? 'down' : 'right')),
             rowMenuButton(r))));
         // Enter in a row = new row below (R168).
         tr.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') { e.target.dispatchEvent(new Event('change')); addNew(r.type, null, r.id); } });
         rowEls.set(r.id, tr);
         body.append(tr);
+        const note = cfg.rowNote?.(ctx, r, m); // e.g. "Looks like the same payment: keep one"
+        if (note) body.append(h('tr.row-note', { 'data-for': r.id, 'data-group': g, hidden: folded }, h('td', { colspan: span }, note)));
         if (open) { const more = moreRow(r, g); more.hidden = folded; body.append(more); track(tr, more); }
       }
     }
@@ -681,7 +734,7 @@ export function recordList(ctx, cfg) {
     const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td.check-cell', {}), cfg.totals(ctx, recs, m, cols))) : null;
     const done = recs.filter(r => (cfg.coreFields || ['amount']).every(f => countsAsDone(statusOf(r, f)))).length;
     const out = h(`div.section.area-${cfg.area}`, {}, head,
-      cfg.strip ? cfg.strip(ctx, m) : null,
+      cfg.strip ? (focus ? moreBlock(`focus:strip:${listKey}`, () => cfg.strip(ctx, ctx.metrics()), { label: 'More detail' }) : cfg.strip(ctx, m)) : null,
       h('div.list', {}, view.bulkHost, h('div.list-scroll', { 'data-scroll-key': listKey }, h('table.rows', {}, thead, body, tfoot)),
         sectionFooter(ctx, { add: addBtn, total: cfg.footerTotal?.(ctx, recs, m), count: recs.length, done, of: recs.length }),
         keyboardHint()));
@@ -694,8 +747,9 @@ export function recordList(ctx, cfg) {
 }
 
 // Secondary then Tertiary behind the caret. Paid with sits at the top (Mockup).
-function moreLayers(ctx, r, cfg, update) {
+function moreLayers(ctx, r, cfg, update, extra = [], m = null) {
   return h('div', {},
+    extra.length ? h('div.layer', {}, extra.map(c => labelled(c.label, c.render(ctx, r, m, update, {})))) : null, // focus mode: the other columns
     cfg.paidWith ? h('div.layer', {}, paidWith(ctx, r, id => update({ paidWith: id }))) : null,
     cfg.secondary ? h('div.layer', {}, cfg.secondary(ctx, r, update)) : null,
     cfg.tertiary ? h('div.layer', {}, cfg.tertiary(ctx, r, update)) : null,
@@ -705,7 +759,7 @@ function moreLayers(ctx, r, cfg, update) {
 function bulkBar(ctx, sel, a) {
   const cards = ctx.store.find(r => r.kind === 'debt' && r.type === 'Credit card');
   const statusBtn = h('button.btn.small', { type: 'button' }, icon('tag'), 'Set status', icon('down'));
-  statusBtn.onclick = () => popover(statusBtn, h('div.stack', {}, STATUSES.map(s => h('button.btn.small', { type: 'button', onclick: () => { closePop(); a.onStatus(s); } }, statusTag(s)))));
+  statusBtn.onclick = () => popover(statusBtn, statusMenu(s => s && a.onStatus(s)));
   const linkBtn = h('button.btn.small', { type: 'button', disabled: !cards.length, title: cards.length ? null : 'Add a credit card first' }, icon('link'), 'Link to card', icon('down'));
   linkBtn.onclick = () => popover(linkBtn, cards.length <= 4
     ? h('div.stack', {}, h('h3', {}, 'Paid with'), cards.map(c => h('button.btn', { type: 'button', onclick: () => { closePop(); a.onLink(c.id); } }, c.name || 'Credit card')))

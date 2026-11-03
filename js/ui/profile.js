@@ -1,4 +1,4 @@
-// My Money › Profile (build phase 5): why now, what applies (the gates hub, R015), about you, work and home,
+// Home › About you (build phase 5): why now, what applies (the gates hub, R015), about you, work and home,
 // the accounts gate with counts (R001 to R003), and the couples split (R177 to R179). Answers live in doc.profile.
 import { h } from './dom.js';
 import { textInput, toggle, select, stepper, checkbox, labelled, moreBlock, pctInput, toast, laterButton, button, moneyInput, parkProfile } from './staples.js';
@@ -47,13 +47,13 @@ export function profileScreen(app, ctx) {
   // ---------- What applies to me: every gate in one place ----------
   const setCar = v => {
     set({ hasCar: v });
-    if (v && !store.find(r => r.kind === 'asset' && r.type === 'Car').length) { store.add('asset', { name: 'Car', values: {} }, { type: 'Car' }); told('Car added to Assets; car lines are back in the Budget.', '#/my-money/assets'); }
+    if (v && !store.find(r => r.kind === 'asset' && r.type === 'Car').length) { store.add('asset', { name: 'Car', values: {} }, { type: 'Car' }); told('Car added to Assets; car lines are back in the Budget.', '#/net-worth/assets'); }
     else if (v === false) told('Car rows and car lines are hidden. Nothing is deleted.');
   };
-  const setKids = v => { set({ dependents: v === null ? null : v ? Math.max(1, p.dependents ?? 0) : 0 }); if (v) told('Kids lines are in the Budget.', '#/spending/budget'); };
+  const setKids = v => { set({ dependents: v === null ? null : v ? Math.max(1, p.dependents ?? 0) : 0 }); if (v) told('Kids lines are in the Budget.', '#/cash-flow/budget'); };
   const setHousing = v => {
     set({ housing: v });
-    if (v === 'Own' && !store.find(r => r.kind === 'asset' && r.type === 'Home').length) { store.add('asset', { name: 'Home', values: {} }, { type: 'Home' }); told('Home added to Assets, with room for the mortgage.', '#/my-money/assets'); }
+    if (v === 'Own' && !store.find(r => r.kind === 'asset' && r.type === 'Home').length) { store.add('asset', { name: 'Home', values: {} }, { type: 'Home' }); told('Home added to Assets, with room for the mortgage.', '#/net-worth/assets'); }
     if (v === 'Family') { // R008: the housing line starts as covered by someone
       for (const r of store.find(x => x.kind === 'bill' && x.values.category === 'Rent or mortgage' && (x.values.whoPays ?? 'Me') === 'Me')) store.update(r.id, { whoPays: 'Covered by someone' });
     }
@@ -172,7 +172,7 @@ export function profileScreen(app, ctx) {
   // Next (Brandon B1.1): once every core answer is in, or parked for later.
   const c = profileCompletion(store.doc);
   const next = h('div.next-step', {}, c.core.ready
-    ? button('Next: Income', { kind: 'primary', iconName: 'right', onClick: () => app.go('#/my-money/income') })
+    ? button('Next: Income', { kind: 'primary', iconName: 'right', onClick: () => app.go('#/cash-flow/income') })
     : h('p.muted', {}, `${c.core.missing.length} to go before Next (${c.core.missing.slice(0, 3).join(', ')}${c.core.missing.length > 3 ? ' and more' : ''}). Answer each, or tap I'll find it later.`));
   return [whyNow, hub, about, work, benefits, accounts, couple, next];
 }

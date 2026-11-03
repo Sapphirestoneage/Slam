@@ -73,23 +73,25 @@ export function stateTax({ gross, pretax = 0, filingStatus = 'Single', place = n
 }
 
 // M12: annual take-home from annual gross.
-export function takeHomeFromGross({ gross, pretax = 0, filingStatus = 'Single', selfEmployed = false, place = null }, ref) {
+// roth: Roth 401(k) money from the paycheck. It leaves take-home like a before-tax deduction but is taxed first,
+// so it never lowers taxable income (answer to question 82).
+export function takeHomeFromGross({ gross, pretax = 0, roth = 0, filingStatus = 'Single', selfEmployed = false, place = null }, ref) {
   if (gross === null || gross === undefined) return needs('M12', ['gross pay']);
   const f = fica({ gross, filingStatus, selfEmployed }, ref);
   const fed = federalTax({ gross, pretax, filingStatus, selfEmployedHalf: f.deductibleHalf }, ref);
   const st = stateTax({ gross, pretax, filingStatus, place }, ref);
-  const v = gross - fed.value - f.value - st.state - st.local - pretax;
+  const v = gross - fed.value - f.value - st.state - st.local - pretax - roth;
   const where = st.applies ? ` minus ${fmt.money(st.state)} ${place.state} state tax${st.nyc ? ` minus ${fmt.money(st.local)} NYC tax` : ''}` : '';
-  return { ...ok('M12', v, `${fmt.money(gross)} gross minus ${fmt.money(fed.value)} federal tax minus ${fmt.money(f.value)} FICA${where} minus ${fmt.money(pretax)} before-tax deductions = ${fmt.money(v)} a year take-home (${fmt.money(v / 12)} a month).${st.applies ? '' : ' State tax is in only for New York so far.'}`), federal: fed, fica: f, stateTax: st };
+  return { ...ok('M12', v, `${fmt.money(gross)} gross minus ${fmt.money(fed.value)} federal tax minus ${fmt.money(f.value)} FICA${where} minus ${fmt.money(pretax)} before-tax deductions${roth ? ` minus ${fmt.money(roth)} Roth 401(k), after tax` : ''} = ${fmt.money(v)} a year take-home (${fmt.money(v / 12)} a month).${st.applies ? '' : ' State tax is in only for New York so far.'}`), federal: fed, fica: f, stateTax: st };
 }
 
 // M13: gross from take-home, by bisection to the nearest $1. Marked Computed.
-export function grossFromTakeHome({ takeHome, pretax = 0, filingStatus = 'Single', selfEmployed = false, place = null }, ref) {
+export function grossFromTakeHome({ takeHome, pretax = 0, roth = 0, filingStatus = 'Single', selfEmployed = false, place = null }, ref) {
   if (takeHome === null || takeHome === undefined) return needs('M13', ['take-home pay']);
   let lo = takeHome, hi = takeHome * 3 + 100000;
   while (hi - lo > 0.5) {
     const mid = (lo + hi) / 2;
-    if (takeHomeFromGross({ gross: mid, pretax, filingStatus, selfEmployed, place }, ref).value < takeHome) lo = mid; else hi = mid;
+    if (takeHomeFromGross({ gross: mid, pretax, roth: typeof roth === 'function' ? roth(mid) : roth, filingStatus, selfEmployed, place }, ref).value < takeHome) lo = mid; else hi = mid;
   }
   const gross = Math.round(hi);
   return { ...ok('M13', gross, `Worked backwards from ${fmt.money(takeHome)} a year take-home: the gross that leaves exactly that after federal tax, FICA, state and city tax (where they apply) and before-tax deductions is ${fmt.money(gross)}.`), status: 'Computed' };
@@ -151,23 +153,30 @@ export function incomeRow(r, { filingStatus = 'Single', ref, place = null }) {
   const yearly = (x, per) => (x == null ? null : monthlyFrom(x, per, v.payFrequency).value * 12);
   const typedGross = v.basis === 'Gross' ? yearly(r.amount, r.per) : v.gross ?? null;
   const salary = typedGross ?? null;
-  const pretax = (salary ?? 0) * (v.contributionPct ?? 0) + ((v.premium ?? 0) + (v.hsaFsa ?? 0) + (v.otherPretax ?? 0) + (v.contributionPct == null ? v.k401Paycheck ?? 0 : 0)) * perYear;
+  // A Roth 401(k) (v.k401Roth, or the Roth part of Both, v.k401RothShare) comes out after tax: same take-home effect, no tax cut.
+  const k401 = (g, pct = v.contributionPct) => (g ?? 0) * (pct ?? 0) + (v.contributionPct == null ? (v.k401Paycheck ?? 0) * perYear : 0);
+  const others = ((v.premium ?? 0) + (v.hsaFsa ?? 0) + (v.otherPretax ?? 0)) * perYear;
+  // The Roth share of the 401(k) money: all of it (Roth), a part (Both, as a % or dollars a paycheck), or none.
+  const rothOf = total => (v.k401Roth ? total : !v.k401RothShare ? 0
+    : Math.min(total, v.k401RothShare.pct != null ? total * v.k401RothShare.pct : (v.k401RothShare.perPaycheck ?? 0) * perYear));
+  const pretax = others + k401(salary) - rothOf(k401(salary));
+  const roth = rothOf(k401(salary));
   const selfEmployed = taxType === '1099';
   if (taxType && salary !== null && (v.basis === 'Gross' || r.amount == null)) { // gross only: take-home is solved
-    const t = takeHomeFromGross({ gross: salary, pretax, filingStatus, selfEmployed, place }, ref);
-    return { takeHome: { ...t, value: t.value / 12, text: t.text, status: 'Computed' }, gross: salary, pretax, taxType, computed: 'takeHome' };
+    const t = takeHomeFromGross({ gross: salary, pretax, roth, filingStatus, selfEmployed, place }, ref);
+    return { takeHome: { ...t, value: t.value / 12, text: t.text, status: 'Computed' }, gross: salary, pretax, roth, taxType, computed: 'takeHome' };
   }
   const th = r.amount == null ? needs('M01', ['take-home']) : monthlyFrom(r.amount, r.per, v.payFrequency);
-  if (!taxType || th.value === null) return { takeHome: th, gross: salary, pretax, taxType, computed: null };
-  if (salary !== null) return { takeHome: th, gross: salary, pretax, taxType, computed: null }; // both typed: kept as typed (R046)
+  if (!taxType || th.value === null) return { takeHome: th, gross: salary, pretax, roth, taxType, computed: null };
+  if (salary !== null) return { takeHome: th, gross: salary, pretax, roth, taxType, computed: null }; // both typed: kept as typed (R046)
   // A 401(k) % is a share of the gross being solved for, so solve again with it until it settles.
-  let g = grossFromTakeHome({ takeHome: th.value * 12, pretax, filingStatus, selfEmployed, place }, ref);
-  let pre = pretax;
+  const split = g => ({ pretax: others + k401(g) - rothOf(k401(g)), roth: rothOf(k401(g)) });
+  let g = grossFromTakeHome({ takeHome: th.value * 12, ...split(null), filingStatus, selfEmployed, place }, ref);
   for (let i = 0; i < 6 && v.contributionPct; i++) {
-    pre = pretax + g.value * v.contributionPct;
-    const next = grossFromTakeHome({ takeHome: th.value * 12, pretax: pre, filingStatus, selfEmployed, place }, ref);
+    const next = grossFromTakeHome({ takeHome: th.value * 12, ...split(g.value), filingStatus, selfEmployed, place }, ref);
     if (Math.abs(next.value - g.value) < 1) { g = next; break; }
     g = next;
   }
-  return { takeHome: th, gross: g.value, grossResult: g, pretax: pre, taxType, computed: 'gross' };
+  const out = split(g.value);
+  return { takeHome: th, gross: g.value, grossResult: g, pretax: out.pretax, roth: out.roth, taxType, computed: 'gross' };
 }

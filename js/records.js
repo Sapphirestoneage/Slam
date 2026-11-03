@@ -2,12 +2,23 @@
 // undo and redo over every change (R086), snapshots (R083, R085, R167), export and import.
 // Pure: no DOM, no storage. js/storage.js saves it; the screens read it.
 
+import { moveFieldIds, FIELDS_VERSION } from './fields-map.js';
 export const SCHEMA_VERSION = 1;
 export const APP_ID = 'SLAM';
 
 // R053. 'Not sure' shows as Guess once the app fills a typical value (R055).
 export const STATUSES = ['Know it', 'Roughly', 'Not sure', 'Will email', 'Not now', 'Not for me', 'Computed'];
 const DONE = new Set(['Know it', 'Roughly', 'Not sure', 'Not for me', 'Computed']); // R054, R055, R058
+// One sureness system (polish pass item 1): every number shows Know it, Rough or Missing on its face. Display only:
+// the stored statuses stay as they are. Rough holds Roughly and Not sure (shown as Guess, a typical value is used);
+// Missing holds Not now and Will email (shown as I'll find it later), and any blank number. Not for me is its own hide action.
+export const SURE = { 'Know it': ['Know it'], Rough: ['Roughly', 'Not sure'], Missing: ['Not now', 'Will email'] };
+export function sureOf(status, hasValue = true) {
+  if (status === 'Not for me') return 'Not for me';
+  if (SURE.Rough.includes(status)) return 'Rough';
+  if (SURE.Missing.includes(status)) return 'Missing';
+  return hasValue ? 'Know it' : 'Missing';
+}
 export const PERIODS = ['paycheck', 'week', '2 weeks', 'twice a month', 'month', 'quarter', 'year'];
 export const SOURCES = ['manual', 'statement', 'bank']; // R116, R118
 
@@ -40,7 +51,7 @@ export function newHousehold({ name = null, now = new Date().toISOString(), id =
     records: [], history: [], snapshots: [], parking: [],
     spending: {}, // budget passes by month, calendar marks, start balance (build phase 6)
     session: {},  // session count, agenda, notes, one-pager (build phases 8 to 10)
-    createdAt: now, updatedAt: now, lastBackupAt: null,
+    createdAt: now, updatedAt: now, lastBackupAt: null, fieldsVersion: FIELDS_VERSION,
   };
 }
 
@@ -339,6 +350,7 @@ export function migrate(doc) {
   // Version 1 is the first shape; later versions add steps here, oldest first.
   for (const k of ['records', 'history', 'snapshots', 'parking']) doc[k] ??= [];
   for (const k of ['profile', 'assumptions', 'settings', 'client', 'spending', 'session']) doc[k] ??= {};
+  moveFieldIds(doc); // field IDs renumbered when fields.json was rebuilt from the spec (js/fields-map.js)
   doc.schema = SCHEMA_VERSION;
   return doc;
 }

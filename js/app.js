@@ -10,7 +10,7 @@ import { localAdapter, memoryAdapter, listClients, loadClient, saveClient, creat
 import { householdFromInputs } from './demo.js';
 import { addPresets } from './presets.js';
 import { keyNumbers } from './math/metrics.js';
-import { TABS, parseRoute, search, routeForPlace } from './nav.js';
+import { TABS, parseRoute, search, routeForPlace, tabRoute } from './nav.js';
 import { SCREENS, progressOf } from './screens.js';
 import { startFastTrack } from './ui/fasttrack-ui.js';
 import { keepPlace } from './ui/place.js';
@@ -101,21 +101,26 @@ const app = {
     const time = h('select', { 'aria-label': 'Show amounts as', title: 'Show amounts as dollars, hours of work or days of FI', 'data-focus': 'time-view' },
       [['$', '$'], ['Hours', 'Hours'], ['FI days', 'FI days']].map(([v, t]) => h('option', { value: v, selected: v === this.ctx.timeMode }, t)));
     time.onchange = () => this.ctx.setTimeMode(time.value);
+    // The Home tab and SLAM do the same: Prep, or Live while a session is on.
+    const ses = this.hasClient ? this.store.doc.session || {} : {};
+    const homeHref = tabRoute(TABS[0], { inSession: !!ses.startedAt && !(ses.endedAt > ses.startedAt) });
     clear($('topbar'), h('div.topbar-in', {},
       h('div.tb-left', {},
-        h('a.site-id', { href: '#/home/prep', title: 'Stress Less About Money' }, 'SLAM'), clientBtn,
+        h('a.site-id', { href: homeHref, title: 'Stress Less About Money' }, 'SLAM'), clientBtn,
         h('span.save-state', { id: 'save-state' })),
-      h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: `#/${t.id}/${t.subs[0].id}`, 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),
+      h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: t.id === 'home' ? homeHref : tabRoute(t), 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),
       h('div.tb-right', {},
         this.findBox(),
         S.iconButton('note', 'Parking lot', () => this.openParking()), undo, redo,
         h('label.field.time-pick', {}, time), cv, gear)));
     // A sub-tab whose area the Profile turned off is absent, not greyed (R001).
-    const off = this.hasClient && tab.id === 'my-money' && this.ctx.gates().areas.debt === false ? new Set(['debt']) : new Set();
-    // My Money modes sit beside its sub-tabs: Fast Track is a button, One page a toggle (Navigation: modes are not tabs).
-    const modes = tab.id === 'my-money' && this.hasClient ? h('span.row-line.mm-modes', { style: { gap: '8px', flexWrap: 'nowrap' } },
+    const off = this.hasClient && tab.id === 'net-worth' && this.ctx.gates().areas.debt === false ? new Set(['debt']) : new Set();
+    // Net worth and Cash flow modes sit beside their sub-tabs: Fast Track is a button, One page a toggle (Navigation: modes are not tabs).
+    const paged = ['net-worth', 'cash-flow'].includes(tab.id);
+    const onePageKey = `onePage-${tab.id}`;
+    const modes = paged && this.hasClient ? h('span.row-line.mm-modes', { style: { gap: '8px', flexWrap: 'nowrap' } },
       S.button('Start Fast Track', { iconName: 'right', onClick: () => startFastTrack(this, this.ctx) }),
-      S.toggle([['sections', 'By section'], ['one', 'One page']], this.prefs.onePage ? 'one' : 'sections', v => this.setPref('onePage', v === 'one'), { label: 'My Money layout' })) : null;
+      S.toggle([['sections', 'By section'], ['one', 'One page']], this.prefs[onePageKey] ? 'one' : 'sections', v => this.setPref(onePageKey, v === 'one'), { label: `${tab.name} layout` })) : null;
     const subs = h('div.subtabs-in', {}, tab.subs.filter(s => !off.has(s.id)).map(s => {
       const p = this.hasClient ? progressOf(this.ctx, tab.id, s.id) : null;
       const complete = p && p.of > 0 && p.done === p.of;
@@ -350,13 +355,13 @@ const app = {
     // A redraw of the same screen never loses your place (R165): scroll, list scroll and the control you were on.
     if (this._lastHash === hash) keepPlace(draw); else draw();
     // One page: a sub-tab click scrolls to its part (only when the place changes, not on every redraw).
-    if (this.prefs.onePage && tab.id === 'my-money' && this._lastHash !== hash && this._lastHash?.startsWith('#/my-money')) document.getElementById(`mm-${sub.id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    if (this.prefs[`onePage-${tab.id}`] && this._lastHash !== hash && this._lastHash?.startsWith(`#/${tab.id}/`)) document.getElementById(`part-${sub.id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     this._lastHash = hash;
     document.title = `${sub.name} · ${tab.name} · SLAM`;
     if (location.hash !== hash) history.replaceState(null, '', hash);
   },
 };
-const placeOf = r => ({ income: 'My Money › Income', benefit: 'My Money › Income', debt: 'My Money › Debt', account: 'My Money › Assets', asset: 'My Money › Assets', coverage: 'My Money › Protection', bill: 'Spending › Budget' })[r.kind] || 'My Money › Profile';
+const placeOf = r => ({ income: 'Cash flow › Income', benefit: 'Cash flow › Income', debt: 'Net worth › Debt', account: 'Net worth › Assets', asset: 'Net worth › Assets', coverage: 'Net worth › Protection', bill: 'Cash flow › Budget' })[r.kind] || 'Home › About you';
 
 // Keyboard (R168): / = Find, Ctrl+Z undo, Ctrl+Shift+Z redo (outside text boxes, so typing undo still works).
 document.addEventListener('keydown', e => {

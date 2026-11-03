@@ -178,3 +178,43 @@ textarea.notes-box { width: 100%; min-height: 90px; border: 2px solid var(--bord
 /* Fix pass 6: the Prep date box reads like the other boxes: same text, a muted hint when empty, a clear picker button. */
 .field input[type="date"].no-date:not(:focus) { color: color-mix(in srgb, var(--text-2) 75%, transparent); }
 .field input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
+
+/* Reorganize pass: the Cash flow waterfall, one row, read left to right. */
+.waterfall { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: var(--s2); margin-bottom: var(--s4); padding: var(--s3) var(--s4); }
+.wf-step { display: flex; flex-direction: column; gap: 2px; padding: var(--s2); border-radius: var(--r-input); min-width: 0; }
+.wf-step.total { background: color-mix(in srgb, var(--primary-light) 35%, transparent); }
+.wf-num { font-size: 1.25rem; font-weight: 700; white-space: nowrap; display: flex; align-items: baseline; gap: 4px; }
+.wf-sign { color: var(--text-2); font-weight: 600; }
+.wf-step .label.metric-home { color: var(--text-2); text-decoration: none; }
+.wf-step .label.metric-home:hover { color: var(--primary); text-decoration: underline; }
+@media (max-width: 760px) { .waterfall { grid-template-columns: 1fr 1fr; } }
+/* Enter once: lines that come from Debt or Protection, and the duplicate flag. */
+table.rows tr.row.auto td { background: color-mix(in srgb, var(--debt) 6%, transparent); }
+.auto-name { font-weight: 600; padding-left: var(--s2); }
+.btn.small.from-btn { border-color: var(--border-filled); color: var(--text); font-weight: 600; }
+button.tag.from-tag { border: 0; cursor: pointer; font: inherit; font-size: .8125rem; font-weight: 700; min-height: 32px; }
+button.tag.from-tag:hover { filter: brightness(.95); text-decoration: underline; }
+table.rows tr.row-note td { height: auto; padding: 6px var(--s3) 10px; background: color-mix(in srgb, var(--warn) 6%, transparent); }
+.dup-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.dup-note .tag.warn { white-space: normal; height: auto; min-height: 24px; padding: 4px 10px; }
+/* Polish item 5: Next 3 on Prep, compact; the FI reveal card on Goals. */
+.next3.compact { margin-bottom: var(--s4); }
+.next3.compact .n3 { padding: var(--s2) var(--s3); gap: 4px; }
+.next3.compact .n3:not(.big) .why { display: none; }
+.reveal-card { margin-bottom: var(--s3); }
+/* Polish item 7: Home's Open items, one card, one line each. */
+.open-items { margin-bottom: var(--s4); display: flex; flex-direction: column; gap: 6px; }
+.open-items h2 { margin: 0; }
+.open-row { display: grid; grid-template-columns: 150px 1fr auto; gap: var(--s3); align-items: center; padding: 6px 0; border-top: 1px solid var(--border-row); min-height: 36px; }
+.open-row a { font-weight: 600; white-space: nowrap; }
+@media (max-width: 760px) { .open-row { grid-template-columns: 1fr auto; } .open-row .muted { grid-column: 1 / -1; grid-row: 2; } }
+/* Polish item 8: the guided close's step indicator. */
+.close-steps { list-style: none; display: flex; gap: var(--s2); padding: 0; margin: 0 0 var(--s2); flex-wrap: wrap; }
+.close-steps button { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border: 2px solid var(--border-input); border-radius: 999px; cursor: pointer; font-weight: 600; background: var(--card); }
+.close-steps .n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--chip); font-size: .8125rem; font-weight: 700; }
+.close-steps li.on button { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
+.close-steps li.on .n { background: var(--on-primary); color: var(--primary); }
+.close-steps li.done .n { background: var(--good); color: #fff; }
+.close-steps button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.close-nav { margin-top: var(--s3); }
+.dup-q { font-weight: 700; }

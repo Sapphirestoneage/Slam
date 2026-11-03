@@ -9,13 +9,13 @@ const PERIODS = [
   [/\b(monthly|a month|per month|\/mo|\/month)\b/i, 'month'],
 ];
 const KINDS = [
-  { re: /\b(card|amex|visa|mastercard|discover)\b/i, kind: 'debt', type: 'Credit card', section: 'My Money › Debt' },
-  { re: /\bstudent loan\b|\bnavient\b|\bnelnet\b|\bsallie\b/i, kind: 'debt', type: 'Student loan', section: 'My Money › Debt' },
-  { re: /\b(car|auto) loan\b/i, kind: 'debt', type: 'Car loan', section: 'My Money › Debt' },
-  { re: /\b(personal loan|loan)\b/i, kind: 'debt', type: 'Personal loan', section: 'My Money › Debt' },
-  { re: /\b(401\(?k\)?|403\(?b\)?|roth|ira|brokerage|hsa|529)\b/i, kind: 'account', group: 'investment', section: 'My Money › Assets' },
-  { re: /\b(savings|checking|hysa|money market|cd)\b/i, kind: 'account', group: 'cash', section: 'My Money › Assets' },
-  { re: /\b(paycheck|salary|wages|job|side hustle|income)\b/i, kind: 'income', section: 'My Money › Income' },
+  { re: /\b(card|amex|visa|mastercard|discover)\b/i, kind: 'debt', type: 'Credit card', section: 'Net worth › Debt' },
+  { re: /\bstudent loan\b|\bnavient\b|\bnelnet\b|\bsallie\b/i, kind: 'debt', type: 'Student loan', section: 'Net worth › Debt' },
+  { re: /\b(car|auto) loan\b/i, kind: 'debt', type: 'Car loan', section: 'Net worth › Debt' },
+  { re: /\b(personal loan|loan)\b/i, kind: 'debt', type: 'Personal loan', section: 'Net worth › Debt' },
+  { re: /\b(401\(?k\)?|403\(?b\)?|roth|ira|brokerage|hsa|529)\b/i, kind: 'account', group: 'investment', section: 'Net worth › Assets' },
+  { re: /\b(savings|checking|hysa|money market|cd)\b/i, kind: 'account', group: 'cash', section: 'Net worth › Assets' },
+  { re: /\b(paycheck|salary|wages|job|side hustle|income)\b/i, kind: 'income', section: 'Cash flow › Income' },
 ];
 const INVEST_TYPES = { '401k': '401(k)', '401(k)': '401(k)', '403b': '403(b)', '403(b)': '403(b)', roth: 'Roth IRA', ira: 'Traditional IRA', brokerage: 'Brokerage', hsa: 'HSA', '529': '529' };
 
@@ -47,6 +47,6 @@ export function parseQuickAdd(text) {
     return { kind: 'income', type: 'Job', name, amount, per: per || 'month', section: k.section,
       summary: `Income${name ? ` "${name}"` : ''}, ${amount ?? 'amount not given'} per ${per || 'month'}` };
   }
-  return { kind: 'bill', type: null, name, amount, per: per || 'month', section: 'Spending › Budget',
+  return { kind: 'bill', type: null, name, amount, per: per || 'month', section: 'Cash flow › Budget',
     summary: `Spending line${name ? ` "${name}"` : ''}, ${amount ?? 'amount not given'} per ${per || 'month'}` };
 }

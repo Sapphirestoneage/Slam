@@ -11,7 +11,7 @@ import { money, pct } from '../format.js';
 import { yearItems, usualDates, sinkingOf, takingOver } from '../year.js';
 import { TUITION_GOAL } from '../community.js';
 
-export const PUI = { extra: 0, pace: null, bands: true, chart: 'FI timeline', extraDebt: 0 };
+export const PUI = { extra: 0, pace: null, bands: true, chart: 'FI timeline', extraDebt: 0, reveal: false };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const short = v => (Math.abs(v) >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
 const whenText = (ctx, months) => (months == null ? null : months === 0 ? 'Now' : `${monthName(addMonths(ymOf(ctx.now()), months))} (${months < 24 ? `${months} months` : `${(months / 12).toFixed(1)} years`})`);
@@ -28,12 +28,32 @@ winSources.push(ctx => {
 // ---------- Goals ----------
 // The FI card, Big deals and the ladder refresh in place when an assumption changes (the milestone list below
 // keeps its own state, so the screen is not rebuilt).
+// The FI reveal (polish item 5): opened from that agenda step, Goals puts the FI date, the Timeline's save-more
+// slider and Big deals first, so all three show without scrolling at 1280px.
+export function revealCard(app, ctx, m) {
+  const fiWhen = m.monthsToFi.value;
+  const slider = h('input', { type: 'range', min: -1000, max: 3000, step: 50, value: PUI.extra, 'aria-label': 'Save more or less a month', 'data-focus': 'reveal:save-more' });
+  const out = h('strong'), result = h('span.fi-when');
+  const paint = () => {
+    const rr = m.fiNumber.value == null ? null : monthsTo(m, m.fiNumber.value, { realReturn: m.inputs.realReturn, extra: PUI.extra, now: ctx.now() });
+    clear(out, `${PUI.extra >= 0 ? '+' : '−'}${money(Math.abs(PUI.extra))} a month`);
+    clear(result, !rr ? '' : rr.reached ? 'Already there' : rr.value == null ? 'Not on this path' : `FI ${whenText(ctx, rr.value)}${ageAt(m, rr.value) != null ? `, at ${ageAt(m, rr.value)}` : ''}`);
+  };
+  slider.oninput = () => { PUI.extra = Number(slider.value); paint(); };
+  paint();
+  return h('div.card.reveal-card', {},
+    h('div.row-line', { style: { gap: '24px', alignItems: 'baseline' } },
+      h('div', {}, h('span.label', {}, 'FI date'), h('div.fi-big', {}, fiWhen != null ? S.mathButton(m.monthsToFi, monthName(addMonths(ymOf(ctx.now()), fiWhen))) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs)))),
+      h('div', {}, h('span.label', {}, 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? S.mathButton(m.fiNumber, money(m.fiNumber.value)) : h('span.muted', { style: { fontSize: '1rem' } }, 'Needs ', S.needLinks(ctx, m.fiNumber.needs))))),
+    m.fiNumber.value != null ? h('div.slider-row', { style: { marginTop: '12px' } }, h('span.label', {}, 'Save more'), slider, out, result) : null);
+}
 export function goalsScreen(app, ctx) {
-  const top = h('div', {}, goalsTop(app, ctx));
+  const reveal = PUI.reveal;
+  const top = h('div', {}, goalsTop(app, ctx, { reveal }));
   ctx.onRefresh(() => S.keepPlace(() => clear(top, goalsTop(app, ctx))));
   return [head('Goals', 'FI target, assumptions, milestones'), top, S.recordList(ctx, milestoneList())];
 }
-function goalsTop(app, ctx) {
+function goalsTop(app, ctx, { reveal = false } = {}) {
   const m = ctx.metrics();
   const a = ctx.store.doc.assumptions;
   const ref = ctx.ref;
@@ -74,9 +94,8 @@ function goalsTop(app, ctx) {
       nominal ? presetRow('Inflation', 'inflation', ref.presets.inflation.values, v => `${Math.round(v * 100)}%`, 'Feeds the nominal numbers') : null,
       h('div.preset-row', {}, h('span.label', {}, 'Life expectancy'), S.textInput(a.lifeExpectancy ?? null, v => setA({ lifeExpectancy: v === null ? null : Number(v) }), { hint: String(ref.defaults.lifeExpectancy), width: 90 })),
       h('div.preset-row', {}, h('span.label', {}, 'Social Security'), S.select(['Full scheduled', 'Reduced %', 'None'], a.socialSecurity ?? null, v => setA({ socialSecurity: v }), { label: 'Social Security', hint: 'Pick one', width: 170 }))), { label: 'More: real or nominal, life expectancy, Social Security' }));
-  return [h('div.card.fi-card', { style: { marginBottom: '16px' } }, left, right),
-    bigDealsCard(ctx, m),
-    ladderCard(ctx, m)];
+  const fiCard = h('div.card.fi-card', { style: { marginBottom: '16px' } }, left, right);
+  return reveal ? [revealCard(app, ctx, m), bigDealsCard(ctx, m), fiCard, ladderCard(ctx, m)] : [fiCard, bigDealsCard(ctx, m), ladderCard(ctx, m)];
 }
 
 // These are big deals (M56): one assumption at a time; click an option to use it.
@@ -252,8 +271,8 @@ export function planDebts(ctx, { order, extra = 0 } = {}) {
 export function payoffScreen(app, ctx) {
   const m = ctx.metrics();
   const ds = m.inputs.debts.filter(d => !d.inFull && d.balance > 0);
-  if (!ds.length) return [head('Debt payoff', 'Each debt shrinking to zero'), h('div.card', {}, h('div.empty.center', {}, h('span.title', {}, ctx.gates().areas.debt === false ? 'No debt, per the Profile' : 'No debts to pay off'),
-    S.button('Open Debt', { iconName: 'right', onClick: () => app.go('#/my-money/debt') })))];
+  if (!ds.length) return [head('Debt payoff', 'Each debt shrinking to zero'), h('div.card', {}, h('div.empty.center', {}, h('span.title', {}, ctx.gates().areas.debt === false ? 'No debt, per About you' : 'No debts to pay off'),
+    S.button('Open Debt', { iconName: 'right', onClick: () => app.go('#/net-worth/debt') })))];
   const usable = ds.filter(d => d.apr != null && d.payment != null);
   if (!usable.length) return [head('Debt payoff', 'Each debt shrinking to zero'), h('div.card', {}, S.chartEmpty(ctx, ['a balance, APR and payment']))];
   const order = m.inputs.debtOrder;
@@ -390,7 +409,7 @@ function takingOverList(app, ctx) {
   const line = x => h('div.year-item', {}, h('span', { style: { fontWeight: 600 } }, x.name), x.who ? h('span.tag.plain', {}, x.who) : null,
     x.monthly != null ? h('span.computed', {}, `${money(x.monthly)} a month`) : h('span.muted.small', {}, 'No amount yet'));
   return h('section.section.area-goals', {}, h('div.section-title', {}, h('h2', {}, 'Taking over'), h('span.muted', {}, `${money(t.total)} a month covered by others today`), h('span.spacer'),
-    S.button('Open the budget', { size: 'small', onClick: () => app.go('#/spending/budget') })),
+    S.button('Open the budget', { size: 'small', onClick: () => app.go('#/cash-flow/budget') })),
   h('div.card', {}, h('div.stack', { style: { gap: '12px' } },
     ...t.steps.map(st => h('div.year-month', {}, h('div.year-head', {}, h('strong', {}, monthName(st.ym)), h('span.muted.small', {}, `+${money(st.added)} a month · ${money(st.total)} in all`)),
       h('div.stack', { style: { gap: '6px' } }, st.items.map(line)))),
@@ -411,7 +430,9 @@ function sinkingFunds(ctx) {
     const acct = accounts.find(a => a.id === v.sinkingFund);
     const tags = (acct?.values.tags || []).map(t => t.name).filter(Boolean);
     return h('tr', {},
-      h('td', {}, h('strong', {}, x.name), h('div.muted.small', {}, x.source)),
+      h('td', {}, h('strong', {}, x.name), h('div.muted.small', {}, x.source),
+        // A yearly cost from the Budget is already in spending as its monthly set-aside, so Free after savings leaves it out.
+        x.rec.kind === 'bill' && x.rec.values.irregular ? h('div.muted.small', {}, 'Already counted in spending') : null),
       h('td.num', {}, f.target == null ? h('span.muted', {}, 'Needs a cost') : money(f.target)),
       h('td', {}, x.ym ? monthName(x.ym, 'short') : h('span.muted', {}, 'Needs a month')),
       h('td.num', {}, f.savedFrom && f.savedFrom !== 'typed' ? h('span.computed', { title: `From ${f.savedFrom}` }, money(f.saved))

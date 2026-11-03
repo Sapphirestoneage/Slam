@@ -37,13 +37,14 @@ Node 20 or newer. The math runs in Node with no browser.
 
 | Where | What |
 |---|---|
-| `index.html` | The app: top bar, five tabs, sub-tabs |
+| `index.html` | The app: top bar, five tabs (Home, Net worth, Cash flow, Plan, Report), sub-tabs |
 | `staples.html` | Every staple and Polish rule on one page |
 | `js/records.js` | One record type, history, undo and redo, snapshots, export and import |
 | `js/math/` | Every Math tab formula as a pure function |
 | `js/gates.js` | What applies to this household: the gates (R001 to R023) |
 | `js/fasttrack.js` | Fast Track's Basics pass, written into the same records |
-| `js/ui/profile.js`, `js/ui/money-lists.js` | My Money: Profile and the gates hub; Income, Assets, Protection, Taxes |
+| `js/nav.js` | The tabs and sub-tabs, old My Money and Spending routes redirected to their new homes, Find |
+| `js/ui/profile.js`, `js/ui/money-lists.js` | Home › About you and the gates hub; Income and Taxes (Cash flow); Assets and Protection (Net worth) |
 | `tools/artifact.mjs` | Builds the one-file SLAM for Eli page from this repo (see the file for how) |
 | `js/math/portfolio.js`, `js/ui/account-detail.js`, `js/ui/account-specific.js` | Inside each account: allocation, holdings, goals, growth, details; 401(k) and HSA |
 | `js/homework.js` | I'll find it later: the Homework list and where to find each thing |

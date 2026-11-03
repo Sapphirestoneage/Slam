@@ -8,12 +8,12 @@ const first = (ctx, pred) => ctx.store.find(pred)[0] || null;
 // Each entry: label, current value, save, and where it lives.
 const QUICK = {
   'take-home': {
-    label: 'Take-home pay a month', hint: 'After taxes, what lands in your account', money: true, where: '#/my-money/income',
+    label: 'Take-home pay a month', hint: 'After taxes, what lands in your account', money: true, where: '#/cash-flow/income',
     get: ctx => { const r = first(ctx, r => r.kind === 'income'); return r?.per === 'month' || !r?.per ? r?.amount ?? null : null; },
     save: (ctx, v) => { const r = first(ctx, r => r.kind === 'income'); r ? ctx.store.update(r.id, { amount: v, per: 'month', basis: 'Take-home' }) : ctx.store.add('income', { name: 'Take-home pay', amount: v, per: 'month' }, { type: 'Job' }); },
   },
   spending: {
-    label: 'Spending a month, all in', hint: 'Everything that goes out in a normal month', money: true, where: '#/spending/budget',
+    label: 'Spending a month, all in', hint: 'Everything that goes out in a normal month', money: true, where: '#/cash-flow/budget',
     extra: (ctx, state) => {
       const r = first(ctx, r => r.kind === 'spending' && r.type === 'All in');
       state.includes = r ? r.values.includesDebtPayments !== false : true;
@@ -28,27 +28,27 @@ const QUICK = {
     },
   },
   age: {
-    label: 'Age', money: false, where: '#/my-money/profile',
+    label: 'Age', money: false, where: '#/home/profile',
     get: ctx => ctx.store.doc.profile.age ?? null,
     save: (ctx, v) => ctx.store.setDoc('profile', { age: v }),
   },
   cash: {
-    label: 'Cash in checking and savings', money: true, where: '#/my-money/assets',
+    label: 'Cash in checking and savings', money: true, where: '#/net-worth/assets',
     get: ctx => first(ctx, r => r.kind === 'account' && r.values.group === 'cash')?.values.balance ?? null,
     save: (ctx, v) => { const r = first(ctx, r => r.kind === 'account' && r.values.group === 'cash'); r ? ctx.store.update(r.id, { balance: v }) : ctx.store.add('account', { name: 'Savings', values: { group: 'cash', balance: v } }, { type: 'Savings or HYSA' }); },
   },
   invested: {
-    label: 'Invested, all accounts', money: true, where: '#/my-money/assets',
+    label: 'Invested, all accounts', money: true, where: '#/net-worth/assets',
     get: ctx => first(ctx, r => r.kind === 'account' && r.values.group === 'investment')?.values.balance ?? null,
     save: (ctx, v) => { const r = first(ctx, r => r.kind === 'account' && r.values.group === 'investment'); r ? ctx.store.update(r.id, { balance: v }) : ctx.store.add('account', { name: 'Investments (all accounts)', values: { group: 'investment', balance: v } }, { type: 'All investments' }); },
   },
   'rent or mortgage': {
-    label: 'Rent or mortgage a month (your share)', money: true, where: '#/spending/budget',
+    label: 'Rent or mortgage a month (your share)', money: true, where: '#/cash-flow/budget',
     get: ctx => first(ctx, r => r.kind === 'bill' && r.values.category === 'Rent or mortgage')?.amount ?? null,
     save: (ctx, v) => { const r = first(ctx, r => r.kind === 'bill' && r.values.category === 'Rent or mortgage'); r ? ctx.store.update(r.id, { amount: v }) : ctx.store.add('bill', { name: 'Rent', amount: v, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date', whoPays: 'Me' } }); },
   },
   'gross pay': {
-    label: 'Gross pay a year', hint: 'Before taxes', money: true, where: '#/my-money/income',
+    label: 'Gross pay a year', hint: 'Before taxes', money: true, where: '#/cash-flow/income',
     get: ctx => first(ctx, r => r.kind === 'income')?.values.gross ?? null,
     save: (ctx, v) => { const r = first(ctx, r => r.kind === 'income'); r ? ctx.store.update(r.id, { gross: v }) : ctx.store.add('income', { name: 'Job', values: { gross: v } }, { type: 'Job' }); },
   },

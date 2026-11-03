@@ -9,6 +9,8 @@ import { profileCompletion } from './profile.js';
 import { firstLowDay } from './spending-ui.js';
 import { homeworkItems, sendSummary, fiCard, netWorthChart } from './report-ui.js';
 import { next3, agenda } from '../plan.js';
+import { PUI } from './plan-ui.js';
+import { soWhat } from '../sowhat.js';
 import { keyNumbers } from '../math/metrics.js';
 import { changeSince, statusOf, countsAsDone } from '../records.js';
 import { money, pct } from '../format.js';
@@ -41,13 +43,12 @@ export function moneyInOneLine(app, ctx) {
     : m.surplus.value !== null && m.surplus.value < 0 ? `You spend ${money(-m.surplus.value)} a month more than comes in.` : null;
   return h('section.section', {}, h('div.section-title', {}, h('h2', {}, 'Money in one line')),
     sentence ? h('p', { style: { fontSize: '1.125rem', fontWeight: 600 } }, sentence) : null,
-    m.inputs.spendingSource === 'lines' && m.inputs.guessLines ? h('div.banner-inline.soft', {}, `Spending includes ${m.inputs.guessLines} starter ${m.inputs.guessLines === 1 ? 'guess' : 'guesses'} at the high end (${money(m.inputs.guessTotal)} a month), so the surplus looks low until they are reviewed.`,
-      S.button('Review on Budget', { iconName: 'right', onClick: () => app.go('#/spending/budget') })) : null,
+    // Guessed lines, a low savings rate or a cash dip: each card says so, with a link (polish item 6).
     S.summaryStrip(ctx, [
-      { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: '#/report/overview' },
-      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: '#/spending/budget' },
-      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: '#/report/overview' },
-      fiCard(ctx, m) && { ...fiCard(ctx, m), home: '#/plan/goals' }]));
+      { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: '#/report/overview', so: soWhat('netWorth', m) },
+      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: '#/cash-flow/budget', so: soWhat('surplus', m, { lowDay: firstLowDay(ctx) }) },
+      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: '#/report/overview', note: m.savingsRate.second, so: soWhat('savingsRate', m) },
+      fiCard(ctx, m) && { ...fiCard(ctx, m), home: '#/plan/goals', so: soWhat('fi', m) }]));
 }
 
 // ---------- Prep ----------
@@ -55,17 +56,20 @@ export function moneyInOneLine(app, ctx) {
 function paydayCard(app, ctx) {
   const d = paydayOf(ctx.store.doc, ctx.ref, ctx.now());
   if (d.needs) return h('div.card.payday', {}, h('strong', {}, 'Payday'), h('span.muted', {}, ` Add ${d.needs} on Income to see what each paycheck covers.`),
-    S.button('Open Income', { size: 'small', onClick: () => app.go('#/my-money/income') }));
+    S.button('Open Income', { size: 'small', onClick: () => app.go('#/cash-flow/income') }));
   const when = new Date(`${d.date}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const line = (k, v) => h('span.stack', { style: { gap: '2px' } }, h('span.label', {}, k), h('strong', {}, money(v)));
   return h('div.card.payday', {},
     h('p', { style: { fontSize: '1.0625rem', margin: 0 } }, `You get ${money(d.period.in)} on ${when}${d.guessDate ? ' (day not set yet)' : ''}. `,
-      d.hasFixed ? `${money(d.period.fixed)} covers fixed bills. ` : '', h('strong', {}, `${money(d.period.free)} is free to spend.`)),
+      d.hasFixed ? `${money(d.period.fixed)} covers fixed bills. ` : '', d.setAside.total ? `${money(d.period.save)} goes to savings goals and sinking funds. ` : '',
+      h('strong', {}, `${money(d.setAside.total ? d.period.afterSavings : d.period.free)} is free to spend.`)),
     !d.hasFixed ? h('span.muted.small', {}, 'Mark bills Fixed on the Budget to see what they take from each paycheck.') : null,
     h('div.row-line', { style: { gap: '24px', marginTop: '10px' } },
-      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each paycheck'), line('In', d.period.in), line('Fixed bills', d.period.fixed), line('Free', d.period.free)),
+      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each paycheck'), line('In', d.period.in), line('Fixed bills', d.period.fixed), line('Free', d.period.free),
+      line('Savings goals and sinking funds', d.period.save), line('Free after savings', d.period.afterSavings)),
     h('div.row-line', { style: { gap: '24px', marginTop: '6px' } },
-      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each month'), line('In', d.month.in), line('Fixed bills', d.month.fixed), line('Free', d.month.free)));
+      h('span.muted.small', { style: { minWidth: '90px' } }, 'Each month'), line('In', d.month.in), line('Fixed bills', d.month.fixed), line('Free', d.month.free),
+      line('Savings goals and sinking funds', d.month.save), line('Free after savings', d.month.afterSavings)));
 }
 // M6: net worth over time, closed until asked; snapshots come from Save snapshot, End session and month-end close.
 function netWorthOverTime(app, ctx) {
@@ -87,27 +91,35 @@ export function prepScreen(app, ctx) {
   const due = app.dueForCheck().length;
   const notes = doc.parking.filter(n => !n.filedTo).length;
   const low = firstLowDay(ctx);
-  const card = (label, big, sub, onClick, linkText) => h('div.metric', {}, h('span.label', {}, label), h('div.big', { style: { fontSize: String(big).length > 6 ? '1.0625rem' : '2rem' } }, big),
-    sub ? h('span.muted.small', {}, sub) : null, onClick ? h('a', { href: '#', onclick: e => { e.preventDefault(); onClick(); } }, linkText) : null);
   return [clientStrip(app, ctx),
     inSession(ctx) ? h('div.banner-inline.good', {}, 'The session is on.', S.button('Back to Live', { iconName: 'right', onClick: () => app.go('#/home/live') })) : null,
     head('Home', `Prep for ${doc.client.name || 'this client'}`, S.button(inSession(ctx) ? 'Back to Live' : 'Start session', { kind: 'primary', size: 'big', onClick: () => startSession(app, ctx) })),
     moneyInOneLine(app, ctx),
+    next3Compact(app, ctx), // polish item 5: the Next 3 numbers on Prep too, #1 large
     paydayCard(app, ctx),
     netWorthOverTime(app, ctx),
-    h('div.strip', {},
-      card('What changed since last time', !snap ? 'Nothing yet' : changes.length ? `${changes.length} ${changes.length === 1 ? 'number' : 'numbers'}` : 'No change',
-        !snap ? 'No snapshot to compare with' : changes.map(x => `${x.label} ${x.c.direction === 'up' ? '▲' : '▼'} ${fmt(x.k, x.c.diff)}`).join(' · ') || `Since ${new Date(snap.at).toLocaleDateString()}`, snap ? () => app.go('#/report/history') : null, 'Open history'),
-      card('Open homework', homework || 'None', homework ? "Numbers to find later" : null, () => app.go('#/tools/lists'), 'Open the list'),
-      card('Due for a check', due || 'None', due ? 'Rough or aged numbers' : null, () => app.go('#/tools/lists'), 'Open the list'),
-      card('Parking lot notes', notes || 'None', notes ? 'Not filed yet' : null, () => app.openParking(), 'Open the parking lot')),
-    low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below ${money(low.low)} on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/spending/calendar') })) : null, // R096
-    ctx.gates().betweenJobs ? S.summaryStrip(ctx, [{ label: 'Runway (between jobs)', result: ctx.metrics().runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/my-money/assets' }]) : null, // R006
+    openItems(app, { snap, changes, fmt, homework, due, notes }),
+    low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below ${money(low.low)} on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/cash-flow/calendar') })) : null, // R096
+    ctx.gates().betweenJobs ? S.summaryStrip(ctx, [{ label: 'Runway (between jobs)', result: ctx.metrics().runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/net-worth/assets' }]) : null, // R006
     S.moreBlock('home:agenda', () => agendaEditor(ctx), { label: "Edit today's agenda" }),
     completionSlim(app, ctx)];
 }
+// One "Open items" card (polish item 7): what changed, homework, due for a check and the parking lot, one line each.
+function openItems(app, { snap, changes, fmt, homework, due, notes }) {
+  const total = homework + due + notes + (changes.length ? 1 : 0);
+  const row = (label, count, detail, go, link) => h('div.open-row', {}, h('strong', {}, label), h('span.muted', {}, detail),
+    go ? h('a', { href: '#', onclick: e => { e.preventDefault(); go(); } }, `${link} ›`) : h('span'));
+  return h('div.card.open-items', {},
+    h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Open items'), h('span.tag.plain', {}, total ? String(total) : 'None')),
+    row('What changed', null, !snap ? 'No snapshot to compare with yet' : changes.length ? changes.map(x => `${x.label} ${x.c.direction === 'up' ? '▲' : '▼'} ${fmt(x.k, x.c.diff)}`).join(' · ') : `No change since ${new Date(snap.at).toLocaleDateString()}`,
+      snap ? () => app.go('#/report/history') : null, 'History'),
+    row('Homework', homework, homework ? `${homework} ${homework === 1 ? 'number' : 'numbers'} to find later` : 'None', () => app.go('#/tools/lists'), 'Homework list'),
+    row('Due for a check', due, due ? `${due} rough or aged ${due === 1 ? 'number' : 'numbers'}` : 'None', () => app.go('#/tools/lists'), 'Revisit list'),
+    row('Parking lot', notes, notes ? `${notes} ${notes === 1 ? 'note' : 'notes'} not filed yet` : 'None', () => app.openParking(), 'Parking lot'));
+}
 function startSession(app, ctx) {
   if (!inSession(ctx)) {
+    ctx.store.snapshot(`Start of session ${sessionNo(ctx)}`, keyNumbers(ctx.metrics())); // polish item 5: a snapshot to compare with at the end
     ctx.store.transaction('Start session', () => {
       ctx.store.setIn('session', ['startedAt'], new Date().toISOString());
       ctx.store.setIn('session', ['guide'], true); // Guide me turns on (R076)
@@ -135,11 +147,11 @@ export function completionParts(ctx) {
   const m = ctx.metrics();
   const p = profileCompletion(doc);
   const parts = [
-    ['Profile', p.core, '#/my-money/profile'],
-    ['Income', listCompletion(ctx, r => r.kind === 'income', ['amount']).core, '#/my-money/income'],
-    ['Debt', ctx.gates().areas.debt === false ? { done: 1, of: 1 } : listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr']).core, '#/my-money/debt'],
-    ['Assets', listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance']).core, '#/my-money/assets'],
-    ['Spending', (() => { const rows = ctx.visible(r => r.kind === 'bill' && r.status !== 'Not for me'); return { done: rows.filter(r => countsAsDone(statusOf(r, 'amount')) && r.status !== 'Not sure').length, of: rows.length }; })(), '#/spending/budget'],
+    ['About you', p.core, '#/home/profile'],
+    ['Income', listCompletion(ctx, r => r.kind === 'income', ['amount']).core, '#/cash-flow/income'],
+    ['Debt', ctx.gates().areas.debt === false ? { done: 1, of: 1 } : listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr']).core, '#/net-worth/debt'],
+    ['Assets', listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance']).core, '#/net-worth/assets'],
+    ['Budget', (() => { const rows = ctx.visible(r => r.kind === 'bill' && r.status !== 'Not for me'); return { done: rows.filter(r => countsAsDone(statusOf(r, 'amount')) && r.status !== 'Not sure').length, of: rows.length }; })(), '#/cash-flow/budget'],
     ['Plan', { done: [m.fiNumber.value != null, m.monthsToFi.value != null || m.monthsToFi.never, ctx.visible(r => r.kind === 'milestone').length > 0].filter(Boolean).length, of: 3 }, '#/plan/goals'],
   ];
   const tot = parts.reduce((a, [, c]) => ({ done: a.done + (c.of ? c.done / c.of : 0), of: a.of + 1 }), { done: 0, of: 0 });
@@ -164,18 +176,25 @@ export function liveScreen(app, ctx) {
   const nextStep = () => {
     // Guide me (R076): the next field to ask, in curriculum order.
     const target = a.current?.route || n3[0]?.route || '#/plan/goals';
+    PUI.reveal = a.current?.id === 'fi';
     app.go(target);
   };
   return [clientStrip(app, ctx),
     head('Home', inSession(ctx) ? 'Live: the session is on' : 'Live: start the session from Prep',
       left != null ? h('span.time-left', {}, left >= 0 ? `${left} min left` : `${-left} min over`) : null,
       S.button('Next step', { kind: 'primary', size: 'big', iconName: 'right', onClick: nextStep })),
-    h('div.agenda', {}, a.steps.map((s, i) => h(`button.step${s.done ? '.done' : ''}${a.current?.id === s.id ? '.current' : ''}`, { type: 'button', onclick: () => app.go(s.route) },
+    h('div.agenda', {}, a.steps.map((s, i) => h(`button.step${s.done ? '.done' : ''}${a.current?.id === s.id ? '.current' : ''}`, { type: 'button', onclick: () => { PUI.reveal = s.id === 'fi'; app.go(s.route); } },
       h('span.step-n', {}, `${i + 1}`), h('span.step-name', {}, s.name), h('span.muted.small', {}, s.done ? 'Done' : a.current?.id === s.id ? "You're here" : 'Up next')))),
     h('div.section-title', {}, h('h2', {}, 'Next 3 numbers'), h('span.muted', {}, 'Ranked by how much they move the FI date')),
     n3.length ? h('div.next3', {}, n3.map((c, i) => next3Card(app, ctx, c, i))) : h('div.card', {}, h('p.muted', {}, 'Every number that moves the FI date is in. Nice.')),
     moneyInOneLine(app, ctx),
     h('div.row-line', { style: { marginTop: '8px' } }, S.button('End session', { iconName: 'check', onClick: () => app.go('#/home/wrap-up') }), S.button('Open the parking lot', { iconName: 'note', onClick: () => app.openParking() }))];
+}
+function next3Compact(app, ctx) {
+  const n3 = next3(ctx.store.doc, ctx.ref, { now: ctx.now() }).top;
+  if (!n3.length) return null;
+  return h('section.section', {}, h('div.section-title', {}, h('h2', {}, 'Next 3 numbers'), h('span.muted', {}, 'Ranked by how much they move the FI date')),
+    h('div.next3.compact', {}, n3.map((c, i) => next3Card(app, ctx, c, i))));
 }
 function next3Card(app, ctx, c, i) {
   const big = i === 0;
@@ -230,8 +249,8 @@ export function wrapScreen(app, ctx) {
   ended ? h('div.banner-inline.good', {}, icon('check'), ` Session ${s.count} saved. A backup file was downloaded. Send the summary when ready.`) : h('p.muted', {}, 'End session does all four at once, then shows Send summary.'),
   h('div.checklist', {}, items.map(i => h(`div.check-item${i.done || ended ? '.done' : ''}`, {}, h('span.box', {}, i.done || ended ? icon('check') : null),
     h('div', { style: { flex: 1 } }, h('div.what', {}, i.what), i.detail ? h('div.muted.small', {}, i.detail) : null), i.act))),
-  h('div.card', {}, h('div.row-line', { style: { gap: '12px' } }, h('strong', {}, 'Money feeling, 1 to 10'),
+  S.moreBlock('wrap:feeling', () => h('div.card', {}, h('div.row-line', { style: { gap: '12px' } }, h('strong', {}, 'Money feeling, 1 to 10'),
     S.stepper(s.feelings?.[s.count || 0] ?? null, v => ctx.store.setIn('session', ['feelings', String(s.count || 0)], v, 'Money feeling'), { min: 1, max: 10, label: 'Money feeling', key: 'feeling' }),
-    h('span.muted.small', {}, 'Asked at the end of each session'))),
+    h('span.muted.small', {}, 'Asked at the end of each session'))), { label: 'Money feeling' }),
   ];
 }
