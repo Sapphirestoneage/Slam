@@ -252,3 +252,7 @@ table.rows.mini th, table.rows.mini td { padding: 4px 6px; white-space: nowrap; 
 .benefit-row { display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; padding-bottom: var(--s3); border-bottom: 1px dashed var(--border-row); }
 .benefit-row .gate-label { min-width: 260px; align-self: center; font-weight: 600; }
 .nudge { flex-basis: 100%; font-size: .875rem; padding: 6px 10px; border-radius: var(--r-button); border: 1.5px solid var(--border-filled); background: var(--card); color: var(--text); }
+.year-month { display: grid; grid-template-columns: 180px 1fr; gap: var(--s3); padding-bottom: var(--s3); border-bottom: 1px dashed var(--border-row); }
+.year-head { display: flex; flex-direction: column; gap: 2px; }
+.year-item { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+@media (max-width: 700px) { .year-month { grid-template-columns: 1fr; } }

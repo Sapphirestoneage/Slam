@@ -177,3 +177,30 @@ test('M3.2: a large refund flags over-withholding; owing flags check withholding
   assert.equal(withholdingFlag({ lastYear: 'Owed', amount: 450 }).kind, 'under');
   assert.equal(withholdingFlag({ lastYear: "Don't know", amount: null }), null);
 });
+
+// ---------- Missed ideas M4, M5: the year and sinking funds ----------
+import { yearItems, usualDates, sinkingOf, nextYm } from '../js/year.js';
+test('M4.1: the year lists events, yearly costs and card fees by month; usual dates carry no cost', () => {
+  const now = new Date('2026-11-10T12:00:00Z');
+  const s = fresh();
+  s.add('event', { name: 'Trip home', amount: 600, values: { month: '2026-12' } }, { type: 'Trip home' });
+  s.add('bill', { name: 'Car registration', amount: 120, per: 'year', values: { irregular: true, monthDue: 3 } }, { type: 'Yearly cost' });
+  s.add('debt', { name: 'Card', values: { annualFee: 95, opened: '2024-02' } }, { type: 'Credit card' });
+  const y = yearItems(s.records, now);
+  assert.deepEqual(y.months.filter(m => m.items.length).map(m => [m.ym, m.cost]), [['2026-12', 600], ['2027-02', 95], ['2027-03', 120]]);
+  assert.equal(nextYm(4, now), '2027-04');
+  const usual = usualDates({ renting: true }, now);
+  assert.ok(usual.every(d => d.cost === undefined));
+  assert.ok(usual.some(d => d.type === 'Lease renewal'));
+});
+test('M5: a sinking fund has monthly needed and % funded; a linked purpose tag supplies the dollars', () => {
+  const now = new Date('2026-11-10T12:00:00Z');
+  const s = fresh();
+  const acct = s.add('account', { values: { group: 'cash', balance: 3000, tags: [{ name: 'Wedding', target: 1200, dollars: 300 }] } }, { type: 'Savings or HYSA' });
+  const e = s.add('event', { name: 'Wedding', amount: 1200, values: { month: '2027-05', sinking: true, sinkingFund: acct.id, fundTag: 'Wedding' } }, { type: 'Wedding' });
+  const item = yearItems(s.records, now).all.find(x => x.id === e.id);
+  const f = sinkingOf(item, { records: s.records, now });
+  assert.equal(f.saved, 300);
+  assert.equal(f.monthly, 150); // 900 left over 6 months
+  assert.equal(f.funded, 0.25);
+});

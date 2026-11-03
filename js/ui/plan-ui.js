@@ -8,6 +8,7 @@ import { payoffPlan } from '../math/debt.js';
 import { addMonths, ymOf, monthName, dateOf, monthsBetween } from '../month.js';
 import { winSources } from './spending-ui.js';
 import { money, pct } from '../format.js';
+import { yearItems, usualDates, sinkingOf } from '../year.js';
 
 export const PUI = { extra: 0, pace: null, bands: true, chart: 'FI timeline', extraDebt: 0 };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -308,7 +309,11 @@ export function eventList() {
   return {
     kind: 'event', area: 'goals', title: 'Upcoming events', thing: { one: 'event', plural: 'events' },
     filter: r => r.kind === 'event',
-    picker: { top: ['Trip', 'Wedding', 'Move', 'Big purchase'], other: ['Holiday gifts', 'Car repair', 'Medical', 'Education', 'Other'] },
+    picker: { top: ['Trip', 'Wedding', 'Move', 'Big purchase'], other: ['Trip home', 'Holiday gifts', 'Lease renewal', 'Insurance renewal', 'Open enrollment', 'Tax day', 'IRA deadline', 'Car repair', 'Medical', 'Education', 'Other'] },
+    secondary: (ctx, r, up) => [
+      r.type === 'Lease renewal' ? S.labelled('Rent goes up by, a month', S.moneyInput(r.values.rentIncrease ?? null, v => up({ rentIncrease: v }), { hint: 'Add increase' }),
+        { note: 'Your landlord\'s renewal letter', ...S.park(ctx, r, 'rentIncrease') }) : null,
+      S.labelled('Day of the month', S.textInput(r.values.day == null ? null : String(r.values.day), v => { const n = Number(v); up({ day: Number.isInteger(n) && n >= 1 && n <= 31 ? n : null }); }, { hint: 'Day, 1 to 31', width: 110 }))],
     newValues: type => ({ name: type }),
     coreFields: ['amount'],
     columns: [
@@ -329,7 +334,72 @@ export function eventList() {
   };
 }
 export function nextYearScreen(app, ctx) {
-  return [head('Next 12 months', 'Upcoming events. Each lands on the calendar in its month'), S.recordList(ctx, eventList())];
+  const host = h('div');
+  const draw = () => clear(host, yourYear(app, ctx), sinkingFunds(ctx));
+  ctx.onRefresh(draw); draw();
+  return [head('Next 12 months', 'Your year: known dates, what they cost, and what to set aside'), host, S.recordList(ctx, eventList())];
+}
+
+// ---------- Your year (M4): every known date and cost, month by month ----------
+function yourYear(app, ctx) {
+  const now = ctx.now();
+  const y = yearItems(ctx.visible(() => true), now);
+  const have = new Set(ctx.visible(r => r.kind === 'event').map(r => r.type));
+  const addUsual = () => {
+    const coverage = ctx.visible(r => r.kind === 'coverage' && r.values.have === 'Have it');
+    const list = usualDates({ renting: ctx.gates().housing === 'Rent', coverage }, now).filter(d => !(d.type !== 'Insurance renewal' && have.has(d.type))
+      && !ctx.visible(r => r.kind === 'event' && r.values.coverageId && r.values.coverageId === d.coverageId).length);
+    if (!list.length) { S.toast('The usual dates are already here.'); return; }
+    ctx.store.transaction('Add the usual dates', () => { for (const d of list) ctx.store.add('event', { name: d.name, values: { month: d.month, day: d.day ?? null, coverageId: d.coverageId ?? null } }, { type: d.type }); });
+    S.toast(`Added ${list.length} dates. Costs are blank: add the ones that cost money.`, { undo: () => ctx.store.undo() });
+  };
+  const sink = x => S.button('Save for it', { size: 'small', iconName: 'plus', onClick: () => { ctx.store.update(x.id, { sinking: true }); S.toast(`${x.name} is now a sinking fund.`); } });
+  const itemLine = x => h('div.year-item', {},
+    h('span', { style: { fontWeight: 600 } }, x.name), h('span.tag.plain', {}, x.source),
+    x.cost != null ? h('span.computed', {}, money(x.cost)) : h('span.muted.small', {}, 'No cost'),
+    x.rentUp ? h('span.muted.small', {}, `Rent goes up ${money(x.rentUp)} a month`) : null,
+    x.cost != null && !x.derived && !x.rec.values.sinking ? sink(x) : x.rec.values?.sinking ? h('span.tag.plain', {}, 'Sinking fund') : null);
+  const months = y.months.filter(mo => mo.items.length);
+  return h('section.section.area-goals', {}, h('div.section-title', {}, h('h2', {}, 'Your year'), h('span.spacer'),
+    S.button('Add the usual dates', { size: 'small', iconName: 'calendar', onClick: addUsual })),
+  h('div.card', {}, months.length || y.undated.length ? h('div.stack', { style: { gap: '12px' } },
+    ...months.map(mo => h('div.year-month', {}, h('div.year-head', {}, h('strong', {}, monthName(mo.ym)), mo.cost != null ? h('span.muted', {}, money(mo.cost)) : null),
+      h('div.stack', { style: { gap: '6px' } }, mo.items.map(itemLine)))),
+    y.undated.length ? h('div.year-month', {}, h('div.year-head', {}, h('strong', {}, 'No month yet'), h('span.muted.small', {}, 'Pick a month below so it lands on the calendar')),
+      h('div.stack', { style: { gap: '6px' } }, y.undated.map(itemLine))) : null)
+    : h('div.empty', {}, h('span.title', {}, 'Nothing on your year yet'), h('span.muted', {}, 'Tax day, open enrollment, renewals, trips: tap Add the usual dates, or add your own below.'))));
+}
+
+// ---------- Sinking funds (M5): any yearly cost or event with a cost ----------
+function sinkingFunds(ctx) {
+  const now = ctx.now();
+  const recs = ctx.visible(() => true);
+  const items = yearItems(recs, now).all.filter(x => x.rec.values.sinking);
+  const accounts = ctx.visible(r => r.kind === 'account');
+  const rows = items.map(x => {
+    const f = sinkingOf(x, { records: recs, now });
+    const v = x.rec.values;
+    const up = patch => ctx.store.update(x.id, patch);
+    const acct = accounts.find(a => a.id === v.sinkingFund);
+    const tags = (acct?.values.tags || []).map(t => t.name).filter(Boolean);
+    return h('tr', {},
+      h('td', {}, h('strong', {}, x.name), h('div.muted.small', {}, x.source)),
+      h('td.num', {}, f.target == null ? h('span.muted', {}, 'Needs a cost') : money(f.target)),
+      h('td', {}, x.ym ? monthName(x.ym, 'short') : h('span.muted', {}, 'Needs a month')),
+      h('td.num', {}, f.savedFrom && f.savedFrom !== 'typed' ? h('span.computed', { title: `From ${f.savedFrom}` }, money(f.saved))
+        : S.moneyInput(v.saved ?? null, n => up({ saved: n }), { hint: 'Saved so far' })),
+      h('td', {}, h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+        S.select(accounts.map(a => [a.id, a.name || a.type]), v.sinkingFund ?? null, id => up({ sinkingFund: id, fundTag: null }), { label: 'Account', hint: 'Which account', width: 160 }),
+        acct ? S.select(tags, v.fundTag ?? null, t => up({ fundTag: t }), { label: 'Purpose tag', hint: tags.length ? 'Which goal' : 'No goals on it yet', width: 150 }) : null)),
+      h('td.num', {}, f.monthly == null ? h('span.muted', {}, '–') : h('span.computed', {}, `${money(f.monthly)} a month`)),
+      h('td.num', {}, f.funded == null ? h('span.muted', {}, '–') : h('span.computed', {}, pct(f.funded))),
+      h('td', {}, S.iconButton('x', `Stop saving for ${x.name}`, () => up({ sinking: false }))));
+  });
+  const monthly = items.reduce((s, x) => s + (sinkingOf(x, { records: recs, now }).monthly ?? 0), 0);
+  return h('section.section.area-goals', {}, h('div.section-title', {}, h('h2', {}, 'Sinking funds'), monthly ? h('span.muted', {}, `${money(monthly)} a month to set aside`) : null),
+    items.length ? h('div.list', {}, h('div.list-scroll', {}, h('table.rows.mini', {},
+      h('thead', {}, h('tr', {}, ['Saving for', 'Target', 'Due', 'Saved', 'Held in', 'Needed', 'Funded', ''].map(t => h('th', {}, t)))), h('tbody', {}, rows))))
+      : h('div.card', {}, h('p.muted', {}, 'Tap Save for it on any cost in Your year (or on a yearly cost in Spending) to save for it a little each month.')));
 }
 export function scenariosScreen() {
   return [head('Scenarios', 'Life event blocks'), h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'Scenario blocks come in a later phase'),

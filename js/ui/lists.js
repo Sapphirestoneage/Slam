@@ -212,7 +212,9 @@ export function irregularList(ref, { onWalk } = {}) {
     ],
     secondary: (ctx, r, up) => {
       const savings = ctx.store.find(x => x.kind === 'account' && x.values.group === 'cash');
-      return [labelled('Sinking fund', select(savings.map(a => [a.id, a.name || a.type]), r.values.sinkingFund ?? null, v => up({ sinkingFund: v }), { label: 'Sinking fund', hint: savings.length ? 'Which savings account' : 'No savings account yet', width: 200 }), { note: 'Which savings account holds it' })];
+      return [labelled('Save for it each month', toggle(['Yes', 'No'], r.values.sinking ? 'Yes' : r.values.sinking === false ? 'No' : null, v => up({ sinking: v === 'Yes' }), { label: 'Sinking fund', clearable: true }),
+        { note: r.values.sinking ? 'Tracked under Plan › Next 12 months' : null }),
+      labelled('Sinking fund', select(savings.map(a => [a.id, a.name || a.type]), r.values.sinkingFund ?? null, v => up({ sinkingFund: v }), { label: 'Sinking fund', hint: savings.length ? 'Which savings account' : 'No savings account yet', width: 200 }), { note: 'Which savings account holds it' })];
     },
     subtotal: (ctx, rows) => `${money(sum(rows, r => r.amount) / 12)} a month`,
     footerTotal: (ctx, recs) => h('span', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, r => r.amount) / 12 : null), h('span.muted', {}, ' a month to set aside')),
