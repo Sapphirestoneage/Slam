@@ -73,7 +73,12 @@
       "catchUp55": 1000
     },
     "commuterMonthly": 340,
-    "commuterNote": "IRS 2026 pre-tax transit and parking limit, each $340 a month. Not in the spec Reference data tab yet."
+    "commuterNote": "IRS 2026 pre-tax transit and parking limit, each $340 a month. Not in the spec Reference data tab yet.",
+    "rothIncome": {
+      "single": 153000,
+      "joint": 242000,
+      "note": "2026 Roth IRA phase-out start (MAGI), single and joint. Used for the backdoor note on FOO step 5. Not in the spec Reference data tab yet."
+    }
   },
   "tax": {
     "standardDeduction": {

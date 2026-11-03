@@ -12,11 +12,11 @@ export const TABS = [
     { id: 'income', name: 'Income', area: 'income' }, { id: 'taxes', name: 'Taxes', area: 'taxes' }, { id: 'budget', name: 'Budget', area: 'needs' },
     { id: 'calendar', name: 'Calendar', area: 'needs' }, { id: 'close', name: 'Month end', area: 'needs' }] },
   { id: 'plan', name: 'Plan', job: 'The future: goals, timeline, events', subs: [
-    { id: 'goals', name: 'Goals', area: 'goals' }, { id: 'timeline', name: 'Timeline', area: 'goals' },
+    { id: 'goals', name: 'Goals', area: 'goals' }, { id: 'foo', name: 'FOO', area: 'goals' }, { id: 'timeline', name: 'Timeline', area: 'goals' },
     { id: 'debt-payoff', name: 'Debt payoff', area: 'debt' }, { id: 'next-12-months', name: 'Next 12 months', area: 'goals' },
     { id: 'scenarios', name: 'Scenarios', area: 'goals' }] },
   { id: 'report', name: 'Report', job: 'The report: net worth, metrics, one-pager', subs: [
-    { id: 'overview', name: 'Overview' }, { id: 'one-pager', name: 'One-pager' }, { id: 'history', name: 'History' }] },
+    { id: 'overview', name: 'Overview' }, { id: 'statements', name: 'Statements' }, { id: 'one-pager', name: 'One-pager' }, { id: 'history', name: 'History' }] },
 ];
 // Old homes (My Money and Spending) still open: bookmarks, saved links and old Lives on text land on the new home.
 export const MOVED = {

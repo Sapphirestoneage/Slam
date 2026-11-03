@@ -6,12 +6,14 @@ import { drafttName } from '../math/spending.js';
 import * as S from './staples.js';
 import { spendingList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.js';
 import { ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
-  closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS } from '../month.js';
+  closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS, planDiffs } from '../month.js';
 import { gutAccuracy, DRAFTT } from '../math/spending.js';
+import { statements, BUCKETS, defaultBucket } from '../math/statements.js';
+import { calendarMarkers } from '../math/markers.js';
 import { money, pct } from '../format.js';
 
 // Screen state that is about looking, not the client's numbers (kept for this browser tab).
-export const UI = { pass: 'Plan', ym: null, period: 'Monthly', groupBy: 'DRAFTT', calYm: null, range: 'Month', show: new Set(GROUPS), openDay: null, review: null };
+export const UI = { pass: 'Plan', ym: null, period: 'Monthly', groupBy: 'DRAFTT', calYm: null, range: 'Month', show: new Set(GROUPS), openDay: null, review: null, markers: true };
 const thisYm = ctx => ymOf(ctx.now());
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
@@ -50,8 +52,13 @@ export function budgetScreen(app, ctx) {
       S.labelled('Cards', S.checkbox('Most spending goes on cards', cardsMost, v => ctx.store.setDoc('profile', { mostOnCards: v })), { note: 'Shows Paid with on every line' })), { label: 'Settings for this budget' }));
   const view = monthView(doc, ctx.ref, UI.ym, { now: ctx.now() });
   if (UI.pass !== 'Actual') UI.pass = 'Plan';
+  // Answer 89: the Plan column appears once a month differs from the usual for any line, and goes when none do.
+  const payFreq = () => ctx.metrics().inputs.payFrequency ?? null;
+  const planCol = () => planDiffs(doc, UI.ym, ctx.store.find(r => r.kind === 'bill' && !r.values.irregular), payFreq()).size > 0;
+  const shownPlanCol = planCol();
+  ctx.onRefresh(() => { if (UI.pass === 'Plan' && planCol() !== shownPlanCol) S.keepPlace(() => app.render()); });
   const body = [UI.pass === 'Plan' ? S.live(ctx, () => gutBox(ctx, monthView(doc, ctx.ref, UI.ym, { now: ctx.now() }))) : null,
-    h('div.visuals', {}, S.recordList(ctx, spendingList(ctx.ref, { pass: UI.pass, ym: UI.ym, groupBy: UI.groupBy, paidWithColumn: cardsMost })),
+    h('div.visuals', {}, S.recordList(ctx, spendingList(ctx.ref, { pass: UI.pass, ym: UI.ym, groupBy: UI.groupBy, paidWithColumn: cardsMost, planColumn: shownPlanCol })),
       S.visualsPanel(ctx, { charts: budgetCharts, area: 'needs' })),
     UI.pass === 'Plan' ? S.moreBlock('budget:fast-track', () => fastTrackTotals(ctx), { label: 'Fast Track totals (by area)' }) : null];
   // The strip follows the lines as they change (the lists keep their own state, so the screen is not rebuilt).
@@ -262,7 +269,8 @@ export function calendarScreen(app, ctx) {
         { hint: st.value == null ? 'Add balance' : `${moneyText(st.value)} (checking)`, key: 'cal:start' }), { note: cal.start != null ? `As of the start of ${monthName(cal.startYm || UI.calYm)}` : 'Pulled from checking; type to change' }),
       S.labelled('Low balance line', S.moneyInput(cal.low ?? null, v => ctx.store.setIn('spending', ['calendar', 'low'], v === null ? undefined : v, 'Low balance line'), { hint: moneyText(ctx.ref.defaults.lowBalanceLine), key: 'cal:low' })),
       S.labelled('Show', h('div.seg.multi', { role: 'group', 'aria-label': 'Show' }, GROUPS.map(gp => h('button', { type: 'button', 'aria-pressed': String(UI.show.has(gp)),
-        onclick: () => { UI.show.has(gp) ? UI.show.delete(gp) : UI.show.add(gp); redraw(); } }, gp)))),
+        onclick: () => { UI.show.has(gp) ? UI.show.delete(gp) : UI.show.add(gp); redraw(); } }, gp)),
+        h('button', { type: 'button', 'aria-pressed': String(UI.markers), title: 'FOO dates and the month-end close day', onclick: () => { UI.markers = !UI.markers; redraw(); } }, 'Markers'))),
       S.checkbox('Count maybe money', !!cal.countMaybe, v => ctx.store.setIn('spending', ['calendar', 'countMaybe'], v, 'Count maybe')),
       S.checkbox('Wins on their own', cal.autoWins !== false, v => ctx.store.setIn('spending', ['calendar', 'autoWins'], v, 'Auto wins'))),
     { label: `Balance ${st.value == null ? 'not set' : money(st.value)} · low line ${money(cal.low ?? ctx.ref.defaults.lowBalanceLine)} · ${UI.show.size === GROUPS.length ? 'showing all' : `showing ${UI.show.size} of ${GROUPS.length}`}` }));
@@ -279,8 +287,10 @@ export function calendarScreen(app, ctx) {
   const byDay = new Map();
   for (const i of monthList) { if (!UI.show.has(i.group)) continue; const k = i.date.startsWith(UI.calYm) ? i.date : i.origDate; if (!byDay.has(k)) byDay.set(k, []); byDay.get(k).push(i); }
   const endOf = new Map((b.rows || []).map(r => [r.date, r.balance]));
+  const marks = new Map();
+  if (UI.markers) for (const mk of calendarMarkers(doc, ctx.ref, UI.calYm, { now: ctx.now(), flags: app.flags || [] })) { if (!marks.has(mk.date)) marks.set(mk.date, []); marks.get(mk.date).push(mk); if (!byDay.has(mk.date)) byDay.set(mk.date, []); }
   return [head('Calendar', 'Day by day, with a running balance'), header, ...notes,
-    monthGrid(ctx, byDay, endOf, b.low), dayList(ctx, byDay, endOf, b.low),
+    monthGrid(ctx, byDay, endOf, b.low, marks), dayList(ctx, byDay, endOf, b.low, marks),
     h('div.card.cal-chart', {}, h('div.bar-top', {}, h('strong', {}, `Running balance, ${UI.range === 'Month' ? monthName(UI.calYm) : `${UI.range} from ${monthName(UI.calYm)}`}`)), balanceChart(ctx, b))];
 }
 const dayLabel = d => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
@@ -291,11 +301,27 @@ function chipOf(ctx, i) {
     i.status === 'Moved' && !i.date.startsWith(UI.calYm) ? 'moved-away' : '', i.guessDate ? 'guess' : ''].filter(Boolean).join('.');
   const amt = i.kind === 'win' ? '' : ` ${sign(i.planned)}${money(Math.abs(i.status === 'Paid' && i.paid != null ? i.paid : i.planned))}`;
   const label = i.kind === 'win' ? `★ ${i.name}` : i.maybe ? `~ ${i.name}` : `${i.name}`;
-  return h(`button.chip.${cls}`, { type: 'button', title: `${i.name}${amt}${i.onCard ? ` · on ${i.onCard}` : ''} · ${i.status}${i.guessDate ? ' · day not set' : ''}`,
+  const canMove = i.kind !== 'win' && i.status !== 'Paid';
+  // Chrome will not start a drag from a <button>, so a movable chip is a focusable role=button that also drags.
+  const btn = h(`${canMove ? 'span' : 'button'}.chip.${cls}`, { type: canMove ? null : 'button', role: canMove ? 'button' : null, tabindex: canMove ? '0' : null,
+    draggable: canMove ? 'true' : null, ondragstart: canMove ? e => { dragging = i; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', i.key); } : null,
+    ondragend: canMove ? () => { dragging = null; } : null,
+    onkeydown: canMove ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } } : null,
+    title: `${i.name}${amt}${i.onCard ? ` · on ${i.onCard}` : ''} · ${i.status}${i.guessDate ? ' · day not set' : ''}`,
     onclick: e => { e.stopPropagation(); instancePanel(ctx, e.currentTarget, i); } },
   i.status === 'Paid' ? icon('check') : null, h('span.chip-name', {}, label), amt ? h('span.chip-amt', {}, amt) : null);
+  return btn;
 }
-function monthGrid(ctx, byDay, endOf, low) {
+const markerRow = list => (list?.length ? h('div.day-marks', {}, list.map(mk => h(`span.day-mark.${mk.kind}`, { title: mk.name }, mk.name))) : null);
+// Drag a chip to another day (desktop). Dropping it back on its own day puts it back as planned. Undo in the toast.
+function moveTo(ctx, i, date) {
+  if (!i || date === i.date) return;
+  if (date === i.origDate) mark(ctx.store, i.key, { status: 'Planned', date: undefined });
+  else mark(ctx.store, i.key, { status: 'Moved', date });
+  S.toast(`Moved ${i.name} to ${dayLabel(date)}.`, { undo: () => ctx.store.undo() });
+}
+let dragging = null;
+function monthGrid(ctx, byDay, endOf, low, marks = new Map()) {
   const ym = UI.calYm;
   const first = new Date(`${ym}-01T12:00:00Z`).getUTCDay();
   const cells = [];
@@ -307,20 +333,25 @@ function monthGrid(ctx, byDay, endOf, low) {
     const bal = endOf.get(date);
     const open = UI.openDay === date;
     const shown = open ? items : items.slice(0, 4);
-    cells.push(h(`div.day${date === today ? '.today' : ''}${bal != null && bal < low ? '.low' : ''}`, {},
+    const cell = h(`div.day${date === today ? '.today' : ''}${bal != null && bal < low ? '.low' : ''}`, {},
       h('div.day-top', {}, h('span.day-n', {}, d), S.iconButton('plus', `Add an entry on ${dayLabel(date)}`, e => entryForm(ctx, e.currentTarget, { date }), { tiny: true })),
+      markerRow(marks.get(date)),
       h('div.chips', {}, shown.map(i => chipOf(ctx, i)),
         items.length > shown.length ? h('button.more-chips', { type: 'button', onclick: () => { UI.openDay = date; ctx.refresh(); } }, `+${items.length - shown.length} more`) : null),
-      bal != null ? h('div.day-bal', {}, bal < low ? '⚠ ' : '', money(bal)) : null));
+      bal != null ? h('div.day-bal', {}, bal < low ? '⚠ ' : '', money(bal)) : null);
+    cell.ondragover = e => { if (dragging) { e.preventDefault(); cell.classList.add('drop'); } };
+    cell.ondragleave = () => cell.classList.remove('drop');
+    cell.ondrop = e => { e.preventDefault(); cell.classList.remove('drop'); const i = dragging; dragging = null; moveTo(ctx, i, date); };
+    cells.push(cell);
   }
   return h('div.cal-grid.card', {}, h('div.dow', {}, ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(x => h('span', {}, x))), h('div.days', {}, cells));
 }
 // Phone: the same month as a list of days (grids do not fit a phone).
-function dayList(ctx, byDay, endOf, low) {
+function dayList(ctx, byDay, endOf, low, marks = new Map()) {
   const days = [...byDay.keys()].sort();
   return h('div.cal-list.card', {}, days.length ? days.map(d => h('div.list-day', {},
     h('div.list-day-top', {}, h('strong', {}, dayLabel(d)), endOf.get(d) != null ? h(`span.day-bal${endOf.get(d) < low ? '.lowtext' : ''}`, {}, endOf.get(d) < low ? '⚠ ' : '', money(endOf.get(d))) : null),
-    h('div.chips', {}, byDay.get(d).map(i => chipOf(ctx, i))))) : h('p.muted', {}, 'Nothing shown. Check the Show filters.'));
+    markerRow(marks.get(d)), h('div.chips', {}, byDay.get(d).map(i => chipOf(ctx, i))))) : h('p.muted', {}, 'Nothing shown. Check the Show filters.'));
 }
 
 // One instance: Got it / Paid, Partial, Didn't happen, Moved (R091 to R094), and setting a missing day.
@@ -348,8 +379,11 @@ function instancePanel(ctx, anchor, i) {
         S.button('Partial', { onClick: () => set({ status: 'Partial', paid: (isIn ? 1 : -1) * (read() ?? 0) }, 'Marked Partial. The rest stays planned.') }),
         S.button("Didn't happen", { onClick: () => set({ status: "Didn't happen" }, "Marked Didn't happen. It counts as $0 at month-end.") })),
       h('div.row-line', { style: { gap: '6px' } }, h('label.field', { style: { width: '170px' } }, dateBox),
-        S.button('Move to this day', { onClick: () => set({ status: 'Moved', date: dateBox.value }, `Moved to ${dayLabel(dateBox.value)}.`) }),
+        S.button('Move', { iconName: 'right', onClick: () => { if (!dateBox.value) return; if (dateBox.value === i.origDate) set({ status: 'Planned', date: undefined }, 'Back on its own day.'); else set({ status: 'Moved', date: dateBox.value }, `Moved to ${dayLabel(dateBox.value)}.`); } }),
         i.status !== 'Planned' ? S.button('Back to planned', { onClick: () => set({ status: 'Planned' }, 'Back to planned.') }) : null),
+      S.labelled('Cash flow bucket', S.toggle(BUCKETS, ctx.store.doc.spending.calendar?.marks?.[i.key]?.bucket || defaultBucket(i, ctx.store.doc),
+        v => { mark(ctx.store, i.key, { bucket: v }); S.toast(`Counted as ${v} on the cash flow statement.`, { undo: () => ctx.store.undo() }); }, { label: 'Cash flow bucket' }),
+        { note: i.kind === 'debt' ? 'Set by type. A loan payment splits: interest is Everyday, principal is Debt.' : 'Set by type; change it for this one if it belongs elsewhere' }),
       i.guessDate && rec ? setDay(ctx, rec, i) : null,
       rec?.kind === 'entry' ? S.button('Edit entry', { iconName: 'note', onClick: e => entryForm(ctx, anchor, { rec }) }) : null,
       rec && rec.kind !== 'entry' ? h('a', { href: (rec.kind === 'debt' && rec.type === 'Credit card' ? '#/net-worth/credit-cards' : { income: '#/cash-flow/income', debt: '#/net-worth/debt', bill: '#/cash-flow/budget', event: '#/plan/next-12-months' }[rec.kind]) || '#/cash-flow/budget', onclick: () => S.closePop() }, `Open ${rec.name || rec.type || 'it'} where it lives`) : null);
@@ -456,7 +490,14 @@ function closeRow(app, ctx, v) {
   const filled = withEst.filter(r => r.actual != null).length;
   const open = UI.review === v.ym;
   const doClose = e => {
-    const go = () => { closeMonth(ctx.store, ctx.ref, v.ym, { now: ctx.now() }); app.snapshot(`Month-end ${monthName(v.ym)}`); /* M6.1 */ S.toast(`${monthName(v.ym)} closed and a snapshot saved. Variable misses carried to next month.`, { undo: () => ctx.store.undo() }); };
+    // One click: close, the three statements for the month (kept with it) and a snapshot (Phase 3.5).
+    const go = () => {
+      closeMonth(ctx.store, ctx.ref, v.ym, { now: ctx.now() });
+      const st = statements(ctx.store.doc, ctx.ref, { kind: 'month', ym: v.ym }, { now: ctx.now() });
+      ctx.store.setIn('spending', ['months', v.ym, 'statements'], { netWorth: st.netWorth.netWorth, liquid: st.netWorth.liquid, surplus: st.income.surplus, startCash: st.cash.start, endCash: st.cash.end, unexplainedCash: st.tie.unexplainedCash }, 'Statements');
+      app.snapshot(`Month-end ${monthName(v.ym)}`); /* M6.1 */
+      S.toast(`${monthName(v.ym)} closed: statements made and a snapshot saved.`, { undo: () => ctx.store.undo(), action: { label: 'See statements', run: () => app.go('#/report/statements') } });
+    };
     if (v.gaps.length) S.confirmBox(e.currentTarget, { text: `${v.gaps.length} ${v.gaps.length === 1 ? 'line has' : 'lines have'} no actual. Close anyway? ${v.gaps.length === 1 ? 'It counts' : 'They count'} as $0.`, yes: 'Close month', no: 'Not yet', onYes: go });
     else go();
   };

@@ -1,9 +1,9 @@
 // Plan (build phase 7): Goals with presets and solvers, These are big deals, milestones, the FI timeline,
 // debt payoff, next 12 months. Scenarios stay a later phase.
 import { h, clear, icon } from './dom.js';
+import { simpleMath } from '../math/simple.js';
 import * as S from './staples.js';
 import { MILESTONES, fiTargets, monthsTo, projection, ladder, solveFor } from '../plan.js';
-import { fiDate } from '../math/fi.js';
 import { payoffPlan } from '../math/debt.js';
 import { addMonths, ymOf, monthName, dateOf, monthsBetween } from '../month.js';
 import { winSources } from './spending-ui.js';
@@ -206,7 +206,8 @@ export function timelineScreen(app, ctx) {
       h('div.slider-row', { style: { marginTop: '10px' } }, h('span.label', {}, 'Pace'), S.toggle(['Optimistic', 'Likely', 'Pessimistic'], pace, v => { PUI.pace = v; app.render(); }, { label: 'Pace' }),
         S.checkbox('Show all three paces', PUI.bands, v => { PUI.bands = v; app.render(); }),
         h('span', { style: { flex: 1 } }), S.select(['FI timeline', 'Savings rate to years', 'Crossover point'], PUI.chart, v => { PUI.chart = v || 'FI timeline'; app.render(); }, { label: 'Chart', hint: 'FI timeline', width: 210 })),
-      h('p', { style: { marginTop: '12px', fontSize: '1.125rem' } }, result, sr != null ? h('span.muted', {}, ` · savings rate ${pct(Math.max(0, sr))}`) : null)),
+      h('p', { style: { marginTop: '12px', fontSize: '1.125rem' } }, result, sr != null ? h('span.muted', {}, ` · savings rate ${pct(Math.max(0, sr))}`) : null),
+      PUI.chart === 'Savings rate to years' ? simpleLine(m, r) : null),
     h('div.card', {}, host)];
 }
 function drawTimeline(host, ctx, m, r) {
@@ -219,19 +220,17 @@ function drawTimeline(host, ctx, m, r) {
   const xs = Array.from({ length: years + 1 }, (_, k) => k);
   let option;
   if (PUI.chart === 'Savings rate to years') {
-    const th = m.inputs.takeHome || 1, w = m.inputs.withdrawalRate;
-    const pts = [];
-    for (let s = 5; s <= 90; s += 5) {
-      const f = fiDate({ invested: 0, monthlyInvesting: th * s / 100, realReturn: r, target: th * (1 - s / 100) * 12 / w });
-      pts.push([s, f.value == null ? null : +(f.value / 12).toFixed(1)]);
-    }
-    const mine = m.savingsRate.value != null && hit != null ? [[Math.round(Math.max(0, (m.surplus.value + PUI.extra) / th) * 100), +(hit / 12).toFixed(1)]] : [];
+    // M72 Shockingly Simple Math (js/math/simple.js): the curve from $0, your savings rate as a dot on it, the next 5% step.
+    const sm = simpleMath({ savingsRate: m.savingsRate.value == null ? null : Math.max(0, m.savingsRate.value), realReturn: r, withdrawalRate: m.inputs.withdrawalRate });
+    const pts = (sm.curve || []).filter(c => c.rate <= 0.9).map(c => [Math.round(c.rate * 100), c.years == null ? null : +c.years.toFixed(1)]);
+    const mine = sm.you?.years != null ? [{ value: [Math.round(sm.you.rate * 100), +sm.you.years.toFixed(1)], name: 'You' }] : [];
+    if (sm.next?.years != null && sm.you?.years != null) mine.push({ value: [Math.round(sm.next.rate * 100), +sm.next.years.toFixed(1)], name: 'Next 5%', itemStyle: { color: t.card, borderColor: t.text, borderWidth: 2 } });
     option = {
       textStyle: { fontFamily: t.font, color: t.text }, grid: { left: 56, right: 24, top: 24, bottom: 40 }, tooltip: { trigger: 'item', formatter: p => `${p.value[0]}% saved → ${p.value[1]} years` },
       xAxis: { type: 'value', name: 'Savings rate %', nameLocation: 'middle', nameGap: 28, min: 0, max: 90, axisLabel: { color: t.text2 } },
       yAxis: { type: 'value', name: 'Years to FI', axisLabel: { color: t.text2 }, splitLine: { lineStyle: { color: t.line } } },
       series: [{ type: 'line', data: pts, smooth: true, showSymbol: false, lineStyle: { color: t.area, width: 3 } },
-        { type: 'scatter', data: mine, symbolSize: 16, itemStyle: { color: t.text }, label: { show: true, formatter: 'You', position: 'top', color: t.text, fontWeight: 700 } }],
+        { type: 'scatter', data: mine, symbolSize: 16, itemStyle: { color: t.text }, label: { show: true, formatter: p => p.name, position: 'top', color: t.text, fontWeight: 700 } }],
     };
   } else if (PUI.chart === 'Crossover point') {
     const bal = yearsOut(r).slice(0, years + 1);
@@ -469,4 +468,12 @@ export function scenariosScreen() {
   return [head('Scenarios', 'Life event blocks'), h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'Scenario blocks come in a later phase'),
     h('span.muted', {}, 'Home, car, kid, job change, sabbatical, move, marriage, side hustle, inheritance. For now, add the next 12 months on its own tab.'),
     S.button('+ Add life event', { disabled: true, why: 'Scenarios are a later phase' })))];
+}
+
+// M72 under the Savings rate to years chart: where your rate sits from $0, and the next 5% step.
+function simpleLine(m, r) {
+  const sm = simpleMath({ savingsRate: m.savingsRate.value == null ? null : Math.max(0, m.savingsRate.value), realReturn: r, withdrawalRate: m.inputs.withdrawalRate });
+  if (sm.you?.years == null) return h('p.muted', {}, 'Your dot appears on the curve once there is a savings rate.');
+  return h('p', { style: { margin: '4px 0 0' } }, 'Shockingly Simple Math: ', S.mathButton(sm, `${Math.round(sm.you.rate * 100)}% saved is about ${sm.you.years.toFixed(1)} years from $0`),
+    sm.next.years != null ? `. The next step, ${Math.round(sm.next.rate * 100)}%, is about ${sm.next.years.toFixed(1)}: ${sm.gain.toFixed(1)} years sooner.` : '.');
 }

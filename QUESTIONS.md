@@ -136,12 +136,35 @@ Each one has the default used so the build could keep going. Answer here or in t
 90. **Focus mode trigger.** Focus mode is on while a session runs with Guide me on (Start session turns both on). Should the coach be able to turn it off mid-session from Live?
 91. **"A month in" on Assets.** In focus mode the contribution is typed per month and stored as a yearly amount (contributionPer Year), replacing a per-paycheck entry if one was there. OK, or keep per paycheck when it was typed that way?
 
+## Answered (Phase 3.5, Nov 3 2026)
+
+- 79 to 86: answered and built in the answers commits (Month end; Home opens Prep or Live; stricter payment matching with Yes / No; Roth 401(k) in Saved from paycheck; yearly-cost fund note; Paid from on Health; fields.json from the spec with the old-name map; new names on the phone tabs).
+- 87 Keep the Nov 3 sub-tab order. 88 No new status. Both as built.
+- 89 to 91: answered and built (see PROGRESS).
+
+- 70 Savings rate headline: answered. The headline counts 401(k) and HSA money from the paycheck plus the employer match (built in the reorganize pass; the old M28 is the second line).
+- The employer match: answered. It is its own income line (it shows as its own line on the income and spending statement, M63, above taxes).
+
+## Phase 3.5 (Nov 3 2026)
+
+92. **Big e months for less steady income.** The Rule of 5 (age / 5) is multiplied by 1, 1.25 or 1.5 for steady, varying or unpredictable income. Are those the multipliers you want?
+93. **True FI.** Shown as the FI number grossed up for about 15% tax on withdrawals, a rough rate until retirement taxes are in. Keep 15%, or another rate?
+94. **Step statuses beyond the three.** Done, In progress and Next as asked, plus Later (steps after the next one) and Optional (Bedazzle before any joy line is picked, so it never blocks). OK?
+95. **A late bill.** For step 1, a bill or debt payment still Planned more than 5 days after its day this month. Is 5 days the right grace?
+96. **Roth IRA income limit.** data/reference-2026.json uses $153,000 single and $242,000 joint (where the phase-out starts) for the backdoor note. Confirm the 2026 values.
+97. **Projected dates.** Steps 1 to 5 and 8 are dated by spending the surplus on them in order; Coast FI and FI use the growth path; a debt payoff on the path uses today's payment. So "Clear the heavy debt" can land before "Credit card paid off at today's payment". Keep both, or date payoffs by the FOO order?
+98. **Launch moves.** The step 7 list is Quit and take time off, Go part-time, Take a sabbatical, Start something of my own, Move somewhere cheaper. Add or rename?
+99. **The bridge rows.** The net worth bridge (M66) needs Saved from paycheck and Debt paid down rows beside surplus, market and other to tie out; the spec formula lists fewer. OK?
+100. **Pay yourself first.** Shown as a line above the income statement (401(k), HSA, match and after-tax contributions, a month and a paycheck) rather than a new row, so the surplus and the bridge keep tying out. OK?
+101. **Markers on the calendar.** FOO dates are months, so they sit on the first of their month; the close marker sits on the last day, or the day the month was closed.
+102. **Drag on a phone.** Phones use the item's Move button with a day picker; drag is desktop only.
+
 ## Answers logged (Nov 3 2026, second round)
 
 - 1 Look Preview: resolved; spec/SLAM Look Preview.html came with the Oct 28 spec refresh. It is the approved look sample the staples page is checked against.
 - 32 Gut spending: no change; the gut number is used until the Budget is switched to The lines.
 - 4 / 5 APR: a blank APR is a Guess until it is typed, and a credit card guesses 25% (a scary picture first). Personal and car loans keep the Reference data rates.
-- 45 Spec: done. All 110 backlog rows are on the Feature list tab under BETA FEEDBACK.
+- 45 Spec: done. The backlog rows are on the Feature list tab under FROM THE BETA (added by the Phase 3.5 spec sync).
 - 48 Cash flag: any cash in a retirement account or HSA is flagged; each account can turn it off (Cash here is on purpose).
 - 49 Concentration: 25% for everyone; Coach tools › Session turns it off for a client.
 - 50 Short goal in stocks: no change; any stocks flag it.
@@ -158,14 +181,15 @@ Each one has the default used so the build could keep going. Answer here or in t
 
 ## Still open (Nov 3 2026)
 
-92. **The Therapy section's new name.** You said rename it for most people. Proposed: "Health and self-care" (therapy, health insurance, copays, prescriptions, gym, haircuts). The T in DRAFTT would no longer stand for it. OK, or another name?
-93. **Starter estimate ranges.** The usual list's starter guesses now say Accept estimate. Show a range under each (e.g. "most people $X to $Y")? That needs a source for the ranges; there is none in the spec.
-94. **63 Taking over.** It is the list of bills someone else pays today (parents, a partner, an employer) that you will start paying on a date you set, e.g. a phone plan from June 2027. Should those dates move the FI date and the surplus once they arrive?
-95. **Rates from the website.** A static site cannot fetch the NY tax tables when it runs (no server, and the tax site does not allow it). Rates stay in data/reference-2026.json, checked by hand each year. OK?
+103. **The Therapy section's new name.** You said rename it for most people. Proposed: "Health and self-care" (therapy, health insurance, copays, prescriptions, gym, haircuts). The T in DRAFTT would no longer stand for it. OK, or another name?
+104. **Starter estimate ranges.** The usual list's starter guesses now say Accept estimate. Show a range under each (e.g. "most people $X to $Y")? That needs a source for the ranges; there is none in the spec.
+105. **63 Taking over.** It is the list of bills someone else pays today (parents, a partner, an employer) that you will start paying on a date you set, e.g. a phone plan from June 2027. Should those dates move the FI date and the surplus once they arrive?
+106. **Rates from the website.** A static site cannot fetch the NY tax tables when it runs (no server, and the tax site does not allow it). Rates stay in data/reference-2026.json, checked by hand each year. OK?
 
 ## All closed (Nov 3 2026)
 
-Every question above is closed. "Kept" means the default described in the question stays, by your call to close them out.
+Every question above is closed. "Kept" means the default described in the question stays, by your call to close them all out.
+Two sessions numbered new questions at the same time: Phase 3.5's are 92 to 102, this one's are 103 to 106.
 
 | # | Closed as |
 |---|---|
@@ -182,8 +206,7 @@ Every question above is closed. "Kept" means the default described in the questi
 | 25 to 31 | Kept: Fast Track debt step, gates toast with Go there, unanswered gates show everything, each job taxed on its own, One page, loan removal asks, gas and tolls gated |
 | 32 | Answered: the gut number until the Budget is switched to the lines |
 | 33 to 43 | Kept: starter guesses (now Accept estimate), guessed days, gaps at close, moved entries, Fat FI 1.5x, real dollars, Next 3, End session, Export PDF, pre-call form later, card bills on payoff |
-| 44 | Answered: the full batch was resent and built |
-| 45 | Answered: the backlog is in the spec's Feature list |
+| 44, 45 | Answered: the full batch was resent and built; the backlog is in the spec's Feature list |
 | 46 | Kept: Will email reads I'll find it later |
 | 47 | Answered: Income and the 401(k) fill each other in (now in two passes) |
 | 48 to 50 | Answered: any cash flagged with a per-account off switch; 25% concentration with a coach off switch; any stocks flag a short goal |
@@ -192,20 +215,23 @@ Every question above is closed. "Kept" means the default described in the questi
 | 55 | Kept: Next counts parked answers |
 | 56 | Answered: Credit cards sub-tab under Net worth |
 | 57 | Done: the commuter limit is in the spec's Reference data; the nudge uses NY and NYC tax |
-| 58 | Answered: Comes out of your paycheck |
-| 59 | Answered: a large refund is over $10,000 |
+| 58, 59 | Answered: Comes out of your paycheck; a large refund is over $10,000 |
 | 60, 61 | Kept: the year view on Next 12 months; renewal months start blank |
-| 62 | Answered: sinking funds come out of the surplus |
-| 63, 94 | Closed: a covered bill is yours from its takeover month, so the surplus and FI date follow on that date (built) |
+| 62 | Answered: sinking funds on events come out of the surplus |
+| 63, 105 | Closed: a covered bill is yours from its takeover month, so the surplus and FI date follow on that date (built) |
 | 64 to 67 | Kept: three freeze rows; community presets per client; the timer for the demo client; I don't have this as Not for me |
-| 68 to 75 | Answered (see the two Answers logged sections) |
+| 68 to 75 | Answered (see the Answers logged sections) |
 | 76, 77 | Kept: paychecks left from today's date; Report this needs a client |
-| 78 to 86 | Answered in the reorganize and polish passes (PROGRESS.md, Answers to the polish questions) |
-| 87 | Kept: the Nov 3 waterfall order (Taxes right after Income) |
-| 88 | Kept: Missing shows Not now and I'll find it later; no extra status |
-| 89 | Kept: Plan shows the usual Amount and this month's Plan side by side |
-| 90 | Kept: focus mode as built; revisit after the next live session |
-| 91 | Kept: focus mode types a month in |
-| 92 | Closed: the T letter reads Health and self-care (built) |
-| 93 | Closed: no ranges under starter estimates (there is no source for them); Accept estimate stays |
-| 95 | Closed: rates stay in data/reference-2026.json, checked by hand each year. The NY joint and NYC rates are still to be checked once tax.ny.gov is allowed in the session's network settings |
+| 78 to 91 | Answered and built in the reorganize, polish and answers passes (PROGRESS.md; "Answered (Phase 3.5)" above) |
+| 92 | Kept: big e months x1, x1.25, x1.5 for steady, varying, unpredictable income |
+| 93 | Kept: True FI grosses up for about 15% tax until retirement taxes are in |
+| 94 | Kept: Later and Optional step statuses beside Done, In progress, Next |
+| 95 | Kept: a bill is late 5 days after its day |
+| 96 | Kept, to confirm with the other rates: Roth IRA phase-out starts $153,000 single, $242,000 joint |
+| 97 | Kept: both dates shown (FOO order and today's payment) |
+| 98 | Kept: the five launch moves as listed |
+| 99, 100 | Kept: the extra bridge rows; Pay yourself first as a line above the income statement |
+| 101, 102 | Kept: FOO markers on the 1st, close marker on the last day; Move button on phones |
+| 103 | Closed: the T letter reads Health and self-care (built) |
+| 104 | Closed: no ranges under starter estimates (there is no source for them); Accept estimate stays |
+| 106 | Closed: rates stay in data/reference-2026.json, checked by hand each year. The NY joint brackets, NYC rates and the Roth IRA limits (96) are still to be checked once tax.ny.gov and irs.gov are allowed in the session's network settings |

@@ -218,3 +218,67 @@ table.rows tr.row-note td { height: auto; padding: 6px var(--s3) 10px; backgroun
 .close-steps button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .close-nav { margin-top: var(--s3); }
 .dup-q { font-weight: 700; }
+
+/* Phase 3.5: Report › Statements. */
+.statement-bar { margin-bottom: var(--s3); }
+.statement { margin-bottom: var(--s3); }
+.statement h2 { margin: 0 0 var(--s2); }
+.st-head, .st-line, .st-group { display: grid; grid-template-columns: minmax(0, 1fr) 140px 140px 120px; gap: var(--s2); align-items: center; min-height: 36px; border-top: 1px solid var(--border-row); }
+.st-head { border-top: 0; font-size: .8125rem; font-weight: 700; color: var(--text-2); min-height: 28px; }
+.st-line.total, .st-group.total { font-weight: 700; border-top: 2px solid var(--border-row); }
+.st-group > .more-wrap { grid-column: 1; }
+.st-group .more-body { grid-column: 1 / -1; }
+.st-records { display: grid; gap: 4px; padding: 4px 0 8px var(--s3); }
+.st-record { display: grid; grid-template-columns: minmax(0, 1fr) 60px 140px; gap: var(--s2); font-size: .875rem; }
+.tie-out { margin-bottom: var(--s4); display: flex; flex-direction: column; gap: 6px; }
+.tie-out h2 { margin: 0; }
+.tie-line { display: flex; align-items: center; gap: var(--s3); min-height: 32px; }
+.tie-line > span:first-child { flex: 1; }
+ul.find-days { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+@media (max-width: 760px) {
+  .st-head, .st-line, .st-group { grid-template-columns: minmax(0, 1fr) 96px 0 84px; }
+  .st-head > :nth-child(3), .st-line > :nth-child(3), .st-group > :nth-child(3) { visibility: hidden; }
+}
+@media print {
+  body.print-statements .shell-page > :not(.statement):not(.tie-out), body.print-statements .report-this { display: none !important; }
+  body.print-statements .statement { break-inside: avoid; margin-bottom: 8px; padding: 8px; }
+}
+.st-group { align-items: start; }
+.st-group > .num { line-height: 36px; }
+/* Phase 3.5: cash layers. */
+.layers-card { display: flex; flex-direction: column; gap: var(--s3); }
+.layer-list { display: grid; gap: 6px; }
+.layer-row { display: grid; grid-template-columns: minmax(160px, 1.2fr) minmax(80px, 1fr) auto auto auto; gap: var(--s3); align-items: center; padding: 6px 0; border-top: 1px solid var(--border-row); }
+.layer-bar { height: 10px; border-radius: 5px; background: var(--computed); overflow: hidden; }
+.layer-bar span { display: block; height: 100%; background: var(--assets); }
+.layer-row.full .layer-bar span { background: var(--good); }
+@media (max-width: 760px) { .layer-row { grid-template-columns: 1fr auto; } .layer-row .layer-bar { grid-column: 1 / -1; } }
+/* Phase 3.5: Plan › FOO. */
+.foo-path { margin-bottom: var(--s3); }
+.foo-stops { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; overflow-x: auto; }
+.foo-stop { flex: 1 1 0; min-width: 84px; display: flex; flex-direction: column; gap: 2px; padding: 8px; border-top: 4px solid var(--border-row); border-radius: 4px; font-size: .8125rem; position: relative; }
+.foo-stop.done { border-top-color: var(--good); }
+.foo-stop.in-progress, .foo-stop.next { border-top-color: var(--goals); }
+.foo-stop.here { background: color-mix(in srgb, var(--goals) 10%, transparent); }
+.foo-here { font-weight: 700; color: var(--goals); }
+.foo-n { font-weight: 800; color: var(--text-2); }
+.foo-name { font-weight: 600; }
+.foo-dates { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+.foo-cols.two { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--s3); align-items: start; }
+.foo-steps { display: grid; gap: 6px; }
+.foo-step { background: var(--card); border-radius: var(--r-card); box-shadow: var(--shadow); padding: var(--s2) var(--s3); }
+.foo-step.here { outline: 2px solid var(--goals); }
+.foo-step-head { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; min-height: 36px; }
+.foo-when { min-width: 72px; text-align: right; }
+.foo-flag { margin: 4px 0; font-size: .875rem; padding: 4px 10px; border-left: 3px solid var(--goals); }
+.foo-part { display: flex; justify-content: space-between; gap: var(--s3); font-size: .9375rem; }
+.foo-original ol { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+@media (max-width: 760px) { .foo-stops { flex-direction: column; } .foo-stop { border-top: 0; border-left: 4px solid var(--border-row); } .foo-stop.done { border-left-color: var(--good); } .foo-stop.in-progress, .foo-stop.next { border-left-color: var(--goals); } .foo-cols.two { grid-template-columns: 1fr; } }
+/* Phase 3.5: calendar markers and drag to move. */
+.day-marks { display: flex; flex-direction: column; gap: 2px; margin: 2px 0; }
+.day-mark { font-size: .6875rem; line-height: 1.2; padding: 1px 6px; border-left: 3px solid var(--goals); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.day-mark.close { border-left-color: var(--report, var(--text-2)); }
+.day.drop { outline: 2px dashed var(--goals); outline-offset: -2px; }
+.chip[draggable="true"] { cursor: grab; -webkit-user-drag: element; } /* all: unset on .chip drops the browser default */
+.chip[role="button"]:focus-visible { outline: 2px solid var(--focus, var(--goals)); outline-offset: 1px; }
+.st-offtop { margin: 4px 0 10px; font-size: .9375rem; }

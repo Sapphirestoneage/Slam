@@ -518,7 +518,7 @@ export function fromButton(label, route, id, { tag = false, value = null } = {})
 }
 // Session-1 focus mode (polish item 4): while Guide me is on in a session, lists show their core columns only and
 // the rest sits under one "More detail" per row or section.
-export const focusOn = ctx => { const s = ctx.store.doc.session || {}; return !!s.guide && !!s.startedAt && !(s.endedAt > s.startedAt); };
+export const focusOn = ctx => { const s = ctx.store.doc.session || {}; return !!s.guide && !s.allFields && !!s.startedAt && !(s.endedAt > s.startedAt); }; // Show all fields on Live turns it off (answer 90)
 export function focusMore(ctx, id, kids) {
   if (!focusOn(ctx)) return kids;
   return moreBlock(`focus:${id}`, () => h('div.stack', { style: { gap: '16px' } }, ...[kids].flat()), { label: 'More detail' });

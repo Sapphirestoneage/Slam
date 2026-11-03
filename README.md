@@ -50,6 +50,10 @@ Node 20 or newer. The math runs in Node with no browser.
 | `js/homework.js` | I'll find it later: the Homework list and where to find each thing |
 | `js/benefits.js`, `js/year.js`, `js/lifeadmin.js`, `js/community.js`, `js/timer.js` | Benefits and withholding flag; your year, sinking funds, taking over; life admin; community presets; onboarding timer |
 | `js/payday.js`, `js/glossary.js`, `js/ui/tips.js`, `js/ui/report-this.js` | Payday card; plain-language tooltips; Report this |
+| `js/math/statements.js`, `js/ui/statements-ui.js` | Report › Statements: net worth, income and spending, cash flow, and the tie-out (M62 to M67) |
+| `js/math/layers.js`, `js/ui/layers-ui.js` | Cash layers: little e, income gaps, big e, backups of the backups (M68) |
+| `js/math/foo.js`, `js/ui/foo-ui.js`, `data/flags.json` | Plan › FOO: the SLAM order of operations, Quiet Quitting FI, the path, efficiency flags as data (M69 to M71) |
+| `js/math/markers.js`, `js/math/simple.js` | Calendar FOO and close markers; Shockingly Simple Math (M72) and Pay yourself first |
 | `docs/backlog-brandon.md` | The Nov 2 beta feedback, tagged NOW or LATER |
 | `data/reference-2026.json` | Presets, limits, rates, lists from the Reference data tab |
 | `PROGRESS.md`, `QUESTIONS.md`, `BACKLOG.md` | Where the build stands, open questions, later phases |
