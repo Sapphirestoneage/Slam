@@ -67,7 +67,7 @@ export function duplicates(lines, { debts = [], autos = [], premiums = [], payFr
 }
 
 // After-tax savings into accounts (IRA, Roth IRA, brokerage, 529, an HSA paid on its own), a month. 401(k)-type
-// accounts and an HSA paid through the paycheck are before-tax savings, already counted from Income.
+// accounts and an HSA paid through the paycheck are saved from the paycheck, already counted from Income.
 const PAYROLL = new Set(['401(k)', '403(b)', '457', 'TSP', 'Solo 401(k)']);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
 export function afterTaxContributions(accounts, { payFrequency = null, payrollHsa = false } = {}) {

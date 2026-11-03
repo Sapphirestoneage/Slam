@@ -115,8 +115,8 @@ export function cashFlowStrip(ctx) {
   const gut = f.source !== 'lines';
   return h('div.card.waterfall', { role: 'group', 'aria-label': 'Cash flow, top to bottom' },
     step('Gross', f.gross, 'Every paycheck before tax, a month.', { home: '#/cash-flow/income' }),
-    step(f.premiums ? 'Taxes and premiums' : 'Taxes', f.taxes, `Gross minus before-tax savings minus take-home${f.premiums ? `, including ${money(f.premiums)} of premiums from the paycheck` : ''}.`, { sign: '−', home: '#/cash-flow/taxes' }),
-    step('Before-tax savings', f.beforeTax, '401(k) and HSA money taken from the paycheck before tax, a month.', { sign: '−' }),
+    step(f.premiums ? 'Taxes and premiums' : 'Taxes', f.taxes, `Gross minus what is saved from the paycheck minus take-home${f.premiums ? `, including ${money(f.premiums)} of premiums from the paycheck` : ''}.`, { sign: '−', home: '#/cash-flow/taxes' }),
+    step('Saved from paycheck', f.beforeTax, '401(k) (traditional or Roth) and HSA money taken from the paycheck, a month. A Roth 401(k) is taxed first, so it does not lower your tax.', { sign: '−' }),
     step('Take-home', f.takeHome, 'What lands in checking each month.', { sign: '=', total: true, home: '#/cash-flow/income' }),
     gut ? step('Spending', f.spending, 'The gut number (switch to the lines under Settings for this budget).', { sign: '−', home: '#/cash-flow/budget' })
       : [step('Fixed', f.fixed, 'Lines marked Fixed, your share, plus debt payments.', { sign: '−', home: '#/cash-flow/budget' }),

@@ -47,6 +47,7 @@ export function inputsOf(doc, ref, now = new Date()) {
   const healthPerPay = !healthFromPay ? 0 : health.per === 'paycheck' ? health.amount : health.amount * 12 / (PAYS[healthJob?.values.payFrequency] ?? 26);
   const withLink = r => {
     let out = r === link.job && r.values.contributionPct == null ? { ...r, values: { ...r.values, contributionPct: link.incomePct, k401Paycheck: link.incomePerPaycheck } } : r;
+    if (r === link.job && link.acct?.values?.taxType === 'Roth') out = { ...out, values: { ...out.values, k401Roth: true } }; // Roth: after tax
     if (health && r.kind === 'income') out = { ...out, values: { ...out.values, premium: r === healthJob ? healthPerPay : 0 } };
     return out;
   };
