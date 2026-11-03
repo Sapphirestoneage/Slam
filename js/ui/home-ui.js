@@ -6,7 +6,7 @@ import { quickFill, canQuickFill } from './quickfill.js';
 import { listCompletion } from './money-lists.js';
 import { profileCompletion } from './profile.js';
 import { firstLowDay } from './spending-ui.js';
-import { homeworkItems, sendSummary, fiCard } from './report-ui.js';
+import { homeworkItems, sendSummary, fiCard, netWorthChart } from './report-ui.js';
 import { next3, agenda } from '../plan.js';
 import { keyNumbers } from '../math/metrics.js';
 import { changeSince, statusOf, countsAsDone } from '../records.js';
@@ -50,6 +50,15 @@ export function moneyInOneLine(app, ctx) {
 }
 
 // ---------- Prep ----------
+// M6: net worth over time, closed until asked; snapshots come from Save snapshot, End session and month-end close.
+function netWorthOverTime(app, ctx) {
+  const snaps = ctx.store.doc.snapshots.filter(x => x.metrics && x.metrics.netWorth != null);
+  return h('div.nw-time', {}, h('div.row-line', { style: { gap: '8px' } },
+    S.moreBlock('home:nw', () => (snaps.length >= 2 ? netWorthChart(snaps, { height: 220 })
+      : h('p.muted', {}, snaps.length ? 'One snapshot so far. The line starts with the second one.' : 'No snapshots yet. Save one now; each month-end close saves one too.')),
+    { label: `Net worth over time${snaps.length ? ` (${snaps.length} snapshots)` : ''}` }),
+    S.button('Save snapshot', { size: 'small', iconName: 'camera', onClick: () => { app.snapshot('Snapshot'); S.toast('Snapshot saved.'); ctx.refresh(); } })));
+}
 export function prepScreen(app, ctx) {
   const doc = ctx.store.doc;
   const snap = ctx.store.lastSnapshot();
@@ -67,6 +76,7 @@ export function prepScreen(app, ctx) {
     inSession(ctx) ? h('div.banner-inline.good', {}, 'The session is on.', S.button('Back to Live', { iconName: 'right', onClick: () => app.go('#/home/live') })) : null,
     head('Home', `Prep for ${doc.client.name || 'this client'}`, S.button(inSession(ctx) ? 'Back to Live' : 'Start session', { kind: 'primary', size: 'big', onClick: () => startSession(app, ctx) })),
     moneyInOneLine(app, ctx),
+    netWorthOverTime(app, ctx),
     h('div.strip', {},
       card('What changed since last time', !snap ? 'Nothing yet' : changes.length ? `${changes.length} ${changes.length === 1 ? 'number' : 'numbers'}` : 'No change',
         !snap ? 'No snapshot to compare with' : changes.map(x => `${x.label} ${x.c.direction === 'up' ? '▲' : '▼'} ${fmt(x.k, x.c.diff)}`).join(' · ') || `Since ${new Date(snap.at).toLocaleDateString()}`, snap ? () => app.go('#/report/history') : null, 'Open history'),

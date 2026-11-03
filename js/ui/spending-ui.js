@@ -421,7 +421,7 @@ function closeRow(app, ctx, v) {
   const filled = withEst.filter(r => r.actual != null).length;
   const open = UI.review === v.ym;
   const doClose = e => {
-    const go = () => { closeMonth(ctx.store, ctx.ref, v.ym, { now: ctx.now() }); S.toast(`${monthName(v.ym)} closed. Variable misses carried to next month.`, { undo: () => ctx.store.undo() }); };
+    const go = () => { closeMonth(ctx.store, ctx.ref, v.ym, { now: ctx.now() }); app.snapshot(`Month-end ${monthName(v.ym)}`); /* M6.1 */ S.toast(`${monthName(v.ym)} closed and a snapshot saved. Variable misses carried to next month.`, { undo: () => ctx.store.undo() }); };
     if (v.gaps.length) S.confirmBox(e.currentTarget, { text: `${v.gaps.length} ${v.gaps.length === 1 ? 'line has' : 'lines have'} no actual. Close anyway? ${v.gaps.length === 1 ? 'It counts' : 'They count'} as $0.`, yes: 'Close month', no: 'Not yet', onYes: go });
     else go();
   };

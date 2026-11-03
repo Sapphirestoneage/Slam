@@ -256,3 +256,5 @@ table.rows.mini th, table.rows.mini td { padding: 4px 6px; white-space: nowrap; 
 .year-head { display: flex; flex-direction: column; gap: 2px; }
 .year-item { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 @media (max-width: 700px) { .year-month { grid-template-columns: 1fr; } }
+.nw-time { margin: var(--s3) 0; }
+.nw-time .more-wrap { flex: 1; }

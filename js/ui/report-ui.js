@@ -234,15 +234,9 @@ export function fiCard(ctx, m) {
 }
 
 // ---------- History ----------
-export function historyScreen(app, ctx) {
-  const doc = ctx.store.doc;
-  const snaps = doc.snapshots.filter(s => s.metrics);
-  const months = closedMonths(doc);
-  const acc = gutAccuracy(months);
-  const since = monthsBetween(ymOf(new Date(doc.createdAt || ctx.now())), ymOf(ctx.now()));
-  if (!snaps.length) return [head('History', 'Snapshots over time'), h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No snapshots yet'),
-    h('span.muted', {}, 'End session saves one, so next time shows what changed.'), S.button('Save snapshot', { iconName: 'camera', onClick: () => app.snapshot('Snapshot') })))];
-  const host = h('div.chart', { style: { height: '280px' } });
+// Total and liquid net worth over time, from the snapshots (M6.2: also on Home, collapsed).
+export function netWorthChart(snaps, { height = 280 } = {}) {
+  const host = h('div.chart', { style: { height: `${height}px` } });
   queueMicrotask(() => {
     if (!window.echarts || !host.isConnected) return;
     const t = S.chartTheme('assets');
@@ -256,6 +250,17 @@ export function historyScreen(app, ctx) {
     });
     new ResizeObserver(() => c.resize()).observe(host);
   });
+  return host;
+}
+export function historyScreen(app, ctx) {
+  const doc = ctx.store.doc;
+  const snaps = doc.snapshots.filter(s => s.metrics);
+  const months = closedMonths(doc);
+  const acc = gutAccuracy(months);
+  const since = monthsBetween(ymOf(new Date(doc.createdAt || ctx.now())), ymOf(ctx.now()));
+  if (!snaps.length) return [head('History', 'Snapshots over time'), h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No snapshots yet'),
+    h('span.muted', {}, 'End session saves one, so next time shows what changed.'), S.button('Save snapshot', { iconName: 'camera', onClick: () => app.snapshot('Snapshot') })))];
+  const host = netWorthChart(snaps);
   const first = snaps[0].metrics, last = snaps[snaps.length - 1].metrics;
   return [head('History', 'Snapshots over time'),
     S.summaryStrip(ctx, [
