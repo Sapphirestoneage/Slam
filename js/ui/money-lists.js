@@ -8,6 +8,7 @@ import { limitUsed } from '../math/assets.js';
 import { accountBlocks, accountFlags, stampBalance } from './account-detail.js';
 import { is401k, yearly401k } from './account-specific.js';
 import { netWorthCheck, yearlyContribution } from '../math/portfolio.js';
+import { benefitYearly } from '../benefits.js';
 import { drafttShares, DRAFTT } from '../math/spending.js';
 import { needs } from '../math/result.js';
 import { statusOf, countsAsDone } from '../records.js';
@@ -256,14 +257,16 @@ function assetSecondary(ctx, r, up) {
   const age = ctx.metrics().inputs.age;
   const freq = ctx.metrics().inputs.income.find(x => x.r.values.payFrequency)?.r.values.payFrequency ?? null;
   const perYear = is401k(r) ? yearly401k(ctx, r) : yearlyContribution(v, freq); // B2.14: real paychecks a year, not 26
-  const lim = limitUsed({ contributions: perYear, type: r.type, age: age ?? 30 }, ctx.ref);
+  const employerHsa = r.type === 'HSA' ? benefitYearly(ctx.store.doc.profile.benefits?.employerHsa, freq) : null; // M2.3: the employer's dollars count too
+  const counted = employerHsa == null ? perYear : (perYear ?? 0) + employerHsa;
+  const lim = limitUsed({ contributions: counted, type: r.type, age: age ?? 30 }, ctx.ref);
   return [
     labelled('Institution', textInput(v.institution, x => up({ institution: x }), { hint: 'Broker', width: 160 }), { later: later('institution') }),
     is401k(r) ? null : labelled('Putting in', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.contribution, x => up({ contribution: x }), { hint: 'Add amount' }),
       toggle(['Paycheck', 'Year'], v.contributionPer ?? 'Year', x => up({ contributionPer: x }), { label: 'Per' })), { later: later('contribution') }),
     is401k(r) || r.type === 'HSA' ? null : labelled('Pretax, Roth or both', toggle(['Pretax', 'Roth', 'Both'], v.taxType ?? null, x => up({ taxType: x }), { label: 'Pretax or Roth' }), { later: later('taxType') }),
     is401k(r) ? null : labelled('Unvested', moneyInput(v.unvested, x => up({ unvested: x }), { hint: 'Add amount' }), { note: 'Shown, not counted in net worth', later: later('unvested') }),
-    limitUsed({ contributions: 0, type: r.type, age: 30 }, ctx.ref).value !== null ? labelled('Limit used this year', h('span.computed', {}, lim.value === null ? `Needs ${lim.needs[0]}` : `${value(lim)} of ${money(lim.limit)}`)) : null];
+    limitUsed({ contributions: 0, type: r.type, age: 30 }, ctx.ref).value !== null ? labelled('Limit used this year', h('span.computed', {}, lim.value === null ? `Needs ${lim.needs[0]}` : `${value(lim)} of ${money(lim.limit)}${employerHsa ? `, with ${money(employerHsa)} from your employer` : ''}`)) : null];
 }
 function assetTertiary(ctx, r, up) {
   if (r.kind !== 'account') return [labelled('Coach notes', textInput(r.privateNote, x => up({ privateNote: x }), { hint: 'Add a private note', width: 320 }))];

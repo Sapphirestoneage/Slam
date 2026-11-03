@@ -151,3 +151,20 @@ test('B3.4, B3.6: vested apart from unvested; HSA managed vs self-directed fees'
   const c = hsaFeeCompare({ invested: 5000, managedPct: 0.005, selfPct: 0.0005 });
   assert.equal(Math.round(c.saves), 23);
 });
+
+// ---------- Missed ideas M2: employer benefits ----------
+import { benefitYearly, commuterSavings } from '../js/benefits.js';
+
+test('M2.2, M2.3: a yes benefit has dollars a year by the real paychecks; a no has none', () => {
+  assert.equal(benefitYearly({ have: 'Yes', amount: 50, per: 'Paycheck' }, 'twice a month'), 1200);
+  assert.equal(benefitYearly({ have: 'Yes', amount: 1000, per: 'Year' }), 1000);
+  assert.equal(benefitYearly({ have: 'No', amount: 1000, per: 'Year' }), null);
+});
+
+test('M2.4: commuter nudge is transit a year (capped) x the marginal rate, and only without the benefit', () => {
+  const s = commuterSavings({ have: "Don't know", transitMonthly: 132, marginal: 0.2965, limitMonthly: 340 });
+  assert.equal(Math.round(s.yearly), Math.round(132 * 12 * 0.2965));
+  assert.equal(commuterSavings({ have: 'No', transitMonthly: 500, marginal: 0.3, limitMonthly: 340 }).covered, 340 * 12);
+  assert.equal(commuterSavings({ have: 'Yes', transitMonthly: 132, marginal: 0.3, limitMonthly: 340 }), null);
+  assert.equal(commuterSavings({ have: 'No', transitMonthly: 0, marginal: 0.3, limitMonthly: 340 }), null);
+});

@@ -1,10 +1,13 @@
 // My Money › Profile (build phase 5): why now, what applies (the gates hub, R015), about you, work and home,
 // the accounts gate with counts (R001 to R003), and the couples split (R177 to R179). Answers live in doc.profile.
 import { h } from './dom.js';
-import { textInput, toggle, select, stepper, checkbox, labelled, moreBlock, pctInput, toast, laterButton, button } from './staples.js';
+import { textInput, toggle, select, stepper, checkbox, labelled, moreBlock, pctInput, toast, laterButton, button, moneyInput, parkProfile } from './staples.js';
 import { gatesOf, syncCount, WORK, HOUSING, COVERAGE, AREAS, REAL_TYPES, recordFor } from '../gates.js';
 import { ageOf } from '../math/metrics.js';
 import { profileCompletion } from '../profile-completion.js';
+import { BENEFITS, HAVE, TRANSIT, commuterSavings } from '../benefits.js';
+import { taxRates } from '../math/income.js';
+import { money, pct } from '../format.js';
 
 export const STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI',
   'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
@@ -138,12 +141,40 @@ export function profileScreen(app, ctx) {
       })))) : h('p.muted', {}, 'Add accounts under Assets to mark which are joint.');
     })) : null;
 
+  // ---------- Benefits at work (M2): yes / no / don't know; a yes opens only its own fields ----------
+  const ben = p.benefits || {};
+  const setBen = (k, patch) => {
+    const next = { ...ben, [k]: { ...(ben[k] || {}), ...patch } };
+    const sync = {}; // the hub's FSA and equity gates follow these answers
+    if (k === 'healthFsa' || k === 'dependentFsa') sync.fsa = next.healthFsa?.have === 'Yes' || next.dependentFsa?.have === 'Yes' ? true : p.fsa ?? null;
+    if (k === 'espp' && patch.have === 'Yes') sync.equityPay = true;
+    store.setDoc('profile', { benefits: next, ...sync });
+  };
+  const m = ctx.metrics();
+  const taxed = m.inputs.income.filter(i => i.taxType && i.gross !== null);
+  const rates = taxed.length ? taxRates({ gross: taxed.reduce((s, i) => s + i.gross, 0), pretax: taxed.reduce((s, i) => s + i.pretax, 0), filingStatus: m.inputs.filingStatus }, ctx.ref) : null;
+  const transit = m.inputs.lines.filter(l => TRANSIT.has(l.category) && l.status !== 'Not for me').reduce((s, l) => s + (l.per === 'year' ? (l.amount ?? 0) / 12 : l.amount ?? 0), 0);
+  const nudge = commuterSavings({ have: ben.commuter?.have, transitMonthly: transit, marginal: rates?.marginal ?? null, limitMonthly: ctx.ref.limits.commuterMonthly });
+  const amountPer = (k, b, hint) => h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+    moneyInput(b.amount ?? null, x => setBen(k, { amount: x }), { hint }), toggle(['Paycheck', 'Year'], b.per ?? 'Paycheck', x => setBen(k, { per: x }), { label: 'Per' }));
+  const benefitRow = ({ key, label }) => {
+    const b = ben[key] || {};
+    const yes = b.have === 'Yes';
+    return h('div.benefit-row', {}, h('span.gate-label', {}, label), pick(HAVE, b.have, v => setBen(key, { have: v }), label),
+      yes ? labelled(key === 'espp' ? 'You put in' : key === 'employerHsa' ? 'Employer puts in' : 'Amount', amountPer(key, b, 'Add amount'), parkProfile(store, `benefit.${key}`)) : null,
+      yes && key === 'espp' ? labelled('Discount', pctInput(b.discount ?? null, x => setBen(key, { discount: x }), { hint: 'e.g. 15' }), parkProfile(store, 'benefit.esppDiscount')) : null,
+      yes && key === 'employerHsa' ? h('span.muted.small', {}, 'Counts toward your HSA limit on Assets') : null,
+      key === 'commuter' && nudge ? h('span.nudge', {}, `You spend about ${money(transit)} a month on transit. Paying it pre-tax could save about ${money(nudge.yearly)} a year (at your ${pct(nudge.marginal)} rate). Ask HR.`) : null);
+  };
+  const benefits = g.employer ? section('Benefits at work', 'income', h('p.muted', {}, 'Answer what your job offers. A yes opens just what we need for it.'),
+    h('div.benefit-list', {}, BENEFITS.map(benefitRow))) : null;
+
   // Next (Brandon B1.1): once every core answer is in, or parked for later.
   const c = profileCompletion(store.doc);
   const next = h('div.next-step', {}, c.core.ready
     ? button('Next: Income', { kind: 'primary', iconName: 'right', onClick: () => app.go('#/my-money/income') })
     : h('p.muted', {}, `${c.core.missing.length} to go before Next (${c.core.missing.slice(0, 3).join(', ')}${c.core.missing.length > 3 ? ' and more' : ''}). Answer each, or tap I'll find it later.`));
-  return [whyNow, hub, about, work, accounts, couple, next];
+  return [whyNow, hub, about, work, benefits, accounts, couple, next];
 }
 
 export { profileCompletion } from '../profile-completion.js';

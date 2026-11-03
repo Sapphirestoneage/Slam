@@ -71,7 +71,9 @@
       "self": 4400,
       "family": 8750,
       "catchUp55": 1000
-    }
+    },
+    "commuterMonthly": 340,
+    "commuterNote": "IRS 2026 pre-tax transit and parking limit, each $340 a month. Not in the spec Reference data tab yet."
   },
   "tax": {
     "standardDeduction": {
@@ -361,13 +363,15 @@
       "category": "Gas or charging",
       "draftt": "Transportation",
       "amount": "Variable",
-      "timing": "Variable date", "gate": "car"
+      "timing": "Variable date",
+      "gate": "car"
     },
     {
       "category": "Tolls and parking",
       "draftt": "Transportation",
       "amount": "Variable",
-      "timing": "Variable date", "gate": "car"
+      "timing": "Variable date",
+      "gate": "car"
     },
     {
       "category": "Transit",

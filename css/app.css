@@ -248,3 +248,7 @@ ul.missing { list-style: none; margin: 0; padding: 0; display: flex; flex-direct
 table.rows.mini th, table.rows.mini td { padding: 4px 6px; white-space: nowrap; }
 .tag.ok-tag { color: var(--good, #1E7A4C); }
 .asset-checks .tag.warn, .acct-blocks .tag.warn { white-space: normal; text-align: left; }
+.benefit-list { display: flex; flex-direction: column; gap: var(--s3); }
+.benefit-row { display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; padding-bottom: var(--s3); border-bottom: 1px dashed var(--border-row); }
+.benefit-row .gate-label { min-width: 260px; align-self: center; font-weight: 600; }
+.nudge { flex-basis: 100%; font-size: .875rem; padding: 6px 10px; border-radius: var(--r-button); border: 1.5px solid var(--border-filled); background: var(--card); color: var(--text); }

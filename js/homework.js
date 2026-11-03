@@ -1,6 +1,7 @@
 // "I'll find it later" (Brandon B1.2, B1.3): any field can be parked on the Homework list, each with a hint on
 // where to look. Record fields use the 'Will email' status (shown as "I'll find it later"); Profile answers live in
 // doc.profile.later. Pure: no DOM.
+import { BENEFITS } from './benefits.js';
 
 export const LATER = 'Will email';
 
@@ -47,8 +48,10 @@ const LABEL = {
   hsaCash: 'cash amount', hsaManagedFee: 'managed fee', hsaSelfFee: 'self-directed fee', matchTiers: 'match tiers', vestingSchedule: 'vesting schedule', value: 'value',
   statementDay: 'statement closing day', autopay: 'autopay', rewards: 'rewards type', creditScore: 'Credit score',
 };
-export const whereToFind = (field, type = null) => (type === 'HSA' && field === 'contribution' ? 'Pay stub: HSA deduction' : WHERE[field] ?? null);
-export const fieldLabel = field => LABEL[field] ?? field;
+const benefitOf = f => BENEFITS.find(b => f === `benefit.${b.key}`);
+export const whereToFind = (field, type = null) => (type === 'HSA' && field === 'contribution' ? 'Pay stub: HSA deduction'
+  : benefitOf(field)?.where ?? (field === 'benefit.esppDiscount' ? 'Equity or ESPP site' : null) ?? WHERE[field] ?? null);
+export const fieldLabel = field => LABEL[field] ?? benefitOf(field)?.label ?? (field === 'benefit.esppDiscount' ? 'ESPP discount' : field);
 
 // Every parked item: Profile answers first, then rows (whole row or one field).
 // records should already be the visible ones (gated-out rows count nowhere).
