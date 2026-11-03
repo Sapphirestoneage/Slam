@@ -476,6 +476,21 @@ export function timeToggle(ctx) {
 }
 
 // ---------- Record list: rows, groups, bulk select, totals (R105, R109 to R114, R165, R171, R172) ----------
+// Entered once elsewhere: the number is a button that opens its home, so it is never edited twice.
+export function openSource(route, id) {
+  location.hash = route;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const row = document.querySelector(`tr[data-id="${id}"]`);
+    if (row?.hidden) document.querySelector(`tr.group[data-group="${CSS.escape(row.dataset.group)}"] button.fold`)?.click();
+    row?.classList.add('highlight');
+    row?.querySelector('input:not([type="checkbox"])')?.focus({ preventScroll: true });
+    row?.scrollIntoView({ block: 'center' });
+  }));
+}
+export function fromButton(label, route, id, { tag = false, value = null } = {}) {
+  return h(tag ? 'button.tag.plain.from-tag' : 'button.btn.small.from-btn', { type: 'button', 'data-focus': `from:${id}`, title: 'Entered there; open it to change it', onclick: () => openSource(route, id) },
+    value, value ? ' · ' : null, label, ' ›');
+}
 const slug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 // A block that redraws itself on every change, keeping your place (for cards beside a list).
 export function live(ctx, render) {
@@ -622,7 +637,8 @@ export function recordList(ctx, cfg) {
         yes: `Clear ${cfg.thing.plural}`, no: 'Keep them', onYes: () => { ctx.store.resetSection(cfg.filter); toast('Cleared.', { undo: () => ctx.store.undo() }); } })) : null);
     const picker = typeof cfg.picker === 'function' ? cfg.picker(ctx) : cfg.picker;
     const addBtn = addButton(cfg.thing.one, e => picker ? openAddPicker(e.currentTarget, { thing: cfg.thing.one, ...picker, onPick: (t, own) => addNew(t, own) }) : addNew(null));
-    if (!recs.length) { view = null; return h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, h('div.list', {}, emptyList(cfg.thing, e => addBtn.click()))); }
+    const autos = cfg.autoRows?.(ctx, m) ?? []; // entered elsewhere, shown here (From Debt): no input, no menu
+    if (!recs.length && !autos.length) { view = null; return h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, h('div.list', {}, emptyList(cfg.thing, e => addBtn.click()))); }
 
     const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all', 'data-focus': 'select-all' });
     allBox.onchange = () => { if (allBox.checked) recs.forEach(r => state.selected.add(r.id)); else state.selected.clear(); refreshSelection(); };
@@ -630,7 +646,7 @@ export function recordList(ctx, cfg) {
     const span = cols.length + 3;
     const thead = h('thead', {}, h('tr', {}, h('th.check-cell', {}, allBox), cols.map(c => h(`th${c.num ? '.num' : ''}`, {}, c.label)), h('th', {}, 'Status'), h('th', {}, h('span.sr', {}, 'Actions'))));
     const groups = new Map();
-    for (const r of recs) { const g = cfg.groupBy?.(r) ?? ''; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(r); }
+    for (const r of [...recs, ...autos]) { const g = cfg.groupBy?.(r) ?? ''; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(r); }
     for (const g of cfg.lastGroups || []) if (groups.has(g)) { const rows = groups.get(g); groups.delete(g); groups.set(g, rows); } // e.g. Not for me sits at the bottom
     const body = h('tbody');
     const rowEls = new Map(), groupEls = new Map();
@@ -659,6 +675,12 @@ export function recordList(ctx, cfg) {
         body.append(tr);
       }
       for (const r of rows) {
+        if (r.auto) {
+          body.append(h('tr.row.auto', { 'data-id': r.id, 'data-group': g, hidden: folded }, h('td.check-cell'),
+            cols.map((c, i) => h(`td.col-${slug(c.label)}${i === 0 ? '.col-first' : ''}${c.num ? '.num' : ''}`, {}, cfg.autoCell?.(ctx, r, c, m) ?? null)),
+            h('td.col-status', {}, h('span.tag.plain', {}, `From ${r.auto.from}`)), h('td.col-actions')));
+          continue;
+        }
         const box = h('input', { type: 'checkbox', 'aria-label': `Select ${r.name || r.type || cfg.thing.one}`, checked: state.selected.has(r.id), 'data-focus': 'sel' });
         box.onchange = () => { box.checked ? state.selected.add(r.id) : state.selected.delete(r.id); refreshSelection(); };
         const open = state.open === r.id;
@@ -674,6 +696,8 @@ export function recordList(ctx, cfg) {
         tr.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') { e.target.dispatchEvent(new Event('change')); addNew(r.type, null, r.id); } });
         rowEls.set(r.id, tr);
         body.append(tr);
+        const note = cfg.rowNote?.(ctx, r, m); // e.g. "Looks like the same payment: keep one"
+        if (note) body.append(h('tr.row-note', { 'data-for': r.id, 'data-group': g, hidden: folded }, h('td', { colspan: span }, note)));
         if (open) { const more = moreRow(r, g); more.hidden = folded; body.append(more); track(tr, more); }
       }
     }

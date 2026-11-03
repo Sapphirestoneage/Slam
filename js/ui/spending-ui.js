@@ -88,14 +88,15 @@ function budgetStrip(ctx, view) {
   const lines = ctx.visible(r => r.kind === 'bill' && !r.values.irregular && r.status !== 'Not for me');
   const cash = (ctx.store.doc.spending.basis || 'accrual') === 'cash';
   const monthlyOf = r => (cash && (r.per === 'year' || r.covers) ? 0 : view.rows.find(x => x.line.id === r.id)?.[UI.pass === 'Rough' ? 'rough' : 'estimate'] ?? 0);
-  const fixed = sum(lines.filter(r => r.values.amountType === 'Fixed'), monthlyOf);
+  const autos = m.inputs.autoLines ?? []; // debt payments, From Debt (entered once on Net worth)
+  const fixed = sum(lines.filter(r => r.values.amountType === 'Fixed'), monthlyOf) + sum(autos, r => r.amount);
   const variable = sum(lines.filter(r => r.values.amountType !== 'Fixed'), monthlyOf);
   const yearly = ctx.visible(r => r.kind === 'bill' && r.values.irregular && r.amount != null);
   const setAside = cash ? sum(yearly.filter(r => String(r.values.monthDue) === String(Number(UI.ym.slice(5)))), r => r.amount) : sum(yearly, r => r.amount / 12);
   const res = (v, text) => ({ id: 'M23', value: v * k, needs: [], unit: 'money', text });
   const share = v => (th ? ` · ${pct(v / th)} of take-home` : '');
   const items = [
-    { label: `Fixed${k > 1 ? `, ${UI.period}` : ''}`, result: res(fixed, `Lines tagged Fixed amount, ${UI.pass === 'Rough' ? 'their usual number' : `the ${monthName(UI.ym)} estimate`}: ${money(fixed)} a month. This is the floor you pay no matter what; it feeds runway and Lean FI.`), note: `The floor${share(fixed)}`, home: '#/cash-flow/budget' },
+    { label: `Fixed${k > 1 ? `, ${UI.period}` : ''}`, result: res(fixed, `Lines tagged Fixed amount${autos.length ? ` and ${autos.length} debt ${autos.length === 1 ? 'payment' : 'payments'} from Debt` : ''}, ${UI.pass === 'Rough' ? 'their usual number' : `the ${monthName(UI.ym)} estimate`}: ${money(fixed)} a month. This is the floor you pay no matter what; it feeds runway and Lean FI.`), note: `The floor${share(fixed)}`, home: '#/cash-flow/budget' },
     { label: `Variable${k > 1 ? `, ${UI.period}` : ''}`, result: res(variable, `Lines tagged Variable amount: ${money(variable)} a month.`), note: share(variable).replace(' · ', '') || null },
     { label: `Yearly costs set aside${k > 1 ? `, ${UI.period}` : ''}`, result: res(setAside, cash ? `Yearly costs due in ${monthName(UI.ym)}: ${money(setAside)} (cash view).` : `Each yearly cost divided by 12: ${money(setAside)} a month.`) },
   ];

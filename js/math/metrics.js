@@ -10,6 +10,7 @@ import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
 import { link401k } from './portfolio.js';
 import { fiNumber, fiDate, coastFi, bigDeals } from './fi.js';
 import { hourlyRate } from './time.js';
+import { debtLines, premiumSources, duplicates, afterTaxContributions } from './linked.js';
 
 const HOUSING = new Set(['Rent or mortgage', 'Electric, gas, water']);
 const CONSUMER = new Set(['Credit card', 'Personal loan', 'Buy now, pay later', 'Payday or cash advance', 'Medical', 'Family or friend']);
@@ -44,12 +45,6 @@ export function inputsOf(doc, ref, now = new Date()) {
     ? income.reduce((s, x) => (s === null || x.takeHome.value === null ? null : s + x.takeHome.value), 0)
     : null;
   const grossAnnual = income.some(x => x.gross !== null) ? income.reduce((s, x) => s + (x.gross ?? 0), 0) : null;
-  const lines = live.filter(r => r.kind === 'bill').map(r => ({ ...r, ...r.values, amount: read(r, 'amount').v }));
-  const allIn = live.find(r => r.kind === 'spending' && r.type === 'All in');
-  const lineTotal = lines.length ? lines.reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0) : null;
-  // Spending for the math: the Gut number until the lines are chosen on Budget (R131: the gut is a test kept to compare).
-  const useLines = !allIn || (doc.spending?.source ?? 'gut') === 'lines' && lineTotal !== null;
-  const spending = useLines ? lineTotal : read(allIn, 'amount').v;
   const debts = live.filter(r => r.kind === 'debt').map(r => {
     const apr = read(r, 'apr', ref.typicalRates[r.type] ?? null);
     const balance = read(r, 'balance').v;
@@ -66,6 +61,19 @@ export function inputsOf(doc, ref, now = new Date()) {
     }
     return { id: r.id, name: r.name ?? r.type, type: r.type, balance, apr: apr.v, aprGuess: !!apr.guess, payment, paymentIsMinimum, inFull, choice, stress: r.stress, linkedTo: r.linkedTo };
   });
+  // Enter once, show in both: each debt's payment is a line From Debt; a typed line that repeats a debt payment or a
+  // premium already paid is flagged and left out until someone picks (js/math/linked.js).
+  const payFrequency = income.find(i => i.r.values.payFrequency)?.r.values.payFrequency ?? null;
+  const typedLines = live.filter(r => r.kind === 'bill').map(r => ({ ...r, ...r.values, amount: read(r, 'amount').v }));
+  const autoLines = debtLines(debts);
+  const premiums = premiumSources(live.filter(r => r.kind === 'coverage'), payFrequency);
+  const { dupOf } = duplicates(typedLines, { debts, autos: autoLines, premiums, payFrequency });
+  const lines = [...typedLines.filter(l => !dupOf[l.id]), ...autoLines];
+  const allIn = live.find(r => r.kind === 'spending' && r.type === 'All in');
+  const lineTotal = typedLines.length ? lines.reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0) : null;
+  // Spending for the math: the Gut number until the lines are chosen on Budget (R131: the gut is a test kept to compare).
+  const useLines = !allIn || (doc.spending?.source ?? 'gut') === 'lines' && lineTotal !== null;
+  const spending = useLines ? lineTotal : read(allIn, 'amount').v;
   const debtPayments = debts.reduce((s, d) => s + (d.inFull ? 0 : d.payment ?? 0), 0);
   const includesDebt = allIn ? allIn.values.includesDebtPayments !== false : false;
   const accounts = live.filter(r => r.kind === 'account').map(r => ({ id: r.id, name: r.name ?? r.type, group: r.values.group, type: r.type, value: read(r, 'balance').v, unvested: r.values.unvested ?? null }));
@@ -81,7 +89,9 @@ export function inputsOf(doc, ref, now = new Date()) {
   return {
     place, link, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, none,
     debtOrder: doc.settings?.debtOrder ?? 'avalanche',
-    debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || (useLines && lines.some(l => l.draftt === 'Debt')) ? 0 : debtPayments),
+    debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || useLines ? 0 : debtPayments), // the lines hold each payment, From Debt
+    autoLines, dupOf, typedLines, premiums, payFrequency,
+    afterTaxSaving: afterTaxContributions(live.filter(r => r.kind === 'account'), { payFrequency, payrollHsa: gates.hsa && income.some(i => (i.r.values.hsaFsa ?? 0) > 0) }).total,
     spendingSource: useLines ? 'lines' : 'gut', lineTotal,
     guessLines: lines.filter(l => l.status === 'Not sure' && l.preset).length,
     guessTotal: lines.filter(l => l.status === 'Not sure' && l.preset).reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0), gutTotal: allIn ? read(allIn, 'amount').v : null,

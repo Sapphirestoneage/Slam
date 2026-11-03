@@ -188,3 +188,12 @@ textarea.notes-box { width: 100%; min-height: 90px; border: 2px solid var(--bord
 .wf-step .label.metric-home { color: var(--text-2); text-decoration: none; }
 .wf-step .label.metric-home:hover { color: var(--primary); text-decoration: underline; }
 @media (max-width: 760px) { .waterfall { grid-template-columns: 1fr 1fr; } }
+/* Enter once: lines that come from Debt or Protection, and the duplicate flag. */
+table.rows tr.row.auto td { background: color-mix(in srgb, var(--debt) 6%, transparent); }
+.auto-name { font-weight: 600; padding-left: var(--s2); }
+.btn.small.from-btn { border-color: var(--border-filled); color: var(--text); font-weight: 600; }
+button.tag.from-tag { border: 0; cursor: pointer; font: inherit; font-size: .8125rem; font-weight: 700; min-height: 32px; }
+button.tag.from-tag:hover { filter: brightness(.95); text-decoration: underline; }
+table.rows tr.row-note td { height: auto; padding: 6px var(--s3) 10px; background: color-mix(in srgb, var(--warn) 6%, transparent); }
+.dup-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.dup-note .tag.warn { white-space: normal; height: auto; min-height: 24px; padding: 4px 10px; }
