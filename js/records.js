@@ -2,6 +2,7 @@
 // undo and redo over every change (R086), snapshots (R083, R085, R167), export and import.
 // Pure: no DOM, no storage. js/storage.js saves it; the screens read it.
 
+import { moveFieldIds, FIELDS_VERSION } from './fields-map.js';
 export const SCHEMA_VERSION = 1;
 export const APP_ID = 'SLAM';
 
@@ -50,7 +51,7 @@ export function newHousehold({ name = null, now = new Date().toISOString(), id =
     records: [], history: [], snapshots: [], parking: [],
     spending: {}, // budget passes by month, calendar marks, start balance (build phase 6)
     session: {},  // session count, agenda, notes, one-pager (build phases 8 to 10)
-    createdAt: now, updatedAt: now, lastBackupAt: null,
+    createdAt: now, updatedAt: now, lastBackupAt: null, fieldsVersion: FIELDS_VERSION,
   };
 }
 
@@ -349,6 +350,7 @@ export function migrate(doc) {
   // Version 1 is the first shape; later versions add steps here, oldest first.
   for (const k of ['records', 'history', 'snapshots', 'parking']) doc[k] ??= [];
   for (const k of ['profile', 'assumptions', 'settings', 'client', 'spending', 'session']) doc[k] ??= {};
+  moveFieldIds(doc); // field IDs renumbered when fields.json was rebuilt from the spec (js/fields-map.js)
   doc.schema = SCHEMA_VERSION;
   return doc;
 }

@@ -79,3 +79,25 @@ test('Health premium with two jobs: job 1 by default, switched to job 2 with Pai
   x = metrics(s.doc, ref, { now: new Date('2026-11-03') }).inputs;
   assert.deepEqual([x.health.jobId, pre(x)[one.id], pre(x)[two.id]], [two.id, 0, 80 * 26], 'out of the second paycheck, once');
 });
+
+import { migrate, importFile, exportFile } from '../js/records.js';
+import { FIELD_MOVES } from '../js/fields-map.js';
+test('fields.json from the spec: old saved clients and backups keep each filed note on its field', () => {
+  const fields = JSON.parse(readFileSync(new URL('../data/fields.json', import.meta.url)));
+  const name = id => fields.find(f => f.id === id)?.field;
+  const old = newHousehold({ name: 'Old file', now: '2026-10-01T09:00:00.000Z' });
+  delete old.fieldsVersion; // made before the rebuild
+  old.parking = [{ id: 'n1', text: 'check withdrawal', filedTo: 'F216' }, { id: 'n2', text: 'their return', filedTo: 'F215' }, { id: 'n3', text: 'HSA', filedTo: 'F020' }];
+  const doc = migrate(JSON.parse(JSON.stringify(old)));
+  assert.deepEqual(doc.parking.map(n => n.filedTo), ['F218', 'F216', 'F020']);
+  assert.equal(name('F218'), 'Withdrawal rate');
+  assert.equal(name('F216'), 'Return (after inflation)');
+  assert.deepEqual(migrate(doc).parking.map(n => n.filedTo), ['F218', 'F216', 'F020'], 'moved once, never twice');
+  // A backup file made before the rebuild loads the same way.
+  const file = exportFile(old, '2026-10-02T09:00:00.000Z');
+  delete file.household.fieldsVersion;
+  assert.deepEqual(importFile(JSON.stringify(file)).parking.map(n => n.filedTo), ['F218', 'F216', 'F020']);
+  // Every move lands on a field that exists, and new clients start on the new numbering.
+  for (const to of Object.values(FIELD_MOVES)) assert.ok(name(to), to);
+  assert.equal(newHousehold().fieldsVersion, 2);
+});

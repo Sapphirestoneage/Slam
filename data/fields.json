@@ -2141,9 +2141,9 @@
  },
  {
   "id": "F215",
-  "field": "Return (real)",
+  "field": "Retire by (age)",
   "area": "Goals",
-  "group": "Assumptions",
+  "group": "FI target",
   "layer": "Secondary",
   "livesOn": "Plan › Goals",
   "scope": "Now",
@@ -2151,7 +2151,7 @@
  },
  {
   "id": "F216",
-  "field": "Withdrawal rate",
+  "field": "Return (after inflation)",
   "area": "Goals",
   "group": "Assumptions",
   "layer": "Secondary",
@@ -2161,7 +2161,7 @@
  },
  {
   "id": "F217",
-  "field": "Pace (optimistic, likely, pessimistic)",
+  "field": "Inflation",
   "area": "Goals",
   "group": "Assumptions",
   "layer": "Secondary",
@@ -2171,6 +2171,26 @@
  },
  {
   "id": "F218",
+  "field": "Withdrawal rate",
+  "area": "Goals",
+  "group": "Assumptions",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F219",
+  "field": "Pace (optimistic, likely, pessimistic)",
+  "area": "Goals",
+  "group": "Assumptions",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": "7"
+ },
+ {
+  "id": "F220",
   "field": "Real or nominal dollars",
   "area": "Goals",
   "group": "Assumptions",
@@ -2180,7 +2200,7 @@
   "phase": "7"
  },
  {
-  "id": "F219",
+  "id": "F221",
   "field": "Life expectancy",
   "area": "Goals",
   "group": "Assumptions",
@@ -2190,7 +2210,7 @@
   "phase": "7"
  },
  {
-  "id": "F220",
+  "id": "F222",
   "field": "Social Security",
   "area": "Goals",
   "group": "Assumptions",
@@ -2200,7 +2220,7 @@
   "phase": "7"
  },
  {
-  "id": "F221",
+  "id": "F223",
   "field": "Spending in retirement",
   "area": "Goals",
   "group": "Retirement spending",
@@ -2210,7 +2230,7 @@
   "phase": "7"
  },
  {
-  "id": "F222",
+  "id": "F224",
   "field": "Go-go, slow-go, no-go phases",
   "area": "Goals",
   "group": "Retirement spending",
@@ -2220,7 +2240,7 @@
   "phase": "7"
  },
  {
-  "id": "F223",
+  "id": "F225",
   "field": "Lean FI (FAT costs only)",
   "area": "Goals",
   "group": "Milestones",
@@ -2230,7 +2250,7 @@
   "phase": "7"
  },
  {
-  "id": "F224",
+  "id": "F226",
   "field": "Coast FI",
   "area": "Goals",
   "group": "Milestones",
@@ -2240,7 +2260,7 @@
   "phase": "7"
  },
  {
-  "id": "F225",
+  "id": "F227",
   "field": "Barista FI",
   "area": "Goals",
   "group": "Milestones",
@@ -2250,7 +2270,7 @@
   "phase": "7"
  },
  {
-  "id": "F226",
+  "id": "F228",
   "field": "Regular FI",
   "area": "Goals",
   "group": "Milestones",
@@ -2260,7 +2280,7 @@
   "phase": "7"
  },
  {
-  "id": "F227",
+  "id": "F229",
   "field": "True FI (after tax)",
   "area": "Goals",
   "group": "Milestones",
@@ -2270,7 +2290,7 @@
   "phase": "7"
  },
  {
-  "id": "F228",
+  "id": "F230",
   "field": "Debt free date",
   "area": "Goals",
   "group": "Milestones",
@@ -2280,7 +2300,7 @@
   "phase": "7"
  },
  {
-  "id": "F229",
+  "id": "F231",
   "field": "Custom milestone (at a date or when a condition is true)",
   "area": "Goals",
   "group": "Milestones",
@@ -2290,7 +2310,7 @@
   "phase": "7"
  },
  {
-  "id": "F230",
+  "id": "F232",
   "field": "Rule of 5 target (age / 5 months)",
   "area": "Goals",
   "group": "Emergency fund",
@@ -2300,7 +2320,7 @@
   "phase": "7"
  },
  {
-  "id": "F231",
+  "id": "F233",
   "field": "Scenario blocks (home, car, kid, job change, sabbatical, move, marriage, side hustle, inheritance)",
   "area": "Goals",
   "group": "Life events",
@@ -2310,7 +2330,7 @@
   "phase": "7"
  },
  {
-  "id": "F232",
+  "id": "F234",
   "field": "Ranked priorities (fund and remove)",
   "area": "Goals",
   "group": "What Matters",
@@ -2320,7 +2340,7 @@
   "phase": "7"
  },
  {
-  "id": "F233",
+  "id": "F235",
   "field": "Best case / dream life",
   "area": "Goals",
   "group": "Dream",
@@ -2330,7 +2350,7 @@
   "phase": "7"
  },
  {
-  "id": "F234",
+  "id": "F236",
   "field": "Discovery table numbers",
   "area": "Coaching",
   "group": "Discovery call",
@@ -2340,7 +2360,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F235",
+  "id": "F237",
   "field": "Session date and agenda",
   "area": "Coaching",
   "group": "Session",
@@ -2350,7 +2370,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F236",
+  "id": "F238",
   "field": "Session notes",
   "area": "Coaching",
   "group": "Session",
@@ -2360,7 +2380,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F237",
+  "id": "F239",
   "field": "Homework list (auto from fields marked 'will email')",
   "area": "Coaching",
   "group": "Homework",
@@ -2370,7 +2390,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F238",
+  "id": "F240",
   "field": "Key stats, things to know, to-dos, goals",
   "area": "Coaching",
   "group": "One-pager",
@@ -2380,7 +2400,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F239",
+  "id": "F241",
   "field": "Strengths, struggles, do more of, do less of",
   "area": "Coaching",
   "group": "One-pager",
@@ -2390,7 +2410,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F240",
+  "id": "F242",
   "field": "Monthly check-in notes and next check date",
   "area": "Coaching",
   "group": "Money date",
@@ -2400,7 +2420,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F241",
+  "id": "F243",
   "field": "Client satisfaction score",
   "area": "Coaching",
   "group": "Scoreboard",
@@ -2410,7 +2430,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F242",
+  "id": "F244",
   "field": "Next check date for rough or aged numbers",
   "area": "Coaching",
   "group": "Every number",
@@ -2420,7 +2440,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F243",
+  "id": "F245",
   "field": "What prompted this call",
   "area": "Coaching",
   "group": "Why now",
@@ -2430,7 +2450,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F244",
+  "id": "F246",
   "field": "Biggest worry and goal in their words",
   "area": "Coaching",
   "group": "Why now",
@@ -2440,7 +2460,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F245",
+  "id": "F247",
   "field": "Money feeling 1-10",
   "area": "Coaching",
   "group": "Why now",
@@ -2450,7 +2470,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F246",
+  "id": "F248",
   "field": "Quick notes",
   "area": "Coaching",
   "group": "Parking lot",
@@ -2460,7 +2480,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F247",
+  "id": "F249",
   "field": "Joint, separate or mix",
   "area": "Profile",
   "group": "Couples split",
@@ -2470,7 +2490,7 @@
   "phase": "5"
  },
  {
-  "id": "F248",
+  "id": "F250",
   "field": "Who pays what (% or fixed)",
   "area": "Profile",
   "group": "Couples split",
@@ -2480,7 +2500,7 @@
   "phase": "5"
  },
  {
-  "id": "F249",
+  "id": "F251",
   "field": "Last 12 months, typical month, lowest month",
   "area": "Income",
   "group": "Variable income",
@@ -2490,7 +2510,7 @@
   "phase": "5"
  },
  {
-  "id": "F250",
+  "id": "F252",
   "field": "Set aside for taxes %",
   "area": "Income",
   "group": "Variable income",
@@ -2500,7 +2520,7 @@
   "phase": "5"
  },
  {
-  "id": "F251",
+  "id": "F253",
   "field": "Month by month (12 boxes)",
   "area": "Income",
   "group": "Variable income",
@@ -2510,7 +2530,7 @@
   "phase": "5"
  },
  {
-  "id": "F252",
+  "id": "F254",
   "field": "Benefit name, what it is, how it works, value, using it?",
   "area": "Income",
   "group": "Other benefits",
@@ -2520,7 +2540,7 @@
   "phase": "5"
  },
  {
-  "id": "F253",
+  "id": "F255",
   "field": "ESPP %, discount; RSU grants and vest dates",
   "area": "Income",
   "group": "Equity pay",
@@ -2530,7 +2550,7 @@
   "phase": "5"
  },
  {
-  "id": "F254",
+  "id": "F256",
   "field": "Credit score, as-of date, source",
   "area": "Debt",
   "group": "Credit",
@@ -2540,7 +2560,7 @@
   "phase": "5"
  },
  {
-  "id": "F255",
+  "id": "F257",
   "field": "Payment choice: minimum, custom, in full",
   "area": "Debt",
   "group": "Credit cards",
@@ -2550,7 +2570,7 @@
   "phase": "5"
  },
  {
-  "id": "F256",
+  "id": "F258",
   "field": "Type, have it or not, premium",
   "area": "Protection",
   "group": "Coverage",
@@ -2560,7 +2580,7 @@
   "phase": "5"
  },
  {
-  "id": "F257",
+  "id": "F259",
   "field": "Coverage amount, through employer, deductible / out-of-pocket max",
   "area": "Protection",
   "group": "Coverage",
@@ -2570,7 +2590,7 @@
   "phase": "5"
  },
  {
-  "id": "F258",
+  "id": "F260",
   "field": "Yearly cost and month due (walk-the-list prompt)",
   "area": "Needs",
   "group": "Irregular costs",
@@ -2580,7 +2600,7 @@
   "phase": "6"
  },
  {
-  "id": "F259",
+  "id": "F261",
   "field": "Upcoming event, rough cost, month",
   "area": "Goals",
   "group": "Next 12 months",
@@ -2590,7 +2610,7 @@
   "phase": "7"
  },
  {
-  "id": "F260",
+  "id": "F262",
   "field": "Maybe money (expected, not certain)",
   "area": "Needs",
   "group": "Calendar",
@@ -2600,7 +2620,7 @@
   "phase": "6"
  },
  {
-  "id": "F261",
+  "id": "F263",
   "field": "Wins on a date",
   "area": "Needs",
   "group": "Calendar",
@@ -2610,7 +2630,7 @@
   "phase": "6"
  },
  {
-  "id": "F262",
+  "id": "F264",
   "field": "Private notes and shared notes",
   "area": "Coaching",
   "group": "Notes",
@@ -2620,7 +2640,7 @@
   "phase": "9-10"
  },
  {
-  "id": "F263",
+  "id": "F265",
   "field": "Session number, next date, client status",
   "area": "Coaching",
   "group": "Package",
