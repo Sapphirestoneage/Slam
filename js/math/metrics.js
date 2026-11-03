@@ -104,9 +104,19 @@ export function inputsOf(doc, ref, now = new Date()) {
   const housingLines = lines.filter(l => HOUSING.has(l.category));
   const housing = housingLines.some(l => l.category === 'Rent or mortgage' && l.amount !== null)
     ? housingLines.reduce((s, l) => s + (myShare(l).value ?? 0), 0) : null;
+  // Sinking funds on events: what is still to save, spread over the months left (yearly Budget costs are already spending).
+  const ymNow = now.getFullYear() * 12 + now.getMonth();
+  const sinkingMonthly = live.filter(r => r.kind === 'event' && r.values.sinking && r.amount != null && r.status !== 'Not for me').reduce((s, r) => {
+    const acct = r.values.sinkingFund ? live.find(q => q.id === r.values.sinkingFund) : null;
+    const tag = acct && r.values.fundTag ? (acct.values.tags || []).find(t => t.name === r.values.fundTag) : null;
+    const saved = tag ? tag.dollars ?? 0 : r.values.saved ?? 0;
+    const [y, mo] = /^\d{4}-\d{2}/.test(r.values.month || '') ? r.values.month.split('-').map(Number) : [null, null];
+    const months = y ? Math.max(1, y * 12 + mo - 1 - ymNow) : null;
+    return months ? s + Math.max(0, r.amount - saved) / months : s;
+  }, 0);
   const a = doc.assumptions;
   return {
-    place, link, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, none,
+    place, link, sinkingMonthly, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, none,
     debtOrder: doc.settings?.debtOrder ?? 'avalanche',
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || useLines ? 0 : debtPayments), // the lines hold each payment, From Debt
     autoLines, dupOf, askOf, typedLines, premiums, payFrequency, health: health ? { id: health.id, perPaycheck: healthPerPay, fromPay: !!healthFromPay, jobId: healthJob?.id ?? null } : null,
@@ -135,7 +145,7 @@ export function metrics(doc, ref, { now = new Date() } = {}) {
   out.liquidNetWorth = liquidNetWorth({ cash: x.cash, brokerage: x.brokerage, consumerDebt: x.debts.filter(d => CONSUMER.has(d.type)).reduce((s, d) => s + (d.balance ?? 0), 0) });
   const floor = x.lines.length ? fixedFloor(x.lines, { roommates: x.roommates }).value : null;
   out.runwayMonths = runway({ cash: x.cash, spending: x.spending, fixedFloor: floor || null });
-  out.surplus = monthlySurplus({ takeHome: x.takeHome, spending: x.spending, debtPaymentsOutsideSpending: x.debtPaymentsOutsideSpending ?? 0 });
+  out.surplus = monthlySurplus({ takeHome: x.takeHome, spending: x.spending, debtPaymentsOutsideSpending: x.debtPaymentsOutsideSpending ?? 0, sinkingFunds: x.sinkingMonthly });
   // B6.9: money into the 401(k) and HSA from the paycheck is saving, not spending; premiums and commuter money are spending.
   const pretaxSaving = x.income.reduce((s, i) => {
     const v = i.r.values, n = PAYS[v.payFrequency] ?? 26, own = i.r === x.link.job;

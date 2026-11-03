@@ -395,3 +395,13 @@ test('48: any cash in a retirement account or HSA is flagged unless the account 
   const d = metrics(s.doc, ref, { now: new Date('2026-11-03') }).inputs.debts[0];
   assert.equal(d.apr, 0.25); assert.equal(d.aprGuess, true);
 });
+test('62: money going into a sinking fund comes out of the surplus', () => {
+  const s = fresh();
+  s.add('income', { name: 'Job', amount: 4000, values: { basis: 'Take-home' } }, { type: 'Job' });
+  s.add('spending', { amount: 3000, values: {} }, { type: 'All in' });
+  const before = metrics(s.doc, ref, { now: new Date('2026-11-10T12:00:00') }).surplus.value;
+  s.add('event', { name: 'Wedding', amount: 1200, values: { month: '2027-05', sinking: true, saved: 300 } }, { type: 'Wedding' });
+  const after = metrics(s.doc, ref, { now: new Date('2026-11-10T12:00:00') }).surplus;
+  assert.equal(before - after.value, 150); // 900 left over 6 months
+  assert.match(after.text, /sinking funds/);
+});

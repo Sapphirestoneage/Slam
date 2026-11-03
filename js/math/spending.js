@@ -86,13 +86,15 @@ export function gutAccuracy(months) {
 }
 
 // M27: monthly surplus.
-export function monthlySurplus({ takeHome, spending, debtPaymentsOutsideSpending = 0 }) {
+export function monthlySurplus({ takeHome, spending, debtPaymentsOutsideSpending = 0, sinkingFunds = 0 }) {
   const m = missing({ 'take-home': takeHome, spending });
   if (m.length) return needs('M27', m);
-  const v = takeHome - spending - debtPaymentsOutsideSpending;
-  return ok('M27', v, debtPaymentsOutsideSpending
-    ? `${fmt.money(takeHome)} take-home minus ${fmt.money(spending)} spending minus ${fmt.money(debtPaymentsOutsideSpending)} debt payments = ${fmt.money(v)} a month.`
-    : `${fmt.money(takeHome)} take-home minus ${fmt.money(spending)} spending (debt payments included) = ${fmt.money(v)} a month.`);
+  const v = takeHome - spending - debtPaymentsOutsideSpending - sinkingFunds;
+  // Answer to 62: money going into a sinking fund is spoken for, so it comes out of the surplus.
+  const sink = sinkingFunds ? ` minus ${fmt.money(sinkingFunds)} into sinking funds` : '';
+  return { ...ok('M27', v, debtPaymentsOutsideSpending
+    ? `${fmt.money(takeHome)} take-home minus ${fmt.money(spending)} spending minus ${fmt.money(debtPaymentsOutsideSpending)} debt payments${sink} = ${fmt.money(v)} a month.`
+    : `${fmt.money(takeHome)} take-home minus ${fmt.money(spending)} spending (debt payments included)${sink} = ${fmt.money(v)} a month.`), sinkingFunds };
 }
 
 // M28: savings rate. Headline on take-home; gross version for Show the math.
