@@ -31,11 +31,29 @@ const ymNow = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1)
 export function coveredShare(line, now = new Date()) {
   const takeover = line.takeover ?? line.values?.takeover ?? null;
   if (takeover && String(takeover).slice(0, 7) <= ymNow(now)) return 0; // a month, or a date in that month
-  return line.coveredPct ?? (line.whoPays === 'Covered by someone' ? 1 : 0);
+  if (line.coveredPct != null) return line.coveredPct;
+  if ((line.whoPays ?? line.values?.whoPays) !== 'Covered by someone') return 0;
+  // Part of the bill: what they cover, in the same period as the bill, as a share of it. Blank: all of it.
+  const part = line.coveredAmount ?? line.values?.coveredAmount ?? null;
+  return part == null || !line.amount ? 1 : Math.min(1, Math.max(0, part / line.amount));
 }
 
-// M21: my share of a line.
-export function myShare(line, { roommates = 0, basis = 'accrual', now = new Date() } = {}) {
+// Money that comes back to you for a line (an employer, an HSA or FSA, a roommate who pays you back), a month.
+export function reimbursedMonthly(line) {
+  const r = line.reimbursed ?? line.values?.reimbursed ?? null;
+  return r == null ? 0 : monthlyFrom(r, line.per).value ?? 0;
+}
+
+// M21: my share of a line, less what is reimbursed to you.
+export function myShare(line, opts = {}) {
+  const base = shareBeforeRefund(line, opts);
+  const back = reimbursedMonthly(line);
+  if (base.value === null || !back) return base;
+  const v = Math.max(0, base.value - back);
+  return ok('M21', v, `${base.text.replace(/\.$/, '')}, minus ${fmt.money(back)} a month reimbursed to you = ${fmt.money(v)}.`);
+}
+// M21 before any reimbursement (what you pay out; M22 support counts against this).
+export function shareBeforeRefund(line, { roommates = 0, basis = 'accrual', now = new Date() } = {}) {
   if (!isBlank(line.myShare)) return ok('M21', line.myShare, `You said your share is ${fmt.money(line.myShare)}.`);
   if (line.status === 'Not for me') return ok('M21', 0, 'Marked Not for me, so it counts as zero.');
   // Answer to 74: Included in rent is already in the rent line; N/A is not for me. Neither counts again.
@@ -112,7 +130,7 @@ export function supportReceived(lines, opts) {
     const covered = coveredShare(l, opts?.now);
     if (!covered) continue;
     const full = lineMonthly(l, opts).value;
-    const mine = myShare(l, opts).value;
+    const mine = shareBeforeRefund(l, opts).value;
     if (full === null || mine === null) continue;
     total += full - mine;
     items.push(`${l.name ?? 'a line'} ${fmt.money(full - mine)}`);

@@ -386,7 +386,7 @@
   "group": "Filing",
   "layer": "Tertiary",
   "livesOn": "Cash flow › Taxes",
-  "scope": "Now",
+  "scope": "Parked",
   "phase": "5"
  },
  {
@@ -986,7 +986,7 @@
   "group": "Each line",
   "layer": "Tertiary",
   "livesOn": "Cash flow › Budget",
-  "scope": "Now",
+  "scope": "Parked",
   "phase": "6"
  },
  {
@@ -1146,7 +1146,7 @@
   "group": "Credit cards",
   "layer": "Tertiary",
   "livesOn": "Net worth › Debt",
-  "scope": "Now",
+  "scope": "Parked",
   "phase": "5"
  },
  {
@@ -1716,7 +1716,7 @@
   "group": "401(k) loan",
   "layer": "Secondary",
   "livesOn": "Net worth › Debt",
-  "scope": "Now",
+  "scope": "Parked",
   "phase": "5"
  },
  {
@@ -2216,7 +2216,7 @@
   "group": "Assumptions",
   "layer": "Tertiary",
   "livesOn": "Plan › Goals",
-  "scope": "Now",
+  "scope": "Parked",
   "phase": "7"
  },
  {

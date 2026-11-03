@@ -6,34 +6,15 @@ Written by `node --test` (test/coverage.test.js). Every spec row names what it i
 
 None.
 
-## In the spec, not built yet (24)
+## In the spec, not built yet (5)
 
 Known gaps, named on their spec rows (notyet: why).
 
 - F039 Taxes › Itemizing or standard: itemized deductions (the standard deduction is used)
-- F059 Needs › Car wash and supplies: no starter line for car wash and supplies (one line can be added)
-- F069 Needs › Money sent to family: no starter line for money sent to family
-- F071 Needs › Diapers, formula, baby supplies: one Kids and childcare starter line for now
-- F072 Needs › Clothes and shoes: one Kids and childcare starter line for now
-- F073 Needs › School tuition and fees: one Kids and childcare starter line for now
-- F074 Needs › Activities, camps, lessons: one Kids and childcare starter line for now
-- F075 Needs › Kids' medical and dental: one Kids and childcare starter line for now
-- F076 Needs › Toys, birthdays, school supplies: one Kids and childcare starter line for now
-- F077 Needs › Allowance and phone: one Kids and childcare starter line for now
-- F080 Needs › Vet visits and vaccines: one Pets starter line for now
-- F081 Needs › Pet insurance: one Pets starter line for now
-- F082 Needs › Medications and flea/tick: one Pets starter line for now
-- F083 Needs › Grooming: one Pets starter line for now
-- F084 Needs › Boarding, walker, daycare: one Pets starter line for now
-- F085 Needs › Supplies, toys, litter: one Pets starter line for now
-- F089 Needs › Amount they cover: a part of a bill someone else covers (today it is all of it or none)
-- F093 Needs › Reimbursed amount: a reimbursed amount on a line
 - F099 Needs › Happiness rating: a happiness rating per line (Bedazzle marks joy lines)
 - F115 Debt › Card from library (benefits prefill): a card library to prefill benefits
 - F172 Debt › Due in full if you leave job: the note that a 401(k) loan is due if you leave the job
-- F220 Goals › Real or nominal dollars: a real or nominal dollars switch (inflation is kept for it)
-- F222 Goals › Social Security: Social Security
-- F244 Coaching › Next check date for rough or aged numbers: a next check date for rough or aged numbers
+- F222 Goals › Social Security: Social Security (parked, the answer on Plan is kept and no math uses it yet)
 
 ## In the spec as Later or Parked (13)
 

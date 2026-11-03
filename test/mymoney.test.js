@@ -64,9 +64,9 @@ test('car, kids and pets gates take their budget lines away; owning takes the re
   addPresets(s, ref);
   const shown = profile => visible(s.records, gatesOf(profile, {}), ref).map(r => r.name);
   const all = shown({});
-  assert.ok(all.includes('Car insurance') && all.includes('Pets') && all.includes('Kids and childcare') && all.includes('Rent'));
+  assert.ok(all.includes('Car insurance') && all.includes('Pet food') && all.includes('Childcare and babysitting') && all.includes('Rent') && all.includes('Money sent to family'));
   const none = shown({ hasCar: false, hasPets: false, dependents: 0, housing: 'Own' });
-  for (const n of ['Car insurance', 'Gas or charging', 'Pets', 'Kids and childcare', 'Rent', 'Renters insurance']) assert.ok(!none.includes(n), `${n} should be hidden`);
+  for (const n of ['Car insurance', 'Gas or charging', 'Car wash and supplies', 'Pet food', 'Pet grooming', 'Childcare and babysitting', "Kids' medical and dental", 'Rent', 'Renters insurance']) assert.ok(!none.includes(n), `${n} should be hidden`);
   assert.ok(none.includes('Transit') && none.includes('Uber and Lyft'), 'transit and Uber appear either way');
 });
 

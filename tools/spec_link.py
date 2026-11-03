@@ -49,22 +49,22 @@ LINKS = {
     "F047": "line:Electric, gas, water", "F048": "line:Internet", "F049": "line:Renters insurance", "F050": "line:Groceries",
     "F051": "line:Dining out and takeout", "F052": "line:Coffee and snacks", "F053": "line:Car insurance", "F054": "line:Gas or charging",
     "F055": "line:Car maintenance and registration", "F056": "line:Car maintenance and registration", "F057": "line:Tolls and parking",
-    "F058": "line:Tolls and parking", "F059": "notyet: no starter line for car wash and supplies (one line can be added)", "F060": "line:Transit",
+    "F058": "line:Tolls and parking", "F059": "line:Car wash and supplies", "F060": "line:Transit",
     "F061": "line:Uber and Lyft", "F062": "line:Therapy", "F063": "line:Doctor and dental copays; line:Prescriptions", "F064": "line:Phone",
     "F065": "line:Streaming; line:Music; line:Apps and cloud storage; line:Amazon Prime and memberships; line:News and magazines",
     "F066": "line:Other wants", "F067": "line:Travel", "F068": "line:Gifts and holidays; line:Charity and giving",
-    "F069": "notyet: no starter line for money sent to family", "F070": "line:Kids and childcare",
-    "F071": "notyet: one Kids and childcare starter line for now", "F072": "notyet: one Kids and childcare starter line for now",
-    "F073": "notyet: one Kids and childcare starter line for now", "F074": "notyet: one Kids and childcare starter line for now",
-    "F075": "notyet: one Kids and childcare starter line for now", "F076": "notyet: one Kids and childcare starter line for now",
-    "F077": "notyet: one Kids and childcare starter line for now", "F078": "type:assets:529", "F079": "line:Pets",
-    "F080": "notyet: one Pets starter line for now", "F081": "notyet: one Pets starter line for now", "F082": "notyet: one Pets starter line for now",
-    "F083": "notyet: one Pets starter line for now", "F084": "notyet: one Pets starter line for now", "F085": "notyet: one Pets starter line for now",
+    "F069": "line:Money sent to family", "F070": "line:Childcare and babysitting",
+    "F071": "line:Diapers, formula, baby supplies", "F072": "line:Kids' clothes and shoes",
+    "F073": "line:School tuition and fees", "F074": "line:Activities, camps, lessons",
+    "F075": "line:Kids' medical and dental", "F076": "line:Toys, birthdays, school supplies",
+    "F077": "line:Kids' allowance and phone", "F078": "type:assets:529", "F079": "line:Pet food",
+    "F080": "line:Vet visits and vaccines", "F081": "line:Pet insurance", "F082": "line:Pet medications and flea and tick",
+    "F083": "line:Pet grooming", "F084": "line:Boarding, walker, daycare", "F085": "line:Pet supplies, toys, litter",
     "F086": "line:Courses and books", "F087": "spending.whoPays", "F088": "spending.coveredBy; spending.takeover",
-    "F089": "notyet: a part of a bill someone else covers (today it is all of it or none)",
+    "F089": "spending.coveredAmount",
     "F090": "spending.splitBy; profile.splitWith; profile.shared.rent; profile.shared.utilities; profile.shared.internet; profile.shared.renters; profile.shared.groceries; profile.shared.household",
     "F091": "spending.myShare; spending.amountIs; profile.billsGivenAs", "F092": "spending.whoPays",
-    "F093": "notyet: a reimbursed amount on a line", "F094": "math:M22", "F095": "profile.hasCar", "F096": "profile.hasPets",
+    "F093": "spending.reimbursed", "F094": "math:M22", "F095": "profile.hasCar", "F096": "profile.hasPets",
     "F097": "spending.per; spending.amountType; spending.low; spending.high; spending.timing; spending.dueDay", "F098": "months.actual; months.estimate",
     "F099": "notyet: a happiness rating per line (Bedazzle marks joy lines)",
     "F104": DEBT("Credit card"), "F105": "debt.balance", "F106": "debt.apr", "F107": "debt.payment", "F108": "debt.minimum; debt.extra",
@@ -94,13 +94,13 @@ LINKS = {
     "F207": "type:assets:Other property; type:assets:Valuables; type:assets:Business", "F208": "type:assets:Money owed to you",
     "F211": "math:M41", "F212": "math:M40", "F213": "math:M62", "F214": "assumption:fiAge", "F215": "assumption:retireAge",
     "F216": "assumption:realReturn", "F217": "assumption:inflation", "F218": "assumption:withdrawalRate", "F219": "ref:presets.pace",
-    "F220": "notyet: a real or nominal dollars switch (inflation is kept for it)", "F221": "ref:defaults.lifeExpectancy",
-    "F222": "notyet: Social Security", "F223": "assumption:retirementSpending", "F225": "math:M51", "F226": "math:M54",
+    "F220": "profile.settings.dollars; math:M02", "F221": "ref:defaults.lifeExpectancy; assumption:lifeExpectancy",
+    "F222": "notyet: Social Security (parked, the answer on Plan is kept and no math uses it yet)", "F223": "assumption:retirementSpending", "F225": "math:M51", "F226": "math:M54",
     "F227": "math:M52; assumption:partTimeIncome", "F228": "math:M50", "F230": "math:M34",
     "F231": "kind:milestone; goals.name; goals.mode; goals.date; goals.condition", "F232": "math:M43",
     "F236": "app:session", "F237": "app:session", "F238": "app:session", "F239": "profile.later; profile.laterDue",
     "F240": "app:session", "F241": "app:session", "F242": "app:session", "F243": "app:session",
-    "F244": "notyet: a next check date for rough or aged numbers", "F245": "profile.whyNow", "F246": "profile.worry; profile.goalWords",
+    "F244": "income.checkOn; debt.checkOn; assets.checkOn; protection.checkOn; spending.checkOn", "F245": "profile.whyNow", "F246": "profile.worry; profile.goalWords",
     "F247": "app:session", "F248": "app:parking", "F249": "profile.moneyStyle", "F250": "profile.splitMine; profile.jointAccounts",
     "F251": "profile.variable.last12; profile.variable.typical; profile.variable.lowest", "F252": "profile.variable.setAside",
     "F253": "profile.variable.months", "F254": "kind:benefit; income.what; income.how; income.using", "F255": "income.equity; profile.equityPay",
@@ -112,6 +112,9 @@ LINKS = {
     "F264": "; ".join(f"{a}.{k}" for a in ["income", "debt", "assets", "protection", "spending", "calendar", "goals"] for k in ["notes", "privateNote"]),
     "F265": "app:session",
 }
+
+# Rows parked for now (Nov 3 2026): their Scope is set to Parked.
+PARK = ["F039", "F099", "F115", "F172", "F222"]
 
 AREA = {"profile": "Profile", "income": "Income", "debt": "Debt", "assets": "Assets", "protection": "Protection", "taxes": "Taxes",
         "spending": "Needs", "calendar": "Needs", "goals": "Goals", "gaps": "Assets", "backups": "Assets", "months": "Needs"}
@@ -138,6 +141,8 @@ def main():
             continue
         last = max(last, int(str(fid)[1:]))
         cell = ws.cell(row=r, column=col[COL])
+        if fid in PARK and RELINK:
+            ws.cell(row=r, column=col["Scope"], value="Parked")
         if fid in LINKS and (not cell.value or RELINK):
             cell.value = LINKS[fid]
             filled += 1

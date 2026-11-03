@@ -12,6 +12,13 @@ export function realReturn(preset, ref) {
   return ok('M02', v, `${fmt.pct(v)} a year after inflation${isBlank(preset) ? ' (the default)' : ''}.`, { unit: 'pct' });
 }
 
+// Today's dollars or future dollars (spec F220): the engine works in today's dollars (M00, M02); future dollars add
+// inflation for the months until the money is reached. A display choice, so no plan number changes.
+export function futureDollars(amount, months, inflation) {
+  if (isBlank(amount) || isBlank(months) || isBlank(inflation)) return null;
+  return amount * (1 + inflation) ** (Math.max(0, months) / 12);
+}
+
 // M50: FI number.
 export function fiNumber({ annualSpending, withdrawalRate }) {
   const m = missing({ spending: annualSpending, 'withdrawal rate': withdrawalRate });

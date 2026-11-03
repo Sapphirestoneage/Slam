@@ -44,6 +44,7 @@ export const FORMATS = [
   { version: 3, shape: 'ab31a47f' }, // Nov 3 2026: This amount is (your share or the whole bill) on Spending lines
   { version: 4, shape: 'aadce0f5' }, // Nov 3 2026: About you › Home and shared bills; the split SLAM uses on each Budget line
   { version: 5, shape: '641d89c9' }, // Nov 3 2026: shared fields (Name, Notes, Stress ...) carry their own area's id
+  { version: 6, shape: 'fc766f60' }, // Nov 3 2026: Amount they cover, Reimbursed to you, Check again on, today's or future dollars
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

@@ -110,8 +110,13 @@ export class Store {
     return result;
   }
 
-  _state() { return clone({ records: this.doc.records, parking: this.doc.parking, profile: this.doc.profile,
-    assumptions: this.doc.assumptions, client: this.doc.client, spending: this.doc.spending, session: this.doc.session }); }
+  // Settings that change the numbers (debt order, cash layers, today's or future dollars ...) save and undo like the
+  // rest; the $ / Hours / FI days view is a screen preference and stays out of undo.
+  _state() {
+    const { timeView, ...settings } = this.doc.settings || {};
+    return clone({ records: this.doc.records, parking: this.doc.parking, profile: this.doc.profile,
+      assumptions: this.doc.assumptions, client: this.doc.client, spending: this.doc.spending, session: this.doc.session, settings });
+  }
   // store.source, while set, marks every history entry with where the change came from (the spreadsheet import).
   _log(entry) { this.doc.history.push({ at: this._tx?.at || this.now(), ...entry, ...(this.source ? { source: this.source } : {}) }); }
 
@@ -303,7 +308,9 @@ export class Store {
       byId.delete(r.id);
     }
     for (const id of byId.keys()) this.doc.history.push({ at, op: `${op}:remove`, id });
+    const view = this.doc.settings?.timeView;
     Object.assign(this.doc, clone(state));
+    if (state.settings && view !== undefined) this.doc.settings.timeView = view;
   }
 
   // Dated history of one field, oldest first.

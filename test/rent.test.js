@@ -74,3 +74,21 @@ test('the surplus follows About you', () => {
   s.setDoc('profile', { roommates: 1, shared: { rent: true } });
   assert.equal(metrics(s.doc, ref).surplus.value, 3800);
 });
+
+// Part of a bill someone else covers (F089), and money reimbursed to you (F093).
+import { coveredShare, reimbursedMonthly } from '../js/math/spending.js';
+test('someone covers part of a bill: you pay the rest', () => {
+  const phone = { amount: 80, per: 'month', whoPays: 'Covered by someone', coveredAmount: 50 };
+  assert.equal(coveredShare(phone), 50 / 80);
+  assert.equal(myShare(phone).value, 30);
+  assert.equal(myShare({ ...phone, coveredAmount: null }).value, 0, 'blank: they cover all of it');
+  assert.equal(myShare({ ...phone, coveredAmount: 200 }).value, 0, 'never more than the bill');
+});
+
+test('a reimbursed amount comes off your share, a month', () => {
+  assert.equal(myShare({ amount: 90, per: 'month', reimbursed: 30 }).value, 60);
+  assert.equal(reimbursedMonthly({ amount: 1200, per: 'year', reimbursed: 600 }), 50);
+  assert.equal(myShare({ amount: 1200, per: 'year', reimbursed: 600 }).value, 50);
+  assert.equal(myShare({ amount: 40, per: 'month', reimbursed: 100 }).value, 0, 'never below zero');
+  assert.equal(myShare({ amount: 3000, per: 'month', whoPays: 'Split', reimbursed: 100 }, { roommates: 1 }).value, 1400, 'after the split');
+});

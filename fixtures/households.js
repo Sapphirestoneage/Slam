@@ -51,7 +51,8 @@ export function richHousehold() {
     s.add('bill', { name: 'Rent', amount: 3200, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', whoPays: 'Split' } });
     s.add('bill', { name: 'Electric', amount: 60, values: { category: 'Electric, gas, water', draftt: 'Accommodation', amountType: 'Variable', whoPays: 'Split', amountIs: 'Your share' } });
     s.add('bill', { name: 'Groceries', amount: 200, per: 'week', values: { category: 'Groceries, dining out, coffee', draftt: 'Food', amountType: 'Variable' } });
-    s.add('bill', { name: 'Phone', amount: 80, values: { category: 'Internet, phone', draftt: 'Accommodation', amountType: 'Fixed', whoPays: 'Covered by someone' } });
+    s.add('bill', { name: 'Phone', amount: 80, values: { category: 'Internet, phone', draftt: 'Accommodation', amountType: 'Fixed', whoPays: 'Covered by someone', coveredAmount: 50 } });
+    s.add('bill', { name: 'Gym', amount: 90, values: { category: 'Gym or fitness', draftt: 'Therapy', amountType: 'Fixed', reimbursed: 30 } });
     s.add('bill', { name: 'Car insurance', amount: 150, values: { category: 'Car insurance', draftt: 'Transportation', amountType: 'Fixed', whoPays: 'Covered by someone', coveredBy: 'Parents', takeover: '2026-09' } }); // already mine
     s.add('bill', { name: 'Streaming', amount: 20, values: { category: 'Subscriptions', draftt: 'Other', amountType: 'Fixed', whoPays: 'Covered by someone', coveredBy: 'Partner', takeover: '2027-06' } }); // not yet
     s.add('bill', { name: 'Water', amount: 40, values: { category: 'Electric, gas, water', draftt: 'Accommodation', amountType: 'Fixed', whoPays: 'Included in rent' } });

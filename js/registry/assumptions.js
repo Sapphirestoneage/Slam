@@ -13,6 +13,7 @@
 export const RULES = {
   cardMinimumFloor: 25, cardMinimumPct: 0.01, housingLine: 0.35, ruleOf5Divisor: 5, keepPaceMonths: 60, littleE: 1000,
   fatFactor: 1.5, trueFiTax: 0.15, heavyApr: 0.08, variableGuessShare: 0.75, maxMonths: 70 * 12,
+  roughCheckDays: 30, agedCheckDays: 90,
 };
 export const LISTS = {
   perMonth: { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, quarter: 1 / 3, year: 1 / 12 },
@@ -54,7 +55,7 @@ export const ASSUMPTIONS = [
   { id: 'presets.pace.Optimistic', name: 'Pace_Optimistic', label: 'Pace: optimistic return', unit: 'pct', get: r => r.presets.pace.Optimistic, source: SPEC, date: '2026-10-28' },
   { id: 'presets.pace.Pessimistic', name: 'Pace_Pessimistic', label: 'Pace: pessimistic return', unit: 'pct', get: r => r.presets.pace.Pessimistic, source: SPEC, date: '2026-10-28' },
   // Defaults.
-  { id: 'defaults.lifeExpectancy', name: 'LifeExpectancy', label: 'Plan to age', unit: 'number', get: r => r.defaults.lifeExpectancy, source: SPEC, date: '2026-10-28' },
+  { id: 'defaults.lifeExpectancy', name: 'LifeExpectancy', label: 'Plan to age', unit: 'number', get: r => r.defaults.lifeExpectancy, client: 'lifeExpectancy', source: SPEC, date: '2026-10-28' },
   { id: 'defaults.sessionMinutes', name: 'SessionMinutes', label: 'Session length, minutes', unit: 'number', get: r => r.defaults.sessionMinutes, source: SPEC, date: '2026-10-28' },
   { id: 'defaults.lowBalanceLine', name: 'LowBalanceLine', label: 'Low balance line on the calendar', unit: 'money', get: r => r.defaults.lowBalanceLine, source: 'Accepted rule (Reference data)', date: '2026-10-28' },
   { id: 'defaults.taxSetAside', name: 'TaxSetAside', label: 'Tax set-aside on variable income', unit: 'pct', get: r => r.defaults.taxSetAside, source: 'Rule of thumb (Reference data)', date: '2026-10-28' },
@@ -101,6 +102,8 @@ export const ASSUMPTIONS = [
   { id: 'rules.trueFiTax', name: 'TrueFiTax', label: 'True FI: rough tax on withdrawals', unit: 'pct', get: () => RULES.trueFiTax, source: RULE('js/math/foo.js (QUESTIONS 93)'), date: '2026-11-03' },
   { id: 'rules.heavyApr', name: 'HeavyApr', label: 'Heavy debt: APR at or over', unit: 'pct', get: () => RULES.heavyApr, source: RULE('js/math/foo.js, FOO step 3'), date: '2026-11-03' },
   { id: 'rules.variableGuessShare', name: 'VarGuess', label: 'Variable income: share of a typical month when no lowest month', unit: 'pct', get: () => RULES.variableGuessShare, source: RULE('js/math/income.js, M16'), date: '2026-10-28' },
+  { id: 'rules.roughCheckDays', name: 'CheckRough', label: 'Check a Roughly number again after, days', unit: 'number', get: () => RULES.roughCheckDays, source: RULE('js/checks.js, R061'), date: '2026-11-03' },
+  { id: 'rules.agedCheckDays', name: 'CheckAged', label: 'Check any number again after, days', unit: 'number', get: () => RULES.agedCheckDays, source: RULE('js/checks.js, R061'), date: '2026-11-03' },
   { id: 'rules.maxMonths', name: 'MaxMonths', label: 'Longest FI path looked at, months', unit: 'number', get: () => RULES.maxMonths, source: RULE('js/math/fi.js, M53 (70 years)'), date: '2026-10-28' },
 ];
 

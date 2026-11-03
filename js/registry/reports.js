@@ -122,6 +122,7 @@ export const REPORTS = [
         { key: 'start', label: 'Balance at the start', unit: 'money' }, { key: 'added', label: 'Contributions', unit: 'money' },
         { key: 'growth', label: 'Growth', unit: 'money' }, { key: 'end', label: 'Balance at the end', unit: 'money' },
         { key: 'fi', label: 'FI target', unit: 'money' }, { key: 'reached', label: 'FI reached', unit: 'text', width: 11 },
+        { key: 'future', label: 'Balance at the end, future dollars', unit: 'money' },
         { key: 'app', label: "The app's balance", unit: 'money' }, { key: 'check', label: 'Check', check: ['end', 'app'] },
       ], sections: [{ title: null, rows: Array.from({ length: YEARS }, (_, i) => ({ cells: {
         year: { v: i + 1 },
@@ -132,6 +133,7 @@ export const REPORTS = [
         growth: { f: '{col:end}-{col:start}-{col:added}' },
         fi: { f: 'Math_M50' },
         reached: { f: 'IF(Math_M50="","",IF({col:end}>=Math_M50,"Yes","No"))' },
+        future: { f: '{col:end}*(1+Inflation)^{col:year}' },
         app: { v: path[(i + 1) * 12] ?? null },
       } })) }] };
       // Each debt, month by month at today's payment (M31 and M32), its numbers read from the Debt tab by ID.

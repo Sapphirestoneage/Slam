@@ -7,6 +7,7 @@ import { inView, timeChip } from '../math/time.js';
 import { money, pct, number, EMPTY, duration } from '../format.js';
 import { joinWords } from '../math/result.js';
 import { myShare, wholeBill, splitOf, withHome } from '../math/spending.js';
+import { nextCheck } from '../checks.js';
 import { parseQuickAdd } from '../quickadd.js';
 import { canQuickFill, quickFill } from './quickfill.js';
 import { gatesOf, gatedOut } from '../gates.js';
@@ -399,7 +400,20 @@ export function whoPays(rec, update, { roommates = 0, profile = null } = {}) {
     top === 'Someone else' ? h('span.row-line', { style: { gap: '8px' } }, // M7.1: who, and when it becomes yours
       select(['Parents', 'Partner', 'Employer', 'Landlord (in rent)', 'Other'], v === 'Included in rent' ? 'Landlord (in rent)' : rec.values.coveredBy ?? null,
         x => update(x === 'Landlord (in rent)' ? { whoPays: 'Included in rent', coveredBy: x } : { whoPays: 'Covered by someone', coveredBy: x }), { label: 'Who covers it', hint: 'Who covers it', width: 170 }),
-      takeoverBox(rec, update)) : null);
+      takeoverBox(rec, update)) : null,
+    // Part of a bill (F089): they cover all of it, or an amount of it, in the same period as the bill.
+    top === 'Someone else' && v === 'Covered by someone' ? (() => {
+      const part = rec.values.coveredAmount != null;
+      const mine = rec.amount == null ? null : myShare({ ...eff, amount: rec.amount }, { roommates });
+      return h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'They cover'),
+        toggle([['all', 'All of it'], ['part', 'Part of it']], part ? 'part' : 'all', x => update({ coveredAmount: x === 'part' ? (rec.values.coveredAmount ?? null) ?? 0 : null }), { label: 'They cover' }),
+        part ? moneyInput(rec.values.coveredAmount, x => update({ coveredAmount: x }), { hint: `Their part, per ${rec.per}` }) : null,
+        part && mine?.value != null ? h('span.computed', { title: mine.text }, `Yours: ${money(mine.value)} a month`) : null);
+    })() : null,
+    // Money that comes back to you for this line (F093): it comes off your share.
+    top !== 'Not for me' ? h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Reimbursed to you'),
+      moneyInput(rec.values.reimbursed ?? null, x => update({ reimbursed: x }), { hint: `Per ${rec.per}` }),
+      h('span.muted.small', {}, 'By an employer, an HSA or FSA, or someone who pays you back. It comes off your share.')) : null);
 }
 // Paid with: checking or a credit card; no bill comes from savings. With one checking account or one card it is
 // picked for you; with more, 'Which checking' or 'Which card' asks (buttons up to 6 cards, a search after, R112).
@@ -778,7 +792,18 @@ function moreLayers(ctx, r, cfg, update, extra = [], m = null) {
     cfg.paidWith ? h('div.layer', {}, paidWith(ctx, r, id => update({ paidWith: id }))) : null,
     cfg.secondary ? h('div.layer', {}, cfg.secondary(ctx, r, update)) : null,
     cfg.tertiary ? h('div.layer', {}, cfg.tertiary(ctx, r, update)) : null,
-    h('div.layer', {}, h('span.label', {}, 'Where it came from: '), h('span.tag.plain', {}, SOURCE_WORDS[r.source] ?? r.source)));
+    h('div.layer', {}, h('span.label', {}, 'Where it came from: '), h('span.tag.plain', {}, SOURCE_WORDS[r.source] ?? r.source), checkLayer(r, update)));
+}
+// The next check date (F244): when this number is due to be looked at again, and a date to set instead.
+function checkLayer(r, update) {
+  const c = nextCheck(r);
+  if (!c) return null;
+  const d = h('input', { type: 'date', value: r.values.checkOn || '', 'aria-label': 'Check again on' });
+  d.onchange = () => update({ checkOn: d.value || null });
+  const when = new Date(`${c.next}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return h('span.row-line', { style: { gap: '8px', marginLeft: '16px' } }, h('span.label', {}, 'Next check'),
+    h('span.computed', { title: c.why }, when), h(`label.field${r.values.checkOn ? '.filled' : ''}`, { style: { width: '170px' } }, d),
+    h('span.muted.small', {}, r.values.checkOn ? 'The date you set' : 'Set a date to check it sooner or later'));
 }
 
 function bulkBar(ctx, sel, a) {

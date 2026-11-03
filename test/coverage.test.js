@@ -43,6 +43,8 @@ function writtenKeys() {
       if (!DRAFTS.has(f)) for (const m of line.matchAll(/\b(?:up|set|setP|setL|setGiving|setH|setBen)\(\{ ?([A-Za-z_]\w*):/g)) note(m[1], at);
       for (const m of line.matchAll(/\.update\([^,()]+(?:\([^)]*\))?, \{ ?([A-Za-z_]\w*):/g)) note(m[1], at);
       for (const m of line.matchAll(/setDoc\('(profile|assumptions|settings|spending|client)', \{ ?([A-Za-z_]\w*):/g)) note(`${m[1]}:${m[2]}`, at);
+      for (const m of line.matchAll(/\bsetA\(\{ ?([A-Za-z_]\w*):/g)) note(`assumptions:${m[1]}`, at);
+      for (const m of line.matchAll(/doc\.settings\.([A-Za-z_]\w*) = /g)) note(`settings:${m[1]}`, at);
       for (const m of line.matchAll(/\.add\('[a-z]+', \{[^}]*values: \{([^}]*)\}/g)) for (const k of m[1].matchAll(/([A-Za-z_]\w*):/g)) note(k[1], at);
     });
   }
@@ -53,7 +55,7 @@ test('every key the app writes is in the field registry', () => {
   const missing = [];
   for (const [key, where] of writtenKeys()) {
     const [part, k] = key.includes(':') ? key.split(':') : [null, key];
-    if (part === 'assumptions') { if (!clientAssumptions.has(k)) missing.push(`assumptions.${k} (${where}): add it to ASSUMPTIONS in js/registry/assumptions.js with client: '${k}'`); continue; }
+    if (part === 'assumptions') { if (!clientAssumptions.has(k) && !NOT_IN_SHEET[`assumptions.${k}`]) missing.push(`assumptions.${k} (${where}): add it to ASSUMPTIONS in js/registry/assumptions.js with client: '${k}'`); continue; }
     if (part === 'settings' || part === 'spending') { if (!declared.has(k) && !NOT_IN_SHEET[`${part}.${k}`]) missing.push(`${part}.${k} (${where}): add it to js/registry/fields.js (a Profile field with part: '${part}') or NOT_IN_SHEET`); continue; }
     if (declared.has(k) || NOT_STORED[k]) continue;
     missing.push(`${k} (${where}): add it to its area in js/registry/fields.js, or say why it stays in the app with sheet: { skip }`);

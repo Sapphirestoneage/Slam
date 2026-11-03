@@ -4,6 +4,7 @@
 import { h, clear, icon } from './dom.js';
 import { debtRoute } from '../nav.js';
 import * as S from './staples.js';
+import { checksOf } from '../checks.js';
 import { homeworkItems } from './report-ui.js';
 import { homeworkText } from '../homework.js';
 import { communityLinesToAdd } from '../community.js';
@@ -17,23 +18,10 @@ const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1
 const ROUTE = { income: '#/cash-flow/income', benefit: '#/cash-flow/income', debt: '#/net-worth/debt', account: '#/net-worth/assets', asset: '#/net-worth/assets', coverage: '#/net-worth/protection', bill: '#/cash-flow/budget', milestone: '#/plan/goals', event: '#/plan/next-12-months' };
 const DAY = 86400000;
 
-// R061: Roughly is checked after 30 days, anything after 90; Not now and Not sure go on the list at once.
+// R061, F244: the next check date for every rough or aged number, from js/checks.js.
 export function revisitList(ctx) {
-  const out = [];
-  for (const r of ctx.visible(x => !['entry', 'win'].includes(x.kind))) {
-    const st = r.status || Object.values(r.fieldStatus || {})[0] || statusOf(r, 'amount') || statusOf(r, 'balance');
-    if (!st || st === 'Not for me' || st === 'Computed') continue;
-    if (r.values?.preset && st === 'Not sure') continue; // starter guesses are reviewed on Budget, summed in one row below
-    const updated = Date.parse(r.updatedAt || r.createdAt || Date.now());
-    const wait = st === 'Roughly' ? 30 : ['Not sure', 'Not now'].includes(st) ? 0 : 90;
-    const next = updated + wait * DAY;
-    if (st === 'Know it' && next > Date.now()) continue;
-    out.push({ r, label: r.name || r.values?.category || r.type || 'Item', status: st, next, route: r.kind === 'debt' ? debtRoute(r) : ROUTE[r.kind] || '#/home/profile' });
-  }
-  out.sort((a, b) => a.next - b.next);
-  const guesses = ctx.visible(x => x.kind === 'bill' && x.values?.preset && x.status === 'Not sure').length;
-  if (guesses) out.unshift({ r: { id: null }, label: `${guesses} starter spending ${guesses === 1 ? 'guess' : 'guesses'} to review`, status: 'Not sure', next: Date.now(), route: '#/cash-flow/budget' });
-  return out;
+  return checksOf(ctx.store.doc, ctx.ref, { now: ctx.now() }).map(c => ({ r: c.rec ?? { id: null }, label: c.label, status: c.status, next: c.next, due: c.due, why: c.why,
+    route: c.guesses ? '#/cash-flow/budget' : c.rec.kind === 'debt' ? debtRoute(c.rec) : ROUTE[c.rec.kind] || '#/home/profile' }));
 }
 
 export function listsScreen(app, ctx) {
@@ -49,7 +37,7 @@ export function listsScreen(app, ctx) {
     h('div.section', {}, h('div.section-title', {}, h('h2', {}, 'Revisit list'), h('span.muted', {}, `${revisit.length}`)), revisit.length
       ? h('div.card.tool-list', {}, revisit.slice(0, 40).map(x => h('div.row-line', { style: { gap: '10px' } },
         h('span', { style: { flex: 1, fontWeight: 600 } }, x.label), S.statusTag(x.status),
-        h('span.muted.small', { style: { minWidth: '92px' } }, x.next <= Date.now() ? 'Due now' : `Check ${new Date(x.next).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`),
+        h('span.muted.small', { style: { minWidth: '92px' }, title: x.why }, x.due ? 'Due now' : `Check ${new Date(`${x.next}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`),
         S.button('Fix now', { size: 'small', onClick: () => fix(x) }))))
       : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'Nothing to revisit yet'), h('span.muted', {}, 'Rough and not-sure numbers land here.')))),
     h('div.section', {}, h('div.section-title', {}, h('h2', {}, 'Homework list'), h('span.spacer'), hw.length ? S.button('Send to client', { size: 'small', iconName: 'mail', onClick: copyHomework }) : null), hw.length

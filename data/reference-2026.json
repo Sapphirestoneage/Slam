@@ -720,6 +720,12 @@
       "draftt": "Wants",
       "amount": "Variable",
       "timing": "Variable date"
+    },
+    {
+      "category": "Family support",
+      "draftt": "Other",
+      "amount": "Variable",
+      "timing": "Variable date"
     }
   ],
   "spendingPresets": {
@@ -852,6 +858,14 @@
         "amount": "Variable",
         "timing": "Variable date",
         "guess": 100
+      },
+      {
+        "name": "Car wash and supplies",
+        "category": "Car maintenance, registration",
+        "draftt": "Transportation",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 20
       },
       {
         "name": "Transit",
@@ -990,20 +1004,124 @@
         "guess": 50
       },
       {
-        "name": "Pets",
+        "name": "Pet food",
         "category": "Pets",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 60
+      },
+      {
+        "name": "Vet visits and vaccines",
+        "category": "Pets",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 40
+      },
+      {
+        "name": "Pet insurance",
+        "category": "Pets",
+        "draftt": "Other",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 40
+      },
+      {
+        "name": "Pet medications and flea and tick",
+        "category": "Pets",
+        "draftt": "Other",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 25
+      },
+      {
+        "name": "Pet grooming",
+        "category": "Pets",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 30
+      },
+      {
+        "name": "Boarding, walker, daycare",
+        "category": "Pets",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 50
+      },
+      {
+        "name": "Pet supplies, toys, litter",
+        "category": "Pets",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 25
+      },
+      {
+        "name": "Childcare and babysitting",
+        "category": "Kids",
+        "draftt": "Other",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 800
+      },
+      {
+        "name": "Diapers, formula, baby supplies",
+        "category": "Kids",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 100
+      },
+      {
+        "name": "Kids' clothes and shoes",
+        "category": "Kids",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 75
+      },
+      {
+        "name": "School tuition and fees",
+        "category": "Kids",
+        "draftt": "Other",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 200
+      },
+      {
+        "name": "Activities, camps, lessons",
+        "category": "Kids",
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
         "guess": 150
       },
       {
-        "name": "Kids and childcare",
+        "name": "Kids' medical and dental",
         "category": "Kids",
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 800
+        "guess": 50
+      },
+      {
+        "name": "Toys, birthdays, school supplies",
+        "category": "Kids",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 75
+      },
+      {
+        "name": "Kids' allowance and phone",
+        "category": "Kids",
+        "draftt": "Other",
+        "amount": "Fixed",
+        "timing": "Fixed date",
+        "guess": 50
       },
       {
         "name": "Charity and giving",
@@ -1012,6 +1130,14 @@
         "amount": "Variable",
         "timing": "Variable date",
         "guess": 100
+      },
+      {
+        "name": "Money sent to family",
+        "category": "Family support",
+        "draftt": "Other",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 150
       },
       {
         "name": "Buffer for surprises",

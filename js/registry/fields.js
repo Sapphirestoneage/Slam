@@ -25,6 +25,8 @@ const top = (key, label, type, opts = {}) => f(key, label, type, { where: 'top',
 const skip = (key, label, why, opts = {}) => f(key, label, 'text', { sheet: { skip: why }, ...opts });
 const pick = (key, label, options, opts = {}) => f(key, label, 'choice', { options, ...opts });
 const coachNote = () => top('privateNote', 'Coach notes', 'text', { coach: true });
+// The next check date for a rough or aged number (js/checks.js): set it to check sooner or later than the rule.
+const CHECK = f('checkOn', 'Check again on', 'date');
 
 // The shared top-level fields every record has (blankRecord in js/records.js).
 const NAME = top('name', 'Name', 'text');
@@ -111,6 +113,7 @@ export const AREAS = [
       pick('settings.debtOrder', 'Debt payoff order', ['avalanche', 'snowball', 'stress'], { part: 'settings', key: 'debtOrder' }),
       pick('settings.layerMode', 'Cash layers kept', ['virtual', 'accounts'], { part: 'settings', key: 'layerMode' }),
       f('settings.qqOpensLaunch', 'Quiet Quitting FI opens the launch window', 'yesno', { part: 'settings', key: 'qqOpensLaunch' }),
+      pick('settings.dollars', "Plan shows today's or future dollars", ['real', 'nominal'], { part: 'settings', key: 'dollars' }),
       f('client.couple', 'Couple (from Solo or couple)', 'yesno', { part: 'client', key: 'couple', sheet: { skip: 'set by Solo or couple' } }),
     ],
   },
@@ -143,7 +146,7 @@ export const AREAS = [
       f('what', 'What it is', 'text', { kinds: ['benefit'] }),
       pick('how', 'How it works', ['Reimbursed', 'Stipend', 'Pretax', 'Match', 'Discount'], { kinds: ['benefit'] }),
       pick('using', 'Using it?', ['Yes', 'No', 'Partly'], { kinds: ['benefit'] }),
-      OWNER, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, STRESS,
+      CHECK, OWNER, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, STRESS,
     ],
   },
   {
@@ -170,7 +173,7 @@ export const AREAS = [
       f('fee', 'Fee per period', 'money'), f('periods', 'Periods a year', 'number'),
       f('taxPlan', 'Payment plan in place', 'yesno'), f('guaranteed', 'Personally guaranteed', 'yesno'),
       f('institution', 'Institution'), f('opened', 'Opened', 'month'),
-      OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(),
+      CHECK, OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(),
     ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'a debt uses Balance and Payment' } } : x)),
   },
   {
@@ -225,7 +228,7 @@ export const AREAS = [
       f('tags', 'Tags', 'list', { kinds: ['account'] }),
       f('matchTiers', 'Match tiers', 'text', { kinds: ['account'], sheet: { skip: 'a table of match tiers on the 401(k); the first tier is on Income as match % and up to %' } }),
       f('rothLog', 'Roth IRA log', 'text', { kinds: ['account'], sheet: { skip: 'a dated list of Roth IRA contributions; edit it in SLAM' } }),
-      OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(),
+      CHECK, OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(),
     ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'an account uses Balance, a thing you own uses Value' } } : x)),
   },
   {
@@ -245,7 +248,7 @@ export const AREAS = [
       f('coverage', 'Coverage amount', 'money'), f('plannedChange', 'Planned change'),
       f('notSame', 'Not the same as a Budget line', 'yesno', { sheet: { skip: 'an answer to Same as your ...?; asked in SLAM' } }),
       f('sameAs', 'Same as a Budget line', 'text', { sheet: { skip: 'an answer to Same as your ...?; asked in SLAM' } }),
-      OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS,
+      CHECK, OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS,
     ],
   },
   {
@@ -273,6 +276,8 @@ export const AREAS = [
       f('dueDay', 'Due day', 'day', { kinds: ['bill'] }),
       pick('whoPays', 'Who pays', ['Me', 'Split', 'My share', 'Covered by someone', 'Included in rent', 'N/A', 'Not for me'], { kinds: ['bill'] }),
       f('coveredBy', 'Who covers it', 'text', { kinds: ['bill'] }),
+      f('coveredAmount', 'Amount they cover', 'money', { kinds: ['bill'] }),
+      f('reimbursed', 'Reimbursed to you', 'money', { kinds: ['bill'] }),
       f('myShare', 'My share', 'money', { kinds: ['bill'] }), f('splitBy', 'Split by', 'number', { kinds: ['bill'] }),
       pick('amountIs', 'This amount is', ['Your share', 'The whole bill'], { kinds: ['bill'] }),
       f('takeover', 'Becomes mine in', 'month', { kinds: ['bill'] }),
@@ -295,7 +300,7 @@ export const AREAS = [
       f('includesDebtPayments', 'Includes debt payments', 'yesno', { kinds: ['spending'] }),
       f('pass', 'Budget pass', 'text', { kinds: ['spending'], sheet: { skip: 'which Budget pass the gut number came from; set by the app' } }),
       f('maaser', 'Maaser line', 'yesno', { kinds: ['bill'], sheet: { skip: 'set by the community preset' } }),
-      OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS,
+      CHECK, OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS,
     ],
   },
   {
@@ -365,6 +370,7 @@ export const NOT_IN_SHEET = {
   session: 'session agenda, notes, feelings and the one-pager; not money',
   'session.feedback': 'Report this notes (coach only; the Coach notes tab when coach-only is ticked)',
   'session.timer': 'the onboarding timer (coach only; the Coach notes tab when coach-only is ticked)',
+  'assumptions.socialSecurity': 'Social Security on Plan › Goals: parked (spec F222); the answer is kept, no math uses it yet',
   history: 'dated history of every change; kept in the app and the backup file',
   snapshots: 'snapshots for change since last session; kept in the app and the backup file',
   parking: 'parking lot notes; kept in the app and the backup file',

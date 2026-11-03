@@ -4,6 +4,7 @@
 import { h, clear, icon } from './dom.js';
 import { simpleMath } from '../math/simple.js';
 import * as S from './staples.js';
+import { futureDollars } from '../math/fi.js';
 import { MILESTONES, fiTargets, monthsTo, projection, ladder, solveFor } from '../plan.js';
 import { payoffPlan } from '../math/debt.js';
 import { addMonths, ymOf, monthName, dateOf, monthsBetween } from '../month.js';
@@ -75,6 +76,8 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
   const fiAge = a.fiAge ?? null;
   const solve = solveFor(m, fiAge);
   const fiWhen = m.monthsToFi.value;
+  const inflation = a.inflation ?? ref.presets.inflation.default;
+  const nominal = (ctx.store.doc.settings.dollars || 'real') === 'nominal';
   const left = h('div.stack', { style: { gap: '12px' } },
     h('div.row-line', { style: { gap: '10px', alignItems: 'flex-end' } },
       S.labelled('FI age', S.textInput(fiAge, v => setA({ fiAge: v === null ? null : Number(v) }), { hint: 'Age', width: 100, key: 'g:fiAge' })),
@@ -83,7 +86,9 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
       h('div.fi-big', {}, fiWhen != null ? S.mathButton(m.monthsToFi, monthName(addMonths(ymOf(ctx.now()), fiWhen))) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))),
       fiWhen != null ? h('span.muted', {}, `${ageAt(m, fiWhen) != null ? `At ${ageAt(m, fiWhen)} · ` : ''}${(fiWhen / 12).toFixed(1)} years from now`) : null,
       investingLine(ctx, m)),
-    h('div', {}, h('span.label', {}, 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? S.mathButton(m.fiNumber, money(m.fiNumber.value)) : h('span.muted', { style: { fontSize: '1rem' } }, 'Needs ', S.needLinks(ctx, m.fiNumber.needs)))),
+    h('div', {}, h('span.label', {}, nominal ? 'FI number, in future dollars' : 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? (nominal && fiWhen != null
+      ? S.mathButton({ ...m.fiNumber, text: `${m.fiNumber.text} With ${pct(inflation)} inflation a year for ${(fiWhen / 12).toFixed(1)} years: ${money(futureDollars(m.fiNumber.value, fiWhen, inflation))} then.` }, money(futureDollars(m.fiNumber.value, fiWhen, inflation)))
+      : S.mathButton(m.fiNumber, money(m.fiNumber.value))) : h('span.muted', { style: { fontSize: '1rem' } }, 'Needs ', S.needLinks(ctx, m.fiNumber.needs)))),
     solve ? h('div.solver', {}, h('strong', {}, `To reach FI at ${fiAge}:`),
       h('ul.op-list', {},
         h('li', {}, solve.save.value == null ? `Investing: needs ${solve.save.needs.join(' and ')}` : solve.extra != null && solve.extra <= 0 ? `On track: you already invest ${money(m.investing?.monthly ?? m.surplus.value)} a month (needs ${money(solve.save.value)}).` : `Invest ${money(solve.save.value)} a month${solve.extra != null ? `, ${money(solve.extra)} more than now` : ''}.`),
@@ -94,21 +99,20 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
   const rr = a.realReturn ?? ref.presets.realReturn.default;
   const HOPEFUL = 0.12;
   const paces = [...['Optimistic', 'Likely', 'Pessimistic'].map(k => [ref.presets.pace[k], `${k} ${Math.round(ref.presets.pace[k] * 100)}%`]), [HOPEFUL, `Hopeful ${Math.round(HOPEFUL * 100)}%`]];
-  const inflation = a.inflation ?? ref.presets.inflation.default;
-  const nominal = (ctx.store.doc.settings.dollars || 'real') === 'nominal';
+  const setDollars = v => ctx.store.setDoc('settings', { dollars: v }); // saves, undoes and redraws like any change
   const right = h('div.stack', { style: { gap: '12px' } },
+    h('div.preset-row', {}, h('span.label', {}, 'Dollars'), S.toggle([['real', "Today's dollars"], ['nominal', 'Future dollars']], ctx.store.doc.settings.dollars || 'real', setDollars, { label: "Today's or future dollars" }),
+      h('span.muted.small', {}, nominal ? `With ${pct(inflation)} inflation a year added until each number is reached` : 'What the money buys today; returns are already after inflation')),
     h('div.preset-row', {}, h('span.label', {}, 'Pace'), S.toggle(paces, paces.find(([v]) => Math.abs(v - rr) < 1e-9)?.[0] ?? null, v => setA({ realReturn: v }), { label: 'Pace' }),
       h('span.muted.small', {}, Math.abs(rr - HOPEFUL) < 1e-9 ? 'Hopeful: no inflation taken out' : 'Return a year, after inflation')),
     // Inflation feeds no number in real dollars, so here it is plain text; it can be picked under More with Nominal.
-    h('div.preset-row', {}, h('span.label', {}, 'Inflation'), h('span', {}, `${+(inflation * 100).toFixed(1)}% a year`), h('span.muted.small', {}, nominal ? 'Used for the nominal numbers (set under More)' : 'Display only; returns are already after inflation')),
+    h('div.preset-row', {}, h('span.label', {}, 'Inflation'), h('span', {}, `${+(inflation * 100).toFixed(1)}% a year`), h('span.muted.small', {}, nominal ? 'Used for future dollars (change it under More)' : 'Display only; returns are already after inflation')),
     presetRow('Withdrawal', 'withdrawalRate', ref.presets.withdrawalRate.values, v => `${+(v * 100).toFixed(1)}%`),
     h('div.preset-row', {}, h('span.label', {}, 'Retirement spending'), S.moneyInput(a.retirementSpending ?? null, v => setA({ retirementSpending: v }), { hint: m.inputs.spending != null ? S.moneyText(m.inputs.spending) : 'Add a month', key: 'g:retSpend' }), h('span.muted.small', {}, 'A month. Blank uses today\'s spending')),
     S.moreBlock('goals:tertiary', () => h('div.stack', { style: { gap: '12px' } },
-      h('div.preset-row', {}, h('span.label', {}, 'Show money as'), S.toggle([['real', 'Real'], ['nominal', 'Nominal']], ctx.store.doc.settings.dollars || 'real', v => { ctx.store.doc.settings.dollars = v; ctx.refresh(); app.render(); }, { label: 'Real or nominal' }),
-        h('span.muted.small', {}, (ctx.store.doc.settings.dollars || 'real') === 'real' ? "Real: in today's dollars" : `Nominal: with ${pct(a.inflation ?? ref.presets.inflation.default)} inflation added${m.fiNumber.value != null && fiWhen != null ? `, the FI number is ${money(m.fiNumber.value * (1 + (a.inflation ?? ref.presets.inflation.default)) ** (fiWhen / 12))} then` : ''}`)),
-      nominal ? presetRow('Inflation', 'inflation', ref.presets.inflation.values, v => `${Math.round(v * 100)}%`, 'Feeds the nominal numbers') : null,
+      presetRow('Inflation', 'inflation', ref.presets.inflation.values, v => `${Math.round(v * 100)}%`, 'Used for future dollars'),
       h('div.preset-row', {}, h('span.label', {}, 'Life expectancy'), S.textInput(a.lifeExpectancy ?? null, v => setA({ lifeExpectancy: v === null ? null : Number(v) }), { hint: String(ref.defaults.lifeExpectancy), width: 90 })),
-      h('div.preset-row', {}, h('span.label', {}, 'Social Security'), S.select(['Full scheduled', 'Reduced %', 'None'], a.socialSecurity ?? null, v => setA({ socialSecurity: v }), { label: 'Social Security', hint: 'Pick one', width: 170 }))), { label: 'More: real or nominal, life expectancy, Social Security' }));
+      h('div.preset-row', {}, h('span.label', {}, 'Social Security'), S.select(['Full scheduled', 'Reduced %', 'None'], a.socialSecurity ?? null, v => setA({ socialSecurity: v }), { label: 'Social Security', hint: 'Pick one', width: 170 }))), { label: 'More: inflation, life expectancy, Social Security' }));
   const fiCard = h('div.card.fi-card', { style: { marginBottom: '16px' } }, left, right);
   return reveal ? [revealCard(app, ctx, m), bigDealsCard(ctx, m), fiCard, ladderCard(ctx, m)] : [fiCard, bigDealsCard(ctx, m), ladderCard(ctx, m)];
 }
@@ -143,7 +147,8 @@ function ladderCard(ctx, m) {
       h('div.ladder', {}, ['Lean FI', 'Coast FI', 'Barista FI', 'Regular FI', 'Fat FI'].map(k => {
         const v = l.value[k];
         const when = t[k]?.value != null ? monthsTo(m, t[k].value, { now: ctx.now() }) : null;
-        return h('div.rung', {}, h('strong', {}, k), h('div.rung-bar', { title: v == null ? 'Needs numbers' : pct(Math.min(1, v)) }, h('span', { style: { width: `${v == null ? 0 : Math.min(100, v * 100)}%` } })),
+        const future = (doc.settings.dollars || 'real') === 'nominal' && t[k]?.value != null && when?.value != null ? futureDollars(t[k].value, when.value, m.inputs.inflation) : null;
+        return h('div.rung', {}, h('strong', {}, k, future != null ? h('span.muted.small', {}, ` ${money(future)} then`) : null), h('div.rung-bar', { title: v == null ? 'Needs numbers' : pct(Math.min(1, v)) }, h('span', { style: { width: `${v == null ? 0 : Math.min(100, v * 100)}%` } })),
           h('span.muted.small', {}, v == null ? (k === 'Barista FI' ? 'Add part-time income' : 'Needs numbers') : when?.reached ? `${pct(Math.min(1, v))} · reached` : `${pct(Math.min(1, v))}${when?.value != null ? ` · ${monthName(addMonths(ymOf(ctx.now()), when.value), 'short')}` : ''}`));
       })));
 }

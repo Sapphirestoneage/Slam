@@ -17,6 +17,7 @@ import { startFastTrack } from './ui/fasttrack-ui.js';
 import { keepPlace } from './ui/place.js';
 import { opened } from './ui/dismiss.js';
 import { parseQuickAdd } from './quickadd.js';
+import { dueChecks } from './checks.js';
 
 const [ref, fields, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/fields.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
 
@@ -333,14 +334,8 @@ const app = {
       } }), S.button('Keep', { onClick: S.closePop }))), { width: 380 });
   },
   // Roughly older than 30 days, or any number older than 90 (R061).
-  dueForCheck() {
-    const now = Date.now(), out = [];
-    for (const r of this.store.records) {
-      const age = (now - Date.parse(r.updatedAt)) / 86400000;
-      const st = r.status || Object.values(r.fieldStatus)[0] || statusOf(r, 'amount');
-      if ((st === 'Roughly' && age > 30) || age > 90 || st === 'Not now') out.push({ label: r.name || r.type, status: st, route: routeForPlace(placeOf(r)) });
-    }
-    return out;
+  dueForCheck() { // the rough or aged numbers due for a check today (js/checks.js)
+    return dueChecks(this.store.doc, ref).filter(c => c.rec).map(c => ({ label: c.label, status: c.status, route: routeForPlace(placeOf(c.rec)) }));
   },
   goToNeed(need) {
     const r = search(need, { fields })[0];
