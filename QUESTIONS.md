@@ -135,3 +135,30 @@ Each one has the default used so the build could keep going. Answer here or in t
 89. **Plan pass columns.** Plan shows each line's usual Amount and this month's Plan side by side (a blank Plan uses the usual number). Hide the Plan column unless someone picks a different month?
 90. **Focus mode trigger.** Focus mode is on while a session runs with Guide me on (Start session turns both on). Should the coach be able to turn it off mid-session from Live?
 91. **"A month in" on Assets.** In focus mode the contribution is typed per month and stored as a yearly amount (contributionPer Year), replacing a per-paycheck entry if one was there. OK, or keep per paycheck when it was typed that way?
+
+## Answers logged (Nov 3 2026, second round)
+
+- 1 Look Preview: resolved; spec/SLAM Look Preview.html came with the Oct 28 spec refresh. It is the approved look sample the staples page is checked against.
+- 32 Gut spending: no change; the gut number is used until the Budget is switched to The lines.
+- 4 / 5 APR: a blank APR is a Guess until it is typed, and a credit card guesses 25% (a scary picture first). Personal and car loans keep the Reference data rates.
+- 45 Spec: done. All 110 backlog rows are on the Feature list tab under BETA FEEDBACK.
+- 48 Cash flag: any cash in a retirement account or HSA is flagged; each account can turn it off (Cash here is on purpose).
+- 49 Concentration: 25% for everyone; Coach tools › Session turns it off for a client.
+- 50 Short goal in stocks: no change; any stocks flag it.
+- 54 Owner: one field, Me / Partner / Joint (solo: Me / Joint). Individual / Joint is gone.
+- 56 Credit cards: standard debt with their own sub-tab, Net worth › Credit cards.
+- 58 Paycheck: built. Income › Comes out of your paycheck lists everything taken before the money lands; Benefits at work answers now come out of the paycheck (commuter and FSAs before tax, ESPP and after-tax 401(k) after tax).
+- 59 Large refund: over $10,000.
+- 62 Sinking funds: money going into a sinking fund (on an event) comes out of the surplus.
+- 69 Joint and NYC rates: still not confirmed. tax.ny.gov is blocked by this session's network settings; allow it and they can be checked against Form IT-2105-I.
+- 70 Savings rate headline: built in PR #5 (counts 401(k), HSA and the match).
+- 74 Who covers it: four answers, I'm covering it / We're splitting it / Someone else is / Not for me, each with its own details; the Budget can group by it. Included in rent and N/A now count as zero.
+- 75 Payday card: no change; savings goals and sinking funds stay separate from free to spend (Free after savings).
+- 401(k) in two passes: Income asks dollars a paycheck and Employer match? Yes / No / Don't know; the 401(k) has the detail (PR #7).
+
+## Still open (Nov 3 2026)
+
+92. **The Therapy section's new name.** You said rename it for most people. Proposed: "Health and self-care" (therapy, health insurance, copays, prescriptions, gym, haircuts). The T in DRAFTT would no longer stand for it. OK, or another name?
+93. **Starter estimate ranges.** The usual list's starter guesses now say Accept estimate. Show a range under each (e.g. "most people $X to $Y")? That needs a source for the ranges; there is none in the spec.
+94. **63 Taking over.** It is the list of bills someone else pays today (parents, a partner, an employer) that you will start paying on a date you set, e.g. a phone plan from June 2027. Should those dates move the FI date and the surplus once they arrive?
+95. **Rates from the website.** A static site cannot fetch the NY tax tables when it runs (no server, and the tax site does not allow it). Rates stay in data/reference-2026.json, checked by hand each year. OK?
