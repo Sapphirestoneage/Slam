@@ -84,14 +84,8 @@ function incomeSecondary(ctx, r, up) {
     labelled(v.payFrequency === 'twice a month' ? 'Paydays' : v.payFrequency === 'month' ? 'Payday' : 'Next payday', paydays(r, up),
       { note: 'Puts each paycheck on its day in the calendar', later: L(ctx, r, v.payFrequency === 'week' || v.payFrequency === '2 weeks' ? 'nextPayday' : 'paydays') }),
     labelled('Type', select(['W-2', '1099', 'Business', 'Side hustle', 'Rental', 'Benefits', 'Other'], v.incomeType ?? null, y => up({ incomeType: y }), { label: 'Income type', hint: x?.taxType ?? 'Pick one', width: 150 }), { later: L(ctx, r, 'incomeType') }),
-    applies('401k', { g }) && x?.taxType ? labelled('401(k) %', pctInput(v.contributionPct ?? (link.job?.id === r.id ? link.incomePct : null), y => up({ contributionPct: y }), { hint: 'e.g. 6' }),
-      { note: link.job?.id === r.id && link.incomePctFrom ? 'From your 401(k)' : link.job?.id === r.id && link.incomePerPaycheck != null ? `From your 401(k): ${money(link.incomePerPaycheck)} a paycheck` : null, later: L(ctx, r, 'contributionPct') }) : null,
-    applies('match', { g }) && x?.taxType ? (link.job?.id === r.id && link.incomeTiersFrom && link.incomeTiers.length > 1
-      ? labelled('Employer match', h('span.computed', { title: 'Set on your 401(k) under Assets' }, link.incomeTiers.map((t, i) => `${pct(t.rate)} of the ${i ? 'next' : 'first'} ${pct(t.upTo)}`).join(', ')), { note: 'From your 401(k)' })
-      : labelled('Employer match: % up to %', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
-        pctInput(v.matchPct ?? (link.job?.id === r.id ? link.incomeTiers[0]?.rate : null), y => up({ matchPct: y }), { hint: 'Match' }), h('span.muted', {}, 'up to'),
-        pctInput(v.matchCapPct ?? (link.job?.id === r.id ? link.incomeTiers[0]?.upTo : null), y => up({ matchCapPct: y }), { hint: 'Of pay' })),
-      { note: link.job?.id === r.id && link.incomeTiersFrom ? 'From your 401(k)' : null, later: L(ctx, r, 'matchPct') })) : null,
+    // The 401(k), first pass (Income): dollars a paycheck and whether there is a match. The detail lives on the 401(k).
+    applies('401k', { g }) && x?.taxType ? k401FirstPass(ctx, r, up, link) : null,
     labelled('Bonus: $ and month', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.bonus, y => up({ bonus: y }), { hint: 'Bonus' }),
       select(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], v.bonusMonth ?? null, y => up({ bonusMonth: y }), { label: 'Bonus month', hint: 'Month', width: 100 })), { later: L(ctx, r, 'bonus') }),
     // The Health coverage row owns the premium; Income borrows it (answer to Brandon question 71).
@@ -102,12 +96,40 @@ function incomeSecondary(ctx, r, up) {
       : labelled('Health premium a paycheck', moneyInput(v.premium, y => up({ premium: y }), { hint: 'Add premium' }), { note: 'Or add Health on Protection; it fills this in', later: L(ctx, r, 'premium') })) : null,
     labelled('Perks', button('Add other benefit', { iconName: 'plus', onClick: () => { ctx.store.add('benefit', { name: null, values: {} }, { type: 'Benefit' }); toast('Benefit row added under Other benefits.'); } }))];
 }
+// Income's first pass at the 401(k): what comes out each paycheck, and is there a match. Roth or traditional, % of
+// salary, match tiers and vesting are on the 401(k) under Net worth › Assets; the two fill each other in.
+function k401FirstPass(ctx, r, up, link) {
+  const v = r.values;
+  const mine = link.job?.id === r.id;
+  const perPaycheck = v.k401Paycheck ?? (mine ? link.incomePerPaycheck : null);
+  const fromAcct = mine && link.incomePerPaycheckFrom;
+  const x = incomeRowOf(ctx.metrics(), r);
+  const n = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 }[v.payFrequency] ?? null;
+  const olderPct = v.contributionPct != null && v.k401Paycheck == null; // files from before: a % of pay
+  const tiers = mine ? link.incomeTiers : [];
+  const hasMatch = tiers.length ? 'Yes' : v.hasMatch ?? null;
+  const acct = mine ? link.acct : null;
+  const details = acct ? fromButton('401(k) details', '#/net-worth/assets', acct.id)
+    : button('Add your 401(k) for the details', { size: 'small', iconName: 'plus', onClick: () => {
+      ctx.store.add('account', { name: '401(k)', values: { group: 'investment' } }, { type: '401(k)' });
+      toast('401(k) added under Net worth › Assets. What you typed here shows there.', { action: { label: 'Go there', run: () => location.hash = '#/net-worth/assets' } });
+    } });
+  return h('div.stack.k401-first', { style: { gap: '8px' } },
+    h('span.row-line', { style: { gap: '16px', alignItems: 'flex-end' } },
+      labelled('401(k) a paycheck', moneyInput(olderPct ? null : perPaycheck, y => up({ k401Paycheck: y, contributionPct: null }), {
+        hint: 'Add amount' }),
+      { note: fromAcct ? 'From your 401(k)' : olderPct ? `Set as ${pct(v.contributionPct)} of pay${x?.gross && n ? ` (about ${money(x.gross * v.contributionPct / n)})` : ''}; type dollars to replace it` : 'Pay stub: 401(k) line', later: L(ctx, r, 'k401Paycheck') }),
+      labelled('Employer match?', tiers.length
+        ? h('span.computed', { title: 'Set on your 401(k)' }, tiers.map((t, i) => `${pct(t.rate)} of the ${i ? 'next' : 'first'} ${pct(t.upTo)}`).join(', '))
+        : toggle(['Yes', 'No', "Don't know"], hasMatch, y => up({ hasMatch: y }), { label: 'Employer match', clearable: true }),
+      { note: tiers.length ? (link.incomeTiersFrom ? 'From your 401(k)' : null) : hasMatch === 'Yes' ? 'Add how much on the 401(k)' : null, later: L(ctx, r, 'hasMatch') }),
+      labelled('The rest', details, { note: 'Roth or traditional, % of salary, match, vesting' })));
+}
 function incomeTertiary(ctx, r, up) {
   const g = ctx.gates();
   const v = r.values;
   const taxed = !!incomeRowOf(ctx.metrics(), r)?.taxType;
   return [
-    applies('vesting', { g }) && taxed ? labelled('Match vesting', select(['Immediate', 'Cliff', 'Graded'], v.vesting ?? null, y => up({ vesting: y }), { label: 'Vesting', width: 140 }), { later: L(ctx, r, 'vesting') }) : null,
     applies('hsaFsa', { g }) && taxed ? labelled(`${g.hsa ? 'HSA' : 'FSA'} a paycheck`, moneyInput(v.hsaFsa, y => up({ hsaFsa: y }), { hint: 'Add amount' }), { later: L(ctx, r, 'hsaFsa') }) : null,
     applies('equity', { g }) && taxed ? labelled('ESPP % and discount; RSUs', textInput(v.equity, y => up({ equity: y }), { hint: 'e.g. 10%, 15% off; 200 RSUs vest Mar', width: 300 }), { later: L(ctx, r, 'equity') }) : null,
     taxed ? labelled('Raise % a year', pctInput(v.raisePct, y => up({ raisePct: y }), { hint: 'e.g. 3' }), { later: L(ctx, r, 'raisePct') }) : null,
@@ -463,7 +485,7 @@ export function taxesScreen(ctx) {
 // ---------- Completion (R065): core is the Primary fields; full adds the detail that applies ----------
 const done = (r, f) => countsAsDone(statusOf(r, f));
 const FULL = {
-  income: (r, g) => ['amount', 'payFrequency', 'incomeType', ...(g.employer ? ['contributionPct'] : [])],
+  income: (r, g) => ['amount', 'payFrequency', 'incomeType', ...(g.employer ? [r.values.contributionPct != null ? 'contributionPct' : 'k401Paycheck'] : [])],
   debt: r => ['balance', 'apr', 'payment', ...(r.type === 'Credit card' ? ['limit', 'dueDay'] : r.type === 'Student loan' ? ['federal'] : []), 'stress'],
   account: r => [r.values.taxType === 'Both' ? 'pretaxBalance' : 'balance', 'institution', ...(r.values.group === 'investment' ? ['taxType', 'contribution'] : ['apy'])],
   asset: r => ['value', ...(LOAN_FOR[r.type] ? ['financed'] : [])],
@@ -474,7 +496,7 @@ export function listCompletion(ctx, pred, core) {
   const g = ctx.gates();
   const recs = ctx.visible(pred);
   const c = { done: 0, of: 0 }, f = { done: 0, of: 0 };
-  const WORDS = { amount: 'amount', balance: 'balance', apr: 'APR', value: 'value', have: 'have it?', payFrequency: 'pay frequency', incomeType: 'type', contributionPct: '401(k) %',
+  const WORDS = { amount: 'amount', balance: 'balance', apr: 'APR', value: 'value', have: 'have it?', payFrequency: 'pay frequency', incomeType: 'type', contributionPct: '401(k) %', k401Paycheck: '401(k) a paycheck',
     payment: 'payment', limit: 'limit', dueDay: 'due day', federal: 'federal or private', stress: 'stress', institution: 'institution', taxType: 'pretax or Roth', contribution: 'putting in',
     apy: 'APY', financed: 'paid off or financed', coverage: 'coverage amount', deductible: 'deductible', benefitPct: 'benefit %', using: 'using it?', pretaxBalance: 'balances' };
   c.missing = []; f.missing = [];

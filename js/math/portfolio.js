@@ -213,22 +213,30 @@ export function link401k(records) {
   const job = records.find(r => r.kind === 'income' && ['Job', 'Partner job'].includes(r.type) && r.values?.incomeType !== '1099') || null;
   const acct = records.find(r => r.kind === 'account' && K401_TYPES.has(r.type)) || null;
   const jv = job?.values || {}, av = acct?.values || {};
-  const acctPerPaycheck = av.contribution != null && av.contributionPer === 'Paycheck' ? av.contribution : null;
-  const incomeTiers = jv.matchPct != null && jv.matchCapPct != null ? [{ rate: jv.matchPct, upTo: jv.matchCapPct }] : [];
+  // Income is the first pass: dollars a paycheck and whether there is a match. The 401(k) holds the detail.
+  const acctOwnPerPaycheck = av.contribution != null && av.contributionPer === 'Paycheck' ? av.contribution : null;
+  const incomeOwnPerPaycheck = jv.k401Paycheck ?? null;
+  const incomeTiers = jv.matchPct != null && jv.matchCapPct != null ? [{ rate: jv.matchPct, upTo: jv.matchCapPct }] : []; // older files
   const acctTiers = (av.matchTiers || []).filter(t => t.rate != null && t.upTo != null);
+  const incomeOwn = incomeOwnPerPaycheck != null || jv.contributionPct != null;
+  const acctOwn = acctOwnPerPaycheck != null || av.salaryPct != null;
   return {
     job, acct,
-    // Income side: 401(k) % and match
-    incomePct: jv.contributionPct ?? av.salaryPct ?? null,
-    incomePctFrom: jv.contributionPct == null && av.salaryPct != null ? '401(k)' : null,
-    incomePerPaycheck: jv.contributionPct == null && av.salaryPct == null ? acctPerPaycheck : null, // dollars, when the 401(k) gives only that
+    // Income side: dollars a paycheck (or an older %), else the 401(k)'s answer
+    incomePct: jv.contributionPct ?? (incomeOwnPerPaycheck == null && acctOwnPerPaycheck == null ? av.salaryPct ?? null : null),
+    incomePctFrom: !incomeOwn && acctOwnPerPaycheck == null && av.salaryPct != null ? '401(k)' : null,
+    incomePerPaycheck: incomeOwnPerPaycheck ?? (jv.contributionPct == null ? acctOwnPerPaycheck : null),
+    incomePerPaycheckFrom: !incomeOwn && acctOwnPerPaycheck != null ? '401(k)' : null,
     incomeTiers: incomeTiers.length ? incomeTiers : acctTiers,
     incomeTiersFrom: !incomeTiers.length && acctTiers.length ? '401(k)' : null,
-    // 401(k) side: % of salary and match tiers
-    acctPct: av.salaryPct ?? (acctPerPaycheck == null ? jv.contributionPct ?? null : null),
-    acctPctFrom: av.salaryPct == null && acctPerPaycheck == null && jv.contributionPct != null ? 'Income' : null,
+    // 401(k) side: per paycheck and % of salary, else Income's first pass
+    acctPerPaycheck: acctOwnPerPaycheck ?? (av.salaryPct == null ? incomeOwnPerPaycheck : null),
+    acctPerPaycheckFrom: !acctOwn && incomeOwnPerPaycheck != null ? 'Income' : null,
+    acctPct: av.salaryPct ?? (acctOwnPerPaycheck == null && incomeOwnPerPaycheck == null ? jv.contributionPct ?? null : null),
+    acctPctFrom: !acctOwn && incomeOwnPerPaycheck == null && jv.contributionPct != null ? 'Income' : null,
     acctTiers: (av.matchTiers || []).length ? av.matchTiers : incomeTiers,
     acctTiersFrom: !(av.matchTiers || []).length && incomeTiers.length ? 'Income' : null,
+    hasMatch: acctTiers.length || incomeTiers.length ? 'Yes' : jv.hasMatch ?? null,
   };
 }
 

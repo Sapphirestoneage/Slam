@@ -16,7 +16,7 @@ const WHERE = {
   // Income
   amount: 'Pay stub: net pay (take-home) or gross pay', gross: 'Pay stub: gross pay, or your offer letter',
   payFrequency: 'Pay stub: pay period dates', paydays: 'Pay stub dates, or bank deposits', nextPayday: 'Pay stub dates, or bank deposits',
-  incomeType: 'W-2 or 1099 from last year', contributionPct: 'Pay stub, or the 401(k) site',
+  incomeType: 'W-2 or 1099 from last year', contributionPct: 'Pay stub, or the 401(k) site', k401Paycheck: 'Pay stub: the 401(k) line', hasMatch: 'Benefits portal or employee handbook',
   matchPct: 'Benefits portal or employee handbook', matchCapPct: 'Benefits portal or employee handbook',
   bonus: 'Offer letter or last year\'s pay stubs', premium: 'Pay stub deductions', hsaFsa: 'Pay stub deductions',
   vesting: 'Benefits portal: vesting schedule', equity: 'Equity site (e.g. the ESPP or RSU portal)',
@@ -44,7 +44,7 @@ const LABEL = {
   dependents: 'Dependents', healthCoverage: 'Health coverage', email: 'Email', phone: 'Phone', workSituation: 'Work situation', housing: 'Housing',
   roommates: 'Roommates', worstCase: 'Worst case: all on me', incomeStability: 'Income stability', moneyStyle: 'How they run money', splitMine: 'Split: my share',
   amount: 'amount', gross: 'gross pay', payFrequency: 'pay frequency', paydays: 'paydays', nextPayday: 'next payday', incomeType: 'income type',
-  contributionPct: '401(k) %', matchPct: 'employer match', matchCapPct: 'match limit', bonus: 'bonus', premium: 'health premium', hsaFsa: 'HSA or FSA amount',
+  contributionPct: '401(k) %', k401Paycheck: '401(k) a paycheck', hasMatch: 'employer match', matchPct: 'employer match', matchCapPct: 'match limit', bonus: 'bonus', premium: 'health premium', hsaFsa: 'HSA or FSA amount',
   vesting: 'match vesting', equity: 'equity pay', raisePct: 'raise %', otherPretax: 'other before-tax', balance: 'balance', institution: 'institution',
   last4: 'last 4 digits', apy: 'APY', yield7: '7-day yield', contribution: 'putting in', taxType: 'Roth or traditional', unvested: 'unvested amount',
   costBasis: 'cost basis', rothBasis: 'Roth contributions so far', contributionsToDate: 'contributions to date', dividends: 'dividends', realized: 'realized gains',

@@ -18,9 +18,10 @@ function matchBlock(ctx, r, up, L) {
   const job = ctx.metrics().inputs.income.find(x => x.taxType === 'W-2' && x.gross !== null);
   const gross = job?.gross ?? null;
   const freq = job?.r.values.payFrequency ?? null;
-  const perPaycheck = v.contribution != null && v.contributionPer === 'Paycheck' ? v.contribution : null;
   const link = link401k(ctx.visible(() => true)); // B3.10: blank here borrows from Income
   const own = link.acct?.id === r.id;
+  // Income's first pass (dollars a paycheck) fills this in until the 401(k) has its own answer.
+  const perPaycheck = v.contribution != null && v.contributionPer === 'Paycheck' ? v.contribution : own ? link.acctPerPaycheck : null;
   const salaryPct = v.salaryPct ?? (own ? link.acctPct : null);
   const split = contributionSplit({ perPaycheck, pct: perPaycheck == null ? salaryPct : null, gross, payFrequency: freq });
   const tiers = (v.matchTiers || []).length ? v.matchTiers : own ? link.acctTiers : [];
@@ -36,9 +37,9 @@ function matchBlock(ctx, r, up, L) {
       v.taxType === 'Both' ? labelled('Roth part', row(toggle([['Amount', '$ a paycheck'], ['Percent', '% of it']], v.rothSplitBy ?? 'Percent', x => up({ rothSplitBy: x }), { label: 'Roth part as' }),
         (v.rothSplitBy ?? 'Percent') === 'Amount' ? moneyInput(v.rothPerPaycheck ?? null, x => up({ rothPerPaycheck: x }), { hint: 'Add amount' }) : pctInput(v.rothPct ?? null, x => up({ rothPct: x }), { hint: 'e.g. 50' })),
         { note: (v.rothSplitBy ?? 'Percent') === 'Amount' ? (v.rothPerPaycheck == null ? 'Blank: all traditional' : 'The rest is traditional') : v.rothPct == null ? 'Blank: all traditional' : `${pct(1 - v.rothPct)} traditional` }) : null,
-      labelled('Per paycheck', split.computed === 'perPaycheck' ? shown(`${money(split.perPaycheck)} (worked out)`) : moneyInput(perPaycheck, x => up({ contribution: x, contributionPer: 'Paycheck' }), { hint: 'Add amount' }), { later: L('contribution') }),
+      labelled('Per paycheck', split.computed === 'perPaycheck' ? shown(`${money(split.perPaycheck)} (worked out)`) : moneyInput(perPaycheck, x => up({ contribution: x, contributionPer: 'Paycheck' }), { hint: 'Add amount' }), { note: own && link.acctPerPaycheckFrom ? 'From Income' : null, later: L('contribution') }),
       labelled('% of salary', split.computed === 'pct' ? shown(`${pct(split.pct)} (worked out)`) : pctInput(salaryPct, x => up({ salaryPct: x, ...(x != null && v.contributionPer === 'Paycheck' ? { contribution: null } : {}) }), { hint: 'e.g. 6' }),
-        { note: own && link.acctPctFrom ? 'From Income' : gross === null ? 'Add gross pay on Income to work out the other' : freq === null ? 'Add pay frequency on Income to work out the other' : 'Type either one' })),
+        { note: own && (link.acctPctFrom || link.acctPerPaycheckFrom) ? 'From Income' : gross === null ? 'Add gross pay on Income to work out the other' : freq === null ? 'Add pay frequency on Income to work out the other' : 'Type either one' })),
     h('div.stack', { style: { gap: '6px' } }, h('span.row-line', { style: { gap: '6px' } }, h('span.label', {}, 'Employer match'), own && link.acctTiersFrom ? fromIncome('From Income') : null),
       ...tiers.map((t, i) => row(pctInput(t.rate ?? null, x => setTier(i, { rate: x }), { hint: 'e.g. 100' }), h('span.muted', {}, i === 0 ? 'of the first' : 'of the next'),
         pctInput(t.upTo ?? null, x => setTier(i, { upTo: x }), { hint: 'e.g. 3' }), h('span.muted', {}, 'of pay'),

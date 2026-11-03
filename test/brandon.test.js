@@ -365,3 +365,21 @@ test('B8: labels find their term (longest first); sentences and plain words do n
   assert.equal(termIn('FIRST'), null); // FI must be its own word
   for (const t of ['Pace', 'Coverage', 'Buffer', 'Surplus', 'Coast FI']) assert.ok(GLOSSARY[t]);
 });
+
+// ---------- 401(k) in two passes: Income per paycheck, the 401(k) in detail ----------
+test('401(k) first pass on Income is dollars a paycheck; the 401(k) borrows it; the 401(k)\'s own answer wins there', () => {
+  const s = fresh();
+  const job = s.add('income', { name: 'Job', amount: 78000, per: 'year', values: { basis: 'Gross', payFrequency: '2 weeks', k401Paycheck: 150, hasMatch: 'Yes' } }, { type: 'Job' });
+  const k = s.add('account', { values: { group: 'investment', balance: 4000 } }, { type: '401(k)' });
+  let l = link401k(s.records);
+  assert.equal(l.acctPerPaycheck, 150); assert.equal(l.acctPerPaycheckFrom, 'Income');
+  assert.equal(l.incomePct, null);
+  const m = metrics(s.doc, ref, { now: new Date('2026-11-03') });
+  assert.ok(Math.abs(m.inputs.income[0].pretax - 150 * 26) < 1); // comes out before tax, 26 paychecks
+  s.update(k.id, { contribution: 200, contributionPer: 'Paycheck', matchTiers: [{ rate: 1, upTo: 0.04 }] });
+  s.update(job.id, { k401Paycheck: null });
+  l = link401k(s.records);
+  assert.equal(l.incomePerPaycheck, 200); assert.equal(l.incomePerPaycheckFrom, '401(k)');
+  assert.equal(l.incomeTiersFrom, '401(k)');
+  assert.equal(l.hasMatch, 'Yes');
+});
