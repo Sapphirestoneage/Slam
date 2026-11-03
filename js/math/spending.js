@@ -43,12 +43,28 @@ export function myShare(line, { roommates = 0, basis = 'accrual', now = new Date
   const m = lineMonthly(line, { basis });
   if (m.value === null) return { ...m, id: 'M21' };
   const covered = coveredShare(line, now);
-  const split = line.splitBy ?? (line.whoPays === 'Split' ? roommates + 1 : 1); // R033
+  const split = splitOf(line, roommates);
+  // People often give their own share of a shared bill ("my rent is $1,500"): then the amount is already theirs.
+  if (amountIsMine(line) && split > 1) return ok('M21', m.value * (1 - covered), `${fmt.money(m.value)} a month is your share of a bill split ${split} ways (the whole bill is about ${fmt.money(m.value * split)}).`);
   const v = m.value * (1 - covered) / split;
   const parts = [];
   if (covered) parts.push(`${fmt.pct(covered)} covered by someone else`);
   if (split > 1) parts.push(`split ${split} ways`);
   return ok('M21', v, parts.length ? `${fmt.money(m.value)} a month, ${parts.join(', ')} = ${fmt.money(v)} is yours.` : `${fmt.money(v)} a month, all yours.`);
+}
+
+// How many ways a shared bill is split: Split by when typed, else you plus each roommate (R033).
+export const splitOf = (line, roommates = 0) => line.splitBy ?? line.values?.splitBy ?? ((line.whoPays ?? line.values?.whoPays) === 'Split' ? roommates + 1 : 1);
+// The amount typed on a split bill is the person's own share (This amount is: Your share), not the whole bill.
+export const amountIsMine = line => (line.amountIs ?? line.values?.amountIs) === 'Your share';
+// The whole bill a month, worked out from a share and the split (or the amount itself when it is the whole bill).
+export function wholeBill(line, { roommates = 0, basis = 'accrual' } = {}) {
+  const m = lineMonthly(line, { basis });
+  if (m.value === null) return { ...m, id: 'M21' };
+  const split = splitOf(line, roommates);
+  return amountIsMine(line) && split > 1
+    ? ok('M21', m.value * split, `Your share ${fmt.money(m.value)} a month times ${split} people = ${fmt.money(m.value * split)} a month for the whole bill.`)
+    : ok('M21', m.value, `${fmt.money(m.value)} a month is the whole bill.`);
 }
 
 // M22: support received.

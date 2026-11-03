@@ -111,7 +111,7 @@ export function inputsOf(doc, ref, now = new Date()) {
   const brokerage = accounts.filter(a => a.type === 'Brokerage').reduce((s, a) => s + (a.value ?? 0), 0);
   const housingLines = lines.filter(l => HOUSING.has(l.category));
   const housing = housingLines.some(l => l.category === 'Rent or mortgage' && l.amount !== null)
-    ? housingLines.reduce((s, l) => s + (myShare(l).value ?? 0), 0) : null;
+    ? housingLines.reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0) : null;
   // Sinking funds on events: what is still to save, spread over the months left (yearly Budget costs are already spending).
   const ymNow = now.getFullYear() * 12 + now.getMonth();
   const sinkingMonthly = live.filter(r => r.kind === 'event' && r.values.sinking && r.amount != null && r.status !== 'Not for me').reduce((s, r) => {

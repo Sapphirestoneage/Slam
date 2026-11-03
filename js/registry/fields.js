@@ -268,6 +268,7 @@ export const AREAS = [
       pick('whoPays', 'Who pays', ['Me', 'Split', 'My share', 'Covered by someone', 'Included in rent', 'N/A', 'Not for me'], { kinds: ['bill'] }),
       f('coveredBy', 'Who covers it', 'text', { kinds: ['bill'] }),
       f('myShare', 'My share', 'money', { kinds: ['bill'] }), f('splitBy', 'Split by', 'number', { kinds: ['bill'] }),
+      pick('amountIs', 'This amount is', ['Your share', 'The whole bill'], { kinds: ['bill'] }),
       f('takeover', 'Becomes mine in', 'month', { kinds: ['bill'] }),
       f('irregular', 'Irregular (once or a few times a year)', 'yesno', { kinds: ['bill'] }),
       pick('monthDue', 'Month due', MONTHS3, { kinds: ['bill'] }),

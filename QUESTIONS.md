@@ -255,3 +255,10 @@ Sessions numbered new questions at the same time: Phase 3.5's are 92 to 102, Ope
 | 117 | Closed: the T letter reads Health and self-care (built) |
 | 118 | Closed: no ranges under starter estimates (there is no source for them); Accept estimate stays |
 | 120 | Closed: rates stay in data/reference-2026.json, checked by hand each year. The NY joint brackets, NYC rates and the Roth IRA limits (96) are still to be checked once tax.ny.gov and irs.gov are allowed in the session's network settings |
+
+## Answered (Nov 3 2026, Open the books)
+
+- 103 Rent and roommates: built. A split bill asks "The amount above is: My share / The whole bill" and shows the other side worked out (a share times the people splitting it, or the whole bill divided by them). Blank stays The whole bill, so no saved number moves. Housing % now splits with the roommates like every other number. Works on every shared bill, not only rent. In the spreadsheet: This amount is, and a Whole bill a month column.
+- 106 Statuses in the sheet: keep all six.
+- 116 Start a new client from a file: OK as built.
+- Still open: 105 (which From the app rows could become formulas), 109 (tabs for the fields that stay in the app), 111 (map the spec fields by ID), 112 (the new-row rule), 113 (conflicts per field), 115 (LibreOffice on GitHub).

@@ -5,7 +5,7 @@ Clear a line by adding the row to the spec (spec/SLAM Build Spec.xlsx, then `pyt
 
 ## Fields (50 of 265 spec fields matched)
 
-### In code, not in the spec (186)
+### In code, not in the spec (187)
 
 - Profile › Client name (`profile.client.name`)
 - Profile › Age (`profile.age`)
@@ -161,6 +161,7 @@ Clear a line by adding the row to the spec (spec/SLAM Build Spec.xlsx, then `pyt
 - Spending lines › Due day (`spending.dueDay`)
 - Spending lines › Who covers it (`spending.coveredBy`)
 - Spending lines › My share (`spending.myShare`)
+- Spending lines › This amount is (`spending.amountIs`)
 - Spending lines › Becomes mine in (`spending.takeover`)
 - Spending lines › Irregular (once or a few times a year) (`spending.irregular`)
 - Spending lines › Month due (`spending.monthDue`)

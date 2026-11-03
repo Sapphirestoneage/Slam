@@ -49,7 +49,7 @@ export function richHousehold() {
     s.add('income', { name: 'Partner', amount: 3100, per: '2 weeks', values: { payFrequency: '2 weeks' } }, { type: 'Partner job' });
     s.add('spending', { name: 'Gut', amount: 5000, values: { includesDebtPayments: false } }, { type: 'All in' });
     s.add('bill', { name: 'Rent', amount: 3200, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', whoPays: 'Split' } });
-    s.add('bill', { name: 'Electric', amount: 120, values: { category: 'Electric, gas, water', draftt: 'Accommodation', amountType: 'Variable' } });
+    s.add('bill', { name: 'Electric', amount: 60, values: { category: 'Electric, gas, water', draftt: 'Accommodation', amountType: 'Variable', whoPays: 'Split', amountIs: 'Your share' } });
     s.add('bill', { name: 'Groceries', amount: 200, per: 'week', values: { category: 'Groceries, dining out, coffee', draftt: 'Food', amountType: 'Variable' } });
     s.add('bill', { name: 'Phone', amount: 80, values: { category: 'Internet, phone', draftt: 'Accommodation', amountType: 'Fixed', whoPays: 'Covered by someone' } });
     s.add('bill', { name: 'Car insurance', amount: 150, values: { category: 'Car insurance', draftt: 'Transportation', amountType: 'Fixed', whoPays: 'Covered by someone', coveredBy: 'Parents', takeover: '2026-09' } }); // already mine
