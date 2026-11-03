@@ -2,7 +2,7 @@
 import { ok, needs, missing, fmt } from './result.js';
 
 // M01: any period to monthly.
-const PER_MONTH = { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, year: 1 / 12 };
+const PER_MONTH = { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, quarter: 1 / 3, year: 1 / 12 };
 export function monthlyFrom(amount, per, payFrequency = null) {
   if (amount === null || amount === undefined) return needs('M01', ['amount']);
   let p = per;

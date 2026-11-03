@@ -3,7 +3,7 @@
 import { h, clear, icon } from './dom.js';
 import { maaserOf, KOSHER_NOTE } from '../community.js';
 import * as S from './staples.js';
-import { spendingList, irregularList, IRREGULAR } from './lists.js';
+import { spendingList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.js';
 import { PASSES, ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
   closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS } from '../month.js';
 import { gutAccuracy, DRAFTT } from '../math/spending.js';
@@ -135,7 +135,7 @@ function basicsPass(ctx) {
   const basics = doc.spending.basics || {};
   const lines = ctx.visible(r => r.kind === 'bill' && r.status !== 'Not for me');
   const areas = [...new Set(['Accommodation', 'Food', 'Transportation', 'Therapy', 'Other', 'Wants', ...lines.map(r => r.values.draftt).filter(Boolean)])];
-  const fromLines = a => sum(lines.filter(r => (r.values.draftt || 'Other') === a), r => (r.per === 'year' ? (r.amount ?? 0) / 12 : r.amount));
+  const fromLines = a => sum(lines.filter(r => (r.values.draftt || 'Other') === a), r => lineMonthlyOf(r) ?? 0);
   const total = sum(areas, a => basics[a]);
   return h('div.card', {}, h('div.basics-grid', {}, areas.map(a => h('div.basics-row', {},
     h('span.basics-name', {}, a),
@@ -159,7 +159,7 @@ function walkIrregular(ctx, anchor) {
     const mon = S.select(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((x, k) => [String(k + 1), x]), null, v => { month = v; }, { label: 'Month due', hint: 'Month', width: 100 });
     const add = () => {
       amt.querySelector('input').dispatchEvent(new Event('change'));
-      ctx.store.add('bill', { name: item.name, amount: yearly, per: 'year', values: { irregular: true, monthDue: month ? Number(month) : null, draftt: 'Other', amountType: 'Fixed', timing: 'Fixed date' } }, { type: 'Yearly cost' });
+      ctx.store.add('bill', { name: item.name, amount: yearly, per: 'year', values: { irregular: true, trip: !!item.trip, monthDue: month ? Number(month) : null, draftt: 'Other', amountType: 'Fixed', timing: 'Fixed date' } }, { type: item.trip ? 'Trip or flight' : 'Yearly cost' });
       i++; draw();
     };
     clear(box, h('span.muted', {}, `${i + 1} of ${todo.length}`), h('strong', { style: { fontSize: '1.125rem' } }, `${item.name}?`),
@@ -179,7 +179,7 @@ export const budgetCharts = [
       const lines = ctx.visible(r => r.kind === 'bill' && !r.values.irregular && r.status !== 'Not for me' && r.amount != null && r.values.amountType && r.values.timing);
       if (!lines.length) return { needs: ['a line tagged Fixed or Variable'] };
       const cells = [['Fixed', 'Fixed date'], ['Variable', 'Fixed date'], ['Fixed', 'Variable date'], ['Variable', 'Variable date']]
-        .map(([a, t]) => { const ls = lines.filter(r => r.values.amountType === a && r.values.timing === t); return { a, t, total: sum(ls, r => (r.per === 'year' ? r.amount / 12 : r.amount)), n: ls.length }; });
+        .map(([a, t]) => { const ls = lines.filter(r => r.values.amountType === a && r.values.timing === t); return { a, t, total: sum(ls, r => lineMonthlyOf(r) ?? 0), n: ls.length }; });
       return { cells };
     },
     option: (d, t) => {
@@ -201,7 +201,7 @@ export const budgetCharts = [
       const lines = ctx.visible(r => r.kind === 'bill' && r.status !== 'Not for me' && r.amount != null);
       if (!lines.length) return { needs: ['a spending line'] };
       const by = new Map();
-      for (const r of lines) { const k = r.values.draftt || 'Other'; by.set(k, (by.get(k) || 0) + (r.per === 'year' ? r.amount / 12 : r.amount)); }
+      for (const r of lines) { const k = r.values.draftt || 'Other'; by.set(k, (by.get(k) || 0) + (lineMonthlyOf(r) ?? 0)); }
       const order = [...DRAFTT, 'Other', 'Wants'];
       return { rows: [...by].sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0])) };
     },

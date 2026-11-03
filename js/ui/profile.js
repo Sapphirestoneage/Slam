@@ -6,7 +6,7 @@ import { gatesOf, syncCount, WORK, HOUSING, COVERAGE, AREAS, REAL_TYPES, recordF
 import { ageOf } from '../math/metrics.js';
 import { profileCompletion } from '../profile-completion.js';
 import { BENEFITS, HAVE, TRANSIT, commuterSavings } from '../benefits.js';
-import { taxRates } from '../math/income.js';
+import { taxRates, monthlyFrom } from '../math/income.js';
 import { money, pct } from '../format.js';
 
 export const STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI',
@@ -154,7 +154,7 @@ export function profileScreen(app, ctx) {
   const m = ctx.metrics();
   const taxed = m.inputs.income.filter(i => i.taxType && i.gross !== null);
   const rates = taxed.length ? taxRates({ gross: taxed.reduce((s, i) => s + i.gross, 0), pretax: taxed.reduce((s, i) => s + i.pretax, 0), filingStatus: m.inputs.filingStatus, place: m.inputs.place }, ctx.ref) : null;
-  const transit = m.inputs.lines.filter(l => TRANSIT.has(l.category) && l.status !== 'Not for me').reduce((s, l) => s + (l.per === 'year' ? (l.amount ?? 0) / 12 : l.amount ?? 0), 0);
+  const transit = m.inputs.lines.filter(l => TRANSIT.has(l.category) && l.status !== 'Not for me').reduce((s, l) => s + (l.amount == null ? 0 : monthlyFrom(l.amount, l.per).value), 0);
   const nudge = commuterSavings({ have: ben.commuter?.have, transitMonthly: transit, marginal: rates?.marginal ?? null, limitMonthly: ctx.ref.limits.commuterMonthly });
   const amountPer = (k, b, hint) => h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
     moneyInput(b.amount ?? null, x => setBen(k, { amount: x }), { hint }), toggle(['Paycheck', 'Year'], b.per ?? 'Paycheck', x => setBen(k, { per: x }), { label: 'Per' }));

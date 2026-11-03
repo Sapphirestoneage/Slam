@@ -4,6 +4,7 @@ import { addPresets } from '../presets.js';
 import { moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, hoursChip, park, parkProfile, metricCard } from './staples.js';
 import { pct } from '../format.js';
 import { feeApr } from '../math/debt.js';
+import { monthlyFrom } from '../math/income.js';
 import { applies } from '../gates.js';
 import { payoffPlan, debtToIncome, utilization } from '../math/debt.js';
 import { needs } from '../math/result.js';
@@ -13,7 +14,10 @@ import { estimateOf, actualOf, instances, monthName } from '../month.js';
 const LOAN_TYPES = new Set(['Student loan', 'Car loan', 'Personal loan', 'Mortgage']);
 const short = v => (Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
-const kept = r => (r.status === 'Not for me' ? 0 : r.amount);
+// B6.10: totals add each line's monthly amount, never the raw number (a $1,200-a-year line is $100 a month).
+const freqOf = ctx => ctx?.metrics?.().inputs.income.find(x => x.r.values.payFrequency)?.r.values.payFrequency ?? null;
+export const lineMonthlyOf = (r, freq = null) => (r.amount == null ? null : monthlyFrom(r.amount, r.per, freq).value);
+const keptIn = ctx => { const f = freqOf(ctx); return r => (r.status === 'Not for me' ? 0 : lineMonthlyOf(r, f)); };
 
 export function debtList(ref) {
   return {
@@ -115,7 +119,13 @@ export function spendingList(ref, { pass = 'Rough', ym = null, groupBy = 'DRAFTT
     kind: 'bill', area: 'needs', title: pass === 'Rough' ? 'Spending lines' : `Spending lines: ${pass}, ${monthName(ym)}`, thing: { one: 'line', plural: 'lines' },
     filter: r => r.kind === 'bill' && !r.values.irregular,
     // Eliminated lines fold away at the bottom; one tap brings one back.
-    groupBy: r => (r.status === 'Not for me' ? 'Not for me' : groupBy === 'Category' ? r.values.category || 'Other' : r.values.draftt || 'Other'),
+    // B6.6: Therapy is its own section; the rest of the T letter reads "Personal care and hygiene" (display only).
+    groupBy: r => (r.status === 'Not for me' ? 'Not for me' : groupBy === 'Category' ? r.values.category || 'Other'
+      : r.values.draftt === 'Therapy' && r.values.category !== 'Therapy' ? 'Personal care and hygiene' : r.values.category === 'Therapy' ? 'Therapy' : r.values.draftt || 'Other'),
+    groupLabel: g => (g === 'Not for me' ? 'Hidden: not for me' : g),
+    // B6.6: every section takes a new line, filed under that section.
+    groupAdd: g => (g === 'Not for me' || groupBy === 'Category' ? null
+      : { name: null, values: { draftt: g === 'Personal care and hygiene' ? 'Therapy' : g, ...(g === 'Therapy' ? { category: 'Therapy' } : {}), amountType: 'Variable', timing: 'Variable date' } }),
     lastGroups: ['Not for me'], foldedGroups: ['Not for me'],
     headerExtra: ctx => (ctx.store.doc.settings.presetsAdded ? null
       : h('button.btn.small', { type: 'button', title: 'About 40 common lines with high starter guesses. Bring them down or mark Not for me.', onclick: () => addPresets(ctx.store, ref) }, icon('plus'), 'Add the usual list')),
@@ -146,12 +156,30 @@ export function spendingList(ref, { pass = 'Rough', ym = null, groupBy = 'DRAFTT
       { label: 'Date is', render: (ctx, r, m, up) => toggle([['Fixed date', 'Fixed date'], ['Variable date', 'Variable date']], r.values.timing ?? null, v => up({ timing: v }), { label: 'Date is' }) },
       { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) },
     ],
-    secondary: (ctx, r, up) => [whoPays(r, up), lineSuggestion(r, up)],
+    secondary: (ctx, r, up) => [whoPays(r, up), lineSuggestion(r, up),
+      // B6.3: low / high for a variable bill; the amount is the average.
+      r.values.amountType === 'Variable' ? labelled('Range: low, high', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+        moneyInput(r.values.low ?? null, v => up({ low: v }), { hint: 'Low' }), moneyInput(r.values.high ?? null, v => up({ high: v }), { hint: 'High' })),
+      { note: r.values.low != null && r.values.high != null ? `The amount above is your average${r.amount == null ? '; add it' : ''}` : 'A light month and a heavy one', ...park(ctx, r, 'low') }) : null,
+      tagsField(r, up)],
     // Not for me counts as $0 everywhere (R058); its group shows what was cut.
-    subtotal: (ctx, rows) => (rows.every(r => r.status === 'Not for me') ? `$0, cut ${money(sum(rows, r => r.amount))}` : money(sum(rows, kept))),
-    footerTotal: (ctx, recs) => amount(ctx, recs.some(r => r.amount != null) ? sum(recs, kept) : null),
-    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Line' ? h('td', {}, `${recs.filter(r => r.status !== 'Not for me').length} lines`) : c.label === 'Amount' ? h('td.num', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, kept) : null)) : h('td')), h('td'), h('td')],
+    subtotal: (ctx, rows) => (rows.every(r => r.status === 'Not for me') ? `$0, cut ${money(sum(rows, r => lineMonthlyOf(r, freqOf(ctx))))} a month` : `${money(sum(rows, keptIn(ctx)))} a month`),
+    footerTotal: (ctx, recs) => h('span', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, keptIn(ctx)) : null), h('span.muted', {}, ' a month')),
+    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Line' ? h('td', {}, `${recs.filter(r => r.status !== 'Not for me').length} lines`) : c.label === 'Amount' ? h('td.num', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, keptIn(ctx)) : null)) : h('td')), h('td'), h('td')],
   };
+}
+
+// B6.7: one line can carry several tags (a dinner can be friends and dates).
+const TAG_IDEAS = ['Friends', 'Dates', 'Family', 'Work', 'Self-care', 'Kids', 'Holidays'];
+function tagsField(r, up) {
+  const tags = r.values.tags || [];
+  const add = t => { const x = (t || '').trim(); if (x && !tags.includes(x)) up({ tags: [...tags, x] }); };
+  const box = h('input', { placeholder: 'Add a tag', 'aria-label': 'Add a tag', list: 'tag-ideas' });
+  box.onchange = () => { add(box.value); box.value = ''; };
+  return labelled('Tags', h('span.row-line', { style: { gap: '6px' } },
+    ...tags.map(t => h('span.tag.plain.tag-chip', {}, t, h('button.chip-x', { type: 'button', 'aria-label': `Remove tag ${t}`, onclick: () => up({ tags: tags.filter(x => x !== t) }) }, '×'))),
+    h('label.field', { style: { width: '140px' } }, box),
+    h('datalist', { id: 'tag-ideas' }, TAG_IDEAS.map(t => h('option', { value: t })))), { note: 'A line can have more than one' });
 }
 
 // Estimate and Actual columns for one month (R134 to R136, R052).
@@ -171,6 +199,9 @@ function monthColumns(pass, ym) {
       const set = v => ctx.store.setIn('spending', ['months', ym, 'lines', r.id, 'actual'], v === null ? undefined : v, 'Actual');
       return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
         a.from === 'calendar' ? h('span.tag.plain', { title: 'From entries marked Paid on the cash flow calendar' }, 'calendar') : null,
+        // B6.11: one tap when the estimate turned out right.
+        a.value == null && estimateOf(ctx.store.doc, ym, r).value != null ? h('button.btn.small.confirm-est', { type: 'button', title: 'It came out as estimated: use the estimate as the actual', 'aria-label': `Same as the estimate for ${r.name || 'this line'}`,
+          onclick: () => set(estimateOf(ctx.store.doc, ym, r).value) }, '✓ As estimated') : null,
         moneyInput(a.from === 'typed' ? a.value : null, set, { hint: a.value == null ? 'Add actual' : moneyText(a.value), key: `${r.id}:act:${ym}` }));
     } },
     { label: 'Difference', num: true, render: (ctx, r) => {
@@ -178,7 +209,8 @@ function monthColumns(pass, ym) {
       const e = estimateOf(ctx.store.doc, ym, r).value, a = actualOf(ctx.store.doc, ym, r, list).value;
       if (e == null || a == null) return h('span.muted', {}, '');
       const d = a - e;
-      return h(`span.diff${d > 0.5 ? '.over' : d < -0.5 ? '.under' : ''}`, {}, Math.abs(d) < 0.5 ? 'On plan' : `${d > 0 ? '+' : '−'}${money(Math.abs(d))}`);
+      const share = e ? ` (${d > 0 ? '+' : '−'}${Math.round(Math.abs(d) / e * 100)}%)` : ''; // B6.11: and as a % of the estimate
+      return h(`span.diff${d > 0.5 ? '.over' : d < -0.5 ? '.under' : ''}`, {}, Math.abs(d) < 0.5 ? 'On plan' : `${d > 0 ? '+' : '−'}${money(Math.abs(d))}${share}`);
     } }];
   return [];
 }
@@ -193,6 +225,7 @@ function lineSuggestion(r, up) {
 export const IRREGULAR = [
   { name: 'Car registration', gate: 'car' }, { name: 'Car insurance (if paid yearly)', gate: 'car' }, { name: 'Holidays' }, { name: 'Birthdays' },
   { name: 'Renewals (domains, memberships)' }, { name: 'Vet checkup', gate: 'pets' }, { name: 'Travel' }, { name: 'Annual subscriptions' }, { name: 'Tax prep' },
+  { name: 'Flights home', trip: true }, { name: 'Trips', trip: true }, // B6.8: recurring trips are their own type
 ];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => [String(i + 1), m]);
 export function irregularList(ref, { onWalk } = {}) {
@@ -212,7 +245,11 @@ export function irregularList(ref, { onWalk } = {}) {
     ],
     secondary: (ctx, r, up) => {
       const savings = ctx.store.find(x => x.kind === 'account' && x.values.group === 'cash');
-      return [labelled('Save for it each month', toggle(['Yes', 'No'], r.values.sinking ? 'Yes' : r.values.sinking === false ? 'No' : null, v => up({ sinking: v === 'Yes' }), { label: 'Sinking fund', clearable: true }),
+      // B6.8: flights and trips: how many a year x what each costs fills the yearly amount.
+      const trip = r.values.trip ? [labelled('How many a year', textInput(r.values.timesYear == null ? null : String(r.values.timesYear), x => { const n = Number(x); const t = Number.isFinite(n) && n > 0 ? n : null; up({ timesYear: t, ...(t && r.values.costEach != null ? { amount: t * r.values.costEach, per: 'year' } : {}) }); }, { hint: 'e.g. 3', width: 90 }), park(ctx, r, 'timesYear')),
+        labelled('Cost each', moneyInput(r.values.costEach ?? null, x => up({ costEach: x, ...(x != null && r.values.timesYear ? { amount: x * r.values.timesYear, per: 'year' } : {}) }), { hint: 'Add cost' }), { note: 'Fills the yearly amount', ...park(ctx, r, 'costEach') })] : [
+        labelled('A trip or flight?', toggle(['Yes', 'No'], r.values.trip ? 'Yes' : null, x => up({ trip: x === 'Yes' }), { label: 'Trip or flight', clearable: true }), { note: 'Count them and price each one' })];
+      return [...trip, labelled('Save for it each month', toggle(['Yes', 'No'], r.values.sinking ? 'Yes' : r.values.sinking === false ? 'No' : null, v => up({ sinking: v === 'Yes' }), { label: 'Sinking fund', clearable: true }),
         { note: r.values.sinking ? 'Tracked under Plan › Next 12 months' : null }),
       labelled('Sinking fund', select(savings.map(a => [a.id, a.name || a.type]), r.values.sinkingFund ?? null, v => up({ sinkingFund: v }), { label: 'Sinking fund', hint: savings.length ? 'Which savings account' : 'No savings account yet', width: 200 }), { note: 'Which savings account holds it' })];
     },
@@ -342,7 +379,7 @@ export function creditCard(ctx) {
 function billsOnCard(ctx, card) {
   const bills = ctx.visible(x => x.kind === 'bill' && x.paidWith === card.id && x.status !== 'Not for me');
   if (!bills.length) return labelled('Bills on this card', h('span.muted', {}, 'None yet. Link one from a bill\'s More ▸ Paid with.'));
-  const total = sum(bills, b => (b.per === 'year' ? (b.amount ?? 0) / 12 : b.amount));
+  const total = sum(bills, b => lineMonthlyOf(b, freqOf(ctx)) ?? 0);
   const inFull = card.values.payChoice === 'In full';
   return labelled(`Bills on this card: ${bills.length}, ${money(total)}/mo`, h('span.row-line', { style: { gap: '6px' } }, bills.map(b => h('a.tag.plain', { href: '#/spending/budget' }, b.name || b.values.category))),
     { note: inFull ? 'Paid in full: these count as spending, no interest' : 'Carrying a balance: these add to what you owe each month' });

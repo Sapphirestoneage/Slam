@@ -703,6 +703,18 @@
       "draftt": "Wants",
       "amount": "Variable",
       "timing": "Variable date"
+    },
+    {
+      "category": "Dates",
+      "draftt": "Wants",
+      "amount": "Variable",
+      "timing": "Variable date"
+    },
+    {
+      "category": "Other wants",
+      "draftt": "Wants",
+      "amount": "Variable",
+      "timing": "Variable date"
     }
   ],
   "spendingPresets": {
@@ -1027,6 +1039,22 @@
         "amount": "Variable",
         "timing": "Variable date",
         "guess": 120
+      },
+      {
+        "name": "Dates",
+        "category": "Dates",
+        "draftt": "Wants",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 100
+      },
+      {
+        "name": "Other wants",
+        "category": "Other wants",
+        "draftt": "Wants",
+        "amount": "Variable",
+        "timing": "Variable date",
+        "guess": 50
       },
       {
         "name": "Hobbies",

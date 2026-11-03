@@ -116,7 +116,7 @@ function incomeStrip(ctx, m) {
   const items = [
     { label: 'Take-home a month', result: x.takeHome === null ? needs('M12', ['take-home']) : { id: 'M12', value: x.takeHome, needs: [], unit: 'money', text: x.income.map(i => i.takeHome.text).filter(Boolean).join(' ') } },
     { label: 'Gross a year', result: gross },
-    { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate' },
+    { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', note: m.savingsRate.withPretax != null ? `${pct(m.savingsRate.withPretax)} with your 401(k) and HSA` : null },
   ];
   if (x.gates.betweenJobs) items.push({ label: 'Runway', result: m.runwayMonths, render: r => `${r.value.toFixed(1)} months` }); // R006
   return summaryStrip(ctx, items);

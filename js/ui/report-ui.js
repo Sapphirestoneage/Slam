@@ -4,7 +4,7 @@ import { h, clear, icon } from './dom.js';
 import { homeworkList } from '../homework.js';
 import * as S from './staples.js';
 import { debtRatios } from './lists.js';
-import { taxRates } from '../math/income.js';
+import { taxRates, monthlyFrom } from '../math/income.js';
 import { drafttShares } from '../math/spending.js';
 import { gutAccuracy } from '../math/spending.js';
 import { fiTargets, ladder, agenda } from '../plan.js';
@@ -146,7 +146,7 @@ const sumNode = (links, n) => Math.max(sum(links.filter(l => l.source === n), l 
 function fixedVariable(ctx, m) {
   const x = m.inputs;
   const lines = x.lines.filter(l => l.status !== 'Not for me' && !l.irregular);
-  const mine = l => (l.per === 'year' ? (l.amount ?? 0) / 12 : l.amount ?? 0);
+  const mine = l => (l.amount == null ? 0 : monthlyFrom(l.amount, l.per).value);
   const fixed = sum(lines.filter(l => l.amountType === 'Fixed'), mine), variable = sum(lines.filter(l => l.amountType !== 'Fixed'), mine);
   const share = v => (x.takeHome ? `${pct(v / x.takeHome)} of take-home` : null);
   if (!lines.length) return null;

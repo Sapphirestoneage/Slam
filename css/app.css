@@ -168,7 +168,7 @@ kbd { font: inherit; font-size: .75rem; font-weight: 700; border: 1.5px solid va
 .vis-panel .bar-top { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s3); flex-wrap: wrap; }
 .vis-panel .chart { height: 260px; }
 
-.page { max-width: 1360px; margin: 0 auto; padding: var(--s5) var(--s5) 96px; }
+.page { max-width: none; margin: 0 auto; padding: var(--s5) var(--s5) 96px; } /* B6.12: the full screen width */
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
 .row-line { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
 
@@ -258,3 +258,6 @@ table.rows.mini th, table.rows.mini td { padding: 4px 6px; white-space: nowrap; 
 @media (max-width: 700px) { .year-month { grid-template-columns: 1fr; } }
 .nw-time { margin: var(--s3) 0; }
 .nw-time .more-wrap { flex: 1; }
+.group-add { min-height: 24px; font-size: .75rem; }
+.tag-chip { display: inline-flex; align-items: center; gap: 4px; }
+.chip-x { border: 0; background: none; color: inherit; font: inherit; font-weight: 700; cursor: pointer; padding: 0 2px; }

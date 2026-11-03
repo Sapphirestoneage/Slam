@@ -1,6 +1,7 @@
 // The year ahead (missed ideas M4, M5, M7): every known yearly date and cost in the next 12 months, sinking funds,
 // and the bills someone else covers that you will take over. Pure: no DOM. Reads the same records as everything else.
 import { ymOf, addMonths, monthsBetween } from './month.js';
+import { monthlyFrom } from './math/income.js';
 
 // Next time a month of the year comes round, from this month on.
 export function nextYm(month, now = new Date()) {
@@ -57,7 +58,7 @@ export function sinkingOf(item, { records = [], now = new Date() } = {}) {
 
 // Taking over (M7.2): each covered bill, its monthly cost, the month you take it over, and the monthly total added then.
 export const COVERERS = ['Parents', 'Partner', 'Employer', 'Other'];
-const monthlyOf = l => (l.amount == null ? null : l.per === 'year' ? l.amount / 12 : l.per === 'week' ? l.amount * 52 / 12 : l.amount);
+const monthlyOf = l => (l.amount == null ? null : monthlyFrom(l.amount, l.per).value);
 export function takingOver(records) {
   const items = records.filter(r => r.kind === 'bill' && r.values.whoPays === 'Covered by someone' && r.status !== 'Not for me')
     .map(r => ({ id: r.id, name: r.name || r.values.category || 'Bill', who: r.values.coveredBy ?? null, ym: r.values.takeover ?? null, monthly: monthlyOf(r) }));

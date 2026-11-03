@@ -314,3 +314,27 @@ test('B5.1: NY and NYC tax on NY taxable income; none outside NY; take-home and 
   assert.ok(Math.abs(r.marginal - (r.federalMarginal + 0.0765 + 0.054 + 0.03876)) < 1e-9);
   assert.equal(r.federalMarginal, 0.22);
 });
+
+// ---------- B6: spending ----------
+import { monthlyFrom } from '../js/math/income.js';
+import { instances as monthList } from '../js/month.js';
+test('B6.3, B6.10: quarterly and yearly lines become the right monthly amount', () => {
+  assert.equal(monthlyFrom(300, 'quarter').value, 100);
+  assert.equal(monthlyFrom(1200, 'year').value, 100);
+});
+test('B6.9: 401(k) money is saving: the savings rate with it counts what left before payday', () => {
+  const s = fresh();
+  s.add('income', { name: 'Job', amount: 80000, per: 'year', values: { basis: 'Gross', payFrequency: '2 weeks', contributionPct: 0.05 } }, { type: 'Job' });
+  s.add('spending', { amount: 3000, values: {} }, { type: 'All in' });
+  const m = metrics(s.doc, ref, { now: new Date('2026-11-03') });
+  assert.ok(Math.abs(m.savingsRate.pretaxSaving - 80000 * 0.05 / 12) < 0.01);
+  assert.ok(m.savingsRate.withPretax > m.savingsRate.value);
+});
+test('B6.10: the month list is built once per change, and rebuilt after one', () => {
+  const s = fresh();
+  s.add('income', { name: 'Job', amount: 4000, values: { payFrequency: 'month' } }, { type: 'Job' });
+  const a = monthList(s.doc, ref, '2026-12'), b = monthList(s.doc, ref, '2026-12');
+  assert.equal(a, b);
+  s.add('bill', { name: 'Gym', amount: 50, values: { dueDay: 3 } }, { type: 'Bill' });
+  assert.notEqual(monthList(s.doc, ref, '2026-12'), a);
+});
