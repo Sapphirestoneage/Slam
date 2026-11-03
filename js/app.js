@@ -10,6 +10,7 @@ import { keyNumbers } from './math/metrics.js';
 import { TABS, parseRoute, search, routeForPlace } from './nav.js';
 import { SCREENS, progressOf } from './screens.js';
 import { startFastTrack } from './ui/fasttrack-ui.js';
+import { keepPlace } from './ui/place.js';
 
 const [ref, fields] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/fields.json').then(r => r.json())]);
 
@@ -34,7 +35,7 @@ const app = {
     this.ctx.onRefresh(() => {
       // A new time view redraws everything; screens without editable lists redraw on any change.
       if (mode !== this.ctx.timeMode || !$('main').querySelector('.list-wrap')) { mode = this.ctx.timeMode; this.renderSoon(); }
-      else this.chrome();
+      else keepPlace(() => this.chrome());
     }, { keep: true });
     if (doc) {
       if (save) saveClient(adapter, doc);
@@ -171,7 +172,8 @@ const app = {
       requestAnimationFrame(() => {
         const row = r.kind === 'record' ? document.querySelector(`tr[data-id="${r.id}"]`) : null;
         (row || $('main').querySelector('h1'))?.classList.add('highlight');
-        row?.querySelector('input')?.focus();
+        row?.querySelector('input')?.focus({ preventScroll: true });
+        row?.scrollIntoView({ block: 'center', behavior: 'smooth' }); // smooth only for Find and One page jumps
         if (r.kind === 'field') S.toast(`${r.label} lives on ${r.where}.`);
       });
     };
@@ -306,13 +308,12 @@ const app = {
     if (tab.id === 'tools' && this.prefs.clientView) { this.go('#/home/prep'); return; } // never in client view
     if (!keepPop) S.closePop();
     this.ctx.clearScreen();
-    this.chrome();
     const screen = SCREENS[`${tab.id}/${sub.id}`];
-    const focus = document.activeElement?.dataset?.focus; // a redraw never loses your place (R165)
-    clear($('main'), screen ? screen(this, this.ctx) : null);
-    if (focus) $('main').querySelector(`[data-focus="${CSS.escape(focus)}"]`)?.focus();
+    const draw = () => { this.chrome(); clear($('main'), screen ? screen(this, this.ctx) : null); };
+    // A redraw of the same screen never loses your place (R165): scroll, list scroll and the control you were on.
+    if (this._lastHash === hash) keepPlace(draw); else draw();
     // One page: a sub-tab click scrolls to its part (only when the place changes, not on every redraw).
-    if (this.prefs.onePage && tab.id === 'my-money' && this._lastHash !== hash && this._lastHash?.startsWith('#/my-money')) document.getElementById(`mm-${sub.id}`)?.scrollIntoView({ block: 'start' });
+    if (this.prefs.onePage && tab.id === 'my-money' && this._lastHash !== hash && this._lastHash?.startsWith('#/my-money')) document.getElementById(`mm-${sub.id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     this._lastHash = hash;
     document.title = `${sub.name} · ${tab.name} · SLAM`;
     if (location.hash !== hash) history.replaceState(null, '', hash);

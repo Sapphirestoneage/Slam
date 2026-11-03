@@ -8,6 +8,8 @@ import { joinWords } from '../math/result.js';
 import { parseQuickAdd } from '../quickadd.js';
 import { canQuickFill, quickFill } from './quickfill.js';
 import { gatesOf, gatedOut } from '../gates.js';
+import { keepPlace } from './place.js';
+export { keepPlace };
 
 // ---------- Context: the store, the time view, the numbers, toasts ----------
 export function createCtx({ store, ref, now = () => new Date() }) {
@@ -35,11 +37,11 @@ export function createCtx({ store, ref, now = () => new Date() }) {
 // ---------- Buttons ----------
 export function button(label, { kind = 'secondary', iconName = null, onClick, size = null, tip = null, disabled = false, why = null } = {}) {
   return h(`button.btn${kind === 'primary' ? '.primary' : kind === 'danger' ? '.danger' : ''}${size ? `.${size}` : ''}`,
-    { type: 'button', onclick: onClick, disabled, title: disabled && why ? why : null, 'data-tip': tip },
+    { type: 'button', onclick: onClick, disabled, title: disabled && why ? why : null, 'data-tip': tip, 'data-focus': typeof label === 'string' ? `btn:${label}` : null },
     iconName ? icon(iconName) : null, label, disabled && why ? h('span.sr', {}, ` (${why})`) : null);
 }
 export function iconButton(name, label, onClick, { tiny = false, disabled = false } = {}) {
-  return h(`button.icon-btn${tiny ? '.tiny' : ''}`, { type: 'button', 'aria-label': label, 'data-tip': label, onclick: onClick, disabled }, icon(name));
+  return h(`button.icon-btn${tiny ? '.tiny' : ''}`, { type: 'button', 'aria-label': label, 'data-tip': label, 'data-focus': `icon:${label}`, onclick: onClick, disabled }, icon(name));
 }
 // Add button: '+ Add [thing]', outlined, bottom left of every section (R103).
 export function addButton(thing, onClick) {
@@ -53,7 +55,7 @@ export function toggle(options, value, onChange, { label = null, clearable = fal
   return h('div.seg', { role: 'group', 'aria-label': label },
     options.map(o => {
       const [v, text] = Array.isArray(o) ? o : [o, o];
-      return h('button', { type: 'button', 'aria-pressed': String(v === value), title: clearable && v === value ? 'Click again to clear' : null, onclick: e => {
+      return h('button', { type: 'button', 'aria-pressed': String(v === value), 'data-focus': label ? `seg:${label}:${v}` : null, title: clearable && v === value ? 'Click again to clear' : null, onclick: e => {
         const off = clearable && e.currentTarget.getAttribute('aria-pressed') === 'true';
         for (const b of e.currentTarget.parentNode.children) b.setAttribute('aria-pressed', String(!off && b === e.currentTarget));
         onChange(off ? null : v);
@@ -62,10 +64,16 @@ export function toggle(options, value, onChange, { label = null, clearable = fal
 }
 
 // ---------- Popovers ----------
-let openPop = null, away = null;
+let openPop = null, away = null, popAnchor = null;
 // Closing also drops its click-outside listener, so a box opened from inside another box (New client from the
 // client menu) is not closed by the first box's listener before its own buttons can be clicked.
-export function closePop() { openPop?.remove(); openPop = null; if (away) { document.removeEventListener('mousedown', away); away = null; } }
+// Focus goes back to the button that opened the box, so a pick never drops you to the top of the page.
+export function closePop() {
+  const back = openPop?.contains(document.activeElement) && popAnchor?.isConnected ? popAnchor : null;
+  openPop?.remove(); openPop = null; popAnchor = null;
+  if (away) { document.removeEventListener('mousedown', away); away = null; }
+  back?.focus({ preventScroll: true });
+}
 export function popover(anchor, content, { width = null } = {}) {
   closePop();
   const r = anchor.getBoundingClientRect();
@@ -73,7 +81,7 @@ export function popover(anchor, content, { width = null } = {}) {
   document.body.append(pop);
   const over = pop.getBoundingClientRect().right - window.innerWidth + 12;
   if (over > 0) pop.style.left = `${Math.max(8, parseFloat(pop.style.left) - over)}px`;
-  openPop = pop;
+  openPop = pop; popAnchor = anchor;
   setTimeout(() => {
     if (openPop !== pop) return;
     away = e => { if (!pop.contains(e.target) && e.target !== anchor && !anchor.contains(e.target)) closePop(); };
@@ -118,7 +126,7 @@ export const guessTag = () => h('span.tag.guess', {}, '? Guess');
 // Shows only when the number is not 'Know it' (DMMT: reduce noise); click to pick.
 export function statusPicker(current, onPick, { label = 'Status' } = {}) {
   const quiet = !current || current === 'Know it';
-  const b = h(`button.status-btn${quiet ? '.quiet' : ''}`, { type: 'button', 'aria-label': `${label}: ${current || 'not set'}` },
+  const b = h(`button.status-btn${quiet ? '.quiet' : ''}`, { type: 'button', 'aria-label': `${label}: ${current || 'not set'}`, 'data-focus': `status:${label}` },
     current && current !== 'Know it' ? statusTag(current) : 'Know it', icon('down'));
   b.onclick = () => popover(b, h('div.stack', {}, h('h3', {}, 'How sure is this?'),
     STATUSES.map(s => h('button.btn.small', { type: 'button', onclick: () => { closePop(); onPick(s); } }, statusTag(s))),
@@ -266,7 +274,7 @@ const OPEN = new Set();
 export function moreBlock(id, content, { label = 'More' } = {}) {
   const open = OPEN.has(id);
   const body = h('div.more-body', { hidden: !open }, open ? content() : null);
-  const btn = h('button.caret', { type: 'button', 'aria-expanded': String(open) }, open ? 'Less' : label, icon(open ? 'down' : 'right'));
+  const btn = h('button.caret', { type: 'button', 'aria-expanded': String(open), 'data-focus': `more:${id}` }, open ? 'Less' : label, icon(open ? 'down' : 'right'));
   btn.onclick = () => {
     const now = !OPEN.has(id);
     now ? OPEN.add(id) : OPEN.delete(id);
@@ -424,13 +432,11 @@ export function timeToggle(ctx) {
 const slug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 export function recordList(ctx, cfg) {
   const root = h('div.list-wrap');
-  const state = { selected: new Set(), folded: new Set(cfg.foldedGroups || []), open: new Set() };
-  const draw = () => {
-    // Keep the box being typed in (R165: never lose your place).
-    const focus = document.activeElement?.dataset?.focus;
-    clear(root, render());
-    if (focus) root.querySelector(`[data-focus="${CSS.escape(focus)}"]`)?.focus();
-  };
+  const listKey = cfg.key ?? slug(cfg.title);
+  const state = { selected: new Set(), folded: new Set(cfg.foldedGroups || []), open: null };
+  // Looks-only changes (select, More, fold) update in place; anything else redraws inside keepPlace (R165).
+  const draw = () => keepPlace(() => clear(root, render()));
+  let view = null; // the parts of the last render that in-place updates touch
   const update = (rec, patch) => { ctx.store.update(rec.id, patch); flashSaved(root.querySelector(`tr[data-id="${rec.id}"]`)); };
   const addNew = (type, name = null, after = null) => {
     const r = ctx.store.add(cfg.kindOf?.(type) ?? cfg.kind, { name: name ?? null, ...(cfg.newValues?.(type) || {}) }, { type: type ?? cfg.defaultType ?? null, after });
@@ -441,8 +447,8 @@ export function recordList(ctx, cfg) {
     const list = [...ids];
     const linked = list.length === 1 ? ctx.store.linked(list[0]) : [];
     const go = withLinked => {
+      list.forEach(id => state.selected.delete(id));
       const n = ctx.store.remove(list, { withLinked });
-      state.selected.clear();
       toast(n > 1 ? `Deleted ${n}.` : 'Deleted.', { undo: () => ctx.store.undo() });
     };
     if (linked.length) {
@@ -451,6 +457,48 @@ export function recordList(ctx, cfg) {
     } else go(false);
   };
   const reset = ids => { const n = ids.length; ctx.store.reset(ids); toast(n > 1 ? `Reset ${n}.` : 'Reset.', { undo: () => ctx.store.undo() }); };
+
+  // ---------- in-place updates ----------
+  const selectedNow = () => [...state.selected].filter(id => view?.recs.some(r => r.id === id));
+  function refreshSelection() {
+    if (!view) return;
+    const sel = selectedNow();
+    for (const [id, tr] of view.rows) { tr.classList.toggle('selected', state.selected.has(id)); const b = tr.querySelector('td.check-cell input'); if (b) b.checked = state.selected.has(id); }
+    view.allBox.checked = sel.length > 0 && sel.length === view.recs.length;
+    view.allBox.indeterminate = sel.length > 0 && sel.length < view.recs.length;
+    // The bulk bar lies over the header row, so nothing below it moves.
+    clear(view.bulkHost, sel.length ? bulkBar(ctx, sel, view.actions(sel)) : null);
+  }
+  function setFold(g, folded) {
+    folded ? state.folded.add(g) : state.folded.delete(g);
+    const head = view?.groups.get(g);
+    if (!head) return;
+    for (const tr of view.body.querySelectorAll('tr')) if (tr.dataset.group === g && tr !== head) tr.hidden = folded;
+    const btn = head.querySelector('button.fold');
+    btn.setAttribute('aria-expanded', String(!folded));
+    btn.querySelector('svg').replaceWith(icon(folded ? 'right' : 'down'));
+  }
+  function setOpen(id) {
+    if (!view) return;
+    const was = state.open;
+    // Closing the other open row (one at a time) must not move the row you clicked.
+    const tr0 = view.rows.get(id), scroller = tr0?.closest('.list-scroll'), top0 = tr0?.getBoundingClientRect().top;
+    state.open = id === was ? null : id;
+    if (was) { view.body.querySelector(`tr.more[data-for="${was}"]`)?.remove(); caretState(view.rows.get(was), false); }
+    if (state.open) {
+      const tr = view.rows.get(state.open);
+      const r = view.recs.find(x => x.id === state.open);
+      if (!tr || !r) { state.open = null; return; }
+      tr.after(moreRow(r, tr.dataset.group));
+      caretState(tr, true);
+    }
+    if (scroller && top0 !== undefined) scroller.scrollTop += tr0.getBoundingClientRect().top - top0;
+  }
+  const caretState = (tr, open) => {
+    const c = tr?.querySelector('button.caret');
+    if (c) { c.setAttribute('aria-expanded', String(open)); clear(c, open ? 'Less' : 'More', icon(open ? 'down' : 'right')); }
+  };
+  const moreRow = (r, g) => h('tr.more', { 'data-for': r.id, 'data-group': g }, h('td', { colspan: view.span }, moreLayers(ctx, r, cfg, p => update(r, p))));
 
   function render() {
     const m = ctx.metrics();
@@ -461,39 +509,40 @@ export function recordList(ctx, cfg) {
         yes: `Clear ${cfg.thing.plural}`, no: 'Keep them', onYes: () => { ctx.store.resetSection(cfg.filter); toast('Cleared.', { undo: () => ctx.store.undo() }); } })) : null);
     const picker = typeof cfg.picker === 'function' ? cfg.picker(ctx) : cfg.picker;
     const addBtn = addButton(cfg.thing.one, e => picker ? openAddPicker(e.currentTarget, { thing: cfg.thing.one, ...picker, onPick: (t, own) => addNew(t, own) }) : addNew(null));
-    if (!recs.length) return h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, h('div.list', {}, emptyList(cfg.thing, e => addBtn.click())));
+    if (!recs.length) { view = null; return h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, h('div.list', {}, emptyList(cfg.thing, e => addBtn.click()))); }
 
-    const sel = [...state.selected].filter(id => recs.some(r => r.id === id));
-    const bulk = sel.length ? bulkBar(ctx, sel, {
-      all: recs.length, onClear: () => { state.selected.clear(); draw(); },
-      onDuplicate: () => { ctx.store.duplicate(sel); toast(`Duplicated ${sel.length}.`, { undo: () => ctx.store.undo() }); },
-      onDelete: e => remove(sel, e.currentTarget), onReset: () => reset(sel),
-      onStatus: s => { ctx.store.setStatus(sel, s); toast(`Set ${sel.length} to ${s}.`, { undo: () => ctx.store.undo() }); },
-      onLink: id => { ctx.store.transaction('Link to card', () => sel.forEach(x => ctx.store.update(x, { paidWith: id }))); toast(`Linked ${sel.length}.`, { undo: () => ctx.store.undo() }); },
-    }) : null;
-    const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all', checked: sel.length === recs.length });
-    allBox.indeterminate = sel.length > 0 && sel.length < recs.length;
-    allBox.onchange = () => { if (allBox.checked) recs.forEach(r => state.selected.add(r.id)); else state.selected.clear(); draw(); };
+    const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all', 'data-focus': 'select-all' });
+    allBox.onchange = () => { if (allBox.checked) recs.forEach(r => state.selected.add(r.id)); else state.selected.clear(); refreshSelection(); };
     const cols = cfg.columns.filter(c => c && (!c.couple || ctx.couple));
+    const span = cols.length + 3;
     const thead = h('thead', {}, h('tr', {}, h('th.check-cell', {}, allBox), cols.map(c => h(`th${c.num ? '.num' : ''}`, {}, c.label)), h('th', {}, 'Status'), h('th', {}, h('span.sr', {}, 'Actions'))));
     const groups = new Map();
     for (const r of recs) { const g = cfg.groupBy?.(r) ?? ''; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(r); }
     for (const g of cfg.lastGroups || []) if (groups.has(g)) { const rows = groups.get(g); groups.delete(g); groups.set(g, rows); } // e.g. Not for me sits at the bottom
     const body = h('tbody');
+    const rowEls = new Map(), groupEls = new Map();
+    view = { recs, rows: rowEls, groups: groupEls, body, span, allBox, bulkHost: h('div.bulk-host'), actions: sel => ({
+      all: recs.length, onClear: () => { state.selected.clear(); refreshSelection(); },
+      onDuplicate: () => { ctx.store.duplicate(sel); toast(`Duplicated ${sel.length}.`, { undo: () => ctx.store.undo() }); },
+      onDelete: e => remove(sel, e.currentTarget), onReset: () => reset(sel),
+      onStatus: s => { ctx.store.setStatus(sel, s); toast(`Set ${sel.length} to ${s}.`, { undo: () => ctx.store.undo() }); },
+      onLink: id => { ctx.store.transaction('Link to card', () => sel.forEach(x => ctx.store.update(x, { paidWith: id }))); toast(`Linked ${sel.length}.`, { undo: () => ctx.store.undo() }); },
+    }) };
     const multi = groups.size > 1; // R171: group headers when more than one type
     for (const [g, rows] of groups) {
+      const folded = multi && state.folded.has(g);
       if (multi) {
-        const folded = state.folded.has(g);
-        body.append(h('tr.group', { onclick: () => { folded ? state.folded.delete(g) : state.folded.add(g); draw(); } },
-          h('td', { colspan: cols.length + 3 }, h('span.fold', {}, icon(folded ? 'right' : 'down'), `${g} (${rows.length})`,
-            cfg.subtotal ? h('span.muted', {}, ' · ', cfg.subtotal(ctx, rows, m)) : null))));
-        if (folded) continue;
+        const tr = h('tr.group', { 'data-group': g },
+          h('td', { colspan: span }, h('button.fold', { type: 'button', 'aria-expanded': String(!folded), 'data-focus': `fold:${g}`, onclick: () => setFold(g, !state.folded.has(g)) },
+            icon(folded ? 'right' : 'down'), `${g} (${rows.length})`, cfg.subtotal ? h('span.muted', {}, ' · ', cfg.subtotal(ctx, rows, m)) : null)));
+        groupEls.set(g, tr);
+        body.append(tr);
       }
       for (const r of rows) {
-        const box = h('input', { type: 'checkbox', 'aria-label': `Select ${r.name || r.type || cfg.thing.one}`, checked: state.selected.has(r.id) });
-        box.onchange = () => { box.checked ? state.selected.add(r.id) : state.selected.delete(r.id); draw(); };
-        const open = state.open.has(r.id);
-        const tr = h(`tr.row${state.selected.has(r.id) ? '.selected' : ''}`, { 'data-id': r.id },
+        const box = h('input', { type: 'checkbox', 'aria-label': `Select ${r.name || r.type || cfg.thing.one}`, checked: state.selected.has(r.id), 'data-focus': 'sel' });
+        box.onchange = () => { box.checked ? state.selected.add(r.id) : state.selected.delete(r.id); refreshSelection(); };
+        const open = state.open === r.id;
+        const tr = h(`tr.row${state.selected.has(r.id) ? '.selected' : ''}`, { 'data-id': r.id, 'data-group': g, hidden: folded },
           h('td.check-cell', {}, box),
           cols.map((c, i) => h(`td.col-${slug(c.label)}${i === 0 ? '.col-first' : ''}${c.num ? '.num' : ''}`, {}, c.render(ctx, r, m, p => update(r, p), { remove: e => remove([r.id], e.currentTarget) }))),
           h('td.col-status', {}, statusPicker(r.status, s => update(r, { status: s }))),
@@ -501,21 +550,25 @@ export function recordList(ctx, cfg) {
             iconButton('copy', 'Duplicate', () => { ctx.store.duplicate(r.id); toast('Duplicated.', { undo: () => ctx.store.undo() }); }),
             iconButton('reset', 'Reset', () => reset([r.id])),
             iconButton('trash', 'Delete', e => remove([r.id], e.currentTarget)),
-            h('button.caret', { type: 'button', 'aria-expanded': String(open), onclick: () => { open ? state.open.delete(r.id) : state.open.add(r.id); draw(); } },
+            h('button.caret', { type: 'button', 'aria-expanded': String(open), 'data-focus': 'more', onclick: () => setOpen(r.id) },
               open ? 'Less' : 'More', icon(open ? 'down' : 'right')))));
         // Enter in a row = new row below (R168).
         tr.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') { e.target.dispatchEvent(new Event('change')); addNew(r.type, null, r.id); } });
+        rowEls.set(r.id, tr);
         body.append(tr);
-        if (open) body.append(h('tr.more', {}, h('td', { colspan: cols.length + 3 }, moreLayers(ctx, r, cfg, p => update(r, p)))));
+        if (open) { const more = moreRow(r, g); more.hidden = folded; body.append(more); }
       }
     }
+    if (state.open && !rowEls.has(state.open)) state.open = null;
     const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td', {}), cfg.totals(ctx, recs, m, cols))) : null;
     const done = recs.filter(r => (cfg.coreFields || ['amount']).every(f => countsAsDone(statusOf(r, f)))).length;
-    return h(`div.section.area-${cfg.area}`, {}, head,
+    const out = h(`div.section.area-${cfg.area}`, {}, head,
       cfg.strip ? cfg.strip(ctx, m) : null,
-      h('div.list', {}, bulk, h('div.list-scroll', {}, h('table.rows', {}, thead, body, tfoot)),
+      h('div.list', {}, view.bulkHost, h('div.list-scroll', { 'data-scroll-key': listKey }, h('table.rows', {}, thead, body, tfoot)),
         sectionFooter(ctx, { add: addBtn, total: cfg.footerTotal?.(ctx, recs, m), count: recs.length, done, of: recs.length }),
         keyboardHint()));
+    refreshSelection();
+    return out;
   }
   ctx.onRefresh(draw);
   draw();
@@ -549,27 +602,34 @@ export function visualsPanel(ctx, { charts, area }) {
   // DMMT 'Watch': Side on wide screens (1600px and up, so a full row still fits), Below otherwise; Hide is one click.
   const state = { pick: charts[0].name, place: window.innerWidth >= 1600 ? 'Side' : 'Below' };
   const wrap = h('div.vis-panel.card');
-  queueMicrotask(() => wrap.closest('.visuals')?.classList.toggle('below', state.place === 'Below'));
-  let chart = null;
-  const draw = () => {
+  // Where it sits starts from CSS (by screen width), so the first paint never shifts the page; a pick sets a class.
+  const place = () => { const v = wrap.closest('.visuals'); for (const [c, p] of [['below', 'Below'], ['side', 'Side'], ['hidden', 'Hide']]) v?.classList.toggle(c, state.place === p); };
+  let chart = null, host = null;
+  const paint = () => {
     const c = charts.find(x => x.name === state.pick);
-    const pick = h('select.plain', { 'aria-label': 'Chart' }, charts.map(x => h('option', { selected: x.name === state.pick }, x.name)));
-    pick.onchange = () => { state.pick = pick.value; draw(); };
-    const host = h('div.chart');
-    clear(wrap, h('div.bar-top', {}, h('span.dot', { class: `area-${area}` }), h('strong', {}, 'Chart'), pick, h('span', { style: { flex: 1 } }),
-      toggle(['Hide', 'Side', 'Below'], state.place, p => { state.place = p; wrap.closest('.visuals')?.classList.toggle('below', p === 'Below'); wrap.closest('.visuals')?.classList.toggle('hidden', p === 'Hide'); draw(); }, { label: 'Where the chart sits' })),
-    state.place === 'Hide' ? null : host);
-    if (state.place === 'Hide') return;
+    if (state.place === 'Hide' || !host) return;
     const data = c.data(ctx);
+    chart?.dispose(); chart = null;
     if (data.needs) { clear(host, chartEmpty(ctx, data.needs)); host.style.height = 'auto'; return; }
+    host.style.height = '';
     if (!window.echarts) { clear(host, h('div.chart-empty', {}, 'The chart library did not load. Check the connection.')); return; }
-    chart?.dispose();
+    clear(host);
     chart = window.echarts.init(host, null, { renderer: 'svg' });
     chart.setOption(c.option(data, chartTheme(area)));
-    new ResizeObserver(() => chart?.resize()).observe(host);
   };
-  ctx.onRefresh(draw);
-  queueMicrotask(draw);
+  const build = () => {
+    const pick = h('select.plain', { 'aria-label': 'Chart', 'data-focus': `chart:${area}` }, charts.map(x => h('option', { selected: x.name === state.pick }, x.name)));
+    pick.onchange = () => { state.pick = pick.value; paint(); };
+    host = h('div.chart', { hidden: state.place === 'Hide' });
+    new ResizeObserver(() => chart?.resize()).observe(host);
+    // Hide, Side and Below only move the panel: no redraw.
+    clear(wrap, h('div.bar-top', {}, h('span.dot', { class: `area-${area}` }), h('strong', {}, 'Chart'), pick, h('span', { style: { flex: 1 } }),
+      toggle(['Hide', 'Side', 'Below'], state.place, p => { const was = state.place; state.place = p; place(); host.hidden = p === 'Hide'; if (was === 'Hide') paint(); else chart?.resize(); }, { label: 'Where the chart sits' })),
+    host);
+  };
+  ctx.onRefresh(() => keepPlace(() => { build(); paint(); }));
+  build();
+  queueMicrotask(paint); // the chart needs the panel on the page to measure
   return wrap;
 }
 export function chartTheme(area) {
