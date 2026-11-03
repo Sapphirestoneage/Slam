@@ -1,6 +1,7 @@
 // The shell (build phase 4): top bar, five tabs, sub-tabs, breadcrumb, Find, quick add, parking lot,
 // undo and redo, time toggle, client view, gear. Each screen shows its first state from Words and states.
 import { h, clear, icon } from './ui/dom.js';
+import { timerAfter } from './timer.js';
 import * as S from './ui/staples.js';
 import { Store, newHousehold, exportFile, importInto, backupDue, statusOf } from './records.js';
 import { localAdapter, memoryAdapter, listClients, loadClient, saveClient, createClient, removeClient, getPrefs, setPrefs, autosave } from './storage.js';
@@ -32,6 +33,10 @@ const app = {
     this.ctx.goTo = need => this.goToNeed(need);
     let mode = this.ctx.timeMode;
     this.ctx.onRefresh(() => {
+      // M10: onboarding timer marks, set once each. Not an undo step: it is about the session, not the money.
+      const m = this.ctx.metrics();
+      const t = timerAfter(this.store.doc, { metricShown: [m.netWorth, m.surplus, m.savingsRate, m.runwayMonths].some(x => x?.value != null) });
+      if (t) { this.store.doc.session ??= {}; this.store.doc.session.timer = t; }
       // A new time view redraws everything; screens without editable lists redraw on any change.
       if (mode !== this.ctx.timeMode || !$('main').querySelector('.list-wrap')) { mode = this.ctx.timeMode; this.renderSoon(); }
       else this.chrome();

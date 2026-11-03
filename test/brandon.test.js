@@ -246,3 +246,16 @@ test('M9: community lines are added once with blank amounts; maaser on gross or 
   assert.equal(maaserOf({ basis: 'Gross', pct: 0.2, grossAnnual: 60000 }).value, 1000);
   assert.equal(maaserOf({ basis: 'Gross', grossAnnual: null }).value, null);
 });
+
+// ---------- Missed ideas M10: onboarding timer ----------
+import { timerAfter } from '../js/timer.js';
+test('M10: each mark is set once, with seconds from the first Profile answer', () => {
+  const s = fresh();
+  assert.equal(timerAfter(s.doc, { now: new Date('2026-11-03T10:00:00Z') }), null);
+  s.setDoc('profile', { firstName: 'A' });
+  s.doc.session.timer = timerAfter(s.doc, { now: new Date('2026-11-03T10:00:00Z') });
+  s.doc.session.timer = timerAfter(s.doc, { metricShown: true, now: new Date('2026-11-03T10:01:30Z') });
+  assert.equal(s.doc.session.timer.seconds.firstMetric, 90);
+  assert.equal(timerAfter(s.doc, { metricShown: true, now: new Date('2026-11-03T10:05:00Z') }), null); // set once
+  assert.equal(s.doc.session.timer.coreDone, undefined);
+});

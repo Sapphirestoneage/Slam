@@ -5,6 +5,7 @@ import * as S from './staples.js';
 import { homeworkItems } from './report-ui.js';
 import { homeworkText } from '../homework.js';
 import { communityLinesToAdd } from '../community.js';
+import { TIMER_MARKS, duration } from '../timer.js';
 import { keyNumbers } from '../math/metrics.js';
 import { statusOf } from '../records.js';
 import { money, pct } from '../format.js';
@@ -61,6 +62,14 @@ export function listsScreen(app, ctx) {
       : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, "Tap I'll find it later on any number and it lands here, with where to look.")))))];
 }
 
+// M10: how long onboarding took, for usability testing. Also in the export (session.timer).
+function timerCard(ctx) {
+  const t = ctx.store.doc.session?.timer || {};
+  return h('div.card', {}, h('h3', {}, 'Onboarding timer'), h('p.muted.small', {}, 'For testing. Times are from the first Profile answer; the export includes them.'),
+    h('table.rows.mini', {}, h('tbody', {}, TIMER_MARKS.map(([k, label]) => h('tr', {}, h('td', {}, label),
+      h('td', {}, t[k] ? new Date(t[k]).toLocaleString() : h('span.muted', {}, 'Not yet')),
+      h('td.num', {}, k === 'profileStarted' ? '' : duration(t.seconds?.[k])))))));
+}
 function setCommunity(ctx, on) {
   ctx.store.transaction('Community presets', () => {
     ctx.store.setIn('session', ['community'], on, 'Community presets');
@@ -109,6 +118,7 @@ export function sessionScreen(app, ctx, { fastTrackGap }) {
         S.pctInput(s.maaser?.pct ?? null, v => ctx.store.setIn('session', ['maaser'], { ...(s.maaser || {}), pct: v }, 'Maaser'), { hint: 'Blank: 10' }),
         h('span.muted.small', {}, 'Shown on the Budget')) : null)),
     fastTrackGap(ctx),
+    timerCard(ctx),
     h('div.card', {}, h('h3', {}, 'Look'), h('div.stack', { style: { gap: '12px' } },
       h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Theme'), S.toggle(['System', 'Light', 'Dark'], app.prefs.theme === 'light' ? 'Light' : app.prefs.theme === 'dark' ? 'Dark' : 'System', v => app.setPref('theme', v.toLowerCase()), { label: 'Theme' })),
       h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Density'), S.toggle(['Comfortable', 'Compact'], app.prefs.density === 'compact' ? 'Compact' : 'Comfortable', v => app.setPref('density', v.toLowerCase()), { label: 'Density' })),
