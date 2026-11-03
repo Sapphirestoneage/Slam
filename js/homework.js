@@ -29,7 +29,9 @@ const WHERE = {
   beneficiary: 'The account\'s settings: beneficiaries', holdings: 'The account\'s holdings or positions page',
   allocation: 'The account\'s holdings page', hsaInvested: 'HSA site: invested vs cash', hsaCash: 'HSA site: invested vs cash',
   hsaManagedFee: 'HSA site: fee schedule', hsaSelfFee: 'HSA site: fee schedule', matchTiers: 'Benefits portal or plan summary',
-  vestingSchedule: 'Benefits portal: vesting schedule', value: 'A recent estimate (Kelley Blue Book, Zillow)',
+  vestingSchedule: 'Benefits portal: vesting schedule',
+  statementDay: 'Card app or statement: closing date', autopay: 'Card app: payments or autopay settings', rewards: 'Card app or the back of the card',
+  creditScore: 'Credit Karma, or your bank or card app (free)', value: 'A recent estimate (Kelley Blue Book, Zillow)',
 };
 const LABEL = {
   whyNow: 'What prompted this call', worry: 'Biggest worry', goalWords: 'Goal in their words', firstName: 'First name', lastName: 'Last name',
@@ -43,6 +45,7 @@ const LABEL = {
   costBasis: 'cost basis', rothBasis: 'Roth contributions so far', contributionsToDate: 'contributions to date', dividends: 'dividends', realized: 'realized gains',
   fees: 'expense ratio', accountFee: 'account fee', beneficiary: 'beneficiary', holdings: 'holdings', allocation: 'allocation', hsaInvested: 'invested amount',
   hsaCash: 'cash amount', hsaManagedFee: 'managed fee', hsaSelfFee: 'self-directed fee', matchTiers: 'match tiers', vestingSchedule: 'vesting schedule', value: 'value',
+  statementDay: 'statement closing day', autopay: 'autopay', rewards: 'rewards type', creditScore: 'Credit score',
 };
 export const whereToFind = (field, type = null) => (type === 'HSA' && field === 'contribution' ? 'Pay stub: HSA deduction' : WHERE[field] ?? null);
 export const fieldLabel = field => LABEL[field] ?? field;

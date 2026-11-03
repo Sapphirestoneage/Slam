@@ -261,13 +261,30 @@ export function checkbox(label, checked, onChange, { key = null } = {}) {
 }
 // A labelled box: the label above, the input under it (affordance rule 3).
 // later: { on, set } adds "I'll find it later" under the box (Brandon B1.2): it parks the field on the Homework list.
-export const labelled = (label, input, { note = null, later = null } = {}) => h(`div.stack${later?.on ? '.parked' : ''}`, {}, h('span.label', {}, label), input,
-  note ? h('span.muted.small', {}, note) : null, later ? laterButton(later, label) : null);
-export function laterButton({ on, set }, label = 'this') {
-  return on
-    ? h('span.row-line.later-on', { style: { gap: '6px', flexWrap: 'nowrap' } }, h('span.tag.plain', {}, 'On your homework'),
-      h('button.btn.small.later-btn', { type: 'button', 'aria-label': `Take ${label} off the homework list`, onclick: () => set(false) }, 'Take off'))
-    : h('button.btn.small.later-btn', { type: 'button', 'aria-label': `I'll find ${label} later`, onclick: () => { set(true); toast(`${label} is on your homework list, with where to find it.`); } }, "I'll find it later");
+// none: { on, set } adds "I don't have this" (counts as answered, as Not for me).
+export const labelled = (label, input, { note = null, later = null, none = null } = {}) => h(`div.stack${later?.on || none?.on ? '.parked' : ''}`, {}, h('span.label', {}, label), input,
+  note ? h('span.muted.small', {}, note) : null, later || none ? parkButtons({ later, none }, label) : null);
+export function parkButtons({ later = null, none = null }, label = 'this') {
+  const undo = (text, opt, what) => h('span.row-line.later-on', { style: { gap: '6px', flexWrap: 'nowrap' } }, h('span.tag.plain', {}, text),
+    h('button.btn.small.later-btn', { type: 'button', 'aria-label': `${what}: ${label}`, onclick: () => opt.set(false) }, 'Undo'));
+  if (later?.on) return undo('On your homework', later, 'Take off the homework list');
+  if (none?.on) return undo("Don't have this", none, 'Undo');
+  return h('span.row-line', { style: { gap: '4px', flexWrap: 'wrap' } },
+    none ? h('button.btn.small.later-btn', { type: 'button', 'aria-label': `I don't have ${label}`, onclick: () => none.set(true) }, "I don't have this") : null,
+    later ? h('button.btn.small.later-btn', { type: 'button', 'aria-label': `I'll find ${label} later`, onclick: () => { later.set(true); toast(`${label} is on your homework list, with where to find it.`); } }, "I'll find it later") : null);
+}
+export const laterButton = (later, label) => parkButtons({ later }, label);
+// Both choices for one field of a row: its own status (Will email = later, Not for me = don't have).
+export function park(ctx, r, field) {
+  const st = r.fieldStatus?.[field];
+  const set = s => on => ctx.store.setFieldStatus(r.id, field, on ? s : null);
+  return { later: { on: st === 'Will email', set: set('Will email') }, none: { on: st === 'Not for me', set: set('Not for me') } };
+}
+// The same for a Profile-level answer (doc.profile.later and doc.profile.none).
+export function parkProfile(store, key) {
+  const p = store.doc.profile;
+  const flip = (bag, on) => store.setDoc('profile', { [bag]: { ...(p[bag] || {}), [key]: on || undefined } });
+  return { later: { on: !!p.later?.[key], set: on => flip('later', on) }, none: { on: !!p.none?.[key], set: on => flip('none', on) } };
 }
 // More / Less: Secondary and Tertiary fields stay behind a caret, closed until asked (R023). Remembers which are open.
 const OPEN = new Set();

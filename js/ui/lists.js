@@ -1,7 +1,8 @@
 // List setups built from the staples: debts and spending lines. Each list is a view of the one record type.
 import { h, icon } from './dom.js';
 import { addPresets } from '../presets.js';
-import { moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, hoursChip } from './staples.js';
+import { moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, hoursChip, park, parkProfile, metricCard } from './staples.js';
+import { pct } from '../format.js';
 import { feeApr } from '../math/debt.js';
 import { applies } from '../gates.js';
 import { payoffPlan, debtToIncome, utilization } from '../math/debt.js';
@@ -268,7 +269,12 @@ function debtSecondary(ctx, r, up) {
       labelled('0% promo: rate and end', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, pctInput(v.promoApr, x => up({ promoApr: x }), { hint: 'e.g. 0' }),
         textInput(v.promoEnd, x => up({ promoEnd: x }), { hint: 'YYYY-MM', width: 110 })), { note: 'Warns 60 days before it ends' }),
       labelled('Due day', textInput(v.dueDay, x => up({ dueDay: x }), { hint: 'Add day', width: 90 }), { note: 'Shows on the cash flow calendar' }),
+      labelled('Statement closes on day', dayBox(v.statementDay, x => up({ statementDay: x })), { note: 'The balance reported to the bureaus', ...park(ctx, r, 'statementDay') }),
       labelled('Credit limit', moneyInput(v.limit, x => up({ limit: x }), { hint: 'Add limit' }), { note: 'For utilization' }),
+      labelled('Utilization', v.limit && v.balance != null ? h('span.computed', { title: 'Balance divided by limit' }, pct(v.balance / v.limit)) : h('span.muted', {}, 'Needs balance and limit'),
+        { note: v.limit && v.balance / v.limit > 0.3 ? 'Over 30% can lower your score' : null }),
+      labelled('Autopay', toggle(['On', 'Off'], v.autopay ?? null, x => up({ autopay: x }), { label: 'Autopay', clearable: true }), { note: v.autopay === 'Off' ? 'Turn it on for at least the minimum: one late payment hurts' : null, ...park(ctx, r, 'autopay') }),
+      labelled('Rewards', select(['Cash back', 'Points', 'Miles', 'None'], v.rewards ?? null, x => up({ rewards: x }), { label: 'Rewards type', width: 140 }), park(ctx, r, 'rewards')),
       labelled('Personal or business', toggle(['Personal', 'Business'], v.use ?? null, x => up({ use: x }), { label: 'Personal or business' })),
       billsOnCard(ctx, r),
       stress(r, up)];
@@ -309,6 +315,27 @@ function debtSecondary(ctx, r, up) {
   };
   return [unique[r.type]?.() ?? null, stress(r, up)];
 }
+const dayBox = (value, onChange) => textInput(value == null ? null : String(value), x => { const n = Number(x); onChange(Number.isInteger(n) && n >= 1 && n <= 31 ? n : null); }, { hint: 'Day, 1 to 31', width: 110 });
+
+// Credit cards across the board (M1.2) and the credit score (M1.3), under the Debt list.
+export function creditCard(ctx) {
+  const cards = ctx.visible(r => r.kind === 'debt' && r.type === 'Credit card');
+  const util = utilization(cards.map(r => ({ balance: r.values.balance, limit: r.values.limit })));
+  const p = ctx.store.doc.profile;
+  const c = p.credit || {};
+  const set = patch => ctx.store.setDoc('profile', { credit: { ...c, ...patch } });
+  const d = h('input', { type: 'date', value: c.checked || '', 'aria-label': 'Date checked' });
+  d.onchange = () => set({ checked: d.value || null });
+  const per = cards.filter(r => r.values.limit && r.values.balance != null);
+  return h('section.section.area-debt', {}, h('div.section-title', {}, h('h2', {}, 'Credit')),
+    h('div.card', {}, h('div.form-grid', {},
+      cards.length ? metricCard(ctx, 'Card utilization, all cards', util.hidden ? needs('M35', ['credit limits'], { unit: 'pct' }) : util,
+        { lowerIsGood: true, note: per.length > 1 ? per.map(r => `${r.name || 'Card'} ${pct(r.values.balance / r.values.limit)}`).join(' · ') : 'Under 30% helps your score; under 10% is best' }) : null,
+      labelled('Credit score', textInput(c.score == null ? null : String(c.score), x => { const n = Number(x); set({ score: Number.isInteger(n) && n >= 300 && n <= 900 ? n : null }); }, { hint: '300 to 850', width: 110 }), parkProfile(ctx.store, 'creditScore')),
+      labelled('Where you checked it', select(['Credit Karma', 'Bank or card app', 'Experian', 'Equifax', 'TransUnion', 'myFICO', 'Other'], c.source ?? null, x => set({ source: x }), { label: 'Score source', width: 170 })),
+      labelled('Date checked', h(`label.field${c.checked ? '.filled' : ''}`, { style: { width: '160px' } }, d)))));
+}
+
 // R103: the card lists the bills charged to it. R104: paid in full they are spending; carried, they add to the balance.
 function billsOnCard(ctx, card) {
   const bills = ctx.visible(x => x.kind === 'bill' && x.paidWith === card.id && x.status !== 'Not for me');
