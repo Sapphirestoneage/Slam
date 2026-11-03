@@ -7,6 +7,7 @@ import { spendingList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.j
 import { ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
   closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS } from '../month.js';
 import { gutAccuracy, DRAFTT } from '../math/spending.js';
+import { statements } from '../math/statements.js';
 import { money, pct } from '../format.js';
 
 // Screen state that is about looking, not the client's numbers (kept for this browser tab).
@@ -455,7 +456,14 @@ function closeRow(app, ctx, v) {
   const filled = withEst.filter(r => r.actual != null).length;
   const open = UI.review === v.ym;
   const doClose = e => {
-    const go = () => { closeMonth(ctx.store, ctx.ref, v.ym, { now: ctx.now() }); app.snapshot(`Month-end ${monthName(v.ym)}`); /* M6.1 */ S.toast(`${monthName(v.ym)} closed and a snapshot saved. Variable misses carried to next month.`, { undo: () => ctx.store.undo() }); };
+    // One click: close, the three statements for the month (kept with it) and a snapshot (Phase 3.5).
+    const go = () => {
+      closeMonth(ctx.store, ctx.ref, v.ym, { now: ctx.now() });
+      const st = statements(ctx.store.doc, ctx.ref, { kind: 'month', ym: v.ym }, { now: ctx.now() });
+      ctx.store.setIn('spending', ['months', v.ym, 'statements'], { netWorth: st.netWorth.netWorth, liquid: st.netWorth.liquid, surplus: st.income.surplus, startCash: st.cash.start, endCash: st.cash.end, unexplainedCash: st.tie.unexplainedCash }, 'Statements');
+      app.snapshot(`Month-end ${monthName(v.ym)}`); /* M6.1 */
+      S.toast(`${monthName(v.ym)} closed: statements made and a snapshot saved.`, { undo: () => ctx.store.undo(), action: { label: 'See statements', run: () => app.go('#/report/statements') } });
+    };
     if (v.gaps.length) S.confirmBox(e.currentTarget, { text: `${v.gaps.length} ${v.gaps.length === 1 ? 'line has' : 'lines have'} no actual. Close anyway? ${v.gaps.length === 1 ? 'It counts' : 'They count'} as $0.`, yes: 'Close month', no: 'Not yet', onYes: go });
     else go();
   };

@@ -9,6 +9,7 @@ import { budgetScreen, calendarScreen, closeScreen } from './ui/spending-ui.js';
 import { prepScreen, liveScreen, wrapScreen } from './ui/home-ui.js';
 import { listsScreen, sessionScreen, discoveryScreen } from './ui/tools-ui.js';
 import { overviewScreen, onePagerScreen, historyScreen } from './ui/report-ui.js';
+import { statementsScreen } from './ui/statements-ui.js';
 import { goalsScreen, timelineScreen, payoffScreen, nextYearScreen, scenariosScreen } from './ui/plan-ui.js';
 import { AREAS } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
@@ -180,6 +181,7 @@ export const SCREENS = {
   'plan/scenarios': () => scenariosScreen(),
 
   'report/overview': (app, ctx) => (app.hasClient ? overviewScreen(app, ctx) : [head('Overview'), noClient(app)]),
+  'report/statements': (app, ctx) => (app.hasClient ? statementsScreen(app, ctx) : [head('Statements'), noClient(app)]),
   'report/one-pager': (app, ctx) => (app.hasClient ? onePagerScreen(app, ctx) : [head('One-pager'), noClient(app)]),
   'report/history': (app, ctx) => (app.hasClient ? historyScreen(app, ctx) : [head('History'), noClient(app)]),
 

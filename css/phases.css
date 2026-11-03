@@ -218,3 +218,30 @@ table.rows tr.row-note td { height: auto; padding: 6px var(--s3) 10px; backgroun
 .close-steps button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .close-nav { margin-top: var(--s3); }
 .dup-q { font-weight: 700; }
+
+/* Phase 3.5: Report › Statements. */
+.statement-bar { margin-bottom: var(--s3); }
+.statement { margin-bottom: var(--s3); }
+.statement h2 { margin: 0 0 var(--s2); }
+.st-head, .st-line, .st-group { display: grid; grid-template-columns: minmax(0, 1fr) 140px 140px 120px; gap: var(--s2); align-items: center; min-height: 36px; border-top: 1px solid var(--border-row); }
+.st-head { border-top: 0; font-size: .8125rem; font-weight: 700; color: var(--text-2); min-height: 28px; }
+.st-line.total, .st-group.total { font-weight: 700; border-top: 2px solid var(--border-row); }
+.st-group > .more-wrap { grid-column: 1; }
+.st-group .more-body { grid-column: 1 / -1; }
+.st-records { display: grid; gap: 4px; padding: 4px 0 8px var(--s3); }
+.st-record { display: grid; grid-template-columns: minmax(0, 1fr) 60px 140px; gap: var(--s2); font-size: .875rem; }
+.tie-out { margin-bottom: var(--s4); display: flex; flex-direction: column; gap: 6px; }
+.tie-out h2 { margin: 0; }
+.tie-line { display: flex; align-items: center; gap: var(--s3); min-height: 32px; }
+.tie-line > span:first-child { flex: 1; }
+ul.find-days { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+@media (max-width: 760px) {
+  .st-head, .st-line, .st-group { grid-template-columns: minmax(0, 1fr) 96px 0 84px; }
+  .st-head > :nth-child(3), .st-line > :nth-child(3), .st-group > :nth-child(3) { visibility: hidden; }
+}
+@media print {
+  body.print-statements .shell-page > :not(.statement):not(.tie-out), body.print-statements .report-this { display: none !important; }
+  body.print-statements .statement { break-inside: avoid; margin-bottom: 8px; padding: 8px; }
+}
+.st-group { align-items: start; }
+.st-group > .num { line-height: 36px; }
