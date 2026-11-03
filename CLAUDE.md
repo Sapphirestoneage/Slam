@@ -18,7 +18,8 @@
 
 ## The spec
 
-- Every new feature also adds or updates its rows in the spec (`spec/SLAM Build Spec.xlsx`, then `python3 tools/xlsx_to_csv.py` to re-export `spec/csv`) and clears its lines from `SPEC-DRIFT.md` (written by `node --test`).
+- Every row on the spec's Fields tab names exactly what it is in code in its SLAM id column (a field like `debt.balance`, `type:debt:Credit card`, `line:Rent`, `math:M14`, or `notyet: why`), and every field is on a spec row. Drift fails the run.
+- A new field: `node tools/registry_fields.mjs > /tmp/fields.json`, then `python3 tools/spec_link.py /tmp/fields.json` adds its spec row; then `python3 tools/xlsx_to_csv.py`. `SPEC-DRIFT.md` (written by `node --test`) lists any drift and the spec rows not built yet.
 
 ## Data and questions
 

@@ -262,3 +262,10 @@ Sessions numbered new questions at the same time: Phase 3.5's are 92 to 102, Ope
 - 106 Statuses in the sheet: keep all six.
 - 116 Start a new client from a file: OK as built.
 - Still open: 105 (which From the app rows could become formulas), 109 (tabs for the fields that stay in the app), 111 (map the spec fields by ID), 112 (the new-row rule), 113 (conflicts per field), 115 (LibreOffice on GitHub).
+- 111 Spec drift: no drift allowed, linked row by row. The spec's Fields tab has a SLAM id column naming exactly what each row is in code; 123 rows were added for fields the spec did not have (F266 to F388); a row that names nothing real or a field with no row fails the run. 24 rows say not built yet, with why (SPEC-DRIFT.md).
+- 112 New rows: a type when the tab has types; on Spending lines, the category (it decides the letter, Fixed or Variable and the date). Built.
+- 113 Conflicts: only the same number changed on both sides, shown as What's changed with a Yes or No. Built.
+- 114 Format version: stays as built (it moves with every new field; the coverage test says the line to add).
+- Rent and the profile: About you › Home and shared bills (who you live with, how many split, your share or the whole bill, which bills you split) feeds every Budget line. Built.
+
+117. **Spec rows not built yet.** 24 spec rows are named notyet in the SLAM id column: itemized deductions, Social Security, a real or nominal dollars switch, a part of a bill someone else covers, a reimbursed amount, a happiness rating per line, the 401(k) loan due-on-leaving note, a card library, a next check date, and one starter line each where the spec has several (kids, pets, car wash, money sent to family). Which do you want built, and which should come off the spec?

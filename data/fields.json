@@ -2648,5 +2648,1235 @@
   "livesOn": "Home / ⚙ Coach tools",
   "scope": "Now",
   "phase": "9-10"
+ },
+ {
+  "id": "F266",
+  "field": "Client name",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F267",
+  "field": "Worst case: all on me",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F268",
+  "field": "HSA-eligible plan",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F269",
+  "field": "FSA at work",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F270",
+  "field": "Variable income: business expenses a month",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F271",
+  "field": "Most spending goes on cards",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F272",
+  "field": "Paid hours a month",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F273",
+  "field": "Commute hours a month",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F274",
+  "field": "Getting-ready hours a month",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F275",
+  "field": "Work costs a month",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F276",
+  "field": "Giving first",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F277",
+  "field": "Giving as",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F278",
+  "field": "Giving %",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F279",
+  "field": "Giving % of",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F280",
+  "field": "Giving a month",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F281",
+  "field": "Keep a job after launch",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F282",
+  "field": "Launch move",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F283",
+  "field": "Launch month",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F284",
+  "field": "Employer benefits",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F285",
+  "field": "Life admin checklist",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F286",
+  "field": "Income gaps",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F287",
+  "field": "Backups of the backups",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F288",
+  "field": "Spending uses",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F289",
+  "field": "Budget view",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F290",
+  "field": "Cash layers kept",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F291",
+  "field": "Quiet Quitting FI opens the launch window",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F292",
+  "field": "Per",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F293",
+  "field": "Owner",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F294",
+  "field": "Typed from",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F295",
+  "field": "Paid with",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F296",
+  "field": "Linked to",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F297",
+  "field": "Paid in advance",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F298",
+  "field": "Stress (1 to 5)",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F299",
+  "field": "Institution",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F300",
+  "field": "Owner",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F301",
+  "field": "Typed from",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F302",
+  "field": "Paid with",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F303",
+  "field": "Linked to",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F304",
+  "field": "Paid in advance",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F305",
+  "field": "Name",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F306",
+  "field": "Gains sold this year",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F307",
+  "field": "Dividends this year",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F308",
+  "field": "Short-term gains",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F309",
+  "field": "Long-term gains",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F310",
+  "field": "Last 4 digits",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F311",
+  "field": "Auto-invest",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F312",
+  "field": "Reinvest dividends",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F313",
+  "field": "Individual or joint",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F314",
+  "field": "Cash here is on purpose",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F315",
+  "field": "HSA managed fee a year",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F316",
+  "field": "HSA self-directed fee a year",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F317",
+  "field": "HSA put in this year",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F318",
+  "field": "Tags",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F319",
+  "field": "Owner",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F320",
+  "field": "Stress (1 to 5)",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F321",
+  "field": "Typed from",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F322",
+  "field": "Paid with",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F323",
+  "field": "Linked to",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F324",
+  "field": "Paid in advance",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F325",
+  "field": "Copay: doctor",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F326",
+  "field": "Copay: specialist",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F327",
+  "field": "Copay: urgent care",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F328",
+  "field": "Short-term or long-term",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F329",
+  "field": "Pays this share of your pay",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F330",
+  "field": "Pays for how long",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F331",
+  "field": "Waiting period",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F332",
+  "field": "Planned change",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F333",
+  "field": "Not the same as a Budget line",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F334",
+  "field": "Same as a Budget line",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F335",
+  "field": "Owner",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F336",
+  "field": "Stress (1 to 5)",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F337",
+  "field": "Typed from",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F338",
+  "field": "Paid with",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F339",
+  "field": "Linked to",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F340",
+  "field": "Paid in advance",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F341",
+  "field": "Name",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F342",
+  "field": "Amount",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F343",
+  "field": "Category",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F344",
+  "field": "DRAFTT letter",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F345",
+  "field": "Save for it each month",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F346",
+  "field": "Sinking fund account",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F347",
+  "field": "Purpose tag",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F348",
+  "field": "Bedazzle (a joy line)",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F349",
+  "field": "Looking for savings",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F350",
+  "field": "Target or cap a month",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F351",
+  "field": "Tags",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F352",
+  "field": "Group",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F353",
+  "field": "Started from a guess",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F354",
+  "field": "From another row",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F355",
+  "field": "Not the same as a debt or premium",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F356",
+  "field": "Same as a debt or premium",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F357",
+  "field": "Maaser line",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F358",
+  "field": "Owner",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F359",
+  "field": "Stress (1 to 5)",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F360",
+  "field": "Typed from",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F361",
+  "field": "Paid with",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F362",
+  "field": "Linked to",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F363",
+  "field": "Paid in advance",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F364",
+  "field": "Name",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F365",
+  "field": "Amount",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F366",
+  "field": "Repeats",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F367",
+  "field": "Ends on",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F368",
+  "field": "Counts as",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F369",
+  "field": "Budget line",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F370",
+  "field": "Typed from",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F371",
+  "field": "Paid with",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F372",
+  "field": "Linked to",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F373",
+  "field": "Paid in advance",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F374",
+  "field": "Rent goes up by, a month",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F375",
+  "field": "Saved so far",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F376",
+  "field": "Save for it each month",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F377",
+  "field": "Sinking fund account",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F378",
+  "field": "Purpose tag",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F379",
+  "field": "For this coverage",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F380",
+  "field": "Typed from",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F381",
+  "field": "Paid with",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F382",
+  "field": "Linked to",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F383",
+  "field": "Paid in advance",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F384",
+  "field": "What is the gap",
+  "area": "Assets",
+  "group": "Income gaps",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F385",
+  "field": "Starts",
+  "area": "Assets",
+  "group": "Income gaps",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F386",
+  "field": "Months",
+  "area": "Assets",
+  "group": "Income gaps",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F387",
+  "field": "Backup",
+  "area": "Assets",
+  "group": "Backups",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F388",
+  "field": "Dollars",
+  "area": "Assets",
+  "group": "Backups",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
  }
 ]

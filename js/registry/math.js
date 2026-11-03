@@ -99,7 +99,7 @@ export const MATH = [
     sheet: 'IF(OR(Math_M13="",N(Math_M13)=0),"",(N(Math_M10)+N(Math_M11)+SUM(Income_state))/Math_M13)', label: 'Effective rate: all income tax over gross',
     app: c => { const rows = c.x.income.map(i => taxedPieces(i.r, c)).filter(Boolean); const g = sum(c.x.income, i => i.gross); return rows.length && g ? sum(rows, t => t.federal.value + t.fica.value + t.stateTax.state + t.stateTax.local) / g : null; },
     parts: [{ key: 'marginal', name: 'Marginal rate (the last dollar)', unit: 'pct', fromApp: 'the bracket of the last dollar plus FICA; on the Taxes tab of SLAM', app: c => (c.x.grossAnnual ? c.taxRates()?.marginal ?? null : null) }] },
-  { id: 'M15', name: 'Employer match ($ a year)', inputs: '401(k) %, match formula, gross', unit: 'money', fns: ['income.employerMatch'],
+  { id: 'M15', name: 'Employer match ($/yr)', inputs: '401(k) %, match formula, gross', unit: 'money', fns: ['income.employerMatch'],
     cols: [{ area: 'income', key: 'M15', label: 'Employer match a year (M15)', unit: 'money',
       f: `IF(OR({@M13}="",{matchPct}="",{matchCapPct}=""),"",MIN(N({@pct}),{matchCapPct})*{matchPct}*{@M13})` }],
     sheet: 'SUM(Income_M15)', label: 'Employer match a year (tiers set on the 401(k) under Assets stay in the app)',

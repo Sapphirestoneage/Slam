@@ -188,12 +188,10 @@ test('the export format version moves with the registries\' shape', () => {
   assert.equal(new Set(FORMATS.map(f => f.version)).size, FORMATS.length);
 });
 
-test('spec drift: SPEC-DRIFT.md is current (a warning, never a failure)', () => {
+test('no spec drift: every spec row names what it is in code, and every field is on a spec row (SPEC-DRIFT.md)', () => {
   const read = p => (existsSync(new URL(p, root)) ? readFileSync(new URL(p, root), 'utf8') : '');
-  const md = driftMarkdown(specDrift(read('spec/csv/Fields.csv'), read('spec/csv/Math.csv')));
+  const d = specDrift(read('spec/csv/Fields.csv'), read('spec/csv/Math.csv'), ref);
+  const md = driftMarkdown(d);
   if (read('SPEC-DRIFT.md') !== md) writeFileSync(new URL('SPEC-DRIFT.md', root), md);
-  const d = specDrift(read('spec/csv/Fields.csv'), read('spec/csv/Math.csv'));
-  const n = d.fields.codeOnly.length + d.fields.specNow.length + d.math.codeOnly.length + d.math.specOnly.length + d.math.renamed.length;
-  if (n) console.log(`Spec drift: ${n} lines in SPEC-DRIFT.md (in code but not in the spec, or the other way). See the file.`);
-  assert.ok(true);
+  assert.deepEqual(d.problems, [], `Spec drift. Fix each line: name the code on the spec row (SLAM id column on the Fields tab), or add the row with tools/spec_link.py, then python3 tools/xlsx_to_csv.py.\n${d.problems.join('\n')}`);
 });

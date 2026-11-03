@@ -50,6 +50,8 @@ The workbook is built only from the registries in `js/registry/`, so it stays co
 - A new formula in `js/math`: add its M entry to `js/registry/math.js` with a sheet formula (named
   ranges only) or `fromApp` and the reason. The test fails for any js/math export or spec M number that is
   not there, and the workbook build fails for a formula that names a range that does not exist.
+- The spec and the code are linked row by row (the SLAM id column on the spec's Fields tab): a spec row that names
+  nothing real, or a field with no spec row, fails the run (`SPEC-DRIFT.md` says which).
 - A new rate, limit or rule: `data/reference-2026.json` or `RULES` in `js/registry/assumptions.js`, with
   its source and date. The math reads `RULES`, so the app and the sheet use the same number.
 

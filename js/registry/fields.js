@@ -7,7 +7,8 @@
 // A field: { key, label, type, sheet }. type is money, pct (stored as a decimal, 7% = 0.07), date (YYYY-MM-DD),
 // month (YYYY-MM), day (1 to 31), number, text, choice (with options), yesno (true or false) or list (several values,
 // shown comma separated). sheet: true for a column on the area's tab, or { skip: 'why' } when the field stays in the
-// app. coach: true marks coach-only notes, left out of the client view export.
+// app. coach: true marks coach-only notes, left out of the client view export. unused: true marks a shared field a
+// record of this area never has (a debt has no Amount), so the spec needs no row for it.
 //
 // where: 'top' for the record's own name, amount and per; 'values' (the default) for record.values; paths inside
 // doc parts use dots (variable.lowest is doc.profile.variable.lowest).
@@ -170,7 +171,7 @@ export const AREAS = [
       f('taxPlan', 'Payment plan in place', 'yesno'), f('guaranteed', 'Personally guaranteed', 'yesno'),
       f('institution', 'Institution'), f('opened', 'Opened', 'month'),
       OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(),
-    ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, sheet: { skip: 'a debt uses Balance and Payment' } } : x)),
+    ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'a debt uses Balance and Payment' } } : x)),
   },
   {
     id: 'assets', prefix: 'Assets', tab: 'Assets', source: 'records', kinds: { account: 'Account', asset: 'Home or car' },
@@ -225,7 +226,7 @@ export const AREAS = [
       f('matchTiers', 'Match tiers', 'text', { kinds: ['account'], sheet: { skip: 'a table of match tiers on the 401(k); the first tier is on Income as match % and up to %' } }),
       f('rothLog', 'Roth IRA log', 'text', { kinds: ['account'], sheet: { skip: 'a dated list of Roth IRA contributions; edit it in SLAM' } }),
       OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(),
-    ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, sheet: { skip: 'an account uses Balance, a thing you own uses Value' } } : x)),
+    ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'an account uses Balance, a thing you own uses Value' } } : x)),
   },
   {
     id: 'protection', prefix: 'Protection', tab: 'Protection', source: 'records', kinds: { coverage: 'Coverage' },
@@ -309,7 +310,7 @@ export const AREAS = [
       f('category', 'Counts as', 'text', { kinds: ['entry'] }),
       f('lineId', 'Budget line', 'text', { kinds: ['entry'], sheet: { skip: 'points at a Budget line by its id; pick it in SLAM' } }),
       NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS,
-    ].map(x => (['per', 'owner', 'stress'].includes(x.key) ? { ...x, sheet: { skip: 'not used on calendar entries' } } : x)),
+    ].map(x => (['per', 'owner', 'stress'].includes(x.key) ? { ...x, unused: true, sheet: { skip: 'not used on calendar entries' } } : x)),
   },
   {
     id: 'goals', prefix: 'Goals', tab: 'Goals and events', source: 'records', kinds: { milestone: 'Milestone', event: 'Event' },
@@ -328,7 +329,7 @@ export const AREAS = [
       f('fundTag', 'Purpose tag', 'text', { kinds: ['event'] }),
       f('coverageId', 'For this coverage', 'text', { kinds: ['event'], sheet: { skip: 'points at a Protection row by its id; set by Add the usual dates' } }),
       NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS,
-    ].map(x => (['per', 'owner', 'stress'].includes(x.key) ? { ...x, sheet: { skip: 'not used on goals and events' } } : x)),
+    ].map(x => (['per', 'owner', 'stress'].includes(x.key) ? { ...x, unused: true, sheet: { skip: 'not used on goals and events' } } : x)),
   },
   {
     id: 'gaps', prefix: 'Gaps', tab: 'Income gaps', source: 'list', part: 'profile', path: 'incomeGaps',
@@ -375,6 +376,8 @@ export const sheetFields = (area, { coach = false } = {}) => area.fields.filter(
 export const areaOf = id => AREAS.find(a => a.id === id);
 
 // Every field's id (area.key, with its doc part when it is not the area's own) and area, set once here.
+// The shared fields (Name, Notes, Stress ...) are one object in the code above: each area gets its own copy first.
+for (const a of AREAS) a.fields = a.fields.map(f => ({ ...f }));
 for (const a of AREAS) for (const f of a.fields) { f.area = a.id; f.id = `${a.id}.${f.part && f.part !== (a.part ?? 'profile') ? `${f.part}.` : ''}${f.key}`; }
 
 // What a field must say to be in the registry. Returns one plain sentence per problem (the coverage test shows them).

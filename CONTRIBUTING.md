@@ -22,10 +22,11 @@ with the reason. Every formula in `js/math` maps to a row on the spec's Math tab
 workbook's Math tab: its entry in `js/registry/math.js` has a sheet formula, or `fromApp` with a one-line reason.
 Every rate, limit and rule is in `js/registry/assumptions.js` with its source and date.
 
-`test/coverage.test.js` fails the run when any of this is missing, and says what to add. It also writes
-`SPEC-DRIFT.md`, the list of what is in code but not in the spec and the other way round (a warning, never a
-failure). When you add a feature, add or update its rows in the spec, re-export the CSVs with
-`python3 tools/xlsx_to_csv.py`, and clear its lines from `SPEC-DRIFT.md`.
+`test/coverage.test.js` fails the run when any of this is missing, and says what to add. The spec is linked to the
+code row by row: each row on the spec's Fields tab names what it is in code in its SLAM id column, and every field
+is on a spec row, so nothing drifts; the run fails if anything does, and `SPEC-DRIFT.md` says what. When you add a
+field, `node tools/registry_fields.mjs > /tmp/fields.json` and `python3 tools/spec_link.py /tmp/fields.json` add its
+spec row; re-export the CSVs with `python3 tools/xlsx_to_csv.py`.
 
 ## Run the tests
 
