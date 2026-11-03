@@ -1,0 +1,15 @@
+# Runs the tests on every push and pull request, so a missed step shows as a red X on GitHub.
+name: test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install ExcelJS for the spreadsheet tests (no build step)
+        run: npm install --no-save --no-audit --no-fund exceljs@4.4.0
+      - name: Test
+        run: node --test

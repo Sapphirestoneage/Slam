@@ -143,3 +143,57 @@ test('every Reference data value is an assumption, a table, or a listed word lis
   for (const t of TABLES) assert.ok(t.rows(ref).length && t.columns.length && t.date, `${t.id}: rows, columns and a date`);
   for (const [k, v] of Object.entries(RULES)) assert.ok(ASSUMPTIONS.some(a => a.id === `rules.${k}`), `RULES.${k} (${v}) needs an assumption entry`);
 });
+
+// ---------- The built workbook, the round trip, the format version, and the spec drift report ----------
+import { writeFileSync, existsSync } from 'node:fs';
+import { householdFromInputs } from '../js/demo.js';
+import { buildWorkbook, formulaCols, DATA_TAB } from '../js/sheet/workbook.js';
+import { rowsOf } from '../js/registry/math.js';
+import { REPORTS } from '../js/registry/reports.js';
+import { compare, linesOf, gridFromPlan } from '../js/import-sheet.js';
+import { shapeOf, FORMATS } from '../js/sheet/format.js';
+import { specDrift, driftMarkdown } from '../js/registry/drift.js';
+
+const NOW = new Date('2026-11-03T12:00:00Z');
+const demoDoc = () => householdFromInputs(JSON.parse(readFileSync(new URL('fixtures/demo.json', root))).inputs, { now: NOW.toISOString() });
+
+test('the Demo client\'s workbook has every tab, column and row the registries call for', () => {
+  const plan = buildWorkbook(demoDoc(), ref, { now: NOW });
+  const tabs = Object.fromEntries(plan.sheets.map(s => [s.name, s]));
+  const want = ['Start here', 'Assumptions', ...AREAS.map(a => a.tab), 'Math', ...REPORTS.map(r => r.tab), DATA_TAB];
+  assert.deepEqual(plan.sheets.map(s => s.name), want, 'the tabs, in order');
+  const missing = [];
+  for (const a of AREAS) {
+    const heads = tabs[a.tab].rows[0].map(c => c.v);
+    for (const f of sheetFields(a)) if (!heads.includes(f.label)) missing.push(`${a.tab}: column ${f.label}`);
+    for (const c of formulaCols().filter(x => x.area === a.id)) if (!heads.includes(c.label)) missing.push(`${a.tab}: formula column ${c.label}`);
+  }
+  const ids = tabs.Math.rows.map(r => r?.[0]?.v);
+  for (const e of MATH) for (const row of rowsOf(e)) { const id = row.key ? `${e.id} · ${row.key}` : e.id; if (!ids.includes(id)) missing.push(`Math: row ${id}`); }
+  const labels = tabs.Assumptions.rows.map(r => r?.[0]?.v);
+  for (const a of ASSUMPTIONS) if (!labels.includes(a.label)) missing.push(`Assumptions: ${a.label}`);
+  assert.deepEqual(missing, []);
+});
+
+test('a round trip (export, then import with no edits) shows no change', () => {
+  const doc = demoDoc();
+  const res = compare(gridFromPlan(buildWorkbook(doc, ref, { now: NOW })), doc);
+  assert.deepEqual([linesOf(res).map(l => `${l.tab} ${l.name} ${l.label}`), res.unknown.length, res.typedOver.length, res.bad.length], [[], 0, 0, 0]);
+});
+
+test('the export format version moves with the registries\' shape', () => {
+  const shape = shapeOf();
+  const last = FORMATS.at(-1);
+  assert.equal(shape, last.shape, `The registries changed shape (a field, formula, column or tab was added, removed or renamed). Add this line to FORMATS in js/sheet/format.js:\n  { version: ${last.version + 1}, shape: '${shape}' },`);
+  assert.equal(new Set(FORMATS.map(f => f.version)).size, FORMATS.length);
+});
+
+test('spec drift: SPEC-DRIFT.md is current (a warning, never a failure)', () => {
+  const read = p => (existsSync(new URL(p, root)) ? readFileSync(new URL(p, root), 'utf8') : '');
+  const md = driftMarkdown(specDrift(read('spec/csv/Fields.csv'), read('spec/csv/Math.csv')));
+  if (read('SPEC-DRIFT.md') !== md) writeFileSync(new URL('SPEC-DRIFT.md', root), md);
+  const d = specDrift(read('spec/csv/Fields.csv'), read('spec/csv/Math.csv'));
+  const n = d.fields.codeOnly.length + d.fields.specNow.length + d.math.codeOnly.length + d.math.specOnly.length + d.math.renamed.length;
+  if (n) console.log(`Spec drift: ${n} lines in SPEC-DRIFT.md (in code but not in the spec, or the other way). See the file.`);
+  assert.ok(true);
+});
