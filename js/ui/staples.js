@@ -557,7 +557,7 @@ export function recordList(ctx, cfg) {
     const selectBtn = h('button.btn.small.select-btn', { type: 'button', 'aria-pressed': String(state.selecting), 'data-focus': 'select-mode', onclick: () => setSelecting(!state.selecting) },
       icon('check'), h('span', {}, state.selecting ? 'Done selecting' : 'Select'));
     const head = h('div.section-title', {}, h('h2', {}, cfg.title), h('span.spacer'), cfg.headerExtra?.(ctx) ?? null, recs.length ? selectBtn : null,
-      recs.length ? iconButton('reset', `Clear all ${cfg.thing.plural}`, e => confirmBox(e.currentTarget, {
+      recs.length ? iconButton('eraser', `Clear all ${cfg.thing.plural}`, e => confirmBox(e.currentTarget, {
         text: `Clear all ${recs.length} ${recs.length === 1 ? cfg.thing.one : cfg.thing.plural}? You can undo this.`,
         yes: `Clear ${cfg.thing.plural}`, no: 'Keep them', onYes: () => { ctx.store.resetSection(cfg.filter); toast('Cleared.', { undo: () => ctx.store.undo() }); } })) : null);
     const picker = typeof cfg.picker === 'function' ? cfg.picker(ctx) : cfg.picker;
@@ -644,8 +644,8 @@ function bulkBar(ctx, sel, a) {
     ? h('div.stack', {}, h('h3', {}, 'Paid with'), cards.map(c => h('button.btn', { type: 'button', onclick: () => { closePop(); a.onLink(c.id); } }, c.name || 'Credit card')))
     : cardSearch(cards, null, id => { closePop(); a.onLink(id); }));
   return h('div.bulk-bar', {}, h('span.count', {}, `${sel.length} selected`),
-    iconButton('copy', 'Duplicate', a.onDuplicate), iconButton('reset', 'Reset', a.onReset), iconButton('trash', 'Delete', a.onDelete),
-    statusBtn, linkBtn, h('span', { style: { flex: 1 } }), iconButton('x', 'Clear selection', a.onClear));
+    statusBtn, linkBtn, iconButton('copy', 'Duplicate', a.onDuplicate), iconButton('reset', 'Reset', a.onReset),
+    h('span', { style: { flex: 1 } }), iconButton('trash', 'Delete', a.onDelete), iconButton('x', 'Clear selection', a.onClear)); // Reset never sits next to Delete
 }
 
 // ---------- Visuals panel (ECharts, area hues) ----------

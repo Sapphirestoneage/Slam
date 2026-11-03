@@ -63,7 +63,7 @@ function buttonsCard() {
     h('div.row-line', {},
       S.button('Save snapshot', { kind: 'primary', iconName: 'camera', onClick: () => { store.snapshot('Demo session', keyNumbers(ctx.metrics())); S.toast('Snapshot saved. Change a number to see the arrows.'); ctx.refresh(); } }),
       S.button('Back up now', { iconName: 'download' }),
-      S.button('Clear debts', { kind: 'danger', iconName: 'reset' }),
+      S.button('Clear debts', { kind: 'danger', iconName: 'eraser' }),
       S.button('Send summary', { disabled: true, why: 'Save a snapshot first' }),
       S.savedNote()),
     h('div.row-line', { style: { marginTop: '16px' } },

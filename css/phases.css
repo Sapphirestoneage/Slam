@@ -170,3 +170,8 @@ textarea.notes-box { width: 100%; min-height: 90px; border: 2px solid var(--bord
 .seg.multi { flex-wrap: wrap; }
 .cal-head .more-wrap { margin-top: 10px; }
 .cal-head .caret { text-align: left; white-space: normal; }
+/* Fix pass 4: hit areas for the calendar chips and the top bar segments (these files load after app.css). */
+.chip, .more-chips { min-height: 32px; }
+.more-chips { display: inline-flex; align-items: center; }
+.topbar .seg button { min-height: 32px; }
+.day-top .icon-btn { width: 32px; height: 32px; }
