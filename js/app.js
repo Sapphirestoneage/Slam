@@ -11,6 +11,8 @@ import { TABS, parseRoute, search, routeForPlace } from './nav.js';
 import { SCREENS, progressOf } from './screens.js';
 import { startFastTrack } from './ui/fasttrack-ui.js';
 import { keepPlace } from './ui/place.js';
+import { opened } from './ui/dismiss.js';
+import { parseQuickAdd } from './quickadd.js';
 
 const [ref, fields] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/fields.json').then(r => r.json())]);
 
@@ -89,17 +91,18 @@ const app = {
     cv.setAttribute('aria-pressed', String(!!this.prefs.clientView));
     const gear = S.iconButton('gear', 'Coach tools', () => this.go('#/tools/lists'));
     gear.classList.add('coach-only');
+    const time = h('select', { 'aria-label': 'Show amounts as', title: 'Show amounts as dollars, hours of work or days of FI', 'data-focus': 'time-view' },
+      [['$', '$'], ['Hours', 'Hours'], ['FI days', 'FI days']].map(([v, t]) => h('option', { value: v, selected: v === this.ctx.timeMode }, t)));
+    time.onchange = () => this.ctx.setTimeMode(time.value);
     clear($('topbar'), h('div.topbar-in', {},
       h('div.tb-left', {},
         h('a.site-id', { href: '#/home/prep', title: 'Stress Less About Money' }, 'SLAM'), clientBtn,
-        h('nav.crumbs', { 'aria-label': 'Breadcrumb', title: `${tab.name} \u203A ${sub.name}` }, h('a', { href: `#/${tab.id}/${tab.subs[0].id}` }, tab.name), h('span.sep', {}, '›'), h('a', { href: `#/${tab.id}/${sub.id}`, 'aria-current': 'page' }, sub.name)),
         h('span.save-state', { id: 'save-state' })),
       h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: `#/${t.id}/${t.subs[0].id}`, 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),
       h('div.tb-right', {},
-        h('button.find-btn', { type: 'button', onclick: () => this.find(), 'aria-label': 'Find (press /)' }, icon('search'), h('span.find-word', {}, 'Find'), h('kbd', {}, '/')),
-        S.quickAdd(this.ctx, { onAdded: (r, p) => this.go(routeForPlace(p.section)) }),
+        this.findBox(),
         S.iconButton('note', 'Parking lot', () => this.openParking()), undo, redo,
-        S.timeToggle(this.ctx), cv, gear)));
+        h('label.field.time-pick', {}, time), cv, gear)));
     // A sub-tab whose area the Profile turned off is absent, not greyed (R001).
     const off = this.hasClient && tab.id === 'my-money' && this.ctx.gates().areas.debt === false ? new Set(['debt']) : new Set();
     // My Money modes sit beside its sub-tabs: Fast Track is a button, One page a toggle (Navigation: modes are not tabs).
@@ -117,25 +120,27 @@ const app = {
     this.saveState();
     this.banner();
   },
+  // Saved, with a small amber dot when a backup is due; clicking it opens Back up now (no full-width banner).
   saveState() {
     const el = $('save-state');
     if (!el) return;
     if (!this.hasClient) { clear(el); return; }
     const st = this.saver?.state;
-    el.className = `save-state${st === 'unsaved' ? ' unsaved' : ''}`;
-    el.title = st === 'unsaved' ? 'Not saved yet' : st === 'saving' ? 'Saving' : 'Saved';
-    clear(el, st === 'unsaved' ? 'Unsaved' : st === 'saving' ? 'Saving' : [icon('check'), h('span.save-word', {}, 'Saved')]);
+    const due = backupDue(this.store.doc).due && this.store.records.length > 0;
+    const word = st === 'unsaved' ? 'Unsaved' : st === 'saving' ? 'Saving' : 'Saved';
+    const btn = h(`button.save-btn${st === 'unsaved' ? '.unsaved' : ''}`, { type: 'button', 'data-focus': 'save-state', 'aria-label': `${st === 'unsaved' ? 'Not saved yet' : word}. ${due ? `${this.backupText()} Back up now` : 'Backup'}`, title: due ? `${word}. ${this.backupText()} Click to back up.` : word },
+      st === 'unsaved' || st === 'saving' ? word : icon('check'), due ? h('span.backup-dot.coach-only', { 'aria-hidden': 'true' }) : null);
+    btn.onclick = () => S.popover(btn, h('div.stack', { style: { gap: '10px' } }, h('strong', {}, this.backupText()),
+      h('span.muted', {}, 'Your work saves in this browser as you go. A backup file keeps it safe anywhere.'),
+      h('div.row-line', {}, S.button('Back up now', { kind: 'primary', iconName: 'download', onClick: () => { S.closePop(); this.exportNow(); } }))), { width: 320 });
+    clear(el, btn);
     if (st === 'unsaved') this.banner();
   },
+  // Only "Not saved yet" stays a banner: rare and urgent.
   banner() {
     const b = $('banner');
-    if (!this.hasClient) return clear(b);
-    if (this.saver?.state === 'unsaved') {
+    if (this.hasClient && this.saver?.state === 'unsaved') {
       return clear(b, h('div', {}, 'Not saved yet. Your last change is safe in this tab; export now to be sure.', S.button('Export', { iconName: 'download', onClick: () => this.exportNow() })));
-    }
-    const due = backupDue(this.store.doc);
-    if (due.due && this.store.records.length) {
-      return clear(b, h('div.coach-only', {}, due.days === null ? 'No backup yet.' : `Last backup ${due.days} days ago.`, S.button('Back up now', { iconName: 'download', onClick: () => this.exportNow() })));
     }
     clear(b);
   },
@@ -152,40 +157,65 @@ const app = {
       h('div.row-line', {}, S.button('New client', { iconName: 'plus', onClick: () => this.newClient(anchor) }), S.button('Try with example numbers', { onClick: () => { S.closePop(); this.loadDemo(); } }))), { width: 340 });
   },
 
-  // ---------- Find (/) ----------
-  find() {
-    const input = h('input', { placeholder: "Type any field, like 'HSA'", 'aria-label': 'Find' });
-    const list = h('ul.find-results', { role: 'listbox' });
-    let results = [], sel = 0;
-    const draw = () => {
-      results = search(input.value, { fields, records: this.store.records });
-      sel = Math.min(sel, Math.max(0, results.length - 1));
-      clear(list, input.value.trim() && !results.length ? h('li.muted', {}, 'Nothing by that name yet.') : results.map((r, i) =>
-        h('li', {}, h('button', { type: 'button', 'aria-selected': String(i === sel), onclick: () => pick(r) }, h('span', {}, r.label), h('span.where', {}, r.where)))));
+  // ---------- Find and add in one box (/) ----------
+  // Typing finds fields, lines and screens; the last choice adds what you typed ("Netflix 15 a month").
+  find() { document.querySelector('[data-focus="find-add"]')?.focus(); },
+  findBox() {
+    const input = h('input', { placeholder: 'Find or add', 'aria-label': "Find or add: type a field like 'HSA', or 'Netflix 15 a month' to add it", 'data-focus': 'find-add', 'data-quick-add': '', autocomplete: 'off', role: 'combobox', 'aria-expanded': 'false' });
+    const wrap = h('div.find-add', {}, h('label.field', {}, icon('search'), input, h('kbd', {}, '/')));
+    let list = null, forget = null, items = [], sel = 0;
+    const closeList = () => { list?.remove(); list = null; forget?.(); forget = null; input.setAttribute('aria-expanded', 'false'); };
+    const pick = it => {
+      closeList();
+      input.value = '';
+      if (it.kind === 'add') return this.quickAdd(it.p);
+      input.blur();
+      this.goFound(it.r);
     };
-    const overlay = h('div.find-overlay', { onclick: e => { if (e.target === overlay) overlay.remove(); } },
-      h('div.find-box', { role: 'dialog', 'aria-label': 'Find' }, h('label.field', {}, icon('search'), input), list));
-    const pick = r => {
-      overlay.remove();
-      if (!r.route) return;
-      this.go(r.route);
-      requestAnimationFrame(() => {
-        const row = r.kind === 'record' ? document.querySelector(`tr[data-id="${r.id}"]`) : null;
-        (row || $('main').querySelector('h1'))?.classList.add('highlight');
-        row?.querySelector('input')?.focus({ preventScroll: true });
-        row?.scrollIntoView({ block: 'center', behavior: 'smooth' }); // smooth only for Find and One page jumps
-        if (r.kind === 'field') S.toast(`${r.label} lives on ${r.where}.`);
-      });
+    const draw = () => {
+      const q = input.value.trim();
+      if (!q) { closeList(); return; }
+      const found = search(q, { fields, records: this.store.records }).slice(0, 8);
+      const add = this.hasClient ? parseQuickAdd(q) : null;
+      items = [...found.map(r => ({ kind: 'find', r })), ...(add ? [{ kind: 'add', p: add }] : [])];
+      sel = Math.min(sel, Math.max(0, items.length - 1));
+      if (!list) {
+        list = h('ul.find-results.find-drop', { role: 'listbox', 'aria-label': 'Find or add' });
+        wrap.append(list);
+        forget = opened({ el: list, anchor: wrap, pop: true, close: closeList });
+        input.setAttribute('aria-expanded', 'true');
+      }
+      clear(list, items.length ? items.map((it, i) => h('li', {}, h('button', { type: 'button', role: 'option', 'aria-selected': String(i === sel), onmousedown: e => e.preventDefault(), onclick: () => pick(it) },
+        it.kind === 'find' ? [h('span', {}, it.r.label), h('span.where', {}, it.r.where)]
+          : [h('span.add-line', {}, icon('plus'), `Add ${it.p.name || 'it'}${it.p.amount != null ? `, ${it.p.amount}${it.p.per ? ` a ${it.p.per}` : ''}` : ''}`), h('span.where', {}, `to ${it.p.section}`)])))
+        : h('li.muted', {}, this.hasClient ? 'Nothing by that name yet.' : 'Nothing by that name yet. Open a client to add.'));
     };
     input.oninput = () => { sel = 0; draw(); };
     input.onkeydown = e => {
-      if (e.key === 'ArrowDown') { sel = Math.min(sel + 1, results.length - 1); draw(); e.preventDefault(); }
+      if (e.key === 'ArrowDown') { sel = Math.min(sel + 1, items.length - 1); draw(); e.preventDefault(); }
       if (e.key === 'ArrowUp') { sel = Math.max(sel - 1, 0); draw(); e.preventDefault(); }
-      if (e.key === 'Enter' && results[sel]) pick(results[sel]);
-      if (e.key === 'Escape') overlay.remove();
+      if (e.key === 'Enter' && list && items[sel]) { e.preventDefault(); pick(items[sel]); }
+      if (e.key === 'Escape') { input.value = ''; closeList(); }
     };
-    document.body.append(overlay);
-    input.focus();
+    return wrap;
+  },
+  quickAdd(p) {
+    const { kind, type, section, summary, ...rest } = p;
+    this.store.add(kind, rest, { type });
+    this.go(routeForPlace(section));
+    S.toast(`Added to ${section}.`, { undo: () => this.store.undo() });
+  },
+  goFound(r) {
+    if (!r.route) return;
+    this.go(r.route);
+    requestAnimationFrame(() => {
+      const row = r.kind === 'record' ? document.querySelector(`tr[data-id="${r.id}"]`) : null;
+      if (row?.hidden) document.querySelector(`tr.group[data-group="${CSS.escape(row.dataset.group)}"] button.fold`)?.click(); // open its folded group
+      (row || $('main').querySelector('h1'))?.classList.add('highlight');
+      row?.querySelector('input')?.focus({ preventScroll: true });
+      row?.scrollIntoView({ block: 'center', behavior: 'smooth' }); // smooth only for Find and One page jumps
+      if (r.kind === 'field') S.toast(`${r.label} lives on ${r.where}.`);
+    });
   },
 
   // ---------- Parking lot (R051) ----------

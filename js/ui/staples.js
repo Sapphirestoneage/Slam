@@ -88,7 +88,7 @@ export function popover(anchor, content, { width = null } = {}) {
 }
 if (typeof document !== 'undefined') installDismiss(document, window);
 
-// ---------- Toasts: 'Deleted. Undo' for 10 seconds ----------
+// ---------- Toasts: bottom left; 5 seconds, or 10 with Undo ----------
 let toastEl = null, toastTimer = null;
 export function toast(text, { undo = null, action = null } = {}) {
   toastEl?.remove(); clearTimeout(toastTimer);
@@ -96,7 +96,7 @@ export function toast(text, { undo = null, action = null } = {}) {
     undo ? h('button.btn', { type: 'button', onclick: () => { undo(); toastEl?.remove(); } }, icon('undo'), 'Undo') : null,
     action ? h('button.btn', { type: 'button', onclick: () => { action.run(); toastEl?.remove(); } }, action.label) : null);
   document.body.append(toastEl);
-  toastTimer = setTimeout(() => toastEl?.remove(), 10000);
+  toastTimer = setTimeout(() => toastEl?.remove(), undo ? 10000 : 5000); // 10 seconds when it can be undone
 }
 
 // ---------- Saved moment (R164) ----------

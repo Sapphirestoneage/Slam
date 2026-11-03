@@ -161,3 +161,36 @@ textarea.note-input { width: 100%; min-height: 70px; border: 2px solid var(--bor
   .seg { flex: 0 1 auto; flex-wrap: wrap; max-width: 100%; }
   .seg button { flex: 1 1 auto; min-height: 40px; }
 }
+
+/* Fix pass 5: slimmer chrome. */
+/* Saved: a button; a small amber dot when a backup is due (coach only). */
+.save-btn { position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 32px; height: 32px; padding: 0 6px; border: 2px solid transparent; border-radius: var(--r-button); background: transparent; color: #BFE8CF; font: inherit; font-size: .8125rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.save-btn:hover { border-color: rgba(255,255,255,.6); }
+.save-btn:focus-visible { outline: 3px solid #fff; outline-offset: 1px; }
+.save-btn.unsaved { color: #fff; background: var(--guess); border-radius: 999px; padding: 0 10px; }
+.backup-dot { position: absolute; top: 3px; right: 3px; width: 9px; height: 9px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--primary-dark); }
+/* The client's name shows in full at 1440, at least 16 characters at 1280. */
+.client-btn { max-width: 360px; }
+@media (max-width: 1399px) { .client-btn { max-width: 224px; } }
+/* Find and add in one box. */
+.find-add { position: relative; flex: none; }
+.find-add .field { width: 220px; }
+.find-add kbd { background: transparent; color: #fff; border-color: rgba(255,255,255,.6); margin-left: 4px; }
+.find-drop { position: absolute; top: calc(100% + 6px); right: 0; width: 420px; z-index: 70; background: var(--card); color: var(--text); border: 2px solid var(--border-input); border-radius: var(--r-card); box-shadow: var(--shadow-lift); padding: var(--s2); margin: 0; max-height: 60vh; }
+.find-drop li.muted { padding: var(--s2) var(--s3); }
+.find-drop li button { min-height: 36px; align-items: center; }
+.find-drop .add-line { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--primary); }
+@media (max-width: 1399px) { .find-add .field { width: 160px; } }
+/* $ / Hours / FI days as one compact control. */
+.tb-right > .field.time-pick { width: auto !important; }
+.topbar .field.time-pick { padding: 0 4px 0 6px; height: 32px; }
+.topbar .time-pick select { color: #fff; font-weight: 700; cursor: pointer; padding-right: 2px; }
+.topbar .time-pick select option { color: var(--text); }
+/* Page head: one slim line under the sub-tabs. The title stays for screen readers; the sub-tab already says it. */
+.page-head { align-items: center; margin-bottom: var(--s3); min-height: 0; }
+.page-head h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.page-head p { margin: 0; font-size: .875rem; }
+.page-head:not(:has(p)):has(> .row-line:empty) { display: none; }
+/* Toast: bottom left, out of the way. */
+.toast { left: 24px; right: auto; transform: none; max-width: 440px; }
+@media (max-width: 760px) { .tb-right > .field.time-pick { display: inline-flex; } }
