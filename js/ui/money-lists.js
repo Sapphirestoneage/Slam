@@ -1,14 +1,14 @@
 // My Money lists (build phase 5, Mockup: Income, Assets, Protection, Taxes): one record type, viewed by sub-tab.
 // Detail stays behind More (R023); fields that do not apply to this household never show (gates.js).
 import { h } from './dom.js';
-import { amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag } from './staples.js';
+import { amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile } from './staples.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
 import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom } from '../math/income.js';
 import { limitUsed } from '../math/assets.js';
 import { accountBlocks, accountFlags, stampBalance } from './account-detail.js';
 import { is401k, yearly401k } from './account-specific.js';
 import { netWorthCheck, yearlyContribution } from '../math/portfolio.js';
-import { benefitYearly } from '../benefits.js';
+import { benefitYearly, withholdingFlag } from '../benefits.js';
 import { drafttShares, DRAFTT } from '../math/spending.js';
 import { needs } from '../math/result.js';
 import { statusOf, countsAsDone } from '../records.js';
@@ -345,9 +345,17 @@ export function taxesScreen(ctx) {
         inferred ? h('span.tag.plain', { title: 'Worked out from Solo or couple. Pick one to confirm.' }, 'Coach infers') : null)),
       metricCard(ctx, 'Effective rate', rates.value === null ? rates : { ...rates, value: rates.effective }),
       metricCard(ctx, 'Marginal bracket', marginal)),
+    // Withholding (M3): last year's result and the W-4 basics, with one plain flag.
+    h('div.form-grid', { style: { marginTop: '16px' } },
+      labelled('Last year at tax time', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+        toggle(['Refund', 'Owed', "Don't know"], p.lastYearTax ?? null, v => set({ lastYearTax: v }), { label: 'Refund or owed', clearable: true }),
+        p.lastYearTax === 'Refund' || p.lastYearTax === 'Owed' ? moneyInput(p.lastYearAmount ?? null, v => set({ lastYearAmount: v }), { hint: 'Add amount', key: 'tax:lastYear' }) : null),
+        parkProfile(ctx.store, 'lastYearAmount')),
+      labelled('W-4 filing status', select(['Single or married filing separately', 'Married filing jointly', 'Head of household'], p.w4Status ?? null, v => set({ w4Status: v }), { label: 'W-4 filing status', width: 270, key: 'tax:w4' }),
+        { note: 'Step 1(c) on your W-4', ...parkProfile(ctx.store, 'w4Status') }),
+      labelled('Extra withheld a paycheck', moneyInput(p.w4Extra ?? null, v => set({ w4Extra: v }), { hint: 'Add amount', key: 'tax:w4extra' }), { note: 'Step 4(c) on your W-4', ...parkProfile(ctx.store, 'w4Extra') })),
+    (() => { const f = withholdingFlag({ lastYear: p.lastYearTax, amount: p.lastYearAmount ?? null }); return f ? h('div.nudge', { style: { marginTop: '12px' } }, f.text) : null; })(),
     moreBlock('taxes:more', () => h('div.form-grid', {},
-      labelled('Last year', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, toggle(['Refund', 'Owed'], p.lastYearTax ?? null, v => set({ lastYearTax: v }), { label: 'Refund or owed' }),
-        moneyInput(p.lastYearAmount ?? null, v => set({ lastYearAmount: v }), { hint: 'Add amount', key: 'tax:lastYear' }))),
       applies('quarterly', { g, taxTypes: taxed.map(i => i.taxType) }) ? labelled('Quarterly estimates paid this year', moneyInput(p.quarterlyPaid ?? null, v => set({ quarterlyPaid: v }), { hint: 'Add amount', key: 'tax:quarterly' })) : null,
       applies('seTax', { g, taxTypes: taxed.map(i => i.taxType) }) ? labelled('Self-employment tax a year', h('span.computed', {}, seTax ? money(seTax.value) : 'Needs 1099 income')) : null)),
     h('p.muted', { style: { marginTop: '12px' } }, `Gross used: ${gross === null ? 'none yet (add take-home or gross on Income)' : `${money(gross)} a year`}. Federal and FICA only; state tax is not in yet.`)));

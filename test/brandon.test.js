@@ -168,3 +168,12 @@ test('M2.4: commuter nudge is transit a year (capped) x the marginal rate, and o
   assert.equal(commuterSavings({ have: 'Yes', transitMonthly: 132, marginal: 0.3, limitMonthly: 340 }), null);
   assert.equal(commuterSavings({ have: 'No', transitMonthly: 0, marginal: 0.3, limitMonthly: 340 }), null);
 });
+
+// ---------- Missed ideas M3: withholding flag ----------
+import { withholdingFlag } from '../js/benefits.js';
+test('M3.2: a large refund flags over-withholding; owing flags check withholding; small or unknown says nothing', () => {
+  assert.equal(withholdingFlag({ lastYear: 'Refund', amount: 2400 }).kind, 'over');
+  assert.equal(withholdingFlag({ lastYear: 'Refund', amount: 300 }), null);
+  assert.equal(withholdingFlag({ lastYear: 'Owed', amount: 450 }).kind, 'under');
+  assert.equal(withholdingFlag({ lastYear: "Don't know", amount: null }), null);
+});

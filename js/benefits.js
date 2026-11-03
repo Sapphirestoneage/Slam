@@ -1,5 +1,6 @@
 // Employer benefits (missed ideas M2): what the job offers, a yearly amount for each, and the commuter nudge.
 // Pure: no DOM. Answers live in doc.profile.benefits[key] = { have: 'Yes' | 'No' | "Don't know", amount, per, ... }.
+import { money } from './format.js';
 
 export const BENEFITS = [
   { key: 'commuter', label: 'Commuter (pre-tax transit and parking)', where: 'Benefits portal: commuter or transit' },
@@ -26,4 +27,13 @@ export function commuterSavings({ have, transitMonthly, marginal, limitMonthly }
   if (have === 'Yes' || !transitMonthly || transitMonthly <= 0 || marginal == null) return null;
   const covered = Math.min(transitMonthly, limitMonthly ?? transitMonthly) * 12;
   return { yearly: covered * marginal, covered, marginal };
+}
+
+// Withholding flag (M3.2): a simple flag, not a W-4 calculator. A refund of $1,000 or more means you may be
+// lending the IRS money all year; any amount owed means check what comes out of each paycheck.
+export const BIG_REFUND = 1000;
+export function withholdingFlag({ lastYear, amount }) {
+  if (lastYear === 'Refund' && amount != null && amount >= BIG_REFUND) return { kind: 'over', text: `Your refund was large (${money(amount)}): you may be over-withholding. A smaller refund means more in each paycheck.` };
+  if (lastYear === 'Owed' && (amount == null || amount > 0)) return { kind: 'under', text: 'You owed at tax time: check your withholding so it is not a surprise again.' };
+  return null;
 }
