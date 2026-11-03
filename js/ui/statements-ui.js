@@ -6,6 +6,7 @@ import { statements, statementRows, periodOf, previous, periodMonths } from '../
 import { addMonths, monthName } from '../month.js';
 import { money } from '../format.js';
 import { inView } from '../math/time.js';
+import { payYourselfFirst } from '../math/simple.js';
 
 export const SUI = { kind: 'month', ym: null, year: null, hours: false };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -31,9 +32,15 @@ export function statementsScreen(app, ctx) {
     h('span.row-line.month-step', { style: { gap: '6px', flexWrap: 'nowrap' } }, S.iconButton('left', 'Previous period', () => step(-1)), h('strong', { style: { minWidth: '130px', textAlign: 'center' } }, label(p)), S.iconButton('right', 'Next period', () => step(1))),
     h('span.muted', {}, `vs ${label(previous(p))}`), h('span', { style: { flex: 1 } }),
     S.button('Print the set', { iconName: 'printer', onClick: () => printSet() })));
+  // Pay yourself first: what comes off the top before any spending, a month and a paycheck.
+  const pyf = payYourselfFirst(ctx.store.doc, ctx.ref, { now: ctx.now() });
+  const offTop = h('p.st-offtop', {}, h('strong', {}, 'Pay yourself first: '), pyf.monthly > 0.5
+    ? [S.mathButton({ id: 'Pay yourself first', value: pyf.monthly, needs: [], text: pyf.text }, `${fmt(pyf.monthly, { hours: SUI.hours })} a month`), ` comes off the top, about ${fmt(pyf.perPaycheck, { hours: SUI.hours })} a paycheck.`]
+    : 'nothing comes off the top yet. A 401(k), HSA or an automatic transfer on payday would.');
   const table = (title, tip, list, { hours = false, below = [], key }) => h('section.card.statement', { 'data-statement': key },
     h('div.row-line', { style: { justifyContent: 'space-between' } }, h('h2', {}, h('span.has-tip', { title: tip }, title)),
       key === 'income' ? S.toggle([['money', '$'], ['hours', 'Hours']], SUI.hours ? 'hours' : 'money', v => { SUI.hours = v === 'hours'; app.render(); }, { label: 'Show as' }) : null),
+    key === 'income' ? offTop : null,
     h('div.st-head', {}, h('span'), h('span.num', {}, label(p)), h('span.num', {}, label(previous(p))), h('span.num', {}, 'Change')),
     [...list, ...below].map((r, i) => statementLine(ctx, r, `${key}:${i}`, v => fmt(v, { hours: hours && SUI.hours }))));
   return [head('Statements', 'Net worth, income and spending, and cash flow, tied out'),
