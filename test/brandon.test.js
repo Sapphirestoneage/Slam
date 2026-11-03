@@ -125,3 +125,29 @@ test('B2.20: net worth equals entered balances minus unvested minus debts', () =
   assert.equal(c.ok, true);
   assert.equal(netWorthCheck(m.netWorth.value + 10, m.inputs).ok, false);
 });
+
+// ---------- Section 3: 401(k) and HSA ----------
+import { matchFromTiers, contributionSplit, vestedOf, hsaFeeCompare } from '../js/math/portfolio.js';
+
+test('B3.3: 100% of the first 3% plus 50% of the next 1%', () => {
+  const tiers = [{ rate: 1, upTo: 0.03 }, { rate: 0.5, upTo: 0.01 }];
+  const full = matchFromTiers({ contributionPct: 0.06, tiers, gross: 60000 });
+  assert.ok(Math.abs(full.pctOfPay - 0.035) < 1e-9);
+  assert.equal(Math.round(full.dollars), 2100);
+  assert.equal(full.leftOnTable, false);
+  const low = matchFromTiers({ contributionPct: 0.02, tiers, gross: 60000 });
+  assert.equal(Math.round(low.dollars), 1200);
+  assert.equal(low.leftOnTable, true);
+});
+
+test('B3.2: per paycheck and % of salary work each other out', () => {
+  assert.equal(contributionSplit({ perPaycheck: 250, gross: 65000, payFrequency: '2 weeks' }).pct, 0.1);
+  assert.equal(contributionSplit({ pct: 0.06, gross: 52000, payFrequency: 'week' }).perPaycheck, 60);
+  assert.equal(contributionSplit({ pct: 0.06, gross: null, payFrequency: 'week' }).computed, null);
+});
+
+test('B3.4, B3.6: vested apart from unvested; HSA managed vs self-directed fees', () => {
+  assert.deepEqual(vestedOf(10000, 2500), { vested: 7500, unvested: 2500 });
+  const c = hsaFeeCompare({ invested: 5000, managedPct: 0.005, selfPct: 0.0005 });
+  assert.equal(Math.round(c.saves), 23);
+});

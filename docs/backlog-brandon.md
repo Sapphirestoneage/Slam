@@ -6,6 +6,8 @@ tests use synthetic households only.
 The SLAM Build Spec (`spec/SLAM Build Spec.xlsx`) is still the source of truth. This file holds the batch
 because a spreadsheet can't be edited cleanly in a diff. Move the rows into the spec when you next refresh it.
 
+Status: every NOW row below is built (commits "Brandon section 1" to "section 3").
+
 Tags: **NOW** = built in this batch. **LATER** = logged, not built.
 
 Rules for every item: Don't Make Me Think (buttons look like buttons, inputs have borders); slim by default with
@@ -45,7 +47,7 @@ commit per section.
 | B2.11 | Tax treatment; penalty-free access age or rule | NOW | Account › More › Details |
 | B2.12 | Account fee plus weighted expense ratio, in $ a year | NOW | Details |
 | B2.13 | Auto-invest on/off; dividend reinvest on/off | NOW | Details |
-| B2.14 | Contribution-limit progress (uses the real pay frequency, not 26) | NOW | Details |
+| B2.14 | Contribution-limit progress (uses the real pay frequency, not 26) | NOW | Account › More (Limit used this year) |
 | B2.15 | Beneficiary named (yes/no); owner (individual/joint) | NOW | Details |
 | B2.16 | Last updated, with a stale flag after 30 days | NOW | Details; the row |
 | B2.17 | Institution plus last 4 digits | NOW | Details |

@@ -261,7 +261,7 @@ function assetSecondary(ctx, r, up) {
     labelled('Institution', textInput(v.institution, x => up({ institution: x }), { hint: 'Broker', width: 160 }), { later: later('institution') }),
     is401k(r) ? null : labelled('Putting in', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.contribution, x => up({ contribution: x }), { hint: 'Add amount' }),
       toggle(['Paycheck', 'Year'], v.contributionPer ?? 'Year', x => up({ contributionPer: x }), { label: 'Per' })), { later: later('contribution') }),
-    is401k(r) ? null : labelled('Pretax, Roth or both', toggle(['Pretax', 'Roth', 'Both'], v.taxType ?? null, x => up({ taxType: x }), { label: 'Pretax or Roth' }), { later: later('taxType') }),
+    is401k(r) || r.type === 'HSA' ? null : labelled('Pretax, Roth or both', toggle(['Pretax', 'Roth', 'Both'], v.taxType ?? null, x => up({ taxType: x }), { label: 'Pretax or Roth' }), { later: later('taxType') }),
     is401k(r) ? null : labelled('Unvested', moneyInput(v.unvested, x => up({ unvested: x }), { hint: 'Add amount' }), { note: 'Shown, not counted in net worth', later: later('unvested') }),
     limitUsed({ contributions: 0, type: r.type, age: 30 }, ctx.ref).value !== null ? labelled('Limit used this year', h('span.computed', {}, lim.value === null ? `Needs ${lim.needs[0]}` : `${value(lim)} of ${money(lim.limit)}`)) : null];
 }

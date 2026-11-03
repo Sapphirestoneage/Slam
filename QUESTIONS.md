@@ -62,3 +62,18 @@ Each one has the default used so the build could keep going. Answer here or in t
 41. **Export PDF.** Uses the browser's print to PDF. It is hidden inside SLAM for Eli (an artifact cannot print); the public site shows it.
 42. **Pre-call form.** Needs a server to receive a client's answers from a link, so it is a later phase. The discovery table works now (Coach tools › Discovery, or New client › From a discovery call).
 43. **Card bills and payoff (R104).** A card's More shows the bills charged to it. Paid in full, they are spending. Carrying a balance, the payoff projection does not yet add them to the balance; the card's payment amount is used as typed.
+
+## Brandon batch (Nov 2 2026)
+
+44. **The request was cut off.** It stops in section 3 at "HSA: cash vs invested, self-directed vs managed with a fee comparison, per-pay". Default: "per-pay" read as the HSA contribution per paycheck (already there, now counted with the real paychecks a year). Anything after it, and any LATER list, was not received. Please resend the rest.
+45. **Where the batch lives.** The spec is a spreadsheet, so the items went to `docs/backlog-brandon.md` (B1.1 to B3.8, tagged NOW or LATER) instead of the xlsx. Move them into the spec on your next refresh, or say so and the rows can be added to the Feature list tab.
+46. **"Will email" is now shown as "I'll find it later".** Same status underneath (R053), so old files and the math are unchanged; only the words on screen moved to the user's side. Profile answers park in their own list. A typed answer comes off the list by itself.
+47. **Two places for the employer match.** Income › More still has the simple "% up to %" that the math (M15) uses; the 401(k) now has tiers (100% of the first 3%, 50% of the next 1%). Default: the tiers show on the 401(k) only and do not change the FI math yet. Which should be the one source? (Backlog BL.5.)
+48. **Uninvested cash threshold.** Flagged when a retirement account or HSA has $500 or more in cash and, outside an HSA, that is at least 10% of the account. HSAs often require a cash floor; is $500 right?
+49. **"A set %" for one holding or theme.** Default 25% of the account, one value for everyone. Should the coach set it per client?
+50. **"Held in stocks" for a short goal.** Flagged when the account's mix has any stocks, or it is an investment account with no mix typed yet. Should a small stock share (say under 20%) pass?
+51. **Overlap.** Found by name, ticker or "what it tracks" matching S&P 500, NASDAQ, Dow or total US market; two or more such funds are flagged. There is no fund lookup yet (BL.2).
+52. **Stocks % field removed.** The new allocation replaces it; nothing in the math read it.
+53. **Stale balance.** Uses "Balance as of", set to today whenever a balance is typed; older rows fall back to the row's last edit date.
+54. **Owner twice for couples.** Every account now has Individual / Joint under Details; couples also keep the Me / Partner / Joint column. Fold them into one?
+55. **Next on the Profile.** Shows once every core answer is in or parked with I'll find it later, and goes to Income. Before that, it says how many are left and names the first three.
