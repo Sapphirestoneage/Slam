@@ -204,3 +204,16 @@ test('M5: a sinking fund has monthly needed and % funded; a linked purpose tag s
   assert.equal(f.monthly, 150); // 900 left over 6 months
   assert.equal(f.funded, 0.25);
 });
+
+// ---------- Missed ideas M7: taking over ----------
+import { takingOver } from '../js/year.js';
+test('M7.2: covered bills by takeover date, with the monthly total added on each date', () => {
+  const s = fresh();
+  s.add('bill', { name: 'Phone', amount: 60, values: { whoPays: 'Covered by someone', coveredBy: 'Parents', takeover: '2027-06' } }, { type: 'Bill' });
+  s.add('bill', { name: 'Car insurance', amount: 1800, per: 'year', values: { whoPays: 'Covered by someone', coveredBy: 'Parents', takeover: '2027-06' } }, { type: 'Bill' });
+  s.add('bill', { name: 'Health insurance', amount: 250, values: { whoPays: 'Covered by someone', coveredBy: 'Employer', takeover: '2028-01' } }, { type: 'Bill' });
+  s.add('bill', { name: 'Streaming', amount: 15, values: { whoPays: 'Covered by someone', coveredBy: 'Partner' } }, { type: 'Bill' });
+  const t = takingOver(s.records);
+  assert.deepEqual(t.steps.map(x => [x.ym, x.added, x.total]), [['2027-06', 210, 210], ['2028-01', 250, 460]]);
+  assert.equal(t.undated.length, 1);
+});

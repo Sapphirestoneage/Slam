@@ -321,6 +321,12 @@ export function stepper(value, onChange, { min = 0, max = 20, label = 'Count', k
     h(`label.field.num-box${v !== null ? '.filled' : ''}`, { style: { width: '56px' } }, box), more);
 }
 
+// The month you start paying a covered bill yourself. Optional.
+function takeoverBox(rec, update) {
+  const d = h('input', { type: 'month', value: rec.values.takeover || '', 'aria-label': 'You take it over in' });
+  d.onchange = () => update({ takeover: d.value || null });
+  return h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, h('span.label', {}, 'You take it over'), h(`label.field${rec.values.takeover ? '.filled' : ''}`, { style: { width: '170px' } }, d));
+}
 // Who pays (every Needs line).
 export const WHO_PAYS = ['Me', 'Split', 'Included in rent', 'Covered by someone', 'N/A', 'My share', "Need it, don't have yet"];
 export function whoPays(rec, update) {
@@ -328,7 +334,9 @@ export function whoPays(rec, update) {
   return h('div.stack', {}, h('span.label', {}, 'Who pays'),
     toggle(WHO_PAYS, v, x => update({ whoPays: x }), { label: 'Who pays' }),
     v === 'Split' ? h('span.row-line', {}, h('span.label', {}, 'Split by'), stepper(rec.values.splitBy ?? null, n => update({ splitBy: n }), { min: 1, label: 'Split by' })) : null,
-    v === 'Covered by someone' ? textInput(rec.values.coveredBy, x => update({ coveredBy: x }), { hint: 'Add who covers it' }) : null,
+    v === 'Covered by someone' ? h('span.row-line', { style: { gap: '8px' } }, // M7.1: who, and when you take it over
+      select(['Parents', 'Partner', 'Employer', 'Other'], rec.values.coveredBy ?? null, x => update({ coveredBy: x }), { label: 'Who covers it', hint: 'Who covers it', width: 150 }),
+      takeoverBox(rec, update)) : null,
     v === 'My share' ? moneyInput(rec.values.myShare, x => update({ myShare: x }), { hint: 'Add my share' }) : null);
 }
 // Paid with: checking or a credit card; no bill comes from savings. With one checking account or one card it is

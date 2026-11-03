@@ -8,7 +8,7 @@ import { payoffPlan } from '../math/debt.js';
 import { addMonths, ymOf, monthName, dateOf, monthsBetween } from '../month.js';
 import { winSources } from './spending-ui.js';
 import { money, pct } from '../format.js';
-import { yearItems, usualDates, sinkingOf } from '../year.js';
+import { yearItems, usualDates, sinkingOf, takingOver } from '../year.js';
 
 export const PUI = { extra: 0, pace: null, bands: true, chart: 'FI timeline', extraDebt: 0 };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -335,7 +335,7 @@ export function eventList() {
 }
 export function nextYearScreen(app, ctx) {
   const host = h('div');
-  const draw = () => clear(host, yourYear(app, ctx), sinkingFunds(ctx));
+  const draw = () => clear(host, yourYear(app, ctx), sinkingFunds(ctx), takingOverList(app, ctx));
   ctx.onRefresh(draw); draw();
   return [head('Next 12 months', 'Your year: known dates, what they cost, and what to set aside'), host, S.recordList(ctx, eventList())];
 }
@@ -368,6 +368,21 @@ function yourYear(app, ctx) {
     y.undated.length ? h('div.year-month', {}, h('div.year-head', {}, h('strong', {}, 'No month yet'), h('span.muted.small', {}, 'Pick a month below so it lands on the calendar')),
       h('div.stack', { style: { gap: '6px' } }, y.undated.map(itemLine))) : null)
     : h('div.empty', {}, h('span.title', {}, 'Nothing on your year yet'), h('span.muted', {}, 'Tax day, open enrollment, renewals, trips: tap Add the usual dates, or add your own below.'))));
+}
+
+// ---------- Taking over (M7.2): bills someone else covers today, and what each date adds a month ----------
+function takingOverList(app, ctx) {
+  const t = takingOver(ctx.visible(() => true));
+  if (!t.items.length) return null;
+  const line = x => h('div.year-item', {}, h('span', { style: { fontWeight: 600 } }, x.name), x.who ? h('span.tag.plain', {}, x.who) : null,
+    x.monthly != null ? h('span.computed', {}, `${money(x.monthly)} a month`) : h('span.muted.small', {}, 'No amount yet'));
+  return h('section.section.area-goals', {}, h('div.section-title', {}, h('h2', {}, 'Taking over'), h('span.muted', {}, `${money(t.total)} a month covered by others today`), h('span.spacer'),
+    S.button('Open the budget', { size: 'small', onClick: () => app.go('#/spending/budget') })),
+  h('div.card', {}, h('div.stack', { style: { gap: '12px' } },
+    ...t.steps.map(st => h('div.year-month', {}, h('div.year-head', {}, h('strong', {}, monthName(st.ym)), h('span.muted.small', {}, `+${money(st.added)} a month · ${money(st.total)} in all`)),
+      h('div.stack', { style: { gap: '6px' } }, st.items.map(line)))),
+    t.undated.length ? h('div.year-month', {}, h('div.year-head', {}, h('strong', {}, 'No date yet'), h('span.muted.small', {}, 'Set "You take it over" on the line in the budget')),
+      h('div.stack', { style: { gap: '6px' } }, t.undated.map(line))) : null)));
 }
 
 // ---------- Sinking funds (M5): any yearly cost or event with a cost ----------
