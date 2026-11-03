@@ -66,3 +66,16 @@ test('Roth 401(k): saved from the paycheck for take-home and the savings rate, b
   assert.ok(Math.abs(typed.gross - 90000) < 2);
   assert.equal(typed.pretax, 0);
 });
+
+test('Health premium with two jobs: job 1 by default, switched to job 2 with Paid from', () => {
+  const s = new Store(newHousehold({ name: 'Synthetic', now: '2026-11-01T09:00:00.000Z' }));
+  const one = s.add('income', { name: 'Day job', amount: 60000, per: 'year', values: { basis: 'Gross', payFrequency: '2 weeks' } }, { type: 'Job' });
+  const two = s.add('income', { name: 'Weekend job', amount: 20000, per: 'year', values: { basis: 'Gross', payFrequency: '2 weeks' } }, { type: 'Job' });
+  const health = s.add('coverage', { amount: 80, per: 'paycheck', values: { have: 'Have it', paidFrom: 'Paycheck' } }, { type: 'Health' });
+  const pre = x => Object.fromEntries(x.income.map(i => [i.r.id, i.pretax]));
+  let x = metrics(s.doc, ref, { now: new Date('2026-11-03') }).inputs;
+  assert.deepEqual([x.health.jobId, pre(x)[one.id], pre(x)[two.id]], [one.id, 80 * 26, 0]);
+  s.update(health.id, { paidFrom: 'Paycheck', paidFromJob: two.id });
+  x = metrics(s.doc, ref, { now: new Date('2026-11-03') }).inputs;
+  assert.deepEqual([x.health.jobId, pre(x)[one.id], pre(x)[two.id]], [two.id, 0, 80 * 26], 'out of the second paycheck, once');
+});

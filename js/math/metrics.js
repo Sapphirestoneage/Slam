@@ -43,7 +43,9 @@ export function inputsOf(doc, ref, now = new Date()) {
   // it ("From Health") and it comes out of take-home once; any premium typed on Income is set aside.
   const health = live.find(r => r.kind === 'coverage' && r.type === 'Health' && r.amount != null && r.values.have !== "Don't");
   const healthFromPay = health && (health.values.paidFrom ?? (health.per === 'paycheck' ? 'Paycheck' : null)) === 'Paycheck';
-  const healthJob = link.job ?? live.find(r => r.kind === 'income' && ['W-2'].includes(r.values?.incomeType)) ?? null;
+  // Job 1 (the one the 401(k) links to) unless Paid from on the Health row names another job.
+  const healthJob = (health?.values.paidFromJob && live.find(r => r.id === health.values.paidFromJob && r.kind === 'income'))
+    ?? link.job ?? live.find(r => r.kind === 'income' && ['W-2'].includes(r.values?.incomeType)) ?? null;
   const healthPerPay = !healthFromPay ? 0 : health.per === 'paycheck' ? health.amount : health.amount * 12 / (PAYS[healthJob?.values.payFrequency] ?? 26);
   const withLink = r => {
     let out = r === link.job && r.values.contributionPct == null ? { ...r, values: { ...r.values, contributionPct: link.incomePct, k401Paycheck: link.incomePerPaycheck } } : r;

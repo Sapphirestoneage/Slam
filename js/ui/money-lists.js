@@ -350,8 +350,16 @@ export function protectionList() {
     secondary: (ctx, r, up) => {
       const v = r.values;
       const employer = labelled('Through employer?', toggle(['Yes', 'No'], v.employer ?? null, x => up({ employer: x }), { label: 'Through employer' }), { note: v.employer === 'Yes' ? 'Ends if the job ends' : null });
-      const paidFrom = labelled('Paid from', toggle(['Paycheck', 'Budget line'], v.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null), x => up({ paidFrom: x }), { label: 'Paid from', clearable: true }),
-        { note: (v.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null)) === 'Paycheck' ? 'Already out of your take-home' : null });
+      // With two or more jobs, Paid from names the paycheck (job 1 unless switched).
+      const jobs = ctx.visible(x => x.kind === 'income' && ['Job', 'Partner job'].includes(x.type));
+      const from0 = v.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null);
+      const paidFrom = jobs.length > 1
+        ? labelled('Paid from', toggle([...jobs.map((j, i) => [j.id, `Paycheck: ${j.name || `Job ${i + 1}`}`]), ['Budget line', 'Budget line']],
+          from0 === 'Budget line' ? 'Budget line' : from0 === 'Paycheck' ? (v.paidFromJob && jobs.some(j => j.id === v.paidFromJob) ? v.paidFromJob : jobs[0].id) : null,
+          x => up(x === null ? { paidFrom: null, paidFromJob: null } : x === 'Budget line' ? { paidFrom: x, paidFromJob: null } : { paidFrom: 'Paycheck', paidFromJob: x }), { label: 'Paid from', clearable: true }),
+        { note: from0 === 'Paycheck' ? 'Already out of that take-home' : null })
+        : labelled('Paid from', toggle(['Paycheck', 'Budget line'], from0, x => up({ paidFrom: x }), { label: 'Paid from', clearable: true }),
+          { note: from0 === 'Paycheck' ? 'Already out of your take-home' : null });
       const from = v.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null);
       const budget = from === 'Budget line' ? labelled('Spending line', premiumOnBudget(ctx, r))
         : from === 'Paycheck' && r.type === 'Health' ? labelled('On Income', fromButton('Your paycheck borrows it', '#/cash-flow/income', ctx.metrics().inputs.health?.jobId ?? ''), { note: 'Out of take-home once; never a Budget line too' }) : null;
