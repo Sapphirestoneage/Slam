@@ -456,6 +456,17 @@ export function timeToggle(ctx) {
 
 // ---------- Record list: rows, groups, bulk select, totals (R105, R109 to R114, R165, R171, R172) ----------
 const slug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+// A block that redraws itself on every change, keeping the box being typed in (for cards beside a list).
+export function live(ctx, render) {
+  const root = h('div.live');
+  const draw = () => {
+    const focus = document.activeElement?.dataset?.focus;
+    clear(root, render());
+    if (focus) root.querySelector(`[data-focus="${CSS.escape(focus)}"]`)?.focus();
+  };
+  ctx.onRefresh(draw); draw();
+  return root;
+}
 export function recordList(ctx, cfg) {
   const root = h('div.list-wrap');
   const state = { selected: new Set(), folded: new Set(cfg.foldedGroups || []), open: new Set() };

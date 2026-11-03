@@ -9,6 +9,7 @@ import { accountBlocks, accountFlags, stampBalance } from './account-detail.js';
 import { is401k, yearly401k } from './account-specific.js';
 import { netWorthCheck, yearlyContribution } from '../math/portfolio.js';
 import { benefitYearly, withholdingFlag } from '../benefits.js';
+import { lifeAdminItems, lifeAdminPatch, LIFE_STATES } from '../lifeadmin.js';
 import { drafttShares, DRAFTT } from '../math/spending.js';
 import { needs } from '../math/result.js';
 import { statusOf, countsAsDone } from '../records.js';
@@ -320,6 +321,25 @@ export function protectionList() {
         h('div.metric', {}, h('span.label', {}, 'Premiums a month'), h('div.big', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, r => r.amount) : null))));
     },
   };
+}
+
+// ---------- Life admin (M8): done / not yet / not for me; not yet goes on the Homework list ----------
+export function lifeAdminScreen(ctx) {
+  const doc = ctx.store.doc;
+  const items = lifeAdminItems(doc, ctx.visible(() => true));
+  const pickFor = x => toggle(LIFE_STATES, x.status, v => {
+    const patch = lifeAdminPatch(x, v, doc);
+    ctx.store.transaction('Life admin', () => {
+      if (patch.account) ctx.store.update(patch.account.id, { beneficiary: patch.account.beneficiary });
+      ctx.store.setDoc('profile', { lifeAdmin: patch.lifeAdmin });
+    });
+  }, { label: x.label, clearable: true });
+  const done = items.filter(x => x.status === 'Done' || x.status === 'Not for me').length;
+  return h('section.section.area-goals', {}, h('div.section-title', {}, h('h2', {}, 'Life admin'), h('span.muted', {}, `${done} of ${items.length} sorted`)),
+    h('div.card', {}, h('p.muted', {}, 'The paperwork that protects you. Anything marked Not yet goes on your homework list, with where to do it.'),
+      h('div.benefit-list', {}, items.map(x => h('div.benefit-row', {}, h('span.gate-label', {}, x.label),
+        x.fromProtection ? h('span.tag.plain', {}, '✓ Done (on your coverage list)') : pickFor(x),
+        x.status === 'Not yet' ? h('span.muted.small', {}, x.where) : null)))));
 }
 
 // ---------- Taxes (Mockup: Taxes › Filing) ----------

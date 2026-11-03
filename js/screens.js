@@ -2,7 +2,7 @@
 import { h, icon } from './ui/dom.js';
 import * as S from './ui/staples.js';
 import { creditCard, debtList, spendingList, debtCharts, debtRatios } from './ui/lists.js';
-import { incomeList, benefitList, variableBlock, assetList, protectionList, taxesScreen, listCompletion, incomeCharts, assetCharts } from './ui/money-lists.js';
+import { incomeList, benefitList, variableBlock, assetList, protectionList, taxesScreen, lifeAdminScreen, listCompletion, incomeCharts, assetCharts } from './ui/money-lists.js';
 import { profileScreen, profileCompletion } from './ui/profile.js';
 import { startFastTrack } from './ui/fasttrack-ui.js';
 import { budgetScreen, calendarScreen, closeScreen } from './ui/spending-ui.js';
@@ -73,12 +73,12 @@ const MM = {
   debt: { title: 'Debt', sub: 'Every debt and its payoff', body: (app, ctx) => (ctx.gates().areas.debt === false
     ? [h('div.card', {}, h('div.empty', {}, h('span.title', {}, 'No debt, per the Profile'), addArea(app, ctx, 'debt', 'Debt')))]
     : [completion(listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr'])), hasAny(ctx, ['debt']) ? null : fastTrack(app, ctx),
-      h('div.visuals', {}, S.recordList(ctx, debtList(ctx.ref)), S.visualsPanel(ctx, { charts: debtCharts, area: 'debt' })), creditCard(ctx)]) },
+      h('div.visuals', {}, S.recordList(ctx, debtList(ctx.ref)), S.visualsPanel(ctx, { charts: debtCharts, area: 'debt' })), S.live(ctx, () => creditCard(ctx))]) },
   assets: { title: 'Assets', sub: 'Cash, investments, car, home', body: (app, ctx) => [
     completion(listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance'])),
     hasAny(ctx, ['account', 'asset']) ? null : fastTrack(app, ctx), offAreas(app, ctx, ['cash', 'investments', 'real']),
     h('div.visuals', {}, S.recordList(ctx, assetList(ctx.ref)), S.visualsPanel(ctx, { charts: assetCharts, area: 'assets' }))] },
-  protection: { title: 'Protection', sub: 'Insurance coverage and gaps', body: (app, ctx) => [completion(listCompletion(ctx, r => r.kind === 'coverage', ['have'])), S.recordList(ctx, protectionList())] },
+  protection: { title: 'Protection', sub: 'Insurance coverage, gaps and life admin', body: (app, ctx) => [completion(listCompletion(ctx, r => r.kind === 'coverage', ['have'])), S.recordList(ctx, protectionList()), S.live(ctx, () => lifeAdminScreen(ctx))] },
   taxes: { title: 'Taxes', sub: 'Filing status, last year, estimates', body: (app, ctx) => [h('div.visuals', {}, taxesScreen(ctx), S.visualsPanel(ctx, { charts: [incomeCharts[0]], area: 'taxes' }))] },
 };
 // One page (X013): every My Money section on one page, each under its own heading.

@@ -2,6 +2,7 @@
 // where to look. Record fields use the 'Will email' status (shown as "I'll find it later"); Profile answers live in
 // doc.profile.later. Pure: no DOM.
 import { BENEFITS } from './benefits.js';
+import { lifeAdminItems } from './lifeadmin.js';
 
 export const LATER = 'Will email';
 
@@ -60,6 +61,7 @@ export function homeworkList(doc, records) {
   const out = [];
   const later = doc.profile?.later || {};
   for (const key of Object.keys(later)) if (later[key]) out.push({ r: null, profileKey: key, label: fieldLabel(key), where: whereToFind(key), due: doc.profile?.laterDue?.[key] ?? null });
+  for (const x of lifeAdminItems(doc, records)) if (x.status === 'Not yet') out.push({ r: null, lifeKey: x.key, label: x.label, where: x.where, due: doc.profile?.laterDue?.[x.key] ?? null }); // M8.2
   for (const r of records) {
     const name = r.name || r.values?.category || r.type || 'Item';
     if (r.status === LATER) out.push({ r, label: name, where: whereToFind(r.kind === 'account' || r.kind === 'debt' ? 'balance' : r.kind === 'asset' ? 'value' : 'amount', r.type), due: r.values?.homeworkDue ?? null });

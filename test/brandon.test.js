@@ -217,3 +217,18 @@ test('M7.2: covered bills by takeover date, with the monthly total added on each
   assert.deepEqual(t.steps.map(x => [x.ym, x.added, x.total]), [['2027-06', 210, 210], ['2028-01', 250, 460]]);
   assert.equal(t.undated.length, 1);
 });
+
+// ---------- Missed ideas M8: life admin ----------
+import { lifeAdminItems, lifeAdminPatch } from '../js/lifeadmin.js';
+test('M8: beneficiaries come from each account; not yet lands on homework; renters insurance reads Protection', () => {
+  const s = fresh();
+  const ira = s.add('account', { name: 'Roth IRA', values: { group: 'investment', beneficiary: 'No' } }, { type: 'Roth IRA' });
+  s.setDoc('profile', { lifeAdmin: { will: 'Not yet', proxy: 'Done' } });
+  const items = lifeAdminItems(s.doc, s.records);
+  assert.equal(items.find(x => x.accountId === ira.id).status, 'Not yet');
+  const hw = homeworkList(s.doc, s.records).map(x => x.label);
+  assert.ok(hw.includes('Beneficiary on Roth IRA') && hw.includes('Basic will') && !hw.includes('Healthcare proxy'));
+  assert.deepEqual(lifeAdminPatch(items[0], 'Done', s.doc).account, { id: ira.id, beneficiary: 'Yes' });
+  s.add('coverage', { values: { have: 'Have it' } }, { type: 'Renters or home' });
+  assert.equal(lifeAdminItems(s.doc, s.records).find(x => x.key === 'renters').status, 'Done');
+});

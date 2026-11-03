@@ -51,11 +51,11 @@ export function listsScreen(app, ctx) {
       ? h('div.card.tool-list', {}, hw.map(x => {
         const d = h('input', { type: 'date', value: x.due || '', 'aria-label': `Due date for ${x.label}` });
         const p = ctx.store.doc.profile;
-        d.onchange = () => (x.r ? ctx.store.update(x.r.id, { homeworkDue: d.value || null }) : ctx.store.setDoc('profile', { laterDue: { ...(p.laterDue || {}), [x.profileKey]: d.value || null } }));
+        d.onchange = () => (x.r ? ctx.store.update(x.r.id, { homeworkDue: d.value || null }) : ctx.store.setDoc('profile', { laterDue: { ...(p.laterDue || {}), [x.profileKey ?? x.lifeKey]: d.value || null } }));
         return h('div.row-line', { style: { gap: '10px' } },
           h('span.stack', { style: { flex: 1, gap: '2px' } }, h('span', { style: { fontWeight: 600 } }, x.label), x.where ? h('span.muted.small', {}, `Where to find it: ${x.where}`) : null),
           h('label.field', { style: { width: '160px' } }, d),
-          S.button('Open', { size: 'small', onClick: () => (x.r ? fix({ ...x, route: ROUTE[x.r.kind] || '#/my-money/profile' }) : app.go('#/my-money/profile')) }));
+          S.button('Open', { size: 'small', onClick: () => (x.r ? fix({ ...x, route: ROUTE[x.r.kind] || '#/my-money/profile' }) : app.go(x.lifeKey ? '#/my-money/protection' : '#/my-money/profile')) }));
       }))
       : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, "Tap I'll find it later on any number and it lands here, with where to look.")))))];
 }
