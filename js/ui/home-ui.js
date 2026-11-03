@@ -22,7 +22,7 @@ const isoDay = d => d.toISOString().slice(0, 10);
 // Client strip: package tracking on every Home screen.
 function clientStrip(app, ctx) {
   const s = ses(ctx);
-  const next = h('input', { type: 'date', value: s.next || '', 'aria-label': 'Next session' });
+  const next = h(`input${s.next ? '' : '.no-date'}`, { type: 'date', value: s.next || '', 'aria-label': 'Next session', 'data-focus': 'strip:next' });
   next.onchange = () => ctx.store.setIn('session', ['next'], next.value || undefined, 'Next session');
   return h('div.card.client-strip', {},
     h('span.who', {}, ctx.store.doc.client.name || 'Client'),
@@ -171,7 +171,7 @@ export function liveScreen(app, ctx) {
       left != null ? h('span.time-left', {}, left >= 0 ? `${left} min left` : `${-left} min over`) : null,
       S.button('Next step', { kind: 'primary', size: 'big', iconName: 'right', onClick: nextStep })),
     h('div.agenda', {}, a.steps.map((s, i) => h(`button.step${s.done ? '.done' : ''}${a.current?.id === s.id ? '.current' : ''}`, { type: 'button', onclick: () => app.go(s.route) },
-      h('span.step-n', {}, `${i + 1}`), h('span.step-name', {}, s.name), h('span.muted.small', {}, s.done ? 'Done' : a.current?.id === s.id ? 'Now' : 'Up next')))),
+      h('span.step-n', {}, `${i + 1}`), h('span.step-name', {}, s.name), h('span.muted.small', {}, s.done ? 'Done' : a.current?.id === s.id ? "You're here" : 'Up next')))),
     h('div.section-title', {}, h('h2', {}, 'Next 3 numbers'), h('span.muted', {}, 'Ranked by how much they move the FI date')),
     n3.length ? h('div.next3', {}, n3.map((c, i) => next3Card(app, ctx, c, i))) : h('div.card', {}, h('p.muted', {}, 'Every number that moves the FI date is in. Nice.')),
     moneyInOneLine(app, ctx),

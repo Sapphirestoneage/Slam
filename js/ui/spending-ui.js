@@ -54,7 +54,10 @@ export function budgetScreen(app, ctx) {
     : UI.pass === 'Basics' ? basicsPass(ctx)
       : h('div.visuals', {}, S.recordList(ctx, spendingList(ctx.ref, { pass: UI.pass, ym: UI.ym, groupBy: UI.groupBy, paidWithColumn: cardsMost })),
         S.visualsPanel(ctx, { charts: budgetCharts, area: 'needs' }));
-  return [head('Budget', 'Every spending line and the five passes'), passBar, budgetStrip(ctx, view), doc.session?.community ? S.live(ctx, () => communityCard(ctx)) : null, body,
+  // The strip follows the lines as they change (the lists keep their own state, so the screen is not rebuilt).
+  const strip = h('div', {}, budgetStrip(ctx, view));
+  ctx.onRefresh(() => S.keepPlace(() => clear(strip, budgetStrip(ctx, monthView(doc, ctx.ref, UI.ym, { now: ctx.now() })))));
+  return [head('Budget', 'Every spending line and the five passes'), passBar, strip, doc.session?.community ? S.live(ctx, () => communityCard(ctx)) : null, body,
     S.recordList(ctx, irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) }))];
 }
 
@@ -103,9 +106,21 @@ function budgetStrip(ctx, view) {
   } else {
     const per = perPaycheck(m);
     items.push(per ? { label: 'Per paycheck', result: { id: 'M20', value: (fixed + variable + setAside) / per.per, needs: [], unit: 'money', text: `Spending ${money(fixed + variable + setAside)} a month over ${per.per.toFixed(2)} paychecks a month (${per.label}).` }, note: 'What each paycheck has to cover' }
-      : { label: 'Gut vs lines', result: view.gut === null ? { id: 'M26', value: null, needs: ['a gut number'], unit: 'money' } : { id: 'M26', value: fixed + variable + setAside - view.gut, needs: [], unit: 'money', text: `Lines ${money(fixed + variable + setAside)} minus the gut number ${money(view.gut)}.` }, note: 'Lines minus the first guess' });
+      : gutVsLines(fixed + variable + setAside, view.gut));
   }
   return S.summaryStrip(ctx, items);
+}
+// Words, not a bare negative: "Lines are $1,950 under your gut number".
+export function gutWords(lines, gut) {
+  const d = lines - gut;
+  if (Math.abs(d) < 0.5) return 'Lines match your gut number';
+  return `Lines are ${money(Math.abs(d))} ${d > 0 ? 'over' : 'under'} your gut number`;
+}
+function gutVsLines(lines, gut) {
+  if (gut === null) return { label: 'Gut vs lines', result: { id: 'M26', value: null, needs: ['a gut number'], unit: 'money' } };
+  const d = lines - gut;
+  return { label: 'Gut vs lines', result: { id: 'M26', value: d, needs: [], unit: 'money', text: `Lines ${money(lines)} minus the gut number ${money(gut)}.` },
+    render: () => (Math.abs(d) < 0.5 ? 'Same' : `${money(Math.abs(d))} ${d > 0 ? 'over' : 'under'}`), note: gutWords(lines, gut) };
 }
 function perPaycheck(m) {
   const f = m.inputs.income.find(x => x.r.values.payFrequency)?.r.values.payFrequency;

@@ -80,8 +80,7 @@ export function profileScreen(app, ctx) {
       field('Last name', 'lastName', textInput(p.lastName, v => set({ lastName: v }), { hint: 'Last name', width: 200, key: 'p:lastName' })),
       field('Birth month and year', 'birthYear', birth('birthMonth', 'birthYear', 'Your'), { note: age !== null ? `Age ${age}` : 'Works out age' }),
       field('State', 'state', select(STATES, p.state ?? null, v => set({ state: v }), { label: 'State', hint: 'State', width: 110, key: 'p:state' }), { note: 'Tax rules' }),
-      p.state === 'NY' ? field('Live in New York City?', 'nyc', yesNo(p.nyc ?? null, v => set({ nyc: v }), 'Live in NYC'), { note: 'NYC has its own income tax' }) : null,
-      field('Solo or couple', 'household', pick(['Solo', 'Couple'], g.couple ? 'Couple' : p.household ? 'Solo' : null, setCouple, 'Solo or couple'))),
+      p.state === 'NY' ? field('Live in New York City?', 'nyc', yesNo(p.nyc ?? null, v => set({ nyc: v }), 'Live in NYC'), { note: 'NYC has its own income tax' }) : null), // Solo or couple is asked once, under What applies to me
     moreBlock('profile:about', () => h('div.form-grid', {},
       g.couple ? field('Partner first name', 'partnerName', textInput(p.partnerName, v => set({ partnerName: v }), { hint: 'Partner name', width: 200, key: 'p:partnerName' })) : null,
       g.couple ? field('Partner birth month and year', 'partnerBirthYear', birth('partnerBirthMonth', 'partnerBirthYear', 'Partner')) : null,

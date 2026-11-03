@@ -136,7 +136,8 @@ export const SCREENS = {
   'tools/data': (app, ctx) => [head('Coach tools', 'Export, import and reset'), h('div.card', {}, h('div.row-line', {},
     S.button('Export', { kind: 'primary', iconName: 'download', onClick: () => app.exportNow() }),
     S.button('Import', { iconName: 'upload', onClick: () => app.importFile() }),
-    S.button('Reset client', { kind: 'danger', iconName: 'reset', disabled: !app.hasClient, why: 'No client open', onClick: e => app.resetClient(e.currentTarget) }),
+    S.button('Reset client', { kind: 'danger', iconName: 'eraser', disabled: !app.hasClient, why: 'No client open', onClick: e => app.resetClient(e.currentTarget) }),
+    h('span', { style: { flex: 1 } }),
     S.button('Delete client', { kind: 'danger', iconName: 'trash', disabled: !app.hasClient, why: 'No client open', onClick: e => app.deleteClient(e.currentTarget) })),
   h('p.muted', { style: { marginTop: '12px' } }, app.backupText()))],
   'tools/session': (app, ctx) => sessionScreen(app, ctx, { fastTrackGap }),
@@ -169,6 +170,7 @@ export function progressOf(ctx, tabId, subId) {
     return { done: rows.filter(r => fields.every(f => countsAsDone(statusOf(r, f)))).length, of: rows.length };
   };
   if (tabId === 'my-money') {
+    if (subId === 'profile') { const c = profileCompletion(ctx.store.doc).core; return c.of ? { done: c.done, of: c.of } : null; }
     if (subId === 'income') return core(['income'], ['amount']);
     if (subId === 'debt') return core(['debt'], ['balance', 'apr']);
     if (subId === 'assets') {

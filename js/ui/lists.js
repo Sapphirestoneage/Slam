@@ -126,7 +126,9 @@ export function spendingList(ref, { pass = 'Rough', ym = null, groupBy = 'DRAFTT
     // B6.6: every section takes a new line, filed under that section.
     groupAdd: g => (g === 'Not for me' || groupBy === 'Category' ? null
       : { name: null, values: { draftt: g === 'Personal care and hygiene' ? 'Therapy' : g, ...(g === 'Therapy' ? { category: 'Therapy' } : {}), amountType: 'Variable', timing: 'Variable date' } }),
-    lastGroups: ['Not for me'], foldedGroups: ['Not for me'],
+    key: 'spending-lines', notForMe: true,
+    // Groups start folded, showing their subtotal; open or closed is kept for the session.
+    lastGroups: ['Not for me'], startFolded: true,
     headerExtra: ctx => (ctx.store.doc.settings.presetsAdded ? null
       : h('button.btn.small', { type: 'button', title: 'About 40 common lines with high starter guesses. Bring them down or mark Not for me.', onclick: () => addPresets(ctx.store, ref) }, icon('plus'), 'Add the usual list')),
     picker: { top: ['Rent or mortgage', 'Groceries, dining out, coffee', 'Electric, gas, water', 'Subscriptions'], other: cats },
@@ -139,24 +141,22 @@ export function spendingList(ref, { pass = 'Rough', ym = null, groupBy = 'DRAFTT
     columns: [
       { label: 'Line', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.values.category || 'Add name', tip: r.values.category, width: 170, key: `${r.id}:name` }) },
       pass !== 'Rough' ? { label: 'Rough', num: true, render: (ctx, r) => h('span.muted', { title: 'The line\'s usual number, set in the Rough pass' }, r.status === 'Not for me' ? '$0' : amount(ctx, r.amount, { chip: false })) } :
-      { label: 'Amount', num: true, render: (ctx, r, m, up, row) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
+      { label: 'Amount', num: true, render: (ctx, r, m, up) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
         moneyInput(r.amount, v => up({ amount: v, status: r.status === 'Not sure' ? null : r.status }), { key: `${r.id}:amount` }), // typing the real number clears Guess
-        r.status === 'Not sure' ? h('button.btn.small', { type: 'button', title: 'The guess is right: keep it as the real number', onclick: () => up({ status: null }) }, 'Keep') : null,
-        r.status === 'Not for me'
-          ? h('button.btn.small', { type: 'button', onclick: () => up({ status: null }) }, 'Bring back')
-          : h('button.btn.small.nfm', { type: 'button', onclick: () => up({ status: 'Not for me' }) }, 'Not for me'),
-        iconButton('trash', 'Delete', row.remove, { tiny: true })) },
+        h('span.keep-slot', {}, r.status === 'Not sure' ? h('button.btn.small', { type: 'button', 'data-focus': 'keep', title: 'The guess is right: keep it as the real number', onclick: () => up({ status: null }) }, 'Keep') : null)) }, // the slot keeps amounts lined up
       ...monthCols,
       paidWithColumn ? { label: 'Paid with', render: (ctx, r, m, up) => {
         const cards = ctx.store.find(x => x.kind === 'debt' && x.type === 'Credit card');
         return select([['checking', 'Checking'], ['savings', 'Savings'], ...cards.map(c => [c.id, c.name || 'Credit card'])], r.paidWith, v => up({ paidWith: v }), { label: 'Paid with', hint: 'Paid with', width: 140 });
       } } : null,
       { label: 'Per', render: (ctx, r, m, up) => perPicker(r.per, v => up({ per: v }), { key: `${r.id}:per` }) },
-      { label: 'Amount is', render: (ctx, r, m, up) => toggle(['Fixed', 'Variable'], r.values.amountType ?? null, v => up({ amountType: v }), { label: 'Amount is' }) },
-      { label: 'Date is', render: (ctx, r, m, up) => toggle([['Fixed date', 'Fixed date'], ['Variable date', 'Variable date']], r.values.timing ?? null, v => up({ timing: v }), { label: 'Date is' }) },
       { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) },
     ],
-    secondary: (ctx, r, up) => [whoPays(r, up), lineSuggestion(r, up),
+    // Amount is and Date is live behind More: the narrowest row (fix pass item 3).
+    secondary: (ctx, r, up) => [
+      labelled('Amount is', toggle(['Fixed', 'Variable'], r.values.amountType ?? null, v => up({ amountType: v }), { label: 'Amount is' }), { note: 'Fixed feeds the floor' }),
+      labelled('Date is', toggle(['Fixed date', 'Variable date'], r.values.timing ?? null, v => up({ timing: v }), { label: 'Date is' }), { note: 'Fixed date lands on its due day' }),
+      whoPays(r, up), lineSuggestion(r, up),
       // B6.3: low / high for a variable bill; the amount is the average.
       r.values.amountType === 'Variable' ? labelled('Range: low, high', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
         moneyInput(r.values.low ?? null, v => up({ low: v }), { hint: 'Low' }), moneyInput(r.values.high ?? null, v => up({ high: v }), { hint: 'High' })),
@@ -230,7 +230,7 @@ export const IRREGULAR = [
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => [String(i + 1), m]);
 export function irregularList(ref, { onWalk } = {}) {
   return {
-    kind: 'bill', area: 'needs', title: 'Irregular and yearly costs', thing: { one: 'yearly cost', plural: 'yearly costs' },
+    kind: 'bill', area: 'needs', title: 'Irregular and yearly costs', key: 'irregular', thing: { one: 'yearly cost', plural: 'yearly costs' },
     filter: r => r.kind === 'bill' && !!r.values.irregular,
     defaultType: 'Yearly cost',
     newValues: () => ({ per: 'year', values: { irregular: true, draftt: 'Other', amountType: 'Fixed', timing: 'Fixed date' } }),
