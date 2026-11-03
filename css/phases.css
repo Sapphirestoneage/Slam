@@ -202,3 +202,9 @@ table.rows tr.row-note td { height: auto; padding: 6px var(--s3) 10px; backgroun
 .next3.compact .n3 { padding: var(--s2) var(--s3); gap: 4px; }
 .next3.compact .n3:not(.big) .why { display: none; }
 .reveal-card { margin-bottom: var(--s3); }
+/* Polish item 7: Home's Open items, one card, one line each. */
+.open-items { margin-bottom: var(--s4); display: flex; flex-direction: column; gap: 6px; }
+.open-items h2 { margin: 0; }
+.open-row { display: grid; grid-template-columns: 150px 1fr auto; gap: var(--s3); align-items: center; padding: 6px 0; border-top: 1px solid var(--border-row); min-height: 36px; }
+.open-row a { font-weight: 600; white-space: nowrap; }
+@media (max-width: 760px) { .open-row { grid-template-columns: 1fr auto; } .open-row .muted { grid-column: 1 / -1; grid-row: 2; } }

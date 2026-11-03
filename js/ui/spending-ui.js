@@ -37,13 +37,12 @@ export function budgetScreen(app, ctx) {
     h('div.row-line', { style: { gap: '12px' } },
       h('span.label', {}, 'Pass'), S.toggle(['Plan', 'Actual'], UI.pass === 'Actual' ? 'Actual' : 'Plan', v => { UI.pass = v; redraw(); }, { label: 'Which pass you are filling' }),
       monthStepper(UI.ym, v => { UI.ym = v; redraw(); }),
-      h('span.spacer', { style: { flex: 1 } }),
-      h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Group by'),
-        S.toggle(['DRAFTT', 'Category'], UI.groupBy, v => { UI.groupBy = v; redraw(); }, { label: 'Group by' }))),
+      h('span.spacer', { style: { flex: 1 } })),
     h('p.muted.pass-what', {}, WHAT[UI.pass] ?? WHAT.Plan),
     S.moreBlock('budget:settings', () => h('div.row-line', { style: { gap: '20px', alignItems: 'flex-start' } },
       S.labelled('Use for surplus and FI', S.toggle([['gut', 'Gut number'], ['lines', 'The lines']], m.inputs.spendingSource, v => ctx.store.setDoc('spending', { source: v }), { label: 'Spending used for the math' }),
         { note: m.inputs.gutTotal === null ? 'No gut number yet, so the lines are used' : `Gut ${money(m.inputs.gutTotal)} · lines ${money(m.inputs.lineTotal ?? 0)}` }),
+      S.labelled('Group by', S.toggle(['DRAFTT', 'Category'], UI.groupBy, v => { UI.groupBy = v; redraw(); }, { label: 'Group by' }), { note: 'DRAFTT letters or plain categories' }),
       S.labelled('Basis', S.toggle([['accrual', 'Accrual'], ['cash', 'Cash']], doc.spending.basis || 'accrual', v => ctx.store.setDoc('spending', { basis: v }), { label: 'Cash or accrual' }),
         { note: 'Accrual spreads yearly and prepaid costs across the months' }),
       S.labelled('Period', S.select(Object.keys(PERIOD), UI.period, v => { UI.period = v || 'Monthly'; redraw(); }, { label: 'Period', hint: 'Monthly', width: 140 })),
@@ -57,7 +56,7 @@ export function budgetScreen(app, ctx) {
   // The strip follows the lines as they change (the lists keep their own state, so the screen is not rebuilt).
   const strip = h('div', {}, budgetStrip(ctx, view));
   ctx.onRefresh(() => S.keepPlace(() => clear(strip, budgetStrip(ctx, monthView(doc, ctx.ref, UI.ym, { now: ctx.now() })))));
-  return [head('Budget', 'Every spending line, planned and actual'), passBar, strip, doc.session?.community ? S.live(ctx, () => communityCard(ctx)) : null, ...body,
+  return [head('Budget', 'Every spending line, planned and actual'), passBar, strip, doc.session?.community ? S.moreBlock('budget:community', () => S.live(ctx, () => communityCard(ctx)), { label: 'Community presets' }) : null, ...body,
     S.recordList(ctx, irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) }))];
 }
 

@@ -269,12 +269,12 @@ export function historyScreen(app, ctx) {
       { label: 'Debt paid down', result: { id: 'M30', value: first.debtTotal == null || last.debtTotal == null ? null : first.debtTotal - last.debtTotal, needs: [], unit: 'money', text: 'Total debt at the first snapshot minus total debt now.' }, so: soWhat('debtPaid', ctx.metrics(), { first, last }) },
       { label: 'Gut accuracy', result: acc, note: acc.hidden ? 'After the first closed month' : 'Average miss of the first guess' },
       { label: 'Snapshots', result: { id: 'M00', value: snaps.length, needs: [], unit: 'count', text: 'Saved at the end of sessions and before imports or resets.' }, render: r => String(r.value) }]),
-    h('div.card', {}, h('strong', {}, 'Net worth over time'), host),
+    S.moreBlock('history:net-worth', () => h('div.card', {}, host), { label: 'Net worth over time' }),
     h('div.card', { style: { marginTop: '16px' } }, h('div.list-scroll', {}, h('table.rows', {},
       h('thead', {}, h('tr', {}, ['Snapshot', 'When', 'Net worth', 'Debt', 'Savings rate', 'Surplus'].map((k, i) => h(`th${i > 1 ? '.num' : ''}`, {}, k)))),
       h('tbody', {}, [...snaps].reverse().map(s => h('tr.row', {}, h('td.col-first', {}, s.label), h('td', {}, new Date(s.at).toLocaleString()),
         h('td.num', {}, money(s.metrics.netWorth)), h('td.num', {}, money(s.metrics.debtTotal)), h('td.num', {}, s.metrics.savingsRate == null ? '' : pct(s.metrics.savingsRate)), h('td.num', {}, money(s.metrics.surplus)))))))),
-    wrapped(ctx, snaps, months, since)];
+    S.moreBlock('history:wrapped', () => wrapped(ctx, snaps, months, since), { label: 'Wrapped, your year in review' })];
 }
 // Year in review (R126): unlocks with 12 months of history.
 function wrapped(ctx, snaps, months, since) {

@@ -91,8 +91,6 @@ export function prepScreen(app, ctx) {
   const due = app.dueForCheck().length;
   const notes = doc.parking.filter(n => !n.filedTo).length;
   const low = firstLowDay(ctx);
-  const card = (label, big, sub, onClick, linkText) => h('div.metric', {}, h('span.label', {}, label), h('div.big', { style: { fontSize: String(big).length > 6 ? '1.0625rem' : '2rem' } }, big),
-    sub ? h('span.muted.small', {}, sub) : null, onClick ? h('a', { href: '#', onclick: e => { e.preventDefault(); onClick(); } }, linkText) : null);
   return [clientStrip(app, ctx),
     inSession(ctx) ? h('div.banner-inline.good', {}, 'The session is on.', S.button('Back to Live', { iconName: 'right', onClick: () => app.go('#/home/live') })) : null,
     head('Home', `Prep for ${doc.client.name || 'this client'}`, S.button(inSession(ctx) ? 'Back to Live' : 'Start session', { kind: 'primary', size: 'big', onClick: () => startSession(app, ctx) })),
@@ -100,16 +98,24 @@ export function prepScreen(app, ctx) {
     next3Compact(app, ctx), // polish item 5: the Next 3 numbers on Prep too, #1 large
     paydayCard(app, ctx),
     netWorthOverTime(app, ctx),
-    h('div.strip', {},
-      card('What changed since last time', !snap ? 'Nothing yet' : changes.length ? `${changes.length} ${changes.length === 1 ? 'number' : 'numbers'}` : 'No change',
-        !snap ? 'No snapshot to compare with' : changes.map(x => `${x.label} ${x.c.direction === 'up' ? '▲' : '▼'} ${fmt(x.k, x.c.diff)}`).join(' · ') || `Since ${new Date(snap.at).toLocaleDateString()}`, snap ? () => app.go('#/report/history') : null, 'Open history'),
-      card('Open homework', homework || 'None', homework ? "Numbers to find later" : null, () => app.go('#/tools/lists'), 'Open the list'),
-      card('Due for a check', due || 'None', due ? 'Rough or aged numbers' : null, () => app.go('#/tools/lists'), 'Open the list'),
-      card('Parking lot notes', notes || 'None', notes ? 'Not filed yet' : null, () => app.openParking(), 'Open the parking lot')),
+    openItems(app, { snap, changes, fmt, homework, due, notes }),
     low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below ${money(low.low)} on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/cash-flow/calendar') })) : null, // R096
     ctx.gates().betweenJobs ? S.summaryStrip(ctx, [{ label: 'Runway (between jobs)', result: ctx.metrics().runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/net-worth/assets' }]) : null, // R006
     S.moreBlock('home:agenda', () => agendaEditor(ctx), { label: "Edit today's agenda" }),
     completionSlim(app, ctx)];
+}
+// One "Open items" card (polish item 7): what changed, homework, due for a check and the parking lot, one line each.
+function openItems(app, { snap, changes, fmt, homework, due, notes }) {
+  const total = homework + due + notes + (changes.length ? 1 : 0);
+  const row = (label, count, detail, go, link) => h('div.open-row', {}, h('strong', {}, label), h('span.muted', {}, detail),
+    go ? h('a', { href: '#', onclick: e => { e.preventDefault(); go(); } }, `${link} ›`) : h('span'));
+  return h('div.card.open-items', {},
+    h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Open items'), h('span.tag.plain', {}, total ? String(total) : 'None')),
+    row('What changed', null, !snap ? 'No snapshot to compare with yet' : changes.length ? changes.map(x => `${x.label} ${x.c.direction === 'up' ? '▲' : '▼'} ${fmt(x.k, x.c.diff)}`).join(' · ') : `No change since ${new Date(snap.at).toLocaleDateString()}`,
+      snap ? () => app.go('#/report/history') : null, 'History'),
+    row('Homework', homework, homework ? `${homework} ${homework === 1 ? 'number' : 'numbers'} to find later` : 'None', () => app.go('#/tools/lists'), 'Homework list'),
+    row('Due for a check', due, due ? `${due} rough or aged ${due === 1 ? 'number' : 'numbers'}` : 'None', () => app.go('#/tools/lists'), 'Revisit list'),
+    row('Parking lot', notes, notes ? `${notes} ${notes === 1 ? 'note' : 'notes'} not filed yet` : 'None', () => app.openParking(), 'Parking lot'));
 }
 function startSession(app, ctx) {
   if (!inSession(ctx)) {
@@ -243,8 +249,8 @@ export function wrapScreen(app, ctx) {
   ended ? h('div.banner-inline.good', {}, icon('check'), ` Session ${s.count} saved. A backup file was downloaded. Send the summary when ready.`) : h('p.muted', {}, 'End session does all four at once, then shows Send summary.'),
   h('div.checklist', {}, items.map(i => h(`div.check-item${i.done || ended ? '.done' : ''}`, {}, h('span.box', {}, i.done || ended ? icon('check') : null),
     h('div', { style: { flex: 1 } }, h('div.what', {}, i.what), i.detail ? h('div.muted.small', {}, i.detail) : null), i.act))),
-  h('div.card', {}, h('div.row-line', { style: { gap: '12px' } }, h('strong', {}, 'Money feeling, 1 to 10'),
+  S.moreBlock('wrap:feeling', () => h('div.card', {}, h('div.row-line', { style: { gap: '12px' } }, h('strong', {}, 'Money feeling, 1 to 10'),
     S.stepper(s.feelings?.[s.count || 0] ?? null, v => ctx.store.setIn('session', ['feelings', String(s.count || 0)], v, 'Money feeling'), { min: 1, max: 10, label: 'Money feeling', key: 'feeling' }),
-    h('span.muted.small', {}, 'Asked at the end of each session'))),
+    h('span.muted.small', {}, 'Asked at the end of each session'))), { label: 'Money feeling' }),
   ];
 }
