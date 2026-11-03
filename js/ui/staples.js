@@ -9,6 +9,7 @@ import { parseQuickAdd } from '../quickadd.js';
 import { canQuickFill, quickFill } from './quickfill.js';
 import { gatesOf, gatedOut } from '../gates.js';
 import { keepPlace } from './place.js';
+import { opened, install as installDismiss } from './dismiss.js';
 export { keepPlace };
 
 // ---------- Context: the store, the time view, the numbers, toasts ----------
@@ -64,14 +65,13 @@ export function toggle(options, value, onChange, { label = null, clearable = fal
 }
 
 // ---------- Popovers ----------
-let openPop = null, away = null, popAnchor = null;
-// Closing also drops its click-outside listener, so a box opened from inside another box (New client from the
-// client menu) is not closed by the first box's listener before its own buttons can be clicked.
-// Focus goes back to the button that opened the box, so a pick never drops you to the top of the page.
+let openPop = null, popAnchor = null, forgetPop = null;
+// Click outside or Escape closes it (one shared mechanism, js/ui/dismiss.js). A box opened from inside another box
+// (New client from the client menu) replaces it. Focus goes back to the button that opened the box.
 export function closePop() {
   const back = openPop?.contains(document.activeElement) && popAnchor?.isConnected ? popAnchor : null;
   openPop?.remove(); openPop = null; popAnchor = null;
-  if (away) { document.removeEventListener('mousedown', away); away = null; }
+  forgetPop?.(); forgetPop = null;
   back?.focus({ preventScroll: true });
 }
 export function popover(anchor, content, { width = null } = {}) {
@@ -82,15 +82,11 @@ export function popover(anchor, content, { width = null } = {}) {
   const over = pop.getBoundingClientRect().right - window.innerWidth + 12;
   if (over > 0) pop.style.left = `${Math.max(8, parseFloat(pop.style.left) - over)}px`;
   openPop = pop; popAnchor = anchor;
-  setTimeout(() => {
-    if (openPop !== pop) return;
-    away = e => { if (!pop.contains(e.target) && e.target !== anchor && !anchor.contains(e.target)) closePop(); };
-    document.addEventListener('mousedown', away);
-  });
+  forgetPop = opened({ el: pop, anchor, pop: true, close: () => { if (openPop === pop) closePop(); } });
   setTimeout(() => pop.querySelector('input, button')?.focus());
   return pop;
 }
-document.addEventListener?.('keydown', e => { if (e.key === 'Escape') closePop(); });
+if (typeof document !== 'undefined') installDismiss(document, window);
 
 // ---------- Toasts: 'Deleted. Undo' for 10 seconds ----------
 let toastEl = null, toastTimer = null;
@@ -272,16 +268,21 @@ export const labelled = (label, input, { note = null } = {}) => h('div.stack', {
 // More / Less: Secondary and Tertiary fields stay behind a caret, closed until asked (R023). Remembers which are open.
 const OPEN = new Set();
 export function moreBlock(id, content, { label = 'More' } = {}) {
-  const open = OPEN.has(id);
-  const body = h('div.more-body', { hidden: !open }, open ? content() : null);
-  const btn = h('button.caret', { type: 'button', 'aria-expanded': String(open), 'data-focus': `more:${id}` }, open ? 'Less' : label, icon(open ? 'down' : 'right'));
-  btn.onclick = () => {
-    const now = !OPEN.has(id);
+  const body = h('div.more-body', { hidden: true });
+  const btn = h('button.caret', { type: 'button', 'data-focus': `more:${id}` });
+  const wrap = h('div.more-wrap', {}, btn, body);
+  let forget = null;
+  const set = now => {
+    const had = !now && body.contains(document.activeElement);
     now ? OPEN.add(id) : OPEN.delete(id);
     btn.setAttribute('aria-expanded', String(now)); clear(btn, now ? 'Less' : label, icon(now ? 'down' : 'right'));
     body.hidden = !now; clear(body, now ? content() : null);
+    forget?.(); forget = now ? opened({ el: wrap, close: () => { forget = null; set(false); } }) : null; // click away or Escape closes it
+    if (had) btn.focus({ preventScroll: true });
   };
-  return h('div.more-wrap', {}, btn, body);
+  btn.onclick = () => set(!OPEN.has(id));
+  set(OPEN.has(id));
+  return wrap;
 }
 export function parseNum(s) {
   const t = String(s ?? '').replace(/[$,%\s]/g, '');
@@ -481,19 +482,35 @@ export function recordList(ctx, cfg) {
   function setOpen(id) {
     if (!view) return;
     const was = state.open;
+    if (was && id !== was) { forgetMore?.(); forgetMore = null; }
     // Closing the other open row (one at a time) must not move the row you clicked.
     const tr0 = view.rows.get(id), scroller = tr0?.closest('.list-scroll'), top0 = tr0?.getBoundingClientRect().top;
     state.open = id === was ? null : id;
-    if (was) { view.body.querySelector(`tr.more[data-for="${was}"]`)?.remove(); caretState(view.rows.get(was), false); }
+    if (was) { view.body.querySelector(`tr.more[data-for="${was}"]`)?.remove(); caretState(view.rows.get(was), false); if (!state.open) { forgetMore?.(); forgetMore = null; } }
     if (state.open) {
       const tr = view.rows.get(state.open);
       const r = view.recs.find(x => x.id === state.open);
       if (!tr || !r) { state.open = null; return; }
-      tr.after(moreRow(r, tr.dataset.group));
+      const more = moreRow(r, tr.dataset.group);
+      tr.after(more);
       caretState(tr, true);
+      track(tr, more);
     }
     if (scroller && top0 !== undefined) scroller.scrollTop += tr0.getBoundingClientRect().top - top0;
   }
+  // Click away or Escape closes the open More (one per list); a click in its own row keeps it.
+  let forgetMore = null;
+  const track = (tr, more) => {
+    forgetMore?.();
+    const id = tr.dataset.id;
+    forgetMore = opened({ el: more, anchor: tr, group: `more:${listKey}`, close: () => {
+      forgetMore = null;
+      if (state.open !== id) return;
+      const had = more.contains(document.activeElement);
+      setOpen(null);
+      if (had) view?.rows.get(id)?.querySelector('button.caret')?.focus({ preventScroll: true });
+    } });
+  };
   const caretState = (tr, open) => {
     const c = tr?.querySelector('button.caret');
     if (c) { c.setAttribute('aria-expanded', String(open)); clear(c, open ? 'Less' : 'More', icon(open ? 'down' : 'right')); }
@@ -556,7 +573,7 @@ export function recordList(ctx, cfg) {
         tr.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') { e.target.dispatchEvent(new Event('change')); addNew(r.type, null, r.id); } });
         rowEls.set(r.id, tr);
         body.append(tr);
-        if (open) { const more = moreRow(r, g); more.hidden = folded; body.append(more); }
+        if (open) { const more = moreRow(r, g); more.hidden = folded; body.append(more); track(tr, more); }
       }
     }
     if (state.open && !rowEls.has(state.open)) state.open = null;
