@@ -159,3 +159,13 @@ Each one has the default used so the build could keep going. Answer here or in t
 101. **Markers on the calendar.** FOO dates are months, so they sit on the first of their month; the close marker sits on the last day, or the day the month was closed.
 102. **Drag on a phone.** Phones use the item's Move button with a day picker; drag is desktop only.
 
+## Open the books (Nov 3 2026)
+
+103. **Housing % and roommates.** The app's Housing % (M2A) divides a Split rent only by Split by, not by your roommates, while My share (M21) divides it by roommates + 1. The sheet copies the app so the Check matches. Should Housing % split by roommates too (it would change the number on Report)?
+104. **The rest of the brief.** The request stopped at "7. Projections: y". Projections is built as investments year by year to FI (50 years, the surplus invested every month, checked against the app's path). What else was meant for Projections, and were there tabs after it (Debt payoff, Calendar, a change log) or sections after the workbook beyond the import and the tests?
+105. **Formulas from the app.** These are "From the app" with the reason on the Math tab: M26 gut accuracy, M2B prepaid, M34 payoff order (a month-by-month simulation), M44 limit used, M56 big deals, M57 solvers, M60 running balance, M61 bonus months, M64, M66 and M67 (calendar marks and dated history), M68 cash layers (little e is a formula), M71 flags; and the gross worked back from take-home (M13) is the app's number inside its formula. OK, or should any become a sheet formula?
+106. **Statuses in the sheet.** The Status column offers Know it, Roughly, Guess, Not for me, I'll find it later and Not now (the six a row can have). The brief named four. Keep six, or show only four and leave the other two as they are?
+107. **Rows taken out of the spreadsheet.** A row deleted in the spreadsheet shows in the review as a removal, not ticked, so nothing is deleted by accident. Tick them by default instead?
+108. **A 6 in a % cell.** A percent cell that comes back as 6 (typed without the % sign in a sheet that does not convert it) is read as 6% and says so in the review. OK?
+109. **Fields that stay in the app.** A few things are not columns and say why in js/registry/fields.js: holdings, allocation and the match tiers inside an account, the Roth IRA log, links between rows (Paid with, Linked to, a sinking fund's account), employer benefits answers, life admin, refund history, homework flags, and calendar marks. Should any of them get a tab of their own?
+110. **Google Sheets and Excel.** The file was checked by recalculating it in LibreOffice, not in Google Sheets or Excel (no access from the build container). Please open one in each once and say if anything looks off.
