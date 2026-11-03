@@ -92,3 +92,16 @@ Each one has the default used so the build could keep going. Answer here or in t
 65. **Community presets.** Stored per client. Yom tov and Pesach come in as yearly costs with blank amounts and no month (the dates move each year). The kosher note is one line on the Budget, not a change to the grocery guess.
 66. **Onboarding timer for the demo client.** "First computed number" is the first time any of net worth, surplus, savings rate or runway has a value; with example numbers that is immediately.
 67. **"I don't have this".** Saved as the field's Not for me status (counts as answered, as $0 in the math), on every field added in this batch. Earlier fields still have I'll find it later only.
+
+## Brandon batch, full copy (Nov 3 2026)
+
+68. **"Fill each other in" (your answer to 47).** Read as: Income and the 401(k) each show the other's 401(k) % and employer match when their own box is blank, marked "From Income" or "From your 401(k)"; typing on either side keeps that side's own answer. A multi-tier match from the 401(k) shows on Income as text, since Income only has one "% up to %". Right reading?
+69. **NY and NYC rates.** Typed in from the 2026 rates as I know them (the five lowest NY brackets cut 0.1 point for 2026). Please check them against the NY tax department's 2026 tables. The high-income recapture and Yonkers are not modeled; other states are still federal only.
+70. **Savings rate and before-tax saving.** The headline stays M28 (surplus over take-home). 401(k) and HSA money from the paycheck shows as a second number ("X% with your 401(k) and HSA"). Should that become the headline?
+71. **Premiums as cash flow.** Each coverage row says Paid from: Paycheck (already out of take-home) or Budget line (one tap adds a linked fixed line). Health premiums typed on Income stay separate from the Health coverage row. Merge them?
+72. **"Personal care and hygiene".** Display only: the DRAFTT T letter is still Therapy in the math and the charts, and actual therapy shows as its own section. Rename the letter in the spec too?
+73. **Dates and Other wants.** Added to the usual list with starter guesses ($100, $50) marked Guess like the other 43 lines. Blank instead?
+74. **Who covers it.** Rarer answers (Included in rent, N/A, Need it, don't have yet) moved behind "Other". OK to drop any of them?
+75. **Payday card.** "Fixed bills" is your share of lines marked Fixed plus debt payments that are not lines. Savings goals and sinking funds are not taken out of "free to spend" yet.
+76. **Paychecks left to max the HSA.** Counted from today's date and the pay frequency, not the typed paydays.
+77. **Report this without a client.** It asks you to open a client first, because the note lives in the client file.
