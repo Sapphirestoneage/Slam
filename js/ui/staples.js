@@ -309,7 +309,7 @@ export const WHO_PAYS = ['Me', 'Split', 'Included in rent', 'Covered by someone'
 export function whoPays(rec, update) {
   const v = rec.values.whoPays ?? 'Me';
   return h('div.stack', {}, h('span.label', {}, 'Who pays'),
-    toggle(WHO_PAYS, v, x => update({ whoPays: x }), { label: 'Who pays' }),
+    select(WHO_PAYS, v, x => update({ whoPays: x ?? 'Me' }), { label: 'Who pays', hint: 'Me', width: 220 }),
     v === 'Split' ? h('span.row-line', {}, h('span.label', {}, 'Split by'), stepper(rec.values.splitBy ?? null, n => update({ splitBy: n }), { min: 1, label: 'Split by' })) : null,
     v === 'Covered by someone' ? textInput(rec.values.coveredBy, x => update({ coveredBy: x }), { hint: 'Add who covers it' }) : null,
     v === 'My share' ? moneyInput(rec.values.myShare, x => update({ myShare: x }), { hint: 'Add my share' }) : null);
@@ -431,17 +431,26 @@ export function timeToggle(ctx) {
 
 // ---------- Record list: rows, groups, bulk select, totals (R105, R109 to R114, R165, R171, R172) ----------
 const slug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+// Which groups are folded, per list, kept for the session (this browser tab). Unset groups use the list's default.
+const FOLDS = (() => { try { return JSON.parse(sessionStorage.getItem('slam.folds') || '{}'); } catch { return {}; } })();
+const saveFolds = () => { try { sessionStorage.setItem('slam.folds', JSON.stringify(FOLDS)); } catch { /* storage blocked: kept until reload */ } };
 export function recordList(ctx, cfg) {
   const root = h('div.list-wrap');
   const listKey = cfg.key ?? slug(cfg.title);
-  const state = { selected: new Set(), folded: new Set(cfg.foldedGroups || []), open: null };
+  const folds = (FOLDS[listKey] ??= {});
+  const state = { selected: new Set(), open: null, selecting: false };
+  const isFolded = g => folds[g] ?? (cfg.startFolded === true || (cfg.foldedGroups || []).includes(g));
   // Looks-only changes (select, More, fold) update in place; anything else redraws inside keepPlace (R165).
   const draw = () => keepPlace(() => clear(root, render()));
   let view = null; // the parts of the last render that in-place updates touch
   const update = (rec, patch) => { ctx.store.update(rec.id, patch); flashSaved(root.querySelector(`tr[data-id="${rec.id}"]`)); };
   const addNew = (type, name = null, after = null) => {
     const r = ctx.store.add(cfg.kindOf?.(type) ?? cfg.kind, { name: name ?? null, ...(cfg.newValues?.(type) || {}) }, { type: type ?? cfg.defaultType ?? null, after });
-    requestAnimationFrame(() => root.querySelector(`tr[data-id="${r.id}"] input`)?.focus());
+    requestAnimationFrame(() => {
+      const tr = root.querySelector(`tr[data-id="${r.id}"]`);
+      if (tr?.hidden) setFold(tr.dataset.group, false); // a new line opens its group
+      tr?.querySelector('input:not([type="checkbox"])')?.focus();
+    });
     return r;
   };
   const remove = (ids, anchor) => {
@@ -470,8 +479,16 @@ export function recordList(ctx, cfg) {
     // The bulk bar lies over the header row, so nothing below it moves.
     clear(view.bulkHost, sel.length ? bulkBar(ctx, sel, view.actions(sel)) : null);
   }
+  function setSelecting(on) {
+    state.selecting = on;
+    if (!on) state.selected.clear();
+    root.classList.toggle('selecting', on);
+    const b = root.querySelector('button.select-btn');
+    if (b) { b.setAttribute('aria-pressed', String(on)); b.lastChild.textContent = on ? 'Done selecting' : 'Select'; }
+    refreshSelection();
+  }
   function setFold(g, folded) {
-    folded ? state.folded.add(g) : state.folded.delete(g);
+    folds[g] = folded; saveFolds();
     const head = view?.groups.get(g);
     if (!head) return;
     for (const tr of view.body.querySelectorAll('tr')) if (tr.dataset.group === g && tr !== head) tr.hidden = folded;
@@ -517,10 +534,29 @@ export function recordList(ctx, cfg) {
   };
   const moreRow = (r, g) => h('tr.more', { 'data-for': r.id, 'data-group': g }, h('td', { colspan: view.span }, moreLayers(ctx, r, cfg, p => update(r, p))));
 
+  // One "..." per row: Reset, Duplicate, Not for me (or Bring back), then Delete on its own (R105).
+  const rowMenuButton = r => {
+    const name = r.name || r.type || cfg.thing.one;
+    const btn = h('button.icon-btn.menu-btn', { type: 'button', 'aria-label': `Actions for ${name}`, 'aria-haspopup': 'menu', 'data-tip': 'Actions', 'data-focus': 'menu' }, icon('dots'));
+    const item = (label, iconName, run, { danger = false } = {}) => h(`button.menu-item${danger ? '.danger' : ''}`, { type: 'button', role: 'menuitem', onclick: () => { closePop(); run(); } }, icon(iconName), label);
+    btn.onclick = () => popover(btn, h('div.row-menu', { role: 'menu', 'aria-label': `Actions for ${name}` },
+      item('Reset', 'reset', () => reset([r.id])),
+      item('Duplicate', 'copy', () => { ctx.store.duplicate(r.id); toast('Duplicated.', { undo: () => ctx.store.undo() }); }),
+      cfg.notForMe ? (r.status === 'Not for me'
+        ? item('Bring back', 'undo', () => update(r, { status: null }))
+        : item('Not for me', 'x', () => { update(r, { status: 'Not for me' }); toast('Moved to Not for me. It counts as $0.', { undo: () => ctx.store.undo() }); })) : null,
+      h('hr'),
+      item('Delete', 'trash', () => remove([r.id], btn), { danger: true })), { width: 200 });
+    return btn;
+  };
+
   function render() {
     const m = ctx.metrics();
     const recs = ctx.visible(cfg.filter);
-    const head = h('div.section-title', {}, h('h2', {}, cfg.title), h('span.spacer'), cfg.headerExtra?.(ctx) ?? null,
+    root.classList.toggle('selecting', state.selecting);
+    const selectBtn = h('button.btn.small.select-btn', { type: 'button', 'aria-pressed': String(state.selecting), 'data-focus': 'select-mode', onclick: () => setSelecting(!state.selecting) },
+      icon('check'), h('span', {}, state.selecting ? 'Done selecting' : 'Select'));
+    const head = h('div.section-title', {}, h('h2', {}, cfg.title), h('span.spacer'), cfg.headerExtra?.(ctx) ?? null, recs.length ? selectBtn : null,
       recs.length ? iconButton('reset', `Clear all ${cfg.thing.plural}`, e => confirmBox(e.currentTarget, {
         text: `Clear all ${recs.length} ${recs.length === 1 ? cfg.thing.one : cfg.thing.plural}? You can undo this.`,
         yes: `Clear ${cfg.thing.plural}`, no: 'Keep them', onYes: () => { ctx.store.resetSection(cfg.filter); toast('Cleared.', { undo: () => ctx.store.undo() }); } })) : null);
@@ -547,10 +583,10 @@ export function recordList(ctx, cfg) {
     }) };
     const multi = groups.size > 1; // R171: group headers when more than one type
     for (const [g, rows] of groups) {
-      const folded = multi && state.folded.has(g);
+      const folded = multi && isFolded(g);
       if (multi) {
         const tr = h('tr.group', { 'data-group': g },
-          h('td', { colspan: span }, h('button.fold', { type: 'button', 'aria-expanded': String(!folded), 'data-focus': `fold:${g}`, onclick: () => setFold(g, !state.folded.has(g)) },
+          h('td', { colspan: span }, h('button.fold', { type: 'button', 'aria-expanded': String(!folded), 'data-focus': `fold:${g}`, onclick: () => setFold(g, !isFolded(g)) },
             icon(folded ? 'right' : 'down'), `${g} (${rows.length})`, cfg.subtotal ? h('span.muted', {}, ' · ', cfg.subtotal(ctx, rows, m)) : null)));
         groupEls.set(g, tr);
         body.append(tr);
@@ -564,11 +600,9 @@ export function recordList(ctx, cfg) {
           cols.map((c, i) => h(`td.col-${slug(c.label)}${i === 0 ? '.col-first' : ''}${c.num ? '.num' : ''}`, {}, c.render(ctx, r, m, p => update(r, p), { remove: e => remove([r.id], e.currentTarget) }))),
           h('td.col-status', {}, statusPicker(r.status, s => update(r, { status: s }))),
           h('td.col-actions', {}, h('span.actions', {},
-            iconButton('copy', 'Duplicate', () => { ctx.store.duplicate(r.id); toast('Duplicated.', { undo: () => ctx.store.undo() }); }),
-            iconButton('reset', 'Reset', () => reset([r.id])),
-            iconButton('trash', 'Delete', e => remove([r.id], e.currentTarget)),
             h('button.caret', { type: 'button', 'aria-expanded': String(open), 'data-focus': 'more', onclick: () => setOpen(r.id) },
-              open ? 'Less' : 'More', icon(open ? 'down' : 'right')))));
+              open ? 'Less' : 'More', icon(open ? 'down' : 'right')),
+            rowMenuButton(r))));
         // Enter in a row = new row below (R168).
         tr.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') { e.target.dispatchEvent(new Event('change')); addNew(r.type, null, r.id); } });
         rowEls.set(r.id, tr);
@@ -577,7 +611,7 @@ export function recordList(ctx, cfg) {
       }
     }
     if (state.open && !rowEls.has(state.open)) state.open = null;
-    const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td', {}), cfg.totals(ctx, recs, m, cols))) : null;
+    const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td.check-cell', {}), cfg.totals(ctx, recs, m, cols))) : null;
     const done = recs.filter(r => (cfg.coreFields || ['amount']).every(f => countsAsDone(statusOf(r, f)))).length;
     const out = h(`div.section.area-${cfg.area}`, {}, head,
       cfg.strip ? cfg.strip(ctx, m) : null,

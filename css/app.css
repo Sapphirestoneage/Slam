@@ -241,3 +241,14 @@ select { color-scheme: inherit; }
 .completion-wrap { margin: calc(-1 * var(--s2)) 0 var(--s4); }
 .completion-wrap .completion { margin: 0 0 var(--s2); }
 ul.missing { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: .9375rem; }
+
+/* Fix pass 3: rows fit. Checkboxes only in Select mode; one "..." menu per row. */
+.list-wrap:not(.selecting) .check-cell { display: none; }
+.btn.select-btn[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+.row-menu { display: flex; flex-direction: column; gap: 2px; }
+.row-menu hr { border: 0; border-top: 1px solid var(--border-row); margin: 4px 0; width: 100%; }
+.menu-item { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: var(--s2); min-height: 36px; padding: 0 var(--s3); border-radius: var(--r-button); cursor: pointer; font-weight: 600; }
+.menu-item:hover, .menu-item:focus-visible { background: var(--primary-light); }
+.menu-item.danger { color: var(--danger); }
+.pop:has(.row-menu) { min-width: 0; padding: var(--s2); }
+.keep-slot { display: inline-flex; min-width: 64px; }
