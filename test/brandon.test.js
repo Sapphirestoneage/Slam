@@ -354,3 +354,14 @@ test('B7: next paycheck, fixed bills per paycheck, and what is free, per period 
   assert.equal(d.period.free, 1200);
   assert.deepEqual([d.month.in, d.month.fixed, d.month.free], [4000, 1600, 2400]);
 });
+
+// ---------- B8: glossary ----------
+import { termIn, GLOSSARY } from '../js/glossary.js';
+test('B8: labels find their term (longest first); sentences and plain words do not', () => {
+  assert.equal(termIn('Coast FI').term, 'Coast FI');
+  assert.equal(termIn('Monthly surplus').term, 'Surplus');
+  assert.equal(termIn('Card utilization, all cards').term, 'Utilization');
+  assert.equal(termIn('First name'), null);
+  assert.equal(termIn('FIRST'), null); // FI must be its own word
+  for (const t of ['Pace', 'Coverage', 'Buffer', 'Surplus', 'Coast FI']) assert.ok(GLOSSARY[t]);
+});
