@@ -42,7 +42,7 @@ export function budgetScreen(app, ctx) {
     S.moreBlock('budget:settings', () => h('div.row-line', { style: { gap: '20px', alignItems: 'flex-start' } },
       S.labelled('Use for surplus and FI', S.toggle([['gut', 'Gut number'], ['lines', 'The lines']], m.inputs.spendingSource, v => ctx.store.setDoc('spending', { source: v }), { label: 'Spending used for the math' }),
         { note: m.inputs.gutTotal === null ? 'No gut number yet, so the lines are used' : `Gut ${money(m.inputs.gutTotal)} · lines ${money(m.inputs.lineTotal ?? 0)}` }),
-      S.labelled('Group by', S.toggle(['DRAFTT', 'Category'], UI.groupBy, v => { UI.groupBy = v; redraw(); }, { label: 'Group by' }), { note: 'DRAFTT letters or plain categories' }),
+      S.labelled('Group by', S.toggle(['DRAFTT', 'Category', ['Who', 'Who covers it']], UI.groupBy, v => { UI.groupBy = v; redraw(); }, { label: 'Group by' }), { note: 'DRAFTT letters, plain categories, or who pays' }),
       S.labelled('Basis', S.toggle([['accrual', 'Accrual'], ['cash', 'Cash']], doc.spending.basis || 'accrual', v => ctx.store.setDoc('spending', { basis: v }), { label: 'Cash or accrual' }),
         { note: 'Accrual spreads yearly and prepaid costs across the months' }),
       S.labelled('Period', S.select(Object.keys(PERIOD), UI.period, v => { UI.period = v || 'Monthly'; redraw(); }, { label: 'Period', hint: 'Monthly', width: 140 })),

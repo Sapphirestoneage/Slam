@@ -405,3 +405,9 @@ test('62: money going into a sinking fund comes out of the surplus', () => {
   assert.equal(before - after.value, 150); // 900 left over 6 months
   assert.match(after.text, /sinking funds/);
 });
+test('74: who covers it reads into four answers; included in rent and N/A count as zero', async () => {
+  const { myShare } = await import('../js/math/spending.js');
+  assert.equal(myShare({ amount: 40, per: 'month', whoPays: 'Included in rent' }).value, 0);
+  assert.equal(myShare({ amount: 40, per: 'month', whoPays: 'N/A' }).value, 0);
+  assert.equal(myShare({ amount: 90, per: 'month', whoPays: 'Split', splitBy: 3 }).value, 30);
+});

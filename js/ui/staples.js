@@ -356,25 +356,34 @@ function takeoverBox(rec, update) {
 export const WHO_PAYS = ['Me', 'Split', 'Included in rent', 'Covered by someone', 'N/A', 'My share', "Need it, don't have yet"];
 // Who covers it (B6.1): covered by me, by someone else (with an optional date it becomes mine), or not for me.
 // "Me" then asks how: all mine, split with roommates, or my share of a bigger bill (B6.5). Rarer answers sit behind Other.
-const MINE = [['Me', 'All mine'], ['Split', 'Split evenly'], ['My share', 'My share of the bill']];
-const OTHER_WHO = ['Included in rent', 'N/A', "Need it, don't have yet"];
+// Who covers it (answer to 74): four answers, each opening only its own details.
+//   I'm covering it · We're splitting it (evenly, or my share of the bill) · Someone else (who, and when it becomes mine) · Not for me.
+// Older answers read into these: Included in rent is someone else (the landlord), N/A is not for me, Need it is mine.
+export const WHO = [['Me', "I'm covering it"], ['Split', "We're splitting it"], ['Someone else', 'Someone else is'], ['Not for me', 'Not for me']];
+export function whoOf(rec) {
+  const v = rec.values?.whoPays ?? 'Me';
+  if (rec.status === 'Not for me' || v === 'N/A') return 'Not for me';
+  if (v === 'Covered by someone' || v === 'Included in rent') return 'Someone else';
+  if (v === 'Split' || v === 'My share') return 'Split';
+  return 'Me';
+}
 export function whoPays(rec, update) {
   const v = rec.values.whoPays ?? 'Me';
-  const top = rec.status === 'Not for me' ? 'Not for me' : v === 'Covered by someone' ? 'Someone else' : OTHER_WHO.includes(v) ? 'Other' : 'Me';
-  const pickTop = x => update(x === 'Not for me' ? { status: 'Not for me' } : { status: rec.status === 'Not for me' ? null : rec.status,
-    whoPays: x === 'Someone else' ? 'Covered by someone' : x === 'Other' ? (OTHER_WHO.includes(v) ? v : OTHER_WHO[0]) : (MINE.some(([k]) => k === v) ? v : 'Me') });
+  const top = whoOf(rec);
+  const keepStatus = rec.status === 'Not for me' ? null : rec.status;
+  const pick = x => update(x === 'Not for me' ? { status: 'Not for me' }
+    : { status: keepStatus, whoPays: x === 'Someone else' ? (v === 'Included in rent' ? v : 'Covered by someone') : x === 'Split' ? (v === 'My share' ? 'My share' : 'Split') : 'Me' });
   const total = rec.amount == null ? 'Add the amount above' : `${money(rec.amount)} per ${rec.per}`;
   return h('div.stack', {}, h('span.label', {}, 'Who covers it'),
-    // A dropdown, not a row of buttons (fix pass item 3).
-    select([['Me', 'Covered by me'], ['Someone else', 'Covered by someone else'], ['Not for me', 'Not for me'], ['Other', 'Other']], top, x => pickTop(x ?? 'Me'), { label: 'Who covers it', hint: 'Covered by me', width: 230 }),
-    top === 'Me' ? toggle(MINE, MINE.some(([k]) => k === v) ? v : 'Me', x => update({ whoPays: x }), { label: 'How it is paid' }) : null,
-    top === 'Me' && v === 'Split' ? h('span.row-line', {}, h('span.label', {}, 'Split by'), stepper(rec.values.splitBy ?? null, n => update({ splitBy: n }), { min: 1, label: 'Split by' }), h('span.muted.small', {}, 'Blank: you plus each roommate')) : null,
-    top === 'Me' && v === 'My share' ? h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Total bill'), h('span.computed', {}, total),
+    toggle(WHO, top, x => pick(x ?? 'Me'), { label: 'Who covers it' }),
+    top === 'Split' ? toggle([['Split', 'Evenly'], ['My share', 'My share of the bill']], v === 'My share' ? 'My share' : 'Split', x => update({ whoPays: x }), { label: 'How it is split' }) : null,
+    top === 'Split' && v !== 'My share' ? h('span.row-line', {}, h('span.label', {}, 'Split by'), stepper(rec.values.splitBy ?? null, n => update({ splitBy: n }), { min: 1, label: 'Split by' }), h('span.muted.small', {}, 'Blank: you plus each roommate')) : null,
+    top === 'Split' && v === 'My share' ? h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Total bill'), h('span.computed', {}, total),
       h('span.label', {}, 'My share a month'), moneyInput(rec.values.myShare, x => update({ myShare: x }), { hint: 'Add my share' })) : null,
     top === 'Someone else' ? h('span.row-line', { style: { gap: '8px' } }, // M7.1: who, and when it becomes yours
-      select(['Parents', 'Partner', 'Employer', 'Other'], rec.values.coveredBy ?? null, x => update({ coveredBy: x }), { label: 'Who covers it', hint: 'Who covers it', width: 150 }),
-      takeoverBox(rec, update)) : null,
-    top === 'Other' ? select(OTHER_WHO, v, x => update({ whoPays: x }), { label: 'Other', width: 200 }) : null);
+      select(['Parents', 'Partner', 'Employer', 'Landlord (in rent)', 'Other'], v === 'Included in rent' ? 'Landlord (in rent)' : rec.values.coveredBy ?? null,
+        x => update(x === 'Landlord (in rent)' ? { whoPays: 'Included in rent', coveredBy: x } : { whoPays: 'Covered by someone', coveredBy: x }), { label: 'Who covers it', hint: 'Who covers it', width: 170 }),
+      takeoverBox(rec, update)) : null);
 }
 // Paid with: checking or a credit card; no bill comes from savings. With one checking account or one card it is
 // picked for you; with more, 'Which checking' or 'Which card' asks (buttons up to 6 cards, a search after, R112).

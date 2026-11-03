@@ -1,7 +1,7 @@
 // List setups built from the staples: debts and spending lines. Each list is a view of the one record type.
 import { h, icon } from './dom.js';
 import { addPresets } from '../presets.js';
-import { fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, hoursChip, park, parkProfile, metricCard } from './staples.js';
+import { fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard } from './staples.js';
 import { pct } from '../format.js';
 import { feeApr } from '../math/debt.js';
 import { monthlyFrom } from '../math/income.js';
@@ -134,11 +134,11 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
     filter: r => r.kind === 'bill' && !r.values.irregular,
     // Eliminated lines fold away at the bottom; one tap brings one back.
     // B6.6: Therapy is its own section; the rest of the T letter reads "Personal care and hygiene" (display only).
-    groupBy: r => (r.status === 'Not for me' ? 'Not for me' : groupBy === 'Category' ? r.values.category || 'Other'
+    groupBy: r => (r.status === 'Not for me' ? 'Not for me' : groupBy === 'Who' ? Object.fromEntries(WHO)[whoOf(r)] : groupBy === 'Category' ? r.values.category || 'Other'
       : r.values.draftt === 'Therapy' && r.values.category !== 'Therapy' ? 'Personal care and hygiene' : r.values.category === 'Therapy' ? 'Therapy' : r.values.draftt || 'Other'),
     groupLabel: g => (g === 'Not for me' ? 'Hidden: not for me' : g),
     // B6.6: every section takes a new line, filed under that section.
-    groupAdd: g => (g === 'Not for me' || g === 'Debt' || groupBy === 'Category' ? null // debts are added on Net worth
+    groupAdd: g => (g === 'Not for me' || g === 'Debt' || groupBy === 'Category' || groupBy === 'Who' ? null // debts are added on Net worth
       : { name: null, values: { draftt: g === 'Personal care and hygiene' ? 'Therapy' : g, ...(g === 'Therapy' ? { category: 'Therapy' } : {}), amountType: 'Variable', timing: 'Variable date' } }),
     key: 'spending-lines', notForMe: true,
     // Groups start folded, showing their subtotal; open or closed is kept for the session.

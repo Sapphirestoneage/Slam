@@ -28,6 +28,9 @@ export function prepaidLeft({ amount, months, monthsElapsed }) {
 export function myShare(line, { roommates = 0, basis = 'accrual' } = {}) {
   if (!isBlank(line.myShare)) return ok('M21', line.myShare, `You said your share is ${fmt.money(line.myShare)}.`);
   if (line.status === 'Not for me') return ok('M21', 0, 'Marked Not for me, so it counts as zero.');
+  // Answer to 74: Included in rent is already in the rent line; N/A is not for me. Neither counts again.
+  if (line.whoPays === 'Included in rent') return ok('M21', 0, 'Included in the rent, so it is already counted there.');
+  if (line.whoPays === 'N/A') return ok('M21', 0, 'Does not apply, so it counts as zero.');
   const m = lineMonthly(line, { basis });
   if (m.value === null) return { ...m, id: 'M21' };
   const covered = line.coveredPct ?? (line.whoPays === 'Covered by someone' ? 1 : 0);
