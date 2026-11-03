@@ -430,7 +430,9 @@ function sinkingFunds(ctx) {
     const acct = accounts.find(a => a.id === v.sinkingFund);
     const tags = (acct?.values.tags || []).map(t => t.name).filter(Boolean);
     return h('tr', {},
-      h('td', {}, h('strong', {}, x.name), h('div.muted.small', {}, x.source)),
+      h('td', {}, h('strong', {}, x.name), h('div.muted.small', {}, x.source),
+        // A yearly cost from the Budget is already in spending as its monthly set-aside, so Free after savings leaves it out.
+        x.rec.kind === 'bill' && x.rec.values.irregular ? h('div.muted.small', {}, 'Already counted in spending') : null),
       h('td.num', {}, f.target == null ? h('span.muted', {}, 'Needs a cost') : money(f.target)),
       h('td', {}, x.ym ? monthName(x.ym, 'short') : h('span.muted', {}, 'Needs a month')),
       h('td.num', {}, f.savedFrom && f.savedFrom !== 'typed' ? h('span.computed', { title: `From ${f.savedFrom}` }, money(f.saved))
