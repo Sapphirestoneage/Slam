@@ -47,6 +47,7 @@ Node 20 or newer. The math runs in Node with no browser.
 | `tools/artifact.mjs` | Builds the one-file SLAM for Eli page from this repo (see the file for how) |
 | `js/math/portfolio.js`, `js/ui/account-detail.js`, `js/ui/account-specific.js` | Inside each account: allocation, holdings, goals, growth, details; 401(k) and HSA |
 | `js/homework.js` | I'll find it later: the Homework list and where to find each thing |
+| `js/benefits.js`, `js/year.js`, `js/lifeadmin.js`, `js/community.js`, `js/timer.js` | Benefits and withholding flag; your year, sinking funds, taking over; life admin; community presets; onboarding timer |
 | `docs/backlog-brandon.md` | The Nov 2 beta feedback, tagged NOW or LATER |
 | `data/reference-2026.json` | Presets, limits, rates, lists from the Reference data tab |
 | `PROGRESS.md`, `QUESTIONS.md`, `BACKLOG.md` | Where the build stands, open questions, later phases |

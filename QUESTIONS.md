@@ -77,3 +77,18 @@ Each one has the default used so the build could keep going. Answer here or in t
 53. **Stale balance.** Uses "Balance as of", set to today whenever a balance is typed; older rows fall back to the row's last edit date.
 54. **Owner twice for couples.** Every account now has Individual / Joint under Details; couples also keep the Me / Partner / Joint column. Fold them into one?
 55. **Next on the Profile.** Shows once every core answer is in or parked with I'll find it later, and goes to Income. Before that, it says how many are left and names the first three.
+
+## Missed-ideas batch (Nov 2 2026)
+
+56. **Credit cards as "their own account type".** Kept as the Debt type they already were (one record for each thing, R049, R115), grouped under Credit cards on Debt. Want them on Assets as well, or a sub-tab of their own?
+57. **Commuter limit.** $340 a month (IRS 2026, transit and parking each) was added to data/reference-2026.json; it is not in the spec's Reference data tab yet. The nudge uses transit lines (Transit; Transit, Uber; Tolls and parking) and the federal + FICA marginal rate; state and NYC tax are not in yet, so the saving reads low for NY.
+58. **Benefits and take-home.** The answers do not change take-home or tax yet; the Income row's before-tax boxes (health premium, HSA or FSA, other before-tax) still drive that. Should a commuter or FSA yes fill those boxes?
+59. **"Large" refund.** $1,000 or more. Owing any amount flags "check withholding".
+60. **Year view placement.** Built into Plan › Next 12 months (Your year, Sinking funds, Taking over above the events list) instead of a new tab. The tab name is unchanged.
+61. **Insurance renewals and lease renewal months.** Added with no month, since only you know them; card annual fees use the card's Opened month.
+62. **Sinking funds and Budget.** A sinking fund's monthly amount shows on Next 12 months only; it is not added to spending or the surplus yet (yearly costs already are, as their set-aside).
+63. **Taking over and the math.** Covered bills still count as $0 to you until the date; the list shows what each date adds, but the FI date does not move on those dates yet.
+64. **Life admin: one freeze or three.** Shown as three rows, one per bureau, so each can be done on its own.
+65. **Community presets.** Stored per client. Yom tov and Pesach come in as yearly costs with blank amounts and no month (the dates move each year). The kosher note is one line on the Budget, not a change to the grocery guess.
+66. **Onboarding timer for the demo client.** "First computed number" is the first time any of net worth, surplus, savings rate or runway has a value; with example numbers that is immediately.
+67. **"I don't have this".** Saved as the field's Not for me status (counts as answered, as $0 in the math), on every field added in this batch. Earlier fields still have I'll find it later only.
