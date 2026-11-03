@@ -126,3 +126,8 @@ Each one has the default used so the build could keep going. Answer here or in t
 84. **Health from the paycheck with two jobs.** The premium is borrowed by the first job (the one the 401(k) links to); other jobs show "From Health, on your main job". OK?
 85. **fields.json and the Fields tab.** data/fields.json was already out of step with spec/csv/Fields.csv before this pass (some field names and groups differ). Only the Lives on column was updated in both. Regenerate fields.json from the spec with tools/fields.py?
 86. **The phone branch (claude/youthful-darwin-qjerhn).** Not merged: it was built on the Phase 11 code and fights the fix pass (the breadcrumb comes back, the backup reminder becomes a floating toast with dots on Tools and the gear instead of the dot on Saved, its phone Find opens the old Find overlay, its Tools sheet uses the old quick add and time toggle). Rebuild the phone layout on the new chrome (one slim row, bottom tabs named Home, Net worth, Cash flow, Plan, Report, Tools sheet with Find or add)?
+
+## Polish pass (Nov 3 2026)
+
+87. **Sub-tab order: Nov 2 or Nov 3.** This request lists Net worth as Profile, Debt, Assets, Protection and Cash flow as Income, Budget, Calendar, Month-end close, Taxes (decided Nov 2). The reorganize pass on Nov 3 put About you first in Home and Taxes right after Income, so Cash flow reads in waterfall order, and that is what is built. Switch to the Nov 2 order? It is a few lines in js/nav.js.
+

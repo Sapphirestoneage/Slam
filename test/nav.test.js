@@ -44,3 +44,17 @@ test('old routes redirect to the new homes (bookmarks, Find, every number links 
 test('no field lives on an old tab', () => {
   for (const f of fields) assert.doesNotMatch(f.livesOn, /My Money|Spending ›/, f.id);
 });
+test('every link in the code points at a live screen, not an old home (Guide me, Next 3, Open where it lives)', async () => {
+  const { readdirSync, statSync } = await import('node:fs');
+  const files = [];
+  const walk = d => { for (const f of readdirSync(d)) { const p = `${d}/${f}`; statSync(p).isDirectory() ? walk(p) : p.endsWith('.js') && files.push(p); } };
+  walk(new URL('../js', import.meta.url).pathname);
+  const bad = [];
+  for (const f of files) {
+    if (f.endsWith('/nav.js')) continue; // the redirect table itself
+    for (const [, route] of readFileSync(f, 'utf8').matchAll(/['"`](#\/[a-z0-9-]+\/[a-z0-9-]+)/g)) {
+      if (parseRoute(route).hash !== route) bad.push(`${f.split('/js/')[1]}: ${route}`);
+    }
+  }
+  assert.deepEqual(bad, []);
+});
