@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // One record type for every money item (R115), dated history on every change (R123),
 // undo and redo over every change (R086), snapshots (R083, R085, R167), export and import.
 // Pure: no DOM, no storage. js/storage.js saves it; the screens read it.
@@ -20,7 +21,9 @@ export function sureOf(status, hasValue = true) {
   return hasValue ? 'Know it' : 'Missing';
 }
 export const PERIODS = ['paycheck', 'week', '2 weeks', 'twice a month', 'month', 'quarter', 'year'];
-export const SOURCES = ['manual', 'statement', 'bank']; // R116, R118
+export const SOURCES = ['manual', 'statement', 'bank', 'spreadsheet']; // R116, R118; spreadsheet: brought back from Open the books
+// Where a number came from, in the user's words.
+export const SOURCE_WORDS = { manual: 'Typed in', statement: 'From a statement', bank: 'From the bank', spreadsheet: 'From your spreadsheet', holdings: 'From the holdings' };
 
 const UNDO_LIMIT = 200;
 const clone = v => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
@@ -77,6 +80,7 @@ export class Store {
     this.redoStack = [];
     this.listeners = new Set();
     this._tx = null;
+    this.source = null;
   }
 
   subscribe(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); }
@@ -108,7 +112,8 @@ export class Store {
 
   _state() { return clone({ records: this.doc.records, parking: this.doc.parking, profile: this.doc.profile,
     assumptions: this.doc.assumptions, client: this.doc.client, spending: this.doc.spending, session: this.doc.session }); }
-  _log(entry) { this.doc.history.push({ at: this._tx?.at || this.now(), ...entry }); }
+  // store.source, while set, marks every history entry with where the change came from (the spreadsheet import).
+  _log(entry) { this.doc.history.push({ at: this._tx?.at || this.now(), ...entry, ...(this.source ? { source: this.source } : {}) }); }
 
   // after: put the new row right below that one (Enter in a row, R168).
   add(kind, fields = {}, { type = fields.type ?? null, after = null } = {}) {

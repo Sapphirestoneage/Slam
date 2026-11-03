@@ -122,3 +122,12 @@ Made by `python3 tools/backlog.py` from the spec; do not edit by hand.
 | Beta | BL.21 Defined beta stages and version notes for testers | Defined beta stages and version notes for testers |  | Brandon beta (Nov 2) |  |
 | Beta | ML.4 Credit card rewards optimizer | Credit card rewards optimizer |  | Missed ideas (Nov 2) |  |
 | Beta | ML.5 Think-aloud test mode: a tester-drives view with "Report this" pinned open | Think-aloud test mode: a tester-drives view with "Report this" pinned open |  | Missed ideas (Nov 2) |  |
+
+## Logged from prompts (not in the spec yet)
+
+Kept by `tools/backlog.py` when it rebuilds this file. Add each to the spec's Feature list, then remove it here.
+
+| Phase | Feature | What it does | Logged |
+|---|---|---|---|
+| 6 | Send to Google Sheets | Sign in with Google (drive.file scope only), send the workbook to the client's Drive, an Update button, and auto-update on save | Open the books, Nov 3 2026 |
+| 6 | Pull from a connected Google Sheet | Bring changes back from the connected sheet without downloading it, through the same review screen | Open the books, Nov 3 2026 |

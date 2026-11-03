@@ -1,8 +1,10 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // M02, M50 to M58: FI numbers, FI date, Coast FI, big deals, solvers, money as time.
 import { ok, needs, missing, fmt, isBlank } from './result.js';
 import { duration } from '../format.js';
+import { RULES } from '../registry/assumptions.js';
 
-const MAX_MONTHS = 70 * 12;
+const MAX_MONTHS = RULES.maxMonths;
 
 // M02: presets are already after inflation; the engine uses them as they are.
 export function realReturn(preset, ref) {

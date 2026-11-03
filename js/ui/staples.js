@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Staples: pieces built once and used everywhere (Staples tab, R103 to R114, R156 to R174, R182 to R185).
 import { h, clear, icon } from './dom.js';
-import { STATUSES, SURE, sureOf, statusOf, changeSince, countsAsDone } from '../records.js';
+import { STATUSES, SURE, sureOf, statusOf, changeSince, countsAsDone, SOURCE_WORDS } from '../records.js';
 import { metrics, keyNumbers } from '../math/metrics.js';
 import { inView, timeChip } from '../math/time.js';
 import { money, pct, number, EMPTY, duration } from '../format.js';
@@ -762,7 +763,7 @@ function moreLayers(ctx, r, cfg, update, extra = [], m = null) {
     cfg.paidWith ? h('div.layer', {}, paidWith(ctx, r, id => update({ paidWith: id }))) : null,
     cfg.secondary ? h('div.layer', {}, cfg.secondary(ctx, r, update)) : null,
     cfg.tertiary ? h('div.layer', {}, cfg.tertiary(ctx, r, update)) : null,
-    h('div.layer', {}, h('span.label', {}, 'Where it came from: '), h('span.tag.plain', {}, r.source)));
+    h('div.layer', {}, h('span.label', {}, 'Where it came from: '), h('span.tag.plain', {}, SOURCE_WORDS[r.source] ?? r.source)));
 }
 
 function bulkBar(ctx, sel, a) {

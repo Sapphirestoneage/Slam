@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Build test fixtures from spreadsheets.
 
   python3 tools/fixtures.py demo     spec/SLAM Build Spec.xlsx, tab 'Demo client' -> fixtures/demo.json

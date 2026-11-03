@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The three statements and the tie-out (Phase 3.5, M62 to M67). Pure: reads the household file, its dated history
 // and the month model; no DOM. Every line keeps the records behind it, so a view can expand it and link to its home.
 //   M62 Net worth statement (balance sheet), as of a date
@@ -8,6 +9,7 @@ import { metrics } from './metrics.js';
 import { statusOf } from '../records.js';
 import { instances, monthView, addMonths, ymOf } from '../month.js';
 import { afterTaxContributions } from './linked.js';
+import { LISTS } from '../registry/assumptions.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const round2 = v => Math.round(v * 100) / 100;
@@ -29,12 +31,12 @@ export function valueAt(doc, rec, field, iso) {
 const startOf = ym => `${ym}-01T00:00:00.000Z`;
 
 // ---------- M62: Net worth statement ----------
-const ROTH = new Set(['Roth IRA']);
-const PRETAX = new Set(['401(k)', '403(b)', '457', 'TSP', 'Solo 401(k)', 'Traditional IRA', 'SEP IRA', 'SIMPLE IRA']);
-const HIGH_RATE = new Set(['Personal loan', 'Buy now, pay later', 'Payday or cash advance', 'Medical', 'Family or friend', 'Tax debt', 'Business', '401(k) loan']);
+const ROTH = new Set(LISTS.rothTypes);
+const PRETAX = new Set(LISTS.pretaxTypes);
+const HIGH_RATE = new Set(LISTS.highRateTypes);
 export const ASSET_ORDER = ['Cash', 'Taxable investments', 'Roth', 'Pretax', 'HSA', 'Real assets'];
 export const DEBT_ORDER = ['Cards', 'Other high rate', 'Student loans', 'Car loans', 'Mortgage', 'Other debt'];
-const assetGroup = r => {
+export const assetGroup = r => {
   if (r.kind === 'asset') return 'Real assets';
   if (r.values?.group === 'cash') return 'Cash';
   if (r.type === 'HSA') return 'HSA';
@@ -42,7 +44,7 @@ const assetGroup = r => {
   if (PRETAX.has(r.type)) return 'Pretax';
   return 'Taxable investments';
 };
-const debtGroup = r => (r.type === 'Credit card' ? 'Cards' : r.type === 'Student loan' ? 'Student loans' : r.type === 'Car loan' ? 'Car loans'
+export const debtGroup = r => (r.type === 'Credit card' ? 'Cards' : r.type === 'Student loan' ? 'Student loans' : r.type === 'Car loan' ? 'Car loans'
   : r.type === 'Mortgage' ? 'Mortgage' : HIGH_RATE.has(r.type) ? 'Other high rate' : 'Other debt');
 const HOME = { Cash: '#/net-worth/assets', Debt: '#/net-worth/debt' };
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Phase 3.5 section 6: Shockingly Simple Math (M72) and Pay yourself first. Pure: no DOM.
 import { fiDate } from './fi.js';
 import { afterTaxContributions } from './linked.js';

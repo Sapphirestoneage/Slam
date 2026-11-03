@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Quick add (R106): 'Netflix 15.99 monthly' or 'Chase card 3200 at 24%' picks the type and section; you confirm.
 
 const PERIODS = [

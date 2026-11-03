@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Every computed number comes back as a Result: the value, what it still needs,
 // whether it rests on a Guess, and the formula in plain words (R166 Show the math).
 import { money, pct, number } from '../format.js';

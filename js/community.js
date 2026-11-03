@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Community presets (missed ideas M9): off by default, per client (doc.settings.community).
 // When on: yearly lines for yom tov and Pesach (blank amounts), a kosher grocery note, future tuition as a goal
 // type, and maaser on gross or take-home at a % (default 10%). Pure: no DOM.

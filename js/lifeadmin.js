@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Life admin checklist (missed ideas M8): done / not yet / not for me. Pure: no DOM.
 // Beneficiaries read and write each account's own "Beneficiary named" answer (one source). Renters insurance
 // counts as done when Protection has it. Everything else lives in doc.profile.lifeAdmin[key].

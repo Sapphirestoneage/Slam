@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Home (build phase 9): the session cockpit. Prep before the call, Live during, Wrap-up after, each with one
 // main button. Answers: where is this client now, what are we doing today, what is the one next thing.
 import { h, clear, icon } from './dom.js';

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Where client files live: localStorage today. Nothing else touches storage.
 import { newHousehold, migrate } from './records.js';
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Reads a household's records and works out every headline number with the Math functions.
 // One place maps records to formula inputs, so every screen shows the same answer.
 import { statusOf } from '../records.js';
@@ -11,10 +12,11 @@ import { link401k, matchFromTiers } from './portfolio.js';
 import { fiNumber, fiDate, coastFi, bigDeals } from './fi.js';
 import { hourlyRate } from './time.js';
 import { debtLines, premiumSources, duplicates, afterTaxContributions } from './linked.js';
+import { LISTS } from '../registry/assumptions.js';
 
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
-const HOUSING = new Set(['Rent or mortgage', 'Electric, gas, water']);
-const CONSUMER = new Set(['Credit card', 'Personal loan', 'Buy now, pay later', 'Payday or cash advance', 'Medical', 'Family or friend']);
+const HOUSING = new Set(LISTS.housing);
+const CONSUMER = new Set(LISTS.consumerDebt);
 
 // A value as the math should see it: Not for me is zero (R058); Not sure with nothing typed is a Guess (R055).
 function read(record, field, guessValue = null, { blankIsGuess = false } = {}) {
@@ -178,11 +180,11 @@ export function metrics(doc, ref, { now = new Date() } = {}) {
   out.fiNumber = fiNumber({ annualSpending: x.retirementSpending === null ? null : x.retirementSpending * 12, withdrawalRate: x.withdrawalRate });
   // Answer to 11: the surplus stays surplus until you choose Invest my surplus. What already goes in counts either way:
   // the 401(k) and HSA from the paycheck and the match; after-tax contributions count unless the surplus (which pays them) is invested.
-  const investSurplus = doc.assumptions?.investSurplus === true;
+  const investSurplus = doc.assumptions?.investSurplus === true || doc.assumptions?.investSurplus === 1; // 1 in the spreadsheet
+  // M53 (spec): surplus to investing + before-tax saving + match. After-tax contributions are paid out of the surplus.
   const alreadyIn = pretaxSaving + match;
-  const monthlyInvesting = out.surplus.value === null && !alreadyIn ? null
-    : alreadyIn + (investSurplus ? out.surplus.value ?? 0 : x.afterTaxSaving ?? 0);
-  out.investing = { investSurplus, alreadyIn, afterTax: investSurplus ? 0 : x.afterTaxSaving ?? 0, surplus: investSurplus ? out.surplus.value : 0, monthly: monthlyInvesting };
+  const monthlyInvesting = out.surplus.value === null ? null : alreadyIn + (investSurplus ? out.surplus.value : 0);
+  out.investing = { investSurplus, alreadyIn, surplus: investSurplus ? out.surplus.value : 0, monthly: monthlyInvesting };
   out.monthsToFi = fiDate({ invested: x.invested, monthlyInvesting, realReturn: x.realReturn, target: out.fiNumber.value }, { from: now });
   if (out.monthsToFi.value === null && !out.monthsToFi.never) { // say what to type, not which result is missing
     const root = [...new Set([...out.surplus.needs, ...out.fiNumber.needs, ...(x.invested === null ? ['invested'] : [])])];

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // M20 to M2B: line amounts, my share, support, floor, set-asides, passes, surplus, savings rate, DRAFTT, housing, prepaid.
 import { ok, needs, missing, fmt, isBlank } from './result.js';
 import { monthlyFrom } from './income.js';
@@ -28,7 +29,7 @@ export function prepaidLeft({ amount, months, monthsElapsed }) {
 const ymNow = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 export function coveredShare(line, now = new Date()) {
   const takeover = line.takeover ?? line.values?.takeover ?? null;
-  if (takeover && takeover <= ymNow(now)) return 0;
+  if (takeover && String(takeover).slice(0, 7) <= ymNow(now)) return 0; // a month, or a date in that month
   return line.coveredPct ?? (line.whoPays === 'Covered by someone' ? 1 : 0);
 }
 

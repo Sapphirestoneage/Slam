@@ -24,6 +24,35 @@ node --test
 
 Node 20 or newer. The math runs in Node with no browser.
 
+The spreadsheet tests (`test/workbook.test.js`, `test/import.test.js`) also write and read a real .xlsx
+when ExcelJS is installed (`npm install`, or `npm install --no-save exceljs@4.4.0`), and recalculate it in
+LibreOffice when that is installed, checking every formula against the app. Without them those few tests
+skip with a message.
+
+## See the math
+
+Every number in SLAM can be opened in a spreadsheet. On Report › One-pager (or Coach tools › Data), **Open in a
+spreadsheet** downloads a workbook with every input, every formula live, and a Check beside each one against the
+app. Change a blue cell and watch what moves. **Bring a spreadsheet back** shows every change for a Keep or Skip
+before anything is saved.
+
+## Open the books (the spreadsheet)
+
+Report › One-pager and Coach tools › Data have **Open in a spreadsheet** (an .xlsx with every number and
+formula, for Excel or Google Sheets) and **Bring a spreadsheet back** (every change listed for approval;
+nothing is saved until Save, with a snapshot first and one undo).
+
+The workbook is built only from the registries in `js/registry/`, so it stays complete as SLAM grows:
+
+- A new field: declare it in `js/registry/fields.js` (its area, label, type, and a column or
+  `sheet: { skip: 'why' }`). `test/coverage.test.js` scans the code for every key the app writes and
+  fails, naming the file and line, until it is declared. The export and the import pick it up from there.
+- A new formula in `js/math`: add its M entry to `js/registry/math.js` with a sheet formula (named
+  ranges only) or `fromApp` and the reason. The test fails for any js/math export or spec M number that is
+  not there, and the workbook build fails for a formula that names a range that does not exist.
+- A new rate, limit or rule: `data/reference-2026.json` or `RULES` in `js/registry/assumptions.js`, with
+  its source and date. The math reads `RULES`, so the app and the sheet use the same number.
+
 ## Test data
 
 - `fixtures/demo.json` is made up and committed. Rebuild it with
@@ -54,6 +83,15 @@ Node 20 or newer. The math runs in Node with no browser.
 | `js/math/layers.js`, `js/ui/layers-ui.js` | Cash layers: little e, income gaps, big e, backups of the backups (M68) |
 | `js/math/foo.js`, `js/ui/foo-ui.js`, `data/flags.json` | Plan › FOO: the SLAM order of operations, Quiet Quitting FI, the path, efficiency flags as data (M69 to M71) |
 | `js/math/markers.js`, `js/math/simple.js` | Calendar FOO and close markers; Shockingly Simple Math (M72) and Pay yourself first |
+| `js/registry/fields.js`, `js/registry/math.js`, `js/registry/assumptions.js`, `js/registry/reports.js` | The registries: every field, every formula (M00 to M72), every assumption, and the Statements, FOO and Projections tabs |
+| `js/sheet/workbook.js`, `js/sheet/excel.js`, `js/sheet/format.js`, `js/import-sheet.js`, `js/ui/sheet-ui.js` | Open the books: the workbook built from the registries, written and read with ExcelJS, and the review on the way back in |
+| `fixtures/households.js` | Made-up households for the spreadsheet tests (every field filled; most of the math in use) |
 | `docs/backlog-brandon.md` | The Nov 2 beta feedback, tagged NOW or LATER |
 | `data/reference-2026.json` | Presets, limits, rates, lists from the Reference data tab |
 | `PROGRESS.md`, `QUESTIONS.md`, `BACKLOG.md` | Where the build stands, open questions, later phases |
+
+## License
+
+SLAM is open source under the GNU Affero General Public License v3.0 only (`LICENSE`). Anyone can use, change and
+share SLAM. Anyone who runs a changed version for others must share their changes under the same license.
+See `CONTRIBUTING.md` to help.

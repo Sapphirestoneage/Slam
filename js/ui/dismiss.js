@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // One way to close things (fix pass item 2): a click outside, or Escape, closes popovers, row More panels and
 // More carets. Each opener registers what it opened here; there are no per-component listeners.
 // Rules: a click inside the thing (or on what opened it) keeps it; a click inside a popover keeps the panels

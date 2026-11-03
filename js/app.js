@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The shell (build phase 4): top bar, five tabs, sub-tabs, breadcrumb, Find, quick add, parking lot,
 // undo and redo, time toggle, client view, gear. Each screen shows its first state from Words and states.
 import { h, clear, icon } from './ui/dom.js';
@@ -54,6 +55,8 @@ const app = {
     } else this.saver = null;
     this.render();
   },
+  // A new, empty client (no starter lines), for Start a new client from a spreadsheet.
+  newClientNamed(name) { this.open(createClient(adapter, name || 'New client', new Date().toISOString())); this.store.undoStack = []; return this.store; },
   newClient(anchor) {
     const input = h('input', { placeholder: 'Client name', 'aria-label': 'Client name' });
     const go = () => { const name = input.value.trim(); if (!name) return; S.closePop(); this.open(createClient(adapter, name, new Date().toISOString())); addPresets(this.store, ref); this.store.undoStack = []; this.go('#/home/prep'); }; // every new client starts with the usual list

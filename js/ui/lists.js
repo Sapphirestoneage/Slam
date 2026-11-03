@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // List setups built from the staples: debts and spending lines. Each list is a view of the one record type.
 import { h, icon } from './dom.js';
 import { addPresets } from '../presets.js';

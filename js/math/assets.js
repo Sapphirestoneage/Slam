@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // M40 to M44: net worth, liquid net worth, runway, Rule of 5, contribution limits.
 import { ok, needs, missing, fmt, isBlank } from './result.js';
+import { RULES } from '../registry/assumptions.js';
 
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 
@@ -34,10 +36,10 @@ export function runway({ cash, spending, fixedFloor = null }) {
 // M43: Rule of 5.
 export function ruleOf5({ age, spending, emergencyCash = null }) {
   if (isBlank(age)) return needs('M43', ['age'], { unit: 'months' });
-  const months = age / 5;
+  const months = age / RULES.ruleOf5Divisor;
   if (isBlank(spending)) return { ...needs('M43', ['spending']), months };
   const target = months * spending;
-  const keepPace = spending / 60;
+  const keepPace = spending / RULES.keepPaceMonths;
   const gap = isBlank(emergencyCash) ? null : target - emergencyCash;
   return { ...ok('M43', target, `Age ${age} divided by 5 = ${fmt.number(months, 1)} months. ${fmt.number(months, 1)} x ${fmt.money(spending)} spending = ${fmt.money(target)}. To keep pace as you age, add ${fmt.money(keepPace)} a month (spending divided by 60).${gap === null ? '' : ` Gap: ${fmt.money(gap)}.`}`), months, keepPace, gap };
 }

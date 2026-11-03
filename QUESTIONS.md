@@ -159,6 +159,25 @@ Each one has the default used so the build could keep going. Answer here or in t
 101. **Markers on the calendar.** FOO dates are months, so they sit on the first of their month; the close marker sits on the last day, or the day the month was closed.
 102. **Drag on a phone.** Phones use the item's Move button with a day picker; drag is desktop only.
 
+## Open the books (Nov 3 2026)
+
+103. **Housing % and roommates.** The app's Housing % (M2A) divides a Split rent only by Split by, not by your roommates, while My share (M21) divides it by roommates + 1. The sheet copies the app so the Check matches. Should Housing % split by roommates too (it would change the number on Report)?
+104. **The rest of the brief.** Answered: the full brief came in the next run and is built (debt payoff month by month in Projections, _meta, the review as asked, coverage, checks, the license).
+105. **Formulas from the app.** These are "From the app" with the reason on the Math tab: M26 gut accuracy, M2B prepaid, M34 payoff order (a month-by-month simulation), M44 limit used, M56 big deals, M57 solvers, M60 running balance, M61 bonus months, M64, M66 and M67 (calendar marks and dated history), M68 cash layers (little e is a formula), M71 flags; and the gross worked back from take-home (M13) is the app's number inside its formula. OK, or should any become a sheet formula?
+106. **Statuses in the sheet.** The Status column offers Know it, Roughly, Guess, Not for me, I'll find it later and Not now (the six a row can have). The brief named four. Keep six, or show only four and leave the other two as they are?
+107. **Rows taken out of the spreadsheet.** A row deleted in the spreadsheet shows in the review as a removal, not ticked, so nothing is deleted by accident. Tick them by default instead?
+108. **A 6 in a % cell.** A percent cell that comes back as 6 (typed without the % sign in a sheet that does not convert it) is read as 6% and says so in the review. OK?
+109. **Fields that stay in the app.** A few things are not columns and say why in js/registry/fields.js: holdings, allocation and the match tiers inside an account, the Roth IRA log, links between rows (Paid with, Linked to, a sinking fund's account), employer benefits answers, life admin, refund history, homework flags, and calendar marks. Should any of them get a tab of their own?
+110. **Google Sheets and Excel.** The file was checked by recalculating it in LibreOffice, not in Google Sheets or Excel (no access from the build container). Please open one in each once and say if anything looks off.
+
+## Open the books, full brief (Nov 3 2026)
+
+111. **Spec drift is long.** SPEC-DRIFT.md lists 183 registry fields not in the spec and 201 spec fields not in code: only 50 of 265 spec field names match a registry label (or start the same way). Most are the same field with different words (spec "Birth month and year", app "Birth year" and "Birth month"). Map them with spec: 'F003' on each registry field (a one-time pass), or rename the spec rows to the app's labels?
+112. **The new-row rule on Spending lines.** "A row with no ID is new if its type column is filled." Budget lines have no types, so on Spending lines (and Income gaps, Backups, Budget months) any filled row is new. Debt, Assets, Income, Protection, Calendar entries and Goals need the Type. OK?
+113. **Conflicts are per record.** When a record changed in SLAM after the export, every spreadsheet edit to it needs a pick, even a field SLAM did not touch. Narrow it to the fields SLAM changed?
+114. **The format version.** It is 1 now. It goes up by one line in js/sheet/format.js each time a field, formula, column or tab is added or renamed (the coverage test says the line to add), so it will move often. OK, or only on removals and renames?
+115. **The GitHub check.** .github/workflows/test.yml installs ExcelJS but not LibreOffice, so on GitHub the recalculation checks skip. Add LibreOffice to the workflow (about a minute more per run)?
+116. **Start a new client from a file.** It makes the client with the name in _meta and brings every row in as new, with no starter Budget lines. OK?
 ## Answers logged (Nov 3 2026, second round)
 
 - 1 Look Preview: resolved; spec/SLAM Look Preview.html came with the Oct 28 spec refresh. It is the approved look sample the staples page is checked against.
@@ -181,15 +200,15 @@ Each one has the default used so the build could keep going. Answer here or in t
 
 ## Still open (Nov 3 2026)
 
-103. **The Therapy section's new name.** You said rename it for most people. Proposed: "Health and self-care" (therapy, health insurance, copays, prescriptions, gym, haircuts). The T in DRAFTT would no longer stand for it. OK, or another name?
-104. **Starter estimate ranges.** The usual list's starter guesses now say Accept estimate. Show a range under each (e.g. "most people $X to $Y")? That needs a source for the ranges; there is none in the spec.
-105. **63 Taking over.** It is the list of bills someone else pays today (parents, a partner, an employer) that you will start paying on a date you set, e.g. a phone plan from June 2027. Should those dates move the FI date and the surplus once they arrive?
-106. **Rates from the website.** A static site cannot fetch the NY tax tables when it runs (no server, and the tax site does not allow it). Rates stay in data/reference-2026.json, checked by hand each year. OK?
+117. **The Therapy section's new name.** You said rename it for most people. Proposed: "Health and self-care" (therapy, health insurance, copays, prescriptions, gym, haircuts). The T in DRAFTT would no longer stand for it. OK, or another name?
+118. **Starter estimate ranges.** The usual list's starter guesses now say Accept estimate. Show a range under each (e.g. "most people $X to $Y")? That needs a source for the ranges; there is none in the spec.
+119. **63 Taking over.** It is the list of bills someone else pays today (parents, a partner, an employer) that you will start paying on a date you set, e.g. a phone plan from June 2027. Should those dates move the FI date and the surplus once they arrive?
+120. **Rates from the website.** A static site cannot fetch the NY tax tables when it runs (no server, and the tax site does not allow it). Rates stay in data/reference-2026.json, checked by hand each year. OK?
 
 ## All closed (Nov 3 2026)
 
-Every question above is closed. "Kept" means the default described in the question stays, by your call to close them all out.
-Two sessions numbered new questions at the same time: Phase 3.5's are 92 to 102, this one's are 103 to 106.
+Every question from 1 to 102 and 117 to 120 is closed; 103 to 116 (Open the books) arrived after and are still open. "Kept" means the default described in the question stays, by your call to close them all out.
+Sessions numbered new questions at the same time: Phase 3.5's are 92 to 102, Open the books' are 103 to 116, this one's are 117 to 120.
 
 | # | Closed as |
 |---|---|
@@ -218,7 +237,7 @@ Two sessions numbered new questions at the same time: Phase 3.5's are 92 to 102,
 | 58, 59 | Answered: Comes out of your paycheck; a large refund is over $10,000 |
 | 60, 61 | Kept: the year view on Next 12 months; renewal months start blank |
 | 62 | Answered: sinking funds on events come out of the surplus |
-| 63, 105 | Closed: a covered bill is yours from its takeover month, so the surplus and FI date follow on that date (built) |
+| 63, 119 | Closed: a covered bill is yours from its takeover month, so the surplus and FI date follow on that date (built) |
 | 64 to 67 | Kept: three freeze rows; community presets per client; the timer for the demo client; I don't have this as Not for me |
 | 68 to 75 | Answered (see the Answers logged sections) |
 | 76, 77 | Kept: paychecks left from today's date; Report this needs a client |
@@ -232,6 +251,7 @@ Two sessions numbered new questions at the same time: Phase 3.5's are 92 to 102,
 | 98 | Kept: the five launch moves as listed |
 | 99, 100 | Kept: the extra bridge rows; Pay yourself first as a line above the income statement |
 | 101, 102 | Kept: FOO markers on the 1st, close marker on the last day; Move button on phones |
-| 103 | Closed: the T letter reads Health and self-care (built) |
-| 104 | Closed: no ranges under starter estimates (there is no source for them); Accept estimate stays |
-| 106 | Closed: rates stay in data/reference-2026.json, checked by hand each year. The NY joint brackets, NYC rates and the Roth IRA limits (96) are still to be checked once tax.ny.gov and irs.gov are allowed in the session's network settings |
+| 103 to 116 | Open: the Open the books questions, asked after this table was made |
+| 117 | Closed: the T letter reads Health and self-care (built) |
+| 118 | Closed: no ranges under starter estimates (there is no source for them); Accept estimate stays |
+| 120 | Closed: rates stay in data/reference-2026.json, checked by hand each year. The NY joint brackets, NYC rates and the Roth IRA limits (96) are still to be checked once tax.ny.gov and irs.gov are allowed in the session's network settings |

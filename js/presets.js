@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The usual list: about 40 spending lines everyone might have, each starting at a high Guess.
 // You eliminate (Not for me or Delete) and bring numbers down, instead of adding from nothing.
 const norm = s => String(s ?? '').trim().toLowerCase();

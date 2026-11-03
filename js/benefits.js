@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Employer benefits (missed ideas M2): what the job offers, a yearly amount for each, and the commuter nudge.
 // Pure: no DOM. Answers live in doc.profile.benefits[key] = { have: 'Yes' | 'No' | "Don't know", amount, per, ... }.
 import { money } from './format.js';

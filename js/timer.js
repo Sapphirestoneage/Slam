@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Onboarding timer (missed ideas M10), for usability testing. Builder only: shown behind the gear, saved in
 // doc.session.timer so it rides along in the export. Each mark is set once, the first time it becomes true.
 // Pure: no DOM.

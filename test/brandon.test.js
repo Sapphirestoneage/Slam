@@ -436,7 +436,7 @@ test('94: a covered bill is yours once its takeover month arrives; 11: the surpl
   s.add('account', { values: { group: 'investment', balance: 20000 } }, { type: 'Brokerage' });
   const off = metrics(s.doc, ref, { now: new Date('2026-11-03') });
   assert.equal(off.investing.monthly, 0);
-  s.setDoc('assumptions', { investSurplus: true });
+  s.setDoc('assumptions', { investSurplus: 1 });
   const on = metrics(s.doc, ref, { now: new Date('2026-11-03') });
   assert.equal(on.investing.monthly, 1000);
   assert.ok(on.monthsToFi.value < (off.monthsToFi.value ?? Infinity));

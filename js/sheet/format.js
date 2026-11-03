@@ -1,0 +1,46 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// The workbook's export format version and fingerprints. The version is a number in _meta that goes up whenever the
+// registries' shape changes: shapeOf() hashes every field, formula and tab id, and FORMATS lists each shape with its
+// number. When the hash is new, test/coverage.test.js fails and says the line to add here, so the number always
+// moves with the shape. An older file still imports: its missing columns are left alone.
+import { AREAS } from '../registry/fields.js';
+import { MATH } from '../registry/math.js';
+import { ASSUMPTIONS } from '../registry/assumptions.js';
+import { REPORTS } from '../registry/reports.js';
+
+export const APP_VERSION = '2026.11.3';
+
+// FNV-1a, 32 bits, as 8 hex digits: small and the same in every browser and in Node.
+export function hash(text) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(16).padStart(8, '0');
+}
+// The same value always gives the same text, whatever order its keys were set in.
+export const stable = v => (Array.isArray(v) ? `[${v.map(stable).join(',')}]` : v && typeof v === 'object'
+  ? `{${Object.keys(v).sort().filter(k => v[k] !== undefined).map(k => `${JSON.stringify(k)}:${stable(v[k])}`).join(',')}}` : JSON.stringify(v ?? null));
+
+// What a record holds, without its own bookkeeping (when it was touched).
+export function fingerprint(rec) {
+  if (!rec) return null;
+  const { createdAt, updatedAt, ...rest } = rec;
+  return hash(stable(rest));
+}
+
+export function shapeOf() {
+  const ids = [
+    ...AREAS.flatMap(a => [`tab:${a.tab}`, ...a.fields.filter(f => f.sheet === true).map(f => `field:${f.id}`)]),
+    ...MATH.flatMap(e => [`math:${e.id}`, ...(e.parts || []).map(p => `math:${e.id}.${p.key}`), ...(e.cols || []).map(c => `col:${c.area}.${c.key}`)]),
+    ...REPORTS.flatMap(r => [`tab:${r.tab}`, ...(r.cols || []).map(c => `col:${c.area}.${c.key}`)]),
+    ...ASSUMPTIONS.filter(a => a.client).map(a => `assumption:${a.client}`),
+  ];
+  return hash(ids.sort().join('\n'));
+}
+
+// Each shape the registries have had, oldest first. Add a line (the next number) when the coverage test asks.
+export const FORMATS = [
+  { version: 1, shape: 'c1034e9f' }, // Nov 3 2026: the first export
+  { version: 2, shape: '63c29a6a' }, // Nov 3 2026: Income's 401(k) a paycheck and Employer match?, Cash here is on purpose, Invest my surplus
+];
+export const FORMAT_VERSION = FORMATS.at(-1).version;
+export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

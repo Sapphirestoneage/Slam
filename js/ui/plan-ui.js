@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Plan (build phase 7): Goals with presets and solvers, These are big deals, milestones, the FI timeline,
 // debt payoff, next 12 months. Scenarios stay a later phase.
 import { h, clear, icon } from './dom.js';
@@ -53,12 +54,11 @@ function investingLine(ctx, m) {
   const iv = m.investing;
   if (!iv) return null;
   const on = iv.investSurplus;
-  const parts = [iv.alreadyIn ? `${money(iv.alreadyIn)} from your paycheck (401(k), HSA, match)` : null, iv.afterTax ? `${money(iv.afterTax)} you put in after tax` : null,
-    on && iv.surplus ? `your ${money(iv.surplus)} surplus` : null].filter(Boolean);
+  const parts = [iv.alreadyIn ? `${money(iv.alreadyIn)} from your paycheck (401(k), HSA, match)` : null, on && iv.surplus ? `your ${money(iv.surplus)} surplus` : null].filter(Boolean);
   return h('div.stack', { style: { gap: '6px', marginTop: '8px' } },
     h('span.muted.small', {}, parts.length ? `Counts ${money(iv.monthly ?? 0)} a month going in: ${parts.join(' + ')}. Inflation is covered: returns are after inflation.` : 'Nothing is going in yet. Inflation is covered: returns are after inflation.'),
     h('span.row-line', { style: { gap: '8px' } },
-      S.toggle([[false, 'Surplus stays surplus'], [true, 'Invest my surplus']], on, v => ctx.store.setDoc('assumptions', { investSurplus: v }), { label: 'Invest my surplus' }),
+      S.toggle([[0, 'Surplus stays surplus'], [1, 'Invest my surplus']], on ? 1 : 0, v => ctx.store.setDoc('assumptions', { investSurplus: v }), { label: 'Invest my surplus' }),
       !on && m.surplus.value > 0 ? h('span.muted.small', {}, `Investing your ${money(m.surplus.value)} a month moves the FI date sooner.`) : null));
 }
 export function goalsScreen(app, ctx) {

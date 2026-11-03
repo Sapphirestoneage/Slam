@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Prints the Demo client match table (and the private Test client's when present).
 // node tools/match.mjs [--private]
 import { readFileSync, existsSync } from 'node:fs';

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Fast Track as a mode on top of My Money (X011): one question at a time, big boxes, Enter moves on,
 // a clock against the 5-minute target, and the four headline numbers at the end (R068).
 import { h, clear, icon } from './dom.js';

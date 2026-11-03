@@ -1,7 +1,9 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Every screen's first state, word for word from the Words and states tab. Later phases fill them in.
 import { h, icon } from './ui/dom.js';
 import { paycheckSection } from './ui/paycheck-ui.js';
 import * as S from './ui/staples.js';
+import { sheetButtons } from './ui/sheet-ui.js';
 import { creditCard, cardsLink, debtList, spendingList, debtCharts, debtRatios } from './ui/lists.js';
 import { incomeList, benefitList, variableBlock, assetList, protectionList, taxesScreen, lifeAdminScreen, listCompletion, incomeCharts, assetCharts } from './ui/money-lists.js';
 import { profileScreen, profileCompletion } from './ui/profile.js';
@@ -205,7 +207,8 @@ export const SCREENS = {
     S.button('Reset client', { kind: 'danger', iconName: 'eraser', disabled: !app.hasClient, why: 'No client open', onClick: e => app.resetClient(e.currentTarget) }),
     h('span', { style: { flex: 1 } }),
     S.button('Delete client', { kind: 'danger', iconName: 'trash', disabled: !app.hasClient, why: 'No client open', onClick: e => app.deleteClient(e.currentTarget) })),
-  h('p.muted', { style: { marginTop: '12px' } }, app.backupText()))],
+  h('p.muted', { style: { marginTop: '12px' } }, app.backupText()),
+  h('h3', { style: { marginTop: '20px' } }, 'Spreadsheet'), sheetButtons(app))],
   'tools/session': (app, ctx) => sessionScreen(app, ctx, { fastTrackGap }),
 };
 

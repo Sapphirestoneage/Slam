@@ -1,8 +1,10 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Report (build phase 8): Overview (donuts, metrics shelf, Sankey), One-pager, History. Read only:
 // every number links to its home, where it is typed.
 import { h, clear, icon } from './dom.js';
 import { homeworkList } from '../homework.js';
 import * as S from './staples.js';
+import { sheetButtons } from './sheet-ui.js';
 import { soWhat } from '../sowhat.js';
 import { debtRatios } from './lists.js';
 import { taxRates, monthlyFrom } from '../math/income.js';
@@ -209,6 +211,7 @@ export function onePagerScreen(app, ctx) {
   const canPrint = (() => { try { return window.self === window.top; } catch { return false; } })(); // a framed page cannot print
   return [head('One-pager', 'Session summary, ready to send',
     canPrint ? S.button('Export PDF', { iconName: 'printer', onClick: () => window.print(), tip: 'Print, or save as PDF' }) : null,
+    sheetButtons(app),
     S.button('Send summary', { kind: 'primary', iconName: 'mail', onClick: e => sendSummary(ctx, e.currentTarget) })),
   h('div.card.one-pager', {},
     h('h2', {}, `${doc.client.name || 'Client'}, ${new Date(ctx.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`),

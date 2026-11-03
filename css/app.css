@@ -316,3 +316,16 @@ table.rows tr.group .group-line .fold { width: auto; flex: 1; }
 .pay-line { display: grid; grid-template-columns: minmax(180px, 280px) auto 1fr; gap: 10px; align-items: center; max-width: 640px; }
 .pay-line .num { text-align: right; font-variant-numeric: tabular-nums; }
 .pay-total { font-weight: 700; }
+
+/* Open the books: Open in a spreadsheet and Bring a spreadsheet back, each with its one line under it. */
+.sheet-actions { display: flex; flex-wrap: wrap; gap: var(--s3) var(--s4); align-items: flex-start; }
+.btn-line { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; max-width: 260px; }
+.btn-line > .muted.small { line-height: 1.35; }
+.page-head .row-line:has(.sheet-actions) { align-items: flex-start; }
+.sheet-changes td { vertical-align: top; }
+@media (max-width: 760px) { .btn-line { max-width: none; } }
+.review-group { border-top: 1.5px solid var(--border-row); padding: var(--s2) 0; }
+.review-group > summary { cursor: pointer; padding: 6px 0; min-height: 32px; }
+.review-group h4 { margin: var(--s3) 0 var(--s1); font-size: .875rem; color: var(--text-2); }
+.review-line { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); padding: 6px 0; border-bottom: 1px solid var(--border-row); flex-wrap: wrap; }
+.review-line .seg button { min-height: 32px; }

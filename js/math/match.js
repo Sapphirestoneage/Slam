@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Compares the app's answers to a fixture's expected outputs (within $1 or 1 month).
 import { metrics, firstDebt } from './metrics.js';
 import { householdFromInputs } from '../demo.js';

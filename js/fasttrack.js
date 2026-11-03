@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Fast Track (X011, R068, R132): the Basics pass in about 5 minutes, totals by area rather than line items.
 // Writes into the same records the full screens use, as one undo step, so every lens turns on and the coach can
 // keep going in full detail from there. Pure: no DOM.

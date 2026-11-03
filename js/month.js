@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The month model (build phase 6): what lands on the calendar, the budget passes for a month, and closing it.
 // Pure: reads a household doc, never touches the DOM. Budget, calendar and close are views of these records (R117).
 import { gatesOf, visible } from './gates.js';

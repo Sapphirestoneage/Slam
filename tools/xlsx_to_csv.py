@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Convert every tab of spec/SLAM Build Spec.xlsx to spec/csv/<tab name>.csv."""
 import csv, pathlib, sys
 import openpyxl
