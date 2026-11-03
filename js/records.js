@@ -8,7 +8,7 @@ export const APP_ID = 'SLAM';
 // R053. 'Not sure' shows as Guess once the app fills a typical value (R055).
 export const STATUSES = ['Know it', 'Roughly', 'Not sure', 'Will email', 'Not now', 'Not for me', 'Computed'];
 const DONE = new Set(['Know it', 'Roughly', 'Not sure', 'Not for me', 'Computed']); // R054, R055, R058
-export const PERIODS = ['paycheck', 'week', '2 weeks', 'twice a month', 'month', 'year'];
+export const PERIODS = ['paycheck', 'week', '2 weeks', 'twice a month', 'month', 'quarter', 'year'];
 export const SOURCES = ['manual', 'statement', 'bank']; // R116, R118
 
 const UNDO_LIMIT = 200;
@@ -86,6 +86,7 @@ export class Store {
     const after = this._state();
     if (JSON.stringify(before) !== JSON.stringify(after)) {
       this.doc.updatedAt = this.now();
+      this.doc._rev = (this.doc._rev || 0) + 1; // a change counter for caches (not history)
       this.undoStack.push({ label, before, after });
       if (this.undoStack.length > UNDO_LIMIT) this.undoStack.shift();
       this.redoStack = [];
@@ -266,6 +267,7 @@ export class Store {
     this._restore(step[side], op, current);
     to.push(step);
     this.doc.updatedAt = this.now();
+    this.doc._rev = (this.doc._rev || 0) + 1;
     this._emit({ type: op, label: step.label });
     return step.label;
   }

@@ -2,7 +2,7 @@
 import { ok, needs, missing, fmt } from './result.js';
 
 // M01: any period to monthly.
-const PER_MONTH = { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, year: 1 / 12 };
+const PER_MONTH = { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, quarter: 1 / 3, year: 1 / 12 };
 export function monthlyFrom(amount, per, payFrequency = null) {
   if (amount === null || amount === undefined) return needs('M01', ['amount']);
   let p = per;
@@ -51,35 +51,62 @@ export function fica({ gross, filingStatus = 'Single', selfEmployed = false }, r
   socialSecurity: ss, medicare, deductibleHalf: selfEmployed ? total / 2 : 0 };
 }
 
+// State and city income tax (B5.1): NY brackets and NYC on NY taxable income. place = { state: 'NY', nyc: true }.
+const placeKey = s => (s === 'Married jointly' || s === 'joint' ? 'joint' : s === 'Head of household' ? 'head' : 'single');
+const byBrackets = (taxable, brackets) => {
+  let tax = 0, marginal = brackets[0][1];
+  for (let i = 0; i < brackets.length; i++) {
+    const [floor, rate] = brackets[i];
+    const ceil = brackets[i + 1]?.[0] ?? Infinity;
+    if (taxable > floor) { tax += (Math.min(taxable, ceil) - floor) * rate; marginal = rate; }
+  }
+  return { tax, marginal };
+};
+export function stateTax({ gross, pretax = 0, filingStatus = 'Single', place = null }, ref) {
+  const st = place?.state ? ref.tax.state?.[place.state] : null;
+  if (!st || gross == null) return { state: 0, local: 0, marginal: 0, taxable: null, applies: false };
+  const key = placeKey(filingStatus);
+  const taxable = Math.max(0, gross - pretax - st.standardDeduction[key]);
+  const s = byBrackets(taxable, st.brackets[key]);
+  const city = place.nyc && ref.tax.local?.NYC ? byBrackets(taxable, ref.tax.local.NYC.brackets[key]) : { tax: 0, marginal: 0 };
+  return { state: s.tax, local: city.tax, marginal: s.marginal + city.marginal, taxable, applies: true, nyc: !!place.nyc };
+}
+
 // M12: annual take-home from annual gross.
-export function takeHomeFromGross({ gross, pretax = 0, filingStatus = 'Single', selfEmployed = false }, ref) {
+export function takeHomeFromGross({ gross, pretax = 0, filingStatus = 'Single', selfEmployed = false, place = null }, ref) {
   if (gross === null || gross === undefined) return needs('M12', ['gross pay']);
   const f = fica({ gross, filingStatus, selfEmployed }, ref);
   const fed = federalTax({ gross, pretax, filingStatus, selfEmployedHalf: f.deductibleHalf }, ref);
-  const v = gross - fed.value - f.value - pretax;
-  return { ...ok('M12', v, `${fmt.money(gross)} gross minus ${fmt.money(fed.value)} federal tax minus ${fmt.money(f.value)} FICA minus ${fmt.money(pretax)} before-tax deductions = ${fmt.money(v)} a year take-home (${fmt.money(v / 12)} a month). State tax is not included yet.`), federal: fed, fica: f };
+  const st = stateTax({ gross, pretax, filingStatus, place }, ref);
+  const v = gross - fed.value - f.value - st.state - st.local - pretax;
+  const where = st.applies ? ` minus ${fmt.money(st.state)} ${place.state} state tax${st.nyc ? ` minus ${fmt.money(st.local)} NYC tax` : ''}` : '';
+  return { ...ok('M12', v, `${fmt.money(gross)} gross minus ${fmt.money(fed.value)} federal tax minus ${fmt.money(f.value)} FICA${where} minus ${fmt.money(pretax)} before-tax deductions = ${fmt.money(v)} a year take-home (${fmt.money(v / 12)} a month).${st.applies ? '' : ' State tax is in only for New York so far.'}`), federal: fed, fica: f, stateTax: st };
 }
 
 // M13: gross from take-home, by bisection to the nearest $1. Marked Computed.
-export function grossFromTakeHome({ takeHome, pretax = 0, filingStatus = 'Single', selfEmployed = false }, ref) {
+export function grossFromTakeHome({ takeHome, pretax = 0, filingStatus = 'Single', selfEmployed = false, place = null }, ref) {
   if (takeHome === null || takeHome === undefined) return needs('M13', ['take-home pay']);
   let lo = takeHome, hi = takeHome * 3 + 100000;
   while (hi - lo > 0.5) {
     const mid = (lo + hi) / 2;
-    if (takeHomeFromGross({ gross: mid, pretax, filingStatus, selfEmployed }, ref).value < takeHome) lo = mid; else hi = mid;
+    if (takeHomeFromGross({ gross: mid, pretax, filingStatus, selfEmployed, place }, ref).value < takeHome) lo = mid; else hi = mid;
   }
   const gross = Math.round(hi);
-  return { ...ok('M13', gross, `Worked backwards from ${fmt.money(takeHome)} a year take-home: the gross that leaves exactly that after federal tax, FICA and before-tax deductions is ${fmt.money(gross)}.`), status: 'Computed' };
+  return { ...ok('M13', gross, `Worked backwards from ${fmt.money(takeHome)} a year take-home: the gross that leaves exactly that after federal tax, FICA, state and city tax (where they apply) and before-tax deductions is ${fmt.money(gross)}.`), status: 'Computed' };
 }
 
 // M14: effective and marginal rates.
-export function taxRates({ gross, pretax = 0, filingStatus = 'Single', selfEmployed = false }, ref) {
+export function taxRates({ gross, pretax = 0, filingStatus = 'Single', selfEmployed = false, place = null }, ref) {
   if (!gross) return needs('M14', ['gross pay'], { unit: 'pct' });
-  const r = takeHomeFromGross({ gross, pretax, filingStatus, selfEmployed }, ref);
-  const effective = (r.federal.value + r.fica.value) / gross;
+  const r = takeHomeFromGross({ gross, pretax, filingStatus, selfEmployed, place }, ref);
+  const st = r.stateTax;
+  const total = r.federal.value + r.fica.value + st.state + st.local;
+  const effective = total / gross;
   const ficaMarginal = gross < ref.tax.socialSecurityWageBase ? ref.tax.socialSecurityRate + ref.tax.medicareRate : ref.tax.medicareRate;
-  const marginal = r.federal.marginal + ficaMarginal;
-  return { ...ok('M14', effective, `Federal tax plus FICA (${fmt.money(r.federal.value + r.fica.value)}) divided by gross (${fmt.money(gross)}) = ${fmt.pct(effective)}. The last dollar is taxed at ${fmt.pct(marginal)}.`, { unit: 'pct' }), effective, marginal };
+  const marginal = r.federal.marginal + ficaMarginal + st.marginal;
+  const parts = `federal ${fmt.money(r.federal.value)} + FICA ${fmt.money(r.fica.value)}${st.applies ? ` + ${place.state} ${fmt.money(st.state)}${st.nyc ? ` + NYC ${fmt.money(st.local)}` : ''}` : ''}`;
+  return { ...ok('M14', effective, `All income tax (${parts} = ${fmt.money(total)}) divided by gross (${fmt.money(gross)}) = ${fmt.pct(effective)}. The last dollar is taxed at ${fmt.pct(marginal)}: federal ${fmt.pct(r.federal.marginal)} + FICA ${fmt.pct(ficaMarginal)}${st.applies ? ` + state and city ${fmt.pct(st.marginal)}` : ''}.`, { unit: 'pct' }),
+    effective, marginal, federalMarginal: r.federal.marginal, ficaMarginal, stateMarginal: st.marginal, parts: { federal: r.federal.value, fica: r.fica.value, state: st.state, local: st.local } };
 }
 
 // M15: employer match, dollars a year.
@@ -117,22 +144,30 @@ export function realHourlyWage({ takeHome, workCosts = 0, paidHours, commuteHour
 const TAXED = { Job: 'W-2', 'Partner job': 'W-2', 'Side hustle': '1099', 'Self-employed': '1099' };
 export const taxTypeOf = r => r.values?.incomeType ?? TAXED[r.type] ?? null;
 const PAYCHECKS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
-export function incomeRow(r, { filingStatus = 'Single', ref }) {
+export function incomeRow(r, { filingStatus = 'Single', ref, place = null }) {
   const v = r.values || {};
   const taxType = taxTypeOf(r);
   const perYear = PAYCHECKS[v.payFrequency] ?? 26;
   const yearly = (x, per) => (x == null ? null : monthlyFrom(x, per, v.payFrequency).value * 12);
   const typedGross = v.basis === 'Gross' ? yearly(r.amount, r.per) : v.gross ?? null;
   const salary = typedGross ?? null;
-  const pretax = (salary ?? 0) * (v.contributionPct ?? 0) + ((v.premium ?? 0) + (v.hsaFsa ?? 0) + (v.otherPretax ?? 0)) * perYear;
+  const pretax = (salary ?? 0) * (v.contributionPct ?? 0) + ((v.premium ?? 0) + (v.hsaFsa ?? 0) + (v.otherPretax ?? 0) + (v.contributionPct == null ? v.k401Paycheck ?? 0 : 0)) * perYear;
   const selfEmployed = taxType === '1099';
   if (taxType && salary !== null && (v.basis === 'Gross' || r.amount == null)) { // gross only: take-home is solved
-    const t = takeHomeFromGross({ gross: salary, pretax, filingStatus, selfEmployed }, ref);
+    const t = takeHomeFromGross({ gross: salary, pretax, filingStatus, selfEmployed, place }, ref);
     return { takeHome: { ...t, value: t.value / 12, text: t.text, status: 'Computed' }, gross: salary, pretax, taxType, computed: 'takeHome' };
   }
   const th = r.amount == null ? needs('M01', ['take-home']) : monthlyFrom(r.amount, r.per, v.payFrequency);
   if (!taxType || th.value === null) return { takeHome: th, gross: salary, pretax, taxType, computed: null };
   if (salary !== null) return { takeHome: th, gross: salary, pretax, taxType, computed: null }; // both typed: kept as typed (R046)
-  const g = grossFromTakeHome({ takeHome: th.value * 12, pretax, filingStatus, selfEmployed }, ref);
-  return { takeHome: th, gross: g.value, grossResult: g, pretax, taxType, computed: 'gross' };
+  // A 401(k) % is a share of the gross being solved for, so solve again with it until it settles.
+  let g = grossFromTakeHome({ takeHome: th.value * 12, pretax, filingStatus, selfEmployed, place }, ref);
+  let pre = pretax;
+  for (let i = 0; i < 6 && v.contributionPct; i++) {
+    pre = pretax + g.value * v.contributionPct;
+    const next = grossFromTakeHome({ takeHome: th.value * 12, pretax: pre, filingStatus, selfEmployed, place }, ref);
+    if (Math.abs(next.value - g.value) < 1) { g = next; break; }
+    g = next;
+  }
+  return { takeHome: th, gross: g.value, grossResult: g, pretax: pre, taxType, computed: 'gross' };
 }

@@ -1,9 +1,10 @@
 // Report (build phase 8): Overview (donuts, metrics shelf, Sankey), One-pager, History. Read only:
 // every number links to its home, where it is typed.
 import { h, clear, icon } from './dom.js';
+import { homeworkList } from '../homework.js';
 import * as S from './staples.js';
 import { debtRatios } from './lists.js';
-import { taxRates } from '../math/income.js';
+import { taxRates, monthlyFrom } from '../math/income.js';
 import { drafttShares } from '../math/spending.js';
 import { gutAccuracy } from '../math/spending.js';
 import { fiTargets, ladder, agenda } from '../plan.js';
@@ -22,7 +23,7 @@ export function overviewScreen(app, ctx) {
   const m = ctx.metrics();
   const x = m.inputs;
   const ratios = debtRatios(ctx, m);
-  const tax = x.grossAnnual ? taxRates({ gross: x.grossAnnual, filingStatus: x.filingStatus }, ctx.ref) : { id: 'M14', value: null, needs: ['gross pay'], unit: 'pct' };
+  const tax = x.grossAnnual ? taxRates({ gross: x.grossAnnual, filingStatus: x.filingStatus, place: x.place }, ctx.ref) : { id: 'M14', value: null, needs: ['gross pay'], unit: 'pct' };
   const shares = drafttShares(x.lines, x.takeHome, { roommates: x.roommates });
   const topLetter = shares.value ? Object.entries(shares.value).sort((a, b) => b[1] - a[1]).find(([, v]) => v > 0) : null;
   const l = ladder(m, ctx.store.doc);
@@ -145,7 +146,7 @@ const sumNode = (links, n) => Math.max(sum(links.filter(l => l.source === n), l 
 function fixedVariable(ctx, m) {
   const x = m.inputs;
   const lines = x.lines.filter(l => l.status !== 'Not for me' && !l.irregular);
-  const mine = l => (l.per === 'year' ? (l.amount ?? 0) / 12 : l.amount ?? 0);
+  const mine = l => (l.amount == null ? 0 : monthlyFrom(l.amount, l.per).value);
   const fixed = sum(lines.filter(l => l.amountType === 'Fixed'), mine), variable = sum(lines.filter(l => l.amountType !== 'Fixed'), mine);
   const share = v => (x.takeHome ? `${pct(v / x.takeHome)} of take-home` : null);
   if (!lines.length) return null;
@@ -157,14 +158,7 @@ function fixedVariable(ctx, m) {
 }
 
 // ---------- One-pager ----------
-export function homeworkItems(ctx) {
-  const out = [];
-  for (const r of ctx.visible(() => true)) {
-    if (r.status === 'Will email') out.push({ r, label: r.name || r.values?.category || r.type || 'Item' });
-    for (const [f, st] of Object.entries(r.fieldStatus || {})) if (st === 'Will email' && r.status !== 'Will email') out.push({ r, field: f, label: `${r.name || r.type || 'Item'}: ${f}` });
-  }
-  return out;
-}
+export function homeworkItems(ctx) { return homeworkList(ctx.store.doc, ctx.visible(() => true)); }
 export function summaryText(ctx) {
   const m = ctx.metrics();
   const doc = ctx.store.doc;
@@ -180,7 +174,7 @@ export function summaryText(ctx) {
     line('Savings rate', m.savingsRate.value == null ? null : pct(m.savingsRate.value)),
     line('FI date', fiWhen == null ? null : monthName(ymOf(new Date(ctx.now().getTime() + fiWhen * 30.44 * 86400000)))),
     '',
-    hw.length ? 'To do:' : null, ...hw.map(x => `- ${x.label}`),
+    hw.length ? 'To do:' : null, ...hw.map(x => `- ${x.label}${x.where ? ` (look on: ${x.where})` : ''}`),
     op.strengths ? `\nStrengths: ${op.strengths}` : null, op.struggles ? `Struggles: ${op.struggles}` : null,
     op.doMore ? `Do more: ${op.doMore}` : null, op.doLess ? `Do less: ${op.doLess}` : null,
     doc.session.next ? `\nNext session: ${doc.session.next}` : null,
@@ -223,7 +217,7 @@ export function onePagerScreen(app, ctx) {
       { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate },
       fiCard(ctx, m)]),
     h('div.op-grid', {},
-      h('div', {}, h('h3', {}, 'To-dos'), hw.length ? h('ul.op-list', {}, hw.map(x => h('li', {}, x.label))) : h('p.muted', {}, 'No homework yet. Mark a number Will email to add it.')),
+      h('div', {}, h('h3', {}, 'To-dos'), hw.length ? h('ul.op-list', {}, hw.map(x => h('li', {}, x.label))) : h('p.muted', {}, "No homework yet. Tap I'll find it later on any number to add it.")),
       h('div', {}, h('h3', {}, 'Goals'), h('ul.op-list', {},
         m.monthsToFi.value != null ? h('li', {}, `FI ${monthName(ymOf(new Date(ctx.now().getTime() + m.monthsToFi.value * 30.44 * 86400000)))}${doc.assumptions.fiAge ? `, target age ${doc.assumptions.fiAge}` : ''}`) : null,
         goals.map(g => h('li', {}, g.name || g.type)), !goals.length && m.monthsToFi.value == null ? h('li.muted', {}, 'Set an FI target on Plan') : null))),
@@ -240,15 +234,9 @@ export function fiCard(ctx, m) {
 }
 
 // ---------- History ----------
-export function historyScreen(app, ctx) {
-  const doc = ctx.store.doc;
-  const snaps = doc.snapshots.filter(s => s.metrics);
-  const months = closedMonths(doc);
-  const acc = gutAccuracy(months);
-  const since = monthsBetween(ymOf(new Date(doc.createdAt || ctx.now())), ymOf(ctx.now()));
-  if (!snaps.length) return [head('History', 'Snapshots over time'), h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No snapshots yet'),
-    h('span.muted', {}, 'End session saves one, so next time shows what changed.'), S.button('Save snapshot', { iconName: 'camera', onClick: () => app.snapshot('Snapshot') })))];
-  const host = h('div.chart', { style: { height: '280px' } });
+// Total and liquid net worth over time, from the snapshots (M6.2: also on Home, collapsed).
+export function netWorthChart(snaps, { height = 280 } = {}) {
+  const host = h('div.chart', { style: { height: `${height}px` } });
   queueMicrotask(() => {
     if (!window.echarts || !host.isConnected) return;
     const t = S.chartTheme('assets');
@@ -262,6 +250,17 @@ export function historyScreen(app, ctx) {
     });
     new ResizeObserver(() => c.resize()).observe(host);
   });
+  return host;
+}
+export function historyScreen(app, ctx) {
+  const doc = ctx.store.doc;
+  const snaps = doc.snapshots.filter(s => s.metrics);
+  const months = closedMonths(doc);
+  const acc = gutAccuracy(months);
+  const since = monthsBetween(ymOf(new Date(doc.createdAt || ctx.now())), ymOf(ctx.now()));
+  if (!snaps.length) return [head('History', 'Snapshots over time'), h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No snapshots yet'),
+    h('span.muted', {}, 'End session saves one, so next time shows what changed.'), S.button('Save snapshot', { iconName: 'camera', onClick: () => app.snapshot('Snapshot') })))];
+  const host = netWorthChart(snaps);
   const first = snaps[0].metrics, last = snaps[snaps.length - 1].metrics;
   return [head('History', 'Snapshots over time'),
     S.summaryStrip(ctx, [

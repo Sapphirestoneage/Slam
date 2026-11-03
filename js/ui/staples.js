@@ -104,7 +104,7 @@ export function flashSaved(rowEl) {
 
 // ---------- Status tag (R053, R160): a symbol as well as a color ----------
 const TAG = {
-  'Roughly': ['roughly', '≈ Roughly'], 'Not sure': ['guess', '? Guess'], 'Will email': ['plain', 'Will email'],
+  'Roughly': ['roughly', '≈ Roughly'], 'Not sure': ['guess', '? Guess'], 'Will email': ['plain', "I'll find it later"],
   'Not now': ['plain', 'Not now'], 'Not for me': ['plain', 'Not for me'], 'Computed': ['plain', 'Computed'], 'Know it': ['plain', 'Know it'],
 };
 export function statusTag(status) {
@@ -241,7 +241,7 @@ export function textInput(value, onChange, { hint = 'Add name', width = 180, key
   return h(`label.field${value ? '.filled' : ''}`, { style: { width: `${width}px` }, title: tip }, input);
 }
 export function perPicker(value, onChange, { key = null } = {}) {
-  const s = h('select', { 'aria-label': 'per', 'data-focus': key }, ['paycheck', 'week', 'month', 'year'].map(p => h('option', { value: p, selected: p === value }, `per ${p}`)));
+  const s = h('select', { 'aria-label': 'per', 'data-focus': key }, ['paycheck', 'week', 'month', 'quarter', 'year'].map(p => h('option', { value: p, selected: p === value }, `per ${p}`)));
   s.onchange = () => onChange(s.value);
   return h('label.field.filled', { style: { width: '130px' } }, s);
 }
@@ -260,17 +260,43 @@ export function checkbox(label, checked, onChange, { key = null } = {}) {
   return h('label.check', {}, box, h('span', {}, label));
 }
 // A labelled box: the label above, the input under it (affordance rule 3).
-export const labelled = (label, input, { note = null } = {}) => h('div.stack', {}, h('span.label', {}, label), input, note ? h('span.muted.small', {}, note) : null);
+// later: { on, set } adds "I'll find it later" under the box (Brandon B1.2): it parks the field on the Homework list.
+// none: { on, set } adds "I don't have this" (counts as answered, as Not for me).
+export const labelled = (label, input, { note = null, later = null, none = null } = {}) => h(`div.stack${later?.on || none?.on ? '.parked' : ''}`, {}, h('span.label', {}, label), input,
+  note ? h('span.muted.small', {}, note) : null, later || none ? parkButtons({ later, none }, label) : null);
+export function parkButtons({ later = null, none = null }, label = 'this') {
+  const undo = (text, opt, what) => h('span.row-line.later-on', { style: { gap: '6px', flexWrap: 'nowrap' } }, h('span.tag.plain', {}, text),
+    h('button.btn.small.later-btn', { type: 'button', 'aria-label': `${what}: ${label}`, onclick: () => opt.set(false) }, 'Undo'));
+  if (later?.on) return undo('On your homework', later, 'Take off the homework list');
+  if (none?.on) return undo("Don't have this", none, 'Undo');
+  return h('span.row-line', { style: { gap: '4px', flexWrap: 'wrap' } },
+    none ? h('button.btn.small.later-btn', { type: 'button', 'aria-label': `I don't have ${label}`, onclick: () => none.set(true) }, "I don't have this") : null,
+    later ? h('button.btn.small.later-btn', { type: 'button', 'aria-label': `I'll find ${label} later`, onclick: () => { later.set(true); toast(`${label} is on your homework list, with where to find it.`); } }, "I'll find it later") : null);
+}
+export const laterButton = (later, label) => parkButtons({ later }, label);
+// Both choices for one field of a row: its own status (Will email = later, Not for me = don't have).
+export function park(ctx, r, field) {
+  const st = r.fieldStatus?.[field];
+  const set = s => on => ctx.store.setFieldStatus(r.id, field, on ? s : null);
+  return { later: { on: st === 'Will email', set: set('Will email') }, none: { on: st === 'Not for me', set: set('Not for me') } };
+}
+// The same for a Profile-level answer (doc.profile.later and doc.profile.none).
+export function parkProfile(store, key) {
+  const p = store.doc.profile;
+  const flip = (bag, on) => store.setDoc('profile', { [bag]: { ...(p[bag] || {}), [key]: on || undefined } });
+  return { later: { on: !!p.later?.[key], set: on => flip('later', on) }, none: { on: !!p.none?.[key], set: on => flip('none', on) } };
+}
 // More / Less: Secondary and Tertiary fields stay behind a caret, closed until asked (R023). Remembers which are open.
 const OPEN = new Set();
 export function moreBlock(id, content, { label = 'More' } = {}) {
   const open = OPEN.has(id);
   const body = h('div.more-body', { hidden: !open }, open ? content() : null);
-  const btn = h('button.caret', { type: 'button', 'aria-expanded': String(open) }, open ? 'Less' : label, icon(open ? 'down' : 'right'));
+  const named = label !== 'More'; // a named block keeps its name when open
+  const btn = h('button.caret', { type: 'button', 'aria-expanded': String(open) }, open && !named ? 'Less' : label, icon(open ? 'down' : 'right'));
   btn.onclick = () => {
     const now = !OPEN.has(id);
     now ? OPEN.add(id) : OPEN.delete(id);
-    btn.setAttribute('aria-expanded', String(now)); clear(btn, now ? 'Less' : label, icon(now ? 'down' : 'right'));
+    btn.setAttribute('aria-expanded', String(now)); clear(btn, now && !named ? 'Less' : label, icon(now ? 'down' : 'right'));
     body.hidden = !now; clear(body, now ? content() : null);
   };
   return h('div.more-wrap', {}, btn, body);
@@ -295,15 +321,34 @@ export function stepper(value, onChange, { min = 0, max = 20, label = 'Count', k
     h(`label.field.num-box${v !== null ? '.filled' : ''}`, { style: { width: '56px' } }, box), more);
 }
 
+// The month you start paying a covered bill yourself. Optional.
+function takeoverBox(rec, update) {
+  const d = h('input', { type: 'month', value: rec.values.takeover || '', 'aria-label': 'You take it over in' });
+  d.onchange = () => update({ takeover: d.value || null });
+  return h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, h('span.label', {}, 'Becomes mine in'), h(`label.field${rec.values.takeover ? '.filled' : ''}`, { style: { width: '170px' } }, d));
+}
 // Who pays (every Needs line).
 export const WHO_PAYS = ['Me', 'Split', 'Included in rent', 'Covered by someone', 'N/A', 'My share', "Need it, don't have yet"];
+// Who covers it (B6.1): covered by me, by someone else (with an optional date it becomes mine), or not for me.
+// "Me" then asks how: all mine, split with roommates, or my share of a bigger bill (B6.5). Rarer answers sit behind Other.
+const MINE = [['Me', 'All mine'], ['Split', 'Split evenly'], ['My share', 'My share of the bill']];
+const OTHER_WHO = ['Included in rent', 'N/A', "Need it, don't have yet"];
 export function whoPays(rec, update) {
   const v = rec.values.whoPays ?? 'Me';
-  return h('div.stack', {}, h('span.label', {}, 'Who pays'),
-    toggle(WHO_PAYS, v, x => update({ whoPays: x }), { label: 'Who pays' }),
-    v === 'Split' ? h('span.row-line', {}, h('span.label', {}, 'Split by'), stepper(rec.values.splitBy ?? null, n => update({ splitBy: n }), { min: 1, label: 'Split by' })) : null,
-    v === 'Covered by someone' ? textInput(rec.values.coveredBy, x => update({ coveredBy: x }), { hint: 'Add who covers it' }) : null,
-    v === 'My share' ? moneyInput(rec.values.myShare, x => update({ myShare: x }), { hint: 'Add my share' }) : null);
+  const top = rec.status === 'Not for me' ? 'Not for me' : v === 'Covered by someone' ? 'Someone else' : OTHER_WHO.includes(v) ? 'Other' : 'Me';
+  const pickTop = x => update(x === 'Not for me' ? { status: 'Not for me' } : { status: rec.status === 'Not for me' ? null : rec.status,
+    whoPays: x === 'Someone else' ? 'Covered by someone' : x === 'Other' ? (OTHER_WHO.includes(v) ? v : OTHER_WHO[0]) : (MINE.some(([k]) => k === v) ? v : 'Me') });
+  const total = rec.amount == null ? 'Add the amount above' : `${money(rec.amount)} per ${rec.per}`;
+  return h('div.stack', {}, h('span.label', {}, 'Who covers it'),
+    toggle([['Me', 'Covered by me'], ['Someone else', 'Covered by someone else'], ['Not for me', 'Not for me'], ['Other', 'Other']], top, pickTop, { label: 'Who covers it' }),
+    top === 'Me' ? toggle(MINE, MINE.some(([k]) => k === v) ? v : 'Me', x => update({ whoPays: x }), { label: 'How it is paid' }) : null,
+    top === 'Me' && v === 'Split' ? h('span.row-line', {}, h('span.label', {}, 'Split by'), stepper(rec.values.splitBy ?? null, n => update({ splitBy: n }), { min: 1, label: 'Split by' }), h('span.muted.small', {}, 'Blank: you plus each roommate')) : null,
+    top === 'Me' && v === 'My share' ? h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Total bill'), h('span.computed', {}, total),
+      h('span.label', {}, 'My share a month'), moneyInput(rec.values.myShare, x => update({ myShare: x }), { hint: 'Add my share' })) : null,
+    top === 'Someone else' ? h('span.row-line', { style: { gap: '8px' } }, // M7.1: who, and when it becomes yours
+      select(['Parents', 'Partner', 'Employer', 'Other'], rec.values.coveredBy ?? null, x => update({ coveredBy: x }), { label: 'Who covers it', hint: 'Who covers it', width: 150 }),
+      takeoverBox(rec, update)) : null,
+    top === 'Other' ? select(OTHER_WHO, v, x => update({ whoPays: x }), { label: 'Other', width: 200 }) : null);
 }
 // Paid with: checking or a credit card; no bill comes from savings. With one checking account or one card it is
 // picked for you; with more, 'Which checking' or 'Which card' asks (buttons up to 6 cards, a search after, R112).
@@ -422,6 +467,17 @@ export function timeToggle(ctx) {
 
 // ---------- Record list: rows, groups, bulk select, totals (R105, R109 to R114, R165, R171, R172) ----------
 const slug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+// A block that redraws itself on every change, keeping the box being typed in (for cards beside a list).
+export function live(ctx, render) {
+  const root = h('div.live');
+  const draw = () => {
+    const focus = document.activeElement?.dataset?.focus;
+    clear(root, render());
+    if (focus) root.querySelector(`[data-focus="${CSS.escape(focus)}"]`)?.focus();
+  };
+  ctx.onRefresh(draw); draw();
+  return root;
+}
 export function recordList(ctx, cfg) {
   const root = h('div.list-wrap');
   const state = { selected: new Set(), folded: new Set(cfg.foldedGroups || []), open: new Set() };
@@ -431,7 +487,14 @@ export function recordList(ctx, cfg) {
     clear(root, render());
     if (focus) root.querySelector(`[data-focus="${CSS.escape(focus)}"]`)?.focus();
   };
-  const update = (rec, patch) => { ctx.store.update(rec.id, patch); flashSaved(root.querySelector(`tr[data-id="${rec.id}"]`)); };
+  const update = (rec, patch) => {
+    ctx.store.transaction('Edit', () => {
+      ctx.store.update(rec.id, patch);
+      // A number typed in comes off the homework list (Brandon B1.2).
+      for (const [f, v] of Object.entries(patch)) if (v !== null && v !== undefined && rec.fieldStatus?.[f] === 'Will email') ctx.store.setFieldStatus(rec.id, f, null);
+    });
+    flashSaved(root.querySelector(`tr[data-id="${rec.id}"]`));
+  };
   const addNew = (type, name = null, after = null) => {
     const r = ctx.store.add(cfg.kindOf?.(type) ?? cfg.kind, { name: name ?? null, ...(cfg.newValues?.(type) || {}) }, { type: type ?? cfg.defaultType ?? null, after });
     requestAnimationFrame(() => root.querySelector(`tr[data-id="${r.id}"] input`)?.focus());
@@ -485,8 +548,10 @@ export function recordList(ctx, cfg) {
       if (multi) {
         const folded = state.folded.has(g);
         body.append(h('tr.group', { onclick: () => { folded ? state.folded.delete(g) : state.folded.add(g); draw(); } },
-          h('td', { colspan: cols.length + 3 }, h('span.fold', {}, icon(folded ? 'right' : 'down'), `${g} (${rows.length})`,
-            cfg.subtotal ? h('span.muted', {}, ' · ', cfg.subtotal(ctx, rows, m)) : null))));
+          h('td', { colspan: cols.length + 3 }, h('span.row-line', { style: { gap: '10px' } }, h('span.fold', {}, icon(folded ? 'right' : 'down'), `${cfg.groupLabel?.(g) ?? g} (${rows.length})`,
+            cfg.subtotal ? h('span.muted', {}, ' · ', cfg.subtotal(ctx, rows, m)) : null),
+            // B6.6: add a line right in this section.
+            cfg.groupAdd && cfg.groupAdd(g) ? h('button.btn.small.group-add', { type: 'button', onclick: e => { e.stopPropagation(); const r = ctx.store.add(cfg.kind, cfg.groupAdd(g), { type: null }); state.folded.delete(g); requestAnimationFrame(() => root.querySelector(`tr[data-id="${r.id}"] input`)?.focus()); } }, icon('plus'), 'Add a line') : null))));
         if (folded) continue;
       }
       for (const r of rows) {

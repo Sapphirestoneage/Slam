@@ -3,6 +3,10 @@
 import { h, clear, icon } from './dom.js';
 import * as S from './staples.js';
 import { homeworkItems } from './report-ui.js';
+import { homeworkText } from '../homework.js';
+import { communityLinesToAdd } from '../community.js';
+import { TIMER_MARKS, duration } from '../timer.js';
+import { feedbackCard } from './report-this.js';
 import { keyNumbers } from '../math/metrics.js';
 import { statusOf } from '../records.js';
 import { money, pct } from '../format.js';
@@ -35,7 +39,7 @@ export function listsScreen(app, ctx) {
   const hw = homeworkItems(ctx);
   const fix = x => { app.go(x.route); requestAnimationFrame(() => { const row = document.querySelector(`tr[data-id="${x.r.id}"]`); row?.classList.add('highlight'); row?.querySelector('input')?.focus(); }); };
   const copyHomework = e => {
-    const text = [`Homework for ${ctx.store.doc.client.name || 'you'}:`, ...hw.map(x => `- ${x.label}${x.r.values?.homeworkDue ? ` (by ${x.r.values.homeworkDue})` : ''}`)].join('\n');
+    const text = homeworkText(ctx.store.doc.client.name, hw);
     const fallback = () => { const ta = h('textarea.notes-box', { readonly: true }, text); S.popover(e.currentTarget, h('div.stack', {}, h('strong', {}, 'Copy and send'), ta), { width: 420 }); setTimeout(() => ta.select()); };
     try { navigator.clipboard.writeText(text).then(() => S.toast('Homework copied. Paste it into a message.'), fallback); } catch { fallback(); }
   };
@@ -48,11 +52,31 @@ export function listsScreen(app, ctx) {
       : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'Nothing to revisit yet'), h('span.muted', {}, 'Rough and not-sure numbers land here.')))),
     h('div.section', {}, h('div.section-title', {}, h('h2', {}, 'Homework list'), h('span.spacer'), hw.length ? S.button('Send to client', { size: 'small', iconName: 'mail', onClick: copyHomework }) : null), hw.length
       ? h('div.card.tool-list', {}, hw.map(x => {
-        const d = h('input', { type: 'date', value: x.r.values?.homeworkDue || '', 'aria-label': `Due date for ${x.label}` });
-        d.onchange = () => ctx.store.update(x.r.id, { homeworkDue: d.value || null });
-        return h('div.row-line', { style: { gap: '10px' } }, h('span', { style: { flex: 1, fontWeight: 600 } }, x.label), h('label.field', { style: { width: '160px' } }, d), S.button('Open', { size: 'small', onClick: () => fix({ ...x, route: ROUTE[x.r.kind] || '#/my-money/profile' }) }));
+        const d = h('input', { type: 'date', value: x.due || '', 'aria-label': `Due date for ${x.label}` });
+        const p = ctx.store.doc.profile;
+        d.onchange = () => (x.r ? ctx.store.update(x.r.id, { homeworkDue: d.value || null }) : ctx.store.setDoc('profile', { laterDue: { ...(p.laterDue || {}), [x.profileKey ?? x.lifeKey]: d.value || null } }));
+        return h('div.row-line', { style: { gap: '10px' } },
+          h('span.stack', { style: { flex: 1, gap: '2px' } }, h('span', { style: { fontWeight: 600 } }, x.label), x.where ? h('span.muted.small', {}, `Where to find it: ${x.where}`) : null),
+          h('label.field', { style: { width: '160px' } }, d),
+          S.button('Open', { size: 'small', onClick: () => (x.r ? fix({ ...x, route: ROUTE[x.r.kind] || '#/my-money/profile' }) : app.go(x.lifeKey ? '#/my-money/protection' : '#/my-money/profile')) }));
       }))
-      : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, 'Mark any number Will email and it lands here.')))))];
+      : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, "Tap I'll find it later on any number and it lands here, with where to look.")))))];
+}
+
+// M10: how long onboarding took, for usability testing. Also in the export (session.timer).
+function timerCard(ctx) {
+  const t = ctx.store.doc.session?.timer || {};
+  return h('div.card', {}, h('h3', {}, 'Onboarding timer'), h('p.muted.small', {}, 'For testing. Times are from the first Profile answer; the export includes them.'),
+    h('table.rows.mini', {}, h('tbody', {}, TIMER_MARKS.map(([k, label]) => h('tr', {}, h('td', {}, label),
+      h('td', {}, t[k] ? new Date(t[k]).toLocaleString() : h('span.muted', {}, 'Not yet')),
+      h('td.num', {}, k === 'profileStarted' ? '' : duration(t.seconds?.[k])))))));
+}
+function setCommunity(ctx, on) {
+  ctx.store.transaction('Community presets', () => {
+    ctx.store.setIn('session', ['community'], on, 'Community presets');
+    if (on) for (const l of communityLinesToAdd(ctx.store.records)) ctx.store.add('bill', l, { type: 'Yearly cost' });
+  });
+  S.toast(on ? 'Yom tov and Pesach are under yearly costs on the Budget, with blank amounts.' : 'Off. The lines it added stay; delete them on the Budget if not needed.', { undo: () => ctx.store.undo() });
 }
 
 // Snapshots with compare, notes, session settings, Fast Track accuracy and the look.
@@ -86,8 +110,17 @@ export function sessionScreen(app, ctx, { fastTrackGap }) {
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Session length'), S.textInput(s.length ?? null, v => ctx.store.setIn('session', ['length'], v === null ? undefined : Number(v), 'Session length'), { hint: `${ctx.ref.defaults.sessionMinutes} min`, width: 110 })),
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Sessions planned'), S.stepper(s.planned ?? 6, v => ctx.store.setIn('session', ['planned'], v, 'Sessions planned'), { min: 1, max: 24, label: 'Sessions planned' })),
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Client view'), S.toggle([[false, 'Off'], [true, 'On']], !!app.prefs.clientView, v => app.setPref('clientView', v), { label: 'Client view' }), h('span.muted.small', {}, 'Hides coach-only items')),
-      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Satisfaction'), S.stepper(s.satisfaction ?? null, v => ctx.store.setIn('session', ['satisfaction'], v, 'Satisfaction'), { min: 1, max: 10, label: 'Satisfaction 1 to 10' })))),
+      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Satisfaction'), S.stepper(s.satisfaction ?? null, v => ctx.store.setIn('session', ['satisfaction'], v, 'Satisfaction'), { min: 1, max: 10, label: 'Satisfaction 1 to 10' })),
+      // M9: community presets, off unless turned on for this client.
+      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Community presets'), S.toggle([[false, 'Off'], [true, 'On']], !!s.community, v => setCommunity(ctx, v), { label: 'Community presets' }),
+        h('span.muted.small', {}, 'Yom tov and Pesach lines, a kosher grocery note, future tuition goals, maaser')),
+      s.community ? h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Maaser'),
+        S.toggle(['Take-home', 'Gross'], s.maaser?.basis ?? 'Take-home', v => ctx.store.setIn('session', ['maaser'], { ...(s.maaser || {}), basis: v }, 'Maaser'), { label: 'Maaser on' }),
+        S.pctInput(s.maaser?.pct ?? null, v => ctx.store.setIn('session', ['maaser'], { ...(s.maaser || {}), pct: v }, 'Maaser'), { hint: 'Blank: 10' }),
+        h('span.muted.small', {}, 'Shown on the Budget')) : null)),
     fastTrackGap(ctx),
+    timerCard(ctx),
+    feedbackCard(ctx),
     h('div.card', {}, h('h3', {}, 'Look'), h('div.stack', { style: { gap: '12px' } },
       h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Theme'), S.toggle(['System', 'Light', 'Dark'], app.prefs.theme === 'light' ? 'Light' : app.prefs.theme === 'dark' ? 'Dark' : 'System', v => app.setPref('theme', v.toLowerCase()), { label: 'Theme' })),
       h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Density'), S.toggle(['Comfortable', 'Compact'], app.prefs.density === 'compact' ? 'Compact' : 'Comfortable', v => app.setPref('density', v.toLowerCase()), { label: 'Density' })),
