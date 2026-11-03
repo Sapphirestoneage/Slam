@@ -11,7 +11,7 @@ import { money, pct } from '../format.js';
 import { yearItems, usualDates, sinkingOf, takingOver } from '../year.js';
 import { TUITION_GOAL } from '../community.js';
 
-export const PUI = { extra: 0, pace: null, bands: true, chart: 'FI timeline', extraDebt: 0 };
+export const PUI = { extra: 0, pace: null, bands: true, chart: 'FI timeline', extraDebt: 0, reveal: false };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const short = v => (Math.abs(v) >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
 const whenText = (ctx, months) => (months == null ? null : months === 0 ? 'Now' : `${monthName(addMonths(ymOf(ctx.now()), months))} (${months < 24 ? `${months} months` : `${(months / 12).toFixed(1)} years`})`);
@@ -28,12 +28,32 @@ winSources.push(ctx => {
 // ---------- Goals ----------
 // The FI card, Big deals and the ladder refresh in place when an assumption changes (the milestone list below
 // keeps its own state, so the screen is not rebuilt).
+// The FI reveal (polish item 5): opened from that agenda step, Goals puts the FI date, the Timeline's save-more
+// slider and Big deals first, so all three show without scrolling at 1280px.
+export function revealCard(app, ctx, m) {
+  const fiWhen = m.monthsToFi.value;
+  const slider = h('input', { type: 'range', min: -1000, max: 3000, step: 50, value: PUI.extra, 'aria-label': 'Save more or less a month', 'data-focus': 'reveal:save-more' });
+  const out = h('strong'), result = h('span.fi-when');
+  const paint = () => {
+    const rr = m.fiNumber.value == null ? null : monthsTo(m, m.fiNumber.value, { realReturn: m.inputs.realReturn, extra: PUI.extra, now: ctx.now() });
+    clear(out, `${PUI.extra >= 0 ? '+' : '−'}${money(Math.abs(PUI.extra))} a month`);
+    clear(result, !rr ? '' : rr.reached ? 'Already there' : rr.value == null ? 'Not on this path' : `FI ${whenText(ctx, rr.value)}${ageAt(m, rr.value) != null ? `, at ${ageAt(m, rr.value)}` : ''}`);
+  };
+  slider.oninput = () => { PUI.extra = Number(slider.value); paint(); };
+  paint();
+  return h('div.card.reveal-card', {},
+    h('div.row-line', { style: { gap: '24px', alignItems: 'baseline' } },
+      h('div', {}, h('span.label', {}, 'FI date'), h('div.fi-big', {}, fiWhen != null ? S.mathButton(m.monthsToFi, monthName(addMonths(ymOf(ctx.now()), fiWhen))) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs)))),
+      h('div', {}, h('span.label', {}, 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? S.mathButton(m.fiNumber, money(m.fiNumber.value)) : h('span.muted', { style: { fontSize: '1rem' } }, 'Needs ', S.needLinks(ctx, m.fiNumber.needs))))),
+    m.fiNumber.value != null ? h('div.slider-row', { style: { marginTop: '12px' } }, h('span.label', {}, 'Save more'), slider, out, result) : null);
+}
 export function goalsScreen(app, ctx) {
-  const top = h('div', {}, goalsTop(app, ctx));
+  const reveal = PUI.reveal;
+  const top = h('div', {}, goalsTop(app, ctx, { reveal }));
   ctx.onRefresh(() => S.keepPlace(() => clear(top, goalsTop(app, ctx))));
   return [head('Goals', 'FI target, assumptions, milestones'), top, S.recordList(ctx, milestoneList())];
 }
-function goalsTop(app, ctx) {
+function goalsTop(app, ctx, { reveal = false } = {}) {
   const m = ctx.metrics();
   const a = ctx.store.doc.assumptions;
   const ref = ctx.ref;
@@ -74,9 +94,8 @@ function goalsTop(app, ctx) {
       nominal ? presetRow('Inflation', 'inflation', ref.presets.inflation.values, v => `${Math.round(v * 100)}%`, 'Feeds the nominal numbers') : null,
       h('div.preset-row', {}, h('span.label', {}, 'Life expectancy'), S.textInput(a.lifeExpectancy ?? null, v => setA({ lifeExpectancy: v === null ? null : Number(v) }), { hint: String(ref.defaults.lifeExpectancy), width: 90 })),
       h('div.preset-row', {}, h('span.label', {}, 'Social Security'), S.select(['Full scheduled', 'Reduced %', 'None'], a.socialSecurity ?? null, v => setA({ socialSecurity: v }), { label: 'Social Security', hint: 'Pick one', width: 170 }))), { label: 'More: real or nominal, life expectancy, Social Security' }));
-  return [h('div.card.fi-card', { style: { marginBottom: '16px' } }, left, right),
-    bigDealsCard(ctx, m),
-    ladderCard(ctx, m)];
+  const fiCard = h('div.card.fi-card', { style: { marginBottom: '16px' } }, left, right);
+  return reveal ? [revealCard(app, ctx, m), bigDealsCard(ctx, m), fiCard, ladderCard(ctx, m)] : [fiCard, bigDealsCard(ctx, m), ladderCard(ctx, m)];
 }
 
 // These are big deals (M56): one assumption at a time; click an option to use it.

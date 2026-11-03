@@ -9,6 +9,7 @@ import { profileCompletion } from './profile.js';
 import { firstLowDay } from './spending-ui.js';
 import { homeworkItems, sendSummary, fiCard, netWorthChart } from './report-ui.js';
 import { next3, agenda } from '../plan.js';
+import { PUI } from './plan-ui.js';
 import { keyNumbers } from '../math/metrics.js';
 import { changeSince, statusOf, countsAsDone } from '../records.js';
 import { money, pct } from '../format.js';
@@ -96,6 +97,7 @@ export function prepScreen(app, ctx) {
     inSession(ctx) ? h('div.banner-inline.good', {}, 'The session is on.', S.button('Back to Live', { iconName: 'right', onClick: () => app.go('#/home/live') })) : null,
     head('Home', `Prep for ${doc.client.name || 'this client'}`, S.button(inSession(ctx) ? 'Back to Live' : 'Start session', { kind: 'primary', size: 'big', onClick: () => startSession(app, ctx) })),
     moneyInOneLine(app, ctx),
+    next3Compact(app, ctx), // polish item 5: the Next 3 numbers on Prep too, #1 large
     paydayCard(app, ctx),
     netWorthOverTime(app, ctx),
     h('div.strip', {},
@@ -111,6 +113,7 @@ export function prepScreen(app, ctx) {
 }
 function startSession(app, ctx) {
   if (!inSession(ctx)) {
+    ctx.store.snapshot(`Start of session ${sessionNo(ctx)}`, keyNumbers(ctx.metrics())); // polish item 5: a snapshot to compare with at the end
     ctx.store.transaction('Start session', () => {
       ctx.store.setIn('session', ['startedAt'], new Date().toISOString());
       ctx.store.setIn('session', ['guide'], true); // Guide me turns on (R076)
@@ -167,18 +170,25 @@ export function liveScreen(app, ctx) {
   const nextStep = () => {
     // Guide me (R076): the next field to ask, in curriculum order.
     const target = a.current?.route || n3[0]?.route || '#/plan/goals';
+    PUI.reveal = a.current?.id === 'fi';
     app.go(target);
   };
   return [clientStrip(app, ctx),
     head('Home', inSession(ctx) ? 'Live: the session is on' : 'Live: start the session from Prep',
       left != null ? h('span.time-left', {}, left >= 0 ? `${left} min left` : `${-left} min over`) : null,
       S.button('Next step', { kind: 'primary', size: 'big', iconName: 'right', onClick: nextStep })),
-    h('div.agenda', {}, a.steps.map((s, i) => h(`button.step${s.done ? '.done' : ''}${a.current?.id === s.id ? '.current' : ''}`, { type: 'button', onclick: () => app.go(s.route) },
+    h('div.agenda', {}, a.steps.map((s, i) => h(`button.step${s.done ? '.done' : ''}${a.current?.id === s.id ? '.current' : ''}`, { type: 'button', onclick: () => { PUI.reveal = s.id === 'fi'; app.go(s.route); } },
       h('span.step-n', {}, `${i + 1}`), h('span.step-name', {}, s.name), h('span.muted.small', {}, s.done ? 'Done' : a.current?.id === s.id ? "You're here" : 'Up next')))),
     h('div.section-title', {}, h('h2', {}, 'Next 3 numbers'), h('span.muted', {}, 'Ranked by how much they move the FI date')),
     n3.length ? h('div.next3', {}, n3.map((c, i) => next3Card(app, ctx, c, i))) : h('div.card', {}, h('p.muted', {}, 'Every number that moves the FI date is in. Nice.')),
     moneyInOneLine(app, ctx),
     h('div.row-line', { style: { marginTop: '8px' } }, S.button('End session', { iconName: 'check', onClick: () => app.go('#/home/wrap-up') }), S.button('Open the parking lot', { iconName: 'note', onClick: () => app.openParking() }))];
+}
+function next3Compact(app, ctx) {
+  const n3 = next3(ctx.store.doc, ctx.ref, { now: ctx.now() }).top;
+  if (!n3.length) return null;
+  return h('section.section', {}, h('div.section-title', {}, h('h2', {}, 'Next 3 numbers'), h('span.muted', {}, 'Ranked by how much they move the FI date')),
+    h('div.next3.compact', {}, n3.map((c, i) => next3Card(app, ctx, c, i))));
 }
 function next3Card(app, ctx, c, i) {
   const big = i === 0;

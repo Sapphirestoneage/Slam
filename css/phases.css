@@ -197,3 +197,8 @@ button.tag.from-tag:hover { filter: brightness(.95); text-decoration: underline;
 table.rows tr.row-note td { height: auto; padding: 6px var(--s3) 10px; background: color-mix(in srgb, var(--warn) 6%, transparent); }
 .dup-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .dup-note .tag.warn { white-space: normal; height: auto; min-height: 24px; padding: 4px 10px; }
+/* Polish item 5: Next 3 on Prep, compact; the FI reveal card on Goals. */
+.next3.compact { margin-bottom: var(--s4); }
+.next3.compact .n3 { padding: var(--s2) var(--s3); gap: 4px; }
+.next3.compact .n3:not(.big) .why { display: none; }
+.reveal-card { margin-bottom: var(--s3); }
