@@ -93,7 +93,7 @@ export function debtStrip(ctx, m) {
   const note = missing.length ? `${missing.map(d => d.name).join(', ')} ${missing.length === 1 ? 'needs' : 'need'} ${missing.some(d => d.apr == null) ? 'an APR' : 'a payment'}` : null;
   const dateOnly = r => { const t = value(r, ctx); return t.match(/\((.*)\)/)?.[1] ?? t; };
   return summaryStrip(ctx, [
-    { label: 'Total debt', result: total, key: 'debtTotal', lowerIsGood: true },
+    // Total debt sits in the Net worth headline above.
     { label: 'Monthly payments', result: payments, key: 'debtPayments', lowerIsGood: true },
     { label: 'Debt-free', result: free, key: 'debtFreeMonths', lowerIsGood: true, render: dateOnly, note: free.value !== null ? note : null },
     { label: 'Interest left', result: interest, key: 'debtInterest', lowerIsGood: true, note },
@@ -381,7 +381,7 @@ function billsOnCard(ctx, card) {
   if (!bills.length) return labelled('Bills on this card', h('span.muted', {}, 'None yet. Link one from a bill\'s More ▸ Paid with.'));
   const total = sum(bills, b => lineMonthlyOf(b, freqOf(ctx)) ?? 0);
   const inFull = card.values.payChoice === 'In full';
-  return labelled(`Bills on this card: ${bills.length}, ${money(total)}/mo`, h('span.row-line', { style: { gap: '6px' } }, bills.map(b => h('a.tag.plain', { href: '#/spending/budget' }, b.name || b.values.category))),
+  return labelled(`Bills on this card: ${bills.length}, ${money(total)}/mo`, h('span.row-line', { style: { gap: '6px' } }, bills.map(b => h('a.tag.plain', { href: '#/cash-flow/budget' }, b.name || b.values.category))),
     { note: inFull ? 'Paid in full: these count as spending, no interest' : 'Carrying a balance: these add to what you owe each month' });
 }
 function debtTertiary(ctx, r, up) {

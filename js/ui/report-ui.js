@@ -16,7 +16,7 @@ const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1
 const short = v => (Math.abs(v) >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const CONSUMER = new Set(['Credit card', 'Personal loan', 'Buy now, pay later', 'Payday or cash advance', 'Medical', 'Family or friend']);
-const HOME = { netWorth: '#/my-money/assets', surplus: '#/spending/budget', savingsRate: '#/spending/budget', fi: '#/plan/goals', debt: '#/my-money/debt', taxes: '#/my-money/taxes', assets: '#/my-money/assets', budget: '#/spending/budget', income: '#/my-money/income', profile: '#/my-money/profile' };
+const HOME = { netWorth: '#/net-worth/assets', surplus: '#/cash-flow/budget', savingsRate: '#/cash-flow/budget', fi: '#/plan/goals', debt: '#/net-worth/debt', taxes: '#/cash-flow/taxes', assets: '#/net-worth/assets', budget: '#/cash-flow/budget', income: '#/cash-flow/income', profile: '#/home/profile' };
 
 // ---------- Overview ----------
 export function overviewScreen(app, ctx) {

@@ -111,11 +111,13 @@ const app = {
         S.iconButton('note', 'Parking lot', () => this.openParking()), undo, redo,
         h('label.field.time-pick', {}, time), cv, gear)));
     // A sub-tab whose area the Profile turned off is absent, not greyed (R001).
-    const off = this.hasClient && tab.id === 'my-money' && this.ctx.gates().areas.debt === false ? new Set(['debt']) : new Set();
-    // My Money modes sit beside its sub-tabs: Fast Track is a button, One page a toggle (Navigation: modes are not tabs).
-    const modes = tab.id === 'my-money' && this.hasClient ? h('span.row-line.mm-modes', { style: { gap: '8px', flexWrap: 'nowrap' } },
+    const off = this.hasClient && tab.id === 'net-worth' && this.ctx.gates().areas.debt === false ? new Set(['debt']) : new Set();
+    // Net worth and Cash flow modes sit beside their sub-tabs: Fast Track is a button, One page a toggle (Navigation: modes are not tabs).
+    const paged = ['net-worth', 'cash-flow'].includes(tab.id);
+    const onePageKey = `onePage-${tab.id}`;
+    const modes = paged && this.hasClient ? h('span.row-line.mm-modes', { style: { gap: '8px', flexWrap: 'nowrap' } },
       S.button('Start Fast Track', { iconName: 'right', onClick: () => startFastTrack(this, this.ctx) }),
-      S.toggle([['sections', 'By section'], ['one', 'One page']], this.prefs.onePage ? 'one' : 'sections', v => this.setPref('onePage', v === 'one'), { label: 'My Money layout' })) : null;
+      S.toggle([['sections', 'By section'], ['one', 'One page']], this.prefs[onePageKey] ? 'one' : 'sections', v => this.setPref(onePageKey, v === 'one'), { label: `${tab.name} layout` })) : null;
     const subs = h('div.subtabs-in', {}, tab.subs.filter(s => !off.has(s.id)).map(s => {
       const p = this.hasClient ? progressOf(this.ctx, tab.id, s.id) : null;
       const complete = p && p.of > 0 && p.done === p.of;
@@ -350,13 +352,13 @@ const app = {
     // A redraw of the same screen never loses your place (R165): scroll, list scroll and the control you were on.
     if (this._lastHash === hash) keepPlace(draw); else draw();
     // One page: a sub-tab click scrolls to its part (only when the place changes, not on every redraw).
-    if (this.prefs.onePage && tab.id === 'my-money' && this._lastHash !== hash && this._lastHash?.startsWith('#/my-money')) document.getElementById(`mm-${sub.id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    if (this.prefs[`onePage-${tab.id}`] && this._lastHash !== hash && this._lastHash?.startsWith(`#/${tab.id}/`)) document.getElementById(`part-${sub.id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     this._lastHash = hash;
     document.title = `${sub.name} · ${tab.name} · SLAM`;
     if (location.hash !== hash) history.replaceState(null, '', hash);
   },
 };
-const placeOf = r => ({ income: 'My Money › Income', benefit: 'My Money › Income', debt: 'My Money › Debt', account: 'My Money › Assets', asset: 'My Money › Assets', coverage: 'My Money › Protection', bill: 'Spending › Budget' })[r.kind] || 'My Money › Profile';
+const placeOf = r => ({ income: 'Cash flow › Income', benefit: 'Cash flow › Income', debt: 'Net worth › Debt', account: 'Net worth › Assets', asset: 'Net worth › Assets', coverage: 'Net worth › Protection', bill: 'Cash flow › Budget' })[r.kind] || 'Home › About you';
 
 // Keyboard (R168): / = Find, Ctrl+Z undo, Ctrl+Shift+Z redo (outside text boxes, so typing undo still works).
 document.addEventListener('keydown', e => {

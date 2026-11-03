@@ -434,7 +434,7 @@ export function keyboardHint() { // R168
 }
 // Hidden-area link: '+ Add [area]' linked to the gates hub.
 export function hiddenAreaLink(ctx, area) {
-  return h('a', { href: '#/my-money/profile', 'data-gate': area }, `+ Add ${area}`);
+  return h('a', { href: '#/home/profile', 'data-gate': area }, `+ Add ${area}`);
 }
 
 // ---------- Confirm dialogs (Words and states) ----------

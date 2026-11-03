@@ -5,7 +5,7 @@ import { parseQuickAdd } from '../js/quickadd.js';
 test('quick add: a bill with a period', () => {
   const r = parseQuickAdd('Netflix 15.99 monthly');
   assert.equal(r.kind, 'bill'); assert.equal(r.name, 'Netflix'); assert.equal(r.amount, 15.99); assert.equal(r.per, 'month');
-  assert.equal(r.section, 'Spending › Budget');
+  assert.equal(r.section, 'Cash flow › Budget');
 });
 test('quick add: a card with a balance and APR', () => {
   const r = parseQuickAdd('Chase card 3200 at 24%');

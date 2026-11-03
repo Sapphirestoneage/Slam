@@ -115,6 +115,8 @@ export function metrics(doc, ref, { now = new Date() } = {}) {
     return s + ((i.gross ?? 0) * pct + perPay * n) / 12;
   }, 0);
   out.savingsRate = savingsRate({ takeHome: x.takeHome, surplus: out.surplus.value, pretaxSaving });
+  out.pretaxSaving = pretaxSaving;
+  out.flow = flowOf(x, { pretaxSaving });
   out.housingPct = housingPct({ housing: x.housing, takeHome: x.takeHome });
   out.supportReceived = supportReceived(x.lines, { roommates: x.roommates });
   const paidInFull = { id: 'M31', value: 1, needs: [], guess: false, unit: 'months', text: 'Paid in full each month: no interest, nothing carried over.' };
@@ -134,6 +136,32 @@ export function metrics(doc, ref, { now = new Date() } = {}) {
   out.hourly = hourlyRate({ takeHome: x.takeHome, ...x.hours }, ref);
   out.annualSpending = x.spending === null ? null : x.spending * 12;
   return out;
+}
+
+// Cash flow waterfall (reorganize pass): gross, minus taxes, minus before-tax savings, = take-home, minus fixed,
+// minus variable, minus savings, = free. Taxes is what is left between gross and take-home once before-tax savings
+// are out, so the rows always add up (it holds paycheck premiums too, and says so). Savings are Retirement-letter lines
+// plus what x.afterTaxSaving and x.setAside add (after-tax contributions, savings goals, sinking funds).
+export function flowOf(x, { pretaxSaving = 0 } = {}) {
+  const gross = x.grossAnnual === null ? null : x.grossAnnual / 12;
+  const beforeTax = pretaxSaving || 0;
+  const takeHome = x.takeHome;
+  const premiums = x.paycheckPremiums ?? 0;
+  const taxes = gross === null || takeHome === null ? null : Math.max(0, gross - beforeTax - takeHome);
+  const mine = l => myShare(l, { roommates: x.roommates }).value ?? 0;
+  const lines = x.spendingSource === 'lines' ? x.lines : [];
+  const saveLines = lines.filter(l => l.draftt === 'Retirement').reduce((s, l) => s + mine(l), 0);
+  const debtOut = x.debtPaymentsOutsideSpending ?? 0;
+  let fixed = null, variable = null;
+  if (x.spendingSource === 'lines' && x.spending !== null) {
+    const rest = lines.filter(l => l.draftt !== 'Retirement');
+    fixed = rest.filter(l => l.amountType === 'Fixed').reduce((s, l) => s + mine(l), 0) + debtOut;
+    variable = rest.filter(l => l.amountType !== 'Fixed').reduce((s, l) => s + mine(l), 0);
+  }
+  const spending = x.spending === null ? null : x.spending + debtOut - saveLines; // gut: one number
+  const savings = saveLines + (x.afterTaxSaving ?? 0) + (x.setAside ?? 0);
+  const free = takeHome === null || spending === null ? null : takeHome - spending - savings;
+  return { gross, taxes, premiums, beforeTax, takeHome, fixed, variable, spending, savings, free, source: x.spendingSource };
 }
 
 // The key numbers a snapshot keeps for 'change since last session' (R167).

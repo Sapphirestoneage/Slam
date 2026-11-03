@@ -77,7 +77,7 @@ export function solveFor(m, fiAge) {
 // ---------- Next 3 numbers (R071 to R073) ----------
 const clone = v => JSON.parse(JSON.stringify(v));
 const OPEN = new Set([null, 'Not sure', 'Not now', 'Will email']);
-const ROUTE = { income: '#/my-money/income', debt: '#/my-money/debt', account: '#/my-money/assets', asset: '#/my-money/assets', bill: '#/spending/budget', spending: '#/spending/budget' };
+const ROUTE = { income: '#/cash-flow/income', debt: '#/net-worth/debt', account: '#/net-worth/assets', asset: '#/net-worth/assets', bill: '#/cash-flow/budget', spending: '#/cash-flow/budget' };
 
 // Fields still open, ranked by how much they move the FI date; anything worth under $100 a year goes to small wins.
 export function next3(doc, ref, { now = new Date(), limit = 3 } = {}) {
@@ -87,11 +87,11 @@ export function next3(doc, ref, { now = new Date(), limit = 3 } = {}) {
   const cands = [];
   const add = c => cands.push(c);
   // The core numbers first: each one locks the FI date on its own.
-  if (m.inputs.takeHome === null) add({ label: 'Take-home pay', why: 'Unlocks surplus, savings rate and the FI date', route: '#/my-money/income', quick: 'take-home', core: true });
-  if (m.inputs.spending === null) add({ label: 'Monthly spending', why: 'Unlocks surplus and the FI number', route: '#/spending/budget', quick: 'spending', core: true });
-  if (m.inputs.invested === null && g.areas.investments !== false) add({ label: 'Invested, all accounts', why: 'Where the FI date starts from', route: '#/my-money/assets', quick: 'invested', core: true });
-  if (m.inputs.age === null) add({ label: 'Age', why: 'Coast FI and the Rule of 5 need it', route: '#/my-money/profile', quick: 'age', core: true });
-  if (m.inputs.cash === null && g.areas.cash !== false) add({ label: 'Cash in checking and savings', why: 'Runway and the Rule of 5', route: '#/my-money/assets', quick: 'cash', core: true });
+  if (m.inputs.takeHome === null) add({ label: 'Take-home pay', why: 'Unlocks surplus, savings rate and the FI date', route: '#/cash-flow/income', quick: 'take-home', core: true });
+  if (m.inputs.spending === null) add({ label: 'Monthly spending', why: 'Unlocks surplus and the FI number', route: '#/cash-flow/budget', quick: 'spending', core: true });
+  if (m.inputs.invested === null && g.areas.investments !== false) add({ label: 'Invested, all accounts', why: 'Where the FI date starts from', route: '#/net-worth/assets', quick: 'invested', core: true });
+  if (m.inputs.age === null) add({ label: 'Age', why: 'Coast FI and the Rule of 5 need it', route: '#/home/profile', quick: 'age', core: true });
+  if (m.inputs.cash === null && g.areas.cash !== false) add({ label: 'Cash in checking and savings', why: 'Runway and the Rule of 5', route: '#/net-worth/assets', quick: 'cash', core: true });
   // Then every open field on a record.
   for (const r of live) {
     const fields = r.kind === 'debt' ? ['balance', 'apr', 'payment'] : r.kind === 'account' ? ['balance'] : r.kind === 'asset' ? ['value'] : ['income', 'bill'].includes(r.kind) ? ['amount'] : [];
@@ -134,9 +134,9 @@ export function agenda(doc, ref, { now = new Date() } = {}) {
   const debtsDone = g.areas.debt === false || m.inputs.debts.every(d => d.balance != null && d.apr != null);
   const custom = doc.session?.agenda;
   const steps = [
-    { id: 'why', name: 'Why now', route: '#/my-money/profile', done: !!doc.profile?.whyNow },
-    { id: 'debt', name: 'Debt and cash', route: g.areas.debt === false ? '#/my-money/assets' : '#/my-money/debt', done: debtsDone && m.inputs.cash !== null },
-    { id: 'spend', name: 'Spending basics', route: '#/spending/budget', done: m.inputs.spending !== null && m.inputs.takeHome !== null && (m.inputs.spendingSource === 'gut' || !m.inputs.guessLines) },
+    { id: 'why', name: 'Why now', route: '#/home/profile', done: !!doc.profile?.whyNow },
+    { id: 'debt', name: 'Debt and cash', route: g.areas.debt === false ? '#/net-worth/assets' : '#/net-worth/debt', done: debtsDone && m.inputs.cash !== null },
+    { id: 'spend', name: 'Spending basics', route: '#/cash-flow/budget', done: m.inputs.spending !== null && m.inputs.takeHome !== null && (m.inputs.spendingSource === 'gut' || !m.inputs.guessLines) },
     { id: 'fi', name: 'FI reveal', route: '#/plan/goals', done: m.monthsToFi.value !== null || !!m.monthsToFi.never },
   ];
   const list = custom?.length ? custom.map(c => steps.find(s => s.id === c.id) || { id: c.id, name: c.name, route: c.route || '#/home/live', done: !!c.done }) : steps;
