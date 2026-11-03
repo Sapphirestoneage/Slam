@@ -5,7 +5,7 @@ Clear a line by adding the row to the spec (spec/SLAM Build Spec.xlsx, then `pyt
 
 ## Fields (50 of 265 spec fields matched)
 
-### In code, not in the spec (187)
+### In code, not in the spec (195)
 
 - Profile › Client name (`profile.client.name`)
 - Profile › Age (`profile.age`)
@@ -14,6 +14,14 @@ Clear a line by adding the row to the spec (spec/SLAM Build Spec.xlsx, then `pyt
 - Profile › Partner birth year (`profile.partnerBirthYear`)
 - Profile › Kids ages (`profile.kidAges`)
 - Profile › Worst case: all on me (`profile.worstCase`)
+- Profile › Splitting shared bills with (people) (`profile.splitWith`)
+- Profile › A shared bill is usually given as (`profile.billsGivenAs`)
+- Profile › Shared: rent or mortgage (`profile.shared.rent`)
+- Profile › Shared: electric, gas, water (`profile.shared.utilities`)
+- Profile › Shared: internet and phone (`profile.shared.internet`)
+- Profile › Shared: renters or home insurance (`profile.shared.renters`)
+- Profile › Shared: groceries (`profile.shared.groceries`)
+- Profile › Shared: household supplies (`profile.shared.household`)
 - Profile › HSA-eligible plan (`profile.hsaEligible`)
 - Profile › FSA at work (`profile.fsa`)
 - Profile › Equity pay (ESPP, RSU) (`profile.equityPay`)
