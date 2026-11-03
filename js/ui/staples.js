@@ -1,6 +1,6 @@
 // Staples: pieces built once and used everywhere (Staples tab, R103 to R114, R156 to R174, R182 to R185).
 import { h, clear, icon } from './dom.js';
-import { STATUSES, statusOf, changeSince, countsAsDone } from '../records.js';
+import { STATUSES, SURE, sureOf, statusOf, changeSince, countsAsDone } from '../records.js';
 import { metrics, keyNumbers } from '../math/metrics.js';
 import { inView, timeChip } from '../math/time.js';
 import { money, pct, number, EMPTY, duration } from '../format.js';
@@ -119,14 +119,28 @@ export function statusTag(status) {
 export function warnTag(text) { return h('span.tag.warn', {}, '⚠ ', text); }
 export const guessTag = () => h('span.tag.guess', {}, '? Guess');
 
-// Shows only when the number is not 'Know it' (DMMT: reduce noise); click to pick.
-export function statusPicker(current, onPick, { label = 'Status' } = {}) {
-  const quiet = !current || current === 'Know it';
-  const b = h(`button.status-btn${quiet ? '.quiet' : ''}`, { type: 'button', 'aria-label': `${label}: ${current || 'not set'}`, 'data-focus': `status:${label}` },
-    current && current !== 'Know it' ? statusTag(current) : 'Know it', icon('down'));
-  b.onclick = () => popover(b, h('div.stack', {}, h('h3', {}, 'How sure is this?'),
-    STATUSES.map(s => h('button.btn.small', { type: 'button', onclick: () => { closePop(); onPick(s); } }, statusTag(s))),
-    h('button.btn.small', { type: 'button', onclick: () => { closePop(); onPick(null); } }, 'Clear')));
+// One sureness system: the face says Know it, Rough or Missing; the finer status is picked inside (polish item 1).
+const FACE = { 'Know it': ['plain', 'Know it'], Rough: ['roughly', '≈ Rough'], Missing: ['missing', 'Missing'], 'Not for me': ['plain', 'Not for me'] };
+export function sureTag(status, hasValue = true) {
+  const face = sureOf(status, hasValue);
+  const [cls, text] = FACE[face];
+  return h(`span.tag.${cls}`, { title: status && face !== status ? `${face}: ${TAG[status]?.[1].replace(/^[?≈] /, '') ?? status}` : null }, text);
+}
+// The menu: Know it; Rough (Roughly, Guess); Missing (Not now, I'll find it later); then Not for me, which hides it.
+export function statusMenu(onPick, current = null) {
+  const pickBtn = (s, text) => h('button.btn.small', { type: 'button', 'aria-pressed': String(s === current), onclick: () => { closePop(); onPick(s); } }, text);
+  const group = (name, list) => h('div.sure-group', {}, h('span.label', {}, name), h('div.row-line', { style: { gap: '6px' } }, list.map(s => pickBtn(s, TAG[s][1].replace(/^[?≈] /, '')))));
+  return h('div.stack.sure-menu', { style: { gap: '10px' } }, h('h3', {}, 'How sure is this?'),
+    h('div.sure-group', {}, pickBtn('Know it', 'Know it')),
+    group('Rough', SURE.Rough), group('Missing', SURE.Missing),
+    h('hr'), h('div.row-line', { style: { gap: '6px' } }, pickBtn('Not for me', 'Not for me (hide it)'),
+      h('button.btn.small', { type: 'button', onclick: () => { closePop(); onPick(null); } }, 'Clear')));
+}
+export function statusPicker(current, onPick, { label = 'Status', hasValue = true } = {}) {
+  const face = sureOf(current, hasValue);
+  const b = h(`button.status-btn${face === 'Know it' ? '.quiet' : ''}`, { type: 'button', 'aria-label': `${label}: ${face}${current && current !== face ? `, ${TAG[current]?.[1] ?? current}` : ''}`, 'data-focus': `status:${label}` },
+    face === 'Know it' ? 'Know it' : sureTag(current, hasValue), icon('down'));
+  b.onclick = () => popover(b, statusMenu(onPick, current));
   return b;
 }
 
@@ -609,6 +623,9 @@ export function recordList(ctx, cfg) {
   };
   const moreRow = (r, g) => h('tr.more', { 'data-for': r.id, 'data-group': g }, h('td', { colspan: view.span }, moreLayers(ctx, r, cfg, p => update(r, p))));
 
+  // A blank core number reads Missing on its face.
+  const hasCore = r => (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields || ['amount'])
+    .every(f => { const v = f in r && f !== 'values' ? r[f] : r.values?.[f]; return v !== null && v !== undefined && v !== ''; });
   // One "..." per row: Reset, Duplicate, Not for me (or Bring back), then Delete on its own (R105).
   const rowMenuButton = r => {
     const name = r.name || r.type || cfg.thing.one;
@@ -687,7 +704,7 @@ export function recordList(ctx, cfg) {
         const tr = h(`tr.row${state.selected.has(r.id) ? '.selected' : ''}`, { 'data-id': r.id, 'data-group': g, hidden: folded },
           h('td.check-cell', {}, box),
           cols.map((c, i) => h(`td.col-${slug(c.label)}${i === 0 ? '.col-first' : ''}${c.num ? '.num' : ''}`, {}, c.render(ctx, r, m, p => update(r, p), { remove: e => remove([r.id], e.currentTarget) }))),
-          h('td.col-status', {}, statusPicker(r.status, s => update(r, { status: s }))),
+          h('td.col-status', {}, statusPicker(r.status, s => update(r, { status: s }), { hasValue: hasCore(r) })),
           h('td.col-actions', {}, h('span.actions', {},
             h('button.caret', { type: 'button', 'aria-expanded': String(open), 'data-focus': 'more', onclick: () => setOpen(r.id) },
               open ? 'Less' : 'More', icon(open ? 'down' : 'right')),
@@ -729,7 +746,7 @@ function moreLayers(ctx, r, cfg, update) {
 function bulkBar(ctx, sel, a) {
   const cards = ctx.store.find(r => r.kind === 'debt' && r.type === 'Credit card');
   const statusBtn = h('button.btn.small', { type: 'button' }, icon('tag'), 'Set status', icon('down'));
-  statusBtn.onclick = () => popover(statusBtn, h('div.stack', {}, STATUSES.map(s => h('button.btn.small', { type: 'button', onclick: () => { closePop(); a.onStatus(s); } }, statusTag(s)))));
+  statusBtn.onclick = () => popover(statusBtn, statusMenu(s => s && a.onStatus(s)));
   const linkBtn = h('button.btn.small', { type: 'button', disabled: !cards.length, title: cards.length ? null : 'Add a credit card first' }, icon('link'), 'Link to card', icon('down'));
   linkBtn.onclick = () => popover(linkBtn, cards.length <= 4
     ? h('div.stack', {}, h('h3', {}, 'Paid with'), cards.map(c => h('button.btn', { type: 'button', onclick: () => { closePop(); a.onLink(c.id); } }, c.name || 'Credit card')))

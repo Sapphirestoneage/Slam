@@ -8,6 +8,16 @@ export const APP_ID = 'SLAM';
 // R053. 'Not sure' shows as Guess once the app fills a typical value (R055).
 export const STATUSES = ['Know it', 'Roughly', 'Not sure', 'Will email', 'Not now', 'Not for me', 'Computed'];
 const DONE = new Set(['Know it', 'Roughly', 'Not sure', 'Not for me', 'Computed']); // R054, R055, R058
+// One sureness system (polish pass item 1): every number shows Know it, Rough or Missing on its face. Display only:
+// the stored statuses stay as they are. Rough holds Roughly and Not sure (shown as Guess, a typical value is used);
+// Missing holds Not now and Will email (shown as I'll find it later), and any blank number. Not for me is its own hide action.
+export const SURE = { 'Know it': ['Know it'], Rough: ['Roughly', 'Not sure'], Missing: ['Not now', 'Will email'] };
+export function sureOf(status, hasValue = true) {
+  if (status === 'Not for me') return 'Not for me';
+  if (SURE.Rough.includes(status)) return 'Rough';
+  if (SURE.Missing.includes(status)) return 'Missing';
+  return hasValue ? 'Know it' : 'Missing';
+}
 export const PERIODS = ['paycheck', 'week', '2 weeks', 'twice a month', 'month', 'quarter', 'year'];
 export const SOURCES = ['manual', 'statement', 'bank']; // R116, R118
 
