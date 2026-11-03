@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Calendar markers (Phase 3.5 section 5): FOO dates and the month-end close day, as slim markers behind a filter.
 // Pure: no DOM. FOO dates are months, so they sit on the first of their month; the close day is the last day.
 import { foo } from './foo.js';

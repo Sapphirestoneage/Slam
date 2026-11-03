@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The app's own numbers for one household, worked out once for the workbook: the metrics, which rows the math counts,
 // the FOO, the cash layers and the statements. The registries' app() functions read from this. Pure: no DOM.
 import { metrics } from '../math/metrics.js';

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Quick fill: a locked number's "needs take-home" opens a box right there. Saving writes to the
 // same record the full screen uses, so it shows up in its home too (Words: Locked state).
 import { h } from './dom.js';

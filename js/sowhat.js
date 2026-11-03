@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Every number says "so what" (polish item 6): one plain sentence of meaning, from the client's side, and one action
 // link when something is off. Pure: takes the metrics (and a few extras), returns { text, action: { label, href } }.
 

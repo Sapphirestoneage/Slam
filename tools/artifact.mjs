@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Builds the one-file SLAM page published as the "SLAM for Eli" artifact, from this repo, so the two never drift.
 // The site itself has no build step; this only packs it: CSS inline, the three data files inline, ECharts from cdnjs.
 // Needs esbuild once: npm i --no-save esbuild@0.24.0   Run: node tools/artifact.mjs [out.html] [title] [client name]

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Field IDs moved when data/fields.json was rebuilt from the spec (Nov 3 2026): the spec added Retire by (age) (F215)
 // and Inflation (F217), so F216 to F263 moved up by two, and Return (real) became Return (after inflation) (F216).
 // Saved clients and backup files name a field only on a filed parking-lot note (parking[].filedTo); migrate() moves

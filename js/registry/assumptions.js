@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The assumptions registry: every assumption and reference value the math uses (returns, limits, brackets, rules),
 // declared once with where it comes from and when it was checked. Values are read from data/reference-2026.json
 // (the Reference data tab) or, for SLAM's own rules, from the constant in js/math. The spreadsheet's Assumptions tab
-// is built from this list only, and test/registry.test.js fails when a Reference data value is not on it.
+// is built from this list only, and test/coverage.test.js fails when a Reference data value is not on it.
 //
 // An entry: { id, name, label, unit, get(ref), source, date }. name is the workbook's named range (letters, digits
 // and _ only, so Excel and Google Sheets both accept it). client: the key in doc.assumptions when a client can pick

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Writes a workbook plan (js/sheet/workbook.js) with ExcelJS, and reads an .xlsx back into plain rows for the import.
 // ExcelJS is passed in: the browser loads it from jsDelivr (js/sheet/load.js), Node tests import it when installed.
 import { FMT } from './workbook.js';

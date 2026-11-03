@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Turns a fixture's inputs (fixtures/demo.json, or the private file locally) into a household.
 // The demo is made up; the published site shows it behind 'Try with example numbers'.
 import { Store, newHousehold } from './records.js';

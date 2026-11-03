@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Enter once, show in both (reorganize pass item 2). An item that is a balance and a flow is typed in one place
 // and shows on both tabs: a debt's payment becomes a Cash flow line "From Debt"; a premium taken from the
 // paycheck is already out of take-home; a contribution to an account is savings in the waterfall.

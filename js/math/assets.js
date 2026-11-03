@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // M40 to M44: net worth, liquid net worth, runway, Rule of 5, contribution limits.
 import { ok, needs, missing, fmt, isBlank } from './result.js';
 import { RULES } from '../registry/assumptions.js';

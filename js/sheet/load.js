@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // ExcelJS for the browser, from jsDelivr, pinned to an exact version (no build step). Loaded the first time a
 // spreadsheet is made or read, then kept.
 import { EXCELJS_URL } from './excel.js';

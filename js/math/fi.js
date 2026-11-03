@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // M02, M50 to M58: FI numbers, FI date, Coast FI, big deals, solvers, money as time.
 import { ok, needs, missing, fmt, isBlank } from './result.js';
 import { duration } from '../format.js';

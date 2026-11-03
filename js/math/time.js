@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The time view (R152 to R155): every amount as hours of work or FI days.
 import { realHourlyWage } from './income.js';
 import { money, hours, fiDays, EMPTY } from '../format.js';

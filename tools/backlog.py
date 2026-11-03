@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Write BACKLOG.md from spec/csv/Feature list.csv: every Phase 4 to 8 row, grouped by phase."""
 import csv, pathlib
 
@@ -22,5 +23,9 @@ for phase in sorted(by_phase):
         cells = [r[col[k]] for k in ("Tier", "Feature", "What it does", "Inspired by (people)", "Source", "Time view")]
         out.append("| " + " | ".join(c.replace("|", "/").replace("\n", " ") for c in cells) + " |")
     out.append("")
-(ROOT / "BACKLOG.md").write_text("\n".join(out))
+# Rows logged from prompts and not in the spec yet sit after this heading; they are kept as they are.
+MARK = "## Logged from prompts (not in the spec yet)"
+was = (ROOT / "BACKLOG.md").read_text(encoding="utf-8") if (ROOT / "BACKLOG.md").exists() else ""
+tail = was[was.index(MARK):] if MARK in was else ""
+(ROOT / "BACKLOG.md").write_text("\n".join(out) + ("\n" + tail if tail else ""))
 print({p: len(v) for p, v in sorted(by_phase.items())})

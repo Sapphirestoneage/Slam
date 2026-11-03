@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Display formats from the Look and feel tab. Empty is a dash, never $0.
 export const EMPTY = '–'; // en dash
 const MINUS = '−';

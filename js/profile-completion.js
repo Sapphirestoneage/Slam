@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Profile completion (R065) and whether Next can show (Brandon B1.1). Pure: no DOM.
 import { gatesOf } from './gates.js';
 

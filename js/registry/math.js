@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The math registry: every Math tab formula (M00 to M72) and every function in js/math, declared once. The workbook's
 // Math tab has one row per entry: its ID, its name in plain words, the live formula (or "From the app" with the
 // reason), the app's value and a Check. Formulas that work row by row (a debt's payoff months) are columns on that
-// Inputs tab, and the Math row adds them up. test/registry.test.js fails when a js/math export or a spec M number is
+// Inputs tab, and the Math row adds them up. test/coverage.test.js fails when a js/math export or a spec M number is
 // missing here.
 //
 // An entry: { id, name, inputs, fns, unit, sheet | fromApp, app, parts, cols }.

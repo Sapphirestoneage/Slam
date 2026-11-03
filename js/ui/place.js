@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Keep your place across a redraw (R165): the window scroll, the scroll inside every list, and the control
 // you were on. Every redraw that rebuilds DOM (app.render, a record list, a chart panel) runs inside keepPlace.
 // No DOM import here, so the Node tests can drive it with a small fake document.

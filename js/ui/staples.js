@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Staples: pieces built once and used everywhere (Staples tab, R103 to R114, R156 to R174, R182 to R185).
 import { h, clear, icon } from './dom.js';
 import { STATUSES, SURE, sureOf, statusOf, changeSince, countsAsDone, SOURCE_WORDS } from '../records.js';

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Gates (R001 to R023): what applies to this household. One place reads the Profile answers and says which
 // areas, rows and fields appear. An unanswered gate shows everything; only a 'no' takes things away (R001: absent,
 // not hidden, but nothing disappears before it is asked). Pure: no DOM, no storage.

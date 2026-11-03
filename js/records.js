@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // One record type for every money item (R115), dated history on every change (R123),
 // undo and redo over every change (R086), snapshots (R083, R085, R167), export and import.
 // Pure: no DOM, no storage. js/storage.js saves it; the screens read it.

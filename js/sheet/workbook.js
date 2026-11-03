@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Open the books: the spreadsheet of one household, built only from the registries (js/registry/). Pure: returns a
 // plan of sheets, cells, formulas and named ranges; js/sheet/excel.js writes it with ExcelJS. Nothing here names a
 // tab, a column or a formula of its own: a new field, math entry or assumption lands in the workbook by being in its

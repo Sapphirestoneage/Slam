@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Plan › FOO (Phase 3.5 section 4): the SLAM order of operations, the path of dated stops, and the original nine
 // beside it on a toggle. Formatting only: js/math/foo.js places the steps and finds the flags.
 import { h } from './dom.js';

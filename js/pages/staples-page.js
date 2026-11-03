@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The staples demo page: every staple and every Polish rule, on the made-up Demo client.
 import { h, clear, icon } from '../ui/dom.js';
 import { Store, newHousehold, STATUSES } from '../records.js';

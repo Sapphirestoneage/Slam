@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Coach tools behind the gear (build phase 10): revisit and homework lists, snapshots with compare, notes and
 // settings, and the discovery table that turns a sales call into a client file.
 import { h, clear, icon } from './dom.js';

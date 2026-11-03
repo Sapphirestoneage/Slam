@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Plain-language tooltips (B8): every jargon term, in a sentence a client would use. Pure data plus one matcher.
 export const GLOSSARY = {
   'Surplus': 'What is left each month after spending and debt payments. This is what can go to goals.',

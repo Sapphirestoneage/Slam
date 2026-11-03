@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Home › About you (build phase 5): why now, what applies (the gates hub, R015), about you, work and home,
 // the accounts gate with counts (R001 to R003), and the couples split (R177 to R179). Answers live in doc.profile.
 import { h } from './dom.js';

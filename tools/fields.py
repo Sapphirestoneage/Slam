@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Write data/fields.json from spec/csv/Fields.csv: what Find searches (field, area, where it lives)."""
 import csv, json, pathlib
 

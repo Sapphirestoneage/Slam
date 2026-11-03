@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Beta feedback (B9): a small "Report this" button on every screen. The note is saved with the screen and the time
 // in the client file (session.feedback), so it goes out in the export.
 import { h } from './dom.js';

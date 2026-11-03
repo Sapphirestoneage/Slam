@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Payday card (B7): "You get $X on [date]. $Y covers fixed bills. $Z is free to spend." Per pay period and per month.
 // Pure: reads the same month model as the calendar. Fixed bills are the fixed floor (fixed-amount lines, your share)
 // plus debt payments that are not already spending lines.

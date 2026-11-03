@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The year ahead (missed ideas M4, M5, M7): every known yearly date and cost in the next 12 months, sinking funds,
 // and the bills someone else covers that you will take over. Pure: no DOM. Reads the same records as everything else.
 import { ymOf, addMonths, monthsBetween } from './month.js';

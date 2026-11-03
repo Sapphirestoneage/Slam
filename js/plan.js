@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The plan model (build phase 7): FI targets, milestone dates, the Next 3 numbers and Guide me.
 // Pure: reads a household and its metrics, never the DOM.
 import { metrics } from './math/metrics.js';

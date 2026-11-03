@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The three statements and the tie-out (Phase 3.5, M62 to M67). Pure: reads the household file, its dated history
 // and the month model; no DOM. Every line keeps the records behind it, so a view can expand it and link to its home.
 //   M62 Net worth statement (balance sheet), as of a date

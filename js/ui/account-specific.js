@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Brandon section 3: fields only some accounts have. 401(k): Roth or traditional, per paycheck and % of salary,
 // match tiers, vesting. HSA: cash vs invested, self-directed vs managed with a fee comparison.
 import { h } from './dom.js';

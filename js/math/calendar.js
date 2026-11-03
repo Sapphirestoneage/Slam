@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // M60, M61: running balance and bonus paycheck months.
 import { ok, needs, fmt, isBlank } from './result.js';
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Plain-language tooltips (B8): watches the page and gives every label, header and title that names a jargon term a
 // dotted underline and a tooltip. Tapping one shows the same words (touch screens have no hover).
 import { h } from './dom.js';

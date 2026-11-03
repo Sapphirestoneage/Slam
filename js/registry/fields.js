@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The field registry: every record type and field SLAM stores, declared once. The spreadsheet export and import
 // (js/sheet/) read only this file for the Inputs tabs: one tab per area, one row per record, one column per field.
-// A new field lands in the workbook by being added here, and test/registry.test.js fails until it is: it scans the
+// A new field lands in the workbook by being added here, and test/coverage.test.js fails until it is: it scans the
 // code for every key the app writes.
 //
 // A field: { key, label, type, sheet }. type is money, pct (stored as a decimal, 7% = 0.07), date (YYYY-MM-DD),
@@ -337,7 +338,7 @@ export const AREAS = [
   },
 ];
 
-// The record kinds the app stores, each in exactly one area (checked by test/registry.test.js).
+// The record kinds the app stores, each in exactly one area (checked by test/coverage.test.js).
 export const KINDS = Object.fromEntries(AREAS.filter(a => a.source === 'records').flatMap(a => Object.keys(a.kinds).map(k => [k, a.id])));
 
 // Doc parts whose keys are not money inputs and stay in the app (also checked by the test).

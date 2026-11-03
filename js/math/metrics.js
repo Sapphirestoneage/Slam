@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Reads a household's records and works out every headline number with the Math functions.
 // One place maps records to formula inputs, so every screen shows the same answer.
 import { statusOf } from '../records.js';

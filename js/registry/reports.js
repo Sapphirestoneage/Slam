@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The report tabs of the workbook (Statements, FOO, Projections), declared as tables: their columns, their rows, and
 // each cell as a formula (off the Inputs and Math tabs), a value, or the app's own number to check against. The
 // export builds these tabs from this file only. Formulas use named ranges and, inside a table, {col:key} for this

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The workbook's export format version and fingerprints. The version is a number in _meta that goes up whenever the
 // registries' shape changes: shapeOf() hashes every field, formula and tab id, and FORMATS lists each shape with its
 // number. When the hash is new, test/coverage.test.js fails and says the line to add here, so the number always

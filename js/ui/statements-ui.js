@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Report › Statements (Phase 3.5 section 2): the three statements for a month or a year, this period vs last, and a
 // slim tie-out. Everything here is formatting: the numbers come from js/math/statements.js.
 import { h, clear, icon } from './dom.js';

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Brandon sections 2 and 3: what is inside each cash and investment account. Every block sits behind its own
 // closed caret inside the row's More (slim by default). Numbers shown are worked out from typed values only.
 import { h } from './dom.js';

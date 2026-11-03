@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Cash layers (Phase 3.5 section 3, M68). Cash fills the layers in order; the FOO reads them. Pure: no DOM.
 //   1 little e      the smaller of $1,000 and the highest deductible ($1,000, a Guess, until a deductible exists)
 //   2 income gaps   each known, dated gap: monthly spending × months; FOO step 1 if it starts within 12 months, else 8

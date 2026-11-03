@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Tiny DOM helpers and the line icons (Lucide style, 2.25 stroke, 18px; R156).
 
 export function h(tag, attrs = {}, ...kids) {

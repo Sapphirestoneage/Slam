@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // M30 to M37: minimums, payoff months, interest, fee APR, payoff order, utilization, DTI, promo.
 import { ok, needs, missing, fmt } from './result.js';
 import { duration } from '../format.js';

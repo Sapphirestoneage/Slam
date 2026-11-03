@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // M01, M10 to M17: periods, taxes, take-home, match, variable income, real hourly wage.
 import { ok, needs, missing, fmt } from './result.js';
 import { RULES, LISTS } from '../registry/assumptions.js';

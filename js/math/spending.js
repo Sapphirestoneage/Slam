@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // M20 to M2B: line amounts, my share, support, floor, set-asides, passes, surplus, savings rate, DRAFTT, housing, prepaid.
 import { ok, needs, missing, fmt, isBlank } from './result.js';
 import { monthlyFrom } from './income.js';

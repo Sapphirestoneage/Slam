@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Brandon section 2 and 3: what is inside an account. Allocation, holdings, purpose tags, growth and basis, fees,
 // access rules, staleness, uninvested cash, and the 401(k) match tiers. Pure: no DOM. Every number comes from typed
 // values only; nothing here fills in an example.

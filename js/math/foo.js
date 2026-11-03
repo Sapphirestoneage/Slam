@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The SLAM financial order of operations (Phase 3.5 section 4): M69 placement, M70 Quiet Quitting FI, M71 flags.
 // Pure: reads the household file and the metrics; no DOM. Each step: Done, In progress, Next or Later, the dollars
 // left, a projected date and what it is made of.

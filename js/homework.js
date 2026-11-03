@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // "I'll find it later" (Brandon B1.2, B1.3): any field can be parked on the Homework list, each with a hint on
 // where to look. Record fields use the 'Will email' status (shown as "I'll find it later"); Profile answers live in
 // doc.profile.later. Pure: no DOM.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Open the books: the two buttons (Open in a spreadsheet, Bring a spreadsheet back) and the review of every change
 // before anything is saved. The workbook and the change list come from js/sheet/; this file only shows them.
 import { h, icon } from './dom.js';
