@@ -11,5 +11,7 @@ jobs:
           node-version: 22
       - name: Install ExcelJS for the spreadsheet tests (no build step)
         run: npm install --no-save --no-audit --no-fund exceljs@4.4.0
+      - name: Install LibreOffice so the spreadsheet recalculation checks run (answer to 115)
+        run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends libreoffice-calc-nogui
       - name: Test
         run: node --test

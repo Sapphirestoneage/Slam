@@ -207,7 +207,7 @@ Each one has the default used so the build could keep going. Answer here or in t
 
 ## All closed (Nov 3 2026)
 
-Every question from 1 to 102 and 117 to 120 is closed. Of 103 to 116 (Open the books), 105, 107, 108, 109, 110 and 115 are still open. "Kept" means the default described in the question stays, by your call to close them all out.
+Every question from 1 to 102 and 117 to 120 is closed. Of 103 to 116 (Open the books), 105, 107, 109 and 110 are still open. "Kept" means the default described in the question stays, by your call to close them all out.
 Sessions numbered new questions at the same time: Phase 3.5's are 92 to 102, Open the books' are 103 to 116, this one's are 117 to 120.
 
 | # | Closed as |
@@ -251,7 +251,7 @@ Sessions numbered new questions at the same time: Phase 3.5's are 92 to 102, Ope
 | 98 | Kept: the five launch moves as listed |
 | 99, 100 | Kept: the extra bridge rows; Pay yourself first as a line above the income statement |
 | 101, 102 | Kept: FOO markers on the 1st, close marker on the last day; Move button on phones |
-| 103 to 116 | 103, 104, 106, 111 to 114 and 116 answered (Answered, Open the books, below). Open: 105, 107, 108, 109, 110, 115 |
+| 103 to 116 | 103, 104, 106, 108, 111 to 116 answered (Answered, Open the books, below). Open: 105, 107, 109, 110 |
 | 117 | Closed: the T letter reads Health and self-care (built) |
 | 118 | Closed: no ranges under starter estimates (there is no source for them); Accept estimate stays |
 | 120 | Closed: rates stay in data/reference-2026.json, checked by hand each year. The NY joint brackets, NYC rates and the Roth IRA limits (96) are still to be checked once tax.ny.gov and irs.gov are allowed in the session's network settings |
@@ -261,7 +261,9 @@ Sessions numbered new questions at the same time: Phase 3.5's are 92 to 102, Ope
 - 103 Rent and roommates: built. A split bill asks "The amount above is: My share / The whole bill" and shows the other side worked out (a share times the people splitting it, or the whole bill divided by them). Blank stays The whole bill, so no saved number moves. Housing % now splits with the roommates like every other number. Works on every shared bill, not only rent. In the spreadsheet: This amount is, and a Whole bill a month column.
 - 106 Statuses in the sheet: keep all six.
 - 116 Start a new client from a file: OK as built.
-- Still open (updated Nov 4 2026): 105 (which From the app rows could become formulas), 107 (tick removed rows by default), 108 (a 6 in a % cell), 109 (tabs for the fields that stay in the app), 110 (open the file in Google Sheets and Excel), 115 (LibreOffice on GitHub). 111, 112, 113 and 114 are answered below.
+- Still open (updated Nov 4 2026): 105 (which From the app rows could become formulas), 107 (tick removed rows by default), 109 (tabs for the fields that stay in the app; not sure yet, so they stay in the app), 110 (open the file in Google Sheets and Excel; not sure yet). 111, 112, 113 and 114 are answered below.
+- 108 A 6 in a % cell: yes, read as 6% and said in the review. Kept as built.
+- 115 LibreOffice on GitHub: yes. The GitHub test run installs it, so the recalculation checks run there too.
 - 111 Spec drift: no drift allowed, linked row by row. The spec's Fields tab has a SLAM id column naming exactly what each row is in code; 123 rows were added for fields the spec did not have (F266 to F388); a row that names nothing real or a field with no row fails the run. 24 rows say not built yet, with why (SPEC-DRIFT.md).
 - 112 New rows: a type when the tab has types; on Spending lines, the category (it decides the letter, Fixed or Variable and the date). Built.
 - 113 Conflicts: only the same number changed on both sides, shown as What's changed with a Yes or No. Built.
