@@ -207,7 +207,7 @@ Each one has the default used so the build could keep going. Answer here or in t
 
 ## All closed (Nov 3 2026)
 
-Every question from 1 to 102 and 117 to 120 is closed; 103 to 116 (Open the books) arrived after and are still open. "Kept" means the default described in the question stays, by your call to close them all out.
+Every question from 1 to 102 and 117 to 120 is closed. Of 103 to 116 (Open the books), 105, 107, 108, 109, 110 and 115 are still open. "Kept" means the default described in the question stays, by your call to close them all out.
 Sessions numbered new questions at the same time: Phase 3.5's are 92 to 102, Open the books' are 103 to 116, this one's are 117 to 120.
 
 | # | Closed as |
@@ -251,7 +251,7 @@ Sessions numbered new questions at the same time: Phase 3.5's are 92 to 102, Ope
 | 98 | Kept: the five launch moves as listed |
 | 99, 100 | Kept: the extra bridge rows; Pay yourself first as a line above the income statement |
 | 101, 102 | Kept: FOO markers on the 1st, close marker on the last day; Move button on phones |
-| 103 to 116 | Open: the Open the books questions, asked after this table was made |
+| 103 to 116 | 103, 104, 106, 111 to 114 and 116 answered (Answered, Open the books, below). Open: 105, 107, 108, 109, 110, 115 |
 | 117 | Closed: the T letter reads Health and self-care (built) |
 | 118 | Closed: no ranges under starter estimates (there is no source for them); Accept estimate stays |
 | 120 | Closed: rates stay in data/reference-2026.json, checked by hand each year. The NY joint brackets, NYC rates and the Roth IRA limits (96) are still to be checked once tax.ny.gov and irs.gov are allowed in the session's network settings |
@@ -261,12 +261,12 @@ Sessions numbered new questions at the same time: Phase 3.5's are 92 to 102, Ope
 - 103 Rent and roommates: built. A split bill asks "The amount above is: My share / The whole bill" and shows the other side worked out (a share times the people splitting it, or the whole bill divided by them). Blank stays The whole bill, so no saved number moves. Housing % now splits with the roommates like every other number. Works on every shared bill, not only rent. In the spreadsheet: This amount is, and a Whole bill a month column.
 - 106 Statuses in the sheet: keep all six.
 - 116 Start a new client from a file: OK as built.
-- Still open: 105 (which From the app rows could become formulas), 109 (tabs for the fields that stay in the app), 111 (map the spec fields by ID), 112 (the new-row rule), 113 (conflicts per field), 115 (LibreOffice on GitHub).
+- Still open (updated Nov 4 2026): 105 (which From the app rows could become formulas), 107 (tick removed rows by default), 108 (a 6 in a % cell), 109 (tabs for the fields that stay in the app), 110 (open the file in Google Sheets and Excel), 115 (LibreOffice on GitHub). 111, 112, 113 and 114 are answered below.
 - 111 Spec drift: no drift allowed, linked row by row. The spec's Fields tab has a SLAM id column naming exactly what each row is in code; 123 rows were added for fields the spec did not have (F266 to F388); a row that names nothing real or a field with no row fails the run. 24 rows say not built yet, with why (SPEC-DRIFT.md).
 - 112 New rows: a type when the tab has types; on Spending lines, the category (it decides the letter, Fixed or Variable and the date). Built.
 - 113 Conflicts: only the same number changed on both sides, shown as What's changed with a Yes or No. Built.
 - 114 Format version: stays as built (it moves with every new field; the coverage test says the line to add).
 - Rent and the profile: About you › Home and shared bills (who you live with, how many split, your share or the whole bill, which bills you split) feeds every Budget line. Built.
 
-117. **Spec rows not built yet.** 24 spec rows are named notyet in the SLAM id column: itemized deductions, Social Security, a real or nominal dollars switch, a part of a bill someone else covers, a reimbursed amount, a happiness rating per line, the 401(k) loan due-on-leaving note, a card library, a next check date, and one starter line each where the spec has several (kids, pets, car wash, money sent to family). Which do you want built, and which should come off the spec?
-- 117 Spec rows not built yet: built the next check date (F244), every starter line the spec lists (kids, pets, car wash, money sent to family), a reimbursed amount on a line (F093), part of a bill someone covers (F089), and today's or future dollars (F220). Parked in the spec: itemized deductions, a happiness rating per line, a card library, the 401(k) loan due-on-leaving note, Social Security.
+121. **Spec rows not built yet.** (numbered 117 by another session; 117 to 120 were already taken) 24 spec rows are named notyet in the SLAM id column: itemized deductions, Social Security, a real or nominal dollars switch, a part of a bill someone else covers, a reimbursed amount, a happiness rating per line, the 401(k) loan due-on-leaving note, a card library, a next check date, and one starter line each where the spec has several (kids, pets, car wash, money sent to family). Which do you want built, and which should come off the spec?
+- 121 Spec rows not built yet: built the next check date (F244), every starter line the spec lists (kids, pets, car wash, money sent to family), a reimbursed amount on a line (F093), part of a bill someone covers (F089), and today's or future dollars (F220). Parked in the spec: itemized deductions, a happiness rating per line, a card library, the 401(k) loan due-on-leaving note, Social Security.
