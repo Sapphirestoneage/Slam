@@ -77,7 +77,7 @@
     "rothIncome": {
       "single": 153000,
       "joint": 242000,
-      "note": "2026 Roth IRA phase-out start (MAGI), single and joint. Used for the backdoor note on FOO step 5. Not in the spec Reference data tab yet."
+      "note": "2026 Roth IRA phase-out start (MAGI), single and joint (ranges $153,000 to $168,000 and $242,000 to $252,000, IRS Notice 2025-67, as reported by several tax sites, checked Nov 4 2026; irs.gov not reachable from the build). Used for the backdoor note on FOO step 5. Not in the spec Reference data tab yet."
     }
   },
   "tax": {
@@ -159,7 +159,7 @@
     "selfEmployedBase": 0.9235,
     "state": {
       "NY": {
-        "source": "NY 2026 single brackets match NY Tax Law 601(c)(1)(vii) (checked Nov 3 2026). Joint brackets: not yet confirmed against the law. The recapture over about $107k AGI and the 2027 to 2032 schedule are not modeled (LATER).",
+        "source": "NY 2026 single brackets match NY Tax Law 601(c)(1)(vii) (checked Nov 3 2026). Joint and head of household thresholds match several tax sites (checked Nov 4 2026) and use the same rates as single; not yet checked against the law itself. The recapture over about $107k AGI and the 2027 to 2032 schedule are not modeled (LATER).",
         "standardDeduction": {
           "single": 8000,
           "joint": 16050,
@@ -285,7 +285,7 @@
     },
     "local": {
       "NYC": {
-        "source": "NYC resident income tax, on NY taxable income. Rates: not yet confirmed against the law.",
+        "source": "NYC resident income tax, on NY taxable income. Rates and the single and joint cutoffs match several tax sites (checked Nov 4 2026); not yet checked against NYC Finance or the law itself.",
         "brackets": {
           "single": [
             [

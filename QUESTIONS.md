@@ -151,7 +151,7 @@ Each one has the default used so the build could keep going. Answer here or in t
 93. **True FI.** Shown as the FI number grossed up for about 15% tax on withdrawals, a rough rate until retirement taxes are in. Keep 15%, or another rate?
 94. **Step statuses beyond the three.** Done, In progress and Next as asked, plus Later (steps after the next one) and Optional (Bedazzle before any joy line is picked, so it never blocks). OK?
 95. **A late bill.** For step 1, a bill or debt payment still Planned more than 5 days after its day this month. Is 5 days the right grace?
-96. **Roth IRA income limit.** data/reference-2026.json uses $153,000 single and $242,000 joint (where the phase-out starts) for the backdoor note. Confirm the 2026 values.
+96. **Roth IRA income limit.** data/reference-2026.json uses $153,000 single and $242,000 joint (where the phase-out starts) for the backdoor note. Confirm the 2026 values. Answered Nov 4 2026: confirmed. The phase-out runs $153,000 to $168,000 single and $242,000 to $252,000 joint (IRS Notice 2025-67, through tax sites that cite it).
 97. **Projected dates.** Steps 1 to 5 and 8 are dated by spending the surplus on them in order; Coast FI and FI use the growth path; a debt payoff on the path uses today's payment. So "Clear the heavy debt" can land before "Credit card paid off at today's payment". Keep both, or date payoffs by the FOO order?
 98. **Launch moves.** The step 7 list is Quit and take time off, Go part-time, Take a sabbatical, Start something of my own, Move somewhere cheaper. Add or rename?
 99. **The bridge rows.** The net worth bridge (M66) needs Saved from paycheck and Debt paid down rows beside surplus, market and other to tie out; the spec formula lists fewer. OK?
