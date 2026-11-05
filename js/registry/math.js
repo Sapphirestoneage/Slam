@@ -24,6 +24,7 @@ import { simpleMath } from '../math/simple.js';
 import { pictureOf, paceOf, unlockOf, confidenceOf, nextSmallThings } from '../math/picture.js';
 import { sessionNo } from '../program.js';
 import { scorecardOf } from '../math/scorecard.js';
+import { ladderOf } from '../math/ladder.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -352,6 +353,14 @@ export const MATH = [
     parts: [
       { key: 'holes', name: 'Holes', unit: 'count', fromApp: 'the areas rated Hole', app: c => scorecardOf(c.doc, c.ref, { now: c.now, flags: c.flags }).holes.length },
       { key: 'top', name: 'Top hole (before your FOO step first, then payoff over effort)', unit: 'text', fromApp: 'the ranking on the Scorecard', app: c => { const h = scorecardOf(c.doc, c.ref, { now: c.now, flags: c.flags }).holes[0]; return h ? `${h.name}${h.payoff ? `: ${Math.round(h.payoff.value)} a year over ${h.effort} hours` : ''}` : 'None'; } },
+    ] },
+  { id: 'M75', name: 'Ladder', inputs: 'the cash layers, the match, the heavy debt since Day 0, net worth, invested, the FI targets', unit: 'count',
+    fns: ['ladder.ladderOf'],
+    fromApp: 'steps in FOO order (little e, the match, heavy debt by quarters, big e) with how far along and a projected month; markers (net worth positive, consumer debt free, $100k, Quiet Quitting FI, Coast FI, Lean FI, FI, Fat FI) reached or projected; the count here is the wins so far',
+    app: c => ladderOf(c.doc, c.ref, { now: c.now, flags: c.flags }).wins,
+    parts: [
+      { key: 'next', name: 'Next step', unit: 'text', fromApp: 'the first step not done, with how far along and when', app: c => { const l = ladderOf(c.doc, c.ref, { now: c.now, flags: c.flags }); return l.next ? `${l.next.name}: ${Math.round(l.next.pct * 100)}% there${l.next.date ? `, about ${l.next.date}` : ''}` : 'Every step done'; } },
+      { key: 'marker', name: 'Next marker', unit: 'text', fromApp: 'the first marker not reached, with its projected month', app: c => { const l = ladderOf(c.doc, c.ref, { now: c.now, flags: c.flags }); return l.nextMarker ? `${l.nextMarker.name}${l.nextMarker.date ? `, about ${l.nextMarker.date}` : ''}` : 'Every marker reached'; } },
     ] },
 ];
 

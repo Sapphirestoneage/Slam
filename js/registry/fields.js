@@ -372,6 +372,7 @@ export const NOT_IN_SHEET = {
   'spending.months.statements': 'statement balances typed at month end; set on Month end',
   'spending.months.summary': 'the month-end summary; set on Month end',
   session: 'session agenda, notes, feelings and the one-pager; not money',
+  'program.ladder': 'the Fat FI label a client renames (the ladder, M75)',
   program: 'the 12-session program: the coach\'s checklist ticks, the hole each session pulled, the game plan; the Program tab shows where it stands',
   scorecard: 'the Scorecard: the coach\'s ratings, reasons, efforts, typed payoffs, chosen holes and the next chapter; the Scorecard tab shows it',
   'session.feedback': 'Report this notes (coach only; the Coach notes tab when coach-only is ticked)',

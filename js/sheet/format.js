@@ -48,6 +48,7 @@ export const FORMATS = [
   { version: 7, shape: '2c78ff04' }, // Nov 5 2026: Locked (confirmed) on Income, Debt, Assets and Spending lines; M73 Picture %; the Program tab
   { version: 8, shape: '276f00d0' }, // Nov 5 2026: Short or long term and Need, want or wish on milestones; M74 Scorecard; the Scorecard tab
   { version: 9, shape: 'b964ff19' }, // Nov 5 2026: Retirement lines and after-tax contributions as investing (M27 retire, M28 afterTax); the surplus invested unless turned off
+  { version: 10, shape: '0b3ff683' }, // Nov 6 2026 (the overnight run, one bump): M75 the ladder
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

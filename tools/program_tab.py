@@ -22,8 +22,9 @@ READ = """
 import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES } from './js/registry/program.js';
 import { AREAS, RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER } from './js/registry/scorecard.js';
 import { ORDER, STEP_WORDS, PREREQS, CONDITIONS } from './js/registry/foo.js';
+import { STEPS, MARKERS, LADDER } from './js/registry/ladder.js';
 const prereqs = Object.fromEntries(Object.entries(PREREQS).map(([k, p]) => [k, { ...p, conditions: (p.conditions || []).map(c => CONDITIONS[c].label) }]));
-console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs } }));
+console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs }, LADDER: { STEPS, MARKERS, LADDER } }));
 """
 RULE_WORDS = {
     "cashFlow": "The headline savings rate: Strong at or over strong, OK at or over ok, else Hole; a negative surplus is a Hole",
@@ -156,6 +157,15 @@ def main():
         row("Review", sid, "Key numbers: " + ", ".join(groups), "")
     row("Review", "Other sessions", "Key numbers: " + ", ".join(cfg["REVIEW"]["fallback"]), "")
     row("FI date", "", "Unlocks once income, spending (a gut number is enough) and an invested balance are in; locked with the plain reason only while one is missing. Shown by confidence: Low as a year range (spending " + str(int(cfg["FI_RANGE"]["Low"] * 100)) + "% lower to higher), Medium as a narrower range or a year (" + str(int(cfg["FI_RANGE"]["Medium"] * 100)) + "%), High as a month. Line 1 is the path assumed (Invest your surplus, on unless turned off); line 2 the other path when it differs (answers 122, 123).", "js/math/picture.js fiWordsOf; js/math/fi.js fiRangeOf")
+
+    # The ladder (overnight F1).
+    lad = cfg["LADDER"]
+    row("Ladder", "", "Two kinds of milestone. Steps are actions in a fixed order that follows SLAM's FOO; a step that does not apply (no match offered, no heavy debt) is left out. Markers are reached whenever the math gets there and slot in between the steps by their actual or projected date. Home shows the next step as a big bar with how far along and the projected month, the next marker as a small line, and the whole ladder closed, with Day 0 as a small marker. Copy frames progress as a win.", "M75; js/registry/ladder.js; js/math/ladder.js; Home")
+    for s in lad["STEPS"]:
+        row("Ladder", f"Step: {s['name']}", s["what"], f"FOO step {s['foo']}" + (f"; only when {s['applies']}" if s.get("applies") else ""))
+    for k in lad["MARKERS"]:
+        row("Ladder", f"Marker: {k['name']}", k["what"], "Label editable per client (program.ladder.fatLabel)" if k.get("editable") else "")
+    row("Ladder", "Heavy debt by quarters", ", ".join(f"{int(x * 100)}%" for x in lad["LADDER"]["heavyShares"]) + " of the heavy debt at Day 0 (today's when there is no Day 0 yet) paid down", "Heavy = cards, payday, personal, medical, BNPL, or any APR at or over the heavy line (QUESTIONS: heavy vs all consumer debt)")
 
     for r, (kind, cells) in enumerate(rows, 1):
         src = {"title": title_src, "head": head_src, "body": body_src}[kind]

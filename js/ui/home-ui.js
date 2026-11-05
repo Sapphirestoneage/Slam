@@ -14,6 +14,8 @@ import { changeSince } from '../records.js';
 import { programOf, startSession, inSession, sessionOf, snapshotNumbers, day0Report, agendaOf, graduationReport } from '../program.js';
 import { SESSIONS, MONEY_DATES, levelWord } from '../registry/program.js';
 import { fiWordsOf } from '../math/picture.js';
+import { ladderOf } from '../math/ladder.js';
+import { monthName } from '../month.js';
 import { ratingTag } from './scorecard-ui.js';
 import { agendaPanel, follow } from './agenda-ui.js';
 import { money, pct } from '../format.js';
@@ -31,6 +33,7 @@ export function homeScreen(app, ctx) {
     pathRow(app, P, open),
     checklistCard(app, ctx, P, open),
     pictureCard(ctx, P),
+    ladderCard(app, ctx),
     P.afterIntake ? holesCard(app, ctx, P) : null,
     filledCard(ctx, P),
     P.afterIntake && !P.scorecard.open.length ? nextChapterCard(ctx, { unrated: P.scorecard.unrated, parked: P.scorecard.parkedHoles }) : null, // answers 137, 140: only an open hole blocks
@@ -178,6 +181,26 @@ function pictureCard(ctx, P) {
     S.moreBlock('home:sections', () => h('div.section-bars', {}, P.picture.sections.map(s => h('div.row-line', {}, h('span', { style: { minWidth: '80px', fontWeight: 600 } }, s.name), bar(s.pct ?? 0),
       h('span.muted.small', {}, `${Math.round((s.pct ?? 0) * 100)}% · ${s.items.length} ${s.items.length === 1 ? 'number' : 'numbers'}`),
       s.pct >= 1 ? h('span.tag.good', {}, '✓') : h('a', { href: s.route }, 'Open ›')))), { label: 'By section' }));
+}
+
+// ---------- The ladder (M75): the next step as a big bar, the next marker as a small line, the full ladder closed ----------
+function ladderCard(app, ctx) {
+  const doc = ctx.store.doc;
+  if (!doc.records.length) return null; // nothing typed yet: the ladder has nothing to say
+  const L = ladderOf(doc, ctx.ref, { now: ctx.now(), flags: app.flags });
+  const when = r => (r.date ? `about ${monthName(r.date, 'short')}` : 'no date yet');
+  const wins = [...L.steps.filter(s => s.done), ...L.markers.filter(k => k.reached)];
+  const n = L.next;
+  const big = n ? h('div.ladder-next', {}, h('div.row-line', { style: { gap: '10px', flexWrap: 'wrap' } }, h('span.muted.small', {}, 'Next step'), h('span.ladder-name', {}, n.name), h('span.muted', {}, n.what)),
+    h('div.bar-row', {}, bar(n.pct, { wide: true, label: `${n.name} progress` }), h('span', {}, `${Math.round(n.pct * 100)}% there`), h('span.muted.small', {}, n.done ? '' : when(n))))
+    : h('div.ladder-next', {}, h('span.ladder-name', {}, 'Every step on the ladder is done'), h('span.muted', {}, ' Markers from here.'));
+  const k = L.nextMarker;
+  const small = h('p.muted.small', { style: { margin: '6px 0 0' } }, k ? [`Next marker: ${k.name}, ${when(k)}.`] : 'Every marker reached.', wins.length ? ` ${wins.length} ${wins.length === 1 ? 'win' : 'wins'} so far: ${wins.map(w => w.name).join(', ')}.` : ' The first win is close.');
+  const rung = r => h(`div.rung${r.done || r.reached ? '.won' : ''}.${r.kind}`, {}, h('span.box', {}, r.done || r.reached ? icon('check') : ''), h('strong', {}, r.name), h('span.tag.plain', {}, r.kind === 'step' ? 'step' : 'marker'),
+    h('span.muted.small', {}, r.what), h('span.spacer'), h('span.small', {}, r.done || r.reached ? 'Done' : r.kind === 'step' ? `${Math.round(r.pct * 100)}% · ${when(r)}` : when(r)));
+  const day0 = L.day0 ? h('div.rung.day0', {}, h('span.box', {}, '·'), h('span.muted.small', {}, `Day 0: ${new Date(L.day0.at).toLocaleDateString()}${L.day0.netWorth != null ? `, net worth ${money(L.day0.netWorth)}` : ''}`)) : null;
+  return h('div.card.ladder-card', {}, big, small,
+    S.moreBlock('home:ladder', () => h('div.rungs', {}, day0, L.rungs.map(rung), h('p.muted.small', { style: { margin: '6px 0 0' } }, 'Steps are in order, like the FOO. Markers slot in by when the math expects them. Steps that do not apply (no match offered, no heavy debt) are left out.')), { label: `The whole ladder (${wins.length} of ${L.rungs.length})` }));
 }
 
 // ---------- The holes (after intake): the top three, ranked, each with its payoff in the money view ----------

@@ -132,3 +132,20 @@ Review,S2,"Key numbers: spending, debt, account",
 Review,S3,"Key numbers: income, spending, debt, account",
 Review,Other sessions,"Key numbers: income, spending, debt, account",
 FI date,,"Unlocks once income, spending (a gut number is enough) and an invested balance are in; locked with the plain reason only while one is missing. Shown by confidence: Low as a year range (spending 15% lower to higher), Medium as a narrower range or a year (5%), High as a month. Line 1 is the path assumed (Invest your surplus, on unless turned off); line 2 the other path when it differs (answers 122, 123).",js/math/picture.js fiWordsOf; js/math/fi.js fiRangeOf
+Ladder,,"Two kinds of milestone. Steps are actions in a fixed order that follows SLAM's FOO; a step that does not apply (no match offered, no heavy debt) is left out. Markers are reached whenever the math gets there and slot in between the steps by their actual or projected date. Home shows the next step as a big bar with how far along and the projected month, the next marker as a small line, and the whole ladder closed, with Day 0 as a small marker. Copy frames progress as a win.",M75; js/registry/ladder.js; js/math/ladder.js; Home
+Ladder,Step: little e,"Plumbing emergencies covered: $1,000 or the highest deductible, whichever is smaller",FOO step 1
+Ladder,Step: 401(k) match captured,Putting in enough to get the full employer match,FOO step 2; only when matchOffered
+Ladder,Step: 25% of heavy debt paid,A quarter of the heavy debt (APR at or over the heavy line) gone since Day 0,FOO step 3; only when heavyDebt
+Ladder,Step: 50% of heavy debt paid,Half of it gone,FOO step 3; only when heavyDebt
+Ladder,Step: 75% of heavy debt paid,Three quarters gone,FOO step 3; only when heavyDebt
+Ladder,Step: Heavy debt free,No debt at or over the heavy-debt APR,FOO step 3; only when heavyDebt
+Ladder,Step: big e,"Losing-a-job emergencies covered: the Rule of 5, five months of spending",FOO step 4
+Ladder,Marker: Net worth positive,What you own is more than what you owe,
+Ladder,Marker: All consumer debt free,"Cards, personal, BNPL, payday, medical and family loans at $0",
+Ladder,Marker: $100k net worth,Six figures of net worth,
+Ladder,Marker: Quiet Quitting FI,Invested enough that the yearly minimum alone reaches FI,
+Ladder,Marker: Coast FI,Invested enough to stop adding and still reach FI at the FI age,
+Ladder,Marker: Lean FI,"25 times needs-only spending (food, accommodation, transportation)",
+Ladder,Marker: FI,25 times current spending,
+Ladder,Marker: Fat FI,"25 times spending, times the Fat multiplier (1.5; the label can be renamed per client)",Label editable per client (program.ladder.fatLabel)
+Ladder,Heavy debt by quarters,"25%, 50%, 75%, 100% of the heavy debt at Day 0 (today's when there is no Day 0 yet) paid down","Heavy = cards, payday, personal, medical, BNPL, or any APR at or over the heavy line (QUESTIONS: heavy vs all consumer debt)"

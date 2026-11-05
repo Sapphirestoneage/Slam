@@ -313,3 +313,14 @@ Answered and built: 122 (a gut number unlocks the FI date at Low confidence, sho
 145. **The cost of an override.** Giving while carrying heavy debt costs that debt's highest APR on the money; with no heavy debt, the real return. Other overridden steps show no cost yet. OK?
 146. **The FI range's ends.** When the high end of the range is not on this path within 70 years it reads "2041 or later". OK?
 147. **Homework from the client's side.** setHomeworkStatus takes by: 'client' and the gate shows who said done; the client screen has no button yet (a later phase). OK?
+
+## Overnight run (Nov 5 to 6 2026): the batch 3 answers, the ladder, couples, debt payoff, Joy, capture
+
+Answered and built from the second overnight brief: 140 (a parked hole does not block; Home shows N parked holes), 141 (a carried Must do goes onto the next Must do; a carried Going over is suggested), 142 (a Find box in the link menu), 143 (the S9 gate once at Start session; End session reviews only what changed), 144 (both prerequisites for giving), 145 (the override cost as built; other costs later), 146 (2041 or later), 147 (the client's I did this waits). Each default below was built so the run could keep going.
+
+148. **The Buffer.** Two weeks of spending (RULES.bufferWeeks), the first cash layer, full before little e. Keep two weeks, or one?
+149. **Big e is the Rule of 5.** Five months of spending (RULES.bigEMonths), one definition in the layers, the Rule of 5 target and the Scorecard (Strong when big e is full). This supersedes the spec's age over 5 (M43); the Demo client's Rule of 5 target became $18,000. OK?
+150. **Override costs.** Only giving's override shows a cost in FI days (the heavy APR, else the real return). Other overridden steps still show no cost. Which others should (SPARKS before Coast FI, the Roth before the match)?
+151. **Heavy debt vs all consumer debt on the ladder.** The quarter steps (25, 50, 75, 100%) measure heavy debt: cards, payday, personal, medical, BNPL, or any APR at or over 8%, measured from Day 0's total. A separate marker, All consumer debt free, counts every consumer type (cards, personal, BNPL, payday, medical, family loans) at any rate. Should the quarters count all consumer debt instead?
+152. **Ladder dates.** A step's projected month is its gap over what goes into savings a month (the layer's gap for little e and big e; the payoff path for the debt quarters); a marker's is the months-to math on invested, or net worth growing by that same monthly amount. The ladder shows "about May 2027", never a day. OK?
+153. **Fat FI.** FI times 1.5 (RULES.fatFactor); the label can be renamed per client (program.ladder.fatLabel) but the multiplier is one rule for everyone. Should the multiplier be per client too?
