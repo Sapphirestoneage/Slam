@@ -11,7 +11,9 @@ import { homeworkItems, sendSummary, fiCard, netWorthChart } from './report-ui.j
 import { PUI } from './plan-ui.js';
 import { soWhat } from '../sowhat.js';
 import { changeSince } from '../records.js';
-import { programOf, startSession, inSession, sessionOf, snapshotNumbers, day0Report, agendaOf, graduationReport, parkedBack, sessionCount } from '../program.js';
+import { programOf, startSession, inSession, sessionOf, snapshotNumbers, day0Report, agendaOf, graduationReport, parkedBack, sessionCount, setJoy, joyOf, joyHistory } from '../program.js';
+import { JOY } from '../registry/joy.js';
+import { personLabels } from '../registry/couples.js';
 import { SESSIONS, MONEY_DATES, levelWord } from '../registry/program.js';
 import { fiWordsOf } from '../math/picture.js';
 import { ladderOf } from '../math/ladder.js';
@@ -29,11 +31,13 @@ export function homeScreen(app, ctx) {
   const open = P.sessions.find(s => s.id === HUI.open) || P.current;
   const low = firstLowDay(ctx);
   return [sessionStrip(app, ctx, P),
+    P.inSession ? joyAsk(ctx, P) : null, // F4: asked at the start of each session
     endedLine(app, ctx, P),
     pathRow(app, P, open),
     checklistCard(app, ctx, P, open),
     pictureCard(ctx, P),
     ladderCard(app, ctx),
+    joyCard(ctx),
     P.afterIntake ? holesCard(app, ctx, P) : null,
     filledCard(ctx, P),
     P.afterIntake && !P.scorecard.open.length ? nextChapterCard(ctx, { unrated: P.scorecard.unrated, parked: P.scorecard.parkedHoles }) : null, // answers 137, 140: only an open hole blocks
@@ -181,6 +185,45 @@ function pictureCard(ctx, P) {
     S.moreBlock('home:sections', () => h('div.section-bars', {}, P.picture.sections.map(s => h('div.row-line', {}, h('span', { style: { minWidth: '80px', fontWeight: 600 } }, s.name), bar(s.pct ?? 0),
       h('span.muted.small', {}, `${Math.round((s.pct ?? 0) * 100)}% · ${s.items.length} ${s.items.length === 1 ? 'number' : 'numbers'}`),
       s.pct >= 1 ? h('span.tag.good', {}, '✓') : h('a', { href: s.route }, 'Open ›')))), { label: 'By section' }));
+}
+
+// ---------- The Joy number (F4) ----------
+// The ask: shown while the session runs until it is answered (one stepper per person in a couple). The wording is config.
+function joyAsk(ctx, P) {
+  const doc = ctx.store.doc, n = P.n, j = joyOf(doc, n);
+  const names = personLabels(doc);
+  const people = ctx.couple && JOY.perPerson ? ['Me', 'Partner'] : ['Me'];
+  const answered = people.every(p => (p === 'Me' ? j.value : j.partner) != null);
+  const row = p => h('div.row-line', { style: { gap: '10px' } }, people.length > 1 ? h('span', { style: { minWidth: '90px', fontWeight: 600 } }, names[p]) : null,
+    S.stepper(p === 'Me' ? j.value : j.partner, v => setJoy(ctx.store, n, v, { person: p, now: ctx.now().toISOString() }), { min: JOY.min, max: JOY.max, label: `${JOY.label} ${names[p]}`, key: `joy:${p}` }),
+    h('span.muted.small', {}, `${JOY.min} ${JOY.low.toLowerCase()} · ${JOY.max} ${JOY.high.toLowerCase()}`));
+  if (answered) return null;
+  return h('div.card.joy-ask', {}, h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, JOY.label), h('span.muted', {}, 'Asked at the start of every session')),
+    h('p', { style: { margin: '6px 0 8px', fontWeight: 600 } }, JOY.question), h('div.stack', { style: { gap: '6px' } }, people.map(row)));
+}
+// Joy since Day 0: the latest number, Day 0's, and a small line, closed until asked.
+function joyCard(ctx) {
+  const doc = ctx.store.doc, H = joyHistory(doc);
+  if (H.latest == null && H.latestPartner == null) return null;
+  const names = personLabels(doc);
+  const words = [H.latest != null ? `${ctx.couple ? `${names.Me} ` : ''}${H.latest} of ${JOY.max}` : null, ctx.couple && H.latestPartner != null ? `${names.Partner} ${H.latestPartner} of ${JOY.max}` : null].filter(Boolean).join(' · ');
+  return h('div.card.joy-card', {}, h('div.row-line', { style: { gap: '10px', flexWrap: 'wrap' } }, h('h2', {}, JOY.label), h('strong', {}, words),
+    H.day0 != null ? h('span.muted.small', {}, `Day 0: ${H.day0}${H.change != null && H.change !== 0 ? ` (${H.change > 0 ? '+' : ''}${H.change} since)` : ''}`) : null, h('span.spacer'),
+    H.points.length >= 2 ? S.moreBlock('home:joy', () => joyChart(H, names, ctx.couple), { label: 'Since Day 0' }) : h('span.muted.small', {}, 'The line starts with the next snapshot')));
+}
+function joyChart(H, names, couple) {
+  const host = h('div.chart', { style: { height: '160px' } });
+  queueMicrotask(() => {
+    if (!window.echarts || !host.isConnected) return;
+    const t = S.chartTheme('assets');
+    const c = window.echarts.init(host, null, { renderer: 'svg' });
+    const series = [{ name: couple ? names.Me : JOY.label, type: 'line', data: H.points.map(p => p.value), symbolSize: 8, lineStyle: { color: t.area, width: 3 }, itemStyle: { color: t.area } }];
+    if (couple) series.push({ name: names.Partner, type: 'line', data: H.points.map(p => p.partner), symbolSize: 6, lineStyle: { color: t.text2, type: 'dashed' }, itemStyle: { color: t.text2 } });
+    c.setOption({ textStyle: { fontFamily: t.font, color: t.text }, grid: { left: 36, right: 16, top: 28, bottom: 28 }, legend: { top: 0, textStyle: { color: t.text2 } }, tooltip: { trigger: 'axis' },
+      xAxis: { type: 'category', data: H.points.map(p => p.label), axisLabel: { color: t.text2 } }, yAxis: { type: 'value', min: JOY.min, max: JOY.max, axisLabel: { color: t.text2 }, splitLine: { lineStyle: { color: t.line } } }, series });
+    new ResizeObserver(() => c.resize()).observe(host);
+  });
+  return host;
 }
 
 // ---------- The ladder (M75): the next step as a big bar, the next marker as a small line, the full ladder closed ----------

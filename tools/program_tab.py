@@ -25,8 +25,9 @@ import { ORDER, STEP_WORDS, PREREQS, CONDITIONS } from './js/registry/foo.js';
 import { STEPS, MARKERS, LADDER } from './js/registry/ladder.js';
 import { MODES, PERSONS, ONE_PERSON_TYPES } from './js/registry/couples.js';
 import { METHODS, SUGGEST } from './js/registry/debt.js';
+import { JOY } from './js/registry/joy.js';
 const prereqs = Object.fromEntries(Object.entries(PREREQS).map(([k, p]) => [k, { ...p, conditions: (p.conditions || []).map(c => CONDITIONS[c].label) }]));
-console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs }, LADDER: { STEPS, MARKERS, LADDER }, COUPLES: { MODES, PERSONS, ONE_PERSON_TYPES }, DEBT: { METHODS, SUGGEST } }));
+console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs }, LADDER: { STEPS, MARKERS, LADDER }, COUPLES: { MODES, PERSONS, ONE_PERSON_TYPES }, DEBT: { METHODS, SUGGEST }, JOY }));
 """
 RULE_WORDS = {
     "cashFlow": "The headline savings rate: Strong at or over strong, OK at or over ok, else Hole; a negative surplus is a Hole",
@@ -177,6 +178,9 @@ def main():
     row("Debt payoff", "", "Each method is its own calculator on Plan › Debt payoff (M34), with the same extra a month. A suggestion comes from the client's stress and is never forced: a money feeling at or under " + str(db["SUGGEST"]["lowFeeling"]) + " of 10, or any debt rated " + str(db["SUGGEST"]["debtStress"]) + "+ for stress, points to Snowball (Return on Hassle once hassle scores are typed); a feeling at or over " + str(db["SUGGEST"]["highFeeling"]) + " points to Avalanche; otherwise Avalanche. The Debt hole on the Scorecard links here.", "js/registry/debt.js; js/math/debt.js ORDERS")
     for m in db["METHODS"]:
         row("Debt payoff", m["name"], m["words"], ("Default" if m.get("default") else "") + ("Placeholder (QUESTIONS: the rule)" if m.get("placeholder") else ""))
+    # The Joy number (overnight F4).
+    jy = cfg["JOY"]
+    row("Joy", "", f"Its own number, separate from the Mindset area and the money feeling. Asked on Home at the start of every session: '{jy['question']}' ({jy['min']} {jy['low'].lower()} to {jy['max']} {jy['high'].lower()}), one answer per person in a couple. Kept per session in the client file, stored in every snapshot, charted from Day 0 on Home under '{jy['label']}', and a row on Day 0 vs now. It replaces Satisfaction in Coach tools. Mindset reads it only when no money feeling is typed.", "js/registry/joy.js; js/program.js setJoy, joyOf, joyHistory")
     # Couples (overnight F2).
     cp = cfg["COUPLES"]
     row("Couples", "", "Every income row, account, debt, goal and homework item carries an Owner tag: " + ", ".join(cp["PERSONS"]) + " (shown as the two first names, or Person A and Person B until typed). A retirement or health account is always one person's: " + ", ".join(cp["ONE_PERSON_TYPES"]) + ". The household mode on About you sets Solo or couple, the default person view on Net worth and Cash flow, and the filing status assumed until one is typed. Switching modes keeps every row and tag.", "js/registry/couples.js; js/couples.js setHouseholdMode; Net worth and Cash flow strips")

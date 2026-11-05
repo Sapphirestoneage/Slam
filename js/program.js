@@ -10,6 +10,7 @@ import { SESSIONS, PACE, LEVELS, REVIEW, AGENDA, HOMEWORK_STATUSES, levelWord } 
 import { homeworkList } from './homework.js';
 import { MODES, modeOf, DISCLOSURE } from './registry/couples.js';
 import { layerSnapshot } from './math/layers.js';
+import { JOY } from './registry/joy.js';
 import { fmt } from './math/result.js';
 import { scorecardOf, ratingOf } from './math/scorecard.js';
 import { THRESHOLDS } from './registry/scorecard.js';
@@ -212,8 +213,30 @@ export function programOf(doc, ref, { now = new Date(), flags = [] } = {}) {
 // hole was worth), so Day 0 vs now and Holes filled can look back.
 export function snapshotNumbers(doc, ref, { now = new Date(), flags = [] } = {}) {
   const sc = scorecardOf(doc, ref, { now, flags });
-  return { ...keyNumbers(metrics(doc, ref, { now })), picturePct: pictureOf(doc, ref, { now }).pct, scoreOk: sc.okCount, scoreOf: sc.of,
+  const joy = joyOf(doc);
+  return { ...keyNumbers(metrics(doc, ref, { now })), picturePct: pictureOf(doc, ref, { now }).pct, scoreOk: sc.okCount, scoreOf: sc.of, joy: joy.value, joyPartner: joy.partner, // F4: the Joy number rides in every snapshot
     scorecard: Object.fromEntries(sc.areas.map(a => [a.id, { rating: a.rating, payoff: a.payoff?.value ?? null, fiDays: a.fiDays }])) };
+}
+
+// ---------- The Joy number (F4): asked at the start of each session, one per person in a couple ----------
+// Stored in doc.session.joy[n] = { at, Me, Partner }. joyOf: the latest answer (this client's, and the partner's).
+export function setJoy(store, n, value, { person = 'Me', now = store.now() } = {}) {
+  if (value != null && (value < JOY.min || value > JOY.max)) throw new Error(`Joy is ${JOY.min} to ${JOY.max}`);
+  const cur = store.doc.session?.joy?.[String(n)] || {};
+  store.setIn('session', ['joy', String(n)], { ...cur, at: now, [person]: value ?? undefined }, 'Joy');
+}
+export function joyOf(doc, n = null) {
+  const all = Object.entries(doc.session?.joy || {}).map(([k, v]) => ({ n: Number(k), ...v })).filter(j => j.Me != null || j.Partner != null).sort((a, b) => a.n - b.n);
+  const pick = n == null ? all.at(-1) : all.find(j => j.n === n);
+  return { value: pick?.Me ?? null, partner: pick?.Partner ?? null, n: pick?.n ?? null, at: pick?.at ?? null, asked: n == null ? all.length > 0 : !!pick };
+}
+// Day 0 to now: one point per snapshot that carries a joy, plus the latest answer when it is newer than the last snapshot.
+export function joyHistory(doc) {
+  const pts = (doc.snapshots || []).filter(s => s.metrics && (s.metrics.joy != null || s.metrics.joyPartner != null)).map(s => ({ at: s.at, label: s.label, session: s.session ?? null, value: s.metrics.joy ?? null, partner: s.metrics.joyPartner ?? null }));
+  const latest = joyOf(doc);
+  if (latest.n != null && (!pts.length || latest.n > (pts.at(-1).session ?? -1))) pts.push({ at: latest.at, label: `Session ${latest.n}`, session: latest.n, value: latest.value, partner: latest.partner }); // answered this session, no snapshot yet
+  const day0 = pts.find(p => /Day 0/.test(p.label)) ?? pts[0] ?? null;
+  return { points: pts, day0: day0 ? day0.value : null, latest: latest.value, latestPartner: latest.partner, change: day0 && latest.value != null && day0.value != null ? latest.value - day0.value : null };
 }
 
 // Start: the session is on, Guide me is on, focus mode is on (answer 90). A hole session pulls the top hole.
@@ -346,7 +369,7 @@ export function day0Report(doc, ref, { now = new Date() } = {}) {
   if (!d0) return null;
   const then = d0.metrics || {};
   const nowNumbers = snapshotNumbers(doc, ref, { now });
-  const rows = [['Net worth', 'netWorth', 'money'], ['Total debt', 'debtTotal', 'money'], ['Monthly surplus', 'surplus', 'money'], ['Savings rate', 'savingsRate', 'pct'], ['Picture', 'picturePct', 'pct'], ['Areas Strong or OK', 'scoreOk', 'count']]
+  const rows = [['Net worth', 'netWorth', 'money'], ['Total debt', 'debtTotal', 'money'], ['Monthly surplus', 'surplus', 'money'], ['Savings rate', 'savingsRate', 'pct'], ['Picture', 'picturePct', 'pct'], ['Areas Strong or OK', 'scoreOk', 'count'], [JOY.label, 'joy', 'count']]
     .map(([label, key, unit]) => ({ label, key, unit, then: then[key] ?? null, now: nowNumbers[key] ?? null, change: then[key] == null || nowNumbers[key] == null ? null : nowNumbers[key] - then[key] }));
   return { at: d0.at, rows };
 }
