@@ -40,13 +40,16 @@ export function ladderOf(doc, ref, { now = new Date(), flags = [] } = {}) {
   const facts = { matchOffered: (x.link.incomeTiers || []).length > 0, heavyDebt: heavyStart > 0 };
   const months = v => (v == null ? null : Math.max(0, Math.ceil(v)));
   const at = n => (n == null ? null : addMonths(ymOf(now), n));
+  // Each step carries its dollars beside its share (batch 7, item 7): have, target and left, in whole dollars; null
+  // where the step has no dollars (the match) or no target yet (big e without an age).
   const steps = STEPS.filter(s => !s.applies || facts[s.applies]).map(s => {
-    let done = false, pct = 0, mo = null;
-    if (s.id === 'littleE') { const l = L?.layers.find(l => l.id === 'little-e'); done = !!l?.full; pct = l?.target ? Math.min(1, (l.filled ?? 0) / l.target) : 0; mo = done ? 0 : surplusIn && l ? months(l.left / surplusIn) : null; }
+    let done = false, pct = 0, mo = null, have = null, target = null;
+    if (s.id === 'littleE') { const l = L?.layers.find(l => l.id === 'little-e'); done = !!l?.full; pct = l?.target ? Math.min(1, (l.filled ?? 0) / l.target) : 0; mo = done ? 0 : surplusIn && l ? months(l.left / surplusIn) : null; if (l?.target) { have = Math.min(l.filled ?? 0, l.target); target = l.target; } }
     else if (s.id === 'match') { const st = step('2'); done = !!st?.done; pct = done ? 1 : (st?.started ? 0.5 : 0); mo = done ? 0 : null; }
-    else if (s.share != null) { const paid = heavyStart ? (heavyStart - heavyLeft) / heavyStart : 0; done = paid >= s.share - 1e-9; pct = Math.min(1, paid / s.share); mo = done ? 0 : heavyPlan?.path ? monthsToShare(heavyPlan.path, heavyStart, s.share) : null; if (mo == null && !done && heavyPlan?.months != null && s.share === 1) mo = heavyPlan.months; }
-    else if (s.id === 'bigE') { const ls = L?.layers.filter(l => l.id.startsWith('big-e')) ?? []; const target = L?.needsAge ? 0 : sum(ls, l => l.target), filled = sum(ls, l => l.filled); done = target > 0 && ls.every(l => l.full); pct = target ? Math.min(1, filled / target) : 0; mo = done ? 0 : surplusIn && target ? months((target - filled) / surplusIn) : (step('4')?.months ?? null); if (L?.needsAge) s = { ...s, what: 'Add your age to set big e (the Rule of 5)' }; } // no spending or no age: nothing to fill, nothing done
-    return { ...s, kind: 'step', done, pct, months: mo, date: at(mo) };
+    else if (s.share != null) { const paid = heavyStart ? (heavyStart - heavyLeft) / heavyStart : 0; done = paid >= s.share - 1e-9; pct = Math.min(1, paid / s.share); mo = done ? 0 : heavyPlan?.path ? monthsToShare(heavyPlan.path, heavyStart, s.share) : null; if (mo == null && !done && heavyPlan?.months != null && s.share === 1) mo = heavyPlan.months; if (heavyStart) { target = heavyStart * s.share; have = Math.min(heavyStart - heavyLeft, target); } }
+    else if (s.id === 'bigE') { const ls = L?.layers.filter(l => l.id.startsWith('big-e')) ?? []; const t = L?.needsAge ? 0 : sum(ls, l => l.target), filled = sum(ls, l => l.filled); done = t > 0 && ls.every(l => l.full); pct = t ? Math.min(1, filled / t) : 0; mo = done ? 0 : surplusIn && t ? months((t - filled) / surplusIn) : (step('4')?.months ?? null); if (t) { target = t; have = Math.min(filled, t); } if (L?.needsAge) s = { ...s, what: 'Add your age to set big e (the Rule of 5)' }; } // no spending or no age: nothing to fill, nothing done
+    const round = v => (v == null ? null : Math.round(v));
+    return { ...s, kind: 'step', done, pct, months: mo, date: at(mo), have: round(have), target: round(target), left: target == null ? null : Math.max(0, round(target) - round(have)) };
   });
   // Markers.
   const T = fiTargets(m, doc);

@@ -24,6 +24,9 @@ export function nextCheck(r, { now = new Date() } = {}) {
 
 // The Revisit list: every number with a next check, soonest first. due: on or before today. Starter guesses on the Budget
 // are one line (they are reviewed together there).
+// A row on the Homework list stays off the Revisit list until the client says it is done (batch 7, item 4): homework
+// is the client's to find; the coach looks again only to confirm it.
+const clientSaysDone = (doc, r) => Object.entries(doc.program?.homeworkStatus || {}).some(([k, v]) => (k === `rec:${r.id}` || k.startsWith(`rec:${r.id}:`)) && v?.status === 'Client says done');
 export function checksOf(doc, ref, { now = new Date() } = {}) {
   const live = visible(doc.records, gatesOf(doc.profile, doc.client), ref);
   const today = iso(now);
@@ -32,6 +35,7 @@ export function checksOf(doc, ref, { now = new Date() } = {}) {
     if (r.kind === 'bill' && r.values?.preset && r.status === 'Not sure') continue;
     const c = nextCheck(r, { now });
     if (!c) continue;
+    if (c.status === 'Will email' && !clientSaysDone(doc, r)) continue;
     if (c.status === 'Know it' && !c.set && c.next > today) continue; // a known number not yet old: nothing to check
     out.push({ rec: r, label: r.name || r.values?.category || r.type || 'Item', ...c, due: c.next <= today });
   }
@@ -43,3 +47,20 @@ export function checksOf(doc, ref, { now = new Date() } = {}) {
   return out;
 }
 export const dueChecks = (doc, ref, opts) => checksOf(doc, ref, opts).filter(c => c.due);
+
+// Defaults in use (batch 7, item 12): every number the app filled in with a typical value instead of a typed one, so
+// a 25% card APR or a starter spending guess is never mistaken for a real number. One line per field: the row, the
+// field, the value in use and where it came from. A typed number with Not sure on it is a guess too (R055).
+export function defaultsInUse(doc, ref) {
+  const live = visible(doc.records, gatesOf(doc.profile, doc.client), ref);
+  const out = [];
+  const blank = v => v === null || v === undefined || v === '';
+  for (const r of live) {
+    const name = r.name || r.values?.category || r.type || 'Item';
+    if (r.kind === 'debt' && blank(r.values?.apr) && ref.typicalRates?.[r.type] != null && statusOfRow(r) !== 'Not for me') out.push({ rec: r, field: 'apr', label: `${name}: APR`, value: ref.typicalRates[r.type], unit: 'pct', from: `Typical ${r.type} rate` });
+    if (r.kind === 'bill' && r.values?.preset && r.status === 'Not sure') out.push({ rec: r, field: 'amount', label: `${name}: amount`, value: r.amount, unit: 'money', from: 'Starter spending guess' });
+    else if (r.status === 'Not sure' && !blank(r.amount)) out.push({ rec: r, field: 'amount', label: `${name}: amount`, value: r.amount, unit: 'money', from: 'Marked Not sure' });
+    for (const [f, st] of Object.entries(r.fieldStatus || {})) if (st === 'Not sure' && !blank(r.values?.[f])) out.push({ rec: r, field: f, label: `${name}: ${f}`, value: r.values[f], unit: f === 'apr' || f === 'apy' ? 'pct' : 'money', from: 'Marked Not sure' });
+  }
+  return out;
+}

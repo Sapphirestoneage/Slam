@@ -6,6 +6,7 @@ import { METHODS } from '../registry/debt.js';
 import { personLabels } from '../registry/couples.js';
 import { institutionPicker } from './institutions-ui.js';
 import { fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
+import { paidInFull } from '../completion.js';
 import { pct } from '../format.js';
 import { feeApr } from '../math/debt.js';
 import { WEEKDAYS, SHABBAT_SPEND_DAY } from '../math/holidays.js';
@@ -50,13 +51,23 @@ export function debtList(ref, { cards = null } = {}) {
     headerExtra: ctx => cards === 'only' ? null : h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Order'),
       toggle(METHODS.map(m => [m.id, m.name]), ctx.store.doc.settings.debtOrder ?? 'avalanche',
         v => { ctx.store.setDoc('settings', { debtOrder: v }); ctx.refresh(); }, { label: 'Payoff order' })),
-    coreFields: ['balance', 'apr'],
+    coreFields: r => (paidInFull(r) ? ['balance'] : ['balance', 'apr']), // batch 7, item 11: a card paid in full needs no APR
     focus: ['Debt', 'Balance', 'APR', 'Payment / mo'], // session 1: type, balance, APR, minimum
     paidWith: false,
     columns: [
       { label: 'Debt', render: (ctx, r, m, up) => h('span.stack.inst-cell', { style: { gap: '4px' } }, institutionPicker(ctx, r, up, { width: 150 }), textInput(r.name, v => up({ name: v }), { hint: 'Nickname (optional)', tip: r.type, width: 150, key: `${r.id}:name` })) }, // item 14
-      { label: 'Balance', num: true, render: (ctx, r, m, up) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, moneyInput(r.values.balance, v => up({ balance: v }), { hint: 'Add balance', key: `${r.id}:balance` }), hoursChip(ctx, r.values.balance)) },
+      // Batch 7, item 11: a card's first question is whether the statement is paid in full each month. In full: the
+      // balance is the statement balance (it still counts for utilization), there is no APR and no payment to ask.
+      // Carries: the balance carried, the APR (a 25% guess until typed) and the payment, like any debt.
+      { label: 'Balance', num: true, render: (ctx, r, m, up) => {
+        const inFull = paidInFull(r), asked = isCard(r) && (inFull || r.values.payChoice != null);
+        const box = h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, moneyInput(r.values.balance, v => up({ balance: v }), { hint: isCard(r) ? (inFull ? 'Statement balance' : 'Balance carried') : 'Add balance', key: `${r.id}:balance` }), hoursChip(ctx, r.values.balance));
+        if (!isCard(r)) return box;
+        return h('span.stack.card-first', { style: { gap: '4px', alignItems: 'flex-end' } },
+          toggle([['In full', 'Paid in full'], ['Carries', 'Carries a balance']], asked ? (inFull ? 'In full' : 'Carries') : null, x => up({ payChoice: x === 'In full' ? 'In full' : (r.values.payment == null ? 'Minimum' : 'Custom') }), { label: `Statement paid in full each month: ${r.name || r.type}` }), box);
+      } },
       { label: 'APR', num: true, render: (ctx, r, m, up) => {
+        if (paidInFull(r)) return h('span.muted.small', { title: 'Paid in full each month: no interest' }, 'None: paid in full');
         const d = m.debts.find(x => x.id === r.id);
         return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, d?.aprGuess ? h('span.tag.guess', {}, '? Guess') : null, pctInput(r.values.apr, v => up({ apr: v }), { key: `${r.id}:apr` }));
       } },
@@ -358,11 +369,12 @@ function debtSecondary(ctx, r, up) {
   const v = r.values;
   if (r.type === 'Credit card') {
     const choice = v.payChoice ?? (v.payment == null ? 'Minimum' : 'Custom');
+    const carries = choice !== 'In full'; // batch 7, item 11: the debt fields show only when the card carries a balance
     return [
-      labelled('Pay', toggle(['Minimum', 'Custom', 'In full'], choice, x => up({ payChoice: x }), { label: 'Pay' })),
+      carries ? labelled('Pay', toggle(['Minimum', 'Custom', 'In full'], choice, x => up({ payChoice: x }), { label: 'Pay' })) : labelled('Pay', h('span.computed', {}, 'In full each month')),
       choice === 'Custom' ? labelled('Custom $ a month', moneyInput(v.payment, x => up({ payment: x }), { hint: 'Add payment' })) : null, // R020
-      labelled('0% promo: rate and end', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, pctInput(v.promoApr, x => up({ promoApr: x }), { hint: 'e.g. 0' }),
-        textInput(v.promoEnd, x => up({ promoEnd: x }), { hint: 'YYYY-MM', width: 110 })), { note: 'Warns 60 days before it ends' }),
+      carries ? labelled('0% promo: rate and end', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, pctInput(v.promoApr, x => up({ promoApr: x }), { hint: 'e.g. 0' }),
+        textInput(v.promoEnd, x => up({ promoEnd: x }), { hint: 'YYYY-MM', width: 110 })), { note: 'Warns 60 days before it ends' }) : null,
       labelled('Due day', textInput(v.dueDay, x => up({ dueDay: x }), { hint: 'Add day', width: 90 }), { note: 'Shows on the cash flow calendar' }),
       labelled('Statement closes on day', dayBox(v.statementDay, x => up({ statementDay: x })), { note: 'The balance reported to the bureaus', ...park(ctx, r, 'statementDay') }),
       labelled('Credit limit', moneyInput(v.limit, x => up({ limit: x }), { hint: 'Add limit' }), { note: 'For utilization' }),
@@ -472,8 +484,7 @@ function debtTertiary(ctx, r, up) {
   const v = r.values;
   const notes = labelled('Coach notes', textInput(r.privateNote, x => up({ privateNote: x }), { hint: 'Add a private note', width: 360 }));
   if (r.type === 'Credit card') {
-    return [labelled('Institution', textInput(v.institution, x => up({ institution: x }), { hint: 'Bank', width: 160 })),
-      labelled('Opened', textInput(v.opened, x => up({ opened: x }), { hint: 'YYYY-MM', width: 110 }), { note: 'Card age' }),
+    return [labelled('Opened', textInput(v.opened, x => up({ opened: x }), { hint: 'YYYY-MM', width: 110 }), { note: 'Card age' }), // the institution is the row's picker (batch 7, item 3)
       labelled('Annual fee', moneyInput(v.annualFee, x => up({ annualFee: x }), { hint: 'Add fee' })),
       labelled('Sign-up bonus: $, spend, by when', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
         moneyInput(v.bonus, x => up({ bonus: x }), { hint: 'Bonus' }), moneyInput(v.bonusSpend, x => up({ bonusSpend: x }), { hint: 'Spend' }),

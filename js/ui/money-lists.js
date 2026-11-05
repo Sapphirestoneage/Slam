@@ -4,7 +4,8 @@
 import { h } from './dom.js';
 import { INCOME_KINDS, incomeKindOf } from '../capture.js';
 import { institutionPicker } from './institutions-ui.js';
-import { fromButton, amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, ownerToggle } from './staples.js';
+import { fromButton, amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, parkGroup, ownerToggle } from './staples.js';
+import { asksTaxType, taxTypeFor } from '../math/portfolio.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
 import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom } from '../math/income.js';
 import { limitUsed } from '../math/assets.js';
@@ -294,8 +295,7 @@ function assetSecondary(ctx, r, up) {
     return [labelled('Notes', textInput(r.notes, x => up({ notes: x }), { hint: 'What it is', width: 300 }))];
   }
   const later = f => L(ctx, r, f);
-  if (v.group === 'cash') return [
-    labelled('Institution', textInput(v.institution, x => up({ institution: x }), { hint: 'Bank', width: 160 }), { later: later('institution') }),
+  if (v.group === 'cash') return [ // the institution is the row's picker (batch 7, item 3); the typed box is gone
     labelled(v.yieldKind === '7-day yield' ? '7-day yield' : 'Interest (APY)', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
       pctInput(v.apy, x => up({ apy: x }), { hint: 'e.g. 4.2' }), toggle(['APY', '7-day yield'], v.yieldKind ?? 'APY', x => up({ yieldKind: x }), { label: 'APY or 7-day yield' })),
     { note: v.apy != null && v.apy < 0.01 && (v.balance ?? 0) > 1000 ? 'Idle cash: a small win to move it' : r.type === 'Money market' ? 'Money market funds show a 7-day yield' : null, later: later('apy') }),
@@ -306,12 +306,15 @@ function assetSecondary(ctx, r, up) {
   const employerHsa = r.type === 'HSA' ? benefitYearly(ctx.store.doc.profile.benefits?.employerHsa, freq) : null; // M2.3: the employer's dollars count too
   const counted = employerHsa == null ? perYear : (perYear ?? 0) + employerHsa;
   const lim = limitUsed({ contributions: counted, type: r.type, age: age ?? 30 }, ctx.ref);
+  // Batch 7, item 5: only a type whose name does not say gets the Pretax or Roth question; an IRA shows its answer;
+  // a Brokerage, Crypto or 529 is never asked. Unvested is a workplace-plan thing, so it stays on those types only.
+  const known = taxTypeFor(r.type);
   return [
-    labelled('Institution', textInput(v.institution, x => up({ institution: x }), { hint: 'Broker', width: 160 }), { later: later('institution') }),
     is401k(r) ? null : labelled('Putting in', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.contribution, x => up({ contribution: x }), { hint: 'Add amount' }),
       toggle(['Paycheck', 'Year'], v.contributionPer ?? 'Year', x => up({ contributionPer: x }), { label: 'Per' })), { later: later('contribution') }),
-    is401k(r) || r.type === 'HSA' ? null : labelled('Pretax, Roth or both', toggle(['Pretax', 'Roth', 'Both'], v.taxType ?? null, x => up({ taxType: x }), { label: 'Pretax or Roth' }), { later: later('taxType') }),
-    is401k(r) ? null : labelled('Unvested', moneyInput(v.unvested, x => up({ unvested: x }), { hint: 'Add amount' }), { note: 'Shown, not counted in net worth', later: later('unvested') }),
+    asksTaxType(r.type) ? labelled('Pretax, Roth or both', toggle(['Pretax', 'Roth', 'Both'], v.taxType ?? null, x => up({ taxType: x }), { label: 'Pretax or Roth' }), { later: later('taxType') })
+      : known ? labelled('Pretax or Roth', h('span.computed', { title: 'Set by the account type' }, known === 'Roth' ? 'Roth: taxed now, tax-free later' : 'Pretax: tax break now, taxed when taken out')) : null,
+    asksTaxType(r.type) ? labelled('Unvested', moneyInput(v.unvested, x => up({ unvested: x }), { hint: 'Add amount' }), { note: 'Shown, not counted in net worth', later: later('unvested') }) : null,
     limitUsed({ contributions: 0, type: r.type, age: 30 }, ctx.ref).value !== null ? labelled('Limit used this year', h('span.computed', {}, lim.value === null ? `Needs ${lim.needs[0]}` : `${value(lim)} of ${money(lim.limit)}${employerHsa ? `, with ${money(employerHsa)} from your employer` : ''}`)) : null];
 }
 function assetTertiary(ctx, r, up) {
@@ -368,7 +371,7 @@ export function protectionList() {
     coreFields: ['have'],
     columns: [
       { label: 'Coverage', render: (ctx, r, m, up) => select(types(ctx).map(t => [t, t === 'Renters or home' && ctx.gates().housing !== 'Own' ? 'Renters insurance' : t]), r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Coverage type', width: 170, key: `${r.id}:type` }) },
-      { label: 'Have it?', render: (ctx, r, m, up) => toggle(['Have it', "Don't", 'Not sure'], r.values.have ?? null, v => up({ have: v }), { label: 'Have it' }) },
+      { label: 'Have it?', render: (ctx, r, m, up) => toggle(['Have it', "Don't", 'Not sure'], r.values.have ?? null, v => up({ have: v }), { label: 'Have it', key: `${r.id}:have` }) },
       { label: 'Premium', num: true, render: (ctx, r, m, up) => pair(moneyInput(r.amount, v => {
         up({ amount: v });
         const line = premiumLine(ctx, r); // keep the Budget line in step
@@ -394,15 +397,18 @@ export function protectionList() {
       const from = v.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null);
       const budget = from === 'Budget line' ? labelled('Spending line', premiumOnBudget(ctx, r))
         : from === 'Paycheck' && r.type === 'Health' ? labelled('On Income', fromButton('Your paycheck borrows it', '#/cash-flow/income', ctx.metrics().inputs.health?.jobId ?? ''), { note: 'Out of take-home once; never a Budget line too' }) : null;
+      // Batch 7, item 10: the money fields sit in one group with one pair of park buttons (the group parks together),
+      // and the disability fields say what they are, with a tooltip, instead of "benefit %".
+      const quiet = (label, input, opts = {}) => labelled(label, input, { ...opts }); // no park buttons: the group below carries them
       if (r.type === 'Health') return [insurer, employer, paidFrom, budget,
-        labelled('Deductible: in-network, out-of-network', pair(moneyInput(v.deductible, x => up({ deductible: x }), { hint: 'In' }), moneyInput(v.deductibleOut, x => up({ deductibleOut: x }), { hint: 'Out' })), later(ctx, r, 'deductible')),
-        labelled('Out-of-pocket max: in, out', pair(moneyInput(v.oopMax, x => up({ oopMax: x }), { hint: 'In' }), moneyInput(v.oopMaxOut, x => up({ oopMaxOut: x }), { hint: 'Out' })), { note: 'The most you pay in a bad year', ...later(ctx, r, 'oopMax') }),
-        labelled('Copays: doctor, specialist, urgent care', pair(moneyInput(v.copayPcp, x => up({ copayPcp: x }), { hint: 'Doctor' }), moneyInput(v.copaySpecialist, x => up({ copaySpecialist: x }), { hint: 'Specialist' }), moneyInput(v.copayUrgent, x => up({ copayUrgent: x }), { hint: 'Urgent' })), later(ctx, r, 'copays'))];
+        quiet('Deductible: in-network, out-of-network', pair(moneyInput(v.deductible, x => up({ deductible: x }), { hint: 'In' }), moneyInput(v.deductibleOut, x => up({ deductibleOut: x }), { hint: 'Out' })), { ...parkGroup(ctx, r, ['deductible', 'oopMax', 'copays']), note: null }),
+        quiet('Out-of-pocket max: in, out', pair(moneyInput(v.oopMax, x => up({ oopMax: x }), { hint: 'In, a bad year' }), moneyInput(v.oopMaxOut, x => up({ oopMaxOut: x }), { hint: 'Out' })), { tip: 'The most you pay in a year, after which the plan pays everything.' }),
+        quiet('Copays: doctor, specialist, urgent care', pair(moneyInput(v.copayPcp, x => up({ copayPcp: x }), { hint: 'Doctor' }), moneyInput(v.copaySpecialist, x => up({ copaySpecialist: x }), { hint: 'Specialist' }), moneyInput(v.copayUrgent, x => up({ copayUrgent: x }), { hint: 'Urgent' })))];
       if (r.type === 'Disability') return [employer, paidFrom, budget,
-        labelled('Short-term or long-term', toggle(['Short-term', 'Long-term', 'Both'], v.term ?? null, x => up({ term: x }), { label: 'Short or long term', clearable: true }), later(ctx, r, 'term')),
-        labelled('Pays this share of your pay', pctInput(v.benefitPct, x => up({ benefitPct: x }), { hint: 'e.g. 60' }), later(ctx, r, 'benefitPct')),
-        labelled('Pays for how long', textInput(v.duration, x => up({ duration: x }), { hint: 'e.g. 26 weeks, to age 65', width: 190 }), later(ctx, r, 'duration')),
-        labelled('Waiting period', textInput(v.waiting, x => up({ waiting: x }), { hint: 'e.g. 90 days', width: 130 }), { note: 'Before the first check', ...later(ctx, r, 'waiting') })];
+        quiet('Short-term or long-term', toggle(['Short-term', 'Long-term', 'Both'], v.term ?? null, x => up({ term: x }), { label: 'Short or long term', clearable: true }), parkGroup(ctx, r, ['term', 'benefitPct'])),
+        quiet('Replaces this % of your pay', pctInput(v.benefitPct, x => up({ benefitPct: x }), { hint: 'Usually 60' }), { tip: 'What the policy pays each month while you cannot work, as a share of your salary. Group plans are usually 60%, and the benefit is taxed when the employer pays the premium.' }),
+        quiet('Benefit period', textInput(v.duration, x => up({ duration: x }), { hint: 'e.g. 26 weeks, or to age 65', width: 200 }), { ...parkGroup(ctx, r, ['duration', 'waiting']), tip: 'How long it keeps paying: weeks for short-term, or to an age (often 65) for long-term.' }),
+        quiet('Waiting period', textInput(v.waiting, x => up({ waiting: x }), { hint: 'Days before the first check, often 90', width: 200 }), { tip: 'The days between the day you cannot work and the first check.' })];
       if (r.type === 'Life') return [employer, paidFrom, budget,
         labelled('Coverage amount', moneyInput(v.coverage, x => up({ coverage: x }), { hint: 'Add amount' }), later(ctx, r, 'coverage')),
         labelled('Planned change', textInput(v.plannedChange, x => up({ plannedChange: x }), { hint: 'e.g. raise it when we marry', width: 260 }), later(ctx, r, 'plannedChange'))];

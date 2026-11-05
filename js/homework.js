@@ -4,6 +4,7 @@
 // doc.profile.later. Pure: no DOM.
 import { BENEFITS } from './benefits.js';
 import { lifeAdminItems } from './lifeadmin.js';
+import { rowLabel } from './institutions.js';
 
 export const LATER = 'Will email';
 
@@ -47,12 +48,16 @@ const LABEL = {
   amount: 'amount', gross: 'gross pay', payFrequency: 'pay frequency', paydays: 'paydays', nextPayday: 'next payday', incomeType: 'income type',
   contributionPct: '401(k) %', k401Paycheck: '401(k) a paycheck', hasMatch: 'employer match', matchPct: 'employer match', matchCapPct: 'match limit', bonus: 'bonus', premium: 'health premium', hsaFsa: 'HSA or FSA amount',
   vesting: 'match vesting', equity: 'equity pay', raisePct: 'raise %', otherPretax: 'other before-tax', balance: 'balance', institution: 'institution',
-  last4: 'last 4 digits', apy: 'APY', yield7: '7-day yield', contribution: 'putting in', taxType: 'Roth or traditional', unvested: 'unvested amount',
+  last4: 'last 4 digits', apr: 'APR', apy: 'APY', yield7: '7-day yield', contribution: 'putting in', taxType: 'Roth or traditional', unvested: 'unvested amount',
   costBasis: 'cost basis', rothBasis: 'Roth contributions so far', contributionsToDate: 'contributions to date', dividends: 'dividends', realized: 'realized gains',
   fees: 'expense ratio', accountFee: 'account fee', beneficiary: 'beneficiary', holdings: 'holdings', allocation: 'allocation', hsaInvested: 'invested amount',
   hsaCash: 'cash amount', hsaManagedFee: 'managed fee', hsaSelfFee: 'self-directed fee', matchTiers: 'match tiers', vestingSchedule: 'vesting schedule', value: 'value',
-  statementDay: 'statement closing day', autopay: 'autopay', rewards: 'rewards type', creditScore: 'Credit score', deductible: 'deductible', oopMax: 'out-of-pocket max', copays: 'copays', term: 'short or long term', benefitPct: 'benefit %', duration: 'how long it pays', waiting: 'waiting period', coverage: 'coverage amount', plannedChange: 'planned change', lastYearAmount: 'Last year\'s refund or amount owed', w4Status: 'W-4 filing status', w4Extra: 'Extra withholding a paycheck',
+  statementDay: 'statement closing day', autopay: 'autopay', rewards: 'rewards type', creditScore: 'Credit score', deductible: 'deductible', oopMax: 'out-of-pocket max', copays: 'copays', term: 'short-term or long-term', benefitPct: 'replaces this % of your pay', duration: 'benefit period', waiting: 'waiting period', coverage: 'coverage amount', plannedChange: 'planned change', lastYearAmount: 'Last year\'s refund or amount owed', w4Status: 'W-4 filing status', w4Extra: 'Extra withholding a paycheck',
 };
+// Who does the homework (batch 7, item 9): the client finds the number, or the coach makes a field and enters it.
+// Items made before this have no owner and are the client's, which is what every one of them meant.
+export const OWNERS = ['client', 'coach'];
+export const ownerOf = x => (x.program?.owner === 'coach' ? 'coach' : 'client');
 const benefitOf = f => BENEFITS.find(b => f === `benefit.${b.key}`);
 export const whereToFind = (field, type = null) => (type === 'HSA' && field === 'contribution' ? 'Pay stub: HSA deduction'
   : benefitOf(field)?.where ?? (field === 'benefit.esppDiscount' ? 'Equity or ESPP site' : null) ?? WHERE[field] ?? null);
@@ -66,18 +71,18 @@ export function homeworkList(doc, records) {
   for (const key of Object.keys(later)) if (later[key]) out.push({ key: `profile:${key}`, r: null, profileKey: key, label: fieldLabel(key), where: whereToFind(key), due: doc.profile?.laterDue?.[key] ?? null });
   for (const x of lifeAdminItems(doc, records)) if (x.status === 'Not yet') out.push({ key: `life:${x.key}`, r: null, lifeKey: x.key, label: x.label, where: x.where, due: doc.profile?.laterDue?.[x.key] ?? null }); // M8.2
   for (const r of records) {
-    const name = r.name || r.values?.category || r.type || 'Item';
+    const name = rowLabel(doc, r) || r.name || r.values?.category || r.type || 'Item'; // "Tikva · 401(k)" and "Tikva · HSA", not Tikva twice (item 8)
     if (r.status === LATER) out.push({ key: `rec:${r.id}`, r, label: name, where: whereToFind(r.kind === 'account' || r.kind === 'debt' ? 'balance' : r.kind === 'asset' ? 'value' : 'amount', r.type), due: r.values?.homeworkDue ?? null });
     for (const [f, st] of Object.entries(r.fieldStatus || {})) if (st === LATER && r.status !== LATER) out.push({ key: `rec:${r.id}:${f}`, r, field: f, label: `${name}: ${fieldLabel(f)}`, where: whereToFind(f, r.type), due: r.values?.homeworkDue ?? null });
   }
-  // Homework the coach made from an agenda item (doc.program.homework), with its status (To do, Client says done, Confirmed).
+  // Homework the coach made from an agenda item or a parking-lot note (doc.program.homework), with its status (To do, Client says done, Confirmed).
   for (const hw of doc.program?.homework || []) if (hw.status !== 'Confirmed') out.push({ key: `hw:${hw.id}`, r: null, program: hw, label: hw.label, where: null, due: hw.due ?? null, from: hw.from, person: hw.person ?? null });
   const statuses = doc.program?.homeworkStatus || {};
-  for (const x of out) { const st = x.program ? { status: x.program.status, by: x.program.statusBy } : statuses[x.key]; x.status = st?.status ?? 'To do'; x.statusBy = st?.by ?? null; }
+  for (const x of out) { const st = x.program ? { status: x.program.status, by: x.program.statusBy } : statuses[x.key]; x.status = st?.status ?? 'To do'; x.statusBy = st?.by ?? null; x.owner = ownerOf(x); }
   return out;
 }
 
-// The copy that goes to the client.
+// The copy that goes to the client: only the client's own items, never the coach's.
 export function homeworkText(name, items) {
-  return [`Homework for ${name || 'you'}:`, ...items.map(x => `- ${x.label}${x.where ? ` (look on: ${x.where})` : ''}${x.due ? ` by ${x.due}` : ''}`)].join('\n');
+  return [`Homework for ${name || 'you'}:`, ...items.filter(x => ownerOf(x) === 'client').map(x => `- ${x.label}${x.where ? ` (look on: ${x.where})` : ''}${x.due ? ` by ${x.due}` : ''}`)].join('\n');
 }

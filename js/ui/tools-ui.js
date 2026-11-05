@@ -4,7 +4,7 @@
 import { h, clear, icon } from './dom.js';
 import { debtRoute } from '../nav.js';
 import * as S from './staples.js';
-import { checksOf } from '../checks.js';
+import { checksOf, defaultsInUse } from '../checks.js';
 import { homeworkItems } from './report-ui.js';
 import { homeworkText } from '../homework.js';
 import { communityLinesToAdd } from '../community.js';
@@ -13,7 +13,7 @@ import { feedbackCard } from './report-this.js';
 import { keyNumbers } from '../math/metrics.js';
 import { statusOf } from '../records.js';
 import { money, pct } from '../format.js';
-import { setHomeworkStatus, setHomeworkPerson, joyOf, confidenceOf } from '../program.js';
+import { setHomeworkStatus, setHomeworkPerson, setHomeworkOwner, joyOf, confidenceOf } from '../program.js';
 import { HOMEWORK_STATUSES } from '../registry/program.js';
 import { PERSONS, personLabels } from '../registry/couples.js';
 import { JOY, CONFIDENCE } from '../registry/joy.js';
@@ -44,20 +44,41 @@ export function listsScreen(app, ctx) {
         h('span.muted.small', { style: { minWidth: '92px' }, title: x.why }, x.due ? 'Due now' : `Check ${new Date(`${x.next}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`),
         S.button('Fix now', { size: 'small', onClick: () => fix(x) }))))
       : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'Nothing to revisit yet'), h('span.muted', {}, 'Rough and not-sure numbers land here.')))),
-    h('div.section', {}, h('div.section-title', {}, h('h2', {}, 'Homework list'), h('span.spacer'), hw.length ? S.button('Send to client', { size: 'small', iconName: 'mail', onClick: copyHomework }) : null), hw.length
-      ? h('div.card.tool-list', {}, hw.map(x => {
-        const d = h('input', { type: 'date', value: x.due || '', 'aria-label': `Due date for ${x.label}` });
-        const p = ctx.store.doc.profile;
-        d.onchange = () => (x.r ? ctx.store.update(x.r.id, { homeworkDue: d.value || null }) : ctx.store.setDoc('profile', { laterDue: { ...(p.laterDue || {}), [x.profileKey ?? x.lifeKey]: d.value || null } }));
-        return h('div.row-line', { style: { gap: '10px' } },
-          h('span.stack', { style: { flex: 1, gap: '2px' } }, h('span', { style: { fontWeight: 600 } }, x.label), x.where ? h('span.muted.small', {}, `Where to find it: ${x.where}`) : null, x.from ? h('span.muted.small', {}, `From session ${Number(x.from.slice(1))}`) : null),
-          // The status: the coach sets Client says done for now; a client's own I did this can set it later. Confirm happens in the review gate too.
-          S.toggle(HOMEWORK_STATUSES.map(s => [s, s]), x.status, v => setHomeworkStatus(ctx.store, x.key, v || 'To do', { by: 'coach' }), { label: `${x.label} status` }),
-          x.program ? null : h('label.field', { style: { width: '160px' } }, d),
-          x.program && ctx.couple ? S.toggle(PERSONS.map(p => [p, personLabels(ctx.store.doc)[p]]), x.person, v => setHomeworkPerson(ctx.store, x.key, v), { label: `${x.label} whose`, clearable: true }) : null, // F2
-          S.button('Open', { size: 'small', onClick: () => (x.r ? fix({ ...x, route: x.r.kind === 'debt' ? debtRoute(x.r) : ROUTE[x.r.kind] || '#/home/profile' }) : app.go(x.lifeKey ? '#/net-worth/protection' : '#/home/profile')) }));
-      }))
-      : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, "Tap I'll find it later on any number and it lands here, with where to look.")))))];
+    h('div.section', {}, h('div.section-title', {}, h('h2', {}, 'Homework list'), h('span.spacer'), hw.some(x => x.owner !== 'coach') ? S.button('Send to client', { size: 'small', iconName: 'mail', onClick: copyHomework }) : null), hw.length
+      ? h('div.card.tool-list', {}, homeworkGroups(app, ctx, hw, fix))
+      : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, "Tap I'll find it later on any number and it lands here, with where to look.")))),
+    defaultsSection(app, ctx, fix))];
+}
+// Batch 7, item 9: two groups, the client's and the coach's. A coach item is "no field for this yet: make one and
+// enter it"; it never goes out with Send to client. Items the coach made can be moved between the two.
+function homeworkGroups(app, ctx, hw, fix) {
+  const row = x => {
+    const d = h('input', { type: 'date', value: x.due || '', 'aria-label': `Due date for ${x.label}` });
+    const p = ctx.store.doc.profile;
+    d.onchange = () => (x.r ? ctx.store.update(x.r.id, { homeworkDue: d.value || null }) : ctx.store.setDoc('profile', { laterDue: { ...(p.laterDue || {}), [x.profileKey ?? x.lifeKey]: d.value || null } }));
+    return h('div.row-line', { style: { gap: '10px' } },
+      h('span.stack', { style: { flex: 1, gap: '2px' } }, h('span', { style: { fontWeight: 600 } }, x.label), x.where ? h('span.muted.small', {}, `Where to find it: ${x.where}`) : null, x.from ? h('span.muted.small', {}, `From session ${Number(x.from.slice(1))}${x.program?.noteId ? ', from a parking-lot note' : ''}`) : null),
+      // The status: the coach sets Client says done for now; a client's own I did this can set it later. Confirm happens in the review gate too.
+      S.toggle(HOMEWORK_STATUSES.map(s => [s, s]), x.status, v => setHomeworkStatus(ctx.store, x.key, v || 'To do', { by: 'coach' }), { label: `${x.label} status` }),
+      x.program ? S.toggle([['client', 'Client'], ['coach', 'Me']], x.owner, v => setHomeworkOwner(ctx.store, x.key, v), { label: `${x.label}: whose job` }) : null,
+      x.program ? null : h('label.field', { style: { width: '160px' } }, d),
+      x.program && ctx.couple ? S.toggle(PERSONS.map(p => [p, personLabels(ctx.store.doc)[p]]), x.person, v => setHomeworkPerson(ctx.store, x.key, v), { label: `${x.label} whose`, clearable: true }) : null, // F2
+      x.program && !x.r ? null : S.button('Open', { size: 'small', onClick: () => (x.r ? fix({ ...x, route: x.r.kind === 'debt' ? debtRoute(x.r) : ROUTE[x.r.kind] || '#/home/profile' }) : app.go(x.lifeKey ? '#/net-worth/protection' : '#/home/profile')) }));
+  };
+  const theirs = hw.filter(x => x.owner !== 'coach'), mine = hw.filter(x => x.owner === 'coach');
+  return [h('h3', {}, `For the client (${theirs.length})`), theirs.length ? theirs.map(row) : h('p.muted.small', {}, 'Nothing for the client.'),
+    h('h3', { style: { marginTop: '12px' } }, `Mine (${mine.length})`), h('p.muted.small', {}, 'No field for these yet: make one and enter it. Never sent to the client.'), mine.length ? mine.map(row) : h('p.muted.small', {}, 'Nothing for me.')];
+}
+// Batch 7, item 12: every number the app filled in with a typical value, so a 25% card APR or a starter spending
+// guess is never mistaken for a typed one. Fix now lands on the row; a typed number takes it off the list.
+function defaultsSection(app, ctx, fix) {
+  const list = defaultsInUse(ctx.store.doc, ctx.ref).map(x => ({ ...x, r: x.rec, route: x.rec.kind === 'debt' ? debtRoute(x.rec) : ROUTE[x.rec.kind] || '#/home/profile' }));
+  const shown = x => (x.unit === 'pct' ? pct(x.value) : money(x.value));
+  return h('div.section', {}, h('div.section-title', {}, h('h2', {}, 'Defaults in use'), h('span.muted', {}, `${list.length}`)), list.length
+    ? h('div.card.tool-list', {}, list.slice(0, 40).map(x => h('div.row-line', { style: { gap: '10px' } },
+      h('span', { style: { flex: 1, fontWeight: 600 } }, x.label), h('span.tag.guess', {}, `? ${shown(x)}`), h('span.muted.small', { style: { minWidth: '150px' } }, x.from),
+      S.button('Fix now', { size: 'small', onClick: () => fix(x) }))), list.length > 40 ? h('p.muted.small', {}, `and ${list.length - 40} more`) : null)
+    : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No defaults in use'), h('span.muted', {}, 'Every number in the math was typed in or marked.'))));
 }
 
 // M10: how long onboarding took, for usability testing. Also in the export (session.timer).

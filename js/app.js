@@ -12,7 +12,8 @@ import { Store, newHousehold, exportFile, importInto, backupDue, statusOf } from
 import { localAdapter, memoryAdapter, listClients, loadClient, saveClient, createClient, removeClient, getPrefs, setPrefs, autosave } from './storage.js';
 import { householdFromInputs } from './demo.js';
 import { addPresets } from './presets.js';
-import { snapshotNumbers, inSession, programOf, agendaOf } from './program.js';
+import { snapshotNumbers, inSession, programOf, agendaOf, makeHomework } from './program.js';
+import { saveFile, saveWords } from './ui/save-file.js';
 import { agendaPanel } from './ui/agenda-ui.js';
 import { TABS, parseRoute, search, routeForPlace, tabRoute } from './nav.js';
 import { SCREENS, progressOf } from './screens.js';
@@ -258,30 +259,71 @@ const app = {
     setTimeout(() => document.querySelector('.pop [data-quick-add]')?.focus());
   },
 
-  // ---------- Parking lot (R051) ----------
-  openParking(anchor = document.querySelector('[data-focus="more"]')) {
-    if (!this.hasClient) { S.toast('Open a client first; notes belong to a client.'); return; }
-    const box = h('div');
+  // ---------- Parking lot (R051; batch 7, item 9: pin it open, resolve, delete, make homework for the client or me) ----------
+  // One panel, drawn either in a popover or pinned as a column at the right edge, so Details and the notes share the screen.
+  parkingPanel() {
+    const box = h('div.parking-panel');
     const text = h('textarea.note-input', { placeholder: 'Jot what the client said', 'aria-label': 'Note' });
     const add = () => { const t = text.value.trim(); if (!t) return; this.store.addNote(t); text.value = ''; draw(); text.focus(); };
     text.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); add(); } };
-    const draw = () => clear(box, h('strong', {}, 'Parking lot'), text,
-      h('div.row-line', { style: { marginTop: '8px' } }, S.button('Add note', { kind: 'primary', onClick: add })),
-      this.store.doc.parking.length ? h('ul.notes', {}, [...this.store.doc.parking].reverse().map(n => h(`li${n.filedTo ? '.filed' : ''}`, {},
+    const fieldOf = n => fields.find(f => f.id === n.filedTo);
+    const hwOf = n => (this.store.doc.program?.homework || []).find(x => x.noteId === n.id) ?? null;
+    const pinned = !!this.prefs.parkingPinned;
+    const undoable = (label, after = null) => S.toast(label, { undo: () => { this.store.undo(); draw(); after?.(); } });
+    const noteRow = n => {
+      const done = !!(n.filedTo || n.doneAt), hw = hwOf(n);
+      return h(`li${done ? '.filed' : ''}`, {},
         h('span.text', {}, n.text),
-        n.filedTo ? h('a', { href: routeForPlace(fields.find(f => f.id === n.filedTo)?.livesOn || '') || '#' }, fields.find(f => f.id === n.filedTo)?.field || n.filedTo)
-          : h('button.btn.small', { type: 'button', onclick: e => this.fileNote(n, e.currentTarget, draw) }, 'File it'),
-        S.iconButton('trash', 'Delete', () => { this.store.removeNote(n.id); draw(); S.toast('Deleted.', { undo: () => { this.store.undo(); } }); }, { tiny: true }))))
-        : h('p.muted', { style: { marginTop: '12px' } }, 'No notes yet.'));
+        n.filedTo ? h('a', { href: routeForPlace(fieldOf(n)?.livesOn || '') || '#' }, fieldOf(n)?.field || n.filedTo)
+          : hw ? h('span.tag.plain', { title: hw.owner === 'coach' ? 'Homework for me: make the field and enter it' : 'On the client\'s homework list' }, hw.owner === 'coach' ? 'Mine' : 'Homework') : null,
+        done ? S.iconButton('undo', 'Reopen this note', () => { n.filedTo ? this.store.fileNote(n.id, null) : this.store.resolveNote(n.id, false); draw(); }, { tiny: true })
+          : [h('button.btn.small', { type: 'button', onclick: e => this.fileNote(n, e.currentTarget, draw) }, 'File it'),
+            hw ? null : h('button.btn.small', { type: 'button', onclick: e => this.noteToHomework(n, e.currentTarget, draw) }, 'Make homework'),
+            S.iconButton('check', 'Resolve: handled, no field needed', () => { this.store.resolveNote(n.id, true); draw(); undoable('Resolved.'); }, { tiny: true })],
+        S.iconButton('trash', 'Delete', () => { this.store.removeNote(n.id); draw(); undoable('Deleted.'); }, { tiny: true }));
+    };
+    const draw = () => {
+      const all = [...this.store.doc.parking].reverse(), open = all.filter(n => !n.filedTo && !n.doneAt), done = all.filter(n => n.filedTo || n.doneAt);
+      clear(box, h('div.row-line', { style: { gap: '8px' } }, h('strong', {}, 'Parking lot'), h('span.muted.small', {}, open.length ? `${open.length} open` : 'nothing open'), h('span.spacer'),
+        S.iconButton('pin', pinned ? 'Unpin: back to a popover' : 'Pin it open beside the page', () => { S.closePop(); this.setPref('parkingPinned', !pinned); }, { tiny: true })),
+        text, h('div.row-line', { style: { marginTop: '8px' } }, S.button('Add note', { kind: 'primary', onClick: add })),
+        open.length ? h('ul.notes', {}, open.map(noteRow)) : h('p.muted', { style: { marginTop: '12px' } }, 'No open notes.'),
+        done.length ? S.moreBlock('parking:done', () => h('div', {}, h('ul.notes', {}, done.map(noteRow)),
+          S.button('Clear done', { size: 'small', iconName: 'trash', onClick: () => { this.store.transaction('Clear done notes', () => { for (const n of done) this.store.removeNote(n.id); }); draw(); undoable(`${done.length} cleared.`); } })), { label: `Done (${done.length})` }) : null);
+    };
     draw();
+    return { box, text, draw };
+  },
+  openParking(anchor = document.querySelector('[data-focus="more"]')) {
+    if (!this.hasClient) { S.toast('Open a client first; notes belong to a client.'); return; }
+    const dock = $('parking');
+    if (dock && !dock.hidden) { dock.querySelector('textarea')?.focus(); return; } // pinned: it is already on the screen
+    const { box, text } = this.parkingPanel();
     S.popover(anchor, box, { width: 420 });
     text.focus();
+  },
+  parkingDock() { // the pinned panel: a slim column at the right edge on every screen, 1280 and up, coach only
+    const el = $('parking');
+    if (!el) return;
+    const on = this.hasClient && !!this.prefs.parkingPinned && !this.prefs.clientView && window.innerWidth >= 1280;
+    el.hidden = !on; document.body.classList.toggle('parking-pinned', on);
+    if (!on) { clear(el); return; }
+    clear(el, this.parkingPanel().box);
+  },
+  // A note becomes homework: for the client (they find the number; it goes out with Send to client) or for me (no field
+  // for it yet: I make one and enter it; never sent). Confirming the homework resolves the note.
+  noteToHomework(note, anchor, redraw) {
+    const sid = programOf(this.store.doc, ref, { now: this.ctx.now(), flags: this.flags }).current.id;
+    const make = owner => { makeHomework(this.store, sid, note.text, { owner, noteId: note.id }); S.closePop(); redraw?.(); this.parkingDock(); S.toast(owner === 'coach' ? 'On your own list: make the field and enter it.' : "On the client's homework list.", { undo: () => { this.store.undo(); redraw?.(); this.parkingDock(); } }); };
+    S.popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, 'Homework for whom?'),
+      S.button('For the client', { kind: 'primary', onClick: () => make('client') }), h('span.muted.small', {}, 'They find the number. It goes out with Send to client.'),
+      S.button('For me', { onClick: () => make('coach') }), h('span.muted.small', {}, 'No field for it yet: I make one and enter it. Never sent to the client.')), { width: 320 });
   },
   fileNote(note, anchor, redraw) {
     const input = h('input', { placeholder: 'Which field?', 'aria-label': 'Which field' });
     const list = h('div.stack');
     input.oninput = () => clear(list, search(input.value, { fields }).filter(r => r.kind === 'field').slice(0, 6)
-      .map(r => h('button.btn.small', { type: 'button', onclick: () => { this.store.fileNote(note.id, r.id); this.openParking(); } }, `${r.label} (${r.where})`)));
+      .map(r => h('button.btn.small', { type: 'button', onclick: () => { this.store.fileNote(note.id, r.id); S.closePop(); if ($('parking')?.hidden === false) { redraw?.(); this.parkingDock(); } else this.openParking(); } }, `${r.label} (${r.where})`)));
     S.popover(anchor, h('div.stack', {}, h('strong', {}, 'File this note to a field'), h('label.field', {}, icon('search'), input), list), { width: 400 });
   },
 
@@ -320,16 +362,16 @@ const app = {
     this.render();
   },
   saveNow() { saveClient(adapter, this.store.doc); },
-  exportNow({ quiet = false } = {}) {
+  async exportNow({ quiet = false } = {}) {
     const doc = this.store.doc;
     const now = new Date().toISOString();
     const blob = new Blob([JSON.stringify(exportFile(doc, now), null, 1)], { type: 'application/json' });
-    const a = h('a', { href: URL.createObjectURL(blob), download: `slam-${(doc.client.name || 'client').replace(/\W+/g, '-').toLowerCase()}-${now.slice(0, 10)}.json` });
-    document.body.append(a); a.click(); a.remove();
-    doc.lastBackupAt = now;
-    saveClient(adapter, doc);
-    if (!quiet) { S.toast('Backup downloaded.'); this.render(); }
+    const result = await saveFile(blob, `slam-${(doc.client.name || 'client').replace(/\W+/g, '-').toLowerCase()}-${now.slice(0, 10)}.json`); // batch 7, item 1: works inside the artifact too
+    if (result === 'saved') { doc.lastBackupAt = now; saveClient(adapter, doc); }
+    if (!quiet) { S.toast(saveWords(result, 'The backup') ?? 'Backup downloaded.'); this.render(); }
   },
+  // Where the homework list lives for whoever is looking (batch 7, item 8): Coach tools, or the one-pager in Client view.
+  homeworkRoute() { return this.prefs.clientView ? '#/report/one-pager' : '#/tools/lists'; },
   importFile() {
     const input = h('input', { type: 'file', accept: '.json,application/json' });
     input.onchange = async () => {
@@ -387,11 +429,14 @@ const app = {
   // ---------- render ----------
   render({ keepPop = false } = {}) {
     const { tab, sub, hash } = parseRoute(location.hash);
-    if (tab.id === 'tools' && this.prefs.clientView) { this.go('#/home/session'); return; } // never in client view
+    if (tab.id === 'tools' && this.prefs.clientView) { // never in client view; say so instead of a silent bounce (batch 7, item 8)
+      S.toast('Coach tools are off in Client view.', { action: { label: 'Turn Client view off', run: () => { this.setPref('clientView', false); this.go(hash); } } });
+      this.go('#/home/session'); return;
+    }
     if (!keepPop) S.closePop();
     this.ctx.clearScreen();
     const screen = SCREENS[`${tab.id}/${sub.id}`];
-    const draw = () => { this.chrome(); clear($('main'), screen ? screen(this, this.ctx) : null); };
+    const draw = () => { this.chrome(); this.parkingDock(); clear($('main'), screen ? screen(this, this.ctx) : null); };
     // A redraw of the same screen never loses your place (R165): scroll, list scroll and the control you were on.
     if (this._lastHash === hash) keepPlace(draw); else draw();
     // One page: a sub-tab click scrolls to its part (only when the place changes, not on every redraw).
@@ -412,6 +457,8 @@ document.addEventListener('keydown', e => {
 app.setupArrive(); // batch 6: counters list what is left
 document.addEventListener('slam:rerender', () => app.render({ keepPop: true }));
 window.addEventListener('hashchange', () => app.render());
+let resizeTimer = null; // the pinned parking lot has room only at 1280 and up
+window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (app.hasClient) app.parkingDock(); }, 150); });
 window.addEventListener('beforeunload', e => { // R084: warn before closing with unsaved work
   app.saver?.flush();
   if (app.saver?.state === 'unsaved') { e.preventDefault(); e.returnValue = ''; }

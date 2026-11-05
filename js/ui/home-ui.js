@@ -22,6 +22,7 @@ import { ratingTag } from './scorecard-ui.js';
 import { agendaPanel, follow } from './agenda-ui.js';
 import { arrive, leftPopover } from './arrive.js';
 import { money, pct } from '../format.js';
+import { defaultsInUse } from '../checks.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const isoDay = d => d.toISOString().slice(0, 10);
@@ -60,12 +61,17 @@ function sessionStrip(app, ctx, P) {
   next.onchange = () => ctx.store.setIn('session', ['next'], next.value || undefined, 'Next session');
   const length = s.length || ctx.ref.defaults.sessionMinutes;
   const left = P.inSession ? Math.round(length - (Date.now() - Date.parse(s.startedAt)) / 60000) : null;
-  const nextStep = () => { // Guide me (R076): the first open item of this session with a place to go, else the next small thing
-    const item = P.current.items.find(i => !i.done && i.route);
-    const target = item?.route || P.next[0]?.route || '#/plan/goals';
-    PUI.reveal = target === '#/plan/goals';
+  // Guide me (R076): the first open item of this session with a place to go, else the next small thing. Batch 7,
+  // item 6: every jump says why it went there, and when nothing is left but what End session does, it says that
+  // instead of landing somewhere for no stated reason.
+  const chase = P.current.items.find(i => !i.done && i.route) ?? null;
+  const small = P.next[0]?.route ? P.next[0] : null;
+  const hasNext = !!(chase || small);
+  const nextStep = () => {
     app.trackerBack(location.hash);
-    arrive(app, target, { from: location.hash });
+    if (chase) { arrive(app, chase.route, { from: location.hash, items: [{ name: chase.label, word: 'this session', id: null, focus: chase.focus ?? null }] }); return; }
+    if (small) { PUI.reveal = small.route === '#/plan/goals'; arrive(app, small.route, { from: location.hash, items: [{ name: `${small.label}: ${small.step}`, word: `raises the picture ${Math.round(small.gain * 100)}%`, id: small.recId ?? null, focus: small.focus ?? null }] }); return; }
+    S.toast(`Everything for session ${P.n} is in. End session saves the ${P.day0 ? 'snapshot' : 'Day 0 snapshot'}.`);
   };
   const start = () => { const r = startSession(ctx.store, ctx.ref, { now: ctx.now(), flags: app.flags }); HUI.open = null; if (r.target) S.toast(`This session's hole: ${P.scorecard.areas.find(a => a.id === r.target)?.name}.`); if (r.sid === 'S9') { app.go('#/home/review'); return; } app.render(); }; // Revisit opens the gate first (answer 138)
   return h('div.card.session-strip', {},
@@ -79,7 +85,7 @@ function sessionStrip(app, ctx, P) {
     h('span.spacer'),
     // Answer 90: focus mode (core columns only) is on by default; this shows every field mid-session, and back.
     P.inSession && s.guide ? S.checkbox('Show every field (not just what\'s missing)', !!s.allFields, v => ctx.store.setIn('session', ['allFields'], v, v ? 'Show every field' : 'Focus mode'), { key: 'home:all-fields' }) : null, // item 10
-    P.inSession ? [S.button('End session', { kind: P.current.done ? 'primary' : 'secondary', size: P.current.done ? 'big' : null, iconName: 'check', onClick: () => app.go('#/home/review') }), P.current.done ? null : S.button('Next step', { kind: 'primary', size: 'big', iconName: 'right', onClick: nextStep })] // item 4: End session leads once the checklist is met
+    P.inSession ? [S.button('End session', { kind: P.current.done || !hasNext ? 'primary' : 'secondary', size: P.current.done || !hasNext ? 'big' : null, iconName: 'check', onClick: () => app.go('#/home/review') }), P.current.done || !hasNext ? null : S.button('Next step', { kind: 'primary', size: 'big', iconName: 'right', onClick: nextStep })] // item 4: End session leads once the checklist is met, or once nothing is left to chase (batch 7, item 6)
       : [P.graduated ? null : S.button('Move to next session', { iconName: 'right', tip: 'Review the key numbers and move on without a live session', onClick: () => app.go('#/home/review') }),
         S.button('Start session', { kind: 'primary', size: 'big', onClick: start, disabled: P.graduated, why: P.graduated ? 'The program is complete' : null })]);
 }
@@ -244,13 +250,16 @@ function ladderCard(app, ctx) {
   const when = r => (r.date ? `about ${monthName(r.date, 'short')}` : 'no date yet');
   const wins = [...L.steps.filter(s => s.done), ...L.markers.filter(k => k.reached)];
   const n = L.next;
+  // Batch 7, item 7: the dollars behind the share. A step: have of target, left to go. A marker: where you are against it.
+  const amounts = r => (r.kind === 'step' ? (r.target != null ? `${money(r.have)} of ${money(r.target)}${r.left ? ` · ${money(r.left)} to go` : ''}` : null)
+    : r.target != null && r.value != null ? `${money(r.value)} of ${money(r.target)}${r.value < r.target ? ` · ${money(r.target - r.value)} to go` : ''}` : null);
   const big = n ? h('div.ladder-next', {}, h('div.row-line', { style: { gap: '10px', flexWrap: 'wrap' } }, h('span.muted.small', {}, 'Next step'), h('span.ladder-name', {}, n.name), h('span.muted', {}, n.what)),
-    h('div.bar-row', {}, bar(n.pct, { wide: true, label: `${n.name} progress` }), h('span', {}, `${Math.round(n.pct * 100)}% there`), h('span.muted.small', {}, n.done ? '' : when(n))))
+    h('div.bar-row', {}, bar(n.pct, { wide: true, label: `${n.name} progress` }), h('span', {}, `${Math.round(n.pct * 100)}% there`), amounts(n) ? h('span.amounts', {}, amounts(n)) : null, h('span.muted.small', {}, n.done ? '' : when(n))))
     : h('div.ladder-next', {}, h('span.ladder-name', {}, 'Every step on the ladder is done'), h('span.muted', {}, ' Markers from here.'));
   const k = L.nextMarker;
-  const small = h('p.muted.small', { style: { margin: '6px 0 0' } }, k ? [`Next marker: ${k.name}, ${when(k)}.`] : 'Every marker reached.', wins.length ? ` ${wins.length} ${wins.length === 1 ? 'win' : 'wins'} so far: ${wins.map(w => w.name).join(', ')}.` : ' The first win is close.');
+  const small = h('p.muted.small', { style: { margin: '6px 0 0' } }, k ? [`Next marker: ${k.name}${amounts(k) ? ` (${amounts(k)})` : ''}, ${when(k)}.`] : 'Every marker reached.', wins.length ? ` ${wins.length} ${wins.length === 1 ? 'win' : 'wins'} so far: ${wins.map(w => w.name).join(', ')}.` : ' The first win is close.');
   const rung = r => h(`div.rung${r.done || r.reached ? '.won' : ''}.${r.kind}`, {}, h('span.box', {}, r.done || r.reached ? icon('check') : ''), h('strong', {}, r.name), h('span.tag.plain', {}, r.kind === 'step' ? 'step' : 'marker'),
-    h('span.muted.small', {}, r.what), h('span.spacer'), h('span.small', {}, r.done || r.reached ? 'Done' : r.kind === 'step' ? `${Math.round(r.pct * 100)}% · ${when(r)}` : when(r)));
+    h('span.muted.small', {}, r.what), h('span.spacer'), h('span.small', {}, r.done || r.reached ? 'Done' : [r.kind === 'step' ? `${Math.round(r.pct * 100)}%` : null, amounts(r), when(r)].filter(Boolean).join(' · ')));
   const day0 = L.day0 ? h('div.rung.day0', {}, h('span.box', {}, '·'), h('span.muted.small', {}, `Day 0: ${new Date(L.day0.at).toLocaleDateString()}${L.day0.netWorth != null ? `, net worth ${money(L.day0.netWorth)}` : ''}`)) : null;
   return h('div.card.ladder-card', {}, big, small,
     S.moreBlock('home:ladder', () => h('div.rungs', {}, day0, L.rungs.map(rung), h('p.muted.small', { style: { margin: '6px 0 0' } }, 'Steps are in order, like the FOO. Markers slot in by when the math expects them. Steps that do not apply (no match offered, no heavy debt) are left out.')), { label: `The whole ladder (${wins.length} of ${L.rungs.length})` }));
@@ -338,17 +347,22 @@ export function moneyInOneLine(app, ctx, m = ctx.metrics()) {
 }
 
 // ---------- In session: what End session does ----------
+// Batch 7, item 2: each line shows its real state (filled in as it happens), so a circle is a status, never a dead
+// control. Homework: anything on the list. Snapshot: this session's snapshot exists. One-pager: it has its key numbers.
+// Next session: a date is picked. Dashed means End session will do it; solid green means it is already done.
 function wrapUp(app, ctx, P) {
   const s = sessionOf(ctx.store.doc);
-  const hw = homeworkItems(ctx);
+  const hw = homeworkItems(ctx), mine = hw.filter(x => x.owner === 'coach').length, theirs = hw.length - mine;
+  const m = ctx.metrics();
+  const snapThisSession = ctx.store.doc.snapshots.some(x => x.session === P.n || (P.n === 1 && x.day0));
   const items = [
-    [`Homework set (${hw.length})`, hw.length ? hw.map(x => x.label).join(', ') : "Nothing marked I'll find it later", S.button('Open the list', { size: 'small', onClick: () => app.go('#/tools/lists') })],
-    [P.day0 ? `Snapshot saved (End of session ${P.n})` : 'Day 0 snapshot saved', 'Freezes today\'s numbers and the Picture %', null],
-    ['One-pager ready', 'Key stats, to-dos, goals, strengths and struggles', S.button('Open one-pager', { size: 'small', onClick: () => app.go('#/report/one-pager') })],
-    ['Next session booked', s.next ? `Set for ${s.next}` : 'Two weeks from today unless a date is picked above', null],
+    [theirs > 0, `Homework set (${theirs}${mine ? `, ${mine} for me` : ''})`, hw.length ? hw.map(x => x.label).join(', ') : "Nothing marked I'll find it later", S.button('Open the list', { size: 'small', onClick: () => app.go(app.homeworkRoute()) })],
+    [snapThisSession, P.n === 1 ? 'Day 0 snapshot saved' : `Snapshot saved (End of session ${P.n})`, snapThisSession ? 'Saved this session' : 'Freezes today\'s numbers and the Picture %', null],
+    [[m.netWorth, m.surplus, m.savingsRate].every(r => r.value !== null), 'One-pager ready', 'Key stats, to-dos, goals, strengths and struggles', S.button('Open one-pager', { size: 'small', onClick: () => app.go('#/report/one-pager') })],
+    [!!s.next, 'Next session booked', s.next ? `Set for ${s.next}` : 'Two weeks from today unless a date is picked above', null],
   ];
   return h('div.card', {}, h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'End session does all four'), h('span.muted', {}, 'then shows Send summary')),
-    h('div.checklist', { style: { marginTop: '10px', marginBottom: 0 } }, items.map(([what, detail, act]) => h('div.check-item', {}, h('span.box', { 'aria-hidden': 'true' }),
+    h('div.checklist', { style: { marginTop: '10px', marginBottom: 0 } }, items.map(([done, what, detail, act]) => h(`div.check-item.preview${done ? '.done' : ''}`, { title: done ? 'Already done' : 'End session does this' }, h('span.box', { role: 'img', 'aria-label': done ? 'Done' : 'End session does this' }, done ? icon('check') : null),
       h('div', { style: { flex: 1 } }, h('div.what', {}, what), h('div.muted.small', {}, detail)), act))));
 }
 
@@ -379,16 +393,18 @@ function openItems(app, ctx) {
   const changes = snap ? [['Net worth', 'netWorth'], ['Debt', 'debtTotal'], ['Savings rate', 'savingsRate'], ['Surplus', 'surplus'], ['Picture', 'picturePct']]
     .map(([label, k]) => ({ label, k, c: changeSince(now, snap, k) })).filter(x => x.c && x.c.direction !== 'same') : [];
   const fmt = (k, d) => (k === 'savingsRate' || k === 'picturePct' ? `${(Math.abs(d) * 100).toFixed(k === 'picturePct' ? 0 : 1)} pts` : money(Math.abs(d)));
-  const homework = homeworkItems(ctx).length, due = app.dueForCheck().length, notes = doc.parking.filter(n => !n.filedTo).length;
-  const total = homework + due + notes + (changes.length ? 1 : 0);
+  const hw = homeworkItems(ctx), mine = hw.filter(x => x.owner === 'coach').length, theirs = hw.length - mine;
+  const homework = hw.length, due = app.dueForCheck().length, notes = ctx.store.openNotes().length, guesses = defaultsInUse(doc, ctx.ref).length; // batch 7: resolved notes and homework count as handled; defaults in use are listed (item 12)
+  const total = homework + due + notes + guesses + (changes.length ? 1 : 0);
   if (!total) return null;
   const row = (label, detail, go, link) => h('div.open-row', {}, h('strong', {}, label), h('span.muted', {}, detail), h('a', { href: '#', onclick: e => { e.preventDefault(); go(); } }, `${link} ›`));
   return h('div.card.open-items', {},
     h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Open items'), h('span.tag.plain', {}, String(total))),
     changes.length ? row('What changed', `${changes.map(x => `${x.label} ${x.c.direction === 'up' ? '▲' : '▼'} ${fmt(x.k, x.c.diff)}`).join(' · ')} since ${snap.label}`, () => app.go('#/report/history'), 'History') : null,
-    homework ? row('Homework', `${homework} ${homework === 1 ? 'number' : 'numbers'} to find later`, () => app.go('#/tools/lists'), 'Homework list') : null,
+    homework ? row('Homework', `${theirs} for the client${mine ? `, ${mine} for me` : ''}`, () => app.go(app.homeworkRoute()), 'Homework list') : null,
     due ? row('Due for a check', `${due} rough or aged ${due === 1 ? 'number' : 'numbers'}`, () => app.go('#/tools/lists'), 'Revisit list') : null,
-    notes ? row('Parking lot', `${notes} ${notes === 1 ? 'note' : 'notes'} not filed yet`, () => app.openParking(), 'Parking lot') : null);
+    guesses ? row('Defaults in use', `${guesses} ${guesses === 1 ? 'number' : 'numbers'} the app filled in with a typical value`, () => app.go('#/tools/lists'), 'Defaults in use') : null,
+    notes ? row('Parking lot', `${notes} open ${notes === 1 ? 'note' : 'notes'}`, () => app.openParking(), 'Parking lot') : null);
 }
 // Day 0 against now (the Revisit session's report, S9; a placeholder table this phase).
 function day0Card(ctx, P) {

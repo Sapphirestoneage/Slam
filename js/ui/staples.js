@@ -16,6 +16,10 @@ import { opened, install as installDismiss } from './dismiss.js';
 import { PERSONS, personLabels, onePerson, ownerOf, modeOf } from '../registry/couples.js';
 export { keepPlace };
 
+// A core field is handled when it is done, or on the Homework list (batch 7, item 4), or the institution comes from the
+// Institutions list (item 3). The same rule as js/completion.js, so a row's amber marker agrees with the counters.
+export const handled = (r, f) => countsAsDone(statusOf(r, f)) || statusOf(r, f) === 'Will email' || (f === 'institution' && !!r.values?.institutionId);
+
 // ---------- Context: the store, the time view, the numbers, toasts ----------
 export function createCtx({ store, ref, now = () => new Date() }) {
   let cache = null;
@@ -62,8 +66,8 @@ export function ownerToggle(ctx, r, up) {
   const options = (onePerson(r) ? PERSONS.filter(p => p !== 'Joint') : PERSONS).map(p => [p, names[p]]);
   return toggle(options, ownerOf(r, modeOf(ctx.store.doc.profile)), v => up({ owner: v }), { label: 'Owner' });
 }
-export function toggle(options, value, onChange, { label = null, clearable = false } = {}) {
-  return h('div.seg', { role: 'group', 'aria-label': label },
+export function toggle(options, value, onChange, { label = null, clearable = false, key = null } = {}) {
+  return h('div.seg', { role: 'group', 'aria-label': label, 'data-focus': key }, // key: the row field's handle for Show me (batch 7, item 3)
     options.map(o => {
       const [v, text] = Array.isArray(o) ? o : [o, o];
       return h('button', { type: 'button', 'aria-pressed': String(v === value), 'data-focus': label ? `seg:${label}:${v}` : null, title: clearable && v === value ? 'Click again to clear' : null, onclick: e => {
@@ -303,8 +307,14 @@ export function checkbox(label, checked, onChange, { key = null } = {}) {
 // A labelled box: the label above, the input under it (affordance rule 3).
 // later: { on, set } adds "I'll find it later" under the box (Brandon B1.2): it parks the field on the Homework list.
 // none: { on, set } adds "I don't have this" (counts as answered, as Not for me).
-export const labelled = (label, input, { note = null, later = null, none = null } = {}) => h(`div.stack${later?.on || none?.on ? '.parked' : ''}`, {}, h('span.label', {}, label), input,
-  note ? h('span.muted.small', {}, note) : null, later || none ? parkButtons({ later, none }, label) : null);
+// Batch 7, item 3: a box that can be parked knows its row and field (park() gives the key), so every such box gets a
+// handle Show me can find, with no list of names to keep: the first input, select or toggle inside it that has none.
+export const labelled = (label, input, { note = null, later = null, none = null, tip = null } = {}) => {
+  const key = later?.key ?? none?.key ?? null;
+  if (key && input?.querySelector) { const el = input.matches?.('.seg') ? input : input.querySelector('input:not([data-focus]), select:not([data-focus]), .seg'); if (el && !el.dataset.focus) el.dataset.focus = key; }
+  return h(`div.stack${later?.on || none?.on ? '.parked' : ''}`, {}, h(`span.label${tip ? '.has-tip' : ''}`, tip ? { title: `${label}: ${tip}` } : {}, label), input,
+    note ? h('span.muted.small', {}, note) : null, later || none ? parkButtons({ later, none }, label) : null);
+};
 export function parkButtons({ later = null, none = null }, label = 'this') {
   const undo = (text, opt, what) => h('span.row-line.later-on', { style: { gap: '6px', flexWrap: 'nowrap' } }, h('span.tag.plain', {}, text),
     h('button.btn.small.later-btn', { type: 'button', 'aria-label': `${what}: ${label}`, onclick: () => opt.set(false) }, 'Undo'));
@@ -319,7 +329,16 @@ export const laterButton = (later, label) => parkButtons({ later }, label);
 export function park(ctx, r, field) {
   const st = r.fieldStatus?.[field];
   const set = s => on => ctx.store.setFieldStatus(r.id, field, on ? s : null);
-  return { later: { on: st === 'Will email', set: set('Will email') }, none: { on: st === 'Not for me', set: set('Not for me') } };
+  const key = `${r.id}:${field}`;
+  return { later: { on: st === 'Will email', set: set('Will email'), key }, none: { on: st === 'Not for me', set: set('Not for me'), key } };
+}
+// One pair of park buttons for a group of fields (batch 7, item 10): on when every field in the group is parked;
+// set parks or unparks them all in one undo step. The handle points at the first field.
+export function parkGroup(ctx, r, fields) {
+  const st = s => fields.every(f => r.fieldStatus?.[f] === s);
+  const set = s => on => ctx.store.transaction(on ? 'Park fields' : 'Unpark fields', () => { for (const f of fields) ctx.store.setFieldStatus(r.id, f, on ? s : null); });
+  const key = `${r.id}:${fields[0]}`;
+  return { later: { on: st('Will email'), set: set('Will email'), key }, none: { on: st('Not for me'), set: set('Not for me'), key } };
 }
 // The same for a Profile-level answer (doc.profile.later and doc.profile.none).
 export function parkProfile(store, key) {
@@ -779,7 +798,7 @@ export function recordList(ctx, cfg) {
         const box = h('input', { type: 'checkbox', 'aria-label': `Select ${r.name || r.type || cfg.thing.one}`, checked: state.selected.has(r.id), 'data-focus': 'sel' });
         box.onchange = () => { box.checked ? state.selected.add(r.id) : state.selected.delete(r.id); refreshSelection(); };
         const open = state.open === r.id;
-        const unfinished = !(cfg.coreFields ? (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields) : ['amount']).every(f => countsAsDone(statusOf(r, f)));
+        const unfinished = !(cfg.coreFields ? (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields) : ['amount']).every(f => handled(r, f));
         if (state.onlyLeft && !unfinished) continue; // item 3: Show only what's left
         const tr = h(`tr.row${state.selected.has(r.id) ? '.selected' : ''}${unfinished ? '.left' : ''}`, { 'data-id': r.id, 'data-group': g, hidden: folded },
           h('td.check-cell', {}, box),
@@ -801,9 +820,9 @@ export function recordList(ctx, cfg) {
     if (state.open && !rowEls.has(state.open)) state.open = null;
     const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td.check-cell', {}), cfg.totals(ctx, recs, m, cols))) : null;
     const coreOf = r => (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields || ['amount']);
-    const leftRows = recs.filter(r => !coreOf(r).every(f => countsAsDone(statusOf(r, f))));
+    const leftRows = recs.filter(r => !coreOf(r).every(f => handled(r, f)));
     const done = recs.length - leftRows.length;
-    const leftItems = leftRows.map(r => { const f = coreOf(r).find(x => !countsAsDone(statusOf(r, x))); return { id: r.id, name: r.name || r.type || cfg.thing.one, word: r.status && r.status !== 'Know it' ? r.status : 'missing', field: f, focus: `${r.id}:${f}`, route: location.hash }; });
+    const leftItems = leftRows.map(r => { const f = coreOf(r).find(x => !handled(r, x)); return { id: r.id, name: r.name || r.type || cfg.thing.one, word: r.status && r.status !== 'Know it' ? r.status : 'missing', field: f, focus: `${r.id}:${f}`, route: location.hash }; });
     const onlyLeft = recs.length > 8 && leftRows.length ? h('label.check-inline.only-left', {}, (() => { const b = h('input', { type: 'checkbox', checked: state.onlyLeft ? 'checked' : null }); b.onchange = () => { state.onlyLeft = b.checked; ctx.refresh(); }; return b; })(), ` Show only what's left (${leftRows.length})`) : null;
     const out = h(`div.section.area-${cfg.area}`, {}, head,
       cfg.strip ? (focus ? moreBlock(`focus:strip:${listKey}`, () => cfg.strip(ctx, ctx.metrics()), { label: 'Totals and chart' }) : cfg.strip(ctx, m)) : null, // item 19

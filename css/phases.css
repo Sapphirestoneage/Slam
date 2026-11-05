@@ -430,3 +430,27 @@ body.cal-dragging, body.cal-dragging * { user-select: none !important; }
 .foo-stop:hover .foo-card, .foo-stop:focus-within .foo-card { display: block; }
 .foo-stop:last-child .foo-card, .foo-stop:nth-last-child(2) .foo-card { left: auto; right: 0; }
 @media (max-width: 760px) { .foo-card { width: min(280px, 80vw); } }
+
+/* Batch 7, item 7: the ladder's dollars beside its share */
+.ladder-next .amounts { font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) { .ladder-next .bar-row { flex-wrap: wrap; } .ladder-next .amounts { flex-basis: 100%; } }
+
+/* Batch 7, item 9: the parking lot pinned open as a slim column at the right edge (1280 and up; a popover below that) */
+.parking-dock { position: fixed; top: 60px; right: 0; bottom: 0; width: 340px; z-index: 35; background: var(--card); border-left: 2px solid var(--border-row); box-shadow: var(--shadow-lift); padding: var(--s3) var(--s4); overflow: auto; }
+.parking-dock[hidden] { display: none; }
+body.parking-pinned main.shell-page, body.parking-pinned .banner { padding-right: 356px; }
+body.parking-pinned .topbar { padding-right: 0; }
+.parking-panel .notes { max-height: none; }
+.parking-panel .notes li { flex-wrap: wrap; row-gap: 4px; }
+.parking-panel .notes li .text { flex-basis: 100%; }
+.parking-panel .notes li.filed .text { text-decoration: line-through; }
+.parking-panel .notes li .tag { white-space: nowrap; }
+@media (max-width: 1279px) { .parking-dock { display: none !important; } body.parking-pinned main.shell-page, body.parking-pinned .banner { padding-right: var(--s5); } }
+@media (max-width: 760px) { body.parking-pinned main.shell-page, body.parking-pinned .banner { padding-right: 12px; } }
+
+/* Batch 7, item 2: the End session preview shows real state, so a circle is a status, not a dead control */
+.check-item.preview .box { border-style: dashed; }
+.check-item.preview.done .box { border-style: solid; }
+
+/* Batch 7, item 11: a card's first question in the row; the debt fields follow only on Carries */
+.card-first .seg button { min-height: 32px; padding: 0 8px; font-size: .8125rem; }

@@ -120,7 +120,16 @@ table.rows tr.group .fold { all: unset; box-sizing: border-box; display: inline-
 table.rows tr.group .fold:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
 table.rows tfoot td { position: sticky; bottom: 0; z-index: 2; background: var(--card); border-top: 2px solid var(--border-row); border-bottom: 0; font-weight: 700; height: 44px; }
 table.rows tr.more td { background: var(--bg); padding: var(--s3) var(--s4); }
-.layer { display: flex; flex-wrap: wrap; gap: var(--s3) var(--s4); align-items: flex-end; }
+/* Batch 7, item 10: a Details panel is a grid, not a free wrap. Every box starts on the same line as its neighbours
+   (label above, box below, park buttons under), so the eye reads rows, not a cloud. A wide box (a pair, a long text)
+   says so with .wide and takes two cells. */
+.layer { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: var(--s3) var(--s4); align-items: start; }
+.layer > .stack { min-width: 0; }
+.layer > .stack > .row-line { flex-wrap: nowrap; }
+.layer > .stack.wide, .layer > .stack:has(> .row-line > .field + .field + .field), .layer > .stack:has(> label.field[style*="width: 3"]), .layer > .stack:has(> textarea) { grid-column: span 2; }
+.layer > .stack:has(> .seg) .seg { flex-wrap: wrap; }
+.layer > .stack .later-btn { min-height: 28px; }
+@media (max-width: 760px) { .layer { grid-template-columns: 1fr; } .layer > .stack.wide, .layer > .stack:has(> .row-line > .field + .field + .field) { grid-column: auto; } }
 .layer + .layer { margin-top: var(--s3); padding-top: var(--s3); border-top: 1px dashed var(--border-row); }
 .stack { display: flex; flex-direction: column; gap: 4px; }
 .actions { display: inline-flex; gap: var(--s2); align-items: center; white-space: nowrap; }

@@ -103,6 +103,17 @@ export function growthOf(type, v = {}, balance = null) {
   return out;
 }
 
+// Batch 7, item 5: which account types still need to be asked Pretax or Roth. A Brokerage, Crypto or 529 is never
+// pretax or Roth; a Roth IRA is Roth; a Traditional, Rollover or SEP IRA is pretax; an HSA has its own rules. Only a
+// type whose name does not say gets the question. taxTypeFor gives the answer the name already holds, else null.
+const ASKS_TAX = new Set(['Other', 'All investments']);
+export const asksTaxType = type => ASKS_TAX.has(type);
+export function taxTypeFor(type, taxType = null) {
+  if (asksTaxType(type)) return taxType ?? null;
+  if (type === 'Roth IRA') return 'Roth';
+  if (['Traditional IRA', 'Rollover IRA', 'SEP'].includes(type)) return 'Pretax';
+  return null; // taxable, or a workplace plan that answers it on Income
+}
 // Tax treatment and when you can reach it without a penalty (B2.11).
 export function taxTreatment(type, taxType = null) {
   if (type === 'HSA') return 'Tax-free in, growth and out for medical';

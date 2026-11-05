@@ -57,7 +57,8 @@ function completion(app, c) {
   const items = x => (x.items || []).map(it => ({ ...it, route }));
   const bar = (label, x) => h('span.row-line', { style: { gap: '8px', flexWrap: 'nowrap' } }, h('span.label', {}, label),
     h('div.progress', { role: 'progressbar', 'aria-valuenow': x.of ? Math.round(x.done / x.of * 100) : 0, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': label }, h('span', { style: { width: `${x.of ? x.done / x.of * 100 : 0}%` } })),
-    x.of && x.done < x.of ? h('button.btn.small.count-btn', { type: 'button', 'aria-label': `${label}: ${x.done} of ${x.of}, see what is left`, onclick: e => leftPopover(app, e.currentTarget, items(x), { title: `${label}: ${x.of - x.done} left` }) }, `${x.done} of ${x.of}`) : h('span.label', {}, `${x.done} of ${x.of}`)); // item 3: a counter lists what is left
+    x.of && x.done < x.of ? h('button.btn.small.count-btn', { type: 'button', 'aria-label': `${label}: ${x.done} of ${x.of}, see what is left`, onclick: e => leftPopover(app, e.currentTarget, items(x), { title: `${label}: ${x.of - x.done} left` }) }, `${x.done} of ${x.of}`) : h('span.label', {}, `${x.done} of ${x.of}`), // item 3: a counter lists what is left
+    x.parked ? h('span.muted.small', { title: 'On the Homework list: handled for this session, not yet a number' }, `${x.parked} on homework`) : null); // batch 7, item 4: deferring shows as progress, and says so
   if (!c.core.of && !c.full.of) return null;
   // What is still missing, in words, behind a caret so the page stays calm.
   const left = [...(c.core.missing || []).map(x => ['Core', x]), ...(c.full.missing || []).filter(x => !(c.core.missing || []).includes(x)).map(x => ['Full detail', x])];
@@ -237,7 +238,7 @@ export function progressOf(ctx, tabId, subId) {
   const core = (kinds, fields) => {
     const rows = recs.filter(r => kinds.includes(r.kind));
     if (!rows.length) return null;
-    return { done: rows.filter(r => fields.every(f => countsAsDone(statusOf(r, f)))).length, of: rows.length };
+    return { done: rows.filter(r => fields.every(f => S.handled(r, f))).length, of: rows.length }; // batch 7, item 4: a parked field is handled
   };
   if (tabId === 'home' && subId === 'profile') { const c = profileCompletion(ctx.store.doc).core; return c.of ? { done: c.done, of: c.of } : null; }
   if (tabId === 'cash-flow' && subId === 'income') return core(['income'], ['amount']);
@@ -246,7 +247,7 @@ export function progressOf(ctx, tabId, subId) {
     if (subId === 'assets') {
       const rows = recs.filter(r => r.kind === 'account' || r.kind === 'asset');
       if (!rows.length) return null;
-      return { done: rows.filter(r => countsAsDone(statusOf(r, r.kind === 'asset' ? 'value' : 'balance'))).length, of: rows.length };
+      return { done: rows.filter(r => S.handled(r, r.kind === 'asset' ? 'value' : 'balance')).length, of: rows.length };
     }
   }
   if (tabId === 'cash-flow' && subId === 'budget') return core(['bill', 'spending'], ['amount']);

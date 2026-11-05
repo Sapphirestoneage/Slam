@@ -130,17 +130,25 @@ export const homeworkAll = (doc, records) => homeworkList(doc, records);
 export function setHomeworkStatus(store, key, status, { by = 'coach' } = {}) {
   if (!HOMEWORK_STATUSES.includes(status)) throw new Error(`Unknown homework status ${status}`);
   const hw = (store.doc.program?.homework || []).find(h => `hw:${h.id}` === key);
-  if (hw) store.setIn('program', ['homework'], store.doc.program.homework.map(h => (h === hw ? { ...h, status, statusBy: by, statusAt: store.now() } : h)), 'Homework');
+  if (hw) store.transaction('Homework', () => {
+    store.setIn('program', ['homework'], store.doc.program.homework.map(h => (h === hw ? { ...h, status, statusBy: by, statusAt: store.now() } : h)), 'Homework');
+    if (hw.noteId && store.doc.parking?.some(n => n.id === hw.noteId)) store.resolveNote(hw.noteId, status === 'Confirmed', { as: 'homework' }); // batch 7, item 9: the note it came from closes with it
+  });
   else store.setIn('program', ['homeworkStatus', key], status === 'To do' ? undefined : { status, by, at: store.now() }, 'Homework');
 }
 // F2: whose homework it is (Me, Partner or Joint) on homework the coach made.
 export function setHomeworkPerson(store, key, person) {
   store.setIn('program', ['homework'], (store.doc.program?.homework || []).map(h => (`hw:${h.id}` === key ? { ...h, person: person ?? undefined } : h)), 'Homework person');
 }
-export function makeHomework(store, sid, label, { link = null, due = null, person = null } = {}) {
-  const hw = { id: store.makeId(), label, from: sid, at: store.now(), status: 'To do', statusBy: null, ...(link ? { link } : {}), ...(due ? { due } : {}), ...(person ? { person } : {}) }; // person (F2): Me, Partner or Joint
+// owner (batch 7, item 9): 'client' (the default, and what every older item means) finds the number; 'coach' makes a
+// field and enters it, and never goes out with Send to client. noteId: the parking-lot note it came from.
+export function makeHomework(store, sid, label, { link = null, due = null, person = null, owner = null, noteId = null } = {}) {
+  const hw = { id: store.makeId(), label, from: sid, at: store.now(), status: 'To do', statusBy: null, ...(link ? { link } : {}), ...(due ? { due } : {}), ...(person ? { person } : {}), ...(owner === 'coach' ? { owner } : {}), ...(noteId ? { noteId } : {}) }; // person (F2): Me, Partner or Joint
   store.setIn('program', ['homework'], [...(store.doc.program?.homework || []), hw], 'Make homework');
   return hw;
+}
+export function setHomeworkOwner(store, key, owner) {
+  store.setIn('program', ['homework'], (store.doc.program?.homework || []).map(h => (`hw:${h.id}` === key ? { ...h, owner: owner === 'coach' ? 'coach' : undefined } : h)), 'Homework owner');
 }
 const agendaDoc = (doc, sid) => doc.program?.agenda?.[sid] || {};
 export function addAgendaItem(store, sid, { label, link = null, key = null, from = null }) {
@@ -169,7 +177,7 @@ export function agendaOf(doc, ref, { now = new Date(), flags = [], P = programOf
   const suggest = s => { if (!have.has(JSON.stringify(s.link ?? s.label))) suggestions.push(s); };
   for (const c of (doc.program?.carried?.[sid] || []).filter(c => !c.must)) suggest({ kind: 'carried', label: c.label, key: c.key ?? null, from: c.from, link: c.link ?? (c.route ? { kind: 'route', route: c.route } : null), why: `carried over from session ${Number(c.from.slice(1))}` });
   for (const hw of homeworkAll(doc, live)) if (hw.status === 'Client says done') suggest({ kind: 'homework', label: `Confirm homework: ${hw.label}`, link: { kind: 'homework', key: hw.key, route: '#/tools/lists' }, why: 'the client says it is done' });
-  for (const n of (doc.parking || []).filter(n => !n.filedTo)) suggest({ kind: 'parking', label: n.text, link: { kind: 'parking', noteId: n.id }, why: 'an open parking-lot question' });
+  for (const n of (doc.parking || []).filter(n => !n.filedTo && !n.doneAt)) suggest({ kind: 'parking', label: n.text, link: { kind: 'parking', noteId: n.id }, why: 'an open parking-lot question' });
   // Parked holes that are due back (overnight answer 1): a + and a one-click Make homework.
   for (const a of P.scorecard.parkedHoles) { const b = parkedBack(a.parked, { n: P.n, now }); if (b.due) suggest({ kind: 'parked', label: `Back from parking: ${a.name}`, key: 'holeFilled', from: sid, link: { kind: 'hole', areaId: a.id, route: '#/plan/scorecard' }, why: `parked ${new Date(a.parked.at).toLocaleDateString()}${a.parked.note ? `: ${a.parked.note}` : ''}; due ${b.when}` }); }
   const top = P.scorecard.open[0];

@@ -276,6 +276,17 @@ export class Store {
   fileNote(noteId, fieldRef) {
     return this.transaction('Filed note', () => { this.doc.parking.find(n => n.id === noteId).filedTo = fieldRef; });
   }
+  // Batch 7, item 9: a note can be resolved without a field (doneAt), or by the homework made from it (doneAs).
+  // A note without doneAt is open, which is what every note meant before.
+  resolveNote(noteId, on = true, { as = null } = {}) {
+    return this.transaction(on ? 'Resolved note' : 'Reopened note', () => {
+      const n = this.doc.parking.find(x => x.id === noteId);
+      if (!n) return;
+      if (on) { n.doneAt = this.now(); if (as) n.doneAs = as; } else { delete n.doneAt; delete n.doneAs; }
+    });
+  }
+  // Open notes: not filed and not resolved.
+  openNotes() { return (this.doc.parking || []).filter(n => !n.filedTo && !n.doneAt); }
   removeNote(noteId) {
     return this.transaction('Deleted', () => { this.doc.parking = this.doc.parking.filter(n => n.id !== noteId); });
   }

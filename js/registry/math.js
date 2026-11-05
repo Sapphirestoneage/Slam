@@ -413,6 +413,7 @@ export const SUPPORT = {
   'portfolio.netWorthCheck': 'inside one account: share of net worth', 'portfolio.paychecksPerYear': 'paychecks a year (Assumptions: Per table)',
   'portfolio.yearlyContribution': 'inside one account: a year in', 'portfolio.contributionFromMonthly': 'inside one account: a month in',
   'portfolio.matchFromTiers': 'the match from its tiers (M15)', 'portfolio.contributionSplit': 'inside one account: pretax and Roth',
+  'portfolio.asksTaxType': 'which account types are asked Pretax or Roth (batch 7, item 5)', 'portfolio.taxTypeFor': 'the tax type an account name already answers (Roth IRA, Traditional IRA)',
   'portfolio.vestedOf': 'inside one account: vested', 'portfolio.hsaFeeCompare': 'inside one account: HSA fees', 'portfolio.link401k': 'Income and the 401(k) fill each other (Income tab: 401(k) % used)',
   'portfolio.paychecksLeft': 'paychecks left this year', 'portfolio.hsaProgress': 'inside one account: HSA this year', 'portfolio.rothLog': 'inside one account: the Roth IRA log',
 };

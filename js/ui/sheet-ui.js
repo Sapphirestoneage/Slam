@@ -3,6 +3,7 @@
 // before anything is saved. The workbook and the change list come from js/sheet/; this file only shows them.
 import { h, icon } from './dom.js';
 import { button, checkbox, toast } from './staples.js';
+import { saveFile, saveWords } from './save-file.js';
 import { buildWorkbook } from '../sheet/workbook.js';
 import { workbookBuffer, readWorkbook } from '../sheet/excel.js';
 import { compare, applyChanges, linesOf, unpicked } from '../import-sheet.js';
@@ -40,10 +41,8 @@ export async function exportSheet(app, btn = null) {
     const ExcelJS = await loadExcelJS();
     const plan = buildWorkbook(doc, app.ctx.ref, { now, coach, flags: app.flags || [] });
     const blob = new Blob([await workbookBuffer(ExcelJS, plan)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const a = h('a', { href: URL.createObjectURL(blob), download: `slam-${slug(plan.client)}-${now.toISOString().slice(0, 10)}.xlsx` });
-    document.body.append(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
-    toast(`Spreadsheet downloaded${coach ? ', with coach-only notes' : ''}. Open it in Excel, or upload it to Google Drive.`);
+    const result = await saveFile(blob, `slam-${slug(plan.client)}-${now.toISOString().slice(0, 10)}.xlsx`); // batch 7, item 1: works inside the artifact too
+    toast(saveWords(result, 'The spreadsheet') ?? `Spreadsheet downloaded${coach ? ', with coach-only notes' : ''}. Open it in Excel, or upload it to Google Drive.`);
   } catch (e) {
     toast(e.message || 'The spreadsheet could not be made.');
   } finally { if (btn) btn.disabled = false; }

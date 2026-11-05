@@ -2,6 +2,8 @@
 // Builds the one-file SLAM page published as the "SLAM for Eli" artifact, from this repo, so the two never drift.
 // The site itself has no build step; this only packs it: CSS inline, the three data files inline, ECharts from cdnjs.
 // Needs esbuild once: npm i --no-save esbuild@0.24.0   Run: node tools/artifact.mjs [out.html] [title] [client name]
+// Publish it with the artifact's downloads capability declared (capabilities: { downloads: true }): the spreadsheet
+// export and the backup file go through that door inside the artifact (js/ui/save-file.js, batch 7 item 1).
 // A client name opens the page straight into that client. Its numbers come from the private Test client when that
 // file is here (so the page holds real numbers: publish it privately only), else from the made-up Demo client.
 import { build } from 'esbuild';
