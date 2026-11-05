@@ -461,7 +461,7 @@ export function taxesScreen(ctx) {
   return h('section.section.area-taxes', {}, h('div.section-title', {}, h('h2', {}, 'Filing')),
     h('div.card', {}, h('div.form-grid', {},
       labelled('Filing status', h('span.row-line', { style: { gap: '8px' } }, select(FILING, x.filingStatus, v => set({ filingStatus: v }), { label: 'Filing status', width: 190, key: 'tax:filing' }),
-        inferred ? h('span.tag.plain', { title: 'Worked out from Solo or couple. Pick one to confirm.' }, 'Coach infers') : null)),
+        inferred ? h('span.tag.plain.guess', { title: 'A guess: Single, or Married jointly once the relationship stage is Married. Pick one to confirm.' }, 'Guess') : null)),
       metricCard(ctx, 'Effective rate', rates.value === null ? rates : { ...rates, value: rates.effective }),
       metricCard(ctx, 'Marginal bracket', marginal)),
     // Withholding (M3): last year's result and the W-4 basics, with one plain flag.

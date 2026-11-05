@@ -15,7 +15,10 @@ import { THRESHOLDS, PAYOFF, AREAS as SCORE_AREAS } from './scorecard.js';
 // SLAM's own rules and lists. The math in js/math reads these (one source for the app and the sheet).
 // The Rule of 5 (M43, confirmed Oct 28, restored Nov 6): big e holds age / 5 months of spending, unrounded (25 is 5.0, 30 is 6.0, 40 is 8.0).
 // One definition for FOO step 4, the cash layers, the ladder, the Scorecard, the Rule of 5 card and the workbook. No age: big e is locked.
-export const bigEMonthsOf = age => (age == null || Number.isNaN(Number(age)) ? null : Number(age) / 5);
+// Answer 172: times an income stability multiplier (Steady 1, Varies 1.25, Unpredictable 1.5), which the coach can override per client with any number (profile.bigEMultiplier).
+export const STABILITY_MULTIPLIER = { Steady: 1, Varies: 1.25, Unpredictable: 1.5 };
+export const bigEMultiplierOf = profile => (profile?.bigEMultiplier != null && Number.isFinite(Number(profile.bigEMultiplier)) ? Number(profile.bigEMultiplier) : STABILITY_MULTIPLIER[profile?.incomeStability] ?? 1);
+export const bigEMonthsOf = (age, multiplier = 1) => (age == null || Number.isNaN(Number(age)) ? null : Number(age) / 5 * (multiplier ?? 1));
 export const RULES = {
   cardMinimumFloor: 25, cardMinimumPct: 0.01, housingLine: 0.35, bufferWeeks: 2, keepPaceMonths: 60, littleE: 1000,
   saferWithdrawal: 0.035, saferUnderAge: 45, // batch 5 C: a second FI line at a safer rate when FI would come before this age

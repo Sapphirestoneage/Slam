@@ -117,7 +117,9 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   // shows its reason and is never where you are. A coach's override (doc.program.overrides, with a note) opens it.
   const overrides = doc.program?.overrides || {};
   const counts = s => !s.optional && !s.off && !s.locked;
-  const condFacts = { heavy, matchLeft: !steps.find(s => s.id === '2')?.done };
+  const condFacts = { heavy };
+  // Answer 175: the Roth is never locked behind the match; the step carries the cost line instead.
+  { const s2 = steps.find(s => s.id === '2'), s5 = steps.find(s => s.id === '5'); if (s2 && !s2.done && s2.left > 0 && s5 && !s5.done && m.annualSpending) s5.skipCost = { dollars: s2.left, fiDays: s2.left / (m.annualSpending / 365), text: `Skipping $${Math.round(s2.left).toLocaleString('en-US')} of match a year (about ${Math.round(s2.left / (m.annualSpending / 365))} FI days) while this comes before the full match.` }; }
   for (const s of steps) {
     const p = PREREQS[s.id];
     if (!p || s.done) continue;
@@ -167,12 +169,11 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
 
 // What an override costs, in FI days a year: giving while carrying heavy debt costs that debt's APR on the money; any
 // other early step costs the real return it would have earned.
-// Answer 150 (batch 5): the Roth before the match costs the match left on the table a year; SPARKS before Coast FI
-// costs the growth the gap to Coast FI would have earned a year.
+// Answer 150 (batch 5): SPARKS before Coast FI costs the growth the gap to Coast FI would have earned a year (the Roth
+// before the match is not locked, answer 175: its cost sits on the step as skipCost).
 function overrideCost(s, { heavy, m, x, steps = [], coast = null, invested = null }) {
   if (!m.annualSpending) return null;
   const fiDaysOf = dollars => dollars / (m.annualSpending / 365);
-  if (s.id === '5') { const left = steps.find(t => t.id === '2')?.left ?? 0; if (!left) return null; return { dollars: left, fiDays: fiDaysOf(left), rate: null, text: `Funding the Roth before the match leaves about $${Math.round(left).toLocaleString('en-US')} of match on the table a year: about ${Math.round(fiDaysOf(left))} FI days a year.` }; }
   if (s.id === '7') { const gap = coast != null && invested != null ? Math.max(0, coast - invested) : 0; if (!gap) return null; const dollars = gap * x.realReturn; return { dollars, fiDays: fiDaysOf(dollars), rate: x.realReturn, text: `Launching before Coast FI gives up the growth on the $${Math.round(gap).toLocaleString('en-US')} still to invest: about ${Math.round(fiDaysOf(dollars))} FI days a year at ${(x.realReturn * 100).toFixed(1)}%.` }; }
   const monthly = s.giveMonthly ?? 0;
   if (!monthly) return null;

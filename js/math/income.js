@@ -18,7 +18,8 @@ export function monthlyFrom(amount, per, payFrequency = null) {
 }
 
 const filingKey = s => (s === 'Married jointly' || s === 'joint' ? 'joint' : 'single');
-export function defaultFilingStatus(couple) { return couple ? 'Married jointly' : 'Single'; } // R041
+// Answer 174 (replaces R041): Single, or Married jointly once the household's relationship stage is Married; a Guess until a filing status is typed.
+export function defaultFilingStatus(profile) { const mode = profile?.mode ?? (profile?.household === 'Couple' ? 'Married merged' : null); return mode && /^Married/.test(mode) ? 'Married jointly' : 'Single'; }
 
 // M10: federal income tax on annual numbers.
 export function federalTax({ gross, pretax = 0, filingStatus = 'Single', selfEmployedHalf = 0 }, ref) {

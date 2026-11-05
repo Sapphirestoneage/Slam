@@ -6,6 +6,7 @@ import { isBlank, needs } from './result.js';
 import { monthlyFrom, incomeRow, defaultFilingStatus } from './income.js';
 import { gatesOf, visible } from '../gates.js';
 import { inView, modeOf, MODES, ownerOf, forPerson } from '../registry/couples.js';
+import { bigEMultiplierOf } from '../registry/assumptions.js';
 import { myShare, withHome, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor } from './spending.js';
 import { cardMinimum, payoffMonths, totalInterest, payoffPlan } from './debt.js';
 import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
@@ -41,7 +42,8 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   const mode = modeOf(doc.profile);
   const liveAll = visible(doc.records, gates, ref); // gated-out rows count nowhere (R001, R066)
   const live = liveAll.filter(r => inView(r, person, mode)).map(r => forPerson(r, person, mode)); // a person view keeps theirs and the Joint ones at half (F2, answer 157)
-  const filingStatus = doc.profile.filingStatus ?? defaultFilingStatus(gates.couple); // R043 and R041; never from the household mode (answer 155)
+  const filingStatus = doc.profile.filingStatus ?? defaultFilingStatus(doc.profile); // answer 174: Single, or Married jointly once the stage is Married; a Guess until typed
+  const filingGuess = doc.profile.filingStatus == null;
   const place = placeOf(doc.profile); // B5.1: NY and NYC tax when the Profile says so
   const link = link401k(live); // B3.10: Income and the 401(k) fill each other in
   // Answer to Brandon question 71: the Health coverage row owns the premium. Paid from the paycheck, the job borrows
@@ -139,7 +141,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   }, 0);
   const a = doc.assumptions;
   return {
-    place, link, sinkingMonthly, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, none, mode, person, splitShare,
+    place, link, sinkingMonthly, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, filingGuess, none, mode, person, splitShare,
     debtOrder: doc.settings?.debtOrder ?? 'avalanche',
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || useLines ? 0 : debtPayments), // the lines hold each payment, From Debt
     autoLines, dupOf, askOf, typedLines, premiums, payFrequency, health: health ? { id: health.id, perPaycheck: healthPerPay, fromPay: !!healthFromPay, jobId: healthJob?.id ?? null } : null,
@@ -149,6 +151,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
     guessLines: lines.filter(l => l.status === 'Not sure' && l.preset).length,
     guessTotal: lines.filter(l => l.status === 'Not sure' && l.preset).reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0), gutTotal: allIn ? read(allIn, 'amount').v : null,
     age: ageOf(doc.profile, now),
+    bigEMultiplier: bigEMultiplierOf(doc.profile), // answer 172: Steady 1, Varies 1.25, Unpredictable 1.5, or the coach's number
     realReturn: a.realReturn ?? ref.presets.realReturn.default,
     withdrawalRate: a.withdrawalRate ?? ref.presets.withdrawalRate.default,
     inflation: a.inflation ?? ref.presets.inflation.default,
@@ -190,7 +193,7 @@ export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
   const paidInFull = { id: 'M31', value: 1, needs: [], guess: false, unit: 'months', text: 'Paid in full each month: no interest, nothing carried over.' };
   out.debts = x.debts.map(d => (d.inFull ? { ...d, payoff: paidInFull, interest: { id: 'M32', value: 0, needs: [], unit: 'money', text: 'Paid in full each month, so no interest.' } }
     : { ...d, payoff: payoffMonths(d, { from: now }), interest: totalInterest(d) }));
-  const r5 = ruleOf5({ age: x.age, spending: x.spending, emergencyCash: x.cash });
+  const r5 = ruleOf5({ age: x.age, spending: x.spending, emergencyCash: x.cash, multiplier: x.bigEMultiplier, stability: doc.profile.bigEMultiplier != null ? null : doc.profile.incomeStability ?? null });
   out.ruleOf5 = r5;
   out.fiNumber = fiNumber({ annualSpending: x.retirementSpending === null ? null : x.retirementSpending * 12, withdrawalRate: x.withdrawalRate });
   // Answers 123 to 125 (batch 2, superseding the Nov 3 answer to 11): the surplus is invested unless Invest my surplus is

@@ -34,6 +34,7 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
       s.left ? h('span.num', {}, S.mathButton({ id: 'M69', value: s.left, needs: [], text: `${s.name}: ${money(s.left)} left${s.monthly ? ' a month' : ''}.${s.date ? ` At today's surplus, about ${monthName(s.date)}.` : ''}` }, `${money(s.left)} left`)) : null,
       h('span.muted.small.foo-when', {}, when(s))),
     lockLine(s),
+    s.skipCost ? h('p.foo-flag.coach-only', {}, s.skipCost.text) : null, // answer 175
     s.flags?.length ? s.flags.map(fl => h('p.foo-flag', {}, fl.text)) : null,
     S.moreBlock(`foo:step:${s.id}`, () => stepDetail(ctx, s, f), { label: 'What is in it' }));
   const giving = p.giving || {};

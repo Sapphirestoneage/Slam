@@ -10,7 +10,9 @@ import { ladderOf } from '../js/math/ladder.js';
 import { foo } from '../js/math/foo.js';
 import { scorecardOf } from '../js/math/scorecard.js';
 import { saferFi } from '../js/math/fi.js';
-import { bigEMonthsOf, RULES } from '../js/registry/assumptions.js';
+import { bigEMonthsOf, bigEMultiplierOf, RULES } from '../js/registry/assumptions.js';
+import { defaultFilingStatus } from '../js/math/income.js';
+import { checksOf } from '../js/checks.js';
 import { PREREQS } from '../js/registry/foo.js';
 import { overrideStep } from '../js/program.js';
 import { matchIncome, nearPayday, importTransactions, dedupe, toTransactions, parseCsv, guessMap } from '../js/import/csv.js';
@@ -64,8 +66,8 @@ test('A: the Rule of 5 is age / 5 everywhere; Brandon at 24 holds 4.8 months; no
   assert.equal(metrics(s.doc, ref, { now }).ruleOf5.value, null);
 });
 
-test('150: the Roth before the match and SPARKS before Coast FI each show a cost in FI days when unlocked anyway', () => {
-  assert.deepEqual(PREREQS['5'].conditions, ['matchCaptured']);
+test('150 and 175: the Roth is never locked behind the match but carries the cost line; SPARKS before Coast FI shows its cost when unlocked anyway', () => {
+  assert.equal(PREREQS['5'], undefined, 'answer 175: no lock');
   const s = fresh();
   s.setDoc('profile', { age: 30, household: 'Solo', areas: { cash: true, investments: true, real: false, debt: false } });
   s.add('income', { name: 'Job', amount: 90000, per: 'year', values: { basis: 'Gross', payFrequency: '2 weeks', contributionPct: 0.02, matchPct: 1, matchCapPct: 0.05 } }, { type: 'Job' });
@@ -74,15 +76,49 @@ test('150: the Roth before the match and SPARKS before Coast FI each show a cost
   s.add('account', { name: 'Brokerage', values: { group: 'investment', balance: 5000 } }, { type: 'Brokerage' });
   let F = foo(s.doc, ref, { now, flags });
   assert.ok(F.steps.find(x => x.id === '2').left > 0, 'match left on the table');
-  assert.equal(F.steps.find(x => x.id === '5').status, 'Locked');
-  assert.match(F.steps.find(x => x.id === '5').prereq.text, /Free money first/);
+  const roth = F.steps.find(x => x.id === '5');
+  assert.notEqual(roth.status, 'Locked');
+  assert.ok(roth.skipCost && roth.skipCost.fiDays > 0); assert.match(roth.skipCost.text, /^Skipping \$[\d,]+ of match a year/);
+  assert.ok(Math.abs(roth.skipCost.dollars - F.steps.find(x => x.id === '2').left) < 0.01, 'the match left a year');
   assert.equal(F.steps.find(x => x.id === '7').status, 'Locked');
-  overrideStep(s, '5', 'Roth first, by choice'); overrideStep(s, '7', 'Launching now');
+  overrideStep(s, '7', 'Launching now');
   F = foo(s.doc, ref, { now, flags });
-  const roth = F.steps.find(x => x.id === '5'), sparks = F.steps.find(x => x.id === '7');
-  assert.ok(roth.cost && roth.cost.fiDays > 0); assert.match(roth.cost.text, /match on the table/);
+  const sparks = F.steps.find(x => x.id === '7');
   assert.ok(sparks.cost && sparks.cost.fiDays > 0); assert.match(sparks.cost.text, /before Coast FI/);
-  assert.ok(Math.abs(roth.cost.dollars - F.steps.find(x => x.id === '2').left) < 0.01, 'the match left a year');
+});
+
+test('172: big e months = age / 5 x the income stability multiplier, or the coach\'s number; the how line says so; Brandon (Steady) stays at 4.8', () => {
+  assert.deepEqual([bigEMultiplierOf({ incomeStability: 'Steady' }), bigEMultiplierOf({ incomeStability: 'Varies' }), bigEMultiplierOf({ incomeStability: 'Unpredictable' }), bigEMultiplierOf({}), bigEMultiplierOf({ incomeStability: 'Varies', bigEMultiplier: 2 })], [1, 1.25, 1.5, 1, 2]);
+  assert.equal(bigEMonthsOf(30, 1.25), 7.5);
+  const s = brandon();
+  assert.ok(Math.abs(metrics(s.doc, ref, { now }).ruleOf5.months - 4.8) < 1e-9, 'Steady: 4.8 months');
+  s.setDoc('profile', { incomeStability: 'Varies' });
+  let m = metrics(s.doc, ref, { now });
+  assert.ok(Math.abs(m.ruleOf5.months - 6) < 1e-9 && Math.abs(m.ruleOf5.value - 6 * 1737.35) < 0.01);
+  assert.match(m.ruleOf5.text, /Age 24 divided by 5 = 4\.8 months x 1\.25 \(income varies\) = 6 months/);
+  assert.ok(Math.abs(layersOf(s.doc, ref, now).months - 6) < 1e-9, 'the layers use the same months');
+  s.setDoc('profile', { bigEMultiplier: 2 });
+  m = metrics(s.doc, ref, { now });
+  assert.ok(Math.abs(m.ruleOf5.months - 9.6) < 1e-9, 'the coach\'s number wins');
+  assert.match(m.ruleOf5.text, /x 2 \(the multiplier set for this client\)/);
+});
+
+test('174: the filing fallback is Single, or Married jointly once the stage is Married, a Guess until typed', () => {
+  assert.equal(defaultFilingStatus({ mode: 'Dating' }), 'Single');
+  assert.equal(defaultFilingStatus({ mode: 'Married separate' }), 'Married jointly');
+  assert.equal(defaultFilingStatus({ household: 'Couple' }), 'Married jointly', 'an older file: Couple reads as Married merged');
+  assert.equal(defaultFilingStatus({}), 'Single');
+});
+
+test('176: a split bill whose roommate count and Splitting with disagree lands on the revisit list', () => {
+  const s = brandon();
+  s.setDoc('profile', { roommates: 1, splitWays: 3, shared: { rent: true }, sharedAs: { rent: 'The whole bill' }, household: 'Solo' });
+  s.add('bill', { name: 'Rent', amount: 2000, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', whoPays: 'Split', amountIs: 'The whole bill' } });
+  const c = checksOf(s.doc, ref, { now }).find(x => x.split);
+  assert.ok(c && c.due); assert.match(c.label, /Rent: check how many ways this splits/); assert.match(c.why, /The roommate count says 2 ways, Split N ways says 3/);
+  assert.equal(metrics(s.doc, ref, { now }).inputs.lines.find(l => l.name === 'Rent').splitBy, 2, 'the roommate count wins: two ways');
+  s.setDoc('profile', { splitWays: 2 });
+  assert.ok(!checksOf(s.doc, ref, { now }).some(x => x.split), 'they agree');
 });
 
 test('157: a Joint row counts at half in one person\'s view; a one-person account never', () => {

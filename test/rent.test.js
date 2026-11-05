@@ -59,7 +59,9 @@ test('shared bills given as your share: the whole bill is worked out', () => {
 test('Split N ways (you included) overrides the roommates; a partner splits when money is Separate or Mix; a couple can give a percent', () => {
   const rentLine = { amount: 3000, per: 'month', category: 'Rent or mortgage' };
   const whole3 = { shared: { rent: true }, sharedAs: { rent: 'The whole bill' } };
-  assert.equal(share(rentLine, { roommates: 0, splitWays: 3, ...whole3 }), 1000);
+  assert.equal(share(rentLine, { splitWays: 3, ...whole3 }), 1000, 'no roommate count: Split 3 ways');
+  assert.equal(share(rentLine, { roommates: 2, splitWays: 2, ...whole3 }), 1000, 'answer 176: the roommate count (3 ways) wins over a typed 2; the disagreement goes to the revisit list');
+  assert.equal(share(rentLine, { roommates: 0, splitWays: 3, ...whole3 }), 3000, 'no roommates: the whole bill is yours, and the revisit list says to check');
   assert.equal(share(rentLine, { household: 'Couple', moneyStyle: 'Separate', ...whole3 }), 1500);
   assert.equal(share(rentLine, { household: 'Couple', moneyStyle: 'Joint', ...whole3 }), 3000, 'Joint: one budget, nothing to split');
   assert.equal(share(rentLine, { household: 'Couple', moneyStyle: 'Mix', splitMine: 0.6, ...whole3 }), 1800);

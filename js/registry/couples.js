@@ -14,7 +14,7 @@ export function personLabels(doc) {
 // Household modes. couple: the partner's rows and the Owner tag show. view: the default person filter on Net worth
 // and Cash flow (all: the household together; Me: this client alone, the partner's rows set aside). merged: shared
 // bills and joint accounts are the default for new rows. A mode never sets the tax filing status (answer 155): it
-// stays blank until typed, and the tax math falls back to the Solo or couple rule (R041) as before.
+// stays blank until typed; the tax math then guesses Single, or Married jointly once the stage is Married (answer 174).
 // combined: whether household totals exist (none: each person's own plan, only Joint items shared; preview: a
 // 'what if we merged' view; on: household totals). split: the shared-bills split method applies (50/50 or by income).
 // suggest: agenda suggestions the mode brings (Engaged: the disclosure checklist, a money talk, a wedding goal).

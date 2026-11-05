@@ -4,6 +4,7 @@
 import { myShare, wholeBill, withHome, partnerSplits, splitWaysOf, sharedBillsOf } from '../math/spending.js';
 import { LISTS } from '../registry/assumptions.js';
 import { MODES, MODE_NAMES, modeOf, SPLIT_METHODS } from '../registry/couples.js';
+import { STABILITY_MULTIPLIER } from '../registry/assumptions.js';
 import { metrics } from '../math/metrics.js';
 import { setHouseholdMode } from '../couples.js';
 import { h } from './dom.js';
@@ -109,6 +110,7 @@ export function profileScreen(app, ctx) {
       field('Housing', 'housing', pick(HOUSING, g.housing, setHousing, 'Housing'))),
     moreBlock('profile:work', () => h('div.form-grid', {},
       field('Worst case: all on me', 'worstCase', yesNo(p.worstCase ?? null, v => set({ worstCase: v }), 'Worst case'), { note: 'Counts housing with no roommate share' }),
+      field('big e multiplier', 'bigEMultiplier', textInput(p.bigEMultiplier == null ? null : String(p.bigEMultiplier), v => { const n = v == null || v === '' ? null : Number(v); set({ bigEMultiplier: n != null && Number.isFinite(n) && n > 0 ? n : null }); }, { hint: `${STABILITY_MULTIPLIER[p.incomeStability] ?? 1} from stability`, width: 120, key: 'p:bigEMult' }), { note: 'big e = age / 5 months x this. Blank: Steady 1, Varies 1.25, Unpredictable 1.5 (answer 172)' }),
       field('Income stability', 'incomeStability', pick(['Steady', 'Varies', 'Unpredictable'], p.incomeStability, v => set({ incomeStability: v }), 'Income stability'), { note: 'Moves the Rule of 5 target' }))));
 
   // ---------- Home and shared bills (batch 5, E): who you live with, how many ways a bill is split (you included), and

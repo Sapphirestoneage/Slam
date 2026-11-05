@@ -92,7 +92,10 @@ export function sharedBillsOf(profile = {}) {
 }
 // How many ways a shared bill is split, you included: Split N ways when typed, else you plus each roommate (and a
 // partner who splits). The count includes the client (batch 5, E4).
-export const splitWaysOf = profile => profile.splitWays ?? (profile.roommates ?? 0) + 1 + (partnerSplits(profile) ? 1 : 0);
+// Answer 176: the roommate count wins when it exists (you, each roommate, a partner who splits); a typed Split N ways (or the
+// older Splitting with N, migrated to N + 1) only when there is no roommate count. When the two disagree the bill goes to the revisit list.
+export const splitWaysOf = profile => (profile.roommates != null ? profile.roommates + 1 + (partnerSplits(profile) ? 1 : 0) : profile.splitWays ?? 1 + (partnerSplits(profile) ? 1 : 0));
+export const splitDisagreeOf = profile => (profile.roommates != null && profile.splitWays != null && profile.splitWays !== splitWaysOf(profile) ? { roommates: splitWaysOf(profile), typed: profile.splitWays } : null);
 // Fills in what a Budget line leaves blank: a bill in a shared group that is on is split, given as the group says
 // (your share or the whole bill), among Split N ways people; a couple can give their share as a percent (Split: my
 // share). What a line says itself always wins.
@@ -107,7 +110,7 @@ export function withHome(line, profile = {}) {
   const typedSplit = line.splitBy ?? line.values?.splitBy;
   if (typedSplit == null) {
     if (profile.household === 'Couple' && profile.splitMine != null && profile.splitWays == null) out.sharePct = profile.splitMine;
-    else out.splitBy = splitWaysOf(profile);
+    else { out.splitBy = splitWaysOf(profile); const d = splitDisagreeOf(profile); if (d) out.splitDisagree = d; } // answer 176: the roommate count wins; a disagreement goes to the revisit list
   }
   return out;
 }

@@ -34,14 +34,16 @@ export function runway({ cash, spending, fixedFloor = null }) {
 }
 
 // M43: Rule of 5.
-export function ruleOf5({ age, spending, emergencyCash = null }) {
+export function ruleOf5({ age, spending, emergencyCash = null, multiplier = 1, stability = null }) {
   if (isBlank(age)) return needs('M43', ['age'], { unit: 'months' });
-  const months = bigEMonthsOf(age); // the Rule of 5: age divided by 5 months of spending, one definition with big e (restored Nov 6)
+  const months = bigEMonthsOf(age, multiplier); // the Rule of 5: age / 5 months of spending, times the income stability multiplier (answers 172), one definition with big e
   if (isBlank(spending)) return { ...needs('M43', ['spending']), months };
   const target = months * spending;
   const keepPace = spending / RULES.keepPaceMonths;
   const gap = isBlank(emergencyCash) ? null : target - emergencyCash;
-  return { ...ok('M43', target, `Age ${age} divided by 5 = ${fmt.number(months, 1)} months. ${fmt.number(months, 1)} x ${fmt.money(spending)} spending = ${fmt.money(target)}. To keep pace as you age, add ${fmt.money(keepPace)} a month (spending divided by 60).${gap === null ? '' : ` Gap: ${fmt.money(gap)}.`}`), months, keepPace, gap };
+  const base = `Age ${age} divided by 5 = ${fmt.number(age / 5, 1)} months`;
+  const mult = multiplier && multiplier !== 1 ? ` x ${fmt.number(multiplier, 2)} (${stability ? `income ${stability === 'Varies' ? 'varies' : stability === 'Unpredictable' ? 'unpredictable' : stability.toLowerCase()}` : 'the multiplier set for this client'}) = ${fmt.number(months, 1)} months` : '';
+  return { ...ok('M43', target, `${base}${mult}. ${fmt.number(months, 1)} x ${fmt.money(spending)} spending = ${fmt.money(target)}. To keep pace as you age, add ${fmt.money(keepPace)} a month (spending divided by 60).${gap === null ? '' : ` Gap: ${fmt.money(gap)}.`}`), months, multiplier, keepPace, gap };
 }
 
 // M44: share of this year's limit used.

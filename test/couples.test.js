@@ -84,7 +84,8 @@ test('switching Dating to Engaged to Married merged keeps every row and tag; onl
   const before = JSON.stringify(s.doc.records.map(r => [r.id, r.owner ?? null, r.values.balance ?? r.amount ?? null]));
   assert.equal(s.doc.settings.person, 'Me', 'Dating: this client alone by default');
   assert.equal(s.doc.profile.filingStatus, undefined, 'blank until typed (answer 155)');
-  assert.equal(metrics(s.doc, ref, { now }).inputs.filingStatus, 'Married jointly', 'the tax math falls back to the Solo or couple rule (R041), not the mode');
+  assert.equal(metrics(s.doc, ref, { now }).inputs.filingStatus, 'Single', 'answer 174: a Guess of Single until the stage is Married');
+  assert.equal(metrics(s.doc, ref, { now }).inputs.filingGuess, true);
   setHouseholdMode(s, 'Engaged');
   assert.equal(s.doc.settings.person, 'Me', 'engaged: own view by default; the merged preview is a tap away');
   assert.equal(s.doc.profile.filingStatus, undefined);
@@ -92,9 +93,11 @@ test('switching Dating to Engaged to Married merged keeps every row and tag; onl
   assert.equal(s.doc.profile.household, 'Couple');
   assert.equal(s.doc.client.couple, true);
   assert.equal(s.doc.profile.filingStatus, undefined, 'still blank after Married merged');
+  assert.equal(metrics(s.doc, ref, { now }).inputs.filingStatus, 'Married jointly', 'answer 174: Married jointly once the stage is Married, still a Guess');
   assert.equal(JSON.stringify(s.doc.records.map(r => [r.id, r.owner ?? null, r.values.balance ?? r.amount ?? null])), before, 'nothing lost');
   s.setDoc('profile', { filingStatus: 'Married separately' });
   assert.equal(metrics(s.doc, ref, { now }).inputs.filingStatus, 'Married separately', 'a typed filing status wins over the mode');
+  assert.equal(metrics(s.doc, ref, { now }).inputs.filingGuess, false);
   setHouseholdMode(s, 'Solo');
   assert.equal(gatesOf(s.doc.profile, s.doc.client).couple, false);
   assert.equal(s.doc.records.length, 11, 'Solo hides the partner rows on the screens; it deletes nothing');

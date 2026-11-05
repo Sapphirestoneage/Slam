@@ -58,7 +58,7 @@ export function factsOf(doc, ref, { now = new Date(), flags = [] } = {}) {
     debtTotal: sum(x.debts, d => d.balance),
     dti: debtToIncome({ monthlyDebtPayments: payments, grossMonthly: gross }).value,
     util: util.hidden ? null : util.value, score: p.credit?.score ?? null,
-    r5: ruleOf5({ age: x.age, spending: x.spending, emergencyCash: x.cash }),
+    r5: m.ruleOf5,
     months: m.runwayMonths.value, littleE, bigE, littleFull: !!littleE?.full, bigFull: !L?.needsAge && bigE.length > 0 && bigE.every(l => l.full), bigMonths: L?.months ?? null, needsAge: !!L?.needsAge,
     marginal: x.grossAnnual ? taxRates({ gross: x.grossAnnual, filingStatus: x.filingStatus, place: x.place }, ref).marginal ?? null : null,
     retirementSaving: (m.pretaxSaving ?? 0) + (x.afterTaxSaving ?? 0), // a month

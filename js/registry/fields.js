@@ -64,7 +64,8 @@ export const AREAS = [
       f('partnerName', 'Partner first name'), f('partnerBirthYear', 'Partner birth year', 'number'),
       f('dependents', 'Dependents', 'number'), f('kidAges', 'Kids ages', 'list'),
       pick('workSituation', 'Work situation', ['Employed (W-2)', 'Self-employed', 'Mixed', 'Between jobs', 'Student', 'Retired']),
-      pick('incomeStability', 'Income stability', ['Steady', 'Varies', 'Unpredictable']),
+      pick('incomeStability', 'Income stability', ['Steady', 'Varies', 'Unpredictable'], { named: 'Profile_incomeStability' }),
+      f('bigEMultiplier', 'big e multiplier (blank: from income stability)', 'number', { named: 'Profile_bigEMultiplier' }), // answer 172: age / 5 x this
       pick('housing', 'Housing', ['Rent', 'Own', 'Family', 'Other']),
       f('roommates', 'Roommates', 'number', { named: 'Profile_roommates' }),
       f('worstCase', 'Worst case: all on me', 'yesno'),

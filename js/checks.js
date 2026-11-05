@@ -3,6 +3,7 @@
 // each row's More read it. A Roughly number is checked 30 days after it last changed; Not sure and Not now go on the
 // list at once; any other number is checked once it is 90 days old. Check again on (a date on the row) overrides it.
 import { RULES } from './registry/assumptions.js';
+import { withHome } from './math/spending.js';
 import { gatesOf, visible } from './gates.js';
 
 const DAY = 86400000;
@@ -34,6 +35,8 @@ export function checksOf(doc, ref, { now = new Date() } = {}) {
     if (c.status === 'Know it' && !c.set && c.next > today) continue; // a known number not yet old: nothing to check
     out.push({ rec: r, label: r.name || r.values?.category || r.type || 'Item', ...c, due: c.next <= today });
   }
+  // Answer 176: a split bill whose roommate count and Splitting with disagree: check how many ways it splits.
+  for (const r of live.filter(x => x.kind === 'bill')) { const w = withHome({ ...r, ...r.values }, doc.profile); if (w.splitDisagree) out.push({ rec: r, label: `${r.name || r.values?.category || 'Bill'}: check how many ways this splits`, status: r.status ?? 'Know it', next: today, why: `The roommate count says ${w.splitDisagree.roommates} ways, Split N ways says ${w.splitDisagree.typed}`, due: true, split: true }); }
   out.sort((a, b) => a.next.localeCompare(b.next));
   const guesses = live.filter(x => x.kind === 'bill' && x.values?.preset && x.status === 'Not sure').length;
   if (guesses) out.unshift({ rec: null, label: `${guesses} starter spending ${guesses === 1 ? 'guess' : 'guesses'} to review`, status: 'Not sure', next: today, why: 'Starter guesses', due: true, guesses });
