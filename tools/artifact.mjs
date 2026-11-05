@@ -5,7 +5,7 @@
 // A client name opens the page straight into that client. Its numbers come from the private Test client when that
 // file is here (so the page holds real numbers: publish it privately only), else from the made-up Demo client.
 import { build } from 'esbuild';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -13,7 +13,9 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = resolve(process.argv[2] || join(root, 'dist', 'slam-artifact.html'));
 const title = process.argv[3] || 'SLAM for Eli';
 const client = process.argv[4] ?? 'Eli';
-const DATA = ['data/reference-2026.json', 'data/fields.json', 'fixtures/demo.json'];
+// Every data file the app fetches, found in the code (so a new one is never left out of the page).
+const jsFiles = dir => readdirSync(join(root, dir), { withFileTypes: true }).flatMap(e => (e.isDirectory() ? jsFiles(join(dir, e.name)) : e.name.endsWith('.js') ? [join(dir, e.name)] : []));
+const DATA = [...new Set(jsFiles('js').flatMap(f => [...readFileSync(join(root, f), 'utf8').matchAll(/fetch\('([^']+\.json)'\)/g)].map(m => m[1])))].sort();
 // The client starts from the private Test client when it is on this machine (git-ignored), else the made-up Demo.
 const PRIVATE = 'fixtures/eli.local.json';
 const start = existsSync(join(root, PRIVATE)) ? PRIVATE : 'fixtures/demo.json';
