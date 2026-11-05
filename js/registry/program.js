@@ -38,8 +38,10 @@ export const UNLOCKS = {
 export const CONFIDENCE = { high: 90, medium: 75 };
 
 // The twelve sessions. An item with auto is ticked from the data (js/program.js autoChecks); the rest are
-// checkboxes. placeholder sessions can be renamed and their checklists edited on Home.
-const MINDSET = { name: 'Goals and mindset', placeholder: true, items: [{ id: 'goal', label: "This session's goal set" }, { id: 'review', label: "Last session's steps reviewed" }] };
+// checkboxes. A hole session (S6 to S8, S10, S11) pulls the top hole on the Scorecard when it starts and is done
+// when that hole is OK or Strong; S10 and S11 switch to itemsWhenClear (the next chapter) once no hole is left.
+const HOLE = { name: 'Fill a hole', hole: true, items: [{ id: 'hole', label: 'The top hole filled (OK or Strong)', auto: 'holeFilled' }] };
+const CHAPTER = [{ id: 'chapter', label: 'Next chapter named, with an amount and a date', auto: 'nextChapter' }];
 export const SESSIONS = [
   { id: 'S1', name: 'First picture', items: [
     { id: 'accounts', label: 'Accounts set up', auto: 'accountsSetUp' },
@@ -54,8 +56,24 @@ export const SESSIONS = [
     { id: 'actuals', label: 'One month of Actuals', auto: 'monthOfActuals' },
     { id: 'locked', label: 'Key numbers locked', auto: 'keyNumbersLocked' },
     { id: 'picture', label: 'Picture about 90%', auto: 'picture90' }] },
-  { id: 'S4', ...MINDSET }, { id: 'S5', ...MINDSET }, { id: 'S6', ...MINDSET }, { id: 'S7', ...MINDSET }, { id: 'S8', ...MINDSET },
-  { id: 'S9', name: 'Revisit', items: [{ id: 'report', label: 'Day 0 vs now report shared' }] },
-  { id: 'S10', ...MINDSET }, { id: 'S11', ...MINDSET },
-  { id: 'S12', name: 'Graduation', placeholder: true, items: [{ id: 'graduate', label: 'Graduated' }] },
+  { id: 'S4', name: 'Goals', items: [
+    { id: 'short', label: 'Three short-term goals, each with an amount, a date and a need, want or wish tag', auto: 'shortGoals' },
+    { id: 'long', label: 'Three long-term goals, each with an amount, a date and a need, want or wish tag', auto: 'longGoals' }] },
+  { id: 'S5', name: 'Full analysis', items: [
+    { id: 'rated', label: 'Every area rated', auto: 'allRated' },
+    { id: 'ranked', label: 'Holes ranked (a payoff and an effort on each)', auto: 'holesRanked' },
+    { id: 'foo', label: 'FOO step confirmed', auto: 'fooConfirmed' },
+    { id: 'top3', label: 'Top 3 holes chosen', auto: 'top3Chosen' }] },
+  { id: 'S6', ...HOLE }, { id: 'S7', ...HOLE }, { id: 'S8', ...HOLE },
+  { id: 'S9', name: 'Revisit', items: [
+    { id: 'compare', label: 'Day 0 vs now compared', auto: 'day0Compared' },
+    { id: 'rescore', label: 'Re-scored and re-ranked', auto: 'rescored' }] },
+  { id: 'S10', ...HOLE, name: 'Fill a hole, or the next chapter', itemsWhenClear: CHAPTER },
+  { id: 'S11', ...HOLE, name: 'Fill a hole, or the next chapter', itemsWhenClear: CHAPTER },
+  { id: 'S12', name: 'Game plan', items: [
+    { id: 'notes', label: 'Next-year plan notes written', auto: 'planNotes' },
+    { id: 'review', label: 'Yearly review date set', auto: 'reviewDate' },
+    { id: 'cadence', label: 'Monthly money date cadence set', auto: 'moneyDate' }] },
 ];
+// The monthly money date, a cadence picked on Home in the Game plan session (S12).
+export const MONEY_DATES = ['The 1st of the month', 'The 15th of the month', 'The last day of the month', 'The first Sunday', 'Every payday'];

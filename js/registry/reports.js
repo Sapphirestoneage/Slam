@@ -8,6 +8,7 @@ import { payYourselfFirst } from '../math/simple.js';
 import { fiDate } from '../math/fi.js';
 import { simulateDebt } from '../math/debt.js';
 import { programOf } from '../program.js';
+import { scorecardOf } from '../math/scorecard.js';
 import { unlockOf, confidenceOf } from '../math/picture.js';
 import { LEVELS, levelWord } from './program.js';
 
@@ -196,6 +197,31 @@ export const REPORTS = [
           { cells: { name: { v: 'FI date' }, status: { v: fi.unlocked ? 'Unlocked' : 'Locked', fromApp: true }, detail: { v: fi.unlocked ? `${conf?.label ?? ''}: ${conf?.text ?? ''}` : fi.reason, fromApp: true } } },
         ] },
         { title: 'Next small things', rows: prog.next.map((n, i) => ({ cells: { name: { v: `${i + 1}. ${n.label}` }, status: { v: `+${Math.round(n.gain * 100)}%`, fromApp: true }, detail: { v: `${levelWord(n.level)} now: ${n.step}`, fromApp: true } } })) },
+      ];
+    },
+  },
+  {
+    tab: 'Scorecard', prefix: 'Score',
+    about: 'The eleven areas, each Strong, OK or Hole (from the numbers, or the coach), the holes ranked with their payoff, effort and best-return score, the goals, and the next chapter. From the app.',
+    columns: [
+      { key: 'name', label: 'Area or goal', unit: 'text', width: 26 }, { key: 'rating', label: 'Rating', unit: 'text', width: 10 }, { key: 'source', label: 'Rated by', unit: 'text', width: 12 },
+      { key: 'rank', label: 'Rank', unit: 'number', width: 7 }, { key: 'payoff', label: 'Payoff a year', unit: 'money' }, { key: 'fiDays', label: 'FI days', unit: 'number', width: 9 },
+      { key: 'effort', label: 'Effort, hours', unit: 'number', width: 9 }, { key: 'score', label: 'A year per hour', unit: 'money' }, { key: 'chosen', label: 'In the plan', unit: 'text', width: 10 },
+      { key: 'reason', label: 'Reason, and how we got this', unit: 'text', width: 90 },
+    ],
+    sections: c => {
+      const sc = scorecardOf(c.doc, c.ref, { now: c.now, flags: c.flags });
+      const v = (x, fromApp = true) => ({ v: x ?? null, fromApp });
+      const row = a => ({ cells: { name: { v: a.name }, rating: v(a.rating ?? 'Not rated'), source: v(a.source === 'coach' ? 'The coach' : a.source === 'auto' ? 'The numbers' : ''), rank: v(a.rank ?? null),
+        payoff: v(a.payoff?.value ?? null), fiDays: v(a.fiDays == null ? null : Math.round(a.fiDays * 10) / 10), effort: v(a.rating === 'Hole' ? a.effort : null), score: v(a.score ?? null),
+        chosen: v(a.rating === 'Hole' ? (a.chosen ? 'Yes' : 'No') : ''), reason: v(a.math.join(' ')) } });
+      const ch = c.doc.scorecard?.nextChapter || {};
+      return [
+        { title: `Holes, ranked (${sc.holes.length}); FOO step ${sc.here ?? 'none yet'}`, rows: sc.holes.map(row) },
+        { title: 'OK', rows: sc.ok.map(row) }, { title: 'Strong', rows: sc.strong.map(row) }, { title: 'Not rated yet', rows: sc.unrated.map(row) },
+        { title: `Goals (S4): ${sc.facts.goals.short} of ${sc.facts.goals.need} short-term and ${sc.facts.goals.long} of ${sc.facts.goals.need} long-term complete`, rows: sc.facts.goals.list.map(g => ({ cells: {
+          name: { v: g.name }, rating: v(g.horizon ?? ''), source: v(g.tag ?? ''), payoff: v(g.amount), reason: v(`${g.date ? `By ${g.date}. ` : ''}${g.complete ? 'Complete.' : 'Needs a horizon, a tag, an amount and a date.'}`) } })) },
+        { title: 'Next chapter', rows: [{ cells: { name: { v: ch.text || '' }, payoff: v(ch.amount ?? null), reason: v(ch.date ? `By ${ch.date}.` : sc.holes.length ? 'Opens when no hole is left.' : 'Name it on Home.') } }] },
       ];
     },
   },

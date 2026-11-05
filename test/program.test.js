@@ -141,7 +141,7 @@ test('no debt, per About you: the payoff has nothing to wait for; an empty clien
 });
 
 // ---------- Sessions ----------
-test('12 sessions; session 1 ticks itself from the data; placeholders are manual and editable', () => {
+test('12 sessions; session 1 ticks itself from the data; a session can be renamed and its checklist edited', () => {
   const s = fresh();
   assert.equal(SESSIONS.length, 12);
   let list = sessionsOf(s.doc, ref, { now });
@@ -158,16 +158,16 @@ test('12 sessions; session 1 ticks itself from the data; placeholders are manual
   assert.deepEqual(list[0].items.map(i => i.done), [true, true, true, true]);
   assert.equal(list[0].status, 'done'); assert.equal(list[1].status, 'current');
   assert.equal(sessionNo(d.doc), 2);
-  // A placeholder: manual ticks, a new name and checklist, all in the client file.
+  // A renamed session with an edited checklist (a manual item added), all in the client file.
   const s4 = list[3];
-  assert.equal(s4.placeholder, true); assert.ok(s4.items.every(i => !i.auto));
-  d.setIn('program', ['checks', 'S4', 'goal'], true, 'Checklist');
-  d.setIn('program', ['sessions', 'S4'], { name: 'Spending plan', items: [{ id: 'goal', label: 'Plan agreed' }, { id: 'x', label: 'Card frozen' }] }, 'Session');
+  assert.equal(s4.name, 'Goals'); assert.ok(s4.items.every(i => i.auto));
+  d.setIn('program', ['checks', 'S4', 'x'], true, 'Checklist');
+  d.setIn('program', ['sessions', 'S4'], { name: 'Goals and dreams', items: [{ id: 'short', label: 'Three short-term goals' }, { id: 'x', label: 'Dream named' }] }, 'Session');
   const again = sessionsOf(d.doc, ref, { now })[3];
-  assert.equal(again.name, 'Spending plan');
-  assert.deepEqual(again.items.map(i => [i.label, i.done]), [['Plan agreed', true], ['Card frozen', false]]);
+  assert.equal(again.name, 'Goals and dreams');
+  assert.deepEqual(again.items.map(i => [i.label, i.auto, i.done]), [['Three short-term goals', true, false], ['Dream named', false, true]]);
   d.undo();
-  assert.equal(sessionsOf(d.doc, ref, { now })[3].name, 'Goals and mindset', 'the program undoes like everything else');
+  assert.equal(sessionsOf(d.doc, ref, { now })[3].name, 'Goals', 'the program undoes like everything else');
 });
 
 test('Day 0: the first end of session saves it, later ends save End of session N; it exports and imports with the file', () => {
@@ -188,7 +188,7 @@ test('Day 0: the first end of session saves it, later ends save End of session N
   assert.equal(e.doc.snapshots.filter(x => x.label.startsWith('End of session')).length, 1);
   assert.equal(e.doc.session.count, 2);
   const rep = day0Report(d.doc, ref, { now });
-  assert.deepEqual(rep.rows.map(r => r.key), ['netWorth', 'debtTotal', 'surplus', 'savingsRate', 'picturePct']);
+  assert.deepEqual(rep.rows.map(r => r.key), ['netWorth', 'debtTotal', 'surplus', 'savingsRate', 'picturePct', 'scoreOk']);
   assert.equal(rep.rows[0].change, 0);
 });
 
@@ -203,10 +203,13 @@ test('programOf: one call gives Home the session, the picture, the pace and the 
 // ---------- The spec's Program tab says what the registry says ----------
 import { csvCells } from '../js/registry/drift.js';
 import { UNLOCKS, CONFIDENCE } from '../js/registry/program.js';
+import { AREAS as SCORE_AREAS, THRESHOLDS } from '../js/registry/scorecard.js';
 test('spec: the Program tab names every session, level, weight, pace mark and unlock (tools/program_tab.py keeps it current)', () => {
   const rows = readFileSync(new URL('../spec/csv/Program.csv', import.meta.url), 'utf8').split(/\r?\n/).map(csvCells);
   const cell = (section, item) => rows.find(r => r[0] === section && r[1] === item);
-  SESSIONS.forEach((s, i) => { const r = cell('Sessions', `S${i + 1} ${s.name}`); assert.ok(r, `S${i + 1} ${s.name}`); for (const it of s.items) assert.ok(r[2].includes(`${it.label} (${it.auto ? 'auto' : 'manual'})`), it.label); });
+  SESSIONS.forEach((s, i) => { const r = cell('Sessions', `S${i + 1} ${s.name}`); assert.ok(r, `S${i + 1} ${s.name}`); for (const it of [...s.items, ...(s.itemsWhenClear || [])]) assert.ok(r[2].includes(`${it.label} (${it.auto ? 'auto' : 'manual'})`), it.label); });
+  for (const a of SCORE_AREAS) assert.ok(cell('Scorecard', a.name), a.name);
+  for (const [area, t] of Object.entries(THRESHOLDS)) for (const [k, v] of Object.entries(t)) assert.equal(cell('Thresholds', `${area} ${k}`)?.[2], String(v), `${area} ${k}`);
   for (const [k, v] of Object.entries(LEVELS)) assert.equal(cell('Levels', k)?.[2], String(v), k);
   for (const [k, v] of Object.entries(WEIGHTS)) assert.equal(cell('Weights', k)?.[2], String(v), k);
   SESSIONS.forEach((s, i) => assert.equal(cell('Pace', `S${i + 1}`)?.[2], `${PACE.expected[i + 1] ?? PACE.hold}%`));

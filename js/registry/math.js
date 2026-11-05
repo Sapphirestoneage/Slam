@@ -23,6 +23,7 @@ import { monthsUntil } from '../math/portfolio.js';
 import { simpleMath } from '../math/simple.js';
 import { pictureOf, paceOf, unlockOf, confidenceOf, nextSmallThings } from '../math/picture.js';
 import { sessionNo } from '../program.js';
+import { scorecardOf } from '../math/scorecard.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -338,6 +339,14 @@ export const MATH = [
       { key: 'pace', name: 'Pace: Ahead, On track or Catch up', unit: 'text', fromApp: 'the Picture % against the pace expected by now', app: c => paceOf(pictureOf(c.doc, c.ref, { now: c.now }).pct, sessionNo(c.doc)).word },
       { key: 'fi', name: 'FI date unlocked', unit: 'text', fromApp: 'income and spending at Estimate and an invested balance', app: c => { const pic = pictureOf(c.doc, c.ref, { now: c.now }); const u = unlockOf('fi', pic); return u.unlocked ? `Yes (${confidenceOf('fi', pic, { now: c.now })?.label ?? ''})` : u.reason; } },
       { key: 'next', name: 'Next small thing', unit: 'text', fromApp: 'the item that raises the Picture % most', app: c => { const n = nextSmallThings(pictureOf(c.doc, c.ref, { now: c.now }), 1)[0]; return n ? `${n.label}: +${Math.round(n.gain * 100)}%` : 'Nothing left'; } },
+    ] },
+  { id: 'M74', name: 'Scorecard', inputs: 'every number, the FOO step, the coach\'s ratings (Assumptions: Scorecard thresholds)', unit: 'count',
+    fns: ['scorecard.scorecardOf', 'scorecard.factsOf', 'scorecard.goalsOf', 'scorecard.ratingOf'],
+    fromApp: 'eleven areas rated Strong, OK or Hole by the rules in js/registry/scorecard.js or by the coach; the count here is the areas Strong or OK (the Scorecard tab has every area)',
+    app: c => scorecardOf(c.doc, c.ref, { now: c.now, flags: c.flags }).okCount,
+    parts: [
+      { key: 'holes', name: 'Holes', unit: 'count', fromApp: 'the areas rated Hole', app: c => scorecardOf(c.doc, c.ref, { now: c.now, flags: c.flags }).holes.length },
+      { key: 'top', name: 'Top hole (before your FOO step first, then payoff over effort)', unit: 'text', fromApp: 'the ranking on the Scorecard', app: c => { const h = scorecardOf(c.doc, c.ref, { now: c.now, flags: c.flags }).holes[0]; return h ? `${h.name}${h.payoff ? `: ${Math.round(h.payoff.value)} a year over ${h.effort} hours` : ''}` : 'None'; } },
     ] },
 ];
 

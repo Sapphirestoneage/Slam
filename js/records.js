@@ -54,7 +54,8 @@ export function newHousehold({ name = null, now = new Date().toISOString(), id =
     records: [], history: [], snapshots: [], parking: [],
     spending: {}, // budget passes by month, calendar marks, start balance (build phase 6)
     session: {},  // session count, agenda, notes, one-pager (build phases 8 to 10)
-    program: {},  // the 12-session program: the coach's checklist ticks and edited placeholder sessions (Phase 3)
+    program: {},  // the 12-session program: the coach's checklist ticks, the hole each session pulled, the game plan (Phase 3)
+    scorecard: {}, // the coach's ratings, reasons, efforts, typed payoffs, chosen holes, the next chapter (Phase 3, batch 2)
     createdAt: now, updatedAt: now, lastBackupAt: null, fieldsVersion: FIELDS_VERSION,
   };
 }
@@ -116,7 +117,7 @@ export class Store {
   _state() {
     const { timeView, ...settings } = this.doc.settings || {};
     return clone({ records: this.doc.records, parking: this.doc.parking, profile: this.doc.profile,
-      assumptions: this.doc.assumptions, client: this.doc.client, spending: this.doc.spending, session: this.doc.session, program: this.doc.program, settings });
+      assumptions: this.doc.assumptions, client: this.doc.client, spending: this.doc.spending, session: this.doc.session, program: this.doc.program, scorecard: this.doc.scorecard, settings });
   }
   // store.source, while set, marks every history entry with where the change came from (the spreadsheet import).
   _log(entry) { this.doc.history.push({ at: this._tx?.at || this.now(), ...entry, ...(this.source ? { source: this.source } : {}) }); }
@@ -363,7 +364,7 @@ export function importFile(file) {
 export function migrate(doc) {
   // Version 1 is the first shape; later versions add steps here, oldest first.
   for (const k of ['records', 'history', 'snapshots', 'parking']) doc[k] ??= [];
-  for (const k of ['profile', 'assumptions', 'settings', 'client', 'spending', 'session', 'program']) doc[k] ??= {};
+  for (const k of ['profile', 'assumptions', 'settings', 'client', 'spending', 'session', 'program', 'scorecard']) doc[k] ??= {};
   moveFieldIds(doc); // field IDs renumbered when fields.json was rebuilt from the spec (js/fields-map.js)
   doc.schema = SCHEMA_VERSION;
   return doc;
@@ -374,7 +375,7 @@ export function importInto(store, file) {
   const incoming = importFile(file);
   store.snapshot('Before import');
   store.transaction('Import', () => {
-    for (const k of ['records', 'parking', 'profile', 'assumptions', 'client', 'spending', 'session', 'program']) store.doc[k] = incoming[k] ?? {};
+    for (const k of ['records', 'parking', 'profile', 'assumptions', 'client', 'spending', 'session', 'program', 'scorecard']) store.doc[k] = incoming[k] ?? {};
     store.doc.history.push(...incoming.history.filter(h => !store.doc.history.some(x => x.at === h.at && x.id === h.id && x.field === h.field)));
     // The file's snapshots (Day 0, each session's end) come along; ones already here stay once.
     store.doc.snapshots.push(...(incoming.snapshots || []).filter(s => !store.doc.snapshots.some(x => x.id === s.id)));

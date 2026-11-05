@@ -10,6 +10,7 @@
 // column its own named range (tax brackets, periods).
 
 import { LEVELS, WEIGHTS, PACE, SESSIONS } from './program.js';
+import { THRESHOLDS, PAYOFF, AREAS as SCORE_AREAS } from './scorecard.js';
 
 // SLAM's own rules and lists. The math in js/math reads these (one source for the app and the sheet).
 export const RULES = {
@@ -138,6 +139,10 @@ export const TABLES = [
     rows: () => Object.entries(WEIGHTS), source: RULE('js/registry/program.js'), date: '2026-11-05' },
   { id: 'Pace', label: 'Pace: Picture % expected by the end of each session (M73)', columns: [['session', 'Session', 'number'], ['expected', 'Expected %', 'pct']],
     rows: () => SESSIONS.map((s, i) => [i + 1, (PACE.expected[i + 1] ?? PACE.hold) / 100]), source: RULE('js/registry/program.js'), date: '2026-11-05' },
+  // The scorecard (batch 2): the thresholds and payoff rules behind each area's rating (M74).
+  { id: 'Score', label: 'Scorecard thresholds and payoff rules (M74)', columns: [['area', 'Area', 'text'], ['rule', 'Rule', 'text'], ['value', 'Value', 'number']],
+    rows: () => [...Object.entries(THRESHOLDS).flatMap(([a, t]) => Object.entries(t).map(([k, v]) => [a, k, v])), ...Object.entries(PAYOFF).flatMap(([a, t]) => Object.entries(t).map(([k, v]) => [a, `payoff ${k}`, v])),
+      ...SCORE_AREAS.map(a => [a.id, 'effort hours (the usual)', a.effort])], source: RULE('js/registry/scorecard.js'), date: '2026-11-05' },
 ];
 
 // Reference data that is a list of words (pickers), not a number the math uses. Declared so nothing is unaccounted for.
