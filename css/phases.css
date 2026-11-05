@@ -311,3 +311,24 @@ ul.find-days { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
 .hole-line .gain { font-weight: 800; color: var(--good); }
 .card.inner { box-shadow: none; border: 1.5px solid var(--border-row); }
 @media (max-width: 760px) { .hole-body { gap: var(--s3); } .hole-num { min-width: 45%; } }
+
+/* ---------- The agenda (Phase 3, batch 3): the panel on Home, the docked bar on every tab, the review gate ---------- */
+.tracker { position: fixed; left: 0; right: 0; bottom: 0; z-index: 44; background: var(--card); border-top: 2px solid var(--primary); box-shadow: 0 -2px 12px rgba(0,0,0,.12); padding: 6px var(--s5); max-height: 70vh; overflow: auto; }
+.tracker[hidden] { display: none; }
+.tracker-head { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; min-height: 36px; }
+.tracker-head .spacer { flex: 1; }
+.tracker-body { padding: 6px 0 8px; }
+body:has(.tracker:not([hidden])) main.shell-page { padding-bottom: 72px; }
+.agenda-head { display: flex; align-items: center; gap: var(--s2); margin: 6px 0 4px; }
+.check-item.compact { padding: 6px var(--s3); }
+.check-item .field { flex: none; }
+.suggest-list { display: grid; gap: 6px; margin-top: 6px; }
+.suggest-row { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; padding: 4px 0; border-top: 1px solid var(--border-row); }
+.review-list { display: grid; gap: 6px; }
+.review-row { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; padding: 6px 0; border-top: 1px solid var(--border-row); min-height: 44px; }
+.review-what { display: flex; flex-direction: column; gap: 2px; flex: 1 1 220px; min-width: 0; }
+.decide { display: inline-flex; gap: 6px; }
+.fi-lines { gap: 2px; margin-top: 4px; }
+.foo-step.locked { opacity: .85; }
+.foo-lock { color: var(--text-2); font-size: .875rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+@media (max-width: 760px) { .tracker { bottom: 58px; padding: 6px 12px; } body:has(.tracker:not([hidden])) main.shell-page { padding-bottom: 120px; } }

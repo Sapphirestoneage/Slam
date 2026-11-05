@@ -11,7 +11,8 @@ import { taxRates, monthlyFrom } from '../math/income.js';
 import { drafttShares } from '../math/spending.js';
 import { gutAccuracy } from '../math/spending.js';
 import { fiTargets, ladder, agenda } from '../plan.js';
-import { pictureOf, unlockOf, confidenceOf } from '../math/picture.js';
+import { pictureOf, unlockOf, confidenceOf, fiWordsOf } from '../math/picture.js';
+import { homeworkAll } from '../program.js';
 import { closedMonths, monthName, ymOf, monthsBetween } from '../month.js';
 import { money, pct } from '../format.js';
 
@@ -162,12 +163,13 @@ function fixedVariable(ctx, m) {
 }
 
 // ---------- One-pager ----------
-export function homeworkItems(ctx) { return homeworkList(ctx.store.doc, ctx.visible(() => true)); }
+export function homeworkItems(ctx) { return homeworkAll(ctx.store.doc, ctx.visible(() => true)).filter(x => x.status !== 'Confirmed'); }
 export function summaryText(ctx) {
   const m = ctx.metrics();
   const doc = ctx.store.doc;
   const op = doc.session.onePager || {};
-  const fiWhen = fiGate(ctx).unlocked ? m.monthsToFi.value : null; // locked by the program: no date yet
+  const gate = fiGate(ctx);
+  const fiWords = gate.unlocked && m.monthsToFi.value != null ? fiWordsOf(m, gate.confidence, { now: ctx.now() }) : null; // locked by the program: no date yet
   const line = (k, v) => (v == null || v === '' ? null : `${k}: ${v}`);
   const hw = homeworkItems(ctx);
   return [
@@ -176,7 +178,7 @@ export function summaryText(ctx) {
     line('Net worth', m.netWorth.value == null ? null : money(m.netWorth.value)),
     line('Monthly surplus', m.surplus.value == null ? null : money(m.surplus.value)),
     line('Savings rate', m.savingsRate.value == null ? null : pct(m.savingsRate.value)),
-    line('FI date', fiWhen == null ? null : monthName(ymOf(new Date(ctx.now().getTime() + fiWhen * 30.44 * 86400000)))),
+    line('FI date', fiWords == null ? null : `${fiWords.text}${fiWords.kind === 'month' ? '' : ` (${gate.confidence?.label ?? 'a range'})`}`),
     '',
     hw.length ? 'To do:' : null, ...hw.map(x => `- ${x.label}${x.where ? ` (look on: ${x.where})` : ''}`),
     op.strengths ? `\nStrengths: ${op.strengths}` : null, op.struggles ? `Struggles: ${op.struggles}` : null,
@@ -224,7 +226,7 @@ export function onePagerScreen(app, ctx) {
     h('div.op-grid', {},
       h('div', {}, h('h3', {}, 'To-dos'), hw.length ? h('ul.op-list', {}, hw.map(x => h('li', {}, x.label))) : h('p.muted', {}, "No homework yet. Tap I'll find it later on any number to add it.")),
       h('div', {}, h('h3', {}, 'Goals'), h('ul.op-list', {},
-        m.monthsToFi.value != null && fiGate(ctx).unlocked ? h('li', {}, `FI ${monthName(ymOf(new Date(ctx.now().getTime() + m.monthsToFi.value * 30.44 * 86400000)))}${doc.assumptions.fiAge ? `, target age ${doc.assumptions.fiAge}` : ''}`) : null,
+        m.monthsToFi.value != null && fiGate(ctx).unlocked ? h('li', {}, `FI ${fiWordsOf(m, fiGate(ctx).confidence, { now: ctx.now() })?.text ?? ''}${doc.assumptions.fiAge ? `, target age ${doc.assumptions.fiAge}` : ''}`) : null,
         goals.map(g => h('li', {}, g.name || g.type)), !goals.length && (m.monthsToFi.value == null || !fiGate(ctx).unlocked) ? h('li.muted', {}, fiGate(ctx).unlocked ? 'Set an FI target on Plan' : `FI date: ${fiGate(ctx).reason}`) : null))),
     h('div.op-grid', { style: { marginTop: '16px' } }, box('strengths', 'Strengths', 'What is going well'), box('struggles', 'Struggles', 'What is hard right now')),
     h('div.op-grid', { style: { marginTop: '16px' } }, box('doMore', 'Do more', 'Keep doing'), box('doLess', 'Do less', 'Ease off')),
@@ -241,8 +243,16 @@ export function fiGate(ctx) {
 export function fiCard(ctx, m) {
   const v = m.monthsToFi.value;
   const g = fiGate(ctx);
+  const words = g.unlocked && v != null ? fiWordsOf(m, g.confidence, { now: ctx.now() }) : null;
+  // Answer 123: line 1 is the path the FI date assumes; line 2 the other path, only when the two differ.
+  const iv = m.investing, alt = iv?.investSurplus ? m.fiPaths?.idle : m.fiPaths?.invested;
+  const altWords = words && alt?.value != null ? fiWordsOf({ ...m, monthsToFi: alt, investing: { ...iv, investSurplus: !iv.investSurplus, monthly: iv.investSurplus ? iv.idle : iv.invested } }, g.confidence, { now: ctx.now() }) : null;
+  const lines = !words ? null : h('span.stack.fi-lines', {},
+    h('span', {}, iv?.investSurplus ? 'Invest your surplus: ' : 'Surplus sits in checking: ', h('strong', {}, `FI ${words.kind === 'month' ? 'in' : 'around'} ${words.text}`)),
+    h('span.muted.small', {}, iv?.investSurplus ? 'assumes your surplus gets invested' : 'assumes the surplus is not invested', ` · ${words.years}`),
+    altWords && altWords.text !== words.text ? h('span.muted.small', {}, `${iv?.investSurplus ? 'If it sits in checking' : 'If invested'}: ${altWords.text}`) : alt?.never && words ? h('span.muted.small', {}, `${iv?.investSurplus ? 'If it sits in checking' : 'If invested'}: not on this path`) : null);
   return { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi', home: HOME.fi, lock: g.unlocked ? null : { reason: g.reason, route: g.route }, confidence: g.confidence,
-    render: v == null ? null : () => monthName(ymOf(new Date(ctx.now().getTime() + v * 30.44 * 86400000)), 'short'), note: v == null ? null : `${(v / 12).toFixed(1)} years from now` };
+    render: words ? () => words.text : null, note: lines ?? (v == null ? null : `${(v / 12).toFixed(1)} years from now`) };
 }
 
 // ---------- History ----------

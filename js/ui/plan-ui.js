@@ -13,6 +13,7 @@ import { money, pct } from '../format.js';
 import { yearItems, usualDates, sinkingOf, takingOver } from '../year.js';
 import { TUITION_GOAL } from '../community.js';
 import { fiGate } from './report-ui.js';
+import { fiWordsOf } from '../math/picture.js';
 
 export const PUI = { extra: 0, pace: null, bands: true, chart: 'FI timeline', extraDebt: 0, reveal: false };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -24,7 +25,7 @@ const paceOf = (ref, r) => Object.entries(ref.presets.pace).find(([, v]) => Math
 const lockedLine = u => h('span.muted', { style: { fontSize: '1rem' } }, icon('lock'), ' Locked. ', u.reason, u.route ? [' ', h('a', { href: u.route }, 'Open ›')] : null);
 const lockedCard = u => h('div.card', {}, h('div.empty.center', {}, h('span.title', {}, icon('lock'), ` ${u.label} is locked`), h('span.muted', {}, u.reason),
   u.route ? S.button('Open where it lives', { iconName: 'right', onClick: () => { location.hash = u.route; } }) : null));
-const confidenceTag = c => (c ? h('span.tag.plain.confidence', { title: c.text }, c.label) : null);
+const confidenceTag = c => (c ? h('span.tag.plain.confidence.coach-only', { title: c.text }, c.label) : null); // a coach's cue, not for the client's screen
 
 // Milestone dates become wins on the calendar (R095).
 winSources.push(ctx => {
@@ -52,7 +53,7 @@ export function revealCard(app, ctx, m) {
   paint();
   return h('div.card.reveal-card', {},
     h('div.row-line', { style: { gap: '24px', alignItems: 'baseline' } },
-      h('div', {}, h('span.label', {}, 'FI date'), h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, monthName(addMonths(ymOf(ctx.now()), fiWhen))) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))), confidenceTag(gate.confidence)),
+      h('div', {}, h('span.label', {}, 'FI date'), h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, fiWordsOf(m, gate.confidence, { now: ctx.now() }).text) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))), confidenceTag(gate.confidence)),
       h('div', {}, h('span.label', {}, 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? S.mathButton(m.fiNumber, money(m.fiNumber.value)) : h('span.muted', { style: { fontSize: '1rem' } }, 'Needs ', S.needLinks(ctx, m.fiNumber.needs))))),
     m.fiNumber.value != null && gate.unlocked ? h('div.slider-row', { style: { marginTop: '12px' } }, h('span.label', {}, 'Save more'), slider, out, result) : null);
 }
@@ -91,8 +92,8 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
       S.labelled('FI age', S.textInput(fiAge, v => setA({ fiAge: v === null ? null : Number(v) }), { hint: 'Age', width: 100, key: 'g:fiAge' })),
       S.button('Just show me', { onClick: () => setA({ fiAge: null }), tip: 'Skip the age and show the earliest date' })),
     h('div', {}, h('span.label', {}, 'FI date'),
-      h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, monthName(addMonths(ymOf(ctx.now()), fiWhen))) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))),
-      gate.unlocked && fiWhen != null ? h('span.muted', {}, `${ageAt(m, fiWhen) != null ? `At ${ageAt(m, fiWhen)} · ` : ''}${(fiWhen / 12).toFixed(1)} years from now `, confidenceTag(gate.confidence)) : null,
+      h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, fiWordsOf(m, gate.confidence, { now: ctx.now() }).text) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))),
+      gate.unlocked && fiWhen != null ? h('span.muted', {}, `${ageAt(m, fiWhen) != null && gate.confidence?.word === 'High' ? `At ${ageAt(m, fiWhen)} · ` : ''}${fiWordsOf(m, gate.confidence, { now: ctx.now() }).years} `, confidenceTag(gate.confidence)) : null,
       gate.unlocked ? investingLine(ctx, m) : null),
     h('div', {}, h('span.label', {}, nominal ? 'FI number, in future dollars' : 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? (nominal && fiWhen != null
       ? S.mathButton({ ...m.fiNumber, text: `${m.fiNumber.text} With ${pct(inflation)} inflation a year for ${(fiWhen / 12).toFixed(1)} years: ${money(futureDollars(m.fiNumber.value, fiWhen, inflation))} then.` }, money(futureDollars(m.fiNumber.value, fiWhen, inflation)))

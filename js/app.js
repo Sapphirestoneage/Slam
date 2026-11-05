@@ -10,7 +10,8 @@ import { Store, newHousehold, exportFile, importInto, backupDue, statusOf } from
 import { localAdapter, memoryAdapter, listClients, loadClient, saveClient, createClient, removeClient, getPrefs, setPrefs, autosave } from './storage.js';
 import { householdFromInputs } from './demo.js';
 import { addPresets } from './presets.js';
-import { snapshotNumbers } from './program.js';
+import { snapshotNumbers, inSession, programOf, agendaOf } from './program.js';
+import { agendaPanel } from './ui/agenda-ui.js';
 import { TABS, parseRoute, search, routeForPlace, tabRoute } from './nav.js';
 import { SCREENS, progressOf } from './screens.js';
 import { startFastTrack } from './ui/fasttrack-ui.js';
@@ -117,7 +118,8 @@ const app = {
         this.findBox(), more,
         h('label.field.time-pick', {}, time), cv, gear)));
     // Home is one screen with one nav row: no sub-tab bar there (About you shows the bar, with the way back).
-    $('subtabs').hidden = tab.id === 'home' && sub.id === 'session';
+    $('subtabs').hidden = tab.id === 'home' && (sub.id === 'session' || sub.id === 'review');
+    this.agendaBar();
     // A sub-tab whose area the Profile turned off is absent, not greyed (R001).
     const off = this.hasClient && tab.id === 'net-worth' && this.ctx.gates().areas.debt === false ? new Set(['debt']) : new Set();
     // Net worth and Cash flow modes sit beside their sub-tabs: Fast Track is a button, One page a toggle (Navigation: modes are not tabs).
@@ -126,7 +128,7 @@ const app = {
     const modes = paged && this.hasClient ? h('span.row-line.mm-modes', { style: { gap: '8px', flexWrap: 'nowrap' } },
       S.button('Start Fast Track', { iconName: 'right', onClick: () => startFastTrack(this, this.ctx) }),
       S.toggle([['sections', 'By section'], ['one', 'One page']], this.prefs[onePageKey] ? 'one' : 'sections', v => this.setPref(onePageKey, v === 'one'), { label: `${tab.name} layout` })) : null;
-    const subs = h('div.subtabs-in', {}, tab.subs.filter(s => !off.has(s.id)).map(s => {
+    const subs = h('div.subtabs-in', {}, tab.subs.filter(s => !off.has(s.id) && !s.hidden).map(s => {
       const p = this.hasClient ? progressOf(this.ctx, tab.id, s.id) : null;
       const complete = p && p.of > 0 && p.done === p.of;
       return h('a.subtab', { href: `#/${tab.id}/${s.id}`, 'aria-current': s.id === sub.id ? 'page' : null, class: s.area ? `area-${s.area}` : null },
@@ -239,10 +241,10 @@ const app = {
   moreMenu(anchor) {
     const item = (label, iconName, onClick, { disabled = false } = {}) => h('button.btn', { type: 'button', disabled, onclick: () => { S.closePop(); onClick(); } }, icon(iconName), label);
     S.popover(anchor, h('div.stack.more-menu', { style: { gap: '8px' } },
-      item(this.store.canUndo ? `Undo: ${this.store.undoStack.at(-1).label}` : 'Undo', 'undo', () => this.undo(), { disabled: !this.store.canUndo }),
+      item(this.store.canUndo && !this.prefs.clientView ? `Undo: ${this.store.undoStack.at(-1).label}` : 'Undo', 'undo', () => this.undo(), { disabled: !this.store.canUndo }), // the label names the coach's last move: not in Client view
       item('Redo', 'redo', () => this.redo(), { disabled: !this.store.canRedo }),
       item('Add anything', 'plus', () => this.addAnything(anchor), { disabled: !this.hasClient }),
-      item('Parking lot', 'note', () => this.openParking(anchor), { disabled: !this.hasClient }),
+      this.prefs.clientView ? null : item('Parking lot', 'note', () => this.openParking(anchor), { disabled: !this.hasClient }), // coach only
       h('span.muted.small', {}, 'Ctrl+Z undoes, Ctrl+Shift+Z redoes, / finds or adds.')), { width: 300 });
   },
   addAnything(anchor) {
@@ -288,8 +290,25 @@ const app = {
     root.dataset.clientView = this.prefs.clientView ? 'on' : 'off';
     root.dataset.font = this.prefs.font || 'inter';
   },
-  snapshot(label) {
-    this.store.snapshot(label, snapshotNumbers(this.store.doc, ref, { now: this.ctx.now() }));
+  // ---------- The agenda bar: on every tab while a session runs, collapsed to one line (coach only) ----------
+  _bar: { open: false, back: null, rev: null, A: null },
+  trackerBack(hash) { if (hash && hash !== '#/home/review' || !this._bar.back) this._bar.back = hash; }, // remember where a jump left from
+  agendaBar() {
+    const el = $('tracker');
+    if (!el) return;
+    const on = this.hasClient && inSession(this.store.doc) && !this.prefs.clientView;
+    el.hidden = !on;
+    if (!on) { clear(el); return; }
+    const b = this._bar;
+    if (b.rev !== this.store.doc._rev || !b.A) { b.A = agendaOf(this.store.doc, ref, { now: this.ctx.now(), flags: this.flags, P: programOf(this.store.doc, ref, { now: this.ctx.now(), flags: this.flags }) }); b.rev = this.store.doc._rev; }
+    const A = b.A;
+    const back = b.back && b.back !== location.hash ? S.button('Back to where we were', { size: 'small', iconName: 'left', onClick: () => { const to = b.back; b.back = null; this.go(to); } }) : null;
+    const head = h('div.tracker-head', {}, h('strong', {}, `Session ${A.n} · ${A.done} of ${A.of} done`), h('span.muted.small', {}, A.name), h('span.spacer'), back,
+      S.button(b.open ? 'Hide the agenda' : 'Agenda', { size: 'small', iconName: b.open ? 'down' : 'up', onClick: () => { b.open = !b.open; this.agendaBar(); } }));
+    clear(el, head, b.open ? h('div.tracker-body', {}, agendaPanel(this, this.ctx, A, { compact: true })) : null);
+  },
+  snapshot(label, extra = {}) {
+    this.store.snapshot(label, snapshotNumbers(this.store.doc, ref, { now: this.ctx.now(), flags: this.flags }), extra);
     saveClient(adapter, this.store.doc);
     S.toast('Snapshot saved.');
     this.render();

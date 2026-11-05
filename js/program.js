@@ -6,12 +6,14 @@ import { metrics, keyNumbers } from './math/metrics.js';
 import { pictureOf, paceOf, nextSmallThings } from './math/picture.js';
 import { foo } from './math/foo.js';
 import { gatesOf, visible } from './gates.js';
-import { SESSIONS, PACE, LEVELS } from './registry/program.js';
+import { SESSIONS, PACE, LEVELS, REVIEW, AGENDA, HOMEWORK_STATUSES, levelWord } from './registry/program.js';
+import { homeworkList } from './homework.js';
+import { fmt } from './math/result.js';
 import { scorecardOf, ratingOf } from './math/scorecard.js';
 import { THRESHOLDS } from './registry/scorecard.js';
 
 export const sessionOf = doc => doc.session || {};
-export const inSession = doc => { const s = sessionOf(doc); return !!s.startedAt && !(s.endedAt > s.startedAt); };
+export const inSession = doc => { const s = sessionOf(doc); return !!s.startedAt && !(s.endedAt && s.endedAt >= s.startedAt); };
 // The session being prepared or run: one past the sessions ended, up to the last.
 export const sessionNo = doc => Math.min(SESSIONS.length, (sessionOf(doc).count || 0) + 1);
 export const graduated = doc => (sessionOf(doc).count || 0) >= SESSIONS.length;
@@ -20,7 +22,7 @@ export const day0Of = doc => (doc.snapshots || []).find(s => s.day0) || null;
 
 const FILLED = new Set(['OK', 'Strong']);
 // The hole a session works on: the top hole when it started (doc.program.targets), else the top hole now.
-export const targetOf = (doc, sid, sc) => doc.program?.targets?.[sid] ?? sc.holes[0]?.id ?? null;
+export const targetOf = (doc, sid, sc) => doc.program?.targets?.[sid] ?? sc.open[0]?.id ?? null; // parked holes wait
 
 // What the data says about each auto item. holeFilled takes the session id.
 export function autoChecks(doc, ref, { now = new Date(), flags = [], picture = pictureOf(doc, ref, { now }), m = metrics(doc, ref, { now }), sc = scorecardOf(doc, ref, { now, flags }) } = {}) {
@@ -34,7 +36,7 @@ export function autoChecks(doc, ref, { now = new Date(), flags = [], picture = p
   const months = Object.values(doc.spending?.months || {});
   const lines = live.filter(r => r.kind === 'bill' && r.status !== 'Not for me');
   const monthOfActuals = months.some(mo => mo.closed) || (lines.length > 0 && months.some(mo => lines.filter(l => mo.lines?.[l.id]?.actual != null).length * 2 >= lines.length));
-  const key = picture.items.filter(it => it.group === 'income' || it.group === 'account');
+  const key = picture.items.filter(it => ['income', 'account', 'debt'].includes(it.group)); // answer 129: debts too
   let here = null;
   try { here = foo(doc, ref, { now, flags }).here ?? null; } catch { here = null; }
   return {
@@ -55,40 +57,112 @@ export function autoChecks(doc, ref, { now = new Date(), flags = [], picture = p
     holesRanked: sc.holes.every(h => h.payoff && h.effort > 0),
     fooConfirmed: sc.here != null && doc.program?.fooConfirmed === sc.here,
     top3Chosen: sc.chosen.length >= Math.min(3, sc.holes.length),
-    holeFilled: sid => { const t = targetOf(doc, sid, sc); return t ? FILLED.has(ratingOf(sc, t)) : sc.holes.length === 0; },
+    holeFilled: sid => { const t = targetOf(doc, sid, sc); return t ? FILLED.has(ratingOf(sc, t)) : sc.open.length === 0; },
     day0Compared: !!day0Of(doc) && doc.snapshots.length >= 2,
     rescored: !!doc.scorecard?.reviewedAt && doc.scorecard.reviewedAt >= (doc.snapshots.filter(s => s.session === 8).at(-1)?.at ?? ''),
     nextChapter: !!(doc.scorecard?.nextChapter?.text && doc.scorecard.nextChapter.amount != null && doc.scorecard.nextChapter.date),
     planNotes: !!doc.program?.plan?.notes,
     reviewDate: !!doc.program?.plan?.reviewDate,
     moneyDate: !!doc.program?.plan?.moneyDate,
+    graduationReport: !!doc.program?.graduation?.at,
+    finalSnapshot: (doc.snapshots || []).some(s => s.graduation),
   };
 }
+// Where each auto item is worked on (the checklist's Open link, the tracker's jump).
+const ITEM_ROUTE = { accountsSetUp: '#/net-worth/assets', moneyInOneLine: '#/cash-flow/income', bigCategories: '#/cash-flow/budget', goalsNamed: '#/plan/goals', fooStep: '#/plan/foo',
+  monthOfActuals: '#/cash-flow/close', shortGoals: '#/plan/goals', longGoals: '#/plan/goals', allRated: '#/plan/scorecard', holesRanked: '#/plan/scorecard', fooConfirmed: '#/plan/scorecard',
+  top3Chosen: '#/plan/scorecard', rescored: '#/plan/scorecard', nextChapter: '#/home/session', planNotes: '#/home/session', reviewDate: '#/home/session', moneyDate: '#/home/session',
+  graduationReport: '#/home/session', finalSnapshot: '#/home/session' };
 
 // The twelve sessions with their names, checklists and where each stands. doc.program holds the coach's own ticks
 // (checks[session][item]) and any renamed placeholder session or edited checklist (sessions[session]).
 export function sessionsOf(doc, ref, opts = {}) {
-  const sc = opts.sc ?? scorecardOf(doc, ref, { now: opts.now, flags: opts.flags });
-  const auto = autoChecks(doc, ref, { ...opts, sc });
+  const now = opts.now ?? new Date();
+  const picture = opts.picture ?? pictureOf(doc, ref, { now });
+  const sc = opts.sc ?? scorecardOf(doc, ref, { now, flags: opts.flags });
+  const auto = autoChecks(doc, ref, { ...opts, now, picture, sc });
   const prog = doc.program || {};
   const count = sessionOf(doc).count || 0;
   const n = sessionNo(doc);
-  const clear = sc.rated === sc.of && sc.holes.length === 0; // every area rated, no hole left: the next chapter
+  const clear = sc.open.length === 0; // answer 137: only a hole blocks the next chapter (unrated areas get a nudge; parked holes wait)
+  const nextRoute = nextSmallThings(picture, 1)[0]?.route ?? null;
+  const areasOpen = picture.items.find(it => it.id === 'areas')?.level === 0;
+  const routeOf = (key, target) => (key === 'holeFilled' ? target?.route ?? '#/plan/scorecard' : key === 'accountsSetUp' && areasOpen ? '#/home/profile'
+    : ['topLine', 'keyNumbersLocked', 'picture90'].includes(key) ? nextRoute : ITEM_ROUTE[key] ?? null);
+  const targetFor = sid => (SESSIONS.find(x => x.id === sid)?.hole ? sc.areas.find(a => a.id === targetOf(doc, sid, sc)) ?? null : null);
   return SESSIONS.map((s, i) => {
     const over = prog.sessions?.[s.id] || {};
     const base = s.itemsWhenClear && clear ? s.itemsWhenClear : s.items;
-    const target = s.hole ? sc.areas.find(a => a.id === targetOf(doc, s.id, sc)) ?? null : null;
-    const items = (over.items ?? base).map(it => {
+    const target = targetFor(s.id);
+    const own = (over.items ?? base).map(it => {
       const key = base.find(b => b.id === it.id)?.auto ?? null;
       const done = key === 'holeFilled' ? auto.holeFilled(s.id) : key ? !!auto[key] : !!prog.checks?.[s.id]?.[it.id];
       const detail = key === 'holeFilled' ? (target ? `${target.name}: ${target.rating ?? 'not rated'}` : 'No hole left') : null;
-      return { id: it.id, label: it.label, auto: !!key, key, done, detail };
+      return { id: it.id, label: it.label, auto: !!key, key, done, detail, from: s.id, carried: false, route: routeOf(key, target) };
     });
+    const items = own;
     const k = i + 1;
     return { ...s, n: k, name: over.name ?? s.name, placeholder: !!s.placeholder, items, target, done: items.length > 0 && items.every(it => it.done),
       status: k <= count ? 'done' : k === n ? 'current' : 'next' };
   });
 }
+// The Must do items of a session still open (ending the session itself settles Day 0 and the final snapshot).
+const SETTLED_BY_ENDING = new Set(['day0', 'finalSnapshot']);
+export const unfinishedOf = session => session.items.filter(i => !i.done && !SETTLED_BY_ENDING.has(i.key)).map(i => ({ from: i.from, id: i.id, label: i.label, key: i.key ?? null, route: i.route ?? null }));
+
+// ---------- The agenda: Must do, Going over, notes, links, and what is suggested for today ----------
+const ym = (d = new Date()) => d;
+export const homeworkAll = (doc, records) => homeworkList(doc, records);
+export function setHomeworkStatus(store, key, status, { by = 'coach' } = {}) {
+  if (!HOMEWORK_STATUSES.includes(status)) throw new Error(`Unknown homework status ${status}`);
+  const hw = (store.doc.program?.homework || []).find(h => `hw:${h.id}` === key);
+  if (hw) store.setIn('program', ['homework'], store.doc.program.homework.map(h => (h === hw ? { ...h, status, statusBy: by, statusAt: store.now() } : h)), 'Homework');
+  else store.setIn('program', ['homeworkStatus', key], status === 'To do' ? undefined : { status, by, at: store.now() }, 'Homework');
+}
+export function makeHomework(store, sid, label, { link = null, due = null } = {}) {
+  const hw = { id: store.makeId(), label, from: sid, at: store.now(), status: 'To do', statusBy: null, ...(link ? { link } : {}), ...(due ? { due } : {}) };
+  store.setIn('program', ['homework'], [...(store.doc.program?.homework || []), hw], 'Make homework');
+  return hw;
+}
+const agendaDoc = (doc, sid) => doc.program?.agenda?.[sid] || {};
+export function addAgendaItem(store, sid, { label, link = null, key = null, from = null }) {
+  const it = { id: store.makeId(), label, ...(link ? { link } : {}), ...(key ? { key } : {}), ...(from ? { from } : {}), done: false };
+  store.setIn('program', ['agenda', sid, 'going'], [...(agendaDoc(store.doc, sid).going || []), it], 'Agenda');
+  return it;
+}
+export function removeAgendaItem(store, sid, id) { store.setIn('program', ['agenda', sid, 'going'], (agendaDoc(store.doc, sid).going || []).filter(x => x.id !== id), 'Agenda'); }
+export function tickAgendaItem(store, sid, id, v) { store.setIn('program', ['agenda', sid, 'going'], (agendaDoc(store.doc, sid).going || []).map(x => (x.id === id ? { ...x, done: !!v } : x)), 'Agenda'); }
+export function setAgendaNote(store, sid, itemId, text) { store.setIn('program', ['agenda', sid, 'notes', itemId], text && text.trim() ? text.trim() : undefined, 'Agenda note'); }
+
+// The session's agenda: Must do (the checklist, ticking from the numbers), Going over (the coach's items, ticking
+// from the numbers when they carry a key, else by hand), per-item notes, and Suggested for today.
+export function agendaOf(doc, ref, { now = new Date(), flags = [], P = programOf(doc, ref, { now, flags }) } = {}) {
+  const sid = P.current.id, a = agendaDoc(doc, sid), notes = a.notes || {};
+  const auto = autoChecks(doc, ref, { now, flags, picture: P.picture, m: P.m, sc: P.scorecard });
+  const must = P.current.items.map(i => ({ ...i, section: 'must', note: notes[i.id] ?? null }));
+  const going = (a.going || []).map(g => {
+    const key = g.key ?? null, t = key === 'holeFilled' && g.from ? P.scorecard.areas.find(x => x.id === targetOf(doc, g.from, P.scorecard)) ?? null : null;
+    const done = key === 'holeFilled' ? auto.holeFilled(g.from ?? sid) : key ? !!auto[key] : !!g.done;
+    return { ...g, section: 'going', auto: !!key, done, note: g.note ?? notes[g.id] ?? null, link: g.link ?? (t ? { kind: 'hole', areaId: t.id, route: t.route } : null) };
+  });
+  const have = new Set(going.map(g => JSON.stringify(g.link ?? g.label)));
+  const live = visible(doc.records, gatesOf(doc.profile, doc.client), ref);
+  const suggestions = [];
+  const suggest = s => { if (!have.has(JSON.stringify(s.link ?? s.label))) suggestions.push(s); };
+  for (const c of doc.program?.carried?.[sid] || []) suggest({ kind: 'carried', label: c.label, key: c.key ?? null, from: c.from, link: c.route ? { kind: 'route', route: c.route } : null, why: `carried over from session ${Number(c.from.slice(1))}` });
+  for (const hw of homeworkAll(doc, live)) if (hw.status === 'Client says done') suggest({ kind: 'homework', label: `Confirm homework: ${hw.label}`, link: { kind: 'homework', key: hw.key, route: '#/tools/lists' }, why: 'the client says it is done' });
+  for (const n of (doc.parking || []).filter(n => !n.filedTo)) suggest({ kind: 'parking', label: n.text, link: { kind: 'parking', noteId: n.id }, why: 'an open parking-lot question' });
+  const top = P.scorecard.open[0];
+  if (top) suggest({ kind: 'hole', label: `Top hole: ${top.name}`, key: 'holeFilled', from: sid, link: { kind: 'hole', areaId: top.id, route: '#/plan/scorecard' }, why: top.payoff ? `${Math.round(top.fiDays ?? 0)} FI days a year` : 'the top of the Scorecard' });
+  const old = now.getTime() - AGENDA.staleDays * 86400000;
+  for (const r of live.filter(r => ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) && r.updatedAt && Date.parse(r.updatedAt) < old).slice(0, 5)) {
+    const days = Math.floor((now.getTime() - Date.parse(r.updatedAt)) / 86400000);
+    suggest({ kind: 'stale', label: `${r.name || r.type}: ${days} days old`, link: { kind: 'record', recId: r.id, route: { income: '#/cash-flow/income', debt: '#/net-worth/debt', account: '#/net-worth/assets', asset: '#/net-worth/assets', bill: '#/cash-flow/budget' }[r.kind] }, why: `older than ${AGENDA.staleDays} days` });
+  }
+  const all = [...must, ...going];
+  return { sid, n: P.n, name: P.current.name, must, going, suggestions, notes, done: all.filter(i => i.done).length, of: all.length, open: all.filter(i => !i.done && !SETTLED_BY_ENDING.has(i.key)) };
+}
+export function addSuggestion(store, sid, s) { return addAgendaItem(store, sid, { label: s.label, link: s.link, key: s.key ?? null, from: s.from ?? null }); }
 // Once session 3 is done (ended, or its checklist met), Home tracks the areas Strong or OK instead of the Picture %.
 export const afterIntake = (doc, sessions) => (sessionOf(doc).count || 0) >= 3 || !!sessions[2]?.done;
 // Holes filled: each area OK or Strong now that a saved snapshot still had as a Hole, with the FI days it was worth.
@@ -125,22 +199,32 @@ export function startSession(store, ref = null, { now = new Date(), flags = [] }
   const at = now.toISOString();
   const sid = SESSIONS[sessionNo(store.doc) - 1].id;
   const pull = SESSIONS[sessionNo(store.doc) - 1].hole && ref && !store.doc.program?.targets?.[sid];
-  const top = pull ? scorecardOf(store.doc, ref, { now, flags }).holes[0]?.id ?? null : null;
+  const top = pull ? scorecardOf(store.doc, ref, { now, flags }).open[0]?.id ?? null : null;
   store.transaction('Start session', () => {
     store.setIn('session', ['startedAt'], at);
+    store.setIn('session', ['endedAt'], undefined); // a session that starts is not ended, whatever the clock says
     store.setIn('session', ['guide'], true);
     store.setIn('session', ['allFields'], false);
     if (top) store.setIn('program', ['targets', sid], top);
   });
   return { sid, target: top };
 }
-// End (R181): homework set, next session booked, the count moves on, and a snapshot is saved: Day 0 the first time,
-// End of session N after. The snapshot stays in the client file, so it exports and imports with everything else.
-export function endSession(store, ref, { homework = [], next = null, now = new Date(), flags = [] } = {}) {
+// End (R181), after the review gate: homework set, next session booked, the count moves on, the session's open items
+// carry over to the next one, the review (confirmed numbers, Move on anyway, a note) is kept on the session record,
+// and a snapshot is saved: Day 0 the first time, End of session N after, Graduation at the end. The snapshot stays
+// in the client file, so it exports and imports with everything else.
+export function endSession(store, ref, { homework = [], next = null, now = new Date(), flags = [], note = null, confirmed = [], decisions = {} } = {}) {
   const at = now.toISOString();
   const s = sessionOf(store.doc);
   const n = (s.count || 0) + 1;
   const first = !day0Of(store.doc);
+  const A = agendaOf(store.doc, ref, { now, flags });
+  const cur = A.must.length || A.going.length ? { id: A.sid, items: A.must } : sessionsOf(store.doc, ref, { now, flags })[n - 1];
+  // Each open item carries over (the default) or becomes homework (decisions[id] = 'homework').
+  const open = A.open.map(i => ({ from: i.from ?? A.sid, id: i.id, label: i.label, key: i.key ?? null, route: i.route ?? i.link?.route ?? null, link: i.link ?? null }));
+  const toHomework = open.filter(i => decisions[i.id] === 'homework');
+  const carry = open.filter(i => decisions[i.id] !== 'homework');
+  const nextSid = SESSIONS[n]?.id ?? null;
   store.transaction('End session', () => {
     store.setIn('session', ['homework'], homework);
     store.setIn('session', ['homeworkAt'], at);
@@ -149,9 +233,73 @@ export function endSession(store, ref, { homework = [], next = null, now = new D
     store.setIn('session', ['endedAt'], at);
     store.setIn('session', ['guide'], false);
     store.setIn('session', ['count'], n);
+    if (nextSid) store.setIn('program', ['carried', nextSid], carry.length ? carry.map(({ link, ...c }) => c) : undefined);
+    for (const i of toHomework) makeHomework(store, A.sid, i.label, { link: i.link });
+    store.setIn('program', ['reviews', cur.id], { at, movedOnAnyway: open.length > 0, carried: carry.map(o => o.label), homework: toHomework.map(o => o.label), confirmed, ...(note ? { note } : {}) });
+    // The recap: the agenda and its notes as they stood when the session ended.
+    store.setIn('program', ['recaps', cur.id], { at, n, name: A.name, must: A.must.map(i => ({ label: i.label, done: i.done, note: i.note })), going: A.going.map(i => ({ label: i.label, done: i.done, note: i.note })),
+      carried: carry.map(o => o.label), homework: toHomework.map(o => o.label), ...(note ? { note } : {}) });
   });
-  const snap = store.snapshot(first ? 'Day 0' : `End of session ${n}`, snapshotNumbers(store.doc, ref, { now, flags }), first ? { day0: true, session: n } : { session: n });
-  return { n, snap, first };
+  const graduation = n >= SESSIONS.length;
+  const snap = store.snapshot(first ? 'Day 0' : graduation ? 'Graduation' : `End of session ${n}`, snapshotNumbers(store.doc, ref, { now, flags }),
+    { session: n, ...(first ? { day0: true } : {}), ...(graduation ? { graduation: true } : {}) });
+  return { n, snap, first, carried: carry, homework: toHomework, graduation };
+}
+
+// The review gate: the key numbers this session looks at before it ends (REVIEW in js/registry/program.js), each
+// with its value and level; Looks right locks a row to Actual, Edit opens the field. The open checklist items are
+// listed as what will carry over.
+export function reviewOf(doc, ref, { now = new Date(), flags = [] } = {}) {
+  const picture = pictureOf(doc, ref, { now });
+  const sessions = sessionsOf(doc, ref, { now, flags, picture });
+  const n = sessionNo(doc), cur = sessions[n - 1];
+  const groups = REVIEW.groups[cur.id] ?? REVIEW.fallback;
+  const rec = id => doc.records.find(r => r.id === id) ?? null;
+  const rows = picture.items.filter(it => groups.includes(it.group)).map(it => {
+    const r = it.recId ? rec(it.recId) : null;
+    let value;
+    if (it.kind === 'category') value = `${it.lines.length} ${it.lines.length === 1 ? 'line' : 'lines'}, ${fmt.money(it.lines.reduce((s, l) => s + (l.amount ?? 0), 0))} a month`;
+    else if (it.kind === 'gut' || (r && it.field)) { const v = r ? (it.field in r && it.field !== 'values' ? r[it.field] : r.values?.[it.field]) : null; value = v == null ? 'Not entered' : it.field === 'apr' ? fmt.pct(v) : fmt.money(v); }
+    else value = it.level > 0 ? 'In' : 'Not entered';
+    const lockIds = it.kind === 'category' ? it.lines.map(l => l.id) : it.recId ? [it.recId] : [];
+    return { id: it.id, label: it.label, group: it.group, level: it.level, word: levelWord(it.level), value, recId: it.recId ?? null, field: it.field ?? null, route: it.route, focus: it.focus ?? null,
+      lockIds, canLock: lockIds.length > 0 && it.level > LEVELS.Missing && it.level < LEVELS.Actual, locked: it.level >= LEVELS.Actual };
+  });
+  const A = agendaOf(doc, ref, { now, flags });
+  const live = visible(doc.records, gatesOf(doc.profile, doc.client), ref);
+  const saidDone = homeworkAll(doc, live).filter(h => h.status === 'Client says done');
+  return { sid: cur.id, n, name: cur.name, session: cur, rows, unfinished: A.open, agenda: A, saidDone, nextSid: SESSIONS[n]?.id ?? null, nextName: SESSIONS[n]?.name ?? null, groups };
+}
+// Looks right: the row's numbers are confirmed, so they count as Actual from now on.
+export function confirmRow(store, row) {
+  store.transaction('Looks right', () => { for (const id of row.lockIds) store.update(id, { locked: true }); });
+}
+
+// The session tracker (every tab while a session runs): the session, how many items are done, and each item with
+// where it is worked on.
+export function trackerOf(doc, ref, { now = new Date(), flags = [] } = {}) {
+  if (!inSession(doc)) return null;
+  const P = programOf(doc, ref, { now, flags });
+  const s = P.current;
+  return { n: P.n, name: s.name, done: s.items.filter(i => i.done).length, of: s.items.length, items: s.items, picture: P.picture };
+}
+// The Revisit session (S9) re-scores through the review gate: done there marks the scorecard re-scored.
+export function markRescored(store, { now = new Date() } = {}) { store.setIn('scorecard', ['reviewedAt'], now.toISOString(), 'Re-scored'); }
+// A hole parked by the coach (answer 136), with an optional note; unparked the same way.
+export function parkHole(store, id, note = null) { store.setIn('scorecard', ['areas', id, 'parked'], { at: store.now(), ...(note ? { note } : {}) }, 'Park it'); }
+export function unparkHole(store, id) { store.setIn('scorecard', ['areas', id, 'parked'], undefined, 'Unpark'); }
+// A locked FOO step unlocked anyway by the coach, with a required note kept on the session record.
+export function overrideStep(store, stepId, note) {
+  if (!note || !String(note).trim()) throw new Error('An unlock needs a note.');
+  store.setIn('program', ['overrides', stepId], { at: store.now(), note: String(note).trim(), session: sessionNo(store.doc) }, 'Unlock anyway');
+}
+export function clearOverride(store, stepId) { store.setIn('program', ['overrides', stepId], undefined, 'Lock again'); }
+
+// The Day 0 vs graduation report (S12): the key numbers then and now, the areas, the holes filled; kept on the file.
+export function graduationReport(doc, ref, { now = new Date(), flags = [] } = {}) {
+  const rep = day0Report(doc, ref, { now });
+  const sc = scorecardOf(doc, ref, { now, flags });
+  return { at: now.toISOString(), day0At: rep?.at ?? null, rows: rep?.rows ?? [], okCount: sc.okCount, of: sc.of, day0Ok: day0Of(doc)?.metrics?.scoreOk ?? null, filled: filledHoles(doc, sc).map(f => ({ id: f.id, name: f.name, to: f.to, fiDays: f.fiDays })) };
 }
 
 // Day 0 against now, for the Revisit session (S9) and the strip: each key number then and now.

@@ -1,0 +1,61 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// The Agenda (Phase 3, batch 3): one panel for a session. Must do is the session's checklist, ticking itself from the
+// numbers wherever they change; Going over is what the coach adds; every item takes a quick note and can link to a
+// page or field, a homework item, a parking-lot question or a Scorecard hole; Suggested for today adds with a +.
+// Home shows it before the session (prep); the docked bar shows it on every tab while the session runs. Coach only.
+import { h, icon } from './dom.js';
+import * as S from './staples.js';
+import { agendaOf, addAgendaItem, removeAgendaItem, tickAgendaItem, setAgendaNote, addSuggestion } from '../program.js';
+
+export const AUI = { noteOpen: null }; // which item's note box is open
+
+// Follow an item's link: a page or field, a homework item, a parking-lot question, or a Scorecard hole.
+export function follow(app, link, { fallback = null } = {}) {
+  if (!link) { if (fallback) { app.trackerBack(location.hash); app.go(fallback); } return; }
+  app.trackerBack(location.hash);
+  if (link.kind === 'parking') { app.openParking(); return; }
+  if (link.kind === 'record' && link.recId) { app.goFound({ kind: 'record', id: link.recId, route: link.route }); return; }
+  if (link.route) app.go(link.route);
+  if (link.focus) requestAnimationFrame(() => document.querySelector(`[data-focus="${link.focus}"]`)?.focus());
+}
+const linkWord = link => (!link ? null : { route: 'a page', record: 'a field', homework: 'homework', parking: 'a parking-lot question', hole: 'a Scorecard hole' }[link.kind] ?? 'a page');
+
+// The panel. compact: the docked bar (shorter rows, no editing of the session itself).
+export function agendaPanel(app, ctx, A, { compact = false } = {}) {
+  const sid = A.sid;
+  const noteBox = it => {
+    const key = `${it.section}:${it.id}`;
+    const open = AUI.noteOpen === key || !!it.note;
+    if (!open) return S.button('Note', { size: 'small', iconName: 'note', onClick: () => { AUI.noteOpen = key; app.render(); } });
+    const ta = h('input', { value: it.note || '', placeholder: 'A quick note', 'aria-label': `Note on ${it.label}`, 'data-focus': `agenda:note:${it.id}` });
+    ta.onchange = () => setAgendaNote(ctx.store, sid, it.id, ta.value);
+    return h('label.field', { style: { width: compact ? '220px' : '300px' } }, ta);
+  };
+  const itemRow = it => h(`div.check-item${it.done ? '.done' : ''}${compact ? '.compact' : ''}`, {},
+    it.auto ? h('span.box', { 'aria-hidden': 'true' }, it.done ? icon('check') : null)
+      : h('input', { type: 'checkbox', checked: it.done, 'aria-label': it.label, onchange: e => (it.section === 'must' ? ctx.store.setIn('program', ['checks', sid, it.id], e.target.checked || undefined, 'Checklist') : tickAgendaItem(ctx.store, sid, it.id, e.target.checked)) }),
+    h('div', { style: { flex: 1, minWidth: 0 } }, h('div.what', {}, it.label, it.detail ? h('span.muted', {}, ` · ${it.detail}`) : null, it.carried ? h('span.tag.plain', { style: { marginLeft: '6px' } }, 'carried over') : null),
+      it.auto ? h('div.auto', {}, it.done ? 'From the numbers' : 'Ticks itself from the numbers') : it.link ? h('div.auto', {}, `Links to ${linkWord(it.link)}`) : null),
+    noteBox(it),
+    it.route || it.link ? S.button('Open', { size: 'small', iconName: 'right', onClick: () => follow(app, it.link ?? { kind: 'route', route: it.route }) }) : null,
+    it.section === 'going' ? S.iconButton('trash', `Remove ${it.label}`, () => removeAgendaItem(ctx.store, sid, it.id), { tiny: true }) : null);
+  const add = h('input', { placeholder: 'Add something to go over', 'aria-label': 'Add something to go over' });
+  const addIt = () => { const v = add.value.trim(); if (!v) return; addAgendaItem(ctx.store, sid, { label: v }); };
+  add.onkeydown = e => { if (e.key === 'Enter') addIt(); };
+  const linkPicker = (anchor, it) => S.popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, `Link ${it.label} to`),
+    ...[['A page', { kind: 'route', route: '#/cash-flow/budget' }], ['The Scorecard', { kind: 'hole', route: '#/plan/scorecard' }], ['The homework list', { kind: 'homework', route: '#/tools/lists' }], ['The parking lot', { kind: 'parking' }]]
+      .map(([label, link]) => h('button.btn.small', { type: 'button', onclick: () => { S.closePop(); ctx.store.setIn('program', ['agenda', sid, 'going'], (ctx.store.doc.program.agenda[sid].going || []).map(x => (x.id === it.id ? { ...x, link } : x)), 'Agenda'); } }, label)),
+    h('span.muted.small', {}, 'A page link opens the Budget; change it by adding the item from where it lives (Find, then +).')), { width: 320 });
+  return h('div.agenda-panel', {},
+    h('div.agenda-head', {}, h('strong', {}, 'Must do'), h('span.muted.small', {}, `${A.must.filter(i => i.done).length} of ${A.must.length}`)),
+    h('div.checklist', { style: { marginBottom: '8px' } }, A.must.map(itemRow)),
+    h('div.agenda-head', {}, h('strong', {}, 'Going over'), h('span.muted.small', {}, A.going.length ? `${A.going.filter(i => i.done).length} of ${A.going.length}` : 'Nothing added yet')),
+    A.going.length ? h('div.checklist', { style: { marginBottom: '8px' } }, A.going.map(it => { const row = itemRow(it); if (!it.link && !it.auto) row.append(S.button('Link', { size: 'small', onClick: e => linkPicker(e.currentTarget, it) })); return row; })) : null,
+    h('div.row-line', { style: { gap: '8px', marginBottom: '8px' } }, h('label.field', { style: { width: compact ? '220px' : '300px' } }, add), S.button('Add', { iconName: 'plus', onClick: addIt })),
+    A.suggestions.length ? S.moreBlock(`agenda:suggest:${sid}${compact ? ':bar' : ''}`, () => h('div.suggest-list', {}, A.suggestions.map(sg => h('div.suggest-row', {},
+      S.button('+', { size: 'small', onClick: () => { addSuggestion(ctx.store, sid, sg); S.toast(`Added: ${sg.label}`); } }),
+      h('span', { style: { flex: 1 } }, sg.label, h('span.muted.small', {}, ` · ${sg.why}`)),
+      h('span.tag.plain', {}, { carried: 'carried over', homework: 'homework', parking: 'parking lot', hole: 'top hole', stale: 'stale number' }[sg.kind])))),
+    { label: `Suggested for today (${A.suggestions.length})` }) : null);
+}
+export { agendaOf };

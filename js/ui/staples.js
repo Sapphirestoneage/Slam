@@ -225,7 +225,7 @@ export function metricCard(ctx, label, result, { key = null, render = null, lowe
         result.unit === 'months' && !render ? h('span.when', {}, ` ${value(result, ctx).replace(/^.*\(/, '(')}`) : null),
     locked && !result.never ? h('span.change', {}, needLinks(ctx, result.needs)) : null,
     result.guess && !confidence ? h('span', {}, guessTag()) : null,
-    confidence && !locked ? h('span', {}, h('span.tag.plain.confidence', { title: confidence.text }, confidence.label)) : null,
+    confidence && !locked ? h('span.coach-only', {}, h('span.tag.plain.confidence', { title: confidence.text }, confidence.label)) : null, // a coach's cue (hidden in Client view)
     change && change.direction !== 'same' ? h(`span.change.${change.direction}${good ? '.good' : ''}`, {}, `${formatDiff(change.diff, key)} since last session`) : null,
     change && change.direction === 'same' ? h('span.change', {}, 'Same as last session') : null,
     note && !locked ? h('span.change', {}, note) : null,
@@ -559,7 +559,7 @@ export function fromButton(label, route, id, { tag = false, value = null } = {})
 }
 // Session-1 focus mode (polish item 4): while Guide me is on in a session, lists show their core columns only and
 // the rest sits under one "More detail" per row or section.
-export const focusOn = ctx => { const s = ctx.store.doc.session || {}; return !!s.guide && !s.allFields && !!s.startedAt && !(s.endedAt > s.startedAt); }; // Show all fields on Live turns it off (answer 90)
+export const focusOn = ctx => { const s = ctx.store.doc.session || {}; return !!s.guide && !s.allFields && !!s.startedAt && !(s.endedAt && s.endedAt >= s.startedAt); }; // Show all fields on Live turns it off (answer 90)
 export function focusMore(ctx, id, kids) {
   if (!focusOn(ctx)) return kids;
   return moreBlock(`focus:${id}`, () => h('div.stack', { style: { gap: '16px' } }, ...[kids].flat()), { label: 'More detail' });

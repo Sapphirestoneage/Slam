@@ -13,6 +13,8 @@ import { feedbackCard } from './report-this.js';
 import { keyNumbers } from '../math/metrics.js';
 import { statusOf } from '../records.js';
 import { money, pct } from '../format.js';
+import { setHomeworkStatus } from '../program.js';
+import { HOMEWORK_STATUSES } from '../registry/program.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const ROUTE = { income: '#/cash-flow/income', benefit: '#/cash-flow/income', debt: '#/net-worth/debt', account: '#/net-worth/assets', asset: '#/net-worth/assets', coverage: '#/net-worth/protection', bill: '#/cash-flow/budget', milestone: '#/plan/goals', event: '#/plan/next-12-months' };
@@ -46,8 +48,10 @@ export function listsScreen(app, ctx) {
         const p = ctx.store.doc.profile;
         d.onchange = () => (x.r ? ctx.store.update(x.r.id, { homeworkDue: d.value || null }) : ctx.store.setDoc('profile', { laterDue: { ...(p.laterDue || {}), [x.profileKey ?? x.lifeKey]: d.value || null } }));
         return h('div.row-line', { style: { gap: '10px' } },
-          h('span.stack', { style: { flex: 1, gap: '2px' } }, h('span', { style: { fontWeight: 600 } }, x.label), x.where ? h('span.muted.small', {}, `Where to find it: ${x.where}`) : null),
-          h('label.field', { style: { width: '160px' } }, d),
+          h('span.stack', { style: { flex: 1, gap: '2px' } }, h('span', { style: { fontWeight: 600 } }, x.label), x.where ? h('span.muted.small', {}, `Where to find it: ${x.where}`) : null, x.from ? h('span.muted.small', {}, `From session ${Number(x.from.slice(1))}`) : null),
+          // The status: the coach sets Client says done for now; a client's own I did this can set it later. Confirm happens in the review gate too.
+          S.toggle(HOMEWORK_STATUSES.map(s => [s, s]), x.status, v => setHomeworkStatus(ctx.store, x.key, v || 'To do', { by: 'coach' }), { label: `${x.label} status` }),
+          x.program ? null : h('label.field', { style: { width: '160px' } }, d),
           S.button('Open', { size: 'small', onClick: () => (x.r ? fix({ ...x, route: x.r.kind === 'debt' ? debtRoute(x.r) : ROUTE[x.r.kind] || '#/home/profile' }) : app.go(x.lifeKey ? '#/net-worth/protection' : '#/home/profile')) }));
       }))
       : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, "Tap I'll find it later on any number and it lands here, with where to look.")))))];

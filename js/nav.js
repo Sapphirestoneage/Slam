@@ -7,7 +7,7 @@ export const TABS = [
   // Home is one screen (Phase 3): the program, the picture, the next small things. Start session switches it to the
   // session mode; About you stays a page of its own under it.
   { id: 'home', name: 'Home', job: 'This session: the program, the picture, the next small things', subs: [
-    { id: 'session', name: 'Home' }, { id: 'profile', name: 'About you', area: 'needs' }] },
+    { id: 'session', name: 'Home' }, { id: 'profile', name: 'About you', area: 'needs' }, { id: 'review', name: 'Review', hidden: true }] }, // Review: the gate before a session ends (no sub-tab of its own)
   { id: 'net-worth', name: 'Net worth', job: 'What you own and owe', subs: [
     { id: 'assets', name: 'Assets', area: 'assets' }, { id: 'debt', name: 'Debt', area: 'debt' }, { id: 'credit-cards', name: 'Credit cards', area: 'debt' }, { id: 'protection', name: 'Protection', area: 'goals' }] },
   { id: 'cash-flow', name: 'Cash flow', job: 'Money in and out: income, taxes, budget, calendar, close', subs: [

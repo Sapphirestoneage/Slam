@@ -63,13 +63,17 @@ export const fieldLabel = field => LABEL[field] ?? benefitOf(field)?.label ?? (f
 export function homeworkList(doc, records) {
   const out = [];
   const later = doc.profile?.later || {};
-  for (const key of Object.keys(later)) if (later[key]) out.push({ r: null, profileKey: key, label: fieldLabel(key), where: whereToFind(key), due: doc.profile?.laterDue?.[key] ?? null });
-  for (const x of lifeAdminItems(doc, records)) if (x.status === 'Not yet') out.push({ r: null, lifeKey: x.key, label: x.label, where: x.where, due: doc.profile?.laterDue?.[x.key] ?? null }); // M8.2
+  for (const key of Object.keys(later)) if (later[key]) out.push({ key: `profile:${key}`, r: null, profileKey: key, label: fieldLabel(key), where: whereToFind(key), due: doc.profile?.laterDue?.[key] ?? null });
+  for (const x of lifeAdminItems(doc, records)) if (x.status === 'Not yet') out.push({ key: `life:${x.key}`, r: null, lifeKey: x.key, label: x.label, where: x.where, due: doc.profile?.laterDue?.[x.key] ?? null }); // M8.2
   for (const r of records) {
     const name = r.name || r.values?.category || r.type || 'Item';
-    if (r.status === LATER) out.push({ r, label: name, where: whereToFind(r.kind === 'account' || r.kind === 'debt' ? 'balance' : r.kind === 'asset' ? 'value' : 'amount', r.type), due: r.values?.homeworkDue ?? null });
-    for (const [f, st] of Object.entries(r.fieldStatus || {})) if (st === LATER && r.status !== LATER) out.push({ r, field: f, label: `${name}: ${fieldLabel(f)}`, where: whereToFind(f, r.type), due: r.values?.homeworkDue ?? null });
+    if (r.status === LATER) out.push({ key: `rec:${r.id}`, r, label: name, where: whereToFind(r.kind === 'account' || r.kind === 'debt' ? 'balance' : r.kind === 'asset' ? 'value' : 'amount', r.type), due: r.values?.homeworkDue ?? null });
+    for (const [f, st] of Object.entries(r.fieldStatus || {})) if (st === LATER && r.status !== LATER) out.push({ key: `rec:${r.id}:${f}`, r, field: f, label: `${name}: ${fieldLabel(f)}`, where: whereToFind(f, r.type), due: r.values?.homeworkDue ?? null });
   }
+  // Homework the coach made from an agenda item (doc.program.homework), with its status (To do, Client says done, Confirmed).
+  for (const hw of doc.program?.homework || []) if (hw.status !== 'Confirmed') out.push({ key: `hw:${hw.id}`, r: null, program: hw, label: hw.label, where: null, due: hw.due ?? null, from: hw.from });
+  const statuses = doc.program?.homeworkStatus || {};
+  for (const x of out) { const st = x.program ? { status: x.program.status, by: x.program.statusBy } : statuses[x.key]; x.status = st?.status ?? 'To do'; x.statusBy = st?.by ?? null; }
   return out;
 }
 

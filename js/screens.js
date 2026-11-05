@@ -16,6 +16,7 @@ import { statementsScreen } from './ui/statements-ui.js';
 import { layersCard } from './ui/layers-ui.js';
 import { fooScreen } from './ui/foo-ui.js';
 import { scorecardScreen } from './ui/scorecard-ui.js';
+import { reviewScreen } from './ui/review-ui.js';
 import { goalsScreen, timelineScreen, payoffScreen, nextYearScreen, scenariosScreen } from './ui/plan-ui.js';
 import { AREAS } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
@@ -158,6 +159,7 @@ function tabPage(tabId, id) {
 
 export const SCREENS = {
   'home/session': (app, ctx) => (app.hasClient ? homeScreen(app, ctx) : [head('Home', 'The program: where this client is, what we are doing today, the next small thing'), noClient(app)]),
+  'home/review': (app, ctx) => (app.hasClient ? reviewScreen(app, ctx) : [head('Review'), noClient(app)]),
 
   // About you is the first stop: its answers decide what shows everywhere.
   'home/profile': (app, ctx) => (app.hasClient ? [head('About you', MM.profile.sub), ...MM.profile.body(app, ctx)] : [head('About you'), noClient(app)]),
