@@ -2,6 +2,7 @@
 // The shell (build phase 4): top bar, five tabs, sub-tabs, Find, the More menu (undo, redo, add anything, the
 // parking lot), time toggle, client view, gear. Each screen shows its first state from Words and states.
 import { h, clear, icon } from './ui/dom.js';
+import { arrive, leftPopover, missingFor } from './ui/arrive.js';
 import { layerSnapshot } from './math/layers.js';
 import { reportThis } from './ui/report-this.js';
 import { startTips } from './ui/tips.js';
@@ -114,6 +115,7 @@ const app = {
     const homeHref = tabRoute(TABS[0]);
     clear($('topbar'), h('div.topbar-in', {},
       h('div.tb-left', {},
+        h('span.row-line.history-btns', { style: { gap: '2px', flexWrap: 'nowrap' } }, S.iconButton('left', 'Back (the previous screen)', () => history.back(), { tiny: true }), S.iconButton('right', 'Forward', () => history.forward(), { tiny: true })), // item 1: every screen is browser history
         h('a.site-id', { href: homeHref, title: 'Stress Less About Money' }, 'SLAM'), clientBtn,
         h('span.save-state', { id: 'save-state' })),
       h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: tabRoute(t), 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),
@@ -136,7 +138,7 @@ const app = {
       const complete = p && p.of > 0 && p.done === p.of;
       return h('a.subtab', { href: `#/${tab.id}/${s.id}`, 'aria-current': s.id === sub.id ? 'page' : null, class: s.area ? `area-${s.area}` : null },
         s.area ? h('span.dot') : null, s.name,
-        p ? h(`span.count${complete ? '.done' : ''}`, { 'aria-label': complete ? 'core done' : `${p.done} of ${p.of} done` }, complete ? '✓' : `${p.done}/${p.of}`) : null);
+        p ? h(`span.count${complete ? '.done' : ''}`, { role: complete ? null : 'button', tabindex: complete ? null : 0, 'aria-label': complete ? 'core done' : `${p.done} of ${p.of} done; see what is left`, onclick: complete ? null : e => { e.preventDefault(); e.stopPropagation(); leftPopover(this, e.currentTarget, missingFor(this.ctx, `#/${tab.id}/${s.id}`).filter(i => i.level === 'Core'), { title: `${s.name}: ${p.of - p.done} left` }); } }, complete ? '✓' : `${p.done}/${p.of}`) : null); // item 3
     }), modes, h('span.spacer'), S.savedNote());
     clear($('subtabs'), subs);
     this.saveState();
@@ -375,9 +377,10 @@ const app = {
   dueForCheck() { // the rough or aged numbers due for a check today (js/checks.js)
     return dueChecks(this.store.doc, ref).filter(c => c.rec).map(c => ({ label: c.label, status: c.status, route: routeForPlace(placeOf(c.rec)) }));
   },
+  setupArrive() { S.setLeftPopover((anchor, items) => leftPopover(this, anchor, items)); },
   goToNeed(need) {
     const r = search(need, { fields })[0];
-    if (r?.route) this.go(r.route);
+    if (r?.route) arrive(this, r.route); // item 2: land and light up what needs work
   },
 
   renderSoon() { if (!this._soon) this._soon = requestAnimationFrame(() => { this._soon = null; this.render({ keepPop: true }); }); },
@@ -406,6 +409,7 @@ document.addEventListener('keydown', e => {
   if (e.key === '/' && !typing) { e.preventDefault(); app.find(); }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); e.shiftKey ? app.redo() : app.undo(); }
 });
+app.setupArrive(); // batch 6: counters list what is left
 window.addEventListener('hashchange', () => app.render());
 window.addEventListener('beforeunload', e => { // R084: warn before closing with unsaved work
   app.saver?.flush();

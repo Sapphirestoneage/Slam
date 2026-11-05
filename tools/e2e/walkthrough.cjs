@@ -24,6 +24,20 @@ const ROUTES = ['#/home/session', '#/home/profile', '#/net-worth/assets', '#/net
   await step('answer Confidence and Joy', async () => { for (const label of ['Confidence', 'Joy']) { const box = page.locator(`.joy-ask input[aria-label^="${label}"]`).first(); if (!(await box.count())) continue; await box.fill('7', { timeout: 3000 }); await box.press('Tab').catch(() => {}); await page.waitForTimeout(500); } if (await page.locator('.joy-ask').count()) throw new Error('the ask stayed after answering both'); });
   await step('agenda suggestion', async () => { const more = page.locator('button', { hasText: /Suggested for today/ }).first(); if (await more.count()) { await more.click({ timeout: 2000 }); await page.waitForTimeout(300); const plus = page.locator('.suggest-row button', { hasText: /^\+$/ }).first(); if (await plus.count()) await plus.click({ timeout: 2000 }); } });
   await step('ladder on Home', async () => { if (!(await page.locator('.ladder-card').count())) throw new Error('no ladder card'); });
+  // Batch 6, priority 1: history arrows, a counter that lists what is left, Fix it lands and lights up, the browser back button.
+  await step('history arrows', async () => { if ((await page.locator('.history-btns button').count()) !== 2) throw new Error('no back and forward arrows'); });
+  await step('counter and Fix it', async () => {
+    await page.evaluate(() => { location.hash = '#/net-worth/debt'; }); await page.waitForTimeout(400);
+    const apr = page.locator('tr.row input[aria-label*="APR" i]').first(); await apr.fill(''); await apr.press('Tab'); await page.waitForTimeout(400);
+    if (!(await page.locator('tr.row.left').count())) throw new Error('no amber marker on the unfinished row');
+    await page.locator('.footer .count-btn').first().click({ timeout: 3000 }); await page.waitForTimeout(300);
+    await page.locator('.pop button', { hasText: 'Fix it' }).first().click({ timeout: 3000 }); await page.waitForTimeout(900);
+    if (!(await page.locator('.toast.arrive').count()) || !(await page.locator('.glow').count())) throw new Error('no arrive toast or glow');
+    await page.locator('.toast.arrive button', { hasText: 'Back to the agenda' }).click({ timeout: 3000 }); await page.waitForTimeout(500);
+    await page.evaluate(() => history.back()); await page.waitForTimeout(500);
+    if (!/net-worth\/debt/.test(await page.evaluate(() => location.hash))) throw new Error(`back did not return to Debt: ${await page.evaluate(() => location.hash)}`);
+    await page.evaluate(() => { location.hash = '#/home/session'; }); await page.waitForTimeout(400);
+  });
   await step('End session through the gate', async () => { await page.locator('button', { hasText: /^End session$/ }).first().click({ timeout: 3000 }); await page.waitForTimeout(600); const go = page.locator('button', { hasText: /Move on anyway|^End session$|Move to the next session/ }).last(); await go.click({ timeout: 3000 }); await page.waitForTimeout(900); });
   await step('session saved', async () => { const t = await page.locator('body').innerText(); if (!/Session 1 saved/.test(t)) throw new Error('no saved banner'); });
   await step('Joy card after the snapshot', async () => { if (!(await page.locator('.joy-card').count())) throw new Error('no Joy card'); });

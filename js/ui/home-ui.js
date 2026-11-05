@@ -20,6 +20,7 @@ import { ladderOf } from '../math/ladder.js';
 import { monthName } from '../month.js';
 import { ratingTag } from './scorecard-ui.js';
 import { agendaPanel, follow } from './agenda-ui.js';
+import { arrive, leftPopover } from './arrive.js';
 import { money, pct } from '../format.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -64,7 +65,7 @@ function sessionStrip(app, ctx, P) {
     const target = item?.route || P.next[0]?.route || '#/plan/goals';
     PUI.reveal = target === '#/plan/goals';
     app.trackerBack(location.hash);
-    app.go(target);
+    arrive(app, target, { from: location.hash });
   };
   const start = () => { const r = startSession(ctx.store, ctx.ref, { now: ctx.now(), flags: app.flags }); HUI.open = null; if (r.target) S.toast(`This session's hole: ${P.scorecard.areas.find(a => a.id === r.target)?.name}.`); if (r.sid === 'S9') { app.go('#/home/review'); return; } app.render(); }; // Revisit opens the gate first (answer 138)
   return h('div.card.session-strip', {},
@@ -302,7 +303,7 @@ function nextThings(app, ctx, P) {
   if (!P.next.length) return h('div.card', {}, h('p', { style: { margin: 0 } }, h('strong', {}, 'Every number is at Actual.'), ' Nothing left to sharpen.'));
   const open = it => {
     if (it.recId) { app.goFound({ kind: 'record', id: it.recId, route: it.route }); return; }
-    app.go(it.route);
+    arrive(app, it.route, { from: location.hash });
     if (it.focus) requestAnimationFrame(() => document.querySelector(`[data-focus="${it.focus}"]`)?.focus());
   };
   return h('section.section', {}, h('div.section-title', {}, h('h2', {}, 'Next small things'), h('span.muted', {}, 'What raises the picture most')),

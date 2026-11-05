@@ -4,6 +4,7 @@
 // page or field, a homework item, a parking-lot question or a Scorecard hole; Suggested for today adds with a +.
 // Home shows it before the session (prep); the docked bar shows it on every tab while the session runs. Coach only.
 import { h, icon } from './dom.js';
+import { arrive } from './arrive.js';
 import * as S from './staples.js';
 import { agendaOf, addAgendaItem, removeAgendaItem, tickAgendaItem, setAgendaNote, addSuggestion, makeHomework } from '../program.js';
 import { search } from '../nav.js';
@@ -12,11 +13,12 @@ export const AUI = { noteOpen: null }; // which item's note box is open
 
 // Follow an item's link: a page or field, a homework item, a parking-lot question, or a Scorecard hole.
 export function follow(app, link, { fallback = null } = {}) {
-  if (!link) { if (fallback) { app.trackerBack(location.hash); app.go(fallback); } return; }
-  app.trackerBack(location.hash);
+  const from = location.hash;
+  if (!link) { if (fallback) { app.trackerBack(from); arrive(app, fallback, { from }); } return; }
+  app.trackerBack(from);
   if (link.kind === 'parking') { app.openParking(); return; }
   if (link.kind === 'record' && link.recId) { app.goFound({ kind: 'record', id: link.recId, route: link.route }); return; }
-  if (link.route) app.go(link.route);
+  if (link.route) arrive(app, link.route, { from }); // item 2: land, highlight the first field that needs work, the toast lists the rest
   if (link.focus) requestAnimationFrame(() => document.querySelector(`[data-focus="${link.focus}"]`)?.focus());
 }
 const linkWord = link => (!link ? null : { route: 'a page', record: 'a field', homework: 'homework', parking: 'a parking-lot question', hole: 'a Scorecard hole' }[link.kind] ?? 'a page');
@@ -56,7 +58,7 @@ export function agendaPanel(app, ctx, A, { compact = false } = {}) {
       h('span.label', {}, 'Or an exact field'), h('label.field', { style: { width: '300px' } }, q), list), { width: 360 });
   };
   return h('div.agenda-panel', {},
-    h('div.agenda-head', {}, h('strong', {}, 'Must do'), h('span.muted.small', {}, `${A.must.filter(i => i.done).length} of ${A.must.length}`)),
+    h('div.agenda-head', {}, h('strong', {}, 'Must do'), A.must.some(i => !i.done) ? h('button.btn.small.count-btn', { type: 'button', 'aria-label': 'Must do: see what is left', onclick: e => S.popover(e.currentTarget, h('div.stack', { style: { gap: '6px' } }, h('strong', {}, `${A.must.filter(i => !i.done).length} left`), ...A.must.filter(i => !i.done).map(i => h('div.row-line', { style: { gap: '8px' } }, h('span', { style: { flex: 1 } }, i.label), i.route || i.link ? S.button('Open', { size: 'small', iconName: 'right', onClick: () => { S.closePop(); follow(app, i.link ?? { kind: 'route', route: i.route }); } }) : null))), { width: 340 }) }, `${A.must.filter(i => i.done).length} of ${A.must.length}`) : h('span.muted.small', {}, `${A.must.filter(i => i.done).length} of ${A.must.length}`)), // item 3
     h('div.checklist', { style: { marginBottom: '8px' } }, A.must.map(itemRow)),
     h('div.agenda-head', {}, h('strong', {}, 'Going over'), h('span.muted.small', {}, A.going.length ? `${A.going.filter(i => i.done).length} of ${A.going.length}` : 'Nothing added yet')),
     A.going.length ? h('div.checklist', { style: { marginBottom: '8px' } }, A.going.map(it => { const row = itemRow(it); if (!it.link && !it.auto) row.append(S.button('Link', { size: 'small', onClick: e => linkPicker(e.currentTarget, it) })); return row; })) : null,

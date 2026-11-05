@@ -14,6 +14,7 @@ import { listsScreen, sessionScreen, discoveryScreen } from './ui/tools-ui.js';
 import { overviewScreen, onePagerScreen, historyScreen } from './ui/report-ui.js';
 import { statementsScreen } from './ui/statements-ui.js';
 import { layersCard } from './ui/layers-ui.js';
+import { arrive, leftPopover, missingFor } from './ui/arrive.js';
 import { metrics as metricsOf } from './math/metrics.js';
 import { personLabels, modeOf, MODES, viewsOf } from './registry/couples.js';
 import { fooScreen } from './ui/foo-ui.js';
@@ -50,15 +51,17 @@ const hasAny = (ctx, kinds) => ctx.store.records.some(r => kinds.includes(r.kind
 
 // ---------- The sections (build phase 5), now under Home, Net worth and Cash flow ----------
 // Two bars per section: core (Primary fields) and full detail (everything that applies) (R065).
-function completion(c) {
+function completion(app, c) {
+  const route = location.hash;
+  const items = x => (x.items || []).map(it => ({ ...it, route }));
   const bar = (label, x) => h('span.row-line', { style: { gap: '8px', flexWrap: 'nowrap' } }, h('span.label', {}, label),
     h('div.progress', { role: 'progressbar', 'aria-valuenow': x.of ? Math.round(x.done / x.of * 100) : 0, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': label }, h('span', { style: { width: `${x.of ? x.done / x.of * 100 : 0}%` } })),
-    h('span.label', {}, `${x.done} of ${x.of}`));
+    x.of && x.done < x.of ? h('button.btn.small.count-btn', { type: 'button', 'aria-label': `${label}: ${x.done} of ${x.of}, see what is left`, onclick: e => leftPopover(app, e.currentTarget, items(x), { title: `${label}: ${x.of - x.done} left` }) }, `${x.done} of ${x.of}`) : h('span.label', {}, `${x.done} of ${x.of}`)); // item 3: a counter lists what is left
   if (!c.core.of && !c.full.of) return null;
   // What is still missing, in words, behind a caret so the page stays calm.
   const left = [...(c.core.missing || []).map(x => ['Core', x]), ...(c.full.missing || []).filter(x => !(c.core.missing || []).includes(x)).map(x => ['Full detail', x])];
   return h('div.completion-wrap', {}, h('div.completion', {}, bar('Core', c.core), bar('Full detail', c.full)),
-    left.length ? S.moreBlock(`missing:${location.hash}`, () => h('ul.missing', {}, left.map(([k, x]) => h('li', {}, h('span.tag.plain', {}, k), ' ', x))), { label: `What's missing (${left.length})` }) : null);
+    left.length ? S.moreBlock(`missing:${location.hash}`, () => h('ul.missing', {}, left.map(([k, x]) => { const it = [...items(c.core), ...items(c.full)].find(i => x.startsWith(i.name.split(':')[0])); return h('li', {}, h('span.tag.plain', {}, k), ' ', x, ' ', S.button('Fix it', { size: 'small', iconName: 'right', onClick: () => arrive(app, route, { only: it ?? undefined }) })); })), { label: `What's missing (${left.length})` }) : null);
 }
 // R015: an area turned off on the Profile leaves a slim way back.
 const addArea = (app, ctx, k, label) => h('a.add-area', { href: '#', onclick: e => {
@@ -77,10 +80,10 @@ const withChart = (ctx, list, charts, area) => (S.focusOn(ctx)
   ? [S.recordList(ctx, list), S.focusMore(ctx, `chart:${area}`, S.visualsPanel(ctx, { charts, area }))]
   : h('div.visuals', {}, S.recordList(ctx, list), S.visualsPanel(ctx, { charts, area })));
 const MM = {
-  profile: { title: 'About you', sub: 'Why now, what applies, about you', body: (app, ctx) => [completion(profileCompletion(ctx.store.doc)), ...profileScreen(app, ctx)] },
+  profile: { title: 'About you', sub: 'Why now, what applies, about you', body: (app, ctx) => [completion(app, profileCompletion(ctx.store.doc)), ...profileScreen(app, ctx)] },
   income: { title: 'Income', sub: 'Paychecks, benefits, variable income', body: (app, ctx) => {
     const g = ctx.gates();
-    return [completion(listCompletion(ctx, r => r.kind === 'income' || r.kind === 'benefit', ['amount'])), hasAny(ctx, ['income']) ? null : fastTrack(app, ctx),
+    return [completion(app, listCompletion(ctx, r => r.kind === 'income' || r.kind === 'benefit', ['amount'])), hasAny(ctx, ['income']) ? null : fastTrack(app, ctx),
       g.betweenJobs && !ctx.store.find(r => r.kind === 'income' && r.type === 'Unemployment').length
         ? h('div.banner-inline', {}, 'Between jobs: add unemployment benefits so the runway counts them.', S.button('Add unemployment', { iconName: 'plus', onClick: () => ctx.store.add('income', { name: 'Unemployment benefits', per: 'week' }, { type: 'Unemployment' }) })) : null,
       withChart(ctx, incomeList(), incomeCharts, 'income'),
@@ -89,19 +92,19 @@ const MM = {
   } },
   debt: { title: 'Debt', sub: 'Every debt and its payoff', body: (app, ctx) => (ctx.gates().areas.debt === false
     ? [h('div.card', {}, h('div.empty', {}, h('span.title', {}, 'No debt, per About you'), addArea(app, ctx, 'debt', 'Debt')))]
-    : [completion(listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr'])), hasAny(ctx, ['debt']) ? null : fastTrack(app, ctx),
+    : [completion(app, listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr'])), hasAny(ctx, ['debt']) ? null : fastTrack(app, ctx),
       withChart(ctx, debtList(ctx.ref, { cards: 'none' }), debtCharts, 'debt'), S.live(ctx, () => cardsLink(ctx))]) },
   // Answer to 56: credit cards are standard debt with a sub-tab of their own: the cards, utilization, the score.
   'credit-cards': { title: 'Credit cards', sub: 'Every card, how much of the limits you use, your score', body: (app, ctx) => (ctx.gates().areas.debt === false
     ? [h('div.card', {}, h('div.empty', {}, h('span.title', {}, 'No debt, per About you'), addArea(app, ctx, 'debt', 'Debt')))]
-    : [completion(listCompletion(ctx, r => r.kind === 'debt' && r.type === 'Credit card', ['balance', 'apr'])),
+    : [completion(app, listCompletion(ctx, r => r.kind === 'debt' && r.type === 'Credit card', ['balance', 'apr'])),
       S.recordList(ctx, debtList(ctx.ref, { cards: 'only' })), S.live(ctx, () => creditCard(ctx))]) },
   assets: { title: 'Assets', sub: 'Cash, investments, car, home', body: (app, ctx) => [
-    completion(listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance'])),
+    completion(app, listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance'])),
     hasAny(ctx, ['account', 'asset']) ? null : fastTrack(app, ctx), offAreas(app, ctx, ['cash', 'investments', 'real']),
     withChart(ctx, assetList(ctx.ref), assetCharts, 'assets'),
     S.moreBlock('assets:layers', () => S.live(ctx, () => layersCard(ctx)), { label: 'Cash layers: little e, gaps, big e' })] },
-  protection: { title: 'Protection', sub: 'Insurance coverage, gaps and life admin', body: (app, ctx) => [completion(listCompletion(ctx, r => r.kind === 'coverage', ['have'])), S.recordList(ctx, protectionList()), S.moreBlock('protection:life-admin', () => S.live(ctx, () => lifeAdminScreen(ctx)), { label: 'Life admin' })] },
+  protection: { title: 'Protection', sub: 'Insurance coverage, gaps and life admin', body: (app, ctx) => [completion(app, listCompletion(ctx, r => r.kind === 'coverage', ['have'])), S.recordList(ctx, protectionList()), S.moreBlock('protection:life-admin', () => S.live(ctx, () => lifeAdminScreen(ctx)), { label: 'Life admin' })] },
   taxes: { title: 'Taxes', sub: 'Filing status, last year, estimates', body: (app, ctx) => [h('div.visuals', {}, taxesScreen(ctx), S.visualsPanel(ctx, { charts: [incomeCharts[0]], area: 'taxes' }))] },
 };
 // Headline strips (reorganize pass). Net worth: what you own and owe. Cash flow: the waterfall, top to bottom.

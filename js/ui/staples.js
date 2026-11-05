@@ -493,14 +493,17 @@ export function payoffCell(ctx, d, longest) {
 }
 
 // ---------- Section footer: total, count, completion bar (R108) ----------
-export function sectionFooter(ctx, { add, total, count, done, of }) {
+export function sectionFooter(ctx, { add, total, count, done, of, left = [], onlyLeft = null }) {
   const pctDone = of ? done / of : 0;
-  return h('div.footer', {}, add, h('span.spacer'),
+  return h('div.footer', {}, add, onlyLeft, h('span.spacer'),
     total !== undefined ? h('span', {}, h('span.label', {}, 'Total '), total) : null,
     h('span.label', {}, `${count} ${count === 1 ? 'item' : 'items'}`),
     h('span.row-line', { style: { gap: '8px' } }, h('div.progress', { role: 'progressbar', 'aria-valuenow': Math.round(pctDone * 100), 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': 'Complete' }, h('span', { style: { width: `${pctDone * 100}%` } })),
-      h('span.label', {}, `${done} of ${of} done`)));
+      left.length ? h('button.btn.small.count-btn', { type: 'button', 'aria-label': `${done} of ${of} done; see what is left`, onclick: e => leftPopoverRef?.(e.currentTarget, left) }, `${done} of ${of} done`) : h('span.label', {}, `${done} of ${of} done`))); // item 3
 }
+// The counter popover lives in arrive.js, which imports this file; the app hands it over once at start.
+let leftPopoverRef = null;
+export function setLeftPopover(fn) { leftPopoverRef = fn; }
 export function keyboardHint() { // R168
   return h('div.hint-line', {}, h('kbd', {}, 'Tab'), ' next box · ', h('kbd', {}, 'Enter'), ' new row below · ',
     h('kbd', {}, 'Ctrl'), '+', h('kbd', {}, 'Z'), ' undo · ', h('kbd', {}, 'Ctrl'), '+', h('kbd', {}, 'Shift'), '+', h('kbd', {}, 'Z'), ' redo · ', h('kbd', {}, '/'), ' Find');
@@ -770,7 +773,9 @@ export function recordList(ctx, cfg) {
         const box = h('input', { type: 'checkbox', 'aria-label': `Select ${r.name || r.type || cfg.thing.one}`, checked: state.selected.has(r.id), 'data-focus': 'sel' });
         box.onchange = () => { box.checked ? state.selected.add(r.id) : state.selected.delete(r.id); refreshSelection(); };
         const open = state.open === r.id;
-        const tr = h(`tr.row${state.selected.has(r.id) ? '.selected' : ''}`, { 'data-id': r.id, 'data-group': g, hidden: folded },
+        const unfinished = !(cfg.coreFields ? (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields) : ['amount']).every(f => countsAsDone(statusOf(r, f)));
+        if (state.onlyLeft && !unfinished) continue; // item 3: Show only what's left
+        const tr = h(`tr.row${state.selected.has(r.id) ? '.selected' : ''}${unfinished ? '.left' : ''}`, { 'data-id': r.id, 'data-group': g, hidden: folded },
           h('td.check-cell', {}, box),
           cols.map((c, i) => h(`td.col-${slug(c.label)}${i === 0 ? '.col-first' : ''}${c.num ? '.num' : ''}`, {}, c.render(ctx, r, m, p => update(r, p), { remove: e => remove([r.id], e.currentTarget) }))),
           h('td.col-status', {}, statusPicker(r.status, s => update(r, { status: s }), { hasValue: hasCore(r), lock: ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? { on: r.values.locked === true, set: v => update(r, { locked: v }) } : null })),
@@ -789,11 +794,15 @@ export function recordList(ctx, cfg) {
     }
     if (state.open && !rowEls.has(state.open)) state.open = null;
     const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td.check-cell', {}), cfg.totals(ctx, recs, m, cols))) : null;
-    const done = recs.filter(r => (cfg.coreFields || ['amount']).every(f => countsAsDone(statusOf(r, f)))).length;
+    const coreOf = r => (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields || ['amount']);
+    const leftRows = recs.filter(r => !coreOf(r).every(f => countsAsDone(statusOf(r, f))));
+    const done = recs.length - leftRows.length;
+    const leftItems = leftRows.map(r => { const f = coreOf(r).find(x => !countsAsDone(statusOf(r, x))); return { id: r.id, name: r.name || r.type || cfg.thing.one, word: r.status && r.status !== 'Know it' ? r.status : 'missing', field: f, focus: `${r.id}:${f}`, route: location.hash }; });
+    const onlyLeft = recs.length > 8 && leftRows.length ? h('label.check-inline.only-left', {}, (() => { const b = h('input', { type: 'checkbox', checked: state.onlyLeft ? 'checked' : null }); b.onchange = () => { state.onlyLeft = b.checked; ctx.refresh(); }; return b; })(), ` Show only what's left (${leftRows.length})`) : null;
     const out = h(`div.section.area-${cfg.area}`, {}, head,
       cfg.strip ? (focus ? moreBlock(`focus:strip:${listKey}`, () => cfg.strip(ctx, ctx.metrics()), { label: 'More detail' }) : cfg.strip(ctx, m)) : null,
       h('div.list', {}, view.bulkHost, h('div.list-scroll', { 'data-scroll-key': listKey }, h('table.rows', {}, thead, body, tfoot)),
-        sectionFooter(ctx, { add: addBtn, total: cfg.footerTotal?.(ctx, recs, m), count: recs.length, done, of: recs.length }),
+        sectionFooter(ctx, { add: addBtn, total: cfg.footerTotal?.(ctx, recs, m), count: recs.length, done, of: recs.length, left: leftItems, onlyLeft }),
         keyboardHint()));
     refreshSelection();
     return out;

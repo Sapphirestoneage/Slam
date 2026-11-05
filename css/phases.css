@@ -359,3 +359,12 @@ body:has(.tracker:not([hidden])) main.shell-page { padding-bottom: 72px; }
 /* Batch 5 (E): the per-bill share rows on About you › Home and shared bills. */
 .shared-bill-row { display: flex; align-items: center; gap: var(--s4); flex-wrap: wrap; min-height: 44px; }
 .shared-bill-row > label { min-width: 220px; }
+
+/* Batch 6, priority 1: history arrows, arrive-and-highlight, counters */
+.history-btns .icon-btn.tiny { min-width: 32px; min-height: 32px; }
+.glow { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: 8px; animation: glowpulse 1.6s ease-in-out 2; }
+@keyframes glowpulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(31, 92, 255, .45); } 50% { box-shadow: 0 0 0 8px rgba(31, 92, 255, 0); } }
+.toast.arrive { bottom: auto; top: 72px; left: 50%; right: auto; transform: translateX(-50%); max-width: min(760px, calc(100vw - 32px)); flex-wrap: wrap; }
+.count-btn { font-weight: 700; }
+tr.row.left td.col-first { box-shadow: inset 3px 0 0 var(--warn); }
+.only-left { font-size: .85rem; display: inline-flex; align-items: center; gap: 6px; }

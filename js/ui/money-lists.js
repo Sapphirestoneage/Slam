@@ -489,37 +489,8 @@ export function taxesScreen(ctx) {
     h('p.muted', { style: { marginTop: '12px' } }, `Gross used: ${gross === null ? 'none yet (add take-home or gross on Income)' : `${money(gross)} a year`}. ${x.place ? `Federal, FICA, NY state${x.place.nyc ? ' and NYC' : ''} tax.${/joint/i.test(x.filingStatus) || x.place.nyc ? ` ${/joint/i.test(x.filingStatus) ? 'NY joint brackets' : ''}${/joint/i.test(x.filingStatus) && x.place.nyc ? ' and ' : ''}${x.place.nyc ? 'NYC rates' : ''}: not yet confirmed against the law.` : ''}` : 'Federal and FICA; state tax is in for New York only so far.'}`)));
 }
 
-// ---------- Completion (R065): core is the Primary fields; full adds the detail that applies ----------
-const done = (r, f) => countsAsDone(statusOf(r, f));
-const FULL = {
-  income: (r, g) => ['amount', 'payFrequency', 'incomeType', ...(g.employer ? [r.values.contributionPct != null ? 'contributionPct' : 'k401Paycheck'] : [])],
-  debt: r => ['balance', 'apr', 'payment', ...(r.type === 'Credit card' ? ['limit', 'dueDay'] : r.type === 'Student loan' ? ['federal'] : []), 'stress'],
-  account: r => [r.values.taxType === 'Both' ? 'pretaxBalance' : 'balance', 'institution', ...(r.values.group === 'investment' ? ['taxType', 'contribution'] : ['apy'])],
-  asset: r => ['value', ...(LOAN_FOR[r.type] ? ['financed'] : [])],
-  coverage: r => ['have', 'amount', r.type === 'Health' ? 'deductible' : r.type === 'Disability' ? 'benefitPct' : 'coverage'], // B4.2: health has no coverage amount
-  benefit: () => ['amount', 'using'],
-};
-export function listCompletion(ctx, pred, core) {
-  const g = ctx.gates();
-  const recs = ctx.visible(pred);
-  const c = { done: 0, of: 0 }, f = { done: 0, of: 0 };
-  const WORDS = { amount: 'amount', balance: 'balance', apr: 'APR', value: 'value', have: 'have it?', payFrequency: 'pay frequency', incomeType: 'type', contributionPct: '401(k) %', k401Paycheck: '401(k) a paycheck',
-    payment: 'payment', limit: 'limit', dueDay: 'due day', federal: 'federal or private', stress: 'stress', institution: 'institution', taxType: 'pretax or Roth', contribution: 'putting in',
-    apy: 'APY', financed: 'paid off or financed', coverage: 'coverage amount', deductible: 'deductible', benefitPct: 'benefit %', using: 'using it?', pretaxBalance: 'balances' };
-  c.missing = []; f.missing = [];
-  for (const r of recs) {
-    const name = r.name || r.type || r.kind;
-    const coreF = typeof core === 'function' ? core(r) : core;
-    c.of += 1;
-    const coreMiss = coreF.filter(x => !done(r, x));
-    if (!coreMiss.length) c.done += 1; else c.missing.push(`${name}: ${coreMiss.map(x => WORDS[x] ?? x).join(', ')}`);
-    const fullF = [...new Set([...coreF, ...(FULL[r.kind]?.(r, g) ?? [])])];
-    const fullMiss = fullF.filter(x => !done(r, x));
-    f.of += fullF.length; f.done += fullF.length - fullMiss.length;
-    if (fullMiss.length) f.missing.push(`${name}: ${fullMiss.map(x => WORDS[x] ?? x).join(', ')}`);
-  }
-  return { core: c, full: f };
-}
+// Completion (R065) lives in js/completion.js (pure, tested); re-exported here for older readers.
+export { listCompletion } from '../completion.js';
 
 // ---------- Charts for the visuals panel (Visualizations tab) ----------
 const theme = t => ({ textStyle: { fontFamily: t.font, color: t.text } });
