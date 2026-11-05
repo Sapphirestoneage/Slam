@@ -26,7 +26,8 @@ export function levelOf(rec, field, { months = {} } = {}) {
   if (rec.kind === 'spending') return LEVELS.Gut; // the gut number is a gut number, however sure
   if (['Not sure', 'Will email', 'Not now'].includes(status)) return LEVELS.Gut;
   if (status === 'Roughly') return LEVELS.Rough;
-  return LEVELS.Estimate; // typed and Know it (or Computed from a typed number)
+  if (status === 'Computed') return LEVELS.Estimate; // worked out from a typed number
+  return LEVELS.Actual; // typed and Know it counts as confirmed (batch 6, item 11); Lock it stays in the row menu for turning a guess into confirmed
 }
 
 // Every number that makes the picture, with its level, weight and where it lives; the Picture % is their weighted

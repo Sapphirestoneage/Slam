@@ -7,7 +7,7 @@
 // Each number's level, in points. Missing: nothing typed. Gut: a guess (a starter line, Not sure, or the gut
 // spending number). Rough: marked Roughly. Estimate: typed and marked Know it. Actual: confirmed (a month of actuals
 // on a Budget line, a balance from a statement or the bank, or locked by the coach).
-export const LEVELS = { Missing: 0, Gut: 25, Rough: 50, Estimate: 75, Actual: 100 };
+export const LEVELS = { Missing: 0, Gut: 25, Rough: 50, Estimate: 75, Actual: 100 }; // Know it is Actual (batch 6, item 11); Estimate is a computed number
 export const LEVEL_WORDS = Object.keys(LEVELS);
 export const levelWord = level => (level === null || level === undefined ? null : LEVEL_WORDS.filter(k => LEVELS[k] <= level).at(-1));
 
@@ -60,7 +60,7 @@ export const SESSIONS = [
   { id: 'S3', name: 'Lock it', items: [
     { id: 'actuals', label: 'One month of Actuals', auto: 'monthOfActuals' },
     { id: 'locked', label: 'Key numbers locked', auto: 'keyNumbersLocked' },
-    { id: 'picture', label: 'Picture about 90%', auto: 'picture90' }] },
+    { id: 'picture', label: 'Whole picture about 90% (see Whole picture on Home)', auto: 'picture90' }] }, // item 9: the item says which part it needs
   { id: 'S4', name: 'Goals', items: [
     { id: 'short', label: 'Three short-term goals, each with an amount, a date and a need, want or wish tag', auto: 'shortGoals' },
     { id: 'long', label: 'Three long-term goals, each with an amount, a date and a need, want or wish tag', auto: 'longGoals' }] },

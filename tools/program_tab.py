@@ -56,8 +56,8 @@ LEVEL_WORDS = {
     "Missing": "Nothing typed (or parked with I'll find it later)",
     "Gut": "A guess: a starter line, Not sure, or the gut spending number",
     "Rough": "Marked Roughly",
-    "Estimate": "Typed and Know it",
-    "Actual": "Confirmed: a month of actuals on a Budget line, a balance from a statement or the bank, or locked by the coach",
+    "Estimate": "Worked out from a typed number (Computed)",
+    "Actual": "Typed and Know it (counts as confirmed, batch 6), a month of actuals on a Budget line, a balance from a statement or the bank, or locked by the coach",
 }
 WEIGHT_WORDS = {
     "income": "Each income row's take-home", "debtBalance": "Each debt's balance", "debtApr": "Each debt's APR",

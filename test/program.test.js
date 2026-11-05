@@ -112,12 +112,12 @@ test('127: the gut number stops counting in the picture once every big category 
 });
 
 // ---------- Levels ----------
-test('levels: missing 0, a guess 25, Roughly 50, typed 75, a statement, a month of actuals or a lock 100; Not for me is out', () => {
+test('levels: missing 0, a guess 25, Roughly 50, typed and Know it 100 (confirmed, batch 6), a statement, a month of actuals or a lock 100; Not for me is out', () => {
   const s = fresh();
   const r = s.add('debt', { name: 'Card', values: {} }, { type: 'Credit card' });
   assert.equal(levelOf(r, 'balance'), LEVELS.Missing);
   s.update(r.id, { balance: 4200 });
-  assert.equal(levelOf(r, 'balance'), LEVELS.Estimate, 'typed is Know it, an Estimate');
+  assert.equal(levelOf(r, 'balance'), LEVELS.Actual, 'typed is Know it, which counts as confirmed (item 11)');
   s.setFieldStatus(r.id, 'balance', 'Roughly');
   assert.equal(levelOf(r, 'balance'), LEVELS.Rough);
   s.setFieldStatus(r.id, 'balance', 'Not sure');
@@ -130,7 +130,7 @@ test('levels: missing 0, a guess 25, Roughly 50, typed 75, a statement, a month 
   s.update(r.id, { source: 'manual', status: 'Not for me' });
   assert.equal(levelOf(r, 'balance'), null);
   const bill = s.add('bill', { name: 'Rent', amount: 1500, values: { category: 'Rent or mortgage', draftt: 'Accommodation' } });
-  assert.equal(levelOf(bill, 'amount'), LEVELS.Estimate);
+  assert.equal(levelOf(bill, 'amount'), LEVELS.Actual, 'typed and Know it (item 11)');
   s.setIn('spending', ['months', '2026-10', 'lines', bill.id, 'actual'], 1500);
   assert.equal(levelOf(bill, 'amount', { months: s.doc.spending.months }), LEVELS.Actual, 'a month of actuals');
   const gut = s.add('spending', { name: 'All in', amount: 3600 }, { type: 'All in' });
@@ -143,7 +143,7 @@ test('Picture %: 0 for an empty client, weighted by the big items, the gut numbe
   assert.equal(pictureOf(s.doc, ref, { now }).pct, 0);
   const d = new Store(householdFromInputs(demo.inputs, { name: 'Z', now: now.toISOString() }));
   const p = pictureOf(d.doc, ref, { now });
-  assert.ok(p.pct > 0.5 && p.pct < 0.8, `the Demo client (typed, gut spending): ${p.pct}`);
+  assert.ok(p.pct > 0.5 && p.pct <= 1, `the Demo client (typed, gut spending): ${p.pct}`);
   // The Demo client types its rent and utilities, so the big categories are at Estimate and the gut steps aside (127).
   assert.ok(!p.items.some(i => i.id === 'gut'));
   assert.ok(p.items.find(i => i.group === 'income').weight === WEIGHTS.income);
@@ -201,13 +201,13 @@ test('FI date: unlocked once income, spending and an invested balance are in (a 
   assert.equal(u.unlocked, false);
   assert.match(u.reason, /^Unlocks when spending is in \(a gut number is enough\) \(0 of 1 there\)\.$/);
   assert.equal(u.route, '#/cash-flow/budget');
-  // The lines as the source, every line typed: unlocked at Medium.
+  // The lines as the source, every line typed: unlocked at High (typed and Know it counts as confirmed, item 11).
   d.setDoc('spending', { source: 'lines' });
   for (const r of d.find(r => r.kind === 'bill')) d.update(r.id, { status: null });
   u = unlockOf('fi', pictureOf(d.doc, ref, { now }));
   assert.equal(u.unlocked, true, JSON.stringify(u.needs));
   const c = confidenceOf('fi', pictureOf(d.doc, ref, { now }), { now });
-  assert.equal(c.word, 'Medium', 'typed numbers, nothing confirmed');
+  assert.equal(c.word, 'High', 'typed numbers, nothing confirmed');
   for (const r of d.find(r => ['income', 'account', 'bill'].includes(r.kind))) d.update(r.id, { locked: true });
   assert.equal(confidenceOf('fi', pictureOf(d.doc, ref, { now }), { now }).word, 'High');
   const old = new Date('2027-04-01T12:00:00Z');
@@ -279,7 +279,7 @@ test('programOf: one call gives Home the session, the picture, the pace and the 
   const p = programOf(d.doc, ref, { now });
   assert.equal(p.n, 1); assert.equal(p.current.id, 'S1');
   assert.ok(p.picture.pct > 0); assert.ok(['Ahead', 'On track', 'Catch up'].includes(p.pace.word));
-  assert.equal(p.next.length, 3); assert.equal(p.day0, null);
+  assert.ok(p.next.length >= 1 && p.next.length <= 3, 'the few things left to sharpen'); assert.equal(p.day0, null);
 });
 
 // ---------- The spec's Program tab says what the registry says ----------

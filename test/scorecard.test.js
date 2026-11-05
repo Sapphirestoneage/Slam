@@ -235,8 +235,11 @@ test('the review gate: the stage\'s key numbers with value and level; Looks righ
   const R = reviewOf(d.doc, ref, { now });
   assert.equal(R.sid, 'S1'); assert.deepEqual(R.groups, ['income', 'spending', 'account']);
   assert.ok(R.rows.length >= 3);
-  const inc = R.rows.find(r => r.group === 'income');
-  assert.equal(inc.word, 'Estimate'); assert.match(inc.value, /\$4,800/); assert.equal(inc.canLock, true);
+  const inc0 = R.rows.find(r => r.group === 'income');
+  assert.equal(inc0.word, 'Actual', 'typed and Know it counts as confirmed (item 11)'); assert.match(inc0.value, /\$4,800/); assert.equal(inc0.canLock, false);
+  d.setStatus([inc0.recId], 'Roughly'); // a rough number can still be confirmed with Looks right
+  const inc = reviewOf(d.doc, ref, { now }).rows.find(r => r.id === inc0.id);
+  assert.equal(inc.word, 'Rough'); assert.equal(inc.canLock, true);
   confirmRow(d, inc);
   assert.equal(reviewOf(d.doc, ref, { now }).rows.find(r => r.id === inc.id).word, 'Actual');
   assert.ok(R.unfinished.some(u => u.id === 'accounts'), 'Accounts set up is still open (no areas answered)');

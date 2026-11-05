@@ -3,7 +3,7 @@ Section,Item,Detail,Notes
 Sessions,,Each client has a 12-session program. A session's checklist ticks itself from the data where it can (auto); the rest are checkboxes. Done when every item is ticked.,js/registry/program.js SESSIONS; js/program.js autoChecks
 Sessions,S1 First picture,Accounts set up (auto); Top-line numbers entered (Gut is OK) (auto); Money in one line generated (auto); Day 0 snapshot saved (auto),
 Sessions,S2 Real numbers,Big categories at Estimate or better (auto); Goals named (auto); FOO step identified (auto),
-Sessions,S3 Lock it,One month of Actuals (auto); Key numbers locked (auto); Picture about 90% (auto),
+Sessions,S3 Lock it,One month of Actuals (auto); Key numbers locked (auto); Whole picture about 90% (see Whole picture on Home) (auto),
 Sessions,S4 Goals,"Three short-term goals, each with an amount, a date and a need, want or wish tag (auto); Three long-term goals, each with an amount, a date and a need, want or wish tag (auto)",
 Sessions,S5 Full analysis,Every area rated (auto); Holes ranked (a payoff and an effort on each) (auto); FOO step confirmed (auto); Top 3 holes chosen (auto),
 Sessions,S6 Fill holes,The top hole filled (OK or Strong) (auto),Pulls the top hole on the Scorecard when it starts
@@ -17,8 +17,8 @@ Levels,,"Each number has a level, in points. The Picture % is the weighted avera
 Levels,Missing,0,Nothing typed (or parked with I'll find it later)
 Levels,Gut,25,"A guess: a starter line, Not sure, or the gut spending number"
 Levels,Rough,50,Marked Roughly
-Levels,Estimate,75,Typed and Know it
-Levels,Actual,100,"Confirmed: a month of actuals on a Budget line, a balance from a statement or the bank, or locked by the coach"
+Levels,Estimate,75,Worked out from a typed number (Computed)
+Levels,Actual,100,"Typed and Know it (counts as confirmed, batch 6), a month of actuals on a Budget line, a balance from a statement or the bank, or locked by the coach"
 Weights,,"Big items count more. A missing big thing (no income row yet) is one item at Missing, so an empty client reads 0%.",js/registry/program.js WEIGHTS
 Weights,income,3,Each income row's take-home
 Weights,debtBalance,3,Each debt's balance

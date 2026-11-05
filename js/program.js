@@ -15,6 +15,7 @@ import { fmt } from './math/result.js';
 import { scorecardOf, ratingOf } from './math/scorecard.js';
 import { THRESHOLDS } from './registry/scorecard.js';
 
+export const STATE_WORDS = { 'Not started': 'Not started', 'In progress': 'In progress', 'Ready to close': 'Ready to close: end the session to review and save', Complete: 'Complete ✓', 'Already met': "Already met, you're ahead ✓" };
 export const sessionOf = doc => doc.session || {};
 export const inSession = doc => { const s = sessionOf(doc); return !!s.startedAt && !(s.endedAt && s.endedAt >= s.startedAt); };
 // The session being prepared or run: one past the sessions ended, up to the last.
@@ -111,7 +112,11 @@ export function sessionsOf(doc, ref, opts = {}) {
     });
     const items = [...own, ...carried];
     const k = i + 1;
-    return { ...s, n: k, name: over.name ?? s.name, placeholder: !!s.placeholder, items, target, done: items.length > 0 && items.every(it => it.done),
+    const met = items.length > 0 && items.every(it => it.done);
+    // Item 8 (batch 6): Not started, In progress, Ready to close (checklist met, awaiting End session and the review), Complete
+    // (closed through the gate); a future session whose checklist is already met reads Already met, you're ahead.
+    const state = k <= count ? 'Complete' : k === n ? (inSession(doc) ? (met ? 'Ready to close' : 'In progress') : met ? 'Ready to close' : 'Not started') : met ? 'Already met' : 'Not started';
+    return { ...s, n: k, name: over.name ?? s.name, placeholder: !!s.placeholder, items, target, done: met, state, stateWord: STATE_WORDS[state],
       status: k <= count ? 'done' : k === n ? 'current' : 'next' };
   });
 }

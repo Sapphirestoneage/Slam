@@ -74,12 +74,12 @@ function sessionStrip(app, ctx, P) {
     h('span.tag.plain', {}, P.graduated ? 'Graduated · 12 of 12' : `Session ${P.n} of ${SESSIONS.length} · ${P.current.name}`),
     P.inSession ? h('span.tag.good', {}, '● Session on') : null,
     left != null ? h('span.time-left', {}, left >= 0 ? `${left} min left` : `${-left} min over`) : null,
-    h('span.row-line', { style: { gap: '6px' } }, h('span.label', {}, 'Next:'), h(`label.field${s.next ? '.filled' : ''}`, { style: { width: '170px' } }, next)),
+    h('span.row-line', { style: { gap: '6px' } }, h('span.label', {}, 'Next session date'), h(`label.field${s.next ? '.filled' : ''}`, { style: { width: '170px' } }, next)), // item 10
     S.select(['Active', 'Maintenance', 'Paused'], s.state || 'Active', v => ctx.store.setIn('session', ['state'], v || 'Active', 'Client status'), { label: 'Client status', hint: 'Active', width: 150 }),
     h('span.spacer'),
     // Answer 90: focus mode (core columns only) is on by default; this shows every field mid-session, and back.
-    P.inSession && s.guide ? S.checkbox('Show all fields', !!s.allFields, v => ctx.store.setIn('session', ['allFields'], v, v ? 'Show all fields' : 'Focus mode'), { key: 'home:all-fields' }) : null,
-    P.inSession ? [S.button('End session', { iconName: 'check', onClick: () => app.go('#/home/review') }), S.button('Next step', { kind: 'primary', size: 'big', iconName: 'right', onClick: nextStep })]
+    P.inSession && s.guide ? S.checkbox('Show every field (not just what\'s missing)', !!s.allFields, v => ctx.store.setIn('session', ['allFields'], v, v ? 'Show every field' : 'Focus mode'), { key: 'home:all-fields' }) : null, // item 10
+    P.inSession ? [S.button('End session', { kind: P.current.done ? 'primary' : 'secondary', size: P.current.done ? 'big' : null, iconName: 'check', onClick: () => app.go('#/home/review') }), P.current.done ? null : S.button('Next step', { kind: 'primary', size: 'big', iconName: 'right', onClick: nextStep })] // item 4: End session leads once the checklist is met
       : [P.graduated ? null : S.button('Move to next session', { iconName: 'right', tip: 'Review the key numbers and move on without a live session', onClick: () => app.go('#/home/review') }),
         S.button('Start session', { kind: 'primary', size: 'big', onClick: start, disabled: P.graduated, why: P.graduated ? 'The program is complete' : null })]);
 }
@@ -107,26 +107,34 @@ function recapCard(r) {
 }
 
 // ---------- The path and the open node's agenda ----------
+// Item 5: a slim one-line path by default (the current session named); Show all 12 opens the grid.
 function pathRow(app, P, open) {
-  return h('div.path', { role: 'list', 'aria-label': 'The 12-session program' }, P.sessions.map(s => h(`button.node.${s.status}${s.id === open.id ? '.open' : ''}`, {
-    type: 'button', role: 'listitem', 'aria-pressed': String(s.id === open.id), 'aria-label': `Session ${s.n}, ${s.name}: ${s.status === 'done' ? 'done' : s.status === 'current' ? 'this session' : 'next'}`,
-    title: `${s.n}. ${s.name}`, onclick: () => { HUI.open = s.id; app.render(); } },
-  h('span.n', {}, s.status === 'done' ? '✓' : String(s.n)), h('span.name', {}, s.name))));
+  const node = s => h(`button.node.${s.status}${s.id === open.id ? '.open' : ''}`, {
+    type: 'button', role: 'listitem', 'aria-pressed': String(s.id === open.id), 'aria-label': `Session ${s.n}, ${s.name}: ${s.stateWord}`,
+    title: `${s.n}. ${s.name}: ${s.stateWord}`, onclick: () => { HUI.open = s.id; app.render(); } },
+  h('span.n', {}, s.status === 'done' ? '✓' : String(s.n)), h('span.name', {}, s.name));
+  if (HUI.pathOpen) return h('div', {}, h('div.path', { role: 'list', 'aria-label': 'The 12-session program' }, P.sessions.map(node)),
+    S.button('Show the line', { size: 'small', iconName: 'up', onClick: () => { HUI.pathOpen = false; app.render(); } }));
+  return h('div.path-slim', { role: 'list', 'aria-label': 'The 12-session program' }, P.sessions.map((s, i) => [i ? h('span.link-line', { 'aria-hidden': 'true' }) : null,
+    h(`button.dot.${s.status}${s.id === open.id ? '.open' : ''}`, { type: 'button', role: 'listitem', 'aria-pressed': String(s.id === open.id), 'aria-label': `Session ${s.n}, ${s.name}: ${s.stateWord}`, title: `${s.n}. ${s.name}: ${s.stateWord}`, onclick: () => { HUI.open = s.id; app.render(); } },
+      s.status === 'done' ? '✓' : s.id === P.current.id ? '●' : '○')]),
+    h('span.path-name', {}, `Session ${open.n} · ${open.name}`), h('span.muted.small', {}, open.stateWord),
+    S.button('Show all 12', { size: 'small', iconName: 'down', onClick: () => { HUI.pathOpen = true; app.render(); } }));
 }
 function checklistCard(app, ctx, P, s) {
   const tick = (iid, v) => ctx.store.setIn('program', ['checks', s.id, iid], v || undefined, 'Checklist');
-  const word = s.status === 'done' ? 'Done' : s.status === 'current' ? 'This session' : 'Up next';
   // The current session shows its full agenda (Must do, Going over, notes, Suggested for today); another node, its checklist.
   const current = s.id === P.current.id;
   const A = current ? agendaOf(ctx.store.doc, ctx.ref, { now: ctx.now(), flags: app.flags, P }) : null;
   const items = current ? null : s.items.map(i => h(`div.check-item${i.done ? '.done' : ''}`, {},
     i.auto ? h('span.box', { 'aria-hidden': 'true' }, i.done ? icon('check') : null) : h('input', { type: 'checkbox', checked: i.done, 'aria-label': i.label, onchange: e => tick(i.id, e.target.checked) }),
-    h('div', { style: { flex: 1 } }, h('div.what', {}, i.label, i.detail ? h('span.muted', {}, ` · ${i.detail}`) : null), i.auto ? h('div.auto', {}, i.done ? 'From the numbers' : 'Ticks itself from the numbers') : null),
+    h('div', { style: { flex: 1 }, title: i.auto ? 'Ticks itself from the numbers' : null }, h('div.what', {}, i.label, i.key === 'day0' && !i.done ? h('span.muted', {}, ' · Saves a starting snapshot. Also happens when you end the session.') : i.detail ? h('span.muted', {}, ` · ${i.detail}`) : null)),
+    i.key === 'day0' && !i.done ? S.button('Save Day 0 now', { size: 'small', iconName: 'camera', onClick: () => app.snapshot('Day 0', { day0: true, session: s.n }) }) : null,
     i.route && !i.done ? S.button('Open', { size: 'small', iconName: 'right', onClick: () => follow(app, { kind: 'route', route: i.route }) }) : null));
   const confirmFoo = current && A.must.some(i => i.key === 'fooConfirmed' && !i.done) && P.scorecard.here != null
     ? h('div.row-line', { style: { gap: '8px', marginTop: '6px' } }, S.button(`Confirm FOO step ${P.scorecard.here}`, { size: 'small', iconName: 'check', onClick: () => { ctx.store.setIn('program', ['fooConfirmed'], P.scorecard.here, 'FOO step'); S.toast(`FOO step ${P.scorecard.here} confirmed.`); } }), h('span.muted.small', {}, 'from Plan › FOO')) : null;
   return h('div.card.session-card.coach-only', {},
-    h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, `Session ${s.n} · ${s.name}`), h(`span.tag.${s.done ? 'good' : 'plain'}`, {}, s.done ? '✓ Done when met' : `${s.items.filter(i => i.done).length} of ${s.items.length}`), h('span.muted', {}, current ? `${word} · the agenda` : word)),
+    h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, `Session ${s.n} · ${s.name}`), h(`span.tag.${s.done ? 'good' : 'plain'}`, {}, s.stateWord), s.done ? null : h('span.muted.small', {}, `${s.items.filter(i => i.done).length} of ${s.items.length}`), h('span.muted', {}, current ? `${word} · the agenda` : word)),
     current ? h('div', { style: { marginTop: '10px' } }, agendaPanel(app, ctx, A)) : h('div.checklist', { style: { marginTop: '10px', marginBottom: 0 } }, items),
     confirmFoo,
     s.id === 'S12' ? graduationCard(app, ctx, P) : null,
@@ -178,7 +186,7 @@ function pictureCard(ctx, P) {
         h('a', { href: '#/plan/scorecard' }, 'Scorecard ›')),
       h('div.row-line', { style: { gap: '10px', marginTop: '6px' } }, h('span.muted.small', {}, `Picture ${pace.points}%`), paceTag, h('span.muted.small', {}, pace.text)));
   }
-  return h('div.card.picture-card', {},
+  return h('div.card.picture-card', {}, h('div.row-line', { style: { gap: '8px' } }, h('h2', {}, 'Whole picture'), h('span.muted.small', {}, 'not required to finish this session')), // item 9
     h('div.bar-row', {}, h('span.pct', {}, `Picture ${pace.points}%`), bar(P.picture.pct, { wide: true }),
       paceTag, h('span.muted', {}, pace.text)),
     S.moreBlock('home:sections', () => h('div.section-bars', {}, P.picture.sections.map(s => h('div.row-line', {}, h('span', { style: { minWidth: '80px', fontWeight: 600 } }, s.name), bar(s.pct ?? 0),

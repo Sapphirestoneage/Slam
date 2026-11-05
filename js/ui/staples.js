@@ -142,8 +142,8 @@ export function statusMenu(onPick, current = null, { lock = null } = {}) {
   const pickBtn = (s, text) => h('button.btn.small', { type: 'button', 'aria-pressed': String(s === current), onclick: () => { closePop(); onPick(s); } }, text);
   const group = (name, list) => h('div.sure-group', {}, h('span.label', {}, name), h('div.row-line', { style: { gap: '6px' } }, list.map(s => pickBtn(s, TAG[s][1].replace(/^[?≈] /, '')))));
   return h('div.stack.sure-menu', { style: { gap: '10px' } }, h('h3', {}, 'How sure is this?'),
-    h('div.sure-group', {}, h('div.row-line', { style: { gap: '6px' } }, pickBtn('Know it', 'Know it'),
-      lock ? h('button.btn.small', { type: 'button', 'aria-pressed': String(!!lock.on), title: 'Confirmed from a statement or checked by you: counts as Actual in the picture', onclick: () => { closePop(); lock.set(!lock.on); } }, icon('lock'), lock.on ? 'Locked (unlock)' : 'Lock it (confirmed)') : null)),
+    h('div.sure-group', {}, h('div.row-line', { style: { gap: '6px' } }, pickBtn('Know it', 'Know it'), // Lock it lives in the row's menu now (batch 6, item 11)
+      null && lock ? h('button.btn.small', { type: 'button', 'aria-pressed': String(!!lock.on), title: 'Confirmed from a statement or checked by you: counts as Actual in the picture', onclick: () => { closePop(); lock.set(!lock.on); } }, icon('lock'), lock.on ? 'Locked (unlock)' : 'Lock it (confirmed)') : null)),
     group('Rough', SURE.Rough), group('Missing', SURE.Missing),
     h('hr'), h('div.row-line', { style: { gap: '6px' } }, pickBtn('Not for me', 'Not for me (hide it)'),
       h('button.btn.small', { type: 'button', onclick: () => { closePop(); onPick(null); } }, 'Clear')));
@@ -701,6 +701,7 @@ export function recordList(ctx, cfg) {
     const btn = h('button.icon-btn.menu-btn', { type: 'button', 'aria-label': `Actions for ${name}`, 'aria-haspopup': 'menu', 'data-tip': 'Actions', 'data-focus': 'menu' }, icon('dots'));
     const item = (label, iconName, run, { danger = false } = {}) => h(`button.menu-item${danger ? '.danger' : ''}`, { type: 'button', role: 'menuitem', onclick: () => { closePop(); run(); } }, icon(iconName), label);
     btn.onclick = () => popover(btn, h('div.row-menu', { role: 'menu', 'aria-label': `Actions for ${name}` },
+      ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? item(r.values.locked === true ? 'Unlock (back to as typed)' : 'Lock it (confirmed)', 'lock', () => update(r, { locked: r.values.locked !== true })) : null, // item 11: a guess becomes confirmed here, never as a nag
       item('Reset', 'reset', () => reset([r.id])),
       item('Duplicate', 'copy', () => { ctx.store.duplicate(r.id); toast('Duplicated.', { undo: () => ctx.store.undo() }); }),
       cfg.notForMe ? (r.status === 'Not for me'

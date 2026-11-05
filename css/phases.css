@@ -368,3 +368,13 @@ body:has(.tracker:not([hidden])) main.shell-page { padding-bottom: 72px; }
 .count-btn { font-weight: 700; }
 tr.row.left td.col-first { box-shadow: inset 3px 0 0 var(--warn); }
 .only-left { font-size: .85rem; display: inline-flex; align-items: center; gap: 6px; }
+
+/* Batch 6, items 4 and 5: the slim path, the done line */
+.path-slim { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-bottom: var(--s3); }
+.path-slim .dot { all: unset; box-sizing: border-box; cursor: pointer; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border-input); display: grid; place-items: center; font-size: .8rem; font-weight: 800; background: var(--card); }
+.path-slim .dot.done { background: var(--good); border-color: var(--good); color: #fff; }
+.path-slim .dot.current, .path-slim .dot.open { border-color: var(--primary); color: var(--primary); }
+.path-slim .dot:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.path-slim .link-line { width: 10px; height: 2px; background: var(--border-input); }
+.path-slim .path-name { font-weight: 700; margin-left: 8px; }
+.done-line { margin-bottom: 6px; }
