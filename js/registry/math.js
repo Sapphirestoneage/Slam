@@ -25,6 +25,8 @@ import { pictureOf, paceOf, unlockOf, confidenceOf, nextSmallThings } from '../m
 import { sessionNo } from '../program.js';
 import { scorecardOf } from '../math/scorecard.js';
 import { ladderOf } from '../math/ladder.js';
+import { compareOf, netWorthIn } from '../math/proposed.js';
+import { closeStreak } from '../month.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -362,6 +364,13 @@ export const MATH = [
       { key: 'next', name: 'Next step', unit: 'text', fromApp: 'the first step not done, with how far along and when', app: c => { const l = ladderOf(c.doc, c.ref, { now: c.now, flags: c.flags }); return l.next ? `${l.next.name}: ${Math.round(l.next.pct * 100)}% there${l.next.date ? `, about ${l.next.date}` : ''}` : 'Every step done'; } },
       { key: 'marker', name: 'Next marker', unit: 'text', fromApp: 'the first marker not reached, with its projected month', app: c => { const l = ladderOf(c.doc, c.ref, { now: c.now, flags: c.flags }); return l.nextMarker ? `${l.nextMarker.name}${l.nextMarker.date ? `, about ${l.nextMarker.date}` : ''}` : 'Every marker reached'; } },
     ] },
+  { id: 'M76', name: 'Current vs Proposed', inputs: 'the file, and the Proposed choices (spending, debt order, retire-by age, surplus invested, extra to debt)', unit: 'money',
+    fns: ['proposed.PROPOSED_KEYS', 'proposed.proposedOf', 'proposed.hasProposal', 'proposed.proposedDoc', 'proposed.netWorthIn', 'proposed.compareOf', 'proposed.setProposed', 'proposed.clearProposed', 'proposed.makeProposedThePlan'],
+    fromApp: 'two runs of the same math on the real file and on a copy with the choices applied: the FI date, the savings rate, net worth in 5 and 10 years (invested grown at the real return with what goes in, the rest of net worth, plus debt paid down on the payoff plan), the next step and marker; the Proposed tab shows each side with the steps',
+    app: c => compareOf(c.doc, c.ref, { now: c.now, flags: c.flags }).rows.find(r => r.key === 'nw10')?.diff ?? null,
+    parts: [{ key: 'nw5', name: 'Net worth in 5 years (current)', unit: 'money', fromApp: 'invested grown at the real return plus what goes in, the rest of net worth, plus debt paid down by then', app: c => netWorthIn(c.m, 5).value }] },
+  { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
+    fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },
 ];
 
 // js/math exports that are not an M formula of their own: how records become formula inputs, account details, and

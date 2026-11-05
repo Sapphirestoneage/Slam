@@ -194,7 +194,7 @@ export const SCREENS = {
   'plan/timeline': (app, ctx) => (app.hasClient ? timelineScreen(app, ctx) : [head('Timeline'), noClient(app)]),
   'plan/debt-payoff': (app, ctx) => (app.hasClient ? payoffScreen(app, ctx) : [head('Debt payoff'), noClient(app)]),
   'plan/next-12-months': (app, ctx) => (app.hasClient ? nextYearScreen(app, ctx) : [head('Next 12 months'), noClient(app)]),
-  'plan/scenarios': () => scenariosScreen(),
+  'plan/scenarios': (app, ctx) => (app.hasClient ? scenariosScreen(app, ctx) : [head('Current vs Proposed'), noClient(app)]),
 
   'report/overview': (app, ctx) => (app.hasClient ? overviewScreen(app, ctx) : [head('Overview'), noClient(app)]),
   'report/statements': (app, ctx) => (app.hasClient ? statementsScreen(app, ctx) : [head('Statements'), noClient(app)]),

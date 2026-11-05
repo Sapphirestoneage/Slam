@@ -12,6 +12,7 @@ import { scorecardOf } from '../math/scorecard.js';
 import { unlockOf, confidenceOf } from '../math/picture.js';
 import { LEVELS, levelWord } from './program.js';
 import { categoryJoyOf, tripsOf, incomeKindOf, changeLog } from '../capture.js';
+import { compareOf } from '../math/proposed.js';
 
 const MAX_ROWS = 600; // a table longer than this is written as values, marked From the app
 
@@ -23,6 +24,19 @@ const RETIREMENT_LINES = 'SUMIFS(Spend_M21,Spend_draftt,"Retirement",Spend_InMat
 const FORMULA_APP = [{ key: 'f', label: 'Formula', unit: 'row', named: true }, { key: 'app', label: "The app's value", unit: 'row' }, { key: 'check', label: 'Check', check: ['f', 'app'] }];
 
 export const REPORTS = [
+  {
+    tab: 'Proposed', prefix: 'Proposed',
+    about: 'Current vs Proposed (K, M76): each result on the real file and on the copy with the Proposed choices, the difference, and the steps behind each side. Values from the app.',
+    columns: [{ key: 'what', label: 'Result', unit: 'text', width: 24 }, { key: 'current', label: 'Current', unit: 'text', width: 18 }, { key: 'proposed', label: 'Proposed', unit: 'text', width: 18 }, { key: 'diff', label: 'Difference', unit: 'text', width: 18 }, { key: 'howCurrent', label: 'How we got this (current)', unit: 'text', width: 60 }, { key: 'howProposed', label: 'How we got this (proposed)', unit: 'text', width: 60 }],
+    sections: c => {
+      const C = compareOf(c.doc, c.ref, { now: c.now, flags: c.flags });
+      const cell = v => ({ v: v == null || v === '' ? null : v, fromApp: true });
+      const show = (r, v) => (v == null ? '' : r.unit === 'money' ? Math.round(v) : r.unit === 'pct' ? `${(v * 100).toFixed(1)}%` : String(v));
+      const diff = r => (r.unit === 'month' ? (r.diffMonths == null ? '' : `${r.diffMonths} months`) : r.unit === 'pct' ? (r.diff == null ? '' : `${(r.diff * 100).toFixed(1)} pts`) : r.unit === 'money' ? (r.diff == null ? '' : Math.round(r.diff)) : (r.current === r.proposed ? 'Same' : 'Changes'));
+      return [{ title: 'Results', rows: C.rows.map(r => ({ cells: { what: cell(r.label), current: cell(show(r, r.current)), proposed: cell(show(r, r.proposed)), diff: cell(diff(r)), howCurrent: cell(r.how.current.join(' ')), howProposed: cell(r.how.proposed.join(' ')) } })) },
+        { title: 'The choices', rows: C.choices.map(x => ({ cells: { what: cell(x.label), current: cell(x.unit === 'money' ? Math.round(x.current ?? 0) : String(x.current ?? '')), proposed: cell(x.unit === 'money' ? Math.round(x.proposed ?? 0) : String(x.proposed ?? '')) } })) }];
+    },
+  },
   {
     tab: 'Captured', prefix: 'Captured',
     about: 'Kept for a later Wrapped (F6): joy ratings per spending category with their dates, everything tagged Trip, the income type on each income row, and the change log (field, old, new, who, when). Values from the app.',
