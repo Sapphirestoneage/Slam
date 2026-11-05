@@ -348,3 +348,10 @@ body:has(.tracker:not([hidden])) main.shell-page { padding-bottom: 72px; }
 
 /* The person filter (F2) */
 .person-bar { flex-wrap: wrap; }
+
+/* Custom payoff order (F3): drag rows */
+.drag-row { border: 1.5px solid var(--border-row); border-radius: 8px; padding: 6px 10px; background: var(--card); min-height: 44px; cursor: grab; }
+.drag-row.dragging { opacity: .5; }
+.drag-row.over { border-color: var(--primary); box-shadow: var(--shadow); }
+.drag-row .drag-handle { color: var(--text-2); letter-spacing: -2px; }
+.drag-row .rank { font-weight: 800; color: var(--text-2); min-width: 18px; }

@@ -114,7 +114,7 @@ export const AREAS = [
       // Settings that change the math.
       pick('spending.source', 'Spending uses', ['gut', 'lines'], { part: 'spending', key: 'source', named: 'Set_spendingSource' }),
       pick('spending.basis', 'Budget view', ['accrual', 'cash'], { part: 'spending', key: 'basis' }),
-      pick('settings.debtOrder', 'Debt payoff order', ['avalanche', 'snowball', 'stress'], { part: 'settings', key: 'debtOrder' }),
+      pick('settings.debtOrder', 'Debt payoff order', ['avalanche', 'snowball', 'hassle', 'stress', 'custom'], { part: 'settings', key: 'debtOrder' }), // F3: js/registry/debt.js METHODS
       pick('settings.layerMode', 'Cash layers kept', ['virtual', 'accounts'], { part: 'settings', key: 'layerMode' }),
       f('settings.qqOpensLaunch', 'Quiet Quitting FI opens the launch window', 'yesno', { part: 'settings', key: 'qqOpensLaunch' }),
       pick('settings.dollars', "Plan shows today's or future dollars", ['real', 'nominal'], { part: 'settings', key: 'dollars' }),
@@ -174,6 +174,7 @@ export const AREAS = [
       f('monthsLeft', 'Months left', 'number'), f('yearsLeft', 'Years left', 'number'), f('paymentsLeft', 'Payments left', 'number'),
       pick('rateType', 'Fixed or adjustable', ['Fixed', 'Adjustable']),
       f('collections', 'In collections', 'yesno'), f('terms', 'Terms agreed'),
+      f('hassle', 'Hassle (1 to 5)', 'number'), // F3: Return on Hassle, the coach's score
       f('fee', 'Fee per period', 'money'), f('periods', 'Periods a year', 'number'),
       f('taxPlan', 'Payment plan in place', 'yesno'), f('guaranteed', 'Personally guaranteed', 'yesno'),
       f('institution', 'Institution'), f('opened', 'Opened', 'month'),
@@ -369,6 +370,7 @@ export const NOT_IN_SHEET = {
   'settings.presetsAdded': 'marks that the starter lines were added once',
   'settings.layerAccounts': 'which account holds each cash layer; set on Cash layers',
   'settings.person': 'the person filter on Net worth and Cash flow (all, Me, Partner), a screen setting (F2)',
+  'settings.debtCustomOrder': 'the custom payoff order, debt ids dragged into place on Plan › Debt payoff (F3)',
   'spending.basics': 'Fast Track totals, kept to compare with the lines',
   'spending.calendar': 'calendar marks (paid, moved, partial) and the starting balance; set on the calendar',
   'spending.months.closed': 'month-end close state; set on Month end',

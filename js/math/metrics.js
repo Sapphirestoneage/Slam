@@ -97,7 +97,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
       const min = cardMinimum({ balance, apr: apr.v });
       payment = min.value; paymentIsMinimum = min.value !== null;
     }
-    return { id: r.id, name: r.name ?? r.type, type: r.type, balance, apr: apr.v, aprGuess: !!apr.guess, payment, paymentIsMinimum, inFull, choice, stress: r.stress, linkedTo: r.linkedTo };
+    return { id: r.id, name: r.name ?? r.type, type: r.type, balance, apr: apr.v, aprGuess: !!apr.guess, payment, paymentIsMinimum, inFull, choice, stress: r.stress, hassle: r.values.hassle ?? null, linkedTo: r.linkedTo };
   });
   // Enter once, show in both: each debt's payment is a line From Debt; a typed line that looks like a debt payment or
   // a premium already paid asks "Same as your ...?" and is left out only after Yes (js/math/linked.js).

@@ -13,7 +13,7 @@ export { ORDER as FOO_ORDER } from './foo.js';
 export const AREAS = [
   { id: 'cashFlow', name: 'Cash flow', foo: '1', fooWords: 'Stop the bleeding', effort: 4, route: '#/cash-flow/budget' },
   { id: 'emergency', name: 'Emergency fund', foo: '1', fooWhen: f => (f.littleFull ? '4' : '1'), fooWords: 'little e at step 1, then big e at step 4', effort: 2, route: '#/net-worth/assets' },
-  { id: 'debt', name: 'Debt', foo: '3', fooWords: 'Clear the heavy debt', effort: 3, route: '#/net-worth/debt' },
+  { id: 'debt', name: 'Debt', foo: '3', fooWords: 'Clear the heavy debt', effort: 3, route: '#/plan/debt-payoff' }, // F3: the hole links to the payoff calculators
   { id: 'credit', name: 'Credit', foo: '3', fooWords: 'Clear the heavy debt (cards)', effort: 2, route: '#/net-worth/credit-cards' },
   { id: 'retirement', name: 'Retirement accounts', foo: '2', fooWhen: f => (f.matchOffered && f.matchLeft > 0 ? '2' : '5'), fooWords: 'Take the free money while match is on the table, then Roth and HSA', effort: 1, route: '#/net-worth/assets' },
   { id: 'investing', name: 'Investing', foo: '6', fooWords: 'Prepay retirement (Coast FI)', effort: 2, route: '#/net-worth/assets' },

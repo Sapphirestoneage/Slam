@@ -225,7 +225,7 @@ export const MATH = [
     cols: [{ area: 'debt', key: 'M33', label: 'Fee as an APR (M33)', unit: 'pct', f: 'IF(OR({fee}="",N({balance})=0,{periods}=""),"",{fee}/{balance}*{periods})' }],
     sheet: 'IF(COUNT(Debt_M33)=0,"",MAX(Debt_M33))', label: 'Highest fee APR',
     app: c => { const v = c.live.filter(r => r.kind === 'debt').map(r => feeApr({ fee: r.values.fee ?? null, amount: r.values.balance || null, periodsPerYear: r.values.periods ?? null }).value).filter(x => x != null); return v.length ? Math.max(...v) : null; } },
-  { id: 'M34', name: 'Payoff order with extra payment', inputs: 'debts, extra, order', unit: 'months', fns: ['debt.payoffPlan', 'debt.simulateDebt'],
+  { id: 'M34', name: 'Payoff order with extra payment', inputs: 'debts, extra, order', unit: 'months', fns: ['debt.payoffPlan', 'debt.simulateDebt', 'debt.hasslePerDollar', 'debt.customOrder', 'debt.orderCost'],
     fromApp: 'a month-by-month simulation that rolls each cleared payment onto the next debt (up to 1,200 rows)',
     app: c => { const ds = c.x.debts.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null); return ds.length ? payoffPlan(ds, { order: c.x.debtOrder }).months : null; } },
   { id: 'M35', name: 'Utilization', inputs: 'cards', unit: 'pct', fns: ['debt.utilization'],

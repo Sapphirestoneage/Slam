@@ -6,7 +6,9 @@ import { simpleMath } from '../math/simple.js';
 import * as S from './staples.js';
 import { futureDollars } from '../math/fi.js';
 import { MILESTONES, fiTargets, monthsTo, projection, ladder, solveFor } from '../plan.js';
-import { payoffPlan } from '../math/debt.js';
+import { payoffPlan, customOrder, orderCost } from '../math/debt.js';
+import { METHODS, suggestMethod } from '../registry/debt.js';
+import { moneyAsTime } from '../math/fi.js';
 import { addMonths, ymOf, monthName, dateOf, monthsBetween } from '../month.js';
 import { winSources } from './spending-ui.js';
 import { money, pct } from '../format.js';
@@ -286,7 +288,7 @@ function drawTimeline(host, ctx, m, r) {
 }
 
 // ---------- Debt payoff ----------
-const ORDER_NAMES = [['avalanche', 'Avalanche'], ['snowball', 'Snowball'], ['stress', 'Stress']];
+const ORDER_NAMES = METHODS.map(m => [m.id, m.name]); // F3: one config
 // R075: a 0% promo ending within 60 days jumps to the top and warns.
 export function promoSoon(ctx) {
   const now = ctx.now();
@@ -300,6 +302,7 @@ export function planDebts(ctx, { order, extra = 0 } = {}) {
   const ds = m.inputs.debts.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null);
   const soon = new Set(promoSoon(ctx).map(r => r.id));
   const o = order || m.inputs.debtOrder;
+  if (o === 'custom') { const sorted = customOrder(ds, ctx.store.doc.settings.debtCustomOrder || []); return payoffPlan([...sorted.filter(d => soon.has(d.id)), ...sorted.filter(d => !soon.has(d.id))], { order: 'given', extra }); }
   if (!soon.size) return payoffPlan(ds, { order: o, extra });
   const rest = payoffPlan(ds.filter(d => !soon.has(d.id)), { order: o }).debts.map(x => ds.find(d => d.name === x.name)).filter(Boolean);
   return payoffPlan([...ds.filter(d => soon.has(d.id)), ...rest], { order: 'given', extra });
@@ -318,6 +321,28 @@ export function payoffScreen(app, ctx) {
   const soon = promoSoon(ctx);
   const plans = Object.fromEntries(ORDER_NAMES.map(([k]) => [k, planDebts(ctx, { order: k, extra: PUI.extraDebt })]));
   const p = plans[order];
+  // F3: a suggestion from the client's stress (never forced), the custom order dragged into place, and what it costs against Avalanche.
+  const feelings = Object.entries(ctx.store.doc.session?.feelings || {}).filter(([, v]) => v != null).sort((a, b) => Number(a[0]) - Number(b[0]));
+  const sug = suggestMethod({ feeling: feelings.length ? feelings.at(-1)[1] : null, debts: usable });
+  const sugName = METHODS.find(x => x.id === sug.id)?.name ?? sug.id;
+  const suggestion = h('div.row-line', { style: { gap: '8px', marginTop: '8px' } }, h('span.muted.small', {}, `Suggested: ${sugName} (${sug.why})`), sug.id !== order ? S.button(`Use ${sugName}`, { size: 'small', onClick: () => setOrder(sug.id) }) : h('span.tag.plain', {}, 'In use'));
+  const ids = ctx.store.doc.settings.debtCustomOrder || [];
+  const setIds = list => { ctx.store.setDoc('settings', { debtCustomOrder: list }); app.render(); };
+  const sorted = customOrder(usable, ids);
+  const move = (i, j) => { const list = sorted.map(d => d.id); if (j < 0 || j >= list.length) return; [list[i], list[j]] = [list[j], list[i]]; setIds(list); };
+  let dragFrom = null;
+  const customList = order === 'custom' ? h('div.custom-order', { style: { marginTop: '10px' } }, h('span.muted.small', {}, 'Drag a debt into place, or use the arrows. The extra goes to the top one first.'),
+    h('div.stack', { style: { gap: '4px', marginTop: '6px' } }, sorted.map((d, i) => { const row = h('div.row-line.drag-row', { draggable: 'true', style: { gap: '8px' }, 'aria-label': `${d.name}, position ${i + 1}` },
+      h('span.drag-handle', { 'aria-hidden': 'true' }, '⋮⋮'), h('span.rank', {}, `${i + 1}`), h('strong', { style: { flex: 1 } }, d.name), h('span.muted.small', {}, `${money(d.balance)} at ${pct(d.apr)}`),
+      S.iconButton('up', `Move ${d.name} up`, () => move(i, i - 1), { tiny: true }), S.iconButton('down', `Move ${d.name} down`, () => move(i, i + 1), { tiny: true }));
+      row.ondragstart = e => { dragFrom = i; e.dataTransfer.effectAllowed = 'move'; row.classList.add('dragging'); };
+      row.ondragend = () => row.classList.remove('dragging');
+      row.ondragover = e => { e.preventDefault(); row.classList.add('over'); };
+      row.ondragleave = () => row.classList.remove('over');
+      row.ondrop = e => { e.preventDefault(); row.classList.remove('over'); if (dragFrom == null || dragFrom === i) return; const list = sorted.map(x => x.id); const [x] = list.splice(dragFrom, 1); list.splice(i, 0, x); dragFrom = null; setIds(list); };
+      return row; }))) : null;
+  const cost = order === 'custom' ? orderCost(usable, { order: 'custom', ids, extra: PUI.extraDebt }) : null;
+  const costDays = cost?.extraInterest != null ? moneyAsTime({ amount: cost.extraInterest, hourlyWage: m.hourly?.value ?? null, annualSpending: m.annualSpending }).value : null;
   const slider = h('input', { type: 'range', min: 0, max: 2000, step: 25, value: PUI.extraDebt, 'aria-label': 'Extra a month' });
   const out = h('strong', {}, `${money(PUI.extraDebt)} extra a month`);
   slider.oninput = () => { PUI.extraDebt = Number(slider.value); clear(out, `${money(PUI.extraDebt)} extra a month`); };
@@ -327,12 +352,14 @@ export function payoffScreen(app, ctx) {
     ...soon.map(r => h('div.banner-inline', {}, '⚠ ', `${r.name || r.type}: the 0% promo ends ${r.values.promoEnd}. It moved to the top of the order.`)),
     h('div.card', { style: { marginBottom: '16px' } },
       h('div.slider-row', {}, h('span.label', {}, 'Order'), S.toggle(ORDER_NAMES, order, setOrder, { label: 'Payoff order' }),
-        h('span.muted.small', {}, { avalanche: 'Highest APR first', snowball: 'Smallest balance first', stress: 'Highest stress first, ties by APR' }[order])),
+        h('span.muted.small', {}, METHODS.find(x => x.id === order)?.words ?? ''), METHODS.find(x => x.id === order)?.placeholder ? h('span.tag.plain', { title: 'The rule is a placeholder until it is settled' }, 'Placeholder') : null),
+      suggestion, customList,
       h('div.slider-row', { style: { marginTop: '10px' } }, h('span.label', {}, 'Extra'), slider, out)),
     S.summaryStrip(ctx, [
       { label: 'Debt-free', result: p.months == null ? { id: 'M34', value: null, never: true, needs: [] } : { id: 'M34', value: p.months, needs: [], unit: 'months', text: p.text }, render: () => at(p.months) },
       { label: 'Interest still to pay', result: { id: 'M34', value: p.months == null ? null : p.interest, needs: p.months == null ? ['payments that clear every debt'] : [], unit: 'money', text: p.text } },
       { label: 'Months', result: { id: 'M34', value: p.months, needs: [], unit: 'count', text: p.text }, render: r => `${r.value}` },
+      order === 'custom' ? { label: 'vs Avalanche (optimal)', result: { id: 'M34', value: cost.extraInterest, needs: cost.extraInterest == null ? ['both plans to finish'] : [], unit: 'money', text: `Interest with your order minus interest with Avalanche${cost.extraMonths ? `; ${cost.extraMonths} more ${Math.abs(cost.extraMonths) === 1 ? 'month' : 'months'}` : ''}.${costDays?.fiDays != null ? ` That is ${costDays.fiDays.toFixed(1)} FI days.` : ''}` }, note: costDays?.fiDays != null ? `${costDays.fiDays.toFixed(1)} FI days of extra interest` : 'Extra interest from your order' } :
       { label: `vs ${order === 'avalanche' ? 'snowball' : 'avalanche'}`, result: (() => { const o = plans[order === 'avalanche' ? 'snowball' : 'avalanche']; const d = o.months == null || p.months == null ? null : o.interest - p.interest; return { id: 'M34', value: d, needs: d == null ? ['both plans to finish'] : [], unit: 'money', text: `Interest with ${order === 'avalanche' ? 'snowball' : 'avalanche'} minus interest with ${order}.` }; })(), note: 'Interest saved by this order' }]),
     h('div.report-grid', {}, h('div.card', {}, h('strong', {}, 'Balance per debt'), payoffChart(ctx, p)), h('div.card', {}, h('strong', {}, 'Order compared'), compareChart(ctx, plans)))];
 }

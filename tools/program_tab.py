@@ -24,8 +24,9 @@ import { AREAS, RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER } from './js/registry/sco
 import { ORDER, STEP_WORDS, PREREQS, CONDITIONS } from './js/registry/foo.js';
 import { STEPS, MARKERS, LADDER } from './js/registry/ladder.js';
 import { MODES, PERSONS, ONE_PERSON_TYPES } from './js/registry/couples.js';
+import { METHODS, SUGGEST } from './js/registry/debt.js';
 const prereqs = Object.fromEntries(Object.entries(PREREQS).map(([k, p]) => [k, { ...p, conditions: (p.conditions || []).map(c => CONDITIONS[c].label) }]));
-console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs }, LADDER: { STEPS, MARKERS, LADDER }, COUPLES: { MODES, PERSONS, ONE_PERSON_TYPES } }));
+console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs }, LADDER: { STEPS, MARKERS, LADDER }, COUPLES: { MODES, PERSONS, ONE_PERSON_TYPES }, DEBT: { METHODS, SUGGEST } }));
 """
 RULE_WORDS = {
     "cashFlow": "The headline savings rate: Strong at or over strong, OK at or over ok, else Hole; a negative surplus is a Hole",
@@ -171,6 +172,11 @@ def main():
     # The cash layers (overnight A9): one definition, used by FOO steps 1 and 4, the Scorecard and the ladder.
     row("Cash layers", "", "Cash fills the buckets in order: the Buffer (bufferWeeks of spending, so checking never bounces), little e ($1,000 or the highest deductible, whichever is smaller), any income gap within 12 months, then big e (the Rule of 5: bigEMonths of spending, FAT first, then DRAFTT, then full). A dip (an emergency paid from cash) comes out of the Buffer first, then little e, then big e last; refilling runs the other way. Each dip is recorded with its date, amount, the layers it came from and what each had left. History: a stacked area over the snapshots, dips marked, with the number of dips, the deepest dip (layer, % left, month) and months to refill. One account with virtual layers, or one account per layer.", "M68; js/math/layers.js; Net worth › Assets › Cash layers")
     row("Cash layers", "Scorecard: Emergency fund", "Hole until little e is full; OK with little e full; Strong with big e full", "js/math/scorecard.js")
+    # Debt payoff methods (overnight F3).
+    db = cfg["DEBT"]
+    row("Debt payoff", "", "Each method is its own calculator on Plan › Debt payoff (M34), with the same extra a month. A suggestion comes from the client's stress and is never forced: a money feeling at or under " + str(db["SUGGEST"]["lowFeeling"]) + " of 10, or any debt rated " + str(db["SUGGEST"]["debtStress"]) + "+ for stress, points to Snowball (Return on Hassle once hassle scores are typed); a feeling at or over " + str(db["SUGGEST"]["highFeeling"]) + " points to Avalanche; otherwise Avalanche. The Debt hole on the Scorecard links here.", "js/registry/debt.js; js/math/debt.js ORDERS")
+    for m in db["METHODS"]:
+        row("Debt payoff", m["name"], m["words"], ("Default" if m.get("default") else "") + ("Placeholder (QUESTIONS: the rule)" if m.get("placeholder") else ""))
     # Couples (overnight F2).
     cp = cfg["COUPLES"]
     row("Couples", "", "Every income row, account, debt, goal and homework item carries an Owner tag: " + ", ".join(cp["PERSONS"]) + " (shown as the two first names, or Person A and Person B until typed). A retirement or health account is always one person's: " + ", ".join(cp["ONE_PERSON_TYPES"]) + ". The household mode on About you sets Solo or couple, the default person view on Net worth and Cash flow, and the filing status assumed until one is typed. Switching modes keeps every row and tag.", "js/registry/couples.js; js/couples.js setHouseholdMode; Net worth and Cash flow strips")

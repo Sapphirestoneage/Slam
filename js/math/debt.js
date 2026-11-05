@@ -75,7 +75,19 @@ const ORDERS = {
   snowball: (a, b) => a.balance - b.balance,
   // Stress: highest rating first, ties by APR; blank ratings go last (R062).
   stress: (a, b) => (b.stress ?? -1) - (a.stress ?? -1) || b.apr - a.apr,
+  // Return on Hassle (F3, a placeholder): hassle score over balance, highest first; unscored debts last; ties by APR.
+  hassle: (a, b) => hasslePerDollar(b) - hasslePerDollar(a) || b.apr - a.apr,
 };
+export const hasslePerDollar = d => (d.hassle != null && d.balance > 0 ? d.hassle / d.balance : -1);
+// A custom order: the debts in the order of ids given (the rest after, as they came).
+export function customOrder(debts, ids = []) { const rank = d => { const i = ids.indexOf(d.id); return i < 0 ? ids.length : i; }; return [...debts].sort((a, b) => rank(a) - rank(b)); }
+// What an order costs against the optimal one (F3): extra interest and extra months against Avalanche with the same extra.
+export function orderCost(debts, { order = 'custom', ids = [], extra = 0, against = 'avalanche' } = {}) {
+  const mine = order === 'custom' ? payoffPlan(customOrder(debts, ids), { order: 'given', extra }) : payoffPlan(debts, { order, extra });
+  const best = payoffPlan(debts, { order: against, extra });
+  const extraInterest = mine.months == null || best.months == null ? null : mine.interest - best.interest;
+  return { plan: mine, best, extraInterest, extraMonths: mine.months == null || best.months == null ? null : mine.months - best.months };
+}
 
 // M34: payoff order with an extra payment, rolling each cleared payment forward.
 export function payoffPlan(debts, { extra = 0, order = 'avalanche', maxMonths = 1200 } = {}) {

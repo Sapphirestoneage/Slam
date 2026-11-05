@@ -2,6 +2,7 @@
 // List setups built from the staples: debts and spending lines. Each list is a view of the one record type.
 import { h, icon } from './dom.js';
 import { addPresets } from '../presets.js';
+import { METHODS } from '../registry/debt.js';
 import { fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
 import { pct } from '../format.js';
 import { feeApr } from '../math/debt.js';
@@ -43,7 +44,7 @@ export function debtList(ref, { cards = null } = {}) {
     picker: cards === 'only' ? null : { top: ref.lists.debtTypesTop.filter(t => cards !== 'none' || t !== 'Credit card'), other: [...ref.lists.debtTypesOther, 'Mortgage'] },
     // Order drives the payoff plan everywhere (Mockup: section header).
     headerExtra: ctx => cards === 'only' ? null : h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Order'),
-      toggle([['avalanche', 'Avalanche'], ['snowball', 'Snowball'], ['stress', 'Stress']], ctx.store.doc.settings.debtOrder ?? 'avalanche',
+      toggle(METHODS.map(m => [m.id, m.name]), ctx.store.doc.settings.debtOrder ?? 'avalanche',
         v => { ctx.store.setDoc('settings', { debtOrder: v }); ctx.refresh(); }, { label: 'Payoff order' })),
     coreFields: ['balance', 'apr'],
     focus: ['Debt', 'Balance', 'APR', 'Payment / mo'], // session 1: type, balance, APR, minimum
@@ -331,6 +332,8 @@ export const debtCharts = [
 
 // ---------- Debt detail behind More, by type (Mockup: Debt) ----------
 const stress = (r, up) => labelled('Stress 1 to 5', toggle(['1', '2', '3', '4', '5'], r.stress ? String(r.stress) : null, v => up({ stress: Number(v) }), { label: 'Stress' }));
+// F3: the coach's hassle score for Return on Hassle (a placeholder method: hassle per dollar, highest first).
+const hassle = (r, up) => labelled('Hassle 1 to 5', toggle(['1', '2', '3', '4', '5'], r.values.hassle ? String(r.values.hassle) : null, v => up({ hassle: v == null ? null : Number(v) }), { label: 'Hassle', clearable: true }), { note: 'For Return on Hassle: how much this debt nags, per dollar' });
 const yn3 = (v, on, label) => toggle(['Yes', 'No', 'Not sure'], v ?? null, on, { label });
 function debtSecondary(ctx, r, up) {
   const g = ctx.gates();
@@ -351,14 +354,14 @@ function debtSecondary(ctx, r, up) {
       labelled('Rewards', select(['Cash back', 'Points', 'Miles', 'None'], v.rewards ?? null, x => up({ rewards: x }), { label: 'Rewards type', width: 140 }), park(ctx, r, 'rewards')),
       labelled('Personal or business', toggle(['Personal', 'Business'], v.use ?? null, x => up({ use: x }), { label: 'Personal or business' })),
       billsOnCard(ctx, r),
-      stress(r, up)];
+      stress(r, up), hassle(r, up)];
   }
   if (r.type === 'Student loan') {
     return [
       labelled('Federal or private', toggle(['Federal', 'Private'], v.federal ?? null, x => up({ federal: x }), { label: 'Federal or private' })),
       applies('repaymentPlan', { g, r }) ? labelled('Repayment plan', select(['Standard', 'Income-driven', 'Other'], v.plan ?? null, x => up({ plan: x }), { label: 'Repayment plan', width: 170 })) : null,
       labelled('Servicer', textInput(v.servicer, x => up({ servicer: x }), { hint: 'Add servicer', width: 170 })),
-      stress(r, up)];
+      stress(r, up), hassle(r, up)];
   }
   if (r.type === 'Car loan' || r.type === 'Mortgage') {
     const kind = r.type === 'Car loan' ? 'Car' : 'Home';
@@ -369,7 +372,7 @@ function debtSecondary(ctx, r, up) {
       r.type === 'Car loan' ? labelled('Months left', textInput(v.monthsLeft, x => up({ monthsLeft: x === null ? null : Number(x) }), { hint: 'Add months', width: 110 }), { note: 'Checks the payoff date' })
         : labelled('Fixed or adjustable', toggle(['Fixed', 'Adjustable'], v.rateType ?? null, x => up({ rateType: x }), { label: 'Fixed or adjustable' })),
       r.type === 'Mortgage' ? labelled('Years left', textInput(v.yearsLeft, x => up({ yearsLeft: x === null ? null : Number(x) }), { hint: 'Add years', width: 100 })) : null,
-      stress(r, up)];
+      stress(r, up), hassle(r, up)];
   }
   // Any other debt: the fields unique to its type (Mockup: Debt › Any other debt).
   const unique = {
@@ -387,7 +390,7 @@ function debtSecondary(ctx, r, up) {
     '401(k) loan': () => labelled('If you leave the job', h('span.computed', {}, 'Due in full, or it counts as a withdrawal')),
     Business: () => labelled('Personally guaranteed', yn3(v.guaranteed, x => up({ guaranteed: x }), 'Personally guaranteed')),
   };
-  return [unique[r.type]?.() ?? null, stress(r, up)];
+  return [unique[r.type]?.() ?? null, stress(r, up), hassle(r, up)];
 }
 const dayBox = (value, onChange) => textInput(value == null ? null : String(value), x => { const n = Number(x); onChange(Number.isInteger(n) && n >= 1 && n <= 31 ? n : null); }, { hint: 'Day, 1 to 31', width: 110 });
 
