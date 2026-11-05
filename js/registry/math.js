@@ -154,8 +154,10 @@ export const MATH = [
     fromApp: 'an average across closed months of each first guess against the actual; the close history stays in SLAM', app: () => null },
   { id: 'M27', name: 'Monthly surplus', inputs: 'M12, M21, debts', unit: 'money', fns: ['spending.monthlySurplus'],
     parts: [
-      { key: 'lines', name: 'Spending on the Budget lines (debt payments From Debt included)', unit: 'money',
-        sheet: 'IF(COUNTIFS(Spend_Kind,"Budget line",Spend_InMath,"<>No")=0,"",SUMIFS(Spend_M21,Spend_InMath,"Yes")+SUM(Debt_auto))', app: c => c.x.lineTotal },
+      { key: 'lines', name: 'Spending on the Budget lines (debt payments From Debt included; Retirement lines left out)', unit: 'money',
+        sheet: 'IF(COUNTIFS(Spend_Kind,"Budget line",Spend_InMath,"<>No")=0,"",SUMIFS(Spend_M21,Spend_InMath,"Yes",Spend_draftt,"<>Retirement")+SUM(Debt_auto))', app: c => c.x.lineTotal },
+      { key: 'retire', name: 'Retirement lines on the Budget, a month (investing, not spending)', unit: 'money',
+        sheet: 'IF(OR(Math_M27_gut="",AND(Set_spendingSource="lines",Math_M27_lines<>"")),SUMIFS(Spend_M21,Spend_draftt,"Retirement",Spend_InMath,"Yes"),0)', app: c => c.x.retirementLines ?? 0 },
       { key: 'gut', name: 'The gut number', unit: 'money',
         sheet: 'IF(COUNTIFS(Spend_Kind,"Gut number",Spend_InMath,"<>No")=0,"",IF(COUNTIFS(Spend_Kind,"Gut number",Spend_InMath,"<>No",Spend_amount,"<>")=0,"",SUMIFS(Spend_amount,Spend_Kind,"Gut number",Spend_InMath,"<>No",Spend_Status,"<>Not for me")))',
         app: c => c.x.gutTotal },
@@ -177,6 +179,7 @@ export const MATH = [
     parts: [
       { key: 'pretax', name: '401(k) and HSA money from the paycheck, a month', unit: 'money', sheet: 'SUM(Income_saving)', app: c => c.m.pretaxSaving },
       { key: 'match', name: 'Employer match, a month', unit: 'money', sheet: 'Math_M15/12', app: c => c.m.savingsRate.match ?? 0 },
+      { key: 'afterTax', name: 'After-tax contributions set on accounts (a Roth IRA, a brokerage), a month', unit: 'money', fromApp: 'each account\'s contribution in its own cadence (a paycheck, a month, a year), from the Assets tab in SLAM', app: c => c.x.afterTaxSaving ?? 0 },
       { key: 'base', name: 'Second line: surplus over take-home', unit: 'pct', sheet: 'IF(OR(Math_M12="",Math_M27="",N(Math_M12)=0),"",Math_M27/Math_M12)', app: c => c.m.savingsRate.ofTakeHome ?? null },
     ],
     sheet: 'IF(OR(Math_M12="",Math_M27=""),"",IF(Math_M28_pretax+Math_M28_match>0,(Math_M27+Math_M28_pretax+Math_M28_match)/(Math_M12+Math_M28_pretax+Math_M28_match),Math_M27/Math_M12))',
@@ -275,10 +278,12 @@ export const MATH = [
     sheet: 'IF(SUMIFS(Spend_M21,Spend_fat,1,Spend_InMath,"Yes")=0,"",SUMIFS(Spend_M21,Spend_fat,1,Spend_InMath,"Yes")*12/WithdrawalRate)', app: c => c.targets()['Lean FI'].value },
   { id: 'M52', name: 'Barista FI number', inputs: 'part-time income', unit: 'money', fns: ['fi.baristaFiNumber'],
     sheet: 'IF(OR(Profile_keepJobAfterLaunch="No",RetirementSpending="",PartTimeIncome=""),"",(RetirementSpending-PartTimeIncome)*12/WithdrawalRate)', app: c => c.targets()['Barista FI'].value ?? null },
-  { id: 'M53', name: 'FI date', inputs: 'invested, M28 before-tax saving and match, M27 if invested, M02, M50', unit: 'months', fns: ['fi.fiDate'],
+  { id: 'M53', name: 'FI date', inputs: 'invested, M28 before-tax saving and match, M27 if invested, M02, M50', unit: 'months', fns: ['fi.fiDate', 'fi.fiRangeOf'],
     parts: [{ key: 'growth', name: 'Growth a month at the return', unit: 'pct', sheet: '(1+RealReturn)^(1/12)-1', app: c => (1 + c.x.realReturn) ** (1 / 12) - 1 },
-      // Answer to 11: what goes in each month. The surplus counts only after Invest my surplus (InvestSurplus = 1).
-      { key: 'invest', name: 'Invested a month: 401(k), HSA, match, plus the surplus if you invest it', unit: 'money', sheet: 'IF(Math_M27="","",Math_M28_pretax+Math_M28_match+IF(N(InvestSurplus)=1,Math_M27,0))', app: c => c.m.investing?.monthly ?? null }],
+      // Answers 123 to 125: what goes in each month. The surplus is invested unless InvestSurplus is 0; then only the
+      // after-tax contributions and Retirement lines (paid out of the surplus) go in.
+      { key: 'invest', name: 'Invested a month: 401(k), HSA, match, plus the surplus (or, with Invest my surplus off, the after-tax contributions and Retirement lines)', unit: 'money',
+        sheet: 'IF(Math_M27="","",Math_M28_pretax+Math_M28_match+IF(N(InvestSurplus)=0,N(Math_M28_afterTax)+N(Math_M27_retire),Math_M27))', app: c => c.m.investing?.monthly ?? null }],
     sheet: 'IF(OR(Math_M41_invested="",Math_M27="",Math_M50=""),"",IF(Math_M41_invested>=Math_M50,0,IF(Math_M53_growth=0,IF(Math_M53_invest>0,IF(ROUNDUP((Math_M50-Math_M41_invested)/Math_M53_invest-0.000000001,0)>MaxMonths,"Never",ROUNDUP((Math_M50-Math_M41_invested)/Math_M53_invest-0.000000001,0)),"Never"),IF(Math_M41_invested+Math_M53_invest/Math_M53_growth<=0,"Never",IF(ROUNDUP(LN((Math_M50+Math_M53_invest/Math_M53_growth)/(Math_M41_invested+Math_M53_invest/Math_M53_growth))/LN(1+Math_M53_growth)-0.000000001,0)>MaxMonths,"Never",ROUNDUP(LN((Math_M50+Math_M53_invest/Math_M53_growth)/(Math_M41_invested+Math_M53_invest/Math_M53_growth))/LN(1+Math_M53_growth)-0.000000001,0))))))',
     label: 'Months until investments reach the FI number, at what goes in each month', app: c => c.m.monthsToFi.value, never: c => !!c.m.monthsToFi.never },
   { id: 'M54', name: 'Coast FI', inputs: 'M50, M02, ages', unit: 'money', fns: ['fi.coastFi', 'foo.coastFiNumber'],
@@ -332,7 +337,7 @@ export const MATH = [
     label: 'Years to FI from $0 at your savings rate', app: c => simpleMath({ savingsRate: c.m.savingsRate.value == null ? null : Math.max(0, c.m.savingsRate.value), realReturn: c.x.realReturn, withdrawalRate: c.x.withdrawalRate }).value },
   // ---------- The program (Phase 3) ----------
   { id: 'M73', name: 'Picture %', inputs: "every number's level and weight (Assumptions: Levels, Weights, Pace)", unit: 'pct',
-    fns: ['picture.levelOf', 'picture.pictureOf', 'picture.nextSmallThings', 'picture.stepOf', 'picture.paceOf', 'picture.unlockOf', 'picture.confidenceOf'],
+    fns: ['picture.levelOf', 'picture.pictureOf', 'picture.nextSmallThings', 'picture.stepOf', 'picture.paceOf', 'picture.unlockOf', 'picture.confidenceOf', 'picture.fiWordsOf'],
     fromApp: 'a weighted average of each number\'s level (Gut 25, Rough 50, Estimate 75, Actual 100; the Program tab lists them)', app: c => pictureOf(c.doc, c.ref, { now: c.now }).pct,
     parts: [
       { key: 'expected', name: 'Expected by the end of this session (pace)', unit: 'pct', fromApp: 'the Pace table against the session being run', app: c => paceOf(pictureOf(c.doc, c.ref, { now: c.now }).pct, sessionNo(c.doc)).target / 100 },

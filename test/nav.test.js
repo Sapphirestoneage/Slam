@@ -7,7 +7,7 @@ const fields = JSON.parse(readFileSync(new URL('../data/fields.json', import.met
 
 test('five tabs, same order, named as decided (R148)', () => {
   assert.deepEqual(TABS.map(t => t.name), ['Home', 'Net worth', 'Cash flow', 'Plan', 'Report']);
-  assert.deepEqual(TABS[0].subs.map(s => s.name), ['Home', 'About you'], 'Phase 3: Home is one screen; Start session switches its mode');
+  assert.deepEqual(TABS[0].subs.filter(s => !s.hidden).map(s => s.name), ['Home', 'About you'], 'Phase 3: Home is one screen; Start session switches its mode (Review is the gate, not a sub-tab)');
   assert.deepEqual(TABS[1].subs.map(s => s.name), ['Assets', 'Debt', 'Credit cards', 'Protection']); // Credit cards: answer to 56
   assert.deepEqual(TABS[2].subs.map(s => s.name), ['Income', 'Taxes', 'Budget', 'Calendar', 'Month end'], 'waterfall order');
 });

@@ -62,12 +62,14 @@ test('(c) Coast FI reached: step 7 opens', () => {
   assert.match(step(f, '7').note, /pick a launch move/);
 });
 
-test('(d) giving on: step 0a comes first', () => {
+test('(d) giving: off by default; on, it sits at the Roth IRA step (5b) and stays locked until that step is reached (batch 3)', () => {
   const off = home(() => {});
-  assert.notEqual(off.steps[0].id, '0a', 'off for everyone by default');
+  assert.equal(step(off, '5b').status, 'Off', 'off for everyone by default');
+  assert.ok(off.steps.findIndex(s => s.id === '5b') > off.steps.findIndex(s => s.id === '5'), 'after Roth and HSA, never first');
   const on = home(s => s.setDoc('profile', { giving: { on: true, mode: 'pct', pct: 0.1, base: 'net' } }));
-  assert.equal(on.steps[0].id, '0a');
-  assert.equal(Math.round(step(on, '0a').left), 500);
+  assert.equal(step(on, '5b').status, 'Locked');
+  assert.match(step(on, '5b').prereq.text, /Giving unlocks at the Roth IRA step/);
+  assert.equal(Math.round(step(on, '5b').left), 500);
 });
 
 test('steps 2 and 3 can be in progress together; 6 and 7 never overlap', () => {
@@ -78,7 +80,7 @@ test('steps 2 and 3 can be in progress together; 6 and 7 never overlap', () => {
   });
   const two = step(f, '2'), three = step(f, '3');
   assert.ok(['In progress', 'Next'].includes(two.status) && ['In progress', 'Next'].includes(three.status), `${two.status} / ${three.status}`);
-  for (const h of [f]) assert.ok(!(step(h, '6').status !== 'Done' && step(h, '7').status !== 'Later'));
+  for (const h of [f]) assert.ok(!(step(h, '6').status !== 'Done' && step(h, '7').status !== 'Locked'), 'the launch window is locked until Coast FI (step 6 done)');
 });
 
 test('efficiency flags come from data/flags.json and land on their stop', () => {

@@ -52,9 +52,9 @@ export const REPORTS = [
           { key: 'takeHome', name: 'Take-home', unit: 'money', f: 'Math_M12', app: f.takeHome, total: true },
           { key: 'fixed', name: 'Fixed spending (Budget lines)', unit: 'money', f: `IF(${LINES_ON},SUMIFS(Spend_M21,Spend_amountType,"Fixed",Spend_draftt,"<>Retirement",Spend_InMath,"Yes")+SUM(Debt_auto),"")`, app: f.fixed },
           { key: 'variable', name: 'Variable spending (Budget lines)', unit: 'money', f: `IF(${LINES_ON},SUMIFS(Spend_M21,Spend_amountType,"<>Fixed",Spend_draftt,"<>Retirement",Spend_InMath,"Yes"),"")`, app: f.variable },
-          { key: 'spending', name: 'Spending', unit: 'money', f: `IF(Math_M27_spending="","",Math_M27_spending+N(Math_M27_debtOut)-IF(${LINES_ON},${RETIREMENT_LINES},0))`, app: f.spending },
+          { key: 'spending', name: 'Spending', unit: 'money', f: 'IF(Math_M27_spending="","",Math_M27_spending+N(Math_M27_debtOut))', app: f.spending },
           { key: 'surplus', name: 'Surplus (M27)', unit: 'money', f: 'Math_M27', app: c.m.surplus.value, total: true },
-          { key: 'savings', name: 'Saved in the budget (Retirement lines and after-tax savings)', unit: 'money', f: `IF(${LINES_ON},${RETIREMENT_LINES},0)+${c.x.afterTaxSaving ?? 0}`, app: f.savings },
+          { key: 'savings', name: 'Saved in the budget (Retirement lines and after-tax savings)', unit: 'money', f: `IF(${LINES_ON},${RETIREMENT_LINES},0)+N(Math_M28_afterTax)`, app: f.savings },
           { key: 'free', name: 'Free after savings', unit: 'money', f: 'IF(OR(Statements_takeHome="",Statements_spending=""),"",Statements_takeHome-Statements_spending-Statements_savings)', app: f.free, total: true },
         ] },
         { title: 'Cash flow, this month on the calendar (M64)', rows: [
@@ -119,9 +119,9 @@ export const REPORTS = [
     about: 'Year by year to FI, and each debt month by month to paid off, as row formulas. A table that would pass 600 rows is written as values and marked From the app.',
     tables: c => {
       const YEARS = 50;
-      const path = c.x.invested == null || c.m.surplus.value == null ? []
-        : fiDate({ invested: c.x.invested, monthlyInvesting: c.m.surplus.value, realReturn: c.x.realReturn, target: Number.MAX_VALUE }, { from: c.now, path: true }).points || [];
-      const years = { title: 'Year by year: investments, the surplus invested every month (M53)', columns: [
+      const path = c.x.invested == null || c.m.investing?.monthly == null ? []
+        : fiDate({ invested: c.x.invested, monthlyInvesting: c.m.investing.monthly, realReturn: c.x.realReturn, target: Number.MAX_VALUE }, { from: c.now, path: true }).points || [];
+      const years = { title: 'Year by year: investments, with what goes in every month (M53)', columns: [
         { key: 'year', label: 'Year', unit: 'number', width: 9 }, { key: 'age', label: 'Age', unit: 'number', width: 9 },
         { key: 'start', label: 'Balance at the start', unit: 'money' }, { key: 'added', label: 'Contributions', unit: 'money' },
         { key: 'growth', label: 'Growth', unit: 'money' }, { key: 'end', label: 'Balance at the end', unit: 'money' },
@@ -132,8 +132,8 @@ export const REPORTS = [
         year: { v: i + 1 },
         age: { f: 'IF(Profile_ageUsed="","",Profile_ageUsed+{col:year})' },
         start: { f: i === 0 ? 'N(Math_M41_invested)' : '{prev:end}' },
-        added: { f: 'N(Math_M27)*12' },
-        end: { f: 'FV(Math_M53_growth,12,-N(Math_M27),-{col:start})' },
+        added: { f: 'N(Math_M53_invest)*12' },
+        end: { f: 'FV(Math_M53_growth,12,-N(Math_M53_invest),-{col:start})' },
         growth: { f: '{col:end}-{col:start}-{col:added}' },
         fi: { f: 'Math_M50' },
         reached: { f: 'IF(Math_M50="","",IF({col:end}>=Math_M50,"Yes","No"))' },

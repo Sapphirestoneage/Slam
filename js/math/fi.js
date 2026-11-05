@@ -54,6 +54,16 @@ export function fiDate({ invested, monthlyInvesting, realReturn, target }, { fro
   return { ...ok('M53', n, `Starting at ${fmt.money(invested)}, growing ${fmt.pct(realReturn)} a year after inflation and adding ${fmt.money(monthlyInvesting)} a month, investments reach ${fmt.money(target)} in ${duration(n, from)}.`, { unit: 'months' }), points: path ? points : undefined };
 }
 
+// The FI date as a range (answer 122): the months to FI with spending lower and higher by a share, from the metrics.
+// Spending moves the FI number and, when the surplus is invested, what goes in each month.
+export function fiRangeOf(m, share, { from = new Date() } = {}) {
+  const x = m.inputs, spend = x.retirementSpending, going = m.investing?.monthly ?? null;
+  if (isBlank(spend) || isBlank(x.invested) || going === null || isBlank(x.withdrawalRate)) return null;
+  const run = k => fiDate({ invested: x.invested, monthlyInvesting: going - (m.investing.investSurplus ? spend * (k - 1) : 0), realReturn: x.realReturn, target: spend * 12 * k / x.withdrawalRate }, { from });
+  const lo = run(1 - share), hi = run(1 + share);
+  return { share, low: lo.value, high: hi.value, highNever: !!hi.never, lowNever: !!lo.never, base: m.monthsToFi.value };
+}
+
 // M54: Coast FI number at today's age.
 export function coastFi({ fiNumber: fi, realReturn, age, retireAge }) {
   const m = missing({ 'FI number': fi, 'return': realReturn, age, 'retirement age': retireAge });

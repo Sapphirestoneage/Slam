@@ -16,7 +16,7 @@ const now = new Date('2026-11-05T12:00:00Z');
 const fresh = () => new Store(newHousehold({ name: 'Synthetic', now: now.toISOString() }), { now: () => now.toISOString() });
 
 // ---------- Step 0: the four Home numbers (reported, not changed) ----------
-test('step 0: a household shaped like the beta Home reproduces 45.2%, $1,433, $71,745 and Oct 2063 with $0 a month invested', () => {
+test('step 0: a household shaped like the beta Home reproduces 45.2%, $1,433, $71,745; FI is 14.3 years with the surplus invested (the default now), Oct 2063 with it in checking', () => {
   const s = fresh();
   s.setDoc('profile', { age: 24, state: 'NY', household: 'Solo', areas: { cash: true, investments: true, real: true, debt: false } });
   s.add('income', { name: 'Job', amount: 3170.35, per: 'month', values: { basis: 'Take-home', payFrequency: '2 weeks' } }, { type: 'Job' });
@@ -28,14 +28,87 @@ test('step 0: a household shaped like the beta Home reproduces 45.2%, $1,433, $7
   assert.equal(Math.round(m.savingsRate.value * 1000) / 10, 45.2);
   assert.equal(m.surplus.value, 1433);
   assert.equal(m.netWorth.value, 71745);
-  assert.equal(m.monthsToFi.value, 443); // 36.9 years: Oct 2063
-  assert.match(m.monthsToFi.text, /Oct 2063/);
-  // The savings rate counts the surplus as saved; the FI date adds nothing a month until Invest my surplus is on.
-  assert.equal(m.investing.monthly, 0);
-  s.setDoc('assumptions', { investSurplus: true });
-  const on = metrics(s.doc, ref, { now });
-  assert.equal(on.investing.monthly, 1433);
-  assert.ok(on.monthsToFi.value / 12 > 14 && on.monthsToFi.value / 12 < 15, 'with the surplus invested: about 14 years, the rough math');
+  // Answer 123: the surplus is invested unless turned off, so the FI date and the savings rate agree with the rough math.
+  assert.equal(m.investing.monthly, 1433);
+  assert.ok(Math.abs(m.monthsToFi.value / 12 - 14.3) < 0.1, `about 14.3 years: ${m.monthsToFi.value / 12}`);
+  assert.equal(m.fiPaths.idle.value, 443, 'if it sits in checking: 36.9 years, Oct 2063');
+  assert.match(m.fiPaths.idle.text, /Oct 2063/);
+  s.setDoc('assumptions', { investSurplus: 0 });
+  const off = metrics(s.doc, ref, { now });
+  assert.equal(off.investing.monthly, 0);
+  assert.equal(off.monthsToFi.value, 443);
+});
+
+// ---------- Answers 122 to 127 (batch 2), on the same household ----------
+const brandonLike = () => {
+  const s = fresh();
+  s.setDoc('profile', { age: 24, state: 'NY', household: 'Solo', areas: { cash: true, investments: true, real: true, debt: false } });
+  s.add('income', { name: 'Job', amount: 3170.35, per: 'month', values: { basis: 'Take-home', payFrequency: '2 weeks' } }, { type: 'Job' });
+  s.add('spending', { name: 'All in', amount: 1737.35, values: { includesDebtPayments: true } }, { type: 'All in' });
+  s.add('account', { name: 'Brokerage', values: { group: 'investment', balance: 43000 } }, { type: 'Brokerage' });
+  s.add('account', { name: 'Checking', values: { group: 'cash', balance: 8745 } }, { type: 'Checking' });
+  s.add('asset', { name: 'Car', values: { value: 20000 } }, { type: 'Car' });
+  return s;
+};
+test('122: the gut number unlocks the FI date at Low confidence, shown as a year range; typed lines make it a year or a narrower range; a lock makes it a month', async () => {
+  const { fiWordsOf } = await import('../js/math/picture.js');
+  const s = brandonLike();
+  let pic = pictureOf(s.doc, ref, { now });
+  let u = unlockOf('fi', pic);
+  assert.equal(u.unlocked, true, 'a gut number is enough');
+  let c = confidenceOf('fi', pic, { now });
+  assert.equal(c.word, 'Low');
+  let m = metrics(s.doc, ref, { now });
+  let w = fiWordsOf(m, c, { now });
+  assert.equal(w.kind, 'range'); assert.match(w.text, /^20\d\d to 20\d\d$/);
+  assert.ok(w.low < m.monthsToFi.value && w.high > m.monthsToFi.value, 'spending 15% lower lands sooner, 15% higher later');
+  // No spending at all: locked with the plain reason.
+  const empty = fresh();
+  empty.add('income', { name: 'Job', amount: 3000, per: 'month', values: { basis: 'Take-home' } }, { type: 'Job' });
+  assert.match(unlockOf('fi', pictureOf(empty.doc, ref, { now })).reason, /spending is in/);
+  // Everything typed: Medium, a year or a narrow range; everything locked: High, a month.
+  for (const r of s.find(r => ['income', 'account', 'asset'].includes(r.kind))) s.update(r.id, { locked: true });
+  s.update(s.find(r => r.kind === 'spending')[0].id, { locked: true });
+  pic = pictureOf(s.doc, ref, { now }); c = confidenceOf('fi', pic, { now }); m = metrics(s.doc, ref, { now });
+  assert.equal(c.word, 'High');
+  assert.equal(fiWordsOf(m, c, { now }).kind, 'month');
+  assert.equal(fiWordsOf(m, { word: 'Medium', range: 0.05 }, { now }).kind === 'year' || fiWordsOf(m, { word: 'Medium', range: 0.05 }, { now }).kind === 'range', true);
+});
+test('124 and 125: after-tax contributions and Retirement lines count as investing, never twice; Retirement lines leave spending and the FI target', () => {
+  const s = brandonLike();
+  s.setDoc('assumptions', { investSurplus: 0 });
+  const roth = s.add('account', { name: 'Roth IRA', values: { group: 'investment', balance: 5000, contribution: 500, contributionPer: 'Month' } }, { type: 'Roth IRA' });
+  let m = metrics(s.doc, ref, { now });
+  assert.equal(m.investing.monthly, 500, 'the Roth contribution goes in even when the surplus sits in checking');
+  s.setDoc('assumptions', { investSurplus: 1 });
+  m = metrics(s.doc, ref, { now });
+  assert.equal(m.investing.monthly, m.surplus.value, 'with the surplus invested, the Roth money is already inside it');
+  // Lines as the source with a Retirement line: it is investing, not spending.
+  s.remove(roth.id);
+  s.add('bill', { name: 'Rent', amount: 1200, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed' } });
+  s.add('bill', { name: 'IRA', amount: 300, values: { draftt: 'Retirement', amountType: 'Fixed' } });
+  s.setDoc('spending', { source: 'lines' });
+  m = metrics(s.doc, ref, { now });
+  assert.equal(m.inputs.spending, 1200, 'the IRA line is not spending');
+  assert.equal(m.inputs.retirementLines, 300);
+  assert.equal(m.fiNumber.value, 1200 * 12 / 0.04, 'and not in the FI target');
+  assert.equal(m.surplus.value, Math.round((3170.35 - 1200) * 100) / 100);
+  assert.equal(m.investing.monthly, m.surplus.value, 'invested: the IRA money is inside the surplus (once)');
+  s.setDoc('assumptions', { investSurplus: 0 });
+  m = metrics(s.doc, ref, { now });
+  assert.equal(m.investing.monthly, 300, 'in checking: only the IRA line goes in');
+  assert.equal(m.flow.spending, 1200); assert.equal(m.flow.savings, 300);
+});
+test('127: the gut number stops counting in the picture once every big category of lines is at Estimate', () => {
+  const s = brandonLike();
+  s.add('bill', { name: 'Rent', amount: 1200, values: { category: 'Rent or mortgage', draftt: 'Accommodation' } });
+  s.add('bill', { name: 'Groceries', amount: 400, values: { category: 'Groceries', draftt: 'Food' } });
+  let pic = pictureOf(s.doc, ref, { now });
+  assert.ok(!pic.items.some(i => i.id === 'gut'), 'typed lines in every category: the gut steps aside even while the math still uses it');
+  assert.equal(pic.items.filter(i => i.kind === 'category').length, 2);
+  s.update(s.find(r => r.name === 'Groceries')[0].id, { status: 'Not sure' });
+  pic = pictureOf(s.doc, ref, { now });
+  assert.ok(pic.items.some(i => i.id === 'gut'), 'a guessed category: the gut counts again');
 });
 
 // ---------- Levels ----------
@@ -71,9 +144,13 @@ test('Picture %: 0 for an empty client, weighted by the big items, the gut numbe
   const d = new Store(householdFromInputs(demo.inputs, { name: 'Z', now: now.toISOString() }));
   const p = pictureOf(d.doc, ref, { now });
   assert.ok(p.pct > 0.5 && p.pct < 0.8, `the Demo client (typed, gut spending): ${p.pct}`);
-  const gut = p.items.find(i => i.id === 'gut');
-  assert.equal(gut.level, LEVELS.Gut); assert.equal(gut.weight, WEIGHTS.gut);
+  // The Demo client types its rent and utilities, so the big categories are at Estimate and the gut steps aside (127).
+  assert.ok(!p.items.some(i => i.id === 'gut'));
   assert.ok(p.items.find(i => i.group === 'income').weight === WEIGHTS.income);
+  const g = fresh();
+  g.add('spending', { name: 'All in', amount: 3600 }, { type: 'All in' });
+  const gut = pictureOf(g.doc, ref, { now }).items.find(i => i.id === 'gut');
+  assert.equal(gut.level, LEVELS.Gut); assert.equal(gut.weight, WEIGHTS.gut);
   // The weighted average, by hand.
   const total = p.items.reduce((t, i) => t + i.weight * 100, 0);
   assert.ok(Math.abs(p.pct - p.items.reduce((t, i) => t + i.weight * i.level, 0) / total) < 1e-9);
@@ -113,13 +190,18 @@ test('pace: Ahead past the target, On track within the margin of what was due, C
 });
 
 // ---------- Unlocks and confidence ----------
-test('FI date: locked with a plain reason until income and spending reach Estimate and an invested balance is in', () => {
+test('FI date: unlocked once income, spending and an invested balance are in (a gut number is enough); locked with a plain reason before', () => {
   const d = new Store(householdFromInputs(demo.inputs, { name: 'Z', now: now.toISOString() }));
   let u = unlockOf('fi', pictureOf(d.doc, ref, { now }));
+  assert.equal(u.unlocked, true, 'the Demo client has a gut number, income and investments');
+  const g = fresh();
+  g.add('income', { name: 'Job', amount: 4000, per: 'month', values: { basis: 'Take-home' } }, { type: 'Job' });
+  g.add('account', { name: 'Brokerage', values: { group: 'investment', balance: 1000 } }, { type: 'Brokerage' });
+  u = unlockOf('fi', pictureOf(g.doc, ref, { now }));
   assert.equal(u.unlocked, false);
-  assert.match(u.reason, /^Unlocks when spending reaches Estimate \(0 of 1 there\)\.$/);
+  assert.match(u.reason, /^Unlocks when spending is in \(a gut number is enough\) \(0 of 1 there\)\.$/);
   assert.equal(u.route, '#/cash-flow/budget');
-  // The lines as the source, every line typed: unlocked.
+  // The lines as the source, every line typed: unlocked at Medium.
   d.setDoc('spending', { source: 'lines' });
   for (const r of d.find(r => r.kind === 'bill')) d.update(r.id, { status: null });
   u = unlockOf('fi', pictureOf(d.doc, ref, { now }));
@@ -137,7 +219,7 @@ test('no debt, per About you: the payoff has nothing to wait for; an empty clien
   const s = fresh();
   s.setDoc('profile', { areas: { debt: false, cash: true, investments: true } });
   assert.equal(unlockOf('payoff', pictureOf(s.doc, ref, { now })).unlocked, true);
-  assert.match(unlockOf('fi', pictureOf(s.doc, ref, { now })).reason, /^Unlocks when income reaches Estimate \(0 of 1 there\), then when spending reaches Estimate and an invested balance is in\.$/);
+  assert.match(unlockOf('fi', pictureOf(s.doc, ref, { now })).reason, /^Unlocks when income is in \(0 of 1 there\), then when spending is in \(a gut number is enough\) and an invested balance is in\.$/);
 });
 
 // ---------- Sessions ----------

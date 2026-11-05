@@ -11,6 +11,7 @@ import { yearItems, sinkingOf } from '../year.js';
 import { RULES, LISTS } from '../registry/assumptions.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
+import { PREREQS, CONDITIONS, ORDER } from '../registry/foo.js';
 const HIGH = new Set(LISTS.heavyDebt);
 const HIGH_APR = RULES.heavyApr;
 const PAYDAY = new Set(['Payday or cash advance']);
@@ -77,9 +78,6 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
 
   const steps = [];
   const add = s => steps.push({ left: 0, parts: [], note: null, ...s });
-  if (give && !giveMonthly) add({ id: '0a', name: 'Give', done: false, started: false, left: null, note: 'Set a percent or an amount to give first.' });
-  else if (give) add({ id: '0a', name: 'Give', done: givingLines >= giveMonthly - 0.5, started: givingLines > 0, left: Math.max(0, giveMonthly - givingLines), monthly: true,
-    note: `${give.mode === 'amount' ? `$${Math.round(give.amount ?? 0)} a month` : `${Math.round((give.pct ?? 0) * 100)}% of ${give.base === 'net' ? 'take-home' : 'gross'}`}, first, before everything else.` });
   add({ id: '0b', name: 'Bedazzle your basic life', done: joy.length > 0 && joy.every(l => (l.amount ?? 0) > 0), started: joy.length > 0, optional: !joy.length, parts: joy.map(l => ({ name: l.name, value: l.amount })),
     note: joy.length ? 'Your joy lines are funded in the plan.' : 'Pick the lines that bring you joy (Budget, a line\'s More).' });
   const e = layer('little-e');
@@ -95,6 +93,11 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   add({ id: '4', name: 'big e', done: bigE.length > 0 && bigE.every(l => l.full), started: bigE.some(l => l.filled > 0), left: sum(bigE, l => l.left ?? 0), parts: bigE.map(l => ({ name: l.name, value: l.filled, target: l.target })) });
   add({ id: '5', name: 'Roth and HSA', done: rothThisYear >= iraLimit - 0.5 && (!x.gates.hsa || hsaIn >= hsaLimit - 0.5), started: rothThisYear > 0 || hsaIn > 0,
     left: Math.max(0, iraLimit - rothThisYear) + (x.gates.hsa ? Math.max(0, hsaLimit - hsaIn) : 0), note: (x.grossAnnual ?? 0) > (ref.limits.rothIncome?.[x.gates.couple ? 'joint' : 'single'] ?? Infinity) ? 'Over the Roth IRA income limit: a backdoor Roth (a traditional IRA contribution, then a conversion) still works.' : 'A Roth IRA and an invested HSA, maxed for the year.' });
+  // Giving (batch 3, superseding the Nov 3 giving-first rule): off by default; at the Roth IRA step, never first in line.
+  if (!give) add({ id: '5b', name: 'Give', done: false, started: false, off: true, left: null, note: 'Off. Turn it on under Giving once the Roth IRA step is reached: a percent or an amount.' });
+  else if (!giveMonthly) add({ id: '5b', name: 'Give', done: false, started: false, left: null, note: 'Set a percent or an amount to give.' });
+  else add({ id: '5b', name: 'Give', done: givingLines >= giveMonthly - 0.5, started: givingLines > 0, left: Math.max(0, giveMonthly - givingLines), monthly: true,
+    note: `${give.mode === 'amount' ? `$${Math.round(give.amount ?? 0)} a month` : `${Math.round((give.pct ?? 0) * 100)}% of ${give.base === 'net' ? 'take-home' : 'gross'}`}, at the Roth IRA step.`, giveMonthly });
   const pastCoast = coast != null && invested >= coast;
   const pastQQ = qq.value != null && invested >= qq.value;
   // Step 7 opens at Coast FI, or at Quiet Quitting FI when that toggle is on; step 6 is done the moment 7 opens.
@@ -104,18 +107,38 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   const opensAt = set.qqOpensLaunch ? 'qq' : 'coast';
   const open = opensAt === 'qq' ? qq.value != null && invested >= qq.value : pastCoast;
   const launch = p.launch?.move && p.launch?.date ? p.launch : null;
-  add({ id: '7', name: 'SPARKS launch window', done: open && !!launch, started: open, gate: !open, note: open ? (launch ? `${launch.move}, ${launch.date}. Only the Roth keeps being topped up.` : 'Open: pick a launch move and date.') : `Opens at ${opensAt === 'qq' ? 'Quiet Quitting FI' : 'Coast FI'}.` });
+  add({ id: '7', name: 'SPARKS launch window', done: open && !!launch, started: open, note: open ? (launch ? `${launch.move}, ${launch.date}. Only the Roth keeps being topped up.` : 'Open: pick a launch move and date.') : `Opens at ${opensAt === 'qq' ? 'Quiet Quitting FI' : 'Coast FI'}.` });
   const future = [...sink.map(s => ({ name: s.name, done: s.funded != null && s.funded >= 1, left: s.target == null ? 0 : Math.max(0, s.target - (s.saved ?? 0)) })), ...laterGaps.map(g => ({ name: g.name, done: g.full, left: g.left }))];
   add({ id: '8', name: 'Fund the future', done: future.every(f => f.done), started: future.some(f => f.done), left: sum(future, f => f.left), parts: future });
   add({ id: '9', name: 'Low-rate debt, then FI', done: !low.length && fiN != null && invested >= fiN, started: !low.length, left: sum(low, d => d.balance) + (fiN == null ? 0 : Math.max(0, fiN - invested)),
     parts: [...sortDebt(low).map(d => ({ name: d.name, value: d.balance })), { name: 'FI', value: fiN, done: fiN != null && invested >= fiN }, { name: 'True FI (after tax)', value: fiN == null ? null : fiN / (1 - TRUE_FI_TAX), text: `The FI number grossed up for about ${TRUE_FI_TAX * 100}% tax on what you take out (a rough rate until retirement taxes are in).` }] });
 
+  // Prerequisites (js/registry/foo.js): a step is reached when every step before it that counts is done; a locked step
+  // shows its reason and is never where you are. A coach's override (doc.program.overrides, with a note) opens it.
+  const overrides = doc.program?.overrides || {};
+  const counts = s => !s.optional && !s.off && !s.locked;
+  const condFacts = { heavy };
+  for (const s of steps) {
+    const p = PREREQS[s.id];
+    if (!p || s.done) continue;
+    const at = steps.findIndex(x => x.id === p.after);
+    const reached = at < 0 || steps.slice(0, at + 1).filter(counts).every(x => x.done);
+    const failed = (p.conditions || []).filter(k => !CONDITIONS[k].test(condFacts));
+    const wouldLock = !reached || failed.length > 0;
+    s.prereq = { after: p.after, reached, failed: failed.map(k => CONDITIONS[k].label), text: `${p.label}${failed.length ? ` Needs ${failed.map(k => CONDITIONS[k].label).join(' and ')}.` : ''}` };
+    if (s.off) continue; // off: nothing to lock yet
+    if (wouldLock && overrides[s.id]?.note) { s.override = overrides[s.id]; s.cost = overrideCost(s, { heavy, m, x }); }
+    else if (wouldLock) s.locked = true;
+  }
   // Status: Done; the first step not done is where you are; 2 and 3 run together; 6 and 7 never overlap.
   let here = null, nextSet = false;
   for (const s of steps) {
     if (s.done) { s.status = 'Done'; continue; }
+    if (s.locked) { s.status = 'Locked'; continue; } // waits for its prerequisite; never blocks the path
+    if (s.off) { s.status = 'Off'; continue; } // giving, until it is turned on
     if (s.optional) { s.status = 'Optional'; continue; } // Bedazzle waits until joy lines are picked; it never blocks
-    if (s.id === '7') { s.status = s.gate ? 'Later' : 'In progress'; continue; } // a window: open or not, wherever you are
+    if (s.id === '7') { s.status = s.started ? 'In progress' : 'Later'; continue; } // a window: open or not, wherever you are
+    if (s.id === '5b') { s.status = s.started ? 'In progress' : 'Next'; continue; } // giving sits beside the Roth step; it never blocks
     if (!here) { here = s.id; s.status = 'In progress'; continue; }
     const pair = (here === '2' && s.id === '3') || (here === '3' && s.id === '2');
     if (pair) { s.status = 'In progress'; continue; }
@@ -124,7 +147,7 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   // Projected dates: the surplus works through the steps in order (dollars left divided by the surplus a month).
   let months = 0;
   for (const s of steps) {
-    if (s.status === 'Done' || s.status === 'Optional' || s.left == null) { s.date = null; continue; }
+    if (['Done', 'Optional', 'Locked', 'Off'].includes(s.status) || s.left == null) { s.date = null; continue; }
     if (s.id === '6' && coast != null) { const t = monthsTo(m, coast, { now }); s.months = t.value; }
     else if (s.id === '9' && fiN != null) { // low-rate debt from the surplus in order, FI on the growth path: whichever lands later
       months += surplus ? sum(low, d => d.balance) / surplus : (low.length ? Infinity : 0);
@@ -138,6 +161,18 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   const raised = flags.filter(f => (f.all || []).length && f.all.every(k => facts[k]));
   for (const f of raised) { const s = steps.find(st => st.id === String(f.step)); if (s) (s.flags ||= []).push(f); }
   return { steps, here, qq, coast, yearlyMinimum, keepJob, flags: raised, facts, path: pathOf({ steps, debts, m, doc, now, coast, qq }) };
+}
+
+// What an override costs, in FI days a year: giving while carrying heavy debt costs that debt's APR on the money; any
+// other early step costs the real return it would have earned.
+function overrideCost(s, { heavy, m, x }) {
+  const monthly = s.giveMonthly ?? 0;
+  if (!monthly || !m.annualSpending) return null;
+  const apr = heavy.length ? Math.max(...heavy.map(d => d.apr ?? 0)) : null;
+  const rate = apr ?? x.realReturn;
+  const dollars = monthly * 12 * rate;
+  const fiDays = dollars / (m.annualSpending / 365);
+  return { dollars, fiDays, rate, text: `${s.name === 'Give' ? 'Giving' : s.name} $${Math.round(monthly).toLocaleString('en-US')} a month ${apr != null ? `while carrying ${(apr * 100).toFixed(0)}% debt` : 'before the step opens'} costs about ${Math.round(fiDays)} FI days a year.` };
 }
 
 // M71: the facts the flags in data/flags.json test. A new flag needs only a new combination of these.

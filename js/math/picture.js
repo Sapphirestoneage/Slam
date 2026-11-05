@@ -7,7 +7,8 @@ import { statusOf } from '../records.js';
 import { gatesOf, visible } from '../gates.js';
 import { DRAFTT, drafttName } from './spending.js';
 import { debtRoute } from '../nav.js';
-import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, SESSIONS } from '../registry/program.js';
+import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS } from '../registry/program.js';
+import { fiRangeOf } from './fi.js';
 import { RULES } from '../registry/assumptions.js';
 
 const isBlank = v => v === null || v === undefined || v === '';
@@ -69,24 +70,32 @@ export function pictureOf(doc, ref, { now = new Date() } = {}) {
   const allIn = live.find(r => r.kind === 'spending' && r.type === 'All in');
   const lines = live.filter(r => r.kind === 'bill' && r.status !== 'Not for me');
   const useLines = !allIn || ((doc.spending?.source ?? 'gut') === 'lines' && lines.length > 0);
-  if (!useLines) {
+  // The lines by DRAFTT letter (the big categories), each the average of its lines' levels.
+  const categories = [];
+  const byLetter = new Map();
+  for (const l of lines) { const k = DRAFTT.includes(l.values.draftt) ? l.values.draftt : 'Other'; byLetter.set(k, [...(byLetter.get(k) || []), l]); }
+  for (const k of [...DRAFTT, 'Other']) {
+    const lv = (byLetter.get(k) || []).map(l => ({ l, level: levelOf(l, 'amount', { months }) })).filter(x => x.level !== null);
+    if (!lv.length) continue;
+    const level = Math.round(lv.reduce((s, x) => s + x.level, 0) / lv.length);
+    const weakest = [...lv].sort((a, b) => a.level - b.level)[0];
+    const oldest = [...lv].map(x => x.l.updatedAt).filter(Boolean).sort()[0] ?? null;
+    categories.push({ id: `draftt:${k}`, recId: weakest.l.id, field: 'amount', label: k === 'Other' ? 'Other lines' : `${drafttName(k)} lines`, group: 'spending', kind: 'category',
+      weight: k === 'Other' ? WEIGHTS.otherLines : WEIGHTS.draftt, level, route: '#/cash-flow/budget', updatedAt: oldest, count: { below: lv.filter(x => x.level < LEVELS.Estimate).length, of: lv.length },
+      lines: lv.map(x => ({ id: x.l.id, name: x.l.name || x.l.values.category || 'Line', level: x.level, amount: x.l.amount ?? null })) });
+  }
+  // Answer 127: the gut number stands in for the categories, and stops counting once the itemized big categories all
+  // reach Estimate (no double count), whichever the Budget uses for the math.
+  const big = categories.filter(c => c.id !== 'draftt:Other');
+  const itemized = big.length > 0 && big.every(c => c.level >= LEVELS.Estimate);
+  if (!useLines && !itemized) {
     const level = levelOf(allIn, 'amount', { months });
     item({ id: 'gut', recId: allIn.id, field: 'amount', label: 'Monthly spending (the gut number)', group: 'spending', kind: 'gut', weight: WEIGHTS.gut, level, route: '#/cash-flow/budget', updatedAt: allIn.updatedAt,
       step: level === LEVELS.Missing ? 'Add the gut number' : 'Build it from the lines on Budget' });
-  } else if (!lines.length) {
+  } else if (!categories.length) {
     item({ id: 'spending', label: 'Monthly spending', group: 'spending', weight: WEIGHTS.gut, level: LEVELS.Missing, route: '#/cash-flow/budget', quick: 'spending' });
   } else {
-    const byLetter = new Map();
-    for (const l of lines) { const k = DRAFTT.includes(l.values.draftt) ? l.values.draftt : 'Other'; byLetter.set(k, [...(byLetter.get(k) || []), l]); }
-    for (const k of [...DRAFTT, 'Other']) {
-      const lv = (byLetter.get(k) || []).map(l => ({ l, level: levelOf(l, 'amount', { months }) })).filter(x => x.level !== null);
-      if (!lv.length) continue;
-      const level = Math.round(lv.reduce((s, x) => s + x.level, 0) / lv.length);
-      const weakest = [...lv].sort((a, b) => a.level - b.level)[0];
-      const oldest = [...lv].map(x => x.l.updatedAt).filter(Boolean).sort()[0] ?? null;
-      item({ id: `draftt:${k}`, recId: weakest.l.id, field: 'amount', label: k === 'Other' ? 'Other lines' : `${drafttName(k)} lines`, group: 'spending', kind: 'category',
-        weight: k === 'Other' ? WEIGHTS.otherLines : WEIGHTS.draftt, level, route: '#/cash-flow/budget', updatedAt: oldest, count: { below: lv.filter(x => x.level < LEVELS.Estimate).length, of: lv.length } });
-    }
+    for (const c of categories) item(c);
   }
   const total = items.reduce((s, it) => s + it.weight * LEVELS.Actual, 0);
   const got = items.reduce((s, it) => s + it.weight * it.level, 0);
@@ -153,6 +162,22 @@ export function confidenceOf(key, picture, { now = new Date() } = {}) {
   let step = avg >= CONFIDENCE.high ? 2 : avg >= CONFIDENCE.medium ? 1 : 0;
   if (aged && step > 0) step -= 1;
   const word = ['Low', 'Medium', 'High'][step];
-  return { word, label: `${word} confidence`, step, avg, aged, of: its.length, atEstimate,
-    text: `${atEstimate} of ${its.length} numbers at Estimate or better${aged ? `, ${aged} older than ${RULES.agedCheckDays} days` : ''}.` };
+  return { word, label: `${word} confidence`, step, avg, aged, of: its.length, atEstimate, range: FI_RANGE[word],
+    text: `${atEstimate} of ${its.length} numbers at Estimate or better${aged ? `, ${aged} older than ${RULES.agedCheckDays} days` : ''}.${word === 'High' ? '' : ` Shown as a year range: spending ${Math.round(FI_RANGE[word] * 100)}% lower to higher.`}` };
+}
+
+// The FI date in words at a confidence (answer 122): a month at High; a year range at Medium (spending 5% either way,
+// one year when both ends land in it) and at Low (15% either way). Months since now; years from the calendar.
+export function fiWordsOf(m, conf, { now = new Date() } = {}) {
+  const base = m.monthsToFi.value;
+  if (base == null) return null;
+  const yearAt = months => new Date(now.getFullYear(), now.getMonth() + months, 1).getFullYear();
+  const monthAt = months => new Date(now.getFullYear(), now.getMonth() + months, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  if (!conf || conf.word === 'High' || !conf.range) return { kind: 'month', text: monthAt(base), low: base, high: base, years: `${(base / 12).toFixed(1)} years from now` };
+  const r = fiRangeOf(m, conf.range, { from: now });
+  if (!r || r.low == null) return { kind: 'year', text: String(yearAt(base)), low: base, high: base, years: `about ${Math.round(base / 12)} years from now` };
+  const lo = yearAt(r.low), hi = r.high == null ? null : yearAt(r.high);
+  const text = hi == null ? `${lo} or later` : lo === hi ? String(lo) : `${lo} to ${hi}`;
+  const yl = Math.round(r.low / 12), yh = r.high == null ? null : Math.round(r.high / 12);
+  return { kind: hi == null || lo !== hi ? 'range' : 'year', text, low: r.low, high: r.high, years: yh == null ? `${yl} years or more from now` : yl === yh ? `about ${yl} years from now` : `about ${yl} to ${yh} years from now` };
 }

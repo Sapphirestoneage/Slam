@@ -21,14 +21,16 @@ export const PACE = { expected: { 1: 40, 2: 70, 3: 90 }, hold: 90, margin: 5 };
 
 // What a calculator needs before it unlocks: every item in the group at or above the level. A group with no items
 // (no debts, per About you) has nothing to wait for.
+// Answer 122 (batch 2): a gut number or a Rough spending unlocks the FI date at Low confidence, shown as a year range;
+// it stays locked, with the plain reason, only while a number is missing altogether.
 export const UNLOCKS = {
   fi: { label: 'FI date', needs: [
-    { group: 'income', min: LEVELS.Estimate, label: 'income reaches Estimate' },
-    { group: 'spending', min: LEVELS.Estimate, label: 'spending reaches Estimate' },
+    { group: 'income', min: LEVELS.Gut, label: 'income is in' },
+    { group: 'spending', min: LEVELS.Gut, label: 'spending is in (a gut number is enough)' },
     { group: 'invested', min: LEVELS.Gut, label: 'an invested balance is in' }] },
   coastFi: { label: 'Coast FI', needs: [
-    { group: 'income', min: LEVELS.Estimate, label: 'income reaches Estimate' },
-    { group: 'spending', min: LEVELS.Estimate, label: 'spending reaches Estimate' },
+    { group: 'income', min: LEVELS.Gut, label: 'income is in' },
+    { group: 'spending', min: LEVELS.Gut, label: 'spending is in (a gut number is enough)' },
     { group: 'invested', min: LEVELS.Gut, label: 'an invested balance is in' },
     { group: 'age', min: LEVELS.Actual, label: 'your age is in' }] },
   payoff: { label: 'Debt payoff', needs: [{ group: 'debt', min: LEVELS.Estimate, label: 'debts reach Estimate' }] },
@@ -36,11 +38,14 @@ export const UNLOCKS = {
 // Confidence of an unlocked number: the weighted level of its inputs (High at or over 90, Medium at or over 75,
 // else Low); any input older than the aged-check days (js/checks.js) drops it one step.
 export const CONFIDENCE = { high: 90, medium: 75 };
+// How the FI date shows at each confidence: a year range from spending minus and plus this share (Low 15%, Medium 5%,
+// collapsing to one year when both ends land in it), a month at High.
+export const FI_RANGE = { Low: 0.15, Medium: 0.05, High: 0 };
 
 // The twelve sessions. An item with auto is ticked from the data (js/program.js autoChecks); the rest are
 // checkboxes. A hole session (S6 to S8, S10, S11) pulls the top hole on the Scorecard when it starts and is done
 // when that hole is OK or Strong; S10 and S11 switch to itemsWhenClear (the next chapter) once no hole is left.
-const HOLE = { name: 'Fill a hole', hole: true, items: [{ id: 'hole', label: 'The top hole filled (OK or Strong)', auto: 'holeFilled' }] };
+const HOLE = { name: 'Fill holes', hole: true, items: [{ id: 'hole', label: 'The top hole filled (OK or Strong)', auto: 'holeFilled' }] };
 const CHAPTER = [{ id: 'chapter', label: 'Next chapter named, with an amount and a date', auto: 'nextChapter' }];
 export const SESSIONS = [
   { id: 'S1', name: 'First picture', items: [
@@ -68,12 +73,27 @@ export const SESSIONS = [
   { id: 'S9', name: 'Revisit', items: [
     { id: 'compare', label: 'Day 0 vs now compared', auto: 'day0Compared' },
     { id: 'rescore', label: 'Re-scored and re-ranked', auto: 'rescored' }] },
-  { id: 'S10', ...HOLE, name: 'Fill a hole, or the next chapter', itemsWhenClear: CHAPTER },
-  { id: 'S11', ...HOLE, name: 'Fill a hole, or the next chapter', itemsWhenClear: CHAPTER },
-  { id: 'S12', name: 'Game plan', items: [
+  { id: 'S10', ...HOLE, name: 'Fill holes, or the next chapter', itemsWhenClear: CHAPTER },
+  { id: 'S11', ...HOLE, name: 'Fill holes, or the next chapter', itemsWhenClear: CHAPTER },
+  { id: 'S12', name: 'Graduation', items: [
+    { id: 'report', label: 'Day 0 vs graduation report made', auto: 'graduationReport' },
     { id: 'notes', label: 'Next-year plan notes written', auto: 'planNotes' },
     { id: 'review', label: 'Yearly review date set', auto: 'reviewDate' },
-    { id: 'cadence', label: 'Monthly money date cadence set', auto: 'moneyDate' }] },
+    { id: 'cadence', label: 'Monthly money date cadence set', auto: 'moneyDate' },
+    { id: 'final', label: 'Final snapshot saved', auto: 'finalSnapshot' }] },
 ];
+// The key numbers each session reviews before it ends (the review gate): groups of picture items (js/math/picture.js).
+// A session not listed reviews the big four. Every row: the value and its level, Looks right (locks it to Actual) or Edit.
+export const REVIEW = {
+  groups: { S1: ['income', 'spending', 'account'], S2: ['spending', 'debt', 'account'], S3: ['income', 'spending', 'debt', 'account'] },
+  fallback: ['income', 'spending', 'debt', 'account'],
+};
+// The agenda (batch 3): Must do is the session's checklist; Going over is what the coach adds; each item can link to a
+// page or field, a homework item, a parking-lot question or a Scorecard hole. Suggested for today: carried-over items,
+// homework the client says is done, open parking-lot questions, the top hole, and numbers older than staleDays.
+// During a session it is a slim docked bar on every tab, collapsed by default (coach only).
+export const AGENDA = { staleDays: 60, suggestionKinds: ['carried', 'homework', 'parking', 'hole', 'stale'], collapsed: true };
+// Homework statuses: the coach sets Client says done for now; a client-side I did this can set it later (by: 'client').
+export const HOMEWORK_STATUSES = ['To do', 'Client says done', 'Confirmed'];
 // The monthly money date, a cadence picked on Home in the Game plan session (S12).
 export const MONEY_DATES = ['The 1st of the month', 'The 15th of the month', 'The last day of the month', 'The first Sunday', 'Every payday'];

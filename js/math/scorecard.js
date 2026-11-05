@@ -5,6 +5,7 @@
 // ones before the client's current FOO step first, then by score. Pure: never the DOM.
 import { metrics } from './metrics.js';
 import { foo } from './foo.js';
+import { layersOf } from './layers.js';
 import { gatesOf, visible } from '../gates.js';
 import { ruleOf5 } from './assets.js';
 import { utilization, debtToIncome } from './debt.js';
@@ -38,8 +39,10 @@ export function factsOf(doc, ref, { now = new Date(), flags = [] } = {}) {
   const m = metrics(doc, ref, { now }), x = m.inputs;
   const p = doc.profile || {};
   const g = gatesOf(p, doc.client), live = visible(doc.records, g, ref);
-  let F = null;
+  let F = null, L = null;
   try { F = foo(doc, ref, { now, flags }); } catch { F = null; }
+  try { L = layersOf(doc, ref, now); } catch { L = null; }
+  const littleE = L?.layers.find(l => l.id === 'little-e') ?? null, bigE = L?.layers.filter(l => l.id.startsWith('big-e')) ?? [];
   const step = id => F?.steps.find(s => s.id === id) ?? null;
   const gross = x.grossAnnual == null ? null : x.grossAnnual / 12;
   const heavyTypes = new Set(LISTS.heavyDebt);
@@ -55,7 +58,7 @@ export function factsOf(doc, ref, { now = new Date(), flags = [] } = {}) {
     dti: debtToIncome({ monthlyDebtPayments: payments, grossMonthly: gross }).value,
     util: util.hidden ? null : util.value, score: p.credit?.score ?? null,
     r5: ruleOf5({ age: x.age, spending: x.spending, emergencyCash: x.cash }),
-    months: m.runwayMonths.value,
+    months: m.runwayMonths.value, littleE, bigE, littleFull: !!littleE?.full, bigFull: bigE.length > 0 && bigE.every(l => l.full),
     marginal: x.grossAnnual ? taxRates({ gross: x.grossAnnual, filingStatus: x.filingStatus, place: x.place }, ref).marginal ?? null : null,
     retirementSaving: (m.pretaxSaving ?? 0) + (x.afterTaxSaving ?? 0), // a month
     retirementAccounts: x.accounts.filter(a => RETIREMENT_TYPES.has(a.type)),
@@ -77,12 +80,12 @@ const RULE = {
     if (sr >= T.cashFlow.ok) return rate('OK', `You save ${pct(sr)} of what comes in; ${pct(T.cashFlow.strong)} is the strong line.`);
     return rate('Hole', `You save ${pct(sr)} of what comes in, under the ${pct(T.cashFlow.ok)} line.`);
   },
-  emergency: f => {
-    if (f.months == null) return null;
-    const cash = money(f.x.cash), target = f.r5.value;
-    if (f.months < T.emergency.holeMonths) return rate('Hole', `${cash} covers ${f.months.toFixed(1)} months of spending, under ${T.emergency.holeMonths}.`);
-    if (f.months >= T.emergency.strongMonths || (target != null && f.x.cash >= target)) return rate('Strong', `${cash} covers ${f.months.toFixed(1)} months of spending${target != null && f.x.cash >= target ? ', past the Rule of 5 target' : ''}.`);
-    return rate('OK', `${cash} covers ${f.months.toFixed(1)} months of spending; ${T.emergency.strongMonths} is the strong line.`);
+  emergency: f => { // answer 132: the cash layers decide (little e, then big e)
+    if (f.x.cash == null || !f.littleE) return null;
+    const cash = money(f.x.cash), months = f.months == null ? '' : ` (${f.months.toFixed(1)} months of spending)`;
+    if (!f.littleFull) return rate('Hole', `${cash}${months}: little e (${money(f.littleE.target ?? 0)}) is not full yet.`);
+    if (f.bigFull || (f.months != null && f.months >= T.emergency.strongMonths)) return rate('Strong', `${cash}${months}: ${f.bigFull ? 'big e is full' : `${T.emergency.strongMonths} months or more`}.`);
+    return rate('OK', `${cash}${months}: little e is full; big e (${money(f.bigE.reduce((s, l) => s + (l.target ?? 0), 0))}) is not yet.`);
   },
   debt: f => {
     if (f.x.gates.areas.debt === false || f.x.none) return rate('Strong', 'No debt, per About you.');
@@ -97,10 +100,10 @@ const RULE = {
     const c = T.credit;
     if (f.score == null && f.util == null) return null;
     if (f.util != null && f.util > c.utilizationHole) return rate('Hole', `Cards ${pct(f.util)} used, over the ${pct(c.utilizationHole)} line${f.score != null ? `; score ${f.score}` : ''}.`);
-    if (f.score == null) return f.util > c.utilizationOk ? rate('OK', `Cards ${pct(f.util)} used; no score on file yet.`) : null;
+    if (f.score == null) return null;
     if (f.score < c.ok) return rate('Hole', `Score ${f.score}, under ${c.ok}.`);
-    if (f.score >= c.strong && (f.util == null || f.util <= c.utilizationOk)) return rate('Strong', `Score ${f.score}${f.util != null ? `, cards ${pct(f.util)} used` : ''}.`);
-    return rate('OK', `Score ${f.score}${f.util != null && f.util > c.utilizationOk ? `, cards ${pct(f.util)} used (over ${pct(c.utilizationOk)})` : `; ${c.strong} is the strong line`}.`);
+    if (f.score >= c.strong) return rate('Strong', `Score ${f.score}${f.util != null ? `, cards ${pct(f.util)} used` : ''}.`);
+    return rate('OK', `Score ${f.score}; ${c.strong} is the strong line${f.util != null ? `, cards ${pct(f.util)} used` : ''}.`);
   },
   retirement: f => {
     if (f.matchOffered && f.matchLeft > 0) return rate('Hole', `${money(f.matchLeft)} a year of employer match left on the table.`);
@@ -209,21 +212,26 @@ export function scorecardOf(doc, ref, { now = new Date(), flags = [] } = {}) {
     const effort = o.effort ?? a.effort;
     const score = payoff && effort > 0 ? payoff.value / effort : null;
     const time = payoff ? moneyAsTime({ amount: payoff.value, hourlyWage: hourly, annualSpending }).value : null;
-    const beforeHere = hereAt >= 0 && FOO_ORDER.indexOf(a.foo) < hereAt;
+    const foo = a.fooWhen ? a.fooWhen(f) : a.foo; // the step on SLAM's own FOO, moved by the facts (little e then big e)
+    const beforeHere = hereAt >= 0 && FOO_ORDER.indexOf(foo) < hereAt;
+    const parked = o.parked ? { at: o.parked.at, note: o.parked.note ?? null } : null;
     const math = [
       `${a.name}: ${rating ?? 'not rated'}${source === 'coach' ? " (the coach's call)" : source === 'auto' ? ' (from the numbers)' : ''}. ${reason}`,
       payoff ? `Payoff: ${payoff.text}${time?.fiDays != null ? ` That is ${fmt.number(time.fiDays, 1)} FI days${time.hours != null ? ` or ${fmt.number(time.hours, 1)} hours of work` : ''}.` : ''}` : rating === 'Hole' ? 'Payoff: no rule for this area; type one on the Scorecard.' : null,
       rating === 'Hole' ? `Effort: ${effort} ${effort === 1 ? 'hour' : 'hours'}${o.effort != null ? ' (set by the coach)' : ' (the usual)'}.` : null,
       score != null ? `Best return: ${money(payoff.value)} a year over ${effort} hours = ${money(score)} a year per hour.` : null,
-      rating === 'Hole' ? `FOO step ${a.foo}; ${f.here == null ? 'the FOO has no step yet' : `you are on step ${f.here}`}: ${beforeHere ? 'before your step, so it ranks first' : 'at or after your step'}.` : null,
+      rating === 'Hole' ? `FOO step ${foo} (${a.fooWords}); ${f.here == null ? 'the FOO has no step yet' : `you are on step ${f.here}`}: ${beforeHere ? 'before your step, so it ranks first' : 'at or after your step'}.` : null,
+      parked ? `Parked${parked.note ? `: ${parked.note}` : ''}. It ranks last until it is unparked.` : null,
     ].filter(Boolean);
-    return { ...a, rating, reason, source, auto, override, coachReason: o.reason ?? null, payoff, fiDays: time?.fiDays ?? null, hours: time?.hours ?? null, effort, effortSet: o.effort != null, score, beforeHere, chosen: chosen.includes(a.id), math };
+    return { ...a, foo, rating, reason, source, auto, override, coachReason: o.reason ?? null, payoff, fiDays: time?.fiDays ?? null, hours: time?.hours ?? null, effort, effortSet: o.effort != null, score, beforeHere, chosen: chosen.includes(a.id), parked, math };
   });
+  // Ranked: parked holes last (answer 136), a hole with no payoff last before them (133), then the ones before the
+  // client's FOO step first, then best return.
   const holes = areas.filter(a => a.rating === 'Hole')
-    .sort((a, b) => (Number(b.beforeHere) - Number(a.beforeHere)) || ((b.score ?? -1) - (a.score ?? -1)) || ((b.payoff?.value ?? 0) - (a.payoff?.value ?? 0)));
+    .sort((a, b) => (Number(!!a.parked) - Number(!!b.parked)) || (Number(!a.payoff) - Number(!b.payoff)) || (Number(b.beforeHere) - Number(a.beforeHere)) || ((b.score ?? -1) - (a.score ?? -1)) || ((b.payoff?.value ?? 0) - (a.payoff?.value ?? 0)));
   holes.forEach((h, i) => { h.rank = i + 1; });
   const okCount = areas.filter(a => a.rating === 'Strong' || a.rating === 'OK').length;
   return { areas, holes, ok: areas.filter(a => a.rating === 'OK'), strong: areas.filter(a => a.rating === 'Strong'), unrated: areas.filter(a => !a.rating),
-    okCount, of: areas.length, rated: areas.filter(a => a.rating).length, here: f.here, chosen: holes.filter(h => h.chosen), facts: f };
+    okCount, of: areas.length, rated: areas.filter(a => a.rating).length, here: f.here, chosen: holes.filter(h => h.chosen), open: holes.filter(h => !h.parked), parkedHoles: holes.filter(h => h.parked), facts: f };
 }
 export const ratingOf = (sc, id) => sc.areas.find(a => a.id === id)?.rating ?? null;

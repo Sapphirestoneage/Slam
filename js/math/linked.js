@@ -74,6 +74,6 @@ const PAYROLL = new Set(['401(k)', '403(b)', '457', 'TSP', 'Solo 401(k)']);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
 export function afterTaxContributions(accounts, { payFrequency = null, payrollHsa = false } = {}) {
   const parts = accounts.filter(a => a.values?.group === 'investment' && a.values.contribution != null && !PAYROLL.has(a.type) && !(a.type === 'HSA' && payrollHsa))
-    .map(a => ({ id: a.id, name: a.name || a.type, monthly: (a.values.contributionPer === 'Paycheck' ? a.values.contribution * (PAYS[payFrequency] ?? 26) : a.values.contribution) / 12 }));
+    .map(a => ({ id: a.id, name: a.name || a.type, monthly: a.values.contributionPer === 'Paycheck' ? a.values.contribution * (PAYS[payFrequency] ?? 26) / 12 : a.values.contributionPer === 'Month' ? a.values.contribution : a.values.contribution / 12 }));
   return { total: parts.reduce((s, p) => s + p.monthly, 0), parts };
 }

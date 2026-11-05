@@ -6,30 +6,31 @@
 // Add or rename an area here; a coach can always override a rating on the Scorecard.
 
 export const RATINGS = ['Strong', 'OK', 'Hole'];
-export const FOO_ORDER = ['0a', '0b', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+export { ORDER as FOO_ORDER } from './foo.js';
 
-// id, name, the FOO step it belongs to, the default effort to fill it (hours, editable per client), where it lives.
+// id, name, the step of SLAM's own FOO it belongs to (js/registry/foo.js; fooWhen moves it with the facts), the usual
+// effort to fill it (hours, editable per client), where it lives. Answer 135: goals and mindset sit at step 0.
 export const AREAS = [
-  { id: 'cashFlow', name: 'Cash flow', foo: '1', effort: 4, route: '#/cash-flow/budget' },
-  { id: 'emergency', name: 'Emergency fund', foo: '1', effort: 2, route: '#/net-worth/assets' },
-  { id: 'debt', name: 'Debt', foo: '3', effort: 3, route: '#/net-worth/debt' },
-  { id: 'credit', name: 'Credit', foo: '3', effort: 2, route: '#/net-worth/credit-cards' },
-  { id: 'retirement', name: 'Retirement accounts', foo: '2', effort: 1, route: '#/net-worth/assets' },
-  { id: 'investing', name: 'Investing', foo: '8', effort: 2, route: '#/net-worth/assets' },
-  { id: 'taxes', name: 'Taxes', foo: '5', effort: 2, route: '#/cash-flow/taxes' },
-  { id: 'protection', name: 'Protection', foo: '1', effort: 2, route: '#/net-worth/protection' },
-  { id: 'income', name: 'Income', foo: '1', effort: 8, route: '#/cash-flow/income' },
-  { id: 'goals', name: 'Goals', foo: '7', effort: 1, route: '#/plan/goals' },
-  { id: 'mindset', name: 'Mindset', foo: '0b', effort: 4, route: '#/home/session' },
+  { id: 'cashFlow', name: 'Cash flow', foo: '1', fooWords: 'Stop the bleeding', effort: 4, route: '#/cash-flow/budget' },
+  { id: 'emergency', name: 'Emergency fund', foo: '1', fooWhen: f => (f.littleFull ? '4' : '1'), fooWords: 'little e at step 1, then big e at step 4', effort: 2, route: '#/net-worth/assets' },
+  { id: 'debt', name: 'Debt', foo: '3', fooWords: 'Clear the heavy debt', effort: 3, route: '#/net-worth/debt' },
+  { id: 'credit', name: 'Credit', foo: '3', fooWords: 'Clear the heavy debt (cards)', effort: 2, route: '#/net-worth/credit-cards' },
+  { id: 'retirement', name: 'Retirement accounts', foo: '2', fooWhen: f => (f.matchOffered && f.matchLeft > 0 ? '2' : '5'), fooWords: 'Take the free money while match is on the table, then Roth and HSA', effort: 1, route: '#/net-worth/assets' },
+  { id: 'investing', name: 'Investing', foo: '6', fooWords: 'Prepay retirement (Coast FI)', effort: 2, route: '#/net-worth/assets' },
+  { id: 'taxes', name: 'Taxes', foo: '5', fooWords: 'Roth and HSA (the tax levers)', effort: 2, route: '#/cash-flow/taxes' },
+  { id: 'protection', name: 'Protection', foo: '1', fooWords: 'Stop the bleeding (coverage, deductibles)', effort: 2, route: '#/net-worth/protection' },
+  { id: 'income', name: 'Income', foo: '1', fooWords: 'Stop the bleeding', effort: 8, route: '#/cash-flow/income' },
+  { id: 'goals', name: 'Goals', foo: '0b', fooWords: 'Step 0, with mindset', effort: 1, route: '#/plan/goals' },
+  { id: 'mindset', name: 'Mindset', foo: '0b', fooWords: 'Step 0, with goals', effort: 4, route: '#/home/session' },
 ];
 
 // The rules' thresholds. Each area with a clear rule is suggested from the data; the rest (Taxes, and any area the
 // data cannot see) stay unrated until the coach rates them.
 export const THRESHOLDS = {
   cashFlow: { strong: 0.20, ok: 0.05 }, // the headline savings rate; a negative surplus is a hole
-  emergency: { holeMonths: 1, strongMonths: 3 }, // cash over a month of spending; the Rule of 5 target met is Strong too
-  debt: { dti: 0.36 }, // heavy debt (cards, payday, personal, high APR) is a hole; payments over this share of gross is OK at best
-  credit: { strong: 740, ok: 670, utilizationOk: 0.30, utilizationHole: 0.50 }, // the score; card use over the limits
+  emergency: { strongMonths: 3 }, // answer 132: Hole until little e is full; OK with little e; Strong with big e full (or this many months of spending)
+  debt: { dti: 0.36 }, // heavy debt (cards, payday, personal, or any APR at or over the heavy line, 8%, RULES.heavyApr) is a hole; payments over this share of gross is OK at best
+  credit: { strong: 740, ok: 670, utilizationHole: 0.30 }, // the score; cards used over this share of the limits is a hole (answer 132)
   retirement: { strongPct: 0.15 }, // 401(k), HSA and after-tax retirement saving as a share of gross; match left on the table is a hole
   investing: { strongPct: 0.15 }, // what goes into investments a month as a share of take-home
   goals: { count: 3 }, // three short-term and three long-term goals, each with an amount, a date and a tag (S4)

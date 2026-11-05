@@ -97,7 +97,11 @@ export function inputsOf(doc, ref, now = new Date()) {
   const { dupOf, askOf } = duplicates(typedLines, { debts, autos: autoLines, premiums, payFrequency });
   const lines = [...typedLines.filter(l => !dupOf[l.id]), ...autoLines];
   const allIn = live.find(r => r.kind === 'spending' && r.type === 'All in');
-  const lineTotal = typedLines.length ? lines.reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0) : null;
+  // Answer 125 (batch 2): a line tagged Retirement is investing, not spending. It leaves spending and the FI target and
+  // joins what goes into investments each month (and so the savings rate, through a bigger surplus).
+  const mine = l => myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0;
+  const lineTotal = typedLines.length ? lines.filter(l => l.draftt !== 'Retirement').reduce((s, l) => s + mine(l), 0) : null;
+  const retirementLines = lines.filter(l => l.draftt === 'Retirement').reduce((s, l) => s + mine(l), 0);
   // Spending for the math: the Gut number until the lines are chosen on Budget (R131: the gut is a test kept to compare).
   const useLines = !allIn || (doc.spending?.source ?? 'gut') === 'lines' && lineTotal !== null;
   const spending = useLines ? lineTotal : read(allIn, 'amount').v;
@@ -130,7 +134,7 @@ export function inputsOf(doc, ref, now = new Date()) {
     autoLines, dupOf, askOf, typedLines, premiums, payFrequency, health: health ? { id: health.id, perPaycheck: healthPerPay, fromPay: !!healthFromPay, jobId: healthJob?.id ?? null } : null,
     paycheckPremiums: premiums.filter(p => p.paidFrom === 'Paycheck').reduce((s, p) => s + (p.monthly ?? 0), 0),
     afterTaxSaving: afterTaxContributions(live.filter(r => r.kind === 'account'), { payFrequency, payrollHsa: gates.hsa && income.some(i => (i.r.values.hsaFsa ?? 0) > 0) }).total,
-    spendingSource: useLines ? 'lines' : 'gut', lineTotal,
+    spendingSource: useLines ? 'lines' : 'gut', lineTotal, retirementLines: useLines ? retirementLines : 0,
     guessLines: lines.filter(l => l.status === 'Not sure' && l.preset).length,
     guessTotal: lines.filter(l => l.status === 'Not sure' && l.preset).reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0), gutTotal: allIn ? read(allIn, 'amount').v : null,
     age: ageOf(doc.profile, now),
@@ -178,14 +182,22 @@ export function metrics(doc, ref, { now = new Date() } = {}) {
   const r5 = ruleOf5({ age: x.age, spending: x.spending, emergencyCash: x.cash });
   out.ruleOf5 = r5;
   out.fiNumber = fiNumber({ annualSpending: x.retirementSpending === null ? null : x.retirementSpending * 12, withdrawalRate: x.withdrawalRate });
-  // Answer to 11: the surplus stays surplus until you choose Invest my surplus. What already goes in counts either way:
-  // the 401(k) and HSA from the paycheck and the match; after-tax contributions count unless the surplus (which pays them) is invested.
-  const investSurplus = doc.assumptions?.investSurplus === true || doc.assumptions?.investSurplus === 1; // 1 in the spreadsheet
-  // M53 (spec): surplus to investing + before-tax saving + match. After-tax contributions are paid out of the surplus.
+  // Answers 123 to 125 (batch 2, superseding the Nov 3 answer to 11): the surplus is invested unless Invest my surplus is
+  // turned off (0 in the spreadsheet). What already goes in counts either way: the 401(k) and HSA from the paycheck and
+  // the match. After-tax contributions set on an account and Retirement lines on the Budget are paid out of the surplus,
+  // so they count when the surplus sits in checking and are already inside it when it is invested (no double count).
+  const investSurplus = !(doc.assumptions?.investSurplus === false || doc.assumptions?.investSurplus === 0);
   const alreadyIn = pretaxSaving + match;
-  const monthlyInvesting = out.surplus.value === null ? null : alreadyIn + (investSurplus ? out.surplus.value : 0);
-  out.investing = { investSurplus, alreadyIn, surplus: investSurplus ? out.surplus.value : 0, monthly: monthlyInvesting };
-  out.monthsToFi = fiDate({ invested: x.invested, monthlyInvesting, realReturn: x.realReturn, target: out.fiNumber.value }, { from: now });
+  const contributions = (x.afterTaxSaving ?? 0) + (x.retirementLines ?? 0);
+  const surplus = out.surplus.value;
+  const invested = surplus === null ? null : alreadyIn + surplus; // the surplus invested
+  const idle = surplus === null ? null : alreadyIn + contributions; // the surplus sits in checking
+  const monthlyInvesting = investSurplus ? invested : idle;
+  out.investing = { investSurplus, alreadyIn, contributions, surplus: investSurplus ? surplus : 0, monthly: monthlyInvesting, invested, idle };
+  const fi = m$ => fiDate({ invested: x.invested, monthlyInvesting: m$, realReturn: x.realReturn, target: out.fiNumber.value }, { from: now });
+  out.monthsToFi = fi(monthlyInvesting);
+  // Both paths, for the FI card: with the surplus invested, and if it sits in checking.
+  out.fiPaths = { invested: fi(invested), idle: fi(idle) };
   if (out.monthsToFi.value === null && !out.monthsToFi.never) { // say what to type, not which result is missing
     const root = [...new Set([...out.surplus.needs, ...out.fiNumber.needs, ...(x.invested === null ? ['invested'] : [])])];
     if (root.length) out.monthsToFi = needs('M53', root, { unit: 'months' });
@@ -217,7 +229,7 @@ export function flowOf(x, { pretaxSaving = 0, setAside = 0 } = {}) {
     fixed = rest.filter(l => l.amountType === 'Fixed').reduce((s, l) => s + mine(l), 0) + debtOut;
     variable = rest.filter(l => l.amountType !== 'Fixed').reduce((s, l) => s + mine(l), 0);
   }
-  const spending = x.spending === null ? null : x.spending + debtOut - saveLines; // gut: one number
+  const spending = x.spending === null ? null : x.spending + debtOut; // the lines already leave Retirement lines out (answer 125); gut: one number
   const savings = saveLines + (x.afterTaxSaving ?? 0) + setAside; // setAside: savings goals and sinking funds (js/payday.js)
   const free = takeHome === null || spending === null ? null : takeHome - spending - savings;
   return { gross, taxes, premiums, beforeTax, takeHome, fixed, variable, spending, savings, free, source: x.spendingSource };
