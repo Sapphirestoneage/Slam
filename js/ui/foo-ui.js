@@ -44,7 +44,7 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
       giving.on ? S.toggle([['pct', '% of pay'], ['amount', 'A set amount']], giving.mode || 'pct', v => setGiving({ mode: v }), { label: 'Giving as' }) : null,
       giving.on && (giving.mode || 'pct') === 'pct' ? [S.pctInput(giving.pct ?? null, v => setGiving({ pct: v }), { hint: 'e.g. 10', key: 'foo:give-pct' }),
         S.toggle([['gross', 'of gross'], ['net', 'of take-home']], giving.base || 'gross', v => setGiving({ base: v }), { label: 'Of' })] : null,
-      giving.on && giving.mode === 'amount' ? S.moneyInput(giving.amount ?? null, v => setGiving({ amount: v }), { hint: 'A month', key: 'foo:give-amt' }) : null), { note: 'Off for everyone until turned on. Giving unlocks at the Roth IRA step. Oxygen mask on you first.' }),
+      giving.on && giving.mode === 'amount' ? S.moneyInput(giving.amount ?? null, v => setGiving({ amount: v }), { hint: 'A month', key: 'foo:give-amt' }) : null), { note: 'Off for everyone until turned on. Giving unlocks once heavy debt is paid off. Oxygen mask on you first.' }),
     S.labelled('After launch, will you keep a job?', S.toggle([['Yes', 'Yes'], ['No', 'No']], p.keepJobAfterLaunch ?? null, v => setP({ keepJobAfterLaunch: v }), { label: 'Keep a job after launch', clearable: true }),
       { note: 'Asked once: it feeds Quiet Quitting FI (a kept job adds its match) and Barista FI' }),
     S.checkbox('Quiet Quitting FI opens the launch window', !!set.qqOpensLaunch, v => ctx.store.setDoc('settings', { qqOpensLaunch: v }), { key: 'foo:qq-opens' })), { label: 'Giving, launch and the job question' });

@@ -214,7 +214,7 @@ export function scorecardOf(doc, ref, { now = new Date(), flags = [] } = {}) {
     const time = payoff ? moneyAsTime({ amount: payoff.value, hourlyWage: hourly, annualSpending }).value : null;
     const foo = a.fooWhen ? a.fooWhen(f) : a.foo; // the step on SLAM's own FOO, moved by the facts (little e then big e)
     const beforeHere = hereAt >= 0 && FOO_ORDER.indexOf(foo) < hereAt;
-    const parked = o.parked ? { at: o.parked.at, note: o.parked.note ?? null } : null;
+    const parked = o.parked ? { at: o.parked.at, note: o.parked.note ?? null, back: o.parked.back ?? { kind: 'next' }, atSession: o.parked.atSession ?? null } : null;
     const math = [
       `${a.name}: ${rating ?? 'not rated'}${source === 'coach' ? " (the coach's call)" : source === 'auto' ? ' (from the numbers)' : ''}. ${reason}`,
       payoff ? `Payoff: ${payoff.text}${time?.fiDays != null ? ` That is ${fmt.number(time.fiDays, 1)} FI days${time.hours != null ? ` or ${fmt.number(time.hours, 1)} hours of work` : ''}.` : ''}` : rating === 'Hole' ? 'Payoff: no rule for this area; type one on the Scorecard.' : null,

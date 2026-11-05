@@ -319,7 +319,7 @@ export const MATH = [
     fromApp: 'needs net worth at the start of the month, from the dated history in SLAM', app: c => c.statements()?.tie.bridge.change ?? null },
   { id: 'M67', name: 'Accrual vs cash surplus', inputs: 'M63, M64', unit: 'money', fns: [],
     fromApp: 'compares the month\'s plan with what was paid, line by line, from the calendar', app: c => c.statements()?.tie.accrualVsCash.difference ?? null },
-  { id: 'M68', name: 'Cash layers', inputs: 'cash, deductibles, gaps, lines', unit: 'money', fns: ['layers.LITTLE_E', 'layers.STABILITY', 'layers.littleE', 'layers.gapStep', 'layers.cashLayers', 'layers.backupRunway', 'layers.layersOf', 'layers.DIP_ORDER', 'layers.dipFrom', 'layers.recordDip'],
+  { id: 'M68', name: 'Cash layers', inputs: 'cash, deductibles, gaps, lines', unit: 'money', fns: ['layers.LITTLE_E', 'layers.STABILITY', 'layers.littleE', 'layers.gapStep', 'layers.cashLayers', 'layers.backupRunway', 'layers.layersOf', 'layers.DIP_ORDER', 'layers.dipFrom', 'layers.recordDip', 'layers.layerSnapshot', 'layers.layerHistory'],
     cols: [{ area: 'protection', key: 'dedMax', label: 'Highest deductible', unit: 'money', f: `IF(${SKIP},"",MAX(N({deductible}),N({deductibleOut})))` }],
     parts: [{ key: 'littleE', name: 'little e: the highest deductible, at most LittleE', unit: 'money',
       sheet: 'IF(N(MAX(Protection_dedMax))<=0,LittleE,MIN(LittleE,MAX(Protection_dedMax)))',

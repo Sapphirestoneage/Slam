@@ -11,7 +11,7 @@ import { homeworkItems, sendSummary, fiCard, netWorthChart } from './report-ui.j
 import { PUI } from './plan-ui.js';
 import { soWhat } from '../sowhat.js';
 import { changeSince } from '../records.js';
-import { programOf, startSession, inSession, sessionOf, snapshotNumbers, day0Report, agendaOf, graduationReport } from '../program.js';
+import { programOf, startSession, inSession, sessionOf, snapshotNumbers, day0Report, agendaOf, graduationReport, parkedBack, sessionCount } from '../program.js';
 import { SESSIONS, MONEY_DATES, levelWord } from '../registry/program.js';
 import { fiWordsOf } from '../math/picture.js';
 import { ladderOf } from '../math/ladder.js';
@@ -222,6 +222,8 @@ function filledCard(ctx, P) {
       h('span.muted.small', {}, `since ${f.since}`), h('span.spacer'),
       f.fiDays != null ? h('span.gain', {}, `+${f.fiDays.toFixed(1)} FI days`) : null, f.payoff != null ? h('span.muted.small', {}, `${money(f.payoff)} a year`) : null))));
 }
+// The soonest bring-back among the parked holes (overnight answer 1).
+function nextBack(ctx, parked) { const n = sessionCount(ctx.store.doc), now = ctx.now(); const list = parked.map(a => parkedBack(a.parked, { n, now })); const due = list.find(b => b.due); if (due) return 'now'; return [...list].sort((a, b) => String(a.at).localeCompare(String(b.at)))[0]?.when?.toLowerCase() ?? 'next session'; }
 // The next chapter: opens when no hole is left (and the S10 and S11 checklist once every area is rated).
 function nextChapterCard(ctx, { inside = false, unrated = [], parked = [] } = {}) {
   const c = ctx.store.doc.scorecard?.nextChapter || {};
@@ -230,7 +232,7 @@ function nextChapterCard(ctx, { inside = false, unrated = [], parked = [] } = {}
   d.onchange = () => save({ date: d.value || null });
   return h(`div.card${inside ? '.inner' : ''}`, { style: inside ? { marginTop: '10px' } : null }, h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Next chapter'), h('span.muted', {}, 'No hole left: what comes next (a home, kids, a career change)')),
     unrated.length ? h('p.muted.small', { style: { margin: '6px 0 0' } }, `Rate ${unrated.map(a => a.name).join(', ')} to be sure.`, ' ', h('a', { href: '#/plan/scorecard' }, 'Scorecard ›')) : null,
-    parked.length ? h('p.muted.small', { style: { margin: '6px 0 0' } }, `${parked.length} parked ${parked.length === 1 ? 'hole' : 'holes'}: ${parked.map(a => a.name).join(', ')}.`, ' ', h('a', { href: '#/plan/scorecard' }, 'Scorecard ›')) : null,
+    parked.length ? h('p.muted.small', { style: { margin: '6px 0 0' } }, `${parked.length} parked ${parked.length === 1 ? 'hole' : 'holes'} (${parked.map(a => a.name).join(', ')}), next back ${nextBack(ctx, parked)}.`, ' ', h('a', { href: '#/plan/scorecard' }, 'Scorecard ›')) : null,
     h('div.row-line', { style: { gap: '10px', marginTop: '10px', alignItems: 'flex-end' } },
       S.labelled('What it is', S.textInput(c.text ?? null, v => save({ text: v }), { hint: 'A home, kids, a career change', width: 320, key: 'chapter:text' })),
       S.labelled('Amount', S.moneyInput(c.amount ?? null, v => save({ amount: v }), { hint: 'Add amount', key: 'chapter:amount' })),

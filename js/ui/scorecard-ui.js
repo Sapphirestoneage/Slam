@@ -3,10 +3,10 @@
 // call; the holes ranked (before the client's FOO step first, then payoff over effort), each with its payoff in the
 // current money view, its effort in hours (editable), its best-return score, a pick for the plan, and How we got
 // this behind a caret; OK areas as rows and Strong ones as slim rows, so strengths show too.
-import { h, icon } from './dom.js';
+import { h, icon, clear } from './dom.js';
 import * as S from './staples.js';
 import { scorecardOf } from '../math/scorecard.js';
-import { parkHole, unparkHole } from '../program.js';
+import { parkHole, unparkHole, parkedBack, sessionCount, makeHomework } from '../program.js';
 import { RATINGS } from '../registry/scorecard.js';
 import { money } from '../format.js';
 
@@ -32,13 +32,21 @@ export function scorecardScreen(app, ctx) {
   const source = a => h('span.muted.small', {}, a.source === 'coach' ? "The coach's call" : a.source === 'auto' ? 'From the numbers' : 'Not rated yet');
   const how = a => S.moreBlock(`score:how:${a.id}`, () => h('ul.how-list', {}, a.math.map(t => h('li', {}, t))), { label: 'How we got this' });
   // A hole: rank, name, the rating picker, the reason, payoff (in the money view), effort, score, in the plan, how.
-  const park = (anchor, a) => S.popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, `Park ${a.name}`), h('span.muted.small', {}, 'It drops to the bottom until it is unparked; the next hole session skips it.'),
-    (() => { const n = h('input', { placeholder: 'Why (optional)', 'aria-label': 'Why park it' }); return [h('label.field', { style: { width: '280px' } }, n), h('div.row-line', {}, S.button('Park it', { kind: 'primary', onClick: () => { S.closePop(); parkHole(ctx.store, a.id, n.value.trim() || null); S.toast(`${a.name} parked.`, { undo: () => ctx.store.undo() }); } }), S.button('Keep it', { onClick: S.closePop }))]; })()), { width: 340 });
+  // Park it: not now, and when we come back (next session, in N sessions, or a date), plus a note.
+  const park = (anchor, a) => { let kind = 'next', n = 2; const date = h('input', { type: 'date', 'aria-label': 'Back on' }); const note = h('input', { placeholder: 'Why (optional)', 'aria-label': 'Why park it' });
+    const box = h('div.stack', { style: { gap: '8px' } });
+    const draw = () => clear(box, h('strong', {}, `Park ${a.name}`), h('span.muted.small', {}, 'Not now. It drops to the bottom and comes back to Suggested for today when it is due.'),
+      S.labelled('Back', S.toggle([['next', 'Next session'], ['sessions', 'In N sessions'], ['date', 'A date']], kind, v => { kind = v; draw(); }, { label: 'When it comes back' })),
+      kind === 'sessions' ? h('div.row-line', { style: { gap: '8px' } }, S.stepper(n, v => { n = v ?? 2; }, { min: 1, max: 12, label: 'Sessions' }), h('span.muted.small', {}, 'sessions from now')) : null,
+      kind === 'date' ? h('label.field', { style: { width: '170px' } }, date) : null,
+      h('label.field', { style: { width: '280px' } }, note),
+      h('div.row-line', {}, S.button('Park it', { kind: 'primary', onClick: () => { if (kind === 'date' && !date.value) { S.toast('Pick the date it comes back.'); return; } S.closePop(); parkHole(ctx.store, a.id, { note: note.value.trim() || null, back: kind === 'date' ? { kind, date: date.value } : kind === 'sessions' ? { kind, n } : { kind } }); S.toast(`${a.name} parked.`, { undo: () => ctx.store.undo() }); } }), S.button('Keep it', { onClick: S.closePop })));
+    draw(); S.popover(anchor, box, { width: 360 }); };
   const addPayoff = (anchor, a) => S.popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, `${a.name}: payoff a year`), h('span.muted.small', {}, 'No rule for this area: your estimate of what filling it is worth a year.'),
     S.moneyInput(null, v => { S.closePop(); if (v != null) setArea(a.id, { payoff: v }); }, { hint: 'Add a year', key: `score:${a.id}:payoff` })), { width: 320 });
   const holeRow = a => h(`div.card.hole-row${a.parked ? '.parked' : ''}`, {},
     h('div.hole-head', {}, h('span.rank', {}, `#${a.rank}`), h('strong.hole-name', {}, a.name), a.parked ? h('span.tag.plain', {}, 'Parked') : null, a.beforeHere ? h('span.tag.plain', {}, `Before FOO step ${sc.here}`) : null, h('span.tag.plain', { title: a.fooWords }, `FOO step ${a.foo}`), h('span.spacer'), clientTag(a), picker(a)),
-    a.parked ? h('div.row-line.coach-only', { style: { gap: '8px', marginTop: '6px' } }, h('span.muted.small', {}, `Parked ${new Date(a.parked.at).toLocaleDateString()}${a.parked.note ? `: ${a.parked.note}` : ''}`), S.button('Unpark', { size: 'small', onClick: () => unparkHole(ctx.store, a.id) })) : null,
+    a.parked ? h('div.row-line.coach-only', { style: { gap: '8px', marginTop: '6px' } }, h('span.muted.small', {}, `Parked ${new Date(a.parked.at).toLocaleDateString()}${a.parked.note ? `: ${a.parked.note}` : ''}. Back: ${parkedBack(a.parked, { n: sessionCount(doc), now: ctx.now() }).when}${parkedBack(a.parked, { n: sessionCount(doc), now: ctx.now() }).due ? ' (due now)' : ''}`), S.button('Unpark', { size: 'small', onClick: () => unparkHole(ctx.store, a.id) }), S.button('Make homework', { size: 'small', onClick: () => { makeHomework(ctx.store, `S${sessionCount(doc)}`, `Fill the ${a.name} hole`, { link: { kind: 'hole', areaId: a.id, route: '#/plan/scorecard' } }); S.toast('Homework made.', { undo: () => ctx.store.undo() }); } })) : null,
     h('div.hole-body', {},
       h('div.stack', { style: { gap: '4px', minWidth: 0, flex: '1 1 260px' } }, reasonBox(a), source(a)),
       h('div.hole-num', {}, h('span.label', {}, 'Payoff'), a.payoff ? [a.fiDays != null ? h('strong', {}, fiDaysText(a.fiDays)) : null, h('span.muted.small', {}, [S.amount(ctx, a.payoff.value), ' a year'])]

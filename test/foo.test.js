@@ -62,14 +62,19 @@ test('(c) Coast FI reached: step 7 opens', () => {
   assert.match(step(f, '7').note, /pick a launch move/);
 });
 
-test('(d) giving: off by default; on, it sits at the Roth IRA step (5b) and stays locked until that step is reached (batch 3)', () => {
+test('(d) giving: off by default; on, its only prerequisite is no heavy debt (overnight answer 5): locked while a card is carried, open after, even before the Roth step', () => {
   const off = home(() => {});
   assert.equal(step(off, '5b').status, 'Off', 'off for everyone by default');
-  assert.ok(off.steps.findIndex(s => s.id === '5b') > off.steps.findIndex(s => s.id === '5'), 'after Roth and HSA, never first');
-  const on = home(s => s.setDoc('profile', { giving: { on: true, mode: 'pct', pct: 0.1, base: 'net' } }));
-  assert.equal(step(on, '5b').status, 'Locked');
-  assert.match(step(on, '5b').prereq.text, /Giving unlocks at the Roth IRA step/);
-  assert.equal(Math.round(step(on, '5b').left), 500);
+  assert.ok(off.steps.findIndex(s => s.id === '5b') > off.steps.findIndex(s => s.id === '5'), 'listed beside Roth and HSA');
+  const give = s => s.setDoc('profile', { giving: { on: true, mode: 'pct', pct: 0.1, base: 'net' } });
+  const heavy = home(s => { give(s); s.add('debt', { name: 'Visa', values: { balance: 3000, apr: 0.24, payment: 150 } }, { type: 'Credit card' }); });
+  assert.equal(step(heavy, '5b').status, 'Locked');
+  assert.match(step(heavy, '5b').prereq.text, /Giving unlocks once heavy debt is paid off/);
+  assert.equal(step(heavy, '5b').prereq.after, null, 'no step comes first');
+  const clear = home(give);
+  assert.notEqual(step(clear, '5b').status, 'Locked', 'no heavy debt: open, though the Roth step is not reached');
+  assert.notEqual(step(clear, '5').status, 'Done', 'the Roth step is still ahead');
+  assert.equal(Math.round(step(clear, '5b').left), 500);
 });
 
 test('steps 2 and 3 can be in progress together; 6 and 7 never overlap', () => {

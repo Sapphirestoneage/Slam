@@ -86,16 +86,40 @@ export function dipFrom(layers, amount) {
   }
   return { from, uncovered: Math.max(0, left) };
 }
-// Record a dip on the file (doc.spending.dips) and take it off the account the layers draw from.
+// Record a dip on the file (doc.spending.dips) and take it off the account the layers draw from. Each dip keeps the
+// date, the amount, which layers it came from and what each had left after (for Curveballs in a later Wrapped).
 export function recordDip(store, { amount, note = null, now = store.now(), layers, accountId = null }) {
   const d = dipFrom(layers, amount);
+  const left = d.from.map(f => { const l = layers.find(x => x.id === f.layer); const after = Math.max(0, (l?.filled ?? 0) - f.amount); return { layer: f.layer, name: f.name, after, pctLeft: l?.target ? after / l.target : 0 }; });
   store.transaction('Emergency dip', () => {
-    store.setIn('spending', ['dips'], [...(store.doc.spending?.dips || []), { id: store.makeId(), at: now, amount, from: d.from, uncovered: d.uncovered, ...(note ? { note } : {}) }], 'Emergency dip');
+    store.setIn('spending', ['dips'], [...(store.doc.spending?.dips || []), { id: store.makeId(), at: now, amount, from: d.from, left, uncovered: d.uncovered, ...(note ? { note } : {}) }], 'Emergency dip');
     if (accountId) { const a = store.get(accountId); if (a) store.update(accountId, { balance: Math.max(0, (a.values.balance ?? 0) - amount) }); }
   });
   return d;
 }
 
+// What a snapshot keeps of the layers: each layer's fill and target, and the cash, so the history can be drawn.
+export function layerSnapshot(doc, ref, now = new Date()) {
+  try { const L = layersOf(doc, ref, now); return { cash: doc.records.filter(r => r.kind === 'account' && r.values?.group === 'cash').reduce((s, r) => s + (r.values.balance ?? 0), 0), layers: L.layers.filter(l => !l.id.startsWith('sink:')).map(l => ({ id: l.id, name: l.name, filled: l.filled, target: l.target })) }; }
+  catch { return null; }
+}
+// The history (A9): the layers at every snapshot that kept them (plus today), the dips marked, and the stats: how
+// many dips, the deepest (the layer it reached, what that layer had left, the month), and months to refill (from
+// each dip to the first later snapshot where every layer it touched is full again; the latest dip shows not yet).
+export function layerHistory(doc, ref, now = new Date()) {
+  const snaps = (doc.snapshots || []).filter(s => s.layers?.layers).map(s => ({ at: s.at, label: s.label, ...s.layers }));
+  const today = layerSnapshot(doc, ref, now);
+  const points = [...snaps, ...(today ? [{ at: now.toISOString(), label: 'Now', ...today }] : [])];
+  const dips = [...(doc.spending?.dips || [])].sort((a, b) => String(a.at).localeCompare(String(b.at)));
+  const order = DIP_ORDER;
+  const deepestOf = d => { const touched = (d.left || d.from.map(f => ({ layer: f.layer, name: f.name, pctLeft: null }))); return [...touched].sort((a, b) => order.indexOf(b.layer) - order.indexOf(a.layer))[0] ?? null; };
+  let deepest = null;
+  for (const d of dips) { const x = deepestOf(d); if (!x) continue; const rank = order.indexOf(x.layer); const cur = deepest ? order.indexOf(deepest.layer) : -1; if (rank > cur || (rank === cur && (x.pctLeft ?? 1) < (deepest.pctLeft ?? 1))) deepest = { ...x, at: d.at, month: ymOf(new Date(d.at)) }; }
+  const refills = dips.map(d => { const touched = d.from.map(f => f.layer); const after = points.find(p => p.at > d.at && touched.every(id => { const l = p.layers.find(x => x.id === id); return l && l.target != null && l.filled >= l.target - 0.5; })); return { at: d.at, months: after ? monthsBetween(ymOf(new Date(d.at)), ymOf(new Date(after.at))) : null }; });
+  const measured = refills.filter(r => r.months != null).map(r => r.months);
+  const stats = { dips: dips.length, deepest, refillMonths: measured.length ? Math.round(measured.reduce((s, x) => s + x, 0) / measured.length * 10) / 10 : null, lastDipRefilled: refills.length ? refills[refills.length - 1].months != null : null };
+  return { points, dips, stats, refills };
+}
 // backups: [{ kind, amount }] dollars you could lean on. Months of runway they add at today's spending.
 export function backupRunway(backups = [], monthlySpending) {
   if (!monthlySpending) return { months: null, total: sum(backups, b => b.amount) };

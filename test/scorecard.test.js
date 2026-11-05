@@ -359,17 +359,17 @@ test('answer 135: each area sits on SLAM\'s own FOO; the emergency fund moves fr
   assert.equal(area(sc, 'emergency').foo, '1');
 });
 
-test('FOO prerequisites: giving is off by default, locks until the Roth IRA step, unlocks anyway only with a note, and shows its cost in FI days', () => {
+test('FOO prerequisites: giving is off by default, locks while heavy debt is carried (overnight answer 5), unlocks anyway only with a note, and shows its cost in FI days', () => {
   const d = demoStore();
   let F = foo(d.doc, ref, { now });
   const give = F.steps.find(s => s.id === '5b');
-  assert.equal(give.status, 'Off'); assert.ok(F.steps.findIndex(s => s.id === '5b') > F.steps.findIndex(s => s.id === '5'), 'at the Roth IRA step, not first');
+  assert.equal(give.status, 'Off'); assert.ok(F.steps.findIndex(s => s.id === '5b') > F.steps.findIndex(s => s.id === '5'), 'listed at the Roth IRA step, not first');
   assert.equal(F.steps.find(s => s.id === '7').status, 'Locked', 'SPARKS waits for Coast FI on the same mechanism');
   assert.match(F.steps.find(s => s.id === '7').prereq.text, /Coast FI first/);
   d.setDoc('profile', { giving: { on: true, mode: 'amount', amount: 200 } });
   F = foo(d.doc, ref, { now });
   assert.equal(F.steps.find(s => s.id === '5b').status, 'Locked');
-  assert.match(F.steps.find(s => s.id === '5b').prereq.text, /^Giving unlocks at the Roth IRA step\. Oxygen mask on you first\./);
+  assert.match(F.steps.find(s => s.id === '5b').prereq.text, /^Giving unlocks once heavy debt is paid off\. Oxygen mask on you first\./);
   assert.ok(F.steps.find(s => s.id === '5b').prereq.failed.includes('no debt at or above the heavy-debt APR'));
   assert.equal(F.here, '3', 'a locked step is never where you are');
   assert.throws(() => overrideStep(d, '5b', '  '), /needs a note/);
@@ -381,7 +381,7 @@ test('FOO prerequisites: giving is off by default, locks until the Roth IRA step
   assert.ok(g.cost.fiDays > 0);
   clearOverride(d, '5b');
   assert.equal(foo(d.doc, ref, { now }).steps.find(s => s.id === '5b').status, 'Locked');
-  assert.equal(PREREQS['5b'].after, '5');
+  assert.equal(PREREQS['5b'].after, undefined, 'no step comes first: heavy debt is the only prerequisite');
 });
 
 test('S12 Graduation: the report, the notes, the dates and the final snapshot tick; the tracker reads the session while it runs', () => {

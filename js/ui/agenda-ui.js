@@ -5,7 +5,7 @@
 // Home shows it before the session (prep); the docked bar shows it on every tab while the session runs. Coach only.
 import { h, icon } from './dom.js';
 import * as S from './staples.js';
-import { agendaOf, addAgendaItem, removeAgendaItem, tickAgendaItem, setAgendaNote, addSuggestion } from '../program.js';
+import { agendaOf, addAgendaItem, removeAgendaItem, tickAgendaItem, setAgendaNote, addSuggestion, makeHomework } from '../program.js';
 import { search } from '../nav.js';
 
 export const AUI = { noteOpen: null }; // which item's note box is open
@@ -64,7 +64,8 @@ export function agendaPanel(app, ctx, A, { compact = false } = {}) {
     A.suggestions.length ? S.moreBlock(`agenda:suggest:${sid}${compact ? ':bar' : ''}`, () => h('div.suggest-list', {}, A.suggestions.map(sg => h('div.suggest-row', {},
       S.button('+', { size: 'small', onClick: () => { addSuggestion(ctx.store, sid, sg); S.toast(`Added: ${sg.label}`); } }),
       h('span', { style: { flex: 1 } }, sg.label, h('span.muted.small', {}, ` · ${sg.why}`)),
-      h('span.tag.plain', {}, { carried: 'carried over', homework: 'homework', parking: 'parking lot', hole: 'top hole', stale: 'stale number' }[sg.kind])))),
+      sg.kind === 'parked' ? S.button('Make homework', { size: 'small', onClick: () => { makeHomework(ctx.store, sid, sg.label.replace(/^Back from parking: /, 'Fill the ') + ' hole', { link: sg.link }); S.toast('Homework made.', { undo: () => ctx.store.undo() }); } }) : null,
+      h('span.tag.plain', {}, { carried: 'carried over', homework: 'homework', parking: 'parking lot', hole: 'top hole', stale: 'stale number', parked: 'back from parking', mode: 'household' }[sg.kind] ?? sg.kind)))),
     { label: `Suggested for today (${A.suggestions.length})` }) : null);
 }
 export { agendaOf };

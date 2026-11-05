@@ -94,7 +94,7 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   add({ id: '5', name: 'Roth and HSA', done: rothThisYear >= iraLimit - 0.5 && (!x.gates.hsa || hsaIn >= hsaLimit - 0.5), started: rothThisYear > 0 || hsaIn > 0,
     left: Math.max(0, iraLimit - rothThisYear) + (x.gates.hsa ? Math.max(0, hsaLimit - hsaIn) : 0), note: (x.grossAnnual ?? 0) > (ref.limits.rothIncome?.[x.gates.couple ? 'joint' : 'single'] ?? Infinity) ? 'Over the Roth IRA income limit: a backdoor Roth (a traditional IRA contribution, then a conversion) still works.' : 'A Roth IRA and an invested HSA, maxed for the year.' });
   // Giving (batch 3, superseding the Nov 3 giving-first rule): off by default; at the Roth IRA step, never first in line.
-  if (!give) add({ id: '5b', name: 'Give', done: false, started: false, off: true, left: null, note: 'Off. Turn it on under Giving once the Roth IRA step is reached: a percent or an amount.' });
+  if (!give) add({ id: '5b', name: 'Give', done: false, started: false, off: true, left: null, note: 'Off. Turn it on under Giving once heavy debt is paid off: a percent or an amount.' });
   else if (!giveMonthly) add({ id: '5b', name: 'Give', done: false, started: false, left: null, note: 'Set a percent or an amount to give.' });
   else add({ id: '5b', name: 'Give', done: givingLines >= giveMonthly - 0.5, started: givingLines > 0, left: Math.max(0, giveMonthly - givingLines), monthly: true,
     note: `${give.mode === 'amount' ? `$${Math.round(give.amount ?? 0)} a month` : `${Math.round((give.pct ?? 0) * 100)}% of ${give.base === 'net' ? 'take-home' : 'gross'}`}, at the Roth IRA step.`, giveMonthly });
@@ -121,11 +121,11 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   for (const s of steps) {
     const p = PREREQS[s.id];
     if (!p || s.done) continue;
-    const at = steps.findIndex(x => x.id === p.after);
-    const reached = at < 0 || steps.slice(0, at + 1).filter(counts).every(x => x.done);
+    const at = p.after ? steps.findIndex(x => x.id === p.after) : -1;
+    const reached = at < 0 || steps.slice(0, at + 1).filter(counts).every(x => x.done); // no after: only the conditions lock it
     const failed = (p.conditions || []).filter(k => !CONDITIONS[k].test(condFacts));
     const wouldLock = !reached || failed.length > 0;
-    s.prereq = { after: p.after, reached, failed: failed.map(k => CONDITIONS[k].label), text: `${p.label}${failed.length ? ` Needs ${failed.map(k => CONDITIONS[k].label).join(' and ')}.` : ''}` };
+    s.prereq = { after: p.after ?? null, reached, failed: failed.map(k => CONDITIONS[k].label), text: `${p.label}${failed.length ? ` Needs ${failed.map(k => CONDITIONS[k].label).join(' and ')}.` : ''}` };
     if (s.off) continue; // off: nothing to lock yet
     if (wouldLock && overrides[s.id]?.note) { s.override = overrides[s.id]; s.cost = overrideCost(s, { heavy, m, x }); }
     else if (wouldLock) s.locked = true;

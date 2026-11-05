@@ -9,6 +9,7 @@ import { gatesOf, visible } from './gates.js';
 import { SESSIONS, PACE, LEVELS, REVIEW, AGENDA, HOMEWORK_STATUSES, levelWord } from './registry/program.js';
 import { homeworkList } from './homework.js';
 import { MODES, modeOf, DISCLOSURE } from './registry/couples.js';
+import { layerSnapshot } from './math/layers.js';
 import { fmt } from './math/result.js';
 import { scorecardOf, ratingOf } from './math/scorecard.js';
 import { THRESHOLDS } from './registry/scorecard.js';
@@ -163,6 +164,8 @@ export function agendaOf(doc, ref, { now = new Date(), flags = [], P = programOf
   for (const c of (doc.program?.carried?.[sid] || []).filter(c => !c.must)) suggest({ kind: 'carried', label: c.label, key: c.key ?? null, from: c.from, link: c.link ?? (c.route ? { kind: 'route', route: c.route } : null), why: `carried over from session ${Number(c.from.slice(1))}` });
   for (const hw of homeworkAll(doc, live)) if (hw.status === 'Client says done') suggest({ kind: 'homework', label: `Confirm homework: ${hw.label}`, link: { kind: 'homework', key: hw.key, route: '#/tools/lists' }, why: 'the client says it is done' });
   for (const n of (doc.parking || []).filter(n => !n.filedTo)) suggest({ kind: 'parking', label: n.text, link: { kind: 'parking', noteId: n.id }, why: 'an open parking-lot question' });
+  // Parked holes that are due back (overnight answer 1): a + and a one-click Make homework.
+  for (const a of P.scorecard.parkedHoles) { const b = parkedBack(a.parked, { n: P.n, now }); if (b.due) suggest({ kind: 'parked', label: `Back from parking: ${a.name}`, key: 'holeFilled', from: sid, link: { kind: 'hole', areaId: a.id, route: '#/plan/scorecard' }, why: `parked ${new Date(a.parked.at).toLocaleDateString()}${a.parked.note ? `: ${a.parked.note}` : ''}; due ${b.when}` }); }
   const top = P.scorecard.open[0];
   if (top) suggest({ kind: 'hole', label: `Top hole: ${top.name}`, key: 'holeFilled', from: sid, link: { kind: 'hole', areaId: top.id, route: '#/plan/scorecard' }, why: top.payoff ? `${Math.round(top.fiDays ?? 0)} FI days a year` : 'the top of the Scorecard' });
   // F2: what the household mode suggests (Engaged: the disclosure checklist, a money talk, a wedding goal).
@@ -193,6 +196,7 @@ export function filledHoles(doc, sc) {
 }
 
 // Everything Home shows about the program, worked out once.
+export const sessionCount = doc => sessionNo(doc); // the session being prepared or run, for callers without a ref
 export function programOf(doc, ref, { now = new Date(), flags = [] } = {}) {
   const m = metrics(doc, ref, { now });
   const picture = pictureOf(doc, ref, { now });
@@ -260,7 +264,7 @@ export function endSession(store, ref, { homework = [], next = null, now = new D
   });
   const graduation = n >= SESSIONS.length;
   const snap = store.snapshot(first ? 'Day 0' : graduation ? 'Graduation' : `End of session ${n}`, snapshotNumbers(store.doc, ref, { now, flags }),
-    { session: n, ...(first ? { day0: true } : {}), ...(graduation ? { graduation: true } : {}) });
+    { session: n, layers: layerSnapshot(store.doc, ref, now), ...(first ? { day0: true } : {}), ...(graduation ? { graduation: true } : {}) });
   return { n, snap, first, carried: carry, homework: toHomework, graduation };
 }
 
@@ -305,8 +309,22 @@ export function trackerOf(doc, ref, { now = new Date(), flags = [] } = {}) {
 }
 // The Revisit session (S9) re-scores through the review gate: done there marks the scorecard re-scored.
 export function markRescored(store, { now = new Date() } = {}) { store.setIn('scorecard', ['reviewedAt'], now.toISOString(), 'Re-scored'); }
-// A hole parked by the coach (answer 136), with an optional note; unparked the same way.
-export function parkHole(store, id, note = null) { store.setIn('scorecard', ['areas', id, 'parked'], { at: store.now(), ...(note ? { note } : {}) }, 'Park it'); }
+// A hole parked by the coach (answer 136; overnight answer 1): not now, and when we come back. back: { kind: 'next' }
+// (next session), { kind: 'sessions', n } (in n sessions) or { kind: 'date', date }; a note is optional. When it is
+// due it shows in Suggested for today with a + and a one-click Make homework. Unparked the same way.
+export function parkHole(store, id, opts = null) {
+  const o = typeof opts === 'string' ? { note: opts } : (opts || {});
+  const back = o.back && ['next', 'sessions', 'date'].includes(o.back.kind) ? o.back : { kind: 'next' };
+  const n = sessionCount(store.doc);
+  store.setIn('scorecard', ['areas', id, 'parked'], { at: store.now(), atSession: n, back, ...(o.note ? { note: o.note } : {}) }, 'Park it');
+}
+// When a parked hole comes back: due or not, and the words for it (Next session; In 2 sessions (session 7); Mar 3, 2027).
+export function parkedBack(parked, { n, now = new Date() }) {
+  const b = parked?.back || { kind: 'next' }, from = parked?.atSession ?? n - 1; // parked before bring-backs existed: due now
+  if (b.kind === 'date') { const due = b.date ? Date.parse(`${b.date}T12:00:00`) <= now.getTime() : false; return { due, when: b.date ? new Date(`${b.date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'a date', at: b.date ?? null }; }
+  const target = from + (b.kind === 'sessions' ? Math.max(1, b.n ?? 1) : 1);
+  return { due: n >= target, when: target === from + 1 ? `Next session (session ${target})` : `In ${target - from} sessions (session ${target})`, at: `S${target}` };
+}
 export function unparkHole(store, id) { store.setIn('scorecard', ['areas', id, 'parked'], undefined, 'Unpark'); }
 // A locked FOO step unlocked anyway by the coach, with a required note kept on the session record.
 export function overrideStep(store, stepId, note) {

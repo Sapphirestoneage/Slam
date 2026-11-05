@@ -2,6 +2,7 @@
 // The shell (build phase 4): top bar, five tabs, sub-tabs, Find, the More menu (undo, redo, add anything, the
 // parking lot), time toggle, client view, gear. Each screen shows its first state from Words and states.
 import { h, clear, icon } from './ui/dom.js';
+import { layerSnapshot } from './math/layers.js';
 import { reportThis } from './ui/report-this.js';
 import { startTips } from './ui/tips.js';
 import { timerAfter } from './timer.js';
@@ -309,7 +310,7 @@ const app = {
     clear(el, head, b.open ? h('div.tracker-body', {}, agendaPanel(this, this.ctx, A, { compact: true })) : null);
   },
   snapshot(label, extra = {}) {
-    this.store.snapshot(label, snapshotNumbers(this.store.doc, ref, { now: this.ctx.now(), flags: this.flags }), extra);
+    this.store.snapshot(label, snapshotNumbers(this.store.doc, ref, { now: this.ctx.now(), flags: this.flags }), { layers: layerSnapshot(this.store.doc, ref, this.ctx.now()), ...extra }); // the cash layers ride along (A9 history)
     saveClient(adapter, this.store.doc);
     S.toast('Snapshot saved.');
     this.render();
