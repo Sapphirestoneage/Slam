@@ -19,9 +19,33 @@ SPEC = ROOT / "spec" / "SLAM Build Spec.xlsx"
 TAB = "Program"
 
 READ = """
-import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, SESSIONS } from './js/registry/program.js';
-console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, SESSIONS }));
+import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, SESSIONS, MONEY_DATES } from './js/registry/program.js';
+import { AREAS, RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER } from './js/registry/scorecard.js';
+console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, SESSIONS, MONEY_DATES, SCORE: { AREAS, RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER } }));
 """
+RULE_WORDS = {
+    "cashFlow": "The headline savings rate: Strong at or over strong, OK at or over ok, else Hole; a negative surplus is a Hole",
+    "emergency": "Cash over a month of spending: Hole under holeMonths, Strong at or over strongMonths (or past the Rule of 5 target), else OK",
+    "debt": "Heavy debt (cards, payday, personal, medical, BNPL, or any APR at or over the heavy line) is a Hole; low-rate debt with payments over dti of gross is OK; else Strong (no debt per About you is Strong)",
+    "credit": "Cards used over utilizationHole is a Hole; a score under ok is a Hole; a score at or over strong with cards within utilizationOk is Strong; else OK; no score and cards within the line stays unrated",
+    "retirement": "Match left on the table is a Hole; 401(k), HSA and after-tax retirement saving at or over strongPct of gross is Strong; some is OK; none while employed is a Hole",
+    "investing": "What goes into investments a month at or over strongPct of take-home is Strong; something invested or going in is OK; nothing with a take-home known is a Hole",
+    "taxes": "No rule: the coach rates it after a look at Taxes",
+    "protection": "No health coverage (or no life or disability with dependents) is a Hole; a missing or Not sure coverage is OK; all in place is Strong; no coverage rows stays unrated",
+    "income": "Between jobs is a Hole; steady income is Strong; varies or unpredictable is OK; no take-home or no stability answer stays unrated",
+    "goals": "count short-term and count long-term goals complete is Strong; any goal is OK; none is a Hole",
+    "mindset": "The latest money feeling: at or over strong is Strong, at or under hole is a Hole, between is OK; none stays unrated",
+}
+PAYOFF_WORDS = {
+    "cashFlow": "The gap to the ok savings rate: ok times take-home minus the surplus, times 12",
+    "emergency": "The gap to months of spending, carried on a card at the typical card APR",
+    "debt": "Interest a year on the heavy debt (balance times APR, added up)",
+    "credit": "aprPoints more APR on every debt balance",
+    "retirement": "The match left on the table a year, plus (with nothing going in) the tax saved by putting targetPct of gross away before tax at the marginal rate",
+    "investing": "Cash above the emergency target plus a surplus not invested, a year, grown at the real return",
+    "taxes": "No rule: the coach types a payoff", "protection": "No rule: the coach types a payoff", "income": "No rule: the coach types a payoff",
+    "goals": "No rule: the coach types a payoff", "mindset": "No rule: the coach types a payoff",
+}
 LEVEL_WORDS = {
     "Missing": "Nothing typed (or parked with I'll find it later)",
     "Gut": "A guess: a starter line, Not sure, or the gut spending number",
@@ -69,12 +93,14 @@ def main():
     def row(*cells):
         rows.append(("body", list(cells)))
 
-    title("Program: the 12 sessions, every number's level, the Picture %, the pace, and what unlocks when (Phase 3, Nov 5 2026)")
+    title("Program: the 12 sessions, every number's level, the Picture %, the pace, what unlocks when, and the Scorecard (Phase 3, Nov 5 2026)")
     head("Section", "Item", "Detail", "Notes")
     row("Sessions", "", "Each client has a 12-session program. A session's checklist ticks itself from the data where it can (auto); the rest are checkboxes. Done when every item is ticked.", "js/registry/program.js SESSIONS; js/program.js autoChecks")
     for i, s in enumerate(cfg["SESSIONS"], 1):
         items = "; ".join(f"{it['label']} ({'auto' if it.get('auto') else 'manual'})" for it in s["items"])
-        note = "Placeholder: the name and checklist can be edited on Home" if s.get("placeholder") else ""
+        if s.get("itemsWhenClear"):
+            items += "; once no hole is left: " + "; ".join(f"{it['label']} ({'auto' if it.get('auto') else 'manual'})" for it in s["itemsWhenClear"])
+        note = "Placeholder: the name and checklist can be edited on Home" if s.get("placeholder") else "Pulls the top hole on the Scorecard when it starts" if s.get("hole") else ""
         row("Sessions", f"S{i} {s['name']}", items, note)
     row("Levels", "", "Each number has a level, in points. The Picture % is the weighted average of every number's level.", "M73; js/registry/program.js LEVELS")
     for k, v in cfg["LEVELS"].items():
@@ -93,6 +119,20 @@ def main():
     row("Snapshots", "", "Ending a session saves a snapshot with the key numbers and the Picture %: Day 0 the first time, End of session N after. They live in the client file, so they export and import with it.", "js/program.js endSession")
     for k, v in HOME:
         row("Home", k, v, "")
+    row("Home", "After intake", "Once session 3 is done the progress bar reads 'X of 11 areas Strong or OK (Day 0: Y)'; the top holes show; a filled hole shows before and after with the FI days gained; the next chapter opens when no hole is left; the Game plan session takes next-year notes, a yearly review date and the monthly money date", "js/program.js afterIntake, filledHoles")
+    row("Home", "Money date cadences", "; ".join(cfg["MONEY_DATES"]), "js/registry/program.js MONEY_DATES")
+    # The scorecard (batch 2).
+    sc = cfg["SCORE"]
+    row("Scorecard", "", "Eleven areas, each Strong, OK or Hole. A rule suggests the rating from the data where it can; the coach can override any rating with a reason. Add or rename an area in js/registry/scorecard.js.", "M74; js/math/scorecard.js; Plan › Scorecard")
+    for a in sc["AREAS"]:
+        row("Scorecard", a["name"], RULE_WORDS[a["id"]], f"FOO step {a['foo']}; the usual effort {a['effort']} h; {a['route']}")
+    for area, t in sc["THRESHOLDS"].items():
+        for k, v in t.items():
+            row("Thresholds", f"{area} {k}", str(v), "")
+    row("Holes", "", "Each hole shows its payoff (dollars a year, hours of work, FI days: the $ / Hours / FI days view), an effort in hours (the usual, editable per client), and the best-return score = payoff over effort. Ranked: holes before the client's current FOO step first, then by score. 'How we got this' shows the math behind a caret. Strong areas show as slim rows.", "js/math/scorecard.js")
+    for a in sc["AREAS"]:
+        row("Holes", f"{a['name']} payoff", PAYOFF_WORDS[a["id"]], "; ".join(f"{k} {v}" for k, v in sc["PAYOFF"].get(a["id"], {}).items()))
+    row("Holes", "Ranking", "FOO order " + ", ".join(sc["FOO_ORDER"]) + "; a hole before the client's step ranks first, then by best return, then by payoff", "")
 
     for r, (kind, cells) in enumerate(rows, 1):
         src = {"title": title_src, "head": head_src, "body": body_src}[kind]

@@ -17,7 +17,8 @@ Cash flow,Budget,"Every spending line, the five passes, fixed/variable, who pays
 Cash flow,Calendar,"Calendar entries, maybe money, wins, low balance line",Card due dates come from Debt
 Cash flow,Month end,"Close, misses, carry adjustments",Actuals feed Report > History
 Plan,Goals,"FI target, assumptions, milestones",FI date shows on Home
-Plan,Timeline,FI timeline with sliders and pace bands,
+,,,
+Plan,Scorecard,"Eleven areas rated Strong, OK or Hole (from the numbers or the coach); holes ranked with payoff, effort and best return; the top 3 for the plan",Sessions 5 to 11 work from it; Home shows areas Strong or OK after session 3
 Plan,Debt payoff,Payoff chart and extra payment slider,Reads Debt
 Plan,Next 12 months,Upcoming events,Each lands on the calendar
 Plan,Scenarios,Life event blocks (later),

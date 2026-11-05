@@ -1,18 +1,18 @@
-"Program: the 12 sessions, every number's level, the Picture %, the pace, and what unlocks when (Phase 3, Nov 5 2026)",,,
+"Program: the 12 sessions, every number's level, the Picture %, the pace, what unlocks when, and the Scorecard (Phase 3, Nov 5 2026)",,,
 Section,Item,Detail,Notes
 Sessions,,Each client has a 12-session program. A session's checklist ticks itself from the data where it can (auto); the rest are checkboxes. Done when every item is ticked.,js/registry/program.js SESSIONS; js/program.js autoChecks
 Sessions,S1 First picture,Accounts set up (auto); Top-line numbers entered (Gut is OK) (auto); Money in one line generated (auto); Day 0 snapshot saved (auto),
 Sessions,S2 Real numbers,Big categories at Estimate or better (auto); Goals named (auto); FOO step identified (auto),
 Sessions,S3 Lock it,One month of Actuals (auto); Key numbers locked (auto); Picture about 90% (auto),
-Sessions,S4 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
-Sessions,S5 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
-Sessions,S6 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
-Sessions,S7 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
-Sessions,S8 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
-Sessions,S9 Revisit,Day 0 vs now report shared (manual),
-Sessions,S10 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
-Sessions,S11 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
-Sessions,S12 Graduation,Graduated (manual),Placeholder: the name and checklist can be edited on Home
+Sessions,S4 Goals,"Three short-term goals, each with an amount, a date and a need, want or wish tag (auto); Three long-term goals, each with an amount, a date and a need, want or wish tag (auto)",
+Sessions,S5 Full analysis,Every area rated (auto); Holes ranked (a payoff and an effort on each) (auto); FOO step confirmed (auto); Top 3 holes chosen (auto),
+Sessions,S6 Fill a hole,The top hole filled (OK or Strong) (auto),Pulls the top hole on the Scorecard when it starts
+Sessions,S7 Fill a hole,The top hole filled (OK or Strong) (auto),Pulls the top hole on the Scorecard when it starts
+Sessions,S8 Fill a hole,The top hole filled (OK or Strong) (auto),Pulls the top hole on the Scorecard when it starts
+Sessions,S9 Revisit,Day 0 vs now compared (auto); Re-scored and re-ranked (auto),
+Sessions,"S10 Fill a hole, or the next chapter","The top hole filled (OK or Strong) (auto); once no hole is left: Next chapter named, with an amount and a date (auto)",Pulls the top hole on the Scorecard when it starts
+Sessions,"S11 Fill a hole, or the next chapter","The top hole filled (OK or Strong) (auto); once no hole is left: Next chapter named, with an amount and a date (auto)",Pulls the top hole on the Scorecard when it starts
+Sessions,S12 Game plan,Next-year plan notes written (auto); Yearly review date set (auto); Monthly money date cadence set (auto),
 Levels,,"Each number has a level, in points. The Picture % is the weighted average of every number's level.",M73; js/registry/program.js LEVELS
 Levels,Missing,0,Nothing typed (or parked with I'll find it later)
 Levels,Gut,25,"A guess: a starter line, Not sure, or the gut spending number"
@@ -59,3 +59,44 @@ Home,Money in one line,"Net worth, monthly surplus, savings rate, and the FI dat
 Home,Hidden when empty,"Payday, open items, the cash dip, runway, Day 0 vs now and net worth over time show only when they have something to say",
 Home,More menu,"Undo, redo, Add anything and the parking lot sit behind one labeled More button in the top bar",
 Home,End session,"Saves the snapshot (Day 0 the first time, End of session N after), the homework, the one-pager, the next date and a backup; then Send summary",
+Home,After intake,"Once session 3 is done the progress bar reads 'X of 11 areas Strong or OK (Day 0: Y)'; the top holes show; a filled hole shows before and after with the FI days gained; the next chapter opens when no hole is left; the Game plan session takes next-year notes, a yearly review date and the monthly money date","js/program.js afterIntake, filledHoles"
+Home,Money date cadences,The 1st of the month; The 15th of the month; The last day of the month; The first Sunday; Every payday,js/registry/program.js MONEY_DATES
+Scorecard,,"Eleven areas, each Strong, OK or Hole. A rule suggests the rating from the data where it can; the coach can override any rating with a reason. Add or rename an area in js/registry/scorecard.js.",M74; js/math/scorecard.js; Plan › Scorecard
+Scorecard,Cash flow,"The headline savings rate: Strong at or over strong, OK at or over ok, else Hole; a negative surplus is a Hole",FOO step 1; the usual effort 4 h; #/cash-flow/budget
+Scorecard,Emergency fund,"Cash over a month of spending: Hole under holeMonths, Strong at or over strongMonths (or past the Rule of 5 target), else OK",FOO step 1; the usual effort 2 h; #/net-worth/assets
+Scorecard,Debt,"Heavy debt (cards, payday, personal, medical, BNPL, or any APR at or over the heavy line) is a Hole; low-rate debt with payments over dti of gross is OK; else Strong (no debt per About you is Strong)",FOO step 3; the usual effort 3 h; #/net-worth/debt
+Scorecard,Credit,Cards used over utilizationHole is a Hole; a score under ok is a Hole; a score at or over strong with cards within utilizationOk is Strong; else OK; no score and cards within the line stays unrated,FOO step 3; the usual effort 2 h; #/net-worth/credit-cards
+Scorecard,Retirement accounts,"Match left on the table is a Hole; 401(k), HSA and after-tax retirement saving at or over strongPct of gross is Strong; some is OK; none while employed is a Hole",FOO step 2; the usual effort 1 h; #/net-worth/assets
+Scorecard,Investing,What goes into investments a month at or over strongPct of take-home is Strong; something invested or going in is OK; nothing with a take-home known is a Hole,FOO step 8; the usual effort 2 h; #/net-worth/assets
+Scorecard,Taxes,No rule: the coach rates it after a look at Taxes,FOO step 5; the usual effort 2 h; #/cash-flow/taxes
+Scorecard,Protection,No health coverage (or no life or disability with dependents) is a Hole; a missing or Not sure coverage is OK; all in place is Strong; no coverage rows stays unrated,FOO step 1; the usual effort 2 h; #/net-worth/protection
+Scorecard,Income,Between jobs is a Hole; steady income is Strong; varies or unpredictable is OK; no take-home or no stability answer stays unrated,FOO step 1; the usual effort 8 h; #/cash-flow/income
+Scorecard,Goals,count short-term and count long-term goals complete is Strong; any goal is OK; none is a Hole,FOO step 7; the usual effort 1 h; #/plan/goals
+Scorecard,Mindset,"The latest money feeling: at or over strong is Strong, at or under hole is a Hole, between is OK; none stays unrated",FOO step 0b; the usual effort 4 h; #/home/session
+Thresholds,cashFlow strong,0.2,
+Thresholds,cashFlow ok,0.05,
+Thresholds,emergency holeMonths,1,
+Thresholds,emergency strongMonths,3,
+Thresholds,debt dti,0.36,
+Thresholds,credit strong,740,
+Thresholds,credit ok,670,
+Thresholds,credit utilizationOk,0.3,
+Thresholds,credit utilizationHole,0.5,
+Thresholds,retirement strongPct,0.15,
+Thresholds,investing strongPct,0.15,
+Thresholds,goals count,3,
+Thresholds,mindset strong,7,
+Thresholds,mindset hole,4,
+Holes,,"Each hole shows its payoff (dollars a year, hours of work, FI days: the $ / Hours / FI days view), an effort in hours (the usual, editable per client), and the best-return score = payoff over effort. Ranked: holes before the client's current FOO step first, then by score. 'How we got this' shows the math behind a caret. Strong areas show as slim rows.",js/math/scorecard.js
+Holes,Cash flow payoff,"The gap to the ok savings rate: ok times take-home minus the surplus, times 12",
+Holes,Emergency fund payoff,"The gap to months of spending, carried on a card at the typical card APR",months 3
+Holes,Debt payoff,"Interest a year on the heavy debt (balance times APR, added up)",
+Holes,Credit payoff,aprPoints more APR on every debt balance,aprPoints 0.02
+Holes,Retirement accounts payoff,"The match left on the table a year, plus (with nothing going in) the tax saved by putting targetPct of gross away before tax at the marginal rate",targetPct 0.06
+Holes,Investing payoff,"Cash above the emergency target plus a surplus not invested, a year, grown at the real return",
+Holes,Taxes payoff,No rule: the coach types a payoff,
+Holes,Protection payoff,No rule: the coach types a payoff,
+Holes,Income payoff,No rule: the coach types a payoff,
+Holes,Goals payoff,No rule: the coach types a payoff,
+Holes,Mindset payoff,No rule: the coach types a payoff,
+Holes,Ranking,"FOO order 0a, 0b, 1, 2, 3, 4, 5, 6, 7, 8, 9; a hole before the client's step ranks first, then by best return, then by payoff",
