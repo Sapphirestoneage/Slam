@@ -9,7 +9,7 @@ const root = new URL('..', import.meta.url).pathname;
 const SPEC_TABS = ['Start here', 'Roadmap', 'Feature list', 'Visualizations', 'Build phases', 'QA checklist',
   'Look and feel', 'Words and states', 'Navigation', 'DMMT check', 'Screens', 'Mockup', 'Staples', 'Rules',
   'Rules summary', 'Math', 'Reference data', 'Fields', 'Feature details', 'Tags and layers', 'Demo client',
-  'Open questions'];
+  'Open questions', 'Program'];
 
 test('spec/csv has one file per spreadsheet tab', () => {
   for (const tab of SPEC_TABS) assert.ok(existsSync(join(root, 'spec/csv', `${tab}.csv`)), tab);

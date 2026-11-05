@@ -79,6 +79,7 @@ The workbook is built only from the registries in `js/registry/`, so it stays co
 | `tools/artifact.mjs` | Builds the one-file SLAM for Eli page from this repo (see the file for how) |
 | `js/math/portfolio.js`, `js/ui/account-detail.js`, `js/ui/account-specific.js` | Inside each account: allocation, holdings, goals, growth, details; 401(k) and HSA |
 | `js/homework.js` | I'll find it later: the Homework list and where to find each thing |
+| `js/registry/program.js`, `js/math/picture.js`, `js/program.js`, `js/ui/home-ui.js` | The program (Phase 3): the 12 sessions and their checklists, every number's level and the Picture % (M73), the pace, the next small things, what unlocks when, Day 0; Home shows it |
 | `js/benefits.js`, `js/year.js`, `js/lifeadmin.js`, `js/community.js`, `js/timer.js` | Benefits and withholding flag; your year, sinking funds, taking over; life admin; community presets; onboarding timer |
 | `js/payday.js`, `js/glossary.js`, `js/ui/tips.js`, `js/ui/report-this.js` | Payday card; plain-language tooltips; Report this |
 | `js/math/statements.js`, `js/ui/statements-ui.js` | Report › Statements: net worth, income and spending, cash flow, and the tie-out (M62 to M67) |

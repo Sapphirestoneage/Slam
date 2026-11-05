@@ -1,0 +1,61 @@
+"Program: the 12 sessions, every number's level, the Picture %, the pace, and what unlocks when (Phase 3, Nov 5 2026)",,,
+Section,Item,Detail,Notes
+Sessions,,Each client has a 12-session program. A session's checklist ticks itself from the data where it can (auto); the rest are checkboxes. Done when every item is ticked.,js/registry/program.js SESSIONS; js/program.js autoChecks
+Sessions,S1 First picture,Accounts set up (auto); Top-line numbers entered (Gut is OK) (auto); Money in one line generated (auto); Day 0 snapshot saved (auto),
+Sessions,S2 Real numbers,Big categories at Estimate or better (auto); Goals named (auto); FOO step identified (auto),
+Sessions,S3 Lock it,One month of Actuals (auto); Key numbers locked (auto); Picture about 90% (auto),
+Sessions,S4 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
+Sessions,S5 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
+Sessions,S6 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
+Sessions,S7 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
+Sessions,S8 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
+Sessions,S9 Revisit,Day 0 vs now report shared (manual),
+Sessions,S10 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
+Sessions,S11 Goals and mindset,This session's goal set (manual); Last session's steps reviewed (manual),Placeholder: the name and checklist can be edited on Home
+Sessions,S12 Graduation,Graduated (manual),Placeholder: the name and checklist can be edited on Home
+Levels,,"Each number has a level, in points. The Picture % is the weighted average of every number's level.",M73; js/registry/program.js LEVELS
+Levels,Missing,0,Nothing typed (or parked with I'll find it later)
+Levels,Gut,25,"A guess: a starter line, Not sure, or the gut spending number"
+Levels,Rough,50,Marked Roughly
+Levels,Estimate,75,Typed and Know it
+Levels,Actual,100,"Confirmed: a month of actuals on a Budget line, a balance from a statement or the bank, or locked by the coach"
+Weights,,"Big items count more. A missing big thing (no income row yet) is one item at Missing, so an empty client reads 0%.",js/registry/program.js WEIGHTS
+Weights,income,3,Each income row's take-home
+Weights,debtBalance,3,Each debt's balance
+Weights,debtApr,1,Each debt's APR
+Weights,account,3,Each account's balance
+Weights,thing,1,"Each home, car or other thing's value"
+Weights,gut,6,"The gut spending number, standing in for the categories until the lines are the source"
+Weights,draftt,2,Each DRAFTT category of Budget lines (the average of its lines' levels)
+Weights,otherLines,1,"The other Budget lines, as one item"
+Weights,age,1,Age (About you)
+Weights,areas,1,What you have today (About you)
+Pace,,The Picture % expected by the end of each session; later sessions hold the session 3 mark. Ahead: at or past this session's mark. On track: within the margin of what was due by now. Catch up: below it.,js/registry/program.js PACE
+Pace,S1,40%,
+Pace,S2,70%,
+Pace,S3,90%,
+Pace,S4,90%,
+Pace,S5,90%,
+Pace,S6,90%,
+Pace,S7,90%,
+Pace,S8,90%,
+Pace,S9,90%,
+Pace,S10,90%,
+Pace,S11,90%,
+Pace,S12,90%,
+Pace,Margin,5 points,
+Unlocks,,"A calculator shows locked, with a plain reason ('Unlocks when spending reaches Estimate (2 of 5 there)'), until every item in each group is at or above the level.",js/registry/program.js UNLOCKS
+Unlocks,FI date,income reaches Estimate (every income item at 75+); spending reaches Estimate (every spending item at 75+); an invested balance is in (every invested item at 25+),
+Unlocks,Coast FI,income reaches Estimate (every income item at 75+); spending reaches Estimate (every spending item at 75+); an invested balance is in (every invested item at 25+); your age is in (every age item at 100+),
+Unlocks,Debt payoff,debts reach Estimate (every debt item at 75+),
+Confidence,,"Once unlocked: High at a weighted input level of 90 or more, Medium at 75 or more, else Low; any input older than the aged-check days drops it one step. Shown instead of the Guess tag.",js/registry/program.js CONFIDENCE
+Snapshots,,"Ending a session saves a snapshot with the key numbers and the Picture %: Day 0 the first time, End of session N after. They live in the client file, so they export and import with it.",js/program.js endSession
+Home,One nav row,"The five tabs (Home, Net worth, Cash flow, Plan, Report). Home has no sub-tab row; About you is a link in the strip and shows the bar with the way back",
+Home,Session strip,"Client name, About you, 'Session N of 12 · name', Next session date, client status; Start session (the one main button) switches the session on: Next step, End session, minutes left, Show all fields",
+Home,Path,"Twelve nodes, done ones ticked, the current one outlined; a node opens its checklist. Auto items tick from the numbers; the rest are checkboxes; placeholder sessions can be renamed and their checklists edited",
+Home,Picture bar,"Picture N% with Ahead, On track or Catch up and the pace sentence; By section opens one bar per section",
+Home,Next small things,"Three cards: +X%, the number, its level now and the step; a button opens the exact field",
+Home,Money in one line,"Net worth, monthly surplus, savings rate, and the FI date locked (with the plain reason) or unlocked (with a confidence label)",
+Home,Hidden when empty,"Payday, open items, the cash dip, runway, Day 0 vs now and net worth over time show only when they have something to say",
+Home,More menu,"Undo, redo, Add anything and the parking lot sit behind one labeled More button in the top bar",
+Home,End session,"Saves the snapshot (Day 0 the first time, End of session N after), the homework, the one-pager, the next date and a backup; then Send summary",

@@ -388,3 +388,7 @@ F385,Built,,Assets,Income gaps,Starts,Secondary,,,,,,,,,Now,Added from the code 
 F386,Built,,Assets,Income gaps,Months,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,whole number,,,gaps.months
 F387,Built,,Assets,Backups,Backup,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,choice,,,backups.kind
 F388,Built,,Assets,Backups,Dollars,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,money,,,backups.amount
+F389,Built,,Income,Income,Locked (confirmed),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,choice,,,income.locked
+F390,Built,,Debt,Debt,Locked (confirmed),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Debt,choice,,,debt.locked
+F391,Built,,Assets,Assets,Locked (confirmed),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,choice,,,assets.locked
+F392,Built,,Needs,Spending lines,Locked (confirmed),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,choice,,,spending.locked

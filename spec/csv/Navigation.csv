@@ -6,7 +6,7 @@ One home per thing,"Every field is entered in exactly one place. Other screens s
 "Tabs are places, buttons are actions","Start Fast Track, Start session and One page are modes, so they're buttons or toggles, not tabs",,
 "Same spot, every screen","Top bar: left = where am I, middle = 5 tabs, right = 8 tools. Sub-tabs always directly under the main tabs",,
 SITE MAP,,,
-Home,About you | Prep | Live | Wrap-up,"About you first (it decides what shows everywhere); session notes, agenda, homework status","Money in one line links to Report, Cash flow and Plan"
+Home,Home | About you,"The session strip (Session N of 12, Start session), the 12-node path and its checklist, the Picture % and pace, the next small things, money in one line; About you first","Money in one line links to Report, Cash flow and Plan; the FI date stays locked until income and spending reach Estimate (Program tab)"
 Home,About you (first stop),"Why now, gates hub (what applies to me), about you, work and home, accounts, couples split",Gates hub links to every gated section; it decides what shows everywhere
 Cash flow,Income,"Paychecks, benefits, variable income, equity pay",Gross starts the Cash flow waterfall; take-home feeds Budget and Report
 Net worth,Debt,"Every debt row, credit score, payoff order",Balance counts in net worth; the payment shows on the Budget as a line From Debt (entered once). Car loan and mortgage also show on Assets (same record)
