@@ -184,7 +184,7 @@ test('S1 to S5 on a couple at -$40k with mixed tags and three debts, switching D
   startSession(d, ref, opts());
   setJoy(d, 1, 3, { now: T.now.toISOString() }); setJoy(d, 1, 6, { person: 'Partner', now: T.now.toISOString() });
   assert.equal(d.doc.settings.person, 'Me');
-  assert.equal(metrics(d.doc, ref, { now: T.now, person: 'Me' }).netWorth.value, 2000 + 3000 - 9500 - 20000);
+  assert.equal(metrics(d.doc, ref, { now: T.now, person: 'Me' }).netWorth.value, 2000 + 1500 - 9500 - 10000, 'Joint rows at half in one person\'s view (answer 157)');
   const ladder = ladderOf(d.doc, ref, opts());
   assert.ok(!ladder.markers.find(k => k.id === 'nwZero').reached && ladder.markers.find(k => k.id === 'nwZero').months > 0, 'net worth positive is a marker ahead');
   const e1 = endSession(d, ref, opts());
@@ -193,13 +193,13 @@ test('S1 to S5 on a couple at -$40k with mixed tags and three debts, switching D
   T.add(30); setHouseholdMode(d, 'Engaged'); startSession(d, ref, opts());
   assert.equal(fingerprint(), before, 'nothing lost on the switch');
   assert.ok(agendaOf(d.doc, ref, opts()).suggestions.filter(s => s.kind === 'mode').length >= 5);
-  assert.equal(metrics(d.doc, ref, { now: T.now }).inputs.filingStatus, 'Single');
+  assert.equal(d.doc.profile.filingStatus, undefined, 'the mode never sets the filing status (answer 155)');
   setJoy(d, 2, 4, { now: T.now.toISOString() }); endSession(d, ref, opts());
   // S3 (Married merged): together by default, filing jointly, an untagged new account is Joint.
   T.add(30); setHouseholdMode(d, 'Married merged'); startSession(d, ref, opts());
   assert.equal(fingerprint(), before, 'nothing lost on the second switch');
   assert.equal(d.doc.settings.person, 'all');
-  assert.equal(metrics(d.doc, ref, { now: T.now }).inputs.filingStatus, 'Married jointly');
+  assert.equal(d.doc.profile.filingStatus, undefined);
   assert.equal(metrics(d.doc, ref, { now: T.now }).netWorth.value, nw0);
   const sc = scorecardOf(d.doc, ref, opts());
   assert.equal(sc.areas.find(a => a.id === 'debt').rating, 'Hole');

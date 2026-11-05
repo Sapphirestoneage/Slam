@@ -40,8 +40,8 @@ test('one config: six modes, three person tags, the names from About you', () =>
   assert.deepEqual(MODE_NAMES, ['Solo', 'Dating', 'Living together', 'Engaged', 'Married separate', 'Married merged']);
   assert.deepEqual(PERSONS, ['Me', 'Partner', 'Joint']);
   assert.ok(!MODES.Solo.couple && MODE_NAMES.slice(1).every(m => MODES[m].couple));
-  assert.equal(MODES['Married merged'].filing, 'Married jointly');
-  assert.equal(MODES['Married separate'].filing, 'Married separately');
+  assert.ok(Object.values(MODES).every(m => m.filing === undefined), 'answer 155: a mode never sets the filing status');
+  assert.ok(MODES.Dating.split, 'answer 156: the shared-bills split is offered in Dating too');
   assert.deepEqual(personLabels(fresh().doc), { Me: 'Ada', Partner: 'Person B', Joint: 'Joint' });
   assert.deepEqual(personLabels(couple().doc), { Me: 'Ada', Partner: 'Bo', Joint: 'Joint' });
   const f = AREAS.find(a => a.id === 'profile').fields.find(x => x.key === 'mode');
@@ -71,25 +71,27 @@ test('the per-person view: net worth and take-home for one person are their rows
   const all = metrics(s.doc, ref, { now }), me = metrics(s.doc, ref, { now, person: 'Me' }), bo = metrics(s.doc, ref, { now, person: 'Partner' });
   assert.equal(all.netWorth.value, 2000 + 1500 + 3000 + 9000 - 9500 - 26000 - 20000);
   assert.ok(all.netWorth.value < -39000 && all.netWorth.value > -41000, `about -$40k: ${all.netWorth.value}`);
-  assert.equal(me.netWorth.value, 2000 + 3000 + 9000 - 9500 - 20000, 'Ada: her rows, the Joint ones, and the 401(k) that reads as hers');
-  assert.equal(bo.netWorth.value, 1500 + 3000 - 26000 - 20000);
+  assert.equal(me.netWorth.value, 2000 + 1500 + 9000 - 9500 - 10000, 'Ada: her rows, half of each Joint one (answer 157), and the 401(k) that reads as hers');
+  assert.equal(bo.netWorth.value, 1500 + 1500 - 26000 - 10000);
+  assert.equal(me.netWorth.value + bo.netWorth.value, all.netWorth.value, 'the two views add up to the household (answer 157)');
   assert.ok(me.inputs.takeHome < all.inputs.takeHome && bo.inputs.takeHome < all.inputs.takeHome, 'one job each');
   assert.equal(me.inputs.debts.length, 2);
   assert.equal(all.inputs.debts.length, 3);
 });
 
-test('switching Dating to Engaged to Married merged keeps every row and tag; only the defaults move (the view, the filing status); the file round-trips', () => {
+test('switching Dating to Engaged to Married merged keeps every row and tag; only the defaults move (the view); the filing status never comes from the mode; the file round-trips', () => {
   const s = couple();
   const before = JSON.stringify(s.doc.records.map(r => [r.id, r.owner ?? null, r.values.balance ?? r.amount ?? null]));
   assert.equal(s.doc.settings.person, 'Me', 'Dating: this client alone by default');
-  assert.equal(metrics(s.doc, ref, { now }).inputs.filingStatus, 'Single');
+  assert.equal(s.doc.profile.filingStatus, undefined, 'blank until typed (answer 155)');
+  assert.equal(metrics(s.doc, ref, { now }).inputs.filingStatus, 'Married jointly', 'the tax math falls back to the Solo or couple rule (R041), not the mode');
   setHouseholdMode(s, 'Engaged');
   assert.equal(s.doc.settings.person, 'Me', 'engaged: own view by default; the merged preview is a tap away');
-  assert.equal(metrics(s.doc, ref, { now }).inputs.filingStatus, 'Single');
+  assert.equal(s.doc.profile.filingStatus, undefined);
   setHouseholdMode(s, 'Married merged');
   assert.equal(s.doc.profile.household, 'Couple');
   assert.equal(s.doc.client.couple, true);
-  assert.equal(metrics(s.doc, ref, { now }).inputs.filingStatus, 'Married jointly');
+  assert.equal(s.doc.profile.filingStatus, undefined, 'still blank after Married merged');
   assert.equal(JSON.stringify(s.doc.records.map(r => [r.id, r.owner ?? null, r.values.balance ?? r.amount ?? null])), before, 'nothing lost');
   s.setDoc('profile', { filingStatus: 'Married separately' });
   assert.equal(metrics(s.doc, ref, { now }).inputs.filingStatus, 'Married separately', 'a typed filing status wins over the mode');

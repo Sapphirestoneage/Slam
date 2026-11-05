@@ -75,7 +75,7 @@ const ORDERS = {
   snowball: (a, b) => a.balance - b.balance,
   // Stress: highest rating first, ties by APR; blank ratings go last (R062).
   stress: (a, b) => (b.stress ?? -1) - (a.stress ?? -1) || b.apr - a.apr,
-  // Return on Hassle (F3, a placeholder): hassle score over balance, highest first; unscored debts last; ties by APR.
+  // Return on Hassle (F3, confirmed Nov 6): hassle score over balance, highest first; unscored debts last; ties by APR.
   hassle: (a, b) => hasslePerDollar(b) - hasslePerDollar(a) || b.apr - a.apr,
 };
 export const hasslePerDollar = d => (d.hassle != null && d.balance > 0 ? d.hassle / d.balance : -1);

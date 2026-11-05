@@ -117,7 +117,7 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   // shows its reason and is never where you are. A coach's override (doc.program.overrides, with a note) opens it.
   const overrides = doc.program?.overrides || {};
   const counts = s => !s.optional && !s.off && !s.locked;
-  const condFacts = { heavy };
+  const condFacts = { heavy, matchLeft: !steps.find(s => s.id === '2')?.done };
   for (const s of steps) {
     const p = PREREQS[s.id];
     if (!p || s.done) continue;
@@ -127,7 +127,7 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
     const wouldLock = !reached || failed.length > 0;
     s.prereq = { after: p.after ?? null, reached, failed: failed.map(k => CONDITIONS[k].label), text: `${p.label}${failed.length ? ` Needs ${failed.map(k => CONDITIONS[k].label).join(' and ')}.` : ''}` };
     if (s.off) continue; // off: nothing to lock yet
-    if (wouldLock && overrides[s.id]?.note) { s.override = overrides[s.id]; s.cost = overrideCost(s, { heavy, m, x }); }
+    if (wouldLock && overrides[s.id]?.note) { s.override = overrides[s.id]; s.cost = overrideCost(s, { heavy, m, x, steps, coast, invested }); }
     else if (wouldLock) s.locked = true;
   }
   // No age: big e has no target, so step 4 is locked with the plain reason (the Rule of 5 needs the age).
@@ -167,9 +167,15 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
 
 // What an override costs, in FI days a year: giving while carrying heavy debt costs that debt's APR on the money; any
 // other early step costs the real return it would have earned.
-function overrideCost(s, { heavy, m, x }) {
+// Answer 150 (batch 5): the Roth before the match costs the match left on the table a year; SPARKS before Coast FI
+// costs the growth the gap to Coast FI would have earned a year.
+function overrideCost(s, { heavy, m, x, steps = [], coast = null, invested = null }) {
+  if (!m.annualSpending) return null;
+  const fiDaysOf = dollars => dollars / (m.annualSpending / 365);
+  if (s.id === '5') { const left = steps.find(t => t.id === '2')?.left ?? 0; if (!left) return null; return { dollars: left, fiDays: fiDaysOf(left), rate: null, text: `Funding the Roth before the match leaves about $${Math.round(left).toLocaleString('en-US')} of match on the table a year: about ${Math.round(fiDaysOf(left))} FI days a year.` }; }
+  if (s.id === '7') { const gap = coast != null && invested != null ? Math.max(0, coast - invested) : 0; if (!gap) return null; const dollars = gap * x.realReturn; return { dollars, fiDays: fiDaysOf(dollars), rate: x.realReturn, text: `Launching before Coast FI gives up the growth on the $${Math.round(gap).toLocaleString('en-US')} still to invest: about ${Math.round(fiDaysOf(dollars))} FI days a year at ${(x.realReturn * 100).toFixed(1)}%.` }; }
   const monthly = s.giveMonthly ?? 0;
-  if (!monthly || !m.annualSpending) return null;
+  if (!monthly) return null;
   const apr = heavy.length ? Math.max(...heavy.map(d => d.apr ?? 0)) : null;
   const rate = apr ?? x.realReturn;
   const dollars = monthly * 12 * rate;

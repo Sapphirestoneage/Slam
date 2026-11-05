@@ -1,4 +1,4 @@
-// Overnight F3: the payoff methods. Avalanche, Snowball, Return on Hassle (placeholder), Stress, Custom; the
+// Overnight F3: the payoff methods. Avalanche, Snowball, Return on Hassle (confirmed, answer 161), Stress, Custom; the
 // suggestion from stress; what a custom order costs against Avalanche. Synthetic debts only.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,7 +15,7 @@ const debts = [
 
 test('five methods in one config; the settings pick and the Debt hole follow it', () => {
   assert.deepEqual(METHOD_IDS, ['avalanche', 'snowball', 'hassle', 'stress', 'custom']);
-  assert.ok(METHODS.find(m => m.id === 'hassle').placeholder, 'Return on Hassle is a placeholder');
+  assert.ok(!METHODS.find(m => m.id === 'hassle').placeholder, 'Return on Hassle is confirmed (answer 161)');
   const pick = AREAS.flatMap(a => a.fields).find(f => f.label === 'Debt payoff order');
   assert.deepEqual(pick.options, METHOD_IDS);
   assert.ok(AREAS.find(a => a.id === 'debt').fields.some(f => f.key === 'hassle'), 'the hassle score is a registered field');

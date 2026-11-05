@@ -377,6 +377,8 @@ export function importInto(store, file) {
   store.snapshot('Before import');
   store.transaction('Import', () => {
     for (const k of ['records', 'parking', 'profile', 'assumptions', 'client', 'spending', 'session', 'program', 'scorecard']) store.doc[k] = incoming[k] ?? {};
+    // Format 11 (batch 5): the money feeling became Confidence; an older file's feelings become this client's Confidence per session.
+    const fe = store.doc.session?.feelings; if (fe && !store.doc.session.confidence) { store.doc.session.confidence = Object.fromEntries(Object.entries(fe).filter(([, v]) => v != null).map(([n, v]) => [n, { at: null, Me: v }])); delete store.doc.session.feelings; }
     store.doc.history.push(...incoming.history.filter(h => !store.doc.history.some(x => x.at === h.at && x.id === h.id && x.field === h.field)));
     // The file's snapshots (Day 0, each session's end) come along; ones already here stay once.
     store.doc.snapshots.push(...(incoming.snapshots || []).filter(s => !store.doc.snapshots.some(x => x.id === s.id)));

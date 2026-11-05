@@ -25,6 +25,7 @@ import { pictureOf, paceOf, unlockOf, confidenceOf, nextSmallThings } from '../m
 import { sessionNo } from '../program.js';
 import { scorecardOf } from '../math/scorecard.js';
 import { ladderOf } from '../math/ladder.js';
+import { saferFi } from '../math/fi.js';
 import { compareOf, netWorthIn } from '../math/proposed.js';
 import { closeStreak } from '../month.js';
 
@@ -281,8 +282,9 @@ export const MATH = [
     sheet: 'IF(SUMIFS(Spend_M21,Spend_fat,1,Spend_InMath,"Yes")=0,"",SUMIFS(Spend_M21,Spend_fat,1,Spend_InMath,"Yes")*12/WithdrawalRate)', app: c => c.targets()['Lean FI'].value },
   { id: 'M52', name: 'Barista FI number', inputs: 'part-time income', unit: 'money', fns: ['fi.baristaFiNumber'],
     sheet: 'IF(OR(Profile_keepJobAfterLaunch="No",RetirementSpending="",PartTimeIncome=""),"",(RetirementSpending-PartTimeIncome)*12/WithdrawalRate)', app: c => c.targets()['Barista FI'].value ?? null },
-  { id: 'M53', name: 'FI date', inputs: 'invested, M28 before-tax saving and match, M27 if invested, M02, M50', unit: 'months', fns: ['fi.fiDate', 'fi.fiRangeOf'],
+  { id: 'M53', name: 'FI date', inputs: 'invested, M28 before-tax saving and match, M27 if invested, M02, M50', unit: 'months', fns: ['fi.fiDate', 'fi.fiRangeOf', 'fi.saferFi'],
     parts: [{ key: 'growth', name: 'Growth a month at the return', unit: 'pct', sheet: '(1+RealReturn)^(1/12)-1', app: c => (1 + c.x.realReturn) ** (1 / 12) - 1 },
+      { key: 'safer', name: 'Safer line: months to FI at the safer withdrawal rate when FI would come before the safer-under age', unit: 'months', fromApp: 'the same path run to spending x 12 / SaferWithdrawal; shown as a second, smaller line (batch 5 C)', app: c => saferFi(c.m, { from: c.now })?.months ?? null },
       // Answers 123 to 125: what goes in each month. The surplus is invested unless InvestSurplus is 0; then only the
       // after-tax contributions and Retirement lines (paid out of the surplus) go in.
       { key: 'invest', name: 'Invested a month: 401(k), HSA, match, plus the surplus (or, with Invest my surplus off, the after-tax contributions and Retirement lines)', unit: 'money',

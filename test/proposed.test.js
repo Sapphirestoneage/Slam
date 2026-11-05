@@ -72,11 +72,17 @@ test('the month-close streak counts back from last month with one grace month', 
   close('2026-06'); // July missed: the grace month
   s = closeStreak(d.doc, now);
   assert.deepEqual([s.months, s.graceUsed], [4, 1]);
-  assert.match(s.words, /4 months in a row \(one grace month used\)/);
+  assert.match(s.words, /4 months in a row \(grace month used in 2026\)/);
   close('2026-03'); // April and May missed: the run stops at June
   assert.equal(closeStreak(d.doc, now).months, 4);
   close('2026-11'); // this month, once closed, counts
   assert.equal(closeStreak(d.doc, now).months, 5);
   d.setIn('spending', ['months', '2026-10', 'closed'], false, 'reopen'); // October open: November, then the grace, then September on
   assert.deepEqual([closeStreak(d.doc, now).months, closeStreak(d.doc, now).graceUsed], [3, 1], 'November, the grace, September and August; July was already missed');
+  // Answer 171: the grace month resets each calendar year. A run from Nov 2026 back through 2025 may forgive one miss in each year.
+  close('2026-10'); close('2026-07'); close('2026-05'); close('2026-04'); close('2026-02'); close('2026-01'); close('2025-12'); close('2025-11'); close('2025-09');
+  d.setIn('spending', ['months', '2026-03', 'closed'], false, 'reopen');
+  const y = closeStreak(d.doc, now); // 2026: Nov to Apr, March missed (grace 2026), Feb, Jan; 2025: Dec, Nov, Oct missed (grace 2025), Sep; Aug missed ends it
+  assert.deepEqual([y.months, y.graceYears], [13, ['2026', '2025']]);
+  assert.equal(y.first, '2025-09');
 });

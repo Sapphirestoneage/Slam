@@ -2,7 +2,7 @@
 // Spending (build phase 6): Budget with five passes, irregular costs, the cash flow calendar and month-end close.
 // Every screen is a view of the same records (R117); the month model lives in js/month.js.
 import { h, clear, icon } from './dom.js';
-import { parseCsv, guessMap, toTransactions, dedupe, suggestLine, importTransactions, saveBankMap, bankMapOf, PDF_WHY } from '../import/csv.js';
+import { parseCsv, guessMap, toTransactions, dedupe, suggestLine, matchIncome, importTransactions, saveBankMap, bankMapOf, PDF_WHY } from '../import/csv.js';
 import { layersOf } from '../math/layers.js';
 import { categoriesOf, categoryJoyOf, rateCategoryJoy } from '../capture.js';
 import { maaserOf, KOSHER_NOTE } from '../community.js';
@@ -73,6 +73,11 @@ export function budgetScreen(app, ctx) {
     S.moreBlock('budget:joy', () => S.live(ctx, () => categoryJoyBlock(ctx)), { label: 'Joy by category' })]; // F6: captured for a later Wrapped
 }
 
+// Answer 168: each Income row's take-home a paycheck and its schedule, for matching money in.
+const PAY_PER_YEAR = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
+function incomesForMatch(ctx) {
+  return ctx.metrics().inputs.income.map(i => { const f = i.r.values?.payFrequency || 'month'; return { id: i.r.id, name: i.r.name || i.r.type, perPay: i.takeHome?.value != null ? i.takeHome.value * 12 / (PAY_PER_YEAR[f] ?? 12) : null, payFrequency: f, nextPayday: i.r.values?.nextPayday ?? null }; });
+}
 // J (overnight): a bank CSV in three steps: the file and the bank, the column map (kept per bank), then a review of
 // each row with its Budget line (suggested from saved rules), duplicates left out; Import puts each amount on its
 // line's month as an actual. PDF stays a stub with its reason on the button.
@@ -96,17 +101,19 @@ function csvImportBlock(app, ctx) {
       if (CSV.map.date == null || (CSV.map.amount == null && CSV.map.debit == null && CSV.map.credit == null)) { S.toast('Pick the date column and an amount column.'); return; }
       if (CSV.bank) saveBankMap(ctx.store, CSV.bank, CSV.map, { hasHeader: CSV.hasHeader });
       const tx = dedupe(toTransactions(CSV.rows, CSV.map, { hasHeader: CSV.hasHeader, bank: CSV.bank || null }), doc.spending?.transactions || []);
-      CSV.list = tx.map(t => ({ ...t, ...suggestLine(t.description, { rules: doc.settings?.csvRules || [], transactions: doc.spending?.transactions || [] }), skip: t.duplicate }));
+      const incomes = incomesForMatch(ctx);
+      CSV.list = tx.map(t => ({ ...t, ...suggestLine(t.description, { rules: doc.settings?.csvRules || [], transactions: doc.spending?.transactions || [] }), ...(matchIncome(t, incomes) || {}), skip: t.duplicate }));
       redraw(); } }), S.button('Start over', { onClick: () => { Object.assign(CSV, { rows: null, map: null, list: null, name: '' }); redraw(); } })));
   if (!CSV.list) return h('div.stack', { style: { gap: '10px' } }, step1, step2);
   const dupes = CSV.list.filter(t => t.duplicate).length;
   const rowOf = (t, i) => h(`div.row-line.csv-row${t.duplicate ? '.muted' : ''}`, { style: { gap: '8px', flexWrap: 'wrap' } },
     S.checkbox('', !t.skip, v => { t.skip = !v; }, { key: `csv:${i}:keep` }), h('span.small', { style: { minWidth: '86px' } }, t.date), h('span', { style: { flex: '1 1 200px' } }, t.description || '(no description)'), h('span.num', {}, money(t.amount)),
-    S.select([['', 'Skip (no line)'], ...lines.map(l => [l.id, l.name || l.values.category || l.type])], t.lineId ?? '', v => { t.lineId = v || null; }, { label: `Line for ${t.description}`, width: 200 }),
-    t.duplicate ? h('span.tag.plain', {}, 'Already imported') : t.why ? h('span.muted.small', {}, t.why) : null);
+    t.amount > 0 ? S.select([['', 'Money in, no paycheck'], ...incomesForMatch(ctx).map(i => [i.id, `Paycheck: ${i.name}`])], t.incomeId ?? '', v => { t.incomeId = v || null; }, { label: `Paycheck for ${t.description}`, width: 200 }) // answer 168
+      : S.select([['', 'Skip (no line)'], ...lines.map(l => [l.id, l.name || l.values.category || l.type])], t.lineId ?? '', v => { t.lineId = v || null; }, { label: `Line for ${t.description}`, width: 200 }),
+    t.duplicate ? h('span.tag.plain', {}, 'Already imported') : t.incomeId ? h('span.muted.small', {}, 'within 5% of a paycheck, near payday') : t.why ? h('span.muted.small', {}, t.why) : null);
   const step3 = h('div.stack', { style: { gap: '6px' } }, h('div.row-line', { style: { gap: '10px' } }, h('strong', {}, `Review ${CSV.list.length} rows`), dupes ? h('span.muted.small', {}, `${dupes} already imported, left out`) : null, h('span.spacer'),
     S.button(`Import ${CSV.list.filter(t => !t.skip && !t.duplicate).length}`, { kind: 'primary', onClick: () => { const r = importTransactions(ctx.store, CSV.list, { bank: CSV.bank || null, now: ctx.now().toISOString() }); Object.assign(CSV, { rows: null, map: null, list: null, name: '' }); S.toast(`${r.imported} imported as actuals; ${r.skipped} left out.`, { undo: () => ctx.store.undo() }); redraw(); } })),
-    h('span.muted.small', {}, 'Money out goes onto its Budget line for that month as an actual (the line counts as Actual). Each line you pick becomes a rule for next time.'),
+    h('span.muted.small', {}, 'Money out goes onto its Budget line for that month as an actual (the line counts as Actual); a paycheck lands on its Income row as the last pay matched. Each line you pick becomes a rule for next time.'),
     ...CSV.list.map(rowOf));
   return h('div.stack', { style: { gap: '10px' } }, step1, step3);
 }

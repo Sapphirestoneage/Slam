@@ -64,6 +64,20 @@ export function fiRangeOf(m, share, { from = new Date() } = {}) {
   return { share, low: lo.value, high: hi.value, highNever: !!hi.never, lowNever: !!lo.never, base: m.monthsToFi.value };
 }
 
+// Batch 5 C (MATH.md flag 1): when FI would come before saferUnderAge, a second line at the safer withdrawal rate
+// (a longer retirement): the FI number at that rate and the months to reach it on the same path. The main line keeps
+// the client's own withdrawal assumption.
+export function saferFi(m, { from = new Date() } = {}) {
+  const x = m.inputs, base = m.monthsToFi.value;
+  if (base == null || x.age == null || isBlank(x.retirementSpending) || isBlank(x.invested)) return null;
+  const fiAge = x.age + base / 12;
+  if (fiAge >= RULES.saferUnderAge) return null;
+  const target = x.retirementSpending * 12 / RULES.saferWithdrawal;
+  const r = fiDate({ invested: x.invested, monthlyInvesting: m.investing?.monthly ?? 0, realReturn: x.realReturn, target }, { from });
+  const monthAt = n => new Date(from.getFullYear(), from.getMonth() + n, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  return { rate: RULES.saferWithdrawal, fiAge, target, months: r.value, never: !!r.never, text: r.never ? `At a safer ${(RULES.saferWithdrawal * 100).toFixed(1)}% for a longer retirement: not on this path within 70 years` : `At a safer ${(RULES.saferWithdrawal * 100).toFixed(1)}% for a longer retirement: FI ${monthAt(r.value)}`, words: `FI at ${Math.round(fiAge)} is a long retirement; ${(RULES.saferWithdrawal * 100).toFixed(1)}% needs ${Math.round(target).toLocaleString('en-US')} instead of ${Math.round(m.fiNumber.value).toLocaleString('en-US')}.` };
+}
+
 // M54: Coast FI number at today's age.
 export function coastFi({ fiNumber: fi, realReturn, age, retireAge }) {
   const m = missing({ 'FI number': fi, 'return': realReturn, age, 'retirement age': retireAge });

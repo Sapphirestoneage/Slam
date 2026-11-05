@@ -3,6 +3,7 @@
 // every number links to its home, where it is typed.
 import { h, clear, icon } from './dom.js';
 import { changeLog } from '../capture.js';
+import { saferFi } from '../math/fi.js';
 import { homeworkList } from '../homework.js';
 import * as S from './staples.js';
 import { sheetButtons } from './sheet-ui.js';
@@ -248,9 +249,11 @@ export function fiCard(ctx, m) {
   // Answer 123: line 1 is the path the FI date assumes; line 2 the other path, only when the two differ.
   const iv = m.investing, alt = iv?.investSurplus ? m.fiPaths?.idle : m.fiPaths?.invested;
   const altWords = words && alt?.value != null ? fiWordsOf({ ...m, monthsToFi: alt, investing: { ...iv, investSurplus: !iv.investSurplus, monthly: iv.investSurplus ? iv.idle : iv.invested } }, g.confidence, { now: ctx.now() }) : null;
+  const safer = words ? saferFi(m, { from: ctx.now() }) : null; // batch 5 C: a second, smaller line under 45
   const lines = !words ? null : h('span.stack.fi-lines', {},
     h('span', {}, iv?.investSurplus ? 'Invest your surplus: ' : 'Surplus sits in checking: ', h('strong', {}, `FI ${words.kind === 'month' ? 'in' : 'around'} ${words.text}`)),
     h('span.muted.small', {}, iv?.investSurplus ? 'assumes your surplus gets invested' : 'assumes the surplus is not invested', ` · ${words.years}`),
+    safer ? h('span.muted.small.fi-safer', { title: safer.words }, safer.text) : null,
     altWords && altWords.text !== words.text ? h('span.muted.small', {}, `${iv?.investSurplus ? 'If it sits in checking' : 'If invested'}: ${altWords.text}`) : alt?.never && words ? h('span.muted.small', {}, `${iv?.investSurplus ? 'If it sits in checking' : 'If invested'}: not on this path`) : null);
   return { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi', home: HOME.fi, lock: g.unlocked ? null : { reason: g.reason, route: g.route }, confidence: g.confidence,
     render: words ? () => words.text : null, note: lines ?? (v == null ? null : `${(v / 12).toFixed(1)} years from now`) };

@@ -23,9 +23,11 @@ export const STEP_WORDS = {
 // Prerequisites: after is the step that must be reached first (every step before it done); conditions are tests on
 // the numbers (CONDITIONS). A locked step's lock text is label, with any failed condition added.
 export const PREREQS = {
+  '5': { conditions: ['matchCaptured'], label: 'The Roth IRA opens once the full employer match is captured. Free money first.' }, // batch 5, answer 150: a lock with a cost
   '5b': { conditions: ['noHeavyDebt'], label: 'Giving unlocks once heavy debt is paid off. Oxygen mask on you first.' }, // no after: heavy debt is the only prerequisite
   '7': { after: '6', label: 'The launch window opens at Coast FI (or Quiet Quitting FI when that toggle is on). Coast FI first, then SPARKS.' },
 };
 export const CONDITIONS = {
   noHeavyDebt: { label: 'no debt at or above the heavy-debt APR', test: f => !f.heavy.length },
+  matchCaptured: { label: 'the full employer match captured', test: f => !f.matchLeft },
 };

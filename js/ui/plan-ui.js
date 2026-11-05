@@ -10,6 +10,7 @@ import { payoffPlan, customOrder, orderCost } from '../math/debt.js';
 import { METHODS, suggestMethod } from '../registry/debt.js';
 import { moneyAsTime } from '../math/fi.js';
 import { compareOf, proposedOf, setProposed, clearProposed, makeProposedThePlan } from '../math/proposed.js';
+import { confidenceOf } from '../program.js';
 import { addMonths, ymOf, monthName, dateOf, monthsBetween } from '../month.js';
 import { winSources } from './spending-ui.js';
 import { money, pct } from '../format.js';
@@ -324,8 +325,7 @@ export function payoffScreen(app, ctx) {
   const plans = Object.fromEntries(ORDER_NAMES.map(([k]) => [k, planDebts(ctx, { order: k, extra: PUI.extraDebt })]));
   const p = plans[order];
   // F3: a suggestion from the client's stress (never forced), the custom order dragged into place, and what it costs against Avalanche.
-  const feelings = Object.entries(ctx.store.doc.session?.feelings || {}).filter(([, v]) => v != null).sort((a, b) => Number(a[0]) - Number(b[0]));
-  const sug = suggestMethod({ feeling: feelings.length ? feelings.at(-1)[1] : null, debts: usable });
+  const sug = suggestMethod({ feeling: confidenceOf(ctx.store.doc).value, debts: usable }); // answer 162: Confidence drives the suggestion
   const sugName = METHODS.find(x => x.id === sug.id)?.name ?? sug.id;
   const suggestion = h('div.row-line', { style: { gap: '8px', marginTop: '8px' } }, h('span.muted.small', {}, `Suggested: ${sugName} (${sug.why})`), sug.id !== order ? S.button(`Use ${sugName}`, { size: 'small', onClick: () => setOrder(sug.id) }) : h('span.tag.plain', {}, 'In use'));
   const ids = ctx.store.doc.settings.debtCustomOrder || [];
@@ -354,7 +354,7 @@ export function payoffScreen(app, ctx) {
     ...soon.map(r => h('div.banner-inline', {}, '⚠ ', `${r.name || r.type}: the 0% promo ends ${r.values.promoEnd}. It moved to the top of the order.`)),
     h('div.card', { style: { marginBottom: '16px' } },
       h('div.slider-row', {}, h('span.label', {}, 'Order'), S.toggle(ORDER_NAMES, order, setOrder, { label: 'Payoff order' }),
-        h('span.muted.small', {}, METHODS.find(x => x.id === order)?.words ?? ''), METHODS.find(x => x.id === order)?.placeholder ? h('span.tag.plain', { title: 'The rule is a placeholder until it is settled' }, 'Placeholder') : null),
+        h('span.muted.small', {}, METHODS.find(x => x.id === order)?.words ?? '')),
       suggestion, customList,
       h('div.slider-row', { style: { marginTop: '10px' } }, h('span.label', {}, 'Extra'), slider, out)),
     S.summaryStrip(ctx, [

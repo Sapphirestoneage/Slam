@@ -18,6 +18,7 @@ import { THRESHOLDS, PAYOFF, AREAS as SCORE_AREAS } from './scorecard.js';
 export const bigEMonthsOf = age => (age == null || Number.isNaN(Number(age)) ? null : Number(age) / 5);
 export const RULES = {
   cardMinimumFloor: 25, cardMinimumPct: 0.01, housingLine: 0.35, bufferWeeks: 2, keepPaceMonths: 60, littleE: 1000,
+  saferWithdrawal: 0.035, saferUnderAge: 45, // batch 5 C: a second FI line at a safer rate when FI would come before this age
   fatFactor: 1.5, trueFiTax: 0.15, heavyApr: 0.08, variableGuessShare: 0.75, maxMonths: 70 * 12,
   roughCheckDays: 30, agedCheckDays: 90,
 };
@@ -101,6 +102,8 @@ export const ASSUMPTIONS = [
   { id: 'rules.cardMinimumFloor', name: 'CardMin_floor', label: 'Card minimum: at least', unit: 'money', get: () => RULES.cardMinimumFloor, source: RULE('js/math/debt.js, M30'), date: '2026-10-28' },
   { id: 'rules.cardMinimumPct', name: 'CardMin_pct', label: 'Card minimum: share of the balance, plus a month of interest', unit: 'pct', get: () => RULES.cardMinimumPct, source: RULE('js/math/debt.js, M30'), date: '2026-10-28' },
   { id: 'rules.housingLine', name: 'Housing_line', label: 'Housing reference line, share of take-home', unit: 'pct', get: () => RULES.housingLine, source: RULE('Math tab, M2A'), date: '2026-10-28' },
+  { id: 'rules.saferWithdrawal', name: 'SaferWithdrawal', label: 'Safer withdrawal rate for a longer retirement (the second FI line)', unit: 'pct', get: () => RULES.saferWithdrawal, source: RULE('js/math/fi.js saferFi; MATH.md flag 1 (batch 5 C)'), date: '2026-11-06' },
+  { id: 'rules.saferUnderAge', name: 'SaferUnderAge', label: 'The second FI line shows when FI would come before this age', unit: 'number', get: () => RULES.saferUnderAge, source: RULE('js/math/fi.js saferFi (batch 5 C)'), date: '2026-11-06' },
   { id: 'rules.bufferWeeks', name: 'BufferWeeks', label: 'Buffer (keeps checking from bouncing): weeks of spending', unit: 'number', get: () => RULES.bufferWeeks, source: RULE('js/math/layers.js, M68; overnight default, Nov 5'), date: '2026-11-05' },
   { id: 'rules.keepPaceMonths', name: 'KeepPace', label: 'Rule of 5 keep pace: spending divided by', unit: 'number', get: () => RULES.keepPaceMonths, source: RULE('js/math/assets.js, M43'), date: '2026-10-28' },
   { id: 'rules.littleE', name: 'LittleE', label: 'little e (most it holds)', unit: 'money', get: () => RULES.littleE, source: RULE('js/math/layers.js, M68'), date: '2026-11-03' },

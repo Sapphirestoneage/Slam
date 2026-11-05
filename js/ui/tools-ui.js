@@ -13,10 +13,10 @@ import { feedbackCard } from './report-this.js';
 import { keyNumbers } from '../math/metrics.js';
 import { statusOf } from '../records.js';
 import { money, pct } from '../format.js';
-import { setHomeworkStatus, setHomeworkPerson, joyOf } from '../program.js';
+import { setHomeworkStatus, setHomeworkPerson, joyOf, confidenceOf } from '../program.js';
 import { HOMEWORK_STATUSES } from '../registry/program.js';
 import { PERSONS, personLabels } from '../registry/couples.js';
-import { JOY } from '../registry/joy.js';
+import { JOY, CONFIDENCE } from '../registry/joy.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const ROUTE = { income: '#/cash-flow/income', benefit: '#/cash-flow/income', debt: '#/net-worth/debt', account: '#/net-worth/assets', asset: '#/net-worth/assets', coverage: '#/net-worth/protection', bill: '#/cash-flow/budget', milestone: '#/plan/goals', event: '#/plan/next-12-months' };
@@ -106,7 +106,7 @@ export function sessionScreen(app, ctx, { fastTrackGap }) {
     h('div.card', {}, h('h3', {}, 'This client'), h('div.stack', { style: { gap: '12px' } },
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Session length'), S.textInput(s.length ?? null, v => ctx.store.setIn('session', ['length'], v === null ? undefined : Number(v), 'Session length'), { hint: `${ctx.ref.defaults.sessionMinutes} min`, width: 110 })),
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Client view'), S.toggle([[false, 'Off'], [true, 'On']], !!app.prefs.clientView, v => app.setPref('clientView', v), { label: 'Client view' }), h('span.muted.small', {}, 'Hides coach-only items')),
-      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, JOY.label), (() => { const j = joyOf(ctx.store.doc); return h('span', {}, j.value != null ? `${j.value} of ${JOY.max}${j.partner != null ? ` · partner ${j.partner}` : ''} (session ${j.n})` : 'Not asked yet'); })(), h('span.muted.small', {}, 'Asked on Home at the start of each session; replaces Satisfaction')), // F4
+      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Confidence and Joy'), (() => { const c = confidenceOf(ctx.store.doc), j = joyOf(ctx.store.doc); const w = (M, v) => (v.value != null ? `${M.label} ${v.value} of ${M.max}${v.partner != null ? ` (partner ${v.partner})` : ''}` : `${M.label} not asked yet`); return h('span', {}, `${w(CONFIDENCE, c)} · ${w(JOY, j)}`); })(), h('span.muted.small', {}, 'Asked on Home at the start of each session')), // F4, answer 164
       // Answer to 49: the one-holding-over-25% flag, on unless the coach turns it off for this client.
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Concentration flag'), S.toggle([[true, 'On'], [false, 'Off']], !s.concentrationOff, v => ctx.store.setIn('session', ['concentrationOff'], !v, 'Concentration flag'), { label: 'Concentration flag' }),
         h('span.muted.small', {}, 'Flags one holding or theme over 25% of an account')),

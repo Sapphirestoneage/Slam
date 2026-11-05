@@ -133,6 +133,7 @@ export const AREAS = [
       f('payDay', 'Payday (day of month)', 'day', { kinds: ['income'] }),
       f('payDays', 'Paydays (twice a month)', 'list', { kinds: ['income'] }),
       f('nextPayday', 'Next payday', 'date', { kinds: ['income'] }),
+      f('actualPay', 'Last paycheck matched', 'money', { kinds: ['income'] }), f('actualPayDate', 'Last paycheck date', 'date', { kinds: ['income'] }), // answer 168: from a bank CSV; the row counts as Actual
       pick('incomeType', 'Tax type', ['W-2', '1099', 'Business', 'Side hustle', 'Rental', 'Benefits', 'Other'], { kinds: ['income'] }),
       pick('incomeKind', 'Income type', ['Salary', 'Side hustle', 'Windfall', 'Other'], { kinds: ['income'] }), // F6: for a later Wrapped; blank reads from the row's type (js/capture.js)
       f('contributionPct', '401(k) %', 'pct', { kinds: ['income'] }),

@@ -320,20 +320,23 @@ export function closedMonths(doc) {
     .map(([ym, m]) => ({ ym, guess: m.summary.gut, actual: m.summary.actual, estimate: m.summary.estimate })).sort((a, b) => a.ym.localeCompare(b.ym));
 }
 
-// L (overnight): months closed in a row, counted back from last month (this month counts once closed), with one
-// grace month: one missed month inside the run does not break it; a second does.
+// L (overnight), answer 171: months closed in a row, counted back from last month (this month counts once closed),
+// with one grace month per calendar year: a missed month inside the run is forgiven once in each year it falls in.
 export function closeStreak(doc, now = new Date()) {
   const closed = new Set(closedMonths(doc).map(m => m.ym));
   const thisYm = ymOf(now);
   let ym = closed.has(thisYm) ? thisYm : addMonths(thisYm, -1);
-  let months = 0, grace = 0, last = null, first = null;
+  let months = 0, last = null, first = null;
+  const graceYears = [];
   for (let i = 0; i < 240; i++) {
+    const year = ym.slice(0, 4);
     if (closed.has(ym)) { months += 1; last ??= ym; first = ym; }
-    else if (months > 0 && grace === 0 && closed.has(addMonths(ym, -1))) { grace = 1; }
+    else if (months > 0 && !graceYears.includes(year) && closed.has(addMonths(ym, -1))) { graceYears.push(year); }
     else break;
     ym = addMonths(ym, -1);
   }
-  return { months, graceUsed: grace, first, last, words: months ? `${months} ${months === 1 ? 'month' : 'months'} in a row${grace ? ' (one grace month used)' : ''}` : 'No closed months yet' };
+  const grace = graceYears.length;
+  return { months, graceUsed: grace, graceYears, first, last, words: months ? `${months} ${months === 1 ? 'month' : 'months'} in a row${grace ? ` (grace month used in ${graceYears.join(', ')})` : ''}` : 'No closed months yet' };
 }
 
 // Calendar mark (R091 to R094).

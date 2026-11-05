@@ -5,7 +5,7 @@ import { statusOf } from '../records.js';
 import { isBlank, needs } from './result.js';
 import { monthlyFrom, incomeRow, defaultFilingStatus } from './income.js';
 import { gatesOf, visible } from '../gates.js';
-import { inView, modeOf, MODES, ownerOf } from '../registry/couples.js';
+import { inView, modeOf, MODES, ownerOf, forPerson } from '../registry/couples.js';
 import { myShare, withHome, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor } from './spending.js';
 import { cardMinimum, payoffMonths, totalInterest, payoffPlan } from './debt.js';
 import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
@@ -40,8 +40,8 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   const gates = gatesOf(doc.profile, doc.client);
   const mode = modeOf(doc.profile);
   const liveAll = visible(doc.records, gates, ref); // gated-out rows count nowhere (R001, R066)
-  const live = liveAll.filter(r => inView(r, person, mode)); // a person view keeps theirs and the Joint ones (F2)
-  const filingStatus = doc.profile.filingStatus ?? (mode ? MODES[mode].filing : defaultFilingStatus(gates.couple)); // R043; F2: the mode's default
+  const live = liveAll.filter(r => inView(r, person, mode)).map(r => forPerson(r, person, mode)); // a person view keeps theirs and the Joint ones at half (F2, answer 157)
+  const filingStatus = doc.profile.filingStatus ?? defaultFilingStatus(gates.couple); // R043 and R041; never from the household mode (answer 155)
   const place = placeOf(doc.profile); // B5.1: NY and NYC tax when the Profile says so
   const link = link401k(live); // B3.10: Income and the 401(k) fill each other in
   // Answer to Brandon question 71: the Health coverage row owns the premium. Paid from the paycheck, the job borrows

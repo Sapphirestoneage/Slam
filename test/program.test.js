@@ -270,7 +270,7 @@ test('Day 0: the first end of session saves it, later ends save End of session N
   assert.equal(e.doc.snapshots.filter(x => x.label.startsWith('End of session')).length, 1);
   assert.equal(e.doc.session.count, 2);
   const rep = day0Report(d.doc, ref, { now });
-  assert.deepEqual(rep.rows.map(r => r.key), ['netWorth', 'debtTotal', 'surplus', 'savingsRate', 'picturePct', 'scoreOk', 'joy']); // F4: Joy is a row
+  assert.deepEqual(rep.rows.map(r => r.key), ['netWorth', 'debtTotal', 'surplus', 'savingsRate', 'picturePct', 'scoreOk', 'confidence', 'joy']); // F4, answer 164: Confidence and Joy are rows
   assert.equal(rep.rows[0].change, 0);
 });
 

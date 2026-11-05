@@ -10,8 +10,8 @@ import { gatesOf, visible } from '../gates.js';
 import { ruleOf5 } from './assets.js';
 import { utilization, debtToIncome } from './debt.js';
 import { moneyAsTime } from './fi.js';
-// The latest Joy answer (F4), read here so the Scorecard never imports the program.
-const joyLatest = doc => { const all = Object.entries(doc.session?.joy || {}).map(([k, v]) => [Number(k), v?.Me ?? v?.Partner ?? null]).filter(([, v]) => v != null).sort((a, b) => a[0] - b[0]); return all.length ? all.at(-1)[1] : null; };
+// The latest Confidence (answer 164; the old money feeling in session.feelings reads as Confidence), read here so the Scorecard never imports the program.
+const confidenceLatest = doc => { const own = Object.entries(doc.session?.confidence || {}).map(([k, v]) => [Number(k), v?.Me ?? null]); const old = Object.entries(doc.session?.feelings || {}).map(([k, v]) => [Number(k), v]); const all = [...own, ...old].filter(([, v]) => v != null).sort((a, b) => a[0] - b[0]); return all.length ? all.at(-1)[1] : null; };
 import { taxRates } from './income.js';
 import { fmt } from './result.js';
 import { projection } from '../plan.js';
@@ -53,7 +53,6 @@ export function factsOf(doc, ref, { now = new Date(), flags = [] } = {}) {
   const cards = live.filter(r => r.kind === 'debt' && r.type === 'Credit card').map(r => ({ balance: r.values.balance, limit: r.values.limit }));
   const util = utilization(cards);
   const coverage = live.filter(r => r.kind === 'coverage');
-  const feelings = Object.entries(doc.session?.feelings || {}).filter(([, v]) => v != null).sort((a, b) => Number(a[0]) - Number(b[0]));
   return {
     m, x, F, here: F?.here ?? null, gross, heavy, payments,
     debtTotal: sum(x.debts, d => d.balance),
@@ -67,7 +66,7 @@ export function factsOf(doc, ref, { now = new Date(), flags = [] } = {}) {
     matchOffered: (x.link.incomeTiers || []).length > 0, matchLeft: step('2')?.left ?? 0, // dollars a year
     employed: g.employer && x.income.length > 0, betweenJobs: g.betweenJobs, stability: p.incomeStability ?? null,
     coverage, have: type => coverage.find(r => r.type === type)?.values.have ?? null, dependents: p.dependents ?? null,
-    goals: goalsOf(doc, ref, m, now), feeling: feelings.length ? feelings.at(-1)[1] : null, joy: joyLatest(doc), // F4: Joy is an input when no feeling is typed
+    goals: goalsOf(doc, ref, m, now), feeling: confidenceLatest(doc), // answer 164: Confidence rates Mindset (Joy is the local measure, not an input here)
     typicalCardApr: ref.typicalRates['Credit card'], realReturn: x.realReturn,
   };
 }
@@ -148,11 +147,10 @@ const RULE = {
     return rate('Hole', 'No goals named yet.');
   },
   mindset: f => {
-    if (f.feeling == null && f.joy != null) { const j = f.joy; return j >= T.mindset.strong ? rate('Strong', `Joy ${j} of 10 (no money feeling typed).`) : j <= T.mindset.hole ? rate('Hole', `Joy ${j} of 10 (no money feeling typed).`) : rate('OK', `Joy ${j} of 10; ${T.mindset.strong} is the strong line.`); }
     if (f.feeling == null) return null;
-    if (f.feeling >= T.mindset.strong) return rate('Strong', `Money feeling ${f.feeling} of 10.`);
-    if (f.feeling <= T.mindset.hole) return rate('Hole', `Money feeling ${f.feeling} of 10.`);
-    return rate('OK', `Money feeling ${f.feeling} of 10; ${T.mindset.strong} is the strong line.`);
+    if (f.feeling >= T.mindset.strong) return rate('Strong', `Confidence ${f.feeling} of 10.`);
+    if (f.feeling <= T.mindset.hole) return rate('Hole', `Confidence ${f.feeling} of 10.`);
+    return rate('OK', `Confidence ${f.feeling} of 10; ${T.mindset.strong} is the strong line.`);
   },
 };
 

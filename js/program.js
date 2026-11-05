@@ -10,7 +10,7 @@ import { SESSIONS, PACE, LEVELS, REVIEW, AGENDA, HOMEWORK_STATUSES, levelWord } 
 import { homeworkList } from './homework.js';
 import { MODES, modeOf, DISCLOSURE } from './registry/couples.js';
 import { layerSnapshot } from './math/layers.js';
-import { JOY } from './registry/joy.js';
+import { JOY, CONFIDENCE } from './registry/joy.js';
 import { fmt } from './math/result.js';
 import { scorecardOf, ratingOf } from './math/scorecard.js';
 import { THRESHOLDS } from './registry/scorecard.js';
@@ -213,31 +213,44 @@ export function programOf(doc, ref, { now = new Date(), flags = [] } = {}) {
 // hole was worth), so Day 0 vs now and Holes filled can look back.
 export function snapshotNumbers(doc, ref, { now = new Date(), flags = [] } = {}) {
   const sc = scorecardOf(doc, ref, { now, flags });
-  const joy = joyOf(doc);
-  return { ...keyNumbers(metrics(doc, ref, { now })), picturePct: pictureOf(doc, ref, { now }).pct, scoreOk: sc.okCount, scoreOf: sc.of, joy: joy.value, joyPartner: joy.partner, // F4: the Joy number rides in every snapshot
+  const joy = joyOf(doc), conf = confidenceOf(doc);
+  return { ...keyNumbers(metrics(doc, ref, { now })), picturePct: pictureOf(doc, ref, { now }).pct, scoreOk: sc.okCount, scoreOf: sc.of, joy: joy.value, joyPartner: joy.partner, confidence: conf.value, confidencePartner: conf.partner, // F4: both measures ride in every snapshot
     scorecard: Object.fromEntries(sc.areas.map(a => [a.id, { rating: a.rating, payoff: a.payoff?.value ?? null, fiDays: a.fiDays }])) };
 }
 
-// ---------- The Joy number (F4): asked at the start of each session, one per person in a couple ----------
-// Stored in doc.session.joy[n] = { at, Me, Partner }. joyOf: the latest answer (this client's, and the partner's).
-export function setJoy(store, n, value, { person = 'Me', now = store.now() } = {}) {
-  if (value != null && (value < JOY.min || value > JOY.max)) throw new Error(`Joy is ${JOY.min} to ${JOY.max}`);
-  const cur = store.doc.session?.joy?.[String(n)] || {};
-  store.setIn('session', ['joy', String(n)], { ...cur, at: now, [person]: value ?? undefined }, 'Joy');
+// ---------- Confidence and Joy (F4, answer 164): asked together at the start of each session, one per person ----------
+// Stored in doc.session[measure.key][n] = { at, Me, Partner }. The old money feeling (session.feelings[n], a number)
+// reads as this client's Confidence until a Confidence is typed for that session.
+function measureEntries(doc, M) {
+  const own = Object.entries(doc.session?.[M.key] || {}).map(([k, v]) => ({ n: Number(k), ...v }));
+  const old = M.key === 'confidence' ? Object.entries(doc.session?.feelings || {}).filter(([k, v]) => v != null && !own.some(o => o.n === Number(k) && (o.Me != null || o.Partner != null))).map(([k, v]) => ({ n: Number(k), Me: v, at: null })) : [];
+  return [...own, ...old].filter(j => j.Me != null || j.Partner != null).sort((a, b) => a.n - b.n);
 }
-export function joyOf(doc, n = null) {
-  const all = Object.entries(doc.session?.joy || {}).map(([k, v]) => ({ n: Number(k), ...v })).filter(j => j.Me != null || j.Partner != null).sort((a, b) => a.n - b.n);
+export function setMeasure(store, M, n, value, { person = 'Me', now = store.now() } = {}) {
+  if (value != null && (value < M.min || value > M.max)) throw new Error(`${M.label} is ${M.min} to ${M.max}`);
+  const cur = store.doc.session?.[M.key]?.[String(n)] || {};
+  store.setIn('session', [M.key, String(n)], { ...cur, at: now, [person]: value ?? undefined }, M.label);
+}
+export function measureOf(doc, M, n = null) {
+  const all = measureEntries(doc, M);
   const pick = n == null ? all.at(-1) : all.find(j => j.n === n);
   return { value: pick?.Me ?? null, partner: pick?.Partner ?? null, n: pick?.n ?? null, at: pick?.at ?? null, asked: n == null ? all.length > 0 : !!pick };
 }
-// Day 0 to now: one point per snapshot that carries a joy, plus the latest answer when it is newer than the last snapshot.
-export function joyHistory(doc) {
-  const pts = (doc.snapshots || []).filter(s => s.metrics && (s.metrics.joy != null || s.metrics.joyPartner != null)).map(s => ({ at: s.at, label: s.label, session: s.session ?? null, value: s.metrics.joy ?? null, partner: s.metrics.joyPartner ?? null }));
-  const latest = joyOf(doc);
+// Day 0 to now: one point per snapshot that carries the measure, plus the latest answer when it is newer than the last snapshot.
+export function measureHistory(doc, M) {
+  const k = M.key, kp = `${k}Partner`;
+  const pts = (doc.snapshots || []).filter(s => s.metrics && (s.metrics[k] != null || s.metrics[kp] != null)).map(s => ({ at: s.at, label: s.label, session: s.session ?? null, value: s.metrics[k] ?? null, partner: s.metrics[kp] ?? null }));
+  const latest = measureOf(doc, M);
   if (latest.n != null && (!pts.length || latest.n > (pts.at(-1).session ?? -1))) pts.push({ at: latest.at, label: `Session ${latest.n}`, session: latest.n, value: latest.value, partner: latest.partner }); // answered this session, no snapshot yet
   const day0 = pts.find(p => /Day 0/.test(p.label)) ?? pts[0] ?? null;
   return { points: pts, day0: day0 ? day0.value : null, latest: latest.value, latestPartner: latest.partner, change: day0 && latest.value != null && day0.value != null ? latest.value - day0.value : null };
 }
+export const setJoy = (store, n, value, opts) => setMeasure(store, JOY, n, value, opts);
+export const joyOf = (doc, n = null) => measureOf(doc, JOY, n);
+export const joyHistory = doc => measureHistory(doc, JOY);
+export const setConfidence = (store, n, value, opts) => setMeasure(store, CONFIDENCE, n, value, opts);
+export const confidenceOf = (doc, n = null) => measureOf(doc, CONFIDENCE, n);
+export const confidenceHistory = doc => measureHistory(doc, CONFIDENCE);
 
 // Start: the session is on, Guide me is on, focus mode is on (answer 90). A hole session pulls the top hole.
 export function startSession(store, ref = null, { now = new Date(), flags = [] } = {}) {
@@ -369,7 +382,7 @@ export function day0Report(doc, ref, { now = new Date() } = {}) {
   if (!d0) return null;
   const then = d0.metrics || {};
   const nowNumbers = snapshotNumbers(doc, ref, { now });
-  const rows = [['Net worth', 'netWorth', 'money'], ['Total debt', 'debtTotal', 'money'], ['Monthly surplus', 'surplus', 'money'], ['Savings rate', 'savingsRate', 'pct'], ['Picture', 'picturePct', 'pct'], ['Areas Strong or OK', 'scoreOk', 'count'], [JOY.label, 'joy', 'count']]
+  const rows = [['Net worth', 'netWorth', 'money'], ['Total debt', 'debtTotal', 'money'], ['Monthly surplus', 'surplus', 'money'], ['Savings rate', 'savingsRate', 'pct'], ['Picture', 'picturePct', 'pct'], ['Areas Strong or OK', 'scoreOk', 'count'], [CONFIDENCE.label, 'confidence', 'count'], [JOY.label, 'joy', 'count']]
     .map(([label, key, unit]) => ({ label, key, unit, then: then[key] ?? null, now: nowNumbers[key] ?? null, change: then[key] == null || nowNumbers[key] == null ? null : nowNumbers[key] - then[key] }));
   return { at: d0.at, rows };
 }

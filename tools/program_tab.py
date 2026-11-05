@@ -25,9 +25,9 @@ import { ORDER, STEP_WORDS, PREREQS, CONDITIONS } from './js/registry/foo.js';
 import { STEPS, MARKERS, LADDER } from './js/registry/ladder.js';
 import { MODES, PERSONS, ONE_PERSON_TYPES } from './js/registry/couples.js';
 import { METHODS, SUGGEST } from './js/registry/debt.js';
-import { JOY } from './js/registry/joy.js';
+import { JOY, CONFIDENCE as CONF_MEASURE } from './js/registry/joy.js';
 const prereqs = Object.fromEntries(Object.entries(PREREQS).map(([k, p]) => [k, { ...p, conditions: (p.conditions || []).map(c => CONDITIONS[c].label) }]));
-console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs }, LADDER: { STEPS, MARKERS, LADDER }, COUPLES: { MODES, PERSONS, ONE_PERSON_TYPES }, DEBT: { METHODS, SUGGEST }, JOY }));
+console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs }, LADDER: { STEPS, MARKERS, LADDER }, COUPLES: { MODES, PERSONS, ONE_PERSON_TYPES }, DEBT: { METHODS, SUGGEST }, JOY, CONF: CONF_MEASURE }));
 """
 RULE_WORDS = {
     "cashFlow": "The headline savings rate: Strong at or over strong, OK at or over ok, else Hole; a negative surplus is a Hole",
@@ -177,10 +177,10 @@ def main():
     db = cfg["DEBT"]
     row("Debt payoff", "", "Each method is its own calculator on Plan › Debt payoff (M34), with the same extra a month. A suggestion comes from the client's stress and is never forced: a money feeling at or under " + str(db["SUGGEST"]["lowFeeling"]) + " of 10, or any debt rated " + str(db["SUGGEST"]["debtStress"]) + "+ for stress, points to Snowball (Return on Hassle once hassle scores are typed); a feeling at or over " + str(db["SUGGEST"]["highFeeling"]) + " points to Avalanche; otherwise Avalanche. The Debt hole on the Scorecard links here.", "js/registry/debt.js; js/math/debt.js ORDERS")
     for m in db["METHODS"]:
-        row("Debt payoff", m["name"], m["words"], ("Default" if m.get("default") else "") + ("Placeholder (QUESTIONS: the rule)" if m.get("placeholder") else ""))
+        row("Debt payoff", m["name"], m["words"], "Default" if m.get("default") else "")
     # The Joy number (overnight F4).
-    jy = cfg["JOY"]
-    row("Joy", "", f"Its own number, separate from the Mindset area and the money feeling. Asked on Home at the start of every session: '{jy['question']}' ({jy['min']} {jy['low'].lower()} to {jy['max']} {jy['high'].lower()}), one answer per person in a couple. Kept per session in the client file, stored in every snapshot, charted from Day 0 on Home under '{jy['label']}', and a row on Day 0 vs now. It replaces Satisfaction in Coach tools. Mindset reads it only when no money feeling is typed.", "js/registry/joy.js; js/program.js setJoy, joyOf, joyHistory")
+    jy, cf = cfg["JOY"], cfg["CONF"]
+    row("Confidence and Joy", "", f"Two numbers, asked together on Home at the start of every session in one small prompt, one answer per person in a couple, kept per session, stored in every snapshot, charted from Day 0 on Home as a slim pair, and rows on Day 0 vs now (answer 164). Confidence (the meta measure, the old money feeling): '{cf['question']}' ({cf['min']} {cf['low'].lower()} to {cf['max']} {cf['high'].lower()}); it rates the Mindset area and drives the debt method suggestion. Joy (the local measure): '{jy['question']}' ({jy['min']} {jy['low'].lower()} to {jy['max']} {jy['high'].lower()}); it pairs with the category joy ratings on the Budget. An older file's money feeling imports as Confidence.", "js/registry/joy.js; js/program.js setMeasure, measureOf, measureHistory")
     # Captured now for later (overnight F6).
     row("Captured", "", "Data kept in the client file for a later Wrapped or Kanban, with the least UI: a dated joy rating (1 to 5) per spending category (Budget › Joy by category); a Trip tag on Budget lines and calendar entries; an income type on each income row (Salary, Side hustle, Windfall, Other; blank reads from the row's type); and a change log on every edit with the field, the old and new value, who (Coach, or Client when Client view is on) and the time. All of it exports and imports with the file; the Captured tab of the workbook lists it.", "js/capture.js; js/records.js _log; Report › History › Change log")
     # Phase 4 starts (overnight H and I).
@@ -193,7 +193,7 @@ def main():
     cp = cfg["COUPLES"]
     row("Couples", "", "Every income row, account, debt, goal and homework item carries an Owner tag: " + ", ".join(cp["PERSONS"]) + " (shown as the two first names, or Person A and Person B until typed). A retirement or health account is always one person's: " + ", ".join(cp["ONE_PERSON_TYPES"]) + ". The household mode on About you sets Solo or couple, the default person view on Net worth and Cash flow, and the filing status assumed until one is typed. Switching modes keeps every row and tag.", "js/registry/couples.js; js/couples.js setHouseholdMode; Net worth and Cash flow strips")
     for name, m in cp["MODES"].items():
-        row("Couples", f"Mode: {name}", m["words"], f"couple {'yes' if m['couple'] else 'no'}; default view {'together' if m['view'] == 'all' else 'this client'}; filing {m['filing']}; new accounts {'Joint' if m['merged'] else 'one person'}")
+        row("Couples", f"Mode: {name}", m["words"], f"couple {'yes' if m['couple'] else 'no'}; default view {'together' if m['view'] == 'all' else 'this client'}; filing status never from the mode (answer 155); new accounts {'Joint' if m['merged'] else 'one person'}")
 
     for r, (kind, cells) in enumerate(rows, 1):
         src = {"title": title_src, "head": head_src, "body": body_src}[kind]

@@ -34,7 +34,7 @@ export const THRESHOLDS = {
   retirement: { strongPct: 0.15 }, // 401(k), HSA and after-tax retirement saving as a share of gross; match left on the table is a hole
   investing: { strongPct: 0.15 }, // what goes into investments a month as a share of take-home
   goals: { count: 3 }, // three short-term and three long-term goals, each with an amount, a date and a tag (S4)
-  mindset: { strong: 7, hole: 4 }, // the money feeling, 1 to 10, asked at the end of each session
+  mindset: { strong: 7, hole: 4 }, // Confidence (how confident vs afraid), 1 to 10, asked at the start of each session (answer 164)
 };
 
 // How a hole's payoff (dollars a year) is worked out. Areas with no rule take a payoff typed by the coach.

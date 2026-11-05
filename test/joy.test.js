@@ -2,10 +2,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { Store, newHousehold } from '../js/records.js';
+import { Store, newHousehold, exportFile, importInto } from '../js/records.js';
 import { householdFromInputs } from '../js/demo.js';
-import { JOY } from '../js/registry/joy.js';
-import { setJoy, joyOf, joyHistory, snapshotNumbers, startSession, endSession, day0Report } from '../js/program.js';
+import { JOY, CONFIDENCE, MEASURES } from '../js/registry/joy.js';
+import { setJoy, joyOf, joyHistory, snapshotNumbers, startSession, endSession, day0Report, setConfidence, confidenceOf, confidenceHistory } from '../js/program.js';
 import { scorecardOf } from '../js/math/scorecard.js';
 import { setHouseholdMode } from '../js/couples.js';
 
@@ -53,14 +53,30 @@ test('every snapshot carries Joy; the history runs Day 0 to now; Day 0 vs now sh
   assert.equal(snapshotNumbers(d.doc, ref, { now: later }).joy, 7);
 });
 
-test('Mindset reads Joy only when no money feeling is typed', () => {
+test('answer 164: Confidence rates Mindset, Joy does not; both are asked, kept, snapshotted and charted; an old money feeling reads and imports as Confidence', () => {
   const d = demoStore();
   const area = () => scorecardOf(d.doc, ref, { now }).areas.find(a => a.id === 'mindset');
   assert.equal(area().rating, null);
   setJoy(d, 1, 3);
+  assert.equal(area().rating, null, 'Joy is the local measure, not a Mindset input');
+  setConfidence(d, 1, 3);
   assert.equal(area().rating, 'Hole');
-  assert.match(area().reason, /Joy 3 of 10/);
-  d.setIn('session', ['feelings', '1'], 8, 'Money feeling');
+  assert.match(area().reason, /Confidence 3 of 10/);
+  assert.equal(CONFIDENCE.question, 'How confident (vs afraid) do you feel about your money?');
+  assert.deepEqual(MEASURES.map(m => m.label), ['Confidence', 'Joy']);
+  d.setIn('session', ['feelings', '2'], 8, 'Money feeling'); // an older file's money feeling for session 2
+  assert.equal(confidenceOf(d.doc).value, 8, 'the old money feeling reads as Confidence');
   assert.equal(area().rating, 'Strong');
-  assert.match(area().reason, /Money feeling 8/);
+  startSession(d, ref, { now }); endSession(d, ref, { now });
+  const snap = d.lastSnapshot();
+  assert.deepEqual([snap.metrics.confidence, snap.metrics.joy], [8, 3], 'both measures in the snapshot');
+  assert.equal(confidenceHistory(d.doc).day0, 8);
+  assert.ok(day0Report(d.doc, ref, { now }).rows.some(r => r.key === 'confidence') && day0Report(d.doc, ref, { now }).rows.some(r => r.key === 'joy'));
+  // An old file with feelings only imports as Confidence.
+  const t = demoStore();
+  const file = JSON.parse(JSON.stringify(exportFile(d.doc)));
+  delete file.household.session.confidence; file.household.session.feelings = { 1: 5 };
+  importInto(t, file);
+  assert.equal(t.doc.session.confidence['1'].Me, 5); assert.equal(t.doc.session.feelings, undefined);
+  assert.equal(confidenceOf(t.doc, 1).value, 5);
 });
