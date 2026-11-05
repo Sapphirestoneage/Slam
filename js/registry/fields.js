@@ -134,6 +134,7 @@ export const AREAS = [
       f('payDays', 'Paydays (twice a month)', 'list', { kinds: ['income'] }),
       f('nextPayday', 'Next payday', 'date', { kinds: ['income'] }),
       pick('incomeType', 'Tax type', ['W-2', '1099', 'Business', 'Side hustle', 'Rental', 'Benefits', 'Other'], { kinds: ['income'] }),
+      pick('incomeKind', 'Income type', ['Salary', 'Side hustle', 'Windfall', 'Other'], { kinds: ['income'] }), // F6: for a later Wrapped; blank reads from the row's type (js/capture.js)
       f('contributionPct', '401(k) %', 'pct', { kinds: ['income'] }),
       f('k401Paycheck', '401(k) a paycheck', 'money', { kinds: ['income'] }), // Income's first pass at the 401(k)
       pick('hasMatch', 'Employer match?', ['Yes', 'No', "Don't know"], { kinds: ['income'] }),
@@ -318,6 +319,7 @@ export const AREAS = [
       pick('repeats', 'Repeats', ['Never', 'Weekly', 'Every 2 weeks', 'Twice a month', 'Monthly', 'Yearly'], { kinds: ['entry'] }),
       f('endsOn', 'Ends on', 'date', { kinds: ['entry'] }),
       f('category', 'Counts as', 'text', { kinds: ['entry'] }),
+      f('trip', 'Trip', 'yesno', { kinds: ['entry'] }), // F6: the Trip tag on a calendar entry
       f('lineId', 'Budget line', 'text', { kinds: ['entry'], sheet: { skip: 'points at a Budget line by its id; pick it in SLAM' } }),
       NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS,
     ].map(x => (['per', 'owner', 'stress'].includes(x.key) ? { ...x, unused: true, sheet: { skip: 'not used on calendar entries' } } : x)),
@@ -371,6 +373,7 @@ export const NOT_IN_SHEET = {
   'settings.layerAccounts': 'which account holds each cash layer; set on Cash layers',
   'settings.person': 'the person filter on Net worth and Cash flow (all, Me, Partner), a screen setting (F2)',
   'settings.debtCustomOrder': 'the custom payoff order, debt ids dragged into place on Plan › Debt payoff (F3)',
+  'spending.categoryJoy': 'dated joy ratings (1 to 5) per spending category, rated on the Budget (F6); the Captured tab lists them',
   'spending.basics': 'Fast Track totals, kept to compare with the lines',
   'spending.calendar': 'calendar marks (paid, moved, partial) and the starting balance; set on the calendar',
   'spending.months.closed': 'month-end close state; set on Month end',

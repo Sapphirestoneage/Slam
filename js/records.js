@@ -120,7 +120,8 @@ export class Store {
       assumptions: this.doc.assumptions, client: this.doc.client, spending: this.doc.spending, session: this.doc.session, program: this.doc.program, scorecard: this.doc.scorecard, settings });
   }
   // store.source, while set, marks every history entry with where the change came from (the spreadsheet import).
-  _log(entry) { this.doc.history.push({ at: this._tx?.at || this.now(), ...entry, ...(this.source ? { source: this.source } : {}) }); }
+  // who (F6): Coach, or Client when Client view is on (the client at the keyboard); every entry carries it.
+  _log(entry) { this.doc.history.push({ at: this._tx?.at || this.now(), ...entry, who: this.who ?? 'Coach', ...(this.source ? { source: this.source } : {}) }); }
 
   // after: put the new row right below that one (Enter in a row, R168).
   add(kind, fields = {}, { type = fields.type ?? null, after = null } = {}) {

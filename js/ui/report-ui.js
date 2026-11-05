@@ -2,6 +2,7 @@
 // Report (build phase 8): Overview (donuts, metrics shelf, Sankey), One-pager, History. Read only:
 // every number links to its home, where it is typed.
 import { h, clear, icon } from './dom.js';
+import { changeLog } from '../capture.js';
 import { homeworkList } from '../homework.js';
 import * as S from './staples.js';
 import { sheetButtons } from './sheet-ui.js';
@@ -295,7 +296,16 @@ export function historyScreen(app, ctx) {
       h('thead', {}, h('tr', {}, ['Snapshot', 'When', 'Net worth', 'Debt', 'Savings rate', 'Surplus'].map((k, i) => h(`th${i > 1 ? '.num' : ''}`, {}, k)))),
       h('tbody', {}, [...snaps].reverse().map(s => h('tr.row', {}, h('td.col-first', {}, s.label), h('td', {}, new Date(s.at).toLocaleString()),
         h('td.num', {}, money(s.metrics.netWorth)), h('td.num', {}, money(s.metrics.debtTotal)), h('td.num', {}, s.metrics.savingsRate == null ? '' : pct(s.metrics.savingsRate)), h('td.num', {}, money(s.metrics.surplus)))))))),
-    S.moreBlock('history:wrapped', () => wrapped(ctx, snaps, months, since), { label: 'Wrapped, your year in review' })];
+    S.moreBlock('history:wrapped', () => wrapped(ctx, snaps, months, since), { label: 'Wrapped, your year in review' }),
+    S.moreBlock('history:log', () => changeLogTable(ctx), { label: 'Change log' })]; // F6: every edit with who
+}
+// F6: the change log, newest first: when, what, field, from, to, who (Coach or Client).
+function changeLogTable(ctx) {
+  const rows = changeLog(ctx.store.doc, { limit: 100 });
+  if (!rows.length) return h('p.muted', {}, 'No changes logged yet.');
+  return h('div.card', {}, h('table.rows', {}, h('thead', {}, h('tr', {}, ['When', 'What', 'Field', 'From', 'To', 'Who'].map(x => h('th', {}, x)))),
+    h('tbody', {}, rows.map(e => h('tr', {}, h('td', {}, new Date(e.at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })), h('td', {}, `${e.op}: ${e.what}`), h('td', {}, e.field), h('td.muted', {}, e.from), h('td', {}, e.to), h('td', {}, h('span.tag.plain', {}, e.who)))))),
+    h('p.muted.small', { style: { margin: '6px 0 0' } }, 'The last 100. The Captured tab of the spreadsheet carries up to 600.'));
 }
 // Year in review (R126): unlocks with 12 months of history.
 function wrapped(ctx, snaps, months, since) {

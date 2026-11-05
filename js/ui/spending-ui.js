@@ -2,6 +2,7 @@
 // Spending (build phase 6): Budget with five passes, irregular costs, the cash flow calendar and month-end close.
 // Every screen is a view of the same records (R117); the month model lives in js/month.js.
 import { h, clear, icon } from './dom.js';
+import { categoriesOf, categoryJoyOf, rateCategoryJoy } from '../capture.js';
 import { maaserOf, KOSHER_NOTE } from '../community.js';
 import { drafttName } from '../math/spending.js';
 import * as S from './staples.js';
@@ -66,7 +67,19 @@ export function budgetScreen(app, ctx) {
   const strip = h('div', {}, budgetStrip(ctx, view));
   ctx.onRefresh(() => S.keepPlace(() => clear(strip, budgetStrip(ctx, monthView(doc, ctx.ref, UI.ym, { now: ctx.now() })))));
   return [head('Budget', 'Every spending line, planned and actual'), passBar, strip, doc.session?.community ? S.moreBlock('budget:community', () => S.live(ctx, () => communityCard(ctx)), { label: 'Community presets' }) : null, ...body,
-    S.recordList(ctx, irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) }))];
+    S.recordList(ctx, irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) })),
+    S.moreBlock('budget:joy', () => S.live(ctx, () => categoryJoyBlock(ctx)), { label: 'Joy by category' })]; // F6: captured for a later Wrapped
+}
+
+// F6: a dated joy rating, 1 to 5, per spending category on the Budget. Kept with its date; the latest shows.
+function categoryJoyBlock(ctx) {
+  const cats = categoriesOf(ctx.visible(() => true));
+  const rated = categoryJoyOf(ctx.store.doc);
+  if (!cats.length) return h('p.muted', { style: { margin: 0 } }, 'Rate each category once the Budget has lines.');
+  return h('div.stack', { style: { gap: '6px' } }, h('span.muted.small', {}, 'How much joy does this spending bring? 1 little, 5 a lot. Each rating keeps its date.'),
+    ...cats.map(cat => h('div.row-line', { style: { gap: '10px' } }, h('span', { style: { minWidth: '200px', fontWeight: 600 } }, cat),
+      S.toggle(['1', '2', '3', '4', '5'], rated[cat] ? String(rated[cat].value) : null, v => rateCategoryJoy(ctx.store, cat, v == null ? null : Number(v), { now: ctx.now().toISOString() }), { label: `${cat} joy`, clearable: true }),
+      rated[cat] ? h('span.muted.small', {}, `${new Date(rated[cat].at).toLocaleDateString()}${rated[cat].history.length > 1 ? ` · ${rated[cat].history.length} ratings` : ''}`) : null)));
 }
 
 // M9: kosher grocery note and maaser, only when community presets are on.
@@ -412,13 +425,14 @@ export function entryForm(ctx, anchor, { date = null, rec = null } = {}) {
   let dir = v.direction || 'Out';
   const day = h('input', { type: 'date', value: v.date || date || '', 'aria-label': 'Date' });
   const rep = h('select', { 'aria-label': 'Repeats' }, ['Never', 'Weekly', 'Every 2 weeks', 'Twice a month', 'Monthly', 'Yearly'].map(x => h('option', { selected: x === (v.repeats || 'Never') }, x)));
+  const tripBox = h('input', { type: 'checkbox', checked: v.trip === true ? 'checked' : null, 'aria-label': 'Trip' }); // F6: the Trip tag
   const ends = h('input', { type: 'date', value: v.endsOn || '', 'aria-label': 'Ends on' });
   const lines = ctx.visible(r => r.kind === 'bill');
   const cat = h('select', { 'aria-label': 'Budget line' }, h('option', { value: '' }, 'No budget line'), h('option', { value: 'Savings', selected: v.category === 'Savings' }, 'Savings'), lines.map(l => h('option', { value: l.id, selected: v.lineId === l.id }, l.name || l.values.category)));
   const save = () => {
     const amount = S.parseNum(amt.querySelector('input').value);
     if (!day.value) { day.focus(); return; }
-    const values = { date: day.value, direction: dir, repeats: rep.value, endsOn: ends.value || null, category: cat.value === 'Savings' ? 'Savings' : null, lineId: cat.value && cat.value !== 'Savings' ? cat.value : null };
+    const values = { date: day.value, direction: dir, repeats: rep.value, endsOn: ends.value || null, category: cat.value === 'Savings' ? 'Savings' : null, lineId: cat.value && cat.value !== 'Savings' ? cat.value : null, trip: tripBox.checked || null };
     if (rec) ctx.store.update(rec.id, { name: name.value.trim() || null, amount, ...values });
     else ctx.store.add('entry', { name: name.value.trim() || null, amount, values }, { type: dir === 'In' ? 'Money in' : dir === 'Maybe' ? 'Maybe' : 'Money out' });
     S.closePop(); S.toast(rec ? 'Saved.' : 'Entry added.', { undo: () => ctx.store.undo() });
@@ -429,7 +443,7 @@ export function entryForm(ctx, anchor, { date = null, rec = null } = {}) {
     h('label.field', {}, name),
     h('div.row-line', { style: { gap: '8px' } }, amt, S.toggle(['In', 'Out', 'Maybe'], dir, x => { dir = x; }, { label: 'In, out or maybe' })),
     h('span.muted.small', {}, 'Maybe = expected but not certain. It stays out of the balance unless Count maybe is on.'),
-    h('div.row-line', { style: { gap: '8px' } }, h('label.field', { style: { width: '170px' } }, day), h('label.field', { style: { width: '170px' } }, rep)),
+    h('div.row-line', { style: { gap: '8px' } }, h('label.field', { style: { width: '170px' } }, day), h('label.field', { style: { width: '170px' } }, rep), h('label.check-inline', {}, tripBox, ' Trip')), // F6
     S.moreBlock('entry:more', () => h('div.stack', { style: { gap: '8px' } }, S.labelled('Budget line', h('label.field', { style: { width: '260px' } }, cat)), S.labelled('Ends on', h('label.field', { style: { width: '170px' } }, ends)))),
     h('div.row-line', { style: { gap: '8px' } }, S.button('Save', { kind: 'primary', onClick: save }), S.button('Cancel', { onClick: S.closePop }),
       rec ? S.iconButton('copy', 'Duplicate', () => { ctx.store.duplicate(rec.id); S.closePop(); S.toast('Duplicated.', { undo: () => ctx.store.undo() }); }) : null,

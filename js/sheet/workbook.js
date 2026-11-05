@@ -54,6 +54,7 @@ export function formulaCols() {
 
 export function buildWorkbook(doc, ref, { now = new Date(), coach = false, flags = [] } = {}) {
   const c = sheetContext(doc, ref, { now, flags });
+  c.coach = coach; // F6: the Captured tab keeps coach-only changes out of the client copy
   const names = new Map(); // name -> absolute reference
   const sheets = [];
   const baseline = { version: FORMAT_VERSION, exportedAt: now.toISOString(), clientId: doc.id, client: null, coach, areas: {}, assumptions: {} };

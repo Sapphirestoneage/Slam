@@ -40,6 +40,7 @@ const app = {
     this.saver?.flush(); this.saver?.stop();
     this.hasClient = !!doc;
     this.store = new Store(doc || newHousehold({ name: null }));
+    this.store.who = this.prefs?.clientView ? 'Client' : 'Coach'; // F6: the change log says who
     this.ctx = S.createCtx({ store: this.store, ref });
     this.ctx.goTo = need => this.goToNeed(need);
     let mode = this.ctx.timeMode;
@@ -290,6 +291,7 @@ const app = {
     if (this.prefs.theme === 'light' || this.prefs.theme === 'dark') root.dataset.theme = this.prefs.theme; else delete root.dataset.theme;
     root.dataset.density = this.prefs.density === 'compact' ? 'compact' : 'comfortable';
     root.dataset.clientView = this.prefs.clientView ? 'on' : 'off';
+    if (this.store) this.store.who = this.prefs.clientView ? 'Client' : 'Coach'; // F6
     root.dataset.font = this.prefs.font || 'inter';
   },
   // ---------- The agenda bar: on every tab while a session runs, collapsed to one line (coach only) ----------

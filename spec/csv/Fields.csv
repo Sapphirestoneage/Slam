@@ -398,3 +398,5 @@ F395,Built,,Profile,Profile,Household mode,Secondary,,,,,,,,,Now,Added from the 
 F396,Built,,Goals,Goals and events,Owner,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Plan › Goals,choice,,,goals.owner
 F397,Built,,Profile,Profile,Shared bills split,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.splitMethod
 F398,Built,,Debt,Debt,Hassle (1 to 5),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Debt,whole number,,,debt.hassle
+F399,Built,,Income,Income,Income type,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,choice,,,income.incomeKind
+F400,Built,,Needs,Calendar entries,Trip,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Calendar,choice,,,calendar.trip

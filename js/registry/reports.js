@@ -11,6 +11,7 @@ import { programOf } from '../program.js';
 import { scorecardOf } from '../math/scorecard.js';
 import { unlockOf, confidenceOf } from '../math/picture.js';
 import { LEVELS, levelWord } from './program.js';
+import { categoryJoyOf, tripsOf, incomeKindOf, changeLog } from '../capture.js';
 
 const MAX_ROWS = 600; // a table longer than this is written as values, marked From the app
 
@@ -22,6 +23,20 @@ const RETIREMENT_LINES = 'SUMIFS(Spend_M21,Spend_draftt,"Retirement",Spend_InMat
 const FORMULA_APP = [{ key: 'f', label: 'Formula', unit: 'row', named: true }, { key: 'app', label: "The app's value", unit: 'row' }, { key: 'check', label: 'Check', check: ['f', 'app'] }];
 
 export const REPORTS = [
+  {
+    tab: 'Captured', prefix: 'Captured',
+    about: 'Kept for a later Wrapped (F6): joy ratings per spending category with their dates, everything tagged Trip, the income type on each income row, and the change log (field, old, new, who, when). Values from the app.',
+    columns: [{ key: 'when', label: 'When', unit: 'text', width: 20 }, { key: 'what', label: 'What', unit: 'text', width: 30 }, { key: 'field', label: 'Field', unit: 'text', width: 22 }, { key: 'from', label: 'From', unit: 'text', width: 22 }, { key: 'to', label: 'To', unit: 'text', width: 22 }, { key: 'who', label: 'Who', unit: 'text', width: 10 }],
+    sections: c => {
+      const cell = v => ({ v: v == null || v === '' ? null : v, fromApp: true });
+      const when = at => (at ? new Date(at).toISOString().slice(0, 16).replace('T', ' ') : '');
+      const joy = Object.entries(categoryJoyOf(c.doc)).flatMap(([cat, j]) => j.history.map(r => ({ cells: { when: cell(when(r.at)), what: cell(cat), field: cell('Joy (1 to 5)'), to: cell(r.value), who: cell(r.who ?? 'Coach') } })));
+      const trips = tripsOf(c.doc.records).map(r => ({ cells: { when: cell(r.kind === 'entry' ? r.values.date ?? '' : ''), what: cell(r.name || r.type || r.kind), field: cell(r.kind === 'entry' ? 'Calendar entry' : 'Budget line'), to: cell('Trip') } }));
+      const incomes = c.doc.records.filter(r => r.kind === 'income').map(r => ({ cells: { what: cell(r.name || r.type), field: cell('Income type'), to: cell(incomeKindOf(r)), from: cell(r.values?.incomeKind ? '' : `from the row's type (${r.type})`) } }));
+      const log = changeLog(c.doc, { limit: MAX_ROWS, coach: !!c.coach }).map(e => ({ cells: { when: cell(when(e.at)), what: cell(`${e.op}: ${e.what}`), field: cell(e.field), from: cell(e.from), to: cell(e.to), who: cell(e.who) } }));
+      return [{ title: 'Joy by category', rows: joy }, { title: 'Trips', rows: trips }, { title: 'Income types', rows: incomes }, { title: `Change log (newest first, up to ${MAX_ROWS})`, rows: log }];
+    },
+  },
   {
     tab: 'Statements', prefix: 'Statements',
     about: 'The three statements, as formulas off the Inputs and Math tabs. Cash flow comes from the calendar marks in SLAM.',
