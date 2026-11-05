@@ -8,6 +8,7 @@ import { institutionPicker } from './institutions-ui.js';
 import { fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
 import { pct } from '../format.js';
 import { feeApr } from '../math/debt.js';
+import { WEEKDAYS, SHABBAT_SPEND_DAY } from '../math/holidays.js';
 import { monthlyFrom } from '../math/income.js';
 import { withHome, myShare } from '../math/spending.js';
 import { applies } from '../gates.js';
@@ -180,7 +181,9 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
     // Amount is and Date is live behind More: the narrowest row (fix pass item 3).
     secondary: (ctx, r, up) => [
       labelled('Amount is', toggle(['Fixed', 'Variable'], r.values.amountType ?? null, v => up({ amountType: v }), { label: 'Amount is' }), { note: 'Fixed feeds the floor' }),
-      labelled('Date is', toggle(['Fixed date', 'Variable date'], r.values.timing ?? null, v => up({ timing: v }), { label: 'Date is' }), { note: 'Fixed date lands on its due day' }),
+      labelled('Date is', toggle(['Fixed date', 'Variable date', 'Weekly'], r.values.timing ?? null, v => up({ timing: v }), { label: 'Date is' }), { note: r.values.timing === 'Weekly' ? 'Lands on its weekday every week' : 'Fixed date lands on its due day' }),
+      r.values.timing === 'Weekly' ? labelled('Lands on', select(WEEKDAYS.map((w, i) => [String(i), w]), String(r.values.weekday ?? SHABBAT_SPEND_DAY), v => up({ weekday: Number(v) }), { label: 'Weekday', width: 140, key: `${r.id}:weekday` }),
+        { note: 'The day the money leaves (Shabbat: Thursday, used Friday night and Saturday)' }) : null,
       pass === 'Plan' && ym ? monthPlanField(ctx, r, ym) : null,
       whoPays(r, up, { roommates: ctx.store.doc.profile.roommates ?? 0, profile: ctx.store.doc.profile }), lineSuggestion(r, up),
       labelled('Bedazzle', toggle([[true, 'A joy line'], [false, 'Not one']], r.values.joy === true ? true : r.values.joy === false ? false : null, v => up({ joy: v }), { label: 'Joy line', clearable: true }), { note: 'Joy lines are funded first in the FOO (step 0b)' }),

@@ -122,6 +122,10 @@ export const AREAS = [
       f('incomeGaps', 'Income gaps', 'text', { sheet: { skip: 'its own tab: Income gaps' } }),
       f('backups', 'Backups of the backups', 'text', { sheet: { skip: 'its own tab: Backups' } }),
       f('institutions', 'Institutions', 'text', { sheet: { skip: 'its own tab: Institutions' } }), // batch 6
+      // Your calendar (About you): holidays computed year to year (M78), and Shabbat as a weekly Budget line.
+      f('calendars.jewish', 'Calendar: Jewish holidays', 'yesno'), f('calendars.shabbat', 'Calendar: Shabbat every week', 'yesno'),
+      f('calendars.muslim', 'Calendar: Muslim holidays', 'yesno'), f('calendars.christian', 'Calendar: Christian holidays', 'yesno'),
+      f('calendars.orthodox', 'Calendar: Orthodox Christian holidays', 'yesno'), f('calendars.us', 'Calendar: US holidays', 'yesno'),
       // Settings that change the math.
       pick('spending.source', 'Spending uses', ['gut', 'lines'], { part: 'spending', key: 'source', named: 'Set_spendingSource' }),
       pick('spending.basis', 'Budget view', ['accrual', 'cash'], { part: 'spending', key: 'basis' }),
@@ -293,8 +297,9 @@ export const AREAS = [
       pick('draftt', 'DRAFTT letter', ['Debt', 'Retirement', 'Accommodation', 'Food', 'Transportation', 'Taxes', 'Therapy'], { kinds: ['bill'] }),
       pick('amountType', 'Amount is', ['Fixed', 'Variable', 'Range'], { kinds: ['bill'] }),
       f('low', 'Range: low', 'money', { kinds: ['bill'] }), f('high', 'Range: high', 'money', { kinds: ['bill'] }),
-      pick('timing', 'Date is', ['Fixed date', 'Any time', 'Spread out'], { kinds: ['bill'] }),
+      pick('timing', 'Date is', ['Fixed date', 'Variable date', 'Weekly', 'Any time', 'Spread out'], { kinds: ['bill'] }),
       f('dueDay', 'Due day', 'day', { kinds: ['bill'] }),
+      f('weekday', 'Weekly: lands on (0 Sunday to 6 Saturday)', 'number', { kinds: ['bill'] }),
       pick('whoPays', 'Who pays', ['Me', 'Split', 'My share', 'Covered by someone', 'Included in rent', 'N/A', 'Not for me'], { kinds: ['bill'] }),
       f('coveredBy', 'Who covers it', 'text', { kinds: ['bill'] }),
       f('coveredAmount', 'Amount they cover', 'money', { kinds: ['bill'] }),
@@ -357,6 +362,7 @@ export const AREAS = [
       f('sinkingFund', 'Sinking fund account', 'text', { kinds: ['event'], sheet: { skip: 'points at an account row by its id; set it in SLAM' } }),
       f('fundTag', 'Purpose tag', 'text', { kinds: ['event'] }),
       f('coverageId', 'For this coverage', 'text', { kinds: ['event'], sheet: { skip: 'points at a Protection row by its id; set by Add the usual dates' } }),
+      f('holiday', 'Holiday (the block re-dates itself each year)', 'text', { kinds: ['event'] }),
       NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS,
     ].map(x => (['per', 'stress'].includes(x.key) ? { ...x, unused: true, sheet: { skip: 'not used on goals and events' } } : x)), // owner: a goal is one person's or Joint (F2)
   },

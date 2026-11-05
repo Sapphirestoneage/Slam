@@ -3,6 +3,7 @@
 // Pure: no DOM. FOO dates are months, so they sit on the first of their month; the close day is the last day.
 import { foo } from './foo.js';
 import { daysIn, dateOf } from '../month.js';
+import { holidaysInMonth, shabbatDays } from './holidays.js';
 
 export function calendarMarkers(doc, ref, ym, { now = new Date(), flags = [] } = {}) {
   const out = [];
@@ -11,5 +12,16 @@ export function calendarMarkers(doc, ref, ym, { now = new Date(), flags = [] } =
   const month = doc.spending?.months?.[ym];
   const closed = month?.closed && month.closedAt ? String(month.closedAt).slice(0, 10) : null;
   out.push({ date: closed || dateOf(ym, daysIn(ym)), kind: 'close', name: closed ? 'Month closed' : 'Month-end close' });
+  // Holidays (M78): the sets ticked on About you. Jewish and Muslim holidays begin at sundown the evening before.
+  const sets = doc.profile?.calendars || {};
+  const add = (date, name, kind = 'holiday') => { if (date.startsWith(ym)) out.push({ date, kind, name }); };
+  for (const d of holidaysInMonth(sets, ym)) {
+    const about = d.approx ? ' (about)' : '';
+    if (d.set === 'jewish' || d.set === 'muslim') add(d.eve, `${d.name} begins at sundown${about}`);
+    add(d.start, `${d.name}${about}`);
+    if (d.days > 2) add(d.end, `${d.name} ends${about}`);
+    else if (d.days === 2) add(d.end, `${d.name}, day 2`);
+  }
+  if (sets.shabbat) for (const s of shabbatDays(ym)) { add(s.friday, 'Shabbat begins at sundown', 'shabbat'); add(s.saturday, 'Shabbat', 'shabbat'); }
   return out;
 }

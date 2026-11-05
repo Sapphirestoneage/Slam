@@ -2,6 +2,7 @@
 // The month model (build phase 6): what lands on the calendar, the budget passes for a month, and closing it.
 // Pure: reads a household doc, never touches the DOM. Budget, calendar and close are views of these records (R117).
 import { gatesOf, visible } from './gates.js';
+import { weekdayDays, holidayInMonth, SHABBAT_SPEND_DAY } from './math/holidays.js';
 import { myShare, withHome } from './math/spending.js';
 import { payoffPlan } from './math/debt.js';
 import { runningBalance } from './math/calendar.js';
@@ -109,6 +110,11 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) 
     if (!monthly) continue;
     const group = r.values.draftt === 'Retirement' || /saving/i.test(r.values.category || '') ? 'Savings' : 'Bills';
     const onCard = cards.get(r.paidWith)?.name ?? null;
+    if (r.values.timing === 'Weekly') { // a weekly line lands on its weekday (Shabbat: bought Thursday, used Friday night and Saturday)
+      const days = weekdayDays(ym, r.values.weekday ?? SHABBAT_SPEND_DAY);
+      for (const d of days) push(r, { kind: 'bill', group, name: r.name || r.values.category, date: d, planned: -monthly / days.length, lineId: r.id, spread: true, onCard });
+      continue;
+    }
     if (r.values.timing === 'Variable date' || (!r.values.dueDay && r.values.amountType !== 'Fixed')) { // item 29: an undated variable line is spending money through the month, not a day-1 guess
       const weeks = [1, 8, 15, 22, 29].filter(d => d <= daysIn(ym));
       for (const d of weeks) push(r, { kind: 'bill', group, name: r.name || r.values.category, date: dateOf(ym, d), planned: -monthly / weeks.length, lineId: r.id, spread: true, onCard, risk: monthly >= RISK });
@@ -124,8 +130,12 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) 
     push(r, { kind: 'debt', group: 'Debt', name: `${d.name} payment`, date: dateOf(ym, Number(r.values.dueDay) || 1), planned: -pay, guessDate: !r.values.dueDay });
   }
   // Next 12 months events land in their month.
-  for (const r of live.filter(x => x.kind === 'event' && x.values.month === ym && x.amount != null)) {
-    push(r, { kind: 'event', group: 'Bills', name: r.name || 'Event', date: dateOf(ym, r.values.day || 1), planned: -r.amount });
+  // A holiday block (M78) lands on the eve of its holiday, whichever year is on screen; the rest on their day.
+  for (const r of live.filter(x => x.kind === 'event' && x.amount != null)) {
+    const hd = r.values.holiday ? holidayInMonth(r.values.holiday, ym) : null;
+    const date = hd ? hd.eve : r.values.month === ym ? dateOf(ym, r.values.day || 1) : null;
+    if (!date) continue;
+    push(r, { kind: 'event', group: 'Bills', name: r.name || hd?.name || 'Event', date, planned: -r.amount });
   }
   // Entries typed on the calendar, with repeats.
   for (const r of live.filter(x => x.kind === 'entry' && x.values.date)) {

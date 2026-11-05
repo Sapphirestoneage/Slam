@@ -16,6 +16,7 @@ import { winSources } from './spending-ui.js';
 import { money, pct } from '../format.js';
 import { yearItems, usualDates, sinkingOf, takingOver } from '../year.js';
 import { TUITION_GOAL } from '../community.js';
+import { holidayYm } from '../math/holidays.js';
 import { fiGate } from './report-ui.js';
 import { fiWordsOf } from '../math/picture.js';
 
@@ -419,6 +420,7 @@ export function eventList() {
       { label: 'Event', render: (ctx, r, m, up) => S.textInput(r.name, v => up({ name: v }), { hint: r.type || 'Name it', width: 190, key: `${r.id}:name` }) },
       { label: 'Rough cost', num: true, render: (ctx, r, m, up) => S.moneyInput(r.amount, v => up({ amount: v }), { hint: 'Add cost', key: `${r.id}:amount` }) },
       { label: 'Month', render: (ctx, r, m, up) => {
+        if (r.values.holiday) { const ym = holidayYm(r.values.holiday, ctx.now()); return h('span.computed', { title: 'Dated by the holiday each year (About you › Your calendar)' }, ym ? `${monthName(ym, 'short')} · every year` : 'Every year'); }
         const base = ymOf(ctx.now());
         const months = Array.from({ length: 13 }, (_, k) => addMonths(base, k)).map(ym => [ym, monthName(ym, 'short')]);
         return S.select(months, r.values.month ?? null, v => up({ month: v }), { label: 'Month', hint: 'Pick a month', width: 150 });
