@@ -289,3 +289,25 @@ ul.find-days { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
 .chip[draggable="true"] { cursor: grab; -webkit-user-drag: element; } /* all: unset on .chip drops the browser default */
 .chip[role="button"]:focus-visible { outline: 2px solid var(--focus, var(--goals)); outline-offset: 1px; }
 .st-offtop { margin: 4px 0 10px; font-size: .9375rem; }
+
+/* ---------- Scorecard (Phase 3, batch 2) and the holes on Home ---------- */
+.hole-row, .ok-row { margin-bottom: var(--s3); }
+.hole-head { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
+.hole-head .rank { font-weight: 800; color: var(--text-2); min-width: 32px; }
+.hole-name { font-size: 1.125rem; }
+.hole-head .spacer, .hole-line .spacer, .holes-card .spacer { flex: 1; }
+.hole-body { display: flex; flex-wrap: wrap; gap: var(--s4); align-items: flex-start; margin-top: var(--s3); }
+.hole-num { display: flex; flex-direction: column; gap: 4px; min-width: 120px; }
+.hole-num .amount { font-weight: 700; }
+.reason { line-height: 1.35; }
+.strong-row { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; padding: 6px var(--s3); border-top: 1px solid var(--border-row); min-height: 40px; }
+.strong-row .reason { font-size: .875rem; }
+.how-list { margin: 8px 0 0; padding-left: 1.2em; font-size: .9375rem; line-height: 1.4; }
+.how-list li { margin: 4px 0; }
+.holes-card { margin-bottom: var(--s4); }
+.holes-list { display: grid; gap: 6px; margin-top: var(--s2); }
+.hole-line { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; padding: 6px 0; border-top: 1px solid var(--border-row); min-height: 40px; }
+.hole-line .rank { font-weight: 800; color: var(--text-2); }
+.hole-line .gain { font-weight: 800; color: var(--good); }
+.card.inner { box-shadow: none; border: 1.5px solid var(--border-row); }
+@media (max-width: 760px) { .hole-body { gap: var(--s3); } .hole-num { min-width: 45%; } }

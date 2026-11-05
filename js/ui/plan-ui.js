@@ -182,6 +182,10 @@ function milestoneList() {
           : h('span.muted', {}, r.type === 'Debt free' ? 'When every debt is paid' : `When investments reach ${r.type}`);
       } },
       { label: 'Projected', render: (ctx, r) => { const p = projection(ctx.metrics(), ctx.store.doc, r, ctx.now()); return h(`span${p.reached ? '.tag.good' : p.date ? '.computed' : '.muted'}`, {}, p.reached ? '✓ Reached' : p.text); } },
+      // Session 4: each goal gets an amount, a horizon and a need, want or wish tag (an FI milestone's amount is its target).
+      { label: 'Amount', render: (ctx, r, m, up) => { const t = fiTargets(ctx.metrics(), ctx.store.doc)[r.type]?.value ?? null; return r.amount == null && t != null ? h('span.computed', { title: 'The target' }, money(t)) : S.moneyInput(r.amount, v => up({ amount: v }), { hint: 'Add amount', key: `${r.id}:amount` }); } },
+      { label: 'Short or long term', render: (ctx, r, m, up) => S.toggle([['Short term', 'Short'], ['Long term', 'Long']], r.values.horizon ?? null, v => up({ horizon: v }), { label: 'Short or long term', clearable: true }) },
+      { label: 'Need, want or wish', render: (ctx, r, m, up) => S.select(['Need', 'Want', 'Wish'], r.values.tag ?? null, v => up({ tag: v }), { label: 'Need, want or wish', hint: 'Tag', width: 110, key: `${r.id}:tag` }) },
     ],
     secondary: (ctx, r) => [
       r.type === 'Barista FI' ? S.labelled('Part-time income a month', S.moneyInput(ctx.store.doc.assumptions.partTimeIncome ?? null, v => ctx.store.setDoc('assumptions', { partTimeIncome: v }), { hint: 'Add income' }), { note: 'Barista FI only' }) : null,

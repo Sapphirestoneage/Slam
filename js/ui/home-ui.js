@@ -12,14 +12,16 @@ import { PUI } from './plan-ui.js';
 import { soWhat } from '../sowhat.js';
 import { changeSince } from '../records.js';
 import { programOf, startSession, endSession, inSession, sessionOf, snapshotNumbers, day0Report } from '../program.js';
-import { SESSIONS, levelWord } from '../registry/program.js';
+import { SESSIONS, MONEY_DATES, levelWord } from '../registry/program.js';
+import { ratingTag } from './scorecard-ui.js';
 import { money, pct } from '../format.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const isoDay = d => d.toISOString().slice(0, 10);
 export const HUI = { open: null }; // the path node whose checklist is open (null: the current session)
 // Where an auto checklist item is worked on (Accounts set up: About you first, until it says what applies).
-const ITEM_ROUTE = { accountsSetUp: '#/net-worth/assets', topLine: null, moneyInOneLine: '#/cash-flow/income', day0: null, bigCategories: '#/cash-flow/budget', goalsNamed: '#/plan/goals', fooStep: '#/plan/foo', monthOfActuals: '#/cash-flow/close', keyNumbersLocked: null, picture90: null };
+const ITEM_ROUTE = { accountsSetUp: '#/net-worth/assets', topLine: null, moneyInOneLine: '#/cash-flow/income', day0: null, bigCategories: '#/cash-flow/budget', goalsNamed: '#/plan/goals', fooStep: '#/plan/foo', monthOfActuals: '#/cash-flow/close', keyNumbersLocked: null, picture90: null,
+  shortGoals: '#/plan/goals', longGoals: '#/plan/goals', allRated: '#/plan/scorecard', holesRanked: '#/plan/scorecard', fooConfirmed: '#/plan/scorecard', top3Chosen: '#/plan/scorecard', holeFilled: '#/plan/scorecard', day0Compared: null, rescored: '#/plan/scorecard', nextChapter: null, planNotes: null, reviewDate: null, moneyDate: null };
 
 export function homeScreen(app, ctx) {
   const doc = ctx.store.doc;
@@ -31,6 +33,9 @@ export function homeScreen(app, ctx) {
     pathRow(app, P, open),
     checklistCard(app, ctx, P, open),
     pictureCard(ctx, P),
+    P.afterIntake ? holesCard(app, ctx, P) : null,
+    filledCard(ctx, P),
+    P.afterIntake && P.scorecard.rated === P.scorecard.of && !P.scorecard.holes.length ? nextChapterCard(ctx) : null,
     nextThings(app, ctx, P),
     moneyInOneLine(app, ctx, P.m),
     P.inSession ? wrapUp(app, ctx, P) : null,
@@ -55,7 +60,7 @@ function sessionStrip(app, ctx, P) {
     PUI.reveal = target === '#/plan/goals';
     app.go(target);
   };
-  const start = () => { startSession(ctx.store); HUI.open = null; app.render(); };
+  const start = () => { const r = startSession(ctx.store, ctx.ref, { now: ctx.now(), flags: app.flags }); HUI.open = null; if (r.target) S.toast(`This session's hole: ${P.scorecard.areas.find(a => a.id === r.target)?.name}.`); app.render(); };
   return h('div.card.session-strip', {},
     h('span.who', {}, doc.client.name || 'Client'),
     h('a', { href: '#/home/profile' }, 'About you ›'),
@@ -104,13 +109,16 @@ function checklistCard(app, ctx, P, s) {
   const routeOf = key => (key === 'accountsSetUp' && P.picture.items.find(it => it.id === 'areas')?.level === 0 ? '#/home/profile' : ITEM_ROUTE[key]);
   const items = s.items.map(i => h(`div.check-item${i.done ? '.done' : ''}`, {},
     i.auto ? h('span.box', { 'aria-hidden': 'true' }, i.done ? icon('check') : null) : h('input', { type: 'checkbox', checked: i.done, 'aria-label': i.label, onchange: e => tick(i.id, e.target.checked) }),
-    h('div', { style: { flex: 1 } }, h('div.what', {}, i.label), i.auto ? h('div.auto', {}, i.done ? 'From the numbers' : 'Ticks itself from the numbers') : null),
-    i.auto && !i.done && routeOf(auto(i.id)) ? h('a', { href: routeOf(auto(i.id)) }, 'Open ›') : null));
+    h('div', { style: { flex: 1 } }, h('div.what', {}, i.label, i.detail ? h('span.muted', {}, ` · ${i.detail}`) : null), i.auto ? h('div.auto', {}, i.done ? 'From the numbers' : 'Ticks itself from the numbers') : null),
+    i.key === 'fooConfirmed' && !i.done && P.scorecard.here != null ? S.button(`Confirm step ${P.scorecard.here}`, { size: 'small', iconName: 'check', onClick: () => { ctx.store.setIn('program', ['fooConfirmed'], P.scorecard.here, 'FOO step'); S.toast(`FOO step ${P.scorecard.here} confirmed.`); } }) : null,
+    i.key === 'holeFilled' && s.target ? h('a', { href: s.target.route }, 'Open where it lives ›') : i.auto && !i.done && routeOf(auto(i.id)) ? h('a', { href: routeOf(i.key) }, 'Open ›') : null));
   const word = s.status === 'done' ? 'Done' : s.status === 'current' ? 'This session' : 'Up next';
   return h('div.card.session-card', {},
     h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, `Session ${s.n} · ${s.name}`), h(`span.tag.${s.done ? 'good' : 'plain'}`, {}, s.done ? '✓ Done when met' : `${s.items.filter(i => i.done).length} of ${s.items.length}`), h('span.muted', {}, word)),
     h('div.checklist', { style: { marginTop: '10px', marginBottom: 0 } }, items),
-    s.placeholder ? S.moreBlock(`home:edit:${s.id}`, () => editSession(ctx, s), { label: 'Edit this session' }) : null,
+    s.id === 'S12' ? gamePlan(ctx) : null,
+    s.items.some(i => i.key === 'nextChapter') ? nextChapterCard(ctx, { inside: true }) : null,
+    S.moreBlock(`home:edit:${s.id}`, () => editSession(ctx, s), { label: 'Edit this session' }),
     s.id === 'S9' && !P.day0 ? h('p.muted.small', { style: { marginTop: '8px' } }, 'The Day 0 vs now report appears here once session 1 has ended.') : null);
 }
 // A placeholder session: its name and checklist, kept in the client file.
@@ -129,16 +137,71 @@ function editSession(ctx, s) {
       ctx.store.doc.program?.sessions?.[s.id] ? S.button('Back to the usual', { onClick: () => ctx.store.setIn('program', ['sessions', s.id], undefined, 'Session') }) : null)));
 }
 
-// ---------- The picture and its pace ----------
-const bar = (x, { wide = false } = {}) => h(`div.progress${wide ? '.wide' : ''}`, { role: 'progressbar', 'aria-valuenow': Math.round(x * 100), 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': 'Picture filled in' }, h('span', { style: { width: `${Math.round(x * 100)}%` } }));
+// ---------- The picture and its pace; after intake, the areas Strong or OK ----------
+const bar = (x, { wide = false, label = 'Picture filled in' } = {}) => h(`div.progress${wide ? '.wide' : ''}`, { role: 'progressbar', 'aria-valuenow': Math.round(x * 100), 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': label }, h('span', { style: { width: `${Math.round(x * 100)}%` } }));
 function pictureCard(ctx, P) {
   const pace = P.pace;
+  const sc = P.scorecard;
+  const paceTag = h(`span.tag.pace-tag.${pace.word === 'Ahead' ? 'ahead' : pace.word === 'On track' ? 'ontrack' : 'catchup'}`, {}, pace.word);
+  if (P.afterIntake) { // the picture is in: now the areas count
+    return h('div.card.picture-card', {},
+      h('div.bar-row', {}, h('span.pct', {}, `${sc.okCount} of ${sc.of} areas Strong or OK`), bar(sc.of ? sc.okCount / sc.of : 0, { wide: true, label: 'Areas Strong or OK' }),
+        h('span.muted', {}, P.day0Ok != null ? `Day 0: ${P.day0Ok}` : 'Day 0: not scored yet', sc.unrated.length ? ` · ${sc.unrated.length} not rated yet` : '', sc.holes.length ? ` · ${sc.holes.length} ${sc.holes.length === 1 ? 'hole' : 'holes'}` : ' · no hole left'),
+        h('a', { href: '#/plan/scorecard' }, 'Scorecard ›')),
+      h('div.row-line', { style: { gap: '10px', marginTop: '6px' } }, h('span.muted.small', {}, `Picture ${pace.points}%`), paceTag, h('span.muted.small', {}, pace.text)));
+  }
   return h('div.card.picture-card', {},
     h('div.bar-row', {}, h('span.pct', {}, `Picture ${pace.points}%`), bar(P.picture.pct, { wide: true }),
-      h(`span.tag.pace-tag.${pace.word === 'Ahead' ? 'ahead' : pace.word === 'On track' ? 'ontrack' : 'catchup'}`, {}, pace.word), h('span.muted', {}, pace.text)),
+      paceTag, h('span.muted', {}, pace.text)),
     S.moreBlock('home:sections', () => h('div.section-bars', {}, P.picture.sections.map(s => h('div.row-line', {}, h('span', { style: { minWidth: '80px', fontWeight: 600 } }, s.name), bar(s.pct ?? 0),
       h('span.muted.small', {}, `${Math.round((s.pct ?? 0) * 100)}% · ${s.items.length} ${s.items.length === 1 ? 'number' : 'numbers'}`),
       s.pct >= 1 ? h('span.tag.good', {}, '✓') : h('a', { href: s.route }, 'Open ›')))), { label: 'By section' }));
+}
+
+// ---------- The holes (after intake): the top three, ranked, each with its payoff in the money view ----------
+function holesCard(app, ctx, P) {
+  const sc = P.scorecard;
+  if (!sc.holes.length) return null;
+  const top = sc.holes.slice(0, 3);
+  return h('div.card.holes-card', {}, h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Top holes'), h('span.muted', {}, 'Before your FOO step first, then best return'), h('span.spacer'), S.button('Open the Scorecard', { iconName: 'right', onClick: () => app.go('#/plan/scorecard') })),
+    h('div.holes-list', {}, top.map(hl => h('div.hole-line', {}, h('span.rank', {}, `#${hl.rank}`), h('strong', {}, hl.name), hl.chosen ? h('span.tag.plain', {}, 'In the plan') : null,
+      h('span.muted.small', {}, hl.reason),
+      h('span.spacer'),
+      hl.payoff ? h('span.row-line', { style: { gap: '6px' } }, S.amount(ctx, hl.payoff.value), h('span.muted.small', {}, `a year${hl.fiDays != null ? ` · ${hl.fiDays.toFixed(1)} FI days` : ''} · ${hl.effort} h`)) : h('span.muted.small', {}, 'Add a payoff on the Scorecard')))));
+}
+// Holes filled: before and after, and the FI days gained.
+function filledCard(ctx, P) {
+  if (!P.filled.length) return null;
+  return h('div.card', {}, h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Holes filled'), h('span.muted', {}, 'Since the snapshot that still had them')),
+    h('div.holes-list', {}, P.filled.map(f => h('div.hole-line', {}, h('strong', {}, f.name), ratingTag(f.from), h('span.muted', {}, '→'), ratingTag(f.to),
+      h('span.muted.small', {}, `since ${f.since}`), h('span.spacer'),
+      f.fiDays != null ? h('span.gain', {}, `+${f.fiDays.toFixed(1)} FI days`) : null, f.payoff != null ? h('span.muted.small', {}, `${money(f.payoff)} a year`) : null))));
+}
+// The next chapter: opens when no hole is left (and the S10 and S11 checklist once every area is rated).
+function nextChapterCard(ctx, { inside = false } = {}) {
+  const c = ctx.store.doc.scorecard?.nextChapter || {};
+  const save = patch => ctx.store.setIn('scorecard', ['nextChapter'], { ...c, ...patch }, 'Next chapter');
+  const d = h('input', { type: 'date', value: c.date || '', 'aria-label': 'Next chapter date' });
+  d.onchange = () => save({ date: d.value || null });
+  return h(`div.card${inside ? '.inner' : ''}`, { style: inside ? { marginTop: '10px' } : null }, h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Next chapter'), h('span.muted', {}, 'No hole left: what comes next (a home, kids, a career change)')),
+    h('div.row-line', { style: { gap: '10px', marginTop: '10px', alignItems: 'flex-end' } },
+      S.labelled('What it is', S.textInput(c.text ?? null, v => save({ text: v }), { hint: 'A home, kids, a career change', width: 320, key: 'chapter:text' })),
+      S.labelled('Amount', S.moneyInput(c.amount ?? null, v => save({ amount: v }), { hint: 'Add amount', key: 'chapter:amount' })),
+      S.labelled('By', h(`label.field${c.date ? '.filled' : ''}`, { style: { width: '170px' } }, d))));
+}
+// The game plan (S12): next-year notes, the yearly review date, the monthly money date.
+function gamePlan(ctx) {
+  const p = ctx.store.doc.program?.plan || {};
+  const save = patch => ctx.store.setIn('program', ['plan'], { ...p, ...patch }, 'Game plan');
+  const notes = h('textarea.notes-box', { placeholder: 'The plan for the next year, in a few lines', 'aria-label': 'Next-year plan notes', 'data-focus': 'plan:notes' }, p.notes || '');
+  notes.onchange = () => save({ notes: notes.value.trim() || null });
+  const d = h('input', { type: 'date', value: p.reviewDate || '', 'aria-label': 'Yearly review date' });
+  d.onchange = () => save({ reviewDate: d.value || null });
+  return h('div.card.inner', { style: { marginTop: '10px' } }, h('div.stack', { style: { gap: '10px' } },
+    S.labelled('Next-year plan notes', notes),
+    h('div.row-line', { style: { gap: '12px', alignItems: 'flex-end' } },
+      S.labelled('Yearly review date', h(`label.field${p.reviewDate ? '.filled' : ''}`, { style: { width: '170px' } }, d)),
+      S.labelled('Monthly money date', S.select(MONEY_DATES, p.moneyDate ?? null, v => save({ moneyDate: v }), { label: 'Monthly money date', hint: 'Pick a cadence', width: 230, key: 'plan:moneyDate' })))));
 }
 
 // ---------- The next small things ----------
@@ -228,8 +291,8 @@ function openItems(app, ctx) {
 function day0Card(ctx, P) {
   const rep = day0Report(ctx.store.doc, ctx.ref, { now: ctx.now() });
   if (!rep) return null;
-  const f = (r, v) => (v == null ? '' : r.unit === 'pct' ? pct(v) : money(v));
-  const diff = r => (r.change == null || Math.abs(r.change) < 1e-9 ? '' : `${r.change > 0 ? '▲' : '▼'} ${r.unit === 'pct' ? `${(Math.abs(r.change) * 100).toFixed(r.key === 'picturePct' ? 0 : 1)} pts` : money(Math.abs(r.change))}`);
+  const f = (r, v) => (v == null ? '' : r.unit === 'pct' ? pct(v) : r.unit === 'count' ? String(v) : money(v));
+  const diff = r => (r.change == null || Math.abs(r.change) < 1e-9 ? '' : `${r.change > 0 ? '▲' : '▼'} ${r.unit === 'pct' ? `${(Math.abs(r.change) * 100).toFixed(r.key === 'picturePct' ? 0 : 1)} pts` : r.unit === 'count' ? String(Math.abs(r.change)) : money(Math.abs(r.change))}`);
   return h('div.card', {}, h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Day 0 vs now'), h('span.muted', {}, `Day 0: ${new Date(rep.at).toLocaleDateString()}`)),
     h('table.rows.compare', { style: { marginTop: '10px' } }, h('thead', {}, h('tr', {}, h('th', {}, ''), h('th.num', {}, 'Day 0'), h('th.num', {}, 'Now'), h('th.num', {}, 'Change'))),
       h('tbody', {}, rep.rows.map(r => h('tr', {}, h('td', {}, r.label), h('td.num', {}, f(r, r.then)), h('td.num', {}, f(r, r.now)), h('td.num', {}, diff(r)))))));
