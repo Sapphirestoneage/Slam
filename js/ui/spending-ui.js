@@ -271,7 +271,7 @@ export function calendarScreen(app, ctx) {
       S.labelled('Low balance line', S.moneyInput(cal.low ?? null, v => ctx.store.setIn('spending', ['calendar', 'low'], v === null ? undefined : v, 'Low balance line'), { hint: moneyText(ctx.ref.defaults.lowBalanceLine), key: 'cal:low' })),
       S.labelled('Show', h('div.seg.multi', { role: 'group', 'aria-label': 'Show' }, GROUPS.map(gp => h('button', { type: 'button', 'aria-pressed': String(UI.show.has(gp)),
         onclick: () => { UI.show.has(gp) ? UI.show.delete(gp) : UI.show.add(gp); redraw(); } }, gp)),
-        h('button', { type: 'button', 'aria-pressed': String(UI.markers), title: 'FOO dates and the month-end close day', onclick: () => { UI.markers = !UI.markers; redraw(); } }, 'Markers'))),
+        h('button', { type: 'button', 'aria-pressed': String(UI.markers), title: 'FOO dates, the month-end close day, and your holidays (About you › Your calendar)', onclick: () => { UI.markers = !UI.markers; redraw(); } }, 'Markers'))),
       S.checkbox('Count maybe money', !!cal.countMaybe, v => ctx.store.setIn('spending', ['calendar', 'countMaybe'], v, 'Count maybe')),
       S.checkbox('Wins on their own', cal.autoWins !== false, v => ctx.store.setIn('spending', ['calendar', 'autoWins'], v, 'Auto wins'))),
     { label: `Balance ${st.value == null ? 'not set' : money(st.value)} · low line ${money(cal.low ?? ctx.ref.defaults.lowBalanceLine)} · ${UI.show.size === GROUPS.length ? 'showing all' : `showing ${UI.show.size} of ${GROUPS.length}`}` }));

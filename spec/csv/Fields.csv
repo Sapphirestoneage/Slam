@@ -394,3 +394,11 @@ F391,Built,,Assets,Assets,Locked (confirmed),Secondary,,,,,,,,,Now,Added from th
 F392,Built,,Needs,Spending lines,Locked (confirmed),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,choice,,,spending.locked
 F393,Built,,Goals,Goals and events,Short or long term,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Plan › Goals,choice,,,goals.horizon
 F394,Built,,Goals,Goals and events,"Need, want or wish",Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Plan › Goals,choice,,,goals.tag
+F395,Built,,Profile,Profile,Calendar: Jewish holidays,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.calendars.jewish
+F396,Built,,Profile,Profile,Calendar: Shabbat every week,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.calendars.shabbat
+F397,Built,,Profile,Profile,Calendar: Muslim holidays,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.calendars.muslim
+F398,Built,,Profile,Profile,Calendar: Christian holidays,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.calendars.christian
+F399,Built,,Profile,Profile,Calendar: Orthodox Christian holidays,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.calendars.orthodox
+F400,Built,,Profile,Profile,Calendar: US holidays,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.calendars.us
+F401,Built,,Needs,Spending lines,Weekly: lands on (0 Sunday to 6 Saturday),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,whole number,,,spending.weekday
+F402,Built,,Goals,Goals and events,Holiday (the block re-dates itself each year),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Plan › Goals,text,,,goals.holiday

@@ -285,6 +285,8 @@ ul.find-days { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
 .day-marks { display: flex; flex-direction: column; gap: 2px; margin: 2px 0; }
 .day-mark { font-size: .6875rem; line-height: 1.2; padding: 1px 6px; border-left: 3px solid var(--goals); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .day-mark.close { border-left-color: var(--report, var(--text-2)); }
+.day-mark.holiday { border-left-color: var(--needs); }
+.day-mark.shabbat { border-left-color: var(--assets); }
 .day.drop { outline: 2px dashed var(--goals); outline-offset: -2px; }
 .chip[draggable="true"] { cursor: grab; -webkit-user-drag: element; } /* all: unset on .chip drops the browser default */
 .chip[role="button"]:focus-visible { outline: 2px solid var(--focus, var(--goals)); outline-offset: 1px; }

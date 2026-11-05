@@ -48,6 +48,7 @@ export const FORMATS = [
   { version: 7, shape: '2c78ff04' }, // Nov 5 2026: Locked (confirmed) on Income, Debt, Assets and Spending lines; M73 Picture %; the Program tab
   { version: 8, shape: '276f00d0' }, // Nov 5 2026: Short or long term and Need, want or wish on milestones; M74 Scorecard; the Scorecard tab
   { version: 9, shape: 'b964ff19' }, // Nov 5 2026: Retirement lines and after-tax contributions as investing (M27 retire, M28 afterTax); the surplus invested unless turned off
+  { version: 10, shape: '6cb26f70' }, // Nov 5 2026: Your calendar on About you (Jewish, Shabbat, Muslim, Christian, Orthodox, US), Holiday on events, Weekly lines with a weekday; M75 Holiday dates
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

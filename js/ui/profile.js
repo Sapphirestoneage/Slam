@@ -10,6 +10,7 @@ import { ageOf } from '../math/metrics.js';
 import { profileCompletion } from '../profile-completion.js';
 import { BENEFITS, HAVE, TRANSIT, commuterSavings } from '../benefits.js';
 import { taxRates, monthlyFrom } from '../math/income.js';
+import { HOLIDAY_SETS, nextHoliday, SHABBAT_SPEND_DAY } from '../math/holidays.js';
 import { money, pct } from '../format.js';
 
 export const STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI',
@@ -193,6 +194,38 @@ export function profileScreen(app, ctx) {
       yes && key === 'employerHsa' ? h('span.muted.small', {}, 'Counts toward your HSA limit on Assets') : null,
       key === 'commuter' && nudge ? h('span.nudge', {}, `You spend about ${money(transit)} a month on transit. Paying it pre-tax could save about ${money(nudge.yearly)} a year (at your ${pct(nudge.marginal)} rate). Ask HR.`) : null);
   };
+  // ---------- Your calendar (M75): holidays computed year to year, and Shabbat as a weekly line ----------
+  const cal = p.calendars || {};
+  const setCal = (k, on) => {
+    const sets = { ...cal, [k]: on || undefined };
+    if (!on) { set({ calendars: sets }); return; } // off: the markers go; nothing typed is deleted
+    if (k === 'shabbat') {
+      const have = store.find(r => r.kind === 'bill' && r.values?.timing === 'Weekly' && /shabbat/i.test(r.name || ''));
+      store.transaction('Shabbat every week', () => {
+        set({ calendars: sets });
+        if (!have.length) store.add('bill', { name: 'Shabbat (food, guests, flowers)', per: 'week', values: { category: 'Groceries', draftt: 'Food', amountType: 'Variable', timing: 'Weekly', weekday: SHABBAT_SPEND_DAY } });
+      });
+      told(have.length ? 'Shabbat is on the calendar every week.' : 'Added a weekly Shabbat line on the Budget, spent Thursday and used Friday night and Saturday. Its amount is blank.', '#/cash-flow/budget');
+      return;
+    }
+    const def = HOLIDAY_SETS.find(x => x.id === k);
+    const have = new Set(store.find(r => r.kind === 'event').map(r => r.values?.holiday).filter(Boolean));
+    const list = def.holidays.filter(x => x.block && !have.has(x.id));
+    store.transaction(`${def.label} on`, () => {
+      set({ calendars: sets });
+      for (const x of list) {
+        const d = nextHoliday(x.id, ctx.now());
+        store.add('event', { name: x.block, values: { holiday: x.id, month: d ? d.start.slice(0, 7) : null, day: d ? Number(d.eve.slice(8)) : null } }, { type: 'Holiday' });
+      }
+    });
+    told(list.length ? `${def.label} are on the calendar. ${list.length} starter blocks sit on Next 12 months with blank amounts; each re-dates itself every year.` : `${def.label} are on the calendar.`, '#/plan/next-12-months');
+  };
+  const calendar = section('Your calendar', 'needs',
+    h('p.muted', {}, 'Holidays land on the calendar as markers and as blocks on Next 12 months. Their dates come from the Hebrew, Islamic and church calendars each year on their own. Tick what applies.'),
+    h('div.stack', { style: { gap: '6px' } },
+      ...HOLIDAY_SETS.map(x => checkbox(x.approx ? `${x.label} (about: the day is set by moon sighting)` : x.label, !!cal[x.id], v => setCal(x.id, v), { key: `p:cal-${x.id}` })),
+      cal.jewish ? checkbox('Shabbat every week: a Budget line spent Thursday, used Friday night and Saturday', !!cal.shabbat, v => setCal('shabbat', v), { key: 'p:cal-shabbat' }) : null));
+
   const benefits = g.employer ? section('Benefits at work', 'income', h('p.muted', {}, 'Answer what your job offers. A yes opens just what we need for it.'),
     h('div.benefit-list', {}, BENEFITS.map(benefitRow))) : null;
 
@@ -201,7 +234,7 @@ export function profileScreen(app, ctx) {
   const next = h('div.next-step', {}, c.core.ready
     ? button('Next: Income', { kind: 'primary', iconName: 'right', onClick: () => app.go('#/cash-flow/income') })
     : h('p.muted', {}, `${c.core.missing.length} to go before Next (${c.core.missing.slice(0, 3).join(', ')}${c.core.missing.length > 3 ? ' and more' : ''}). Answer each, or tap I'll find it later.`));
-  return [whyNow, hub, about, work, home, benefits, accounts, couple, next];
+  return [whyNow, hub, about, work, home, calendar, benefits, accounts, couple, next];
 }
 
 export { profileCompletion } from '../profile-completion.js';

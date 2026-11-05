@@ -20,6 +20,7 @@ import { takeHomeFromGross, variableSafeBudget, realHourlyWage, monthlyFrom, def
 import { payoffPlan, feeApr, utilization, debtToIncome, promoPayment } from '../math/debt.js';
 import { moneyAsTime } from '../math/fi.js';
 import { monthsUntil } from '../math/portfolio.js';
+import { holidaysOf } from '../math/holidays.js';
 import { simpleMath } from '../math/simple.js';
 import { pictureOf, paceOf, unlockOf, confidenceOf, nextSmallThings } from '../math/picture.js';
 import { sessionNo } from '../program.js';
@@ -353,6 +354,12 @@ export const MATH = [
       { key: 'holes', name: 'Holes', unit: 'count', fromApp: 'the areas rated Hole', app: c => scorecardOf(c.doc, c.ref, { now: c.now, flags: c.flags }).holes.length },
       { key: 'top', name: 'Top hole (before your FOO step first, then payoff over effort)', unit: 'text', fromApp: 'the ranking on the Scorecard', app: c => { const h = scorecardOf(c.doc, c.ref, { now: c.now, flags: c.flags }).holes[0]; return h ? `${h.name}${h.payoff ? `: ${Math.round(h.payoff.value)} a year over ${h.effort} hours` : ''}` : 'None'; } },
     ] },
+  // ---------- Holidays (the calendar question on About you) ----------
+  { id: 'M75', name: 'Holiday dates', inputs: 'the calendar sets ticked on About you (Jewish, Muslim, Christian, Orthodox, US) and Shabbat', unit: 'text',
+    fns: ['holidays.HOLIDAY_SETS', 'holidays.holidayById', 'holidays.holidayDates', 'holidays.holidaysOf', 'holidays.nextHoliday', 'holidays.holidayYm', 'holidays.holidayInMonth',
+      'holidays.shabbatDays', 'holidays.weekdayDays', 'holidays.holidaysInMonth', 'holidays.WEEKDAYS', 'holidays.SHABBAT_SPEND_DAY'],
+    fromApp: 'computed from the Hebrew calendar, the tabular Islamic calendar and the Easter formulas (day-level, no table to refresh); holiday blocks re-date themselves each year',
+    app: c => holidaysOf(c.doc.profile?.calendars || {}, c.now.getUTCFullYear()).map(d => `${d.name} ${d.start}`).join('; ') || null },
 ];
 
 // js/math exports that are not an M formula of their own: how records become formula inputs, account details, and

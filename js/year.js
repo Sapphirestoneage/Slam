@@ -3,6 +3,7 @@
 // and the bills someone else covers that you will take over. Pure: no DOM. Reads the same records as everything else.
 import { ymOf, addMonths, monthsBetween } from './month.js';
 import { monthlyFrom } from './math/income.js';
+import { holidayYm } from './math/holidays.js';
 
 // Next time a month of the year comes round, from this month on.
 export function nextYm(month, now = new Date()) {
@@ -29,7 +30,7 @@ export function yearItems(records, now = new Date()) {
   const start = ymOf(now), end = addMonths(start, 12);
   const out = [];
   for (const r of records) {
-    if (r.kind === 'event') out.push({ id: r.id, rec: r, name: r.name || r.type || 'Event', ym: r.values.month ?? null, cost: r.amount ?? null, source: r.type || 'Event', rentUp: r.type === 'Lease renewal' ? r.values.rentIncrease ?? null : null });
+    if (r.kind === 'event') out.push({ id: r.id, rec: r, name: r.name || r.type || 'Event', ym: r.values.holiday ? holidayYm(r.values.holiday, now) ?? r.values.month ?? null : r.values.month ?? null, holiday: r.values.holiday ?? null, cost: r.amount ?? null, source: r.type || 'Event', rentUp: r.type === 'Lease renewal' ? r.values.rentIncrease ?? null : null });
     else if (r.kind === 'bill' && r.values.irregular && r.status !== 'Not for me') out.push({ id: r.id, rec: r, name: r.name || 'Yearly cost', ym: nextYm(r.values.monthDue, now), cost: r.amount ?? null, source: 'Yearly cost' });
     else if (r.kind === 'debt' && r.type === 'Credit card' && r.values.annualFee) {
       const m = /^\d{4}-(\d{2})/.exec(r.values.opened || '')?.[1];
