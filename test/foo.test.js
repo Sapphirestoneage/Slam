@@ -74,7 +74,7 @@ test('(d) giving: off by default; on, it sits at the Roth IRA step (5b) and stay
 
 test('steps 2 and 3 can be in progress together; 6 and 7 never overlap', () => {
   const f = home(s => {
-    s.add('account', { name: 'Savings', values: { group: 'cash', balance: 1500 } }, { type: 'Savings or HYSA' });
+    s.add('account', { name: 'Savings', values: { group: 'cash', balance: 3500 } }, { type: 'Savings or HYSA' }); // the Buffer and little e full
     s.add('debt', { name: 'Visa', values: { balance: 3000, apr: 0.24, payment: 150 } }, { type: 'Credit card' });
     s.update(s.find(r => r.kind === 'income')[0].id, { contributionPct: 0.02, matchPct: 1, matchCapPct: 0.05 });
   });

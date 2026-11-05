@@ -51,11 +51,11 @@ test('thresholds in config: emergency fund under a month is a Hole; a score unde
   s.setIn('session', ['feelings', '1'], 3, 'Money feeling');
   s.update(s.find(r => r.kind === 'account')[0].id, { balance: 600 }); // under little e
   let sc = scorecardOf(s.doc, ref, { now });
-  assert.equal(area(sc, 'emergency').rating, 'Hole'); assert.equal(THRESHOLDS.emergency.strongMonths, 3);
+  assert.equal(area(sc, 'emergency').rating, 'Hole'); assert.equal(THRESHOLDS.emergency.strongMonths, 5);
   assert.equal(area(sc, 'credit').rating, 'Hole');
   assert.equal(area(sc, 'mindset').rating, 'Hole');
   assert.equal(area(sc, 'debt').rating, 'Strong', 'no debt, per About you');
-  s.update(s.find(r => r.kind === 'account')[0].id, { balance: 9000 });
+  s.update(s.find(r => r.kind === 'account')[0].id, { balance: 20000 }); // the Buffer, little e and big e (five months) full
   s.setDoc('profile', { credit: { score: 760 } });
   s.setIn('session', ['feelings', '2'], 8, 'Money feeling');
   sc = scorecardOf(s.doc, ref, { now });
@@ -255,15 +255,20 @@ test('the review gate: the stage\'s key numbers with value and level; Looks righ
   assert.equal(d.doc.program.recaps.S1.going[0].note, 'Still nervous about it');
   const hw = homeworkAll(d.doc, d.records).find(h => h.label === 'Talk through the card');
   assert.equal(hw.status, 'To do'); assert.equal(hw.from, 'S1');
-  // Session 2: the carried item is suggested for today with a +, and ticks from the numbers once added.
+  // Session 2 (answer 141): a carried Must do item goes straight onto Must do, labeled, and ticks from the numbers.
   A = agendaOf(d.doc, ref, { now });
-  const sug = A.suggestions.find(s => s.kind === 'carried');
-  assert.equal(sug.label, 'Accounts set up'); assert.match(sug.why, /carried over from session 1/);
-  addSuggestion(d, 'S2', sug);
-  A = agendaOf(d.doc, ref, { now });
-  assert.equal(A.going[0].done, false); assert.equal(A.going[0].auto, true);
+  const carried = A.must.find(i => i.carried);
+  assert.equal(carried.label, 'Accounts set up'); assert.match(carried.detail, /carried over from session 1/); assert.equal(carried.done, false);
+  assert.ok(!A.suggestions.some(s => s.kind === 'carried'), 'a Must do item is not a suggestion');
   d.setDoc('profile', { areas: { cash: true, investments: true, real: true, debt: true } });
-  assert.equal(agendaOf(d.doc, ref, { now }).going[0].done, true, 'answering About you settles it');
+  assert.equal(agendaOf(d.doc, ref, { now }).must.find(i => i.carried).done, true, 'answering About you settles it');
+  // A carried Going over item stays a suggestion with a +.
+  const g2 = addAgendaItem(d, 'S2', { label: 'Talk through the car' });
+  endSession(d, ref, { now });
+  const sug = agendaOf(d.doc, ref, { now }).suggestions.find(s => s.kind === 'carried');
+  assert.equal(sug.label, 'Talk through the car');
+  addSuggestion(d, 'S3', sug);
+  assert.equal(agendaOf(d.doc, ref, { now }).going[0].label, 'Talk through the car');
 });
 
 test('homework statuses: To do, Client says done (the coach for now, a client later), Confirmed in the gate; said-done homework is suggested for the agenda', () => {
@@ -330,7 +335,7 @@ test('answers 132 and 133: little e and big e rate the emergency fund; cards ove
   let sc = scorecardOf(s.doc, ref, { now });
   assert.equal(area(sc, 'emergency').rating, 'Hole'); assert.match(area(sc, 'emergency').reason, /little e/);
   assert.equal(area(sc, 'credit').rating, 'Hole'); assert.match(area(sc, 'credit').reason, /40\.0% used/);
-  s.update(cash.id, { balance: 1500 });
+  s.update(cash.id, { balance: 2500 }); // the Buffer (two weeks) and little e full
   sc = scorecardOf(s.doc, ref, { now });
   assert.equal(area(sc, 'emergency').rating, 'OK');
   s.update(cash.id, { balance: 20000 });

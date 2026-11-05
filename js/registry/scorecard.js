@@ -28,7 +28,7 @@ export const AREAS = [
 // data cannot see) stay unrated until the coach rates them.
 export const THRESHOLDS = {
   cashFlow: { strong: 0.20, ok: 0.05 }, // the headline savings rate; a negative surplus is a hole
-  emergency: { strongMonths: 3 }, // answer 132: Hole until little e is full; OK with little e; Strong with big e full (or this many months of spending)
+  emergency: { strongMonths: 5 }, // overnight answer: Hole until little e is full; OK with little e; Strong with big e full (RULES.bigEMonths, five months of spending)
   debt: { dti: 0.36 }, // heavy debt (cards, payday, personal, or any APR at or over the heavy line, 8%, RULES.heavyApr) is a hole; payments over this share of gross is OK at best
   credit: { strong: 740, ok: 670, utilizationHole: 0.30 }, // the score; cards used over this share of the limits is a hole (answer 132)
   retirement: { strongPct: 0.15 }, // 401(k), HSA and after-tax retirement saving as a share of gross; match left on the table is a hole

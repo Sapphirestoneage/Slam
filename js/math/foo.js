@@ -80,9 +80,9 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   const add = s => steps.push({ left: 0, parts: [], note: null, ...s });
   add({ id: '0b', name: 'Bedazzle your basic life', done: joy.length > 0 && joy.every(l => (l.amount ?? 0) > 0), started: joy.length > 0, optional: !joy.length, parts: joy.map(l => ({ name: l.name, value: l.amount })),
     note: joy.length ? 'Your joy lines are funded in the plan.' : 'Pick the lines that bring you joy (Budget, a line\'s More).' });
-  const e = layer('little-e');
+  const e = layer('little-e'), buf = layer('buffer');
   const bleed = [{ name: 'No late bills', done: !late.length }, { name: 'Payday and cash-advance debt at $0', done: !paydayDebt.length, left: sum(paydayDebt, d => d.balance) },
-    { name: 'little e full', done: e.full, left: e.left }, ...soonGaps.map(g => ({ name: `${g.name} covered`, done: g.full, left: g.left }))];
+    { name: 'Buffer full', done: !!buf?.full, left: buf?.left ?? 0 }, { name: 'little e full', done: e.full, left: e.left }, ...soonGaps.map(g => ({ name: `${g.name} covered`, done: g.full, left: g.left }))];
   add({ id: '1', name: 'Stop the bleeding', done: bleed.every(b => b.done), started: bleed.some(b => b.done), left: sum(bleed, b => b.left ?? 0), parts: bleed });
   const matchOffered = (x.link.incomeTiers || []).length > 0;
   add({ id: '2', name: 'Take the free money', done: !matchOffered || !mt?.leftOnTable, started: (pctIn ?? 0) > 0, left: matchOffered && mt?.leftOnTable ? Math.max(0, (fullMatchAt - (pctIn ?? 0)) * (gross ?? 0)) : 0,

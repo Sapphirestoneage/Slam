@@ -84,7 +84,7 @@ const RULE = {
     if (f.x.cash == null || !f.littleE) return null;
     const cash = money(f.x.cash), months = f.months == null ? '' : ` (${f.months.toFixed(1)} months of spending)`;
     if (!f.littleFull) return rate('Hole', `${cash}${months}: little e (${money(f.littleE.target ?? 0)}) is not full yet.`);
-    if (f.bigFull || (f.months != null && f.months >= T.emergency.strongMonths)) return rate('Strong', `${cash}${months}: ${f.bigFull ? 'big e is full' : `${T.emergency.strongMonths} months or more`}.`);
+    if (f.bigFull) return rate('Strong', `${cash}${months}: big e is full (${RULES.bigEMonths} months of spending).`);
     return rate('OK', `${cash}${months}: little e is full; big e (${money(f.bigE.reduce((s, l) => s + (l.target ?? 0), 0))}) is not yet.`);
   },
   debt: f => {

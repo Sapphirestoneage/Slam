@@ -153,7 +153,7 @@ test('M40 to M44 assets', () => {
   const rw = runway({ cash: 6000, spending: 3000, fixedFloor: 2000 });
   assert.equal(rw.value, 2); assert.equal(rw.onFloor, 3);
   const r5 = ruleOf5({ age: 30, spending: 3000, emergencyCash: 10000 });
-  assert.equal(r5.months, 6); assert.equal(r5.value, 18000); assert.equal(r5.keepPace, 50); assert.equal(r5.gap, 8000);
+  assert.equal(r5.months, 5, 'the Rule of 5: five months, one definition with big e (Nov 5)'); assert.equal(r5.value, 15000); assert.equal(r5.keepPace, 50); assert.equal(r5.gap, 5000);
   assert.equal(limitUsed({ contributions: 12250, type: '401(k)', age: 30 }, ref).value, 0.5);
   assert.equal(limitUsed({ contributions: 0, type: '401(k)', age: 61 }, ref).limit, 35750);
   assert.equal(limitUsed({ contributions: 0, type: 'Roth IRA', age: 52 }, ref).limit, 8600);

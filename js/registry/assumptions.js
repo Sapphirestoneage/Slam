@@ -14,7 +14,7 @@ import { THRESHOLDS, PAYOFF, AREAS as SCORE_AREAS } from './scorecard.js';
 
 // SLAM's own rules and lists. The math in js/math reads these (one source for the app and the sheet).
 export const RULES = {
-  cardMinimumFloor: 25, cardMinimumPct: 0.01, housingLine: 0.35, ruleOf5Divisor: 5, keepPaceMonths: 60, littleE: 1000,
+  cardMinimumFloor: 25, cardMinimumPct: 0.01, housingLine: 0.35, bigEMonths: 5, bufferWeeks: 2, keepPaceMonths: 60, littleE: 1000,
   fatFactor: 1.5, trueFiTax: 0.15, heavyApr: 0.08, variableGuessShare: 0.75, maxMonths: 70 * 12,
   roughCheckDays: 30, agedCheckDays: 90,
 };
@@ -98,7 +98,8 @@ export const ASSUMPTIONS = [
   { id: 'rules.cardMinimumFloor', name: 'CardMin_floor', label: 'Card minimum: at least', unit: 'money', get: () => RULES.cardMinimumFloor, source: RULE('js/math/debt.js, M30'), date: '2026-10-28' },
   { id: 'rules.cardMinimumPct', name: 'CardMin_pct', label: 'Card minimum: share of the balance, plus a month of interest', unit: 'pct', get: () => RULES.cardMinimumPct, source: RULE('js/math/debt.js, M30'), date: '2026-10-28' },
   { id: 'rules.housingLine', name: 'Housing_line', label: 'Housing reference line, share of take-home', unit: 'pct', get: () => RULES.housingLine, source: RULE('Math tab, M2A'), date: '2026-10-28' },
-  { id: 'rules.ruleOf5Divisor', name: 'RuleOf5', label: 'Rule of 5: age divided by', unit: 'number', get: () => RULES.ruleOf5Divisor, source: RULE('js/math/assets.js, M43'), date: '2026-10-28' },
+  { id: 'rules.bigEMonths', name: 'BigEMonths', label: 'big e (the Rule of 5): months of spending', unit: 'number', get: () => RULES.bigEMonths, source: RULE('js/math/layers.js, M43 and M68; overnight answer, Nov 5: 5 months, one definition everywhere'), date: '2026-11-05' },
+  { id: 'rules.bufferWeeks', name: 'BufferWeeks', label: 'Buffer (keeps checking from bouncing): weeks of spending', unit: 'number', get: () => RULES.bufferWeeks, source: RULE('js/math/layers.js, M68; overnight default, Nov 5'), date: '2026-11-05' },
   { id: 'rules.keepPaceMonths', name: 'KeepPace', label: 'Rule of 5 keep pace: spending divided by', unit: 'number', get: () => RULES.keepPaceMonths, source: RULE('js/math/assets.js, M43'), date: '2026-10-28' },
   { id: 'rules.littleE', name: 'LittleE', label: 'little e (most it holds)', unit: 'money', get: () => RULES.littleE, source: RULE('js/math/layers.js, M68'), date: '2026-11-03' },
   { id: 'rules.fatFactor', name: 'FatFactor', label: 'Fat FI: times regular spending', unit: 'number', get: () => RULES.fatFactor, source: RULE('js/plan.js (QUESTIONS: confirm)'), date: '2026-10-28' },

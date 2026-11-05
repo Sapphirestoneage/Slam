@@ -28,9 +28,11 @@ export function finishSession(app, ctx, { note = null } = {}) {
 export function reviewScreen(app, ctx) {
   if (app.prefs.clientView) { app.go('#/home/session'); return []; } // coach only
   const doc = ctx.store.doc;
-  const R = reviewOf(doc, ctx.ref, { now: ctx.now(), flags: app.flags });
   const live = inSession(doc);
-  const revisit = R.sid === 'S9' && live && !doc.scorecard?.reviewedAt?.startsWith?.(ctx.now().toISOString().slice(0, 10)) && !RVW.revisitDone; // the Revisit session opens the gate at its start
+  const n = sessionOf(doc);
+  const s9 = (n.count || 0) + 1 === 9;
+  const revisit = s9 && live && !RVW.revisitDone && !(doc.scorecard?.reviewedAt && doc.scorecard.reviewedAt >= (n.startedAt || '')); // the gate opens once at Start session
+  const R = reviewOf(doc, ctx.ref, { now: ctx.now(), flags: app.flags, since: s9 && live && !revisit ? n.startedAt : null }); // End session on S9 reviews what changed during it (answer 143)
   const mode = revisit ? 'revisit' : live ? 'end' : 'move';
   const open = R.unfinished;
   const note = h('textarea.notes-box', { placeholder: 'Optional: why we moved on, what to pick up next time', 'aria-label': 'Review note', 'data-focus': 'review:note' });
@@ -57,7 +59,7 @@ export function reviewScreen(app, ctx) {
       open.length ? h('p.muted.small', { style: { margin: '8px 0 0' } }, `Carried over items are suggested for ${R.nextName ? `session ${R.n + 1} (${R.nextName})` : 'the next session'}; homework goes to the Homework list.`) : null),
     h('p.muted', {}, 'Each number this stage leans on, with how sure it is. Looks right locks it as Actual; Edit opens where it lives.'),
     groups.map(g => h('div.card', { style: { marginBottom: '12px' } }, h('h3', { style: { margin: '0 0 8px' } }, NAMES[g] ?? g), h('div.review-list', {}, R.rows.filter(r => r.group === g).map(row)))),
-    !R.rows.length ? h('div.card', {}, h('p.muted', { style: { margin: 0 } }, 'No numbers to review yet.')) : null,
+    !R.rows.length ? h('div.card', {}, h('p.muted', { style: { margin: 0 } }, s9 && live && !revisit ? 'Nothing changed during this session.' : 'No numbers to review yet.')) : null,
     R.saidDone.length ? h('div.card', { style: { marginBottom: '12px' } }, h('h3', { style: { margin: '0 0 8px' } }, 'Homework the client says is done'), h('div.review-list', {}, R.saidDone.map(hwRow))) : null,
     mode === 'revisit' ? null : h('div.card', { style: { marginBottom: '12px' } }, h('div.stack', { style: { gap: '6px' } }, h('span.label', {}, 'Note (optional, kept on the session record)'), note)),
     h('div.row-line', { style: { gap: '10px' } }, primary, h('span.muted.small', {}, mode === 'revisit' ? 'Then the session runs as usual; End session reviews again.' : 'Saves the snapshot, the homework and a backup file, then shows Send summary.'),

@@ -6,6 +6,7 @@
 import { h, icon } from './dom.js';
 import * as S from './staples.js';
 import { agendaOf, addAgendaItem, removeAgendaItem, tickAgendaItem, setAgendaNote, addSuggestion } from '../program.js';
+import { search } from '../nav.js';
 
 export const AUI = { noteOpen: null }; // which item's note box is open
 
@@ -42,10 +43,18 @@ export function agendaPanel(app, ctx, A, { compact = false } = {}) {
   const add = h('input', { placeholder: 'Add something to go over', 'aria-label': 'Add something to go over' });
   const addIt = () => { const v = add.value.trim(); if (!v) return; addAgendaItem(ctx.store, sid, { label: v }); };
   add.onkeydown = e => { if (e.key === 'Enter') addIt(); };
-  const linkPicker = (anchor, it) => S.popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, `Link ${it.label} to`),
-    ...[['A page', { kind: 'route', route: '#/cash-flow/budget' }], ['The Scorecard', { kind: 'hole', route: '#/plan/scorecard' }], ['The homework list', { kind: 'homework', route: '#/tools/lists' }], ['The parking lot', { kind: 'parking' }]]
-      .map(([label, link]) => h('button.btn.small', { type: 'button', onclick: () => { S.closePop(); ctx.store.setIn('program', ['agenda', sid, 'going'], (ctx.store.doc.program.agenda[sid].going || []).map(x => (x.id === it.id ? { ...x, link } : x)), 'Agenda'); } }, label)),
-    h('span.muted.small', {}, 'A page link opens the Budget; change it by adding the item from where it lives (Find, then +).')), { width: 320 });
+  const setLink = (it, link) => ctx.store.setIn('program', ['agenda', sid, 'going'], (ctx.store.doc.program.agenda[sid].going || []).map(x => (x.id === it.id ? { ...x, link } : x)), 'Agenda');
+  // The link menu: the Scorecard, the homework list, the parking lot, or Find (answer 142) for any screen, field or row.
+  const linkPicker = (anchor, it) => {
+    const q = h('input', { placeholder: 'Find a field, a row or a screen', 'aria-label': 'Find a field, a row or a screen' });
+    const list = h('div.stack', { style: { gap: '4px' } });
+    q.oninput = () => { const found = search(q.value, { fields: app.fields || [], records: ctx.store.records }).slice(0, 6);
+      list.replaceChildren(...found.map(r => h('button.btn.small', { type: 'button', onclick: () => { S.closePop(); setLink(it, r.kind === 'record' ? { kind: 'record', recId: r.id, route: r.route } : { kind: 'route', route: r.route }); } }, `${r.label} · ${r.where}`))); };
+    S.popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, `Link ${it.label} to`),
+      h('div.row-line', { style: { gap: '6px' } }, ...[['The Scorecard', { kind: 'hole', route: '#/plan/scorecard' }], ['The homework list', { kind: 'homework', route: '#/tools/lists' }], ['The parking lot', { kind: 'parking' }]]
+        .map(([label, link]) => h('button.btn.small', { type: 'button', onclick: () => { S.closePop(); setLink(it, link); } }, label))),
+      h('span.label', {}, 'Or an exact field'), h('label.field', { style: { width: '300px' } }, q), list), { width: 360 });
+  };
   return h('div.agenda-panel', {},
     h('div.agenda-head', {}, h('strong', {}, 'Must do'), h('span.muted.small', {}, `${A.must.filter(i => i.done).length} of ${A.must.length}`)),
     h('div.checklist', { style: { marginBottom: '8px' } }, A.must.map(itemRow)),

@@ -100,7 +100,13 @@ export function sessionsOf(doc, ref, opts = {}) {
       const detail = key === 'holeFilled' ? (target ? `${target.name}: ${target.rating ?? 'not rated'}` : 'No hole left') : null;
       return { id: it.id, label: it.label, auto: !!key, key, done, detail, from: s.id, carried: false, route: routeOf(key, target) };
     });
-    const items = own;
+    // A Must do item carried over from the session before (answer 141) ticks the same way, from its own session.
+    const carried = (prog.carried?.[s.id] || []).filter(c => c.must).map(c => {
+      const key = c.key ?? null, t = targetFor(c.from);
+      const done = key === 'holeFilled' ? auto.holeFilled(c.from) : key ? !!auto[key] : !!prog.checks?.[s.id]?.[`${c.from}:${c.id}`];
+      return { id: `${c.from}:${c.id}`, label: c.label, auto: !!key, key, done, from: c.from, carried: true, route: routeOf(key, t), detail: `carried over from session ${Number(c.from.slice(1))}` };
+    });
+    const items = [...own, ...carried];
     const k = i + 1;
     return { ...s, n: k, name: over.name ?? s.name, placeholder: !!s.placeholder, items, target, done: items.length > 0 && items.every(it => it.done),
       status: k <= count ? 'done' : k === n ? 'current' : 'next' };
@@ -149,7 +155,7 @@ export function agendaOf(doc, ref, { now = new Date(), flags = [], P = programOf
   const live = visible(doc.records, gatesOf(doc.profile, doc.client), ref);
   const suggestions = [];
   const suggest = s => { if (!have.has(JSON.stringify(s.link ?? s.label))) suggestions.push(s); };
-  for (const c of doc.program?.carried?.[sid] || []) suggest({ kind: 'carried', label: c.label, key: c.key ?? null, from: c.from, link: c.route ? { kind: 'route', route: c.route } : null, why: `carried over from session ${Number(c.from.slice(1))}` });
+  for (const c of (doc.program?.carried?.[sid] || []).filter(c => !c.must)) suggest({ kind: 'carried', label: c.label, key: c.key ?? null, from: c.from, link: c.link ?? (c.route ? { kind: 'route', route: c.route } : null), why: `carried over from session ${Number(c.from.slice(1))}` });
   for (const hw of homeworkAll(doc, live)) if (hw.status === 'Client says done') suggest({ kind: 'homework', label: `Confirm homework: ${hw.label}`, link: { kind: 'homework', key: hw.key, route: '#/tools/lists' }, why: 'the client says it is done' });
   for (const n of (doc.parking || []).filter(n => !n.filedTo)) suggest({ kind: 'parking', label: n.text, link: { kind: 'parking', noteId: n.id }, why: 'an open parking-lot question' });
   const top = P.scorecard.open[0];
@@ -221,7 +227,7 @@ export function endSession(store, ref, { homework = [], next = null, now = new D
   const A = agendaOf(store.doc, ref, { now, flags });
   const cur = A.must.length || A.going.length ? { id: A.sid, items: A.must } : sessionsOf(store.doc, ref, { now, flags })[n - 1];
   // Each open item carries over (the default) or becomes homework (decisions[id] = 'homework').
-  const open = A.open.map(i => ({ from: i.from ?? A.sid, id: i.id, label: i.label, key: i.key ?? null, route: i.route ?? i.link?.route ?? null, link: i.link ?? null }));
+  const open = A.open.map(i => ({ from: i.from ?? A.sid, id: i.carried ? i.id.slice(i.from.length + 1) : i.id, label: i.label, key: i.key ?? null, route: i.route ?? i.link?.route ?? null, link: i.link ?? null, must: i.section === 'must' }));
   const toHomework = open.filter(i => decisions[i.id] === 'homework');
   const carry = open.filter(i => decisions[i.id] !== 'homework');
   const nextSid = SESSIONS[n]?.id ?? null;
@@ -233,7 +239,7 @@ export function endSession(store, ref, { homework = [], next = null, now = new D
     store.setIn('session', ['endedAt'], at);
     store.setIn('session', ['guide'], false);
     store.setIn('session', ['count'], n);
-    if (nextSid) store.setIn('program', ['carried', nextSid], carry.length ? carry.map(({ link, ...c }) => c) : undefined);
+    if (nextSid) store.setIn('program', ['carried', nextSid], carry.length ? carry : undefined);
     for (const i of toHomework) makeHomework(store, A.sid, i.label, { link: i.link });
     store.setIn('program', ['reviews', cur.id], { at, movedOnAnyway: open.length > 0, carried: carry.map(o => o.label), homework: toHomework.map(o => o.label), confirmed, ...(note ? { note } : {}) });
     // The recap: the agenda and its notes as they stood when the session ended.
@@ -249,13 +255,15 @@ export function endSession(store, ref, { homework = [], next = null, now = new D
 // The review gate: the key numbers this session looks at before it ends (REVIEW in js/registry/program.js), each
 // with its value and level; Looks right locks a row to Actual, Edit opens the field. The open checklist items are
 // listed as what will carry over.
-export function reviewOf(doc, ref, { now = new Date(), flags = [] } = {}) {
+export function reviewOf(doc, ref, { now = new Date(), flags = [], since = null } = {}) {
   const picture = pictureOf(doc, ref, { now });
   const sessions = sessionsOf(doc, ref, { now, flags, picture });
   const n = sessionNo(doc), cur = sessions[n - 1];
   const groups = REVIEW.groups[cur.id] ?? REVIEW.fallback;
   const rec = id => doc.records.find(r => r.id === id) ?? null;
-  const rows = picture.items.filter(it => groups.includes(it.group)).map(it => {
+  // since (the Revisit session's end, answer 143): only the numbers touched during the session.
+  const touched = it => !since || (it.recId && Date.parse(rec(it.recId)?.updatedAt ?? 0) >= Date.parse(since)) || (it.lines || []).some(l => Date.parse(rec(l.id)?.updatedAt ?? 0) >= Date.parse(since));
+  const rows = picture.items.filter(it => groups.includes(it.group) && touched(it)).map(it => {
     const r = it.recId ? rec(it.recId) : null;
     let value;
     if (it.kind === 'category') value = `${it.lines.length} ${it.lines.length === 1 ? 'line' : 'lines'}, ${fmt.money(it.lines.reduce((s, l) => s + (l.amount ?? 0), 0))} a month`;

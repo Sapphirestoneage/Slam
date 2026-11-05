@@ -75,7 +75,7 @@ Scorecard,Goals,count short-term and count long-term goals complete is Strong; a
 Scorecard,Mindset,"The latest money feeling: at or over strong is Strong, at or under hole is a Hole, between is OK; none stays unrated",FOO step 0b; the usual effort 4 h; #/home/session
 Thresholds,cashFlow strong,0.2,
 Thresholds,cashFlow ok,0.05,
-Thresholds,emergency strongMonths,3,
+Thresholds,emergency strongMonths,5,
 Thresholds,debt dti,0.36,
 Thresholds,credit strong,740,
 Thresholds,credit ok,670,

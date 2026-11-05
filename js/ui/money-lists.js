@@ -615,7 +615,7 @@ export const assetCharts = [
         axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false }, pointer: { show: false },
         title: { offsetCenter: [0, '30%'], color: t.text2, fontSize: 12 },
         detail: { offsetCenter: [0, '-5%'], color: t.text, fontSize: 22, fontWeight: 700, formatter: () => `${money(d.cash)} of ${money(d.target)}` },
-        data: [{ value: d.cash, name: `${d.months.toFixed(1)} months of spending (age / 5)` }] }] }),
+        data: [{ value: d.cash, name: `${d.months.toFixed(1)} months of spending (the Rule of 5)` }] }] }),
   },
   {
     name: 'Contribution limits',

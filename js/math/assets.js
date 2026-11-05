@@ -36,7 +36,7 @@ export function runway({ cash, spending, fixedFloor = null }) {
 // M43: Rule of 5.
 export function ruleOf5({ age, spending, emergencyCash = null }) {
   if (isBlank(age)) return needs('M43', ['age'], { unit: 'months' });
-  const months = age / RULES.ruleOf5Divisor;
+  const months = RULES.bigEMonths; // the Rule of 5: five months of spending, one definition with big e (overnight answer, Nov 5)
   if (isBlank(spending)) return { ...needs('M43', ['spending']), months };
   const target = months * spending;
   const keepPace = spending / RULES.keepPaceMonths;

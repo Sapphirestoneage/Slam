@@ -2,7 +2,7 @@
 // Net worth › Assets › Cash layers (Phase 3.5 section 3). Formatting only: js/math/layers.js does the math.
 import { h } from './dom.js';
 import * as S from './staples.js';
-import { layersOf } from '../math/layers.js';
+import { layersOf, recordDip } from '../math/layers.js';
 import { money } from '../format.js';
 
 export const BACKUP_KINDS = ['Unemployment benefits', 'Disability coverage', 'Available credit', 'What you could cut', 'Family help'];
@@ -37,13 +37,31 @@ export function layersCard(ctx) {
       S.moneyInput(b?.amount ?? null, v => setBackups(v == null ? backups.filter(x => x.kind !== kind) : [...backups.filter(x => x.kind !== kind), { kind, amount: v }]), { hint: 'Dollars you could lean on', key: `backup:${kind}` }));
   };
   return h('div.card.layers-card', {},
-    h('div.row-line', { style: { justifyContent: 'space-between' } }, h('span.muted', {}, 'Your cash, filled in order. The FOO reads these.'),
+    h('div.row-line', { style: { justifyContent: 'space-between' } }, h('span.muted', {}, 'Your cash fills these buckets in order: Buffer, little e, then big e. An emergency dips the Buffer first and big e last.'),
+      S.button('Record a dip', { size: 'small', onClick: e => dipBox(e.currentTarget, ctx, L, cash) }),
       S.toggle([['virtual', 'One account, layers inside'], ['accounts', 'One account per layer']], mode, v => setSetting({ layerMode: v }), { label: 'How the layers are held' })),
     h('div.layer-list', {}, rows),
     L.extra > 0.5 ? h('p.muted', { style: { margin: '8px 0 0' } }, `${money(L.extra)} of cash sits above every layer.`) : null,
+    (doc.spending?.dips || []).length ? S.moreBlock('layers:dips', () => h('ul.op-list', {}, [...doc.spending.dips].reverse().map(d => h('li', {}, `${new Date(d.at).toLocaleDateString()}: ${money(d.amount)}${d.note ? ` (${d.note})` : ''} from ${d.from.map(f => `${f.name} ${money(f.amount)}`).join(', ')}${d.uncovered ? `; ${money(d.uncovered)} not covered` : ''}`))), { label: `Dips (${doc.spending.dips.length})` }) : null,
     S.moreBlock('layers:gaps', () => h('div.stack', { style: { gap: '8px' } }, h('span.muted.small', {}, 'A known stretch with less or no pay (a summer off, leave, a contract ending). Spending times months; within 12 months it moves to FOO step 1.'),
       ...gaps.map(gapRow), S.button('Add a gap', { size: 'small', iconName: 'plus', onClick: () => setGaps([...gaps, { id: `g${Date.now().toString(36)}`, name: null, start: null, months: 1 }]) })), { label: `Income gaps (${gaps.length})` }),
     S.moreBlock('layers:backups', () => h('div.stack', { style: { gap: '8px' } }, h('span.muted.small', {}, 'Backups of the backups add months of runway. They are never counted as a fund.'),
       ...BACKUP_KINDS.map(backupRow),
       L.backups.months != null && L.backups.total ? h('span', {}, `Adds about ${L.backups.months.toFixed(1)} months to your runway${L.runwayWithBackups != null ? ` (${L.runway.toFixed(1)} now, ${L.runwayWithBackups.toFixed(1)} with them)` : ''}.`) : null), { label: 'Backups of the backups' }));
+}
+
+// An emergency paid from cash: how much, a note, which account; the layers say what it came out of.
+function dipBox(anchor, ctx, L, cash) {
+  const amt = S.moneyInput(null, () => {}, { hint: 'How much', key: 'dip:amount' });
+  const note = h('input', { placeholder: 'What happened (optional)', 'aria-label': 'What happened' });
+  let acct = cash[0]?.id ?? null;
+  S.popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, 'Record a dip'), h('span.muted.small', {}, 'It comes out of the Buffer first, then little e, then big e.'), amt, h('label.field', { style: { width: '280px' } }, note),
+    cash.length > 1 ? S.select(cash.map(a => [a.id, a.name]), acct, v => { acct = v; }, { label: 'From which account', hint: 'Account', width: 220 }) : null,
+    h('div.row-line', {}, S.button('Record it', { kind: 'primary', onClick: () => {
+      const v = S.parseNum(amt.querySelector('input').value);
+      if (v == null || v <= 0) { S.toast('How much?'); return; }
+      S.closePop();
+      const d = recordDip(ctx.store, { amount: v, note: note.value.trim() || null, now: ctx.now().toISOString(), layers: L.layers, accountId: acct });
+      S.toast(`Dip recorded: ${d.from.map(f => `${f.name} ${money(f.amount)}`).join(', ')}${d.uncovered ? `; ${money(d.uncovered)} not covered` : ''}.`, { undo: () => ctx.store.undo() });
+    } }), S.button('Cancel', { onClick: S.closePop }))), { width: 340 });
 }

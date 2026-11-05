@@ -31,6 +31,7 @@ const root = document.documentElement;
 
 const app = {
   flags, // efficiency flags (data/flags.json), read by the FOO
+  fields, // every field with where it lives (data/fields.json), for Find
   prefs: getPrefs(adapter),
   store: null, ctx: null, saver: null, hasClient: false,
 

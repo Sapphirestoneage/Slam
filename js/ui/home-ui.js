@@ -33,7 +33,7 @@ export function homeScreen(app, ctx) {
     pictureCard(ctx, P),
     P.afterIntake ? holesCard(app, ctx, P) : null,
     filledCard(ctx, P),
-    P.afterIntake && !P.scorecard.open.length ? nextChapterCard(ctx, { unrated: P.scorecard.unrated }) : null, // answer 137: only a hole blocks
+    P.afterIntake && !P.scorecard.open.length ? nextChapterCard(ctx, { unrated: P.scorecard.unrated, parked: P.scorecard.parkedHoles }) : null, // answers 137, 140: only an open hole blocks
     nextThings(app, ctx, P),
     moneyInOneLine(app, ctx, P.m),
     P.inSession ? wrapUp(app, ctx, P) : null,
@@ -200,13 +200,14 @@ function filledCard(ctx, P) {
       f.fiDays != null ? h('span.gain', {}, `+${f.fiDays.toFixed(1)} FI days`) : null, f.payoff != null ? h('span.muted.small', {}, `${money(f.payoff)} a year`) : null))));
 }
 // The next chapter: opens when no hole is left (and the S10 and S11 checklist once every area is rated).
-function nextChapterCard(ctx, { inside = false, unrated = [] } = {}) {
+function nextChapterCard(ctx, { inside = false, unrated = [], parked = [] } = {}) {
   const c = ctx.store.doc.scorecard?.nextChapter || {};
   const save = patch => ctx.store.setIn('scorecard', ['nextChapter'], { ...c, ...patch }, 'Next chapter');
   const d = h('input', { type: 'date', value: c.date || '', 'aria-label': 'Next chapter date' });
   d.onchange = () => save({ date: d.value || null });
   return h(`div.card${inside ? '.inner' : ''}`, { style: inside ? { marginTop: '10px' } : null }, h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Next chapter'), h('span.muted', {}, 'No hole left: what comes next (a home, kids, a career change)')),
     unrated.length ? h('p.muted.small', { style: { margin: '6px 0 0' } }, `Rate ${unrated.map(a => a.name).join(', ')} to be sure.`, ' ', h('a', { href: '#/plan/scorecard' }, 'Scorecard ›')) : null,
+    parked.length ? h('p.muted.small', { style: { margin: '6px 0 0' } }, `${parked.length} parked ${parked.length === 1 ? 'hole' : 'holes'}: ${parked.map(a => a.name).join(', ')}.`, ' ', h('a', { href: '#/plan/scorecard' }, 'Scorecard ›')) : null,
     h('div.row-line', { style: { gap: '10px', marginTop: '10px', alignItems: 'flex-end' } },
       S.labelled('What it is', S.textInput(c.text ?? null, v => save({ text: v }), { hint: 'A home, kids, a career change', width: 320, key: 'chapter:text' })),
       S.labelled('Amount', S.moneyInput(c.amount ?? null, v => save({ amount: v }), { hint: 'Add amount', key: 'chapter:amount' })),
