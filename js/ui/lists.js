@@ -2,7 +2,7 @@
 // List setups built from the staples: debts and spending lines. Each list is a view of the one record type.
 import { h, icon } from './dom.js';
 import { addPresets } from '../presets.js';
-import { fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard } from './staples.js';
+import { fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
 import { pct } from '../format.js';
 import { feeApr } from '../math/debt.js';
 import { monthlyFrom } from '../math/income.js';
@@ -70,7 +70,7 @@ export function debtList(ref, { cards = null } = {}) {
         const longest = Math.max(0, ...m.debts.map(x => x.payoff.value ?? 0));
         return payoffCell(ctx, d, longest);
       } },
-      { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) },
+      { label: 'Owner', couple: true, render: (ctx, r, m, up) => ownerToggle(ctx, r, up) },
     ],
     // Enter once: the payment also shows in Cash flow as a Budget line From Debt.
     secondary: (ctx, r, up) => [labelled('In Cash flow', fromButton('Payment on the Budget', '#/cash-flow/budget', `auto:${r.id}`), { note: 'Entered here once; the Budget shows it From Debt' }), ...[debtSecondary(ctx, r, up)].flat()],
@@ -170,7 +170,7 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
         return select([['checking', 'Checking'], ['savings', 'Savings'], ...cards.map(c => [c.id, c.name || 'Credit card'])], r.paidWith, v => up({ paidWith: v }), { label: 'Paid with', hint: 'Paid with', width: 140 });
       } } : null,
       { label: 'Per', render: (ctx, r, m, up) => perPicker(r.per, v => up({ per: v }), { key: `${r.id}:per` }) },
-      { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) },
+      { label: 'Owner', couple: true, render: (ctx, r, m, up) => ownerToggle(ctx, r, up) },
     ],
     // Amount is and Date is live behind More: the narrowest row (fix pass item 3).
     secondary: (ctx, r, up) => [

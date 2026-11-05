@@ -59,6 +59,8 @@ export const AREAS = [
       f('state', 'State', 'text', { named: 'Profile_state' }),
       f('nyc', 'Live in New York City', 'yesno', { named: 'Profile_nyc' }),
       pick('household', 'Solo or couple', ['Solo', 'Couple'], { named: 'Profile_household' }),
+      pick('mode', 'Household mode', ['Solo', 'Dating', 'Living together', 'Engaged', 'Married separate', 'Married merged']), // F2: sets Solo or couple, the default view and the filing status (js/registry/couples.js)
+      pick('splitMethod', 'Shared bills split', ['50/50', 'By income']), // F2: By income uses each person's take-home as the share when none is typed
       f('partnerName', 'Partner first name'), f('partnerBirthYear', 'Partner birth year', 'number'),
       f('dependents', 'Dependents', 'number'), f('kidAges', 'Kids ages', 'list'),
       pick('workSituation', 'Work situation', ['Employed (W-2)', 'Self-employed', 'Mixed', 'Between jobs', 'Student', 'Retired']),
@@ -338,7 +340,7 @@ export const AREAS = [
       f('fundTag', 'Purpose tag', 'text', { kinds: ['event'] }),
       f('coverageId', 'For this coverage', 'text', { kinds: ['event'], sheet: { skip: 'points at a Protection row by its id; set by Add the usual dates' } }),
       NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS,
-    ].map(x => (['per', 'owner', 'stress'].includes(x.key) ? { ...x, unused: true, sheet: { skip: 'not used on goals and events' } } : x)),
+    ].map(x => (['per', 'stress'].includes(x.key) ? { ...x, unused: true, sheet: { skip: 'not used on goals and events' } } : x)), // owner: a goal is one person's or Joint (F2)
   },
   {
     id: 'gaps', prefix: 'Gaps', tab: 'Income gaps', source: 'list', part: 'profile', path: 'incomeGaps',
@@ -366,6 +368,7 @@ export const NOT_IN_SHEET = {
   'settings.fastTrack': 'the last Fast Track run, kept to compare',
   'settings.presetsAdded': 'marks that the starter lines were added once',
   'settings.layerAccounts': 'which account holds each cash layer; set on Cash layers',
+  'settings.person': 'the person filter on Net worth and Cash flow (all, Me, Partner), a screen setting (F2)',
   'spending.basics': 'Fast Track totals, kept to compare with the lines',
   'spending.calendar': 'calendar marks (paid, moved, partial) and the starting balance; set on the calendar',
   'spending.months.closed': 'month-end close state; set on Month end',

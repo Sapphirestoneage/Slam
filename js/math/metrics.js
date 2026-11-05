@@ -5,6 +5,7 @@ import { statusOf } from '../records.js';
 import { isBlank, needs } from './result.js';
 import { monthlyFrom, incomeRow, defaultFilingStatus } from './income.js';
 import { gatesOf, visible } from '../gates.js';
+import { inView, modeOf, MODES, ownerOf } from '../registry/couples.js';
 import { myShare, withHome, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor } from './spending.js';
 import { cardMinimum, payoffMonths, totalInterest, payoffPlan } from './debt.js';
 import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
@@ -35,10 +36,12 @@ export function ageOf(profile, now = new Date()) {
   return now.getFullYear() - profile.birthYear - (now.getMonth() + 1 < m ? 1 : 0);
 }
 
-export function inputsOf(doc, ref, now = new Date()) {
+export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   const gates = gatesOf(doc.profile, doc.client);
-  const live = visible(doc.records, gates, ref); // gated-out rows count nowhere (R001, R066)
-  const filingStatus = doc.profile.filingStatus ?? defaultFilingStatus(gates.couple); // R043
+  const mode = modeOf(doc.profile);
+  const liveAll = visible(doc.records, gates, ref); // gated-out rows count nowhere (R001, R066)
+  const live = liveAll.filter(r => inView(r, person, mode)); // a person view keeps theirs and the Joint ones (F2)
+  const filingStatus = doc.profile.filingStatus ?? (mode ? MODES[mode].filing : defaultFilingStatus(gates.couple)); // R043; F2: the mode's default
   const place = placeOf(doc.profile); // B5.1: NY and NYC tax when the Profile says so
   const link = link401k(live); // B3.10: Income and the 401(k) fill each other in
   // Answer to Brandon question 71: the Health coverage row owns the premium. Paid from the paycheck, the job borrows
@@ -67,6 +70,14 @@ export function inputsOf(doc, ref, now = new Date()) {
     return out;
   };
   const income = live.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(withLink(r), { filingStatus, ref, place }) }));
+  // F2: shared bills split by income. This client's share of the two take-homes, used as the split when About you says By income and no share is typed.
+  const splitShare = (() => {
+    if (!mode || !MODES[mode].split || doc.profile.splitMethod !== 'By income') return null;
+    const rows = liveAll.filter(r => r.kind === 'income').map(r => ({ who: ownerOf(r, mode), v: incomeRow(withLink(r), { filingStatus, ref, place }).takeHome.value }));
+    const me = rows.filter(x => x.who === 'Me').reduce((s, x) => s + (x.v ?? 0), 0), partner = rows.filter(x => x.who === 'Partner').reduce((s, x) => s + (x.v ?? 0), 0);
+    return me + partner > 0 ? me / (me + partner) : null;
+  })();
+  const profile = splitShare != null && doc.profile.splitMine == null ? { ...doc.profile, splitMine: splitShare } : doc.profile;
   const takeHome = income.length
     ? income.reduce((s, x) => (s === null || x.takeHome.value === null ? null : s + x.takeHome.value), 0)
     : null;
@@ -91,7 +102,7 @@ export function inputsOf(doc, ref, now = new Date()) {
   // Enter once, show in both: each debt's payment is a line From Debt; a typed line that looks like a debt payment or
   // a premium already paid asks "Same as your ...?" and is left out only after Yes (js/math/linked.js).
   const payFrequency = income.find(i => i.r.values.payFrequency)?.r.values.payFrequency ?? null;
-  const typedLines = live.filter(r => r.kind === 'bill').map(r => withHome({ ...r, ...r.values, amount: read(r, 'amount').v }, doc.profile)); // About you › Home fills the blanks
+  const typedLines = live.filter(r => r.kind === 'bill').map(r => withHome({ ...r, ...r.values, amount: read(r, 'amount').v }, profile)); // About you › Home fills the blanks; the by-income split when chosen (F2)
   const autoLines = debtLines(debts);
   const premiums = premiumSources(live.filter(r => r.kind === 'coverage'), payFrequency);
   const { dupOf, askOf } = duplicates(typedLines, { debts, autos: autoLines, premiums, payFrequency });
@@ -128,7 +139,7 @@ export function inputsOf(doc, ref, now = new Date()) {
   }, 0);
   const a = doc.assumptions;
   return {
-    place, link, sinkingMonthly, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, none,
+    place, link, sinkingMonthly, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, none, mode, person, splitShare,
     debtOrder: doc.settings?.debtOrder ?? 'avalanche',
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || useLines ? 0 : debtPayments), // the lines hold each payment, From Debt
     autoLines, dupOf, askOf, typedLines, premiums, payFrequency, health: health ? { id: health.id, perPaycheck: healthPerPay, fromPay: !!healthFromPay, jobId: healthJob?.id ?? null } : null,
@@ -148,8 +159,8 @@ export function inputsOf(doc, ref, now = new Date()) {
   };
 }
 
-export function metrics(doc, ref, { now = new Date() } = {}) {
-  const x = inputsOf(doc, ref, now);
+export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
+  const x = inputsOf(doc, ref, now, { person });
   const out = { inputs: x };
   out.netWorth = x.none && !x.accounts.length && !x.things.length && !x.debts.length
     ? { id: 'M40', value: 0, needs: [], guess: false, unit: 'money', text: 'None of these: no cash, investments, home, car or debt, so net worth is $0.' }

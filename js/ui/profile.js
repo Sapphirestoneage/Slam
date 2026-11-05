@@ -3,6 +3,9 @@
 // the accounts gate with counts (R001 to R003), and the couples split (R177 to R179). Answers live in doc.profile.
 import { myShare, wholeBill, withHome, partnerSplits, peopleSharing } from '../math/spending.js';
 import { LISTS } from '../registry/assumptions.js';
+import { MODES, MODE_NAMES, modeOf, SPLIT_METHODS } from '../registry/couples.js';
+import { metrics } from '../math/metrics.js';
+import { setHouseholdMode } from '../couples.js';
 import { h } from './dom.js';
 import { textInput, toggle, select, stepper, checkbox, labelled, moreBlock, pctInput, toast, laterButton, button, moneyInput, parkProfile } from './staples.js';
 import { gatesOf, syncCount, WORK, HOUSING, COVERAGE, AREAS, REAL_TYPES, recordFor } from '../gates.js';
@@ -61,7 +64,8 @@ export function profileScreen(app, ctx) {
       for (const r of store.find(x => x.kind === 'bill' && x.values.category === 'Rent or mortgage' && (x.values.whoPays ?? 'Me') === 'Me')) store.update(r.id, { whoPays: 'Covered by someone' });
     }
   };
-  const setCouple = v => { store.transaction('Solo or couple', () => { set({ household: v }); store.setDoc('client', { couple: v === 'Couple' }); }); };
+  // F2: the mode sets Solo or couple; a switch keeps every row and tag, and changes the defaults only (the view, the filing status).
+  const setMode = v => setHouseholdMode(store, v);
   const gate = (label, control, note = null, key = null) => h('div.gate', {}, h('span.gate-label', {}, label), control, note ? h('span.muted.small', {}, note) : null, key ? laterButton(later(key), label) : null);
   const hub = section('What applies to me', 'needs',
     h('p.muted', {}, 'Each answer adds or removes those sections everywhere. Nothing is deleted when something is turned off.'),
@@ -74,7 +78,7 @@ export function profileScreen(app, ctx) {
       gate('HSA-eligible plan', yesNo(p.hsaEligible ?? null, v => set({ hsaEligible: v }), 'HSA-eligible'), null, 'hsaEligible'),
       gate('FSA at work', yesNo(p.fsa ?? null, v => set({ fsa: v }), 'FSA'), null, 'fsa'),
       gate('Equity pay (ESPP, RSU)', yesNo(p.equityPay ?? null, v => set({ equityPay: v }), 'Equity pay'), null, 'equityPay'),
-      gate('Solo or couple', pick(['Solo', 'Couple'], g.couple ? 'Couple' : p.household ? 'Solo' : null, setCouple, 'Solo or couple'))));
+      gate('Household', select(MODE_NAMES, modeOf(p), setMode, { label: 'Household mode', width: 190, key: 'p:mode' }), modeOf(p) ? MODES[modeOf(p)].words : 'Solo, dating, living together, engaged, married')));
 
   // ---------- About you ----------
   const about = section('About you', 'needs',
@@ -159,7 +163,8 @@ export function profileScreen(app, ctx) {
   const couple = g.couple ? section('Couples split', 'needs',
     h('div.form-grid', {},
       field('How they run money', 'moneyStyle', pick(['Joint', 'Separate', 'Mix'], p.moneyStyle, v => set({ moneyStyle: v }), 'How they run money')),
-      field('Split: my share', 'splitMine', pctInput(p.splitMine ?? null, v => set({ splitMine: v }), { hint: 'e.g. 50', key: 'p:split' }), { note: 'Your share of the bills you split (Home and shared bills). Blank: an even split' })),
+      field('Split: my share', 'splitMine', pctInput(p.splitMine ?? null, v => set({ splitMine: v }), { hint: 'e.g. 50', key: 'p:split' }), { note: 'Your share of the bills you split (Home and shared bills). Blank: an even split' }),
+      MODES[modeOf(p)]?.split ? field('Shared bills split', 'splitMethod', pick(SPLIT_METHODS, p.splitMethod ?? null, v => set({ splitMethod: v }), 'Shared bills split'), { note: (() => { const sh = metrics(store.doc, ctx.ref, { now: ctx.now() }).inputs.splitShare; return p.splitMethod === 'By income' ? (sh == null ? 'By income needs a take-home for each person' : `By income: your share is ${Math.round(sh * 100)}% of the two take-homes`) : 'Even, or each by their take-home'; })() }) : null),
     moreBlock('profile:couple', () => {
       const accts = store.find(r => r.kind === 'account');
       const joint = new Set(p.jointAccounts || []);

@@ -14,6 +14,8 @@ import { listsScreen, sessionScreen, discoveryScreen } from './ui/tools-ui.js';
 import { overviewScreen, onePagerScreen, historyScreen } from './ui/report-ui.js';
 import { statementsScreen } from './ui/statements-ui.js';
 import { layersCard } from './ui/layers-ui.js';
+import { metrics as metricsOf } from './math/metrics.js';
+import { personLabels, modeOf, MODES, viewsOf } from './registry/couples.js';
 import { fooScreen } from './ui/foo-ui.js';
 import { scorecardScreen } from './ui/scorecard-ui.js';
 import { reviewScreen } from './ui/review-ui.js';
@@ -105,8 +107,19 @@ const MM = {
 // Headline strips (reorganize pass). Net worth: what you own and owe. Cash flow: the waterfall, top to bottom.
 const sumOf = (list, f) => list.reduce((t, x) => t + (f(x) ?? 0), 0);
 const okMoney = (id, value, text) => ({ id, value, needs: [], unit: 'money', text });
+// F2: the person filter. All, or one person (their rows and the Joint ones). The mode sets the default; the pick is kept in settings.person.
+export function personOf(ctx) { const p = ctx.store.doc.settings?.person; const mode = modeOf(ctx.store.doc.profile); const v = p ?? (mode ? MODES[mode].view : 'all'); return v === 'all' && mode && !MODES[mode].together ? 'Me' : v; } // no combined totals in Dating or Living together
+export function personMetrics(ctx) { const p = personOf(ctx); return p === 'all' ? ctx.metrics() : metricsOf(ctx.store.doc, ctx.ref, { now: ctx.now(), person: p }); }
+export function personBar(ctx) {
+  if (!ctx.couple) return null;
+  const names = personLabels(ctx.store.doc);
+  const mode = modeOf(ctx.store.doc.profile), cfg = MODES[mode] || MODES['Married merged'];
+  return h('div.row-line.person-bar', { style: { gap: '10px', marginBottom: '8px' } }, h('span.muted.small', {}, 'Show'),
+    S.toggle(viewsOf(mode || 'Married merged', names), personOf(ctx), v => ctx.store.setDoc('settings', { person: v }), { label: 'Whose numbers' }),
+    personOf(ctx) !== 'all' ? h('span.muted.small', {}, `${names[personOf(ctx)]}'s rows and the Joint ones`) : cfg.combined === 'preview' ? h('span.muted.small', {}, 'A preview of the two together; nothing is merged') : null);
+}
 export function netWorthStrip(ctx) {
-  const m = ctx.metrics(), x = m.inputs;
+  const m = personMetrics(ctx), x = m.inputs;
   const owned = [...x.accounts, ...x.things].filter(a => a.value != null);
   const owed = x.debts.filter(d => d.balance != null);
   const list = (rows, f) => rows.map(r => `${r.name} ${money(f(r))}`).join(' + ');
@@ -114,21 +127,21 @@ export function netWorthStrip(ctx) {
     : x.none ? okMoney('M40', 0, 'None of these: no assets.') : needs('M40', ['an asset balance'], { unit: 'money' });
   const debt = owed.length ? okMoney('M30', sumOf(owed, d => d.balance), `${list(owed, d => d.balance)} = ${money(sumOf(owed, d => d.balance))}.`)
     : x.none || x.gates.areas.debt === false ? okMoney('M30', 0, 'No debt, per About you.') : needs('M30', ['a debt balance'], { unit: 'money' });
-  return S.summaryStrip(ctx, [
+  return h('div', {}, personBar(ctx), S.summaryStrip(ctx, [
     { label: 'Total net worth', result: m.netWorth, key: 'netWorth' },
     { label: 'Liquid net worth', result: m.liquidNetWorth, key: 'liquidNetWorth' },
     { label: 'Total assets', result: assets, home: '#/net-worth/assets' },
-    { label: 'Total debt', result: debt, key: 'debtTotal', lowerIsGood: true, home: '#/net-worth/debt' }]);
+    { label: 'Total debt', result: debt, key: 'debtTotal', lowerIsGood: true, home: '#/net-worth/debt' }]));
 }
 // Every step is a Show the math button; take-home and free are the totals.
 export function cashFlowStrip(ctx) {
-  const m = ctx.metrics();
+  const m = personMetrics(ctx);
   const f = flowOf(m.inputs, { pretaxSaving: m.pretaxSaving, setAside: setAsideOf(ctx.store.doc, ctx.ref, ctx.now()).total }); // goals and sinking funds are savings
   const step = (label, v, text, { sign = '', total = false, home = null } = {}) => h(`div.wf-step${total ? '.total' : ''}`, {},
     home ? h('a.label.metric-home', { href: home }, label) : h('span.label', {}, label),
     h('div.wf-num', {}, v === null ? h('span.muted', {}, '–') : [sign ? h('span.wf-sign', { 'aria-hidden': 'true' }, sign) : null, S.mathButton({ id: 'Cash flow', value: v, needs: [], text }, money(v))]));
   const gut = f.source !== 'lines';
-  return h('div.card.waterfall', { role: 'group', 'aria-label': 'Cash flow, top to bottom' },
+  return h('div', {}, personBar(ctx), h('div.card.waterfall', { role: 'group', 'aria-label': 'Cash flow, top to bottom' },
     step('Gross', f.gross, 'Every paycheck before tax, a month.', { home: '#/cash-flow/income' }),
     step(f.premiums ? 'Taxes and premiums' : 'Taxes', f.taxes, `Gross minus what is saved from the paycheck minus take-home${f.premiums ? `, including ${money(f.premiums)} of premiums from the paycheck` : ''}.`, { sign: '−', home: '#/cash-flow/taxes' }),
     step('Saved from paycheck', f.beforeTax, '401(k) (traditional or Roth) and HSA money taken from the paycheck, a month. A Roth 401(k) is taxed first, so it does not lower your tax.', { sign: '−' }),
@@ -137,7 +150,7 @@ export function cashFlowStrip(ctx) {
       : [step('Fixed', f.fixed, 'Lines marked Fixed, your share, plus debt payments.', { sign: '−', home: '#/cash-flow/budget' }),
         step('Variable', f.variable, 'Every other line, your share.', { sign: '−', home: '#/cash-flow/budget' })],
     step('Savings', f.savings, 'Retirement lines, after-tax contributions, savings goals and sinking funds, a month.', { sign: '−' }),
-    step('Free', f.free, 'Take-home minus spending minus savings.', { sign: '=', total: true }));
+    step('Free', f.free, 'Take-home minus spending minus savings.', { sign: '=', total: true })));
 }
 
 const NET_WORTH = { assets: MM.assets, debt: MM.debt, 'credit-cards': MM['credit-cards'], protection: MM.protection };

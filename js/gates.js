@@ -12,6 +12,7 @@ export const PROTECTION_TYPES = ['Health', 'Life', 'Disability', 'Renters or hom
 // Debts that ride on a home or car (R049): the same loan shows on the asset and on Debt.
 export const LOAN_FOR = { Car: 'Car loan', Home: 'Mortgage' };
 
+import { MODES } from './registry/couples.js';
 export function gatesOf(profile = {}, client = {}) {
   const p = profile || {};
   const work = p.workSituation ?? null;
@@ -19,7 +20,7 @@ export function gatesOf(profile = {}, client = {}) {
   // Fast Track leaves its area unanswered, so it still shows.
   const area = k => (p.noneOfThese ? false : p.areas?.[k] ?? null);
   return {
-    couple: p.household ? p.household === 'Couple' : !!client.couple, // R007
+    couple: p.mode ? MODES[p.mode]?.couple ?? false : p.household ? p.household === 'Couple' : !!client.couple, // R007; F2: the mode decides
     car: p.hasCar ?? null, // R009
     pets: p.hasPets ?? null, // R011
     kids: p.dependents === null || p.dependents === undefined ? null : p.dependents > 0, // R010

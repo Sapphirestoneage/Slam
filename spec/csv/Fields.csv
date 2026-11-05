@@ -394,3 +394,6 @@ F391,Built,,Assets,Assets,Locked (confirmed),Secondary,,,,,,,,,Now,Added from th
 F392,Built,,Needs,Spending lines,Locked (confirmed),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,choice,,,spending.locked
 F393,Built,,Goals,Goals and events,Short or long term,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Plan › Goals,choice,,,goals.horizon
 F394,Built,,Goals,Goals and events,"Need, want or wish",Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Plan › Goals,choice,,,goals.tag
+F395,Built,,Profile,Profile,Household mode,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.mode
+F396,Built,,Goals,Goals and events,Owner,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Plan › Goals,choice,,,goals.owner
+F397,Built,,Profile,Profile,Shared bills split,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.splitMethod

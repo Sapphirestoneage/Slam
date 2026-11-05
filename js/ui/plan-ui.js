@@ -187,6 +187,7 @@ function milestoneList() {
       { label: 'Amount', render: (ctx, r, m, up) => { const t = fiTargets(ctx.metrics(), ctx.store.doc)[r.type]?.value ?? null; return r.amount == null && t != null ? h('span.computed', { title: 'The target' }, money(t)) : S.moneyInput(r.amount, v => up({ amount: v }), { hint: 'Add amount', key: `${r.id}:amount` }); } },
       { label: 'Short or long term', render: (ctx, r, m, up) => S.toggle([['Short term', 'Short'], ['Long term', 'Long']], r.values.horizon ?? null, v => up({ horizon: v }), { label: 'Short or long term', clearable: true }) },
       { label: 'Need, want or wish', render: (ctx, r, m, up) => S.select(['Need', 'Want', 'Wish'], r.values.tag ?? null, v => up({ tag: v }), { label: 'Need, want or wish', hint: 'Tag', width: 110, key: `${r.id}:tag` }) },
+      { label: 'Whose', couple: true, render: (ctx, r, m, up) => S.ownerToggle(ctx, r, up) }, // F2
     ],
     secondary: (ctx, r) => [
       r.type === 'Barista FI' ? S.labelled('Part-time income a month', S.moneyInput(ctx.store.doc.assumptions.partTimeIncome ?? null, v => ctx.store.setDoc('assumptions', { partTimeIncome: v }), { hint: 'Add income' }), { note: 'Barista FI only' }) : null,

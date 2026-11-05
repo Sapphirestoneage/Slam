@@ -2,7 +2,7 @@
 // My Money lists (build phase 5, Mockup: Income, Assets, Protection, Taxes): one record type, viewed by sub-tab.
 // Detail stays behind More (R023); fields that do not apply to this household never show (gates.js).
 import { h } from './dom.js';
-import { fromButton, amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park } from './staples.js';
+import { fromButton, amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, ownerToggle } from './staples.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
 import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom } from '../math/income.js';
 import { limitUsed } from '../math/assets.js';
@@ -18,7 +18,7 @@ import { money, pct } from '../format.js';
 
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const short = v => (Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
-const owner = { label: 'Owner', couple: true, render: (ctx, r, m, up) => toggle(['Me', 'Partner', 'Joint'], r.owner || 'Me', v => up({ owner: v }), { label: 'Owner' }) };
+const owner = { label: 'Owner', couple: true, render: (ctx, r, m, up) => ownerToggle(ctx, r, up) }; // F2: the people's names; a retirement account is one person's
 const num = x => (x === null ? null : Number(x));
 // "I'll find it later" on one field of a row (Brandon B1.2): the field's own status, shown on the Homework list.
 const L = (ctx, r, field) => ({ on: r.fieldStatus?.[field] === 'Will email', set: on => ctx.store.setFieldStatus(r.id, field, on ? 'Will email' : null) });

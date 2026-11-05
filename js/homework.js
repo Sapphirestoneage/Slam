@@ -71,7 +71,7 @@ export function homeworkList(doc, records) {
     for (const [f, st] of Object.entries(r.fieldStatus || {})) if (st === LATER && r.status !== LATER) out.push({ key: `rec:${r.id}:${f}`, r, field: f, label: `${name}: ${fieldLabel(f)}`, where: whereToFind(f, r.type), due: r.values?.homeworkDue ?? null });
   }
   // Homework the coach made from an agenda item (doc.program.homework), with its status (To do, Client says done, Confirmed).
-  for (const hw of doc.program?.homework || []) if (hw.status !== 'Confirmed') out.push({ key: `hw:${hw.id}`, r: null, program: hw, label: hw.label, where: null, due: hw.due ?? null, from: hw.from });
+  for (const hw of doc.program?.homework || []) if (hw.status !== 'Confirmed') out.push({ key: `hw:${hw.id}`, r: null, program: hw, label: hw.label, where: null, due: hw.due ?? null, from: hw.from, person: hw.person ?? null });
   const statuses = doc.program?.homeworkStatus || {};
   for (const x of out) { const st = x.program ? { status: x.program.status, by: x.program.statusBy } : statuses[x.key]; x.status = st?.status ?? 'To do'; x.statusBy = st?.by ?? null; }
   return out;

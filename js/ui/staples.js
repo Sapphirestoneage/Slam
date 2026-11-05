@@ -13,6 +13,7 @@ import { canQuickFill, quickFill } from './quickfill.js';
 import { gatesOf, gatedOut } from '../gates.js';
 import { keepPlace } from './place.js';
 import { opened, install as installDismiss } from './dismiss.js';
+import { PERSONS, personLabels, onePerson, ownerOf, modeOf } from '../registry/couples.js';
 export { keepPlace };
 
 // ---------- Context: the store, the time view, the numbers, toasts ----------
@@ -55,6 +56,12 @@ export function addButton(thing, onClick) {
 // Segmented toggle (Fixed | Variable, $ | Hours | FI days, Side | Below ...). The pick colors at once,
 // even where nothing redraws (a box that only keeps the answer until Save).
 // clearable: clicking the picked one again takes the answer back (an answer, not a setting).
+// The Owner tag (F2): Person A, Person B or Joint, with the names once typed. A retirement or health account is one person's.
+export function ownerToggle(ctx, r, up) {
+  const names = personLabels(ctx.store.doc);
+  const options = (onePerson(r) ? PERSONS.filter(p => p !== 'Joint') : PERSONS).map(p => [p, names[p]]);
+  return toggle(options, ownerOf(r, modeOf(ctx.store.doc.profile)), v => up({ owner: v }), { label: 'Owner' });
+}
 export function toggle(options, value, onChange, { label = null, clearable = false } = {}) {
   return h('div.seg', { role: 'group', 'aria-label': label },
     options.map(o => {

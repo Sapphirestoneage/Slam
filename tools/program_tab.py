@@ -23,8 +23,9 @@ import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_D
 import { AREAS, RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER } from './js/registry/scorecard.js';
 import { ORDER, STEP_WORDS, PREREQS, CONDITIONS } from './js/registry/foo.js';
 import { STEPS, MARKERS, LADDER } from './js/registry/ladder.js';
+import { MODES, PERSONS, ONE_PERSON_TYPES } from './js/registry/couples.js';
 const prereqs = Object.fromEntries(Object.entries(PREREQS).map(([k, p]) => [k, { ...p, conditions: (p.conditions || []).map(c => CONDITIONS[c].label) }]));
-console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs }, LADDER: { STEPS, MARKERS, LADDER } }));
+console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs }, LADDER: { STEPS, MARKERS, LADDER }, COUPLES: { MODES, PERSONS, ONE_PERSON_TYPES } }));
 """
 RULE_WORDS = {
     "cashFlow": "The headline savings rate: Strong at or over strong, OK at or over ok, else Hole; a negative surplus is a Hole",
@@ -166,6 +167,12 @@ def main():
     for k in lad["MARKERS"]:
         row("Ladder", f"Marker: {k['name']}", k["what"], "Label editable per client (program.ladder.fatLabel)" if k.get("editable") else "")
     row("Ladder", "Heavy debt by quarters", ", ".join(f"{int(x * 100)}%" for x in lad["LADDER"]["heavyShares"]) + " of the heavy debt at Day 0 (today's when there is no Day 0 yet) paid down", "Heavy = cards, payday, personal, medical, BNPL, or any APR at or over the heavy line (QUESTIONS: heavy vs all consumer debt)")
+
+    # Couples (overnight F2).
+    cp = cfg["COUPLES"]
+    row("Couples", "", "Every income row, account, debt, goal and homework item carries an Owner tag: " + ", ".join(cp["PERSONS"]) + " (shown as the two first names, or Person A and Person B until typed). A retirement or health account is always one person's: " + ", ".join(cp["ONE_PERSON_TYPES"]) + ". The household mode on About you sets Solo or couple, the default person view on Net worth and Cash flow, and the filing status assumed until one is typed. Switching modes keeps every row and tag.", "js/registry/couples.js; js/couples.js setHouseholdMode; Net worth and Cash flow strips")
+    for name, m in cp["MODES"].items():
+        row("Couples", f"Mode: {name}", m["words"], f"couple {'yes' if m['couple'] else 'no'}; default view {'together' if m['view'] == 'all' else 'this client'}; filing {m['filing']}; new accounts {'Joint' if m['merged'] else 'one person'}")
 
     for r, (kind, cells) in enumerate(rows, 1):
         src = {"title": title_src, "head": head_src, "body": body_src}[kind]

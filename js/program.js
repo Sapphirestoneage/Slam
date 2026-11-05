@@ -8,6 +8,7 @@ import { foo } from './math/foo.js';
 import { gatesOf, visible } from './gates.js';
 import { SESSIONS, PACE, LEVELS, REVIEW, AGENDA, HOMEWORK_STATUSES, levelWord } from './registry/program.js';
 import { homeworkList } from './homework.js';
+import { MODES, modeOf, DISCLOSURE } from './registry/couples.js';
 import { fmt } from './math/result.js';
 import { scorecardOf, ratingOf } from './math/scorecard.js';
 import { THRESHOLDS } from './registry/scorecard.js';
@@ -125,8 +126,12 @@ export function setHomeworkStatus(store, key, status, { by = 'coach' } = {}) {
   if (hw) store.setIn('program', ['homework'], store.doc.program.homework.map(h => (h === hw ? { ...h, status, statusBy: by, statusAt: store.now() } : h)), 'Homework');
   else store.setIn('program', ['homeworkStatus', key], status === 'To do' ? undefined : { status, by, at: store.now() }, 'Homework');
 }
-export function makeHomework(store, sid, label, { link = null, due = null } = {}) {
-  const hw = { id: store.makeId(), label, from: sid, at: store.now(), status: 'To do', statusBy: null, ...(link ? { link } : {}), ...(due ? { due } : {}) };
+// F2: whose homework it is (Me, Partner or Joint) on homework the coach made.
+export function setHomeworkPerson(store, key, person) {
+  store.setIn('program', ['homework'], (store.doc.program?.homework || []).map(h => (`hw:${h.id}` === key ? { ...h, person: person ?? undefined } : h)), 'Homework person');
+}
+export function makeHomework(store, sid, label, { link = null, due = null, person = null } = {}) {
+  const hw = { id: store.makeId(), label, from: sid, at: store.now(), status: 'To do', statusBy: null, ...(link ? { link } : {}), ...(due ? { due } : {}), ...(person ? { person } : {}) }; // person (F2): Me, Partner or Joint
   store.setIn('program', ['homework'], [...(store.doc.program?.homework || []), hw], 'Make homework');
   return hw;
 }
@@ -160,6 +165,13 @@ export function agendaOf(doc, ref, { now = new Date(), flags = [], P = programOf
   for (const n of (doc.parking || []).filter(n => !n.filedTo)) suggest({ kind: 'parking', label: n.text, link: { kind: 'parking', noteId: n.id }, why: 'an open parking-lot question' });
   const top = P.scorecard.open[0];
   if (top) suggest({ kind: 'hole', label: `Top hole: ${top.name}`, key: 'holeFilled', from: sid, link: { kind: 'hole', areaId: top.id, route: '#/plan/scorecard' }, why: top.payoff ? `${Math.round(top.fiDays ?? 0)} FI days a year` : 'the top of the Scorecard' });
+  // F2: what the household mode suggests (Engaged: the disclosure checklist, a money talk, a wedding goal).
+  const mode = modeOf(doc.profile);
+  for (const what of MODES[mode]?.suggest || []) {
+    if (what === 'disclosure') for (const d of DISCLOSURE) suggest({ kind: 'mode', label: `Disclosure: ${d}`, link: { kind: 'route', route: d.startsWith('Debts') ? '#/net-worth/debt' : d.startsWith('Accounts') ? '#/net-worth/assets' : d.startsWith('Income') ? '#/cash-flow/income' : '#/net-worth/credit-cards' }, why: 'engaged: everything on the table' });
+    if (what === 'moneyTalk') suggest({ kind: 'mode', label: 'Money talk: how we will run money once married', link: { kind: 'route', route: '#/home/profile' }, why: 'engaged: the mode after the wedding' });
+    if (what === 'wedding' && !live.some(r => r.kind === 'milestone' && /wedding/i.test(r.name || ''))) suggest({ kind: 'mode', label: 'Add a wedding goal', link: { kind: 'route', route: '#/plan/goals' }, why: 'engaged: a date and an amount' });
+  }
   const old = now.getTime() - AGENDA.staleDays * 86400000;
   for (const r of live.filter(r => ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) && r.updatedAt && Date.parse(r.updatedAt) < old).slice(0, 5)) {
     const days = Math.floor((now.getTime() - Date.parse(r.updatedAt)) / 86400000);
