@@ -19,15 +19,17 @@ SPEC = ROOT / "spec" / "SLAM Build Spec.xlsx"
 TAB = "Program"
 
 READ = """
-import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, SESSIONS, MONEY_DATES } from './js/registry/program.js';
+import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES } from './js/registry/program.js';
 import { AREAS, RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER } from './js/registry/scorecard.js';
-console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, SESSIONS, MONEY_DATES, SCORE: { AREAS, RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER } }));
+import { ORDER, STEP_WORDS, PREREQS, CONDITIONS } from './js/registry/foo.js';
+const prereqs = Object.fromEntries(Object.entries(PREREQS).map(([k, p]) => [k, { ...p, conditions: (p.conditions || []).map(c => CONDITIONS[c].label) }]));
+console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs } }));
 """
 RULE_WORDS = {
     "cashFlow": "The headline savings rate: Strong at or over strong, OK at or over ok, else Hole; a negative surplus is a Hole",
-    "emergency": "Cash over a month of spending: Hole under holeMonths, Strong at or over strongMonths (or past the Rule of 5 target), else OK",
+    "emergency": "The cash layers: Hole until little e is full ($1,000 or the highest deductible, whichever is smaller); OK with little e full; Strong with big e full or strongMonths of spending (answer 132)",
     "debt": "Heavy debt (cards, payday, personal, medical, BNPL, or any APR at or over the heavy line) is a Hole; low-rate debt with payments over dti of gross is OK; else Strong (no debt per About you is Strong)",
-    "credit": "Cards used over utilizationHole is a Hole; a score under ok is a Hole; a score at or over strong with cards within utilizationOk is Strong; else OK; no score and cards within the line stays unrated",
+    "credit": "Cards used over utilizationHole (30%) is a Hole; a score under ok is a Hole; a score at or over strong is Strong; else OK; no score stays unrated (answer 132)",
     "retirement": "Match left on the table is a Hole; 401(k), HSA and after-tax retirement saving at or over strongPct of gross is Strong; some is OK; none while employed is a Hole",
     "investing": "What goes into investments a month at or over strongPct of take-home is Strong; something invested or going in is OK; nothing with a take-home known is a Hole",
     "taxes": "No rule: the coach rates it after a look at Taxes",
@@ -132,7 +134,28 @@ def main():
     row("Holes", "", "Each hole shows its payoff (dollars a year, hours of work, FI days: the $ / Hours / FI days view), an effort in hours (the usual, editable per client), and the best-return score = payoff over effort. Ranked: holes before the client's current FOO step first, then by score. 'How we got this' shows the math behind a caret. Strong areas show as slim rows.", "js/math/scorecard.js")
     for a in sc["AREAS"]:
         row("Holes", f"{a['name']} payoff", PAYOFF_WORDS[a["id"]], "; ".join(f"{k} {v}" for k, v in sc["PAYOFF"].get(a["id"], {}).items()))
-    row("Holes", "Ranking", "FOO order " + ", ".join(sc["FOO_ORDER"]) + "; a hole before the client's step ranks first, then by best return, then by payoff", "")
+    row("Holes", "Ranking", "FOO order " + ", ".join(sc["FOO_ORDER"]) + "; parked holes last (Park it, with an optional note; unpark any time); a hole with no payoff last before them, with an Add payoff button; then holes before the client's step first, then by best return, then by payoff (answers 133, 136)", "")
+    row("Holes", "The next chapter", "Opens on Home once no open hole is left (a parked hole does not block); unrated areas show a nudge: Rate Taxes to be sure (answer 137)", "")
+    # The area-to-FOO mapping (answer 135).
+    for a in sc["AREAS"]:
+        row("FOO mapping", a["name"], f"Step {a['foo']}: {a['fooWords']}" + (" (moves with the facts)" if a.get("fooWhen") else ""), "")
+    # SLAM's own FOO and its prerequisites (batch 3).
+    foo = cfg["FOO"]
+    row("FOO", "", "SLAM's own order of operations. A step can declare a prerequisite step (reached first: every step before it that counts is done) and conditions on the numbers. A locked step shows a lock and its plain reason, is never where you are, and never counts as a hole. Unlock anyway needs a note (kept on the session record) and shows the cost in FI days a year, coach only.", "js/registry/foo.js; js/math/foo.js")
+    for sid in foo["ORDER"]:
+        p = foo["PREREQS"].get(sid)
+        pre = "" if not p else f"after step {p['after']}" + (f"; needs {' and '.join(p['conditions'])}" if p.get("conditions") else "") + f". Lock text: {p['label']}"
+        row("FOO", f"Step {sid}", foo["STEP_WORDS"][sid], pre)
+    # The agenda, homework and the review gate (batch 3).
+    row("Agenda", "", "One panel per session: Must do (the session's checklist, ticking itself from the numbers wherever they change), Going over (what the coach adds), a quick note on any item, and a link on any item to a page or field, a homework item, a parking-lot question or a Scorecard hole (Open jumps there; Back to where we were returns). Editable on Home before the session; a slim docked bar on every tab while the session runs, collapsed to Session N · X of Y done. Coach only; never blocks navigation.", "js/program.js agendaOf; js/ui/agenda-ui.js")
+    row("Agenda", "Suggested for today", "Each with a + button: carried-over items, homework the client says is done, open parking-lot questions, the top hole, and numbers older than staleDays (" + str(cfg["AGENDA"]["staleDays"]) + " days)", "")
+    row("Agenda", "End session", "Each open item: Carry over (suggested next session) or Make homework; then the review gate; then the snapshot. The agenda and its notes are kept as the session recap.", "")
+    row("Homework", "", "Statuses: " + ", ".join(cfg["HOMEWORK_STATUSES"]) + ". The coach sets Client says done for now (Coach tools › Lists); a client-side I did this can set it later (by: client). Confirm or Back to To do in the review gate. Homework made from an agenda item lives in the client file (doc.program.homework) beside the parked numbers.", "js/homework.js; js/program.js setHomeworkStatus")
+    row("Review", "", "The gate before a session ends (End session, Move to next session) and at the start of the Revisit session: the stage's key numbers with their value and level, Looks right (locks to Actual) or Edit; homework the client says is done with Confirm or Back to To do; Move on anyway with an optional note kept on the session record; the snapshot after.", "js/program.js reviewOf; js/ui/review-ui.js")
+    for sid, groups in cfg["REVIEW"]["groups"].items():
+        row("Review", sid, "Key numbers: " + ", ".join(groups), "")
+    row("Review", "Other sessions", "Key numbers: " + ", ".join(cfg["REVIEW"]["fallback"]), "")
+    row("FI date", "", "Unlocks once income, spending (a gut number is enough) and an invested balance are in; locked with the plain reason only while one is missing. Shown by confidence: Low as a year range (spending " + str(int(cfg["FI_RANGE"]["Low"] * 100)) + "% lower to higher), Medium as a narrower range or a year (" + str(int(cfg["FI_RANGE"]["Medium"] * 100)) + "%), High as a month. Line 1 is the path assumed (Invest your surplus, on unless turned off); line 2 the other path when it differs (answers 122, 123).", "js/math/picture.js fiWordsOf; js/math/fi.js fiRangeOf")
 
     for r, (kind, cells) in enumerate(rows, 1):
         src = {"title": title_src, "head": head_src, "body": body_src}[kind]

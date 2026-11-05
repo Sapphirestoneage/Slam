@@ -6,13 +6,13 @@ Sessions,S2 Real numbers,Big categories at Estimate or better (auto); Goals name
 Sessions,S3 Lock it,One month of Actuals (auto); Key numbers locked (auto); Picture about 90% (auto),
 Sessions,S4 Goals,"Three short-term goals, each with an amount, a date and a need, want or wish tag (auto); Three long-term goals, each with an amount, a date and a need, want or wish tag (auto)",
 Sessions,S5 Full analysis,Every area rated (auto); Holes ranked (a payoff and an effort on each) (auto); FOO step confirmed (auto); Top 3 holes chosen (auto),
-Sessions,S6 Fill a hole,The top hole filled (OK or Strong) (auto),Pulls the top hole on the Scorecard when it starts
-Sessions,S7 Fill a hole,The top hole filled (OK or Strong) (auto),Pulls the top hole on the Scorecard when it starts
-Sessions,S8 Fill a hole,The top hole filled (OK or Strong) (auto),Pulls the top hole on the Scorecard when it starts
+Sessions,S6 Fill holes,The top hole filled (OK or Strong) (auto),Pulls the top hole on the Scorecard when it starts
+Sessions,S7 Fill holes,The top hole filled (OK or Strong) (auto),Pulls the top hole on the Scorecard when it starts
+Sessions,S8 Fill holes,The top hole filled (OK or Strong) (auto),Pulls the top hole on the Scorecard when it starts
 Sessions,S9 Revisit,Day 0 vs now compared (auto); Re-scored and re-ranked (auto),
-Sessions,"S10 Fill a hole, or the next chapter","The top hole filled (OK or Strong) (auto); once no hole is left: Next chapter named, with an amount and a date (auto)",Pulls the top hole on the Scorecard when it starts
-Sessions,"S11 Fill a hole, or the next chapter","The top hole filled (OK or Strong) (auto); once no hole is left: Next chapter named, with an amount and a date (auto)",Pulls the top hole on the Scorecard when it starts
-Sessions,S12 Game plan,Next-year plan notes written (auto); Yearly review date set (auto); Monthly money date cadence set (auto),
+Sessions,"S10 Fill holes, or the next chapter","The top hole filled (OK or Strong) (auto); once no hole is left: Next chapter named, with an amount and a date (auto)",Pulls the top hole on the Scorecard when it starts
+Sessions,"S11 Fill holes, or the next chapter","The top hole filled (OK or Strong) (auto); once no hole is left: Next chapter named, with an amount and a date (auto)",Pulls the top hole on the Scorecard when it starts
+Sessions,S12 Graduation,Day 0 vs graduation report made (auto); Next-year plan notes written (auto); Yearly review date set (auto); Monthly money date cadence set (auto); Final snapshot saved (auto),
 Levels,,"Each number has a level, in points. The Picture % is the weighted average of every number's level.",M73; js/registry/program.js LEVELS
 Levels,Missing,0,Nothing typed (or parked with I'll find it later)
 Levels,Gut,25,"A guess: a starter line, Not sure, or the gut spending number"
@@ -45,8 +45,8 @@ Pace,S11,90%,
 Pace,S12,90%,
 Pace,Margin,5 points,
 Unlocks,,"A calculator shows locked, with a plain reason ('Unlocks when spending reaches Estimate (2 of 5 there)'), until every item in each group is at or above the level.",js/registry/program.js UNLOCKS
-Unlocks,FI date,income reaches Estimate (every income item at 75+); spending reaches Estimate (every spending item at 75+); an invested balance is in (every invested item at 25+),
-Unlocks,Coast FI,income reaches Estimate (every income item at 75+); spending reaches Estimate (every spending item at 75+); an invested balance is in (every invested item at 25+); your age is in (every age item at 100+),
+Unlocks,FI date,income is in (every income item at 25+); spending is in (a gut number is enough) (every spending item at 25+); an invested balance is in (every invested item at 25+),
+Unlocks,Coast FI,income is in (every income item at 25+); spending is in (a gut number is enough) (every spending item at 25+); an invested balance is in (every invested item at 25+); your age is in (every age item at 100+),
 Unlocks,Debt payoff,debts reach Estimate (every debt item at 75+),
 Confidence,,"Once unlocked: High at a weighted input level of 90 or more, Medium at 75 or more, else Low; any input older than the aged-check days drops it one step. Shown instead of the Guess tag.",js/registry/program.js CONFIDENCE
 Snapshots,,"Ending a session saves a snapshot with the key numbers and the Picture %: Day 0 the first time, End of session N after. They live in the client file, so they export and import with it.",js/program.js endSession
@@ -63,25 +63,23 @@ Home,After intake,"Once session 3 is done the progress bar reads 'X of 11 areas 
 Home,Money date cadences,The 1st of the month; The 15th of the month; The last day of the month; The first Sunday; Every payday,js/registry/program.js MONEY_DATES
 Scorecard,,"Eleven areas, each Strong, OK or Hole. A rule suggests the rating from the data where it can; the coach can override any rating with a reason. Add or rename an area in js/registry/scorecard.js.",M74; js/math/scorecard.js; Plan › Scorecard
 Scorecard,Cash flow,"The headline savings rate: Strong at or over strong, OK at or over ok, else Hole; a negative surplus is a Hole",FOO step 1; the usual effort 4 h; #/cash-flow/budget
-Scorecard,Emergency fund,"Cash over a month of spending: Hole under holeMonths, Strong at or over strongMonths (or past the Rule of 5 target), else OK",FOO step 1; the usual effort 2 h; #/net-worth/assets
+Scorecard,Emergency fund,"The cash layers: Hole until little e is full ($1,000 or the highest deductible, whichever is smaller); OK with little e full; Strong with big e full or strongMonths of spending (answer 132)",FOO step 1; the usual effort 2 h; #/net-worth/assets
 Scorecard,Debt,"Heavy debt (cards, payday, personal, medical, BNPL, or any APR at or over the heavy line) is a Hole; low-rate debt with payments over dti of gross is OK; else Strong (no debt per About you is Strong)",FOO step 3; the usual effort 3 h; #/net-worth/debt
-Scorecard,Credit,Cards used over utilizationHole is a Hole; a score under ok is a Hole; a score at or over strong with cards within utilizationOk is Strong; else OK; no score and cards within the line stays unrated,FOO step 3; the usual effort 2 h; #/net-worth/credit-cards
+Scorecard,Credit,Cards used over utilizationHole (30%) is a Hole; a score under ok is a Hole; a score at or over strong is Strong; else OK; no score stays unrated (answer 132),FOO step 3; the usual effort 2 h; #/net-worth/credit-cards
 Scorecard,Retirement accounts,"Match left on the table is a Hole; 401(k), HSA and after-tax retirement saving at or over strongPct of gross is Strong; some is OK; none while employed is a Hole",FOO step 2; the usual effort 1 h; #/net-worth/assets
-Scorecard,Investing,What goes into investments a month at or over strongPct of take-home is Strong; something invested or going in is OK; nothing with a take-home known is a Hole,FOO step 8; the usual effort 2 h; #/net-worth/assets
+Scorecard,Investing,What goes into investments a month at or over strongPct of take-home is Strong; something invested or going in is OK; nothing with a take-home known is a Hole,FOO step 6; the usual effort 2 h; #/net-worth/assets
 Scorecard,Taxes,No rule: the coach rates it after a look at Taxes,FOO step 5; the usual effort 2 h; #/cash-flow/taxes
 Scorecard,Protection,No health coverage (or no life or disability with dependents) is a Hole; a missing or Not sure coverage is OK; all in place is Strong; no coverage rows stays unrated,FOO step 1; the usual effort 2 h; #/net-worth/protection
 Scorecard,Income,Between jobs is a Hole; steady income is Strong; varies or unpredictable is OK; no take-home or no stability answer stays unrated,FOO step 1; the usual effort 8 h; #/cash-flow/income
-Scorecard,Goals,count short-term and count long-term goals complete is Strong; any goal is OK; none is a Hole,FOO step 7; the usual effort 1 h; #/plan/goals
+Scorecard,Goals,count short-term and count long-term goals complete is Strong; any goal is OK; none is a Hole,FOO step 0b; the usual effort 1 h; #/plan/goals
 Scorecard,Mindset,"The latest money feeling: at or over strong is Strong, at or under hole is a Hole, between is OK; none stays unrated",FOO step 0b; the usual effort 4 h; #/home/session
 Thresholds,cashFlow strong,0.2,
 Thresholds,cashFlow ok,0.05,
-Thresholds,emergency holeMonths,1,
 Thresholds,emergency strongMonths,3,
 Thresholds,debt dti,0.36,
 Thresholds,credit strong,740,
 Thresholds,credit ok,670,
-Thresholds,credit utilizationOk,0.3,
-Thresholds,credit utilizationHole,0.5,
+Thresholds,credit utilizationHole,0.3,
 Thresholds,retirement strongPct,0.15,
 Thresholds,investing strongPct,0.15,
 Thresholds,goals count,3,
@@ -99,4 +97,38 @@ Holes,Protection payoff,No rule: the coach types a payoff,
 Holes,Income payoff,No rule: the coach types a payoff,
 Holes,Goals payoff,No rule: the coach types a payoff,
 Holes,Mindset payoff,No rule: the coach types a payoff,
-Holes,Ranking,"FOO order 0a, 0b, 1, 2, 3, 4, 5, 6, 7, 8, 9; a hole before the client's step ranks first, then by best return, then by payoff",
+Holes,Ranking,"FOO order 0b, 1, 2, 3, 4, 5, 5b, 6, 7, 8, 9; parked holes last (Park it, with an optional note; unpark any time); a hole with no payoff last before them, with an Add payoff button; then holes before the client's step first, then by best return, then by payoff (answers 133, 136)",
+Holes,The next chapter,Opens on Home once no open hole is left (a parked hole does not block); unrated areas show a nudge: Rate Taxes to be sure (answer 137),
+FOO mapping,Cash flow,Step 1: Stop the bleeding,
+FOO mapping,Emergency fund,"Step 1: little e at step 1, then big e at step 4 (moves with the facts)",
+FOO mapping,Debt,Step 3: Clear the heavy debt,
+FOO mapping,Credit,Step 3: Clear the heavy debt (cards),
+FOO mapping,Retirement accounts,"Step 2: Take the free money while match is on the table, then Roth and HSA (moves with the facts)",
+FOO mapping,Investing,Step 6: Prepay retirement (Coast FI),
+FOO mapping,Taxes,Step 5: Roth and HSA (the tax levers),
+FOO mapping,Protection,"Step 1: Stop the bleeding (coverage, deductibles)",
+FOO mapping,Income,Step 1: Stop the bleeding,
+FOO mapping,Goals,"Step 0b: Step 0, with mindset",
+FOO mapping,Mindset,"Step 0b: Step 0, with goals",
+FOO,,"SLAM's own order of operations. A step can declare a prerequisite step (reached first: every step before it that counts is done) and conditions on the numbers. A locked step shows a lock and its plain reason, is never where you are, and never counts as a hole. Unlock anyway needs a note (kept on the session record) and shows the cost in FI days a year, coach only.",js/registry/foo.js; js/math/foo.js
+FOO,Step 0b,Bedazzle your basic life: the joy lines (goals and mindset live here too),
+FOO,Step 1,"Stop the bleeding: no late bills, payday debt at $0, little e full ($1,000 or the highest deductible, whichever is smaller), income gaps within 12 months covered",
+FOO,Step 2,Take the free money: the full employer match,
+FOO,Step 3,"Clear the heavy debt: cards, payday, personal, medical, BNPL, or any APR at or over the heavy line (8%)",
+FOO,Step 4,"big e: the Rule of 5 months, FAT first, then DRAFTT, then full spending",
+FOO,Step 5,"Roth and HSA: a Roth IRA and an invested HSA, maxed for the year",
+FOO,Step 5b,"Give: a percent or an amount, once the Roth IRA step is reached",after step 5; needs no debt at or above the heavy-debt APR. Lock text: Giving unlocks at the Roth IRA step. Oxygen mask on you first.
+FOO,Step 6,"Prepay retirement: Quiet Quitting FI, then Coast FI (maxing the 401(k) is the lever)",
+FOO,Step 7,"SPARKS launch window: opens at Coast FI (or Quiet Quitting FI when that toggle is on), strictly after step 6","after step 6. Lock text: The launch window opens at Coast FI (or Quiet Quitting FI when that toggle is on). Coast FI first, then SPARKS."
+FOO,Step 8,Fund the future: sinking funds and later income gaps,
+FOO,Step 9,"Low-rate debt, then FI, then True FI",
+Agenda,,"One panel per session: Must do (the session's checklist, ticking itself from the numbers wherever they change), Going over (what the coach adds), a quick note on any item, and a link on any item to a page or field, a homework item, a parking-lot question or a Scorecard hole (Open jumps there; Back to where we were returns). Editable on Home before the session; a slim docked bar on every tab while the session runs, collapsed to Session N · X of Y done. Coach only; never blocks navigation.",js/program.js agendaOf; js/ui/agenda-ui.js
+Agenda,Suggested for today,"Each with a + button: carried-over items, homework the client says is done, open parking-lot questions, the top hole, and numbers older than staleDays (60 days)",
+Agenda,End session,Each open item: Carry over (suggested next session) or Make homework; then the review gate; then the snapshot. The agenda and its notes are kept as the session recap.,
+Homework,,"Statuses: To do, Client says done, Confirmed. The coach sets Client says done for now (Coach tools › Lists); a client-side I did this can set it later (by: client). Confirm or Back to To do in the review gate. Homework made from an agenda item lives in the client file (doc.program.homework) beside the parked numbers.",js/homework.js; js/program.js setHomeworkStatus
+Review,,"The gate before a session ends (End session, Move to next session) and at the start of the Revisit session: the stage's key numbers with their value and level, Looks right (locks to Actual) or Edit; homework the client says is done with Confirm or Back to To do; Move on anyway with an optional note kept on the session record; the snapshot after.",js/program.js reviewOf; js/ui/review-ui.js
+Review,S1,"Key numbers: income, spending, account",
+Review,S2,"Key numbers: spending, debt, account",
+Review,S3,"Key numbers: income, spending, debt, account",
+Review,Other sessions,"Key numbers: income, spending, debt, account",
+FI date,,"Unlocks once income, spending (a gut number is enough) and an invested balance are in; locked with the plain reason only while one is missing. Shown by confidence: Low as a year range (spending 15% lower to higher), Medium as a narrower range or a year (5%), High as a month. Line 1 is the path assumed (Invest your surplus, on unless turned off); line 2 the other path when it differs (answers 122, 123).",js/math/picture.js fiWordsOf; js/math/fi.js fiRangeOf

@@ -300,3 +300,16 @@ Each one has the default built so the run could keep going.
 137. **The next chapter.** It opens (on Home, and as the S10 and S11 checklist) once every area is rated and no hole is left. Should an unrated area block it, as built, or only a Hole?
 138. **Re-scored (S9).** A Re-scored today button on the Scorecard marks it; the item ticks when that mark is after session 8 ended. The ratings themselves are always live. OK, or should the Revisit session re-run something?
 139. **Day 0 and the areas count.** Day 0 snapshots saved before this batch have no areas count, so Home shows "Day 0: not scored yet" for them; new Day 0 snapshots keep it. OK?
+
+## Phase 3 batch 3, the Agenda, the gate and the FOO prerequisites (Nov 5 2026)
+
+Answered and built: 122 (a gut number unlocks the FI date at Low confidence, shown as a year range), 123 (the surplus is invested unless turned off), 124 (after-tax contributions count), 125 (Retirement lines are investing), 126 (levels kept), 127 (weights kept; the gut number steps aside once the big categories are at Estimate), 128 (pace kept), 129 (debts in the key numbers locked), 130 (More menu kept), 131 (the session names), 132 (little e and big e; cards over 30%; heavy debt 8%), 133 (payoff rules; Add payoff), 134 (effort kept), 135 (SLAM's own FOO), 136 (Park it), 137 (only a hole blocks; a nudge for unrated areas), 138 (Revisit opens the gate), 139 (Day 0 not scored yet).
+
+140. **A parked hole and the next chapter.** As built, a parked hole does not block the next chapter (it is set aside) and the Scorecard says so. Should it block like an open hole?
+141. **Carried-over items.** As built, they land in Suggested for today with a + (the coach decides); nothing goes onto the next agenda by itself. Should a carried Must do item go straight onto the next session's Must do instead?
+142. **The agenda item link picker.** A Going over item links to a page (the Budget), the Scorecard, the homework list or the parking lot from a small menu; the exact-field links come from the suggestions (a stale number, the top hole) and from Must do items. Do you want a Find box on the item for any field?
+143. **The Revisit gate.** Start session on S9 opens the gate first; Done re-scoring marks it and the session runs; End session reviews again. OK?
+144. **Giving's condition.** Besides reaching the Roth IRA step, giving also needs no heavy debt (the mechanism's example), so it locks again if heavy debt comes back. Keep both, or the step alone?
+145. **The cost of an override.** Giving while carrying heavy debt costs that debt's highest APR on the money; with no heavy debt, the real return. Other overridden steps show no cost yet. OK?
+146. **The FI range's ends.** When the high end of the range is not on this path within 70 years it reads "2041 or later". OK?
+147. **Homework from the client's side.** setHomeworkStatus takes by: 'client' and the gate shows who said done; the client screen has no button yet (a later phase). OK?
