@@ -46,7 +46,7 @@ export function homeScreen(app, ctx) {
     P.inSession ? wrapUp(app, ctx, P) : null,
     paydayCard(app, ctx),
     openItems(app, ctx),
-    low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below ${money(low.low)} on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/cash-flow/calendar') })) : null, // R096
+    low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below the low line (${money(low.low)}) on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/cash-flow/calendar') })) : null, // R096
     ctx.gates().betweenJobs ? S.summaryStrip(ctx, [{ label: 'Runway (between jobs)', result: P.m.runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/net-worth/assets' }]) : null, // R006
     day0Card(ctx, P),
     netWorthOverTime(app, ctx)];

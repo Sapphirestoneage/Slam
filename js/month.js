@@ -186,10 +186,11 @@ export function startBalance(doc, ref, now = new Date()) {
 }
 
 // Running balance for one or more months, chained from the start month (M60). Months before the start have none.
-export function balances(doc, ref, ym, months = 1, { now = new Date(), autoWins = [] } = {}) {
+// low (overnight I): the line a day is flagged under; the calendar passes the Buffer layer's target when none is typed.
+export function balances(doc, ref, ym, months = 1, { now = new Date(), autoWins = [], low: lowLine = null } = {}) {
   const st = startBalance(doc, ref, now);
   const cal = doc.spending?.calendar || {};
-  const low = cal.low ?? ref.defaults.lowBalanceLine;
+  const low = cal.low ?? lowLine ?? ref.defaults.lowBalanceLine;
   if (st.value == null) return { needs: ['a starting balance'], low };
   if (ym < st.ym) return { needs: [`a month from ${monthName(st.ym)} on`], low };
   let b = st.value;
@@ -317,6 +318,22 @@ export function carry(store, ym, lineId, amountValue) {
 export function closedMonths(doc) {
   return Object.entries(doc.spending?.months || {}).filter(([, m]) => m.closed && m.summary)
     .map(([ym, m]) => ({ ym, guess: m.summary.gut, actual: m.summary.actual, estimate: m.summary.estimate })).sort((a, b) => a.ym.localeCompare(b.ym));
+}
+
+// L (overnight): months closed in a row, counted back from last month (this month counts once closed), with one
+// grace month: one missed month inside the run does not break it; a second does.
+export function closeStreak(doc, now = new Date()) {
+  const closed = new Set(closedMonths(doc).map(m => m.ym));
+  const thisYm = ymOf(now);
+  let ym = closed.has(thisYm) ? thisYm : addMonths(thisYm, -1);
+  let months = 0, grace = 0, last = null, first = null;
+  for (let i = 0; i < 240; i++) {
+    if (closed.has(ym)) { months += 1; last ??= ym; first = ym; }
+    else if (months > 0 && grace === 0 && closed.has(addMonths(ym, -1))) { grace = 1; }
+    else break;
+    ym = addMonths(ym, -1);
+  }
+  return { months, graceUsed: grace, first, last, words: months ? `${months} ${months === 1 ? 'month' : 'months'} in a row${grace ? ' (one grace month used)' : ''}` : 'No closed months yet' };
 }
 
 // Calendar mark (R091 to R094).

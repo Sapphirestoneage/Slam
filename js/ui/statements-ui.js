@@ -26,7 +26,8 @@ export function statementsScreen(app, ctx) {
   const rows = statementRows(st, last);
   const m = ctx.metrics();
   // Money, or hours of life energy (YMOYL step 3) on the income and spending statement.
-  const fmt = (v, { hours = false } = {}) => (v == null ? '–' : hours ? inView(v, 'Hours', { rate: m.hourly }).text : money(v));
+  // H (overnight): $, hours of life energy, or FI days on the income and cash flow statements; the net worth statement stays in dollars.
+  const fmt = (v, { hours = false } = {}) => (v == null ? '–' : hours && SUI.view !== 'money' ? inView(v, SUI.view, { rate: m.hourly, annualSpending: m.annualSpending }).text : money(v));
   const step = n => { if (p.kind === 'year') SUI.year = p.year + n; else SUI.ym = addMonths(p.ym, n); app.render(); };
   const picker = h('div.card.statement-bar', {}, h('div.row-line', { style: { gap: '12px' } },
     S.toggle([['month', 'Month'], ['year', 'Year']], SUI.kind, v => { SUI.kind = v; app.render(); }, { label: 'Period' }),
@@ -40,7 +41,7 @@ export function statementsScreen(app, ctx) {
     : 'nothing comes off the top yet. A 401(k), HSA or an automatic transfer on payday would.');
   const table = (title, tip, list, { hours = false, below = [], key }) => h('section.card.statement', { 'data-statement': key },
     h('div.row-line', { style: { justifyContent: 'space-between' } }, h('h2', {}, h('span.has-tip', { title: tip }, title)),
-      key === 'income' ? S.toggle([['money', '$'], ['hours', 'Hours']], SUI.hours ? 'hours' : 'money', v => { SUI.hours = v === 'hours'; app.render(); }, { label: 'Show as' }) : null),
+      key !== 'nw' ? S.toggle([['money', '$'], ['Hours', 'Hours'], ['FI days', 'FI days']], SUI.view ?? 'money', v => { SUI.view = v; SUI.hours = v !== 'money'; app.render(); }, { label: 'Show as' }) : null),
     key === 'income' ? offTop : null,
     h('div.st-head', {}, h('span'), h('span.num', {}, label(p)), h('span.num', {}, label(previous(p))), h('span.num', {}, 'Change')),
     [...list, ...below].map((r, i) => statementLine(ctx, r, `${key}:${i}`, v => fmt(v, { hours: hours && SUI.hours }))));
@@ -48,7 +49,7 @@ export function statementsScreen(app, ctx) {
     picker,
     table('Net worth statement', 'The balance sheet: what you own and owe on the last day', rows.netWorth, { below: rows.below, key: 'nw' }),
     table('Income and spending statement', 'The income statement, accrual: spending counts when it happens, a card swipe included', rows.income, { hours: true, key: 'income' }),
-    table('Cash flow statement', 'The statement of cash flows, cash basis: money counts when it moves', rows.cash, { key: 'cash' }),
+    table('Cash flow statement', 'The statement of cash flows, cash basis: money counts when it moves', rows.cash, { hours: true, key: 'cash' }),
     tiePanel(app, ctx, st)];
 }
 

@@ -2,13 +2,15 @@
 // Spending (build phase 6): Budget with five passes, irregular costs, the cash flow calendar and month-end close.
 // Every screen is a view of the same records (R117); the month model lives in js/month.js.
 import { h, clear, icon } from './dom.js';
+import { parseCsv, guessMap, toTransactions, dedupe, suggestLine, importTransactions, saveBankMap, bankMapOf, PDF_WHY } from '../import/csv.js';
+import { layersOf } from '../math/layers.js';
 import { categoriesOf, categoryJoyOf, rateCategoryJoy } from '../capture.js';
 import { maaserOf, KOSHER_NOTE } from '../community.js';
 import { drafttName } from '../math/spending.js';
 import * as S from './staples.js';
 import { spendingList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.js';
 import { ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
-  closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS, planDiffs } from '../month.js';
+  closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS, planDiffs, closeStreak } from '../month.js';
 import { gutAccuracy, DRAFTT } from '../math/spending.js';
 import { statements, BUCKETS, defaultBucket } from '../math/statements.js';
 import { calendarMarkers } from '../math/markers.js';
@@ -69,6 +71,44 @@ export function budgetScreen(app, ctx) {
   return [head('Budget', 'Every spending line, planned and actual'), passBar, strip, doc.session?.community ? S.moreBlock('budget:community', () => S.live(ctx, () => communityCard(ctx)), { label: 'Community presets' }) : null, ...body,
     S.recordList(ctx, irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) })),
     S.moreBlock('budget:joy', () => S.live(ctx, () => categoryJoyBlock(ctx)), { label: 'Joy by category' })]; // F6: captured for a later Wrapped
+}
+
+// J (overnight): a bank CSV in three steps: the file and the bank, the column map (kept per bank), then a review of
+// each row with its Budget line (suggested from saved rules), duplicates left out; Import puts each amount on its
+// line's month as an actual. PDF stays a stub with its reason on the button.
+const CSV = { bank: '', rows: null, map: null, hasHeader: true, list: null, name: '' };
+function csvImportBlock(app, ctx) {
+  const doc = ctx.store.doc;
+  const lines = ctx.visible(r => r.kind === 'bill');
+  const redraw = () => app.render();
+  const bankBox = S.textInput(CSV.bank || null, v => { CSV.bank = v || ''; CSV.map = CSV.bank && bankMapOf(doc, CSV.bank) ? { ...bankMapOf(doc, CSV.bank) } : CSV.map; }, { hint: 'Bank name (keeps the column map)', width: 220, key: 'csv:bank' });
+  const file = h('input', { type: 'file', accept: '.csv,text/csv', 'aria-label': 'CSV file' });
+  file.onchange = () => { const f = file.files?.[0]; if (!f) return; CSV.name = f.name; f.text().then(text => { CSV.rows = parseCsv(text); const saved = CSV.bank ? bankMapOf(doc, CSV.bank) : null; CSV.map = saved ? { ...saved } : guessMap(CSV.rows[0] || []); CSV.hasHeader = saved?.hasHeader ?? true; CSV.list = null; redraw(); }); };
+  const step1 = h('div.row-line', { style: { gap: '10px', flexWrap: 'wrap' } }, S.labelled('Bank', bankBox), S.labelled('CSV file', h('label.field', { style: { width: '260px' } }, file)),
+    S.button('PDF statement', { disabled: true, why: PDF_WHY }), CSV.name ? h('span.muted.small', {}, `${CSV.name}: ${CSV.rows?.length ?? 0} rows`) : null);
+  if (!CSV.rows) return h('div.stack', { style: { gap: '8px' } }, h('span.muted.small', {}, 'Export a CSV from the bank, name the bank, pick which column is which once; next time the map is remembered. Imported amounts land on the Budget as actuals.'), step1);
+  const headers = CSV.hasHeader ? CSV.rows[0] : CSV.rows[0].map((_, i) => `Column ${i + 1}`);
+  const colPick = role => S.select(headers.map((hd, i) => [String(i), hd || `Column ${i + 1}`]), CSV.map[role] == null ? null : String(CSV.map[role]), v => { CSV.map[role] = v == null ? null : Number(v); }, { label: role, hint: 'Not in this file', width: 170 });
+  const step2 = h('div.stack', { style: { gap: '8px' } }, h('strong', {}, 'Which column is which'),
+    h('div.row-line', { style: { gap: '10px', flexWrap: 'wrap' } }, S.labelled('Date', colPick('date')), S.labelled('Description', colPick('description')), S.labelled('Amount (signed)', colPick('amount')), S.labelled('or Debit', colPick('debit')), S.labelled('and Credit', colPick('credit')),
+      S.labelled('First row', S.toggle([[true, 'Headers'], [false, 'Data']], CSV.hasHeader, v => { CSV.hasHeader = v; }, { label: 'First row' }))),
+    h('div.row-line', { style: { gap: '8px' } }, S.button('Review the rows', { kind: 'primary', onClick: () => {
+      if (CSV.map.date == null || (CSV.map.amount == null && CSV.map.debit == null && CSV.map.credit == null)) { S.toast('Pick the date column and an amount column.'); return; }
+      if (CSV.bank) saveBankMap(ctx.store, CSV.bank, CSV.map, { hasHeader: CSV.hasHeader });
+      const tx = dedupe(toTransactions(CSV.rows, CSV.map, { hasHeader: CSV.hasHeader, bank: CSV.bank || null }), doc.spending?.transactions || []);
+      CSV.list = tx.map(t => ({ ...t, ...suggestLine(t.description, { rules: doc.settings?.csvRules || [], transactions: doc.spending?.transactions || [] }), skip: t.duplicate }));
+      redraw(); } }), S.button('Start over', { onClick: () => { Object.assign(CSV, { rows: null, map: null, list: null, name: '' }); redraw(); } })));
+  if (!CSV.list) return h('div.stack', { style: { gap: '10px' } }, step1, step2);
+  const dupes = CSV.list.filter(t => t.duplicate).length;
+  const rowOf = (t, i) => h(`div.row-line.csv-row${t.duplicate ? '.muted' : ''}`, { style: { gap: '8px', flexWrap: 'wrap' } },
+    S.checkbox('', !t.skip, v => { t.skip = !v; }, { key: `csv:${i}:keep` }), h('span.small', { style: { minWidth: '86px' } }, t.date), h('span', { style: { flex: '1 1 200px' } }, t.description || '(no description)'), h('span.num', {}, money(t.amount)),
+    S.select([['', 'Skip (no line)'], ...lines.map(l => [l.id, l.name || l.values.category || l.type])], t.lineId ?? '', v => { t.lineId = v || null; }, { label: `Line for ${t.description}`, width: 200 }),
+    t.duplicate ? h('span.tag.plain', {}, 'Already imported') : t.why ? h('span.muted.small', {}, t.why) : null);
+  const step3 = h('div.stack', { style: { gap: '6px' } }, h('div.row-line', { style: { gap: '10px' } }, h('strong', {}, `Review ${CSV.list.length} rows`), dupes ? h('span.muted.small', {}, `${dupes} already imported, left out`) : null, h('span.spacer'),
+    S.button(`Import ${CSV.list.filter(t => !t.skip && !t.duplicate).length}`, { kind: 'primary', onClick: () => { const r = importTransactions(ctx.store, CSV.list, { bank: CSV.bank || null, now: ctx.now().toISOString() }); Object.assign(CSV, { rows: null, map: null, list: null, name: '' }); S.toast(`${r.imported} imported as actuals; ${r.skipped} left out.`, { undo: () => ctx.store.undo() }); redraw(); } })),
+    h('span.muted.small', {}, 'Money out goes onto its Budget line for that month as an actual (the line counts as Actual). Each line you pick becomes a rule for next time.'),
+    ...CSV.list.map(rowOf));
+  return h('div.stack', { style: { gap: '10px' } }, step1, step3);
 }
 
 // F6: a dated joy rating, 1 to 5, per spending category on the Budget. Kept with its date; the latest shows.
@@ -260,7 +300,7 @@ export function calendarScreen(app, ctx) {
   const cal = doc.spending.calendar || {};
   const redraw = () => app.render();
   const range = { Month: 1, '3 mo': 3, '6 mo': 6, Year: 12 }[UI.range] || 1;
-  const b = balances(doc, ctx.ref, UI.calYm, range, { now: ctx.now(), autoWins: milestoneWins(ctx) });
+  const b = balances(doc, ctx.ref, UI.calYm, range, { now: ctx.now(), autoWins: milestoneWins(ctx), low: bufferLine(ctx) }); // I: days under the Buffer are flagged
   const list = b.list || instances(doc, ctx.ref, UI.calYm, { now: ctx.now() });
   const monthList = list.filter(i => i.date.startsWith(UI.calYm) || i.origDate?.startsWith(UI.calYm));
   if (!monthList.some(i => i.kind !== 'win')) {
@@ -281,13 +321,13 @@ export function calendarScreen(app, ctx) {
     S.moreBlock('cal:settings', () => h('div.row-line.cal-settings', { style: { gap: '16px', marginTop: '10px', alignItems: 'flex-end' } },
       S.labelled('Starting balance', S.moneyInput(cal.start ?? null, v => { ctx.store.setIn('spending', ['calendar', 'start'], v === null ? undefined : v, 'Starting balance'); ctx.store.setIn('spending', ['calendar', 'startYm'], v === null ? undefined : UI.calYm); },
         { hint: st.value == null ? 'Add balance' : `${moneyText(st.value)} (checking)`, key: 'cal:start' }), { note: cal.start != null ? `As of the start of ${monthName(cal.startYm || UI.calYm)}` : 'Pulled from checking; type to change' }),
-      S.labelled('Low balance line', S.moneyInput(cal.low ?? null, v => ctx.store.setIn('spending', ['calendar', 'low'], v === null ? undefined : v, 'Low balance line'), { hint: moneyText(ctx.ref.defaults.lowBalanceLine), key: 'cal:low' })),
+      S.labelled('Low balance line', S.moneyInput(cal.low ?? null, v => ctx.store.setIn('spending', ['calendar', 'low'], v === null ? undefined : v, 'Low balance line'), { hint: bufferLine(ctx) != null ? `Buffer ${moneyText(bufferLine(ctx))}` : moneyText(ctx.ref.defaults.lowBalanceLine), key: 'cal:low' }), { note: 'Blank: the Buffer layer (two weeks of spending)' }),
       S.labelled('Show', h('div.seg.multi', { role: 'group', 'aria-label': 'Show' }, GROUPS.map(gp => h('button', { type: 'button', 'aria-pressed': String(UI.show.has(gp)),
         onclick: () => { UI.show.has(gp) ? UI.show.delete(gp) : UI.show.add(gp); redraw(); } }, gp)),
         h('button', { type: 'button', 'aria-pressed': String(UI.markers), title: 'FOO dates and the month-end close day', onclick: () => { UI.markers = !UI.markers; redraw(); } }, 'Markers'))),
       S.checkbox('Count maybe money', !!cal.countMaybe, v => ctx.store.setIn('spending', ['calendar', 'countMaybe'], v, 'Count maybe')),
       S.checkbox('Wins on their own', cal.autoWins !== false, v => ctx.store.setIn('spending', ['calendar', 'autoWins'], v, 'Auto wins'))),
-    { label: `Balance ${st.value == null ? 'not set' : money(st.value)} · low line ${money(cal.low ?? ctx.ref.defaults.lowBalanceLine)} · ${UI.show.size === GROUPS.length ? 'showing all' : `showing ${UI.show.size} of ${GROUPS.length}`}` }));
+    { label: `Balance ${st.value == null ? 'not set' : money(st.value)} · low line ${money(cal.low ?? bufferLine(ctx) ?? ctx.ref.defaults.lowBalanceLine)}${cal.low == null && bufferLine(ctx) != null ? ' (the Buffer)' : ''} · ${UI.show.size === GROUPS.length ? 'showing all' : `showing ${UI.show.size} of ${GROUPS.length}`}` }));
   const notes = [];
   if (bonusPaycheck(monthList)) notes.push(h('div.banner-inline.good', {}, icon('check'), ` Bonus paycheck month: three paydays land in ${monthName(UI.calYm, 'long')}.`));
   if (b.firstLow) notes.push(h('div.banner-inline', {}, '⚠ ', `Below ${money(b.low)} on ${dayLabel(b.firstLow.date)}: ${money(b.firstLow.balance)}.`));
@@ -496,7 +536,10 @@ export function closeScreen(app, ctx) {
     h('span.muted', {}, 'Plan a month on Budget, mark what was paid on the calendar, then close it here.'), S.button('Open Budget', { iconName: 'right', onClick: () => app.go('#/cash-flow/budget') })))];
   UI.review ??= views.find(v => !v.closed)?.ym ?? now;
   const acc = gutAccuracy(closedMonths(doc));
+  const streak = closeStreak(doc, ctx.now());
   return [head('Month end', 'Plan vs actual'),
+    h('p.muted', { style: { margin: '0 0 8px' } }, h('strong', {}, streak.words), streak.months ? ` · ${monthName(streak.first)} to ${monthName(streak.last)}. One missed month inside a run is a grace month.` : ' Close a month to start the streak.'), // L (overnight)
+    S.moreBlock('close:import', () => csvImportBlock(app, ctx), { label: 'Import a bank statement (CSV)' }), // J (overnight)
     acc.hidden ? null : S.summaryStrip(ctx, [{ label: 'Gut accuracy', result: acc, note: 'How far the first guess was off, on average' }]),
     h('div.close-list', {}, views.map(v => closeRow(app, ctx, v)))];
 }
@@ -592,6 +635,10 @@ function bulletChart(ctx, rows, gut) {
 
 // Home and Report read the first low day (R096).
 export function firstLowDay(ctx) {
-  const b = balances(ctx.store.doc, ctx.ref, thisYm(ctx), 2, { now: ctx.now(), autoWins: milestoneWins(ctx) });
+  const b = balances(ctx.store.doc, ctx.ref, thisYm(ctx), 2, { now: ctx.now(), autoWins: milestoneWins(ctx), low: bufferLine(ctx) });
   return b.firstLow ? { ...b.firstLow, low: b.low, label: dayLabel(b.firstLow.date) } : null;
+}
+// I (overnight): the Buffer layer's target (two weeks of spending), the low line unless one is typed on the calendar.
+export function bufferLine(ctx) {
+  try { const t = layersOf(ctx.store.doc, ctx.ref, ctx.now()).layers.find(l => l.id === 'buffer')?.target; return t != null && t > 0 ? Math.round(t) : null; } catch { return null; }
 }

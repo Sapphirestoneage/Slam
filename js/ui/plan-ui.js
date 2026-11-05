@@ -9,6 +9,7 @@ import { MILESTONES, fiTargets, monthsTo, projection, ladder, solveFor } from '.
 import { payoffPlan, customOrder, orderCost } from '../math/debt.js';
 import { METHODS, suggestMethod } from '../registry/debt.js';
 import { moneyAsTime } from '../math/fi.js';
+import { compareOf, proposedOf, setProposed, clearProposed, makeProposedThePlan } from '../math/proposed.js';
 import { addMonths, ymOf, monthName, dateOf, monthsBetween } from '../month.js';
 import { winSources } from './spending-ui.js';
 import { money, pct } from '../format.js';
@@ -235,7 +236,8 @@ export function timelineScreen(app, ctx) {
     h('div.card', {}, host)];
 }
 function drawTimeline(host, ctx, m, r) {
-  if (!window.echarts || !host.isConnected) { queueMicrotask(() => host.isConnected && drawTimeline(host, ctx, m, r)); return; }
+  if (!window.echarts) return; // no chart library (offline): draw nothing rather than retry forever
+  if (!host.isConnected) { setTimeout(() => host.isConnected && drawTimeline(host, ctx, m, r), 50); return; } // a task, never a microtask loop
   const t = S.chartTheme('goals');
   const inv = m.inputs.invested, save = m.surplus.value + PUI.extra, target = m.fiNumber.value;
   const yearsOut = n => { const pts = [inv]; let b = inv; const g = (1 + n) ** (1 / 12); for (let k = 1; k <= 12 * 50; k++) { b = b * g + save; if (k % 12 === 0) pts.push(b); } return pts; };
@@ -515,11 +517,37 @@ function sinkingFunds(ctx) {
       h('thead', {}, h('tr', {}, ['Saving for', 'Target', 'Due', 'Saved', 'Held in', 'Needed', 'Funded', ''].map(t => h('th', {}, t)))), h('tbody', {}, rows))))
       : h('div.card', {}, h('p.muted', {}, 'Tap Save for it on any cost in Your year (or on a yearly cost in Spending) to save for it a little each month.')));
 }
-export function scenariosScreen() {
-  return [head('Scenarios', 'Life event blocks'), h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'Scenario blocks come in a later phase'),
-    h('span.muted', {}, 'Home, car, kid, job change, sabbatical, move, marriage, side hustle, inheritance. For now, add the next 12 months on its own tab.'),
-    S.button('+ Add life event', { disabled: true, why: 'Scenarios are a later phase' })))];
+// K (overnight): Current vs Proposed. Proposed is a copy the coach edits; the differences show in the money view
+// ($, hours or FI days); every result opens How we got this; Make Proposed the plan is one undoable step.
+export function scenariosScreen(app, ctx) {
+  const doc = ctx.store.doc, p = proposedOf(doc);
+  const C = compareOf(doc, ref0(ctx), { now: ctx.now(), flags: app.flags });
+  const propose = patch => { setProposed(ctx.store, patch); app.render(); }; // program.proposed is app data (NOT_IN_SHEET), not a field
+  const editor = h('div.card', {}, h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Proposed'), h('span.muted', {}, 'A copy you edit; nothing changes until you make it the plan'), h('span.spacer'), C.has ? S.button('Clear', { size: 'small', onClick: () => { clearProposed(ctx.store); app.render(); } }) : null),
+    h('div.row-line', { style: { gap: '12px', flexWrap: 'wrap', marginTop: '8px', alignItems: 'flex-end' } },
+      S.labelled('Spending a month', S.moneyInput(p.spending ?? null, v => propose({ spending: v }), { hint: C.current.spending != null ? `now ${money(C.current.spending)}` : 'Add spending', key: 'prop:spending' })),
+      S.labelled('Debt order', S.select(METHODS.map(m => [m.id, m.name]), p.debtOrder ?? null, v => propose({ debtOrder: v }), { label: 'Proposed debt order', hint: `now ${METHODS.find(m => m.id === C.current.debtOrder)?.name ?? C.current.debtOrder}`, width: 170 })),
+      S.labelled('Retire by (age)', S.stepper(p.fiAge ?? null, v => propose({ fiAge: v }), { min: 30, max: 80, label: 'Proposed retire-by age', key: 'prop:fiAge' })),
+      S.labelled('Surplus invested', S.toggle([[true, 'Yes'], [false, 'No']], p.investSurplus ?? null, v => propose({ investSurplus: v }), { label: 'Proposed surplus invested', clearable: true })),
+      S.labelled('Extra to debt a month', S.moneyInput(p.extraDebt ?? null, v => propose({ extraDebt: v }), { hint: 'Add extra', key: 'prop:extra' }))));
+  const fmt = (r, v) => (v == null ? '–' : r.unit === 'money' ? S.amount(ctx, v) : r.unit === 'pct' ? pct(v) : r.unit === 'month' ? monthName(v, 'short') : String(v));
+  const diffCell = r => {
+    if (r.unit === 'month') return r.diffMonths == null ? '' : r.diffMonths === 0 ? 'Same' : `${r.diffMonths < 0 ? '' : '+'}${r.diffMonths} months${r.diffMonths < 0 ? ' sooner' : ' later'}`;
+    if (r.unit === 'pct') return r.diff == null ? '' : `${r.diff > 0 ? '+' : ''}${(r.diff * 100).toFixed(1)} pts`;
+    if (r.unit === 'money') return r.diff == null ? '' : h('span', {}, r.diff > 0 ? '+' : r.diff < 0 ? '−' : '', S.amount(ctx, Math.abs(r.diff)));
+    return r.current === r.proposed ? 'Same' : 'Changes';
+  };
+  const how = r => S.moreBlock(`prop:how:${r.key}`, () => h('div.row-line', { style: { gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap' } },
+    h('div', { style: { flex: '1 1 260px' } }, h('strong', {}, 'Current'), h('ol.how-list', {}, r.how.current.map(t => h('li', {}, t)))),
+    h('div', { style: { flex: '1 1 260px' } }, h('strong', {}, 'Proposed'), h('ol.how-list', {}, r.how.proposed.map(t => h('li', {}, t))))), { label: 'How we got this' });
+  const table = h('div.card', {}, h('table.rows.compare', {}, h('thead', {}, h('tr', {}, h('th', {}, ''), h('th.num', {}, 'Current'), h('th.num', {}, 'Proposed'), h('th.num', {}, 'Difference'))),
+    h('tbody', {}, C.rows.flatMap(r => [h('tr', {}, h('td', {}, r.label), h('td.num', {}, fmt(r, r.current)), h('td.num', {}, fmt(r, r.proposed)), h('td.num', {}, diffCell(r))), h('tr.how-row', {}, h('td', { colSpan: 4 }, how(r)))]))),
+    S.moreBlock('prop:choices', () => h('table.rows', {}, h('tbody', {}, C.choices.map(c => h('tr', {}, h('td', {}, c.label), h('td.num', {}, c.unit === 'money' ? money(c.current ?? 0) : String(c.current ?? '–')), h('td.num', {}, c.unit === 'money' ? money(c.proposed ?? 0) : String(c.proposed ?? '–')))))), { label: 'The choices side by side' }),
+    h('div.row-line', { style: { gap: '10px', marginTop: '10px' } }, S.button('Make Proposed the plan', { kind: 'primary', disabled: !C.has, why: C.has ? null : 'Change something under Proposed first', onClick: () => { makeProposedThePlan(ctx.store, ref0(ctx), { now: ctx.now() }); S.toast('Proposed is the plan now.', { undo: () => ctx.store.undo() }); app.render(); } }),
+      h('span.muted.small', {}, 'Writes the choices onto the file in one step; Undo puts it back.')));
+  return [head('Current vs Proposed', 'Today against the plan you are proposing'), editor, table];
 }
+const ref0 = ctx => ctx.ref;
 
 // M72 under the Savings rate to years chart: where your rate sits from $0, and the next 5% step.
 function simpleLine(m, r) {
