@@ -93,6 +93,14 @@ The workbook is built only from the registries in `js/registry/`, so it stays co
 | `fixtures/households.js` | Made-up households for the spreadsheet tests (every field filled; most of the math in use) |
 | `docs/backlog-brandon.md` | The Nov 2 beta feedback, tagged NOW or LATER |
 | `data/reference-2026.json` | Presets, limits, rates, lists from the Reference data tab |
+| `js/registry/ladder.js`, `js/math/ladder.js` | The ladder (M75): steps in FOO order and markers slotted by date; Home's next step and next marker |
+| `js/registry/couples.js`, `js/couples.js` | Couples: person tags, the six household modes and their defaults, the per-person view, the by-income split |
+| `js/registry/debt.js` | Debt payoff methods (Avalanche, Snowball, Return on Hassle, Stress, Custom) and the suggestion from stress |
+| `js/registry/joy.js` | The Joy number: the wording, asked at session start, in every snapshot, charted from Day 0 |
+| `js/capture.js`, `js/import/csv.js` | Captured for later (category joy, Trip, income type, the change log with who); the CSV statement import |
+| `js/math/proposed.js` | Current vs Proposed (M76): both sides, the differences, How we got this, Make Proposed the plan |
+| `tools/e2e/walkthrough.cjs`, `test/walkthrough.test.js` | The full walkthrough: S1 to S12 in unit tests; every screen at three widths, light and dark, in the browser |
+| `MATH.md`, `SYNC.md`, `MORNING.md` | Every calculation reviewed (a self-review pending a CFP); the Google Sheets sync design; the overnight run's morning note |
 | `PROGRESS.md`, `QUESTIONS.md`, `BACKLOG.md` | Where the build stands, open questions, later phases |
 
 ## License
