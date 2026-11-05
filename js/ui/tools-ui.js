@@ -98,7 +98,6 @@ export function sessionScreen(app, ctx, { fastTrackGap }) {
       note('privateNotes', 'Private notes', 'Only you see these'), note('sharedNotes', 'Shared notes', 'The client sees these'))),
     h('div.card', {}, h('h3', {}, 'This client'), h('div.stack', { style: { gap: '12px' } },
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Session length'), S.textInput(s.length ?? null, v => ctx.store.setIn('session', ['length'], v === null ? undefined : Number(v), 'Session length'), { hint: `${ctx.ref.defaults.sessionMinutes} min`, width: 110 })),
-      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Sessions planned'), S.stepper(s.planned ?? 6, v => ctx.store.setIn('session', ['planned'], v, 'Sessions planned'), { min: 1, max: 24, label: 'Sessions planned' })),
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Client view'), S.toggle([[false, 'Off'], [true, 'On']], !!app.prefs.clientView, v => app.setPref('clientView', v), { label: 'Client view' }), h('span.muted.small', {}, 'Hides coach-only items')),
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Satisfaction'), S.stepper(s.satisfaction ?? null, v => ctx.store.setIn('session', ['satisfaction'], v, 'Satisfaction'), { min: 1, max: 10, label: 'Satisfaction 1 to 10' })),
       // Answer to 49: the one-holding-over-25% flag, on unless the coach turns it off for this client.
@@ -136,6 +135,6 @@ export function discoveryScreen(app) {
       money('takeHome', 'Take-home a month'), money('rent', 'Rent a month'), money('debt', 'Total debt'), money('savings', 'Savings'),
       text('goal', 'Goal', 'In their words'), text('why', 'Why now', 'What prompted the call')),
     h('div.row-line', { style: { marginTop: '16px', gap: '10px' } }, S.button('Send to client file', { kind: 'primary', size: 'big', iconName: 'right', onClick: send }),
-      h('span.muted', {}, 'Creates the client and opens Home in Prep.')),
+      h('span.muted', {}, 'Creates the client and opens Home.')),
     h('p.muted.small', { style: { marginTop: '16px' } }, 'The pre-call form the client fills from a link needs a server to receive answers, so it is a later phase.'))];
 }

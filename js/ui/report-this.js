@@ -8,7 +8,7 @@ export function reportThis(app) {
   const btn = h('button.report-this.no-print', { type: 'button', title: 'Something confusing or broken? Tell us here' }, 'Report this');
   btn.onclick = () => {
     if (!app.hasClient) { toast('Open a client first: the note is saved in their file.'); return; }
-    const screen = { route: location.hash || '#/home/prep', title: document.querySelector('main h1')?.textContent?.trim() || null };
+    const screen = { route: location.hash || '#/home/session', title: document.querySelector('main h1')?.textContent?.trim() || null };
     const box = h('textarea.notes-box', { placeholder: 'What happened, or what did you expect?', 'aria-label': 'What happened', rows: 4 });
     const save = () => {
       const text = box.value.trim();

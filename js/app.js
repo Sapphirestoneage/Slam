@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// The shell (build phase 4): top bar, five tabs, sub-tabs, breadcrumb, Find, quick add, parking lot,
-// undo and redo, time toggle, client view, gear. Each screen shows its first state from Words and states.
+// The shell (build phase 4): top bar, five tabs, sub-tabs, Find, the More menu (undo, redo, add anything, the
+// parking lot), time toggle, client view, gear. Each screen shows its first state from Words and states.
 import { h, clear, icon } from './ui/dom.js';
 import { reportThis } from './ui/report-this.js';
 import { startTips } from './ui/tips.js';
@@ -10,7 +10,7 @@ import { Store, newHousehold, exportFile, importInto, backupDue, statusOf } from
 import { localAdapter, memoryAdapter, listClients, loadClient, saveClient, createClient, removeClient, getPrefs, setPrefs, autosave } from './storage.js';
 import { householdFromInputs } from './demo.js';
 import { addPresets } from './presets.js';
-import { keyNumbers } from './math/metrics.js';
+import { snapshotNumbers } from './program.js';
 import { TABS, parseRoute, search, routeForPlace, tabRoute } from './nav.js';
 import { SCREENS, progressOf } from './screens.js';
 import { startFastTrack } from './ui/fasttrack-ui.js';
@@ -60,13 +60,13 @@ const app = {
   newClientNamed(name) { this.open(createClient(adapter, name || 'New client', new Date().toISOString())); this.store.undoStack = []; return this.store; },
   newClient(anchor) {
     const input = h('input', { placeholder: 'Client name', 'aria-label': 'Client name' });
-    const go = () => { const name = input.value.trim(); if (!name) return; S.closePop(); this.open(createClient(adapter, name, new Date().toISOString())); addPresets(this.store, ref); this.store.undoStack = []; this.go('#/home/prep'); }; // every new client starts with the usual list
+    const go = () => { const name = input.value.trim(); if (!name) return; S.closePop(); this.open(createClient(adapter, name, new Date().toISOString())); addPresets(this.store, ref); this.store.undoStack = []; this.go('#/home/session'); }; // every new client starts with the usual list
     input.onkeydown = e => { if (e.key === 'Enter') go(); };
     S.popover(anchor, h('div.stack', { style: { gap: '12px' } }, h('strong', {}, 'New client'), h('label.field', {}, input),
       h('div.row-line', {}, S.button('Create', { kind: 'primary', onClick: go }), S.button('Cancel', { onClick: S.closePop })),
       h('a', { href: '#/tools/discovery', onclick: () => S.closePop() }, 'From a discovery call ›')), { width: 340 });
   },
-  // Discovery table (R180): creates the client, fills each number as Roughly, opens Home in Prep.
+  // Discovery table (R180): creates the client, fills each number as Roughly, opens Home.
   newClientFromDiscovery(v) {
     this.open(createClient(adapter, v.name, new Date().toISOString()));
     const s = this.store;
@@ -80,7 +80,7 @@ const app = {
     });
     addPresets(s, ref);
     s.undoStack = [];
-    this.go('#/home/prep');
+    this.go('#/home/session');
     S.toast(`${v.name} is ready. Every number from the call is marked Roughly.`);
   },
   async loadDemo() {
@@ -97,8 +97,9 @@ const app = {
     const clientName = this.hasClient ? this.store.doc.client.name : 'No client';
     const clientBtn = h('button.client-btn', { type: 'button', 'aria-label': `Client: ${clientName}. Switch client`, title: clientName }, h('span', {}, clientName), icon('down'));
     clientBtn.onclick = () => this.clientMenu(clientBtn);
-    const undo = S.iconButton('undo', 'Undo', () => this.undo(), { disabled: !this.store.canUndo });
-    const redo = S.iconButton('redo', 'Redo', () => this.redo(), { disabled: !this.store.canRedo });
+    // Undo, redo, Add anything and the parking lot sit behind one labeled More button (Phase 3: one calm row).
+    const more = h('button.icon-btn.more-btn', { type: 'button', 'aria-label': 'More: undo, redo, add anything, parking lot', 'aria-haspopup': 'dialog', 'data-focus': 'more' }, 'More', icon('down'));
+    more.onclick = () => this.moreMenu(more);
     const cv = S.iconButton('monitor', this.prefs.clientView ? 'Client view is on' : 'Client view', () => this.setPref('clientView', !this.prefs.clientView));
     cv.setAttribute('aria-pressed', String(!!this.prefs.clientView));
     const gear = S.iconButton('gear', 'Coach tools', () => this.go('#/tools/lists'));
@@ -106,18 +107,17 @@ const app = {
     const time = h('select', { 'aria-label': 'Show amounts as', title: 'Show amounts as dollars, hours of work or days of FI', 'data-focus': 'time-view' },
       [['$', '$'], ['Hours', 'Hours'], ['FI days', 'FI days']].map(([v, t]) => h('option', { value: v, selected: v === this.ctx.timeMode }, t)));
     time.onchange = () => this.ctx.setTimeMode(time.value);
-    // The Home tab and SLAM do the same: Prep, or Live while a session is on.
-    const ses = this.hasClient ? this.store.doc.session || {} : {};
-    const homeHref = tabRoute(TABS[0], { inSession: !!ses.startedAt && !(ses.endedAt > ses.startedAt) });
+    const homeHref = tabRoute(TABS[0]);
     clear($('topbar'), h('div.topbar-in', {},
       h('div.tb-left', {},
         h('a.site-id', { href: homeHref, title: 'Stress Less About Money' }, 'SLAM'), clientBtn,
         h('span.save-state', { id: 'save-state' })),
-      h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: t.id === 'home' ? homeHref : tabRoute(t), 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),
+      h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: tabRoute(t), 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),
       h('div.tb-right', {},
-        this.findBox(),
-        S.iconButton('note', 'Parking lot', () => this.openParking()), undo, redo,
+        this.findBox(), more,
         h('label.field.time-pick', {}, time), cv, gear)));
+    // Home is one screen with one nav row: no sub-tab bar there (About you shows the bar, with the way back).
+    $('subtabs').hidden = tab.id === 'home' && sub.id === 'session';
     // A sub-tab whose area the Profile turned off is absent, not greyed (R001).
     const off = this.hasClient && tab.id === 'net-worth' && this.ctx.gates().areas.debt === false ? new Set(['debt']) : new Set();
     // Net worth and Cash flow modes sit beside their sub-tabs: Fast Track is a button, One page a toggle (Navigation: modes are not tabs).
@@ -235,9 +235,24 @@ const app = {
     });
   },
 
+  // ---------- The More menu: undo, redo, add anything, the parking lot ----------
+  moreMenu(anchor) {
+    const item = (label, iconName, onClick, { disabled = false } = {}) => h('button.btn', { type: 'button', disabled, onclick: () => { S.closePop(); onClick(); } }, icon(iconName), label);
+    S.popover(anchor, h('div.stack.more-menu', { style: { gap: '8px' } },
+      item(this.store.canUndo ? `Undo: ${this.store.undoStack.at(-1).label}` : 'Undo', 'undo', () => this.undo(), { disabled: !this.store.canUndo }),
+      item('Redo', 'redo', () => this.redo(), { disabled: !this.store.canRedo }),
+      item('Add anything', 'plus', () => this.addAnything(anchor), { disabled: !this.hasClient }),
+      item('Parking lot', 'note', () => this.openParking(anchor), { disabled: !this.hasClient }),
+      h('span.muted.small', {}, 'Ctrl+Z undoes, Ctrl+Shift+Z redoes, / finds or adds.')), { width: 300 });
+  },
+  addAnything(anchor) {
+    S.popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, 'Add anything'), h('span.muted.small', {}, 'A name, an amount and how often, then Enter: "Netflix 15 a month"'),
+      S.quickAdd(this.ctx, { onAdded: (r, p) => this.go(routeForPlace(p.section)) })), { width: 320 });
+    setTimeout(() => document.querySelector('.pop [data-quick-add]')?.focus());
+  },
+
   // ---------- Parking lot (R051) ----------
-  openParking() {
-    const anchor = document.querySelector('[aria-label="Parking lot"]');
+  openParking(anchor = document.querySelector('[data-focus="more"]')) {
     if (!this.hasClient) { S.toast('Open a client first; notes belong to a client.'); return; }
     const box = h('div');
     const text = h('textarea.note-input', { placeholder: 'Jot what the client said', 'aria-label': 'Note' });
@@ -274,12 +289,13 @@ const app = {
     root.dataset.font = this.prefs.font || 'inter';
   },
   snapshot(label) {
-    this.store.snapshot(label, keyNumbers(this.ctx.metrics()));
+    this.store.snapshot(label, snapshotNumbers(this.store.doc, ref, { now: this.ctx.now() }));
     saveClient(adapter, this.store.doc);
     S.toast('Snapshot saved.');
     this.render();
   },
-  exportNow() {
+  saveNow() { saveClient(adapter, this.store.doc); },
+  exportNow({ quiet = false } = {}) {
     const doc = this.store.doc;
     const now = new Date().toISOString();
     const blob = new Blob([JSON.stringify(exportFile(doc, now), null, 1)], { type: 'application/json' });
@@ -287,8 +303,7 @@ const app = {
     document.body.append(a); a.click(); a.remove();
     doc.lastBackupAt = now;
     saveClient(adapter, doc);
-    S.toast('Backup downloaded.');
-    this.render();
+    if (!quiet) { S.toast('Backup downloaded.'); this.render(); }
   },
   importFile() {
     const input = h('input', { type: 'file', accept: '.json,application/json' });
@@ -329,7 +344,7 @@ const app = {
         const next = listClients(adapter)[0];
         this.open(next ? loadClient(adapter, next.id) : null, { save: false });
         this.prefs = setPrefs(adapter, { clientId: next?.id ?? null });
-        this.go('#/home/prep');
+        this.go('#/home/session');
         S.toast(`Deleted ${name}.`, { undo: () => { saveClient(adapter, kept); this.open(loadClient(adapter, kept.id), { save: false }); S.toast(`${name} is back.`); } });
       } }), S.button('Keep', { onClick: S.closePop }))), { width: 380 });
   },
@@ -346,7 +361,7 @@ const app = {
   // ---------- render ----------
   render({ keepPop = false } = {}) {
     const { tab, sub, hash } = parseRoute(location.hash);
-    if (tab.id === 'tools' && this.prefs.clientView) { this.go('#/home/prep'); return; } // never in client view
+    if (tab.id === 'tools' && this.prefs.clientView) { this.go('#/home/session'); return; } // never in client view
     if (!keepPop) S.closePop();
     this.ctx.clearScreen();
     const screen = SCREENS[`${tab.id}/${sub.id}`];

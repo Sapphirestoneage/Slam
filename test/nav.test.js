@@ -7,7 +7,7 @@ const fields = JSON.parse(readFileSync(new URL('../data/fields.json', import.met
 
 test('five tabs, same order, named as decided (R148)', () => {
   assert.deepEqual(TABS.map(t => t.name), ['Home', 'Net worth', 'Cash flow', 'Plan', 'Report']);
-  assert.deepEqual(TABS[0].subs.map(s => s.name), ['About you', 'Prep', 'Live', 'Wrap-up']);
+  assert.deepEqual(TABS[0].subs.map(s => s.name), ['Home', 'About you'], 'Phase 3: Home is one screen; Start session switches its mode');
   assert.deepEqual(TABS[1].subs.map(s => s.name), ['Assets', 'Debt', 'Credit cards', 'Protection']); // Credit cards: answer to 56
   assert.deepEqual(TABS[2].subs.map(s => s.name), ['Income', 'Taxes', 'Budget', 'Calendar', 'Month end'], 'waterfall order');
 });
@@ -40,10 +40,9 @@ test('old routes redirect to the new homes (bookmarks, Find, every number links 
   assert.equal(routeForPlace('Cash flow › Taxes'), '#/cash-flow/taxes');
   assert.equal(routeForPlace('Home › About you'), '#/home/profile');
   assert.equal(routeForPlace('Cash flow › Month-end close'), '#/cash-flow/close', 'a renamed sub-tab still lands');
-  assert.equal(parseRoute('#/home').sub.name, 'Prep', 'Home lands on Prep; About you is first in the row');
-  assert.equal(TABS[0].subs[0].name, 'About you');
-  assert.equal(tabRoute(TABS[0]), '#/home/prep');
-  assert.equal(tabRoute(TABS[0], { inSession: true }), '#/home/live', 'Home and SLAM open Live while a session is on');
+  assert.equal(parseRoute('#/home').sub.name, 'Home');
+  assert.equal(tabRoute(TABS[0]), '#/home/session');
+  for (const old of ['#/home/prep', '#/home/live', '#/home/wrap-up']) assert.equal(parseRoute(old).hash, '#/home/session', `${old} lands on the one Home`);
   assert.equal(tabRoute(TABS[2]), '#/cash-flow/income');
 });
 test('no field lives on an old tab', () => {

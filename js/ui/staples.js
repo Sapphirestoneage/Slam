@@ -130,20 +130,23 @@ export function sureTag(status, hasValue = true) {
   return h(`span.tag.${cls}`, { title: status && face !== status ? `${face}: ${TAG[status]?.[1].replace(/^[?≈] /, '') ?? status}` : null }, text);
 }
 // The menu: Know it; Rough (Roughly, Guess); Missing (Not now, I'll find it later); then Not for me, which hides it.
-export function statusMenu(onPick, current = null) {
+// lock: { on, set } adds Lock it (confirmed) for the coach: the number counts as Actual in the Picture % (Phase 3).
+export function statusMenu(onPick, current = null, { lock = null } = {}) {
   const pickBtn = (s, text) => h('button.btn.small', { type: 'button', 'aria-pressed': String(s === current), onclick: () => { closePop(); onPick(s); } }, text);
   const group = (name, list) => h('div.sure-group', {}, h('span.label', {}, name), h('div.row-line', { style: { gap: '6px' } }, list.map(s => pickBtn(s, TAG[s][1].replace(/^[?≈] /, '')))));
   return h('div.stack.sure-menu', { style: { gap: '10px' } }, h('h3', {}, 'How sure is this?'),
-    h('div.sure-group', {}, pickBtn('Know it', 'Know it')),
+    h('div.sure-group', {}, h('div.row-line', { style: { gap: '6px' } }, pickBtn('Know it', 'Know it'),
+      lock ? h('button.btn.small', { type: 'button', 'aria-pressed': String(!!lock.on), title: 'Confirmed from a statement or checked by you: counts as Actual in the picture', onclick: () => { closePop(); lock.set(!lock.on); } }, icon('lock'), lock.on ? 'Locked (unlock)' : 'Lock it (confirmed)') : null)),
     group('Rough', SURE.Rough), group('Missing', SURE.Missing),
     h('hr'), h('div.row-line', { style: { gap: '6px' } }, pickBtn('Not for me', 'Not for me (hide it)'),
       h('button.btn.small', { type: 'button', onclick: () => { closePop(); onPick(null); } }, 'Clear')));
 }
-export function statusPicker(current, onPick, { label = 'Status', hasValue = true } = {}) {
+export function statusPicker(current, onPick, { label = 'Status', hasValue = true, lock = null } = {}) {
   const face = sureOf(current, hasValue);
-  const b = h(`button.status-btn${face === 'Know it' ? '.quiet' : ''}`, { type: 'button', 'aria-label': `${label}: ${face}${current && current !== face ? `, ${TAG[current]?.[1] ?? current}` : ''}`, 'data-focus': `status:${label}` },
-    face === 'Know it' ? 'Know it' : sureTag(current, hasValue), icon('down'));
-  b.onclick = () => popover(b, statusMenu(onPick, current));
+  const lockedFace = lock?.on && face === 'Know it';
+  const b = h(`button.status-btn${face === 'Know it' && !lockedFace ? '.quiet' : ''}`, { type: 'button', 'aria-label': `${label}: ${lockedFace ? 'Locked' : face}${current && current !== face ? `, ${TAG[current]?.[1] ?? current}` : ''}`, 'data-focus': `status:${label}` },
+    lockedFace ? h('span.tag.good', {}, icon('lock'), 'Locked') : face === 'Know it' ? 'Know it' : sureTag(current, hasValue), icon('down'));
+  b.onclick = () => popover(b, statusMenu(onPick, current, { lock }));
   return b;
 }
 
@@ -202,19 +205,27 @@ function joinWordsEl(items) {
   items.forEach((el, i) => { if (i) out.push(i === items.length - 1 ? ' and ' : ', '); out.push(el); });
   return out;
 }
-export function metricCard(ctx, label, result, { key = null, render = null, lowerIsGood = false, note = null, home = null, so = null } = {}) {
+// lock: the program keeps this number locked until its inputs qualify (Phase 3), with the plain reason and where to
+// go. confidence: once unlocked, how sure the inputs are (shown instead of the Guess tag).
+export function metricCard(ctx, label, result, { key = null, render = null, lowerIsGood = false, note = null, home = null, so = null, lock = null, confidence = null } = {}) {
+  const labelEl = home ? h('a.label.metric-home', { href: home, title: `Open where ${label.toLowerCase()} comes from` }, label) : h('span.label', {}, label);
+  if (lock) {
+    return h('div.metric.locked', {}, labelEl, h('div.big', {}, icon('lock'), ' Locked'),
+      h('span.change.lock-why', {}, lock.reason, lock.route ? [' ', h('a', { href: lock.route }, 'Open ›')] : null));
+  }
   const locked = result.value === null || result.value === undefined;
   const snap = ctx.store.lastSnapshot();
   const change = key && !locked ? changeSince(keyNumbers(ctx.metrics()), snap, key) : null;
   const good = change && (change.direction === 'down') === lowerIsGood;
   return h(`div.metric${locked ? '.locked' : ''}`, {},
-    home ? h('a.label.metric-home', { href: home, title: `Open where ${label.toLowerCase()} comes from` }, label) : h('span.label', {}, label), // every number links to its home
+    labelEl, // every number links to its home
     locked
       ? h('div.big', {}, result.never ? warnTag('Not on this path') : [icon('lock'), ` Locked: needs ${result.needs.length} ${result.needs.length === 1 ? 'number' : 'numbers'}`])
       : h('div.big', {}, mathButton(result, render ? render(result) : result.unit === 'months' ? `${Math.ceil(result.value)} months` : value(result, ctx)),
         result.unit === 'months' && !render ? h('span.when', {}, ` ${value(result, ctx).replace(/^.*\(/, '(')}`) : null),
     locked && !result.never ? h('span.change', {}, needLinks(ctx, result.needs)) : null,
-    result.guess ? h('span', {}, guessTag()) : null,
+    result.guess && !confidence ? h('span', {}, guessTag()) : null,
+    confidence && !locked ? h('span', {}, h('span.tag.plain.confidence', { title: confidence.text }, confidence.label)) : null,
     change && change.direction !== 'same' ? h(`span.change.${change.direction}${good ? '.good' : ''}`, {}, `${formatDiff(change.diff, key)} since last session`) : null,
     change && change.direction === 'same' ? h('span.change', {}, 'Same as last session') : null,
     note && !locked ? h('span.change', {}, note) : null,
@@ -755,7 +766,7 @@ export function recordList(ctx, cfg) {
         const tr = h(`tr.row${state.selected.has(r.id) ? '.selected' : ''}`, { 'data-id': r.id, 'data-group': g, hidden: folded },
           h('td.check-cell', {}, box),
           cols.map((c, i) => h(`td.col-${slug(c.label)}${i === 0 ? '.col-first' : ''}${c.num ? '.num' : ''}`, {}, c.render(ctx, r, m, p => update(r, p), { remove: e => remove([r.id], e.currentTarget) }))),
-          h('td.col-status', {}, statusPicker(r.status, s => update(r, { status: s }), { hasValue: hasCore(r) })),
+          h('td.col-status', {}, statusPicker(r.status, s => update(r, { status: s }), { hasValue: hasCore(r), lock: ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? { on: r.values.locked === true, set: v => update(r, { locked: v }) } : null })),
           h('td.col-actions', {}, h('span.actions', {},
             h('button.caret', { type: 'button', 'aria-expanded': String(open), 'data-focus': 'more', onclick: () => setOpen(r.id) },
               open ? 'Less' : view.moreLabel, icon(open ? 'down' : 'right')),

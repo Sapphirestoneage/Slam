@@ -6,11 +6,6 @@
 .site-id { color: #fff; font-weight: 800; font-size: 1.25rem; letter-spacing: .04em; text-decoration: none; }
 .client-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px; border: 2px solid rgba(255,255,255,.7); border-radius: var(--r-button); background: transparent; color: #fff; font: inherit; font-weight: 700; cursor: pointer; max-width: 130px; }
 .client-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.crumbs { display: flex; align-items: center; gap: 6px; font-size: .875rem; font-weight: 600; white-space: nowrap; flex: 0 1 auto; min-width: 72px; overflow: hidden; }
-.crumbs a { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.crumbs a:first-child { flex: none; }
-.crumbs a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
-.crumbs .sep { opacity: .7; }
 .save-state { flex: none; font-size: .8125rem; font-weight: 700; color: #BFE8CF; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
 .save-state.unsaved { color: #fff; background: var(--guess); padding: 2px 8px; border-radius: 999px; }
 .tabs { display: flex; gap: 0; flex: none; }
@@ -42,6 +37,9 @@
 .find-btn kbd { background: transparent; color: #fff; border-color: rgba(255,255,255,.6); }
 
 .subtabs { position: sticky; top: 60px; z-index: 30; background: var(--card); border-bottom: 1.5px solid var(--border-row); }
+.subtabs[hidden] { display: none; }
+.topbar .more-btn { display: inline-flex; align-items: center; width: auto; padding: 0 8px 0 10px; gap: 2px; font-weight: 700; font-size: .9375rem; }
+.more-menu .btn { justify-content: flex-start; width: 100%; }
 .subtabs-in { max-width: none; margin: 0 auto; display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s5); }
 .subtab { display: inline-flex; align-items: center; gap: var(--s2); height: 38px; padding: 0 var(--s3); border-radius: var(--r-button); color: var(--text); text-decoration: none; font-weight: 700; border: 2px solid transparent; }
 .subtab:hover { border-color: var(--border-row); }
@@ -84,12 +82,12 @@ textarea.note-input { width: 100%; min-height: 70px; border: 2px solid var(--bor
 
 /* Dark: the top bar's whites softened to match the page; borders quieter. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) :is(.topbar, .site-id, .client-btn, .crumbs a, .tab, .find-btn, .topbar .icon-btn, .topbar .seg button, .topbar .field input, .find-btn kbd, .topbar .field svg, .toast) { color: #E4E7EC; }
+  :root:not([data-theme="light"]) :is(.topbar, .site-id, .client-btn, .tab, .find-btn, .topbar .icon-btn, .topbar .seg button, .topbar .field input, .find-btn kbd, .topbar .field svg, .toast) { color: #E4E7EC; }
   :root:not([data-theme="light"]) .topbar { border-bottom: 1px solid #1C2029; }
   :root:not([data-theme="light"]) :is(.tab[aria-current="page"], .topbar .seg button[aria-pressed="true"], .topbar .icon-btn[aria-pressed="true"]) { color: var(--on-primary); }
   :root:not([data-theme="light"]) :is(.client-btn, .find-btn, .topbar .icon-btn, .topbar .field, .topbar .seg) { border-color: rgba(228, 231, 236, .45); }
 }
-:root[data-theme="dark"] :is(.topbar, .site-id, .client-btn, .crumbs a, .tab, .find-btn, .topbar .icon-btn, .topbar .seg button, .topbar .field input, .find-btn kbd, .topbar .field svg, .toast) { color: #E4E7EC; }
+:root[data-theme="dark"] :is(.topbar, .site-id, .client-btn, .tab, .find-btn, .topbar .icon-btn, .topbar .seg button, .topbar .field input, .find-btn kbd, .topbar .field svg, .toast) { color: #E4E7EC; }
 :root[data-theme="dark"] .topbar { border-bottom: 1px solid #1C2029; }
 :root[data-theme="dark"] :is(.tab[aria-current="page"], .topbar .seg button[aria-pressed="true"], .topbar .icon-btn[aria-pressed="true"]) { color: var(--on-primary); }
 :root[data-theme="dark"] :is(.client-btn, .find-btn, .topbar .icon-btn, .topbar .field, .topbar .seg) { border-color: rgba(228, 231, 236, .45); }
@@ -113,7 +111,6 @@ textarea.note-input { width: 100%; min-height: 70px; border: 2px solid var(--bor
   .topbar { position: static; }
   .topbar-in { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 8px; }
   .tb-left { flex: 1 1 100%; }
-  .crumbs { display: none; }
   .tabs { order: 2; width: 100%; overflow-x: auto; }
   .tb-right { order: 3; width: 100%; overflow-x: auto; justify-content: flex-start; padding-bottom: 2px; }
   .tb-right > .field { display: none; }

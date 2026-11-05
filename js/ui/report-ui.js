@@ -11,6 +11,7 @@ import { taxRates, monthlyFrom } from '../math/income.js';
 import { drafttShares } from '../math/spending.js';
 import { gutAccuracy } from '../math/spending.js';
 import { fiTargets, ladder, agenda } from '../plan.js';
+import { pictureOf, unlockOf, confidenceOf } from '../math/picture.js';
 import { closedMonths, monthName, ymOf, monthsBetween } from '../month.js';
 import { money, pct } from '../format.js';
 
@@ -166,7 +167,7 @@ export function summaryText(ctx) {
   const m = ctx.metrics();
   const doc = ctx.store.doc;
   const op = doc.session.onePager || {};
-  const fiWhen = m.monthsToFi.value;
+  const fiWhen = fiGate(ctx).unlocked ? m.monthsToFi.value : null; // locked by the program: no date yet
   const line = (k, v) => (v == null || v === '' ? null : `${k}: ${v}`);
   const hw = homeworkItems(ctx);
   return [
@@ -223,17 +224,24 @@ export function onePagerScreen(app, ctx) {
     h('div.op-grid', {},
       h('div', {}, h('h3', {}, 'To-dos'), hw.length ? h('ul.op-list', {}, hw.map(x => h('li', {}, x.label))) : h('p.muted', {}, "No homework yet. Tap I'll find it later on any number to add it.")),
       h('div', {}, h('h3', {}, 'Goals'), h('ul.op-list', {},
-        m.monthsToFi.value != null ? h('li', {}, `FI ${monthName(ymOf(new Date(ctx.now().getTime() + m.monthsToFi.value * 30.44 * 86400000)))}${doc.assumptions.fiAge ? `, target age ${doc.assumptions.fiAge}` : ''}`) : null,
-        goals.map(g => h('li', {}, g.name || g.type)), !goals.length && m.monthsToFi.value == null ? h('li.muted', {}, 'Set an FI target on Plan') : null))),
+        m.monthsToFi.value != null && fiGate(ctx).unlocked ? h('li', {}, `FI ${monthName(ymOf(new Date(ctx.now().getTime() + m.monthsToFi.value * 30.44 * 86400000)))}${doc.assumptions.fiAge ? `, target age ${doc.assumptions.fiAge}` : ''}`) : null,
+        goals.map(g => h('li', {}, g.name || g.type)), !goals.length && (m.monthsToFi.value == null || !fiGate(ctx).unlocked) ? h('li.muted', {}, fiGate(ctx).unlocked ? 'Set an FI target on Plan' : `FI date: ${fiGate(ctx).reason}`) : null))),
     h('div.op-grid', { style: { marginTop: '16px' } }, box('strengths', 'Strengths', 'What is going well'), box('struggles', 'Struggles', 'What is hard right now')),
     h('div.op-grid', { style: { marginTop: '16px' } }, box('doMore', 'Do more', 'Keep doing'), box('doLess', 'Do less', 'Ease off')),
     h('p.disclaimer', {}, 'Coach, not a licensed financial advisor.'))]; // R182
 }
 
-// The FI date as a month, with how far off it is (fits a narrow card).
+// The FI date as a month, with how far off it is (fits a narrow card). Locked by the program until income and
+// spending reach Estimate and an invested balance is in (Phase 3); once unlocked, a confidence label.
+export function fiGate(ctx) {
+  const pic = pictureOf(ctx.store.doc, ctx.ref, { now: ctx.now() });
+  const u = unlockOf('fi', pic);
+  return { ...u, confidence: u.unlocked ? confidenceOf('fi', pic, { now: ctx.now() }) : null, payoff: unlockOf('payoff', pic) };
+}
 export function fiCard(ctx, m) {
   const v = m.monthsToFi.value;
-  return { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi', home: HOME.fi,
+  const g = fiGate(ctx);
+  return { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi', home: HOME.fi, lock: g.unlocked ? null : { reason: g.reason, route: g.route }, confidence: g.confidence,
     render: v == null ? null : () => monthName(ymOf(new Date(ctx.now().getTime() + v * 30.44 * 86400000)), 'short'), note: v == null ? null : `${(v / 12).toFixed(1)} years from now` };
 }
 

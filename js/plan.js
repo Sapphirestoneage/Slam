@@ -145,7 +145,7 @@ export function agenda(doc, ref, { now = new Date() } = {}) {
     { id: 'spend', name: 'Spending basics', route: '#/cash-flow/budget', done: m.inputs.spending !== null && m.inputs.takeHome !== null && (m.inputs.spendingSource === 'gut' || !m.inputs.guessLines) },
     { id: 'fi', name: 'FI reveal', route: '#/plan/goals', done: m.monthsToFi.value !== null || !!m.monthsToFi.never },
   ];
-  const list = custom?.length ? custom.map(c => steps.find(s => s.id === c.id) || { id: c.id, name: c.name, route: c.route || '#/home/live', done: !!c.done }) : steps;
+  const list = custom?.length ? custom.map(c => steps.find(s => s.id === c.id) || { id: c.id, name: c.name, route: c.route || '#/home/session', done: !!c.done }) : steps;
   const current = list.find(s => !s.done) || null;
   return { steps: list, current };
 }

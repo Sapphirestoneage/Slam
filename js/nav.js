@@ -4,9 +4,10 @@
 // The DATING spine: Debt + Assets = Net worth; Taxes + Income + Needs = Cash flow; Goals = Plan.
 // Cash flow sub-tabs read in waterfall order: Income, Taxes, then Budget, Calendar and Close.
 export const TABS = [
-  // Home opens Prep (or Live while a session is on, see homeRoute); About you is first in the row, not the landing page.
-  { id: 'home', name: 'Home', job: 'This session: who they are, before, during, after', landing: 'prep', subs: [
-    { id: 'profile', name: 'About you', area: 'needs' }, { id: 'prep', name: 'Prep' }, { id: 'live', name: 'Live' }, { id: 'wrap-up', name: 'Wrap-up' }] },
+  // Home is one screen (Phase 3): the program, the picture, the next small things. Start session switches it to the
+  // session mode; About you stays a page of its own under it.
+  { id: 'home', name: 'Home', job: 'This session: the program, the picture, the next small things', subs: [
+    { id: 'session', name: 'Home' }, { id: 'profile', name: 'About you', area: 'needs' }] },
   { id: 'net-worth', name: 'Net worth', job: 'What you own and owe', subs: [
     { id: 'assets', name: 'Assets', area: 'assets' }, { id: 'debt', name: 'Debt', area: 'debt' }, { id: 'credit-cards', name: 'Credit cards', area: 'debt' }, { id: 'protection', name: 'Protection', area: 'goals' }] },
   { id: 'cash-flow', name: 'Cash flow', job: 'Money in and out: income, taxes, budget, calendar, close', subs: [
@@ -21,6 +22,7 @@ export const TABS = [
 ];
 // Old homes (My Money and Spending) still open: bookmarks, saved links and old Lives on text land on the new home.
 export const MOVED = {
+  'home/prep': 'home/session', 'home/live': 'home/session', 'home/wrap-up': 'home/session', // the old Home modes (Phase 3: one screen)
   'my-money': 'home/profile', 'my-money/profile': 'home/profile', 'my-money/income': 'cash-flow/income', 'my-money/taxes': 'cash-flow/taxes',
   'my-money/debt': 'net-worth/debt', 'my-money/assets': 'net-worth/assets', 'my-money/protection': 'net-worth/protection',
   spending: 'cash-flow/budget', 'spending/budget': 'cash-flow/budget', 'spending/calendar': 'cash-flow/calendar', 'spending/close': 'cash-flow/close',
@@ -47,8 +49,8 @@ export function parseRoute(hash) {
   return { tab, sub, hash: `#/${tab.id}/${sub.id}` };
 }
 export const routeOf = (tabId, subId) => `#/${tabId}/${subId}`;
-// Where a tab's own button goes: its landing page; Home goes to Live while a session is on.
-export const tabRoute = (t, { inSession = false } = {}) => (t.id === 'home' ? (inSession ? '#/home/live' : '#/home/prep') : routeOf(t.id, t.landing ?? t.subs[0].id));
+// Where a tab's own button goes: its landing page (its first sub-tab).
+export const tabRoute = t => routeOf(t.id, t.landing ?? t.subs[0].id);
 
 // 'My Money › Debt' (the Fields tab's 'Lives on') to a route.
 export function routeForPlace(place) {

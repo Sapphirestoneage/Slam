@@ -12,6 +12,7 @@ import { winSources } from './spending-ui.js';
 import { money, pct } from '../format.js';
 import { yearItems, usualDates, sinkingOf, takingOver } from '../year.js';
 import { TUITION_GOAL } from '../community.js';
+import { fiGate } from './report-ui.js';
 
 export const PUI = { extra: 0, pace: null, bands: true, chart: 'FI timeline', extraDebt: 0, reveal: false };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -19,6 +20,11 @@ const short = v => (Math.abs(v) >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : Math.abs(
 const whenText = (ctx, months) => (months == null ? null : months === 0 ? 'Now' : `${monthName(addMonths(ymOf(ctx.now()), months))} (${months < 24 ? `${months} months` : `${(months / 12).toFixed(1)} years`})`);
 const ageAt = (m, months) => (m.inputs.age == null || months == null ? null : Math.floor(m.inputs.age + months / 12));
 const paceOf = (ref, r) => Object.entries(ref.presets.pace).find(([, v]) => Math.abs(v - r) < 1e-9)?.[0] ?? null;
+// Phase 3: a calculator stays locked, with the plain reason, until its inputs qualify (js/math/picture.js).
+const lockedLine = u => h('span.muted', { style: { fontSize: '1rem' } }, icon('lock'), ' Locked. ', u.reason, u.route ? [' ', h('a', { href: u.route }, 'Open ›')] : null);
+const lockedCard = u => h('div.card', {}, h('div.empty.center', {}, h('span.title', {}, icon('lock'), ` ${u.label} is locked`), h('span.muted', {}, u.reason),
+  u.route ? S.button('Open where it lives', { iconName: 'right', onClick: () => { location.hash = u.route; } }) : null));
+const confidenceTag = c => (c ? h('span.tag.plain.confidence', { title: c.text }, c.label) : null);
 
 // Milestone dates become wins on the calendar (R095).
 winSources.push(ctx => {
@@ -34,6 +40,7 @@ winSources.push(ctx => {
 // slider and Big deals first, so all three show without scrolling at 1280px.
 export function revealCard(app, ctx, m) {
   const fiWhen = m.monthsToFi.value;
+  const gate = fiGate(ctx);
   const slider = h('input', { type: 'range', min: -1000, max: 3000, step: 50, value: PUI.extra, 'aria-label': 'Save more or less a month', 'data-focus': 'reveal:save-more' });
   const out = h('strong'), result = h('span.fi-when');
   const paint = () => {
@@ -45,9 +52,9 @@ export function revealCard(app, ctx, m) {
   paint();
   return h('div.card.reveal-card', {},
     h('div.row-line', { style: { gap: '24px', alignItems: 'baseline' } },
-      h('div', {}, h('span.label', {}, 'FI date'), h('div.fi-big', {}, fiWhen != null ? S.mathButton(m.monthsToFi, monthName(addMonths(ymOf(ctx.now()), fiWhen))) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs)))),
+      h('div', {}, h('span.label', {}, 'FI date'), h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, monthName(addMonths(ymOf(ctx.now()), fiWhen))) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))), confidenceTag(gate.confidence)),
       h('div', {}, h('span.label', {}, 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? S.mathButton(m.fiNumber, money(m.fiNumber.value)) : h('span.muted', { style: { fontSize: '1rem' } }, 'Needs ', S.needLinks(ctx, m.fiNumber.needs))))),
-    m.fiNumber.value != null ? h('div.slider-row', { style: { marginTop: '12px' } }, h('span.label', {}, 'Save more'), slider, out, result) : null);
+    m.fiNumber.value != null && gate.unlocked ? h('div.slider-row', { style: { marginTop: '12px' } }, h('span.label', {}, 'Save more'), slider, out, result) : null);
 }
 // Answer to 11: the surplus stays surplus until you choose to invest it; the FI date says what it counts.
 // Answer to 15: returns are after inflation, so the FI date already covers it (everything is in today's dollars).
@@ -76,6 +83,7 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
   const fiAge = a.fiAge ?? null;
   const solve = solveFor(m, fiAge);
   const fiWhen = m.monthsToFi.value;
+  const gate = fiGate(ctx);
   const inflation = a.inflation ?? ref.presets.inflation.default;
   const nominal = (ctx.store.doc.settings.dollars || 'real') === 'nominal';
   const left = h('div.stack', { style: { gap: '12px' } },
@@ -83,9 +91,9 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
       S.labelled('FI age', S.textInput(fiAge, v => setA({ fiAge: v === null ? null : Number(v) }), { hint: 'Age', width: 100, key: 'g:fiAge' })),
       S.button('Just show me', { onClick: () => setA({ fiAge: null }), tip: 'Skip the age and show the earliest date' })),
     h('div', {}, h('span.label', {}, 'FI date'),
-      h('div.fi-big', {}, fiWhen != null ? S.mathButton(m.monthsToFi, monthName(addMonths(ymOf(ctx.now()), fiWhen))) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))),
-      fiWhen != null ? h('span.muted', {}, `${ageAt(m, fiWhen) != null ? `At ${ageAt(m, fiWhen)} · ` : ''}${(fiWhen / 12).toFixed(1)} years from now`) : null,
-      investingLine(ctx, m)),
+      h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, monthName(addMonths(ymOf(ctx.now()), fiWhen))) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))),
+      gate.unlocked && fiWhen != null ? h('span.muted', {}, `${ageAt(m, fiWhen) != null ? `At ${ageAt(m, fiWhen)} · ` : ''}${(fiWhen / 12).toFixed(1)} years from now `, confidenceTag(gate.confidence)) : null,
+      gate.unlocked ? investingLine(ctx, m) : null),
     h('div', {}, h('span.label', {}, nominal ? 'FI number, in future dollars' : 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? (nominal && fiWhen != null
       ? S.mathButton({ ...m.fiNumber, text: `${m.fiNumber.text} With ${pct(inflation)} inflation a year for ${(fiWhen / 12).toFixed(1)} years: ${money(futureDollars(m.fiNumber.value, fiWhen, inflation))} then.` }, money(futureDollars(m.fiNumber.value, fiWhen, inflation)))
       : S.mathButton(m.fiNumber, money(m.fiNumber.value))) : h('span.muted', { style: { fontSize: '1rem' } }, 'Needs ', S.needLinks(ctx, m.fiNumber.needs)))),
@@ -114,13 +122,14 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
       h('div.preset-row', {}, h('span.label', {}, 'Life expectancy'), S.textInput(a.lifeExpectancy ?? null, v => setA({ lifeExpectancy: v === null ? null : Number(v) }), { hint: String(ref.defaults.lifeExpectancy), width: 90 })),
       h('div.preset-row', {}, h('span.label', {}, 'Social Security'), S.select(['Full scheduled', 'Reduced %', 'None'], a.socialSecurity ?? null, v => setA({ socialSecurity: v }), { label: 'Social Security', hint: 'Pick one', width: 170 }))), { label: 'More: inflation, life expectancy, Social Security' }));
   const fiCard = h('div.card.fi-card', { style: { marginBottom: '16px' } }, left, right);
-  return reveal ? [revealCard(app, ctx, m), bigDealsCard(ctx, m), fiCard, ladderCard(ctx, m)] : [fiCard, bigDealsCard(ctx, m), ladderCard(ctx, m)];
+  return reveal ? [revealCard(app, ctx, m), bigDealsCard(ctx, m, gate), fiCard, ladderCard(ctx, m, gate)] : [fiCard, bigDealsCard(ctx, m, gate), ladderCard(ctx, m, gate)];
 }
 
 // These are big deals (M56): one assumption at a time; click an option to use it.
-function bigDealsCard(ctx, m) {
+function bigDealsCard(ctx, m, gate) {
   const bd = m.bigDeals;
   const a = ctx.store.doc.assumptions;
+  if (!gate.unlocked) return h('div.card', { style: { marginBottom: '16px' } }, h('div.section-title.area-goals', {}, h('h2', {}, 'These are big deals')), h('p', { style: { margin: 0 } }, lockedLine(gate)));
   if (bd.value === null) return h('div.card', { style: { marginBottom: '16px' } }, h('h2', {}, 'These are big deals'), h('p.muted', {}, 'Needs invested, monthly investing and spending to compare FI dates.'));
   const maxSpread = Math.max(1, ...bd.rows.map(r => r.spread ?? 0));
   const cur = { Return: a.realReturn ?? ctx.ref.presets.realReturn.default, 'Withdrawal rate': a.withdrawalRate ?? ctx.ref.presets.withdrawalRate.default, Spending: 1 };
@@ -138,7 +147,7 @@ function bigDealsCard(ctx, m) {
 }
 
 // Milestone ladder (M55): each FI step filled by %.
-function ladderCard(ctx, m) {
+function ladderCard(ctx, m, gate = { unlocked: true }) {
   const doc = ctx.store.doc;
   const t = fiTargets(m, doc);
   const l = ladder(m, doc);
@@ -146,7 +155,7 @@ function ladderCard(ctx, m) {
     l.value === null ? h('p.muted', {}, 'Needs ', S.needLinks(ctx, ['invested'])) :
       h('div.ladder', {}, ['Lean FI', 'Coast FI', 'Barista FI', 'Regular FI', 'Fat FI'].map(k => {
         const v = l.value[k];
-        const when = t[k]?.value != null ? monthsTo(m, t[k].value, { now: ctx.now() }) : null;
+        const when = t[k]?.value != null && gate.unlocked ? monthsTo(m, t[k].value, { now: ctx.now() }) : null; // dates wait for the FI date to unlock
         const future = (doc.settings.dollars || 'real') === 'nominal' && t[k]?.value != null && when?.value != null ? futureDollars(t[k].value, when.value, m.inputs.inflation) : null;
         return h('div.rung', {}, h('strong', {}, k, future != null ? h('span.muted.small', {}, ` ${money(future)} then`) : null), h('div.rung-bar', { title: v == null ? 'Needs numbers' : pct(Math.min(1, v)) }, h('span', { style: { width: `${v == null ? 0 : Math.min(100, v * 100)}%` } })),
           h('span.muted.small', {}, v == null ? (k === 'Barista FI' ? 'Add part-time income' : 'Needs numbers') : when?.reached ? `${pct(Math.min(1, v))} · reached` : `${pct(Math.min(1, v))}${when?.value != null ? ` · ${monthName(addMonths(ymOf(ctx.now()), when.value), 'short')}` : ''}`));
@@ -184,6 +193,8 @@ function milestoneList() {
 export function timelineScreen(app, ctx) {
   const m = ctx.metrics();
   const ref = ctx.ref;
+  const gate = fiGate(ctx);
+  if (!gate.unlocked) return [head('Timeline', 'Invested balance rising to your FI number'), lockedCard(gate)];
   if (m.fiNumber.value === null || m.inputs.invested === null || m.surplus.value === null) {
     const needs = [...new Set([...m.fiNumber.needs, ...m.surplus.needs, ...(m.inputs.invested === null ? ['invested'] : [])])];
     return [head('Timeline', 'Invested balance rising to your FI number'), h('div.card', {}, S.chartEmpty(ctx, needs.length ? needs : ['a plan that reaches FI']))];
@@ -294,6 +305,8 @@ export function payoffScreen(app, ctx) {
     S.button('Open Debt', { iconName: 'right', onClick: () => app.go('#/net-worth/debt') })))];
   const usable = ds.filter(d => d.apr != null && d.payment != null);
   if (!usable.length) return [head('Debt payoff', 'Each debt shrinking to zero'), h('div.card', {}, S.chartEmpty(ctx, ['a balance, APR and payment']))];
+  const gate = fiGate(ctx).payoff;
+  if (!gate.unlocked) return [head('Debt payoff', 'Each debt shrinking to zero'), lockedCard(gate)];
   const order = m.inputs.debtOrder;
   const setOrder = v => { ctx.store.doc.settings.debtOrder = v; ctx.store._emit({ type: 'settings' }); app.render(); };
   const soon = promoSoon(ctx);

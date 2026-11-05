@@ -9,7 +9,7 @@ import { incomeList, benefitList, variableBlock, assetList, protectionList, taxe
 import { profileScreen, profileCompletion } from './ui/profile.js';
 import { startFastTrack } from './ui/fasttrack-ui.js';
 import { budgetScreen, calendarScreen, closeScreen } from './ui/spending-ui.js';
-import { prepScreen, liveScreen, wrapScreen } from './ui/home-ui.js';
+import { homeScreen } from './ui/home-ui.js';
 import { listsScreen, sessionScreen, discoveryScreen } from './ui/tools-ui.js';
 import { overviewScreen, onePagerScreen, historyScreen } from './ui/report-ui.js';
 import { statementsScreen } from './ui/statements-ui.js';
@@ -155,23 +155,8 @@ function tabPage(tabId, id) {
   };
 }
 
-function moneyInOneLine(app, ctx) { // Mockup: exactly four numbers
-  const m = ctx.metrics();
-  const sentence = m.surplus.value !== null && m.monthsToFi.value !== null
-    ? `You keep ${money(m.surplus.value)} a month and are on track for FI${m.inputs.age !== null ? ` at ${Math.floor(m.inputs.age + m.monthsToFi.value / 12)}` : ` in ${m.monthsToFi.value} months`}.` : null;
-  return h('section.section', {}, h('div.section-title', {}, h('h2', {}, 'Money in one line')),
-    sentence ? h('p', { style: { fontSize: '1.125rem', fontWeight: 600 } }, sentence) : null,
-    S.summaryStrip(ctx, [
-      { label: 'Net worth', result: m.netWorth, key: 'netWorth' },
-      { label: 'Monthly surplus', result: m.surplus, key: 'surplus' },
-      { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate' },
-      { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi' }]));
-}
-
 export const SCREENS = {
-  'home/prep': (app, ctx) => (app.hasClient ? prepScreen(app, ctx) : [head('Home', 'This session: before, during, after'), noClient(app)]),
-  'home/live': (app, ctx) => (app.hasClient ? liveScreen(app, ctx) : [head('Home'), noClient(app)]),
-  'home/wrap-up': (app, ctx) => (app.hasClient ? wrapScreen(app, ctx) : [head('Home'), noClient(app)]),
+  'home/session': (app, ctx) => (app.hasClient ? homeScreen(app, ctx) : [head('Home', 'The program: where this client is, what we are doing today, the next small thing'), noClient(app)]),
 
   // About you is the first stop: its answers decide what shows everywhere.
   'home/profile': (app, ctx) => (app.hasClient ? [head('About you', MM.profile.sub), ...MM.profile.body(app, ctx)] : [head('About you'), noClient(app)]),
@@ -222,12 +207,6 @@ function fastTrackGap(ctx) {
     h('p', {}, `Fast Track (${new Date(ft.at).toLocaleDateString()}${ft.seconds ? `, ${Math.round(ft.seconds / 60)} min` : ''}) said ${money(ft.result.surplus)} a month surplus; now ${money(now.surplus)}.`),
     gap === null ? h('p.muted', {}, 'Needs a surplus on both sides to compare.')
       : h('p', {}, Math.abs(gap) <= 100 ? S.statusTag('Know it') : S.warnTag('Over $100'), ` Gap: ${money(Math.abs(gap))} a month (target: within $100).`));
-}
-
-function prepCard(label, text, href = null, onClick = null) {
-  const body = h('div.big', { style: { fontSize: text.length > 6 ? '1rem' : '2rem' } }, text);
-  return h('div.metric', {}, h('span.label', {}, label), body,
-    href ? h('a', { href }, 'Open the list') : onClick ? h('a', { href: '#', onclick: e => { e.preventDefault(); onClick(); } }, 'Open the parking lot') : null);
 }
 
 // Sub-tab progress (R162): a small count, or a check when core is done.

@@ -83,7 +83,7 @@ export function startFastTrack(app, ctx) {
       h('p.muted', {}, 'These are totals by area. Going through each tab in full detail tightens them; the gap is tracked on Coach tools.'),
       h('div.row-line', { style: { justifyContent: 'flex-end' } },
         h('button.btn', { type: 'button', onclick: () => { close(); app.go('#/home/profile'); } }, 'Keep going in full detail'),
-        h('button.btn.primary', { type: 'button', onclick: () => { close(); app.go('#/home/prep'); } }, 'Done')));
+        h('button.btn.primary', { type: 'button', onclick: () => { close(); app.go('#/home/session'); } }, 'Done')));
     toast('Fast Track saved.', { undo: () => ctx.store.undo() });
   };
   const draw = () => {

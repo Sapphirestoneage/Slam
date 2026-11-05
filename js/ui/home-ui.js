@@ -1,63 +1,196 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Home (build phase 9): the session cockpit. Prep before the call, Live during, Wrap-up after, each with one
-// main button. Answers: where is this client now, what are we doing today, what is the one next thing.
+// Home (Phase 3): one screen for the program. The session strip (Session N of 12; Start session switches the session
+// on, End session saves the snapshot), the path of twelve nodes with the current one open to its checklist, the
+// Picture % with its pace, the three next small things, and money in one line with the FI date locked or unlocked.
+// A card with nothing to say stays off the screen.
 import { h, clear, icon } from './dom.js';
 import { paydayOf } from '../payday.js';
 import * as S from './staples.js';
-import { quickFill, canQuickFill } from './quickfill.js';
-import { listCompletion } from './money-lists.js';
-import { profileCompletion } from './profile.js';
 import { firstLowDay } from './spending-ui.js';
 import { homeworkItems, sendSummary, fiCard, netWorthChart } from './report-ui.js';
-import { next3, agenda } from '../plan.js';
 import { PUI } from './plan-ui.js';
 import { soWhat } from '../sowhat.js';
-import { keyNumbers } from '../math/metrics.js';
-import { changeSince, statusOf, countsAsDone } from '../records.js';
+import { changeSince } from '../records.js';
+import { programOf, startSession, endSession, inSession, sessionOf, snapshotNumbers, day0Report } from '../program.js';
+import { SESSIONS, levelWord } from '../registry/program.js';
 import { money, pct } from '../format.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
-const ses = ctx => ctx.store.doc.session || {};
-export const inSession = ctx => !!ses(ctx).startedAt && !(ses(ctx).endedAt > ses(ctx).startedAt);
-const sessionNo = ctx => (ses(ctx).count || 0) + 1;
 const isoDay = d => d.toISOString().slice(0, 10);
+export const HUI = { open: null }; // the path node whose checklist is open (null: the current session)
+// Where an auto checklist item is worked on (Accounts set up: About you first, until it says what applies).
+const ITEM_ROUTE = { accountsSetUp: '#/net-worth/assets', topLine: null, moneyInOneLine: '#/cash-flow/income', day0: null, bigCategories: '#/cash-flow/budget', goalsNamed: '#/plan/goals', fooStep: '#/plan/foo', monthOfActuals: '#/cash-flow/close', keyNumbersLocked: null, picture90: null };
 
-// Client strip: package tracking on every Home screen.
-function clientStrip(app, ctx) {
-  const s = ses(ctx);
-  const next = h(`input${s.next ? '' : '.no-date'}`, { type: 'date', value: s.next || '', 'aria-label': 'Next session', 'data-focus': 'strip:next' });
-  next.onchange = () => ctx.store.setIn('session', ['next'], next.value || undefined, 'Next session');
-  return h('div.card.client-strip', {},
-    h('span.who', {}, ctx.store.doc.client.name || 'Client'),
-    h('span.tag.plain', {}, `Session ${sessionNo(ctx)} of ${s.planned || 6}`),
-    h('span.row-line', { style: { gap: '6px' } }, h('span.label', {}, 'Next:'), h(`label.field${s.next ? '.filled' : ''}`, { style: { width: '170px' } }, next)),
-    S.select(['Active', 'Maintenance', 'Paused'], s.state || 'Active', v => ctx.store.setIn('session', ['state'], v || 'Active', 'Client status'), { label: 'Client status', hint: 'Active', width: 150 }),
-    inSession(ctx) ? h('span.tag.good', {}, '● Session on') : null);
+export function homeScreen(app, ctx) {
+  const doc = ctx.store.doc;
+  const P = programOf(doc, ctx.ref, { now: ctx.now(), flags: app.flags });
+  const open = P.sessions.find(s => s.id === HUI.open) || P.current;
+  const low = firstLowDay(ctx);
+  return [sessionStrip(app, ctx, P),
+    endedLine(app, ctx, P),
+    pathRow(app, P, open),
+    checklistCard(app, ctx, P, open),
+    pictureCard(ctx, P),
+    nextThings(app, ctx, P),
+    moneyInOneLine(app, ctx, P.m),
+    P.inSession ? wrapUp(app, ctx, P) : null,
+    paydayCard(app, ctx),
+    openItems(app, ctx),
+    low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below ${money(low.low)} on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/cash-flow/calendar') })) : null, // R096
+    ctx.gates().betweenJobs ? S.summaryStrip(ctx, [{ label: 'Runway (between jobs)', result: P.m.runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/net-worth/assets' }]) : null, // R006
+    day0Card(ctx, P),
+    netWorthOverTime(app, ctx)];
 }
 
-// Exactly four numbers, one plain sentence (Mockup: Money in one line). Each opens its home.
-export function moneyInOneLine(app, ctx) {
-  const m = ctx.metrics();
-  const fi = m.monthsToFi.value;
-  const sentence = m.surplus.value !== null && fi !== null
-    ? `You keep ${money(m.surplus.value)} a month and are on track for FI${m.inputs.age !== null ? ` at ${Math.floor(m.inputs.age + fi / 12)}` : ` in ${(fi / 12).toFixed(1)} years`}.`
-    : m.surplus.value !== null && m.surplus.value < 0 ? `You spend ${money(-m.surplus.value)} a month more than comes in.` : null;
+// ---------- The session strip ----------
+function sessionStrip(app, ctx, P) {
+  const doc = ctx.store.doc, s = sessionOf(doc);
+  const next = h(`input${s.next ? '' : '.no-date'}`, { type: 'date', value: s.next || '', 'aria-label': 'Next session', 'data-focus': 'strip:next' });
+  next.onchange = () => ctx.store.setIn('session', ['next'], next.value || undefined, 'Next session');
+  const length = s.length || ctx.ref.defaults.sessionMinutes;
+  const left = P.inSession ? Math.round(length - (Date.now() - Date.parse(s.startedAt)) / 60000) : null;
+  const nextStep = () => { // Guide me (R076): the first open item of this session, else the next small thing
+    const item = P.current.items.find(i => !i.done && ITEM_ROUTE[SESSIONS[P.n - 1].items.find(b => b.id === i.id)?.auto]);
+    const target = (item ? ITEM_ROUTE[SESSIONS[P.n - 1].items.find(b => b.id === item.id).auto] : null) || P.next[0]?.route || '#/plan/goals';
+    PUI.reveal = target === '#/plan/goals';
+    app.go(target);
+  };
+  const start = () => { startSession(ctx.store); HUI.open = null; app.render(); };
+  return h('div.card.session-strip', {},
+    h('span.who', {}, doc.client.name || 'Client'),
+    h('a', { href: '#/home/profile' }, 'About you ›'),
+    h('span.tag.plain', {}, P.graduated ? 'Graduated · 12 of 12' : `Session ${P.n} of ${SESSIONS.length} · ${P.current.name}`),
+    P.inSession ? h('span.tag.good', {}, '● Session on') : null,
+    left != null ? h('span.time-left', {}, left >= 0 ? `${left} min left` : `${-left} min over`) : null,
+    h('span.row-line', { style: { gap: '6px' } }, h('span.label', {}, 'Next:'), h(`label.field${s.next ? '.filled' : ''}`, { style: { width: '170px' } }, next)),
+    S.select(['Active', 'Maintenance', 'Paused'], s.state || 'Active', v => ctx.store.setIn('session', ['state'], v || 'Active', 'Client status'), { label: 'Client status', hint: 'Active', width: 150 }),
+    h('span.spacer'),
+    // Answer 90: focus mode (core columns only) is on by default; this shows every field mid-session, and back.
+    P.inSession && s.guide ? S.checkbox('Show all fields', !!s.allFields, v => ctx.store.setIn('session', ['allFields'], v, v ? 'Show all fields' : 'Focus mode'), { key: 'home:all-fields' }) : null,
+    P.inSession ? [S.button('End session', { iconName: 'check', onClick: () => end(app, ctx, P) }), S.button('Next step', { kind: 'primary', size: 'big', iconName: 'right', onClick: nextStep })]
+      : S.button('Start session', { kind: 'primary', size: 'big', onClick: start, disabled: P.graduated, why: P.graduated ? 'The program is complete' : null }));
+}
+// End (R181): snapshot (Day 0 the first time), homework, one-pager, next date, a backup file; then Send summary.
+function end(app, ctx, P) {
+  const hw = homeworkItems(ctx);
+  const s = sessionOf(ctx.store.doc);
+  const r = endSession(ctx.store, ctx.ref, { homework: hw.map(x => x.label), next: s.next || isoDay(new Date(Date.now() + 14 * 86400000)), now: ctx.now(), flags: app.flags });
+  app.saveNow();
+  try { app.exportNow({ quiet: true }); } catch { /* downloads can be blocked; the reminder stays */ } // R151
+  HUI.open = null;
+  S.toast(r.first ? 'Session 1 saved, with the Day 0 snapshot.' : `Session ${r.n} saved. Snapshot taken.`);
+  app.render();
+}
+function endedLine(app, ctx, P) {
+  const s = sessionOf(ctx.store.doc);
+  if (P.inSession || !s.endedAt || !s.count) return null;
+  const n = s.count;
+  return h('div.banner-inline.good', {}, icon('check'), ` Session ${n} saved${n === 1 ? ' with the Day 0 snapshot' : ''}. A backup file was downloaded.`,
+    S.button('Send summary', { kind: 'primary', iconName: 'mail', onClick: e => sendSummary(ctx, e.currentTarget) }),
+    S.moreBlock('home:feeling', () => h('div.row-line', { style: { gap: '12px' } }, h('strong', {}, 'Money feeling, 1 to 10'),
+      S.stepper(s.feelings?.[n] ?? null, v => ctx.store.setIn('session', ['feelings', String(n)], v, 'Money feeling'), { min: 1, max: 10, label: 'Money feeling', key: 'feeling' })), { label: 'Money feeling' }));
+}
+
+// ---------- The path and the open node's checklist ----------
+function pathRow(app, P, open) {
+  return h('div.path', { role: 'list', 'aria-label': 'The 12-session program' }, P.sessions.map(s => h(`button.node.${s.status}${s.id === open.id ? '.open' : ''}`, {
+    type: 'button', role: 'listitem', 'aria-pressed': String(s.id === open.id), 'aria-label': `Session ${s.n}, ${s.name}: ${s.status === 'done' ? 'done' : s.status === 'current' ? 'this session' : 'next'}`,
+    title: `${s.n}. ${s.name}`, onclick: () => { HUI.open = s.id; app.render(); } },
+  h('span.n', {}, s.status === 'done' ? '✓' : String(s.n)), h('span.name', {}, s.name))));
+}
+function checklistCard(app, ctx, P, s) {
+  const tick = (iid, v) => ctx.store.setIn('program', ['checks', s.id, iid], v || undefined, 'Checklist');
+  const auto = id => SESSIONS[s.n - 1].items.find(b => b.id === id)?.auto ?? null;
+  const routeOf = key => (key === 'accountsSetUp' && P.picture.items.find(it => it.id === 'areas')?.level === 0 ? '#/home/profile' : ITEM_ROUTE[key]);
+  const items = s.items.map(i => h(`div.check-item${i.done ? '.done' : ''}`, {},
+    i.auto ? h('span.box', { 'aria-hidden': 'true' }, i.done ? icon('check') : null) : h('input', { type: 'checkbox', checked: i.done, 'aria-label': i.label, onchange: e => tick(i.id, e.target.checked) }),
+    h('div', { style: { flex: 1 } }, h('div.what', {}, i.label), i.auto ? h('div.auto', {}, i.done ? 'From the numbers' : 'Ticks itself from the numbers') : null),
+    i.auto && !i.done && routeOf(auto(i.id)) ? h('a', { href: routeOf(auto(i.id)) }, 'Open ›') : null));
+  const word = s.status === 'done' ? 'Done' : s.status === 'current' ? 'This session' : 'Up next';
+  return h('div.card.session-card', {},
+    h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, `Session ${s.n} · ${s.name}`), h(`span.tag.${s.done ? 'good' : 'plain'}`, {}, s.done ? '✓ Done when met' : `${s.items.filter(i => i.done).length} of ${s.items.length}`), h('span.muted', {}, word)),
+    h('div.checklist', { style: { marginTop: '10px', marginBottom: 0 } }, items),
+    s.placeholder ? S.moreBlock(`home:edit:${s.id}`, () => editSession(ctx, s), { label: 'Edit this session' }) : null,
+    s.id === 'S9' && !P.day0 ? h('p.muted.small', { style: { marginTop: '8px' } }, 'The Day 0 vs now report appears here once session 1 has ended.') : null);
+}
+// A placeholder session: its name and checklist, kept in the client file.
+function editSession(ctx, s) {
+  const save = patch => ctx.store.setIn('program', ['sessions', s.id], { name: s.name, items: s.items.map(i => ({ id: i.id, label: i.label })), ...patch }, 'Session');
+  const name = h('input', { value: s.name, 'aria-label': 'Session name' });
+  name.onchange = () => save({ name: name.value.trim() || SESSIONS[s.n - 1].name });
+  const add = h('input', { placeholder: 'Add an item', 'aria-label': 'Add an item' });
+  const addIt = () => { const v = add.value.trim(); if (!v) return; save({ items: [...s.items.map(i => ({ id: i.id, label: i.label })), { id: `c${Date.now().toString(36)}`, label: v }] }); };
+  add.onkeydown = e => { if (e.key === 'Enter') addIt(); };
+  return h('div.card', { style: { marginTop: '8px' } }, h('div.stack', { style: { gap: '8px' } },
+    h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Name'), h('label.field.filled', { style: { width: '260px' } }, name)),
+    s.items.map(i => h('div.row-line', { style: { gap: '8px' } }, h('span', { style: { flex: 1 } }, i.label),
+      S.iconButton('trash', `Remove ${i.label}`, () => save({ items: s.items.filter(x => x.id !== i.id).map(x => ({ id: x.id, label: x.label })) }), { tiny: true }))),
+    h('div.row-line', { style: { gap: '8px' } }, h('label.field', { style: { width: '260px' } }, add), S.button('Add item', { iconName: 'plus', onClick: addIt }),
+      ctx.store.doc.program?.sessions?.[s.id] ? S.button('Back to the usual', { onClick: () => ctx.store.setIn('program', ['sessions', s.id], undefined, 'Session') }) : null)));
+}
+
+// ---------- The picture and its pace ----------
+const bar = (x, { wide = false } = {}) => h(`div.progress${wide ? '.wide' : ''}`, { role: 'progressbar', 'aria-valuenow': Math.round(x * 100), 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': 'Picture filled in' }, h('span', { style: { width: `${Math.round(x * 100)}%` } }));
+function pictureCard(ctx, P) {
+  const pace = P.pace;
+  return h('div.card.picture-card', {},
+    h('div.bar-row', {}, h('span.pct', {}, `Picture ${pace.points}%`), bar(P.picture.pct, { wide: true }),
+      h(`span.tag.pace-tag.${pace.word === 'Ahead' ? 'ahead' : pace.word === 'On track' ? 'ontrack' : 'catchup'}`, {}, pace.word), h('span.muted', {}, pace.text)),
+    S.moreBlock('home:sections', () => h('div.section-bars', {}, P.picture.sections.map(s => h('div.row-line', {}, h('span', { style: { minWidth: '80px', fontWeight: 600 } }, s.name), bar(s.pct ?? 0),
+      h('span.muted.small', {}, `${Math.round((s.pct ?? 0) * 100)}% · ${s.items.length} ${s.items.length === 1 ? 'number' : 'numbers'}`),
+      s.pct >= 1 ? h('span.tag.good', {}, '✓') : h('a', { href: s.route }, 'Open ›')))), { label: 'By section' }));
+}
+
+// ---------- The next small things ----------
+function nextThings(app, ctx, P) {
+  if (!P.next.length) return h('div.card', {}, h('p', { style: { margin: 0 } }, h('strong', {}, 'Every number is at Actual.'), ' Nothing left to sharpen.'));
+  const open = it => {
+    if (it.recId) { app.goFound({ kind: 'record', id: it.recId, route: it.route }); return; }
+    app.go(it.route);
+    if (it.focus) requestAnimationFrame(() => document.querySelector(`[data-focus="${it.focus}"]`)?.focus());
+  };
+  return h('section.section', {}, h('div.section-title', {}, h('h2', {}, 'Next small things'), h('span.muted', {}, 'What raises the picture most')),
+    h('div.next-things', {}, P.next.map((it, i) => h('div.thing', {}, h('span.gain', {}, `+${Math.round(it.gain * 100)}%`),
+      h('span.thing-name', {}, it.label), h('span.muted.small', {}, `${levelWord(it.level)} now · ${it.step}`),
+      S.button(it.kind === 'category' ? 'Open the lines' : 'Open the field', { kind: i === 0 ? 'primary' : 'secondary', iconName: 'right', onClick: () => open(it) })))));
+}
+
+// ---------- Money in one line (Mockup: exactly four numbers) ----------
+export function moneyInOneLine(app, ctx, m = ctx.metrics()) {
+  const fi = fiCard(ctx, m);
+  const when = m.monthsToFi.value;
+  const sentence = fi.lock ? (m.surplus.value !== null ? `You keep ${money(m.surplus.value)} a month. The FI date ${fi.lock.reason.replace(/^Unlocks/, 'unlocks')}` : null)
+    : m.surplus.value !== null && when !== null ? `You keep ${money(m.surplus.value)} a month and are on track for FI${m.inputs.age !== null ? ` at ${Math.floor(m.inputs.age + when / 12)}` : ` in ${(when / 12).toFixed(1)} years`}.`
+      : m.surplus.value !== null && m.surplus.value < 0 ? `You spend ${money(-m.surplus.value)} a month more than comes in.` : null;
   return h('section.section', {}, h('div.section-title', {}, h('h2', {}, 'Money in one line')),
     sentence ? h('p', { style: { fontSize: '1.125rem', fontWeight: 600 } }, sentence) : null,
-    // Guessed lines, a low savings rate or a cash dip: each card says so, with a link (polish item 6).
     S.summaryStrip(ctx, [
       { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: '#/report/overview', so: soWhat('netWorth', m) },
       { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: '#/cash-flow/budget', so: soWhat('surplus', m, { lowDay: firstLowDay(ctx) }) },
       { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: '#/report/overview', note: m.savingsRate.second, so: soWhat('savingsRate', m) },
-      fiCard(ctx, m) && { ...fiCard(ctx, m), home: '#/plan/goals', so: soWhat('fi', m) }]));
+      { ...fi, home: '#/plan/goals', so: soWhat('fi', m) }]));
 }
 
-// ---------- Prep ----------
+// ---------- In session: what End session does ----------
+function wrapUp(app, ctx, P) {
+  const s = sessionOf(ctx.store.doc);
+  const hw = homeworkItems(ctx);
+  const items = [
+    [`Homework set (${hw.length})`, hw.length ? hw.map(x => x.label).join(', ') : "Nothing marked I'll find it later", S.button('Open the list', { size: 'small', onClick: () => app.go('#/tools/lists') })],
+    [P.day0 ? `Snapshot saved (End of session ${P.n})` : 'Day 0 snapshot saved', 'Freezes today\'s numbers and the Picture %', null],
+    ['One-pager ready', 'Key stats, to-dos, goals, strengths and struggles', S.button('Open one-pager', { size: 'small', onClick: () => app.go('#/report/one-pager') })],
+    ['Next session booked', s.next ? `Set for ${s.next}` : 'Two weeks from today unless a date is picked above', null],
+  ];
+  return h('div.card', {}, h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'End session does all four'), h('span.muted', {}, 'then shows Send summary')),
+    h('div.checklist', { style: { marginTop: '10px', marginBottom: 0 } }, items.map(([what, detail, act]) => h('div.check-item', {}, h('span.box', { 'aria-hidden': 'true' }),
+      h('div', { style: { flex: 1 } }, h('div.what', {}, what), h('div.muted.small', {}, detail)), act))));
+}
+
+// ---------- Cards that show only when they have something to say ----------
 // B7: the next paycheck, what the fixed bills take, and what is free, per pay period and per month.
 function paydayCard(app, ctx) {
   const d = paydayOf(ctx.store.doc, ctx.ref, ctx.now());
-  if (d.needs) return h('div.card.payday', {}, h('strong', {}, 'Payday'), h('span.muted', {}, ` Add ${d.needs} on Income to see what each paycheck covers.`),
-    S.button('Open Income', { size: 'small', onClick: () => app.go('#/cash-flow/income') }));
+  if (d.needs) return null;
   const when = new Date(`${d.date}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const line = (k, v) => h('span.stack', { style: { gap: '2px' } }, h('span.label', {}, k), h('strong', {}, money(v)));
   return h('div.card.payday', {},
@@ -72,189 +205,42 @@ function paydayCard(app, ctx) {
       h('span.muted.small', { style: { minWidth: '90px' } }, 'Each month'), line('In', d.month.in), line('Fixed bills', d.month.fixed), line('Free', d.month.free),
       line('Savings goals and sinking funds', d.month.save), line('Free after savings', d.month.afterSavings)));
 }
-// M6: net worth over time, closed until asked; snapshots come from Save snapshot, End session and month-end close.
+// Open items (polish item 7): what changed, homework, due for a check and the parking lot, one line each; off when none.
+function openItems(app, ctx) {
+  const doc = ctx.store.doc;
+  const snap = ctx.store.lastSnapshot();
+  const now = snapshotNumbers(doc, ctx.ref, { now: ctx.now() });
+  const changes = snap ? [['Net worth', 'netWorth'], ['Debt', 'debtTotal'], ['Savings rate', 'savingsRate'], ['Surplus', 'surplus'], ['Picture', 'picturePct']]
+    .map(([label, k]) => ({ label, k, c: changeSince(now, snap, k) })).filter(x => x.c && x.c.direction !== 'same') : [];
+  const fmt = (k, d) => (k === 'savingsRate' || k === 'picturePct' ? `${(Math.abs(d) * 100).toFixed(k === 'picturePct' ? 0 : 1)} pts` : money(Math.abs(d)));
+  const homework = homeworkItems(ctx).length, due = app.dueForCheck().length, notes = doc.parking.filter(n => !n.filedTo).length;
+  const total = homework + due + notes + (changes.length ? 1 : 0);
+  if (!total) return null;
+  const row = (label, detail, go, link) => h('div.open-row', {}, h('strong', {}, label), h('span.muted', {}, detail), h('a', { href: '#', onclick: e => { e.preventDefault(); go(); } }, `${link} ›`));
+  return h('div.card.open-items', {},
+    h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Open items'), h('span.tag.plain', {}, String(total))),
+    changes.length ? row('What changed', `${changes.map(x => `${x.label} ${x.c.direction === 'up' ? '▲' : '▼'} ${fmt(x.k, x.c.diff)}`).join(' · ')} since ${snap.label}`, () => app.go('#/report/history'), 'History') : null,
+    homework ? row('Homework', `${homework} ${homework === 1 ? 'number' : 'numbers'} to find later`, () => app.go('#/tools/lists'), 'Homework list') : null,
+    due ? row('Due for a check', `${due} rough or aged ${due === 1 ? 'number' : 'numbers'}`, () => app.go('#/tools/lists'), 'Revisit list') : null,
+    notes ? row('Parking lot', `${notes} ${notes === 1 ? 'note' : 'notes'} not filed yet`, () => app.openParking(), 'Parking lot') : null);
+}
+// Day 0 against now (the Revisit session's report, S9; a placeholder table this phase).
+function day0Card(ctx, P) {
+  const rep = day0Report(ctx.store.doc, ctx.ref, { now: ctx.now() });
+  if (!rep) return null;
+  const f = (r, v) => (v == null ? '' : r.unit === 'pct' ? pct(v) : money(v));
+  const diff = r => (r.change == null || Math.abs(r.change) < 1e-9 ? '' : `${r.change > 0 ? '▲' : '▼'} ${r.unit === 'pct' ? `${(Math.abs(r.change) * 100).toFixed(r.key === 'picturePct' ? 0 : 1)} pts` : money(Math.abs(r.change))}`);
+  return h('div.card', {}, h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Day 0 vs now'), h('span.muted', {}, `Day 0: ${new Date(rep.at).toLocaleDateString()}`)),
+    h('table.rows.compare', { style: { marginTop: '10px' } }, h('thead', {}, h('tr', {}, h('th', {}, ''), h('th.num', {}, 'Day 0'), h('th.num', {}, 'Now'), h('th.num', {}, 'Change'))),
+      h('tbody', {}, rep.rows.map(r => h('tr', {}, h('td', {}, r.label), h('td.num', {}, f(r, r.then)), h('td.num', {}, f(r, r.now)), h('td.num', {}, diff(r)))))));
+}
+// M6: net worth over time, closed until asked; snapshots come from End session and month-end close.
 function netWorthOverTime(app, ctx) {
   const snaps = ctx.store.doc.snapshots.filter(x => x.metrics && x.metrics.netWorth != null);
+  if (!snaps.length) return null;
   return h('div.nw-time', {}, h('div.row-line', { style: { gap: '8px' } },
-    S.moreBlock('home:nw', () => (snaps.length >= 2 ? netWorthChart(snaps, { height: 220 })
-      : h('p.muted', {}, snaps.length ? 'One snapshot so far. The line starts with the second one.' : 'No snapshots yet. Save one now; each month-end close saves one too.')),
-    { label: `Net worth over time${snaps.length ? ` (${snaps.length} snapshots)` : ''}` }),
-    S.button('Save snapshot', { size: 'small', iconName: 'camera', onClick: () => { app.snapshot('Snapshot'); S.toast('Snapshot saved.'); ctx.refresh(); } })));
+    S.moreBlock('home:nw', () => (snaps.length >= 2 ? netWorthChart(snaps, { height: 220 }) : h('p.muted', {}, 'One snapshot so far. The line starts with the second one.')),
+      { label: `Net worth over time (${snaps.length} ${snaps.length === 1 ? 'snapshot' : 'snapshots'})` }),
+    S.button('Save snapshot', { size: 'small', iconName: 'camera', onClick: () => { app.snapshot('Snapshot'); } })));
 }
-export function prepScreen(app, ctx) {
-  const doc = ctx.store.doc;
-  const snap = ctx.store.lastSnapshot();
-  const now = keyNumbers(ctx.metrics());
-  const changes = snap ? [['Net worth', 'netWorth', false], ['Debt', 'debtTotal', true], ['Savings rate', 'savingsRate', false], ['Surplus', 'surplus', false]]
-    .map(([label, k, lowerGood]) => ({ label, k, lowerGood, c: changeSince(now, snap, k) })).filter(x => x.c && x.c.direction !== 'same') : [];
-  const fmt = (k, d) => (k === 'savingsRate' ? `${(Math.abs(d) * 100).toFixed(1)} pts` : money(Math.abs(d)));
-  const homework = homeworkItems(ctx).length;
-  const due = app.dueForCheck().length;
-  const notes = doc.parking.filter(n => !n.filedTo).length;
-  const low = firstLowDay(ctx);
-  return [clientStrip(app, ctx),
-    inSession(ctx) ? h('div.banner-inline.good', {}, 'The session is on.', S.button('Back to Live', { iconName: 'right', onClick: () => app.go('#/home/live') })) : null,
-    head('Home', `Prep for ${doc.client.name || 'this client'}`, S.button(inSession(ctx) ? 'Back to Live' : 'Start session', { kind: 'primary', size: 'big', onClick: () => startSession(app, ctx) })),
-    moneyInOneLine(app, ctx),
-    next3Compact(app, ctx), // polish item 5: the Next 3 numbers on Prep too, #1 large
-    paydayCard(app, ctx),
-    netWorthOverTime(app, ctx),
-    openItems(app, { snap, changes, fmt, homework, due, notes }),
-    low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below ${money(low.low)} on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/cash-flow/calendar') })) : null, // R096
-    ctx.gates().betweenJobs ? S.summaryStrip(ctx, [{ label: 'Runway (between jobs)', result: ctx.metrics().runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/net-worth/assets' }]) : null, // R006
-    S.moreBlock('home:agenda', () => agendaEditor(ctx), { label: "Edit today's agenda" }),
-    completionSlim(app, ctx)];
-}
-// One "Open items" card (polish item 7): what changed, homework, due for a check and the parking lot, one line each.
-function openItems(app, { snap, changes, fmt, homework, due, notes }) {
-  const total = homework + due + notes + (changes.length ? 1 : 0);
-  const row = (label, count, detail, go, link) => h('div.open-row', {}, h('strong', {}, label), h('span.muted', {}, detail),
-    go ? h('a', { href: '#', onclick: e => { e.preventDefault(); go(); } }, `${link} ›`) : h('span'));
-  return h('div.card.open-items', {},
-    h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Open items'), h('span.tag.plain', {}, total ? String(total) : 'None')),
-    row('What changed', null, !snap ? 'No snapshot to compare with yet' : changes.length ? changes.map(x => `${x.label} ${x.c.direction === 'up' ? '▲' : '▼'} ${fmt(x.k, x.c.diff)}`).join(' · ') : `No change since ${new Date(snap.at).toLocaleDateString()}`,
-      snap ? () => app.go('#/report/history') : null, 'History'),
-    row('Homework', homework, homework ? `${homework} ${homework === 1 ? 'number' : 'numbers'} to find later` : 'None', () => app.go('#/tools/lists'), 'Homework list'),
-    row('Due for a check', due, due ? `${due} rough or aged ${due === 1 ? 'number' : 'numbers'}` : 'None', () => app.go('#/tools/lists'), 'Revisit list'),
-    row('Parking lot', notes, notes ? `${notes} ${notes === 1 ? 'note' : 'notes'} not filed yet` : 'None', () => app.openParking(), 'Parking lot'));
-}
-function startSession(app, ctx) {
-  if (!inSession(ctx)) {
-    ctx.store.snapshot(`Start of session ${sessionNo(ctx)}`, keyNumbers(ctx.metrics())); // polish item 5: a snapshot to compare with at the end
-    ctx.store.transaction('Start session', () => {
-      ctx.store.setIn('session', ['startedAt'], new Date().toISOString());
-      ctx.store.setIn('session', ['guide'], true); // Guide me turns on (R076)
-      ctx.store.setIn('session', ['allFields'], false); // answer 90: each session starts in focus mode
-    });
-  }
-  app.go('#/home/live');
-}
-function agendaEditor(ctx) {
-  const steps = agenda(ctx.store.doc, ctx.ref, { now: ctx.now() }).steps;
-  const save = list => ctx.store.setIn('session', ['agenda'], list.map(s => ({ id: s.id, name: s.name, route: s.route })), 'Agenda');
-  const name = h('input', { placeholder: 'Add a step', 'aria-label': 'Add a step' });
-  const add = () => { const v = name.value.trim(); if (!v) return; save([...steps, { id: `c${Date.now().toString(36)}`, name: v, route: '#/home/live' }]); };
-  name.onkeydown = e => { if (e.key === 'Enter') add(); };
-  return h('div.card', { style: { marginTop: '8px' } }, h('div.stack', { style: { gap: '6px' } },
-    steps.map((s, i) => h('div.row-line', { style: { gap: '8px' } }, h('strong', { style: { minWidth: '24px' } }, `${i + 1}.`), h('span', { style: { flex: 1 } }, s.name),
-      S.iconButton('left', 'Move up', () => { const l = [...steps]; if (i) { [l[i - 1], l[i]] = [l[i], l[i - 1]]; save(l); } }, { tiny: true, disabled: !i }),
-      S.iconButton('trash', 'Remove step', () => save(steps.filter((_, k) => k !== i)), { tiny: true }))),
-    h('div.row-line', { style: { gap: '8px' } }, h('label.field', { style: { width: '260px' } }, name), S.button('Add step', { iconName: 'plus', onClick: add }),
-      ctx.store.doc.session.agenda ? S.button('Back to the usual four', { onClick: () => ctx.store.setIn('session', ['agenda'], undefined, 'Agenda') }) : null)));
-}
-
-// One slim bar so Home stays calm; By section opens the two bars per section.
-export function completionParts(ctx) {
-  const doc = ctx.store.doc;
-  const m = ctx.metrics();
-  const p = profileCompletion(doc);
-  const parts = [
-    ['About you', p.core, '#/home/profile'],
-    ['Income', listCompletion(ctx, r => r.kind === 'income', ['amount']).core, '#/cash-flow/income'],
-    ['Debt', ctx.gates().areas.debt === false ? { done: 1, of: 1 } : listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr']).core, '#/net-worth/debt'],
-    ['Assets', listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance']).core, '#/net-worth/assets'],
-    ['Budget', (() => { const rows = ctx.visible(r => r.kind === 'bill' && r.status !== 'Not for me'); return { done: rows.filter(r => countsAsDone(statusOf(r, 'amount')) && r.status !== 'Not sure').length, of: rows.length }; })(), '#/cash-flow/budget'],
-    ['Plan', { done: [m.fiNumber.value != null, m.monthsToFi.value != null || m.monthsToFi.never, ctx.visible(r => r.kind === 'milestone').length > 0].filter(Boolean).length, of: 3 }, '#/plan/goals'],
-  ];
-  const tot = parts.reduce((a, [, c]) => ({ done: a.done + (c.of ? c.done / c.of : 0), of: a.of + 1 }), { done: 0, of: 0 });
-  return { parts, pct: tot.of ? tot.done / tot.of : 0 };
-}
-function completionSlim(app, ctx) {
-  const c = completionParts(ctx);
-  const bar = (x, w) => h('div.progress', { style: w ? { width: w } : null, role: 'progressbar', 'aria-valuenow': Math.round(x * 100), 'aria-valuemin': 0, 'aria-valuemax': 100 }, h('span', { style: { width: `${Math.round(x * 100)}%` } }));
-  return h('div.card.completion-slim', {}, h('div.slim-bar', {}, h('strong', {}, `Picture filled in: ${Math.round(c.pct * 100)}%`), bar(c.pct)),
-    S.moreBlock('home:completion', () => h('div.section-bars', {}, c.parts.map(([name, x, href]) => h('div.row-line', {}, h('span', { style: { minWidth: '80px', fontWeight: 600 } }, name), bar(x.of ? x.done / x.of : 0),
-      h('span.muted.small', {}, x.of ? `${x.done} of ${x.of}` : 'Nothing yet'), x.of && x.done >= x.of ? h('span.tag.good', {}, '✓') : h('a', { href }, "What's next ›")))), { label: 'By section' }));
-}
-
-// ---------- Live ----------
-export function liveScreen(app, ctx) {
-  const doc = ctx.store.doc;
-  const a = agenda(doc, ctx.ref, { now: ctx.now() });
-  const length = doc.session.length || ctx.ref.defaults.sessionMinutes;
-  const started = doc.session.startedAt ? Date.parse(doc.session.startedAt) : null;
-  const left = started && inSession(ctx) ? Math.round(length - (Date.now() - started) / 60000) : null;
-  const n3 = next3(doc, ctx.ref, { now: ctx.now() }).top;
-  const nextStep = () => {
-    // Guide me (R076): the next field to ask, in curriculum order.
-    const target = a.current?.route || n3[0]?.route || '#/plan/goals';
-    PUI.reveal = a.current?.id === 'fi';
-    app.go(target);
-  };
-  return [clientStrip(app, ctx),
-    head('Home', inSession(ctx) ? 'Live: the session is on' : 'Live: start the session from Prep',
-      left != null ? h('span.time-left', {}, left >= 0 ? `${left} min left` : `${-left} min over`) : null,
-      // Answer 90: focus mode (core columns only) is on by default; this shows every field mid-session, and back.
-      inSession(ctx) && doc.session.guide ? S.checkbox('Show all fields', !!doc.session.allFields, v => ctx.store.setIn('session', ['allFields'], v, v ? 'Show all fields' : 'Focus mode'), { key: 'live:all-fields' }) : null,
-      S.button('Next step', { kind: 'primary', size: 'big', iconName: 'right', onClick: nextStep })),
-    h('div.agenda', {}, a.steps.map((s, i) => h(`button.step${s.done ? '.done' : ''}${a.current?.id === s.id ? '.current' : ''}`, { type: 'button', onclick: () => { PUI.reveal = s.id === 'fi'; app.go(s.route); } },
-      h('span.step-n', {}, `${i + 1}`), h('span.step-name', {}, s.name), h('span.muted.small', {}, s.done ? 'Done' : a.current?.id === s.id ? "You're here" : 'Up next')))),
-    h('div.section-title', {}, h('h2', {}, 'Next 3 numbers'), h('span.muted', {}, 'Ranked by how much they move the FI date')),
-    n3.length ? h('div.next3', {}, n3.map((c, i) => next3Card(app, ctx, c, i))) : h('div.card', {}, h('p.muted', {}, 'Every number that moves the FI date is in. Nice.')),
-    moneyInOneLine(app, ctx),
-    h('div.row-line', { style: { marginTop: '8px' } }, S.button('End session', { iconName: 'check', onClick: () => app.go('#/home/wrap-up') }), S.button('Open the parking lot', { iconName: 'note', onClick: () => app.openParking() }))];
-}
-function next3Compact(app, ctx) {
-  const n3 = next3(ctx.store.doc, ctx.ref, { now: ctx.now() }).top;
-  if (!n3.length) return null;
-  return h('section.section', {}, h('div.section-title', {}, h('h2', {}, 'Next 3 numbers'), h('span.muted', {}, 'Ranked by how much they move the FI date')),
-    h('div.next3.compact', {}, n3.map((c, i) => next3Card(app, ctx, c, i))));
-}
-function next3Card(app, ctx, c, i) {
-  const big = i === 0;
-  let fill = null;
-  if (c.recId) {
-    const r = ctx.store.get(c.recId);
-    const save = v => ctx.store.update(c.recId, { [c.field]: v, ...(r.status === 'Not sure' || r.status === 'Not now' || r.status === 'Will email' ? { status: null } : {}) });
-    const cur = c.field in r && c.field !== 'values' ? r[c.field] : r.values[c.field];
-    fill = c.kind === 'pct' ? S.pctInput(cur ?? null, save, { hint: 'Add APR', key: `n3:${c.recId}:${c.field}` }) : S.moneyInput(cur ?? null, save, { hint: cur != null ? 'Confirm' : 'Add amount', key: `n3:${c.recId}:${c.field}` });
-  } else if (c.quick && canQuickFill(c.quick)) {
-    fill = S.button('Fill it here', { kind: big ? 'primary' : 'secondary', iconName: 'plus', onClick: e => quickFill(ctx, e.currentTarget, c.quick) });
-  }
-  return h(`div.n3${big ? '.big' : ''}`, {}, h('span.n3-rank', {}, `#${i + 1}`), h('span.n3-name', {}, c.label),
-    h('span.why', {}, c.why || (c.moves != null ? `Moves the FI date by about ${Math.round(c.moves)} months` : c.status === 'Not sure' ? 'A guess for now' : 'Still open')),
-    fill, h('a', { href: c.route }, 'Open where it lives'));
-}
-
-// ---------- Wrap-up ----------
-export function wrapScreen(app, ctx) {
-  const doc = ctx.store.doc;
-  const s = doc.session;
-  const started = s.startedAt || null;
-  const ended = s.endedAt && (!started || s.endedAt > started);
-  const snap = ctx.store.lastSnapshot();
-  const hw = homeworkItems(ctx);
-  const suggested = s.next || isoDay(new Date(Date.now() + 14 * 86400000));
-  const next = h('input', { type: 'date', value: suggested, 'aria-label': 'Next session date' });
-  next.onchange = () => ctx.store.setIn('session', ['next'], next.value || undefined, 'Next session');
-  const items = [
-    { what: `Homework set (${hw.length})`, done: !!s.homeworkAt && (!started || s.homeworkAt >= started), detail: hw.length ? hw.map(x => x.label).join(', ') : "Nothing marked I'll find it later", act: S.button('Open the list', { onClick: () => app.go('#/tools/lists') }) },
-    { what: 'Snapshot saved', done: !!snap && (!started || snap.at >= started), detail: snap ? `Last: ${snap.label}, ${new Date(snap.at).toLocaleString()}` : 'Freezes today\'s numbers', act: S.button('Save snapshot', { iconName: 'camera', onClick: () => app.snapshot(`Session ${sessionNo(ctx)}`) }) },
-    { what: 'One-pager ready', done: !!s.onePagerAt && (!started || s.onePagerAt >= started), detail: 'Key stats, to-dos, goals, strengths and struggles', act: S.button('Open one-pager', { onClick: () => app.go('#/report/one-pager') }) },
-    { what: 'Next session booked', done: !!s.next && s.next >= isoDay(new Date()), detail: null, act: h(`label.field${s.next ? '.filled' : ''}`, { style: { width: '170px' } }, next) },
-  ];
-  const end = () => {
-    ctx.store.transaction('End session', () => {
-      const at = new Date().toISOString();
-      ctx.store.setIn('session', ['homework'], hw.map(x => x.label));
-      ctx.store.setIn('session', ['homeworkAt'], at);
-      ctx.store.setIn('session', ['onePagerAt'], at);
-      ctx.store.setIn('session', ['next'], next.value || suggested);
-      ctx.store.setIn('session', ['endedAt'], at);
-      ctx.store.setIn('session', ['guide'], false);
-      ctx.store.setIn('session', ['count'], (s.count || 0) + 1);
-    });
-    app.snapshot(`End of session ${s.count || 0}`); // R181: snapshot saved, one-pager filled, homework built
-    try { app.exportNow(); } catch { /* downloads can be blocked; the reminder stays */ } // R151
-  };
-  return [clientStrip(app, ctx), head('Home', ended ? 'Wrap-up: done' : 'Wrap-up',
-    ended ? S.button('Send summary', { kind: 'primary', size: 'big', iconName: 'mail', onClick: e => sendSummary(ctx, e.currentTarget) })
-      : S.button('End session', { kind: 'primary', size: 'big', iconName: 'check', onClick: end })),
-  ended ? h('div.banner-inline.good', {}, icon('check'), ` Session ${s.count} saved. A backup file was downloaded. Send the summary when ready.`) : h('p.muted', {}, 'End session does all four at once, then shows Send summary.'),
-  h('div.checklist', {}, items.map(i => h(`div.check-item${i.done || ended ? '.done' : ''}`, {}, h('span.box', {}, i.done || ended ? icon('check') : null),
-    h('div', { style: { flex: 1 } }, h('div.what', {}, i.what), i.detail ? h('div.muted.small', {}, i.detail) : null), i.act))),
-  S.moreBlock('wrap:feeling', () => h('div.card', {}, h('div.row-line', { style: { gap: '12px' } }, h('strong', {}, 'Money feeling, 1 to 10'),
-    S.stepper(s.feelings?.[s.count || 0] ?? null, v => ctx.store.setIn('session', ['feelings', String(s.count || 0)], v, 'Money feeling'), { min: 1, max: 10, label: 'Money feeling', key: 'feeling' }),
-    h('span.muted.small', {}, 'Asked at the end of each session'))), { label: 'Money feeling' }),
-  ];
-}
+export { inSession };
