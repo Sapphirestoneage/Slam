@@ -329,6 +329,7 @@ export function parkProfile(store, key) {
 }
 // More / Less: Secondary and Tertiary fields stay behind a caret, closed until asked (R023). Remembers which are open.
 const OPEN = new Set();
+export const openBlock = id => OPEN.add(id); // open a named block before the next render (batch 6)
 export function moreBlock(id, content, { label = 'More' } = {}) {
   const body = h('div.more-body', { hidden: true });
   const named = label !== 'More'; // a named block keeps its name when open

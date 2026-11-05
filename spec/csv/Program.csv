@@ -80,7 +80,9 @@ Thresholds,debt dti,0.36,
 Thresholds,credit strong,740,
 Thresholds,credit ok,670,
 Thresholds,credit utilizationHole,0.3,
+Thresholds,credit inquiriesOk,2,
 Thresholds,retirement strongPct,0.15,
+Thresholds,taxes closeEnough,1000,
 Thresholds,investing strongPct,0.15,
 Thresholds,goals count,3,
 Thresholds,mindset strong,7,
@@ -112,16 +114,27 @@ FOO mapping,Goals,"Step 0b: Step 0, with mindset",
 FOO mapping,Mindset,"Step 0b: Step 0, with goals",
 FOO,,"SLAM's own order of operations. A step can declare a prerequisite step (reached first: every step before it that counts is done) and conditions on the numbers. A locked step shows a lock and its plain reason, is never where you are, and never counts as a hole. Unlock anyway needs a note (kept on the session record) and shows the cost in FI days a year, coach only.",js/registry/foo.js; js/math/foo.js
 FOO,Step 0b,Bedazzle your basic life: the joy lines (goals and mindset live here too),
+FOO,Step 0b tile,"Joy Basics: Bedazzle your basic life. Fund the few things that make daily life good. Problem: Budgets that cut everything feel like punishment, and people quit. Unlocks: A plan you'll actually stick with. Done when: The joy lines are picked and funded.","js/registry/foo.js STEP_CARDS (batch 6, item 31)"
 FOO,Step 1,"Stop the bleeding: no late bills, payday debt at $0, little e full ($1,000 or the highest deductible, whichever is smaller), income gaps within 12 months covered",
+FOO,Step 1 tile,"Stop the Bleeding: Stop the bleeding. Bills current, no payday debt, little e full, income gaps covered. Problem: One surprise turns into late fees and new debt. Unlocks: Nothing's on fire, you can think straight. Done when: No late bill, payday debt at $0, little e full, any gap within 12 months covered.","js/registry/foo.js STEP_CARDS (batch 6, item 31)"
 FOO,Step 2,Take the free money: the full employer match,
+FOO,Step 2 tile,Free Money: Take the free money. Get the full employer match. Problem: Leaving an instant 50 to 100% return on the table. Unlocks: A raise you already earned. Done when: Putting in enough to get the whole match (or no match is offered).,"js/registry/foo.js STEP_CARDS (batch 6, item 31)"
 FOO,Step 3,"Clear the heavy debt: cards, payday, personal, medical, BNPL, or any APR at or over the heavy line (8%)",
+FOO,Step 3 tile,"Kill Heavy Debt: Clear the heavy debt. Pay off everything at 8% or more. Problem: Interest working against you faster than investing works for you. Unlocks: Your cash flow back, and giving unlocks. Done when: No debt at or over the heavy line.","js/registry/foo.js STEP_CARDS (batch 6, item 31)"
 FOO,Step 4,"big e: the Rule of 5 (your age divided by 5 months of spending), FAT first, then DRAFTT, then full spending",
+FOO,Step 4 tile,"big e: big e: the Rule of 5. Your age divided by 5 is the months of spending saved. Problem: A job loss forcing new debt or selling investments at a bad time. Unlocks: Freedom to invest without fear, and leverage to leave a bad job. Done when: Every big e layer (FAT, DRAFTT, full) is full.","js/registry/foo.js STEP_CARDS (batch 6, item 31)"
 FOO,Step 5,"Roth and HSA: a Roth IRA and an invested HSA, maxed for the year",
+FOO,Step 5 tile,"Tax-Free Growth: Roth IRA and HSA. Max the Roth IRA and the HSA. Problem: Paying tax on decades of growth. Unlocks: Money later the IRS can't touch. Done when: The Roth IRA (and the HSA, when eligible) is maxed for the year.","js/registry/foo.js STEP_CARDS (batch 6, item 31)"
 FOO,Step 5b,"Give: a percent or an amount; off by default; opens once heavy debt is paid off, even before the Roth step",no step first; needs no debt at or above the heavy-debt APR. Lock text: Giving unlocks once heavy debt is paid off. Oxygen mask on you first.
+FOO,Step 5b tile,Give: Give. Giving once heavy debt is gone. Problem: Giving from borrowed money. Unlocks: Generosity without guilt. Done when: The giving lines reach the percent or amount set.,"js/registry/foo.js STEP_CARDS (batch 6, item 31)"
 FOO,Step 6,"Prepay retirement: Quiet Quitting FI, then Coast FI (maxing the 401(k) is the lever)",
+FOO,Step 6 tile,"Prepay Retirement: Prepay retirement. Quiet Quitting FI, then Coast FI. Problem: Retirement depending on working until 65. Unlocks: Work becomes a choice, and SPARKS unlocks. Done when: Invested reaches Coast FI (or Quiet Quitting FI when that toggle is on).","js/registry/foo.js STEP_CARDS (batch 6, item 31)"
 FOO,Step 7,"SPARKS launch window: opens at Coast FI (or Quiet Quitting FI when that toggle is on), strictly after step 6","after step 6. Lock text: The launch window opens at Coast FI (or Quiet Quitting FI when that toggle is on). Coast FI first, then SPARKS."
+FOO,Step 7 tile,"SPARKS Launch: SPARKS launch window. Take the big swing while you're young. Problem: Waiting until you're ""ready"" and missing the window. Unlocks: The life you'd actually design. Done when: A launch move and a month are picked, after Coast FI.","js/registry/foo.js STEP_CARDS (batch 6, item 31)"
 FOO,Step 8,Fund the future: sinking funds and later income gaps,
+FOO,Step 8 tile,"Fund the Future: Fund the future. Sinking funds for big goals (home, car, kids). Problem: Big purchases turning into debt. Unlocks: Big life moves paid in cash. Done when: Every sinking fund and later income gap is funded.","js/registry/foo.js STEP_CARDS (batch 6, item 31)"
 FOO,Step 9,"Low-rate debt, then FI, then True FI",
+FOO,Step 9 tile,"Full Freedom: Low-rate debt, then FI, then True FI. Low-rate debt, then FI, then True FI. Problem: Still owing anything at the finish line. Unlocks: Fully done. Done when: No debt, and invested at or past the FI number.","js/registry/foo.js STEP_CARDS (batch 6, item 31)"
 Agenda,,"One panel per session: Must do (the session's checklist, ticking itself from the numbers wherever they change), Going over (what the coach adds), a quick note on any item, and a link on any item to a page or field, a homework item, a parking-lot question or a Scorecard hole (Open jumps there; Back to where we were returns). Editable on Home before the session; a slim docked bar on every tab while the session runs, collapsed to Session N · X of Y done. Coach only; never blocks navigation.",js/program.js agendaOf; js/ui/agenda-ui.js
 Agenda,Suggested for today,"Each with a + button: carried-over items, homework the client says is done, open parking-lot questions, the top hole, and numbers older than staleDays (60 days)",
 Agenda,End session,Each open item: Carry over (suggested next session) or Make homework; then the review gate; then the snapshot. The agenda and its notes are kept as the session recap.,

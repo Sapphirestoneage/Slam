@@ -377,7 +377,7 @@ tr.row.left td.col-first { box-shadow: inset 3px 0 0 var(--warn); }
 .path-slim .dot:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .path-slim .link-line { width: 10px; height: 2px; background: var(--border-input); }
 .path-slim .path-name { font-weight: 700; margin-left: 8px; }
-.done-line { margin-bottom: 6px; }
+.done-line { margin-bottom: 6px; white-space: normal; text-align: left; max-width: 100%; padding-top: 4px; padding-bottom: 4px; height: auto; } /* a long "N steps done: …" line wraps at phone width (no sideways scroll) */
 
 /* Batch 6, items 13 to 26: institutions, one unit per table, no sideways scroll, no scroll inside scroll */
 .inst-row { padding: 6px 0; border-top: 1px solid var(--border-row); }
@@ -396,3 +396,35 @@ table.rows th { white-space: normal; }
   .inst-cell label.field, .inst-cell select { width: 100% !important; }
   .section-title, tr.row, .glow, section.section { scroll-margin-top: 60px; }
 }
+
+/* Batch 6, items 27 to 30: the calendar */
+.chip { cursor: pointer; }
+.chip .drag-handle { cursor: grab; color: var(--text-2); letter-spacing: -2px; padding-right: 2px; flex: none; }
+body.cal-dragging, body.cal-dragging * { user-select: none !important; }
+.chip.guess { border-bottom: 0; }
+.chip .guess-badge { display: inline-grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; background: var(--warn); color: #fff; font-size: .65rem; font-weight: 800; flex: none; }
+.chip.spread { background: color-mix(in srgb, var(--needs, var(--primary)) 14%, transparent); border: 1.5px dashed var(--border-input); font-weight: 700; }
+.day-totals { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: .72rem; font-variant-numeric: tabular-nums; color: var(--text-2); }
+.day-totals .tot { display: inline-flex; align-items: center; gap: 3px; }
+.day-totals .dot, .filter-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-2); display: inline-block; }
+.day-totals .tot.in .dot, .filter-chip.in .dot { background: var(--income); }
+.day-totals .tot.out .dot, .filter-chip.out .dot { background: var(--needs, var(--primary)); }
+.day-totals .tot.debt .dot { background: var(--debt); }
+.day-totals .tot.save .dot, .filter-chip.save .dot { background: var(--assets); }
+.filter-chip[aria-pressed="false"] { opacity: .55; }
+.cal-list.force-list { display: block !important; }
+.day { cursor: pointer; }
+.cal-filters { padding: 0 var(--s2); }
+
+/* Batch 6, items 31 to 33: FOO tiles with cards, partial bars, done steps folded */
+.foo-stop { border-top: 4px solid var(--border-row); overflow: visible; }
+.foo-stop .foo-fill { position: absolute; top: -4px; left: 0; height: 4px; background: var(--goals); border-radius: 2px; max-width: 100%; }
+.foo-stop.done .foo-fill { background: var(--good); width: 100% !important; }
+.foo-stop.locked .foo-fill, .foo-stop.off .foo-fill { background: var(--border-input); }
+.foo-tile { all: unset; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.foo-tile:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+.foo-card { display: none; position: absolute; left: 0; top: calc(100% + 4px); z-index: 20; width: 280px; background: var(--card); border: 1.5px solid var(--border-input); border-radius: var(--r-card); box-shadow: var(--shadow-lift); padding: 8px 10px; font-size: .8125rem; }
+.foo-card p { margin: 4px 0 0; }
+.foo-stop:hover .foo-card, .foo-stop:focus-within .foo-card { display: block; }
+.foo-stop:last-child .foo-card, .foo-stop:nth-last-child(2) .foo-card { left: auto; right: 0; }
+@media (max-width: 760px) { .foo-card { width: min(280px, 80vw); } }

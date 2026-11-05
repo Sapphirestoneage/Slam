@@ -3,6 +3,7 @@
 import { h, icon } from './dom.js';
 import { addPresets } from '../presets.js';
 import { METHODS } from '../registry/debt.js';
+import { personLabels } from '../registry/couples.js';
 import { institutionPicker } from './institutions-ui.js';
 import { fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
 import { pct } from '../format.js';
@@ -443,7 +444,15 @@ export function creditCard(ctx) {
         { lowerIsGood: true, note: per.length > 1 ? per.map(r => `${r.name || 'Card'} ${pct(r.values.balance / r.values.limit)}`).join(' · ') : 'Under 30% helps your score; under 10% is best' }) : null,
       labelled('Credit score', textInput(c.score == null ? null : String(c.score), x => { const n = Number(x); set({ score: Number.isInteger(n) && n >= 300 && n <= 900 ? n : null }); }, { hint: '300 to 850', width: 110 }), parkProfile(ctx.store, 'creditScore')),
       labelled('Where you checked it', select(['Credit Karma', 'Bank or card app', 'Experian', 'Equifax', 'TransUnion', 'myFICO', 'Other'], c.source ?? null, x => set({ source: x }), { label: 'Score source', width: 170 })),
-      labelled('Date checked', h(`label.field${c.checked ? '.filled' : ''}`, { style: { width: '160px' } }, d)))));
+      labelled('Date checked', h(`label.field${c.checked ? '.filled' : ''}`, { style: { width: '160px' } }, d)),
+      // Item 34: the partner's score, late payments, the oldest account, hard inquiries. The Scorecard rates Credit from these.
+      ...(ctx.couple ? [labelled(`Credit score (${personLabels(p ? ctx.store.doc : {}).Partner})`, textInput(c.scorePartner == null ? null : String(c.scorePartner), x => { const n = Number(x); set({ scorePartner: Number.isInteger(n) && n >= 300 && n <= 900 ? n : null }); }, { hint: '300 to 850', width: 110 })),
+        labelled('Where checked (partner)', select(['Credit Karma', 'Bank or card app', 'Experian', 'Equifax', 'TransUnion', 'myFICO', 'Other'], c.sourcePartner ?? null, x => set({ sourcePartner: x }), { label: 'Partner score source', width: 170 })),
+        labelled('Date checked (partner)', (() => { const d2 = h('input', { type: 'date', value: c.checkedPartner || '', 'aria-label': 'Partner date checked' }); d2.onchange = () => set({ checkedPartner: d2.value || null }); return h(`label.field${c.checkedPartner ? '.filled' : ''}`, { style: { width: '160px' } }, d2); })())] : []),
+      labelled('Late payments in the last 2 years', h('span.row-line', { style: { gap: '6px' } }, toggle(['Yes', 'No'], c.latePayments === true ? 'Yes' : c.latePayments === false ? 'No' : null, x => set({ latePayments: x === 'Yes', ...(x === 'No' ? { lateCount: null } : {}) }), { label: 'Late payments', clearable: true }),
+        c.latePayments === true ? textInput(c.lateCount == null ? null : String(c.lateCount), x => { const n = Number(x); set({ lateCount: Number.isInteger(n) && n >= 0 ? n : null }); }, { hint: 'How many', width: 90 }) : null)),
+      labelled('Age of oldest account', h('span.row-line', { style: { gap: '6px' } }, textInput(c.oldestAccountYears == null ? null : String(c.oldestAccountYears), x => { const n = Number(x); set({ oldestAccountYears: Number.isFinite(n) && n >= 0 ? n : null }); }, { hint: 'Years', width: 90 }), h('span.muted.small', {}, 'years'))),
+      labelled('Hard inquiries in the last year', textInput(c.inquiries == null ? null : String(c.inquiries), x => { const n = Number(x); set({ inquiries: Number.isInteger(n) && n >= 0 ? n : null }); }, { hint: 'How many', width: 90 }), { note: 'More than 2 holds a strong score at OK' }))));
 }
 
 // R103: the card lists the bills charged to it. R104: paid in full they are spending; carried, they add to the balance.

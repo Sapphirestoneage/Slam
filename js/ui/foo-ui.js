@@ -3,6 +3,7 @@
 // beside it on a toggle. Formatting only: js/math/foo.js places the steps and finds the flags.
 import { h, icon } from './dom.js';
 import * as S from './staples.js';
+import { STEP_CARDS } from '../registry/foo.js';
 import { foo, ORIGINAL } from '../math/foo.js';
 import { monthName } from '../month.js';
 import { money } from '../format.js';
@@ -19,9 +20,16 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
   const setP = patch => ctx.store.setDoc('profile', patch);
   const when = s => (s.status === 'Done' ? 'Done' : s.date ? monthName(s.date, 'short') : s.status === 'Optional' ? 'Pick joy lines' : s.status === 'Off' ? 'Off' : s.status === 'Locked' ? '' : s.left == null && s.id === '5b' ? 'Set an amount' : s.status === 'Later' ? '' : 'Needs a surplus');
   // The path: one stop per step, you-are-here on the current one; the dated stops open below it.
+  // Items 31 to 33: short names on the tiles, a card on hover or tap, a partial bar, a click opens the full detail below.
+  const card = s => { const c = STEP_CARDS[s.id] || {}; return h('div.foo-card', { role: 'tooltip' }, h('strong', {}, `${s.id} ${c.full ?? s.name}`), h('p', {}, c.why), h('p', {}, h('b', {}, 'Problem: '), c.problem), h('p', {}, h('b', {}, 'Unlocks: '), c.unlocks), h('p', {}, h('b', {}, 'Done when: '), c.doneWhen), h('p', {}, h('b', {}, 'Status: '), s.status, s.left ? `, ${money(s.left)} left` : '', s.date ? `, about ${monthName(s.date, 'short')}` : '')); };
+  // A click on a tile opens the step's full detail below (the caret itself is clicked after this click ends, so the click-away rule leaves it open).
+  const openStep = s => { const go = () => { const row = document.querySelector(`.foo-step[data-step="${s.id}"]`); const c = row?.querySelector(`[data-focus="more:foo:step:${s.id}"]`); if (c && c.getAttribute('aria-expanded') !== 'true') c.click(); row?.scrollIntoView({ block: 'center', behavior: 'smooth' }); };
+    if (s.status === 'Done' && !FUI.showDone) { FUI.showDone = true; app.render(); setTimeout(go, 50); } else setTimeout(go, 0); };
   const path = h('div.card.foo-path', {},
     h('ol.foo-stops', { 'aria-label': 'Your path' }, f.steps.map(s => h(`li.foo-stop.${(s.status || '').toLowerCase().replace(' ', '-')}${f.here === s.id ? '.here' : ''}`, {},
-      h('span.foo-n', {}, s.id), h('span.foo-name', {}, s.name), f.here === s.id ? h('span.foo-here', {}, 'You are here') : null))),
+      h('div.foo-fill', { 'aria-hidden': 'true', style: { width: `${Math.round((s.progress ?? 0) * 100)}%` } }),
+      h('button.foo-tile', { type: 'button', 'aria-label': `Step ${s.id}, ${STEP_CARDS[s.id]?.full ?? s.name}: ${s.status}. Open the detail`, onclick: () => openStep(s) }, h('span.foo-n', {}, s.id), h('span.foo-name', {}, STEP_CARDS[s.id]?.short ?? s.name)),
+      f.here === s.id ? h('span.foo-here', {}, 'You are here') : null, card(s)))),
     S.moreBlock('foo:path', () => h('ul.foo-dates', {}, f.path.map(d => h('li', {}, h('strong', {}, monthName(d.ym, 'short')), ` ${d.name}`))), { label: `Every date on the way (${f.path.length})` }));
   // A locked step: the lock and its plain reason; Unlock anyway needs a note (kept on the session record) and shows the cost in FI days.
   const unlock = (anchor, s) => { const n = h('input', { placeholder: 'Why (required)', 'aria-label': 'Why unlock it' }); S.popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, `Unlock ${s.name} anyway`), h('span.muted.small', {}, s.prereq?.text), h('label.field', { style: { width: '300px' } }, n),
@@ -36,7 +44,7 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
     lockLine(s),
     s.skipCost ? h('p.foo-flag.coach-only', {}, s.skipCost.text) : null, // answer 175
     s.flags?.length ? s.flags.map(fl => h('p.foo-flag', {}, fl.text)) : null,
-    S.moreBlock(`foo:step:${s.id}`, () => stepDetail(ctx, s, f), { label: 'What is in it' }));
+    S.moreBlock(`foo:step:${s.id}`, () => stepDetail(ctx, s, f), { label: 'Full detail' }));
   const giving = p.giving || {};
   const setGiving = patch => setP({ giving: { ...giving, ...patch } });
   const settings = S.moreBlock('foo:settings', () => h('div.stack', { style: { gap: '12px' } },
@@ -53,11 +61,17 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
       S.toggle([[false, 'SLAM path'], [true, "With the Money Guy's original"]], FUI.original, v => { FUI.original = v; app.render(); }, { label: 'Show the original nine' })),
     path, settings,
     h(`div.foo-cols${FUI.original ? '.two' : ''}`, {},
-      h('div.foo-steps', {}, f.steps.map(stepRow)),
+      h('div.foo-steps', {}, doneLine(f), f.steps.filter(s => s.status !== 'Done' || FUI.showDone).map(stepRow)), // item 32: done steps fold into one slim line
       FUI.original ? h('div.card.foo-original', {}, h('h2', {}, "The Money Guy's original"), h('ol', {}, ORIGINAL.map(o => h('li', {}, o))),
         h('p.muted.small', {}, 'For comparison. SLAM adds joy up front, giving at the Roth IRA step, income gaps, the three big e layers, Quiet Quitting FI and a launch window.')) : null)];
 }
 
+// Item 32: the done steps as one slim line, opened on request.
+function doneLine(f) {
+  const done = f.steps.filter(s => s.status === 'Done');
+  if (!done.length) return null;
+  return h('button.btn.small.done-line', { type: 'button', 'aria-expanded': String(!!FUI.showDone), onclick: () => { FUI.showDone = !FUI.showDone; document.dispatchEvent(new CustomEvent('slam:rerender')); } }, icon('check'), ` ${done.length} ${done.length === 1 ? 'step' : 'steps'} done: ${done.map(s => STEP_CARDS[s.id]?.short ?? s.name).join(', ')}`, h('span.muted', {}, FUI.showDone ? ' (hide)' : ' (show)'));
+}
 function stepDetail(ctx, s, f) {
   const parts = (s.parts || []).map(pt => h('div.foo-part', {}, h('span', {}, pt.done === true ? '✓ ' : '', pt.name),
     pt.value != null ? h('span.num', {}, pt.text ? S.mathButton({ id: 'M70', value: pt.value, needs: [], text: pt.text }, money(pt.value)) : `${money(pt.value)}${pt.target != null ? ` of ${money(pt.target)}` : ''}`) : pt.left ? h('span.num', {}, `${money(pt.left)} left`) : null));

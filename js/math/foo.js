@@ -109,7 +109,8 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   const launch = p.launch?.move && p.launch?.date ? p.launch : null;
   add({ id: '7', name: 'SPARKS launch window', done: open && !!launch, started: open, note: open ? (launch ? `${launch.move}, ${launch.date}. Only the Roth keeps being topped up.` : 'Open: pick a launch move and date.') : `Opens at ${opensAt === 'qq' ? 'Quiet Quitting FI' : 'Coast FI'}.` });
   const future = [...sink.map(s => ({ name: s.name, done: s.funded != null && s.funded >= 1, left: s.target == null ? 0 : Math.max(0, s.target - (s.saved ?? 0)) })), ...laterGaps.map(g => ({ name: g.name, done: g.full, left: g.left }))];
-  add({ id: '8', name: 'Fund the future', done: future.every(f => f.done), started: future.some(f => f.done), left: sum(future, f => f.left), parts: future });
+  // Item 33 (batch 6): with nothing to fund yet the step waits (optional), it is not Done; the old every() on an empty list read Done and drew a full green bar.
+  add({ id: '8', name: 'Fund the future', done: future.length > 0 && future.every(f => f.done), started: future.some(f => f.done), left: sum(future, f => f.left), parts: future, optional: future.length === 0, note: future.length ? null : 'Nothing to fund yet: add a sinking fund on an event, or a later income gap.' });
   add({ id: '9', name: 'Low-rate debt, then FI', done: !low.length && fiN != null && invested >= fiN, started: !low.length, left: sum(low, d => d.balance) + (fiN == null ? 0 : Math.max(0, fiN - invested)),
     parts: [...sortDebt(low).map(d => ({ name: d.name, value: d.balance })), { name: 'FI', value: fiN, done: fiN != null && invested >= fiN }, { name: 'True FI (after tax)', value: fiN == null ? null : fiN / (1 - TRUE_FI_TAX), text: `The FI number grossed up for about ${TRUE_FI_TAX * 100}% tax on what you take out (a rough rate until retirement taxes are in).` }] });
 
@@ -147,6 +148,17 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
     const pair = (here === '2' && s.id === '3') || (here === '3' && s.id === '2');
     if (pair) { s.status = 'In progress'; continue; }
     s.status = nextSet ? 'Later' : 'Next'; nextSet = true; // one Next: the step after the one you are on
+  }
+  // Item 33: how far along each step is, for the partial bar on its tile (0 to 1).
+  for (const s of steps) {
+    if (s.done) { s.progress = 1; continue; }
+    const withTarget = (s.parts || []).filter(pt => pt.target != null && pt.target > 0);
+    if (withTarget.length) { s.progress = Math.min(1, sum(withTarget, pt => Math.min(pt.value ?? 0, pt.target)) / sum(withTarget, pt => pt.target)); continue; }
+    const flags = (s.parts || []).filter(pt => typeof pt.done === 'boolean');
+    if (flags.length) { s.progress = flags.filter(pt => pt.done).length / flags.length; continue; }
+    if (s.id === '9' && fiN) { s.progress = Math.min(1, invested / fiN); continue; }
+    if (s.id === '6' && coast) { s.progress = Math.min(1, invested / coast); continue; }
+    s.progress = s.started ? 0.4 : 0;
   }
   // Projected dates: the surplus works through the steps in order (dollars left divided by the surplus a month).
   let months = 0;

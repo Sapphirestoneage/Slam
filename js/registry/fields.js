@@ -97,6 +97,12 @@ export const AREAS = [
       f('variable.months', 'Variable income: each month', 'list'),
       // Credit (Net worth › Debt).
       f('credit.score', 'Credit score', 'number'), f('credit.source', 'Where you checked it'), f('credit.checked', 'Credit score checked on', 'date'),
+      f('credit.scorePartner', 'Credit score (partner)', 'number'), f('credit.sourcePartner', 'Where the partner checked it'), f('credit.checkedPartner', 'Partner score checked on', 'date'), // item 34: per person
+      f('credit.latePayments', 'Late payments in the last 2 years', 'yesno'), f('credit.lateCount', 'How many late payments', 'number'),
+      f('credit.oldestAccountYears', 'Age of oldest account (years)', 'number'), f('credit.inquiries', 'Hard inquiries in the last year', 'number'),
+      // Item 35: what Taxes and Income need to rate themselves.
+      f('taxes.lastYear', 'Last year: refund (+) or owed (-)', 'money'), f('taxes.withholdingChanged', 'Withholding changed since', 'yesno'),
+      f('incomeFacts.lastRaiseDate', 'Last raise', 'month'), f('incomeFacts.lastRaiseAmount', 'Last raise amount (a year)', 'money'), pick('incomeFacts.marketRate', 'Paid at market rate', ['Yes', 'No', 'Unsure']),
       pick('mostOnCards', 'Most spending goes on cards', ['Yes', 'No', 'Some']),
       // Work hours, for the time view (M17).
       f('hours.paidHours', 'Paid hours a month', 'number', { named: 'Hours_paid' }),

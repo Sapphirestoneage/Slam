@@ -21,13 +21,13 @@ TAB = "Program"
 READ = """
 import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES } from './js/registry/program.js';
 import { AREAS, RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER } from './js/registry/scorecard.js';
-import { ORDER, STEP_WORDS, PREREQS, CONDITIONS } from './js/registry/foo.js';
+import { ORDER, STEP_WORDS, PREREQS, CONDITIONS, STEP_CARDS } from './js/registry/foo.js';
 import { STEPS, MARKERS, LADDER } from './js/registry/ladder.js';
 import { MODES, PERSONS, ONE_PERSON_TYPES } from './js/registry/couples.js';
 import { METHODS, SUGGEST } from './js/registry/debt.js';
 import { JOY, CONFIDENCE as CONF_MEASURE } from './js/registry/joy.js';
 const prereqs = Object.fromEntries(Object.entries(PREREQS).map(([k, p]) => [k, { ...p, conditions: (p.conditions || []).map(c => CONDITIONS[c].label) }]));
-console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs }, LADDER: { STEPS, MARKERS, LADDER }, COUPLES: { MODES, PERSONS, ONE_PERSON_TYPES }, DEBT: { METHODS, SUGGEST }, JOY, CONF: CONF_MEASURE }));
+console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs, CARDS: STEP_CARDS }, LADDER: { STEPS, MARKERS, LADDER }, COUPLES: { MODES, PERSONS, ONE_PERSON_TYPES }, DEBT: { METHODS, SUGGEST }, JOY, CONF: CONF_MEASURE }));
 """
 RULE_WORDS = {
     "cashFlow": "The headline savings rate: Strong at or over strong, OK at or over ok, else Hole; a negative surplus is a Hole",
@@ -149,7 +149,10 @@ def main():
     for sid in foo["ORDER"]:
         p = foo["PREREQS"].get(sid)
         pre = "" if not p else (f"after step {p['after']}" if p.get("after") else "no step first") + (f"; needs {' and '.join(p['conditions'])}" if p.get("conditions") else "") + f". Lock text: {p['label']}"
+        c = foo.get("CARDS", {}).get(sid)
         row("FOO", f"Step {sid}", foo["STEP_WORDS"][sid], pre)
+        if c:
+            row("FOO", f"Step {sid} tile", f"{c['short']}: {c['full']}. {c['why']} Problem: {c['problem']} Unlocks: {c['unlocks']} Done when: {c['doneWhen']}", "js/registry/foo.js STEP_CARDS (batch 6, item 31)")
     # The agenda, homework and the review gate (batch 3).
     row("Agenda", "", "One panel per session: Must do (the session's checklist, ticking itself from the numbers wherever they change), Going over (what the coach adds), a quick note on any item, and a link on any item to a page or field, a homework item, a parking-lot question or a Scorecard hole (Open jumps there; Back to where we were returns). Editable on Home before the session; a slim docked bar on every tab while the session runs, collapsed to Session N · X of Y done. Coach only; never blocks navigation.", "js/program.js agendaOf; js/ui/agenda-ui.js")
     row("Agenda", "Suggested for today", "Each with a + button: carried-over items, homework the client says is done, open parking-lot questions, the top hole, and numbers older than staleDays (" + str(cfg["AGENDA"]["staleDays"]) + " days)", "")

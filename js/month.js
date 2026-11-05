@@ -109,7 +109,7 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) 
     if (!monthly) continue;
     const group = r.values.draftt === 'Retirement' || /saving/i.test(r.values.category || '') ? 'Savings' : 'Bills';
     const onCard = cards.get(r.paidWith)?.name ?? null;
-    if (r.values.timing === 'Variable date') {
+    if (r.values.timing === 'Variable date' || (!r.values.dueDay && r.values.amountType !== 'Fixed')) { // item 29: an undated variable line is spending money through the month, not a day-1 guess
       const weeks = [1, 8, 15, 22, 29].filter(d => d <= daysIn(ym));
       for (const d of weeks) push(r, { kind: 'bill', group, name: r.name || r.values.category, date: dateOf(ym, d), planned: -monthly / weeks.length, lineId: r.id, spread: true, onCard, risk: monthly >= RISK });
     } else {
@@ -337,6 +337,26 @@ export function closeStreak(doc, now = new Date()) {
   }
   const grace = graceYears.length;
   return { months, graceUsed: grace, graceYears, first, last, words: months ? `${months} ${months === 1 ? 'month' : 'months'} in a row${grace ? ` (grace month used in ${graceYears.join(', ')})` : ''}` : 'No closed months yet' };
+}
+
+// Item 29: the week-by-week spread lines of a month fold into one bar per week ("Spending money: -$X this week"),
+// expandable by category; dated bills keep their days. list: the month's instances. Returns the list with the spread
+// items replaced by one bar per week (kind 'spread', parts: the lines behind it).
+export function collapseSpread(list) {
+  const out = [], weeks = new Map();
+  for (const i of list) {
+    if (!i.spread) { out.push(i); continue; }
+    if (!weeks.has(i.date)) weeks.set(i.date, { kind: 'spread', group: i.group, name: 'Spending money', date: i.date, origDate: i.date, key: `spread:${i.date}`, status: 'Planned', planned: 0, parts: [], weekly: true });
+    const w = weeks.get(i.date); w.planned += i.planned; w.parts.push(i);
+  }
+  for (const w of weeks.values()) { w.parts.sort((a, b) => a.planned - b.planned); out.push(w); }
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+// A day's totals by type, for the month view's one-line summary: only the types with activity.
+export function dayTotals(items) {
+  const t = {};
+  for (const i of items) { if (i.kind === 'win') continue; const k = i.group === 'Income' ? 'in' : i.group === 'Debt' ? 'debt' : i.group === 'Savings' ? 'save' : i.group === 'Maybe' ? 'maybe' : 'out'; t[k] = (t[k] ?? 0) + (i.status === 'Paid' && i.paid != null ? i.paid : i.planned); }
+  return t;
 }
 
 // Calendar mark (R091 to R094).

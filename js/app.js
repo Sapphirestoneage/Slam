@@ -410,6 +410,7 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); e.shiftKey ? app.redo() : app.undo(); }
 });
 app.setupArrive(); // batch 6: counters list what is left
+document.addEventListener('slam:rerender', () => app.render({ keepPop: true }));
 window.addEventListener('hashchange', () => app.render());
 window.addEventListener('beforeunload', e => { // R084: warn before closing with unsaved work
   app.saver?.flush();

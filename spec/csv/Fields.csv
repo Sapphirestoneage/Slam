@@ -412,3 +412,15 @@ F409,Built,,Assets,Institutions,Kind,Secondary,,,,,,,,,Now,Added from the code (
 F410,Built,,Assets,Institutions,Website,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,text,,,institutions.website
 F411,Built,,Assets,Institutions,Notes,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,text,,,institutions.notes
 F412,Built,,Assets,Institutions,Whose,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,choice,,,institutions.owner
+F413,Built,,Profile,Profile,Credit score (partner),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,whole number,,,profile.credit.scorePartner
+F414,Built,,Profile,Profile,Where the partner checked it,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,text,,,profile.credit.sourcePartner
+F415,Built,,Profile,Profile,Partner score checked on,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,date,,,profile.credit.checkedPartner
+F416,Built,,Profile,Profile,Late payments in the last 2 years,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.credit.latePayments
+F417,Built,,Profile,Profile,How many late payments,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,whole number,,,profile.credit.lateCount
+F418,Built,,Profile,Profile,Age of oldest account (years),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,whole number,,,profile.credit.oldestAccountYears
+F419,Built,,Profile,Profile,Hard inquiries in the last year,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,whole number,,,profile.credit.inquiries
+F420,Built,,Profile,Profile,Last year: refund (+) or owed (-),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,money,,,profile.taxes.lastYear
+F421,Built,,Profile,Profile,Withholding changed since,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.taxes.withholdingChanged
+F422,Built,,Profile,Profile,Last raise,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,date,,,profile.incomeFacts.lastRaiseDate
+F423,Built,,Profile,Profile,Last raise amount (a year),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,money,,,profile.incomeFacts.lastRaiseAmount
+F424,Built,,Profile,Profile,Paid at market rate,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.incomeFacts.marketRate

@@ -62,8 +62,22 @@ export function scorecardScreen(app, ctx) {
     h('div.row-line', { style: { gap: '12px' } }, reasonBox(a), source(a), h('a', { href: a.route }, 'Open ›')), how(a));
   const strongRow = a => h('div.strong-row', {}, ratingTag(a.rating), h('strong', {}, a.name), h('span.reason.muted', {}, a.override ? (a.coachReason || "The coach's call") : a.reason),
     h('span.spacer'), app.prefs.clientView ? null : S.button('Change', { size: 'small', onClick: e => S.popover(e.currentTarget, h('div.stack', { style: { gap: '10px' } }, h('strong', {}, a.name), picker(a), a.override ? S.textInput(a.coachReason, v => setArea(a.id, { reason: v }), { hint: 'Why, in a few words', width: 280 }) : null), { width: 360 }) }));
-  const unratedRow = a => h('div.card.ok-row', {}, h('div.hole-head', {}, h('strong.hole-name', {}, a.name), ratingTag(null), h('span.spacer'), picker(a)),
-    h('div.row-line', { style: { gap: '12px' } }, h('span.reason.muted', {}, a.reason), h('a', { href: a.route }, 'Open ›')));
+  // Item 35: an area the data cannot rate yet shows the one to three inputs it needs, right here.
+  const p = doc.profile, setP = (part, patch) => ctx.store.setDoc('profile', { [part]: { ...(p[part] || {}), ...patch } });
+  const needsOf = a => {
+    if (a.id === 'taxes') { const t = p.taxes || {}; return [S.labelled("Last year: refund (+) or owed (-)", S.moneyInput(t.lastYear ?? null, v => setP('taxes', { lastYear: v }), { hint: 'e.g. 1,200 or -800', key: 'score:taxes:lastYear' })),
+      S.labelled('Withholding changed since?', S.toggle(['Yes', 'No'], t.withholdingChanged === true ? 'Yes' : t.withholdingChanged === false ? 'No' : null, v => setP('taxes', { withholdingChanged: v === 'Yes' }), { label: 'Withholding changed', clearable: true }))]; }
+    if (a.id === 'income') { const f = p.incomeFacts || {}; const d = h('input', { type: 'month', value: f.lastRaiseDate || '', 'aria-label': 'Last raise' }); d.onchange = () => setP('incomeFacts', { lastRaiseDate: d.value || null });
+      return [S.labelled('Last raise', h(`label.field${f.lastRaiseDate ? '.filled' : ''}`, { style: { width: '150px' } }, d)), S.labelled('Raise amount (a year)', S.moneyInput(f.lastRaiseAmount ?? null, v => setP('incomeFacts', { lastRaiseAmount: v }), { hint: 'Add amount', key: 'score:income:raise' })),
+        S.labelled('Paid at market rate?', S.toggle(['Yes', 'No', 'Unsure'], f.marketRate ?? null, v => setP('incomeFacts', { marketRate: v }), { label: 'Paid at market rate', clearable: true }))]; }
+    if (a.id === 'credit') { const c = p.credit || {}; return [S.labelled('Credit score', S.textInput(c.score == null ? null : String(c.score), x => { const n = Number(x); setP('credit', { score: Number.isInteger(n) && n >= 300 && n <= 900 ? n : null }); }, { hint: '300 to 850', width: 110, key: 'score:credit:score' })),
+      S.labelled('Late payments in 2 years?', S.toggle(['Yes', 'No'], c.latePayments === true ? 'Yes' : c.latePayments === false ? 'No' : null, v => setP('credit', { latePayments: v === 'Yes' }), { label: 'Late payments', clearable: true })), h('a', { href: '#/net-worth/credit-cards' }, 'More under Credit ›')]; }
+    if (a.id === 'mindset') return [h('span.muted.small', {}, 'Rated from Confidence, asked at the start of each session. '), h('a', { href: '#/home/session' }, 'Start the session ›')];
+    if (a.id === 'protection') return [h('a', { href: a.route }, 'Add the usual coverage list ›')];
+    return null;
+  };
+  const unratedRow = a => { const needs = needsOf(a); return h('div.card.ok-row', {}, h('div.hole-head', {}, h('strong.hole-name', {}, a.name), ratingTag(null), h('span.spacer'), picker(a)),
+    needs ? h('div.row-line', { style: { gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' } }, h('span.muted.small', {}, 'Needs: '), ...needs) : h('div.row-line', { style: { gap: '12px' } }, h('span.reason.muted', {}, a.reason), h('a', { href: a.route }, 'Open ›'))); };
   const section = (title, list, row, note = null) => (list.length ? h('section.section', {}, h('div.section-title.area-goals', {}, h('h2', {}, title), h('span.muted', {}, note ?? `${list.length}`)), list.map(row)) : null);
   const rescore = () => { ctx.store.setIn('scorecard', ['reviewedAt'], ctx.now().toISOString(), 'Re-scored'); S.toast('Marked as re-scored today.'); };
   const confirm = () => { ctx.store.setIn('program', ['fooConfirmed'], sc.here, 'FOO step'); S.toast(`FOO step ${sc.here} confirmed.`); };
@@ -71,8 +85,8 @@ export function scorecardScreen(app, ctx) {
       S.button('Re-scored today', { iconName: 'check', tip: 'Marks the Revisit session\'s re-score', onClick: rescore })),
     S.summaryStrip(ctx, [
       { label: 'Areas Strong or OK', result: { id: 'M74', value: sc.okCount, needs: [], unit: 'count', text: `${sc.okCount} of ${sc.of} areas rated Strong or OK; ${sc.holes.length} ${sc.holes.length === 1 ? 'hole' : 'holes'}; ${sc.unrated.length} not rated yet.` }, render: r => `${r.value} of ${sc.of}` },
-      { label: 'Holes', result: { id: 'M74', value: sc.holes.length, needs: [], unit: 'count', text: 'The areas rated Hole, ranked below.' }, render: r => String(r.value) },
-      { label: 'In the plan', result: { id: 'M74', value: sc.chosen.length, needs: [], unit: 'count', text: 'Holes picked for the top 3.' }, render: r => `${r.value} of ${Math.min(3, sc.holes.length)}` },
+      { label: 'Holes', result: { id: 'M74', value: sc.holes.length, needs: [], unit: 'count', text: 'The areas rated Hole, ranked below.' }, render: r => (sc.unrated.length ? `${r.value} found so far · ${sc.unrated.length} not rated yet` : String(r.value)) }, // item 36
+      { label: 'In the plan', result: { id: 'M74', value: sc.chosen.length, needs: [], unit: 'count', text: 'Holes picked for the top 3.' }, render: r => (sc.holes.length ? `${r.value} of ${Math.min(3, sc.holes.length)}` : sc.unrated.length ? 'pick after rating' : 'no hole to pick') },
       { label: 'FOO step', result: { id: 'M69', value: sc.here == null ? null : Number(sc.here) || 0, needs: sc.here == null ? ['a surplus'] : [], unit: 'count', text: 'The step you are on (Plan › FOO). Holes before it rank first.' }, render: () => `${sc.here}`,
         note: doc.program?.fooConfirmed === sc.here ? 'Confirmed' : null }]),
     sc.here != null && doc.program?.fooConfirmed !== sc.here ? h('div.row-line', { style: { marginBottom: '16px', gap: '10px' } }, S.button(`Confirm FOO step ${sc.here}`, { iconName: 'check', onClick: confirm }), h('span.muted.small', {}, 'Session 5 asks for it; the step comes from Plan › FOO.')) : null,

@@ -11,14 +11,14 @@ import { drafttName } from '../math/spending.js';
 import * as S from './staples.js';
 import { spendingList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.js';
 import { ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
-  closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS, planDiffs, closeStreak } from '../month.js';
+  closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS, planDiffs, closeStreak, collapseSpread, dayTotals } from '../month.js';
 import { gutAccuracy, DRAFTT } from '../math/spending.js';
 import { statements, BUCKETS, defaultBucket } from '../math/statements.js';
 import { calendarMarkers } from '../math/markers.js';
 import { money, pct } from '../format.js';
 
 // Screen state that is about looking, not the client's numbers (kept for this browser tab).
-export const UI = { pass: 'Plan', ym: null, period: 'Monthly', groupBy: 'DRAFTT', calYm: null, range: 'Month', show: new Set(GROUPS), openDay: null, review: null, markers: true };
+export const UI = { pass: 'Plan', ym: null, period: 'Monthly', groupBy: 'DRAFTT', calYm: null, range: 'Month', show: new Set(GROUPS), openDay: null, review: null, markers: true, view: 'month', totalsOnly: false }; // batch 6: Month or Full list; Totals only
 const thisYm = ctx => ymOf(ctx.now());
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
@@ -325,6 +325,8 @@ export function calendarScreen(app, ctx) {
       monthStepper(UI.calYm, v => { UI.calYm = v; UI.openDay = null; redraw(); }),
       S.button('Today', { onClick: () => { UI.calYm = thisYm(ctx); redraw(); } }),
       S.toggle(['Month', '3 mo', '6 mo', 'Year'], UI.range, v => { UI.range = v; redraw(); }, { label: 'How far ahead the balance looks' }),
+      S.toggle([['month', 'Month'], ['list', 'Full list']], UI.view, v => { UI.view = v; redraw(); }, { label: 'View' }), // item 28
+      UI.view === 'month' ? S.checkbox('Totals only', UI.totalsOnly, v => { UI.totalsOnly = v; redraw(); }) : null,
       h('span', { style: { flex: 1 } }),
       S.button('Add a win', { iconName: 'plus', onClick: e => winForm(ctx, e.currentTarget) }),
       S.button('Add entry', { kind: 'primary', iconName: 'plus', onClick: e => entryForm(ctx, e.currentTarget, { date: UI.calYm === thisYm(ctx) ? ctx.now().toISOString().slice(0, 10) : dateOf(UI.calYm, 1) }) })),
@@ -332,12 +334,13 @@ export function calendarScreen(app, ctx) {
       S.labelled('Starting balance', S.moneyInput(cal.start ?? null, v => { ctx.store.setIn('spending', ['calendar', 'start'], v === null ? undefined : v, 'Starting balance'); ctx.store.setIn('spending', ['calendar', 'startYm'], v === null ? undefined : UI.calYm); },
         { hint: st.value == null ? 'Add balance' : `${moneyText(st.value)} (checking)`, key: 'cal:start' }), { note: cal.start != null ? `As of the start of ${monthName(cal.startYm || UI.calYm)}` : 'Pulled from checking; type to change' }),
       S.labelled('Low balance line', S.moneyInput(cal.low ?? null, v => ctx.store.setIn('spending', ['calendar', 'low'], v === null ? undefined : v, 'Low balance line'), { hint: bufferLine(ctx) != null ? `Buffer ${moneyText(bufferLine(ctx))}` : moneyText(ctx.ref.defaults.lowBalanceLine), key: 'cal:low' }), { note: 'Blank: the Buffer layer (two weeks of spending)' }),
-      S.labelled('Show', h('div.seg.multi', { role: 'group', 'aria-label': 'Show' }, GROUPS.map(gp => h('button', { type: 'button', 'aria-pressed': String(UI.show.has(gp)),
-        onclick: () => { UI.show.has(gp) ? UI.show.delete(gp) : UI.show.add(gp); redraw(); } }, gp)),
-        h('button', { type: 'button', 'aria-pressed': String(UI.markers), title: 'FOO dates and the month-end close day', onclick: () => { UI.markers = !UI.markers; redraw(); } }, 'Markers'))),
+      S.labelled('Markers', h('div.seg.multi', { role: 'group', 'aria-label': 'Markers' }, h('button', { type: 'button', 'aria-pressed': String(UI.markers), title: 'FOO dates and the month-end close day', onclick: () => { UI.markers = !UI.markers; redraw(); } }, 'Markers'))),
       S.checkbox('Count maybe money', !!cal.countMaybe, v => ctx.store.setIn('spending', ['calendar', 'countMaybe'], v, 'Count maybe')),
       S.checkbox('Wins on their own', cal.autoWins !== false, v => ctx.store.setIn('spending', ['calendar', 'autoWins'], v, 'Auto wins'))),
     { label: `Balance ${st.value == null ? 'not set' : money(st.value)} · low line ${money(cal.low ?? bufferLine(ctx) ?? ctx.ref.defaults.lowBalanceLine)}${cal.low == null && bufferLine(ctx) != null ? ' (the Buffer)' : ''} · ${UI.show.size === GROUPS.length ? 'showing all' : `showing ${UI.show.size} of ${GROUPS.length}`}` }));
+  // Item 28: filter chips by type sit on the header, not in the settings.
+  const filters = h('div.row-line.cal-filters', { style: { gap: '6px', marginTop: '8px', flexWrap: 'wrap' } }, h('span.muted.small', {}, 'Show'), GROUPS.map(gp => h(`button.btn.small.filter-chip.${CHIP[gp] || 'out'}`, { type: 'button', 'aria-pressed': String(UI.show.has(gp)), onclick: () => { UI.show.has(gp) ? UI.show.delete(gp) : UI.show.add(gp); redraw(); } }, h('span.dot'), gp)));
+  header.append(filters);
   const notes = [];
   if (bonusPaycheck(monthList)) notes.push(h('div.banner-inline.good', {}, icon('check'), ` Bonus paycheck month: three paydays land in ${monthName(UI.calYm, 'long')}.`));
   if (b.firstLow) notes.push(h('div.banner-inline', {}, '⚠ ', `Below ${money(b.low)} on ${dayLabel(b.firstLow.date)}: ${money(b.firstLow.balance)}.`));
@@ -346,15 +349,15 @@ export function calendarScreen(app, ctx) {
   const risky = [...new Set(monthList.filter(i => i.risk && i.status === 'Planned').map(i => i.name))];
   const guessN = new Set(monthList.filter(i => i.guessDate).map(i => i.recId)).size;
   const heads = [risky.length ? `Timing risk: ${risky.slice(0, 3).join(', ')}${risky.length > 3 ? ` and ${risky.length - 3} more` : ''} are large with no fixed date` : null,
-    guessN ? `${guessN} ${guessN === 1 ? 'item sits' : 'items sit'} on a guessed day (dotted); click one to set its day` : null].filter(Boolean);
+    guessN ? `${guessN} ${guessN === 1 ? 'item sits' : 'items sit'} on a guessed day (marked ?); click one to set its day` : null].filter(Boolean); // item 30
   if (heads.length) notes.push(h('div.banner-inline.soft', {}, heads.join('. ') + '.'));
   const byDay = new Map();
-  for (const i of monthList) { if (!UI.show.has(i.group)) continue; const k = i.date.startsWith(UI.calYm) ? i.date : i.origDate; if (!byDay.has(k)) byDay.set(k, []); byDay.get(k).push(i); }
+  for (const i of collapseSpread(monthList)) { if (!UI.show.has(i.group)) continue; const k = i.date.startsWith(UI.calYm) ? i.date : i.origDate; if (!byDay.has(k)) byDay.set(k, []); byDay.get(k).push(i); } // item 29: one Spending money bar a week
   const endOf = new Map((b.rows || []).map(r => [r.date, r.balance]));
   const marks = new Map();
   if (UI.markers) for (const mk of calendarMarkers(doc, ctx.ref, UI.calYm, { now: ctx.now(), flags: app.flags || [] })) { if (!marks.has(mk.date)) marks.set(mk.date, []); marks.get(mk.date).push(mk); if (!byDay.has(mk.date)) byDay.set(mk.date, []); }
   return [head('Calendar', 'Day by day, with a running balance'), header, ...notes,
-    monthGrid(ctx, byDay, endOf, b.low, marks), dayList(ctx, byDay, endOf, b.low, marks),
+    UI.view === 'list' ? null : monthGrid(ctx, byDay, endOf, b.low, marks), dayList(ctx, byDay, endOf, b.low, marks, { force: UI.view === 'list' }), // item 28: Month, or the Full list on any width
     h('div.card.cal-chart', {}, h('div.bar-top', {}, h('strong', {}, `Running balance, ${UI.range === 'Month' ? monthName(UI.calYm) : `${UI.range} from ${monthName(UI.calYm)}`}`)), balanceChart(ctx, b))];
 }
 const dayLabel = d => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
@@ -365,16 +368,26 @@ function chipOf(ctx, i) {
     i.status === 'Moved' && !i.date.startsWith(UI.calYm) ? 'moved-away' : '', i.guessDate ? 'guess' : ''].filter(Boolean).join('.');
   const amt = i.kind === 'win' ? '' : ` ${sign(i.planned)}${money(Math.abs(i.status === 'Paid' && i.paid != null ? i.paid : i.planned))}`;
   const label = i.kind === 'win' ? `★ ${i.name}` : i.maybe ? `~ ${i.name}` : `${i.name}`;
+  if (i.kind === 'spread') { // item 29: one bar for the week's spending money, expandable by category
+    const bar = h('button.chip.spread.out', { type: 'button', title: `Spending money this week: ${i.parts.length} ${i.parts.length === 1 ? 'line' : 'lines'}`, onclick: e => { e.stopPropagation(); spreadPanel(ctx, e.currentTarget, i); } }, h('span.chip-name', {}, `Spending money${i.weekly ? ' this week' : ''}`), h('span.chip-amt', {}, `${sign(i.planned)}${money(Math.abs(i.planned))}`));
+    return bar;
+  }
   const canMove = i.kind !== 'win' && i.status !== 'Paid';
-  // Chrome will not start a drag from a <button>, so a movable chip is a focusable role=button that also drags.
-  const btn = h(`${canMove ? 'span' : 'button'}.chip.${cls}`, { type: canMove ? null : 'button', role: canMove ? 'button' : null, tabindex: canMove ? '0' : null,
-    draggable: canMove ? 'true' : null, ondragstart: canMove ? e => { dragging = i; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', i.key); } : null,
-    ondragend: canMove ? () => { dragging = null; } : null,
-    onkeydown: canMove ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } } : null,
-    title: `${i.name}${amt}${i.onCard ? ` · on ${i.onCard}` : ''} · ${i.status}${i.guessDate ? ' · day not set' : ''}`,
+  // Item 27: drag by the handle only (no text gets selected); the chip itself is a button.
+  const handle = canMove ? h('span.drag-handle', { draggable: 'true', title: 'Drag to another day', 'aria-hidden': 'true',
+    ondragstart: e => { dragging = i; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', i.key); document.body.classList.add('cal-dragging'); try { e.dataTransfer.setDragImage(e.currentTarget.parentNode, 10, 10); } catch {} },
+    ondragend: () => { dragging = null; document.body.classList.remove('cal-dragging'); document.querySelectorAll('.day.drop').forEach(d => d.classList.remove('drop')); } }, '⋮⋮') : null;
+  const btn = h(`button.chip.${cls}`, { type: 'button',
+    title: `${i.name}${amt}${i.onCard ? ` · on ${i.onCard}` : ''} · ${i.status}${i.guessDate ? ' · guessed day' : ''}`,
     onclick: e => { e.stopPropagation(); instancePanel(ctx, e.currentTarget, i); } },
-  i.status === 'Paid' ? icon('check') : null, h('span.chip-name', {}, label), amt ? h('span.chip-amt', {}, amt) : null);
+  handle, i.guessDate ? h('span.guess-badge', { title: 'Guessed day: the line has no due day yet' }, '?') : null, i.status === 'Paid' ? icon('check') : null, h('span.chip-name', {}, label), amt ? h('span.chip-amt', {}, amt) : null); // item 30
   return btn;
+}
+// Item 29: what a week's spending money is made of, by category; each line opens its own panel.
+function spreadPanel(ctx, anchor, w) {
+  S.popover(anchor, h('div.stack', { style: { gap: '6px' } }, h('strong', {}, `Spending money, week of ${dayLabel(w.date)}`), h('span.muted.small', {}, 'Variable lines with no set day, spread week by week. A line with a due day sits on its day instead.'),
+    ...w.parts.map(p => h('div.row-line', { style: { gap: '8px' } }, h('button.btn.small', { type: 'button', onclick: e => { S.closePop(); instancePanel(ctx, anchor, p); } }, p.name), h('span.spacer'), h('span.num', {}, `${sign(p.planned)}${money(Math.abs(p.planned))}`))),
+    h('div.row-line', { style: { gap: '8px', fontWeight: 700 } }, h('span', {}, 'This week'), h('span.spacer'), h('span.num', {}, `${sign(w.planned)}${money(Math.abs(w.planned))}`))), { width: 340 });
 }
 const markerRow = list => (list?.length ? h('div.day-marks', {}, list.map(mk => h(`span.day-mark.${mk.kind}`, { title: mk.name }, mk.name))) : null);
 // Drag a chip to another day (desktop). Dropping it back on its own day puts it back as planned. Undo in the toast.
@@ -396,14 +409,15 @@ function monthGrid(ctx, byDay, endOf, low, marks = new Map()) {
     const items = byDay.get(date) || [];
     const bal = endOf.get(date);
     const open = UI.openDay === date;
-    const shown = open ? items : items.slice(0, 4);
-    const cell = h(`div.day${date === today ? '.today' : ''}${bal != null && bal < low ? '.low' : ''}`, {},
+    const shown = open ? items : UI.totalsOnly ? [] : items.slice(0, 3); // item 28: the top 3, then +N more
+    const cell = h(`div.day${date === today ? '.today' : ''}${bal != null && bal < low ? '.low' : ''}`, { onclick: e => { if (e.target.closest('button, .chip, .icon-btn, .drag-handle')) return; UI.openDay = open ? null : date; ctx.refresh(); } },
       h('div.day-top', {}, h('span.day-n', {}, d), S.iconButton('plus', `Add an entry on ${dayLabel(date)}`, e => entryForm(ctx, e.currentTarget, { date }), { tiny: true })),
       markerRow(marks.get(date)),
+      totalsLine(items),
       h('div.chips', {}, shown.map(i => chipOf(ctx, i)),
-        items.length > shown.length ? h('button.more-chips', { type: 'button', onclick: () => { UI.openDay = date; ctx.refresh(); } }, `+${items.length - shown.length} more`) : null),
+        items.length > shown.length ? h('button.more-chips', { type: 'button', onclick: e => { e.stopPropagation(); UI.openDay = date; ctx.refresh(); } }, UI.totalsOnly && !open ? `${items.length} ${items.length === 1 ? 'item' : 'items'}` : `+${items.length - shown.length} more`) : null),
       bal != null ? h('div.day-bal', {}, bal < low ? '⚠ ' : '', money(bal)) : null);
-    cell.ondragover = e => { if (dragging) { e.preventDefault(); cell.classList.add('drop'); } };
+    cell.ondragover = e => { if (dragging) { e.preventDefault(); if (!cell.classList.contains('drop')) { document.querySelectorAll('.day.drop').forEach(x => x.classList.remove('drop')); cell.classList.add('drop'); } } }; // item 27: only the hovered day
     cell.ondragleave = () => cell.classList.remove('drop');
     cell.ondrop = e => { e.preventDefault(); cell.classList.remove('drop'); const i = dragging; dragging = null; moveTo(ctx, i, date); };
     cells.push(cell);
@@ -411,11 +425,19 @@ function monthGrid(ctx, byDay, endOf, low, marks = new Map()) {
   return h('div.cal-grid.card', {}, h('div.dow', {}, ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(x => h('span', {}, x))), h('div.days', {}, cells));
 }
 // Phone: the same month as a list of days (grids do not fit a phone).
-function dayList(ctx, byDay, endOf, low, marks = new Map()) {
+function dayList(ctx, byDay, endOf, low, marks = new Map(), { force = false } = {}) { // item 28: the Full list, every item with day totals
   const days = [...byDay.keys()].sort();
-  return h('div.cal-list.card', {}, days.length ? days.map(d => h('div.list-day', {},
-    h('div.list-day-top', {}, h('strong', {}, dayLabel(d)), endOf.get(d) != null ? h(`span.day-bal${endOf.get(d) < low ? '.lowtext' : ''}`, {}, endOf.get(d) < low ? '⚠ ' : '', money(endOf.get(d))) : null),
+  return h(`div.cal-list.card${force ? '.force-list' : ''}`, {}, days.length ? days.map(d => h('div.list-day', {},
+    h('div.list-day-top', {}, h('strong', {}, dayLabel(d)), totalsLine(byDay.get(d)), endOf.get(d) != null ? h(`span.day-bal${endOf.get(d) < low ? '.lowtext' : ''}`, {}, endOf.get(d) < low ? '⚠ ' : '', money(endOf.get(d))) : null),
     markerRow(marks.get(d)), h('div.chips', {}, byDay.get(d).map(i => chipOf(ctx, i))))) : h('p.muted', {}, 'Nothing shown. Check the Show filters.'));
+}
+// Item 28: one line of totals by type for a day (income, spending, debt, savings), each with its color dot.
+const TOT_WORDS = { in: 'in', out: 'spending', debt: 'debt', save: 'saving', maybe: 'maybe' };
+function totalsLine(items) {
+  const t = dayTotals(items);
+  const keys = Object.keys(t);
+  if (!keys.length) return null;
+  return h('div.day-totals', {}, keys.map(k => h(`span.tot.${k}`, { title: TOT_WORDS[k] }, h('span.dot'), `${sign(t[k])}${money(Math.abs(t[k]))}`)));
 }
 
 // One instance: Got it / Paid, Partial, Didn't happen, Moved (R091 to R094), and setting a missing day.

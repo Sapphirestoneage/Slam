@@ -57,7 +57,7 @@ export function factsOf(doc, ref, { now = new Date(), flags = [] } = {}) {
     m, x, F, here: F?.here ?? null, gross, heavy, payments,
     debtTotal: sum(x.debts, d => d.balance),
     dti: debtToIncome({ monthlyDebtPayments: payments, grossMonthly: gross }).value,
-    util: util.hidden ? null : util.value, score: p.credit?.score ?? null,
+    util: util.hidden ? null : util.value, score: p.credit?.score ?? null, scorePartner: p.credit?.scorePartner ?? null, credit: p.credit || {}, taxes: p.taxes || {}, incomeFacts: p.incomeFacts || {},
     r5: m.ruleOf5,
     months: m.runwayMonths.value, littleE, bigE, littleFull: !!littleE?.full, bigFull: !L?.needsAge && bigE.length > 0 && bigE.every(l => l.full), bigMonths: L?.months ?? null, needsAge: !!L?.needsAge,
     marginal: x.grossAnnual ? taxRates({ gross: x.grossAnnual, filingStatus: x.filingStatus, place: x.place }, ref).marginal ?? null : null,
@@ -97,14 +97,16 @@ const RULE = {
     if (f.dti != null && f.dti > T.debt.dti) return rate('OK', `Only low-rate debt, but payments take ${pct(f.dti)} of gross, over the ${pct(T.debt.dti)} line.`);
     return rate('Strong', `Only low-rate debt${f.dti != null ? `; payments take ${pct(f.dti)} of gross` : ''}.`);
   },
-  credit: f => {
-    const c = T.credit;
-    if (f.score == null && f.util == null) return null;
-    if (f.util != null && f.util > c.utilizationHole) return rate('Hole', `Cards ${pct(f.util)} used, over the ${pct(c.utilizationHole)} line${f.score != null ? `; score ${f.score}` : ''}.`);
-    if (f.score == null) return null;
-    if (f.score < c.ok) return rate('Hole', `Score ${f.score}, under ${c.ok}.`);
-    if (f.score >= c.strong) return rate('Strong', `Score ${f.score}${f.util != null ? `, cards ${pct(f.util)} used` : ''}.`);
-    return rate('OK', `Score ${f.score}; ${c.strong} is the strong line${f.util != null ? `, cards ${pct(f.util)} used` : ''}.`);
+  credit: f => { // item 34: the score(s), utilization, late payments, the oldest account, hard inquiries
+    const scores = [f.score, f.scorePartner].filter(v => v != null);
+    const low = scores.length ? Math.min(...scores) : null;
+    const late = f.credit.latePayments === true;
+    if (f.util != null && f.util > T.credit.utilizationHole) return rate('Hole', `Cards ${pct(f.util)} used, over the ${pct(T.credit.utilizationHole)} line.`);
+    if (late) return rate('Hole', `${f.credit.lateCount ? `${f.credit.lateCount} late ${f.credit.lateCount === 1 ? 'payment' : 'payments'}` : 'A late payment'} in the last two years.`);
+    if (low != null && low < T.credit.ok) return rate('Hole', `A score of ${low}, under ${T.credit.ok}.`);
+    if (low != null && low >= T.credit.strong) return rate((f.credit.inquiries ?? 0) > T.credit.inquiriesOk ? 'OK' : 'Strong', `${scores.length > 1 ? `Scores of ${scores.join(' and ')}` : `A score of ${low}`}, at or over ${T.credit.strong}${(f.credit.inquiries ?? 0) > T.credit.inquiriesOk ? `, but ${f.credit.inquiries} hard inquiries this year` : ''}${f.credit.oldestAccountYears != null ? `; oldest account ${f.credit.oldestAccountYears} years` : ''}.`);
+    if (low != null) return rate('OK', `A score of ${low}; ${T.credit.strong} is the strong line.`);
+    return null;
   },
   retirement: f => {
     if (f.matchOffered && f.matchLeft > 0) return rate('Hole', `${money(f.matchLeft)} a year of employer match left on the table.`);
@@ -122,7 +124,14 @@ const RULE = {
     if (th != null) return rate('Hole', f.m.investing?.investSurplus === false && (f.m.surplus.value ?? 0) > 0 ? 'Nothing invested and nothing going in; the surplus sits in cash.' : 'Nothing invested and nothing going in.');
     return null;
   },
-  taxes: () => null, // no clear rule from the data: the coach rates it after a look at Taxes
+  taxes: f => { // item 35: last year's refund or amount owed, and whether withholding changed since
+    const v = f.taxes.lastYear;
+    if (v == null) return null;
+    const changed = f.taxes.withholdingChanged === true;
+    if (Math.abs(v) <= T.taxes.closeEnough) return rate('Strong', `Last year came within ${money(T.taxes.closeEnough)}: ${v >= 0 ? `a ${money(v)} refund` : `${money(-v)} owed`}.`);
+    if (changed) return rate('OK', `Last year ${v >= 0 ? `a ${money(v)} refund` : `${money(-v)} owed`}, but withholding changed since.`);
+    return rate('Hole', `Last year ${v >= 0 ? `a ${money(v)} refund (an interest-free loan to the IRS)` : `${money(-v)} owed`}, and withholding has not changed.`);
+  },
   protection: f => {
     if (!f.coverage.length) return null;
     const gaps = f.coverage.filter(r => r.values.have === "Don't").map(r => r.type);
@@ -136,8 +145,10 @@ const RULE = {
   income: f => {
     if (f.betweenJobs) return rate('Hole', 'Between jobs.');
     if (f.x.takeHome == null) return null;
-    if (f.stability === 'Steady') return rate('Strong', `${money(f.x.takeHome)} a month take-home, steady.`);
-    if (f.stability === 'Varies' || f.stability === 'Unpredictable') return rate('OK', `${money(f.x.takeHome)} a month take-home, ${f.stability.toLowerCase()}.`);
+    const mk = f.incomeFacts.marketRate ?? null; // item 35: paid at market rate, and the last raise
+    if (mk === 'No') return rate('Hole', `${money(f.x.takeHome)} a month take-home, under market rate.`);
+    if (f.stability === 'Steady' && mk !== 'Unsure') return rate('Strong', `${money(f.x.takeHome)} a month take-home, steady${mk === 'Yes' ? ', at market rate' : ''}.`);
+    if (f.stability === 'Varies' || f.stability === 'Unpredictable' || mk === 'Unsure') return rate('OK', `${money(f.x.takeHome)} a month take-home, ${f.stability ? f.stability.toLowerCase() : 'steady'}${mk === 'Unsure' ? ', unsure about market rate' : ''}.`);
     return null;
   },
   goals: f => {
@@ -208,7 +219,7 @@ export function scorecardOf(doc, ref, { now = new Date(), flags = [] } = {}) {
     const override = RATINGS.includes(o.rating) ? o.rating : null;
     const rating = override ?? auto?.rating ?? null;
     const source = override ? 'coach' : auto ? 'auto' : 'unrated';
-    const reason = override ? (o.reason || "The coach's call.") : auto?.reason ?? 'Not rated yet: the data cannot say, so rate it on the Scorecard.';
+    const reason = override ? (o.reason || "The coach's call.") : auto?.reason ?? 'Not rated yet: add the inputs it needs on the Scorecard, or rate it.';
     const payoff = rating !== 'Hole' ? null : o.payoff != null ? { value: o.payoff, text: `${money(o.payoff)} a year, the coach's estimate.`, typed: true } : PAYOFFS[a.id]?.(f) ?? null;
     const effort = o.effort ?? a.effort;
     const score = payoff && effort > 0 ? payoff.value / effort : null;

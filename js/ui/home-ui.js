@@ -134,7 +134,7 @@ function checklistCard(app, ctx, P, s) {
   const confirmFoo = current && A.must.some(i => i.key === 'fooConfirmed' && !i.done) && P.scorecard.here != null
     ? h('div.row-line', { style: { gap: '8px', marginTop: '6px' } }, S.button(`Confirm FOO step ${P.scorecard.here}`, { size: 'small', iconName: 'check', onClick: () => { ctx.store.setIn('program', ['fooConfirmed'], P.scorecard.here, 'FOO step'); S.toast(`FOO step ${P.scorecard.here} confirmed.`); } }), h('span.muted.small', {}, 'from Plan › FOO')) : null;
   return h('div.card.session-card.coach-only', {},
-    h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, `Session ${s.n} · ${s.name}`), h(`span.tag.${s.done ? 'good' : 'plain'}`, {}, s.stateWord), s.done ? null : h('span.muted.small', {}, `${s.items.filter(i => i.done).length} of ${s.items.length}`), h('span.muted', {}, current ? `${word} · the agenda` : word)),
+    h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, `Session ${s.n} · ${s.name}`), h(`span.tag.${s.done ? 'good' : 'plain'}`, {}, s.stateWord), s.done ? null : h('span.muted.small', {}, `${s.items.filter(i => i.done).length} of ${s.items.length}`), h('span.muted', {}, current ? 'the agenda' : '')),
     current ? h('div', { style: { marginTop: '10px' } }, agendaPanel(app, ctx, A)) : h('div.checklist', { style: { marginTop: '10px', marginBottom: 0 } }, items),
     confirmFoo,
     s.id === 'S12' ? graduationCard(app, ctx, P) : null,
