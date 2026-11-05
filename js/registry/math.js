@@ -264,7 +264,7 @@ export const MATH = [
     cols: [{ area: 'profile', key: 'ageUsed', label: 'Age (worked out)', unit: 'number',
       f: (rec, c) => `IF({age}<>"",{age},IF({birthYear}="","",${c.now.getFullYear()}-{birthYear}-IF(${c.now.getMonth() + 1}<N({birthMonth}),1,0)))` }],
     parts: [
-      { key: 'months', name: 'Target months (the Rule of 5: five months, one definition with big e)', unit: 'months', sheet: 'BigEMonths', app: c => c.m.ruleOf5.months ?? null },
+      { key: 'months', name: 'Target months (the Rule of 5: age divided by 5, one definition with big e)', unit: 'months', sheet: 'IF(Profile_ageUsed="","",Profile_ageUsed/5)', app: c => c.m.ruleOf5.months ?? null },
       { key: 'keepPace', name: 'Keep pace: add a month', unit: 'money', sheet: 'IF(Math_M27_spending="","",Math_M27_spending/KeepPace)', app: c => c.m.ruleOf5.keepPace ?? null },
       { key: 'gap', name: 'Gap: target minus cash', unit: 'money', sheet: 'IF(OR(Math_M43="",Math_M41_cash=""),"",Math_M43-Math_M41_cash)', app: c => c.m.ruleOf5.gap ?? null },
     ],

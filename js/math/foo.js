@@ -130,6 +130,8 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
     if (wouldLock && overrides[s.id]?.note) { s.override = overrides[s.id]; s.cost = overrideCost(s, { heavy, m, x }); }
     else if (wouldLock) s.locked = true;
   }
+  // No age: big e has no target, so step 4 is locked with the plain reason (the Rule of 5 needs the age).
+  if (L.needsAge) { const s4 = steps.find(s => s.id === '4'); s4.done = false; s4.locked = true; s4.left = null; s4.prereq = { after: null, reached: true, failed: [], needsAge: true, text: 'Add your age to set big e (the Rule of 5: your age divided by 5 months of spending).' }; delete s4.override; }
   // Status: Done; the first step not done is where you are; 2 and 3 run together; 6 and 7 never overlap.
   let here = null, nextSet = false;
   for (const s of steps) {

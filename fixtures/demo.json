@@ -69,8 +69,8 @@
    "tolerance": "1 month"
   },
   "ruleOf5Target": {
-   "label": "Rule of 5 target $ (M43): five months of spending (Nov 5 answer)",
-   "value": 18000,
+   "label": "Rule of 5 target $ (M43): age 29 / 5 = 5.8 months of spending",
+   "value": 20880,
    "tolerance": "$1"
   },
   "ruleOf5KeepPace": {

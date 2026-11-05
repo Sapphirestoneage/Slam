@@ -75,7 +75,7 @@ Scorecard,Goals,count short-term and count long-term goals complete is Strong; a
 Scorecard,Mindset,"The latest money feeling: at or over strong is Strong, at or under hole is a Hole, between is OK; none stays unrated",FOO step 0b; the usual effort 4 h; #/home/session
 Thresholds,cashFlow strong,0.2,
 Thresholds,cashFlow ok,0.05,
-Thresholds,emergency strongMonths,5,
+Thresholds,emergency strong,big e full (age / 5 months),
 Thresholds,debt dti,0.36,
 Thresholds,credit strong,740,
 Thresholds,credit ok,670,
@@ -115,7 +115,7 @@ FOO,Step 0b,Bedazzle your basic life: the joy lines (goals and mindset live here
 FOO,Step 1,"Stop the bleeding: no late bills, payday debt at $0, little e full ($1,000 or the highest deductible, whichever is smaller), income gaps within 12 months covered",
 FOO,Step 2,Take the free money: the full employer match,
 FOO,Step 3,"Clear the heavy debt: cards, payday, personal, medical, BNPL, or any APR at or over the heavy line (8%)",
-FOO,Step 4,"big e: the Rule of 5 months, FAT first, then DRAFTT, then full spending",
+FOO,Step 4,"big e: the Rule of 5 (your age divided by 5 months of spending), FAT first, then DRAFTT, then full spending",
 FOO,Step 5,"Roth and HSA: a Roth IRA and an invested HSA, maxed for the year",
 FOO,Step 5b,"Give: a percent or an amount; off by default; opens once heavy debt is paid off, even before the Roth step",no step first; needs no debt at or above the heavy-debt APR. Lock text: Giving unlocks once heavy debt is paid off. Oxygen mask on you first.
 FOO,Step 6,"Prepay retirement: Quiet Quitting FI, then Coast FI (maxing the 401(k) is the lever)",
@@ -139,7 +139,7 @@ Ladder,Step: 25% of heavy debt paid,A quarter of the heavy debt (APR at or over 
 Ladder,Step: 50% of heavy debt paid,Half of it gone,FOO step 3; only when heavyDebt
 Ladder,Step: 75% of heavy debt paid,Three quarters gone,FOO step 3; only when heavyDebt
 Ladder,Step: Heavy debt free,No debt at or over the heavy-debt APR,FOO step 3; only when heavyDebt
-Ladder,Step: big e,"Losing-a-job emergencies covered: the Rule of 5, five months of spending",FOO step 4
+Ladder,Step: big e,"Losing-a-job emergencies covered: the Rule of 5, your age divided by 5 months of spending",FOO step 4
 Ladder,Marker: Net worth positive,What you own is more than what you owe,
 Ladder,Marker: All consumer debt free,"Cards, personal, BNPL, payday, medical and family loans at $0",
 Ladder,Marker: $100k net worth,Six figures of net worth,

@@ -254,7 +254,7 @@ test('12 sessions; session 1 ticks itself from the data; a session can be rename
 
 test('Day 0: the first end of session saves it, later ends save End of session N; it exports and imports with the file', () => {
   const d = new Store(householdFromInputs(demo.inputs, { name: 'Z', now: now.toISOString() }), { now: () => now.toISOString() });
-  startSession(d);
+  startSession(d, ref, { now }); // the same clock as the end, so the test does not depend on today's date
   assert.equal(inSession(d.doc), true);
   const first = endSession(d, ref, { now });
   assert.equal(first.first, true); assert.equal(first.snap.label, 'Day 0'); assert.equal(first.snap.day0, true);

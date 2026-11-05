@@ -12,7 +12,7 @@ export const STEP_WORDS = {
   '1': 'Stop the bleeding: no late bills, payday debt at $0, little e full ($1,000 or the highest deductible, whichever is smaller), income gaps within 12 months covered',
   '2': 'Take the free money: the full employer match',
   '3': 'Clear the heavy debt: cards, payday, personal, medical, BNPL, or any APR at or over the heavy line (8%)',
-  '4': 'big e: the Rule of 5 months, FAT first, then DRAFTT, then full spending',
+  '4': 'big e: the Rule of 5 (your age divided by 5 months of spending), FAT first, then DRAFTT, then full spending',
   '5': 'Roth and HSA: a Roth IRA and an invested HSA, maxed for the year',
   '5b': 'Give: a percent or an amount; off by default; opens once heavy debt is paid off, even before the Roth step',
   '6': 'Prepay retirement: Quiet Quitting FI, then Coast FI (maxing the 401(k) is the lever)',

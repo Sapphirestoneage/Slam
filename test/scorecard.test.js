@@ -51,11 +51,11 @@ test('thresholds in config: emergency fund under a month is a Hole; a score unde
   s.setIn('session', ['feelings', '1'], 3, 'Money feeling');
   s.update(s.find(r => r.kind === 'account')[0].id, { balance: 600 }); // under little e
   let sc = scorecardOf(s.doc, ref, { now });
-  assert.equal(area(sc, 'emergency').rating, 'Hole'); assert.equal(THRESHOLDS.emergency.strongMonths, 5);
+  assert.equal(area(sc, 'emergency').rating, 'Hole'); assert.match(THRESHOLDS.emergency.strong, /age \/ 5/);
   assert.equal(area(sc, 'credit').rating, 'Hole');
   assert.equal(area(sc, 'mindset').rating, 'Hole');
   assert.equal(area(sc, 'debt').rating, 'Strong', 'no debt, per About you');
-  s.update(s.find(r => r.kind === 'account')[0].id, { balance: 20000 }); // the Buffer, little e and big e (five months) full
+  s.update(s.find(r => r.kind === 'account')[0].id, { balance: 21000 }); // the Buffer ($1,385), little e and big e (age 30: 6 months, $18,000) full
   s.setDoc('profile', { credit: { score: 760 } });
   s.setIn('session', ['feelings', '2'], 8, 'Money feeling');
   sc = scorecardOf(s.doc, ref, { now });
@@ -338,7 +338,7 @@ test('answers 132 and 133: little e and big e rate the emergency fund; cards ove
   s.update(cash.id, { balance: 2500 }); // the Buffer (two weeks) and little e full
   sc = scorecardOf(s.doc, ref, { now });
   assert.equal(area(sc, 'emergency').rating, 'OK');
-  s.update(cash.id, { balance: 20000 });
+  s.update(cash.id, { balance: 21000 });
   sc = scorecardOf(s.doc, ref, { now });
   assert.equal(area(sc, 'emergency').rating, 'Strong');
   s.update(card.id, { balance: 1000 }); s.setDoc('profile', { credit: { score: 700 } });

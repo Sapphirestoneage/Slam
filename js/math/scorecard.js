@@ -60,7 +60,7 @@ export function factsOf(doc, ref, { now = new Date(), flags = [] } = {}) {
     dti: debtToIncome({ monthlyDebtPayments: payments, grossMonthly: gross }).value,
     util: util.hidden ? null : util.value, score: p.credit?.score ?? null,
     r5: ruleOf5({ age: x.age, spending: x.spending, emergencyCash: x.cash }),
-    months: m.runwayMonths.value, littleE, bigE, littleFull: !!littleE?.full, bigFull: bigE.length > 0 && bigE.every(l => l.full),
+    months: m.runwayMonths.value, littleE, bigE, littleFull: !!littleE?.full, bigFull: !L?.needsAge && bigE.length > 0 && bigE.every(l => l.full), bigMonths: L?.months ?? null, needsAge: !!L?.needsAge,
     marginal: x.grossAnnual ? taxRates({ gross: x.grossAnnual, filingStatus: x.filingStatus, place: x.place }, ref).marginal ?? null : null,
     retirementSaving: (m.pretaxSaving ?? 0) + (x.afterTaxSaving ?? 0), // a month
     retirementAccounts: x.accounts.filter(a => RETIREMENT_TYPES.has(a.type)),
@@ -86,8 +86,8 @@ const RULE = {
     if (f.x.cash == null || !f.littleE) return null;
     const cash = money(f.x.cash), months = f.months == null ? '' : ` (${f.months.toFixed(1)} months of spending)`;
     if (!f.littleFull) return rate('Hole', `${cash}${months}: little e (${money(f.littleE.target ?? 0)}) is not full yet.`);
-    if (f.bigFull) return rate('Strong', `${cash}${months}: big e is full (${RULES.bigEMonths} months of spending).`);
-    return rate('OK', `${cash}${months}: little e is full; big e (${money(f.bigE.reduce((s, l) => s + (l.target ?? 0), 0))}) is not yet.`);
+    if (f.bigFull) return rate('Strong', `${cash}${months}: big e is full (${f.bigMonths.toFixed(1)} months of spending, your age over 5).`);
+    return rate('OK', `${cash}${months}: little e is full; big e (${f.needsAge ? 'add your age to set it' : money(f.bigE.reduce((s, l) => s + (l.target ?? 0), 0))}) is not yet.`);
   },
   debt: f => {
     if (f.x.gates.areas.debt === false || f.x.none) return rate('Strong', 'No debt, per About you.');

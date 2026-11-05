@@ -9,7 +9,7 @@ export const STEPS = [
   { id: 'heavy50', name: '50% of heavy debt paid', what: 'Half of it gone', foo: '3', share: 0.5, applies: 'heavyDebt' },
   { id: 'heavy75', name: '75% of heavy debt paid', what: 'Three quarters gone', foo: '3', share: 0.75, applies: 'heavyDebt' },
   { id: 'heavyFree', name: 'Heavy debt free', what: 'No debt at or over the heavy-debt APR', foo: '3', share: 1, applies: 'heavyDebt' },
-  { id: 'bigE', name: 'big e', what: 'Losing-a-job emergencies covered: the Rule of 5, five months of spending', foo: '4' },
+  { id: 'bigE', name: 'big e', what: 'Losing-a-job emergencies covered: the Rule of 5, your age divided by 5 months of spending', foo: '4' },
 ];
 export const MARKERS = [
   { id: 'nwZero', name: 'Net worth positive', what: 'What you own is more than what you owe', kind: 'netWorth', target: 0 },

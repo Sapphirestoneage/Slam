@@ -3,7 +3,7 @@
 //   0 Buffer        keeps checking from bouncing: two weeks of spending (RULES.bufferWeeks)
 //   1 little e      the smaller of $1,000 and the highest deductible ($1,000, a Guess, until a deductible exists)
 //   2 income gaps   each known, dated gap: monthly spending × months; FOO step 1 if it starts within 12 months, else 8
-//   3 big e         the Rule of 5: five months of spending (RULES.bigEMonths, one definition everywhere) in three layers: FAT, DRAFTT, full
+//   3 big e         the Rule of 5: age / 5 months of spending (bigEMonthsOf, one definition everywhere) in three layers: FAT, DRAFTT, full; no age: locked
 // Cash fills them in that order (the refill order); a dip takes from the Buffer first, then little e, then big e.
 //   4 sinking funds already built; they feed FOO step 8
 // Backups of the backups (unemployment, disability, available credit, what could be cut, family help) add months of
@@ -13,11 +13,11 @@ import { monthsBetween, ymOf } from '../month.js';
 import { metrics } from './metrics.js';
 import { yearItems, sinkingOf } from '../year.js';
 import { gatesOf, visible } from '../gates.js';
-import { RULES } from '../registry/assumptions.js';
+import { RULES, bigEMonthsOf } from '../registry/assumptions.js';
 
 const FAT = new Set(['Food', 'Accommodation', 'Transportation']);
 export const LITTLE_E = RULES.littleE;
-export const STABILITY = { Steady: 1, Varies: 1.25, Unpredictable: 1.5 }; // kept for the sheet; big e is one definition (RULES.bigEMonths) since Nov 5
+export const STABILITY = { Steady: 1, Varies: 1.25, Unpredictable: 1.5 }; // kept for the sheet; big e is age / 5 whatever the stability (QUESTIONS: should unstable income add months?)
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 
 export function littleE(deductibles = []) {
@@ -40,7 +40,8 @@ export function cashLayers(x, { deductibles = [], gaps = [], stability = null, m
   const mine = l => myShare(l, { roommates: x.roommates ?? 0 }).value ?? 0;
   const lines = (x.lines || []).filter(l => l.status !== 'Not for me');
   const monthly = { fat: sum(lines.filter(l => FAT.has(l.draftt)), mine), draftt: sum(lines.filter(l => DRAFTT.includes(l.draftt)), mine), full: x.spending ?? sum(lines, mine) };
-  const months = RULES.bigEMonths;
+  const months = bigEMonthsOf(x.age); // null without an age: big e is locked
+  const needsAge = months == null;
   const e = littleE(deductibles);
   const buffer = (monthly.full ?? 0) * RULES.bufferWeeks * 12 / 52;
   const layers = [
@@ -48,15 +49,15 @@ export function cashLayers(x, { deductibles = [], gaps = [], stability = null, m
     { id: 'little-e', name: 'little e', target: e.target, guess: e.guess, note: e.note, step: 1 },
     ...[...gaps].sort((a, b) => String(a.start).localeCompare(String(b.start))).map(g => ({ id: `gap:${g.id}`, name: g.name || 'Income gap', target: (monthly.full ?? 0) * (g.months ?? 0),
       step: gapStep(g, now), note: `${g.months} ${g.months === 1 ? 'month' : 'months'} from ${g.start}` })),
-    { id: 'big-e:fat', name: 'big e: FAT', target: monthly.fat * months, step: 4, note: `Food, accommodation and transportation for ${months} months` },
-    { id: 'big-e:draftt', name: 'big e: DRAFTT', target: monthly.draftt * months, step: 4, note: `Every DRAFTT need for ${months} months` },
-    { id: 'big-e:full', name: 'big e: full', target: (monthly.full ?? 0) * months, step: 4, note: `All spending for ${months} months (the Rule of 5)` },
+    { id: 'big-e:fat', name: 'big e: FAT', target: needsAge ? null : monthly.fat * months, step: 4, note: needsAge ? 'Add your age to set big e' : `Food, accommodation and transportation for ${months.toFixed(1)} months` },
+    { id: 'big-e:draftt', name: 'big e: DRAFTT', target: needsAge ? null : monthly.draftt * months, step: 4, note: needsAge ? 'Add your age to set big e' : `Every DRAFTT need for ${months.toFixed(1)} months` },
+    { id: 'big-e:full', name: 'big e: full', target: needsAge ? null : (monthly.full ?? 0) * months, step: 4, note: needsAge ? 'Add your age to set big e' : `All spending for ${months.toFixed(1)} months (the Rule of 5: age ${x.age} over 5)` },
     ...sinking.map(s => ({ id: `sink:${s.id}`, name: s.name, target: s.target ?? 0, step: 8, note: s.due ? `By ${s.due}` : 'Sinking fund' })),
   ];
   // The big e layers nest (FAT inside DRAFTT inside full): each one fills only what the one before did not.
   let prevBig = 0;
   for (const l of layers) {
-    if (!l.id.startsWith('big-e:')) continue;
+    if (!l.id.startsWith('big-e:') || l.target == null) continue;
     const t = l.target; l.total = t; l.target = Math.max(0, t - prevBig); prevBig = Math.max(prevBig, t);
   }
   if (mode === 'accounts') { // one account per layer: each layer holds what its account holds
@@ -68,7 +69,7 @@ export function cashLayers(x, { deductibles = [], gaps = [], stability = null, m
   for (const l of layers) { l.full = l.target != null && l.filled >= l.target - 0.5; l.left = l.target == null ? null : Math.max(0, l.target - l.filled); }
   const placed = sum(layers, l => l.filled);
   const bigE = layers.filter(l => l.id.startsWith('big-e'));
-  return { layers, monthly, months, extra: Math.max(0, (x.cash ?? 0) - placed), littleE: e, bufferFull: !!layers[0].full, littleFull: !!layers[1].full, bigFull: bigE.length > 0 && bigE.every(l => l.full) };
+  return { layers, monthly, months, needsAge, extra: Math.max(0, (x.cash ?? 0) - placed), littleE: e, bufferFull: !!layers[0].full, littleFull: !!layers[1].full, bigFull: !needsAge && bigE.length > 0 && bigE.every(l => l.full) };
 }
 
 // A dip (an emergency paid from cash): it comes out of the Buffer first, then little e, then big e last; what each

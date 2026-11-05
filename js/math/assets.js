@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // M40 to M44: net worth, liquid net worth, runway, Rule of 5, contribution limits.
 import { ok, needs, missing, fmt, isBlank } from './result.js';
-import { RULES } from '../registry/assumptions.js';
+import { RULES, bigEMonthsOf } from '../registry/assumptions.js';
 
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 
@@ -36,12 +36,12 @@ export function runway({ cash, spending, fixedFloor = null }) {
 // M43: Rule of 5.
 export function ruleOf5({ age, spending, emergencyCash = null }) {
   if (isBlank(age)) return needs('M43', ['age'], { unit: 'months' });
-  const months = RULES.bigEMonths; // the Rule of 5: five months of spending, one definition with big e (overnight answer, Nov 5)
+  const months = bigEMonthsOf(age); // the Rule of 5: age divided by 5 months of spending, one definition with big e (restored Nov 6)
   if (isBlank(spending)) return { ...needs('M43', ['spending']), months };
   const target = months * spending;
   const keepPace = spending / RULES.keepPaceMonths;
   const gap = isBlank(emergencyCash) ? null : target - emergencyCash;
-  return { ...ok('M43', target, `The Rule of 5: ${fmt.number(months, 0)} months x ${fmt.money(spending)} spending = ${fmt.money(target)}. To keep pace as spending grows, add ${fmt.money(keepPace)} a month (spending divided by 60).${gap === null ? '' : ` Gap: ${fmt.money(gap)}.`}`), months, keepPace, gap }; // words fixed overnight: the months no longer come from age
+  return { ...ok('M43', target, `Age ${age} divided by 5 = ${fmt.number(months, 1)} months. ${fmt.number(months, 1)} x ${fmt.money(spending)} spending = ${fmt.money(target)}. To keep pace as you age, add ${fmt.money(keepPace)} a month (spending divided by 60).${gap === null ? '' : ` Gap: ${fmt.money(gap)}.`}`), months, keepPace, gap };
 }
 
 // M44: share of this year's limit used.

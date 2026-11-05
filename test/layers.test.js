@@ -26,12 +26,12 @@ test('layers fill in order: Buffer, little e, income gaps, big e as FAT, then DR
   assert.ok(Math.abs(buf.target - 3000 * 2 * 12 / 52) < 0.01, 'two weeks of spending'); assert.ok(buf.full);
   assert.equal(e.filled, 1000);
   assert.equal(gap.target, 6000); assert.equal(gap.filled, 6000);
-  // The Rule of 5: five months, one definition. FAT $2,200 a month, DRAFTT $2,500 (adds Therapy), full $3,000.
-  assert.equal(out.months, 5);
-  assert.equal(fat.total, 2200 * 5); assert.equal(fat.filled, 2200 * 5, 'FAT fills (what is left after the Buffer, little e and the gap covers it)');
-  assert.equal(draftt.target, 300 * 5, 'DRAFTT adds only what FAT did not cover');
-  assert.ok(Math.abs(draftt.filled - (20000 - buf.target - 1000 - 6000 - 11000)) < 0.01, 'what is left goes into DRAFTT'); assert.equal(full.filled, 0);
-  assert.equal(full.target, 500 * 5);
+  // The Rule of 5: age 30 / 5 = 6 months, one definition. FAT $2,200 a month, DRAFTT $2,500 (adds Therapy), full $3,000.
+  assert.equal(out.months, 6);
+  assert.equal(fat.total, 2200 * 6); assert.ok(Math.abs(fat.filled - (20000 - buf.target - 1000 - 6000)) < 0.01, 'FAT takes what is left after the Buffer, little e and the gap');
+  assert.equal(draftt.target, 300 * 6, 'DRAFTT adds only what FAT did not cover');
+  assert.equal(draftt.filled, 0); assert.equal(full.filled, 0);
+  assert.equal(full.target, 500 * 6);
   assert.equal(out.bufferFull && out.littleFull && !out.bigFull, true);
 });
 
@@ -53,8 +53,12 @@ test('an income gap sits in FOO step 8 until its date comes within 12 months, th
   assert.equal(gapStep(gap, new Date('2027-02-15T12:00:00Z')), 8);
 });
 
-test('big e is one definition (five months) whatever the income stability; one account per layer reads each account', () => {
-  assert.equal(cashLayers(x(0), { stability: 'Unpredictable', now }).months, 5);
+test('big e is one definition (age / 5 months) whatever the income stability; no age locks it; one account per layer reads each account', () => {
+  assert.equal(cashLayers(x(0), { stability: 'Unpredictable', now }).months, 6);
+  assert.equal(cashLayers(x(0, { age: 25 }), { now }).months, 5); assert.equal(cashLayers(x(0, { age: 40 }), { now }).months, 8);
+  const noAge = cashLayers(x(5000, { age: null }), { now });
+  assert.ok(noAge.needsAge && noAge.months == null && !noAge.bigFull && noAge.layers.find(l => l.id === 'big-e:full').target == null);
+  assert.match(noAge.layers.find(l => l.id === 'big-e:full').note, /Add your age/);
   const out = cashLayers(x(0), { mode: 'accounts', accounts: [{ id: 'a', name: 'Little e savings', value: 800 }], layerAccounts: { 'little-e': 'a' }, now });
   assert.equal(out.layers[1].filled, 800); assert.equal(out.layers[1].account, 'Little e savings');
 });
