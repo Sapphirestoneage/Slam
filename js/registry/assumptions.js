@@ -9,6 +9,8 @@
 // their own (the sheet shows the default, a blue cell for theirs, and the one used). A table: rows of numbers, each
 // column its own named range (tax brackets, periods).
 
+import { LEVELS, WEIGHTS, PACE, SESSIONS } from './program.js';
+
 // SLAM's own rules and lists. The math in js/math reads these (one source for the app and the sheet).
 export const RULES = {
   cardMinimumFloor: 25, cardMinimumPct: 0.01, housingLine: 0.35, ruleOf5Divisor: 5, keepPaceMonths: 60, littleE: 1000,
@@ -129,6 +131,13 @@ export const TABLES = [
     rows: () => LISTS.housing.map(t => [t]), source: RULE('js/math/metrics.js, M2A'), date: '2026-10-28' },
   { id: 'Heavy', label: 'Heavy debt types (FOO step 3)', columns: [['type', 'Debt type', 'text']],
     rows: () => LISTS.heavyDebt.map(t => [t]), source: RULE('js/math/foo.js, FOO step 3'), date: '2026-11-03' },
+  // The program (Phase 3): the levels, weights and pace behind the Picture % (M73).
+  { id: 'Levels', label: 'Levels: points per number (M73)', columns: [['name', 'Level', 'text'], ['points', 'Points', 'number']],
+    rows: () => Object.entries(LEVELS), source: RULE('js/registry/program.js'), date: '2026-11-05' },
+  { id: 'Weights', label: 'Weights: how much each number counts in the Picture % (M73)', columns: [['item', 'Item', 'text'], ['weight', 'Weight', 'number']],
+    rows: () => Object.entries(WEIGHTS), source: RULE('js/registry/program.js'), date: '2026-11-05' },
+  { id: 'Pace', label: 'Pace: Picture % expected by the end of each session (M73)', columns: [['session', 'Session', 'number'], ['expected', 'Expected %', 'pct']],
+    rows: () => SESSIONS.map((s, i) => [i + 1, (PACE.expected[i + 1] ?? PACE.hold) / 100]), source: RULE('js/registry/program.js'), date: '2026-11-05' },
 ];
 
 // Reference data that is a list of words (pickers), not a number the math uses. Declared so nothing is unaccounted for.

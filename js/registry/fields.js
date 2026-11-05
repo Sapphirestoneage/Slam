@@ -39,6 +39,8 @@ const PAID_WITH = top('paidWith', 'Paid with', 'text', { sheet: { skip: 'points 
 const LINKED_TO = top('linkedTo', 'Linked to', 'text', { sheet: { skip: 'points at another row by its id (a car loan and its car); set it in SLAM' } });
 const SOURCE = top('source', 'Typed from', 'text', { sheet: { skip: 'where a number came from (manual, statement, bank); set by the app' } });
 const COVERS = top('covers', 'Paid in advance', 'text', { sheet: { skip: 'a prepayment (date paid and months covered); set it on the Budget line' } });
+// Locked: the coach confirmed this row's number (its level is Actual for the Picture %, Phase 3).
+const LOCKED = () => f('locked', 'Locked (confirmed)', 'yesno');
 
 // Every area is one Inputs tab, in this order. source says where its rows live:
 //   records: doc.records of these kinds (one row per record)
@@ -146,7 +148,7 @@ export const AREAS = [
       f('what', 'What it is', 'text', { kinds: ['benefit'] }),
       pick('how', 'How it works', ['Reimbursed', 'Stipend', 'Pretax', 'Match', 'Discount'], { kinds: ['benefit'] }),
       pick('using', 'Using it?', ['Yes', 'No', 'Partly'], { kinds: ['benefit'] }),
-      CHECK, OWNER, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, STRESS,
+      CHECK, LOCKED(), OWNER, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, STRESS,
     ],
   },
   {
@@ -173,7 +175,7 @@ export const AREAS = [
       f('fee', 'Fee per period', 'money'), f('periods', 'Periods a year', 'number'),
       f('taxPlan', 'Payment plan in place', 'yesno'), f('guaranteed', 'Personally guaranteed', 'yesno'),
       f('institution', 'Institution'), f('opened', 'Opened', 'month'),
-      CHECK, OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(),
+      CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(),
     ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'a debt uses Balance and Payment' } } : x)),
   },
   {
@@ -228,7 +230,7 @@ export const AREAS = [
       f('tags', 'Tags', 'list', { kinds: ['account'] }),
       f('matchTiers', 'Match tiers', 'text', { kinds: ['account'], sheet: { skip: 'a table of match tiers on the 401(k); the first tier is on Income as match % and up to %' } }),
       f('rothLog', 'Roth IRA log', 'text', { kinds: ['account'], sheet: { skip: 'a dated list of Roth IRA contributions; edit it in SLAM' } }),
-      CHECK, OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(),
+      CHECK, LOCKED(), OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(),
     ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'an account uses Balance, a thing you own uses Value' } } : x)),
   },
   {
@@ -300,7 +302,7 @@ export const AREAS = [
       f('includesDebtPayments', 'Includes debt payments', 'yesno', { kinds: ['spending'] }),
       f('pass', 'Budget pass', 'text', { kinds: ['spending'], sheet: { skip: 'which Budget pass the gut number came from; set by the app' } }),
       f('maaser', 'Maaser line', 'yesno', { kinds: ['bill'], sheet: { skip: 'set by the community preset' } }),
-      CHECK, OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS,
+      CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS,
     ],
   },
   {
@@ -368,6 +370,7 @@ export const NOT_IN_SHEET = {
   'spending.months.statements': 'statement balances typed at month end; set on Month end',
   'spending.months.summary': 'the month-end summary; set on Month end',
   session: 'session agenda, notes, feelings and the one-pager; not money',
+  program: 'the 12-session program: the coach\'s checklist ticks and edited placeholder sessions; the Program tab shows where it stands',
   'session.feedback': 'Report this notes (coach only; the Coach notes tab when coach-only is ticked)',
   'session.timer': 'the onboarding timer (coach only; the Coach notes tab when coach-only is ticked)',
   'assumptions.socialSecurity': 'Social Security on Plan › Goals: parked (spec F222); the answer is kept, no math uses it yet',

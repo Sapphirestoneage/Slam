@@ -7,6 +7,9 @@ import { ASSET_ORDER, DEBT_ORDER, assetGroup, debtGroup } from '../math/statemen
 import { payYourselfFirst } from '../math/simple.js';
 import { fiDate } from '../math/fi.js';
 import { simulateDebt } from '../math/debt.js';
+import { programOf } from '../program.js';
+import { unlockOf, confidenceOf } from '../math/picture.js';
+import { LEVELS, levelWord } from './program.js';
 
 const MAX_ROWS = 600; // a table longer than this is written as values, marked From the app
 
@@ -168,6 +171,32 @@ export const REPORTS = [
           sections: [{ title: null, rows }] };
       });
       return [years, ...tables];
+    },
+  },
+  {
+    tab: 'Program', prefix: 'Program',
+    about: 'The 12-session program: each session and its checklist, the Picture % with its pace, and the next small things. From the app (the ticks and levels live in SLAM).',
+    columns: [
+      { key: 'name', label: 'Session or number', unit: 'text', width: 40 }, { key: 'status', label: 'Where it stands', unit: 'text', width: 16 },
+      { key: 'done', label: 'Done', unit: 'number', width: 8 }, { key: 'of', label: 'Of', unit: 'number', width: 8 }, { key: 'detail', label: 'Done when, or the detail', unit: 'text', width: 90 },
+    ],
+    sections: c => {
+      const prog = programOf(c.doc, c.ref, { now: c.now, flags: c.flags });
+      const pctText = v => (v == null ? '' : `${Math.round(v * 100)}%`);
+      const fi = unlockOf('fi', prog.picture), conf = confidenceOf('fi', prog.picture, { now: c.now });
+      return [
+        { title: 'Sessions', rows: prog.sessions.map(s => ({ cells: {
+          name: { v: `${s.n}. ${s.name}` }, status: { v: s.status === 'done' ? 'Done' : s.status === 'current' ? 'This session' : 'Next', fromApp: true },
+          done: { v: s.items.filter(i => i.done).length, fromApp: true }, of: { v: s.items.length, fromApp: true },
+          detail: { v: s.items.map(i => `${i.done ? '[x]' : '[ ]'} ${i.label}${i.auto ? ' (from the numbers)' : ''}`).join('; '), fromApp: true } } })) },
+        { title: 'The picture (M73)', rows: [
+          { cells: { name: { v: 'Picture %' }, status: { v: pctText(prog.picture.pct), fromApp: true }, detail: { v: prog.pace.text, fromApp: true } } },
+          { cells: { name: { v: 'Pace' }, status: { v: prog.pace.word, fromApp: true }, detail: { v: `${prog.pace.target}% expected by the end of session ${prog.n}`, fromApp: true } } },
+          ...prog.picture.sections.map(s => ({ cells: { name: { v: `${s.name} section` }, status: { v: pctText(s.pct), fromApp: true }, done: { v: s.items.filter(i => i.level >= LEVELS.Estimate).length, fromApp: true }, of: { v: s.items.length, fromApp: true }, detail: { v: s.items.map(i => `${i.label}: ${levelWord(i.level)}`).join('; '), fromApp: true } } })),
+          { cells: { name: { v: 'FI date' }, status: { v: fi.unlocked ? 'Unlocked' : 'Locked', fromApp: true }, detail: { v: fi.unlocked ? `${conf?.label ?? ''}: ${conf?.text ?? ''}` : fi.reason, fromApp: true } } },
+        ] },
+        { title: 'Next small things', rows: prog.next.map((n, i) => ({ cells: { name: { v: `${i + 1}. ${n.label}` }, status: { v: `+${Math.round(n.gain * 100)}%`, fromApp: true }, detail: { v: `${levelWord(n.level)} now: ${n.step}`, fromApp: true } } })) },
+      ];
     },
   },
 ];

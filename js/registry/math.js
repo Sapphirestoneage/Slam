@@ -21,6 +21,8 @@ import { payoffPlan, feeApr, utilization, debtToIncome, promoPayment } from '../
 import { moneyAsTime } from '../math/fi.js';
 import { monthsUntil } from '../math/portfolio.js';
 import { simpleMath } from '../math/simple.js';
+import { pictureOf, paceOf, unlockOf, confidenceOf, nextSmallThings } from '../math/picture.js';
+import { sessionNo } from '../program.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -327,6 +329,16 @@ export const MATH = [
   { id: 'M72', name: 'Shockingly Simple Math', inputs: 'M28, return, WR', unit: 'years', fns: ['simple.simpleMath', 'simple.yearsAtRate'],
     sheet: 'IF(OR(Math_M28="",N(Math_M28)<=0),"",IF(Math_M28>=1,0,ROUNDUP(LN(1+(1-Math_M28)*12/WithdrawalRate*Math_M53_growth/Math_M28)/LN(1+Math_M53_growth)-0.000000001,0)/12))',
     label: 'Years to FI from $0 at your savings rate', app: c => simpleMath({ savingsRate: c.m.savingsRate.value == null ? null : Math.max(0, c.m.savingsRate.value), realReturn: c.x.realReturn, withdrawalRate: c.x.withdrawalRate }).value },
+  // ---------- The program (Phase 3) ----------
+  { id: 'M73', name: 'Picture %', inputs: "every number's level and weight (Assumptions: Levels, Weights, Pace)", unit: 'pct',
+    fns: ['picture.levelOf', 'picture.pictureOf', 'picture.nextSmallThings', 'picture.stepOf', 'picture.paceOf', 'picture.unlockOf', 'picture.confidenceOf'],
+    fromApp: 'a weighted average of each number\'s level (Gut 25, Rough 50, Estimate 75, Actual 100; the Program tab lists them)', app: c => pictureOf(c.doc, c.ref, { now: c.now }).pct,
+    parts: [
+      { key: 'expected', name: 'Expected by the end of this session (pace)', unit: 'pct', fromApp: 'the Pace table against the session being run', app: c => paceOf(pictureOf(c.doc, c.ref, { now: c.now }).pct, sessionNo(c.doc)).target / 100 },
+      { key: 'pace', name: 'Pace: Ahead, On track or Catch up', unit: 'text', fromApp: 'the Picture % against the pace expected by now', app: c => paceOf(pictureOf(c.doc, c.ref, { now: c.now }).pct, sessionNo(c.doc)).word },
+      { key: 'fi', name: 'FI date unlocked', unit: 'text', fromApp: 'income and spending at Estimate and an invested balance', app: c => { const pic = pictureOf(c.doc, c.ref, { now: c.now }); const u = unlockOf('fi', pic); return u.unlocked ? `Yes (${confidenceOf('fi', pic, { now: c.now })?.label ?? ''})` : u.reason; } },
+      { key: 'next', name: 'Next small thing', unit: 'text', fromApp: 'the item that raises the Picture % most', app: c => { const n = nextSmallThings(pictureOf(c.doc, c.ref, { now: c.now }), 1)[0]; return n ? `${n.label}: +${Math.round(n.gain * 100)}%` : 'Nothing left'; } },
+    ] },
 ];
 
 // js/math exports that are not an M formula of their own: how records become formula inputs, account details, and

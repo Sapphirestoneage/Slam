@@ -8,7 +8,7 @@ import { MATH } from '../registry/math.js';
 import { ASSUMPTIONS } from '../registry/assumptions.js';
 import { REPORTS } from '../registry/reports.js';
 
-export const APP_VERSION = '2026.11.3';
+export const APP_VERSION = '2026.11.5';
 
 // FNV-1a, 32 bits, as 8 hex digits: small and the same in every browser and in Node.
 export function hash(text) {
@@ -45,6 +45,7 @@ export const FORMATS = [
   { version: 4, shape: 'aadce0f5' }, // Nov 3 2026: About you › Home and shared bills; the split SLAM uses on each Budget line
   { version: 5, shape: '641d89c9' }, // Nov 3 2026: shared fields (Name, Notes, Stress ...) carry their own area's id
   { version: 6, shape: 'fc766f60' }, // Nov 3 2026: Amount they cover, Reimbursed to you, Check again on, today's or future dollars
+  { version: 7, shape: '2c78ff04' }, // Nov 5 2026: Locked (confirmed) on Income, Debt, Assets and Spending lines; M73 Picture %; the Program tab
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;
