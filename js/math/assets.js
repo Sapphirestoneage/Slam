@@ -41,7 +41,7 @@ export function ruleOf5({ age, spending, emergencyCash = null }) {
   const target = months * spending;
   const keepPace = spending / RULES.keepPaceMonths;
   const gap = isBlank(emergencyCash) ? null : target - emergencyCash;
-  return { ...ok('M43', target, `Age ${age} divided by 5 = ${fmt.number(months, 1)} months. ${fmt.number(months, 1)} x ${fmt.money(spending)} spending = ${fmt.money(target)}. To keep pace as you age, add ${fmt.money(keepPace)} a month (spending divided by 60).${gap === null ? '' : ` Gap: ${fmt.money(gap)}.`}`), months, keepPace, gap };
+  return { ...ok('M43', target, `The Rule of 5: ${fmt.number(months, 0)} months x ${fmt.money(spending)} spending = ${fmt.money(target)}. To keep pace as spending grows, add ${fmt.money(keepPace)} a month (spending divided by 60).${gap === null ? '' : ` Gap: ${fmt.money(gap)}.`}`), months, keepPace, gap }; // words fixed overnight: the months no longer come from age
 }
 
 // M44: share of this year's limit used.

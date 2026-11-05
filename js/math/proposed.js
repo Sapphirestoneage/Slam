@@ -34,7 +34,7 @@ export function proposedDoc(doc, ref, { now = new Date() } = {}) {
 export function netWorthIn(m, years, { extraDebt = 0 } = {}) {
   const r = m.inputs.realReturn ?? 0, n = years * 12, monthly = m.investing?.monthly ?? 0, inv = m.inputs.invested ?? 0, nw = m.netWorth.value;
   if (nw == null) return { value: null, steps: ['Net worth needs a balance.'] };
-  const g = (1 + r / 12) ** n, grown = inv * g + (r ? monthly * (g - 1) / (r / 12) : monthly * n);
+  const gm = (1 + r) ** (1 / 12), g = gm ** n, grown = inv * g + (r ? monthly * (g - 1) / (gm - 1) : monthly * n); // the same monthly growth as the FI date (M53): (1 + r)^(1/12)
   const ds = m.inputs.debts.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null);
   const plan = ds.length ? payoffPlan(ds, { order: m.inputs.debtOrder, extra: extraDebt, maxMonths: n }) : null;
   const left = plan ? (plan.path[Math.min(n, plan.path.length - 1)] || []).reduce((s, v) => s + v, 0) : 0;
