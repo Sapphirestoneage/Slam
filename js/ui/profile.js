@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Home › About you (build phase 5): why now, what applies (the gates hub, R015), about you, work and home,
 // the accounts gate with counts (R001 to R003), and the couples split (R177 to R179). Answers live in doc.profile.
-import { myShare, wholeBill, withHome, partnerSplits, peopleSharing } from '../math/spending.js';
+import { myShare, wholeBill, withHome, partnerSplits, splitWaysOf, sharedBillsOf } from '../math/spending.js';
 import { LISTS } from '../registry/assumptions.js';
 import { MODES, MODE_NAMES, modeOf, SPLIT_METHODS } from '../registry/couples.js';
 import { metrics } from '../math/metrics.js';
@@ -34,8 +34,10 @@ export function profileScreen(app, ctx) {
     store.setDoc('profile', cleared.length ? { ...patch, later: Object.fromEntries(Object.entries(later).filter(([k]) => !cleared.includes(k))) } : patch);
   };
   const later = key => ({ on: !!p.later?.[key], set: on => store.setDoc('profile', { later: { ...(p.later || {}), [key]: on || undefined } }) });
+  // Batch 5 (E5): "I'll find it later" shows only while the answer is empty; once a value is set, it reads as answered.
+  const answered = key => p[key] !== null && p[key] !== undefined && p[key] !== '';
   // A labelled box whose answer can be parked for later.
-  const field = (label, key, input, opts = {}) => labelled(label, input, { ...opts, later: later(key) });
+  const field = (label, key, input, opts = {}) => labelled(label, input, { ...opts, later: answered(key) ? null : later(key) });
   // A gate that adds rows says where they went, with one click to go there (R015).
   const told = (text, route) => toast(text, { action: route ? { label: 'Go there', run: () => app.go(route) } : null });
   const birth = (mKey, yKey, who) => h('span.row-line', { style: { gap: '8px', flexWrap: 'nowrap' } },
@@ -66,7 +68,7 @@ export function profileScreen(app, ctx) {
   };
   // F2: the mode sets Solo or couple; a switch keeps every row and tag, and changes the defaults only (the view, the filing status).
   const setMode = v => setHouseholdMode(store, v);
-  const gate = (label, control, note = null, key = null) => h('div.gate', {}, h('span.gate-label', {}, label), control, note ? h('span.muted.small', {}, note) : null, key ? laterButton(later(key), label) : null);
+  const gate = (label, control, note = null, key = null) => h('div.gate', {}, h('span.gate-label', {}, label), control, note ? h('span.muted.small', {}, note) : null, key && !answered(key) ? laterButton(later(key), label) : null);
   const hub = section('What applies to me', 'needs',
     h('p.muted', {}, 'Each answer adds or removes those sections everywhere. Nothing is deleted when something is turned off.'),
     h('div.gates', {},
@@ -109,30 +111,41 @@ export function profileScreen(app, ctx) {
       field('Worst case: all on me', 'worstCase', yesNo(p.worstCase ?? null, v => set({ worstCase: v }), 'Worst case'), { note: 'Counts housing with no roommate share' }),
       field('Income stability', 'incomeStability', pick(['Steady', 'Varies', 'Unpredictable'], p.incomeStability, v => set({ incomeStability: v }), 'Income stability'), { note: 'Moves the Rule of 5 target' }))));
 
-  // ---------- Home and shared bills: who you live with and what you split. Every Budget line follows it unless it
-  // says otherwise (js/math/spending.js withHome), so rent and the other shared bills come out right. ----------
-  const shared = p.shared || {};
-  const rentRec = store.find(r => r.kind === 'bill' && r.values.category === 'Rent or mortgage')[0] ?? null;
-  const rentLine = rentRec ? withHome({ ...rentRec, ...rentRec.values }, p) : null;
-  const rentMine = rentLine && rentLine.amount != null ? myShare(rentLine, { roommates: p.roommates ?? 0 }) : null;
-  const rentWhole = rentLine && rentLine.amount != null ? wholeBill(rentLine, { roommates: p.roommates ?? 0 }) : null;
+  // ---------- Home and shared bills (batch 5, E): who you live with, how many ways a bill is split (you included), and
+  // per bill whether it is split and whether the amount is given as your share or the whole bill. Every Budget line
+  // follows it unless it says otherwise (js/math/spending.js withHome). With roommates and nothing ticked yet, the
+  // config defaults apply (LISTS.sharedGroups) and the first change writes every box out, so the defaults never move
+  // under a line later. ----------
+  const groups = sharedBillsOf(p);
+  const roommates = p.roommates ?? 0;
+  const ways = splitWaysOf(p);
+  const writeShared = patch => set({ shared: { ...Object.fromEntries(Object.entries(groups).map(([k, g]) => [k, g.on])), ...patch }, sharedAs: Object.fromEntries(Object.entries(groups).map(([k, g]) => [k, g.as])) });
+  const writeAs = (k, v) => set({ sharedAs: { ...Object.fromEntries(Object.entries(groups).map(([x, g]) => [x, g.as])), [k]: v } });
+  const example = (k, gr) => { // the first Budget line of that kind, shown the way the toggle reads it
+    const rec = store.find(r => r.kind === 'bill' && gr.categories.includes(r.values.category) && r.amount != null)[0];
+    if (!rec) return null;
+    const line = withHome({ ...rec, ...rec.values }, p);
+    const mine = myShare(line, { roommates }), whole = wholeBill(line, { roommates });
+    if (mine.value == null || whole.value == null) return null;
+    return h('span.computed.small', { title: `${mine.text} ${whole.text}` }, gr.as === 'Your share' ? `${money(rec.amount)} your share` : `${money(rec.amount)} whole bill, ${money(mine.value)} your share`);
+  };
+  const billRow = ([k, gr]) => h('div.shared-bill-row', {},
+    checkbox(gr.label, gr.on, on => {
+      // Lines of that kind that said I'm covering it now follow About you (one undo step).
+      const lines = on ? store.find(r => r.kind === 'bill' && gr.categories.includes(r.values.category) && (r.values.whoPays ?? 'Me') === 'Me' && r.values.whoPays !== undefined) : [];
+      store.transaction(on ? `Split ${gr.label.toLowerCase()}` : 'Shared bills', () => { writeShared({ [k]: on }); for (const r of lines) store.update(r.id, { whoPays: null }); });
+      if (lines.length) toast(`${lines.map(r => r.name || r.values.category).join(', ')} now ${lines.length === 1 ? 'follows' : 'follow'} this.`, { undo: () => store.undo() });
+    }, { key: `p:shared-${k}` }),
+    gr.on ? toggle([['Your share', 'My share'], ['The whole bill', 'Whole bill']], gr.as, v => writeAs(k, v ?? gr.as), { label: `${gr.label}: the amount is` }) : null,
+    gr.on ? example(k, gr) : null);
   const home = section('Home and shared bills', 'needs',
-    h('p.muted', {}, 'Who you live with and which bills you split. Every Budget line follows this unless the line says otherwise.'),
+    h('p.muted', {}, 'Who you live with and which bills you split. A bill given as your share is never divided again; a whole bill is divided by the split count. Every Budget line follows this unless the line says otherwise.'),
     h('div.form-grid', {},
       field('Roommates', 'roommates', stepper(p.roommates ?? null, n => set({ roommates: n }), { label: 'Roommates', key: 'p:home-roommates' }), { note: 'People you live with, not counting a partner' }),
-      field('Splitting shared bills with', 'splitWith', stepper(p.splitWith ?? null, n => set({ splitWith: n }), { label: 'People you split with', key: 'p:home-splitWith' }),
-        { note: `Blank: ${peopleSharing({ ...p, splitWith: null }) - 1} (your roommates${partnerSplits(p) ? ' and your partner' : ''})` }),
-      field('When you give a shared bill, it is usually', 'billsGivenAs', pick([['Your share', 'My share'], ['The whole bill', 'The whole bill']], p.billsGivenAs, v => set({ billsGivenAs: v }), 'Shared bills given as'),
-        { note: 'Like "my rent is $1,500": your share, or the whole rent?' })),
-    labelled('Bills you split', h('div.row-line', { style: { gap: '12px', flexWrap: 'wrap' } },
-      Object.entries(LISTS.sharedGroups).map(([k, gr]) => checkbox(gr.label, shared[k] === true, on => {
-        // Lines of that kind that said I'm covering it now follow About you (one undo step).
-        const lines = on ? store.find(r => r.kind === 'bill' && gr.categories.includes(r.values.category) && (r.values.whoPays ?? 'Me') === 'Me' && r.values.whoPays !== undefined) : [];
-        store.transaction(on ? `Split ${gr.label.toLowerCase()}` : 'Shared bills', () => { set({ shared: { ...shared, [k]: on || undefined } }); for (const r of lines) store.update(r.id, { whoPays: null }); });
-        if (lines.length) toast(`${lines.map(r => r.name || r.values.category).join(', ')} now ${lines.length === 1 ? 'follows' : 'follow'} this.`, { undo: () => store.undo() });
-      }, { key: `p:shared-${k}` })))),
-    rentMine?.value != null && rentWhole?.value != null && rentWhole.value !== rentMine.value
-      ? h('p', { style: { marginTop: '12px' } }, h('span.computed', { title: `${rentMine.text} ${rentWhole.text}` }, `Rent: your share ${money(rentMine.value)} a month, the whole rent about ${money(rentWhole.value)}.`)) : null);
+      labelled(`Split ${ways} ${ways === 1 ? 'way' : 'ways'} (you + ${roommates} ${roommates === 1 ? 'roommate' : 'roommates'}${partnerSplits(p) ? ' + your partner' : ''})`, stepper(p.splitWays ?? null, n => set({ splitWays: n }), { label: 'Split N ways', min: 1, key: 'p:home-splitWays' }),
+        { note: `Blank: ${splitWaysOf({ ...p, splitWays: null })}, you included. Type a count to override it` })), // never homework: the count follows the roommates
+    labelled('Bills you split', h('div.stack', { style: { gap: '6px' } }, Object.entries(groups).map(billRow)),
+      { note: groups.rent.defaulted && roommates > 0 ? 'Starting from the usual: rent as your share; electric and internet as the whole bill. Tick or untick any.' : null }));
 
   // ---------- Accounts gate: which areas, then how many of each type (R001 to R003) ----------
   const areas = p.areas || {};

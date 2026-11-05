@@ -7,6 +7,7 @@ import { fromButton, confirmBox, toast, button, warnTag, moneyText, value, amoun
 import { pct } from '../format.js';
 import { feeApr } from '../math/debt.js';
 import { monthlyFrom } from '../math/income.js';
+import { withHome, myShare } from '../math/spending.js';
 import { applies } from '../gates.js';
 import { payoffPlan, debtToIncome, utilization } from '../math/debt.js';
 import { needs } from '../math/result.js';
@@ -164,7 +165,8 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
       pass === 'Actual' ? null :
       { label: 'Amount', num: true, render: (ctx, r, m, up) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
         premiumOf(ctx, r) ? fromButton(`From ${premiumOf(ctx, r).type}`, '#/net-worth/protection', r.linkedTo, { value: amount(ctx, r.amount, { chip: false }) }) : moneyInput(r.amount, v => up({ amount: v, status: r.status === 'Not sure' ? null : r.status }), { key: `${r.id}:amount` }), // typing the real number clears Guess
-        h('span.keep-slot', {}, r.status === 'Not sure' ? h('button.btn.small', { type: 'button', 'data-focus': 'keep', title: 'The starter estimate is right: use it as your number. Or type your own.', onclick: () => up({ status: null }) }, 'Accept estimate') : null)) }, // the slot keeps amounts lined up
+        h('span.keep-slot', {}, r.status === 'Not sure' ? h('button.btn.small', { type: 'button', 'data-focus': 'keep', title: 'The starter estimate is right: use it as your number. Or type your own.', onclick: () => up({ status: null }) }, 'Accept estimate') : null),
+        shareChip(ctx, r)) }, // the slot keeps amounts lined up
       ...monthCols,
       paidWithColumn ? { label: 'Paid with', render: (ctx, r, m, up) => {
         const cards = ctx.store.find(x => x.kind === 'debt' && x.type === 'Credit card');
@@ -332,7 +334,18 @@ export const debtCharts = [
 
 // ---------- Debt detail behind More, by type (Mockup: Debt) ----------
 const stress = (r, up) => labelled('Stress 1 to 5', toggle(['1', '2', '3', '4', '5'], r.stress ? String(r.stress) : null, v => up({ stress: Number(v) }), { label: 'Stress' }));
-// F3: the coach's hassle score for Return on Hassle (a placeholder method: hassle per dollar, highest first).
+// Batch 5 (E3): a split bill says on the row what the amount is: "$1,500 your share" or "$240 whole bill, $60 your share".
+function shareChip(ctx, r) {
+  if (r.amount == null) return null;
+  const p = ctx.store.doc.profile;
+  const line = withHome({ ...r, ...r.values, amount: r.amount }, p);
+  if ((line.whoPays ?? null) !== 'Split') return null;
+  const mine = myShare(line, { roommates: p.roommates ?? 0 });
+  if (mine.value == null) return null;
+  const whole = (line.amountIs ?? 'The whole bill') === 'Your share';
+  return h('span.computed.small.share-chip', { title: mine.text }, whole ? 'your share' : `whole bill, ${money(mine.value)} your share`);
+}
+// F3: the coach's hassle score for Return on Hassle (hassle score over balance, highest first; answer 161).
 const hassle = (r, up) => labelled('Hassle 1 to 5', toggle(['1', '2', '3', '4', '5'], r.values.hassle ? String(r.values.hassle) : null, v => up({ hassle: v == null ? null : Number(v) }), { label: 'Hassle', clearable: true }), { note: 'For Return on Hassle: how much this debt nags, per dollar' });
 const yn3 = (v, on, label) => toggle(['Yes', 'No', 'Not sure'], v ?? null, on, { label });
 function debtSecondary(ctx, r, up) {

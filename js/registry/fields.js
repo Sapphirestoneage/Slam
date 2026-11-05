@@ -68,11 +68,14 @@ export const AREAS = [
       pick('housing', 'Housing', ['Rent', 'Own', 'Family', 'Other']),
       f('roommates', 'Roommates', 'number', { named: 'Profile_roommates' }),
       f('worstCase', 'Worst case: all on me', 'yesno'),
-      f('splitWith', 'Splitting shared bills with (people)', 'number'),
-      pick('billsGivenAs', 'A shared bill is usually given as', ['Your share', 'The whole bill']),
+      f('splitWays', 'Split shared bills N ways (you included)', 'number', { named: 'Profile_splitWays' }), // batch 5 (E4): replaces Splitting with (people besides you)
       f('shared.rent', 'Shared: rent or mortgage', 'yesno'), f('shared.utilities', 'Shared: electric, gas, water', 'yesno'),
       f('shared.internet', 'Shared: internet and phone', 'yesno'), f('shared.renters', 'Shared: renters or home insurance', 'yesno'),
       f('shared.groceries', 'Shared: groceries', 'yesno'), f('shared.household', 'Shared: household supplies', 'yesno'),
+      // Batch 5 (E1): per bill, is the amount typed your share or the whole bill (replaces the one "usually given as").
+      pick('sharedAs.rent', 'Rent or mortgage given as', ['Your share', 'The whole bill']), pick('sharedAs.utilities', 'Electric, gas, water given as', ['Your share', 'The whole bill']),
+      pick('sharedAs.internet', 'Internet and phone given as', ['Your share', 'The whole bill']), pick('sharedAs.renters', 'Renters or home insurance given as', ['Your share', 'The whole bill']),
+      pick('sharedAs.groceries', 'Groceries given as', ['Your share', 'The whole bill']), pick('sharedAs.household', 'Household supplies given as', ['Your share', 'The whole bill']),
       pick('healthCoverage', 'Health coverage', ['Employer', 'ACA', "Parent's plan", 'Medicaid', 'None', 'Other']),
       f('hasCar', 'Has a car', 'yesno'), f('hasPets', 'Has pets', 'yesno'),
       f('hsaEligible', 'HSA-eligible plan', 'yesno'), f('fsa', 'FSA at work', 'yesno'), f('equityPay', 'Equity pay (ESPP, RSU)', 'yesno'),

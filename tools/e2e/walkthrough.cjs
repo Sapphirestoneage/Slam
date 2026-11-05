@@ -27,6 +27,8 @@ const ROUTES = ['#/home/session', '#/home/profile', '#/net-worth/assets', '#/net
   await step('End session through the gate', async () => { await page.locator('button', { hasText: /^End session$/ }).first().click({ timeout: 3000 }); await page.waitForTimeout(600); const go = page.locator('button', { hasText: /Move on anyway|^End session$|Move to the next session/ }).last(); await go.click({ timeout: 3000 }); await page.waitForTimeout(900); });
   await step('session saved', async () => { const t = await page.locator('body').innerText(); if (!/Session 1 saved/.test(t)) throw new Error('no saved banner'); });
   await step('Joy card after the snapshot', async () => { if (!(await page.locator('.joy-card').count())) throw new Error('no Joy card'); });
+  await step('the Rule of 5 reads age / 5 on the Assets tab', async () => { await page.evaluate(() => { location.hash = '#/net-worth/assets'; }); await page.waitForTimeout(400); const more = page.locator('button', { hasText: /Cash layers/ }).first(); if (await more.count()) { await more.click({ timeout: 2000 }); await page.waitForTimeout(400); } const t = await page.locator('body').innerText(); if (!/5\.8 months|Add your age to set big e/.test(t)) throw new Error('no age / 5 months on Assets'); });
+  await step('About you: the per-bill share toggle and Split N ways', async () => { await page.evaluate(() => { location.hash = '#/home/profile'; }); await page.waitForTimeout(400); const t = await page.locator('body').innerText(); if (!/Split \d+ ways?/.test(t)) throw new Error('no Split N ways'); });
   // Every screen at three widths, light and dark.
   for (const width of [1440, 1280, 390]) {
     console.log(`screens at ${width}...`);

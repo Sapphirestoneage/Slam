@@ -77,32 +77,45 @@ export function shareBeforeRefund(line, { roommates = 0, basis = 'accrual', now 
   return ok('M21', v, parts.length ? `${fmt.money(m.value)} a month, ${parts.join(', ')} = ${fmt.money(v)} is yours.` : `${fmt.money(v)} a month, all yours.`);
 }
 
-// About you › Home and shared bills fills in what a Budget line leaves blank: a bill in a shared group is split; it is
-// split with the people you live with (you plus Splitting with, else your roommates); a couple can give their share as
-// a percent (Split: my share); and a shared bill is given the way you usually give it (your share or the whole bill).
-// What a line says itself always wins.
+// About you › Home and shared bills (batch 5, E). Which bills are split and, per bill, whether the amount typed is
+// your share or the whole bill (profile.shared[k], profile.sharedAs[k]). With roommates and nothing answered yet the
+// config defaults apply (LISTS.sharedGroups: rent on as your share; electric and internet on as the whole bill; the
+// rest off). A bill given as your share is never divided again; the whole bill is divided by the split count.
+export function sharedBillsOf(profile = {}) {
+  const roommates = profile.roommates ?? 0;
+  const touched = profile.shared != null;
+  const out = {};
+  for (const [k, g] of Object.entries(LISTS.sharedGroups)) {
+    out[k] = { label: g.label, categories: g.categories, on: touched ? profile.shared[k] === true : roommates > 0 && g.defaultOn, as: profile.sharedAs?.[k] ?? g.defaultAs, defaulted: !touched };
+  }
+  return out;
+}
+// How many ways a shared bill is split, you included: Split N ways when typed, else you plus each roommate (and a
+// partner who splits). The count includes the client (batch 5, E4).
+export const splitWaysOf = profile => profile.splitWays ?? (profile.roommates ?? 0) + 1 + (partnerSplits(profile) ? 1 : 0);
+// Fills in what a Budget line leaves blank: a bill in a shared group that is on is split, given as the group says
+// (your share or the whole bill), among Split N ways people; a couple can give their share as a percent (Split: my
+// share). What a line says itself always wins.
 export function withHome(line, profile = {}) {
   const cat = line.category ?? line.values?.category;
-  const shared = profile.shared || {};
-  const inShared = Object.entries(LISTS.sharedGroups).some(([k, g]) => shared[k] === true && g.categories.includes(cat));
+  const group = Object.values(sharedBillsOf(profile)).find(g => g.on && g.categories.includes(cat)) ?? null;
   const out = { ...line };
   const who = line.whoPays ?? line.values?.whoPays ?? null;
-  if (!who && inShared) out.whoPays = 'Split';
+  if (!who && group) out.whoPays = 'Split';
   if ((out.whoPays ?? who) !== 'Split') return out;
-  if ((line.amountIs ?? line.values?.amountIs) == null && profile.billsGivenAs) out.amountIs = profile.billsGivenAs;
+  if ((line.amountIs ?? line.values?.amountIs) == null && group) out.amountIs = group.as;
   const typedSplit = line.splitBy ?? line.values?.splitBy;
   if (typedSplit == null) {
-    if (profile.household === 'Couple' && profile.splitMine != null && profile.splitWith == null) out.sharePct = profile.splitMine;
-    else if (profile.splitWith != null) out.splitBy = profile.splitWith + 1;
-    else if (partnerSplits(profile)) out.splitBy = (profile.roommates ?? 0) + 2; // you, your partner and each roommate
+    if (profile.household === 'Couple' && profile.splitMine != null && profile.splitWays == null) out.sharePct = profile.splitMine;
+    else out.splitBy = splitWaysOf(profile);
   }
   return out;
 }
 
 // A partner splits the shared bills when the couple keeps money Separate or Mix (Joint: one budget, nothing to split).
 export const partnerSplits = profile => profile.household === 'Couple' && ['Separate', 'Mix'].includes(profile.moneyStyle);
-// The people splitting a shared bill when nothing more is said: you, your roommates, and a partner who splits.
-export const peopleSharing = profile => (profile.splitWith ?? (profile.roommates ?? 0) + (partnerSplits(profile) ? 1 : 0)) + 1;
+// The people splitting a shared bill, you included (the same count as splitWaysOf; kept for older readers).
+export const peopleSharing = profile => splitWaysOf(profile);
 
 // How many ways a shared bill is split: Split by when typed, else you plus each roommate (R033).
 export const splitOf = (line, roommates = 0) => line.splitBy ?? line.values?.splitBy ?? ((line.whoPays ?? line.values?.whoPays) === 'Split' ? roommates + 1 : 1);

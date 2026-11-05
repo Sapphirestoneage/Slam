@@ -38,7 +38,7 @@ Every section ends with this household's number.
 
 ## 2. Spending, surplus and the savings rate (M20 to M29, M2A)
 
-- Line a month (M20) = M01 on each Budget line; my share (M21) = the line after the household split (a Split line ÷ the people sharing, or × my share %; a Covered line minus what someone else pays; minus reimbursements). Lines marked Retirement are investing, not spending (answer 125).
+- Line a month (M20) = M01 on each Budget line; my share (M21) = the line after the household split (a Split line ÷ the people sharing, or × my share %; a Covered line minus what someone else pays; minus reimbursements). Lines marked Retirement are investing, not spending (answer 125). A bill About you marks as given as my share is never divided again; a whole bill is divided by Split N ways, the client included (batch 5, E).
 - Spending a month (M27 spending) = the sum of my shares of the lines, or the gut number until the Budget switches to the lines.
 - Monthly surplus (M27) = take-home − spending − debt payments not already inside spending − sinking funds.
 - Savings rate, headline (M28) = (surplus + after-tax savings + 401(k)/HSA from the paycheck + match) ÷ (take-home + 401(k)/HSA + match). Second line: surplus ÷ take-home. On gross: the same numerator ÷ gross.

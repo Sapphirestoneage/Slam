@@ -30,15 +30,18 @@ export const LISTS = {
   heavyDebt: ['Credit card', 'Payday or cash advance', 'Personal loan', 'Buy now, pay later', 'Medical', 'Tax debt'],
   rothTypes: ['Roth IRA'],
   pretaxTypes: ['401(k)', '403(b)', '457', 'TSP', 'Solo 401(k)', 'Traditional IRA', 'SEP IRA', 'SIMPLE IRA'],
-  // Bills a household can share, each a group of Budget categories (About you › Home and shared bills).
+  // Bills a household can share, each a group of Budget categories (About you › Home and shared bills). Batch 5 (E):
+  // with roommates and nothing answered yet, defaultOn says which are split and defaultAs how the amount is usually
+  // given (people quote their share of the rent, but the whole electric bill). The choice is per bill (profile.sharedAs).
   sharedGroups: {
-    rent: { label: 'Rent or mortgage', categories: ['Rent or mortgage'] },
-    utilities: { label: 'Electric, gas, water', categories: ['Electric, gas, water'] },
-    internet: { label: 'Internet and phone', categories: ['Internet, phone', 'Internet', 'Phone'] },
-    renters: { label: 'Renters or home insurance', categories: ['Renters or home insurance'] },
-    groceries: { label: 'Groceries', categories: ['Groceries, dining out, coffee', 'Groceries'] },
-    household: { label: 'Household supplies', categories: ['Household supplies', 'Laundry', 'Furniture and home'] },
+    rent: { label: 'Rent or mortgage', categories: ['Rent or mortgage'], defaultOn: true, defaultAs: 'Your share' },
+    utilities: { label: 'Electric, gas, water', categories: ['Electric, gas, water'], defaultOn: true, defaultAs: 'The whole bill' },
+    internet: { label: 'Internet and phone', categories: ['Internet, phone', 'Internet', 'Phone'], defaultOn: true, defaultAs: 'The whole bill' },
+    renters: { label: 'Renters or home insurance', categories: ['Renters or home insurance'], defaultOn: false, defaultAs: 'Your share' },
+    groceries: { label: 'Groceries', categories: ['Groceries, dining out, coffee', 'Groceries'], defaultOn: false, defaultAs: 'Your share' },
+    household: { label: 'Household supplies', categories: ['Household supplies', 'Laundry', 'Furniture and home'], defaultOn: false, defaultAs: 'The whole bill' },
   },
+  sharedAs: ['Your share', 'The whole bill'], // the per-bill choice (shown as My share / Whole bill)
   highRateTypes: ['Personal loan', 'Buy now, pay later', 'Payday or cash advance', 'Medical', 'Family or friend', 'Tax debt', 'Business', '401(k) loan'],
 };
 

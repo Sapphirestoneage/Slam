@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Net worth › Assets › Cash layers (Phase 3.5 section 3). Formatting only: js/math/layers.js does the math.
-import { h } from './dom.js';
+import { h, icon } from './dom.js';
 import * as S from './staples.js';
 import { layersOf, recordDip, layerHistory } from '../math/layers.js';
 import { money } from '../format.js';
@@ -18,7 +18,7 @@ export function layersCard(ctx) {
   const rows = L.layers.map(l => h(`div.layer-row${l.full ? '.full' : ''}`, {},
     h('div.stack', { style: { gap: '2px' } }, h('strong', {}, l.name, l.guess ? [' ', S.guessTag()] : null), h('span.muted.small', {}, l.note)),
     bar(l),
-    h('span.num', {}, l.target == null ? h('span.muted', {}, 'Needs your age') : S.mathButton({ id: 'M68', value: l.filled, needs: [], text: `${l.name}: ${money(l.filled)} of ${money(l.target)}. ${l.note}.` }, `${money(l.filled)} of ${money(l.target)}`)),
+    h('span.num', {}, l.target == null ? h('a.muted', { href: '#/home/profile', title: l.note }, icon('lock'), ' Locked: add your age') : S.mathButton({ id: 'M68', value: l.filled, needs: [], text: `${l.name}: ${money(l.filled)} of ${money(l.target)}. ${l.note}.` }, `${money(l.filled)} of ${money(l.target)}`)),
     h('span.tag.plain', {}, `FOO step ${l.step}`),
     mode === 'accounts' ? S.select(cash.map(a => [a.id, a.name]), (doc.settings.layerAccounts || {})[l.id] ?? null,
       v => setSetting({ layerAccounts: { ...(doc.settings.layerAccounts || {}), [l.id]: v ?? undefined } }), { label: `Account for ${l.name}`, hint: 'Which account', width: 170 }) : null));

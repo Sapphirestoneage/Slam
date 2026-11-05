@@ -410,7 +410,7 @@ export function whoPays(rec, update, { roommates = 0, profile = null } = {}) {
       const other = mine ? wholeBill(line, { roommates }) : myShare(line, { roommates });
       return h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'The amount above is'),
         toggle([['Your share', 'My share'], ['The whole bill', 'The whole bill']], mine ? 'Your share' : 'The whole bill', x => update({ amountIs: x }), { label: 'The amount above is' }),
-        other.value == null ? null : h('span.computed', { title: other.text }, `${mine ? `Whole bill about ${money(other.value)}` : `Your share ${money(other.value)}`} a month (${split ? `${split} people` : `your ${pct(line.sharePct)}`})`),
+        other.value == null ? null : h('span.computed', { title: other.text }, mine ? `${money(rec.amount)} your share (whole bill about ${money(other.value)} a month)` : `${money(rec.amount)} whole bill, ${money(other.value)} your share a month (${split ? `${split} ways` : `your ${pct(line.sharePct)}`})`),
         inherited ? h('span.muted.small', {}, 'From About you: a bill you split') : null);
     })() : null,
     top === 'Split' && v === 'My share' ? h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Total bill'), h('span.computed', {}, total),

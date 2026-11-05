@@ -46,6 +46,9 @@ const taxedPieces = (rec, c) => {
 };
 const debtOf = (rec, c) => c.x.debts.find(d => d.id === rec.id) ?? null;
 
+// Batch 5 (E): is a shared group on in the sheet? Its About you box when answered, else (with roommates) the config default.
+const SHARED_ON = (k, g) => `IF(Profile_shared_${k}<>"",Profile_shared_${k}="Yes",${g.defaultOn ? 'N(Profile_roommates)>0' : 'FALSE'})`;
+
 export const MATH = [
   { id: 'M00', name: 'Units', inputs: 'none', fns: [], unit: 'text',
     fromApp: 'a convention, not a number: money is a month in today\'s dollars, rates are yearly decimals (7% = 0.07)', app: () => null },
@@ -124,13 +127,15 @@ export const MATH = [
       f: rec => `IF(OR(${SKIP},{Kind}<>"Budget line",{amount}=""),"",IF({Status}="Not for me",0,${rec.covers?.months ? `{amount}/${rec.covers.months}` : `{amount}*${MONTH_FACTOR('{per}')}`}))` }],
     sheet: 'SUMIFS(Spend_M20,Spend_InMath,"Yes")', label: 'Budget lines, each as a month, added up',
     app: c => sum(c.x.typedLines.filter(l => !c.x.dupOf[l.id]), l => (l.amount == null ? 0 : l.covers?.months ? l.amount / l.covers.months : monthlyFrom(l.amount, l.per).value)) },
-  { id: 'M21', name: 'My share', inputs: 'amount, who pays, covered, split', unit: 'money', fns: ['spending.myShare', 'spending.shareBeforeRefund', 'spending.reimbursedMonthly', 'spending.splitOf', 'spending.amountIsMine', 'spending.wholeBill', 'spending.withHome', 'spending.partnerSplits', 'spending.peopleSharing'],
+  { id: 'M21', name: 'My share', inputs: 'amount, who pays, covered, split', unit: 'money', fns: ['spending.myShare', 'spending.shareBeforeRefund', 'spending.reimbursedMonthly', 'spending.splitOf', 'spending.amountIsMine', 'spending.wholeBill', 'spending.withHome', 'spending.partnerSplits', 'spending.peopleSharing', 'spending.sharedBillsOf', 'spending.splitWaysOf'],
     cols: [
+      // Batch 5 (E): a shared group is on when its About you box says Yes, or, with nothing answered and roommates, by its config default.
       { area: 'spending', key: 'whoUsed', label: 'Who pays used', unit: 'text',
-        f: `IF({whoPays}<>"",{whoPays},IF(OR(${Object.entries(LISTS.sharedGroups).map(([k, g]) => `AND(Profile_shared_${k}="Yes",OR(${g.categories.map(c => `{category}="${c}"`).join(',')}))`).join(',')}),"Split",""))` },
-      { area: 'spending', key: 'givenUsed', label: 'Amount given as', unit: 'text', f: 'IF({amountIs}<>"",{amountIs},IF(AND({@whoUsed}="Split",Profile_billsGivenAs<>""),Profile_billsGivenAs,""))' },
-      { area: 'spending', key: 'sharePct', label: 'Couple share used', unit: 'pct', f: 'IF(AND({@whoUsed}="Split",{splitBy}="",Profile_household="Couple",Profile_splitMine<>"",Profile_splitWith=""),Profile_splitMine,"")' },
-      { area: 'spending', key: 'splitUsed', label: 'Split by used', unit: 'number', f: 'IF({splitBy}<>"",{splitBy},IF({@whoUsed}="Split",IF(Profile_splitWith<>"",Profile_splitWith,N(Profile_roommates)+IF(AND(Profile_household="Couple",OR(Profile_moneyStyle="Separate",Profile_moneyStyle="Mix")),1,0))+1,1))' },
+        f: `IF({whoPays}<>"",{whoPays},IF(OR(${Object.entries(LISTS.sharedGroups).map(([k, g]) => `AND(${SHARED_ON(k, g)},OR(${g.categories.map(c => `{category}="${c}"`).join(',')}))`).join(',')}),"Split",""))` },
+      { area: 'spending', key: 'givenUsed', label: 'Amount given as (per bill)', unit: 'text',
+        f: `IF({amountIs}<>"",{amountIs},IF({@whoUsed}="Split",${Object.entries(LISTS.sharedGroups).reduceRight((rest, [k, g]) => `IF(OR(${g.categories.map(c => `{category}="${c}"`).join(',')}),IF(Profile_sharedAs_${k}<>"",Profile_sharedAs_${k},"${g.defaultAs}"),${rest})`, '""')},""))` },
+      { area: 'spending', key: 'sharePct', label: 'Couple share used', unit: 'pct', f: 'IF(AND({@whoUsed}="Split",{splitBy}="",Profile_household="Couple",Profile_splitMine<>"",Profile_splitWays=""),Profile_splitMine,"")' },
+      { area: 'spending', key: 'splitUsed', label: 'Split N ways used (you included)', unit: 'number', f: 'IF({splitBy}<>"",{splitBy},IF({@whoUsed}="Split",IF(Profile_splitWays<>"",Profile_splitWays,N(Profile_roommates)+1+IF(AND(Profile_household="Couple",OR(Profile_moneyStyle="Separate",Profile_moneyStyle="Mix")),1,0)),1))' },
       { area: 'spending', key: 'covered', label: 'Share someone else covers', unit: 'pct',
         f: 'IF(AND({@whoUsed}="Covered by someone",OR({takeover}="",TEXT({takeover},"yyyy-mm")>TEXT(TODAY(),"yyyy-mm"))),IF(AND({coveredAmount}<>"",N({amount})<>0),MIN(1,MAX(0,{coveredAmount}/{amount})),1),0)' },
       { area: 'spending', key: 'shareBase', label: 'My share before reimbursement', unit: 'money',

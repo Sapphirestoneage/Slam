@@ -367,6 +367,20 @@ export function migrate(doc) {
   for (const k of ['records', 'history', 'snapshots', 'parking']) doc[k] ??= [];
   for (const k of ['profile', 'assumptions', 'settings', 'client', 'spending', 'session', 'program', 'scorecard']) doc[k] ??= {};
   moveFieldIds(doc); // field IDs renumbered when fields.json was rebuilt from the spec (js/fields-map.js)
+  // Batch 5 (Nov 6): "Splitting shared bills with N" (people besides you) became "Split N ways" (you included), so N + 1.
+  if (doc.profile.splitWith != null && doc.profile.splitWays == null) doc.profile.splitWays = doc.profile.splitWith + 1;
+  delete doc.profile.splitWith;
+  // Batch 5 (Nov 6): the one "a shared bill is usually given as" became a per-bill choice (profile.sharedAs[group]). A
+  // ticked bill with no choice keeps the old meaning (blank was the whole bill), and every box is written out so the
+  // roommate defaults never move under a ticked file.
+  if (doc.profile.shared) {
+    doc.profile.sharedAs ??= {};
+    for (const k of ['rent', 'utilities', 'internet', 'renters', 'groceries', 'household']) {
+      doc.profile.shared[k] = doc.profile.shared[k] === true;
+      if (doc.profile.shared[k] && !doc.profile.sharedAs[k]) doc.profile.sharedAs[k] = doc.profile.billsGivenAs ?? 'The whole bill';
+    }
+  }
+  delete doc.profile.billsGivenAs;
   doc.schema = SCHEMA_VERSION;
   return doc;
 }
