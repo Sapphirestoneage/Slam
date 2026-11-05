@@ -117,10 +117,10 @@ LINKS = {
 PARK = ["F039", "F099", "F115", "F172", "F222"]
 
 AREA = {"profile": "Profile", "income": "Income", "debt": "Debt", "assets": "Assets", "protection": "Protection", "taxes": "Taxes",
-        "spending": "Needs", "calendar": "Needs", "goals": "Goals", "gaps": "Assets", "backups": "Assets", "months": "Needs"}
+        "spending": "Needs", "calendar": "Needs", "goals": "Goals", "gaps": "Assets", "backups": "Assets", "institutions": "Assets", "months": "Needs"}
 LIVES = {"profile": "Home › About you", "income": "Cash flow › Income", "debt": "Net worth › Debt", "assets": "Net worth › Assets",
          "protection": "Net worth › Protection", "taxes": "Cash flow › Taxes", "spending": "Cash flow › Budget", "calendar": "Cash flow › Calendar",
-         "goals": "Plan › Goals", "gaps": "Net worth › Assets", "backups": "Net worth › Assets", "months": "Cash flow › Budget"}
+         "goals": "Plan › Goals", "gaps": "Net worth › Assets", "backups": "Net worth › Assets", "institutions": "Net worth › Assets", "months": "Cash flow › Budget"}
 DATA = {"money": "money", "pct": "percent", "date": "date", "month": "date", "day": "whole number", "number": "whole number",
         "text": "text", "list": "text", "choice": "choice", "yesno": "choice"}
 

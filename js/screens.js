@@ -15,6 +15,7 @@ import { overviewScreen, onePagerScreen, historyScreen } from './ui/report-ui.js
 import { statementsScreen } from './ui/statements-ui.js';
 import { layersCard } from './ui/layers-ui.js';
 import { arrive, leftPopover, missingFor } from './ui/arrive.js';
+import { institutionsCard } from './ui/institutions-ui.js';
 import { metrics as metricsOf } from './math/metrics.js';
 import { personLabels, modeOf, MODES, viewsOf } from './registry/couples.js';
 import { fooScreen } from './ui/foo-ui.js';
@@ -69,11 +70,11 @@ const addArea = (app, ctx, k, label) => h('a.add-area', { href: '#', onclick: e 
   const p = ctx.store.doc.profile;
   ctx.store.setDoc('profile', { areas: { ...(p.areas || {}), [k]: true }, noneOfThese: false });
   S.toast(`${label} is back.`, { undo: () => ctx.store.undo() });
-} }, `+ Add ${label.toLowerCase()}`);
+} }, '+ Add one');
 const offAreas = (app, ctx, keys) => {
   const g = ctx.gates();
   const off = AREAS.filter(([k]) => keys.includes(k) && g.areas[k] === false);
-  return off.length ? h('div.row-line.off-areas', {}, h('span.muted', {}, 'Turned off in About you:'), off.map(([k, label]) => addArea(app, ctx, k, label))) : null;
+  return off.length ? h('div.row-line.off-areas', {}, off.map(([k, label]) => [h('span.muted', {}, `No ${label.toLowerCase()} yet.`), addArea(app, ctx, k, label)])) : null; // item 26
 };
 // A list with its chart; in session-1 focus mode the chart waits under More detail (polish item 4).
 const withChart = (ctx, list, charts, area) => (S.focusOn(ctx)
@@ -103,7 +104,8 @@ const MM = {
     completion(app, listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance'])),
     hasAny(ctx, ['account', 'asset']) ? null : fastTrack(app, ctx), offAreas(app, ctx, ['cash', 'investments', 'real']),
     withChart(ctx, assetList(ctx.ref), assetCharts, 'assets'),
-    S.moreBlock('assets:layers', () => S.live(ctx, () => layersCard(ctx)), { label: 'Cash layers: little e, gaps, big e' })] },
+    S.moreBlock('assets:layers', () => S.live(ctx, () => layersCard(ctx)), { label: 'Cash layers: little e, gaps, big e' }),
+    S.moreBlock('assets:institutions', () => S.live(ctx, () => institutionsCard(app, ctx)), { label: `Institutions (${(ctx.store.doc.profile.institutions || []).length})` })] }, // item 13
   protection: { title: 'Protection', sub: 'Insurance coverage, gaps and life admin', body: (app, ctx) => [completion(app, listCompletion(ctx, r => r.kind === 'coverage', ['have'])), S.recordList(ctx, protectionList()), S.moreBlock('protection:life-admin', () => S.live(ctx, () => lifeAdminScreen(ctx)), { label: 'Life admin' })] },
   taxes: { title: 'Taxes', sub: 'Filing status, last year, estimates', body: (app, ctx) => [h('div.visuals', {}, taxesScreen(ctx), S.visualsPanel(ctx, { charts: [incomeCharts[0]], area: 'taxes' }))] },
 };

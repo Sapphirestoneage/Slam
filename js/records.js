@@ -4,6 +4,7 @@
 // Pure: no DOM, no storage. js/storage.js saves it; the screens read it.
 
 import { moveFieldIds, FIELDS_VERSION } from './fields-map.js';
+import { migrateInstitutions } from './institutions.js';
 export const SCHEMA_VERSION = 1;
 export const APP_ID = 'SLAM';
 
@@ -367,6 +368,7 @@ export function migrate(doc) {
   for (const k of ['records', 'history', 'snapshots', 'parking']) doc[k] ??= [];
   for (const k of ['profile', 'assumptions', 'settings', 'client', 'spending', 'session', 'program', 'scorecard']) doc[k] ??= {};
   moveFieldIds(doc); // field IDs renumbered when fields.json was rebuilt from the spec (js/fields-map.js)
+  migrateInstitutions(doc); // batch 6: typed institution names become rows on the Institutions list (deduped), pointed at by id
   // Batch 5 (Nov 6): "Splitting shared bills with N" (people besides you) became "Split N ways" (you included), so N + 1.
   if (doc.profile.splitWith != null && doc.profile.splitWays == null) doc.profile.splitWays = doc.profile.splitWith + 1;
   delete doc.profile.splitWith;

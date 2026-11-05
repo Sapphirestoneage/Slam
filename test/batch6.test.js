@@ -31,3 +31,38 @@ test('items 2 and 3: a screen\'s missing fields come as items with a focus key, 
   assert.equal(c.core.missing[0], 'Car loan: APR', 'the words stay for What\'s missing');
   assert.equal(missingFor(ctx, '#/home/session').length, 0, 'a screen with no completion has nothing to light up');
 });
+
+import { institutionsOf, addInstitution, institutionOf, rowLabel, atInstitution, migrateInstitutions, removeInstitution, INSTITUTION_KINDS } from '../js/institutions.js';
+import { exportFile, importInto, newHousehold } from '../js/records.js';
+
+test('items 13 to 15: institutions are one list; rows point at one and read Institution · Kind or · Nickname; an old file\'s typed names migrate, deduped', () => {
+  const ctx = demoCtx(); const s = ctx.store;
+  assert.deepEqual(INSTITUTION_KINDS, ['Bank', 'Credit union', 'Brokerage', 'Workplace plan', 'Lender', 'Insurer', 'Other']);
+  const chase = addInstitution(s, { name: 'Chase', kind: 'Bank' });
+  assert.equal(addInstitution(s, { name: ' chase ' }).id, chase.id, 'deduped by name, case blind');
+  const checking = s.find(r => r.kind === 'account' && r.values.group === 'cash')[0];
+  s.update(checking.id, { institutionId: chase.id, name: null });
+  assert.equal(rowLabel(s.doc, s.get(checking.id)), `Chase · ${checking.type}`);
+  s.update(checking.id, { name: 'Everyday' });
+  assert.equal(rowLabel(s.doc, s.get(checking.id)), 'Chase · Everyday');
+  const card = s.find(r => r.kind === 'debt' && r.type === 'Credit card')[0];
+  s.update(card.id, { institutionId: chase.id });
+  const at = atInstitution(s.doc, chase.id);
+  assert.equal(at.rows.length, 2); assert.equal(at.total, (checking.values.balance ?? 0) - (card.values.balance ?? 0));
+  // An older file with typed names: rows appear, deduped, and the records point at them.
+  const old = JSON.parse(JSON.stringify(exportFile(s.doc)));
+  delete old.household.profile.institutions;
+  for (const r of old.household.records) { delete r.values.institutionId; }
+  const a = old.household.records.filter(r => r.kind === 'account');
+  a[0].values.institution = 'Ally'; a[1].values.institution = 'ALLY '; old.household.records.filter(r => r.kind === 'debt')[0].values.institution = 'Nelnet';
+  const t = new Store(newHousehold({ name: 'T', now: now.toISOString() }));
+  importInto(t, old);
+  const names = institutionsOf(t.doc).map(i => i.name).sort();
+  assert.deepEqual(names, ['Ally', 'Nelnet']);
+  assert.equal(institutionOf(t.doc, t.doc.records.find(r => r.id === a[1].id)).name, 'Ally');
+  assert.equal(institutionsOf(t.doc).find(i => i.name === 'Nelnet').kind, 'Lender');
+  assert.equal(migrateInstitutions(t.doc).profile.institutions.length, 2, 'idempotent');
+  removeInstitution(s, chase.id);
+  assert.equal(s.get(checking.id).values.institutionId, null, 'its rows keep their nicknames and lose the pointer');
+  s.undo(); assert.equal(institutionsOf(s.doc).length, 1, 'undoable');
+});

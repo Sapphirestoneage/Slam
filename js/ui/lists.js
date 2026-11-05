@@ -3,6 +3,7 @@
 import { h, icon } from './dom.js';
 import { addPresets } from '../presets.js';
 import { METHODS } from '../registry/debt.js';
+import { institutionPicker } from './institutions-ui.js';
 import { fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
 import { pct } from '../format.js';
 import { feeApr } from '../math/debt.js';
@@ -51,7 +52,7 @@ export function debtList(ref, { cards = null } = {}) {
     focus: ['Debt', 'Balance', 'APR', 'Payment / mo'], // session 1: type, balance, APR, minimum
     paidWith: false,
     columns: [
-      { label: 'Debt', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 150, key: `${r.id}:name` }) },
+      { label: 'Debt', render: (ctx, r, m, up) => h('span.stack.inst-cell', { style: { gap: '4px' } }, institutionPicker(ctx, r, up, { width: 150 }), textInput(r.name, v => up({ name: v }), { hint: 'Nickname (optional)', tip: r.type, width: 150, key: `${r.id}:name` })) }, // item 14
       { label: 'Balance', num: true, render: (ctx, r, m, up) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, moneyInput(r.values.balance, v => up({ balance: v }), { hint: 'Add balance', key: `${r.id}:balance` }), hoursChip(ctx, r.values.balance)) },
       { label: 'APR', num: true, render: (ctx, r, m, up) => {
         const d = m.debts.find(x => x.id === r.id);
@@ -77,7 +78,7 @@ export function debtList(ref, { cards = null } = {}) {
     // Enter once: the payment also shows in Cash flow as a Budget line From Debt.
     secondary: (ctx, r, up) => [labelled('In Cash flow', fromButton('Payment on the Budget', '#/cash-flow/budget', `auto:${r.id}`), { note: 'Entered here once; the Budget shows it From Debt' }), ...[debtSecondary(ctx, r, up)].flat()],
     tertiary: (ctx, r, up) => debtTertiary(ctx, r, up),
-    subtotal: (ctx, rows) => money(sum(rows, r => r.values.balance)),
+    subtotal: (ctx, rows) => amount(ctx, sum(rows, r => r.values.balance), { chip: false }), // item 16
     footerTotal: (ctx, recs) => amount(ctx, recs.some(r => r.values.balance != null) ? sum(recs, r => r.values.balance) : null),
     totals: (ctx, recs, m, cols) => {
       const cells = cols.map(c => {

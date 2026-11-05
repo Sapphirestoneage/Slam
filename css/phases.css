@@ -378,3 +378,21 @@ tr.row.left td.col-first { box-shadow: inset 3px 0 0 var(--warn); }
 .path-slim .link-line { width: 10px; height: 2px; background: var(--border-input); }
 .path-slim .path-name { font-weight: 700; margin-left: 8px; }
 .done-line { margin-bottom: 6px; }
+
+/* Batch 6, items 13 to 26: institutions, one unit per table, no sideways scroll, no scroll inside scroll */
+.inst-row { padding: 6px 0; border-top: 1px solid var(--border-row); }
+.inst-here { margin: 6px 0 0 12px; padding: 6px 10px; border-left: 3px solid var(--border-row); }
+.inst-cell { display: inline-flex; flex-direction: column; }
+.inst-cell select, .inst-cell label.field { max-width: 100%; }
+.shortcuts-link { font-weight: 600; }
+table.rows input, table.rows select, table.rows label.field, table.rows .seg { max-width: 100%; }
+table.rows th { white-space: normal; }
+.section-title, tr.row, .glow, section.section { scroll-margin-top: 120px; } /* item 24: nothing lands under the sticky bars */
+@media (max-width: 760px) {
+  table.rows th { top: 44px; }
+  table.rows { table-layout: fixed; }
+  table.rows td, table.rows th { padding: 0 4px; overflow: hidden; }
+  table.rows td.col-actions .actions { flex-wrap: wrap; }
+  .inst-cell label.field, .inst-cell select { width: 100% !important; }
+  .section-title, tr.row, .glow, section.section { scroll-margin-top: 60px; }
+}

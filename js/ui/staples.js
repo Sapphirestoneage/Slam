@@ -504,9 +504,12 @@ export function sectionFooter(ctx, { add, total, count, done, of, left = [], onl
 // The counter popover lives in arrive.js, which imports this file; the app hands it over once at start.
 let leftPopoverRef = null;
 export function setLeftPopover(fn) { leftPopoverRef = fn; }
-export function keyboardHint() { // R168
-  return h('div.hint-line', {}, h('kbd', {}, 'Tab'), ' next box · ', h('kbd', {}, 'Enter'), ' new row below · ',
+export function keyboardHint() { // R168; item 21: a small Shortcuts link that expands
+  const line = h('span', {}, h('kbd', {}, 'Tab'), ' next box · ', h('kbd', {}, 'Enter'), ' new row below · ',
     h('kbd', {}, 'Ctrl'), '+', h('kbd', {}, 'Z'), ' undo · ', h('kbd', {}, 'Ctrl'), '+', h('kbd', {}, 'Shift'), '+', h('kbd', {}, 'Z'), ' redo · ', h('kbd', {}, '/'), ' Find');
+  line.hidden = !keyboardHint.open;
+  const link = h('a.shortcuts-link', { href: '#', onclick: e => { e.preventDefault(); keyboardHint.open = !keyboardHint.open; line.hidden = !keyboardHint.open; } }, 'Shortcuts');
+  return h('div.hint-line', {}, link, ' ', line);
 }
 // Hidden-area link: '+ Add [area]' linked to the gates hub.
 export function hiddenAreaLink(ctx, area) {
@@ -572,7 +575,7 @@ export function fromButton(label, route, id, { tag = false, value = null } = {})
 export const focusOn = ctx => { const s = ctx.store.doc.session || {}; return !!s.guide && !s.allFields && !!s.startedAt && !(s.endedAt && s.endedAt >= s.startedAt); }; // Show all fields on Live turns it off (answer 90)
 export function focusMore(ctx, id, kids) {
   if (!focusOn(ctx)) return kids;
-  return moreBlock(`focus:${id}`, () => h('div.stack', { style: { gap: '16px' } }, ...[kids].flat()), { label: 'More detail' });
+  return moreBlock(`focus:${id}`, () => h('div.stack', { style: { gap: '16px' } }, ...[kids].flat()), { label: 'More fields' }); // item 19
 }
 const slug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 // A block that redraws itself on every change, keeping your place (for cards beside a list).
@@ -688,7 +691,7 @@ export function recordList(ctx, cfg) {
   };
   const caretState = (tr, open) => {
     const c = tr?.querySelector('button.caret');
-    if (c) { c.setAttribute('aria-expanded', String(open)); clear(c, open ? 'Less' : view?.moreLabel ?? 'More', icon(open ? 'down' : 'right')); }
+    if (c) { c.setAttribute('aria-expanded', String(open)); clear(c, open ? 'Less' : view?.moreLabel ?? 'Details', icon(open ? 'down' : 'right')); }
   };
   const moreRow = (r, g) => h('tr.more', { 'data-for': r.id, 'data-group': g }, h('td', { colspan: view.span }, moreLayers(ctx, r, cfg, p => update(r, p), view.extra, ctx.metrics())));
 
@@ -702,6 +705,7 @@ export function recordList(ctx, cfg) {
     const item = (label, iconName, run, { danger = false } = {}) => h(`button.menu-item${danger ? '.danger' : ''}`, { type: 'button', role: 'menuitem', onclick: () => { closePop(); run(); } }, icon(iconName), label);
     btn.onclick = () => popover(btn, h('div.row-menu', { role: 'menu', 'aria-label': `Actions for ${name}` },
       ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? item(r.values.locked === true ? 'Unlock (back to as typed)' : 'Lock it (confirmed)', 'lock', () => update(r, { locked: r.values.locked !== true })) : null, // item 11: a guess becomes confirmed here, never as a nag
+      item(state.open === r.id ? 'Hide details' : 'Details', 'right', () => setOpen(r.id)), // item 17: the detail is in the menu too
       item('Reset', 'reset', () => reset([r.id])),
       item('Duplicate', 'copy', () => { ctx.store.duplicate(r.id); toast('Duplicated.', { undo: () => ctx.store.undo() }); }),
       cfg.notForMe ? (r.status === 'Not for me'
@@ -740,7 +744,7 @@ export function recordList(ctx, cfg) {
     for (const g of cfg.lastGroups || []) if (groups.has(g)) { const rows = groups.get(g); groups.delete(g); groups.set(g, rows); } // e.g. Not for me sits at the bottom
     const body = h('tbody');
     const rowEls = new Map(), groupEls = new Map();
-    view = { recs, rows: rowEls, groups: groupEls, body, span, allBox, extra: extraCols, moreLabel: focus ? 'More detail' : 'More', bulkHost: h('div.bulk-host'), actions: sel => ({
+    view = { recs, rows: rowEls, groups: groupEls, body, span, allBox, extra: extraCols, moreLabel: 'Details', bulkHost: h('div.bulk-host'), actions: sel => ({
       all: recs.length, onClear: () => { state.selected.clear(); refreshSelection(); },
       onDuplicate: () => { ctx.store.duplicate(sel); toast(`Duplicated ${sel.length}.`, { undo: () => ctx.store.undo() }); },
       onDelete: e => remove(sel, e.currentTarget), onReset: () => reset(sel),
@@ -801,7 +805,7 @@ export function recordList(ctx, cfg) {
     const leftItems = leftRows.map(r => { const f = coreOf(r).find(x => !countsAsDone(statusOf(r, x))); return { id: r.id, name: r.name || r.type || cfg.thing.one, word: r.status && r.status !== 'Know it' ? r.status : 'missing', field: f, focus: `${r.id}:${f}`, route: location.hash }; });
     const onlyLeft = recs.length > 8 && leftRows.length ? h('label.check-inline.only-left', {}, (() => { const b = h('input', { type: 'checkbox', checked: state.onlyLeft ? 'checked' : null }); b.onchange = () => { state.onlyLeft = b.checked; ctx.refresh(); }; return b; })(), ` Show only what's left (${leftRows.length})`) : null;
     const out = h(`div.section.area-${cfg.area}`, {}, head,
-      cfg.strip ? (focus ? moreBlock(`focus:strip:${listKey}`, () => cfg.strip(ctx, ctx.metrics()), { label: 'More detail' }) : cfg.strip(ctx, m)) : null,
+      cfg.strip ? (focus ? moreBlock(`focus:strip:${listKey}`, () => cfg.strip(ctx, ctx.metrics()), { label: 'Totals and chart' }) : cfg.strip(ctx, m)) : null, // item 19
       h('div.list', {}, view.bulkHost, h('div.list-scroll', { 'data-scroll-key': listKey }, h('table.rows', {}, thead, body, tfoot)),
         sectionFooter(ctx, { add: addBtn, total: cfg.footerTotal?.(ctx, recs, m), count: recs.length, done, of: recs.length, left: leftItems, onlyLeft }),
         keyboardHint()));

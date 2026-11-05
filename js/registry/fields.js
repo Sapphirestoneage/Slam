@@ -115,6 +115,7 @@ export const AREAS = [
       f('laterDue', "I'll find it later: due", 'text', { sheet: { skip: 'homework due dates; the Homework list in SLAM' } }),
       f('incomeGaps', 'Income gaps', 'text', { sheet: { skip: 'its own tab: Income gaps' } }),
       f('backups', 'Backups of the backups', 'text', { sheet: { skip: 'its own tab: Backups' } }),
+      f('institutions', 'Institutions', 'text', { sheet: { skip: 'its own tab: Institutions' } }), // batch 6
       // Settings that change the math.
       pick('spending.source', 'Spending uses', ['gut', 'lines'], { part: 'spending', key: 'source', named: 'Set_spendingSource' }),
       pick('spending.basis', 'Budget view', ['accrual', 'cash'], { part: 'spending', key: 'basis' }),
@@ -184,6 +185,7 @@ export const AREAS = [
       f('fee', 'Fee per period', 'money'), f('periods', 'Periods a year', 'number'),
       f('taxPlan', 'Payment plan in place', 'yesno'), f('guaranteed', 'Personally guaranteed', 'yesno'),
       f('institution', 'Institution'), f('opened', 'Opened', 'month'),
+      f('institutionId', 'Institution (from the list)', 'text', { sheet: { skip: 'points at an Institutions row by id; the Institution column shows its name' } }),
       CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(),
     ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'a debt uses Balance and Payment' } } : x)),
   },
@@ -203,7 +205,8 @@ export const AREAS = [
       f('pretaxBalance', 'Pretax part', 'money', { kinds: ['account'] }), f('rothBalance', 'Roth part', 'money', { kinds: ['account'] }),
       pick('taxType', 'Pretax, Roth or both', ['Pretax', 'Roth', 'Both'], { kinds: ['account'] }),
       f('unvested', 'Unvested', 'money', { kinds: ['account'] }),
-      f('institution', 'Institution', 'text', { kinds: ['account'] }),
+      f('institution', 'Institution', 'text', { kinds: ['account'] }), // the older typed name; the Institutions list is the home now
+      f('institutionId', 'Institution (from the list)', 'text', { kinds: ['account'], sheet: { skip: 'points at an Institutions row by id; the Institution column shows its name' } }),
       f('apy', 'APY', 'pct', { kinds: ['account'] }), pick('yieldKind', 'APY or 7-day yield', ['APY', '7-day yield'], { kinds: ['account'] }),
       pick('purpose', 'Purpose', ['Emergency', 'Sinking fund', 'Goal', 'General'], { kinds: ['account'] }),
       f('contribution', 'Putting in', 'money', { kinds: ['account'] }),
@@ -248,6 +251,7 @@ export const AREAS = [
     types: { coverage: ['Health', 'Life', 'Disability', 'Renters or home', 'Car', 'Umbrella'] },
     fields: [
       NAME, pick('have', 'Have it?', ['Have it', "Don't", 'Not sure']), AMOUNT('Premium'), PER('Premium per'),
+      f('institutionId', 'Insurer (from the Institutions list)', 'text', { sheet: { skip: 'points at an Institutions row by id' } }),
       pick('paidFrom', 'Paid from', ['Paycheck', 'Budget']),
       f('paidFromJob', 'Paid from which job', 'text', { sheet: { skip: 'points at a job row by its id; set it in SLAM' } }),
       f('employer', 'Through employer', 'yesno'),
@@ -349,6 +353,11 @@ export const AREAS = [
       f('coverageId', 'For this coverage', 'text', { kinds: ['event'], sheet: { skip: 'points at a Protection row by its id; set by Add the usual dates' } }),
       NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS,
     ].map(x => (['per', 'stress'].includes(x.key) ? { ...x, unused: true, sheet: { skip: 'not used on goals and events' } } : x)), // owner: a goal is one person's or Joint (F2)
+  },
+  {
+    id: 'institutions', prefix: 'Inst', tab: 'Institutions', source: 'list', part: 'profile', path: 'institutions',
+    about: 'The banks, credit unions, brokerages, workplace plans, lenders and insurers the household uses (batch 6). Name, kind, website, notes, whose. Never a login or a password.',
+    fields: [f('name', 'Institution'), pick('kind', 'Kind', ['Bank', 'Credit union', 'Brokerage', 'Workplace plan', 'Lender', 'Insurer', 'Other']), f('website', 'Website'), f('notes', 'Notes'), pick('owner', 'Whose', ['Me', 'Partner', 'Joint'])],
   },
   {
     id: 'gaps', prefix: 'Gaps', tab: 'Income gaps', source: 'list', part: 'profile', path: 'incomeGaps',

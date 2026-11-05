@@ -50,6 +50,7 @@ export const FORMATS = [
   { version: 9, shape: 'b964ff19' }, // Nov 5 2026: Retirement lines and after-tax contributions as investing (M27 retire, M28 afterTax); the surplus invested unless turned off
   { version: 10, shape: 'b521922f' }, // Nov 6 2026 (the overnight run, one bump): M75 the ladder; the household mode; owner on goals
   { version: 11, shape: '6aeffdc5' }, // Nov 6 2026 (batch 5, one bump): the Rule of 5 as age / 5 (M43 months a formula), Confidence beside Joy, the last paycheck matched on Income, the safer FI line, Split N ways and the per-bill My share / Whole bill on Profile (splitWith and billsGivenAs gone, migrated)
+  { version: 12, shape: '55a8ce44' }, // Nov 6 2026 (batch 6, one bump): the Institutions list (typed names migrate to rows), institutionId on accounts, debts and coverage
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

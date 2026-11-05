@@ -3,6 +3,7 @@
 // Detail stays behind More (R023); fields that do not apply to this household never show (gates.js).
 import { h } from './dom.js';
 import { INCOME_KINDS, incomeKindOf } from '../capture.js';
+import { institutionPicker } from './institutions-ui.js';
 import { fromButton, amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, ownerToggle } from './staples.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
 import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom } from '../math/income.js';
@@ -245,7 +246,7 @@ export function assetList(ref) {
     kindOf: type => (type ? recordFor(type, ref).kind : 'account'),
     newValues: type => ({ values: type ? { ...recordFor(type, ref).values } : { group: 'cash' } }),
     columns: [
-      { label: 'Account', render: (ctx, r, m, up) => textInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 170, key: `${r.id}:name` }) },
+      { label: 'Account', render: (ctx, r, m, up) => h('span.stack.inst-cell', { style: { gap: '4px' } }, r.kind === 'account' ? institutionPicker(ctx, r, up) : null, textInput(r.name, v => up({ name: v }), { hint: r.kind === 'account' ? 'Nickname (optional)' : r.type || 'Add name', tip: r.type, width: 170, key: `${r.id}:name` })) }, // item 14: [Institution] · [Nickname]
       { label: 'Balance', num: true, render: (ctx, r, m, up) => {
         if (r.kind === 'asset') return moneyInput(r.values.value, v => up({ value: v }), { hint: 'Add value', key: `${r.id}:balance` });
         if (r.values.taxType === 'Both') { // R018: two boxes, one balance
@@ -262,18 +263,18 @@ export function assetList(ref) {
         return select(ref.lists.cashTypes, r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Account type', width: 160, key: `${r.id}:type` }); // B2.18: the kind of account, apart from the bank
       } },
       // Focus mode only: what goes in each month, typed as a month and saved in the cadence it was entered in (answer 91).
-      { label: 'A month in', num: true, focusOnly: true, render: (ctx, r, m, up) => {
+      { label: 'Added monthly', num: true, focusOnly: true, render: (ctx, r, m, up) => { // item 18
         if (r.kind !== 'account' || r.values.group !== 'investment') return null;
         const per = yearlyContribution(r.values, m?.inputs.payFrequency ?? null);
-        return moneyInput(per == null ? null : Math.round(per / 12 * 100) / 100, v => up(contributionFromMonthly(v, r.values, m?.inputs.payFrequency ?? null)), { hint: 'Add a month', key: `${r.id}:month-in` });
+        return moneyInput(per == null ? null : Math.round(per / 12 * 100) / 100, v => up(contributionFromMonthly(v, r.values, m?.inputs.payFrequency ?? null)), { hint: 'Add amount', key: `${r.id}:month-in` });
       } },
       owner,
     ],
     secondary: (ctx, r, up) => assetSecondary(ctx, r, up),
     tertiary: (ctx, r, up) => assetTertiary(ctx, r, up),
     coreFields: [],
-    focus: ['Account', 'Balance', 'Kind', 'A month in'], // session 1: type, balance, monthly contribution
-    subtotal: (ctx, rows) => money(sum(rows, valOf)),
+    focus: ['Account', 'Balance', 'Kind', 'Added monthly'], // session 1: type, balance, monthly contribution
+    subtotal: (ctx, rows) => amount(ctx, sum(rows, valOf), { chip: false }), // item 16: one unit per table
     footerTotal: (ctx, recs) => amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null),
     totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Account' ? h('td', {}, `${recs.length} ${recs.length === 1 ? 'item' : 'items'}`) : c.label === 'Balance' ? h('td.num', {}, amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null)) : h('td')), h('td'), h('td')],
     strip: (ctx, m) => h('div', {}, summaryStrip(ctx, [
@@ -378,6 +379,7 @@ export function protectionList() {
     ],
     secondary: (ctx, r, up) => {
       const v = r.values;
+      const insurer = labelled('Insurer', institutionPicker(ctx, r, up)); // item 14
       const employer = labelled('Through employer?', toggle(['Yes', 'No'], v.employer ?? null, x => up({ employer: x }), { label: 'Through employer' }), { note: v.employer === 'Yes' ? 'Ends if the job ends' : null });
       // With two or more jobs, Paid from names the paycheck (job 1 unless switched).
       const jobs = ctx.visible(x => x.kind === 'income' && ['Job', 'Partner job'].includes(x.type));
@@ -392,7 +394,7 @@ export function protectionList() {
       const from = v.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null);
       const budget = from === 'Budget line' ? labelled('Spending line', premiumOnBudget(ctx, r))
         : from === 'Paycheck' && r.type === 'Health' ? labelled('On Income', fromButton('Your paycheck borrows it', '#/cash-flow/income', ctx.metrics().inputs.health?.jobId ?? ''), { note: 'Out of take-home once; never a Budget line too' }) : null;
-      if (r.type === 'Health') return [employer, paidFrom, budget,
+      if (r.type === 'Health') return [insurer, employer, paidFrom, budget,
         labelled('Deductible: in-network, out-of-network', pair(moneyInput(v.deductible, x => up({ deductible: x }), { hint: 'In' }), moneyInput(v.deductibleOut, x => up({ deductibleOut: x }), { hint: 'Out' })), later(ctx, r, 'deductible')),
         labelled('Out-of-pocket max: in, out', pair(moneyInput(v.oopMax, x => up({ oopMax: x }), { hint: 'In' }), moneyInput(v.oopMaxOut, x => up({ oopMaxOut: x }), { hint: 'Out' })), { note: 'The most you pay in a bad year', ...later(ctx, r, 'oopMax') }),
         labelled('Copays: doctor, specialist, urgent care', pair(moneyInput(v.copayPcp, x => up({ copayPcp: x }), { hint: 'Doctor' }), moneyInput(v.copaySpecialist, x => up({ copaySpecialist: x }), { hint: 'Specialist' }), moneyInput(v.copayUrgent, x => up({ copayUrgent: x }), { hint: 'Urgent' })), later(ctx, r, 'copays'))];

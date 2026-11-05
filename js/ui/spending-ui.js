@@ -2,6 +2,7 @@
 // Spending (build phase 6): Budget with five passes, irregular costs, the cash flow calendar and month-end close.
 // Every screen is a view of the same records (R117); the month model lives in js/month.js.
 import { h, clear, icon } from './dom.js';
+import { institutionsOf } from '../institutions.js';
 import { parseCsv, guessMap, toTransactions, dedupe, suggestLine, matchIncome, importTransactions, saveBankMap, bankMapOf, PDF_WHY } from '../import/csv.js';
 import { layersOf } from '../math/layers.js';
 import { categoriesOf, categoryJoyOf, rateCategoryJoy } from '../capture.js';
@@ -86,7 +87,9 @@ function csvImportBlock(app, ctx) {
   const doc = ctx.store.doc;
   const lines = ctx.visible(r => r.kind === 'bill');
   const redraw = () => app.render();
-  const bankBox = S.textInput(CSV.bank || null, v => { CSV.bank = v || ''; CSV.map = CSV.bank && bankMapOf(doc, CSV.bank) ? { ...bankMapOf(doc, CSV.bank) } : CSV.map; }, { hint: 'Bank name (keeps the column map)', width: 220, key: 'csv:bank' });
+  const insts = institutionsOf(doc).map(i => i.name); // item 15: the column map is saved per institution
+  const bankBox = insts.length ? S.select(insts, CSV.bank || null, v => { CSV.bank = v || ''; CSV.map = CSV.bank && bankMapOf(doc, CSV.bank) ? { ...bankMapOf(doc, CSV.bank) } : CSV.map; }, { label: 'Institution', hint: 'Pick the institution', width: 220 })
+    : S.textInput(CSV.bank || null, v => { CSV.bank = v || ''; }, { hint: 'Bank name (add it under Institutions to keep the map)', width: 260, key: 'csv:bank' });
   const file = h('input', { type: 'file', accept: '.csv,text/csv', 'aria-label': 'CSV file' });
   file.onchange = () => { const f = file.files?.[0]; if (!f) return; CSV.name = f.name; f.text().then(text => { CSV.rows = parseCsv(text); const saved = CSV.bank ? bankMapOf(doc, CSV.bank) : null; CSV.map = saved ? { ...saved } : guessMap(CSV.rows[0] || []); CSV.hasHeader = saved?.hasHeader ?? true; CSV.list = null; redraw(); }); };
   const step1 = h('div.row-line', { style: { gap: '10px', flexWrap: 'wrap' } }, S.labelled('Bank', bankBox), S.labelled('CSV file', h('label.field', { style: { width: '260px' } }, file)),

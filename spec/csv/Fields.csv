@@ -403,3 +403,12 @@ F400,Built,,Needs,Calendar entries,Trip,Secondary,,,,,,,,,Now,Added from the cod
 F401,Built,,Income,Income,Last paycheck matched,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.actualPay
 F402,Built,,Income,Income,Last paycheck date,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,date,,,income.actualPayDate
 F403,Built,,Profile,Profile,big e multiplier (blank: from income stability),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,whole number,,,profile.bigEMultiplier
+F404,Built,,Profile,Profile,Institutions,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js); stays in the app: its own tab: Institutions,,Home › About you,text,,,profile.institutions
+F405,Built,,Debt,Debt,Institution (from the list),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js); stays in the app: points at an Institutions row by id; the Institution column shows its name,,Net worth › Debt,text,,,debt.institutionId
+F406,Built,,Assets,Assets,Institution (from the list),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js); stays in the app: points at an Institutions row by id; the Institution column shows its name,,Net worth › Assets,text,,,assets.institutionId
+F407,Built,,Protection,Protection,Insurer (from the Institutions list),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js); stays in the app: points at an Institutions row by id,,Net worth › Protection,text,,,protection.institutionId
+F408,Built,,Assets,Institutions,Institution,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,text,,,institutions.name
+F409,Built,,Assets,Institutions,Kind,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,choice,,,institutions.kind
+F410,Built,,Assets,Institutions,Website,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,text,,,institutions.website
+F411,Built,,Assets,Institutions,Notes,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,text,,,institutions.notes
+F412,Built,,Assets,Institutions,Whose,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,choice,,,institutions.owner
