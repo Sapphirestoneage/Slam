@@ -473,7 +473,7 @@
     },
     {
       "category": "Subscriptions",
-      "draftt": "Other",
+      "draftt": "Bills",
       "amount": "Fixed",
       "timing": "Fixed date"
     },
@@ -505,7 +505,7 @@
     },
     {
       "category": "Phone",
-      "draftt": "Accommodation",
+      "draftt": "Bills",
       "amount": "Fixed",
       "timing": "Fixed date"
     },
@@ -609,31 +609,31 @@
     },
     {
       "category": "Streaming",
-      "draftt": "Other",
+      "draftt": "Bills",
       "amount": "Fixed",
       "timing": "Fixed date"
     },
     {
       "category": "Music",
-      "draftt": "Other",
+      "draftt": "Bills",
       "amount": "Fixed",
       "timing": "Fixed date"
     },
     {
       "category": "Apps and cloud",
-      "draftt": "Other",
+      "draftt": "Bills",
       "amount": "Fixed",
       "timing": "Fixed date"
     },
     {
       "category": "Memberships",
-      "draftt": "Other",
+      "draftt": "Bills",
       "amount": "Fixed",
       "timing": "Fixed date"
     },
     {
       "category": "News",
-      "draftt": "Other",
+      "draftt": "Bills",
       "amount": "Fixed",
       "timing": "Fixed date"
     },
@@ -729,7 +729,7 @@
     }
   ],
   "spendingPresets": {
-    "about": "Starter guesses near the top 25% of what single adults spend each month, rounded. Start high and bring them down. Every line starts as Guess (Not sure).",
+    "about": "Typical monthly amounts near the top 25% of what single adults spend, rounded. They are shown faded for reference and count nowhere until the client uses one (Use) or types a real number. Each line has a level: 1 the big one, 2 the regulars, 3 folded into Everything else.",
     "lines": [
       {
         "name": "Rent",
@@ -737,7 +737,8 @@
         "draftt": "Accommodation",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 2000
+        "guess": 2000,
+        "level": 1
       },
       {
         "name": "Electric, gas, water",
@@ -745,7 +746,8 @@
         "draftt": "Accommodation",
         "amount": "Variable",
         "timing": "Fixed date",
-        "guess": 200
+        "guess": 200,
+        "level": 2
       },
       {
         "name": "Internet",
@@ -753,15 +755,17 @@
         "draftt": "Accommodation",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 80
+        "guess": 80,
+        "level": 2
       },
       {
         "name": "Phone",
         "category": "Phone",
-        "draftt": "Accommodation",
+        "draftt": "Bills",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 90
+        "guess": 90,
+        "level": 1
       },
       {
         "name": "Renters insurance",
@@ -769,7 +773,8 @@
         "draftt": "Accommodation",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 25
+        "guess": 25,
+        "level": 2
       },
       {
         "name": "Household supplies",
@@ -777,7 +782,8 @@
         "draftt": "Accommodation",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 60
+        "guess": 60,
+        "level": 3
       },
       {
         "name": "Furniture and home",
@@ -785,7 +791,8 @@
         "draftt": "Accommodation",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 75
+        "guess": 75,
+        "level": 3
       },
       {
         "name": "Laundry and dry cleaning",
@@ -793,7 +800,8 @@
         "draftt": "Accommodation",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 40
+        "guess": 40,
+        "level": 3
       },
       {
         "name": "Groceries",
@@ -801,7 +809,8 @@
         "draftt": "Food",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 500
+        "guess": 500,
+        "level": 1
       },
       {
         "name": "Dining out and takeout",
@@ -809,7 +818,8 @@
         "draftt": "Food",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 350
+        "guess": 350,
+        "level": 2
       },
       {
         "name": "Coffee and snacks",
@@ -817,7 +827,8 @@
         "draftt": "Food",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 80
+        "guess": 80,
+        "level": 3
       },
       {
         "name": "Work lunches",
@@ -825,7 +836,8 @@
         "draftt": "Food",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 60
+        "guess": 60,
+        "level": 3
       },
       {
         "name": "Car insurance",
@@ -833,7 +845,8 @@
         "draftt": "Transportation",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 200
+        "guess": 200,
+        "level": 2
       },
       {
         "name": "Gas or charging",
@@ -841,7 +854,8 @@
         "draftt": "Transportation",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 200
+        "guess": 200,
+        "level": 1
       },
       {
         "name": "Tolls and parking",
@@ -849,7 +863,8 @@
         "draftt": "Transportation",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 60
+        "guess": 60,
+        "level": 2
       },
       {
         "name": "Car maintenance and registration",
@@ -857,7 +872,8 @@
         "draftt": "Transportation",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 100
+        "guess": 100,
+        "level": 3
       },
       {
         "name": "Car wash and supplies",
@@ -865,7 +881,8 @@
         "draftt": "Transportation",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 20
+        "guess": 20,
+        "level": 3
       },
       {
         "name": "Transit",
@@ -873,7 +890,8 @@
         "draftt": "Transportation",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 130
+        "guess": 130,
+        "level": 1
       },
       {
         "name": "Uber and Lyft",
@@ -881,7 +899,8 @@
         "draftt": "Transportation",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 80
+        "guess": 80,
+        "level": 2
       },
       {
         "name": "Therapy",
@@ -889,7 +908,8 @@
         "draftt": "Therapy",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 300
+        "guess": 300,
+        "level": 2
       },
       {
         "name": "Health insurance (not through work)",
@@ -897,7 +917,8 @@
         "draftt": "Therapy",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 450
+        "guess": 450,
+        "level": 1
       },
       {
         "name": "Doctor and dental copays",
@@ -905,7 +926,8 @@
         "draftt": "Therapy",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 75
+        "guess": 75,
+        "level": 2
       },
       {
         "name": "Prescriptions",
@@ -913,7 +935,8 @@
         "draftt": "Therapy",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 40
+        "guess": 40,
+        "level": 2
       },
       {
         "name": "Gym or fitness",
@@ -921,7 +944,8 @@
         "draftt": "Therapy",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 70
+        "guess": 70,
+        "level": 3
       },
       {
         "name": "Haircuts and personal care",
@@ -929,47 +953,53 @@
         "draftt": "Therapy",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 80
+        "guess": 80,
+        "level": 3
       },
       {
         "name": "Streaming",
         "category": "Streaming",
-        "draftt": "Other",
+        "draftt": "Bills",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 50
+        "guess": 50,
+        "level": 2
       },
       {
         "name": "Music",
         "category": "Music",
-        "draftt": "Other",
+        "draftt": "Bills",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 12
+        "guess": 12,
+        "level": 3
       },
       {
         "name": "Apps and cloud storage",
         "category": "Apps and cloud",
-        "draftt": "Other",
+        "draftt": "Bills",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 20
+        "guess": 20,
+        "level": 2
       },
       {
         "name": "Amazon Prime and memberships",
         "category": "Memberships",
-        "draftt": "Other",
+        "draftt": "Bills",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 15
+        "guess": 15,
+        "level": 3
       },
       {
         "name": "News and magazines",
         "category": "News",
-        "draftt": "Other",
+        "draftt": "Bills",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 15
+        "guess": 15,
+        "level": 3
       },
       {
         "name": "Bank and card fees",
@@ -977,7 +1007,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 15
+        "guess": 15,
+        "level": 3
       },
       {
         "name": "Yearly fees, spread monthly",
@@ -985,7 +1016,8 @@
         "draftt": "Other",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 20
+        "guess": 20,
+        "level": 3
       },
       {
         "name": "Courses and books",
@@ -993,7 +1025,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 75
+        "guess": 75,
+        "level": 3
       },
       {
         "name": "Tech and gadgets",
@@ -1001,7 +1034,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 50
+        "guess": 50,
+        "level": 3
       },
       {
         "name": "Pet food",
@@ -1009,7 +1043,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 60
+        "guess": 60,
+        "level": 2
       },
       {
         "name": "Vet visits and vaccines",
@@ -1017,7 +1052,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 40
+        "guess": 40,
+        "level": 3
       },
       {
         "name": "Pet insurance",
@@ -1025,7 +1061,8 @@
         "draftt": "Other",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 40
+        "guess": 40,
+        "level": 3
       },
       {
         "name": "Pet medications and flea and tick",
@@ -1033,7 +1070,8 @@
         "draftt": "Other",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 25
+        "guess": 25,
+        "level": 3
       },
       {
         "name": "Pet grooming",
@@ -1041,7 +1079,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 30
+        "guess": 30,
+        "level": 3
       },
       {
         "name": "Boarding, walker, daycare",
@@ -1049,7 +1088,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 50
+        "guess": 50,
+        "level": 3
       },
       {
         "name": "Pet supplies, toys, litter",
@@ -1057,7 +1097,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 25
+        "guess": 25,
+        "level": 3
       },
       {
         "name": "Childcare and babysitting",
@@ -1065,7 +1106,8 @@
         "draftt": "Other",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 800
+        "guess": 800,
+        "level": 2
       },
       {
         "name": "Diapers, formula, baby supplies",
@@ -1073,7 +1115,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 100
+        "guess": 100,
+        "level": 3
       },
       {
         "name": "Kids' clothes and shoes",
@@ -1081,7 +1124,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 75
+        "guess": 75,
+        "level": 3
       },
       {
         "name": "School tuition and fees",
@@ -1089,7 +1133,8 @@
         "draftt": "Other",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 200
+        "guess": 200,
+        "level": 2
       },
       {
         "name": "Activities, camps, lessons",
@@ -1097,7 +1142,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 150
+        "guess": 150,
+        "level": 3
       },
       {
         "name": "Kids' medical and dental",
@@ -1105,7 +1151,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 50
+        "guess": 50,
+        "level": 3
       },
       {
         "name": "Toys, birthdays, school supplies",
@@ -1113,7 +1160,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 75
+        "guess": 75,
+        "level": 3
       },
       {
         "name": "Kids' allowance and phone",
@@ -1121,7 +1169,8 @@
         "draftt": "Other",
         "amount": "Fixed",
         "timing": "Fixed date",
-        "guess": 50
+        "guess": 50,
+        "level": 3
       },
       {
         "name": "Charity and giving",
@@ -1129,7 +1178,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 100
+        "guess": 100,
+        "level": 2
       },
       {
         "name": "Money sent to family",
@@ -1137,7 +1187,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 150
+        "guess": 150,
+        "level": 2
       },
       {
         "name": "Buffer for surprises",
@@ -1145,7 +1196,8 @@
         "draftt": "Other",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 100
+        "guess": 100,
+        "level": 3
       },
       {
         "name": "Clothes and shoes",
@@ -1153,7 +1205,8 @@
         "draftt": "Wants",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 150
+        "guess": 150,
+        "level": 3
       },
       {
         "name": "Shows, events, entertainment",
@@ -1161,7 +1214,8 @@
         "draftt": "Wants",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 150
+        "guess": 150,
+        "level": 3
       },
       {
         "name": "Drinks and nights out",
@@ -1169,7 +1223,8 @@
         "draftt": "Wants",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 120
+        "guess": 120,
+        "level": 3
       },
       {
         "name": "Dates",
@@ -1177,7 +1232,8 @@
         "draftt": "Wants",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 100
+        "guess": 100,
+        "level": 3
       },
       {
         "name": "Other wants",
@@ -1185,7 +1241,8 @@
         "draftt": "Wants",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 50
+        "guess": 50,
+        "level": 3
       },
       {
         "name": "Hobbies",
@@ -1193,7 +1250,8 @@
         "draftt": "Wants",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 100
+        "guess": 100,
+        "level": 3
       },
       {
         "name": "Travel",
@@ -1201,7 +1259,8 @@
         "draftt": "Wants",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 300
+        "guess": 300,
+        "level": 2
       },
       {
         "name": "Gifts and holidays",
@@ -1209,9 +1268,12 @@
         "draftt": "Wants",
         "amount": "Variable",
         "timing": "Variable date",
-        "guess": 125
+        "guess": 125,
+        "level": 2
       }
-    ]
+    ],
+    "source": "SLAM spec, batch 10 (Eli, Nov 5 2026): faded typical amounts, levels, Bills and subscriptions",
+    "date": "2026-11-05"
   },
   "typicalRatesNote": "Credit card set to 25% on purpose (Nov 3): an unknown card APR shows a scary Guess until the real one is typed. The Fed G.19 average is 22.15%."
 }

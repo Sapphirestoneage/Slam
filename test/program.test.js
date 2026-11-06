@@ -8,7 +8,7 @@ import { levelOf, pictureOf, nextSmallThings, paceOf, unlockOf, confidenceOf } f
 import { LEVELS, WEIGHTS, PACE, SESSIONS } from '../js/registry/program.js';
 import { sessionsOf, programOf, startSession, endSession, day0Of, day0Report, sessionNo, inSession } from '../js/program.js';
 import { householdFromInputs } from '../js/demo.js';
-import { addPresets } from '../js/presets.js';
+import { addPresets, useTypical } from '../js/presets.js';
 
 const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
 const demo = JSON.parse(readFileSync(new URL('../fixtures/demo.json', import.meta.url)));
@@ -157,11 +157,12 @@ test('Picture %: 0 for an empty client, weighted by the big items, the gut numbe
   assert.deepEqual(p.sections.map(x => x.name), ['About you', 'Income', 'Debt', 'Assets', 'Spending']);
   // Lines as the source: one item per DRAFTT letter, the starter guesses at Gut.
   addPresets(d, ref);
+  useTypical(d, d.find(r => r.kind === 'bill' && r.values.preset).map(r => r.id)); // batch 10: used typicals are Roughly
   d.setDoc('spending', { source: 'lines' });
   const p2 = pictureOf(d.doc, ref, { now });
   const cats = p2.items.filter(i => i.kind === 'category');
   assert.ok(cats.length >= 4);
-  assert.ok(cats.every(c => c.weight === (c.id === 'draftt:Other' ? WEIGHTS.otherLines : WEIGHTS.draftt)));
+  assert.ok(cats.every(c => c.weight === (['draftt:Other', 'draftt:Bills'].includes(c.id) ? WEIGHTS.otherLines : WEIGHTS.draftt)));
   assert.ok(p2.items.every(i => i.id !== 'gut'), 'the gut number steps aside');
 });
 

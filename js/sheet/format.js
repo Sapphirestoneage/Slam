@@ -52,6 +52,7 @@ export const FORMATS = [
   { version: 11, shape: '6aeffdc5' }, // Nov 6 2026 (batch 5, one bump): the Rule of 5 as age / 5 (M43 months a formula), Confidence beside Joy, the last paycheck matched on Income, the safer FI line, Split N ways and the per-bill My share / Whole bill on Profile (splitWith and billsGivenAs gone, migrated)
   { version: 12, shape: 'a2acef2e' }, // Nov 6 2026 (batch 6, one bump): the Institutions list (typed names migrate to rows), institutionId on accounts, debts and coverage
   { version: 13, shape: '22665ac6' }, // Nov 6 2026 (the merge with main's Your calendar, one bump): calendars on About you, Weekly lines with a weekday, Holiday on events; M78 Holiday dates (M75 on main before the merge)
+  { version: 14, shape: '77a8c604' }, // Nov 5 2026 (batch 10, one bump): Typical amount, Level and Everything else on Spending lines (M27 by level); Bills and subscriptions as a letter; Why now chips on Profile
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

@@ -12,6 +12,8 @@ import { MODES, modeOf, DISCLOSURE } from './registry/couples.js';
 import { layerSnapshot } from './math/layers.js';
 import { JOY, CONFIDENCE } from './registry/joy.js';
 import { fmt } from './math/result.js';
+import { isFaded } from './math/spending.js';
+import { whyAnswered } from './whynow.js';
 import { scorecardOf, ratingOf } from './math/scorecard.js';
 import { THRESHOLDS } from './registry/scorecard.js';
 
@@ -36,9 +38,9 @@ export function autoChecks(doc, ref, { now = new Date(), flags = [], picture = p
   const has = (kind, f = () => true) => live.some(r => r.kind === kind && f(r));
   const areasAnswered = p.noneOfThese === true || Object.values(p.areas || {}).some(v => v === true || v === false);
   const areaOk = (k, test) => g.areas[k] !== true || test; // an area they said they have needs at least one row
-  const cats = picture.items.filter(it => it.kind === 'category' && it.id !== 'draftt:Other');
+  const cats = picture.items.filter(it => it.kind === 'category' && it.id !== 'draftt:Other' && it.id !== 'draftt:Bills');
   const months = Object.values(doc.spending?.months || {});
-  const lines = live.filter(r => r.kind === 'bill' && r.status !== 'Not for me');
+  const lines = live.filter(r => r.kind === 'bill' && r.status !== 'Not for me' && !isFaded(r)); // batch 10: faded lines are not lines yet
   const monthOfActuals = months.some(mo => mo.closed) || (lines.length > 0 && months.some(mo => lines.filter(l => mo.lines?.[l.id]?.actual != null).length * 2 >= lines.length));
   const key = picture.items.filter(it => ['income', 'account', 'debt'].includes(it.group)); // answer 129: debts too
   let here = null;
@@ -49,7 +51,7 @@ export function autoChecks(doc, ref, { now = new Date(), flags = [], picture = p
     moneyInOneLine: [m.netWorth, m.surplus, m.savingsRate].every(r => r.value !== null),
     day0: !!day0Of(doc),
     bigCategories: cats.length > 0 && cats.every(it => it.level >= LEVELS.Estimate),
-    goalsNamed: has('milestone') || !!p.goalWords,
+    goalsNamed: has('milestone') || whyAnswered(p, 'goalWords'),
     fooStep: here !== null,
     monthOfActuals,
     keyNumbersLocked: key.length > 0 && key.some(it => it.group === 'income') && key.every(it => it.level >= LEVELS.Actual),

@@ -60,7 +60,7 @@ test('Next 3: core numbers first, gated-out and small items left out (R071 to R0
   n = next3(s.doc, ref, { now, limit: 99 });
   assert.ok(!n.all.some(c => /Car insurance|Gas or charging/.test(c.label)));
   const music = s.find(r => r.name === 'Music')[0];
-  s.update(music.id, { amount: 5 }); // $60 a year
+  s.update(music.id, { amount: 5, status: 'Not sure' }); // $60 a year, still a guess (batch 10: a faded line is not open until it has a number)
   assert.ok(next3(s.doc, ref, { now, limit: 99 }).small.some(c => c.recId === music.id));
 });
 

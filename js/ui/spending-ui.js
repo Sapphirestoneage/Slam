@@ -74,7 +74,10 @@ export function budgetScreen(app, ctx) {
   // The strip follows the lines as they change (the lists keep their own state, so the screen is not rebuilt).
   const strip = h('div', {}, budgetStrip(ctx, view));
   ctx.onRefresh(() => S.keepPlace(() => clear(strip, budgetStrip(ctx, monthView(doc, ctx.ref, UI.ym, { now: ctx.now() })))));
-  return [head('Budget', 'Every spending line, planned and actual'), passBar, strip, doc.session?.community ? S.moreBlock('budget:community', () => S.live(ctx, () => communityCard(ctx)), { label: 'Community presets' }) : null, ...body,
+  // Batch 10: the one-time note for a file whose untouched starter amounts turned faded.
+  const fadedNote = doc.settings?.fadedNote ? h('div.slim-note', { role: 'status' }, h('span', {}, 'Starter amounts you never changed are now shown faded. Use them with one click, or type the real number.'),
+    h('button.icon-btn.tiny', { type: 'button', 'aria-label': 'Close this note', 'data-tip': 'Close', onclick: () => ctx.store.setDoc('settings', { fadedNote: null }) }, icon('x'))) : null;
+  return [head('Budget', 'Every spending line, planned and actual'), fadedNote, passBar, strip, doc.session?.community ? S.moreBlock('budget:community', () => S.live(ctx, () => communityCard(ctx)), { label: 'Community presets' }) : null, ...body,
     S.recordList(ctx, irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) })),
     S.moreBlock('budget:joy', () => S.live(ctx, () => categoryJoyBlock(ctx)), { label: 'Joy by category' })]; // F6: captured for a later Wrapped
 }
@@ -161,15 +164,23 @@ function budgetStrip(ctx, view) {
   const m = ctx.metrics();
   const k = PERIOD[UI.period] || 1;
   const th = m.inputs.takeHome;
-  const lines = ctx.visible(r => r.kind === 'bill' && !r.values.irregular && r.status !== 'Not for me');
+  const lines = ctx.visible(r => r.kind === 'bill' && !r.values.irregular && r.status !== 'Not for me' && r.amount != null); // batch 10: a faded typical counts nowhere
   const cash = (ctx.store.doc.spending.basis || 'accrual') === 'cash';
   const monthlyOf = r => (cash && (r.per === 'year' || r.covers) ? 0 : view.rows.find(x => x.line.id === r.id)?.estimate ?? 0);
   const autos = m.inputs.autoLines ?? []; // debt payments, From Debt (entered once on Net worth)
   const fixed = sum(lines.filter(r => r.values.amountType === 'Fixed'), monthlyOf) + sum(autos, r => r.amount);
-  const variable = sum(lines.filter(r => r.values.amountType !== 'Fixed'), monthlyOf);
+  const buckets = sum(m.inputs.categories ?? [], c => (c.else?.from === 'bucket' ? c.else.bucket : 0)); // batch 10: an Everything else rough amount, while none of its pieces has a number
+  const variable = sum(lines.filter(r => r.values.amountType !== 'Fixed'), monthlyOf) + buckets;
   const yearly = ctx.visible(r => r.kind === 'bill' && r.values.irregular && r.amount != null);
   const setAside = cash ? sum(yearly.filter(r => String(r.values.monthDue) === String(Number(UI.ym.slice(5)))), r => r.amount) : sum(yearly, r => r.amount / 12);
   const res = (v, text) => ({ id: 'M23', value: v * k, needs: [], unit: 'money', text });
+  // Batch 10: until a line has a real amount (or a category is typed), the gut number is the only spending number shown.
+  const anyReal = lines.length > 0 || autos.length > 0 || (m.inputs.categories ?? []).some(c => c.typed != null || c.else?.bucket != null);
+  if (!anyReal && UI.pass !== 'Actual') {
+    const gut = m.inputs.gutTotal;
+    return S.summaryStrip(ctx, [{ label: 'Spending, your gut number', result: gut == null ? { id: 'M27', value: null, needs: ['a gut number'], unit: 'money' } : { id: 'M27', value: gut * k, needs: [], unit: 'money', text: `Your gut number: ${money(gut)} a month. The lines take over once they hold real amounts.` }, note: gut == null ? null : 'Until the lines hold real amounts' },
+      { label: `Yearly costs set aside${k > 1 ? `, ${UI.period}` : ''}`, result: res(setAside, `Each yearly cost divided by 12: ${money(setAside)} a month.`) }]);
+  }
   const share = v => (th ? ` · ${pct(v / th)} of take-home` : '');
   const items = [
     { label: `Fixed${k > 1 ? `, ${UI.period}` : ''}`, result: res(fixed, `Lines tagged Fixed amount${autos.length ? ` and ${autos.length} debt ${autos.length === 1 ? 'payment' : 'payments'} from Debt` : ''}, the ${monthName(UI.ym)} plan: ${money(fixed)} a month. This is the floor you pay no matter what; it feeds runway and Lean FI.`), note: `The floor${share(fixed)}`, home: '#/cash-flow/budget' },

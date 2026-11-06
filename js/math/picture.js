@@ -5,7 +5,7 @@
 // Pure: reads a household, never the DOM.
 import { statusOf } from '../records.js';
 import { gatesOf, visible } from '../gates.js';
-import { DRAFTT, drafttName, isCategoryRecord } from './spending.js';
+import { DRAFTT, drafttName, isCategoryRecord, isFaded, categoryKeyOf, levelOf as lvOf, LEVEL_ELSE } from './spending.js';
 import { debtRoute } from '../nav.js';
 import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS } from '../registry/program.js';
 import { fiRangeOf } from './fi.js';
@@ -69,19 +69,20 @@ export function pictureOf(doc, ref, { now = new Date() } = {}) {
   for (const r of live.filter(x => x.kind === 'asset')) recItem(r, 'value', { label: `${name(r)} value`, group: 'thing', weight: WEIGHTS.thing, route: '#/net-worth/assets' });
   // Spending: the gut number until the lines are the source (as the math does), then one item per DRAFTT letter.
   const allIn = live.find(r => r.kind === 'spending' && r.type === 'All in');
-  const lines = live.filter(r => r.kind === 'bill' && r.status !== 'Not for me');
+  // Batch 10: a faded starter line counts for nothing; the core progress counts levels 1 and 2 (Everything else is fine rough).
+  const lines = live.filter(r => r.kind === 'bill' && r.status !== 'Not for me' && !isFaded(r) && lvOf(r) !== LEVEL_ELSE);
   const useLines = !allIn || ((doc.spending?.source ?? 'gut') === 'lines' && lines.length > 0);
   // Batch 7 (A): a category row with an amount counts on its own (its level is the row's); otherwise the category is
   // the average of its lines' levels. Categories, not lines, are what the Picture counts.
   const categories = [];
   const byLetter = new Map();
   const catRecs = live.filter(isCategoryRecord);
-  for (const l of lines) { const k = DRAFTT.includes(l.values.draftt) ? l.values.draftt : 'Other'; byLetter.set(k, [...(byLetter.get(k) || []), l]); }
-  for (const k of [...DRAFTT, 'Other']) {
+  for (const l of lines) { const k = categoryKeyOf(l); byLetter.set(k, [...(byLetter.get(k) || []), l]); }
+  for (const k of [...DRAFTT, 'Bills', 'Other']) { // batch 10: Bills and subscriptions is its own category
     const rec = catRecs.find(r => r.type === k);
     if (rec && rec.amount != null && rec.status !== 'Not for me') {
       const level = levelOf(rec, 'amount', { months });
-      categories.push({ id: `draftt:${k}`, recId: rec.id, field: 'amount', label: `${drafttName(k)} (category)`, group: 'spending', kind: 'category', weight: k === 'Other' ? WEIGHTS.otherLines : WEIGHTS.draftt,
+      categories.push({ id: `draftt:${k}`, recId: rec.id, field: 'amount', label: `${drafttName(k)} (category)`, group: 'spending', kind: 'category', weight: k === 'Other' || k === 'Bills' ? WEIGHTS.otherLines : WEIGHTS.draftt,
         level, route: '#/cash-flow/budget', updatedAt: rec.updatedAt, count: { below: level < LEVELS.Estimate ? 1 : 0, of: 1 }, lines: [] });
       continue;
     }
@@ -91,12 +92,12 @@ export function pictureOf(doc, ref, { now = new Date() } = {}) {
     const weakest = [...lv].sort((a, b) => a.level - b.level)[0];
     const oldest = [...lv].map(x => x.l.updatedAt).filter(Boolean).sort()[0] ?? null;
     categories.push({ id: `draftt:${k}`, recId: weakest.l.id, field: 'amount', label: k === 'Other' ? 'Other lines' : `${drafttName(k)} lines`, group: 'spending', kind: 'category',
-      weight: k === 'Other' ? WEIGHTS.otherLines : WEIGHTS.draftt, level, route: '#/cash-flow/budget', updatedAt: oldest, count: { below: lv.filter(x => x.level < LEVELS.Estimate).length, of: lv.length },
+      weight: k === 'Other' || k === 'Bills' ? WEIGHTS.otherLines : WEIGHTS.draftt, level, route: '#/cash-flow/budget', updatedAt: oldest, count: { below: lv.filter(x => x.level < LEVELS.Estimate).length, of: lv.length },
       lines: lv.map(x => ({ id: x.l.id, name: x.l.name || x.l.values.category || 'Line', level: x.level, amount: x.l.amount ?? null })) });
   }
   // Answer 127: the gut number stands in for the categories, and stops counting once the itemized big categories all
   // reach Estimate (no double count), whichever the Budget uses for the math.
-  const big = categories.filter(c => c.id !== 'draftt:Other');
+  const big = categories.filter(c => c.id !== 'draftt:Other' && c.id !== 'draftt:Bills') // batch 10: Bills was part of Other before;
   const itemized = big.length > 0 && big.every(c => c.level >= LEVELS.Estimate);
   if (!useLines && !itemized) {
     const level = levelOf(allIn, 'amount', { months });

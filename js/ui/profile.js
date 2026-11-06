@@ -7,7 +7,7 @@ import { MODES, MODE_NAMES, modeOf, SPLIT_METHODS } from '../registry/couples.js
 import { STABILITY_MULTIPLIER } from '../registry/assumptions.js';
 import { metrics } from '../math/metrics.js';
 import { setHouseholdMode } from '../couples.js';
-import { h } from './dom.js';
+import { h, icon } from './dom.js';
 import { textInput, toggle, select, stepper, checkbox, labelled, moreBlock, pctInput, toast, laterButton, button, moneyInput, parkProfile } from './staples.js';
 import { gatesOf, syncCount, WORK, HOUSING, COVERAGE, AREAS, REAL_TYPES, recordFor } from '../gates.js';
 import { ageOf } from '../math/metrics.js';
@@ -16,6 +16,7 @@ import { BENEFITS, HAVE, TRANSIT, commuterSavings } from '../benefits.js';
 import { taxRates, monthlyFrom } from '../math/income.js';
 import { HOLIDAY_SETS, nextHoliday, SHABBAT_SPEND_DAY } from '../math/holidays.js';
 import { money, pct } from '../format.js';
+import { WHY_CHIPS, WHY_LABELS, chipsOf, whyAnswered, toggleChip, starChip } from '../whynow.js';
 
 export const STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI',
   'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
@@ -58,11 +59,19 @@ export function profileScreen(app, ctx) {
   const age = ageOf(p, ctx.now());
 
   // ---------- Why now ----------
-  const whyNow = section('Why now', 'needs',
-    h('div.form-grid', {},
-      field('What prompted this call', 'whyNow', textInput(p.whyNow, v => set({ whyNow: v }), { hint: 'In their words', width: 320, key: 'p:whyNow' })),
-      field('Biggest worry', 'worry', textInput(p.worry, v => set({ worry: v }), { hint: 'In their words', width: 320, key: 'p:worry' })),
-      field('Goal in their words', 'goalWords', textInput(p.goalWords, v => set({ goalWords: v }), { hint: 'In their words', width: 320, key: 'p:goalWords' }))));
+  // Batch 10 (item 4): each question is a row of chips (several, a star on the main one, Other opens a small box), with
+  // the In their words box under it, optional. Will get it shows while neither a chip nor words are there.
+  const whyField = key => {
+    const list = chipsOf(p, key), star = p.chipStar?.[key] ?? null;
+    const chip = c => h('span.why-chip-wrap', {},
+      h('button.pick.why-chip', { type: 'button', 'aria-pressed': String(list.includes(c)), 'data-focus': list.length ? null : c === WHY_CHIPS[key][0] ? `p:${key}:chips` : null, onclick: () => set(toggleChip(store.doc.profile, key, c)) }, list.includes(c) ? icon('check') : null, c),
+      list.includes(c) ? h('button.star-btn', { type: 'button', 'aria-pressed': String(star === c), 'aria-label': star === c ? `${c} is the main one. Unstar` : `Make ${c} the main one`, title: star === c ? 'The main one (tap to unstar)' : 'Make this the main one', onclick: () => set(starChip(store.doc.profile, key, c)) }, star === c ? '★' : '☆') : null);
+    return h('div.stack.why-field', { style: { gap: '8px' } },
+      labelled(WHY_LABELS[key], h('div.picks.why-chips', { role: 'group', 'aria-label': WHY_LABELS[key] }, WHY_CHIPS[key].map(chip)), { later: whyAnswered(p, key) ? null : later(key) }),
+      list.includes('Other') ? textInput(p.chipOther?.[key] ?? null, v => set({ chipOther: { ...(store.doc.profile.chipOther || {}), [key]: v } }), { hint: 'Other: in a few words', width: 320, key: `p:${key}:other` }) : null,
+      h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'In their words'), textInput(p[key], v => set({ [key]: v }), { hint: 'Optional', width: 320, key: `p:${key}` })));
+  };
+  const whyNow = section('Why now', 'needs', h('div.stack', { style: { gap: '16px' } }, whyField('whyNow'), whyField('worry'), whyField('goalWords')));
 
   // ---------- What applies to me: every gate in one place ----------
   const setCar = v => {
@@ -263,7 +272,7 @@ export function profileScreen(app, ctx) {
   const c = profileCompletion(store.doc);
   const next = h('div.next-step', {}, c.core.ready
     ? button('Next: Income', { kind: 'primary', iconName: 'right', onClick: () => app.go('#/cash-flow/income') })
-    : h('p.muted', {}, `${c.core.missing.length} to go before Next (${c.core.missing.slice(0, 3).join(', ')}${c.core.missing.length > 3 ? ' and more' : ''}). Answer each, or tap I'll find it later.`));
+    : h('p.muted', {}, `${c.core.missing.length} to go before Next (${c.core.missing.slice(0, 3).join(', ')}${c.core.missing.length > 3 ? ' and more' : ''}). Answer each, or tap Will get it.`));
   return [whyNow, hub, about, work, home, calendar, benefits, accounts, couple].map(willGetAll).concat([next]);
 }
 

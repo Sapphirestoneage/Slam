@@ -172,7 +172,7 @@ textarea.notes-box { width: 100%; min-height: 90px; border: 2px solid var(--bord
   .basics-row { grid-template-columns: 1fr 1fr; }
   .basics-row .muted { grid-column: 1 / -1; }
   .fi-card, .report-grid, .one-pager .op-grid { grid-template-columns: 1fr; }
-  .shelf { grid-template-columns: 1fr 1fr; }
+  .shelf { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .shelf .metric { min-width: 0; } .shelf .metric .btn.need { white-space: normal; height: auto; } /* batch 10: a locked card wraps at 390 */
   .deal { grid-template-columns: 1fr; }
   .rung { grid-template-columns: 90px 1fr 80px; }
   .discovery-grid { grid-template-columns: 1fr; }
@@ -499,3 +499,42 @@ a.missing-link { color: var(--primary); text-decoration: underline; text-underli
 /* Batch 8: the Will get it button keeps the debt table inside 1280: the clock alone when the screen is narrow. */
 @media (max-width: 1300px) { .will-get { padding: 0 6px; } .will-get .will-get-text { display: none; } .payoff { min-width: 168px; } }
 .status-cell { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; white-space: nowrap; } /* the Will get it button sits under the status, so the column never widens */
+/* Batch 10: tap chips (a pressed one is filled and has a check), the side panel, faded typical amounts, the docked arrive bar. */
+.picks { display: flex; flex-wrap: wrap; gap: 6px; }
+.pick { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 4px; min-height: 34px; padding: 4px 12px; border-radius: 999px; border: 1.5px solid var(--border-input); background: var(--card); color: var(--text); font: inherit; font-size: .875rem; font-weight: 600; cursor: pointer; box-shadow: 0 1px 0 var(--border-row); }
+.pick:hover { border-color: var(--primary); }
+.pick:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.pick[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary, #fff); }
+.pick .i { width: 14px; height: 14px; }
+.why-chip-wrap { display: inline-flex; align-items: center; gap: 2px; }
+.star-btn { all: unset; box-sizing: border-box; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1.5px solid var(--border-input); background: var(--card); color: var(--amber, #B26A00); font-size: 1rem; cursor: pointer; }
+.star-btn[aria-pressed="true"] { background: var(--amber, #B26A00); border-color: var(--amber, #B26A00); color: #fff; }
+.star-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.why-field .label { font-weight: 700; }
+.day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.day-grid .pick { justify-content: center; padding: 4px 0; min-height: 32px; }
+label.field.money.faded input::placeholder { color: var(--text-2); opacity: .55; font-style: italic; }
+label.field.money.faded { border-style: dashed; }
+.use-typical { white-space: nowrap; }
+.typical-note { font-weight: 400; white-space: normal; }
+.else-bucket label.field.money { width: 120px !important; }
+.link-btn { all: unset; cursor: pointer; color: var(--primary); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+.link-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.slim-note { display: flex; align-items: center; gap: 10px; padding: 6px 12px; margin: 0 0 8px; border-radius: var(--r-card); background: var(--computed); border: 1.5px solid var(--border-row); font-size: .875rem; }
+.slim-note span { flex: 1; }
+.side-panel { position: fixed; top: 60px; right: 0; bottom: 0; width: min(440px, 100vw); z-index: 60; background: var(--card); color: var(--text); border-left: 2px solid var(--border-input); box-shadow: var(--shadow-lift); display: flex; flex-direction: column; }
+.side-head { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1.5px solid var(--border-row); }
+.side-head h2 { flex: 1; margin: 0; font-size: 1.125rem; overflow-wrap: anywhere; }
+.side-body { overflow: auto; padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 16px; }
+.panel-sec h3 { margin: 0 0 8px; font-size: .9375rem; }
+.timing-sentence { margin: 0; font-size: 1rem; }
+.who-detail { padding-left: 4px; }
+@media (max-width: 760px) {
+  .side-panel { top: auto; left: 0; right: 0; width: auto; max-height: 82vh; border-left: 0; border-top: 2px solid var(--border-input); border-radius: 14px 14px 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+}
+.arrive-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 6px 12px; margin: 0 0 10px; border-radius: var(--r-card); background: var(--primary-dark); color: #fff; font-size: .875rem; }
+.arrive-bar .btn { border-color: #fff; color: #fff; background: transparent; box-shadow: none; }
+.arrive-bar .icon-btn { color: #fff; }
+:root:not([data-theme="light"]) .arrive-bar { color: #E4E7EC; }
+body.side-open main.shell-page, body.side-open .banner { padding-right: calc(min(440px, 100vw) + 16px); } /* batch 10: the inspector sits beside the page, never over it */
+@media (max-width: 760px) { body.side-open main.shell-page { padding-right: 12px; } }

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { Store } from '../js/records.js';
 import { householdFromInputs } from '../js/demo.js';
-import { addPresets } from '../js/presets.js';
+import { addPresets, useTypical } from '../js/presets.js';
 import { instances, balances, monthView, closeMonth, mark, carry, closedMonths, addMonths, daysIn, dateOf, bonusPaycheck } from '../js/month.js';
 import { gutAccuracy } from '../js/math/spending.js';
 
@@ -17,6 +17,7 @@ const YM = '2026-11';
 function client(inputs) {
   const s = new Store(householdFromInputs(inputs, { name: 'Test' }));
   addPresets(s, ref);
+  useTypical(s, s.find(r => r.kind === 'bill').map(r => r.id)); // batch 10: the starter lines are faded until used; these tests use them all
   return s;
 }
 

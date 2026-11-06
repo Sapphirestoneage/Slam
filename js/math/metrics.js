@@ -116,7 +116,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   // Batch 7 (A): the categories carry the spending. A category's amount is what was typed on its row, or its lines'
   // total when that is higher or nothing was typed; the line total is the categories added up (Retirement apart).
   const categories = categoryTotals(live.filter(isCategoryRecord), lines, mine);
-  const anyTyped = typedLines.length > 0 || categories.some(c => c.typed != null);
+  const anyTyped = typedLines.some(l => l.amount != null) || categories.some(c => c.typed != null || c.else?.bucket != null); // batch 10: a faded starter line (no real amount) is not a line yet
   const lineTotal = anyTyped ? categories.filter(c => c.key !== 'Retirement').reduce((s, c) => s + (c.amount ?? 0), 0) : null;
   const retirementLines = categories.find(c => c.key === 'Retirement')?.amount ?? 0;
   // Spending for the math: the Gut number until the lines are chosen on Budget (R131: the gut is a test kept to compare).

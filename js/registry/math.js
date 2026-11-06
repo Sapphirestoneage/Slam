@@ -54,7 +54,14 @@ const SHARED_ON = (k, g) => `IF(${SHARED_TOUCHED},Profile_shared_${k}="Yes",${g.
 
 // Batch 7 (A): a category's amount in the sheet. Its typed row (Kind Category, Type the category key, a month) or its
 // lines' shares when they add up to more; Debt adds the payments From Debt. Other is every line with no DRAFTT letter.
-const CAT_LINES = k => (k === 'Other' ? `SUMIFS(Spend_M21,Spend_InMath,"Yes",Spend_Kind,"Budget line",Spend_draftt,"")` : `SUMIFS(Spend_M21,Spend_InMath,"Yes",Spend_Kind,"Budget line",Spend_draftt,"${k}")${k === 'Debt' ? '+SUM(Debt_auto)' : ''}`);
+// Batch 10: a line counts by its level. Levels 1 and 2 (blank is 2) add up as they are; the level 3 lines (Everything
+// else) count when any has a number, else the one rough amount on the category row (elseAmount). A faded starter
+// line has no amount, so it adds nothing. Bills (Bills and subscriptions) has its own row; Other is every line whose
+// letter is none of the named ones (blank, Wants).
+const NAMED = ['Debt', 'Retirement', 'Accommodation', 'Food', 'Transportation', 'Taxes', 'Therapy', 'Bills'];
+const LETTER = k => (k === 'Other' ? NAMED.map(n => `Spend_draftt,"<>${n}"`).join(',') : `Spend_draftt,"${k}"`);
+const LINES_AT = (k, lv) => `SUMIFS(Spend_M21,Spend_InMath,"Yes",Spend_Kind,"Budget line",${LETTER(k)},Spend_level,"${lv}")`;
+const CAT_LINES = k => `(${LINES_AT(k, '<>3')}+IF(COUNTIFS(Spend_InMath,"Yes",Spend_Kind,"Budget line",${LETTER(k)},Spend_level,"3",Spend_amount,"<>")>0,${LINES_AT(k, '3')},SUMIFS(Spend_elseAmount,Spend_InMath,"<>No",Spend_Kind,"Gut number or category",Spend_Type,"${k}",Spend_Status,"<>Not for me"))${k === 'Debt' ? '+SUM(Debt_auto)' : ''})`;
 const CAT_TYPED = k => `SUMIFS(Spend_amount,Spend_InMath,"<>No",Spend_Kind,"Gut number or category",Spend_Type,"${k}",Spend_Status,"<>Not for me")`; // a category row is a month
 const CAT_SUM = keep => CATEGORIES.filter(keep).map(k => `MAX(${CAT_TYPED(k)},${CAT_LINES(k)})`).join('+');
 
@@ -136,7 +143,7 @@ export const MATH = [
       f: rec => `IF(OR(${SKIP},{Kind}<>"Budget line",{amount}=""),"",IF({Status}="Not for me",0,${rec.covers?.months ? `{amount}/${rec.covers.months}` : `{amount}*${MONTH_FACTOR('{per}')}`}))` }],
     sheet: 'SUMIFS(Spend_M20,Spend_InMath,"Yes")', label: 'Budget lines, each as a month, added up',
     app: c => sum(c.x.typedLines.filter(l => !c.x.dupOf[l.id]), l => (l.amount == null ? 0 : l.covers?.months ? l.amount / l.covers.months : monthlyFrom(l.amount, l.per).value)) },
-  { id: 'M21', name: 'My share', inputs: 'amount, who pays, covered, split', unit: 'money', fns: ['spending.myShare', 'spending.categoryTotals', 'spending.CATEGORIES', 'spending.CORE_CATEGORIES', 'spending.categoryName', 'spending.categoryKeyOf', 'spending.isCategoryRecord', 'spending.shareBeforeRefund', 'spending.reimbursedMonthly', 'spending.splitOf', 'spending.amountIsMine', 'spending.wholeBill', 'spending.withHome', 'spending.partnerSplits', 'spending.peopleSharing', 'spending.sharedBillsOf', 'spending.splitWaysOf', 'spending.splitDisagreeOf'],
+  { id: 'M21', name: 'My share', inputs: 'amount, who pays, covered, split', unit: 'money', fns: ['spending.myShare', 'spending.categoryTotals', 'spending.CATEGORIES', 'spending.CORE_CATEGORIES', 'spending.categoryName', 'spending.categoryKeyOf', 'spending.isCategoryRecord', 'spending.isFaded', 'spending.typicalOf', 'spending.typicalTotal', 'spending.LEVEL_ELSE', 'spending.levelOf', 'spending.everythingElse', 'spending.BILLS_CATEGORIES', 'spending.inFat', 'spending.shareBeforeRefund', 'spending.reimbursedMonthly', 'spending.splitOf', 'spending.amountIsMine', 'spending.wholeBill', 'spending.withHome', 'spending.partnerSplits', 'spending.peopleSharing', 'spending.sharedBillsOf', 'spending.splitWaysOf', 'spending.splitDisagreeOf'],
     cols: [
       // Batch 5 (E): a shared group is on when its About you box says Yes, or, with nothing answered and roommates, by its config default.
       { area: 'spending', key: 'whoUsed', label: 'Who pays used', unit: 'text',
@@ -293,7 +300,7 @@ export const MATH = [
   { id: 'M50', name: 'FI number', inputs: 'spending, withdrawal rate', unit: 'money', fns: ['fi.fiNumber'],
     sheet: 'IF(OR(RetirementSpending="",WithdrawalRate=""),"",RetirementSpending*12/WithdrawalRate)', label: 'Spending in retirement a year over the withdrawal rate', app: c => c.m.fiNumber.value },
   { id: 'M51', name: 'Lean FI number', inputs: 'Food, Accommodation, Transportation lines', unit: 'money', fns: ['fi.leanFiNumber'],
-    cols: [{ area: 'spending', key: 'fat', label: 'Food, housing or transportation', unit: 'number', f: 'IF(OR({draftt}="Food",{draftt}="Accommodation",{draftt}="Transportation"),1,0)' }],
+    cols: [{ area: 'spending', key: 'fat', label: 'Food, housing or transportation', unit: 'number', f: 'IF(OR({draftt}="Food",{draftt}="Accommodation",{draftt}="Transportation",{category}="Phone"),1,0)' }],
     sheet: 'IF(SUMIFS(Spend_M21,Spend_fat,1,Spend_InMath,"Yes")=0,"",SUMIFS(Spend_M21,Spend_fat,1,Spend_InMath,"Yes")*12/WithdrawalRate)', app: c => c.targets()['Lean FI'].value },
   { id: 'M52', name: 'Barista FI number', inputs: 'part-time income', unit: 'money', fns: ['fi.baristaFiNumber'],
     sheet: 'IF(OR(Profile_keepJobAfterLaunch="No",RetirementSpending="",PartTimeIncome=""),"",(RetirementSpending-PartTimeIncome)*12/WithdrawalRate)', app: c => c.targets()['Barista FI'].value ?? null },

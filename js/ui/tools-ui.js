@@ -46,7 +46,7 @@ export function listsScreen(app, ctx) {
       : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'Nothing to revisit yet'), h('span.muted', {}, 'Rough and not-sure numbers land here.')))),
     h('div.section', {}, h('div.section-title', {}, h('h2', {}, 'Homework list'), h('span.spacer'), hw.some(x => x.owner !== 'coach') ? S.button('Send to client', { size: 'small', iconName: 'mail', onClick: copyHomework }) : null), hw.length
       ? h('div.card.tool-list', {}, homeworkGroups(app, ctx, hw, fix))
-      : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, "Tap I'll find it later on any number and it lands here, with where to look.")))),
+      : h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No homework yet'), h('span.muted', {}, "Tap Will get it on any number and it lands here, with where to look.")))),
     defaultsSection(app, ctx, fix))];
 }
 // Batch 7, item 9: two groups, the client's and the coach's. A coach item is "no field for this yet: make one and

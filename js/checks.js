@@ -3,7 +3,7 @@
 // each row's More read it. A Roughly number is checked 30 days after it last changed; Not sure and Not now go on the
 // list at once; any other number is checked once it is 90 days old. Check again on (a date on the row) overrides it.
 import { RULES } from './registry/assumptions.js';
-import { withHome } from './math/spending.js';
+import { withHome, isFaded } from './math/spending.js';
 import { gatesOf, visible } from './gates.js';
 
 const DAY = 86400000;
@@ -33,6 +33,7 @@ export function checksOf(doc, ref, { now = new Date() } = {}) {
   const out = [];
   for (const r of live) {
     if (r.kind === 'bill' && r.values?.preset && r.status === 'Not sure') continue;
+    if (isFaded(r)) continue; // batch 10: a faded typical amount is not a number yet, so there is nothing to check
     const c = nextCheck(r, { now });
     if (!c) continue;
     if (c.status === 'Will email' && !clientSaysDone(doc, r)) continue;
@@ -59,6 +60,7 @@ export function defaultsInUse(doc, ref) {
     const name = r.name || r.values?.category || r.type || 'Item';
     if (r.kind === 'debt' && blank(r.values?.apr) && ref.typicalRates?.[r.type] != null && statusOfRow(r) !== 'Not for me') out.push({ rec: r, field: 'apr', label: `${name}: APR`, value: ref.typicalRates[r.type], unit: 'pct', from: `Typical ${r.type} rate` });
     if (r.kind === 'bill' && r.values?.preset && r.status === 'Not sure') out.push({ rec: r, field: 'amount', label: `${name}: amount`, value: r.amount, unit: 'money', from: 'Starter spending guess' });
+    else if (r.kind === 'bill' && r.values?.usedTypical && r.status === 'Roughly' && !blank(r.amount)) out.push({ rec: r, field: 'amount', label: `${name}: amount`, value: r.amount, unit: 'money', from: 'Typical amount, used' }); // batch 10: Use on a faded line
     else if (r.status === 'Not sure' && !blank(r.amount)) out.push({ rec: r, field: 'amount', label: `${name}: amount`, value: r.amount, unit: 'money', from: 'Marked Not sure' });
     for (const [f, st] of Object.entries(r.fieldStatus || {})) if (st === 'Not sure' && !blank(r.values?.[f])) out.push({ rec: r, field: f, label: `${name}: ${f}`, value: r.values[f], unit: f === 'apr' || f === 'apy' ? 'pct' : 'money', from: 'Marked Not sure' });
   }

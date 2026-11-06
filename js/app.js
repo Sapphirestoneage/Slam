@@ -11,7 +11,7 @@ import * as S from './ui/staples.js';
 import { Store, newHousehold, exportFile, importInto, backupDue, statusOf } from './records.js';
 import { localAdapter, memoryAdapter, listClients, loadClient, saveClient, createClient, removeClient, getPrefs, setPrefs, autosave } from './storage.js';
 import { householdFromInputs } from './demo.js';
-import { addPresets } from './presets.js';
+import { addPresets, migrateBatch10 } from './presets.js';
 import { snapshotNumbers, inSession, programOf, agendaOf, makeHomework } from './program.js';
 import { saveFile, saveWords } from './ui/save-file.js';
 import { agendaPanel } from './ui/agenda-ui.js';
@@ -41,6 +41,7 @@ const app = {
   open(doc, { save = true } = {}) {
     this.saver?.flush(); this.saver?.stop();
     this.hasClient = !!doc;
+    if (doc) migrateBatch10(doc, ref); // batch 10: untouched starter amounts become faded typicals; Bills and subscriptions; levels (once per file)
     this.store = new Store(doc || newHousehold({ name: null }));
     this.store.who = this.prefs?.clientView ? 'Client' : 'Coach'; // F6: the change log says who
     this.ctx = S.createCtx({ store: this.store, ref });
@@ -379,6 +380,7 @@ const app = {
         const text = await input.files[0].text();
         if (!this.hasClient) { const doc = JSON.parse(text).household; this.open(doc); S.toast('Imported.'); return; }
         importInto(this.store, text);
+        if (!JSON.parse(text).household?.settings?.migrated10) { delete this.store.doc.settings.migrated10; migrateBatch10(this.store.doc, ref); } // batch 10: an older file's untouched starter amounts turn faded
         S.toast('Imported. A snapshot was taken first.', { undo: () => this.store.undo() });
       } catch (e) { S.toast(e.message || 'That file could not be read.'); }
     };

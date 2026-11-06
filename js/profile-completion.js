@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Profile completion (R065) and whether Next can show (Brandon B1.1). Pure: no DOM.
 import { gatesOf } from './gates.js';
+import { whyAnswered } from './whynow.js';
 
 const KEY = { 'What prompted this call': 'whyNow', 'Biggest worry': 'worry', 'Goal in their words': 'goalWords', 'First name': 'firstName', 'Last name': 'lastName',
   'Birth year': 'birthYear', State: 'state', 'Solo or couple': 'household', 'Work situation': 'workSituation', Housing: 'housing', Car: 'hasCar', Pets: 'hasPets',
@@ -12,7 +13,8 @@ export function profileCompletion(doc) {
   const g = gatesOf(p, doc.client);
   const has = ([, v]) => v !== null && v !== undefined && v !== '';
   const parked = ([k]) => !!p.later?.[KEY[k]];
-  const core = [['What prompted this call', p.whyNow], ['Biggest worry', p.worry], ['Goal in their words', p.goalWords], ['First name', p.firstName], ['Last name', p.lastName],
+  const why = k => (whyAnswered(p, k) ? true : null); // batch 10: a chip or the words
+  const core = [['What prompted this call', why('whyNow')], ['Biggest worry', why('worry')], ['Goal in their words', why('goalWords')], ['First name', p.firstName], ['Last name', p.lastName],
     ['Birth year', p.birthYear], ['State', p.state], ['Solo or couple', p.household], ['Work situation', p.workSituation], ['Housing', p.housing], ['Car', p.hasCar], ['Pets', p.hasPets],
     ['Which do you have today', p.noneOfThese || Object.values(p.areas || {}).some(v => v !== null && v !== undefined) ? true : null]];
   if (g.couple) core.push(['Partner name', p.partnerName], ['Partner birth year', p.partnerBirthYear]);

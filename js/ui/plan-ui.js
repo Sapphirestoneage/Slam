@@ -4,6 +4,7 @@
 import { h, clear, icon } from './dom.js';
 import { simpleMath } from '../math/simple.js';
 import * as S from './staples.js';
+import { goalSuggestions } from '../whynow.js';
 import { futureDollars } from '../math/fi.js';
 import { MILESTONES, fiTargets, monthsTo, projection, ladder, solveFor } from '../plan.js';
 import { payoffPlan, customOrder, orderCost } from '../math/debt.js';
@@ -79,7 +80,19 @@ export function goalsScreen(app, ctx) {
   const reveal = PUI.reveal;
   const top = h('div', {}, goalsTop(app, ctx, { reveal }));
   ctx.onRefresh(() => S.keepPlace(() => clear(top, goalsTop(app, ctx))));
-  return [head('Goals', 'FI target, assumptions, milestones'), top, S.recordList(ctx, milestoneList())];
+  return [head('Goals', 'FI target, assumptions, milestones'), top, S.live(ctx, () => goalChipSuggestions(ctx)), S.recordList(ctx, milestoneList())];
+}
+// Batch 10 (item 4): the goal chips from About you › Why now that match a Plan goal or FOO step, each with Add. The
+// coach confirms; nothing is added on its own. Not now sets one aside for this client.
+function goalChipSuggestions(ctx) {
+  const p = ctx.store.doc.profile;
+  const list = goalSuggestions(p, ctx.visible(r => r.kind === 'milestone'));
+  if (!list.length) return h('span');
+  return h('div.card.goal-suggest', {}, h('div.row-line', { style: { gap: '8px' } }, h('strong', {}, 'From Why now'), h('span.muted.small', {}, 'Goals they picked. Add the ones that fit.')),
+    h('div.stack', { style: { gap: '6px', marginTop: '8px' } }, list.map(g => h('div.row-line', { style: { gap: '10px', flexWrap: 'wrap' } },
+      h('span', { style: { flex: '1 1 220px' } }, g.main ? '★ ' : '', h('strong', {}, g.chip), h('span.muted.small', {}, ` · ${g.step}`)),
+      S.button('Add', { size: 'small', iconName: 'plus', kind: 'primary', onClick: () => { ctx.store.add('milestone', { name: g.name, values: { mode: g.type === 'Custom' ? 'date' : 'when' } }, { type: g.type }); S.toast(`${g.name} added to the milestones.`, { undo: () => ctx.store.undo() }); } }),
+      S.button('Not now', { size: 'small', onClick: () => ctx.store.setDoc('profile', { goalSuggest: [...(p.goalSuggest || []), g.chip] }) })))));
 }
 function goalsTop(app, ctx, { reveal = false } = {}) {
   const m = ctx.metrics();

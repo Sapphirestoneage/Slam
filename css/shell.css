@@ -121,7 +121,7 @@ textarea.note-input { width: 100%; min-height: 70px; border: 2px solid var(--bor
   .banner > div { flex-wrap: wrap; }
   .shell-page { padding: 16px 12px 96px; }
   .page-head { flex-wrap: wrap; align-items: flex-start; }
-  .strip { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .strip { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; } .strip .metric { min-width: 0; overflow-wrap: anywhere; } /* batch 10: a long locked label wraps instead of widening the page */
   .metric { min-height: 0; padding: 10px 12px; }
   .metric .big { font-size: 1.5rem; }
   .metric.locked .big { font-size: .9375rem; }

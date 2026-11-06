@@ -5,13 +5,14 @@ import { addPresets } from '../presets.js';
 import { METHODS } from '../registry/debt.js';
 import { personLabels } from '../registry/couples.js';
 import { institutionPicker } from './institutions-ui.js';
-import { recordList as S_recordList, fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, perChip, nameInput, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
+import { recordList as S_recordList, popover as S_popover, closePop as S_closePop, moreBlock as S_moreBlock, fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, perChip, nameInput, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
 import { paidInFull } from '../completion.js';
 import { pct } from '../format.js';
 import { feeApr } from '../math/debt.js';
 import { WEEKDAYS, SHABBAT_SPEND_DAY } from '../math/holidays.js';
 import { monthlyFrom } from '../math/income.js';
-import { withHome, myShare, DRAFTT, drafttName, CATEGORIES, categoryName, categoryKeyOf, isCategoryRecord } from '../math/spending.js';
+import { withHome, myShare, DRAFTT, drafttName, CATEGORIES, categoryName, categoryKeyOf, isCategoryRecord, isFaded, typicalOf, typicalTotal, levelOf, LEVEL_ELSE, everythingElse } from '../math/spending.js';
+import { FREQS, DAY_CHIPS, WEEKDAY_CHIPS, MONTH_CHIPS, timingOf, timingPatch, timingWords, ordinal } from '../timing.js';
 import { applies } from '../gates.js';
 import { payoffPlan, debtToIncome, utilization } from '../math/debt.js';
 import { needs } from '../math/result.js';
@@ -157,15 +158,23 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
     // Eliminated lines fold away at the bottom; one tap brings one back.
     // Answer to 92: the T letter reads Health and self-care (therapy, insurance, copays, prescriptions); haircuts, personal
     // care and the gym sit in Personal care and hygiene (B6.6). Display only: the letter's stored key stays Therapy.
-    groupBy: r => (only ? (r.status === 'Not for me' ? 'Not for me' : '') : r.status === 'Not for me' ? 'Not for me' : groupBy === 'Who' ? Object.fromEntries(WHO)[whoOf(r)] : groupBy === 'Category' ? r.values.category || 'Other'
-      : r.values.draftt === 'Therapy' ? (['Personal care', 'Gym or fitness', 'Laundry'].includes(r.values.category) ? 'Personal care and hygiene' : 'Health and self-care') : r.values.draftt || 'Other'),
-    groupLabel: g => (g === 'Not for me' ? 'Hidden: not for me' : g),
+    // Batch 10 (item 3): under a category the lines sit by level: Level 1 and 2 as they are, Level 3 in one Everything
+    // else group (folded, its own amount). Item 5f: a group header always names its group.
+    groupBy: r => (only ? (r.status === 'Not for me' ? 'Not for me' : levelOf(r) === LEVEL_ELSE ? ELSE_GROUP : categoryName(only)) : r.status === 'Not for me' ? 'Not for me' : groupBy === 'Who' ? Object.fromEntries(WHO)[whoOf(r)] : groupBy === 'Category' ? r.values.category || 'Other'
+      : r.values.draftt === 'Therapy' ? (['Personal care', 'Gym or fitness', 'Laundry'].includes(r.values.category) ? 'Personal care and hygiene' : 'Health and self-care') : r.values.draftt ? drafttName(r.values.draftt) : 'Other'),
+    groupLabel: g => (g === 'Not for me' ? 'Hidden: not for me' : g || (only ? categoryName(only) : 'Other')),
+    foldedGroups: [ELSE_GROUP],
+    // The core progress and the "N of M" nags count Level 1 and 2 lines; Everything else is fine rough.
+    counts: r => levelOf(r) !== LEVEL_ELSE,
+    groupExtra: (ctx, g, rows) => (g === ELSE_GROUP && only ? elseBucket(ctx, only, rows) : typicalNote(ctx, rows)),
+    menuExtra: (ctx, r, up) => (levelOf(r) === LEVEL_ELSE ? [{ label: 'Move up (its own line)', icon: 'right', run: () => up({ level: 2 }) }] : [{ label: 'Move down (into Everything else)', icon: 'down', run: () => up({ level: LEVEL_ELSE }) }]),
     // B6.6: every section takes a new line, filed under that section.
-    groupAdd: g => (g === 'Not for me' || g === 'Debt' || groupBy === 'Category' || groupBy === 'Who' ? null // debts are added on Net worth
-      : { name: null, values: { draftt: g === 'Personal care and hygiene' || g === 'Health and self-care' ? 'Therapy' : g, ...(g === 'Personal care and hygiene' ? { category: 'Personal care' } : {}), amountType: 'Variable', timing: 'Variable date' } }),
-    key: 'spending-lines', notForMe: true,
-    // Groups start folded, showing their subtotal; open or closed is kept for the session.
-    lastGroups: ['Not for me'], startFolded: true,
+    groupAdd: g => (g === 'Not for me' || g === 'Debt' || g === ELSE_GROUP || groupBy === 'Category' || groupBy === 'Who' || only ? null // debts are added on Net worth; under a category the list's own Add a line files it there
+      : { name: null, values: { draftt: g === 'Personal care and hygiene' || g === 'Health and self-care' ? 'Therapy' : g === drafttName('Bills') ? 'Bills' : g === 'Other' ? null : g, ...(g === 'Personal care and hygiene' ? { category: 'Personal care' } : {}), amountType: 'Variable', timing: 'Variable date' } }),
+    key: only ? `spending-lines:${only}` : 'spending-lines', notForMe: true,
+    // Groups start folded, showing their subtotal; open or closed is kept for the session. Under a category the
+    // Level 1 and 2 lines show; Everything else starts folded.
+    lastGroups: [ELSE_GROUP, 'Not for me'], startFolded: !only,
     headerExtra: ctx => (only || ctx.store.doc.settings.presetsAdded ? null
       : h('button.btn.small', { type: 'button', title: 'About 40 common lines with high starter guesses. Bring them down or mark Not for me.', onclick: () => addPresets(ctx.store, ref) }, icon('plus'), 'Add the usual list')),
     picker: only ? { top: cats.slice(0, 4), other: cats.slice(4) } : { top: ['Rent or mortgage', 'Groceries, dining out, coffee', 'Electric, gas, water', 'Subscriptions'], other: cats },
@@ -175,14 +184,17 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
       return { values: only ? { ...v, draftt: only === 'Other' ? null : only } : v }; // a line added under a category stays in it
     },
     coreFields: ['amount'],
-    paidWith: true,
+    paidWith: false, // batch 10: Paid with sits in the side panel's Who pays
     columns: [
       { label: 'Line', render: (ctx, r, m, up) => nameInput(r.name, v => up({ name: v }), { hint: r.values.category || 'Add name', tip: r.values.category, width: 190, key: `${r.id}:name` }) }, // batch 8 (B11): wraps
       pass === 'Actual' ? null :
       { label: 'Amount', num: true, render: (ctx, r, m, up) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
-        premiumOf(ctx, r) ? fromButton(`From ${premiumOf(ctx, r).type}`, '#/net-worth/protection', r.linkedTo, { value: amount(ctx, r.amount, { chip: false }) }) : moneyInput(r.amount, v => up({ amount: v, status: r.status === 'Not sure' ? null : r.status }), { key: `${r.id}:amount` }), // typing the real number clears Guess
+        premiumOf(ctx, r) ? fromButton(`From ${premiumOf(ctx, r).type}`, '#/net-worth/protection', r.linkedTo, { value: amount(ctx, r.amount, { chip: false }) })
+          : isFaded(r) ? fadedInput(r, up) // batch 10: the typical amount shows faded in the box and counts nowhere until used or typed
+            : moneyInput(r.amount, v => up(typedPatch(r, v)), { key: `${r.id}:amount` }), // typing the real number clears Guess
         premiumOf(ctx, r) ? null : perChip(r.per, v => up({ per: v }), { key: `${r.id}:per` }), // batch 8 (B7): the period lives in the amount
-        h('span.keep-slot', {}, r.status === 'Not sure' ? h('button.btn.small', { type: 'button', 'data-focus': 'keep', title: `The starter estimate (${moneyText(r.amount)}) is right: use it as your number. Or type your own.`, onclick: () => up({ status: null }) }, 'Use') : null), // batch 8 (B6)
+        h('span.keep-slot', {}, isFaded(r) ? useButton(r, up)
+          : r.status === 'Not sure' ? h('button.btn.small', { type: 'button', 'data-focus': 'keep', title: `The starter estimate (${moneyText(r.amount)}) is right: use it as your number. Or type your own.`, onclick: () => up({ status: null }) }, 'Use') : null), // batch 8 (B6)
         shareChip(ctx, r)) }, // the slot keeps amounts lined up
       ...monthCols,
       paidWithColumn ? { label: 'Paid with', render: (ctx, r, m, up) => {
@@ -193,20 +205,9 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
     ],
     // Batch 8 (B8): the bulk bar's Move to section changes the DRAFTT letter.
     moveTo: { label: 'Move to section', options: () => [...DRAFTT, 'Other'].map(k => [k, drafttName(k)]), apply: (ctx, id, k) => ctx.store.update(id, { draftt: k === 'Other' ? null : k }) },
-    // Amount is and Date is live behind More: the narrowest row (fix pass item 3).
-    secondary: (ctx, r, up) => [
-      labelled('Amount is', toggle(['Fixed', 'Variable'], r.values.amountType ?? null, v => up({ amountType: v }), { label: 'Amount is' }), { note: 'Fixed feeds the floor' }),
-      labelled('Date is', toggle(['Fixed date', 'Variable date', 'Weekly'], r.values.timing ?? null, v => up({ timing: v }), { label: 'Date is' }), { note: r.values.timing === 'Weekly' ? 'Lands on its weekday every week' : 'Fixed date lands on its due day' }),
-      r.values.timing === 'Weekly' ? labelled('Lands on', select(WEEKDAYS.map((w, i) => [String(i), w]), String(r.values.weekday ?? SHABBAT_SPEND_DAY), v => up({ weekday: Number(v) }), { label: 'Weekday', width: 140, key: `${r.id}:weekday` }),
-        { note: 'The day the money leaves (Shabbat: Thursday, used Friday night and Saturday)' }) : null,
-      pass === 'Plan' && ym ? monthPlanField(ctx, r, ym) : null,
-      whoPays(r, up, { roommates: ctx.store.doc.profile.roommates ?? 0, profile: ctx.store.doc.profile }), lineSuggestion(r, up),
-      labelled('Bedazzle', toggle([[true, 'A joy line'], [false, 'Not one']], r.values.joy === true ? true : r.values.joy === false ? false : null, v => up({ joy: v }), { label: 'Joy line', clearable: true }), { note: 'Joy lines are funded first in the FOO (step 0b)' }),
-      // B6.3: low / high for a variable bill; the amount is the average.
-      r.values.amountType === 'Variable' ? labelled('Range: low, high', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
-        moneyInput(r.values.low ?? null, v => up({ low: v }), { hint: 'Low' }), moneyInput(r.values.high ?? null, v => up({ high: v }), { hint: 'High' })),
-      { note: r.values.low != null && r.values.high != null ? `The amount above is your average${r.amount == null ? '; add it' : ''}` : 'A light month and a heavy one', ...park(ctx, r, 'low') }) : null,
-      tagsField(r, up)],
+    // Batch 10 (item 5): the details open in a side panel (a bottom sheet on a phone): the timing as one sentence set
+    // by taps, who pays as one row, and More folded. The amount stays typable in the row and in the panel.
+    panel: { title: (ctx, r) => r.name || r.values.category || 'Spending line', build: (ctx, r, up) => linePanel(ctx, r, up, { pass, ym }) },
     // Not for me counts as $0 everywhere (R058); its group shows what was cut.
     // Enter once: each debt's payment shows here From Debt, in the Debt letter; its number opens the debt.
     autoRows: (ctx, m) => (m.inputs.autoLines ?? []).filter(a => !only || categoryKeyOf(a) === only), // under a category: only its own From Debt rows
@@ -239,7 +240,7 @@ const setPlan = (ctx, r, ym) => v => ctx.store.setIn('spending', ['months', ym, 
 // Behind More on every line: a different plan for just this month (blank = the usual amount).
 function monthPlanField(ctx, r, ym) {
   const typed = ctx.store.doc.spending?.months?.[ym]?.lines?.[r.id]?.estimate ?? null;
-  return labelled(`Plan for ${monthName(ym, 'short')}`, moneyInput(typed, setPlan(ctx, r, ym), { hint: 'Same as usual', key: `${r.id}:est-more:${ym}` }), { note: 'Only if this month is different; blank uses the usual amount' });
+  return labelled(`Different in ${monthName(ym, 'short')}`, moneyInput(typed, setPlan(ctx, r, ym), { hint: 'Same as usual', key: `${r.id}:est-more:${ym}`, width: 170 }), { tip: 'Only if this month is different; blank uses the usual amount' });
 }
 // Plan and Actual columns for one month (R134 to R136, R052). A blank month plan uses the line's usual number.
 function monthColumns(pass, ym) {
@@ -274,8 +275,9 @@ function monthColumns(pass, ym) {
 }
 // R143, R144: fixed lines are easy to cut and hard to lower; variable lines the other way round.
 function lineSuggestion(r, up) {
-  if (r.values.amountType === 'Fixed') return labelled('Looking for savings', toggle(['Keep', 'Cancel', 'Renegotiate', 'Switch'], r.values.decision ?? null, v => up({ decision: v }), { label: 'Looking for savings', clearable: true }), { note: 'Fixed: easy to cut, hard to lower' });
-  return labelled('Target or cap a month', moneyInput(r.values.target, v => up({ target: v }), { hint: 'Add target' }), { note: 'Variable: easy to lower, hard to cut' });
+  // Batch 10 (5d): Keep or Try to cut (stored as Keep and Cancel; an older Renegotiate or Switch reads as Try to cut).
+  if (r.values.amountType === 'Fixed') return labelled('Looking for savings', toggle([['Keep', 'Keep'], ['Cancel', 'Try to cut']], r.values.decision == null ? null : r.values.decision === 'Keep' ? 'Keep' : 'Cancel', v => up({ decision: v }), { label: 'Looking for savings', clearable: true }), { tip: 'Fixed: easy to cut, hard to lower' });
+  return labelled('Target or cap a month', moneyInput(r.values.target, v => up({ target: v }), { hint: 'Add target' }), { tip: 'Variable: easy to lower, hard to cut' });
 }
 
 // Irregular and yearly costs (Mockup: Budget › Irregular and yearly costs): the yearly amount, the month it hits,
@@ -514,7 +516,7 @@ export function categoryList(ref, { pass = 'Plan', ym = null } = {}) {
     hasValue: (ctx, r) => catOf(ctx, r)?.amount != null,
     columns: [
       { label: 'Category', render: (ctx, r) => { const c = catOf(ctx, r); return h('span.stack', { style: { gap: '2px' } }, h('strong', {}, c?.name ?? r.name ?? r.type),
-        h('span.muted.small', {}, c?.lines.length ? `${c.lines.length} ${c.lines.length === 1 ? 'line' : 'lines'}` : 'No lines: the amount alone counts')); } },
+        h('span.muted.small', {}, c?.lines.length ? `${c.lines.length} ${c.lines.length === 1 ? 'line' : 'lines'}` : fadedIn(ctx, r.type) ? `${fadedIn(ctx, r.type)} starter lines, none used yet` : 'No lines: the amount alone counts')); } },
       { label: 'Amount', num: true, render: (ctx, r, m, up) => {
         const c = catOf(ctx, r);
         if (!c) return null;
@@ -532,3 +534,95 @@ export function categoryList(ref, { pass = 'Plan', ym = null } = {}) {
     totals: (ctx, recs, m, cols) => [...cols.map(c => (c.label === 'Category' ? h('td', {}, `${recs.filter(r => r.status !== 'Not for me').length} categories`) : c.label === 'Amount' ? h('td.num', {}, amount(ctx, m.inputs.lineTotal)) : h('td'))), h('td'), h('td')],
   };
 }
+
+// ---------- Batch 10: faded typical amounts, Everything else, the line's side panel ----------
+const ELSE_GROUP = 'Everything else';
+// Typing a real number: it is Know it (a Guess or a used typical clears), never a typical any more.
+const typedPatch = (r, v) => ({ amount: v, status: r.status === 'Not sure' || (r.values.usedTypical && r.status === 'Roughly') ? null : r.status, usedTypical: null });
+const usePatch = r => ({ amount: typicalOf(r), status: 'Roughly', usedTypical: true });
+const useButton = (r, up) => h('button.btn.small.use-typical', { type: 'button', 'data-focus': 'keep', title: `Use the typical ${money(typicalOf(r))} as the number, marked Roughly. Or type the real number.`, 'aria-label': `Use ${money(typicalOf(r))} for ${r.name || 'this line'}`, onclick: () => up(usePatch(r)) }, `Use ${money(typicalOf(r))}`);
+// The amount box of a faded line: the typical amount is the faded placeholder; typing enters a real number.
+function fadedInput(r, up, key = `${r.id}:amount`) {
+  const box = moneyInput(null, v => { if (v != null) up(typedPatch(r, v)); }, { hint: moneyText(typicalOf(r)), key });
+  box.classList.add('faded');
+  box.title = `Typical: ${money(typicalOf(r))} a month. Not counted until you use it or type the real number.`;
+  return box;
+}
+// A group's slim note: what the faded typical amounts would add up to (for reference, not their number).
+function typicalNote(ctx, rows) {
+  const t = typicalTotal(rows.filter(r => !r.auto));
+  return t ? h('span.muted.small.typical-note', { title: 'The faded typical amounts count nowhere until you use one or type the real number' }, `Typical amounts would add up to ${money(t)} a month (for reference, not their number)`) : null;
+}
+// The Everything else header: the sum of its pieces when any has a number, else one rough amount for the whole bucket
+// (kept on the category row as elseAmount). Once a piece has a number the pieces win and the bucket reads as replaced.
+function elseBucket(ctx, key, rows) {
+  const cat = ctx.store.find(r => isCategoryRecord(r) && r.type === key)[0] ?? null;
+  const e = everythingElse(rows.filter(r => !r.auto), cat?.values?.elseAmount ?? null, r => (r.amount == null ? 0 : monthlyFrom(r.amount, r.per).value));
+  return h('span.row-line.else-bucket', { style: { gap: '8px', flexWrap: 'wrap' } },
+    e.from === 'pieces' ? h('span.computed.small', { title: 'The lines inside have numbers, so they are what counts' }, `${money(e.piecesSum)} from ${e.real} ${e.real === 1 ? 'line' : 'lines'}${e.replaced ? ` · replaces the ${money(e.bucket)} rough amount` : ''}`)
+      : cat ? h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, h('span.label', {}, 'One rough amount'), moneyInput(e.bucket, v => ctx.store.update(cat.id, { elseAmount: v }), { hint: 'A month', key: `else:${key}:amount` })) : null);
+}
+// The timing sentence (5b). Every part is a tap: how often, then day chips (1st, 15th, Last day, Other opens a 1 to 31
+// grid), weekday chips or month chips. No typing.
+function timingRow(ctx, r, up) {
+  const t = timingOf(r);
+  const tap = pick => up(timingPatch(r, pick));
+  const chips = (opts, cur, on, label, focus = null) => h('div.picks.timing-chips', { role: 'group', 'aria-label': label, 'data-focus': focus }, opts.map(([v, text]) => h('button.pick', { type: 'button', 'aria-pressed': String(v === cur), onclick: () => on(v) }, text)));
+  const odd = t.day != null && ![1, 15, 31].includes(t.day);
+  const grid = () => h('div.stack', { style: { gap: '8px' } }, h('strong', {}, 'Pick the day'), h('div.day-grid', { role: 'group', 'aria-label': 'Day of the month' },
+    Array.from({ length: 31 }, (_, i) => h('button.pick', { type: 'button', 'aria-pressed': String(t.day === i + 1), onclick: () => { S_closePop(); tap({ day: i + 1 }); } }, String(i + 1)))));
+  const dayChips = h('div.picks.timing-chips', { role: 'group', 'aria-label': 'Day', 'data-focus': `${r.id}:dueDay` },
+    DAY_CHIPS.map(([v, text]) => h('button.pick', { type: 'button', 'aria-pressed': String(v === t.day), onclick: () => tap({ day: v }) }, text)),
+    h('button.pick', { type: 'button', 'aria-pressed': String(odd), 'aria-haspopup': 'dialog', onclick: e => S_popover(e.currentTarget, grid(), { width: 300 }) }, odd ? `the ${ordinal(t.day)}` : 'Other day'));
+  return h('div.stack.timing', { style: { gap: '8px' } },
+    h('p.timing-sentence', {}, h('strong', {}, r.amount != null ? money(r.amount) : isFaded(r) ? `${money(typicalOf(r))} typical` : 'No amount yet'), ' · ', timingWords(r)),
+    chips(FREQS, t.freq, v => tap({ freq: v }), 'How often'),
+    t.freq === 'month' || (t.freq === 'year' && t.month) ? dayChips : null,
+    t.freq === 'week' ? chips(WEEKDAY_CHIPS, t.weekday, v => tap({ weekday: v }), 'Weekday', `${r.id}:weekday`) : null,
+    t.freq === 'year' ? chips(MONTH_CHIPS, t.month, v => tap({ month: v }), 'Month', `${r.id}:monthDue`) : null,
+    h('div.row-line', { style: { gap: '8px', flexWrap: 'wrap' } }, h('span.label.has-tip', { title: 'Same amount every time feeds the fixed floor: what you pay no matter what' }, 'Amount'),
+      toggle([['Fixed', 'Same amount every time'], ['Variable', 'It changes']], r.values.amountType ?? null, v => up({ amountType: v }), { label: 'Amount is' })));
+}
+// Who pays (5c): one segmented row (Me / Splitting / Someone else / Not for me; the stored values stay), its detail
+// only when it is not Me, Paid with beside it, and Someone pays me back behind a small link.
+const PANEL = { back: null };
+function whoRow(ctx, r, up) {
+  const top = whoOf(r);
+  const keep = r.status === 'Not for me' ? null : r.status;
+  const pick = x => up(x === 'Not for me' ? { status: 'Not for me' } : { status: keep, whoPays: x === 'Someone else' ? (r.values.whoPays === 'Included in rent' ? 'Included in rent' : 'Covered by someone') : x === 'Split' ? (r.values.whoPays === 'My share' ? 'My share' : 'Split') : 'Me' });
+  const p = r.paidWith, cards = ctx.store.find(x => x.kind === 'debt' && x.type === 'Credit card');
+  const way = p === 'card' || cards.some(c => c.id === p) ? 'card' : p ? 'checking' : null;
+  const back = r.values.reimbursed != null || PANEL.back === r.id;
+  return h('div.stack', { style: { gap: '10px' } },
+    toggle([['Me', 'Me'], ['Split', 'Splitting'], ['Someone else', 'Someone else'], ['Not for me', 'Not for me']], top, x => pick(x ?? 'Me'), { label: 'Who pays' }),
+    top === 'Split' || top === 'Someone else' ? h('div.who-detail', {}, whoPays(r, up, { roommates: ctx.store.doc.profile.roommates ?? 0, profile: ctx.store.doc.profile, detailOnly: true })) : null,
+    top === 'Not for me' ? null : h('div.row-line', { style: { gap: '8px', flexWrap: 'wrap' } }, h('span.label', {}, 'Paid with'),
+      toggle([['checking', 'Checking'], ['card', 'Credit card']], way, w => up({ paidWith: w === 'card' ? (cards.length === 1 ? cards[0].id : 'card') : 'checking' }), { label: 'Paid with' }),
+      way === 'card' && cards.length > 1 ? select(cards.map(c => [c.id, c.name || 'Credit card']), cards.some(c => c.id === p) ? p : null, v => up({ paidWith: v }), { label: 'Which card', hint: 'Which card', width: 160 }) : null,
+      way === 'card' && !cards.length ? h('span.muted.small', {}, 'No cards yet: add them under Debt') : null),
+    top === 'Not for me' ? null : back ? h('div.row-line', { style: { gap: '8px' } }, h('span.label.has-tip', { title: 'By an employer, an HSA or FSA, or someone who pays you back. It comes off your share.' }, 'Paid back to you'),
+      moneyInput(r.values.reimbursed ?? null, x => up({ reimbursed: x }), { hint: `Per ${r.per}` }))
+      : h('button.link-btn', { type: 'button', onclick: () => { PANEL.back = r.id; ctx.refresh(); } }, '+ Someone pays me back'));
+}
+function linePanel(ctx, r, up, { pass, ym }) {
+  const prem = premiumOf(ctx, r);
+  return [
+    h('div.row-line.panel-amount', { style: { gap: '8px', flexWrap: 'wrap' } }, h('span.label', {}, 'Amount'),
+      prem ? fromButton(`From ${prem.type}`, '#/net-worth/protection', r.linkedTo, { value: amount(ctx, r.amount, { chip: false }) })
+        : isFaded(r) ? fadedInput(r, up, `${r.id}:amount:panel`) : moneyInput(r.amount, v => up(typedPatch(r, v)), { key: `${r.id}:amount:panel` }),
+      prem ? null : perChip(r.per, v => up({ per: v }), { key: `${r.id}:per:panel` }),
+      isFaded(r) ? useButton(r, up) : null),
+    h('section.panel-sec', {}, h('h3', {}, 'When'), timingRow(ctx, r, up)),
+    h('section.panel-sec', {}, h('h3', {}, 'Who pays'), whoRow(ctx, r, up)),
+    h('section.panel-sec', {}, h('h3.has-tip', { title: 'Level 1 is the big one, 2 the regulars; Everything else folds into one line with its own amount' }, 'Shown as'),
+      toggle([[1, 'The big one'], [2, 'A regular'], [3, 'Everything else']], levelOf(r), v => up({ level: v }), { label: 'Level' })),
+    S_moreBlock(`line-more:${r.id}`, () => h('div.stack', { style: { gap: '12px' } },
+      pass === 'Plan' && ym ? monthPlanField(ctx, r, ym) : null,
+      lineSuggestion(r, up),
+      labelled('Joy', toggle([[true, 'A joy line'], [false, 'Not one']], r.values.joy === true ? true : r.values.joy === false ? false : null, v => up({ joy: v }), { label: 'Joy line', clearable: true }), { tip: 'Joy lines are funded first in the FOO (step 0b)' }),
+      r.values.amountType === 'Variable' ? labelled('Range: low, high', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+        moneyInput(r.values.low ?? null, v => up({ low: v }), { hint: 'Low' }), moneyInput(r.values.high ?? null, v => up({ high: v }), { hint: 'High' })), { tip: 'A light month and a heavy one; the amount is the average', ...park(ctx, r, 'low') }) : null,
+      tagsField(r, up)), { label: 'More' }),
+  ];
+}
+const fadedIn = (ctx, key) => ctx.visible(l => l.kind === 'bill' && !l.values.irregular && isFaded(l) && categoryKeyOf(l) === key).length;

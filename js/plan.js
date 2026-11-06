@@ -6,7 +6,8 @@ import { debtRoute } from './nav.js';
 import { monthlyFrom } from './math/income.js';
 import { fiDate, leanFiNumber, baristaFiNumber, pctToFi, solveMonthlySaving, solveSpending } from './math/fi.js';
 import { payoffPlan } from './math/debt.js';
-import { myShare } from './math/spending.js';
+import { inFat, myShare, isFaded } from './math/spending.js';
+import { whyAnswered } from './whynow.js';
 import { statusOf } from './records.js';
 import { gatesOf, visible } from './gates.js';
 import { addMonths, ymOf, dateOf, monthName } from './month.js';
@@ -14,13 +15,12 @@ import { RULES } from './registry/assumptions.js';
 
 export const MILESTONES = ['Lean FI', 'Coast FI', 'Barista FI', 'Regular FI', 'Fat FI', 'Debt free', 'Custom'];
 export const FAT_FACTOR = RULES.fatFactor; // Fat FI: 1.5 times regular spending (QUESTIONS: confirm)
-const FAT_LETTERS = new Set(['Food', 'Accommodation', 'Transportation']);
 
 // Every FI number the plan talks about.
 export function fiTargets(m, doc) {
   const x = m.inputs;
   const w = x.withdrawalRate;
-  const fat = x.lines.filter(l => FAT_LETTERS.has(l.draftt)).reduce((s, l) => s + (myShare(l, { roommates: x.roommates }).value ?? 0), 0);
+  const fat = x.lines.filter(inFat).reduce((s, l) => s + (myShare(l, { roommates: x.roommates }).value ?? 0), 0);
   const partTime = doc.assumptions?.partTimeIncome ?? null; // a month
   return {
     'Lean FI': fat ? leanFiNumber({ annualFat: fat * 12, withdrawalRate: w }) : { id: 'M51', value: null, needs: ['food, housing or transportation lines'] },
@@ -107,6 +107,7 @@ export function next3(doc, ref, { now = new Date(), limit = 3 } = {}) {
       if (!OPEN.has(st) && v != null) continue;
       if (r.kind === 'debt' && f === 'payment' && r.type === 'Credit card' && r.values.payChoice !== 'Custom') continue; // the minimum is worked out
       if (r.status === 'Not for me') continue;
+      if (isFaded(r)) continue; // batch 10: a faded typical amount is for reference, not an open number
       // Dollars a year at stake, for materiality (R073).
       const dollars = r.kind === 'bill' ? (r.amount == null ? 0 : monthlyFrom(r.amount, r.per).value * 12)
         : r.kind === 'debt' ? f === 'apr' ? (r.values.balance ?? 0) * (r.values.apr ?? ref.typicalRates[r.type] ?? 0.1) : f === 'payment' ? (r.values.payment ?? 300) * 12 : (r.values.balance ?? 5000) * 0.1
@@ -140,7 +141,7 @@ export function agenda(doc, ref, { now = new Date() } = {}) {
   const debtsDone = g.areas.debt === false || (m.inputs.debts.length > 0 && m.inputs.debts.every(d => d.balance != null && d.apr != null)); // batch 8 (C14): no debts typed is not done
   const custom = doc.session?.agenda;
   const steps = [
-    { id: 'why', name: 'Why now', route: '#/home/profile', done: !!doc.profile?.whyNow },
+    { id: 'why', name: 'Why now', route: '#/home/profile', done: whyAnswered(doc.profile, 'whyNow') },
     { id: 'debt', name: 'Debt and cash', route: g.areas.debt === false ? '#/net-worth/assets' : '#/net-worth/debt', done: debtsDone && m.inputs.cash !== null },
     { id: 'spend', name: 'Spending basics', route: '#/cash-flow/budget', done: m.inputs.spending !== null && m.inputs.takeHome !== null && (m.inputs.spendingSource === 'gut' || !m.inputs.guessLines) },
     { id: 'fi', name: 'FI reveal', route: '#/plan/goals', done: m.monthsToFi.value !== null || !!m.monthsToFi.never },

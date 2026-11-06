@@ -6,7 +6,7 @@ import { metrics, keyNumbers } from '../math/metrics.js';
 import { inView, timeChip } from '../math/time.js';
 import { money, pct, number, EMPTY, duration } from '../format.js';
 import { joinWords } from '../math/result.js';
-import { myShare, wholeBill, splitOf, withHome } from '../math/spending.js';
+import { myShare, wholeBill, splitOf, withHome, isFaded, typicalOf } from '../math/spending.js';
 import { nextCheck } from '../checks.js';
 import { parseQuickAdd } from '../quickadd.js';
 import { canQuickFill, quickFill } from './quickfill.js';
@@ -271,10 +271,10 @@ function ghostChart() {
 // Amount box: $ value with a 'per' picker (R043). Empty: strong border and a hint (R163).
 // Shown with commas ($4,200; $15.99); typing accepts commas, $ or plain digits.
 export const moneyText = v => (v === null || v === undefined ? '' : Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 }));
-export function moneyInput(value, onChange, { hint = 'Add amount', cents = true, key = null } = {}) {
+export function moneyInput(value, onChange, { hint = 'Add amount', cents = true, key = null, width = 128 } = {}) {
   const input = h('input', { inputmode: 'decimal', placeholder: hint, 'aria-label': hint.replace(/^Add /, ''), value: moneyText(value), 'data-focus': key });
   input.onchange = () => { const n = parseNum(input.value); input.value = moneyText(n); onChange?.(n); };
-  return h(`label.field.money${value !== null && value !== undefined ? '.filled' : ''}`, { style: { width: '128px' } }, h('span.pre', {}, '$'), input);
+  return h(`label.field.money${value !== null && value !== undefined ? '.filled' : ''}`, { style: { width: `${width}px` } }, h('span.pre', {}, '$'), input);
 }
 export function pctInput(value, onChange, { hint = 'Add APR', key = null } = {}) {
   const shown = value === null || value === undefined ? '' : +(value * 100).toFixed(3);
@@ -430,7 +430,7 @@ export function whoOf(rec) {
   if (v === 'Split' || v === 'My share') return 'Split';
   return 'Me';
 }
-export function whoPays(rec, update, { roommates = 0, profile = null } = {}) {
+export function whoPays(rec, update, { roommates = 0, profile = null, detailOnly = false } = {}) {
   // A blank answer follows About you › Home and shared bills (a shared bill is split, given as your share or the whole).
   const eff = withHome({ ...rec, ...rec.values }, profile || {});
   const inherited = rec.values.whoPays == null && eff.whoPays === 'Split';
@@ -440,8 +440,8 @@ export function whoPays(rec, update, { roommates = 0, profile = null } = {}) {
   const pick = x => update(x === 'Not for me' ? { status: 'Not for me' }
     : { status: keepStatus, whoPays: x === 'Someone else' ? (v === 'Included in rent' ? v : 'Covered by someone') : x === 'Split' ? (v === 'My share' ? 'My share' : 'Split') : 'Me' });
   const total = rec.amount == null ? 'Add the amount above' : `${money(rec.amount)} per ${rec.per}`;
-  return h('div.stack', {}, h('span.label', {}, 'Who covers it'),
-    toggle(WHO, top, x => pick(x ?? 'Me'), { label: 'Who covers it' }),
+  return h('div.stack', {}, detailOnly ? null : h('span.label', {}, 'Who covers it'), // batch 10 (5c): the side panel draws the one row itself
+    detailOnly ? null : toggle(WHO, top, x => pick(x ?? 'Me'), { label: 'Who covers it' }),
     top === 'Split' ? toggle([['Split', 'Evenly'], ['My share', 'My share of the bill']], v === 'My share' ? 'My share' : 'Split', x => update({ whoPays: x }), { label: 'How it is split' }) : null,
     top === 'Split' && v !== 'My share' ? h('span.row-line', {}, h('span.label', {}, 'Split by'), stepper(rec.values.splitBy ?? null, n => update({ splitBy: n }), { min: 1, label: 'Split by' }), h('span.muted.small', {}, 'Blank: you plus each roommate')) : null,
     // People give their rent either way ("my rent is $1,500" is often their share): ask which, and show the other.
@@ -471,7 +471,7 @@ export function whoPays(rec, update, { roommates = 0, profile = null } = {}) {
         part && mine?.value != null ? h('span.computed', { title: mine.text }, `Yours: ${money(mine.value)} a month`) : null);
     })() : null,
     // Money that comes back to you for this line (F093): it comes off your share.
-    top !== 'Not for me' ? h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Reimbursed to you'),
+    top !== 'Not for me' && !detailOnly ? h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Reimbursed to you'),
       moneyInput(rec.values.reimbursed ?? null, x => update({ reimbursed: x }), { hint: `Per ${rec.per}` }),
       h('span.muted.small', {}, 'By an employer, an HSA or FSA, or someone who pays you back. It comes off your share.')) : null);
 }
@@ -691,6 +691,14 @@ export function recordList(ctx, cfg) {
   }
   function setOpen(id) {
     if (!view) return;
+    if (cfg.panel) { // batch 10 (5a): details open in the side panel; the row stays one slim line
+      const r = view.recs.find(x => x.id === id);
+      if (!r) return;
+      state.open = null;
+      const tr = view.rows.get(id);
+      sidePanel(ctx, { title: cfg.panel.title?.(ctx, r) ?? (r.name || r.type || cfg.thing.one), key: `row:${id}`, anchor: tr, build: () => { const now = ctx.store.get(id); return now ? cfg.panel.build(ctx, now, p => update(now, p)) : h('p.muted', {}, 'This line is gone.'); } });
+      return;
+    }
     const was = state.open;
     if (was && id !== was) { forgetMore?.(); forgetMore = null; }
     // Closing the other open row (one at a time) must not move the row you clicked.
@@ -733,7 +741,14 @@ export function recordList(ctx, cfg) {
   // Batch 8 (B5, B6): a row is unconfirmed while its face is not Know it (blank, Rough or a Guess) and it is not already Getting it.
   const unconfirmed = r => !['Not for me', 'Will email', 'Computed'].includes(r.status) && sureOf(r.status, hasCore(r)) !== 'Know it' && !(r.values?.locked === true);
   const willGet = ids => { ctx.store.setStatus(ids, 'Will email'); toast(`${ids.length === 1 ? 'Find: it is' : `Find: ${ids.length} are`} on the homework list, with where to look.`, { undo: () => ctx.store.undo() }); };
-  const useEstimates = ids => { const list = ids.filter(id => ctx.store.get(id)?.status === 'Not sure'); if (!list.length) return; ctx.store.setStatus(list, null); toast(`${list.length} starter ${list.length === 1 ? 'estimate' : 'estimates'} kept as the number.`, { undo: () => ctx.store.undo() }); };
+  const useEstimates = ids => {
+    const list = ids.filter(id => ctx.store.get(id)?.status === 'Not sure');
+    const faded = ids.filter(id => isFaded(ctx.store.get(id))); // batch 10: a faded typical becomes the amount, marked Roughly
+    if (!list.length && !faded.length) return;
+    ctx.store.transaction('Use estimates', () => { if (list.length) ctx.store.setStatus(list, null); for (const id of faded) { const r = ctx.store.get(id); ctx.store.update(id, { amount: typicalOf(r), status: 'Roughly', usedTypical: true }); } });
+    const n = list.length + faded.length;
+    toast(`${n} starter ${n === 1 ? 'estimate' : 'estimates'} used as the number (Roughly).`, { undo: () => ctx.store.undo() });
+  };
   // One "..." per row: Reset, Duplicate, Not for me (or Bring back), then Delete on its own (R105).
   const rowMenuButton = r => {
     const name = r.name || r.type || cfg.thing.one;
@@ -743,6 +758,7 @@ export function recordList(ctx, cfg) {
       ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? item(r.values.locked === true ? 'Unlock (back to as typed)' : 'Lock it (confirmed)', 'lock', () => update(r, { locked: r.values.locked !== true })) : null, // item 11: a guess becomes confirmed here, never as a nag
       item(state.open === r.id ? 'Hide details' : 'Details', 'right', () => setOpen(r.id)), // item 17: the detail is in the menu too
       item('Reset', 'reset', () => reset([r.id])),
+      ...(cfg.menuExtra?.(ctx, r, p => update(r, p)) ?? []).map(x => item(x.label, x.icon ?? 'right', x.run)), // batch 10: Move up / Move down
       cfg.fixed ? null : item('Duplicate', 'copy', () => { ctx.store.duplicate(r.id); toast('Duplicated.', { undo: () => ctx.store.undo() }); }),
       cfg.notForMe ? (r.status === 'Not for me'
         ? item('Bring back', 'undo', () => update(r, { status: null }))
@@ -798,6 +814,7 @@ export function recordList(ctx, cfg) {
           h('td', { colspan: span - 1 }, h('span.row-line.group-line', { style: { gap: '10px', flexWrap: 'nowrap' } },
             h('button.fold', { type: 'button', 'aria-expanded': String(!folded), 'data-focus': `fold:${g}`, onclick: () => setFold(g, !isFolded(g)) },
               icon(folded ? 'right' : 'down'), `${cfg.groupLabel?.(g) ?? g} (${rows.length})`, cfg.subtotal ? h('span.muted', {}, ' · ', cfg.subtotal(ctx, rows, m)) : null),
+            cfg.groupExtra ? cfg.groupExtra(ctx, g, rows, m) : null, // batch 10: e.g. what the typical amounts would add up to
             // B6.6: add a line right in this section.
             cfg.groupAdd && cfg.groupAdd(g) ? h('button.btn.small.group-add', { type: 'button', 'data-focus': `group-add:${g}`, onclick: () => {
               const r = ctx.store.add(cfg.kind, cfg.groupAdd(g), { type: null });
@@ -845,11 +862,11 @@ export function recordList(ctx, cfg) {
     }
     if (state.open && !rowEls.has(state.open)) state.open = null;
     const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td.check-cell', {}), cfg.totals(ctx, recs, m, cols))) : null;
-    const counted = recs.filter(r => !isBlankRow(r, coreOf(r))); // batch 8 (B9): a blank row counts nowhere
+    const counted = recs.filter(r => !isBlankRow(r, coreOf(r)) && (!cfg.counts || cfg.counts(r))); // batch 8 (B9): a blank row counts nowhere; batch 10: a list can leave rows out (Everything else, faded)
     const leftRows = counted.filter(r => !coreOf(r).every(f => handled(r, f)));
     const done = counted.length - leftRows.length;
     // Batch 8 (B5, B6): one button for the whole section: every unconfirmed row to Getting it; every starter estimate kept.
-    const toGet = counted.filter(unconfirmed), toUse = counted.filter(r => r.status === 'Not sure');
+    const toGet = counted.filter(unconfirmed), toUse = recs.filter(r => r.status === 'Not sure' || isFaded(r));
     const bulk = [toUse.length ? h('button.btn.small', { type: 'button', title: 'Keep every starter estimate as the number', onclick: () => useEstimates(toUse.map(r => r.id)) }, icon('check'), `Use all starter estimates (${toUse.length})`) : null,
       toGet.length ? h('button.btn.small', { type: 'button', title: 'Every unconfirmed row goes on the homework list as Find: …, marked Getting it', onclick: () => willGet(toGet.map(r => r.id)) }, icon('clock'), `Will get all of these (${toGet.length})`) : null];
     const leftItems = leftRows.map(r => { const f = coreOf(r).find(x => !handled(r, x)); return { id: r.id, name: r.name || r.type || cfg.thing.one, word: r.status && r.status !== 'Know it' ? r.status : 'missing', field: f, focus: `${r.id}:${f}`, route: location.hash }; });
@@ -942,4 +959,31 @@ export function chartTheme(area) {
   const css = getComputedStyle(document.documentElement);
   const v = n => css.getPropertyValue(n).trim();
   return { area: v(`--${area}`), text: v('--text'), text2: v('--text-2'), line: v('--border-row'), card: v('--card'), font: v('--font') };
+}
+
+// ---------- Batch 10 (item 5a): the side panel ----------
+// The table is for scanning, the panel is for editing: one panel at a time, on the right (a bottom sheet at 760px
+// and below). Escape, the X or a click outside closes it. build() draws the content and is called again after each
+// change, so the panel follows the row. Returns { close }.
+let sideEl = null, sideOff = null, sideStop = null;
+export function closeSidePanel() { const el = sideEl; sideEl = null; sideOff?.(); sideOff = null; sideStop?.(); sideStop = null; el?.remove(); document.body.classList.remove('side-open'); }
+export const sidePanelOpen = () => !!sideEl;
+export function sidePanel(ctx, { title, build, anchor = null, key = null }) {
+  closeSidePanel();
+  const body = h('div.side-body');
+  const head = h('div.side-head', {}, h('h2', {}, title), h('button.icon-btn', { type: 'button', 'aria-label': 'Close', 'data-tip': 'Close', onclick: closeSidePanel }, icon('x')));
+  const el = h('aside.side-panel', { role: 'dialog', 'aria-label': title, 'data-panel': key }, head, body);
+  const draw = () => { if (sideEl !== el) return; const t = typeof title === 'function' ? title() : title; keepPlace(() => clear(body, build())); };
+  sideEl = el;
+  // An inspector beside the table (YNAB): on wide screens the page makes room and the panel starts under the sticky
+  // bars, so it covers nothing; at 760px and below it is a bottom sheet over the page (a modal sheet).
+  const phone = window.matchMedia?.('(max-width: 760px)').matches;
+  if (phone) el.setAttribute('aria-modal', 'true');
+  else { const bars = [document.getElementById('subtabs'), document.getElementById('topbar')].find(b => b && !b.hidden && b.getBoundingClientRect().height); el.style.top = `${Math.round(bars ? bars.getBoundingClientRect().bottom : 60)}px`; document.body.classList.add('side-open'); }
+  document.body.append(el);
+  draw();
+  sideStop = ctx.onRefresh(draw);
+  sideOff = opened({ el, anchor, close: () => { if (sideEl === el) { sideOff = null; closeSidePanel(); } } });
+  requestAnimationFrame(() => el.querySelector('button:not(.icon-btn), input')?.focus({ preventScroll: true }));
+  return { close: closeSidePanel, el };
 }

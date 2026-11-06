@@ -357,7 +357,7 @@ function wrapUp(app, ctx, P) {
   const m = ctx.metrics();
   const snapThisSession = ctx.store.doc.snapshots.some(x => x.session === P.n || (P.n === 1 && x.day0));
   const items = [
-    [theirs > 0, `Homework set (${theirs}${mine ? `, ${mine} for me` : ''})`, hw.length ? hw.map(x => x.label).join(', ') : "Nothing marked I'll find it later", S.button('Open the list', { size: 'small', onClick: () => app.go(app.homeworkRoute()) })],
+    [theirs > 0, `Homework set (${theirs}${mine ? `, ${mine} for me` : ''})`, hw.length ? hw.map(x => x.label).join(', ') : 'Nothing marked Will get it', S.button('Open the list', { size: 'small', onClick: () => app.go(app.homeworkRoute()) })],
     [snapThisSession, P.n === 1 ? 'Day 0 snapshot saved' : `Snapshot saved (End of session ${P.n})`, snapThisSession ? 'Saved this session' : 'Freezes today\'s numbers and the Picture %', null],
     [[m.netWorth, m.surplus, m.savingsRate].every(r => r.value !== null), 'One-pager ready', 'Key stats, to-dos, goals, strengths and struggles', S.button('Open one-pager', { size: 'small', onClick: () => app.go('#/report/one-pager') })],
     [!!s.next, 'Next session booked', s.next ? `Set for ${s.next}` : 'Two weeks from today unless a date is picked above', null],

@@ -8,14 +8,13 @@
 //   4 sinking funds already built; they feed FOO step 8
 // Backups of the backups (unemployment, disability, available credit, what could be cut, family help) add months of
 // runway and are never counted as a fund.
-import { myShare, DRAFTT } from './spending.js';
+import { myShare, DRAFTT, inFat } from './spending.js'; // batch 10: Phone stays in FAT and DRAFTT after its move to Bills and subscriptions
 import { monthsBetween, ymOf } from '../month.js';
 import { metrics } from './metrics.js';
 import { yearItems, sinkingOf } from '../year.js';
 import { gatesOf, visible } from '../gates.js';
 import { RULES, bigEMonthsOf, STABILITY_MULTIPLIER } from '../registry/assumptions.js';
 
-const FAT = new Set(['Food', 'Accommodation', 'Transportation']);
 export const LITTLE_E = RULES.littleE;
 export const STABILITY = STABILITY_MULTIPLIER; // answer 172: big e = age / 5 x the stability multiplier (or the coach's number)
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
@@ -39,7 +38,7 @@ export function gapStep(gap, now = new Date()) {
 export function cashLayers(x, { deductibles = [], gaps = [], stability = null, mode = 'virtual', accounts = [], layerAccounts = {}, sinking = [], now = new Date() } = {}) {
   const mine = l => myShare(l, { roommates: x.roommates ?? 0 }).value ?? 0;
   const lines = (x.lines || []).filter(l => l.status !== 'Not for me');
-  const monthly = { fat: sum(lines.filter(l => FAT.has(l.draftt)), mine), draftt: sum(lines.filter(l => DRAFTT.includes(l.draftt)), mine), full: x.spending ?? sum(lines, mine) };
+  const monthly = { fat: sum(lines.filter(inFat), mine), draftt: sum(lines.filter(l => DRAFTT.includes(l.draftt) || inFat(l)), mine), full: x.spending ?? sum(lines, mine) };
   const mult = x.bigEMultiplier ?? 1;
   const months = bigEMonthsOf(x.age, mult); // null without an age: big e is locked
   const how = mult !== 1 ? ` (age ${x.age} / 5 x ${mult})` : ` (age ${x.age} / 5)`;

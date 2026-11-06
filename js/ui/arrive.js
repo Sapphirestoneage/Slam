@@ -54,23 +54,31 @@ function show({ scroll = true } = {}) {
   if (!state) return;
   const { list, i } = state, it = list[i];
   unglow();
+  // Batch 10 (5b): a line under a closed category: open the category first, then look again.
+  if (it.parent && !document.querySelector(`tr[data-id="${CSS.escape(it.id)}"]`) && !document.querySelector(`[data-focus="${CSS.escape(it.focus ?? '')}"]`)) {
+    const c = caretOf(document.querySelector(`tr[data-id="${CSS.escape(it.parent)}"]`));
+    if (c) { c.click(); requestAnimationFrame(() => requestAnimationFrame(() => show({ scroll }))); return; }
+  }
   let el = target(it);
-  if (!el?.matches('label.field, .seg, .stack, .row-line, input, select') && it.focus) { // the box is inside a closed Details panel: open it, then look again
-    const caret = caretOf(el);
+  if (!el?.matches('label.field, .seg, .stack, .row-line, input, select, .picks') && it.focus) { // the box is inside a closed Details panel: open it, then look again
+    const caret = caretOf(el) ?? caretOf(el?.closest?.('tr.row')); // batch 10 (5b): on the Budget the caret opens the side panel, where the day chips are
     if (caret) { caret.click(); requestAnimationFrame(() => { const inner = target(it); if (inner && inner !== el) { el.classList.remove('glow'); light(inner, scroll); } }); }
   }
   if (el) light(el, scroll);
   const names = list.map(x => `${x.name}${x.word ? ` (${x.word})` : ''}`);
   const shown = names.length > 3 ? [...names.slice(0, 3), `+${names.length - 3} more`] : names;
   toastEl?.remove();
-  toastEl = h('div.toast.arrive', { role: 'status' },
+  // Batch 10 (5g): a slim bar docked at the top of the content, never over the table.
+  toastEl = h('div.arrive-bar', { role: 'status' },
     h('span.stack', { style: { gap: '2px' } }, h('span', {}, h('strong', {}, 'On this screen: '), shown.join(' · ')),
       it.where ? h('span.small', { style: { opacity: .85 } }, `${it.name.split(': ').pop()}: look on ${it.where}`) : null),
-    h('button.btn', { type: 'button', onclick: () => show() }, 'Show me'),
-    list.length > 1 ? h('button.btn', { type: 'button', onclick: () => { state.i = (state.i + 1) % state.list.length; show(); } }, `Next › (${i + 1} of ${list.length})`) : null,
-    h('button.btn', { type: 'button', onclick: () => { const to = state.back; closeToast(); location.hash = to; } }, 'Back to the agenda'),
+    h('span.spacer', { style: { flex: 1 } }),
+    h('button.btn.small', { type: 'button', onclick: () => show() }, 'Show me'),
+    list.length > 1 ? h('button.btn.small', { type: 'button', onclick: () => { state.i = (state.i + 1) % state.list.length; show(); } }, `Next › (${i + 1} of ${list.length})`) : null,
+    h('button.btn.small', { type: 'button', onclick: () => { const to = state.back; closeToast(); location.hash = to; } }, 'Back to the agenda'),
     h('button.icon-btn.tiny', { type: 'button', 'aria-label': 'Close', onclick: closeToast }, icon('x')));
-  document.body.append(toastEl);
+  const main = document.getElementById('main');
+  if (main) main.prepend(toastEl); else document.body.append(toastEl);
 }
 function light(el, scroll) {
   el.classList.add('glow');

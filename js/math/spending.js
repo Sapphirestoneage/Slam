@@ -216,7 +216,8 @@ export function savingsRate({ takeHome, surplus, afterTaxSavings = 0, gross = nu
 // M29: DRAFTT shares of take-home. Proportions only.
 export const DRAFTT = ['Debt', 'Retirement', 'Accommodation', 'Food', 'Transportation', 'Taxes', 'Therapy'];
 // What each letter is called on screen. The stored key stays 'Therapy'; it reads Health and self-care (answer to 92).
-export const DRAFTT_NAME = { Therapy: 'Health and self-care' };
+// Batch 10: Bills and subscriptions is a group outside DRAFTT (like Other and Wants), stored as draftt 'Bills'.
+export const DRAFTT_NAME = { Therapy: 'Health and self-care', Bills: 'Bills and subscriptions' };
 export const drafttName = k => DRAFTT_NAME[k] ?? k;
 export function drafttShares(lines, takeHome, opts) {
   if (isBlank(takeHome)) return needs('M29', ['take-home'], { unit: 'pct' });
@@ -241,22 +242,55 @@ export function housingPct({ housing, takeHome }) {
 // when the lines add up to more, the category reads the line total ("updated from $X"); with no typed number it
 // reads the line total; what the lines have not reached shows as "$X not assigned yet". An existing file with lines
 // and no category records reads exactly as before (category = the sum of its lines).
-export const CATEGORIES = ['Accommodation', 'Food', 'Transportation', 'Debt', 'Therapy', 'Taxes', 'Retirement', 'Other'];
+export const CATEGORIES = ['Accommodation', 'Food', 'Transportation', 'Debt', 'Therapy', 'Taxes', 'Retirement', 'Bills', 'Other'];
 export const CORE_CATEGORIES = ['Accommodation', 'Food', 'Transportation']; // always counted in progress; the rest once they hold something
 export const categoryName = k => DRAFTT_NAME[k] ?? k;
-export const categoryKeyOf = line => (DRAFTT.includes(line.draftt ?? line.values?.draftt) ? (line.draftt ?? line.values?.draftt) : 'Other');
+// Batch 10: Bills and subscriptions has its own category row; every other letter outside DRAFTT (Wants, blank) is Other.
+export const categoryKeyOf = line => { const d = line.draftt ?? line.values?.draftt; return DRAFTT.includes(d) || d === 'Bills' ? d : 'Other'; };
 export const isCategoryRecord = r => r?.kind === 'spending' && r.type !== 'All in' && CATEGORIES.includes(r.type);
+
+// ---------- Batch 10: faded typical amounts and levels ----------
+// A starter line holds its typical amount apart (values.typical) and no amount of its own: it is shown faded for
+// reference and counts nowhere until the client uses it (amount = typical, Roughly) or types a real number.
+const blankAmount = v => v === null || v === undefined || v === '';
+export const isFaded = r => (r?.kind === undefined || r.kind === 'bill') && blankAmount(r?.amount) && (r?.values?.typical ?? r?.typical) != null && r?.status !== 'Not for me';
+export const typicalOf = r => r?.values?.typical ?? r?.typical ?? null;
+// What the typical amounts of the faded lines would add up to, a month (for reference, not their number).
+export const typicalTotal = lines => lines.filter(isFaded).reduce((s, l) => s + (monthlyFrom(typicalOf(l), l.per ?? 'month').value ?? 0), 0);
+// Levels inside every group: 1 the big one, 2 the regulars, 3 folded into one Everything else line. A line with no
+// level is a 2 (a line the client adds); starter lines carry theirs from Reference data (spendingPresets.lines[].level).
+export const LEVEL_ELSE = 3;
+// The categories that sit in Bills and subscriptions (Internet stays in Accommodation; the combined Internet, phone too).
+export const BILLS_CATEGORIES = ['Phone', 'Streaming', 'Music', 'Apps and cloud', 'Memberships', 'News', 'Subscriptions'];
+// Food, accommodation and transportation (Lean FI and big e: FAT). Phone sat in Accommodation before batch 10, so it
+// stays in FAT after its move to Bills and subscriptions (nothing about Lean FI changes).
+const FAT_LETTERS = new Set(['Food', 'Accommodation', 'Transportation']);
+export const inFat = l => FAT_LETTERS.has(l.draftt ?? l.values?.draftt) || (l.category ?? l.values?.category) === 'Phone';
+export const levelOf = l => { const v = Number(l?.level ?? l?.values?.level); return v === 1 || v === 2 || v === 3 ? v : 2; };
+// The Everything else line of one group: its pieces (level 3 lines) win once any has a real amount; until then the
+// one rough amount typed for the whole bucket counts (bucket: the category row's elseAmount). Never both.
+export function everythingElse(lines = [], bucket = null, mine = l => l.amount ?? 0) {
+  const pieces = lines.filter(l => levelOf(l) === LEVEL_ELSE && (l.status ?? null) !== 'Not for me');
+  const real = pieces.filter(l => !blankAmount(l.amount));
+  const piecesSum = real.length ? real.reduce((s, l) => s + (mine(l) ?? 0), 0) : null;
+  const b = blankAmount(bucket) ? null : Number(bucket);
+  const from = piecesSum != null ? 'pieces' : b != null ? 'bucket' : 'none';
+  return { pieces, real: real.length, piecesSum, bucket: b, from, amount: from === 'pieces' ? piecesSum : from === 'bucket' ? b : null, replaced: from === 'pieces' && b != null };
+}
 // catRecs: the category records; lines: the Budget lines as the math sees them (my share, autos included; Not for me
-// left out); mine(line): a line's monthly amount. Returns one entry per category, in order.
+// left out); mine(line): a line's monthly amount. Returns one entry per category, in order. Batch 10: a faded line
+// (no real amount) counts nowhere, and a group's Everything else bucket counts while none of its pieces has a number.
 export function categoryTotals(catRecs = [], lines = [], mine = l => l.amount ?? 0) {
   return CATEGORIES.map(key => {
     const rec = catRecs.find(r => r.type === key) ?? null;
-    const mineLines = lines.filter(l => (l.status ?? null) !== 'Not for me' && categoryKeyOf(l) === key);
-    const linesSum = mineLines.length ? mineLines.reduce((s, l) => s + (mine(l) ?? 0), 0) : null;
+    const mineLines = lines.filter(l => (l.status ?? null) !== 'Not for me' && !blankAmount(l.amount) && categoryKeyOf(l) === key);
+    const others = mineLines.filter(l => levelOf(l) !== LEVEL_ELSE);
+    const rest = everythingElse(lines.filter(l => categoryKeyOf(l) === key), rec?.values?.elseAmount ?? null, mine);
+    const linesSum = others.length || rest.amount != null ? others.reduce((s, l) => s + (mine(l) ?? 0), 0) + (rest.amount ?? 0) : null;
     const typed = rec && !isBlank(rec.amount) && rec.status !== 'Not for me' ? monthlyFrom(rec.amount, rec.per ?? 'month').value : null;
     const from = typed == null ? (linesSum == null ? 'none' : 'lines') : linesSum != null && linesSum > typed + 0.5 ? 'updated' : 'typed';
     const amount = from === 'none' ? null : from === 'lines' ? linesSum : from === 'updated' ? linesSum : typed;
     const unassigned = from === 'typed' && typed != null ? Math.max(0, typed - (linesSum ?? 0)) : 0;
-    return { key, name: categoryName(key), rec, typed, linesSum, lines: mineLines, from, amount, unassigned, counts: CORE_CATEGORIES.includes(key) || amount != null || mineLines.length > 0 || !!rec?.status };
+    return { key, name: categoryName(key), rec, typed, linesSum, lines: mineLines, else: rest, from, amount, unassigned, counts: CORE_CATEGORIES.includes(key) || amount != null || mineLines.length > 0 || !!rec?.status };
   });
 }

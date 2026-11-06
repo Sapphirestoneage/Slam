@@ -373,3 +373,11 @@ Answered and built from the second overnight brief: 140 (a parked hole does not 
 183. **A category above its lines.** With $600 typed on Food and $350 of Food lines, the category stays $600 and shows "$250 not assigned yet"; only lines above the typed amount move it. Should the typed amount fall to the line total once the lines look complete (every line Know it), or always stay?
 184. **The export format.** Batch 8 adds no field, formula or column to the registries, so the format's shape hash did not move and version 11 stands (the coverage test would have demanded a bump otherwise); category rows are ordinary spending records with the category as their type, so older files import unchanged and older workbooks still read. Fine to leave it at 11, or do you want a version bumped on every batch regardless?
 185. **The Will get it hover.** On About you the per-field Will get it buttons appear on hover or focus (always on touch screens), with one "Will get all of these (N)" per section. The house rule says hover never carries information; this is a deliberate exception. Keep it?
+
+## Batch 10 (Nov 5 2026)
+
+186. **Use is Roughly.** Use on a faded typical amount enters it as Roughly (it shows in Defaults in use and comes back to confirm in 30 days). Batch 8's per-row Use on an older Not sure line still makes it Know it. Should those two match?
+187. **Untouched means.** The migration fades a starter line only when it is still Not sure, still at the starter guess and nobody typed over it. A line someone set to Roughly or Know it without changing the number keeps its amount. Fade those too?
+188. **Phone in Lean FI.** Phone moved to Bills and subscriptions but stays in FAT (Lean FI, big e FAT), as it was through Accommodation. The other subscriptions stay out. OK?
+189. **Category typed vs Everything else.** Batch 8's rule stands: a typed category amount counts as done and the lines only move it when they add up to more. Everything else's rough bucket is one of those lines. Should a typed category also hide the bucket box?
+190. **Goal chips to milestones.** Debt free and FI or retire early add those milestones; Emergency fund, Buy a home, Save for a big event and Start investing add a Custom milestone with that name (the FOO steps are not goals in SLAM). Map them elsewhere?

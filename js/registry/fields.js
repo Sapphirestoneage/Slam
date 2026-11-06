@@ -85,6 +85,11 @@ export const AREAS = [
       f('jointAccounts', 'Joint accounts', 'list', { sheet: { skip: 'a list of account ids; tick them on About you' } }),
       f('email', 'Email'), f('phone', 'Phone'),
       f('whyNow', 'What prompted this call'), f('worry', 'Biggest worry'), f('goalWords', 'Goal in their words'),
+      // Batch 10: Why now as chips (several each), a star on the main one, and Other's own words. The text boxes above stay.
+      f('chips.whyNow', 'What prompted this call: chips', 'list'), f('chips.worry', 'Biggest worry: chips', 'list'), f('chips.goalWords', 'Goal: chips', 'list'),
+      f('chipStar.whyNow', 'What prompted this call: the main one', 'text'), f('chipStar.worry', 'Biggest worry: the main one', 'text'), f('chipStar.goalWords', 'Goal: the main one', 'text'),
+      f('chipOther.whyNow', 'What prompted this call: Other', 'text'), f('chipOther.worry', 'Biggest worry: Other', 'text'), f('chipOther.goalWords', 'Goal: Other', 'text'),
+      f('goalSuggest', 'Goal suggestions set aside', 'list', { sheet: { skip: 'which goal chip suggestions the coach set aside on Plan › Goals; set in SLAM' } }),
       f('areas.cash', 'Has cash', 'yesno'), f('areas.investments', 'Has investments', 'yesno'), f('areas.real', 'Has a home or car', 'yesno'), f('areas.debt', 'Has debt', 'yesno'),
       f('noneOfThese', 'None of these (no money areas)', 'yesno'),
       f('counts', 'How many of each', 'text', { sheet: { skip: 'the counts typed on About you only make blank rows; the rows themselves are on each tab' } }),
@@ -294,7 +299,12 @@ export const AREAS = [
     fields: [
       NAME, AMOUNT('Amount'), PER(),
       f('category', 'Category', 'text', { kinds: ['bill'] }),
-      pick('draftt', 'DRAFTT letter', ['Debt', 'Retirement', 'Accommodation', 'Food', 'Transportation', 'Taxes', 'Therapy'], { kinds: ['bill'] }),
+      pick('draftt', 'DRAFTT letter', ['Debt', 'Retirement', 'Accommodation', 'Food', 'Transportation', 'Taxes', 'Therapy', 'Bills', 'Wants'], { kinds: ['bill'] }), // batch 10: Bills (Bills and subscriptions) and Wants sit outside DRAFTT, like Other (blank)
+      // Batch 10: a starter line's typical amount, kept apart from the amount: shown faded, counted nowhere until used.
+      f('typical', 'Typical amount (for reference, not counted)', 'money', { kinds: ['bill'] }),
+      f('usedTypical', 'Amount came from Use typical', 'yesno', { kinds: ['bill'], sheet: { skip: 'set by the Use button; the Status column says Roughly' } }),
+      f('level', 'Level in its group (1, 2, 3 = Everything else; blank is 2)', 'number', { kinds: ['bill'] }),
+      f('elseAmount', 'Everything else, one rough amount a month', 'money', { kinds: ['spending'] }), // on a category row: counts while none of its level 3 lines has a number
       pick('amountType', 'Amount is', ['Fixed', 'Variable', 'Range'], { kinds: ['bill'] }),
       f('low', 'Range: low', 'money', { kinds: ['bill'] }), f('high', 'Range: high', 'money', { kinds: ['bill'] }),
       pick('timing', 'Date is', ['Fixed date', 'Variable date', 'Weekly', 'Any time', 'Spread out'], { kinds: ['bill'] }),
@@ -396,6 +406,8 @@ export const NOT_IN_SHEET = {
   'settings.timeView': 'the $ / Hours / FI days view, a screen setting',
   'settings.fastTrack': 'the last Fast Track run, kept to compare',
   'settings.presetsAdded': 'marks that the starter lines were added once',
+  'settings.migrated10': 'marks that batch 10 turned untouched starter amounts faded, once per file',
+  'settings.fadedNote': 'how many starter amounts turned faded, for the one-time note on the Budget (cleared when it is closed)',
   'settings.layerAccounts': 'which account holds each cash layer; set on Cash layers',
   'settings.person': 'the person filter on Net worth and Cash flow (all, Me, Partner), a screen setting (F2)',
   'settings.debtCustomOrder': 'the custom payoff order, debt ids dragged into place on Plan › Debt payoff (F3)',

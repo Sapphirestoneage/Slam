@@ -10,7 +10,7 @@ import { parseRoute } from './nav.js';
 import { LATER, fieldLabel, whereToFind } from './homework.js';
 import { rowLabel } from './institutions.js';
 import { asksTaxType } from './math/portfolio.js';
-import { categoryTotals, isCategoryRecord, CATEGORIES } from './math/spending.js';
+import { categoryTotals, isCategoryRecord, CATEGORIES, categoryKeyOf } from './math/spending.js';
 
 // A field is done when its status counts as done; the institution is done once the row points at an Institutions row.
 const isDone = (r, f) => (f === 'institution' && !!r.values?.institutionId) || countsAsDone(statusOf(r, f));
@@ -49,7 +49,8 @@ export function budgetCompletion(ctx) {
   for (const r of recs.filter(r => r.kind === 'bill' && !r.values.irregular && r.values.amountType === 'Fixed' && r.amount != null && r.status !== 'Not for me' && !r.values.dueDay)) {
     const name = r.name || r.values.category || 'Line';
     f.of += 1; f.missing.push(`Set due day for ${name}`);
-    f.items.push({ id: r.id, name: `Set due day for ${name}`, field: 'dueDay', word: 'no day', level: 'Full detail', focus: `${r.id}:dueDay`, where: 'The bill or the bank statement: the day it leaves' });
+    const parent = recs.find(c => isCategoryRecord(c) && c.type === categoryKeyOf(r))?.id ?? null; // batch 10 (5b): Show me opens the category, then the line's side panel
+    f.items.push({ id: r.id, parent, name: `Set due day for ${name}`, field: 'dueDay', word: 'no day', level: 'Full detail', focus: `${r.id}:dueDay`, where: 'The bill or the bank statement: the day it leaves' });
   }
   return { core: c, full: f };
 }
