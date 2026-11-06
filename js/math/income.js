@@ -269,7 +269,8 @@ export const taxTypeOf = r => r.values?.incomeType ?? TAXED[r.type] ?? null;
 const PAYCHECKS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
 // An Unemployment row with no tax type picked is a benefit: counted weekly as it lands, less the 10% federal
 // withholding when chosen; its income tax is worked out on the household's return (householdTax).
-export const isBenefitRow = r => r?.kind === 'income' && r.type === 'Unemployment' && !r.values?.incomeType;
+// A tax type of Benefits is the same benefit (found on a real household: picking it fell back to a paycheck with FICA).
+export const isBenefitRow = r => r?.kind === 'income' && r.type === 'Unemployment' && (!r.values?.incomeType || r.values.incomeType === 'Benefits');
 export function benefitRow(r, { ref, now = new Date() } = {}) {
   const v = r.values || {};
   if (r.amount == null) return { takeHome: needs('M01', ['the weekly amount']), gross: null, pretax: 0, roth: 0, afterTax: 0, parts: null, taxType: null, computed: null, benefit: null };

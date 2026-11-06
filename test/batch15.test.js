@@ -417,3 +417,13 @@ test('item 1 and 13: opened in a spreadsheet, the household tax formulas give th
     assert.deepEqual(off, [], `filing ${filing ?? 'blank'}`);
   }
 });
+
+// Found on a real household (Nov 6): an Unemployment row with Tax type "Benefits" picked fell back to a paycheck,
+// grossed up with FICA. Benefits is the same benefit.
+import { isBenefitRow as isBenefitQ } from '../js/math/income.js';
+test('an Unemployment row tagged Benefits is still a benefit; tagged W-2 it is not', () => {
+  const row = values => ({ kind: 'income', type: 'Unemployment', values });
+  assert.equal(isBenefitQ(row({})), true);
+  assert.equal(isBenefitQ(row({ incomeType: 'Benefits' })), true);
+  assert.equal(isBenefitQ(row({ incomeType: 'W-2' })), false);
+});
