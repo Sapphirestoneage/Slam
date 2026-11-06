@@ -182,6 +182,10 @@ export function confidenceOf(key, picture, { now = new Date() } = {}) {
 export function fiWordsOf(m, conf, { now = new Date() } = {}) {
   const base = m.monthsToFi.value;
   if (base == null) return null;
+  // Batch 12 (persona finding): already past the FI number says so, with the margin, never "about 0 years from now".
+  const inv = m.inputs?.invested, fiN = m.fiNumber?.value;
+  if (base === 0 && inv != null && fiN != null && inv >= fiN) { const over = inv - fiN, $ = v => `$${Math.round(v).toLocaleString('en-US')}`;
+    return { kind: 'past', past: true, text: 'Reached', low: 0, high: 0, margin: over, years: `past your FI number: ${$(inv)} invested against ${$(fiN)}, ${$(over)} over`, sentence: `You are past your FI number: ${$(inv)} invested against ${$(fiN)}, ${$(over)} (${Math.round(over / fiN * 100)}%) over.` }; }
   const yearAt = months => new Date(now.getFullYear(), now.getMonth() + months, 1).getFullYear();
   const monthAt = months => new Date(now.getFullYear(), now.getMonth() + months, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   if (!conf || conf.word === 'High' || !conf.range) return { kind: 'month', text: monthAt(base), low: base, high: base, years: `${(base / 12).toFixed(1)} years from now` };

@@ -20,8 +20,10 @@ function checkFixture(fx) {
   const p = projection(m, doc, { type: 'Regular FI', values: {} }, now);
   assert.equal(p.months, m.monthsToFi.value);
   const want = fx.expected.monthsToFi;
-  // The spec's number is the surplus invested from today; the app's FI date pays heavy debt first (batch 11, the debt rule).
-  if (want) assert.ok(Math.abs(m.fiPaths.invested.value - want.value) <= 1, `FI months ${m.fiPaths.invested.value} vs ${want.value}`);
+  // Batch 12: the spec's Demo number is the plan the app shows (heavy debt, then big e, then invested); a sheet that
+  // still says "surplus fully invested" (the private test client) is checked against that path.
+  const got = /on the plan/i.test(want?.label ?? '') ? m.monthsToFi : m.fiPaths.invested;
+  if (want) assert.ok(Math.abs(got.value - want.value) <= 1, `FI months ${got.value} vs ${want.value}`);
   return { doc, m };
 }
 

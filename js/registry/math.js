@@ -29,6 +29,9 @@ import { ladderOf } from '../math/ladder.js';
 import { saferFi } from '../math/fi.js';
 import { compareOf, netWorthIn } from '../math/proposed.js';
 import { closeStreak } from '../month.js';
+import { foo } from '../math/foo.js';
+import { gapOf } from '../math/gap.js';
+import { nextMoves } from '../math/moves.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -186,7 +189,7 @@ export const MATH = [
     cols: [{ area: 'months', key: 'M25', label: 'Actual minus plan (M25)', unit: 'money', f: 'IF(OR({estimate}="",{actual}=""),"",{actual}-{estimate})' }],
     sheet: 'SUM(Months_M25)', label: 'Every month with both a plan and an actual: actual minus plan, added up',
     app: c => sum(Object.values(c.doc.spending?.months || {}).flatMap(mo => Object.values(mo.lines || {})), l => estimateVsActual({ estimate: l.estimate ?? null, actual: l.actual ?? null }).value) },
-  { id: 'M26', name: 'Gut accuracy', inputs: 'closed months', unit: 'pct', fns: ['spending.gutAccuracy'],
+  { id: 'M26', name: 'Gut accuracy', inputs: 'closed months', unit: 'pct', fns: ['spending.gutAccuracy', 'spending.gutVsLinesWords'],
     fromApp: 'an average across closed months of each first guess against the actual; the close history stays in SLAM', app: () => null },
   { id: 'M27', name: 'Monthly surplus', inputs: 'M12, M21, debts', unit: 'money', fns: ['spending.monthlySurplus'],
     parts: [
@@ -261,7 +264,7 @@ export const MATH = [
     cols: [{ area: 'debt', key: 'M33', label: 'Fee as an APR (M33)', unit: 'pct', f: 'IF(OR({fee}="",N({balance})=0,{periods}=""),"",{fee}/{balance}*{periods})' }],
     sheet: 'IF(COUNT(Debt_M33)=0,"",MAX(Debt_M33))', label: 'Highest fee APR',
     app: c => { const v = c.live.filter(r => r.kind === 'debt').map(r => feeApr({ fee: r.values.fee ?? null, amount: r.values.balance || null, periodsPerYear: r.values.periods ?? null }).value).filter(x => x != null); return v.length ? Math.max(...v) : null; } },
-  { id: 'M34', name: 'Payoff order with extra payment', inputs: 'debts, extra, order, the surplus while heavy debt is carried (the debt rule)', unit: 'months', fns: ['debt.payoffPlan', 'debt.simulateDebt', 'debt.hasslePerDollar', 'debt.customOrder', 'debt.orderCost', 'debt.debtFirstPlan', 'debt.isHeavyDebt', 'debt.promoSoonIds', 'metrics.debtRuleOf', 'debt.debtFreeCard', 'debt.HERO_EXTRAS'],
+  { id: 'M34', name: 'Payoff order with extra payment', inputs: 'debts, extra, order, the surplus while heavy debt is carried (the debt rule)', unit: 'months', fns: ['debt.payoffPlan', 'debt.simulateDebt', 'debt.hasslePerDollar', 'debt.customOrder', 'debt.orderCost', 'debt.debtFirstPlan', 'debt.isHeavyDebt', 'debt.promoSoonIds', 'metrics.debtRuleOf', 'debt.debtFreeCard', 'debt.HERO_EXTRAS', 'debt.heroExtras', 'debt.SHORT_PLAN_SHARES'],
     fromApp: 'a month-by-month simulation: every debt gets its payment, the surplus goes to heavy debt first in the payoff order (batch 11, the debt rule), and each cleared payment rolls forward (up to 1,200 rows)',
     parts: [{ key: 'heavy', name: 'Months until the heavy debt is gone, on the same plan', unit: 'months', fromApp: 'the same simulation', app: c => (c.m.debtPlan?.debts.some(d => d.heavy) ? c.m.debtPlan.heavyMonths : null) },
       { key: 'minimum', name: 'Months until every debt is gone at each debt\'s own payment only', unit: 'months', fromApp: 'the same simulation with no surplus and no extra', app: c => c.m.debtPlanMinimum?.months ?? null }],
@@ -324,9 +327,9 @@ export const MATH = [
       // after-tax contributions and Retirement lines (paid out of the surplus) go in.
       // Batch 11, the debt rule: while heavy debt is carried the surplus goes to it first, so for those months only what
       // the paycheck and the accounts already put in is invested; after them the surplus and the freed heavy payments.
-      { key: 'debtMonths', name: 'Months the surplus pays heavy debt first (0 when the rule is off or there is none)', unit: 'months', fromApp: 'the month-by-month debt-first plan (M34) with the surplus on the heavy debt', app: c => c.m.investing?.before?.months ?? 0 },
+      { key: 'debtMonths', name: 'Months before the surplus is invested: it pays heavy debt first, then fills big e (0 when both rules are off or there is nothing to do)', unit: 'months', fromApp: 'the month-by-month debt-first plan (M34), then the freed-money flow (M79): big e left over the surplus and freed payments', app: c => c.m.investing?.before?.months ?? 0 },
       { key: 'freed', name: 'Heavy debt payments freed once it is paid, a month', unit: 'money', fromApp: 'the payments on the heavy debts in the debt-first plan (M34)', app: c => c.m.investing?.freed ?? 0 },
-      { key: 'before', name: 'Invested a month while the surplus pays heavy debt: 401(k), HSA, match, after-tax contributions and Retirement lines', unit: 'money',
+      { key: 'before', name: 'Invested a month while the surplus pays heavy debt or fills big e: 401(k), HSA, match, after-tax contributions and Retirement lines', unit: 'money',
         sheet: 'IF(Math_M27="","",Math_M28_pretax+Math_M28_match+N(Math_M28_afterTax)+N(Math_M27_retire))', app: c => (c.m.investing?.before ? c.m.investing.before.monthly : c.m.surplus.value == null ? null : (c.m.investing?.alreadyIn ?? 0) + (c.m.investing?.contributions ?? 0)) },
       { key: 'invest', name: 'Invested a month: 401(k), HSA, match, plus the surplus and any freed heavy payments (or, with Invest my surplus off, the after-tax contributions and Retirement lines)', unit: 'money',
         sheet: 'IF(Math_M27="","",Math_M28_pretax+Math_M28_match+IF(N(InvestSurplus)=0,N(Math_M28_afterTax)+N(Math_M27_retire),Math_M27+N(Math_M53_freed)))', app: c => c.m.investing?.monthly ?? null }],
@@ -346,7 +349,7 @@ export const MATH = [
     app: c => moneyAsTime({ amount: 100, hourlyWage: c.m.hourly.value, annualSpending: c.m.annualSpending }).value.fiDays },
 
   // ---------- Calendar ----------
-  { id: 'M60', name: 'Running balance', inputs: 'calendar entries', unit: 'money', fns: ['calendar.runningBalance', 'markers.calendarMarkers'],
+  { id: 'M60', name: 'Running balance', inputs: 'calendar entries', unit: 'money', fns: ['calendar.runningBalance', 'markers.calendarMarkers', 'calendar.gutSpread'],
     fromApp: 'a day-by-day walk through the calendar with each paid, moved and maybe mark; on Cash flow › Calendar', app: () => null },
   { id: 'M61', name: 'Bonus paycheck months', inputs: 'pay dates', unit: 'text', fns: ['calendar.bonusMonths'],
     fromApp: 'counts the paydays in each month from the next payday; on Cash flow › Calendar', app: () => null },
@@ -408,10 +411,27 @@ export const MATH = [
       { key: 'marker', name: 'Next marker', unit: 'text', fromApp: 'the first marker not reached, with its projected month', app: c => { const l = ladderOf(c.doc, c.ref, { now: c.now, flags: c.flags }); return l.nextMarker ? `${l.nextMarker.name}${l.nextMarker.date ? `, about ${l.nextMarker.date}` : ''}` : 'Every marker reached'; } },
     ] },
   { id: 'M76', name: 'Current vs Proposed', inputs: 'the file, and the Proposed choices (spending, debt order, retire-by age, surplus invested, extra to debt)', unit: 'money',
-    fns: ['proposed.PROPOSED_KEYS', 'proposed.proposedOf', 'proposed.hasProposal', 'proposed.proposedDoc', 'proposed.netWorthIn', 'proposed.compareOf', 'proposed.setProposed', 'proposed.clearProposed', 'proposed.makeProposedThePlan'],
+    fns: ['proposed.extraIncomeRecord', 'proposed.PROPOSED_KEYS', 'proposed.proposedOf', 'proposed.hasProposal', 'proposed.proposedDoc', 'proposed.netWorthIn', 'proposed.compareOf', 'proposed.setProposed', 'proposed.clearProposed', 'proposed.makeProposedThePlan'],
     fromApp: 'two runs of the same math on the real file and on a copy with the choices applied: the FI date, the savings rate, net worth in 5 and 10 years (invested grown at the real return with what goes in, the rest of net worth, plus debt paid down on the payoff plan), the next step and marker; the Proposed tab shows each side with the steps',
     app: c => compareOf(c.doc, c.ref, { now: c.now, flags: c.flags }).rows.find(r => r.key === 'nw10')?.diff ?? null,
     parts: [{ key: 'nw5', name: 'Net worth in 5 years (current)', unit: 'money', fromApp: 'invested grown at the real return plus what goes in, the rest of net worth, plus debt paid down by then', app: c => netWorthIn(c.m, 5).value }] },
+  { id: 'M79', name: 'Freed money follows the FOO', inputs: 'M34 heavy months and freed payments, M27, M43 big e less the cash in the layers (M68), the Roth IRA and HSA room', unit: 'months',
+    fns: ['flow.freedFlow', 'flow.taxFreeRoom', 'flow.flowWords', 'fi.waitWords', 'layers.layerOptions'],
+    fromApp: 'after the heavy debt the surplus and the freed payments fill big e, then Tax-Free Growth, then are invested (RULES.freedFollowsFoo, QUESTIONS 196); each phase ends at the first whole month its dollars are in. The value is the month big e is full; the FI date (M53) reads the same months',
+    app: c => c.m.fooFlow?.bigEEnd ?? null,
+    parts: [{ key: 'taxFree', name: 'Month Tax-Free Growth is full for the year', unit: 'months', fromApp: 'the same flow', app: c => c.m.fooFlow?.taxFreeEnd ?? null }] },
+  { id: 'M80', name: 'Next best opportunity', inputs: 'M79, the match left on the table, every debt\'s APR and promo end, the return', unit: 'money',
+    fns: ['flow.nextBest', 'flow.matchRoom'],
+    fromApp: 'on each FOO step the money goes to (heavy debt, big e, Tax-Free Growth, investing), the yearly value of the step against the best alternative on the same dollars; shown as one line on the step when it beats it by RULES.nextBestMin or more. The value is the largest gap a year across the steps',
+    app: c => { const v = foo(c.doc, c.ref, { now: c.now, flags: c.flags }).steps.map(s => s.worthALook?.by).filter(x => x != null); return v.length ? Math.max(...v) : null; } },
+  { id: 'M81', name: 'The gap', inputs: 'M27 (below zero), the spending lines and their levels, Bills and subscriptions, the gut number, the income option', unit: 'money',
+    fns: ['gap.gapOf', 'gap.gapProposal', 'gap.gapIncomeOf'],
+    fromApp: 'when the surplus is below zero: what the month is short, and three levers with what each closes (a quarter of the largest Level 1 or 2 line that can move, or a tenth of the gut number with no lines; the largest subscription that can be cut; the income the coach fills in); Use the gap proposes the spending cut and the income for the rest on Current vs Proposed',
+    app: c => gapOf(c.doc, c.m)?.short ?? null },
+  { id: 'M82', name: 'Your next 3 moves', inputs: 'M69 the FOO step (and M79, M81), M74 the holes before it, the homework', unit: 'count',
+    fns: ['moves.nextMoves'],
+    fromApp: 'the FOO step you are on (or the gap), a Scorecard hole before your step with a payoff, a homework item, then the FOO steps the money goes to next; each one sentence with dollars and a month, linked to its screen. Top of Report › One-pager',
+    app: c => nextMoves(c.doc, c.ref, { now: c.now, flags: c.flags }).length },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },
   // ---------- Holidays (the calendar question on About you) ----------

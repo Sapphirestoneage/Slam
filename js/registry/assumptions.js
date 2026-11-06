@@ -25,6 +25,12 @@ export const RULES = {
   fatFactor: 1.5, trueFiTax: 0.15, heavyApr: 0.08, variableGuessShare: 0.75, maxMonths: 70 * 12,
   roughCheckDays: 30, agedCheckDays: 90,
   debtFirst: 1, // batch 11: while heavy debt is carried the surplus goes to it first (1 on, 0 off); js/math/metrics.js debtRuleOf
+  // Batch 12 (QUESTIONS 196, Eli Nov 5): freed money follows the FOO. After heavy debt the surplus and the freed payments
+  // fill big e, then Tax-Free Growth, then the rest is invested (1 on, 0: invested once heavy debt is gone); js/math/flow.js.
+  freedFollowsFoo: 1,
+  shortPlanMonths: 12, // batch 12 (QUESTIONS 200): the debt-free card's chips become +5% / +10% / +25% on a plan this short or shorter
+  gapTrimLine: 0.25, gapTrimGut: 0.1, // batch 12 (item 5): what a gap lever closes: a quarter of the largest line that can move, or a tenth of the gut number with no lines
+  nextBestMin: 100, // batch 12: an alternative shows as "Worth a look" on a FOO step when it beats the step by this much a year
 };
 export const LISTS = {
   perMonth: { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, quarter: 1 / 3, year: 1 / 12 },
@@ -122,6 +128,11 @@ export const ASSUMPTIONS = [
   { id: 'rules.roughCheckDays', name: 'CheckRough', label: 'Check a Roughly number again after, days', unit: 'number', get: () => RULES.roughCheckDays, source: RULE('js/checks.js, R061'), date: '2026-11-03' },
   { id: 'rules.agedCheckDays', name: 'CheckAged', label: 'Check any number again after, days', unit: 'number', get: () => RULES.agedCheckDays, source: RULE('js/checks.js, R061'), date: '2026-11-03' },
   { id: 'rules.debtFirst', name: 'DebtFirst_rule', label: 'The debt rule: while heavy debt is carried, the surplus goes to it first (1 on, 0 off)', unit: 'number', get: () => RULES.debtFirst, source: RULE('js/math/metrics.js debtRuleOf; Batch 11 item 1'), date: '2026-11-05' },
+  { id: 'rules.freedFollowsFoo', name: 'FreedFollowsFoo', label: 'Freed money follows the FOO: after heavy debt the surplus and freed payments fill big e, then Tax-Free Growth, then are invested (1 on, 0 off)', unit: 'number', get: () => RULES.freedFollowsFoo, source: RULE('js/math/flow.js freedFlow, M79; Eli confirmed Nov 5 (QUESTIONS 196)'), date: '2026-11-05' },
+  { id: 'rules.nextBestMin', name: 'NextBestMin', label: 'Next best opportunity: an alternative shows on a FOO step when it beats the step by at least this a year', unit: 'money', get: () => RULES.nextBestMin, source: RULE('js/math/flow.js nextBest, M80; Eli Nov 5: "actually measure the next best opportunity"'), date: '2026-11-05' },
+  { id: 'rules.shortPlanMonths', name: 'ShortPlanMonths', label: 'Debt-free card: a plan this many months or shorter gets +5% / +10% / +25% chips instead of +$50 / +$100 / +$250', unit: 'number', get: () => RULES.shortPlanMonths, source: RULE('js/math/debt.js heroExtras; Batch 12 item 4 (QUESTIONS 200)'), date: '2026-11-05' },
+  { id: 'rules.gapTrimLine', name: 'GapTrimLine', label: 'The gap: the spending lever trims the largest Level 1 or 2 line that can move by this share', unit: 'pct', get: () => RULES.gapTrimLine, source: RULE('js/math/gap.js gapOf, M81; Batch 12 item 5'), date: '2026-11-05' },
+  { id: 'rules.gapTrimGut', name: 'GapTrimGut', label: 'The gap: with no spending lines, the spending lever trims the gut number by this share', unit: 'pct', get: () => RULES.gapTrimGut, source: RULE('js/math/gap.js gapOf, M81; Batch 12 item 5'), date: '2026-11-05' },
   { id: 'rules.maxMonths', name: 'MaxMonths', label: 'Longest FI path looked at, months', unit: 'number', get: () => RULES.maxMonths, source: RULE('js/math/fi.js, M53 (70 years)'), date: '2026-10-28' },
 ];
 

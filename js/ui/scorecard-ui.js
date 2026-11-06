@@ -91,6 +91,7 @@ export function scorecardScreen(app, ctx) {
         note: doc.program?.fooConfirmed === sc.here ? 'Confirmed' : null }]),
     sc.here != null && doc.program?.fooConfirmed !== sc.here ? h('div.row-line', { style: { marginBottom: '16px', gap: '10px' } }, S.button(`Confirm FOO step ${sc.here}`, { iconName: 'check', onClick: confirm }), h('span.muted.small', {}, 'Session 5 asks for it; the step comes from Plan › FOO.')) : null,
     section('Holes, ranked', sc.holes, holeRow, sc.holes.length ? `${sc.holes.length} · before your FOO step first${sc.holes.some(x => x.waits) ? ', heavy debt before what comes after it' : ''}, then best return${sc.parkedHoles.length ? `; ${sc.parkedHoles.length} parked at the bottom` : ''}` : 'None'),
+    sc.areas.some(a => a.followsGap) ? h('p.muted.small.gap-wait', {}, `Waiting on the gap (one cause, one hole: Cash flow): ${sc.areas.filter(a => a.followsGap).map(a => a.name).join(', ')}.`) : null, // batch 12 (item 5)
     section('Not rated yet', sc.unrated, unratedRow),
     section('OK', sc.ok, okRow),
     section('Strong', sc.strong, strongRow),

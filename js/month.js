@@ -5,7 +5,7 @@ import { gatesOf, visible } from './gates.js';
 import { weekdayDays, holidayInMonth, SHABBAT_SPEND_DAY } from './math/holidays.js';
 import { myShare, withHome } from './math/spending.js';
 import { payoffPlan } from './math/debt.js';
-import { runningBalance } from './math/calendar.js';
+import { runningBalance, gutSpread } from './math/calendar.js';
 import { inputsOf } from './math/metrics.js';
 import { monthlyFrom } from './math/income.js';
 
@@ -121,6 +121,12 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) 
     } else {
       push(r, { kind: 'bill', group, name: r.name || r.values.category, date: dateOf(ym, Number(r.values.dueDay) || 1), planned: -monthly, lineId: r.id, guessDate: !r.values.dueDay, onCard });
     }
+  }
+  // Batch 12 (item 2): while spending is the gut number, the part no real line covers is spending money, week by week.
+  const gs = gutSpread(inputs, myShare), allIn = live.find(r => r.kind === 'spending' && r.type === 'All in');
+  if (gs?.left > 0 && allIn) {
+    const weeks = [1, 8, 15, 22, 29].filter(d => d <= daysIn(ym));
+    for (const d of weeks) push(allIn, { kind: 'gut', group: 'Bills', name: gs.name, date: dateOf(ym, d), planned: -gs.left / weeks.length, spread: true, gut: true });
   }
   // Debt payments on their due day, every month (R050). A card paid in full pulls the bills charged to it (R101).
   for (const d of inputs.debts) {

@@ -120,7 +120,7 @@ export function cashMonth(doc, ref, ym, { now = new Date(), startCash = null } =
   const countMaybe = !!doc.spending?.calendar?.countMaybe;
   const items = [], unmarked = [];
   for (const i of instances(doc, ref, ym, { now })) {
-    if (i.kind === 'win' || (i.maybe && !countMaybe) || !i.date.startsWith(ym)) continue;
+    if (i.kind === 'win' || i.kind === 'gut' || (i.maybe && !countMaybe) || !i.date.startsWith(ym)) continue;
     if (i.onCard) continue; // swiped on a card: it leaves checking when the card is paid
     const amount = i.status === 'Paid' || i.status === 'Partial' ? (i.paid ?? i.planned) : i.status === "Didn't happen" ? 0 : i.planned;
     if (i.status === 'Planned') unmarked.push({ date: i.date, name: i.name, amount: i.planned });

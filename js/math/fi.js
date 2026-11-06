@@ -54,8 +54,16 @@ export function fiDate({ invested, monthlyInvesting, realReturn, target }, { fro
     return { id: 'M53', value: null, needs: [], never: true, unit: 'months', guess: false,
       text: 'Not on this path within 70 years. Try the solver to see what would get there.', points: path ? points : undefined };
   }
-  const lead = before && before.months > 0 ? `adding ${fmt.money(before.monthly)} a month for the ${before.months} ${before.months === 1 ? 'month' : 'months'} the surplus pays heavy debt first, then ${fmt.money(monthlyInvesting)} a month` : `adding ${fmt.money(monthlyInvesting)} a month`;
+  const lead = before && before.months > 0 ? `adding ${fmt.money(before.monthly)} a month for the ${before.months} ${before.months === 1 ? 'month' : 'months'} ${waitWords(before)}, then ${fmt.money(monthlyInvesting)} a month` : `adding ${fmt.money(monthlyInvesting)} a month`;
   return { ...ok('M53', n, `Starting at ${fmt.money(invested)}, growing ${fmt.pct(realReturn)} a year after inflation and ${lead}, investments reach ${fmt.money(target)} in ${duration(n, from)}.`, { unit: 'months' }), points: path ? points : undefined };
+}
+
+// What the months before the surplus is invested are for (batch 12, M79): heavy debt first, then big e.
+export function waitWords(before) {
+  const H = before?.heavyMonths ?? before?.months ?? 0, all = before?.months ?? 0;
+  if (H >= all) return 'the surplus pays heavy debt first';
+  if (!H) return 'the surplus fills big e first';
+  return `the surplus pays heavy debt first (${H}) and then fills big e (${all - H})`;
 }
 
 // The FI date as a range (answer 122): the months to FI with spending lower and higher by a share, from the metrics.

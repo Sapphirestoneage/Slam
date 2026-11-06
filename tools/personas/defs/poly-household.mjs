@@ -33,7 +33,7 @@ export default {
     savingsRate: { value: 0.3192, unit: 'pct', note: '$3,470 / $10,870.' },
     fooStep: { value: '4', unit: 'step', note: 'Step 1 done ($29,000), no match on file, no heavy debt. big e: Ana 36 / 5 = 7.2 x $7,400 = $53,280.' },
     debtFreeMonths: { value: 268, unit: 'months', note: 'n = -ln(1 - 0.055/12 x 400,000 / 2,600) / ln(1 + 0.055/12) = 267.1, so 268.' },
-    monthsToFi: { value: 244, unit: 'months', note: 'FI number $7,400 x 12 / 4% = $2,220,000, $3,470 a month from $105,000: 243.3, so 244 months.' },
+    monthsToFi: { value: 251, unit: 'months', note: 'Batch 12, freed money follows the FOO: $28,695 of big e left / $3,470 a month = 9 months, so 9 months with nothing going in (FI number $7,400 x 12 / 4% = $2,220,000, $3,470 a month from $105,000: 243.3, so 244 months.05,000 grows to FI number $7,400 x 12 / 4% = $2,220,000, $3,470 a month from $105,000: 243.3, so 244 months.10,466). Then $3,470 a month at 7% real to the $2,220,000 FI number: 9 + ln(($2,220,000 (g-1) + $3,470) / (FI number $7,400 x 12 / 4% = $2,220,000, $3,470 a month from $105,000: 243.3, so 244 months.10,466 (g-1) + $3,470)) / ln g = 251.0, so 251 months.' },
     runwayMonths: { value: 3.919, unit: 'months', tol: 0.01, note: '$29,000 / $7,400.' },
   },
   cannot: [

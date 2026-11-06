@@ -8,13 +8,15 @@ import { gatesOf, visible } from '../gates.js';
 import { inView, modeOf, MODES, ownerOf, forPerson } from '../registry/couples.js';
 import { bigEMultiplierOf } from '../registry/assumptions.js';
 import { myShare, withHome, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor, categoryTotals, isCategoryRecord } from './spending.js';
-import { cardMinimum, payoffMonths, totalInterest, payoffPlan, debtFirstPlan, isHeavyDebt, promoSoonIds, debtFreeCard } from './debt.js';
+import { cardMinimum, payoffMonths, totalInterest, payoffPlan, debtFirstPlan, isHeavyDebt, promoSoonIds, debtFreeCard, heroExtras } from './debt.js';
 import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
 import { link401k, matchFromTiers } from './portfolio.js';
 import { fiNumber, fiDate, coastFi, bigDeals } from './fi.js';
 import { hourlyRate } from './time.js';
 import { debtLines, premiumSources, duplicates, afterTaxContributions } from './linked.js';
 import { LISTS, RULES } from '../registry/assumptions.js';
+import { cashLayers, layerOptions } from './layers.js';
+import { freedFlow, taxFreeRoom } from './flow.js';
 
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
 const HOUSING = new Set(LISTS.housing);
@@ -225,12 +227,23 @@ export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
   const idle = surplus === null ? null : alreadyIn + contributions; // the surplus sits in checking
   const monthlyInvesting = investSurplus ? invested : idle;
   const H = out.debtPlan.heavyMonths;
-  const before = rule.on && surplus !== null ? { months: H ?? RULES.maxMonths, monthly: alreadyIn + contributions } : null; // while the surplus pays heavy debt
-  out.investing = { investSurplus, debtFirst: rule.on, alreadyIn, contributions, surplus: investSurplus ? surplus : 0, monthly: monthlyInvesting, invested, idle, before, freed };
+  // Batch 12 (M79, RULES.freedFollowsFoo): freed money follows the FOO. After the heavy debt the surplus and the freed
+  // payments fill big e (the Rule of 5 target less the cash already in the layers), then Tax-Free Growth (invested),
+  // then the rest is invested. Off when Invest from today is picked or the surplus is not invested.
+  const flowOn = !!RULES.freedFollowsFoo && rule.wanted && investSurplus && surplus !== null && surplus >= 0; // a gap (M81) comes first
+  if (flowOn) {
+    const lay = cashLayers(x, layerOptions(doc, ref, x, now));
+    const bigELeft = lay.needsAge ? 0 : lay.layers.filter(l => l.id.startsWith('big-e')).reduce((s, l) => s + (l.left ?? 0), 0);
+    const room = taxFreeRoom(doc, x, ref, now);
+    out.fooFlow = { ...freedFlow({ surplus: Math.max(0, surplus - contributions), heavyMonths: rule.on ? H : 0, freed, bigELeft, taxFreeLeft: room.left }), room, bigELeft, bigETarget: lay.needsAge ? null : lay.layers.filter(l => l.id.startsWith('big-e')).reduce((s, l) => s + (l.target ?? 0), 0) };
+  } else out.fooFlow = null;
+  const wait = out.fooFlow ? (out.fooFlow.waitMonths ?? RULES.maxMonths) : rule.on ? (H ?? RULES.maxMonths) : 0;
+  const before = surplus !== null && wait > 0 ? { months: wait, monthly: alreadyIn + contributions, heavyMonths: rule.on ? (H ?? RULES.maxMonths) : 0 } : null; // while the surplus pays heavy debt, then fills big e
+  out.investing = { investSurplus, debtFirst: rule.on, alreadyIn, contributions, surplus: investSurplus ? surplus : 0, monthly: monthlyInvesting, invested, idle, before, freed, followsFoo: !!out.fooFlow };
   const fi = (m$, b = before) => fiDate({ invested: x.invested, monthlyInvesting: m$, realReturn: x.realReturn, target: out.fiNumber.value }, { from: now, before: b });
   out.monthsToFi = fi(monthlyInvesting);
   // The paths, for the FI card: the one in use, with the surplus invested from today, and if it sits in checking.
-  out.fiPaths = { invested: fi(surplus === null ? null : alreadyIn + surplus, null), idle: fi(idle, null), debtFirst: rule.heavy ? fi(monthlyInvesting, { months: H ?? RULES.maxMonths, monthly: alreadyIn + contributions }) : null };
+  out.fiPaths = { invested: fi(surplus === null ? null : alreadyIn + surplus, null), idle: fi(idle, null), debtFirst: rule.heavy ? fi(monthlyInvesting, { months: H ?? RULES.maxMonths, monthly: alreadyIn + contributions }) : null, followsFoo: out.fooFlow ? out.monthsToFi : null };
   if (out.monthsToFi.value === null && !out.monthsToFi.never) { // say what to type, not which result is missing
     const root = [...new Set([...out.surplus.needs, ...out.fiNumber.needs, ...(x.invested === null ? ['invested'] : [])])];
     if (root.length) out.monthsToFi = needs('M53', root, { unit: 'months' });
@@ -297,5 +310,6 @@ export function debtHeroOf(doc, m) {
   const day0 = (doc.snapshots || []).find(s => s.day0) ?? null;
   const start = day0 ? (day0.records || []).filter(r => r.kind === 'debt' && r.values?.payChoice !== 'In full').reduce((s, r) => s + (r.values?.balance ?? 0), 0) : null;
   const rerun = extra => debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: m.debtRule.first ?? [], surplus: m.debtRule.toDebt, extra: (x.debtExtra ?? 0) + extra });
-  return debtFreeCard(m.debtPlan, { start, rerun });
+  const card = debtFreeCard(m.debtPlan, { start, rerun, extras: heroExtras(m.debtPlan) });
+  return card && { ...card, short: m.debtPlan.months != null && m.debtPlan.months <= RULES.shortPlanMonths, then: m.fooFlow?.bigEMonths ? { monthly: m.fooFlow.monthly, months: m.fooFlow.bigEEnd, taxFree: m.fooFlow.taxFreeEnd } : null }; // batch 12: what the money does next (M79)
 }

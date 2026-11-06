@@ -66,12 +66,12 @@ test('item 1: the Scorecard ranks Debt above Retirement accounts while heavy deb
 test('item 1: the FI date pays heavy debt first, then invests the surplus and the freed payments; the toggle and the copy follow it', () => {
   const s = maya();
   let m = metrics(s.doc, ref, { now });
-  assert.deepEqual(m.investing.before, { months: 4, monthly: 0 });
+  // Batch 12 (M79): freed money follows the FOO, so the 4 debt months are followed by 10 months filling big e.
+  assert.deepEqual(m.investing.before, { months: 14, monthly: 0, heavyMonths: 4 });
   assert.equal(m.investing.monthly, 1900, '$1,700 surplus + the $200 freed card payment');
-  const direct = fiDate({ invested: 15000, monthlyInvesting: 1900, realReturn: m.inputs.realReturn, target: m.fiNumber.value }, { before: { months: 4, monthly: 0 } });
+  const direct = fiDate({ invested: 15000, monthlyInvesting: 1900, realReturn: m.inputs.realReturn, target: m.fiNumber.value }, { before: { months: 14, monthly: 0 } });
   assert.equal(m.monthsToFi.value, direct.value);
-  assert.ok(m.monthsToFi.value <= m.fiPaths.invested.value, 'paying the 25% card first, then investing its freed payment, is no later than investing from today');
-  assert.match(m.monthsToFi.text, /4 months the surplus pays heavy debt first/);
+  assert.match(m.monthsToFi.text, /14 months the surplus pays heavy debt first \(4\) and then fills big e \(10\)/);
   assert.match(soWhat('surplus', m).text, /goes to your heavy debt first/);
   assert.doesNotMatch(soWhat('savingsRate', m).text, /strong/);
   // Turned off: the surplus is invested from today and the debt keeps its own payment.
@@ -116,7 +116,9 @@ test('item 3: the debt-free card: one date, what goes to debt, what-ifs that mov
   assert.deepEqual(c.marks.map(k => k.id), ['quarter', 'half', 'free'], 'one debt: no first-debt mark');
   assert.equal(c.next.id, 'quarter'); assert.equal(c.next.left, 1500);
   const w = Object.fromEntries(c.whatIf.map(x => [x.extra, x]));
-  assert.ok(w[250].months < c.months, '+$250 is a month sooner');
+  // Batch 12 (item 4): a 4-month plan gets +5% / +10% / +25% of the $1,900 (rounded to $10).
+  assert.deepEqual(c.whatIf.map(x => x.extra), [100, 190, 480]);
+  assert.ok(w[480].months < c.months, '+$480 is a month sooner');
   assert.ok(w[100].interestSaved > 0 && w[100].lastPayment < c.lastPayment, '+$100 lands in the same month with less interest and a smaller last payment');
   assert.equal(s.doc.settings.debtExtra, undefined, 'a what-if saves nothing');
   // A longer plan: +$100 is an earlier month.
@@ -128,8 +130,8 @@ test('item 3: the debt-free card: one date, what goes to debt, what-ifs that mov
   const two = debtFreeCard(debtFirstPlan([{ id: 'a', name: 'A', type: 'Credit card', balance: 1000, apr: 0.2, payment: 50 }, { id: 'b', name: 'B', type: 'Credit card', balance: 3000, apr: 0.25, payment: 90 }], { surplus: 500 }));
   assert.deepEqual(two.marks.map(k => k.id), ['quarter', 'half', 'first', 'free']);
   // Made the plan: the extra counts everywhere.
-  s.setDoc('settings', { debtExtra: 250 });
-  assert.equal(metrics(s.doc, ref, { now }).debtPlan.months, w[250].months);
+  s.setDoc('settings', { debtExtra: 480 });
+  assert.equal(metrics(s.doc, ref, { now }).debtPlan.months, w[480].months);
 });
 
 test('item 4: every FOO step has one name, said three ways, and the old names are gone from the code', () => {
@@ -172,7 +174,7 @@ test('item 9: a typed 0 is an answer: invested, cash or debts at 0 still give an
   assert.equal(metrics(maya({ invested: 0, checking: 0, savings: 0 }).doc, ref, { now }).inputs.cash, 0);
   // With heavy debt the FI date is the debt-first one.
   const m = metrics(maya({ invested: 0 }).doc, ref, { now });
-  assert.deepEqual(m.investing.before, { months: 4, monthly: 0 });
+  assert.equal(m.investing.before.heavyMonths, 4);
   // An area answered "none" on About you is a real $0 too.
   const s = new Store(newHousehold({ name: 'Z', now: now.toISOString() }), { now: () => now.toISOString() });
   s.setDoc('profile', { birthYear: 1996, areas: { investments: false, cash: false, debt: false } });

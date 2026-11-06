@@ -220,6 +220,16 @@ export function promoPayment({ balance, monthsLeft }) {
 // (never saved), and the milestones: 25% and 50% of the debt gone, the first debt paid off, debt free, each with its
 // month on the plan; the next one with the dollars still to go. start: the debt total at Day 0 when there is one.
 export const HERO_EXTRAS = [50, 100, 250];
+// Batch 12 (item 4, QUESTIONS 200): on a plan of RULES.shortPlanMonths (12) or fewer, $50 rarely moves the date, so the
+// chips are +5%, +10% and +25% of what goes to debt a month, each rounded to $10 (never two the same, never under $10).
+export const SHORT_PLAN_SHARES = [0.05, 0.1, 0.25];
+export function heroExtras(plan) {
+  if (!plan?.debts?.length || plan.months == null || plan.months > RULES.shortPlanMonths) return HERO_EXTRAS;
+  const monthly = plan.debts.reduce((s, d) => s + (d.payment ?? 0), 0) + (plan.surplus ?? 0) + (plan.extra ?? 0);
+  const out = [];
+  for (const k of SHORT_PLAN_SHARES) { let v = Math.max(10, Math.round(monthly * k / 10) * 10); while (out.includes(v)) v += 10; out.push(v); }
+  return out;
+}
 export function debtFreeCard(plan, { start = null, extras = HERO_EXTRAS, rerun = null } = {}) {
   if (!plan?.debts?.length) return null;
   const now = plan.path[0].reduce((s, v) => s + v, 0);

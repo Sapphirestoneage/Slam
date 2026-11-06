@@ -18,6 +18,8 @@ import { SESSIONS, MONEY_DATES, levelWord } from '../registry/program.js';
 import { fiWordsOf } from '../math/picture.js';
 import { ladderOf } from '../math/ladder.js';
 import { debtHeroOf } from '../math/metrics.js';
+import { gapOf } from '../math/gap.js';
+import { gapCard } from './gap-ui.js';
 import { isCategoryRecord } from '../math/spending.js';
 import { monthName, addMonths, ymOf } from '../month.js';
 import { ratingTag } from './scorecard-ui.js';
@@ -35,7 +37,7 @@ export function homeScreen(app, ctx) {
   const open = P.sessions.find(s => s.id === HUI.open) || P.current;
   const low = firstLowDay(ctx);
   return [sessionStrip(app, ctx, P),
-    debtHero(app, ctx, P.m), // batch 11 (item 3): while heavy debt is carried, Home leads with the debt-free date
+    gapOf(doc, P.m) ? gapCard(app, ctx, P.m) : debtHero(app, ctx, P.m), // batch 12 (item 5): a short month owns Home; else (batch 11) the debt-free date leads
     P.inSession ? joyAsk(ctx, P) : null, // F4: asked at the start of each session
     endedLine(app, ctx, P),
     pathRow(app, P, open),
@@ -67,7 +69,9 @@ function debtHero(app, ctx, m) {
   const at = mo => (mo == null ? 'not on this plan' : monthName(addMonths(ymOf(ctx.now()), mo), 'short'));
   const pick = HERO.extra ? card.whatIf.find(w => w.extra === HERO.extra) : null;
   const chips = h('div.row-line.hero-chips', { role: 'group', 'aria-label': 'What if more went to debt each month' },
-    card.whatIf.map(w => h('button.chip-btn', { type: 'button', 'aria-pressed': String(HERO.extra === w.extra), onclick: () => { HERO.extra = HERO.extra === w.extra ? 0 : w.extra; app.render(); } }, `+${money(w.extra)} a month`)));
+    card.whatIf.map(w => { const saved = w.months != null && card.months != null ? card.months - w.months : null; // batch 12 (item 4): each chip says what it moves
+      return h('button.chip-btn', { type: 'button', 'aria-pressed': String(HERO.extra === w.extra), title: card.short ? `${Math.round(w.extra / card.monthly * 100)}% more than the ${money(card.monthly)} going to debt a month` : null, onclick: () => { HERO.extra = HERO.extra === w.extra ? 0 : w.extra; app.render(); } },
+        `+${money(w.extra)} a month`, h('span.chip-sub', {}, saved > 0 ? ` · ${at(w.months)}` : ' · same month')); }));
   const whatIf = pick ? h('div.row-line.hero-whatif', { style: { gap: '10px' } },
     h('span', {}, `With ${money(pick.extra)} more a month: debt free `, h('strong', {}, at(pick.months)),
       pick.months != null && card.months != null && card.months - pick.months > 0 ? h('span.muted', {}, ` (${card.months - pick.months} ${card.months - pick.months === 1 ? 'month' : 'months'} sooner${pick.interestSaved ? `, ${money(pick.interestSaved)} less interest` : ''})`)
@@ -83,6 +87,7 @@ function debtHero(app, ctx, m) {
       next && !next.done ? h('div', {}, h('span.label', {}, 'Next milestone'), h('div.hero-num', {}, next.name), h('span.muted.small', {}, `${money(next.left)} to go · ${at(next.months)}`)) : null,
       h('span.spacer'), chips),
     whatIf,
+    card.then ? h('p.muted.small.hero-then', {}, `After that, ${money(card.then.monthly)} a month fills big e by ${at(card.then.months)}${card.then.taxFree != null && card.then.taxFree > card.then.months ? `, then the Roth IRA by ${at(card.then.taxFree)}` : ''}, then it is invested.`) : null, // batch 12 (M79): freed money follows the FOO
     S.moreBlock('home:debt-hero', () => h('ul.hero-marks', {}, card.marks.map(mark)), { label: `Milestones (${card.marks.filter(k => k.done).length} of ${card.marks.length})` }));
 }
 
@@ -366,7 +371,8 @@ export function moneyInOneLine(app, ctx, m = ctx.metrics()) {
   const fi = fiCard(ctx, m);
   const when = m.monthsToFi.value;
   const words = fi.lock || when == null ? null : fiWordsOf(m, fi.confidence, { now: ctx.now() });
-  const sentence = fi.lock ? (m.surplus.value !== null ? `You keep ${money(m.surplus.value)} a month. The FI date ${fi.lock.reason.replace(/^Unlocks/, 'unlocks')}` : null)
+  const G = gapOf(ctx.store.doc, m); // batch 12 (item 5): a short month says so first
+  const sentence = G ? G.text : words?.past ? words.sentence : fi.lock ? (m.surplus.value !== null ? `You keep ${money(m.surplus.value)} a month. The FI date ${fi.lock.reason.replace(/^Unlocks/, 'unlocks')}` : null)
     : m.surplus.value !== null && words && m.debtRule?.on && m.debtPlan?.months != null ? `Your ${money(m.surplus.value)} a month goes to heavy debt first: debt free ${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.months), 'short')}, then FI ${words.kind === 'month' ? `in ${words.text}` : `around ${words.text}`}.` // batch 11: the debt rule
     : m.surplus.value !== null && words ? `You keep ${money(m.surplus.value)} a month and are on track for FI ${words.kind === 'month' ? `in ${words.text}` : `around ${words.text}`}${m.inputs.age !== null && words.kind === 'month' ? `, at ${Math.floor(m.inputs.age + when / 12)}` : ''}.`
       : m.surplus.value !== null && m.surplus.value < 0 ? `You spend ${money(-m.surplus.value)} a month more than comes in.` : null;
@@ -405,6 +411,9 @@ function paydayCard(app, ctx) {
   const d = paydayOf(ctx.store.doc, ctx.ref, ctx.now());
   if (d.needs) return null;
   const when = new Date(`${d.date}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const G = gapOf(ctx.store.doc, ctx.metrics()); // batch 12 (persona finding): in a short month nothing is free to spend yet
+  if (G) return h('div.card.payday', {}, h('p', { style: { fontSize: '1.0625rem', margin: 0 } }, `You get ${money(d.period.in)} on ${when}${d.guessDate ? ' (day not set yet)' : ''}. `,
+    h('strong', {}, `The month is ${money(G.short)} short, so nothing is free to spend until the gap closes.`)));
   const line = (k, v) => h('span.stack', { style: { gap: '2px' } }, h('span.label', {}, k), h('strong', {}, money(v)));
   return h('div.card.payday', {},
     h('p', { style: { fontSize: '1.0625rem', margin: 0 } }, `You get ${money(d.period.in)} on ${when}${d.guessDate ? ' (day not set yet)' : ''}. `,

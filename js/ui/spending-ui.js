@@ -13,7 +13,7 @@ import { spendingList, categoryList, irregularList, IRREGULAR, lineMonthlyOf } f
 import { ensureCategories } from '../presets.js';
 import { ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
   closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS, planDiffs, closeStreak, collapseSpread, dayTotals } from '../month.js';
-import { gutAccuracy, DRAFTT } from '../math/spending.js';
+import { gutAccuracy, DRAFTT, gutVsLinesWords } from '../math/spending.js';
 import { statements, BUCKETS, defaultBucket } from '../math/statements.js';
 import { calendarMarkers } from '../math/markers.js';
 import { money, pct } from '../format.js';
@@ -228,7 +228,7 @@ function gutBox(ctx, view) {
   return h('div.card.gut-card', {},
     h('div.row-line', { style: { gap: '12px' } }, h('strong', {}, 'Your gut number'), S.moneyInput(rec?.amount ?? null, set, { hint: 'A month, all in', key: 'gut' }),
       rec ? S.toggle([[true, 'Includes debt payments'], [false, 'Not debt payments']], rec.values.includesDebtPayments !== false, v => ctx.store.update(rec.id, { includesDebtPayments: v }), { label: 'Includes debt payments' }) : null),
-    h('p.muted', { style: { margin: '8px 0 0' } }, rec?.amount != null && lineTotal ? gutWords(lineTotal, rec.amount) : 'What do you think you spend in a month? Ask before looking at anything; it is kept to compare later.'));
+    h('p.muted', { style: { margin: '8px 0 0' } }, rec?.amount != null ? gutVsLinesWords({ gut: rec.amount, lineTotal, categories: ctx.metrics().inputs.categories }).text : 'What do you think you spend in a month? Ask before looking at anything; it is kept to compare later.')); // batch 12 (item 3)
 }
 
 // Fast Track totals (the old Basics pass): one total per area (R132), with what the lines say beside them.
@@ -401,8 +401,8 @@ function chipOf(ctx, i) {
 }
 // Item 29: what a week's spending money is made of, by category; each line opens its own panel.
 function spreadPanel(ctx, anchor, w) {
-  S.popover(anchor, h('div.stack', { style: { gap: '6px' } }, h('strong', {}, `Spending money, week of ${dayLabel(w.date)}`), h('span.muted.small', {}, 'Variable lines with no set day, spread week by week. A line with a due day sits on its day instead.'),
-    ...w.parts.map(p => h('div.row-line', { style: { gap: '8px' } }, h('button.btn.small', { type: 'button', onclick: e => { S.closePop(); instancePanel(ctx, anchor, p); } }, p.name), h('span.spacer'), h('span.num', {}, `${sign(p.planned)}${money(Math.abs(p.planned))}`))),
+  S.popover(anchor, h('div.stack', { style: { gap: '6px' } }, h('strong', {}, `Spending money, week of ${dayLabel(w.date)}`), h('span.muted.small', {}, w.parts.some(p => p.gut) ? 'Your gut number, less what the lines and the debt payments already hold, spread week by week until the lines say where it goes.' : 'Variable lines with no set day, spread week by week. A line with a due day sits on its day instead.'),
+    ...w.parts.map(p => h('div.row-line', { style: { gap: '8px' } }, p.gut ? h('a.btn.small', { href: '#/cash-flow/budget', onclick: () => S.closePop() }, p.name) : h('button.btn.small', { type: 'button', onclick: e => { S.closePop(); instancePanel(ctx, anchor, p); } }, p.name), /* batch 12 (item 2): the gut part opens the Budget */ h('span.spacer'), h('span.num', {}, `${sign(p.planned)}${money(Math.abs(p.planned))}`))),
     h('div.row-line', { style: { gap: '8px', fontWeight: 700 } }, h('span', {}, 'This week'), h('span.spacer'), h('span.num', {}, `${sign(w.planned)}${money(Math.abs(w.planned))}`))), { width: 340 });
 }
 const markerRow = list => (list?.length ? h('div.day-marks', {}, list.map(mk => h(`span.day-mark.${mk.kind}`, { title: mk.name }, mk.name))) : null);

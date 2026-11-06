@@ -131,14 +131,18 @@ export function backupRunway(backups = [], monthlySpending) {
 
 // Everything the layers need, read from the household file. Stored: profile.incomeGaps, profile.backups,
 // settings.layerMode ('virtual' or 'accounts') and settings.layerAccounts ({ layerId: accountId }).
-export function layersOf(doc, ref, now = new Date()) {
-  const m = metrics(doc, ref, { now });
-  const x = m.inputs;
+// What cashLayers needs from the file (one place: layersOf and the freed-money flow in metrics, batch 12).
+export function layerOptions(doc, ref, x, now = new Date()) {
   const live = visible(doc.records, gatesOf(doc.profile, doc.client), ref);
   const deductibles = live.filter(r => r.kind === 'coverage' && r.values?.have !== "Don't").flatMap(r => [r.values.deductible, r.values.deductibleOut]);
   const sinking = yearItems(live, now).all.filter(i => i.rec.values.sinking).map(i => { const f = sinkingOf(i, { records: live, now }); return { id: i.id, name: i.name, target: f.target, due: i.ym }; });
-  const out = cashLayers(x, { deductibles, gaps: doc.profile.incomeGaps || [], stability: doc.profile.incomeStability ?? null, mode: doc.settings?.layerMode || 'virtual',
-    accounts: x.accounts.filter(a => a.group === 'cash'), layerAccounts: doc.settings?.layerAccounts || {}, sinking, now });
+  return { deductibles, gaps: doc.profile.incomeGaps || [], stability: doc.profile.incomeStability ?? null, mode: doc.settings?.layerMode || 'virtual',
+    accounts: x.accounts.filter(a => a.group === 'cash'), layerAccounts: doc.settings?.layerAccounts || {}, sinking, now };
+}
+export function layersOf(doc, ref, now = new Date()) {
+  const m = metrics(doc, ref, { now });
+  const x = m.inputs;
+  const out = cashLayers(x, layerOptions(doc, ref, x, now));
   const backups = backupRunway(doc.profile.backups || [], out.monthly.full);
   const runway = m.runwayMonths.value;
   return { ...out, backups, runway, runwayWithBackups: runway == null || backups.months == null ? null : runway + backups.months };

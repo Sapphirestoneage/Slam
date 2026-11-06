@@ -25,7 +25,7 @@ export default {
     savingsRate: { value: 0.2826, unit: 'pct', note: '$1,300 / $4,600.' },
     fooStep: { value: '4', unit: 'step', note: 'Step 1 done, no match, no debt. big e: 29 / 5 = 5.8 x 1.5 (unpredictable) = 8.7 months x $3,300 = $28,710.' },
     debtFreeMonths: { value: 'none', unit: 'months', note: 'No debt.' },
-    monthsToFi: { value: 296, unit: 'months', note: 'FI number $3,300 x 12 / 4% = $990,000; nothing invested; $1,300 a month: 296 months (about 24.7 years).' },
+    monthsToFi: { value: 311, unit: 'months', note: 'Batch 12, freed money follows the FOO: FI number $3,300 x 12 / 4% = $990,000; nothing invested; $1,300 a month: 296 months (about 24.7 years).9,433 of big e left / FI number $3,300 x 12 / 4% = $990,000; nothing invested; $1,300 a month: 296 months (about 24.7 years).,300 a month = 15 months, so 15 months with nothing going in ($0 grows to $0). Then FI number $3,300 x 12 / 4% = $990,000; nothing invested; $1,300 a month: 296 months (about 24.7 years).,300 a month at 7% real to the $990,000 FI number: 15 + ln(($990,000 (g-1) + FI number $3,300 x 12 / 4% = $990,000; nothing invested; $1,300 a month: 296 months (about 24.7 years).,300) / ($0 (g-1) + FI number $3,300 x 12 / 4% = $990,000; nothing invested; $1,300 a month: 296 months (about 24.7 years).,300)) / ln g = 311.0, so 311 months.' },
     runwayMonths: { value: 3.576, unit: 'months', tol: 0.01, note: '$11,800 / $3,300 (it counts the tax money; without it, 2.5 months).' },
     bigETarget: { value: 28710, unit: 'money', note: '8.7 x $3,300.' },
   },

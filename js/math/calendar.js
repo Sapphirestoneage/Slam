@@ -44,3 +44,18 @@ export function bonusMonths({ firstPayday, year }) {
   const names = months.map(m => new Date(Date.UTC(year, m, 15)).toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }));
   return ok('M61', months, months.length ? `Three paychecks land in ${names.join(' and ')} ${year}.` : `No three-paycheck months in ${year}.`, { unit: 'list' });
 }
+
+// Batch 12 (item 2): the gut number on the calendar. While spending is the gut number, the part no real line covers
+// (the gut number less every line with a real amount, and less the debt payments when the gut number includes them,
+// which have their own days) is spending money through the month, week by week. Faded starter amounts are not lines.
+// x: metrics inputs. Null when spending comes from the lines, or there is no gut number.
+export function gutSpread(x, myShare) {
+  if (x.spendingSource !== 'gut' || !(x.gutTotal > 0)) return null;
+  const real = (x.typedLines || []).filter(l => l.amount != null && !x.dupOf?.[l.id] && l.status !== 'Not for me' && l.draftt !== 'Retirement');
+  const covered = real.reduce((s, l) => s + (myShare(l, { roommates: x.roommates ?? 0 }).value ?? 0), 0);
+  const debt = x.debtPaymentsOutsideSpending === 0 ? (x.debts || []).reduce((s, d) => s + (d.inFull ? 0 : d.payment ?? 0), 0) : 0;
+  const left = Math.max(0, x.gutTotal - covered - debt);
+  return { id: 'M60', gut: x.gutTotal, covered, debt, left, lines: real.length,
+    name: real.length ? 'Spending money (not on a line yet)' : 'Spending money',
+    text: `${fmt.money(x.gutTotal)} gut number${debt ? ` minus ${fmt.money(debt)} of debt payments on their own days` : ''}${real.length ? ` minus ${fmt.money(covered)} on ${real.length} ${real.length === 1 ? 'line' : 'lines'}` : ''} = ${fmt.money(left)} of spending money, spread week by week.` };
+}

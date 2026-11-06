@@ -84,8 +84,8 @@
    "tolerance": "$1"
   },
   "monthsToFi": {
-   "label": "Months to FI, surplus fully invested (M53)",
-   "value": 303.0,
+   "label": "Months to FI on the plan: the surplus pays the card first, then fills big e, then is invested (M53)",
+   "value": 294.0,
    "tolerance": "1 month"
   },
   "coastFi": {

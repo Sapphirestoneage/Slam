@@ -12,15 +12,17 @@ export const WHY_CHIPS = {
   goalWords: ['Debt free', 'Emergency fund', 'Buy a home', 'FI or retire early', 'Save for a big event', 'Stop living paycheck to paycheck', 'Feel in control, less stress', 'Start investing', 'Other'],
 };
 export const WHY_LABELS = { whyNow: 'What prompted this call', worry: 'Biggest worry', goalWords: 'Goal in their words' };
-// Goal chips that map to a Plan goal (a milestone type) or a FOO step. Debt free and FI are milestones; the rest are
-// Custom milestones named for the FOO step they lead to.
+// Goal chips that map to a Plan goal (a milestone type) or a FOO step. Debt free and FI are milestones. Batch 12
+// (item 7, QUESTIONS 190): Emergency fund points at the big e step and Start investing at Tax-Free Growth (FOO steps,
+// nothing to add); Buy a home and Save for a big event become Fund the Future goals (an event saved for each month,
+// FOO step 8), not plain Custom milestones.
 export const GOAL_MAP = {
-  'Debt free': { type: 'Debt free', name: 'Debt free', step: 'Heavy debt, then the rest' },
-  'Emergency fund': { type: 'Custom', name: 'Emergency fund', step: 'little e, then big e' },
-  'Buy a home': { type: 'Custom', name: 'Buy a home', step: 'A sinking fund for the down payment' },
-  'FI or retire early': { type: 'Regular FI', name: 'Regular FI', step: 'The FI number' },
-  'Save for a big event': { type: 'Custom', name: 'Save for a big event', step: 'A sinking fund' },
-  'Start investing': { type: 'Custom', name: 'Start investing', step: 'The match, then the Roth IRA' },
+  'Debt free': { kind: 'milestone', type: 'Debt free', name: 'Debt free', step: 'Heavy debt, then the rest' },
+  'Emergency fund': { kind: 'foo', fooStep: '4', name: 'big e', step: 'FOO step 4: Build your job-loss fund (big e, your age / 5 months of spending)' },
+  'Buy a home': { kind: 'future', fooStep: '8', name: 'Buy a home: down payment', step: 'FOO step 8, Fund the Future: saved for each month' },
+  'FI or retire early': { kind: 'milestone', type: 'Regular FI', name: 'Regular FI', step: 'The FI number' },
+  'Save for a big event': { kind: 'future', fooStep: '8', name: 'A big event', step: 'FOO step 8, Fund the Future: saved for each month' },
+  'Start investing': { kind: 'foo', fooStep: '5', name: 'Tax-Free Growth', step: 'FOO step 5: Max out tax-free accounts (Roth IRA and HSA)' },
 };
 const blank = v => v === null || v === undefined || String(v).trim() === '';
 export const chipsOf = (p, key) => (Array.isArray(p?.chips?.[key]) ? p.chips[key] : []);
@@ -50,10 +52,11 @@ export function starChip(p, key, chip) {
   return { chipStar: { ...(p?.chipStar || {}), [key]: was ? null : chip }, ...(list.includes(chip) ? {} : { chips: { ...(p?.chips || {}), [key]: [...list, chip] } }) };
 }
 // Goal suggestions for Plan › Goals: each mapped goal chip that has no matching milestone yet and was not set aside.
-export function goalSuggestions(p, milestones = []) {
-  const have = new Set(milestones.flatMap(r => [String(r.name ?? '').toLowerCase(), r.type === 'Custom' ? null : String(r.type ?? '').toLowerCase()]).filter(Boolean));
+// records: the milestones and events already there (a Fund the Future goal is an event with the same name).
+export function goalSuggestions(p, records = []) {
+  const have = new Set(records.flatMap(r => [String(r.name ?? '').toLowerCase(), r.kind === 'event' || r.type === 'Custom' ? null : String(r.type ?? '').toLowerCase()]).filter(Boolean));
   const aside = new Set(p?.goalSuggest || []);
   return chipsOf(p, 'goalWords').filter(c => GOAL_MAP[c] && !aside.has(c)).map(c => ({ chip: c, ...GOAL_MAP[c], main: p?.chipStar?.goalWords === c }))
-    .filter(g => !have.has(g.name.toLowerCase()) && !(g.type !== 'Custom' && have.has(g.type.toLowerCase())))
+    .filter(g => !have.has(g.name.toLowerCase()) && !(g.kind === 'milestone' && have.has(g.type.toLowerCase())))
     .sort((a, b) => b.main - a.main);
 }

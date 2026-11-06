@@ -566,6 +566,9 @@ body.side-open main.shell-page, body.side-open .banner { padding-right: calc(min
 .chip-btn:hover { background: var(--primary); color: var(--on-primary); }
 .chip-btn[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
 .chip-btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.chip-btn .chip-sub { font-weight: 500; }
+.hero-then { margin: 4px 0 0; }
+.foo-worth { margin: 4px 0 0 28px; color: var(--text); }
 .debt-hero .hero-whatif { margin-top: 8px; flex-wrap: wrap; }
 .hero-marks { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; }
 .hero-mark { display: inline-flex; align-items: center; gap: 6px; }
@@ -610,3 +613,15 @@ td.col-first > .inst-cell > .inst-link { white-space: nowrap; line-height: 1.1; 
 td.col-first > .inst-cell:has(> .inst-link)::before { content: ''; display: block; height: 18px; }
 .inst-cell > label.field.name-field { flex: none; height: auto !important; }
 .inst-cell > label.field.name-field textarea.name-box { height: auto; }
+/* Batch 12 (item 5): the gap card. Calm: the brand blue edge, never red. */
+.gap-card { margin-bottom: var(--s4); padding: 12px 16px; border-left: 4px solid var(--primary); }
+.gap-card .gap-head { font-size: 1.25rem; }
+.gap-levers { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.gap-lever { display: grid; grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 1.4fr) auto minmax(90px, auto) 60px; gap: 12px; align-items: center; padding: 6px 0; border-top: 1px solid var(--border-row); }
+.gap-lever .gap-closes { font-weight: 700; text-align: right; }
+@media (max-width: 700px) { .gap-lever { grid-template-columns: 1fr auto; } .gap-lever .gap-how { grid-column: 1 / -1; } }
+/* Batch 12 (item 6): Your next 3 moves on the one-pager. */
+.op-moves { margin: 4px 0 14px; }
+.op-moves h3 { margin: 0 0 6px; }
+.op-moves-list { margin: 0; padding-left: 22px; display: grid; gap: 4px; font-size: 1.0625rem; }
+.op-moves-list a { color: var(--text); text-decoration-color: var(--primary); text-underline-offset: 3px; }

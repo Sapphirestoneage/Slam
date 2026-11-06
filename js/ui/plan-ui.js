@@ -6,6 +6,8 @@ import { simpleMath } from '../math/simple.js';
 import * as S from './staples.js';
 import { goalSuggestions } from '../whynow.js';
 import { futureDollars } from '../math/fi.js';
+import { flowWords } from '../math/flow.js';
+import { gapCard } from './gap-ui.js';
 import { MILESTONES, fiTargets, monthsTo, projection, ladder, solveFor } from '../plan.js';
 import { payoffPlan, customOrder, orderCost, debtFirstPlan } from '../math/debt.js';
 import { METHODS, suggestMethod } from '../registry/debt.js';
@@ -75,9 +77,9 @@ function investingLine(ctx, m) {
   // Batch 11 (item 1): while heavy debt is carried, the surplus pays it first; Invest my surplus takes over after.
   const debtLine = r.heavy ? h('span.row-line', { style: { gap: '8px' } },
     S.toggle([[1, 'Heavy debt first'], [0, 'Invest from today']], r.wanted ? 1 : 0, v => ctx.store.setDoc('assumptions', { debtFirst: v }), { label: 'Where the surplus goes while heavy debt is carried' }),
-    h('span.muted.small', {}, r.on ? `Until ${m.debtRule.heavyMonths == null ? 'the heavy debt is gone' : at(m.debtRule.heavyMonths)} the surplus pays heavy debt; then it is ${on ? 'invested' : 'kept'}.` : 'The surplus is invested from today while heavy debt is still carried.')) : null;
+    h('span.muted.small', {}, (m.surplus.value ?? 0) < 0 ? 'The gap comes first: there is no surplus yet.' : r.on ? (m.fooFlow ? `The surplus ${flowWords(m.fooFlow, ctx.now())}.` : `Until ${m.debtRule.heavyMonths == null ? 'the heavy debt is gone' : at(m.debtRule.heavyMonths)} the surplus pays heavy debt; then it is ${on ? 'invested' : 'kept'}.`) : 'The surplus is invested from today while heavy debt is still carried.')) : null;
   return h('div.stack', { style: { gap: '6px', marginTop: '8px' } },
-    h('span.muted.small', {}, parts.length ? `${r.on ? 'After the heavy debt, counts' : 'Counts'} ${money(iv.monthly ?? 0)} a month going in: ${parts.join(' + ')}. Inflation is covered: returns are after inflation.` : 'Nothing is going in yet. Inflation is covered: returns are after inflation.'),
+    h('span.muted.small', {}, (m.surplus.value ?? 0) < 0 ? `Nothing goes in from the surplus while the month is short${iv.alreadyIn ? `; ${money(iv.alreadyIn)} a month still goes in from your paycheck` : ''}. Inflation is covered: returns are after inflation.` : parts.length ? `${m.fooFlow?.waitMonths ? `After the ${r.on ? 'heavy debt and ' : ''}big e, counts` : r.on ? 'After the heavy debt, counts' : 'Counts'} ${money(iv.monthly ?? 0)} a month going in: ${parts.join(' + ')}. Inflation is covered: returns are after inflation.` : 'Nothing is going in yet. Inflation is covered: returns are after inflation.'),
     debtLine,
     h('span.row-line', { style: { gap: '8px' } },
       S.toggle([[0, 'Surplus stays surplus'], [1, 'Invest my surplus']], on ? 1 : 0, v => ctx.store.setDoc('assumptions', { investSurplus: v }), { label: 'Invest my surplus' }),
@@ -87,18 +89,21 @@ export function goalsScreen(app, ctx) {
   const reveal = PUI.reveal;
   const top = h('div', {}, goalsTop(app, ctx, { reveal }));
   ctx.onRefresh(() => S.keepPlace(() => clear(top, goalsTop(app, ctx))));
-  return [head('Goals', 'FI target, assumptions, milestones'), top, S.live(ctx, () => goalChipSuggestions(ctx)), S.recordList(ctx, milestoneList())];
+  return [head('Goals', 'FI target, assumptions, milestones'), S.live(ctx, () => gapCard(app, ctx, ctx.metrics(), { where: 'goals' }) ?? h('span')), top, S.live(ctx, () => goalChipSuggestions(ctx)), S.recordList(ctx, milestoneList())];
 }
 // Batch 10 (item 4): the goal chips from About you › Why now that match a Plan goal or FOO step, each with Add. The
 // coach confirms; nothing is added on its own. Not now sets one aside for this client.
 function goalChipSuggestions(ctx) {
   const p = ctx.store.doc.profile;
-  const list = goalSuggestions(p, ctx.visible(r => r.kind === 'milestone'));
+  const list = goalSuggestions(p, ctx.visible(r => r.kind === 'milestone' || r.kind === 'event'));
   if (!list.length) return h('span');
   return h('div.card.goal-suggest', {}, h('div.row-line', { style: { gap: '8px' } }, h('strong', {}, 'From Why now'), h('span.muted.small', {}, 'Goals they picked. Add the ones that fit.')),
     h('div.stack', { style: { gap: '6px', marginTop: '8px' } }, list.map(g => h('div.row-line', { style: { gap: '10px', flexWrap: 'wrap' } },
       h('span', { style: { flex: '1 1 220px' } }, g.main ? '★ ' : '', h('strong', {}, g.chip), h('span.muted.small', {}, ` · ${g.step}`)),
-      S.button('Add', { size: 'small', iconName: 'plus', kind: 'primary', onClick: () => { ctx.store.add('milestone', { name: g.name, values: { mode: g.type === 'Custom' ? 'date' : 'when' } }, { type: g.type }); S.toast(`${g.name} added to the milestones.`, { undo: () => ctx.store.undo() }); } }),
+      // Batch 12 (item 7): a FOO step is opened, not added; a Fund the Future goal is an event saved for each month.
+      g.kind === 'foo' ? S.button(`Open step ${g.fooStep}`, { size: 'small', iconName: 'right', kind: 'primary', onClick: () => { location.hash = '#/plan/foo'; } })
+        : g.kind === 'future' ? S.button('Add', { size: 'small', iconName: 'plus', kind: 'primary', onClick: () => { ctx.store.add('event', { name: g.name, values: { sinking: true } }); S.toast(`${g.name} added to Fund the Future: set its amount and month under Sinking funds.`, { undo: () => ctx.store.undo() }); } })
+        : S.button('Add', { size: 'small', iconName: 'plus', kind: 'primary', onClick: () => { ctx.store.add('milestone', { name: g.name, values: { mode: g.type === 'Custom' ? 'date' : 'when' } }, { type: g.type }); S.toast(`${g.name} added to the milestones.`, { undo: () => ctx.store.undo() }); } }),
       S.button('Not now', { size: 'small', onClick: () => ctx.store.setDoc('profile', { goalSuggest: [...(p.goalSuggest || []), g.chip] }) })))));
 }
 function goalsTop(app, ctx, { reveal = false } = {}) {
@@ -559,7 +564,8 @@ export function scenariosScreen(app, ctx) {
       // Batch 11 (item 7): Retire by starts from the FI age on Goals; a change here is the proposal.
       S.labelled('Retire by (age)', S.stepper(p.fiAge ?? C.current.fiAge ?? null, v => propose({ fiAge: v === C.current.fiAge ? null : v }), { min: 30, max: 80, label: 'Proposed retire-by age', key: 'prop:fiAge' })),
       S.labelled('Surplus invested', S.toggle([[true, 'Yes'], [false, 'No']], p.investSurplus ?? null, v => propose({ investSurplus: v }), { label: 'Proposed surplus invested', clearable: true })),
-      S.labelled('Extra to debt a month', S.moneyInput(p.extraDebt ?? null, v => propose({ extraDebt: v }), { hint: 'Add extra', key: 'prop:extra' }))));
+      S.labelled('Extra to debt a month', S.moneyInput(p.extraDebt ?? null, v => propose({ extraDebt: v }), { hint: 'Add extra', key: 'prop:extra' })),
+      S.labelled('Extra income a month', S.moneyInput(p.extraIncome ?? null, v => propose({ extraIncome: v }), { hint: 'Add income', key: 'prop:income' })))); // batch 12: Use the gap fills it
   const fmt = (r, v) => (v == null ? '–' : r.unit === 'money' ? S.amount(ctx, v) : r.unit === 'pct' ? pct(v) : r.unit === 'month' ? monthName(v, 'short') : String(v));
   const diffCell = r => {
     if (r.unit === 'month') return r.diffMonths == null ? '' : r.diffMonths === 0 ? 'Same' : `${r.diffMonths < 0 ? '' : '+'}${r.diffMonths} months${r.diffMonths < 0 ? ' sooner' : ' later'}`;

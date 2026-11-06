@@ -6,6 +6,8 @@ import { metrics } from './metrics.js';
 import { isHeavyDebt } from './debt.js';
 import { matchFromTiers } from './portfolio.js';
 import { layersOf } from './layers.js';
+import { taxFreeRoom, matchRoom, nextBest } from './flow.js';
+import { gapOf } from './gap.js';
 import { monthsTo } from '../plan.js';
 import { addMonths, ymOf, instances } from '../month.js';
 import { yearItems, sinkingOf } from '../year.js';
@@ -67,12 +69,8 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   const tracking = monthList.some(i => i.status !== 'Planned');
   const late = !tracking ? [] : monthList.filter(i => (i.kind === 'bill' || i.kind === 'debt') && i.status === 'Planned' && i.date < fiveDaysAgo && !i.onCard && !i.guessDate && !i.spread);
   const paydayDebt = debts.filter(d => PAYDAY.has(d.type) && (d.balance ?? 0) > 0);
-  const roth = x.accounts.filter(a => a.type === 'Roth IRA');
-  const rothRec = roth.map(a => recOf(a.id));
-  const rothThisYear = sum(rothRec, r => sum((r?.values.rothLog || []).filter(e => e.taxYear === now.getFullYear()), e => e.amount) || (r?.values.contribution ?? 0) * (r?.values.contributionPer === 'Paycheck' ? 26 : 1));
-  const hsa = x.accounts.filter(a => a.type === 'HSA');
-  const hsaLimit = ref.limits.hsa[x.gates.couple ? 'family' : 'self'];
-  const hsaIn = sum(hsa.map(a => recOf(a.id)), r => r?.values.contributionsYtd ?? r?.values.contribution ?? 0) + (x.gates.hsa ? sum(x.income, i => (i.r.values.hsaFsa ?? 0) * n) : 0);
+  const room = m.fooFlow?.room ?? taxFreeRoom(doc, x, ref, now); // one definition with the freed-money flow (js/math/flow.js)
+  const { rothThisYear, hsaLimit, hsaIn } = room;
   const sink = yearItems(doc.records, now).all.filter(i => i.rec.values.sinking).map(i => ({ ...sinkingOf(i, { records: doc.records, now }), name: i.name }));
   const give = p.giving?.on ? p.giving : null;
   const giveMonthly = !give ? 0 : give.mode === 'amount' ? give.amount ?? 0 : (give.pct ?? 0) * ((give.base === 'net' ? x.takeHome : (x.grossAnnual ?? 0) / 12) ?? 0);
@@ -84,9 +82,10 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   add({ id: '0b', name: stepHeadline('0b'), done: joy.length > 0 && joy.every(l => (l.amount ?? 0) > 0), started: joy.length > 0, optional: !joy.length, parts: joy.map(l => ({ name: l.name, value: l.amount })),
     note: joy.length ? 'Your joy lines are funded in the plan.' : 'Pick the lines that bring you joy (Budget, a line\'s More).' });
   const e = layer('little-e'), buf = layer('buffer');
-  const bleed = [{ name: 'No late bills', done: !late.length }, { name: 'Payday and cash-advance debt at $0', done: !paydayDebt.length, left: sum(paydayDebt, d => d.balance) },
+  const G = gapOf(doc, m); // batch 12 (item 5, M81): a month that is short is where step 1 starts
+  const bleed = [...(G ? [{ name: 'Spend less than you make: the month is short', done: false, left: G.short, gap: true }] : []), { name: 'No late bills', done: !late.length }, { name: 'Payday and cash-advance debt at $0', done: !paydayDebt.length, left: sum(paydayDebt, d => d.balance) },
     { name: 'Buffer full', done: !!buf?.full, left: buf?.left ?? 0 }, { name: 'little e full', done: e.full, left: e.left }, ...soonGaps.map(g => ({ name: `${g.name} covered`, done: g.full, left: g.left }))];
-  add({ id: '1', name: stepHeadline('1'), done: bleed.every(b => b.done), started: bleed.some(b => b.done), left: sum(bleed, b => b.left ?? 0), parts: bleed });
+  add({ id: '1', name: stepHeadline('1'), done: bleed.every(b => b.done), started: bleed.some(b => b.done), left: G ? G.short : sum(bleed, b => b.left ?? 0), parts: bleed, ...(G ? { monthly: true, gap: G.short } : {}) }); // batch 12: in a gap, the gap is what is left
   const matchOffered = (x.link.incomeTiers || []).length > 0;
   add({ id: '2', name: stepHeadline('2'), done: !matchOffered || !mt?.leftOnTable, started: (pctIn ?? 0) > 0, left: matchOffered && mt?.leftOnTable ? Math.max(0, (fullMatchAt - (pctIn ?? 0)) * (gross ?? 0)) : 0,
     note: !matchOffered ? 'No match on file.' : mt?.leftOnTable ? `Put in ${(fullMatchAt * 100).toFixed(1)}% to get the full match.` : 'You get the full match.',
@@ -174,15 +173,33 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
       s.months = Number.isFinite(months) && t != null ? Math.max(Math.ceil(months), t) : null;
     } else if (s.id === '7' && s.status !== 'In progress') { s.months = steps.find(x => x.id === '6')?.months ?? null; } // the window opens when step 6 is done
     else if (s.id === '3' && m.debtPlan?.debts.some(d => d.heavy)) { // batch 11: the one debt plan (the surplus to heavy debt first, M34)
-      const hm = m.debtPlan.heavyMonths; s.months = hm; months = hm == null ? Infinity : Math.max(months, hm);
+      const hm = m.debtPlan.heavyMonths; s.months = G ? null : hm; months = hm == null || G ? Infinity : Math.max(months, hm); // batch 12: in a gap the payments are not funded yet
+      if (G) s.ifPaid = hm;
       s.minimumMonths = m.debtPlanMinimum?.heavyMonths ?? null; // the same debt at its own payment only, for the one-line note
+    } else if ((s.id === '4' || s.id === '5') && m.fooFlow && (s.id === '5' || !L.needsAge)) { // batch 12 (M79): freed money follows the FOO, one flow for every screen
+      const fs = m.fooFlow.steps.find(q => q.id === s.id);
+      s.months = fs?.to ?? null; s.flowMonthly = fs?.monthly ?? null; if (s.months != null) months = Math.max(months, s.months);
     } else { months += surplus ? (s.monthly ? 0 : s.left / surplus) : Infinity; s.months = Number.isFinite(months) ? Math.ceil(months) : null; }
     s.date = s.months == null ? null : addMonths(ymOf(now), s.months);
+  }
+  // Batch 12 (M80): the next best opportunity. On each step the money goes to, the best alternative by its yearly value;
+  // when it beats the step, a one-line note ("Worth a look"). The order never changes.
+  const mRoom = matchRoom(x), heavyTarget = (m.debtPlan?.debts || []).find(d => d.heavy && d.paidOffMonth !== 0) ?? null;
+  const flowMonthly = m.fooFlow?.monthly ?? surplus;
+  const shown = new Set();
+  const rateOf = { '3': heavyTarget?.apr ?? 0, '4': 0, '5': x.realReturn, '6': x.realReturn };
+  for (const s of steps) {
+    if (!(s.id in rateOf) || ['Done', 'Locked', 'Off', 'Optional'].includes(s.status)) continue;
+    const monthly = s.id === '3' ? (m.debtRule?.toDebt ?? 0) : flowMonthly;
+    const from = s.id === '3' ? 0 : s.id === '6' ? (m.fooFlow?.taxFreeEnd ?? 0) : (m.fooFlow?.steps.find(q => q.id === s.id)?.from ?? 0);
+    const nb = nextBest({ id: s.id, rate: rateOf[s.id], monthly, target: s.id === '3' ? heavyTarget?.id : null, from }, { debts: x.debts, match: mRoom, realReturn: x.realReturn, now });
+    const key = nb ? `${nb.kind}:${nb.id ?? ''}` : null;
+    if (nb && !shown.has(key)) { s.worthALook = nb; shown.add(key); } // the same alternative shows once, on the first step it beats
   }
   const facts = factsOf({ x, m, steps, L, coast, qq, invested, debts, low, doc, k401Limit: ref.limits['401k'].base });
   const raised = flags.filter(f => (f.all || []).length && f.all.every(k => facts[k]));
   for (const f of raised) { const s = steps.find(st => st.id === String(f.step)); if (s) (s.flags ||= []).push(f); }
-  return { steps, here, qq, coast, yearlyMinimum, keepJob, flags: raised, facts, debtText: m.debtPlan?.text ?? null, heavyPayments: m.debtPlan?.heavyPayments ?? 0, path: pathOf({ steps, debts, m, doc, now, coast, qq }) };
+  return { steps, here, qq, coast, yearlyMinimum, keepJob, flags: raised, facts, gap: G, debtText: m.debtPlan?.text ?? null, heavyPayments: m.debtPlan?.heavyPayments ?? 0, path: pathOf({ steps, debts, m, doc, now, coast, qq }) };
 }
 
 // What an override costs, in FI days a year: giving while carrying heavy debt costs that debt's APR on the money; any

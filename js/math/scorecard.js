@@ -240,9 +240,19 @@ export function scorecardOf(doc, ref, { now = new Date(), flags = [] } = {}) {
     ].filter(Boolean);
     return { ...a, foo, rating, reason, source, auto, override, coachReason: o.reason ?? null, payoff, fiDays: time?.fiDays ?? null, hours: time?.hours ?? null, effort, effortSet: o.effort != null, score, beforeHere, waits, chosen: chosen.includes(a.id), parked, math };
   });
+  // Batch 12 (item 5): in a gap, one cause, one hole. Holes that are only there because nothing is left over to put in
+  // (little e or big e not full, nothing going into retirement or investing) follow the Cash flow hole: it says so, and
+  // they leave the ranked list until the gap closes. A match left on the table and heavy debt keep their own holes.
+  const GAP_FOLLOWERS = ['emergency', 'retirement', 'investing'];
+  if ((f.m.surplus.value ?? 0) < -0.5) {
+    const cash = areas.find(a => a.id === 'cashFlow');
+    const follow = areas.filter(a => GAP_FOLLOWERS.includes(a.id) && a.rating === 'Hole' && a.source === 'auto' && !(a.id === 'retirement' && f.matchOffered && f.matchLeft > 0));
+    for (const a of follow) { a.followsGap = true; a.reason = `${a.reason} It waits on the gap: nothing is left over to put in yet.`; }
+    if (cash?.rating === 'Hole' && follow.length) cash.reason = `${cash.reason} ${follow.map(a => a.name).join(', ').replace(/, ([^,]*)$/, ' and $1')} ${follow.length === 1 ? 'waits' : 'wait'} on this.`;
+  }
   // Ranked: parked holes last (answer 136), a hole with no payoff last before them (133), then the ones before the
   // client's FOO step first, then best return.
-  const holes = areas.filter(a => a.rating === 'Hole')
+  const holes = areas.filter(a => a.rating === 'Hole' && !a.followsGap)
     .sort((a, b) => (Number(!!a.parked) - Number(!!b.parked)) || (Number(!a.payoff) - Number(!b.payoff)) || (Number(b.beforeHere) - Number(a.beforeHere)) || (Number(a.waits) - Number(b.waits)) || ((b.score ?? -1) - (a.score ?? -1)) || ((b.payoff?.value ?? 0) - (a.payoff?.value ?? 0)));
   holes.forEach((h, i) => { h.rank = i + 1; });
   const okCount = areas.filter(a => a.rating === 'Strong' || a.rating === 'OK').length;

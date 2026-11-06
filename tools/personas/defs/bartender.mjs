@@ -26,7 +26,7 @@ export default {
     savingsRate: { value: 0.2239, unit: 'pct', note: '$750 / $3,350.' },
     fooStep: { value: '1', unit: 'step', note: 'Buffer $2,600 x 24 / 52 = $1,200 and little e $1,000 need $2,200, and the slow season (within 12 months) needs one month, $2,600, all in step 1. Cash is $1,700.' },
     debtFreeMonths: { value: 3, unit: 'months', note: '$90 + $750 = $840 a month on $1,800 at 27%: 2.2, so 3 months.' },
-    monthsToFi: { value: 325, unit: 'months', note: 'FI number $2,600 x 12 / 4% = $780,000. 3 months adding nothing ($3,000 grows to $3,051), then $750 + $90 = $840 a month: 324.4, so 325 months.' },
+    monthsToFi: { value: 345, unit: 'months', note: 'Batch 12, freed money follows the FOO: 3 months on heavy debt, then FI number $2,600 x 12 / 4% = $780,000. 3 months adding nothing ($3,000 grows to $3,051), then $750 + $90 = $840 a month: 324.4, so 325 months.7,550 of big e left / $840 a month = 21 months, so 24 months with nothing going in ($3,000 grows to $3,435). Then $840 a month at 7% real to the $780,000 FI number: 24 + ln(($780,000 (g-1) + $840) / ($3,435 (g-1) + $840)) / ln g = 345.0, so 345 months.' },
     runwayMonths: { value: 0.654, unit: 'months', tol: 0.01, note: '$1,700 / $2,600.' },
     bigETarget: { value: 17550, unit: 'money', note: 'Age 27 / 5 = 5.4 x 1.25 (income varies) = 6.75 months x $2,600 = $17,550.' },
     littleEFull: { value: false, unit: 'bool', note: '$1,700 fills the $1,200 buffer, then $500 of little e.' },

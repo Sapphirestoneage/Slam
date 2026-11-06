@@ -4,6 +4,8 @@
 import { h, clear, icon } from './dom.js';
 import { changeLog } from '../capture.js';
 import { saferFi } from '../math/fi.js';
+import { flowWords } from '../math/flow.js';
+import { nextMoves } from '../math/moves.js';
 import { homeworkList } from '../homework.js';
 import * as S from './staples.js';
 import { sheetButtons } from './sheet-ui.js';
@@ -189,6 +191,7 @@ export function summaryText(ctx) {
     line('Debt free', m.debtRule?.heavy && m.debtPlan?.months != null ? `${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.months), 'short')}${m.debtRule.on ? ' (the surplus goes to heavy debt first)' : ''}` : null), // batch 11
     line('FI date', fiWords == null ? null : `${fiWords.text}${fiWords.kind === 'month' ? '' : ` (${gate.confidence?.label ?? 'a range'})`}`),
     '',
+    ...(mv => (mv.length ? ['Your next moves:', ...mv.map((x, i) => `${i + 1}. ${x.text}`), ''] : []))(nextMoves(doc, ctx.ref, { now: ctx.now() })), // batch 12 (item 6)
     hw.length ? 'To do:' : null, ...hw.map(x => `- ${x.label}${x.where ? ` (look on: ${x.where})` : ''}`),
     op.strengths ? `\nStrengths: ${op.strengths}` : null, op.struggles ? `Struggles: ${op.struggles}` : null,
     op.doMore ? `Do more: ${op.doMore}` : null, op.doLess ? `Do less: ${op.doLess}` : null,
@@ -237,6 +240,7 @@ export function onePagerScreen(app, ctx) {
     S.button('Send summary', { kind: 'primary', iconName: 'mail', onClick: e => sendSummary(ctx, e.currentTarget) })),
   h('div.card.one-pager', {},
     h('h2', {}, `${doc.client.name || 'Client'}, ${new Date(ctx.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`),
+    movesBlock(app, ctx), // batch 12 (item 6): Your next 3 moves, then the tiles
     S.summaryStrip(ctx, [
       { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: HOME.netWorth, so: soWhat('netWorth', m) },
       { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: HOME.surplus, so: soWhat('surplus', m) },
@@ -246,11 +250,20 @@ export function onePagerScreen(app, ctx) {
       h('div', {}, h('h3', {}, 'To-dos'), hw.filter(x => x.owner !== 'coach').length ? h('ul.op-list', {}, hw.filter(x => x.owner !== 'coach').map(x => h('li', {}, x.label, x.where ? h('span.muted.small', {}, ` · ${x.where}`) : null))) : h('p.muted', {}, "No homework yet. Tap Will get it on any number to add it.")), // the client's own items; the coach's stay on Coach tools (batch 7, item 9)
       h('div', {}, h('h3', {}, 'Goals'), h('ul.op-list', {},
         m.debtRule?.heavy && m.debtPlan?.months != null ? h('li', {}, `Debt free ${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.months), 'short')}${m.debtRule.on ? ': the surplus goes to heavy debt first' : ''}`) : null, // batch 11
-        m.monthsToFi.value != null && fiGate(ctx).unlocked ? h('li', {}, `FI ${fiWordsOf(m, fiGate(ctx).confidence, { now: ctx.now() })?.text ?? ''}${doc.assumptions.fiAge ? `, target age ${doc.assumptions.fiAge}` : ''}`) : null,
+        m.monthsToFi.value != null && fiGate(ctx).unlocked ? h('li', {}, `FI ${fiWordsOf(m, fiGate(ctx).confidence, { now: ctx.now() })?.past ? 'reached' : fiWordsOf(m, fiGate(ctx).confidence, { now: ctx.now() })?.text ?? ''}${doc.assumptions.fiAge ? `, target age ${doc.assumptions.fiAge}` : ''}`) : null,
         goals.map(g => h('li', {}, g.name || g.type)), !goals.length && (m.monthsToFi.value == null || !fiGate(ctx).unlocked) ? h('li.muted', {}, fiGate(ctx).unlocked ? 'Set an FI target on Plan' : `FI date: ${fiGate(ctx).reason}`) : null))),
     h('div.op-grid', { style: { marginTop: '16px' } }, box('strengths', 'Strengths', 'What is going well'), box('struggles', 'Struggles', 'What is hard right now')),
     h('div.op-grid', { style: { marginTop: '16px' } }, box('doMore', 'Do more', 'Keep doing'), box('doLess', 'Do less', 'Ease off')),
     h('p.disclaimer', {}, 'Coach, not a licensed financial advisor.'))]; // R182
+}
+
+// Batch 12 (item 6, M82): Your next 3 moves, each with dollars and a month, each a link to its screen (RightCapital's
+// Snapshot tiles link to the detail the same way).
+function movesBlock(app, ctx) {
+  const moves = nextMoves(ctx.store.doc, ctx.ref, { now: ctx.now(), flags: app.flags });
+  if (!moves.length) return null;
+  return h('section.op-moves', { 'aria-label': 'Your next 3 moves' }, h('h3', {}, moves.length === 3 ? 'Your next 3 moves' : `Your next ${moves.length === 1 ? 'move' : `${moves.length} moves`}`),
+    h('ol.op-moves-list', {}, moves.map(mv => h('li', {}, h('a', { href: mv.route }, mv.text)))));
 }
 
 // The FI date as a month, with how far off it is (fits a narrow card). Locked by the program until income and
@@ -268,9 +281,9 @@ export function fiCard(ctx, m) {
   const iv = m.investing, alt = iv?.investSurplus ? m.fiPaths?.idle : m.fiPaths?.invested;
   const altWords = words && alt?.value != null ? fiWordsOf({ ...m, monthsToFi: alt, investing: { ...iv, investSurplus: !iv.investSurplus, monthly: iv.investSurplus ? iv.idle : iv.invested } }, g.confidence, { now: ctx.now() }) : null;
   const safer = words ? saferFi(m, { from: ctx.now() }) : null; // batch 5 C: a second, smaller line under 45
-  const lines = !words ? null : h('span.stack.fi-lines', {},
-    h('span', {}, iv?.debtFirst ? 'Heavy debt first: ' : iv?.investSurplus ? 'Invest your surplus: ' : 'Surplus sits in checking: ', h('strong', {}, `FI ${words.kind === 'month' ? 'in' : 'around'} ${words.text}`)),
-    h('span.muted.small', {}, iv?.debtFirst ? `assumes the surplus pays heavy debt until ${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.heavyMonths ?? 0), 'short')}, then ${iv.investSurplus ? 'is invested' : 'stays in checking'}` : iv?.investSurplus ? 'assumes your surplus gets invested' : 'assumes the surplus is not invested', ` · ${words.years}`),
+  const lines = !words ? null : words.past ? h('span.stack.fi-lines', {}, h('strong', {}, 'FI reached')) : h('span.stack.fi-lines', {},
+    h('span', {}, iv?.debtFirst ? 'Heavy debt first: ' : m.fooFlow?.waitMonths ? 'big e first: ' : iv?.investSurplus ? 'Invest your surplus: ' : 'Surplus sits in checking: ', h('strong', {}, words.past ? 'FI reached' : `FI ${words.kind === 'month' ? 'in' : 'around'} ${words.text}`)),
+    h('span.muted.small', {}, m.fooFlow ? `assumes the surplus ${flowWords(m.fooFlow, ctx.now(), { invested: iv.investSurplus })}` : iv?.debtFirst ? `assumes the surplus pays heavy debt until ${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.heavyMonths ?? 0), 'short')}, then ${iv.investSurplus ? 'is invested' : 'stays in checking'}` : iv?.investSurplus ? 'assumes your surplus gets invested' : 'assumes the surplus is not invested', ` · ${words.years}`),
     safer ? h('span.muted.small.fi-safer', { title: safer.words }, safer.text) : null,
     altWords && altWords.text !== words.text ? h('span.muted.small', {}, `${iv?.investSurplus ? 'If it sits in checking' : 'If invested'}: ${altWords.text}`) : alt?.never && words ? h('span.muted.small', {}, `${iv?.investSurplus ? 'If it sits in checking' : 'If invested'}: not on this path`) : null);
   return { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi', home: HOME.fi, lock: g.unlocked ? null : { reason: g.reason, route: g.route }, confidence: g.confidence,

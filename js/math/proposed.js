@@ -6,11 +6,16 @@
 import { metrics } from './metrics.js';
 import { ladderOf } from './ladder.js';
 import { payoffPlan } from './debt.js';
+import { waitWords } from './fi.js';
 import { addMonths, ymOf, monthName } from '../month.js';
 import { METHODS } from '../registry/debt.js';
+import { blankRecord } from '../records.js';
+
+// Batch 12 (Use the gap): extra income on the proposed copy is one take-home row a month.
+export const extraIncomeRecord = amount => ({ ...blankRecord('income', 'Side hustle'), id: 'proposed-extra-income', name: 'Extra shifts or a side gig', amount, per: 'month', status: 'Roughly', values: { basis: 'Take-home', payFrequency: 'month', incomeType: 'Side hustle' } });
 
 const clone = x => JSON.parse(JSON.stringify(x));
-export const PROPOSED_KEYS = ['spending', 'debtOrder', 'fiAge', 'investSurplus', 'extraDebt'];
+export const PROPOSED_KEYS = ['spending', 'debtOrder', 'fiAge', 'investSurplus', 'extraDebt', 'extraIncome']; // extraIncome: batch 12, Use the gap
 export const proposedOf = doc => doc.program?.proposed ?? {};
 export const hasProposal = doc => PROPOSED_KEYS.some(k => proposedOf(doc)[k] != null);
 
@@ -28,6 +33,7 @@ export function proposedDoc(doc, ref, { now = new Date() } = {}) {
   if (p.fiAge != null) out.assumptions = { ...(out.assumptions || {}), fiAge: p.fiAge };
   if (p.investSurplus != null) out.assumptions = { ...(out.assumptions || {}), investSurplus: !!p.investSurplus };
   if (p.extraDebt) out.settings = { ...(out.settings || {}), debtExtra: p.extraDebt }; // the copy only: the one debt plan carries it (batch 11)
+  if (p.extraIncome) out.records.push(extraIncomeRecord(p.extraIncome));
   return out;
 }
 // Net worth in t years: invested grows at the real return with what goes in each month; the rest of net worth
@@ -46,7 +52,7 @@ export function netWorthIn(m, years, { extraDebt = 0 } = {}) {
   const value = grown + (nw - inv) + paid;
   return { value, steps: [
     `Invested today ${money(inv)} grows at ${(r * 100).toFixed(1)}% real for ${years} years: ${money(inv * g)}.`,
-    k ? `${money(b.monthly)} a month going in for the ${k} months the surplus pays heavy debt first, then ${money(monthly)} a month: ${money(grown - inv * g)}.` : `${money(monthly)} a month going in, ${n} months, grows to ${money(grown - inv * g)}.`,
+    k ? `${money(b.monthly)} a month going in for the ${k} months ${waitWords(b)}, then ${money(monthly)} a month: ${money(grown - inv * g)}.` : `${money(monthly)} a month going in, ${n} months, grows to ${money(grown - inv * g)}.`,
     `The rest of net worth (cash, things, minus debts) stays: ${money(nw - inv)}.`,
     `Debt paid down on the ${m.inputs.debtOrder} plan${extraDebt || m.inputs.debtExtra ? ` with ${money(extraDebt || m.inputs.debtExtra)} extra` : ''}${m.debtRule?.on ? ', the surplus on heavy debt first' : ''} by then: ${money(paid)} of ${money(debtNow)}.`,
     `Net worth in ${years} years: ${money(value)}.`] };
@@ -59,7 +65,7 @@ function side(doc, ref, { now, flags, extraDebt = 0 }) {
   const nw5 = netWorthIn(m, 5), nw10 = netWorthIn(m, 10); // the extra is on the copy's debt plan (proposedDoc)
   const at = mo => (mo == null ? null : addMonths(ymOf(now), mo));
   return { m, fiMonths: fi, fiDate: fi == null ? null : at(Math.ceil(fi)),
-    fiSteps: [`Invested ${money(m.inputs.invested)}; ${m.investing?.before ? `${money(m.investing.before.monthly)} a month going in for the ${m.investing.before.months} months the surplus pays heavy debt first, then ` : ''}${money(m.investing?.monthly)} a month going in at ${((m.inputs.realReturn ?? 0) * 100).toFixed(1)}% real.`, `FI number ${money(m.fiNumber.value)} (spending ${money(m.annualSpending)} a year over the ${((m.inputs.withdrawalRate ?? 0.04) * 100).toFixed(1)}% withdrawal rate).`, fi == null ? 'No FI date yet: something is missing.' : `Months until invested reaches the FI number: ${Math.ceil(fi)} (${monthName(at(Math.ceil(fi)))}).`],
+    fiSteps: [`Invested ${money(m.inputs.invested)}; ${m.investing?.before ? `${money(m.investing.before.monthly)} a month going in for the ${m.investing.before.months} months ${waitWords(m.investing.before)}, then ` : ''}${money(m.investing?.monthly)} a month going in at ${((m.inputs.realReturn ?? 0) * 100).toFixed(1)}% real.`, `FI number ${money(m.fiNumber.value)} (spending ${money(m.annualSpending)} a year over the ${((m.inputs.withdrawalRate ?? 0.04) * 100).toFixed(1)}% withdrawal rate).`, fi == null ? 'No FI date yet: something is missing.' : `Months until invested reaches the FI number: ${Math.ceil(fi)} (${monthName(at(Math.ceil(fi)))}).`],
     savingsRate: m.savingsRate.value, savingsSteps: [m.savingsRate.text ?? 'Savings rate: surplus plus after-tax savings over take-home.'],
     nw5: nw5.value, nw5Steps: nw5.steps, nw10: nw10.value, nw10Steps: nw10.steps,
     nextStep: L.next ? { name: L.next.name, date: L.next.date, pct: L.next.pct } : null, nextMarker: L.nextMarker ? { name: L.nextMarker.name, date: L.nextMarker.date } : null,
@@ -88,6 +94,7 @@ export function compareOf(doc, ref, { now = new Date(), flags = [] } = {}) {
     { key: 'fiAge', label: 'Retire by (age)', unit: 'number', current: current.fiAge, proposed: p.fiAge ?? current.fiAge },
     { key: 'investSurplus', label: 'Surplus invested', unit: 'text', current: current.investSurplus ? 'Yes' : 'No', proposed: (p.investSurplus ?? current.investSurplus) ? 'Yes' : 'No' },
     { key: 'extraDebt', label: 'Extra to debt a month', unit: 'money', current: 0, proposed: p.extraDebt ?? 0 },
+    { key: 'extraIncome', label: 'Extra income a month', unit: 'money', current: 0, proposed: p.extraIncome ?? 0 },
   ];
   return { rows, choices, has: hasProposal(doc), current, proposed };
 }
@@ -102,6 +109,7 @@ export function makeProposedThePlan(store, ref, { now = new Date() } = {}) {
     if (p.debtOrder) store.setDoc('settings', { debtOrder: p.debtOrder });
     if (p.fiAge != null) store.setDoc('assumptions', { fiAge: p.fiAge });
     if (p.investSurplus != null) store.setDoc('assumptions', { investSurplus: !!p.investSurplus });
+    if (p.extraIncome) { const { values, ...r } = extraIncomeRecord(p.extraIncome); store.add('income', { name: r.name, amount: r.amount, per: r.per, status: r.status, values }, { type: r.type }); }
     store.setIn('program', ['proposed'], undefined);
   });
 }

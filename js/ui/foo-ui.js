@@ -8,6 +8,7 @@ import { addMonths, ymOf } from '../month.js';
 import { foo, ORIGINAL } from '../math/foo.js';
 import { monthName } from '../month.js';
 import { money } from '../format.js';
+import { gapCard } from './gap-ui.js';
 
 export const FUI = { original: false };
 export const LAUNCH_MOVES = ['Quit and take time off', 'Go part-time', 'Take a sabbatical', 'Start something of my own', 'Move somewhere cheaper'];
@@ -19,7 +20,7 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
   const doc = ctx.store.doc, p = doc.profile, set = doc.settings;
   const f = foo(doc, ctx.ref, { now: ctx.now(), flags });
   const setP = patch => ctx.store.setDoc('profile', patch);
-  const when = s => (s.status === 'Done' ? 'Done' : s.date ? monthName(s.date, 'short') : s.status === 'Optional' ? (s.id === '0b' ? 'Pick joy lines' : 'Nothing to fund yet') : s.status === 'Off' ? 'Off' : s.status === 'Locked' ? '' : s.left == null && s.id === '5b' ? 'Set an amount' : s.status === 'Later' ? '' : 'Needs a surplus');
+  const when = s => (s.status === 'Done' ? 'Done' : s.date ? monthName(s.date, 'short') : s.status === 'Optional' ? (s.id === '0b' ? 'Pick joy lines' : 'Nothing to fund yet') : s.status === 'Off' ? 'Off' : s.status === 'Locked' ? '' : s.left == null && s.id === '5b' ? 'Set an amount' : s.status === 'Later' ? '' : f.gap ? 'After the gap' : 'Needs a surplus');
   // The path: one stop per step, you-are-here on the current one; the dated stops open below it.
   // Items 31 to 33: short names on the tiles, a card on hover or tap, a partial bar, a click opens the full detail below.
   // Batch 11 (item 4): the card says the headline, then "Name · specifics", then "→ what you get".
@@ -43,11 +44,13 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
   const stepRow = s => h(`div.foo-step${f.here === s.id ? '.here' : ''}${s.status === 'Locked' ? '.locked' : ''}${s.status === 'Optional' ? '.optional' : ''}`, { 'data-step': s.id },
     h('div.foo-step-head', {}, h('span.foo-n', {}, s.id), h('div.foo-names', {}, h('strong', {}, s.name), h('span.muted.small.foo-sub', {}, stepSub(s.id)), h('span.small.foo-get', {}, stepGet(s.id))), h(`span.tag.${STATUS_CLASS[s.status] || 'plain'}`, {}, s.status === 'Locked' ? [icon('lock'), ' Locked'] : s.status),
       h('span', { style: { flex: 1 } }),
-      s.left ? h('span.num', {}, S.mathButton({ id: 'M69', value: s.left, needs: [], text: s.id === '3' && f.debtText ? f.debtText : `${s.name}: ${money(s.left)} left${s.monthly ? ' a month' : ''}.${s.date ? ` At today's surplus, about ${monthName(s.date)}.` : ''}` }, dollars(s))) : null,
+      s.left ? h('span.num', {}, S.mathButton({ id: 'M69', value: s.left, needs: [], text: s.id === '3' && f.debtText ? f.debtText : `${s.name}: ${money(s.left)} left${s.monthly ? ' a month' : ''}.${s.date ? (s.flowMonthly ? ` At ${money(s.flowMonthly)} a month (the surplus${f.heavyPayments && s.id !== '3' ? ' plus the freed debt payments' : ''}, after the steps before it), about ${monthName(s.date)}.` : ` At today's surplus, about ${monthName(s.date)}.`) : ''}` }, dollars(s))) : null,
       h('span.muted.small.foo-when', {}, when(s))),
     // Batch 11 (item 1): one payoff date across the app; the date at the payment alone, in one line.
+    s.id === '3' && f.gap && s.ifPaid !== undefined ? h('p.muted.small.foo-slim', {}, `If the ${money(f.heavyPayments ?? 0)} a month in payments keeps being paid: ${s.ifPaid == null ? 'never' : monthName(addMonths(ymOf(ctx.now()), s.ifPaid), 'short')}. The gap comes first.`) : null, // batch 12
     s.id === '3' && s.date && s.minimumMonths !== undefined && s.minimumMonths !== s.months ? h('p.muted.small.foo-slim', {}, `Your surplus goes here first. If only the ${money(f.heavyPayments ?? 0)} a month in payments is paid: ${s.minimumMonths == null ? 'never' : monthName(addMonths(ymOf(ctx.now()), s.minimumMonths), 'short')}.`) : null,
     lockLine(s),
+    s.worthALook ? h('p.small.foo-slim.foo-worth', { title: s.worthALook.how }, s.worthALook.text) : null, // batch 12 (M80): the next best opportunity, one line; the order stays
     s.skipCost ? h('p.foo-flag.coach-only', {}, s.skipCost.text) : null, // answer 175
     s.flags?.length ? s.flags.map(fl => h('p.foo-flag', {}, fl.text)) : null,
     s.status === 'Optional' && s.id !== '0b' ? h('p.muted.small.foo-slim', {}, s.note) : S.moreBlock(`foo:step:${s.id}`, () => stepDetail(ctx, s, f), { label: 'Full detail' })); // answer 181: step 8 stays, one slim line
@@ -65,6 +68,7 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
     S.checkbox('Quiet Quitting FI opens the launch window', !!set.qqOpensLaunch, v => ctx.store.setDoc('settings', { qqOpensLaunch: v }), { key: 'foo:qq-opens' })), { label: 'Giving, launch and the job question' });
   return [head('FOO', 'Your order of operations: what to fund next, and when',
       S.toggle([[false, 'SLAM path'], [true, "With the Money Guy's original"]], FUI.original, v => { FUI.original = v; app.render(); }, { label: 'Show the original nine' })),
+    f.gap ? gapCard(app, ctx, undefined, { where: 'foo' }) : null, // batch 12 (item 5): the gap on top
     path, settings,
     h(`div.foo-cols${FUI.original ? '.two' : ''}`, {},
       h('div.foo-steps', {}, doneLine(f), f.steps.filter(s => s.status !== 'Done' || FUI.showDone).map(stepRow)), // item 32: done steps fold into one slim line

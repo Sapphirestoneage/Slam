@@ -227,3 +227,45 @@ QA: 519 tests in UTC and America/New_York, 0 fail.
 The dual-age view does both (The Bridge's two ages and both partners'); the 625 skills stay public, credited to Eli,
 built in conjunction with Jonathan Mendonsa; Quantum Collapse, the FI Address and the personality types were earlier
 standalone tools, described in docs/roadmap/named-tools.md from Eli's past chats and placed in ROADMAP.md.
+
+## Batch 12 (Nov 5): the money and plan side
+
+Freed money now follows SLAM's own order, a month that is short gets its own card, and the one-pager opens with the
+next three moves. Test client Maya ($5,200 take-home, $3,500 gut spending, $6,000 on cards paying $200).
+
+1. Freed money follows the FOO (M79, js/math/flow.js freedFlow, RULES.freedFollowsFoo; QUESTIONS 196, Eli: "but actually
+   measure the next best opportunity"). Heavy debt first (the batch 11 plan), then the surplus and the freed payments
+   fill big e (the Rule of 5 target less the cash already in the layers), then Tax-Free Growth (the Roth IRA and HSA
+   room this year), then the rest is invested; low-rate debt keeps its own payment. metrics runs it once
+   (m.fooFlow); the FI date and its ranges invest only what the paycheck already puts in until big e is full
+   (investing.before), and FOO, the ladder, Next step, Current vs Proposed, the FI card, Report and the debt-free card
+   ("After that, $1,900 a month fills big e by Jan 2028, then the Roth IRA by May 2028") read it. The next best
+   opportunity (M80, nextBest, RULES.nextBestMin $100): each step the money goes to is compared by yearly value with
+   the match not yet taken, a debt above what the step earns, a debt before its promo ends; a winner is one line on
+   the step ("Worth a look: ..."), shown once, and the order never changes. Maya: heavy debt Mar 2027, big e Jan 2028,
+   Tax-Free Growth May 2028, FI Apr 2048 (257 months). The persona defs' FI months are redone by hand (8 personas).
+2. The calendar spreads the gut number: while spending is the gut number, what no real line covers (less the debt
+   payments when the gut number includes them) is Spending money week by week (js/math/calendar.js gutSpread); with
+   some lines it reads "Spending money (not on a line yet)". Statements skip it (an estimate, not a transaction).
+3. Budget: "No lines yet: your gut number is your spending number." With some lines, the comparison plus how many
+   categories are still gut-only (spending.js gutVsLinesWords).
+4. The debt-free card on a plan of 12 months or fewer: +5% / +10% / +25% of what goes to debt (rounded to $10,
+   RULES.shortPlanMonths); every chip says the month it lands in or "same month". Maya: +$100 same month, +$190 and
+   +$480 Feb 2027.
+5. The gap (M81, js/math/gap.js): "Your month is $X short." on Home (in place of the debt-free card), and at the top of
+   Plan › Goals and FOO, with three levers and what each closes (a quarter of the largest Level 1 or 2 line that can
+   move, or a tenth of the gut number; the largest cuttable subscription; extra shifts or a side gig, a box the coach
+   fills, program.gap) and Use the gap, which proposes the plan on Current vs Proposed (a new Extra income a month
+   choice). FOO step 1 carries the gap as what is left and later dates wait on it; the Scorecard folds the holes the gap
+   causes (emergency fund, retirement, investing) into Cash flow. Persona findings: in a short month Home no longer
+   says "free to spend" or "money left over"; a client past FI reads "You are past your FI number: $X invested against
+   $Y, $Z over".
+6. Report › One-pager opens with Your next 3 moves (M82, js/math/moves.js), each with dollars and a month and a link;
+   Send summary carries them too.
+7. Why now goal chips: Emergency fund opens FOO step 4, Start investing step 5, Buy a home and Save for a big event add
+   a Fund the Future goal (an event saved for each month).
+8. The spec's Demo FI check is the plan the app shows: 294 months, a formula on the Demo client tab.
+9. QUESTIONS 186 to 200 answered.
+
+Export format 16. QA: tests in UTC and America/New_York (test/batch12.test.js); the layout checker; before and after
+screenshots at 1280 (and 390 for Home and the one-pager).

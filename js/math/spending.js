@@ -294,3 +294,18 @@ export function categoryTotals(catRecs = [], lines = [], mine = l => l.amount ??
     return { key, name: categoryName(key), rec, typed, linesSum, lines: mineLines, else: rest, from, amount, unassigned, counts: CORE_CATEGORIES.includes(key) || amount != null || mineLines.length > 0 || !!rec?.status };
   });
 }
+
+// Batch 12 (item 3): the gut number against the lines, in words. With no spending line holding a real amount (faded
+// starter amounts and the debt payments From Debt are not spending lines), the gut number is the spending number;
+// with some, the comparison, and how many categories still rest on the gut number alone.
+// lineTotal: the lines' total as the Budget shows it (with the debt payments); categories: metrics inputs.categories.
+export function gutVsLinesWords({ gut, lineTotal, categories = [] }) {
+  if (gut == null) return { real: 0, gutOnly: null, text: null };
+  const cats = categories.filter(c => c.key !== 'Debt' && c.key !== 'Retirement');
+  const real = cats.filter(c => c.amount != null).length;
+  if (!real) return { real: 0, gutOnly: cats.filter(c => c.counts).length, text: 'No lines yet: your gut number is your spending number.' };
+  const gutOnly = cats.filter(c => c.counts && c.amount == null).length;
+  const d = (lineTotal ?? 0) - gut;
+  const head = Math.abs(d) < 0.5 ? 'Lines match your gut number' : `Lines are ${fmt.money(Math.abs(d))} ${d > 0 ? 'over' : 'under'} your gut number`;
+  return { real, gutOnly, text: `${head}${gutOnly ? `; ${gutOnly} ${gutOnly === 1 ? 'category is' : 'categories are'} still gut-only` : ''}.` };
+}
