@@ -9,7 +9,7 @@ export default {
     dependents: 2, kidAges: [4, 8], filingStatus: 'Head of household',
     workSituation: 'Employed (W-2)', housing: 'Rent', hasCar: false, hasPets: false, incomeStability: 'Steady', healthCoverage: 'Medicaid',
     areas: { cash: true, investments: false, real: false, debt: true },
-    worry: 'Losing SNAP if I take more hours', goalWords: 'Take the supervisor job without going backwards',
+    worry: 'Losing SNAP if I take more hours', goalWords: 'Take the supervisor job',
     cliff: { snap: 'Getting it', medicaid: 'Getting it', kids: 'Getting it', eitc: 'Getting it' },
   },
   records: [
