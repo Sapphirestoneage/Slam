@@ -8,6 +8,16 @@ grows into a multimillionaire planning its next stages.
 uncertainty: the plan stops being a wide range and becomes this household's plan. The rule is easy; the flexibility
 is depth. A fifth of the effort gets four fifths of the picture, with the option to reach 99%.
 
+**Direction, Nov 6 2026 (Eli): the sheet for the coach, the app for clients.** The SLAM workbook becomes Eli's main
+tool and the place the logic lives: he fills it in with a client, session by session, and changes rules there. It is
+built for Google Sheets (an .xlsx that opens cleanly there, every function on Google Sheets' list). Its tabs follow
+the session: You, Money in, Money out, Own and owe, The plan, The future, Statements, One-pager, then Assumptions and
+the engine room. Inputs look like inputs (boxes, dropdowns for Know it / Roughly / Gut and for every tap), results
+are formulas, and a Check column proves the sheet and the app agree. The app stops growing new features; it becomes
+the client-facing layer later (one-tap answers on a phone, Fast Track, couples and who sees this, imports) and is
+made to match the sheet, never the other way round. New ideas land in the sheet first. Builders already in flight on
+Nov 6 finish their batches; nothing new starts on the app until the sheet is in Eli's hands.
+
 **Two orders, side by side.** The money order is SLAM's FOO: what the next dollar funds. The skill order is the
 library: what to learn, or unlearn, next. They run together: each FOO step has the few skills that make it work.
 
