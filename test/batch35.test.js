@@ -123,13 +123,14 @@ async function incomeOff(doc) {
   await wb.xlsx.readFile(join(dir, 'out', 'book.xlsx'));
   const val = v => (v && typeof v === 'object' ? v.result ?? v.error ?? null : v);
   const off = [], seen = new Set();
-  for (const tab of ['Math', 'Statements']) {
+  for (const tab of ['Math', 'Report › Statements']) {
     let col = null;
+    const at = tab === 'Math' ? 1 : 2; // batch 59: a screen tab's column A is its hidden keys
     wb.getWorksheet(tab).eachRow((r, n) => {
       const vals = r.values;
       if (vals.includes('Check')) { col = vals.indexOf('Check'); return; }
       if (!col) return;
-      const id = String(r.getCell(1).value ?? ''), name = String(r.getCell(2).value ?? '');
+      const id = String(r.getCell(at).value ?? ''), name = String(r.getCell(at + 1).value ?? '');
       const mine = tab === 'Math' ? INCOME_ROWS.test(id) : /^(Gross, all income|Taxes \(and premiums|Take-home)/.test(id) || /^(Gross, all income|Taxes \(and premiums|Take-home)/.test(name);
       if (!mine) return;
       seen.add(`${tab}:${id}`);

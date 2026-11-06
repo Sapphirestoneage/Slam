@@ -1,5 +1,6 @@
 // Phase 3, batch 2: the Scorecard, the holes and sessions 4 to 12. Synthetic households only.
 import { test } from 'node:test';
+import { tableIn } from './sheet-helpers.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Store, newHousehold, exportFile, importInto } from '../js/records.js';
@@ -218,12 +219,12 @@ test('the scorecard, goals and holes export and import with the client file, and
   assert.equal(e.doc.scorecard.nextChapter.text, 'Kids');
   assert.equal(e.find(r => r.kind === 'milestone' && r.values.tag === 'Want').length, 1);
   const plan = buildWorkbook(d.doc, ref, { now });
-  const tab = plan.sheets.find(s => s.name === 'Scorecard');
+  const tab = plan.sheets.find(s => s.name === 'Plan › Scorecard'); // batch 59: the tab follows the screen
   assert.ok(tab, 'a Scorecard tab');
   const text = JSON.stringify(tab.rows);
   assert.match(text, /Retirement accounts/); assert.match(text, /Holes, ranked \(2\)/, "the trip makes Goals OK"); assert.match(text, /Trip/); assert.match(text, /Kids/);
-  const goals = plan.sheets.find(s => s.name === 'Goals and events');
-  assert.ok(goals.rows[0].some(c => c.v === 'Need, want or wish') && goals.rows[0].some(c => c.v === 'Short or long term'));
+  const goals = tableIn(plan, 'goals');
+  assert.ok(goals.head.includes('Need, want or wish') && goals.head.includes('Short or long term'));
 });
 
 // ---------- Batch 3: the gate, carry-over, parking, the FOO prerequisites ----------

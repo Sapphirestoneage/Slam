@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Bring a spreadsheet back: read an edited workbook and compare it with SLAM. Pure: no DOM. Reads only the Assumptions
-// and Inputs tabs, through the field registry (a tab or column is found by its registry label), and ignores every
-// formula tab. The review screen (js/ui/sheet-ui.js) shows the result; applyChanges saves what was kept.
+// Bring a spreadsheet back: read an edited workbook and compare it with SLAM. Pure: no DOM. Reads the Assumptions tab
+// and every screen tab through the field registry: a row by the hidden key in its column A (a field, a record's id, a
+// section band, a blank row), a column by the hidden row of keys above its header (batch 59), never by position. A
+// file of format 43 or before (one tab per area) is read by its tab names and headers. The review screen
+// (js/ui/sheet-ui.js) shows the result; applyChanges saves what was kept.
 //
 // compare(grid, doc) returns, by area: Changed (field, old, new), New rows, Removed rows; Changed assumptions;
 // Couldn't tell what this is; typed over a formula; bad values with their cell; columns left alone. Each line has a
@@ -10,11 +12,13 @@
 import { nightsStale } from './math/earnings.js';
 import { AREAS, sheetFields } from './registry/fields.js';
 import { ASSUMPTIONS } from './registry/assumptions.js';
-import { DATA_TAB, OLD_DATA_TAB, STATUS_WORDS, toCell, partOf, rowsForArea, formulaCols, colLetter } from './sheet/workbook.js';
+import { DATA_TAB, OLD_DATA_TAB, STATUS_WORDS, KEY, toCell, partOf, rowsForArea, formulaCols, colLetter } from './sheet/workbook.js';
+import { decodeDefaults, tabOfArea, SCREEN_TABS } from './registry/tabs.js';
+import { foldDoc, SHARE } from './privacy.js';
 import { fingerprint, FORMAT_VERSION } from './sheet/format.js';
 const OLD_TYPES = { 'Savings or HYSA': 'Savings' };
 
-const STATUS_BACK = Object.fromEntries(Object.entries(STATUS_WORDS).map(([k, v]) => [v.toLowerCase(), k]));
+const STATUS_BACK = { ...Object.fromEntries(Object.entries(STATUS_WORDS).map(([k, v]) => [v.toLowerCase(), k])), "i'll find it later": 'Will email' }; // the old word, in files of format 43 and before
 const getPath = (o, path) => path.split('.').reduce((v, k) => (v == null ? undefined : v[k]), o);
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 const isBlankCell = v => v === null || v === undefined || (typeof v === 'string' && v.trim() === '');
@@ -89,139 +93,238 @@ export function gridFromPlan(plan) {
   return grid;
 }
 
+// Where each area's rows and fields are in a grid. The screen tabs (batch 59 on) are read by their hidden column A:
+// a table by its #keys and #head rows, its sections by their bands, a doc field by its field: row, a result by its
+// math: row. A file of format 43 or before has one tab per area (area.tab) with its header on the first row.
+export function locate(grid) {
+  const out = { layout: null, tables: {}, fields: new Map(), formulaRows: [] };
+  for (const tab of Object.keys(grid)) {
+    const rows = grid[tab] || [];
+    let section = null; // the section a field row sits in (About you, Your credit ...), for the review's words
+    for (let ri = 0; ri < rows.length; ri++) {
+      const key = rows[ri]?.[0];
+      if (typeof key !== 'string') continue;
+      if (key.startsWith(KEY.block)) section = key.slice(KEY.block.length);
+      if (key.startsWith(KEY.field)) { out.fields.set(key.slice(KEY.field.length), { tab, ri, ci: 2, v: rows[ri][2] ?? null, section }); out.layout = 'screens'; }
+      else if (key.startsWith(KEY.col) || key.startsWith(KEY.math)) out.formulaRows.push({ tab, ri, ci: 2, label: rows[ri][1] ?? key, key });
+      else if (key.startsWith(KEY.keys) && String(rows[ri + 1]?.[0] ?? '').startsWith(KEY.head)) {
+        const id = key.slice(KEY.keys.length);
+        const keys = (rows[ri] || []).map((k, i) => (i === 0 ? '_id' : k == null ? '' : String(k)));
+        const data = [];
+        let r = ri + 2;
+        for (; r < rows.length; r++) {
+          const k = rows[r]?.[0];
+          if (typeof k === 'string' && [KEY.end, KEY.keys, KEY.head, KEY.field, KEY.col, KEY.math, KEY.block].some(p => k.startsWith(p))) break;
+          data.push(r);
+        }
+        out.tables[id] = { tab, head: rows[ri + 1].map(v => (v == null ? '' : String(v).trim())), headAt: ri + 1, keys, data, screens: true };
+        out.layout = 'screens';
+        ri = r;
+      }
+    }
+  }
+  if (out.layout) return out;
+  for (const area of AREAS) { // the old layout: a tab per area, the header on row 1, every row under it
+    const rows = grid[area.tab];
+    if (!rows) continue;
+    out.layout = 'areas';
+    if (area.source === 'doc') {
+      const head = (rows[0] || []).map(v => (v == null ? '' : String(v).trim().toLowerCase()));
+      for (const f of area.fields) { const i = head.indexOf(f.label.toLowerCase()); if (i >= 0) out.fields.set(f.id, { tab: area.tab, ri: 1, ci: i, v: rows[1]?.[i] ?? null }); }
+      out.tables[area.id] = { tab: area.tab, head: (rows[0] || []).map(v => (v == null ? '' : String(v).trim())), headAt: 0, keys: null, data: [], screens: false };
+      continue;
+    }
+    out.tables[area.id] = { tab: area.tab, head: (rows[0] || []).map(v => (v == null ? '' : String(v).trim())), headAt: 0, keys: null, data: rows.map((_, i) => i).slice(1), screens: false };
+  }
+  return out;
+}
+
 export function compare(grid, doc, { asNew = false, ref = null } = {}) {
   const catDefaults = ref?.categoryDefaults ?? [];
   const meta = asNew ? null : metaOf(grid);
   const base = meta?.baseline ?? null;
   const fps = meta?.fingerprints ?? {};
   const formulas = grid._formulas || null;
-  const out = { meta: metaOf(grid), wrongClient: false, noMeta: !metaOf(grid), areas: [], assumptions: [], unknown: [], typedOver: [], bad: [], leftAlone: [] };
-  out.wrongClient = !asNew && !!out.meta?.clientId && out.meta.clientId !== doc.id;
+  const where = locate(grid);
+  const out = { meta: metaOf(grid), wrongClient: false, noMeta: !metaOf(grid), layout: where.layout, areas: [], assumptions: [], unknown: [], typedOver: [], bad: [], leftAlone: [] };
+  // Batch 59: a copy made Without private rows (its own id, this client's id plus -shared) is this client's file. Its
+  // private rows carry neutral names there: they are never read, renamed or deleted from it.
+  const sharedCopy = !!out.meta?.baseline?.shared && !asNew;
+  out.shared = sharedCopy;
+  out.wrongClient = !asNew && !!out.meta?.clientId && out.meta.clientId !== doc.id && !(sharedCopy && out.meta.clientId === `${doc.id}-shared`);
   out.olderFormat = out.meta?.version != null && out.meta.version < FORMAT_VERSION;
+  const privateIds = sharedCopy ? new Set(foldDoc(doc, SHARE, ref).records.filter(r => r.folded).map(r => r.id)) : new Set();
+  const neutral = sharedCopy ? new Map(foldDoc(doc, SHARE, ref).records.filter(r => r.folded).map(r => [r.id, r.name])) : new Map();
   let n = 0;
   const line = x => ({ id: `c${n++}`, decision: x.conflict ? null : x.op === 'remove' ? 'skip' : 'keep', ...x });
   const allCols = formulaCols();
+  const groups = new Map(); // by tab, in the order the tabs come
+  const groupOf = tab => { if (!groups.has(tab)) groups.set(tab, { id: tab, tab, changed: [], added: [], removed: [] }); return groups.get(tab); };
+  const cellOf = (tab, ri, ci) => `${tab}!${colLetter(ci + 1)}${ri + 1}`;
+  const changedInSlam = recId => !!(meta && fps[recId] && fps[recId] !== fingerprint(doc.records.find(r => r.id === recId)));
+  const isFormula = (tab, ri, ci) => !!formulas?.[tab]?.has(`${ri}:${ci}`);
+  // A changed value: one line, a conflict only when SLAM changed this same number after the file was made.
+  const fieldLine = (area, f, raw, { tab, ri, ci, rowName, item, wasStored, recId, gate }) => {
+    const r = fromCell(f.type, raw, f);
+    const stored = item ? toCell(f.type, item.get(f) ?? null) : null;
+    if (r.bad && String(raw ?? '').trim() === String(stored instanceof Date ? stored.toISOString().slice(0, 10) : stored ?? '').trim()) return; // as SLAM has it: never a change
+    if (r.bad) { out.bad.push({ cell: cellOf(tab, ri, ci), tab, name: rowName, label: f.label, value: raw, text: `${cellOf(tab, ri, ci)} (${rowName}, ${f.label}): ${r.bad}. Skipped.` }); return; }
+    if (same(r.value, wasStored)) return;
+    const nowV = asStored(f.type, item ? item.get(f) ?? null : null, f);
+    if (same(r.value, nowV)) return;
+    const conflict = !!gate && !same(nowV, wasStored);
+    groupOf(tab).changed.push(line({ op: 'edit', area: area.id, tab, recId, field: f.key, fld: f, label: f.label, name: rowName, was: wasStored, from: item ? item.get(f) ?? null : null, to: r.value, note: r.note, cell: cellOf(tab, ri, ci), conflict }));
+  };
+
+  // Typed over a formula: a result row (math:, col:) or a formula column whose cell is a plain value now.
+  for (const fr of where.formulaRows) {
+    const v = grid[fr.tab]?.[fr.ri]?.[fr.ci];
+    if (formulas?.[fr.tab] && !isBlankCell(v) && !isFormula(fr.tab, fr.ri, fr.ci) && fr.key.startsWith(KEY.col)) out.typedOver.push({ cell: cellOf(fr.tab, fr.ri, fr.ci), name: fr.label, value: v, text: `You typed over ${fr.label}. SLAM keeps its math; your number was ${v}.` });
+    if (formulas?.[fr.tab] && !isBlankCell(v) && !isFormula(fr.tab, fr.ri, fr.ci) && fr.key.startsWith(KEY.math) && !(grid[fr.tab]?.[fr.ri]?.[4] === 'From the app')) out.typedOver.push({ cell: cellOf(fr.tab, fr.ri, fr.ci), name: fr.label, value: v, text: `You typed over ${fr.label} (${fr.tab}). SLAM keeps its math; your number was ${v}.` });
+  }
 
   for (const area of AREAS) {
-    const rows = grid[area.tab];
-    const group = { id: area.id, tab: area.tab, changed: [], added: [], removed: [] };
-    if (!rows) { if (base?.areas?.[area.id] && Object.keys(base.areas[area.id]).length) out.leftAlone.push(`The ${area.tab} tab is not in the file, so nothing on it changed.`); continue; }
-    out.areas.push(group);
-    const head = (rows[0] || []).map(v => (v == null ? '' : String(v).trim()));
     const fields = sheetFields(area, { coach: true });
-    const colOf = label => head.findIndex(h => h.toLowerCase() === label.toLowerCase());
-    const cols = fields.map(f => ({ f, i: colOf(f.label) })).filter(x => x.i >= 0);
-    const fCols = allCols.filter(x => x.area === area.id).map(x => ({ col: x, i: colOf(x.label) })).filter(x => x.i >= 0);
-    for (const f of fields) if (colOf(f.label) < 0 && !f.coach) out.leftAlone.push(`${area.tab}: no ${f.label} column, so it was left alone.`);
-    const known = new Set([...fields.map(f => f.label.toLowerCase()), ...BUILTIN_LABELS, ...allCols.filter(x => x.area === area.id).map(x => x.label.toLowerCase())]);
-    head.forEach((h, i) => { if (h && !known.has(h.toLowerCase())) out.unknown.push(line({ op: 'column', area: area.id, tab: area.tab, name: `${area.tab}: the column "${h}"`, cell: `${area.tab}!${colLetter(i + 1)}1`, note: 'SLAM has no field with this name, so it was not read.' })); });
-    const idCol = colOf('SLAM id (leave as is)'), kindCol = colOf('Kind'), typeCol = colOf('Type'), statusCol = colOf('Status');
     const baseArea = base?.areas?.[area.id] ?? null;
-    const current = new Map((asNew ? [] : rowsForArea(area, doc)).map(r => [r.id, r]));
-    const nowOf = (item, f) => (item ? item.get(f) ?? null : null);
-    const seen = new Set();
-    const cellOf = (ri, ci) => `${area.tab}!${colLetter(ci + 1)}${ri + 1}`;
-    const tab = area.tab;
-    const typedOver = (ri, rowName) => {
-      if (!formulas?.[area.tab]) return;
-      for (const { col, i } of fCols) {
-        const v = rows[ri]?.[i];
-        if (!isBlankCell(v) && !formulas[area.tab].has(`${ri}:${i}`)) out.typedOver.push({ cell: cellOf(ri, i), name: `${rowName}: ${col.label}`, value: v, text: `You typed over ${rowName}: ${col.label}. SLAM keeps its math; your number was ${v}.` });
-      }
-    };
-    const changedInSlam = recId => !!(meta && fps[recId] && fps[recId] !== fingerprint(doc.records.find(r => r.id === recId)));
-    // A conflict only when SLAM changed this same number after the file was made (gate: the record's fingerprint moved).
-    const fieldLine = (x, row, ri, { item, wasStored, recId, conflict: gate }) => {
-      const { f, i } = x;
-      const r = fromCell(f.type, row[i], f);
-      if (r.bad) { out.bad.push({ cell: cellOf(ri, i), tab, name: x.rowName, label: f.label, value: row[i], text: `${cellOf(ri, i)} (${x.rowName}, ${f.label}): ${r.bad}. Skipped.` }); return; }
-      if (same(r.value, wasStored)) return;
-      const nowV = asStored(f.type, nowOf(item, f), f);
-      if (same(r.value, nowV)) return;
-      const conflict = !!gate && !same(nowV, wasStored);
-      group.changed.push(line({ op: 'edit', area: area.id, tab, recId, field: f.key, fld: f, label: f.label, name: x.rowName, was: wasStored, from: nowOf(item, f), to: r.value, note: r.note, cell: cellOf(ri, i), conflict }));
-    };
-
     if (area.source === 'doc') {
-      const row = rows[1] || [];
-      const item = asNew ? null : current.get('doc');
-      for (const x of cols) {
-        const was = baseArea ? baseArea.doc?.[x.f.key] ?? null : undefined;
-        const wasStored = was === undefined ? asStored(x.f.type, nowOf(item, x.f), x.f) : fromCell(x.f.type, was, x.f).value ?? null;
-        const nowV = asStored(x.f.type, nowOf(item, x.f), x.f);
-        fieldLine({ ...x, rowName: tab }, row, 1, { item, wasStored, recId: 'doc', conflict: was !== undefined });
+      const item = asNew ? null : rowsForArea(area, doc)[0];
+      let any = false;
+      for (const f of fields) {
+        const loc = where.fields.get(f.id);
+        if (!loc) { if (where.layout && !f.coach && (where.layout === 'areas' ? where.tables[area.id] : true)) out.leftAlone.push(`${where.layout === 'areas' ? area.tab : 'The file'}: no ${f.label} ${where.layout === 'areas' ? 'column' : 'row'}, so it was left alone.`); continue; }
+        any = true;
+        const was = baseArea ? baseArea.doc?.[f.key] ?? null : undefined;
+        const wasStored = was === undefined ? asStored(f.type, item ? item.get(f) ?? null : null, f) : fromCell(f.type, was, f).value ?? null;
+        fieldLine(area, f, loc.v, { tab: loc.tab, ri: loc.ri, ci: loc.ci, rowName: where.layout === 'areas' ? area.tab : loc.section ?? loc.tab, item, wasStored, recId: 'doc', gate: was !== undefined });
       }
-      typedOver(1, tab);
+      const t = where.tables[area.id];
+      if (t && !t.screens) { // the old layout: the formula columns on row 2, and the columns SLAM does not know
+        const known = new Set([...fields.map(f => f.label.toLowerCase()), ...BUILTIN_LABELS, ...allCols.filter(x => x.area === area.id).map(x => x.label.toLowerCase())]);
+        t.head.forEach((h, i) => { if (h && !known.has(h.toLowerCase())) out.unknown.push(line({ op: 'column', area: area.id, tab: t.tab, name: `${t.tab}: the column "${h}"`, cell: cellOf(t.tab, 0, i), note: 'SLAM has no field with this name, so it was not read.' })); });
+        for (const col of allCols.filter(x => x.area === area.id)) { const i = t.head.findIndex(h => h.toLowerCase() === col.label.toLowerCase()); const v = grid[t.tab]?.[1]?.[i]; if (i >= 0 && formulas?.[t.tab] && !isBlankCell(v) && !isFormula(t.tab, 1, i)) out.typedOver.push({ cell: cellOf(t.tab, 1, i), name: `${t.tab}: ${col.label}`, value: v, text: `You typed over ${t.tab}: ${col.label}. SLAM keeps its math; your number was ${v}.` }); }
+      }
+      if (!any && !t && base?.areas?.[area.id]) out.leftAlone.push(`The ${area.tab} rows are not in the file, so nothing on them changed.`);
       continue;
     }
 
-    for (let ri = 1; ri < rows.length; ri++) {
+    const t = where.tables[area.id];
+    if (!t) { if (baseArea && Object.keys(baseArea).length) out.leftAlone.push(`The ${tabOfArea(area.id) ?? area.tab} rows are not in the file, so nothing on them changed.`); continue; }
+    const rows = grid[t.tab];
+    const tab = t.tab;
+    // A column by its key (the screen tabs) or its header (the old layout).
+    const byLabel = label => t.head.findIndex(h => h.toLowerCase() === label.toLowerCase());
+    const colOf = (key, label) => (t.keys ? t.keys.indexOf(key) : byLabel(label));
+    const cols = fields.map(f => ({ f, i: colOf(f.key, f.label) })).filter(x => x.i >= 0);
+    const fCols = allCols.filter(x => x.area === area.id).map(x => ({ col: x, i: colOf(`@${x.key}`, x.label) })).filter(x => x.i >= 0);
+    for (const f of fields) if (colOf(f.key, f.label) < 0 && !f.coach) out.leftAlone.push(`${tab}: no ${f.label} column, so it was left alone.`);
+    const known = t.keys ? new Set([...fields.map(f => f.key), '_id', 'Kind', 'Type', 'Status', 'InMath', 'month', 'line', ...allCols.filter(x => x.area === area.id).map(x => `@${x.key}`)])
+      : new Set([...fields.map(f => f.label.toLowerCase()), ...BUILTIN_LABELS, ...allCols.filter(x => x.area === area.id).map(x => x.label.toLowerCase())]);
+    t.head.forEach((h, i) => { const k = t.keys ? t.keys[i] ?? '' : h.toLowerCase(); if (h && !known.has(k)) out.unknown.push(line({ op: 'column', area: area.id, tab, name: `${tab}: the column "${h}"`, cell: cellOf(tab, t.headAt, i), note: 'SLAM has no field with this name, so it was not read.' })); });
+    const idCol = 0;
+    const kindCol = colOf('Kind', 'Kind'), typeCol = colOf('Type', 'Type'), statusCol = colOf('Status', 'Status');
+    const current = new Map((asNew ? [] : rowsForArea(area, doc)).map(r => [r.id, r]));
+    const nowOf = (item, f) => (item ? item.get(f) ?? null : null);
+    const seen = new Set();
+    const group = groupOf(tab);
+    const typedOver = (ri, rowName) => {
+      if (!formulas?.[tab]) return;
+      for (const { col, i } of fCols) {
+        const v = rows[ri]?.[i];
+        if (!isBlankCell(v) && !isFormula(tab, ri, i)) out.typedOver.push({ cell: cellOf(tab, ri, i), name: `${rowName}: ${col.label}`, value: v, text: `You typed over ${rowName}: ${col.label}. SLAM keeps its math; your number was ${v}.` });
+      }
+    };
+    let sec = {}; // the defaults of the section a row sits in (from its band)
+    for (const ri of t.data) {
       const row = rows[ri] || [];
-      const rawId = idCol >= 0 && !isBlankCell(row[idCol]) ? String(row[idCol]).trim() : null;
+      const a = row[idCol];
+      const key = typeof a === 'string' ? a.trim() : a == null ? '' : String(a);
+      if (t.screens && key.startsWith(KEY.sec)) { sec = decodeDefaults(key.slice(KEY.sec.length)); continue; }
+      if (t.screens && key === KEY.gap) continue;
+      const slot = t.screens && key.startsWith(`${KEY.blank}:`) ? decodeDefaults(key.slice(KEY.blank.length + 1)) : {};
+      const rawId = !key || (t.screens && key.startsWith(KEY.blank)) ? null : key;
       const id = asNew ? null : rawId;
-      const filled = cols.filter(({ i }) => !isBlankCell(row[i]));
+      // A cell counts as typed when it holds something other than what the row was given (a backup's name).
+      const typed = ({ f, i }) => !isBlankCell(row[i]) && !(slot[f.key] != null && String(row[i]).trim().toLowerCase() === String(slot[f.key]).toLowerCase());
+      const filled = cols.filter(typed);
       if (!rawId && !filled.length) continue; // a blank row (Kind and In the math are filled in for you)
       const nameCell = cols.find(x => x.f.key === 'name');
       const typed = typeCol >= 0 && !isBlankCell(row[typeCol]) ? String(row[typeCol]).trim() : null;
       const typeWord = OLD_TYPES[typed] ?? typed; // batch 55 (QUESTIONS 400): an older workbook's Savings or HYSA reads as Savings, as js/records.js migrates it
       const rowName = (nameCell && !isBlankCell(row[nameCell.i]) ? String(row[nameCell.i]) : null) ?? typeWord ?? `row ${ri + 1}`;
+      if (id && privateIds.has(id)) { // a private row in a copy without private rows: shown there by a neutral name only
+        seen.add(id);
+        const wasRow = baseArea?.[id];
+        const edited = cols.some(({ f, i }) => { const r = fromCell(f.type, row[i], f); return !r.bad && wasRow && !same(r.value, fromCell(f.type, wasRow[f.key] ?? null, f).value ?? null); });
+        if (edited) out.leftAlone.push(`${tab}: ${neutral.get(id) ?? 'a private row'} is kept private, so what changed on it in this copy was not read. Change it in SLAM.`);
+        continue;
+      }
       typedOver(ri, rowName);
       if (id) {
         seen.add(id);
         const item = current.get(id);
         const wasRow = baseArea?.[id];
-        if (!item) { out.unknown.push(line({ op: 'row', area: area.id, tab, name: `${tab}: ${rowName}`, cell: cellOf(ri, idCol), decision: 'skip', note: wasRow ? 'Deleted in SLAM after the file was made, so its edits were not read.' : 'Its SLAM id is not one SLAM knows.' })); continue; }
+        if (!item) { out.unknown.push(line({ op: 'row', area: area.id, tab, name: `${tab}: ${rowName}`, cell: cellOf(tab, ri, idCol), decision: 'skip', note: wasRow ? 'Deleted in SLAM after the file was made, so its edits were not read.' : 'Its SLAM id is not one SLAM knows.' })); continue; }
         const kind = item.rec?.kind;
         const conflict = changedInSlam(id);
         for (const x of cols) {
           if (x.f.kinds && kind && !x.f.kinds.includes(kind)) continue;
           const wasStored = wasRow ? fromCell(x.f.type, wasRow[x.f.key] ?? null, x.f).value ?? null : asStored(x.f.type, nowOf(item, x.f), x.f);
-          fieldLine({ ...x, rowName }, row, ri, { item, wasStored, recId: id, conflict });
+          fieldLine(area, x.f, row[x.i], { tab, ri, ci: x.i, rowName, item, wasStored, recId: id, gate: conflict });
         }
         if (statusCol >= 0 && item.rec) {
           const word = isBlankCell(row[statusCol]) ? null : String(row[statusCol]).trim();
           const st = word === null ? null : STATUS_BACK[word.toLowerCase()];
-          const wasWord = wasRow ? wasRow._status ?? null : STATUS_WORDS[item.rec.status] ?? null;
-          if (word !== null && !st) out.bad.push({ cell: cellOf(ri, statusCol), tab, name: rowName, label: 'Status', value: word, text: `${cellOf(ri, statusCol)} (${rowName}, Status): ${word} is not a status. Skipped.` });
-          else if ((word ?? null) !== (wasWord ?? null) && (st ?? null) !== (item.rec.status ?? null)) group.changed.push(line({ op: 'status', area: area.id, tab, recId: id, label: 'Status', name: rowName, was: wasWord, from: STATUS_WORDS[item.rec.status] ?? null, to: st, cell: cellOf(ri, statusCol), conflict: conflict && (STATUS_WORDS[item.rec.status] ?? null) !== (wasWord ?? null) }));
+          const wasWord = wasRow ? STATUS_WORDS[STATUS_BACK[String(wasRow._status ?? '').toLowerCase()]] ?? wasRow._status ?? null : STATUS_WORDS[item.rec.status] ?? null;
+          if (word !== null && !st) out.bad.push({ cell: cellOf(tab, ri, statusCol), tab, name: rowName, label: 'Status', value: word, text: `${cellOf(tab, ri, statusCol)} (${rowName}, Status): ${word} is not a status. Skipped.` });
+          else if ((st ? STATUS_WORDS[st] : null) !== (wasWord ?? null) && (st ?? null) !== (item.rec.status ?? null)) group.changed.push(line({ op: 'status', area: area.id, tab, recId: id, label: 'Status', name: rowName, was: wasWord, from: STATUS_WORDS[item.rec.status] ?? null, to: st, cell: cellOf(tab, ri, statusCol), conflict: conflict && (STATUS_WORDS[item.rec.status] ?? null) !== (wasWord ?? null) }));
         }
-        if (typeWord && item.rec && typeWord !== (item.rec.type ?? '')) group.changed.push(line({ op: 'edit', area: area.id, tab, recId: id, field: 'type', fld: { key: 'type', where: 'top', type: 'text' }, label: 'Type', name: rowName, from: item.rec.type, to: typeWord, cell: cellOf(ri, typeCol), conflict }));
+        if (typeWord && item.rec && typeWord !== (item.rec.type ?? '')) group.changed.push(line({ op: 'edit', area: area.id, tab, recId: id, field: 'type', fld: { key: 'type', where: 'top', type: 'text' }, label: 'Type', name: rowName, from: item.rec.type, to: typeWord, cell: cellOf(tab, ri, typeCol), conflict }));
         continue;
       }
-      // A row with no ID: a new record when its type is filled in (or the area has no types); else, ask.
+      // A row with no ID: a new record. Its section gives what it is (a card, a cash account, a line under Food) unless
+      // a cell says otherwise; with no type to go on, ask.
       const values = {};
-      for (const { f, i } of filled) { const r = fromCell(f.type, row[i], f); if (r.bad) out.bad.push({ cell: cellOf(ri, i), tab, name: rowName, label: f.label, value: row[i], text: `${cellOf(ri, i)} (${rowName}, ${f.label}): ${r.bad}. Skipped.` }); else values[f.key] = r.value; }
+      for (const x of filled) { const r = fromCell(x.f.type, row[x.i], x.f); if (r.bad) out.bad.push({ cell: cellOf(tab, ri, x.i), tab, name: rowName, label: x.f.label, value: row[x.i], text: `${cellOf(tab, ri, x.i)} (${rowName}, ${x.f.label}): ${r.bad}. Skipped.` }); else values[x.f.key] = r.value; }
+      for (const [k, v] of Object.entries(slot)) { const f = fields.find(x => x.key === k); if (f && values[k] === undefined) values[k] = fromCell(f.type, v, f).value; }
       if (area.source === 'records') {
         const kindWord = kindCol >= 0 && !isBlankCell(row[kindCol]) ? String(row[kindCol]).trim().toLowerCase() : null;
-        const kind = Object.entries(area.kinds).find(([, w]) => w.toLowerCase() === kindWord)?.[0] ?? Object.keys(area.kinds)[0];
+        const fromType = typeWord ? Object.keys(area.kinds).find(k => (area.types?.[k] ?? []).includes(typeWord)) : null;
+        const kind = Object.entries(area.kinds).find(([, w]) => w.toLowerCase() === kindWord)?.[0] ?? (sec.kind && area.kinds[sec.kind] ? sec.kind : null) ?? fromType ?? Object.keys(area.kinds)[0];
         for (const k of Object.keys(values)) { const f = fields.find(x => x.key === k); if (f.kinds && !f.kinds.includes(kind)) delete values[k]; }
+        const defaults = {}; // the section's own answers (group, letter, owner, irregular): used unless the row says otherwise
+        for (const [k, v] of Object.entries(sec)) { const f = fields.find(x => x.key === k); if (f && (!f.kinds || f.kinds.includes(kind)) && values[k] === undefined) defaults[k] = fromCell(f.type, v, f).value; }
+        const type = typeWord ?? (sec.type && sec.kind === kind ? sec.type : null);
         const word = statusCol >= 0 && !isBlankCell(row[statusCol]) ? String(row[statusCol]).trim().toLowerCase() : null;
         const types = area.types?.[kind] ?? null;
-        const x = { op: 'add', area: area.id, tab, kind, type: typeWord, status: word ? STATUS_BACK[word] ?? null : null, values, fields, label: `New ${area.kinds[kind].toLowerCase()}`, name: values.name ?? rowName, to: values, cell: `${tab}!A${ri + 1}` };
+        const x = { op: 'add', area: area.id, tab, kind, type, status: word ? STATUS_BACK[word] ?? null : null, values, defaults, fields, label: `New ${area.kinds[kind].toLowerCase()}`, name: values.name ?? rowName, to: values, cell: cellOf(tab, ri, 1) };
         // A new Budget line needs its category most: it decides the DRAFTT letter, Fixed or Variable, and the date.
         if (kind === 'bill') x.categoryDefaults = catDefaults;
-        if (types && !typeWord) out.unknown.push(line({ ...x, decision: 'skip', needsType: types, note: `A new row with no type. Pick what it is to bring it in.` }));
-        else if (kind === 'bill' && !values.category && catDefaults.length) out.unknown.push(line({ ...x, decision: 'skip', needsCategory: catDefaults.map(c => c.category), note: 'A new line with no category. Pick its category to bring it in.' }));
+        const sectionCats = kind === 'bill' && defaults.draftt ? catDefaults.filter(c => c.draftt === defaults.draftt).map(c => c.category) : [];
+        if (types && !type) out.unknown.push(line({ ...x, decision: 'skip', needsType: types, note: 'A new row with no type. Pick what it is to bring it in.' }));
+        else if (kind === 'bill' && !values.category && catDefaults.length) out.unknown.push(line({ ...x, decision: 'skip', needsCategory: [...sectionCats, ...catDefaults.map(c => c.category).filter(c => !sectionCats.includes(c))], note: 'A new line with no category. Pick its category to bring it in.' }));
         else group.added.push(line(x));
       } else if (area.source === 'months') {
-        const mo = colOf('Month (YYYY-MM)'), li = colOf('Budget line');
-        const ym = fromCell('month', row[mo]).value;
+        const mo = colOf('month', 'Month (YYYY-MM)'), li = colOf('line', 'Budget line');
+        const ym = fromCell('month', isBlankCell(row[mo]) ? sec.month ?? null : row[mo]).value;
         const lineRec = doc.records.find(r => r.kind === 'bill' && String(r.name || r.values?.category || '').toLowerCase() === String(row[li] ?? '').trim().toLowerCase());
-        const x = { op: 'add', area: area.id, tab, values, ym, lineId: lineRec?.id ?? null, label: 'New month line', name: `${row[li] ?? 'A line'}, ${ym ?? 'no month'}`, to: values, cell: `${tab}!A${ri + 1}` };
+        const x = { op: 'add', area: area.id, tab, values, ym, lineId: lineRec?.id ?? null, label: 'New month line', name: `${row[li] ?? 'A line'}, ${ym ?? 'no month'}`, to: values, cell: cellOf(tab, ri, 1) };
         if (!ym || !lineRec) out.unknown.push(line({ ...x, decision: 'skip', note: !ym ? 'It needs a month (YYYY-MM).' : `There is no Budget line called ${row[li] ?? '(blank)'}.` }));
         else group.added.push(line(x));
       } else {
-        group.added.push(line({ op: 'add', area: area.id, tab, values, label: `New ${area.tab.toLowerCase().replace(/s$/, '')}`, name: values.name ?? values.kind ?? rowName, to: values, cell: `${tab}!A${ri + 1}` }));
+        group.added.push(line({ op: 'add', area: area.id, tab, values, label: `New ${area.tab.toLowerCase().replace(/s$/, '')}`, name: values.name ?? values.kind ?? rowName, to: values, cell: cellOf(tab, ri, 1) }));
       }
     }
-    // In SLAM but not in the spreadsheet: Removed in the spreadsheet, never deleted unless kept.
-    if (idCol >= 0 && !asNew) {
+    // In SLAM but not in the spreadsheet: Removed in the spreadsheet, never deleted unless kept. A private row of a copy
+    // without private rows is never offered.
+    if (!asNew) {
       for (const [id, item] of current) {
         if (seen.has(id) || (base && !baseArea?.[id])) continue; // added in SLAM after the export: not in the file, not removed
+        if (privateIds.has(id)) { out.leftAlone.push(`${tab}: ${neutral.get(id) ?? 'a private row'} is kept private; it is not in this copy, and it stays in SLAM.`); continue; }
         group.removed.push(line({ op: 'remove', area: area.id, tab, recId: id, label: 'Removed in the spreadsheet', name: item.rec?.name || item.rec?.type || item.get({ key: 'name' }) || id }));
       }
     }
   }
+
 
   // Assumptions: the blue This client column (the Used column is a formula).
   const aRows = grid.Assumptions;
@@ -242,7 +345,8 @@ export function compare(grid, doc, { asNew = false, ref = null } = {}) {
       out.assumptions.push(line({ op: 'edit', area: 'assumptions', tab: 'Assumptions', recId: 'assumptions', field: a.client, fld: { key: a.client, type }, label: a.label, name: 'Assumptions', from: nowV, to: got.value, note: got.note, cell: `Assumptions!C${ri + 1}`, conflict: !!base && !same(nowV, was) }));
     }
   }
-  out.areas = out.areas.filter(g => g.changed.length || g.added.length || g.removed.length);
+  const order = t => { const i = SCREEN_TABS.findIndex(x => x.name === t); return i < 0 ? 999 : i; }; // in the app's order
+  out.areas = [...groups.values()].filter(g => g.changed.length || g.added.length || g.removed.length).sort((x, y) => order(x.tab) - order(y.tab));
   return out;
 }
 
@@ -292,6 +396,7 @@ export function applyChanges(store, res, { metrics = null } = {}) {
               const d = (c.categoryDefaults || []).find(x => x.category === values.category);
               if (d) { values.draftt ??= d.draftt; values.amountType ??= d.amount; values.timing ??= d.timing; }
             }
+            for (const [k, v] of Object.entries(c.defaults || {})) { const f = c.fields.find(x => x.key === k); if (f?.where === 'top') top[k] ??= v; else values[k] ??= v; } // batch 59: what its section says
             const type = c.type ?? (c.kind === 'entry' ? (values.direction === 'In' ? 'Money in' : values.direction === 'Maybe' ? 'Maybe' : 'Money out') : null);
             if (c.kind === 'entry') { values.direction ??= type === 'Money in' ? 'In' : type === 'Maybe' ? 'Maybe' : 'Out'; values.repeats ??= 'Never'; }
             const rec = store.add(c.kind, { ...top, status: c.status ?? null, source: 'spreadsheet', values }, { type });

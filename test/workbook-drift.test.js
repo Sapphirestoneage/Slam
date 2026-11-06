@@ -4,6 +4,7 @@
 // otherwise. It runs on the 14 personas, the Demo client, and Alexis and Tom through Fast Track; without ExcelJS or
 // LibreOffice it skips and says which is missing. The hand checks below the big one need neither.
 import { test } from 'node:test';
+import { tableIn } from './sheet-helpers.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { importFile } from '../js/records.js';
@@ -57,8 +58,8 @@ test('the multimillionaire: a sinking fund comes off the surplus until its month
   const m = metrics(persona('multimillionaire'), ref, { now });
   near(m.inputs.sinkingMonthly, 20000 / 7);
   const plan = buildWorkbook(persona('multimillionaire'), ref, { now });
-  const goals = plan.sheets.find(s => s.name === 'Goals and events');
-  const col = goals.rows[0].findIndex(c => c.v === 'Set aside a month (sinking fund)');
+  const goals = tableIn(plan, 'goals');
+  const col = goals.head.indexOf('Set aside a month (sinking fund)');
   assert.ok(col > 0, 'the Goals tab has the column');
   assert.match(goals.rows.find(r => r[col]?.f && /Parents|assisted/.test(JSON.stringify(r)))?.[col].f ?? '', /MAX\(0,[A-Z]+\d+-N\([A-Z]+\d+\)\)\/MAX\(1,/);
 });

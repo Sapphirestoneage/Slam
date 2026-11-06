@@ -9,7 +9,7 @@ import { householdFromInputs } from '../js/demo.js';
 import { Store, newHousehold } from '../js/records.js';
 import { metrics } from '../js/math/metrics.js';
 import { buildWorkbook } from '../js/sheet/workbook.js';
-import { compare, applyChanges, linesOf, unpicked, fromCell, gridFromPlan } from '../js/import-sheet.js';
+import { compare, applyChanges, linesOf, unpicked, fromCell, gridFromPlan, locate } from '../js/import-sheet.js';
 import { everyField } from '../fixtures/households.js';
 import { loadExcel } from '../tools/workbook-check.mjs';
 
@@ -18,10 +18,14 @@ const demo = JSON.parse(readFileSync(new URL('../fixtures/demo.json', import.met
 const NOW = new Date('2026-11-03T12:00:00Z');
 const fresh = () => new Store(householdFromInputs(demo.inputs, { now: NOW.toISOString() }), { now: () => NOW.toISOString() });
 const exported = s => gridFromPlan(buildWorkbook(s.doc, ref, { now: NOW }));
-const col = (grid, tab, label) => grid[tab][0].indexOf(label);
-const rowOf = (grid, tab, name) => (name === null ? 1 : grid[tab].findIndex((r, i) => i > 0 && r[col(grid, tab, 'Name')] === name));
-const set = (grid, tab, name, label, v) => { const r = rowOf(grid, tab, name), c = col(grid, tab, label); assert.ok(r > 0 && c >= 0, `${tab} ${name} ${label}`); grid[tab][r][c] = v; };
-const blankRow = (grid, tab) => grid[tab].findIndex((r, i) => i > 0 && !r[0]);
+// Batch 59: a table is found by its hidden keys on its screen tab (an area id here), a row by its Name.
+const T = (grid, area) => locate(grid).tables[area];
+const tabOf = (grid, area) => T(grid, area).tab;
+const col = (grid, area, label) => T(grid, area).head.indexOf(label);
+const rowOf = (grid, area, name) => { const t = T(grid, area); return t.data.find(ri => grid[t.tab][ri][t.head.indexOf('Name')] === name) ?? -1; };
+const set = (grid, area, name, label, v) => { const r = rowOf(grid, area, name), c = col(grid, area, label); assert.ok(r > 0 && c >= 0, `${area} ${name} ${label}`); grid[tabOf(grid, area)][r][c] = v; };
+const blankRow = (grid, area) => { const t = T(grid, area); return t.data.find(ri => grid[t.tab][ri][0] === '#new'); };
+const setField = (grid, id, v) => { const loc = locate(grid).fields.get(id); grid[loc.tab][loc.ri][loc.ci] = v; };
 const words = res => linesOf(res).map(l => `${l.tab}: ${l.op} ${l.name}${l.op !== 'add' && l.op !== 'remove' ? ` ${l.label}` : ''}`);
 const state = d => JSON.stringify({ records: d.records, profile: d.profile, assumptions: d.assumptions, spending: d.spending, client: d.client });
 
@@ -36,17 +40,18 @@ test('export then import with no edits shows zero changes', () => {
 test('a balance, a new spending line, a deleted debt row and the return: exactly those four, and keeping them updates the app', () => {
   const edit = s => {
     const grid = exported(s);
-    set(grid, 'Debt', 'Credit card', 'Balance', 3900);
-    const b = blankRow(grid, 'Spending lines');
-    grid['Spending lines'][b][col(grid, 'Spending lines', 'Name')] = 'Gym';
-    grid['Spending lines'][b][col(grid, 'Spending lines', 'Amount')] = 45;
-    grid.Debt.splice(rowOf(grid, 'Debt', 'Student loan'), 1);
+    set(grid, 'debt', 'Credit card', 'Balance', 3900);
+    const b = blankRow(grid, 'spending'), sp = tabOf(grid, 'spending');
+    grid[sp][b][col(grid, 'spending', 'Name')] = 'Gym';
+    grid[sp][b][col(grid, 'spending', 'Amount')] = 45;
+    grid[sp][b][col(grid, 'spending', 'Category')] = 'Gym or fitness';
+    grid[tabOf(grid, 'debt')].splice(rowOf(grid, 'debt', 'Student loan'), 1);
     grid.Assumptions.find(r => r[0] === 'Return a year, after inflation')[2] = 0.06;
     return compare(grid, s.doc);
   };
   const s = fresh();
   const res = edit(s);
-  assert.deepEqual(words(res).sort(), ['Assumptions: edit Assumptions Return a year, after inflation', 'Debt: edit Credit card Balance', 'Debt: remove Student loan', 'Spending lines: add Gym'].sort());
+  assert.deepEqual(words(res).sort(), ['Assumptions: edit Assumptions Return a year, after inflation', 'Net worth › Debt: edit Credit card Balance', 'Net worth › Debt: remove Student loan', 'Cash flow › Budget: add Gym'].sort());
   assert.equal(linesOf(res).find(l => l.op === 'remove').decision, 'skip', 'a removed row is never deleted unless kept');
   applyChanges(s, res);
   assert.equal(s.find(r => r.name === 'Student loan').length, 1, 'still there: the removal was not kept');
@@ -62,7 +67,7 @@ test('a balance, a new spending line, a deleted debt row and the return: exactly
 test('kept changes go into history with source spreadsheet, and the record says From your spreadsheet', () => {
   const s = fresh();
   const grid = exported(s);
-  set(grid, 'Debt', 'Car loan', 'APR', 0.065);
+  set(grid, 'debt', 'Car loan', 'APR', 0.065);
   applyChanges(s, compare(grid, s.doc));
   const car = s.find(r => r.name === 'Car loan')[0];
   const h = s.doc.history.filter(x => x.id === car.id && x.field === 'apr').at(-1);
@@ -74,7 +79,7 @@ test('a record changed in SLAM after the export is a conflict that needs a pick'
   const s = fresh();
   const grid = exported(s);
   s.update(s.find(r => r.name === 'Car loan')[0].id, { balance: 6800 });
-  set(grid, 'Debt', 'Car loan', 'Balance', 6900);
+  set(grid, 'debt', 'Car loan', 'Balance', 6900);
   const res = compare(grid, s.doc);
   const c = linesOf(res).find(l => l.name === 'Car loan');
   assert.deepEqual([c.conflict, c.decision, c.from, c.to], [true, null, 6800, 6900]);
@@ -92,7 +97,7 @@ test('only the same number changed on both sides is a conflict; another field on
   const s = fresh();
   const grid = exported(s);
   s.update(s.find(r => r.name === 'Car loan')[0].id, { balance: 6800 }); // SLAM changed the balance
-  set(grid, 'Debt', 'Car loan', 'APR', 0.065); // the spreadsheet changed the APR
+  set(grid, 'debt', 'Car loan', 'APR', 0.065); // the spreadsheet changed the APR
   const [c] = linesOf(compare(grid, s.doc));
   assert.deepEqual([c.label, c.conflict, c.decision], ['APR', false, 'keep']);
 });
@@ -100,9 +105,9 @@ test('only the same number changed on both sides is a conflict; another field on
 test('a new Budget line needs its category; picking one brings in its letter, amount and date', () => {
   const s = fresh();
   const grid = exported(s);
-  const b = blankRow(grid, 'Spending lines'), c = l => col(grid, 'Spending lines', l);
-  grid['Spending lines'][b][c('Name')] = 'Gym';
-  grid['Spending lines'][b][c('Amount')] = 45;
+  const b = blankRow(grid, 'spending'), c = l => col(grid, 'spending', l);
+  grid[tabOf(grid, 'spending')][b][c('Name')] = 'Gym';
+  grid[tabOf(grid, 'spending')][b][c('Amount')] = 45;
   const res = compare(grid, s.doc, { ref });
   const u = res.unknown.find(x => x.name === 'Gym');
   assert.ok(u.needsCategory.includes('Gym or fitness') && u.decision === 'skip');
@@ -115,9 +120,9 @@ test('a new Budget line needs its category; picking one brings in its letter, am
 test('typing over a formula is one line and changes nothing', () => {
   const s = fresh();
   const grid = exported(s);
-  const r = rowOf(grid, 'Debt', 'Credit card'), c = col(grid, 'Debt', 'Payoff months (M31)');
-  grid.Debt[r][c] = 12;
-  grid._formulas.Debt.delete(`${r}:${c}`);
+  const r = rowOf(grid, 'debt', 'Credit card'), c = col(grid, 'debt', 'Payoff months (M31)'), d = tabOf(grid, 'debt');
+  grid[d][r][c] = 12;
+  grid._formulas[d].delete(`${r}:${c}`);
   const before = state(s.doc);
   const res = compare(grid, s.doc);
   assert.deepEqual(res.typedOver.map(t => t.text), ['You typed over Credit card: Payoff months (M31). SLAM keeps its math; your number was 12.']);
@@ -143,13 +148,13 @@ test('an older file still imports: missing columns are left alone, unknown ones 
   const s = fresh();
   const grid = exported(s);
   grid._meta.find(r => r[0] === 'Export format version')[1] = 0;
-  const c = col(grid, 'Debt', 'Promo ends');
-  for (const r of grid.Debt) r.splice(c, 1); // a column added after this file was made
-  grid.Debt[0].push('Nickname');
-  set(grid, 'Debt', 'Credit card', 'Balance', 4000);
+  const c = col(grid, 'debt', 'Promo ends'), d = tabOf(grid, 'debt'), t = T(grid, 'debt');
+  for (const r of grid[d]) if (r.length > c) r.splice(c, 1); // a column added after this file was made
+  grid[d][t.headAt].push('Nickname');
+  set(grid, 'debt', 'Credit card', 'Balance', 4000);
   const res = compare(grid, s.doc);
   assert.equal(res.olderFormat, true);
-  assert.deepEqual(words(res), ['Debt: edit Credit card Balance']);
+  assert.deepEqual(words(res), ['Net worth › Debt: edit Credit card Balance']);
   assert.ok(res.leftAlone.some(x => /Promo ends/.test(x)));
   assert.ok(res.unknown.some(u => /Nickname/.test(u.name)), "the new column is under Couldn't tell what this is");
   applyChanges(s, res);
@@ -160,8 +165,8 @@ test('Undo after an import restores the snapshot exactly', () => {
   const s = fresh();
   const before = state(s.doc);
   const grid = exported(s);
-  set(grid, 'Debt', 'Credit card', 'Balance', 3900);
-  set(grid, 'Profile', null, 'Age', 31);
+  set(grid, 'debt', 'Credit card', 'Balance', 3900);
+  setField(grid, 'profile.age', 31);
   const res = compare(grid, s.doc);
   for (const l of linesOf(res)) l.decision = 'keep';
   applyChanges(s, res);
@@ -174,9 +179,10 @@ test('Undo after an import restores the snapshot exactly', () => {
 test('a row with no ID and no type is asked about; with a type picked it comes in', () => {
   const s = fresh();
   const grid = exported(s);
-  const b = blankRow(grid, 'Debt');
-  grid.Debt[b][col(grid, 'Debt', 'Name')] = 'Mystery';
-  grid.Debt[b][col(grid, 'Debt', 'Balance')] = 500;
+  const t = T(grid, 'debt'); // under Loans: the section has no one type
+  const b = t.data.find(ri => grid[t.tab][ri][0] === '#new' && t.data.some(x => x < ri && grid[t.tab][x][1] === 'Loans'));
+  grid[t.tab][b][col(grid, 'debt', 'Name')] = 'Mystery';
+  grid[t.tab][b][col(grid, 'debt', 'Balance')] = 500;
   const res = compare(grid, s.doc);
   const u = res.unknown.find(x => x.name === 'Mystery');
   assert.ok(u.needsType.includes('Medical') && u.decision === 'skip');
@@ -188,33 +194,33 @@ test('a row with no ID and no type is asked about; with a type picked it comes i
 test('bad values are listed with their cell and skipped', () => {
   const s = fresh();
   const grid = exported(s);
-  set(grid, 'Debt', 'Student loan', 'APR', 'lots');
-  set(grid, 'Debt', 'Credit card', 'Bonus: spend by', 'someday');
+  set(grid, 'debt', 'Student loan', 'APR', 'lots');
+  set(grid, 'debt', 'Credit card', 'Bonus: spend by', 'someday');
   const res = compare(grid, s.doc);
   assert.equal(res.bad.length, 2);
-  assert.match(res.bad[0].text, /^Debt![A-Z]+\d+ \(Student loan, APR\): lots is not a number\. Skipped\.$/);
+  assert.match(res.bad.find(b => /Student loan/.test(b.text)).text, /^Net worth › Debt![A-Z]+\d+ \(Student loan, APR\): lots is not a number\. Skipped\.$/);
   assert.deepEqual(words(res), []);
 });
 
 test('a new Calendar entries row comes in logged on its date, so its month can be closed', () => {
   const s = fresh();
   const grid = exported(s);
-  const b = blankRow(grid, 'Calendar entries'), c = l => col(grid, 'Calendar entries', l);
-  Object.assign(grid['Calendar entries'][b], { [c('Type')]: 'Money out', [c('Name')]: 'Concert', [c('Amount')]: 80, [c('Date')]: new Date(Date.UTC(2026, 9, 12)) });
+  const b = blankRow(grid, 'calendar'), c = l => col(grid, 'calendar', l);
+  Object.assign(grid[tabOf(grid, 'calendar')][b], { [c('Type')]: 'Money out', [c('Name')]: 'Concert', [c('Amount')]: 80, [c('Date')]: new Date(Date.UTC(2026, 9, 12)) });
   applyChanges(s, compare(grid, s.doc));
   const rec = s.find(r => r.name === 'Concert')[0];
   assert.deepEqual([rec.kind, rec.values.date, rec.values.direction], ['entry', '2026-10-12', 'Out']);
   assert.deepEqual(s.doc.spending.calendar.marks[`${rec.id}@2026-10-12`], { status: 'Got it / Paid', paid: 80 });
 });
 
-test('a sheet with no _meta tab is matched by its tab and column headers', () => {
+test('a sheet with no _meta tab is matched by its hidden keys', () => {
   const s = fresh();
   const grid = exported(s);
   delete grid._meta;
-  set(grid, 'Assets', 'Savings', 'Balance', 6500);
+  set(grid, 'assets', 'Savings', 'Balance', 6500);
   const res = compare(grid, s.doc);
   assert.equal(res.noMeta, true);
-  assert.deepEqual(words(res), ['Assets: edit Savings Balance']);
+  assert.deepEqual(words(res), ['Net worth › Assets: edit Savings Balance']);
 });
 
 test('cells read back the way people type them', () => {
@@ -239,10 +245,11 @@ test('through a real .xlsx (ExcelJS): untouched shows nothing; one typed cell is
   assert.deepEqual([words(res0), res0.typedOver, res0.bad], [[], [], []]);
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(buf);
-  const ws = wb.getWorksheet('Assets');
-  const head = ws.getRow(1).values;
-  ws.getRow(2).getCell(head.indexOf('Balance')).value = 777;
-  ws.getRow(2).getCell(head.indexOf('Value used')).value = 5;
+  const t = locate(await readWorkbook(ExcelJS, buf)).tables.assets;
+  const ws = wb.getWorksheet(t.tab);
+  const first = t.data.find(ri => ws.getRow(ri + 1).getCell(1).value && !String(ws.getRow(ri + 1).getCell(1).value).startsWith('#'));
+  ws.getRow(first + 1).getCell(t.head.indexOf('Balance') + 1).value = 777;
+  ws.getRow(first + 1).getCell(t.head.indexOf('Value used') + 1).value = 5;
   const res = compare(await readWorkbook(ExcelJS, await wb.xlsx.writeBuffer()), s.doc);
   assert.deepEqual(linesOf(res).map(l => [l.label, l.to]), [['Balance', 777]]);
   assert.equal(res.typedOver.length, 1);

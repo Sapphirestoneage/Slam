@@ -7,6 +7,7 @@ import { AREAS } from '../registry/fields.js';
 import { MATH } from '../registry/math.js';
 import { ASSUMPTIONS } from '../registry/assumptions.js';
 import { REPORTS } from '../registry/reports.js';
+import { SCREEN_TABS } from '../registry/tabs.js';
 
 export const APP_VERSION = '2026.11.5';
 
@@ -33,6 +34,7 @@ export function shapeOf() {
     ...MATH.flatMap(e => [`math:${e.id}`, ...(e.parts || []).map(p => `math:${e.id}.${p.key}`), ...(e.cols || []).map(c => `col:${c.area}.${c.key}`)]),
     ...REPORTS.flatMap(r => [`tab:${r.tab}`, ...(r.cols || []).map(c => `col:${c.area}.${c.key}`)]),
     ...ASSUMPTIONS.filter(a => a.client).map(a => `assumption:${a.client}`),
+    ...SCREEN_TABS.map(t => `screen:${t.name}:${t.blocks.map(b => b.form ? `form:${b.fields.join(',')}` : b.table ? `table:${b.table}` : b.math ? `math:${b.rows.map(x => x.split('=')[0]).join(',')}` : b.report ? `report:${b.report}` : 'note').join('|')}`), // batch 59: the screen tabs
   ];
   return hash(ids.sort().join('\n'));
 }
@@ -89,6 +91,7 @@ export const FORMATS = [
   { version: 48, shape: 'a49bd526' }, // batch 62: the Phase 4 reads as live formulas: the Lender, Fire drill, Shift P&L, Credit score and Benefits cliff tabs, their columns on the Income, Debt, Assets, Budget and People tabs, and the FireDrill and Medicaid_states tables
   { version: 49, shape: '9f95f75d' }, // batch 58: People birth year for each adult past the couple (QUESTIONS 419), Institutions' Whose takes P3 to P7 (QUESTIONS 415)
   { version: 50, shape: 'ce7c59ee' }, // batch 63: the Ranges tab (M9R live, with What widens it), the priors tables on Assumptions (M9E, M9A), the M9N part column on each tab with an Owner, the M53 changes as dated
+  { version: 51, shape: 'SHAPE' }, // batch 59: the tabs follow the session (You, Money in, Money out, Own and owe, The plan, The future, Statements, One-pager; the screen's sections as bands), read back by hidden keys; a shift row's nights as rows under it; files of 50 and before come back by their old tabs
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

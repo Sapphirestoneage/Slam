@@ -1,6 +1,7 @@
 // Batch 45 (Nov 6 2026): the decided small items owed from tonight's batches (QUESTIONS 321, 333, 334, 344, 345, 346,
 // 348, 349, 353, 354, 356 and Batch 39's Budget minor). Each check is worked by hand in its comment.
 import { test } from 'node:test';
+import { tableIn } from './sheet-helpers.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { importFile, Store } from '../js/records.js';
@@ -60,9 +61,9 @@ test('Q333 and Q353: the spreadsheet made Without private rows is the shared bac
   const shared = sharedBackup(doc, ref);
   const fan = doc.records.find(r => r.values?.chargebacks === 115);
   const plan = buildWorkbook(shared, ref, { now, shared: true });
-  const income = plan.sheets.find(x => x.area === 'income');
+  const income = tableIn(plan, 'income');
   const row = income.rows.find(r => r.some(c => c?.v === fan.id));
-  const cell = key => row[income.layout.findIndex(l => l.key === key)]?.v ?? null;
+  const cell = key => row[income.keys.indexOf(key)]?.v ?? null;
   assert.equal(cell('name'), 'Self-employment');
   assert.equal(cell('amount'), 2265, '$2,975 less the 20% fee less $115 chargebacks');
   assert.ok(!cell('feePct'), 'no fee in the file'); assert.ok(!cell('holdDays'), 'no hold in the file'); assert.ok(!cell('platform'));

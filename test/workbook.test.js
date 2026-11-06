@@ -13,7 +13,10 @@ import { AREAS, sheetFields } from '../js/registry/fields.js';
 import { MATH, rowsOf } from '../js/registry/math.js';
 import { ASSUMPTIONS } from '../js/registry/assumptions.js';
 import { REPORTS } from '../js/registry/reports.js';
-import { buildWorkbook, formulaCols, BLANK_ROWS, DATA_TAB, COACH_TAB, nameOk } from '../js/sheet/workbook.js';
+import { buildWorkbook, formulaCols, DATA_TAB, COACH_TAB, nameOk } from '../js/sheet/workbook.js';
+import { SCREEN_TABS, tabOfArea, tabOfReport } from '../js/registry/tabs.js';
+import { locate } from '../js/import-sheet.js';
+import { tableIn, fieldIn } from './sheet-helpers.js';
 import { everyField, richHousehold } from '../fixtures/households.js';
 import { loadExcel, soffice as SOFFICE, missing as WB_MISSING } from '../tools/workbook-check.mjs';
 
@@ -22,27 +25,60 @@ const demo = JSON.parse(readFileSync(new URL('../fixtures/demo.json', import.met
 const NOW = new Date('2026-11-03T12:00:00Z');
 const demoDoc = () => householdFromInputs(demo.inputs, { now: NOW.toISOString() });
 
-test('every registry field has its column, every math entry its row, every assumption its line', () => {
+test('every registry field has its column or row, every math entry its row, every assumption its line', () => {
   const plan = buildWorkbook(everyField(), ref, { now: NOW, coach: true });
   const byName = Object.fromEntries(plan.sheets.map(s => [s.name, s]));
   for (const a of AREAS) {
-    const sheet = byName[a.tab];
-    assert.ok(sheet, `${a.tab} tab`);
-    const heads = sheet.rows[0].map(c => c.v);
-    for (const f of sheetFields(a, { coach: true })) assert.ok(heads.includes(f.label), `${a.tab}: column ${f.label}`);
-    for (const col of formulaCols().filter(x => x.area === a.id)) assert.ok(heads.includes(col.label), `${a.tab}: formula column ${col.label}`);
-    if (a.source !== 'doc') assert.ok(sheet.rows.length - 1 >= BLANK_ROWS, `${a.tab}: ${BLANK_ROWS} blank rows`);
+    if (a.source === 'doc') { for (const f of sheetFields(a, { coach: true })) assert.ok(fieldIn(plan, f.id), `${f.id}: a row on its screen tab`); continue; }
+    const t = tableIn(plan, a.id);
+    assert.ok(t, `${a.id}: a table`);
+    assert.equal(t.sheet.name, tabOfArea(a.id));
+    for (const f of sheetFields(a, { coach: true })) assert.ok(t.head.includes(f.label), `${a.tab}: column ${f.label}`);
+    for (const col of formulaCols().filter(x => x.area === a.id)) assert.ok(t.head.includes(col.label), `${a.tab}: formula column ${col.label}`);
   }
   const mathIds = byName.Math.rows.slice(3).map(r => r[0].v);
   for (const e of MATH) for (const row of rowsOf(e)) assert.ok(mathIds.includes(row.key ? `${e.id} · ${row.key}` : e.id), `Math row ${e.id} ${row.key ?? ''}`);
   const aLabels = byName.Assumptions.rows.map(r => r?.[0]?.v);
   for (const a of ASSUMPTIONS) assert.ok(aLabels.includes(a.label), `Assumption ${a.label}`);
-  assert.deepEqual(plan.sheets.map(s => s.name).slice(0, 2), ['Start here', 'Assumptions']);
   const order = plan.sheets.map(s => s.name);
-  assert.ok(order.indexOf('Math') > order.indexOf(AREAS.at(-1).tab) && order.indexOf('Statements') > order.indexOf('Math'), 'tabs in order');
-  for (const r of REPORTS) assert.ok(byName[r.tab], `${r.tab} tab`);
+  assert.deepEqual(order.slice(0, SCREEN_TABS.length + 1), ['Start here', ...SCREEN_TABS.map(t => t.name)], 'Start here, then the screens in nav order');
+  assert.ok(order.indexOf('Math') > order.indexOf('Assumptions') && order.indexOf('Assumptions') > order.indexOf(SCREEN_TABS.at(-1).name), 'the engine room after the screens');
+  for (const r of REPORTS) assert.ok(byName[tabOfReport(r.tab)], `${r.tab} tab`);
   assert.ok(byName[DATA_TAB].hidden, 'the SLAM data tab is hidden');
   for (const n of plan.names) assert.ok(nameOk(n.name), `${n.name}: a name Excel and Google Sheets accept`);
+  const text = JSON.stringify(plan.sheets.map(s => s.rows));
+  assert.ok(!text.includes('\u2014'), 'no em dash anywhere in the file');
+});
+
+test('each screen tab looks like the app: a line saying which screen it is, bands for sections, boxes for inputs, dropdowns for taps', () => {
+  const plan = buildWorkbook(everyField(), ref, { now: NOW });
+  for (const t of SCREEN_TABS) {
+    const s = plan.sheets.find(x => x.name === t.name);
+    assert.equal(s.rows[0][1].v, t.name);
+    assert.match(s.rows[1][1].v, / in SLAM/);
+    assert.ok(s.freeze?.rows >= 2, `${t.name}: frozen`);
+    assert.deepEqual(s.hiddenCols.slice(0, 1), ['A']);
+  }
+  const budget = plan.sheets.find(x => x.name === 'Cash flow › Budget');
+  const bands = budget.bands.map(r => budget.rows[r - 1][1].v);
+  assert.deepEqual(bands.slice(0, 4), ['Your gut number', 'Accommodation', 'Food', 'Transportation']);
+  assert.ok(bands.includes('Irregular and yearly costs') && bands.includes('Health and self-care'));
+  const debt = plan.sheets.find(x => x.name === 'Net worth › Debt');
+  assert.deepEqual(debt.bands.map(r => debt.rows[r - 1][1].v), ['Credit cards', 'Loans', 'Other']);
+  const assets = plan.sheets.find(x => x.name === 'Net worth › Assets');
+  assert.deepEqual(assets.bands.map(r => assets.rows[r - 1][1].v), ['Cash', 'Investments', 'Home or car']);
+  // Dropdowns: the statuses as the app says them, each choice, Yes or No, owners, the categories.
+  const t = tableIn(plan, 'spending');
+  const letter = key => String.fromCharCode(65 + t.keys.indexOf(key));
+  const rules = budget.validations;
+  assert.ok(rules.some(v => v.col === letter('Status') && v.list.join() === 'Know it,Roughly,Guess,Will get it,Not now,Not for me'));
+  assert.ok(rules.some(v => v.col === letter('whoPays') && v.list.includes('Covered by someone')));
+  assert.ok(rules.some(v => v.list.includes('Groceries') && v.ref), 'the categories, from the hidden lists tab');
+  const about = plan.sheets.find(x => x.name === 'Home › About you');
+  assert.ok(about.validations.some(v => v.list.includes('Married merged')), 'Household mode is a pick');
+  // Output-only tabs are locked; tabs with boxes are not (rows can be added and deleted).
+  assert.equal(plan.sheets.find(x => x.name === 'Report › Overview').protect, true);
+  assert.equal(budget.protect, false);
 });
 
 test('the client view leaves out coach notes, Report this notes and the timer; the coach copy can include them', () => {
@@ -55,7 +91,7 @@ test('the client view leaves out coach notes, Report this notes and the timer; t
   const client = buildWorkbook(doc, ref, { now: NOW });
   assert.ok(!text(client).includes('Coach only: talk about the card') && !text(client).includes('A beta note'));
   assert.ok(!client.sheets.some(x => x.name === COACH_TAB));
-  assert.ok(!client.sheets.find(x => x.name === 'Debt').rows[0].some(c => c.v === 'Coach notes'));
+  assert.ok(!tableIn(client, 'debt').head.includes('Coach notes'));
   const coach = buildWorkbook(doc, ref, { now: NOW, coach: true });
   assert.ok(text(coach).includes('Coach only: talk about the card') && text(coach).includes('A beta note'));
 });
@@ -82,41 +118,36 @@ test('the workbook writes and reads back with ExcelJS', { skip: !ExcelJS && 'Exc
   const plan = buildWorkbook(everyField(), ref, { now: NOW });
   const grid = await readWorkbook(ExcelJS, await workbookBuffer(ExcelJS, plan));
   for (const s of plan.sheets) assert.ok(grid[s.name], `${s.name} read back`);
-  assert.equal(grid.Debt[0][5], 'Name');
+  assert.equal(locate(grid).tables.debt.head[1], 'Name');
 });
 
-// Recalculate in LibreOffice with no cached values, then read every Check cell.
+// Recalculate in LibreOffice with no cached values, then read every Check cell (on Math and every screen tab).
 async function recalculated(doc) {
-  const { workbookBuffer, readWorkbook } = await import('../js/sheet/excel.js');
+  const { workbookBuffer } = await import('../js/sheet/excel.js');
   const dir = mkdtempSync(join(tmpdir(), 'slam-sheet-'));
   const file = join(dir, 'book.xlsx');
-  writeFileSync(file, Buffer.from(await workbookBuffer(ExcelJS, buildWorkbook(doc, ref, { now: NOW }), { cache: false })));
+  const plan = buildWorkbook(doc, ref, { now: NOW });
+  writeFileSync(file, Buffer.from(await workbookBuffer(ExcelJS, plan, { cache: false })));
   execFileSync(soffice, [`-env:UserInstallation=file://${join(dir, 'lo-profile')}`, '--headless', '--calc', '--convert-to', 'xlsx', '--outdir', join(dir, 'out'), file], { stdio: 'ignore', timeout: 120000 });
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(join(dir, 'out', 'book.xlsx'));
+  wb.plan = plan;
   return wb;
 }
-const CHECK_TABS = ['Math', 'Statements', 'FOO', 'Projections'];
-// Every Check cell under each table's header row that is not Matches (or From the app).
-export function offChecks(ws, off = []) {
-  let col = null;
-  ws.eachRow((row, n) => {
-    const vals = row.values;
-    if (vals.includes('Check')) { col = vals.indexOf('Check'); return; }
-    if (!col) return;
-    const v = row.getCell(col).value;
+// Every Check cell of the plan that is not Matches (or From the app) once recalculated.
+export function offChecks(wb, off = []) {
+  for (const s of wb.plan.sheets) s.rows.forEach((row, ri) => (row || []).forEach((cell, ci) => {
+    if (cell?.s !== 'check') return;
+    const v = wb.getWorksheet(s.name).getCell(ri + 1, ci + 1).value;
     const shown = v && typeof v === 'object' ? v.result ?? v.error : v;
-    if (shown != null && shown !== 'Matches' && shown !== 'From the app') off.push(`${ws.name} row ${n} (${row.getCell(1).value} ${row.getCell(2).value}): ${JSON.stringify(shown)}`);
-  });
+    if (shown != null && shown !== 'Matches' && shown !== 'From the app') off.push(`${s.name} row ${ri + 1} (${row[0]?.v} ${row[1]?.v}): ${JSON.stringify(shown)}`);
+  }));
   return off;
 }
 
 for (const [label, make] of [['the Demo client', demoDoc], ['a household using most of the math', richHousehold]]) {
   test(`opened in a spreadsheet, every formula gives the app's number (${label})`, { skip: WB_MISSING, timeout: 180000 }, async () => {
-    const wb = await recalculated(make());
-    const off = [];
-    for (const tab of CHECK_TABS) offChecks(wb.getWorksheet(tab), off);
-    assert.deepEqual(off, []);
+    assert.deepEqual(offChecks(await recalculated(make())), []);
   });
 }
 

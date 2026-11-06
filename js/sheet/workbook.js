@@ -3,22 +3,30 @@
 // plan of sheets, cells, formulas and named ranges; js/sheet/excel.js writes it with ExcelJS. Nothing here names a
 // tab, a column or a formula of its own: a new field, math entry or assumption lands in the workbook by being in its
 // registry, and buildWorkbook throws when a formula points at a name that does not exist.
+// Batch 59: the tabs follow the app's screens (js/registry/tabs.js). Every screen tab has a hidden column A that says
+// what each row is (a field, a table's keys and header, a section band, a record's id, a blank row, a math row), so
+// js/import-sheet.js reads the tab back by those keys and never by position.
 import { AREAS, sheetFields, fieldsFor } from '../registry/fields.js';
+import { SCREEN_TABS, sectionsOf, decodeDefaults, tabOfArea } from '../registry/tabs.js';
 import { MATH, rowsOf } from '../registry/math.js';
 import { ASSUMPTIONS, TABLES, sourceOf } from '../registry/assumptions.js';
 import { REPORTS } from '../registry/reports.js';
 import { sheetContext } from './context.js';
 import { FORMAT_VERSION, APP_VERSION, shapeOf, fingerprint } from './format.js';
 
-export const BLANK_ROWS = 20;
+export const BLANK_ROWS = 20; // the old layout's blank rows (format 43 and before); each section now ends with its own
+export const LIST_TAB = '_lists'; // hidden: the long dropdown lists (Excel keeps a list typed into a rule under 255 characters)
 export const REPO = 'https://github.com/sapphirestoneage/slam';
 export const DATA_TAB = '_meta';
 export const OLD_DATA_TAB = 'SLAM data'; // the first files made (Nov 3 2026) kept it here
 export const COACH_TAB = 'Coach notes';
 // The stored statuses as the sheet shows them (one sureness system: Not sure is a Guess).
-export const STATUS_WORDS = { 'Know it': 'Know it', Roughly: 'Roughly', 'Not sure': 'Guess', 'Not for me': 'Not for me', 'Will email': "I'll find it later", 'Not now': 'Not now', Computed: 'Worked out' };
-export const STATUS_LIST = ['Know it', 'Roughly', 'Guess', 'Not for me', "I'll find it later", 'Not now'];
-const FMT = { money: '"$"#,##0.00', pct: '0.00%', months: '0', number: 'General', years: '0.0', day: '0', date: 'yyyy-mm-dd', month: 'yyyy-mm', text: '@', choice: '@', yesno: '@', list: '@' };
+// Batch 59: the words of the app's status picker (Will get it was "I'll find it later" in files of format 43 and before).
+export const STATUS_WORDS = { 'Know it': 'Know it', Roughly: 'Roughly', 'Not sure': 'Guess', 'Not for me': 'Not for me', 'Will email': 'Will get it', 'Not now': 'Not now', Computed: 'Worked out' };
+export const STATUS_LIST = ['Know it', 'Roughly', 'Guess', 'Will get it', 'Not now', 'Not for me'];
+// What column A of a screen tab says (hidden): the import reads each row by it.
+export const KEY = { field: 'field:', col: 'col:', math: 'math:', keys: '#keys:', head: '#head:', sec: '#sec:', blank: '#new', end: '#end:', gap: '#gap', block: '#block:' };
+const FMT = { money: '"$"#,##0', cents: '"$"#,##0.00', pct: '0.0#%', months: '0', number: 'General', years: '0.0', day: '0', date: 'yyyy-mm-dd', month: 'yyyy-mm', text: '@', choice: '@', yesno: '@', list: '@' };
 const TOL = { money: 1, cents: 0.01, pct: 0.0005, months: 1, number: 0.01, years: 0.05 }; // within $1 or 1 month; a cent where the app shows cents (cents: true)
 const BUILTIN = { Kind: 'Kind', Type: 'Type', Status: 'Status', InMath: 'In the math' };
 
@@ -57,7 +65,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
   c.coach = coach; // F6: the Captured tab keeps coach-only changes out of the client copy
   const names = new Map(); // name -> absolute reference
   const sheets = [];
-  const baseline = { version: FORMAT_VERSION, exportedAt: now.toISOString(), clientId: doc.id, client: null, coach, ...(shared ? { shared: true } : {}), areas: {}, assumptions: {} }; // batch 28: a copy without private rows is never brought back
+  const baseline = { version: FORMAT_VERSION, exportedAt: now.toISOString(), clientId: doc.id, client: null, coach, ...(shared ? { shared: true } : {}), areas: {}, assumptions: {} }; // batch 59: a copy without private rows comes back without touching them
   const define = (name, ref1) => {
     if (!nameOk(name)) throw new Error(`Not a usable range name: ${name}`);
     if (names.has(name)) throw new Error(`Range name used twice: ${name}`);
@@ -69,20 +77,24 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
   const client = doc.client?.name || [doc.profile?.firstName, doc.profile?.lastName].filter(Boolean).join(' ') || 'Client';
   baseline.client = client;
   const day = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  sheets.push({ name: 'Start here', kind: 'start', widths: [100], rows: [
+  sheets.push({ name: 'Start here', kind: 'start', widths: [110], rows: [
     [{ v: `SLAM: the books for ${client}`, s: 'title' }],
     [{ v: `Made ${day}${coach ? ' (coach copy, with coach-only notes)' : shared ? ' (a copy without private rows: they show as neutral lines such as Other income, and every total is the same)' : ''}.`, s: 'text' }],
-    [{ v: 'This file holds every number SLAM has for this household, and the math behind each one, as live formulas.', s: 'text' }],
+    [{ v: 'This file holds every number SLAM has for this household, and the math behind each one, as live formulas. Its tabs are the app\'s screens, in the same order, with the same sections.', s: 'text' }],
     [],
     [{ v: 'How to use it', s: 'section' }],
-    [{ v: 'Blue cells are your numbers. Change them and everything else updates.', s: 'text' }],
-    [{ v: 'Black cells are formulas. Click one to see its math.', s: 'text' }],
-    [{ v: 'Each Inputs tab ends with 20 blank blue rows for new entries.', s: 'text' }],
-    [{ v: 'The Math tab checks each formula against the app: Matches, or the gap.', s: 'text' }],
-    [{ v: "When you're ready, bring this file back into SLAM to save your changes.", s: 'text' }],
+    [{ v: 'Blue boxes are your numbers, as in the app. Change one and everything else updates.', s: 'text' }],
+    [{ v: 'Grey cells are worked out. Click one to see its math; typing over it is never saved.', s: 'text' }],
+    [{ v: 'A bold band is a section of the screen. Each section ends with a blank row or two for a new entry; insert more rows inside a section if you need them.', s: 'text' }],
+    [{ v: 'A box with a small arrow is a tap in the app: pick from its list.', s: 'text' }],
+    [{ v: 'Each result shows the app\'s value beside it and a Check: Matches, or the gap.', s: 'text' }],
+    [{ v: "When you're ready, bring this file back into SLAM (Report, One-pager, Bring a spreadsheet back). You'll see every change before anything is saved.", s: 'text' }],
     [],
     [{ v: 'Tabs', s: 'section' }],
-    ...['Assumptions', ...AREAS.map(a => a.tab), 'Math', ...REPORTS.map(r => r.tab)].map(t => [{ v: `${t}: ${tabAbout(t)}`, s: 'text' }]),
+    ...SCREEN_TABS.map(t => [{ v: `${t.name}: ${t.about}`, s: 'text' }]),
+    [{ v: `Assumptions: ${tabAbout('Assumptions')}`, s: 'text' }],
+    [{ v: `Math: ${tabAbout('Math')}`, s: 'text' }],
+    ...REPORTS.filter(r => !SCREEN_TABS.some(t => t.blocks.some(b => b.report === r.tab))).map(r => [{ v: `${r.tab}: ${r.about}`, s: 'text' }]),
     [],
     [{ v: 'SLAM is open source (AGPL-3.0).', s: 'text' }],
     [{ v: REPO, s: 'link', link: REPO }],
@@ -115,74 +127,180 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
     const last = aRows.length;
     t.columns.forEach(([key], i) => define(`${t.id}_${key}`, absRange(aSheet.name, colLetter(i + 1), first, last)));
   }
-  sheets.push(aSheet);
+  const pending = [];
 
-  // ---------- Inputs: one tab per area ----------
+  // ---------- The screen tabs (batch 59): one per screen, in nav order, each with the screen's sections ----------
+  const lists = new Map(); // a long dropdown list's text -> its named range on the hidden _lists tab
+  const listRef = list => {
+    const text = list.join('\n');
+    if (!lists.has(text)) lists.set(text, { name: `List_${lists.size + 1}`, list });
+    return lists.get(text).name;
+  };
   const inputTabs = [];
-  for (const area of AREAS) {
-    const fields = sheetFields(area, { coach });
-    const myCols = cols.filter(x => x.area === area.id);
-    const layout = []; // { key, label, kind: 'id'|'builtin'|'field'|'formula', fld, col }
-    const isRecords = area.source === 'records';
-    layout.push({ key: '_id', label: 'SLAM id (leave as is)', kind: 'id' }); // every row carries its record ID, hidden
-    if (isRecords) for (const b of ['Kind', 'Type', 'Status', 'InMath']) layout.push({ key: b, label: BUILTIN[b], kind: 'builtin' });
-    if (area.source === 'months') layout.push({ key: 'month', label: 'Month (YYYY-MM)', kind: 'month' }, { key: 'line', label: 'Budget line', kind: 'line' });
-    for (const fld of fields) layout.push({ key: fld.key, label: fld.label, kind: 'field', fld });
-    for (const col of myCols) layout.push({ key: col.key, label: col.label, kind: 'formula', col });
-    layout.forEach((l, i) => { l.letter = colLetter(i + 1); });
-    const letterOf = new Map(layout.map(l => [l.key, l.letter]));
-    const rows = [layout.map(l => ({ v: l.label, s: 'head', key: l.key }))];
-    const sheet = { name: area.tab, kind: 'inputs', area: area.id, layout, rows, freeze: { rows: 1, cols: isRecords ? 5 : 1 },
-      hiddenCols: layout.filter(l => l.kind === 'id').map(l => l.letter), widths: layout.map(l => (l.kind === 'id' ? 10 : Math.min(36, Math.max(11, l.label.length + 2)))), validations: [] };
-    const base = baseline.areas[area.id] = {};
-    const data = rowsForArea(area, doc, c);
-    const total = area.source === 'doc' ? 1 : data.length + BLANK_ROWS;
-    const kindNames = isRecords ? Object.values(area.kinds) : [];
-    for (let i = 0; i < total; i++) {
-      const item = data[i] ?? null;
-      const r = i + 2;
-      const rowBase = item ? (base[item.id] = {}) : null;
-      const cells = layout.map(l => {
-        if (l.kind === 'id') return { v: item?.id ?? null, s: 'hidden', fmt: 'text' };
-        if (l.kind === 'month') return { v: item?.ym ?? null, s: item ? 'text' : 'input', fmt: 'text' };
-        if (l.kind === 'line') return { v: item?.lineName ?? null, s: item ? 'text' : 'input', fmt: 'text' };
-        if (l.kind === 'builtin') {
-          if (l.key === 'Kind') return { v: item ? area.kinds[item.rec.kind] : kindNames[0], s: item ? 'text' : 'input' };
-          if (l.key === 'Type') return { v: item?.rec.type ?? null, s: 'input' };
-          if (l.key === 'Status') { const st = item ? STATUS_WORDS[item.rec.status] ?? null : null; if (rowBase) rowBase._status = st; return { v: st, s: 'input' }; }
-          return { v: item ? c.inMath(item.rec) : 'Yes', s: 'text' };
-        }
-        if (l.kind === 'field') {
-          const applies = !item?.rec || !l.fld.kinds || l.fld.kinds.includes(item.rec.kind);
-          const v = item ? toCell(l.fld.type, item.get(l.fld)) : null;
-          if (rowBase && applies) rowBase[l.fld.key] = v instanceof Date ? v.toISOString().slice(0, 10) : v;
-          return { v, s: applies ? 'input' : 'na', fmt: l.fld.type };
-        }
-        const tmpl = typeof l.col.f === 'function' ? l.col.f(item?.rec ?? { values: {}, kind: null }, c) : l.col.f;
-        const f = compileRowFormula(tmpl, { letterOf, row: r, app: l.col.app, rec: item?.rec ?? null, c, where: `${area.tab}: ${l.label}` });
-        return { f, s: 'formula', fmt: l.col.unit, ...(/\bTODAY\(/i.test(f) && datedRec(item?.rec) ? { today: true } : {}) }; // batch 45: a dated row (QUESTIONS 334)
-      });
-      rows.push(cells);
+  const placed = new Set(); // the report tabs that live on a screen tab
+  for (const tab of SCREEN_TABS) {
+    const sheet = { name: tab.name, kind: 'screen', route: tab.route, rows: [], widths: [], hiddenCols: ['A'], hiddenRows: [], validations: [], bands: [] };
+    const rows = sheet.rows;
+    const at = () => rows.length + 1; // the next row's number
+    rows.push([{ v: KEY.gap, s: 'key' }, { v: tab.name, s: 'title' }]);
+    rows.push([{ v: KEY.gap, s: 'key' }, { v: tab.about, s: 'about' }]);
+    let firstTable = null;
+    for (const b of tab.blocks) {
+      rows.push([{ v: KEY.gap, s: 'key' }]);
+      if (b.note) { rows.push([{ v: KEY.gap, s: 'key' }, { v: b.note, s: 'note' }]); continue; }
+      if (b.form) { formBlock(b); continue; }
+      if (b.math) { mathBlock(b); continue; }
+      if (b.table) { if (firstTable === null && rows.length <= 4) firstTable = rows.length; tableBlock(b); continue; }
+      if (b.report) { placed.add(b.report); reportBlock(REPORTS.find(r => r.tab === b.report), sheet, 1, b.tables); }
     }
-    const last = total + 1;
-    for (const l of layout) {
-      if (l.kind === 'id') { define(`${area.prefix}_Id`, area.source === 'doc' ? absRange(sheet.name, l.letter, 2) : absRange(sheet.name, l.letter, 2, last)); continue; }
-      if (l.kind === 'month' || l.kind === 'line') continue;
-      const name = l.kind === 'field' ? fieldName(area, l.fld) : l.kind === 'builtin' ? `${area.prefix}_${l.key}` : `${area.prefix}_${l.key}`;
-      define(name, area.source === 'doc' ? absRange(sheet.name, l.letter, 2) : absRange(sheet.name, l.letter, 2, last));
-      const list = l.kind === 'builtin' ? (l.key === 'Status' ? STATUS_LIST : l.key === 'Kind' && kindNames.length > 1 ? kindNames : l.key === 'Type' ? [...new Set(Object.values(area.types || {}).flat())] : null)
-        : l.fld?.type === 'choice' ? l.fld.options : l.fld?.type === 'yesno' ? ['Yes', 'No'] : null;
-      if (list?.length && list.join(',').length < 250) sheet.validations.push({ col: l.letter, from: 2, to: last, list });
-    }
+    // Freeze the title and the first table's header when the tab opens on a table; else the title lines.
+    const head = firstTable !== null ? rows.findIndex((r, i) => i >= firstTable && String(r?.[0]?.v ?? '').startsWith(KEY.head)) : -1;
+    sheet.freeze = head >= 0 ? { rows: head + 1, cols: 2 } : { rows: 2 };
+    sheet.protect = !rows.some(r => r?.some(cell => cell?.s === 'input')); // nothing to type: the whole tab is locked
+    fitWidths(sheet);
     sheets.push(sheet);
     inputTabs.push(sheet);
+
+    // A doc area's fields as label and value rows. Each field's named range is its value cell.
+    function formBlock(b) {
+      const area = AREAS.find(a => a.id === b.form);
+      rows.push([{ v: `${KEY.block}${b.title}`, s: 'key' }, { v: b.title, s: 'section' }]);
+      for (const id of b.fields) {
+        const fa = AREAS.find(a => a.source === 'doc' && id.startsWith(`${a.id}.`)); // a form can hold fields of two doc areas (Taxes: the return and last year)
+        const fld = fa && sheetFields(fa, { coach }).find(x => x.id === id);
+        if (!fld) continue; // coach-only, or not carried in this copy
+        const item = rowsForArea(fa, doc, c)[0];
+        const rowBase = (baseline.areas[fa.id] ??= {}).doc ??= {};
+        const r = at();
+        const v = toCell(fld.type, item.get(fld));
+        rowBase[fld.key] = v instanceof Date ? v.toISOString().slice(0, 10) : v;
+        rows.push([{ v: `${KEY.field}${fld.id}`, s: 'key' }, { v: fld.label, s: 'label' }, { v, s: 'input', fmt: fld.type }]);
+        define(fieldName(fa, fld), absRange(sheet.name, 'C', r));
+        const list = listOf(fld, ref);
+        if (list) sheet.validations.push({ col: 'C', from: r, to: r, list, ref: needsRange(list) ? listRef(list) : null });
+        if (!names.has(`${fa.prefix}_Id`)) define(`${fa.prefix}_Id`, absRange(sheet.name, 'A', r));
+      }
+      for (const key of b.cols || []) {
+        const col = cols.find(x => x.area === area.id && x.key === key);
+        const r = at();
+        const tmpl = typeof col.f === 'function' ? col.f({ values: {}, kind: null }, c) : col.f;
+        const f = tmpl.replace(/\{(@?)([A-Za-z0-9_.]+)\}/g, (all, isCol, k) => {
+          if (isCol) return `${area.prefix}_${k}`;
+          const fld = area.fields.find(x => x.key === k);
+          if (!fld) throw new Error(`${tab.name}: ${col.label} reads ${k}, which ${area.id} does not have`);
+          return fieldName(area, fld);
+        });
+        rows.push([{ v: `${KEY.col}${area.id}.${key}`, s: 'key' }, { v: col.label, s: 'label' }, { f, s: 'formula', fmt: col.unit }]);
+        define(`${area.prefix}_${key}`, absRange(sheet.name, 'C', r));
+      }
+    }
+
+    // Results off the Math tab, each with the app's value and a Check (a row from the app says so and is not checked).
+    function mathBlock(b) {
+      rows.push([{ v: `${KEY.block}${b.math}`, s: 'key' }, { v: b.math, s: 'section' }]);
+      rows.push([{ v: KEY.gap, s: 'key' }, ...['What', 'Value', "The app's value", 'Check'].map(v => ({ v, s: 'head' }))]);
+      (sheet.headRows ??= []).push(rows.length);
+      for (const entry of b.rows) {
+        const [id, words] = entry.split('=');
+        const found = mathRow(id);
+        if (!found) throw new Error(`${tab.name}: no Math row ${id}`);
+        const { e, row } = found;
+        const r = at();
+        const unit = row.unit ?? e.unit;
+        const appV = appValue(row, c);
+        const fmt = unit === 'money' && (row.cents ?? e.cents) ? 'cents' : unit;
+        const name = words ?? row.name;
+        if (row.fromApp) rows.push([{ v: `${KEY.math}${id}`, s: 'key' }, { v: name, s: 'label' }, { v: appV, s: 'app', fmt }, { v: appV, s: 'app', fmt }, { v: 'From the app', s: 'note' }]);
+        else {
+          const f = `Math_${id}`;
+          pending.push({ f, where: `${tab.name}: ${id}` });
+          rows.push([{ v: `${KEY.math}${id}`, s: 'key' }, { v: name, s: 'label' }, { f, s: 'formula', fmt, cached: appV }, { v: appV, s: 'app', fmt },
+            { f: checkFormula(`C${r}`, `D${r}`, unit === 'money' && (row.cents ?? e.cents) ? 'cents' : unit), s: 'check' }]);
+        }
+      }
+    }
+
+    // An area's rows as a table, in the screen's sections: a hidden row of column keys, the header, then each section
+    // as a band row, its rows and its blank rows. Every column's named range runs from the first band to the last row.
+    function tableBlock(b) {
+      const area = AREAS.find(a => a.id === b.table);
+      const layout = tableLayout(area, { coach });
+      const letterOf = new Map(layout.map(l => [l.key, l.letter]));
+      const width = layout.length;
+      rows.push([{ v: `${KEY.block}${b.title}`, s: 'key' }, { v: b.title, s: 'section' }]);
+      rows.push(layout.map((l, i) => (i === 0 ? { v: `${KEY.keys}${area.id}`, s: 'key' } : { v: l.kind === 'field' ? l.fld.key : l.kind === 'formula' ? `@${l.key}` : l.key, s: 'key' })));
+      sheet.hiddenRows.push(rows.length);
+      rows.push(layout.map((l, i) => (i === 0 ? { v: `${KEY.head}${area.id}`, s: 'key' } : { v: l.label, s: 'head', key: l.key })));
+      (sheet.headRows ??= []).push(rows.length);
+      const first = at();
+      const base = baseline.areas[area.id] ??= {};
+      const data = rowsForArea(area, doc, c);
+      const kindName = k => (area.kinds ? area.kinds[k] ?? Object.values(area.kinds)[0] : null);
+      const secs = sectionsOf(area, doc, data, ref);
+      const shown = new Set(secs.flatMap(x => x.items));
+      const rest = data.filter(it => !shown.has(it)); // a row no section of the screen holds still gets a line
+      if (rest.length) secs.push({ key: '', title: 'Other rows', items: rest, blank: 0 });
+      for (const sec of secs) {
+        const defaults = decodeDefaults(sec.key);
+        if (sec.title) {
+          rows.push(layout.map((l, i) => (i === 0 ? { v: `${KEY.sec}${sec.key}`, s: 'key' } : { v: i === 1 ? sec.title : null, s: 'band' })));
+          sheet.bands.push(rows.length);
+        }
+        const from = at();
+        const slots = (sec.slots || []).map(s => ({ slot: s }));
+        for (const item of [...sec.items, ...slots, ...Array.from({ length: sec.blank }, () => null)]) {
+          const real = item && !item.slot ? item : null;
+          const r = at();
+          const rowBase = real ? (base[real.id] = {}) : null;
+          rows.push(layout.map(l => {
+            if (l.kind === 'id') return { v: real?.id ?? (item?.slot ? `${KEY.blank}:${Object.entries(item.slot).map(([k, v]) => `${k}=${v}`).join(';')}` : KEY.blank), s: 'key', fmt: 'text' };
+            if (l.kind === 'month') return { v: real?.ym ?? null, s: real ? 'formulaValue' : 'input', fmt: 'text' };
+            if (l.kind === 'line') return { v: real?.lineName ?? null, s: real ? 'formulaValue' : 'input', fmt: 'text' };
+            if (l.kind === 'builtin') {
+              if (l.key === 'Kind') return { v: real ? area.kinds[real.rec.kind] : kindName(defaults.kind), s: 'key' };
+              if (l.key === 'Type') return { v: real?.rec.type ?? null, s: 'input' };
+              if (l.key === 'Status') { const st = real ? STATUS_WORDS[real.rec.status] ?? null : null; if (rowBase) rowBase._status = st; return { v: st, s: 'input' }; }
+              return { v: real ? c.inMath(real.rec) : 'Yes', s: 'formulaValue' };
+            }
+            if (l.kind === 'field') {
+              const kind = real?.rec?.kind ?? defaults.kind ?? null;
+              const applies = !l.fld.kinds || !kind || l.fld.kinds.includes(kind);
+              const v = real ? toCell(l.fld.type, real.get(l.fld)) : item?.slot?.[l.fld.key] ?? null;
+              if (rowBase && applies) rowBase[l.fld.key] = v instanceof Date ? v.toISOString().slice(0, 10) : v;
+              return { v, s: applies ? 'input' : 'na', fmt: l.fld.type };
+            }
+            const tmpl = typeof l.col.f === 'function' ? l.col.f(real?.rec ?? { values: {}, kind: null }, c) : l.col.f;
+            const f = compileRowFormula(tmpl, { letterOf, row: r, app: l.col.app, rec: real?.rec ?? null, c, where: `${tab.name}: ${l.label}` });
+            return { f, s: 'formula', fmt: l.col.unit, ...(/\bTODAY\(/i.test(f) && datedRec(real?.rec) ? { today: true } : {}) }; // batch 45: a dated row (QUESTIONS 334)
+          }));
+        }
+        const to = rows.length;
+        if (to >= from) { // this section's dropdowns: its own types, every choice, Yes or No, the statuses
+          for (const l of layout) {
+            const list = l.kind === 'builtin' ? (l.key === 'Status' ? STATUS_LIST : l.key === 'Type' ? (sec.types ?? [...new Set(Object.values(area.types || {}).flat())]) : null)
+              : l.kind === 'line' ? doc.records.filter(x => x.kind === 'bill').map(x => x.name || x.values?.category || 'Budget line')
+              : l.kind === 'field' ? listOf(l.fld, ref) : null;
+            if (list?.length) sheet.validations.push({ col: l.letter, from, to, list, ref: needsRange(list) ? listRef(list) : null });
+          }
+        }
+      }
+      const last = Math.max(rows.length, first);
+      rows.push([{ v: `${KEY.end}${area.id}`, s: 'key' }]);
+      for (const l of layout) {
+        if (l.kind === 'id') { define(`${area.prefix}_Id`, absRange(sheet.name, l.letter, first, last)); continue; }
+        if (l.kind === 'month' || l.kind === 'line') continue;
+        define(l.kind === 'field' ? fieldName(area, l.fld) : `${area.prefix}_${l.key}`, absRange(sheet.name, l.letter, first, last));
+      }
+      if (letterOf.has('Kind')) sheet.hiddenCols.push(letterOf.get('Kind')); // what kind of row each is: set by its section
+      sheet.tables = [...(sheet.tables || []), { area: area.id, width, head: first - 1 }];
+    }
   }
 
-  // ---------- Math ----------
-  const mRows = [[{ v: 'Math: every formula', s: 'title' }], [{ v: 'One row per formula in SLAM. Formula is live; The app\'s value is what SLAM shows; Check says Matches, or the gap. A row that counts the months to a date says Moved on since this file was made, once a month has passed.', s: 'about' }],
+  // ---------- Assumptions, Math and Captured: the engine room, after the screens ----------
+  sheets.push(aSheet);
+  const mRows = [[{ v: 'Math: every formula', s: 'title' }], [{ v: 'The engine room: one row per formula in SLAM, in the order the math is built. Formula is live; The app\'s value is what SLAM shows; Check says Matches, or the gap. The screen tabs show the same rows where the app shows them. A row that counts the months to a date says Moved on since this file was made, once a month has passed.', s: 'about' }],
     ['ID', 'In plain words', 'Formula', "The app's value", 'Check', 'Made of'].map(v => ({ v, s: 'head' }))];
-  const mathSheet = { name: 'Math', kind: 'math', widths: [9, 60, 18, 18, 14, 36], freeze: { rows: 3, cols: 2 }, rows: mRows };
-  const pending = [];
+  const mathSheet = { name: 'Math', kind: 'math', widths: [9, 60, 18, 18, 14, 36], freeze: { rows: 3, cols: 2 }, rows: mRows, protect: true };
   for (const e of MATH) {
     for (const row of rowsOf(e)) {
       const r = mRows.length + 1;
@@ -190,11 +308,12 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
       const appV = appValue(row, c);
       const id = row.key ? `${e.id} · ${row.key}` : e.id;
       const name = row.key ? `Math_${e.id}_${row.key}` : `Math_${e.id}`;
+      const fmt = unit === 'money' && (row.cents ?? e.cents) ? 'cents' : unit;
       if (row.fromApp) {
-        mRows.push([{ v: id, s: 'text' }, { v: row.name, s: 'text' }, { v: `From the app: ${row.fromApp}`, s: 'note' }, { v: appV, s: 'app', fmt: unit }, { v: 'From the app', s: 'note' }, { v: row.key ? '' : e.inputs, s: 'note' }]);
+        mRows.push([{ v: id, s: 'text' }, { v: row.name, s: 'text' }, { v: `From the app: ${row.fromApp}`, s: 'note' }, { v: appV, s: 'app', fmt }, { v: 'From the app', s: 'note' }, { v: row.key ? '' : e.inputs, s: 'note' }]);
         define(name, absRange(mathSheet.name, 'D', r));
       } else {
-        mRows.push([{ v: id, s: 'text' }, { v: row.name, s: 'text' }, { f: row.sheet, s: 'formula', fmt: unit, cached: appV }, { v: appV, s: 'app', fmt: unit },
+        mRows.push([{ v: id, s: 'text' }, { v: row.name, s: 'text' }, { f: row.sheet, s: 'formula', fmt, cached: appV }, { v: appV, s: 'app', fmt },
           { f: checkFormula(`C${r}`, `D${r}`, unit === 'money' && (row.cents ?? e.cents) ? 'cents' : unit), s: 'check' }, { v: row.key ? '' : e.inputs, s: 'note' }]);
         define(name, absRange(mathSheet.name, 'C', r));
         pending.push({ f: row.sheet, where: `Math ${id}` });
@@ -202,22 +321,31 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
     }
   }
   sheets.push(mathSheet);
+  for (const rep of REPORTS.filter(r => !placed.has(r.tab))) { // a report no screen shows (Captured) keeps a tab of its own
+    const sheet = { name: rep.tab, kind: 'report', widths: [], freeze: { rows: 3 }, rows: [[{ v: rep.tab, s: 'title' }], [{ v: rep.about, s: 'about' }]], protect: true };
+    reportBlock(rep, sheet, 0);
+    sheets.push(sheet);
+  }
 
-  // ---------- Statements, FOO, Projections: each a tab of one or more tables ----------
-  for (const rep of REPORTS) {
-    const rows = [[{ v: rep.tab, s: 'title' }], [{ v: rep.about, s: 'about' }]];
-    const sheet = { name: rep.tab, kind: 'report', widths: [], freeze: { rows: 3 }, rows };
-    for (const t of rep.tables ? rep.tables(c) : [{ columns: rep.columns, sections: rep.sections(c) }]) {
+  // A report's tables (Statements, FOO, Projections ...) on a sheet, from column off + 1 (a screen tab's column A is hidden).
+  function reportBlock(rep, sheet, off, which = null) {
+    const rows = sheet.rows;
+    let tables = rep.tables ? rep.tables(c) : [{ columns: rep.columns, sections: rep.sections(c) }];
+    if (which === 'years') tables = tables.slice(0, 1);
+    if (which === 'debts') tables = tables.slice(1);
+    const pad = off ? [{ v: KEY.gap, s: 'key' }] : [];
+    if (off && !tables.length) rows.push([...pad, { v: 'Nothing here yet for this household.', s: 'note' }]);
+    for (const t of tables) {
       const head = t.columns;
-      head.forEach((h, i) => { sheet.widths[i] = Math.max(sheet.widths[i] ?? 0, h.width ?? 16); if (h.group) (sheet.groups ||= []).push(colLetter(i + 1)); }); // batch 63: working columns, grouped and collapsed
-      if (t.title) rows.push([{ v: t.title, s: 'section' }]);
-      if (t.note) rows.push([{ v: t.note, s: 'note' }]);
-      const letterOf = new Map(head.map((h, i) => [h.key, colLetter(i + 1)]));
-      rows.push(head.map(h => ({ v: h.label, s: 'head' })));
+      head.forEach((h, i) => { sheet.widths[i + off] = Math.max(sheet.widths[i + off] ?? 0, Math.min(off ? 48 : 999, h.width ?? 16)); if (h.group && !off) (sheet.groups ||= []).push(colLetter(i + 1)); }); // batch 63: working columns, grouped and collapsed (not on a session tab, where the columns are shared with other blocks)
+      if (t.title) rows.push([...pad, { v: t.title, s: 'section' }]);
+      if (t.note) rows.push([...pad, { v: t.note, s: 'note' }]);
+      const letterOf = new Map(head.map((h, i) => [h.key, colLetter(i + 1 + off)]));
+      rows.push([...pad, ...head.map(h => ({ v: h.label, s: 'head' }))]);
       const first = rows.length + 1;
       const flat = [];
       for (const sec of t.sections) {
-        if (sec.title) { rows.push([{ v: sec.title, s: 'section' }]); flat.push(null); }
+        if (sec.title) { rows.push([...pad, { v: sec.title, s: 'band' }, ...head.slice(1).map(() => ({ v: null, s: 'band' }))]); flat.push(null); }
         for (const row of sec.rows) { rows.push(null); flat.push({ row, r: rows.length }); }
       }
       const last = rows.length;
@@ -226,14 +354,14 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
         if (!item) { prevRow = null; continue; }
         const { row, r } = item;
         const cells = normalizeReportRow(rep.read ? readRow(row, rep.prefix) : row);
-        rows[r - 1] = head.map(h => {
+        rows[r - 1] = [...(off ? [{ v: KEY.gap, s: 'key' }] : []), ...head.map(h => {
           if (h.check) return rep.read && row.app === undefined ? { v: null } : { f: reportCheck(h, letterOf, r, row.unit ?? head.find(x => x.key === h.check[0]).unit), s: 'check' }; // batch 62: a step with no number in the app has no Check
           const cell = cells[h.key];
           const unit = h.unit === 'row' ? row.unit : h.unit;
           if (!cell) return { v: null };
           if (cell.f) {
-            const f = compileReportFormula(cell.f, { letterOf, row: r, prev: prevRow, first, last, where: `${rep.tab}: ${row.name ?? row.key ?? r}` });
-            pending.push({ f, where: `${rep.tab} row ${r}` });
+            const f = compileReportFormula(cell.f, { letterOf, row: r, prev: prevRow, first, last, where: `${sheet.name}: ${row.name ?? row.key ?? r}` });
+            pending.push({ f, where: `${sheet.name} row ${r}` });
             // The app's value is cached only in the cell the Check compares with it: a spreadsheet that shows cached values
             // until it recalculates (LibreOffice by default) would otherwise show it in every formula of the row (batch 38:
             // the age, contributions and growth on Projections all read as the year's balance).
@@ -244,16 +372,16 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
           }
           const v = unit === 'month' ? toCell('month', cell.v) : cell.v;
           return { v, s: cell.input ? 'input' : cell.fromApp || h.key === 'app' || h.key.startsWith('app') ? 'app' : cell.note ? 'note' : 'text', fmt: unit };
-        });
+        })];
         const namedCol = head.find(h => cells[h.key]?.named) ?? head.find(h => h.named);
         if (row.key && namedCol) define(`${rep.prefix}_${row.key}`, absRange(sheet.name, letterOf.get(namedCol.key), r));
         prevRow = r;
       }
       for (const key of t.names || []) define(`${rep.prefix}_${key}`, absRange(sheet.name, letterOf.get(key), first, Math.max(first, last))); // batch 63: a whole column of the table
-      rows.push([]);
+      rows.push(off ? [{ v: KEY.gap, s: 'key' }] : []);
     }
-    sheets.push(sheet);
   }
+
 
   // ---------- Coach notes (coach copy only) ----------
   if (coach) {
@@ -266,6 +394,15 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
       [], [{ v: 'Onboarding timer', s: 'section' }], ['Mark', 'When'].map(v => ({ v, s: 'head' })),
       ...Object.entries(t).map(([k, v]) => [{ v: k, s: 'text' }, { v: typeof v === 'object' ? JSON.stringify(v) : v, s: 'text' }]),
     ] });
+  }
+
+  // ---------- _lists (hidden): the dropdown lists too long to type into a rule ----------
+  if (lists.size) {
+    const all = [...lists.values()];
+    const height = Math.max(...all.map(x => x.list.length));
+    sheets.push({ name: LIST_TAB, kind: 'lists', hidden: true, protect: true, widths: all.map(() => 24),
+      rows: Array.from({ length: height }, (_, i) => all.map(x => ({ v: x.list[i] ?? null, s: 'text', fmt: 'text' }))) });
+    all.forEach((x, i) => define(x.name, absRange(LIST_TAB, colLetter(i + 1), 1, x.list.length)));
   }
 
   // ---------- _meta (hidden, protected): who and when, the format version, a fingerprint of each record, and what
@@ -293,7 +430,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
   baseline.fingerprints = Object.fromEntries(prints);
 
   // Every name a formula uses must exist: the build fails here, never in the client's spreadsheet.
-  for (const s of inputTabs) for (const row of s.rows.slice(1)) for (const cell of row) if (cell?.f) pending.push({ f: cell.f, where: s.name });
+  for (const s of inputTabs) for (const row of s.rows.slice(1)) for (const cell of row || []) if (cell?.f) pending.push({ f: cell.f, where: s.name });
   for (const p of pending) checkNames(p.f, names, p.where);
   markDated(sheets, names, now);
   return { sheets, names: [...names].map(([name, refr]) => ({ name, ref: refr })), baseline, context: c, client, at: now };
@@ -358,11 +495,54 @@ function markDated(sheets, names, now) {
 
 function tabAbout(t) {
   if (t === 'Assumptions') return 'every rate, limit and rule, with its source and date';
-  if (t === 'Math') return 'every formula, its value in the app, and a check';
+  if (t === 'Math') return 'the engine room: every formula, its value in the app, and a check';
   return AREAS.find(a => a.tab === t)?.about ?? REPORTS.find(r => r.tab === t)?.about ?? '';
 }
 
-// The rows of one Inputs tab: { id, rec?, get(fld) }.
+// A table's columns: the hidden id, the name, then Type and Status where the rows have them, every field, In the math,
+// the formula columns, and the hidden Kind (set by the row's section).
+export function tableLayout(area, { coach = false } = {}) {
+  const fields = sheetFields(area, { coach });
+  const isRecords = area.source === 'records';
+  const name = fields.find(f => f.key === 'name');
+  const L = [{ key: '_id', label: 'SLAM id (leave as is)', kind: 'id' }];
+  if (area.source === 'months') L.push({ key: 'month', label: 'Month (YYYY-MM)', kind: 'month' }, { key: 'line', label: 'Budget line', kind: 'line' });
+  if (name) L.push({ key: 'name', label: name.label, kind: 'field', fld: name });
+  if (isRecords) L.push({ key: 'Type', label: BUILTIN.Type, kind: 'builtin' }, { key: 'Status', label: BUILTIN.Status, kind: 'builtin' });
+  for (const f of fields) if (f !== name) L.push({ key: f.key, label: f.label, kind: 'field', fld: f });
+  if (isRecords) L.push({ key: 'InMath', label: BUILTIN.InMath, kind: 'builtin' });
+  for (const col of formulaCols().filter(x => x.area === area.id)) L.push({ key: col.key, label: col.label, kind: 'formula', col });
+  if (isRecords) L.push({ key: 'Kind', label: BUILTIN.Kind, kind: 'builtin' });
+  L.forEach((l, i) => { l.letter = colLetter(i + 1); });
+  return L;
+}
+// A field's dropdown: its choices, Yes or No, or a Budget line's categories (a list, not a rule: another word still goes in).
+export function listOf(fld, ref = null) {
+  if (fld.type === 'choice') return fld.options;
+  if (fld.type === 'yesno') return ['Yes', 'No'];
+  if (fld.area === 'spending' && fld.key === 'category' && ref?.categoryDefaults?.length) return [...new Set(ref.categoryDefaults.map(x => x.category))];
+  return null;
+}
+const needsRange = list => list.some(x => String(x).includes(',')) || list.join(',').length >= 250;
+function mathRow(id) {
+  for (const e of MATH) for (const row of rowsOf(e)) if ((row.key ? `${e.id}_${row.key}` : e.id) === id) return { e, row };
+  return null;
+}
+// Widths that fit: each column as wide as what it holds (a header wraps), within 8 and 44 characters.
+const QUIET = new Set(['title', 'about', 'section', 'band', 'note', 'key']);
+function fitWidths(sheet) {
+  const w = sheet.widths;
+  sheet.rows.forEach(row => (row || []).forEach((cell, i) => {
+    if (!cell || QUIET.has(cell.s) || i === 0) return;
+    const text = cell.f ? '' : cell.v instanceof Date ? '2026-11-06' : String(cell.v ?? '');
+    const n = cell.s === 'head' ? Math.min(18, Math.ceil(text.length / 2) + 3) : cell.f ? 14 : typeof cell.v === 'number' ? 13 : text.length + 3;
+    w[i] = Math.max(w[i] ?? 8, Math.min(44, n));
+  }));
+  w[0] = 4;
+  for (let i = 1; i < w.length; i++) w[i] ??= 10;
+}
+
+// The rows of one area: { id, rec?, get(fld) }.
 export function rowsForArea(area, doc, c) {
   if (area.source === 'doc') return [{ id: 'doc', get: fld => getPath(doc[partOf(area, fld)] || {}, fld.key) }];
   if (area.source === 'records') {

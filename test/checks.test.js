@@ -62,9 +62,9 @@ test('rent +$100 in the file moves surplus, savings rate and the FI date the way
     const doc = make();
     const before = mathRows(await recalc(doc));
     const after = mathRows(await recalc(doc, wb => {
-      const ws = wb.getWorksheet('Spending lines');
-      const head = ws.getRow(1).values;
-      ws.eachRow((row, n) => { if (n > 1 && row.getCell(head.indexOf('Name')).value === 'Rent') { const c = row.getCell(head.indexOf('Amount')); c.value = c.value + 100; } });
+      const ws = wb.getWorksheet('Cash flow › Budget'); // batch 59: Budget lines sit on the Budget screen's tab, under its header
+      let head = null;
+      ws.eachRow(row => { if (row.getCell(1).value === '#head:spending') { head = row.values; return; } if (head && row.getCell(head.indexOf('Name')).value === 'Rent') { const c = row.getCell(head.indexOf('Amount')); c.value = c.value + 100; } });
     }));
     const s = new Store(JSON.parse(JSON.stringify(doc)));
     const rent = s.find(r => r.name === 'Rent')[0];

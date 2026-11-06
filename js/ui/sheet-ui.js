@@ -82,7 +82,6 @@ export function importSheet(app) {
       const ExcelJS = await loadExcelJS();
       const grid = await readWorkbook(ExcelJS, await file.arrayBuffer());
       const res = compare(grid, app.store.doc, { ref: app.ctx.ref });
-      if (res.meta?.baseline?.shared) { toast('This is a copy made without private rows (they are renamed in it). Bring back a full copy instead.'); return; } // batch 28: it would rename rows
       if (res.wrongClient) askWhichClient(app, grid, res, file.name);
       else review(app, res, file.name);
     } catch (e) {
@@ -209,7 +208,8 @@ export function review(app, res, fileName = 'the spreadsheet') {
     h('div.ft-head', {}, icon('upload'), h('h2', { style: { margin: 0 } }, "What's changed"), h('span', { style: { flex: 1 } }), button('Cancel', { onClick: () => close() })),
     h('p.muted', {}, `${fileName}: ${plural(all.length, 'change')}. Answer Yes to keep a change, No to leave SLAM as it is. Nothing is saved until you press Save these changes.`),
     res.noMeta ? h('div.nudge', {}, 'This file has no _meta tab (it was made or rebuilt outside SLAM), so tabs and columns were matched by their headers and every cell is compared with what SLAM has now.') : null,
-    res.olderFormat ? h('div.nudge', {}, `This file was made by an older SLAM (format ${res.meta.version}). Columns added since are left alone.`) : null,
+    res.olderFormat ? h('div.nudge', {}, res.layout === 'areas' ? `This file was made by an older SLAM (format ${res.meta.version}), with a tab per kind of row (Debt, Spending lines ...). It was read by those tabs; anything added since is left alone. A file made now has a tab per screen.` : `This file was made by an older SLAM (format ${res.meta.version}). Anything added since is left alone.`) : null,
+    res.shared ? h('div.nudge', {}, 'This copy was made without private rows. Rows kept private are not read from it, renamed or deleted: change them in SLAM.') : null, // batch 59
     h('div.row-line', { style: { margin: '8px 0' } }, button('Yes to all changes', { size: 'small', onClick: () => keepAll(all.filter(l => l.op !== 'remove')) })),
     body,
     h('div.ft-foot', {}, save, button('Cancel', { onClick: () => close() }), status, h('span.muted.small', {}, 'A snapshot is taken first, and Undo puts everything back.')));

@@ -1,6 +1,7 @@
 // Batch 10 (Nov 5 2026): faded typical amounts, Bills and subscriptions, levels with Everything else, Why now chips,
 // and the timing sentence of the spending line side panel. Synthetic households only.
 import { test } from 'node:test';
+import { tableIn } from './sheet-helpers.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Store, newHousehold } from '../js/records.js';
@@ -91,8 +92,7 @@ test('1: Use enters the typical amount as Roughly; it counts, it is in Defaults 
   assert.ok(instances(s.doc, ref, YM, { now }).some(i => i.recId === rent.id), 'a used line is on the calendar');
   // The workbook: live numbers leave faded lines out; the typical amount is its own labeled column.
   const wb = buildWorkbook(s.doc, ref, { now });
-  const tab = wb.sheets.find(x => x.name === 'Spending lines');
-  const head = tab.rows[0].map(c => c.v);
+  const head = tableIn(wb, 'spending').head;
   assert.ok(head.includes('Typical amount (for reference, not counted)'));
 });
 

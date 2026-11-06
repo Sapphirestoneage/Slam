@@ -149,7 +149,9 @@ test('every Reference data value is an assumption, a table, or a listed word lis
 // ---------- The built workbook, the round trip, the format version, and the spec drift report ----------
 import { writeFileSync, existsSync } from 'node:fs';
 import { householdFromInputs } from '../js/demo.js';
-import { buildWorkbook, formulaCols, DATA_TAB } from '../js/sheet/workbook.js';
+import { buildWorkbook, formulaCols, DATA_TAB, LIST_TAB, KEY } from '../js/sheet/workbook.js';
+import { SCREEN_TABS, NO_TAB, tabOfArea } from '../js/registry/tabs.js';
+import { TABS as NAV, TOOLS as NAV_TOOLS } from '../js/nav.js';
 import { rowsOf } from '../js/registry/math.js';
 import { REPORTS } from '../js/registry/reports.js';
 import { compare, linesOf, gridFromPlan } from '../js/import-sheet.js';
@@ -162,19 +164,49 @@ const demoDoc = () => householdFromInputs(JSON.parse(readFileSync(new URL('fixtu
 test('the Demo client\'s workbook has every tab, column and row the registries call for', () => {
   const plan = buildWorkbook(demoDoc(), ref, { now: NOW });
   const tabs = Object.fromEntries(plan.sheets.map(s => [s.name, s]));
-  const want = ['Start here', 'Assumptions', ...AREAS.map(a => a.tab), 'Math', ...REPORTS.map(r => r.tab), DATA_TAB];
+  const rest = REPORTS.filter(r => !SCREEN_TABS.some(t => t.blocks.some(b => b.report === r.tab))).map(r => r.tab);
+  const want = ['Start here', ...SCREEN_TABS.map(t => t.name), 'Assumptions', 'Math', ...rest, LIST_TAB, DATA_TAB];
   assert.deepEqual(plan.sheets.map(s => s.name), want, 'the tabs, in order');
   const missing = [];
   for (const a of AREAS) {
-    const heads = tabs[a.tab].rows[0].map(c => c.v);
-    for (const f of sheetFields(a)) if (!heads.includes(f.label)) missing.push(`${a.tab}: column ${f.label}`);
-    for (const c of formulaCols().filter(x => x.area === a.id)) if (!heads.includes(c.label)) missing.push(`${a.tab}: formula column ${c.label}`);
+    if (a.source === 'doc') { // every field a form row, its key in the hidden column A
+      const keys = new Set(plan.sheets.flatMap(s => s.rows.map(r => r?.[0]?.v)));
+      for (const f of sheetFields(a)) if (!keys.has(`${KEY.field}${f.id}`)) missing.push(`${f.id}: no row on any tab`);
+      continue;
+    }
+    const sheet = tabs[tabOfArea(a.id)];
+    const head = sheet.rows.find(r => r?.[0]?.v === `${KEY.head}${a.id}`).map(c => c?.v);
+    for (const f of sheetFields(a)) if (!head.includes(f.label)) missing.push(`${sheet.name}: column ${f.label}`);
+    for (const c of formulaCols().filter(x => x.area === a.id)) if (!head.includes(c.label)) missing.push(`${sheet.name}: formula column ${c.label}`);
   }
   const ids = tabs.Math.rows.map(r => r?.[0]?.v);
   for (const e of MATH) for (const row of rowsOf(e)) { const id = row.key ? `${e.id} · ${row.key}` : e.id; if (!ids.includes(id)) missing.push(`Math: row ${id}`); }
   const labels = tabs.Assumptions.rows.map(r => r?.[0]?.v);
   for (const a of ASSUMPTIONS) if (!labels.includes(a.label)) missing.push(`Assumptions: ${a.label}`);
   assert.deepEqual(missing, []);
+});
+
+// Batch 59: the tabs follow the screens. A new field of About you, Taxes or a setting needs a row on the tab of the
+// screen it is asked on; a new screen needs a tab, or a line in NO_TAB with why.
+test('every doc field has one row on a screen tab, every table one home, every screen a tab or a reason', () => {
+  const placed = SCREEN_TABS.flatMap(t => t.blocks.filter(b => b.form).flatMap(b => b.fields));
+  const problems = [];
+  for (const a of AREAS.filter(x => x.source === 'doc')) for (const f of sheetFields(a, { coach: true })) {
+    const n = placed.filter(id => id === f.id).length;
+    if (n !== 1) problems.push(`${f.id} (${f.label}) is on ${n} form rows. Add it to the form block of the screen it is asked on in js/registry/tabs.js (SCREEN_TABS).`);
+  }
+  for (const id of placed) if (!AREAS.some(a => a.source === 'doc' && sheetFields(a, { coach: true }).some(f => f.id === id))) problems.push(`${id}: in js/registry/tabs.js but not a doc field the sheet carries`);
+  for (const a of AREAS.filter(x => x.source !== 'doc')) { const n = SCREEN_TABS.filter(t => t.blocks.some(b => b.table === a.id)).length; if (n !== 1) problems.push(`${a.id}: a table on ${n} tabs (one, please)`); }
+  for (const t of SCREEN_TABS) {
+    if (t.name.length > 31 || /[[\]:*?/\\]/.test(t.name) || /^'|'$/.test(t.name)) problems.push(`${t.name}: not a tab name Excel takes`);
+    if (/\u2014/.test(t.about)) problems.push(`${t.name}: an em dash in its line`);
+  }
+  const routes = new Set(SCREEN_TABS.flatMap(t => [t.route, ...(t.also || [])]));
+  for (const tab of [...NAV, NAV_TOOLS]) for (const sub of tab.subs.filter(x => !x.hidden)) {
+    const where = `${tab.name} › ${sub.name}`;
+    if (!routes.has(`#/${tab.id}/${sub.id}`) && !NO_TAB.some(([n]) => n === where)) problems.push(`${where}: no tab and no reason in NO_TAB`);
+  }
+  assert.deepEqual(problems, []);
 });
 
 test('a round trip (export, then import with no edits) shows no change', () => {

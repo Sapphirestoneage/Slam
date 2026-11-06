@@ -399,7 +399,7 @@ export const AREAS = [
     fields: [
       NAME, AMOUNT('Amount'), PER(),
       f('category', 'Category', 'text', { kinds: ['bill'] }),
-      pick('draftt', 'DRAFTT letter', ['Debt', 'Retirement', 'Accommodation', 'Food', 'Transportation', 'Taxes', 'Therapy', 'Bills', 'Wants'], { kinds: ['bill'] }), // batch 10: Bills (Bills and subscriptions) and Wants sit outside DRAFTT, like Other (blank)
+      pick('draftt', 'DRAFTT letter', ['Debt', 'Retirement', 'Accommodation', 'Food', 'Transportation', 'Taxes', 'Therapy', 'Bills', 'Wants', 'Other'], { kinds: ['bill'] }), // batch 10: Bills (Bills and subscriptions) and Wants sit outside DRAFTT, like Other (blank)
       // Batch 10: a starter line's typical amount, kept apart from the amount: shown faded, counted nowhere until used.
       f('typical', 'Typical amount (for reference, not counted)', 'money', { kinds: ['bill'] }),
       f('usedTypical', 'Amount came from Use typical', 'yesno', { kinds: ['bill', 'spending'], sheet: { skip: 'set by the Use button; the Status column says Roughly' } }),

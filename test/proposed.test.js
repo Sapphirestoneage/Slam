@@ -57,7 +57,7 @@ test('the Proposed tab of the workbook carries both sides and the steps', () => 
   setProposed(d, { spending: 3000 });
   assert.ok(REPORTS.find(r => r.tab === 'Proposed'));
   const wb = buildWorkbook(d.doc, ref, { now });
-  const sheet = wb.sheets.find(s => s.name === 'Proposed');
+  const sheet = wb.sheets.find(s => s.name === 'Plan › Current vs Proposed'); // batch 59: the tab follows the screen
   const text = JSON.stringify(sheet.rows);
   assert.ok(text.includes('FI date') && text.includes('Net worth in 10 years') && text.includes('grows at') && text.includes('Spending a month'));
 });
