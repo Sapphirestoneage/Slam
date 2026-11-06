@@ -289,6 +289,7 @@ function ladderCard(app, ctx) {
   const n = L.next;
   // Batch 7, item 7: the dollars behind the share. A step: have of target, left to go. A marker: where you are against it.
   const amounts = r => (r.kind === 'step' ? (r.target != null ? `${money(r.have)} of ${money(r.target)}${r.left ? ` · ${money(r.left)} to go` : ''}` : null)
+    : r.target === 0 ? 'the yearly Roth IRA alone gets you there' // Quiet Quitting FI already in reach: no dollars to show
     : r.target != null && r.value != null ? `${money(r.value)} of ${money(r.target)}${r.value < r.target ? ` · ${money(r.target - r.value)} to go` : ''}` : null);
   const big = n ? h('div.ladder-next', {}, h('div.row-line', { style: { gap: '10px', flexWrap: 'wrap' } }, h('span.muted.small', {}, 'Next step'), h('span.ladder-name', {}, n.name), h('span.muted', {}, n.what)),
     h('div.bar-row', {}, bar(n.pct, { wide: true, label: `${n.name} progress` }), h('span', {}, `${Math.round(n.pct * 100)}% there`), amounts(n) ? h('span.amounts', {}, amounts(n)) : null, h('span.muted.small', {}, n.done ? '' : when(n))))
