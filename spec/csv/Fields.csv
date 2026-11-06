@@ -457,3 +457,5 @@ F454,Built,,Protection,Protection,Bills list: keep or try to cut,Secondary,,,,,,
 F455,Built,,Needs,Spending lines,Starts in (a known cost ahead),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,date,,,spending.startsIn
 F456,Built,,Needs,Spending lines,Paid to my partner (moves money between you),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,choice,,,spending.toPartner
 F457,Built,,Profile,Profile,Phase 4 previews on (Life Transitions on Plan),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.settings.phase4
+F458,Built,,Debt,Debt,Card from the library,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Debt,text,,,debt.cardId
+F459,Built,,Debt,Debt,Card credits and benefits used,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js); stays in the app: a Use it or Don't tap per credit and benefit of the library card; set them on Credit cards,,Net worth › Debt,text,,,debt.cardUse

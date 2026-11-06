@@ -38,6 +38,9 @@ export const RULES = {
   // Batch 21 (Life Transitions, M90): retirement money taken before 59 and a half pays a 10% additional tax (IRS
   // Topic 558); the dip runs at most this many months; a card's cost is shown on this example amount and time.
   earlyPenalty: 0.1, penaltyAge: 59.5, transitionMaxMonths: 120, cardExampleAmount: 1000, cardExampleMonths: 3,
+  // Batch 30 (the card library, M9C and M9D): a card with a fee is set against a no-fee card at this flat rate; the
+  // score line names utilization over utilHigh, then over utilBest, and this many hard inquiries in 2 years (myFICO).
+  plainCardRate: 0.02, utilHigh: 0.3, utilBest: 0.1, inquiriesMany: 3,
 };
 export const LISTS = {
   perMonth: { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, quarter: 1 / 3, year: 1 / 12 },
@@ -159,6 +162,10 @@ export const ASSUMPTIONS = [
   { id: 'rules.fiRangeMaxYears', name: 'FiRangeMaxYears', label: 'FI date range: widest shown, years (wider shows the one step that narrows it)', unit: 'number', get: () => RULES.fiRangeMaxYears, source: RULE('js/math/picture.js fiWordsOf; batch 15 item 7 (QUESTIONS: confirm 5)'), date: '2026-11-06' },
   { id: 'rules.materialHours', name: 'MaterialHours', label: 'Worth doing: dollars a year beat this many hours at your real hourly wage', unit: 'number', get: () => RULES.materialHours, client: 'materialHours', source: RULE('js/plan.js next3 (R073); batch 15 item 4 (QUESTIONS: confirm 2 hours)'), date: '2026-11-06' },
   { id: 'rules.materialFloor', name: 'MaterialFloor', label: 'Worth doing: never under this many dollars a year', unit: 'money', get: () => RULES.materialFloor, client: 'materialFloor', source: RULE('js/plan.js next3 (R073)'), date: '2026-11-06' },
+  { id: 'rules.plainCardRate', name: 'PlainCardRate', label: 'Card library: a no-fee card set beside a card with a fee earns this on everything', unit: 'pct', get: () => RULES.plainCardRate, source: RULE('js/math/cards.js feeCheck, M9C; batch 30 (Wells Fargo Active Cash and Citi Double Cash pay 2% with no fee)'), date: '2026-11-06' },
+  { id: 'rules.utilHigh', name: 'UtilHigh', label: 'Your credit: utilization over this moves the score most after on-time payments', unit: 'pct', get: () => RULES.utilHigh, source: 'myFICO, What\'s in my FICO Scores (amounts owed are 30% of the score; under 30% utilization is the common guide)', date: '2026-11-06' },
+  { id: 'rules.utilBest', name: 'UtilBest', label: 'Your credit: utilization under this is where the best scores sit', unit: 'pct', get: () => RULES.utilBest, source: 'myFICO, What\'s in my FICO Scores (people with top scores use under 10% of their limits)', date: '2026-11-06' },
+  { id: 'rules.inquiriesMany', name: 'InquiriesMany', label: 'Your credit: this many hard inquiries in 2 years makes holding off on applications the next step', unit: 'number', get: () => RULES.inquiriesMany, source: RULE('js/math/cards.js creditMove, M9D; the Credit health note (more than 2 holds a strong score at OK)'), date: '2026-11-06' },
   { id: 'rules.maxMonths', name: 'MaxMonths', label: 'Longest FI path looked at, months', unit: 'number', get: () => RULES.maxMonths, source: RULE('js/math/fi.js, M53 (70 years)'), date: '2026-10-28' },
 ];
 
@@ -233,6 +240,9 @@ export const REFERENCE_FILES = [
   { id: 'library.appSkills', file: 'data/library/app-skills.json', label: 'The skill library, second set: the older app\'s own 40 skills (six trees, with their proofs)',
     source: 'The older app\'s skills (data/skill_tree.json, the six app trees, gates read against data/foo_rules.json), from the public Sapphirestoneage/personalfinance repo, copied by tools/library/extract-app-skills.mjs',
     date: '2026-11-06', readBy: 'nothing yet (Phase 4 library slice)' },
+  { id: 'library.cards', file: 'data/library/cards.json', label: 'The card library: current consumer cards of the biggest US issuers, store and secured cards (fee, APR range, rewards, credits, benefits)',
+    source: 'The issuers\' own pages first (Chase, Capital One, Bank of America, Wells Fargo, US Bank, Citi, American Express, Apple), read 2026-11-06; each card names its source and whether it was checked there, on a review site, or not re-read (tools/library/cards-source.mjs)',
+    date: '2026-11-06', readBy: 'Net worth > Credit cards (js/ui/cards-ui.js): Which card is it?, What your cards give you, the fee check (js/math/cards.js, M9C)' },
 ];
 
 export const valueOf = (a, ref) => a.get(ref);

@@ -2023,6 +2023,26 @@
         ],
         "add": "none",
         "why": "batch 23: the quick check on Plan › Goals answers it from the plan (the tightest day, the FOO step, the FI date)"
+      },
+      {
+        "terms": [
+          "card benefits",
+          "card rewards",
+          "annual fee",
+          "rewards",
+          "cell phone protection",
+          "which card",
+          "card library",
+          "is my card worth it",
+          "points",
+          "cash back"
+        ],
+        "label": "Which card is it?",
+        "go": [
+          "debt*[Credit card].cardId"
+        ],
+        "add": "debt:Credit card",
+        "why": "batch 30: a card picked from the library shows its rewards, credits and benefits, and the fee check, on Credit cards"
       }
     ]
   },

@@ -1,0 +1,26 @@
+/* Batch 30: the card library on Net worth > Credit cards (js/ui/cards-ui.js). */
+.card-give + .card-give { margin-top: var(--s4); padding-top: var(--s4); border-top: 1px solid var(--border-row); }
+.card-give-row { display: grid; grid-template-columns: minmax(0, 1fr) 130px 170px; gap: 12px; align-items: center; padding: 4px 0; }
+.card-give-row + .card-give-row { border-top: 1px dashed var(--border-row); }
+.card-give-amt { text-align: right; font-weight: 600; }
+.card-give-row > .seg { justify-self: end; }
+.fee-check strong { font-weight: 700; }
+.card-results .card-result { justify-content: flex-start; text-align: left; white-space: normal; height: auto; min-height: 34px; padding-top: 6px; padding-bottom: 6px; }
+.doubled-notes .note-line { color: var(--text-2); font-size: .9375rem; }
+.doubled-notes .note-line svg { width: 16px; height: 16px; vertical-align: -3px; }
+.card-give-name { margin: 0; font-size: 1.0625rem; font-weight: 700; }
+.your-credit .credit-move { flex-basis: 100%; order: 10; color: var(--text-2); font-size: .9375rem; }
+.your-credit .credit-move .label { display: inline; font-weight: 700; }
+@media (max-width: 760px) {
+  .card-give-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .card-give-row > .seg { grid-column: 1 / -1; justify-self: start; }
+}
+/* Your credit: each card's table stacks on a phone (it scrolled sideways at 390 before batch 30). */
+@media (max-width: 760px) {
+  .credit-cards-table, .credit-cards-table tbody, .credit-cards-table tr, .credit-cards-table td { display: block; width: 100%; }
+  .credit-cards-table thead { display: none; }
+  .credit-cards-table tr { padding: 8px 0; border-bottom: 1px solid var(--border-row); }
+  .credit-cards-table td { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 0; text-align: left; border: 0; }
+  .credit-cards-table td:first-child { font-weight: 700; }
+  .credit-cards-table td[data-label]::before { content: attr(data-label); color: var(--text-2); font-size: .875rem; font-weight: 600; }
+}

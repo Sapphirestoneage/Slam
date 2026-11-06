@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Every screen's first state, word for word from the Words and states tab. Later phases fill them in.
+import { cardsGiveSection, doubledNotes } from './ui/cards-ui.js';
 import { h, icon } from './ui/dom.js';
 import { budgetCompletion, itemRoute } from './completion.js';
 import { paycheckSection } from './ui/paycheck-ui.js';
@@ -128,7 +129,7 @@ const MM = {
   'credit-cards': { title: 'Credit cards', sub: 'Every card, how much of the limits you use, your score', body: (app, ctx) => (ctx.gates().areas.debt === false
     ? [h('div.card', {}, h('div.empty', {}, h('span.title', {}, 'No debt, per About you'), addArea(app, ctx, 'debt', 'Debt')))]
     : [completion(app, listCompletion(ctx, r => r.kind === 'debt' && r.type === 'Credit card', ['balance', 'apr'])),
-      S.recordList(ctx, debtList(ctx.ref, { cards: 'only' })), S.live(ctx, () => creditCard(ctx))]) },
+      S.recordList(ctx, debtList(ctx.ref, { cards: 'only' })), S.live(ctx, () => doubledNotes(ctx) ?? h('span')), S.live(ctx, () => cardsGiveSection(ctx) ?? h('span')), S.live(ctx, () => creditCard(ctx))]) }, // batch 30: the card library, doubled-up benefits, Your credit
   assets: { title: 'Assets', sub: 'Cash, investments, car, home', body: (app, ctx) => [
     completion(app, listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance'])),
     hasAny(ctx, ['account', 'asset']) ? null : fastTrack(app, ctx), offAreas(app, ctx, ['cash', 'investments', 'real']),

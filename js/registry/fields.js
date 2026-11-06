@@ -194,6 +194,8 @@ export const AREAS = [
       f('autopay', 'Autopay', 'choice', { options: ['Yes', 'No', 'Minimum', 'Full'] }),
       f('rewards', 'Rewards'), f('annualFee', 'Annual fee', 'money'),
       f('bonus', 'Sign-up bonus'), f('bonusSpend', 'Bonus: spend needed', 'money'), f('bonusBy', 'Bonus: spend by', 'date'),
+      f('cardId', 'Card from the library'), // batch 30: a data/library/cards.json id; the card's rewards, credits and benefits come from there
+      f('cardUse', 'Card credits and benefits used', 'text', { sheet: { skip: 'a Use it or Don\'t tap per credit and benefit of the library card; set them on Credit cards' } }),
       f('promoApr', 'Promo APR', 'pct'), f('promoEnd', 'Promo ends', 'month'),
       pick('use', 'Personal or business', ['Personal', 'Business']),
       pick('federal', 'Federal or private', ['Federal', 'Private']),

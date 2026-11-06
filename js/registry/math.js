@@ -36,6 +36,9 @@ import { gapOf } from '../math/gap.js';
 import { nextMoves } from '../math/moves.js';
 import { transitionOf } from '../math/transitions.js';
 import { debtRangeOf } from '../math/metrics.js';
+import { cardsPicture, creditMove } from '../math/cards.js';
+import { cardLibrary } from '../cardlib.js';
+import { creditHealth } from '../math/debt.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -502,6 +505,19 @@ export const MATH = [
     fns: ['afford.AFFORD_KINDS', 'afford.askOf', 'afford.affordDoc', 'afford.affordOf'],
     fromApp: 'two runs of the same math, on the file and on a copy with the cost in (a one-time cost or goal as a Fund the Future sinking fund until its month, a monthly cost as spending from its month): the tightest day on the calendar, the FOO step date and the FI date on each side; the row here is a $1,000 one-time cost next month',
     label: 'FI date moves (months) with a $1,000 one-time cost next month', app: c => affordOf(c.doc, c.ref, { kind: 'once', amount: 1000, ym: addMonths(ymOf(c.now), 1) }, { now: c.now }).fi?.moved ?? null },
+  // ---------- Batch 30: the card library (Net worth › Credit cards) ----------
+  { id: 'M9C', name: 'Is the card worth its fee', inputs: 'the card picked from the library (fee, rewards by category, credits), the Use it and Don\'t taps, the Budget lines by category, M17 the real hourly wage and the client\'s materiality (MaterialHours, MaterialFloor)', unit: 'money',
+    fns: ['cards.searchCards', 'cards.cardById', 'cards.issuerName', 'cards.categorySpend', 'cards.cardRewards', 'cards.feeCheck', 'cards.DOUBLE_WORDS', 'cards.doubledUp', 'cards.cardsPicture'],
+    fromApp: 'reads the card library (data/library/cards.json): what each card earns a year on the Budget\'s everyday lines at its category rates and caps, plus the credits tapped Use it, less the annual fee; under the materiality amount it reads about even. The value adds up every held card with a fee',
+    app: c => { const P = cardsPicture({ cardRows: c.live.filter(r => r.kind === 'debt' && r.type === 'Credit card'), lines: c.x.lines, coverage: c.live.filter(r => r.kind === 'coverage'), library: cardLibrary(), rate: c.m.hourly, assumptions: c.doc.assumptions, freq: c.x.payFrequency });
+      const nets = (P?.held || []).map(h => h.check.value).filter(v => v != null); return nets.length ? nets.reduce((s, v) => s + v, 0) : null; },
+    parts: [{ key: 'doubled', name: 'Card benefits a paid line may be doubling up', unit: 'count', fromApp: 'card benefits (cell phone protection, rental car coverage, extended warranty) against Budget lines and Protection rows whose names say the same thing',
+      app: c => cardsPicture({ cardRows: c.live.filter(r => r.kind === 'debt' && r.type === 'Credit card'), lines: c.x.lines, coverage: c.live.filter(r => r.kind === 'coverage'), library: cardLibrary(), freq: c.x.payFrequency })?.doubled.length ?? null }] },
+  { id: 'M9D', name: 'What would move the credit score most', inputs: 'the score, M35 utilization overall and each card\'s balance and limit, late payments, autopay on each card, hard inquiries, the oldest card\'s age', unit: 'text',
+    fns: ['cards.creditMove'],
+    fromApp: 'one line in FICO\'s order of weight: on-time payments (a late payment or autopay off), then utilization over UtilHigh, then over UtilBest, then hard inquiries at InquiriesMany, then the age of the oldest card',
+    app: c => { const cards = c.live.filter(r => r.kind === 'debt' && r.type === 'Credit card'); const cr = c.doc.profile?.credit || {}; const H = creditHealth(cards.map(r => ({ id: r.id, balance: r.values.balance, limit: r.values.limit, opened: r.values.opened })), { now: c.now });
+      return creditMove({ score: cr.score ?? null, overall: H.overall, cards: cards.map(r => ({ balance: r.values.balance ?? 0, limit: r.values.limit ?? 0 })), latePayments: cr.latePayments ?? null, autopayOff: cards.filter(r => r.values.autopay === 'Off').length, inquiries: cr.inquiries ?? null, oldestMonths: H.oldestMonths }).key; } },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },
   // ---------- Holidays (the calendar question on About you) ----------

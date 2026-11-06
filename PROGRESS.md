@@ -563,3 +563,41 @@ covered (the Demo's load toast) before and after; the open sections scanned on M
 ## Nov 6 2026: taps no longer knock you up the page
 
 Eli, on his phone in the Claude app: "when I click on a cell it knocks me back up". Three causes fixed everywhere: (1) keepPlace (js/ui/place.js) holds the page at its old height through every redraw until charts and fitTable settle, so a host that sizes or scrolls the page from outside never sees it shrink; (2) landing on a box (js/ui/arrive.js light) scrolls only when the box is off screen; (3) the walk moves on by itself only when the change was made in its own box or bar, so a tap elsewhere on the page leaves the walk and the page where they are. Effort scoreboard unchanged (35 and 38 actions).
+
+## Batch 30 (Nov 6 2026): the card library
+
+Eli (Oct 2026): "a credit card library of the bigger banks' cards with benefits as prefill templates: client names the
+card, he selects it and tweaks, with materiality applied", and a client's credit beyond a simple debt view.
+
+1. Data: data/library/cards.json, 67 current consumer cards from Chase, American Express, Capital One (and Discover,
+   which it now owns), Citi, Bank of America, Wells Fargo, US Bank, Apple, plus store cards (Amazon, Costco, Target,
+   Kohl's, Best Buy, Lowe's) and secured cards. Each: issuer, name, network, annual fee, typical APR range, standing 0%
+   intro months, rewards by category (rate, caps, a point value in dollars), credits with their dollars a year and
+   conditions, benefits in words, foreign fee, secured, the source link, the date checked and how: 50 on the issuer's
+   own page, 3 on a review site where the issuer page would not load, 14 not re-read (each lists what to check).
+   Written once in tools/library/cards-source.mjs; registered in REFERENCE_FILES; test/cards.test.js checks its shape.
+   Sign-up bonuses are left out on purpose (they change weekly). Changes found tonight: the Sapphire Preferred refresh
+   (June 2026), the $795 Sapphire Reserve, the $895 Platinum, Freedom Flex losing cell phone protection on Sep 20.
+2. Which card is it?: a card row with no issuer has a small "Which card is it?" link (also in Details and in What
+   your cards give you). A few letters (sapph, venture, active, or initials like csp) and one tap fill the name, the
+   issuer (made an Institution once, then reused), the annual fee and the rewards type. Everything stays editable; the
+   APR stays the client's own (the library's range is the APR box's hover tip). Demo: 3 actions.
+3. Is it worth its fee? (M9C): What your cards give you, a section closed by default whose closed line carries each
+   fee card's answer. Rewards are counted on the Budget's everyday lines (dining, groceries, gas, transit, streaming,
+   drugstore, phone, entertainment, home) at the card's rates and caps; each credit and benefit has Use it / Don't;
+   credits tapped Use it count their dollars; benefits are words only. "Worth about $X a year more than its $Y fee",
+   "Gives back about $X a year less than its $Y fee", or under the client's materiality (MaterialHours at the real
+   hourly wage, never under MaterialFloor) "About even ... a small win either way". When a no-fee 2% card would earn
+   more on the same spending, one line says so (rule PlainCardRate).
+4. Paying twice (M9C part): a held card with cell phone protection, rental car coverage or an extended warranty and a
+   Budget line or Protection row named for the same thing gives a one-line note under the cards, always in view.
+5. Your credit (M9D): Credit health is now Your credit. Its closed line reads the score, the share of limits used, the
+   oldest card, inquiries and on-time history, and one line under the title, in view while closed, says what would
+   move the score most (on time first, then under 30% with the dollars to get there, then under 10%, then fewer
+   applications, then time). Rules UtilHigh, UtilBest, InquiriesMany. On a phone each card's table stacks (it scrolled
+   sideways at 390 before).
+
+QA: tests pass in UTC and America/New_York; export format 23; spec rows for debt.cardId, debt.cardUse, M9C and M9D
+(tools/library/cards-spec.py adds the Math rows); Find: annual fee, card benefits, rewards, which card. Layout check on
+Credit cards: 0 before and after (Demo and New, all widths and themes), and all checks clean with two library cards
+picked and every section open at 1440, 1280 and 390, light and dark (the old 390 overflow in the per-card table fixed).

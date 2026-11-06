@@ -1,0 +1,3510 @@
+{
+ "id": "library.cards",
+ "version": "1.0.0",
+ "asOf": "2026-11-06",
+ "source": "The issuers' own pages first (Chase, Capital One, Bank of America, Wells Fargo, US Bank, Citi through Mastercard's Citi page, American Express, Apple), read on 2026-11-06; a review site where the issuer page would not load (verified: secondary); the rest from what was known in mid 2026 (verified: unverified, with what to check). Written by tools/library/cards-source.mjs.",
+ "confidence": "mixed",
+ "confidenceNote": "Fees, APR ranges and rewards change often and sign-up bonuses are left out on purpose. Each card says how it was checked; the coach can tweak every number on the client's own card.",
+ "note": "rates: x points (or percent) per dollar in a category; capYear is the spend a year that earns it (shared: the caps of the rates with the same tag are one cap); oneOf: the client's biggest of these categories; rotating: quarterly categories, shown but not counted. pointValue: dollars per point in SLAM's math (the cash or travel-portal floor). credits: value is dollars a year if used. benefits: words only. apr: the typical range, shown as a hint; the client's own APR is the number used.",
+ "counts": {
+  "cards": 67,
+  "issuers": 12
+ },
+ "categories": {
+  "dining": {
+   "label": "Dining and takeout",
+   "lines": [
+    "Dining out",
+    "Coffee and snacks",
+    "Work lunches"
+   ]
+  },
+  "groceries": {
+   "label": "Groceries",
+   "lines": [
+    "Groceries"
+   ]
+  },
+  "gas": {
+   "label": "Gas and EV charging",
+   "lines": [
+    "Gas or charging"
+   ]
+  },
+  "transit": {
+   "label": "Transit, rideshare, tolls",
+   "lines": [
+    "Transit",
+    "Rideshare",
+    "Tolls and parking"
+   ]
+  },
+  "travel": {
+   "label": "Travel",
+   "lines": [
+    "Travel"
+   ]
+  },
+  "streaming": {
+   "label": "Streaming",
+   "lines": [
+    "Streaming",
+    "Music"
+   ]
+  },
+  "drugstore": {
+   "label": "Drugstores",
+   "lines": [
+    "Prescriptions"
+   ]
+  },
+  "phone": {
+   "label": "Phone plan",
+   "lines": [
+    "Phone"
+   ]
+  },
+  "entertainment": {
+   "label": "Entertainment",
+   "lines": [
+    "Entertainment"
+   ]
+  },
+  "home": {
+   "label": "Home improvement",
+   "lines": [
+    "Furniture and home"
+   ]
+  },
+  "online": {
+   "label": "Online shopping",
+   "lines": []
+  },
+  "amazon": {
+   "label": "Amazon and Whole Foods",
+   "lines": []
+  },
+  "delivery": {
+   "label": "Delivery apps",
+   "lines": []
+  },
+  "airline": {
+   "label": "One airline, booked direct",
+   "lines": []
+  },
+  "hotel": {
+   "label": "Hotels booked direct",
+   "lines": []
+  },
+  "hotelPortal": {
+   "label": "Hotels on the issuer's travel site",
+   "lines": []
+  },
+  "travelPortal": {
+   "label": "The issuer's travel site",
+   "lines": []
+  },
+  "store": {
+   "label": "At the store",
+   "lines": []
+  },
+  "applePay": {
+   "label": "Paid with Apple Pay",
+   "lines": []
+  },
+  "pick": {
+   "label": "A category you pick",
+   "lines": []
+  },
+  "pick2": {
+   "label": "A second category you pick",
+   "lines": []
+  }
+ },
+ "benefitKinds": {
+  "cellPhone": "Cell phone protection",
+  "purchase": "Purchase protection",
+  "warranty": "Extended warranty",
+  "rental": "Rental car coverage",
+  "tripCancel": "Trip cancellation",
+  "tripDelay": "Trip delay",
+  "baggage": "Baggage",
+  "lounge": "Airport lounges"
+ },
+ "cards": [
+  {
+   "network": "Visa",
+   "annualFee": 95,
+   "apr": [
+    19.49,
+    27.74
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "hotel",
+     "name": "Chase Travel hotel credit",
+     "value": 100,
+     "words": "Up to $100 a card year on hotels booked through Chase Travel"
+    },
+    {
+     "id": "trusted",
+     "name": "Global Entry or TSA PreCheck",
+     "value": 30,
+     "words": "Up to $120 every 4 years ($30 a year spread)"
+    },
+    {
+     "id": "dashpass",
+     "name": "DashPass membership",
+     "value": 0,
+     "words": "A free year of DashPass (activate by Dec 31, 2029); not counted in dollars"
+    }
+   ],
+   "benefits": {
+    "rental": "Primary rental car coverage: theft and collision up to $60,000 (decline the counter coverage)",
+    "tripCancel": "Trip cancellation and interruption, up to $10,000 a person",
+    "tripDelay": "Trip delay over 12 hours or overnight, up to $500 a person",
+    "baggage": "Lost and delayed baggage",
+    "purchase": "Purchase protection: 120 days, up to $500 an item",
+    "warranty": "Extended warranty: one more year on US warranties of 3 years or less"
+   },
+   "checked": "2026-11-06",
+   "unverified": [],
+   "id": "chase-sapphire-preferred",
+   "issuer": "Chase",
+   "name": "Sapphire Preferred",
+   "rewards": {
+    "kind": "Points",
+    "words": "5x Chase Travel, 3x dining, gas and EV charging, online groceries, top streaming, 2x other travel, 1x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 5
+     },
+     {
+      "cat": "dining",
+      "x": 3
+     },
+     {
+      "cat": "gas",
+      "x": 3
+     },
+     {
+      "cat": "streaming",
+      "x": 3
+     },
+     {
+      "cat": "travel",
+      "x": 2
+     }
+    ],
+    "base": 1,
+    "note": "Points are worth 1 cent each on Chase Travel; transfer partners can be worth more. Groceries earn 3x online only (not Target, Walmart or clubs)"
+   },
+   "source": "https://www.chase.com/travel/guide/tips/preferred-update",
+   "verified": "issuer",
+   "note": "Refreshed June 2026: 3x gas, vacation rentals and the hotel credit are new"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 795,
+   "apr": [
+    19.74,
+    28.24
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "travel",
+     "name": "Travel credit",
+     "value": 300,
+     "words": "Up to $300 a card year on any travel"
+    },
+    {
+     "id": "edit",
+     "name": "The Edit hotel credit",
+     "value": 500,
+     "words": "Up to $500 a year ($250 a booking) on prepaid 2-night stays through The Edit"
+    },
+    {
+     "id": "dining",
+     "name": "Sapphire Exclusive Tables dining",
+     "value": 300,
+     "words": "$150 Jan to Jun and $150 Jul to Dec at select OpenTable restaurants"
+    },
+    {
+     "id": "stubhub",
+     "name": "StubHub and viagogo",
+     "value": 300,
+     "words": "$150 each half year, activation needed, through Dec 31, 2027"
+    },
+    {
+     "id": "doordash",
+     "name": "DoorDash promos",
+     "value": 300,
+     "words": "$15 off one restaurant order and two $10 grocery or retail promos a month (about $300 a year if used every month)"
+    },
+    {
+     "id": "peloton",
+     "name": "Peloton membership",
+     "value": 120,
+     "words": "$10 a month, activation needed, through Dec 31, 2027"
+    },
+    {
+     "id": "lyft",
+     "name": "Lyft",
+     "value": 120,
+     "words": "$10 a month in the Lyft app, through Sep 30, 2027"
+    },
+    {
+     "id": "apple",
+     "name": "Apple TV and Apple Music",
+     "value": 0,
+     "words": "Free subscriptions (activate by Jun 22, 2027); counted only if the client would pay for them"
+    },
+    {
+     "id": "trusted",
+     "name": "Global Entry or TSA PreCheck",
+     "value": 30,
+     "words": "Up to $120 every 4 years ($30 a year spread)"
+    }
+   ],
+   "benefits": {
+    "lounge": "Priority Pass and Chase Sapphire Lounges, with up to two guests",
+    "rental": "Primary rental car coverage up to $75,000",
+    "tripCancel": "Trip cancellation and interruption, up to $10,000 a person",
+    "tripDelay": "Trip delay over 12 hours or overnight, up to $500 a ticket",
+    "baggage": "Lost and delayed baggage",
+    "purchase": "Purchase protection: 120 days, up to $10,000 an item",
+    "warranty": "Extended warranty: one more year on US warranties of 3 years or less"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "travel and purchase protection limits (the page links to them; from the benefits guide as known in mid 2026)"
+   ],
+   "id": "chase-sapphire-reserve",
+   "issuer": "Chase",
+   "name": "Sapphire Reserve",
+   "rewards": {
+    "kind": "Points",
+    "words": "8x Chase Travel, 4x flights and hotels booked direct, 3x dining, 1x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 8
+     },
+     {
+      "cat": "airline",
+      "x": 4
+     },
+     {
+      "cat": "hotel",
+      "x": 4
+     },
+     {
+      "cat": "dining",
+      "x": 3
+     }
+    ],
+    "base": 1,
+    "note": "Points are worth 1 cent on Chase Travel; Points Boost can make some bookings worth up to 2 cents"
+   },
+   "source": "https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    18.49,
+    27.99
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {
+    "purchase": "Purchase protection: 120 days, up to $500 an item",
+    "warranty": "Extended warranty: one more year on US warranties of 3 years or less",
+    "rental": "Secondary rental car coverage",
+    "tripCancel": "Trip cancellation and interruption, up to $1,500 a person"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "benefits (from the Freedom benefits guide as known in mid 2026)"
+   ],
+   "id": "chase-freedom-unlimited",
+   "issuer": "Chase",
+   "name": "Freedom Unlimited",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "5% Chase Travel, 3% dining and drugstores, 1.5% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 5
+     },
+     {
+      "cat": "dining",
+      "x": 3
+     },
+     {
+      "cat": "drugstore",
+      "x": 3
+     }
+    ],
+    "base": 1.5
+   },
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 0,
+   "apr": [
+    18.49,
+    27.99
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {
+    "purchase": "Purchase protection: 120 days, up to $500 an item",
+    "warranty": "Extended warranty: one more year on US warranties of 3 years or less",
+    "rental": "Secondary rental car coverage",
+    "tripCancel": "Trip cancellation and interruption, up to $1,500 a person"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "purchase protection and warranty limits"
+   ],
+   "id": "chase-freedom-flex",
+   "issuer": "Chase",
+   "name": "Freedom Flex",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "5% on rotating quarterly categories (up to $1,500 a quarter, activate each quarter), 5% Chase Travel, 3% dining and drugstores, 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 5
+     },
+     {
+      "cat": "dining",
+      "x": 3
+     },
+     {
+      "cat": "drugstore",
+      "x": 3
+     }
+    ],
+    "base": 1,
+    "rotating": {
+     "x": 5,
+     "capYear": 6000
+    }
+   },
+   "source": "https://thepointsguy.com/news/chase-freedom-flex-cellphone-protection-ending/",
+   "verified": "secondary",
+   "note": "Cell phone protection ended Sep 20, 2026; the 3% foreign transaction fee ended the same day"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    18.49,
+    27.99
+   ],
+   "intro": null,
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {
+    "purchase": "Purchase protection: 120 days, up to $500 an item"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "benefits and foreign fee"
+   ],
+   "id": "chase-freedom-rise",
+   "issuer": "Chase",
+   "name": "Freedom Rise",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "1.5% on everything",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 1.5
+   },
+   "starter": true,
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer",
+   "note": "Made for people new to credit"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    29.24,
+    29.24
+   ],
+   "intro": null,
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "foreign fee"
+   ],
+   "id": "chase-slate-edge",
+   "issuer": "Chase",
+   "name": "Slate Edge",
+   "rewards": {
+    "kind": "None",
+    "words": "No rewards",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 0
+   },
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer",
+   "note": "For building credit"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    18.99,
+    27.74
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {
+    "purchase": "Purchase protection: 120 days, up to $500 an item",
+    "warranty": "Extended warranty: one more year on US warranties of 3 years or less",
+    "rental": "Secondary rental car coverage"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "benefits"
+   ],
+   "id": "chase-prime-visa",
+   "issuer": "Chase",
+   "name": "Prime Visa (Amazon)",
+   "store": "Amazon",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "5% at Amazon, Whole Foods and Chase Travel (with Prime), 2% gas, restaurants, transit and rideshare, 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "amazon",
+      "x": 5
+     },
+     {
+      "cat": "travelPortal",
+      "x": 5
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "gas",
+      "x": 2
+     },
+     {
+      "cat": "transit",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer",
+   "note": "Needs a Prime membership; the Amazon Visa without Prime earns 3% at Amazon"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    18.99,
+    27.74
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {
+    "purchase": "Purchase protection: 120 days, up to $500 an item",
+    "warranty": "Extended warranty: one more year on US warranties of 3 years or less"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "benefits"
+   ],
+   "id": "chase-amazon-visa",
+   "issuer": "Chase",
+   "name": "Amazon Visa",
+   "store": "Amazon",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "3% at Amazon, Whole Foods and Chase Travel, 2% gas, restaurants, transit and rideshare, 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "amazon",
+      "x": 3
+     },
+     {
+      "cat": "travelPortal",
+      "x": 3
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "gas",
+      "x": 2
+     },
+     {
+      "cat": "transit",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 150,
+   "apr": [
+    19.99,
+    28.49
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "bag",
+     "name": "Free first checked bag",
+     "value": 140,
+     "words": "For you and a companion on United; about $140 a year on two round trips"
+    },
+    {
+     "id": "club",
+     "name": "Two United Club passes",
+     "value": 0,
+     "words": "Two one-time passes a year; counted only if used"
+    },
+    {
+     "id": "partners",
+     "name": "Partner credits",
+     "value": 0,
+     "words": "Rideshare, hotel and other partner credits; counted only if used"
+    }
+   ],
+   "benefits": {
+    "rental": "Primary rental car coverage",
+    "tripCancel": "Trip cancellation and interruption",
+    "tripDelay": "Trip delay over 6 hours",
+    "baggage": "Lost and delayed baggage",
+    "purchase": "Purchase protection",
+    "warranty": "Extended warranty"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "earn rates and protections (not on the all-cards page)"
+   ],
+   "id": "chase-united-explorer",
+   "issuer": "Chase",
+   "name": "United Explorer",
+   "rewards": {
+    "kind": "Miles",
+    "words": "2x United, dining and hotels booked direct, 1x everything else",
+    "pointValue": 0.012,
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 2
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "hotel",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer",
+   "note": "$0 the first year"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 350,
+   "apr": [
+    19.99,
+    28.49
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "united",
+     "name": "United travel credit",
+     "value": 200,
+     "words": "$200 a year on United purchases"
+    },
+    {
+     "id": "award",
+     "name": "10,000-mile award discount",
+     "value": 0,
+     "words": "Counted only if the client books an award"
+    },
+    {
+     "id": "bags",
+     "name": "Two free checked bags",
+     "value": 0,
+     "words": "Counted only if the client flies United"
+    }
+   ],
+   "benefits": {
+    "rental": "Primary rental car coverage",
+    "tripCancel": "Trip cancellation and interruption",
+    "tripDelay": "Trip delay",
+    "baggage": "Lost and delayed baggage",
+    "purchase": "Purchase protection",
+    "warranty": "Extended warranty"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "earn rates and protections"
+   ],
+   "id": "chase-united-quest",
+   "issuer": "Chase",
+   "name": "United Quest",
+   "rewards": {
+    "kind": "Miles",
+    "words": "3x United, 2x dining, streaming and other travel, 1x everything else",
+    "pointValue": 0.012,
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 3
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "streaming",
+      "x": 2
+     },
+     {
+      "cat": "travel",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 99,
+   "apr": [
+    19.49,
+    27.99
+   ],
+   "intro": null,
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [
+    {
+     "id": "anniv",
+     "name": "3,000 anniversary points",
+     "value": 39,
+     "words": "About $39 at 1.3 cents a point"
+    },
+    {
+     "id": "bag",
+     "name": "First checked bag free",
+     "value": 0,
+     "words": "Counted only if the client flies Southwest"
+    }
+   ],
+   "benefits": {
+    "purchase": "Purchase protection",
+    "warranty": "Extended warranty",
+    "baggage": "Lost and delayed baggage"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "protections and foreign fee"
+   ],
+   "id": "chase-southwest-plus",
+   "issuer": "Chase",
+   "name": "Southwest Rapid Rewards Plus",
+   "rewards": {
+    "kind": "Points",
+    "words": "2x Southwest, 1x everything else",
+    "pointValue": 0.013,
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 229,
+   "apr": [
+    19.49,
+    27.99
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "anniv",
+     "name": "7,500 anniversary points",
+     "value": 98,
+     "words": "About $98 at 1.3 cents a point"
+    },
+    {
+     "id": "bag",
+     "name": "First checked bag free",
+     "value": 0,
+     "words": "Counted only if the client flies Southwest"
+    }
+   ],
+   "benefits": {
+    "purchase": "Purchase protection",
+    "warranty": "Extended warranty",
+    "baggage": "Lost and delayed baggage",
+    "tripDelay": "Trip delay"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "protections"
+   ],
+   "id": "chase-southwest-priority",
+   "issuer": "Chase",
+   "name": "Southwest Rapid Rewards Priority",
+   "rewards": {
+    "kind": "Points",
+    "words": "4x Southwest, 2x gas and restaurants, 1x everything else",
+    "pointValue": 0.013,
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 4
+     },
+     {
+      "cat": "gas",
+      "x": 2
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 95,
+   "apr": [
+    19.49,
+    27.99
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "night",
+     "name": "Free night each anniversary",
+     "value": 150,
+     "words": "A night up to 35,000 points; about $150 if the client stays at Marriott"
+    },
+    {
+     "id": "airline",
+     "name": "Airline credit",
+     "value": 100,
+     "words": "Up to $100 in airline statement credits, through Jun 30, 2027"
+    }
+   ],
+   "benefits": {
+    "tripDelay": "Trip delay",
+    "baggage": "Lost and delayed baggage",
+    "purchase": "Purchase protection",
+    "rental": "Secondary rental car coverage"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "groceries, gas and dining 3x (from mid 2026)",
+    "protections"
+   ],
+   "id": "chase-marriott-boundless",
+   "issuer": "Chase",
+   "name": "Marriott Bonvoy Boundless",
+   "rewards": {
+    "kind": "Points",
+    "words": "Up to 17x at Marriott, 3x on groceries, gas and dining (first $6,000 a year), 2x everything else",
+    "pointValue": 0.007,
+    "rates": [
+     {
+      "cat": "hotel",
+      "x": 6
+     },
+     {
+      "cat": "groceries",
+      "x": 3,
+      "capYear": 6000,
+      "shared": "b3"
+     },
+     {
+      "cat": "gas",
+      "x": 3,
+      "capYear": 6000,
+      "shared": "b3"
+     },
+     {
+      "cat": "dining",
+      "x": 3,
+      "capYear": 6000,
+      "shared": "b3"
+     }
+    ],
+    "base": 2
+   },
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 150,
+   "apr": [
+    19.49,
+    27.99
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "night",
+     "name": "Free night each anniversary",
+     "value": 150,
+     "words": "A night up to 40,000 points; about $150 if the client stays at IHG"
+    },
+    {
+     "id": "trusted",
+     "name": "Global Entry or TSA PreCheck",
+     "value": 30,
+     "words": "Up to $120 every 4 years"
+    }
+   ],
+   "benefits": {
+    "tripCancel": "Trip cancellation",
+    "tripDelay": "Trip delay",
+    "baggage": "Lost and delayed baggage",
+    "purchase": "Purchase protection"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "category rates beyond IHG",
+    "protections"
+   ],
+   "id": "chase-ihg-premier",
+   "issuer": "Chase",
+   "name": "IHG One Rewards Premier",
+   "rewards": {
+    "kind": "Points",
+    "words": "Up to 26x at IHG, 5x travel, dining and gas, 3x everything else",
+    "pointValue": 0.005,
+    "rates": [
+     {
+      "cat": "hotel",
+      "x": 10
+     },
+     {
+      "cat": "travel",
+      "x": 5
+     },
+     {
+      "cat": "dining",
+      "x": 5
+     },
+     {
+      "cat": "gas",
+      "x": 5
+     }
+    ],
+    "base": 3
+   },
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 95,
+   "apr": [
+    19.49,
+    27.99
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "night",
+     "name": "Free night each anniversary",
+     "value": 150,
+     "words": "A Category 1 to 4 night; about $150 if the client stays at Hyatt"
+    }
+   ],
+   "benefits": {
+    "tripCancel": "Trip cancellation",
+    "tripDelay": "Trip delay",
+    "baggage": "Lost luggage",
+    "purchase": "Purchase protection",
+    "rental": "Secondary rental car coverage"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "2x categories",
+    "protections"
+   ],
+   "id": "chase-world-of-hyatt",
+   "issuer": "Chase",
+   "name": "World of Hyatt",
+   "rewards": {
+    "kind": "Points",
+    "words": "Up to 9x at Hyatt, 2x dining, airlines, transit, gym, 1x everything else",
+    "pointValue": 0.015,
+    "rates": [
+     {
+      "cat": "hotel",
+      "x": 4
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "airline",
+      "x": 2
+     },
+     {
+      "cat": "transit",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    18.49,
+    27.99
+   ],
+   "intro": null,
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "earn rate and fee"
+   ],
+   "id": "chase-disney-visa",
+   "issuer": "Chase",
+   "name": "Disney Visa",
+   "rewards": {
+    "kind": "Points",
+    "words": "1% in Disney Rewards Dollars on everything",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 1
+   },
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 0,
+   "apr": [
+    18.49,
+    27.99
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "dashpass",
+     "name": "A free year of DashPass",
+     "value": 0,
+     "words": "Renews at $96 a year unless cancelled"
+    }
+   ],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "foreign fee"
+   ],
+   "id": "chase-doordash",
+   "issuer": "Chase",
+   "name": "DoorDash Rewards Mastercard",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "4% DoorDash and Caviar, 3% dining direct, 2% groceries, 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "delivery",
+      "x": 4
+     },
+     {
+      "cat": "dining",
+      "x": 3
+     },
+     {
+      "cat": "groceries",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://creditcards.chase.com/all-credit-cards",
+   "verified": "issuer"
+  },
+  {
+   "network": "Amex",
+   "annualFee": 895,
+   "apr": null,
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "hotel",
+     "name": "Fine Hotels + Resorts or Hotel Collection",
+     "value": 600,
+     "words": "Up to $300 each half year on prepaid Amex Travel stays"
+    },
+    {
+     "id": "resy",
+     "name": "Resy restaurants",
+     "value": 400,
+     "words": "Up to $100 a quarter at US Resy restaurants; enroll"
+    },
+    {
+     "id": "digital",
+     "name": "Digital entertainment",
+     "value": 300,
+     "words": "Up to $25 a month on Disney+, Hulu, ESPN+, Peacock, NYT, YouTube and others; enroll"
+    },
+    {
+     "id": "uber",
+     "name": "Uber Cash",
+     "value": 200,
+     "words": "$15 a month plus a December bonus"
+    },
+    {
+     "id": "uberone",
+     "name": "Uber One membership",
+     "value": 120,
+     "words": "Up to $120 a year on an Uber One membership"
+    },
+    {
+     "id": "airline",
+     "name": "Airline fees",
+     "value": 200,
+     "words": "Up to $200 a year in incidental fees on one chosen airline; enroll"
+    },
+    {
+     "id": "lululemon",
+     "name": "lululemon",
+     "value": 300,
+     "words": "Up to $75 a quarter; enroll"
+    },
+    {
+     "id": "equinox",
+     "name": "Equinox",
+     "value": 300,
+     "words": "Up to $300 a year; enroll"
+    },
+    {
+     "id": "clear",
+     "name": "CLEAR+",
+     "value": 209,
+     "words": "Up to the yearly CLEAR+ fee"
+    },
+    {
+     "id": "walmart",
+     "name": "Walmart+",
+     "value": 155,
+     "words": "Up to $12.95 a month on a Walmart+ membership"
+    },
+    {
+     "id": "oura",
+     "name": "Oura Ring",
+     "value": 200,
+     "words": "Up to $200 a year at ouraring.com; enroll"
+    },
+    {
+     "id": "trusted",
+     "name": "Global Entry or TSA PreCheck",
+     "value": 30,
+     "words": "Up to $120 every 4 years"
+    }
+   ],
+   "benefits": {
+    "lounge": "Centurion Lounges, Priority Pass, Delta Sky Club when flying Delta (10 visits a year) and more",
+    "cellPhone": {
+     "words": "Cell phone protection: up to $800 a claim, $50 deductible, 2 claims a year, when the phone bill is paid with the card",
+     "perClaim": 800,
+     "deductible": 50
+    },
+    "rental": "Car rental loss and damage insurance, secondary, when the rental is paid with the card",
+    "tripCancel": "Trip cancellation and interruption, up to $10,000 a trip",
+    "tripDelay": "Trip delay over 6 hours, up to $500",
+    "purchase": "Purchase protection: theft or accidental damage within 90 days, up to $1,000 an item",
+    "warranty": "Extended warranty: one more year on US manufacturer warranties of 5 years or less"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "trip protection limits and the CLEAR+ amount ($209 to $219 across sources)"
+   ],
+   "id": "amex-platinum",
+   "issuer": "American Express",
+   "name": "Platinum Card",
+   "aprNote": "A charge card: pay in full, or Pay Over Time at its own APR",
+   "rewards": {
+    "kind": "Points",
+    "words": "5x flights booked direct or with Amex Travel (up to $500,000 a year), 5x prepaid hotels on Amex Travel, 1x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 5
+     },
+     {
+      "cat": "hotelPortal",
+      "x": 5
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.nerdwallet.com/reviews/credit-cards/american-express-platinum",
+   "verified": "secondary",
+   "note": "Refreshed Sep 2025; fee $895"
+  },
+  {
+   "network": "Amex",
+   "annualFee": 325,
+   "apr": null,
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "dining",
+     "name": "Dining credit",
+     "value": 120,
+     "words": "Up to $10 a month at Grubhub, Five Guys, Cheesecake Factory, Buffalo Wild Wings, Wonder; enroll"
+    },
+    {
+     "id": "uber",
+     "name": "Uber Cash",
+     "value": 120,
+     "words": "$10 a month on Uber rides or Uber Eats in the US"
+    },
+    {
+     "id": "resy",
+     "name": "Resy restaurants",
+     "value": 100,
+     "words": "Up to $50 Jan to Jun and $50 Jul to Dec; enroll"
+    },
+    {
+     "id": "dunkin",
+     "name": "Dunkin'",
+     "value": 84,
+     "words": "Up to $7 a month at US Dunkin'; enroll"
+    },
+    {
+     "id": "hotel",
+     "name": "Hotel Collection",
+     "value": 0,
+     "words": "Up to $100 of on-property charges on a 2-night Amex Travel stay; counted only if used"
+    }
+   ],
+   "benefits": {
+    "rental": "Car rental loss and damage insurance, secondary, when the rental is paid with the card",
+    "baggage": "Baggage insurance",
+    "purchase": "Purchase protection: theft or accidental damage within 90 days, up to $1,000 an item",
+    "warranty": "Extended warranty: one more year on US manufacturer warranties of 5 years or less",
+    "tripDelay": "Trip delay over 12 hours, up to $300"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "protections (from the Gold benefits as known in mid 2026)"
+   ],
+   "id": "amex-gold",
+   "issuer": "American Express",
+   "name": "Gold Card",
+   "aprNote": "Pay in full, or Pay Over Time at its own APR",
+   "rewards": {
+    "kind": "Points",
+    "words": "4x restaurants and US takeout (up to $50,000 a year), 4x US supermarkets (up to $25,000 a year), 5x prepaid hotels and 3x flights on Amex Travel or direct, 1x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "dining",
+      "x": 4,
+      "capYear": 50000
+     },
+     {
+      "cat": "groceries",
+      "x": 4,
+      "capYear": 25000
+     },
+     {
+      "cat": "airline",
+      "x": 3
+     },
+     {
+      "cat": "hotelPortal",
+      "x": 5
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.americanexpress.com/en-us/credit-cards/credit-intel/amex-gold-vs-blue-cash-preferred/",
+   "verified": "issuer"
+  },
+  {
+   "network": "Amex",
+   "annualFee": 150,
+   "apr": null,
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "clear",
+     "name": "CLEAR+",
+     "value": 209,
+     "words": "Up to the yearly CLEAR+ fee"
+    }
+   ],
+   "benefits": {
+    "tripDelay": "Trip delay over 12 hours, up to $300",
+    "baggage": "Baggage insurance",
+    "purchase": "Purchase protection: theft or accidental damage within 90 days, up to $1,000 an item",
+    "warranty": "Extended warranty: one more year on US manufacturer warranties of 5 years or less",
+    "rental": "Car rental loss and damage insurance, secondary, when the rental is paid with the card"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "all of it: fee, rates and credits as known in mid 2026"
+   ],
+   "id": "amex-green",
+   "issuer": "American Express",
+   "name": "Green Card",
+   "aprNote": "Pay in full, or Pay Over Time at its own APR",
+   "rewards": {
+    "kind": "Points",
+    "words": "3x travel, transit and restaurants, 1x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travel",
+      "x": 3
+     },
+     {
+      "cat": "transit",
+      "x": 3
+     },
+     {
+      "cat": "dining",
+      "x": 3
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.americanexpress.com/us/credit-cards/card/green/",
+   "verified": "unverified"
+  },
+  {
+   "network": "Amex",
+   "annualFee": 95,
+   "apr": [
+    20.24,
+    29.24
+   ],
+   "intro": {
+    "purchases": 12,
+    "transfers": 12
+   },
+   "foreignFee": 0.027,
+   "secured": false,
+   "credits": [
+    {
+     "id": "streaming",
+     "name": "Disney streaming credit",
+     "value": 120,
+     "words": "Up to $10 a month on Disney+, Hulu or ESPN+; enroll"
+    }
+   ],
+   "benefits": {
+    "rental": "Car rental loss and damage insurance, secondary, when the rental is paid with the card",
+    "purchase": "Purchase protection: theft or accidental damage within 90 days, up to $1,000 an item",
+    "warranty": "Extended warranty: one more year on US manufacturer warranties of 5 years or less"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range, intro APR and foreign fee"
+   ],
+   "id": "amex-blue-cash-preferred",
+   "issuer": "American Express",
+   "name": "Blue Cash Preferred",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "6% US supermarkets (up to $6,000 a year), 6% select US streaming, 3% US gas and transit, 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "groceries",
+      "x": 6,
+      "capYear": 6000
+     },
+     {
+      "cat": "streaming",
+      "x": 6
+     },
+     {
+      "cat": "gas",
+      "x": 3
+     },
+     {
+      "cat": "transit",
+      "x": 3
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.americanexpress.com/en-us/credit-cards/credit-intel/amex-gold-vs-blue-cash-preferred/",
+   "verified": "issuer",
+   "note": "$0 the first year"
+  },
+  {
+   "network": "Amex",
+   "annualFee": 0,
+   "apr": [
+    20.24,
+    29.24
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0.027,
+   "secured": false,
+   "credits": [
+    {
+     "id": "streaming",
+     "name": "Disney streaming credit",
+     "value": 84,
+     "words": "Up to $7 a month on the Disney bundle; enroll"
+    },
+    {
+     "id": "home",
+     "name": "Home Chef credit",
+     "value": 0,
+     "words": "Up to $15 a month at Home Chef; counted only if used"
+    }
+   ],
+   "benefits": {
+    "rental": "Car rental loss and damage insurance, secondary, when the rental is paid with the card",
+    "purchase": "Purchase protection: theft or accidental damage within 90 days, up to $1,000 an item",
+    "warranty": "Extended warranty: one more year on US manufacturer warranties of 5 years or less"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "all of it, as known in mid 2026"
+   ],
+   "id": "amex-blue-cash-everyday",
+   "issuer": "American Express",
+   "name": "Blue Cash Everyday",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "3% US supermarkets, US online retail and US gas (each up to $6,000 a year), 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "groceries",
+      "x": 3,
+      "capYear": 6000
+     },
+     {
+      "cat": "gas",
+      "x": 3,
+      "capYear": 6000
+     },
+     {
+      "cat": "online",
+      "x": 3,
+      "capYear": 6000
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/",
+   "verified": "unverified"
+  },
+  {
+   "network": "Amex",
+   "annualFee": 150,
+   "apr": [
+    20.24,
+    29.24
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "bag",
+     "name": "First checked bag free",
+     "value": 140,
+     "words": "For you and up to 8 on one reservation; about $140 a year on two round trips"
+    },
+    {
+     "id": "flight",
+     "name": "Delta flight credit",
+     "value": 0,
+     "words": "$200 after $10,000 spent in a year; counted only if reached"
+    },
+    {
+     "id": "stays",
+     "name": "Delta Stays credit",
+     "value": 100,
+     "words": "Up to $100 a year on prepaid Delta Stays hotels"
+    }
+   ],
+   "benefits": {
+    "rental": "Car rental loss and damage insurance, secondary, when the rental is paid with the card",
+    "purchase": "Purchase protection: theft or accidental damage within 90 days, up to $1,000 an item",
+    "warranty": "Extended warranty: one more year on US manufacturer warranties of 5 years or less",
+    "baggage": "Baggage insurance"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "all of it, as known in mid 2026"
+   ],
+   "id": "amex-delta-gold",
+   "issuer": "American Express",
+   "name": "Delta SkyMiles Gold",
+   "rewards": {
+    "kind": "Miles",
+    "words": "2x Delta, restaurants and US supermarkets, 1x everything else",
+    "pointValue": 0.011,
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 2
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "groceries",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-gold-american-express-card/",
+   "verified": "unverified",
+   "note": "$0 the first year"
+  },
+  {
+   "network": "Amex",
+   "annualFee": 0,
+   "apr": [
+    20.24,
+    29.24
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {
+    "rental": "Car rental loss and damage insurance, secondary, when the rental is paid with the card",
+    "purchase": "Purchase protection: theft or accidental damage within 90 days, up to $1,000 an item",
+    "warranty": "Extended warranty: one more year on US manufacturer warranties of 5 years or less"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "all of it, as known in mid 2026"
+   ],
+   "id": "amex-hilton-honors",
+   "issuer": "American Express",
+   "name": "Hilton Honors",
+   "rewards": {
+    "kind": "Points",
+    "words": "7x Hilton, 5x restaurants, US supermarkets and US gas, 3x everything else",
+    "pointValue": 0.005,
+    "rates": [
+     {
+      "cat": "hotel",
+      "x": 7
+     },
+     {
+      "cat": "dining",
+      "x": 5
+     },
+     {
+      "cat": "groceries",
+      "x": 5
+     },
+     {
+      "cat": "gas",
+      "x": 5
+     }
+    ],
+    "base": 3
+   },
+   "source": "https://www.americanexpress.com/us/credit-cards/card/hilton-honors/",
+   "verified": "unverified"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 395,
+   "apr": [
+    19.99,
+    29.24
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "travel",
+     "name": "Capital One Travel credit",
+     "value": 300,
+     "words": "Up to $300 a card year on Capital One Travel bookings"
+    },
+    {
+     "id": "anniv",
+     "name": "10,000 anniversary miles",
+     "value": 100,
+     "words": "Worth $100 against travel each card anniversary"
+    },
+    {
+     "id": "trusted",
+     "name": "Global Entry or TSA PreCheck",
+     "value": 30,
+     "words": "Up to $120 every 4 years"
+    }
+   ],
+   "benefits": {
+    "lounge": "Priority Pass and Capital One Lounges (authorized users pay $125 a year since Feb 1, 2026)",
+    "cellPhone": {
+     "words": "Cell phone protection: up to $800 a claim, $50 deductible, 2 claims a year, when the phone bill is paid with the card",
+     "perClaim": 800,
+     "deductible": 50
+    },
+    "rental": "Primary rental car coverage up to $75,000",
+    "tripCancel": "Trip cancellation and interruption",
+    "tripDelay": "Trip delay",
+    "baggage": "Lost luggage",
+    "purchase": "Purchase protection: 90 days, up to $10,000 a claim",
+    "warranty": "Extended warranty: one more year on warranties of 3 years or less"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range",
+    "benefit limits (AwardWallet, Jun 2026)"
+   ],
+   "id": "capone-venture-x",
+   "issuer": "Capital One",
+   "name": "Venture X",
+   "rewards": {
+    "kind": "Miles",
+    "words": "10x hotels and rental cars and 5x flights on Capital One Travel, 2x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 10
+     }
+    ],
+    "base": 2,
+    "note": "Miles are worth 1 cent against travel; transfer partners can be worth more"
+   },
+   "source": "https://www.capitalone.com/credit-cards/compare",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 95,
+   "apr": [
+    19.99,
+    29.24
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "trusted",
+     "name": "Global Entry or TSA PreCheck",
+     "value": 30,
+     "words": "Up to $120 every 4 years"
+    }
+   ],
+   "benefits": {
+    "rental": "Secondary collision damage waiver on rentals paid with the card (decline the counter coverage)",
+    "warranty": "Extended warranty",
+    "tripDelay": "Travel accident insurance"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range",
+    "benefits"
+   ],
+   "id": "capone-venture",
+   "issuer": "Capital One",
+   "name": "Venture",
+   "rewards": {
+    "kind": "Miles",
+    "words": "5x hotels and rental cars on Capital One Travel, 2x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 5
+     }
+    ],
+    "base": 2
+   },
+   "source": "https://www.capitalone.com/credit-cards/compare",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    18.99,
+    28.99
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {
+    "warranty": "Extended warranty",
+    "rental": "Secondary collision damage waiver on rentals paid with the card (decline the counter coverage)"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range",
+    "benefits"
+   ],
+   "id": "capone-ventureone",
+   "issuer": "Capital One",
+   "name": "VentureOne",
+   "rewards": {
+    "kind": "Miles",
+    "words": "5x hotels and rental cars on Capital One Travel, 1.25x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 5
+     }
+    ],
+    "base": 1.25
+   },
+   "source": "https://www.capitalone.com/credit-cards/compare",
+   "verified": "issuer"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 0,
+   "apr": [
+    18.99,
+    28.99
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {
+    "warranty": "Extended warranty"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range",
+    "benefits"
+   ],
+   "id": "capone-quicksilver",
+   "issuer": "Capital One",
+   "name": "Quicksilver",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "1.5% on everything, 5% hotels and rental cars on Capital One Travel",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 5
+     }
+    ],
+    "base": 1.5
+   },
+   "source": "https://www.capitalone.com/credit-cards/compare",
+   "verified": "issuer"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 39,
+   "apr": [
+    29.74,
+    29.74
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR"
+   ],
+   "id": "capone-quicksilverone",
+   "issuer": "Capital One",
+   "name": "QuicksilverOne",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "1.5% on everything",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 1.5
+   },
+   "starter": true,
+   "source": "https://www.capitalone.com/credit-cards/compare",
+   "verified": "issuer",
+   "note": "For fair credit"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 0,
+   "apr": [
+    18.99,
+    28.99
+   ],
+   "intro": {
+    "purchases": 12,
+    "transfers": 12
+   },
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {
+    "warranty": "Extended warranty"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range"
+   ],
+   "id": "capone-savor",
+   "issuer": "Capital One",
+   "name": "Savor",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "3% groceries (not superstores), dining, entertainment and popular streaming, 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "groceries",
+      "x": 3
+     },
+     {
+      "cat": "dining",
+      "x": 3
+     },
+     {
+      "cat": "entertainment",
+      "x": 3
+     },
+     {
+      "cat": "streaming",
+      "x": 3
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.capitalone.com/credit-cards/compare",
+   "verified": "issuer",
+   "note": "Was SavorOne; $0 fee now"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 0,
+   "apr": [
+    29.74,
+    29.74
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR"
+   ],
+   "id": "capone-platinum",
+   "issuer": "Capital One",
+   "name": "Platinum",
+   "rewards": {
+    "kind": "None",
+    "words": "No rewards",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 0
+   },
+   "starter": true,
+   "source": "https://www.capitalone.com/credit-cards/compare",
+   "verified": "issuer"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 0,
+   "apr": [
+    29.74,
+    29.74
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": true,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR"
+   ],
+   "id": "capone-platinum-secured",
+   "issuer": "Capital One",
+   "name": "Platinum Secured",
+   "deposit": "Refundable deposit of $49, $99 or $200",
+   "rewards": {
+    "kind": "None",
+    "words": "No rewards",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 0
+   },
+   "source": "https://www.capitalone.com/credit-cards/compare",
+   "verified": "issuer"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 0,
+   "apr": [
+    29.74,
+    29.74
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": true,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR"
+   ],
+   "id": "capone-quicksilver-secured",
+   "issuer": "Capital One",
+   "name": "Quicksilver Secured",
+   "deposit": "Refundable deposit from $200",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "1.5% on everything",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 1.5
+   },
+   "source": "https://www.capitalone.com/credit-cards/compare",
+   "verified": "issuer"
+  },
+  {
+   "network": "Discover",
+   "annualFee": 0,
+   "apr": [
+    18.24,
+    27.24
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range"
+   ],
+   "id": "discover-it-cash-back",
+   "issuer": "Discover (Capital One)",
+   "name": "Discover it Cash Back",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "5% on rotating quarterly categories (up to $1,500 a quarter, activate), 1% everything else; the first year is matched",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 1,
+    "rotating": {
+     "x": 5,
+     "capYear": 6000
+    }
+   },
+   "source": "https://www.capitalone.com/credit-cards/compare",
+   "verified": "issuer",
+   "note": "Accounts move to the Capital One app from Jul 27, 2026"
+  },
+  {
+   "network": "Discover",
+   "annualFee": 0,
+   "apr": [
+    18.24,
+    27.24
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": null
+   },
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range and intro"
+   ],
+   "id": "discover-it-miles",
+   "issuer": "Discover (Capital One)",
+   "name": "Discover it Miles",
+   "rewards": {
+    "kind": "Miles",
+    "words": "1.5x on everything, 5% hotels, vacation rentals and rental cars on Capital One Travel; the first year is matched",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 5
+     }
+    ],
+    "base": 1.5
+   },
+   "source": "https://doctorofcredit.com/discover-cards-will-transition-to-capital-one-website-app-on-july-27-2026",
+   "verified": "secondary"
+  },
+  {
+   "network": "Discover",
+   "annualFee": 0,
+   "apr": [
+    18.24,
+    27.24
+   ],
+   "intro": {
+    "purchases": 6,
+    "transfers": 18
+   },
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "all of it, as known in mid 2026"
+   ],
+   "id": "discover-it-chrome",
+   "issuer": "Discover (Capital One)",
+   "name": "Discover it Chrome",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "2% gas and restaurants (up to $1,000 a quarter combined), 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "gas",
+      "x": 2,
+      "capYear": 4000,
+      "shared": "chrome"
+     },
+     {
+      "cat": "dining",
+      "x": 2,
+      "capYear": 4000,
+      "shared": "chrome"
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.discover.com/credit-cards/",
+   "verified": "unverified"
+  },
+  {
+   "network": "Discover",
+   "annualFee": 0,
+   "apr": [
+    27.24,
+    27.24
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": true,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "all of it, as known in mid 2026"
+   ],
+   "id": "discover-it-secured",
+   "issuer": "Discover (Capital One)",
+   "name": "Discover it Secured",
+   "deposit": "Refundable deposit from $200",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "2% gas and restaurants (up to $1,000 a quarter combined), 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "gas",
+      "x": 2,
+      "capYear": 4000,
+      "shared": "sec"
+     },
+     {
+      "cat": "dining",
+      "x": 2,
+      "capYear": 4000,
+      "shared": "sec"
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://doctorofcredit.com/capital-one-launches-discover-it-secured-cash-back-credit-card",
+   "verified": "unverified"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 0,
+   "apr": [
+    18.49,
+    28.74
+   ],
+   "intro": {
+    "purchases": null,
+    "transfers": 18
+   },
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "foreign fee"
+   ],
+   "id": "citi-double-cash",
+   "issuer": "Citi",
+   "name": "Double Cash",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "2% on everything (1% when you buy, 1% when you pay), 5% hotels, car rentals and attractions on Citi Travel",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 5
+     }
+    ],
+    "base": 2
+   },
+   "source": "https://www.mastercard.com/us/en/personal/find-a-card/credit-card/issuers/citi.html",
+   "verified": "issuer",
+   "note": "From the Mastercard page for Citi cards"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 0,
+   "apr": [
+    18.49,
+    28.49
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "all of it, as known in mid 2026"
+   ],
+   "id": "citi-custom-cash",
+   "issuer": "Citi",
+   "name": "Custom Cash",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "5% in your top spending category each billing cycle (up to $500), 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "pick",
+      "x": 5,
+      "oneOf": [
+       "dining",
+       "groceries",
+       "gas",
+       "transit",
+       "travel",
+       "streaming",
+       "drugstore",
+       "home",
+       "entertainment"
+      ],
+      "capYear": 6000
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.citi.com/credit-cards/citi-custom-cash-credit-card",
+   "verified": "unverified"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 0,
+   "apr": [
+    18.74,
+    28.74
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "foreign fee"
+   ],
+   "id": "citi-strata",
+   "issuer": "Citi",
+   "name": "Strata",
+   "rewards": {
+    "kind": "Points",
+    "words": "5x hotels, car rentals and attractions on Citi Travel, 3x supermarkets, select transit, gas and EV charging, 3x one category you pick (streaming by default), 2x restaurants, 1x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 5
+     },
+     {
+      "cat": "groceries",
+      "x": 3
+     },
+     {
+      "cat": "transit",
+      "x": 3
+     },
+     {
+      "cat": "gas",
+      "x": 3
+     },
+     {
+      "cat": "streaming",
+      "x": 3
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.mastercard.com/us/en/personal/find-a-card/credit-card/issuers/citi.html",
+   "verified": "issuer"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 95,
+   "apr": [
+    20.24,
+    28.24
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "hotel",
+     "name": "Hotel benefit",
+     "value": 100,
+     "words": "$100 off one hotel stay of $500 or more a calendar year, booked on cititravel.com"
+    }
+   ],
+   "benefits": {
+    "tripCancel": "Trip cancellation and interruption",
+    "tripDelay": "Trip delay",
+    "baggage": "Lost or damaged luggage",
+    "rental": "MasterRental car coverage, secondary"
+   },
+   "checked": "2026-11-06",
+   "unverified": [],
+   "id": "citi-strata-premier",
+   "issuer": "Citi",
+   "name": "Strata Premier",
+   "rewards": {
+    "kind": "Points",
+    "words": "10x hotels, car rentals and attractions on Citi Travel, 3x air travel, other hotels, restaurants, supermarkets, gas and EV charging, 1x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 10
+     },
+     {
+      "cat": "airline",
+      "x": 3
+     },
+     {
+      "cat": "hotel",
+      "x": 3
+     },
+     {
+      "cat": "dining",
+      "x": 3
+     },
+     {
+      "cat": "groceries",
+      "x": 3
+     },
+     {
+      "cat": "gas",
+      "x": 3
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.citi.com/credit-cards/citi-strata-premier-credit-card",
+   "verified": "issuer"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 595,
+   "apr": [
+    20.74,
+    28.74
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "hotel",
+     "name": "Hotel credit",
+     "value": 300,
+     "words": "Up to $300 off a 2-night stay on cititravel.com each year"
+    },
+    {
+     "id": "splurge",
+     "name": "Splurge credit",
+     "value": 200,
+     "words": "Up to $200 a year at chosen brands (from mid 2026; check)"
+    },
+    {
+     "id": "blacklane",
+     "name": "Blacklane",
+     "value": 200,
+     "words": "Up to $200 a year on Blacklane rides (from mid 2026; check)"
+    }
+   ],
+   "benefits": {
+    "lounge": "Priority Pass and Admirals Club passes",
+    "tripCancel": "Trip cancellation and interruption",
+    "tripDelay": "Trip delay",
+    "rental": "Rental car coverage"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "the splurge and Blacklane credits and the protections (as known in mid 2026)"
+   ],
+   "id": "citi-strata-elite",
+   "issuer": "Citi",
+   "name": "Strata Elite",
+   "rewards": {
+    "kind": "Points",
+    "words": "12x hotels, car rentals and attractions and 6x air on Citi Travel, 6x restaurants Friday and Saturday 6 PM to 6 AM ET (3x other times), 1.5x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 12
+     },
+     {
+      "cat": "dining",
+      "x": 3
+     }
+    ],
+    "base": 1.5
+   },
+   "source": "https://www.mastercard.com/us/en/personal/find-a-card/credit-card/issuers/citi.html",
+   "verified": "issuer"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 0,
+   "apr": [
+    18.24,
+    28.99
+   ],
+   "intro": {
+    "purchases": 12,
+    "transfers": 21
+   },
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range and intro, as known in mid 2026"
+   ],
+   "id": "citi-simplicity",
+   "issuer": "Citi",
+   "name": "Simplicity",
+   "rewards": {
+    "kind": "None",
+    "words": "No rewards; no late fees and no penalty APR",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 0
+   },
+   "source": "https://www.citi.com/credit-cards/citi-simplicity-credit-card",
+   "verified": "unverified"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 0,
+   "apr": [
+    16.74,
+    27.49
+   ],
+   "intro": {
+    "purchases": 12,
+    "transfers": 21
+   },
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "foreign fee"
+   ],
+   "id": "citi-diamond-preferred",
+   "issuer": "Citi",
+   "name": "Diamond Preferred",
+   "rewards": {
+    "kind": "None",
+    "words": "No rewards",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 0
+   },
+   "source": "https://www.mastercard.com/us/en/personal/find-a-card/credit-card/issuers/citi.html",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    19.99,
+    19.99
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {
+    "warranty": "Extended warranty",
+    "purchase": "Damage and theft purchase protection",
+    "rental": "Secondary rental car coverage"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "all of it, as known in mid 2026"
+   ],
+   "id": "citi-costco",
+   "issuer": "Citi",
+   "name": "Costco Anywhere Visa",
+   "store": "Costco",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "5% gas at Costco and 4% other gas and EV charging (up to $7,000 a year), 3% restaurants and travel, 2% Costco, 1% everything else; paid once a year as a reward certificate",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "gas",
+      "x": 4,
+      "capYear": 7000
+     },
+     {
+      "cat": "dining",
+      "x": 3
+     },
+     {
+      "cat": "travel",
+      "x": 3
+     },
+     {
+      "cat": "store",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.citi.com/credit-cards/citi-costco-anywhere-visa-credit-card",
+   "verified": "unverified",
+   "note": "Needs a Costco membership"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 99,
+   "apr": [
+    20.24,
+    29.74
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "bag",
+     "name": "First checked bag free",
+     "value": 140,
+     "words": "On domestic American flights; about $140 a year on two round trips"
+    }
+   ],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "all of it, as known in mid 2026"
+   ],
+   "id": "citi-aadvantage-platinum",
+   "issuer": "Citi",
+   "name": "AAdvantage Platinum Select",
+   "rewards": {
+    "kind": "Miles",
+    "words": "2x American Airlines, restaurants and gas, 1x everything else",
+    "pointValue": 0.012,
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 2
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "gas",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.aa.com/i18n/aadvantage-program/aadvantage-credit-cards.jsp",
+   "verified": "unverified",
+   "note": "$0 the first year"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    17.74,
+    27.74
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "foreign fee"
+   ],
+   "id": "bofa-customized-cash",
+   "issuer": "Bank of America",
+   "name": "Customized Cash Rewards",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "3% in one category you pick (gas, online shopping, dining, travel, drugstores or home improvement), 2% groceries and wholesale clubs (the 3% and 2% share $2,500 a quarter), 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "pick",
+      "x": 3,
+      "oneOf": [
+       "gas",
+       "online",
+       "dining",
+       "travel",
+       "drugstore",
+       "home"
+      ],
+      "capYear": 10000,
+      "shared": "ccr"
+     },
+     {
+      "cat": "groceries",
+      "x": 2,
+      "capYear": 10000,
+      "shared": "ccr"
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.bankofamerica.com/credit-cards/",
+   "verified": "issuer",
+   "note": "Preferred Rewards clients earn 25% to 75% more"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    17.74,
+    27.74
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "foreign fee"
+   ],
+   "id": "bofa-unlimited-cash",
+   "issuer": "Bank of America",
+   "name": "Unlimited Cash Rewards",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "1.5% on everything",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 1.5
+   },
+   "source": "https://www.bankofamerica.com/credit-cards/",
+   "verified": "issuer",
+   "note": "Preferred Rewards clients earn 25% to 75% more"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    17.74,
+    27.74
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [],
+   "id": "bofa-travel-rewards",
+   "issuer": "Bank of America",
+   "name": "Travel Rewards",
+   "rewards": {
+    "kind": "Points",
+    "words": "1.5x on everything, 3x on travel booked with Bank of America Travel",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 3
+     }
+    ],
+    "base": 1.5
+   },
+   "source": "https://www.bankofamerica.com/credit-cards/",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 95,
+   "apr": [
+    19.74,
+    27.74
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "airline",
+     "name": "Airline fees and TSA PreCheck or Global Entry",
+     "value": 100,
+     "words": "Up to $100 a year in airline incidentals, plus up to $100 for TSA PreCheck or Global Entry (every 4 years)"
+    }
+   ],
+   "benefits": {
+    "tripCancel": "Trip cancellation and interruption",
+    "tripDelay": "Trip delay",
+    "baggage": "Lost and delayed baggage",
+    "rental": "Rental car coverage",
+    "purchase": "Purchase protection",
+    "warranty": "Extended warranty"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "the split of the $200 in credits",
+    "protection limits"
+   ],
+   "id": "bofa-premium-rewards",
+   "issuer": "Bank of America",
+   "name": "Premium Rewards",
+   "rewards": {
+    "kind": "Points",
+    "words": "2x travel and dining, 1.5x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travel",
+      "x": 2
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     }
+    ],
+    "base": 1.5
+   },
+   "source": "https://www.bankofamerica.com/credit-cards/",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    15.24,
+    26.24
+   ],
+   "intro": {
+    "purchases": 21,
+    "transfers": 21
+   },
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "foreign fee"
+   ],
+   "id": "bofa-bankamericard",
+   "issuer": "Bank of America",
+   "name": "BankAmericard",
+   "rewards": {
+    "kind": "None",
+    "words": "No rewards; no penalty APR",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 0
+   },
+   "source": "https://www.bankofamerica.com/credit-cards/",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    27.74,
+    27.74
+   ],
+   "intro": null,
+   "foreignFee": 0.03,
+   "secured": true,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "foreign fee"
+   ],
+   "id": "bofa-customized-cash-secured",
+   "issuer": "Bank of America",
+   "name": "Customized Cash Rewards Secured",
+   "deposit": "Deposit of $200 to $5,000, reviewed for return",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "3% in one category you pick, 2% groceries and wholesale clubs (sharing $2,500 a quarter), 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "pick",
+      "x": 3,
+      "oneOf": [
+       "gas",
+       "online",
+       "dining",
+       "travel",
+       "drugstore",
+       "home"
+      ],
+      "capYear": 10000,
+      "shared": "ccrs"
+     },
+     {
+      "cat": "groceries",
+      "x": 2,
+      "capYear": 10000,
+      "shared": "ccrs"
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.bankofamerica.com/credit-cards/",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    18.74,
+    28.74
+   ],
+   "intro": {
+    "purchases": 12,
+    "transfers": 12
+   },
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {
+    "cellPhone": {
+     "words": "Cell phone protection: up to $600 a claim, $25 deductible, 2 claims a year, when the monthly phone bill is paid with the card. Not for a lost phone",
+     "perClaim": 600,
+     "deductible": 25
+    },
+    "rental": "Secondary collision damage waiver on rentals paid with the card (decline the counter coverage)"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "foreign fee"
+   ],
+   "id": "wf-active-cash",
+   "issuer": "Wells Fargo",
+   "name": "Active Cash",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "2% on everything",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 2
+   },
+   "source": "https://creditcards.wellsfargo.com/cards/active-cash-credit-card",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    18.74,
+    28.74
+   ],
+   "intro": {
+    "purchases": 12,
+    "transfers": null
+   },
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {
+    "cellPhone": {
+     "words": "Cell phone protection: up to $600 a claim, $25 deductible, 2 claims a year, when the monthly phone bill is paid with the card. Not for a lost phone",
+     "perClaim": 600,
+     "deductible": 25
+    },
+    "rental": "Secondary collision damage waiver on rentals paid with the card (decline the counter coverage)"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "cell phone protection on this card (Wells Fargo offers it on its Visa Signature cards; checked on Active Cash)"
+   ],
+   "id": "wf-autograph",
+   "issuer": "Wells Fargo",
+   "name": "Autograph",
+   "rewards": {
+    "kind": "Points",
+    "words": "3x restaurants, travel, gas, transit, popular streaming and phone plans, 1x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "dining",
+      "x": 3
+     },
+     {
+      "cat": "travel",
+      "x": 3
+     },
+     {
+      "cat": "gas",
+      "x": 3
+     },
+     {
+      "cat": "transit",
+      "x": 3
+     },
+     {
+      "cat": "streaming",
+      "x": 3
+     },
+     {
+      "cat": "phone",
+      "x": 3
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://creditcards.wellsfargo.com/cards/",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 95,
+   "apr": [
+    20.24,
+    28.24
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "airline",
+     "name": "Airline credit",
+     "value": 50,
+     "words": "$50 a year after a $50 airline purchase"
+    }
+   ],
+   "benefits": {
+    "cellPhone": {
+     "words": "Cell phone protection: up to $1,000 a claim, $25 deductible, 2 claims a year, when the phone bill is paid with the card",
+     "perClaim": 1000,
+     "deductible": 25
+    },
+    "tripCancel": "Trip cancellation and interruption",
+    "baggage": "Lost luggage",
+    "rental": "Rental car coverage"
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range",
+    "cell phone protection amount ($1,000 as known in mid 2026)",
+    "protections"
+   ],
+   "id": "wf-autograph-journey",
+   "issuer": "Wells Fargo",
+   "name": "Autograph Journey",
+   "rewards": {
+    "kind": "Points",
+    "words": "5x hotels, 4x airlines, 3x other travel and restaurants, 1x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "hotel",
+      "x": 5
+     },
+     {
+      "cat": "airline",
+      "x": 4
+     },
+     {
+      "cat": "travel",
+      "x": 3
+     },
+     {
+      "cat": "dining",
+      "x": 3
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://creditcards.wellsfargo.com/cards/",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    17.74,
+    28.49
+   ],
+   "intro": {
+    "purchases": 21,
+    "transfers": 21
+   },
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {
+    "cellPhone": {
+     "words": "Cell phone protection: up to $600 a claim, $25 deductible, 2 claims a year, when the monthly phone bill is paid with the card. Not for a lost phone",
+     "perClaim": 600,
+     "deductible": 25
+    }
+   },
+   "checked": "2026-11-06",
+   "unverified": [
+    "cell phone protection on this card",
+    "foreign fee"
+   ],
+   "id": "wf-reflect",
+   "issuer": "Wells Fargo",
+   "name": "Reflect",
+   "rewards": {
+    "kind": "None",
+    "words": "No rewards",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 0
+   },
+   "source": "https://creditcards.wellsfargo.com/cards/",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    19.49,
+    28.74
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range and the 5% category list (as known in mid 2026)"
+   ],
+   "id": "usb-cash-plus",
+   "issuer": "US Bank",
+   "name": "Cash+",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "5% on two categories you pick each quarter (first $2,000 combined, enroll), 2% on one everyday category (gas, groceries or restaurants), 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "pick",
+      "x": 5,
+      "oneOf": [
+       "phone",
+       "streaming",
+       "home",
+       "entertainment",
+       "online",
+       "transit"
+      ],
+      "capYear": 8000
+     },
+     {
+      "cat": "pick2",
+      "x": 2,
+      "oneOf": [
+       "gas",
+       "groceries",
+       "dining"
+      ]
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.usbank.com/credit-cards/compare.html",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    18.24,
+    28.74
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [
+    {
+     "id": "streaming",
+     "name": "Streaming credit",
+     "value": 15,
+     "words": "$15 a year after 11 months in a row of streaming purchases"
+    }
+   ],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range"
+   ],
+   "id": "usb-altitude-go",
+   "issuer": "US Bank",
+   "name": "Altitude Go",
+   "rewards": {
+    "kind": "Points",
+    "words": "4x dining, takeout and delivery (first $2,000 a quarter), 2x groceries, gas, EV charging and streaming, 1x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "dining",
+      "x": 4,
+      "capYear": 8000
+     },
+     {
+      "cat": "groceries",
+      "x": 2
+     },
+     {
+      "cat": "gas",
+      "x": 2
+     },
+     {
+      "cat": "streaming",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.usbank.com/credit-cards/compare.html",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    18.24,
+    28.74
+   ],
+   "intro": {
+    "purchases": 15,
+    "transfers": 15
+   },
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range and fee (now $0, as known in mid 2026)"
+   ],
+   "id": "usb-altitude-connect",
+   "issuer": "US Bank",
+   "name": "Altitude Connect",
+   "rewards": {
+    "kind": "Points",
+    "words": "4x travel and gas and EV charging (gas on the first $1,000 a quarter), 2x dining, streaming and groceries, 1x everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "travel",
+      "x": 4
+     },
+     {
+      "cat": "gas",
+      "x": 4,
+      "capYear": 4000
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "streaming",
+      "x": 2
+     },
+     {
+      "cat": "groceries",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.usbank.com/credit-cards/compare.html",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    18.24,
+    28.74
+   ],
+   "intro": {
+    "purchases": 12,
+    "transfers": 12
+   },
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR range"
+   ],
+   "id": "usb-smartly",
+   "issuer": "US Bank",
+   "name": "Smartly Visa Signature",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "2% on everything, up to 4% with qualifying US Bank savings balances (first $10,000 a billing cycle)",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 2
+   },
+   "source": "https://www.usbank.com/credit-cards/compare.html",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    28.74,
+    28.74
+   ],
+   "intro": null,
+   "foreignFee": 0.03,
+   "secured": true,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR"
+   ],
+   "id": "usb-secured",
+   "issuer": "US Bank",
+   "name": "Secured Visa",
+   "deposit": "Deposit of $300 to $5,000",
+   "rewards": {
+    "kind": "None",
+    "words": "No rewards",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 0
+   },
+   "source": "https://www.usbank.com/credit-cards/compare.html",
+   "verified": "issuer"
+  },
+  {
+   "network": "Mastercard",
+   "annualFee": 0,
+   "apr": [
+    17.49,
+    27.74
+   ],
+   "intro": null,
+   "foreignFee": 0,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "the 3% merchant list"
+   ],
+   "id": "apple-card",
+   "issuer": "Apple (Goldman Sachs, moving to Chase)",
+   "name": "Apple Card",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "3% at Apple and select merchants with Apple Pay, 2% with Apple Pay, 1% with the physical card",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "applePay",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.apple.com/newsroom/2026/01/chase-to-become-new-issuer-of-apple-card/",
+   "verified": "issuer",
+   "note": "No fees. Chase becomes the issuer about two years after Jan 2026; Mastercard stays the network"
+  },
+  {
+   "network": "Store",
+   "annualFee": 0,
+   "apr": [
+    29.95,
+    29.95
+   ],
+   "intro": null,
+   "foreignFee": null,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR, as known in mid 2026"
+   ],
+   "id": "td-target-circle",
+   "issuer": "TD Bank",
+   "name": "Target Circle Card",
+   "store": "Target",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "5% off at Target and Target.com",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "store",
+      "x": 5
+     }
+    ],
+    "base": 0
+   },
+   "source": "https://www.target.com/circlecard",
+   "verified": "unverified"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": null,
+   "intro": null,
+   "foreignFee": null,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "APR"
+   ],
+   "id": "capone-kohls",
+   "issuer": "Capital One",
+   "name": "Kohl's Rewards Visa",
+   "aprNote": "Not on the issuer page; see the card terms",
+   "store": "Kohl's",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "7.5% at Kohl's, 3% gas, 2% groceries, 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "store",
+      "x": 7.5
+     },
+     {
+      "cat": "gas",
+      "x": 3
+     },
+     {
+      "cat": "groceries",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.capitalone.com/credit-cards/compare",
+   "verified": "issuer"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 0,
+   "apr": [
+    30.74,
+    30.74
+   ],
+   "intro": null,
+   "foreignFee": 0.03,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "all of it, as known in mid 2026"
+   ],
+   "id": "citi-best-buy",
+   "issuer": "Citi",
+   "name": "My Best Buy Visa",
+   "store": "Best Buy",
+   "rewards": {
+    "kind": "Points",
+    "words": "5% back at Best Buy (6% for members), 3% gas, 2% dining and groceries, 1% everything else",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "store",
+      "x": 5
+     },
+     {
+      "cat": "gas",
+      "x": 3
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "groceries",
+      "x": 2
+     }
+    ],
+    "base": 1
+   },
+   "source": "https://www.bestbuy.com/site/misc/best-buy-credit-cards/pcmcat102500050032.c",
+   "verified": "unverified"
+  },
+  {
+   "network": "Store",
+   "annualFee": 0,
+   "apr": [
+    33.99,
+    33.99
+   ],
+   "intro": null,
+   "foreignFee": null,
+   "secured": false,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "all of it, as known in mid 2026"
+   ],
+   "id": "synchrony-lowes",
+   "issuer": "Synchrony",
+   "name": "Lowe's Advantage Card",
+   "store": "Lowe's",
+   "rewards": {
+    "kind": "Cash back",
+    "words": "5% off at Lowe's (or special financing instead)",
+    "pointValue": 0.01,
+    "rates": [
+     {
+      "cat": "store",
+      "x": 5
+     }
+    ],
+    "base": 0
+   },
+   "source": "https://www.lowes.com/l/credit/credit-center",
+   "verified": "unverified"
+  },
+  {
+   "network": "Visa",
+   "annualFee": 35,
+   "apr": [
+    25.64,
+    25.64
+   ],
+   "intro": null,
+   "foreignFee": 0.03,
+   "secured": true,
+   "credits": [],
+   "benefits": {},
+   "checked": "2026-11-06",
+   "unverified": [
+    "all of it, as known in mid 2026"
+   ],
+   "id": "opensky-secured",
+   "issuer": "Capital Bank",
+   "name": "OpenSky Secured Visa",
+   "deposit": "Deposit from $200; no credit check to apply",
+   "rewards": {
+    "kind": "None",
+    "words": "No rewards",
+    "pointValue": 0.01,
+    "rates": [],
+    "base": 0
+   },
+   "source": "https://www.openskycc.com/",
+   "verified": "unverified"
+  }
+ ]
+}

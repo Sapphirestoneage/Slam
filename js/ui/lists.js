@@ -5,6 +5,9 @@ import { addPresets } from '../presets.js';
 import { METHODS } from '../registry/debt.js';
 import { personLabels } from '../registry/couples.js';
 import { institutionLink } from './institutions-ui.js';
+import { cardPickLink } from './cards-ui.js';
+import { libraryCardOf } from '../cardlib.js';
+import { creditMove } from '../math/cards.js';
 import { tapPick, openSource, recordList as S_recordList, popover as S_popover, closePop as S_closePop, moreBlock as S_moreBlock, secWrap as S_secWrap, fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, perChip, nameInput, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
 import { paidInFull } from '../completion.js';
 import { pct } from '../format.js';
@@ -57,7 +60,7 @@ export function debtList(ref, { cards = null } = {}) {
     focus: ['Debt', 'Balance', 'APR', 'Payment / mo'], // session 1: type, balance, APR, minimum
     paidWith: false,
     columns: [
-      { label: 'Debt', render: (ctx, r, m, up) => h('span.stack.inst-cell', { style: { gap: '2px' } }, nameInput(r.name, v => up({ name: v }), { hint: 'Nickname (optional)', tip: r.type, width: 170, key: `${r.id}:name` }), institutionLink(ctx, r, up, { word: isCard(r) ? 'Add issuer' : 'Add lender' })) }, // batch 11 (5e, 5f): a link, then a name that wraps
+      { label: 'Debt', render: (ctx, r, m, up) => h('span.stack.inst-cell', { style: { gap: '2px' } }, nameInput(r.name, v => up({ name: v }), { hint: 'Nickname (optional)', tip: r.type, width: 170, key: `${r.id}:name` }), isCard(r) && !r.values.cardId && !r.values.institutionId ? cardPickLink(ctx, r) : institutionLink(ctx, r, up, { word: isCard(r) ? 'Add issuer' : 'Add lender' })) }, // batch 11 (5e, 5f): a link, then a name that wraps; batch 30: a card with no issuer yet asks Which card is it? (the library fills the issuer)
       // Batch 7, item 11: a card's first question is whether the statement is paid in full each month. In full: the
       // balance is the statement balance (it still counts for utilization), there is no APR and no payment to ask.
       // Carries: the balance carried, the APR (a 25% guess until typed) and the payment, like any debt.
@@ -79,7 +82,10 @@ export function debtList(ref, { cards = null } = {}) {
             h('button.btn.small.use-guess', { type: 'button', title: `Keep ${shown}% (the typical ${r.type.toLowerCase()} rate) as the APR`, 'aria-label': `Use ${shown}% as the APR for ${r.name || r.type}`, onclick: () => { ctx.store.transaction('Use the typical APR', () => { ctx.store.update(r.id, { apr: typical }); ctx.store.setFieldStatus(r.id, 'apr', null); }); toast(`APR set to ${shown}%.`, { undo: () => ctx.store.undo() }); } }, 'Use'), // batch 19: Use before the box, so the box sits in the same place as on rows without one
             pctInput(null, v => up({ apr: v }), { key: `${r.id}:apr`, hint: shown }));
         }
-        return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, d?.aprGuess ? h('span.tag.guess', {}, '? Guess') : null, pctInput(r.values.apr, v => up({ apr: v }), { key: `${r.id}:apr`, hint: 'APR' }));
+        const box = pctInput(r.values.apr, v => up({ apr: v }), { key: `${r.id}:apr`, hint: 'APR' });
+        const lc = isCard(r) ? libraryCardOf(r) : null; // batch 30: the library's range is a hint only; the APR is the client's own
+        if (lc?.apr) box.title = `Typical for the ${lc.name}: ${lc.apr[0]}% to ${lc.apr[1]}%. Type the APR on the statement.`;
+        return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, d?.aprGuess ? h('span.tag.guess', {}, '? Guess') : null, box);
       } },
       { label: 'Payment / mo', num: true, render: (ctx, r, m, up) => {
         const d = m.debts.find(x => x.id === r.id);
@@ -408,6 +414,7 @@ function debtSecondary(ctx, r, up) {
       labelled('Utilization', v.limit && v.balance != null ? h('span.computed', { title: 'Balance divided by limit' }, pct(v.balance / v.limit)) : h('span.muted', {}, 'Needs balance and limit'),
         { note: v.limit && v.balance / v.limit > 0.3 ? 'Over 30% can lower your score' : null }),
       labelled('Autopay', toggle(['On', 'Off'], v.autopay ?? null, x => up({ autopay: x }), { label: 'Autopay', clearable: true }), { note: v.autopay === 'Off' ? 'Turn it on for at least the minimum: one late payment hurts' : null, ...park(ctx, r, 'autopay') }),
+      labelled('Which card', cardPickLink(ctx, r, { asButton: true }), { note: libraryCardOf(r) ? `From the library: ${libraryCardOf(r).name}` : 'Fills the name, issuer, fee and rewards' }), // batch 30
       labelled('Rewards', tapPick(['Cash back', 'Points', 'Miles', 'None'], v.rewards ?? null, x => up({ rewards: x }), { label: 'Rewards type' }), park(ctx, r, 'rewards')),
       labelled('Personal or business', toggle(['Personal', 'Business'], v.use ?? null, x => up({ use: x }), { label: 'Personal or business' })),
       billsOnCard(ctx, r),
@@ -508,10 +515,10 @@ export function creditCard(ctx) {
     h('table.rows.mini.credit-cards-table', {}, h('thead', {}, h('tr', {}, ['Card', 'Limit', 'Used', 'Opened', 'Age'].map(t => h('th', {}, t)))),
       h('tbody', {}, cards.map(r => { const x = H.per.find(q => q.id === r.id); return h('tr', {},
         h('td', {}, r.name || 'Card'),
-        h('td', {}, moneyInput(r.values.limit ?? null, v => ctx.store.update(r.id, { limit: v }), { hint: 'Add limit', key: `${r.id}:limit:health` })),
-        h('td.num', {}, x?.util == null ? h('span.muted.small', {}, '–') : pct(x.util)),
-        h('td', {}, openedPicker(ctx, r)),
-        h('td', {}, x?.ageMonths == null ? h('span.muted.small', {}, 'Pick the month') : yearsText(x.ageMonths))); })))) : null;
+        h('td', { 'data-label': 'Limit' }, moneyInput(r.values.limit ?? null, v => ctx.store.update(r.id, { limit: v }), { hint: 'Add limit', key: `${r.id}:limit:health` })),
+        h('td.num', { 'data-label': 'Used' }, x?.util == null ? h('span.muted.small', {}, '–') : pct(x.util)),
+        h('td', { 'data-label': 'Opened' }, openedPicker(ctx, r)),
+        h('td', { 'data-label': 'Age' }, x?.ageMonths == null ? h('span.muted.small', {}, 'Pick the month') : yearsText(x.ageMonths))); })))) : null; // batch 30: data-label names each cell on a phone, where the table stacks
   const rest = () => h('div.form-grid.credit-more', {},
     perCard,
     cards.length ? h('div.stack', { style: { gap: '2px' } }, h('span.label', {}, 'Account age'), H.oldestMonths == null ? h('span.muted.small', {}, 'Pick each card\'s opened month') : h('span', {}, `Oldest ${yearsText(H.oldestMonths)} · average ${yearsText(Math.round(H.averageMonths))}`)) : null,
@@ -523,8 +530,16 @@ export function creditCard(ctx) {
       labelled('Hard inquiries in the last 2 years', tapCount(c.inquiries ?? null, n => set({ inquiries: n }), 'Hard inquiries in the last 2 years'), { note: 'More than 2 holds a strong score at OK' }),
       labelled('Credit freeze', h('div.row-line', { style: { gap: '6px', flexWrap: 'wrap' } }, BUREAUS.map(b => h('button.chip-btn', { type: 'button', 'aria-pressed': String(freeze[b] === true), title: freeze[b] === true ? `Frozen at ${b}. Tap to mark it off` : `Tap to mark it frozen at ${b}`, onclick: () => set({ [`freeze${b}`]: freeze[b] === true ? false : true }) }, `${b}: ${freeze[b] === true ? 'on' : freeze[b] === false ? 'off' : 'not set'}`))),
         { note: H.frozen.length === 3 ? 'Frozen at all three' : 'A freeze stops new accounts in your name' }));
-  return S_secWrap(h('section.section.area-debt', {}, h('div.section-title', {}, h('h2', {}, 'Credit health')),
-    h('div.card', {}, scoreLine, S_moreBlock('cards:credit-health', rest, { label: 'Each card, account age, late payments, inquiries, freeze' }))), 'cards:health', { summary: [c.score != null ? `Score ${c.score}${c.source ? ` (${c.source})` : ''}` : 'No score yet', H.overall != null ? `Utilization ${pct(H.overall)}` : cards.length ? 'Utilization needs a card limit' : null].filter(Boolean).join(' · ') }); // batch 13: a caret section, closed by default
+  // Batch 30 (Eli: "see a client's credit beyond a simple debt view"): Your credit, one slim closed line (the score,
+  // utilization, the oldest card, inquiries, on-time history) and, always in view, what would move the score most (M9D).
+  const move = creditMove({ score: c.score ?? null, overall: H.overall, cards: cards.map(r => ({ balance: r.values.balance ?? 0, limit: r.values.limit ?? 0 })), latePayments: c.latePayments ?? null,
+    autopayOff: cards.filter(r => r.values.autopay === 'Off').length, inquiries: c.inquiries ?? null, oldestMonths: H.oldestMonths });
+  const summary = [c.score != null ? `Score ${c.score}${c.source ? ` (${c.source})` : ''}` : 'No score yet', H.overall != null ? `${pct(H.overall)} of limits used` : cards.length ? 'Utilization needs a card limit' : null,
+    H.oldestMonths != null ? `oldest card ${yearsText(H.oldestMonths)}` : null, c.inquiries != null ? `${c.inquiries >= 4 ? '4+' : c.inquiries} ${c.inquiries === 1 ? 'inquiry' : 'inquiries'}` : null,
+    c.latePayments === false ? 'on time' : c.latePayments === true ? `${c.lateCount ? `${c.lateCount >= 4 ? '4+' : c.lateCount} late` : 'late'} payments` : null].filter(Boolean).join(' · ');
+  const head = h('div.section-title', {}, h('h2', {}, 'Your credit'), h('span.credit-move', { title: move.text }, h('span.label', {}, 'Moves it most: '), move.text));
+  return S_secWrap(h('section.section.area-debt.your-credit', {}, head,
+    h('div.card', {}, scoreLine, S_moreBlock('cards:credit-health', rest, { label: 'Each card, account age, late payments, inquiries, freeze' }))), 'cards:health', { summary }); // batch 13: a caret section, closed by default
 }
 const mathButtonFor = (r, text) => h('span', { title: r.text }, text);
 // The month a card was opened, as two taps (a month, then a year): no typing.
