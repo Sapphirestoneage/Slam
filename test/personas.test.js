@@ -72,7 +72,7 @@ for (const def of defs) {
   if (!existsSync(path)) continue;
   const doc = importFile(readFileSync(path, 'utf8'));
   const a = foo(doc, ref, { now }).here, b = foo(doc, ref, { now: new Date(now.getTime() + 15 * 86400000) }).here;
-  test(`persona ${def.id}: the FOO step holds two weeks later`, { todo: a !== b ? `finding F-LATE: step ${a} on Nov 5, step ${b} on Nov 20 (an undated payment counts as a late bill)` : false }, () => { assert.equal(b, a); });
+  test(`persona ${def.id}: the FOO step holds two weeks later`, () => { assert.equal(b, a, `step ${a} on Nov 5, step ${b} on Nov 20`); });
 }
 
 test('personas: the twelve are all there, and the one-answer checks hold for each', () => {

@@ -211,3 +211,13 @@ people, from someone below zero to a multimillionaire. No app behavior changed.
 
 QA: 512 tests in UTC and America/New_York (490 pass, 12 skip, 10 todo: the persona findings). The persona run: all 12
 load through Import, 0 console errors; findings ranked in the batch 16 report.
+
+## Nov 6 2026: F-LATE fix (late bills only when they can be late)
+
+A payment with no due day landed on the 1st and, from the 7th, counted as a late bill, so every client dropped to FOO step 1
+for the rest of the month (Batch 16 finding F-LATE, question 215). js/math/foo.js now counts a late bill only in a month the
+client is tracking (at least one payment marked on the calendar), only for a real due day (not a guessed day or a spread
+weekly amount), and only 6+ days past it and still Planned. test/late-bill.test.js covers both sides; the persona
+"FOO step holds two weeks later" checks are real tests again and pass for all 12.
+
+QA: 519 tests in UTC and America/New_York, 0 fail.

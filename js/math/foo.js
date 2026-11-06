@@ -59,9 +59,13 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   const layer = id => L.layers.find(l => l.id === id);
   const bigE = L.layers.filter(l => l.id.startsWith('big-e'));
   const soonGaps = L.layers.filter(l => l.id.startsWith('gap:') && l.step === 1), laterGaps = L.layers.filter(l => l.id.startsWith('gap:') && l.step === 8);
-  // A late bill: a bill or debt payment more than 5 days past its day this month and still not marked paid.
+  // A late bill: a bill or debt payment more than 5 days past its real due day this month and still not marked paid,
+  // counted only in a month the client is tracking (at least one payment marked). A guessed day (no due day yet) or a
+  // spread weekly amount is never late, and an untracked month says nothing about lateness (finding F-LATE).
   const fiveDaysAgo = new Date(now.getTime() - 5 * 86400000).toISOString().slice(0, 10);
-  const late = instances(doc, ref, ymOf(now), { now }).filter(i => (i.kind === 'bill' || i.kind === 'debt') && i.status === 'Planned' && i.date < fiveDaysAgo && !i.onCard);
+  const monthList = instances(doc, ref, ymOf(now), { now });
+  const tracking = monthList.some(i => i.status !== 'Planned');
+  const late = !tracking ? [] : monthList.filter(i => (i.kind === 'bill' || i.kind === 'debt') && i.status === 'Planned' && i.date < fiveDaysAgo && !i.onCard && !i.guessDate && !i.spread);
   const paydayDebt = debts.filter(d => PAYDAY.has(d.type) && (d.balance ?? 0) > 0);
   const roth = x.accounts.filter(a => a.type === 'Roth IRA');
   const rothRec = roth.map(a => recOf(a.id));
