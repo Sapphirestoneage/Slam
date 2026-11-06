@@ -162,6 +162,11 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
     }
     return { id: r.id, name: r.name ?? r.type, type: r.type, balance, balanceRough: balance != null && roughAt(r, 'balance'), apr: apr.v, aprGuess: !!apr.guess, payment, paymentIsMinimum, inFull, choice, stress: r.stress, hassle: r.values.hassle ?? null, linkedTo: r.linkedTo,
       promoEnd: r.values.promoEnd ?? null, forgiven: r.values?.pslf === 'Yes' || r.values?.forgiveness === true || r.values?.forgiveness === 'Yes' };
+  }).map(d => { // batch 29: a forgiveness loan with its payments left typed ends there on the one plan (the rest is forgiven)
+    const left = live.find(r => r.id === d.id)?.values?.paymentsLeft;
+    const rec = live.find(r => r.id === d.id);
+    const e = rec?.values?.noRoll ? { ...d, noRoll: true } : d; // a what-if copy's new loan (js/math/truecost.js), never a client's row
+    return e.forgiven && Number(left) > 0 ? { ...e, forgiveAt: Math.round(Number(left)) } : e;
   });
   // Enter once, show in both: each debt's payment is a line From Debt; a typed line that looks like a debt payment or
   // a premium already paid asks "Same as your ...?" and is left out only after Yes (js/math/linked.js).
@@ -319,7 +324,7 @@ export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
   const lay1 = cashLayers(x, layerOptions(doc, ref, x, now));
   const firstLeft = RULES.freedFollowsFoo ? lay1.layers.filter(l => l.step === 1).reduce((s, l) => s + (l.left ?? 0), 0) : 0;
   const firstMonths = toDebt > 0 && firstLeft > 0.5 ? Math.ceil(firstLeft / toDebt - 1e-9) : 0;
-  out.debtPlan = debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: promoSoonIds(x.debts, now), surplus: toDebt, extra: x.debtExtra, surplusFrom: firstMonths, changes: rule.on ? surplusChanges : null });
+  out.debtPlan = debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: promoSoonIds(x.debts, now), surplus: toDebt, extra: x.debtExtra, surplusFrom: firstMonths, changes: rule.on ? surplusChanges : null, inflation: x.inflation });
   out.debtPlanMinimum = rule.on || x.debtExtra ? debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: promoSoonIds(x.debts, now) }) : out.debtPlan; // each debt at its own payment only
   out.debtRule = { ...rule, toDebt, toDebtRaw: rule.on && surplus !== null ? surplus - contributions - goalSaving : null, firstLeft, heavyMonths: out.debtPlan.heavyMonths, first: promoSoonIds(x.debts, now), changes: rule.on ? surplusChanges : null };
   for (const d of [...x.debts, ...out.debts]) { const p = out.debtPlan.debts.find(q => q.id === d.id); d.planMonths = d.inFull ? null : p?.paidOffMonth ?? null; d.minimumMonths = d.inFull ? null : out.debtPlanMinimum.debts.find(q => q.id === d.id)?.paidOffMonth ?? null; d.heavy = isHeavyDebt(d); }

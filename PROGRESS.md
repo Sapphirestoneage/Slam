@@ -627,3 +627,41 @@ Steve Krug's method, adapted: eight tasks (Alexis's first session, Maya's homewo
 6. The employer match is one tap (the usual formulas, lists.matchPicks); an empty list's Add picker opens at its button; Home names both runways for a job loss; Month end says what a gut-only close leaves out and has Same as plan; Fast Track's count follows the answers and its end screen and the share view use plain words; the clipped Move to next session tip is short.
 
 Before and after (16 runs): 169 actions to 138, 28 hesitations to 2, 6 dead ends to 0, 2 back presses and 2 wrong clicks to 0, tasks done 6 to 16 (task 4 partly: no household view in Living together; task 6 by Batch 23's screen). Effort scoreboard unchanged (35 / 38).
+## Batch 29 (Nov 6 2026): the true cost of debt, borrowing, and the student loan decision
+
+Eli's Level 15 Borrow design (Oct 11 to 12 2026), folded into Plan › Debt payoff as four caret sections, closed until
+opened, all taps, every number from the client's own plan (js/math/truecost.js, js/math/studentloan.js;
+js/ui/truecost-ui.js, css/truecost.css).
+
+1. The true cost of each debt (M9T). One line a debt: the interest still to pay on the one plan and in today's dollars,
+   the months of FI it costs (the FI date as it is, against the plan run again with that debt gone today and its
+   payment kept), the rate after tax where interest is deductible (the student loan interest deduction; a home loan only
+   when itemizing beats the standard deduction; a rental's or a business's loan as a cost of that income), and when the
+   debt is still owed at FI with its payment in spending, what it adds to the FI number. Maya's card: $300 of interest,
+   $299 in today's dollars, FI 4 months later (Aug 2049 against Apr 2049). Tom's mortgage saves no tax ($12,350 of
+   interest under the $16,100 standard deduction) and carries $585,000 of his FI number; his rental loan is 4.94% after tax.
+2. Thinking about borrowing? (M9L). What for (car, home, school, business, stuff, other), how much, up to three offers
+   (rate, years, fees), and Pay cash beside them: the payment, the total, what it costs over the amount (and in today's
+   dollars), after tax where it applies, the FI date, the debt-free month when it moves, the free money a month, and big
+   e. Each offer runs through the plan on a copy, never saved. A new loan under 8% gives its payment back to the surplus
+   when it ends (it does not roll into the next debt, so a car loan never moves the debt-free date sooner). Tom, two car
+   offers and cash in 7 taps: $482 and $401 a month, FI 3 months later either way; cash takes big e from $34,000 to $9,000.
+3. What it bought (M9L). For school or business borrowing: extra pay a year (quick picks), when it starts, the year it
+   is paid back (the extra take-home adds up to the loan's total) and the FI date with the loan alone and with the extra
+   pay. Dana, $25,000 for school at 6.4% and $10,000 a year more: paid back by 2031. Never a verdict.
+4. Student loan decision (M9S). For federal student loans, held as one: Standard (the tiered plan for loans from July
+   2026), IBR, RAP, and for a PSLF borrower IBR and RAP with PSLF: the payment, the payments, the total paid, the forgiven
+   amount and the federal tax on it. The 2026 rules (the 2025 law: RAP from July 1 2026, IBR without the hardship test,
+   SAVE ended, PAYE and ICR closing June 30 2028, IDR forgiveness taxed again from 2026, PSLF tax-free) are in
+   data/reference-2026.json (studentLoans), each registered with its source and date, unverified items marked. Taps write
+   the loan's own facts: PSLF, qualifying payments made (Payments left), First borrowed (a new Debt field).
+   Dana Persona (new, the fourteenth persona): a PSLF teacher, $48,000 at 5.5%, AGI $55,500: Standard $520.93 a month
+   ($62,511); IBR $263 with PSLF, 72 payments, $18,936 paid, $44,342 forgiven tax-free; RAP $231.25 with PSLF, $16,650
+   paid, $42,789 forgiven. All match the hand calculation in test/truecost.test.js.
+5. One answer with the FOO (forgiveness() in js/math/foo.js): a PSLF loan with its payments left typed now ends on the
+   one debt plan at its forgiveness month (what is left is forgiven), and a what-if extra or a freed payment never goes
+   to it. Dana is debt free in 72 months on every screen. No line ever tells a forgiveness borrower to pay it off fast;
+   the words say what paying more does instead (it only lowers what is forgiven).
+
+Tests: test/truecost.test.js (Maya, Tom, Dana, the rules) pass in UTC and America/New_York. Find: "true cost",
+"borrow", "refinance", "PSLF", "loan forgiveness", "earning power" land on the sections.

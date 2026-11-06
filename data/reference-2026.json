@@ -87,6 +87,8 @@
     }
   },
   "tax": {
+    "mortgageDebtLimit": 750000,
+    "saltCap": 40400,
     "standardDeduction": {
       "single": 16100,
       "joint": 32200
@@ -1302,6 +1304,10 @@
     "source": "SLAM rule, js/find.js (Eli, Nov 5 2026: \"I do not know where everything is\")",
     "date": "2026-11-05",
     "words": [
+      {"terms": ["true cost", "true cost of debt", "cost of debt", "what my debt costs", "interest in today's dollars", "debt fi", "fi months"], "label": "The true cost of each debt", "go": ["focus:sec:payoff:truecost@#/plan/debt-payoff"], "add": "none", "why": "batch 29: one line per debt on Plan › Debt payoff (interest in today's dollars, the FI months it costs, the rate after tax)"},
+      {"terms": ["borrow", "borrowing", "new loan", "loan offers", "compare loans", "compare offers", "financing", "finance a car", "pay cash", "refinance", "refinancing"], "label": "Thinking about borrowing?", "go": ["focus:sec:payoff:borrow@#/plan/debt-payoff"], "add": "none", "why": "batch 29: up to three offers side by side and paying cash, on Plan › Debt payoff"},
+      {"terms": ["pslf", "public service loan forgiveness", "loan forgiveness", "forgiveness", "income-driven", "income driven repayment", "repayment plan", "save plan", "ibr plan", "rap plan", "repayment assistance plan"], "label": "Student loan decision", "go": ["focus:sec:payoff:student@#/plan/debt-payoff", "debt*[Student loan].balance", "add:debt@#/net-worth/debt"], "add": "none", "why": "batch 29: Standard, IBR, RAP and PSLF compared on Plan › Debt payoff (only with a student loan on file)"},
+      {"terms": ["earning power", "worth the degree", "is school worth it", "business loan payback", "break even"], "label": "What it bought", "go": ["focus:sec:payoff:bought@#/plan/debt-payoff"], "add": "none", "why": "batch 29: the extra pay a year school or a business may bring, and the year it is paid back"},
       {
         "terms": [
           "rent",
@@ -2897,5 +2903,101 @@
         "category": "Other wants"
       }
     ]
+  },
+  "studentLoans": {
+    "asOf": "2026-11-06",
+    "poverty": {
+      "base": 15960,
+      "perPerson": 5680
+    },
+    "ibr": {
+      "newPct": 0.1,
+      "newYears": 20,
+      "oldPct": 0.15,
+      "oldYears": 25,
+      "povertyMultiple": 1.5
+    },
+    "rap": {
+      "bands": [
+        [
+          0,
+          0
+        ],
+        [
+          10000,
+          0.01
+        ],
+        [
+          20000,
+          0.02
+        ],
+        [
+          30000,
+          0.03
+        ],
+        [
+          40000,
+          0.04
+        ],
+        [
+          50000,
+          0.05
+        ],
+        [
+          60000,
+          0.06
+        ],
+        [
+          70000,
+          0.07
+        ],
+        [
+          80000,
+          0.08
+        ],
+        [
+          90000,
+          0.09
+        ],
+        [
+          100000,
+          0.1
+        ]
+      ],
+      "minimum": 10,
+      "perDependent": 50,
+      "principalMatch": 50,
+      "years": 30
+    },
+    "pslfPayments": 120,
+    "standardYears": 10,
+    "tiered": [
+      [
+        0,
+        10
+      ],
+      [
+        25000,
+        15
+      ],
+      [
+        50000,
+        20
+      ],
+      [
+        100000,
+        25
+      ]
+    ],
+    "interestDeduction": {
+      "max": 2500,
+      "singleFrom": 85000,
+      "singleTo": 100000,
+      "jointFrom": 175000,
+      "jointTo": 205000
+    },
+    "idrForgivenessTaxed": 1,
+    "legacyCloses": "2028-06-30",
+    "saveEnded": "2026-03-10"
   }
 }

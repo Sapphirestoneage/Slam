@@ -205,7 +205,7 @@ export const AREAS = [
       pick('use', 'Personal or business', ['Personal', 'Business']),
       pick('federal', 'Federal or private', ['Federal', 'Private']),
       f('plan', 'Repayment plan'), f('servicer', 'Servicer'),
-      pick('pslf', 'PSLF eligible', ['Yes', 'No', 'Not sure']), f('forgiveness', 'Forgiveness', 'yesno', { sheet: { skip: 'an older way to mark forgiveness; PSLF eligible is the one to use' } }),
+      pick('pslf', 'PSLF eligible', ['Yes', 'No', 'Not sure']), pick('firstBorrowed', 'First borrowed', ['Before July 2014', 'July 2014 to June 2026', 'July 2026 or later']), /* batch 29: which federal plans a loan can use */ f('forgiveness', 'Forgiveness', 'yesno', { sheet: { skip: 'an older way to mark forgiveness; PSLF eligible is the one to use' } }),
       pick('forbearance', 'Forbearance or deferment', ['None', 'Forbearance', 'Deferment']),
       f('monthsLeft', 'Months left', 'number'), f('yearsLeft', 'Years left', 'number'), f('paymentsLeft', 'Payments left', 'number'),
       pick('rateType', 'Fixed or adjustable', ['Fixed', 'Adjustable']),

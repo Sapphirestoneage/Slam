@@ -28,6 +28,7 @@ import { fiWordsOf, debtWordsOf } from '../math/picture.js';
 import { changeWords } from '../math/changes.js';
 import { outsourceCheck } from '../math/time.js';
 import { affordSection } from './afford-ui.js';
+import { trueCostSections } from './truecost-ui.js';
 
 export const PUI = { extra: 0, pace: null, bands: true, chart: 'FI timeline', extraDebt: 0, reveal: false };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -383,7 +384,7 @@ export function payoffScreen(app, ctx) {
   const m = ctx.metrics();
   const ds = m.inputs.debts.filter(d => !d.inFull && d.balance > 0);
   if (!ds.length) return [head('Debt payoff', 'Each debt shrinking to zero'), h('div.card', {}, h('div.empty.center', {}, h('span.title', {}, ctx.gates().areas.debt === false ? 'No debt, per About you' : 'No debts to pay off'),
-    S.button('Open Debt', { iconName: 'right', onClick: () => app.go('#/net-worth/debt') })))];
+    S.button('Open Debt', { iconName: 'right', onClick: () => app.go('#/net-worth/debt') }))), ...trueCostSections(app, ctx, { hasDebt: false })]; // batch 29: borrowing is still a question
   const usable = ds.filter(d => d.apr != null && d.payment != null);
   if (!usable.length) return [head('Debt payoff', 'Each debt shrinking to zero'), h('div.card', {}, S.chartEmpty(ctx, ['a balance and a payment']))];
   const gate = fiGate(ctx).payoff;
@@ -437,7 +438,8 @@ export function payoffScreen(app, ctx) {
         return { label: 'Months', result: { id: 'M34', value: p.months, needs: [], unit: 'count', text: p.text }, render: r => (ranged && w.low !== w.high ? `${w.low} to ${w.high}` : `${r.value}`) }; })(),
       order === 'custom' ? { label: 'vs Avalanche (optimal)', result: { id: 'M34', value: cost.extraInterest, needs: cost.extraInterest == null ? ['both plans to finish'] : [], unit: 'money', text: `Interest with your order minus interest with Avalanche${cost.extraMonths ? `; ${cost.extraMonths} more ${Math.abs(cost.extraMonths) === 1 ? 'month' : 'months'}` : ''}.${costDays?.fiDays != null ? ` That is ${costDays.fiDays.toFixed(1)} FI days.` : ''}` }, note: costDays?.fiDays != null ? `${costDays.fiDays.toFixed(1)} FI days of extra interest` : 'Extra interest from your order' } :
       { label: `vs ${order === 'avalanche' ? 'snowball' : 'avalanche'}`, result: (() => { const o = plans[order === 'avalanche' ? 'snowball' : 'avalanche']; const d = o.months == null || p.months == null ? null : o.interest - p.interest; return { id: 'M34', value: d, needs: d == null ? ['both plans to finish'] : [], unit: 'money', text: `Interest with ${order === 'avalanche' ? 'snowball' : 'avalanche'} minus interest with ${order}.` }; })(), note: 'Interest saved by this order' }]),
-    h('div.report-grid', {}, h('div.card', {}, h('strong', {}, 'Balance per debt'), payoffChart(ctx, p)), h('div.card', {}, h('strong', {}, 'Order compared'), compareChart(ctx, plans)))];
+    h('div.report-grid', {}, h('div.card', {}, h('strong', {}, 'Balance per debt'), payoffChart(ctx, p)), h('div.card', {}, h('strong', {}, 'Order compared'), compareChart(ctx, plans))),
+    ...trueCostSections(app, ctx)]; // batch 29: the true cost of debt, borrowing, what it bought, the student loan decision
 }
 // Batch 11: the rule the date assumes, and the date if only each debt's own payment is paid, in one line each; a
 // guessed APR says so.

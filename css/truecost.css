@@ -1,0 +1,54 @@
+/* Batch 29: the true cost of debt on Plan › Debt payoff. Calm: no red, slim, every choice a tap. */
+.tc { display: grid; gap: var(--s4); }
+.tc-form { display: grid; gap: 10px; }
+.tc-q { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px var(--s3); align-items: start; }
+.tc-q > .label { line-height: 1.25; padding-top: 8px; }
+.tc-a { min-width: 0; }
+.tc-a .picks, .tc-a .seg { flex-wrap: wrap; }
+.tc-amount { gap: 10px; align-items: center; flex-wrap: wrap; }
+.tc-wait { margin: 0; }
+.tc-lines { display: grid; gap: 0; }
+.tc-line { display: grid; gap: 4px; padding: 10px 0; border-top: 1px solid var(--border-row); }
+.tc-line:first-child { border-top: 0; padding-top: 0; }
+.tc-name { gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.tc-words { margin: 0; line-height: 1.5; }
+.tc-offers { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--s3); align-items: start; }
+.tc-offer { display: grid; gap: 8px; padding: var(--s3); border: 1px solid var(--border-row); border-radius: var(--r-input); min-width: 0; }
+.tc-offer .tc-q { grid-template-columns: 56px minmax(0, 1fr); }
+.tc-offer-head { justify-content: space-between; gap: 8px; min-height: 32px; }
+.tc-add { display: flex; align-items: center; min-height: 48px; }
+.tc-answer { display: grid; gap: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--border-row); }
+.tc-lead { margin: 0; font-size: 1.0625rem; font-weight: 600; line-height: 1.4; }
+.tc-tablewrap { min-width: 0; overflow-x: auto; }
+.tc-table { width: 100%; border-collapse: collapse; }
+.tc-table th, .tc-table td { padding: 8px; border-bottom: 1px solid var(--border-row); vertical-align: top; text-align: left; }
+.tc-table thead th { font-size: .875rem; font-weight: 600; color: var(--text-2); border-bottom: 2px solid var(--border-row); }
+.tc-table tbody th { font-weight: 600; }
+.tc-table .num { text-align: right; }
+.tc-table .num .math { text-align: right; }
+.tc-sub { display: block; font-weight: 400; }
+.tc-tag { display: inline-block; margin-top: 4px; }
+.tc-plans tr.tc-yours > * { background: color-mix(in srgb, var(--debt) 12%, transparent); }
+.tc-nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); }
+.tc-num { display: flex; flex-direction: column; gap: 2px; padding: var(--s3); border: 1px solid var(--border-row); border-radius: var(--r-input); min-width: 0; }
+.tc-big { font-size: 1.25rem; font-weight: 700; }
+.tc-big .math { font-size: inherit; font-weight: inherit; text-align: left; }
+@media (max-width: 760px) {
+  .tc-q { grid-template-columns: minmax(0, 1fr); }
+  .tc-q > .label { padding-top: 0; }
+  .tc-offer .tc-q { grid-template-columns: minmax(0, 1fr); }
+  .tc-offers { grid-template-columns: minmax(0, 1fr); }
+  .tc-nums { grid-template-columns: minmax(0, 1fr); }
+}
+.tc-narrow { display: none; }
+.tc-cards { gap: var(--s3); }
+.tc-card { display: grid; gap: 6px; padding: var(--s3); border: 1px solid var(--border-row); border-radius: var(--r-input); }
+.tc-card-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.tc-pairs { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px var(--s3); margin: 0; }
+.tc-pairs dt { color: var(--text-2); }
+.tc-pairs dd { margin: 0; text-align: right; }
+@media (max-width: 760px) {
+  .tc-wide { display: none; }
+  .tc-narrow { display: grid; }
+}
+.tc-end { height: 88px; }

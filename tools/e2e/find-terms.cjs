@@ -53,5 +53,9 @@ const TERMS = [
   // Batch 20 (Rocket Surgery): words coaches typed that found nothing or the wrong place.
   { term: 'raise', routes: [I], box: /:amount$|^add:income$/ },
   { term: 'close the month', routes: ['#/cash-flow/close'], box: /^sec:close:months$/ },
+  // Batch 29: the true cost of debt on Plan › Debt payoff.
+  { term: 'true cost', routes: ['#/plan/debt-payoff'], box: /^sec:payoff:truecost$/ },
+  { term: 'borrow', routes: ['#/plan/debt-payoff'], box: /^sec:payoff:borrow$/ },
+  { term: 'refinance', routes: ['#/plan/debt-payoff'], box: /^sec:payoff:borrow$/ },
 ];
 module.exports = { TERMS };

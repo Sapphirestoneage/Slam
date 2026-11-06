@@ -31,6 +31,8 @@ import { saferFi } from '../math/fi.js';
 import { compareOf, netWorthIn } from '../math/proposed.js';
 import { closeStreak, byCategory, monthView, ymOf, addMonths } from '../month.js';
 import { affordOf } from '../math/afford.js';
+import { trueCostOf, loanOffers } from '../math/truecost.js';
+import { studentLoanPlans } from '../math/studentloan.js';
 import { foo } from '../math/foo.js';
 import { gapOf } from '../math/gap.js';
 import { nextMoves } from '../math/moves.js';
@@ -525,6 +527,19 @@ export const MATH = [
     app: c => identityOf(c.doc, c.ref, { now: c.now, m: c.m }).people[0].letters.type,
     parts: [{ key: 'address', name: 'FI Address', unit: 'text', fromApp: 'the four characters, the motion flag and the modifiers, read mostly from the household plus up to four taps', app: c => identityOf(c.doc, c.ref, { now: c.now, m: c.m }).address.full },
       { key: 'weather', name: 'Money weather (latest)', unit: 'text', fromApp: 'the latest session\'s six taps, scaled to 12', app: c => identityOf(c.doc, c.ref, { now: c.now, m: c.m }).people[0].weather.latest }] },
+  // ---------- The true cost of debt and the student loan decision (batch 29) ----------
+  { id: 'M9T', name: 'The true cost of each debt', inputs: 'M34 the one debt plan (each debt\'s interest, also in today\'s dollars at the inflation assumption), M53 the FI date, M14 the marginal rates, the debt type and what it is linked to', unit: 'money',
+    fns: ['truecost.trueCostOf', 'truecost.withoutDebt', 'truecost.afterTaxOf'],
+    fromApp: 'the plan run once per debt on a copy with that debt gone today (its payment kept), for the FI months it costs; today\'s dollars divide each month\'s interest by inflation to that month; the row is the interest still to pay, in today\'s dollars, across every debt',
+    label: 'Interest still to pay, in today\'s dollars', app: c => trueCostOf(c.doc, c.ref, { now: c.now }).value },
+  { id: 'M9L', name: 'A new loan, or a different one', inputs: 'what it is for, the amount, up to three offers (rate, years, fees), paying cash; M34, M53, M68 big e, the free money a month; for school or business the extra pay a year and when it starts', unit: 'months',
+    fns: ['truecost.LOAN_KINDS', 'truecost.MAX_OFFERS', 'truecost.loanPayment', 'truecost.loanSchedule', 'truecost.withLoan', 'truecost.withCash', 'truecost.loanAskOf', 'truecost.loanOffers', 'truecost.boughtOf'],
+    fromApp: 'each offer is added to a copy of the file and the whole plan runs again (the payment, the total, the FI date, the debt-free month, big e when paid in cash); the row is a $20,000 car loan at 7% over 5 years',
+    label: 'FI date moves (months) with a $20,000 car loan at 7% over 5 years', app: c => loanOffers(c.doc, c.ref, { kind: 'car', amount: 20000, offers: [{ rate: 0.07, years: 5 }] }, { now: c.now }).offers[0]?.fi?.moved ?? null },
+  { id: 'M9S', name: 'Student loan decision', inputs: 'every federal student loan as one (balance, APR, payment), PSLF and the payments left, first borrowed, gross pay less before-tax saving and the interest deduction (AGI), filing status, dependents; the 2026 plan rules (studentLoans in the reference data)', unit: 'money',
+    fns: ['studentloan.FIRST_BORROWED', 'studentloan.PAYMENTS_MADE', 'studentloan.povertyLine', 'studentloan.levelPayment', 'studentloan.ibrPayment', 'studentloan.rapRate', 'studentloan.rapPayment', 'studentloan.repay', 'studentloan.interestDeduction', 'studentloan.studentLoanOf', 'studentloan.studentLoanPlans'],
+    fromApp: 'a month-by-month walk of each plan (simple interest on federal loans, the RAP interest waiver and $50 principal match) to forgiveness or payoff, and the federal tax on what IBR or RAP forgives in today\'s dollars; the row is the lowest total paid plus tax across the plans',
+    label: 'Lowest total paid plus tax across the plans', app: c => studentLoanPlans(c.doc, c.ref, { now: c.now }).value },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },
   // ---------- Holidays (the calendar question on About you) ----------
