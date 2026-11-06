@@ -742,3 +742,18 @@ Alexis (born 1998, $400 checking): the note under her checking box in coach view
 is on; a new blank Savings row reads 4.9K to 12K. Maya ($5,200 cash in two accounts) gets none; Tom ($38,000 cash) gets
 "Above what most households have in checking and savings" under his savings. Tests: test/priors.test.js (every figure
 in the file is on a Primary row of priors-sources.md; nothing Secondary is in it). Spec row M9E, format 28.
+## Batch 33 (Nov 6 2026): the Rocket Surgery majors left open
+
+Batch 20's think-aloud left four majors and a row of minors open; each is the least change that solves it (Krug: tweak, don't redesign), taps over typing.
+
+1. Both (preview) for Living together (QUESTIONS 287): a third choice on the whose-numbers switch on Home, Goals and Debt payoff shows the two together, read-only: the store puts back any change but the switch while it is on, with one toast saying to pick a name. Elsewhere Both reads as this client, so Net worth and Cash flow stay per person.
+2. A raise in one tap (Q288): +3%, +5%, +10% or a % on a job row's details work out the new gross and the take-home with the household tax math (js/math/raise.js, M12) for rows given as Gross, Take-home or Both; a worked-out take-home is Roughly. The toast says what it set, then what it moved: "Raise 10%: take-home $10,830 a month (was $9,800), gross $203,500 a year. That moved the plan: FI 12 months sooner". Find's raise lands on the taps.
+3. The Budget's line side panel no longer covers the lines table at 1280: the list fit runs again when the panel opens or closes, and a list inside an open row no longer takes the open row's 16px padding.
+4. Current vs Proposed carries a short month as card borrowing at the highest card APR (else the typical card APR), with one line saying so (Q289): the deficit persona's 5-year net worth is −$52,428 against $1,952 for the Proposed that closes the gap (it was $1,952 on both sides).
+5. Month end for a gut-only client closes every gut-only category against its gut split (what the gut number leaves, shared by the starter lines' typicals; Maya's Food $314), the actual typed there or read from an import or the calendar. The Budget's own month view is unchanged.
+6. The same scaled typical on both Budget passes (Q290): the Actual pass note says Food $310, as the Plan pass's Use typical.
+7. With an all-accounts investments total, "Is part of this a 401(k)? Split it out" moves the tapped part (all, half or a box) into a new 401(k) row; invested and the FI date stay (Q291).
+8. A Living together couple's FOO, Scorecard, Transitions, cash layers and Current vs Proposed read the switched person's plan, and the switch shows on those screens; the one-pager's next moves follow. tools/e2e/personas.cjs now checks one answer for the month the heavy debt is paid off: on main it found Jan 2027 on Goals and Dec 2026 on the one-pager for the couple-separate persona; now one.
+9. Minors: the calendar grid no longer flags days already gone (28), Find's apr leaves out debt types the client does not have (26), the gross box under Given as Both says /yr (27), the Budget counter reads "1 of 4 filled · core 1 of 3" beside the sub-tab's 1/3 (25). Finding 24 (Skip and Next) stays as batch 18 decided.
+
+Rocket Surgery tasks 3, 4, 5 and 7 again (both users): task 3 done (every line and five gut-only categories closed, 11 actions, from not done), task 4 done (2 taps: Sam, then Both), task 5 done with the two sides apart, task 7 in 4 and 3 actions with no hesitation (from 5 and 5, one hesitation each). docs/usability/scorecard-2026-11-06.json re-scored: 0 blockers, 0 majors, 9 minors (from 6 majors, 15 minors).

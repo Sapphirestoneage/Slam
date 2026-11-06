@@ -97,11 +97,21 @@ export class Store {
   transaction(label, fn) {
     if (this._tx) return fn();
     const before = this._state();
+    const logged = this.doc.history?.length ?? 0;
     this._tx = { label, at: this.now() };
     let result;
     try { result = fn(); }
     finally { this._tx = null; }
     const after = this._state();
+    // Batch 33 (QUESTIONS 287): a read-only view (Living together's Both preview) puts the change back, history too.
+    if (this.readOnly && JSON.stringify(before) !== JSON.stringify(after) && this.readOnly(before, after)) {
+      const timeView = this.doc.settings?.timeView;
+      Object.assign(this.doc, clone(before));
+      if (timeView !== undefined) this.doc.settings.timeView = timeView;
+      if (this.doc.history) this.doc.history.length = logged;
+      this._emit({ type: 'readonly', label });
+      return result;
+    }
     if (JSON.stringify(before) !== JSON.stringify(after)) {
       this.doc.updatedAt = this.now();
       this.doc._rev = (this.doc._rev || 0) + 1; // a change counter for caches (not history)

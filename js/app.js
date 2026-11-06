@@ -18,7 +18,7 @@ import { agendaPanel } from './ui/agenda-ui.js';
 import { walkButton, stopWalk, startSessionOne } from './ui/walk-ui.js';
 import { TABS, parseRoute, search, routeForPlace, tabRoute } from './nav.js';
 import { SCREENS, progressOf, personBar } from './screens.js';
-import { ownPlanPerson } from './registry/couples.js';
+import { ownPlanPerson, setBothScreen, offersBoth, bothPreviewOn } from './registry/couples.js';
 import { startFastTrack, fastTrackLabel } from './ui/fasttrack-ui.js';
 import { keepPlace } from './ui/place.js';
 import { opened } from './ui/dismiss.js';
@@ -66,8 +66,9 @@ const app = {
       else keepPlace(() => this.chrome());
     }, { keep: true });
     // Batch 20 (Rocket Surgery): an edit that moves the FI date, the debt-free date or what is free says so in one line.
-    this._headline = doc ? this.headlineOf() : null;
+    this._headline = doc ? this.headlineOf() : null; this._headWho = doc ? ownPlanPerson(doc) ?? 'all' : null;
     this.store.subscribe(change => this.headlineMoved(change));
+    this.store.subscribe(change => { if (change?.type === 'readonly') { S.toast('Both is a preview of the two together. Pick a name to change a number.'); this.renderSoon(); } }); // batch 33 (QUESTIONS 287)
     if (doc) {
       if (save) saveClient(adapter, doc);
       this.saver = autosave(this.store, adapter, { onState: () => this.saveState() });
@@ -382,15 +383,19 @@ const app = {
     if (!this.hasClient) return;
     const was = this._headline, now = this.headlineOf();
     this._headline = now;
+    // Batch 33: whose numbers (the person switch, the Both preview) is a view, not a move.
+    const who = ownPlanPerson(this.store.doc) ?? 'all';
+    if (this._headWho !== who) { this._headWho = who; return; }
     if (!was || change?.type !== 'change') return; // undo, redo and snapshots move it back on purpose
     if (document.querySelector('.ft-overlay, .walk-bar')) return; // Fast Track and the walk are still gathering
     const up = document.querySelector('.toast');
     if (up && !up.dataset.moved) return; // another toast (with its own Undo) stays
     const from = up ? this._movedFrom : was; // edits in a row add up while the line is showing
     const words = movedWords(from, now, this.ctx.now());
-    if (!words) { up?.remove(); return; }
+    const lead = /^Raise /.test(change.label || '') ? change.label : null; // batch 33 (Q288): a raise tap says what it set, then what it moved
+    if (!words && !lead) { up?.remove(); return; }
     this._movedFrom = from;
-    const el = S.toast(`That moved the plan: ${words}.`, { undo: () => this.store.undo() });
+    const el = S.toast(lead ? `${lead}.${words ? ` That moved the plan: ${words}.` : ''}` : `That moved the plan: ${words}.`, { undo: () => this.store.undo() });
     if (el) el.dataset.moved = '1';
   },
   undo() { const l = this.store.undo(); if (l) { S.toast(`Undone: ${l}`); this.usage('undo'); } },
@@ -512,7 +517,14 @@ const app = {
     this.ctx.clearScreen();
     const screen = SCREENS[`${tab.id}/${sub.id}`];
     // Batch 20 (Rocket Surgery): a couple with no combined totals picks whose plan Home, Goals and Debt payoff show, as on Net worth and Cash flow.
-    const whose = this.hasClient && ownPlanPerson(this.store.doc) && (`${tab.id}/${sub.id}` === 'home/session' || ['plan/goals', 'plan/debt-payoff'].includes(`${tab.id}/${sub.id}`)) ? personBar(this.ctx) : null;
+    const planScreen = ['home/session', 'plan/goals', 'plan/debt-payoff'].includes(`${tab.id}/${sub.id}`);
+    // Batch 33 (QUESTIONS 287): on these three screens Living together also offers Both (preview), read-only: the
+    // store puts back any change but the switch itself while it is on.
+    setBothScreen(this.hasClient && planScreen && offersBoth(this.store.doc));
+    this.store.readOnly = (a, b) => bothPreviewOn(this.store.doc) && JSON.stringify({ ...a, settings: { ...a.settings, person: null } }) !== JSON.stringify({ ...b, settings: { ...b.settings, person: null } });
+    // Batch 33 (finding 23): FOO, Scorecard, Transitions and Current vs Proposed follow the same switch, so it shows there too.
+    const followsSwitch = planScreen || ['plan/foo', 'plan/scorecard', 'plan/transitions', 'plan/scenarios'].includes(`${tab.id}/${sub.id}`);
+    const whose = this.hasClient && followsSwitch && (ownPlanPerson(this.store.doc) || bothPreviewOn(this.store.doc)) ? S.live(this.ctx, () => personBar(this.ctx)) : null;
     const draw = () => { this.chrome(); this.parkingDock(); clear($('main'), whose, screen ? screen(this, this.ctx) : null); this.sectionLinks(); };
     // A redraw of the same screen never loses your place (R165): scroll, list scroll and the control you were on.
     // Batch 20 (Rocket Surgery): a new screen opens at its top (a tab tap used to land half way down, where the last

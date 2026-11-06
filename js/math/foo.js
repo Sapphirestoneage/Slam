@@ -2,6 +2,7 @@
 // The SLAM financial order of operations (Phase 3.5 section 4): M69 placement, M70 Quiet Quitting FI, M71 flags.
 // Pure: reads the household file and the metrics; no DOM. Each step: Done, In progress, Next or Later, the dollars
 // left, a projected date and what it is made of.
+import { ownPlanPerson } from '../registry/couples.js';
 import { metrics } from './metrics.js';
 import { isHeavyDebt } from './debt.js';
 import { matchFromTiers } from './portfolio.js';
@@ -33,7 +34,7 @@ export const coastFiNumber = ({ fiNumber, realReturn, age, fiAge }) => (fiNumber
 export const ORIGINAL = ['Deductibles covered', 'Employer match', 'High-interest debt', 'Emergency reserves', 'Roth IRA and HSA', 'Max out retirement', 'Hyper-accumulation', 'Prepaid future assets', 'Low-interest debt'];
 
 export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
-  const m = metrics(doc, ref, { now });
+  const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }); // batch 33 (finding 23): a couple with no combined totals walks one person's FOO, as Home and Plan show it
   const x = m.inputs, p = doc.profile || {}, set = doc.settings || {};
   const L = layersOf(doc, ref, now);
   const recOf = id => doc.records.find(r => r.id === id);

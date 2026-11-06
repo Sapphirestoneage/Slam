@@ -8,6 +8,7 @@
 //   4 sinking funds already built; they feed FOO step 8
 // Backups of the backups (unemployment, disability, available credit, what could be cut, family help) add months of
 // runway and are never counted as a fund.
+import { ownPlanPerson } from '../registry/couples.js';
 import { myShare, DRAFTT, inFat } from './spending.js'; // batch 10: Phone stays in FAT and DRAFTT after its move to Bills and subscriptions
 import { monthsBetween, ymOf } from '../month.js';
 import { metrics } from './metrics.js';
@@ -140,7 +141,7 @@ export function layerOptions(doc, ref, x, now = new Date()) {
     accounts: x.accounts.filter(a => a.group === 'cash' && !a.forTaxes), layerAccounts: doc.settings?.layerAccounts || {}, sinking, now };
 }
 export function layersOf(doc, ref, now = new Date()) {
-  const m = metrics(doc, ref, { now });
+  const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }); // batch 33: one person's cash layers in Dating and Living together (the FOO's big e)
   const x = m.inputs;
   const out = cashLayers(x, layerOptions(doc, ref, x, now));
   const backups = backupRunway(doc.profile.backups || [], out.monthly.full);

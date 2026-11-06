@@ -78,7 +78,7 @@ export function budgetScreen(app, ctx) {
   // Batch 10: the one-time note for a file whose untouched starter amounts turned faded.
   const fadedNote = doc.settings?.fadedNote ? h('div.slim-note', { role: 'status' }, h('span', {}, 'Starter amounts you never changed are now shown faded. Use them with one click, or type the real number.'),
     h('button.icon-btn.tiny', { type: 'button', 'aria-label': 'Close this note', 'data-tip': 'Close', onclick: () => ctx.store.setDoc('settings', { fadedNote: null }) }, icon('x'))) : null;
-  return [head('Budget', 'Every spending line, planned and actual', S.live(ctx, () => fillCounter(app, budgetCompletion(ctx)) ?? h('span'))), fadedNote, passBar, strip, doc.session?.community ? S.sec('budget:community', { title: 'Community presets' }, () => S.live(ctx, () => communityCard(ctx))) : null, ...body, // batch 14: X of Y filled in the head
+  return [head('Budget', 'Every spending line, planned and actual', S.live(ctx, () => fillCounter(app, budgetCompletion(ctx), { core: true }) ?? h('span'))), fadedNote, passBar, strip, doc.session?.community ? S.sec('budget:community', { title: 'Community presets' }, () => S.live(ctx, () => communityCard(ctx))) : null, ...body, // batch 14: X of Y filled in the head
     S.recordList(ctx, { ...irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) }), open: false }), // batch 13: secondary sections start closed
     S.sec('budget:joy', { title: 'Joy by category', summary: 'How much joy each category brings, for a later Wrapped' }, () => S.live(ctx, () => categoryJoyBlock(ctx)))]; // F6: captured for a later Wrapped
 }
@@ -411,13 +411,14 @@ function monthGrid(ctx, byDay, endOf, low, marks = new Map()) {
     const bal = endOf.get(date);
     const open = UI.openDay === date;
     const shown = open ? items : UI.totalsOnly ? [] : items.slice(0, 3); // item 28: the top 3, then +N more
-    const cell = h(`div.day${date === today ? '.today' : ''}${bal != null && bal < low ? '.low' : ''}`, { onclick: e => { if (e.target.closest('button, .chip, .icon-btn, .drag-handle')) return; UI.openDay = open ? null : date; ctx.refresh(); } },
+    const flag = bal != null && bal < low && date >= localDay(ctx); // batch 33 (finding 28): a day already gone is not flagged
+    const cell = h(`div.day${date === today ? '.today' : ''}${flag ? '.low' : ''}`, { onclick: e => { if (e.target.closest('button, .chip, .icon-btn, .drag-handle')) return; UI.openDay = open ? null : date; ctx.refresh(); } },
       h('div.day-top', {}, h('span.day-n', {}, d), S.iconButton('plus', `Add an entry on ${dayLabel(date)}`, e => entryForm(ctx, e.currentTarget, { date }), { tiny: true })),
       markerRow(marks.get(date)),
       totalsLine(items),
       h('div.chips', {}, shown.map(i => chipOf(ctx, i)),
         items.length > shown.length ? h('button.more-chips', { type: 'button', onclick: e => { e.stopPropagation(); UI.openDay = date; ctx.refresh(); } }, UI.totalsOnly && !open ? `${items.length} ${items.length === 1 ? 'item' : 'items'}` : `+${items.length - shown.length} more`) : null),
-      bal != null ? h('div.day-bal', {}, bal < low ? '⚠ ' : '', money(bal)) : null);
+      bal != null ? h('div.day-bal', {}, flag ? '⚠ ' : '', money(bal)) : null);
     cell.ondragover = e => { if (dragging) { e.preventDefault(); if (!cell.classList.contains('drop')) { document.querySelectorAll('.day.drop').forEach(x => x.classList.remove('drop')); cell.classList.add('drop'); } } }; // item 27: only the hovered day
     cell.ondragleave = () => cell.classList.remove('drop');
     cell.ondrop = e => { e.preventDefault(); cell.classList.remove('drop'); const i = dragging; dragging = null; moveTo(ctx, i, date); };
@@ -426,10 +427,11 @@ function monthGrid(ctx, byDay, endOf, low, marks = new Map()) {
   return h('div.cal-grid.card', {}, h('div.dow', {}, ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(x => h('span', {}, x))), h('div.days', {}, cells));
 }
 // Phone: the same month as a list of days (grids do not fit a phone).
+const localDay = ctx => { const t = ctx.now(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; }; // today, on the client's clock
 function dayList(ctx, byDay, endOf, low, marks = new Map(), { force = false } = {}) { // item 28: the Full list, every item with day totals
   const days = [...byDay.keys()].sort();
   return h(`div.cal-list.card${force ? '.force-list' : ''}`, {}, days.length ? days.map(d => h('div.list-day', {},
-    h('div.list-day-top', {}, h('strong', {}, dayLabel(d)), totalsLine(byDay.get(d)), endOf.get(d) != null ? h(`span.day-bal${endOf.get(d) < low ? '.lowtext' : ''}`, {}, endOf.get(d) < low ? '⚠ ' : '', money(endOf.get(d))) : null),
+    h('div.list-day-top', {}, h('strong', {}, dayLabel(d)), totalsLine(byDay.get(d)), endOf.get(d) != null ? h(`span.day-bal${endOf.get(d) < low && d >= localDay(ctx) ? '.lowtext' : ''}`, {}, endOf.get(d) < low && d >= localDay(ctx) ? '⚠ ' : '', money(endOf.get(d))) : null),
     markerRow(marks.get(d)), h('div.chips', {}, byDay.get(d).map(i => chipOf(ctx, i))))) : h('p.muted', {}, 'Nothing shown. Check the Show filters.'));
 }
 // Item 28: one line of totals by type for a day (income, spending, debt, savings), each with its color dot.
@@ -563,7 +565,7 @@ export function closeScreen(app, ctx) {
   const now = thisYm(ctx);
   const since = ymOf(new Date(doc.createdAt || ctx.now())); // nothing to close before the client existed
   const months = Array.from({ length: 6 }, (_, k) => addMonths(now, -k)).filter(ym => ym >= since);
-  const views = months.map(ym => monthView(doc, ctx.ref, ym, { now: ctx.now() }));
+  const views = months.map(ym => monthView(doc, ctx.ref, ym, { now: ctx.now(), gutCats: true })); // batch 33: the gut-only categories close too, against their gut split
   const any = views.some(v => v.rows.some(r => (r.estimate ?? 0) > 0));
   // Batch 22: the month's transactions come in from the client's app (Rocket Money, Monarch) or bank; SLAM never syncs.
   const imp = importButton(app, { ym: UI.review ?? now, onSaved: ym => { UI.review = ym; UI.closeStep[ym] = 1; UI.closeBy[ym] = 'category'; app.render(); } });
@@ -629,7 +631,7 @@ function review(app, ctx, v, doClose) {
   let body;
   if (step === 1) {
     const missing = rows.filter(r => r.actual == null).length;
-    const by = UI.closeBy[v.ym] ?? (v.rows.some(r => ctx.store.getIn('spending', ['months', v.ym, 'lines', r.line.id, 'actualFrom']) === 'csv') ? 'category' : 'line');
+    const by = UI.closeBy[v.ym] ?? (v.rows.some(r => r.actualFrom === 'csv' || ctx.store.getIn('spending', ['months', v.ym, 'lines', r.line.id, 'actualFrom']) === 'csv') ? 'category' : 'line');
     const byPick = h('div.row-line.close-by', {}, S.toggle([['category', 'By category'], ['line', 'By line']], by, x => { UI.closeBy[v.ym] = x; app.render(); }, { label: 'Show the month' }));
     const cats = by === 'category' ? byCategory(v) : null; // batch 22: plan vs actual per Budget category
     body = cats ? [byPick, gutOnly(app, ctx, v), h('p.muted', {}, missing ? `${missing} ${missing === 1 ? 'line has' : 'lines have'} no actual yet. Switch to By line to type them.` : 'Every line has an actual.'),
@@ -637,14 +639,14 @@ function review(app, ctx, v, doClose) {
         h('td.num', {}, money(c.plan)), h('td.num', {}, c.actual == null ? h('span.muted', {}, 'No actual') : money(c.actual)), h('td.num', {}, diff(c))]),
       nav(S.button('Next: review the misses', { kind: 'primary', iconName: 'right', onClick: go(2) }))] : [byPick, gutOnly(app, ctx, v), h('p.muted', {}, missing ? `${missing} ${missing === 1 ? 'line has' : 'lines have'} no actual yet. Lines marked Paid on the calendar are already in; type the rest.` : 'Every line has an actual.'),
       // Batch 20 (Rocket Surgery): a bill paid as planned is one tap (Same as plan sits in its own column, before the box).
-      table(['Line', 'Plan', '', 'Actual'], rows, r => [h('td.col-first', {}, name(r)), h('td.num', {}, money(r.estimate ?? 0), r.fromRough ? h('span.muted.small', {}, ' usual') : null),
+      table(['Line', 'Plan', '', 'Actual'], rows, r => [h('td.col-first', {}, name(r)), h('td.num', {}, money(r.estimate ?? 0), r.fromRough ? h('span.muted.small', {}, ' usual') : r.fromGut ? h('span.muted.small', { title: 'Its share of the gut number: what the gut number leaves after the lines, split by the typical amounts' }, ' gut split') : null),
         h('td.num.use-plan', {}, !v.closed && r.actual == null && (r.estimate ?? 0) > 0 ? S.button(`Same as plan ${money(r.estimate)}`, { size: 'small', tip: `It was ${money(r.estimate)}, as planned`, onClick: () => set(r, Math.round(r.estimate * 100) / 100) }) : null),
         h('td.num', {}, v.closed ? money(r.actual) : S.moneyInput(r.actualFrom === 'typed' ? r.actual : null, val => set(r, val), { hint: r.actual == null ? 'Add actual' : moneyText(r.actual), key: `close:${v.ym}:${r.line.id}` }))]),
       nav(S.button('Next: review the misses', { kind: 'primary', iconName: 'right', onClick: go(2) }))];
   } else if (step === 2) {
     const shown = rows.filter(r => r.actual != null && r.diff != null && Math.abs(r.diff) >= 0.5);
     body = [top.length ? h('div.misses', {}, h('span.label', {}, 'Biggest misses'), top.map(r => h('span.miss', {}, h('strong', {}, r.line.name || r.line.values.category), ` ${r.diff > 0 ? '+' : '−'}${money(Math.abs(r.diff))}`,
-      r.variable ? null : h('span.muted', {}, ' (fixed)')))) : h('p.muted', {}, v.rows.some(r => r.actual != null) ? (gutOnlyOf(ctx, v) ? 'Every line with an actual landed on plan. The gut-only categories are not in this close.' : 'Everything landed on plan.') : 'No actuals yet. Go back a step to add them.'),
+      r.variable ? null : h('span.muted', {}, ' (fixed)')))) : h('p.muted', {}, v.rows.some(r => r.actual != null) ? 'Everything landed on plan.' : 'No actuals yet. Go back a step to add them.'),
       shown.length ? table(['Line', 'Plan', 'Actual', 'Difference'], shown, r => [h('td.col-first', {}, name(r)), h('td.num', {}, money(r.estimate ?? 0)), h('td.num', {}, money(r.actual)), h('td.num', {}, diff(r))]) : null,
       bulletChart(ctx, rows.filter(r => r.actual != null).slice(0, 12), v.gut),
       nav(S.button('Next: carry forward', { kind: 'primary', iconName: 'right', onClick: go(3) }), go(1))];
@@ -662,19 +664,19 @@ function openBudgetButton(app) {
   b.dataset.focus = 'sec:close:months'; // the same box Find's month-end words land on when the months are there
   return b;
 }
-// Batch 20 (Rocket Surgery): Month end compares lines; categories that hold only the gut number have none, so a
-// gut-only client's close compared Rent alone and said "Everything landed on plan". One line says what is left out.
+// Batch 20 (Rocket Surgery): Month end compares lines; categories that hold only the gut number had none, so a
+// gut-only client's close compared Rent alone. Batch 33: they close too, each against its gut split (monthView
+// gutCats); one line says so, with Add their lines for a client ready to itemize.
 function gutOnlyOf(ctx, v) {
-  if (v.gut == null) return null;
-  const cats = ctx.metrics().inputs.categories.filter(c => c.key !== 'Debt' && c.key !== 'Retirement' && c.counts && c.amount == null);
-  if (!cats.length) return null;
-  return { names: cats.map(c => c.name), left: Math.max(0, v.gut - (v.totals.estimate ?? 0)) };
+  const cats = v.rows.filter(r => r.gutCat);
+  if (v.gut == null || !cats.length) return null;
+  return { names: cats.map(r => r.line.name), split: cats.reduce((s, r) => s + (r.rough ?? 0), 0) };
 }
 function gutOnly(app, ctx, v) {
   const g = gutOnlyOf(ctx, v);
   if (!g) return null;
   const names = g.names.length > 2 ? `${g.names.slice(0, 2).join(', ')} and ${g.names.length - 2} more` : g.names.join(' and ');
-  return h('div.row-line.gut-only', { style: { gap: '12px' } }, h('span.muted', {}, `${names} ${g.names.length === 1 ? 'has' : 'have'} only the gut number${g.left ? ` (${money(g.left)} of ${money(v.gut)})` : ''}, so this close leaves ${g.names.length === 1 ? 'it' : 'them'} out.`),
+  return h('div.row-line.gut-only', { style: { gap: '12px' } }, h('span.muted', {}, `${names} ${g.names.length === 1 ? 'has' : 'have'} only the gut number: ${g.names.length === 1 ? 'its' : 'their'} plan is its split (${money(g.split)} of ${money(v.gut)}). Type what was spent, or import the month.`),
     S.button('Add their lines', { size: 'small', iconName: 'right', onClick: () => { UI.pass = 'Actual'; app.go('#/cash-flow/budget'); } }));
 }
 function bulletChart(ctx, rows, gut) {

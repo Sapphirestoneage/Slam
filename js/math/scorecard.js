@@ -3,6 +3,7 @@
 // are in js/registry/scorecard.js), the coach's override where there is one, each hole's payoff (dollars a year,
 // hours of work and FI days), its effort and the best-return score (payoff over effort), and the holes ranked: the
 // ones before the client's current FOO step first, then by score. Pure: never the DOM.
+import { ownPlanPerson } from '../registry/couples.js';
 import { metrics } from './metrics.js';
 import { foo } from './foo.js';
 import { layersOf } from './layers.js';
@@ -38,7 +39,7 @@ export function goalsOf(doc, ref, m, now = new Date()) {
 
 // Everything the rules look at, worked out once.
 export function factsOf(doc, ref, { now = new Date(), flags = [] } = {}) {
-  const m = metrics(doc, ref, { now }), x = m.inputs;
+  const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }), x = m.inputs; // batch 33 (finding 23): one person's plan in Dating and Living together
   const p = doc.profile || {};
   const g = gatesOf(p, doc.client), live = visible(doc.records, g, ref);
   let F = null, L = null;

@@ -26,7 +26,7 @@ export const handled = (r, f) => countsAsDone(statusOf(r, f)) || statusOf(r, f) 
 
 // ---------- Context: the store, the time view, the numbers, toasts ----------
 export function createCtx({ store, ref, now = () => new Date() }) {
-  let cache = null;
+  let cache = null, cacheFor;
   const listeners = new Set();
   const ctx = {
     store, ref, now,
@@ -38,7 +38,7 @@ export function createCtx({ store, ref, now = () => new Date() }) {
     visible(pred) { const g = ctx.gates(); return store.find(r => pred(r) && !gatedOut(r, g, ref)); },
     // Batch 15 (question 212): a couple with no combined totals (Dating, Living together) sees one person's own plan
     // everywhere, this client's unless the person switch says the partner's.
-    metrics() { return (cache ??= metrics(store.doc, ref, { now: now(), person: ownPlanPerson(store.doc) })); },
+    metrics() { const k = ownPlanPerson(store.doc); if (cache && cacheFor !== k) cache = null; cacheFor = k; return (cache ??= metrics(store.doc, ref, { now: now(), person: k })); }, // batch 33: the Both preview changes whose plan a screen reads
     // Screens register here; the shell clears them when it leaves the screen (keep: shell-level).
     onRefresh(fn, { keep = false } = {}) { fn.keep = keep; listeners.add(fn); return () => listeners.delete(fn); },
     clearScreen() { for (const fn of listeners) if (!fn.keep) listeners.delete(fn); },
@@ -1099,7 +1099,10 @@ export function chartTheme(area) {
 // and below). Escape, the X or a click outside closes it. build() draws the content and is called again after each
 // change, so the panel follows the row. Returns { close }.
 let sideEl = null, sideOff = null, sideStop = null;
-export function closeSidePanel() { const el = sideEl; sideEl = null; sideOff?.(); sideOff = null; sideStop?.(); sideStop = null; el?.remove(); document.body.classList.remove('side-open'); }
+// Batch 33 (Rocket Surgery finding 17): the page narrows or widens beside the panel, so every list fits itself again
+// (the Budget's lines lost Status and Will get it under the panel at 1280).
+const refitTables = () => requestAnimationFrame(() => document.querySelectorAll('table.rows').forEach(fitTable));
+export function closeSidePanel() { const el = sideEl; sideEl = null; sideOff?.(); sideOff = null; sideStop?.(); sideStop = null; el?.remove(); const was = document.body.classList.contains('side-open'); document.body.classList.remove('side-open'); if (was) refitTables(); }
 export const sidePanelOpen = () => !!sideEl;
 export function sidePanel(ctx, { title, build, anchor = null, key = null }) {
   closeSidePanel();
@@ -1120,6 +1123,7 @@ export function sidePanel(ctx, { title, build, anchor = null, key = null }) {
     el.removeAttribute('aria-modal');
     const bars = [document.getElementById('subtabs'), document.getElementById('topbar')].find(b => b && !b.hidden && b.getBoundingClientRect().height);
     el.style.top = `${Math.round(bars ? bars.getBoundingClientRect().bottom : 60)}px`; document.body.classList.add('side-open');
+    refitTables();
   };
   fit();
   mq?.addEventListener?.('change', fit);

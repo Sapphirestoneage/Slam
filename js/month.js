@@ -317,19 +317,36 @@ export function actualOf(doc, ym, line, list) {
 }
 
 // Everything the budget and close screens show for one month.
-export function monthView(doc, ref, ym, { now = new Date() } = {}) {
+// gutCats (batch 33, Rocket Surgery finding 12): Month end also closes the categories that hold only the gut number,
+// one row each (id cat:<key>): the plan is its gut split (or a plan typed or carried for the month), the actual is the
+// one typed on Month end, else what its lines got (an import, the calendar). Its starter lines fold into it.
+export function monthView(doc, ref, ym, { now = new Date(), gutCats = false } = {}) {
   const g = gatesOf(doc.profile, doc.client);
-  const dupOf = inputsOf(doc, ref, now).dupOf; // the same payment as a debt or a premium: counted there, once
-  const lines = visible(doc.records, g, ref).filter(r => r.kind === 'bill' && !dupOf[r.id]);
-  const list = instances(doc, ref, ym, { now });
+  const x = inputsOf(doc, ref, now);
+  const dupOf = x.dupOf; // the same payment as a debt or a premium: counted there, once
   const md = monthDoc(doc, ym);
-  const rows = lines.map(l => {
+  const split = gutCats && (md.gut ?? gutOf(doc)) != null ? x.gutSplit ?? {} : {};
+  const all = visible(doc.records, g, ref).filter(r => r.kind === 'bill' && !dupOf[r.id]);
+  const folded = l => split[categoryKeyOf(l)] != null && md.lines?.[l.id]?.estimate == null && !(roughOf(doc, l) > 0); // a starter line of a gut-only category
+  const lines = all.filter(l => !folded(l));
+  const list = instances(doc, ref, ym, { now });
+  const catRows = Object.entries(split).map(([key, plan]) => {
+    const id = `cat:${key}`, own = all.filter(l => folded(l) && categoryKeyOf(l) === key && l.status !== 'Not for me');
+    const e = md.lines?.[id]?.estimate, typed = md.lines?.[id]?.actual;
+    const acts = own.map(l => actualOf(doc, ym, l, list)).filter(a => a.value != null);
+    const actual = typed != null ? typed : acts.length ? acts.reduce((s2, a) => s2 + a.value, 0) : null;
+    const estimate = e ?? plan;
+    return { line: { id, name: categoryName(key), values: { category: categoryName(key), draftt: key, amountType: 'Variable' } }, gutCat: key, rough: plan, estimate, fromRough: false, fromGut: e == null,
+      actual, actualFrom: typed != null ? 'typed' : own.some(l => md.lines?.[l.id]?.actualFrom === 'csv') ? 'csv' : acts.length ? 'calendar' : null,
+      diff: actual == null ? null : actual - estimate, variable: true, priceUp: false };
+  });
+  const rows = [...lines.map(l => {
     const est = estimateOf(doc, ym, l);
     const act = actualOf(doc, ym, l, list);
     const diff = est.value != null && act.value != null ? act.value - est.value : null;
     return { line: l, rough: roughOf(doc, l), estimate: est.value, fromRough: est.fromRough, actual: act.value, actualFrom: act.from, diff,
       variable: l.values.amountType !== 'Fixed', priceUp: l.values.amountType === 'Fixed' && diff != null && diff > 0.5 }; // R141
-  }).filter(r => r.line.status !== 'Not for me');
+  }).filter(r => r.line.status !== 'Not for me'), ...catRows];
   const sum = f => rows.reduce((s, r) => s + (f(r) ?? 0), 0);
   const gaps = rows.filter(r => r.actual == null && (r.estimate ?? 0) > 0);
   // R145: variable lines' misses first, then by size.
@@ -367,7 +384,7 @@ export const gutOf = doc => gutRecord(doc)?.amount ?? null;
 
 // Close: lock the month, keep the gut vs actual for accuracy, and carry variable misses to next month (Mockup: Close row).
 export function closeMonth(store, ref, ym, { now = new Date() } = {}) {
-  const v = monthView(store.doc, ref, ym, { now });
+  const v = monthView(store.doc, ref, ym, { now, gutCats: true }); // batch 33: the gut-only categories close too
   const next = addMonths(ym, 1);
   return store.transaction(`Closed ${monthName(ym)}`, () => {
     for (const r of v.rows) {
@@ -376,7 +393,7 @@ export function closeMonth(store, ref, ym, { now = new Date() } = {}) {
         store.setIn('spending', ['months', next, 'lines', r.line.id, 'estimate'], Math.round(r.actual));
       }
     }
-    const after = monthView(store.doc, ref, ym, { now });
+    const after = monthView(store.doc, ref, ym, { now, gutCats: true });
     store.setIn('spending', ['months', ym, 'summary'], { gut: v.gut, estimate: after.totals.estimate, actual: after.totals.actual });
     store.setIn('spending', ['months', ym, 'closed'], true);
     store.setIn('spending', ['months', ym, 'closedAt'], now.toISOString());

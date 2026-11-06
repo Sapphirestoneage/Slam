@@ -268,6 +268,28 @@ export const typicalTotal = lines => lines.filter(isFaded).reduce((s, l) => s + 
 // scale (QUESTIONS 241): when the empty categories' typicals would add up to more than the gut number leaves for them,
 // each is scaled down by the same share, so one tap never puts the lines over the client's own number. Never scaled up.
 export const categoryTypicalOf = (lines, key, scale = 1) => { const t = typicalTotal(lines.filter(l => !l.values?.irregular && categoryKeyOf(l) === key)) * Math.min(1, Math.max(0, scale ?? 1)); return t > 0 ? Math.round(t / 10) * 10 : null; };
+// Batch 33 (QUESTIONS 290): what a group of lines' typicals add up to on the Actual pass, the same number as the Plan
+// pass's Use typical: an empty category's starter lines read as categoryTypicalOf, scaled to the gut number; a category
+// that already holds an amount keeps its lines' plain typicals (the Plan pass offers nothing there).
+export function groupTypicalOf(lines, { categories = [], scale = 1 } = {}) {
+  const keys = [...new Set(lines.filter(isFaded).map(categoryKeyOf))];
+  return keys.reduce((s, k) => s + (categories.find(c => c.key === k)?.amount == null ? categoryTypicalOf(lines, k, scale) ?? 0 : typicalTotal(lines.filter(l => categoryKeyOf(l) === k))), 0);
+}
+// Batch 33 (Rocket Surgery finding 12): the gut split. The categories that hold only the gut number (no amount and no
+// line with one) share what the gut number leaves after debt payments (when it includes them) and the categories with
+// an amount, in proportion to their starter lines' typicals (evenly when none has a typical). Month end closes them
+// against this plan.
+export function gutSplitOf({ gut = null, includesDebt = false, debtPayments = 0, categories = [], lines = [] }) {
+  if (gut == null) return {};
+  const inPlay = c => c.key !== 'Retirement' && c.key !== 'Debt';
+  const typOf = c => typicalTotal(lines.filter(l => !l.values?.irregular && categoryKeyOf(l) === c.key));
+  const empty = categories.filter(c => inPlay(c) && c.amount == null && (c.counts || typOf(c) > 0));
+  if (!empty.length) return {};
+  const room = Math.max(0, gut - (includesDebt ? debtPayments : 0) - categories.filter(c => inPlay(c) && c.amount != null).reduce((s, c) => s + c.amount, 0));
+  const typ = empty.map(typOf);
+  const all = typ.reduce((s, t) => s + t, 0);
+  return Object.fromEntries(empty.map((c, i) => [c.key, Math.round((all > 0 ? room * typ[i] / all : room / empty.length) * 100) / 100]));
+}
 // The share (1 or less) the empty categories' typicals are scaled by: what the gut number leaves after debt payments
 // (when it includes them) and the categories that already hold an amount, over what their typicals add up to.
 export function typicalScaleOf({ gut = null, includesDebt = false, debtPayments = 0, categories = [], lines = [] }) {

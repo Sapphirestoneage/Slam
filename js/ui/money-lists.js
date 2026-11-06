@@ -4,11 +4,12 @@
 import { h } from './dom.js';
 import { INCOME_KINDS, incomeKindOf } from '../capture.js';
 import { institutionPicker, institutionLink } from './institutions-ui.js';
-import { tapPick, fromButton, amount, value, moneyInput, pctInput, textInput, nameInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, parkGroup, ownerToggle } from './staples.js';
+import { popover, closePop, tapPick, fromButton, amount, value, moneyInput, pctInput, textInput, nameInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, parkGroup, ownerToggle } from './staples.js';
 import { asksTaxType, taxTypeFor } from '../math/portfolio.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
 import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom, isBenefitRow, householdRates, quarterlySetAside, irregularPlan } from '../math/income.js';
 import { foo } from '../math/foo.js';
+import { raiseOf } from '../math/raise.js';
 import { RULES } from '../registry/assumptions.js';
 import { limitUsed } from '../math/assets.js';
 import { accountBlocks, accountFlags, stampBalance } from './account-detail.js';
@@ -63,7 +64,7 @@ export function incomeList() {
       { label: 'Source', render: (ctx, r, m, up) => nameInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 170, key: `${r.id}:name` }) }, // batch 13: a long name wraps
       { label: 'Amount', num: true, render: (ctx, r, m, up) => (r.values.basis === 'Both' && incomeRowOf(m, r)?.taxType
         ? h('span.row-line', { style: { gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' } }, // Brandon B1.6: both typed, both kept (batch 13: stacked when the row is tight)
-          moneyInput(r.amount, v => up({ amount: v }), { hint: 'Take-home', key: `${r.id}:amount` }), moneyInput(r.values.gross, v => up({ gross: v }), { hint: 'Gross a year', key: `${r.id}:gross` }))
+          moneyInput(r.amount, v => up({ amount: v }), { hint: 'Take-home', key: `${r.id}:amount` }), yearBox(moneyInput(r.values.gross, v => up({ gross: v }), { hint: 'Gross a year', key: `${r.id}:gross` })))
         : moneyInput(r.amount, v => up({ amount: v }), { hint: isBenefitRow(r) ? 'Add a week' : r.type === 'Platform' ? 'Add gross' : r.values.basis === 'Gross' ? 'Add gross' : r.amount == null && r.values.payShift != null ? 'From shifts' : 'Add take-home', key: `${r.id}:amount` })) },
       { label: 'Given as', render: (ctx, r, m, up) => (r.type === 'Platform' ? h('span.muted', { title: 'What fans, buyers or riders paid, before the platform takes its fee' }, 'Before fees') // batch 27
         : incomeRowOf(m, r)?.taxType
@@ -81,6 +82,8 @@ export function incomeList() {
   };
 }
 const incomeRowOf = (m, r) => m.inputs.income.find(x => x.r.id === r.id);
+// Batch 33 (finding 27): with Given as Both, Per names the take-home's period; the gross box says it is a year.
+const yearBox = box => { box.append(h('span.post', { title: 'Gross a year' }, '/yr')); box.title = 'Gross a year, before tax'; return box; };
 // Unemployment benefits (batch 15, item 13): the weekly amount in a tap (NY's most is registered), when they started
 // and end (a tap for 26 weeks from the start), and the 10% withholding choice. Taxed on Taxes, no FICA.
 const dateBox = (value, onChange, label) => { const d = h('input', { type: 'date', value: value || '', 'aria-label': label }); d.onchange = () => onChange(d.value || null); return h(`label.field${value ? '.filled' : ''}`, { style: { width: '170px' } }, d); };
@@ -116,8 +119,10 @@ function incomeSecondary(ctx, r, up) {
   const other = x?.computed === 'gross' ? labelled('Gross a year (worked out)', h('span.computed', {}, value(x.grossResult, ctx)))
     : x?.computed === 'takeHome' ? labelled('Take-home a month (worked out)', h('span.computed', {}, value(x.takeHome, ctx)))
       : x?.taxType && v.basis !== 'Both' ? labelled('Gross a year', moneyInput(v.gross, y => up({ gross: y }), { hint: 'Add gross' }), { note: 'Both given: kept as typed', later: L(ctx, r, 'gross') }) : null;
+  // Batch 33 (QUESTIONS 288): a raise in one tap. +3%, +5%, +10% or a typed %: the new gross and take-home from the tax math.
+  const raise = x?.taxType && !['Rental', 'Platform'].includes(r.type) ? raiseTaps(ctx, r, up) : null; // with no pay yet, a tap says what it needs (Find's raise lands here)
   const incomeKind = labelled('Income type', tapPick(INCOME_KINDS, v.incomeKind ?? null, x => up({ incomeKind: x }), { label: 'Income type', key: `${r.id}:incomeKind` }), { note: `Blank reads as ${incomeKindOf(r)} from the row's type` }); // F6
-  return [WORK_TYPES.has(r.type) ? workBlock(ctx, r, up, x) : null, other, incomeKind,
+  return [WORK_TYPES.has(r.type) ? workBlock(ctx, r, up, x) : null, other, raise, incomeKind,
     labelled(v.payFrequency === 'twice a month' ? 'Paydays' : v.payFrequency === 'month' ? 'Payday' : 'Next payday', paydays(r, up),
       { note: 'Puts each paycheck on its day in the calendar', later: L(ctx, r, v.payFrequency === 'week' || v.payFrequency === '2 weeks' ? 'nextPayday' : 'paydays') }),
     labelled('Type', select(['W-2', '1099', 'Business', 'Side hustle', 'Rental', 'Benefits', 'Other'], v.incomeType ?? null, y => up({ incomeType: y }), { label: 'Income type', hint: x?.taxType ?? 'Pick one', width: 150 }), { later: L(ctx, r, 'incomeType') }),
@@ -133,6 +138,22 @@ function incomeSecondary(ctx, r, up) {
       : labelled('Health premium a paycheck', moneyInput(v.premium, y => up({ premium: y }), { hint: 'Add premium', width: 150 }), { note: 'Or add Health on Protection; it fills this in', later: L(ctx, r, 'premium') })) : null,
     labelled('Perks', button('Add other benefit', { iconName: 'plus', onClick: () => { ctx.store.add('benefit', { name: null, values: {} }, { type: 'Benefit' }); toast('Benefit row added under Other benefits.'); } }))];
 }
+function raiseTaps(ctx, r, up) {
+  const go = pct => {
+    const o = raiseOf(ctx.store.doc, ctx.ref, r.id, pct, { now: ctx.now() });
+    if (!o) { toast('A raise needs the pay first: type the take-home or the gross.'); return; }
+    const p = `${+(pct * 100).toFixed(2)}%`;
+    // A worked-out take-home is Roughly until a pay stub says otherwise (Q288); a typed gross raised by a % stays as it was.
+    ctx.store.transaction(`Raise ${p}: take-home ${money(o.takeHomeAfter)} a month (was ${money(o.takeHomeBefore)}), gross ${money(o.grossAfter)} a year`, () => up({ ...o.patch, ...(o.basis === 'Gross' ? {} : { status: 'Roughly' }) }));
+  };
+  const box = pctInput(null, y => { if (y > 0) go(y); }, { hint: 'Other', key: `${r.id}:raisePct` });
+  box.style.width = '92px';
+  const wide = labelled('A raise', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+    ...[0.03, 0.05, 0.1].map((p, i) => { const b = button(`+${p * 100}%`, { size: 'small', tip: `Gross up ${p * 100}%; the take-home is worked out with the tax math`, onClick: () => go(p) }); if (!i) b.dataset.focus = `${r.id}:raise`; return b; }), box),
+  { tip: 'Each tap raises the gross and works out the new take-home with the tax math. Undo puts it back' });
+  wide.classList.add('raise-taps'); // two columns wide beside the others; one on a phone (css/phases.css)
+  return wide;
+}
 // Income's first pass at the 401(k): what comes out each paycheck, and is there a match. Roth or traditional, % of
 // salary, match tiers and vesting are on the 401(k) under Net worth › Assets; the two fill each other in.
 function k401FirstPass(ctx, r, up, link) {
@@ -146,7 +167,11 @@ function k401FirstPass(ctx, r, up, link) {
   const tiers = mine ? link.incomeTiers : [];
   const hasMatch = tiers.length ? 'Yes' : v.hasMatch ?? null;
   const acct = mine ? link.acct : null;
+  // Batch 33 (QUESTIONS 291): with an all-accounts total on file, the 401(k) is split out of it (the total stays right)
+  // instead of added empty beside it (which locked the FI date until its balance was in).
+  const lump = acct ? null : ctx.store.find(x => x.kind === 'account' && x.type === 'All investments' && (x.values.balance ?? 0) > 0)[0] ?? null;
   const details = acct ? fromButton('401(k) details', '#/net-worth/assets', acct.id)
+    : lump ? button('Is part of this a 401(k)? Split it out', { size: 'small', iconName: 'plus', tip: `Moves part of ${lump.name || 'the investments total'} into a 401(k) row; the total stays ${money(lump.values.balance)}`, onClick: e => splitPop(ctx, lump, e.currentTarget) })
     : button('Add your 401(k) for the details', { size: 'small', iconName: 'plus', onClick: () => {
       ctx.store.add('account', { name: '401(k)', values: { group: 'investment' } }, { type: '401(k)' });
       toast('401(k) added under Net worth › Assets. What you typed here shows there.', { action: { label: 'Go there', run: () => location.hash = '#/net-worth/assets' } });
@@ -165,6 +190,23 @@ function k401FirstPass(ctx, r, up, link) {
           hasMatch === 'Yes' ? matchPicks(ctx, r, v, up) : null),
       { note: link.incomeTiersFrom && tiers.length ? 'From your 401(k)' : hasMatch === 'Yes' && !tiers.length ? 'Tap how much; other formulas on the 401(k)' : null, later: L(ctx, r, 'hasMatch') }),
       labelled('The rest', details, { note: 'Roth or traditional, % of salary, match, vesting' })));
+}
+function splitPop(ctx, lump, anchor) {
+  const total = lump.values.balance;
+  const go = part => {
+    if (!(part > 0)) return;
+    const take = Math.min(part, total);
+    closePop();
+    ctx.store.transaction('Split out the 401(k)', () => {
+      ctx.store.add('account', { name: '401(k)', status: lump.status ?? null, values: { group: 'investment', balance: take } }, { type: '401(k)' });
+      if (take >= total) ctx.store.remove([lump.id]); else ctx.store.update(lump.id, { balance: Math.round((total - take) * 100) / 100 });
+    });
+    toast(`${money(take)} of ${lump.name || 'the investments total'} is now your 401(k); invested is still ${money(total)}.`, { undo: () => ctx.store.undo(), action: { label: 'Go there', run: () => location.hash = '#/net-worth/assets' } });
+  };
+  popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, `How much of the ${money(total)} is the 401(k)?`),
+    h('span.row-line', { style: { gap: '6px', flexWrap: 'wrap' } }, button(`All of it, ${money(total)}`, { size: 'small', onClick: () => go(total) }), button(`Half, ${money(total / 2)}`, { size: 'small', onClick: () => go(total / 2) }),
+      moneyInput(null, v => go(v), { hint: 'Other', key: 'split401k', width: 120 })),
+    h('span.muted.small', {}, 'The rest stays in the total; the 401(k) row gets its own balance.')), { width: 340 });
 }
 // The usual match formulas as taps (data/reference-2026.json lists.matchPicks); the pick is the job row's first tier.
 function matchPicks(ctx, r, v, up) {

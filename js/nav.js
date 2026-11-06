@@ -98,7 +98,11 @@ export function search(query, { fields = [], records = [], doc = null, ref = nul
     if (sc !== null) out.push({ kind: 'record', id: r.id, label: r.name || r.type, where: placeOfRecord(r), route: routeForPlace(placeOfRecord(r)), score: sc });
   }
   const fieldHits = [];
+  // Batch 33 (finding 26): once a word lands on this client's own debts (APR, one per debt), the field list's debt
+  // types they do not have (Mortgage, Tax debt, 401(k) loan) stay out.
+  const ownDebts = words.some(w => w.id && records.some(r => r.id === w.id && r.kind === 'debt'));
   for (const f of fields) {
+    if (ownDebts && f.area === 'Debt') continue;
     const sc = score(f.field) ?? (score(f.group || '') !== null ? 4 : null);
     if (sc !== null) fieldHits.push({ kind: 'field', id: f.id, label: f.field, group: f.group, where: f.livesOn, route: routeForPlace(f.livesOn), score: sc });
   }

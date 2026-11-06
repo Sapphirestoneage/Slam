@@ -637,8 +637,12 @@ export function scenariosScreen(app, ctx) {
     h('div.row-line', { style: { gap: '10px', marginTop: '10px' } }, S.button('Make Proposed the plan', { kind: 'primary', disabled: !C.has, why: C.has ? null : 'Change something under Proposed first', onClick: () => { makeProposedThePlan(ctx.store, ref0(ctx), { now: ctx.now() }); S.toast('Proposed is the plan now.', { undo: () => ctx.store.undo() }); app.render(); } }),
       h('span.muted.small', {}, 'Writes the choices onto the file in one step; Undo puts it back.')));
   const rule = ctx.metrics().debtRule;
+  // Batch 33 (QUESTIONS 289): a short month is borrowed on the card, said in one line.
+  const shortLine = sd => (sd.shortfall?.monthly ? `${money(sd.shortfall.monthly)} a month short: carried as card borrowing at ${(sd.shortfall.apr * 100).toFixed(1)}%${sd.shortfall.from === 'card' ? ', the highest card APR' : ', a typical card APR'}` : null);
+  const shorts = [shortLine(C.current) ? `Current is ${shortLine(C.current)}` : null, shortLine(C.proposed) ? `Proposed is ${shortLine(C.proposed)}` : null].filter(Boolean);
   return [head('Current vs Proposed', 'Today against the plan you are proposing'), editor,
-    rule?.on ? h('p.muted.small', { style: { margin: '0 0 8px' } }, 'Both sides send the surplus to heavy debt first, then invest it (change it on Plan › Goals).') : null, table];
+    rule?.on ? h('p.muted.small', { style: { margin: '0 0 8px' } }, 'Both sides send the surplus to heavy debt first, then invest it (change it on Plan › Goals).') : null,
+    shorts.length ? h('p.muted.small.short-note', { style: { margin: '0 0 8px' }, title: 'Net worth in 5 and 10 years takes off what the card would owe by then; How we got this shows it' }, `${shorts.join('. ')}.`) : null, table];
 }
 const ref0 = ctx => ctx.ref;
 

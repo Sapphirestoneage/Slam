@@ -90,24 +90,24 @@ session; a minor reads oddly.
 | 9 | An empty list's Add picker opened at the top left of the window, over the top bar (Next 12 months, and every empty list with a picker) | Next 12 months (Control) | Looks | major | 2 | 4 | Fixed |
 | 10 | Two runways for one job loss: Home 3.7 months, Transitions 24.0 months, neither saying what it counts | Home (Section) | One answer | major | 2 | 4 | Fixed |
 | 11 | No "whose numbers" switch on Home or Plan for a couple with no combined totals | Home, Goals, Debt payoff (Control) | Obvious | major | 2 | 4 | Fixed |
-| 12 | Month end for a gut-only client compared Rent alone and said "Everything landed on plan" | Month end (Section) | One answer | major | 2 | 4 | Fixed (one line and Add their lines; a category-level actual is not built) |
+| 12 | Month end for a gut-only client compared Rent alone and said "Everything landed on plan" | Month end (Section) | One answer | major | 2 | 4 | Fixed (one line and Add their lines); batch 33: each gut-only category closes against its gut split |
 | 13 | Month end: a bill paid as planned had to be typed | Month end (Control) | Easy | major | 2 | 4 | Fixed |
-| 14 | Living together has no household view, so "then the household" cannot be shown | Home, Net worth, Cash flow (Screen) | Coachable | major | 2 | 4 | Not fixed: Eli's decision (QUESTIONS 212); question 287 |
+| 14 | Living together has no household view, so "then the household" cannot be shown | Home, Net worth, Cash flow (Screen) | Coachable | major | 2 | 4 | Fixed by batch 33: Both (preview), read-only, on Home, Goals and Debt payoff (question 287) |
 | 15 | No screen answers "Can I afford it?" | Plan (Screen) | Works | major | 2 | 4 | Not this batch: Batch 23 landed it on main during this run (input below) |
-| 16 | A raise with Given as Both: the gross is typed and the take-home guessed after tax; no raise tap | Income (Control) | Easy | major | 2 | 4 | Not fixed: needs the take-home worked out from the new gross (question 288) |
-| 17 | The Budget line's side panel covers the right of the lines table at 1280 (Status and Will get it cut to "Wi") | Budget (Section) | Looks | major | 2 | 4 | Not fixed: the list fit (S.fitTable) has to run again when the inspector opens; next layout batch |
-| 18 | Current vs Proposed: a Current with a $400 monthly shortfall shows the same 5-year net worth as the Proposed that closes it ($1,952 both) | Current vs Proposed (Row) | Right | major | 2 | 4 | Not fixed: the projection does not carry a shortfall (math; question 289) |
+| 16 | A raise with Given as Both: the gross is typed and the take-home guessed after tax; no raise tap | Income (Control) | Easy | major | 2 | 4 | Fixed by batch 33: raise taps +3%, +5%, +10% and a %, the take-home from the tax math (question 288) |
+| 17 | The Budget line's side panel covers the right of the lines table at 1280 (Status and Will get it cut to "Wi") | Budget (Section) | Looks | major | 2 | 4 | Fixed by batch 33: the list fit runs again when the panel opens or closes, and a list inside an open row no longer takes its padding |
+| 18 | Current vs Proposed: a Current with a $400 monthly shortfall shows the same 5-year net worth as the Proposed that closes it ($1,952 both) | Current vs Proposed (Row) | Right | major | 2 | 4 | Fixed by batch 33: the shortfall is card borrowing at the highest card APR (question 289) |
 | 19 | Fast Track's count changed between steps: "Step 1 of 7" then "Step 2 of 6" | Fast Track (Words) | One answer | minor | 2 | 2 | Fixed |
 | 20 | Fast Track's end screen: "a lens still needs a number", "the gap is tracked on Coach tools" | Fast Track (Words) | Words | minor | 2 | 2 | Fixed |
 | 21 | The share view, for parents, says "little e" and "big e" | Transitions share view (Words) | Words | minor | 2 | 2 | Fixed |
-| 22 | The Budget's Plan and Actual passes show different groups and different typical totals for the same category (Food: Use typical $310; "would add up to $990") | Budget (Section) | One answer | major | 1 | 2 | Not fixed: two typical sources (scaled vs starter); question 290 |
-| 23 | A Living together couple's FOO step, Scorecard and Transitions still count both people (the one-pager's cards date comes from the household FOO) | Plan › FOO, Scorecard, Transitions (Screen) | One answer | major | 1 | 2 | Not fixed: foo(), scorecardOf() and transitionOf() take no person yet; next couples batch |
+| 22 | The Budget's Plan and Actual passes show different groups and different typical totals for the same category (Food: Use typical $310; "would add up to $990") | Budget (Section) | One answer | major | 1 | 2 | Fixed by batch 33: the same scaled typical on both passes (question 290) |
+| 23 | A Living together couple's FOO step, Scorecard and Transitions still count both people (the one-pager's cards date comes from the household FOO) | Plan › FOO, Scorecard, Transitions (Screen) | One answer | major | 1 | 2 | Fixed by batch 33: foo(), factsOf(), transitionOf() and layersOf() read the switched person; the switch shows on FOO, Scorecard, Transitions and Current vs Proposed |
 | 24 | The walk bar's Skip and Next both move on when the box is empty | Walk me through (Control) | Obvious | minor | 1 | 1 | Not fixed: batch 18 decided Next keeps what is there; the hover tips say it |
-| 25 | The Budget sub-tab's "1/3" (core) and the screen's "1 of 4 filled" (full) read as two answers | Budget (Words) | One answer | minor | 1 | 1 | Not fixed |
-| 26 | Find's "apr" lists debt types the client does not have (Mortgage, Tax debt, 401(k) loan) | Find (Words) | Findable | minor | 1 | 1 | Not fixed |
-| 27 | Given as Both: "Per month" sits beside the yearly gross box, so $203,500 reads as a month | Income (Words) | Words | minor | 1 | 1 | Not fixed |
-| 28 | The calendar grid still marks days before today with the low-line sign (Home no longer warns) | Calendar (Row) | Tells | minor | 1 | 1 | Not fixed |
-| 29 | "Add your 401(k) for the details" (still under The rest on Income) adds an empty 401(k) that locks the FI date until its balance is in | Income (Control) | Works | major | 0 after | 0 | Not fixed: rarer now that the match is a tap; question 291 |
+| 25 | The Budget sub-tab's "1/3" (core) and the screen's "1 of 4 filled" (full) read as two answers | Budget (Words) | One answer | minor | 1 | 1 | Fixed by batch 33: the counter reads "1 of 4 filled · core 1 of 3" |
+| 26 | Find's "apr" lists debt types the client does not have (Mortgage, Tax debt, 401(k) loan) | Find (Words) | Findable | minor | 1 | 1 | Fixed by batch 33: the field list leaves out debt types once a word lands on the client's own debts |
+| 27 | Given as Both: "Per month" sits beside the yearly gross box, so $203,500 reads as a month | Income (Words) | Words | minor | 1 | 1 | Fixed by batch 33: the gross box says /yr |
+| 28 | The calendar grid still marks days before today with the low-line sign (Home no longer warns) | Calendar (Row) | Tells | minor | 1 | 1 | Fixed by batch 33 |
+| 29 | "Add your 401(k) for the details" (still under The rest on Income) adds an empty 401(k) that locks the FI date until its balance is in | Income (Control) | Works | major | 0 after | 0 | Fixed by batch 33: "Is part of this a 401(k)? Split it out" (question 291) |
 
 ## What was fixed, and how small
 

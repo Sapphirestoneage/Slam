@@ -307,7 +307,7 @@ export function rowsForArea(area, doc, c) {
   }
   if (area.source === 'months') {
     const months = doc.spending?.months || {};
-    const lineName = id => { const r = doc.records.find(x => x.id === id); return r ? r.name || r.values?.category || r.type || 'Budget line' : id; };
+    const lineName = id => { const r = doc.records.find(x => x.id === id); return r ? r.name || r.values?.category || r.type || 'Budget line' : /^cat:/.test(id) ? `${id.slice(4)} (gut-only category)` : id; }; // batch 33: Month end's gut-only categories
     return Object.keys(months).sort().flatMap(ym => Object.entries(months[ym].lines || {}).filter(([, l]) => l && (l.estimate != null || l.actual != null))
       .map(([lineId, l]) => ({ id: `${ym}|${lineId}`, ym, lineId, lineName: lineName(lineId), get: fld => l[fld.key] })));
   }

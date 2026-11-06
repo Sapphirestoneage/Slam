@@ -41,6 +41,8 @@ function readNumbers() {
     ...grab(/[Dd]ebt[- ]free\s*(?:in |by |date\s*[:\n]\s*|\n\s*)?((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{4})/g, 'debtFree')
       .filter(n => !/own payment is paid/.test(n.at)), // "If only each debt's own payment is paid: debt free ..." is a labelled comparison, not a second answer
     ...grab(/FI date\s*[:\n]\s*(?:[^\n]*?)((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{4})/g, 'fiDate'),
+    // Batch 33: the month the heavy debt is gone, as Goals, Home and the one-pager's moves say it (the FOO's step 3).
+    ...grab(/(?:the cards paid off|pays heavy debt until) ((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{4})/g, 'heavyOff'),
   ];
 }
 // The app's own answers, from the open client. Runs in the page.
@@ -131,9 +133,9 @@ async function runPersona(browser, id) {
     const off = seen.filter(n => want[k] != null && !(k === 'savingsRate' ? Math.abs(toNum(n.raw) - want[k]) < 0.006 : sameMoney(toNum(n.raw), want[k])));
     if (off.length) out.story.push({ severity: 'blocker', route: [...new Set(off.map(o => o.route))].join(', '), what: `${k} shows ${[...new Set(off.map(o => o.raw))].join(', ')} where the math says ${want[k]} ("${off[0].at}")` });
   }
-  for (const [k, appSays] of [['debtFree', out.app.debtFree], ['fiDate', out.app.fiDate]]) {
+  for (const [k, appSays] of [['debtFree', out.app.debtFree], ['fiDate', out.app.fiDate], ['heavyOff', null]]) {
     const seen = [...new Set(out.numbers.filter(n => n.key === k).map(n => n.raw.replace(/^(\w{3})\w*/, '$1')))];
-    if (seen.length > 1) out.story.push({ severity: 'blocker', route: [...new Set(out.numbers.filter(n => n.key === k).map(n => n.route))].join(', '), what: `two answers for the ${k === 'fiDate' ? 'FI date' : 'debt-free month'}: ${seen.join(' and ')}${appSays ? ` (the math: ${appSays})` : ''}` });
+    if (seen.length > 1) out.story.push({ severity: 'blocker', route: [...new Set(out.numbers.filter(n => n.key === k).map(n => n.route))].join(', '), what: `two answers for the ${k === 'fiDate' ? 'FI date' : k === 'heavyOff' ? 'month the heavy debt is paid off' : 'debt-free month'}: ${seen.join(' and ')}${appSays ? ` (the math: ${appSays})` : ''}` });
   }
   await ctx.close();
   return out;

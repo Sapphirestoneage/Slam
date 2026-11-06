@@ -12,6 +12,7 @@
 //                 their end, each rung used as it is reached, and the floor (the month the last rung runs out).
 //   Tripwires     if/then rules tied to a rung or a month, each placed on the dip.
 //   Plan B and C  up to two other paths (a rung first, rungs left out, extra income, a deeper cut), one line each.
+import { ownPlanPerson } from '../registry/couples.js';
 import { metrics } from './metrics.js';
 import { layersOf } from './layers.js';
 import { myShare } from './spending.js';
@@ -97,7 +98,7 @@ export function transitionPlan(doc, ref) {
 }
 
 // Every rung, read from the household, with the coach's taps on top. Returns the ladder and what the dip needs.
-export function ladderOf(doc, ref, { now = new Date(), plan = transitionPlan(doc, ref), m = metrics(doc, ref, { now }), layers = layersOf(doc, ref, now) } = {}) {
+export function ladderOf(doc, ref, { now = new Date(), plan = transitionPlan(doc, ref), m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }), layers = layersOf(doc, ref, now) } = {}) {
   const x = m.inputs;
   const here = ymOf(now);
   const start = plan?.start && /^\d{4}-\d{2}$/.test(plan.start) ? plan.start : here;
@@ -287,7 +288,7 @@ export const monthsText = mo => (mo == null ? 'past 10 years' : mo >= 36 ? `${(m
 // Everything the screen, the share view and the agenda read, worked out once.
 export function transitionOf(doc, ref, { now = new Date() } = {}) {
   const plan = transitionPlan(doc, ref);
-  const m = metrics(doc, ref, { now });
+  const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }); // batch 33 (finding 23): the burn and the rungs of one person's plan in Dating and Living together
   const layers = layersOf(doc, ref, now);
   const lad = ladderOf(doc, ref, { now, plan, m, layers });
   const dip = dipOf(lad);

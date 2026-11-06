@@ -17,17 +17,25 @@
   "fast",
   "coachable"
  ],
- "note": "After the Batch 20 fixes, rebased on main with Batches 22, 23, 24 and 30. Categories 5 (obvious) and 12 (coachable) wait for Eli at sign-off.",
+ "note": "After the Batch 20 fixes, rebased on main with Batches 22, 23, 24 and 30. Categories 5 (obvious) and 12 (coachable) wait for Eli at sign-off. Batch 33 (Nov 6) re-scored the screens it fixed: Home, Income, Budget, Calendar, Month end, Goals, Debt payoff, Current vs Proposed, Transitions, the One-pager and Find, and added FOO and Scorecard (couples only).",
  "summary": {
-  "screens": 19,
+  "screens": 21,
   "blocker": 0,
-  "major": 6,
-  "minor": 15,
+  "major": 0,
+  "minor": 9,
   "allPass": [
+   "Income",
+   "Budget",
+   "Calendar",
+   "Month end",
    "Assets",
    "About you",
    "Debt payoff",
-   "Next 12 months"
+   "Next 12 months",
+   "One-pager",
+   "Find (top bar)",
+   "FOO",
+   "Scorecard"
   ]
  },
  "screens": [
@@ -52,9 +60,8 @@
      "reason": "numbers matched the app math and the persona hand numbers"
     },
     "oneAnswer": {
-     "result": "failure",
-     "severity": "minor",
-     "reason": "a Living together couple: the FOO step and the Scorecard behind Home still count both people (finding 23)"
+     "result": "pass",
+     "reason": "a Living together couple: the FOO step, the ladder and the Scorecard behind Home follow the whose-numbers switch (batch 33, finding 23); Both (preview) shows the two together, read-only"
     },
     "looks": {
      "result": "pass",
@@ -278,9 +285,8 @@
    ],
    "categories": {
     "works": {
-     "result": "failure",
-     "severity": "major",
-     "reason": "\"Add your 401(k) for the details\" still adds an empty 401(k) that locks the FI date until its balance is in (finding 29)"
+     "result": "pass",
+     "reason": "with an all-accounts investments total, \"Is part of this a 401(k)? Split it out\" moves that part into a 401(k) row; invested and the FI date stay (batch 33, Q291)"
     },
     "right": {
      "result": "pass",
@@ -303,14 +309,12 @@
      "reason": "Find reaches it in one search; it opens at its top and Back returns"
     },
     "easy": {
-     "result": "failure",
-     "severity": "major",
-     "reason": "a raise with Given as Both needs a typed gross and a guessed take-home; no raise tap (finding 16)"
+     "result": "pass",
+     "reason": "a raise is one tap (+3%, +5%, +10% or a %): the new gross and take-home from the tax math, and the toast says what it moved (batch 33, Q288)"
     },
     "words": {
-     "result": "failure",
-     "severity": "minor",
-     "reason": "Per month sits beside the yearly gross box, so the gross reads as a month (finding 27)"
+     "result": "pass",
+     "reason": "Given as Both: the gross box says /yr beside it, so it no longer reads as a month (batch 33, finding 27)"
     },
     "tells": {
      "result": "pass",
@@ -347,14 +351,12 @@
      "reason": "numbers matched the app math and the persona hand numbers"
     },
     "oneAnswer": {
-     "result": "failure",
-     "severity": "major",
-     "reason": "the Plan and Actual passes show different groups and typical totals for one category (finding 22); the sub-tab 1/3 vs 1 of 4 filled (finding 25)"
+     "result": "pass",
+     "reason": "the Actual pass note uses the same scaled typical as the Plan pass (Food $310 on both, Q290); the counter reads \"1 of 4 filled · core 1 of 3\" beside the sub-tab's 1/3 (finding 25)"
     },
     "looks": {
-     "result": "failure",
-     "severity": "major",
-     "reason": "the line side panel covers the right of the lines table at 1280 (Status, Will get it cut) (finding 17)"
+     "result": "pass",
+     "reason": "the lines table fits itself again when the side panel opens or closes; nothing under the panel at 1280 (batch 33, finding 17)"
     },
     "obvious": {
      "result": "pass",
@@ -431,9 +433,8 @@
      "reason": "plain words, no verdicts, no em dashes"
     },
     "tells": {
-     "result": "failure",
-     "severity": "minor",
-     "reason": "days before today still carry the low-line sign in the grid (finding 28)"
+     "result": "pass",
+     "reason": "days before today no longer carry the low-line sign in the grid or the list (batch 33, finding 28)"
     },
     "fits": {
      "result": "pass",
@@ -465,9 +466,8 @@
      "reason": "numbers matched the app math and the persona hand numbers"
     },
     "oneAnswer": {
-     "result": "failure",
-     "severity": "major",
-     "reason": "a gut-only category has no actual to compare: the close now says it leaves them out, but cannot compare them (finding 12)"
+     "result": "pass",
+     "reason": "a gut-only client closes every category: each gut-only category against its gut split (Food $314 for Maya), the actual typed or imported (batch 33, finding 12)"
     },
     "looks": {
      "result": "pass",
@@ -698,7 +698,7 @@
     },
     "oneAnswer": {
      "result": "pass",
-     "reason": "one value per fact across the screens visited"
+     "reason": "Both (preview) for a Living together couple, read-only; Jordan's and Sam's own plans as before (batch 33, Q287)"
     },
     "looks": {
      "result": "pass",
@@ -756,7 +756,7 @@
     },
     "oneAnswer": {
      "result": "pass",
-     "reason": "one value per fact across the screens visited"
+     "reason": "Both (preview) for a Living together couple, read-only (batch 33, Q287)"
     },
     "looks": {
      "result": "pass",
@@ -809,13 +809,12 @@
      "reason": "every button did what it says in the runs"
     },
     "right": {
-     "result": "failure",
-     "severity": "major",
-     "reason": "a Current with a monthly shortfall shows the same 5-year net worth as a Proposed that closes it (finding 18)"
+     "result": "pass",
+     "reason": "a Current that is short each month borrows the gap on the card at the highest card APR, said in one line: the deficit persona's 5-year net worth is -$52,428 against $1,952 (batch 33, Q289)"
     },
     "oneAnswer": {
      "result": "pass",
-     "reason": "one value per fact across the screens visited"
+     "reason": "a Living together couple compares the same person's plan as the switch, which shows here too (batch 33, finding 23)"
     },
     "looks": {
      "result": "pass",
@@ -929,9 +928,8 @@
      "reason": "numbers matched the app math and the persona hand numbers"
     },
     "oneAnswer": {
-     "result": "failure",
-     "severity": "minor",
-     "reason": "a Living together couple: the burn and the rungs count both people (finding 23)"
+     "result": "pass",
+     "reason": "a Living together couple: the burn and the rungs are the switched person's, and the switch shows here (batch 33, finding 23)"
     },
     "looks": {
      "result": "pass",
@@ -1046,9 +1044,8 @@
      "reason": "numbers matched the app math and the persona hand numbers"
     },
     "oneAnswer": {
-     "result": "failure",
-     "severity": "minor",
-     "reason": "a Living together couple: the cards date in the next moves comes from the household FOO (finding 23)"
+     "result": "pass",
+     "reason": "a Living together couple: the next moves read the same person's FOO (the cards paid off Jan 2027, as Goals says) (batch 33, finding 23)"
     },
     "looks": {
      "result": "pass",
@@ -1130,9 +1127,8 @@
      "reason": "taps and one-tap Use where a typical exists"
     },
     "words": {
-     "result": "failure",
-     "severity": "minor",
-     "reason": "\"apr\" lists debt types the client does not have (finding 26)"
+     "result": "pass",
+     "reason": "\"apr\" lists the client's own debts only once a word lands on them (batch 33, finding 26)"
     },
     "tells": {
      "result": "pass",
@@ -1151,6 +1147,124 @@
      "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
     }
    }
+  },
+  {
+   "screen": "FOO",
+   "route": "#/plan/foo",
+   "tasks": [
+    4
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "a Living together couple: the steps are the switched person's (Sam's heavy debt step is Done; it was In progress on Jordan's card) and the switch shows here (batch 33, finding 23)"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Scorecard",
+   "route": "#/plan/scorecard",
+   "tasks": [
+    4
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "a Living together couple: the steps are the switched person's (Sam's heavy debt step is Done; it was In progress on Jordan's card) and the switch shows here (batch 33, finding 23)"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "not re-scored in full by batch 33; checked for the couple case only"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
   }
- ]
+ ],
+ "updated": {
+  "batch": 33,
+  "date": "2026-11-06"
+ }
 }

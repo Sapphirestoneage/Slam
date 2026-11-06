@@ -49,4 +49,13 @@ export const inView = (r, person, mode = null) => !person || person === 'all' ||
 export const viewsOf = (mode, names) => [...(MODES[mode]?.together ? [['all', MODES[mode].together]] : []), ['Me', names.Me], ['Partner', names.Partner]];
 // Batch 15 (question 212): a couple with no combined totals (Dating, Living together) sees one person's own plan
 // everywhere: this client's, unless the person switch says the partner's. Other modes: the household (null).
-export const ownPlanPerson = doc => { const mode = modeOf(doc?.profile); return mode && MODES[mode].couple && MODES[mode].combined === 'none' ? (doc.settings?.person === 'Partner' ? 'Partner' : 'Me') : null; };
+// Batch 33 (QUESTIONS 287): Living together's "Both (preview)", read-only, on the screens that offer it (Home, Goals,
+// Debt payoff). The shell says which screen is open (setBothScreen); the switch's pick ('all') stays in settings.person.
+// On a screen that offers it, 'all' is the two together (the household); anywhere else it reads as this client.
+export const BOTH_PREVIEW = { modes: ['Living together'], label: 'Both (preview)' };
+const shown = { both: false };
+export const setBothScreen = on => { shown.both = !!on; };
+export const bothScreen = () => shown.both;
+export const offersBoth = doc => BOTH_PREVIEW.modes.includes(modeOf(doc?.profile));
+export const bothPreviewOn = doc => shown.both && offersBoth(doc) && doc.settings?.person === 'all';
+export const ownPlanPerson = doc => { const mode = modeOf(doc?.profile); return mode && MODES[mode].couple && MODES[mode].combined === 'none' ? (bothPreviewOn(doc) ? null : doc.settings?.person === 'Partner' ? 'Partner' : 'Me') : null; };

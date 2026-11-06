@@ -634,3 +634,7 @@ td.col-first > .inst-cell:has(> .inst-link)::before { content: ''; display: bloc
 .work-block .work-group + .work-group { padding-top: 10px; border-top: 1px dashed var(--border-row); }
 .work-block .month-taps { flex-wrap: wrap; }
 .work-result .stack { gap: 2px; }
+
+/* Batch 33 (QUESTIONS 288): the raise taps take two columns of a row's details; a phone's details are one column */
+.raise-taps { grid-column: span 2; }
+@media (max-width: 760px) { .raise-taps { grid-column: auto; } }

@@ -119,7 +119,8 @@ table.rows tr.group td { background: var(--bg); height: 36px; font-weight: 700; 
 table.rows tr.group .fold { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: var(--s2); min-height: 36px; width: 100%; cursor: pointer; }
 table.rows tr.group .fold:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
 table.rows tfoot td { position: sticky; bottom: 0; z-index: 2; background: var(--card); border-top: 2px solid var(--border-row); border-bottom: 0; font-weight: 700; height: 44px; }
-table.rows tr.more td { background: var(--bg); padding: var(--s3) var(--s4); }
+table.rows tr.more td { background: var(--bg); }
+table.rows tr.more > td { padding: var(--s3) var(--s4); } /* batch 33: the padding is the open row's own, not every cell of a list inside it (the Budget's lines kept 16px a side and could not fit beside the side panel) */
 /* Batch 7, item 10: a Details panel is a grid, not a free wrap. Every box starts on the same line as its neighbours
    (label above, box below, park buttons under), so the eye reads rows, not a cloud. A wide box (a pair, a long text)
    says so with .wide and takes two cells. */

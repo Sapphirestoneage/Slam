@@ -24,7 +24,7 @@ export const hasProposal = doc => PROPOSED_KEYS.some(k => proposedOf(doc)[k] != 
 // number) to the proposed total, so the shape of the budget stays.
 export function proposedDoc(doc, ref, { now = new Date() } = {}) {
   const p = proposedOf(doc), out = clone(doc);
-  const m = metrics(doc, ref, { now });
+  const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }); // batch 33: the spending scale is against the same person's spending the Current side shows
   if (p.spending != null && m.inputs.spending) {
     const k = p.spending / m.inputs.spending;
     if (m.inputs.lines?.length && doc.spending?.source === 'lines') { for (const r of out.records) if (r.kind === 'bill' && r.amount != null) r.amount = Math.round(r.amount * k * 100) / 100; }
@@ -39,33 +39,49 @@ export function proposedDoc(doc, ref, { now = new Date() } = {}) {
 }
 // Net worth in t years: invested grows at the real return with what goes in each month; the rest of net worth
 // (cash, things, minus debts) stays, plus the debt paid down by then on the payoff plan.
-export function netWorthIn(m, years, { extraDebt = 0 } = {}) {
+// Batch 33 (QUESTIONS 289): a monthly shortfall is borrowed on the card: the client's highest card APR, else the
+// typical card APR (Reference data). Owed after n months: the shortfall each month, growing at APR / 12 a month.
+export function shortfallOf(m, ref) {
+  const short = m.surplus?.value != null && m.surplus.value < -0.5 ? -m.surplus.value : 0;
+  const cards = (m.inputs.debts || []).filter(d => d.type === 'Credit card' && d.apr != null);
+  const apr = cards.length ? Math.max(...cards.map(d => d.apr)) : ref?.typicalRates?.['Credit card'] ?? null;
+  return { monthly: short, apr, from: cards.length ? 'card' : 'typical' };
+}
+export const shortfallOwed = (monthly, apr, months) => (!monthly || !months ? 0 : !apr ? monthly * months : monthly * ((1 + apr / 12) ** months - 1) / (apr / 12));
+export function netWorthIn(m, years, { extraDebt = 0, shortfall = null } = {}) {
   const r = m.inputs.realReturn ?? 0, n = years * 12, monthly = m.investing?.monthly ?? 0, inv = m.inputs.invested ?? 0, nw = m.netWorth.value;
   if (nw == null) return { value: null, steps: ['Net worth needs a balance.'] };
   // The same monthly growth as the FI date (M53): (1 + r)^(1/12), with the debt-first months first (batch 11).
   const gm = (1 + r) ** (1 / 12), g = gm ** n, b = m.investing?.before, k = b ? Math.min(n, b.months) : 0;
   const fv = (P, t) => (r ? P * (gm ** t - 1) / (gm - 1) : P * t);
-  const grown = inv * g + fv(b ? b.monthly : monthly, k) * gm ** (n - k) + fv(monthly, n - k);
+  const going = P => (shortfall?.monthly ? Math.max(0, P) : P); // batch 33: a short month invests nothing; the card carries it
+  const grown = inv * g + fv(going(b ? b.monthly : monthly), k) * gm ** (n - k) + fv(going(monthly), n - k);
   const ds = m.inputs.debts.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null);
   const plan = ds.length ? (m.debtPlan && !extraDebt ? m.debtPlan : payoffPlan(ds, { order: m.inputs.debtOrder, extra: extraDebt, maxMonths: n })) : null; // the one debt plan (batch 11)
   const left = plan ? (plan.path[Math.min(n, plan.path.length - 1)] || []).reduce((s, v) => s + v, 0) : 0;
   const debtNow = ds.reduce((s, d) => s + d.balance, 0), paid = Math.max(0, debtNow - left);
-  const value = grown + (nw - inv) + paid;
-  return { value, steps: [
+  // The shortfall is borrowed while it lasts: the whole gap through the debt-first months, then whatever going in is
+  // still below zero once the freed payments come back (none, when they cover it).
+  const late = monthly < 0 ? -monthly : k ? 0 : shortfall?.monthly ?? 0, grow = t => (shortfall?.apr ? (1 + shortfall.apr / 12) ** t : 1);
+  const owed = shortfall?.monthly ? shortfallOwed(shortfall.monthly, shortfall.apr, k) * grow(n - k) + shortfallOwed(late, shortfall.apr, n - k) : 0;
+  const value = grown + (nw - inv) + paid - owed;
+  return { value, owed, steps: [
     `Invested today ${money(inv)} grows at ${(r * 100).toFixed(1)}% real for ${years} years: ${money(inv * g)}.`,
     k ? `${money(b.monthly)} a month going in for the ${k} months ${waitWords(b)}, then ${money(monthly)} a month: ${money(grown - inv * g)}.` : `${money(monthly)} a month going in, ${n} months, grows to ${money(grown - inv * g)}.`,
     `The rest of net worth (cash, things, minus debts) stays: ${money(nw - inv)}.`,
     `Debt paid down on the ${m.inputs.debtOrder} plan${extraDebt || m.inputs.debtExtra ? ` with ${money(extraDebt || m.inputs.debtExtra)} extra` : ''}${m.debtRule?.on ? ', the surplus on heavy debt first' : ''} by then: ${money(paid)} of ${money(debtNow)}.`,
+    ...(owed ? [`The ${money(shortfall.monthly)} a month shortfall goes on the card at ${(shortfall.apr * 100).toFixed(1)}%${shortfall.from === 'card' ? ' (the highest card APR)' : ' (a typical card APR)'}${k < n && late !== shortfall.monthly ? `, ${late ? `${money(late)} a month` : 'nothing'} once the freed payments come back` : ''}: ${money(owed)} owed by then.`] : []),
     `Net worth in ${years} years: ${money(value)}.`] };
 }
-const money = v => (v == null ? '–' : `$${Math.round(v).toLocaleString('en-US')}`);
+const money = v => (v == null ? '–' : `${Math.round(v) < 0 ? '−' : ''}$${Math.abs(Math.round(v)).toLocaleString('en-US')}`); // batch 33: −$65, not $-65
 function side(doc, ref, { now, flags, extraDebt = 0 }) {
   const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }); // batch 20: a couple with no combined totals compares one person's plan, as Home and Plan show it
   const fi = m.monthsToFi.value;
   const L = ladderOf(doc, ref, { now, flags });
-  const nw5 = netWorthIn(m, 5), nw10 = netWorthIn(m, 10); // the extra is on the copy's debt plan (proposedDoc)
+  const shortfall = shortfallOf(m, ref); // batch 33 (Q289): a short month is borrowed, so a plan that closes the gap shows the difference
+  const nw5 = netWorthIn(m, 5, { shortfall }), nw10 = netWorthIn(m, 10, { shortfall }); // the extra is on the copy's debt plan (proposedDoc)
   const at = mo => (mo == null ? null : addMonths(ymOf(now), mo));
-  return { m, fiMonths: fi, fiDate: fi == null ? null : at(Math.ceil(fi)),
+  return { m, shortfall, fiMonths: fi, fiDate: fi == null ? null : at(Math.ceil(fi)),
     fiSteps: [`Invested ${money(m.inputs.invested)}; ${m.investing?.before ? `${money(m.investing.before.monthly)} a month going in for the ${m.investing.before.months} months ${waitWords(m.investing.before)}, then ` : ''}${money(m.investing?.monthly)} a month going in at ${((m.inputs.realReturn ?? 0) * 100).toFixed(1)}% real.`, `FI number ${money(m.fiNumber.value)} (spending ${money(m.annualSpending)} a year over the ${((m.inputs.withdrawalRate ?? 0.04) * 100).toFixed(1)}% withdrawal rate).`, fi == null ? 'No FI date yet: something is missing.' : `Months until invested reaches the FI number: ${Math.ceil(fi)} (${monthName(at(Math.ceil(fi)))}).`],
     savingsRate: m.savingsRate.value, savingsSteps: [m.savingsRate.text ?? 'Savings rate: surplus plus after-tax savings over take-home.'],
     nw5: nw5.value, nw5Steps: nw5.steps, nw10: nw10.value, nw10Steps: nw10.steps,

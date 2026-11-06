@@ -14,7 +14,7 @@ import { pct } from '../format.js';
 import { feeApr, promoPayoffOf } from '../math/debt.js';
 import { WEEKDAYS, SHABBAT_SPEND_DAY } from '../math/holidays.js';
 import { monthlyFrom } from '../math/income.js';
-import { withHome, myShare, DRAFTT, drafttName, CATEGORIES, categoryName, categoryKeyOf, isCategoryRecord, isFaded, typicalOf, typicalTotal, categoryTypicalOf, levelOf, LEVEL_ELSE, everythingElse } from '../math/spending.js';
+import { withHome, myShare, DRAFTT, drafttName, CATEGORIES, categoryName, categoryKeyOf, isCategoryRecord, isFaded, typicalOf, typicalTotal, categoryTypicalOf, groupTypicalOf, levelOf, LEVEL_ELSE, everythingElse } from '../math/spending.js';
 import { FREQS, DAY_CHIPS, WEEKDAY_CHIPS, MONTH_CHIPS, timingOf, timingPatch, timingWords, ordinal } from '../timing.js';
 import { applies } from '../gates.js';
 import { payoffPlan, debtToIncome, utilization, creditHealth, BUREAUS, yearsText } from '../math/debt.js';
@@ -642,7 +642,8 @@ function fadedInput(r, up, key = `${r.id}:amount`) {
 }
 // A group's slim note: what the faded typical amounts would add up to (for reference, not their number).
 function typicalNote(ctx, rows) {
-  const t = typicalTotal(rows.filter(r => !r.auto));
+  const x = ctx.metrics().inputs;
+  const t = groupTypicalOf(rows.filter(r => !r.auto), { categories: x.categories, scale: x.typicalScale ?? 1 }); // batch 33 (Q290): the same scaled typical as the Plan pass
   return t ? h('span.muted.small.typical-note', { title: 'The faded typical amounts count nowhere until you use one or type the real number' }, `Typical amounts would add up to ${money(t)} a month (for reference, not their number)`) : null;
 }
 // The Everything else header: the sum of its pieces when any has a number, else one rough amount for the whole bucket

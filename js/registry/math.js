@@ -28,7 +28,7 @@ import { sessionNo } from '../program.js';
 import { scorecardOf } from '../math/scorecard.js';
 import { ladderOf } from '../math/ladder.js';
 import { saferFi } from '../math/fi.js';
-import { compareOf, netWorthIn } from '../math/proposed.js';
+import { compareOf, netWorthIn, shortfallOf } from '../math/proposed.js';
 import { closeStreak, byCategory, monthView, ymOf, addMonths } from '../month.js';
 import { affordOf } from '../math/afford.js';
 import { trueCostOf, loanOffers } from '../math/truecost.js';
@@ -168,7 +168,7 @@ export const MATH = [
       f: '(IF({@stack}="","",{@ssPart}+{@medPart}+(MAX(0,SUMIFS(Income_ficaBase,Income_taxUnit,{@taxUnit},Income_stack,"<="&{@stack})-IF(Taxes_joint="Yes",Medicare_over_joint,Medicare_over_single))-MAX(0,SUMIFS(Income_ficaBase,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-IF(Taxes_joint="Yes",Medicare_over_joint,Medicare_over_single)))*Medicare_addl))' }],
     sheet: 'IF(COUNT(Income_M11)=0,"",SUM(Income_M11))', label: 'Social Security and Medicare a year (per person, to the wage base), all income',
     app: c => (Object.keys(c.x.householdTax?.rows || {}).length ? c.x.householdTax.total.fica : null) },
-  { id: 'M12', name: 'Take-home from gross', inputs: 'M10, M11, state and city tax', unit: 'money', fns: ['income.takeHomeFromGross', 'income.stateTax', 'income.incomeRow', 'income.taxTypeOf', 'income.isBenefitRow', 'income.benefitRow', 'income.benefitWeeksThisYear',
+  { id: 'M12', name: 'Take-home from gross', inputs: 'M10, M11, state and city tax', unit: 'money', fns: ['income.takeHomeFromGross', 'raise.raiseOf', 'income.stateTax', 'income.incomeRow', 'income.taxTypeOf', 'income.isBenefitRow', 'income.benefitRow', 'income.benefitWeeksThisYear',
     // Batch 27: income by type (tips, shifts, platform payouts), folded into each row's take-home.
     'earnings.SHIFTS_PER_MONTH', 'earnings.MONTHS3', 'earnings.TIP_OUT_BY', 'earnings.WORK_KEYS', 'earnings.hasWork', 'earnings.workOf', 'earnings.workCash', 'earnings.perShift', 'earnings.workText', 'earnings.tipsTaxNote',
     'earnings.seasonShifts', 'earnings.hasSeasons', 'earnings.shiftMonthsOf', 'earnings.PLATFORMS', 'earnings.platformOf', 'earnings.heldDates'],
@@ -211,7 +211,7 @@ export const MATH = [
       f: rec => `IF(OR(${SKIP},{Kind}<>"Budget line",{amount}=""),"",IF({Status}="Not for me",0,${rec.covers?.months ? `{amount}/${rec.covers.months}` : `{amount}*${MONTH_FACTOR('{per}')}`}))` }],
     sheet: 'SUMIFS(Spend_M20,Spend_InMath,"Yes")', label: 'Budget lines, each as a month, added up',
     app: c => sum(c.x.typedLines.filter(l => !c.x.dupOf[l.id]), l => (l.amount == null ? 0 : l.covers?.months ? l.amount / l.covers.months : monthlyFrom(l.amount, l.per).value)) },
-  { id: 'M21', name: 'My share', inputs: 'amount, who pays, covered, split', unit: 'money', fns: ['spending.myShare', 'spending.categoryTotals', 'spending.CATEGORIES', 'spending.CORE_CATEGORIES', 'spending.categoryName', 'spending.categoryKeyOf', 'spending.isCategoryRecord', 'spending.isFaded', 'spending.typicalOf', 'spending.typicalTotal', 'spending.categoryTypicalOf', 'spending.typicalScaleOf', 'spending.LEVEL_ELSE', 'spending.levelOf', 'spending.everythingElse', 'spending.BILLS_CATEGORIES', 'spending.inFat', 'spending.shareBeforeRefund', 'spending.reimbursedMonthly', 'spending.splitOf', 'spending.amountIsMine', 'spending.wholeBill', 'spending.withHome', 'spending.partnerSplits', 'spending.peopleSharing', 'spending.sharedBillsOf', 'spending.splitWaysOf', 'spending.splitDisagreeOf', 'metrics.coupleBills'],
+  { id: 'M21', name: 'My share', inputs: 'amount, who pays, covered, split', unit: 'money', fns: ['spending.myShare', 'spending.categoryTotals', 'spending.CATEGORIES', 'spending.CORE_CATEGORIES', 'spending.categoryName', 'spending.categoryKeyOf', 'spending.isCategoryRecord', 'spending.isFaded', 'spending.typicalOf', 'spending.typicalTotal', 'spending.gutSplitOf', 'spending.groupTypicalOf', 'spending.categoryTypicalOf', 'spending.typicalScaleOf', 'spending.LEVEL_ELSE', 'spending.levelOf', 'spending.everythingElse', 'spending.BILLS_CATEGORIES', 'spending.inFat', 'spending.shareBeforeRefund', 'spending.reimbursedMonthly', 'spending.splitOf', 'spending.amountIsMine', 'spending.wholeBill', 'spending.withHome', 'spending.partnerSplits', 'spending.peopleSharing', 'spending.sharedBillsOf', 'spending.splitWaysOf', 'spending.splitDisagreeOf', 'metrics.coupleBills'],
     cols: [
       // Batch 5 (E): a shared group is on when its About you box says Yes, or, with nothing answered and roommates, by its config default.
       { area: 'spending', key: 'whoUsed', label: 'Who pays used', unit: 'text',
@@ -483,10 +483,10 @@ export const MATH = [
       { key: 'marker', name: 'Next marker', unit: 'text', fromApp: 'the first marker not reached, with its projected month', app: c => { const l = ladderOf(c.doc, c.ref, { now: c.now, flags: c.flags }); return l.nextMarker ? `${l.nextMarker.name}${l.nextMarker.date ? `, about ${l.nextMarker.date}` : ''}` : 'Every marker reached'; } },
     ] },
   { id: 'M76', name: 'Current vs Proposed', inputs: 'the file, and the Proposed choices (spending, debt order, retire-by age, surplus invested, extra to debt)', unit: 'money',
-    fns: ['proposed.extraIncomeRecord', 'proposed.PROPOSED_KEYS', 'proposed.proposedOf', 'proposed.hasProposal', 'proposed.proposedDoc', 'proposed.netWorthIn', 'proposed.compareOf', 'proposed.setProposed', 'proposed.clearProposed', 'proposed.makeProposedThePlan'],
-    fromApp: 'two runs of the same math on the real file and on a copy with the choices applied: the FI date, the savings rate, net worth in 5 and 10 years (invested grown at the real return with what goes in, the rest of net worth, plus debt paid down on the payoff plan), the next step and marker; the Proposed tab shows each side with the steps',
+    fns: ['proposed.extraIncomeRecord', 'proposed.PROPOSED_KEYS', 'proposed.proposedOf', 'proposed.hasProposal', 'proposed.proposedDoc', 'proposed.netWorthIn', 'proposed.shortfallOf', 'proposed.shortfallOwed', 'proposed.compareOf', 'proposed.setProposed', 'proposed.clearProposed', 'proposed.makeProposedThePlan'],
+    fromApp: 'two runs of the same math on the real file and on a copy with the choices applied: the FI date, the savings rate, net worth in 5 and 10 years (invested grown at the real return with what goes in, the rest of net worth, plus debt paid down on the payoff plan, minus a monthly shortfall borrowed on the card at the highest card APR, else the typical card APR), the next step and marker; the Proposed tab shows each side with the steps',
     app: c => compareOf(c.doc, c.ref, { now: c.now, flags: c.flags }).rows.find(r => r.key === 'nw10')?.diff ?? null,
-    parts: [{ key: 'nw5', name: 'Net worth in 5 years (current)', unit: 'money', fromApp: 'invested grown at the real return plus what goes in, the rest of net worth, plus debt paid down by then', app: c => netWorthIn(c.m, 5).value }] },
+    parts: [{ key: 'nw5', name: 'Net worth in 5 years (current)', unit: 'money', fromApp: 'invested grown at the real return plus what goes in, the rest of net worth, plus debt paid down by then, minus a monthly shortfall borrowed on the card', app: c => netWorthIn(c.m, 5, { shortfall: shortfallOf(c.m, c.ref) }).value }] },
   { id: 'M79', name: 'Freed money follows the FOO', inputs: 'M34 heavy months and freed payments, M27, M43 big e less the cash in the layers (M68), the Roth IRA and HSA room', unit: 'months',
     fns: ['flow.freedFlow', 'flow.taxFreeRoom', 'flow.flowWords', 'fi.waitWords', 'layers.layerOptions'],
     fromApp: 'after the heavy debt the surplus and the freed payments fill big e, then Tax-Free Growth, then are invested (RULES.freedFollowsFoo, QUESTIONS 196); each phase ends at the first whole month its dollars are in. The value is the month big e is full; the FI date (M53) reads the same months',

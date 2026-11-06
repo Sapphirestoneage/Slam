@@ -24,7 +24,7 @@ import { fillCounter } from './ui/counts-ui.js';
 import { taxesCompletion, protectionCompletion } from './completion.js';
 import { institutionsCard } from './ui/institutions-ui.js';
 import { metrics as metricsOf } from './math/metrics.js';
-import { personLabels, modeOf, MODES, viewsOf } from './registry/couples.js';
+import { personLabels, modeOf, MODES, viewsOf, bothScreen, offersBoth, bothPreviewOn, BOTH_PREVIEW } from './registry/couples.js';
 import { fooScreen } from './ui/foo-ui.js';
 import { scorecardScreen } from './ui/scorecard-ui.js';
 import { reviewScreen } from './ui/review-ui.js';
@@ -146,15 +146,21 @@ const layersSummary = ctx => { try { const L = layersOf(ctx.store.doc, ctx.ref, 
 const sumOf = (list, f) => list.reduce((t, x) => t + (f(x) ?? 0), 0);
 const okMoney = (id, value, text) => ({ id, value, needs: [], unit: 'money', text });
 // F2: the person filter. All, or one person (their rows and the Joint ones). The mode sets the default; the pick is kept in settings.person.
-export function personOf(ctx) { const p = ctx.store.doc.settings?.person; const mode = modeOf(ctx.store.doc.profile); const v = p ?? (mode ? MODES[mode].view : 'all'); return v === 'all' && mode && !MODES[mode].together ? 'Me' : v; } // no combined totals in Dating or Living together
+export function personOf(ctx) { const p = ctx.store.doc.settings?.person; const mode = modeOf(ctx.store.doc.profile); const v = p ?? (mode ? MODES[mode].view : 'all'); return v === 'all' && mode && !MODES[mode].together && !bothPreviewOn(ctx.store.doc) ? 'Me' : v; } // no combined totals in Dating or Living together (batch 33: Living together's Both preview, where offered)
 export function personMetrics(ctx) { const p = personOf(ctx); return p === 'all' ? ctx.metrics() : metricsOf(ctx.store.doc, ctx.ref, { now: ctx.now(), person: p }); }
 export function personBar(ctx) {
   if (!ctx.couple) return null;
   const names = personLabels(ctx.store.doc);
   const mode = modeOf(ctx.store.doc.profile), cfg = MODES[mode] || MODES['Married merged'];
+  // Batch 33 (QUESTIONS 287): Living together adds Both (preview) where the screen offers it, read-only.
+  const both = bothScreen() && offersBoth(ctx.store.doc);
+  const views = [...viewsOf(mode || 'Married merged', names), ...(both ? [['all', BOTH_PREVIEW.label]] : [])];
+  const p = personOf(ctx);
   return h('div.row-line.person-bar', { style: { gap: '10px', marginBottom: '8px' } }, h('span.muted.small', {}, 'Show'),
-    S.toggle(viewsOf(mode || 'Married merged', names), personOf(ctx), v => ctx.store.setDoc('settings', { person: v }), { label: 'Whose numbers' }),
-    personOf(ctx) !== 'all' ? h('span.muted.small', {}, `${names[personOf(ctx)]}'s rows and the Joint ones`) : cfg.combined === 'preview' ? h('span.muted.small', {}, 'A preview of the two together; nothing is merged') : null);
+    S.toggle(views, p, v => ctx.store.setDoc('settings', { person: v }), { label: 'Whose numbers' }),
+    p !== 'all' ? h('span.muted.small', {}, `${names[p]}'s rows and the Joint ones`)
+      : both ? h('span.muted.small.both-note', { title: 'Nothing is merged and nothing can be changed here. Each keeps their own plan.' }, `${names.Me} and ${names.Partner} together, a preview: pick a name to change a number`)
+        : cfg.combined === 'preview' ? h('span.muted.small', {}, 'A preview of the two together; nothing is merged') : null);
 }
 export function netWorthStrip(ctx) {
   const m = personMetrics(ctx), x = m.inputs;
