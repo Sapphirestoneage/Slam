@@ -38,6 +38,7 @@ import { gapOf } from '../math/gap.js';
 import { nextMoves } from '../math/moves.js';
 import { transitionOf } from '../math/transitions.js';
 import { fireDrillOf } from '../math/firedrill.js';
+import { project } from '../math/projection.js';
 import { cardsPicture, creditMove } from '../math/cards.js';
 import { cardLibrary } from '../cardlib.js';
 import { skillLibrary } from '../library.js';
@@ -685,6 +686,17 @@ export const MATH = [
       { key: 'help', name: 'Health coverage help a year at today\'s income (Medicaid, the Essential Plan or the premium credit)', unit: 'money', fromApp: 'the benchmark plan less what the household pays on the coverage its income puts it on', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m }).base.health.help },
       { key: 'eitc', name: 'EITC a year at today\'s earnings (federal and New York)', unit: 'money', fromApp: 'the EITC_2026 table, phased in and out, plus EITC_nyShare in New York', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m }).base.eitc.total },
       { key: 'raise5k', name: 'A $5,000 raise: kept after tax less the benefits it costs, a year', unit: 'money', fromApp: 'the raise taxed with the household and each Getting it program read again (above)', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m, raise: 5000 }).raise.net },
+    ] },
+  // ---------- Batch 50: the year-by-year projection engine, the core (Phase 5; docs/engines/projection.md) ----------
+  { id: 'M9P', name: 'The year-by-year projection: months to FI on the full plan', inputs: 'M27 the surplus and the known changes ahead, M34 the one debt plan, M79 the FOO flow (big e, Tax-Free Growth room), M50 the FI number, M02 the return, each income row and its person (W-2, side work and self-employment stop at the stop age, the rest keeps going), M10 SLAM\'s tax function for a raise or a job that stops, the 401(k), HSA and IRA limits by age (limits in the reference data), each account\'s tax type, birth years, Retire by or the FI age, Plan to age, ProjectionRaise, ProjectionCashReturn', unit: 'months',
+    fns: ['projection.EARNED_TYPES', 'projection.WITHDRAW_ORDER', 'projection.bucketOf', 'projection.peopleOf', 'projection.contributionLimit', 'projection.eventsFromProposed', 'projection.project', 'projection.NOT_IN'],
+    fromApp: 'the household is walked a month at a time from today to the end of life (each person\'s age, pay that stops, contributions held to the limit for that age and calendar year, each account by tax type, withdrawals once work stops), which a sheet cannot do with named ranges; docs/engines/projection-check/ has it rebuilt by hand in plain formulas for four households. No screen reads it yet: the FI card still shows M53',
+    app: c => project(c.doc, c.ref, { now: c.now, m: c.m }).fiMonths,
+    parts: [
+      { key: 'debtFree', name: 'Debt free (months), from the one debt plan', unit: 'months', fromApp: 'M9P reads the one debt plan (M34) month by month', app: c => project(c.doc, c.ref, { now: c.now, m: c.m }).debtFreeMonths ?? null },
+      { key: 'netWorth10', name: 'Net worth at the end of year 10, today\'s dollars', unit: 'money', fromApp: 'M9P: every account, debt and thing at the end of its tenth year', app: c => project(c.doc, c.ref, { now: c.now, m: c.m }).years[9]?.end?.netWorth ?? null },
+      { key: 'netWorth30', name: 'Net worth at the end of year 30, today\'s dollars', unit: 'money', fromApp: 'M9P: every account, debt and thing at the end of its thirtieth year', app: c => project(c.doc, c.ref, { now: c.now, m: c.m }).years[29]?.end?.netWorth ?? null },
+      { key: 'lastsTo', name: 'Age the money runs out once work stops (blank: it lasts to Plan to age)', unit: 'number', fromApp: 'M9P: the first month after work stops that cash and every account cannot cover', app: c => project(c.doc, c.ref, { now: c.now, m: c.m }).lastsToAge ?? null },
     ] },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },

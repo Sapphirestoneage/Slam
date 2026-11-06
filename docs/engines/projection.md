@@ -1,6 +1,55 @@
 # Engine spec: the year-by-year projection
 
-Status: design, Batch 17. Nothing here is built. Phase 5 (ROADMAP.md).
+Status: core built, Batch 50 (`js/math/projection.js`, M9P). Math only: no screen reads it yet, so no number a client
+has seen moves. Designed in Batch 17. Phase 5 (ROADMAP.md).
+
+## As built (Batch 50)
+
+**In:** build order steps 1 to 3 and parts of 5 and 6. `project(doc, ref, { now, person, mode, events })` walks the
+household a month at a time from this month to Plan to age (the younger person's), and reports the first 12 months
+month by month and every year after (plan years: year 1 is the next 12 months). Each person's age (one accessor,
+`peopleOf`, for Batch 49's people model); each income row by its person, with W-2, side work, self-employment and
+platform pay stopping at the stop age (Retire by or the FI age, else 65) and rent, family help and benefits going on
+(unemployment ends on its date, through the known changes ahead); a raise a year (`RULES.projectionIncomeGrowth`, 0
+until asked for) and a job that stops are taxed by SLAM's tax function as it is (`householdTax`, the seam for full tax
+depth); the 401(k), the HSA and the match held to the limit for that person's age in that calendar year (catch-ups
+from the year they turn 50, 55 for the HSA, the larger one from 60 to 63, the 415(c) total), pay over a limit coming
+back after the marginal rate; spending as today plus the known changes, and a coach's retirement spending once work
+stops; the one debt plan (M34) reused month by month (never re-implemented); the FOO flow (M79) reused for the phases
+(step 1 and big e to cash, heavy debt, then Tax-Free Growth room each calendar year, then taxable); each account by tax
+type (cash, taxable, pretax, Roth, HSA; 529 and goal money apart) growing at the real return a month; withdrawals once
+work stops in `WITHDRAW_ORDER` (cash, taxable, Roth, HSA, pretax, with a pretax draw before 59½ flagged); the flags
+(the age markers, stop, FI, debt free, short while working, runs out, early); a first dual-age block per person.
+Events: Current vs Proposed's choices (`eventsFromProposed`, from today, through the same copy Current vs Proposed
+builds) and dated spending, income and one-off changes (the debt plan and the FOO flow are rerun with them).
+
+**Where it differs from the design above, on purpose:**
+
+- Every year is stepped a month at a time inside, not once a year with a mid-year convention: a phase that ends
+  mid-year lands in its own month and the FI month is exact. Maya's full run (metrics included) is well under 30 ms.
+- Two modes. `plan` (the default) is the engine as designed. `today` turns the new parts off (no stop, no payment
+  coming back, no limits, no raise) and gives M53, M34 and Next 12 months to the month for every persona and the Demo
+  (test/projection.test.js). In `plan`, four households differ, each listed with its reason in the test
+  (PLAN_DIFFERS): three get an earlier FI date because their last debt sits inside the monthly numbers and is paid off
+  before FI (today's math keeps paying it forever, the engine gives the payment back to the month); Lena and Marco's
+  FI never comes because work stops at 65 (M53 keeps them working to 83). Debt-free dates and Next 12 months match in both.
+- The FI test is today's (invested against the FI number, M50); "net of guaranteed income" waits for Social Security,
+  since today the only candidates are rent and benefits, which SLAM reads as one net number.
+- Money the debt plan sets aside and does not need (the last payment on a debt) stays in checking, so net worth keeps
+  it; the FI date never counted it.
+- A short month while working is drawn from cash and then shown as not covered, never borrowed (Current vs Proposed's
+  net worth puts it on the card; the engine does not).
+
+**Not in yet** (`NOT_IN` on the result): full tax depth (capital gains, the ACA credit, Roth conversions, state
+brackets by year), tax and the 10% penalty on withdrawals, Social Security, RMDs (flagged at 73 only as an age marker),
+go-go, slow-go and no-go spending, a second stop age for a partner, two IRAs for a couple, Triple D and Monte Carlo,
+coast age, the sources for each gap year, and every screen moved onto the engine (build order step 9).
+
+**The hand-built check** (ROADMAP's done means): `tools/projection/build.mjs` rebuilds Maya, Alexis, Tom and Priya and
+Dev in a real xlsx with plain formulas (Inputs, Debt plan with NPER and FV per segment between payoffs, Year 1 month by
+month, Years 1 to 30 in closed form), in `docs/engines/projection-check/`. The test recalculates them in LibreOffice
+and the engine matches to the dollar in year 1 and within 1% at year 30 (in practice within $15). What the sheets take
+from the app is labelled on Inputs: big e and FOO step 1 still to fill, and take-home once work stops.
 
 ## Purpose
 

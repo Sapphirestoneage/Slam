@@ -73,6 +73,9 @@ export const RULES = {
   // spend more) and the share spent moves this far either way; once one is answered the other moves this far. Wider
   // than a gut spending number (rangeSpendGut), so a gut answer still narrows the plan.
   priorSpendShare: 0.25,
+  // Batch 50 (the projection engine core, M9P): a raise a year after inflation (none until SLAM asks for one) and what
+  // cash earns after inflation, both in today's dollars.
+  projectionIncomeGrowth: 0, projectionCashReturn: 0,
 };
 export const LISTS = {
   perMonth: { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, quarter: 1 / 3, year: 1 / 12 },
@@ -296,6 +299,8 @@ export const ASSUMPTIONS = [
   { id: 'rules.learnShown', name: 'LearnShown', label: 'The library: skills to learn shown at each FOO step', unit: 'number', get: () => RULES.learnShown, source: RULE('js/math/library.js, M9K; the older suite\'s Stacker, three at a time (docs/engines/library.md)'), date: '2026-11-06' },
   { id: 'rules.carPaymentYears', name: 'CarPaymentYears', label: 'Can I afford it?: a car payment starts at this many years (other monthly costs start at For good)', unit: 'number', get: () => RULES.carPaymentYears, source: RULE('js/math/afford.js, M83; QUESTIONS 273 (decided Nov 6)'), date: '2026-11-06' },
   { id: 'rules.fireDrillDays', name: 'FireDrillDays', label: 'Fire drill: the days of the calendar read when an account freezes', unit: 'number', get: () => RULES.fireDrillDays, source: RULE('js/math/firedrill.js, M9F: about a pay cycle or two, the time a direct deposit change takes, and the time a closed account takes to send its balance back'), date: '2026-11-06' },
+  { id: 'rules.projectionIncomeGrowth', name: 'ProjectionRaise', label: 'Projection: pay grows this much a year after inflation', unit: 'pct', get: () => RULES.projectionIncomeGrowth, source: RULE('js/math/projection.js, M9P: 0 until a raise is asked for, so the projection gives today\'s FI date; the SSA Trustees\' intermediate real-wage differential (about 1.1% a year, 2025 Report) is the candidate, QUESTIONS'), date: '2026-11-06' },
+  { id: 'rules.projectionCashReturn', name: 'ProjectionCashReturn', label: 'Projection: cash earns this much a year after inflation', unit: 'pct', get: () => RULES.projectionCashReturn, source: RULE('js/math/projection.js, M9P: 0, as M53 and Current vs Proposed treat cash today; high-yield savings rates have run near inflation (FDIC national rates against BLS CPI, 2024 to 2026)'), date: '2026-11-06' },
   { id: 'rules.typicalLow', name: 'TypicalLow', label: 'Typical at your age: the low end of a typical range, times the source\'s median (or mean)', unit: 'number', get: () => RULES.typicalLow, source: RULE('js/math/priors.js, M9E; docs/engines/priors.md, until percentiles are read'), date: '2026-11-06' },
   { id: 'rules.priorSpendShare', name: 'PriorSpendShare', label: 'Typical at your age, not answered yet: the share of pay spent moves this far either way, and so does pay or spending once the other is answered (wider than RangeSpendGut, so a gut answer narrows it)', unit: 'pct', get: () => RULES.priorSpendShare, source: RULE('js/math/agestart.js, M9A; docs/engines/priors.md, How a range narrows (batch 46)'), date: '2026-11-06' },
   { id: 'rules.typicalHigh', name: 'TypicalHigh', label: 'Typical at your age: the high end of a typical range, times the source\'s median (or mean)', unit: 'number', get: () => RULES.typicalHigh, source: RULE('js/math/priors.js, M9E; docs/engines/priors.md, until percentiles are read'), date: '2026-11-06' },

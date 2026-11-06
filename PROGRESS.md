@@ -1163,3 +1163,27 @@ QUESTIONS 388 to 391, as decided.
 docs/usability/scorecard-2026-11-06.json: the Fire drill row updated in place ("batch": 52), 0 blockers, 0 majors, 1
 minor (as before). Layout checker on Fire drill and Home (all checks, Demo and New, and the Demo with Phase 4 on): 0
 failures. Persona run: 15 personas, 0 errors, 0 story notes. Workbook check: every row matches.
+
+## Batch 50 (Nov 6 2026): the projection engine core (Phase 5, M9P, math only)
+
+1. `js/math/projection.js`: `project(doc, ref, { now, person, mode, events })` walks the household a month at a time
+   from this month to Plan to age and reports the first 12 months month by month and every year after: each person's
+   age (`peopleOf`, the one place people are read), income by row and person (W-2, side work and self-employment stop
+   at the stop age), SLAM's tax function as it is for a raise or a job that stops (the seam for full tax depth), the
+   401(k), HSA and match held to the limit for that age and calendar year (`contributionLimit`), the one debt plan (M34)
+   and the FOO flow (M79) reused, each account by tax type, withdrawals once work stops (`WITHDRAW_ORDER`, pretax before
+   59½ flagged), flags and a first dual-age block. Events: Current vs Proposed's choices (`eventsFromProposed`) and
+   dated spending, income and one-off changes. Cached per input version (doc._rev); Maya's full run with metrics is
+   about 10 ms. No screen reads it.
+2. Parity (test/projection.test.js): with the new parts off (`mode: 'today'`) it gives M53's FI date, the debt-free date
+   and Next 12 months (the surplus, what goes into investments, what is owed) for all 15 personas and the Demo, to the
+   month; the Proposed side of Current vs Proposed too. With them on, the debt-free dates and Next 12 months match and
+   three FI dates come sooner (a last debt's payment comes back) and Lena and Marco's never comes (work stops at 65,
+   the money lasts to 73), each listed with why (PLAN_DIFFERS; QUESTIONS 403, 407).
+3. The hand-built spreadsheets: `tools/projection/build.mjs` rebuilds Maya, Alexis, Tom and Priya and Dev in plain
+   formulas (Inputs, Debt plan by NPER and FV per segment, Year 1 by month, Years 1 to 30 in closed form) in
+   `docs/engines/projection-check/`; LibreOffice recalculates them (its own profile) and the engine matches to the
+   dollar in year 1 and within 1% at year 30 (Tom $6,709,971 against the sheet's $6,709,984).
+4. Registered: M9P (months to FI, debt free, net worth at 10 and 30 years, the age the money lasts to) as a From the app
+   row, rules ProjectionRaise and ProjectionCashReturn (both 0), format 40, spec row M9P. projection.md's Status says
+   what is in and what is not.

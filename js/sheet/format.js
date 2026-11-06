@@ -78,6 +78,7 @@ export const FORMATS = [
   { version: 37, shape: 'fe5cb0eb' }, // batch 46: M9A the plan from an age (typical for the age until answered), rule PriorSpendShare
   { version: 38, shape: 'a5501e0b' }, // batch 48: the mortgage rate and the taxes-and-insurance share per client (assumptions.lenderRate, lenderTaxIns), account.planJob (Current job / Old job)
   { version: 39, shape: '9d7d2829' }, // batch 47: M9B the benefits cliff, About you › Benefits now (six taps), SNAP a month, Child care paid out of pocket, the cliff tables and values
+  { version: 40, shape: 'cbac14c2' }, // batch 50: M9P the year-by-year projection (months to FI, debt free, net worth at 10 and 30 years, the age the money lasts to), rules ProjectionRaise, ProjectionCashReturn
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;
