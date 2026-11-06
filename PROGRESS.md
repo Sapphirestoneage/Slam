@@ -829,7 +829,8 @@ Before and after (44 runs): 169 actions to 150, 40 hesitations to 2, 14 dead end
    funds come off the surplus (M27 · sinking, a Set aside a month column on Goals and events); the lines count only
    with an amount; Has investments No (or cash No) is $0; a couple who split bills counts both shares in the household
    view (a Household part column on Spending lines); 529 and Goal contributions in Saved in the budget; the step you
-   are on skips 7 and 5b; only the compared cell carries the app's cached value. The app was not wrong anywhere; foo()
+   are on skips 7 and 5b; only the compared cell carries the app's cached value; the net worth bridge has batch 34's
+   sinking funds line. The app was not wrong anywhere; foo()
    and layersOf() take a person (default unchanged) so the workbook's FOO is the household's, like every other number
    in it.
 4. M81 (the gap) is a formula now, its levers a From the app row; M9E · netWorth looks up a new Priors_netWorth table

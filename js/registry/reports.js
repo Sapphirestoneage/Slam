@@ -98,11 +98,12 @@ export const REPORTS = [
           { key: 'unexplained', name: 'Unexplained cash: in the accounts minus ending cash (M65)', unit: 'money', f: 'IF(Statements_cashEnd="","",Statements_cashNow-Statements_cashEnd)', app: st ? st.tie.cashInAccounts - st.tie.cashOnStatement : null },
           { key: 'change', name: 'Change in net worth this month', unit: 'money', fromApp: 'net worth at the start of the month, from the dated history', app: st?.tie.bridge.change ?? null },
           { key: 'bSurplus', name: 'Surplus', unit: 'money', fromApp: 'the month on the accrual statement', app: st?.tie.bridge.surplus ?? null },
+          { key: 'bSinking', name: 'Set aside into sinking funds (still in the accounts)', unit: 'money', fromApp: 'the month on the accrual statement (batch 34: it comes out of the surplus there)', app: st?.tie.bridge.sinking ?? null },
           { key: 'bSaved', name: 'Saved from paycheck', unit: 'money', fromApp: 'the month on the accrual statement', app: st?.tie.bridge.saved ?? null },
           { key: 'bDebt', name: 'Debt paid down', unit: 'money', fromApp: 'principal paid this month', app: st?.tie.bridge.debtPaidDown ?? null },
           { key: 'bMarket', name: 'Market change', unit: 'money', fromApp: 'investment balances, start and end of the month', app: st?.tie.bridge.market ?? null },
           { key: 'bOther', name: 'Other changes (home and car values)', unit: 'money', fromApp: 'value updates this month', app: st?.tie.bridge.other ?? null },
-          { key: 'bUnexplained', name: 'Unexplained (M66)', unit: 'money', f: 'IF(Statements_change="","",Statements_change-N(Statements_bSurplus)-N(Statements_bSaved)-N(Statements_bDebt)-N(Statements_bMarket)-N(Statements_bOther))', app: st?.tie.bridge.unexplained ?? null },
+          { key: 'bUnexplained', name: 'Unexplained (M66)', unit: 'money', f: 'IF(Statements_change="","",Statements_change-N(Statements_bSurplus)-N(Statements_bSinking)-N(Statements_bSaved)-N(Statements_bDebt)-N(Statements_bMarket)-N(Statements_bOther))', app: st?.tie.bridge.unexplained ?? null },
         ] },
       ];
     },

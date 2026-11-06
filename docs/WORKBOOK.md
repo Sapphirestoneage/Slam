@@ -52,4 +52,5 @@ Batch 38 fixed these (the before list):
 | M70 and the FOO tab | couple-separate | the FOO walked one person's plan (as the screens do) while the workbook holds both people's rows |
 | Statements · Saved in the budget, Free after savings | couple-joint | the app counts 529 and Goal contributions as saved; the sheet left them out |
 | Projections (every column), FOO status (cached values) | every household with a projection; the Demo's downloaded file showed 50 Checks off in LibreOffice | each row's formulas all carried the app's balance as their cached value (the age read $23,540); now only the compared cell carries it |
+| Statements · Unexplained (M66) | multimillionaire, trans-transition (after rebasing on batch 34) | the net worth bridge gained a sinking funds line in the app; the sheet now has it as its own row and takes it off |
 | M69, FOO · The step you are on | multimillionaire | step 7 (Go all in) is a window beside the path, never the step you are on; the sheet matched the first In progress |
