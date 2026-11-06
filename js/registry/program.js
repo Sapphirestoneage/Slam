@@ -15,10 +15,24 @@ export const levelWord = level => (level === null || level === undefined ? null 
 // Budget lines weighs 2; the gut spending number stands in for the categories (6) until the lines are used.
 export const WEIGHTS = { income: 3, debtBalance: 3, debtApr: 1, account: 3, thing: 1, gut: 6, draftt: 2, otherLines: 1, age: 1, areas: 1 };
 
-// The Picture % expected by the end of each session (points); later sessions hold the session 3 mark. Within the
-// margin counts as on track. Eli, Nov 6: "goal is as much as possible": after batch 18 the rough pass reaches about
-// 80% in session 1, so the pace asks for the most a session can do (was 40, 70, 90).
-export const PACE = { expected: { 1: 85, 2: 95, 3: 99 }, hold: 99, margin: 5 };
+// The pace (points) expected by the end of each session; later sessions hold the session 3 mark. Within the margin
+// counts as on track. Eli, Nov 6: "goal is as much as possible" (was 40, 70, 90, then 85, 95, 99 on the blend).
+// Batch 57 (Eli, Nov 6: "quantity versus quality"): session 1 reads Answered (how much is in), sessions 2 on read
+// Solid (how much of it is from a statement or known for sure); measure says which. start is what the measure is due
+// at when a session starts reading a new one (Solid, from session 2): what a normal session 1 leaves. Measured on the
+// effort runs (Alexis, Tom, Maya: Fast Track and the walk): answered 96, 100, 96 and solid 74, 86, 61 after session
+// 1; solid 100 for all three once the guesses come back in session 2 (the batch 57 question in QUESTIONS.md has the table).
+export const PACE = { measure: { 1: 'answered', 2: 'solid', 3: 'solid' }, expected: { 1: 95, 2: 95, 3: 99 }, start: { 2: 60 }, hold: 99, margin: 5 };
+export const PACE_WORDS = { answered: 'Answered', solid: 'Solid' };
+// The Whole picture bar on Home (batch 57): each box's weight in one of five parts, by its level (min points); a box
+// not answered (blank, Will get it, Not now) is Not in yet whatever its level.
+export const BAR_LEVELS = [
+  { key: 'know', label: 'Know it', min: LEVELS.Actual },
+  { key: 'statement', label: 'Statement or app', min: LEVELS.Estimate },
+  { key: 'rough', label: 'Rough', min: LEVELS.Rough },
+  { key: 'gut', label: 'Gut', min: LEVELS.Gut },
+  { key: 'missing', label: 'Not in yet', min: null },
+];
 
 // What a calculator needs before it unlocks: every item in the group at or above the level. A group with no items
 // (no debts, per About you) has nothing to wait for.
@@ -62,7 +76,7 @@ export const SESSIONS = [
   { id: 'S3', name: 'Lock it', items: [
     { id: 'actuals', label: 'One month of Actuals', auto: 'monthOfActuals' },
     { id: 'locked', label: 'Key numbers locked', auto: 'keyNumbersLocked' },
-    { id: 'picture', label: 'Whole picture 95% or more (see Whole picture on Home)', auto: 'picture90' }] }, // item 9: the item says which part it needs
+    { id: 'picture', label: 'Whole picture answered and solid, 95% or more each (see Whole picture on Home)', auto: 'picture90' }] }, // item 9: the item says which part it needs; batch 57: both halves
   { id: 'S4', name: 'Goals', items: [
     { id: 'short', label: 'Three short-term goals, each with an amount, a date and a need, want or wish tag', auto: 'shortGoals' },
     { id: 'long', label: 'Three long-term goals, each with an amount, a date and a need, want or wish tag', auto: 'longGoals' }] },

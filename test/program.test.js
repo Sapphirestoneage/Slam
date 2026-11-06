@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Store, newHousehold, exportFile, importInto } from '../js/records.js';
 import { metrics } from '../js/math/metrics.js';
-import { levelOf, pictureOf, nextSmallThings, paceOf, unlockOf, confidenceOf } from '../js/math/picture.js';
+import { levelOf, pictureOf, nextSmallThings, paceOf, paceMeasureOf, unlockOf, confidenceOf } from '../js/math/picture.js';
 import { LEVELS, WEIGHTS, PACE, SESSIONS } from '../js/registry/program.js';
 import { sessionsOf, programOf, startSession, endSession, day0Of, day0Report, sessionNo, inSession } from '../js/program.js';
 import { householdFromInputs } from '../js/demo.js';
@@ -181,15 +181,23 @@ test('next small things: three items, each with its gain and where to go; the ga
   assert.ok(Math.abs(n[0].gain - n[0].weight * (LEVELS.Estimate - 0) / sum) < 1e-9, 'a missing number gains up to Estimate when typed');
 });
 
-test('pace: Ahead past the target, On track within the margin of what was due, Catch up below it', () => {
+test('pace: Ahead past the target, On track within the margin of what was due, Catch up below it (batch 57: session 1 reads Answered, sessions 2 on read Solid)', () => {
+  assert.deepEqual([1, 2, 3, 7, 12].map(paceMeasureOf), ['answered', 'solid', 'solid', 'solid', 'solid']);
+  assert.deepEqual([PACE.expected[1], PACE.expected[2], PACE.expected[3], PACE.start[2]], [95, 95, 99, 60]);
   assert.equal(paceOf(0, 1).word, 'On track', 'session 1 starts at 0 with nothing due yet');
-  assert.equal(paceOf(0.86, 1).word, 'Ahead');
-  assert.equal(paceOf(0.81, 2).word, 'On track'); // 85 due, margin 5
-  assert.equal(paceOf(0.70, 2).word, 'Catch up');
+  assert.equal(paceOf(0.96, 1).word, 'Ahead');
+  assert.equal(paceOf(0.56, 2).word, 'On track', 'Solid starts session 2 due at 60, within the margin of 5');
+  assert.equal(paceOf(0.54, 2).word, 'Catch up');
+  assert.equal(paceOf(0.91, 3).word, 'On track', 'session 3: 95 was due (session 2, the same measure), margin 5');
+  assert.equal(paceOf(0.89, 3).word, 'Catch up');
   assert.equal(paceOf(0.99, 3).word, 'Ahead');
   assert.equal(paceOf(0.95, 7).word, 'On track'); // held at 99
-  assert.deepEqual([PACE.expected[1], PACE.expected[2], PACE.expected[3]], [85, 95, 99]);
-  assert.match(paceOf(0.5, 2).text, /50% now; 85% was expected by now, 95% by the end of session 2/);
+  assert.equal(paceOf(0.88, 1).text, 'Session 1: answered 88%; 95% expected by the end of it');
+  assert.equal(paceOf(0.96, 1).text, 'Session 1: answered 96%, past the 95% expected');
+  assert.equal(paceOf(0.5, 2).text, 'Session 2: solid 50%; 60% was expected by now, 95% by the end of it');
+  // A picture: the session's own measure is read off it.
+  const pic = { pct: 0.7, answered: 0.96, solid: 0.6 };
+  assert.equal(paceOf(pic, 1).points, 96); assert.equal(paceOf(pic, 2).points, 60); assert.equal(paceOf(pic, 2).label, 'Solid');
 });
 
 // ---------- Unlocks and confidence ----------
@@ -273,7 +281,7 @@ test('Day 0: the first end of session saves it, later ends save End of session N
   assert.equal(e.doc.snapshots.filter(x => x.label.startsWith('End of session')).length, 1);
   assert.equal(e.doc.session.count, 2);
   const rep = day0Report(d.doc, ref, { now });
-  assert.deepEqual(rep.rows.map(r => r.key), ['netWorth', 'debtTotal', 'surplus', 'savingsRate', 'picturePct', 'scoreOk', 'confidence', 'joy']); // F4, answer 164: Confidence and Joy are rows
+  assert.deepEqual(rep.rows.map(r => r.key), ['netWorth', 'debtTotal', 'surplus', 'savingsRate', 'pictureAnswered', 'pictureSolid', 'scoreOk', 'confidence', 'joy']); // F4, answer 164: Confidence and Joy are rows; batch 57: Answered and Solid stand for the Picture
   assert.equal(rep.rows[0].change, 0);
 });
 
@@ -297,7 +305,8 @@ test('spec: the Program tab names every session, level, weight, pace mark and un
   for (const [area, t] of Object.entries(THRESHOLDS)) for (const [k, v] of Object.entries(t)) assert.equal(cell('Thresholds', `${area} ${k}`)?.[2], String(v), `${area} ${k}`);
   for (const [k, v] of Object.entries(LEVELS)) assert.equal(cell('Levels', k)?.[2], String(v), k);
   for (const [k, v] of Object.entries(WEIGHTS)) assert.equal(cell('Weights', k)?.[2], String(v), k);
-  SESSIONS.forEach((s, i) => assert.equal(cell('Pace', `S${i + 1}`)?.[2], `${PACE.expected[i + 1] ?? PACE.hold}%`));
+  SESSIONS.forEach((s, i) => { const m = paceMeasureOf(i + 1); assert.equal(cell('Pace', `S${i + 1}`)?.[2], `${m[0].toUpperCase()}${m.slice(1)} ${PACE.expected[i + 1] ?? PACE.hold}%`);
+    if (PACE.start?.[i + 1] != null) assert.match(cell('Pace', `S${i + 1}`)?.[3] ?? '', new RegExp(`due at ${PACE.start[i + 1]}%`)); }); // batch 57: each session names its measure
   assert.equal(cell('Pace', 'Margin')?.[2], `${PACE.margin} points`);
   for (const u of Object.values(UNLOCKS)) { const r = cell('Unlocks', u.label); assert.ok(r, u.label); for (const n of u.needs) assert.ok(r[2].includes(n.label), n.label); }
   assert.match(cell('Confidence', '')?.[2] ?? '', new RegExp(`${CONFIDENCE.high} or more, Medium at ${CONFIDENCE.medium}`));

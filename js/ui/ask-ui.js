@@ -26,7 +26,7 @@ export function askNextCard(app, ctx) {
       h('strong.ask-q', {}, q.question),
       h('span.spacer'),
       S.button('Open the box', { kind: 'primary', size: 'small', iconName: 'right', onClick: () => openQuestion(app, q) })),
-    q.why ? h('p.muted.small.ask-why', {}, q.why) : null,
+    q.why ? h('p.muted.small.ask-why', {}, q.addsWords ? `${q.why}. ${q.addsWords}.` : q.why) : null, // batch 57: says which half it moves
     then ? h('div.row-line.ask-then', {}, h('span.muted.small', {}, 'Then: ', then.question),
       S.button('Open', { size: 'small', iconName: 'right', onClick: () => openQuestion(app, then) })) : null);
 }

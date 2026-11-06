@@ -9,7 +9,7 @@
 // their own (the sheet shows the default, a blue cell for theirs, and the one used). A table: rows of numbers, each
 // column its own named range (tax brackets, periods).
 
-import { LEVELS, WEIGHTS, PACE, SESSIONS } from './program.js';
+import { LEVELS, WEIGHTS, PACE, PACE_WORDS, SESSIONS } from './program.js';
 import { THRESHOLDS, PAYOFF, AREAS as SCORE_AREAS } from './scorecard.js';
 import { priorsData } from '../priorslib.js';
 
@@ -387,8 +387,10 @@ export const TABLES = [
     rows: () => Object.entries(LEVELS), source: RULE('js/registry/program.js'), date: '2026-11-05' },
   { id: 'Weights', label: 'Weights: how much each number counts in the Picture % (M73)', columns: [['item', 'Item', 'text'], ['weight', 'Weight', 'number']],
     rows: () => Object.entries(WEIGHTS), source: RULE('js/registry/program.js'), date: '2026-11-05' },
-  { id: 'Pace', label: 'Pace: Picture % expected by the end of each session (M73)', columns: [['session', 'Session', 'number'], ['expected', 'Expected %', 'pct']],
-    rows: () => SESSIONS.map((s, i) => [i + 1, (PACE.expected[i + 1] ?? PACE.hold) / 100]), source: RULE('js/registry/program.js'), date: '2026-11-05' },
+  // Batch 57: each session's pace reads Answered (session 1) or Solid (session 2 on); Due at start is what the measure
+  // is due at when a session starts reading it (blank: the last session's mark).
+  { id: 'Pace', label: 'Pace: Answered or Solid expected by the end of each session (M73)', columns: [['session', 'Session', 'number'], ['reads', 'Reads', 'text'], ['expected', 'Expected %', 'pct'], ['start', 'Due at start %', 'pct']],
+    rows: () => SESSIONS.map((s, i) => [i + 1, PACE_WORDS[PACE.measure[i + 1] ?? PACE.measure[3]], (PACE.expected[i + 1] ?? PACE.hold) / 100, PACE.start?.[i + 1] != null ? PACE.start[i + 1] / 100 : null]), source: RULE('js/registry/program.js'), date: '2026-11-06' },
   // The scorecard (batch 2): the thresholds and payoff rules behind each area's rating (M74).
   { id: 'Score', label: 'Scorecard thresholds and payoff rules (M74)', columns: [['area', 'Area', 'text'], ['rule', 'Rule', 'text'], ['value', 'Value', 'number']],
     rows: () => [...Object.entries(THRESHOLDS).flatMap(([a, t]) => Object.entries(t).map(([k, v]) => [a, k, v])), ...Object.entries(PAYOFF).flatMap(([a, t]) => Object.entries(t).map(([k, v]) => [a, `payoff ${k}`, v])),

@@ -22,6 +22,11 @@ const TOM = { name: 'Tom Hutchinson', birthYear: '1988', takeHome: '9800', per: 
   housing: 'Own', car: true, homeValue: '650000', carValue: '22000', cards: null, noOtherDebts: false, fiAge: '50',
   taps: { kids: false, pets: false, work: 'Employed (W-2)', household: 'Solo', hsa: true, fsa: false, equity: true, state: 'NY', why: ['Want FI or to retire early'], worry: ['Never being able to retire'], goal: ['FI or retire early'] } };
 
+// Maya (batch 57, the build notes): born 1996, $2,400 every 2 weeks, gut $3,500 (not incl debt), checking $1,200,
+// savings $4,000, invested $15,000, cards $6,000 paying $200 (the APR a guess), rents, no car.
+const MAYA = { name: 'Maya Test', birthYear: '1996', takeHome: '2400', per: 'paycheck', freq: '2 weeks', gut: '3500', gutIncludesDebt: false, checking: '1200', savings: '4000', invested: '15000',
+  housing: 'Rent', car: false, cards: { bal: '6000', pay: '200' }, noOtherDebts: true, fiAge: null,
+  taps: { kids: false, pets: false, work: 'Employed (W-2)', household: 'Solo', hsa: false, fsa: false, equity: false, state: 'NY', why: ['Debt feels out of control'], worry: ['Debt'], goal: ['Debt free'] } };
 async function launch({ width = 1440, height = 1000 } = {}) {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width, height } });
@@ -76,7 +81,8 @@ async function fastTrack(page, client, c = counter(page)) {
     c.step = 'Home';
     await c.click(page.locator('button', { hasText: /^(Start session 1|Start Fast Track|Redo Fast Track)$/ }).first()); await settle(page, 400);
   }
-  const seg = async (label, v) => { const b = byFocus(page, `seg:${label}:${v}`); if (await has(b) && (await b.getAttribute('aria-pressed')) !== 'true') await c.click(b); };
+  // Scoped to the Fast Track box: About you on the page under it has the same buttons (batch 57).
+  const seg = async (label, v) => { const b = page.locator(`.ft-box [data-focus="${`seg:${label}:${v}`}"]`).first(); if (await has(b) && (await b.getAttribute('aria-pressed')) !== 'true') await c.click(b); };
   const money = async (key, v) => { if (v == null) return; const b = byFocus(page, key); if (await has(b)) await c.type(b, v); };
   for (let s = 0; s < 14; s++) {
     if (!(await has(page.locator('.ft-box')))) break;
@@ -129,4 +135,4 @@ async function newClientFastTrack(page, client) {
   return c;
 }
 
-module.exports = { BASE, launch, settle, counter, newClient, fastTrack, tapStep, newClientFastTrack, byFocus, has, ALEXIS, TOM };
+module.exports = { BASE, launch, settle, counter, newClient, fastTrack, tapStep, newClientFastTrack, byFocus, has, ALEXIS, TOM, MAYA };

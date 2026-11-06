@@ -64,6 +64,9 @@ export function questionWords(k) {
   return `What is in ${label} today`;
 }
 // Why it matters, in one line: what the answer pins down ("Pins your FI date to within about 2 years").
+// Batch 57: which half of the Picture a question moves (it does not change how one is picked): a number not given yet
+// (or a typical stand-in) adds to Answered; one already given, firmed up, adds to Solid.
+const addsOf = adds => ({ adds, addsWords: adds === 'solid' ? 'Firms up a number already in: raises Solid' : 'A new answer: raises Answered' });
 export function whyWords(n) {
   if (!n) return null;
   if (n.key === 'foo') return 'Settles which step of your plan you are on';
@@ -137,7 +140,7 @@ export function askNextOf(doc, ref, { now = new Date(), person = null, m = null,
     }
     if (value <= 1e-9) continue;
     out.push({ id: k.id, recId: k.recId, field: k.field, route: k.route, focus: k.gut && ans.level === LEVELS.Estimate ? 'gut:from' : k.focus ?? `${k.recId}:${k.field}`, kind: k.kind, label: k.label, level: k.level, prior: !!k.prior,
-      question: questionWords(k), narrows: best, why: whyWords(best), value, seconds: ans.seconds, answer: ans.level, score: value / ans.seconds, order: order(k.id) });
+      question: questionWords(k), narrows: best, why: whyWords(best), ...addsOf(!k.prior && k.level > LEVELS.Missing ? 'solid' : 'answered'), value, seconds: ans.seconds, answer: ans.level, score: value / ans.seconds, order: order(k.id) });
   }
   // M56: on a near tie, the input behind the assumption that moves the FI date most goes first (Spending: the spending input).
   const deal = base.bigDeals?.value === 'Spending' ? 'spending' : null;
@@ -150,7 +153,7 @@ export function askNextOf(doc, ref, { now = new Date(), person = null, m = null,
   // M73 first: an item the plan cannot run without (nothing typed yet) comes before any narrowing.
   const missing = small.filter(it => it.level === LEVELS.Missing && !knobs.some(k => k.id === it.id) && !(it.recId && SKIP.has(statusOf(recOf(it.recId) ?? {}, it.field))))
     .map(it => ({ id: it.id, recId: it.recId ?? null, field: it.field ?? null, route: it.route, focus: it.focus ?? (it.recId && it.field ? `${it.recId}:${it.field}` : null), kind: 'missing', label: it.label, level: it.level, prior: false,
-      question: `${it.label} (nothing in yet)`, narrows: { key: it.group, missing: true }, why: whyWords({ missing: true }), value: null, seconds: RULES.askSecondsNumber, answer: LEVELS.Rough, score: Infinity, order: order(it.id), missing: true }));
+      question: `${it.label} (nothing in yet)`, narrows: { key: it.group, missing: true }, why: whyWords({ missing: true }), ...addsOf('answered'), value: null, seconds: RULES.askSecondsNumber, answer: LEVELS.Rough, score: Infinity, order: order(it.id), missing: true }));
   const questions = [...missing, ...out];
   return { meter, guess, questions, top: questions[0] ?? null, runnerUp: questions[1] ?? null };
 }

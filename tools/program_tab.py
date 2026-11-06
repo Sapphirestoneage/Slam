@@ -19,7 +19,7 @@ SPEC = ROOT / "spec" / "SLAM Build Spec.xlsx"
 TAB = "Program"
 
 READ = """
-import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES } from './js/registry/program.js';
+import { LEVELS, WEIGHTS, PACE, BAR_LEVELS, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES } from './js/registry/program.js';
 import { AREAS, RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER } from './js/registry/scorecard.js';
 import { ORDER, STEP_WORDS, PREREQS, CONDITIONS, STEP_CARDS } from './js/registry/foo.js';
 import { STEPS, MARKERS, LADDER } from './js/registry/ladder.js';
@@ -27,7 +27,7 @@ import { MODES, PERSONS, ONE_PERSON_TYPES } from './js/registry/couples.js';
 import { METHODS, SUGGEST } from './js/registry/debt.js';
 import { JOY, CONFIDENCE as CONF_MEASURE } from './js/registry/joy.js';
 const prereqs = Object.fromEntries(Object.entries(PREREQS).map(([k, p]) => [k, { ...p, conditions: (p.conditions || []).map(c => CONDITIONS[c].label) }]));
-console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs, CARDS: STEP_CARDS }, LADDER: { STEPS, MARKERS, LADDER }, COUPLES: { MODES, PERSONS, ONE_PERSON_TYPES }, DEBT: { METHODS, SUGGEST }, JOY, CONF: CONF_MEASURE }));
+console.log(JSON.stringify({ LEVELS, WEIGHTS, PACE, BAR_LEVELS, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS, MONEY_DATES, REVIEW, AGENDA, HOMEWORK_STATUSES, SCORE: { AREAS: AREAS.map(a => ({ ...a, fooWhen: a.fooWhen ? 'moves with the facts' : null })), RATINGS, THRESHOLDS, PAYOFF, FOO_ORDER }, FOO: { ORDER, STEP_WORDS, PREREQS: prereqs, CARDS: STEP_CARDS }, LADDER: { STEPS, MARKERS, LADDER }, COUPLES: { MODES, PERSONS, ONE_PERSON_TYPES }, DEBT: { METHODS, SUGGEST }, JOY, CONF: CONF_MEASURE }));
 """
 RULE_WORDS = {
     "cashFlow": "The headline savings rate: Strong at or over strong, OK at or over ok, else Hole; a negative surplus is a Hole",
@@ -114,10 +114,15 @@ def main():
     row("Weights", "", "Big items count more. A missing big thing (no income row yet) is one item at Missing, so an empty client reads 0%.", "js/registry/program.js WEIGHTS")
     for k, v in cfg["WEIGHTS"].items():
         row("Weights", k, str(v), WEIGHT_WORDS[k])
-    row("Pace", "", "The Picture % expected by the end of each session; later sessions hold the session 3 mark. Ahead: at or past this session's mark. On track: within the margin of what was due by now. Catch up: below it.", "js/registry/program.js PACE")
+    row("Pace", "", "Batch 57 (Eli, Nov 6: quantity versus quality): the Picture % splits into Answered (the weighted share of boxes with any answer, a guess included; Will get it and Not now are not answers) and Solid (of the answered weight, the share at Estimate or Actual: read off a statement or an app, worked out, or Know it). Each session's pace reads one of them: Answered in session 1, Solid from session 2; later sessions hold the session 3 mark. Ahead: at or past this session's mark. On track: within the margin of what was due by now (the last session's mark on the same measure, else the measure's start mark). Catch up: below it.", "js/registry/program.js PACE; M73 answered and solid")
+    measure = cfg["PACE"]["measure"]
+    last = str(max(int(k) for k in measure))
     for n in range(1, len(cfg["SESSIONS"]) + 1):
-        row("Pace", f"S{n}", f"{cfg['PACE']['expected'].get(str(n), cfg['PACE']['hold'])}%", "")
+        m = measure.get(str(n), measure[last])
+        start = cfg["PACE"].get("start", {}).get(str(n))
+        row("Pace", f"S{n}", f"{m.capitalize()} {cfg['PACE']['expected'].get(str(n), cfg['PACE']['hold'])}%", f"{m.capitalize()} due at {start}% when it starts" if start is not None else "")
     row("Pace", "Margin", f"{cfg['PACE']['margin']} points", "")
+    row("Pace", "Bar", "Home's Whole picture bar splits the weight by level: " + "; ".join(f"{b['label']}" for b in cfg["BAR_LEVELS"]) + ". A box not answered is Not in yet.", "js/registry/program.js BAR_LEVELS")
     row("Unlocks", "", "A calculator shows locked, with a plain reason ('Unlocks when spending reaches Estimate (2 of 5 there)'), until every item in each group is at or above the level.", "js/registry/program.js UNLOCKS")
     for k, u in cfg["UNLOCKS"].items():
         row("Unlocks", u["label"], "; ".join(f"{n['label']} (every {n['group']} item at {n['min']}+)" for n in u["needs"]), "")

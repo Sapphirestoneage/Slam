@@ -81,6 +81,7 @@ export const FORMATS = [
   { version: 40, shape: 'cbac14c2' }, // batch 50: M9P the year-by-year projection (months to FI, debt free, net worth at 10 and 30 years, the age the money lasts to), rules ProjectionRaise, ProjectionCashReturn
   { version: 41, shape: '3cf3c796' }, // batch 49: M9N households of any size, the People tab (name, adult or dependent, role, age), Shared among and Split how on every row (the percents skipped), Owner P3 to P7
   { version: 42, shape: '6e45b952' }, // batch 51: M9H Shift P&L, Income › getting to a shift, childcare, outfits and gear, the hours around a shift, rule MileageRate
+  { version: 43, shape: 'a8ebfcce' }, // batch 57: M73 answered and solid (the Picture split into quantity and quality), the Pace table's Reads and Due at start columns
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

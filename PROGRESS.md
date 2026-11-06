@@ -1249,3 +1249,25 @@ failures. Persona run: 15 personas, 0 errors, 0 story notes. Workbook check: eve
 7. Personas: Nova the dancer $337.97 a shift after costs, $33.80 a real hour (on the clock $52.48); Riley the bartender
    $229.00, $22.90 (on the clock $32.50); hand-worked in their defs (shiftPnl) and checked in test/batch51.test.js;
    Alexis, Tom, Maya and the teacher have no shift rows and show nothing. QUESTIONS 420 to 426.
+
+## Batch 57 (Nov 6 2026): the Picture split into Answered and Solid
+
+Eli asked (1:27 pm): "how much information have they completed versus the aspects of the information that they've
+completed ... quantity versus quality".
+1. Math (M73, js/math/picture.js): every picture item now says whether it is answered (Gut or better; Will get it and
+   Not now are not answers). pictureOf returns answered (the weighted share of boxes with an answer), solid (of the
+   answered weight, the share at Estimate or Actual), the box counts behind both, and the weight at each level for a
+   bar (BAR_LEVELS in js/registry/program.js). The blend (pct) is unchanged. Registered as M73 answered and solid;
+   test/batch57.test.js checks them by hand.
+2. Pace (js/registry/program.js PACE): session 1 reads Answered (95%), sessions 2 on read Solid (95%, then 99%), with
+   Solid due at 60% when session 2 starts; numbers measured on the effort runs (QUESTIONS 427). The session 3 item
+   needs both at 95%. The Program tab and the Assumptions Pace table say which measure each session reads.
+3. Home: Certainty stays the big meter; under it "Answered 8 of 9 · Solid 6 of 8" (weighted shares in the tip), a slim
+   bar split by level with its words under it (no red; stripes for Rough and Gut), and the pace tag ("Session 1:
+   answered 96%, past the 95% expected"). The card's summary, the Day 0 table, What changed and the spreadsheet's
+   Program report use the same two words; snapshots keep pictureAnswered and pictureSolid. Glossary: Answered (how
+   much they have given), Solid (how much of it is from a statement or known for sure).
+4. Ask next: the why line says which half the question moves ("Firms up a number already in: raises Solid", "A new
+   answer: raises Answered"); how it picks is unchanged.
+5. Tools: the effort run prints Answered and Solid, runs Maya with EFFORT_CLIENTS=Maya, and drive.cjs taps Fast Track's
+   own buttons (About you under it has the same ones). Format 43. QUESTIONS 427 to 430.

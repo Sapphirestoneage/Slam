@@ -142,6 +142,19 @@
 /* Batch 43 (M9Q): the certainty meter where the Picture % stood, the Picture % one slim line under it; Ask next one slim card. */
 .picture-card .cert-label { font-weight: 600; }
 .picture-card .cert-small .progress { flex: 0 1 160px; }
+/* Batch 57: Answered and Solid, a slim bar split by level (no red; each part has its own fill so it reads without color, and the words sit under it). */
+.picture-card .pic-words { font-weight: 600; }
+.stack-bar { display: flex; flex: 0 1 200px; min-width: 120px; height: 10px; border-radius: 5px; overflow: hidden; background: var(--computed); }
+.stack-bar .seg { display: block; height: 100%; }
+.stack-bar .seg + .seg, .stack-key .sw { box-shadow: inset 1px 0 0 var(--card); }
+.seg.know, .sw.know { background: var(--good); }
+.seg.statement, .sw.statement { background: color-mix(in srgb, var(--good) 55%, var(--card)); }
+.seg.rough, .sw.rough { background: repeating-linear-gradient(135deg, var(--roughly) 0 3px, color-mix(in srgb, var(--roughly) 55%, var(--card)) 3px 6px); }
+.seg.gut, .sw.gut { background: repeating-linear-gradient(90deg, var(--guess) 0 2px, color-mix(in srgb, var(--guess) 35%, var(--card)) 2px 5px); }
+.seg.missing, .sw.missing { background: var(--computed); }
+.stack-key { gap: 12px; margin-top: 4px; flex-wrap: wrap; }
+.stack-key .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; border: 1px solid var(--border-row); }
+@media (max-width: 600px) { .stack-bar { flex-basis: 100%; } }
 .ask-next { margin-bottom: var(--s4); padding-top: 12px; padding-bottom: 12px; }
 .ask-next .ask-top { gap: 10px; flex-wrap: wrap; align-items: center; }
 .ask-next .ask-q { font-size: 1.0625rem; min-width: 0; }

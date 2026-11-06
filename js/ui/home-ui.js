@@ -67,7 +67,7 @@ export function homeScreen(app, ctx) {
     pathRow(app, P, open),
     checklistCard(app, ctx, P, open),
     affordHomeLine(app), // batch 23: Can I afford it? opens on Plan › Goals
-    card(pictureCard(ctx, P, app), 'home:picture', { open: true, summary: `Certainty ${certaintyPoints(ctx, app)}% · Picture ${P.pace.points}% · ${P.pace.word}` }),
+    card(pictureCard(ctx, P, app), 'home:picture', { open: true, summary: `Certainty ${certaintyPoints(ctx, app)}% · ${pictureWords(P.picture)} · ${P.pace.word}` }),
     P.inSession ? card(wrapUp(app, ctx, P), 'home:wrap-up', { open: true }) : null,
     low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below the low line (${money(low.low)}) on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/cash-flow/calendar') })) : null, // R096
     ctx.gates().betweenJobs ? runwayStrip(ctx, P) : null, // R006
@@ -273,7 +273,19 @@ const fmtRow = (r, v) => (v == null ? '' : r.unit === 'pct' ? pct(v) : r.unit ==
 // ---------- The picture and its pace; after intake, the areas Strong or OK ----------
 const bar = (x, { wide = false, label = 'Picture filled in' } = {}) => h(`div.progress${wide ? '.wide' : ''}`, { role: 'progressbar', 'aria-valuenow': Math.round(x * 100), 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': label }, h('span', { style: { width: `${Math.round(x * 100)}%` } }));
 // Batch 43 (M9Q): the certainty meter stands where the Picture % stood (how narrow the key ranges are); the Picture %
-// stays under it as a detail, and the program's pace still reads the Picture %.
+// stays under it as a detail. Batch 57 (Eli: "quantity versus quality"): that detail is Answered and Solid as box
+// counts (the weighted shares in the tip), a slim bar split by level with its words under it, and the pace tag,
+// which reads Answered in session 1 and Solid from session 2.
+export const pictureWords = pic => `Answered ${pic.counts.answered} of ${pic.counts.of} · Solid ${pic.counts.solid} of ${pic.counts.answered}`;
+const pictureTip = pic => `Answered: ${Math.round(pic.answered * 100)}% of the weight has an answer (a guess counts; Will get it and Not now do not). Solid: ${Math.round(pic.solid * 100)}% of what is answered is from a statement or app, or known for sure. Big numbers count more. Both blended: ${Math.round(pic.pct * 100)}%.`;
+function pictureLine(pic, pace, paceTag) {
+  const parts = pic.bar.filter(b => b.count > 0);
+  const stack = h('div.stack-bar', { role: 'img', 'aria-label': `By level: ${parts.map(b => `${b.label} ${b.count}`).join(', ')}` },
+    parts.map(b => h(`span.seg.${b.key}`, { style: { width: `${(b.share * 100).toFixed(2)}%` }, title: `${b.label}: ${b.count} ${b.count === 1 ? 'box' : 'boxes'}, ${Math.round(b.share * 100)}% of the weight` })));
+  return h('div.picture-detail', { style: { marginTop: '6px' } },
+    h('div.row-line', { style: { gap: '10px' } }, h('span.small.pic-words', { title: pictureTip(pic) }, pictureWords(pic)), stack, paceTag, h('span.muted.small', {}, pace.text)),
+    h('div.row-line.stack-key', {}, parts.map(b => h('span.muted.small', {}, h(`i.sw.${b.key}`, { 'aria-hidden': 'true' }), `${b.label} ${b.count}`))));
+}
 function pictureCard(ctx, P, app = null) {
   const pace = P.pace;
   const sc = P.scorecard;
@@ -281,7 +293,7 @@ function pictureCard(ctx, P, app = null) {
   const M = ctx.askNext?.(app?.flags ?? [])?.meter ?? null;
   const cert = M ? M.value : 0, points = Math.round(cert * 100);
   const certTip = M?.none ? 'Nothing to measure yet: add take-home pay and spending' : `${meterWord(cert)}: the ranges on the FI date, the debt-free date, the surplus, the emergency fund and net worth, against the wider of a plan from your age alone and your own numbers all read as guesses`; // batch 51 (QUESTIONS 387)
-  const detail = h('div.row-line.picture-detail', { style: { gap: '10px', marginTop: '6px' } }, h('span.muted.small', {}, `Picture ${pace.points}%`), paceTag, h('span.muted.small', {}, pace.text));
+  const detail = pictureLine(P.picture, pace, paceTag);
   if (P.afterIntake) { // the picture is in: now the areas count
     return h('div.card.picture-card', {}, h('div.row-line', { style: { gap: '8px' } }, h('h2', {}, 'Whole picture')), // batch 13: a title for the caret
       h('div.bar-row', {}, h('span.pct', {}, `${sc.okCount} of ${sc.of} areas Strong or OK`), bar(sc.of ? sc.okCount / sc.of : 0, { wide: true, label: 'Areas Strong or OK' }),
@@ -497,9 +509,10 @@ function openItems(app, ctx) {
   const doc = ctx.store.doc;
   const snap = ctx.store.lastSnapshot();
   const now = snapshotNumbers(doc, ctx.ref, { now: ctx.now() });
-  const changes = snap ? [['Net worth', 'netWorth'], ['Debt', 'debtTotal'], ['Savings rate', 'savingsRate'], ['Surplus', 'surplus'], ['Picture', 'picturePct']]
+  const PICS = ['picturePct', 'pictureAnswered', 'pictureSolid'];
+  const changes = snap ? [['Net worth', 'netWorth'], ['Debt', 'debtTotal'], ['Savings rate', 'savingsRate'], ['Surplus', 'surplus'], ...(snap.metrics?.pictureAnswered != null ? [['Answered', 'pictureAnswered'], ['Solid', 'pictureSolid']] : [['Picture', 'picturePct']])] // batch 57: the two words; an older snapshot has the blend only
     .map(([label, k]) => ({ label, k, c: changeSince(now, snap, k) })).filter(x => x.c && x.c.direction !== 'same') : [];
-  const fmt = (k, d) => (k === 'savingsRate' || k === 'picturePct' ? `${(Math.abs(d) * 100).toFixed(k === 'picturePct' ? 0 : 1)} pts` : money(Math.abs(d)));
+  const fmt = (k, d) => (k === 'savingsRate' || PICS.includes(k) ? `${(Math.abs(d) * 100).toFixed(PICS.includes(k) ? 0 : 1)} pts` : money(Math.abs(d)));
   const hw = homeworkItems(ctx), mine = hw.filter(x => x.owner === 'coach').length, theirs = hw.length - mine;
   const homework = hw.length, due = app.dueForCheck().length, notes = ctx.store.openNotes().length, guesses = defaultsInUse(doc, ctx.ref).length; // batch 7: resolved notes and homework count as handled; defaults in use are listed (item 12)
   const total = homework + due + notes + guesses + (changes.length ? 1 : 0);
@@ -518,7 +531,7 @@ function day0Card(ctx, P) {
   const rep = day0Report(ctx.store.doc, ctx.ref, { now: ctx.now() });
   if (!rep) return null;
   const f = (r, v) => (v == null ? '' : r.unit === 'pct' ? pct(v) : r.unit === 'count' ? String(v) : money(v));
-  const diff = r => (r.change == null || Math.abs(r.change) < 1e-9 ? '' : `${r.change > 0 ? '▲' : '▼'} ${r.unit === 'pct' ? `${(Math.abs(r.change) * 100).toFixed(r.key === 'picturePct' ? 0 : 1)} pts` : r.unit === 'count' ? String(Math.abs(r.change)) : money(Math.abs(r.change))}`);
+  const diff = r => (r.change == null || Math.abs(r.change) < 1e-9 ? '' : `${r.change > 0 ? '▲' : '▼'} ${r.unit === 'pct' ? `${(Math.abs(r.change) * 100).toFixed(/^picture/.test(r.key) ? 0 : 1)} pts` : r.unit === 'count' ? String(Math.abs(r.change)) : money(Math.abs(r.change))}`);
   return h('div.card', {}, h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Day 0 vs now'), h('span.muted', {}, `Day 0: ${new Date(rep.at).toLocaleDateString()}`)),
     h('table.rows.compare', { style: { marginTop: '10px' } }, h('thead', {}, h('tr', {}, h('th', {}, ''), h('th.num', {}, 'Day 0'), h('th.num', {}, 'Now'), h('th.num', {}, 'Change'))),
       h('tbody', {}, rep.rows.map(r => h('tr', {}, h('td', {}, r.label), h('td.num', {}, f(r, r.then)), h('td.num', {}, f(r, r.now)), h('td.num', {}, diff(r)))))));

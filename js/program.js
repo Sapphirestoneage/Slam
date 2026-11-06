@@ -57,7 +57,7 @@ export function autoChecks(doc, ref, { now = new Date(), flags = [], picture = p
     fooStep: here !== null,
     monthOfActuals,
     keyNumbersLocked: key.length > 0 && key.some(it => it.group === 'income') && key.every(it => it.level >= LEVELS.Actual),
-    picture90: picture.pct * 100 >= PACE.expected[3] - PACE.margin,
+    picture90: Math.min(picture.answered, picture.solid) * 100 >= PACE.expected[3] - PACE.margin, // batch 57: answered and solid both
     // Sessions 4 to 12 (batch 2): goals, the full analysis, the holes, the revisit, the next chapter, the game plan.
     shortGoals: sc.facts.goals.short >= THRESHOLDS.goals.count,
     longGoals: sc.facts.goals.long >= THRESHOLDS.goals.count,
@@ -235,16 +235,17 @@ export function programOf(doc, ref, { now = new Date(), flags = [] } = {}) {
   const sessions = sessionsOf(doc, ref, { now, flags, picture, m, sc });
   const n = sessionNo(doc);
   const day0 = day0Of(doc);
-  return { m, picture, sessions, n, current: sessions[n - 1], pace: paceOf(picture.pct, n), next: nextSmallThings(picture), day0, inSession: inSession(doc), graduated: graduated(doc),
+  return { m, picture, sessions, n, current: sessions[n - 1], pace: paceOf(picture, n), next: nextSmallThings(picture), day0, inSession: inSession(doc), graduated: graduated(doc),
     scorecard: sc, afterIntake: afterIntake(doc, sessions), filled: filledHoles(doc, sc), day0Ok: day0?.metrics?.scoreOk ?? null };
 }
 
-// The numbers a snapshot keeps: the key numbers, the Picture %, and the scorecard (each area's rating and what its
+// The numbers a snapshot keeps: the key numbers, the Picture % (and, batch 57, its Answered and Solid), and the scorecard (each area's rating and what its
 // hole was worth), so Day 0 vs now and Holes filled can look back.
 export function snapshotNumbers(doc, ref, { now = new Date(), flags = [] } = {}) {
   const sc = scorecardOf(doc, ref, { now, flags });
   const joy = joyOf(doc), conf = confidenceOf(doc);
-  return { ...keyNumbers(metrics(doc, ref, { now, person: ownPlanPerson(doc) })), picturePct: pictureOf(doc, ref, { now }).pct, scoreOk: sc.okCount, scoreOf: sc.of, joy: joy.value, joyPartner: joy.partner, confidence: conf.value, confidencePartner: conf.partner, // F4: both measures ride in every snapshot
+  const pic = pictureOf(doc, ref, { now });
+  return { ...keyNumbers(metrics(doc, ref, { now, person: ownPlanPerson(doc) })), picturePct: pic.pct, pictureAnswered: pic.answered, pictureSolid: pic.solid, scoreOk: sc.okCount, scoreOf: sc.of, joy: joy.value, joyPartner: joy.partner, confidence: conf.value, confidencePartner: conf.partner, // F4: both measures ride in every snapshot
     scorecard: Object.fromEntries(sc.areas.map(a => [a.id, { rating: a.rating, payoff: a.payoff?.value ?? null, fiDays: a.fiDays }])) };
 }
 
@@ -424,7 +425,7 @@ export function day0Report(doc, ref, { now = new Date() } = {}) {
   if (!d0) return null;
   const then = d0.metrics || {};
   const nowNumbers = snapshotNumbers(doc, ref, { now });
-  const rows = [['Net worth', 'netWorth', 'money'], ['Total debt', 'debtTotal', 'money'], ['Monthly surplus', 'surplus', 'money'], ['Savings rate', 'savingsRate', 'pct'], ['Picture', 'picturePct', 'pct'], ['Areas Strong or OK', 'scoreOk', 'count'], [CONFIDENCE.label, 'confidence', 'count'], [JOY.label, 'joy', 'count']]
+  const rows = [['Net worth', 'netWorth', 'money'], ['Total debt', 'debtTotal', 'money'], ['Monthly surplus', 'surplus', 'money'], ['Savings rate', 'savingsRate', 'pct'], ['Answered', 'pictureAnswered', 'pct'], ['Solid', 'pictureSolid', 'pct'], ['Areas Strong or OK', 'scoreOk', 'count'], [CONFIDENCE.label, 'confidence', 'count'], [JOY.label, 'joy', 'count']]
     .map(([label, key, unit]) => ({ label, key, unit, then: then[key] ?? null, now: nowNumbers[key] ?? null, change: then[key] == null || nowNumbers[key] == null ? null : nowNumbers[key] - then[key] }));
   return { at: d0.at, rows };
 }

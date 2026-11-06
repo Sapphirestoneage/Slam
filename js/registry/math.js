@@ -524,11 +524,14 @@ export const MATH = [
     label: 'Years to FI from $0 at your savings rate', app: c => simpleMath({ savingsRate: c.m.savingsRate.value == null ? null : Math.max(0, c.m.savingsRate.value), realReturn: c.x.realReturn, withdrawalRate: c.x.withdrawalRate }).value },
   // ---------- The program (Phase 3) ----------
   { id: 'M73', name: 'Picture %', inputs: "every number's level and weight (Assumptions: Levels, Weights, Pace)", unit: 'pct',
-    fns: ['picture.levelOf', 'picture.pictureOf', 'picture.nextSmallThings', 'picture.stepOf', 'picture.paceOf', 'picture.unlockOf', 'picture.confidenceOf', 'picture.fiWordsOf'],
+    fns: ['picture.levelOf', 'picture.pictureOf', 'picture.nextSmallThings', 'picture.stepOf', 'picture.paceOf', 'picture.paceMeasureOf', 'picture.answeredSolidOf', 'picture.barKeyOf', 'picture.unlockOf', 'picture.confidenceOf', 'picture.fiWordsOf'],
     fromApp: 'a weighted average of each number\'s level (Gut 25, Rough 50, Estimate 75, Actual 100; the Program tab lists them)', app: c => pictureOf(c.doc, c.ref, { now: c.now }).pct,
     parts: [
-      { key: 'expected', name: 'Expected by the end of this session (pace)', unit: 'pct', fromApp: 'the Pace table against the session being run', app: c => paceOf(pictureOf(c.doc, c.ref, { now: c.now }).pct, sessionNo(c.doc)).target / 100 },
-      { key: 'pace', name: 'Pace: Ahead, On track or Catch up', unit: 'text', fromApp: 'the Picture % against the pace expected by now', app: c => paceOf(pictureOf(c.doc, c.ref, { now: c.now }).pct, sessionNo(c.doc)).word },
+      // Batch 57: the blend splits into quantity and quality; the pace reads Answered in session 1, Solid after.
+      { key: 'answered', name: 'Answered (how much is in)', unit: 'pct', fromApp: 'each box\'s weight counted when it has any answer (Gut or better; Will get it and Not now are not answers), over every box\'s weight', app: c => pictureOf(c.doc, c.ref, { now: c.now }).answered },
+      { key: 'solid', name: 'Solid (how much of it is sure)', unit: 'pct', fromApp: 'of the answered weight, the share at Estimate (a statement or app total, worked out) or Actual (Know it, a statement balance, locked)', app: c => pictureOf(c.doc, c.ref, { now: c.now }).solid },
+      { key: 'expected', name: 'Expected by the end of this session (pace)', unit: 'pct', fromApp: 'the Pace table against the session being run', app: c => paceOf(pictureOf(c.doc, c.ref, { now: c.now }), sessionNo(c.doc)).target / 100 },
+      { key: 'pace', name: 'Pace: Ahead, On track or Catch up', unit: 'text', fromApp: 'Answered (session 1) or Solid (session 2 on) against the pace expected by now', app: c => paceOf(pictureOf(c.doc, c.ref, { now: c.now }), sessionNo(c.doc)).word },
       { key: 'fi', name: 'FI date unlocked', unit: 'text', fromApp: 'income and spending at Estimate and an invested balance', app: c => { const pic = pictureOf(c.doc, c.ref, { now: c.now }); const u = unlockOf('fi', pic); return u.unlocked ? `Yes (${confidenceOf('fi', pic, { now: c.now })?.label ?? ''})` : u.reason; } },
       { key: 'next', name: 'Next small thing', unit: 'text', fromApp: 'the item that raises the Picture % most', app: c => { const n = nextSmallThings(pictureOf(c.doc, c.ref, { now: c.now }), 1)[0]; return n ? `${n.label}: +${Math.round(n.gain * 100)}%` : 'Nothing left'; } },
     ] },

@@ -64,6 +64,9 @@ export const GLOSSARY = {
   'Coast': 'Coast FI: you have saved enough that it grows to your FI number on its own.',
   'FAT': 'Food, accommodation and transportation only: the smallest of the spending levels, the first layer of big e.',
   'Picture': 'How much of the money picture is filled in with real numbers; each number counts by how much it moves the plan.',
+  // Batch 57 (Eli, Nov 6): the Picture split into quantity and quality.
+  'Answered': 'How much they have given: every box with an answer, a guess included. Will get it and Not now are not answers yet.',
+  'Solid': 'How much of it is from a statement or known for sure: of the answered boxes, the ones read off a statement or an app, or marked Know it.',
   'Certainty': 'How narrow the plan\'s ranges are: 0% when every number is a guess, near 100% when every number is known. Answering Ask next raises it most.',
 };
 // Batch 37 (QUESTIONS 320's batch, Batch 33's minors): Eli's own terms stay, and the first time one shows in plain view
@@ -75,13 +78,15 @@ export const PLAIN = [
   { term: 'FAT', re: /\bFAT\b/, plain: 'food, rent, transport' },
   { term: 'Picture', re: /\bPicture\b/, plain: 'how much is filled in' },
   { term: 'Certainty', re: /\bCertainty\b/, plain: 'how sure the plan is' }, // batch 43: the certainty meter on Home
+  { term: 'Answered', re: /\bAnswered\b/, plain: 'how much is given' }, // batch 57: the Picture line on Home
+  { term: 'Solid', re: /\bSolid\b/, plain: 'how much is sure' },
 ];
 // The screens that pair them (Home, Goals, Transitions and its share view, Debt payoff; batch 45, QUESTIONS 345: Plan ›
 // FOO and Cash flow › Budget, the screens that use the terms most).
 export const PLAIN_ON = ['#/home/session', '#/plan/goals', '#/plan/transitions', '#/plan/debt-payoff', '#/plan/foo', '#/cash-flow/budget'];
 const TERMS = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
 const esc = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const RES = TERMS.map(t => [t, new RegExp(`(^|[^A-Za-z])${esc(t)}([^A-Za-z]|$)`, ['FI', 'APR', 'APY', 'FAT', 'Picture', 'Certainty'].includes(t) ? '' : 'i')]);
+const RES = TERMS.map(t => [t, new RegExp(`(^|[^A-Za-z])${esc(t)}([^A-Za-z]|$)`, ['FI', 'APR', 'APY', 'FAT', 'Picture', 'Certainty', 'Answered', 'Solid'].includes(t) ? '' : 'i')]);
 
 // The first (longest) term in a piece of text, with its explanation, or null.
 export function termIn(text) {

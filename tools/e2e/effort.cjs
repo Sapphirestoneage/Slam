@@ -4,7 +4,7 @@
 // and Walk me through, counting every action (a tap, a pick or a typed number is one action; keystrokes separately,
 // QUESTIONS 232) and prints for each:
 //   1. actions to a rough picture (New client to the end of the walk)
-//   2. the Picture % after it, and core (every screen's core count) as a %
+//   2. Answered and Solid after it (batch 57; the blended Picture % beside them), and core (every screen's core count) as a %
 //   3. certainty after it: the FI date's range in years, or the debt-free date when FI is not on the path, or locked
 //   4. an estimate of actions to 99%: every box still open on the counters (core and full detail, X of Y filled),
 //      times the actions one box took in the walk
@@ -22,7 +22,7 @@ function answerFor(who, stop) {
   if (stop.typical) return { tap: 'walk:typical' }; // batch 18: the typical answer is the first tap (Use typical $X, the filing status)
   if (stop.key === 'tax:filing') return { pick: ['tax:filing', 'Single'] }; // before batch 18: no typical tap, pick it
   if (stop.key === 'add:usual-coverage') return { tap: 'add:usual-coverage', next: true };
-  if (stop.field === 'have') { const type = stop.type; const v = HAVE[who][type] ?? 'Not sure'; return { tap: `seg:Have it:${v}`, scoped: true }; }
+  if (stop.field === 'have') { const type = stop.type; const v = (HAVE[who] ?? HAVE.Alexis)[type] ?? 'Not sure'; return { tap: `seg:Have it:${v}`, scoped: true }; }
   return { later: true };
 }
 
@@ -64,7 +64,7 @@ async function walk(page, who, c) {
 }
 
 async function measure(page) {
-  return page.evaluate(async () => {
+  return page.evaluate(async (process_doc) => {
     const ref = await fetch('data/reference-2026.json').then(r => r.json());
     const [{ pictureOf, confidenceOf, fiWordsOf, unlockOf, nextSmallThings }, { metrics, debtHeroOf }, C, { profileCompletion }] = await Promise.all([import('/js/math/picture.js'), import('/js/math/metrics.js'), import('/js/completion.js'), import('/js/profile-completion.js')]);
     const { fillCounts } = C;
@@ -110,8 +110,8 @@ async function measure(page) {
       ['Debt', C.listCompletion(ctx, r => r.kind === 'debt' && r.type !== 'Credit card', debtCore).full.missing], ['Credit cards', C.listCompletion(ctx, r => r.kind === 'debt' && r.type === 'Credit card', debtCore).full.missing],
       ['Protection', C.protectionCompletion(ctx).full.missing ?? []], ['Goals', C.goalsCompletion(ctx).full.items.map(x => x.name)]].filter(([, l]) => l?.length).map(([k, l]) => `${k}: ${l.join('; ')}`);
     const gains = nextSmallThings(pic, 4).map(it => `${it.label} (${['Missing', 'Gut', 'Rough', 'Estimate', 'Actual'][[0, 25, 50, 75, 100].indexOf(it.level)] ?? it.level}, +${Math.round(it.full * 100)} points at Know it)`);
-    return { open, gains, base, sens, confidence: conf ? `${conf.word} (inputs at ${Math.round(conf.avg)} of 100)` : null, picture: Math.round(pic.pct * 100), core: core.of ? Math.round(core.done / core.of * 100) : 100, coreDone: core.done, coreOf: core.of, fullLeft: full.of - full.done, fullOf: full.of, certainty, counts: counts.map(x => `${x.screen} ${x.full.done}/${x.full.of}`) };
-  });
+    return { open, gains, base, sens, confidence: conf ? `${conf.word} (inputs at ${Math.round(conf.avg)} of 100)` : null, picture: Math.round(pic.pct * 100), answered: Math.round(pic.answered * 100), solid: Math.round(pic.solid * 100), boxes: pic.counts, doc: process_doc ? doc : undefined, core: core.of ? Math.round(core.done / core.of * 100) : 100, coreDone: core.done, coreOf: core.of, fullLeft: full.of - full.done, fullOf: full.of, certainty, counts: counts.map(x => `${x.screen} ${x.full.done}/${x.full.of}`) };
+  }, !!process.env.EFFORT_JSON);
 }
 
 async function run(who, client) {
@@ -134,11 +134,13 @@ async function run(who, client) {
 
 (async () => {
   const out = [];
-  for (const [who, client] of [['Alexis', D.ALEXIS], ['Tom', D.TOM]]) out.push(await run(who, client));
+  // EFFORT_CLIENTS=Alexis,Tom,Maya picks who runs (default Alexis and Tom, the scoreboard's two).
+  const pick = (process.env.EFFORT_CLIENTS || 'Alexis,Tom').split(',').map(x => x.trim());
+  for (const [who, client] of [['Alexis', D.ALEXIS], ['Tom', D.TOM], ['Maya', D.MAYA]].filter(([w]) => pick.includes(w))) out.push(await run(who, client));
   console.log('Effort scoreboard (New client, Start session 1 with Fast Track, Walk me through)');
-  console.log('| Client | Actions to a rough picture | Picture after it | Core after it | Certainty after it | Actions to 99% (estimate) |');
+  console.log('| Client | Actions to a rough picture | Answered and Solid after it | Core after it | Certainty after it | Actions to 99% (estimate) |');
   console.log('|---|---|---|---|---|---|');
-  for (const r of out) console.log(`| ${r.who} | ${r.roughActions} (${r.clicks} taps, ${r.typed} typed; ${r.keys} keystrokes; ${r.walkBoxes} walk stops) | ${r.picture}% | ${r.core}% (${r.coreDone} of ${r.coreOf}) | ${r.certainty} | about ${r.to99} (${r.fullLeft} of ${r.fullOf} boxes open x ${r.perBox} each) |`);
+  for (const r of out) console.log(`| ${r.who} | ${r.roughActions} (${r.clicks} taps, ${r.typed} typed; ${r.keys} keystrokes; ${r.walkBoxes} walk stops) | answered ${r.answered}% (${r.boxes.answered} of ${r.boxes.of}), solid ${r.solid}% (${r.boxes.solid} of ${r.boxes.answered}); blend ${r.picture}% | ${r.core}% (${r.coreDone} of ${r.coreOf}) | ${r.certainty} | about ${r.to99} (${r.fullLeft} of ${r.fullOf} boxes open x ${r.perBox} each) |`);
   console.log('\nSensitivity after the rough pass: one input moved at a time, everything else as entered');
   console.log('| Client | Input | Moved | FI date range | Debt-free range |');
   console.log('|---|---|---|---|---|');

@@ -4580,6 +4580,66 @@
      "reason": "a household far from typical no longer reads near 0% on one output after a full Fast Track"
     }
    }
+  },
+  {
+   "screen": "Home: Whole picture (Answered and Solid)",
+   "route": "#/home/session",
+   "area": "Home",
+   "batch": 57,
+   "tasks": [
+    1,
+    2
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "the line, the bar and the pace tag follow every answer; End session moves the tag from Answered to Solid (Maya: Session 2: solid 61%, On track); no page errors for Alexis, Tom and Maya after Fast Track"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "Answered and Solid checked by hand (test/batch57.test.js: 17 of 18 and 8 of 17 for the synthetic household); the counts on Home match the effort runs (Alexis 8 of 9, 7 of 8; Tom 9 of 9, 8 of 9; Maya 8 of 9, 6 of 8)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "Home, the card summary, the Day 0 table, What changed and the Program report all read the same two numbers from pictureOf"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "one slim line under the certainty meter: two counts, a 10px bar, the pace tag; the parts' words under the bar"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "on Home, open by default, where the Picture % stood"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "nothing to type; the tip carries the weighted shares"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "Answered (how much is given) and Solid (how much is sure) paired with their plain words; no verdict words; Not in yet instead of missing"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the counts and the bar move as soon as a box is answered or firmed up"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker (all nine checks) clean on Home and Report at 1440, 1280 and 390, light and dark, Demo and New; checked by eye for Alexis, Tom and Maya at all three widths, no sideways scroll at 390"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "two more passes over the picture's items, well under a millisecond"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off; the line shows in Client view with the plain words beside the terms"
+    }
+   }
   }
  ],
  "updated": {
@@ -4678,5 +4738,13 @@
   "major": 0,
   "minor": 1,
   "note": "Batch 49 appended its screens (each with \"batch\": 49), scored after its changes; the rows above and the summary are as they were."
+ },
+ "batch57": {
+  "date": "2026-11-06",
+  "screens": 1,
+  "blocker": 0,
+  "major": 0,
+  "minor": 0,
+  "note": "Batch 57 added Home: Whole picture (Answered and Solid). Ask next's why line now names the half it raises; its row (batch 43) is unchanged."
  }
 }

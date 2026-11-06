@@ -214,7 +214,7 @@ export const REPORTS = [
   },
   {
     tab: 'Program', prefix: 'Program',
-    about: 'The 12-session program: each session and its checklist, the Picture % with its pace, and the next small things. From the app (the ticks and levels live in SLAM).',
+    about: 'The 12-session program: each session and its checklist, Answered and Solid with the pace, and the next small things. From the app (the ticks and levels live in SLAM).',
     columns: [
       { key: 'name', label: 'Session or number', unit: 'text', width: 40 }, { key: 'status', label: 'Where it stands', unit: 'text', width: 16 },
       { key: 'done', label: 'Done', unit: 'number', width: 8 }, { key: 'of', label: 'Of', unit: 'number', width: 8 }, { key: 'detail', label: 'Done when, or the detail', unit: 'text', width: 90 },
@@ -229,8 +229,10 @@ export const REPORTS = [
           done: { v: s.items.filter(i => i.done).length, fromApp: true }, of: { v: s.items.length, fromApp: true },
           detail: { v: s.items.map(i => `${i.done ? '[x]' : '[ ]'} ${i.label}${i.auto ? ' (from the numbers)' : ''}`).join('; '), fromApp: true } } })) },
         { title: 'The picture (M73)', rows: [
-          { cells: { name: { v: 'Picture %' }, status: { v: pctText(prog.picture.pct), fromApp: true }, detail: { v: prog.pace.text, fromApp: true } } },
-          { cells: { name: { v: 'Pace' }, status: { v: prog.pace.word, fromApp: true }, detail: { v: `${prog.pace.target}% expected by the end of session ${prog.n}`, fromApp: true } } },
+          // Batch 57: the two words Home uses (counts of boxes in done and of; the blend stays in the detail).
+          { cells: { name: { v: 'Answered' }, status: { v: pctText(prog.picture.answered), fromApp: true }, done: { v: prog.picture.counts.answered, fromApp: true }, of: { v: prog.picture.counts.of, fromApp: true }, detail: { v: `${prog.picture.counts.answered} of ${prog.picture.counts.of} boxes have an answer (a guess counts; Will get it and Not now do not)`, fromApp: true } } },
+          { cells: { name: { v: 'Solid' }, status: { v: pctText(prog.picture.solid), fromApp: true }, done: { v: prog.picture.counts.solid, fromApp: true }, of: { v: prog.picture.counts.answered, fromApp: true }, detail: { v: `${prog.picture.counts.solid} of the ${prog.picture.counts.answered} answered are from a statement or app, or known for sure. Blend of both: ${pctText(prog.picture.pct)}`, fromApp: true } } },
+          { cells: { name: { v: 'Pace' }, status: { v: prog.pace.word, fromApp: true }, detail: { v: prog.pace.text, fromApp: true } } },
           ...prog.picture.sections.map(s => ({ cells: { name: { v: `${s.name} section` }, status: { v: pctText(s.pct), fromApp: true }, done: { v: s.items.filter(i => i.level >= LEVELS.Estimate).length, fromApp: true }, of: { v: s.items.length, fromApp: true }, detail: { v: s.items.map(i => `${i.label}: ${levelWord(i.level)}`).join('; '), fromApp: true } } })),
           { cells: { name: { v: 'FI date' }, status: { v: fi.unlocked ? 'Unlocked' : 'Locked', fromApp: true }, detail: { v: fi.unlocked ? `${conf?.label ?? ''}: ${conf?.text ?? ''}` : fi.reason, fromApp: true } } },
         ] },

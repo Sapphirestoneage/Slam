@@ -7,7 +7,7 @@ import { statusOf } from '../records.js';
 import { gatesOf, visible } from '../gates.js';
 import { DRAFTT, drafttName, isCategoryRecord, isFaded, categoryKeyOf, levelOf as lvOf, LEVEL_ELSE } from './spending.js';
 import { debtRoute } from '../nav.js';
-import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS } from '../registry/program.js';
+import { LEVELS, WEIGHTS, PACE, PACE_WORDS, BAR_LEVELS, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS } from '../registry/program.js';
 import { fiRangeOf } from './fi.js';
 import { debtRangeOf } from './metrics.js';
 import { RULES } from '../registry/assumptions.js';
@@ -43,8 +43,10 @@ export function pictureOf(doc, ref, { now = new Date() } = {}) {
   const live = visible(doc.records, g, ref);
   const months = doc.spending?.months || {};
   const items = [];
-  const item = o => { if (o.level !== null) items.push({ sub: null, ...o, next: o.level < LEVELS.Estimate ? LEVELS.Estimate : LEVELS.Actual }); };
-  const recItem = (r, field, o) => item({ id: `${r.id}:${field}`, recId: r.id, field, level: levelOf(r, field, { months }), updatedAt: r.updatedAt, ...o });
+  // Batch 57: answered is "any answer at all" (Gut or better). A box marked Will get it or Not now is not answered yet,
+  // even though the blended pct still gives it a guess's credit.
+  const item = o => { if (o.level !== null) items.push({ sub: null, answered: o.level > LEVELS.Missing, ...o, next: o.level < LEVELS.Estimate ? LEVELS.Estimate : LEVELS.Actual }); };
+  const recItem = (r, field, o) => { const level = levelOf(r, field, { months }); item({ id: `${r.id}:${field}`, recId: r.id, field, level, answered: answeredOf(r, field, level), updatedAt: r.updatedAt, ...o }); };
   const name = r => r.name || r.type || 'Item';
   // About you: the age (Coast FI, the Rule of 5) and what applies (the gates).
   const ageKnown = !isBlank(p.age) || !isBlank(p.birthYear);
@@ -62,7 +64,7 @@ export function pictureOf(doc, ref, { now = new Date() } = {}) {
     const th = incomeRow(r, { ref, now }).takeHome?.value;
     return th == null ? lv : Math.min(LEVELS.Estimate, levelOf({ ...r, amount: th }, 'amount', { months }));
   };
-  for (const r of income) item({ id: `${r.id}:amount`, recId: r.id, field: 'amount', level: incomeLevel(r), updatedAt: r.updatedAt, label: /take-home/i.test(name(r)) ? name(r) : `${name(r)} take-home`, group: 'income', weight: WEIGHTS.income, route: '#/cash-flow/income' });
+  for (const r of income) item({ id: `${r.id}:amount`, recId: r.id, field: 'amount', level: incomeLevel(r), answered: answeredOf(r, 'amount', incomeLevel(r)), updatedAt: r.updatedAt, label: /take-home/i.test(name(r)) ? name(r) : `${name(r)} take-home`, group: 'income', weight: WEIGHTS.income, route: '#/cash-flow/income' });
   // Debts: the balance counts most, the APR a little (the payment is often worked out).
   if (g.areas.debt !== false) {
     const debts = live.filter(r => r.kind === 'debt');
@@ -96,16 +98,16 @@ export function pictureOf(doc, ref, { now = new Date() } = {}) {
     if (rec && rec.amount != null && rec.status !== 'Not for me') {
       const level = levelOf(rec, 'amount', { months });
       categories.push({ id: `draftt:${k}`, recId: rec.id, field: 'amount', label: `${drafttName(k)} (category)`, group: 'spending', kind: 'category', weight: k === 'Other' || k === 'Bills' ? WEIGHTS.otherLines : WEIGHTS.draftt,
-        level, route: '#/cash-flow/budget', updatedAt: rec.updatedAt, count: { below: level < LEVELS.Estimate ? 1 : 0, of: 1 }, lines: [] });
+        level, answered: answeredOf(rec, 'amount', level), route: '#/cash-flow/budget', updatedAt: rec.updatedAt, count: { below: level < LEVELS.Estimate ? 1 : 0, of: 1 }, lines: [] });
       continue;
     }
-    const lv = (byLetter.get(k) || []).map(l => ({ l, level: levelOf(l, 'amount', { months }) })).filter(x => x.level !== null);
+    const lv = (byLetter.get(k) || []).map(l => { const level = levelOf(l, 'amount', { months }); return { l, level, answered: answeredOf(l, 'amount', level) }; }).filter(x => x.level !== null);
     if (!lv.length) continue;
     const level = Math.round(lv.reduce((s, x) => s + x.level, 0) / lv.length);
     const weakest = [...lv].sort((a, b) => a.level - b.level)[0];
     const oldest = [...lv].map(x => x.l.updatedAt).filter(Boolean).sort()[0] ?? null;
     categories.push({ id: `draftt:${k}`, recId: weakest.l.id, field: 'amount', label: k === 'Other' ? 'Other lines' : `${drafttName(k)} lines`, group: 'spending', kind: 'category',
-      weight: k === 'Other' || k === 'Bills' ? WEIGHTS.otherLines : WEIGHTS.draftt, level, route: '#/cash-flow/budget', updatedAt: oldest, count: { below: lv.filter(x => x.level < LEVELS.Estimate).length, of: lv.length },
+      weight: k === 'Other' || k === 'Bills' ? WEIGHTS.otherLines : WEIGHTS.draftt, level, answered: lv.some(x => x.answered), route: '#/cash-flow/budget', updatedAt: oldest, count: { below: lv.filter(x => x.level < LEVELS.Estimate).length, of: lv.length },
       lines: lv.map(x => ({ id: x.l.id, name: x.l.name || x.l.values.category || 'Line', level: x.level, amount: x.l.amount ?? null })) });
   }
   // Answer 127: the gut number stands in for the categories, and stops counting once the itemized big categories all
@@ -114,7 +116,7 @@ export function pictureOf(doc, ref, { now = new Date() } = {}) {
   const itemized = big.length > 0 && big.every(c => c.level >= LEVELS.Estimate);
   if (!useLines && !itemized) {
     const level = levelOf(allIn, 'amount', { months });
-    item({ id: 'gut', recId: allIn.id, field: 'amount', label: 'Monthly spending (the gut number)', group: 'spending', kind: 'gut', weight: WEIGHTS.gut, level, route: '#/cash-flow/budget', updatedAt: allIn.updatedAt,
+    item({ id: 'gut', recId: allIn.id, field: 'amount', label: 'Monthly spending (the gut number)', group: 'spending', kind: 'gut', weight: WEIGHTS.gut, level, answered: answeredOf(allIn, 'amount', level), route: '#/cash-flow/budget', updatedAt: allIn.updatedAt,
       step: level === LEVELS.Missing ? 'Add the gut number' : 'Build it from the lines on Budget' });
   } else if (!categories.length) {
     item({ id: 'spending', label: 'Monthly spending', group: 'spending', weight: WEIGHTS.gut, level: LEVELS.Missing, route: '#/cash-flow/budget', focus: 'gut', quick: 'spending' }); // Nov 6: Ask next and Fix it land on Your gut number, not the first category
@@ -123,8 +125,25 @@ export function pictureOf(doc, ref, { now = new Date() } = {}) {
   }
   const total = items.reduce((s, it) => s + it.weight * LEVELS.Actual, 0);
   const got = items.reduce((s, it) => s + it.weight * it.level, 0);
-  for (const it of items) { it.gain = total ? it.weight * (it.next - it.level) / total : 0; it.full = total ? it.weight * (LEVELS.Actual - it.level) / total : 0; }
-  return { pct: total ? got / total : 0, items, sections: sectionsOf(items) };
+  for (const it of items) { it.gain = total ? it.weight * (it.next - it.level) / total : 0; it.full = total ? it.weight * (LEVELS.Actual - it.level) / total : 0; it.solid = it.answered && it.level >= LEVELS.Estimate; }
+  return { pct: total ? got / total : 0, ...answeredSolidOf(items), items, sections: sectionsOf(items) };
+}
+const SKIP = new Set(['Will email', 'Not now']); // Will get it (homework) and Not now: a box put off, not answered
+const answeredOf = (rec, field, level) => level > LEVELS.Missing && !SKIP.has(statusOf(rec, field));
+
+// Batch 57 (Eli, Nov 6: "quantity versus quality"): the Picture % blends how much is in with how sure it is. Split:
+//   answered = the weighted share of boxes with any answer (Gut or better; Will get it and Not now are not answers)
+//   solid    = of the answered weight, the share at Estimate (a statement or app total, worked out) or Actual (Know it)
+// with the box counts behind each (counts.answered of counts.of; counts.solid of counts.answered) and the weight at
+// each level for the stacked bar (shares of the whole weight; they add up to 1). pct, the blend, is unchanged.
+export const barKeyOf = it => (!it.answered ? 'missing' : BAR_LEVELS.find(b => b.min != null && it.level >= b.min)?.key ?? 'gut');
+export function answeredSolidOf(items) {
+  const w = its => its.reduce((s, it) => s + it.weight, 0);
+  const all = w(items);
+  const ans = items.filter(it => it.answered), sol = ans.filter(it => it.level >= LEVELS.Estimate);
+  const wa = w(ans);
+  const bar = BAR_LEVELS.map(b => { const its = items.filter(it => barKeyOf(it) === b.key); return { key: b.key, label: b.label, count: its.length, weight: w(its), share: all ? w(its) / all : 0 }; });
+  return { answered: all ? wa / all : 0, solid: wa ? w(sol) / wa : 0, counts: { of: items.length, answered: ans.length, solid: sol.length }, bar };
 }
 const SECTIONS = [['About you', ['age', 'areas'], '#/home/profile'], ['Income', ['income'], '#/cash-flow/income'], ['Debt', ['debt'], '#/net-worth/debt'], ['Assets', ['account', 'thing'], '#/net-worth/assets'], ['Spending', ['spending'], '#/cash-flow/budget']];
 function sectionsOf(items) {
@@ -148,17 +167,25 @@ export function stepOf(it) {
   return 'Confirm it from a statement, or lock it';
 }
 
-// Ahead, On track or Catch up against the pace expected by this session.
-export function paceOf(pct, sessionNo) {
+// Which measure a session's pace reads (batch 57): Answered in session 1, Solid from session 2 (later sessions hold
+// session 3's measure, as they hold its mark).
+export const paceMeasureOf = sessionNo => { const n = Math.max(1, Math.min(SESSIONS.length, sessionNo)); return PACE.measure[n] ?? PACE.measure[Math.max(...Object.keys(PACE.measure).map(Number))]; };
+// Ahead, On track or Catch up against the pace expected by this session. x is a picture (pictureOf: the session's
+// measure is read off it) or the measure's share already (0 to 1). What was due by now: the last session's mark when it
+// read the same measure, else the measure's start mark.
+export function paceOf(x, sessionNo) {
   const n = Math.max(1, Math.min(SESSIONS.length, sessionNo));
+  const measure = paceMeasureOf(n);
+  const pct = typeof x === 'number' ? x : x?.[measure] ?? 0;
   const target = PACE.expected[n] ?? PACE.hold;
-  const floor = n <= 1 ? 0 : PACE.expected[n - 1] ?? PACE.hold;
+  const floor = n <= 1 ? 0 : paceMeasureOf(n - 1) === measure ? PACE.expected[n - 1] ?? PACE.hold : PACE.start?.[n] ?? 0;
   const points = Math.round(pct * 100);
   const word = points >= target ? 'Ahead' : points + PACE.margin >= floor ? 'On track' : 'Catch up';
-  const text = word === 'Ahead' ? `${points}% now, past the ${target}% expected by the end of session ${n}`
-    : word === 'On track' ? `${points}% now; ${target}% expected by the end of session ${n}`
-      : `${points}% now; ${floor}% was expected by now, ${target}% by the end of session ${n}`;
-  return { word, points, target, floor, text };
+  const said = `Session ${n}: ${measure} ${points}%`;
+  const text = word === 'Ahead' ? `${said}, past the ${target}% expected`
+    : word === 'On track' ? `${said}; ${target}% expected by the end of it`
+      : `${said}; ${floor}% was expected by now, ${target}% by the end of it`;
+  return { word, points, target, floor, measure, label: PACE_WORDS[measure], text };
 }
 
 // Is a calculator unlocked, and if not, the plain reason and where to go.
