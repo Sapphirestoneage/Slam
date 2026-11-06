@@ -10,6 +10,7 @@
 - Every screen works at 1440, 1280 and 390 wide.
 - Read `DESIGN.md` before any UI work.
 - A batch is not done until `node tools/e2e/layout.cjs` passes (or its remaining failures are listed in the batch report).
+- Every batch report scores the screens it touched against `QA.md` (the 12 categories, with severity).
 
 ## Every field and formula is registered
 
