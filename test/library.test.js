@@ -63,7 +63,7 @@ test('tags name a real Scorecard area and FOO step, and say which rule set them'
 
 test('every file in data/library/ is registered with its source and date', () => {
   const files = readdirSync(new URL('data/library/', root)).filter(f => f.endsWith('.json')).map(f => `data/library/${f}`);
-  assert.deepEqual(files.sort(), REFERENCE_FILES.map(r => r.file).sort());
+  assert.deepEqual(files.sort(), REFERENCE_FILES.map(r => r.file).filter(f => f.startsWith('data/library/')).sort()); // batch 31: data/priors-2026.json is registered here too (test/priors.test.js)
   for (const r of REFERENCE_FILES) {
     const d = JSON.parse(readFileSync(new URL(r.file, root), 'utf8'));
     assert.equal(d.id, r.id);

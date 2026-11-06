@@ -44,6 +44,9 @@ export const RULES = {
   // Batch 26 (the library's first slice, M9K): three skills to learn at each FOO step (the older Stacker's rule,
   // docs/engines/library.md). Can I afford it? (QUESTIONS 273): a car payment starts at this many years; other monthly costs For good.
   learnShown: 3, carPaymentYears: 5,
+  // Batch 31 (typical at your age, js/math/priors.js): no Primary row publishes percentiles, so a typical range is this
+  // spread around the source's figure (docs/engines/priors.md, until the CE and SCF microdata percentiles are read).
+  typicalLow: 0.6, typicalHigh: 1.5,
 };
 export const LISTS = {
   perMonth: { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, quarter: 1 / 3, year: 1 / 12 },
@@ -203,6 +206,8 @@ export const ASSUMPTIONS = [
   { id: 'rules.inquiriesMany', name: 'InquiriesMany', label: 'Your credit: this many hard inquiries in 2 years makes holding off on applications the next step', unit: 'number', get: () => RULES.inquiriesMany, source: RULE('js/math/cards.js creditMove, M9D; the Credit health note (more than 2 holds a strong score at OK)'), date: '2026-11-06' },
   { id: 'rules.learnShown', name: 'LearnShown', label: 'The library: skills to learn shown at each FOO step', unit: 'number', get: () => RULES.learnShown, source: RULE('js/math/library.js, M9K; the older suite\'s Stacker, three at a time (docs/engines/library.md)'), date: '2026-11-06' },
   { id: 'rules.carPaymentYears', name: 'CarPaymentYears', label: 'Can I afford it?: a car payment starts at this many years (other monthly costs start at For good)', unit: 'number', get: () => RULES.carPaymentYears, source: RULE('js/math/afford.js, M83; QUESTIONS 273 (decided Nov 6)'), date: '2026-11-06' },
+  { id: 'rules.typicalLow', name: 'TypicalLow', label: 'Typical at your age: the low end of a typical range, times the source\'s median (or mean)', unit: 'number', get: () => RULES.typicalLow, source: RULE('js/math/priors.js, M9E; docs/engines/priors.md, until percentiles are read'), date: '2026-11-06' },
+  { id: 'rules.typicalHigh', name: 'TypicalHigh', label: 'Typical at your age: the high end of a typical range, times the source\'s median (or mean)', unit: 'number', get: () => RULES.typicalHigh, source: RULE('js/math/priors.js, M9E; docs/engines/priors.md, until percentiles are read'), date: '2026-11-06' },
   { id: 'rules.maxMonths', name: 'MaxMonths', label: 'Longest FI path looked at, months', unit: 'number', get: () => RULES.maxMonths, source: RULE('js/math/fi.js, M53 (70 years)'), date: '2026-10-28' },
 ];
 
@@ -295,6 +300,10 @@ export const REFERENCE_FILES = [
   { id: 'library.cards', file: 'data/library/cards.json', label: 'The card library: current consumer cards of the biggest US issuers, store and secured cards (fee, APR range, rewards, credits, benefits)',
     source: 'The issuers\' own pages first (Chase, Capital One, Bank of America, Wells Fargo, US Bank, Citi, American Express, Apple), read 2026-11-06; each card names its source and whether it was checked there, on a review site, or not re-read (tools/library/cards-source.mjs)',
     date: '2026-11-06', readBy: 'Net worth > Credit cards (js/ui/cards-ui.js): Which card is it?, What your cards give you, the fee check (js/math/cards.js, M9C)' },
+  // Batch 31 (Phase 4, Track 1): typical at your age, only the rows docs/engines/priors-sources.md marks Primary.
+  { id: 'priors', file: 'data/priors-2026.json', label: 'Typical at your age: net worth by age, cash, card balances and student loans (SCF 2025), spending by age (CE 2024), emergency savings by age (SHED 2025)',
+    source: 'Federal Reserve SCF 2025 report (scf26.pdf, Tables 2 to 4), Federal Reserve SHED data tables (survey of October 2025), BLS Consumer Expenditure Survey 2024 by age on FRED; only the Primary rows of docs/engines/priors-sources.md',
+    date: '2026-11-06', readBy: 'the money box hook (js/ui/typical-ui.js): a faded typical range in a blank box (coach view) and a one-line note under a typed number far outside typical (js/math/priors.js, M9E)' },
 ];
 
 export const valueOf = (a, ref) => a.get(ref);

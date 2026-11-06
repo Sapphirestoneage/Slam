@@ -713,3 +713,32 @@ Two orders of operations side by side: the FOO says what to fund next, the libra
 6. QUESTIONS 273: Can I afford it? starts a car payment at 5 years (RULES.carPaymentYears) and every other monthly cost at For good (Tom's $400 car payment: FI 3 months later instead of 12).
 7. QUESTIONS 280: the 14 cards not rechecked on Nov 6 say "not rechecked yet" beside their name in coach view; client view leaves them out of the card search, the held card's details and the closed line.
 8. Registered: profile.library (spec row F487), M9K (spec Math row), rules LearnShown and CarPaymentYears, format version 27; test/library-slice.test.js.
+
+## Batch 31 (Nov 6 2026): typical at your age (Phase 4, Track 1 groundwork)
+
+Eli (ROADMAP Track 1, QUESTIONS 208 and 210): the coach always sees typical-at-your-age ranges, one switch shows them
+in client view; "both as a check": they fill blanks as ranges and check what was typed.
+
+1. Data: data/priors-2026.json holds only the rows docs/engines/priors-sources.md marks Primary: SCF 2025 net worth by
+   age (median and mean, Table 2), cash, card balances and student loans (all ages, Tables 3 and 4), CE 2024 spending
+   by age (under 25 and 25 to 34 by category, 35 to 44 total), SHED 2025 shares by age ($400 with cash, three months
+   saved). Each row names its table, link and year. Left out and listed in the file: rent and every NY or NY metro
+   figure (ACS, still Secondary), retirement balances and income by age (Secondary). Registered in REFERENCE_FILES.
+2. Math: js/math/priors.js (M9E). No Primary row publishes percentiles, so a typical range is the source's median (SCF)
+   or mean (CE) times RULES typicalLow 0.6 and typicalHigh 1.5; far outside is one more spread beyond an edge (2.25 and
+   0.36 of likely). The household total is checked (all cash accounts together, all cards, all student loans, the gut
+   number a month: CE total less personal insurance and pensions, over 12). Debts and spending note only the high side.
+3. One hook in moneyInput (js/ui/typical-ui.js): a typed total far outside typical gets a calm one-line note under the
+   biggest of its boxes ("Below what most households have in checking and savings"), muted, the source and the spread
+   in its tip, with an X that hides it for that box (settings.typicalOff; Coach tools > Session brings hidden notes
+   back). The box stays level with its row (the wrap keeps equal room above); on a phone the note wraps at the box's
+   width so the row's other boxes stay in their column.
+4. A blank core box (a cash account's balance, a card or student loan balance, the gut number, Fast Track's gut and
+   debt totals) fades in the typical range in coach view ("4.9K to 12K", the basis in the tip), counted nowhere.
+5. Coach tools > Session > Typical at your age: "Show typical-at-your-age in client view" (settings.typicalInClient,
+   off). Client view shows the notes only when it is on; the faded ranges stay coach-only for now.
+
+Alexis (born 1998, $400 checking): the note under her checking box in coach view, none in client view until the switch
+is on; a new blank Savings row reads 4.9K to 12K. Maya ($5,200 cash in two accounts) gets none; Tom ($38,000 cash) gets
+"Above what most households have in checking and savings" under his savings. Tests: test/priors.test.js (every figure
+in the file is on a Primary row of priors-sources.md; nothing Secondary is in it). Spec row M9E, format 28.

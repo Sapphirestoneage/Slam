@@ -2,8 +2,10 @@
 
 Status: research draft, Batch 17 (searched and read 2026-11-05); priors check, Batch 24 (2026-11-06): each Secondary
 row tried against its primary table (the SCF 2025 report, the Fed SHED tables, Census CPS and ACS), and moved to
-Primary with the exact table and page where it matched. **None of these numbers is in app code**, and none should be
-until it is entered as reference data with its source and date (docs/engines/priors.md). Figures are paraphrased
+Primary with the exact table and page where it matched. Batch 31 (2026-11-06) entered the Primary rows, and only those, as `data/priors-2026.json` (registered in
+`REFERENCE_FILES`; test/priors.test.js checks every figure there against a Primary row here). No Secondary or Not
+found figure is in app code, and none should be until it is verified and entered with its source and date
+(docs/engines/priors.md). Figures are paraphrased
 from the cited pages and rounded as they give them.
 
 **How to read the Check column.** *Primary*: read on the publisher's own page or its FRED mirror in this session.

@@ -4,6 +4,7 @@
 import { h, clear, icon } from './dom.js';
 import { debtRoute } from '../nav.js';
 import * as S from './staples.js';
+import { typicalInClient, hiddenNotes } from './typical-ui.js';
 import { checksOf, defaultsInUse } from '../checks.js';
 import { homeworkItems } from './report-ui.js';
 import { homeworkText } from '../homework.js';
@@ -132,6 +133,8 @@ export function sessionScreen(app, ctx, { fastTrackGap }) {
       // Batch 21: Phase 4 previews (Life Transitions on Plan), on for a new household in this build, until Phase 3 is signed off.
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Phase 4 previews'), S.toggle([[true, 'On'], [false, 'Off']], doc.settings?.phase4 === true, v => ctx.store.setDoc('settings', { phase4: v }), { label: 'Phase 4 previews' }),
         h('span.muted.small', {}, 'Life Transitions on Plan')),
+      // Batch 31 (QUESTIONS 208): the coach always sees typical-at-your-age; this shows the notes in client view too.
+      typicalRow(ctx, doc),
       // M9: community presets, off unless turned on for this client.
       h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Community presets'), S.toggle([[false, 'Off'], [true, 'On']], !!s.community, v => setCommunity(ctx, v), { label: 'Community presets' }),
         h('span.muted.small', {}, 'Yom tov and Pesach lines, a kosher grocery note, future tuition goals, maaser')),
@@ -167,4 +170,13 @@ export function discoveryScreen(app) {
       h('span.muted', {}, 'Creates the client and opens Home.')),
     h('p.muted.small', { style: { marginTop: '16px' } }, 'Sent the intake form instead? Coach tools, Data, Import intake (CSV).')),
     identitySection(app, app.ctx)]; // batch 25 (Phase 4): who they are with money, for the client that is open
+}
+
+// Batch 31: Show typical-at-your-age in client view (settings.typicalInClient, off by default), and hidden notes back.
+function typicalRow(ctx, doc) {
+  const hidden = hiddenNotes(doc);
+  return h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Typical at your age'),
+    S.toggle([[false, 'Off'], [true, 'On']], typicalInClient(doc), v => ctx.store.setDoc('settings', { typicalInClient: v }), { label: 'Show typical-at-your-age in client view' }),
+    h('span.muted.small', {}, 'Show typical-at-your-age in client view'),
+    hidden.length ? S.button(`Show ${hidden.length} hidden ${hidden.length === 1 ? 'note' : 'notes'}`, { size: 'small', onClick: () => ctx.store.setIn('settings', ['typicalOff'], undefined, 'Show the typical-at-your-age notes again') }) : null);
 }

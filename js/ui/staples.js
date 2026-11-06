@@ -328,10 +328,16 @@ function ghostChart() {
 // Amount box: $ value with a 'per' picker (R043). Empty: strong border and a hint (R163).
 // Shown with commas ($4,200; $15.99); typing accepts commas, $ or plain digits.
 export const moneyText = v => (v === null || v === undefined ? '' : Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 }));
+// Batch 31: the one hook for typical at your age (js/ui/typical-ui.js sets it). Given the box's key it may fade a
+// typical range into a blank box, or hand back the box with a one-line note under it; with nothing to say it returns
+// the box as is.
+let moneyHook = null;
+export const setMoneyHook = fn => { moneyHook = fn; };
 export function moneyInput(value, onChange, { hint = 'Add amount', cents = true, key = null, width = 128 } = {}) {
   const input = h('input', { inputmode: 'decimal', placeholder: hint, 'aria-label': hint.replace(/^Add /, ''), value: moneyText(value), 'data-focus': key });
   input.onchange = () => { const n = parseNum(input.value); input.value = moneyText(n); onChange?.(n); };
-  return h(`label.field.money${value !== null && value !== undefined ? '.filled' : ''}`, { style: { width: `${width}px` } }, h('span.pre', {}, '$'), input);
+  const box = h(`label.field.money${value !== null && value !== undefined ? '.filled' : ''}`, { style: { width: `${width}px` } }, h('span.pre', {}, '$'), input);
+  return (key && moneyHook?.(key, value ?? null, box, input, { width })) || box;
 }
 export function pctInput(value, onChange, { hint = 'Add APR', key = null } = {}) {
   const shown = value === null || value === undefined ? '' : +(value * 100).toFixed(3);

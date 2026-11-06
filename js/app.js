@@ -28,6 +28,7 @@ import { logEvent, usageCsv } from './usage.js';
 import { movedWords } from './sowhat.js';
 import { foo } from './math/foo.js';
 import { setSectionClient, sectionTools, openAround, rememberSection } from './ui/sections.js';
+import { startTypical } from './ui/typical-ui.js';
 
 const [ref, fields, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/fields.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
 
@@ -549,6 +550,7 @@ window.addEventListener('beforeunload', e => { // R084: warn before closing with
   if (app.saver?.state === 'unsaved') { e.preventDefault(); e.returnValue = ''; }
 });
 
+startTypical(app); // batch 31: typical at your age on the money boxes (one hook in moneyInput)
 app.applyPrefs();
 const last = app.prefs.clientId ? loadClient(adapter, app.prefs.clientId) : null;
 app.open(last, { save: false });

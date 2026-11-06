@@ -1,6 +1,11 @@
 # Engine spec: priors (a plan from an age)
 
-Status: design, Batch 17. Nothing here is built. Phase 4, Track 1 (ROADMAP.md).
+Status: design, Batch 17. Phase 4, Track 1 (ROADMAP.md). Batch 31 built the groundwork: `data/priors-2026.json` (the
+Primary rows only), `js/math/priors.js` (M9E: the range by age band, the far-outside check, the shares), the faded
+typical range in a blank core box (coach view) and the one-line note under a typed total far outside typical
+(`js/ui/typical-ui.js`, one hook in moneyInput). No row publishes percentiles yet, so every range is the stated
+spread (RULES typicalLow 0.6, typicalHigh 1.5) around the median (SCF) or mean (CE). Conditioning, household size
+and place scaling (no Primary NY row) are not built.
 
 ## Purpose
 

@@ -42,6 +42,8 @@ import { cardsPicture, creditMove } from '../math/cards.js';
 import { cardLibrary } from '../cardlib.js';
 import { skillLibrary } from '../library.js';
 import { libraryOf } from '../math/library.js';
+import { priorsData } from '../priorslib.js';
+import { typicalChecks, typicalBoxes, typicalOf } from '../math/priors.js';
 import { creditHealth } from '../math/debt.js';
 import { identityOf } from '../math/identity.js';
 
@@ -550,6 +552,13 @@ export const MATH = [
     fromApp: 'a reading order, not a dollar formula (batch 26, Phase 4): the skills tagged to each FOO step, ordered by the tilt (the tree\'s place in it, one per tree first) when there is one, then the band, the leverage tier and the level; LearnShown of them not done; an app skill whose proof names a household fact ticks itself when the fact shows; the first unlearn entry for the step, Not yet or From an earlier step against the order. The value is the first skill to learn at the step you are on (Home\'s Learn next)',
     app: c => { const lib = skillLibrary(); return lib ? libraryOf(c.doc, c.ref, lib, { now: c.now, m: c.m })?.next?.skill.name ?? null : null; },
     parts: [{ key: 'ticked', name: 'Skills the data ticks', unit: 'count', fromApp: 'the app skills whose proof field the household shows (FOO step 2, little e, the coverage rows and the rest)', app: c => { const lib = skillLibrary(); if (!lib) return null; const L = libraryOf(c.doc, c.ref, lib, { now: c.now, m: c.m }); return Object.values(L.steps).reduce((n, b) => n + b.done.filter(x => x.by === 'data').length, 0); } }] },
+  // ---------- Batch 31: typical at your age (Phase 4, Track 1 groundwork) ----------
+  { id: 'M9E', name: 'Typical at your age', inputs: 'age (About you: birth year and month), state, the cash accounts\' balances, card balances, student loan balances, the gut spending number; data/priors-2026.json (the Primary rows only); TypicalLow, TypicalHigh', unit: 'count',
+    fns: ['priors.TYPICAL', 'priors.CE_CATEGORIES', 'priors.NO_ROW', 'priors.rowFor', 'priors.placeOf', 'priors.typicalOf', 'priors.farFrom', 'priors.typicalCheck', 'priors.typicalChecks', 'priors.shareOf', 'priors.shortRange', 'priors.typicalBoxes'],
+    fromApp: 'reads data/priors-2026.json: for the age band, the source\'s median (SCF) or mean (CE) times TypicalLow and TypicalHigh is the typical range (no Primary row publishes percentiles); a total is far outside when above high x high / likely or below low x low / likely. The value counts the totals far outside (cash, cards, student loans, spending a month)',
+    app: c => { const d = priorsData(); return d ? typicalChecks(d, { age: c.x?.age ?? null, boxes: typicalBoxes(c.live) }).length : null; },
+    parts: [{ key: 'netWorth', name: 'Typical net worth at this age (the SCF median)', unit: 'money', fromApp: 'the SCF 2025 median family net worth for the age of head (Table 2)',
+      app: c => { const d = priorsData(); return d ? typicalOf(d, 'netWorth', { age: c.x?.age ?? null })?.likely ?? null : null; } }] },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },
   // ---------- Holidays (the calendar question on About you) ----------

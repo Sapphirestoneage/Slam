@@ -447,6 +447,8 @@ export const NOT_IN_SHEET = {
   'settings.fadedNote': 'how many starter amounts turned faded, for the one-time note on the Budget (cleared when it is closed)',
   'settings.layerAccounts': 'which account holds each cash layer; set on Cash layers',
   'settings.person': 'the person filter on Net worth and Cash flow (all, Me, Partner), a screen setting (F2)',
+  'settings.typicalInClient': 'batch 31: Coach tools > Session > Typical at your age, whether client view shows the typical-at-your-age notes (the coach always sees them); a display switch, default off',
+  'settings.typicalOff': 'batch 31: the money boxes whose typical-at-your-age note was hidden (box key to true), so each stays hidden for this client',
   'settings.debtCustomOrder': 'the custom payoff order, debt ids dragged into place on Plan › Debt payoff (F3)',
   'spending.categoryJoy': 'dated joy ratings (1 to 5) per spending category, rated on the Budget (F6); the Captured tab lists them',
   'spending.transactions': 'transactions imported from bank CSVs (J): date, description, amount, bank, the Budget line, Actual level',

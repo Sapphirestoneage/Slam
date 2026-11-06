@@ -1,0 +1,821 @@
+{
+ "id": "priors",
+ "asOf": "2026-11-06",
+ "year": 2026,
+ "source": "docs/engines/priors-sources.md, only the rows marked Primary (read on the publisher's page or its FRED mirror; batch 17 and the batch 24 verify pass). Nothing Secondary or Not found is here",
+ "range": "No row here publishes a 25th to 75th percentile, so every range is SLAM's stated spread around the source's figure (RULES typicalLow and typicalHigh, docs/engines/priors.md): the median where the source gives one (SCF), else the mean (CE)",
+ "sources": {
+  "scf2025": {
+   "name": "Survey of Consumer Finances 2025: Changes in U.S. Family Finances from 2022 to 2025",
+   "publisher": "Federal Reserve Board",
+   "link": "https://www.federalreserve.gov/publications/files/scf26.pdf",
+   "released": "2026-10-09"
+  },
+  "shed2025": {
+   "name": "Survey of Household Economics and Decisionmaking (survey of October 2025), data tables",
+   "publisher": "Federal Reserve Board",
+   "link": "https://www.federalreserve.gov/consumerscommunities/sheddataviz/",
+   "released": "2026-05"
+  },
+  "ce2024": {
+   "name": "Consumer Expenditure Survey 2024, by age of reference person (calendar-year tables)",
+   "publisher": "Bureau of Labor Statistics, read on FRED (its mirror)",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198191"
+  }
+ },
+ "rows": [
+  {
+   "field": "netWorth",
+   "band": "under 35",
+   "ages": [
+    null,
+    34
+   ],
+   "who": "households under 35",
+   "median": 33000,
+   "mean": 135400,
+   "unit": "balance",
+   "source": "scf2025",
+   "table": "Table 2 (p. 12), family net worth by age of head",
+   "link": "https://www.federalreserve.gov/publications/files/scf26.pdf",
+   "year": 2025
+  },
+  {
+   "field": "netWorth",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "households 35 to 44",
+   "median": 155600,
+   "mean": 681900,
+   "unit": "balance",
+   "source": "scf2025",
+   "table": "Table 2 (p. 12), family net worth by age of head",
+   "link": "https://www.federalreserve.gov/publications/files/scf26.pdf",
+   "year": 2025
+  },
+  {
+   "field": "netWorth",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "households 45 to 54",
+   "median": 253700,
+   "mean": 1244500,
+   "unit": "balance",
+   "source": "scf2025",
+   "table": "Table 2 (p. 12), family net worth by age of head",
+   "link": "https://www.federalreserve.gov/publications/files/scf26.pdf",
+   "year": 2025
+  },
+  {
+   "field": "netWorth",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "households 55 to 64",
+   "median": 411900,
+   "mean": 1878000,
+   "unit": "balance",
+   "source": "scf2025",
+   "table": "Table 2 (p. 12), family net worth by age of head",
+   "link": "https://www.federalreserve.gov/publications/files/scf26.pdf",
+   "year": 2025
+  },
+  {
+   "field": "netWorth",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "households 65 to 74",
+   "median": 431300,
+   "mean": 1897600,
+   "unit": "balance",
+   "source": "scf2025",
+   "table": "Table 2 (p. 12), family net worth by age of head",
+   "link": "https://www.federalreserve.gov/publications/files/scf26.pdf",
+   "year": 2025
+  },
+  {
+   "field": "netWorth",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "households 75 and over",
+   "median": 504900,
+   "mean": 1962200,
+   "unit": "balance",
+   "source": "scf2025",
+   "table": "Table 2 (p. 12), family net worth by age of head",
+   "link": "https://www.federalreserve.gov/publications/files/scf26.pdf",
+   "year": 2025
+  },
+  {
+   "field": "cash",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "share": 0.987,
+   "median": 8200,
+   "mean": 62900,
+   "among": "the 98.7% with a checking, savings or money market account",
+   "unit": "balance",
+   "source": "scf2025",
+   "table": "Table 3 (p. 15), transaction accounts",
+   "link": "https://www.federalreserve.gov/publications/files/scf26.pdf",
+   "year": 2025
+  },
+  {
+   "field": "card",
+   "band": "all ages",
+   "ages": null,
+   "who": "households with a card balance",
+   "share": 0.447,
+   "median": 3100,
+   "mean": 8000,
+   "among": "the 44.7% carrying a balance after the last payment",
+   "unit": "balance",
+   "source": "scf2025",
+   "table": "Table 4 (p. 25), credit card balances",
+   "link": "https://www.federalreserve.gov/publications/files/scf26.pdf",
+   "year": 2025
+  },
+  {
+   "field": "studentLoans",
+   "band": "all ages",
+   "ages": null,
+   "who": "households with student loans",
+   "share": 0.2,
+   "median": 25600,
+   "mean": 43000,
+   "among": "the 20.0% with education debt",
+   "unit": "balance",
+   "source": "scf2025",
+   "table": "Table 4 (p. 25), education installment loans",
+   "link": "https://www.federalreserve.gov/publications/files/scf26.pdf",
+   "year": 2025
+  },
+  {
+   "field": "cover400",
+   "band": "all adults",
+   "ages": null,
+   "who": "adults",
+   "share": 0.63,
+   "unit": "share",
+   "source": "shed2025",
+   "table": "Unexpected expenses: would cover a $400 emergency expense with cash or its equivalent",
+   "link": "https://www.federalreserve.gov/consumerscommunities/sheddataviz/unexpectedexpenses-table.html",
+   "year": 2025
+  },
+  {
+   "field": "emergency3mo",
+   "band": "all adults",
+   "ages": null,
+   "who": "adults",
+   "share": 0.55,
+   "unit": "share",
+   "source": "shed2025",
+   "table": "Emergency savings: adults who have 3 months of emergency savings",
+   "link": "https://www.federalreserve.gov/consumerscommunities/sheddataviz/emergency-savings-table.html",
+   "year": 2025
+  },
+  {
+   "field": "cover400",
+   "band": "18 to 29",
+   "ages": [
+    18,
+    29
+   ],
+   "who": "18 to 29 year olds",
+   "share": 0.45,
+   "unit": "share",
+   "source": "shed2025",
+   "table": "Unexpected expenses: would cover a $400 emergency expense with cash or its equivalent",
+   "link": "https://www.federalreserve.gov/consumerscommunities/sheddataviz/unexpectedexpenses-table.html",
+   "year": 2025
+  },
+  {
+   "field": "emergency3mo",
+   "band": "18 to 29",
+   "ages": [
+    18,
+    29
+   ],
+   "who": "18 to 29 year olds",
+   "share": 0.37,
+   "unit": "share",
+   "source": "shed2025",
+   "table": "Emergency savings: adults who have 3 months of emergency savings",
+   "link": "https://www.federalreserve.gov/consumerscommunities/sheddataviz/emergency-savings-table.html",
+   "year": 2025
+  },
+  {
+   "field": "cover400",
+   "band": "30 to 44",
+   "ages": [
+    30,
+    44
+   ],
+   "who": "30 to 44 year olds",
+   "share": 0.57,
+   "unit": "share",
+   "source": "shed2025",
+   "table": "Unexpected expenses: would cover a $400 emergency expense with cash or its equivalent",
+   "link": "https://www.federalreserve.gov/consumerscommunities/sheddataviz/unexpectedexpenses-table.html",
+   "year": 2025
+  },
+  {
+   "field": "emergency3mo",
+   "band": "30 to 44",
+   "ages": [
+    30,
+    44
+   ],
+   "who": "30 to 44 year olds",
+   "share": 0.49,
+   "unit": "share",
+   "source": "shed2025",
+   "table": "Emergency savings: adults who have 3 months of emergency savings",
+   "link": "https://www.federalreserve.gov/consumerscommunities/sheddataviz/emergency-savings-table.html",
+   "year": 2025
+  },
+  {
+   "field": "cover400",
+   "band": "45 to 59",
+   "ages": [
+    45,
+    59
+   ],
+   "who": "45 to 59 year olds",
+   "share": 0.66,
+   "unit": "share",
+   "source": "shed2025",
+   "table": "Unexpected expenses: would cover a $400 emergency expense with cash or its equivalent",
+   "link": "https://www.federalreserve.gov/consumerscommunities/sheddataviz/unexpectedexpenses-table.html",
+   "year": 2025
+  },
+  {
+   "field": "emergency3mo",
+   "band": "45 to 59",
+   "ages": [
+    45,
+    59
+   ],
+   "who": "45 to 59 year olds",
+   "share": 0.55,
+   "unit": "share",
+   "source": "shed2025",
+   "table": "Emergency savings: adults who have 3 months of emergency savings",
+   "link": "https://www.federalreserve.gov/consumerscommunities/sheddataviz/emergency-savings-table.html",
+   "year": 2025
+  },
+  {
+   "field": "cover400",
+   "band": "60 and over",
+   "ages": [
+    60,
+    null
+   ],
+   "who": "adults 60 and over",
+   "share": 0.78,
+   "unit": "share",
+   "source": "shed2025",
+   "table": "Unexpected expenses: would cover a $400 emergency expense with cash or its equivalent",
+   "link": "https://www.federalreserve.gov/consumerscommunities/sheddataviz/unexpectedexpenses-table.html",
+   "year": 2025
+  },
+  {
+   "field": "emergency3mo",
+   "band": "60 and over",
+   "ages": [
+    60,
+    null
+   ],
+   "who": "adults 60 and over",
+   "share": 0.71,
+   "unit": "share",
+   "source": "shed2025",
+   "table": "Emergency savings: adults who have 3 months of emergency savings",
+   "link": "https://www.federalreserve.gov/consumerscommunities/sheddataviz/emergency-savings-table.html",
+   "year": 2025
+  },
+  {
+   "field": "spending.total",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 47283,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Total expenditures, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.total",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 74475,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Total expenditures, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.total",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 91229,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Total expenditures, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/series/CXUTOTALEXPLB0404M",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.food",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 7215,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.food",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 9630,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAtHome",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 4189,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food at home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAtHome",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 5712,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food at home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAway",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 3025,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food away from home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAway",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 3918,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food away from home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.housing",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 16853,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Housing, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.housing",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 26380,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Housing, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.shelter",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 12050,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Shelter, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.shelter",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 17656,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Shelter, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.rentedDwellings",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 10119,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Rented dwellings, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "note": "Averages renters and owners: not a rent prior (priors-sources.md: rent uses the ACS row, still Secondary)",
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.rentedDwellings",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 9927,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Rented dwellings, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "note": "Averages renters and owners: not a rent prior (priors-sources.md: rent uses the ACS row, still Secondary)",
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.utilities",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 2181,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Utilities, fuels, public services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.utilities",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 4076,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Utilities, fuels, public services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.transportation",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 9243,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Transportation, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.transportation",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 12802,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Transportation, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.vehiclePurchases",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 4312,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Vehicle purchases (net outlay), annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.vehiclePurchases",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 5266,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Vehicle purchases (net outlay), annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.healthCare",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 1485,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Health care, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.healthCare",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 3825,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Health care, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.entertainment",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 1835,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Entertainment, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.entertainment",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 3224,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Entertainment, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.apparel",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 1541,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Apparel and services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.apparel",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 2220,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Apparel and services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.personalInsurance",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 4428,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Personal insurance and pensions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.personalInsurance",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 10701,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Personal insurance and pensions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.cashContributions",
+   "band": "under 25",
+   "ages": [
+    null,
+    24
+   ],
+   "who": "people under 25",
+   "mean": 345,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Cash contributions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.cashContributions",
+   "band": "25 to 34",
+   "ages": [
+    25,
+    34
+   ],
+   "who": "25 to 34 year olds",
+   "mean": 1004,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Cash contributions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  }
+ ],
+ "place": [],
+ "placeNote": "No Primary row gives a New York State or NY metro figure yet (ACS rent B25064 is still Secondary), so every figure is national. A place row would be { field, place, factor, source, link, year }",
+ "leftOut": [
+  "Rent (ACS B25064, national, NY State, NJ and NY metro): Secondary, census.gov was not reachable",
+  "Retirement balances by age (SCF historical tables): Secondary",
+  "Household income by age (Census H-10 and its percentiles): Secondary",
+  "Card, education debt and transaction accounts by age (SCF historical tables): Not found",
+  "Average card debt by generation (Experian) and student loans by age (FSA, via Student Loan Planner): Secondary",
+  "CE rows for 35 to 44 beyond the total, and 45 and over: not read"
+ ]
+}

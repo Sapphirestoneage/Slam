@@ -1,0 +1,18 @@
+/* Batch 31: typical at your age (js/ui/typical-ui.js). A calm one-line note under a money box: muted, never red, no
+   verdict. The wrap keeps as much room above the box as the note takes below, so in a row (centered) the box stays
+   level with its neighbours (DESIGN.md rule 1); the note itself takes no width, so the column does not move (1b). */
+.typical-wrap { display: inline-flex; flex-direction: column; align-items: flex-start; position: relative; padding: 26px 0; vertical-align: middle; }
+.stack > .typical-wrap { padding-top: 0; } /* label above, box below: the box keeps its place in a form grid */
+.typical-note { position: absolute; left: 0; bottom: 0; height: 24px; display: inline-flex; align-items: center; gap: 2px; white-space: nowrap;
+  font-size: 0.8125rem; font-weight: 500; color: var(--text-2); line-height: 1; }
+td.num .typical-wrap, .row-line[style*="flex-end"] > .typical-wrap { align-items: flex-end; }
+td.num .typical-note, .row-line[style*="flex-end"] > .typical-wrap > .typical-note { left: auto; right: 0; }
+.typical-wrap .typical-note .icon-btn.tiny { width: 24px; height: 24px; min-width: 24px; min-height: 24px; border: 0; background: none; padding: 0; color: var(--text-2); }
+.typical-wrap .typical-note .icon-btn.tiny:hover { color: var(--primary); background: color-mix(in srgb, var(--primary-light) 40%, transparent); }
+.typical-wrap .typical-note .icon-btn.tiny .i { width: 14px; height: 14px; }
+.field.money.typical-ph input::placeholder { font-style: italic; }
+@media (max-width: 760px) { /* a phone: rows start at the top; the note wraps under the box at the box's own width, so what sits beside the box stays where it is on every row */
+  .typical-wrap, td.num .typical-wrap, .row-line[style*="flex-end"] > .typical-wrap { padding: 0; align-items: flex-start; }
+  .typical-note, td.num .typical-note, .row-line[style*="flex-end"] > .typical-wrap > .typical-note { position: static; width: 0; min-width: 100%; height: auto; white-space: normal; align-items: flex-start; line-height: 1.25; font-size: 0.75rem; padding-top: 3px; }
+  .typical-note > span { flex: 1 1 auto; }
+}
