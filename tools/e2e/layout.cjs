@@ -496,7 +496,9 @@ async function runClient(page, client) {
   }
 }
 
-(async () => {
+// Required from another script (tools/e2e/personas.cjs), it only hands over its checks; run directly, it runs.
+module.exports = { scan, landing, ROUTES, CHECKS };
+if (require.main === module) (async () => {
   const t0 = Date.now();
   fs.mkdirSync(OUT, { recursive: true });
   for (const f of fs.readdirSync(OUT)) if (/^(level|clipped|overflow|covered|askable)-\d+\.png$/.test(f)) fs.unlinkSync(path.join(OUT, f));

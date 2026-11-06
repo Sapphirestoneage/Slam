@@ -1,0 +1,47 @@
+// An unmarried couple living together who keep money separate and split rent and utilities 60/40 by income.
+// Expected numbers are Jordan's own plan (the Me view), which is what Living together shows by default.
+export default {
+  id: 'couple-separate', order: 5, name: 'Jordan and Sam', view: 'Me',
+  about: 'Made up. Unmarried, living together, money kept separate. Rent $2,400 and utilities $200 split 60/40 by income (Jordan $4,500, Sam $3,000 take-home). Jordan: a card and a student loan; Sam: a car loan.',
+  profile: {
+    firstName: 'Jordan', lastName: 'Persona', partnerName: 'Sam', birthYear: 1995, birthMonth: 7, partnerBirthYear: 1996, state: 'IL',
+    household: 'Couple', mode: 'Living together', moneyStyle: 'Separate', splitMethod: 'By income',
+    workSituation: 'Employed (W-2)', housing: 'Rent', hasCar: true, hasPets: false, incomeStability: 'Steady', healthCoverage: 'Employer',
+    shared: { rent: true, utilities: true, internet: false, renters: false, groceries: false, household: false },
+    sharedAs: { rent: 'The whole bill', utilities: 'The whole bill' },
+    areas: { cash: true, investments: true, real: true, debt: true },
+  },
+  client: { couple: true },
+  records: [
+    { kind: 'income', type: 'Job', name: "Jordan's paycheck", owner: 'Me', amount: 4500, per: 'month', values: { basis: 'Take-home', payFrequency: 'twice a month', incomeType: 'W-2' } },
+    { kind: 'income', type: 'Partner job', name: "Sam's paycheck", owner: 'Partner', amount: 3000, per: 'month', values: { basis: 'Take-home', payFrequency: '2 weeks', incomeType: 'W-2' } },
+    { kind: 'spending', type: 'All in', name: "Jordan's spending, all in", owner: 'Me', amount: 3200, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
+    { kind: 'spending', type: 'All in', name: "Sam's spending, all in", owner: 'Partner', amount: 2100, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
+    { kind: 'bill', name: 'Rent', amount: 2400, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date' } },
+    { kind: 'bill', name: 'Electric, gas, water', amount: 200, values: { category: 'Electric, gas, water', draftt: 'Accommodation', amountType: 'Variable' } },
+    { kind: 'account', type: 'Checking', name: "Jordan's checking", owner: 'Me', values: { group: 'cash', balance: 3000 } },
+    { kind: 'account', type: 'Roth IRA', name: "Jordan's Roth IRA", owner: 'Me', values: { group: 'investment', balance: 12000 } },
+    { kind: 'debt', type: 'Student loan', name: "Jordan's student loan", owner: 'Me', values: { balance: 18000, apr: 0.055, payment: 210, federal: 'Federal' } },
+    { kind: 'debt', type: 'Credit card', name: "Jordan's card", owner: 'Me', values: { balance: 1500, apr: 0.24, payment: 100, payChoice: 'Custom' } },
+    { kind: 'account', type: 'Checking', name: "Sam's checking", owner: 'Partner', values: { group: 'cash', balance: 1500 } },
+    { kind: 'account', type: 'Savings or HYSA', name: "Sam's savings", owner: 'Partner', values: { group: 'cash', balance: 2000 } },
+    { ref: 'car', kind: 'asset', type: 'Car', name: "Sam's car", owner: 'Partner', values: { value: 9000, financed: 'Financed' } },
+    { kind: 'debt', type: 'Car loan', name: "Sam's car loan", owner: 'Partner', linkedTo: '@car', values: { balance: 6000, apr: 0.079, payment: 260 } },
+  ],
+  expected: {
+    takeHome: { value: 4500, unit: 'money', note: "Jordan's own take-home." },
+    netWorth: { value: -4500, unit: 'money', note: 'Jordan: $3,000 + $12,000 - $18,000 - $1,500 = -$4,500.' },
+    surplus: { value: 1300, unit: 'money', note: '$4,500 - $3,200 (his gut, his 60% of rent and utilities and his debt payments included) = $1,300.' },
+    savingsRate: { value: 0.2889, unit: 'pct', note: '$1,300 / $4,500.' },
+    housingPct: { value: 0.3467, unit: 'pct', note: 'By income: 4,500 / (4,500 + 3,000) = 60%. ($2,400 + $200) x 60% = $1,560 / $4,500 = 34.7%.' },
+    fooStep: { value: '3', unit: 'step', note: 'Step 1 done ($3,000 covers the $1,477 buffer and $1,000 little e), no match on file, the card is heavy.' },
+    debtFreeMonths: { value: 110, unit: 'months', note: 'Card first with the surplus: $1,400 a month clears $1,500 at 24% in 2 months. The student loan (5.5%, not heavy) keeps its $210: n = -ln(1 - 0.055/12 x 18,000 / 210) / ln(1 + 0.055/12) = 109.1, so 110.' },
+    heavyDebtMonths: { value: 2, unit: 'months', note: 'The card.' },
+    monthsToFi: { value: 275, unit: 'months', note: 'FI number $3,200 x 12 / 4% = $960,000. 2 months adding nothing, then $1,300 + the freed $100 = $1,400 a month from $12,136: 274.6, so 275 months.' },
+    runwayMonths: { value: 0.9375, unit: 'months', tol: 0.01, note: '$3,000 / $3,200.' },
+    householdSurplus: { value: 2200, unit: 'money', view: 'all', finding: 'F-GUT', note: 'Both together: $7,500 - $3,200 - $2,100 = $2,200. Living together shows no combined totals, so this is only what a combined view should say if one shows.' },
+  },
+  cannot: [
+    'One gut number per household: with two people each keeping their own all-in number, a combined view reads only the first one.',
+  ],
+};

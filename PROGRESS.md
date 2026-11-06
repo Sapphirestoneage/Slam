@@ -186,3 +186,28 @@ Docs and data only; no screen changed.
 5. docs/engines/: priors.md, ranges.md, projection.md, next-best.md, library.md (purpose, inputs, outputs, formulas in plain words, data and sources, test households, build order each), and priors-sources.md (a draft table of public figures by age band: CPS income, BLS CE spending for 2024, ACS rent, SCF 2025 net worth, retirement and card figures, FSA student loans, SHED emergency savings; each marked Primary or Secondary, with what could not be reached).
 
 QA: tests in UTC and America/New_York (test/library.test.js is new); no screen touched, so no layout or QA.md scorecard change. Questions 201 to 211.
+
+## Batch 16 (Nov 5): personas, every avatar and user landed
+
+Twelve made-up households that run SLAM end to end, each checked against QA.md, so every batch proves it works for real
+people, from someone below zero to a multimillionaire. No app behavior changed.
+
+1. tools/personas/defs/*.mjs: Alexis, Tom, Maya, a deficit, an unmarried couple splitting 60/40 by income, a married
+   couple with one paycheck and a baby, three adults in one home, a tipped bartender, a 1099 dancer, a fan-site creator
+   with a part-time job, a worker planning gender-affirming care, and a 52-year-old with $4.2M. Each def holds the
+   household, 7 to 13 numbers a coach expects worked out by hand (the arithmetic in each note), and what SLAM cannot
+   represent for that person yet (cannot: the Phase 4 list).
+2. tools/personas/build.mjs builds each into the app's own backup file (exportFile; the usual list added as for any new
+   client, then the batch 10 pass), in fixtures/personas/, so each opens through Coach tools › Data › Import. --check
+   says when a file is out of date.
+3. test/personas.test.js: every expected number against the app; a known gap carries a finding id and shows as a todo
+   (F-GUT, F-529, F-LATE); the FOO step two weeks later; one debt-free answer and one surplus per persona.
+4. tools/e2e/personas.cjs: each persona through Import in the browser, every screen at 1280: console errors, What's
+   missing, the layout checker's own scan (tools/e2e/layout.cjs now exports its checks when required), and story checks
+   (no "no debt" with debts, locks asking for what the household cannot have, negative or contradictory paycheck words,
+   one answer per number across screens).
+5. tools/artifact.mjs: a private full household at fixtures/<name>.household.local.json (git-ignored) opens the page
+   straight into that whole household; otherwise as before.
+
+QA: 512 tests in UTC and America/New_York (490 pass, 12 skip, 10 todo: the persona findings). The persona run: all 12
+load through Import, 0 console errors; findings ranked in the batch 16 report.

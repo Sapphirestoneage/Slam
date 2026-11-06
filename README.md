@@ -47,7 +47,32 @@ folder in the system temp folder) and exits 1 when anything fails. `SLAM_URL` po
 `LAYOUT_QUICK=1` runs 1440 light only; `LAYOUT_OFFLINE=1` stands in for the CDN and fonts where they are blocked
 (`ECHARTS` gives the local echarts.min.js). About 10 minutes for the full run.
 
-## See the math
+### Personas
+
+```
+node tools/personas/build.mjs          # after a change to the backup format: rebuild fixtures/personas/*.json
+node --test test/personas.test.js      # the numbers (part of node --test)
+python3 -m http.server 8816 &
+node tools/e2e/personas.cjs            # every screen, for every persona, in the browser
+```
+
+Twelve made-up households that run SLAM end to end, from below zero to a multimillionaire: Alexis (avoids money),
+Tom (a CPA with every account), Maya, a deficit, an unmarried couple splitting by income, a married couple with one
+paycheck and a baby, three adults in one home, a tipped bartender, a 1099 dancer, a fan-site creator with a part-time
+job, a worker planning gender-affirming care, and a 52-year-old with $4.2M. Each is written readably in
+`tools/personas/defs/<id>.mjs`, with the 5 to 10 numbers a coach expects worked out by hand (the arithmetic is in each
+note) and a list of what SLAM cannot represent for that person yet. `tools/personas/build.mjs` turns each def into the
+app's own backup file in `fixtures/personas/`, so any of them opens through Coach tools › Data › Import.
+
+`test/personas.test.js` opens each file the way Import does and checks every expected number within its tolerance. A
+number the app is known to get differently carries a finding id in its def and shows as a todo with what the app says,
+so the gap stays in sight without stopping the run; anything else that differs fails. `tools/e2e/personas.cjs` opens
+each persona through Import in the browser, visits every screen at 1280, and writes `report.md` and `personas.json`
+(console errors, the What's missing count, the layout checker's findings, and whether each screen tells a sensible
+story: no "no debt" words with debts on file, no lock asking for a number the household cannot have, no NaN, one answer
+per number across screens) to `PERSONAS_OUT` (default: a `slam-personas` folder in the system temp folder). About 3
+minutes. Every batch report includes its result (QA.md, Personas).
+
 
 Every number in SLAM can be opened in a spreadsheet. On Report › One-pager (or Coach tools › Data), **Open in a
 spreadsheet** downloads a workbook with every input, every formula live, and a Check beside each one against the
@@ -81,6 +106,12 @@ The workbook is built only from the registries in `js/registry/`, so it stays co
   in `fixtures/` and run `python3 tools/fixtures.py private` to make
   `fixtures/eli.local.json`. Both are git-ignored. Tests that need it skip with a
   message when it is missing.
+- `fixtures/personas/*.json` are the made-up persona households (see Personas above), built from
+  `tools/personas/defs/` by `node tools/personas/build.mjs`.
+- A private full household: save a client's backup (Coach tools › Data › Export) as
+  `fixtures/<name>.household.local.json` (the client name in lower case, spaces as dashes: `eli.household.local.json`).
+  `node tools/artifact.mjs` then opens the page straight into that whole household instead of one built from the
+  simple inputs. Git-ignored by the `fixtures/*.local.json` rule; publish that page privately only.
 
 ## Files
 
@@ -117,6 +148,7 @@ The workbook is built only from the registries in `js/registry/`, so it stays co
 | `js/registry/joy.js` | The Joy number: the wording, asked at session start, in every snapshot, charted from Day 0 |
 | `js/capture.js`, `js/import/csv.js` | Captured for later (category joy, Trip, income type, the change log with who); the CSV statement import |
 | `js/math/proposed.js` | Current vs Proposed (M76): both sides, the differences, How we got this, Make Proposed the plan |
+| `tools/personas/`, `fixtures/personas/`, `test/personas.test.js`, `tools/e2e/personas.cjs` | The twelve persona households: their defs with hand-worked numbers, the built backup files, the number check and the browser run |
 | `tools/e2e/walkthrough.cjs`, `test/walkthrough.test.js` | The full walkthrough: S1 to S12 in unit tests; every screen at three widths, light and dark, in the browser |
 | `MATH.md`, `SYNC.md`, `MORNING.md` | Every calculation reviewed (a self-review pending a CFP); the Google Sheets sync design; the overnight run's morning note |
 | `PROGRESS.md`, `QUESTIONS.md`, `BACKLOG.md` | Where the build stands, open questions, later phases |

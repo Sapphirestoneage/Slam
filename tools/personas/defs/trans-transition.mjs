@@ -1,0 +1,40 @@
+// A W-2 software worker planning gender-affirming care over 3 years, partly covered by insurance, plus a name change.
+export default {
+  id: 'trans-transition', order: 11, name: 'Avery Persona',
+  about: 'Made up. W-2 software worker ($140,000, take-home $6,800) planning gender-affirming care over 3 years with partial coverage: surgery in Sept 2027 ($12,000 out of pocket after 70% coverage, $3,000 saved), a second procedure in Oct 2028 ($8,000), the name and document change in Feb 2027 ($600), ongoing care in the budget. Rents, a Roth IRA and a 401(k).',
+  profile: {
+    firstName: 'Avery', lastName: 'Persona', birthYear: 1994, birthMonth: 10, state: 'WA', household: 'Solo', mode: 'Solo',
+    workSituation: 'Employed (W-2)', housing: 'Rent', hasCar: false, hasPets: true, incomeStability: 'Steady', healthCoverage: 'Employer',
+    areas: { cash: true, investments: true, real: false, debt: false },
+  },
+  records: [
+    { kind: 'income', type: 'Job', name: 'Salary', amount: 6800, per: 'month', values: { basis: 'Both', gross: 140000, payFrequency: '2 weeks', incomeType: 'W-2', contributionPct: 0.08, hasMatch: 'Yes', matchPct: 0.5, matchCapPct: 0.06 } },
+    { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 4300, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
+    { kind: 'account', type: 'Checking', name: 'Checking', values: { group: 'cash', balance: 4000 } },
+    { kind: 'account', type: 'Savings or HYSA', name: 'HYSA', values: { group: 'cash', balance: 18000 } },
+    { kind: 'account', type: 'Roth IRA', name: 'Roth IRA', values: { group: 'investment', balance: 28000 } },
+    { kind: 'account', type: '401(k)', name: '401(k)', values: { group: 'investment', balance: 62000 } },
+    { kind: 'coverage', type: 'Health', name: 'Health (covers 70% after the deductible)', amount: 150, per: 'month', values: { have: 'Have it', deductible: 2500, paidFrom: 'Paycheck' } },
+    { kind: 'event', name: 'Name and document change', amount: 600, values: { month: '2027-02', sinking: true, saved: 0 } },
+    { kind: 'event', name: 'Surgery (out of pocket after coverage)', amount: 12000, values: { month: '2027-09', sinking: true, saved: 3000 } },
+    { kind: 'event', name: 'Second procedure (out of pocket)', amount: 8000, values: { month: '2028-10', sinking: true, saved: 0 } },
+    { kind: 'bill', name: 'Rent', amount: 2300, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date' } },
+    { kind: 'bill', name: 'Hair removal sessions', amount: 150, values: { category: 'Copays', draftt: 'Therapy', amountType: 'Fixed' } },
+    { kind: 'bill', name: 'Prescriptions', amount: 40, values: { category: 'Prescriptions', draftt: 'Therapy', amountType: 'Fixed' } },
+  ],
+  expected: {
+    netWorth: { value: 112000, unit: 'money', note: '$4,000 + $18,000 + $28,000 + $62,000 = $112,000.' },
+    sinking: { value: 1447.83, unit: 'money', note: 'Saving toward each date: ($600 - $0) / 3 months = $200, ($12,000 - $3,000) / 10 = $900, $8,000 / 23 = $347.83: $1,447.83 a month.' },
+    surplus: { value: 1052.17, unit: 'money', note: '$6,800 - $4,300 - $1,447.83 into the care funds = $1,052.17.' },
+    savingsRate: { value: 0.2889, unit: 'pct', note: '401(k) $140,000 x 8% / 12 = $933.33, match 50% of 6% = $350. ($1,052.17 + $933.33 + $350) / ($6,800 + $1,283.33) = 28.9%.' },
+    fooStep: { value: '4', unit: 'step', note: 'Step 1 done ($22,000), match taken, no debt. big e: 32 / 5 = 6.4 x $4,300 = $27,520.' },
+    debtFreeMonths: { value: 'none', unit: 'months', note: 'No debt.' },
+    monthsToFi: { value: 217, unit: 'months', note: 'FI number $4,300 x 12 / 4% = $1,290,000. $933.33 + $350 + $1,052.17 = $2,335.50 a month from $90,000: 216.3, so 217 months.' },
+    runwayMonths: { value: 5.116, unit: 'months', tol: 0.01, note: '$22,000 / $4,300.' },
+  },
+  cannot: [
+    'Planned medical care with partial coverage: no procedure, cost, coverage % or out-of-pocket maximum; each one is an event with the out-of-pocket amount worked out by hand.',
+    'The out-of-pocket maximum resets each year: two procedures in two plan years cost two maximums, which only shows if the coach does it.',
+    'A name change: no checklist for updating the name on accounts, cards, the 401(k), beneficiaries and tax records.',
+  ],
+};

@@ -4,8 +4,14 @@
 // Needs esbuild once: npm i --no-save esbuild@0.24.0   Run: node tools/artifact.mjs [out.html] [title] [client name]
 // Publish it with the artifact's downloads capability declared (capabilities: { downloads: true }): the spreadsheet
 // export and the backup file go through that door inside the artifact (js/ui/save-file.js, batch 7 item 1).
-// A client name opens the page straight into that client. Its numbers come from the private Test client when that
-// file is here (so the page holds real numbers: publish it privately only), else from the made-up Demo client.
+// A client name opens the page straight into that client. Where its numbers come from, first found wins:
+//   1. fixtures/<name>.household.local.json, a full household: a SLAM backup file (Coach tools › Data › Export) of
+//      that client, saved under the client name in lower case with spaces as dashes (Eli: fixtures/eli.household.local.json).
+//      The page opens straight into that whole household (every row, the program, the sessions), not one built from
+//      the simple inputs. The file is private, git-ignored by the fixtures/*.local.json rule: publish the page privately only.
+//   2. fixtures/eli.local.json, the private Test client's simple inputs (real numbers: publish privately only).
+//   3. fixtures/demo.json, the made-up Demo client.
+// A client already saved in the browser under that name still opens as saved (the page never overwrites it).
 import { build } from 'esbuild';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -21,6 +27,9 @@ const DATA = [...new Set(jsFiles('js').flatMap(f => [...readFileSync(join(root, 
 // The client starts from the private Test client when it is on this machine (git-ignored), else the made-up Demo.
 const PRIVATE = 'fixtures/eli.local.json';
 const start = existsSync(join(root, PRIVATE)) ? PRIVATE : 'fixtures/demo.json';
+const HOUSEHOLD = client ? `fixtures/${client.trim().toLowerCase().replace(/\s+/g, '-')}.household.local.json` : null;
+const household = HOUSEHOLD && existsSync(join(root, HOUSEHOLD)) ? HOUSEHOLD : null;
+if (household) console.log(`Opening into the full household in ${household} (private: publish privately only)`);
 
 // The entry answers fetch() for the data files from the bundle, then starts the app.
 const entry = `${DATA.map((p, i) => `import d${i} from './${p}';`).join('\n')}
@@ -29,13 +38,16 @@ const real = window.fetch.bind(window);
 window.fetch = (u, ...a) => (typeof u === 'string' && files[u] ? Promise.resolve(new Response(JSON.stringify(files[u]), { headers: { 'Content-Type': 'application/json' } })) : real(u, ...a));
 await import('./js/app.js');
 ${client ? `// Opens straight into the client, with the usual spending list.
-import startData from './${start}';
+import startData from './${household ?? start}';
 import { localAdapter, listClients, loadClient } from './js/storage.js';
 import { householdFromInputs } from './js/demo.js';
+import { importFile } from './js/records.js';
 import { addPresets } from './js/presets.js';
 let store; try { localStorage.getItem('x'); store = localAdapter(); } catch { store = null; }
 const mine = store ? listClients(store).find(c => c.name === ${JSON.stringify(client)}) : null;
-if (!window.slam.hasClient || !mine) { window.slam.open(mine ? loadClient(store, mine.id) : householdFromInputs(startData.inputs, { name: ${JSON.stringify(client)} })); window.slam.go('#/home/prep'); }
+${household ? `// A full household backup: the whole file, under the client name (its own spending list comes with it).
+const fresh = () => { const doc = importFile(startData); doc.client.name = ${JSON.stringify(client)}; return doc; };` : `const fresh = () => householdFromInputs(startData.inputs, { name: ${JSON.stringify(client)} });`}
+if (!window.slam.hasClient || !mine) { window.slam.open(mine ? loadClient(store, mine.id) : fresh()); window.slam.go('#/home/prep'); }
 if (window.slam.hasClient && !window.slam.store.doc.settings.presetsAdded) addPresets(window.slam.store, d0);` : ''}
 `;
 const js = (await build({

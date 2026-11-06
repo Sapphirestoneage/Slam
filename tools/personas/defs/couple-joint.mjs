@@ -1,0 +1,41 @@
+// A married couple with combined money: one paycheck, one partner at home with the baby, a 529.
+export default {
+  id: 'couple-joint', order: 6, name: 'Priya and Dev',
+  about: 'Made up. Married, money combined, Dev stays home with their baby. Priya earns $120,000 (take-home $7,200 a month) with a 401(k) and a 100% match up to 4%. A home with a mortgage, a paid-off car, a 529.',
+  profile: {
+    firstName: 'Priya', lastName: 'Persona', partnerName: 'Dev', birthYear: 1991, birthMonth: 2, partnerBirthYear: 1990, state: 'TX',
+    household: 'Couple', mode: 'Married merged', moneyStyle: 'Joint', dependents: 1, kidAges: [1],
+    workSituation: 'Employed (W-2)', housing: 'Own', hasCar: true, hasPets: false, incomeStability: 'Steady', healthCoverage: 'Employer',
+    areas: { cash: true, investments: true, real: true, debt: true },
+  },
+  client: { couple: true },
+  records: [
+    { kind: 'income', type: 'Job', name: "Priya's salary", owner: 'Me', amount: 7200, per: 'month', values: { basis: 'Both', gross: 120000, payFrequency: '2 weeks', incomeType: 'W-2', contributionPct: 0.06, hasMatch: 'Yes', matchPct: 1, matchCapPct: 0.04 } },
+    { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 6100, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
+    { kind: 'account', type: 'Checking', name: 'Joint checking', owner: 'Joint', values: { group: 'cash', balance: 6000 } },
+    { kind: 'account', type: 'Savings or HYSA', name: 'Joint HYSA', owner: 'Joint', values: { group: 'cash', balance: 15000, purpose: 'Emergency' } },
+    { kind: 'account', type: '401(k)', name: "Priya's 401(k)", owner: 'Me', values: { group: 'investment', balance: 85000 } },
+    { kind: 'account', type: 'Roth IRA', name: "Dev's Roth IRA", owner: 'Partner', values: { group: 'investment', balance: 20000 } },
+    { kind: 'account', type: '529', name: "Baby's 529", owner: 'Joint', values: { group: 'investment', balance: 8000, contribution: 200, contributionPer: 'Month', purpose: 'Goal' } },
+    { ref: 'home', kind: 'asset', type: 'Home', name: 'Home', owner: 'Joint', values: { value: 480000, financed: 'Financed' } },
+    { kind: 'debt', type: 'Mortgage', name: 'Mortgage', owner: 'Joint', linkedTo: '@home', values: { balance: 360000, apr: 0.061, payment: 2300 } },
+    { kind: 'asset', type: 'Car', name: 'Car', owner: 'Joint', values: { value: 18000, financed: 'Paid off' } },
+    { kind: 'coverage', type: 'Health', name: 'Family health plan', amount: 420, per: 'month', values: { have: 'Have it', deductible: 4000, paidFrom: 'Paycheck' } },
+    { kind: 'coverage', type: 'Life', name: "Priya's term life", amount: 35, per: 'month', values: { have: 'Have it' } },
+    { kind: 'bill', name: 'Childcare and babysitting', amount: 300, values: { category: 'Kids', draftt: 'Other', amountType: 'Variable' } },
+  ],
+  expected: {
+    netWorth: { value: 272000, unit: 'money', note: '$6,000 + $15,000 + $85,000 + $20,000 + $8,000 529 + $480,000 + $18,000 - $360,000 = $272,000.' },
+    surplus: { value: 1100, unit: 'money', note: '$7,200 - $6,100 = $1,100.' },
+    savingsRate: { value: 0.2561, unit: 'pct', note: '401(k) $120,000 x 6% / 12 = $600, match 4% x $120,000 / 12 = $400. ($1,100 + $600 + $400) / ($7,200 + $1,000) = 25.6%.' },
+    fooStep: { value: '4', unit: 'step', note: 'Step 1 done ($21,000 cash), match taken (6% over the 4% cap), no heavy debt. big e: Priya 35 / 5 = 7 months x $6,100 = $42,700.' },
+    debtFreeMonths: { value: 314, unit: 'months', note: 'Mortgage at $2,300: n = -ln(1 - 0.061/12 x 360,000 / 2,300) / ln(1 + 0.061/12) = 313.2, so 314.' },
+    monthsToFi: { value: 283, unit: 'months', note: 'A coach leaves the 529 out of FI: invested $105,000 (not $113,000), and the $200 a month into the 529 is not retirement money, so $600 + $400 + $1,100 - $200 = $1,900 a month. FI number $6,100 x 12 / 4% = $1,830,000: 282.3, so 283 months.', finding: 'F-529' },
+    runwayMonths: { value: 3.443, unit: 'months', tol: 0.01, note: '$21,000 / $6,100.' },
+    bigETarget: { value: 42700, unit: 'money', note: '7 x $6,100.' },
+  },
+  cannot: [
+    'College costs: a 529 is an investment account like any other, so it counts toward FI; there is no per-child goal, no college cost, no years until college.',
+    'One income household: no field for the stay-at-home partner (spousal IRA eligibility, the value of the care, a return-to-work date).',
+  ],
+};

@@ -116,7 +116,24 @@ One row per screen touched, one column per category, each cell a pass or the fai
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Screen | pass | pass | major: two payoff dates | minor: clipped name | pass | pass | pass | pass | pass | pass | pass | pass |
 
-## Later categories (after Phase 3)
+## Personas
+
+Twelve made-up households (README, Personas) prove each batch works for real people, from someone below zero to a
+multimillionaire, including the ones SLAM cannot fully hold yet (three adults, house fees, platform payouts, transition
+costs, business income, estates, college).
+
+- `node --test` includes `test/personas.test.js`: every persona's hand-worked numbers (net worth, surplus or gap,
+  savings rate, FOO step, debt-free month, FI month, emergency fund) against the app. A todo there is a known finding,
+  named in the persona's def; a failure is new.
+- `node tools/e2e/personas.cjs` opens each persona through Import and visits every screen at 1280: console errors,
+  What's missing, the layout checks, and the story checks (one answer per number, no lock that asks for what the
+  household cannot have, no "no debt" with debts on file).
+- **Every batch report includes the persona result**: the test counts (pass, todo, fail) and the browser run's table
+  (per persona: console errors, What's missing, layout findings, story blockers and majors), with anything the batch
+  made better or worse. A batch that adds a new failure or a new story blocker says why or fixes it.
+- When a batch fixes a finding, it removes the finding id from the def (the todo then has to pass).
+
+
 
 - **Safe**: client data stays where it should, backups work, nothing real reaches the repo.
 - **Resilient**: couples, irregular income, deficits, a client with 30 accounts.
