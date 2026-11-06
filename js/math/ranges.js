@@ -53,21 +53,26 @@ const PRIOR = () => ({ low: RULES.typicalLow, high: RULES.typicalHigh });
 // Every input that moves, as a knob: { id, label, kind, level, prior, recId, field, route, focus, apply(doc, side) }.
 // side is 'low' or 'high' (the input's own low and high, not the output's). Spending is one knob: the gut number, or
 // the lines together (they move together, ranges.md "Correlated inputs"), each line by its own level.
-export function knobsOf(doc, ref) {
+// force (batch 43, Ask me next and the certainty meter): (id, level, prior) => a level to read an input at instead of its
+// own, or null to keep it. Ask me next reads one input at the level its answer reaches; the certainty meter reads every
+// input as a guess (its stand-in for age-only). A typical amount read at a level of its own is the client's number then.
+export function knobsOf(doc, ref, { force = null } = {}) {
   const live = visible(doc.records, gatesOf(doc.profile, doc.client), ref);
   const months = doc.spending?.months || {};
   const lv = (r, f) => levelOf(r, f, { months });
   const name = r => r.name || r.type || 'Item';
   const knobs = [];
   const swap = (d, recs) => { const by = new Map(recs.map(r => [r.id, r])); return { ...d, records: d.records.map(r => by.get(r.id) ?? r) }; };
+  const at = (id, level, prior) => { const f = force?.(id, level, !!prior); return f == null ? { level, prior: !!prior } : { level: f, prior: false }; };
   const scaleKnob = (r, field, o) => {
     const v = valueOf(r, field);
     if (isBlank(v) || !Number(v)) return;
-    const level = lv(r, field);
-    if (level === null) return;
-    const w = o.prior ? PRIOR() : { low: 1 - widthOf(o.kind, level), high: 1 + widthOf(o.kind, level) };
+    const own = lv(r, field);
+    if (own === null) return;
+    const { level, prior } = at(`${r.id}:${field}`, own, o.prior);
+    const w = prior ? PRIOR() : { low: 1 - widthOf(o.kind, level), high: 1 + widthOf(o.kind, level) };
     if (w.low === 1 && w.high === 1) return;
-    knobs.push({ id: `${r.id}:${field}`, recId: r.id, field, level, ...o, factor: w,
+    knobs.push({ id: `${r.id}:${field}`, recId: r.id, field, ...o, level, prior, factor: w,
       apply: (d, side) => swap(d, [withValue(r, field, Number(v) * (side === 'low' ? w.low : w.high))]) });
   };
   // Income: each row on its own (two jobs, a couple's two incomes). A paycheck is steady; tips, gigs and a business vary.
@@ -80,12 +85,13 @@ export function knobsOf(doc, ref) {
   const lines = live.filter(r => (r.kind === 'bill' || isCategoryRecord(r)) && !isBlank(r.amount) && Number(r.amount) && statusOf(r, 'amount') !== 'Not for me');
   const useLines = !allIns.length || (doc.spending?.source ?? 'gut') === 'lines';
   if (!useLines) {
-    const level = Math.min(...allIns.map(r => lv(r, 'amount') ?? LEVELS.Actual));
+    const own = Math.min(...allIns.map(r => lv(r, 'amount') ?? LEVELS.Actual));
+    const { level } = at('spending', own, false);
     const w = widthOf('spending', level);
-    if (w > 0) knobs.push({ id: 'spending', recId: allIns[0].id, field: 'amount', kind: 'spending', level, label: level >= LEVELS.Estimate ? 'Spending total from statements' : 'Gut spending number', route: '#/cash-flow/budget', focus: 'gut', factor: { low: 1 - w, high: 1 + w },
+    if (w > 0) knobs.push({ id: 'spending', recId: allIns[0].id, field: 'amount', kind: 'spending', gut: true, level, label: own >= LEVELS.Estimate ? 'Spending total from statements' : 'Gut spending number', route: '#/cash-flow/budget', focus: 'gut', factor: { low: 1 - w, high: 1 + w },
       apply: (d, side) => swap(d, allIns.map(r => ({ ...r, amount: r.amount * (side === 'low' ? 1 - w : 1 + w) }))) });
   } else if (lines.length) {
-    const each = lines.map(r => { const level = lv(r, 'amount'); const prior = r.values?.preset === true && statusOf(r, 'amount') === 'Not sure'; const w = widthOf('spending', level);
+    const each = lines.map(r => { const { level, prior } = at('spending', lv(r, 'amount'), r.values?.preset === true && statusOf(r, 'amount') === 'Not sure'); const w = widthOf('spending', level);
       return { r, level, prior, low: prior ? PRIOR().low : 1 - w, high: prior ? PRIOR().high : 1 + w }; }).filter(e => e.low !== 1 || e.high !== 1);
     if (each.length) {
       const big = [...each].sort((a, b) => Math.abs(b.r.amount) * (b.high - b.low) - Math.abs(a.r.amount) * (a.high - a.low))[0];
@@ -101,12 +107,12 @@ export function knobsOf(doc, ref) {
     scaleKnob(r, 'balance', { kind: 'balance', label: `${short} balance`, route: debtRoute(r) });
     if (statusOf(r, 'apr') === 'Not for me' || isBlank(valueOf(r, 'balance')) || !Number(valueOf(r, 'balance'))) continue;
     const apr = valueOf(r, 'apr'), typical = ref.typicalRates?.[r.type] ?? null;
-    const guessed = isBlank(apr);
-    if (guessed && typical == null) continue;
-    const level = guessed ? LEVELS.Missing : lv(r, 'apr');
+    const blank = isBlank(apr);
+    if (blank && typical == null) continue;
+    const { level, prior: guessed } = at(`${r.id}:apr`, blank ? LEVELS.Missing : lv(r, 'apr'), blank);
     const w = guessed ? RULES.aprGuessSwing : widthOf('apr', level);
     if (!w) continue;
-    const base = guessed ? typical : Number(apr);
+    const base = blank ? typical : Number(apr);
     knobs.push({ id: `${r.id}:apr`, recId: r.id, field: 'apr', kind: 'apr', level, prior: guessed, label: `${short} APR`, route: debtRoute(r), points: w,
       apply: (d, side) => swap(d, [withValue(r, 'apr', Math.max(0, base + (side === 'low' ? -w : w)))]) });
   }
@@ -114,9 +120,9 @@ export function knobsOf(doc, ref) {
 }
 
 // The outputs every run reads. Dates are months from now; a date that never comes on its path is Infinity.
-const DATE = new Set(['fi', 'debtFree']);
+export const DATE = new Set(['fi', 'debtFree']);
 export const OUTPUTS = { fi: 'FI date', debtFree: 'Debt-free date', efMonths: 'Emergency fund, months of spending held', surplus: 'Monthly surplus', netWorth: 'Net worth' };
-function readOut(m) {
+export function readOut(m) {
   const fi = m.monthsToFi?.value ?? (m.monthsToFi?.never ? Infinity : null);
   const plan = m.debtPlan?.debts?.length ? m.debtPlan : null;
   return { fi, debtFree: plan ? plan.months ?? Infinity : null, efMonths: m.runwayMonths?.value ?? null, surplus: m.surplus?.value ?? null, netWorth: m.netWorth?.value ?? null };
@@ -149,7 +155,7 @@ export function rangesOf(doc, ref, { now = new Date(), person = null, m = null }
   const base = m ?? metrics(doc, ref, { now, person });
   const knobs = knobsOf(doc, ref);
   const b = readOut(base);
-  const runs = knobs.map(k => ({ k, low: readOut(metrics(k.apply(doc, 'low'), ref, { now, person })), high: readOut(metrics(k.apply(doc, 'high'), ref, { now, person })) }));
+  const runs = runsOf(doc, ref, knobs, { now, person });
   const out = {};
   const spend = base.inputs?.spending ?? null;
   const material = materialityOf(base.hourly, doc.assumptions).value;
@@ -167,7 +173,16 @@ export function rangesOf(doc, ref, { now = new Date(), person = null, m = null }
     }
     out[key] = r;
   }
-  return { ...out, knobs: knobs.map(({ apply, ...k }) => k), material, now };
+  // runs: each knob's two runs, read (batch 43: Ask me next swaps one input's runs for its answered ones).
+  return { ...out, knobs: knobs.map(({ apply, ...k }) => k), runs: runs.map(({ k, low, high }) => ({ id: k.id, low, high })), material, now };
+}
+// Each knob run at its low and at its high, the outputs read off each run.
+export function runsOf(doc, ref, knobs, { now = new Date(), person = null } = {}) {
+  return knobs.map(k => ({ k, low: readOut(metrics(k.apply(doc, 'low'), ref, { now, person })), high: readOut(metrics(k.apply(doc, 'high'), ref, { now, person })) }));
+}
+// One output's range from a set of runs ({ id, low, high } with each side's outputs read): the same combine rangesOf uses.
+export function rangeFromRuns(key, likely, runs) {
+  return combine(likely, runs.map(r => ({ id: r.id, low: r.low[key], high: r.high[key] })), { date: DATE.has(key), floor: DATE.has(key) || key === 'efMonths' ? 0 : null });
 }
 
 // The FOO step as a range (ranges.md "step 3, maybe 4"): the step at likely, and the lowest and highest step any one

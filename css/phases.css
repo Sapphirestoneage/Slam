@@ -139,6 +139,15 @@
 .picture-card { margin-bottom: var(--s4); }
 .picture-card .bar-row { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
 .picture-card .pct { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; }
+/* Batch 43 (M9Q): the certainty meter where the Picture % stood, the Picture % one slim line under it; Ask next one slim card. */
+.picture-card .cert-label { font-weight: 600; }
+.picture-card .cert-small .progress { flex: 0 1 160px; }
+.ask-next { margin-bottom: var(--s4); padding-top: 12px; padding-bottom: 12px; }
+.ask-next .ask-top { gap: 10px; flex-wrap: wrap; align-items: center; }
+.ask-next .ask-q { font-size: 1.0625rem; min-width: 0; }
+.ask-next .ask-why { margin: 4px 0 0; }
+.ask-next .ask-then { gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+@media (max-width: 600px) { .ask-next .ask-top > .spacer { display: none; } .ask-next .ask-top > .btn { flex-basis: 100%; justify-content: center; } }
 .progress.wide { width: 260px; height: 12px; border-radius: 6px; }
 .tag.pace-tag.ahead { background: var(--good); color: #fff; }
 .tag.pace-tag.ontrack { background: var(--chip); color: var(--chip-text); }

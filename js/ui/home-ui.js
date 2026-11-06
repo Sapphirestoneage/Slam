@@ -34,6 +34,7 @@ import { transitionOf, phase4On, monthsText } from '../math/transitions.js';
 import { startFastTrack } from './fasttrack-ui.js';
 import { affordHomeLine } from './afford-ui.js';
 import { learnNextLine, learnNextName } from './library-ui.js';
+import { askNextCard, meterWord, certaintyPoints } from './ask-ui.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const isoDay = d => d.toISOString().slice(0, 10);
@@ -58,12 +59,13 @@ export function homeScreen(app, ctx) {
   const items = openItems(app, ctx);
   return [sessionStrip(app, ctx, P),
     gapOf(doc, P.m) ? gapCard(app, ctx, P.m) : debtHero(app, ctx, P.m), // batch 12 (item 5): a short month owns Home; else (batch 11) the debt-free date leads
+    askNextCard(app, ctx), // batch 43 (M9Q): the one question that narrows the plan most, one tap to its box
     P.inSession ? joyAsk(ctx, P) : null, // F4: asked at the start of each session
     endedLine(app, ctx, P),
     pathRow(app, P, open),
     checklistCard(app, ctx, P, open),
     affordHomeLine(app), // batch 23: Can I afford it? opens on Plan › Goals
-    card(pictureCard(ctx, P), 'home:picture', { open: true, summary: `Picture ${P.pace.points}% · ${P.pace.word}` }),
+    card(pictureCard(ctx, P, app), 'home:picture', { open: true, summary: `Certainty ${certaintyPoints(ctx, app)}% · Picture ${P.pace.points}% · ${P.pace.word}` }),
     P.inSession ? card(wrapUp(app, ctx, P), 'home:wrap-up', { open: true }) : null,
     low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below the low line (${money(low.low)}) on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/cash-flow/calendar') })) : null, // R096
     ctx.gates().betweenJobs ? runwayStrip(ctx, P) : null, // R006
@@ -268,20 +270,28 @@ const fmtRow = (r, v) => (v == null ? '' : r.unit === 'pct' ? pct(v) : r.unit ==
 
 // ---------- The picture and its pace; after intake, the areas Strong or OK ----------
 const bar = (x, { wide = false, label = 'Picture filled in' } = {}) => h(`div.progress${wide ? '.wide' : ''}`, { role: 'progressbar', 'aria-valuenow': Math.round(x * 100), 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': label }, h('span', { style: { width: `${Math.round(x * 100)}%` } }));
-function pictureCard(ctx, P) {
+// Batch 43 (M9Q): the certainty meter stands where the Picture % stood (how narrow the key ranges are); the Picture %
+// stays under it as a detail, and the program's pace still reads the Picture %.
+function pictureCard(ctx, P, app = null) {
   const pace = P.pace;
   const sc = P.scorecard;
   const paceTag = h(`span.tag.pace-tag.${pace.word === 'Ahead' ? 'ahead' : pace.word === 'On track' ? 'ontrack' : 'catchup'}`, {}, pace.word);
+  const M = ctx.askNext?.(app?.flags ?? [])?.meter ?? null;
+  const cert = M ? M.value : 0, points = Math.round(cert * 100);
+  const certTip = M?.none ? 'Nothing to measure yet: add take-home pay and spending' : `${meterWord(cert)}: the ranges on the FI date, the debt-free date, the surplus, the emergency fund and net worth, against what they would be if every number were a guess`;
+  const detail = h('div.row-line.picture-detail', { style: { gap: '10px', marginTop: '6px' } }, h('span.muted.small', {}, `Picture ${pace.points}%`), paceTag, h('span.muted.small', {}, pace.text));
   if (P.afterIntake) { // the picture is in: now the areas count
     return h('div.card.picture-card', {}, h('div.row-line', { style: { gap: '8px' } }, h('h2', {}, 'Whole picture')), // batch 13: a title for the caret
       h('div.bar-row', {}, h('span.pct', {}, `${sc.okCount} of ${sc.of} areas Strong or OK`), bar(sc.of ? sc.okCount / sc.of : 0, { wide: true, label: 'Areas Strong or OK' }),
         h('span.muted', {}, P.day0Ok != null ? `Day 0: ${P.day0Ok}` : 'Day 0: not scored yet', sc.unrated.length ? ` · ${sc.unrated.length} not rated yet` : '', sc.holes.length ? ` · ${sc.holes.length} ${sc.holes.length === 1 ? 'hole' : 'holes'}` : ' · no hole left'),
         h('a', { href: '#/plan/scorecard' }, 'Scorecard ›')),
-      h('div.row-line', { style: { gap: '10px', marginTop: '6px' } }, h('span.muted.small', {}, `Picture ${pace.points}%`), paceTag, h('span.muted.small', {}, pace.text)));
+      h('div.row-line.cert-small', { style: { gap: '10px', marginTop: '6px' } }, h('span.small', { title: certTip }, `Certainty (how sure the plan is) ${points}%`), bar(cert, { label: 'Certainty' }), h('span.muted.small', {}, M?.none ? 'nothing to measure yet' : meterWord(cert))),
+      detail);
   }
   return h('div.card.picture-card', {}, h('div.row-line', { style: { gap: '8px' } }, h('h2', {}, 'Whole picture'), h('span.muted.small', {}, 'not required to finish this session')), // item 9
-    h('div.bar-row', {}, h('span.pct', {}, `Picture ${pace.points}%`), bar(P.picture.pct, { wide: true }),
-      paceTag, h('span.muted', {}, pace.text)),
+    h('div.bar-row', { title: certTip }, h('span.cert-label', {}, 'Certainty (how sure the plan is)'), h('span.pct', {}, `${points}%`), bar(cert, { wide: true, label: 'Certainty' }),
+      h('span.muted', {}, M?.none ? 'Nothing to measure yet' : meterWord(cert))),
+    detail,
     S.moreBlock('home:sections', () => h('div.section-bars', {}, P.picture.sections.map(s => h('div.row-line', {}, h('span', { style: { minWidth: '80px', fontWeight: 600 } }, s.name), bar(s.pct ?? 0),
       h('span.muted.small', {}, `${Math.round((s.pct ?? 0) * 100)}% · ${s.items.length} ${s.items.length === 1 ? 'number' : 'numbers'}`),
       s.pct >= 1 ? h('span.tag.good', {}, '✓') : h('a', { href: s.route }, 'Open ›')))), { label: 'By section' }));

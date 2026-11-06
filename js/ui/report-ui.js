@@ -309,7 +309,7 @@ export function fiCard(ctx, m) {
     h('span.muted.small', {}, m.fooFlow ? `assumes the surplus ${flowWords(m.fooFlow, ctx.now(), { invested: iv.investSurplus })}` : iv?.debtFirst ? `assumes the surplus pays heavy debt until ${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.heavyMonths ?? 0), 'short')}, then ${iv.investSurplus ? 'is invested' : 'stays in checking'}` : iv?.investSurplus ? 'assumes your surplus gets invested' : 'assumes the surplus is not invested', ` · ${words.years}`),
     safer ? h('span.muted.small.fi-safer', { title: safer.words }, safer.text) : null,
     altWords && altWords.text !== words.text ? h('span.muted.small', {}, `${iv?.investSurplus ? 'If it sits in checking' : 'If invested'}: ${altWords.text}`) : alt?.never && words ? h('span.muted.small', {}, `${iv?.investSurplus ? 'If it sits in checking' : 'If invested'}: not on this path`) : null);
-  return { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi', home: HOME.fi, lock: g.unlocked ? null : { reason: g.reason, route: g.route }, confidence: g.confidence,
+  return { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi', home: HOME.fi, lock: g.unlocked ? null : { reason: g.reason, route: g.route }, // batch 43 (QUESTIONS 341): no confidence tag; the range line says it
     render: words ? () => words.text : null, note: lines ?? (v == null ? null : `${(v / 12).toFixed(1)} years from now`), range: words && !words.past ? rangeLine(ctx, 'fi') : null };
 }
 

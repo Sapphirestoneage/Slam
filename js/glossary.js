@@ -64,6 +64,7 @@ export const GLOSSARY = {
   'Coast': 'Coast FI: you have saved enough that it grows to your FI number on its own.',
   'FAT': 'Food, accommodation and transportation only: the smallest of the spending levels, the first layer of big e.',
   'Picture': 'How much of the money picture is filled in with real numbers; each number counts by how much it moves the plan.',
+  'Certainty': 'How narrow the plan\'s ranges are: 0% when every number is a guess, near 100% when every number is known. Answering Ask next raises it most.',
 };
 // Batch 37 (QUESTIONS 320's batch, Batch 33's minors): Eli's own terms stay, and the first time one shows in plain view
 // on a screen it carries its plain meaning in brackets (js/ui/tips.js pairTerms), with its hover tip kept.
@@ -73,12 +74,13 @@ export const PLAIN = [
   { term: 'DRAFTT', re: /\bDRAFTT( needs)?\b/, plain: 'rent, food, transport, debt, taxes' },
   { term: 'FAT', re: /\bFAT\b/, plain: 'food, rent, transport' },
   { term: 'Picture', re: /\bPicture\b/, plain: 'how much is filled in' },
+  { term: 'Certainty', re: /\bCertainty\b/, plain: 'how sure the plan is' }, // batch 43: the certainty meter on Home
 ];
 // The screens that pair them (Home, Goals, Transitions and its share view, Debt payoff).
 export const PLAIN_ON = ['#/home/session', '#/plan/goals', '#/plan/transitions', '#/plan/debt-payoff'];
 const TERMS = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
 const esc = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const RES = TERMS.map(t => [t, new RegExp(`(^|[^A-Za-z])${esc(t)}([^A-Za-z]|$)`, ['FI', 'APR', 'APY', 'FAT', 'Picture'].includes(t) ? '' : 'i')]);
+const RES = TERMS.map(t => [t, new RegExp(`(^|[^A-Za-z])${esc(t)}([^A-Za-z]|$)`, ['FI', 'APR', 'APY', 'FAT', 'Picture', 'Certainty'].includes(t) ? '' : 'i')]);
 
 // The first (longest) term in a piece of text, with its explanation, or null.
 export function termIn(text) {

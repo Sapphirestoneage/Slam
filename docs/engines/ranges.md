@@ -1,7 +1,8 @@
 # Engine spec: ranges (a low, likely and high on every key output)
 
 Status: design, Batch 17. Built in Batch 41 (build order steps 1 to 4: `js/math/ranges.js`, M9R); the certainty meter
-(step 5) and the savings rate's range are next. Phase 4, Track 1 (ROADMAP.md).
+(step 5) in Batch 43 (M9Q, defined in next-best.md: the width at age-only is read as the all-guess width until the
+age-only start is built); the savings rate's range is next. Phase 4, Track 1 (ROADMAP.md).
 
 As built (batch 41), where it differs from the design below: the widths are RULES (Know it: balances 2%, a paycheck, a
 bill and a rate 0; Estimate 5%; Rough: balances 10%, spending 10%, steady pay 10%, pay that varies 30%, an APR 2

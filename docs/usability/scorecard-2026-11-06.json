@@ -2772,6 +2772,185 @@
      "reason": "waits for Eli at sign-off; nothing coach-only on it"
     }
    }
+  },
+  {
+   "screen": "Home: Ask next and the certainty meter",
+   "route": "#/home/session",
+   "area": "Home",
+   "batch": 43,
+   "tasks": [
+    1,
+    2
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "Open the box lands on the box (the Statements or an app tap for a gut number), glowing and focused, in view and not under a sticky header, at 1440, 1280 and 390 for Alexis, Tom, Maya and the bartender; answering it moves the card to the next question"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "every score equals what answering that question really buys, and the top one is the best of them, by trying each (test/batch43.test.js); the meter reads near 100% with everything at Know it and 0% with everything a guess"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "the meter is one number (how narrow the ranges are) and the Picture % one other (how much is filled in), each named; the widths are the same ranges the lines under each number show"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "one slim card, one primary button; the meter bar where the Picture % bar stood, the Picture % one line under it"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find: certainty, how sure, ask next, next question (batch 43 words) land on Home"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "one tap to the box; the gut number's answer is one tap (Statements or an app)"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "\"What you spend a month, read off a bank or card app\", \"Pins your FI date to within about 4 years\", \"interest rate (APR)\", Certainty (how sure the plan is); no verdict words (Still wide, Narrowing, Narrow)"
+    },
+    "tells": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "after answering on Budget there is no word there that the plan narrowed; the coach sees it back on Home (the card names the next question, the meter rises)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker (all nine checks) clean on this screen at 1440, 1280 and 390, light and dark, Demo and a new client (batch 43 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "the meter and the question cost about 15 to 20 ms a change on top of the ranges"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off; the card is coach-only (hidden in Client view), the meter shows in both"
+    }
+   }
+  },
+  {
+   "screen": "Goals: FI date without the confidence tag",
+   "route": "#/plan/goals",
+   "area": "Plan",
+   "batch": 43,
+   "tasks": [
+    4
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "the FI card and the reveal card show the date, its range line and the years, no tag"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "the same FI month and range as Home"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "the range line is the only \"how sure\" on the date (QUESTIONS 341)"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "nothing beside the big date but its line"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "unchanged"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "Low, Medium and High confidence no longer show"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the range line says how far the numbers not known yet could move it"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker (all nine checks) clean on this screen at 1440, 1280 and 390, light and dark, Demo and a new client (batch 43 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "FOO: the step's range line",
+   "route": "#/plan/foo",
+   "area": "Plan",
+   "batch": 43,
+   "tasks": [
+    4
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "the step you are on shows \"Likely step 8, maybe step 4\" when one input could move it (the multimillionaire, the creator); the tap names what could move it with Open the box"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "the same FOO range as the line beside Confirm FOO step on Home (M9R)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one range method on both screens"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "one slim line under the step's head"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "unchanged"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain: likely, maybe"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "shows only when an input could move the step"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker (all nine checks) clean on this screen at 1440, 1280 and 390, light and dark, Demo and a new client (batch 43 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
   }
  ],
  "updated": {
@@ -2819,5 +2998,13 @@
   "major": 0,
   "minor": 1,
   "note": "Batch 44 appended Fire drill (\"batch\": 44), scored after its fixes; the rows above and the summary are as they were."
+ },
+ "batch43": {
+  "date": "2026-11-06",
+  "screens": 3,
+  "blocker": 0,
+  "major": 0,
+  "minor": 1,
+  "note": "Batch 43 appended its screens (each with \"batch\": 43), scored after its changes; the rows above and the summary are as they were."
  }
 }

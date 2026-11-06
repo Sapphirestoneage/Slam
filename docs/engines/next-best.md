@@ -1,6 +1,33 @@
 # Engine spec: next best (the next dollar and the next question)
 
-Status: design, Batch 17. Nothing here is built. Phase 4, Track 1 (ROADMAP.md).
+Status: design, Batch 17. The next question is built in Batch 43 (`js/math/nextbest.js`, M9Q: build order steps 1 and
+3, Home only; the walk keeps its own order); `askCost` lives in RULES as three question times instead of a key per field;
+the next dollar (steps 4 and 5) is next. Phase 4, Track 1 (ROADMAP.md).
+
+As built (batch 43), where it differs from the design below:
+
+- **The certainty meter** (ranges.md build order step 5) is defined here: for each key output (FI date, debt-free date,
+  emergency fund months, monthly surplus, net worth), certainty = 1 minus its width over its **all-guess width**, clamped
+  0 to 1, where the all-guess width is the same output with every input on file read at Gut (a typical amount stays
+  typical). That is SLAM's stand-in for "the width at age-only" until the age-only start is built: every number a guess
+  reads 0%, every number at Know it near 100%. A date that could run on and never come counts as `CertaintyOpenMonths`
+  (600) wide. The meter is the weighted average by `CertaintyWeightFi` 3, `CertaintyWeightDebtFree` 3,
+  `CertaintyWeightSurplus` 2, `CertaintyWeightEf` 1, `CertaintyWeightNetWorth` 1 (RULES, source this file, Nov 6 2026).
+  The FOO step is a place on a list with no width, so it is left out of the meter; settling it counts in the next
+  question (`CertaintyWeightFoo` 1). On Home the meter stands where the Picture % stood; the Picture % is one line under
+  it and the program's pace still reads it.
+- **What an answer reaches**: the gut number read off a statement or an app reaches Estimate (the Budget's "Statements
+  or an app" tap, AskSecondsLookup 60); a statements total built from the lines reaches Know it (AskSecondsBuild 600); a
+  typical amount not answered yet (a blank APR) reaches Know it (AskSecondsLookup 60); any other number already given
+  reaches Know it (AskSecondsNumber 15).
+- **Exact, not approximate**: each candidate is run again at its answered level (two runs), the rest kept as they are,
+  so the score is what answering really buys (`test/batch43.test.js` checks it against answering each one on a copy).
+- **The first inputs**: an item from the Picture %'s next small things with nothing in yet comes before any narrowing
+  (the plan cannot run without it); These are big deals (M56) breaks a near tie (2%) toward the spending input when
+  Spending is the assumption that moves the FI date most; then the next small things order.
+- **The test households, as built**: Maya's first question is the spending total, not the card APR (the debt rule pays
+  her card in about four months whatever its rate, so the APR barely moves a date); Alexis's is the spending total, then
+  the guessed APR; Tom's is the rough invested total, then the statements total built from the lines.
 
 ## Purpose
 

@@ -47,6 +47,7 @@ import { typicalChecks, typicalBoxes, typicalOf, priorsOpts } from '../math/prio
 import { creditHealth } from '../math/debt.js';
 import { identityOf } from '../math/identity.js';
 import { lenderOf } from '../math/lender.js';
+import { askNextOf } from '../math/nextbest.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -654,6 +655,14 @@ export const MATH = [
     parts: [{ key: 'withCard', name: 'Days covered with the backup card\'s room (a card cannot pay rent or another debt)', unit: 'days', fromApp: 'the fewer of (cash + card room) / every must-pay a day and cash / (housing and minimums) a day', app: c => fireDrillOf(c.doc, c.ref, { now: c.now }).cover?.withCard ?? null },
       { key: 'outOfReach', name: 'Out of reach if it froze today: its balance, the same bank\'s accounts, and the paychecks that land there in the window', unit: 'money', fromApp: 'M9F: from the calendar\'s next FireDrillDays days', app: c => fireDrillOf(c.doc, c.ref, { now: c.now }).unreachable?.total ?? null },
       { key: 'mustPay', name: 'Must-pay bills a month (the DRAFTT needs and the minimums)', unit: 'money', fromApp: 'M9F: the must-pay Budget lines plus each debt\'s minimum, or the gut number with only a gut number', app: c => fireDrillOf(c.doc, c.ref, { now: c.now }).must?.monthly ?? null }] },
+  { id: 'M9Q', name: 'Ask me next and the certainty meter', inputs: 'the ranges (M9R) and their drivers, the Picture %\'s next small things (M73), These are big deals (M56), the FOO step\'s range, the weights and question times on the Assumptions tab (CertaintyWeight*, CertaintyOpenMonths, AskSeconds*)', unit: 'pct',
+    fns: ['nextbest.KEYS', 'nextbest.WEIGHTS', 'nextbest.spanOf', 'nextbest.certaintyOf', 'nextbest.answerOf', 'nextbest.questionWords', 'nextbest.whyWords', 'nextbest.askNextOf', 'ranges.runsOf', 'ranges.rangeFromRuns', 'ranges.readOut', 'ranges.DATE'],
+    fromApp: 'the plan is run again with every input read as a guess (the all-guess widths), and once more for each input read at the level its answer reaches, which a sheet cannot do with named ranges. The value is the certainty meter: each key output\'s 1 minus its width over its all-guess width, weighted',
+    app: c => { const A = askNextOf(c.doc, c.ref, { now: c.now, m: c.m, R: c.ranges(), F: c.fooRange() }); return A.meter ? A.meter.value : null; },
+    parts: [
+      { key: 'ask', name: 'Ask me next: the question whose answer narrows the plan most per second', unit: 'text', fromApp: 'M9Q: each input read again at the level its answer reaches', app: c => askNextOf(c.doc, c.ref, { now: c.now, m: c.m, R: c.ranges(), F: c.fooRange() }).top?.question ?? null },
+      { key: 'then', name: 'Ask me next: the runner-up', unit: 'text', fromApp: 'M9Q: each input read again at the level its answer reaches', app: c => askNextOf(c.doc, c.ref, { now: c.now, m: c.m, R: c.ranges(), F: c.fooRange() }).runnerUp?.question ?? null },
+    ] },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },
   // ---------- Holidays (the calendar question on About you) ----------

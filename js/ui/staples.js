@@ -4,6 +4,7 @@ import { h, clear, icon } from './dom.js';
 import { STATUSES, SURE, sureOf, statusOf, changeSince, countsAsDone, SOURCE_WORDS } from '../records.js';
 import { metrics, keyNumbers } from '../math/metrics.js';
 import { rangesOf, fooRangeOf } from '../math/ranges.js';
+import { askNextOf } from '../math/nextbest.js';
 import { inView, timeChip } from '../math/time.js';
 import { money, pct, number, EMPTY, duration } from '../format.js';
 import { joinWords } from '../math/result.js';
@@ -28,7 +29,7 @@ export const handled = (r, f) => countsAsDone(statusOf(r, f)) || statusOf(r, f) 
 
 // ---------- Context: the store, the time view, the numbers, toasts ----------
 export function createCtx({ store, ref, now = () => new Date(), viewer = () => ({ clientView: false }) }) {
-  let cache = null, cacheFor, cacheDoc = null, rcache = null, fcache = null;
+  let cache = null, cacheFor, cacheDoc = null, rcache = null, fcache = null, acache = null;
   const listeners = new Set();
   const ctx = {
     ref, now,
@@ -38,7 +39,7 @@ export function createCtx({ store, ref, now = () => new Date(), viewer = () => (
     audience() { return audienceOf(store.doc, { clientView: !!viewer().clientView }); },
     get store() { return viewStore(store, ctx.audience(), ref); },
     get timeMode() { return store.doc.settings.timeView || '$'; },
-    setTimeMode(mode) { store.doc.settings.timeView = mode; cache = null; rcache = null; fcache = null; ctx.refresh(); store._emit({ type: 'settings' }); },
+    setTimeMode(mode) { store.doc.settings.timeView = mode; cache = null; rcache = null; fcache = null; acache = null; ctx.refresh(); store._emit({ type: 'settings' }); },
     get couple() { return ctx.gates().couple; },
     gates() { return gatesOf(store.doc.profile, store.doc.client); },
     // Rows that apply to this household: a gate that says no takes them off every list (R001).
@@ -51,10 +52,12 @@ export function createCtx({ store, ref, now = () => new Date(), viewer = () => (
     // step's range apart, since each of its runs walks the whole FOO. Worked out once per change, like the metrics.
     ranges() { const m = ctx.metrics(), d = ctx.store.doc; if (rcache?.m !== m) rcache = { m, r: rangesOf(d, ref, { now: now(), person: ownPlanPerson(d), m }) }; return rcache.r; },
     fooRange(flags = []) { const m = ctx.metrics(); if (fcache?.m !== m) fcache = { m, r: fooRangeOf(ctx.store.doc, ref, { now: now(), flags }) }; return fcache.r; },
+    // Batch 43 (M9Q): Ask me next and the certainty meter, on the same ranges and the same folded household, once per change.
+    askNext(flags = []) { const m = ctx.metrics(), d = ctx.store.doc; if (acache?.m !== m) acache = { m, r: askNextOf(d, ref, { now: now(), person: ownPlanPerson(d), m, R: ctx.ranges(), F: ctx.fooRange(flags), flags }) }; return acache.r; },
     // Screens register here; the shell clears them when it leaves the screen (keep: shell-level).
     onRefresh(fn, { keep = false } = {}) { fn.keep = keep; listeners.add(fn); return () => listeners.delete(fn); },
     clearScreen() { for (const fn of listeners) if (!fn.keep) listeners.delete(fn); },
-    refresh() { cache = null; rcache = null; fcache = null; for (const fn of [...listeners]) fn(); },
+    refresh() { cache = null; rcache = null; fcache = null; acache = null; for (const fn of [...listeners]) fn(); },
     goTo: () => {}, // the shell replaces this; the staples page stays put
   };
   store.subscribe(() => ctx.refresh());

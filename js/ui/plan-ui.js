@@ -42,7 +42,7 @@ const paceOf = (ref, r) => Object.entries(ref.presets.pace).find(([, v]) => Math
 const lockedLine = u => h('span.muted', { style: { fontSize: '1rem' } }, icon('lock'), ' Locked. ', u.reason, u.route ? [' ', h('a', { href: u.route }, 'Open ›')] : null);
 const lockedCard = u => h('div.card', {}, h('div.empty.center', {}, h('span.title', {}, icon('lock'), ` ${u.label} is locked`), h('span.muted', {}, u.reason),
   u.route ? S.button('Open where it lives', { iconName: 'right', onClick: () => { location.hash = u.route; } }) : null));
-const confidenceTag = c => (c ? h('span.tag.plain.confidence.coach-only', { title: c.text }, c.label) : null); // a coach's cue, not for the client's screen
+// Batch 43 (QUESTIONS 341): the FI confidence tag is retired; the range line under the date says the same thing better.
 
 // Milestone dates become wins on the calendar (R095).
 winSources.push(ctx => {
@@ -70,7 +70,7 @@ export function revealCard(app, ctx, m) {
   paint();
   return h('div.card.reveal-card', {},
     h('div.row-line', { style: { gap: '24px', alignItems: 'baseline' } },
-      h('div', {}, h('span.label', {}, 'FI date'), h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, fiWordsOf(m, null, { now: ctx.now() }).text) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))), confidenceTag(gate.confidence),
+      h('div', {}, h('span.label', {}, 'FI date'), h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, fiWordsOf(m, null, { now: ctx.now() }).text) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))),
         gate.unlocked && fiWhen != null ? rangeLine(ctx, 'fi') : null),
       h('div', {}, h('span.label', {}, 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? S.mathButton(m.fiNumber, money(m.fiNumber.value)) : h('span.muted', { style: { fontSize: '1rem' } }, 'Needs ', S.needLinks(ctx, m.fiNumber.needs))))),
     m.fiNumber.value != null && gate.unlocked ? h('div.slider-row', { style: { marginTop: '12px' } }, h('span.label', {}, 'Save more'), slider, out, result) : null);
@@ -135,7 +135,7 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
       h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, fiWordsOf(m, null, { now: ctx.now() }).text) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))),
       // Batch 41 (M9R): the likely month is the big one; the range is one quiet line under it.
       gate.unlocked && fiWhen != null ? rangeLine(ctx, 'fi') : null,
-      gate.unlocked && fiWhen != null ? h('span.muted', {}, `${ageAt(m, fiWhen) != null ? `At ${ageAt(m, fiWhen)} · ` : ''}${fiWordsOf(m, null, { now: ctx.now() }).years} `, confidenceTag(gate.confidence)) : null,
+      gate.unlocked && fiWhen != null ? h('span.muted', {}, `${ageAt(m, fiWhen) != null ? `At ${ageAt(m, fiWhen)} · ` : ''}${fiWordsOf(m, null, { now: ctx.now() }).years}`) : null,
       gate.unlocked ? investingLine(ctx, m) : null,
       changesLines(ctx, m)),
     h('div', {}, h('span.label', {}, nominal ? 'FI number, in future dollars' : 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? (nominal && fiWhen != null

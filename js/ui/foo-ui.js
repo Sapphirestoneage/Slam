@@ -10,6 +10,7 @@ import { monthName } from '../month.js';
 import { money } from '../format.js';
 import { gapCard } from './gap-ui.js';
 import { libraryFor, learnBlock } from './library-ui.js';
+import { fooRangeLine } from './range-ui.js';
 
 export const FUI = { original: false };
 export const LAUNCH_MOVES = ['Quit and take time off', 'Go part-time', 'Take a sabbatical', 'Start something of my own', 'Move somewhere cheaper'];
@@ -51,6 +52,7 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
     // Batch 11 (item 1): one payoff date across the app; the date at the payment alone, in one line.
     s.id === '3' && f.gap && s.ifPaid !== undefined ? h('p.muted.small.foo-slim', {}, `If the ${money(f.heavyPayments ?? 0)} a month in payments keeps being paid: ${s.ifPaid == null ? 'never' : monthName(addMonths(ymOf(ctx.now()), s.ifPaid), 'short')}. The gap comes first.`) : null, // batch 12
     s.id === '3' && s.date && s.minimumMonths !== undefined && s.minimumMonths !== s.months ? h('p.muted.small.foo-slim', {}, `Your surplus goes here first. If only the ${money(f.heavyPayments ?? 0)} a month in payments is paid: ${s.minimumMonths == null ? 'never' : monthName(addMonths(ymOf(ctx.now()), s.minimumMonths), 'short')}.`) : null,
+    f.here === s.id ? (l => (l ? h('div.foo-slim.foo-range', {}, l) : null))(fooRangeLine(ctx)) : null, // batch 43 (QUESTIONS 343): "Likely step 3, maybe step 4" beside the step you are on
     lockLine(s),
     s.worthALook ? h('p.small.foo-slim.foo-worth', { title: s.worthALook.how }, s.worthALook.text) : null, // batch 12 (M80): the next best opportunity, one line; the order stays
     s.skipCost ? h('p.foo-flag.coach-only', {}, s.skipCost.text) : null, // answer 175

@@ -991,3 +991,34 @@ ROADMAP's "Bank closure fire drill and stranded money", with the older suite's W
 4. Registered: M9F with three parts (From the app), FireDrillDays, the Bill_order table, income.landsIn (skipped: an id), program.fireDrill (not in the sheet), format 33, spec rows (`tools/library/firedrill-spec.py`, spec_link).
 
 docs/usability/scorecard-2026-11-06.json: Fire drill appended with "batch": 44, 0 blockers, 0 majors, 1 minor. Questions 364 to 370.
+## Batch 43 (Nov 6 2026): Ask me next and the certainty meter (Phase 4, Track 1)
+
+1. Ask me next (`js/math/nextbest.js`, M9Q, docs/engines/next-best.md "As built"): the one input whose answer narrows
+   the key ranges most per second of a call, and the runner-up. The candidates are the Picture %'s next small things
+   (an item with nothing in yet comes first: the plan cannot run without it) and every input below Know it from the
+   ranges (M9R). Each is run again at the level its answer reaches (the gut number read off a statement or an app:
+   Estimate; any other number: Know it; the statements total built from the lines: Know it, at ten minutes), the rest
+   as they are; its value is each key output's drop in width over its all-guess width, by weight, plus settling the
+   FOO step; its score is that over the seconds the question takes (RULES AskSecondsNumber 15, AskSecondsLookup 60,
+   AskSecondsBuild 600). These are big deals (M56) breaks a near tie toward the spending input. Will get it and Not
+   now are never asked. The score is exact: test/batch43.test.js answers every question on a copy of the file and
+   checks the score is what the answer really buys, and that the top one is the best of them.
+2. On Home, one slim coach-only card under the debt-free card (or the gap): "Ask next: What you spend a month, read off
+   a bank or card app", "Pins your FI date to within about 4 years", Open the box (it lands through the Find landing,
+   so the box glows, is focused and never sits under a sticky header; for the gut number it is the Statements or an
+   app tap), and "Then:" the runner-up with its own Open. Answering it changes the numbers, so the card names the next
+   question. Maya: one tap, FI range 138 months wide to 44, certainty 55% to 83%, next the invested balance.
+3. The certainty meter where the Picture % stood: "Certainty (how sure the plan is) 55%", a bar, and a calm word (Still
+   wide, Narrowing, Narrow). Each key output's 1 minus its width over its width with every number read as a guess (the
+   stand-in for age-only), weighted (RULES CertaintyWeight*: FI date and debt-free 3, surplus 2, emergency fund and net
+   worth 1; a date that could never come counts CertaintyOpenMonths wide). The Picture % is one line under it with its
+   pace tag; the program's pace still reads the Picture % (js/registry/program.js unchanged). After intake the meter is
+   the small line under the areas Strong or OK. The card's closed line reads Certainty, Picture and the pace.
+4. QUESTIONS 341: the FI confidence tag is gone from Goals (the FI card and the reveal card) and Home's FI tile; the
+   range line under the date says it. QUESTIONS 343: Plan › FOO shows the FOO step's range line ("Likely step 8, maybe
+   step 4", a tap names what could move it) under the step you are on.
+5. Plain words: Certainty joins the glossary and the plain pairs (how sure the plan is); the card says "interest rate
+   (APR)" and "which step of your plan you are on".
+6. The workbook: M9Q (the meter, the question, the runner-up) is a From the app row; format 36, spec row M9Q
+   (`tools/library/nextbest-spec.py`). `js/math/ranges.js` gained `knobsOf(..., { force })`, `runsOf`, `rangeFromRuns`
+   and keeps each knob's runs, so Ask me next reruns one input, not the plan.
