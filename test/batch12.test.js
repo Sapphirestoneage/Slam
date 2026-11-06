@@ -182,7 +182,7 @@ test('persona findings: a short month owns Home (Dana, Alexis); past FI says so 
 test('item 6: Your next 3 moves for Maya: dollars and dates, each with a screen', () => {
   const mv = nextMoves(maya().doc, ref, { now });
   assert.equal(mv.length, 3);
-  assert.equal(mv[0].text, 'Pay $1,900 a month to the cards: debt free Mar 2027');
+  assert.equal(mv[0].text, 'Pay $1,900 a month to the cards (the $200 going now plus the $1,700 left over): debt free Mar 2027');
   assert.match(mv[1].text, /^Then: Put \$1,900 a month into big e .*: \$[\d,]+ by Jan 2028$/);
   assert.match(mv[2].text, /^Then: Put \$1,900 a month into a Roth IRA: \$7,500 by May 2028$/);
   assert.ok(mv.every(x => x.route && x.ym && x.amount > 0));
@@ -196,4 +196,19 @@ test('item 7: goal chips map to the FOO', () => {
   assert.equal(g['Buy a home'].kind, 'future'); assert.equal(g['Save for a big event'].fooStep, '8');
   assert.equal(g['Debt free'].kind, 'milestone');
   assert.ok(!goalSuggestions(p, [{ kind: 'event', name: 'Buy a home: down payment' }]).some(x => x.chip === 'Buy a home'), 'an event already there is not suggested again');
+});
+
+// Question 217 (decided Nov 6, follows "freed money follows the FOO"): the surplus fills FOO step 1 (the buffer and
+// little e) before heavy debt gets it; each debt keeps its own payment meanwhile.
+import { freedFlow as flowQ217 } from '../js/math/flow.js';
+import { debtFirstPlan as planQ217 } from '../js/math/debt.js';
+test('q217: step 1 fills before heavy debt, and the card waits on its own payment meanwhile', () => {
+  const card = { id: 'c', name: 'Card', type: 'Credit card', balance: 1800, apr: 0.27, payment: 90 };
+  const now = planQ217([card], { surplus: 750 });
+  const after = planQ217([card], { surplus: 750, surplusFrom: 5 });
+  assert.equal(now.heavyMonths, 3);
+  assert.equal(after.heavyMonths, 7, '5 months on step 1 at $90 leaves $1,541, then $840 a month clears it in 2');
+  const f = flowQ217({ surplus: 750, heavyMonths: 7, freed: 90, bigELeft: 0, taxFreeLeft: 0, firstMonths: 5, firstLeft: 3100 });
+  assert.deepEqual(f.steps.slice(0, 2).map(s => [s.id, s.from, s.to]), [['1', 0, 5], ['3', 5, 7]]);
+  assert.match(f.text, /fills the buffer and little e first \(5 months\), \$750 a month pays heavy debt next \(2 months\)/);
 });

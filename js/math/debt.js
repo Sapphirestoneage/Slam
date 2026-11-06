@@ -134,7 +134,9 @@ export function payoffPlan(debts, { extra = 0, order = 'avalanche', maxMonths = 
 // the next heavy debt. Once the heavy debt is gone the surplus (and the freed heavy payments) go to investing, so
 // low-rate debt keeps its own payment; an extra (a what-if, or settings.debtExtra) keeps rolling to it. This is the
 // one plan every screen reads: each debt's payoff month, the heavy-debt-free month and the debt-free month.
-export function debtFirstPlan(debts, { order = 'avalanche', ids = [], first = [], surplus = 0, extra = 0, maxMonths = 1200 } = {}) {
+// surplusFrom (batch 12 follow-up, question 217): the months the surplus first spends filling FOO step 1 (the buffer and
+// little e) before it reaches heavy debt; each debt keeps its own payment meanwhile.
+export function debtFirstPlan(debts, { order = 'avalanche', ids = [], first = [], surplus = 0, extra = 0, maxMonths = 1200, surplusFrom = 0 } = {}) {
   const usable = debts.filter(d => !d.inFull && (d.balance ?? 0) > 0 && d.apr != null && d.payment != null);
   const skipped = debts.filter(d => !d.inFull && (d.balance ?? 0) > 0 && !usable.includes(d)).map(d => d.name);
   const top = new Set(first);
@@ -157,7 +159,7 @@ export function debtFirstPlan(debts, { order = 'avalanche', ids = [], first = []
       if (d.heavy) freedHeavy += d.payment - pay; else freedLow += d.payment - pay;
     }
     // The surplus and the freed heavy payments go only to heavy debt; an extra and freed low-rate payments to any, in order.
-    let heavyPool = heavyOpen ? toDebt + freedHeavy : 0, pool = more + freedLow;
+    let heavyPool = heavyOpen ? (month > surplusFrom ? toDebt : 0) + freedHeavy : 0, pool = more + freedLow;
     for (const d of list) {
       if (d.left <= 0.005 || !d.heavy || heavyPool <= 0) continue;
       const pay = Math.min(d.left, heavyPool);
@@ -175,7 +177,7 @@ export function debtFirstPlan(debts, { order = 'avalanche', ids = [], first = []
   const done = list.every(d => d.left <= 0.005);
   const heavyPayments = heavyList.reduce((s, d) => s + d.payment, 0);
   const words = [toDebt ? `${fmt.money(toDebt)} of surplus` : null, more ? `${fmt.money(more)} extra` : null].filter(Boolean).join(' and ');
-  return { id: 'M34', order, months: done ? month : null, heavyMonths, interest: total, surplus: toDebt, extra: more, heavyPayments, skipped, path,
+  return { id: 'M34', order, months: done ? month : null, heavyMonths, interest: total, surplus: toDebt, extra: more, heavyPayments, skipped, path, surplusFrom,
     debts: list.map(({ id, name, type, balance, payment, apr, aprGuess, heavy, paidOffMonth, interest }) => ({ id, name, type, balance, payment, apr, aprGuess: !!aprGuess, heavy, paidOffMonth, interest })),
     text: !list.length ? 'No debt with a balance, an APR and a payment.' : done
       ? `Every debt gets its own payment${words ? `, and ${words} a month goes to the heavy debt first (${order})` : ''}. ${heavyList.length ? `The heavy debt is gone in ${heavyMonths} ${heavyMonths === 1 ? 'month' : 'months'}; ` : ''}every debt is gone in ${month} months, with ${fmt.money(total)} of interest.`

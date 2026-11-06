@@ -330,7 +330,7 @@ export function promoSoon(ctx) {
 // promo ending soon first), so the order in use with no what-if extra is exactly the date every other screen shows.
 export function planDebts(ctx, { order, extra = 0 } = {}) {
   const m = ctx.metrics(), x = m.inputs;
-  return debtFirstPlan(x.debts, { order: order || x.debtOrder, ids: ctx.store.doc.settings.debtCustomOrder || [], first: promoSoon(ctx).map(r => r.id), surplus: m.debtRule?.toDebt ?? 0, extra: (x.debtExtra ?? 0) + extra });
+  return debtFirstPlan(x.debts, { order: order || x.debtOrder, ids: ctx.store.doc.settings.debtCustomOrder || [], first: promoSoon(ctx).map(r => r.id), surplus: m.debtRule?.toDebt ?? 0, extra: (x.debtExtra ?? 0) + extra, surplusFrom: m.debtPlan?.surplusFrom ?? 0 });
 }
 export function payoffScreen(app, ctx) {
   const m = ctx.metrics();

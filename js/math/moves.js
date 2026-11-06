@@ -21,6 +21,8 @@ export function nextMoves(doc, ref, { now = new Date(), flags = [], limit = 3 } 
   const out = [], used = new Set();
   const push = mv => { if (out.length < limit && !used.has(mv.key)) { used.add(mv.key); out.push({ ...mv, when: monthWords(mv.ym) }); } };
   const step = id => F.steps.find(s => s.id === id);
+  // So the move's dollars square with the surplus tile: the payments they make now plus what is left over each month.
+  const split = monthly => { const left = m.debtRule?.toDebt ?? 0, now$ = monthly - left; return left > 0 && now$ > 0.5 ? ` (the ${money(now$)} going now plus the ${money(left)} left over)` : ''; };
   // What a FOO step asks for, as a move. A step with nothing to fund or no date gives none.
   const stepMove = (s, lead = '') => {
     if (!s || ['Done', 'Locked', 'Off', 'Optional'].includes(s.status)) return null;
@@ -29,7 +31,7 @@ export function nextMoves(doc, ref, { now = new Date(), flags = [], limit = 3 } 
       const hero = debtHeroOf(doc, m), months = s.months ?? s.ifPaid ?? null;
       const monthly = hero?.monthly ?? m.debtPlan?.debts.reduce((t, d) => t + (d.payment ?? 0), 0) ?? null;
       if (monthly == null || months == null) return null;
-      return { key: 'foo:3', step: '3', amount: monthly, ym: at(months), route: '#/plan/debt-payoff', text: `${lead}Pay ${money(monthly)} a month to the ${heavyWords(m)}: debt free ${monthWords(at(months))}${F.gap ? ' once the gap is closed' : ''}` };
+      return { key: 'foo:3', step: '3', amount: monthly, ym: at(months), route: '#/plan/debt-payoff', text: `${lead}Pay ${money(monthly)} a month to the ${heavyWords(m)}${split(monthly)}: debt free ${monthWords(at(months))}${F.gap ? ' once the gap is closed' : ''}` };
     }
     if (s.date == null || !s.left) return null;
     const monthly = s.flowMonthly ?? null;

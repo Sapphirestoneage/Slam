@@ -35,24 +35,28 @@ export function taxFreeRoom(doc, x, ref, now = new Date()) {
 // contributions already invested); heavyMonths: when the heavy debt is gone on the one plan (0 when there is none,
 // null when the payments never clear it); freed: the heavy payments that free up; bigELeft and taxFreeLeft: dollars.
 // Each phase ends at the first whole month its dollars are in (a part month rounds up), like every FOO date.
-export function freedFlow({ surplus, heavyMonths = 0, freed = 0, bigELeft = 0, taxFreeLeft = 0 }) {
+// firstMonths (question 217): the months the surplus first fills FOO step 1 (the buffer and little e), before heavy debt.
+export function freedFlow({ surplus, heavyMonths = 0, freed = 0, bigELeft = 0, taxFreeLeft = 0, firstMonths = 0, firstLeft = 0 }) {
   if (surplus == null) return null;
   const toDebt = Math.max(0, surplus), monthly = toDebt + Math.max(0, freed || 0);
-  const H = heavyMonths;
+  const F = Math.max(0, firstMonths || 0);
+  const H = heavyMonths == null ? null : Math.max(heavyMonths, F);
   const span = left => (!(left > 0.5) ? 0 : monthly > 0 ? Math.ceil(left / monthly - 1e-9) : null);
   const bigE = span(bigELeft), taxFree = span(taxFreeLeft);
   const bigEEnd = H == null || bigE == null ? null : H + bigE;
   const taxFreeEnd = bigEEnd == null || taxFree == null ? null : bigEEnd + taxFree;
   const steps = [
-    { id: '3', from: 0, to: H, monthly: toDebt, left: null },
+    ...(F ? [{ id: '1', from: 0, to: F, monthly: toDebt, left: Math.max(0, firstLeft || 0) }] : []),
+    { id: '3', from: F, to: H, monthly: toDebt, left: null },
     { id: '4', from: H, to: bigEEnd, monthly, left: Math.max(0, bigELeft || 0) },
     { id: '5', from: bigEEnd, to: taxFreeEnd, monthly, left: Math.max(0, taxFreeLeft || 0) },
     { id: 'rest', from: taxFreeEnd, to: null, monthly, left: null },
   ];
-  const bits = [H ? `${money(toDebt)} a month pays heavy debt first (${H} ${H === 1 ? 'month' : 'months'})` : null,
+  const bits = [F ? `${money(toDebt)} a month fills the buffer and little e first (${F} ${F === 1 ? 'month' : 'months'})` : null,
+    H > F ? `${money(toDebt)} a month pays heavy debt${F ? ' next' : ' first'} (${H - F} ${H - F === 1 ? 'month' : 'months'})` : null,
     bigE ? `${money(monthly)} a month${H ? ' (the surplus plus the freed payments)' : ''} fills big e (${bigE} ${bigE === 1 ? 'month' : 'months'})` : null,
     taxFree ? `Tax-Free Growth takes ${money(taxFreeLeft)} of Roth IRA and HSA room (${taxFree} ${taxFree === 1 ? 'month' : 'months'})` : null].filter(Boolean);
-  return { id: 'M79', monthly, toDebt, freed: Math.max(0, freed || 0), heavyMonths: H, bigEMonths: bigE, taxFreeMonths: taxFree, bigEEnd, taxFreeEnd,
+  return { id: 'M79', monthly, toDebt, freed: Math.max(0, freed || 0), firstMonths: F, heavyMonths: H, bigEMonths: bigE, taxFreeMonths: taxFree, bigEEnd, taxFreeEnd,
     waitMonths: bigEEnd, // the months before the surplus is invested (heavy debt, then big e); Tax-Free Growth is invested
     steps, text: bits.length ? `${bits.join(', ')}, then the rest is invested.` : 'The surplus is invested.' };
 }

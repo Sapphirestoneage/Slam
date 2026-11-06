@@ -218,7 +218,12 @@ export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
   // contributions).
   const rule = debtRuleOf(doc, x.debts);
   const toDebt = rule.on && surplus !== null ? Math.max(0, surplus - contributions) : 0;
-  out.debtPlan = debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: promoSoonIds(x.debts, now), surplus: toDebt, extra: x.debtExtra });
+  // Question 217 (follows Eli's "freed money follows the FOO"): FOO step 1 (the buffer and little e) fills from the
+  // surplus before heavy debt gets it, so the money matches the step order.
+  const lay1 = cashLayers(x, layerOptions(doc, ref, x, now));
+  const firstLeft = RULES.freedFollowsFoo ? lay1.layers.filter(l => l.step === 1).reduce((s, l) => s + (l.left ?? 0), 0) : 0;
+  const firstMonths = toDebt > 0 && firstLeft > 0.5 ? Math.ceil(firstLeft / toDebt - 1e-9) : 0;
+  out.debtPlan = debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: promoSoonIds(x.debts, now), surplus: toDebt, extra: x.debtExtra, surplusFrom: firstMonths });
   out.debtPlanMinimum = rule.on || x.debtExtra ? debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: promoSoonIds(x.debts, now) }) : out.debtPlan; // each debt at its own payment only
   out.debtRule = { ...rule, toDebt, heavyMonths: out.debtPlan.heavyMonths, first: promoSoonIds(x.debts, now) };
   for (const d of [...x.debts, ...out.debts]) { const p = out.debtPlan.debts.find(q => q.id === d.id); d.planMonths = d.inFull ? null : p?.paidOffMonth ?? null; d.minimumMonths = d.inFull ? null : out.debtPlanMinimum.debts.find(q => q.id === d.id)?.paidOffMonth ?? null; d.heavy = isHeavyDebt(d); }
@@ -235,7 +240,7 @@ export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
     const lay = cashLayers(x, layerOptions(doc, ref, x, now));
     const bigELeft = lay.needsAge ? 0 : lay.layers.filter(l => l.id.startsWith('big-e')).reduce((s, l) => s + (l.left ?? 0), 0);
     const room = taxFreeRoom(doc, x, ref, now);
-    out.fooFlow = { ...freedFlow({ surplus: Math.max(0, surplus - contributions), heavyMonths: rule.on ? H : 0, freed, bigELeft, taxFreeLeft: room.left }), room, bigELeft, bigETarget: lay.needsAge ? null : lay.layers.filter(l => l.id.startsWith('big-e')).reduce((s, l) => s + (l.target ?? 0), 0) };
+    out.fooFlow = { ...freedFlow({ surplus: Math.max(0, surplus - contributions), heavyMonths: rule.on ? H : 0, freed, bigELeft, taxFreeLeft: room.left, firstMonths: rule.on ? firstMonths : 0, firstLeft }), room, bigELeft, bigETarget: lay.needsAge ? null : lay.layers.filter(l => l.id.startsWith('big-e')).reduce((s, l) => s + (l.target ?? 0), 0) };
   } else out.fooFlow = null;
   const wait = out.fooFlow ? (out.fooFlow.waitMonths ?? RULES.maxMonths) : rule.on ? (H ?? RULES.maxMonths) : 0;
   const before = surplus !== null && wait > 0 ? { months: wait, monthly: alreadyIn + contributions, heavyMonths: rule.on ? (H ?? RULES.maxMonths) : 0 } : null; // while the surplus pays heavy debt, then fills big e
@@ -309,7 +314,7 @@ export function debtHeroOf(doc, m) {
   if (!m.debtRule?.heavy || !m.debtPlan?.debts.length) return null;
   const day0 = (doc.snapshots || []).find(s => s.day0) ?? null;
   const start = day0 ? (day0.records || []).filter(r => r.kind === 'debt' && r.values?.payChoice !== 'In full').reduce((s, r) => s + (r.values?.balance ?? 0), 0) : null;
-  const rerun = extra => debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: m.debtRule.first ?? [], surplus: m.debtRule.toDebt, extra: (x.debtExtra ?? 0) + extra });
+  const rerun = extra => debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: m.debtRule.first ?? [], surplus: m.debtRule.toDebt, extra: (x.debtExtra ?? 0) + extra, surplusFrom: m.debtPlan?.surplusFrom ?? 0 });
   const card = debtFreeCard(m.debtPlan, { start, rerun, extras: heroExtras(m.debtPlan) });
   return card && { ...card, short: m.debtPlan.months != null && m.debtPlan.months <= RULES.shortPlanMonths, then: m.fooFlow?.bigEMonths ? { monthly: m.fooFlow.monthly, months: m.fooFlow.bigEEnd, taxFree: m.fooFlow.taxFreeEnd } : null }; // batch 12: what the money does next (M79)
 }

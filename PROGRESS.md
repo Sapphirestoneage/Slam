@@ -269,3 +269,11 @@ next three moves. Test client Maya ($5,200 take-home, $3,500 gut spending, $6,00
 
 Export format 16. QA: tests in UTC and America/New_York (test/batch12.test.js); the layout checker; before and after
 screenshots at 1280 (and 390 for Home and the one-pager).
+
+## Nov 6 2026: step 1 before heavy debt, and the next move's dollars (batch 12 follow-up)
+
+Question 217: the surplus now fills FOO step 1 (buffer, little e, income gaps within 12 months) before heavy debt,
+so the money follows the step order (js/math/debt.js surplusFrom, js/math/flow.js step 1 phase, metrics wiring;
+the Debt payoff view and the chips pass it too). Bartender persona redone by hand: debt free 7 months, FI 349.
+The one-pager's first move now shows its parts ("the $200 going now plus the $1,700 left over") so it squares with
+the surplus tile. QA: 525 tests in UTC and America/New_York, 0 fail, 2 todo (F-GUT, F-529).
