@@ -592,7 +592,7 @@ input.zero-slider::-moz-range-track { height: 6px; border-radius: 3px; backgroun
 input.zero-slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--primary); border: 2px solid var(--card); cursor: pointer; }
 input.zero-slider:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .compare td.how-cell { width: 40px; text-align: right; }
-.apr-guess .field.pct { width: 84px !important; }
+/* batch 19: the guessed APR box is the same width as every other APR box, so the column lines up */
 .use-guess { padding: 0 10px; }
 /* Batch 11 (item 7): Current vs Proposed fits at phone width: the label takes its own line above the numbers. */
 @media (max-width: 760px) {

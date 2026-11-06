@@ -40,12 +40,19 @@ node tools/e2e/layout.cjs
 ```
 
 Opens every screen at 1440, 1280 and 390 wide, light and dark, for the Demo client and a new client made through Fast
-Track, opens Details panels, and checks the rules in `DESIGN.md`: boxes level in a row, no clipped text, no sideways
-scroll, nothing covering anything, and every What's missing item landing on a box. It needs Playwright (not a SLAM
+Track, opens Details panels, and checks the rules in `DESIGN.md`: boxes level in a row (`level`), no clipped text
+(`clipped`), no sideways scroll (`overflow`), nothing covering anything (`covered`), and every What's missing item
+landing on a box (`askable`). Since batch 19 it also checks repeated rows (a table, or three or more same-looking rows
+stacked in a list): the same kind of control lines up down the column, left and right edges within 2px (`column`; a
+list outside a table only compares rows built the same way, and answer chips are left out); a sticky header or footer
+that has left its place never sits over a row's controls, checked at the top, the bottom and with each long list part
+way up the screen (`sticky`); a button with no words has a name, a hover tip and a picture everyone reads the same way
+(`unlabeled`); and at least 6px between the controls of two adjacent rows (`cramped`). While fixing, narrow the run
+with `LAYOUT_ROUTES=budget,debt`, `LAYOUT_WIDTHS=1280,390`, `LAYOUT_THEMES=light` and `LAYOUT_CLIENTS=New`. It needs Playwright (not a SLAM
 dependency). It writes `layout.json`, `report.md` and a few screenshots to `LAYOUT_OUT` (default: a `slam-layout`
 folder in the system temp folder) and exits 1 when anything fails. `SLAM_URL` points it at another server;
 `LAYOUT_QUICK=1` runs 1440 light only; `LAYOUT_OFFLINE=1` stands in for the CDN and fonts where they are blocked
-(`ECHARTS` gives the local echarts.min.js). About 10 minutes for the full run.
+(`ECHARTS` gives the local echarts.min.js). About 10 to 15 minutes for the full run.
 
 ### Personas
 
@@ -56,10 +63,10 @@ python3 -m http.server 8816 &
 node tools/e2e/personas.cjs            # every screen, for every persona, in the browser
 ```
 
-Thirteen made-up households that run SLAM end to end, from below zero to a multimillionaire: Alexis (avoids money),
+Twelve made-up households that run SLAM end to end, from below zero to a multimillionaire: Alexis (avoids money),
 Tom (a CPA with every account), Maya, a deficit, an unmarried couple splitting by income, a married couple with one
 paycheck and a baby, three adults in one home, a tipped bartender, a 1099 dancer, a fan-site creator with a part-time
-job, a worker planning gender-affirming care, a 52-year-old with $4.2M, and someone just laid off (Life Transitions). Each is written readably in
+job, a worker planning gender-affirming care, and a 52-year-old with $4.2M. Each is written readably in
 `tools/personas/defs/<id>.mjs`, with the 5 to 10 numbers a coach expects worked out by hand (the arithmetic is in each
 note) and a list of what SLAM cannot represent for that person yet. `tools/personas/build.mjs` turns each def into the
 app's own backup file in `fixtures/personas/`, so any of them opens through Coach tools › Data › Import.
@@ -173,7 +180,7 @@ The workbook is built only from the registries in `js/registry/`, so it stays co
 | `js/registry/joy.js` | The Joy number: the wording, asked at session start, in every snapshot, charted from Day 0 |
 | `js/capture.js`, `js/import/csv.js` | Captured for later (category joy, Trip, income type, the change log with who); the CSV statement import |
 | `js/math/proposed.js` | Current vs Proposed (M76): both sides, the differences, How we got this, Make Proposed the plan |
-| `tools/personas/`, `fixtures/personas/`, `test/personas.test.js`, `tools/e2e/personas.cjs` | The thirteen persona households: their defs with hand-worked numbers, the built backup files, the number check and the browser run |
+| `tools/personas/`, `fixtures/personas/`, `test/personas.test.js`, `tools/e2e/personas.cjs` | The twelve persona households: their defs with hand-worked numbers, the built backup files, the number check and the browser run |
 | `tools/e2e/walkthrough.cjs`, `test/walkthrough.test.js` | The full walkthrough: S1 to S12 in unit tests; every screen at three widths, light and dark, in the browser |
 | `MATH.md`, `SYNC.md`, `MORNING.md` | Every calculation reviewed (a self-review pending a CFP); the Google Sheets sync design; the overnight run's morning note |
 | `js/find.js`, `data/reference-2026.json` (findWords) | Find understands people: everyday words to a screen and a box, Add by type, a note when unsure (batch 14) |

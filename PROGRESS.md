@@ -406,15 +406,48 @@ blank keeps the defaults (2 hours, $100). Registered as client assumptions; expo
 what the gut number leaves (after debt payments it includes and the categories already set), each is scaled by the
 same share and rounded to $10 (js/math/spending.js typicalScaleOf, read by the walk and the Budget). Never scaled up.
 Questions 240 to 249 decided; 242 (the session pace) waits for Eli. QA: 576 tests, 0 fail.
-## Batch 21 (Nov 6 2026): Life Transitions, the first Phase 4 feature
 
-A session that turns panic into a number (Eli's Nov 5 design chat). Plan › Transitions, behind a Phase 4 switch in Coach tools › Session (settings.phase4, on for a new household in this build). Find reaches it from job loss, laid off, quit, transition and runway.
+## Batch 19 (Nov 6): columns that line up, rows that breathe, nothing stuck over a row
 
-1. Here and there: a template in one tap (job loss, quitting, student to first job, getting married, a baby, divorce or breakup, kids grown and out, something else), the start and the destination as taps, a start month as taps (or another month), and which income stops (the template's default, one tap to change).
-2. The burn: full spending, DRAFTT needs, FAT and food and housing only, read from the Budget (DRAFTT and FAT are the cash layers' own numbers, one answer with big e), each with how long the money lasts at that level.
-3. The options ladder, cheapest first, prefilled and priced: the checking buffer, little e, big e and other cash, cut to the basics (a level and when it starts; it buys time, it adds no money), side income or selling things (quick picks, and the ways to earn quickly), unemployment (batch 15's rows and end date; one tap adds NY's most), family help (from Backups, only if real), investments, a 0% card (0% until its promo ends), a regular card ("Using $1,000 for 3 months costs about $60"), retirement money last (the 10% penalty and tax from the app's own tax math). Each rung toggles.
-4. The dip: an ECharts chart of the money left on every rung, month by month from today, each rung its own band, with Today, the end of benefits, each tripwire, the floor (the month the last rung runs out) and Plan B and C as dashed lines; the lines are spelled out under it. js/math/transitions.js (M90, registered with its spec row), tests in test/transitions.test.js.
-5. Tripwires: if (a rung is reached, no offer by a month, money left under 3 months) then (a list of taps), placed on the dip, in order, and in the session agenda as suggestions.
-6. Plan B and C: extra income from a month, a rung first, rungs left out, a deeper cut; one line each against the plan.
-7. Share view: one page for parents or a partner (the situation, the plan in order, decided ahead, the worst case, it is handled), no coach notes, one switch to hide the costly rungs' dollars, Print.
-8. A thirteenth persona, Riley Between (job loss), with every runway number worked by hand (tools/personas/defs/job-loss.mjs): DRAFTT $2,840, 24.0 months to Oct 2028; full 21.8, FAT 26.1, food and housing 28.0; Plan B 48.4.
+Batch 13 took tools/e2e/layout.cjs to zero, but it only compared boxes within one row. On Budget by category the
+Accommodation box sat about 160px left of Food's (its "from the lines" pill shared the cell), Debt's "$780 · From Debt"
+was clipped and pushed "a month" out of line, the status pills nearly touched, and the sticky "9 categories" totals row
+covered the last row on screen.
+
+1. Four new checks in tools/e2e/layout.cjs (README, Layout check; DESIGN.md rules 1b, 1c, 4 and 8). `column`: in a
+   table, or three or more same-looking rows stacked in a list, the same kind of control (box, percent box, note box,
+   dropdown, status pill, Details, the ... button, Will get it) shares its left and right edges within 2px; a button
+   that shows its own words or a value (Use $120, a date) lines up on one edge; a list outside a table only compares
+   rows built the same way, and answer chips are left out. `sticky`: a sticky header or footer that has left its place
+   never sits over a row's controls (checked at the top, the bottom, and with each long list part way up the screen).
+   `unlabeled`: a button with no words has a name and a hover tip, and its picture is one everyone reads the same way.
+   `cramped`: at least 6px between the controls of two adjacent rows. The persona run uses them too.
+   LAYOUT_ROUTES, LAYOUT_WIDTHS, LAYOUT_THEMES and LAYOUT_CLIENTS narrow a run while fixing; the new client is made
+   with the exact Create button (batch 18's "Create and start session 1" made the old match ambiguous).
+2. Budget by category: what the amount reads from ("$1,770 from the lines", "From Debt", batch 18's "Use typical $X")
+   has its own column right before the box (under it on a phone), so the box is in the same place on every row; Debt's
+   amount is a box-shaped "$780 ›" that opens Debt; rows are 52px.
+3. Every list: the totals row ends the list instead of sticking over the last row on screen; each status pill and each
+   Details button is one width; 4px of air above and below every row; Will get it says so in words; a guessed APR's
+   Use and a box's typical sit before the box; the guessed APR box is the same width as the others; the hours chip
+   after a balance is one width; a long name grows its box instead of spilling out. A list too wide for its card at 1280
+   (Debt and Credit cards for a new client, a couple's Income) first drops the row hours chips, the payoff months, the
+   clock and some padding, then, still too wide, the row's Will get it (the status menu and Will get all of these keep
+   it), so nothing scrolls sideways (S.fitTable).
+4. Phones: Debt and Credit cards rows are two-column cards; a toggle gets its own line; Will get it waits on the
+   buttons line after Details so the status stays beside the box; name boxes are the full width; Month end's "usual"
+   text holds one slot.
+5. Elsewhere: the Scorecard's hole cards are one grid (Payoff, Effort, Best return, In the plan and the buttons in the
+   same place on each); FOO's amounts end at the same edge, dates under them on a phone; Goals assumptions have the
+   label over the control; Coach tools settings put the label on its own line on a phone, and its lists keep Fix now
+   at the right edge; "Client view" and "Clear all" are words, not a screen and an eraser.
+
+Layout check (all widths, both themes, Demo and a new client), before at c3224ac with the new checker: level 0,
+clipped 1, overflow 1, covered 3, askable 0, column 353 (31 distinct), sticky 80 (5), unlabeled 1183 (46), cramped 0;
+after (rebased on batch 18 and 5885f92): level 0, clipped 1, overflow 1, covered 3, askable 0, column 0, sticky 0,
+unlabeled 0, cramped 0. The four left are batch 13's: the Demo's load toast in its first seconds (covered 3), the Move
+to next session hover tip (clipped 1) and Current vs Proposed 10px wide once at 1440 (overflow 1, not on its own).
+Persona run at 1280: layout items 629 before (unlabeled 414, column 44, sticky 148, cramped 11, clipped 12), 12 after
+(the same Move to next session hover tip, once per persona); console errors 0 and story notes unchanged.
+QA: tests pass in UTC and America/New_York; before and after screenshots of Budget, Assets, Debt, Credit cards,
+Income and Goals at 1280 and 390.

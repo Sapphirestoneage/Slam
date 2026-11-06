@@ -2,7 +2,8 @@
 // (Coach tools › Data › Import), visits every screen at 1280 wide, and records for each persona and screen:
 //   errors   console errors and page errors
 //   missing  how many What's missing items the screen lists (js/completion.js missingFor)
-//   layout   the layout checker's own checks (tools/e2e/layout.cjs scan: level, clipped, overflow, covered)
+//   layout   the layout checker's own checks (tools/e2e/layout.cjs scan: level, clipped, overflow, covered, and since
+//            batch 19 column, sticky (at the top of the screen), unlabeled and cramped)
 //   story    whether the screen tells a sensible story: no "no debt" words with debts on file, no lock on a date
 //            whose inputs are all there, no NaN or undefined, and one answer per number across every screen
 //            (net worth, surplus, savings rate, the debt-free month, the FI month), checked against the app's own math
@@ -91,7 +92,7 @@ async function runPersona(browser, id) {
       await page.evaluate(h => { document.querySelectorAll('.pop').forEach(p => p.remove()); location.hash = h; }, r); await settle(page, 450);
       await page.evaluate(() => scrollTo(0, 0));
       const missing = await page.evaluate(async rt => { const m = await import('/js/ui/arrive.js'); return m.missingFor(window.slam.ctx, rt).length; }, r).catch(() => null);
-      const lay = await page.evaluate(scan, { checks: ['level', 'clipped', 'overflow', 'covered'] });
+      const lay = await page.evaluate(scan, { checks: ['level', 'clipped', 'overflow', 'covered', 'column', 'sticky', 'unlabeled', 'cramped'] }); // batch 19: column, sticky, unlabeled, cramped
       const text = await page.evaluate(() => document.querySelector('main')?.innerText || '');
       const nums = await page.evaluate(readNumbers);
       out.numbers.push(...nums.map(n => ({ ...n, route: r })));

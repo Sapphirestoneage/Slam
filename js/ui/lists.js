@@ -5,7 +5,7 @@ import { addPresets } from '../presets.js';
 import { METHODS } from '../registry/debt.js';
 import { personLabels } from '../registry/couples.js';
 import { institutionLink } from './institutions-ui.js';
-import { tapPick, recordList as S_recordList, popover as S_popover, closePop as S_closePop, moreBlock as S_moreBlock, secWrap as S_secWrap, fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, perChip, nameInput, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
+import { tapPick, openSource, recordList as S_recordList, popover as S_popover, closePop as S_closePop, moreBlock as S_moreBlock, secWrap as S_secWrap, fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, perChip, nameInput, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
 import { paidInFull } from '../completion.js';
 import { pct } from '../format.js';
 import { feeApr, promoPayoffOf } from '../math/debt.js';
@@ -75,8 +75,8 @@ export function debtList(ref, { cards = null } = {}) {
         if (d?.aprGuess && typical != null && (r.values.apr === null || r.values.apr === undefined)) {
           const shown = `${+(typical * 100).toFixed(2)}`;
           return h('span.row-line.apr-guess', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
-            pctInput(null, v => up({ apr: v }), { key: `${r.id}:apr`, hint: shown }),
-            h('button.btn.small.use-guess', { type: 'button', title: `Keep ${shown}% (the typical ${r.type.toLowerCase()} rate) as the APR`, 'aria-label': `Use ${shown}% as the APR for ${r.name || r.type}`, onclick: () => { ctx.store.transaction('Use the typical APR', () => { ctx.store.update(r.id, { apr: typical }); ctx.store.setFieldStatus(r.id, 'apr', null); }); toast(`APR set to ${shown}%.`, { undo: () => ctx.store.undo() }); } }, 'Use'));
+            h('button.btn.small.use-guess', { type: 'button', title: `Keep ${shown}% (the typical ${r.type.toLowerCase()} rate) as the APR`, 'aria-label': `Use ${shown}% as the APR for ${r.name || r.type}`, onclick: () => { ctx.store.transaction('Use the typical APR', () => { ctx.store.update(r.id, { apr: typical }); ctx.store.setFieldStatus(r.id, 'apr', null); }); toast(`APR set to ${shown}%.`, { undo: () => ctx.store.undo() }); } }, 'Use'), // batch 19: Use before the box, so the box sits in the same place as on rows without one
+            pctInput(null, v => up({ apr: v }), { key: `${r.id}:apr`, hint: shown }));
         }
         return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, d?.aprGuess ? h('span.tag.guess', {}, '? Guess') : null, pctInput(r.values.apr, v => up({ apr: v }), { key: `${r.id}:apr`, hint: 'APR' }));
       } },
@@ -571,24 +571,34 @@ export function categoryList(ref, { pass = 'Plan', ym = null } = {}) {
   return {
     kind: 'spending', area: 'needs', title: 'Budget by category', thing: { one: 'category', plural: 'categories' }, key: 'categories',
     filter: r => isCategoryRecord(r), order: (a, b) => CATEGORIES.indexOf(a.type) - CATEGORIES.indexOf(b.type),
-    fixed: true, noAdd: true, moreLabel: 'Lines', notForMe: true, paidWith: false, coreFields: ['amount'], focusOf: (r, f) => `cat:${r.type}:${f}`, // batch 13: Fix it lands on the category's box
+    fixed: true, noAdd: true, moreLabel: 'Lines', notForMe: true, tableClass: 'cat-rows', paidWith: false, coreFields: ['amount'], focusOf: (r, f) => `cat:${r.type}:${f}`, // batch 13: Fix it lands on the category's box
     hasValue: (ctx, r) => catOf(ctx, r)?.amount != null,
     columns: [
       { label: 'Category', render: (ctx, r) => { const c = catOf(ctx, r); return h('span.stack', { style: { gap: '2px' } }, h('strong', {}, c?.name ?? r.name ?? r.type),
         h('span.muted.small', {}, c?.lines.length ? `${c.lines.length} ${c.lines.length === 1 ? 'line' : 'lines'}` : fadedIn(ctx, r.type) ? `${fadedIn(ctx, r.type)} starter lines, none used yet` : 'No lines: the amount alone counts')); } },
+      // Batch 19: what the amount reads from sits in its own column, right beside the box (under it on a phone), so the
+      // box is always in the same place down the table (DESIGN.md rule 1b).
+      { label: 'Note', head: '', num: true, render: (ctx, r, m, up) => {
+        const c = catOf(ctx, r);
+        if (!c) return null;
+        if (r.type === 'Debt') return h('span.muted.small.cat-note', { title: 'Each debt payment, entered once on Net worth > Debt' }, 'From Debt');
+        // Batch 18 (QUESTIONS 229): an empty category offers its typical amount (the starter lines' typicals) in one tap,
+        // marked Roughly; typing a real number clears the Roughly that came from it. Batch 19: it sits right before the
+        // box, in this column, so the box stays in one place.
+        const typ = c.amount == null && r.status !== 'Not for me' ? categoryTypicalOf(ctx.visible(x => x.kind === 'bill'), r.type, ctx.metrics().inputs.typicalScale ?? 1) : null; // Q241: scaled to the gut number
+        if (typ) return h('button.btn.small.use-typical', { type: 'button', 'data-focus': `cat:${r.type}:typical`, title: `Use the typical ${money(typ)} a month (what the starter lines add up to), marked Roughly. Or type the real number.`, onclick: () => up({ amount: typ, per: 'month', status: 'Roughly', usedTypical: true }) }, `Use typical ${money(typ)}`);
+        return c.from === 'updated' ? h('span.computed.small.cat-note', { title: `The lines add up to ${money(c.linesSum)}, more than the ${money(c.typed)} typed, so the category reads the line total.` }, `${money(c.linesSum)} · updated from ${money(c.typed)}`)
+          : c.from === 'lines' ? h('span.computed.small.cat-note', { title: 'No amount typed: the category reads its lines' }, `${money(c.linesSum)} from the lines`)
+          : c.from === 'typed' && c.lines.length ? (c.unassigned > 0.5 ? h('span.muted.small.cat-note', {}, `${money(c.unassigned)} not assigned yet`) : h('span.muted.small.cat-note', {}, 'Fully itemized')) : null;
+      } },
       { label: 'Amount', num: true, render: (ctx, r, m, up) => {
         const c = catOf(ctx, r);
         if (!c) return null;
-        if (r.type === 'Debt') return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } }, (() => { const fb = fromButton('From Debt', '#/net-worth/debt', null, { value: amount(ctx, c.amount, { chip: false }) }); fb.dataset.focus = `cat:${r.type}:amount`; return fb; })(), h('span.muted.small', {}, 'a month')); // batch 13: Fix it lands on the button that opens Debt
-        const note = c.from === 'updated' ? h('span.computed.small.cat-note', { title: `The lines add up to ${money(c.linesSum)}, more than the ${money(c.typed)} typed, so the category reads the line total.` }, `${money(c.linesSum)} · updated from ${money(c.typed)}`)
-          : c.from === 'lines' ? h('span.computed.small.cat-note', { title: 'No amount typed: the category reads its lines' }, `${money(c.linesSum)} from the lines`)
-          : c.from === 'typed' && c.lines.length ? (c.unassigned > 0.5 ? h('span.muted.small.cat-note', {}, `${money(c.unassigned)} not assigned yet`) : h('span.muted.small.cat-note', {}, 'Fully itemized')) : null;
-        // Batch 18 (QUESTIONS 229): an empty category offers its typical amount (the starter lines' typicals) in one tap,
-        // marked Roughly; typing a real number clears the Roughly that came from it.
-        const typ = c.amount == null && r.status !== 'Not for me' ? categoryTypicalOf(ctx.visible(x => x.kind === 'bill'), r.type, ctx.metrics().inputs.typicalScale ?? 1) : null;
-        return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'wrap', gap: '6px' } },
-          typ ? h('button.btn.small.use-typical', { type: 'button', 'data-focus': `cat:${r.type}:typical`, title: `Use the typical ${money(typ)} a month (what the starter lines add up to), marked Roughly. Or type the real number.`, onclick: () => up({ amount: typ, per: 'month', status: 'Roughly', usedTypical: true }) }, `Use typical ${money(typ)}`) : null,
-          moneyInput(r.amount, v => up({ amount: v, per: 'month', status: r.status === 'Not sure' || (r.values.usedTypical && r.status === 'Roughly') ? null : r.status, usedTypical: null }), { hint: c.from === 'lines' ? moneyText(c.linesSum) : 'A month', key: `cat:${r.type}:amount` }), note);
+        if (r.type === 'Debt') { // batch 13: Fix it lands on the button that opens Debt; batch 19: shaped like the box it stands in for
+          const fb = h('button.from-box', { type: 'button', 'data-focus': `cat:${r.type}:amount`, title: 'Entered on Debt; open it to change it', 'aria-label': `${money(c.amount)} a month, from Debt. Open Debt`, onclick: () => openSource('#/net-worth/debt', null) }, amount(ctx, c.amount, { chip: false }), icon('right'));
+          return fb;
+        }
+        return moneyInput(r.amount, v => up({ amount: v, per: 'month', status: r.status === 'Not sure' || (r.values.usedTypical && r.status === 'Roughly') ? null : r.status, usedTypical: null }), { hint: c.from === 'lines' ? moneyText(c.linesSum) : 'A month', key: `cat:${r.type}:amount` }); // batch 18: typing a real number clears the Roughly that came from Use typical
       } },
     ],
     // The caret: this category's lines, with their own add button; a line added here stays in the category.

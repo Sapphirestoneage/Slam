@@ -132,7 +132,8 @@ const app = {
     // Undo, redo, Add anything and the parking lot sit behind one labeled More button (Phase 3: one calm row).
     const more = h('button.icon-btn.more-btn', { type: 'button', 'aria-label': 'More: undo, redo, add anything, parking lot', 'aria-haspopup': 'dialog', 'data-focus': 'more' }, 'More', icon('down'));
     more.onclick = () => this.moreMenu(more);
-    const cv = S.iconButton('monitor', this.prefs.clientView ? 'Client view is on' : 'Client view', () => this.setPref('clientView', !this.prefs.clientView));
+    // Batch 19: says what it does in words (a screen picture alone read as nothing; DESIGN.md rule 8).
+    const cv = h('button.icon-btn.more-btn.cv-btn', { type: 'button', title: this.prefs.clientView ? 'Client view is on: coach-only items are hidden. Click to turn it off' : 'Client view: hide coach-only items while the client watches', 'data-focus': 'icon:Client view', onclick: () => this.setPref('clientView', !this.prefs.clientView) }, icon('monitor'), this.prefs.clientView ? 'Client view on' : 'Client view');
     cv.setAttribute('aria-pressed', String(!!this.prefs.clientView));
     const gear = S.iconButton('gear', 'Coach tools', () => this.go('#/tools/lists'));
     gear.classList.add('coach-only');
@@ -160,8 +161,7 @@ const app = {
     const modes = paged && this.hasClient ? h('span.row-line.mm-modes', { style: { gap: '8px', flexWrap: 'nowrap' } },
       S.button(fastTrackLabel(this.ctx), { iconName: 'right', onClick: () => startFastTrack(this, this.ctx) }),
       S.toggle([['sections', 'By section'], ['one', 'One page']], this.prefs[onePageKey] ? 'one' : 'sections', v => this.setPref(onePageKey, v === 'one'), { label: `${tab.name} layout` })) : null;
-    const phase4 = this.hasClient && this.store.doc.settings?.phase4 === true; // batch 21: Phase 4 previews (Coach tools › Session)
-    const subs = h('div.subtabs-in', {}, tab.subs.filter(s => !off.has(s.id) && !s.hidden && (!s.phase4 || phase4)).map(s => {
+    const subs = h('div.subtabs-in', {}, tab.subs.filter(s => !off.has(s.id) && !s.hidden).map(s => {
       const p = this.hasClient ? progressOf(this.ctx, tab.id, s.id) : null;
       const complete = p && p.of > 0 && p.done === p.of;
       return h('a.subtab', { href: `#/${tab.id}/${s.id}`, 'aria-current': s.id === sub.id ? 'page' : null, class: s.area ? `area-${s.area}` : null },

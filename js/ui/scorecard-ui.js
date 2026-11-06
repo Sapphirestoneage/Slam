@@ -48,15 +48,15 @@ export function scorecardScreen(app, ctx) {
     h('div.hole-head', {}, h('span.rank', {}, `#${a.rank}`), h('strong.hole-name', {}, a.name), a.parked ? h('span.tag.plain', {}, 'Parked') : null, a.beforeHere ? h('span.tag.plain', {}, `Before FOO step ${sc.here}`) : null, h('span.tag.plain', { title: a.fooWords }, `FOO step ${a.foo}`), h('span.spacer'), clientTag(a), picker(a)),
     a.parked ? h('div.row-line.coach-only', { style: { gap: '8px', marginTop: '6px' } }, h('span.muted.small', {}, `Parked ${new Date(a.parked.at).toLocaleDateString()}${a.parked.note ? `: ${a.parked.note}` : ''}. Back: ${parkedBack(a.parked, { n: sessionCount(doc), now: ctx.now() }).when}${parkedBack(a.parked, { n: sessionCount(doc), now: ctx.now() }).due ? ' (due now)' : ''}`), S.button('Unpark', { size: 'small', onClick: () => unparkHole(ctx.store, a.id) }), S.button('Make homework', { size: 'small', onClick: () => { makeHomework(ctx.store, `S${sessionCount(doc)}`, `Fill the ${a.name} hole`, { link: { kind: 'hole', areaId: a.id, route: '#/plan/scorecard' } }); S.toast('Homework made.', { undo: () => ctx.store.undo() }); } })) : null,
     h('div.hole-body', {},
-      h('div.stack', { style: { gap: '4px', minWidth: 0, flex: '1 1 260px' } }, reasonBox(a), source(a)),
-      h('div.hole-num', {}, h('span.label', {}, 'Payoff'), a.payoff ? [a.fiDays != null ? h('strong', {}, fiDaysText(a.fiDays)) : null, h('span.muted.small', {}, [S.amount(ctx, a.payoff.value), ' a year'])]
+      h('div.stack.hn-why', { style: { gap: '4px', minWidth: 0 } }, reasonBox(a), source(a)), // batch 19: a grid, so each number sits in the same place on every card
+      h('div.hole-num.hn-payoff', {}, h('span.label', {}, 'Payoff'), a.payoff ? [a.fiDays != null ? h('strong', {}, fiDaysText(a.fiDays)) : null, h('span.muted.small', {}, [S.amount(ctx, a.payoff.value), ' a year'])]
         : [S.button('Add payoff', { size: 'small', iconName: 'plus', onClick: e => addPayoff(e.currentTarget, a) }), h('span.muted.small', {}, 'No rule: ranks last until typed')]),
-      a.payoff?.typed ? h('div.hole-num', {}, h('span.label', {}, 'Your payoff'), h('span.row-line', { style: { gap: '6px' } }, S.moneyInput(a.payoff.value, v => (v == null ? clearArea(a.id, ['payoff']) : setArea(a.id, { payoff: v })), { hint: 'A year', key: `score:${a.id}:payoff` }))) : null,
-      h('div.hole-num', {}, h('span.label', {}, 'Effort, hours'), S.textInput(a.effort == null ? null : String(a.effort), v => { const n = v == null ? null : Number(v); n == null || Number.isNaN(n) ? clearArea(a.id, ['effort']) : setArea(a.id, { effort: n }); }, { hint: 'Hours', width: 90, key: `score:${a.id}:effort` })),
-      h('div.hole-num', {}, h('span.label', {}, 'Best return'), a.score != null ? h('strong', {}, `${money(a.score)} a year per hour`) : h('span.muted', {}, 'Needs a payoff')),
-      h('div.hole-num', {}, S.checkbox('In the plan (top 3)', a.chosen, v => choose(a.id, v), { key: `score:${a.id}:chosen` })),
-      h('a', { href: a.route }, 'Open where it lives ›'),
-      a.parked ? null : S.button('Park it', { size: 'small', onClick: e => park(e.currentTarget, a) })),
+      a.payoff?.typed ? h('div.hole-num.hn-yours', {}, h('span.label', {}, 'Your payoff'), h('span.row-line', { style: { gap: '6px' } }, S.moneyInput(a.payoff.value, v => (v == null ? clearArea(a.id, ['payoff']) : setArea(a.id, { payoff: v })), { hint: 'A year', key: `score:${a.id}:payoff` }))) : null,
+      h('div.hole-num.hn-effort', {}, h('span.label', {}, 'Effort, hours'), S.textInput(a.effort == null ? null : String(a.effort), v => { const n = v == null ? null : Number(v); n == null || Number.isNaN(n) ? clearArea(a.id, ['effort']) : setArea(a.id, { effort: n }); }, { hint: 'Hours', width: 90, key: `score:${a.id}:effort` })),
+      h('div.hole-num.hn-score', {}, h('span.label', {}, 'Best return'), a.score != null ? h('strong', {}, `${money(a.score)} a year per hour`) : h('span.muted', {}, 'Needs a payoff')),
+      h('div.hole-num.hn-plan', {}, S.checkbox('In the plan (top 3)', a.chosen, v => choose(a.id, v), { key: `score:${a.id}:chosen` })),
+      h('div.hn-acts', {}, h('a', { href: a.route }, 'Open where it lives ›'),
+        a.parked ? null : S.button('Park it', { size: 'small', onClick: e => park(e.currentTarget, a) }))),
     how(a));
   const okRow = a => h('div.card.ok-row', {}, h('div.hole-head', {}, h('strong.hole-name', {}, a.name), h('span.spacer'), clientTag(a), picker(a)),
     h('div.row-line', { style: { gap: '12px' } }, reasonBox(a), source(a), h('a', { href: a.route }, 'Open ›')), how(a));

@@ -122,19 +122,16 @@ export function sessionScreen(app, ctx, { fastTrackGap }) {
     h('div.card', {}, h('h3', {}, 'Notes'), h('div.stack', { style: { gap: '12px' } },
       note('privateNotes', 'Private notes', 'Only you see these'), note('sharedNotes', 'Shared notes', 'The client sees these'))),
     h('div.card', {}, h('h3', {}, 'This client'), h('div.stack', { style: { gap: '12px' } },
-      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Session length'), S.textInput(s.length ?? null, v => ctx.store.setIn('session', ['length'], v === null ? undefined : Number(v), 'Session length'), { hint: `${ctx.ref.defaults.sessionMinutes} min`, width: 110 })),
-      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Client view'), S.toggle([[false, 'Off'], [true, 'On']], !!app.prefs.clientView, v => app.setPref('clientView', v), { label: 'Client view' }), h('span.muted.small', {}, 'Hides coach-only items')),
-      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Confidence and Joy'), (() => { const c = confidenceOf(ctx.store.doc), j = joyOf(ctx.store.doc); const w = (M, v) => (v.value != null ? `${M.label} ${v.value} of ${M.max}${v.partner != null ? ` (partner ${v.partner})` : ''}` : `${M.label} not asked yet`); return h('span', {}, `${w(CONFIDENCE, c)} · ${w(JOY, j)}`); })(), h('span.muted.small', {}, 'Asked on Home at the start of each session')), // F4, answer 164
+      h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Session length'), S.textInput(s.length ?? null, v => ctx.store.setIn('session', ['length'], v === null ? undefined : Number(v), 'Session length'), { hint: `${ctx.ref.defaults.sessionMinutes} min`, width: 110 })),
+      h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Client view'), S.toggle([[false, 'Off'], [true, 'On']], !!app.prefs.clientView, v => app.setPref('clientView', v), { label: 'Client view' }), h('span.muted.small', {}, 'Hides coach-only items')),
+      h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Confidence and Joy'), (() => { const c = confidenceOf(ctx.store.doc), j = joyOf(ctx.store.doc); const w = (M, v) => (v.value != null ? `${M.label} ${v.value} of ${M.max}${v.partner != null ? ` (partner ${v.partner})` : ''}` : `${M.label} not asked yet`); return h('span', {}, `${w(CONFIDENCE, c)} · ${w(JOY, j)}`); })(), h('span.muted.small', {}, 'Asked on Home at the start of each session')), // F4, answer 164
       // Answer to 49: the one-holding-over-25% flag, on unless the coach turns it off for this client.
-      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Concentration flag'), S.toggle([[true, 'On'], [false, 'Off']], !s.concentrationOff, v => ctx.store.setIn('session', ['concentrationOff'], !v, 'Concentration flag'), { label: 'Concentration flag' }),
+      h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Concentration flag'), S.toggle([[true, 'On'], [false, 'Off']], !s.concentrationOff, v => ctx.store.setIn('session', ['concentrationOff'], !v, 'Concentration flag'), { label: 'Concentration flag' }),
         h('span.muted.small', {}, 'Flags one holding or theme over 25% of an account')),
-      // Batch 21: Phase 4 previews (Life Transitions on Plan), on for a new household in this build, until Phase 3 is signed off.
-      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Phase 4 previews'), S.toggle([[true, 'On'], [false, 'Off']], doc.settings?.phase4 === true, v => ctx.store.setDoc('settings', { phase4: v }), { label: 'Phase 4 previews' }),
-        h('span.muted.small', {}, 'Life Transitions on Plan')),
       // M9: community presets, off unless turned on for this client.
-      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Community presets'), S.toggle([[false, 'Off'], [true, 'On']], !!s.community, v => setCommunity(ctx, v), { label: 'Community presets' }),
+      h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Community presets'), S.toggle([[false, 'Off'], [true, 'On']], !!s.community, v => setCommunity(ctx, v), { label: 'Community presets' }),
         h('span.muted.small', {}, 'Yom tov and Pesach lines, a kosher grocery note, future tuition goals, maaser')),
-      s.community ? h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Maaser'),
+      s.community ? h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Maaser'),
         S.toggle(['Take-home', 'Gross'], s.maaser?.basis ?? 'Take-home', v => ctx.store.setIn('session', ['maaser'], { ...(s.maaser || {}), basis: v }, 'Maaser'), { label: 'Maaser on' }),
         S.pctInput(s.maaser?.pct ?? null, v => ctx.store.setIn('session', ['maaser'], { ...(s.maaser || {}), pct: v }, 'Maaser'), { hint: 'Blank: 10' }),
         h('span.muted.small', {}, 'Shown on the Budget')) : null)),
@@ -142,9 +139,9 @@ export function sessionScreen(app, ctx, { fastTrackGap }) {
     timerCard(ctx),
     feedbackCard(ctx),
     h('div.card', {}, h('h3', {}, 'Look'), h('div.stack', { style: { gap: '12px' } },
-      h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Theme'), S.toggle(['System', 'Light', 'Dark'], app.prefs.theme === 'light' ? 'Light' : app.prefs.theme === 'dark' ? 'Dark' : 'System', v => app.setPref('theme', v.toLowerCase()), { label: 'Theme' })),
-      h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Density'), S.toggle(['Comfortable', 'Compact'], app.prefs.density === 'compact' ? 'Compact' : 'Comfortable', v => app.setPref('density', v.toLowerCase()), { label: 'Density' })),
-      h('div.row-line', {}, h('span.label', { style: { width: '90px' } }, 'Font'), S.toggle([['inter', 'Inter'], ['plex', 'IBM Plex Sans'], ['source', 'Source Sans 3']], app.prefs.font || 'inter', v => app.setPref('font', v), { label: 'Font' })))))];
+      h('div.row-line.set-row', {}, h('span.label', { style: { width: '90px' } }, 'Theme'), S.toggle(['System', 'Light', 'Dark'], app.prefs.theme === 'light' ? 'Light' : app.prefs.theme === 'dark' ? 'Dark' : 'System', v => app.setPref('theme', v.toLowerCase()), { label: 'Theme' })),
+      h('div.row-line.set-row', {}, h('span.label', { style: { width: '90px' } }, 'Density'), S.toggle(['Comfortable', 'Compact'], app.prefs.density === 'compact' ? 'Compact' : 'Comfortable', v => app.setPref('density', v.toLowerCase()), { label: 'Density' })),
+      h('div.row-line.set-row', {}, h('span.label', { style: { width: '90px' } }, 'Font'), S.toggle([['inter', 'Inter'], ['plex', 'IBM Plex Sans'], ['source', 'Source Sans 3']], app.prefs.font || 'inter', v => app.setPref('font', v), { label: 'Font' })))))];
 }
 
 // Discovery table (Mockup: DISCOVERY): each box fills its field as Roughly; Send to client file creates the client (R180).

@@ -33,7 +33,6 @@ import { closeStreak } from '../month.js';
 import { foo } from '../math/foo.js';
 import { gapOf } from '../math/gap.js';
 import { nextMoves } from '../math/moves.js';
-import { transitionOf } from '../math/transitions.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -482,12 +481,6 @@ export const MATH = [
     fns: ['moves.nextMoves'],
     fromApp: 'the FOO step you are on (or the gap), a Scorecard hole before your step with a payoff, a homework item, then the FOO steps the money goes to next; each one sentence with dollars and a month, linked to its screen. Top of Report › One-pager',
     app: c => nextMoves(c.doc, c.ref, { now: c.now, flags: c.flags }).length },
-  { id: 'M90', name: 'Life Transitions runway', inputs: 'M27 spending and the DRAFTT and FAT levels (M68), income that keeps coming, unemployment until its end date, cash in the layers, family help, card room and APR, retirement balances with the early penalty and tax (M10)', unit: 'months',
-    fns: ['transitions.RUNGS', 'transitions.LEVELS', 'transitions.phase4On', 'transitions.cardCost', 'transitions.withdrawalCost', 'transitions.burnLevels', 'transitions.transitionPlan', 'transitions.ladderOf', 'transitions.dipOf', 'transitions.tripwiresOf', 'transitions.plansOf', 'transitions.monthsText', 'transitions.transitionOf', 'transitions.setTransition'],
-    fromApp: 'a month-by-month run from today: the burn (the cut level once the cut starts) less income that keeps coming and benefits until their end month, drawn from the rungs that are on in ladder order (cash, family, investments, the 0% card, the regular card with its APR each month, retirement money after the 10% penalty and tax); the value is the months from the start until the last rung runs out (Plan › Transitions)',
-    app: c => transitionOf(c.doc, c.ref, { now: c.now }).runway,
-    parts: [{ key: 'full', name: 'Months at full spending', unit: 'months', fromApp: 'the same run with the burn held at full spending', app: c => transitionOf(c.doc, c.ref, { now: c.now }).levels[0].runway },
-      { key: 'food', name: 'Months at food and housing only', unit: 'months', fromApp: 'the same run with the burn held at food and housing', app: c => transitionOf(c.doc, c.ref, { now: c.now }).levels[3].runway }] },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },
   // ---------- Holidays (the calendar question on About you) ----------

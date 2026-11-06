@@ -1,16 +1,23 @@
 // The layout checker: the owner's repeat design complaints (DESIGN.md) as checks that fail.
 // Serve the app (python3 -m http.server 8767), then: node tools/e2e/layout.cjs
 // Visits every screen in walkthrough.cjs at 1440, 1280 and 390 wide, light and dark, for the Demo client and for a
-// brand-new client made through the UI and Fast Track, opens Details panels on the list screens, and runs five checks:
+// brand-new client made through the UI and Fast Track, opens Details panels on the list screens, and runs nine checks:
 //   level    boxes (and their labels) in one visual row start at the same top edge, within 2px
 //   clipped  inputs, selects, buttons and cut-off text show in full
 //   overflow no sideways scroll and nothing past the right edge
 //   covered  toasts, bars and the Report this button sit over nothing interactive they do not belong to
 //   askable  every What's missing item lands on a visible, enabled box (focus or a highlight around it)
+//   column   (batch 19) in repeated rows (a table, or a list of same-looking rows) the same kind of control shares
+//            its left and right edges, within 2px
+//   sticky   (batch 19) a sticky header or footer that has left its place never sits over a row's controls (checked at
+//            the top, the bottom, and with each long list part way up the screen)
+//   unlabeled (batch 19) a button with no words has a name and a hover tip, and a picture everyone reads the same way
+//   cramped  (batch 19) at least 6px between the controls of two adjacent rows
 // Writes layout.json, report.md and up to 3 screenshots per check to LAYOUT_OUT (default: <tmp>/slam-layout, never the
 // repo). Exit code 1 when any check fails. Env: SLAM_URL (default http://localhost:8767); LAYOUT_OFFLINE=1 or 0 forces
 // the stand-ins for the blocked CDN and fonts on or off (default: on when the local ECharts file exists); ECHARTS: the
-// local echarts.min.js; LAYOUT_QUICK=1 runs 1440 light only.
+// local echarts.min.js; LAYOUT_QUICK=1 runs 1440 light only. While fixing: LAYOUT_ROUTES=budget,debt (part of the
+// route), LAYOUT_WIDTHS=1280,390, LAYOUT_THEMES=light, LAYOUT_CLIENTS=New narrow the run.
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -28,9 +35,12 @@ const ROUTES = (() => {
   const m = src.match(/const ROUTES = \[([\s\S]*?)\];/);
   return m[1].match(/'#\/[^']+'/g).map(s => s.slice(1, -1));
 })();
-const WIDTHS = QUICK ? [1440] : [1440, 1280, 390];
-const THEMES = QUICK ? ['light'] : ['light', 'dark'];
-const CHECKS = ['level', 'clipped', 'overflow', 'covered', 'askable'];
+const WIDTHS = process.env.LAYOUT_WIDTHS ? process.env.LAYOUT_WIDTHS.split(',').map(Number) : QUICK ? [1440] : [1440, 1280, 390];
+const THEMES = process.env.LAYOUT_THEMES ? process.env.LAYOUT_THEMES.split(',') : QUICK ? ['light'] : ['light', 'dark'];
+const ONLY = process.env.LAYOUT_ROUTES ? process.env.LAYOUT_ROUTES.split(',') : null; // batch 19: a few screens while fixing them
+const CLIENTS = process.env.LAYOUT_CLIENTS ? process.env.LAYOUT_CLIENTS.split(',') : ['Demo', 'New'];
+const CHECKS = ['level', 'clipped', 'overflow', 'covered', 'askable', 'column', 'sticky', 'unlabeled', 'cramped'];
+const STILL = ['level', 'clipped', 'overflow', 'column', 'unlabeled', 'cramped']; // what a scan of a screen at rest runs
 const SHOTS_PER_CHECK = 3;
 
 const failures = [];
@@ -246,6 +256,164 @@ function scan(opt) {
       }
     }
   }
+  // ----- batch 19: the repeated rows of a table or list (column, cramped, sticky share them) -----
+  // A table's rows are its tbody rows with real cells (not a group header, a note or an open Details panel). A list
+  // outside a table is three or more siblings with the same tag and classes, stacked one under the other, each holding
+  // a control. Each control has a kind (box, select, toggle, status, or a button by its class) and an ordinal among its
+  // kind in its cell (tables) or row (lists): that pair is its column.
+  const CTRLS = 'label.field, .field, input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]):not([type=file]), select, textarea, button, a.btn, .seg, [role=button]';
+  const BTN_SIG = ['status-btn', 'caret', 'menu-btn', 'will-get', 'from-btn', 'use-typical', 'icon-btn', 'fold', 'pick', 'tag', 'math'];
+  // Fixed-size controls share both edges; a button that shows its own words or a value (Use $120, a date) lines up on one.
+  const BOTH = ['box', 'box.pct', 'box.note', 'select', 'status', 'button.caret', 'button.menu-btn', 'button.will-get', 'button.icon-btn', 'button.from-btn'];
+  const kindOf = el => {
+    if (el.matches('select') || (el.matches('.field') && el.querySelector('select'))) return 'select';
+    if (el.matches('textarea') || el.querySelector?.('textarea')) return 'box.note'; // a note box is its own kind
+    if (el.matches('label.field, .field, input, textarea')) return el.matches('.pct') || el.querySelector('.post') ? 'box.pct' : 'box';
+    if (el.matches('.seg')) return 'toggle';
+    if (el.matches('.status-btn')) return 'status';
+    return `button.${BTN_SIG.find(c => el.classList.contains(c)) || 'btn'}`;
+  };
+  const KIND_WORD = k => ({ box: 'box', 'box.pct': 'percent box', 'box.note': 'note box', select: 'dropdown', toggle: 'toggle', status: 'status pill', 'button.caret': 'Details button', 'button.menu-btn': '... button', 'button.will-get': 'Will get it button', 'button.from-btn': 'From button' }[k] || k.replace('button.', '').replace(/^btn$/, 'button') + (k.startsWith('button.') && k !== 'button.btn' ? ' button' : ''));
+  const ctrlsIn = el => [...el.querySelectorAll(CTRLS)].filter(c => vis(c) && !c.parentElement.closest('label.field, .field, .seg, button, a.btn, [role=button], .pop') && !c.closest('tr.more, .pop'));
+  // A row of answer chips (tap picks, timing chips) is one answer, not a column: column leaves its chips out.
+  const lined = c => !c.matches('.pick, .tag') && !c.closest('.picks, .tap-pick, .timing-chips, .day-grid');
+  const rowSets = () => {
+    if (rowsCache) return rowsCache;
+    const sets = [];
+    for (const t of document.querySelectorAll('table')) {
+      if (!vis(t) || t.closest('.pop')) continue;
+      const rows = [...t.querySelectorAll(':scope > tbody > tr')].filter(tr => vis(tr) && !tr.matches('.group, .more, .row-note') && ![...tr.cells].some(td => td.colSpan > 1));
+      if (rows.length >= 2) sets.push({ kind: 'table', holder: t, rows: rows.map(tr => ({ el: tr, cells: [...tr.cells] })) });
+    }
+    const seen = new Set();
+    for (const p of document.querySelectorAll('main *, .ft-box *')) {
+      if (seen.has(p) || p.closest('table, .pop') || p.children.length < 3 || !vis(p)) continue;
+      const sig = el => `${el.tagName}.${[...el.classList].filter(c => !['glow', 'selected', 'flash', 'open', 'on', 'done', 'left'].includes(c)).sort().join('.')}`;
+      const byS = new Map();
+      for (const k of p.children) if (vis(k)) { const s = sig(k); if (!byS.has(s)) byS.set(s, []); byS.get(s).push(k); }
+      for (const [, kids] of byS) {
+        if (kids.length < 3) continue;
+        const rs = kids.map(k => k.getBoundingClientRect());
+        const stacked = rs.every((r, i) => !i || (r.top >= rs[i - 1].bottom - 2 && Math.abs(r.left - rs[0].left) <= 2));
+        if (!stacked) continue;
+        const rows = kids.map(k => ({ el: k, cells: [k] })).filter(r => ctrlsIn(r.el).length);
+        if (rows.length >= 2) { sets.push({ kind: 'list', holder: p, rows }); seen.add(p); }
+      }
+    }
+    return (rowsCache = sets);
+  };
+  const rowName = el => ([...el.querySelectorAll('input:not([type=checkbox]):not([type=radio])')].find(i => i.value && !/^[\d,.$%-]+$/.test(i.value))?.value || el.querySelector('strong, .label')?.textContent || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  let rowsCache = null;
+
+  // ----- column -----
+  // The same kind of control in repeated rows shares its left and right edges, within 2px (DESIGN.md rule 1b).
+  if (opt.checks.includes('column')) {
+    for (const set of rowSets()) {
+      const cols = new Map();
+      for (const row of set.rows) {
+        row.cells.forEach((cell, ci) => {
+          const n = {};
+          for (const c of ctrlsIn(cell).filter(lined)) {
+            const k0 = kindOf(c), k = k0 === 'button.btn' ? `${k0}:${c.textContent.replace(/[\d$,.%·]+/g, '').replace(/\s+/g, ' ').trim().slice(0, 24)}` : k0; // a plain button is matched by its words (Use $120 and Use $90 are one column; Park it and Add payoff are not)
+            n[k] = (n[k] ?? -1) + 1;
+            // A list outside a table (a form's rows, cards) is only compared between rows built the same way: the same
+            // controls in the same order. A table compares by column.
+            const key = `${set.kind === 'table' ? ci : ctrlsIn(row.el).filter(lined).map(kindOf).join(',')}|${k}|${n[k]}`;
+            if (!cols.has(key)) cols.set(key, []);
+            cols.get(key).push({ c, row, r: c.getBoundingClientRect() });
+          }
+        });
+      }
+      for (const [key, list] of cols) {
+        if (list.length < 2) continue;
+        const kind = key.split('|')[1].replace(/:.*$/, '');
+        if (list.length < 2) continue;
+        if (!BOTH.includes(kind) && ['left', 'right'].some(e => { const xs = list.map(it => it.r[e]); return Math.max(...xs) - Math.min(...xs) <= 2; })) continue;
+        for (const edge of ['left', 'right']) {
+          const xs = list.map(it => it.r[edge]);
+          const spread = Math.max(...xs) - Math.min(...xs);
+          if (spread <= 2) continue;
+          // The odd one out: the edge the fewest rows share.
+          const mode = xs.map(x => xs.filter(y => Math.abs(y - x) <= 2).length);
+          const common = xs[mode.indexOf(Math.max(...mode))];
+          const odd = list.reduce((a, it) => (Math.abs(it.r[edge] - common) > Math.abs(a.r[edge] - common) ? it : a));
+          add('column', odd.c, `${rowName(odd.row.el)} · ${KIND_WORD(kind)}`, `the ${KIND_WORD(kind)} ${edge} edges differ by ${Math.round(spread)}px down the ${set.kind === 'table' ? 'table' : 'list'} (${list.slice(0, 6).map(it => `${rowName(it.row.el).slice(0, 18) || '?'} @${Math.round(it.r[edge] - common)}`).join(', ')}${list.length > 6 ? ', ...' : ''})`, { sub: `${key}|${edge}`, container: desc(set.holder) });
+          break; // one line per column: the left edge, or the right when the left lines up
+        }
+      }
+    }
+  }
+
+  // ----- cramped -----
+  // Controls in adjacent rows need at least 6px of air between them (DESIGN.md rule 1c).
+  if (opt.checks.includes('cramped')) {
+    for (const set of rowSets()) {
+      for (let i = 1; i < set.rows.length; i++) {
+        const a = set.rows[i - 1], b = set.rows[i];
+        if (set.kind === 'table' && a.el.nextElementSibling !== b.el) continue; // a Details panel or a note sits between them
+        const ca = ctrlsIn(a.el).map(c => ({ c, r: c.getBoundingClientRect() })), cb = ctrlsIn(b.el).map(c => ({ c, r: c.getBoundingClientRect() }));
+        let worst = null;
+        for (const x of ca) for (const y of cb) {
+          if (Math.min(x.r.right, y.r.right) - Math.max(x.r.left, y.r.left) < 4) continue;
+          const gap = y.r.top - x.r.bottom;
+          if (gap < 6 && (!worst || gap < worst.gap)) worst = { gap, x, y };
+        }
+        if (worst) add('cramped', worst.y.c, `${rowName(a.el)} / ${rowName(b.el)}`, `only ${Math.round(worst.gap)}px between the ${KIND_WORD(kindOf(worst.x.c))} above and the ${KIND_WORD(kindOf(worst.y.c))} below (6px at least)`, { container: desc(set.holder) });
+      }
+    }
+  }
+
+  // ----- unlabeled -----
+  // A button with no words needs a name (aria-label) and a hover tip (title or data-tip), and its picture must be one
+  // everyone reads the same way; anything else says what it does in words (DESIGN.md rule 8).
+  if (opt.checks.includes('unlabeled')) {
+    const KNOWN = ['dots', 'x', 'left', 'right', 'down', 'search', 'gear', 'info', 'plus', 'minus', 'trash', 'undo', 'redo', 'check'];
+    for (const b of document.querySelectorAll('button, a.btn, [role=button]')) {
+      if (!vis(b) || b.closest('.pop') && !vis(b.closest('.pop'))) continue;
+      if (b.innerText.replace(/[\s›‹·]+/g, '')) continue; // it has visible words
+      const name = (b.getAttribute('aria-label') || (b.getAttribute('aria-labelledby') && document.getElementById(b.getAttribute('aria-labelledby'))?.textContent) || '').trim();
+      const tip = (b.getAttribute('title') || b.dataset.tip || '').trim();
+      const glyph = b.querySelector('svg[data-icon]')?.getAttribute('data-icon') || (b.querySelector('svg, img') ? 'picture' : '');
+      if (!glyph && !name) { add('unlabeled', b, '', 'an empty button: no words, no picture, no name'); continue; }
+      if (!name || !tip) { add('unlabeled', b, name || tip || glyph, `a ${glyph || 'bare'} button with no ${!name ? 'name (aria-label)' : 'hover tip (title)'}`); continue; }
+      if (!KNOWN.includes(glyph)) add('unlabeled', b, name, `a ${glyph} picture alone ("${name.slice(0, 40)}"): say what it does in words`, { sub: glyph });
+    }
+  }
+
+  // ----- sticky -----
+  // A sticky header or footer that has left its place in the page (it is stuck) sits over nothing a row holds: a stuck
+  // footer never, a stuck header only where it floats below the bars above it (DESIGN.md rule 4).
+  if (opt.checks.includes('sticky')) {
+    const SKIP = '.topbar, .subtabs, .tabs, .toast, .pop, .report-this, .tracker, .parking-dock, .bulk-host, .ft-overlay, .find-overlay, [aria-modal="true"]';
+    const bars = [...document.querySelectorAll('.topbar, .subtabs')].filter(vis).map(b => b.getBoundingClientRect()).filter(r => r.top < innerHeight / 3); // the bars stuck at the top
+    const barsBottom = Math.max(0, ...bars.map(r => r.bottom));
+    const stickies = [...document.querySelectorAll('body *')].filter(el => getComputedStyle(el).position === 'sticky' && vis(el) && !el.closest(SKIP) && !el.parentElement.closest('[style*="sticky"]'));
+    const rowCtrls = rowSets().flatMap(s => s.rows.flatMap(row => ctrlsIn(row.el).map(c => ({ c, row }))));
+    const done = new Set();
+    for (const st of stickies) {
+      // Stuck: where it is now differs from where it would sit in the page. A table cell's row keeps the in-page place.
+      const now = st.getBoundingClientRect();
+      let home;
+      if (st.matches('td, th')) home = st.parentElement.getBoundingClientRect();
+      else { const old = st.style.position; st.style.position = 'static'; home = st.getBoundingClientRect(); st.style.position = old; }
+      if (Math.abs(now.top - home.top) <= 1) continue;
+      const footer = now.top > home.top ? false : true; // pushed up from below its place: a footer
+      const unit = st.matches('td, th') ? st.parentElement : st;
+      if (done.has(unit)) continue;
+      const u = st.matches('td, th') ? [...st.parentElement.children].reduce((r, c) => { const q = c.getBoundingClientRect(); return { top: Math.min(r.top, q.top), bottom: Math.max(r.bottom, q.bottom), left: Math.min(r.left, q.left), right: Math.max(r.right, q.right) }; }, { top: 1e9, bottom: -1e9, left: 1e9, right: -1e9 }) : now;
+      if (!footer && u.top <= barsBottom + 2) continue; // a header riding flush under the bars: rows pass under it, as under the bars
+      done.add(unit);
+      for (const { c, row } of rowCtrls) {
+        if (unit.contains(c)) continue;
+        const r = c.getBoundingClientRect();
+        const y1 = Math.max(r.top, u.top), y2 = Math.min(r.bottom, u.bottom), x1 = Math.max(r.left, u.left), x2 = Math.min(r.right, u.right);
+        if (x2 - x1 < 4 || y2 - y1 < 4 || r.bottom <= barsBottom) continue;
+        const pt = document.elementFromPoint((x1 + x2) / 2, (y1 + y2) / 2);
+        if (!pt || !unit.contains(pt)) continue;
+        add('sticky', c, `${rowName(row.el)} · ${KIND_WORD(kindOf(c))}`, `the sticky ${footer ? 'footer' : 'header'} ("${unit.textContent.replace(/\s+/g, ' ').trim().slice(0, 30)}") sits over this row's ${KIND_WORD(kindOf(c))} ${opt.where || ''}`.trim(), { overlay: desc(unit) });
+      }
+    }
+  }
   return { list: out, ignoredWithTitle: out.ignoredWithTitle || 0, coveredByPopover: out.coveredByPopover || 0, clippedBtn: 0, srOnly: out.srOnly || 0 };
 }
 
@@ -315,12 +483,22 @@ async function go(page, route) { await page.evaluate(h => { document.querySelect
 async function scanHere(page, meta, checks) {
   const res = await page.evaluate(scan, { checks: checks.filter(c => c !== 'covered') });
   await record(page, meta, res);
-  if (checks.includes('covered')) {
+  if (checks.includes('covered') || checks.includes('sticky')) {
     // Bars and buttons that stay put: what is under them once the page is scrolled all the way down cannot be reached.
     await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight)); await settle(page, 120);
-    const cov = await page.evaluate(scan, { checks: ['covered'], where: 'with the page scrolled to the bottom' });
+    const cov = await page.evaluate(scan, { checks: checks.filter(c => c === 'covered' || c === 'sticky'), where: 'with the page scrolled to the bottom' });
     await record(page, meta, cov);
     await page.evaluate(() => scrollTo(0, 0));
+  }
+  if (checks.includes('sticky')) {
+    // Batch 19: each long list part way up the screen, where a sticky header or footer is stuck over its rows.
+    const spots = await page.evaluate(() => [...document.querySelectorAll('main table.rows')].filter(t => t.checkVisibility() && t.getBoundingClientRect().height > 160).slice(0, 3)
+      .flatMap(t => { const r = t.getBoundingClientRect(); const top = r.top + scrollY; return [Math.max(0, top - innerHeight * 0.35), Math.max(0, top + r.height - innerHeight * 0.5)]; }));
+    for (const y of spots) {
+      await page.evaluate(v => scrollTo(0, v), y); await settle(page, 100);
+      await record(page, meta, await page.evaluate(scan, { checks: ['sticky'], where: 'with a list part way up the screen' }));
+    }
+    if (spots.length) await page.evaluate(() => scrollTo(0, 0));
   }
 }
 // Open up to two Details panels on a list screen (and the first one inside an opened category), scanning each.
@@ -333,14 +511,14 @@ async function details(page, meta) {
     const label = (await c.evaluate(b => b.closest('tr').innerText.replace(/\s+/g, ' ').trim().slice(0, 30)).catch(() => '')) || `row ${i + 1}`;
     await c.scrollIntoViewIfNeeded().catch(() => {});
     await c.click({ timeout: 2000 }).catch(() => {}); await settle(page, 300);
-    await scanHere(page, { ...meta, state: `Details open: ${label}` }, ['level', 'clipped', 'overflow']);
+    await scanHere(page, { ...meta, state: `Details open: ${label}` }, STILL);
     // A category opens its lines: open the first line's Details too (where the spending-line boxes are).
     const innerC = page.locator('.cat-lines tr.row td.col-actions button.caret[aria-expanded="false"]').first();
     if (await innerC.count()) {
       const l2 = await innerC.evaluate(b => b.closest('tr').innerText.replace(/\s+/g, ' ').trim().slice(0, 30)).catch(() => 'line');
       await innerC.scrollIntoViewIfNeeded().catch(() => {});
       await innerC.click({ timeout: 2000 }).catch(() => {}); await settle(page, 300);
-      await scanHere(page, { ...meta, state: `Details open: ${label} > ${l2}` }, ['level', 'clipped', 'overflow']);
+      await scanHere(page, { ...meta, state: `Details open: ${label} > ${l2}` }, STILL);
     }
   }
 }
@@ -369,7 +547,7 @@ async function fastTrack(page, meta, { finish }) {
   for (let s = 0; s < 12; s++) {
     if (!(await page.locator('.ft-box').count())) break;
     const title = await page.locator('.ft-box h2').first().innerText().catch(() => `step ${s + 1}`);
-    if (/done|Every lens|Almost/.test(title)) { await scanHere(page, { ...meta, route: 'Fast Track: done', state: '' }, ['level', 'clipped', 'overflow']); break; }
+    if (/done|Every lens|Almost/.test(title)) { await scanHere(page, { ...meta, route: 'Fast Track: done', state: '' }, STILL); break; }
     // Simple answers: the first choice of every toggle with none picked, the first option of every select, round numbers.
     await page.evaluate(() => {
       for (const seg of document.querySelectorAll('.ft-box .seg, .ft-box .tap-pick')) if (!seg.querySelector('[aria-pressed="true"], .on, [aria-checked="true"]')) seg.querySelector('button')?.click(); // a row of tap chips (batch 13) answers like a toggle
@@ -386,7 +564,7 @@ async function fastTrack(page, meta, { finish }) {
     const sels = page.locator('.ft-box select');
     for (let i = 0; i < await sels.count(); i++) { const sl = sels.nth(i); if (!(await sl.inputValue().catch(() => 'x'))) await sl.selectOption({ index: 1 }).catch(() => {}); }
     await settle(page, 150);
-    await scanHere(page, { ...meta, route: `Fast Track: ${title}`, state: '' }, ['level', 'clipped', 'overflow']);
+    await scanHere(page, { ...meta, route: `Fast Track: ${title}`, state: '' }, STILL);
     const last = await page.locator('.ft-box .ft-foot button', { hasText: /^Finish/ }).count();
     if (last && !finish) { await page.locator('.ft-box button[aria-label="Close without saving"]').click().catch(() => {}); break; }
     await page.locator('.ft-box .ft-foot button.primary').click({ timeout: 2000 }).catch(() => {}); await settle(page, 250);
@@ -484,10 +662,11 @@ async function runClient(page, client) {
       await page.goto(`${BASE}/#/home/session`, { waitUntil: 'load' }); await settle(page, 500);
       await setTheme(page, theme);
       for (const route of ROUTES) {
+        if (ONLY && !ONLY.some(o => route.includes(o))) continue;
         const meta = { route, width, theme, client };
         try {
           await go(page, route);
-          await scanHere(page, meta, ['level', 'clipped', 'overflow', 'covered']);
+          await scanHere(page, meta, [...STILL, 'covered', 'sticky']);
           await details(page, meta);
           if (width === 1440 && theme === 'light') { await go(page, route); await askable(page, meta); }
         } catch (e) { errors.push(`${client} ${route} ${width} ${theme}: ${e.message.split('\n')[0]}`); }
@@ -497,15 +676,15 @@ async function runClient(page, client) {
 }
 
 // Required from another script (tools/e2e/personas.cjs), it only hands over its checks; run directly, it runs.
-module.exports = { scan, landing, ROUTES, CHECKS };
+module.exports = { scan, landing, ROUTES, CHECKS, STILL, fastTrack };
 if (require.main === module) (async () => {
   const t0 = Date.now();
   fs.mkdirSync(OUT, { recursive: true });
-  for (const f of fs.readdirSync(OUT)) if (/^(level|clipped|overflow|covered|askable)-\d+\.png$/.test(f)) fs.unlinkSync(path.join(OUT, f));
+  for (const f of fs.readdirSync(OUT)) if (/^(level|clipped|overflow|covered|askable|column|sticky|unlabeled|cramped)-\d+\.png$/.test(f)) fs.unlinkSync(path.join(OUT, f));
   console.log(`Layout check: ${ROUTES.length} screens x ${WIDTHS.join('/')} x ${THEMES.join('/')} x 2 clients${OFFLINE ? ' (CDN and fonts stood in)' : ''}`);
   const browser = await chromium.launch();
   // The Demo client.
-  {
+  if (CLIENTS.includes('Demo')) {
     const { ctx, page } = await newContext(browser);
     const demo = page.locator('button', { hasText: /example numbers|Demo/i }).first();
     await demo.click({ timeout: 4000 }); await settle(page, 400);
@@ -517,13 +696,13 @@ if (require.main === module) (async () => {
     await ctx.close();
   }
   // A brand-new client: Home > New client > name > Create, then Fast Track with simple numbers.
-  {
+  if (CLIENTS.includes('New')) {
     const { ctx, page } = await newContext(browser);
     try {
       await page.locator('button', { hasText: /^New client$/ }).first().click({ timeout: 4000 }); await settle(page, 250);
       await page.locator('.new-client-pop input').fill('Layout Test');
-      await scanHere(page, { route: 'New client box', width: 1440, theme: 'light', client: 'New' }, ['level', 'clipped', 'covered']);
-      await page.locator('.new-client-pop button', { hasText: 'Create' }).click(); await settle(page, 600);
+      await scanHere(page, { route: 'New client box', width: 1440, theme: 'light', client: 'New' }, ['level', 'clipped', 'covered', 'unlabeled']);
+      await page.locator('.new-client-pop button', { hasText: /^Create$/ }).click(); await settle(page, 600);
       for (const width of WIDTHS) { // each step of Fast Track at every width; the real answers go in at the last one
         await page.setViewportSize({ width, height: width < 600 ? 844 : 1000 });
         await fastTrack(page, { width, theme: 'light', client: 'New' }, { finish: width === WIDTHS[WIDTHS.length - 1] });

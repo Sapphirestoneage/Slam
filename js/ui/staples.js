@@ -596,7 +596,13 @@ export function payoffCell(ctx, d, longest) {
     const width = longest ? Math.max(4, (d.planMonths / longest) * 100) : 0;
     const alone = d.minimumMonths != null && d.minimumMonths !== d.planMonths ? monthName(addMonths(ymOf(ctx.now()), d.minimumMonths), 'short') : d.minimumMonths == null && d.payoff?.never ? 'never' : null;
     return h('div.payoff', {},
-      h('span.computed', {}, mathButton({ id: 'M34', value: d.planMonths, needs: [], unit: 'months', text: plan?.text ?? '' }, `${ym} · ${d.planMonths} ${d.planMonths === 1 ? 'month' : 'months'}`)),
+      h('span.computed', {}, (() => { // batch 19: the months are their own span, so a list squeezed at 1280 can show the date alone
+        const words = `${d.planMonths} ${d.planMonths === 1 ? 'month' : 'months'}`;
+        const b = mathButton({ id: 'M34', value: d.planMonths, needs: [], unit: 'months', text: plan?.text ?? '' }, `${ym} · ${words}`);
+        clear(b, ym, h('span.payoff-months', {}, ` · ${words}`));
+        b.title = `${ym}, ${words} from now`;
+        return b;
+      })()),
       h('div.bar', { role: 'img', 'aria-label': `${d.planMonths} months` }, h('span', { style: { width: `${width}%` } })),
       alone ? h('span.muted.small.payoff-alone', {}, `If only the ${money(d.payment)} ${d.paymentIsMinimum ? 'minimum' : 'payment'} is paid: ${alone}`) : null);
   }
@@ -714,7 +720,7 @@ export function recordList(ctx, cfg) {
   const state = { selected: new Set(), open: null, last: null }; // last: the row last clicked, for shift-click ranges (batch 8, B8)
   const isFolded = g => folds[g] ?? (cfg.startFolded === true || (cfg.foldedGroups || []).includes(g));
   // Looks-only changes (select, More, fold) update in place; anything else redraws inside keepPlace (R165).
-  const draw = () => keepPlace(() => clear(root, render()));
+  const draw = () => { keepPlace(() => clear(root, render())); requestAnimationFrame(() => fitTable(root.querySelector('table.rows'))); };
   let view = null; // the parts of the last render that in-place updates touch
   const update = (rec, patch) => {
     ctx.store.transaction('Edit', () => {
@@ -853,9 +859,9 @@ export function recordList(ctx, cfg) {
     const m = ctx.metrics();
     const recs = cfg.order ? [...ctx.visible(cfg.filter)].sort(cfg.order) : ctx.visible(cfg.filter);
     const head = h('div.section-title', {}, h('h2', {}, cfg.title), h('span.spacer'), cfg.headerExtra?.(ctx) ?? null,
-      recs.length && !cfg.fixed ? iconButton('eraser', `Clear all ${cfg.thing.plural}`, e => confirmBox(e.currentTarget, {
+      recs.length && !cfg.fixed ? h('button.btn.small.clear-all', { type: 'button', 'data-focus': `icon:Clear all ${cfg.thing.plural}`, title: `Clear all ${cfg.thing.plural} (asks first; you can undo it)`, onclick: e => confirmBox(e.currentTarget, { // batch 19: in words, not an eraser alone
         text: `Clear all ${recs.length} ${recs.length === 1 ? cfg.thing.one : cfg.thing.plural}? You can undo this.`,
-        yes: `Clear ${cfg.thing.plural}`, no: 'Keep them', onYes: () => { ctx.store.resetSection(cfg.filter); toast('Cleared.', { undo: () => ctx.store.undo() }); } })) : null);
+        yes: `Clear ${cfg.thing.plural}`, no: 'Keep them', onYes: () => { ctx.store.resetSection(cfg.filter); toast('Cleared.', { undo: () => ctx.store.undo() }); } }) }, 'Clear all') : null);
     const picker = typeof cfg.picker === 'function' ? cfg.picker(ctx) : cfg.picker;
     const addBtn = cfg.noAdd ? null : addButton(cfg.thing.one, e => picker ? openAddPicker(e.currentTarget, { thing: cfg.thing.one, ...picker, onPick: (t, own) => addNew(t, own) }) : addNew(null));
     const autos = cfg.autoRows?.(ctx, m) ?? []; // entered elsewhere, shown here (From Debt): no input, no menu
@@ -871,7 +877,7 @@ export function recordList(ctx, cfg) {
     const cols = focus ? shown.filter(c => focus.includes(c.label)) : shown;
     const extraCols = focus ? shown.filter(c => !focus.includes(c.label)) : [];
     const span = cols.length + 3;
-    const thead = h('thead', {}, h('tr', {}, h('th.check-cell', {}, allBox), cols.map(c => h(`th${c.num ? '.num' : ''}`, {}, c.label)), h('th', {}, 'Status'), h('th', {}, h('span.sr', {}, 'Actions'))));
+    const thead = h('thead', {}, h('tr', {}, h('th.check-cell', {}, allBox), cols.map(c => h(`th${c.num ? '.num' : ''}`, {}, c.head ?? c.label)), h('th', {}, 'Status'), h('th', {}, h('span.sr', {}, 'Actions'))));
     const groups = new Map();
     for (const r of [...recs, ...autos]) { const g = cfg.groupBy?.(r) ?? ''; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(r); }
     for (const g of cfg.lastGroups || []) if (groups.has(g)) { const rows = groups.get(g); groups.delete(g); groups.set(g, rows); } // e.g. Not for me sits at the bottom
@@ -958,7 +964,7 @@ export function recordList(ctx, cfg) {
     const out = h(`div.section.area-${cfg.area}`, {}, head,
       cfg.strip ? (focus ? moreBlock(`focus:strip:${listKey}`, () => cfg.strip(ctx, ctx.metrics()), { label: 'Totals and chart' }) : cfg.strip(ctx, m)) : null, // item 19
       lead,
-      h('div.list', {}, h('div.list-scroll', { 'data-scroll-key': listKey }, h('table.rows', {}, thead, body, tfoot)), view.bulkHost,
+      h('div.list', {}, h('div.list-scroll', { 'data-scroll-key': listKey }, h(`table.rows${cfg.tableClass ? `.${cfg.tableClass}` : ''}`, {}, thead, body, tfoot)), view.bulkHost,
         sectionFooter(ctx, { add: addBtn, total: cfg.footerTotal?.(ctx, recs, m), count: counted.length, done, of: counted.length, left: leftItems, onlyLeft, bulk }),
         keyboardHint()));
     refreshSelection();
@@ -970,6 +976,19 @@ export function recordList(ctx, cfg) {
   draw();
   return root;
 }
+// Batch 19: a wide list that does not fit its card (Debt at 1280) first drops the hours chips from its rows, the payoff
+// months, Will get it's clock and some padding ("tight"); still too wide, the row's Will get it button steps back to the
+// status menu and the list's Will get all of these ("tighter"). Never the boxes, so it never scrolls sideways.
+export function fitTable(t) {
+  if (!t?.isConnected || getComputedStyle(t).display !== 'table') return;
+  const holder = t.closest('.list-scroll') || t.parentElement;
+  const over = () => t.offsetWidth > holder.clientWidth + 1;
+  t.classList.remove('tight', 'tighter');
+  if (over()) t.classList.add('tight');
+  if (over()) t.classList.add('tighter');
+  for (const ta of t.querySelectorAll('textarea.name-box')) { ta.style.height = 'auto'; ta.style.height = `${ta.scrollHeight}px`; } // a narrower name box grows taller
+}
+if (typeof window !== 'undefined') { let q = 0; window.addEventListener('resize', () => { cancelAnimationFrame(q); q = requestAnimationFrame(() => document.querySelectorAll('table.rows').forEach(fitTable)); }); }
 
 // Secondary then Tertiary behind the caret. Paid with sits at the top (Mockup).
 function moreLayers(ctx, r, cfg, update, extra = [], m = null) {

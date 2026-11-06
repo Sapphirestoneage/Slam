@@ -51,7 +51,7 @@ export function newHousehold({ name = null, now = new Date().toISOString(), id =
     client: { name, couple: false },
     profile: {},
     assumptions: {}, // blank: defaults come from Reference data (R025)
-    settings: { timeView: '$', phase4: true }, // R154, remembered per client; batch 21: Phase 4 previews (Life Transitions) on for a new household in this build
+    settings: { timeView: '$' }, // R154, remembered per client
     records: [], history: [], snapshots: [], parking: [],
     spending: {}, // budget passes by month, calendar marks, start balance (build phase 6)
     session: {},  // session count, agenda, notes, one-pager (build phases 8 to 10)

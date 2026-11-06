@@ -30,12 +30,22 @@ Checked by: by eye (a think-aloud run with both clients).
 
 1. Boxes in a row sit level. Helper text goes under a box and never pushes it out of line with its neighbors.
    Checked by: `level`
+   1b. Down a column, the same kind of control lines up: in a table or a list of repeated rows, every amount box,
+   dropdown, status pill and row button starts and ends at the same place on every row (within 2px). What a box reads
+   from ("$1,770 from the lines", "From Debt") sits beside it in its own column, or under it on a phone, never in the
+   box's cell where it shoves the box over. A one-tap Use button goes before the box, not after it. Each status pill and
+   each Details button is one width.
+   Checked by: `column`
+   1c. Rows breathe: at least 6px between the controls of two adjacent rows.
+   Checked by: `cramped`
 2. No clipped text: labels, placeholders, select values and buttons show in full.
    Checked by: `clipped`
 3. No sideways scroll or overflow at 1440, 1280 and 390, light and dark.
    Checked by: `overflow`
 4. Nothing covers anything: popups, toasts and bars never sit over headers, buttons or content they do not belong to.
-   Checked by: `covered`
+   A sticky header or footer never sits over a row's controls: a list's totals row ends the list where the list ends
+   (it is not sticky), and a sticky header rides flush under the top bars.
+   Checked by: `covered`, `sticky`
 5. Never ask for something with no box to fill: every What's missing item, checklist item, homework line and nudge
    lands on a fillable control.
    Checked by: `askable` (What's missing, the counters and the arrive toast; homework lines and nudges by eye)
@@ -43,8 +53,10 @@ Checked by: by eye (a think-aloud run with both clients).
    Checked by: by eye
 7. One question, one answer: no two numbers or two names for the same thing.
    Checked by: by eye
-8. Clickable things look clickable and nothing else does.
-   Checked by: by eye
+8. Clickable things look clickable and nothing else does. A button with no words has a name and a hover tip, and its
+   picture is one everyone reads the same way (..., the X, arrows, the gear, search, info, plus, minus, the bin, undo);
+   any other picture says what it does in words ("Client view", "Clear all", "Will get it").
+   Checked by: `unlabeled` (the rest by eye)
 9. Slim and collapsed by default; popups close on a click elsewhere; the page does not jump.
    Checked by: by eye
 10. Plain words; explanations in hover tips, not in plain view.

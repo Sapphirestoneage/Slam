@@ -456,4 +456,3 @@ F453,Built,,Income,Income,Have 10% federal tax withheld,Secondary,,,,,,,,,Now,Ad
 F454,Built,,Protection,Protection,Bills list: keep or try to cut,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Protection,choice,,,protection.decision
 F455,Built,,Needs,Spending lines,Starts in (a known cost ahead),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,date,,,spending.startsIn
 F456,Built,,Needs,Spending lines,Paid to my partner (moves money between you),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,choice,,,spending.toPartner
-F457,Built,,Profile,Profile,Phase 4 previews on (Life Transitions on Plan),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.settings.phase4

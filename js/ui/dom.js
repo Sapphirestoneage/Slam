@@ -65,6 +65,7 @@ export function icon(name, label = null) {
   const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   s.setAttribute('viewBox', '0 0 24 24');
   s.setAttribute('class', 'i');
+  s.setAttribute('data-icon', name); // batch 19: the layout checker's unlabeled check reads which glyph a bare icon button shows
   if (label) { s.setAttribute('role', 'img'); s.setAttribute('aria-label', label); } else s.setAttribute('aria-hidden', 'true');
   s.innerHTML = P[name] || P.info;
   return s;
