@@ -164,7 +164,10 @@ export const MATH = [
       f: '(IF({@stack}="","",{@ssPart}+{@medPart}+(MAX(0,SUMIFS(Income_ficaBase,Income_taxUnit,{@taxUnit},Income_stack,"<="&{@stack})-IF(Taxes_joint="Yes",Medicare_over_joint,Medicare_over_single))-MAX(0,SUMIFS(Income_ficaBase,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-IF(Taxes_joint="Yes",Medicare_over_joint,Medicare_over_single)))*Medicare_addl))' }],
     sheet: 'IF(COUNT(Income_M11)=0,"",SUM(Income_M11))', label: 'Social Security and Medicare a year (per person, to the wage base), all income',
     app: c => (Object.keys(c.x.householdTax?.rows || {}).length ? c.x.householdTax.total.fica : null) },
-  { id: 'M12', name: 'Take-home from gross', inputs: 'M10, M11, state and city tax', unit: 'money', fns: ['income.takeHomeFromGross', 'income.stateTax', 'income.incomeRow', 'income.taxTypeOf', 'income.isBenefitRow', 'income.benefitRow', 'income.benefitWeeksThisYear'],
+  { id: 'M12', name: 'Take-home from gross', inputs: 'M10, M11, state and city tax', unit: 'money', fns: ['income.takeHomeFromGross', 'income.stateTax', 'income.incomeRow', 'income.taxTypeOf', 'income.isBenefitRow', 'income.benefitRow', 'income.benefitWeeksThisYear',
+    // Batch 27: income by type (tips, shifts, platform payouts), folded into each row's take-home.
+    'earnings.SHIFTS_PER_MONTH', 'earnings.MONTHS3', 'earnings.TIP_OUT_BY', 'earnings.WORK_KEYS', 'earnings.hasWork', 'earnings.workOf', 'earnings.workCash', 'earnings.perShift', 'earnings.workText', 'earnings.tipsTaxNote',
+    'earnings.seasonShifts', 'earnings.hasSeasons', 'earnings.shiftMonthsOf', 'earnings.PLATFORMS', 'earnings.platformOf', 'earnings.heldDates'],
     cols: [
       { area: 'income', key: 'state', label: 'State and city tax a year', unit: 'money',
         f: () => {
@@ -347,7 +350,7 @@ export const MATH = [
   { id: 'M41', name: 'Liquid net worth', inputs: 'accounts, debts', unit: 'money', fns: ['assets.liquidNetWorth'],
     cols: [{ area: 'debt', key: 'consumer', label: 'Consumer debt', unit: 'number', f: 'IF(COUNTIF(Consumer_type,{Type})>0,1,0)' }],
     parts: [
-      { key: 'cash', name: 'Cash (checking, savings and other cash)', unit: 'money', sheet: 'IF(COUNTIFS(Assets_group,"cash",Assets_InMath,"<>No")=0,IF(Profile_noneOfThese="Yes",0,""),SUMIFS(Assets_val,Assets_group,"cash"))', app: c => c.x.cash },
+      { key: 'cash', name: 'Cash (checking, savings and other cash; money set aside for taxes left out, batch 27)', unit: 'money', sheet: 'IF(COUNTIFS(Assets_group,"cash",Assets_InMath,"<>No")=0,IF(Profile_noneOfThese="Yes",0,""),SUMIFS(Assets_val,Assets_group,"cash",Assets_purpose,"<>Taxes"))', app: c => c.x.cash },
       { key: 'invested', name: 'Invested toward FI (every investment account but a 529 or a Goal account; question 214)', unit: 'money', sheet: 'IF(COUNTIFS(Assets_group,"investment",Assets_InMath,"<>No")=0,IF(Profile_noneOfThese="Yes",0,""),SUMIFS(Assets_val,Assets_group,"investment")-SUMIFS(Assets_val,Assets_group,"investment",Assets_Type,"529")-SUMIFS(Assets_val,Assets_group,"investment",Assets_Type,"<>529",Assets_purpose,"Goal"))', app: c => c.x.invested },
     ],
     sheet: 'IF(Math_M41_cash="","",Math_M41_cash+SUMIFS(Assets_val,Assets_Type,"Brokerage")-SUMIFS(Debt_balUsed,Debt_consumer,1))', label: 'Cash plus brokerage minus consumer debt',

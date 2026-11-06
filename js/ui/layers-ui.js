@@ -11,7 +11,7 @@ export function layersCard(ctx) {
   const doc = ctx.store.doc;
   const L = layersOf(doc, ctx.ref, ctx.now());
   const mode = doc.settings.layerMode || 'virtual';
-  const cash = ctx.metrics().inputs.accounts.filter(a => a.group === 'cash');
+  const cash = ctx.metrics().inputs.accounts.filter(a => a.group === 'cash' && !a.forTaxes); // batch 27: tax money is not a layer's account
   const setSetting = patch => ctx.store.setDoc('settings', patch);
   const bar = l => h('div.layer-bar', { role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuenow': l.target ? Math.round(l.filled / l.target * 100) : 0, 'aria-label': l.name },
     h('span', { style: { width: `${l.target ? Math.min(100, l.filled / l.target * 100) : 0}%` } }));
@@ -42,6 +42,7 @@ export function layersCard(ctx) {
       S.toggle([['virtual', 'One account, layers inside'], ['accounts', 'One account per layer']], mode, v => setSetting({ layerMode: v }), { label: 'How the layers are held' })),
     h('div.layer-list', {}, rows),
     L.extra > 0.5 ? h('p.muted', { style: { margin: '8px 0 0' } }, `${money(L.extra)} of cash sits above every layer.`) : null,
+    ctx.metrics().inputs.taxSetAside > 0.5 ? h('p.muted.small.tax-apart', { style: { margin: '8px 0 0' } }, `${money(ctx.metrics().inputs.taxSetAside)} set aside for taxes stays out of these layers: it is already owed.`) : null, // batch 27
     S.moreBlock('layers:history', () => historyBlock(ctx), { label: 'History' }),
     (doc.spending?.dips || []).length ? S.moreBlock('layers:dips', () => h('ul.op-list', {}, [...doc.spending.dips].reverse().map(d => h('li', {}, `${new Date(d.at).toLocaleDateString()}: ${money(d.amount)}${d.note ? ` (${d.note})` : ''} from ${d.from.map(f => `${f.name} ${money(f.amount)}`).join(', ')}${d.uncovered ? `; ${money(d.uncovered)} not covered` : ''}`))), { label: `Dips (${doc.spending.dips.length})` }) : null,
     S.moreBlock('layers:gaps', () => h('div.stack', { style: { gap: '8px' } }, h('span.muted.small', {}, 'A known stretch with less or no pay (a summer off, leave, a contract ending). Spending times months; within 12 months it moves to FOO step 1.'),

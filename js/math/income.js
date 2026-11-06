@@ -2,6 +2,7 @@
 // M01, M10 to M17: periods, taxes, take-home, match, variable income, real hourly wage.
 import { ok, needs, missing, fmt } from './result.js';
 import { RULES, LISTS } from '../registry/assumptions.js';
+import { workOf, workCash, workText, platformOf } from './earnings.js';
 
 // M01: any period to monthly.
 const PER_MONTH = LISTS.perMonth; // the Per table in the assumptions registry
@@ -264,7 +265,7 @@ export function realHourlyWage({ takeHome, workCosts = 0, paidHours, commuteHour
 // R046: a paycheck row typed as take-home or as gross. The other is solved and marked Computed.
 // Jobs pay tax; benefits and money from family are counted as they land. Each row is worked out on its own here
 // (what its paychecks hold back); the household's return (householdTax, batch 15) then sets each row's share.
-const TAXED = { Job: 'W-2', 'Partner job': 'W-2', 'Side hustle': '1099', 'Self-employed': '1099' };
+const TAXED = { Job: 'W-2', 'Partner job': 'W-2', 'Side hustle': '1099', 'Self-employed': '1099', Platform: '1099' }; // batch 27: platform payouts are self-employment income
 export const taxTypeOf = r => r.values?.incomeType ?? TAXED[r.type] ?? null;
 const PAYCHECKS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
 // An Unemployment row with no tax type picked is a benefit: counted weekly as it lands, less the 10% federal
@@ -283,8 +284,33 @@ export function benefitRow(r, { ref, now = new Date() } = {}) {
     gross: null, pretax: 0, roth: 0, afterTax: 0, parts: null, taxType: null, computed: null,
     benefit: { weekly, monthly, withholdRate: w, weeks, thisYear: weekly * weeks, withheld: weekly * weeks * w, end: v.benefitEnd ?? null, start: v.benefitStart ?? null } };
 }
-export function incomeRow(r, { filingStatus = 'Single', ref, place = null, now = new Date() }) {
-  if (isBenefitRow(r)) return benefitRow(r, { ref, now });
+// Batch 27 (income by type): a Platform row is taxed on its payouts net of the platform's fee and chargebacks (the fee
+// is a business cost); a shift job with no paycheck typed is taxed on the gross its shifts add up to; tips and fees
+// paid in cash land on top of the paycheck (js/math/earnings.js). takeHome is the whole row; paycheck is the part
+// that is the paycheck (what the withholding is worked out on), extra the cash on top.
+export function incomeRow(r, opts) {
+  if (isBenefitRow(r)) return benefitRow(r, { ref: opts.ref, now: opts.now ?? new Date() });
+  if (r.type === 'Platform') {
+    const p = platformOf(r, opts.ref);
+    const taxed = taxTypeOf(r);
+    const row = { ...r, amount: null, per: 'month', values: { ...r.values, basis: 'Take-home', gross: p.net === null ? null : p.net * 12 } };
+    const out = taxed ? rowCore(row, opts) : { takeHome: p.net === null ? needs('M01', ['the gross a month']) : ok('M12', p.net, p.text), gross: null, pretax: 0, roth: 0, afterTax: 0, parts: null, taxType: null, computed: null };
+    if (out.takeHome?.value != null && taxed) out.takeHome = { ...out.takeHome, text: `${p.text} ${out.takeHome.text}` };
+    return { ...out, platform: p, extra: 0, grossExtra: 0 };
+  }
+  const w = workOf(r);
+  if (!w.any) return rowCore(r, opts);
+  const taxType = taxTypeOf(r) === '1099' ? '1099' : 'W-2';
+  const c = workCash(w, { paycheckTyped: r.amount != null, taxType });
+  const row = c.mode === 'shifts' ? { ...r, amount: null, values: { ...r.values, basis: 'Take-home', gross: c.grossYear } } : r;
+  const out = rowCore(row, opts);
+  const paid = out.takeHome?.value ?? null;
+  if (paid === null) return { ...out, work: w, cash: c, extra: c.extra, grossExtra: c.grossExtra };
+  const total = paid + c.extra;
+  return { ...out, work: w, cash: c, paycheck: paid, extra: c.extra, grossExtra: c.grossExtra,
+    takeHome: { ...out.takeHome, value: total, text: `${out.takeHome.text} ${workText(w, c, total)}`.trim() } };
+}
+function rowCore(r, { filingStatus = 'Single', ref, place = null, now = new Date() }) {
   const v = r.values || {};
   const taxType = taxTypeOf(r);
   const perYear = PAYCHECKS[v.payFrequency] ?? 26;

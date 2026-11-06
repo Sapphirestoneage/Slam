@@ -152,7 +152,7 @@ export const AREAS = [
   {
     id: 'income', prefix: 'Income', tab: 'Income', source: 'records', kinds: { income: 'Income', benefit: 'Other benefit' },
     about: 'Paychecks and other money in, and benefits from work.',
-    types: { income: ['Job', 'Partner job', 'Side hustle', 'Self-employed', 'Unemployment', 'Benefits', 'Rental', 'Money from family', 'From partner'] },
+    types: { income: ['Job', 'Partner job', 'Side hustle', 'Self-employed', 'Platform', 'Unemployment', 'Benefits', 'Rental', 'Money from family', 'From partner'] }, // batch 27: Platform
     fields: [
       NAME, AMOUNT('Amount'), PER(),
       pick('basis', 'Given as', ['Take-home', 'Gross', 'Both'], { kinds: ['income'] }),
@@ -181,6 +181,23 @@ export const AREAS = [
       f('equity', 'ESPP and RSUs', 'text', { kinds: ['income'] }),
       f('raisePct', 'Raise % a year', 'pct', { kinds: ['income'] }),
       f('otherPretax', 'Other before-tax a paycheck', 'money', { kinds: ['income'] }),
+      // Batch 27 (income by type): a shift job, its tips and tip-out, its seasons (js/math/earnings.js).
+      f('shiftsWeek', 'Shifts a week', 'number', { kinds: ['income'] }),
+      f('payShift', 'Pay a shift (before tax)', 'money', { kinds: ['income'] }),
+      f('hourly', 'Hourly pay', 'money', { kinds: ['income'] }), f('hoursShift', 'Hours a shift', 'number', { kinds: ['income'] }),
+      f('houseFee', 'House or stage fee a shift', 'money', { kinds: ['income'] }),
+      f('cardTips', 'Card tips (on the paycheck)', 'money', { kinds: ['income'] }), pick('cardTipsPer', 'Card tips per', ['shift', 'month'], { kinds: ['income'] }),
+      f('cashTips', 'Cash tips', 'money', { kinds: ['income'] }), pick('cashTipsPer', 'Cash tips per', ['shift', 'month'], { kinds: ['income'] }),
+      pick('cashReported', 'Cash tips reported', YES_NO_WORDS, { kinds: ['income'] }),
+      pick('tipOutBy', 'Tip-out as', ['% of sales', '% of tips', '$ a shift'], { kinds: ['income'] }),
+      f('tipOutPct', 'Tip-out %', 'pct', { kinds: ['income'] }), f('tipOutAmount', 'Tip-out a shift', 'money', { kinds: ['income'] }),
+      f('salesShift', 'Sales a shift', 'money', { kinds: ['income'] }),
+      f('slowMonths', 'Slow season months', 'list', { kinds: ['income'] }), f('slowShifts', 'Shifts a week in the slow season', 'number', { kinds: ['income'] }),
+      f('busyMonths', 'Busy season months', 'list', { kinds: ['income'] }), f('busyShifts', 'Shifts a week in the busy season', 'number', { kinds: ['income'] }),
+      // A Platform row: amount is the gross a month; the fee and hold are prefilled from the Platforms table.
+      pick('platform', 'Platform', ['OnlyFans', 'Fansly', 'Patreon', 'Etsy', 'Uber', 'DoorDash', 'Upwork', 'Other'], { kinds: ['income'] }),
+      f('feePct', 'Platform fee %', 'pct', { kinds: ['income'] }), f('holdDays', 'Payout hold (days)', 'number', { kinds: ['income'] }),
+      f('chargebacks', 'Chargebacks and refunds a month', 'money', { kinds: ['income'] }),
       f('what', 'What it is', 'text', { kinds: ['benefit'] }),
       pick('how', 'How it works', ['Reimbursed', 'Stipend', 'Pretax', 'Match', 'Discount'], { kinds: ['benefit'] }),
       pick('using', 'Using it?', ['Yes', 'No', 'Partly'], { kinds: ['benefit'] }),
@@ -237,7 +254,7 @@ export const AREAS = [
       f('institution', 'Institution', 'text', { kinds: ['account'] }), // the older typed name; the Institutions list is the home now
       f('institutionId', 'Institution (from the list)', 'text', { kinds: ['account'], sheet: { skip: 'points at an Institutions row by id; the Institution column shows its name' } }),
       f('apy', 'APY', 'pct', { kinds: ['account'] }), pick('yieldKind', 'APY or 7-day yield', ['APY', '7-day yield'], { kinds: ['account'] }),
-      pick('purpose', 'Purpose', ['Emergency', 'Sinking fund', 'Goal', 'General'], { kinds: ['account'] }),
+      pick('purpose', 'Purpose', ['Emergency', 'Sinking fund', 'Goal', 'Taxes', 'General'], { kinds: ['account'] }), // batch 27: Taxes is owed money, kept out of emergency cash
       f('contribution', 'Putting in', 'money', { kinds: ['account'] }),
       pick('contributionPer', 'Putting in per', ['Paycheck', 'Year', 'Month'], { kinds: ['account'] }),
       f('salaryPct', '% of salary', 'pct', { kinds: ['account'] }),

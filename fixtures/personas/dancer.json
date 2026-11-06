@@ -25,10 +25,9 @@
    "incomeStability": "Unpredictable",
    "healthCoverage": "ACA",
    "variable": {
-    "typical": 4600,
-    "lowest": 2800,
-    "setAside": 0.28,
-    "business": 1120
+    "typical": 6175,
+    "lowest": 4116.67,
+    "setAside": 0.28
    },
    "areas": {
     "cash": true,
@@ -54,8 +53,8 @@
     "id": "dancer-001",
     "kind": "income",
     "type": "Self-employed",
-    "name": "Dancing, after house fees and the tax set-aside",
-    "amount": 4600,
+    "name": "Dancing",
+    "amount": null,
     "per": "month",
     "owner": null,
     "status": "Roughly",
@@ -65,8 +64,18 @@
     "source": "manual",
     "covers": null,
     "values": {
-     "basis": "Take-home",
-     "incomeType": "1099"
+     "incomeType": "1099",
+     "payFrequency": "week",
+     "shiftsWeek": 3,
+     "payShift": 575,
+     "houseFee": 80,
+     "tipOutBy": "$ a shift",
+     "tipOutAmount": 20,
+     "slowMonths": [
+      "Jan",
+      "Feb"
+     ],
+     "slowShifts": 2
     },
     "notes": null,
     "privateNote": null,
@@ -188,7 +197,7 @@
     "values": {
      "group": "cash",
      "balance": 3500,
-     "purpose": "Sinking fund"
+     "purpose": "Taxes"
     },
     "notes": null,
     "privateNote": null,

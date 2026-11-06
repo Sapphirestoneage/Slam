@@ -26,8 +26,8 @@
    "incomeStability": "Varies",
    "healthCoverage": "ACA",
    "variable": {
-    "typical": 3350,
-    "lowest": 2100,
+    "typical": 3380,
+    "lowest": 2253.33,
     "setAside": 0.1
    },
    "incomeGaps": [
@@ -62,7 +62,7 @@
     "id": "bartender-001",
     "kind": "income",
     "type": "Job",
-    "name": "Paycheck (wage and card tips)",
+    "name": "Bar job",
     "amount": 900,
     "per": "2 weeks",
     "owner": null,
@@ -75,7 +75,21 @@
     "values": {
      "basis": "Take-home",
      "payFrequency": "2 weeks",
-     "incomeType": "W-2"
+     "incomeType": "W-2",
+     "shiftsWeek": 3,
+     "cardTips": 60,
+     "cardTipsPer": "shift",
+     "cashTips": 140,
+     "cashTipsPer": "shift",
+     "tipOutBy": "% of sales",
+     "tipOutPct": 0.03,
+     "salesShift": 1000,
+     "cashReported": "No",
+     "slowMonths": [
+      "Jan",
+      "Feb"
+     ],
+     "slowShifts": 2
     },
     "notes": null,
     "privateNote": null,
@@ -85,30 +99,6 @@
    },
    {
     "id": "bartender-002",
-    "kind": "income",
-    "type": "Job",
-    "name": "Cash tips, after tip-out",
-    "amount": 1400,
-    "per": "month",
-    "owner": null,
-    "status": "Roughly",
-    "fieldStatus": {},
-    "paidWith": null,
-    "linkedTo": null,
-    "source": "manual",
-    "covers": null,
-    "values": {
-     "basis": "Take-home",
-     "incomeType": "W-2"
-    },
-    "notes": null,
-    "privateNote": null,
-    "stress": null,
-    "createdAt": "2026-11-05T12:00:00.000Z",
-    "updatedAt": "2026-11-05T12:00:00.000Z"
-   },
-   {
-    "id": "bartender-003",
     "kind": "spending",
     "type": "All in",
     "name": "Monthly spending, all in",
@@ -132,7 +122,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-004",
+    "id": "bartender-003",
     "kind": "account",
     "type": "Checking",
     "name": "Checking",
@@ -156,7 +146,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-005",
+    "id": "bartender-004",
     "kind": "account",
     "type": "Savings or HYSA",
     "name": "Savings",
@@ -180,7 +170,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-006",
+    "id": "bartender-005",
     "kind": "account",
     "type": "Roth IRA",
     "name": "Roth IRA",
@@ -204,7 +194,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-007",
+    "id": "bartender-006",
     "kind": "asset",
     "type": "Car",
     "name": "Car (paid off)",
@@ -228,7 +218,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-008",
+    "id": "bartender-007",
     "kind": "debt",
     "type": "Credit card",
     "name": "Card",
@@ -254,7 +244,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-009",
+    "id": "bartender-008",
     "kind": "bill",
     "type": null,
     "name": "Rent",
@@ -283,7 +273,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-010",
+    "id": "bartender-009",
     "kind": "bill",
     "type": null,
     "name": "Electric, gas, water",
@@ -312,7 +302,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-011",
+    "id": "bartender-010",
     "kind": "bill",
     "type": null,
     "name": "Internet",
@@ -341,7 +331,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-012",
+    "id": "bartender-011",
     "kind": "bill",
     "type": null,
     "name": "Phone",
@@ -370,7 +360,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-013",
+    "id": "bartender-012",
     "kind": "bill",
     "type": null,
     "name": "Renters insurance",
@@ -399,7 +389,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-014",
+    "id": "bartender-013",
     "kind": "bill",
     "type": null,
     "name": "Household supplies",
@@ -428,7 +418,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-015",
+    "id": "bartender-014",
     "kind": "bill",
     "type": null,
     "name": "Furniture and home",
@@ -457,7 +447,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-016",
+    "id": "bartender-015",
     "kind": "bill",
     "type": null,
     "name": "Laundry and dry cleaning",
@@ -486,7 +476,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-017",
+    "id": "bartender-016",
     "kind": "bill",
     "type": null,
     "name": "Groceries",
@@ -515,7 +505,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-018",
+    "id": "bartender-017",
     "kind": "bill",
     "type": null,
     "name": "Dining out and takeout",
@@ -544,7 +534,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-019",
+    "id": "bartender-018",
     "kind": "bill",
     "type": null,
     "name": "Coffee and snacks",
@@ -573,7 +563,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-020",
+    "id": "bartender-019",
     "kind": "bill",
     "type": null,
     "name": "Work lunches",
@@ -602,7 +592,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-021",
+    "id": "bartender-020",
     "kind": "bill",
     "type": null,
     "name": "Car insurance",
@@ -631,7 +621,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-022",
+    "id": "bartender-021",
     "kind": "bill",
     "type": null,
     "name": "Gas or charging",
@@ -660,7 +650,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-023",
+    "id": "bartender-022",
     "kind": "bill",
     "type": null,
     "name": "Tolls and parking",
@@ -689,7 +679,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-024",
+    "id": "bartender-023",
     "kind": "bill",
     "type": null,
     "name": "Car maintenance and registration",
@@ -718,7 +708,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-025",
+    "id": "bartender-024",
     "kind": "bill",
     "type": null,
     "name": "Car wash and supplies",
@@ -747,7 +737,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-026",
+    "id": "bartender-025",
     "kind": "bill",
     "type": null,
     "name": "Transit",
@@ -776,7 +766,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-027",
+    "id": "bartender-026",
     "kind": "bill",
     "type": null,
     "name": "Uber and Lyft",
@@ -805,7 +795,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-028",
+    "id": "bartender-027",
     "kind": "bill",
     "type": null,
     "name": "Therapy",
@@ -834,7 +824,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-029",
+    "id": "bartender-028",
     "kind": "bill",
     "type": null,
     "name": "Health insurance (not through work)",
@@ -863,7 +853,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-030",
+    "id": "bartender-029",
     "kind": "bill",
     "type": null,
     "name": "Doctor and dental copays",
@@ -892,7 +882,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-031",
+    "id": "bartender-030",
     "kind": "bill",
     "type": null,
     "name": "Prescriptions",
@@ -921,7 +911,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-032",
+    "id": "bartender-031",
     "kind": "bill",
     "type": null,
     "name": "Gym or fitness",
@@ -950,7 +940,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-033",
+    "id": "bartender-032",
     "kind": "bill",
     "type": null,
     "name": "Haircuts and personal care",
@@ -979,7 +969,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-034",
+    "id": "bartender-033",
     "kind": "bill",
     "type": null,
     "name": "Streaming",
@@ -1008,7 +998,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-035",
+    "id": "bartender-034",
     "kind": "bill",
     "type": null,
     "name": "Music",
@@ -1037,7 +1027,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-036",
+    "id": "bartender-035",
     "kind": "bill",
     "type": null,
     "name": "Apps and cloud storage",
@@ -1066,7 +1056,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-037",
+    "id": "bartender-036",
     "kind": "bill",
     "type": null,
     "name": "Amazon Prime and memberships",
@@ -1095,7 +1085,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-038",
+    "id": "bartender-037",
     "kind": "bill",
     "type": null,
     "name": "News and magazines",
@@ -1124,7 +1114,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-039",
+    "id": "bartender-038",
     "kind": "bill",
     "type": null,
     "name": "Bank and card fees",
@@ -1153,7 +1143,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-040",
+    "id": "bartender-039",
     "kind": "bill",
     "type": null,
     "name": "Yearly fees, spread monthly",
@@ -1182,7 +1172,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-041",
+    "id": "bartender-040",
     "kind": "bill",
     "type": null,
     "name": "Courses and books",
@@ -1211,7 +1201,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-042",
+    "id": "bartender-041",
     "kind": "bill",
     "type": null,
     "name": "Tech and gadgets",
@@ -1240,7 +1230,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-043",
+    "id": "bartender-042",
     "kind": "bill",
     "type": null,
     "name": "Pet food",
@@ -1269,7 +1259,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-044",
+    "id": "bartender-043",
     "kind": "bill",
     "type": null,
     "name": "Vet visits and vaccines",
@@ -1298,7 +1288,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-045",
+    "id": "bartender-044",
     "kind": "bill",
     "type": null,
     "name": "Pet insurance",
@@ -1327,7 +1317,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-046",
+    "id": "bartender-045",
     "kind": "bill",
     "type": null,
     "name": "Pet medications and flea and tick",
@@ -1356,7 +1346,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-047",
+    "id": "bartender-046",
     "kind": "bill",
     "type": null,
     "name": "Pet grooming",
@@ -1385,7 +1375,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-048",
+    "id": "bartender-047",
     "kind": "bill",
     "type": null,
     "name": "Boarding, walker, daycare",
@@ -1414,7 +1404,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-049",
+    "id": "bartender-048",
     "kind": "bill",
     "type": null,
     "name": "Pet supplies, toys, litter",
@@ -1443,7 +1433,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-050",
+    "id": "bartender-049",
     "kind": "bill",
     "type": null,
     "name": "Childcare and babysitting",
@@ -1472,7 +1462,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-051",
+    "id": "bartender-050",
     "kind": "bill",
     "type": null,
     "name": "Diapers, formula, baby supplies",
@@ -1501,7 +1491,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-052",
+    "id": "bartender-051",
     "kind": "bill",
     "type": null,
     "name": "Kids' clothes and shoes",
@@ -1530,7 +1520,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-053",
+    "id": "bartender-052",
     "kind": "bill",
     "type": null,
     "name": "School tuition and fees",
@@ -1559,7 +1549,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-054",
+    "id": "bartender-053",
     "kind": "bill",
     "type": null,
     "name": "Activities, camps, lessons",
@@ -1588,7 +1578,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-055",
+    "id": "bartender-054",
     "kind": "bill",
     "type": null,
     "name": "Kids' medical and dental",
@@ -1617,7 +1607,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-056",
+    "id": "bartender-055",
     "kind": "bill",
     "type": null,
     "name": "Toys, birthdays, school supplies",
@@ -1646,7 +1636,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-057",
+    "id": "bartender-056",
     "kind": "bill",
     "type": null,
     "name": "Kids' allowance and phone",
@@ -1675,7 +1665,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-058",
+    "id": "bartender-057",
     "kind": "bill",
     "type": null,
     "name": "Charity and giving",
@@ -1704,7 +1694,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-059",
+    "id": "bartender-058",
     "kind": "bill",
     "type": null,
     "name": "Money sent to family",
@@ -1733,7 +1723,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-060",
+    "id": "bartender-059",
     "kind": "bill",
     "type": null,
     "name": "Buffer for surprises",
@@ -1762,7 +1752,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-061",
+    "id": "bartender-060",
     "kind": "bill",
     "type": null,
     "name": "Clothes and shoes",
@@ -1791,7 +1781,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-062",
+    "id": "bartender-061",
     "kind": "bill",
     "type": null,
     "name": "Shows, events, entertainment",
@@ -1820,7 +1810,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-063",
+    "id": "bartender-062",
     "kind": "bill",
     "type": null,
     "name": "Drinks and nights out",
@@ -1849,7 +1839,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-064",
+    "id": "bartender-063",
     "kind": "bill",
     "type": null,
     "name": "Dates",
@@ -1878,7 +1868,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-065",
+    "id": "bartender-064",
     "kind": "bill",
     "type": null,
     "name": "Other wants",
@@ -1907,7 +1897,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-066",
+    "id": "bartender-065",
     "kind": "bill",
     "type": null,
     "name": "Hobbies",
@@ -1936,7 +1926,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-067",
+    "id": "bartender-066",
     "kind": "bill",
     "type": null,
     "name": "Travel",
@@ -1965,7 +1955,7 @@
     "updatedAt": "2026-11-05T12:00:00.000Z"
    },
    {
-    "id": "bartender-068",
+    "id": "bartender-067",
     "kind": "bill",
     "type": null,
     "name": "Gifts and holidays",
@@ -2006,14 +1996,14 @@
     "at": "2026-11-05T12:00:00.000Z",
     "op": "add",
     "id": "bartender-002",
-    "kind": "income",
+    "kind": "spending",
     "who": "Coach"
    },
    {
     "at": "2026-11-05T12:00:00.000Z",
     "op": "add",
     "id": "bartender-003",
-    "kind": "spending",
+    "kind": "account",
     "who": "Coach"
    },
    {
@@ -2034,21 +2024,21 @@
     "at": "2026-11-05T12:00:00.000Z",
     "op": "add",
     "id": "bartender-006",
-    "kind": "account",
-    "who": "Coach"
-   },
-   {
-    "at": "2026-11-05T12:00:00.000Z",
-    "op": "add",
-    "id": "bartender-007",
     "kind": "asset",
     "who": "Coach"
    },
    {
     "at": "2026-11-05T12:00:00.000Z",
     "op": "add",
-    "id": "bartender-008",
+    "id": "bartender-007",
     "kind": "debt",
+    "who": "Coach"
+   },
+   {
+    "at": "2026-11-05T12:00:00.000Z",
+    "op": "add",
+    "id": "bartender-008",
+    "kind": "bill",
     "who": "Coach"
    },
    {
@@ -2461,13 +2451,6 @@
     "at": "2026-11-05T12:00:00.000Z",
     "op": "add",
     "id": "bartender-067",
-    "kind": "bill",
-    "who": "Coach"
-   },
-   {
-    "at": "2026-11-05T12:00:00.000Z",
-    "op": "add",
-    "id": "bartender-068",
     "kind": "bill",
     "who": "Coach"
    }

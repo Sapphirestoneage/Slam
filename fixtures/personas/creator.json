@@ -27,8 +27,8 @@
    "healthCoverage": "Employer",
    "hsaEligible": true,
    "variable": {
-    "typical": 2000,
-    "lowest": 900,
+    "typical": 2350,
+    "lowest": 1200,
     "setAside": 0.25
    },
    "areas": {
@@ -80,9 +80,9 @@
    {
     "id": "creator-002",
     "kind": "income",
-    "type": "Self-employed",
-    "name": "Platform payouts, after fees, chargebacks and the tax set-aside",
-    "amount": 2000,
+    "type": "Platform",
+    "name": "OnlyFans",
+    "amount": 3125,
     "per": "month",
     "owner": null,
     "status": "Roughly",
@@ -92,8 +92,10 @@
     "source": "manual",
     "covers": null,
     "values": {
-     "basis": "Take-home",
-     "incomeType": "1099"
+     "platform": "OnlyFans",
+     "chargebacks": 150,
+     "payFrequency": "week",
+     "nextPayday": "2026-11-09"
     },
     "notes": null,
     "privateNote": null,

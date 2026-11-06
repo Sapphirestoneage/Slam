@@ -121,11 +121,16 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
     const tax = Object.fromEntries(['federal', 'state', 'local', 'fica', 'socialSecurity', 'medicare', 'total'].map(f => [f, sh[f] * k]));
     i.tax = tax;
     if (i.benefit) { i.withheld = i.benefit.withheld; i.due = Math.max(0, tax.total - i.withheld); continue; }
+    // Batch 27: the paycheck part is what the tax is worked out on; tips and fees paid in cash ride on top (i.extra).
+    const extra = i.extra ?? 0, paid = i.takeHome.value == null ? null : i.takeHome.value - extra;
     if (i.computed === 'takeHome') {
       const v = (i.gross - tax.total - i.pretax - (i.roth ?? 0) - (i.afterTax ?? 0)) / 12;
-      if (Math.abs(v * 12 - i.takeHome.value * 12) > 0.5) i.takeHome = { ...i.takeHome, value: v, text: `${fmt.money(i.gross)} gross minus its share of the household's tax (${fmt.money(tax.total)}: federal ${fmt.money(tax.federal)}, FICA ${fmt.money(tax.fica)}${tax.state + tax.local ? `, state and city ${fmt.money(tax.state + tax.local)}` : ''}) minus ${fmt.money(i.pretax + (i.roth ?? 0) + (i.afterTax ?? 0))} taken from the paycheck = ${fmt.money(v * 12)} a year (${fmt.money(v)} a month).` };
+      if (Math.abs(v * 12 - paid * 12) > 0.5) {
+        i.paycheck = v;
+        i.takeHome = { ...i.takeHome, value: v + extra, text: `${i.platform ? `${i.platform.text} ` : ''}${fmt.money(i.gross)} ${i.platform ? 'paid out a year' : 'gross'} minus its share of the household's tax (${fmt.money(tax.total)}: federal ${fmt.money(tax.federal)}, FICA ${fmt.money(tax.fica)}${tax.state + tax.local ? `, state and city ${fmt.money(tax.state + tax.local)}` : ''})${i.pretax + (i.roth ?? 0) + (i.afterTax ?? 0) ? ` minus ${fmt.money(i.pretax + (i.roth ?? 0) + (i.afterTax ?? 0))} taken from the paycheck` : ''} = ${fmt.money(v * 12)} a year (${fmt.money(v)} a month)${extra ? `, plus ${fmt.money(extra)} a month in cash tips after the tip-out and fees = ${fmt.money(v + extra)}` : ''}.` };
+      }
       i.withheld = i.taxType === '1099' ? 0 : tax.total; // nothing is held back from self-employment pay: it is set aside (quarterly)
-    } else i.withheld = i.taxType === '1099' ? 0 : Math.max(0, i.gross - i.takeHome.value * 12 - i.pretax - (i.roth ?? 0) - (i.afterTax ?? 0));
+    } else i.withheld = i.taxType === '1099' ? 0 : Math.max(0, i.gross - paid * 12 - i.pretax - (i.roth ?? 0) - (i.afterTax ?? 0));
     i.due = Math.max(0, tax.total - i.withheld);
   }
   // F2: shared bills split by income. This client's share of the two take-homes, used as the split when About you says By income and no share is typed.
@@ -143,7 +148,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   // QUESTIONS 228: the Cash flow strip's and the Statements' Gross is every income before tax: a paycheck's gross, a
   // benefit before its withholding, and money that is not taxed (family help, gifts) as it lands, so it never reads
   // below take-home. grossAnnual stays jobs only (the tax rates, the match, the Roth limit read it).
-  const grossOfRow = i => i.benefit ? i.benefit.monthly * 12 : i.gross ?? (!i.taxType && i.takeHome.value != null ? i.takeHome.value * 12 : null);
+  const grossOfRow = i => { const g = i.benefit ? i.benefit.monthly * 12 : i.gross ?? (!i.taxType && i.takeHome.value != null ? i.takeHome.value * 12 : null); return g === null ? null : g + (i.taxType ? i.grossExtra ?? 0 : 0); }; // batch 27: cash tips not in the paycheck's gross
   const grossAllAnnual = income.some(i => grossOfRow(i) !== null) ? income.reduce((s, i) => s + (grossOfRow(i) ?? 0), 0) : null;
   const debts = live.filter(r => r.kind === 'debt').map(r => {
     // A blank APR is a Guess until it is typed (answer to the APR question), not only when marked Not sure.
@@ -196,11 +201,14 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   const spending = useLines ? lineTotal : gutOf();
   const debtPayments = debts.reduce((s, d) => s + (d.inFull ? 0 : d.payment ?? 0), 0);
   const includesDebt = allIn ? allIn.values.includesDebtPayments !== false : false;
-  const accounts = live.filter(r => r.kind === 'account').map(r => ({ id: r.id, name: r.name ?? r.type, group: r.values.group, type: r.type, value: read(r, 'balance').v, rough: roughAt(r, 'balance'), unvested: r.values.unvested ?? null }));
+  const accounts = live.filter(r => r.kind === 'account').map(r => ({ id: r.id, name: r.name ?? r.type, group: r.values.group, type: r.type, value: read(r, 'balance').v, rough: roughAt(r, 'balance'), unvested: r.values.unvested ?? null, ...(r.values.group === 'cash' && r.values.purpose === 'Taxes' ? { forTaxes: true } : {}) }));
   const things = live.filter(r => r.kind === 'asset').map(r => ({ id: r.id, name: r.name ?? r.type, type: r.type, value: read(r, 'value').v }));
   const none = gates.none; // R002: 'None of these' counts as done, with zeros
   // Batch 11 (item 9): an area answered "none" (About you, or a 0 typed in Fast Track) is a real $0, not a missing number.
-  const cash = accounts.some(a => a.group === 'cash') ? accounts.filter(a => a.group === 'cash').reduce((s, a) => s + (a.value ?? 0), 0) : none || gates.areas.cash === false ? 0 : null;
+  // Batch 27: money set aside for quarterly taxes (Purpose: Taxes) is owed, not emergency cash. It stays in net worth and
+  // leaves the cash the layers, the runway, the Rule of 5 and the FOO read; taxSetAside shows it on its own.
+  const cash = accounts.some(a => a.group === 'cash') ? accounts.filter(a => a.group === 'cash' && !a.forTaxes).reduce((s, a) => s + (a.value ?? 0), 0) : none || gates.areas.cash === false ? 0 : null;
+  const taxSetAside = accounts.filter(a => a.forTaxes).reduce((s, a) => s + (a.value ?? 0), 0);
   // Question 214 (batch 15): a 529 or an account set to Purpose: Goal is earmarked money, not FI money. It stays in net
   // worth and leaves the invested balance the FI date grows from (and its contributions leave what goes in).
   const earmarked = a => a.type === '529' || live.find(r => r.id === a.id)?.values?.purpose === 'Goal';
@@ -233,7 +241,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   }, 0);
   const a = doc.assumptions;
   const out = {
-    place, link, sinkingMonthly, householdTax: hh, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, grossAllAnnual, gates, filingStatus, filingGuess, none, mode, person, splitShare,
+    place, link, sinkingMonthly, householdTax: hh, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, grossAllAnnual, taxSetAside, gates, filingStatus, filingGuess, none, mode, person, splitShare,
     debtOrder: doc.settings?.debtOrder ?? 'avalanche', debtCustomOrder: doc.settings?.debtCustomOrder ?? [], debtExtra: doc.settings?.debtExtra ?? 0,
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || useLines ? 0 : debtPayments), // the lines hold each payment, From Debt
     typicalScale: typicalScaleOf({ gut: gutOf(), includesDebt, debtPayments, categories, lines: typedLines }), // QUESTIONS 241

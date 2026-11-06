@@ -665,3 +665,38 @@ js/ui/truecost-ui.js, css/truecost.css).
 
 Tests: test/truecost.test.js (Maya, Tom, Dana, the rules) pass in UTC and America/New_York. Find: "true cost",
 "borrow", "refinance", "PSLF", "loan forgiveness", "earning power" land on the sections.
+
+## Batch 27 (Nov 6 2026): income by type (tips, shifts, platform payouts, cash kept)
+
+Phase 4 Track 2, wave 1. Math in js/math/earnings.js (folded into each row's take-home by incomeRow, M12); the screens
+in js/ui/earnings-ui.js. Taps first, slim and closed until asked.
+
+1. Tips on a Job row (Tips and shifts, a closed caret in the row's Details): card tips (on the paycheck, taxed there),
+   cash tips (a shift or a month), the tip-out (% of sales with sales a shift, % of tips, or dollars a shift, with
+   quick-pick chips), and Cash tips reported? (Yes / No). Cash tips kept count for the plan either way; one calm line
+   says roughly what the tax on them would be, and a hover tip what reporting changes (Social Security record, the
+   income a lender sees, the federal tips deduction). The tips rules are registered (tax.tips: the $25,000 deduction,
+   2025 to 2028, the $150,000 / $300,000 phase-out, $100 per $1,000; Pub 531's $20 a month and the 50% penalty),
+   sourced to IRS IR-2026-49 and T.D. 10044 (Federal Register Apr 13 2026). The deduction is shown, not yet taken off
+   the household's tax (Phase 5 tax depth). Riley the bartender: $900 every 2 weeks ($1,950) plus ($140 cash - $30
+   tip-out) x 13 shifts = $1,430: $3,380 a month, $260 a shift.
+2. Shifts: shifts a week (taps), pay a shift or hourly x hours, a house or stage fee a shift, the take-home a shift.
+   With no paycheck typed the row's gross comes from its shifts and is taxed on the household's return (a 1099 row
+   takes the fee and tip-out off as business costs). Slow and busy months (month taps, shifts a week then) scale the
+   calendar and fill batch 15's irregular income view in one tap (Use your shifts). Nova the dancer: ($575 - $80 -
+   $20) x 13 = $6,175 a month before tax, $4,775.81 after it, $367.37 a shift.
+3. Platform income rows (OnlyFans, Fansly, Patreon, Etsy, Uber, DoorDash, Upwork, Other as taps): gross a month, the fee
+   and hold prefilled from the registered Platforms table (each row with its source), chargebacks a month, the payout
+   schedule (Pay frequency). Taxed as self-employment on what is paid out; the calendar lands each payout its hold
+   days after the payout date. Kai the creator: $3,125 - 20% - $150 = $2,350 paid out, $1,755.88 after tax, weekly
+   payouts landing 7 days later.
+4. Cash kept: Cash on hand counts as cash with a one-line loss-risk note; Purpose: Taxes keeps quarterly tax money in
+   net worth but out of emergency cash, the layers (big e, little e), the runway and the Rule of 5, shown on its own on
+   Assets and under the layers. Nova: cash $8,300, set aside for taxes $3,500, runway 2.5 months.
+5. The bartender, dancer and creator defs use all of this, every note hand-worked again (the dancer's and creator's
+   FI notes were garbled by an earlier replace and are rewritten), the fixtures rebuilt, their cannot lists cleared.
+
+Tests: test/batch27.test.js (11) and the persona suite pass in UTC and America/New_York. Layout check on Income and
+Assets (Demo and a new client, all widths and themes): 0 findings before and after; the 3 covered are the Demo's load
+toast on Budget and Debt. The open Tips and shifts, Platform and Cash on hand details scanned on the three personas at
+1280 and 390: 0 findings.

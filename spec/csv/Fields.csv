@@ -464,3 +464,25 @@ F461,Built,,Profile,Profile,Personality letters answers,Secondary,,,,,,,,,Now,"A
 F462,Built,,Profile,Profile,Skill trees the letters lead with,Secondary,,,,,,,,,Now,"Added from the code (js/registry/fields.js); stays in the app: the 25 skill tree ids ranked by the letters (M95), kept for the library on Plan › FOO; set by the app",,Home › About you,text,,,profile.identity.tilt
 F463,Built,,Profile,Profile,Who they are with money: do this later,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js); stays in the app: Do this later on Fast Track; set in SLAM,,Home › About you,choice,,,profile.identity.later
 F464,Built,,Debt,Debt,First borrowed,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Debt,choice,,,debt.firstBorrowed
+F465,Built,,Income,Income,Shifts a week,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.shiftsWeek
+F466,Built,,Income,Income,Pay a shift (before tax),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.payShift
+F467,Built,,Income,Income,Hourly pay,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.hourly
+F468,Built,,Income,Income,Hours a shift,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.hoursShift
+F469,Built,,Income,Income,House or stage fee a shift,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.houseFee
+F470,Built,,Income,Income,Card tips (on the paycheck),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.cardTips
+F471,Built,,Income,Income,Card tips per,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,choice,,,income.cardTipsPer
+F472,Built,,Income,Income,Cash tips,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.cashTips
+F473,Built,,Income,Income,Cash tips per,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,choice,,,income.cashTipsPer
+F474,Built,,Income,Income,Cash tips reported,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,choice,,,income.cashReported
+F475,Built,,Income,Income,Tip-out as,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,choice,,,income.tipOutBy
+F476,Built,,Income,Income,Tip-out %,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,percent,,,income.tipOutPct
+F477,Built,,Income,Income,Tip-out a shift,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.tipOutAmount
+F478,Built,,Income,Income,Sales a shift,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.salesShift
+F479,Built,,Income,Income,Slow season months,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,text,,,income.slowMonths
+F480,Built,,Income,Income,Shifts a week in the slow season,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.slowShifts
+F481,Built,,Income,Income,Busy season months,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,text,,,income.busyMonths
+F482,Built,,Income,Income,Shifts a week in the busy season,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.busyShifts
+F483,Built,,Income,Income,Platform,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,choice,,,income.platform
+F484,Built,,Income,Income,Platform fee %,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,percent,,,income.feePct
+F485,Built,,Income,Income,Payout hold (days),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.holdDays
+F486,Built,,Income,Income,Chargebacks and refunds a month,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.chargebacks

@@ -20,6 +20,7 @@ import { drafttShares, DRAFTT, drafttName } from '../math/spending.js';
 import { needs } from '../math/result.js';
 import { statusOf, countsAsDone } from '../records.js';
 import { money, pct } from '../format.js';
+import { workBlock, platformBlock, seasonsFill } from './earnings-ui.js';
 
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const short = v => (Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
@@ -52,9 +53,10 @@ export function incomeList() {
   return {
     kind: 'income', area: 'income', title: 'Income', thing: { one: 'income', plural: 'income rows' }, defaultType: 'Job',
     filter: r => r.kind === 'income',
-    picker: ctx => ({ top: ctx.gates().betweenJobs ? ['Unemployment', 'Job', 'Side hustle', 'Benefits'] : ['Job', 'Unemployment', 'Side hustle', 'Benefits', 'Rental'],
-      other: ['Partner job', 'Money from family', 'Self-employed', 'Rental'] }),
-    newValues: type => (type === 'Unemployment' ? { name: 'Unemployment benefits', per: 'week', values: { payFrequency: 'week' } } : {}), // batch 15: weekly
+    picker: ctx => ({ top: ctx.gates().betweenJobs ? ['Unemployment', 'Job', 'Side hustle', 'Benefits'] : ctx.gates().variable ? ['Job', 'Self-employed', 'Platform', 'Side hustle', 'Unemployment'] : ['Job', 'Unemployment', 'Side hustle', 'Benefits', 'Rental'],
+      other: ['Partner job', 'Money from family', 'Self-employed', 'Platform', 'Rental'] }), // batch 27: Platform (OnlyFans, Etsy, Uber and the rest)
+    newValues: type => (type === 'Unemployment' ? { name: 'Unemployment benefits', per: 'week', values: { payFrequency: 'week' } } // batch 15: weekly
+      : type === 'Platform' ? { per: 'month', values: { payFrequency: 'week' } } : {}),
     coreFields: ['amount'],
     focus: ['Source', 'Amount', 'Given as', 'Per', 'Pay frequency'], // session 1: take-home or gross, and how often
     columns: [
@@ -62,8 +64,9 @@ export function incomeList() {
       { label: 'Amount', num: true, render: (ctx, r, m, up) => (r.values.basis === 'Both' && incomeRowOf(m, r)?.taxType
         ? h('span.row-line', { style: { gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' } }, // Brandon B1.6: both typed, both kept (batch 13: stacked when the row is tight)
           moneyInput(r.amount, v => up({ amount: v }), { hint: 'Take-home', key: `${r.id}:amount` }), moneyInput(r.values.gross, v => up({ gross: v }), { hint: 'Gross a year', key: `${r.id}:gross` }))
-        : moneyInput(r.amount, v => up({ amount: v }), { hint: isBenefitRow(r) ? 'Add a week' : r.values.basis === 'Gross' ? 'Add gross' : 'Add take-home', key: `${r.id}:amount` })) },
-      { label: 'Given as', render: (ctx, r, m, up) => (incomeRowOf(m, r)?.taxType
+        : moneyInput(r.amount, v => up({ amount: v }), { hint: isBenefitRow(r) ? 'Add a week' : r.type === 'Platform' ? 'Add gross' : r.values.basis === 'Gross' ? 'Add gross' : r.amount == null && r.values.payShift != null ? 'From shifts' : 'Add take-home', key: `${r.id}:amount` })) },
+      { label: 'Given as', render: (ctx, r, m, up) => (r.type === 'Platform' ? h('span.muted', { title: 'What fans, buyers or riders paid, before the platform takes its fee' }, 'Before fees') // batch 27
+        : incomeRowOf(m, r)?.taxType
         ? toggle(['Take-home', 'Gross', 'Both'], r.values.basis ?? 'Take-home', v => up({ basis: v }), { label: 'Given as' })
         : h('span.muted', { title: 'Counted as it lands; no tax worked out' }, 'As it lands')) },
       { label: 'Per', render: (ctx, r, m, up) => perPicker(r.per, v => up({ per: v }), { key: `${r.id}:per` }) },
@@ -99,6 +102,7 @@ function benefitSecondary(ctx, r, up) {
     x?.tax ? wide(labelled('Tax on it this year', h('span.computed', { title: 'Federal and state income tax; no Social Security or Medicare' }, `${money(x.tax.total)}${x.due > 0.5 ? (x.withheld ? `, ${money(x.due)} due when you file` : ', all due when you file') : ''}`))) : null,
     labelled('Coach notes', textInput(r.privateNote, y => up({ privateNote: y }), { hint: 'Add a private note', width: 320 }))];
 }
+const WORK_TYPES = new Set(['Job', 'Partner job', 'Side hustle', 'Self-employed']); // batch 27: rows that can have tips and shifts
 function incomeSecondary(ctx, r, up) {
   if (isBenefitRow(r)) return benefitSecondary(ctx, r, up);
   const g = ctx.gates();
@@ -106,11 +110,14 @@ function incomeSecondary(ctx, r, up) {
   const m = ctx.metrics();
   const x = incomeRowOf(m, r);
   const v = r.values;
+  if (r.type === 'Platform') return [...platformBlock(ctx, r, up, x), // batch 27: a platform's fee, hold and chargebacks; the payout schedule is Pay frequency
+    labelled(v.payFrequency === 'twice a month' ? 'Payout days' : v.payFrequency === 'month' ? 'Payout day' : 'Next payout', paydays(r, up), { note: 'Lands on the calendar after the hold' }),
+    labelled('Type', select(['1099', 'Business', 'Side hustle', 'Other'], v.incomeType ?? null, y => up({ incomeType: y }), { label: 'Income type', hint: x?.taxType ?? 'Pick one', width: 150 }))];
   const other = x?.computed === 'gross' ? labelled('Gross a year (worked out)', h('span.computed', {}, value(x.grossResult, ctx)))
     : x?.computed === 'takeHome' ? labelled('Take-home a month (worked out)', h('span.computed', {}, value(x.takeHome, ctx)))
       : x?.taxType && v.basis !== 'Both' ? labelled('Gross a year', moneyInput(v.gross, y => up({ gross: y }), { hint: 'Add gross' }), { note: 'Both given: kept as typed', later: L(ctx, r, 'gross') }) : null;
   const incomeKind = labelled('Income type', tapPick(INCOME_KINDS, v.incomeKind ?? null, x => up({ incomeKind: x }), { label: 'Income type', key: `${r.id}:incomeKind` }), { note: `Blank reads as ${incomeKindOf(r)} from the row's type` }); // F6
-  return [other, incomeKind,
+  return [WORK_TYPES.has(r.type) ? workBlock(ctx, r, up, x) : null, other, incomeKind,
     labelled(v.payFrequency === 'twice a month' ? 'Paydays' : v.payFrequency === 'month' ? 'Payday' : 'Next payday', paydays(r, up),
       { note: 'Puts each paycheck on its day in the calendar', later: L(ctx, r, v.payFrequency === 'week' || v.payFrequency === '2 weeks' ? 'nextPayday' : 'paydays') }),
     labelled('Type', select(['W-2', '1099', 'Business', 'Side hustle', 'Rental', 'Benefits', 'Other'], v.incomeType ?? null, y => up({ incomeType: y }), { label: 'Income type', hint: x?.taxType ?? 'Pick one', width: 150 }), { later: L(ctx, r, 'incomeType') }),
@@ -171,7 +178,7 @@ function incomeTertiary(ctx, r, up) {
   if (isBenefitRow(r)) return [];
   const g = ctx.gates();
   const v = r.values;
-  const taxed = !!incomeRowOf(ctx.metrics(), r)?.taxType;
+  const taxed = !!incomeRowOf(ctx.metrics(), r)?.taxType && r.type !== 'Platform'; // batch 27: a platform pays no paycheck, so nothing comes out of one
   return [
     applies('hsaFsa', { g }) && taxed ? labelled(`${g.hsa ? 'HSA' : 'FSA'} a paycheck`, moneyInput(v.hsaFsa, y => up({ hsaFsa: y }), { hint: 'Add amount' }), { later: L(ctx, r, 'hsaFsa') }) : null,
     applies('equity', { g }) && taxed ? labelled('ESPP % and discount; RSUs', textInput(v.equity, y => up({ equity: y }), { hint: 'e.g. 10%, 15% off; 200 RSUs vest Mar', width: 320 }), { later: L(ctx, r, 'equity') }) : null,
@@ -182,7 +189,7 @@ function incomeTertiary(ctx, r, up) {
 function incomeStrip(ctx, m) {
   const x = m.inputs;
   const taxed = x.income.filter(i => i.taxType && i.gross !== null);
-  const gross = taxed.length ? { id: 'M13', value: sum(taxed, i => i.gross), needs: [], unit: 'money', text: taxed.map(i => `${i.r.name || i.r.type} ${money(i.gross)} a year${i.computed === 'gross' ? ' (worked out from take-home)' : ''}`).join(' + ') + '.' }
+  const gross = taxed.length ? { id: 'M13', value: sum(taxed, i => i.gross + (i.grossExtra ?? 0)), needs: [], unit: 'money', text: taxed.map(i => `${i.r.name || i.r.type} ${money(i.gross)} a year${i.computed === 'gross' ? ' (worked out from take-home)' : ''}${i.grossExtra ? ` plus ${money(i.grossExtra)} in cash tips after the tip-out` : ''}`).join(' + ') + '.' } // batch 27: cash tips are income before tax too
     : needs('M13', ['take-home or gross']);
   const items = [
     { label: 'Take-home a month', result: x.takeHome === null ? needs('M12', ['take-home']) : { id: 'M12', value: x.takeHome, needs: [], unit: 'money', text: x.income.map(i => i.takeHome.text).filter(Boolean).join(' ') } },
@@ -236,6 +243,7 @@ export function variableBlock(ctx) {
       labelled('Lowest month', moneyInput(v.lowest, x => set({ lowest: x }), { hint: 'Add amount', key: 'var:lowest' }), { note: 'Drives the safe budget' }),
       labelled('Set aside for taxes', pctInput(v.setAside, x => set({ setAside: x }), { hint: String(Math.round((own ?? ctx.ref.defaults.taxSetAside) * 100)), key: 'var:setAside' }), { note: own != null ? `Blank uses your rate, ${Math.round(own * 100)}%` : 'Blank uses 25%' }),
       metricCard(ctx, 'Safe to count on a month', safe)),
+    seasonsFill(ctx, set), // batch 27: the shifts' slow and busy months fill the months below in one tap
     // Batch 15, item 11: base month and good month (YNAB: live on what you can count on).
     plan.value != null ? h('div.irregular-plan', { style: { marginTop: '12px' } },
       h('div.row-line', { style: { gap: '24px', flexWrap: 'wrap' } },
@@ -331,8 +339,9 @@ export function assetList(ref) {
     totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Account' ? h('td', {}, `${recs.length} ${recs.length === 1 ? 'item' : 'items'}`) : c.label === 'Balance' ? h('td.num', {}, amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null)) : h('td')), h('td'), h('td')],
     strip: (ctx, m) => h('div', {}, summaryStrip(ctx, [
       // Total and liquid net worth sit in the Net worth headline above.
-      { label: 'Cash', result: m.inputs.cash === null ? needs('M41', ['cash']) : { id: 'M41', value: m.inputs.cash, needs: [], unit: 'money', text: `Checking, savings and other cash: ${money(m.inputs.cash)}.` } },
-      { label: 'Job-loss fund target (big e)', tip: 'The Rule of 5: about one month of spending for every 5 years of age, kept in cash for a job loss', result: m.ruleOf5 }]), assetChecks(ctx, m)),
+      { label: 'Cash', result: m.inputs.cash === null ? needs('M41', ['cash']) : { id: 'M41', value: m.inputs.cash, needs: [], unit: 'money', text: `Checking, savings and other cash: ${money(m.inputs.cash)}.${m.inputs.taxSetAside ? ` The ${money(m.inputs.taxSetAside)} set aside for taxes is not in it: it is owed.` : ''}` } },
+      m.inputs.taxSetAside ? { label: 'Set aside for taxes', tip: 'Quarterly tax money (Purpose: Taxes). In net worth, not in emergency cash or big e', result: { id: 'M41', value: m.inputs.taxSetAside, needs: [], unit: 'money', text: `Accounts with Purpose: Taxes hold ${money(m.inputs.taxSetAside)}. It counts in net worth and stays out of the cash layers (big e, little e) and the runway, because it is already owed.` } } : null,
+      { label: 'Job-loss fund target (big e)', tip: 'The Rule of 5: about one month of spending for every 5 years of age, kept in cash for a job loss', result: m.ruleOf5 }].filter(Boolean)), assetChecks(ctx, m)),
     stripWhenEmpty: true,
   };
 }
@@ -350,7 +359,10 @@ function assetSecondary(ctx, r, up) {
     labelled(v.yieldKind === '7-day yield' ? '7-day yield' : 'Interest (APY)', h('span.row-line', { style: { gap: '6px', flexWrap: 'wrap' } },
       pctInput(v.apy, x => up({ apy: x }), { hint: 'e.g. 4.2' }), toggle(['APY', '7-day yield'], v.yieldKind ?? 'APY', x => up({ yieldKind: x }), { label: 'APY or 7-day yield' })),
     { note: v.apy != null && v.apy < 0.01 && (v.balance ?? 0) > 1000 ? 'Idle cash: a small win to move it' : r.type === 'Money market' ? 'Money market funds show a 7-day yield' : null, later: later('apy') }),
-    labelled('Purpose', tapPick(['Emergency', 'Sinking fund', 'Goal', 'General'], v.purpose ?? null, x => up({ purpose: x }), { label: 'Purpose' }))];
+    labelled('Purpose', tapPick(['Emergency', 'Sinking fund', 'Goal', 'Taxes', 'General'], v.purpose ?? null, x => up({ purpose: x }), { label: 'Purpose' }),
+      { note: v.purpose === 'Taxes' ? 'Owed money: kept out of your emergency cash' : null, tip: 'Taxes: quarterly tax money set aside. It stays in net worth but never counts as emergency cash' }),
+    // Batch 27: cash at home or in a safe counts as cash, with one calm line on the risk.
+    r.type === 'Cash on hand' ? (el => { el.classList.add('wide'); return el; })(h('div.stack', {}, h('span.label', {}, 'Cash at home'), h('span.muted.small', {}, 'Counts as cash you can reach. Nothing insures it, so a fire, a loss or a theft is the risk; a safe or a second spot lowers it.'))) : null];
   const age = ctx.metrics().inputs.age;
   const freq = ctx.metrics().inputs.income.find(x => x.r.values.payFrequency)?.r.values.payFrequency ?? null;
   const perYear = is401k(r) ? yearly401k(ctx, r) : yearlyContribution(v, freq); // B2.14: real paychecks a year, not 26

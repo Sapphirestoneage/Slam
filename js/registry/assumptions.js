@@ -126,6 +126,16 @@ export const ASSUMPTIONS = [
   { id: 'limits.unemployment.NY.maxWeekly', name: 'UI_NY_maxWeekly', label: 'NY unemployment: most a week', unit: 'money', get: r => r.limits.unemployment.NY.maxWeekly, source: 'NY DOL, claims filed on or after Oct 6 2025 (via Littler, Oct 2025); QUESTIONS: check the Oct 2026 indexing', date: '2026-11-05' },
   { id: 'limits.unemployment.NY.weeks', name: 'UI_NY_weeks', label: 'NY unemployment: weeks it lasts', unit: 'number', get: r => r.limits.unemployment.NY.weeks, source: 'NY DOL (26 weeks of benefits)', date: '2026-11-05' },
   { id: 'tax.unemployment.withholdRate', name: 'UI_withhold', label: 'Unemployment: federal withholding when chosen', unit: 'pct', get: r => r.tax.unemployment.withholdRate, source: 'IRS Form W-4V (10%)', date: '2026-11-05' },
+  // Batch 27 (income by type): the federal tips deduction (One Big Beautiful Bill Act, IRC section 224; final rules
+  // T.D. 10044, Federal Register Apr 13 2026) and tip reporting (IRS Publication 531, Dec 2024 revision).
+  { id: 'tax.tips.deductionCap', name: 'Tips_cap', label: 'Tips deduction: most a year, any filing status (federal income tax only; Social Security and Medicare still apply)', unit: 'money', get: r => r.tax.tips.deductionCap, source: 'IRS IR-2026-49 (Apr 10 2026); T.D. 10044, Federal Register Apr 13 2026, via RSM (Apr 2026)', date: '2026-11-06' },
+  { id: 'tax.tips.phaseOutSingle', name: 'Tips_phaseSingle', label: 'Tips deduction: shrinks above this income (MAGI), single', unit: 'money', get: r => r.tax.tips.phaseOutSingle, source: 'T.D. 10044 (Apr 13 2026), via RSM', date: '2026-11-06' },
+  { id: 'tax.tips.phaseOutJoint', name: 'Tips_phaseJoint', label: 'Tips deduction: shrinks above this income (MAGI), married jointly', unit: 'money', get: r => r.tax.tips.phaseOutJoint, source: 'T.D. 10044 (Apr 13 2026), via RSM', date: '2026-11-06' },
+  { id: 'tax.tips.phaseOutPer1000', name: 'Tips_phaseStep', label: 'Tips deduction: dollars it shrinks by for each $1,000 over the line', unit: 'money', get: r => r.tax.tips.phaseOutPer1000, source: 'T.D. 10044 (Apr 13 2026), via RSM', date: '2026-11-06' },
+  { id: 'tax.tips.firstYear', name: 'Tips_firstYear', label: 'Tips deduction: first tax year', unit: 'number', get: r => r.tax.tips.firstYear, source: 'T.D. 10044: applies to tax years beginning after Dec 31 2024', date: '2026-11-06' },
+  { id: 'tax.tips.lastYear', name: 'Tips_lastYear', label: 'Tips deduction: last tax year (it ends unless Congress extends it)', unit: 'number', get: r => r.tax.tips.lastYear, source: 'T.D. 10044 (through 2028), via Thomson Reuters (Apr 13 2026)', date: '2026-11-06' },
+  { id: 'tax.tips.reportOver', name: 'Tips_reportOver', label: 'Tips: a month of tips from one job at or over this is reported to the employer, by the 10th of the next month', unit: 'money', get: r => r.tax.tips.reportOver, source: 'IRS Publication 531 (Dec 2024 revision, page reviewed Apr 30 2026)', date: '2026-11-06' },
+  { id: 'tax.tips.unreportedPenalty', name: 'Tips_penalty', label: 'Tips not reported to the employer: penalty, as a share of the Social Security and Medicare tax on them', unit: 'pct', get: r => r.tax.tips.unreportedPenalty, source: 'IRS Publication 531 (Dec 2024 revision): 50%, unless there is reasonable cause', date: '2026-11-06' },
   // Typical rates, used when a client says Not sure (always a Guess).
   { id: 'typicalRates.Credit card', name: 'Typical_card', label: 'Typical credit card APR', unit: 'pct', get: r => r.typicalRates['Credit card'], source: FED, date: '2026-08-07' },
   { id: 'typicalRates.Personal loan', name: 'Typical_personal', label: 'Typical personal loan APR', unit: 'pct', get: r => r.typicalRates['Personal loan'], source: FED, date: '2026-08-07' },
@@ -202,6 +212,9 @@ export const TABLES = [
   { id: 'NY_head', label: 'NY brackets, head of household', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.state.NY.brackets.head), source: r => r.tax.state.NY.source, date: '2026-11-03' },
   { id: 'QuarterlyDue', label: 'Quarterly estimated tax due dates (month-day; the fourth is in January of the next year)', columns: [['quarter', 'Quarter', 'number'], ['due', 'Due', 'text']],
     rows: r => r.tax.quarterlyDue.map((d, i) => [i + 1, d]), source: 'IRS Form 1040-ES (2026)', date: '2026-11-05' },
+  // Batch 27: platform income (each row: the fee, the days a payout is held, the usual payout schedule, and where it came from).
+  { id: 'Platforms', label: 'Platforms: fee, hold and payout schedule (prefilled on a Platform income row)', columns: [['platform', 'Platform', 'text'], ['fee', 'Fee', 'pct'], ['hold', 'Hold, days', 'number'], ['payout', 'Payout', 'text'], ['source', 'Source', 'text']],
+    rows: r => Object.entries(r.platforms).map(([k, p]) => [k, p.fee, p.holdDays, p.payout, p.source]), source: 'Each row names its source (checked Nov 6 2026; the unverified ones are on QUESTIONS)', date: '2026-11-06' },
   { id: 'NYC_single', label: 'NYC brackets, single', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.local.NYC.brackets.single), source: r => r.tax.local.NYC.source, date: '2026-11-03' },
   { id: 'NYC_joint', label: 'NYC brackets, joint', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.local.NYC.brackets.joint), source: r => r.tax.local.NYC.source, date: '2026-11-03' },
   { id: 'NYC_head', label: 'NYC brackets, head of household', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.local.NYC.brackets.head), source: r => r.tax.local.NYC.source, date: '2026-11-03' },
@@ -248,6 +261,7 @@ export const REFERENCE_LISTS = {
   'studentLoans.legacyCloses': 'the day PAYE and ICR close to new enrollment, June 30 2028 (Tate Law, Oct 4 2026); words on the student loan drill-down, no math reads it',
   'studentLoans.saveEnded': 'the day a court order ended SAVE, March 10 2026 (Tate Law, Oct 4 2026); words only',
   lists: 'picker lists (debt types, account types, statuses) and, since batch 20, the usual 401(k) match formulas as taps (matchPicks: the job row\'s first tier)',
+  platforms: 'the Platforms table (batch 27)',
   categoryDefaults: 'the starting DRAFTT letter, amount and date for each Budget category',
   spendingPresets: 'starter Budget lines, each a Guess',
   year: 'the tax year this file is for', source: 'where this file came from',

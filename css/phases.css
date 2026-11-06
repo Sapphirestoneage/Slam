@@ -629,3 +629,8 @@ td.col-first > .inst-cell:has(> .inst-link)::before { content: ''; display: bloc
 .op-moves h3 { margin: 0 0 6px; }
 .op-moves-list { margin: 0; padding-left: 22px; display: grid; gap: 4px; font-size: 1.0625rem; }
 .op-moves-list a { color: var(--text); text-decoration-color: var(--primary); text-underline-offset: 3px; }
+/* Batch 27: income by type (Tips and shifts on a Job row) */
+.work-block .work-title { font-weight: 650; color: var(--text); display: block; margin-bottom: 4px; }
+.work-block .work-group + .work-group { padding-top: 10px; border-top: 1px dashed var(--border-row); }
+.work-block .month-taps { flex-wrap: wrap; }
+.work-result .stack { gap: 2px; }

@@ -102,7 +102,7 @@ export function recordDip(store, { amount, note = null, now = store.now(), layer
 
 // What a snapshot keeps of the layers: each layer's fill and target, and the cash, so the history can be drawn.
 export function layerSnapshot(doc, ref, now = new Date()) {
-  try { const L = layersOf(doc, ref, now); return { cash: doc.records.filter(r => r.kind === 'account' && r.values?.group === 'cash').reduce((s, r) => s + (r.values.balance ?? 0), 0), layers: L.layers.filter(l => !l.id.startsWith('sink:')).map(l => ({ id: l.id, name: l.name, filled: l.filled, target: l.target })) }; }
+  try { const L = layersOf(doc, ref, now); return { cash: doc.records.filter(r => r.kind === 'account' && r.values?.group === 'cash' && r.values?.purpose !== 'Taxes').reduce((s, r) => s + (r.values.balance ?? 0), 0), layers: L.layers.filter(l => !l.id.startsWith('sink:')).map(l => ({ id: l.id, name: l.name, filled: l.filled, target: l.target })) }; }
   catch { return null; }
 }
 // The history (A9): the layers at every snapshot that kept them (plus today), the dips marked, and the stats: how
@@ -137,7 +137,7 @@ export function layerOptions(doc, ref, x, now = new Date()) {
   const deductibles = live.filter(r => r.kind === 'coverage' && r.values?.have !== "Don't").flatMap(r => [r.values.deductible, r.values.deductibleOut]);
   const sinking = yearItems(live, now).all.filter(i => i.rec.values.sinking).map(i => { const f = sinkingOf(i, { records: live, now }); return { id: i.id, name: i.name, target: f.target, due: i.ym }; });
   return { deductibles, gaps: doc.profile.incomeGaps || [], stability: doc.profile.incomeStability ?? null, mode: doc.settings?.layerMode || 'virtual',
-    accounts: x.accounts.filter(a => a.group === 'cash'), layerAccounts: doc.settings?.layerAccounts || {}, sinking, now };
+    accounts: x.accounts.filter(a => a.group === 'cash' && !a.forTaxes), layerAccounts: doc.settings?.layerAccounts || {}, sinking, now };
 }
 export function layersOf(doc, ref, now = new Date()) {
   const m = metrics(doc, ref, { now });

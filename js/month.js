@@ -8,6 +8,7 @@ import { payoffPlan } from './math/debt.js';
 import { runningBalance, gutSpread } from './math/calendar.js';
 import { inputsOf, metrics } from './math/metrics.js';
 import { monthlyFrom, quarterlySetAside } from './math/income.js';
+import { heldDates, seasonShifts } from './math/earnings.js';
 
 // ---------- Dates (UTC, so a day is a day everywhere) ----------
 export const ymOf = (d = new Date()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
@@ -66,7 +67,7 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) 
   const marks = cal.marks || {};
   const out = [];
   const push = (rec, x) => {
-    const key = `${rec.id}@${x.date}`;
+    const key = `${rec.id}${x.keyTag ? `:${x.keyTag}` : ''}@${x.date}`; // batch 27: a row's cash tips are their own entries
     const mark = marks[key] || {};
     const status = mark.status || 'Planned';
     out.push({ ...x, key, recId: rec.id, origDate: x.date, date: status === 'Moved' && mark.date ? mark.date : x.date,
@@ -86,13 +87,23 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) 
     if (monthly == null) continue;
     const every = r.values.payFrequency || (x.benefit ? 'week' : 'month');
     const setAside = x.taxType === '1099' && x.tax ? x.tax.total / 12 : 0;
-    const per = (monthly + setAside) * 12 / (PAYS[every] || 12);
+    // Batch 27: cash tips kept after the tip-out and fees land week by week, apart from the paycheck (a shortfall, when
+    // the fees run over the cash, comes off the paycheck instead).
+    const extra = x.extra ?? 0, cashWeekly = extra > 0.005;
+    const season = (() => { const ss = seasonShifts(r.values); return ss && r.values.shiftsWeek ? ss[Number(ym.slice(5)) - 1] / r.values.shiftsWeek : 1; })(); // a slow or busy month scales the shift job
+    const per = (monthly - (cashWeekly ? extra : 0) + setAside) * 12 / (PAYS[every] || 12) * season;
     const guessDate = !r.values.nextPayday && !r.values.payDays && !r.values.payDay;
     const anchor = r.values.nextPayday || (x.benefit && r.values.benefitStart) || ANCHOR;
-    for (const date of repeatDays(ym, { every, anchor, days: r.values.payDays, day: r.values.payDay || 1 })) {
+    // A platform payout lands after its hold: each payout date moves later by the hold days (js/math/earnings.js).
+    const hold = x.platform?.holdDays ?? 0;
+    const dates = heldDates(ym, hold, m => repeatDays(m, { every, anchor, days: r.values.payDays, day: r.values.payDay || 1 }));
+    for (const { date, earned } of dates) {
       if (x.benefit?.end && date > x.benefit.end) continue;
       if (x.benefit?.start && date < x.benefit.start) continue;
-      push(r, { kind: 'income', group: 'Income', name: r.name || r.type || 'Paycheck', date, planned: per, guessDate: guessDate && !(x.benefit && r.values.benefitStart) });
+      push(r, { kind: 'income', group: 'Income', name: r.name || r.type || 'Paycheck', date, planned: per, guessDate: guessDate && !(x.benefit && r.values.benefitStart), ...(hold ? { hold, earned } : {}) });
+    }
+    if (cashWeekly) for (const date of repeatDays(ym, { every: 'week', anchor: ANCHOR })) {
+      push(r, { kind: 'income', group: 'Income', name: `${r.name || r.type || 'Job'}: cash tips kept`, date, planned: extra * 12 / 52 * season, guessDate: true, cash: true, keyTag: 'cash' });
     }
   }
   const q = quarterlySetAside(inputs.householdTax, ref, { year: Number(ym.slice(0, 4)), paid: 0 });
@@ -264,7 +275,7 @@ function monthRun(doc, ref, ym, start, opts) {
 // R098: months where every-2-weeks pay lands three times.
 export function bonusPaycheck(list) {
   const byRec = new Map();
-  for (const i of list.filter(x => x.kind === 'income')) byRec.set(i.recId, (byRec.get(i.recId) || 0) + 1);
+  for (const i of list.filter(x => x.kind === 'income' && !x.cash)) byRec.set(i.recId, (byRec.get(i.recId) || 0) + 1);
   return [...byRec.values()].some(n => n === 3);
 }
 

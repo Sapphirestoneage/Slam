@@ -1,16 +1,19 @@
-// A fan-site creator with a part-time W-2 job: platform payouts after a 20% fee, chargebacks taken back later, an HSA.
+// A fan-site creator with a part-time W-2 job: a Platform income row (gross, the 20% fee, chargebacks, the 7-day hold,
+// weekly payouts; batch 27), an HSA.
 export default {
   id: 'creator', order: 10, name: 'Kai Creator',
-  about: 'Made up. Fan-site creator paid by platform payouts (about $2,500 a month after the 20% platform fee, less about $150 in chargebacks and a tax set-aside: $2,000 kept), a part-time W-2 job at $1,100 every 2 weeks with $50 a paycheck into an HSA, a card.',
+  about: 'Made up. Fan-site creator on OnlyFans: about $3,125 a month gross, the 20% platform fee ($625) and about $150 in chargebacks leave $2,350 paid out a month, weekly, each payout after the 7-day hold; a part-time W-2 job at $1,100 every 2 weeks with $50 a paycheck into an HSA, a card.',
   profile: {
     firstName: 'Kai', lastName: 'Creator', birthYear: 2000, birthMonth: 1, state: 'CA', household: 'Solo', mode: 'Solo',
     workSituation: 'Mixed', housing: 'Rent', roommates: 1, hasCar: false, hasPets: false, incomeStability: 'Varies', healthCoverage: 'Employer',
-    hsaEligible: true, variable: { typical: 2000, lowest: 900, setAside: 0.25 },
+    hsaEligible: true, variable: { typical: 2350, lowest: 1200, setAside: 0.25 }, // batch 27: payouts after fees and chargebacks, before tax
     areas: { cash: true, investments: true, real: false, debt: true },
   },
   records: [
     { kind: 'income', type: 'Job', name: 'Part-time job', amount: 1100, per: '2 weeks', values: { basis: 'Take-home', payFrequency: '2 weeks', incomeType: 'W-2', hsaFsa: 50 } },
-    { kind: 'income', type: 'Self-employed', name: 'Platform payouts, after fees, chargebacks and the tax set-aside', amount: 2000, per: 'month', status: 'Roughly', values: { basis: 'Take-home', incomeType: '1099' } },
+    // Batch 27: a Platform row: $3,125 a month gross on OnlyFans, the registered 20% fee and 7-day hold, about $150 a month
+    // in chargebacks, paid out weekly from Monday Nov 9 (so each payout lands a week later, after the hold).
+    { kind: 'income', type: 'Platform', name: 'OnlyFans', amount: 3125, per: 'month', status: 'Roughly', values: { platform: 'OnlyFans', chargebacks: 150, payFrequency: 'week', nextPayday: '2026-11-09' } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 3600, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Checking', name: 'Checking', values: { group: 'cash', balance: 2200 } },
     { kind: 'account', type: 'Savings or HYSA', name: 'HYSA', values: { group: 'cash', balance: 6000 } },
@@ -20,19 +23,21 @@ export default {
     { kind: 'coverage', type: 'Health', name: 'HDHP through work', amount: 60, per: 'month', values: { have: 'Have it', deductible: 3000, paidFrom: 'Paycheck' } },
   ],
   expected: {
-    takeHome: { value: 4383.33, unit: 'money', note: '$1,100 x 26 / 12 = $2,383.33 + $2,000 payouts.' },
+    takeHome: { value: 4139.21, unit: 'money', note: 'Job: $1,100 x 26 / 12 = $2,383.33 (its gross works out to $35,094). Platform: $3,125 - 20% ($625) - $150 = $2,350 a month, $28,200 a year, stacked on the job: SE tax 15.3% x 92.35% x $28,200 = $3,984.53; federal 12% x ($28,200 - $1,992.27) = $3,144.93 (the job already used the $16,100 standard deduction; CA tax is not in the app yet). ($28,200 - $7,129.46) / 12 = $1,755.88. $2,383.33 + $1,755.88 = $4,139.21.' },
     netWorth: { value: 17800, unit: 'money', note: '$2,200 + $6,000 + $3,500 + $9,000 - $2,900 = $17,800.' },
-    surplus: { value: 783.33, unit: 'money', note: '$4,383.33 - $3,600 = $783.33.' },
-    savingsRate: { value: 0.1985, unit: 'pct', note: 'HSA $50 x 26 / 12 = $108.33 from the paycheck. ($783.33 + $108.33) / ($4,383.33 + $108.33) = 19.9%.' },
+    surplus: { value: 539.21, unit: 'money', note: '$4,139.21 - $3,600 = $539.21.' },
+    savingsRate: { value: 0.1525, unit: 'pct', note: 'HSA $50 x 26 / 12 = $108.33 from the paycheck. ($539.21 + $108.33) / ($4,139.21 + $108.33) = 15.2%.' },
     fooStep: { value: '3', unit: 'step', note: 'Step 1 done ($8,200 cash), no match, the card is heavy.' },
-    debtFreeMonths: { value: 3, unit: 'months', note: '$300 + $783.33 = $1,083.33 a month on $2,900 at 21%: 2.8, so 3 months.' },
-    monthsToFi: { value: 329, unit: 'months', note: 'Batch 12, freed money follows the FOO: 3 months on heavy debt, then FI number $3,600 x 12 / 4% = $1,080,000. 3 months at $108.33 (the HSA), then $108.33 + $783.33 + $300 = $1,191.67 a month: 313.8, so 314 months.7,862 of big e left / FI number $3,600 x 12 / 4% = $1,080,000. 3 months at $108.33 (the HSA), then $108.33 + $783.33 + $300 = $1,191.67 a month: 313.8, so 314 months.,083.33 a month = 17 months, so 20 months with FI number $3,600 x 12 / 4% = $1,080,000. 3 months at $108.33 (the HSA), then $108.33 + $783.33 + $300 = $1,191.67 a month: 313.8, so 314 months.08.33 a month going in (FI number $3,600 x 12 / 4% = $1,080,000. 3 months at $108.33 (the HSA), then $108.33 + $783.33 + $300 = $1,191.67 a month: 313.8, so 314 months.2,500 grows to FI number $3,600 x 12 / 4% = $1,080,000. 3 months at $108.33 (the HSA), then $108.33 + $783.33 + $300 = $1,191.67 a month: 313.8, so 314 months.6,279). Then FI number $3,600 x 12 / 4% = $1,080,000. 3 months at $108.33 (the HSA), then $108.33 + $783.33 + $300 = $1,191.67 a month: 313.8, so 314 months.,191.67 a month at 7% real to the FI number $3,600 x 12 / 4% = $1,080,000. 3 months at $108.33 (the HSA), then $108.33 + $783.33 + $300 = $1,191.67 a month: 313.8, so 314 months.,080,000 FI number: 20 + ln((FI number $3,600 x 12 / 4% = $1,080,000. 3 months at $108.33 (the HSA), then $108.33 + $783.33 + $300 = $1,191.67 a month: 313.8, so 314 months.,080,000 (g-1) + FI number $3,600 x 12 / 4% = $1,080,000. 3 months at $108.33 (the HSA), then $108.33 + $783.33 + $300 = $1,191.67 a month: 313.8, so 314 months.,191.67) / (FI number $3,600 x 12 / 4% = $1,080,000. 3 months at $108.33 (the HSA), then $108.33 + $783.33 + $300 = $1,191.67 a month: 313.8, so 314 months.6,279 (g-1) + FI number $3,600 x 12 / 4% = $1,080,000. 3 months at $108.33 (the HSA), then $108.33 + $783.33 + $300 = $1,191.67 a month: 313.8, so 314 months.,191.67)) / ln g = 328.2, so 329 months.' },
+    debtFreeMonths: { value: 4, unit: 'months', note: '$300 + $539.21 = $839.21 a month on $2,900 at 21% (1.75% a month): $2,111.54, $1,309.28, $492.98, then paid off in month 4 (about $119 of interest).' },
+    monthsToFi: { value: 365, unit: 'months', note: 'Freed money follows the FOO: 4 months on the card, then big e: $23,400 - ($8,200 - buffer $1,661.54 - little e $1,000) = $17,861.54 / $839.21 = 21.3, so 22 months: 26 months with only the HSA going in ($12,500 x g^26 + $108.33 x (g^26 - 1) / (g - 1) = $17,498.59, g = 1.07^(1/12)). Then $108.33 + $539.21 + $300 = $947.54 a month to the $1,080,000 FI number ($3,600 x 12 / 4%): ln(($1,080,000 (g-1) + $947.54) / ($17,498.59 (g-1) + $947.54)) / ln g = 338.4, so 339: 365 months.' },
     runwayMonths: { value: 2.278, unit: 'months', tol: 0.01, note: '$8,200 / $3,600.' },
     bigETarget: { value: 23400, unit: 'money', note: 'Age 26 / 5 = 5.2 x 1.25 (varies) = 6.5 x $3,600 = $23,400.' },
   },
   cannot: [
-    'Platform payouts: no gross, platform fee, payout schedule or hold period; only the net is typed.',
-    'Chargebacks: no way to record money taken back after it was paid, or to hold some back for them.',
+    // Batch 27 cleared: platform payouts (gross, the platform fee, chargebacks a month, the hold and the payout schedule)
+    // are a Platform income row, and the calendar lands each payout after the hold.
+    'Chargebacks: only a monthly amount; no way to hold back a reserve for them or to date one that lands late.',
     'A creator business: equipment, content costs and a separate business account have no home (Variable income has one business expenses box).',
+    'State tax on self-employment outside New York (CA here) is not worked out yet, so the take-home reads a little high.',
   ],
 };

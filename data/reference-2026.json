@@ -360,7 +360,17 @@
       "06-15",
       "09-15",
       "01-15"
-    ]
+    ],
+    "tips": {
+      "deductionCap": 25000,
+      "phaseOutSingle": 150000,
+      "phaseOutJoint": 300000,
+      "phaseOutPer1000": 100,
+      "firstYear": 2025,
+      "lastYear": 2028,
+      "reportOver": 20,
+      "unreportedPenalty": 0.5
+    }
   },
   "typicalRates": {
     "Credit card": 0.25,
@@ -2999,5 +3009,55 @@
     "idrForgivenessTaxed": 1,
     "legacyCloses": "2028-06-30",
     "saveEnded": "2026-03-10"
+  },
+  "platforms": {
+    "OnlyFans": {
+      "fee": 0.2,
+      "holdDays": 7,
+      "payout": "week",
+      "source": "OnlyFans Terms of Service for Creators (the 20% OnlyFans fee); the 7-day pending period from creator payout guides. Fee and hold not checked against the platform's own page tonight (QUESTIONS); widely reported, checked Nov 6 2026"
+    },
+    "Fansly": {
+      "fee": 0.2,
+      "holdDays": 7,
+      "payout": "week",
+      "source": "Fansly creator terms (20% fee); hold from creator guides. not checked against the platform's own page tonight (QUESTIONS); widely reported, checked Nov 6 2026"
+    },
+    "Patreon": {
+      "fee": 0.129,
+      "holdDays": 5,
+      "payout": "month",
+      "source": "Patreon Help Center, A standard platform fee for new creators (10% for pages launched after Aug 4 2025) plus card processing 2.9% + $0.30 (the $0.30 is left out). Hold of about 5 days after the monthly charge: unverified"
+    },
+    "Etsy": {
+      "fee": 0.095,
+      "holdDays": 3,
+      "payout": "week",
+      "source": "Etsy Fees and Payments Policy: 6.5% transaction fee plus US payment processing 3% + $0.25 (the $0.25 and the $0.20 listing fee are left out). Deposit hold: unverified; etsy.com/legal/fees could not be opened tonight"
+    },
+    "Uber": {
+      "fee": 0,
+      "holdDays": 2,
+      "payout": "week",
+      "source": "Uber shows driver earnings after its service fee, so type the earnings and the fee is 0. Weekly pay with a short hold: unverified"
+    },
+    "DoorDash": {
+      "fee": 0,
+      "holdDays": 3,
+      "payout": "week",
+      "source": "DoorDash shows Dasher pay after its cut and passes tips on in full, so the fee is 0. Weekly deposit: unverified"
+    },
+    "Upwork": {
+      "fee": 0.1,
+      "holdDays": 10,
+      "payout": "week",
+      "source": "Upwork freelancer service fee: variable 0% to 15% per contract since May 1 2025 (10% on contracts from before), via GigRadar Upwork fees guide (2026). The 10-day security period on hourly work: unverified"
+    },
+    "Other": {
+      "fee": 0,
+      "holdDays": 0,
+      "payout": "month",
+      "source": "SLAM default: no fee and no hold until typed"
+    }
   }
 }

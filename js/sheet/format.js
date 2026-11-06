@@ -64,6 +64,7 @@ export const FORMATS = [
   { version: 23, shape: '173768f5' }, // Nov 6 2026 (batch 30): the card library (debt.cardId, debt.cardUse), M9C worth its fee, M9D what moves the score, rules PlainCardRate, UtilHigh, UtilBest, InquiriesMany
   { version: 24, shape: '221ccf4a' }, // batch 25: profile.identity (address, letters, tilt, later) and M95 (who they are with money)
   { version: 25, shape: 'cb99234a' }, // batch 29: M9T, M9L, M9S (the true cost of debt, the student loan decision) and Debt › First borrowed
+  { version: 26, shape: 'da9adc90' }, // batch 27: income by type (tips, shifts, Platform rows), Purpose: Taxes, the Platforms table
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

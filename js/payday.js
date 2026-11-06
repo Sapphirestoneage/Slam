@@ -28,7 +28,7 @@ export function paydayOf(doc, ref, now = new Date()) {
   const today = now.toISOString().slice(0, 10);
   const ym = ymOf(now);
   const pays = [...instances(doc, ref, ym, { now }), ...instances(doc, ref, addMonths(ym, 1), { now })]
-    .filter(i => i.kind === 'income' && i.planned > 0 && i.date >= today).sort((a, b) => a.date.localeCompare(b.date));
+    .filter(i => i.kind === 'income' && !i.cash && i.planned > 0 && i.date >= today).sort((a, b) => a.date.localeCompare(b.date));
   const next = pays[0] || null;
   if (!next || x.takeHome == null) return { needs: x.takeHome == null ? 'take-home pay' : 'a paycheck on the calendar' };
   // Batch 15: the household's pay, per pay period of its biggest paycheck (several jobs, a partner's part-time pay):
