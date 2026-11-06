@@ -13,14 +13,15 @@ import { Store } from '../js/records.js';
 import { metrics } from '../js/math/metrics.js';
 import { buildWorkbook } from '../js/sheet/workbook.js';
 import { richHousehold } from '../fixtures/households.js';
+import { loadExcel, soffice as SOFFICE } from '../tools/workbook-check.mjs';
 
 const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
 const demo = JSON.parse(readFileSync(new URL('../fixtures/demo.json', import.meta.url)));
 const privatePath = new URL('../fixtures/eli.local.json', import.meta.url);
 const NOW = new Date('2026-11-03T12:00:00Z');
 let ExcelJS = null;
-try { ExcelJS = (await import('exceljs')).default; } catch { /* not installed */ }
-const soffice = ['/usr/bin/soffice', '/usr/local/bin/soffice', '/Applications/LibreOffice.app/Contents/MacOS/soffice'].find(p => existsSync(p));
+ExcelJS = loadExcel(); // here, or the main checkout's in a git worktree (tools/workbook-check.mjs)
+const soffice = SOFFICE;
 const NEED = (!ExcelJS || !soffice) && `needs ExcelJS (npm install) and LibreOffice: without them the Math rows are only checked by reading`;
 
 async function recalc(doc, edit = null) {

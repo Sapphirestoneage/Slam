@@ -19,7 +19,7 @@ export const COACH_TAB = 'Coach notes';
 export const STATUS_WORDS = { 'Know it': 'Know it', Roughly: 'Roughly', 'Not sure': 'Guess', 'Not for me': 'Not for me', 'Will email': "I'll find it later", 'Not now': 'Not now', Computed: 'Worked out' };
 export const STATUS_LIST = ['Know it', 'Roughly', 'Guess', 'Not for me', "I'll find it later", 'Not now'];
 const FMT = { money: '"$"#,##0.00', pct: '0.00%', months: '0', number: 'General', years: '0.0', day: '0', date: 'yyyy-mm-dd', month: 'yyyy-mm', text: '@', choice: '@', yesno: '@', list: '@' };
-const TOL = { money: 1, pct: 0.0005, months: 1, number: 0.01, years: 0.05 }; // within $1 or 1 month
+const TOL = { money: 1, cents: 0.01, pct: 0.0005, months: 1, number: 0.01, years: 0.05 }; // within $1 or 1 month; a cent where the app shows cents (cents: true)
 const BUILTIN = { Kind: 'Kind', Type: 'Type', Status: 'Status', InMath: 'In the math' };
 
 export const colLetter = n => { let s = ''; for (let i = n; i > 0; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + ((i - 1) % 26)) + s; return s; };
@@ -193,7 +193,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, flags
         define(name, absRange(mathSheet.name, 'D', r));
       } else {
         mRows.push([{ v: id, s: 'text' }, { v: row.name, s: 'text' }, { f: row.sheet, s: 'formula', fmt: unit, cached: appV }, { v: appV, s: 'app', fmt: unit },
-          { f: checkFormula(`C${r}`, `D${r}`, unit), s: 'check' }, { v: row.key ? '' : e.inputs, s: 'note' }]);
+          { f: checkFormula(`C${r}`, `D${r}`, unit === 'money' && (row.cents ?? e.cents) ? 'cents' : unit), s: 'check' }, { v: row.key ? '' : e.inputs, s: 'note' }]);
         define(name, absRange(mathSheet.name, 'C', r));
         pending.push({ f: row.sheet, where: `Math ${id}` });
       }
@@ -232,7 +232,12 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, flags
           if (cell.f) {
             const f = compileReportFormula(cell.f, { letterOf, row: r, prev: prevRow, first, last, where: `${rep.tab}: ${row.name ?? row.key ?? r}` });
             pending.push({ f, where: `${rep.tab} row ${r}` });
-            return { f, s: row.total ? 'total' : 'formula', fmt: unit, cached: cells.app?.v };
+            // The app's value is cached only in the cell the Check compares with it: a spreadsheet that shows cached values
+            // until it recalculates (LibreOffice by default) would otherwise show it in every formula of the row (batch 38:
+            // the age, contributions and growth on Projections all read as the year's balance).
+            const chk = head.find(x => x.check);
+            const pair = [chk?.check ?? ['f', 'app'], chk?.also].find(p => p?.[0] === h.key);
+            return { f, s: row.total ? 'total' : 'formula', fmt: unit, cached: pair ? cells[pair[1]]?.v : undefined };
           }
           const v = unit === 'month' ? toCell('month', cell.v) : cell.v;
           return { v, s: cell.fromApp || h.key === 'app' || h.key.startsWith('app') ? 'app' : cell.note ? 'note' : 'text', fmt: unit };

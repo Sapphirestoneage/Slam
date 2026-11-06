@@ -814,3 +814,27 @@ The same method as Batch 20 on the twelve screens left out of the first scorecar
 5. Smaller: Lists' Fix now lights the number itself; Data's primary button says Export a backup; Protection keeps unanswered usual-list rows (they vanished when focus left them) and counts them at the foot, and shows Renters insurance in full; Debt says the only-its-own-payment date once and names its APR box; Scorecard has one rating control per hole and Mark re-scored today; every Session switch reads Off, On; Statements' group buttons are one width with room between rows; Discovery names the client "Who they are with money" answers for.
 
 Before and after (44 runs): 169 actions to 150, 40 hesitations to 2, 14 dead ends to 0, 4 back presses and 5 wrong clicks to 2 and 2, tasks done 38 to 44. Layout checker on these screens: 62 failures (Statements) to 0; Statements, Data and Discovery are now in the checked routes. Persona run: story blockers 14 to 2 (a Living together couple on Statements, question 332). Effort scoreboard unchanged (35 / 38). Questions 330 to 332.
+
+## Batch 38 (Nov 6 2026): the workbook matches the app for every persona (QUESTIONS 326)
+
+1. The check runs everywhere it can: `tools/workbook-check.mjs` builds a household's workbook, has LibreOffice
+   recalculate it (a few runs side by side) and lists every Check that is not Matches, and every cached value that is
+   not what its formula gives. ExcelJS (already a dev dependency) is found in this checkout or, in a git worktree,
+   the main checkout's; every ExcelJS test now loads it that way, so nothing is linked by hand. Without ExcelJS or
+   LibreOffice the tests skip and say which is missing. docs/WORKBOOK.md says how it works and how to run it.
+2. Before: on the 14 personas, the Demo and Fast Track Alexis and Tom, 222 Checks were off on 14 of the 17 households
+   (21 different Math rows, 4 statement lines, 5 FOO rows and the Projections years) (the list and causes are in docs/WORKBOOK.md), and the Demo's downloaded
+   file showed 50 Checks off in LibreOffice (every Projections formula cached the year's balance).
+3. Fixed in the sheet formulas: debt payments outside the gut (the Kind is "Gut number or category" now); sinking
+   funds come off the surplus (M27 · sinking, a Set aside a month column on Goals and events); the lines count only
+   with an amount; Has investments No (or cash No) is $0; a couple who split bills counts both shares in the household
+   view (a Household part column on Spending lines); 529 and Goal contributions in Saved in the budget; the step you
+   are on skips 7 and 5b; only the compared cell carries the app's cached value. The app was not wrong anywhere; foo()
+   and layersOf() take a person (default unchanged) so the workbook's FOO is the household's, like every other number
+   in it.
+4. M81 (the gap) is a formula now, its levers a From the app row; M9E · netWorth looks up a new Priors_netWorth table
+   on Assumptions; the From the app rows of tonight's math say why they stay in the app. M01 and M17 check to the cent.
+5. test/workbook-drift.test.js recalculates all 17 households and fails on any row off, plus hand checks of each fix.
+
+Tests: the whole suite passes in UTC and America/New_York. After: every Check Matches on all 17 households, and the
+Demo's file downloaded from the browser opens in LibreOffice with 341 of 341 Checks at Matches (50 off before).

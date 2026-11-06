@@ -36,7 +36,8 @@ node --test
 ```
 
 Node 20 or newer. With LibreOffice installed, the spreadsheet checks also recalculate the workbook and compare
-every formula with the app. Without ExcelJS or LibreOffice those few tests skip with a message.
+every formula with the app (docs/WORKBOOK.md; `node tools/workbook-check.mjs` lists any row that differs). Without
+ExcelJS or LibreOffice those few tests skip and say which is missing.
 
 ## House rules
 

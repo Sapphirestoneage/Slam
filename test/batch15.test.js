@@ -389,9 +389,9 @@ function offChecks(ws, off = []) {
   return off;
 }
 let ExcelJS = null;
-try { ExcelJS = (await import('exceljs')).default; } catch { /* not installed */ }
-const soffice = ['/usr/bin/soffice', '/usr/local/bin/soffice', '/Applications/LibreOffice.app/Contents/MacOS/soffice'].find(p => existsSync(p));
-test('item 1 and 13: opened in a spreadsheet, the household tax formulas give the app\'s numbers (two jobs, a 1099, unemployment, NY and NYC, a couple)', { skip: (!ExcelJS || !soffice) && 'needs ExcelJS and LibreOffice', timeout: 180000 }, async () => {
+ExcelJS = loadExcel(); // here, or the main checkout's in a git worktree (tools/workbook-check.mjs)
+const soffice = SOFFICE;
+test('item 1 and 13: opened in a spreadsheet, the household tax formulas give the app\'s numbers (two jobs, a 1099, unemployment, NY and NYC, a couple)', { skip: WB_MISSING, timeout: 180000 }, async () => {
   const { workbookBuffer } = await import('../js/sheet/excel.js');
   for (const filing of [null, 'Married jointly']) {
     const s = fresh();
@@ -430,6 +430,7 @@ test('an Unemployment row tagged Benefits is still a benefit; tagged W-2 it is n
 
 // Eli, Nov 6: "customizable like materiality": each client can set the hours and the floor.
 import { materialityOf as matQ } from '../js/math/time.js';
+import { loadExcel, soffice as SOFFICE, missing as WB_MISSING } from '../tools/workbook-check.mjs';
 test('materiality: the client\'s own hours and floor win over the defaults', () => {
   const wage = { value: 40 };
   assert.equal(matQ(wage).value, 80 > 100 ? 80 : 100, 'default: 2 hours at $40 is $80, under the $100 floor');

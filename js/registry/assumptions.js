@@ -11,6 +11,7 @@
 
 import { LEVELS, WEIGHTS, PACE, SESSIONS } from './program.js';
 import { THRESHOLDS, PAYOFF, AREAS as SCORE_AREAS } from './scorecard.js';
+import { priorsData } from '../priorslib.js';
 
 // SLAM's own rules and lists. The math in js/math reads these (one source for the app and the sheet).
 // The Rule of 5 (M43, confirmed Oct 28, restored Nov 6): big e holds age / 5 months of spending, unrounded (25 is 5.0, 30 is 6.0, 40 is 8.0).
@@ -238,6 +239,11 @@ export const TABLES = [
     rows: r => Object.entries(r.typicalRates), source: FED, date: '2026-08-07' },
   { id: 'Consumer', label: 'Consumer debt types (left out of liquid net worth)', columns: [['type', 'Debt type', 'text']],
     rows: () => LISTS.consumerDebt.map(t => [t]), source: RULE('js/math/metrics.js, M41'), date: '2026-10-28' },
+  // Batch 38: typical net worth by age (M9E), so the sheet looks it up. Rows only once data/priors-2026.json is loaded
+  // (it always is in the app's workbook path and the tests); one blank row before then, so the ranges stay real.
+  { id: 'Priors_netWorth', label: 'Typical net worth by age of head (M9E: the SCF median)', columns: [['from', 'Age from', 'number'], ['band', 'Ages', 'text'], ['typical', 'Typical (median, else mean)', 'money']],
+    rows: () => { const rows = (priorsData()?.rows || []).filter(r => r.field === 'netWorth' && r.ages).sort((a, b) => (a.ages[0] ?? 0) - (b.ages[0] ?? 0)).map(r => [r.ages[0] ?? 0, r.band, r.median ?? r.mean ?? null]); return rows.length ? rows : [[null, null, null]]; },
+    source: () => 'Federal Reserve, Survey of Consumer Finances 2025, Table 2 (family net worth by age of head), via data/priors-2026.json', date: '2026-11-06' },
   { id: 'Housing', label: 'Housing categories (M2A)', columns: [['category', 'Category', 'text']],
     rows: () => LISTS.housing.map(t => [t]), source: RULE('js/math/metrics.js, M2A'), date: '2026-10-28' },
   { id: 'Heavy', label: 'Heavy debt types (FOO step 3)', columns: [['type', 'Debt type', 'text']],

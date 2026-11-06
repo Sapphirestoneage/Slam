@@ -29,8 +29,9 @@ Node 20 or newer. The math runs in Node with no browser.
 
 The spreadsheet tests (`test/workbook.test.js`, `test/import.test.js`) also write and read a real .xlsx
 when ExcelJS is installed (`npm install`, or `npm install --no-save exceljs@4.4.0`), and recalculate it in
-LibreOffice when that is installed, checking every formula against the app. Without them those few tests
-skip with a message.
+LibreOffice when that is installed, checking every formula against the app (every persona, the Demo and Fast
+Track Alexis and Tom: docs/WORKBOOK.md). Without them those few tests skip and say which is missing; a git
+worktree uses the main checkout's ExcelJS.
 
 ### Layout check
 

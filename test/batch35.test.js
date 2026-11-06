@@ -13,6 +13,7 @@ import { householdTax, tipsDeductionOf, stateTaxLine } from '../js/math/income.j
 import { workOf, workCash, reportedTipsYear, workLine } from '../js/math/earnings.js';
 import { buildWorkbook } from '../js/sheet/workbook.js';
 import { OUT_DIR } from '../tools/personas/build.mjs';
+import { loadExcel, soffice as SOFFICE, missing as WB_MISSING } from '../tools/workbook-check.mjs';
 
 const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
 const now = new Date('2026-11-05T12:00:00Z');
@@ -94,8 +95,8 @@ test('item 6: a Job row says its tips and shifts in one line', () => {
 
 // ---------- The workbook (QUESTIONS 305): recalculated in LibreOffice, the income rows match the app ----------
 let ExcelJS = null;
-try { ExcelJS = (await import('exceljs')).default; } catch { /* not installed */ }
-const soffice = ['/usr/bin/soffice', '/usr/local/bin/soffice', '/Applications/LibreOffice.app/Contents/MacOS/soffice'].find(p => existsSync(p));
+ExcelJS = loadExcel(); // here, or the main checkout's in a git worktree (tools/workbook-check.mjs)
+const soffice = SOFFICE;
 // A household that uses every path: a W-2 shift job with no paycheck (reported cash, a tip-out on tips), a partner's
 // gross-typed job with card tips a month (joint, over the phase-out line), a 1099 shift job with a house fee, and an
 // Etsy row with its fee typed and chargebacks.
@@ -139,7 +140,7 @@ async function incomeOff(doc) {
   return { off, seen };
 }
 for (const [label, make] of [['the bartender', () => persona('bartender')], ['the dancer', () => persona('dancer')], ['the creator', () => persona('creator')], ['a household with every tips, shifts and platform path', tippedHousehold]]) {
-  test(`Q305: opened in a spreadsheet, tips, shifts and platform rows give the app's tax and take-home (${label})`, { skip: (!ExcelJS || !soffice) && 'needs ExcelJS and LibreOffice', timeout: 180000 }, async () => {
+  test(`Q305: opened in a spreadsheet, tips, shifts and platform rows give the app's tax and take-home (${label})`, { skip: WB_MISSING, timeout: 180000 }, async () => {
     const { off, seen } = await incomeOff(make());
     assert.deepEqual(off, []);
     for (const id of ['Math:M10', 'Math:M12', 'Math:M13']) assert.ok(seen.has(id), `${id} was checked`);

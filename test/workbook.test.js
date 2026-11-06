@@ -15,6 +15,7 @@ import { ASSUMPTIONS } from '../js/registry/assumptions.js';
 import { REPORTS } from '../js/registry/reports.js';
 import { buildWorkbook, formulaCols, BLANK_ROWS, DATA_TAB, COACH_TAB, nameOk } from '../js/sheet/workbook.js';
 import { everyField, richHousehold } from '../fixtures/households.js';
+import { loadExcel, soffice as SOFFICE, missing as WB_MISSING } from '../tools/workbook-check.mjs';
 
 const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
 const demo = JSON.parse(readFileSync(new URL('../fixtures/demo.json', import.meta.url)));
@@ -73,8 +74,8 @@ test('builds for a new, empty household too', () => {
 
 // ---------- With ExcelJS and LibreOffice ----------
 let ExcelJS = null;
-try { ExcelJS = (await import('exceljs')).default; } catch { /* not installed */ }
-const soffice = ['/usr/bin/soffice', '/usr/local/bin/soffice', '/Applications/LibreOffice.app/Contents/MacOS/soffice'].find(p => existsSync(p));
+ExcelJS = loadExcel(); // here, or the main checkout's in a git worktree (tools/workbook-check.mjs)
+const soffice = SOFFICE;
 
 test('the workbook writes and reads back with ExcelJS', { skip: !ExcelJS && 'ExcelJS is not installed (npm install exceljs@4.4.0 --no-save)' }, async () => {
   const { workbookBuffer, readWorkbook } = await import('../js/sheet/excel.js');
@@ -111,7 +112,7 @@ export function offChecks(ws, off = []) {
 }
 
 for (const [label, make] of [['the Demo client', demoDoc], ['a household using most of the math', richHousehold]]) {
-  test(`opened in a spreadsheet, every formula gives the app's number (${label})`, { skip: (!ExcelJS || !soffice) && 'needs ExcelJS and LibreOffice', timeout: 180000 }, async () => {
+  test(`opened in a spreadsheet, every formula gives the app's number (${label})`, { skip: WB_MISSING, timeout: 180000 }, async () => {
     const wb = await recalculated(make());
     const off = [];
     for (const tab of CHECK_TABS) offChecks(wb.getWorksheet(tab), off);
@@ -119,7 +120,7 @@ for (const [label, make] of [['the Demo client', demoDoc], ['a household using m
   });
 }
 
-test('opened in a spreadsheet, no formula errors with every field filled', { skip: (!ExcelJS || !soffice) && 'needs ExcelJS and LibreOffice', timeout: 180000 }, async () => {
+test('opened in a spreadsheet, no formula errors with every field filled', { skip: WB_MISSING, timeout: 180000 }, async () => {
   const wb = await recalculated(everyField());
   const errors = [];
   wb.eachSheet(ws => ws.eachRow(row => row.eachCell(cell => {

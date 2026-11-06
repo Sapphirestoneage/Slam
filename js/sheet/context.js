@@ -20,8 +20,10 @@ export function sheetContext(doc, ref, { now = new Date(), flags = [] } = {}) {
     doc, ref, now, m, x, live, flags,
     // In the math: No when a gate hides the row (R001), Counted once when it is the same as a debt or premium.
     inMath: rec => (!liveIds.has(rec.id) ? 'No' : x.dupOf?.[rec.id] ? 'Counted once' : 'Yes'),
-    foo: once(() => foo(doc, ref, { now, flags })),
-    layers: once(() => layersOf(doc, ref, now)),
+    // The workbook is the household's books (every row of both people), so its FOO and cash layers are the household's
+    // too, even where the app's screens walk one person's plan (Dating, Living together; batch 38, QUESTIONS).
+    foo: once(() => foo(doc, ref, { now, flags, person: null })),
+    layers: once(() => layersOf(doc, ref, now, { person: null })),
     targets: once(() => fiTargets(m, doc)),
     statements: safe(() => statements(doc, ref, periodOf('month', now), { now })),
     nwStatement: once(() => netWorthStatement(doc, { live })),

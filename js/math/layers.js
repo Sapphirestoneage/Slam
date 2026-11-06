@@ -147,8 +147,8 @@ export function sleepPicks(L) {
   const all = (L?.layers || []).filter(l => !l.id.startsWith('sink:'));
   return [{ id: 'little', label: 'Buffer and little e', value: upTo(2) }, { id: 'all', label: 'Every layer', value: all.length && all.every(l => l.target != null) ? Math.round(all.reduce((s, l) => s + l.target, 0)) : null }].filter(p => p.value != null && p.value > 0);
 }
-export function layersOf(doc, ref, now = new Date()) {
-  const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }); // batch 33: one person's cash layers in Dating and Living together (the FOO's big e)
+export function layersOf(doc, ref, now = new Date(), { person = ownPlanPerson(doc) } = {}) {
+  const m = metrics(doc, ref, { now, person }); // batch 33: one person's cash layers in Dating and Living together (the FOO's big e)
   const x = m.inputs;
   const out = cashLayers(x, layerOptions(doc, ref, x, now));
   const backups = backupRunway(doc.profile.backups || [], out.monthly.full);

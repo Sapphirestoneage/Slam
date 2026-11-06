@@ -33,10 +33,12 @@ export const coastFiNumber = ({ fiNumber, realReturn, age, fiAge }) => (fiNumber
 // The nine steps of the original order (The Money Guy Show), for the comparison toggle.
 export const ORIGINAL = ['Deductibles covered', 'Employer match', 'High-interest debt', 'Emergency reserves', 'Roth IRA and HSA', 'Max out retirement', 'Hyper-accumulation', 'Prepaid future assets', 'Low-interest debt'];
 
-export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
-  const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }); // batch 33 (finding 23): a couple with no combined totals walks one person's FOO, as Home and Plan show it
+// person: whose plan (the app's own: one person's for a couple with no combined totals); the workbook passes null for
+// the household's books, as every other number in it is (batch 38).
+export function foo(doc, ref, { now = new Date(), flags = [], person = ownPlanPerson(doc) } = {}) {
+  const m = metrics(doc, ref, { now, person }); // batch 33 (finding 23): a couple with no combined totals walks one person's FOO, as Home and Plan show it
   const x = m.inputs, p = doc.profile || {}, set = doc.settings || {};
-  const L = layersOf(doc, ref, now);
+  const L = layersOf(doc, ref, now, { person });
   const recOf = id => doc.records.find(r => r.id === id);
   const surplus = Math.max(0, m.surplus.value ?? 0);
   const age = x.age, fiAge = doc.assumptions?.fiAge ?? x.retireAge;

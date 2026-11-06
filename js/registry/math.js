@@ -109,7 +109,7 @@ export const MATH = [
     fromApp: 'a convention, not a number: money is a month in today\'s dollars, rates are yearly decimals (7% = 0.07)', app: () => null },
 
   // ---------- Income and taxes ----------
-  { id: 'M01', name: 'Monthly from any period', inputs: 'amount, period, pay frequency', unit: 'money', fns: ['income.monthlyFrom'],
+  { id: 'M01', name: 'Monthly from any period', inputs: 'amount, period, pay frequency', unit: 'money', cents: true, fns: ['income.monthlyFrom'],
     cols: [{ area: 'income', key: 'M01', label: 'A month (M01)', unit: 'money',
       f: `IF(OR(${SKIP},{Kind}<>"Income",{amount}=""),"",{amount}*${MONTH_FACTOR('IF({per}="paycheck",{payFrequency},{per})')})` }],
     sheet: 'SUM(Income_M01)', label: 'Income rows, each as a month, added up',
@@ -240,7 +240,7 @@ export const MATH = [
     parts: [{ key: 'rate', name: 'Your rate on self-employment income (income tax and SE tax, on top of the rest)', unit: 'pct', fromApp: 'the tax the 1099 rows add to the household\'s return over their gross (M10 to M12, stacked)', app: c => quarterlySetAside(c.x.householdTax, c.ref)?.rate ?? null }],
     sheet: 'IF(Var_lowest<>"",Var_lowest*(1-IF(Var_setAside="",IF(Math_M16_rate<>"",Math_M16_rate,TaxSetAside),Var_setAside)),IF(Var_typical<>"",Var_typical*VarGuess*(1-IF(Var_setAside="",IF(Math_M16_rate<>"",Math_M16_rate,TaxSetAside),Var_setAside)),""))',
     app: c => { const v = c.doc.profile.variable || {}; return variableSafeBudget({ lowestMonth: v.lowest ?? null, typicalMonth: v.typical ?? null, setAside: v.setAside ?? quarterlySetAside(c.x.householdTax, c.ref)?.rate ?? null }, c.ref).value; } },
-  { id: 'M17', name: 'Real hourly wage', inputs: 'take-home, work costs, hours', unit: 'money', fns: ['income.realHourlyWage', 'time.hourlyRate', 'time.materialityOf', 'time.outsourceCheck'],
+  { id: 'M17', name: 'Real hourly wage', inputs: 'take-home, work costs, hours', unit: 'money', cents: true, fns: ['income.realHourlyWage', 'time.hourlyRate', 'time.materialityOf', 'time.outsourceCheck'],
     sheet: 'IF(OR(Math_M12="",N(Hours_paid)=0),"",(Math_M12-N(Hours_costs))/(Hours_paid+N(Hours_commute)+N(Hours_prep)))',
     app: c => realHourlyWage({ takeHome: c.x.takeHome, ...c.x.hours }).value },
 
@@ -263,8 +263,13 @@ export const MATH = [
         f: 'IF(AND({@whoUsed}="Covered by someone",OR({takeover}="",TEXT({takeover},"yyyy-mm")>TEXT(TODAY(),"yyyy-mm"))),IF(AND({coveredAmount}<>"",N({amount})<>0),MIN(1,MAX(0,{coveredAmount}/{amount})),1),0)' },
       { area: 'spending', key: 'shareBase', label: 'My share before reimbursement', unit: 'money',
         f: `IF(OR(${SKIP},{Kind}<>"Budget line"),"",IF({myShare}<>"",{myShare},IF({Status}="Not for me",0,IF(OR({@whoUsed}="Included in rent",{@whoUsed}="N/A",AND({startsIn}<>"",TEXT({startsIn},"yyyy-mm")>TEXT(TODAY(),"yyyy-mm"))),0,IF({@M20}="","",{@M20}*(1-{@covered})*IF({@givenUsed}="Your share",1,IF({@sharePct}<>"",{@sharePct},1/{@splitUsed})))))))` },
+      // Batch 38: a couple who split bills (Living together, Engaged, Married separate) is seen here as one household, as
+      // the app's household view sees it (metrics.coupleBills): a bill split between the two counts at the couple's
+      // part (both shares), a payment to the partner moves money between them and counts at 0.
+      { area: 'spending', key: 'coupleX', label: 'Household part of my share (a couple who split bills)', unit: 'number',
+        f: `IF(OR(${Object.entries(MODES).filter(([, m]) => m.couple && m.split).map(([k]) => `Profile_mode="${k}"`).join(',')}),IF({toPartner}="Yes",0,IF(AND({@whoUsed}="Split",Profile_household="Couple",OR(Profile_moneyStyle="Separate",Profile_moneyStyle="Mix",Profile_moneyStyle="")),IF({@sharePct}<>"",IF({@sharePct}>0,1/{@sharePct},1),2),1)),1)` },
       { area: 'spending', key: 'M21', label: 'My share a month (M21)', unit: 'money',
-        f: `IF({@shareBase}="","",IF(OR({Status}="Not for me",{@whoUsed}="Included in rent",{@whoUsed}="N/A"),{@shareBase},MAX(0,{@shareBase}-IF({reimbursed}="",0,{reimbursed}*${MONTH_FACTOR('{per}')}))))` },
+        f: `IF({@shareBase}="","",{@coupleX}*IF(OR({Status}="Not for me",{@whoUsed}="Included in rent",{@whoUsed}="N/A"),{@shareBase},MAX(0,{@shareBase}-IF({reimbursed}="",0,{reimbursed}*${MONTH_FACTOR('{per}')}))))` },
       { area: 'spending', key: 'whole', label: 'Whole bill a month', unit: 'money', f: 'IF({@M20}="","",IF({@givenUsed}="Your share",IF({@sharePct}<>"",{@M20}/{@sharePct},{@M20}*{@splitUsed}),{@M20}))' }],
     sheet: 'SUMIFS(Spend_M21,Spend_InMath,"Yes")', label: 'My share of every Budget line, a month',
     app: c => sum(c.x.typedLines.filter(l => !c.x.dupOf[l.id]), l => myShare(l, { roommates: c.x.roommates }).value) },
@@ -288,11 +293,21 @@ export const MATH = [
       app: c => { const v = byCategory(monthView(c.doc, c.ref, ymOf(c.now), { now: c.now })).filter(x => x.diff != null); return v.length ? sum(v, x => x.diff) : null; } }] },
   { id: 'M26', name: 'Gut accuracy', inputs: 'closed months', unit: 'pct', fns: ['spending.gutAccuracy', 'spending.gutVsLinesWords'],
     fromApp: 'an average across closed months of each first guess against the actual; the close history stays in SLAM', app: () => null },
-  { id: 'M27', name: 'Monthly surplus', inputs: 'M12, M21, debts', unit: 'money', fns: ['spending.monthlySurplus'],
+  { id: 'M27', name: 'Monthly surplus', inputs: 'M12, M21, debts, sinking funds', unit: 'money', fns: ['spending.monthlySurplus'],
+    // Batch 38: a dated goal saved for each month (Save for it each month) comes off the surplus until its month, as
+    // the app does: what is left to save over the months to go (at least 1). A Purpose tag on a sinking fund account
+    // counts that tag's dollars as saved; the account is chosen in SLAM, so that number comes from the app.
+    cols: [{ area: 'goals', key: 'sinkMonthly', label: 'Set aside a month (sinking fund)', unit: 'money',
+      f: (rec, c) => {
+        const acct = rec.values?.sinkingFund ? c.live.find(q => q.id === rec.values.sinkingFund) : null;
+        const tag = acct && rec.values?.fundTag ? (acct.values.tags || []).find(t => t.name === rec.values.fundTag) : null;
+        const saved = tag ? String(+(tag.dollars ?? 0)) : 'N({saved})';
+        return `IF(OR(${SKIP},{Kind}<>"Event",{sinking}<>"Yes",{amount}="",{Status}="Not for me"),0,IFERROR(MAX(0,{amount}-${saved})/MAX(1,VALUE(LEFT({month},4))*12+VALUE(MID({month},6,2))-YEAR(TODAY())*12-MONTH(TODAY())),0))`;
+      } }],
     parts: [
       // Batch 7 (A): the categories carry the spending: each is the larger of its typed row (Kind Category) and its lines.
       { key: 'lines', name: 'Spending by category (each the larger of its typed amount and its lines; debt payments From Debt included; Retirement left out)', unit: 'money',
-        sheet: `IF(AND(COUNTIFS(Spend_Kind,"Budget line",Spend_InMath,"<>No")=0,COUNTIFS(Spend_Kind,"Gut number or category",Spend_InMath,"<>No",Spend_Type,"<>All in",Spend_amount,"<>")=0),"",${CAT_SUM(k => k !== 'Retirement')})`, app: c => c.x.lineTotal },
+        sheet: `IF(AND(COUNT(Spend_M20)=0,COUNTIFS(Spend_Kind,"Gut number or category",Spend_InMath,"<>No",Spend_Type,"<>All in",Spend_amount,"<>")=0),"",${CAT_SUM(k => k !== 'Retirement')})`, app: c => c.x.lineTotal },
       { key: 'retire', name: 'Retirement on the Budget, a month (investing, not spending)', unit: 'money',
         sheet: `IF(OR(Math_M27_gut="",AND(Set_spendingSource="lines",Math_M27_lines<>"")),${CAT_SUM(k => k === 'Retirement')},0)`, app: c => c.x.retirementLines ?? 0 },
       { key: 'gut', name: 'The gut number', unit: 'money',
@@ -302,10 +317,11 @@ export const MATH = [
         sheet: 'IF(OR(Math_M27_gut="",AND(Set_spendingSource="lines",Math_M27_lines<>"")),Math_M27_lines,Math_M27_gut)',
         app: c => c.x.spending },
       { key: 'debtOut', name: 'Debt payments not already in spending', unit: 'money',
-        sheet: 'IF(Math_M27_spending="","",IF(OR(Math_M27_gut="",AND(Set_spendingSource="lines",Math_M27_lines<>"")),0,IF(COUNTIFS(Spend_Kind,"Gut number",Spend_includesDebtPayments,"No")>0,SUM(Debt_payOut),0)))',
+        sheet: 'IF(Math_M27_spending="","",IF(OR(Math_M27_gut="",AND(Set_spendingSource="lines",Math_M27_lines<>"")),0,IF(COUNTIFS(Spend_Kind,"Gut number or category",Spend_Type,"All in",Spend_InMath,"<>No",Spend_includesDebtPayments,"No")>0,SUM(Debt_payOut),0)))',
         app: c => c.x.debtPaymentsOutsideSpending },
+      { key: 'sinking', name: 'Set aside a month for dated goals (sinking funds), until each one\'s month', unit: 'money', sheet: 'SUM(Goals_sinkMonthly)', app: c => c.x.sinkingMonthly ?? 0 },
     ],
-    sheet: 'IF(OR(Math_M12="",Math_M27_spending=""),"",Math_M12-Math_M27_spending-N(Math_M27_debtOut))', label: 'Take-home minus spending minus debt payments outside spending, a month',
+    sheet: 'IF(OR(Math_M12="",Math_M27_spending=""),"",Math_M12-Math_M27_spending-N(Math_M27_debtOut)-N(Math_M27_sinking))', label: 'Take-home minus spending minus debt payments outside spending minus sinking funds, a month',
     app: c => c.m.surplus.value },
   { id: 'M28', name: 'Savings rate (headline)', inputs: 'M27, 401(k) and HSA from the paycheck, match', unit: 'pct', fns: ['spending.savingsRate'],
     cols: [{ area: 'income', key: 'saving', label: 'Into the 401(k) and HSA a month', unit: 'money',
@@ -393,8 +409,8 @@ export const MATH = [
   { id: 'M41', name: 'Liquid net worth', inputs: 'accounts, debts', unit: 'money', fns: ['assets.liquidNetWorth'],
     cols: [{ area: 'debt', key: 'consumer', label: 'Consumer debt', unit: 'number', f: 'IF(COUNTIF(Consumer_type,{Type})>0,1,0)' }],
     parts: [
-      { key: 'cash', name: 'Cash (checking, savings and other cash; money set aside for taxes left out, batch 27)', unit: 'money', sheet: 'IF(COUNTIFS(Assets_group,"cash",Assets_InMath,"<>No")=0,IF(Profile_noneOfThese="Yes",0,""),SUMIFS(Assets_val,Assets_group,"cash",Assets_purpose,"<>Taxes"))', app: c => c.x.cash },
-      { key: 'invested', name: 'Invested toward FI (every investment account but a 529 or a Goal account; question 214)', unit: 'money', sheet: 'IF(COUNTIFS(Assets_group,"investment",Assets_InMath,"<>No")=0,IF(Profile_noneOfThese="Yes",0,""),SUMIFS(Assets_val,Assets_group,"investment")-SUMIFS(Assets_val,Assets_group,"investment",Assets_Type,"529")-SUMIFS(Assets_val,Assets_group,"investment",Assets_Type,"<>529",Assets_purpose,"Goal"))', app: c => c.x.invested },
+      { key: 'cash', name: 'Cash (checking, savings and other cash; money set aside for taxes left out, batch 27)', unit: 'money', sheet: 'IF(COUNTIFS(Assets_group,"cash",Assets_InMath,"<>No")=0,IF(OR(Profile_noneOfThese="Yes",Profile_areas_cash="No"),0,""),SUMIFS(Assets_val,Assets_group,"cash",Assets_purpose,"<>Taxes"))', app: c => c.x.cash },
+      { key: 'invested', name: 'Invested toward FI (every investment account but a 529 or a Goal account; question 214)', unit: 'money', sheet: 'IF(COUNTIFS(Assets_group,"investment",Assets_InMath,"<>No")=0,IF(OR(Profile_noneOfThese="Yes",Profile_areas_investments="No"),0,""),SUMIFS(Assets_val,Assets_group,"investment")-SUMIFS(Assets_val,Assets_group,"investment",Assets_Type,"529")-SUMIFS(Assets_val,Assets_group,"investment",Assets_Type,"<>529",Assets_purpose,"Goal"))', app: c => c.x.invested },
     ],
     sheet: 'IF(Math_M41_cash="","",Math_M41_cash+SUMIFS(Assets_val,Assets_Type,"Brokerage")-SUMIFS(Debt_balUsed,Debt_consumer,1))', label: 'Cash plus brokerage minus consumer debt',
     app: c => c.m.liquidNetWorth.value },
@@ -528,20 +544,24 @@ export const MATH = [
     parts: [{ key: 'nw5', name: 'Net worth in 5 years (current)', unit: 'money', fromApp: 'invested grown at the real return plus what goes in, the rest of net worth, plus debt paid down by then, minus a monthly shortfall borrowed on the card', app: c => netWorthIn(c.m, 5, { shortfall: shortfallOf(c.m, c.ref) }).value }] },
   { id: 'M79', name: 'Freed money follows the FOO', inputs: 'M34 heavy months and freed payments, M27, M43 big e less the cash in the layers (M68), the Roth IRA and HSA room', unit: 'months',
     fns: ['flow.freedFlow', 'flow.taxFreeRoom', 'flow.flowWords', 'fi.waitWords', 'layers.layerOptions'],
-    fromApp: 'after the heavy debt the surplus and the freed payments fill big e, then Tax-Free Growth, then are invested (RULES.freedFollowsFoo, QUESTIONS 196); each phase ends at the first whole month its dollars are in. The value is the month big e is full; the FI date (M53) reads the same months',
+    fromApp: 'a month-by-month flow, not one cell: after the heavy debt the surplus and the freed payments fill big e, then Tax-Free Growth, then are invested (RULES.freedFollowsFoo, QUESTIONS 196); each phase ends at the first whole month its dollars are in. The value is the month big e is full; the FI date (M53) reads the same months',
     app: c => c.m.fooFlow?.bigEEnd ?? null,
     parts: [{ key: 'taxFree', name: 'Month Tax-Free Growth is full for the year', unit: 'months', fromApp: 'the same flow', app: c => c.m.fooFlow?.taxFreeEnd ?? null }] },
   { id: 'M80', name: 'Next best opportunity', inputs: 'M79, the match left on the table, every debt\'s APR and promo end, the return', unit: 'money',
     fns: ['flow.nextBest', 'flow.matchRoom'],
-    fromApp: 'on each FOO step the money goes to (heavy debt, big e, Tax-Free Growth, investing), the yearly value of the step against the best alternative on the same dollars; shown as one line on the step when it beats it by RULES.nextBestMin or more. The value is the largest gap a year across the steps',
+    fromApp: 'compares every alternative for the same dollars step by step, so it is worked out in SLAM: on each FOO step the money goes to (heavy debt, big e, Tax-Free Growth, investing), the yearly value of the step against the best alternative on the same dollars; shown as one line on the step when it beats it by RULES.nextBestMin or more. The value is the largest gap a year across the steps',
     app: c => { const v = foo(c.doc, c.ref, { now: c.now, flags: c.flags }).steps.map(s => s.worthALook?.by).filter(x => x != null); return v.length ? Math.max(...v) : null; } },
   { id: 'M81', name: 'The gap', inputs: 'M27 (below zero), the spending lines and their levels, Bills and subscriptions, the gut number, the income option', unit: 'money',
     fns: ['gap.gapOf', 'gap.gapProposal', 'gap.gapIncomeOf'],
-    fromApp: 'when the surplus is below zero: what the month is short, and three levers with what each closes (a quarter of the largest Level 1 or 2 line that can move, or a tenth of the gut number with no lines; the largest subscription that can be cut; the income the coach fills in); Use the gap proposes the spending cut and the income for the rest on Current vs Proposed',
-    app: c => gapOf(c.doc, c.m)?.short ?? null },
+    // Batch 38: what the month is short is a formula now; the levers pick lines by level and kind, so they stay in the app.
+    sheet: 'IF(Math_M27="","",IF(Math_M27>=-0.5,"",-Math_M27))', label: 'What the month is short: the surplus below zero, turned around',
+    app: c => gapOf(c.doc, c.m)?.short ?? null,
+    parts: [{ key: 'closes', name: 'What the three levers close together, a month', unit: 'money',
+      fromApp: 'the levers pick one Budget line by its level and kind, so they are chosen in SLAM: a quarter of the largest Level 1 or 2 line that can move (or a tenth of the gut number with no lines), the largest subscription that can be cut, and the income the coach fills in; Use the gap proposes the spending cut and the income for the rest on Current vs Proposed',
+      app: c => gapOf(c.doc, c.m)?.closes ?? null }] },
   { id: 'M82', name: 'Your next 3 moves', inputs: 'M69 the FOO step (and M79, M81), M74 the holes before it, the homework', unit: 'count',
     fns: ['moves.nextMoves'],
-    fromApp: 'the FOO step you are on (or the gap), a Scorecard hole before your step with a payoff, a homework item, then the FOO steps the money goes to next; each one sentence with dollars and a month, linked to its screen. Top of Report › One-pager',
+    fromApp: 'sentences picked from the FOO, the Scorecard and the homework, not a number: the FOO step you are on (or the gap), a Scorecard hole before your step with a payoff, a homework item, then the FOO steps the money goes to next; each one sentence with dollars and a month, linked to its screen. Top of Report › One-pager',
     app: c => nextMoves(c.doc, c.ref, { now: c.now, flags: c.flags }).length },
   { id: 'M90', name: 'Life Transitions runway', inputs: 'M27 spending and the DRAFTT and FAT levels (M68), income that keeps coming, unemployment until its end date, cash in the layers, family help, card room and APR, retirement balances with the early penalty and tax (M10)', unit: 'months',
     fns: ['transitions.RUNGS', 'transitions.LEVELS', 'transitions.phase4On', 'transitions.cardCost', 'transitions.withdrawalCost', 'transitions.burnLevels', 'transitions.transitionPlan', 'transitions.ladderOf', 'transitions.dipOf', 'transitions.tripwiresOf', 'transitions.plansOf', 'transitions.monthsText', 'transitions.transitionOf', 'transitions.setTransition'],
@@ -571,8 +591,8 @@ export const MATH = [
     fns: ['identity.identityOn', 'identity.isCouple', 'identity.peopleOf', 'identity.inTransition', 'identity.addressFacts', 'identity.familiarityOf', 'identity.stateOf', 'identity.routeOf', 'identity.feelOf', 'identity.stateChar', 'identity.ceilingChar', 'identity.addressOf', 'identity.axisScores', 'identity.tieBreaks', 'identity.lettersOf', 'identity.weatherScore', 'identity.weatherHistory', 'identity.weatherOf', 'identity.tiltOf', 'identity.treeName', 'identity.leadOf', 'identity.asksOf', 'identity.identityOf', 'identity.onePagerLine', 'identity.setAddress', 'identity.toggleModifier', 'identity.setLetter', 'identity.setWeather', 'identity.setLater'],
     fromApp: 'tap scoring, not a dollar formula (batch 25, Phase 4): the FI Address (familiarity, route and target, state and feeling, the ceiling, a motion flag, modifiers), the four letters (each axis -3 to 3 from Agree 1, Neutral 0, Disagree -1; a tie leans on what SLAM knows) with the 3 skill trees each type points to, the weather (six answers 0 to 2, two turned around, scaled to 12: Clear to 2, Fair to 5, Overcast to 8, Storm above), a couple\'s one ask each, and the tilt (25 tree ids ranked). The value is the client\'s four letters (Coach tools › Discovery)',
     app: c => identityOf(c.doc, c.ref, { now: c.now, m: c.m }).people[0].letters.type,
-    parts: [{ key: 'address', name: 'FI Address', unit: 'text', fromApp: 'the four characters, the motion flag and the modifiers, read mostly from the household plus up to four taps', app: c => identityOf(c.doc, c.ref, { now: c.now, m: c.m }).address.full },
-      { key: 'weather', name: 'Money weather (latest)', unit: 'text', fromApp: 'the latest session\'s six taps, scaled to 12', app: c => identityOf(c.doc, c.ref, { now: c.now, m: c.m }).people[0].weather.latest }] },
+    parts: [{ key: 'address', name: 'FI Address', unit: 'text', fromApp: 'tap scoring kept in SLAM (the taps are not on a tab): the four characters, the motion flag and the modifiers, read mostly from the household plus up to four taps', app: c => identityOf(c.doc, c.ref, { now: c.now, m: c.m }).address.full },
+      { key: 'weather', name: 'Money weather (latest)', unit: 'text', fromApp: 'the latest session\'s six taps, scaled to 12 (the taps are kept with the session in SLAM, not on a tab)', app: c => identityOf(c.doc, c.ref, { now: c.now, m: c.m }).people[0].weather.latest }] },
   // ---------- The true cost of debt and the student loan decision (batch 29) ----------
   { id: 'M9T', name: 'The true cost of each debt', inputs: 'M34 the one debt plan (each debt\'s interest, also in today\'s dollars at the inflation assumption), M53 the FI date, M14 the marginal rates, the debt type and what it is linked to', unit: 'money',
     fns: ['truecost.trueCostOf', 'truecost.withoutDebt', 'truecost.afterTaxOf'],
@@ -594,9 +614,10 @@ export const MATH = [
   // ---------- Batch 31: typical at your age (Phase 4, Track 1 groundwork) ----------
   { id: 'M9E', name: 'Typical at your age', inputs: 'age (About you: birth year and month), state, the cash accounts\' balances, card balances, student loan balances, the gut spending number; data/priors-2026.json (the Primary rows only); TypicalLow, TypicalHigh', unit: 'count',
     fns: ['priors.TYPICAL', 'priors.CE_CATEGORIES', 'priors.NO_ROW', 'priors.rowFor', 'priors.placeOf', 'priors.typicalOf', 'priors.farFrom', 'priors.typicalCheck', 'priors.typicalChecks', 'priors.shareOf', 'priors.shortRange', 'priors.typicalBoxes'],
-    fromApp: 'reads data/priors-2026.json: for the age band, the source\'s median (SCF) or mean (CE) times TypicalLow and TypicalHigh is the typical range (no Primary row publishes percentiles); a total is far outside when above high x high / likely or below low x low / likely. The value counts the totals far outside (cash, cards, student loans, spending a month)',
+    fromApp: 'which totals to test depends on the boxes the household has filled, so it is worked out in SLAM: it reads data/priors-2026.json: for the age band, the source\'s median (SCF) or mean (CE) times TypicalLow and TypicalHigh is the typical range (no Primary row publishes percentiles); a total is far outside when above high x high / likely or below low x low / likely. The value counts the totals far outside (cash, cards, student loans, spending a month)',
     app: c => { const d = priorsData(); return d ? typicalChecks(d, { age: c.x?.age ?? null, boxes: typicalBoxes(c.live) }).length : null; },
-    parts: [{ key: 'netWorth', name: 'Typical net worth at this age (the SCF median)', unit: 'money', fromApp: 'the SCF 2025 median family net worth for the age of head (Table 2)',
+    parts: [{ key: 'netWorth', name: 'Typical net worth at this age (the SCF median)', unit: 'money', // batch 38: a lookup on the Assumptions tab, no longer from the app
+      sheet: 'IF(Profile_ageUsed="","",IFERROR(INDEX(Priors_netWorth_typical,MATCH(Profile_ageUsed,Priors_netWorth_from,1)),""))',
       app: c => { const d = priorsData(); return d ? typicalOf(d, 'netWorth', { age: c.x?.age ?? null })?.likely ?? null : null; } }] },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },

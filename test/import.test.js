@@ -11,6 +11,7 @@ import { metrics } from '../js/math/metrics.js';
 import { buildWorkbook } from '../js/sheet/workbook.js';
 import { compare, applyChanges, linesOf, unpicked, fromCell, gridFromPlan } from '../js/import-sheet.js';
 import { everyField } from '../fixtures/households.js';
+import { loadExcel } from '../tools/workbook-check.mjs';
 
 const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
 const demo = JSON.parse(readFileSync(new URL('../fixtures/demo.json', import.meta.url)));
@@ -229,7 +230,7 @@ test('cells read back the way people type them', () => {
 });
 
 let ExcelJS = null;
-try { ExcelJS = (await import('exceljs')).default; } catch { /* not installed */ }
+ExcelJS = loadExcel(); // here, or the main checkout's in a git worktree (tools/workbook-check.mjs)
 test('through a real .xlsx (ExcelJS): untouched shows nothing; one typed cell is one change; a typed-over formula is seen', { skip: !ExcelJS && 'ExcelJS is not installed (npm install)' }, async () => {
   const { workbookBuffer, readWorkbook } = await import('../js/sheet/excel.js');
   const s = new Store(everyField(), { now: () => NOW.toISOString() });

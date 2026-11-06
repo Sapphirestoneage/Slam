@@ -83,7 +83,7 @@ export const REPORTS = [
           { key: 'variable', name: 'Variable spending (Budget lines)', unit: 'money', f: `IF(${LINES_ON},SUMIFS(Spend_M21,Spend_amountType,"<>Fixed",Spend_draftt,"<>Retirement",Spend_InMath,"Yes"),"")`, app: f.variable },
           { key: 'spending', name: 'Spending', unit: 'money', f: 'IF(Math_M27_spending="","",Math_M27_spending+N(Math_M27_debtOut))', app: f.spending },
           { key: 'surplus', name: 'Surplus (M27)', unit: 'money', f: 'Math_M27', app: c.m.surplus.value, total: true },
-          { key: 'savings', name: 'Saved in the budget (Retirement lines and after-tax savings)', unit: 'money', f: `IF(${LINES_ON},${RETIREMENT_LINES},0)+N(Math_M28_afterTax)`, app: f.savings },
+          { key: 'savings', name: 'Saved in the budget (Retirement lines and after-tax savings, a 529 or Goal account included)', unit: 'money', f: `IF(${LINES_ON},${RETIREMENT_LINES},0)+N(Math_M28_afterTax)+N(Math_M28_goal)`, app: f.savings }, // batch 38: the app counts 529 and Goal contributions here (not in FI money)
           { key: 'free', name: 'Free after savings', unit: 'money', f: 'IF(OR(Statements_takeHome="",Statements_spending=""),"",Statements_takeHome-Statements_spending-Statements_savings)', app: f.free, total: true },
         ] },
         { title: 'Cash flow, this month on the calendar (M64)', rows: [
@@ -135,7 +135,9 @@ export const REPORTS = [
           left: LEFT[s.id] ? { f: LEFT[s.id] } : { v: s.left ?? null, fromApp: true },
           date: { v: s.date ?? null, fromApp: true }, appStatus: { v: s.status }, appLeft: { v: s.left ?? null },
         } })),
-        { key: 'here', cells: { name: { v: 'The step you are on' }, status: { f: 'IFERROR(INDEX({above:step},MATCH("In progress",{above:status},0)),"")', named: true }, appStatus: { v: F.here ?? '' } } },
+        // The first step In progress, in order; 7 (Go all in) and 5b (Give) are windows beside the path, never the step
+        // you are on (batch 38: the multimillionaire has 7 open and is on 8).
+        { key: 'here', cells: { name: { v: 'The step you are on' }, status: { f: F.steps.filter(s => !['7', '5b'].includes(s.id)).reduceRight((rest, s) => `IF(INDEX({above:status},MATCH("${s.id}",{above:step},0))="In progress","${s.id}",${rest})`, '""'), named: true }, appStatus: { v: F.here ?? '' } } },
       ] },
       { title: 'Quiet Quitting FI and Coast FI', rows: [
         { cells: { name: { v: 'Quiet Quitting FI (M70)' }, left: { f: 'Math_M70' }, appLeft: { v: F.qq.value ?? null } } },
