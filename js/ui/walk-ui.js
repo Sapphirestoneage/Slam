@@ -23,7 +23,11 @@ export function walkMeThrough(app, ctx) {
   ensureCategories(ctx.store); // the Budget's category rows, so a category stop can offer Use typical from the first one
   // Batch 18: a tap that answers the box (Have it?, a pick, Use typical) or a typed number moves on by itself; Next
   // stays for keeping what is there. Only a change that fills the current box moves on.
-  W.off = ctx.store.subscribe(() => { if (W.on && W.cur && !W.quiet && !W.soon) { W.soon = true; requestAnimationFrame(() => requestAnimationFrame(() => { W.soon = false; filledNow(app); })); } });
+  // Eli, Nov 6 ("when I click on a cell it knocks me back up"): only a change made in the walk's own box moves the
+  // walk on. A tap somewhere else on the page (another chip on About you, say) leaves the walk, and the page, where they are.
+  W.off = ctx.store.subscribe(() => { if (W.on && W.cur && !W.quiet && !W.soon && inCurrentBox(W.last)) { W.soon = true; requestAnimationFrame(() => requestAnimationFrame(() => { W.soon = false; filledNow(app); })); } });
+  W.tapTrack = e => { W.last = e.target; };
+  document.addEventListener('pointerdown', W.tapTrack, true); document.addEventListener('focusin', W.tapTrack, true);
   W.keys = e => { if (e.key === 'Escape' && W.on && !document.querySelector('.pop, .ft-overlay')) { e.preventDefault(); stopWalk(); } };
   document.addEventListener('keydown', W.keys);
   document.body.classList.add('walking');
@@ -35,6 +39,7 @@ function stopWalk({ quiet = false } = {}) {
   const n = W.passed.length;
   W.on = false; W.bar?.remove(); W.bar = null; W.cur = null; W.off?.(); W.off = null;
   document.removeEventListener('keydown', W.keys);
+  if (W.tapTrack) { document.removeEventListener('pointerdown', W.tapTrack, true); document.removeEventListener('focusin', W.tapTrack, true); }
   document.body.classList.remove('walking'); document.body.style.removeProperty('--walk-room');
   if (!quiet) S.toast(n ? `Walk ended after ${n} ${n === 1 ? 'box' : 'boxes'}. Walk me through picks up where it left off.` : 'Walk ended.');
 }
@@ -57,6 +62,16 @@ function next(app) {
   if (W.cur.open) S.openBlock(W.cur.open);
   land(app, W.cur.route, { id: W.cur.id, focus: W.cur.focus, parentCat: W.cur.parentCat ?? null });
   draw(app, W.passed.length + 1, W.passed.length + left.reduce((n, x) => n + (x.make ? x.make.length : 1), 0)); // rows the walk makes count as the boxes they become
+}
+// Was the last tap or focus inside the walk's current box (its control, the walk bar, or the row it sits in)?
+function inCurrentBox(el) {
+  if (!el || !W.cur) return false;
+  if (W.bar?.contains?.(el)) return true;
+  const box = W.cur.focus ? document.querySelector(`[data-focus="${CSS.escape(W.cur.focus)}"]`) : null;
+  const scope = box?.closest?.('label.field, .seg, .picks, .stack, tr.row, .row-line') ?? box;
+  if (scope?.contains?.(el)) return true;
+  const row = W.cur.id ? document.querySelector(`tr[data-id="${CSS.escape(W.cur.id)}"]`) : null;
+  return !!row?.contains?.(el) || !!el.closest?.('.glow');
 }
 // The current box got its answer (it dropped off the list): count it and go on.
 function filledNow(app) {

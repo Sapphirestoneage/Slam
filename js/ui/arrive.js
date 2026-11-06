@@ -93,7 +93,11 @@ export function place(it, { scroll = true, again = null } = {}) {
 }
 function light(el, scroll) {
   el.classList.add('glow');
-  if (scroll) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  // Only scroll when the box is off screen (Eli, Nov 6: taps were knocking him back up the page); the docked bars at
+  // the bottom take about 140px.
+  const r = el.getBoundingClientRect?.();
+  const visible = r && r.top >= 64 && r.bottom <= window.innerHeight - 140;
+  if (scroll && !visible) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   (el.matches('input,select,button') ? el : el.querySelector('input,select,button'))?.focus({ preventScroll: true });
 }
 // Find (batch 14): go to the screen and light up one box, no bar. it: { id, focus, parent, parentCat }; parentCat names

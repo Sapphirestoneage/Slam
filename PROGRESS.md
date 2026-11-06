@@ -560,3 +560,6 @@ America/New_York. Layout check on Home, Goals and Overview (Demo and a new clien
 covered (the Demo's load toast) before and after; the open sections scanned on Maya, Tom and the deficit persona at
 1440, 1280 and 390, light and dark: 0 findings (the Move to next session hover tip on Home, clipped, is batch 13's).
 
+## Nov 6 2026: taps no longer knock you up the page
+
+Eli, on his phone in the Claude app: "when I click on a cell it knocks me back up". Three causes fixed everywhere: (1) keepPlace (js/ui/place.js) holds the page at its old height through every redraw until charts and fitTable settle, so a host that sizes or scrolls the page from outside never sees it shrink; (2) landing on a box (js/ui/arrive.js light) scrolls only when the box is off screen; (3) the walk moves on by itself only when the change was made in its own box or bar, so a tap elsewhere on the page leaves the walk and the page where they are. Effort scoreboard unchanged (35 and 38 actions).

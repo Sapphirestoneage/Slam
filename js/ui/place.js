@@ -30,8 +30,30 @@ function neighbours(row) {
 const scrollers = doc => [...doc.querySelectorAll('.list-scroll[data-scroll-key]')];
 const topOf = el => el?.getBoundingClientRect?.().top ?? null;
 
+// Hold the page's height through a redraw (Eli, Nov 6, on his phone in the Claude app: "when I click on a cell it
+// knocks me back up"). While the old screen is cleared and the new one built, the page can be briefly shorter; a
+// host that sizes or scrolls the page from outside (the Claude app's artifact view) can then reset its scroll to the
+// top. The page keeps at least its old height until the redraw and anything it schedules (charts, fitTable) settle.
+let holds = 0;
+function holdHeight(doc, win) {
+  const root = doc.documentElement;
+  if (!root?.style || typeof win.requestAnimationFrame !== 'function') return () => {};
+  if (holds++ === 0) root.style.minHeight = `${root.scrollHeight}px`;
+  let done = false;
+  return () => {
+    if (done) return; done = true;
+    const release = () => { if (--holds === 0) root.style.minHeight = ''; };
+    win.requestAnimationFrame(() => win.requestAnimationFrame(() => win.setTimeout(release, 600)));
+  };
+}
+
 export function keepPlace(fn, { doc = globalThis.document, win = globalThis.window } = {}) {
   if (!doc?.querySelectorAll || !win) return fn();
+  const unhold = holdHeight(doc, win);
+  try { return keepPlaceInner(fn, doc, win); } finally { unhold(); }
+}
+
+function keepPlaceInner(fn, doc, win) {
   const y = win.scrollY;
   const inner = new Map(scrollers(doc).map(el => [el.dataset.scrollKey, el.scrollTop]));
   const active = doc.activeElement;
