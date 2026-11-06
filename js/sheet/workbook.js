@@ -214,7 +214,8 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
         const appV = appValue(row, c);
         const fmt = unit === 'money' && (row.cents ?? e.cents) ? 'cents' : unit;
         const name = words ?? row.name;
-        if (row.fromApp) rows.push([{ v: `${KEY.math}${id}`, s: 'key' }, { v: name, s: 'label' }, { v: appV, s: 'app', fmt }, { v: appV, s: 'app', fmt }, { v: 'From the app', s: 'note' }]);
+        if (row.fromApp && typeof appV === 'string') rows.push([{ v: `${KEY.math}${id}`, s: 'key' }, { v: name, s: 'label' }, { v: appV, s: 'appText' }, { v: null }, { v: 'From the app', s: 'note' }]); // a sentence wraps in its box
+        else if (row.fromApp) rows.push([{ v: `${KEY.math}${id}`, s: 'key' }, { v: name, s: 'label' }, { v: appV, s: 'app', fmt }, { v: appV, s: 'app', fmt }, { v: 'From the app', s: 'note' }]);
         else {
           const f = `Math_${id}`;
           pending.push({ f, where: `${tab.name}: ${id}` });
@@ -567,13 +568,13 @@ function mathRow(id) {
   return null;
 }
 // Widths that fit: each column as wide as what it holds (a header wraps), within 8 and 44 characters.
-const QUIET = new Set(['title', 'about', 'section', 'band', 'note', 'key']);
+const QUIET = new Set(['title', 'about', 'section', 'band', 'note', 'key', 'appText']);
 function fitWidths(sheet) {
   const w = sheet.widths;
   sheet.rows.forEach(row => (row || []).forEach((cell, i) => {
     if (!cell || QUIET.has(cell.s) || i === 0) return;
     const text = cell.f ? '' : cell.v instanceof Date ? '2026-11-06' : String(cell.v ?? '');
-    const n = cell.s === 'head' ? Math.min(18, Math.ceil(text.length / 2) + 3) : cell.f ? 14 : typeof cell.v === 'number' ? 13 : text.length + 3;
+    const n = cell.s === 'head' ? Math.min(18, Math.ceil(text.length / 2) + 3) : cell.f || cell.s === 'app' ? 14 : typeof cell.v === 'number' ? 13 : text.length + 3; // a long app sentence spills over, it does not widen the column
     w[i] = Math.max(w[i] ?? 8, Math.min(44, n));
   }));
   w[0] = 4;
