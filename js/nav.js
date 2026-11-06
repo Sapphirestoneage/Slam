@@ -20,7 +20,8 @@ export const TABS = [
     { id: 'scenarios', name: 'Current vs Proposed', area: 'goals' },
     { id: 'transitions', name: 'Transitions', area: 'goals', phase4: true }] }, // K: the tab keeps its id; batch 21: Life Transitions, shown when Phase 4 previews are on (Coach tools)
   { id: 'report', name: 'Report', job: 'The report: net worth, metrics, one-pager', subs: [
-    { id: 'overview', name: 'Overview' }, { id: 'statements', name: 'Statements' }, { id: 'one-pager', name: 'One-pager' }, { id: 'history', name: 'History' }] },
+    { id: 'overview', name: 'Overview' }, { id: 'statements', name: 'Statements' }, { id: 'one-pager', name: 'One-pager' }, { id: 'history', name: 'History' },
+    { id: 'lender', name: 'Lender\'s view', phase4: true }] }, // batch 42: what a lender, a landlord and a card issuer see (Phase 4 previews)
 ];
 // Old homes (My Money and Spending) still open: bookmarks, saved links and old Lives on text land on the new home.
 export const MOVED = {

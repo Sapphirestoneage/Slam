@@ -13,7 +13,7 @@ export default {
     { kind: 'income', type: 'Job', name: 'Part-time job', amount: 1100, per: '2 weeks', values: { basis: 'Take-home', payFrequency: '2 weeks', incomeType: 'W-2', hsaFsa: 50 } },
     // Batch 27: a Platform row: $3,125 a month gross on OnlyFans, the registered 20% fee and 7-day hold, about $150 a month
     // in chargebacks, paid out weekly from Monday Nov 9 (so each payout lands a week later, after the hold).
-    { kind: 'income', type: 'Platform', name: 'OnlyFans', amount: 3125, per: 'month', status: 'Roughly', values: { platform: 'OnlyFans', chargebacks: 150, payFrequency: 'week', nextPayday: '2026-11-09' } },
+    { kind: 'income', type: 'Platform', name: 'OnlyFans', amount: 3125, per: 'month', status: 'Roughly', values: { platform: 'OnlyFans', chargebacks: 150, payFrequency: 'week', nextPayday: '2026-11-09', returnsFiled: '1', returnLast: 14500 } }, // batch 42: started mid-2025, one return so far
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 3600, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Checking', name: 'Checking', values: { group: 'cash', balance: 2200 } },
     { kind: 'account', type: 'Savings or HYSA', name: 'HYSA', values: { group: 'cash', balance: 6000 } },
@@ -32,6 +32,15 @@ export default {
     monthsToFi: { value: 365, unit: 'months', note: 'Freed money follows the FOO: 4 months on the card, then big e: $23,400 - ($8,200 - buffer $1,661.54 - little e $1,000) = $17,861.54 / $839.21 = 21.3, so 22 months: 26 months with only the HSA going in ($12,500 x g^26 + $108.33 x (g^26 - 1) / (g - 1) = $17,498.59, g = 1.07^(1/12)). Then $108.33 + $539.21 + $300 = $947.54 a month to the $1,080,000 FI number ($3,600 x 12 / 4%): ln(($1,080,000 (g-1) + $947.54) / ($17,498.59 (g-1) + $947.54)) / ln g = 338.4, so 339: 365 months.' },
     runwayMonths: { value: 2.278, unit: 'months', tol: 0.01, note: '$8,200 / $3,600.' },
     bigETarget: { value: 23400, unit: 'money', note: 'Age 26 / 5 = 5.2 x 1.25 (varies) = 6.5 x $3,600 = $23,400.' },
+  },
+  // Batch 42 (the lender's-eye view, M9W): what Report › Lender's view should say, worked by hand.
+  lender: {
+    earned: { value: 5274.5, note: 'Job gross $35,094 / 12 = $2,924.50 (the app\'s M13 from $1,100 every 2 weeks) + OnlyFans $28,200 / 12 = $2,350 paid out after the fee and chargebacks.' },
+    mortgageIncome: { value: 2924.5, note: 'One return with OnlyFans (2025, $14,500): most mortgage lenders wait for the second, so only the job counts.' },
+    landlordIncome: { value: 4132.83, note: '$2,924.50 + the latest return $14,500 / 12 = $1,208.33.' },
+    dti: { value: 0.0273, tol: 0.0005, note: 'The card at its minimum: max($25, 1% x $2,900 + $2,900 x 21% / 12) = $29 + $50.75 = $79.75; / $2,924.50 = 2.7%.' },
+    gap: { value: 2350, note: '$5,274.50 - $2,924.50 = $2,350 a month (all of OnlyFans).' },
+    says: ['File your 2026 return showing all of OnlyFans', 'most mortgage lenders wait for the second', 'Needs a card limit'],
   },
   cannot: [
     // Batch 27 cleared: platform payouts (gross, the platform fee, chargebacks a month, the hold and the payout schedule)

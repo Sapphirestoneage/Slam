@@ -35,6 +35,15 @@ export default {
     bigETarget: { value: 17550, unit: 'money', note: 'Age 27 / 5 = 5.4 x 1.25 (income varies) = 6.75 months x $2,600 = $17,550.' },
     littleEFull: { value: false, unit: 'bool', note: '$1,700 fills the $1,200 buffer, then $500 of little e.' },
   },
+  // Batch 42 (the lender's-eye view, M9W): what Report › Lender's view should say, worked by hand.
+  lender: {
+    earned: { value: 3635, note: 'The paycheck\'s gross $26,460 a year (the app\'s M13 from $900 every 2 weeks, card tips in it) / 12 = $2,205 + cash tips after tip-out ($140 - $30) x 13 shifts = $1,430.' },
+    mortgageIncome: { value: 2205, note: 'The cash tips are not reported, so no W-2 shows them: the paycheck only.' },
+    landlordIncome: { value: 2205, note: 'The same: pay stubs show the paycheck.' },
+    dti: { value: 0.0265, tol: 0.0005, note: 'The card at its minimum: max($25, 1% x $1,800 + $1,800 x 27% / 12) = $18 + $40.50 = $58.50; / $2,205 = 2.65%.' },
+    gap: { value: 1430, note: 'The unreported cash tips, $1,430 a month.' },
+    says: ['Report the cash tips on Bar job ($1,430 a month)', 'Deposit cash as it comes in', 'Needs a card limit'],
+  },
   cannot: [
     // Batch 27 cleared: tips (card, cash, tip-out on sales, reported or not) are parts of the Job row; and Variable income
     // shows for any client whose income varies (About you › Income stability), W-2 or not.

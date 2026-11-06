@@ -75,7 +75,10 @@
       "Jan",
       "Feb"
      ],
-     "slowShifts": 2
+     "slowShifts": 2,
+     "returnsFiled": "2 or more",
+     "returnLast": 52000,
+     "returnBefore": 41000
     },
     "notes": null,
     "privateNote": null,

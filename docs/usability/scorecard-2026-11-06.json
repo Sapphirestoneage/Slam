@@ -2644,6 +2644,70 @@
      "reason": "waits for Eli at sign-off"
     }
    }
+  },
+  {
+   "screen": "Report › Lender's view",
+   "route": "#/report/lender",
+   "area": "Report",
+   "batch": 42,
+   "tasks": [
+    "L1 What would a lender count for me?",
+    "L2 Why can't I show my tips?",
+    "L3 What rent can I get approved for?",
+    "L4 What do I pay before the statement date?"
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every tap saves and undoes (Cash tips reported, Tax returns filed, Use this year's pace, the two return boxes); Add a card limit lands on the card's limit box on Credit cards"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "test/lender.test.js: hand-worked rules (two returns averaged, never over the latest; one return; none; card minimums; 1% student loans; the netted rental loan; the loan from a payment) and the dancer, bartender, creator, teacher and Tom defs' lender numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "the lender's DTI differs from Overview's on purpose; each says so in one line (Overview's card: what you pay over gross pay; this screen shows Overview's number beside its own when they differ)"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker (all checks) clean on this screen for Demo and New, and on six personas with every section open at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "three side-by-side reads with one big number each; the moves are full sentences that wrap to five lines at 1280 (Eli at sign-off: shorter?)"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find: lender, dti, debt to income, how much house, 3x rent, proof of income land on it; one sub-tab under Report (Phase 4 previews)"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps for returns filed and tips reported, a one-tap Use for each return box; nothing to type unless the returns differ from this year"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "no red, no verdict words, no em dashes; the limits live in the info tips; the DTI place says which lines it sits under"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "a Guess tag on the mortgage number and the gap line until the returns are answered; empty states for no income, no cards and no card limit"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "the three reads stack under 1100px; tables stack with labels on a phone"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opens with no visible wait; the read is one pass over the rows"
+    },
+    "coachable": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "answers 'what can I get approved for' in one look; the rate (6.2%) and taxes and insurance share (25%) behind the loan size wait for Eli (QUESTIONS)"
+    }
+   }
   }
  ],
  "updated": {
@@ -2672,5 +2736,16 @@
   "major": 0,
   "minor": 5,
   "note": "Batch 37 appended its screens (each with \"batch\": 37), scored after its fixes; the rows above and the summary are as they were."
+ },
+ "batch42": {
+  "source": "Batch 42 (the lender's-eye view), scored by Claude against QA.md",
+  "note": "One new screen. Categories 5 (obvious) and 12 (coachable) wait for Eli at sign-off.",
+  "summary": {
+   "screens": 1,
+   "blocker": 0,
+   "major": 0,
+   "minor": 2,
+   "allPass": []
+  }
  }
 }

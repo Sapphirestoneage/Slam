@@ -209,6 +209,10 @@ export const AREAS = [
       pick('platform', 'Platform', ['OnlyFans', 'Fansly', 'Patreon', 'Etsy', 'Uber', 'DoorDash', 'Upwork', 'Other'], { kinds: ['income'] }),
       f('feePct', 'Platform fee %', 'pct', { kinds: ['income'] }), f('holdDays', 'Payout hold (days)', 'number', { kinds: ['income'] }),
       f('chargebacks', 'Chargebacks and refunds a month', 'money', { kinds: ['income'] }),
+      // Batch 42 (the lender's-eye view, M9W): the returns a self-employment row has on file, as a lender reads them.
+      pick('returnsFiled', 'Tax returns filed with this income', ['2 or more', '1', 'None'], { kinds: ['income'] }),
+      f('returnLast', 'Net profit on the last return filed (a year)', 'money', { kinds: ['income'] }),
+      f('returnBefore', 'Net profit on the return before that (a year)', 'money', { kinds: ['income'] }),
       f('what', 'What it is', 'text', { kinds: ['benefit'] }),
       pick('how', 'How it works', ['Reimbursed', 'Stipend', 'Pretax', 'Match', 'Discount'], { kinds: ['benefit'] }),
       pick('using', 'Using it?', ['Yes', 'No', 'Partly'], { kinds: ['benefit'] }),

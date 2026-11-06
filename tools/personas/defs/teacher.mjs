@@ -25,6 +25,16 @@ export default {
     debtFreeMonths: { value: 72, unit: 'months', note: 'The loan keeps its own $263 payment (a PSLF loan takes no extra) and PSLF forgives what is left after the 72 payments still to make: debt free in 72 months.' },
     bigETarget: { value: 18560, unit: 'money', note: 'Age 32 / 5 = 6.4 months x $2,900 = $18,560.' },
   },
+  // Batch 42 (the lender's-eye view, M9W): a plain W-2 household, what Report › Lender's view should say.
+  lender: {
+    earned: { value: 4833.33, note: '$58,000 / 12.' },
+    mortgageIncome: { value: 4833.33, note: 'A W-2 salary counts in full.' },
+    landlordIncome: { value: 4833.33, note: 'The same.' },
+    dti: { value: 0.0544, tol: 0.0005, note: 'The IBR payment $263 / $4,833.33 = 5.4%.' },
+    gap: { value: 0, note: 'Nothing earned is out of sight.' },
+    loan: { value: 165724, tol: 50, note: 'min(28% x $4,833.33 = $1,353.33, 36% x $4,833.33 - $263 = $1,477) = $1,353.33; 75% = $1,015 at 6.2% for 30 years x 163.28 = $165,724.' },
+    says: ['4 times', 'At or over the 3 times line', 'No cards on file', 'Everything you earn'],
+  },
   cannot: [
     'PSLF employer certification and the count of qualifying payments are typed by hand (Payments left); SLAM does not read them from the servicer.',
   ],

@@ -509,3 +509,6 @@ F506,Built,,Needs,Calendar entries,Name when shared,Secondary,,,,,,,,,Now,Added 
 F507,Built,,Goals,Goals and events,Who sees this (blank: everyone),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Plan › Goals,choice,,,goals.seen
 F508,Built,,Goals,Goals and events,Who sees its notes (blank: as the row),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Plan › Goals,choice,,,goals.notesSeen
 F509,Built,,Goals,Goals and events,Name when shared,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Plan › Goals,choice,,,goals.shareName
+F510,Built,,Income,Income,Tax returns filed with this income,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,choice,,,income.returnsFiled
+F511,Built,,Income,Income,Net profit on the last return filed (a year),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.returnLast
+F512,Built,,Income,Income,Net profit on the return before that (a year),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.returnBefore

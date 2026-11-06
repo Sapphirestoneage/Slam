@@ -95,7 +95,9 @@
      "platform": "OnlyFans",
      "chargebacks": 150,
      "payFrequency": "week",
-     "nextPayday": "2026-11-09"
+     "nextPayday": "2026-11-09",
+     "returnsFiled": "1",
+     "returnLast": 14500
     },
     "notes": null,
     "privateNote": null,

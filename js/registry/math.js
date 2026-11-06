@@ -45,6 +45,7 @@ import { priorsData } from '../priorslib.js';
 import { typicalChecks, typicalBoxes, typicalOf, priorsOpts } from '../math/priors.js';
 import { creditHealth } from '../math/debt.js';
 import { identityOf } from '../math/identity.js';
+import { lenderOf } from '../math/lender.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -631,6 +632,18 @@ export const MATH = [
         { key: `${k}High`, name: `${label}: high (blank when a date never comes at that end)`, unit, fromApp: 'M9R: the plan run again with each input moved by its level', app: c => c.ranges()?.[k]?.high ?? null }]),
       { key: 'fooLow', name: 'FOO step: the earliest step any one input reaches at its low or high', unit: 'text', fromApp: 'M9R: the FOO (M69) walked again with each input moved by its level', app: c => c.fooRange()?.low ?? null },
       { key: 'fooHigh', name: 'FOO step: the latest step any one input reaches at its low or high', unit: 'text', fromApp: 'M9R: the FOO (M69) walked again with each input moved by its level', app: c => c.fooRange()?.high ?? null },
+    ] },
+  // ---------- Batch 42: the lender's-eye view (Phase 4, Track 2) ----------
+  { id: 'M9W', name: 'What a lender sees: a mortgage lender, a landlord and a card issuer', inputs: 'each income row (its gross, cash tips and whether they are reported, the returns filed with self-employment: Tax returns filed, Net profit on the last return and the one before), benefits and their end dates, the debts\' payments (a card at its minimum), the home loan, the rent line, card balances, limits and statement days; LenderFront, LenderBack, LenderBackStrong, LenderBackDu, LenderFhaFront, LenderFhaBack, LenderRentTimes, LenderRentYearNyc, LenderDropLook, LenderBenefitYears, LenderLeaseMonths, LenderStudentPct, LenderMortgageRate, LenderMortgageYears, LenderTaxInsShare, UtilHigh, UtilBest', unit: 'pct',
+    fns: ['lender.RETURNS_FILED', 'lender.lenderOn', 'lender.lastReturnYear', 'lender.lenderKind', 'lender.returnsOf', 'lender.lenderRows', 'lender.lenderDebts', 'lender.loanFromPayment', 'lender.maxHomePayment', 'lender.dtiPlace', 'lender.lenderOf'],
+    fromApp: 'each income row is read three ways (a mortgage lender, a landlord, a card issuer) by its kind: a paycheck at its gross with reported tips, self-employment from the returns filed (two averaged, never more than the latest), benefits by how long they run, gifts not at all; the moves are the reading run again with one change each, so it is worked out in SLAM',
+    label: 'Total debt-to-income on the income a mortgage lender can count', app: c => lenderOf(c.doc, c.ref, { now: c.now, m: c.m }).mortgage.dti,
+    parts: [
+      { key: 'counted', name: 'Income a mortgage lender can count, a month', unit: 'money', fromApp: 'the rows read as a lender reads them (above)', app: c => lenderOf(c.doc, c.ref, { now: c.now, m: c.m }).mortgageIncome },
+      { key: 'earned', name: 'Income earned, a month before tax (gifts left out)', unit: 'money', fromApp: 'every income row before tax, cash tips and self-employment at this year\'s pace', app: c => lenderOf(c.doc, c.ref, { now: c.now, m: c.m }).earned },
+      { key: 'gap', name: 'The gap: earned less what a mortgage lender can count, a month', unit: 'money', fromApp: 'earned less counted', app: c => lenderOf(c.doc, c.ref, { now: c.now, m: c.m }).gap.month },
+      { key: 'landlord', name: 'Income a landlord can count, a month', unit: 'money', fromApp: 'the rows read as a landlord reads them: the latest return for self-employment', app: c => lenderOf(c.doc, c.ref, { now: c.now, m: c.m }).landlordIncome },
+      { key: 'loan', name: 'Home loan the usual lines clear on the income a lender can count', unit: 'money', fromApp: 'the most home payment (LenderFront and LenderBack less the other debts), less taxes and insurance, as a loan at LenderMortgageRate over LenderMortgageYears', app: c => lenderOf(c.doc, c.ref, { now: c.now, m: c.m }).mortgage.loan },
     ] },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },

@@ -953,3 +953,31 @@ separate money, and families share a screen. One layer, js/privacy.js, sits wher
    backup and spreadsheet carry no private name, the view store writes through. tools/e2e/privacy.cjs (the browser leak
    test, README): every screen in four views at 1280 and 390, every row's Details at 1280, the one-pager (coach and
    client view), Send summary, the share view and both exports searched for the private names, notes and amounts.
+
+## Batch 42 (Nov 6 2026): the lender's-eye view (Phase 4, Track 2, real lives wave 1)
+
+1. Math: `js/math/lender.js` (M9W, test/lender.test.js). Each income row is read three ways. A paycheck counts at its
+   gross (card tips are on it); cash tips only when reported. Self-employment (1099, a business, a side hustle, a
+   Platform row) counts from the returns filed, net of what was written off: two returns averaged, never more than the
+   latest (Fannie Mae B3-3.1-01's declining-trend rule and FHA 4000.1's lesser-of rule are the same formula); one
+   return, a mortgage lender waits for the second and a landlord reads it; none, nothing. Blank returns are a Guess at
+   this year's pace. Unemployment does not count for a mortgage; a benefit counts when it runs 3 more years (a lease
+   for a landlord); a rental's loan is netted; gifts are in neither column. Debts at the payment on the credit
+   report (a card at its minimum, a student loan with no payment at 1%, no family loans). Reads: total DTI against
+   36%, 43% (FHA), 45% and 50%, and the home loan the 28/36 lines clear; gross over the rent against 3 times (40 times
+   a year in NYC); utilization against 10% and 30% with what to pay before the statement closes. The gap is earned
+   less what a mortgage lender counts, with the home loan and rent it rules out. The moves are the read run again with
+   one change each (report the tips, file the next return in full, pay off the debt with the biggest payment for its
+   balance, deposit cash so bank statements show it), the top two per reader.
+2. Rules: 15 new RULES (Lender*) on Assumptions with sources and dates (Fannie Mae B3-6-02 and B3-3.1-01, HUD 4000.1
+   II.A.5.d, the CFPB's old 43% QM line, LeaseRunner for 3x and 40x); utilization reuses UtilHigh and UtilBest. New
+   Income fields: Tax returns filed with this income, Net profit on the last return, the one before (spec rows added,
+   format 33, M9W on the Math tab via tools/library/lender-spec.py).
+3. Screen: Report › Lender's view (a Phase 4 preview, like Transitions): one slim gap line, three reads side by side
+   (a mortgage lender, a landlord, a card issuer: the one number, where it lands, the moves), then closed sections:
+   What each one counts, Your returns and tips (taps and one-tap Use), Debts a lender counts. Overview's
+   debt-to-income card says in one line how it differs. Find: lender, dti, how much house, 3x rent, proof of income.
+4. Personas: the dancer's def has her 2024 and 2025 returns ($41,000 and $52,000: $3,875 a month counted of $6,175
+   earned), the creator's OnlyFans has one return ($14,500: a mortgage lender counts only the job); the bartender's
+   unreported cash tips are the $1,430 gap; the teacher (W-2) and Tom read with no gap. Each def's `lender` says what
+   the screen should say; test/lender.test.js checks it.

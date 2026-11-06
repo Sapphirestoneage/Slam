@@ -30,6 +30,7 @@ import { scorecardScreen } from './ui/scorecard-ui.js';
 import { reviewScreen } from './ui/review-ui.js';
 import { goalsScreen, timelineScreen, payoffScreen, nextYearScreen, scenariosScreen } from './ui/plan-ui.js';
 import { transitionsScreen } from './ui/transitions-ui.js';
+import { lenderScreen } from './ui/lender-ui.js';
 import { AREAS, recordFor } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
 import { statusOf, countsAsDone } from './records.js';
@@ -253,6 +254,7 @@ export const SCREENS = {
   'report/statements': (app, ctx) => (app.hasClient ? statementsScreen(app, ctx) : [head('Statements'), noClient(app)]),
   'report/one-pager': (app, ctx) => (app.hasClient ? onePagerScreen(app, ctx) : [head('One-pager'), noClient(app)]),
   'report/history': (app, ctx) => (app.hasClient ? historyScreen(app, ctx) : [head('History'), noClient(app)]),
+  'report/lender': (app, ctx) => (app.hasClient ? lenderScreen(app, ctx) : [head('What a lender sees'), noClient(app)]), // batch 42
 
   'tools/lists': (app, ctx) => (app.hasClient ? listsScreen(app, ctx) : [head('Coach tools'), noClient(app)]),
   'tools/discovery': app => discoveryScreen(app),

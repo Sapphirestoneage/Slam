@@ -41,6 +41,14 @@ export default {
     bigETarget: { value: 49400, unit: 'money', note: '7.6 x $6,500.' },
     littleEFull: { value: true, unit: 'bool', note: 'Highest deductible $3,000, so little e is $1,000, and it is full.' },
   },
+  // Batch 42 (the lender's-eye view, M9W): an owner, so the home payment is the front end.
+  lender: {
+    earned: { value: 15816.67, note: '$185,000 / 12 + $400 net rent.' },
+    mortgageIncome: { value: 15816.67, note: 'Salary and the net rent both count.' },
+    dti: { value: 0.1517, tol: 0.0005, note: 'Home $1,950 + car $450 = $2,400 / $15,816.67 = 15.2% (the rental loan is netted in the $400 rent).' },
+    gap: { value: 0, note: 'Nothing out of sight.' },
+    says: ['$1,950 of it the home, 12.3% on its own'],
+  },
   cannot: [
     'RSUs: only a text box (Income › ESPP and RSUs). Vests are not income, not a windfall on the calendar, and not a concentration flag on the brokerage.',
     'Rental property: no rent, vacancy, costs or depreciation. The rent is typed as one net number on Income, and the rental loan sits on Debt as a second Mortgage.',

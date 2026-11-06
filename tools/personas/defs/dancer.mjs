@@ -13,7 +13,8 @@ export default {
     // Batch 27: the shifts are the row: 3 a week at about $575 a shift in dances (card and cash), less an $80 house fee
     // and a $20 tip-out (DJ and house mom) a shift; the app works out the tax on the rest (1099, quarterly).
     { kind: 'income', type: 'Self-employed', name: 'Dancing', status: 'Roughly', values: { incomeType: '1099', payFrequency: 'week',
-      shiftsWeek: 3, payShift: 575, houseFee: 80, tipOutBy: '$ a shift', tipOutAmount: 20, slowMonths: ['Jan', 'Feb'], slowShifts: 2 } },
+      shiftsWeek: 3, payShift: 575, houseFee: 80, tipOutBy: '$ a shift', tipOutAmount: 20, slowMonths: ['Jan', 'Feb'], slowShifts: 2,
+      returnsFiled: '2 or more', returnLast: 52000, returnBefore: 41000 } }, // batch 42: her 2024 and 2025 returns (Schedule C net) showed less than she earns now
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 3300, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Cash on hand', name: 'Cash at home', values: { group: 'cash', balance: 2500 } },
     { kind: 'account', type: 'Checking', name: 'Checking (bank A)', values: { group: 'cash', balance: 1800 } },
@@ -32,6 +33,16 @@ export default {
     monthsToFi: { value: 294, unit: 'months', note: 'Freed money follows the FOO: big e has $8,300 - $2,523.08 = $5,776.92, so $22,933.08 is left / $1,475.81 = 15.5, so 16 months with nothing invested. Then $1,475.81 a month at 7% real (g = 1.07^(1/12)) to the $990,000 FI number ($3,300 x 12 / 4%): ln(($990,000 (g-1) + $1,475.81) / $1,475.81) / ln g = 277.9, so 278: 294 months.' },
     runwayMonths: { value: 2.515, unit: 'months', tol: 0.01, note: '$8,300 / $3,300 (cash at home, checking and savings; the $3,500 set aside for taxes is owed, so it is not runway).' },
     bigETarget: { value: 28710, unit: 'money', note: '8.7 x $3,300.' },
+  },
+  // Batch 42 (the lender's-eye view, M9W): what Report › Lender's view should say, worked by hand.
+  lender: {
+    earned: { value: 6175, note: 'This year\'s pace: $74,100 / 12 (the shifts, net of the house fee and tip-out).' },
+    mortgageIncome: { value: 3875, note: 'Returns rising ($41,000 in 2024, $52,000 in 2025), so averaged: $93,000 / 2 = $46,500 / 12 = $3,875 (never more than the latest year).' },
+    landlordIncome: { value: 4333.33, note: 'A landlord reads the latest return: $52,000 / 12.' },
+    dti: { value: 0, note: 'No debts: 0%.' },
+    gap: { value: 2300, note: '$6,175 - $3,875 = $2,300 a month.' },
+    loan: { value: 132865, tol: 50, note: 'Home payment min(28% x $3,875 = $1,085, 36% x $3,875 = $1,395) = $1,085; 75% carries the loan: $813.75 a month at 6.2% for 30 years x 163.28 = $132,865.' },
+    says: ['File your 2026 return showing all of Dancing', '$63,050 a year', 'Deposit cash as it comes in'],
   },
   cannot: [
     // Batch 27 cleared: house fees and tip-out per shift are on the shift job; cash at home is a Cash on hand account
