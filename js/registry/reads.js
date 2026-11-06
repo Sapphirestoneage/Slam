@@ -12,7 +12,7 @@
 import { lenderOf } from '../math/lender.js';
 import { fireDrillOf, BANK_TYPES, fireDrillState } from '../math/firedrill.js';
 import { institutionOf } from '../institutions.js';
-import { shiftPnlsOf } from '../math/shiftpnl.js';
+import { shiftPnlsOf, isShiftRow, nightsOf } from '../math/shiftpnl.js';
 import { creditMove } from '../math/cards.js';
 import { creditHealth } from '../math/debt.js';
 import { CLIFF_COLS, cliffSections } from './reads-cliff.js';
@@ -175,40 +175,96 @@ const drillSections = c => {
 // the row's own take-home a shift, then getting there, childcare and gear; over every hour around the shift.
 const PER = '{@shiftsMo}';
 const SHIFT_COLS = [
-  { area: 'income', key: 'shiftOn', label: 'Shift P&L: a shift row (1)', unit: 'number', f: 'IF(AND(N({@shiftsMo})>0,{@M12}<>"",{app:folded}<>"Yes"),1,"")', app: { folded: rec => (rec.folded ? 'Yes' : '') } },
+  // 1: a shift row read whole; 2: a row with kinds of night (batch 60), read one night at a time on the Shift P&L tab.
+  { area: 'income', key: 'shiftOn', label: 'Shift P&L: a shift row (1; 2 when it has kinds of night)', unit: 'number', f: 'IF(AND(N({@shiftsMo})>0,{@M12}<>"",{app:folded}<>"Yes"),IF({app:nights}>0,2,1),"")',
+    app: { folded: rec => (rec.folded ? 'Yes' : ''), nights: rec => (Array.isArray(rec.values?.nights) ? rec.values.nights.length : 0) } },
   { area: 'income', key: 'shiftIn', label: 'Shift P&L: gross a shift (pay, tips; a paycheck before tax)', unit: 'money',
     f: `IF({@shiftOn}<>1,"",IF({@workMode}="Paycheck",N({@M13})/12+N({@cashMo}),N({@payMo})+N({@cardMo})+N({@cashMo}))/${PER})` },
   { area: 'income', key: 'shiftTakeHome', label: 'Shift P&L: take-home a shift (the row\'s own, after the fee, tip-out and tax)', unit: 'money', f: `IF({@shiftOn}<>1,"",{@M12}/${PER})` },
   { area: 'income', key: 'shiftTax', label: 'Shift P&L: tax a shift (gross less the fee, tip-out and take-home)', unit: 'money', f: `IF({@shiftOn}<>1,"",{@shiftIn}-N({@feeMo})/${PER}-N({@tipOutMo})/${PER}-{@shiftTakeHome})` },
   { area: 'income', key: 'shiftTravel', label: 'Shift P&L: getting there a shift', unit: 'money',
-    f: 'IF({@shiftOn}<>1,"",IF({travelBy}="Drive",IF({milesShift}="",0,{milesShift}*MileageRate),IF(OR({travelBy}="Ride",{travelBy}="Transit"),IF({travelCost}="",0,{travelCost}*IF({travelWays}="",2,{travelWays})),0)))' },
-  { area: 'income', key: 'shiftCare', label: 'Shift P&L: childcare a shift', unit: 'money', f: 'IF({@shiftOn}<>1,"",IF(OR({sitterHours}="",{sitterRate}=""),0,{sitterHours}*{sitterRate}))' },
-  { area: 'income', key: 'shiftGear', label: 'Shift P&L: outfits and gear a shift', unit: 'money', f: 'IF({@shiftOn}<>1,"",IF(OR({gearCost}="",N({gearShifts})=0),0,{gearCost}/{gearShifts}))' },
+    f: 'IF({@shiftOn}="","",IF({travelBy}="Drive",IF({milesShift}="",0,{milesShift}*MileageRate),IF(OR({travelBy}="Ride",{travelBy}="Transit"),IF({travelCost}="",0,{travelCost}*IF({travelWays}="",2,{travelWays})),0)))' },
+  { area: 'income', key: 'shiftCare', label: 'Shift P&L: childcare a shift', unit: 'money', f: 'IF({@shiftOn}="","",IF(OR({sitterHours}="",{sitterRate}=""),0,{sitterHours}*{sitterRate}))' },
+  { area: 'income', key: 'shiftGear', label: 'Shift P&L: outfits and gear a shift', unit: 'money', f: 'IF({@shiftOn}="","",IF(OR({gearCost}="",N({gearShifts})=0),0,{gearCost}/{gearShifts}))' },
   { area: 'income', key: 'shiftReal', label: 'Shift P&L: what a shift leaves you', unit: 'money', f: 'IF({@shiftOn}<>1,"",{@shiftTakeHome}-{@shiftTravel}-{@shiftCare}-{@shiftGear})' },
   { area: 'income', key: 'shiftHours', label: 'Shift P&L: hours a shift takes (getting ready, travel, the shift, winding down)', unit: 'number',
     f: 'IF(OR({@shiftOn}<>1,{hoursShift}=""),"",{hoursShift}+N({prepHours})+N({travelHours})+N({windDownHours}))' },
   { area: 'income', key: 'shiftHourly', label: 'Shift P&L: real hourly', unit: 'money', f: 'IF(OR({@shiftHours}="",N({@shiftHours})=0),"",{@shiftReal}/{@shiftHours})' },
 ];
+// Batch 60's kinds of night: each night's own boxes live with the row in SLAM (not a column of the Income tab), so they
+// show here as the app's values; each night's P&L is worked out from them and the row's columns: its share of the
+// shifts, its gross, fee and tip-out, and its part of the row's tax (by what it adds to the taxed gross; by its shifts
+// on a paycheck row), so the nights' take-homes add up to the row's.
+function nightRows(x, nights, k0, P, row) {
+  const v = x.r.values || {};
+  const R = col => row(col);
+  const out = [];
+  const keys = nights.map((nt, i) => `n${k0 + i}`);
+  nights.forEach((nt, i) => {
+    const k = keys[i], n = v.nights?.[i] ?? {}, r = name => `{row:${k}${name}}`;
+    const A = P.rows.find(p => p.rowId === x.r.id && p.nightId === nt.id) ?? null;
+    const given = (name, label, val, unit = 'money') => ({ key: `${k}${name}`, name: `${label} (on Income › Tips and shifts in SLAM)`, unit, given: true, value: val ?? null });
+    out.push({ title: `${x.r.name || x.r.type}, ${nt.name}: one shift`, rows: [
+      given('Shifts', 'Shifts a week', n.shiftsWeek, 'number'), given('Pay', 'Pay a shift', n.payShift), given('Hours', 'Hours a shift', n.hoursShift, 'number'),
+      given('Card', 'Card tips a shift', n.cardTips), given('Cash', 'Cash tips a shift', n.cashTips), given('Fee', 'House or stage fee a shift', n.houseFee),
+      given('OutAmt', 'Tip-out a shift (when it is $ a shift)', n.tipOutAmount), given('Sales', 'Sales a shift (when the tip-out is a % of sales)', n.salesShift),
+      { key: `${k}Month`, name: 'Shifts a month', unit: 'number', f: `IF(N(${r('Shifts')})=0,"",${r('Shifts')}*52/12)` },
+      { key: `${k}PayMo`, name: 'Pay a month', unit: 'money', f: `IF(${r('Month')}="","",IF(${r('Pay')}<>"",${r('Pay')}*${r('Month')},IF(AND(${R('hourly')}<>"",${r('Hours')}<>""),${R('hourly')}*${r('Hours')}*${r('Month')},0)))` },
+      { key: `${k}CardMo`, name: 'Card tips a month', unit: 'money', f: `IF(${r('Month')}="","",N(${r('Card')})*${r('Month')})` },
+      { key: `${k}CashMo`, name: 'Cash tips a month', unit: 'money', f: `IF(${r('Month')}="","",N(${r('Cash')})*${r('Month')})` },
+      { key: `${k}FeeMo`, name: 'House or stage fees a month', unit: 'money', f: `IF(${r('Month')}="","",N(${r('Fee')})*${r('Month')})` },
+      { key: `${k}OutMo`, name: 'Tip-out a month (by the row\'s Tip-out as)', unit: 'money',
+        f: `IF(${r('Month')}="","",IF(${R('tipOutBy')}="% of sales",IF(OR(${R('tipOutPct')}="",${r('Sales')}=""),0,${R('tipOutPct')}*${r('Sales')}*${r('Month')}),IF(${R('tipOutBy')}="% of tips",IF(${R('tipOutPct')}="",0,${R('tipOutPct')}*(${r('CardMo')}+${r('CashMo')})),IF(AND(${R('tipOutBy')}="$ a shift",${r('OutAmt')}<>""),${r('OutAmt')}*${r('Month')},0))))` },
+      { key: `${k}Share`, name: 'Its share of the row\'s shifts', unit: 'pct', f: `IF(${r('Month')}="","",${r('Month')}/${R('shiftsMo')})` },
+      { key: `${k}Gross`, name: 'Gross a month (a paycheck row: its share of the paycheck, plus cash tips)', unit: 'money',
+        f: `IF(${r('Month')}="","",IF(${R('workMode')}="Paycheck",N(${R('M13')})/12*${r('Share')}+${r('CashMo')},${r('PayMo')}+${r('CardMo')}+${r('CashMo')}))` },
+      { key: `${k}Net`, name: 'Less its fee and tip-out, a month', unit: 'money', f: `IF(${r('Month')}="","",${r('Gross')}-${r('FeeMo')}-${r('OutMo')})` },
+      { key: `${k}Base`, name: 'What it adds to the taxed gross, a month (its share of shifts on a paycheck row)', unit: 'number',
+        f: `IF(${r('Month')}="","",IF(${R('workMode')}="Paycheck",${r('Share')},MAX(0,${r('PayMo')}+${r('CardMo')}+IF(${R('cashReported')}="Yes",${r('CashMo')},0)-IF(${R('taxType')}="1099",${r('OutMo')},MIN(${r('OutMo')},${r('CardMo')}+IF(${R('cashReported')}="Yes",${r('CashMo')},0)))-IF(${R('taxType')}="1099",${r('FeeMo')},0))))` },
+      { key: `${k}TakeMo`, name: 'Take-home a month: less its part of the row\'s tax', unit: 'money',
+        f: `IF(${r('Month')}="","",${r('Net')}-(${keys.map(q => `N({row:${q}Net})`).join('+')}-${R('M12')})*IF(${keys.map(q => `N({row:${q}Base})`).join('+')}>0,${r('Base')}/(${keys.map(q => `N({row:${q}Base})`).join('+')}),${r('Share')}))` },
+      { key: `${k}In`, name: 'Gross a shift', unit: 'money', f: `IF(${r('Month')}="","",${r('Gross')}/${r('Month')})`, app: A?.gross },
+      { key: `${k}TakeHome`, name: 'Take-home a shift', unit: 'money', f: `IF(${r('Month')}="","",${r('TakeMo')}/${r('Month')})`, app: A?.takeHome },
+      { key: `${k}Tax`, name: A?.taxWord ?? 'Tax a shift', unit: 'money', f: `IF(${r('Month')}="","",${r('In')}-${r('FeeMo')}/${r('Month')}-${r('OutMo')}/${r('Month')}-${r('TakeHome')})`, app: A?.tax },
+      { key: `${k}Costs`, name: 'Getting there, childcare, outfits and gear a shift (the row\'s)', unit: 'money', f: `IF(${r('Month')}="","",${R('shiftTravel')}+${R('shiftCare')}+${R('shiftGear')})`, app: A?.costs.total },
+      { key: `${k}Real`, name: 'What the shift leaves you', unit: 'money', f: `IF(${r('Month')}="","",${r('TakeHome')}-${r('Costs')})`, app: A?.real },
+      { key: `${k}HoursAll`, name: 'Hours it takes (its own hours, and the row\'s getting ready, travel and winding down)', unit: 'number', f: `IF(OR(${r('Month')}="",${r('Hours')}=""),"",${r('Hours')}+N(${R('prepHours')})+N(${R('travelHours')})+N(${R('windDownHours')}))`, app: A ? A.hours.total : undefined },
+      { key: `${k}Hourly`, name: 'Real hourly', unit: 'money', f: `IF(OR(${r('HoursAll')}="",N(${r('HoursAll')})=0),"",${r('Real')}/${r('HoursAll')})`, app: A ? A.realHourly : undefined },
+    ] });
+  });
+  return { sections: out, keys, ids: nights.map((nt, i) => ({ k: keys[i], rowId: x.r.id, nightId: nt.id })) };
+}
 const shiftSections = c => {
   const P = shiftPnlsOf(c.m, { ref: c.ref });
   const best = P.rows.find(r => r.realHourly != null) ?? null;
   const at = (col, id) => `INDEX(Income_${col},MATCH("${String(id).replace(/"/g, '""')}",Income_Id,0))`;
-  return [
-    ...P.rows.map(r => ({ title: `${r.name}: one shift (the Shift P&L columns on the Income tab)`, rows: [
-      { name: 'Gross a shift', unit: 'money', f: at('shiftIn', r.id), app: r.gross },
-      { name: r.taxWord, unit: 'money', f: at('shiftTax', r.id), app: r.tax },
-      { name: 'Take-home a shift', unit: 'money', f: at('shiftTakeHome', r.id), app: r.takeHome },
-      { name: 'Getting there, childcare, outfits and gear a shift', unit: 'money', f: `${at('shiftTravel', r.id)}+${at('shiftCare', r.id)}+${at('shiftGear', r.id)}`, app: r.costs.total },
-      { name: 'What the shift leaves you', unit: 'money', f: at('shiftReal', r.id), app: r.real },
-      { name: 'Hours it takes', unit: 'number', f: at('shiftHours', r.id), app: r.hours.total },
-      { name: 'Real hourly', unit: 'money', f: at('shiftHourly', r.id), app: r.realHourly },
-    ] })),
-    { title: 'The shift that pays most per real hour', rows: [
-      { key: 'hourly', name: 'Real hourly', unit: 'money', f: 'IF(COUNT(Income_shiftHourly)=0,"",MAX(Income_shiftHourly))', app: best?.realHourly ?? null },
-      { key: 'real', name: 'What that shift leaves you, a shift (the first shift row when none has its hours)', unit: 'money',
-        f: 'IF({row:hourly}<>"",INDEX(Income_shiftReal,MATCH({row:hourly},Income_shiftHourly,0)),IFERROR(INDEX(Income_shiftReal,MATCH(1,Income_shiftOn,0)),""))', app: (best ?? P.rows[0])?.real ?? null },
-    ] },
-  ];
+  const sections = [], nightKeys = [], nightIds = [];
+  for (const x of (c.m.inputs.income || []).filter(y => isShiftRow(y) && !y.r.folded)) {
+    const ns = nightsOf(x);
+    if (ns) { const N = nightRows(x, ns, nightKeys.length + 1, P, col => at(col, x.r.id)); sections.push(...N.sections); nightKeys.push(...N.keys); nightIds.push(...N.ids); continue; }
+    const r = P.rows.find(p => p.rowId === x.r.id && !p.nightId);
+    if (!r) continue;
+    sections.push({ title: `${r.name}: one shift (the Shift P&L columns on the Income tab)`, rows: [
+      { name: 'Gross a shift', unit: 'money', f: at('shiftIn', r.rowId), app: r.gross },
+      { name: r.taxWord, unit: 'money', f: at('shiftTax', r.rowId), app: r.tax },
+      { name: 'Take-home a shift', unit: 'money', f: at('shiftTakeHome', r.rowId), app: r.takeHome },
+      { name: 'Getting there, childcare, outfits and gear a shift', unit: 'money', f: `${at('shiftTravel', r.rowId)}+${at('shiftCare', r.rowId)}+${at('shiftGear', r.rowId)}`, app: r.costs.total },
+      { name: 'What the shift leaves you', unit: 'money', f: at('shiftReal', r.rowId), app: r.real },
+      { name: 'Hours it takes', unit: 'number', f: at('shiftHours', r.rowId), app: r.hours.total },
+      { name: 'Real hourly', unit: 'money', f: at('shiftHourly', r.rowId), app: r.realHourly },
+    ] });
+  }
+  const all = ['Income_shiftHourly', ...nightKeys.map(k => `{row:${k}Hourly}`)].join(',');
+  const first = P.rows[0];
+  const firstNight = first?.nightId ? nightIds.find(q => q.rowId === first.rowId && q.nightId === first.nightId) : null;
+  const firstReal = !first ? '""' : firstNight ? `{row:${firstNight.k}Real}` : `IFERROR(${at('shiftReal', first.rowId)},"")`;
+  const realOf = nightKeys.reduceRight((rest, k) => `IF({row:${k}Hourly}={row:hourly},{row:${k}Real},${rest})`, '""');
+  sections.push({ title: 'The shift that pays most per real hour', rows: [
+    { key: 'hourly', name: 'Real hourly', unit: 'money', f: `IF(COUNT(${all})=0,"",MAX(${all}))`, app: best?.realHourly ?? null },
+    { key: 'real', name: 'What that shift leaves you, a shift (the first shift when none has its hours)', unit: 'money',
+      f: `IF({row:hourly}="",${firstReal},IF(COUNTIF(Income_shiftHourly,{row:hourly})>0,INDEX(Income_shiftReal,MATCH({row:hourly},Income_shiftHourly,0)),${realOf}))`, app: (best ?? first)?.real ?? null },
+  ] });
+  return sections;
 };
 
 // ---------- What would move the credit score most (M9D, js/math/cards.js creditMove) ----------

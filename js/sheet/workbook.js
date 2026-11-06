@@ -418,6 +418,7 @@ function readRow(row, prefix) {
   const f = row.f?.replace(/\{row:([A-Za-z0-9_]+)\}/g, (all, k) => `${prefix}_${k}`);
   const app = { v: row.app ?? null };
   if (row.input) return { cells: { name: { v: row.name }, f: { v: row.value ?? null, input: true }, app } };
+  if (row.given) return { cells: { name: { v: row.name }, f: { v: row.value ?? null, fromApp: true }, app } }; // a value kept in SLAM that the formulas below read
   return { cells: { name: { v: row.name }, f: row.fromApp ? { v: row.app ?? null, fromApp: true } : { f }, app } };
 }
 // A short row ({ name, f | fromApp, app }) as cells. A row from the app shows the app's number in the Formula column.
