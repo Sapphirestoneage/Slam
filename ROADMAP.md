@@ -45,7 +45,7 @@ and the app fits lives that do not look like a W-2 brochure.
 
 ### Track 1: Quantum Collapse
 
-"Typical at your age" ranges: the coach always sees them; one switch shows them in client view (Eli, Nov 6).
+"Typical at your age" ranges: the coach always sees them; one switch shows them in client view (Eli, Nov 6). Eli: "both as a check": besides filling blanks as ranges, they check what was typed. A typed number far outside the typical range for the age (and place) gets a calm one-line note beside the box ("Rent is above what most 25 to 34 year olds in NY metro pay"), useful both as a typo catch and as a coaching prompt; never a verdict, never red.
 
 - **Priors by age.** Typical values by age band (and household type where the data has it) for take-home, spending by
   category, rent, debts, balances, retirement savings and emergency savings, from public surveys
