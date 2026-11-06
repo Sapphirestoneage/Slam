@@ -8,7 +8,7 @@ import { addMonths, monthName } from '../month.js';
 import { money } from '../format.js';
 import { inView } from '../math/time.js';
 import { payYourselfFirst } from '../math/simple.js';
-import { MODES, modeOf, personLabels } from '../registry/couples.js';
+import { ownPlanPerson } from '../registry/couples.js';
 
 export const SUI = { kind: 'month', ym: null, year: null, hours: false };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -22,8 +22,10 @@ const label = p => (p.kind === 'year' ? String(p.year) : monthName(p.ym));
 
 export function statementsScreen(app, ctx) {
   const p = periodNow(ctx);
-  const st = statements(ctx.store.doc, ctx.ref, p, { now: ctx.now() });
-  const last = statements(ctx.store.doc, ctx.ref, previous(p), { now: ctx.now() });
+  // Batch 40 (QUESTIONS 332): a couple with no combined totals reads the person the whose-numbers switch shows (or Both).
+  const person = ownPlanPerson(ctx.store.doc) ?? 'all'; // 'all': the household as metrics() counts it (a shared bill once, whole)
+  const st = statements(ctx.store.doc, ctx.ref, p, { now: ctx.now(), person });
+  const last = statements(ctx.store.doc, ctx.ref, previous(p), { now: ctx.now(), person });
   const rows = statementRows(st, last);
   const m = ctx.metrics();
   // Money, or hours of life energy (YMOYL step 3) on the income and spending statement.
@@ -36,7 +38,7 @@ export function statementsScreen(app, ctx) {
     h('span.muted', {}, `vs ${label(previous(p))}${last.onFile ? '' : ' (nothing on file)'}`), h('span', { style: { flex: 1 } }),
     S.button('Print the set', { iconName: 'printer', onClick: () => printSet() })));
   // Pay yourself first: what comes off the top before any spending, a month and a paycheck.
-  const pyf = payYourselfFirst(ctx.store.doc, ctx.ref, { now: ctx.now() });
+  const pyf = payYourselfFirst(ctx.store.doc, ctx.ref, { now: ctx.now(), person });
   const offTop = h('p.st-offtop', {}, h('strong', {}, 'Pay yourself first: '), pyf.monthly > 0.5
     ? [S.mathButton({ id: 'Pay yourself first', value: pyf.monthly, needs: [], text: pyf.text }, `${fmt(pyf.monthly, { hours: SUI.hours })} a month`), ` comes off the top, about ${fmt(pyf.perPaycheck, { hours: SUI.hours })} a paycheck.`]
     : 'nothing comes off the top yet. A 401(k), HSA or an automatic transfer on payday would.');
@@ -49,12 +51,8 @@ export function statementsScreen(app, ctx) {
   // Batch 34: a period before this file began has no balances on file; say so once instead of a row of $0.
   const began = st.began ? new Date(st.began).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
   const before = !st.onFile ? h('p.muted.st-began', {}, `This file began ${began}: nothing is on file for ${label(p)}. Income and spending show the plan.`) : null;
-  // Batch 34: a couple with no combined totals sees their own plan everywhere else; these statements count both.
-  const mode = modeOf(ctx.store.doc.profile);
-  const both = ctx.couple && mode && MODES[mode].combined === 'none'
-    ? h('p.muted.st-began', {}, `These statements count both of you. Home, Cash flow and Overview show ${personLabels(ctx.store.doc).Me}'s own plan.`) : null;
   return [head('Statements', 'Net worth, income and spending, and cash flow, tied out'),
-    picker, before, both,
+    picker, before,
     table('Net worth statement', 'The balance sheet: what you own and owe on the last day', rows.netWorth, { below: rows.below, key: 'nw' }),
     table('Income and spending statement', 'The income statement, accrual: spending counts when it happens, a card swipe included', rows.income, { hours: true, key: 'income' }),
     table('Cash flow statement', 'The statement of cash flows, cash basis: money counts when it moves', rows.cash, { hours: true, key: 'cash' }),

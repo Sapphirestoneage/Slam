@@ -11,6 +11,7 @@ import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS } from '
 import { fiRangeOf } from './fi.js';
 import { debtRangeOf } from './metrics.js';
 import { RULES } from '../registry/assumptions.js';
+import { incomeRow } from './income.js';
 
 const isBlank = v => v === null || v === undefined || v === '';
 const valueOf = (rec, field) => (field in rec && field !== 'values' ? rec[field] : rec.values?.[field]);
@@ -53,7 +54,15 @@ export function pictureOf(doc, ref, { now = new Date() } = {}) {
   // Income.
   const income = live.filter(r => r.kind === 'income');
   if (!income.length) item({ id: 'income', label: 'Take-home pay', group: 'income', weight: WEIGHTS.income, level: LEVELS.Missing, route: '#/cash-flow/income', quick: 'take-home' });
-  for (const r of income) recItem(r, 'amount', { label: /take-home/i.test(name(r)) ? name(r) : `${name(r)} take-home`, group: 'income', weight: WEIGHTS.income, route: '#/cash-flow/income' });
+  // Batch 40 (the dancer persona): a shift job or a platform has no take-home typed; the math works it out from the
+  // shifts or the payouts (M12), so the row counts at its own level (Roughly stays Rough), at most Estimate, never Missing.
+  const incomeLevel = r => {
+    const lv = levelOf(r, 'amount', { months });
+    if (lv !== LEVELS.Missing || !ref) return lv;
+    const th = incomeRow(r, { ref, now }).takeHome?.value;
+    return th == null ? lv : Math.min(LEVELS.Estimate, levelOf({ ...r, amount: th }, 'amount', { months }));
+  };
+  for (const r of income) item({ id: `${r.id}:amount`, recId: r.id, field: 'amount', level: incomeLevel(r), updatedAt: r.updatedAt, label: /take-home/i.test(name(r)) ? name(r) : `${name(r)} take-home`, group: 'income', weight: WEIGHTS.income, route: '#/cash-flow/income' });
   // Debts: the balance counts most, the APR a little (the payment is often worked out).
   if (g.areas.debt !== false) {
     const debts = live.filter(r => r.kind === 'debt');
@@ -200,9 +209,10 @@ export function fiWordsOf(m, conf, { now = new Date() } = {}) {
   const lo = yearAt(r.low), hi = r.high == null ? null : yearAt(r.high);
   // Batch 15, item 7: a range wider than RULES.fiRangeMaxYears (or open-ended) says nothing a coach can use, so the
   // words become the one step that narrows it. The math (fiRangeOf) is unchanged; this is display only.
+  // Batch 40: the inputs named are in (the lock waits for a missing one), so the step is Firm up, as on the debt-free date.
   if (hi == null || hi - lo > RULES.fiRangeMaxYears) {
     const want = (conf.weak || []).slice(0, 2).map(w => w.replace(/^[A-Z]/, c => c.toLowerCase()));
-    return { kind: 'wide', text: want.length ? `Add ${want.join(' and ')} to see a date` : 'Firm up the rough numbers to see a date', low: r.low, high: r.high, wide: true,
+    return { kind: 'wide', text: want.length ? `Firm up ${want.join(' and ')} to see a date` : 'Firm up the rough numbers to see a date', low: r.low, high: r.high, wide: true,
       years: hi == null ? `${Math.round(r.low / 12)} years or more from now` : `about ${Math.round(r.low / 12)} to ${Math.round(r.high / 12)} years from now` };
   }
   const text = hi == null ? `${lo} or later` : lo === hi ? String(lo) : `${lo} to ${hi}`;

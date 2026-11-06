@@ -307,8 +307,8 @@ seen only by eye, by the layout checker or by the persona run counts as one run 
 | 14 | "Who they are with money" under the prospect's form answers for the client already open | Discovery (Section) | Obvious | minor | 2 | 2 | Fixed (its line names that client) |
 | 15 | The Debt APR box's name was its faded typical ("7.14") | Debt (Control) | Fits | minor | by eye | 1 | Fixed |
 | 16 | The Statements group buttons were different widths (12 column failures) and rows had 1px between them (50 cramped) | Statements (Row) | Looks | minor | layout 62 | 1 | Fixed |
-| 17 | A Living together couple: Statements count both people while Home, Cash flow and Overview show one (couple-separate $3,500 vs $1,300) | Statements (Screen) | One answer | major | persona 1 | 2 | Not fixed: one line now says so; question 332 |
-| 18 | Biggest share and Housing % stay locked for a gut-only client and a homeowner with no mortgage | Overview (Row) | Tells | major | persona 2 | 2 | Not fixed: question 330 |
+| 17 | A Living together couple: Statements count both people while Home, Cash flow and Overview show one (couple-separate $3,500 vs $1,300) | Statements (Screen) | One answer | major | persona 1 | 2 | Fixed in batch 40: the statements follow the whose-numbers switch (question 332) |
+| 18 | Biggest share and Housing % stay locked for a gut-only client and a homeowner with no mortgage | Overview (Row) | Tells | major | persona 2 | 2 | Fixed in batch 40: hidden with one line why; the dancer's FI date and Goals lock were her shift income read as missing (question 330) |
 | 19 | Protection's "4 of 13 filled" (the whole screen) and "5 items, 4 of 5 done" (the rows) count different things without saying so | Protection (Words) | One answer | minor | 2 | 2 | Not fixed |
 | 20 | "Accommodation" next to "Housing %" on Overview | Overview (Words) | Words | minor | 2 | 2 | Not fixed: Accommodation is the Budget's own group name (one name everywhere) |
 | 21 | "big e" in plain view on FOO | FOO (Words) | Words | minor | 2 | 2 | Not fixed: Batch 26's code tonight |
@@ -416,7 +416,7 @@ are finding 17, couple-separate on Statements); story majors 3 to 3 (finding 18)
 
 The twelve screens are appended to `docs/usability/scorecard-2026-11-06.json` (route, area, tasks, and each category's
 pass or failure with severity and a one-line reason), with their own summary under `batch34`: 0 blockers, 2 majors
-(findings 17 and 18), 11 minors; Timeline, History and Coach tools › Lists pass all 12. Categories 5 and 12 wait for
+(findings 17 and 18, both fixed in batch 40, so 0 now), 11 minors; Timeline, History and Coach tools › Lists pass all 12. Categories 5 and 12 wait for
 Eli's sign-off.
 ## Batch 37: the Phase 4 and new screens (Nov 6 2026)
 

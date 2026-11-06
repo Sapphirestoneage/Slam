@@ -52,17 +52,22 @@ function repeatDays(ym, { every, anchor = ANCHOR, days = null, day = 1 }) {
 // ---------- What lands on the calendar this month ----------
 // B6.10: the Actual pass asks for the month's list once per row and column; build it once per change.
 const CACHE = new WeakMap();
+// person (batch 40, QUESTIONS 332): a view as metrics() reads it with the same person: one person's (their rows, the
+// Joint ones at half, a shared bill at their share) or 'all' (a shared bill once, whole); null: the rows as they are.
 export function instances(doc, ref, ym, opts = {}) {
-  const key = `${doc._rev ?? 0}|${doc.updatedAt}|${ym}|${ymOf(opts.now || new Date())}|${(opts.autoWins || []).length}`;
+  const key = `${doc._rev ?? 0}|${doc.updatedAt}|${ym}|${ymOf(opts.now || new Date())}|${(opts.autoWins || []).length}|${opts.person ?? ''}`;
   let byDoc = CACHE.get(doc);
   const version = `${doc._rev ?? 0}|${doc.updatedAt}`;
   if (!byDoc || byDoc.version !== version) { byDoc = { version, lists: new Map() }; CACHE.set(doc, byDoc); }
   if (!byDoc.lists.has(key)) byDoc.lists.set(key, buildInstances(doc, ref, ym, opts));
   return byDoc.lists.get(key);
 }
-function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) {
+function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [], person = null } = {}) {
   const g = gatesOf(doc.profile, doc.client);
-  const live = visible(doc.records, g, ref);
+  const inputs = inputsOf(doc, ref, now, { person });
+  const view = person ? inputs.viewRecords : null;
+  const live = view ?? visible(doc.records, g, ref);
+  const partOf = new Map((view ?? []).map(r => [r.id, shareOf(r)])); // what a paid amount marked on the calendar counts for in this view
   const cal = doc.spending?.calendar || {};
   const marks = cal.marks || {};
   const out = [];
@@ -70,13 +75,13 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) 
     const key = `${rec.id}${x.keyTag ? `:${x.keyTag}` : ''}@${x.date}`; // batch 27: a row's cash tips are their own entries
     const mark = marks[key] || {};
     const status = mark.status || 'Planned';
+    const k = partOf.get(rec.id) ?? 1;
     out.push({ ...x, key, recId: rec.id, origDate: x.date, date: status === 'Moved' && mark.date ? mark.date : x.date,
-      status, paid: mark.paid ?? null, note: mark.note ?? null });
+      status, paid: mark.paid == null ? null : mark.paid * k, note: mark.note ?? null });
   };
   const roommates = doc.profile?.roommates ?? 0;
   const cards = new Map(live.filter(r => r.kind === 'debt' && r.type === 'Credit card').map(r => [r.id, r]));
 
-  const inputs = inputsOf(doc, ref, now);
   // A month ahead is read as of that month (batch 15, item 6): a covered bill that becomes yours, a line that starts.
   const later = ym > ymOf(now) ? new Date(Date.UTC(Number(ym.slice(0, 4)), Number(ym.slice(5)) - 1, 15, 12)) : now;
   // Paychecks (green), by pay frequency. Unemployment lands weekly until its end date (batch 15, item 13). Self-
@@ -190,10 +195,14 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) 
   // Wins: typed ones, then payoffs and milestones the projection reaches (R095).
   for (const r of live.filter(x => x.kind === 'win' && x.values.date?.startsWith(ym))) push(r, { kind: 'win', group: 'Wins', name: r.name || 'A win', date: r.values.date, planned: 0 });
   if (cal.autoWins !== false) {
-    for (const w of [...debtWins(inputs, now, debtPlanOf(doc, ref, now)), ...autoWins]) if (w.date.startsWith(ym)) out.push({ key: `auto:${w.name}@${w.date}`, recId: null, kind: 'win', group: 'Wins', name: w.name, date: w.date, origDate: w.date, planned: 0, status: 'Planned', auto: true });
+    for (const w of [...debtWins(inputs, now, person ? metrics(doc, ref, { now, person }).debtPlan : debtPlanOf(doc, ref, now)), ...autoWins]) if (w.date.startsWith(ym)) out.push({ key: `auto:${w.name}@${w.date}`, recId: null, kind: 'win', group: 'Wins', name: w.name, date: w.date, origDate: w.date, planned: 0, status: 'Planned', auto: true });
   }
   return out.sort((a, b) => a.date.localeCompare(b.date) || b.planned - a.planned);
 }
+
+// Batch 40: the part of a row one person's view counts (a shared bill's share, a Joint row's half), for amounts typed
+// on the whole row elsewhere (a calendar mark, a month's typed estimate or actual).
+export const shareOf = r => r?.coupleShared?.share ?? (r?.halved ? 0.5 : 1);
 
 // Payoff dates from the plan become wins on the calendar.
 // Batch 13 (answer to Q221): the wins read the one debt plan (m.debtPlan: the surplus, freed payments, FOO step 1
@@ -320,16 +329,16 @@ export function actualOf(doc, ym, line, list) {
 // gutCats (batch 33, Rocket Surgery finding 12): Month end also closes the categories that hold only the gut number,
 // one row each (id cat:<key>): the plan is its gut split (or a plan typed or carried for the month), the actual is the
 // one typed on Month end, else what its lines got (an import, the calendar). Its starter lines fold into it.
-export function monthView(doc, ref, ym, { now = new Date(), gutCats = false } = {}) {
+export function monthView(doc, ref, ym, { now = new Date(), gutCats = false, person = null } = {}) {
   const g = gatesOf(doc.profile, doc.client);
-  const x = inputsOf(doc, ref, now);
+  const x = inputsOf(doc, ref, now, { person });
   const dupOf = x.dupOf; // the same payment as a debt or a premium: counted there, once
   const md = monthDoc(doc, ym);
   const split = gutCats && (md.gut ?? gutOf(doc)) != null ? x.gutSplit ?? {} : {};
-  const all = visible(doc.records, g, ref).filter(r => r.kind === 'bill' && !dupOf[r.id]);
+  const all = ((person ? x.viewRecords : null) ?? visible(doc.records, g, ref)).filter(r => r.kind === 'bill' && !dupOf[r.id]);
   const folded = l => split[categoryKeyOf(l)] != null && md.lines?.[l.id]?.estimate == null && !(roughOf(doc, l) > 0); // a starter line of a gut-only category
   const lines = all.filter(l => !folded(l));
-  const list = instances(doc, ref, ym, { now });
+  const list = instances(doc, ref, ym, { now, person });
   const catRows = Object.entries(split).map(([key, plan]) => {
     const id = `cat:${key}`, own = all.filter(l => folded(l) && categoryKeyOf(l) === key && l.status !== 'Not for me');
     const e = md.lines?.[id]?.estimate, typed = md.lines?.[id]?.actual;
@@ -341,8 +350,10 @@ export function monthView(doc, ref, ym, { now = new Date(), gutCats = false } = 
       diff: actual == null ? null : actual - estimate, variable: true, priceUp: false };
   });
   const rows = [...lines.map(l => {
-    const est = estimateOf(doc, ym, l);
-    const act = actualOf(doc, ym, l, list);
+    const k = person ? shareOf(l) : 1; // batch 40: a month's typed number is the whole row's; one person's view counts their part
+    const e0 = estimateOf(doc, ym, l), a0 = actualOf(doc, ym, l, list);
+    const est = !e0.fromRough && e0.value != null ? { ...e0, value: e0.value * k } : e0;
+    const act = a0.from === 'typed' ? { ...a0, value: a0.value * k } : a0;
     const diff = est.value != null && act.value != null ? act.value - est.value : null;
     return { line: l, rough: roughOf(doc, l), estimate: est.value, fromRough: est.fromRough, actual: act.value, actualFrom: act.from, diff,
       variable: l.values.amountType !== 'Fixed', priceUp: l.values.amountType === 'Fixed' && diff != null && diff > 0.5 }; // R141

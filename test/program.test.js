@@ -61,7 +61,7 @@ test('122: the gut number unlocks the FI date at Low confidence, shown as a year
   let m = metrics(s.doc, ref, { now });
   let w = fiWordsOf(m, c, { now });
   // Batch 15, item 7: a range wider than RULES.fiRangeMaxYears shows the one step that narrows it instead.
-  if (w.kind === 'wide') assert.match(w.text, /^(Add .+ to see a date|Firm up the rough numbers to see a date)$/);
+  if (w.kind === 'wide') assert.match(w.text, /^Firm up .+ to see a date$/);
   else { assert.equal(w.kind, 'range'); assert.match(w.text, /^20\d\d to 20\d\d$/); }
   assert.ok(w.low < m.monthsToFi.value && w.high > m.monthsToFi.value, 'spending 15% lower lands sooner, 15% higher later');
   // No spending at all: locked with the plain reason.

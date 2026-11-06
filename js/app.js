@@ -519,7 +519,8 @@ const app = {
     this.ctx.clearScreen();
     const screen = SCREENS[`${tab.id}/${sub.id}`];
     // Batch 20 (Rocket Surgery): a couple with no combined totals picks whose plan Home, Goals and Debt payoff show, as on Net worth and Cash flow.
-    const planScreen = ['home/session', 'plan/goals', 'plan/debt-payoff'].includes(`${tab.id}/${sub.id}`);
+    // Batch 40 (QUESTIONS 332): Report › Statements too, so the statements read the same person's plan (or Both).
+    const planScreen = ['home/session', 'plan/goals', 'plan/debt-payoff', 'report/statements'].includes(`${tab.id}/${sub.id}`);
     // Batch 33 (QUESTIONS 287): on these three screens Living together also offers Both (preview), read-only: the
     // store puts back any change but the switch itself while it is on.
     setBothScreen(this.hasClient && planScreen && offersBoth(this.store.doc));

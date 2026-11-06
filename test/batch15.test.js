@@ -227,7 +227,7 @@ test('item 7: a range wider than the cap shows the one step that narrows it; the
   const m = metrics(s.doc, ref, { now });
   const w = fiWordsOf(m, { word: 'Low', range: 0.6, weak: ['Take-home pay', 'Monthly spending'] }, { now });
   assert.equal(w.kind, 'wide');
-  assert.equal(w.text, 'Add take-home pay and monthly spending to see a date');
+  assert.equal(w.text, 'Firm up take-home pay and monthly spending to see a date');
   assert.ok(w.low < m.monthsToFi.value, 'the range is still worked out');
   const narrow = fiWordsOf(m, { word: 'Medium', range: 0.01, weak: [] }, { now });
   assert.notEqual(narrow.kind, 'wide');

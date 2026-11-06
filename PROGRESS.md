@@ -895,3 +895,29 @@ Batch 20's method on the screens built tonight (Transitions from scratch, Discov
 7. Small: Find simple math, the gap box's "$ $ a month", the big deals options on one track width (the layout checker's 6 old column findings on Goals).
 
 docs/usability/scorecard-2026-11-06.json: 11 screens appended with "batch": 37, 0 blockers, 0 majors, 5 minors. Questions 344 to 347.
+
+## Batch 40 (Nov 6 2026): the last majors on the scorecard (Overview, Statements, the dancer's FI date)
+
+1. QUESTIONS 330, Report › Overview: a card this household cannot light is hidden, with one quiet line under the
+   cards saying why ("Housing %: not for this household. You own outright, so there is no rent or mortgage line."):
+   Biggest share for a gut-only client with no group-tagged line, Housing % for an owner with no mortgage and no rent
+   line, Debt-to-income with no debt, Utilization with no card (js/gates.js overviewNotFor). A card a number on file
+   would light keeps its lock and one-click unlock (a renter's Housing %, a mortgage with no payment). "X of Y lit"
+   counts the cards shown.
+2. QUESTIONS 332, Report › Statements: the three statements and Pay yourself first follow the whose-numbers switch for
+   Dating and Living together (ownPlanPerson), and the switch shows there, with Living together's Both (preview). The
+   calendar month (js/month.js instances, monthView) and the statements (js/math/statements.js) take a view: one
+   person's rows (Joint at half, a shared bill at their share, typed month numbers and calendar marks at that part), or
+   the two together with a shared bill once and whole (metrics inputs.viewRecords). Couple-separate: Jordan $1,300 and
+   -$4,500, Sam $900 and $6,500, Both $2,200 and $2,000, each the same as the plan on Home. The Batch 34 "these count
+   both of you" line is gone.
+3. The dancer's majors: a shift job (or a platform) with no take-home typed counted as Missing on the Picture, so the
+   FI date stayed locked ("Unlocks when income is in, 0 of 1 there") on Goals and the One-pager while the math had her
+   $4,775.81. The row now counts at its own level (Roughly: Rough), at most Estimate (js/math/picture.js). A too-wide
+   FI range says "Firm up ... to see a date" (it said "Add", for numbers that are in), as the debt-free date does.
+4. docs/usability/scorecard-2026-11-06.json: Overview's Tells and Statements' One answer pass (batch34 summary: 0
+   majors).
+
+Tests: test/batch40.test.js (5, hand-checked) and the whole suite pass in UTC and America/New_York. Persona run: story
+blockers 2 to 0, majors 5 to 0, layout 0. Layout check on Overview, Statements, Goals and the One-pager (all widths and
+themes, Demo and a new client): 0 findings before and after (the 1 covered is the Demo's load toast on Budget).

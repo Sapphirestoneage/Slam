@@ -78,7 +78,7 @@ async function measure(page) {
     if (unlockOf('fi', pic).unlocked && m.monthsToFi.value != null) {
       const w = fiWordsOf(m, confidenceOf('fi', pic, { now }), { now });
       const yr = mo => new Date(now.getFullYear(), now.getMonth() + mo, 1).getFullYear();
-      certainty = w.high == null ? `FI ${yr(w.low)} or later (open-ended)` : `FI ${yr(w.low)} to ${yr(w.high)}: ${((w.high - w.low) / 12).toFixed(1)} years wide${w.wide ? ' (shown as "Add ... to see a date")' : ''}`;
+      certainty = w.high == null ? `FI ${yr(w.low)} or later (open-ended)` : `FI ${yr(w.low)} to ${yr(w.high)}: ${((w.high - w.low) / 12).toFixed(1)} years wide${w.wide ? ' (shown as "Firm up ... to see a date")' : ''}`;
     } else {
       const hero = debtHeroOf(doc, m);
       if (hero?.months != null) certainty = `debt free in ${hero.months} months (one date; FI ${m.monthsToFi.value == null ? 'not on this path yet' : 'locked'})`;

@@ -31,11 +31,11 @@ export function simpleMath({ savingsRate, realReturn, withdrawalRate }) {
 
 // Pay yourself first: what comes off the top before spending, a month and a paycheck.
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
-export function payYourselfFirst(doc, ref, { now = new Date() } = {}) {
-  const m = metrics(doc, ref, { now });
+export function payYourselfFirst(doc, ref, { now = new Date(), person = null } = {}) {
+  const m = metrics(doc, ref, { now, person }); // batch 40: Statements reads one person's plan for a couple with no combined totals
   const x = m.inputs, f = m.flow;
   const match = m.savingsRate.match ?? 0;
-  const contrib = afterTaxContributions(doc.records.filter(r => r.kind === 'account'), { payFrequency: x.payFrequency, payrollHsa: x.gates.hsa && x.income.some(i => (i.r.values.hsaFsa ?? 0) > 0) });
+  const contrib = afterTaxContributions(((person ? x.viewRecords : null) ?? doc.records).filter(r => r.kind === 'account'), { payFrequency: x.payFrequency, payrollHsa: x.gates.hsa && x.income.some(i => (i.r.values.hsaFsa ?? 0) > 0) });
   const parts = [
     { name: '401(k) and HSA from the paycheck', monthly: f.beforeTax ?? 0 },
     { name: 'Employer match', monthly: match },

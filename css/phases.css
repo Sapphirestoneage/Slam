@@ -94,6 +94,9 @@
 /* ---------- Report ---------- */
 .report-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s4); align-items: start; }
 .shelf { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s3); margin-bottom: var(--s4); }
+/* Batch 40 (QUESTIONS 330): the cards this household cannot light, one quiet line each under the shelf. */
+.not-for { margin: calc(-1 * var(--s2)) 0 var(--s4); }
+.not-for p { margin: 2px 0; }
 .metric a.metric-home { color: var(--text-2); text-decoration: none; }
 .metric a.metric-home:hover { color: var(--primary); text-decoration: underline; }
 .metric a.metric-home::after { content: ' ›'; }

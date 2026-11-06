@@ -246,6 +246,10 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || useLines ? 0 : debtPayments), // the lines hold each payment, From Debt
     typicalScale: typicalScaleOf({ gut: gutOf(), includesDebt, debtPayments, categories, lines: typedLines }), // QUESTIONS 241
     gutSplit: gutSplitOf({ gut: gutOf(), includesDebt, debtPayments, categories, lines: typedLines }), // batch 33: Month end's plan for the gut-only categories
+    // Batch 40 (QUESTIONS 332): the rows as this view counts them (one person's: theirs, the Joint ones at half, a shared
+    // bill at their share; a couple keeping money apart together: a shared bill once, whole), so the calendar and the
+    // statements can read the same plan when they are asked for a view. null: the household's rows as they are.
+    viewRecords: together && !coupleApart ? null : [...live.filter(r => r.kind !== 'bill'), ...billRows],
     autoLines, dupOf, askOf, typedLines, premiums, payFrequency, health: health ? { id: health.id, perPaycheck: healthPerPay, fromPay: !!healthFromPay, jobId: healthJob?.id ?? null } : null,
     paycheckPremiums: premiums.filter(p => p.paidFrom === 'Paycheck').reduce((s, p) => s + (p.monthly ?? 0), 0),
     afterTaxSaving: afterTaxContributions(live.filter(r => r.kind === 'account'), { payFrequency, payrollHsa: gates.hsa && income.some(i => (i.r.values.hsaFsa ?? 0) > 0) }).total,

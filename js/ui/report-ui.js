@@ -25,6 +25,7 @@ import { money, pct } from '../format.js';
 import { keyNumbers } from '../math/metrics.js';
 import { whyText } from '../whynow.js';
 import { identityLine } from './identity-ui.js';
+import { overviewNotFor } from '../gates.js';
 
 export const RUI = { liquid: false, tab: 'Savings' };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -53,16 +54,20 @@ export function overviewScreen(app, ctx) {
   const shelf = [
     ...(debtFree ? [debtFree] : []),
     { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate, note: m.savingsRate.second, so: soWhat('savingsRate', m) },
-    { label: 'Biggest share of take-home', tip: 'The biggest DRAFTT letter (Debt, Retirement, Accommodation, Food, Transportation, Therapy): the spending group that takes the most of take-home', result: topLetter ? { id: 'M29', value: topLetter[1], needs: [], unit: 'pct', text: shares.text } : { ...shares, value: null, needs: shares.needs?.length ? shares.needs : ['a tagged spending line'] },
+    { id: 'draftt', label: 'Biggest share of take-home', tip: 'The biggest DRAFTT letter (Debt, Retirement, Accommodation, Food, Transportation, Therapy): the spending group that takes the most of take-home', result: topLetter ? { id: 'M29', value: topLetter[1], needs: [], unit: 'pct', text: shares.text } : { ...shares, value: null, needs: shares.needs?.length ? shares.needs : ['a tagged spending line'] },
       home: HOME.budget, note: topLetter ? `${topLetter[0]}, share of take-home` : 'Share of take-home', so: soWhat('drafttTop', m, { top: topLetter }) },
-    { label: 'Debt-to-income', result: ratios.dti, home: HOME.debt, so: soWhat('dti', m, ratios.dti) },
-    { label: 'Housing %', result: m.housingPct, home: HOME.budget, so: soWhat('housing', m) },
+    { id: 'dti', label: 'Debt-to-income', result: ratios.dti, home: HOME.debt, so: soWhat('dti', m, ratios.dti) },
+    { id: 'housing', label: 'Housing %', result: m.housingPct, home: HOME.budget, so: soWhat('housing', m) },
     { label: 'Job-loss fund target (big e)', tip: 'The Rule of 5: about one month of spending for every 5 years of age, the fund that carries you through a job loss', result: r5, home: HOME.assets, so: soWhat('ruleOf5', m) },
     { label: 'Tax rate', result: tax, home: HOME.taxes, note: tax.marginal != null ? h('span.has-tip', { title: 'Your marginal bracket: the rate on the next dollar you earn' }, `Tax on your next dollar ${pct(tax.marginal)}`) : null, so: soWhat('taxRate', m, tax) },
-    { label: 'Utilization', result: ratios.util, home: HOME.debt, render: ratios.util.none ? () => 'No cards' : null, so: ratios.util.none ? null : soWhat('util', m, ratios.util) },
+    { id: 'util', label: 'Utilization', result: ratios.util, home: HOME.debt, render: ratios.util.none ? () => 'No cards' : null, so: ratios.util.none ? null : soWhat('util', m, ratios.util) },
     { label: 'Of the way to FI', result: l.value === null ? l : { id: 'M55', value: l.value['Regular FI'], needs: l.value['Regular FI'] == null ? ['an FI number'] : [], unit: 'pct', text: l.text }, home: HOME.fi,
       note: l.value?.['Coast FI'] != null ? h('span', {}, h('span.has-tip', { title: 'Coast FI: enough invested that growth alone reaches FI by the FI age, so you could stop saving' }, `Can stop saving ${pct(Math.min(1, l.value['Coast FI']))}`), ' · ', h('span.has-tip', { title: 'Lean FI: enough to cover a bare-bones budget for good' }, `Bare-bones FI ${pct(Math.min(1, l.value['Lean FI'] ?? 0))}`)) : null, so: soWhat('ofFi', m, { value: l.value?.['Regular FI'] ?? null }) },
   ];
+  // Batch 40 (QUESTIONS 330): a card this household cannot light is hidden, with one quiet line saying why; a card a
+  // number on file would light keeps its lock and its one-click unlock.
+  const notFor = overviewNotFor(x, { ratios, topLetter });
+  const shown = shelf.filter(i => !notFor.some(n => n.key === i.id));
   return [head('Overview', 'Read only. Every number links to its home'),
     S.summaryStrip(ctx, [
       { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: HOME.netWorth, so: soWhat('netWorth', m), range: rangeLine(ctx, 'netWorth') },
@@ -70,7 +75,8 @@ export function overviewScreen(app, ctx) {
       { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: HOME.surplus, so: soWhat('surplus', m), range: rangeLine(ctx, 'surplus') },
       { label: 'Runway', result: m.runwayMonths, key: 'runway', render: r => `${r.value.toFixed(1)} months`, home: HOME.assets, so: soWhat('runway', m), range: rangeLine(ctx, 'efMonths') }]),
     // Batch 13 (item 1): Metrics is the core (open); the charts and fixed vs variable are caret sections, closed.
-    S.sec('overview:metrics', { title: 'Metrics', open: true, summary: `${shelf.filter(i => i.result?.value != null).length} of ${shelf.length} lit` }, h('p.muted.small', { style: { margin: '0 0 8px' } }, 'Lit when the numbers behind them exist'), h('div.shelf', {}, shelf.map(i => S.metricCard(ctx, i.label, i.result, i)))),
+    S.sec('overview:metrics', { title: 'Metrics', open: true, summary: `${shown.filter(i => i.result?.value != null).length} of ${shown.length} lit` }, h('p.muted.small', { style: { margin: '0 0 8px' } }, 'Lit when the numbers behind them exist'), h('div.shelf', {}, shown.map(i => S.metricCard(ctx, i.label, i.result, i))),
+      notFor.length ? h('div.not-for', {}, notFor.map(n => h('p.muted.small', { 'data-not-for': n.key }, h('strong', {}, n.label), `: not for this household. ${n.why[0].toUpperCase()}${n.why.slice(1)}.`))) : null),
     simpleMathSection(ctx), // batch 23: Your Shockingly Simple Math
     S.sec('overview:charts', { title: 'Where the money goes', summary: 'Spending by group and the cash flow chart' }, () => h('div.report-grid', {}, donutCard(app, ctx, m), sankeyCard(ctx, m))),
     (() => { const fv = fixedVariable(ctx, m); return fv ? S.sec('overview:fixed', { title: 'Fixed and variable', summary: 'What you pay no matter what, and what moves' }, fv) : null; })()];

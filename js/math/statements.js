@@ -7,7 +7,7 @@
 //   M65 cash tie-out, M66 net worth bridge, M67 accrual vs cash surplus
 import { metrics } from './metrics.js';
 import { statusOf } from '../records.js';
-import { instances, monthView, addMonths, ymOf } from '../month.js';
+import { instances, monthView, addMonths, ymOf, shareOf } from '../month.js';
 import { afterTaxContributions } from './linked.js';
 import { LISTS } from '../registry/assumptions.js';
 
@@ -53,8 +53,10 @@ export function netWorthStatement(doc, { asOf = null, live = doc.records } = {})
   const val = (r, f) => {
     if (statusOf(r, f) === 'Not for me') return 0;
     if (!asOf) { const v = f in r && f !== 'values' ? r[f] : r.values?.[f]; return v ?? null; }
-    const a = valueAt(doc, r, f, asOf);
-    return a.exists ? a.value : undefined;
+    // Batch 40: in one person's view a Joint row is at half (live holds that copy); the dated history is the whole row's.
+    const whole = shareOf(r) !== 1 ? doc.records.find(o => o.id === r.id) ?? r : r;
+    const a = valueAt(doc, whole, f, asOf);
+    return a.exists ? (a.value == null ? null : a.value * (whole === r ? 1 : shareOf(r))) : undefined;
   };
   const line = (r, f, group, home) => { const v = val(r, f); return v === undefined ? null : { id: r.id, name: r.name || r.type, value: v, group, home }; };
   const assets = live.filter(r => r.kind === 'account' || r.kind === 'asset').map(r => line(r, r.kind === 'asset' ? 'value' : 'balance', assetGroup(r), HOME.Cash)).filter(Boolean);
@@ -76,17 +78,17 @@ export function netWorthStatement(doc, { asOf = null, live = doc.records } = {})
 // ---------- M63: Income and spending statement (accrual), one month ----------
 // Lines use the month's actual where it has one (a closed or logged month), else its plan. Debt payments are the
 // lines From Debt. The employer match is its own line and goes straight to savings with the 401(k) and HSA money.
-export function incomeMonth(doc, ref, ym, { now = new Date() } = {}) {
-  const m = metrics(doc, ref, { now });
+export function incomeMonth(doc, ref, ym, { now = new Date(), person = null } = {}) {
+  const m = metrics(doc, ref, { now, person });
   const f = m.flow, x = m.inputs;
   const match = m.savingsRate.match ?? 0;
-  const v = monthView(doc, ref, ym, { now });
+  const v = monthView(doc, ref, ym, { now, person });
   const cards = new Set(doc.records.filter(r => r.kind === 'debt' && r.type === 'Credit card').map(r => r.id));
   const logged = v.rows.some(r => r.actual != null);
   const lines = v.rows.map(r => ({ id: r.line.id, name: r.line.name || r.line.values.category || 'Line', fixed: r.line.values.amountType === 'Fixed',
     value: logged ? r.actual ?? 0 : r.estimate ?? 0, onCard: !!cards.has(r.line.paidWith),
     yearly: !!r.line.values.irregular, prepaid: !!r.line.covers?.months, home: '#/cash-flow/budget' })).filter(l => l.value);
-  const debtPaid = instances(doc, ref, ym, { now }).filter(i => i.kind === 'debt');
+  const debtPaid = instances(doc, ref, ym, { now, person }).filter(i => i.kind === 'debt');
   const debtLines = (x.autoLines ?? []).map(a => {
     const i = debtPaid.find(d => d.recId === a.auto.sourceId);
     const paid = i && (i.status === 'Paid' || i.status === 'Partial') && i.paid != null ? -i.paid : i?.status === "Didn't happen" ? 0 : a.amount;
@@ -94,7 +96,7 @@ export function incomeMonth(doc, ref, ym, { now = new Date() } = {}) {
   });
   // Batch 34 (Rocket Surgery): while spending is the gut number, the part no line covers is spending too (the same
   // weekly spending money the calendar shows), so the surplus here is the surplus on Home and Overview.
-  const gut = instances(doc, ref, ym, { now }).filter(i => i.kind === 'gut');
+  const gut = instances(doc, ref, ym, { now, person }).filter(i => i.kind === 'gut');
   const gutLeft = -sum(gut, i => (i.status === 'Paid' || i.status === 'Partial' ? (i.paid ?? i.planned) : i.status === "Didn't happen" ? 0 : i.planned));
   const gutLines = gutLeft > 0.005 ? [{ id: gut[0].recId, name: gut[0].name, fixed: false, value: round2(gutLeft), gut: true, home: '#/cash-flow/budget' }] : [];
   const all = [...lines, ...gutLines, ...debtLines];
@@ -121,13 +123,14 @@ export function defaultBucket(i, doc) {
   if (i.kind === 'entry') { const r = doc.records.find(x => x.id === i.recId); return r?.values.bucket || (r?.values.category === 'Savings' ? 'Investing' : 'Everyday'); }
   return 'Everyday';
 }
-export function cashMonth(doc, ref, ym, { now = new Date(), startCash = null } = {}) {
-  const m = metrics(doc, ref, { now });
+export function cashMonth(doc, ref, ym, { now = new Date(), startCash = null, person = null } = {}) {
+  const m = metrics(doc, ref, { now, person });
   const x = m.inputs;
+  const rows = (person ? x.viewRecords : null) ?? doc.records; // batch 40: a view reads its rows (one person's: Joint at half)
   const marks = doc.spending?.calendar?.marks || {};
   const countMaybe = !!doc.spending?.calendar?.countMaybe;
   const items = [], unmarked = [];
-  for (const i of instances(doc, ref, ym, { now })) {
+  for (const i of instances(doc, ref, ym, { now, person })) {
     if (i.kind === 'win' || (i.maybe && !countMaybe) || !i.date.startsWith(ym)) continue; // batch 34: the gut's spending money leaves checking too
     if (i.onCard) continue; // swiped on a card: it leaves checking when the card is paid
     const amount = i.status === 'Paid' || i.status === 'Partial' ? (i.paid ?? i.planned) : i.status === "Didn't happen" ? 0 : i.planned;
@@ -137,7 +140,8 @@ export function cashMonth(doc, ref, ym, { now = new Date(), startCash = null } =
       // A payment is interest (Everyday, a cost of the month) and principal (Debt, paying down what is owed). Cards are Everyday.
       const d = x.debts.find(dd => dd.id === i.recId);
       const rec = doc.records.find(r => r.id === i.recId);
-      const owed = rec ? valueAt(doc, rec, 'balance', startOf(ym)).value ?? d?.balance ?? 0 : d?.balance ?? 0; // interest on what was owed when the month began
+      const was = rec ? valueAt(doc, rec, 'balance', startOf(ym)).value : null;
+      const owed = was != null ? was * shareOf(rows.find(r => r.id === i.recId)) : d?.balance ?? 0; // interest on what was owed when the month began (this view's part)
       const interest = Math.min(-amount, Math.max(0, owed * (d?.apr ?? 0) / 12));
       const principal = -amount - interest;
       if (d?.type === 'Credit card' && !marks[i.key]?.bucket) { items.push({ ...pick(i), amount, bucket: 'Everyday', principal }); continue; }
@@ -150,9 +154,9 @@ export function cashMonth(doc, ref, ym, { now = new Date(), startCash = null } =
     items.push({ ...pick(i), amount, bucket, yearly: i.kind === 'yearly' || !!line?.covers?.months });
   }
   // After-tax contributions to accounts leave checking every month (they are not calendar items yet).
-  const contrib = afterTaxContributions(doc.records.filter(r => r.kind === 'account'), { payFrequency: x.payFrequency, payrollHsa: x.gates.hsa && x.income.some(i => (i.r.values.hsaFsa ?? 0) > 0) });
+  const contrib = afterTaxContributions(rows.filter(r => r.kind === 'account'), { payFrequency: x.payFrequency, payrollHsa: x.gates.hsa && x.income.some(i => (i.r.values.hsaFsa ?? 0) > 0) });
   for (const p of contrib.parts) items.push({ key: `contrib:${p.id}@${ym}`, recId: p.id, name: `${p.name}: contribution`, date: `${ym}-28`, amount: -p.monthly, bucket: 'Investing', kind: 'contribution' });
-  const start = startCash ?? netWorthStatement(doc, { asOf: startOf(ym) }).cash;
+  const start = startCash ?? netWorthStatement(doc, { asOf: startOf(ym), live: rows }).cash;
   const by = b => items.filter(i => i.bucket === b);
   const totals = Object.fromEntries(BUCKETS.map(b => [b, sum(by(b), i => i.amount)]));
   const end = start + totals.Everyday + totals.Investing + totals.Debt;
@@ -168,17 +172,20 @@ export const periodOf = (kind, now) => (kind === 'year' ? { kind, year: now.getU
 const endIso = p => startOf(addMonths(periodMonths(p).at(-1), 1));
 
 // All three statements and the tie-out for a period.
-export function statements(doc, ref, period, { now = new Date() } = {}) {
+// person (batch 40, QUESTIONS 332): a couple with no combined totals reads one person's statements, as Home and Overview
+// do (ownPlanPerson), or 'all' for the two together as metrics() counts them; null reads the rows as they are.
+export function statements(doc, ref, period, { now = new Date(), person = null } = {}) {
   const months = periodMonths(period);
-  const nwStart = netWorthStatement(doc, { asOf: startOf(months[0]) });
+  const live = person ? metrics(doc, ref, { now, person }).inputs.viewRecords ?? doc.records : doc.records;
+  const nwStart = netWorthStatement(doc, { asOf: startOf(months[0]), live });
   // Ending balances: as typed when the month was closed (balances are checked at the close), else at the period end,
   // else today's for a period still running.
   const closedAt = doc.spending?.months?.[months.at(-1)]?.closed ? doc.spending.months[months.at(-1)].closedAt : null;
   const ended = endIso(period) <= now.toISOString();
-  const nwEnd = netWorthStatement(doc, { asOf: closedAt ? new Date(Date.parse(closedAt) + 1000).toISOString() : ended ? endIso(period) : null });
-  const inc = months.map(ym => incomeMonth(doc, ref, ym, { now }));
+  const nwEnd = netWorthStatement(doc, { asOf: closedAt ? new Date(Date.parse(closedAt) + 1000).toISOString() : ended ? endIso(period) : null, live });
+  const inc = months.map(ym => incomeMonth(doc, ref, ym, { now, person }));
   let cashStart = nwStart.cash;
-  const cash = months.map(ym => { const c = cashMonth(doc, ref, ym, { now, startCash: cashStart }); cashStart = c.end; return c; });
+  const cash = months.map(ym => { const c = cashMonth(doc, ref, ym, { now, startCash: cashStart, person }); cashStart = c.end; return c; });
   const add = (list, k) => sum(list, x => x[k]);
   const income = { gross: add(inc, 'gross'), match: add(inc, 'match'), taxes: add(inc, 'taxes'), saved: add(inc, 'saved'), takeHome: add(inc, 'takeHome'),
     fixed: mergeLines(inc.flatMap(i => i.fixed)), variable: mergeLines(inc.flatMap(i => i.variable)), fixedTotal: add(inc, 'fixedTotal'), variableTotal: add(inc, 'variableTotal'),
