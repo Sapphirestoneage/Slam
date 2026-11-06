@@ -1483,3 +1483,46 @@ Every function used is on Google Sheets' function list (checked Nov 6). Workbook
    (spec F598, FORMATS 49). The engine's row per adult waits for batch 56.
 5. People's Taxes cell for this client is a link, "Set on Taxes ›" (or the status, "Married jointly ›"), that lands
    on the filing status on Cash flow › Taxes. A list footer with nothing to fill in it no longer says "0 of 0 done".
+
+## Batch 63 (Nov 6 2026): Phase 4 Track 1 in the workbook, as live formulas
+
+The workbook is the coach's main tool (ROADMAP Direction), so the Track 1 math that was "From the app" is now worked
+out in the sheet, with the app's number as the Check.
+
+1. **Ranges (M9R), a new Ranges tab** (`js/sheet/ranges.js`, registered as a report). The block: one row per key
+   output (FI date, debt-free date, emergency fund months, monthly surplus, net worth) with Likely, Could be from, To,
+   the app's ends, a Check on each end, and Wide enough to show (the materiality rule). Under it, What widens it: one
+   row per input that can widen a range (each income row, the spending number or the lines, each account, home or
+   car, each debt's balance and its APR, kept even at Know it so a Status changed in the sheet widens the range live).
+   Each row reads its input by SLAM id (INDEX and MATCH on named ranges), its sureness from the row's Status, its
+   width from the RULES on Assumptions, and works out every output with the input at its low and at its high: the
+   surplus, emergency fund months and net worth straight from the input; take-home on a gross or a platform payout
+   through the household's tax again (federal on the row's return, Social Security to the wage base, Medicare and the
+   extra Medicare, New York and the city); the FI date by NPER as M53 does, with known changes in cells of their own.
+   From the app, as M53 already does: the months the surplus pays heavy debt or fills big e first, the payments freed
+   after, and the debt-free month at each end (the month-by-month debt plan). The block combines the swings as the
+   root of the sum of their squares. The working columns are grouped and collapsed. M9R's low, likely and high rows on
+   Math read the block; the FOO step's ends stay from the app (the FOO walked again per input).
+2. **The certainty meter (M9Q)** is a formula: each output's 1 minus its width over its width at 0%, weighted
+   (CertaintyWeight*), with a How sure row per output. The width at 0% per output stays from the app (the plan from
+   the age alone, and every input read as a guess). Ask me next stays from the app (each input re-run at the level its
+   answer reaches, the debt plan per input, after the Picture's next small things; QUESTIONS).
+3. **Typical at your age (M9E) and the plan from an age (M9A)** are lookups on three new priors tables on Assumptions
+   (Priors_ce: CE spending by age; Priors_value: the single figures; Priors_place: the price parities) beside
+   Priors_netWorth (`js/sheet/typical.js`): the CE one-person row scaled by the band's ratio to all ages, the place's
+   parity (the NY metro for the NYC area), cash and pay shaped like spending, retirement like net worth, rent split by
+   the people sharing it, and all households' middle when only a share has any. M9E's count of totals far outside
+   typical, each typical figure, M9A's count of core inputs still typical, each fill-in and whether it is answered are
+   formulas; a table on the Ranges tab shows them with the plan from the age (its ranges stay the app's: the whole plan
+   again on typical numbers).
+4. **Households of any size (M9N)**: a This client's part column on every tab with an Owner (equal, by percent, by
+   income, among the people ticked), and the Math row reads the first shared row in the file. The percents typed on
+   the Owner chip and each adult's take-home for By income are written in from the app (splitPcts is not a column).
+5. Found on the way: a brand-new client's M40 read $0 (the 20 blank rows say In the math Yes); it now counts a row
+   once it has a SLAM id or a number. M53 gained its known changes as dated (from1 to 4, by1 to 4), so each end of a
+   range starts them after its own debt-first months. Assumptions defines `<Name>_mine` for the client's own box.
+
+Workbook check: every Check matches on all 22 households; the drift test passes. A brand-new client with only an age
+reads every Batch 63 row as Matches (rows from other batches that read 0 for an empty file are in QUESTIONS). The
+Ranges tab of the Demo, Maya and an age-only client was opened in LibreOffice and rendered. Every function is on
+Google Sheets' list. Format 50. QUESTIONS 465 to 470.

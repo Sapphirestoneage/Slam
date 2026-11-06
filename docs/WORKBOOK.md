@@ -78,3 +78,21 @@ Still from the app, each with its reason on the Math tab: the break-even raise (
 paychecks landing in the fire drill's window (dated on the calendar, M60), M9T, M9L and M83 (whole-plan runs that read
 the month-by-month debt plan, M34), M9S (a month-by-month walk of each repayment plan), M9C (the card library) and M90
 (it reads the cash layers, M68).
+
+## Batch 63: ranges, the meter and typical at your age, live
+
+The Ranges tab (js/sheet/ranges.js) is the corner method of docs/engines/ranges.md in the sheet: one row per input
+that can widen a range (What widens it), each output at the input's low and high, and the block (Likely, Could be
+from, To, Check) adding the swings as the root of the sum of their squares. Each row finds its input by SLAM id with
+INDEX and MATCH on the named ranges, so it reads whatever the coach types. Taken from the app, as M53 already takes its
+debt-first months: the debt-first months and freed payments at each end, and the debt-free month at each end. The
+meter (M9Q) is a formula over the block and each output's width at 0% (from the app). Typical at your age (M9E) and the
+plan from an age's fill-ins (M9A) are lookups on Priors_ce, Priors_value, Priors_place and Priors_netWorth
+(js/sheet/typical.js). Still From the app, each with its reason on Math: the FOO step's ends, Ask me next, the plan from
+an age's ranges, and each output's width at 0%.
+
+Every function the formulas use is on Google Sheets' list (checked Nov 6 2026 at support.google.com/docs/table/25273):
+INDEX, MATCH, IF, OR, AND, NOT, MIN, MAX, ABS, SQRT, SUM, SUMIFS, COUNTIFS, COUNTIF, COUNT, SUMPRODUCT, ROUND, ROUNDUP,
+LN, FV, ISNUMBER, ISERROR, IFERROR, N, LEN, SUBSTITUTE, SEARCH. A formula with known changes ahead puts each change's
+month, starting balance and months to FI in cells of their own, so no formula is long enough for LibreOffice to stop
+reading it (one long one read #N/A).

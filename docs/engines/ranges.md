@@ -12,6 +12,9 @@ number. The line under a number always names months ("Could be Aug 2039 to Jan 2
 brief), shows only when the inputs below Know it move it a material amount, and its tap names the two inputs that
 widen it most. The FOO step's ends are the steps the one-at-a-time runs reach (no squares for a place on a list).
 
+Batch 63: the same method as live formulas in the workbook (the Ranges tab; docs/WORKBOOK.md), with the app's
+number as the Check.
+
 ## Purpose
 
 Every key output carries the uncertainty of its inputs: a low, a likely and a high, so the plan reads as a range that
