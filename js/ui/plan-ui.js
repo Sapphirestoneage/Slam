@@ -27,6 +27,7 @@ import { fiGate } from './report-ui.js';
 import { fiWordsOf, debtWordsOf } from '../math/picture.js';
 import { changeWords } from '../math/changes.js';
 import { outsourceCheck } from '../math/time.js';
+import { affordSection } from './afford-ui.js';
 
 export const PUI = { extra: 0, pace: null, bands: true, chart: 'FI timeline', extraDebt: 0, reveal: false };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -94,7 +95,7 @@ export function goalsScreen(app, ctx) {
   const reveal = PUI.reveal;
   const top = h('div', {}, goalsTop(app, ctx, { reveal }));
   ctx.onRefresh(() => S.keepPlace(() => clear(top, goalsTop(app, ctx))));
-  return [head('Goals', 'FI target, assumptions, milestones', S.live(ctx, () => fillCounter(app, goalsCompletion(ctx)) ?? h('span'))), S.live(ctx, () => gapCard(app, ctx, ctx.metrics(), { where: 'goals' }) ?? h('span')), top, S.live(ctx, () => goalChipSuggestions(ctx)), S.recordList(ctx, { ...milestoneList(), open: false })]; // batch 14: X of Y filled in the head; batch 13: milestones start closed
+  return [head('Goals', 'FI target, assumptions, milestones', S.live(ctx, () => fillCounter(app, goalsCompletion(ctx)) ?? h('span'))), S.live(ctx, () => gapCard(app, ctx, ctx.metrics(), { where: 'goals' }) ?? h('span')), affordSection(app, ctx), top, S.live(ctx, () => goalChipSuggestions(ctx)), S.recordList(ctx, { ...milestoneList(), open: false })]; // batch 14: X of Y filled in the head; batch 13: milestones start closed
 }
 // Batch 10 (item 4): the goal chips from About you › Why now that match a Plan goal or FOO step, each with Add. The
 // coach confirms; nothing is added on its own. Not now sets one aside for this client.

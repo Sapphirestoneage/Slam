@@ -533,3 +533,30 @@ check unchanged (the same 4 old failures, none on Month end).
 
 QA: tests pass in UTC and America/New_York; layout check on the touched screens unchanged (the four old items);
 persona run: no new findings, the job-loss Overview tax-rate major gone.
+
+## Batch 23 (Nov 6 2026): Can I afford it? and Your Shockingly Simple Math
+
+1. Can I afford it? (M83, js/math/afford.js; js/ui/afford-ui.js). A caret section first on Plan › Goals, reached from
+   a slim "Can I afford…?" button on Home and from Find ("afford", "can I", "trip", "buy"). All taps: one-time, a
+   monthly cost or a big goal; what for; how much (quick picks or a box); when (month chips; a monthly cost also asks
+   for how long). The answer runs the plan twice, as it is and on a copy with the cost in, and says a calm one-liner,
+   then three numbers (the tightest day on the calendar against the low-balance line, or the free money a month, or
+   the set-aside; the date of the FOO step you are on; the FI date), then from where (YNAB: the money has to come from
+   somewhere) and whether big e or little e is touched, then Make it a goal (a Fund the Future sinking fund) or Add to
+   the budget, and Add to the calendar. Maya, a $2,000 trip in March: $500 a month from now, heavy debt done Apr 2027
+   instead of Mar 2027, FI one month later, the tightest day Mar 8 at $3,350. Tom, a $400 a month car payment: FI 12
+   months later (3 if it ends after 5 years). The deficit persona: "Your month is $400 short today ... Closing the
+   gap comes first", with See the gap.
+   A sinking fund on an event now ends at its month in every projection (a known change on the FI date, the debt plan
+   and freed money follows the FOO, M79), so Make it a goal moves the Goals FI date by what the answer said. The trans
+   persona's FI date moves from 220 to 175 months (hand-worked in its def).
+2. Your Shockingly Simple Math (simple.js simpleTable and simpleWaterfall; js/ui/simple-math-ui.js). A caret section on
+   Report › Overview, closed, one line ("At your 29% savings rate: about 24 years to FI from $0; your plan says 22.8").
+   Mr. Money Mustache's table at 10% to 90% plus the client's own row, highlighted, at their return and withdrawal rate
+   and at the original 5%; the assumption waterfall from the original table to their FI date. Credit in a tip.
+
+Tests: test/afford.test.js (Maya, Tom, the deficit persona, the Simple Math hand calculation) pass in UTC and
+America/New_York. Layout check on Home, Goals and Overview (Demo and a new client, all widths and themes): the same 6
+covered (the Demo's load toast) before and after; the open sections scanned on Maya, Tom and the deficit persona at
+1440, 1280 and 390, light and dark: 0 findings (the Move to next session hover tip on Home, clipped, is batch 13's).
+

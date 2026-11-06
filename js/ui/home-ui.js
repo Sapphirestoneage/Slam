@@ -30,6 +30,7 @@ import { defaultsInUse } from '../checks.js';
 import { walkButton, walkMeThrough, startSessionOne } from './walk-ui.js';
 import { isFreshClient } from '../walk.js';
 import { startFastTrack } from './fasttrack-ui.js';
+import { affordHomeLine } from './afford-ui.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const isoDay = d => d.toISOString().slice(0, 10);
@@ -58,6 +59,7 @@ export function homeScreen(app, ctx) {
     endedLine(app, ctx, P),
     pathRow(app, P, open),
     checklistCard(app, ctx, P, open),
+    affordHomeLine(app), // batch 23: Can I afford it? opens on Plan › Goals
     card(pictureCard(ctx, P), 'home:picture', { open: true, summary: `Picture ${P.pace.points}% · ${P.pace.word}` }),
     P.inSession ? card(wrapUp(app, ctx, P), 'home:wrap-up', { open: true }) : null,
     low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below the low line (${money(low.low)}) on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/cash-flow/calendar') })) : null, // R096

@@ -215,13 +215,16 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
     ? housingLines.reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0) + (rentLine ? 0 : mortgagePay) : null;
   // Sinking funds on events: what is still to save, spread over the months left (yearly Budget costs are already spending).
   const ymNow = now.getFullYear() * 12 + now.getMonth();
+  const sinkingEnds = []; // batch 23: each set-aside stops at its month, and the surplus has that money back from then on
   const sinkingMonthly = live.filter(r => r.kind === 'event' && r.values.sinking && r.amount != null && r.status !== 'Not for me').reduce((s, r) => {
     const acct = r.values.sinkingFund ? live.find(q => q.id === r.values.sinkingFund) : null;
     const tag = acct && r.values.fundTag ? (acct.values.tags || []).find(t => t.name === r.values.fundTag) : null;
     const saved = tag ? tag.dollars ?? 0 : r.values.saved ?? 0;
     const [y, mo] = /^\d{4}-\d{2}/.test(r.values.month || '') ? r.values.month.split('-').map(Number) : [null, null];
     const months = y ? Math.max(1, y * 12 + mo - 1 - ymNow) : null;
-    return months ? s + Math.max(0, r.amount - saved) / months : s;
+    const each = months ? Math.max(0, r.amount - saved) / months : 0;
+    if (each > 0.005) sinkingEnds.push({ id: r.id, kind: 'sinkingEnd', ym: r.values.month.slice(0, 7), at: months, surplus: each, spending: 0, name: r.name || r.type || 'A goal' });
+    return months ? s + each : s;
   }, 0);
   const a = doc.assumptions;
   const out = {
@@ -252,6 +255,10 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   // Batch 15, items 6 and 13: known changes ahead (a covered bill that becomes yours, a line that starts on a date,
   // benefits that end). Today's spending leaves them out; the projections and retirement spending put them in.
   out.changes = datedChanges(out, { now });
+  // Batch 23: a sinking fund's saving ends at its month, so the FI date and the debt plan see it end. A what-if copy
+  // (Can I afford it?, js/math/afford.js) can carry changes of its own in doc.whatIf; a client's file never has one.
+  const extraChanges = [...sinkingEnds, ...(Array.isArray(doc.whatIf?.changes) ? doc.whatIf.changes : [])];
+  if (extraChanges.length) out.changes = [...out.changes, ...extraChanges].sort((p, q) => p.at - q.at);
   out.laterSpending = out.changes.reduce((s, c) => s + (c.spending ?? 0), 0);
   if (a.retirementSpending == null && spending !== null && out.laterSpending) out.retirementSpending = spending + out.laterSpending;
   return out;
@@ -329,7 +336,7 @@ export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
     const lay = cashLayers(x, layerOptions(doc, ref, x, now));
     const bigELeft = lay.needsAge ? 0 : lay.layers.filter(l => l.id.startsWith('big-e')).reduce((s, l) => s + (l.left ?? 0), 0);
     const room = taxFreeRoom(doc, x, ref, now);
-    out.fooFlow = { ...freedFlow({ surplus: Math.max(0, surplus - contributions - goalSaving), heavyMonths: rule.on ? H : 0, freed, bigELeft, taxFreeLeft: room.left, firstMonths: rule.on ? firstMonths : 0, firstLeft }), room, bigELeft, bigETarget: lay.needsAge ? null : lay.layers.filter(l => l.id.startsWith('big-e')).reduce((s, l) => s + (l.target ?? 0), 0) };
+    out.fooFlow = { ...freedFlow({ surplus: Math.max(0, surplus - contributions - goalSaving), heavyMonths: rule.on ? H : 0, freed, bigELeft, taxFreeLeft: room.left, firstMonths: rule.on ? firstMonths : 0, firstLeft, changes: surplusChanges }), room, bigELeft, bigETarget: lay.needsAge ? null : lay.layers.filter(l => l.id.startsWith('big-e')).reduce((s, l) => s + (l.target ?? 0), 0) };
   } else out.fooFlow = null;
   const wait = out.fooFlow ? (out.fooFlow.waitMonths ?? RULES.maxMonths) : rule.on ? (H ?? RULES.maxMonths) : 0;
   const before = surplus !== null && wait > 0 ? { months: wait, monthly: alreadyIn + contributions, heavyMonths: rule.on ? (H ?? RULES.maxMonths) : 0 } : null; // while the surplus pays heavy debt, then fills big e

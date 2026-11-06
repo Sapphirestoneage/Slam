@@ -45,5 +45,10 @@ const TERMS = [
   { term: 'budget', routes: [B], box: /^gut$/ },
   // Batch 22: a month of transactions from the client's app or bank comes in on Month end.
   ...['import', 'csv', 'rocket money', 'monarch', 'transactions'].map(term => ({ term, routes: ['#/cash-flow/close'], box: /^import-tx$/ })),
+  // Batch 23: Can I afford it? on Plan › Goals, by the words a client says.
+  { term: 'can I afford', routes: [G], box: /^sec:goals:afford$/ },
+  { term: 'afford', routes: [G], box: /^sec:goals:afford$/ },
+  { term: 'trip', routes: [G], box: /^sec:goals:afford$/ },
+  { term: 'buy', routes: [G], box: /^sec:goals:afford$/ },
 ];
 module.exports = { TERMS };

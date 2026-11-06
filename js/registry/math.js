@@ -29,7 +29,8 @@ import { scorecardOf } from '../math/scorecard.js';
 import { ladderOf } from '../math/ladder.js';
 import { saferFi } from '../math/fi.js';
 import { compareOf, netWorthIn } from '../math/proposed.js';
-import { closeStreak, byCategory, monthView, ymOf } from '../month.js';
+import { closeStreak, byCategory, monthView, ymOf, addMonths } from '../month.js';
+import { affordOf } from '../math/afford.js';
 import { foo } from '../math/foo.js';
 import { gapOf } from '../math/gap.js';
 import { nextMoves } from '../math/moves.js';
@@ -439,7 +440,7 @@ export const MATH = [
     app: c => c.foo().qq.value },
   { id: 'M71', name: 'Efficiency flags', inputs: 'M69', unit: 'number', fns: [],
     fromApp: 'tests in data/flags.json on facts the FOO works out', app: c => c.foo().flags.length },
-  { id: 'M72', name: 'Shockingly Simple Math', inputs: 'M28, return, WR', unit: 'years', fns: ['simple.simpleMath', 'simple.yearsAtRate'],
+  { id: 'M72', name: 'Shockingly Simple Math', inputs: 'M28, return, WR', unit: 'years', fns: ['simple.simpleMath', 'simple.yearsAtRate', 'simple.MMM', 'simple.simpleTable', 'simple.simpleWaterfall'], // batch 23: the table and the assumption waterfall on Report › Overview
     sheet: 'IF(OR(Math_M28="",N(Math_M28)<=0),"",IF(Math_M28>=1,0,ROUNDUP(LN(1+(1-Math_M28)*12/WithdrawalRate*Math_M53_growth/Math_M28)/LN(1+Math_M53_growth)-0.000000001,0)/12))',
     label: 'Years to FI from $0 at your savings rate', app: c => simpleMath({ savingsRate: c.m.savingsRate.value == null ? null : Math.max(0, c.m.savingsRate.value), realReturn: c.x.realReturn, withdrawalRate: c.x.withdrawalRate }).value },
   // ---------- The program (Phase 3) ----------
@@ -496,6 +497,11 @@ export const MATH = [
     app: c => transitionOf(c.doc, c.ref, { now: c.now }).runway,
     parts: [{ key: 'full', name: 'Months at full spending', unit: 'months', fromApp: 'the same run with the burn held at full spending', app: c => transitionOf(c.doc, c.ref, { now: c.now }).levels[0].runway },
       { key: 'food', name: 'Months at food and housing only', unit: 'months', fromApp: 'the same run with the burn held at food and housing', app: c => transitionOf(c.doc, c.ref, { now: c.now }).levels[3].runway }] },
+  // ---------- Can I afford it? (batch 23) ----------
+  { id: 'M83', name: 'Can I afford it?', inputs: 'a cost (one-time, a month, or a big goal), its amount and month; M60 the calendar and its low-balance line, M69 the FOO step and its date, M53 the FI date, M68 the cash layers, the free money a month', unit: 'months',
+    fns: ['afford.AFFORD_KINDS', 'afford.askOf', 'afford.affordDoc', 'afford.affordOf'],
+    fromApp: 'two runs of the same math, on the file and on a copy with the cost in (a one-time cost or goal as a Fund the Future sinking fund until its month, a monthly cost as spending from its month): the tightest day on the calendar, the FOO step date and the FI date on each side; the row here is a $1,000 one-time cost next month',
+    label: 'FI date moves (months) with a $1,000 one-time cost next month', app: c => affordOf(c.doc, c.ref, { kind: 'once', amount: 1000, ym: addMonths(ymOf(c.now), 1) }, { now: c.now }).fi?.moved ?? null },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },
   // ---------- Holidays (the calendar question on About you) ----------

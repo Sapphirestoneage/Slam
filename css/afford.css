@@ -1,0 +1,41 @@
+/* Batch 23: Can I afford it? (Plan › Goals) and Your Shockingly Simple Math (Report › Overview). Calm: no red, slim. */
+.afford { display: grid; gap: var(--s4); }
+.af-form { display: grid; gap: 10px; }
+.af-q { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px var(--s3); align-items: start; }
+.af-q > .label { line-height: 1.25; padding-top: 8px; }
+.af-a { min-width: 0; }
+.af-a .picks, .af-a .seg { flex-wrap: wrap; }
+.af-amount { gap: 10px; align-items: center; flex-wrap: wrap; }
+.af-wait { margin: 0; }
+.af-answer { display: grid; gap: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--border-row); }
+.af-line { margin: 0; font-size: 1.125rem; font-weight: 600; line-height: 1.4; }
+.af-nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); }
+.af-num { display: flex; flex-direction: column; gap: 2px; padding: var(--s3); border: 1px solid var(--border-row); border-radius: var(--r-input); min-width: 0; }
+.af-big { font-size: 1.25rem; font-weight: 700; }
+.af-big .math { font-size: inherit; font-weight: inherit; text-align: left; }
+.af-from { margin: 0; line-height: 1.5; }
+.af-actions { gap: 10px; flex-wrap: wrap; }
+.afford-home { gap: 10px; margin: 4px 0 var(--s3); flex-wrap: wrap; }
+.sm-card { display: grid; gap: var(--s3); }
+.sm-credit { margin: 0; }
+.sm-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s5); align-items: start; }
+.sm-tablewrap { min-width: 0; }
+.sm-table { width: 100%; border-collapse: collapse; }
+.sm-table th { font-size: .875rem; font-weight: 600; color: var(--text-2); text-align: left; padding: 6px 8px; border-bottom: 2px solid var(--border-row); }
+.sm-table td { padding: 6px 8px; border-bottom: 1px solid var(--border-row); }
+.sm-table .num { text-align: right; }
+.sm-table tr.sm-you td { background: color-mix(in srgb, var(--goals) 14%, transparent); font-weight: 600; }
+.sm-table tr.sm-you td:first-child { box-shadow: inset 4px 0 0 var(--goals); }
+.sm-fall h3 { margin: 0 0 8px; font-size: 1rem; }
+.sm-steps { list-style: none; margin: 0; padding: 0; display: grid; }
+.sm-step { display: flex; justify-content: space-between; gap: var(--s3); padding: 8px 0; border-top: 1px solid var(--border-row); }
+.sm-step:first-child { border-top: 0; }
+.sm-step.sm-last { border-top: 2px solid var(--border-row); }
+.sm-step-text, .sm-step-num { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sm-step-num { align-items: flex-end; text-align: right; white-space: nowrap; }
+@media (max-width: 760px) {
+  .af-q { grid-template-columns: minmax(0, 1fr); }
+  .af-q > .label { padding-top: 0; }
+  .af-nums { grid-template-columns: minmax(0, 1fr); }
+  .sm-grid { grid-template-columns: minmax(0, 1fr); }
+}

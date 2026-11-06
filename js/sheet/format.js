@@ -60,6 +60,7 @@ export const FORMATS = [
   { version: 19, shape: 'c33c4b9f' }, // batch 21: settings.phase4 and M90 (Life Transitions)
   { version: 20, shape: '314ea84e' }, // Nov 6 2026 (batch 22): M25 by category, this month (Month end after an import)
   { version: 21, shape: 'b67d018a' }, // batch 24: M34 rangeLow and rangeHigh (the debt-free range), rules AprGuessSwing and RoughBalanceShare
+  { version: 22, shape: '329adf3e' }, // batch 23: M83 Can I afford it?, and the M72 table and waterfall functions
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

@@ -2002,6 +2002,27 @@
         ],
         "add": "none",
         "why": "batch 22: a Rocket Money, Monarch or bank CSV comes in on Cash flow > Month end (also Coach tools > Data); the review comes before anything is saved"
+      },
+      {
+        "terms": [
+          "afford",
+          "can i afford",
+          "can i afford it",
+          "can i",
+          "can we afford",
+          "trip",
+          "vacation",
+          "buy",
+          "big purchase",
+          "purchase",
+          "wedding"
+        ],
+        "label": "Can I afford it?",
+        "go": [
+          "focus:sec:goals:afford@#/plan/goals"
+        ],
+        "add": "none",
+        "why": "batch 23: the quick check on Plan › Goals answers it from the plan (the tightest day, the FOO step, the FI date)"
       }
     ]
   },

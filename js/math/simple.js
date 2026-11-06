@@ -3,6 +3,7 @@
 import { fiDate } from './fi.js';
 import { afterTaxContributions } from './linked.js';
 import { metrics } from './metrics.js';
+import { fmt } from './result.js';
 
 // M72: years to FI from a savings rate s, starting from $0: M53 with investing = s × take-home and retirement
 // spending = (1 − s) × take-home. Take-home cancels out, so the curve is the same for everyone at a given return and WR.
@@ -46,4 +47,41 @@ export function payYourselfFirst(doc, ref, { now = new Date() } = {}) {
   const perPaycheck = monthly / paysPerMonth;
   return { monthly, perPaycheck, paysPerMonth, freq, parts,
     text: parts.length ? `${parts.map(p => `${p.name} ${Math.round(p.monthly).toLocaleString('en-US')}`).join(' + ')} = ${Math.round(monthly).toLocaleString('en-US')} a month, ${paysPerMonth.toFixed(2)} paychecks a month, so about ${Math.round(perPaycheck).toLocaleString('en-US')} a paycheck.` : 'Nothing comes off the top yet.' };
+}
+
+// Batch 23: Your Shockingly Simple Math (Report › Overview). Mr. Money Mustache's table ("The Shockingly Simple Math
+// Behind Early Retirement", 2012: 5% after inflation, a 4% withdrawal rate, starting from $0) re-run on this client's
+// return and withdrawal rate, with their own savings rate as a row of its own.
+export const MMM = { realReturn: 0.05, withdrawalRate: 0.04 };
+export function simpleTable({ savingsRate, realReturn, withdrawalRate }, { rates = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] } = {}) {
+  if (realReturn == null || withdrawalRate == null) return { id: 'M72', value: null, needs: ['a return and a withdrawal rate'], rows: [] };
+  const you = savingsRate != null && savingsRate > 0 && savingsRate < 1 ? savingsRate : null;
+  const list = [...rates.filter(r => you == null || Math.abs(r - you) > 0.0005).map(rate => ({ rate, you: false })), ...(you != null ? [{ rate: you, you: true }] : [])].sort((a, b) => a.rate - b.rate);
+  const rows = list.map(({ rate, you: mine }) => ({ rate, you: mine, years: yearsAtRate(rate, { realReturn, withdrawalRate }), original: yearsAtRate(rate, MMM) }));
+  const mine = rows.find(r => r.you) ?? null;
+  return { id: 'M72', value: mine?.years ?? null, needs: [], rows, you: mine,
+    text: `Years from $0 to FI at each savings rate: invest that share of take-home a month at ${(realReturn * 100).toFixed(1)}% a year after inflation until it reaches the rest of take-home times 12, divided by ${(withdrawalRate * 100).toFixed(1)}%. Take-home cancels out, so only the rate, the return and the withdrawal rate matter. The original table uses 5% and 4%.` };
+}
+// The assumption waterfall: the original table's years at your savings rate, then each of your own assumptions in
+// turn (your return, your withdrawal rate, starting from what you have invested), then your plan as it stands (the
+// FI date, M53: heavy debt and big e first, your retirement spending, known changes). Each step says what it does.
+export function simpleWaterfall(m, { now = new Date() } = {}) {
+  const x = m.inputs, s = m.savingsRate?.value;
+  if (s == null || !(s > 0) || x.takeHome == null) return { id: 'M72', value: null, needs: [s == null ? 'a savings rate' : 'a savings rate above zero'], steps: [] };
+  const rate = Math.min(0.999, s), base = x.takeHome + (m.savingsRate.pretaxSaving ?? 0) + (m.savingsRate.match ?? 0); // the headline rate's own base
+  const y0 = yearsAtRate(rate, MMM), y1 = yearsAtRate(rate, { realReturn: x.realReturn, withdrawalRate: MMM.withdrawalRate }), y2 = yearsAtRate(rate, { realReturn: x.realReturn, withdrawalRate: x.withdrawalRate });
+  const from = fiDate({ invested: x.invested ?? 0, monthlyInvesting: rate * base, realReturn: x.realReturn, target: (1 - rate) * base * 12 / x.withdrawalRate }, { from: now });
+  const y3 = from.value == null ? null : from.value / 12;
+  const y4 = m.monthsToFi?.value == null ? null : m.monthsToFi.value / 12;
+  const p = v => `${+(v * 100).toFixed(1)}%`;
+  const steps = [
+    { key: 'original', label: `The original table at your ${Math.round(rate * 100)}%`, note: '5% return, 4% withdrawal, from $0', years: y0 },
+    { key: 'return', label: `Your return, ${p(x.realReturn)}`, note: 'after inflation, from Goals', years: y1 },
+    { key: 'withdrawal', label: `Your withdrawal rate, ${p(x.withdrawalRate)}`, note: 'from Goals', years: y2 },
+    { key: 'invested', label: `Starting from your ${fmt.money(x.invested ?? 0)} invested`, note: 'instead of $0', years: y3 },
+    ...(y4 != null ? [{ key: 'plan', label: 'Your plan as it stands', note: 'debt and big e first, your retirement spending, known changes', years: y4 }] : []),
+  ].map((st, i, all) => ({ ...st, change: i === 0 || st.years == null || all[i - 1].years == null ? null : st.years - all[i - 1].years }));
+  const last = steps.at(-1);
+  return { id: 'M72', value: last.years, needs: [], steps,
+    text: `${steps.map(st => `${st.label}: ${st.years == null ? 'not on this path' : `${st.years.toFixed(1)} years`}${st.change != null ? ` (${st.change > 0 ? '+' : ''}${st.change.toFixed(1)})` : ''}`).join('; ')}.` };
 }

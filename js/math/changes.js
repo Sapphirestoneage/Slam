@@ -44,6 +44,8 @@ export function changeWords(c) {
   const when = new Date(Date.UTC(y, m - 1, 15)).toLocaleString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
   const by = `${c.surplus < 0 ? '-' : '+'}${fmt.money(Math.abs(c.surplus))}`;
   if (c.kind === 'benefitEnd') return `Benefits end ${when}: your month changes by ${by}`;
+  if (c.kind === 'sinkingEnd') return `${c.name} is saved for by ${when}: your month changes by ${by}`; // batch 23
+  if (c.kind === 'ends') return `${c.name} ends ${when}: your month changes by ${by}`; // batch 23, a what-if only
   if (c.kind === 'takeover') return `${c.name} becomes yours ${when}: your month changes by ${by}`;
   return `${c.name} starts ${when}: your month changes by ${by}`;
 }

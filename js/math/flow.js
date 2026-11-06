@@ -36,13 +36,22 @@ export function taxFreeRoom(doc, x, ref, now = new Date()) {
 // null when the payments never clear it); freed: the heavy payments that free up; bigELeft and taxFreeLeft: dollars.
 // Each phase ends at the first whole month its dollars are in (a part month rounds up), like every FOO date.
 // firstMonths (question 217): the months the surplus first fills FOO step 1 (the buffer and little e), before heavy debt.
-export function freedFlow({ surplus, heavyMonths = 0, freed = 0, bigELeft = 0, taxFreeLeft = 0, firstMonths = 0, firstLeft = 0 }) {
+// changes (batch 23): known changes ahead, each { at, monthly } (a sinking fund's saving that ends, a bill that becomes
+// yours): from month at on, the surplus moves by monthly, so big e and Tax-Free Growth fill at that pace.
+export function freedFlow({ surplus, heavyMonths = 0, freed = 0, bigELeft = 0, taxFreeLeft = 0, firstMonths = 0, firstLeft = 0, changes = null }) {
   if (surplus == null) return null;
   const toDebt = Math.max(0, surplus), monthly = toDebt + Math.max(0, freed || 0);
   const F = Math.max(0, firstMonths || 0);
   const H = heavyMonths == null ? null : Math.max(heavyMonths, F);
-  const span = left => (!(left > 0.5) ? 0 : monthly > 0 ? Math.ceil(left / monthly - 1e-9) : null);
-  const bigE = span(bigELeft), taxFree = span(taxFreeLeft);
+  const moves = (changes || []).filter(c => c.monthly);
+  const span = (left, from = 0) => {
+    if (!(left > 0.5)) return 0;
+    if (!moves.length || from == null) return monthly > 0 ? Math.ceil(left / monthly - 1e-9) : null;
+    let got = 0, n = 0;
+    while (got < left - 1e-9 && n < 1200) { got += Math.max(0, monthly + moves.reduce((s, c) => s + (c.at <= from + n ? c.monthly : 0), 0)); n += 1; }
+    return got >= left - 1e-9 ? n : null;
+  };
+  const bigE = span(bigELeft, H), taxFree = span(taxFreeLeft, H == null || bigE == null ? null : H + bigE);
   const bigEEnd = H == null || bigE == null ? null : H + bigE;
   const taxFreeEnd = bigEEnd == null || taxFree == null ? null : bigEEnd + taxFree;
   const steps = [

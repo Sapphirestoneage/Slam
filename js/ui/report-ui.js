@@ -2,6 +2,7 @@
 // Report (build phase 8): Overview (donuts, metrics shelf, Sankey), One-pager, History. Read only:
 // every number links to its home, where it is typed.
 import { h, clear, icon } from './dom.js';
+import { simpleMathSection } from './simple-math-ui.js';
 import { changeLog } from '../capture.js';
 import { saferFi } from '../math/fi.js';
 import { flowWords } from '../math/flow.js';
@@ -66,6 +67,7 @@ export function overviewScreen(app, ctx) {
       { label: 'Runway', result: m.runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: HOME.assets, so: soWhat('runway', m) }]),
     // Batch 13 (item 1): Metrics is the core (open); the charts and fixed vs variable are caret sections, closed.
     S.sec('overview:metrics', { title: 'Metrics', open: true, summary: `${shelf.filter(i => i.result?.value != null).length} of ${shelf.length} lit` }, h('p.muted.small', { style: { margin: '0 0 8px' } }, 'Lit when the numbers behind them exist'), h('div.shelf', {}, shelf.map(i => S.metricCard(ctx, i.label, i.result, i)))),
+    simpleMathSection(ctx), // batch 23: Your Shockingly Simple Math
     S.sec('overview:charts', { title: 'Where the money goes', summary: 'Spending by group and the cash flow chart' }, () => h('div.report-grid', {}, donutCard(app, ctx, m), sankeyCard(ctx, m))),
     (() => { const fv = fixedVariable(ctx, m); return fv ? S.sec('overview:fixed', { title: 'Fixed and variable', summary: 'What you pay no matter what, and what moves' }, fv) : null; })()];
 }
