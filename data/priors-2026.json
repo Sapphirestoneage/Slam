@@ -2,8 +2,8 @@
  "id": "priors",
  "asOf": "2026-11-06",
  "year": 2026,
- "source": "docs/engines/priors-sources.md, only the rows marked Primary (read on the publisher's page or its FRED mirror; batch 17 and the batch 24 verify pass). Nothing Secondary or Not found is here",
- "range": "No row here publishes a 25th to 75th percentile, so every range is SLAM's stated spread around the source's figure (RULES typicalLow and typicalHigh, docs/engines/priors.md): the median where the source gives one (SCF), else the mean (CE)",
+ "source": "docs/engines/priors-sources.md, only the rows marked Primary (read on the publisher's page or its FRED mirror; batch 17, the batch 24 verify pass and the batch 39 data pass). Nothing Secondary or Not found is here",
+ "range": "Where a row gives its 25th and 75th percentiles (p25, p75), those are the range. Every other range is SLAM's stated spread around the source's figure (RULES typicalLow and typicalHigh, docs/engines/priors.md): the median where the source gives one (SCF, ACS), else the mean (CE)",
  "sources": {
   "scf2025": {
    "name": "Survey of Consumer Finances 2025: Changes in U.S. Family Finances from 2022 to 2025",
@@ -21,6 +21,21 @@
    "name": "Consumer Expenditure Survey 2024, by age of reference person (calendar-year tables)",
    "publisher": "Bureau of Labor Statistics, read on FRED (its mirror)",
    "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198191"
+  },
+  "ce2024size": {
+   "name": "Consumer Expenditure Survey 2024, by size of consumer unit (calendar-year tables)",
+   "publisher": "Bureau of Labor Statistics, read on FRED (its mirror)",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215378"
+  },
+  "acs5y2024": {
+   "name": "American Community Survey 5-year estimates, 2020 to 2024",
+   "publisher": "U.S. Census Bureau",
+   "link": "https://www.census.gov/quickfacts/fact/table/NY/HSG860224"
+  },
+  "rpp2024": {
+   "name": "Regional Price Parities by state and metro area, 2024",
+   "publisher": "Bureau of Economic Analysis, read on FRED (its mirror)",
+   "link": "https://fred.stlouisfed.org/series/RPPALL35620"
   }
  },
  "rows": [
@@ -353,7 +368,7 @@
    "unit": "year",
    "source": "ce2024",
    "table": "Total expenditures, annual mean per consumer unit",
-   "link": "https://fred.stlouisfed.org/series/CXUTOTALEXPLB0404M",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
    "year": 2024,
    "among": "households of every size (CE consumer units)"
   },
@@ -806,16 +821,1491 @@
    "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346",
    "year": 2024,
    "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.food",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 12460,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAtHome",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 7411,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food at home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAway",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 5049,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food away from home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.housing",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 30369,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Housing, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.shelter",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 18728,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Shelter, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.rentedDwellings",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 7036,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Rented dwellings, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.utilities",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 5053,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Utilities, fuels and public services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.transportation",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 15581,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Transportation, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.vehiclePurchases",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 6560,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Vehicle purchases (net outlay), annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.healthCare",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 5949,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Health care, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.entertainment",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 4128,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Entertainment, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.apparel",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 2649,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Apparel and services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.personalInsurance",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 13465,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Personal insurance and pensions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.cashContributions",
+   "band": "35 to 44",
+   "ages": [
+    35,
+    44
+   ],
+   "who": "35 to 44 year olds",
+   "mean": 1595,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Cash contributions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.total",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 100327,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Total expenditures, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.food",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 12772,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAtHome",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 7703,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food at home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAway",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 5069,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food away from home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.housing",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 30747,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Housing, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.shelter",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 19283,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Shelter, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.rentedDwellings",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 5001,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Rented dwellings, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.utilities",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 5779,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Utilities, fuels and public services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.transportation",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 17184,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Transportation, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.vehiclePurchases",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 6448,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Vehicle purchases (net outlay), annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.healthCare",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 6748,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Health care, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.entertainment",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 4803,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Entertainment, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.apparel",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 2547,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Apparel and services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.personalInsurance",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 14948,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Personal insurance and pensions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.cashContributions",
+   "band": "45 to 54",
+   "ages": [
+    45,
+    54
+   ],
+   "who": "45 to 54 year olds",
+   "mean": 3315,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Cash contributions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.total",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 84946,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Total expenditures, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.food",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 10214,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAtHome",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 6174,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food at home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAway",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 4040,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food away from home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.housing",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 27019,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Housing, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.shelter",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 16507,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Shelter, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.rentedDwellings",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 3619,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Rented dwellings, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.utilities",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 5138,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Utilities, fuels and public services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.transportation",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 15085,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Transportation, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.vehiclePurchases",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 6344,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Vehicle purchases (net outlay), annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.healthCare",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 6711,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Health care, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.entertainment",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 3706,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Entertainment, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.apparel",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 2032,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Apparel and services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.personalInsurance",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 12172,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Personal insurance and pensions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.cashContributions",
+   "band": "55 to 64",
+   "ages": [
+    55,
+    64
+   ],
+   "who": "55 to 64 year olds",
+   "mean": 2300,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Cash contributions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.total",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 65354,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Total expenditures, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.food",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 8483,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAtHome",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 5642,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food at home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAway",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 2841,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food away from home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.housing",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 22329,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Housing, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.shelter",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 12749,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Shelter, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.rentedDwellings",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 2681,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Rented dwellings, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.utilities",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 4653,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Utilities, fuels and public services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.transportation",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 11414,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Transportation, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.vehiclePurchases",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 4539,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Vehicle purchases (net outlay), annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.healthCare",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 7715,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Health care, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.entertainment",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 3122,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Entertainment, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.apparel",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 1377,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Apparel and services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.personalInsurance",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 4579,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Personal insurance and pensions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.cashContributions",
+   "band": "65 to 74",
+   "ages": [
+    65,
+    74
+   ],
+   "who": "65 to 74 year olds",
+   "mean": 2921,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Cash contributions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.total",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 55834,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Total expenditures, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.food",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 7168,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAtHome",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 4696,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food at home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAway",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 2472,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Food away from home, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.housing",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 21999,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Housing, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.shelter",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 13346,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Shelter, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.rentedDwellings",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 4435,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Rented dwellings, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.utilities",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 4234,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Utilities, fuels and public services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.transportation",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 6855,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Transportation, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.vehiclePurchases",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 2039,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Vehicle purchases (net outlay), annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.healthCare",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 7918,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Health care, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.entertainment",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 2888,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Entertainment, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.apparel",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 942,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Apparel and services, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.personalInsurance",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 1908,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Personal insurance and pensions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.cashContributions",
+   "band": "75 and over",
+   "ages": [
+    75,
+    null
+   ],
+   "who": "people 75 and over",
+   "mean": 3497,
+   "unit": "year",
+   "source": "ce2024",
+   "table": "Cash contributions, annual mean per consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264",
+   "year": 2024,
+   "among": "households of every size (CE consumer units)"
+  },
+  {
+   "field": "spending.total",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 48794,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Total expenditures, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.food",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 5644,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Food, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.foodAtHome",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 3395,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Food at home, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.foodAway",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 2249,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Food away from home, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.housing",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 19052,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Housing, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.shelter",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 12954,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Shelter, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.rentedDwellings",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 6986,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Rented dwellings, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.utilities",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 2978,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Utilities, fuels and public services, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.transportation",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 6953,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Transportation, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.vehiclePurchases",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 2490,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Vehicle purchases (net outlay), annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.healthCare",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 4026,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Health care, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.entertainment",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 2187,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Entertainment, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.apparel",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 1113,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Apparel and services, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.personalInsurance",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 4329,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Personal insurance and pensions, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "spending.cashContributions",
+   "band": "all ages",
+   "ages": null,
+   "household": "Solo",
+   "who": "people who live alone",
+   "mean": 2152,
+   "unit": "year",
+   "source": "ce2024size",
+   "table": "Cash contributions, annual mean per one-person consumer unit",
+   "link": "https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380",
+   "year": 2024,
+   "among": "one-person households of every age (average age 56.3)"
+  },
+  {
+   "field": "retirement",
+   "band": "all ages",
+   "ages": null,
+   "who": "households with a retirement account",
+   "share": 0.549,
+   "median": 106000,
+   "among": "the 54.9% with a retirement account",
+   "unit": "balance",
+   "source": "scf2025",
+   "table": "Table 3 (p. 15), retirement accounts",
+   "link": "https://www.federalreserve.gov/publications/files/scf26.pdf",
+   "year": 2025
+  },
+  {
+   "field": "netWorth",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "median": 215900,
+   "p25": 27900,
+   "p75": 812800,
+   "p90": 2539200,
+   "unit": "balance",
+   "source": "scf2025",
+   "table": "Table A.2 (p. 48), net worth percentiles; median and mean from the press release",
+   "link": "https://www.federalreserve.gov/publications/files/scf26.pdf",
+   "year": 2025
+  },
+  {
+   "field": "rent",
+   "band": "all ages",
+   "ages": null,
+   "who": "renters",
+   "median": 1413,
+   "unit": "month",
+   "source": "acs5y2024",
+   "table": "QuickFacts median gross rent (B25064), United States",
+   "link": "https://www.census.gov/quickfacts/fact/table/US/HSG860223",
+   "year": 2024,
+   "among": "renter households (rent plus utilities)",
+   "period": "2020 to 2024"
+  },
+  {
+   "field": "rent",
+   "band": "all ages",
+   "ages": null,
+   "place": "NY",
+   "area": "New York State",
+   "who": "renters in New York State",
+   "median": 1621,
+   "unit": "month",
+   "source": "acs5y2024",
+   "table": "QuickFacts median gross rent (B25064), New York State",
+   "link": "https://www.census.gov/quickfacts/fact/table/NY/HSG860224",
+   "year": 2024,
+   "among": "renter households (rent plus utilities)",
+   "period": "2020 to 2024"
   }
  ],
- "place": [],
- "placeNote": "No Primary row gives a New York State or NY metro figure yet (ACS rent B25064 is still Secondary), so every figure is national. A place row would be { field, place, factor, source, link, year }",
+ "place": [
+  {
+   "field": "spending",
+   "place": "NY",
+   "area": "the New York metro",
+   "factor": 1.12563,
+   "source": "rpp2024",
+   "table": "Regional Price Parities: All Items, New York-Newark-Jersey City MSA, 2024: 112.563 (United States = 100)",
+   "link": "https://fred.stlouisfed.org/data/RPPALL35620",
+   "year": 2024
+  },
+  {
+   "field": "spending",
+   "place": "NJ",
+   "area": "New Jersey",
+   "factor": 1.08805,
+   "source": "rpp2024",
+   "table": "Regional Price Parities: All Items, New Jersey, 2024: 108.805 (United States = 100)",
+   "link": "https://fred.stlouisfed.org/data/NJRPPALL",
+   "year": 2024
+  }
+ ],
+ "placeNote": "NY clients read the New York metro (QUESTIONS 210) where a Primary figure gives it: spending scales by the metro's BEA price parity. Rent has no Primary metro figure yet (data.census.gov and the Census API were not reachable), so a NY renter reads New York State's median gross rent and says so. Cash, cards, loans and net worth stay national (no Primary place row). A place row is { field, place, area, factor, source, table, link, year }; a row with its own place (rent) is used as is",
  "leftOut": [
-  "Rent (ACS B25064, national, NY State, NJ and NY metro): Secondary, census.gov was not reachable",
-  "Retirement balances by age (SCF historical tables): Secondary",
+  "NY metro median gross rent (ACS B25064 for CBSA 35620): no Primary page reachable (USAFacts says about $1,830 for 2020-2024, Secondary)",
+  "Gross rent quartiles: the ACS publishes contract rent quartiles (B25057, B25059), not gross; neither was reachable",
+  "Rent by age of householder: no published table (ACS PUMS only)",
+  "Cash, cards, student loans and retirement by age (SCF historical tables and Data Interactive): not reachable; the report gives them for all families only",
   "Household income by age (Census H-10 and its percentiles): Secondary",
-  "Card, education debt and transaction accounts by age (SCF historical tables): Not found",
-  "Average card debt by generation (Experian) and student loans by age (FSA, via Student Loan Planner): Secondary",
-  "CE rows for 35 to 44 beyond the total, and 45 and over: not read"
+  "Average card debt by generation (Experian) and student loans by age (FSA portfolio by age, located but not readable): Secondary",
+  "CE one-person households by age: no published cross-table; the one-person row is all ages"
  ]
 }

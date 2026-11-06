@@ -839,3 +839,13 @@ Before and after (44 runs): 169 actions to 150, 40 hesitations to 2, 14 dead end
 
 Tests: the whole suite passes in UTC and America/New_York. After: every Check Matches on all 17 households, and the
 Demo's file downloaded from the browser opens in LibreOffice with 341 of 341 Checks at Matches (50 off before).
+
+## Batch 39 (Nov 6 2026): the data pass for "typical at your age"
+
+Batch 31 could use only a few Primary rows (QUESTIONS 314 to 318). This pass read more primary tables and wired them in.
+
+1. Read and entered as Primary (docs/engines/priors-sources.md, data/priors-2026.json): the CE 2024 by age for 35 to 44 through 75 and over (all categories) and by size of consumer unit (one person, all ages); ACS 2020 to 2024 median gross rent from QuickFacts (United States $1,413, New York State $1,621; Rockland County $1,901 recorded, not used); BEA 2024 price parities (NY metro 112.563, New Jersey 108.805; NY State and NY metro housing recorded); the SCF report's all-families retirement row (54.9%, $106,000) and net worth percentiles (Table A.2); the BLS New York metro CE release for 2022-23 as a cross-check.
+2. Still out of reach, with the exact URLs tried in priors-sources.md: the NY metro rent (Census API, data.census.gov), the SCF by-age tables (historical tables xlsx, Data Interactive, the CSV zips), the CE NY metro 2023-24 PDF, the FSA portfolio by age. Cash, cards and student loans stay all ages (QUESTIONS 315).
+3. js/math/priors.js (M9E): the closest row wins (its place, then Solo or Couple, then the age band); 25th to 75th percentiles where a row gives them (QUESTIONS 314), else the stated spread; spending scaled by the place's price parity (the NY metro for NY clients, QUESTIONS 210); the one-person CE row for a person living alone (QUESTIONS 318); a rent check and faded range for a renter's rent line, divided by the people the rent is split among (QUESTIONS 316). priorsOpts reads them from About you; typicalBoxes takes the rent line unless the household owns or lives with family.
+4. js/ui/typical-ui.js: the rent line's amount box gets the faded range (coach view) and the note; a line with batch 10's own faded amount keeps it. css/typical.css: the note's rules are scoped to its wrap, because Budget's group line (batch 10) shares the class and was being stacked over the list's footer.
+5. Alexis: her $900 share reads against New York State's $1,621 split two ways ($811), inside typical, so no note; her $400 checking keeps its one note. Maya and Tom unchanged (Tom's cash note only). test/priors.test.js reads the persona files themselves.

@@ -3,7 +3,11 @@
 Status: research draft, Batch 17 (searched and read 2026-11-05); priors check, Batch 24 (2026-11-06): each Secondary
 row tried against its primary table (the SCF 2025 report, the Fed SHED tables, Census CPS and ACS), and moved to
 Primary with the exact table and page where it matched. Batch 31 (2026-11-06) entered the Primary rows, and only those, as `data/priors-2026.json` (registered in
-`REFERENCE_FILES`; test/priors.test.js checks every figure there against a Primary row here). No Secondary or Not
+`REFERENCE_FILES`; test/priors.test.js checks every figure there against a Primary row here). Batch 39 (2026-11-06, the data pass) read the CE
+by age for 35 and over and by size of consumer unit (one person), ACS median gross rent for the US and New York State
+(QuickFacts), BEA price parities for the NY metro and NJ, the SCF report's all-families retirement row and net worth
+percentiles, and the BLS New York metro CE release; the by-age SCF tables and the NY metro rent stayed out of reach
+(the exact URLs are under "Could not reach"). No Secondary or Not
 found figure is in app code, and none should be until it is verified and entered with its source and date
 (docs/engines/priors.md). Figures are paraphrased
 from the cited pages and rounded as they give them.
@@ -33,48 +37,77 @@ Note: the Census age medians in P60-286 figure 1 could not be matched to their l
 the H-10 medians above are the ones to verify first. Their under-25 figure is above the CE mean for the same band,
 which is expected (CE counts consumer units, including students living alone), and is why the two must not be mixed.
 
-## Spending by category (BLS Consumer Expenditure Survey, by age of reference person, 2024, annual means)
+## Spending by category (BLS Consumer Expenditure Survey 2024, by age of reference person and by size of consumer unit, annual means)
 
 All rows: [FRED release tables for the CE by age of reference person](https://fred.stlouisfed.org/release/tables?rid=479&eid=1198191),
-which mirror the BLS CE calendar-year tables. Under 25 from [its expenditures table](https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193);
-25 to 34 from [its expenditures table](https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346); totals from the
-FRED series [under 25](https://fred.stlouisfed.org/series/CXUTOTALEXPLB0402M), [25 to 34](https://fred.stlouisfed.org/series/CXUTOTALEXPLB0403M)
-and [35 to 44](https://fred.stlouisfed.org/series/CXUTOTALEXPLB0404M). Check: Primary (FRED mirror).
+which mirror the BLS CE calendar-year tables. Expenditures tables: [under 25](https://fred.stlouisfed.org/release/tables?rid=479&eid=1198193),
+[25 to 34](https://fred.stlouisfed.org/release/tables?rid=479&eid=1198346), [35 to 44](https://fred.stlouisfed.org/release/tables?rid=479&eid=1198499),
+[45 to 54](https://fred.stlouisfed.org/release/tables?rid=479&eid=1198652), [55 to 64](https://fred.stlouisfed.org/release/tables?rid=479&eid=1198805),
+[65 to 74](https://fred.stlouisfed.org/release/tables?rid=479&eid=1199111), [75 and over](https://fred.stlouisfed.org/release/tables?rid=479&eid=1199264)
+(batch 39 read 35 and over); totals also from the FRED series [under 25](https://fred.stlouisfed.org/series/CXUTOTALEXPLB0402M),
+[25 to 34](https://fred.stlouisfed.org/series/CXUTOTALEXPLB0403M) and [35 to 44](https://fred.stlouisfed.org/series/CXUTOTALEXPLB0404M). One person:
+[FRED, CE by size of consumer unit, one person, expenditures](https://fred.stlouisfed.org/release/tables?rid=479&eid=1215380) (its total is also the
+series [CXUTOTALEXPLB0502M](https://fred.stlouisfed.org/data/CXUTOTALEXPLB0502M), 2024: $48,794). Check: Primary (FRED mirror).
 
-| Category (a year) | Under 25 | 25 to 34 | 35 to 44 |
-|---|---|---|---|
-| Total expenditures | $47,283 | $74,475 (2023: $71,867) | $91,229 (2023: $90,939) |
-| Food | $7,215 | $9,630 | not read |
-| Food at home | $4,189 | $5,712 | not read |
-| Food away from home | $3,025 | $3,918 | not read |
-| Housing | $16,853 | $26,380 | not read |
-| Shelter | $12,050 | $17,656 | not read |
-| Rented dwellings | $10,119 | $9,927 | not read |
-| Utilities, fuels, public services | $2,181 | $4,076 | not read |
-| Transportation | $9,243 | $12,802 | not read |
-| Vehicle purchases (net outlay) | $4,312 | $5,266 | not read |
-| Health care | $1,485 | $3,825 | not read |
-| Entertainment | $1,835 | $3,224 | not read |
-| Apparel and services | $1,541 | $2,220 | not read |
-| Personal insurance and pensions | $4,428 | $10,701 | not read |
-| Cash contributions | $345 | $1,004 | not read |
+| Category (a year) | Under 25 | 25 to 34 | 35 to 44 | 45 to 54 | 55 to 64 | 65 to 74 | 75 and over | One person, all ages |
+|---|---|---|---|---|---|---|---|---|
+| Total expenditures | $47,283 | $74,475 (2023: $71,867) | $91,229 (2023: $90,939) | $100,327 | $84,946 | $65,354 | $55,834 | $48,794 |
+| Food | $7,215 | $9,630 | $12,460 | $12,772 | $10,214 | $8,483 | $7,168 | $5,644 |
+| Food at home | $4,189 | $5,712 | $7,411 | $7,703 | $6,174 | $5,642 | $4,696 | $3,395 |
+| Food away from home | $3,025 | $3,918 | $5,049 | $5,069 | $4,040 | $2,841 | $2,472 | $2,249 |
+| Housing | $16,853 | $26,380 | $30,369 | $30,747 | $27,019 | $22,329 | $21,999 | $19,052 |
+| Shelter | $12,050 | $17,656 | $18,728 | $19,283 | $16,507 | $12,749 | $13,346 | $12,954 |
+| Rented dwellings | $10,119 | $9,927 | $7,036 | $5,001 | $3,619 | $2,681 | $4,435 | $6,986 |
+| Utilities, fuels, public services | $2,181 | $4,076 | $5,053 | $5,779 | $5,138 | $4,653 | $4,234 | $2,978 |
+| Transportation | $9,243 | $12,802 | $15,581 | $17,184 | $15,085 | $11,414 | $6,855 | $6,953 |
+| Vehicle purchases (net outlay) | $4,312 | $5,266 | $6,560 | $6,448 | $6,344 | $4,539 | $2,039 | $2,490 |
+| Health care | $1,485 | $3,825 | $5,949 | $6,748 | $6,711 | $7,715 | $7,918 | $4,026 |
+| Entertainment | $1,835 | $3,224 | $4,128 | $4,803 | $3,706 | $3,122 | $2,888 | $2,187 |
+| Apparel and services | $1,541 | $2,220 | $2,649 | $2,547 | $2,032 | $1,377 | $942 | $1,113 |
+| Personal insurance and pensions | $4,428 | $10,701 | $13,465 | $14,948 | $12,172 | $4,579 | $1,908 | $4,329 |
+| Cash contributions | $345 | $1,004 | $1,595 | $3,315 | $2,300 | $2,921 | $3,497 | $2,152 |
 
-**How these become a range.** CE publishes means per consumer unit, not percentiles. Likely = the mean divided by 12,
-then by the household-size factor (CE also publishes by size of consumer unit, [FRED table](https://fred.stlouisfed.org/release/tables?rid=479&eid=1215378)),
-scaled by place (cost of living). Low and high = a stated spread (start at 0.6 and 1.5 of likely) until percentiles are
-computed from the CE public-use microdata. Rent for a renter uses the ACS rent row instead of "rented dwellings"
-(which averages renters and owners). Once take-home is known, switch to the CE rows by income quintile
-([FRED table](https://fred.stlouisfed.org/release/tables?rid=479&eid=1213094)).
+Who these households are (CE 2024 consumer unit characteristics, same FRED tables, Primary): 25 to 34 average 2.6
+people, reference person 29.9, 56% renters ([table](https://fred.stlouisfed.org/release/tables?rid=479&eid=1198449)); 35 to 44 average 3.3 people,
+40% renters ([table](https://fred.stlouisfed.org/release/tables?rid=479&eid=1198602)); one person: 40.8 million consumer units, average age 56.3,
+0.6 earners, 51% renters ([table](https://fred.stlouisfed.org/release/tables?rid=479&eid=1215483)). The one-person row is all ages: the CE
+publishes no one-person table by age, so a 28-year-old living alone is compared with every one-person household,
+retirees included, and the tip says so.
+
+**How these become a range.** CE publishes means per consumer unit, not percentiles. Likely = the mean divided by 12;
+spending all in is total expenditures less personal insurance and pensions (payroll taxes and retirement
+contributions, taken out before take-home). A person living alone (About you: Solo) reads the one-person column; a
+couple reads the age band's column (households of every size). Low and high = a stated spread (0.6 and 1.5 of likely)
+until percentiles are computed from the CE public-use microdata. A NY client's spending is scaled by the NY metro's
+price parity (Place, below). Rent for a renter uses the ACS rent row instead of "rented dwellings" (which averages
+renters and owners). Once take-home is known, switch to the CE rows by income quintile
+([FRED table](https://fred.stlouisfed.org/release/tables?rid=479&eid=1213094), not read yet).
+
+## Place (cost of living and the New York metro)
+
+| Figure | Area | Year | Value | Source | Check | How it is used |
+|---|---|---|---|---|---|---|
+| Regional price parity, all items (US = 100) | New York-Newark-Jersey City metro (MSA 35620) | 2024 | 112.563 (2023: 112.645) | [FRED RPPALL35620, from BEA](https://fred.stlouisfed.org/data/RPPALL35620) | Primary (FRED mirror of BEA) | Spending for a NY client times 1.12563 (QUESTIONS 210: the NY metro for NY clients) |
+| same | New York State | 2024 | 107.921 | [FRED NYRPPALL, from BEA](https://fred.stlouisfed.org/data/NYRPPALL) | Primary (FRED mirror of BEA) | Not used (210 picked the metro); here for a later upstate switch |
+| same | New Jersey | 2024 | 108.805 | [FRED NJRPPALL, from BEA](https://fred.stlouisfed.org/data/NJRPPALL) | Primary (FRED mirror of BEA) | Spending for a NJ client times 1.08805 |
+| Regional price parity, housing services (US = 100) | New York-Newark-Jersey City metro | 2024 | 148.616 | [FRED RPPSERVERENT35620, from BEA](https://fred.stlouisfed.org/data/RPPSERVERENT35620) | Primary (FRED mirror of BEA) | Not used for rent: it prices a like-for-like unit, so the national median times 1.486 (about $2,100) overstates what NY renters pay (Secondary pages put the metro median near $1,830 to $1,890) |
+| CE average annual expenditures, NY metro against the US | New York metro | 2022 to 2023 | $90,291 against $75,172 (1.20); housing $33,626 (37.2%); 2.6 people per unit; income before taxes $122,473 | [BLS, Consumer Expenditures in the New York Metropolitan Area: 2022-23, Table 1](https://www.bls.gov/regions/northeast/news-release/2024/consumerexpenditures_newyork_20241118.htm) | Primary | A cross-check on the price parity: NY metro households spend about 20% more, partly from higher incomes, which is why the price parity (12%) is the scale. The 2023-24 release (Jan 6 2026) is only on FRASER as a PDF, not reachable |
 
 ## Rent
 
 | Figure | Area | Year | Value | Source | Check | How it becomes a range |
 |---|---|---|---|---|---|---|
-| Median gross rent (ACS B25064, 1-year) | United States | 2024 | $1,487 a month | [gousa.kr summary of ACS 2024 B25064](https://gousa.kr/board/housing/4213) | Secondary, still unverified (batch 24): api.census.gov and data.census.gov were not reachable (the proxy refused the API; no census.gov page with the table came up in search) | The median is likely; the ACS also publishes rent quartiles (B25057, B25059) for low and high |
+| Median gross rent (ACS 5-year, B25064, as QuickFacts gives it) | United States | 2020 to 2024 | $1,413 a month | [Census QuickFacts, United States, Median gross rent 2020-2024](https://www.census.gov/quickfacts/fact/table/US/HSG860223) | Primary (batch 39) | Likely = the median; low and high the stated spread (no gross rent quartile is published); a renter's share divides it by the people the rent is split among |
+| same | New York State | 2020 to 2024 | $1,621 a month | [Census QuickFacts, New York, Median gross rent 2020-2024](https://www.census.gov/quickfacts/fact/table/NY/HSG860224) | Primary (batch 39) | The row a NY renter reads until the metro figure is read (the basis line says New York State) |
+| same | Rockland County, NY | 2020 to 2024 | $1,901 a month | [Census QuickFacts, Rockland County](https://www.census.gov/quickfacts/rocklandcountynewyork) | Primary (batch 39) | Not used: SLAM knows the state, not the county |
+| same | United States, 2015 to 2019 against 2020 to 2024 | 2020 to 2024 | $1,413 against $1,309 | [Census, Renters in 20% of U.S. Counties Paid More in 2020-2024 (Jan 2026)](https://www.census.gov/library/stories/2026/01/housing-costs.html) | Primary (matches QuickFacts) | Context |
+| Median gross rent (ACS 1-year, B25064) | United States | 2024 | $1,487 a month | [gousa.kr summary of ACS 2024 B25064](https://gousa.kr/board/housing/4213) | Secondary, still unverified: the Census API and data.census.gov refused again in batch 39 | Would replace the 5-year figure once read |
 | same | New York State | 2024 | $1,720 | same | Secondary | same |
-| same | New Jersey | 2024 | $1,798 | same | Secondary | same |
-| same | New York-Newark-Jersey City metro | 2024 | $1,890 | same | Secondary | same, the default row for SLAM's NY clients |
-| Rent by age of householder | any | | | ACS PUMS (age by gross rent) | Not found | Needed to make rent an age prior, not only a place prior |
+| same | New Jersey | 2024 | $1,798 | same | Secondary (QuickFacts NJ failed at the site in batch 39) | same |
+| same | New York-Newark-Jersey City metro | 2024 | $1,890 | same | Secondary | The row SLAM wants for NY clients (QUESTIONS 210) |
+| Median gross rent (ACS 5-year) | New York metro | 2020 to 2024 | about $1,830 | [USAFacts, New York metro rent](https://usafacts.org/answers/how-much-do-households-spend-on-rent/metro-area/new-york-ny) | Secondary (cites the ACS, no table number) | same |
+| Rent quartiles | any | | | ACS B25057 and B25059 are contract rent quartiles (rent without utilities), not gross; the 2024 variables exist on [api.census.gov](https://api.census.gov/data/2024/acs/acs1/variables/B25059_001MA.html) but no data query was reachable | Not found | A gross rent range would need B25063 (the rent distribution) or PUMS |
+| Rent by age of householder | any | | | ACS PUMS (age by gross rent); no published table | Not found | Needed to make rent an age prior, not only a place prior |
 
 ## Net worth, debts and balances (Federal Reserve Survey of Consumer Finances, 2025 wave, released Oct 9 2026)
 
@@ -92,6 +125,9 @@ stock holdings among holders $77,400. The full report is "Changes in U.S. Family
 | same | 55 to 64 | $411,900 (mean $1,878,000) | same | Primary | same |
 | same | 65 to 74 | $431,300 (mean $1,897,600) | same | Primary | same |
 | same | 75 and over | $504,900 (mean $1,962,200) | same | Primary | same |
+| Net worth percentiles | all | 25th $27,900; median $215,900; 75th $812,800; 90th $2,539,200 | [SCF 2025 report, scf26.pdf](https://www.federalreserve.gov/publications/files/scf26.pdf), Table A.2 (p. 48); the median from the press release | Primary (batch 39) | The one row with real percentiles: low = 25th, high = 75th. Used only with no age (the age rows have medians only) |
+| Has a retirement account; median among holders | all | 54.9%; $106,000 | [SCF 2025 report, scf26.pdf](https://www.federalreserve.gov/publications/files/scf26.pdf), Table 3 (p. 15), retirement accounts | Primary (batch 39) | Two parts: the chance of any, then the range if any. All ages only |
+| Has a vehicle loan; median among holders | all | 32.1%; $17,000 | same, Table 4 (p. 25), vehicle loans | Primary (batch 39) | Not in the data file yet (no typical note for car loans) |
 | Has a retirement account; median balance among holders | under 35 | 48.8%; $21,000 (mean $48,500) | [Dave Manuel, from the SCF historical tables](https://www.davemanuel.com/retirement-savings-by-age.php) | Secondary, still unverified (batch 24): the report has no by-age ownership or median table. Its Box 2 Table A (p. 18) gives the mean among IRA or DC holders: under 35 $48,400 (the page says $48,500), 35 to 44 $182,400, 45 to 54 $415,800, 55 to 64 $670,200; Box 2 (p. 17) gives plan participation (any IRA, DC or DB) of 66% at 35 to 44 and about 70% at 45 to 64. The shares and medians by age are in the SCF historical tables (an xlsx on federalreserve.gov), not found by search | Two parts: the chance of any (48.8%), and the range if any |
 | same | 35 to 44 | 59.6%; $61,000 (mean $182,400) | same | Secondary, still unverified (as above) | same |
 | same | 45 to 54 | 63.0%; $133,000 | same | Secondary, still unverified (as above) | same |
@@ -102,7 +138,8 @@ stock holdings among holders $77,400. The full report is "Changes in U.S. Family
 | Median checking and savings balance (transaction accounts, among the 98.7% who have one) | all | $8,200 ($8,800 in 2022); mean $62,900 | [SCF 2025 report, scf26.pdf](https://www.federalreserve.gov/publications/files/scf26.pdf), Table 3 (p. 15), transaction accounts | Primary (batch 24) | A transaction-account prior; by age needs the report's asset table |
 | Has education debt (student loans) | all | 20.0% (21.8% in 2022); median $25,600, mean $43,000 among holders | [SCF 2025 report, scf26.pdf](https://www.federalreserve.gov/publications/files/scf26.pdf), Table 4 (p. 25), student loans | Primary (batch 24) | The chance of any; the balance from the FSA row below |
 | Late on a loan payment in the past year | all | 19.6% (12.2% in 2022); 60 days or more 8.2% (4.9%) | [SCF 2025 report, scf26.pdf](https://www.federalreserve.gov/publications/files/scf26.pdf), Table 5 (p. 30), late on payments | Primary (batch 24) | Not a prior for a field; context for the lender's-eye view |
-| Card, vehicle and education debt by age; transaction accounts by age | each band | not read | the report (read in batch 24) gives Tables 3 and 4 for all families only, with no age split | Not found: in the SCF historical tables (xlsx), not found by search | The main gap: the SCF by-age debt table |
+| Card, vehicle and education debt by age; transaction accounts and retirement by age | each band | not read | Batch 39 confirmed the report gives Tables 3 and 4 for all families only (age groups only in Tables 1 and 2) and found the tables' home: the [SCF index](https://federalreserve.gov/econres/scfindex.htm) links the historical tables (scf2025_tables_public_real_historical.xlsx), the Data Interactive and its CSV (dataviz/download/zips/scf.zip) and the summary extract (scfp2025excel.zip) | Not reachable: the xlsx, the Data Interactive table page and the zips were refused (WebFetch permission step; the shell proxy refuses federalreserve.gov), and the chart page renders only with JavaScript | The main gap: one look at the historical tables' age rows, or SLAM's own run of the summary extract |
+| Transaction accounts by age: median among holders and percentiles | under 35 | median $5,000; 25th $800; 75th $16,200 | [Richify, from the SCF 2025 public data](https://www.richify.ai/us/data/average-savings-by-age) (the page's own run of the percentiles) | Secondary, computed by a third party | Would replace the all-ages cash row once a Fed table confirms it |
 
 ## Credit card debt (other sources)
 
@@ -146,17 +183,34 @@ stock holdings among holders $77,400. The full report is "Changes in U.S. Family
 
 ## Could not reach from the build (for the verify pass)
 
-Batch 24 read the 2025 SCF report (scf26.pdf) and the SHED emergency savings table; those rows are Primary now. Still
-refused by the proxy or the permission step, each needing one look before its figures are used: www2.census.gov (P60-289's
-PDF and table1.xlsx, the HINC-01 2026 and HINC-03 spreadsheets), api.census.gov and data.census.gov (ACS B25064 rent),
-bls.gov CE tables directly, and the SCF historical tables (the by-age shares and medians; not found by search). The
-federalreserve.gov/econres/files/bulletincharts.pdf found by search is the 2016 SCF Chartbook, too old to use.
+Batch 24 read the 2025 SCF report (scf26.pdf) and the SHED emergency savings table. Batch 39 tried each gap again; the
+shell's proxy refuses census.gov, api.census.gov, federalreserve.gov, bls.gov and fred.stlouisfed.org, so everything
+was read with the web reader, which refuses a page it was not linked to unless someone approves it (no one could
+tonight). The exact URLs that were tried and refused, or gave no figures:
+
+- NY metro rent: `https://api.census.gov/data/2024/acs/acs1?get=NAME,B25064_001E,B25057_001E,B25058_001E,B25059_001E&for=state:36`
+  (refused), `https://data.census.gov/table/ACSDT1Y2024.B25064?g=310XX00US35620` (refused),
+  `https://censusreporter.org/profiles/31000US35620-new-york-newark-jersey-city-ny-nj-metro-area/` (read: ACS 2024 1-year,
+  median household income $99,852, but no rent on the page), QuickFacts for New Jersey, New York city and the US csv
+  (`https://www.census.gov/quickfacts/fact/table/NJ/POP010220`, `https://census.gov/quickfacts/fact/table/newyorkcitynewyork/PST120223`,
+  `https://www.census.gov/quickfacts/fact/csv/US/HSG860224`: failed at the site). QuickFacts has no metro areas.
+- SCF by age: `https://www.federalreserve.gov/econres/files/scf2025_tables_public_real_historical.xlsx` (refused),
+  `https://www.federalreserve.gov/econres/scf/dataviz/scf/table/` (refused),
+  `https://federalreserve.gov/econres/scf/dataviz/scf/chart/` (read: JavaScript only, no figures), the CSV
+  `https://www.federalreserve.gov/econres/scf/dataviz/download/zips/scf.zip` and `scfp2025excel.zip` (shell refused).
+- CE New York metro 2023-24: `https://fraser.stlouisfed.org//docs/releases/regNE/regNE_20260106_26-12-BOS.pdf` (refused);
+  the 2022-23 release on bls.gov was read.
+- Student loans by age (FSA portfolio by age): `https://studentaid.gov/data-center/student/portfolio` (refused); the
+  xls is listed on [catalog.data.gov](https://catalog.data.gov/dataset/federal-student-loan-portfolio) (portfolio-by-age.xls), not read.
+- Still from batch 24: www2.census.gov (P60-289 table1.xlsx, HINC-01 2026) for income by age.
 
 ## Next steps
 
-1. Verify the rows still Secondary (the Census age medians, ACS rent, the SCF retirement shares by age) once www2.census.gov
-   and the SCF historical tables can be read; replace the CE spreads with microdata percentiles.
-2. Pull the SCF 2025 by-age debt, card, education and transaction-account rows.
-3. Add the CE rows for 35 to 44 and older, by composition of consumer unit, and by income quintile.
-4. Add a cost-of-living table for NY, NJ and the metro, with its source.
+1. One approved look at the SCF historical tables (or a run of the summary extract): the by-age rows for transaction
+   accounts, cards, student loans and retirement, with their percentiles; then cash, cards and loans read by age.
+2. One approved look at ACS B25064 for CBSA 35620 (data.census.gov or the Census API): the NY metro rent row, then a
+   NY renter reads the metro, not the state; B25063 for a gross rent range.
+3. Verify the rows still Secondary (the Census age medians, ACS 1-year rent) once www2.census.gov can be read; replace
+   the CE spreads with microdata percentiles.
+4. Add the CE rows by income quintile (conditioning on take-home).
 5. Write each as a `data/priors/*.json` file with its source, year and asOf, registered in `REFERENCE_FILES`.

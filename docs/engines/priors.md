@@ -4,8 +4,12 @@ Status: design, Batch 17. Phase 4, Track 1 (ROADMAP.md). Batch 31 built the grou
 Primary rows only), `js/math/priors.js` (M9E: the range by age band, the far-outside check, the shares), the faded
 typical range in a blank core box (coach view) and the one-line note under a typed total far outside typical
 (`js/ui/typical-ui.js`, one hook in moneyInput). No row publishes percentiles yet, so every range is the stated
-spread (RULES typicalLow 0.6, typicalHigh 1.5) around the median (SCF) or mean (CE). Conditioning, household size
-and place scaling (no Primary NY row) are not built.
+spread (RULES typicalLow 0.6, typicalHigh 1.5) around the median (SCF) or mean (CE). Batch 39 (the data pass) added
+the closest-row pick (a place row, then the household type, then the age band): a person living alone reads the CE
+one-person row, NY spending scales by the NY metro's BEA price parity (QUESTIONS 210), rent is the ACS median gross
+rent (New York State for NY renters until the metro figure is read, a share divided by the people splitting it), and
+a row that gives its 25th and 75th percentiles uses them (only net worth for all ages so far). Conditioning on
+income and category sums are not built.
 
 ## Purpose
 

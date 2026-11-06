@@ -3,11 +3,17 @@
 // docs/engines/priors-sources.md marks Primary. For an age band (and a place, where a primary row gives one) the
 // typical range of a field; a check on a typed number far outside it, in calm words; and the shares (SHED) that are
 // a chance, not an amount. Every function takes the priors data as an argument: the math never loads a file.
-// No row publishes percentiles, so a range is SLAM's stated spread (RULES typicalLow, typicalHigh) around the
-// source's figure: the median where it gives one (SCF), else the mean (CE). "Far outside" is one more spread beyond
-// an edge: above high x high / likely, or below low x low / likely (2.25 and 0.36 of likely at 0.6 and 1.5).
+// A row that gives its 25th and 75th percentiles (p25, p75) is its own range; every other range is SLAM's stated
+// spread (RULES typicalLow, typicalHigh) around the source's figure: the median where it gives one (SCF, ACS), else
+// the mean (CE). "Far outside" is one more spread beyond an edge: above high x high / likely, or below low x low /
+// likely (2.25 and 0.36 of likely at 0.6 and 1.5).
+// Batch 39 (the data pass): a row can be for one household type (household: 'Solo', the CE one-person row) or one
+// place (place: 'NY', ACS rent for New York State); the closest row wins (place, then household, then age band).
+// Spending scales by a place row (BEA price parities: the NY metro for NY clients, QUESTIONS 210). Rent is new: the
+// ACS median gross rent, a renter's share when the rent is split with roommates.
 import { fmt } from './result.js';
 import { RULES } from '../registry/assumptions.js';
+import { splitWaysOf } from './spending.js';
 
 const money = v => fmt.money(Math.round(v));
 
@@ -20,48 +26,77 @@ export const TYPICAL = {
   studentLoans: { what: 'owe on student loans', short: 'student loans, all together', sides: ['above'] },
   spending: { what: 'spend a month', short: 'spending a month, all in', sides: ['above'], perMonth: true },
   netWorth: { what: 'have in net worth', short: 'net worth', sides: [] },
+  rent: { what: 'pay in rent a month', short: 'rent a month', sides: ['above'], perMonth: true },
 };
 // CE categories as a month (spending.<key>): the shape for a later Budget check, no note yet.
 export const CE_CATEGORIES = ['total', 'food', 'foodAtHome', 'foodAway', 'housing', 'shelter', 'utilities', 'transportation', 'vehiclePurchases', 'healthCare', 'entertainment', 'apparel', 'personalInsurance', 'cashContributions'];
 // No Primary row yet: these say why instead of a range (empty is not zero).
 export const NO_ROW = {
-  rent: 'No Primary rent row yet (ACS B25064 is still Secondary); CE rented dwellings averages renters and owners',
-  retirement: 'No Primary retirement balance by age yet (the SCF historical tables are not read)',
+  income: 'No Primary household income by age yet (Census H-10 is still Secondary)',
 };
 
 const inBand = (ages, age) => !ages || (age != null && (ages[0] == null || age >= ages[0]) && (ages[1] == null || age <= ages[1]));
-// The row for a field at an age: the age band's row, else the all-ages row (which says so), else null.
-export function rowFor(data, field, age = null) {
-  const rows = (data?.rows || []).filter(r => r.field === field);
-  return rows.find(r => r.ages && inBand(r.ages, age)) ?? rows.find(r => !r.ages) ?? null;
+// The row for a field: of the rows that fit (their place, household and age band each match or are not set), the
+// closest one: its own place counts most, then its household type, then the age band. So a person living alone reads
+// the CE one-person row (all ages) before the age band's row of every household size, a NY renter reads New York's
+// rent, and anyone else the national all-ages row (which says so). Null when nothing fits.
+export function rowFor(data, field, age = null, { place = null, household = null } = {}) {
+  let best = null, top = -1;
+  for (const r of data?.rows || []) {
+    if (r.field !== field) continue;
+    if (r.place != null && r.place !== place) continue;
+    if (r.household != null && r.household !== household) continue;
+    if (r.ages && !inBand(r.ages, age)) continue;
+    const score = (r.place != null ? 4 : 0) + (r.household != null ? 2 : 0) + (r.ages ? 1 : 0);
+    if (score > top) { best = r; top = score; }
+  }
+  return best;
 }
-// A place scale where a primary row gives one (none yet: data.place is empty, so every figure is national).
-export const placeOf = (data, field, place) => (place ? (data?.place || []).find(p => p.place === place && (p.field === field || p.field === '*')) ?? null : null);
+// A place scale where a primary row gives one: for a field or its parts (spending covers spending.food).
+export const placeOf = (data, field, place) => (place ? (data?.place || []).find(p => p.place === place && (p.field === field || field.startsWith(`${p.field}.`) || p.field === '*')) ?? null : null);
+
+// The household facts the rows are picked by, from About you: the state (NY reads the NY metro where a row has it),
+// Solo or Couple, and for rent how many ways it is split when the amount given is the person's own share.
+export function priorsOpts(profile = {}) {
+  const p = profile || {};
+  const share = p.shared?.rent !== false && (p.sharedAs?.rent ?? 'Your share') === 'Your share';
+  const ways = p.roommates != null || p.splitWays != null ? splitWaysOf(p) : 1;
+  return { place: p.state ?? null, household: p.household === 'Solo' || p.household === 'Couple' ? p.household : null, split: share && ways > 1 ? ways : 1, housing: p.housing ?? null };
+}
 
 const center = r => r.median ?? r.mean ?? null;
 // Spending all in, a month: CE total expenditures less personal insurance and pensions (payroll taxes and retirement
 // contributions, which come out before take-home), over 12. Both rows from the same band, or nothing.
-function spendingRow(data, age) {
-  const t = rowFor(data, 'spending.total', age), p = rowFor(data, 'spending.personalInsurance', age);
-  if (!t || !p || t.band !== p.band) return null;
+function spendingRow(data, age, pick) {
+  const t = rowFor(data, 'spending.total', age, pick), p = rowFor(data, 'spending.personalInsurance', age, pick);
+  if (!t || !p || t.band !== p.band || t.household !== p.household) return null;
   return { ...t, field: 'spending', mean: (t.mean - p.mean) / 12, unit: 'month', table: `${t.table} less ${p.table.replace(/, annual.*$/, '')}, over 12` };
 }
 
-// The typical range: { field, low, likely, high, by: 'median' | 'mean', band, who, allAges, source, table, link, year,
-// place, basis }, or null when no Primary row covers it (NO_ROW says why).
-export function typicalOf(data, field, { age = null, place = null, low = RULES.typicalLow, high = RULES.typicalHigh } = {}) {
+// The typical range: { field, low, likely, high, by: 'median' | 'mean', band, who, allAges, household, percentiles,
+// split, source, table, link, year, place, area, basis }, or null when no Primary row covers it (NO_ROW says why).
+// household picks a household-type row where one exists (Solo: the CE one-person row); split divides a rent by the
+// people it is split among (the client gives their own share).
+export function typicalOf(data, field, { age = null, place = null, household = null, split = 1, low = RULES.typicalLow, high = RULES.typicalHigh } = {}) {
   if (NO_ROW[field]) return null;
-  const r = field === 'spending' ? spendingRow(data, age) : field.startsWith('spending.') ? ((x) => (x ? { ...x, mean: x.mean / 12, unit: 'month' } : null))(rowFor(data, field, age)) : rowFor(data, field, age);
+  const pick = { place, household };
+  const r = field === 'spending' ? spendingRow(data, age, pick) : field.startsWith('spending.') ? ((x) => (x ? { ...x, mean: x.mean / 12, unit: 'month' } : null))(rowFor(data, field, age, pick)) : rowFor(data, field, age, pick);
   const c = r ? center(r) : null;
   if (c == null || r.unit === 'share') return null;
-  const p = placeOf(data, field, place);
-  const likely = c * (p?.factor ?? 1);
+  const p = r.place != null ? null : placeOf(data, field, place);
+  const ways = field === 'rent' && split > 1 ? split : 1;
+  const f = (p?.factor ?? 1) / ways;
+  const pct = r.median != null && r.p25 != null && r.p75 != null;
+  const likely = c * f, lo = pct ? r.p25 * f : likely * low, hi = pct ? r.p75 * f : likely * high;
   const by = r.median != null ? 'median' : 'mean';
   const src = data.sources?.[r.source]?.name ?? r.source;
-  const at = r.ages ? r.band : 'all ages';
-  return { field, low: likely * low, likely, high: likely * high, by, band: r.band, who: r.who, allAges: !r.ages, source: src, table: r.table, link: r.link, year: r.year,
-    place: p ? p.place : 'national', among: r.among ?? null,
-    basis: `Typical ${at === 'all ages' ? 'at all ages' : `at ${at}`}: ${money(likely * low)} to ${money(likely * high)}${r.unit === 'month' ? ' a month' : ''}. ${src}, ${r.year}, ${r.table}: ${by} ${money(likely)}${r.among ? ` among ${r.among}` : ''}${p ? `, scaled for ${p.place}` : ', national'}. The range is SLAM's ${low} to ${high} spread around it (no percentiles published)` };
+  const at = r.household === 'Solo' ? 'living alone' : r.place != null ? `in ${r.area ?? r.place}` : r.ages ? `at ${r.band}` : 'at all ages';
+  const where = r.place != null ? '' : p ? `, scaled for ${p.area ?? p.place} (${p.table})` : ', national';
+  const parts = ways > 1 ? `, split ${ways} ways (your share)` : '';
+  const spread = pct ? 'The range is the published 25th to 75th percentile' : `The range is SLAM's ${low} to ${high} spread around it (no percentiles published)`;
+  return { field, low: lo, likely, high: hi, by, band: r.band, who: r.who, allAges: !r.ages, household: r.household ?? null, percentiles: pct, split: ways, source: src, table: r.table, link: r.link, year: r.year,
+    place: r.place ?? p?.place ?? 'national', area: r.area ?? p?.area ?? null, among: r.among ?? null,
+    basis: `Typical ${at}: ${money(lo)} to ${money(hi)}${r.unit === 'month' ? ' a month' : ''}. ${src}${r.period ? '' : `, ${r.year}`}, ${r.table}: ${by} ${money(c)}${r.among ? ` among ${r.among}` : ''}${where}${parts}${f !== 1 ? `: ${money(likely)}` : ''}. ${spread}` };
 }
 
 // Which side of the range a value is far outside, or null. sides limits it (a debt notes only the high side).
@@ -86,13 +121,13 @@ export function typicalCheck(data, field, value, opts = {}) {
 
 // The checks for a household, one per field: each list is the boxes that make up the total ({ key, value }); the
 // total is checked and the note goes under the biggest box (ties: the first). Blank boxes do not count.
-export function typicalChecks(data, { age = null, place = null, boxes = {} } = {}) {
+export function typicalChecks(data, { age = null, place = null, household = null, split = 1, boxes = {} } = {}) {
   const out = [];
   for (const field of Object.keys(TYPICAL)) {
     const list = (boxes[field] || []).filter(b => b.value != null && Number.isFinite(Number(b.value)));
     if (!list.length) continue;
     const total = list.reduce((s, b) => s + Number(b.value), 0);
-    const c = typicalCheck(data, field, total, { age, place });
+    const c = typicalCheck(data, field, total, { age, place, household, split });
     if (c) out.push({ ...c, key: list.reduce((a, b) => (Number(b.value) > Number(a.value) ? b : a)).key, boxes: list.length });
   }
   return out;
@@ -115,10 +150,13 @@ export function shortRange(range) {
 }
 
 // The boxes each check adds up, read from the household's rows (the ones that apply): cash accounts, card balances,
-// student loans and the gut spending number, each with the key its money box carries.
-export function typicalBoxes(records = []) {
+// student loans, the gut spending number and, for a renter, the rent line(s) they pay, each with the key its money box
+// carries. housing is About you's Rent, Own, Family or Other (rent is checked unless they own or live with family).
+export const isRentLine = r => r.kind === 'bill' && r.values?.category === 'Rent or mortgage' && !['Covered by someone', 'N/A', 'Not for me', 'Included in rent'].includes(r.values?.whoPays) && !r.values?.irregular && (r.per ?? 'month') === 'month';
+export function typicalBoxes(records = [], { housing = null } = {}) {
   const bal = r => ({ key: `${r.id}:balance`, value: r.values?.balance ?? null });
   return {
+    rent: housing === 'Own' || housing === 'Family' ? [] : records.filter(isRentLine).map(r => ({ key: `${r.id}:amount`, value: r.amount ?? null })),
     cash: records.filter(r => r.kind === 'account' && r.values?.group === 'cash').map(bal),
     card: records.filter(r => r.kind === 'debt' && r.type === 'Credit card').map(bal),
     studentLoans: records.filter(r => r.kind === 'debt' && r.type === 'Student loan').map(bal),

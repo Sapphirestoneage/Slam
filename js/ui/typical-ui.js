@@ -9,14 +9,18 @@ import { h } from './dom.js';
 import { setMoneyHook, iconButton, toast } from './staples.js';
 import { priorsData, loadPriors } from '../priorslib.js';
 import { ageOf } from '../math/metrics.js';
-import { typicalOf, typicalChecks, typicalBoxes, shortRange } from '../math/priors.js';
+import { isFaded } from '../math/spending.js';
+import { typicalOf, typicalChecks, typicalBoxes, shortRange, priorsOpts, isRentLine } from '../math/priors.js';
 
 // Which typical field a money box is, from its key: a row's balance (cash account, card, student loan), the gut
-// spending number (Budget and Fast Track), Fast Track's debt totals. Anything else: no typical.
+// spending number (Budget and Fast Track), Fast Track's debt totals, a renter's rent line (batch 39). Anything else:
+// no typical.
 function fieldOf(ctx, key) {
   if (key === 'gut' || key === 'ft:gut') return 'spending';
   if (key === 'ft:Credit card:bal') return 'card';
   if (key === 'ft:Student loan:bal') return 'studentLoans';
+  const rent = /^(.+):amount$/.exec(key);
+  if (rent) { const b = ctx.store.get(rent[1]); return b && isRentLine(b) && !['Own', 'Family'].includes(ctx.store.doc.profile?.housing) ? 'rent' : null; }
   const m = /^(.+):balance$/.exec(key);
   const r = m ? ctx.store.get(m[1]) : null;
   if (!r) return null;
@@ -29,7 +33,7 @@ function fieldOf(ctx, key) {
 let memo = { rev: null, doc: null, checks: [] };
 function checksOf(ctx, data) {
   const doc = ctx.store.doc;
-  if (memo.doc !== doc || memo.rev !== doc._rev) memo = { rev: doc._rev, doc, checks: typicalChecks(data, { age: ageOf(doc.profile, ctx.now()), place: doc.profile?.state ?? null, boxes: typicalBoxes(ctx.visible(() => true)) }) };
+  if (memo.doc !== doc || memo.rev !== doc._rev) { const o = priorsOpts(doc.profile); memo = { rev: doc._rev, doc, checks: typicalChecks(data, { age: ageOf(doc.profile, ctx.now()), ...o, boxes: typicalBoxes(ctx.visible(() => true), o) }) }; }
   return memo.checks;
 }
 
@@ -46,7 +50,8 @@ export function startTypical(app) {
     const doc = ctx.store.doc, coach = !app.prefs.clientView;
     if (value == null) { // fill the blank: a faded range, coach view only
       if (!coach) return null;
-      const r = typicalOf(data, field, { age: ageOf(doc.profile, ctx.now()), place: doc.profile?.state ?? null });
+      if (field === 'rent' && isFaded(ctx.store.get(key.split(':')[0]) ?? {})) return null; // batch 10's own faded amount stays
+      const r = typicalOf(data, field, { age: ageOf(doc.profile, ctx.now()), ...priorsOpts(doc.profile) });
       if (!r) return null;
       input.placeholder = width >= 200 ? `Typical ${shortRange(r)}` : shortRange(r);
       box.classList.add('typical-ph');

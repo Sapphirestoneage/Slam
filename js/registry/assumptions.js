@@ -312,7 +312,7 @@ export const REFERENCE_FILES = [
     source: 'The issuers\' own pages first (Chase, Capital One, Bank of America, Wells Fargo, US Bank, Citi, American Express, Apple), read 2026-11-06; each card names its source and whether it was checked there, on a review site, or not re-read (tools/library/cards-source.mjs)',
     date: '2026-11-06', readBy: 'Net worth > Credit cards (js/ui/cards-ui.js): Which card is it?, What your cards give you, the fee check (js/math/cards.js, M9C)' },
   // Batch 31 (Phase 4, Track 1): typical at your age, only the rows docs/engines/priors-sources.md marks Primary.
-  { id: 'priors', file: 'data/priors-2026.json', label: 'Typical at your age: net worth by age, cash, card balances and student loans (SCF 2025), spending by age (CE 2024), emergency savings by age (SHED 2025)',
+  { id: 'priors', file: 'data/priors-2026.json', label: 'Typical at your age: net worth by age, cash, card balances, student loans and retirement (SCF 2025), spending by age and for one person (CE 2024), rent (ACS 2020 to 2024), place price parities (BEA 2024), emergency savings by age (SHED 2025)',
     source: 'Federal Reserve SCF 2025 report (scf26.pdf, Tables 2 to 4), Federal Reserve SHED data tables (survey of October 2025), BLS Consumer Expenditure Survey 2024 by age on FRED; only the Primary rows of docs/engines/priors-sources.md',
     date: '2026-11-06', readBy: 'the money box hook (js/ui/typical-ui.js): a faded typical range in a blank box (coach view) and a one-line note under a typed number far outside typical (js/math/priors.js, M9E)' },
 ];

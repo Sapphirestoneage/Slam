@@ -43,7 +43,7 @@ import { cardLibrary } from '../cardlib.js';
 import { skillLibrary } from '../library.js';
 import { libraryOf } from '../math/library.js';
 import { priorsData } from '../priorslib.js';
-import { typicalChecks, typicalBoxes, typicalOf } from '../math/priors.js';
+import { typicalChecks, typicalBoxes, typicalOf, priorsOpts } from '../math/priors.js';
 import { creditHealth } from '../math/debt.js';
 import { identityOf } from '../math/identity.js';
 
@@ -612,10 +612,10 @@ export const MATH = [
     app: c => { const lib = skillLibrary(); return lib ? libraryOf(c.doc, c.ref, lib, { now: c.now, m: c.m })?.next?.skill.name ?? null : null; },
     parts: [{ key: 'ticked', name: 'Skills the data ticks', unit: 'count', fromApp: 'the app skills whose proof field the household shows (FOO step 2, little e, the coverage rows and the rest)', app: c => { const lib = skillLibrary(); if (!lib) return null; const L = libraryOf(c.doc, c.ref, lib, { now: c.now, m: c.m }); if (!L) return null; return Object.values(L.steps).reduce((n, b) => n + b.done.filter(x => x.by === 'data').length, 0); } }] },
   // ---------- Batch 31: typical at your age (Phase 4, Track 1 groundwork) ----------
-  { id: 'M9E', name: 'Typical at your age', inputs: 'age (About you: birth year and month), state, the cash accounts\' balances, card balances, student loan balances, the gut spending number; data/priors-2026.json (the Primary rows only); TypicalLow, TypicalHigh', unit: 'count',
-    fns: ['priors.TYPICAL', 'priors.CE_CATEGORIES', 'priors.NO_ROW', 'priors.rowFor', 'priors.placeOf', 'priors.typicalOf', 'priors.farFrom', 'priors.typicalCheck', 'priors.typicalChecks', 'priors.shareOf', 'priors.shortRange', 'priors.typicalBoxes'],
-    fromApp: 'which totals to test depends on the boxes the household has filled, so it is worked out in SLAM: it reads data/priors-2026.json: for the age band, the source\'s median (SCF) or mean (CE) times TypicalLow and TypicalHigh is the typical range (no Primary row publishes percentiles); a total is far outside when above high x high / likely or below low x low / likely. The value counts the totals far outside (cash, cards, student loans, spending a month)',
-    app: c => { const d = priorsData(); return d ? typicalChecks(d, { age: c.x?.age ?? null, boxes: typicalBoxes(c.live) }).length : null; },
+  { id: 'M9E', name: 'Typical at your age', inputs: 'age (About you: birth year and month), state, solo or couple, housing, roommates and how rent is given, the cash accounts\' balances, card balances, student loan balances, the gut spending number, the rent line; data/priors-2026.json (the Primary rows only); TypicalLow, TypicalHigh', unit: 'count',
+    fns: ['priors.TYPICAL', 'priors.CE_CATEGORIES', 'priors.NO_ROW', 'priors.rowFor', 'priors.placeOf', 'priors.typicalOf', 'priors.farFrom', 'priors.typicalCheck', 'priors.typicalChecks', 'priors.shareOf', 'priors.shortRange', 'priors.typicalBoxes', 'priors.priorsOpts', 'priors.isRentLine'],
+    fromApp: 'which totals to test depends on the boxes the household has filled, so it is worked out in SLAM: it reads data/priors-2026.json: the closest row (its place, then solo or couple, then the age band); its 25th to 75th percentile where it gives them, else the source\'s median (SCF, ACS) or mean (CE) times TypicalLow and TypicalHigh; spending scaled by the place\'s price parity (the NY metro for NY), rent divided by the people it is split among; a total is far outside when above high x high / likely or below low x low / likely. The value counts the totals far outside (cash, cards, student loans, spending a month, rent)',
+    app: c => { const d = priorsData(); if (!d) return null; const o = priorsOpts(c.doc?.profile); return typicalChecks(d, { age: c.x?.age ?? null, ...o, boxes: typicalBoxes(c.live, o) }).length; },
     parts: [{ key: 'netWorth', name: 'Typical net worth at this age (the SCF median)', unit: 'money', // batch 38: a lookup on the Assumptions tab, no longer from the app
       sheet: 'IF(Profile_ageUsed="","",IFERROR(INDEX(Priors_netWorth_typical,MATCH(Profile_ageUsed,Priors_netWorth_from,1)),""))',
       app: c => { const d = priorsData(); return d ? typicalOf(d, 'netWorth', { age: c.x?.age ?? null })?.likely ?? null : null; } }] },
