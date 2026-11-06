@@ -9,7 +9,7 @@ export const libraryFrom = (skills, appSkills, unlearn) => ({ skills: skills?.sk
 export function loadSkillLibrary(onReady) {
   if (LIB) return Promise.resolve(LIB);
   if (typeof fetch !== 'function') return Promise.resolve(null);
-  // Literal paths, one per file: the artifact build finds data files by their fetch('...json') calls and packs them in.
+  // Literal paths, one per file: the artifact build finds data files by their literal fetch paths and packs them in.
   const json = r => r.json();
   loading ??= Promise.all([fetch('data/library/skills.json').then(json), fetch('data/library/app-skills.json').then(json), fetch('data/library/unlearn.json').then(json)]).then(([a, b, c]) => setSkillLibrary(libraryFrom(a, b, c))).catch(() => { loading = null; return null; });
   return loading.then(lib => { if (lib) onReady?.(lib); return lib; });
