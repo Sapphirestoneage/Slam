@@ -651,7 +651,8 @@ export function scenariosScreen(app, ctx) {
   // Batch 33 (QUESTIONS 289): a short month is borrowed on the card, said in one line.
   // Batch 37 (Q320): the borrowing stops at the room on the cards; past it, one plain line says the month cannot be covered.
   const shortLine = sd => (sd.shortfall?.monthly ? `${money(sd.shortfall.monthly)} a month short: carried as card borrowing at ${(sd.shortfall.apr * 100).toFixed(1)}%${sd.shortfall.from === 'card' ? ', the highest card APR' : ', a typical card APR'}${sd.shortfall.fullYm ? `, until the cards are full in ${monthName(sd.shortfall.fullYm, 'short')} (${money(sd.shortfall.room)} of room${sd.shortfall.roomFrom === 'typical' ? ', a typical limit' : ''}). From then the month cannot be covered` : ''}` : null);
-  const shorts = [shortLine(C.current) ? `Current is ${shortLine(C.current)}` : null, shortLine(C.proposed) ? `Proposed is ${shortLine(C.proposed)}` : null].filter(Boolean);
+  const same = shortLine(C.current) && shortLine(C.current) === shortLine(C.proposed); // batch 37: one line when both sides are short the same way
+  const shorts = same ? [`Both sides are ${shortLine(C.current)}`] : [shortLine(C.current) ? `Current is ${shortLine(C.current)}` : null, shortLine(C.proposed) ? `Proposed is ${shortLine(C.proposed)}` : null].filter(Boolean);
   return [head('Current vs Proposed', 'Today against the plan you are proposing'), editor,
     rule?.on ? h('p.muted.small', { style: { margin: '0 0 8px' } }, 'Both sides send the surplus to heavy debt first, then invest it (change it on Plan › Goals).') : null,
     shorts.length ? h('p.muted.small.short-note', { style: { margin: '0 0 8px' }, title: 'Net worth in 5 and 10 years takes off what the card would owe by then; How we got this shows it' }, `${shorts.join('. ')}.`) : null, table];

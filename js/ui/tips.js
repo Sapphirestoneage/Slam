@@ -26,10 +26,13 @@ export function pairTerms(main, hash = location.hash) {
   if (!main || !PLAIN_ON.some(r => hash === r || hash.startsWith(`${r}?`) || hash.startsWith(`${r}/`))) return 0;
   let made = 0;
   for (const p of PLAIN) {
-    if ([...main.querySelectorAll(`.term-pair[data-term="${p.term}"]`)].some(el => el.checkVisibility?.() !== false)) continue;
     const walk = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, { acceptNode: n => (!p.re.test(n.nodeValue) || n.parentElement?.closest(SKIP) || n.parentElement?.checkVisibility?.() === false ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
     const node = walk.nextNode();
     if (!node) continue;
+    // The pair goes with the first mention in reading order: a pair made before an earlier line appeared moves up.
+    const seen = [...main.querySelectorAll(`.term-pair[data-term="${p.term}"]`)].filter(el => el.checkVisibility?.() !== false);
+    if (seen.some(el => el.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
+    for (const el of seen) el.replaceWith(document.createTextNode(el.firstChild.textContent));
     const m = node.nodeValue.match(p.re), at = m.index, end = at + m[0].length;
     const tip = GLOSSARY[p.term];
     const pair = h('span.term-pair', { 'data-term': p.term }, h(`span${tip ? '.has-tip' : ''}`, tip ? { title: `${p.term}: ${tip}` } : {}, m[0]), ` (${p.plain})`);
