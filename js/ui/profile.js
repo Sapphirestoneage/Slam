@@ -35,7 +35,17 @@ export function profileScreen(app, ctx) {
     const cleared = Object.keys(patch).filter(k => later[k] && patch[k] !== null && patch[k] !== undefined);
     store.setDoc('profile', cleared.length ? { ...patch, later: Object.fromEntries(Object.entries(later).filter(([k]) => !cleared.includes(k))) } : patch);
   };
-  const later = key => ({ on: !!p.later?.[key], set: on => store.setDoc('profile', { later: { ...(p.later || {}), [key]: on || undefined } }) });
+  // Batch 8 (B5): each park button knows its key, so one section-level "Will get all of these (N)" can press them all.
+  const laters = new Map();
+  const later = key => { const o = { on: !!p.later?.[key], set: on => store.setDoc('profile', { later: { ...(store.doc.profile.later || {}), [key]: on || undefined } }), parkKey: key }; laters.set(key, o); return o; };
+  const willGetAll = sec => {
+    if (!sec?.querySelectorAll) return sec;
+    const keys = [...new Set([...sec.querySelectorAll('button.later-btn[data-park-key]')].map(b => b.dataset.parkKey))].filter(k => laters.has(k));
+    if (keys.length < 2) return sec;
+    sec.querySelector('.section-title')?.append(h('span.spacer'), button(`Will get all of these (${keys.length})`, { size: 'small', iconName: 'clock', tip: 'Every empty answer in this section goes on the homework list as Find: …',
+      onClick: () => { store.transaction('Will get all', () => keys.forEach(k => laters.get(k).set(true))); toast(`${keys.length} answers are on the homework list, with where to look.`); } }));
+    return sec;
+  };
   // Batch 5 (E5): "I'll find it later" shows only while the answer is empty; once a value is set, it reads as answered.
   const answered = key => p[key] !== null && p[key] !== undefined && p[key] !== '';
   // A labelled box whose answer can be parked for later.
@@ -254,7 +264,7 @@ export function profileScreen(app, ctx) {
   const next = h('div.next-step', {}, c.core.ready
     ? button('Next: Income', { kind: 'primary', iconName: 'right', onClick: () => app.go('#/cash-flow/income') })
     : h('p.muted', {}, `${c.core.missing.length} to go before Next (${c.core.missing.slice(0, 3).join(', ')}${c.core.missing.length > 3 ? ' and more' : ''}). Answer each, or tap I'll find it later.`));
-  return [whyNow, hub, about, work, home, calendar, benefits, accounts, couple, next];
+  return [whyNow, hub, about, work, home, calendar, benefits, accounts, couple].map(willGetAll).concat([next]);
 }
 
 export { profileCompletion } from '../profile-completion.js';

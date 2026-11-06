@@ -454,3 +454,42 @@ body.parking-pinned .topbar { padding-right: 0; }
 
 /* Batch 7, item 11: a card's first question in the row; the debt fields follow only on Carries */
 .card-first .seg button { min-height: 32px; padding: 0 8px; font-size: .8125rem; }
+
+/* Batch 8 (B8): the checkbox on every row is always there, slim; the section header has one; the bulk bar sticks to the bottom. */
+.list-wrap .check-cell { display: table-cell; width: 24px; padding: 0 2px; }
+.list-wrap .check-cell input[type="checkbox"] { width: 16px; height: 16px; }
+table.rows tr.group td.check-cell { background: var(--bg); }
+.bulk-host { position: sticky; top: auto; bottom: 0; z-index: 4; }
+.bulk-bar { border-radius: 0; flex-wrap: wrap; border-top: 2px solid var(--border-row); }
+/* Batch 8 (B10): the sticky header is solid; rows pass under it. */
+table.rows th { background-color: var(--card); background-image: linear-gradient(var(--card), var(--card)); box-shadow: 0 2px 0 var(--border-row); z-index: 3; }
+/* Batch 8 (B11): names wrap. */
+label.field.name-field { height: auto; min-height: var(--row-input, 36px); align-items: stretch; }
+textarea.name-box { field-sizing: content; resize: none; overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.3; padding: 6px 0; min-height: 24px; font: inherit; border: 0; background: transparent; color: inherit; width: 100%; }
+table.rows td.col-line, table.rows td.col-first { white-space: normal; }
+/* Batch 8 (B7): the period chip inside the amount. */
+.per-chip { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; min-height: 28px; padding: 0 6px; border-radius: var(--r-button); border: 1.5px solid var(--border-input); background: var(--card); color: var(--text-2); font: inherit; font-size: .8125rem; font-weight: 600; cursor: pointer; }
+.per-chip:hover, .per-chip:focus-visible { border-color: var(--primary); color: var(--text); }
+/* Batch 8 (B5): Getting it (a clock) and the Will get it button in a row. */
+.tag.getting { background: var(--chip); color: var(--chip-text); display: inline-flex; align-items: center; gap: 4px; }
+.tag.getting .i, .later-btn .i, .will-get .i { width: 14px; height: 14px; }
+.will-get { min-height: 28px; font-size: .75rem; padding: 0 8px; color: var(--text-2); }
+.status-cell { white-space: nowrap; }
+.cat-note { white-space: nowrap; }
+.cat-lines .list { box-shadow: none; border: 1.5px solid var(--border-row); }
+.cat-lines .section-title h2 { font-size: 1rem; }
+/* Batch 8 (B5): on About you the per-field Will get it shows on hover or focus; one section button covers the rest. */
+.profile-card .park-btns { opacity: 0; transition: opacity .15s ease; }
+.profile-card .stack:hover .park-btns, .profile-card .stack:focus-within .park-btns, .profile-card .gate:hover .park-btns, .profile-card .gate:focus-within .park-btns, .profile-card .park-btns:focus-within { opacity: 1; }
+@media (hover: none) { .profile-card .park-btns { opacity: 1; } }
+/* Batch 8 (C12, C13, D181): What's missing as links under one heading; Back and Forward as real buttons; step 8 slim. */
+.missing-head { font-size: .8125rem; font-weight: 700; color: var(--text-2); margin: 8px 0 4px; text-transform: uppercase; letter-spacing: .02em; }
+.missing-groups ul.missing { margin-bottom: 4px; }
+a.missing-link { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; font-weight: 600; }
+.history-btns .btn { padding: 0 8px; min-width: 36px; }
+.history-btns .btn .i { margin: 0; }
+.foo-step.optional .foo-step-head { min-height: 32px; }
+.foo-step.optional .foo-slim { margin: 2px 0 0 28px; }
+/* Batch 8: the Will get it button keeps the debt table inside 1280: the clock alone when the screen is narrow. */
+@media (max-width: 1300px) { .will-get { padding: 0 6px; } .will-get .will-get-text { display: none; } .payoff { min-width: 168px; } }
+.status-cell { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; white-space: nowrap; } /* the Will get it button sits under the status, so the column never widens */

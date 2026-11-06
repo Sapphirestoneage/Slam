@@ -58,10 +58,11 @@ export function autoChecks(doc, ref, { now = new Date(), flags = [], picture = p
     shortGoals: sc.facts.goals.short >= THRESHOLDS.goals.count,
     longGoals: sc.facts.goals.long >= THRESHOLDS.goals.count,
     allRated: sc.rated === sc.of,
-    holesRanked: sc.holes.every(h => h.payoff && h.effort > 0),
+    // Batch 8 (C14): an empty list is not a pass. Holes are ranked, chosen or filled only once something was rated.
+    holesRanked: sc.rated > 0 && sc.holes.every(h => h.payoff && h.effort > 0),
     fooConfirmed: sc.here != null && doc.program?.fooConfirmed === sc.here,
-    top3Chosen: sc.chosen.length >= Math.min(3, sc.holes.length),
-    holeFilled: sid => { const t = targetOf(doc, sid, sc); return t ? FILLED.has(ratingOf(sc, t)) : sc.open.length === 0; },
+    top3Chosen: sc.rated > 0 && sc.chosen.length >= Math.min(3, sc.holes.length),
+    holeFilled: sid => { const t = targetOf(doc, sid, sc); return t ? FILLED.has(ratingOf(sc, t)) : sc.rated > 0 && sc.open.length === 0; },
     day0Compared: !!day0Of(doc) && doc.snapshots.length >= 2,
     rescored: !!doc.scorecard?.reviewedAt && doc.scorecard.reviewedAt >= (doc.snapshots.filter(s => s.session === 8).at(-1)?.at ?? ''),
     nextChapter: !!(doc.scorecard?.nextChapter?.text && doc.scorecard.nextChapter.amount != null && doc.scorecard.nextChapter.date),
@@ -181,6 +182,11 @@ export function agendaOf(doc, ref, { now = new Date(), flags = [], P = programOf
   // Parked holes that are due back (overnight answer 1): a + and a one-click Make homework.
   for (const a of P.scorecard.parkedHoles) { const b = parkedBack(a.parked, { n: P.n, now }); if (b.due) suggest({ kind: 'parked', label: `Back from parking: ${a.name}`, key: 'holeFilled', from: sid, link: { kind: 'hole', areaId: a.id, route: '#/plan/scorecard' }, why: `parked ${new Date(a.parked.at).toLocaleDateString()}${a.parked.note ? `: ${a.parked.note}` : ''}; due ${b.when}` }); }
   const top = P.scorecard.open[0];
+  // Batch 8 (A4): in S3 and S4, the biggest typed category that is not itemized yet.
+  if (['S3', 'S4'].includes(sid)) {
+    const big = [...(P.m?.inputs?.categories ?? [])].filter(c => c.typed != null && c.key !== 'Debt' && (c.linesSum ?? 0) < c.typed - 0.5).sort((a, b) => (b.amount ?? 0) - (a.amount ?? 0))[0];
+    if (big) suggest({ kind: 'category', label: `Break down your biggest category: ${big.name} (${fmt.money(big.amount)} a month)`, link: { kind: 'route', route: '#/cash-flow/budget' }, why: 'the lines sharpen the picture; the category alone already counts as done' });
+  }
   if (top) suggest({ kind: 'hole', label: `Top hole: ${top.name}`, key: 'holeFilled', from: sid, link: { kind: 'hole', areaId: top.id, route: '#/plan/scorecard' }, why: top.payoff ? `${Math.round(top.fiDays ?? 0)} FI days a year` : 'the top of the Scorecard' });
   // F2: what the household mode suggests (Engaged: the disclosure checklist, a money talk, a wedding goal).
   const mode = modeOf(doc.profile);
@@ -305,6 +311,16 @@ export function endSession(store, ref, { homework = [], next = null, now = new D
     store.setIn('session', ['guide'], false);
     store.setIn('session', ['count'], n);
     if (nextSid) store.setIn('program', ['carried', nextSid], carry.length ? carry : undefined);
+    // Batch 8 (B5): every Will get it (Find: …) still open goes straight onto the next session's agenda, once.
+    if (nextSid && ref) {
+      const liveNow = visible(store.doc.records, gatesOf(store.doc.profile, store.doc.client), ref);
+      const onNext = new Set((agendaDoc(store.doc, nextSid).going || []).map(g => JSON.stringify(g.link ?? g.label)));
+      for (const hw of homeworkList(store.doc, liveNow)) {
+        if (hw.status !== 'To do' || hw.owner !== 'client' || !(hw.key.startsWith('rec:') || hw.key.startsWith('profile:'))) continue;
+        const link = { kind: 'homework', key: hw.key, route: '#/tools/session' };
+        if (!onNext.has(JSON.stringify(link))) { addAgendaItem(store, nextSid, { label: hw.label, link, from: cur.id }); onNext.add(JSON.stringify(link)); }
+      }
+    }
     for (const i of toHomework) makeHomework(store, A.sid, i.label, { link: i.link });
     store.setIn('program', ['reviews', cur.id], { at, movedOnAnyway: open.length > 0, carried: carry.map(o => o.label), homework: toHomework.map(o => o.label), confirmed, ...(note ? { note } : {}) });
     // The recap: the agenda and its notes as they stood when the session ended.

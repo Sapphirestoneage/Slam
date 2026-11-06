@@ -116,7 +116,7 @@ const app = {
     const homeHref = tabRoute(TABS[0]);
     clear($('topbar'), h('div.topbar-in', {},
       h('div.tb-left', {},
-        h('span.row-line.history-btns', { style: { gap: '2px', flexWrap: 'nowrap' } }, S.iconButton('left', 'Back (the previous screen)', () => history.back(), { tiny: true }), S.iconButton('right', 'Forward', () => history.forward(), { tiny: true })), // item 1: every screen is browser history
+        h('span.row-line.history-btns', { style: { gap: '4px', flexWrap: 'nowrap' } }, S.button(h('span.sr', {}, 'Back'), { iconName: 'left', tip: 'Back', onClick: () => history.back() }), S.button(h('span.sr', {}, 'Forward'), { iconName: 'right', tip: 'Forward', onClick: () => history.forward() })), // item 1: every screen is browser history; batch 8 (C13): normal bordered buttons, always in the sticky bar
         h('a.site-id', { href: homeHref, title: 'Stress Less About Money' }, 'SLAM'), clientBtn,
         h('span.save-state', { id: 'save-state' })),
       h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: tabRoute(t), 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),

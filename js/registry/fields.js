@@ -289,7 +289,7 @@ export const AREAS = [
     ],
   },
   {
-    id: 'spending', prefix: 'Spend', tab: 'Spending lines', source: 'records', kinds: { bill: 'Budget line', spending: 'Gut number' },
+    id: 'spending', prefix: 'Spend', tab: 'Spending lines', source: 'records', kinds: { bill: 'Budget line', spending: 'Gut number or category' }, // batch 7 (A): a category row is kind spending with the category as its type
     about: 'Every Budget line, and the one gut number for all spending.',
     fields: [
       NAME, AMOUNT('Amount'), PER(),

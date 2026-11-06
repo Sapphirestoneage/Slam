@@ -18,7 +18,7 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
   const doc = ctx.store.doc, p = doc.profile, set = doc.settings;
   const f = foo(doc, ctx.ref, { now: ctx.now(), flags });
   const setP = patch => ctx.store.setDoc('profile', patch);
-  const when = s => (s.status === 'Done' ? 'Done' : s.date ? monthName(s.date, 'short') : s.status === 'Optional' ? 'Pick joy lines' : s.status === 'Off' ? 'Off' : s.status === 'Locked' ? '' : s.left == null && s.id === '5b' ? 'Set an amount' : s.status === 'Later' ? '' : 'Needs a surplus');
+  const when = s => (s.status === 'Done' ? 'Done' : s.date ? monthName(s.date, 'short') : s.status === 'Optional' ? (s.id === '0b' ? 'Pick joy lines' : 'Nothing to fund yet') : s.status === 'Off' ? 'Off' : s.status === 'Locked' ? '' : s.left == null && s.id === '5b' ? 'Set an amount' : s.status === 'Later' ? '' : 'Needs a surplus');
   // The path: one stop per step, you-are-here on the current one; the dated stops open below it.
   // Items 31 to 33: short names on the tiles, a card on hover or tap, a partial bar, a click opens the full detail below.
   const card = s => { const c = STEP_CARDS[s.id] || {}; return h('div.foo-card', { role: 'tooltip' }, h('strong', {}, `${s.id} ${c.full ?? s.name}`), h('p', {}, c.why), h('p', {}, h('b', {}, 'Problem: '), c.problem), h('p', {}, h('b', {}, 'Unlocks: '), c.unlocks), h('p', {}, h('b', {}, 'Done when: '), c.doneWhen), h('p', {}, h('b', {}, 'Status: '), s.status, s.left ? `, ${money(s.left)} left` : '', s.date ? `, about ${monthName(s.date, 'short')}` : '')); };
@@ -36,15 +36,17 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
     h('div.row-line', {}, S.button('Unlock anyway', { kind: 'primary', onClick: () => { const v = n.value.trim(); if (!v) { S.toast('Say why first: the note is required.'); n.focus(); return; } S.closePop(); overrideStep(ctx.store, s.id, v); S.toast(`${s.name} unlocked. The cost shows on the step.`, { undo: () => ctx.store.undo() }); } }), S.button('Keep it locked', { onClick: S.closePop }))), { width: 360 }); };
   const lockLine = s => (s.status === 'Locked' ? h('div.foo-lock.coach-only', {}, icon('lock'), h('span', {}, s.prereq?.text), s.prereq?.needsAge ? h('a', { href: '#/home/profile' }, 'Add your age ›') : S.button('Unlock anyway', { size: 'small', onClick: e => unlock(e.currentTarget, s) }))
     : s.override ? h('div.foo-lock.coach-only', {}, h('span.tag.plain', {}, 'Unlocked by the coach'), h('span', {}, `${s.override.note} (session ${s.override.session})`), s.cost ? h('span', {}, s.cost.text) : null, S.button('Lock again', { size: 'small', onClick: () => clearOverride(ctx.store, s.id) })) : null);
-  const stepRow = s => h(`div.foo-step${f.here === s.id ? '.here' : ''}${s.status === 'Locked' ? '.locked' : ''}`, { 'data-step': s.id },
+  // Batch 8 (C15): the dollars beside the share. A step part-way along reads "$have of $target · $left left".
+  const dollars = s => { if (!s.left) return null; const parts = (s.parts || []).filter(x => x.target != null && x.value != null); const target = parts.reduce((a, x) => a + x.target, 0), have = parts.reduce((a, x) => a + x.value, 0); return parts.length && target > 0 ? `${money(have)} of ${money(target)} · ${money(s.left)} left` : `${money(s.left)} left${s.monthly ? ' a month' : ''}`; };
+  const stepRow = s => h(`div.foo-step${f.here === s.id ? '.here' : ''}${s.status === 'Locked' ? '.locked' : ''}${s.status === 'Optional' ? '.optional' : ''}`, { 'data-step': s.id },
     h('div.foo-step-head', {}, h('span.foo-n', {}, s.id), h('strong', {}, s.name), h(`span.tag.${STATUS_CLASS[s.status] || 'plain'}`, {}, s.status === 'Locked' ? [icon('lock'), ' Locked'] : s.status),
       h('span', { style: { flex: 1 } }),
-      s.left ? h('span.num', {}, S.mathButton({ id: 'M69', value: s.left, needs: [], text: `${s.name}: ${money(s.left)} left${s.monthly ? ' a month' : ''}.${s.date ? ` At today's surplus, about ${monthName(s.date)}.` : ''}` }, `${money(s.left)} left`)) : null,
+      s.left ? h('span.num', {}, S.mathButton({ id: 'M69', value: s.left, needs: [], text: `${s.name}: ${money(s.left)} left${s.monthly ? ' a month' : ''}.${s.date ? ` At today's surplus, about ${monthName(s.date)}.` : ''}` }, dollars(s))) : null,
       h('span.muted.small.foo-when', {}, when(s))),
     lockLine(s),
     s.skipCost ? h('p.foo-flag.coach-only', {}, s.skipCost.text) : null, // answer 175
     s.flags?.length ? s.flags.map(fl => h('p.foo-flag', {}, fl.text)) : null,
-    S.moreBlock(`foo:step:${s.id}`, () => stepDetail(ctx, s, f), { label: 'Full detail' }));
+    s.status === 'Optional' && s.id !== '0b' ? h('p.muted.small.foo-slim', {}, s.note) : S.moreBlock(`foo:step:${s.id}`, () => stepDetail(ctx, s, f), { label: 'Full detail' })); // answer 181: step 8 stays, one slim line
   const giving = p.giving || {};
   const setGiving = patch => setP({ giving: { ...giving, ...patch } });
   const settings = S.moreBlock('foo:settings', () => h('div.stack', { style: { gap: '12px' } },

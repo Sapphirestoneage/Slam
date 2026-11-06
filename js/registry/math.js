@@ -15,7 +15,7 @@
 //     {app:name} the app's value for that row (from app[name](rec, c)). f can be a function (rec, c) => template.
 //   fns: the js/math exports this entry is made of ('file.export').
 import { LISTS } from './assumptions.js';
-import { DRAFTT, myShare, irregularSetAside, estimateVsActual } from '../math/spending.js';
+import { DRAFTT, CATEGORIES, myShare, irregularSetAside, estimateVsActual } from '../math/spending.js';
 import { takeHomeFromGross, variableSafeBudget, realHourlyWage, monthlyFrom, defaultFilingStatus } from '../math/income.js';
 import { payoffPlan, feeApr, utilization, debtToIncome, promoPayment } from '../math/debt.js';
 import { moneyAsTime } from '../math/fi.js';
@@ -51,6 +51,12 @@ const debtOf = (rec, c) => c.x.debts.find(d => d.id === rec.id) ?? null;
 // A group is on when ticked; with no box touched at all (every shared cell blank) the roommate defaults apply, as sharedBillsOf does.
 const SHARED_TOUCHED = `OR(${Object.keys(LISTS.sharedGroups).map(k => `Profile_shared_${k}<>""`).join(',')})`;
 const SHARED_ON = (k, g) => `IF(${SHARED_TOUCHED},Profile_shared_${k}="Yes",${g.defaultOn ? 'N(Profile_roommates)>0' : 'FALSE'})`;
+
+// Batch 7 (A): a category's amount in the sheet. Its typed row (Kind Category, Type the category key, a month) or its
+// lines' shares when they add up to more; Debt adds the payments From Debt. Other is every line with no DRAFTT letter.
+const CAT_LINES = k => (k === 'Other' ? `SUMIFS(Spend_M21,Spend_InMath,"Yes",Spend_Kind,"Budget line",Spend_draftt,"")` : `SUMIFS(Spend_M21,Spend_InMath,"Yes",Spend_Kind,"Budget line",Spend_draftt,"${k}")${k === 'Debt' ? '+SUM(Debt_auto)' : ''}`);
+const CAT_TYPED = k => `SUMIFS(Spend_amount,Spend_InMath,"<>No",Spend_Kind,"Gut number or category",Spend_Type,"${k}",Spend_Status,"<>Not for me")`; // a category row is a month
+const CAT_SUM = keep => CATEGORIES.filter(keep).map(k => `MAX(${CAT_TYPED(k)},${CAT_LINES(k)})`).join('+');
 
 export const MATH = [
   { id: 'M00', name: 'Units', inputs: 'none', fns: [], unit: 'text',
@@ -130,7 +136,7 @@ export const MATH = [
       f: rec => `IF(OR(${SKIP},{Kind}<>"Budget line",{amount}=""),"",IF({Status}="Not for me",0,${rec.covers?.months ? `{amount}/${rec.covers.months}` : `{amount}*${MONTH_FACTOR('{per}')}`}))` }],
     sheet: 'SUMIFS(Spend_M20,Spend_InMath,"Yes")', label: 'Budget lines, each as a month, added up',
     app: c => sum(c.x.typedLines.filter(l => !c.x.dupOf[l.id]), l => (l.amount == null ? 0 : l.covers?.months ? l.amount / l.covers.months : monthlyFrom(l.amount, l.per).value)) },
-  { id: 'M21', name: 'My share', inputs: 'amount, who pays, covered, split', unit: 'money', fns: ['spending.myShare', 'spending.shareBeforeRefund', 'spending.reimbursedMonthly', 'spending.splitOf', 'spending.amountIsMine', 'spending.wholeBill', 'spending.withHome', 'spending.partnerSplits', 'spending.peopleSharing', 'spending.sharedBillsOf', 'spending.splitWaysOf', 'spending.splitDisagreeOf'],
+  { id: 'M21', name: 'My share', inputs: 'amount, who pays, covered, split', unit: 'money', fns: ['spending.myShare', 'spending.categoryTotals', 'spending.CATEGORIES', 'spending.CORE_CATEGORIES', 'spending.categoryName', 'spending.categoryKeyOf', 'spending.isCategoryRecord', 'spending.shareBeforeRefund', 'spending.reimbursedMonthly', 'spending.splitOf', 'spending.amountIsMine', 'spending.wholeBill', 'spending.withHome', 'spending.partnerSplits', 'spending.peopleSharing', 'spending.sharedBillsOf', 'spending.splitWaysOf', 'spending.splitDisagreeOf'],
     cols: [
       // Batch 5 (E): a shared group is on when its About you box says Yes, or, with nothing answered and roommates, by its config default.
       { area: 'spending', key: 'whoUsed', label: 'Who pays used', unit: 'text',
@@ -166,12 +172,13 @@ export const MATH = [
     fromApp: 'an average across closed months of each first guess against the actual; the close history stays in SLAM', app: () => null },
   { id: 'M27', name: 'Monthly surplus', inputs: 'M12, M21, debts', unit: 'money', fns: ['spending.monthlySurplus'],
     parts: [
-      { key: 'lines', name: 'Spending on the Budget lines (debt payments From Debt included; Retirement lines left out)', unit: 'money',
-        sheet: 'IF(COUNTIFS(Spend_Kind,"Budget line",Spend_InMath,"<>No")=0,"",SUMIFS(Spend_M21,Spend_InMath,"Yes",Spend_draftt,"<>Retirement")+SUM(Debt_auto))', app: c => c.x.lineTotal },
-      { key: 'retire', name: 'Retirement lines on the Budget, a month (investing, not spending)', unit: 'money',
-        sheet: 'IF(OR(Math_M27_gut="",AND(Set_spendingSource="lines",Math_M27_lines<>"")),SUMIFS(Spend_M21,Spend_draftt,"Retirement",Spend_InMath,"Yes"),0)', app: c => c.x.retirementLines ?? 0 },
+      // Batch 7 (A): the categories carry the spending: each is the larger of its typed row (Kind Category) and its lines.
+      { key: 'lines', name: 'Spending by category (each the larger of its typed amount and its lines; debt payments From Debt included; Retirement left out)', unit: 'money',
+        sheet: `IF(AND(COUNTIFS(Spend_Kind,"Budget line",Spend_InMath,"<>No")=0,COUNTIFS(Spend_Kind,"Gut number or category",Spend_InMath,"<>No",Spend_Type,"<>All in",Spend_amount,"<>")=0),"",${CAT_SUM(k => k !== 'Retirement')})`, app: c => c.x.lineTotal },
+      { key: 'retire', name: 'Retirement on the Budget, a month (investing, not spending)', unit: 'money',
+        sheet: `IF(OR(Math_M27_gut="",AND(Set_spendingSource="lines",Math_M27_lines<>"")),${CAT_SUM(k => k === 'Retirement')},0)`, app: c => c.x.retirementLines ?? 0 },
       { key: 'gut', name: 'The gut number', unit: 'money',
-        sheet: 'IF(COUNTIFS(Spend_Kind,"Gut number",Spend_InMath,"<>No")=0,"",IF(COUNTIFS(Spend_Kind,"Gut number",Spend_InMath,"<>No",Spend_amount,"<>")=0,"",SUMIFS(Spend_amount,Spend_Kind,"Gut number",Spend_InMath,"<>No",Spend_Status,"<>Not for me")))',
+        sheet: 'IF(COUNTIFS(Spend_Kind,"Gut number or category",Spend_Type,"All in",Spend_InMath,"<>No")=0,"",IF(COUNTIFS(Spend_Kind,"Gut number or category",Spend_Type,"All in",Spend_InMath,"<>No",Spend_amount,"<>")=0,"",SUMIFS(Spend_amount,Spend_Kind,"Gut number or category",Spend_Type,"All in",Spend_InMath,"<>No",Spend_Status,"<>Not for me")))', // the All in row only; a category row has its key as Type
         app: c => c.x.gutTotal },
       { key: 'spending', name: 'Spending a month (the gut number until the Budget switches to the lines)', unit: 'money',
         sheet: 'IF(OR(Math_M27_gut="",AND(Set_spendingSource="lines",Math_M27_lines<>"")),Math_M27_lines,Math_M27_gut)',

@@ -14,6 +14,7 @@ import { gatesOf, gatedOut } from '../gates.js';
 import { keepPlace } from './place.js';
 import { opened, install as installDismiss } from './dismiss.js';
 import { PERSONS, personLabels, onePerson, ownerOf, modeOf } from '../registry/couples.js';
+import { isBlankRow } from '../completion.js';
 export { keepPlace };
 
 // A core field is handled when it is done, or on the Homework list (batch 7, item 4), or the institution comes from the
@@ -122,7 +123,7 @@ export function flashSaved(rowEl) {
 
 // ---------- Status tag (R053, R160): a symbol as well as a color ----------
 const TAG = {
-  'Roughly': ['roughly', '≈ Roughly'], 'Not sure': ['guess', '? Guess'], 'Will email': ['plain', "I'll find it later"],
+  'Roughly': ['roughly', '≈ Roughly'], 'Not sure': ['guess', '? Guess'], 'Will email': ['getting', 'Will get it'], // batch 8 (B5): the old "I'll find it later"
   'Not now': ['plain', 'Not now'], 'Not for me': ['plain', 'Not for me'], 'Computed': ['plain', 'Computed'], 'Know it': ['plain', 'Know it'],
 };
 export function statusTag(status) {
@@ -136,6 +137,7 @@ export const guessTag = () => h('span.tag.guess', {}, '? Guess');
 // One sureness system: the face says Know it, Rough or Missing; the finer status is picked inside (polish item 1).
 const FACE = { 'Know it': ['plain', 'Know it'], Rough: ['roughly', '≈ Rough'], Missing: ['missing', 'Missing'], 'Not for me': ['plain', 'Not for me'] };
 export function sureTag(status, hasValue = true) {
+  if (status === 'Will email') return h('span.tag.getting', { title: 'Will get it: on the homework list, with where to look' }, icon('clock'), 'Getting it'); // batch 8 (B5): the clock badge
   const face = sureOf(status, hasValue);
   const [cls, text] = FACE[face];
   return h(`span.tag.${cls}`, { title: status && face !== status ? `${face}: ${TAG[status]?.[1].replace(/^[?≈] /, '') ?? status}` : null }, text);
@@ -285,6 +287,25 @@ export function textInput(value, onChange, { hint = 'Add name', width = 180, key
   input.onchange = () => onChange(input.value.trim() || null);
   return h(`label.field${value ? '.filled' : ''}`, { style: { width: `${width}px` }, title: tip }, input);
 }
+// Batch 8 (B7): the period folded into the amount: a small "/mo" chip after the money box; click to change.
+const PER_SHORT = { paycheck: 'paycheck', week: 'wk', '2 weeks': '2 wks', 'twice a month': '2x/mo', month: 'mo', quarter: 'qtr', year: 'yr' };
+export function perChip(value, onChange, { key = null, label = 'Per' } = {}) {
+  const v = value ?? 'month';
+  const b = h('button.per-chip', { type: 'button', 'aria-label': `${label}: per ${v}. Change`, title: `Per ${v}. Click to change`, 'data-focus': key }, `/${PER_SHORT[v] ?? v}`);
+  b.onclick = () => popover(b, h('div.stack', { style: { gap: '6px' } }, h('h3', {}, 'Per'), h('div.row-line', { style: { gap: '6px', flexWrap: 'wrap' } },
+    ['paycheck', 'week', '2 weeks', 'twice a month', 'month', 'quarter', 'year'].map(p => h('button.btn.small', { type: 'button', 'aria-pressed': String(p === v), onclick: () => { closePop(); onChange(p); } }, p)))), { width: 320 });
+  return b;
+}
+// Batch 8 (B11): a name that wraps instead of truncating (a one-line box that grows as the words do).
+export function nameInput(value, onChange, { hint = 'Add name', width = 180, key = null, tip = null } = {}) {
+  const ta = h('textarea.name-box', { placeholder: hint, 'aria-label': hint.replace(/^Add /, ''), rows: 1, 'data-focus': key }, value ?? '');
+  const fit = () => { ta.style.height = 'auto'; ta.style.height = `${Math.max(0, ta.scrollHeight)}px`; };
+  ta.oninput = fit;
+  ta.onchange = () => onChange(ta.value.trim() || null);
+  ta.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); ta.blur(); } };
+  requestAnimationFrame(fit);
+  return h(`label.field.name-field${value ? '.filled' : ''}`, { style: { width: `${width}px` }, title: tip }, ta);
+}
 export function perPicker(value, onChange, { key = null } = {}) {
   const s = h('select', { 'aria-label': 'per', 'data-focus': key }, ['paycheck', 'week', 'month', 'quarter', 'year'].map(p => h('option', { value: p, selected: p === value }, `per ${p}`)));
   s.onchange = () => onChange(s.value);
@@ -316,13 +337,14 @@ export const labelled = (label, input, { note = null, later = null, none = null,
     note ? h('span.muted.small', {}, note) : null, later || none ? parkButtons({ later, none }, label) : null);
 };
 export function parkButtons({ later = null, none = null }, label = 'this') {
-  const undo = (text, opt, what) => h('span.row-line.later-on', { style: { gap: '6px', flexWrap: 'nowrap' } }, h('span.tag.plain', {}, text),
+  const undo = (text, opt, what, cls = 'plain') => h('span.row-line.later-on', { style: { gap: '6px', flexWrap: 'nowrap' } }, h(`span.tag.${cls}`, {}, cls === 'getting' ? icon('clock') : null, text),
     h('button.btn.small.later-btn', { type: 'button', 'aria-label': `${what}: ${label}`, onclick: () => opt.set(false) }, 'Undo'));
-  if (later?.on) return undo('On your homework', later, 'Take off the homework list');
+  if (later?.on) return undo('Getting it', later, 'Take off the homework list', 'getting'); // batch 8 (B5): the clock badge
   if (none?.on) return undo("Don't have this", none, 'Undo');
-  return h('span.row-line', { style: { gap: '4px', flexWrap: 'wrap' } },
+  return h('span.row-line.park-btns', { style: { gap: '4px', flexWrap: 'wrap' } },
     none ? h('button.btn.small.later-btn', { type: 'button', 'aria-label': `I don't have ${label}`, onclick: () => none.set(true) }, "I don't have this") : null,
-    later ? h('button.btn.small.later-btn', { type: 'button', 'aria-label': `I'll find ${label} later`, onclick: () => { later.set(true); toast(`${label} is on your homework list, with where to find it.`); } }, "I'll find it later") : null);
+    later ? h('button.btn.small.later-btn', { type: 'button', 'aria-label': `Will get ${label}`, 'data-park-key': later.parkKey ?? null, title: 'Marks it Getting it and puts "Find: this" on the homework list, with where to look',
+      onclick: () => { later.set(true); toast(`Find: ${label} is on the homework list, with where to look.`); } }, icon('clock'), 'Will get it') : null);
 }
 export const laterButton = (later, label) => parkButtons({ later }, label);
 // Both choices for one field of a row: its own status (Will email = later, Not for me = don't have).
@@ -513,9 +535,9 @@ export function payoffCell(ctx, d, longest) {
 }
 
 // ---------- Section footer: total, count, completion bar (R108) ----------
-export function sectionFooter(ctx, { add, total, count, done, of, left = [], onlyLeft = null }) {
+export function sectionFooter(ctx, { add, total, count, done, of, left = [], onlyLeft = null, bulk = null }) {
   const pctDone = of ? done / of : 0;
-  return h('div.footer', {}, add, onlyLeft, h('span.spacer'),
+  return h('div.footer', {}, add, onlyLeft, bulk, h('span.spacer'),
     total !== undefined ? h('span', {}, h('span.label', {}, 'Total '), total) : null,
     h('span.label', {}, `${count} ${count === 1 ? 'item' : 'items'}`),
     h('span.row-line', { style: { gap: '8px' } }, h('div.progress', { role: 'progressbar', 'aria-valuenow': Math.round(pctDone * 100), 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': 'Complete' }, h('span', { style: { width: `${pctDone * 100}%` } })),
@@ -612,7 +634,7 @@ export function recordList(ctx, cfg) {
   const root = h('div.list-wrap');
   const listKey = cfg.key ?? slug(cfg.title);
   const folds = (FOLDS[listKey] ??= {});
-  const state = { selected: new Set(), open: null, selecting: false };
+  const state = { selected: new Set(), open: null, last: null }; // last: the row last clicked, for shift-click ranges (batch 8, B8)
   const isFolded = g => folds[g] ?? (cfg.startFolded === true || (cfg.foldedGroups || []).includes(g));
   // Looks-only changes (select, More, fold) update in place; anything else redraws inside keepPlace (R165).
   const draw = () => keepPlace(() => clear(root, render()));
@@ -634,19 +656,15 @@ export function recordList(ctx, cfg) {
     });
     return r;
   };
-  const remove = (ids, anchor) => {
+  // Batch 8 (B8): Delete never asks first; the toast undoes it. A linked row (a car and its loan) deletes this row only.
+  const remove = ids => {
     const list = [...ids];
-    const linked = list.length === 1 ? ctx.store.linked(list[0]) : [];
-    const go = withLinked => {
-      list.forEach(id => state.selected.delete(id));
-      const n = ctx.store.remove(list, { withLinked });
-      toast(n > 1 ? `Deleted ${n}.` : 'Deleted.', { undo: () => ctx.store.undo() });
-    };
-    if (linked.length) {
-      confirmBox(anchor, { text: `Delete the ${cfg.thing.one} only, or the ${linked[0].name || linked[0].type} too?`, yes: `Delete the ${cfg.thing.one} only`, no: 'Keep it', onYes: () => go(false),
-        extra: { label: 'Delete both', run: () => go(true) } });
-    } else go(false);
+    list.forEach(id => state.selected.delete(id));
+    const n = ctx.store.remove(list, { withLinked: false });
+    toast(n > 1 ? `Deleted ${n}.` : 'Deleted.', { undo: () => ctx.store.undo() });
   };
+  // Batch 8 (B9): a row left with no name and nothing typed disappears on its own, without a toast.
+  const dropIfBlank = id => { const r = ctx.store.get(id); if (!r || cfg.fixed || !isBlankRow(r, coreOf(r))) return; if (state.open === id) state.open = null; ctx.store.remove([id], { withLinked: false, quiet: true }); };
   const reset = ids => { const n = ids.length; ctx.store.reset(ids); toast(n > 1 ? `Reset ${n}.` : 'Reset.', { undo: () => ctx.store.undo() }); };
 
   // ---------- in-place updates ----------
@@ -657,17 +675,11 @@ export function recordList(ctx, cfg) {
     for (const [id, tr] of view.rows) { tr.classList.toggle('selected', state.selected.has(id)); const b = tr.querySelector('td.check-cell input'); if (b) b.checked = state.selected.has(id); }
     view.allBox.checked = sel.length > 0 && sel.length === view.recs.length;
     view.allBox.indeterminate = sel.length > 0 && sel.length < view.recs.length;
-    // The bulk bar lies over the header row, so nothing below it moves.
-    clear(view.bulkHost, sel.length ? bulkBar(ctx, sel, view.actions(sel)) : null);
+    for (const [g, head] of view.groups) { const ids = view.groupIds.get(g) || []; const b = head.querySelector('input[type="checkbox"]'); if (!b) continue; const n = ids.filter(id => state.selected.has(id)).length; b.checked = n > 0 && n === ids.length; b.indeterminate = n > 0 && n < ids.length; }
+    // The bulk bar sticks to the bottom of the list (batch 8, B8), so nothing above it moves.
+    clear(view.bulkHost, sel.length ? bulkBar(ctx, sel, view.actions(sel), cfg) : null);
   }
-  function setSelecting(on) {
-    state.selecting = on;
-    if (!on) state.selected.clear();
-    root.classList.toggle('selecting', on);
-    const b = root.querySelector('button.select-btn');
-    if (b) { b.setAttribute('aria-pressed', String(on)); b.lastChild.textContent = on ? 'Done selecting' : 'Select'; }
-    refreshSelection();
-  }
+
   function setFold(g, folded) {
     folds[g] = folded; saveFolds();
     const head = view?.groups.get(g);
@@ -715,9 +727,13 @@ export function recordList(ctx, cfg) {
   };
   const moreRow = (r, g) => h('tr.more', { 'data-for': r.id, 'data-group': g }, h('td', { colspan: view.span }, moreLayers(ctx, r, cfg, p => update(r, p), view.extra, ctx.metrics())));
 
+  const coreOf = r => (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields || ['amount']);
   // A blank core number reads Missing on its face.
-  const hasCore = r => (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields || ['amount'])
-    .every(f => { const v = f in r && f !== 'values' ? r[f] : r.values?.[f]; return v !== null && v !== undefined && v !== ''; });
+  const hasCore = r => (cfg.hasValue ? cfg.hasValue(ctx, r) : coreOf(r).every(f => { const v = f in r && f !== 'values' ? r[f] : r.values?.[f]; return v !== null && v !== undefined && v !== ''; }));
+  // Batch 8 (B5, B6): a row is unconfirmed while its face is not Know it (blank, Rough or a Guess) and it is not already Getting it.
+  const unconfirmed = r => !['Not for me', 'Will email', 'Computed'].includes(r.status) && sureOf(r.status, hasCore(r)) !== 'Know it' && !(r.values?.locked === true);
+  const willGet = ids => { ctx.store.setStatus(ids, 'Will email'); toast(`${ids.length === 1 ? 'Find: it is' : `Find: ${ids.length} are`} on the homework list, with where to look.`, { undo: () => ctx.store.undo() }); };
+  const useEstimates = ids => { const list = ids.filter(id => ctx.store.get(id)?.status === 'Not sure'); if (!list.length) return; ctx.store.setStatus(list, null); toast(`${list.length} starter ${list.length === 1 ? 'estimate' : 'estimates'} kept as the number.`, { undo: () => ctx.store.undo() }); };
   // One "..." per row: Reset, Duplicate, Not for me (or Bring back), then Delete on its own (R105).
   const rowMenuButton = r => {
     const name = r.name || r.type || cfg.thing.one;
@@ -727,31 +743,28 @@ export function recordList(ctx, cfg) {
       ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? item(r.values.locked === true ? 'Unlock (back to as typed)' : 'Lock it (confirmed)', 'lock', () => update(r, { locked: r.values.locked !== true })) : null, // item 11: a guess becomes confirmed here, never as a nag
       item(state.open === r.id ? 'Hide details' : 'Details', 'right', () => setOpen(r.id)), // item 17: the detail is in the menu too
       item('Reset', 'reset', () => reset([r.id])),
-      item('Duplicate', 'copy', () => { ctx.store.duplicate(r.id); toast('Duplicated.', { undo: () => ctx.store.undo() }); }),
+      cfg.fixed ? null : item('Duplicate', 'copy', () => { ctx.store.duplicate(r.id); toast('Duplicated.', { undo: () => ctx.store.undo() }); }),
       cfg.notForMe ? (r.status === 'Not for me'
         ? item('Bring back', 'undo', () => update(r, { status: null }))
         : item('Not for me', 'x', () => { update(r, { status: 'Not for me' }); toast('Moved to Not for me. It counts as $0.', { undo: () => ctx.store.undo() }); })) : null,
-      h('hr'),
-      item('Delete', 'trash', () => remove([r.id], btn), { danger: true })), { width: 200 });
+      cfg.fixed ? null : h('hr'),
+      cfg.fixed ? null : item('Delete', 'trash', () => remove([r.id]), { danger: true })), { width: 200 });
     return btn;
   };
 
   function render() {
     const m = ctx.metrics();
-    const recs = ctx.visible(cfg.filter);
-    root.classList.toggle('selecting', state.selecting);
-    const selectBtn = h('button.btn.small.select-btn', { type: 'button', 'aria-pressed': String(state.selecting), 'data-focus': 'select-mode', onclick: () => setSelecting(!state.selecting) },
-      icon('check'), h('span', {}, state.selecting ? 'Done selecting' : 'Select'));
-    const head = h('div.section-title', {}, h('h2', {}, cfg.title), h('span.spacer'), cfg.headerExtra?.(ctx) ?? null, recs.length ? selectBtn : null,
-      recs.length ? iconButton('eraser', `Clear all ${cfg.thing.plural}`, e => confirmBox(e.currentTarget, {
+    const recs = cfg.order ? [...ctx.visible(cfg.filter)].sort(cfg.order) : ctx.visible(cfg.filter);
+    const head = h('div.section-title', {}, h('h2', {}, cfg.title), h('span.spacer'), cfg.headerExtra?.(ctx) ?? null,
+      recs.length && !cfg.fixed ? iconButton('eraser', `Clear all ${cfg.thing.plural}`, e => confirmBox(e.currentTarget, {
         text: `Clear all ${recs.length} ${recs.length === 1 ? cfg.thing.one : cfg.thing.plural}? You can undo this.`,
         yes: `Clear ${cfg.thing.plural}`, no: 'Keep them', onYes: () => { ctx.store.resetSection(cfg.filter); toast('Cleared.', { undo: () => ctx.store.undo() }); } })) : null);
     const picker = typeof cfg.picker === 'function' ? cfg.picker(ctx) : cfg.picker;
-    const addBtn = addButton(cfg.thing.one, e => picker ? openAddPicker(e.currentTarget, { thing: cfg.thing.one, ...picker, onPick: (t, own) => addNew(t, own) }) : addNew(null));
+    const addBtn = cfg.noAdd ? null : addButton(cfg.thing.one, e => picker ? openAddPicker(e.currentTarget, { thing: cfg.thing.one, ...picker, onPick: (t, own) => addNew(t, own) }) : addNew(null));
     const autos = cfg.autoRows?.(ctx, m) ?? []; // entered elsewhere, shown here (From Debt): no input, no menu
-    if (!recs.length && !autos.length) { view = null; return h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, h('div.list', {}, emptyList(cfg.thing, e => addBtn.click()))); }
+    if (!recs.length && !autos.length) { view = null; return h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, h('div.list', {}, emptyList(cfg.thing, e => addBtn?.click()))); }
 
-    const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all', 'data-focus': 'select-all' });
+    const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all', 'data-focus': 'select-all', title: 'Select all' });
     allBox.onchange = () => { if (allBox.checked) recs.forEach(r => state.selected.add(r.id)); else state.selected.clear(); refreshSelection(); };
     const focus = focusOn(ctx) && cfg.focus ? cfg.focus : null;
     const shown = cfg.columns.filter(c => c && (!c.couple || ctx.couple) && (!c.focusOnly || focus));
@@ -764,19 +777,25 @@ export function recordList(ctx, cfg) {
     for (const g of cfg.lastGroups || []) if (groups.has(g)) { const rows = groups.get(g); groups.delete(g); groups.set(g, rows); } // e.g. Not for me sits at the bottom
     const body = h('tbody');
     const rowEls = new Map(), groupEls = new Map();
-    view = { recs, rows: rowEls, groups: groupEls, body, span, allBox, extra: extraCols, moreLabel: 'Details', bulkHost: h('div.bulk-host'), actions: sel => ({
+    const order = []; // the rows in the order shown, for shift-click ranges
+    const groupIds = new Map();
+    view = { recs, rows: rowEls, groups: groupEls, groupIds, body, span, allBox, extra: extraCols, moreLabel: cfg.moreLabel ?? 'Details', bulkHost: h('div.bulk-host'), actions: sel => ({
       all: recs.length, onClear: () => { state.selected.clear(); refreshSelection(); },
-      onDuplicate: () => { ctx.store.duplicate(sel); toast(`Duplicated ${sel.length}.`, { undo: () => ctx.store.undo() }); },
-      onDelete: e => remove(sel, e.currentTarget), onReset: () => reset(sel),
+      onDelete: () => remove(sel), onReset: () => reset(sel),
       onStatus: s => { ctx.store.setStatus(sel, s); toast(`Set ${sel.length} to ${s}.`, { undo: () => ctx.store.undo() }); },
-      onLink: id => { ctx.store.transaction('Link to card', () => sel.forEach(x => ctx.store.update(x, { paidWith: id }))); toast(`Linked ${sel.length}.`, { undo: () => ctx.store.undo() }); },
+      onWillGet: () => willGet(sel), onUse: () => useEstimates(sel),
+      onMove: key => { ctx.store.transaction('Move to section', () => sel.forEach(x => cfg.moveTo.apply(ctx, x, key))); toast(`Moved ${sel.length}.`, { undo: () => ctx.store.undo() }); },
     }) };
     const multi = groups.size > 1; // R171: group headers when more than one type
     for (const [g, rows] of groups) {
       const folded = multi && isFolded(g);
+      groupIds.set(g, rows.filter(r => !r.auto).map(r => r.id));
       if (multi) {
+        const gBox = h('input', { type: 'checkbox', 'aria-label': `Select all in ${cfg.groupLabel?.(g) ?? g}`, title: 'Select this section' });
+        gBox.onchange = () => { for (const id of groupIds.get(g)) gBox.checked ? state.selected.add(id) : state.selected.delete(id); refreshSelection(); };
         const tr = h('tr.group', { 'data-group': g },
-          h('td', { colspan: span }, h('span.row-line.group-line', { style: { gap: '10px', flexWrap: 'nowrap' } },
+          h('td.check-cell', {}, gBox),
+          h('td', { colspan: span - 1 }, h('span.row-line.group-line', { style: { gap: '10px', flexWrap: 'nowrap' } },
             h('button.fold', { type: 'button', 'aria-expanded': String(!folded), 'data-focus': `fold:${g}`, onclick: () => setFold(g, !isFolded(g)) },
               icon(folded ? 'right' : 'down'), `${cfg.groupLabel?.(g) ?? g} (${rows.length})`, cfg.subtotal ? h('span.muted', {}, ' · ', cfg.subtotal(ctx, rows, m)) : null),
             // B6.6: add a line right in this section.
@@ -795,21 +814,28 @@ export function recordList(ctx, cfg) {
             h('td.col-status', {}, h('span.tag.plain', {}, `From ${r.auto.from}`)), h('td.col-actions')));
           continue;
         }
-        const box = h('input', { type: 'checkbox', 'aria-label': `Select ${r.name || r.type || cfg.thing.one}`, checked: state.selected.has(r.id), 'data-focus': 'sel' });
-        box.onchange = () => { box.checked ? state.selected.add(r.id) : state.selected.delete(r.id); refreshSelection(); };
+        const box = h('input', { type: 'checkbox', 'aria-label': `Select ${r.name || r.type || cfg.thing.one}`, checked: state.selected.has(r.id), 'data-focus': 'sel', title: 'Select (shift-click for a range)' });
+        const idx = order.push(r.id) - 1;
+        box.onclick = e => { // batch 8 (B8): shift-click selects the range from the row last clicked
+          if (e.shiftKey && state.last != null && state.last !== idx) { const [a, b] = [Math.min(state.last, idx), Math.max(state.last, idx)]; for (let i = a; i <= b; i++) box.checked ? state.selected.add(order[i]) : state.selected.delete(order[i]); }
+          box.checked ? state.selected.add(r.id) : state.selected.delete(r.id);
+          state.last = idx; refreshSelection();
+        };
         const open = state.open === r.id;
         const unfinished = !(cfg.coreFields ? (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields) : ['amount']).every(f => handled(r, f));
         if (state.onlyLeft && !unfinished) continue; // item 3: Show only what's left
         const tr = h(`tr.row${state.selected.has(r.id) ? '.selected' : ''}${unfinished ? '.left' : ''}`, { 'data-id': r.id, 'data-group': g, hidden: folded },
           h('td.check-cell', {}, box),
           cols.map((c, i) => h(`td.col-${slug(c.label)}${i === 0 ? '.col-first' : ''}${c.num ? '.num' : ''}`, {}, c.render(ctx, r, m, p => update(r, p), { remove: e => remove([r.id], e.currentTarget) }))),
-          h('td.col-status', {}, statusPicker(r.status, s => update(r, { status: s }), { hasValue: hasCore(r), lock: ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? { on: r.values.locked === true, set: v => update(r, { locked: v }) } : null })),
+          h('td.col-status', {}, h('span.row-line.status-cell', { style: { gap: '6px', flexWrap: 'nowrap' } }, statusPicker(r.status, s => update(r, { status: s }), { hasValue: hasCore(r), lock: ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? { on: r.values.locked === true, set: v => update(r, { locked: v }) } : null }),
+            unconfirmed(r) && !isBlankRow(r, coreOf(r)) ? h('button.btn.small.will-get', { type: 'button', title: 'Marks it Getting it and puts "Find: this" on the homework list, with where to look', 'aria-label': `Will get ${r.name || r.type || cfg.thing.one}`, onclick: () => willGet([r.id]) }, icon('clock'), h('span.will-get-text', {}, 'Will get it')) : null)), // batch 8 (B5)
           h('td.col-actions', {}, h('span.actions', {},
             h('button.caret', { type: 'button', 'aria-expanded': String(open), 'data-focus': 'more', onclick: () => setOpen(r.id) },
               open ? 'Less' : view.moreLabel, icon(open ? 'down' : 'right')),
             rowMenuButton(r))));
         // Enter in a row = new row below (R168).
         tr.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') { e.target.dispatchEvent(new Event('change')); addNew(r.type, null, r.id); } });
+        tr.addEventListener('focusout', () => setTimeout(() => { if (!tr.isConnected || tr.contains(document.activeElement)) return; dropIfBlank(r.id); }, 120)); // batch 8 (B9): left empty, it goes
         rowEls.set(r.id, tr);
         body.append(tr);
         const note = cfg.rowNote?.(ctx, r, m); // e.g. "Looks like the same payment: keep one"
@@ -819,15 +845,19 @@ export function recordList(ctx, cfg) {
     }
     if (state.open && !rowEls.has(state.open)) state.open = null;
     const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td.check-cell', {}), cfg.totals(ctx, recs, m, cols))) : null;
-    const coreOf = r => (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields || ['amount']);
-    const leftRows = recs.filter(r => !coreOf(r).every(f => handled(r, f)));
-    const done = recs.length - leftRows.length;
+    const counted = recs.filter(r => !isBlankRow(r, coreOf(r))); // batch 8 (B9): a blank row counts nowhere
+    const leftRows = counted.filter(r => !coreOf(r).every(f => handled(r, f)));
+    const done = counted.length - leftRows.length;
+    // Batch 8 (B5, B6): one button for the whole section: every unconfirmed row to Getting it; every starter estimate kept.
+    const toGet = counted.filter(unconfirmed), toUse = counted.filter(r => r.status === 'Not sure');
+    const bulk = [toUse.length ? h('button.btn.small', { type: 'button', title: 'Keep every starter estimate as the number', onclick: () => useEstimates(toUse.map(r => r.id)) }, icon('check'), `Use all starter estimates (${toUse.length})`) : null,
+      toGet.length ? h('button.btn.small', { type: 'button', title: 'Every unconfirmed row goes on the homework list as Find: …, marked Getting it', onclick: () => willGet(toGet.map(r => r.id)) }, icon('clock'), `Will get all of these (${toGet.length})`) : null];
     const leftItems = leftRows.map(r => { const f = coreOf(r).find(x => !handled(r, x)); return { id: r.id, name: r.name || r.type || cfg.thing.one, word: r.status && r.status !== 'Know it' ? r.status : 'missing', field: f, focus: `${r.id}:${f}`, route: location.hash }; });
     const onlyLeft = recs.length > 8 && leftRows.length ? h('label.check-inline.only-left', {}, (() => { const b = h('input', { type: 'checkbox', checked: state.onlyLeft ? 'checked' : null }); b.onchange = () => { state.onlyLeft = b.checked; ctx.refresh(); }; return b; })(), ` Show only what's left (${leftRows.length})`) : null;
     const out = h(`div.section.area-${cfg.area}`, {}, head,
       cfg.strip ? (focus ? moreBlock(`focus:strip:${listKey}`, () => cfg.strip(ctx, ctx.metrics()), { label: 'Totals and chart' }) : cfg.strip(ctx, m)) : null, // item 19
-      h('div.list', {}, view.bulkHost, h('div.list-scroll', { 'data-scroll-key': listKey }, h('table.rows', {}, thead, body, tfoot)),
-        sectionFooter(ctx, { add: addBtn, total: cfg.footerTotal?.(ctx, recs, m), count: recs.length, done, of: recs.length, left: leftItems, onlyLeft }),
+      h('div.list', {}, h('div.list-scroll', { 'data-scroll-key': listKey }, h('table.rows', {}, thead, body, tfoot)), view.bulkHost,
+        sectionFooter(ctx, { add: addBtn, total: cfg.footerTotal?.(ctx, recs, m), count: counted.length, done, of: counted.length, left: leftItems, onlyLeft, bulk }),
         keyboardHint()));
     refreshSelection();
     return out;
@@ -844,7 +874,7 @@ function moreLayers(ctx, r, cfg, update, extra = [], m = null) {
     cfg.paidWith ? h('div.layer', {}, paidWith(ctx, r, id => update({ paidWith: id }))) : null,
     cfg.secondary ? h('div.layer', {}, cfg.secondary(ctx, r, update)) : null,
     cfg.tertiary ? h('div.layer', {}, cfg.tertiary(ctx, r, update)) : null,
-    h('div.layer', {}, h('span.label', {}, 'Where it came from: '), h('span.tag.plain', {}, SOURCE_WORDS[r.source] ?? r.source), checkLayer(r, update)));
+    cfg.fixed ? null : h('div.layer', {}, h('span.label', {}, 'Where it came from: '), h('span.tag.plain', {}, SOURCE_WORDS[r.source] ?? r.source), checkLayer(r, update))); // a category row carries no source line
 }
 // The next check date (F244): when this number is due to be looked at again, and a date to set instead.
 function checkLayer(r, update) {
@@ -858,17 +888,19 @@ function checkLayer(r, update) {
     h('span.muted.small', {}, r.values.checkOn ? 'The date you set' : 'Set a date to check it sooner or later'));
 }
 
-function bulkBar(ctx, sel, a) {
-  const cards = ctx.store.find(r => r.kind === 'debt' && r.type === 'Credit card');
+// Batch 8 (B8): the sticky bottom bar: N selected · Delete · Use estimates · Will get it · Move to section · Set status · Clear.
+function bulkBar(ctx, sel, a, cfg = {}) {
   const statusBtn = h('button.btn.small', { type: 'button' }, icon('tag'), 'Set status', icon('down'));
   statusBtn.onclick = () => popover(statusBtn, statusMenu(s => s && a.onStatus(s)));
-  const linkBtn = h('button.btn.small', { type: 'button', disabled: !cards.length, title: cards.length ? null : 'Add a credit card first' }, icon('link'), 'Link to card', icon('down'));
-  linkBtn.onclick = () => popover(linkBtn, cards.length <= 4
-    ? h('div.stack', {}, h('h3', {}, 'Paid with'), cards.map(c => h('button.btn', { type: 'button', onclick: () => { closePop(); a.onLink(c.id); } }, c.name || 'Credit card')))
-    : cardSearch(cards, null, id => { closePop(); a.onLink(id); }));
-  return h('div.bulk-bar', {}, h('span.count', {}, `${sel.length} selected`),
-    statusBtn, linkBtn, iconButton('copy', 'Duplicate', a.onDuplicate), iconButton('reset', 'Reset', a.onReset),
-    h('span', { style: { flex: 1 } }), iconButton('trash', 'Delete', a.onDelete), iconButton('x', 'Clear selection', a.onClear)); // Reset never sits next to Delete
+  const moveBtn = cfg.moveTo ? h('button.btn.small', { type: 'button' }, icon('right'), cfg.moveTo.label ?? 'Move to section', icon('down')) : null;
+  if (moveBtn) moveBtn.onclick = () => popover(moveBtn, h('div.stack', { style: { gap: '6px' } }, h('h3', {}, cfg.moveTo.label ?? 'Move to'), h('div.row-line', { style: { gap: '6px', flexWrap: 'wrap' } },
+    cfg.moveTo.options(ctx).map(([k, label]) => h('button.btn.small', { type: 'button', onclick: () => { closePop(); a.onMove(k); } }, label)))), { width: 360 });
+  return h('div.bulk-bar', { role: 'toolbar', 'aria-label': 'Selected rows' }, h('span.count', {}, `${sel.length} selected`),
+    cfg.fixed ? null : h('button.btn.small', { type: 'button', onclick: a.onDelete }, icon('trash'), 'Delete'),
+    h('button.btn.small', { type: 'button', title: 'Keep the starter estimates as the numbers', onclick: a.onUse }, icon('check'), 'Use estimates'),
+    h('button.btn.small', { type: 'button', title: 'Mark them Getting it and put each on the homework list', onclick: a.onWillGet }, icon('clock'), 'Will get it'),
+    moveBtn, statusBtn,
+    h('span', { style: { flex: 1 } }), h('button.btn.small', { type: 'button', onclick: a.onClear }, icon('x'), 'Clear'));
 }
 
 // ---------- Visuals panel (ECharts, area hues) ----------

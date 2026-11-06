@@ -10,6 +10,7 @@ import { parseRoute } from './nav.js';
 import { LATER, fieldLabel, whereToFind } from './homework.js';
 import { rowLabel } from './institutions.js';
 import { asksTaxType } from './math/portfolio.js';
+import { categoryTotals, isCategoryRecord, CATEGORIES } from './math/spending.js';
 
 // A field is done when its status counts as done; the institution is done once the row points at an Institutions row.
 const isDone = (r, f) => (f === 'institution' && !!r.values?.institutionId) || countsAsDone(statusOf(r, f));
@@ -26,10 +27,43 @@ const FULL = {
 // The word for a field: the same label the screen and the Homework list use (item 3: one name everywhere).
 const WORDS = { pretaxBalance: 'balances', limit: 'credit limit', dueDay: 'due day', federal: 'federal or private', stress: 'stress', payment: 'payment', financed: 'paid off or financed', have: 'have it?' };
 export const wordFor = f => WORDS[f] ?? fieldLabel(f);
+// Batch 7 (B9): a row with no name, no status and nothing in its core fields is blank: it counts nowhere and the
+// list drops it once it is left empty.
+export const isBlankRow = (r, core = ['amount']) => !r.name && !r.status && !r.values?.institutionId && core.every(f => { const v = f in r && f !== 'values' ? r[f] : r.values?.[f]; return v === null || v === undefined || v === ''; });
+// Batch 7 (A3): the Budget counts categories, not lines. A category is done with a typed amount, or lines that add
+// up (an existing file keeps its lines); parked when its row says Will get it; the three FAT categories always count,
+// the rest once they hold something. Items point at the category row's amount box (cat:<key>:amount).
+export function budgetCompletion(ctx) {
+  const recs = ctx.visible(r => r.kind === 'bill' || isCategoryRecord(r));
+  const cats = categoryTotals(recs.filter(isCategoryRecord), recs.filter(r => r.kind === 'bill' && !r.values.irregular && !isBlankRow(r)), l => l.amount ?? 0).filter(c => c.counts);
+  const c = { done: 0, of: 0, parked: 0, missing: [], items: [] };
+  for (const x of cats) {
+    c.of += 1;
+    const parked = x.rec?.status === LATER && x.amount == null;
+    if (x.amount != null) c.done += 1;
+    else if (parked) c.parked += 1;
+    else { c.missing.push(`${x.name}: amount`); c.items.push({ id: x.rec?.id ?? `cat:${x.key}`, name: `${x.name}: amount`, field: 'amount', word: x.rec?.status ?? 'missing', level: 'Core', focus: `cat:${x.key}:amount`, where: 'Your bank or card app: last month, by category' }); }
+  }
+  // Answer 180: a fixed line with no due day sits on the 1st with a ? badge; the day is asked for, as full detail, never a block.
+  const f = { done: c.done, of: c.of, parked: c.parked, missing: [], items: [] };
+  for (const r of recs.filter(r => r.kind === 'bill' && !r.values.irregular && r.values.amountType === 'Fixed' && r.amount != null && r.status !== 'Not for me' && !r.values.dueDay)) {
+    const name = r.name || r.values.category || 'Line';
+    f.of += 1; f.missing.push(`Set due day for ${name}`);
+    f.items.push({ id: r.id, name: `Set due day for ${name}`, field: 'dueDay', word: 'no day', level: 'Full detail', focus: `${r.id}:dueDay`, where: 'The bill or the bank statement: the day it leaves' });
+  }
+  return { core: c, full: f };
+}
+// Batch 8 (C14): how many rows a screen has at all, so "all set" is never said about an empty screen.
+export function rowsOn(ctx, hash) {
+  const key = routeKey(hash), def = MISSING[key];
+  if (!def) return null;
+  if (def === 'budget') return budgetCompletion(ctx).core.of;
+  return ctx.visible(def[0]).length;
+}
 export function listCompletion(ctx, pred, core) {
   const g = ctx.gates();
   const doc = ctx.store.doc;
-  const recs = ctx.visible(pred);
+  const recs = ctx.visible(pred).filter(r => !isBlankRow(r, typeof core === 'function' ? core(r) : core));
   const c = { done: 0, of: 0, parked: 0 }, f = { done: 0, of: 0, parked: 0 };
   c.missing = []; f.missing = []; c.items = []; f.items = []; // items: one per field, for arrive-and-highlight (batch 6)
   // focus: the box's handle on the screen. The institution's box is the row's Institutions picker (institutionId).
@@ -57,14 +91,14 @@ export const MISSING = {
   'net-worth/credit-cards': [r => r.kind === 'debt' && r.type === 'Credit card', r => (paidInFull(r) ? ['balance'] : ['balance', 'apr'])],
   'net-worth/assets': [r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance']],
   'net-worth/protection': [r => r.kind === 'coverage', ['have']],
-  'cash-flow/budget': [r => r.kind === 'bill', ['amount']],
+  'cash-flow/budget': 'budget', // batch 7 (A): the categories
 };
 export const routeKey = hash => { const { tab, sub } = parseRoute(hash); return `${tab.id}/${sub.id}`; };
 // The fields that need work on a screen, core first: [{ id, name, field, word, level, focus, where, route }].
 export function missingFor(ctx, hash) {
   const key = routeKey(hash), def = MISSING[key];
   if (!def) return [];
-  const c = listCompletion(ctx, def[0], def[1]);
+  const c = def === 'budget' ? budgetCompletion(ctx) : listCompletion(ctx, def[0], def[1]);
   const seen = new Set();
   return [...(c.core.items || []), ...(c.full.items || [])].filter(it => { const k = `${it.id}:${it.field}`; if (seen.has(k)) return false; seen.add(k); return true; }).map(it => ({ ...it, route: `#/${key}` }));
 }

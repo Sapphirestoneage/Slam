@@ -128,7 +128,8 @@ const RULE = {
     const v = f.taxes.lastYear;
     if (v == null) return null;
     const changed = f.taxes.withholdingChanged === true;
-    if (Math.abs(v) <= T.taxes.closeEnough) return rate('Strong', `Last year came within ${money(T.taxes.closeEnough)}: ${v >= 0 ? `a ${money(v)} refund` : `${money(-v)} owed`}.`);
+    const band = f.x.takeHome != null ? T.taxes.closeEnoughShare * f.x.takeHome * 12 : T.taxes.closeEnough; // answer 179: the band scales with income
+    if (Math.abs(v) <= band) return rate('Strong', `Last year came within ${money(band)} (${f.x.takeHome != null ? `about ${pct(T.taxes.closeEnoughShare)} of a year's take-home` : 'the usual band'}): ${v >= 0 ? `a ${money(v)} refund` : `${money(-v)} owed`}.`);
     if (changed) return rate('OK', `Last year ${v >= 0 ? `a ${money(v)} refund` : `${money(-v)} owed`}, but withholding changed since.`);
     return rate('Hole', `Last year ${v >= 0 ? `a ${money(v)} refund (an interest-free loan to the IRS)` : `${money(-v)} owed`}, and withholding has not changed.`);
   },

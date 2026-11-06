@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Every screen's first state, word for word from the Words and states tab. Later phases fill them in.
 import { h, icon } from './ui/dom.js';
+import { budgetCompletion } from './completion.js';
 import { paycheckSection } from './ui/paycheck-ui.js';
 import * as S from './ui/staples.js';
 import { sheetButtons } from './ui/sheet-ui.js';
@@ -61,9 +62,14 @@ function completion(app, c) {
     x.parked ? h('span.muted.small', { title: 'On the Homework list: handled for this session, not yet a number' }, `${x.parked} on homework`) : null); // batch 7, item 4: deferring shows as progress, and says so
   if (!c.core.of && !c.full.of) return null;
   // What is still missing, in words, behind a caret so the page stays calm.
-  const left = [...(c.core.missing || []).map(x => ['Core', x]), ...(c.full.missing || []).filter(x => !(c.core.missing || []).includes(x)).map(x => ['Full detail', x])];
+  // Batch 8 (C12): every line is a link to its exact field (arrive highlights it and the toast says where to look); one heading per level.
+  const coreItems = items(c.core), fullItems = items(c.full).filter(i => !coreItems.some(x => x.id === i.id && x.field === i.field));
+  const left = coreItems.length + fullItems.length;
+  const link = it => h('li', {}, h('a.missing-link', { href: route, onclick: e => { e.preventDefault(); arrive(app, route, { only: it }); } }, it.name), it.where ? h('span.muted.small', {}, ` · look on ${it.where}`) : null);
   return h('div.completion-wrap', {}, h('div.completion', {}, bar('Core', c.core), bar('Full detail', c.full)),
-    left.length ? S.moreBlock(`missing:${location.hash}`, () => h('ul.missing', {}, left.map(([k, x]) => { const it = [...items(c.core), ...items(c.full)].find(i => x.startsWith(i.name.split(':')[0])); return h('li', {}, h('span.tag.plain', {}, k), ' ', x, ' ', S.button('Fix it', { size: 'small', iconName: 'right', onClick: () => arrive(app, route, { only: it ?? undefined }) })); })), { label: `What's missing (${left.length})` }) : null);
+    left ? S.moreBlock(`missing:${location.hash}`, () => h('div.missing-groups', {},
+      coreItems.length ? [h('h3.missing-head', {}, `Core (${coreItems.length})`), h('ul.missing', {}, coreItems.map(link))] : null,
+      fullItems.length ? [h('h3.missing-head', {}, `Full detail (${fullItems.length})`), h('ul.missing', {}, fullItems.map(link))] : null), { label: `What's missing (${left})` }) : null);
 }
 // R015: an area turned off on the Profile leaves a slim way back.
 const addArea = (app, ctx, k, label) => h('a.add-area', { href: '#', onclick: e => {
@@ -250,7 +256,7 @@ export function progressOf(ctx, tabId, subId) {
       return { done: rows.filter(r => S.handled(r, r.kind === 'asset' ? 'value' : 'balance')).length, of: rows.length };
     }
   }
-  if (tabId === 'cash-flow' && subId === 'budget') return core(['bill', 'spending'], ['amount']);
+  if (tabId === 'cash-flow' && subId === 'budget') { const b = budgetCompletion(ctx).core; return { done: b.done, of: b.of }; } // batch 7 (A3): categories, not lines
   return null;
 }
 export { keyNumbers, icon };

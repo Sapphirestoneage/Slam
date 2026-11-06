@@ -5,7 +5,7 @@
 // Pure: reads a household, never the DOM.
 import { statusOf } from '../records.js';
 import { gatesOf, visible } from '../gates.js';
-import { DRAFTT, drafttName } from './spending.js';
+import { DRAFTT, drafttName, isCategoryRecord } from './spending.js';
 import { debtRoute } from '../nav.js';
 import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS } from '../registry/program.js';
 import { fiRangeOf } from './fi.js';
@@ -23,7 +23,7 @@ export function levelOf(rec, field, { months = {} } = {}) {
   if (rec.values?.locked === true) return LEVELS.Actual;
   if (CONFIRMED_SOURCES.has(rec.source)) return LEVELS.Actual;
   if (rec.kind === 'bill' && Object.values(months).some(m => m?.lines?.[rec.id]?.actual != null)) return LEVELS.Actual;
-  if (rec.kind === 'spending') return LEVELS.Gut; // the gut number is a gut number, however sure
+  if (rec.kind === 'spending' && rec.type === 'All in') return LEVELS.Gut; // the gut number is a gut number, however sure (a category row counts like any typed number)
   if (['Not sure', 'Will email', 'Not now'].includes(status)) return LEVELS.Gut;
   if (status === 'Roughly') return LEVELS.Rough;
   if (status === 'Computed') return LEVELS.Estimate; // worked out from a typed number
@@ -71,11 +71,20 @@ export function pictureOf(doc, ref, { now = new Date() } = {}) {
   const allIn = live.find(r => r.kind === 'spending' && r.type === 'All in');
   const lines = live.filter(r => r.kind === 'bill' && r.status !== 'Not for me');
   const useLines = !allIn || ((doc.spending?.source ?? 'gut') === 'lines' && lines.length > 0);
-  // The lines by DRAFTT letter (the big categories), each the average of its lines' levels.
+  // Batch 7 (A): a category row with an amount counts on its own (its level is the row's); otherwise the category is
+  // the average of its lines' levels. Categories, not lines, are what the Picture counts.
   const categories = [];
   const byLetter = new Map();
+  const catRecs = live.filter(isCategoryRecord);
   for (const l of lines) { const k = DRAFTT.includes(l.values.draftt) ? l.values.draftt : 'Other'; byLetter.set(k, [...(byLetter.get(k) || []), l]); }
   for (const k of [...DRAFTT, 'Other']) {
+    const rec = catRecs.find(r => r.type === k);
+    if (rec && rec.amount != null && rec.status !== 'Not for me') {
+      const level = levelOf(rec, 'amount', { months });
+      categories.push({ id: `draftt:${k}`, recId: rec.id, field: 'amount', label: `${drafttName(k)} (category)`, group: 'spending', kind: 'category', weight: k === 'Other' ? WEIGHTS.otherLines : WEIGHTS.draftt,
+        level, route: '#/cash-flow/budget', updatedAt: rec.updatedAt, count: { below: level < LEVELS.Estimate ? 1 : 0, of: 1 }, lines: [] });
+      continue;
+    }
     const lv = (byLetter.get(k) || []).map(l => ({ l, level: levelOf(l, 'amount', { months }) })).filter(x => x.level !== null);
     if (!lv.length) continue;
     const level = Math.round(lv.reduce((s, x) => s + x.level, 0) / lv.length);

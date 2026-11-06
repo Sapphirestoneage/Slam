@@ -8,7 +8,7 @@
 // opens the row's Details when the box is inside it and outlines the box, not the row.
 import { h, icon } from './dom.js';
 import * as S from './staples.js';
-import { missingFor, routeKey, MISSING } from '../completion.js';
+import { missingFor, routeKey, MISSING, rowsOn } from '../completion.js';
 export { missingFor, routeKey, MISSING };
 
 let toastEl = null, state = null;
@@ -34,7 +34,7 @@ function recheck() {
   const was = state.list[state.i];
   const now = missingFor(state.app.ctx, state.route);
   const keep = state.only ? now.filter(it => it.id === state.only.id && it.field === state.only.field) : now;
-  if (!keep.length) { closeToast(); S.toast('All set on this screen.'); return; }
+  if (!keep.length) { closeToast(); S.toast(rowsOn(state.app.ctx, state.route) === 0 ? 'Nothing on this screen yet: add a row to start.' : 'All set on this screen.'); return; } // batch 8 (C14): empty is not all set
   if (keep.length === state.list.length && keep.every((it, i) => it.id === state.list[i].id && it.field === state.list[i].field)) return;
   state.list = keep;
   const same = keep.findIndex(it => it.id === was?.id && it.field === was?.field);

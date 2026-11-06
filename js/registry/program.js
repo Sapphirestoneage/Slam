@@ -92,7 +92,7 @@ export const REVIEW = {
 // page or field, a homework item, a parking-lot question or a Scorecard hole. Suggested for today: carried-over items,
 // homework the client says is done, open parking-lot questions, the top hole, and numbers older than staleDays.
 // During a session it is a slim docked bar on every tab, collapsed by default (coach only).
-export const AGENDA = { staleDays: 60, suggestionKinds: ['carried', 'homework', 'parking', 'hole', 'stale'], collapsed: true };
+export const AGENDA = { staleDays: 60, suggestionKinds: ['carried', 'homework', 'parking', 'hole', 'stale', 'category'], collapsed: true };
 // Homework statuses: the coach sets Client says done for now; a client-side I did this can set it later (by: 'client').
 export const HOMEWORK_STATUSES = ['To do', 'Client says done', 'Confirmed'];
 // The monthly money date, a cadence picked on Home in the Game plan session (S12).

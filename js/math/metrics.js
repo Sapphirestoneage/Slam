@@ -7,7 +7,7 @@ import { monthlyFrom, incomeRow, defaultFilingStatus } from './income.js';
 import { gatesOf, visible } from '../gates.js';
 import { inView, modeOf, MODES, ownerOf, forPerson } from '../registry/couples.js';
 import { bigEMultiplierOf } from '../registry/assumptions.js';
-import { myShare, withHome, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor } from './spending.js';
+import { myShare, withHome, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor, categoryTotals, isCategoryRecord } from './spending.js';
 import { cardMinimum, payoffMonths, totalInterest, payoffPlan } from './debt.js';
 import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
 import { link401k, matchFromTiers } from './portfolio.js';
@@ -113,8 +113,12 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   // Answer 125 (batch 2): a line tagged Retirement is investing, not spending. It leaves spending and the FI target and
   // joins what goes into investments each month (and so the savings rate, through a bigger surplus).
   const mine = l => myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0;
-  const lineTotal = typedLines.length ? lines.filter(l => l.draftt !== 'Retirement').reduce((s, l) => s + mine(l), 0) : null;
-  const retirementLines = lines.filter(l => l.draftt === 'Retirement').reduce((s, l) => s + mine(l), 0);
+  // Batch 7 (A): the categories carry the spending. A category's amount is what was typed on its row, or its lines'
+  // total when that is higher or nothing was typed; the line total is the categories added up (Retirement apart).
+  const categories = categoryTotals(live.filter(isCategoryRecord), lines, mine);
+  const anyTyped = typedLines.length > 0 || categories.some(c => c.typed != null);
+  const lineTotal = anyTyped ? categories.filter(c => c.key !== 'Retirement').reduce((s, c) => s + (c.amount ?? 0), 0) : null;
+  const retirementLines = categories.find(c => c.key === 'Retirement')?.amount ?? 0;
   // Spending for the math: the Gut number until the lines are chosen on Budget (R131: the gut is a test kept to compare).
   const useLines = !allIn || (doc.spending?.source ?? 'gut') === 'lines' && lineTotal !== null;
   const spending = useLines ? lineTotal : read(allIn, 'amount').v;
@@ -147,7 +151,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
     autoLines, dupOf, askOf, typedLines, premiums, payFrequency, health: health ? { id: health.id, perPaycheck: healthPerPay, fromPay: !!healthFromPay, jobId: healthJob?.id ?? null } : null,
     paycheckPremiums: premiums.filter(p => p.paidFrom === 'Paycheck').reduce((s, p) => s + (p.monthly ?? 0), 0),
     afterTaxSaving: afterTaxContributions(live.filter(r => r.kind === 'account'), { payFrequency, payrollHsa: gates.hsa && income.some(i => (i.r.values.hsaFsa ?? 0) > 0) }).total,
-    spendingSource: useLines ? 'lines' : 'gut', lineTotal, retirementLines: useLines ? retirementLines : 0,
+    spendingSource: useLines ? 'lines' : 'gut', lineTotal, retirementLines: useLines ? retirementLines : 0, categories,
     guessLines: lines.filter(l => l.status === 'Not sure' && l.preset).length,
     guessTotal: lines.filter(l => l.status === 'Not sure' && l.preset).reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0), gutTotal: allIn ? read(allIn, 'amount').v : null,
     age: ageOf(doc.profile, now),

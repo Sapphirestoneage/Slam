@@ -17,6 +17,7 @@ import { personLabels } from '../registry/couples.js';
 import { SESSIONS, MONEY_DATES, levelWord } from '../registry/program.js';
 import { fiWordsOf } from '../math/picture.js';
 import { ladderOf } from '../math/ladder.js';
+import { isCategoryRecord } from '../math/spending.js';
 import { monthName } from '../month.js';
 import { ratingTag } from './scorecard-ui.js';
 import { agendaPanel, follow } from './agenda-ui.js';
@@ -245,7 +246,7 @@ function joyChart(Hs, names, couple) {
 // ---------- The ladder (M75): the next step as a big bar, the next marker as a small line, the full ladder closed ----------
 function ladderCard(app, ctx) {
   const doc = ctx.store.doc;
-  if (!doc.records.length) return null; // nothing typed yet: the ladder has nothing to say
+  if (!doc.records.some(r => !isCategoryRecord(r))) return null; // nothing typed yet (the Budget's category rows do not count): the ladder has nothing to say
   const L = ladderOf(doc, ctx.ref, { now: ctx.now(), flags: app.flags });
   const when = r => (r.date ? `about ${monthName(r.date, 'short')}` : 'no date yet');
   const wins = [...L.steps.filter(s => s.done), ...L.markers.filter(k => k.reached)];

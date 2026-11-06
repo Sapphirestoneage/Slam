@@ -9,7 +9,8 @@ import { categoriesOf, categoryJoyOf, rateCategoryJoy } from '../capture.js';
 import { maaserOf, KOSHER_NOTE } from '../community.js';
 import { drafttName } from '../math/spending.js';
 import * as S from './staples.js';
-import { spendingList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.js';
+import { spendingList, categoryList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.js';
+import { ensureCategories } from '../presets.js';
 import { ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
   closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS, planDiffs, closeStreak, collapseSpread, dayTotals } from '../month.js';
 import { gutAccuracy, DRAFTT } from '../math/spending.js';
@@ -37,6 +38,8 @@ const monthStepper = (ym, onChange) => h('span.row-line.month-step', { style: { 
 // ---------- Budget ----------
 export function budgetScreen(app, ctx) {
   UI.ym ??= thisYm(ctx);
+  UI.budgetView ??= 'categories'; // batch 8 (A1): one row per category by default; All lines is the old table
+  if (UI.budgetView === 'categories') ensureCategories(ctx.store);
   const doc = ctx.store.doc;
   const m = ctx.metrics();
   const redraw = () => app.render();
@@ -45,11 +48,12 @@ export function budgetScreen(app, ctx) {
     h('div.row-line', { style: { gap: '12px' } },
       h('span.label', {}, 'Pass'), S.toggle(['Plan', 'Actual'], UI.pass === 'Actual' ? 'Actual' : 'Plan', v => { UI.pass = v; redraw(); }, { label: 'Which pass you are filling' }),
       monthStepper(UI.ym, v => { UI.ym = v; redraw(); }),
+      UI.pass === 'Plan' ? S.toggle([['categories', 'By category'], ['lines', 'All lines']], UI.budgetView, v => { UI.budgetView = v; redraw(); }, { label: 'Budget view' }) : null,
       h('span.spacer', { style: { flex: 1 } })),
     h('p.muted.pass-what', {}, WHAT[UI.pass] ?? WHAT.Plan),
     S.moreBlock('budget:settings', () => h('div.row-line', { style: { gap: '20px', alignItems: 'flex-start' } },
-      S.labelled('Use for surplus and FI', S.toggle([['gut', 'Gut number'], ['lines', 'The lines']], m.inputs.spendingSource, v => ctx.store.setDoc('spending', { source: v }), { label: 'Spending used for the math' }),
-        { note: m.inputs.gutTotal === null ? 'No gut number yet, so the lines are used' : `Gut ${money(m.inputs.gutTotal)} · lines ${money(m.inputs.lineTotal ?? 0)}` }),
+      S.labelled('Use for surplus and FI', S.toggle([['gut', 'Gut number'], ['lines', 'The categories']], m.inputs.spendingSource, v => ctx.store.setDoc('spending', { source: v }), { label: 'Spending used for the math' }),
+        { note: m.inputs.gutTotal === null ? 'No gut number yet, so the categories are used' : `Gut ${money(m.inputs.gutTotal)} · categories ${money(m.inputs.lineTotal ?? 0)}` }),
       S.labelled('Group by', S.toggle(['DRAFTT', 'Category', ['Who', 'Who covers it']], UI.groupBy, v => { UI.groupBy = v; redraw(); }, { label: 'Group by' }), { note: 'DRAFTT letters, plain categories, or who pays' }),
       S.labelled('Basis', S.toggle([['accrual', 'Accrual'], ['cash', 'Cash']], doc.spending.basis || 'accrual', v => ctx.store.setDoc('spending', { basis: v }), { label: 'Cash or accrual' }),
         { note: 'Accrual spreads yearly and prepaid costs across the months' }),
@@ -63,7 +67,8 @@ export function budgetScreen(app, ctx) {
   const shownPlanCol = planCol();
   ctx.onRefresh(() => { if (UI.pass === 'Plan' && planCol() !== shownPlanCol) S.keepPlace(() => app.render()); });
   const body = [UI.pass === 'Plan' ? S.live(ctx, () => gutBox(ctx, monthView(doc, ctx.ref, UI.ym, { now: ctx.now() }))) : null,
-    h('div.visuals', {}, S.recordList(ctx, spendingList(ctx.ref, { pass: UI.pass, ym: UI.ym, groupBy: UI.groupBy, paidWithColumn: cardsMost, planColumn: shownPlanCol })),
+    h('div.visuals', {}, UI.pass === 'Plan' && UI.budgetView === 'categories' ? S.recordList(ctx, categoryList(ctx.ref, { pass: UI.pass, ym: UI.ym }))
+      : S.recordList(ctx, spendingList(ctx.ref, { pass: UI.pass, ym: UI.ym, groupBy: UI.groupBy, paidWithColumn: cardsMost, planColumn: shownPlanCol })),
       S.visualsPanel(ctx, { charts: budgetCharts, area: 'needs' })),
     UI.pass === 'Plan' ? S.moreBlock('budget:fast-track', () => fastTrackTotals(ctx), { label: 'Fast Track totals (by area)' }) : null];
   // The strip follows the lines as they change (the lists keep their own state, so the screen is not rebuilt).

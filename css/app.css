@@ -285,7 +285,6 @@ table.rows.mini th, table.rows.mini td { padding: 4px 6px; white-space: nowrap; 
 @media print { .report-this { display: none; } }
 
 /* Fix pass 3: rows fit. Checkboxes only in Select mode; one "..." menu per row. */
-.list-wrap:not(.selecting) .check-cell { display: none; }
 .btn.select-btn[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
 .row-menu { display: flex; flex-direction: column; gap: 2px; }
 .row-menu hr { border: 0; border-top: 1px solid var(--border-row); margin: 4px 0; width: 100%; }

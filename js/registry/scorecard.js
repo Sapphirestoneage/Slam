@@ -32,7 +32,7 @@ export const THRESHOLDS = {
   debt: { dti: 0.36 }, // heavy debt (cards, payday, personal, or any APR at or over the heavy line, 8%, RULES.heavyApr) is a hole; payments over this share of gross is OK at best
   credit: { strong: 740, ok: 670, utilizationHole: 0.30, inquiriesOk: 2 }, // the score; cards used over this share of the limits is a hole (answer 132); more than inquiriesOk hard inquiries this year holds a strong score at OK (item 34)
   retirement: { strongPct: 0.15 },
-  taxes: { closeEnough: 1000 }, // item 35: last year's refund or amount owed within this is Strong // 401(k), HSA and after-tax retirement saving as a share of gross; match left on the table is a hole
+  taxes: { closeEnoughShare: 0.02, closeEnough: 1000 }, // answer 179: within about 2% of a year's take-home is Strong (the dollar floor stands in with no take-home) // 401(k), HSA and after-tax retirement saving as a share of gross; match left on the table is a hole
   investing: { strongPct: 0.15 }, // what goes into investments a month as a share of take-home
   goals: { count: 3 }, // three short-term and three long-term goals, each with an amount, a date and a tag (S4)
   mindset: { strong: 7, hole: 4 }, // Confidence (how confident vs afraid), 1 to 10, asked at the start of each session (answer 164)

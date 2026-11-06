@@ -19,7 +19,7 @@ test('B1.2, B1.3: parked fields land on the homework list with where to find the
   const hw = homeworkList(s.doc, s.records);
   assert.equal(hw.length, 2);
   assert.match(hw[0].where, /insurance card/i);
-  assert.match(hw[1].label, /Job: pay frequency/);
+  assert.match(hw[1].label, /Find: Job pay frequency/); // batch 8 (B5): Will get it reads Find: …
   assert.match(hw[1].where, /pay stub/i);
   assert.match(homeworkText('Sam', hw), /look on: Pay stub/);
 });

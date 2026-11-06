@@ -137,7 +137,7 @@ export function next3(doc, ref, { now = new Date(), limit = 3 } = {}) {
 export function agenda(doc, ref, { now = new Date() } = {}) {
   const m = metrics(doc, ref, { now });
   const g = gatesOf(doc.profile, doc.client);
-  const debtsDone = g.areas.debt === false || m.inputs.debts.every(d => d.balance != null && d.apr != null);
+  const debtsDone = g.areas.debt === false || (m.inputs.debts.length > 0 && m.inputs.debts.every(d => d.balance != null && d.apr != null)); // batch 8 (C14): no debts typed is not done
   const custom = doc.session?.agenda;
   const steps = [
     { id: 'why', name: 'Why now', route: '#/home/profile', done: !!doc.profile?.whyNow },

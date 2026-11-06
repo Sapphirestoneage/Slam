@@ -51,7 +51,7 @@ test('items 3 and 8: picking an institution from the list is the institution; tw
   s.setFieldStatus(inv[0].id, 'contribution', LATER); s.setFieldStatus(inv[1].id, 'contribution', LATER);
   const labels = homeworkList(s.doc, s.records).filter(x => x.field === 'contribution').map(x => x.label);
   assert.equal(labels.length, 2); assert.notEqual(labels[0], labels[1], 'Tikva · All investments and Tikva · HSA, not Tikva twice');
-  assert.ok(labels.every(l => l.startsWith('Tikva · ')));
+  assert.ok(labels.every(l => l.startsWith('Find: Tikva · ')), 'batch 8: homework reads Find: …');
   const item = missingFor(ctx, '#/net-worth/assets').find(i => i.field === 'balance') ?? { where: null };
   assert.equal(typeof item.where === 'string' || item.where === null, true, 'every item says where to look');
 });

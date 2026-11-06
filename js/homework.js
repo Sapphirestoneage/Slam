@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// "I'll find it later" (Brandon B1.2, B1.3): any field can be parked on the Homework list, each with a hint on
-// where to look. Record fields use the 'Will email' status (shown as "I'll find it later"); Profile answers live in
-// doc.profile.later. Pure: no DOM.
+// "Will get it" (Brandon B1.2, B1.3; renamed in batch 8, B5): any field can be parked on the Homework list as
+// "Find: …", each with a hint on where to look. Record fields use the 'Will email' status (shown as "Getting it");
+// Profile answers live in doc.profile.later. Pure: no DOM.
 import { BENEFITS } from './benefits.js';
 import { lifeAdminItems } from './lifeadmin.js';
 import { rowLabel } from './institutions.js';
@@ -68,12 +68,12 @@ export const fieldLabel = field => LABEL[field] ?? benefitOf(field)?.label ?? (f
 export function homeworkList(doc, records) {
   const out = [];
   const later = doc.profile?.later || {};
-  for (const key of Object.keys(later)) if (later[key]) out.push({ key: `profile:${key}`, r: null, profileKey: key, label: fieldLabel(key), where: whereToFind(key), due: doc.profile?.laterDue?.[key] ?? null });
+  for (const key of Object.keys(later)) if (later[key]) out.push({ key: `profile:${key}`, r: null, profileKey: key, label: `Find: ${fieldLabel(key)}`, where: whereToFind(key), due: doc.profile?.laterDue?.[key] ?? null });
   for (const x of lifeAdminItems(doc, records)) if (x.status === 'Not yet') out.push({ key: `life:${x.key}`, r: null, lifeKey: x.key, label: x.label, where: x.where, due: doc.profile?.laterDue?.[x.key] ?? null }); // M8.2
   for (const r of records) {
     const name = rowLabel(doc, r) || r.name || r.values?.category || r.type || 'Item'; // "Tikva · 401(k)" and "Tikva · HSA", not Tikva twice (item 8)
-    if (r.status === LATER) out.push({ key: `rec:${r.id}`, r, label: name, where: whereToFind(r.kind === 'account' || r.kind === 'debt' ? 'balance' : r.kind === 'asset' ? 'value' : 'amount', r.type), due: r.values?.homeworkDue ?? null });
-    for (const [f, st] of Object.entries(r.fieldStatus || {})) if (st === LATER && r.status !== LATER) out.push({ key: `rec:${r.id}:${f}`, r, field: f, label: `${name}: ${fieldLabel(f)}`, where: whereToFind(f, r.type), due: r.values?.homeworkDue ?? null });
+    if (r.status === LATER) out.push({ key: `rec:${r.id}`, r, label: `Find: ${name} ${r.kind === 'account' || r.kind === 'debt' ? 'balance' : r.kind === 'asset' ? 'value' : 'amount'}`, where: whereToFind(r.kind === 'account' || r.kind === 'debt' ? 'balance' : r.kind === 'asset' ? 'value' : 'amount', r.type), due: r.values?.homeworkDue ?? null });
+    for (const [f, st] of Object.entries(r.fieldStatus || {})) if (st === LATER && r.status !== LATER) out.push({ key: `rec:${r.id}:${f}`, r, field: f, label: `Find: ${name} ${fieldLabel(f)}`, where: whereToFind(f, r.type), due: r.values?.homeworkDue ?? null });
   }
   // Homework the coach made from an agenda item or a parking-lot note (doc.program.homework), with its status (To do, Client says done, Confirmed).
   for (const hw of doc.program?.homework || []) if (hw.status !== 'Confirmed') out.push({ key: `hw:${hw.id}`, r: null, program: hw, label: hw.label, where: null, due: hw.due ?? null, from: hw.from, person: hw.person ?? null });

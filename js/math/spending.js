@@ -233,3 +233,30 @@ export function housingPct({ housing, takeHome }) {
   const v = housing / takeHome;
   return ok('M2A', v, `Housing ${fmt.money(housing)} (your share of rent and utilities) divided by ${fmt.money(takeHome)} take-home = ${fmt.pct(v)}. The reference line is 35%.`, { unit: 'pct' });
 }
+
+// ---------- Batch 7 (A): the category-first Budget ----------
+// One row per category (the DRAFTT letters plus Other), each with a single amount and status that counts as done on
+// its own. Lines are optional: a category record (kind 'spending', type = the category key) holds what the client
+// typed; its lines (kind 'bill' with that DRAFTT letter) are a breakdown. The category's amount is the typed number;
+// when the lines add up to more, the category reads the line total ("updated from $X"); with no typed number it
+// reads the line total; what the lines have not reached shows as "$X not assigned yet". An existing file with lines
+// and no category records reads exactly as before (category = the sum of its lines).
+export const CATEGORIES = ['Accommodation', 'Food', 'Transportation', 'Debt', 'Therapy', 'Taxes', 'Retirement', 'Other'];
+export const CORE_CATEGORIES = ['Accommodation', 'Food', 'Transportation']; // always counted in progress; the rest once they hold something
+export const categoryName = k => DRAFTT_NAME[k] ?? k;
+export const categoryKeyOf = line => (DRAFTT.includes(line.draftt ?? line.values?.draftt) ? (line.draftt ?? line.values?.draftt) : 'Other');
+export const isCategoryRecord = r => r?.kind === 'spending' && r.type !== 'All in' && CATEGORIES.includes(r.type);
+// catRecs: the category records; lines: the Budget lines as the math sees them (my share, autos included; Not for me
+// left out); mine(line): a line's monthly amount. Returns one entry per category, in order.
+export function categoryTotals(catRecs = [], lines = [], mine = l => l.amount ?? 0) {
+  return CATEGORIES.map(key => {
+    const rec = catRecs.find(r => r.type === key) ?? null;
+    const mineLines = lines.filter(l => (l.status ?? null) !== 'Not for me' && categoryKeyOf(l) === key);
+    const linesSum = mineLines.length ? mineLines.reduce((s, l) => s + (mine(l) ?? 0), 0) : null;
+    const typed = rec && !isBlank(rec.amount) && rec.status !== 'Not for me' ? monthlyFrom(rec.amount, rec.per ?? 'month').value : null;
+    const from = typed == null ? (linesSum == null ? 'none' : 'lines') : linesSum != null && linesSum > typed + 0.5 ? 'updated' : 'typed';
+    const amount = from === 'none' ? null : from === 'lines' ? linesSum : from === 'updated' ? linesSum : typed;
+    const unassigned = from === 'typed' && typed != null ? Math.max(0, typed - (linesSum ?? 0)) : 0;
+    return { key, name: categoryName(key), rec, typed, linesSum, lines: mineLines, from, amount, unassigned, counts: CORE_CATEGORIES.includes(key) || amount != null || mineLines.length > 0 || !!rec?.status };
+  });
+}

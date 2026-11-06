@@ -214,8 +214,18 @@ export function onePagerScreen(app, ctx) {
   const hw = homeworkItems(ctx);
   const goals = ctx.visible(r => r.kind === 'milestone');
   const canPrint = (() => { try { return window.self === window.top; } catch { return false; } })(); // a framed page cannot print
+  // Batch 8 (C15): inside the artifact the page cannot print, so Export PDF hands a printable copy of the one-pager to
+  // the download door (open it, then print or save as PDF); on the site it prints as before.
+  const exportPdf = async () => {
+    if (canPrint) { window.print(); return; }
+    const page = document.querySelector('.one-pager');
+    const css = [...document.querySelectorAll('style')].map(s => s.textContent).join('\n');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${doc.client.name || 'Client'}: one-pager</title><style>${css}\nbody{padding:24px;background:#fff}.btn,.caret,.icon-btn,textarea{display:none}</style></head><body><div class="one-pager">${page?.innerHTML ?? ''}</div><script>window.onload=()=>setTimeout(()=>window.print(),300)</script></body></html>`;
+    const r = await saveFile(new Blob([html], { type: 'text/html' }), `${(doc.client.name || 'client').replace(/\s+/g, '-').toLowerCase()}-one-pager.html`);
+    S.toast(saveWords(r, 'The one-pager') ?? 'Saved: open the file and print or save it as a PDF.');
+  };
   return [head('One-pager', 'Session summary, ready to send',
-    canPrint ? S.button('Export PDF', { iconName: 'printer', onClick: () => window.print(), tip: 'Print, or save as PDF' }) : null,
+    S.button('Export PDF', { iconName: 'printer', onClick: exportPdf, tip: canPrint ? 'Print, or save as PDF' : 'Saves a printable copy; open it and save as PDF' }),
     sheetButtons(app),
     S.button('Send summary', { kind: 'primary', iconName: 'mail', onClick: e => sendSummary(ctx, e.currentTarget) })),
   h('div.card.one-pager', {},
