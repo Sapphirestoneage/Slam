@@ -254,6 +254,9 @@ function plansSection(ctx, T) {
 
 // ---------- The share view: one page for parents or a partner ----------
 function shareView(app, ctx, T) {
+  // Batch 28: a page for parents or a partner: private and coach-only rows fold into neutral words, the runway is the same.
+  ctx = S.shareCtx(ctx);
+  T = transitionOf(ctx.store.doc, ctx.ref, { now: ctx.now() });
   const p = T.plan, lad = T.ladder, hide = !!p.share?.hideCosts;
   const first = ctx.store.doc.profile.firstName || ctx.store.doc.client.name || 'The';
   const on = lad.rungs.filter(r => r.on);

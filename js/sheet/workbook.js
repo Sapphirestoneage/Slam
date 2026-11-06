@@ -52,12 +52,12 @@ export function formulaCols() {
   return [...MATH.flatMap(e => (e.cols || []).map(col => ({ ...col, entry: e.id }))), ...REPORTS.flatMap(r => (r.cols || []).map(col => ({ ...col, entry: r.tab })))];
 }
 
-export function buildWorkbook(doc, ref, { now = new Date(), coach = false, flags = [] } = {}) {
+export function buildWorkbook(doc, ref, { now = new Date(), coach = false, shared = false, flags = [] } = {}) {
   const c = sheetContext(doc, ref, { now, flags });
   c.coach = coach; // F6: the Captured tab keeps coach-only changes out of the client copy
   const names = new Map(); // name -> absolute reference
   const sheets = [];
-  const baseline = { version: FORMAT_VERSION, exportedAt: now.toISOString(), clientId: doc.id, client: null, coach, areas: {}, assumptions: {} };
+  const baseline = { version: FORMAT_VERSION, exportedAt: now.toISOString(), clientId: doc.id, client: null, coach, ...(shared ? { shared: true } : {}), areas: {}, assumptions: {} }; // batch 28: a copy without private rows is never brought back
   const define = (name, ref1) => {
     if (!nameOk(name)) throw new Error(`Not a usable range name: ${name}`);
     if (names.has(name)) throw new Error(`Range name used twice: ${name}`);
@@ -71,7 +71,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, flags
   const day = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   sheets.push({ name: 'Start here', kind: 'start', widths: [100], rows: [
     [{ v: `SLAM: the books for ${client}`, s: 'title' }],
-    [{ v: `Made ${day}${coach ? ' (coach copy, with coach-only notes)' : ''}.`, s: 'text' }],
+    [{ v: `Made ${day}${coach ? ' (coach copy, with coach-only notes)' : shared ? ' (a copy without private rows: they show as neutral lines such as Other income, and every total is the same)' : ''}.`, s: 'text' }],
     [{ v: 'This file holds every number SLAM has for this household, and the math behind each one, as live formulas.', s: 'text' }],
     [],
     [{ v: 'How to use it', s: 'section' }],

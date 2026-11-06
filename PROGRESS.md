@@ -921,3 +921,35 @@ docs/usability/scorecard-2026-11-06.json: 11 screens appended with "batch": 37, 
 Tests: test/batch40.test.js (5, hand-checked) and the whole suite pass in UTC and America/New_York. Persona run: story
 blockers 2 to 0, majors 5 to 0, layout 0. Layout check on Overview, Statements, Goals and the One-pager (all widths and
 themes, Demo and a new client): 0 findings before and after (the 1 covered is the Demo's load toast on Budget).
+## Batch 28 (Nov 6 2026): who sees this (Phase 4 Track 2, wave 1)
+
+Eli's lens: many clients earn in ways they keep discreet (adult and sex work, cash tips, side income), couples keep
+separate money, and families share a screen. One layer, js/privacy.js, sits where data leaves the coach's view.
+
+1. The mark: every record kind carries seen (Everyone in the plan, Me and my coach, Coach only), notesSeen (a note can
+   be more private than its row, never less) and shareName, registered in js/registry/fields.js (21 spec rows, F489 to
+   F509) with the words in LISTS.privacy. Set with taps in the row's ⋯ menu (Who sees this: three taps for the row, three
+   for its notes, and for a private row the name it takes when shared). A marked row gets one calm line under it: a
+   lock, the mark in words and where it does not show, with a tip. The menu's Lock it (confirmed) now uses the check, so
+   the lock means one thing in that menu. The Coach notes box on every row is coach-only (hidden in Client view).
+2. Honored where data leaves: a row a viewer may not see is folded, never removed: a neutral name, no notes, no
+   platform, institution or last 4 digits, every number the math reads kept (a platform's fee, hold and payout schedule
+   stay as numbers), so every total equals the coach's to the cent. The app's ctx reads its household through
+   viewStore (reads folded, writes to the real store), so Client view and the couple views need no screen of their own:
+   Client view folds Coach only rows; the household view (Ours) in Client view folds both partners' private rows; in one
+   partner's view the other partner's private rows are left out altogether (they never counted in that partner's
+   numbers). Lists drop folded rows and say "Includes amounts kept private"; a coach-only row has no calendar chip,
+   month-end line or Overview row of its own in Client view; Find skips them. The one-pager, Send summary and the Life
+   Transitions share view read the household through shareCtx (private and coach-only rows in neutral words, the
+   coach's notes gone). Coach tools › Data has What the files hold: Everything, or Without private rows, for the backup
+   and the spreadsheet; the copy is marked (Start here says so), has an id of its own so opening it never writes over
+   the client, leaves out imported transactions, session notes and the history of folded rows, and Bring a spreadsheet
+   back refuses it.
+3. Keep this private: one tap in an income row's menu marks it Me and my coach and names it Other income in anything
+   shared; the popover offers Self-employment and Consulting as taps.
+4. Tests: a new persona, the private couple (Remy's fan page on OnlyFans and its payout account kept between Remy and
+   the coach, Dana's private store card, a coach-only note and a coach-only Budget line; net worth $26,238 hand-worked).
+   test/privacy.test.js (7): who sees what, every total equal in every view, what a fold keeps and drops, the shared
+   backup and spreadsheet carry no private name, the view store writes through. tools/e2e/privacy.cjs (the browser leak
+   test, README): every screen in four views at 1280 and 390, every row's Details at 1280, the one-pager (coach and
+   client view), Send summary, the share view and both exports searched for the private names, notes and amounts.

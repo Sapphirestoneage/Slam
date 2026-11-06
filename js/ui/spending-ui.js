@@ -10,6 +10,7 @@ import { categoriesOf, categoryJoyOf, rateCategoryJoy } from '../capture.js';
 import { maaserOf, KOSHER_NOTE } from '../community.js';
 import { drafttName } from '../math/spending.js';
 import * as S from './staples.js';
+import { ownLineHidden } from '../privacy.js';
 import { spendingList, categoryList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.js';
 import { ensureCategories } from '../presets.js';
 import { ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
@@ -365,6 +366,7 @@ const dayLabel = d => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { w
 const moneyText = v => S.moneyText(v);
 
 function chipOf(ctx, i) {
+  if (ownLineHidden(ctx.store.doc, i.recId)) return null; // batch 28: a coach-only line has no chip in Client view (the balance still counts it)
   const cls = [CHIP[i.group] || 'out', i.onCard ? 'oncard' : '', i.status === 'Paid' ? 'done' : '', i.status === "Didn't happen" ? 'missed' : '', i.status === 'Partial' ? 'partial' : '',
     i.status === 'Moved' && !i.date.startsWith(UI.calYm) ? 'moved-away' : '', i.guessDate ? 'guess' : ''].filter(Boolean).join('.');
   const amt = i.kind === 'win' ? '' : ` ${sign(i.planned)}${money(Math.abs(i.status === 'Paid' && i.paid != null ? i.paid : i.planned))}`;
@@ -639,7 +641,7 @@ function review(app, ctx, v, doClose) {
         h('td.num', {}, money(c.plan)), h('td.num', {}, c.actual == null ? h('span.muted', {}, 'No actual') : money(c.actual)), h('td.num', {}, diff(c))]),
       nav(S.button('Next: review the misses', { kind: 'primary', iconName: 'right', onClick: go(2) }))] : [byPick, gutOnly(app, ctx, v), h('p.muted', {}, missing ? `${missing} ${missing === 1 ? 'line has' : 'lines have'} no actual yet. Lines marked Paid on the calendar are already in; type the rest.` : 'Every line has an actual.'),
       // Batch 20 (Rocket Surgery): a bill paid as planned is one tap (Same as plan sits in its own column, before the box).
-      table(['Line', 'Plan', '', 'Actual'], rows, r => [h('td.col-first', {}, name(r)), h('td.num', {}, money(r.estimate ?? 0), r.fromRough ? h('span.muted.small', {}, ' usual') : r.fromGut ? h('span.muted.small', { title: 'Its share of the gut number: what the gut number leaves after the lines, split by the typical amounts' }, ' gut split') : null),
+      table(['Line', 'Plan', '', 'Actual'], rows.filter(r => !ownLineHidden(ctx.store.doc, r.line?.id)), r => [h('td.col-first', {}, name(r)), h('td.num', {}, money(r.estimate ?? 0), r.fromRough ? h('span.muted.small', {}, ' usual') : r.fromGut ? h('span.muted.small', { title: 'Its share of the gut number: what the gut number leaves after the lines, split by the typical amounts' }, ' gut split') : null),
         h('td.num.use-plan', {}, !v.closed && r.actual == null && (r.estimate ?? 0) > 0 ? S.button(`Same as plan ${money(r.estimate)}`, { size: 'small', tip: `It was ${money(r.estimate)}, as planned`, onClick: () => set(r, Math.round(r.estimate * 100) / 100) }) : null),
         h('td.num', {}, v.closed ? money(r.actual) : S.moneyInput(r.actualFrom === 'typed' ? r.actual : null, val => set(r, val), { hint: r.actual == null ? 'Add actual' : moneyText(r.actual), key: `close:${v.ym}:${r.line.id}` }))]),
       nav(S.button('Next: review the misses', { kind: 'primary', iconName: 'right', onClick: go(2) }))];

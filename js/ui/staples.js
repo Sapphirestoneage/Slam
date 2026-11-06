@@ -17,6 +17,7 @@ import { keepPlace } from './place.js';
 import { opened, install as installDismiss } from './dismiss.js';
 import { PERSONS, personLabels, onePerson, ownerOf, modeOf, ownPlanPerson } from '../registry/couples.js';
 import { isBlankRow } from '../completion.js';
+import { audienceOf, viewStore, SHARE, seenOf, notesSeenOf, isMarked, SEEN, SEEN_WORDS, SEEN_TIPS, SHARE_NAMES, neutralName, PRIVATE_LINE } from '../privacy.js';
 export { keepPlace };
 import { secWrap, sectionOpen, caretButton } from './sections.js';
 export { sec, secWrap, secCard, openAround, sectionOpen } from './sections.js'; // batch 13: the caret header on every section
@@ -26,24 +27,30 @@ export { sec, secWrap, secCard, openAround, sectionOpen } from './sections.js'; 
 export const handled = (r, f) => countsAsDone(statusOf(r, f)) || statusOf(r, f) === 'Will email' || (f === 'institution' && !!r.values?.institutionId);
 
 // ---------- Context: the store, the time view, the numbers, toasts ----------
-export function createCtx({ store, ref, now = () => new Date() }) {
-  let cache = null, cacheFor, rcache = null, fcache = null;
+export function createCtx({ store, ref, now = () => new Date(), viewer = () => ({ clientView: false }) }) {
+  let cache = null, cacheFor, cacheDoc = null, rcache = null, fcache = null;
   const listeners = new Set();
   const ctx = {
-    store, ref, now,
+    ref, now,
+    // Batch 28 (js/privacy.js): who is looking (the coach, the client in Client view, one partner's view), and the
+    // household as they see it. Reads go through the fold; writes go to the real store. realStore is the coach's.
+    realStore: store,
+    audience() { return audienceOf(store.doc, { clientView: !!viewer().clientView }); },
+    get store() { return viewStore(store, ctx.audience(), ref); },
     get timeMode() { return store.doc.settings.timeView || '$'; },
     setTimeMode(mode) { store.doc.settings.timeView = mode; cache = null; rcache = null; fcache = null; ctx.refresh(); store._emit({ type: 'settings' }); },
     get couple() { return ctx.gates().couple; },
     gates() { return gatesOf(store.doc.profile, store.doc.client); },
     // Rows that apply to this household: a gate that says no takes them off every list (R001).
-    visible(pred) { const g = ctx.gates(); return store.find(r => pred(r) && !gatedOut(r, g, ref)); },
+    visible(pred) { const g = ctx.gates(); return ctx.store.find(r => pred(r) && !gatedOut(r, g, ref)); },
     // Batch 15 (question 212): a couple with no combined totals (Dating, Living together) sees one person's own plan
-    // everywhere, this client's unless the person switch says the partner's.
-    metrics() { const k = ownPlanPerson(store.doc); if (cache && cacheFor !== k) cache = null; cacheFor = k; return (cache ??= metrics(store.doc, ref, { now: now(), person: k })); }, // batch 33: the Both preview changes whose plan a screen reads
+    // everywhere, this client's unless the person switch says the partner's. Batch 28: from the folded household,
+    // whose numbers are the same to the cent; only the names of rows this viewer does not see change.
+    metrics() { const d = ctx.store.doc, k = ownPlanPerson(d); if (cache && (cacheFor !== k || cacheDoc !== d)) cache = null; cacheFor = k; cacheDoc = d; return (cache ??= metrics(d, ref, { now: now(), person: k })); }, // batch 33: the Both preview changes whose plan a screen reads
     // Batch 41 (M9R): the key outputs' low, likely and high, on the same metrics (so likely is that very number); the FOO
     // step's range apart, since each of its runs walks the whole FOO. Worked out once per change, like the metrics.
-    ranges() { const m = ctx.metrics(); if (rcache?.m !== m) rcache = { m, r: rangesOf(store.doc, ref, { now: now(), person: ownPlanPerson(store.doc), m }) }; return rcache.r; },
-    fooRange(flags = []) { const m = ctx.metrics(); if (fcache?.m !== m) fcache = { m, r: fooRangeOf(store.doc, ref, { now: now(), flags }) }; return fcache.r; },
+    ranges() { const m = ctx.metrics(), d = ctx.store.doc; if (rcache?.m !== m) rcache = { m, r: rangesOf(d, ref, { now: now(), person: ownPlanPerson(d), m }) }; return rcache.r; },
+    fooRange(flags = []) { const m = ctx.metrics(); if (fcache?.m !== m) fcache = { m, r: fooRangeOf(ctx.store.doc, ref, { now: now(), flags }) }; return fcache.r; },
     // Screens register here; the shell clears them when it leaves the screen (keep: shell-level).
     onRefresh(fn, { keep = false } = {}) { fn.keep = keep; listeners.add(fn); return () => listeners.delete(fn); },
     clearScreen() { for (const fn of listeners) if (!fn.keep) listeners.delete(fn); },
@@ -52,6 +59,22 @@ export function createCtx({ store, ref, now = () => new Date() }) {
   };
   store.subscribe(() => ctx.refresh());
   return ctx;
+}
+// Batch 28: the same household as anything shared sees it (the one-pager, Send summary, the Life Transitions share view):
+// private and coach-only rows folded into neutral words, the coach's notes gone, every total the same. Writes still go
+// to the real household (a one-pager box the coach types in).
+export function shareCtx(ctx) {
+  const real = ctx.realStore ?? ctx.store;
+  let cache = null, cacheDoc = null;
+  const c = Object.create(ctx, {
+    store: { get: () => viewStore(real, SHARE, ctx.ref) },
+    shared: { value: true },
+  });
+  c.audience = () => SHARE;
+  c.gates = () => gatesOf(c.store.doc.profile, c.store.doc.client);
+  c.visible = pred => { const g = c.gates(); return c.store.find(r => pred(r) && !gatedOut(r, g, ctx.ref)); };
+  c.metrics = () => { const d = c.store.doc; if (cacheDoc !== d) { cache = null; cacheDoc = d; } return (cache ??= metrics(d, ctx.ref, { now: ctx.now(), person: ownPlanPerson(d) })); };
+  return c;
 }
 
 // ---------- Buttons ----------
@@ -430,7 +453,8 @@ export function checkbox(label, checked, onChange, { key = null } = {}) {
 export const labelled = (label, input, { note = null, later = null, none = null, tip = null } = {}) => {
   const key = later?.key ?? none?.key ?? null;
   if (key && input?.querySelector) { const el = input.matches?.('.seg, .picks') ? input : input.querySelector('input:not([data-focus]), select:not([data-focus]), .seg, .picks'); if (el && !el.dataset.focus) el.dataset.focus = key; } // batch 13: a row of tap chips gets the handle too
-  return h(`div.stack${later?.on || none?.on ? '.parked' : ''}`, {}, h(`span.label${tip ? '.has-tip' : ''}`, tip ? { title: `${label}: ${tip}` } : {}, label), input,
+  // Batch 28: the Coach notes box on any row is the coach's alone: hidden in Client view (its text never reaches the client's screen).
+  return h(`div.stack${later?.on || none?.on ? '.parked' : ''}${label === 'Coach notes' ? '.coach-only' : ''}`, {}, h(`span.label${tip ? '.has-tip' : ''}`, tip ? { title: `${label}: ${tip}` } : {}, label), input,
     note ? h('span.muted.small', {}, note) : null, later || none ? parkButtons({ later, none }, label) : null);
 };
 export function parkButtons({ later = null, none = null }, label = 'this') {
@@ -886,8 +910,11 @@ export function recordList(ctx, cfg) {
     const btn = h('button.icon-btn.menu-btn', { type: 'button', 'aria-label': `Actions for ${name}`, 'aria-haspopup': 'menu', 'data-tip': 'Actions', 'data-focus': 'menu' }, icon('dots'));
     const item = (label, iconName, run, { danger = false } = {}) => h(`button.menu-item${danger ? '.danger' : ''}`, { type: 'button', role: 'menuitem', onclick: () => { closePop(); run(); } }, icon(iconName), label);
     btn.onclick = () => popover(btn, h('div.row-menu', { role: 'menu', 'aria-label': `Actions for ${name}` },
-      ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? item(r.values.locked === true ? 'Unlock (back to as typed)' : 'Lock it (confirmed)', 'lock', () => update(r, { locked: r.values.locked !== true })) : null, // item 11: a guess becomes confirmed here, never as a nag
+      ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? item(r.values.locked === true ? 'Unlock (back to as typed)' : 'Lock it (confirmed)', 'check', () => update(r, { locked: r.values.locked !== true })) : null, // item 11: a guess becomes confirmed here, never as a nag
       item(state.open === r.id ? 'Hide details' : 'Details', 'right', () => setOpen(r.id)), // item 17: the detail is in the menu too
+      // Batch 28: who sees this row, in taps; an income line has the one-tap preset too.
+      item(`Who sees this: ${SEEN_WORDS[seenOf(r)]}`, 'lock', () => requestAnimationFrame(() => seenPopover(ctx, view?.rows.get(r.id)?.querySelector('button.menu-btn') ?? btn, r, p => update(r, p)))),
+      r.kind === 'income' && seenOf(r) === 'Everyone' ? item('Keep this private', 'lock', () => { keepPrivate(ctx, r, p => update(r, p)); requestAnimationFrame(() => seenPopover(ctx, view?.rows.get(r.id)?.querySelector('button.menu-btn') ?? btn, ctx.store.get(r.id) ?? r, p => update(r, p))); }) : null,
       item('Reset', 'reset', () => reset([r.id])),
       ...(cfg.menuExtra?.(ctx, r, p => update(r, p)) ?? []).map(x => item(x.label, x.icon ?? 'right', x.run)), // batch 10: Move up / Move down
       cfg.fixed ? null : item('Duplicate', 'copy', () => { ctx.store.duplicate(r.id); toast('Duplicated.', { undo: () => ctx.store.undo() }); }),
@@ -901,7 +928,10 @@ export function recordList(ctx, cfg) {
 
   function render() {
     const m = ctx.metrics();
-    const recs = cfg.order ? [...ctx.visible(cfg.filter)].sort(cfg.order) : ctx.visible(cfg.filter);
+    // Batch 28: a row this viewer does not see is folded (js/privacy.js): it stays in every total and leaves the list.
+    const all = cfg.order ? [...ctx.visible(cfg.filter)].sort(cfg.order) : ctx.visible(cfg.filter);
+    const recs = all.filter(r => !r.folded), kept = all.length - recs.length;
+    const privateLine = kept ? h('p.private-line.muted.small', { title: 'Some rows here are kept between a person and the coach. Every total still counts them' }, icon('lock'), PRIVATE_LINE) : null;
     const head = h('div.section-title', {}, h('h2', {}, cfg.title), h('span.spacer'), cfg.headerExtra?.(ctx) ?? null,
       recs.length && !cfg.fixed ? h('button.btn.small.clear-all', { type: 'button', 'data-focus': `icon:Clear all ${cfg.thing.plural}`, title: `Clear all ${cfg.thing.plural} (asks first; you can undo it)`, onclick: e => confirmBox(e.currentTarget, { // batch 19: in words, not an eraser alone
         text: `Clear all ${recs.length} ${recs.length === 1 ? cfg.thing.one : cfg.thing.plural}? You can undo this.`,
@@ -911,8 +941,8 @@ export function recordList(ctx, cfg) {
     const autos = cfg.autoRows?.(ctx, m) ?? []; // entered elsewhere, shown here (From Debt): no input, no menu
     const lead = cfg.lead?.(ctx, m) ?? null; // batch 11: a row that lives elsewhere but counts here (the cards on Debt)
     // Batch 13 (item 1): the list's header is a caret; closed, it says what is in it in one line.
-    const secOf = (el, sum) => cfg.caret === false ? el : secWrap(el, `list:${listKey}`, { open: cfg.open ?? true, summary: cfg.summary?.(ctx, recs, m) ?? sum });
-    if (!recs.length && !autos.length) { view = null; return secOf(h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, lead, h('div.list', {}, emptyList(cfg.emptyThing?.(ctx) ?? cfg.thing, e => (picker ? openAddPicker(e.currentTarget, { thing: cfg.thing.one, ...picker, onPick: (t, own) => addNew(t, own) }) : addNew(null))))), cfg.emptyThing?.(ctx)?.empty ?? cfg.thing.empty ?? `No ${cfg.thing.plural} yet`); }
+    const secOf = (el, sum) => cfg.caret === false ? el : secWrap(el, `list:${listKey}`, { open: cfg.open ?? true, summary: cfg.summary?.(ctx, all, m) ?? sum });
+    if (!recs.length && !autos.length) { view = null; return secOf(h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && (cfg.stripWhenEmpty || kept) ? cfg.strip(ctx, m) : null, lead, privateLine, h('div.list', {}, emptyList(cfg.emptyThing?.(ctx) ?? cfg.thing, e => (picker ? openAddPicker(e.currentTarget, { thing: cfg.thing.one, ...picker, onPick: (t, own) => addNew(t, own) }) : addNew(null))))), cfg.emptyThing?.(ctx)?.empty ?? cfg.thing.empty ?? `No ${cfg.thing.plural} yet`); }
 
     const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all', 'data-focus': 'select-all', title: 'Select all' });
     allBox.onchange = () => { if (allBox.checked) recs.forEach(r => state.selected.add(r.id)); else state.selected.clear(); refreshSelection(); };
@@ -990,7 +1020,8 @@ export function recordList(ctx, cfg) {
         rowEls.set(r.id, tr);
         body.append(tr);
         const note = cfg.rowNote?.(ctx, r, m); // e.g. "Looks like the same payment: keep one"
-        if (note) body.append(h('tr.row-note', { 'data-for': r.id, 'data-group': g, hidden: folded }, h('td', { colspan: span }, note)));
+        const mark = seenLine(ctx, r); // batch 28: who sees this, in words; it is changed in the row's menu (one place)
+        if (note || mark) body.append(h(`tr.row-note${note ? '' : '.seen-only'}`, { 'data-for': r.id, 'data-group': g, hidden: folded }, h('td', { colspan: span }, mark, note)));
         if (open) { const more = moreRow(r, g); more.hidden = folded; body.append(more); track(tr, more); }
       }
       // Batch 35: one slim line under a group (Assets: the money set aside for taxes, kept out of the Cash total).
@@ -998,7 +1029,7 @@ export function recordList(ctx, cfg) {
       if (foot) body.append(h('tr.group-foot', { 'data-group': g, hidden: folded }, h('td', { colspan: span }, foot)));
     }
     if (state.open && !rowEls.has(state.open)) state.open = null;
-    const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td.check-cell', {}), cfg.totals(ctx, recs, m, cols))) : null;
+    const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td.check-cell', {}), cfg.totals(ctx, all, m, cols))) : null; // batch 28: every row counts, seen or not
     const counted = recs.filter(r => (cfg.countsBlank || !isBlankRow(r, coreOf(r))) && (!cfg.counts || cfg.counts(r))); // batch 34: a list whose blank rows are questions (Protection's usual list) counts them // batch 8 (B9): a blank row counts nowhere; batch 10: a list can leave rows out (Everything else, faded)
     const leftRows = counted.filter(r => !coreOf(r).every(f => handled(r, f)));
     const done = counted.length - leftRows.length;
@@ -1012,10 +1043,11 @@ export function recordList(ctx, cfg) {
       cfg.strip ? (focus ? moreBlock(`focus:strip:${listKey}`, () => cfg.strip(ctx, ctx.metrics()), { label: 'Totals and chart' }) : cfg.strip(ctx, m)) : null, // item 19
       lead,
       h('div.list', {}, h('div.list-scroll', { 'data-scroll-key': listKey }, h(`table.rows${cfg.tableClass ? `.${cfg.tableClass}` : ''}`, {}, thead, body, tfoot)), view.bulkHost,
-        sectionFooter(ctx, { add: addBtn, total: cfg.footerTotal?.(ctx, recs, m), count: counted.length, done, of: counted.length, left: leftItems, onlyLeft, bulk }),
+        privateLine,
+        sectionFooter(ctx, { add: addBtn, total: cfg.footerTotal?.(ctx, all, m), count: counted.length, done, of: counted.length, left: leftItems, onlyLeft, bulk }),
         keyboardHint()));
     refreshSelection();
-    const totalEl = cfg.footerTotal?.(ctx, recs, m);
+    const totalEl = cfg.footerTotal?.(ctx, all, m);
     const totalText = totalEl ? (() => { const c = totalEl.cloneNode(true); c.querySelectorAll('.time-chip').forEach(x => x.remove()); return c.textContent.replace(/\s+/g, ' ').trim(); })() : '';
     return secOf(out, [`${counted.length} ${counted.length === 1 ? cfg.thing.one : cfg.thing.plural}`, totalText && totalText !== EMPTY ? totalText : null, counted.length ? `${done} of ${counted.length} done` : null].filter(Boolean).join(' · '));
   }
@@ -1023,6 +1055,45 @@ export function recordList(ctx, cfg) {
   draw();
   return root;
 }
+// ---------- Who sees this (batch 28, js/privacy.js) ----------
+// The row's one line under it when it is marked: a lock, the mark in words, and where it does not show, with a tip.
+export function seenLine(ctx, r, onClick = null) {
+  if (!isMarked(r)) return null;
+  const s = seenOf(r), n = notesSeenOf(r), names = personLabels(ctx.store.doc);
+  const other = ctx.couple ? (ownerOf(r, modeOf(ctx.store.doc.profile)) === 'Partner' ? names.Me : names.Partner) : null;
+  const where = s === 'Coach only' ? 'Hidden from client view and anything shared'
+    : s === 'Me and my coach' ? `Hidden from ${other ? `${other}'s view and ` : ''}anything shared${r.values?.shareName ? `; shows as ${r.values.shareName}` : ''}`
+      : `Its notes: ${SEEN_WORDS[n]}`;
+  const words = s === 'Everyone' ? `Notes: ${SEEN_WORDS[n]}` : SEEN_WORDS[s];
+  const tip = `${SEEN_TIPS[s === 'Everyone' ? n : s]}. Change it in the row's menu`;
+  const inner = [icon('lock'), h('span.seen-word', {}, words), h('span.muted.small', {}, where)];
+  return onClick ? h('button.seen-line', { type: 'button', title: tip, 'aria-label': `Who sees this: ${words}. ${where}. Change`, 'data-focus': `${r.id}:seen`, onclick: onClick }, inner)
+    : h('span.seen-line', { title: tip }, inner);
+}
+// One tap on an income line: kept between this client and the coach, shown as Other income in anything shared.
+export function keepPrivate(ctx, r, up) {
+  up({ seen: 'Me and my coach', shareName: r.values?.shareName || SHARE_NAMES[0] });
+  toast(`Kept private. Anything shared shows it as ${r.values?.shareName || SHARE_NAMES[0]}.`, { undo: () => ctx.store.undo() });
+}
+// The taps: who sees the row, who sees its notes, and (for a private line) the name it takes when shared.
+export function seenPopover(ctx, anchor, r, up) {
+  const client = ctx.audience?.().who === 'client';
+  const opts = SEEN.filter(s => !client || s !== 'Coach only').map(s => [s, s]); // the client never marks a row away from themselves
+  const draw = () => {
+    const now = ctx.realStore?.get(r.id) ?? ctx.store.get(r.id) ?? r;
+    const s = seenOf(now);
+    return h('div.stack.seen-pop', { style: { gap: '10px' } }, h('h3', {}, 'Who sees this'),
+      labelled('This row', toggle(opts, s, v => { up({ seen: v === 'Everyone' ? null : v }); redraw(); }, { label: 'Who sees this row' }), { tip: SEEN_TIPS[s] }),
+      labelled('Its notes', toggle(opts, notesSeenOf(now), v => { up({ notesSeen: v === 'Everyone' ? null : v }); redraw(); }, { label: 'Who sees its notes' }), { tip: 'A note can be more private than its row, never less' }),
+      s !== 'Everyone' ? labelled('Shows as, when shared', toggle(SHARE_NAMES.map(x => [x, x]), now.values?.shareName ?? null, v => { up({ shareName: v }); redraw(); }, { label: 'Name when shared', clearable: true }), { tip: `The neutral name in a partner's view and anything shared. Blank: ${neutralName({ ...now, values: { ...now.values, shareName: null } })}` }) : null,
+      h('p.muted.small', {}, 'Totals always count it.'));
+  };
+  let box = null;
+  const redraw = () => { const b = draw(); box?.replaceWith(b); box = b; };
+  box = draw();
+  popover(anchor, h('div', {}, box), { width: Math.min(440, (typeof window !== 'undefined' ? window.innerWidth : 440) - 16) });
+}
+
 // Batch 19: a wide list that does not fit its card (Debt at 1280) first drops the hours chips from its rows, the payoff
 // months, Will get it's clock and some padding ("tight"); still too wide, the row's Will get it button steps back to the
 // status menu and the list's Will get all of these ("tighter"). Never the boxes, so it never scrolls sideways.

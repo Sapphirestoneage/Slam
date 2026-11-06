@@ -6,6 +6,8 @@ import { INCOME_KINDS, incomeKindOf } from '../capture.js';
 import { institutionPicker, institutionLink } from './institutions-ui.js';
 import { popover, closePop, tapPick, fromButton, amount, value, moneyInput, pctInput, textInput, nameInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, parkGroup, ownerToggle, openBlock } from './staples.js';
 import { asksTaxType, taxTypeFor } from '../math/portfolio.js';
+import { notesHidden } from '../privacy.js';
+import { modeOf } from '../registry/couples.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
 import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom, isBenefitRow, householdRates, quarterlySetAside, irregularPlan, tipsDeductionOf, stateTaxLine } from '../math/income.js';
 import { foo } from '../math/foo.js';
@@ -423,7 +425,7 @@ function assetSecondary(ctx, r, up) {
       moneyInput(v.propertyTax, x => up({ propertyTax: x }), { hint: 'Tax' }), moneyInput(v.homeInsurance, x => up({ homeInsurance: x }), { hint: 'Insurance' }), moneyInput(v.hoa, x => up({ hoa: x }), { hint: 'HOA' }))),
     labelled('Purchase price and date', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.purchasePrice, x => up({ purchasePrice: x }), { hint: 'Price' }), textInput(v.purchased, x => up({ purchased: x }), { hint: 'YYYY-MM', width: 100 })))];
     if (r.type === 'Car') return [labelled('Purchase price', moneyInput(v.purchasePrice, x => up({ purchasePrice: x }), { hint: 'Add price' }))];
-    return [labelled('Notes', textInput(r.notes, x => up({ notes: x }), { hint: 'What it is', width: 300 }))];
+    return notesHidden(r, ctx.audience?.() ?? { who: 'coach', person: 'all' }, modeOf(ctx.store.doc.profile)) ? [] : [labelled('Notes', textInput(r.notes, x => up({ notes: x }), { hint: 'What it is', width: 300 }))]; // batch 28: a note this viewer may not see has no box (typing would write over it)
   }
   const later = f => L(ctx, r, f);
   if (v.group === 'cash') return [ // the institution is the row's picker (batch 7, item 3); the typed box is gone

@@ -62,7 +62,7 @@ function wordScore(w, q) {
   return null;
 }
 // The rows a household shows (gates applied); with no household, none.
-export const liveRecords = (doc, ref) => (doc ? visible(doc.records || [], gatesOf(doc.profile, doc.client), ref) : []);
+export const liveRecords = (doc, ref) => (doc ? visible((doc.records || []).filter(r => !r.folded), gatesOf(doc.profile, doc.client), ref) : []); // batch 28: a row this viewer does not see is not found
 
 // Every word that matches, each turned into results for this client: one per row for a * target, else the first
 // target that resolves. A result says whose it is ("APR · Chase card") when it points at a row.

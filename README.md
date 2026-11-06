@@ -64,10 +64,10 @@ python3 -m http.server 8816 &
 node tools/e2e/personas.cjs            # every screen, for every persona, in the browser
 ```
 
-Fourteen made-up households that run SLAM end to end, from below zero to a multimillionaire: Alexis (avoids money),
+Fifteen made-up households that run SLAM end to end, from below zero to a multimillionaire: Alexis (avoids money),
 Tom (a CPA with every account), Maya, a deficit, an unmarried couple splitting by income, a married couple with one
 paycheck and a baby, three adults in one home, a tipped bartender, a 1099 dancer, a fan-site creator with a part-time
-job, a worker planning gender-affirming care, a 52-year-old with $4.2M, someone just laid off (Life Transitions), and a teacher on PSLF (the student loan decision). Each is written readably in
+job, a worker planning gender-affirming care, a 52-year-old with $4.2M, someone just laid off (Life Transitions), a teacher on PSLF (the student loan decision), and a married couple where one partner's fan-site income is kept between them and the coach (who sees this). Each is written readably in
 `tools/personas/defs/<id>.mjs`, with the 5 to 10 numbers a coach expects worked out by hand (the arithmetic is in each
 note) and a list of what SLAM cannot represent for that person yet. `tools/personas/build.mjs` turns each def into the
 app's own backup file in `fixtures/personas/`, so any of them opens through Coach tools › Data › Import.
@@ -80,6 +80,22 @@ each persona through Import in the browser, visits every screen at 1280, and wri
 story: no "no debt" words with debts on file, no lock asking for a number the household cannot have, no NaN, one answer
 per number across screens) to `PERSONAS_OUT` (default: a `slam-personas` folder in the system temp folder). About 3
 minutes. Every batch report includes its result (QA.md, Personas).
+
+### Who sees this: the leak test (batch 28)
+
+```
+node --test test/privacy.test.js
+SLAM_URL=http://localhost:8767 node tools/e2e/privacy.cjs
+```
+
+Any row, and its notes, can be marked Everyone in the plan, Me and my coach, or Coach only (the row's ⋯ menu, Who sees
+this; an income row also has Keep this private). `js/privacy.js` is the one layer data passes through on its way out of
+the coach's view: Client view and the couple views read the household through it, and the one-pager, Send summary, the
+Life Transitions share view and an export made Without private rows read it as anything shared sees it. A row a viewer
+may not see is folded, never removed: a neutral name, no notes or account details, every number kept, so every total
+equals the coach's. The test opens the private couple persona and searches every screen in each view, the shared
+pages and both exports for the private names and amounts. `EXCELJS` points at a local exceljs.min.js where the CDN is
+blocked; `PRIVACY_WIDTHS` (default 1280,390).
 ### Findability and effort (batch 14)
 
 ```
@@ -181,7 +197,7 @@ The workbook is built only from the registries in `js/registry/`, so it stays co
 | `js/registry/joy.js` | The Joy number: the wording, asked at session start, in every snapshot, charted from Day 0 |
 | `js/capture.js`, `js/import/csv.js` | Captured for later (category joy, Trip, income type, the change log with who); the CSV statement import |
 | `js/math/proposed.js` | Current vs Proposed (M76): both sides, the differences, How we got this, Make Proposed the plan |
-| `tools/personas/`, `fixtures/personas/`, `test/personas.test.js`, `tools/e2e/personas.cjs` | The fourteen persona households: their defs with hand-worked numbers, the built backup files, the number check and the browser run |
+| `tools/personas/`, `fixtures/personas/`, `test/personas.test.js`, `tools/e2e/personas.cjs` | The fifteen persona households: their defs with hand-worked numbers, the built backup files, the number check and the browser run |
 | `tools/e2e/walkthrough.cjs`, `test/walkthrough.test.js` | The full walkthrough: S1 to S12 in unit tests; every screen at three widths, light and dark, in the browser |
 | `MATH.md`, `SYNC.md`, `MORNING.md` | Every calculation reviewed (a self-review pending a CFP); the Google Sheets sync design; the overnight run's morning note |
 | `js/find.js`, `data/reference-2026.json` (findWords) | Find understands people: everyday words to a screen and a box, Add by type, a note when unsure (batch 14) |

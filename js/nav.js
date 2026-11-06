@@ -70,6 +70,7 @@ export const VIEWS = [{ label: 'Bills list', where: 'Cash flow › Calendar › 
 // fields, screens and the client's own records. Punctuation and spacing do not count ("401k" finds "401(k)").
 // Identical results show once; two fields with the same name say which group each is in.
 export function search(query, { fields = [], records = [], doc = null, ref = null } = {}) {
+  records = records.filter(r => !r.folded); // batch 28: a row this viewer does not see is not found (js/privacy.js)
   const q = norm(query);
   if (!q) return [];
   const score = text => {

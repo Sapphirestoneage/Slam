@@ -71,6 +71,7 @@ export const FORMATS = [
   { version: 30, shape: '0325a73e' }, // batch 36: profile.sleepAtNight (the sleep-at-night number on Cash layers), M68 sleepPicks, M9K libraryOn and slamRuleOf
   { version: 31, shape: 'a370bd9c' }, // batch 38: M27 sinking funds (Goals: Set aside a month), the couple's household part of a split bill (Spending), M81 the gap and its levers, M9E net worth by age (Assumptions)
   { version: 32, shape: 'cc7ff4a3' }, // batch 41: M9R ranges on the key outputs (low, likely, high), rules RangeBalance*, RangeSpend*, RangeIncome*, RangeVariable*, RangeAprRough, RangeMinMonths, RangeMinEfMonths
+  { version: 33, shape: '82622750' }, // Nov 6 2026 (batch 28): who sees this (seen, notesSeen, shareName on every record kind)
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

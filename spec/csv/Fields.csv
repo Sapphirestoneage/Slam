@@ -488,3 +488,24 @@ F485,Built,,Income,Income,Payout hold (days),Secondary,,,,,,,,,Now,Added from th
 F486,Built,,Income,Income,Chargebacks and refunds a month,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.chargebacks
 F487,Built,,Profile,Profile,Skills done (the library),Secondary,,,,,,,,,Now,"Added from the code (js/registry/fields.js); stays in the app: one entry per skill id marked Done on Plan › FOO (done, by, on); the skills the data proves tick themselves (M9K)",,Home › About you,text,,,profile.library
 F488,Built,,Profile,Profile,Sleep-at-night number (the cash that lets you sleep),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets › Cash layers,money,,,profile.sleepAtNight
+F489,Built,,Income,Income,Who sees this (blank: everyone),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,choice,,,income.seen
+F490,Built,,Income,Income,Who sees its notes (blank: as the row),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,choice,,,income.notesSeen
+F491,Built,,Income,Income,Name when shared,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,choice,,,income.shareName
+F492,Built,,Debt,Debt,Who sees this (blank: everyone),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Debt,choice,,,debt.seen
+F493,Built,,Debt,Debt,Who sees its notes (blank: as the row),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Debt,choice,,,debt.notesSeen
+F494,Built,,Debt,Debt,Name when shared,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Debt,choice,,,debt.shareName
+F495,Built,,Assets,Assets,Who sees this (blank: everyone),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,choice,,,assets.seen
+F496,Built,,Assets,Assets,Who sees its notes (blank: as the row),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,choice,,,assets.notesSeen
+F497,Built,,Assets,Assets,Name when shared,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,choice,,,assets.shareName
+F498,Built,,Protection,Protection,Who sees this (blank: everyone),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Protection,choice,,,protection.seen
+F499,Built,,Protection,Protection,Who sees its notes (blank: as the row),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Protection,choice,,,protection.notesSeen
+F500,Built,,Protection,Protection,Name when shared,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Protection,choice,,,protection.shareName
+F501,Built,,Needs,Spending lines,Who sees this (blank: everyone),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,choice,,,spending.seen
+F502,Built,,Needs,Spending lines,Who sees its notes (blank: as the row),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,choice,,,spending.notesSeen
+F503,Built,,Needs,Spending lines,Name when shared,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,choice,,,spending.shareName
+F504,Built,,Needs,Calendar entries,Who sees this (blank: everyone),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Calendar,choice,,,calendar.seen
+F505,Built,,Needs,Calendar entries,Who sees its notes (blank: as the row),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Calendar,choice,,,calendar.notesSeen
+F506,Built,,Needs,Calendar entries,Name when shared,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Calendar,choice,,,calendar.shareName
+F507,Built,,Goals,Goals and events,Who sees this (blank: everyone),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Plan › Goals,choice,,,goals.seen
+F508,Built,,Goals,Goals and events,Who sees its notes (blank: as the row),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Plan › Goals,choice,,,goals.notesSeen
+F509,Built,,Goals,Goals and events,Name when shared,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Plan › Goals,choice,,,goals.shareName

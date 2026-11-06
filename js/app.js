@@ -9,6 +9,8 @@ import { startTips } from './ui/tips.js';
 import { timerAfter } from './timer.js';
 import * as S from './ui/staples.js';
 import { Store, newHousehold, exportFile, importInto, backupDue, statusOf } from './records.js';
+import { UI as EXPORT_UI } from './ui/sheet-ui.js';
+import { sharedBackup } from './privacy.js';
 import { localAdapter, memoryAdapter, listClients, loadClient, saveClient, createClient, removeClient, getPrefs, setPrefs, autosave } from './storage.js';
 import { householdFromInputs } from './demo.js';
 import { addPresets, migrateBatch10 } from './presets.js';
@@ -54,7 +56,7 @@ const app = {
     if (doc) migrateBatch10(doc, ref); // batch 10: untouched starter amounts become faded typicals; Bills and subscriptions; levels (once per file)
     this.store = new Store(doc || newHousehold({ name: null }));
     this.store.who = this.prefs?.clientView ? 'Client' : 'Coach'; // F6: the change log says who
-    this.ctx = S.createCtx({ store: this.store, ref });
+    this.ctx = S.createCtx({ store: this.store, ref, viewer: () => ({ clientView: !!this.prefs?.clientView }) }); // batch 28: Client view reads the household as the client sees it
     this.ctx.goTo = need => this.goToNeed(need);
     let mode = this.ctx.timeMode;
     this.ctx.onRefresh(() => {
@@ -195,7 +197,7 @@ const app = {
       st === 'unsaved' || st === 'saving' ? word : icon('check'), due ? h('span.backup-dot.coach-only', { 'aria-hidden': 'true' }) : null);
     btn.onclick = () => S.popover(btn, h('div.stack', { style: { gap: '10px' } }, h('strong', {}, this.backupText()),
       h('span.muted', {}, 'Your work saves in this browser as you go. A backup file keeps it safe anywhere.'),
-      h('div.row-line', {}, S.button('Back up now', { kind: 'primary', iconName: 'download', onClick: () => { S.closePop(); this.exportNow(); } }))), { width: 320 });
+      h('div.row-line', {}, S.button('Back up now', { kind: 'primary', iconName: 'download', onClick: () => { S.closePop(); this.exportNow({ shared: false }); } }))), { width: 320 });
     clear(el, btn);
     if (st === 'unsaved') this.banner();
   },
@@ -203,7 +205,7 @@ const app = {
   banner() {
     const b = $('banner');
     if (this.hasClient && this.saver?.state === 'unsaved') {
-      return clear(b, h('div', {}, 'Not saved yet. Your last change is safe in this tab; export now to be sure.', S.button('Export', { iconName: 'download', onClick: () => this.exportNow() })));
+      return clear(b, h('div', {}, 'Not saved yet. Your last change is safe in this tab; export now to be sure.', S.button('Export', { iconName: 'download', onClick: () => this.exportNow({ shared: false }) })));
     }
     clear(b);
   },
@@ -239,7 +241,7 @@ const app = {
     const draw = () => {
       const q = input.value.trim();
       if (!q) { closeList(); return; }
-      const found = search(q, { fields, records: this.store.records, doc: this.hasClient ? this.store.doc : null, ref }).slice(0, 8);
+      const found = search(q, { fields, records: this.ctx.store.records.filter(r => !r.folded), doc: this.hasClient ? this.ctx.store.doc : null, ref }).slice(0, 8); // batch 28: as this viewer sees the household
       const add = this.hasClient ? addChoice(q, { ref }) : null; // batch 14: Add goes where it belongs, or a note for later
       items = [...found.map(r => ({ kind: 'find', r })), ...(add ? [{ kind: 'add', p: add }] : [])];
       sel = Math.min(sel, Math.max(0, items.length - 1));
@@ -435,13 +437,16 @@ const app = {
     this.render();
   },
   saveNow() { saveClient(adapter, this.store.doc); },
-  async exportNow({ quiet = false } = {}) {
+  // Batch 28: shared (Coach tools › Data, What the files hold: Without private rows) writes a copy with private and
+  // coach-only rows folded into neutral words and an id of its own; it is not a backup, so the backup date stays.
+  async exportNow({ quiet = false, shared = !quiet && EXPORT_UI.shared } = {}) {
     const doc = this.store.doc;
     const now = new Date().toISOString();
-    const blob = new Blob([JSON.stringify(exportFile(doc, now), null, 1)], { type: 'application/json' });
-    const result = await saveFile(blob, `slam-${(doc.client.name || 'client').replace(/\W+/g, '-').toLowerCase()}-${now.slice(0, 10)}.json`); // batch 7, item 1: works inside the artifact too
-    if (result === 'saved') { doc.lastBackupAt = now; saveClient(adapter, doc); }
-    if (!quiet) { S.toast(saveWords(result, 'The backup') ?? 'Backup downloaded.'); this.render(); }
+    const out = shared ? sharedBackup(doc, ref) : doc;
+    const blob = new Blob([JSON.stringify(exportFile(out, now), null, 1)], { type: 'application/json' });
+    const result = await saveFile(blob, `slam-${(doc.client.name || 'client').replace(/\W+/g, '-').toLowerCase()}-${shared ? 'shared-' : ''}${now.slice(0, 10)}.json`); // batch 7, item 1: works inside the artifact too
+    if (result === 'saved' && !shared) { doc.lastBackupAt = now; saveClient(adapter, doc); }
+    if (!quiet) { S.toast(saveWords(result, shared ? 'The copy without private rows' : 'The backup') ?? (shared ? 'Copy without private rows downloaded. It opens as a client of its own.' : 'Backup downloaded.')); this.render(); }
   },
   // Where the homework list lives for whoever is looking (batch 7, item 8): Coach tools, or the one-pager in Client view.
   homeworkRoute() { return this.prefs.clientView ? '#/report/one-pager' : '#/tools/lists'; },
@@ -495,7 +500,7 @@ const app = {
   },
   setupArrive() { S.setLeftPopover((anchor, items) => leftPopover(this, anchor, items)); },
   goToNeed(need) {
-    const r = search(need, { fields, records: this.store.records, doc: this.store.doc, ref })[0];
+    const r = search(need, { fields, records: this.ctx.store.records.filter(x => !x.folded), doc: this.ctx.store.doc, ref })[0];
     if (r?.route) arrive(this, r.route); // item 2: land and light up what needs work
   },
 

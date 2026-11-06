@@ -658,3 +658,13 @@ td.col-first > .inst-cell:has(> .inst-link)::before { content: ''; display: bloc
 /* Batch 33 (QUESTIONS 288): the raise taps take two columns of a row's details; a phone's details are one column */
 .raise-taps { grid-column: span 2; }
 @media (max-width: 760px) { .raise-taps { grid-column: auto; } }
+/* Batch 28: who sees this. A calm line under a marked row (a lock, the mark in words, where it does not show), and the
+   one line a list or a page shows when it keeps rows from this viewer. Never a warning color. */
+table.rows tr.row-note.seen-only td { background: none; padding-top: 0; }
+.seen-line { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 0.85rem; color: var(--text-2); background: none; border: 0; padding: 2px 0; margin-right: 12px; }
+button.seen-line { cursor: pointer; }
+button.seen-line:hover .seen-word { text-decoration: underline; }
+.seen-line svg { width: 14px; height: 14px; flex: none; }
+.seen-line .seen-word { font-weight: 600; color: var(--text); }
+.private-line { display: flex; align-items: center; gap: 6px; margin: 6px 0; }
+.private-line svg { width: 14px; height: 14px; flex: none; }

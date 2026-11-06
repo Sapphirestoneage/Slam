@@ -26,6 +26,7 @@ import { keyNumbers } from '../math/metrics.js';
 import { whyText } from '../whynow.js';
 import { identityLine } from './identity-ui.js';
 import { overviewNotFor } from '../gates.js';
+import { PRIVATE_LINE, ownLineHidden } from '../privacy.js';
 
 export const RUI = { liquid: false, tab: 'Savings' };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -96,9 +97,10 @@ function donutCard(app, ctx, m) {
   const total = sum(assets, a => a[1]) - sum(debtRows, d => d[1]);
   const host = h('div.chart', { style: { height: '260px' } });
   const tabs = ['Savings', 'Investments', 'Real assets', 'Debts', 'About you'];
-  const rows = RUI.tab === 'Debts' ? debts.map(d => [d.name, d.balance, HOME.debt])
+  const own = x => !ownLineHidden(ctx.store.doc, x.id); // batch 28: a coach-only row has no line of its own in Client view
+  const rows = RUI.tab === 'Debts' ? debts.filter(own).map(d => [d.name, d.balance, HOME.debt])
     : RUI.tab === 'About you' ? aboutRows(ctx)
-      : (groups.find(g => g[0] === RUI.tab)?.[1] || []).map(a => [a.name, a.value, HOME.assets]);
+      : (groups.find(g => g[0] === RUI.tab)?.[1] || []).filter(own).map(a => [a.name, a.value, HOME.assets]);
   queueMicrotask(() => {
     if (!window.echarts || !host.isConnected || (!assets.length && !debtRows.length)) return;
     const t = S.chartTheme('assets');
@@ -190,6 +192,7 @@ function fixedVariable(ctx, m) {
 // ---------- One-pager ----------
 export function homeworkItems(ctx) { return homeworkAll(ctx.store.doc, ctx.visible(() => true)).filter(x => x.status !== 'Confirmed'); }
 export function summaryText(ctx) {
+  if (!ctx.shared) ctx = S.shareCtx(ctx); // batch 28: a summary leaves the session, so private rows read as neutral words
   const m = ctx.metrics();
   const doc = ctx.store.doc;
   const op = doc.session.onePager || {};
@@ -229,6 +232,7 @@ export function sendSummary(ctx, anchor) {
   ctx.store.setIn('session', ['summarySentAt'], new Date(ctx.now()).toISOString(), 'Summary sent');
 }
 export function onePagerScreen(app, ctx) {
+  ctx = S.shareCtx(ctx); // batch 28: the one-pager is what leaves the session: private rows fold into neutral words, totals the same
   const m = ctx.metrics();
   const doc = ctx.store.doc;
   const op = doc.session.onePager || {};
@@ -252,10 +256,11 @@ export function onePagerScreen(app, ctx) {
   };
   return [head('One-pager', 'Session summary, ready to send',
     S.button('Export PDF', { iconName: 'printer', onClick: exportPdf, tip: canPrint ? 'Print, or save as PDF' : 'Saves a printable copy; open it and save as PDF' }),
-    sheetButtons(app),
+    sheetButtons(app, { choice: false }), // batch 28: What the files hold is on Coach tools › Data (the header stays slim)
     S.button('Send summary', { kind: 'primary', iconName: 'mail', onClick: e => sendSummary(ctx, e.currentTarget) })),
   h('div.card.one-pager', {},
     h('h2', {}, `${doc.client.name || 'Client'}, ${new Date(ctx.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`),
+    doc.records.some(r => r.folded) ? h('p.private-line.muted.small.no-print', { title: 'Rows kept between a person and the coach show here as neutral words (Other income, Other spending). Every total still counts them' }, icon('lock'), `${PRIVATE_LINE}: shown as neutral words`) : null,
     identityLine(ctx), // batch 25 (Phase 4): who they are with money, one line, and the wording it leads with
     movesBlock(app, ctx), // batch 12 (item 6): Your next 3 moves, then the tiles
     S.summaryStrip(ctx, [

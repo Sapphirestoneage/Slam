@@ -82,6 +82,14 @@ export const LISTS = {
   retirementTypes: ['401(k)', '403(b)', '457', 'TSP', 'Solo 401(k)', 'Traditional IRA', 'Rollover IRA', 'SEP', 'SEP IRA', 'SIMPLE IRA', 'Roth IRA'],
   penaltyFreeTypes: ['457'],
   highRateTypes: ['Personal loan', 'Buy now, pay later', 'Payday or cash advance', 'Medical', 'Family or friend', 'Tax debt', 'Business', '401(k) loan'],
+  // Batch 28 (who sees this, js/privacy.js): the three marks a row or its notes can carry, the neutral names a coach
+  // picks for a private income line in anything shared, and the neutral word each kind of row takes when it is folded.
+  privacy: {
+    seen: ['Everyone', 'Me and my coach', 'Coach only'],
+    shareNames: ['Other income', 'Self-employment', 'Consulting'],
+    neutral: { income: 'Other income', benefit: 'Other benefit', debt: 'Other debt', 'account:cash': 'Other savings', 'account:investment': 'Other investments', asset: 'Other asset',
+      coverage: 'Other coverage', bill: 'Other spending', spending: 'Other spending', entry: 'Other money in or out', win: 'A win', milestone: 'Another goal', event: 'Another date' },
+  },
 };
 
 const SPEC = 'SLAM Build Spec, Reference data tab';

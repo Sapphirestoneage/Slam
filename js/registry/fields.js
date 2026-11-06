@@ -14,6 +14,7 @@
 // doc parts use dots (variable.lowest is doc.profile.variable.lowest).
 
 import { PERIODS } from '../records.js';
+import { LISTS } from './assumptions.js';
 
 const PERS = PERIODS;
 const FREQS = ['week', '2 weeks', 'twice a month', 'month'];
@@ -25,6 +26,13 @@ const top = (key, label, type, opts = {}) => f(key, label, type, { where: 'top',
 const skip = (key, label, why, opts = {}) => f(key, label, 'text', { sheet: { skip: why }, ...opts });
 const pick = (key, label, options, opts = {}) => f(key, label, 'choice', { options, ...opts });
 const coachNote = () => top('privateNote', 'Coach notes', 'text', { coach: true });
+// Batch 28 (js/privacy.js): who sees a row and its notes, and the neutral name a private row takes in anything shared.
+// Blank is Everyone. Every record kind carries them.
+const SEEN_F = [
+  f('seen', 'Who sees this (blank: everyone)', 'choice', { options: LISTS.privacy.seen }),
+  f('notesSeen', 'Who sees its notes (blank: as the row)', 'choice', { options: LISTS.privacy.seen }),
+  f('shareName', 'Name when shared', 'choice', { options: LISTS.privacy.shareNames }),
+];
 // The next check date for a rough or aged number (js/checks.js): set it to check sooner or later than the rule.
 const CHECK = f('checkOn', 'Check again on', 'date');
 
@@ -204,7 +212,7 @@ export const AREAS = [
       f('what', 'What it is', 'text', { kinds: ['benefit'] }),
       pick('how', 'How it works', ['Reimbursed', 'Stipend', 'Pretax', 'Match', 'Discount'], { kinds: ['benefit'] }),
       pick('using', 'Using it?', ['Yes', 'No', 'Partly'], { kinds: ['benefit'] }),
-      CHECK, LOCKED(), OWNER, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, STRESS,
+      CHECK, LOCKED(), OWNER, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, STRESS, ...SEEN_F,
     ],
   },
   {
@@ -235,7 +243,7 @@ export const AREAS = [
       f('taxPlan', 'Payment plan in place', 'yesno'), f('guaranteed', 'Personally guaranteed', 'yesno'),
       f('institution', 'Institution'), f('opened', 'Opened', 'month'),
       f('institutionId', 'Institution (from the list)', 'text', { sheet: { skip: 'points at an Institutions row by id; the Institution column shows its name' } }),
-      CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(),
+      CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(), ...SEEN_F,
     ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'a debt uses Balance and Payment' } } : x)),
   },
   {
@@ -291,7 +299,7 @@ export const AREAS = [
       f('tags', 'Tags', 'list', { kinds: ['account'] }),
       f('matchTiers', 'Match tiers', 'text', { kinds: ['account'], sheet: { skip: 'a table of match tiers on the 401(k); the first tier is on Income as match % and up to %' } }),
       f('rothLog', 'Roth IRA log', 'text', { kinds: ['account'], sheet: { skip: 'a dated list of Roth IRA contributions; edit it in SLAM' } }),
-      CHECK, LOCKED(), OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(),
+      CHECK, LOCKED(), OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(), ...SEEN_F,
     ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'an account uses Balance, a thing you own uses Value' } } : x)),
   },
   {
@@ -313,7 +321,7 @@ export const AREAS = [
       pick('decision', 'Bills list: keep or try to cut', ['Keep', 'Cancel']), // batch 15: the recurring bills list (Cancel shows as Try to cut)
       f('notSame', 'Not the same as a Budget line', 'yesno', { sheet: { skip: 'an answer to Same as your ...?; asked in SLAM' } }),
       f('sameAs', 'Same as a Budget line', 'text', { sheet: { skip: 'an answer to Same as your ...?; asked in SLAM' } }),
-      CHECK, OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS,
+      CHECK, OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, ...SEEN_F,
     ],
   },
   {
@@ -373,7 +381,7 @@ export const AREAS = [
       f('includesDebtPayments', 'Includes debt payments', 'yesno', { kinds: ['spending'] }),
       f('pass', 'Budget pass', 'text', { kinds: ['spending'], sheet: { skip: 'where the gut number came from (Gut, or Statements when read off statements or an app); set by Fast Track and the gut box' } }),
       f('maaser', 'Maaser line', 'yesno', { kinds: ['bill'], sheet: { skip: 'set by the community preset' } }),
-      CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS,
+      CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, ...SEEN_F,
     ],
   },
   {
@@ -388,7 +396,7 @@ export const AREAS = [
       f('category', 'Counts as', 'text', { kinds: ['entry'] }),
       f('trip', 'Trip', 'yesno', { kinds: ['entry'] }), // F6: the Trip tag on a calendar entry
       f('lineId', 'Budget line', 'text', { kinds: ['entry'], sheet: { skip: 'points at a Budget line by its id; pick it in SLAM' } }),
-      NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS,
+      NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, ...SEEN_F,
     ].map(x => (['per', 'owner', 'stress'].includes(x.key) ? { ...x, unused: true, sheet: { skip: 'not used on calendar entries' } } : x)),
   },
   {
@@ -410,7 +418,7 @@ export const AREAS = [
       f('fundTag', 'Purpose tag', 'text', { kinds: ['event'] }),
       f('coverageId', 'For this coverage', 'text', { kinds: ['event'], sheet: { skip: 'points at a Protection row by its id; set by Add the usual dates' } }),
       f('holiday', 'Holiday (the block re-dates itself each year)', 'text', { kinds: ['event'] }),
-      NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS,
+      NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, ...SEEN_F,
     ].map(x => (['per', 'stress'].includes(x.key) ? { ...x, unused: true, sheet: { skip: 'not used on goals and events' } } : x)), // owner: a goal is one person's or Joint (F2)
   },
   {

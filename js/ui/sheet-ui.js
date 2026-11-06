@@ -2,7 +2,8 @@
 // Open the books: the two buttons (Open in a spreadsheet, Bring a spreadsheet back) and the review of every change
 // before anything is saved. The workbook and the change list come from js/sheet/; this file only shows them.
 import { h, icon } from './dom.js';
-import { button, checkbox, toast } from './staples.js';
+import { button, checkbox, toast, toggle } from './staples.js';
+import { isMarked, sharedBackup } from '../privacy.js';
 import { saveFile, saveWords } from './save-file.js';
 import { buildWorkbook } from '../sheet/workbook.js';
 import { workbookBuffer, readWorkbook } from '../sheet/excel.js';
@@ -19,32 +20,51 @@ export const WORDS = {
   backLine: "Been using your spreadsheet? Upload it here. You'll see every change before anything is saved.",
   backTip: 'From Google Sheets, download it first: File, Download, Microsoft Excel (.xlsx).',
   coach: 'Include coach-only notes',
+  // Batch 28: what an export holds. A shared copy folds private and coach-only rows into neutral words (the totals stay).
+  choice: 'What the files hold',
+  full: 'Everything',
+  shared: 'Without private rows',
+  sharedTip: 'Rows marked Me and my coach or Coach only become neutral lines (Other income, Other spending) with their notes, platform and account details left out; every total is the same. A copy with an id of its own: it never writes over this client',
 };
-const UI = { coach: false };
+export const UI = { coach: false, shared: false };
+// The one choice for the backup and the spreadsheet (Coach tools › Data, and beside the spreadsheet button elsewhere).
+export function exportChoice(app) {
+  if (!app.hasClient || !app.store?.doc?.records?.some(r => isMarked(r) || r.privateNote)) return null; // nothing to leave out
+  return h('div.row-line.export-choice', { style: { gap: '8px' } }, h('span.label.has-tip', { title: WORDS.sharedTip }, WORDS.choice),
+    toggle([[false, WORDS.full], [true, WORDS.shared]], UI.shared, v => { UI.shared = v; }, { label: WORDS.choice }));
+}
+// The household an export carries: everything, the shared copy, or in Client view what the client sees.
+export function exportDoc(app) {
+  const doc = app.store.doc;
+  if (UI.shared) return sharedBackup(doc, app.ctx.ref);
+  return app.prefs?.clientView ? app.ctx.store.doc : doc;
+}
 const slug = s => String(s || 'client').replace(/\W+/g, '-').replace(/^-|-$/g, '').toLowerCase();
 
 // The two buttons, each with its one line under it. coachBox: the coach-only checkbox (hidden in client view).
-export function sheetButtons(app, { coachBox = true } = {}) {
+export function sheetButtons(app, { coachBox = true, choice = true } = {}) {
   const clientView = !!app.prefs?.clientView;
   return h('div.sheet-actions', {},
     h('div.btn-line', {}, button(WORDS.open, { iconName: 'sheet', onClick: e => exportSheet(app, e.currentTarget) }), h('span.muted.small', {}, WORDS.openLine),
-      coachBox && !clientView ? h('span.coach-only', {}, checkbox(WORDS.coach, UI.coach, v => { UI.coach = v; }, { key: 'sheet:coach' })) : null),
+      coachBox && !clientView ? h('span.coach-only', {}, checkbox(WORDS.coach, UI.coach, v => { UI.coach = v; }, { key: 'sheet:coach' })) : null,
+      choice && !clientView ? h('span.coach-only', {}, exportChoice(app)) : null),
     h('div.btn-line', {}, button(WORDS.back, { iconName: 'upload', onClick: () => importSheet(app), tip: WORDS.backTip }), h('span.muted.small', { title: WORDS.backTip }, WORDS.backLine)),
     intakeButton(app));
 }
 
 export async function exportSheet(app, btn = null) {
   if (!app.hasClient) { toast('Open a client first.'); return; }
-  const doc = app.store.doc;
+  const doc = exportDoc(app); // batch 28: everything, the shared copy, or what the client sees
+  const shared = doc !== app.store.doc;
   const now = new Date();
-  const coach = UI.coach && !app.prefs?.clientView; // the client view never carries coach-only notes
+  const coach = UI.coach && !app.prefs?.clientView && !shared; // the client view and a shared copy never carry coach-only notes
   if (btn) btn.disabled = true;
   try {
     const ExcelJS = await loadExcelJS();
-    const plan = buildWorkbook(doc, app.ctx.ref, { now, coach, flags: app.flags || [] });
+    const plan = buildWorkbook(doc, app.ctx.ref, { now, coach, shared, flags: app.flags || [] });
     const blob = new Blob([await workbookBuffer(ExcelJS, plan)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const result = await saveFile(blob, `slam-${slug(plan.client)}-${now.toISOString().slice(0, 10)}.xlsx`); // batch 7, item 1: works inside the artifact too
-    toast(saveWords(result, 'The spreadsheet') ?? `Spreadsheet downloaded${coach ? ', with coach-only notes' : ''}. Open it in Excel, or upload it to Google Drive.`);
+    const result = await saveFile(blob, `slam-${slug(plan.client)}-${shared ? 'shared-' : ''}${now.toISOString().slice(0, 10)}.xlsx`); // batch 7, item 1: works inside the artifact too
+    toast(saveWords(result, 'The spreadsheet') ?? `Spreadsheet downloaded${coach ? ', with coach-only notes' : shared ? ', without private rows' : ''}. Open it in Excel, or upload it to Google Drive.`);
   } catch (e) {
     toast(e.message || 'The spreadsheet could not be made.');
   } finally { if (btn) btn.disabled = false; }
@@ -60,6 +80,7 @@ export function importSheet(app) {
       const ExcelJS = await loadExcelJS();
       const grid = await readWorkbook(ExcelJS, await file.arrayBuffer());
       const res = compare(grid, app.store.doc, { ref: app.ctx.ref });
+      if (res.meta?.baseline?.shared) { toast('This is a copy made without private rows (they are renamed in it). Bring back a full copy instead.'); return; } // batch 28: it would rename rows
       if (res.wrongClient) askWhichClient(app, grid, res, file.name);
       else review(app, res, file.name);
     } catch (e) {
