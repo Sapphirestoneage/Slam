@@ -40,8 +40,8 @@
 .subtabs[hidden] { display: none; }
 .topbar .more-btn { display: inline-flex; align-items: center; width: auto; padding: 0 8px 0 10px; gap: 2px; font-weight: 700; font-size: .9375rem; }
 .more-menu .btn { justify-content: flex-start; width: 100%; }
-.subtabs-in { max-width: none; margin: 0 auto; display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s5); }
-.subtab { display: inline-flex; align-items: center; gap: var(--s2); height: 38px; padding: 0 var(--s3); border-radius: var(--r-button); color: var(--text); text-decoration: none; font-weight: 700; border: 2px solid transparent; }
+.subtabs-in { max-width: none; margin: 0 auto; display: flex; flex-wrap: wrap; row-gap: 4px; align-items: center; gap: var(--s2); padding: var(--s2) var(--s5); } /* Nov 6: a tab's name never wraps inside it; with many tabs (Plan has 9) whole tabs go to a second row */
+.subtab { flex: none; white-space: nowrap; display: inline-flex; align-items: center; gap: var(--s2); height: 38px; padding: 0 var(--s3); border-radius: var(--r-button); color: var(--text); text-decoration: none; font-weight: 700; border: 2px solid transparent; }
 .subtab:hover { border-color: var(--border-row); }
 .subtab[aria-current="page"] { background: var(--primary); color: var(--on-primary); }
 .subtab .count { font-size: .75rem; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: var(--chip); color: var(--chip-text); }
@@ -115,7 +115,7 @@ textarea.note-input { width: 100%; min-height: 70px; border: 2px solid var(--bor
   .tb-right { order: 3; width: 100%; flex-wrap: wrap; justify-content: flex-start; row-gap: 6px; padding-bottom: 2px; } /* batch 8: wraps, nothing hides past the edge */
   .tb-right > .field { display: none; }
   .subtabs { top: 0; }
-  .subtabs-in { overflow-x: auto; padding: 8px 12px; }
+  .subtabs-in { flex-wrap: nowrap; overflow-x: auto; padding: 8px 12px; }
   .subtab { flex: none; }
   .banner { padding: 0 12px; }
   .banner > div { flex-wrap: wrap; }
