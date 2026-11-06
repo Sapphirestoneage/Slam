@@ -114,7 +114,7 @@ const app = {
     const demo = await fetch('fixtures/demo.json').then(r => r.json());
     const existing = listClients(adapter).find(c => c.name === 'Demo client');
     this.open(existing ? loadClient(adapter, existing.id) : householdFromInputs(demo.inputs, { name: 'Demo client' }));
-    S.toast('Example numbers loaded. The Demo client is made up.');
+    S.toast('Example numbers loaded. The Demo client is made up.', { phoneMs: 4000 }); // batch 51 (QUESTIONS 379)
   },
   go(hash) { if (location.hash === hash) this.render(); else location.hash = hash; },
   // ---------- The usage log (batch 14, item 9): counts and words only, in the client file; saved a moment later ----------

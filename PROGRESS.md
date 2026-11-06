@@ -1218,3 +1218,34 @@ failures. Persona run: 15 personas, 0 errors, 0 story notes. Workbook check: eve
    household of three, head of household). test/households.test.js proves every persona and the Demo read exactly as
    before in every view, on every screen's numbers and in each audience's fold (fixtures/views-baseline.json, written
    from main before the batch; tools/personas/views.mjs).
+
+
+## Batch 51 (Nov 6 2026): four decided small items, and Shift P&L (Phase 5, real lives wave 2)
+
+1. QUESTIONS 374: a month's own gut number (Different in <month> on Budget) is what that month's lines compare with on
+   the gut card ("Lines are $2,550 under your November 2026 gut number") and the totals strip, and that month's guess
+   in gut accuracy, even when typed after the month closed (js/month.js closedMonths).
+2. QUESTIONS 378: in Client view a Budget category whose only line is coach-only says "Includes amounts kept private"
+   (the discreet couple's Other, beside "$37 from the lines"), not "23 starter lines, none used yet"
+   (js/privacy.js categoryLinesWords).
+3. QUESTIONS 379: on a phone the Demo load toast leaves after 4 seconds (5 on wider screens), still at the bottom.
+4. QUESTIONS 387: the certainty meter's 0% for each output is the wider of the age-only width and this household's
+   all-guess width (js/math/nextbest.js). Tom's net worth reads 78% (was 0%), Alexis's debt-free date 56% (was 9%);
+   after Fast Track Maya 78%, Alexis 69% (49%), Tom 87% (72%). next-best.md "As built" says so.
+5. Shift P&L (M9H, js/math/shiftpnl.js): for each row with shifts a week, a shift's gross (pay or the paycheck before
+   tax, card and cash tips) less the house fee, the tip-out and the row's own tax gives the take-home a shift that Tips
+   and shifts shows; less getting there (a ride or fare each way, both ways unless One way; or miles at the IRS 72.5
+   cents, reference data mileage.rate, IR-2025-128), childcare (sitter hours x rate) and outfits and gear (spread over
+   the shifts they last) gives what the shift leaves; over every hour (getting ready, travel, the shift, winding down)
+   the real hourly, beside the shift's own hourly and the hourly value (M17). Rows rank by real hourly. A view: the
+   surplus does not change. New income fields (11), spec rows F551 to F561, the Math row, format 42.
+6. Screen: Cash flow › Income › What a shift really pays, under the income list, closed, only with a shift row (and
+   Phase 4 previews on): three tiles (take-home a shift, what the shift leaves, a real hour), then the money a shift and
+   the hours a shift as slim rows, every cost and hour a tap (A ride, Drive, Transit, Walk; $10 to $30 each way; Both
+   ways or One way; miles; childcare hours "All N hours away" and $15 to $25 an hour, shown with kids or when typed;
+   outfits over 10 to 50 shifts). A row kept private for this audience stays folded ("Includes amounts kept
+   private"). Find: "shift p&l", "real hourly", "what a shift pays", "best night". The layout checker has a third
+   client, Shift (the dancer through Import), scanning Income with the section closed and open.
+7. Personas: Nova the dancer $337.97 a shift after costs, $33.80 a real hour (on the clock $52.48); Riley the bartender
+   $229.00, $22.90 (on the clock $32.50); hand-worked in their defs (shiftPnl) and checked in test/batch51.test.js;
+   Alexis, Tom, Maya and the teacher have no shift rows and show nothing. QUESTIONS 420 to 426.

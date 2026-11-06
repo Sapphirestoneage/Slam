@@ -280,7 +280,7 @@ function pictureCard(ctx, P, app = null) {
   const paceTag = h(`span.tag.pace-tag.${pace.word === 'Ahead' ? 'ahead' : pace.word === 'On track' ? 'ontrack' : 'catchup'}`, {}, pace.word);
   const M = ctx.askNext?.(app?.flags ?? [])?.meter ?? null;
   const cert = M ? M.value : 0, points = Math.round(cert * 100);
-  const certTip = M?.none ? 'Nothing to measure yet: add take-home pay and spending' : `${meterWord(cert)}: the ranges on the FI date, the debt-free date, the surplus, the emergency fund and net worth, against what they would be if every number were a guess`;
+  const certTip = M?.none ? 'Nothing to measure yet: add take-home pay and spending' : `${meterWord(cert)}: the ranges on the FI date, the debt-free date, the surplus, the emergency fund and net worth, against the wider of a plan from your age alone and your own numbers all read as guesses`; // batch 51 (QUESTIONS 387)
   const detail = h('div.row-line.picture-detail', { style: { gap: '10px', marginTop: '6px' } }, h('span.muted.small', {}, `Picture ${pace.points}%`), paceTag, h('span.muted.small', {}, pace.text));
   if (P.afterIntake) { // the picture is in: now the areas count
     return h('div.card.picture-card', {}, h('div.row-line', { style: { gap: '8px' } }, h('h2', {}, 'Whole picture')), // batch 13: a title for the caret

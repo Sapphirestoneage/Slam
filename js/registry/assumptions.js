@@ -137,6 +137,7 @@ export const ASSUMPTIONS = [
   { id: 'defaults.sessionMinutes', name: 'SessionMinutes', label: 'Session length, minutes', unit: 'number', get: r => r.defaults.sessionMinutes, source: SPEC, date: '2026-10-28' },
   { id: 'defaults.lowBalanceLine', name: 'LowBalanceLine', label: 'Low balance line on the calendar', unit: 'money', get: r => r.defaults.lowBalanceLine, source: 'Accepted rule (Reference data)', date: '2026-10-28' },
   { id: 'defaults.taxSetAside', name: 'TaxSetAside', label: 'Tax set-aside on variable income', unit: 'pct', get: r => r.defaults.taxSetAside, source: 'Rule of thumb (Reference data)', date: '2026-10-28' },
+  { id: 'mileage.rate', name: 'MileageRate', label: 'Driving to a shift: the IRS business rate, dollars a mile (Shift P&L)', unit: 'money', get: r => r.mileage.rate, source: 'IRS IR-2025-128 (Dec 29 2025), Notice 2026-10: 72.5 cents a mile from Jan 1 2026', date: '2026-11-06' }, // batch 51
   { id: 'hoursPerMonthFallback', name: 'HoursPerMonth', label: 'Work hours a month when none are typed', unit: 'number', get: r => r.hoursPerMonthFallback, source: 'R153 (40 hours a week)', date: '2026-10-28' },
   // 2026 limits.
   { id: 'limits.401k.base', name: 'Limit_401k', label: '401(k), 403(b), 457, TSP deferral limit', unit: 'money', get: r => r.limits['401k'].base, source: IRS, date: '2026-10-28' },

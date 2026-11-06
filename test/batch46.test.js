@@ -158,7 +158,11 @@ test('QUESTIONS 371: the certainty meter\'s 0% is the plan from the age alone', 
   const R = rangesOf(s.doc, ref, { now }), F = fooRangeOf(s.doc, ref, { now });
   const A = askNextOf(s.doc, ref, { now, R, F, zero });
   const part = A.meter.parts.find(p => p.key === 'surplus');
-  near(part.value, 1 - R.surplus.width / zero.surplus.width, 1e-9);
+  // Batch 51 (QUESTIONS 387): the zero is the wider of the age-only width and the all-guess width. Maya's surplus: the
+  // age-only $2,123 against her all-guess $2,330, so the all-guess one; her FI date keeps the age-only open end (600).
+  const allGuess = askNextOf(s.doc, ref, { now, R, F }).meter.parts.find(p => p.key === 'surplus');
+  near(part.value, Math.max(1 - R.surplus.width / zero.surplus.width, allGuess.value), 1e-9);
+  near(A.meter.parts.find(p => p.key === 'fi').value, 1 - R.fi.width / 600, 1e-9);
   assert.ok(A.meter.value > askNextOf(s.doc, ref, { now, R, F }).meter.value, 'Maya after Fast Track is surer against an age-only plan than against all-guess');
   assert.equal(ageOnlyRangesOf(fresh({}).doc, ref, data, { now }), null, 'no age: the all-guess zero stands');
 });

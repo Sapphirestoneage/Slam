@@ -197,7 +197,9 @@ export function dockedHeight({ without = null } = {}) {
   }
   return Math.max(0, Math.round(vh - top));
 }
-export function toast(text, { undo = null, action = null } = {}) {
+// Batch 51 (QUESTIONS 379): phoneMs, how long it stays on a phone (where it spans the width at the bottom, the usual
+// snackbar); the Demo load toast leaves after 4 seconds there.
+export function toast(text, { undo = null, action = null, phoneMs = null } = {}) {
   if (toastEl?._scroll) window.removeEventListener('scroll', toastEl._scroll, true);
   toastEl?.remove(); clearTimeout(toastTimer);
   toastEl = h('div.toast', { role: 'status' }, h('span', {}, text),
@@ -207,7 +209,7 @@ export function toast(text, { undo = null, action = null } = {}) {
   if (dock) toastEl.style.setProperty('bottom', `${dock + 10}px`, 'important'); // above the docked bars (batch 18, item 6)
   document.body.append(toastEl);
   dodge(toastEl); settleDodge(toastEl);
-  toastTimer = setTimeout(() => toastEl?.remove(), undo ? 10000 : 5000); // 10 seconds when it can be undone
+  toastTimer = setTimeout(() => toastEl?.remove(), undo ? 10000 : phoneMs && window.innerWidth <= 700 ? phoneMs : 5000); // 10 seconds when it can be undone
   return toastEl;
 }
 // Batch 37: a toast whose message is done (Transitions' Cleared, once a template is picked) goes at once.

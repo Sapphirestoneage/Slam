@@ -155,6 +155,14 @@ export const hiddenCount = recs => recs.filter(r => r.folded).length;
 // of a list's row count and a Budget category's line count too (its amount stays in every total).
 export const countable = recs => recs.filter(r => r.folded !== 'Coach only');
 export const PRIVATE_LINE = 'Includes amounts kept private';
+// Batch 51 (QUESTIONS 378): what a Budget category says about its lines: the lines this audience sees, else (when its
+// only lines are coach-only, in Client view) that it holds amounts kept private, else its unused starter lines.
+export function categoryLinesWords(lines = [], faded = 0) {
+  const n = countable(lines).length;
+  if (n) return `${n} ${n === 1 ? 'line' : 'lines'}`;
+  if (lines.some(l => l.folded === 'Coach only')) return PRIVATE_LINE;
+  return faded ? `${faded} starter lines, none used yet` : 'No lines: the amount alone counts';
+}
 
 // A store that reads the household as an audience sees it and writes to the real one. Every read (doc, get, find)
 // goes through the fold; every write (update, add, setDoc, undo ...) goes to the real store, and the next read folds

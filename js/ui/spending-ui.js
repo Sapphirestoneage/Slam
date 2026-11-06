@@ -153,7 +153,7 @@ function budgetStrip(ctx, view) {
   } else {
     const per = perPaycheck(m);
     items.push(per ? { label: 'Per paycheck', result: { id: 'M20', value: (fixed + variable + setAside) / per.per, needs: [], unit: 'money', text: `Spending ${money(fixed + variable + setAside)} a month over ${per.per.toFixed(2)} paychecks a month (${per.label}).` }, note: 'What each paycheck has to cover' }
-      : gutVsLines(fixed + variable + setAside, view.gut));
+      : gutVsLines(fixed + variable + setAside, view.gut, ctx.store.getIn('spending', ['months', UI.ym, 'gut']) != null ? monthName(UI.ym) : null));
   }
   return budgetSlim(ctx, items);
 }
@@ -163,16 +163,17 @@ function budgetSlim(ctx, items) {
   return S.slimStrip(ctx, 'budget:totals', 'Totals', items.map(i => ({ ...i, label: SLIM_LABEL[i.label] ?? i.label.replace(/, .*$/, ''), text: i.render && i.result.value != null ? i.render(i.result) : undefined })), S.summaryStrip(ctx, items), { tip: 'Open the totals: fixed, variable, yearly, and how the lines compare' });
 }
 // Words, not a bare negative: "Lines are $1,950 under your gut number".
-export function gutWords(lines, gut) {
-  const d = lines - gut;
-  if (Math.abs(d) < 0.5) return 'Lines match your gut number';
-  return `Lines are ${money(Math.abs(d))} ${d > 0 ? 'over' : 'under'} your gut number`;
+// Batch 51 (QUESTIONS 374): month names a month's own gut number ("your December gut number").
+export function gutWords(lines, gut, month = null) {
+  const d = lines - gut, yours = month ? `your ${month} gut number` : 'your gut number';
+  if (Math.abs(d) < 0.5) return `Lines match ${yours}`;
+  return `Lines are ${money(Math.abs(d))} ${d > 0 ? 'over' : 'under'} ${yours}`;
 }
-function gutVsLines(lines, gut) {
+function gutVsLines(lines, gut, month = null) {
   if (gut === null) return { label: 'Gut vs lines', result: { id: 'M26', value: null, needs: ['a gut number'], unit: 'money' } };
   const d = lines - gut;
-  return { label: 'Gut vs lines', result: { id: 'M26', value: d, needs: [], unit: 'money', text: `Lines ${money(lines)} minus the gut number ${money(gut)}.` },
-    render: () => (Math.abs(d) < 0.5 ? 'Same' : `${money(Math.abs(d))} ${d > 0 ? 'over' : 'under'}`), note: gutWords(lines, gut) };
+  return { label: 'Gut vs lines', result: { id: 'M26', value: d, needs: [], unit: 'money', text: `Lines ${money(lines)} minus ${month ? `${month}'s own` : 'the'} gut number ${money(gut)}.` },
+    render: () => (Math.abs(d) < 0.5 ? 'Same' : `${money(Math.abs(d))} ${d > 0 ? 'over' : 'under'}`), note: gutWords(lines, gut, month) };
 }
 function perPaycheck(m) {
   const f = m.inputs.income.find(x => x.r.values.payFrequency)?.r.values.payFrequency;
@@ -189,7 +190,8 @@ function gutBox(ctx, view) {
     else ctx.store.add('spending', { name: 'Monthly spending, all in', amount: v, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } }, { type: 'All in' });
   };
   const lineTotal = view.totals.rough + sum(ctx.metrics().inputs.autoLines ?? [], a => a.amount); // with the debt payments, From Debt, as on the strip
-  const words = rec?.amount != null ? gutVsLinesWords({ gut: rec.amount, lineTotal, categories: ctx.metrics().inputs.categories }).text : 'What do you think you spend in a month? Ask before looking at anything; it is kept to compare later.'; // batch 12 (item 3)
+  // Batch 51 (QUESTIONS 374): the lines compare with the month's own gut number when it has one.
+  const words = rec?.amount != null ? gutVsLinesWords({ gut: view.gut ?? rec.amount, lineTotal, categories: ctx.metrics().inputs.categories, month: ctx.store.getIn('spending', ['months', UI.ym, 'gut']) != null ? monthName(UI.ym) : null }).text : 'What do you think you spend in a month? Ask before looking at anything; it is kept to compare later.'; // batch 12 (item 3)
   const row = h('div.row-line.gut-row', { style: { gap: '12px' } }, h('h3', {}, 'Your gut number'), S.moneyInput(rec?.amount ?? null, set, { hint: 'A month, all in', key: 'gut' }),
     rec ? S.toggle([[true, 'Includes debt payments'], [false, 'Not debt payments']], rec.values.includesDebtPayments !== false, v => ctx.store.update(rec.id, { includesDebtPayments: v }), { label: 'Includes debt payments' }) : null,
     // Batch 18: where the number is from, as in Fast Track; statements or an app counts at Estimate on the Picture.

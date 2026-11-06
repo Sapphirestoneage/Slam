@@ -418,10 +418,11 @@ export function carry(store, ym, lineId, amountValue) {
   return store.setIn('spending', ['months', addMonths(ym, 1), 'lines', lineId, 'estimate'], Math.round(amountValue), 'Carried to next month');
 }
 
-// Closed months for gut accuracy (M26) and history.
+// Closed months for gut accuracy (M26) and history. Batch 51 (QUESTIONS 374): a month's own gut number (typed on
+// Budget, even after the month closed) is that month's guess.
 export function closedMonths(doc) {
   return Object.entries(doc.spending?.months || {}).filter(([, m]) => m.closed && m.summary)
-    .map(([ym, m]) => ({ ym, guess: m.summary.gut, actual: m.summary.actual, estimate: m.summary.estimate })).sort((a, b) => a.ym.localeCompare(b.ym));
+    .map(([ym, m]) => ({ ym, guess: m.gut ?? m.summary.gut, actual: m.summary.actual, estimate: m.summary.estimate })).sort((a, b) => a.ym.localeCompare(b.ym));
 }
 
 // L (overnight), answer 171: months closed in a row, counted back from last month (this month counts once closed),

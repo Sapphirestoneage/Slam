@@ -39,7 +39,7 @@ const ROUTES = (() => {
 const WIDTHS = process.env.LAYOUT_WIDTHS ? process.env.LAYOUT_WIDTHS.split(',').map(Number) : QUICK ? [1440] : [1440, 1280, 390];
 const THEMES = process.env.LAYOUT_THEMES ? process.env.LAYOUT_THEMES.split(',') : QUICK ? ['light'] : ['light', 'dark'];
 const ONLY = process.env.LAYOUT_ROUTES ? process.env.LAYOUT_ROUTES.split(',') : null; // batch 19: a few screens while fixing them
-const CLIENTS = process.env.LAYOUT_CLIENTS ? process.env.LAYOUT_CLIENTS.split(',') : ['Demo', 'New'];
+const CLIENTS = process.env.LAYOUT_CLIENTS ? process.env.LAYOUT_CLIENTS.split(',') : ['Demo', 'New', 'Shift']; // batch 51: Shift, a client with shift rows (the dancer persona)
 const CHECKS = ['level', 'clipped', 'overflow', 'covered', 'askable', 'column', 'sticky', 'unlabeled', 'cramped'];
 const STILL = ['level', 'clipped', 'overflow', 'column', 'unlabeled', 'cramped']; // what a scan of a screen at rest runs
 const SHOTS_PER_CHECK = 3;
@@ -682,7 +682,7 @@ if (require.main === module) (async () => {
   const t0 = Date.now();
   fs.mkdirSync(OUT, { recursive: true });
   for (const f of fs.readdirSync(OUT)) if (/^(level|clipped|overflow|covered|askable|column|sticky|unlabeled|cramped)-\d+\.png$/.test(f)) fs.unlinkSync(path.join(OUT, f));
-  console.log(`Layout check: ${ROUTES.length} screens x ${WIDTHS.join('/')} x ${THEMES.join('/')} x 2 clients${OFFLINE ? ' (CDN and fonts stood in)' : ''}`);
+  console.log(`Layout check: ${ROUTES.length} screens x ${WIDTHS.join('/')} x ${THEMES.join('/')} x ${CLIENTS.length} clients${OFFLINE ? ' (CDN and fonts stood in)' : ''}`);
   const browser = await chromium.launch();
   // The Demo client.
   if (CLIENTS.includes('Demo')) {
@@ -720,6 +720,29 @@ if (require.main === module) (async () => {
       await fixedBill(page).catch(e => errors.push(`fixed bill setup: ${e.message.split('\n')[0]}`));
       await runClient(page, 'New');
     } catch (e) { errors.push(`new client: ${e.message.split('\n')[0]}`); }
+    await ctx.close();
+  }
+  // Batch 51: a client with shift rows (the dancer persona, through Import): Cash flow › Income with What a shift really
+  // pays closed and open, at every width and theme.
+  if (CLIENTS.includes('Shift')) {
+    const { ctx, page } = await newContext(browser);
+    try {
+      await go(page, '#/tools/data'); await settle(page, 600);
+      const [chooser] = await Promise.all([page.waitForEvent('filechooser', { timeout: 5000 }), page.locator('button', { hasText: /^Import$/ }).first().click()]);
+      await chooser.setFiles(path.join(__dirname, '..', '..', 'fixtures', 'personas', 'dancer.json')); await settle(page, 1200);
+      await page.evaluate(() => document.querySelectorAll('.toast').forEach(t => t.remove()));
+      for (const width of WIDTHS) for (const theme of THEMES) {
+        await page.setViewportSize({ width, height: width < 600 ? 844 : 1000 }); await setTheme(page, theme);
+        await go(page, '#/cash-flow/income'); await settle(page, 300);
+        const meta = { route: '#/cash-flow/income', width, theme, client: 'Shift' };
+        await scanHere(page, { ...meta, state: 'What a shift really pays closed' }, [...STILL, 'covered']);
+        const caret = page.locator('[data-sec="income:shifts"] button.sec-caret').first();
+        if ((await caret.getAttribute('aria-expanded').catch(() => null)) === 'false') { await caret.click().catch(() => {}); await settle(page, 300); }
+        await page.locator('[data-sec="income:shifts"]').scrollIntoViewIfNeeded().catch(() => {});
+        await scanHere(page, { ...meta, state: 'What a shift really pays open' }, [...STILL, 'covered']);
+        if ((await caret.getAttribute('aria-expanded').catch(() => null)) === 'true') { await caret.click().catch(() => {}); await settle(page, 200); }
+      }
+    } catch (e) { errors.push(`shift client: ${e.message.split('\n')[0]}`); }
     await ctx.close();
   }
   await browser.close();

@@ -55,6 +55,7 @@ import { askNextOf } from '../math/nextbest.js';
 import { cliffOf } from '../math/cliff.js';
 import { rowShare } from '../math/household.js';
 import { householdOf } from './couples.js';
+import { shiftPnlsOf } from '../math/shiftpnl.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -675,6 +676,12 @@ export const MATH = [
     parts: [{ key: 'withCard', name: 'Days covered with the backup card\'s room (a card cannot pay rent or another debt)', unit: 'days', fromApp: 'the fewer of (cash + card room) / every must-pay a day and cash / (housing and minimums) a day', app: c => fireDrillOf(c.doc, c.ref, { now: c.now }).cover?.withCard ?? null },
       { key: 'outOfReach', name: 'Out of reach if it froze today: its balance, the same bank\'s accounts, and the paychecks that land there in the window', unit: 'money', fromApp: 'M9F: from the calendar\'s next FireDrillDays days', app: c => fireDrillOf(c.doc, c.ref, { now: c.now }).unreachable?.total ?? null },
       { key: 'mustPay', name: 'Must-pay bills a month (the DRAFTT needs and the minimums)', unit: 'money', fromApp: 'M9F: the must-pay Budget lines plus each debt\'s minimum, or the gut number with only a gut number', app: c => fireDrillOf(c.doc, c.ref, { now: c.now }).must?.monthly ?? null }] },
+  // ---------- Batch 51: Shift P&L (Phase 5, real lives wave 2) ----------
+  { id: 'M9H', name: 'Shift P&L: what a shift really pays an hour', inputs: 'each shift row (M12: shifts a week, pay a shift or the paycheck, card and cash tips, the house fee, the tip-out, its take-home), Getting to a shift (a ride or fare each way and the ways, or the miles at MileageRate), childcare hours and the sitter\'s rate, outfits and gear over the shifts they last, the hours a shift (getting ready, travel, the shift, winding down), M17 the hourly value', unit: 'money',
+    fns: ['shiftpnl.TRAVEL_BY', 'shiftpnl.COST_KEYS', 'shiftpnl.isShiftRow', 'shiftpnl.shiftCostsOf', 'shiftpnl.shiftHoursOf', 'shiftpnl.shiftPnlOf', 'shiftpnl.shiftPnlsOf'],
+    fromApp: 'the take-home a shift is each row\'s own take-home (M12, with the household\'s tax) over its shifts a month, so it is worked out in SLAM; the costs and hours are the row\'s own boxes. The value is the real hourly of the shift row that pays most per real hour',
+    app: c => { const P = shiftPnlsOf(c.m, { ref: c.ref }); return P.rows.find(r => r.realHourly != null)?.realHourly ?? null; },
+    parts: [{ key: 'real', name: 'What that shift leaves, a shift: take-home less getting there, childcare and gear', unit: 'money', fromApp: 'M9H: the row\'s take-home a shift less its costs', app: c => { const P = shiftPnlsOf(c.m, { ref: c.ref }); const r = P.rows.find(x => x.realHourly != null) ?? P.rows[0]; return r ? r.real : null; } }] },
   { id: 'M9Q', name: 'Ask me next and the certainty meter', inputs: 'the ranges (M9R) and their drivers, the Picture %\'s next small things (M73), These are big deals (M56), the FOO step\'s range, the weights and question times on the Assumptions tab (CertaintyWeight*, CertaintyOpenMonths, AskSeconds*)', unit: 'pct',
     fns: ['nextbest.KEYS', 'nextbest.WEIGHTS', 'nextbest.spanOf', 'nextbest.certaintyOf', 'nextbest.answerOf', 'nextbest.questionWords', 'nextbest.whyWords', 'nextbest.askNextOf', 'ranges.runsOf', 'ranges.rangeFromRuns', 'ranges.readOut', 'ranges.DATE'],
     fromApp: 'the plan is run again with every input read as a guess (the all-guess widths), and once more for each input read at the level its answer reaches, which a sheet cannot do with named ranges. The value is the certainty meter: each key output\'s 1 minus its width over its all-guess width, weighted',

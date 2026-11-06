@@ -23,7 +23,7 @@ import { needs } from '../math/result.js';
 import { money } from '../format.js';
 import { estimateOf, actualOf, instances, monthName, planDiffs, addMonths, ymOf } from '../month.js';
 import { rangeLine } from './range-ui.js';
-import { countable } from '../privacy.js';
+import { countable, categoryLinesWords } from '../privacy.js';
 
 const LOAN_TYPES = new Set(['Student loan', 'Car loan', 'Personal loan', 'Mortgage']);
 const short = v => (Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
@@ -604,7 +604,7 @@ export function categoryList(ref, { pass = 'Plan', ym = null } = {}) {
     hasValue: (ctx, r) => catOf(ctx, r)?.amount != null,
     columns: [
       { label: 'Category', render: (ctx, r) => { const c = catOf(ctx, r); return h('span.stack', { style: { gap: '2px' } }, h('strong', {}, c?.name ?? r.name ?? r.type),
-        h('span.muted.small', {}, countable(c?.lines ?? []).length ? `${countable(c.lines).length} ${countable(c.lines).length === 1 ? 'line' : 'lines'}` : fadedIn(ctx, r.type) ? `${fadedIn(ctx, r.type)} starter lines, none used yet` : 'No lines: the amount alone counts')); } },
+        h('span.muted.small', {}, categoryLinesWords(c?.lines ?? [], fadedIn(ctx, r.type)))); } }, // batch 51 (QUESTIONS 378): coach-only lines only: "Includes amounts kept private"
       // Batch 19: what the amount reads from sits in its own column, right beside the box (under it on a phone), so the
       // box is always in the same place down the table (DESIGN.md rule 1b).
       { label: 'Note', head: '', num: true, render: (ctx, r, m, up) => {

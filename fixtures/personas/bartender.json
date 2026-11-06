@@ -89,7 +89,15 @@
       "Jan",
       "Feb"
      ],
-     "slowShifts": 2
+     "slowShifts": 2,
+     "hoursShift": 8,
+     "prepHours": 0.5,
+     "travelHours": 1,
+     "windDownHours": 0.5,
+     "travelBy": "Ride",
+     "travelCost": 14,
+     "gearCost": 120,
+     "gearShifts": 40
     },
     "notes": null,
     "privateNote": null,

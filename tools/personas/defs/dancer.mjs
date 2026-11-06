@@ -16,7 +16,10 @@ export default {
     // and a $20 tip-out (DJ and house mom) a shift; the app works out the tax on the rest (1099, quarterly).
     { kind: 'income', type: 'Self-employed', name: 'Dancing', status: 'Roughly', values: { incomeType: '1099', payFrequency: 'week',
       shiftsWeek: 3, payShift: 575, houseFee: 80, tipOutBy: '$ a shift', tipOutAmount: 20, slowMonths: ['Jan', 'Feb'], slowShifts: 2,
-      returnsFiled: '2 or more', returnLast: 52000, returnBefore: 41000 } }, // batch 42: her 2024 and 2025 returns (Schedule C net) showed less than she earns now
+      returnsFiled: '2 or more', returnLast: 52000, returnBefore: 41000, // batch 42: her 2024 and 2025 returns (Schedule C net) showed less than she earns now
+      // Batch 51 (Shift P&L): a 7-hour shift, 1.5 hours getting ready (hair, makeup), 1 hour driving there and back
+      // (24 miles), half an hour winding down; outfits, shoes and makeup about $360 every 30 shifts.
+      hoursShift: 7, prepHours: 1.5, travelHours: 1, windDownHours: 0.5, travelBy: 'Drive', milesShift: 24, gearCost: 360, gearShifts: 30 } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 3300, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Cash on hand', name: 'Cash at home', values: { group: 'cash', balance: 2500 } },
     { kind: 'account', type: 'Checking', name: 'Checking (bank A)', values: { group: 'cash', balance: 1800, institutionId: 'dancer-bank-a' } },
@@ -45,6 +48,12 @@ export default {
     gap: { value: 2300, note: '$6,175 - $3,875 = $2,300 a month.' },
     loan: { value: 120122, tol: 50, note: 'Home payment min(28% x $3,875 = $1,085, 36% x $3,875 = $1,395) = $1,085; 75% carries the loan: $813.75 a month at 7.18% for 30 years x 147.616 = $120,122.' },
     says: ['File your 2026 return showing all of Dancing', '$63,050 a year', 'Deposit cash as it comes in'],
+  },
+  // Batch 51 (Shift P&L, M9H): what Cash flow › Income › What a shift really pays says, worked by hand.
+  shiftPnl: {
+    rows: [{ name: 'Dancing', gross: 575, fee: 80, tipOut: 20, tax: 107.63, takeHome: 367.37, travel: 17.40, childcare: 0, gear: 12, real: 337.97, hours: 10, ownHourly: 52.48, realHourly: 33.80, hourly: 27.61 }],
+    note: 'Take-home a shift: $4,775.81 / 13 = $367.37 (Tips and shifts). Gross $575, less the $80 house fee and $20 tip-out = $475; tax set aside $475 - $367.37 = $107.63. Getting there: 24 miles x $0.725 (IRS 2026) = $17.40. Outfits: $360 / 30 = $12.00. $367.37 - $17.40 - $12.00 = $337.97 the shift leaves. Hours: 1.5 + 1 + 7 + 0.5 = 10, so $33.80 an hour (on the clock: $367.37 / 7 = $52.48). Her hourly value: $4,775.81 / 173 hours = $27.61 (a guess until work hours are in), $6.19 under the real hourly.',
+    says: ['What a shift really pays', '$337.97', '$33.80 an hour', 'House fee', 'Driving'],
   },
   // Batch 44: what Net worth › Fire drill says (as of NOW, Nov 5 2026: the 30 days Nov 5 to Dec 4). test/firedrill.test.js
   // checks the numbers; the browser run checks the words show.

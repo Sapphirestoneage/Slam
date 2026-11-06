@@ -23,6 +23,11 @@ As built (batch 43), where it differs from the design below:
   unit, so a household far from typical can read low on one output: Tom's net worth (a $650,000 home moves more
   dollars than a typical household holds) reads 0% there, Alexis's debt-free date 9% (her $4,200 card against a typical
   $0 to $2,800). Maya after Fast Track reads 78% (55% against all-guess), Alexis 49% (54%), Tom 72% (79%).
+  **Batch 51 (QUESTIONS 387):** each output's 0% is now **the wider of** the age-only width and this household's own
+  all-guess width, so a household far from typical is measured against its own guesses where they are wider. Tom's net
+  worth ($1,076,982 to $1,163,018, $86,037 wide) reads 78% against his all-guess $384,723 (the age-only $83,744 is
+  narrower), not 0%; Alexis's debt-free date (35 to 85 months, 50 wide) reads 56% against her all-guess 113 months (the
+  age-only 55), not 9%. After Fast Track Maya reads 78% (was 78%), Alexis 69% (49%), Tom 87% (73%).
 - **What an answer reaches**: the gut number read off a statement or an app reaches Estimate (the Budget's "Statements
   or an app" tap, AskSecondsLookup 60); a statements total built from the lines reaches Know it (AskSecondsBuild 600); a
   typical amount not answered yet (a blank APR) reaches Know it (AskSecondsLookup 60); any other number already given

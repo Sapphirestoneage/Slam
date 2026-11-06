@@ -1,0 +1,18 @@
+/* Cash flow › Income › What a shift really pays (batch 51). The fire drill's three tiles, then two slim lists: the money
+   a shift and the hours a shift. Each row: its name and amount on one line, its taps under them (never beside, so the
+   amounts line up down the list). */
+.sp-card { display: flex; flex-direction: column; gap: var(--s3); }
+.sp-title { margin: 0; font-size: var(--fs-section); }
+.sp-vs, .sp-best { margin: 0; }
+.sp-cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: var(--s4); align-items: start; }
+.sp-list { display: flex; flex-direction: column; min-width: 0; }
+.sp-head { margin: 0 0 2px; font-size: var(--fs-label); color: var(--text-2); }
+.sp-row { display: grid; grid-template-columns: minmax(0, 1fr) 112px; gap: 6px var(--s3); align-items: center; padding: 8px 0; border-top: 1px solid var(--border-row); min-height: 40px; }
+.sp-head + .sp-row { border-top: 0; }
+.sp-name { min-width: 0; overflow-wrap: anywhere; }
+.sp-amt { text-align: right; white-space: nowrap; }
+.sp-amt .math { font-size: inherit; font-weight: inherit; }
+.sp-ctl { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-width: 0; }
+.sp-sub { gap: 8px; flex-wrap: wrap; }
+.sp-total { font-weight: 600; }
+@media (max-width: 1100px) { .sp-cols { grid-template-columns: minmax(0, 1fr); } }

@@ -4406,10 +4406,184 @@
      "reason": "one tap changes whose numbers show while talking"
     }
    }
+  },
+  {
+   "screen": "Income › What a shift really pays",
+   "route": "#/cash-flow/income",
+   "batch": 51,
+   "tasks": [
+    1
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every tap saves to the row and redraws the three numbers; Undo takes a tap back (checked: ride $20 both ways $315.37, one way $335.37, undo)"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-worked in test/batch51.test.js: the dancer $337.97 and $33.80 an hour, the bartender $229.00 and $22.90; the take-home a shift ties to Tips and shifts to the cent"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one take-home a shift (the same as Tips and shifts); the costs are a view, so the surplus does not move"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker (Shift client) clean closed and open at 1440, 1280 and 390, light and dark; amounts in one column down each list"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "the title says what it is; three tiles answer it before any row"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find: shift p&l, real hourly, what a shift pays, best night; it sits under the income list where the shift rows are"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "every cost and hour is a tap; only an odd fare, mileage or outfit total is typed"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "from the client's side (The shift leaves you, A real hour); no verdict words, no red"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "a missing shift length says Needs the hours a shift with the taps right below"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "tiles stack and the two lists stack at 390; taps wrap"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "no visible wait on a tap"
+    },
+    "coachable": {
+     "result": "minor",
+     "reason": "waits for Eli at sign-off; behind the Phase 4 previews switch (QUESTIONS 425)"
+    }
+   }
+  },
+  {
+   "screen": "Budget (the month's own gut number, a coach-only category)",
+   "route": "#/cash-flow/budget",
+   "batch": 51,
+   "tasks": [
+    1
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "a month's own gut number moves the gut card's Lines vs gut and the strip's; checked on Maya at 1280 and 390"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "Lines are $2,550 under your November 2026 gut number ($4,500 against $1,950 of lines); gut accuracy reads the month's own number (test/batch51)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "the month's gut number is that month's plan everywhere: Budget, Month end, gut accuracy"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on Budget (Demo and New) at every width and theme"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "the words name the month whose gut number it is"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "unchanged: one tap opens the month's box"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "Includes amounts kept private in Client view for a category whose only line is coach-only"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the line changes as the month's number is typed"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "checked at 390; the Demo load toast leaves after 4 seconds there"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "no visible wait"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "Client view no longer says the private category has unused starter lines"
+    }
+   }
+  },
+  {
+   "screen": "Home (the certainty meter's zero)",
+   "route": "#/home/session",
+   "batch": 51,
+   "tasks": [
+    1
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "the meter reads each output against the wider of the age-only and all-guess widths"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-checked: Tom's net worth 1 - 86,037 / 384,723 = 78%, Alexis's debt-free date 1 - 50 / 113 = 56%"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "the workbook's M9Q reads the same meter (workbook-check clean)"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "unchanged layout; layout checker clean on Home"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "the tip says what the meter is measured against"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "unchanged"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "Narrow / Narrowing words as before"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "Tom after Fast Track 87%, Alexis 69%, Maya 78%"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "checked at 1280 and 390"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "no visible wait"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "a household far from typical no longer reads near 0% on one output after a full Fast Track"
+    }
+   }
   }
  ],
  "updated": {
-  "batch": 40,
+  "batch": 51,
   "date": "2026-11-06"
  },
  "batch34": {

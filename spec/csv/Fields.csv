@@ -550,3 +550,14 @@ F547,Built,,Profile,People,Name,Secondary,,,,,,,,,Now,Added from the code (js/re
 F548,Built,,Profile,People,Adult or dependent,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,people.kind
 F549,Built,,Profile,People,Role,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,people.role
 F550,Built,,Profile,People,Age (a dependent),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,whole number,,,people.age
+F551,Built,,Income,Income,Getting to a shift,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,choice,,,income.travelBy
+F552,Built,,Income,Income,Ride or fare each way,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.travelCost
+F553,Built,,Income,Income,Ride or fare: ways a shift (1 or 2),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.travelWays
+F554,Built,,Income,Income,"Miles driven a shift, there and back",Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.milesShift
+F555,Built,,Income,Income,"Travel hours a shift, there and back",Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.travelHours
+F556,Built,,Income,Income,"Getting ready, hours a shift",Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.prepHours
+F557,Built,,Income,Income,"Winding down after, hours a shift",Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.windDownHours
+F558,Built,,Income,Income,Childcare hours a shift,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.sitterHours
+F559,Built,,Income,Income,Childcare: the sitter's rate an hour,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.sitterRate
+F560,Built,,Income,Income,Outfits and gear: what they cost,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.gearCost
+F561,Built,,Income,Income,Outfits and gear: shifts they last,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.gearShifts

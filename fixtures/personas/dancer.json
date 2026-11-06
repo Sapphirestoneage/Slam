@@ -96,7 +96,15 @@
      "slowShifts": 2,
      "returnsFiled": "2 or more",
      "returnLast": 52000,
-     "returnBefore": 41000
+     "returnBefore": 41000,
+     "hoursShift": 7,
+     "prepHours": 1.5,
+     "travelHours": 1,
+     "windDownHours": 0.5,
+     "travelBy": "Drive",
+     "milesShift": 24,
+     "gearCost": 360,
+     "gearShifts": 30
     },
     "notes": null,
     "privateNote": null,

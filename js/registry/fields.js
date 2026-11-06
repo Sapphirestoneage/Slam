@@ -222,6 +222,14 @@ export const AREAS = [
       f('feePct', 'Platform fee %', 'pct', { kinds: ['income'] }), f('holdDays', 'Payout hold (days)', 'number', { kinds: ['income'] }),
       f('landsIn', 'Lands in (which account)', 'text', { kinds: ['income'], sheet: { skip: 'points at a checking or savings row by its id; set it on Net worth › Fire drill' } }), // batch 44
       f('chargebacks', 'Chargebacks and refunds a month', 'money', { kinds: ['income'] }),
+      // Batch 51 (Shift P&L, M9H): what a shift costs and the hours around it (js/math/shiftpnl.js). Hours a shift is above.
+      pick('travelBy', 'Getting to a shift', ['Ride', 'Drive', 'Transit', 'Walk'], { kinds: ['income'] }),
+      f('travelCost', 'Ride or fare each way', 'money', { kinds: ['income'] }), f('travelWays', 'Ride or fare: ways a shift (1 or 2)', 'number', { kinds: ['income'] }),
+      f('milesShift', 'Miles driven a shift, there and back', 'number', { kinds: ['income'] }),
+      f('travelHours', 'Travel hours a shift, there and back', 'number', { kinds: ['income'] }),
+      f('prepHours', 'Getting ready, hours a shift', 'number', { kinds: ['income'] }), f('windDownHours', 'Winding down after, hours a shift', 'number', { kinds: ['income'] }),
+      f('sitterHours', 'Childcare hours a shift', 'number', { kinds: ['income'] }), f('sitterRate', 'Childcare: the sitter\'s rate an hour', 'money', { kinds: ['income'] }),
+      f('gearCost', 'Outfits and gear: what they cost', 'money', { kinds: ['income'] }), f('gearShifts', 'Outfits and gear: shifts they last', 'number', { kinds: ['income'] }),
       // Batch 42 (the lender's-eye view, M9W): the returns a self-employment row has on file, as a lender reads them.
       pick('returnsFiled', 'Tax returns filed with this income', ['2 or more', '1', 'None'], { kinds: ['income'] }),
       f('returnLast', 'Net profit on the last return filed (a year)', 'money', { kinds: ['income'] }),

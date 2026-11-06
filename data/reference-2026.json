@@ -1327,6 +1327,7 @@
     "words": [
       {"terms": ["benefits cliff", "cliff", "raise and benefits", "snap", "food stamps", "ebt", "medicaid", "essential plan", "child health plus", "chip", "eitc", "earned income credit", "premium tax credit", "aca subsidy", "obamacare subsidy", "marketplace help", "subsidy cliff", "lose benefits", "losing benefits", "is the raise worth it", "take the raise", "more hours"], "label": "What a raise does to your benefits", "go": ["focus:cliff@#/plan/cliff"], "add": "none", "why": "batch 47: Plan › Raise and benefits: the SNAP, Medicaid, Essential Plan, marketplace and EITC lines a raise crosses, and what you keep (Phase 4)"},
       {"terms": ["lender", "lenders view", "what a lender sees", "lender's eye view", "dti", "debt to income", "qualify for a mortgage", "mortgage qualify", "how much house", "how much house can i afford", "preapproval", "pre approval", "apartment application", "rent application", "income for rent", "3x rent", "40x rent", "proof of income", "income verification", "documented income", "two years of returns", "mortgage rate", "interest rate for a mortgage", "property tax and insurance"], "label": "What a lender sees", "go": ["focus:lender@#/report/lender"], "add": "none", "why": "batch 42: Report › Lender's view: a mortgage lender, a landlord and a card issuer, each with the one number they read (Phase 4)"},
+      {"terms": ["shift p&l", "shift pnl", "what a shift pays", "what a shift really pays", "real hourly", "real hourly rate", "pay per shift", "best night", "which night pays best", "is a shift worth it", "outfit costs", "babysitter for shifts"], "label": "What a shift really pays", "go": ["focus:sec:income:shifts@#/cash-flow/income"], "add": "none", "why": "batch 51: Cash flow › Income, a shift after travel, childcare, outfits and every hour around it (Phase 5)"},
       {"terms": ["certainty", "how sure", "how sure is the plan", "certainty meter", "plan certainty"], "label": "Certainty (how sure the plan is)", "go": ["focus:sec:home:picture@#/home/session"], "add": "none", "why": "batch 43: the certainty meter on Home, where the Picture % stood"},
       {"terms": ["ask next", "ask me next", "what to ask next", "next question", "what should i ask"], "label": "Ask next", "go": ["focus:btn:Open the box@#/home/session"], "add": "none", "why": "batch 43: the one question that narrows the plan most, on Home"},
       {"terms": ["true cost", "true cost of debt", "cost of debt", "what my debt costs", "interest in today's dollars", "debt fi", "fi months"], "label": "The true cost of each debt", "go": ["focus:sec:payoff:truecost@#/plan/debt-payoff"], "add": "none", "why": "batch 29: one line per debt on Plan › Debt payoff (interest in today's dollars, the FI months it costs, the rate after tax)"},
@@ -3398,5 +3399,8 @@
         "how": "Old deposits, refunds and final paychecks go to the state when a business cannot reach you. MissingMoney (run with NAUPA, the state treasurers' unclaimed property group) searches most states at once; unclaimed.org links each state's own site."
       }
     }
+  },
+  "mileage": {
+    "rate": 0.725
   }
 }

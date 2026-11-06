@@ -33,6 +33,7 @@ import { transitionsScreen } from './ui/transitions-ui.js';
 import { lenderScreen } from './ui/lender-ui.js';
 import { cliffScreen } from './ui/cliff-ui.js';
 import { fireDrillScreen } from './ui/firedrill-ui.js';
+import { shiftSection } from './ui/shiftpnl-ui.js';
 import { AREAS, recordFor } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
 import { statusOf, countsAsDone } from './records.js';
@@ -121,6 +122,7 @@ const MM = {
       g.betweenJobs && !ctx.store.find(r => r.kind === 'income' && r.type === 'Unemployment').length
         ? h('div.banner-inline', {}, 'Between jobs: add unemployment benefits so the runway counts them.', S.button('Add unemployment', { iconName: 'plus', onClick: () => ctx.store.add('income', { name: 'Unemployment benefits', per: 'week' }, { type: 'Unemployment' }) })) : null,
       withChart(ctx, incomeList(), incomeCharts, 'income'),
+      S.live(ctx, () => shiftSection(app, ctx)), // batch 51 (Phase 5): what a shift really pays, closed, only with a shift row
       S.live(ctx, () => { const p = paycheckSection(ctx); return p ? S.secWrap(p, 'income:paycheck', { summary: 'Taxes, 401(k), HSA and premiums taken before payday' }) : null; }), // answer to 58: everything the paycheck pays first, in one place; batch 13: closed by default
       S.focusMore(ctx, 'income:extra', [g.variable || ['Varies', 'Unpredictable'].includes(ctx.store.doc.profile.incomeStability) || ctx.store.find(r => r.kind === 'income' && taxTypeOf(r) === '1099').length ? S.secWrap(variableBlock(ctx), 'income:variable', { summary: 'Months with more or less pay' }) : null, S.recordList(ctx, { ...benefitList(), open: false })].filter(Boolean))];
   } },

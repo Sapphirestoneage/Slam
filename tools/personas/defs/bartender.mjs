@@ -15,7 +15,11 @@ export default {
     // on top, the tip-out is 3% of the night's sales paid from the cash, and the cash tips are not reported yet.
     { kind: 'income', type: 'Job', name: 'Bar job', amount: 900, per: '2 weeks', values: { basis: 'Take-home', payFrequency: '2 weeks', incomeType: 'W-2',
       shiftsWeek: 3, cardTips: 60, cardTipsPer: 'shift', cashTips: 140, cashTipsPer: 'shift', tipOutBy: '% of sales', tipOutPct: 0.03, salesShift: 1000, cashReported: 'No',
-      slowMonths: ['Jan', 'Feb'], slowShifts: 2 } },
+      slowMonths: ['Jan', 'Feb'], slowShifts: 2,
+      // Batch 51 (Shift P&L): an 8-hour shift, half an hour getting ready, a ride both ways at $14 (parking downtown costs
+      // more), half an hour each way, half an hour counting out and winding down; non-slip shoes and black shirts about
+      // $120 every 40 shifts.
+      hoursShift: 8, prepHours: 0.5, travelHours: 1, windDownHours: 0.5, travelBy: 'Ride', travelCost: 14, gearCost: 120, gearShifts: 40 } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 2600, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Checking', name: 'Checking', values: { group: 'cash', balance: 1100 } },
     { kind: 'account', type: 'Savings or HYSA', name: 'Savings', values: { group: 'cash', balance: 600 } },
@@ -34,6 +38,12 @@ export default {
     runwayMonths: { value: 0.654, unit: 'months', tol: 0.01, note: '$1,700 / $2,600.' },
     bigETarget: { value: 17550, unit: 'money', note: 'Age 27 / 5 = 5.4 x 1.25 (income varies) = 6.75 months x $2,600 = $17,550.' },
     littleEFull: { value: false, unit: 'bool', note: '$1,700 fills the $1,200 buffer, then $500 of little e.' },
+  },
+  // Batch 51 (Shift P&L, M9H): what Cash flow › Income › What a shift really pays says, worked by hand.
+  shiftPnl: {
+    rows: [{ name: 'Bar job', gross: 309.62, fee: 0, tipOut: 30, tax: 19.62, takeHome: 260, travel: 28, childcare: 0, gear: 3, real: 229, hours: 10, ownHourly: 32.50, realHourly: 22.90, hourly: 19.54 }],
+    note: 'Take-home a shift: $3,380 / 13 = $260 (Tips and shifts). Gross: the paycheck before tax $26,460 / 12 / 13 = $169.62 (wage and card tips) plus $140 cash tips = $309.62; less the $30 tip-out (3% of $1,000); tax and deductions from the paycheck ($2,205 - $1,950) / 13 = $19.62. Getting there: a ride both ways, 2 x $14 = $28. Shoes and shirts: $120 / 40 = $3. $260 - $28 - $3 = $229 the shift leaves. Hours: 0.5 + 1 + 8 + 0.5 = 10, so $22.90 an hour (on the clock: $260 / 8 = $32.50). Her hourly value: $3,380 / 173 = $19.54 (a guess), $3.36 under the real hourly.',
+    says: ['What a shift really pays', '$229.00', '$22.90 an hour', 'Tip-out', 'A ride'],
   },
   // Batch 42 (the lender's-eye view, M9W): what Report › Lender's view should say, worked by hand.
   lender: {

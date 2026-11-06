@@ -340,13 +340,15 @@ export function categoryTotals(catRecs = [], lines = [], mine = l => l.amount ??
 // starter amounts and the debt payments From Debt are not spending lines), the gut number is the spending number;
 // with some, the comparison, and how many categories still rest on the gut number alone.
 // lineTotal: the lines' total as the Budget shows it (with the debt payments); categories: metrics inputs.categories.
-export function gutVsLinesWords({ gut, lineTotal, categories = [] }) {
+// Batch 51 (QUESTIONS 374): month, the month's name when the gut number is that month's own ("your December gut number").
+export function gutVsLinesWords({ gut, lineTotal, categories = [], month = null }) {
   if (gut == null) return { real: 0, gutOnly: null, text: null };
   const cats = categories.filter(c => c.key !== 'Debt' && c.key !== 'Retirement');
   const real = cats.filter(c => c.amount != null).length;
   if (!real) return { real: 0, gutOnly: cats.filter(c => c.counts).length, text: 'No lines yet: your gut number is your spending number.' };
   const gutOnly = cats.filter(c => c.counts && c.amount == null).length;
   const d = (lineTotal ?? 0) - gut;
-  const head = Math.abs(d) < 0.5 ? 'Lines match your gut number' : `Lines are ${fmt.money(Math.abs(d))} ${d > 0 ? 'over' : 'under'} your gut number`;
+  const yours = month ? `your ${month} gut number` : 'your gut number';
+  const head = Math.abs(d) < 0.5 ? `Lines match ${yours}` : `Lines are ${fmt.money(Math.abs(d))} ${d > 0 ? 'over' : 'under'} ${yours}`;
   return { real, gutOnly, text: `${head}${gutOnly ? `; ${gutOnly} ${gutOnly === 1 ? 'category is' : 'categories are'} still gut-only` : ''}.` };
 }
