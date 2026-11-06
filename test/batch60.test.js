@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { importFile, Store } from '../js/records.js';
 import { buildWorkbook } from '../js/sheet/workbook.js';
-import { compare, applyChanges, linesOf, gridFromPlan } from '../js/import-sheet.js';
+import { compare, applyChanges, linesOf, gridFromPlan, locate } from '../js/import-sheet.js';
 import { metrics } from '../js/math/metrics.js';
 import { workOf, nightsRollUp, nightFromRow, addNight, copyNight, removeNight, setNight, hasNights, tipsTaxNote, NIGHT_KEYS, nightsStale } from '../js/math/earnings.js';
 import { householdRates } from '../js/math/income.js';
@@ -114,20 +114,22 @@ test('Q422: the taps: add turns the row into its first night plus a blank one, c
   assert.deepEqual(NIGHT_KEYS, ['shiftsWeek', 'payShift', 'hoursShift', 'cardTips', 'cashTips', 'houseFee', 'tipOutAmount', 'salesShift']);
 });
 
-test('Q422: the round trip: the spreadsheet carries the nights added up; typing over them there makes the row one kind again', () => {
+// Batch 59 (QUESTIONS 448, decided): the sheet carries each night as a row under its shift row, and the row's shift
+// columns are formulas over them; typing over one is listed and never saved (test/roundtrip.test.js edits the nights).
+test('Q422 and Q448: the round trip: the nights are rows in the sheet; typing over the row\'s added-up columns is listed, never saved', () => {
   const s = new Store(persona('dancer'), { now: () => now.toISOString() });
   const grid = gridFromPlan(buildWorkbook(s.doc, ref, { now }));
-  assert.deepEqual(linesOf(compare(grid, s.doc)), [], 'no edits, no changes: the row\'s columns are the nights added up');
+  assert.deepEqual(linesOf(compare(grid, s.doc)), [], 'no edits, no changes');
   assert.equal(nightsStale(dancing(s.doc).values), false);
-  const c = grid.Income[0].indexOf('Shifts a week'), r = grid.Income.findIndex((x, i) => i > 0 && x[grid.Income[0].indexOf('Name')] === 'Dancing');
-  grid.Income[r][c] = 4;
+  const t = locate(grid).tables.income, rows = grid[t.tab];
+  const c = t.keys.indexOf('shiftsWeek'), r = t.data.find(i => rows[i][t.keys.indexOf('name')] === 'Dancing');
+  rows[r][c] = 4;
+  grid._formulas[t.tab].delete(`${r}:${c}`);
   const res = compare(grid, s.doc);
-  for (const l of linesOf(res)) l.decision = 'keep';
+  assert.deepEqual([linesOf(res).length, res.typedOver.length], [0, 1]);
   applyChanges(s, res);
   const v = dancing(s.doc).values;
-  assert.equal(v.shiftsWeek, 4); assert.equal(v.nights, null, 'the typed 4 a week wins');
-  // 4 shifts at the old average $575 - $80 - $20 = $475: $475 x 4 x 52 / 12 = $8,233.33 a month before tax.
-  near(workOf({ values: v }).pay.month, 575 * 4 * 52 / 12, 1e-6);
+  assert.equal(v.nights.length, 2, 'the nights stay'); assert.equal(v.shiftsWeek, 3);
 });
 
 // ---------- QUESTIONS 424: the shift with tax set aside on unreported cash tips ----------
