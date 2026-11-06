@@ -427,3 +427,13 @@ test('an Unemployment row tagged Benefits is still a benefit; tagged W-2 it is n
   assert.equal(isBenefitQ(row({ incomeType: 'Benefits' })), true);
   assert.equal(isBenefitQ(row({ incomeType: 'W-2' })), false);
 });
+
+// Eli, Nov 6: "customizable like materiality": each client can set the hours and the floor.
+import { materialityOf as matQ } from '../js/math/time.js';
+test('materiality: the client\'s own hours and floor win over the defaults', () => {
+  const wage = { value: 40 };
+  assert.equal(matQ(wage).value, 80 > 100 ? 80 : 100, 'default: 2 hours at $40 is $80, under the $100 floor');
+  assert.equal(matQ(wage, { materialHours: 8 }).value, 320);
+  assert.equal(matQ(wage, { materialHours: 1, materialFloor: 50 }).value, 50);
+  assert.equal(matQ({ value: null }, { materialFloor: 250 }).value, 250);
+});

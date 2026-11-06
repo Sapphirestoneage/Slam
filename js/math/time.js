@@ -37,10 +37,13 @@ export function timeChip(amount, { rate }) {
 
 // Batch 15, item 4 (R073): is a task worth the time? It is when its dollars a year beat the hours it takes
 // (RULES.materialHours) at the real hourly wage (M17), and never under RULES.materialFloor.
-export function materialityOf(rate) {
+// Each client can set their own hours and floor (Eli, Nov 6: "customizable like materiality"): assumptions.materialHours
+// and assumptions.materialFloor, picked from taps on Plan › Goals; blank uses the RULES defaults.
+export function materialityOf(rate, a = {}) {
   const wage = rate?.value ?? null;
-  const v = Math.max(RULES.materialFloor, wage == null ? 0 : wage * RULES.materialHours);
-  return { ...ok('M17', v, wage == null ? `No hourly wage yet, so the floor: ${fmt.money(v)} a year.` : `${RULES.materialHours} hours at ${fmt.money(wage, { cents: true })} an hour${rate.guess ? ' (a guess until work hours are in)' : ''} = ${fmt.money(wage * RULES.materialHours)}${wage * RULES.materialHours < RULES.materialFloor ? `, under the ${fmt.money(RULES.materialFloor)} floor, so ${fmt.money(v)}` : ''}: a number worth less than ${fmt.money(v)} a year goes to small wins.`), wage };
+  const hours = a?.materialHours ?? RULES.materialHours, floor = a?.materialFloor ?? RULES.materialFloor;
+  const v = Math.max(floor, wage == null ? 0 : wage * hours);
+  return { ...ok('M17', v, wage == null ? `No hourly wage yet, so the floor: ${fmt.money(v)} a year.` : `${hours} ${hours === 1 ? 'hour' : 'hours'} at ${fmt.money(wage, { cents: true })} an hour${rate.guess ? ' (a guess until work hours are in)' : ''} = ${fmt.money(wage * hours)}${wage * hours < floor ? `, under the ${fmt.money(floor)} floor, so ${fmt.money(v)}` : ''}: a number worth less than ${fmt.money(v)} a year goes to small wins.`), wage, hours, floor };
 }
 
 // Batch 15, item 12: is a paid service worth it? Its cost a month against the hours it saves at the real hourly wage.

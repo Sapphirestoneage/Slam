@@ -394,3 +394,8 @@ the Giving switch again); "payday" follows batch 13's pay frequency box. After: 
 
 QA: tests pass in UTC and America/New_York (test/batch18.test.js); effort, findability (76 of 78 before, 78 of 78
 after), persona and layout scripts; before and after screenshots at 1280 and 390.
+## Nov 6 2026: "worth doing" per client (Eli: "customizable like materiality")
+
+The materiality bar (a fix counts when it saves more a year than this much of your time is worth) is now per client:
+taps on Plan › Goals › More for 1, 2, 4 or 8 hours at the real hourly wage and a floor of $50, $100, $250 or $500;
+blank keeps the defaults (2 hours, $100). Registered as client assumptions; export format 18.

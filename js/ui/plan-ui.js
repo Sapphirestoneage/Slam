@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Plan (build phase 7): Goals with presets and solvers, These are big deals, milestones, the FI timeline,
 // debt payoff, next 12 months. Scenarios stay a later phase.
+import { RULES } from '../registry/assumptions.js';
 import { fillCounter } from './counts-ui.js';
 import { goalsCompletion } from '../completion.js';
 import { h, clear, icon } from './dom.js';
@@ -156,7 +157,11 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
     S.moreBlock('goals:tertiary', () => h('div.stack', { style: { gap: '12px' } },
       presetRow('Inflation', 'inflation', ref.presets.inflation.values, v => `${Math.round(v * 100)}%`, 'Used for future dollars'),
       h('div.preset-row', {}, h('span.label', {}, 'Life expectancy'), S.textInput(a.lifeExpectancy ?? null, v => setA({ lifeExpectancy: v === null ? null : Number(v) }), { hint: String(ref.defaults.lifeExpectancy), width: 90 })),
-      h('div.preset-row', {}, h('span.label', {}, 'Social Security'), S.tapPick(['Full scheduled', 'Reduced %', 'None'], a.socialSecurity ?? null, v => setA({ socialSecurity: v }), { label: 'Social Security' }))), { label: 'More: inflation, life expectancy, Social Security' }));
+      // Worth doing (materiality), per client: hours at the real hourly wage, and a dollar floor (Eli, Nov 6).
+      h('div.preset-row', {}, h('span.label', {}, 'Worth doing'), S.toggle([1, 2, 4, 8].map(v => [v, `${v} ${v === 1 ? 'hour' : 'hours'}`]), a.materialHours ?? RULES.materialHours, v => setA({ materialHours: v }), { label: 'Worth doing: hours at your real hourly wage' }),
+        S.toggle([50, 100, 250, 500].map(v => [v, `at least $${v}`]), a.materialFloor ?? RULES.materialFloor, v => setA({ materialFloor: v }), { label: 'Worth doing: never under' }),
+        h('span.muted.small', {}, 'A fix counts when it saves more a year than this much of your time is worth')),
+      h('div.preset-row', {}, h('span.label', {}, 'Social Security'), S.tapPick(['Full scheduled', 'Reduced %', 'None'], a.socialSecurity ?? null, v => setA({ socialSecurity: v }), { label: 'Social Security' }))), { label: 'More: inflation, life expectancy, worth doing, Social Security' }));
   const fiCard = h('div.card.fi-card', { style: { marginBottom: '16px' } }, left, right);
   // Batch 13 (item 1): the FI date and its assumptions are the core (open); the big deals, the FI ladder and the
   // outsource lens are caret sections, closed, each with its one line.

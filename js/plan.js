@@ -121,7 +121,7 @@ export function next3(doc, ref, { now = new Date(), limit = 3 } = {}) {
   }
   // Effect on the FI date: the number as it stands (or its guess) against the number at zero.
   // Batch 15, item 4: worth doing when its dollars a year beat the time it takes at the real hourly wage ($100 floor).
-  const material = materialityOf(m.hourly);
+  const material = materialityOf(m.hourly, doc.assumptions);
   const base = m.monthsToFi.value;
   for (const c of cands) {
     if (c.core) { c.effect = Infinity; continue; }
