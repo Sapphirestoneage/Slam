@@ -37,6 +37,11 @@ export default {
     netWorth: { value: 26238, unit: 'money', note: 'The household, every row counted whoever sees it: $2,140 + $3,871 (set aside for taxes, still owned) + $5,200 + $18,400 - $2,000 - $1,373 = $26,238.' },
     runwayMonths: { value: 1.6311, unit: 'months', tol: 0.01, note: 'Cash that is not set aside for taxes: $2,140 + $5,200 = $7,340, over the $4,500 the two spend a month ($2,400 + $2,100, all in) = 1.631 months. The coach-only PO box line ($37) is a Budget line, read only when the lines are used, so this reads the gut numbers.' },
   },
+  // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  cliff: {
+    near: { value: false, note: '$123,200 a year for two in IL with work coverage.' },
+    says: ['Nowhere near a benefit line'],
+  },
   cannot: [
   ],
 };

@@ -77,8 +77,8 @@ for (const def of defs) {
   test(`persona ${def.id}: the FOO step holds two weeks later`, () => { assert.equal(b, a, `step ${a} on Nov 5, step ${b} on Nov 20`); });
 }
 
-test('personas: all fifteen are there, and the one-answer checks hold for each', () => {
-  assert.equal(defs.length, 15); // batch 21: the job-loss household (Life Transitions); batch 29: the PSLF teacher; batch 28: the private couple (who sees this)
+test('personas: all seventeen are there, and the one-answer checks hold for each', () => {
+  assert.equal(defs.length, 17); // batch 47: the single parent on SNAP and Medicaid, the couple near the 400% line (the benefits cliff); batch 21: the job-loss household (Life Transitions); batch 29: the PSLF teacher; batch 28: the private couple (who sees this)
   for (const def of defs) {
     const doc = importFile(readFileSync(join(OUT_DIR, `${def.id}.json`), 'utf8'));
     const m = metrics(doc, ref, { now });

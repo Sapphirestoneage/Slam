@@ -45,6 +45,11 @@ export default {
     says: ['$30,969', '0 days', 'counted as the same bank', 'Mortgage payment', 'Housing'],
     notSays: ['close accounts tied to adult work'],
   },
+  // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  cliff: {
+    near: { value: false, note: '$120,000 a year for three in TX with work coverage: SNAP for 3 is $35,520, the EITC with one child ends at $58,863 joint; Texas has not expanded Medicaid.' },
+    says: ['Nowhere near a benefit line'],
+  },
   cannot: [
     'College costs: a 529 stays out of FI (batch 15), but there is no per-child goal, no college cost, no years until college.',
     'One income household: no field for the stay-at-home partner (spousal IRA eligibility, the value of the care, a return-to-work date).',

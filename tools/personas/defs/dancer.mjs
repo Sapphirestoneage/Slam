@@ -53,6 +53,11 @@ export default {
     note: 'The shifts land in checking every Friday: Nov 6, 13, 20, 27 and Dec 4, $475 x 3 shifts = $1,425 each, $7,125 in the 30 days. Out of reach: $1,800 + $7,125 = $8,925. Still reachable: savings at Online Bank B $4,000 + cash at home $2,500 = $6,500 (the $3,500 for taxes is listed, not counted). Must-pay: the gut number $3,300 (no debts). $6,500 / ($3,300 x 12 / 365 = $108.49 a day) = 59.9, so 59 days. Ready: the second bank (Online Bank B) and a month outside the main bank ($6,500 >= $3,300); 2 of 5.',
     says: ['If this account froze today', '$8,925', '$6,500', 'About 59 days', 'close accounts tied to adult work', 'set aside for taxes, not counted', 'Savings (online bank B) at Online Bank B'],
   },
+  // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  cliff: {
+    near: { value: false, note: 'NV, $68,865 MAGI (self-employment less half the SE tax) on a marketplace plan: over the 400% line ($63,840), so there is no premium help left to lose; nothing else applies.' },
+    says: ['Nowhere near a benefit line'],
+  },
   cannot: [
     // Batch 27 cleared: house fees and tip-out per shift are on the shift job; cash at home is a Cash on hand account
     // (counted as cash, with its loss-risk note); the quarterly tax money is Purpose: Taxes, outside big e and the runway.

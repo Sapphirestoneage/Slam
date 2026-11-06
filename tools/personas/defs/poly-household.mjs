@@ -36,6 +36,11 @@ export default {
     monthsToFi: { value: 251, unit: 'months', note: 'Batch 12, freed money follows the FOO: $28,695 of big e left / $3,470 a month = 9 months, so 9 months with nothing going in (FI number $7,400 x 12 / 4% = $2,220,000, $3,470 a month from $105,000: 243.3, so 244 months.05,000 grows to FI number $7,400 x 12 / 4% = $2,220,000, $3,470 a month from $105,000: 243.3, so 244 months.10,466). Then $3,470 a month at 7% real to the $2,220,000 FI number: 9 + ln(($2,220,000 (g-1) + $3,470) / (FI number $7,400 x 12 / 4% = $2,220,000, $3,470 a month from $105,000: 243.3, so 244 months.10,466 (g-1) + $3,470)) / ln g = 251.0, so 251 months.' },
     runwayMonths: { value: 3.919, unit: 'months', tol: 0.01, note: '$29,000 / $7,400.' },
   },
+  // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  cliff: {
+    near: { value: false, note: '$148,900 a year with work coverage: every line is below.' },
+    says: ['Nowhere near a benefit line'],
+  },
   cannot: [
     'Three adults: the household holds Me, Partner and Joint only. Cam has no rows, no accounts, no debts, no tag; Cam can only appear as money coming in.',
     'Custom splits per person: a bill has Your share or a My share amount; there is no 40/40/20 or 50/25/25 split across three people, so each split is worked out by hand.',

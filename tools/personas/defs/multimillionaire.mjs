@@ -49,6 +49,11 @@ export default {
     debtFreeMonths: { value: 'none', unit: 'months', note: 'No debt.' },
     runwayMonths: { value: 14.286, unit: 'months', tol: 0.01, note: '$200,000 / $14,000.' },
   },
+  // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  cliff: {
+    near: { value: false, note: '$432,500 a year for four.' },
+    says: ['Nowhere near a benefit line'],
+  },
   cannot: [
     'Business income: a salary plus distributions from your own company (S corp) has no shape; distributions are a second income row typed as Both, and the business is one asset value with no cash flow.',
     'Estate: no will, trust, beneficiaries per account beyond a yes or no, or what passes to whom.',

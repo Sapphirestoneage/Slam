@@ -18,7 +18,8 @@ export const TABS = [
     { id: 'goals', name: 'Goals', area: 'goals' }, { id: 'foo', name: 'FOO', area: 'goals' }, { id: 'scorecard', name: 'Scorecard', area: 'goals' }, { id: 'timeline', name: 'Timeline', area: 'goals' },
     { id: 'debt-payoff', name: 'Debt payoff', area: 'debt' }, { id: 'next-12-months', name: 'Next 12 months', area: 'goals' },
     { id: 'scenarios', name: 'Current vs Proposed', area: 'goals' },
-    { id: 'transitions', name: 'Transitions', area: 'goals', phase4: true }] }, // K: the tab keeps its id; batch 21: Life Transitions, shown when Phase 4 previews are on (Coach tools)
+    { id: 'transitions', name: 'Transitions', area: 'goals', phase4: true },
+    { id: 'cliff', name: 'Raise and benefits', area: 'goals', phase4: true }] }, // K: the tab keeps its id; batch 21: Life Transitions, shown when Phase 4 previews are on (Coach tools)
   { id: 'report', name: 'Report', job: 'The report: net worth, metrics, one-pager', subs: [
     { id: 'overview', name: 'Overview' }, { id: 'statements', name: 'Statements' }, { id: 'one-pager', name: 'One-pager' }, { id: 'history', name: 'History' },
     { id: 'lender', name: 'Lender\'s view', phase4: true }] }, // batch 42: what a lender, a landlord and a card issuer see (Phase 4 previews)

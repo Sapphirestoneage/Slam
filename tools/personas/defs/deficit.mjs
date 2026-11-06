@@ -29,6 +29,15 @@ export default {
     littleEFull: { value: false, unit: 'bool', note: '$50.' },
     cardFullMonths: { value: 43, unit: 'months', note: 'Current vs Proposed borrows the $400 gap on the store card at 29.99% (QUESTIONS 320). No limit is typed, so the room is the typical limit at 33 (Experian, Millennials, $32,727) less the $2,500 owed: $30,227. Owed after n months = 400 x ((1 + 0.2999/12)^n - 1) / (0.2999/12): $29,133 at 42, $30,262 at 43, so the cards are full in month 43 (Jun 2030) and net worth in 5 and 10 years is not a number (it was -$52,428 and -$265,580 before the cap).' },
   },
+  // Batch 47 (the benefits cliff, M9B): on Medicaid in Ohio (About you) with $36,100 a year before tax, already over the
+  // 138% line ($22,024.80), so the screen says it may end at renewal and leaves it out of the raise.
+  cliff: {
+    near: { value: true, note: 'Medicaid is a Getting it (from About you).' },
+    medicaidLine: { value: 22024.8, note: '138% x $15,960.' },
+    past: { value: ['medicaid'], note: '$36,117 (take-home $2,600 grossed up) is over $22,024.80.' },
+    raise5000: { value: 4017.5, tol: 0.05, note: 'Nothing counted to lose: $5,000 less 12% federal, 7.65% FICA (Ohio is not taxed in SLAM yet) = $4,017.50.' },
+    says: ['already over the line for Medicaid'],
+  },
   cannot: [
     'A payday loan is a lump due every 2 weeks with a fee, not a monthly payment against an APR; the fee fields exist (Fee per period, Periods a year) but the payoff math reads APR and Payment, so the coach has to turn the fee into both.',
   ],

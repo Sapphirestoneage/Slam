@@ -44,6 +44,15 @@ export default {
     gap: { value: 1430, note: 'The unreported cash tips, $1,430 a month.' },
     says: ['Report the cash tips on Bar job ($1,430 a month)', 'Deposit cash as it comes in', 'Needs a card limit'],
   },
+  // Batch 47 (the benefits cliff, M9B): Florida, a marketplace plan (About you), $43,620 a year: the premium help slopes
+  // and ends at 400% ($63,840). Florida has not expanded Medicaid.
+  cliff: {
+    near: { value: true, note: 'The premium help is a Getting it (a Guess from About you).' },
+    acaLine: { value: 63840, note: '400% x $15,960.' },
+    help: { value: 4101.3, tol: 0.05, note: '$43,620 / $15,960 = 273.3% of the line, in the 250% to 300% band: 8.66% + 46.6% of the way to 10.22% = 9.387%, so $4,094.70 a year paid; the Florida benchmark $683 a month = $8,196; help $4,101.30.' },
+    next: { value: 'aca', note: 'The premium help ends at $63,840, $20,220 above her.' },
+    says: ['Marketplace premium help'],
+  },
   cannot: [
     // Batch 27 cleared: tips (card, cash, tip-out on sales, reported or not) are parts of the Job row; and Variable income
     // shows for any client whose income varies (About you › Income stability), W-2 or not.

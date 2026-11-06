@@ -35,5 +35,10 @@ export default {
     littleEFull: { value: false, unit: 'bool', note: 'Cash $400 fills the buffer first; little e gets nothing.' },
     housingPct: { value: 0.3731, unit: 'pct', note: 'Rent $900 (given as her share) + half of the $140 electric bill (the whole bill, split 2 ways) = $970 / $2,600 = 37.3%.' },
   },
+  // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  cliff: {
+    near: { value: false, note: 'NY, one person, about $37,900 a year before tax (her take-home grossed up), health coverage through work: SNAP (150% of $15,960 = $23,940), Medicaid ($22,025) and the EITC with no children ($19,540) are all below her, and work coverage keeps the Essential Plan and the premium help from applying.' },
+    says: ['Nowhere near a benefit line'],
+  },
   cannot: [],
 };

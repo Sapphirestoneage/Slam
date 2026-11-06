@@ -31,6 +31,7 @@ import { reviewScreen } from './ui/review-ui.js';
 import { goalsScreen, timelineScreen, payoffScreen, nextYearScreen, scenariosScreen } from './ui/plan-ui.js';
 import { transitionsScreen } from './ui/transitions-ui.js';
 import { lenderScreen } from './ui/lender-ui.js';
+import { cliffScreen } from './ui/cliff-ui.js';
 import { fireDrillScreen } from './ui/firedrill-ui.js';
 import { AREAS, recordFor } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
@@ -251,6 +252,7 @@ export const SCREENS = {
   'plan/next-12-months': (app, ctx) => (app.hasClient ? nextYearScreen(app, ctx) : [head('Next 12 months'), noClient(app)]),
   'plan/scenarios': (app, ctx) => (app.hasClient ? scenariosScreen(app, ctx) : [head('Current vs Proposed'), noClient(app)]),
   'plan/transitions': (app, ctx) => (app.hasClient ? transitionsScreen(app, ctx) : [head('Life Transitions'), noClient(app)]), // batch 21
+  'plan/cliff': (app, ctx) => (app.hasClient ? cliffScreen(app, ctx) : [head('What a raise does to your benefits'), noClient(app)]), // batch 47: the benefits cliff
 
   'report/overview': (app, ctx) => (app.hasClient ? overviewScreen(app, ctx) : [head('Overview'), noClient(app)]),
   'report/statements': (app, ctx) => (app.hasClient ? statementsScreen(app, ctx) : [head('Statements'), noClient(app)]),

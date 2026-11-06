@@ -51,6 +51,7 @@ import { creditHealth } from '../math/debt.js';
 import { identityOf } from '../math/identity.js';
 import { lenderOf } from '../math/lender.js';
 import { askNextOf } from '../math/nextbest.js';
+import { cliffOf } from '../math/cliff.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -673,6 +674,17 @@ export const MATH = [
     parts: [
       { key: 'ask', name: 'Ask me next: the question whose answer narrows the plan most per second', unit: 'text', fromApp: 'M9Q: each input read again at the level its answer reaches', app: c => askNextOf(c.doc, c.ref, { now: c.now, m: c.m, R: c.ranges(), F: c.fooRange(), zero: zeroOf(c) }).top?.question ?? null },
       { key: 'then', name: 'Ask me next: the runner-up', unit: 'text', fromApp: 'M9Q: each input read again at the level its answer reaches', app: c => askNextOf(c.doc, c.ref, { now: c.now, m: c.m, R: c.ranges(), F: c.fooRange(), zero: zeroOf(c) }).runnerUp?.question ?? null },
+    ] },
+  // ---------- Batch 47: the benefits cliff (Phase 4, Track 2) ----------
+  { id: 'M9B', name: 'The benefits cliff: the lines a raise crosses and what the household keeps', inputs: 'the household size (Solo or couple, Dependents, Kids ages), State and NYC, Health coverage, every income row (earned or not, gross, pre-tax money, half the SE tax), the Rent or mortgage and Electric, gas, water lines, Filing status, the status taps (Getting it, Might qualify, Not on it), SNAP a month and Child care paid out of pocket; Poverty_base, Poverty_perPerson, the SNAP_limits, ACA_applicable, ACA_benchmark, EITC_2026 and NY_chpBands tables and the SNAP_*, Medicaid_*, NY_*, ACA_*, EITC_* values', unit: 'money',
+    fns: ['cliff.CLIFF_STATUS', 'cliff.CLIFF_PROGRAMS', 'cliff.RAISE_PICKS', 'cliff.cliffOn', 'cliff.fplOf', 'cliff.cliffHousehold', 'cliff.snapLine', 'cliff.snapBenefit', 'cliff.applicablePct', 'cliff.benchmarkOf', 'cliff.healthAt', 'cliff.kidsAt', 'cliff.eitcOf', 'cliff.programsAt', 'cliff.raiseOf', 'cliff.breakEven', 'cliff.cliffOf'],
+    fromApp: 'each program is read at today\'s income and again with the raise (SNAP\'s benefit formula, the health coverage chain, the EITC phase-out, the household\'s tax on the raise), and the break-even is a search in $100 steps, so it is worked out in SLAM',
+    label: 'Distance to the next benefit line, a year', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m }).next?.distance ?? null,
+    parts: [
+      { key: 'snap', name: 'SNAP a month at today\'s income (the benefit formula)', unit: 'money', fromApp: 'the most for the size less 30% of net income (above)', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m }).base.snap.monthly },
+      { key: 'help', name: 'Health coverage help a year at today\'s income (Medicaid, the Essential Plan or the premium credit)', unit: 'money', fromApp: 'the benchmark plan less what the household pays on the coverage its income puts it on', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m }).base.health.help },
+      { key: 'eitc', name: 'EITC a year at today\'s earnings (federal and New York)', unit: 'money', fromApp: 'the EITC_2026 table, phased in and out, plus EITC_nyShare in New York', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m }).base.eitc.total },
+      { key: 'raise5k', name: 'A $5,000 raise: kept after tax less the benefits it costs, a year', unit: 'money', fromApp: 'the raise taxed with the household and each Getting it program read again (above)', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m, raise: 5000 }).raise.net },
     ] },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },

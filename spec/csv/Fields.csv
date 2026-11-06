@@ -516,3 +516,11 @@ F513,Built,,Income,Income,Lands in (which account),Secondary,,,,,,,,,Now,Added f
 F514,Built,,Debt,Debt,Same bank as (kept private),Secondary,,,,,,,,,Now,"Added from the code (js/registry/fields.js); stays in the app: batch 44: on a row kept private, an opaque key in place of its institution, so the fire drill still knows which rows share a bank; set by the fold",,Net worth › Debt,text,,,debt.bankKey
 F515,Built,,Assets,Assets,Same bank as (kept private),Secondary,,,,,,,,,Now,"Added from the code (js/registry/fields.js); stays in the app: batch 44: on a row kept private, an opaque key in place of its institution, so the fire drill still knows which rows share a bank; set by the fold",,Net worth › Assets,text,,,assets.bankKey
 F516,Built,,Assets,Assets,Workplace plan: from the current job or an old one,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets,choice,,,assets.planJob
+F517,Built,,Profile,Profile,Benefits now: SNAP (food),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.cliff.snap
+F518,Built,,Profile,Profile,Benefits now: Medicaid,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.cliff.medicaid
+F519,Built,,Profile,Profile,Benefits now: The Essential Plan (NY),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.cliff.essential
+F520,Built,,Profile,Profile,Benefits now: Marketplace premium help,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.cliff.aca
+F521,Built,,Profile,Profile,"Benefits now: Children's coverage (Medicaid, Child Health Plus)",Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.cliff.kids
+F522,Built,,Profile,Profile,Benefits now: Earned income credit (EITC),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.cliff.eitc
+F523,Built,,Profile,Profile,SNAP a month (from the benefit letter),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,money,,,profile.cliff.snapAmount
+F524,Built,,Profile,Profile,Child care paid out of pocket,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.cliff.careCosts

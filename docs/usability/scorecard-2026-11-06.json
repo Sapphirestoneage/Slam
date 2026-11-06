@@ -3827,6 +3827,70 @@
      "reason": "the walk now opens with the question that moves the plan most; waits for Eli at sign-off"
     }
    }
+  },
+  {
+   "screen": "Raise and benefits",
+   "route": "#/plan/cliff",
+   "area": "Plan",
+   "batch": 47,
+   "tasks": [
+    "Find it from the client's words (food stamps)",
+    "Test a $10,000 raise",
+    "Type a $13,000 raise (the SNAP line)",
+    "Mark the Essential Plan Getting it, then undo",
+    "Use the $543 SNAP estimate as her amount",
+    "Say child care is paid out of pocket"
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "all six tasks done in the browser on Jasmine at 1280; each tap saves (profile.cliff) and Undo takes it back; the raise stays as tested while the taps redraw"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-checked in test/cliff.test.js: the poverty line, the SNAP lines and benefit (Jasmine $543), the IRS 2027 table, the health chain, New York children's bands, the 2026 EITC, the raise and break-even; every persona's cliff block (Jasmine -$305 at $13,000 until $13,700; Lena and Marco -$7,275.70 at $5,000 until $14,800)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one poverty line (studentLoans.poverty) for the student loans and the cliff; the raise's tax is the household's own tax (M12); each benefit has one name across the screen"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, Demo and a new client; and with every section open for Jasmine and Lena and Marco at 1280 and 390"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "one sentence answers the raise; waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find: food stamps, snap, medicaid, eitc, subsidy cliff land on it in one search; a Plan sub-tab after Transitions"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "three raise taps, a tap per benefit, a one-tap Use for SNAP; typing only for a raise not on the chips"
+    },
+    "words": {
+     "result": "minor",
+     "reason": "Line and Worth now are short column heads explained in a foot note and tips; MAGI only in a hover tip. Ahead and behind are plain, no verdict words, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the sentence and the table move on every tap; a status not tapped shows Guess and the guess; nowhere near says so in one line"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "1440, 1280 and 390, light and dark; the benefits table stacks on a phone"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opens with no visible wait (500 raises read for the behind runs, each a tax and a few lines)"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "answers is the raise worth it in one sentence; waits for Eli at sign-off; nothing coach-only on it"
+    }
+   }
   }
  ],
  "updated": {

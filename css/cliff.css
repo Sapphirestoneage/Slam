@@ -1,0 +1,30 @@
+/* Batch 47: Plan › Raise and benefits (the benefits cliff). Calm: no red; the sentence first, the numbers under it. */
+.cf-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px var(--s3); padding: 10px var(--s4); margin-bottom: var(--s4); }
+.cf-line > .label { flex: 0 0 auto; }
+.cf-line-text { flex: 1 1 360px; min-width: 0; line-height: 1.45; }
+.cf-raise { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); margin-bottom: var(--s4); min-width: 0; }
+.cf-raise > * { min-width: 0; }
+.cf-ask { display: grid; gap: 6px; }
+.cf-picks { gap: 8px var(--s3); flex-wrap: wrap; align-items: center; }
+.cf-say { margin: 0; font-size: 1.125rem; line-height: 1.45; }
+.cf-wait { margin: 0; }
+.cf-table { width: 100%; }
+table.rows.mini.cf-table td { white-space: normal; overflow-wrap: anywhere; }
+table.rows.mini.cf-table .num { text-align: right; white-space: nowrap; overflow-wrap: normal; }
+.cf-table tr.cf-net td { border-top: 1px solid var(--border-row); }
+.cf-now td { vertical-align: middle; }
+.cf-you .seg { flex-wrap: nowrap; }
+.cf-extras { flex-wrap: wrap; gap: var(--s3) var(--s5, 24px); align-items: flex-start; margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--border-row); }
+.cf-how { margin: 0; padding-left: 20px; display: grid; gap: 8px; line-height: 1.45; }
+.cf-foot { margin: 8px 0 0; }
+@media (max-width: 760px) {
+  .cf-now, .cf-now tbody, .cf-now tr, .cf-now td { display: block; width: 100%; }
+  .cf-now thead { display: none; }
+  .cf-now tr { padding: 8px 0; border-bottom: 1px solid var(--border-row); }
+  .cf-now td { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 0; text-align: left; border: 0; }
+  .cf-now td:first-child { font-weight: 700; }
+  .cf-now td[data-label]::before { content: attr(data-label); color: var(--text-2); font-size: .875rem; font-weight: 600; }
+  .cf-now td.cf-you { flex-wrap: wrap; }
+  .cf-you .seg { flex-wrap: wrap; }
+  .cf-say { font-size: 1rem; }
+}

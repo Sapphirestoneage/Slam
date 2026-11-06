@@ -135,6 +135,11 @@ export const AREAS = [
       pick('giving.base', 'Giving % of', ['gross', 'net']), f('giving.amount', 'Giving a month', 'money'),
       pick('keepJobAfterLaunch', 'Keep a job after launch', YES_NO_WORDS),
       f('launch.move', 'Launch move'), f('launch.date', 'Launch month', 'month'),
+      // Batch 47 (the benefits cliff, M9B): which public benefits the household gets now, one tap each (Plan › Raise and benefits).
+      ...['snap:SNAP (food)', 'medicaid:Medicaid', 'essential:The Essential Plan (NY)', 'aca:Marketplace premium help', 'kids:Children\'s coverage (Medicaid, Child Health Plus)', 'eitc:Earned income credit (EITC)']
+        .map(x => { const [k, l] = x.split(':'); return pick(`cliff.${k}`, `Benefits now: ${l}`, ['Getting it', 'Might qualify', 'Not on it']); }),
+      f('cliff.snapAmount', 'SNAP a month (from the benefit letter)', 'money'),
+      f('cliff.careCosts', 'Child care paid out of pocket', 'yesno'),
       f('benefits', 'Employer benefits', 'text', { sheet: { skip: 'a set of benefit answers, each with have it, amount and per; on About you › Benefits' } }),
       f('lifeAdmin', 'Life admin checklist', 'text', { sheet: { skip: 'done / not yet / not for me per item; on Net worth › Protection' } }),
       f('taxHistory', 'Refund history', 'text', { area: 'taxes', sheet: { skip: 'two earlier tax years; on the Taxes tab of SLAM' } }),

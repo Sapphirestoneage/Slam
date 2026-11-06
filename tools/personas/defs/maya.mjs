@@ -37,5 +37,10 @@ export default {
     says: ['$12,400', '0 days', 'counted as the same bank', 'All your spending, since the needs are not split out yet', 'Split it on Budget', 'room on the card', 'Payroll app or HR portal'],
     notSays: ['close accounts tied to adult work'],
   },
+  // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  cliff: {
+    near: { value: false, note: '$86,000 a year in New York City with work coverage: every line is below her.' },
+    says: ['Nowhere near a benefit line'],
+  },
   cannot: [],
 };

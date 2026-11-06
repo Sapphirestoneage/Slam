@@ -49,6 +49,11 @@ export default {
     gap: { value: 0, note: 'Nothing out of sight.' },
     says: ['$1,950 of it the home, 12.3% on its own'],
   },
+  // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  cliff: {
+    near: { value: false, note: '$189,800 a year in NJ with work coverage: every line is far below.' },
+    says: ['Nowhere near a benefit line'],
+  },
   cannot: [
     'RSUs: only a text box (Income › ESPP and RSUs). Vests are not income, not a windfall on the calendar, and not a concentration flag on the brokerage.',
     'Rental property: no rent, vacancy, costs or depreciation. The rent is typed as one net number on Income, and the rental loan sits on Debt as a second Mortgage.',

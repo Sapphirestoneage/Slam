@@ -35,6 +35,11 @@ export default {
     loan: { value: 149830, tol: 50, note: 'min(28% x $4,833.33 = $1,353.33, 36% x $4,833.33 - $263 = $1,477) = $1,353.33; 75% = $1,015 at 7.18% for 30 years x 147.616 = $149,830.' },
     says: ['4 times', 'At or over the 3 times line', 'No cards on file', 'Everything you earn'],
   },
+  // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  cliff: {
+    near: { value: false, note: '$58,000 a year in PA with work coverage: SNAP $20,748 and the EITC $19,540 are below her.' },
+    says: ['Nowhere near a benefit line'],
+  },
   cannot: [
     'PSLF employer certification and the count of qualifying payments are typed by hand (Payments left); SLAM does not read them from the servicer.',
   ],

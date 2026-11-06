@@ -41,6 +41,11 @@ export default {
     runwayMonths: { value: 0.9375, unit: 'months', tol: 0.01, note: '$3,000 / $3,200.' },
     householdSurplus: { value: 2200, unit: 'money', view: 'all', note: 'Both together: $7,500 - $3,200 - $2,100 = $2,200. Living together shows no combined totals, so this is only what a combined view should say if one shows.' },
   },
+  // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  cliff: {
+    near: { value: false, note: '$106,600 a year for two in IL with work coverage: SNAP for 2 is $28,140, the EITC ends at $26,820 joint with no children.' },
+    says: ['Nowhere near a benefit line'],
+  },
   cannot: [
   ],
 };

@@ -48,6 +48,11 @@ export default {
     note: 'Opens on checking, where the larger take-home lands (the job, $2,383.33 a month). The job pays $1,100 on Nov 6, Nov 20 and Dec 4 ($3,300); OnlyFans pays $2,350 x 12 / 52 = $542.31 each Monday after the 7-day hold: Nov 9, 16, 23 and 30 ($2,169.24). The HYSA has no bank set, so it counts as at the same bank until Another bank is tapped (QUESTIONS 367). Out of reach: $2,200 + $6,000 + $3,300 + $2,169.24 = $13,669.24; nothing to reach, 0 days. With Another bank tapped on the HYSA: $6,000 reachable, 53 days (below). Must-pay: the gut number $3,600 less the $300 card payment in it, plus the card minimum ($29 + $2,900 x 21% / 12 = $79.75): $3,379.75. With the HYSA at another bank: $6,000 / ($3,379.75 x 12 / 365 = $111.11 a day) = 53.99, so 53 days. Held on OnlyFans at any time: $2,350 x 12 / 365 x 7 = $540.82.',
     says: ['$13,669', '0 days', 'counted as the same bank', 'close accounts tied to adult work', 'OnlyFans: payouts held back', '$541', 'Payout settings on each platform'],
   },
+  // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  cliff: {
+    near: { value: false, note: '$63,300 a year in CA with work coverage: every line is below or does not apply.' },
+    says: ['Nowhere near a benefit line'],
+  },
   cannot: [
     // Batch 27 cleared: platform payouts (gross, the platform fee, chargebacks a month, the hold and the payout schedule)
     // are a Platform income row, and the calendar lands each payout after the hold.

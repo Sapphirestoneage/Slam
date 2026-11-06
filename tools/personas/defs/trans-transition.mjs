@@ -32,6 +32,11 @@ export default {
     monthsToFi: { value: 175, unit: 'months', note: 'Batch 12, freed money follows the FOO: $8,505 of big e left / $1,052.17 a month = 9 months, with $933.33 + $350 = $1,283.33 a month going in ($90,000 grows to $106,500). Then $933.33 + $350 + $1,052.17 = $2,335.51 a month, and batch 23: each care fund\'s saving ends at its month and comes back to what goes in: +$200 from month 4 (Feb 2027, counted once the big e months are over), +$900 from month 11, +$347.83 from month 24. At 7% real to the FI number $4,300 x 12 / 4% = $1,290,000: 175 months (worked month by month).' },
     runwayMonths: { value: 5.116, unit: 'months', tol: 0.01, note: '$22,000 / $4,300.' },
   },
+  // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  cliff: {
+    near: { value: false, note: '$140,000 a year in WA with work coverage.' },
+    says: ['Nowhere near a benefit line'],
+  },
   cannot: [
     'Planned medical care with partial coverage: no procedure, cost, coverage % or out-of-pocket maximum; each one is an event with the out-of-pocket amount worked out by hand.',
     'The out-of-pocket maximum resets each year: two procedures in two plan years cost two maximums, which only shows if the coach does it.',

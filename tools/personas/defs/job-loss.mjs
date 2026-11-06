@@ -66,5 +66,14 @@ export default {
       note: '$1,500 a month more from month 3: $240 short in Nov and Dec, $1,260 over in Jan to Mar (into the buffer), then $1,340 a month. $55,202 - $480 + $3,780 = $58,502. The 0% card is reached in May 2028, after its promo, so its 23% takes $133.75 of its room; the regular card (Aug 2028) $213.53. 5 + ($58,502 - $347.28) / $1,340 = 48.399 months.' },
     cardExample: { apr: 0.24, cost: 60, note: '$1,000 x 24% / 12 x 3 months = $60.' },
   },
+  // Batch 47 (the benefits cliff, M9B): New York, on the marketplace (About you) with unemployment of $31,200 a year:
+  // 195.5% of the line, so the Essential Plan (free to 200%, $31,920). A new job at $1,000 a year more ends it.
+  cliff: {
+    near: { value: true, note: 'The Essential Plan is a Getting it (a Guess: ACA on About you, under 200%).' },
+    essentialLine: { value: 31920, note: '200% x $15,960.' },
+    next: { value: 'essential', note: '$720 above the $31,200.' },
+    health1000: { value: 2204.4, tol: 0.5, note: 'At $32,200 (201.75% of the line, 6.78% + 3.5% of the way to 8.66% = 6.846%) they pay $2,204.40 a year for the benchmark plan instead of $0.' },
+    says: ['The Essential Plan ends', 'behind'],
+  },
   cannot: [], // batch 24: Report › Overview reads the benefit's taxes now (the household rates, as on Taxes)
 };
