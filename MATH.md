@@ -179,3 +179,21 @@ Severity: **high** could mislead a client into a bad decision; **medium** is a s
 5. **Filing status by couple mode.** Resolved in batch 5: no mode sets it; the fallback rule is QUESTIONS 174 (low).
 
 Unit errors found and fixed tonight: the Rule of 5 words; the Proposed compounding rate. No per-month-read-as-per-year error was found in the math this time.
+
+## Batch 15 additions (Nov 6 2026)
+
+- **Household tax (M10 to M12).** One federal and state return for Married jointly, else one per person. FICA per person,
+  with the Social Security wage base per person. Rows stack in a fixed order (jobs, then 1099, then unemployment): a row's
+  tax is the return's tax with it minus without it, so the shares add up and a second job shows its real rate.
+- **Quarterly estimates (M16).** The tax 1099 rows add on top (income tax at the household's brackets plus SE tax), over
+  their gross, is the set-aside rate; a quarter is a quarter of the year's amount; due dates from Form 1040-ES.
+- **Unemployment.** Taxed federal and state on the weeks paid this tax year (26 back from the end date when no start is
+  typed); no FICA; 10% withheld only when chosen.
+- **Known changes ahead (M53).** A bill that becomes yours, a line that starts, benefits that end: the monthly surplus moves
+  from that month on (after any debt-first months, which the debt plan stretches for them), and a cost that stays is in
+  spending in retirement (the FI number).
+- **The Quiet Quitting FI flag rule (M70).** Reached when invested today is at or over M70 and every investment balance
+  is typed (a blank is not known yet). Said as "You've already reached Quiet Quitting FI: just the Roth IRA each year gets
+  you there" (plus the match when a job is kept).
+- **Earmarked money.** A 529 or an account with Purpose: Goal is in net worth, not in the invested balance the FI date grows
+  from; its contributions are not FI money.

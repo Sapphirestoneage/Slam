@@ -100,14 +100,17 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   else if (!giveMonthly) add({ id: '5b', name: stepHeadline('5b'), done: false, started: false, left: null, note: 'Set a percent or an amount to give.' });
   else add({ id: '5b', name: stepHeadline('5b'), done: givingLines >= giveMonthly - 0.5, started: givingLines > 0, left: Math.max(0, giveMonthly - givingLines), monthly: true,
     note: `${give.mode === 'amount' ? `$${Math.round(give.amount ?? 0)} a month` : `${Math.round((give.pct ?? 0) * 100)}% of ${give.base === 'net' ? 'take-home' : 'gross'}`}, beside the tax-free step.`, giveMonthly });
-  const pastCoast = coast != null && invested >= coast;
-  const pastQQ = qq.value != null && invested >= qq.value;
+  const pastCoast = coast != null && !!x.investedKnown && invested >= coast;
+  const pastQQ = qq.value != null && x.investedKnown && invested >= qq.value; // a blank balance is not known yet
+  // Batch 15, item 8 (the flag rule, MATH.md): past Quiet Quitting FI means invested today is at or over M70, so the
+  // yearly minimum alone (the Roth IRA, plus the match when a job is kept) reaches FI by the FI age. Said plainly.
+  if (pastQQ) { qq.reached = true; qq.reachedText = `You've already reached Quiet Quitting FI: just the Roth IRA${keepJob === 'Yes' && matchYearly ? ' and the match from the job you keep' : ''} each year gets you there.`; }
   // Step 7 opens at Coast FI, or at Quiet Quitting FI when that toggle is on; step 6 is done the moment 7 opens.
-  add({ id: '6', name: stepHeadline('6'), done: pastCoast || (!!set.qqOpensLaunch && pastQQ), started: qq.value != null && invested >= qq.value, left: coast == null ? null : Math.max(0, coast - invested),
-    parts: [{ name: 'Quiet Quitting FI', value: qq.value, done: qq.value != null && invested >= qq.value, text: qq.text }, { name: 'Coast FI', value: coast, done: pastCoast }],
-    note: 'Maxing the 401(k) is the lever inside this step.' });
+  add({ id: '6', name: stepHeadline('6'), done: pastCoast || (!!set.qqOpensLaunch && pastQQ), started: pastQQ, left: coast == null ? null : Math.max(0, coast - invested),
+    parts: [{ name: 'Quiet Quitting FI', value: qq.value, done: pastQQ, text: qq.text }, { name: 'Coast FI', value: coast, done: pastCoast }],
+    note: pastQQ ? `${qq.reachedText} Maxing the 401(k) is the lever for Coast FI.` : 'Maxing the 401(k) is the lever inside this step.' });
   const opensAt = set.qqOpensLaunch ? 'qq' : 'coast';
-  const open = opensAt === 'qq' ? qq.value != null && invested >= qq.value : pastCoast;
+  const open = opensAt === 'qq' ? pastQQ : pastCoast;
   const launch = p.launch?.move && p.launch?.date ? p.launch : null;
   add({ id: '7', name: stepHeadline('7'), done: open && !!launch, started: open, note: open ? (launch ? `${launch.move}, ${launch.date}. Only the Roth keeps being topped up.` : 'Open: pick a launch move and date.') : `Opens at ${opensAt === 'qq' ? 'Quiet Quitting FI' : 'Coast FI'}.` });
   const future = [...sink.map(s => ({ name: s.name, done: s.funded != null && s.funded >= 1, left: s.target == null ? 0 : Math.max(0, s.target - (s.saved ?? 0)) })), ...laterGaps.map(g => ({ name: g.name, done: g.full, left: g.left }))];
@@ -230,7 +233,7 @@ function factsOf({ x, m, steps, L, coast, qq, invested, debts, low, doc, k401Lim
     launchWaiting: st('7')?.status !== 'Done',
     extraOnLowRateDebt: low.some(d => (d.rec?.values.extra ?? 0) > 0),
     bigENotFull: !st('4')?.done,
-    pastQuietQuitting: qq.value != null && invested >= qq.value,
+    pastQuietQuitting: qq.value != null && x.investedKnown && invested >= qq.value,
     contributingPastNeed: savingYearly > 0,
     noGoalForExtra: !doc.records.some(r => r.kind === 'milestone'),
     forgivenessLoanExtra: debts.some(d => forgiveness(d.rec) && ((d.rec?.values.extra ?? 0) > 0 || (d.rec?.values.payment ?? 0) > (d.rec?.values.minimum ?? Infinity))),

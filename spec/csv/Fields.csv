@@ -450,3 +450,9 @@ F447,Built,,Profile,Profile,Credit freeze at Equifax,Secondary,,,,,,,,,Now,Added
 F448,Built,,Profile,Profile,Credit freeze at Experian,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.credit.freezeExperian
 F449,Built,,Profile,Profile,Credit freeze at TransUnion,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.credit.freezeTransUnion
 F450,Built,,Profile,Profile,Extra to debt a month (Make it the plan on Home),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,money,,,profile.settings.debtExtra
+F451,Built,,Income,Income,Benefits started,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,date,,,income.benefitStart
+F452,Built,,Income,Income,Benefits end,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,date,,,income.benefitEnd
+F453,Built,,Income,Income,Have 10% federal tax withheld,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,choice,,,income.withhold
+F454,Built,,Protection,Protection,Bills list: keep or try to cut,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Protection,choice,,,protection.decision
+F455,Built,,Needs,Spending lines,Starts in (a known cost ahead),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,date,,,spending.startsIn
+F456,Built,,Needs,Spending lines,Paid to my partner (moves money between you),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,choice,,,spending.toPartner

@@ -48,10 +48,13 @@ export function fica({ gross, filingStatus = 'Single', selfEmployed = false }, r
   const over = Math.max(0, base - t.additionalMedicareOver[filingKey(filingStatus)]);
   const medicare = base * medRate + over * t.additionalMedicareRate;
   const total = ss + medicare;
+  // The deductible half is half of the self-employment tax itself (Social Security and Medicare at 15.3%); the
+  // Additional Medicare 0.9% is not part of it (IRS Schedule SE).
+  const seHalf = selfEmployed ? (ss + base * medRate) / 2 : 0;
   return { ...ok('M11', total, selfEmployed
     ? `Self-employed: 15.3% on 92.35% of ${fmt.money(gross)} (Social Security up to ${fmt.money(t.socialSecurityWageBase)}) = ${fmt.money(total)} a year; half of it is deductible.`
     : `Social Security 6.2% of ${fmt.money(Math.min(base, t.socialSecurityWageBase))} plus Medicare 1.45% of ${fmt.money(base)}${over > 0 ? ` plus 0.9% of the ${fmt.money(over)} over the limit` : ''} = ${fmt.money(total)} a year.`),
-  socialSecurity: ss, medicare, deductibleHalf: selfEmployed ? total / 2 : 0 };
+  socialSecurity: ss, medicare, deductibleHalf: seHalf };
 }
 
 // State and city income tax (B5.1): NY brackets and NYC on NY taxable income. place = { state: 'NY', nyc: true }.
@@ -73,6 +76,104 @@ export function stateTax({ gross, pretax = 0, filingStatus = 'Single', place = n
   const s = byBrackets(taxable, st.brackets[key]);
   const city = place.nyc && ref.tax.local?.NYC ? byBrackets(taxable, ref.tax.local.NYC.brackets[key]) : { tax: 0, marginal: 0 };
   return { state: s.tax, local: city.tax, marginal: s.marginal + city.marginal, taxable, applies: true, nyc: !!place.nyc };
+}
+
+// Household tax (batch 15, item 1; M10 to M12). Income tax is worked out once per tax return, not once per job:
+// one return for Married jointly, else one per person. FICA is per person, with the Social Security wage base per
+// person (two jobs never pay Social Security past it). Rows are stacked in a fixed order (jobs, then self-employment,
+// then unemployment; record order within each), and each row's share is the tax it adds on top of the rows before
+// it, so the shares add up to the return's tax and a second job shows the rate it really pays.
+// rows: [{ id, person: 'Me' | 'Partner', gross, pretax, taxType }]. Unemployment: income tax, no FICA.
+export const STACK = { 'W-2': 0, '1099': 1, Unemployment: 2 };
+const rankOf = t => STACK[t] ?? 0;
+export const noFica = t => t === 'Unemployment';
+export function householdTax(rows, { filingStatus = 'Single', place = null } = {}, ref) {
+  const t = ref.tax, joint = filingKey(filingStatus) === 'joint';
+  const list = rows.filter(r => r.gross != null && r.taxType).map((r, i) => ({ ...r, i, unit: joint ? 'Household' : r.person === 'Partner' ? 'Partner' : 'Me', rank: rankOf(r.taxType) }))
+    .sort((a, b) => a.unit.localeCompare(b.unit) || a.rank - b.rank || a.i - b.i);
+  const out = {}, units = {};
+  const st = place?.state ? t.state?.[place.state] : null;
+  const fedTax = x => byBrackets(x, t.brackets[filingKey(filingStatus)]);
+  const pk = placeKey(filingStatus);
+  const stateOn = x => (st ? byBrackets(Math.max(0, x - st.standardDeduction[pk]), st.brackets[pk]).tax : 0);
+  const cityOn = x => (st && place.nyc && ref.tax.local?.NYC ? byBrackets(Math.max(0, x - st.standardDeduction[pk]), ref.tax.local.NYC.brackets[pk]).tax : 0);
+  const std = t.standardDeduction[filingKey(filingStatus)];
+  const over = t.additionalMedicareOver[filingKey(filingStatus)];
+  const ssBase = {}, uBase = {}, uFed = {}, uState = {};
+  for (const r of list) {
+    const se = r.taxType === '1099', none = noFica(r.taxType);
+    const base = none ? 0 : se ? r.gross * t.selfEmployedBase : r.gross;
+    const p = r.person === 'Partner' ? 'Partner' : 'Me';
+    const before = ssBase[p] ?? 0; ssBase[p] = before + base;
+    const ssRate = se ? t.socialSecurityRate * 2 : t.socialSecurityRate;
+    const ss = (Math.min(ssBase[p], t.socialSecurityWageBase) - Math.min(before, t.socialSecurityWageBase)) * ssRate;
+    const medicare = base * (se ? t.medicareRate * 2 : t.medicareRate);
+    const ub = uBase[r.unit] ?? 0; uBase[r.unit] = ub + base;
+    const addl = (Math.max(0, uBase[r.unit] - over) - Math.max(0, ub - over)) * t.additionalMedicareRate;
+    const seHalf = se ? (ss + medicare) / 2 : 0;
+    const own = Math.max(0, r.gross - (r.pretax ?? 0) - seHalf);
+    const fb = uFed[r.unit] ?? 0; uFed[r.unit] = fb + own;
+    const federal = fedTax(Math.max(0, uFed[r.unit] - std)).tax - fedTax(Math.max(0, fb - std)).tax;
+    const sOwn = Math.max(0, r.gross - (r.pretax ?? 0));
+    const sb = uState[r.unit] ?? 0; uState[r.unit] = sb + sOwn;
+    const state = stateOn(uState[r.unit]) - stateOn(sb), local = cityOn(uState[r.unit]) - cityOn(sb);
+    const fica = ss + medicare + addl;
+    out[r.id] = { federal, state, local, fica, socialSecurity: ss, medicare: medicare + addl, seHalf, total: federal + state + local + fica, unit: r.unit, person: p, taxType: r.taxType, gross: r.gross };
+  }
+  for (const [u, taxable] of Object.entries(uFed)) {
+    const f = fedTax(Math.max(0, taxable - std));
+    const sTax = st ? byBrackets(Math.max(0, uState[u] - st.standardDeduction[pk]), st.brackets[pk]) : { marginal: 0 };
+    const cTax = st && place.nyc && ref.tax.local?.NYC ? byBrackets(Math.max(0, uState[u] - st.standardDeduction[pk]), ref.tax.local.NYC.brackets[pk]) : { marginal: 0 };
+    units[u] = { taxable: Math.max(0, taxable - std), federalMarginal: f.marginal, stateMarginal: sTax.marginal + cTax.marginal, base: uBase[u] ?? 0 };
+  }
+  const all = Object.values(out);
+  const add = k => all.reduce((s2, x) => s2 + x[k], 0);
+  const total = { federal: add('federal'), state: add('state'), local: add('local'), fica: add('fica'), all: add('total'), gross: add('gross') };
+  return { rows: out, units, total, joint, text: `${all.length} income ${all.length === 1 ? 'row' : 'rows'} on ${Object.keys(units).length === 1 ? 'one return' : `${Object.keys(units).length} returns`}: federal ${fmt.money(total.federal)} + FICA ${fmt.money(total.fica)}${st ? ` + ${place.state} ${fmt.money(total.state)}${place.nyc ? ` + NYC ${fmt.money(total.local)}` : ''}` : ''} = ${fmt.money(total.all)} a year.` };
+}
+
+// The household's rates (Taxes): effective is all tax over everything taxed; marginal is the next dollar of pay on
+// this client's return: the federal bracket, state and city, and FICA (7.65% under the wage base, then 1.45%, plus
+// 0.9% past the Additional Medicare line).
+export function householdRates(hh, ref, { person = 'Me' } = {}) {
+  const t = hh?.total;
+  if (!t || !t.gross) return needs('M14', ['gross pay'], { unit: 'pct' });
+  const unit = hh.joint ? 'Household' : person === 'Partner' ? 'Partner' : 'Me';
+  const u = hh.units[unit] ?? Object.values(hh.units)[0];
+  const mine = Object.values(hh.rows).filter(r => (hh.joint || r.person === (person === 'Partner' ? 'Partner' : 'Me')) && r.taxType !== 'Unemployment' && r.taxType !== '1099');
+  const ssBase = Object.values(hh.rows).filter(r => r.person === (person === 'Partner' ? 'Partner' : 'Me') && r.taxType !== 'Unemployment').reduce((s2, r) => s2 + (r.taxType === '1099' ? r.gross * ref.tax.selfEmployedBase : r.gross), 0);
+  const fica = (ssBase < ref.tax.socialSecurityWageBase ? ref.tax.socialSecurityRate : 0) + ref.tax.medicareRate + ((u?.base ?? 0) > ref.tax.additionalMedicareOver[hh.joint ? 'joint' : 'single'] ? ref.tax.additionalMedicareRate : 0);
+  const ficaMarginal = mine.length || !Object.values(hh.rows).length ? fica : 0;
+  const marginal = (u?.federalMarginal ?? 0) + (u?.stateMarginal ?? 0) + ficaMarginal;
+  const effective = t.all / t.gross;
+  return { ...ok('M14', effective, `All tax on the return${Object.keys(hh.units).length > 1 ? 's' : ''} (${fmt.money(t.all)}) over everything taxed (${fmt.money(t.gross)}) = ${fmt.pct(effective)}. The next dollar of pay is taxed at ${fmt.pct(marginal)}: federal ${fmt.pct(u?.federalMarginal ?? 0)}${u?.stateMarginal ? ` + state and city ${fmt.pct(u.stateMarginal)}` : ''} + FICA ${fmt.pct(ficaMarginal)}.`, { unit: 'pct' }),
+    effective, marginal, federalMarginal: u?.federalMarginal ?? 0, stateMarginal: u?.stateMarginal ?? 0, ficaMarginal };
+}
+
+// Quarterly estimates (batch 15, item 3): the tax self-employment income adds on top of everything else (its stacked
+// share, SE tax included), as a share of each dollar and split over the four due dates (IRS Form 1040-ES).
+export function quarterlySetAside(hh, ref, { year = new Date().getFullYear(), paid = 0 } = {}) {
+  const se = Object.values(hh?.rows || {}).filter(r => r.taxType === '1099');
+  if (!se.length) return null;
+  const yearly = se.reduce((s2, r) => s2 + r.total, 0), gross = se.reduce((s2, r) => s2 + r.gross, 0);
+  const each = Math.max(0, yearly - (paid ?? 0)) / 4;
+  const due = (ref.tax.quarterlyDue || []).map((md, i) => `${i === 3 ? year + 1 : year}-${md}`);
+  const rate = gross ? yearly / gross : null;
+  return { yearly, gross, rate, quarterly: yearly / 4, each, due,
+    text: `Self-employment income ${fmt.money(gross)} a year adds ${fmt.money(yearly)} of tax (income tax at your rates plus self-employment tax) on top of your other income: ${rate == null ? '' : `${Math.round(rate * 100)} cents of each dollar, `}${fmt.money(yearly / 4)} each quarter.` };
+}
+
+// Unemployment benefits (batch 15, item 13): taxable for federal and state income tax, no FICA, nothing withheld
+// unless the person asks for the 10% federal withholding (IRS Form W-4V). Weeks this tax year, for the tax.
+export function benefitWeeksThisYear({ start = null, end = null, now = new Date(), maxWeeks = 26 } = {}) {
+  const y = now.getUTCFullYear();
+  const day = s => Date.parse(`${s}T00:00:00Z`);
+  const jan1 = Date.UTC(y, 0, 1), dec31 = Date.UTC(y, 11, 31);
+  if (!start && !end) return 52;
+  const e = end ? day(end) : dec31;
+  const s0 = start ? day(start) : e - maxWeeks * 7 * 86400000;
+  const from = Math.max(s0, jan1), to = Math.min(e, dec31);
+  return to < from ? 0 : Math.round((to - from) / (7 * 86400000));
 }
 
 // M12: annual take-home from annual gross.
@@ -134,6 +235,23 @@ export function variableSafeBudget({ lowestMonth, typicalMonth, setAside }, ref)
   return ok('M16', v, `No lowest month yet, so 75% of a typical month (${fmt.money(typicalMonth)}) is used as a guess, minus ${fmt.pct(rate)} for taxes = ${fmt.money(v)} a month.`, { guess: true });
 }
 
+// Batch 15, item 11 (YNAB's live on last month's income, adapted): an irregular income plan. The base month is what
+// you can count on (M16, the slow month after tax); the extra is a typical month after tax less the base; the extra
+// goes down the FOO order; and a lean-season fund covers the swing: with twelve months typed, every month's shortfall
+// under the typical month added up, else the swing times RULES.leanSeasonMonths.
+export function irregularPlan({ lowestMonth, typicalMonth, months = null, setAside = null }, ref) {
+  const rate = setAside ?? ref.defaults.taxSetAside;
+  const base = variableSafeBudget({ lowestMonth, typicalMonth, setAside: rate }, ref);
+  if (base.value == null || typicalMonth == null) return { value: null, needs: base.value == null ? base.needs : ['a typical month'], base };
+  const good = typicalMonth * (1 - rate);
+  const extra = Math.max(0, good - base.value);
+  const typed = (months || []).filter(v => v != null);
+  const fromMonths = typed.length === 12 ? typed.reduce((s2, v) => s2 + Math.max(0, typicalMonth - v) * (1 - rate), 0) : null;
+  const fund = fromMonths ?? extra * RULES.leanSeasonMonths;
+  return { ...ok('M16', fund, fromMonths != null ? `Twelve months typed: every month under the typical ${fmt.money(typicalMonth)}, after ${fmt.pct(rate)} for taxes, adds up to ${fmt.money(fund)} to hold for the lean months.` : `The swing between a typical month and the base, after ${fmt.pct(rate)} for taxes, is ${fmt.money(extra)}; ${RULES.leanSeasonMonths} months of it is ${fmt.money(fund)} to hold for the lean season.`),
+    base: base.value, baseGuess: !!base.guess, good, extra, fund, rate, fromMonths: fromMonths != null };
+}
+
 // M17: real hourly wage (life energy), monthly numbers. Missing hours: 'needs hours'.
 export function realHourlyWage({ takeHome, workCosts = 0, paidHours, commuteHours = 0, prepHours = 0 }) {
   if (takeHome === null || takeHome === undefined) return needs('M17', ['take-home pay']);
@@ -144,12 +262,28 @@ export function realHourlyWage({ takeHome, workCosts = 0, paidHours, commuteHour
 }
 
 // R046: a paycheck row typed as take-home or as gross. The other is solved and marked Computed.
-// Jobs pay tax; benefits, unemployment and money from family are counted as they land. Each job is worked out
-// on its own (a second job is taxed as if it were the only one), and state tax is not in yet.
+// Jobs pay tax; benefits and money from family are counted as they land. Each row is worked out on its own here
+// (what its paychecks hold back); the household's return (householdTax, batch 15) then sets each row's share.
 const TAXED = { Job: 'W-2', 'Partner job': 'W-2', 'Side hustle': '1099', 'Self-employed': '1099' };
 export const taxTypeOf = r => r.values?.incomeType ?? TAXED[r.type] ?? null;
 const PAYCHECKS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
-export function incomeRow(r, { filingStatus = 'Single', ref, place = null }) {
+// An Unemployment row with no tax type picked is a benefit: counted weekly as it lands, less the 10% federal
+// withholding when chosen; its income tax is worked out on the household's return (householdTax).
+export const isBenefitRow = r => r?.kind === 'income' && r.type === 'Unemployment' && !r.values?.incomeType;
+export function benefitRow(r, { ref, now = new Date() } = {}) {
+  const v = r.values || {};
+  if (r.amount == null) return { takeHome: needs('M01', ['the weekly amount']), gross: null, pretax: 0, roth: 0, afterTax: 0, parts: null, taxType: null, computed: null, benefit: null };
+  const monthly = monthlyFrom(r.amount, r.per ?? 'week', v.payFrequency).value;
+  const w = v.withhold === 'Yes' ? ref.tax.unemployment.withholdRate : 0;
+  const weekly = monthly * 12 / 52;
+  const weeks = benefitWeeksThisYear({ start: v.benefitStart ?? null, end: v.benefitEnd ?? null, now, maxWeeks: ref.limits.unemployment.NY.weeks });
+  const th = monthly * (1 - w);
+  return { takeHome: ok('M12', th, `${fmt.money(weekly)} a week is ${fmt.money(monthly)} a month${w ? `, minus the ${fmt.pct(w)} federal tax you chose to have withheld` : ', with no tax withheld'} = ${fmt.money(th)} a month.${v.benefitEnd ? ` Ends ${v.benefitEnd}.` : ''}`),
+    gross: null, pretax: 0, roth: 0, afterTax: 0, parts: null, taxType: null, computed: null,
+    benefit: { weekly, monthly, withholdRate: w, weeks, thisYear: weekly * weeks, withheld: weekly * weeks * w, end: v.benefitEnd ?? null, start: v.benefitStart ?? null } };
+}
+export function incomeRow(r, { filingStatus = 'Single', ref, place = null, now = new Date() }) {
+  if (isBenefitRow(r)) return benefitRow(r, { ref, now });
   const v = r.values || {};
   const taxType = taxTypeOf(r);
   const perYear = PAYCHECKS[v.payFrequency] ?? 26;

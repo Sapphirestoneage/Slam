@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // M20 to M2B: line amounts, my share, support, floor, set-asides, passes, surplus, savings rate, DRAFTT, housing, prepaid.
 import { ok, needs, missing, fmt, isBlank } from './result.js';
+import { MODES, modeOf } from '../registry/couples.js';
 import { LISTS } from '../registry/assumptions.js';
 import { monthlyFrom } from './income.js';
 
@@ -56,6 +57,9 @@ export function myShare(line, opts = {}) {
 export function shareBeforeRefund(line, { roommates = 0, basis = 'accrual', now = new Date() } = {}) {
   if (!isBlank(line.myShare)) return ok('M21', line.myShare, `You said your share is ${fmt.money(line.myShare)}.`);
   if (line.status === 'Not for me') return ok('M21', 0, 'Marked Not for me, so it counts as zero.');
+  // Batch 15, item 6: a known future cost (Starts in a month) counts from that month on; the projections add it then.
+  const starts = line.startsIn ?? line.values?.startsIn ?? null;
+  if (starts && String(starts).slice(0, 7) > ymNow(now)) return ok('M21', 0, `Starts ${String(starts).slice(0, 7)}, so it counts from then (the FI date and the calendar already add it).`);
   // Answer to 74: Included in rent is already in the rent line; N/A is not for me. Neither counts again.
   if (line.whoPays === 'Included in rent') return ok('M21', 0, 'Included in the rent, so it is already counted there.');
   if (line.whoPays === 'N/A') return ok('M21', 0, 'Does not apply, so it counts as zero.');
@@ -116,7 +120,9 @@ export function withHome(line, profile = {}) {
 }
 
 // A partner splits the shared bills when the couple keeps money Separate or Mix (Joint: one budget, nothing to split).
-export const partnerSplits = profile => profile.household === 'Couple' && ['Separate', 'Mix'].includes(profile.moneyStyle);
+// Batch 15 (item 2): in a couples mode that keeps money apart (Dating to Married separate) with no money style typed,
+// the partner splits too.
+export const partnerSplits = profile => profile.household === 'Couple' && (['Separate', 'Mix'].includes(profile.moneyStyle) || (profile.moneyStyle == null && !!MODES[modeOf(profile)]?.split));
 // The people splitting a shared bill, you included (the same count as splitWaysOf; kept for older readers).
 export const peopleSharing = profile => splitWaysOf(profile);
 

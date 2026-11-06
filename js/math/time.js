@@ -2,7 +2,8 @@
 // The time view (R152 to R155): every amount as hours of work or FI days.
 import { realHourlyWage } from './income.js';
 import { money, hours, fiDays, EMPTY } from '../format.js';
-import { isBlank } from './result.js';
+import { isBlank, ok, fmt } from './result.js';
+import { RULES } from '../registry/assumptions.js';
 
 // The hourly rate behind the toggle. Real hours when entered; otherwise take-home / 173 as a Guess (R153).
 export function hourlyRate({ takeHome, workCosts, paidHours, commuteHours, prepHours }, ref) {
@@ -32,4 +33,19 @@ export function inView(amount, mode, { rate, annualSpending }) {
 export function timeChip(amount, { rate }) {
   if (isBlank(amount) || Math.abs(amount) <= 50 || !rate?.value) return null;
   return hours(Math.abs(amount) / rate.value);
+}
+
+// Batch 15, item 4 (R073): is a task worth the time? It is when its dollars a year beat the hours it takes
+// (RULES.materialHours) at the real hourly wage (M17), and never under RULES.materialFloor.
+export function materialityOf(rate) {
+  const wage = rate?.value ?? null;
+  const v = Math.max(RULES.materialFloor, wage == null ? 0 : wage * RULES.materialHours);
+  return { ...ok('M17', v, wage == null ? `No hourly wage yet, so the floor: ${fmt.money(v)} a year.` : `${RULES.materialHours} hours at ${fmt.money(wage, { cents: true })} an hour${rate.guess ? ' (a guess until work hours are in)' : ''} = ${fmt.money(wage * RULES.materialHours)}${wage * RULES.materialHours < RULES.materialFloor ? `, under the ${fmt.money(RULES.materialFloor)} floor, so ${fmt.money(v)}` : ''}: a number worth less than ${fmt.money(v)} a year goes to small wins.`), wage };
+}
+
+// Batch 15, item 12: is a paid service worth it? Its cost a month against the hours it saves at the real hourly wage.
+export function outsourceCheck({ cost, hoursSaved }, rate) {
+  if (isBlank(cost) || isBlank(hoursSaved) || !rate?.value) return { value: null, needs: [isBlank(cost) ? 'what it costs' : isBlank(hoursSaved) ? 'hours it saves' : 'take-home pay'] };
+  const worth = hoursSaved * rate.value, v = worth - cost;
+  return { ...ok('M17', v, `${hours(hoursSaved)} saved a month at ${money(rate.value, { cents: true })} an hour is worth ${money(worth)}; it costs ${money(cost)}, so ${v >= 0 ? `it frees ${money(v)} of your time` : `it costs ${money(-v)} more than your time is worth`} a month.`), worth, perHour: cost / hoursSaved };
 }

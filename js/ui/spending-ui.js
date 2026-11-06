@@ -12,7 +12,7 @@ import * as S from './staples.js';
 import { spendingList, categoryList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.js';
 import { ensureCategories } from '../presets.js';
 import { ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
-  closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS, planDiffs, closeStreak, collapseSpread, dayTotals } from '../month.js';
+  closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS, planDiffs, closeStreak, collapseSpread, dayTotals, recurringBills } from '../month.js';
 import { gutAccuracy, DRAFTT, gutVsLinesWords } from '../math/spending.js';
 import { statements, BUCKETS, defaultBucket } from '../math/statements.js';
 import { calendarMarkers } from '../math/markers.js';
@@ -322,6 +322,8 @@ const CHIP = { Income: 'in', Bills: 'out', Debt: 'out', Savings: 'save', Maybe: 
 const sign = v => (v > 0 ? '+' : v < 0 ? '−' : '');
 export function calendarScreen(app, ctx) {
   UI.calYm ??= thisYm(ctx);
+  if (location.hash !== UI.calHash) { UI.calHash = location.hash; if (/[?&]view=bills/.test(location.hash)) UI.view = 'bills'; } // Find: bills, subscriptions, recurring
+  if (UI.view === 'bills') return billsScreen(app, ctx);
   const doc = ctx.store.doc;
   const cal = doc.spending.calendar || {};
   const redraw = () => app.render();
@@ -341,7 +343,7 @@ export function calendarScreen(app, ctx) {
       monthStepper(UI.calYm, v => { UI.calYm = v; UI.openDay = null; redraw(); }),
       S.button('Today', { onClick: () => { UI.calYm = thisYm(ctx); redraw(); } }),
       S.toggle(['Month', '3 mo', '6 mo', 'Year'], UI.range, v => { UI.range = v; redraw(); }, { label: 'How far ahead the balance looks' }),
-      S.toggle([['month', 'Month'], ['list', 'Full list']], UI.view, v => { UI.view = v; redraw(); }, { label: 'View' }), // item 28
+      S.toggle([['month', 'Month'], ['list', 'Full list'], ['bills', 'Bills list']], UI.view, v => { UI.view = v; redraw(); }, { label: 'View' }), // item 28; batch 15: the Bills list
       UI.view === 'month' ? S.checkbox('Totals only', UI.totalsOnly, v => { UI.totalsOnly = v; redraw(); }) : null,
       h('span', { style: { flex: 1 } }),
       S.button('Add a win', { iconName: 'plus', onClick: e => winForm(ctx, e.currentTarget) }),
@@ -375,6 +377,26 @@ export function calendarScreen(app, ctx) {
   return [head('Calendar', 'Day by day, with a running balance'), header, ...notes,
     UI.view === 'list' ? null : monthGrid(ctx, byDay, endOf, b.low, marks), dayList(ctx, byDay, endOf, b.low, marks, { force: UI.view === 'list' }), // item 28: Month, or the Full list on any width
     h('div.card.cal-chart', {}, h('div.bar-top', {}, h('strong', {}, `Running balance, ${UI.range === 'Month' ? monthName(UI.calYm) : `${UI.range} from ${monthName(UI.calYm)}`}`)), balanceChart(ctx, b))];
+}
+// Batch 15, item 9: the Bills list (Monarch recurring, Rocket Money subscriptions). Every repeating charge by its next
+// date, with how often, paid with, and Keep or Try to cut on what can be cut.
+function billsScreen(app, ctx) {
+  const redraw = () => app.render();
+  const b = recurringBills(ctx.store.doc, ctx.ref, ctx.now());
+  const when = d => (d ? new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) : null);
+  const home = i => (i.kind === 'debt' ? '#/net-worth/debt' : i.kind === 'coverage' ? '#/net-worth/protection' : '#/cash-flow/budget');
+  const header = h('div.card.cal-head', {}, h('div.row-line', { style: { gap: '10px' } },
+    S.toggle([['month', 'Month'], ['list', 'Full list'], ['bills', 'Bills list']], 'bills', v => { UI.view = v; redraw(); }, { label: 'View' }),
+    h('span', { style: { flex: 1 } }),
+    h('span.muted', {}, `${b.items.length} repeating ${b.items.length === 1 ? 'charge' : 'charges'}, ${money(b.monthly)} a month${b.toCut ? ` · trying to cut ${money(b.toCut)}` : ''}`)));
+  if (!b.items.length) return [head('Calendar', 'Every repeating charge, by its next date'), header, h('div.card', {}, h('div.empty.center', {}, h('span.title', {}, 'No repeating bills yet'),
+    h('span.muted', {}, 'Mark a Budget line Fixed or give it a due day and it shows here.'), S.button('Open the budget', { iconName: 'right', onClick: () => app.go('#/cash-flow/budget') })))];
+  const table = h('table.rows.bills-list', {}, h('thead', {}, h('tr', {}, [['Charge', 'th'], ['Amount', 'th.num'], ['How often', 'th.col-often'], ['Next', 'th'], ['Paid with', 'th.col-paid'], ['Keep or cut', 'th']].map(([t, tag]) => h(tag, {}, t)))),
+    h('tbody', {}, b.items.map(i => h('tr', { 'data-id': i.id }, h('td', {}, S.fromButton(i.name, home(i), i.kind === 'debt' ? i.id : i.id)),
+      h('td.num', {}, money(i.amount)), h('td.col-often', {}, i.often), h('td', {}, when(i.next) ?? h('span.muted.small', { title: 'Add a due day on the line to place it' }, 'Day not set')),
+      h('td.col-paid', {}, i.paidWith ?? h('span.muted.small', {}, 'Not set')),
+      h('td', {}, i.cut ? S.toggle([['Keep', 'Keep'], ['Cancel', 'Try to cut']], i.decision, v => ctx.store.update(i.id, { decision: v }), { label: `Keep or try to cut: ${i.name}`, clearable: true }) : h('span.muted.small', {}, 'A payment you owe'))))));
+  return [head('Calendar', 'Every repeating charge, by its next date'), header, h('div.card', { style: { overflowX: 'auto' } }, table)];
 }
 const dayLabel = d => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
 const moneyText = v => S.moneyText(v);

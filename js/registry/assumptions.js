@@ -24,6 +24,9 @@ export const RULES = {
   saferWithdrawal: 0.035, saferUnderAge: 45, // batch 5 C: a second FI line at a safer rate when FI would come before this age
   fatFactor: 1.5, trueFiTax: 0.15, heavyApr: 0.08, variableGuessShare: 0.75, maxMonths: 70 * 12,
   roughCheckDays: 30, agedCheckDays: 90,
+  leanSeasonMonths: 3, // batch 15: an irregular income's lean-season fund holds this many months of the swing (no twelve months typed)
+  fiRangeMaxYears: 5, // batch 15: an FI range wider than this many years shows the one step that narrows it instead
+  materialHours: 2, materialFloor: 100, // batch 15: a task is worth doing when its dollars a year beat these hours at the real hourly wage (never under $100)
   debtFirst: 1, // batch 11: while heavy debt is carried the surplus goes to it first (1 on, 0 off); js/math/metrics.js debtRuleOf
   // Batch 12 (QUESTIONS 196, Eli Nov 5): freed money follows the FOO. After heavy debt the surplus and the freed payments
   // fill big e, then Tax-Free Growth, then the rest is invested (1 on, 0: invested once heavy debt is gone); js/math/flow.js.
@@ -70,7 +73,7 @@ export const ASSUMPTIONS = [
   { id: 'client.investSurplus', name: 'InvestSurplus', label: 'Invest my surplus: 1 or blank yes, 0 no (the surplus sits in checking)', unit: 'number', get: () => 1, client: 'investSurplus', source: 'Plan › Goals (Nov 5 answer to 123; it was off by default on Nov 3)', date: '2026-11-05' },
   { id: 'client.debtFirst', name: 'DebtFirst', label: 'Heavy debt first: 1 or blank yes, 0 no (the surplus is invested or stays, as Invest my surplus says)', unit: 'number', get: () => 1, client: 'debtFirst', source: 'Plan › Goals (Batch 11 item 1)', date: '2026-11-05' },
   { id: 'client.fiAge', name: 'FiAge', label: 'FI target age (blank: Retire by)', unit: 'number', get: () => null, client: 'fiAge', fallback: 'RetireAge', source: 'Plan › Goals', date: '2026-11-03' },
-  { id: 'client.retirementSpending', name: 'RetirementSpending', label: 'Spending in retirement, a month (blank: today\'s spending)', unit: 'money', get: () => null, client: 'retirementSpending', fallback: 'Math_M27_spending', source: 'Plan › Goals (R030)', date: '2026-11-03' },
+  { id: 'client.retirementSpending', name: 'RetirementSpending', label: 'Spending in retirement, a month (blank: today\'s spending)', unit: 'money', get: () => null, client: 'retirementSpending', fallback: 'IF(Math_M27_spending="","",Math_M27_spending+N(Math_M50_later))', source: 'Plan › Goals (R030)', date: '2026-11-03' },
   { id: 'client.partTimeIncome', name: 'PartTimeIncome', label: 'Part-time income after launch, a month', unit: 'money', get: () => null, client: 'partTimeIncome', source: 'Plan › Goals (Barista FI)', date: '2026-11-03' },
   { id: 'presets.pace.Likely', name: 'Pace_Likely', label: 'Pace: likely return', unit: 'pct', get: r => r.presets.pace.Likely, source: SPEC, date: '2026-10-28' },
   { id: 'presets.pace.Optimistic', name: 'Pace_Optimistic', label: 'Pace: optimistic return', unit: 'pct', get: r => r.presets.pace.Optimistic, source: SPEC, date: '2026-10-28' },
@@ -108,6 +111,10 @@ export const ASSUMPTIONS = [
   { id: 'tax.state.NY.standardDeduction.single', name: 'NY_std_single', label: 'NY standard deduction, single', unit: 'money', get: r => r.tax.state.NY.standardDeduction.single, source: 'NY Tax Law (see the NY brackets note)', date: '2026-11-03' },
   { id: 'tax.state.NY.standardDeduction.joint', name: 'NY_std_joint', label: 'NY standard deduction, joint', unit: 'money', get: r => r.tax.state.NY.standardDeduction.joint, source: 'NY Tax Law (see the NY brackets note)', date: '2026-11-03' },
   { id: 'tax.state.NY.standardDeduction.head', name: 'NY_std_head', label: 'NY standard deduction, head of household', unit: 'money', get: r => r.tax.state.NY.standardDeduction.head, source: 'NY Tax Law (see the NY brackets note)', date: '2026-11-03' },
+  // Unemployment benefits (batch 15, item 13).
+  { id: 'limits.unemployment.NY.maxWeekly', name: 'UI_NY_maxWeekly', label: 'NY unemployment: most a week', unit: 'money', get: r => r.limits.unemployment.NY.maxWeekly, source: 'NY DOL, claims filed on or after Oct 6 2025 (via Littler, Oct 2025); QUESTIONS: check the Oct 2026 indexing', date: '2026-11-05' },
+  { id: 'limits.unemployment.NY.weeks', name: 'UI_NY_weeks', label: 'NY unemployment: weeks it lasts', unit: 'number', get: r => r.limits.unemployment.NY.weeks, source: 'NY DOL (26 weeks of benefits)', date: '2026-11-05' },
+  { id: 'tax.unemployment.withholdRate', name: 'UI_withhold', label: 'Unemployment: federal withholding when chosen', unit: 'pct', get: r => r.tax.unemployment.withholdRate, source: 'IRS Form W-4V (10%)', date: '2026-11-05' },
   // Typical rates, used when a client says Not sure (always a Guess).
   { id: 'typicalRates.Credit card', name: 'Typical_card', label: 'Typical credit card APR', unit: 'pct', get: r => r.typicalRates['Credit card'], source: FED, date: '2026-08-07' },
   { id: 'typicalRates.Personal loan', name: 'Typical_personal', label: 'Typical personal loan APR', unit: 'pct', get: r => r.typicalRates['Personal loan'], source: FED, date: '2026-08-07' },
@@ -133,6 +140,10 @@ export const ASSUMPTIONS = [
   { id: 'rules.shortPlanMonths', name: 'ShortPlanMonths', label: 'Debt-free card: a plan this many months or shorter gets +5% / +10% / +25% chips instead of +$50 / +$100 / +$250', unit: 'number', get: () => RULES.shortPlanMonths, source: RULE('js/math/debt.js heroExtras; Batch 12 item 4 (QUESTIONS 200)'), date: '2026-11-05' },
   { id: 'rules.gapTrimLine', name: 'GapTrimLine', label: 'The gap: the spending lever trims the largest Level 1 or 2 line that can move by this share', unit: 'pct', get: () => RULES.gapTrimLine, source: RULE('js/math/gap.js gapOf, M81; Batch 12 item 5'), date: '2026-11-05' },
   { id: 'rules.gapTrimGut', name: 'GapTrimGut', label: 'The gap: with no spending lines, the spending lever trims the gut number by this share', unit: 'pct', get: () => RULES.gapTrimGut, source: RULE('js/math/gap.js gapOf, M81; Batch 12 item 5'), date: '2026-11-05' },
+  { id: 'rules.leanSeasonMonths', name: 'LeanSeasonMonths', label: 'Irregular income: lean-season fund, months of the swing', unit: 'number', get: () => RULES.leanSeasonMonths, source: RULE('js/math/income.js irregularPlan; batch 15 item 11 (QUESTIONS: confirm 3)'), date: '2026-11-06' },
+  { id: 'rules.fiRangeMaxYears', name: 'FiRangeMaxYears', label: 'FI date range: widest shown, years (wider shows the one step that narrows it)', unit: 'number', get: () => RULES.fiRangeMaxYears, source: RULE('js/math/picture.js fiWordsOf; batch 15 item 7 (QUESTIONS: confirm 5)'), date: '2026-11-06' },
+  { id: 'rules.materialHours', name: 'MaterialHours', label: 'Worth doing: dollars a year beat this many hours at your real hourly wage', unit: 'number', get: () => RULES.materialHours, source: RULE('js/plan.js next3 (R073); batch 15 item 4 (QUESTIONS: confirm 2 hours)'), date: '2026-11-06' },
+  { id: 'rules.materialFloor', name: 'MaterialFloor', label: 'Worth doing: never under this many dollars a year', unit: 'money', get: () => RULES.materialFloor, source: RULE('js/plan.js next3 (R073)'), date: '2026-11-06' },
   { id: 'rules.maxMonths', name: 'MaxMonths', label: 'Longest FI path looked at, months', unit: 'number', get: () => RULES.maxMonths, source: RULE('js/math/fi.js, M53 (70 years)'), date: '2026-10-28' },
 ];
 
@@ -145,6 +156,8 @@ export const TABLES = [
   { id: 'NY_single', label: 'NY brackets, single', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.state.NY.brackets.single), source: r => r.tax.state.NY.source, date: '2026-11-03' },
   { id: 'NY_joint', label: 'NY brackets, joint', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.state.NY.brackets.joint), source: r => r.tax.state.NY.source, date: '2026-11-03' },
   { id: 'NY_head', label: 'NY brackets, head of household', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.state.NY.brackets.head), source: r => r.tax.state.NY.source, date: '2026-11-03' },
+  { id: 'QuarterlyDue', label: 'Quarterly estimated tax due dates (month-day; the fourth is in January of the next year)', columns: [['quarter', 'Quarter', 'number'], ['due', 'Due', 'text']],
+    rows: r => r.tax.quarterlyDue.map((d, i) => [i + 1, d]), source: 'IRS Form 1040-ES (2026)', date: '2026-11-05' },
   { id: 'NYC_single', label: 'NYC brackets, single', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.local.NYC.brackets.single), source: r => r.tax.local.NYC.source, date: '2026-11-03' },
   { id: 'NYC_joint', label: 'NYC brackets, joint', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.local.NYC.brackets.joint), source: r => r.tax.local.NYC.source, date: '2026-11-03' },
   { id: 'NYC_head', label: 'NYC brackets, head of household', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.local.NYC.brackets.head), source: r => r.tax.local.NYC.source, date: '2026-11-03' },
@@ -181,7 +194,7 @@ export const REFERENCE_LISTS = {
   'limits.commuterNote': 'a note on the commuter limit',
   typicalRatesNote: 'a note: the card Guess is 25% on purpose; the Fed average is 22.15%',
   'limits.rothIncome.note': 'a note on the Roth income limit',
-  'tax.brackets': 'the Fed_single and Fed_joint tables',
+  'tax.brackets': 'the Fed_single and Fed_joint tables', 'tax.quarterlyDue': 'the QuarterlyDue table',
   'tax.state.NY.brackets': 'the NY tables', 'tax.state.NY.source': 'the NY tables source', 'tax.local': 'the NYC tables',
   lists: 'picker lists (debt types, account types, statuses)',
   categoryDefaults: 'the starting DRAFTT letter, amount and date for each Budget category',

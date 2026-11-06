@@ -31,6 +31,7 @@ import { money } from './format.js';
 import { needs } from './math/result.js';
 import { flowOf } from './math/metrics.js';
 import { setAsideOf } from './payday.js';
+import { taxTypeOf } from './math/income.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const center = (...kids) => h('div.card', {}, h('div.empty.center', {}, ...kids));
@@ -112,7 +113,7 @@ const MM = {
         ? h('div.banner-inline', {}, 'Between jobs: add unemployment benefits so the runway counts them.', S.button('Add unemployment', { iconName: 'plus', onClick: () => ctx.store.add('income', { name: 'Unemployment benefits', per: 'week' }, { type: 'Unemployment' }) })) : null,
       withChart(ctx, incomeList(), incomeCharts, 'income'),
       S.live(ctx, () => paycheckSection(ctx)), // answer to 58: everything the paycheck pays first, in one place
-      S.focusMore(ctx, 'income:extra', [g.variable ? variableBlock(ctx) : null, S.recordList(ctx, benefitList())].filter(Boolean))];
+      S.focusMore(ctx, 'income:extra', [g.variable || ['Varies', 'Unpredictable'].includes(ctx.store.doc.profile.incomeStability) || ctx.store.find(r => r.kind === 'income' && taxTypeOf(r) === '1099').length ? variableBlock(ctx) : null, S.recordList(ctx, benefitList())].filter(Boolean))];
   } },
   debt: { title: 'Debt', sub: 'Every debt and its payoff', body: (app, ctx) => (ctx.gates().areas.debt === false
     ? [h('div.card', {}, h('div.empty', {}, h('span.title', {}, 'No debt, per About you'), addArea(app, ctx, 'debt', 'Debt')))]

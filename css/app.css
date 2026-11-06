@@ -347,3 +347,14 @@ body:has(.new-client-pop) .try-demo { visibility: hidden; } /* the New client bo
 .intake-pick { display: flex; flex-direction: column; gap: var(--s2); }
 .intake-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--s3); justify-content: flex-start; text-align: left; width: 100%; min-height: 44px; }
 .intake-box .review-line > div:first-child { min-width: 0; flex: 1 1 260px; }
+/* Batch 15: the Bills list and the tax-by-row table read like the other row tables, with the money right-aligned. */
+table.rows.bills-list td.num, table.rows.tax-rows td.num { text-align: right; white-space: nowrap; }
+table.rows.bills-list td, table.rows.tax-rows td { white-space: nowrap; }
+.changes-ahead span { color: var(--text-2); }
+table.rows.bills-list th, table.rows.tax-rows th { position: static; }
+@media (max-width: 600px) {
+  table.rows.bills-list .col-often, table.rows.bills-list .col-paid, table.rows.bills-list thead { display: none; }
+  table.rows.bills-list, table.rows.bills-list tbody { display: block; }
+  table.rows.bills-list tr { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 0; border-bottom: 1px solid var(--border-row); }
+  table.rows.bills-list td { height: auto; padding: 0; border: 0; }
+}

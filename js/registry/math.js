@@ -15,10 +15,11 @@
 //     {app:name} the app's value for that row (from app[name](rec, c)). f can be a function (rec, c) => template.
 //   fns: the js/math exports this entry is made of ('file.export').
 import { LISTS } from './assumptions.js';
+import { MODES } from './couples.js';
 import { DRAFTT, CATEGORIES, myShare, irregularSetAside, estimateVsActual } from '../math/spending.js';
-import { takeHomeFromGross, variableSafeBudget, realHourlyWage, monthlyFrom, defaultFilingStatus } from '../math/income.js';
+import { takeHomeFromGross, variableSafeBudget, realHourlyWage, monthlyFrom, defaultFilingStatus, quarterlySetAside } from '../math/income.js';
 import { payoffPlan, feeApr, utilization, debtToIncome, promoPayment } from '../math/debt.js';
-import { moneyAsTime } from '../math/fi.js';
+import { moneyAsTime, fiDate } from '../math/fi.js';
 import { monthsUntil } from '../math/portfolio.js';
 import { holidaysOf } from '../math/holidays.js';
 import { simpleMath } from '../math/simple.js';
@@ -40,12 +41,28 @@ const SKIP = '{InMath}="No"';
 // M53 in the sheet (batch 11): months from a start balance S at P a month to the FI number, with the same "Never" past
 // the longest path; then the debt-first months (Math_M53_debtMonths at Math_M53_before) run first.
 const nper = (S, P, cap = 'MaxMonths') => `IF(Math_M53_growth=0,IF(${P}>0,IF(ROUNDUP((Math_M50-${S})/${P}-0.000000001,0)>${cap},"Never",ROUNDUP((Math_M50-${S})/${P}-0.000000001,0)),"Never"),IF(${S}+${P}/Math_M53_growth<=0,"Never",IF(ROUNDUP(LN((Math_M50+${P}/Math_M53_growth)/(${S}+${P}/Math_M53_growth))/LN(1+Math_M53_growth)-0.000000001,0)>${cap},"Never",ROUNDUP(LN((Math_M50+${P}/Math_M53_growth)/(${S}+${P}/Math_M53_growth))/LN(1+Math_M53_growth)-0.000000001,0))))`;
+// Batch 15: known changes ahead (Math_M53_at1 to at4, Math_M53_ch1 to ch4: from month at on, what goes in moves by
+// ch). After the debt-first months the path runs in segments, each at its own amount a month; the FI date falls in the
+// first segment whose end balance reaches the FI number. With no changes this is the two-phase formula from batch 11.
+export const CHANGE_SLOTS = 4;
 function m53Sheet() {
-  const H = 'N(Math_M53_debtMonths)', inv = 'Math_M41_invested', B = 'Math_M53_before', P = 'Math_M53_invest';
+  const H = 'N(Math_M53_debtMonths)', inv = 'Math_M41_invested', B = 'Math_M53_before';
   const after = `FV(Math_M53_growth,${H},-${B},-${inv})`;
   const phase1 = nper(inv, B);
-  const lead = `IF(${after}>=Math_M50,${phase1},IF(ISNUMBER(${nper(after, P, `MaxMonths-${H}`)}),${H}+${nper(after, P, `MaxMonths-${H}`)},"Never"))`;
-  return `IF(OR(${inv}="",Math_M27="",Math_M50=""),"",IF(${inv}>=Math_M50,0,IF(${H}=0,${nper(inv, P)},${lead})))`;
+  const P = j => `(Math_M53_invest${Array.from({ length: j }, (_, k) => `+N(Math_M53_ch${k + 1})`).join('')})`;
+  const S = j => (j === 0 ? after : `Math_M53_seg${j}`);
+  const T = j => (j === 0 ? H : `Math_M53_at${j}`);
+  const tail = j => `IF(ISNUMBER(${nper(S(j), P(j), `MaxMonths-${T(j)}`)}),${T(j)}+${nper(S(j), P(j), `MaxMonths-${T(j)}`)},"Never")`;
+  const seg = j => (j === CHANGE_SLOTS ? tail(j)
+    : `IF(Math_M53_at${j + 1}="",${tail(j)},IF(Math_M53_seg${j + 1}>=Math_M50,IF(ISNUMBER(${nper(S(j), P(j), `MaxMonths-${T(j)}`)}),${T(j)}+${nper(S(j), P(j), `MaxMonths-${T(j)}`)},"Never"),${seg(j + 1)}))`);
+  return `IF(OR(${inv}="",Math_M27="",Math_M50=""),"",IF(${inv}>=Math_M50,0,IF(AND(${H}>0,${after}>=Math_M50),${phase1},${seg(0)})))`;
+}
+// The change points the sheet uses: each change at the month it takes effect on the path (never inside the debt-first
+// months), merged by month, in order.
+export function changeSlots(m) {
+  const H = m.investing?.before?.months ?? 0, by = new Map();
+  for (const c of m.investing?.changes || []) { const at = Math.max(c.at, H); by.set(at, (by.get(at) ?? 0) + c.monthly); }
+  return [...by].sort((a, b) => a[0] - b[0]).map(([at, monthly]) => ({ at, monthly }));
 }
 
 const MONTH_FACTOR = per => `IFERROR(INDEX(Per_month,MATCH(${per},Per_name,0)),1)`;
@@ -54,11 +71,6 @@ const bracket = (t, table) => `SUMPRODUCT((${t}>${table}_over)*(${t}-${table}_ov
 
 // The income row the metrics worked out for a record (take-home, gross, pretax, Roth), or null.
 const inc = (rec, c) => c.x.income.find(i => i.r.id === rec.id) ?? null;
-const taxedPieces = (rec, c) => {
-  const i = inc(rec, c);
-  if (!i?.taxType || i.gross == null) return null;
-  return takeHomeFromGross({ gross: i.gross, pretax: i.pretax, roth: i.roth, filingStatus: c.x.filingStatus, selfEmployed: i.taxType === '1099', place: c.x.place }, c.ref);
-};
 const debtOf = (rec, c) => c.x.debts.find(d => d.id === rec.id) ?? null;
 
 // Batch 5 (E): is a shared group on in the sheet? Its About you box when answered, else (with roommates) the config default.
@@ -93,16 +105,24 @@ export const MATH = [
   { id: 'M13', name: 'Gross from take-home', inputs: 'take-home, deductions', unit: 'money', fns: ['income.grossFromTakeHome'],
     cols: [
       { area: 'income', key: 'taxType', label: 'Taxed as', unit: 'text',
-        f: `IF(${INCOME},IF({incomeType}<>"",{incomeType},IF(OR({Type}="Job",{Type}="Partner job"),"W-2",IF(OR({Type}="Side hustle",{Type}="Self-employed"),"1099",""))),"")` },
+        f: `IF(${INCOME},IF({incomeType}<>"",{incomeType},IF(OR({Type}="Job",{Type}="Partner job"),"W-2",IF(OR({Type}="Side hustle",{Type}="Self-employed"),"1099",IF({Type}="Unemployment","Unemployment","")))),"")` },
       { area: 'income', key: 'M13', label: 'Gross a year (M13)', unit: 'money',
-        f: `IF(OR(${SKIP},{Kind}<>"Income"),"",IF({basis}="Gross",IF({@M01}="","",{@M01}*12),IF({gross}<>"",{gross},{app:solved})))`,
+        f: `IF(OR(${SKIP},{Kind}<>"Income",{@taxType}="Unemployment"),"",IF({basis}="Gross",IF({@M01}="","",{@M01}*12),IF({gross}<>"",{gross},{app:solved})))`,
         app: { solved: (rec, c) => (inc(rec, c)?.computed === 'gross' ? Math.round(inc(rec, c).gross) : '') } },
+      // Batch 15, item 13: unemployment is taxed on the weeks paid this tax year (26 back from the end date when no start is typed).
+      { area: 'income', key: 'uiYear', label: 'Unemployment taxed this year', unit: 'money',
+        f: (rec, c) => { const y = c.now.getFullYear(), end = `IF({benefitEnd}="",DATE(${y},12,31),{benefitEnd})`;
+          return `IF(OR(${SKIP},{@taxType}<>"Unemployment",{@M01}=""),"",{@M01}*12/52*IF(AND({benefitStart}="",{benefitEnd}=""),52,ROUND(MAX(0,MIN(${end},DATE(${y},12,31))-MAX(IF({benefitStart}="",${end}-UI_NY_weeks*7,{benefitStart}),DATE(${y},1,1)))/7,0)))`; } },
+      { area: 'income', key: 'taxedGross', label: 'Taxed a year (gross, or unemployment this year)', unit: 'money', f: 'IF({@taxType}="","",IF({@taxType}="Unemployment",{@uiYear},{@M13}))' },
     ],
     sheet: 'IF(COUNT(Income_M13)=0,"",SUM(Income_M13))', label: 'Gross pay a year, all jobs (a gross worked back from take-home is the app\'s, found by trial: Excel has no reverse tax)',
     app: c => c.x.grossAnnual },
-  { id: 'M10', name: 'Federal income tax', inputs: 'gross, before-tax deductions, filing status', unit: 'money', fns: ['income.federalTax', 'income.defaultFilingStatus'],
+  // Batch 15, item 1: income tax once per return (Married jointly: one; else one per person), FICA per person with the
+  // Social Security wage base per person. Rows stack in order (jobs, then 1099, then unemployment; then row order):
+  // each row's tax is the return's tax with it minus the tax without it, so the rows add up to the return.
+  { id: 'M10', name: 'Federal income tax', inputs: 'gross, before-tax deductions, filing status', unit: 'money', fns: ['income.federalTax', 'income.defaultFilingStatus', 'income.householdTax', 'income.STACK', 'income.noFica'],
     cols: [
-      { area: 'taxes', key: 'filing', label: 'Filing status used', unit: 'text', f: 'IF({filingStatus}<>"",{filingStatus},IF(Profile_household="Couple","Married jointly","Single"))' },
+      { area: 'taxes', key: 'filing', label: 'Filing status used', unit: 'text', f: 'IF({filingStatus}<>"",{filingStatus},IF(OR(LEFT(Profile_mode,7)="Married",AND(Profile_mode="",Profile_household="Couple")),"Married jointly","Single"))' },
       { area: 'taxes', key: 'joint', label: 'Files jointly', unit: 'text', f: 'IF({@filing}="Married jointly","Yes","No")' },
       { area: 'income', key: 'pct', label: '401(k) % used', unit: 'pct', f: `IF(${INCOME},IF({contributionPct}<>"",{contributionPct},{app:linkPct}),"")`,
         app: { linkPct: (rec, c) => (c.x.link.job?.id === rec.id && rec.values.contributionPct == null ? c.x.link.incomePct ?? '' : '') } },
@@ -110,44 +130,62 @@ export const MATH = [
         f: (rec, c) => {
           const premium = c.x.health ? `${c.x.health.jobId === rec.id ? c.x.health.perPaycheck : 0}` : 'N({premium})';
           const perPay = c.x.link.job?.id === rec.id && rec.values.contributionPct == null ? c.x.link.incomePerPaycheck ?? 0 : 0;
-          return `IF(OR(${SKIP},{Kind}<>"Income"),"",(${premium}+N({hsaFsa})+N({otherPretax}))*${PAYS_A_YEAR}+N({@M13})*N({@pct})+IF({contributionPct}="",${perPay},0)*${PAYS_A_YEAR}-N({app:roth}))`;
+          return `IF(OR(${SKIP},{Kind}<>"Income"),"",IF({@taxType}="Unemployment",0,(${premium}+N({hsaFsa})+N({otherPretax}))*${PAYS_A_YEAR}+N({@M13})*N({@pct})+IF({contributionPct}="",${perPay},0)*${PAYS_A_YEAR}-N({app:roth})))`;
         },
         app: { roth: (rec, c) => inc(rec, c)?.roth ?? 0 } },
-      { area: 'income', key: 'taxable', label: 'Taxable a year (federal)', unit: 'money',
-        f: `IF(OR({@M13}="",{@taxType}=""),"",MAX(0,{@M13}-{@pretax}-IF({@taxType}="1099",{@M11}/2,0)-IF(Taxes_joint="Yes",StdDed_joint,StdDed_single)))` },
+      { area: 'income', key: 'taxPerson', label: 'Whose tax', unit: 'text', f: 'IF({@taxType}="","",IF(OR({owner}="Partner",AND({owner}="",{Type}="Partner job")),"Partner","Me"))' },
+      { area: 'income', key: 'taxUnit', label: 'Tax return', unit: 'text', f: 'IF({@taxType}="","",IF(Taxes_joint="Yes","Household",{@taxPerson}))' },
+      { area: 'income', key: 'stack', label: 'Order on the return (jobs, then 1099, then unemployment)', unit: 'number',
+        f: 'IF(OR({@taxType}="",{@taxedGross}=""),"",IF({@taxType}="1099",1,IF({@taxType}="Unemployment",2,0))*100000+ROW())' },
+      { area: 'income', key: 'ficaBase', label: 'FICA base a year', unit: 'money', f: 'IF({@stack}="","",IF({@taxType}="Unemployment",0,IF({@taxType}="1099",{@taxedGross}*SE_base,{@taxedGross})))' },
+      { area: 'income', key: 'ssPart', label: 'Social Security a year (per person, to the wage base)', unit: 'money',
+        f: 'IF({@stack}="","",(MIN(SUMIFS(Income_ficaBase,Income_taxPerson,{@taxPerson},Income_stack,"<="&{@stack}),SS_wageBase)-MIN(SUMIFS(Income_ficaBase,Income_taxPerson,{@taxPerson},Income_stack,"<="&{@stack})-{@ficaBase},SS_wageBase))*SS_rate*IF({@taxType}="1099",2,1))' },
+      { area: 'income', key: 'medPart', label: 'Medicare a year', unit: 'money', f: 'IF({@stack}="","",{@ficaBase}*Medicare_rate*IF({@taxType}="1099",2,1))' },
+      { area: 'income', key: 'own', label: 'Adds to taxable income (federal)', unit: 'money',
+        f: 'IF({@stack}="","",MAX(0,{@taxedGross}-N({@pretax})-IF({@taxType}="1099",({@ssPart}+{@medPart})/2,0)))' },
+      { area: 'income', key: 'taxable', label: 'Taxable a year (federal), the return through this row', unit: 'money',
+        f: 'IF({@stack}="","",MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<="&{@stack})-IF(Taxes_joint="Yes",StdDed_joint,StdDed_single)))' },
       { area: 'income', key: 'M10', label: 'Federal tax a year (M10)', unit: 'money',
-        f: `IF({@taxable}="","",IF(Taxes_joint="Yes",${bracket('{@taxable}', 'Fed_joint')},${bracket('{@taxable}', 'Fed_single')}))` },
+        f: `IF({@taxable}="","",IF(Taxes_joint="Yes",${bracket('{@taxable}', 'Fed_joint')}-${bracket('MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-StdDed_joint)', 'Fed_joint')},${bracket('{@taxable}', 'Fed_single')}-${bracket('MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-StdDed_single)', 'Fed_single')}))` },
     ],
-    sheet: 'IF(COUNT(Income_M10)=0,"",SUM(Income_M10))', label: 'Federal tax a year, all jobs',
-    app: c => { const rows = c.x.income.map(i => taxedPieces(i.r, c)).filter(Boolean); return rows.length ? sum(rows, t => t.federal.value) : null; } },
+    sheet: 'IF(COUNT(Income_M10)=0,"",SUM(Income_M10))', label: 'Federal tax a year, the household\'s return (or each person\'s)',
+    app: c => (Object.keys(c.x.householdTax?.rows || {}).length ? c.x.householdTax.total.federal : null) },
   { id: 'M11', name: 'FICA', inputs: 'gross, year', unit: 'money', fns: ['income.fica'],
     cols: [{ area: 'income', key: 'M11', label: 'FICA a year (M11)', unit: 'money',
-      f: `IF(OR({@M13}="",{@taxType}=""),"",IF({@taxType}="1099",MIN({@M13}*SE_base,SS_wageBase)*SS_rate*2+{@M13}*SE_base*Medicare_rate*2+MAX(0,{@M13}*SE_base-IF(Taxes_joint="Yes",Medicare_over_joint,Medicare_over_single))*Medicare_addl,MIN({@M13},SS_wageBase)*SS_rate+{@M13}*Medicare_rate+MAX(0,{@M13}-IF(Taxes_joint="Yes",Medicare_over_joint,Medicare_over_single))*Medicare_addl))` }],
-    sheet: 'IF(COUNT(Income_M11)=0,"",SUM(Income_M11))', label: 'Social Security and Medicare a year, all jobs',
-    app: c => { const rows = c.x.income.map(i => taxedPieces(i.r, c)).filter(Boolean); return rows.length ? sum(rows, t => t.fica.value) : null; } },
-  { id: 'M12', name: 'Take-home from gross', inputs: 'M10, M11, state and city tax', unit: 'money', fns: ['income.takeHomeFromGross', 'income.stateTax', 'income.incomeRow', 'income.taxTypeOf'],
+      f: '(IF({@stack}="","",{@ssPart}+{@medPart}+(MAX(0,SUMIFS(Income_ficaBase,Income_taxUnit,{@taxUnit},Income_stack,"<="&{@stack})-IF(Taxes_joint="Yes",Medicare_over_joint,Medicare_over_single))-MAX(0,SUMIFS(Income_ficaBase,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-IF(Taxes_joint="Yes",Medicare_over_joint,Medicare_over_single)))*Medicare_addl))' }],
+    sheet: 'IF(COUNT(Income_M11)=0,"",SUM(Income_M11))', label: 'Social Security and Medicare a year (per person, to the wage base), all income',
+    app: c => (Object.keys(c.x.householdTax?.rows || {}).length ? c.x.householdTax.total.fica : null) },
+  { id: 'M12', name: 'Take-home from gross', inputs: 'M10, M11, state and city tax', unit: 'money', fns: ['income.takeHomeFromGross', 'income.stateTax', 'income.incomeRow', 'income.taxTypeOf', 'income.isBenefitRow', 'income.benefitRow', 'income.benefitWeeksThisYear'],
     cols: [
       { area: 'income', key: 'state', label: 'State and city tax a year', unit: 'money',
-        f: `IF(OR({@M13}="",{@taxType}="",Profile_state<>"NY"),IF({@M13}="","",0),${['NY', 'NYC'].map(t => `IF(${t === 'NYC' ? 'Profile_nyc="Yes"' : 'TRUE'},IF(Taxes_filing="Married jointly",${bracket(`MAX(0,{@M13}-{@pretax}-NY_std_joint)`, `${t}_joint`)},IF(Taxes_filing="Head of household",${bracket(`MAX(0,{@M13}-{@pretax}-NY_std_head)`, `${t}_head`)},${bracket(`MAX(0,{@M13}-{@pretax}-NY_std_single)`, `${t}_single`)})),0)`).join('+')})` },
+        f: () => {
+          const cum = op => `SUMIFS(Income_stateOwn,Income_taxUnit,{@taxUnit},Income_stack,"${op}"&{@stack})`;
+          const on = (x, t, k) => bracket(`MAX(0,${x}-NY_std_${k})`, `${t}_${k}`);
+          const by = t => `IF(Taxes_filing="Married jointly",${on(cum('<='), t, 'joint')}-${on(cum('<'), t, 'joint')},IF(Taxes_filing="Head of household",${on(cum('<='), t, 'head')}-${on(cum('<'), t, 'head')},${on(cum('<='), t, 'single')}-${on(cum('<'), t, 'single')}))`;
+          return `IF({@stack}="","",IF(Profile_state<>"NY",0,${by('NY')}+IF(Profile_nyc="Yes",${by('NYC')},0)))`;
+        } },
+      { area: 'income', key: 'stateOwn', label: 'Adds to state taxable income', unit: 'money', f: 'IF({@stack}="","",MAX(0,{@taxedGross}-N({@pretax})))' },
       { area: 'income', key: 'M12', label: 'Take-home a month (M12)', unit: 'money',
-        f: `IF(OR(${SKIP},{Kind}<>"Income"),"",IF(AND({@taxType}<>"",{@M13}<>"",OR({basis}="Gross",{amount}="")),({@M13}-{@M10}-{@M11}-{@state}-{@pretax}-N({app:roth}))/12,{@M01}))`,
-        app: { roth: (rec, c) => inc(rec, c)?.roth ?? 0 } },
+        f: `IF(OR(${SKIP},{Kind}<>"Income"),"",IF({@taxType}="Unemployment",IF({@M01}="","",{@M01}*(1-IF({withhold}="Yes",UI_withhold,0))),IF(AND({@taxType}<>"",{@M13}<>"",OR({basis}="Gross",{amount}="")),({@M13}-{@M10}-{@M11}-{@state}-{@pretax}-N({app:roth}))/12,{@M01})))`,
+        app: { roth: (rec, c) => (inc(rec, c)?.roth ?? 0) + (inc(rec, c)?.afterTax ?? 0) } },
     ],
     sheet: 'IF(COUNTIFS(Income_Kind,"Income",Income_InMath,"<>No")=0,"",SUM(Income_M12))', label: 'Take-home a month, all income',
     app: c => c.x.takeHome },
-  { id: 'M14', name: 'Effective and marginal tax rate', inputs: 'M10, M11', unit: 'pct', fns: ['income.taxRates'],
-    sheet: 'IF(OR(Math_M13="",N(Math_M13)=0),"",(N(Math_M10)+N(Math_M11)+SUM(Income_state))/Math_M13)', label: 'Effective rate: all income tax over gross',
-    app: c => { const rows = c.x.income.map(i => taxedPieces(i.r, c)).filter(Boolean); const g = sum(c.x.income, i => i.gross); return rows.length && g ? sum(rows, t => t.federal.value + t.fica.value + t.stateTax.state + t.stateTax.local) / g : null; },
+  { id: 'M14', name: 'Effective and marginal tax rate', inputs: 'M10, M11', unit: 'pct', fns: ['income.taxRates', 'income.householdRates'],
+    sheet: 'IF(N(SUM(Income_taxedGross))=0,"",(N(Math_M10)+N(Math_M11)+SUM(Income_state))/SUM(Income_taxedGross))', label: 'Effective rate: all income tax over everything taxed',
+    app: c => { const t = c.x.householdTax?.total; return t && t.gross ? t.all / t.gross : null; },
     parts: [{ key: 'marginal', name: 'Marginal rate (the last dollar)', unit: 'pct', fromApp: 'the bracket of the last dollar plus FICA; on the Taxes tab of SLAM', app: c => (c.x.grossAnnual ? c.taxRates()?.marginal ?? null : null) }] },
   { id: 'M15', name: 'Employer match ($/yr)', inputs: '401(k) %, match formula, gross', unit: 'money', fns: ['income.employerMatch'],
     cols: [{ area: 'income', key: 'M15', label: 'Employer match a year (M15)', unit: 'money',
       f: `IF(OR({@M13}="",{matchPct}="",{matchCapPct}=""),"",MIN(N({@pct}),{matchCapPct})*{matchPct}*{@M13})` }],
     sheet: 'SUM(Income_M15)', label: 'Employer match a year (tiers set on the 401(k) under Assets stay in the app)',
     app: c => (c.m.savingsRate.match ?? 0) * 12 },
-  { id: 'M16', name: 'Variable income safe budget', inputs: 'lowest month, set-aside', unit: 'money', fns: ['income.variableSafeBudget'],
-    sheet: 'IF(Var_lowest<>"",Var_lowest*(1-IF(Var_setAside="",TaxSetAside,Var_setAside)),IF(Var_typical<>"",Var_typical*VarGuess*(1-IF(Var_setAside="",TaxSetAside,Var_setAside)),""))',
-    app: c => { const v = c.doc.profile.variable || {}; return variableSafeBudget({ lowestMonth: v.lowest ?? null, typicalMonth: v.typical ?? null, setAside: v.setAside ?? null }, c.ref).value; } },
-  { id: 'M17', name: 'Real hourly wage', inputs: 'take-home, work costs, hours', unit: 'money', fns: ['income.realHourlyWage', 'time.hourlyRate'],
+  { id: 'M16', name: 'Variable income safe budget', inputs: 'lowest month, set-aside', unit: 'money', fns: ['income.variableSafeBudget', 'income.quarterlySetAside', 'income.irregularPlan'],
+    // Batch 15, item 3: a blank set-aside uses the client's own rate on self-employment income (Math_M16_rate), else TaxSetAside.
+    parts: [{ key: 'rate', name: 'Your rate on self-employment income (income tax and SE tax, on top of the rest)', unit: 'pct', fromApp: 'the tax the 1099 rows add to the household\'s return over their gross (M10 to M12, stacked)', app: c => quarterlySetAside(c.x.householdTax, c.ref)?.rate ?? null }],
+    sheet: 'IF(Var_lowest<>"",Var_lowest*(1-IF(Var_setAside="",IF(Math_M16_rate<>"",Math_M16_rate,TaxSetAside),Var_setAside)),IF(Var_typical<>"",Var_typical*VarGuess*(1-IF(Var_setAside="",IF(Math_M16_rate<>"",Math_M16_rate,TaxSetAside),Var_setAside)),""))',
+    app: c => { const v = c.doc.profile.variable || {}; return variableSafeBudget({ lowestMonth: v.lowest ?? null, typicalMonth: v.typical ?? null, setAside: v.setAside ?? quarterlySetAside(c.x.householdTax, c.ref)?.rate ?? null }, c.ref).value; } },
+  { id: 'M17', name: 'Real hourly wage', inputs: 'take-home, work costs, hours', unit: 'money', fns: ['income.realHourlyWage', 'time.hourlyRate', 'time.materialityOf', 'time.outsourceCheck'],
     sheet: 'IF(OR(Math_M12="",N(Hours_paid)=0),"",(Math_M12-N(Hours_costs))/(Hours_paid+N(Hours_commute)+N(Hours_prep)))',
     app: c => realHourlyWage({ takeHome: c.x.takeHome, ...c.x.hours }).value },
 
@@ -157,7 +195,7 @@ export const MATH = [
       f: rec => `IF(OR(${SKIP},{Kind}<>"Budget line",{amount}=""),"",IF({Status}="Not for me",0,${rec.covers?.months ? `{amount}/${rec.covers.months}` : `{amount}*${MONTH_FACTOR('{per}')}`}))` }],
     sheet: 'SUMIFS(Spend_M20,Spend_InMath,"Yes")', label: 'Budget lines, each as a month, added up',
     app: c => sum(c.x.typedLines.filter(l => !c.x.dupOf[l.id]), l => (l.amount == null ? 0 : l.covers?.months ? l.amount / l.covers.months : monthlyFrom(l.amount, l.per).value)) },
-  { id: 'M21', name: 'My share', inputs: 'amount, who pays, covered, split', unit: 'money', fns: ['spending.myShare', 'spending.categoryTotals', 'spending.CATEGORIES', 'spending.CORE_CATEGORIES', 'spending.categoryName', 'spending.categoryKeyOf', 'spending.isCategoryRecord', 'spending.isFaded', 'spending.typicalOf', 'spending.typicalTotal', 'spending.LEVEL_ELSE', 'spending.levelOf', 'spending.everythingElse', 'spending.BILLS_CATEGORIES', 'spending.inFat', 'spending.shareBeforeRefund', 'spending.reimbursedMonthly', 'spending.splitOf', 'spending.amountIsMine', 'spending.wholeBill', 'spending.withHome', 'spending.partnerSplits', 'spending.peopleSharing', 'spending.sharedBillsOf', 'spending.splitWaysOf', 'spending.splitDisagreeOf'],
+  { id: 'M21', name: 'My share', inputs: 'amount, who pays, covered, split', unit: 'money', fns: ['spending.myShare', 'spending.categoryTotals', 'spending.CATEGORIES', 'spending.CORE_CATEGORIES', 'spending.categoryName', 'spending.categoryKeyOf', 'spending.isCategoryRecord', 'spending.isFaded', 'spending.typicalOf', 'spending.typicalTotal', 'spending.LEVEL_ELSE', 'spending.levelOf', 'spending.everythingElse', 'spending.BILLS_CATEGORIES', 'spending.inFat', 'spending.shareBeforeRefund', 'spending.reimbursedMonthly', 'spending.splitOf', 'spending.amountIsMine', 'spending.wholeBill', 'spending.withHome', 'spending.partnerSplits', 'spending.peopleSharing', 'spending.sharedBillsOf', 'spending.splitWaysOf', 'spending.splitDisagreeOf', 'metrics.coupleBills'],
     cols: [
       // Batch 5 (E): a shared group is on when its About you box says Yes, or, with nothing answered and roommates, by its config default.
       { area: 'spending', key: 'whoUsed', label: 'Who pays used', unit: 'text',
@@ -165,11 +203,11 @@ export const MATH = [
       { area: 'spending', key: 'givenUsed', label: 'Amount given as (per bill)', unit: 'text',
         f: `IF({amountIs}<>"",{amountIs},IF({@whoUsed}="Split",${Object.entries(LISTS.sharedGroups).reduceRight((rest, [k, g]) => `IF(AND(OR(${g.categories.map(c => `{category}="${c}"`).join(',')}),${SHARED_ON(k, g)}),IF(Profile_sharedAs_${k}<>"",Profile_sharedAs_${k},"${g.defaultAs}"),${rest})`, '""')},""))` }, // the default applies only while the group is on, as the app does
       { area: 'spending', key: 'sharePct', label: 'Couple share used', unit: 'pct', f: 'IF(AND({@whoUsed}="Split",{splitBy}="",Profile_household="Couple",Profile_splitMine<>"",Profile_splitWays=""),Profile_splitMine,"")' },
-      { area: 'spending', key: 'splitUsed', label: 'Split N ways used (you included)', unit: 'number', f: 'IF({splitBy}<>"",{splitBy},IF({@whoUsed}="Split",IF(Profile_splitWays<>"",Profile_splitWays,N(Profile_roommates)+1+IF(AND(Profile_household="Couple",OR(Profile_moneyStyle="Separate",Profile_moneyStyle="Mix")),1,0)),1))' },
+      { area: 'spending', key: 'splitUsed', label: 'Split N ways used (you included)', unit: 'number', f: `IF({splitBy}<>"",{splitBy},IF({@whoUsed}="Split",IF(Profile_splitWays<>"",Profile_splitWays,N(Profile_roommates)+1+IF(AND(Profile_household="Couple",OR(Profile_moneyStyle="Separate",Profile_moneyStyle="Mix",AND(Profile_moneyStyle="",OR(${Object.entries(MODES).filter(([, m]) => m.split).map(([k]) => `Profile_mode="${k}"`).join(',')})))),1,0)),1))` },
       { area: 'spending', key: 'covered', label: 'Share someone else covers', unit: 'pct',
         f: 'IF(AND({@whoUsed}="Covered by someone",OR({takeover}="",TEXT({takeover},"yyyy-mm")>TEXT(TODAY(),"yyyy-mm"))),IF(AND({coveredAmount}<>"",N({amount})<>0),MIN(1,MAX(0,{coveredAmount}/{amount})),1),0)' },
       { area: 'spending', key: 'shareBase', label: 'My share before reimbursement', unit: 'money',
-        f: `IF(OR(${SKIP},{Kind}<>"Budget line"),"",IF({myShare}<>"",{myShare},IF({Status}="Not for me",0,IF(OR({@whoUsed}="Included in rent",{@whoUsed}="N/A"),0,IF({@M20}="","",{@M20}*(1-{@covered})*IF({@givenUsed}="Your share",1,IF({@sharePct}<>"",{@sharePct},1/{@splitUsed})))))))` },
+        f: `IF(OR(${SKIP},{Kind}<>"Budget line"),"",IF({myShare}<>"",{myShare},IF({Status}="Not for me",0,IF(OR({@whoUsed}="Included in rent",{@whoUsed}="N/A",AND({startsIn}<>"",TEXT({startsIn},"yyyy-mm")>TEXT(TODAY(),"yyyy-mm"))),0,IF({@M20}="","",{@M20}*(1-{@covered})*IF({@givenUsed}="Your share",1,IF({@sharePct}<>"",{@sharePct},1/{@splitUsed})))))))` },
       { area: 'spending', key: 'M21', label: 'My share a month (M21)', unit: 'money',
         f: `IF({@shareBase}="","",IF(OR({Status}="Not for me",{@whoUsed}="Included in rent",{@whoUsed}="N/A"),{@shareBase},MAX(0,{@shareBase}-IF({reimbursed}="",0,{reimbursed}*${MONTH_FACTOR('{per}')}))))` },
       { area: 'spending', key: 'whole', label: 'Whole bill a month', unit: 'money', f: 'IF({@M20}="","",IF({@givenUsed}="Your share",IF({@sharePct}<>"",{@M20}/{@sharePct},{@M20}*{@splitUsed}),{@M20}))' }],
@@ -219,7 +257,8 @@ export const MATH = [
     parts: [
       { key: 'pretax', name: '401(k) and HSA money from the paycheck, a month', unit: 'money', sheet: 'SUM(Income_saving)', app: c => c.m.pretaxSaving },
       { key: 'match', name: 'Employer match, a month', unit: 'money', sheet: 'Math_M15/12', app: c => c.m.savingsRate.match ?? 0 },
-      { key: 'afterTax', name: 'After-tax contributions set on accounts (a Roth IRA, a brokerage), a month', unit: 'money', fromApp: 'each account\'s contribution in its own cadence (a paycheck, a month, a year), from the Assets tab in SLAM', app: c => c.x.afterTaxSaving ?? 0 },
+      { key: 'afterTax', name: 'After-tax contributions set on accounts (a Roth IRA, a brokerage), a month', unit: 'money', fromApp: 'each account\'s contribution in its own cadence (a paycheck, a month, a year), from the Assets tab in SLAM', app: c => (c.x.afterTaxSaving ?? 0) - (c.x.goalSaving ?? 0) },
+      { key: 'goal', name: 'Into a 529 or a Goal account from the surplus, a month (not FI money; question 214)', unit: 'money', fromApp: 'each 529 or Goal account\'s contribution in its own cadence, from the Assets tab in SLAM', app: c => c.x.goalSaving ?? 0 },
       { key: 'base', name: 'Second line: surplus over take-home', unit: 'pct', sheet: 'IF(OR(Math_M12="",Math_M27="",N(Math_M12)=0),"",Math_M27/Math_M12)', app: c => c.m.savingsRate.ofTakeHome ?? null },
     ],
     sheet: 'IF(OR(Math_M12="",Math_M27=""),"",IF(Math_M28_pretax+Math_M28_match>0,(Math_M27+Math_M28_pretax+Math_M28_match)/(Math_M12+Math_M28_pretax+Math_M28_match),Math_M27/Math_M12))',
@@ -275,7 +314,7 @@ export const MATH = [
   { id: 'M36', name: 'Debt-to-income', inputs: 'debts, gross', unit: 'pct', fns: ['debt.debtToIncome'],
     sheet: 'IF(OR(Math_M13="",N(Math_M13)=0,COUNTIFS(Debt_balUsed,">0")=0),"",SUM(Debt_payUsed)/(Math_M13/12))',
     app: c => debtToIncome({ monthlyDebtPayments: c.x.debts.some(d => d.balance > 0) ? sum(c.x.debts, d => d.payment) : null, grossMonthly: c.x.grossAnnual == null ? null : c.x.grossAnnual / 12 }).value },
-  { id: 'M37', name: 'Promo solver', inputs: 'balance, promo end', unit: 'money', fns: ['debt.promoPayment'],
+  { id: 'M37', name: 'Promo solver', inputs: 'balance, promo end', unit: 'money', fns: ['debt.promoPayment', 'debt.promoPayoffOf'],
     cols: [{ area: 'debt', key: 'M37', label: 'Payment to clear by the promo end (M37)', unit: 'money',
       f: (rec, c) => `IF(OR({promoEnd}="",{@balUsed}=""),"",IF((YEAR({promoEnd})-${c.now.getFullYear()})*12+MONTH({promoEnd})-${c.now.getMonth() + 1}<=0,"",{@balUsed}/((YEAR({promoEnd})-${c.now.getFullYear()})*12+MONTH({promoEnd})-${c.now.getMonth() + 1})))`}],
     sheet: 'IF(COUNT(Debt_M37)=0,"",SUM(Debt_M37))', label: 'Payments a month to clear every promo balance in time (months counted from the day this file was made)',
@@ -293,7 +332,7 @@ export const MATH = [
     cols: [{ area: 'debt', key: 'consumer', label: 'Consumer debt', unit: 'number', f: 'IF(COUNTIF(Consumer_type,{Type})>0,1,0)' }],
     parts: [
       { key: 'cash', name: 'Cash (checking, savings and other cash)', unit: 'money', sheet: 'IF(COUNTIFS(Assets_group,"cash",Assets_InMath,"<>No")=0,IF(Profile_noneOfThese="Yes",0,""),SUMIFS(Assets_val,Assets_group,"cash"))', app: c => c.x.cash },
-      { key: 'invested', name: 'Invested (every investment account)', unit: 'money', sheet: 'IF(COUNTIFS(Assets_group,"investment",Assets_InMath,"<>No")=0,IF(Profile_noneOfThese="Yes",0,""),SUMIFS(Assets_val,Assets_group,"investment"))', app: c => c.x.invested },
+      { key: 'invested', name: 'Invested toward FI (every investment account but a 529 or a Goal account; question 214)', unit: 'money', sheet: 'IF(COUNTIFS(Assets_group,"investment",Assets_InMath,"<>No")=0,IF(Profile_noneOfThese="Yes",0,""),SUMIFS(Assets_val,Assets_group,"investment")-SUMIFS(Assets_val,Assets_group,"investment",Assets_Type,"529")-SUMIFS(Assets_val,Assets_group,"investment",Assets_Type,"<>529",Assets_purpose,"Goal"))', app: c => c.x.invested },
     ],
     sheet: 'IF(Math_M41_cash="","",Math_M41_cash+SUMIFS(Assets_val,Assets_Type,"Brokerage")-SUMIFS(Debt_balUsed,Debt_consumer,1))', label: 'Cash plus brokerage minus consumer debt',
     app: c => c.m.liquidNetWorth.value },
@@ -314,13 +353,18 @@ export const MATH = [
 
   // ---------- Goals and projection ----------
   { id: 'M50', name: 'FI number', inputs: 'spending, withdrawal rate', unit: 'money', fns: ['fi.fiNumber'],
+    // Batch 15, item 6: a line that is not yours yet (Becomes mine in) or starts later (Starts in) is left out of
+    // today's spending and put into spending in retirement (RetirementSpending's blank falls back to both).
+    cols: [{ area: 'spending', key: 'later', label: 'Added later, a month (becomes yours or starts)', unit: 'money',
+      f: `IF(OR(${SKIP},{Kind}<>"Budget line",{@M20}="",{Status}="Not for me",{myShare}<>""),"",IF(OR(AND({@whoUsed}="Covered by someone",{takeover}<>"",TEXT({takeover},"yyyy-mm")>TEXT(TODAY(),"yyyy-mm")),AND({startsIn}<>"",TEXT({startsIn},"yyyy-mm")>TEXT(TODAY(),"yyyy-mm"))),MAX(0,{@M20}*IF({@givenUsed}="Your share",1,IF({@sharePct}<>"",{@sharePct},1/{@splitUsed}))-IF({reimbursed}="",0,{reimbursed}*${MONTH_FACTOR('{per}')}))-N({@M21}),0))` }],
+    parts: [{ key: 'later', name: 'Known costs ahead, a month (in spending in retirement)', unit: 'money', sheet: 'SUMIFS(Spend_later,Spend_InMath,"Yes")', app: c => c.x.laterSpending ?? 0 }],
     sheet: 'IF(OR(RetirementSpending="",WithdrawalRate=""),"",RetirementSpending*12/WithdrawalRate)', label: 'Spending in retirement a year over the withdrawal rate', app: c => c.m.fiNumber.value },
   { id: 'M51', name: 'Lean FI number', inputs: 'Food, Accommodation, Transportation lines', unit: 'money', fns: ['fi.leanFiNumber'],
     cols: [{ area: 'spending', key: 'fat', label: 'Food, housing or transportation', unit: 'number', f: 'IF(OR({draftt}="Food",{draftt}="Accommodation",{draftt}="Transportation",{category}="Phone"),1,0)' }],
     sheet: 'IF(SUMIFS(Spend_M21,Spend_fat,1,Spend_InMath,"Yes")=0,"",SUMIFS(Spend_M21,Spend_fat,1,Spend_InMath,"Yes")*12/WithdrawalRate)', app: c => c.targets()['Lean FI'].value },
   { id: 'M52', name: 'Barista FI number', inputs: 'part-time income', unit: 'money', fns: ['fi.baristaFiNumber'],
     sheet: 'IF(OR(Profile_keepJobAfterLaunch="No",RetirementSpending="",PartTimeIncome=""),"",(RetirementSpending-PartTimeIncome)*12/WithdrawalRate)', app: c => c.targets()['Barista FI'].value ?? null },
-  { id: 'M53', name: 'FI date', inputs: 'invested, M28 before-tax saving and match, M27 if invested, M02, M50', unit: 'months', fns: ['fi.fiDate', 'fi.fiRangeOf', 'fi.saferFi'],
+  { id: 'M53', name: 'FI date', inputs: 'invested, M28 before-tax saving and match, M27 if invested, M02, M50', unit: 'months', fns: ['fi.fiDate', 'fi.fiRangeOf', 'fi.saferFi', 'fi.changeAt', 'changes.datedChanges', 'changes.endYm', 'changes.changeWords', 'changes.surplusIn'],
     parts: [{ key: 'growth', name: 'Growth a month at the return', unit: 'pct', sheet: '(1+RealReturn)^(1/12)-1', app: c => (1 + c.x.realReturn) ** (1 / 12) - 1 },
       { key: 'safer', name: 'Safer line: months to FI at the safer withdrawal rate when FI would come before the safer-under age', unit: 'months', fromApp: 'the same path run to spending x 12 / SaferWithdrawal; shown as a second, smaller line (batch 5 C)', app: c => saferFi(c.m, { from: c.now })?.months ?? null },
       // Answers 123 to 125: what goes in each month. The surplus is invested unless InvestSurplus is 0; then only the
@@ -332,7 +376,12 @@ export const MATH = [
       { key: 'before', name: 'Invested a month while the surplus pays heavy debt or fills big e: 401(k), HSA, match, after-tax contributions and Retirement lines', unit: 'money',
         sheet: 'IF(Math_M27="","",Math_M28_pretax+Math_M28_match+N(Math_M28_afterTax)+N(Math_M27_retire))', app: c => (c.m.investing?.before ? c.m.investing.before.monthly : c.m.surplus.value == null ? null : (c.m.investing?.alreadyIn ?? 0) + (c.m.investing?.contributions ?? 0)) },
       { key: 'invest', name: 'Invested a month: 401(k), HSA, match, plus the surplus and any freed heavy payments (or, with Invest my surplus off, the after-tax contributions and Retirement lines)', unit: 'money',
-        sheet: 'IF(Math_M27="","",Math_M28_pretax+Math_M28_match+IF(N(InvestSurplus)=0,N(Math_M28_afterTax)+N(Math_M27_retire),Math_M27+N(Math_M53_freed)))', app: c => c.m.investing?.monthly ?? null }],
+        sheet: 'IF(Math_M27="","",Math_M28_pretax+Math_M28_match+IF(N(InvestSurplus)=0,N(Math_M28_afterTax)+N(Math_M27_retire),Math_M27-N(Math_M28_goal)+N(Math_M53_freed)))', app: c => c.m.investing?.monthly ?? null },
+      ...Array.from({ length: CHANGE_SLOTS }, (_, k) => [
+        { key: `at${k + 1}`, name: `Known change ${k + 1} ahead: the month it starts on the path (months from now)`, unit: 'months', fromApp: 'the month from the dates on the Budget and Income rows (Becomes mine in, Starts in, benefits end), after the debt-first months', app: c => changeSlots(c.m)[k]?.at ?? null },
+        { key: `ch${k + 1}`, name: `Known change ${k + 1} ahead: what goes in moves by this a month`, unit: 'money', fromApp: 'the change to the surplus from those rows (a bill that becomes yours, benefits that end)', app: c => changeSlots(c.m)[k]?.monthly ?? null },
+        { key: `seg${k + 1}`, name: `Invested at known change ${k + 1}`, unit: 'money', sheet: `IF(Math_M53_at${k + 1}="","",FV(Math_M53_growth,Math_M53_at${k + 1}-${k ? `Math_M53_at${k}` : 'N(Math_M53_debtMonths)'},-(Math_M53_invest${Array.from({ length: k }, (_, j) => `+N(Math_M53_ch${j + 1})`).join('')}),-${k ? `Math_M53_seg${k}` : 'FV(Math_M53_growth,N(Math_M53_debtMonths),-Math_M53_before,-Math_M41_invested)'}))`,
+          app: c => { const sl = changeSlots(c.m)[k]; if (!sl || c.x.invested == null || c.m.investing?.monthly == null) return null; const pts = fiDate({ invested: c.x.invested, monthlyInvesting: c.m.investing.monthly, realReturn: c.x.realReturn, target: Number.MAX_VALUE }, { from: c.now, path: true, before: c.m.investing.before ?? null, changes: c.m.investing.changes ?? null }).points; return pts?.[sl.at] ?? null; } }]).flat()],
     sheet: m53Sheet(),
     label: 'Months until investments reach the FI number, at what goes in each month', app: c => c.m.monthsToFi.value, never: c => !!c.m.monthsToFi.never },
   { id: 'M54', name: 'Coast FI', inputs: 'M50, M02, ages', unit: 'money', fns: ['fi.coastFi', 'foo.coastFiNumber'],

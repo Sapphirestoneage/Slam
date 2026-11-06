@@ -133,9 +133,13 @@ test('living together: shared bills split by income when chosen (this client\'s 
   assert.ok(by.inputs.splitShare > 0.5 && by.inputs.splitShare < 0.7, `Ada earns more: ${by.inputs.splitShare}`);
   const rent = by.inputs.lines.find(l => l.name === 'Rent');
   assert.ok(rent, 'the rent line is in');
-  assert.ok(Math.abs(rent.sharePct - by.inputs.splitShare) < 1e-9, 'the line carries the by-income share');
+  // Batch 15, item 2: the household counts the shared rent once, whole; each person's view carries their share of it.
+  assert.equal(rent.amount, 2000, 'the household view: the whole rent, once');
+  const ada = metrics(s.doc, ref, { now, person: 'Me' }).inputs.lines.find(l => l.name === 'Rent');
+  assert.ok(Math.abs(ada.coupleShared.share - by.inputs.splitShare) < 1e-9 && Math.abs(ada.amount - 2000 * by.inputs.splitShare) < 1e-6, 'Ada\'s view carries the by-income share');
   s.setDoc('profile', { splitMine: 0.4 });
-  assert.equal(metrics(s.doc, ref, { now }).inputs.lines.find(l => l.name === 'Rent').sharePct, 0.4, 'a typed share wins');
+  assert.equal(metrics(s.doc, ref, { now, person: 'Me' }).inputs.lines.find(l => l.name === 'Rent').coupleShared.share, 0.4, 'a typed share wins');
+  assert.ok(Math.abs(metrics(s.doc, ref, { now, person: 'Partner' }).inputs.lines.find(l => l.name === 'Rent').amount - 1200) < 1e-6, 'Bo pays the other 60%');
 });
 
 test('engaged: the disclosure checklist, a money talk and a wedding goal are suggested for today, with a +', () => {

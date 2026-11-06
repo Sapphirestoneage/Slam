@@ -173,7 +173,9 @@ export function confidenceOf(key, picture, { now = new Date() } = {}) {
   let step = avg >= CONFIDENCE.high ? 2 : avg >= CONFIDENCE.medium ? 1 : 0;
   if (aged && step > 0) step -= 1;
   const word = ['Low', 'Medium', 'High'][step];
-  return { word, label: `${word} confidence`, step, avg, aged, of: its.length, atEstimate, range: FI_RANGE[word],
+  // Batch 15, item 7: the inputs still under Estimate, heaviest first, for the one sentence a too-wide range shows.
+  const weak = its.filter(it => it.level < LEVELS.Estimate).sort((a, b) => b.weight - a.weight).map(it => it.label);
+  return { word, label: `${word} confidence`, step, avg, aged, of: its.length, atEstimate, range: FI_RANGE[word], weak,
     text: `${atEstimate} of ${its.length} numbers at Estimate or better${aged ? `, ${aged} older than ${RULES.agedCheckDays} days` : ''}.${word === 'High' ? '' : ` Shown as a year range: spending ${Math.round(FI_RANGE[word] * 100)}% lower to higher.`}` };
 }
 
@@ -192,6 +194,13 @@ export function fiWordsOf(m, conf, { now = new Date() } = {}) {
   const r = fiRangeOf(m, conf.range, { from: now });
   if (!r || r.low == null) return { kind: 'year', text: String(yearAt(base)), low: base, high: base, years: `about ${Math.round(base / 12)} years from now` };
   const lo = yearAt(r.low), hi = r.high == null ? null : yearAt(r.high);
+  // Batch 15, item 7: a range wider than RULES.fiRangeMaxYears (or open-ended) says nothing a coach can use, so the
+  // words become the one step that narrows it. The math (fiRangeOf) is unchanged; this is display only.
+  if (hi == null || hi - lo > RULES.fiRangeMaxYears) {
+    const want = (conf.weak || []).slice(0, 2).map(w => w.replace(/^[A-Z]/, c => c.toLowerCase()));
+    return { kind: 'wide', text: want.length ? `Add ${want.join(' and ')} to see a date` : 'Firm up the rough numbers to see a date', low: r.low, high: r.high, wide: true,
+      years: hi == null ? `${Math.round(r.low / 12)} years or more from now` : `about ${Math.round(r.low / 12)} to ${Math.round(r.high / 12)} years from now` };
+  }
   const text = hi == null ? `${lo} or later` : lo === hi ? String(lo) : `${lo} to ${hi}`;
   const yl = Math.round(r.low / 12), yh = r.high == null ? null : Math.round(r.high / 12);
   return { kind: hi == null || lo !== hi ? 'range' : 'year', text, low: r.low, high: r.high, years: yh == null ? `${yl} years or more from now` : yl === yh ? `about ${yl} years from now` : `about ${yl} to ${yh} years from now` };

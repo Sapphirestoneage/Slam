@@ -63,8 +63,8 @@ export function ladderOf(doc, ref, { now = new Date(), flags = [] } = {}) {
   const markers = MARKERS.map(k => {
     let reached = false, mo = null, target = null, value = null;
     if (k.kind === 'netWorth') { target = k.target; value = nw; reached = hasNw && nw != null && nw >= k.target; mo = reached ? 0 : nw == null ? null : surplusIn ? months((k.target - nw) / surplusIn) : null; }
-    else if (k.kind === 'consumerFree') { reached = x.debts.length > 0 && !consumer.length; mo = reached ? 0 : consumerPlan?.months ?? null; }
-    else { target = targetOf[k.target]; value = x.invested; if (target != null && x.invested != null) { reached = x.invested >= target; mo = reached ? 0 : monthsTo(m, target, { now }).value; } }
+    else if (k.kind === 'consumerFree') { reached = x.debts.length > 0 && !consumer.length && x.debts.every(d => d.inFull || d.balance != null); mo = reached ? 0 : consumerPlan?.months ?? null; }
+    else { target = targetOf[k.target]; value = x.invested; if (target != null && x.invested != null) { reached = !!x.investedKnown && x.invested >= target; mo = reached ? 0 : monthsTo(m, target, { now }).value; } }
     const name = k.editable && doc.program?.ladder?.fatLabel ? doc.program.ladder.fatLabel : k.name;
     return { ...k, name, kind: 'marker', reached, months: mo, date: at(mo), target, value, applies: !(k.kind === 'consumerFree' && !x.debts.length && gates.areas.debt === false) }; // never had consumer debt: the marker is left out
   }).filter(k => k.applies);

@@ -146,7 +146,7 @@ export const AREAS = [
   {
     id: 'income', prefix: 'Income', tab: 'Income', source: 'records', kinds: { income: 'Income', benefit: 'Other benefit' },
     about: 'Paychecks and other money in, and benefits from work.',
-    types: { income: ['Job', 'Partner job', 'Side hustle', 'Self-employed', 'Unemployment', 'Benefits', 'Rental', 'Money from family'] },
+    types: { income: ['Job', 'Partner job', 'Side hustle', 'Self-employed', 'Unemployment', 'Benefits', 'Rental', 'Money from family', 'From partner'] },
     fields: [
       NAME, AMOUNT('Amount'), PER(),
       pick('basis', 'Given as', ['Take-home', 'Gross', 'Both'], { kinds: ['income'] }),
@@ -157,7 +157,11 @@ export const AREAS = [
       f('nextPayday', 'Next payday', 'date', { kinds: ['income'] }),
       f('actualPay', 'Last paycheck matched', 'money', { kinds: ['income'] }), f('actualPayDate', 'Last paycheck date', 'date', { kinds: ['income'] }), // answer 168: from a bank CSV; the row counts as Actual
       pick('incomeType', 'Tax type', ['W-2', '1099', 'Business', 'Side hustle', 'Rental', 'Benefits', 'Other'], { kinds: ['income'] }),
-      pick('incomeKind', 'Income type', ['Salary', 'Side hustle', 'Windfall', 'Other'], { kinds: ['income'] }), // F6: for a later Wrapped; blank reads from the row's type (js/capture.js)
+      pick('incomeKind', 'Income type', ['Salary', 'Side hustle', 'Windfall', 'Other'], { kinds: ['income'] }),
+      // Batch 15, item 13: unemployment benefits (weekly, taxed on the return, no FICA; nothing withheld unless chosen).
+      f('benefitStart', 'Benefits started', 'date', { kinds: ['income'] }),
+      f('benefitEnd', 'Benefits end', 'date', { kinds: ['income'] }),
+      pick('withhold', 'Have 10% federal tax withheld', YES_NO_WORDS, { kinds: ['income'] }), // F6: for a later Wrapped; blank reads from the row's type (js/capture.js)
       f('contributionPct', '401(k) %', 'pct', { kinds: ['income'] }),
       f('k401Paycheck', '401(k) a paycheck', 'money', { kinds: ['income'] }), // Income's first pass at the 401(k)
       pick('hasMatch', 'Employer match?', ['Yes', 'No', "Don't know"], { kinds: ['income'] }),
@@ -278,6 +282,7 @@ export const AREAS = [
       pick('term', 'Short-term or long-term', ['Short-term', 'Long-term']),
       f('benefitPct', 'Pays this share of your pay', 'pct'), f('duration', 'Pays for how long'), f('waiting', 'Waiting period'),
       f('coverage', 'Coverage amount', 'money'), f('plannedChange', 'Planned change'),
+      pick('decision', 'Bills list: keep or try to cut', ['Keep', 'Cancel']), // batch 15: the recurring bills list (Cancel shows as Try to cut)
       f('notSame', 'Not the same as a Budget line', 'yesno', { sheet: { skip: 'an answer to Same as your ...?; asked in SLAM' } }),
       f('sameAs', 'Same as a Budget line', 'text', { sheet: { skip: 'an answer to Same as your ...?; asked in SLAM' } }),
       CHECK, OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS,
@@ -319,6 +324,8 @@ export const AREAS = [
       f('myShare', 'My share', 'money', { kinds: ['bill'] }), f('splitBy', 'Split by', 'number', { kinds: ['bill'] }),
       pick('amountIs', 'This amount is', ['Your share', 'The whole bill'], { kinds: ['bill'] }),
       f('takeover', 'Becomes mine in', 'month', { kinds: ['bill'] }),
+      f('startsIn', 'Starts in (a known cost ahead)', 'month', { kinds: ['bill'] }), // batch 15: counted from this month on, in every projection
+      pick('toPartner', 'Paid to my partner (moves money between you)', YES_NO_WORDS, { kinds: ['bill'] }), // batch 15: the household view leaves it out
       f('irregular', 'Irregular (once or a few times a year)', 'yesno', { kinds: ['bill'] }),
       pick('monthDue', 'Month due', MONTHS3, { kinds: ['bill'] }),
       f('timesYear', 'How many a year', 'number', { kinds: ['bill'] }), f('costEach', 'Cost each', 'money', { kinds: ['bill'] }),

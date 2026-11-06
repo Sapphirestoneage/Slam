@@ -7,7 +7,7 @@ import * as S from './staples.js';
 import { checksOf, defaultsInUse } from '../checks.js';
 import { homeworkItems } from './report-ui.js';
 import { homeworkText } from '../homework.js';
-import { communityLinesToAdd } from '../community.js';
+import { setCommunityOn } from '../community.js';
 import { TIMER_MARKS, duration } from '../timer.js';
 import { feedbackCard } from './report-this.js';
 import { keyNumbers } from '../math/metrics.js';
@@ -89,11 +89,8 @@ function timerCard(ctx) {
       h('td', {}, t[k] ? new Date(t[k]).toLocaleString() : h('span.muted', {}, 'Not yet')),
       h('td.num', {}, k === 'profileStarted' ? '' : duration(t.seconds?.[k])))))));
 }
-function setCommunity(ctx, on) {
-  ctx.store.transaction('Community presets', () => {
-    ctx.store.setIn('session', ['community'], on, 'Community presets');
-    if (on) for (const l of communityLinesToAdd(ctx.store.records)) ctx.store.add('bill', l, { type: 'Yearly cost' });
-  });
+export function setCommunity(ctx, on) {
+  setCommunityOn(ctx.store, on); // batch 15: the same switch as About you › Your community and calendar
   S.toast(on ? 'Yom tov and Pesach are under yearly costs on the Budget, with blank amounts.' : 'Off. The lines it added stay; delete them on the Budget if not needed.', { undo: () => ctx.store.undo() });
 }
 

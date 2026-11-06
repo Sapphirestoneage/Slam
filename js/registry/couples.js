@@ -47,3 +47,6 @@ export const forPerson = (r, person, mode = null) => (person && person !== 'all'
 export const inView = (r, person, mode = null) => !person || person === 'all' || ownerOf(r, mode) === person || ownerOf(r, mode) === 'Joint';
 // The person options for a mode: the combined view (its label by mode, none in Dating and Living together), then each person.
 export const viewsOf = (mode, names) => [...(MODES[mode]?.together ? [['all', MODES[mode].together]] : []), ['Me', names.Me], ['Partner', names.Partner]];
+// Batch 15 (question 212): a couple with no combined totals (Dating, Living together) sees one person's own plan
+// everywhere: this client's, unless the person switch says the partner's. Other modes: the household (null).
+export const ownPlanPerson = doc => { const mode = modeOf(doc?.profile); return mode && MODES[mode].couple && MODES[mode].combined === 'none' ? (doc.settings?.person === 'Partner' ? 'Partner' : 'Me') : null; };

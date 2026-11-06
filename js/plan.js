@@ -12,6 +12,7 @@ import { statusOf } from './records.js';
 import { gatesOf, visible } from './gates.js';
 import { addMonths, ymOf, dateOf, monthName } from './month.js';
 import { RULES } from './registry/assumptions.js';
+import { materialityOf } from './math/time.js';
 
 export const MILESTONES = ['Lean FI', 'Coast FI', 'Barista FI', 'Regular FI', 'Fat FI', 'Debt free', 'Custom'];
 export const FAT_FACTOR = RULES.fatFactor; // Fat FI: 1.5 times regular spending (QUESTIONS: confirm)
@@ -37,7 +38,7 @@ export function monthsTo(m, target, { realReturn = m.inputs.realReturn, extra = 
   if (target == null) return { value: null, needs: ['a target'] };
   if (m.inputs.invested != null && m.inputs.invested >= target) return { value: 0, reached: true };
   const now$ = m.investing?.monthly ?? m.surplus.value; // what goes in today (answer to 11), plus any extra
-  return fiDate({ invested: m.inputs.invested, monthlyInvesting: now$ === null ? null : now$ + extra, realReturn, target }, { from: now, before: m.investing?.before ? { ...m.investing.before, monthly: m.investing.before.monthly + extra } : null }); // batch 11: the debt-first months come first
+  return fiDate({ invested: m.inputs.invested, monthlyInvesting: now$ === null ? null : now$ + extra, realReturn, target }, { from: now, before: m.investing?.before ? { ...m.investing.before, monthly: m.investing.before.monthly + extra } : null, changes: m.investing?.changes ?? null }); // batch 11: the debt-first months come first
 }
 
 // A milestone row's projected date.
@@ -85,7 +86,8 @@ const clone = v => JSON.parse(JSON.stringify(v));
 const OPEN = new Set([null, 'Not sure', 'Not now', 'Will email']);
 const ROUTE = { income: '#/cash-flow/income', debt: '#/net-worth/debt', account: '#/net-worth/assets', asset: '#/net-worth/assets', bill: '#/cash-flow/budget', spending: '#/cash-flow/budget' };
 
-// Fields still open, ranked by how much they move the FI date; anything worth under $100 a year goes to small wins.
+// Fields still open, ranked by how much they move the FI date; anything worth less than the time it takes (at the
+// real hourly wage, never under $100 a year) goes to small wins.
 export function next3(doc, ref, { now = new Date(), limit = 3 } = {}) {
   const m = metrics(doc, ref, { now });
   const g = gatesOf(doc.profile, doc.client);
@@ -118,10 +120,12 @@ export function next3(doc, ref, { now = new Date(), limit = 3 } = {}) {
     }
   }
   // Effect on the FI date: the number as it stands (or its guess) against the number at zero.
+  // Batch 15, item 4: worth doing when its dollars a year beat the time it takes at the real hourly wage ($100 floor).
+  const material = materialityOf(m.hourly);
   const base = m.monthsToFi.value;
   for (const c of cands) {
     if (c.core) { c.effect = Infinity; continue; }
-    if (c.dollars < 100) { c.small = true; continue; }
+    if (c.dollars < material.value) { c.small = true; continue; }
     if (base === null || c.guess == null) { c.effect = c.dollars / 1000; continue; }
     const d = clone(doc);
     const r = d.records.find(x => x.id === c.recId);
@@ -131,7 +135,7 @@ export function next3(doc, ref, { now = new Date(), limit = 3 } = {}) {
     c.moves = alt === null ? null : Math.abs(alt - base);
   }
   const ranked = cands.filter(c => !c.small).sort((a, b) => (b.effect - a.effect) || (b.dollars ?? 0) - (a.dollars ?? 0));
-  return { top: ranked.slice(0, limit), all: ranked, small: cands.filter(c => c.small) };
+  return { top: ranked.slice(0, limit), all: ranked, small: cands.filter(c => c.small), material };
 }
 
 // ---------- Guide me: the session 1 curriculum (R076) ----------

@@ -7,7 +7,9 @@ import { institutionPicker, institutionLink } from './institutions-ui.js';
 import { fromButton, amount, value, moneyInput, pctInput, textInput, nameInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, parkGroup, ownerToggle } from './staples.js';
 import { asksTaxType, taxTypeFor } from '../math/portfolio.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
-import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom } from '../math/income.js';
+import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom, isBenefitRow, householdRates, quarterlySetAside, irregularPlan } from '../math/income.js';
+import { foo } from '../math/foo.js';
+import { RULES } from '../registry/assumptions.js';
 import { limitUsed } from '../math/assets.js';
 import { accountBlocks, accountFlags, stampBalance } from './account-detail.js';
 import { is401k, yearly401k } from './account-specific.js';
@@ -52,6 +54,7 @@ export function incomeList() {
     filter: r => r.kind === 'income',
     picker: ctx => ({ top: ctx.gates().betweenJobs ? ['Unemployment', 'Job', 'Side hustle', 'Benefits'] : ['Job', 'Unemployment', 'Side hustle', 'Benefits', 'Rental'],
       other: ['Partner job', 'Money from family', 'Self-employed', 'Rental'] }),
+    newValues: type => (type === 'Unemployment' ? { name: 'Unemployment benefits', per: 'week', values: { payFrequency: 'week' } } : {}), // batch 15: weekly
     coreFields: ['amount'],
     focus: ['Source', 'Amount', 'Given as', 'Per', 'Pay frequency'], // session 1: take-home or gross, and how often
     columns: [
@@ -59,7 +62,7 @@ export function incomeList() {
       { label: 'Amount', num: true, render: (ctx, r, m, up) => (r.values.basis === 'Both' && incomeRowOf(m, r)?.taxType
         ? h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap', justifyContent: 'flex-end' } }, // Brandon B1.6: both typed, both kept
           moneyInput(r.amount, v => up({ amount: v }), { hint: 'Take-home', key: `${r.id}:amount` }), moneyInput(r.values.gross, v => up({ gross: v }), { hint: 'Gross a year', key: `${r.id}:gross` }))
-        : moneyInput(r.amount, v => up({ amount: v }), { hint: r.values.basis === 'Gross' ? 'Add gross' : 'Add take-home', key: `${r.id}:amount` })) },
+        : moneyInput(r.amount, v => up({ amount: v }), { hint: isBenefitRow(r) ? 'Add a week' : r.values.basis === 'Gross' ? 'Add gross' : 'Add take-home', key: `${r.id}:amount` })) },
       { label: 'Given as', render: (ctx, r, m, up) => (incomeRowOf(m, r)?.taxType
         ? toggle(['Take-home', 'Gross', 'Both'], r.values.basis ?? 'Take-home', v => up({ basis: v }), { label: 'Given as' })
         : h('span.muted', { title: 'Counted as it lands; no tax worked out' }, 'As it lands')) },
@@ -75,7 +78,29 @@ export function incomeList() {
   };
 }
 const incomeRowOf = (m, r) => m.inputs.income.find(x => x.r.id === r.id);
+// Unemployment benefits (batch 15, item 13): the weekly amount in a tap (NY's most is registered), when they started
+// and end (a tap for 26 weeks from the start), and the 10% withholding choice. Taxed on Taxes, no FICA.
+const dateBox = (value, onChange, label) => { const d = h('input', { type: 'date', value: value || '', 'aria-label': label }); d.onchange = () => onChange(d.value || null); return h(`label.field${value ? '.filled' : ''}`, { style: { width: '170px' } }, d); };
+const addWeeks = (iso, w) => { const d = new Date(`${iso}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + w * 7 - 1); return d.toISOString().slice(0, 10); };
+function benefitSecondary(ctx, r, up) {
+  const v = r.values, ref = ctx.ref, max = ref.limits.unemployment.NY.maxWeekly, weeks = ref.limits.unemployment.NY.weeks;
+  const x = incomeRowOf(ctx.metrics(), r);
+  const weekly = r.per === 'week' ? r.amount : null;
+  const amounts = [[String(max), `$${max} (NY most)`], ['600', '$600'], ['450', '$450']];
+  const wide = el => { el.style.gridColumn = 'span 2'; return el; }; // the chips and a box, or a date and a tap, need two columns
+  return [
+    wide(labelled('A week', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+      toggle(amounts, weekly == null ? null : String(weekly), y => up({ amount: Number(y), per: 'week' }), { label: 'Weekly benefit' }),
+      moneyInput(weekly, y => up({ amount: y, per: 'week' }), { hint: 'Other', key: `${r.id}:weekly`, width: 100 })), { tip: `NY pays at most $${max} a week (claims from Oct 2025)` })),
+    labelled('Started', dateBox(v.benefitStart, y => up({ benefitStart: y }), 'Benefits started')),
+    wide(labelled('Ends', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, dateBox(v.benefitEnd, y => up({ benefitEnd: y }), 'Benefits end'),
+      v.benefitStart ? button(`${weeks} weeks from start`, { size: 'small', onClick: () => up({ benefitEnd: addWeeks(v.benefitStart, weeks) }) }) : null), { tip: 'After this date the benefits drop out of every projection' })),
+    labelled('Withhold 10% for federal tax', toggle(['Yes', 'No'], v.withhold ?? 'No', y => up({ withhold: y }), { label: 'Withhold 10%' }), { tip: 'Form W-4V. With No, the tax is due when you file (see Taxes)' }),
+    x?.tax ? wide(labelled('Tax on it this year', h('span.computed', { title: 'Federal and state income tax; no Social Security or Medicare' }, `${money(x.tax.total)}${x.due > 0.5 ? (x.withheld ? `, ${money(x.due)} due when you file` : ', all due when you file') : ''}`))) : null,
+    labelled('Coach notes', textInput(r.privateNote, y => up({ privateNote: y }), { hint: 'Add a private note', width: 320 }))];
+}
 function incomeSecondary(ctx, r, up) {
+  if (isBenefitRow(r)) return benefitSecondary(ctx, r, up);
   const g = ctx.gates();
   const link = link401k(ctx.visible(() => true)); // B3.10: blank here borrows from the 401(k)
   const m = ctx.metrics();
@@ -131,6 +156,7 @@ function k401FirstPass(ctx, r, up, link) {
       labelled('The rest', details, { note: 'Roth or traditional, % of salary, match, vesting' })));
 }
 function incomeTertiary(ctx, r, up) {
+  if (isBenefitRow(r)) return [];
   const g = ctx.gates();
   const v = r.values;
   const taxed = !!incomeRowOf(ctx.metrics(), r)?.taxType;
@@ -185,14 +211,26 @@ export function variableBlock(ctx) {
   const p = ctx.store.doc.profile;
   const v = p.variable || {};
   const set = patch => ctx.store.setDoc('profile', { variable: { ...v, ...patch } });
-  const safe = variableSafeBudget({ lowestMonth: v.lowest ?? null, typicalMonth: v.typical ?? null, setAside: v.setAside ?? null }, ctx.ref);
+  // Batch 15, item 3: blank set-aside uses this client's own rate on self-employment income (SE tax in), else 25%.
+  const own = quarterlySetAside(ctx.metrics().inputs.householdTax, ctx.ref)?.rate ?? null;
+  const rate = v.setAside ?? own ?? null;
+  const safe = variableSafeBudget({ lowestMonth: v.lowest ?? null, typicalMonth: v.typical ?? null, setAside: rate }, ctx.ref);
+  const plan = irregularPlan({ lowestMonth: v.lowest ?? null, typicalMonth: v.typical ?? null, months: v.months ?? null, setAside: rate }, ctx.ref);
+  const step = (() => { try { const f = foo(ctx.store.doc, ctx.ref, { now: ctx.now() }); const s1 = f.steps.find(x => x.id === f.here); return s1 ? s1.name : null; } catch { return null; } })();
   return h('section.section.area-income', {}, h('div.section-title', {}, h('h2', {}, 'Variable income')),
     h('div.card', {}, h('div.form-grid', {},
       labelled('Last 12 months total', moneyInput(v.last12, x => set({ last12: x }), { hint: 'Add total', key: 'var:last12' })),
       labelled('Typical month', moneyInput(v.typical, x => set({ typical: x }), { hint: 'Add amount', key: 'var:typical' })),
       labelled('Lowest month', moneyInput(v.lowest, x => set({ lowest: x }), { hint: 'Add amount', key: 'var:lowest' }), { note: 'Drives the safe budget' }),
-      labelled('Set aside for taxes', pctInput(v.setAside, x => set({ setAside: x }), { hint: `Blank: ${Math.round(ctx.ref.defaults.taxSetAside * 100)}`, key: 'var:setAside' }), { note: 'Blank uses 25%' }),
+      labelled('Set aside for taxes', pctInput(v.setAside, x => set({ setAside: x }), { hint: String(Math.round((own ?? ctx.ref.defaults.taxSetAside) * 100)), key: 'var:setAside' }), { note: own != null ? `Blank uses your rate, ${Math.round(own * 100)}%` : 'Blank uses 25%' }),
       metricCard(ctx, 'Safe to count on a month', safe)),
+    // Batch 15, item 11: base month and good month (YNAB: live on what you can count on).
+    plan.value != null ? h('div.irregular-plan', { style: { marginTop: '12px' } },
+      h('div.row-line', { style: { gap: '24px', flexWrap: 'wrap' } },
+        h('span.stack', {}, h('span.label', {}, 'Base month'), h('strong', {}, money(plan.base)), h('span.muted.small', {}, 'Budget your bills on this')),
+        h('span.stack', {}, h('span.label', {}, 'A good month adds'), h('strong', {}, money(plan.extra)), h('span.muted.small', {}, step ? `The extra goes to your next step: ${step}` : 'The extra goes down your order of operations')),
+        h('span.stack', {}, h('span.label', {}, 'Lean-season fund'), h('strong', {}, value(plan, ctx)), h('span.muted.small', {}, plan.fromMonths ? 'From your twelve months' : `${RULES.leanSeasonMonths} months of the swing`))),
+      h('p.muted.small', { style: { margin: '6px 0 0' } }, 'The rule: live on the base month. When a month comes in above it, the extra fills the lean-season fund first, then the next step in your order.')) : null,
     moreBlock('income:variable', () => h('div', {},
       h('div.form-grid', {}, ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((mo, i) =>
         labelled(mo, moneyInput(v.months?.[i] ?? null, x => { const ms = [...(v.months || Array(12).fill(null))]; ms[i] = x; set({ months: ms }); }, { hint: '–', key: `var:m${i}` })))),
@@ -459,12 +497,17 @@ export function taxesScreen(ctx) {
   const set = patch => ctx.store.setDoc('profile', patch);
   const taxed = x.income.filter(i => i.taxType && i.gross !== null);
   const gross = taxed.length ? sum(taxed, i => i.gross) : null;
-  const pretax = sum(taxed, i => i.pretax);
-  const se = taxed.some(i => i.taxType === '1099');
-  const rates = taxRates({ gross, pretax, filingStatus: x.filingStatus, selfEmployed: se && taxed.every(i => i.taxType === '1099'), place: x.place }, ctx.ref);
-  const marginal = rates.value === null ? rates : { ...rates, value: rates.marginal, text: `The last dollar earned is taxed at ${pct(rates.marginal)}: the federal bracket plus FICA.` };
-  const seGross = sum(taxed.filter(i => i.taxType === '1099'), i => i.gross);
-  const seTax = seGross ? fica({ gross: seGross, filingStatus: x.filingStatus, selfEmployed: true }, ctx.ref) : null;
+  // Batch 15, item 1: one return for the household (or one per person), FICA per person.
+  const hh = x.householdTax;
+  const rates = householdRates(hh, ctx.ref);
+  const marginal = rates.value === null ? rates : { ...rates, value: rates.marginal, text: `The next dollar of pay is taxed at ${pct(rates.marginal)}: the federal bracket${rates.stateMarginal ? ', state and city' : ''} plus FICA.` };
+  const seRows = Object.values(hh?.rows || {}).filter(t => t.taxType === '1099');
+  const seTax = seRows.length ? { value: sum(seRows, t => t.fica) } : null;
+  const q = quarterlySetAside(hh, ctx.ref, { year: ctx.now().getFullYear(), paid: p.quarterlyPaid ?? 0 });
+  const rows = x.income.filter(i => i.tax);
+  const gap = sum(rows.filter(i => !i.benefit && i.taxType !== '1099'), i => i.due);
+  const benefits = rows.filter(i => i.benefit);
+  const due = d => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   const inferred = !p.filingStatus;
   const g = ctx.gates();
   return h('section.section.area-taxes', {}, h('div.section-title', {}, h('h2', {}, 'Filing')),
@@ -483,6 +526,14 @@ export function taxesScreen(ctx) {
         { note: 'Step 1(c) on your W-4', ...parkProfile(ctx.store, 'w4Status') }),
       labelled('Extra withheld a paycheck', moneyInput(p.w4Extra ?? null, v => set({ w4Extra: v }), { hint: 'Add amount', key: 'tax:w4extra' }), { note: 'Step 4(c) on your W-4', ...parkProfile(ctx.store, 'w4Extra') })),
     (() => { const f = withholdingFlag({ lastYear: p.lastYearTax, amount: p.lastYearAmount ?? null }); return f ? h('div.nudge', { style: { marginTop: '12px' } }, f.text) : null; })(),
+    // Batch 15, item 3: quarterly estimates from the real rates (SE tax in), with the four due dates (they are on the calendar).
+    q ? h('div.nudge.quarterly', { style: { marginTop: '12px' } }, h('strong', {}, `Set aside ${Math.round((q.rate ?? 0) * 100)} cents of each self-employment dollar: ${money(q.each)} a quarter.`),
+      ` Due ${q.due.map(due).join(', ')}. Your rates with self-employment tax in, on top of your other income.`) : null,
+    gap > 100 ? h('div.nudge', { style: { marginTop: '12px' } }, `Your paychecks hold back about ${money(gap)} a year less than the household owes (each job withholds as if it were the only one). More withheld a paycheck (W-4 step 4c) or step 2 fixes it.`) : null,
+    ...benefits.map(i => h('div.nudge', { style: { marginTop: '12px' } }, `${i.r.name || 'Unemployment'}: ${money(i.benefit.thisYear)} taxed this year, federal and ${x.place?.state ?? 'state'} income tax ${money(i.tax.total)}, no Social Security or Medicare. ${i.withheld ? `${money(i.withheld)} withheld, ` : 'Nothing withheld, '}about ${money(i.due)} due when you file.`)),
+    rows.length > 1 ? moreBlock('taxes:rows', () => h('table.rows.tax-rows', {}, h('thead', {}, h('tr', {}, ['Income', 'Federal', 'FICA', ...(x.place ? ['State and city'] : []), 'Total'].map(t => h('th', {}, t)))),
+      h('tbody', {}, rows.map(i => h('tr', {}, h('td', {}, i.r.name || i.r.type), h('td.num', {}, money(i.tax.federal)), h('td.num', {}, money(i.tax.fica)), ...(x.place ? [h('td.num', {}, money(i.tax.state + i.tax.local))] : []), h('td.num', {}, money(i.tax.total)))))),
+    { label: `Each row's share of the tax (${hh?.joint ? 'one return' : Object.keys(hh?.units || {}).length > 1 ? 'one return each' : 'one return'})` }) : null,
     moreBlock('taxes:more', () => h('div.form-grid', {},
       // Refund history (B5.2): the two years before, each with don't know.
       ...[2, 3].map(k => {
@@ -511,9 +562,9 @@ export const incomeCharts = [
       const taxed = x.income.filter(i => i.taxType && i.gross !== null);
       if (!taxed.length) return { needs: ['take-home or gross pay'] };
       let fed = 0, fc = 0, pre = 0, gross = 0, st = 0;
-      for (const i of taxed) {
-        const t = takeHomeFromGross({ gross: i.gross, pretax: i.pretax, filingStatus: x.filingStatus, selfEmployed: i.taxType === '1099', place: x.place }, ctx.ref);
-        gross += i.gross; fed += t.federal.value; fc += t.fica.value; pre += i.pretax; st += t.stateTax.state + t.stateTax.local;
+      for (const i of taxed) { // batch 15: each row's share of the household's tax
+        const t = i.tax ?? { federal: 0, fica: 0, state: 0, local: 0 };
+        gross += i.gross; fed += t.federal; fc += t.fica; pre += i.pretax; st += t.state + t.local;
       }
       const steps = [['Gross', gross / 12], ['Federal tax', -fed / 12], ['FICA', -fc / 12], ...(st ? [['State and city', -st / 12]] : []), ['Before-tax', -pre / 12]];
       return { steps, takeHome: (gross - fed - fc - st - pre) / 12 };

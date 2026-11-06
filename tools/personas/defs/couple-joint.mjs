@@ -30,12 +30,12 @@ export default {
     savingsRate: { value: 0.2561, unit: 'pct', note: '401(k) $120,000 x 6% / 12 = $600, match 4% x $120,000 / 12 = $400. ($1,100 + $600 + $400) / ($7,200 + $1,000) = 25.6%.' },
     fooStep: { value: '4', unit: 'step', note: 'Step 1 done ($21,000 cash), match taken (6% over the 4% cap), no heavy debt. big e: Priya 35 / 5 = 7 months x $6,100 = $42,700.' },
     debtFreeMonths: { value: 314, unit: 'months', note: 'Mortgage at $2,300: n = -ln(1 - 0.061/12 x 360,000 / 2,300) / ln(1 + 0.061/12) = 313.2, so 314.' },
-    monthsToFi: { value: 283, unit: 'months', note: 'A coach leaves the 529 out of FI: invested $105,000 (not $113,000), and the $200 a month into the 529 is not retirement money, so $600 + $400 + $1,100 - $200 = $1,900 a month. FI number $6,100 x 12 / 4% = $1,830,000: 282.3, so 283 months.', finding: 'F-529' },
+    monthsToFi: { value: 293, unit: 'months', note: 'A coach leaves the 529 out of FI (question 214): invested $105,000 (not $113,000), and the $200 a month into the 529 is not retirement money. Batch 12, freed money follows the FOO: $25,515 of big e left / ($1,100 - $200 = $900 a month) = 28.4, so 29 months with only the $600 401(k) and $400 match going in; then $1,900 a month. FI number $6,100 x 12 / 4% = $1,830,000: 293 months.' },
     runwayMonths: { value: 3.443, unit: 'months', tol: 0.01, note: '$21,000 / $6,100.' },
     bigETarget: { value: 42700, unit: 'money', note: '7 x $6,100.' },
   },
   cannot: [
-    'College costs: a 529 is an investment account like any other, so it counts toward FI; there is no per-child goal, no college cost, no years until college.',
+    'College costs: a 529 stays out of FI (batch 15), but there is no per-child goal, no college cost, no years until college.',
     'One income household: no field for the stay-at-home partner (spousal IRA eligibility, the value of the care, a return-to-work date).',
   ],
 };

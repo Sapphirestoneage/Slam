@@ -63,6 +63,7 @@ export function routeForPlace(place) {
   return routeOf(tab.id, sub.id);
 }
 
+export const VIEWS = [{ label: 'Bills list', where: 'Cash flow › Calendar › Bills list', route: '#/cash-flow/calendar?view=bills', words: ['bills', 'subscriptions', 'recurring', 'repeating charges'] }];
 // Find (R168 '/'): fields, screens and the client's own records, best match first.
 export function search(query, { fields = [], records = [] } = {}) {
   const q = query.trim().toLowerCase();
@@ -78,6 +79,11 @@ export function search(query, { fields = [], records = [] } = {}) {
   for (const t of ALL) for (const s of t.subs) {
     const sc = score(s.name);
     if (sc !== null) out.push({ kind: 'screen', label: s.name, where: `${t.name} › ${s.name}`, route: routeOf(t.id, s.id), score: sc });
+  }
+  // Batch 15: views inside a screen, found by their everyday words (the Bills list: bills, subscriptions, recurring).
+  for (const v of VIEWS) {
+    const sc = [v.label, ...v.words].map(score).filter(x => x !== null).sort((a, b) => a - b)[0] ?? null;
+    if (sc !== null) out.push({ kind: 'screen', label: v.label, where: v.where, route: v.route, score: sc });
   }
   for (const r of records) {
     const sc = score(r.name || '') ?? score(r.type || '');

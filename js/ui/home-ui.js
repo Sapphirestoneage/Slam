@@ -416,7 +416,7 @@ function paydayCard(app, ctx) {
     h('strong', {}, `The month is ${money(G.short)} short, so nothing is free to spend until the gap closes.`)));
   const line = (k, v) => h('span.stack', { style: { gap: '2px' } }, h('span.label', {}, k), h('strong', {}, money(v)));
   return h('div.card.payday', {},
-    h('p', { style: { fontSize: '1.0625rem', margin: 0 } }, `You get ${money(d.period.in)} on ${when}${d.guessDate ? ' (day not set yet)' : ''}. `,
+    h('p', { style: { fontSize: '1.0625rem', margin: 0 } }, d.several ? `Your household brings in about ${money(d.period.in)} a paycheck; the next one lands ${when}${d.guessDate ? ' (day not set yet)' : ''}. ` : `You get ${money(d.period.in)} on ${when}${d.guessDate ? ' (day not set yet)' : ''}. `,
       d.hasFixed ? `${money(d.period.fixed)} covers fixed bills. ` : '', d.setAside.total ? `${money(d.period.save)} goes to savings goals and sinking funds. ` : '',
       h('strong', {}, `${money(d.setAside.total ? d.period.afterSavings : d.period.free)} is free to spend.`)),
     !d.hasFixed ? h('span.muted.small', {}, 'Mark bills Fixed on the Budget to see what they take from each paycheck.') : null,

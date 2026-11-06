@@ -136,7 +136,8 @@ export function payoffPlan(debts, { extra = 0, order = 'avalanche', maxMonths = 
 // one plan every screen reads: each debt's payoff month, the heavy-debt-free month and the debt-free month.
 // surplusFrom (batch 12 follow-up, question 217): the months the surplus first spends filling FOO step 1 (the buffer and
 // little e) before it reaches heavy debt; each debt keeps its own payment meanwhile.
-export function debtFirstPlan(debts, { order = 'avalanche', ids = [], first = [], surplus = 0, extra = 0, maxMonths = 1200, surplusFrom = 0 } = {}) {
+// changes (batch 15): known changes ahead, each { at, monthly }; the surplus to heavy debt moves by them from month at.
+export function debtFirstPlan(debts, { order = 'avalanche', ids = [], first = [], surplus = 0, extra = 0, maxMonths = 1200, surplusFrom = 0, changes = null } = {}) {
   const usable = debts.filter(d => !d.inFull && (d.balance ?? 0) > 0 && d.apr != null && d.payment != null);
   const skipped = debts.filter(d => !d.inFull && (d.balance ?? 0) > 0 && !usable.includes(d)).map(d => d.name);
   const top = new Set(first);
@@ -159,7 +160,8 @@ export function debtFirstPlan(debts, { order = 'avalanche', ids = [], first = []
       if (d.heavy) freedHeavy += d.payment - pay; else freedLow += d.payment - pay;
     }
     // The surplus and the freed heavy payments go only to heavy debt; an extra and freed low-rate payments to any, in order.
-    let heavyPool = heavyOpen ? (month > surplusFrom ? toDebt : 0) + freedHeavy : 0, pool = more + freedLow;
+    const toDebtNow = changes?.length ? Math.max(0, (surplus || 0) + changes.reduce((s2, c) => s2 + (c.at <= month - 1 ? c.monthly : 0), 0)) : toDebt;
+    let heavyPool = heavyOpen ? (month > surplusFrom ? toDebtNow : 0) + freedHeavy : 0, pool = more + freedLow;
     for (const d of list) {
       if (d.left <= 0.005 || !d.heavy || heavyPool <= 0) continue;
       const pay = Math.min(d.left, heavyPool);
@@ -215,6 +217,19 @@ export function promoPayment({ balance, monthsLeft }) {
   if (monthsLeft <= 0) return needs('M37', ['a promo end date in the future']);
   const v = balance / monthsLeft;
   return ok('M37', v, `${fmt.money(balance)} divided by the ${monthsLeft} months left on the promo = ${fmt.money(v)} a month.`);
+}
+
+// Batch 15, item 5: the promo line a card shows. A card with a 0% promo (rate 0 or blank) and an end month: the payment
+// that clears it before the promo ends (M37), and the words "Pay $X a month to clear it before the promo ends (Mar 2027)".
+export function promoPayoffOf(d, now = new Date()) {
+  const end = d?.promoEnd ?? d?.values?.promoEnd ?? null, apr = d?.promoApr ?? d?.values?.promoApr ?? null, balance = d?.balance ?? d?.values?.balance ?? null;
+  if (!end || !/^\d{4}-\d{2}/.test(String(end)) || (apr != null && apr > 0) || !(balance > 0)) return null;
+  const [y, m] = String(end).split('-').map(Number);
+  const r = promoPayment({ balance, monthsLeft: (y - now.getFullYear()) * 12 + (m - 1 - now.getMonth()) });
+  if (r.value == null) return null;
+  const ends = new Date(Date.UTC(y, m - 1, 15)).toLocaleString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const monthly = Math.ceil(r.value);
+  return { monthly, ends, months: (y - now.getFullYear()) * 12 + (m - 1 - now.getMonth()), result: r, text: `Pay ${fmt.money(monthly)} a month to clear it before the promo ends (${ends})` };
 }
 
 // The debt-free card (batch 11, item 3; Undebt.it and Tally: one date, milestones). From the one plan: the debt-free

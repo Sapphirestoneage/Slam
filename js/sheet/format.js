@@ -55,6 +55,7 @@ export const FORMATS = [
   { version: 14, shape: '77a8c604' }, // Nov 5 2026 (batch 10, one bump): Typical amount, Level and Everything else on Spending lines (M27 by level); Bills and subscriptions as a letter; Why now chips on Profile
   { version: 15, shape: 'b9c21b0b' }, // Nov 5 2026 (batch 11, one bump): the debt rule (DebtFirst, M34 heavy and minimum, M53 debtMonths, freed, before), credit freeze, Extra to debt
   { version: 16, shape: '9d9b88a4' }, // Nov 5 2026 (batch 12, one bump): M79 freed money follows the FOO, M80 next best, M81 the gap, M82 next 3 moves, rules FreedFollowsFoo, NextBestMin, ShortPlanMonths, GapTrimLine, GapTrimGut
+  { version: 17, shape: '5c3b3584' }, // Nov 6 2026 (batch 15, one bump): household tax columns, unemployment, Starts in, Paid to my partner, known changes on M53, M50 later, the 529 goal part
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

@@ -8,7 +8,7 @@ import { institutionLink } from './institutions-ui.js';
 import { recordList as S_recordList, popover as S_popover, closePop as S_closePop, moreBlock as S_moreBlock, fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, perChip, nameInput, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
 import { paidInFull } from '../completion.js';
 import { pct } from '../format.js';
-import { feeApr } from '../math/debt.js';
+import { feeApr, promoPayoffOf } from '../math/debt.js';
 import { WEEKDAYS, SHABBAT_SPEND_DAY } from '../math/holidays.js';
 import { monthlyFrom } from '../math/income.js';
 import { withHome, myShare, DRAFTT, drafttName, CATEGORIES, categoryName, categoryKeyOf, isCategoryRecord, isFaded, typicalOf, typicalTotal, levelOf, LEVEL_ELSE, everythingElse } from '../math/spending.js';
@@ -93,7 +93,8 @@ export function debtList(ref, { cards = null } = {}) {
       { label: 'Pays off', render: (ctx, r, m) => {
         const d = m.debts.find(x => x.id === r.id);
         const longest = Math.max(0, ...m.debts.map(x => x.planMonths ?? x.payoff.value ?? 0));
-        return payoffCell(ctx, d, longest);
+        const promo = isCard(r) && !paidInFull(r) ? promoPayoffOf(r, ctx.now()) : null; // batch 15, item 5
+        return promo ? h('span.stack', { style: { gap: '2px' } }, payoffCell(ctx, d, longest), h('span.small.promo-line', { title: promo.result.text }, promo.text)) : payoffCell(ctx, d, longest);
       } },
       { label: 'Owner', couple: true, render: (ctx, r, m, up) => ownerToggle(ctx, r, up) },
     ],
@@ -393,7 +394,7 @@ function debtSecondary(ctx, r, up) {
       carries ? labelled('Pay', toggle(['Minimum', 'Custom', 'In full'], choice, x => up({ payChoice: x }), { label: 'Pay' })) : labelled('Pay', h('span.computed', {}, 'In full each month')),
       choice === 'Custom' ? labelled('Custom $ a month', moneyInput(v.payment, x => up({ payment: x }), { hint: 'Add payment' })) : null, // R020
       carries ? labelled('0% promo: rate and end', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, pctInput(v.promoApr, x => up({ promoApr: x }), { hint: 'e.g. 0' }),
-        textInput(v.promoEnd, x => up({ promoEnd: x }), { hint: 'YYYY-MM', width: 110 })), { note: 'Warns 60 days before it ends' }) : null,
+        textInput(v.promoEnd, x => up({ promoEnd: x }), { hint: 'YYYY-MM', width: 110 })), { note: promoPayoffOf(r, ctx.now())?.text ?? 'Warns 60 days before it ends' }) : null,
       labelled('Due day', textInput(v.dueDay, x => up({ dueDay: x }), { hint: 'Add day', width: 90, key: `${r.id}:dueDay` }), { note: 'Shows on the cash flow calendar; a fixed line with no day sits on the 1st with a ? badge' }),
       labelled('Statement closes on day', dayBox(v.statementDay, x => up({ statementDay: x })), { note: 'The balance reported to the bureaus', ...park(ctx, r, 'statementDay') }),
       labelled('Credit limit', moneyInput(v.limit, x => up({ limit: x }), { hint: 'Add limit' }), { note: 'For utilization' }),
@@ -659,6 +660,11 @@ function whoRow(ctx, r, up) {
       moneyInput(r.values.reimbursed ?? null, x => up({ reimbursed: x }), { hint: `Per ${r.per}` }))
       : h('button.link-btn', { type: 'button', onclick: () => { PANEL.back = r.id; ctx.refresh(); } }, '+ Someone pays me back'));
 }
+function startsInBox(r, up) {
+  const d = h('input', { type: 'month', value: r.values.startsIn || '', 'aria-label': 'Starts in' });
+  d.onchange = () => up({ startsIn: d.value || null });
+  return h(`label.field${r.values.startsIn ? '.filled' : ''}`, { style: { width: '170px' } }, d);
+}
 function linePanel(ctx, r, up, { pass, ym }) {
   const prem = premiumOf(ctx, r);
   return [
@@ -674,6 +680,10 @@ function linePanel(ctx, r, up, { pass, ym }) {
     S_moreBlock(`line-more:${r.id}`, () => h('div.stack', { style: { gap: '12px' } },
       pass === 'Plan' && ym ? monthPlanField(ctx, r, ym) : null,
       lineSuggestion(r, up),
+      // Batch 15, item 6: a known cost ahead (health care from a date): counted from that month on, in every projection.
+      labelled('Starts in', startsInBox(r, up), { tip: 'A cost that begins later. Today\'s spending leaves it out; the FI date, the ladder and the calendar add it from that month' }),
+      // Batch 15, item 2: a payment to the partner moves money between the two; the household view leaves it out.
+      ctx.couple ? labelled('Paid to my partner', toggle(['Yes', 'No'], r.values.toPartner ?? null, v => up({ toPartner: v }), { label: 'Paid to my partner', clearable: true }), { tip: 'Money you send your partner (your share of rent they pay). Your view counts it; the two of you together do not' }) : null,
       labelled('Joy', toggle([[true, 'A joy line'], [false, 'Not one']], r.values.joy === true ? true : r.values.joy === false ? false : null, v => up({ joy: v }), { label: 'Joy line', clearable: true }), { tip: 'Joy lines are funded first in the FOO (step 0b)' }),
       r.values.amountType === 'Variable' ? labelled('Range: low, high', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
         moneyInput(r.values.low ?? null, v => up({ low: v }), { hint: 'Low' }), moneyInput(r.values.high ?? null, v => up({ high: v }), { hint: 'High' })), { tip: 'A light month and a heavy one; the amount is the average', ...park(ctx, r, 'low') }) : null,

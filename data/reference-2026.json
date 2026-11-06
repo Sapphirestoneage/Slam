@@ -78,6 +78,12 @@
       "single": 153000,
       "joint": 242000,
       "note": "2026 Roth IRA phase-out start (MAGI), single and joint (ranges $153,000 to $168,000 and $242,000 to $252,000, IRS Notice 2025-67, as reported by several tax sites, checked Nov 4 2026; irs.gov not reachable from the build). Used for the backdoor note on FOO step 5. Not in the spec Reference data tab yet."
+    },
+    "unemployment": {
+      "NY": {
+        "maxWeekly": 869,
+        "weeks": 26
+      }
     }
   },
   "tax": {
@@ -343,7 +349,16 @@
           ]
         }
       }
-    }
+    },
+    "unemployment": {
+      "withholdRate": 0.1
+    },
+    "quarterlyDue": [
+      "04-15",
+      "06-15",
+      "09-15",
+      "01-15"
+    ]
   },
   "typicalRates": {
     "Credit card": 0.25,

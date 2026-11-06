@@ -13,6 +13,7 @@ import { layerSnapshot } from './math/layers.js';
 import { JOY, CONFIDENCE } from './registry/joy.js';
 import { fmt } from './math/result.js';
 import { isFaded } from './math/spending.js';
+import { promoPayoffOf } from './math/debt.js';
 import { whyAnswered } from './whynow.js';
 import { scorecardOf, ratingOf } from './math/scorecard.js';
 import { THRESHOLDS } from './registry/scorecard.js';
@@ -196,6 +197,11 @@ export function agendaOf(doc, ref, { now = new Date(), flags = [], P = programOf
     if (what === 'disclosure') for (const d of DISCLOSURE) suggest({ kind: 'mode', label: `Disclosure: ${d}`, link: { kind: 'route', route: d.startsWith('Debts') ? '#/net-worth/debt' : d.startsWith('Accounts') ? '#/net-worth/assets' : d.startsWith('Income') ? '#/cash-flow/income' : '#/net-worth/credit-cards' }, why: 'engaged: everything on the table' });
     if (what === 'moneyTalk') suggest({ kind: 'mode', label: 'Money talk: how we will run money once married', link: { kind: 'route', route: '#/home/profile' }, why: 'engaged: the mode after the wedding' });
     if (what === 'wedding' && !live.some(r => r.kind === 'milestone' && /wedding/i.test(r.name || ''))) suggest({ kind: 'mode', label: 'Add a wedding goal', link: { kind: 'route', route: '#/plan/goals' }, why: 'engaged: a date and an amount' });
+  }
+  // Batch 15, item 5: a card on a 0% promo with an end month gets its pay-to-clear amount as a suggestion.
+  for (const r of live.filter(x => x.kind === 'debt' && x.type === 'Credit card' && x.values.payChoice !== 'In full')) {
+    const pr = promoPayoffOf(r, now);
+    if (pr) suggest({ kind: 'promo', label: `${r.name || 'Card'}: ${pr.text.replace(/^Pay/, 'pay')}`, link: { kind: 'record', recId: r.id, route: '#/net-worth/credit-cards' }, why: 'a 0% promo ends; this clears it in time' });
   }
   const old = now.getTime() - AGENDA.staleDays * 86400000;
   for (const r of live.filter(r => ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) && r.updatedAt && Date.parse(r.updatedAt) < old).slice(0, 5)) {

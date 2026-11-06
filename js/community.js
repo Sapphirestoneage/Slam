@@ -21,3 +21,16 @@ export function maaserOf({ basis = 'Take-home', pct = null, grossAnnual = null, 
   if (base == null) return { value: null, needs: basis === 'Gross' ? 'gross pay' : 'take-home pay', rate };
   return { value: base * rate, base, rate, text: `${Math.round(rate * 1000) / 10}% of ${basis === 'Gross' ? 'gross' : 'take-home'} pay a month` };
 }
+
+// Batch 15, item 10: the communities a client can pick on About you › Your community and calendar. One today (its
+// switch is doc.session.community, the same one Coach tools › Session shows); a new community is one more entry here.
+export const COMMUNITIES = [
+  { id: 'jewish', label: 'Jewish community', key: 'community', adds: ['Yom tov and Pesach as yearly costs', 'A kosher groceries note', 'Future tuition as a goal', 'Maaser on the Budget'] },
+];
+// Turn a community's presets on or off. On adds its yearly lines (blank amounts) once; off keeps what was added.
+export function setCommunityOn(store, on) {
+  store.transaction('Community presets', () => {
+    store.setIn('session', ['community'], on, 'Community presets');
+    if (on) for (const l of communityLinesToAdd(store.records)) store.add('bill', l, { type: 'Yearly cost' });
+  });
+}

@@ -94,6 +94,7 @@ function stepDetail(ctx, s, f) {
     extra.push(h('div.row-line', { style: { gap: '8px' } }, S.select(LAUNCH_MOVES, launch.move ?? null, v => setL({ move: v }), { label: 'Launch move', hint: 'Pick a launch move', width: 230 }),
       h(`label.field${launch.date ? '.filled' : ''}`, { style: { width: '170px' } }, d)));
   }
+  if (s.id === '6' && f.qq?.reached) extra.push(h('p.qq-reached', {}, h('strong', {}, f.qq.reachedText)));
   if (s.id === '6') extra.push(h('p.muted.small', {}, `The yearly minimum for Quiet Quitting FI: ${money(f.yearlyMinimum)} (the Roth IRA limit${f.keepJob === 'Yes' ? ' plus the match from the job you keep' : ''}).`));
   return h('div.stack', { style: { gap: '6px' } }, s.note ? h('p.muted', { style: { margin: 0 } }, s.note) : null, ...parts, ...extra);
 }

@@ -277,3 +277,36 @@ so the money follows the step order (js/math/debt.js surplusFrom, js/math/flow.j
 the Debt payoff view and the chips pass it too). Bartender persona redone by hand: debt free 7 months, FI 349.
 The one-pager's first move now shows its parts ("the $200 going now plus the $1,700 left over") so it squares with
 the surplus tile. QA: 525 tests in UTC and America/New_York, 0 fail, 2 todo (F-GUT, F-529).
+
+## Nov 6 2026: Batch 15, the needs-work items from the feature audit
+
+1. Household tax once (js/math/income.js householdTax, metrics). Income tax per return (Married jointly: one; else one per
+   person), FICA per person with the Social Security wage base per person, rows stacked (jobs, 1099, unemployment), each
+   row's share shown on Taxes. Two W-2 rows of $60,000 and $40,000 pay what one $100,000 row pays. A row typed as take-home
+   keeps what was typed; what its paychecks hold back less its share is the "two jobs" gap on Taxes. The workbook's Income
+   tab stacks the same way (SUMIFS by return and order) and matches in LibreOffice.
+2. Couples keeping money apart (metrics coupleBills): a shared bill (Joint, or Split with the partner) counts once and whole
+   for the household and at each person's share (By income, typed, or half) in each view; Paid to my partner and From
+   partner stay in each view and leave the household; every gut number in a view adds up. Dating and Living together show
+   this client's own plan everywhere, the partner's as the switch (registry/couples ownPlanPerson, question 212).
+3. Quarterly estimates: the tax 1099 income adds (SE tax in) as a rate and four payments with the IRS due dates, on Taxes
+   and on the calendar (1099 pay lands before tax; the tax goes out on Apr 15, Jun 15, Sep 15 and Jan 15). A blank
+   variable-income set-aside uses that rate.
+4. Materiality at the real hourly wage (time.materialityOf, plan.next3): 2 hours at the wage, never under $100.
+5. Promo payoff on screen (debt.promoPayoffOf): the card row, its panel, and an agenda suggestion.
+6. Known changes ahead (js/math/changes.js): Becomes mine in, a new Starts in on any Budget line, and benefits that end feed
+   the FI date, the debt plan, the ladder, the timeline, Big deals, retirement spending and the calendar; Goals lists each
+   in one line. The sheet's M53 runs in segments (four change slots).
+7. The FI range: wider than 5 years shows the one step that narrows it.
+8. Quiet Quitting FI said plainly once reached; a win needs real numbers (blank balances or blank debts are not known yet).
+9. Bills list: Cash flow › Calendar › Bills list, every repeating charge by next date with Keep or Try to cut; Find
+   reaches it with bills, subscriptions or recurring.
+10. Community presets on About you › Your community and calendar, one switch with Coach tools.
+11. Irregular income: base month, good month, where the extra goes, a lean-season fund.
+12. Is it worth paying for? on Goals (collapsed): a service against the hours it saves at the real wage.
+13. Unemployment as an income type: weekly taps (NY most $869, registered), start and end dates (26 weeks from start),
+    10% withholding as a choice, taxed federal and state with no FICA, weekly on the calendar until it ends, then out of
+    every projection, with the one-line Plan note.
+Also: a 529 or a Goal account stays out of the FI path (question 214); the Home paycheck line uses the household's pay.
+
+QA: 540 tests in UTC and America/New_York (547 pass after the batch 12 rebase, 0 fail, 0 todo: the F-GUT and F-529 persona todos now pass; couple-joint now 293 months); test/batch15.test.js has 21, one a LibreOffice recalculation of the tax formulas, joint and apart. Layout check (1440 light, quick): 18 level, 30 clipped, 4 overflow, 5 covered, 76 askable, the same as before the batch (no new failures).

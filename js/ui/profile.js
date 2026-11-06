@@ -15,6 +15,7 @@ import { profileCompletion } from '../profile-completion.js';
 import { BENEFITS, HAVE, TRANSIT, commuterSavings } from '../benefits.js';
 import { taxRates, monthlyFrom } from '../math/income.js';
 import { HOLIDAY_SETS, nextHoliday, SHABBAT_SPEND_DAY } from '../math/holidays.js';
+import { COMMUNITIES, setCommunityOn } from '../community.js';
 import { money, pct } from '../format.js';
 import { WHY_CHIPS, WHY_LABELS, chipsOf, whyAnswered, toggleChip, starChip } from '../whynow.js';
 
@@ -259,7 +260,16 @@ export function profileScreen(app, ctx) {
     });
     told(list.length ? `${def.label} are on the calendar. ${list.length} starter blocks sit on Next 12 months with blank amounts; each re-dates itself every year.` : `${def.label} are on the calendar.`, '#/plan/next-12-months');
   };
-  const calendar = section('Your calendar', 'needs',
+  // Batch 15, item 10: community presets as taps, beside the calendars (the same switch as Coach tools › Session).
+  const sess = store.doc.session || {};
+  const community = h('div.stack.community-pick', { style: { gap: '6px', marginBottom: '12px' } },
+    ...COMMUNITIES.map(c => h('div.row-line', { style: { gap: '10px', flexWrap: 'wrap' } }, h('span.gate-label', {}, c.label),
+      toggle([[true, 'Yes'], [false, 'No']], sess[c.key] == null ? null : !!sess[c.key], v => { setCommunityOn(store, v); told(v ? `${c.label}: ${c.adds.join(', ')}. The yearly lines are on the Budget with blank amounts.` : 'Off. Anything it added stays.', '#/cash-flow/budget'); }, { label: c.label }),
+      h('span.muted.small', {}, c.adds.join(' · ')))),
+    sess.community ? h('div.row-line', { style: { gap: '10px' } }, h('span.gate-label', {}, 'Maaser on'),
+      toggle(['Take-home', 'Gross'], sess.maaser?.basis ?? 'Take-home', v => store.setIn('session', ['maaser'], { ...(sess.maaser || {}), basis: v }, 'Maaser'), { label: 'Maaser on' }),
+      pctInput(sess.maaser?.pct ?? null, v => store.setIn('session', ['maaser'], { ...(sess.maaser || {}), pct: v }, 'Maaser'), { hint: 'Blank: 10', key: 'p:maaser' })) : null);
+  const calendar = section('Your community and calendar', 'needs', community,
     h('p.muted', {}, 'Holidays land on the calendar as markers and as blocks on Next 12 months. Their dates come from the Hebrew, Islamic and church calendars each year on their own. Tick what applies.'),
     h('div.stack', { style: { gap: '6px' } },
       ...HOLIDAY_SETS.map(x => checkbox(x.approx ? `${x.label} (about: the day is set by moon sighting)` : x.label, !!cal[x.id], v => setCal(x.id, v), { key: `p:cal-${x.id}` })),

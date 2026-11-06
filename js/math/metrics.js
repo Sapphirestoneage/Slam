@@ -3,11 +3,13 @@
 // One place maps records to formula inputs, so every screen shows the same answer.
 import { statusOf } from '../records.js';
 import { isBlank, needs } from './result.js';
-import { monthlyFrom, incomeRow, defaultFilingStatus } from './income.js';
+import { monthlyFrom, incomeRow, defaultFilingStatus, householdTax } from './income.js';
+import { fmt } from './result.js';
+import { datedChanges } from './changes.js';
 import { gatesOf, visible } from '../gates.js';
 import { inView, modeOf, MODES, ownerOf, forPerson } from '../registry/couples.js';
 import { bigEMultiplierOf } from '../registry/assumptions.js';
-import { myShare, withHome, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor, categoryTotals, isCategoryRecord } from './spending.js';
+import { myShare, withHome, partnerSplits, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor, categoryTotals, isCategoryRecord } from './spending.js';
 import { cardMinimum, payoffMonths, totalInterest, payoffPlan, debtFirstPlan, isHeavyDebt, promoSoonIds, debtFreeCard, heroExtras } from './debt.js';
 import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
 import { link401k, matchFromTiers } from './portfolio.js';
@@ -31,6 +33,32 @@ function read(record, field, guessValue = null, { blankIsGuess = false } = {}) {
   return { v: isBlank(v) ? null : v };
 }
 
+// Batch 15, item 2: a couple keeping money apart (a mode with a split). A bill both pay (tagged Joint, or Split with
+// the partner) is one cost for the couple: the household counts it once, whole; each person's view counts their share
+// of it (By income or a typed share, else half). A payment to the partner (Paid to my partner) and money from the
+// partner (From partner) move money between the two: each person's view keeps them, the household leaves both out.
+export function coupleBills(bills, { person = null, mode, profile, share = 0.5, roommates = 0, now = new Date() }) {
+  const together = !person || person === 'all';
+  const out = [];
+  for (const r of bills) {
+    const owner = ownerOf(r, mode);
+    if (r.values?.toPartner === 'Yes') { if (!together && owner === person) out.push(r); continue; }
+    const amount = read(r, 'amount').v;
+    const line = withHome({ ...r, ...r.values, amount }, profile);
+    const split = line.whoPays === 'Split' && partnerSplits(profile);
+    if (owner !== 'Joint' && !split) { if (together || owner === person) out.push(r); continue; }
+    const mineNow = myShare(line, { roommates, now }).value;
+    if (mineNow == null) { if (together || owner === person || owner === 'Joint') out.push(r); continue; }
+    const p = line.whoPays === 'Split' && line.sharePct != null ? line.sharePct : share; // this client's part of the couple's cost
+    const couple = line.whoPays !== 'Split' ? mineNow : line.sharePct != null ? (line.sharePct > 0 ? mineNow / line.sharePct : mineNow) : mineNow * 2;
+    const mine = person === 'Partner' ? 1 - p : p;
+    const amt = together ? couple : couple * mine;
+    out.push({ ...r, owner: 'Joint', amount: amt, per: 'month', coupleShared: { couple, share: together ? 1 : mine },
+      values: { ...r.values, whoPays: 'Me', amountIs: null, splitBy: null, sharePct: null, myShare: null, coveredAmount: null, reimbursed: null, takeover: null, startsIn: null, coveredBy: null } });
+  }
+  return out;
+}
+
 export const placeOf = p => (p?.state === 'NY' ? { state: 'NY', nyc: p.nyc === true } : null);
 export function ageOf(profile, now = new Date()) {
   if (!isBlank(profile.age)) return profile.age;
@@ -43,7 +71,9 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   const gates = gatesOf(doc.profile, doc.client);
   const mode = modeOf(doc.profile);
   const liveAll = visible(doc.records, gates, ref); // gated-out rows count nowhere (R001, R066)
-  const live = liveAll.filter(r => inView(r, person, mode)).map(r => forPerson(r, person, mode)); // a person view keeps theirs and the Joint ones at half (F2, answer 157)
+  const together = !person || person === 'all';
+  const transfer = r => r.kind === 'income' && r.type === 'From partner' && !!MODES[mode]?.couple; // batch 15: money between the two
+  const live = liveAll.filter(r => inView(r, person, mode) && !(together && transfer(r))).map(r => forPerson(r, person, mode)); // a person view keeps theirs and the Joint ones at half (F2, answer 157)
   const filingStatus = doc.profile.filingStatus ?? defaultFilingStatus(doc.profile); // answer 174: Single, or Married jointly once the stage is Married; a Guess until typed
   const filingGuess = doc.profile.filingStatus == null;
   const place = placeOf(doc.profile); // B5.1: NY and NYC tax when the Profile says so
@@ -73,7 +103,27 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
     }
     return out;
   };
-  const income = live.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(withLink(r), { filingStatus, ref, place }) }));
+  const income = live.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(withLink(r), { filingStatus, ref, place, now }) }));
+  // Batch 15, item 1: income tax once per return (one for Married jointly, else one per person), FICA per person.
+  // Worked out on every income row of the household (a person's view takes its rows' shares, a Joint row at half).
+  // A row given as gross takes home its gross less its share; a row given as take-home keeps what was typed, and the
+  // difference between its share and what its paychecks hold back is what is still due (two jobs, a side hustle).
+  const hhIncome = liveAll.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(withLink(r), { filingStatus, ref, place, now }) }));
+  const hh = householdTax(hhIncome.map(i => ({ id: i.r.id, person: ownerOf(i.r, mode) === 'Partner' ? 'Partner' : 'Me', gross: i.benefit ? i.benefit.thisYear : i.gross, pretax: i.pretax, taxType: i.benefit ? 'Unemployment' : i.taxType })), { filingStatus, place }, ref);
+  for (const i of income) {
+    const sh = hh.rows[i.r.id];
+    if (!sh) continue;
+    const k = i.r.halved ? 0.5 : 1;
+    const tax = Object.fromEntries(['federal', 'state', 'local', 'fica', 'socialSecurity', 'medicare', 'total'].map(f => [f, sh[f] * k]));
+    i.tax = tax;
+    if (i.benefit) { i.withheld = i.benefit.withheld; i.due = Math.max(0, tax.total - i.withheld); continue; }
+    if (i.computed === 'takeHome') {
+      const v = (i.gross - tax.total - i.pretax - (i.roth ?? 0) - (i.afterTax ?? 0)) / 12;
+      if (Math.abs(v * 12 - i.takeHome.value * 12) > 0.5) i.takeHome = { ...i.takeHome, value: v, text: `${fmt.money(i.gross)} gross minus its share of the household's tax (${fmt.money(tax.total)}: federal ${fmt.money(tax.federal)}, FICA ${fmt.money(tax.fica)}${tax.state + tax.local ? `, state and city ${fmt.money(tax.state + tax.local)}` : ''}) minus ${fmt.money(i.pretax + (i.roth ?? 0) + (i.afterTax ?? 0))} taken from the paycheck = ${fmt.money(v * 12)} a year (${fmt.money(v)} a month).` };
+      i.withheld = i.taxType === '1099' ? 0 : tax.total; // nothing is held back from self-employment pay: it is set aside (quarterly)
+    } else i.withheld = i.taxType === '1099' ? 0 : Math.max(0, i.gross - i.takeHome.value * 12 - i.pretax - (i.roth ?? 0) - (i.afterTax ?? 0));
+    i.due = Math.max(0, tax.total - i.withheld);
+  }
   // F2: shared bills split by income. This client's share of the two take-homes, used as the split when About you says By income and no share is typed.
   const splitShare = (() => {
     if (!mode || !MODES[mode].split || doc.profile.splitMethod !== 'By income') return null;
@@ -107,12 +157,17 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   // Enter once, show in both: each debt's payment is a line From Debt; a typed line that looks like a debt payment or
   // a premium already paid asks "Same as your ...?" and is left out only after Yes (js/math/linked.js).
   const payFrequency = income.find(i => i.r.values.payFrequency)?.r.values.payFrequency ?? null;
-  const typedLines = live.filter(r => r.kind === 'bill').map(r => withHome({ ...r, ...r.values, amount: read(r, 'amount').v }, profile)); // About you › Home fills the blanks; the by-income split when chosen (F2)
+  const coupleApart = !!(mode && MODES[mode].couple && MODES[mode].split);
+  const billRows = coupleApart ? coupleBills(liveAll.filter(r => r.kind === 'bill'), { person, mode, profile, share: profile.splitMine ?? 0.5, roommates: doc.profile.roommates ?? 0, now }) : live.filter(r => r.kind === 'bill');
+  const typedLines = billRows.map(r => withHome({ ...r, ...r.values, amount: read(r, 'amount').v }, profile)); // About you › Home fills the blanks; the by-income split when chosen (F2)
   const autoLines = debtLines(debts);
   const premiums = premiumSources(live.filter(r => r.kind === 'coverage'), payFrequency);
   const { dupOf, askOf } = duplicates(typedLines, { debts, autos: autoLines, premiums, payFrequency });
   const lines = [...typedLines.filter(l => !dupOf[l.id]), ...autoLines];
-  const allIn = live.find(r => r.kind === 'spending' && r.type === 'All in');
+  const allIns = live.filter(r => r.kind === 'spending' && r.type === 'All in');
+  const allIn = allIns[0] ?? null;
+  // Batch 15, item 2: each person can have their own gut number; a view adds up the ones in it.
+  const gutOf = () => (allIns.length > 1 ? (allIns.every(r => read(r, 'amount').v == null) ? null : allIns.reduce((s2, r) => s2 + (read(r, 'amount').v ?? 0), 0)) : allIn ? read(allIn, 'amount').v : null);
   // Answer 125 (batch 2): a line tagged Retirement is investing, not spending. It leaves spending and the FI target and
   // joins what goes into investments each month (and so the savings rate, through a bigger surplus).
   const mine = l => myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0;
@@ -124,7 +179,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   const retirementLines = categories.find(c => c.key === 'Retirement')?.amount ?? 0;
   // Spending for the math: the Gut number until the lines are chosen on Budget (R131: the gut is a test kept to compare).
   const useLines = !allIn || (doc.spending?.source ?? 'gut') === 'lines' && lineTotal !== null;
-  const spending = useLines ? lineTotal : read(allIn, 'amount').v;
+  const spending = useLines ? lineTotal : gutOf();
   const debtPayments = debts.reduce((s, d) => s + (d.inFull ? 0 : d.payment ?? 0), 0);
   const includesDebt = allIn ? allIn.values.includesDebtPayments !== false : false;
   const accounts = live.filter(r => r.kind === 'account').map(r => ({ id: r.id, name: r.name ?? r.type, group: r.values.group, type: r.type, value: read(r, 'balance').v, unvested: r.values.unvested ?? null }));
@@ -132,7 +187,14 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   const none = gates.none; // R002: 'None of these' counts as done, with zeros
   // Batch 11 (item 9): an area answered "none" (About you, or a 0 typed in Fast Track) is a real $0, not a missing number.
   const cash = accounts.some(a => a.group === 'cash') ? accounts.filter(a => a.group === 'cash').reduce((s, a) => s + (a.value ?? 0), 0) : none || gates.areas.cash === false ? 0 : null;
-  const invested = accounts.some(a => a.group === 'investment') ? accounts.filter(a => a.group === 'investment').reduce((s, a) => s + (a.value ?? 0), 0) : none || gates.areas.investments === false ? 0 : null;
+  // Question 214 (batch 15): a 529 or an account set to Purpose: Goal is earmarked money, not FI money. It stays in net
+  // worth and leaves the invested balance the FI date grows from (and its contributions leave what goes in).
+  const earmarked = a => a.type === '529' || live.find(r => r.id === a.id)?.values?.purpose === 'Goal';
+  const invested = accounts.some(a => a.group === 'investment') ? accounts.filter(a => a.group === 'investment' && !earmarked(a)).reduce((s, a) => s + (a.value ?? 0), 0) : none || gates.areas.investments === false ? 0 : null;
+  // Batch 15 (item 8 follow-up): a win needs real numbers. Invested is known when every investment balance is typed
+  // (or the area is answered none); a blank balance is not known yet, not $0.
+  const investedKnown = accounts.some(a => a.group === 'investment') ? accounts.filter(a => a.group === 'investment').every(a => a.value != null) : invested === 0;
+  const earmarkedTotal = accounts.filter(a => a.group === 'investment' && earmarked(a)).reduce((s, a) => s + (a.value ?? 0), 0);
   const brokerage = accounts.filter(a => a.type === 'Brokerage').reduce((s, a) => s + (a.value ?? 0), 0);
   const housingLines = lines.filter(l => HOUSING.has(l.category));
   const housing = housingLines.some(l => l.category === 'Rent or mortgage' && l.amount !== null)
@@ -148,26 +210,33 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
     return months ? s + Math.max(0, r.amount - saved) / months : s;
   }, 0);
   const a = doc.assumptions;
-  return {
-    place, link, sinkingMonthly, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, filingGuess, none, mode, person, splitShare,
+  const out = {
+    place, link, sinkingMonthly, householdTax: hh, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, filingGuess, none, mode, person, splitShare,
     debtOrder: doc.settings?.debtOrder ?? 'avalanche', debtCustomOrder: doc.settings?.debtCustomOrder ?? [], debtExtra: doc.settings?.debtExtra ?? 0,
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || useLines ? 0 : debtPayments), // the lines hold each payment, From Debt
     autoLines, dupOf, askOf, typedLines, premiums, payFrequency, health: health ? { id: health.id, perPaycheck: healthPerPay, fromPay: !!healthFromPay, jobId: healthJob?.id ?? null } : null,
     paycheckPremiums: premiums.filter(p => p.paidFrom === 'Paycheck').reduce((s, p) => s + (p.monthly ?? 0), 0),
     afterTaxSaving: afterTaxContributions(live.filter(r => r.kind === 'account'), { payFrequency, payrollHsa: gates.hsa && income.some(i => (i.r.values.hsaFsa ?? 0) > 0) }).total,
+    goalSaving: afterTaxContributions(live.filter(r => r.kind === 'account' && (r.type === '529' || r.values?.purpose === 'Goal')), { payFrequency }).total, earmarked: earmarkedTotal, investedKnown,
     spendingSource: useLines ? 'lines' : 'gut', lineTotal, retirementLines: useLines ? retirementLines : 0, categories,
     guessLines: lines.filter(l => l.status === 'Not sure' && l.preset).length,
-    guessTotal: lines.filter(l => l.status === 'Not sure' && l.preset).reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0), gutTotal: allIn ? read(allIn, 'amount').v : null,
+    guessTotal: lines.filter(l => l.status === 'Not sure' && l.preset).reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0), gutTotal: allIn ? gutOf() : null,
     age: ageOf(doc.profile, now),
     bigEMultiplier: bigEMultiplierOf(doc.profile), // answer 172: Steady 1, Varies 1.25, Unpredictable 1.5, or the coach's number
     realReturn: a.realReturn ?? ref.presets.realReturn.default,
     withdrawalRate: a.withdrawalRate ?? ref.presets.withdrawalRate.default,
     inflation: a.inflation ?? ref.presets.inflation.default,
     retireAge: a.fiAge ?? a.retireAge ?? ref.defaults.retireAge, // FI target age if set, else Retire by, else 65 (answer to 10)
-    retirementSpending: a.retirementSpending ?? spending, // R030
+    retirementSpending: a.retirementSpending ?? spending, // R030 (known costs ahead are added in metrics, batch 15)
     hours: doc.profile.hours ?? {},
     roommates: doc.profile.roommates ?? 0,
   };
+  // Batch 15, items 6 and 13: known changes ahead (a covered bill that becomes yours, a line that starts on a date,
+  // benefits that end). Today's spending leaves them out; the projections and retirement spending put them in.
+  out.changes = datedChanges(out, { now });
+  out.laterSpending = out.changes.reduce((s, c) => s + (c.spending ?? 0), 0);
+  if (a.retirementSpending == null && spending !== null && out.laterSpending) out.retirementSpending = spending + out.laterSpending;
+  return out;
 }
 
 export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
@@ -210,25 +279,27 @@ export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
   // so they count when the surplus sits in checking and are already inside it when it is invested (no double count).
   const investSurplus = !(doc.assumptions?.investSurplus === false || doc.assumptions?.investSurplus === 0);
   const alreadyIn = pretaxSaving + match;
-  const contributions = (x.afterTaxSaving ?? 0) + (x.retirementLines ?? 0);
+  const goalSaving = x.goalSaving ?? 0; // question 214: paid out of the surplus into a 529 or a goal account, not FI money
+  const contributions = (x.afterTaxSaving ?? 0) - goalSaving + (x.retirementLines ?? 0);
   const surplus = out.surplus.value;
   // Batch 11, the debt rule (debtRuleOf): while heavy debt is carried the surplus goes to it first, by default. The
   // one debt plan every screen reads is built here; the FI path invests only what the paycheck already puts in until
   // the heavy debt is gone, then the surplus plus the freed heavy payments (or, with Surplus stays surplus, only the
   // contributions).
   const rule = debtRuleOf(doc, x.debts);
-  const toDebt = rule.on && surplus !== null ? Math.max(0, surplus - contributions) : 0;
+  const toDebt = rule.on && surplus !== null ? Math.max(0, surplus - contributions - goalSaving) : 0;
+  const surplusChanges = x.changes.filter(c => c.surplus).map(c => ({ at: c.at, monthly: c.surplus, name: c.name }));
   // Question 217 (follows Eli's "freed money follows the FOO"): FOO step 1 (the buffer and little e) fills from the
   // surplus before heavy debt gets it, so the money matches the step order.
   const lay1 = cashLayers(x, layerOptions(doc, ref, x, now));
   const firstLeft = RULES.freedFollowsFoo ? lay1.layers.filter(l => l.step === 1).reduce((s, l) => s + (l.left ?? 0), 0) : 0;
   const firstMonths = toDebt > 0 && firstLeft > 0.5 ? Math.ceil(firstLeft / toDebt - 1e-9) : 0;
-  out.debtPlan = debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: promoSoonIds(x.debts, now), surplus: toDebt, extra: x.debtExtra, surplusFrom: firstMonths });
+  out.debtPlan = debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: promoSoonIds(x.debts, now), surplus: toDebt, extra: x.debtExtra, surplusFrom: firstMonths, changes: rule.on ? surplusChanges : null });
   out.debtPlanMinimum = rule.on || x.debtExtra ? debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: promoSoonIds(x.debts, now) }) : out.debtPlan; // each debt at its own payment only
-  out.debtRule = { ...rule, toDebt, heavyMonths: out.debtPlan.heavyMonths, first: promoSoonIds(x.debts, now) };
+  out.debtRule = { ...rule, toDebt, heavyMonths: out.debtPlan.heavyMonths, first: promoSoonIds(x.debts, now), changes: rule.on ? surplusChanges : null };
   for (const d of [...x.debts, ...out.debts]) { const p = out.debtPlan.debts.find(q => q.id === d.id); d.planMonths = d.inFull ? null : p?.paidOffMonth ?? null; d.minimumMonths = d.inFull ? null : out.debtPlanMinimum.debts.find(q => q.id === d.id)?.paidOffMonth ?? null; d.heavy = isHeavyDebt(d); }
   const freed = rule.on ? out.debtPlan.heavyPayments : 0;
-  const invested = surplus === null ? null : alreadyIn + surplus + freed; // the surplus invested (and, after the heavy debt, its freed payments)
+  const invested = surplus === null ? null : alreadyIn + surplus - goalSaving + freed; // the surplus invested (and, after the heavy debt, its freed payments), less what goes to a 529 or a goal
   const idle = surplus === null ? null : alreadyIn + contributions; // the surplus sits in checking
   const monthlyInvesting = investSurplus ? invested : idle;
   const H = out.debtPlan.heavyMonths;
@@ -240,21 +311,22 @@ export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
     const lay = cashLayers(x, layerOptions(doc, ref, x, now));
     const bigELeft = lay.needsAge ? 0 : lay.layers.filter(l => l.id.startsWith('big-e')).reduce((s, l) => s + (l.left ?? 0), 0);
     const room = taxFreeRoom(doc, x, ref, now);
-    out.fooFlow = { ...freedFlow({ surplus: Math.max(0, surplus - contributions), heavyMonths: rule.on ? H : 0, freed, bigELeft, taxFreeLeft: room.left, firstMonths: rule.on ? firstMonths : 0, firstLeft }), room, bigELeft, bigETarget: lay.needsAge ? null : lay.layers.filter(l => l.id.startsWith('big-e')).reduce((s, l) => s + (l.target ?? 0), 0) };
+    out.fooFlow = { ...freedFlow({ surplus: Math.max(0, surplus - contributions - goalSaving), heavyMonths: rule.on ? H : 0, freed, bigELeft, taxFreeLeft: room.left, firstMonths: rule.on ? firstMonths : 0, firstLeft }), room, bigELeft, bigETarget: lay.needsAge ? null : lay.layers.filter(l => l.id.startsWith('big-e')).reduce((s, l) => s + (l.target ?? 0), 0) };
   } else out.fooFlow = null;
   const wait = out.fooFlow ? (out.fooFlow.waitMonths ?? RULES.maxMonths) : rule.on ? (H ?? RULES.maxMonths) : 0;
   const before = surplus !== null && wait > 0 ? { months: wait, monthly: alreadyIn + contributions, heavyMonths: rule.on ? (H ?? RULES.maxMonths) : 0 } : null; // while the surplus pays heavy debt, then fills big e
-  out.investing = { investSurplus, debtFirst: rule.on, alreadyIn, contributions, surplus: investSurplus ? surplus : 0, monthly: monthlyInvesting, invested, idle, before, freed, followsFoo: !!out.fooFlow };
-  const fi = (m$, b = before) => fiDate({ invested: x.invested, monthlyInvesting: m$, realReturn: x.realReturn, target: out.fiNumber.value }, { from: now, before: b });
+  const changes = investSurplus && surplus !== null ? surplusChanges : [];
+  out.investing = { investSurplus, debtFirst: rule.on, alreadyIn, contributions, surplus: investSurplus ? surplus : 0, monthly: monthlyInvesting, invested, idle, before, freed, followsFoo: !!out.fooFlow, changes };
+  const fi = (m$, b = before, ch = changes) => fiDate({ invested: x.invested, monthlyInvesting: m$, realReturn: x.realReturn, target: out.fiNumber.value }, { from: now, before: b, changes: ch });
   out.monthsToFi = fi(monthlyInvesting);
   // The paths, for the FI card: the one in use, with the surplus invested from today, and if it sits in checking.
-  out.fiPaths = { invested: fi(surplus === null ? null : alreadyIn + surplus, null), idle: fi(idle, null), debtFirst: rule.heavy ? fi(monthlyInvesting, { months: H ?? RULES.maxMonths, monthly: alreadyIn + contributions }) : null, followsFoo: out.fooFlow ? out.monthsToFi : null };
+  out.fiPaths = { invested: fi(surplus === null ? null : alreadyIn + surplus - goalSaving, null, surplusChanges), idle: fi(idle, null, []), debtFirst: rule.heavy ? fi(monthlyInvesting, { months: H ?? RULES.maxMonths, monthly: alreadyIn + contributions }) : null, followsFoo: out.fooFlow ? out.monthsToFi : null };
   if (out.monthsToFi.value === null && !out.monthsToFi.never) { // say what to type, not which result is missing
     const root = [...new Set([...out.surplus.needs, ...out.fiNumber.needs, ...(x.invested === null ? ['invested'] : [])])];
     if (root.length) out.monthsToFi = needs('M53', root, { unit: 'months' });
   }
   out.coastFi = coastFi({ fiNumber: out.fiNumber.value, realReturn: x.realReturn, age: x.age, retireAge: x.retireAge });
-  out.bigDeals = bigDeals({ invested: x.invested, monthlyInvesting, annualSpending: x.retirementSpending === null ? null : x.retirementSpending * 12 }, ref);
+  out.bigDeals = bigDeals({ invested: x.invested, monthlyInvesting, annualSpending: x.retirementSpending === null ? null : x.retirementSpending * 12 }, ref, { before, changes });
   out.hourly = hourlyRate({ takeHome: x.takeHome, ...x.hours }, ref);
   out.annualSpending = x.spending === null ? null : x.spending * 12;
   return out;
@@ -314,7 +386,7 @@ export function debtHeroOf(doc, m) {
   if (!m.debtRule?.heavy || !m.debtPlan?.debts.length) return null;
   const day0 = (doc.snapshots || []).find(s => s.day0) ?? null;
   const start = day0 ? (day0.records || []).filter(r => r.kind === 'debt' && r.values?.payChoice !== 'In full').reduce((s, r) => s + (r.values?.balance ?? 0), 0) : null;
-  const rerun = extra => debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: m.debtRule.first ?? [], surplus: m.debtRule.toDebt, extra: (x.debtExtra ?? 0) + extra, surplusFrom: m.debtPlan?.surplusFrom ?? 0 });
+  const rerun = extra => debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: m.debtRule.first ?? [], surplus: m.debtRule.toDebt, extra: (x.debtExtra ?? 0) + extra, surplusFrom: m.debtPlan?.surplusFrom ?? 0, changes: m.debtRule.changes ?? null });
   const card = debtFreeCard(m.debtPlan, { start, rerun, extras: heroExtras(m.debtPlan) });
   return card && { ...card, short: m.debtPlan.months != null && m.debtPlan.months <= RULES.shortPlanMonths, then: m.fooFlow?.bigEMonths ? { monthly: m.fooFlow.monthly, months: m.fooFlow.bigEEnd, taxFree: m.fooFlow.taxFreeEnd } : null }; // batch 12: what the money does next (M79)
 }

@@ -22,6 +22,8 @@ import { TUITION_GOAL } from '../community.js';
 import { holidayYm } from '../math/holidays.js';
 import { fiGate } from './report-ui.js';
 import { fiWordsOf } from '../math/picture.js';
+import { changeWords } from '../math/changes.js';
+import { outsourceCheck } from '../math/time.js';
 
 export const PUI = { extra: 0, pace: null, bands: true, chart: 'FI timeline', extraDebt: 0, reveal: false };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -124,7 +126,8 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
     h('div', {}, h('span.label', {}, 'FI date'),
       h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, fiWordsOf(m, gate.confidence, { now: ctx.now() }).text) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))),
       gate.unlocked && fiWhen != null ? h('span.muted', {}, `${ageAt(m, fiWhen) != null && gate.confidence?.word === 'High' ? `At ${ageAt(m, fiWhen)} · ` : ''}${fiWordsOf(m, gate.confidence, { now: ctx.now() }).years} `, confidenceTag(gate.confidence)) : null,
-      gate.unlocked ? investingLine(ctx, m) : null),
+      gate.unlocked ? investingLine(ctx, m) : null,
+      changesLines(ctx, m)),
     h('div', {}, h('span.label', {}, nominal ? 'FI number, in future dollars' : 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? (nominal && fiWhen != null
       ? S.mathButton({ ...m.fiNumber, text: `${m.fiNumber.text} With ${pct(inflation)} inflation a year for ${(fiWhen / 12).toFixed(1)} years: ${money(futureDollars(m.fiNumber.value, fiWhen, inflation))} then.` }, money(futureDollars(m.fiNumber.value, fiWhen, inflation)))
       : S.mathButton(m.fiNumber, money(m.fiNumber.value))) : h('span.muted', { style: { fontSize: '1rem' } }, 'Needs ', S.needLinks(ctx, m.fiNumber.needs)))),
@@ -153,7 +156,37 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
       h('div.preset-row', {}, h('span.label', {}, 'Life expectancy'), S.textInput(a.lifeExpectancy ?? null, v => setA({ lifeExpectancy: v === null ? null : Number(v) }), { hint: String(ref.defaults.lifeExpectancy), width: 90 })),
       h('div.preset-row', {}, h('span.label', {}, 'Social Security'), S.select(['Full scheduled', 'Reduced %', 'None'], a.socialSecurity ?? null, v => setA({ socialSecurity: v }), { label: 'Social Security', hint: 'Pick one', width: 170 }))), { label: 'More: inflation, life expectancy, Social Security' }));
   const fiCard = h('div.card.fi-card', { style: { marginBottom: '16px' } }, left, right);
-  return reveal ? [revealCard(app, ctx, m), bigDealsCard(ctx, m, gate), fiCard, ladderCard(ctx, m, gate)] : [fiCard, bigDealsCard(ctx, m, gate), ladderCard(ctx, m, gate)];
+  return reveal ? [revealCard(app, ctx, m), bigDealsCard(ctx, m, gate), fiCard, ladderCard(ctx, m, gate), outsourceLens(ctx, m)] : [fiCard, bigDealsCard(ctx, m, gate), ladderCard(ctx, m, gate), outsourceLens(ctx, m)];
+}
+
+// Batch 15, items 6 and 13: the known changes ahead, one line each ("Benefits end Jan 2027: your month changes by
+// -$3,766"). They are already in the FI date, the ladder, the debt plan and the calendar.
+function changesLines(ctx, m) {
+  const list = (m.inputs.changes || []).filter(c => Math.abs(c.surplus) >= 1).slice(0, 4);
+  if (!list.length) return null;
+  return h('div.stack.changes-ahead', { style: { gap: '2px', marginTop: '8px' } }, list.map(c => h('span.small', { title: 'Already in the FI date, the ladder and the calendar' }, changeWords(c))));
+}
+
+// Batch 15, item 12: is a service worth paying for? Cost a month against the hours it saves, at your real hourly
+// wage (M17). A what-if: nothing is saved. Typical costs are faded with one tap to use them.
+const OUTSOURCE = { Cleaning: { cost: 160, hours: 6 }, 'Meal prep': { cost: 300, hours: 10 }, Laundry: { cost: 80, hours: 4 }, Other: { cost: null, hours: null } };
+const OUT = { what: null, cost: null, hours: null };
+function outsourceLens(ctx, m) {
+  const rate = m.hourly;
+  const host = h('div');
+  const draw = () => {
+    const t = OUT.what ? OUTSOURCE[OUT.what] : null;
+    const cost = OUT.cost ?? t?.cost ?? null, hrs = OUT.hours ?? t?.hours ?? null;
+    const r = OUT.what ? outsourceCheck({ cost, hoursSaved: hrs }, rate) : null;
+    clear(host, h('div.row-line', { style: { gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' } },
+      S.labelled('Pay for', S.toggle(Object.keys(OUTSOURCE), OUT.what, v => { OUT.what = v; OUT.cost = null; OUT.hours = null; draw(); }, { label: 'Pay for' })),
+      OUT.what ? S.labelled('Costs a month', S.moneyInput(OUT.cost, v => { OUT.cost = v; draw(); }, { hint: t?.cost != null ? `${money(t.cost)} typical` : 'Add amount', key: 'out:cost', width: 120 })) : null,
+      OUT.what ? S.labelled('Hours it saves a month', S.toggle(['2', '4', '6', '10'], hrs == null ? null : String(hrs), v => { OUT.hours = Number(v); draw(); }, { label: 'Hours saved' })) : null),
+    r ? h('p', { style: { margin: '8px 0 0' } }, r.value == null ? h('span.muted', {}, `Needs ${r.needs.join(' and ')}.`) : S.mathButton(r, r.value >= 0 ? `Worth it: your ${hrs} hours are worth ${money(r.worth)} a month at ${money(rate.value, { cents: true })} an hour, and it costs ${money(cost)}.` : `Your ${hrs} hours are worth ${money(r.worth)} a month at ${money(rate.value, { cents: true })} an hour; it costs ${money(cost)}, ${money(-r.value)} more.`)) : null,
+    rate?.guess && OUT.what ? h('span.muted.small', {}, 'Your hourly wage is a guess until work hours are in (About you).') : null);
+  };
+  draw();
+  return S.moreBlock('goals:outsource', () => h('div.card.outsource', {}, host), { label: `Is it worth paying for? Your time at ${rate?.value ? `${money(rate.value, { cents: true })} an hour` : 'your hourly wage'}` });
 }
 
 // These are big deals (M56): one assumption at a time; click an option to use it.

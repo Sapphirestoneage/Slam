@@ -42,20 +42,25 @@ export function baristaFiNumber({ annualSpending, partTimeIncome, withdrawalRate
 // M53: months until invested reaches the FI number. Monthly growth then the month's investing.
 // before (batch 11, the debt rule): { months, monthly } goes in for the first months instead (while the surplus pays
 // heavy debt first), then monthlyInvesting.
-export function fiDate({ invested, monthlyInvesting, realReturn, target }, { from = new Date(), path = false, before = null } = {}) {
+// changes (batch 15, items 6 and 13): known changes ahead, each { at, monthly }: from month at on, what goes in each
+// month moves by monthly (a bill that becomes yours: less; benefits that end: less). They apply after the debt-first
+// months, which the debt plan already stretches for them.
+export const changeAt = (changes, k) => (changes || []).reduce((s, c) => s + (c.at <= k ? c.monthly : 0), 0);
+export function fiDate({ invested, monthlyInvesting, realReturn, target }, { from = new Date(), path = false, before = null, changes = null } = {}) {
   const m = missing({ invested, 'monthly investing': monthlyInvesting, 'return': realReturn, 'FI number': target });
   if (m.length) return needs('M53', m, { unit: 'months' });
   const g = (1 + realReturn) ** (1 / 12);
   let b = invested, n = 0;
   const points = [b];
-  const going = k => (before && k < before.months ? before.monthly : monthlyInvesting);
+  const going = k => (before && k < before.months ? before.monthly : monthlyInvesting + changeAt(changes, k));
   while (b < target && n < MAX_MONTHS) { b = b * g + going(n); n += 1; if (path) points.push(b); }
   if (b < target) {
     return { id: 'M53', value: null, needs: [], never: true, unit: 'months', guess: false,
       text: 'Not on this path within 70 years. Try the solver to see what would get there.', points: path ? points : undefined };
   }
+  const later = (changes || []).filter(c => c.monthly && c.at > 0);
   const lead = before && before.months > 0 ? `adding ${fmt.money(before.monthly)} a month for the ${before.months} ${before.months === 1 ? 'month' : 'months'} ${waitWords(before)}, then ${fmt.money(monthlyInvesting)} a month` : `adding ${fmt.money(monthlyInvesting)} a month`;
-  return { ...ok('M53', n, `Starting at ${fmt.money(invested)}, growing ${fmt.pct(realReturn)} a year after inflation and ${lead}, investments reach ${fmt.money(target)} in ${duration(n, from)}.`, { unit: 'months' }), points: path ? points : undefined };
+  return { ...ok('M53', n, `Starting at ${fmt.money(invested)}, growing ${fmt.pct(realReturn)} a year after inflation and ${lead}, investments reach ${fmt.money(target)} in ${duration(n, from)}.${later.length ? ` Known changes ahead are in: ${later.map(c => `${c.monthly < 0 ? 'less' : 'more'} ${fmt.money(Math.abs(c.monthly))} a month from month ${c.at + 1}${c.name ? ` (${c.name})` : ''}`).join(', ')}.` : ''}`, { unit: 'months' }), points: path ? points : undefined };
 }
 
 // What the months before the surplus is invested are for (batch 12, M79): heavy debt first, then big e.
@@ -71,7 +76,7 @@ export function waitWords(before) {
 export function fiRangeOf(m, share, { from = new Date() } = {}) {
   const x = m.inputs, spend = x.retirementSpending, going = m.investing?.monthly ?? null;
   if (isBlank(spend) || isBlank(x.invested) || going === null || isBlank(x.withdrawalRate)) return null;
-  const run = k => fiDate({ invested: x.invested, monthlyInvesting: going - (m.investing.investSurplus ? spend * (k - 1) : 0), realReturn: x.realReturn, target: spend * 12 * k / x.withdrawalRate }, { from, before: m.investing.before ?? null });
+  const run = k => fiDate({ invested: x.invested, monthlyInvesting: going - (m.investing.investSurplus ? spend * (k - 1) : 0), realReturn: x.realReturn, target: spend * 12 * k / x.withdrawalRate }, { from, before: m.investing.before ?? null, changes: m.investing.changes ?? null });
   const lo = run(1 - share), hi = run(1 + share);
   return { share, low: lo.value, high: hi.value, highNever: !!hi.never, lowNever: !!lo.never, base: m.monthsToFi.value };
 }
@@ -85,7 +90,7 @@ export function saferFi(m, { from = new Date() } = {}) {
   const fiAge = x.age + base / 12;
   if (fiAge >= RULES.saferUnderAge) return null;
   const target = x.retirementSpending * 12 / RULES.saferWithdrawal;
-  const r = fiDate({ invested: x.invested, monthlyInvesting: m.investing?.monthly ?? 0, realReturn: x.realReturn, target }, { from, before: m.investing?.before ?? null });
+  const r = fiDate({ invested: x.invested, monthlyInvesting: m.investing?.monthly ?? 0, realReturn: x.realReturn, target }, { from, before: m.investing?.before ?? null, changes: m.investing?.changes ?? null });
   const monthAt = n => new Date(from.getFullYear(), from.getMonth() + n, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   return { rate: RULES.saferWithdrawal, fiAge, target, months: r.value, never: !!r.never, text: r.never ? `At a safer ${(RULES.saferWithdrawal * 100).toFixed(1)}% for a longer retirement: not on this path within 70 years` : `At a safer ${(RULES.saferWithdrawal * 100).toFixed(1)}% for a longer retirement: FI ${monthAt(r.value)}`, words: `FI at ${Math.round(fiAge)} is a long retirement; ${(RULES.saferWithdrawal * 100).toFixed(1)}% needs ${Math.round(target).toLocaleString('en-US')} instead of ${Math.round(m.fiNumber.value).toLocaleString('en-US')}.` };
 }
@@ -108,16 +113,18 @@ export function pctToFi(invested, targets) {
 }
 
 // M56: These are big deals. One assumption at a time, the rest at default.
-export function bigDeals({ invested, monthlyInvesting, annualSpending }, ref) {
+// opts (batch 15): the same path as the FI date (the debt-first months and the known changes ahead), so the
+// highlighted preset shows the same date as the FI card.
+export function bigDeals({ invested, monthlyInvesting, annualSpending }, ref, { before = null, changes = null } = {}) {
   const p = ref.presets;
   const base = { r: p.realReturn.default, w: p.withdrawalRate.default };
-  const run = (r, w, spend = annualSpending) => fiDate({ invested, monthlyInvesting, realReturn: r, target: isBlank(spend) ? null : spend / w }).value;
+  const run = (r, w, spend = annualSpending) => fiDate({ invested, monthlyInvesting, realReturn: r, target: isBlank(spend) ? null : spend / w }, { before, changes }).value;
   const baseline = run(base.r, base.w);
   // Spending moves both the FI number and what is left to invest each month.
   const runSpending = k => {
     if (isBlank(annualSpending) || isBlank(monthlyInvesting)) return null;
     const delta = annualSpending * (k - 1) / 12;
-    return fiDate({ invested, monthlyInvesting: monthlyInvesting - delta, realReturn: base.r, target: annualSpending * k / base.w }).value;
+    return fiDate({ invested, monthlyInvesting: monthlyInvesting - delta, realReturn: base.r, target: annualSpending * k / base.w }, { before, changes }).value;
   };
   const rows = [
     { assumption: 'Return', presets: p.realReturn.values.map(r => ({ preset: r, months: run(r, base.w) })) },

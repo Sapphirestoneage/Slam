@@ -14,7 +14,7 @@ import { addMonths, ymOf, monthName } from '../month.js';
 import { gatesOf, gatedOut } from '../gates.js';
 import { keepPlace } from './place.js';
 import { opened, install as installDismiss } from './dismiss.js';
-import { PERSONS, personLabels, onePerson, ownerOf, modeOf } from '../registry/couples.js';
+import { PERSONS, personLabels, onePerson, ownerOf, modeOf, ownPlanPerson } from '../registry/couples.js';
 import { isBlankRow } from '../completion.js';
 export { keepPlace };
 
@@ -34,7 +34,9 @@ export function createCtx({ store, ref, now = () => new Date() }) {
     gates() { return gatesOf(store.doc.profile, store.doc.client); },
     // Rows that apply to this household: a gate that says no takes them off every list (R001).
     visible(pred) { const g = ctx.gates(); return store.find(r => pred(r) && !gatedOut(r, g, ref)); },
-    metrics() { return (cache ??= metrics(store.doc, ref, { now: now() })); },
+    // Batch 15 (question 212): a couple with no combined totals (Dating, Living together) sees one person's own plan
+    // everywhere, this client's unless the person switch says the partner's.
+    metrics() { return (cache ??= metrics(store.doc, ref, { now: now(), person: ownPlanPerson(store.doc) })); },
     // Screens register here; the shell clears them when it leaves the screen (keep: shell-level).
     onRefresh(fn, { keep = false } = {}) { fn.keep = keep; listeners.add(fn); return () => listeners.delete(fn); },
     clearScreen() { for (const fn of listeners) if (!fn.keep) listeners.delete(fn); },

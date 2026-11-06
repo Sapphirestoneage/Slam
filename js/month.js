@@ -7,7 +7,7 @@ import { myShare, withHome } from './math/spending.js';
 import { payoffPlan } from './math/debt.js';
 import { runningBalance, gutSpread } from './math/calendar.js';
 import { inputsOf } from './math/metrics.js';
-import { monthlyFrom } from './math/income.js';
+import { monthlyFrom, quarterlySetAside } from './math/income.js';
 
 // ---------- Dates (UTC, so a day is a day everywhere) ----------
 export const ymOf = (d = new Date()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
@@ -76,16 +76,30 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) 
   const cards = new Map(live.filter(r => r.kind === 'debt' && r.type === 'Credit card').map(r => [r.id, r]));
 
   const inputs = inputsOf(doc, ref, now);
-  // Paychecks (green), by pay frequency.
+  // A month ahead is read as of that month (batch 15, item 6): a covered bill that becomes yours, a line that starts.
+  const later = ym > ymOf(now) ? new Date(Date.UTC(Number(ym.slice(0, 4)), Number(ym.slice(5)) - 1, 15, 12)) : now;
+  // Paychecks (green), by pay frequency. Unemployment lands weekly until its end date (batch 15, item 13). Self-
+  // employment pay lands before tax; its tax goes out on the quarterly due dates (batch 15, item 3).
   for (const x of inputs.income) {
     const r = x.r;
     const monthly = x.takeHome?.value;
     if (monthly == null) continue;
-    const every = r.values.payFrequency || 'month';
-    const per = monthly * 12 / (PAYS[every] || 12);
+    const every = r.values.payFrequency || (x.benefit ? 'week' : 'month');
+    const setAside = x.taxType === '1099' && x.tax ? x.tax.total / 12 : 0;
+    const per = (monthly + setAside) * 12 / (PAYS[every] || 12);
     const guessDate = !r.values.nextPayday && !r.values.payDays && !r.values.payDay;
-    for (const date of repeatDays(ym, { every, anchor: r.values.nextPayday || ANCHOR, days: r.values.payDays, day: r.values.payDay || 1 })) {
-      push(r, { kind: 'income', group: 'Income', name: r.name || r.type || 'Paycheck', date, planned: per, guessDate });
+    const anchor = r.values.nextPayday || (x.benefit && r.values.benefitStart) || ANCHOR;
+    for (const date of repeatDays(ym, { every, anchor, days: r.values.payDays, day: r.values.payDay || 1 })) {
+      if (x.benefit?.end && date > x.benefit.end) continue;
+      if (x.benefit?.start && date < x.benefit.start) continue;
+      push(r, { kind: 'income', group: 'Income', name: r.name || r.type || 'Paycheck', date, planned: per, guessDate: guessDate && !(x.benefit && r.values.benefitStart) });
+    }
+  }
+  const q = quarterlySetAside(inputs.householdTax, ref, { year: Number(ym.slice(0, 4)), paid: 0 });
+  if (q?.quarterly > 0) {
+    for (const md of ref.tax.quarterlyDue || []) {
+      if (md.slice(0, 2) !== ym.slice(5)) continue;
+      out.push({ key: `tax:quarterly@${ym}-${md.slice(3)}`, recId: null, kind: 'tax', group: 'Bills', name: 'Quarterly estimated tax', date: `${ym}-${md.slice(3)}`, origDate: `${ym}-${md.slice(3)}`, planned: -q.quarterly, status: marks[`tax:quarterly@${ym}-${md.slice(3)}`]?.status || 'Planned', paid: null, note: null });
     }
   }
   // Bills: fixed date on its day; variable date spread week by week (R140). On a card: shown on the card (R101).
@@ -106,7 +120,7 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) 
       push(r, { kind: 'bill', group: 'Bills', name: r.name || 'Prepaid', date: r.covers.datePaid, planned: -r.amount, lineId: r.id, onCard: cards.get(r.paidWith)?.name ?? null });
       continue;
     }
-    const monthly = myShare(line, { roommates }).value;
+    const monthly = myShare(line, { roommates, now: later }).value;
     if (!monthly) continue;
     const group = r.values.draftt === 'Retirement' || /saving/i.test(r.values.category || '') ? 'Savings' : 'Bills';
     const onCard = cards.get(r.paidWith)?.name ?? null;
@@ -381,4 +395,49 @@ export function mark(store, key, patch) {
   const next = { ...cur, ...patch };
   if (next.status === 'Planned') return store.setIn('spending', ['calendar', 'marks', key], next.bucket ? { bucket: next.bucket } : undefined, 'Back to planned'); // a chosen bucket stays
   return store.setIn('spending', ['calendar', 'marks', key], next, patch.status ? `Marked ${patch.status}` : 'Edit');
+}
+
+// ---------- The Bills list (batch 15, item 9; Monarch recurring, Rocket Money subscriptions) ----------
+// One list of every repeating charge: Budget lines that repeat on a day or are fixed (bills, subscriptions), yearly
+// costs, debt payments and insurance premiums paid from the budget. Each: amount, how often, the next date, paid with,
+// and Keep or Try to cut (stored as decision Keep or Cancel, like the Budget's Looking for savings). By next date.
+export function recurringBills(doc, ref, now = new Date()) {
+  const x = inputsOf(doc, ref, now);
+  const live = visible(doc.records, gatesOf(doc.profile, doc.client), ref);
+  const byId = new Map(live.map(r => [r.id, r]));
+  const today = now.toISOString().slice(0, 10), here = ymOf(now);
+  const nextDay = day => { const d = dateOf(here, day); return d >= today ? d : dateOf(addMonths(here, 1), day); };
+  const payer = r => { const p = r?.paidWith; if (!p) return null; const q = byId.get(p); return q ? q.name || q.type : p === 'card' ? 'Credit card' : p === 'checking' ? 'Checking' : null; };
+  const out = [];
+  for (const l of x.typedLines) {
+    if (x.dupOf[l.id] || l.status === 'Not for me') continue;
+    const r = byId.get(l.id);
+    if (!r) continue;
+    const monthly = myShare(l, { roommates: x.roommates, now }).value;
+    if (r.values.irregular) {
+      if (r.amount == null) continue;
+      const mo = Number(r.values.monthDue) || null;
+      const ym = mo ? `${now.getUTCFullYear()}-${String(mo).padStart(2, '0')}` : null;
+      const next = ym ? (dateOf(ym, r.values.dueDay || 1) >= today ? dateOf(ym, r.values.dueDay || 1) : dateOf(`${now.getUTCFullYear() + 1}-${String(mo).padStart(2, '0')}`, r.values.dueDay || 1)) : null;
+      out.push({ id: r.id, kind: 'bill', name: r.name || r.values.category || 'Yearly cost', amount: r.values.myShare ?? r.amount, often: 'Yearly', monthly: (r.values.myShare ?? r.amount) / 12, next, paidWith: payer(r), decision: r.values.decision ?? null, cut: true });
+      continue;
+    }
+    const repeats = r.values.amountType === 'Fixed' || r.values.dueDay || r.values.category === 'Subscriptions' || r.values.draftt === 'Bills';
+    if (!repeats || !monthly || r.values.timing === 'Variable date' || r.values.timing === 'Spread out') continue;
+    if (r.values.timing === 'Weekly') { const days = weekdayDays(here, r.values.weekday ?? SHABBAT_SPEND_DAY).filter(d => d >= today); out.push({ id: r.id, kind: 'bill', name: r.name || r.values.category, amount: monthly * 12 / 52, often: 'Weekly', monthly, next: days[0] ?? null, paidWith: payer(r), decision: r.values.decision ?? null, cut: true }); continue; }
+    const often = r.per === 'year' ? 'Yearly' : r.per === 'quarter' ? 'Every 3 months' : 'Monthly';
+    out.push({ id: r.id, kind: 'bill', name: r.name || r.values.category || 'Bill', amount: often === 'Monthly' ? monthly : r.amount, often, monthly, next: r.values.dueDay ? nextDay(Number(r.values.dueDay)) : null, paidWith: payer(r), decision: r.values.decision ?? null, cut: true });
+  }
+  for (const d of x.debts) {
+    if (d.inFull || !d.payment || !(d.balance > 0)) continue;
+    const r = byId.get(d.id);
+    out.push({ id: d.id, kind: 'debt', name: `${d.name} payment`, amount: d.payment, often: 'Monthly', monthly: d.payment, next: r?.values.dueDay ? nextDay(Number(r.values.dueDay)) : null, paidWith: payer(r), decision: null, cut: false });
+  }
+  for (const r of live.filter(q => q.kind === 'coverage' && q.amount != null && q.values.have !== "Don't")) {
+    if ((r.values.paidFrom ?? (r.per === 'paycheck' ? 'Paycheck' : null)) === 'Paycheck') continue; // taken from the paycheck, not a bill
+    const monthly = monthlyFrom(r.amount, r.per ?? 'month').value;
+    out.push({ id: r.id, kind: 'coverage', name: `${r.name || r.type} premium`, amount: r.amount, often: r.per === 'year' ? 'Yearly' : 'Monthly', monthly, next: r.values.dueDay ? nextDay(Number(r.values.dueDay)) : null, paidWith: payer(r), decision: r.values.decision ?? null, cut: true });
+  }
+  out.sort((a, b) => (a.next ?? '9999').localeCompare(b.next ?? '9999') || b.monthly - a.monthly);
+  return { items: out, monthly: out.reduce((s, i) => s + (i.monthly ?? 0), 0), toCut: out.filter(i => i.decision === 'Cancel').reduce((s, i) => s + (i.monthly ?? 0), 0) };
 }
