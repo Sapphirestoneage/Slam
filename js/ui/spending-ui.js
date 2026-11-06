@@ -14,7 +14,10 @@ import { ownLineHidden } from '../privacy.js';
 import { ownPlanPerson } from '../registry/couples.js';
 // Batch 45 (QUESTIONS 348): Calendar and Month end read the whose-numbers switch for a couple with no combined totals
 // (Dating, Living together), as Statements does: one person's own plan (their rows, a shared bill at their share).
-const viewPerson = ctx => ownPlanPerson(ctx.store.doc) ?? null;
+// Batch 58 (QUESTIONS 413): past two adults they read the adult the switch is on in any mode (ctx.listPerson).
+const viewPerson = ctx => ctx.listPerson ?? ownPlanPerson(ctx.store.doc) ?? null;
+// The Budget's month: the household's, or one adult's (their lines, a shared one at their part) when the lists follow the switch.
+const budgetMonth = ctx => monthView(ctx.store.doc, ctx.ref, UI.ym, { now: ctx.now(), person: ctx.listPerson ?? null });
 import { spendingList, categoryList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.js';
 import { ensureCategories } from '../presets.js';
 import { ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
@@ -65,21 +68,21 @@ export function budgetScreen(app, ctx) {
         { note: 'Accrual spreads yearly and prepaid costs across the months' }),
       S.labelled('Period', S.toggle(Object.keys(PERIOD), UI.period, v => { UI.period = v || 'Monthly'; redraw(); }, { label: 'Period' })), // batch 13: 4 choices are a tap
       S.labelled('Cards', S.checkbox('Most spending goes on cards', cardsMost, v => ctx.store.setDoc('profile', { mostOnCards: v })), { note: 'Shows Paid with on every line' })), { label: 'Settings for this budget' }));
-  const view = monthView(doc, ctx.ref, UI.ym, { now: ctx.now() });
+  const view = budgetMonth(ctx);
   if (UI.pass !== 'Actual') UI.pass = 'Plan';
   // Answer 89: the Plan column appears once a month differs from the usual for any line, and goes when none do.
   const payFreq = () => ctx.metrics().inputs.payFrequency ?? null;
   const planCol = () => planDiffs(doc, UI.ym, ctx.store.find(r => r.kind === 'bill' && !r.values.irregular), payFreq()).size > 0;
   const shownPlanCol = planCol();
   ctx.onRefresh(() => { if (UI.pass === 'Plan' && planCol() !== shownPlanCol) S.keepPlace(() => app.render()); });
-  const body = [UI.pass === 'Plan' ? S.live(ctx, () => gutBox(ctx, monthView(doc, ctx.ref, UI.ym, { now: ctx.now() }))) : null,
+  const body = [UI.pass === 'Plan' ? S.live(ctx, () => gutBox(ctx, budgetMonth(ctx))) : null,
     h('div.visuals', {}, UI.pass === 'Plan' && UI.budgetView === 'categories' ? S.recordList(ctx, categoryList(ctx.ref, { pass: UI.pass, ym: UI.ym }))
       : S.recordList(ctx, spendingList(ctx.ref, { pass: UI.pass, ym: UI.ym, groupBy: UI.groupBy, paidWithColumn: cardsMost, planColumn: shownPlanCol })),
       S.visualsPanel(ctx, { charts: budgetCharts, area: 'needs' })),
     UI.pass === 'Plan' ? S.sec('budget:fast-track', { title: 'Fast Track totals (by area)', summary: fastTrackSummary(doc) }, () => fastTrackTotals(ctx)) : null];
   // The strip follows the lines as they change (the lists keep their own state, so the screen is not rebuilt).
   const strip = h('div', {}, budgetStrip(ctx, view));
-  ctx.onRefresh(() => S.keepPlace(() => clear(strip, budgetStrip(ctx, monthView(doc, ctx.ref, UI.ym, { now: ctx.now() })))));
+  ctx.onRefresh(() => S.keepPlace(() => clear(strip, budgetStrip(ctx, budgetMonth(ctx)))));
   // Batch 10: the one-time note for a file whose untouched starter amounts turned faded.
   const fadedNote = doc.settings?.fadedNote ? h('div.slim-note', { role: 'status' }, h('span', {}, 'Starter amounts you never changed are now shown faded. Use them with one click, or type the real number.'),
     h('button.icon-btn.tiny', { type: 'button', 'aria-label': 'Close this note', 'data-tip': 'Close', onclick: () => ctx.store.setDoc('settings', { fadedNote: null }) }, icon('x'))) : null;
@@ -131,7 +134,7 @@ function budgetStrip(ctx, view) {
   const buckets = sum(m.inputs.categories ?? [], c => (c.else?.from === 'bucket' ? c.else.bucket : 0)); // batch 10: an Everything else rough amount, while none of its pieces has a number
   const variable = sum(lines.filter(r => r.values.amountType !== 'Fixed'), monthlyOf) + buckets;
   const yearly = ctx.visible(r => r.kind === 'bill' && r.values.irregular && r.amount != null);
-  const setAside = cash ? sum(yearly.filter(r => String(r.values.monthDue) === String(Number(UI.ym.slice(5)))), r => r.amount) : sum(yearly, r => r.amount / 12);
+  const setAside = cash ? sum(yearly.filter(r => String(r.values.monthDue) === String(Number(UI.ym.slice(5)))), r => r.amount * S.viewPart(ctx, r)) : sum(yearly, r => r.amount * S.viewPart(ctx, r) / 12); // batch 58: one adult's part
   const res = (v, text) => ({ id: 'M23', value: v * k, needs: [], unit: 'money', text });
   // Batch 10: until a line has a real amount (or a category is typed), the gut number is the only spending number shown.
   const anyReal = lines.length > 0 || autos.length > 0 || (m.inputs.categories ?? []).some(c => c.typed != null || c.else?.bucket != null);

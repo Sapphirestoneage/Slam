@@ -49,7 +49,7 @@ export function institutionsCard(app, ctx) {
         S.select(INSTITUTION_KINDS, i.kind ?? null, v => updateInstitution(ctx.store, i.id, { kind: v }), { label: `${i.name} kind`, hint: 'Kind', width: 150 }),
         S.textInput(i.website, v => updateInstitution(ctx.store, i.id, { website: v }), { hint: 'Website (optional)', width: 190, key: `inst:${i.id}:web` }),
         i.website ? h('a', { href: /^https?:/.test(i.website) ? i.website : `https://${i.website}`, target: '_blank', rel: 'noopener' }, 'Open site ›') : null,
-        ctx.couple ? S.toggle([['Me', names.Me], ['Partner', names.Partner], ['Joint', 'Joint']], i.owner ?? null, v => updateInstitution(ctx.store, i.id, { owner: v }), { label: `${i.name} whose`, clearable: true }) : null,
+        ctx.multi ? S.whosePick(doc, i.owner, v => updateInstitution(ctx.store, i.id, { owner: v }), { label: `${i.name} whose` }) : null, // batch 58 (QUESTIONS 415): every adult by name
         csv ? h('span.tag.plain', { title: 'A bank CSV column map is saved for this institution' }, 'CSV map saved') : null,
         h('span.spacer'), S.iconButton('trash', `Remove ${i.name}`, () => { removeInstitution(ctx.store, i.id); S.toast(`${i.name} removed; its rows keep their nicknames.`, { undo: () => ctx.store.undo() }); }, { tiny: true })),
       h('div.row-line', { style: { gap: '8px', marginTop: '4px' } }, S.textInput(i.notes, v => updateInstitution(ctx.store, i.id, { notes: v }), { hint: 'Notes (never a login or password)', width: 420, key: `inst:${i.id}:notes` })),

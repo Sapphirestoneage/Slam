@@ -13,7 +13,7 @@
 // This is the one layer data passes through on its way out of the coach's view: the app's ctx reads its doc through
 // viewStore (Client view and the couple views), and shareDoc / shareCtx feed every shared output.
 import { LISTS } from './registry/assumptions.js';
-import { MODES, modeOf, ownerOf, bothPreviewOn, validPerson, extraAdults, EXTRA_IDS } from './registry/couples.js';
+import { MODES, modeOf, ownerOf, bothPreviewOn, validPerson, extraAdults, EXTRA_IDS, listsFollowView } from './registry/couples.js';
 import { platformOf } from './math/earnings.js';
 import { CONTROL_KEYS } from './math/control.js';
 
@@ -47,6 +47,13 @@ export function personView(doc) {
   const mode = modeOf(doc?.profile), p = doc?.settings?.person;
   const v = p ?? (mode ? MODES[mode].view : 'all');
   return v === 'all' && mode && !MODES[mode].together && !bothPreviewOn(doc) ? 'Me' : validPerson(doc, v); // batch 33: Living together's Both preview; batch 49: any adult in the plan
+}
+// Batch 58 (QUESTIONS 413): the adult whose rows the lists show (null: every row, as the household's books). One
+// adult's view, in a household whose lists follow the switch (listsFollowView); Everyone and a couple read null.
+export function listPersonOf(doc) {
+  if (!listsFollowView(doc)) return null;
+  const v = personView(doc);
+  return v && v !== 'all' ? v : null;
 }
 // Batch 49: a couple, or any household with more than one adult in the plan (each adult has a view of their own).
 const isCouple = doc => { const mode = modeOf(doc?.profile); return !!(mode && MODES[mode].couple) || extraAdults(doc).length > 0; };

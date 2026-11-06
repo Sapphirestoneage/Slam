@@ -696,7 +696,7 @@ button.seen-line:hover .seen-word { text-decoration: underline; }
 .private-line svg { width: 14px; height: 14px; flex: none; }
 
 /* Batch 49: About you › People (households of any size). One grid, so every row's boxes line up down the column. */
-.people-table { display: grid; grid-template-columns: minmax(170px, 200px) minmax(0, 1fr) minmax(110px, 180px) 40px; gap: 8px 12px; align-items: center; }
+.people-table { display: grid; grid-template-columns: minmax(170px, 200px) minmax(0, 1fr) 96px minmax(110px, 180px) 40px; gap: 8px 12px; align-items: center; } /* batch 58: Born */
 .people-row { display: contents; }
 .people-head .label { padding-bottom: 2px; }
 .people-sum { margin: 0; }
@@ -704,9 +704,15 @@ button.seen-line:hover .seen-word { text-decoration: underline; }
 .split-pcts { display: flex; flex-wrap: wrap; gap: 8px; }
 @media (max-width: 640px) {
   .people-table { grid-template-columns: minmax(0, 1fr) 40px; }
-  .people-row > :nth-child(2), .people-row > :nth-child(3) { grid-column: 1 / 2; }
+  .people-row > :nth-child(2), .people-row > :nth-child(3), .people-row > :nth-child(4) { grid-column: 1 / 2; }
   .people-head { display: none; }
 }
 .people-row .person-name { padding: 6px 0; }
+/* Batch 58: the birth-year chip and the Taxes link sit at the start of their cells; the chip is one width down the column. */
+.people-row .birth-chip { justify-self: start; min-width: 84px; justify-content: space-between; }
+.people-row .tax-link { justify-self: start; }
+.birth-pop .picks { flex-wrap: wrap; }
 /* Batch 49: one width for the Owner chip down a table, so a short name (Dev) and a long one (Joint, Riley) leave the next column level. */
 table.rows tr.row .owner-chip { min-width: 84px; justify-content: space-between; }
+/* Batch 58: one adult's part of a shared row, on the slim line under it. */
+tr.row-note .part-line { margin-right: 12px; }

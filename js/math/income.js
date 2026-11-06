@@ -284,8 +284,11 @@ export function householdRates(hh, ref, { person = 'Me' } = {}) {
   const fica = (ssBase < ref.tax.socialSecurityWageBase ? ref.tax.socialSecurityRate : 0) + ref.tax.medicareRate + ((u?.base ?? 0) > ref.tax.additionalMedicareOver[hh.joint && !OWN_RETURN.has(who) ? 'joint' : 'single'] ? ref.tax.additionalMedicareRate : 0);
   const ficaMarginal = mine.length || !Object.values(hh.rows).length ? fica : 0;
   const marginal = (u?.federalMarginal ?? 0) + (u?.stateMarginal ?? 0) + ficaMarginal;
-  const effective = t.all / t.gross;
-  return { ...ok('M14', effective, `All tax on the return${Object.keys(hh.units).length > 1 ? 's' : ''} (${fmt.money(t.all)}) over everything taxed (${fmt.money(t.gross)}) = ${fmt.pct(effective)}. The next dollar of pay is taxed at ${fmt.pct(marginal)}: federal ${fmt.pct(u?.federalMarginal ?? 0)}${u?.stateMarginal ? ` + state and city ${fmt.pct(u.stateMarginal)}` : ''} + FICA ${fmt.pct(ficaMarginal)}.`, { unit: 'pct' }),
+  // Batch 58: an adult with a return of their own reads their own return (their tax over their gross), as their view does.
+  const ownRows = OWN_RETURN.has(who) ? Object.values(hh.rows).filter(r => r.person === who) : null;
+  const all = ownRows ? ownRows.reduce((s2, r) => s2 + r.total, 0) : t.all, taxedGross = ownRows ? ownRows.reduce((s2, r) => s2 + (r.gross ?? 0), 0) : t.gross;
+  const effective = taxedGross ? all / taxedGross : 0;
+  return { ...ok('M14', effective, `All tax on ${ownRows ? 'their own return' : `the return${Object.keys(hh.units).length > 1 ? 's' : ''}`} (${fmt.money(all)}) over everything taxed (${fmt.money(taxedGross)}) = ${fmt.pct(effective)}. The next dollar of pay is taxed at ${fmt.pct(marginal)}: federal ${fmt.pct(u?.federalMarginal ?? 0)}${u?.stateMarginal ? ` + state and city ${fmt.pct(u.stateMarginal)}` : ''} + FICA ${fmt.pct(ficaMarginal)}.`, { unit: 'pct' }),
     effective, marginal, federalMarginal: u?.federalMarginal ?? 0, stateMarginal: u?.stateMarginal ?? 0, ficaMarginal };
 }
 

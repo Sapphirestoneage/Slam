@@ -167,24 +167,26 @@ export const MATH = [
       { area: 'income', key: 'medPart', label: 'Medicare a year', unit: 'money', f: 'IF({@stack}="","",{@ficaBase}*Medicare_rate*IF({@taxType}="1099",2,1))' },
       { area: 'income', key: 'own', label: 'Adds to taxable income (federal)', unit: 'money',
         f: 'IF({@stack}="","",MAX(0,{@taxedGross}-N({@pretax})-IF({@taxType}="1099",({@ssPart}+{@medPart})/2,0)))' },
+      // Batch 58: each return by its own unit: the couple's joint return (Household), else the filing status, and an adult
+      // past the couple (P3 to P7) on a Single return of their own (QUESTIONS 412), as the app's householdTax does.
       { area: 'income', key: 'taxable', label: 'Taxable a year (federal), the return through this row', unit: 'money',
-        f: 'IF({@stack}="","",MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<="&{@stack})-IF(Taxes_joint="Yes",StdDed_joint,IF(Taxes_filing="Head of household",StdDed_head,StdDed_single))))' },
+        f: 'IF({@stack}="","",MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<="&{@stack})-IF({@taxUnit}="Household",StdDed_joint,IF(AND(Taxes_filing="Head of household",NOT(OR({@taxUnit}="P3",{@taxUnit}="P4",{@taxUnit}="P5",{@taxUnit}="P6",{@taxUnit}="P7"))),StdDed_head,StdDed_single))))' },
       // Batch 35 (QUESTIONS 300): the federal tips deduction, once per return: the reported tips kept (tipsQ, never past the
       // row's taxed gross), up to Tips_cap, less Tips_phaseStep for each $1,000 of income over the line; none married
       // filing separately or outside its years. Each tipped row takes its share of what the return saves, by its tips.
       { area: 'income', key: 'tipsQ', label: 'Reported tips kept a year (tips deduction)', unit: 'money',
         f: 'IF(OR({@workMode}="",{@stack}=""),"",MIN(MAX(0,{@taxedGross}),IF({@workMode}="Shifts",MAX(0,{@tipsTaxedMo}-{@outTaxedMo}),N({@cardMo})+IF({cashReported}="Yes",MAX(0,N({@cashMo})-{@tipOutMo}),0))*12))' },
       { area: 'income', key: 'tipsDed', label: 'Tips deduction on this return a year', unit: 'money',
-        f: (rec, c) => `IF(OR({@stack}="",N({@tipsQ})=0),"",IF(OR(Taxes_filing="Married separately",${c.now.getFullYear()}<Tips_firstYear,${c.now.getFullYear()}>Tips_lastYear),0,MAX(0,MIN(Tips_cap,SUMIFS(Income_tipsQ,Income_taxUnit,{@taxUnit}))-MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit})-IF(Taxes_joint="Yes",Tips_phaseJoint,Tips_phaseSingle))*Tips_phaseStep/1000)))` },
+        f: (rec, c) => `IF(OR({@stack}="",N({@tipsQ})=0),"",IF(OR(Taxes_filing="Married separately",${c.now.getFullYear()}<Tips_firstYear,${c.now.getFullYear()}>Tips_lastYear),0,MAX(0,MIN(Tips_cap,SUMIFS(Income_tipsQ,Income_taxUnit,{@taxUnit}))-MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit})-IF({@taxUnit}="Household",Tips_phaseJoint,Tips_phaseSingle))*Tips_phaseStep/1000)))` },
       { area: 'income', key: 'tipsSaved', label: 'Federal tax the tips deduction saves a year (this row\'s share)', unit: 'money',
         f: () => {
-          const T = 'MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit})-IF(Taxes_joint="Yes",StdDed_joint,IF(Taxes_filing="Head of household",StdDed_head,StdDed_single)))', L = `MAX(0,${T}-{@tipsDed})`;
-          return `IF({@tipsDed}="","",IF(Taxes_joint="Yes",${bracket(T, 'Fed_joint')}-${bracket(L, 'Fed_joint')},IF(Taxes_filing="Head of household",${bracket(T, 'Fed_head')}-${bracket(L, 'Fed_head')},${bracket(T, 'Fed_single')}-${bracket(L, 'Fed_single')}))*{@tipsQ}/SUMIFS(Income_tipsQ,Income_taxUnit,{@taxUnit}))`;
+          const T = 'MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit})-IF({@taxUnit}="Household",StdDed_joint,IF(AND(Taxes_filing="Head of household",NOT(OR({@taxUnit}="P3",{@taxUnit}="P4",{@taxUnit}="P5",{@taxUnit}="P6",{@taxUnit}="P7"))),StdDed_head,StdDed_single)))', L = `MAX(0,${T}-{@tipsDed})`;
+          return `IF({@tipsDed}="","",IF({@taxUnit}="Household",${bracket(T, 'Fed_joint')}-${bracket(L, 'Fed_joint')},IF(AND(Taxes_filing="Head of household",NOT(OR({@taxUnit}="P3",{@taxUnit}="P4",{@taxUnit}="P5",{@taxUnit}="P6",{@taxUnit}="P7"))),${bracket(T, 'Fed_head')}-${bracket(L, 'Fed_head')},${bracket(T, 'Fed_single')}-${bracket(L, 'Fed_single')}))*{@tipsQ}/SUMIFS(Income_tipsQ,Income_taxUnit,{@taxUnit}))`;
         } },
       { area: 'income', key: 'M10', label: 'Federal tax a year (M10)', unit: 'money',
         f: () => {
           const by = (std, t) => `${bracket('{@taxable}', t)}-${bracket(`MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-${std})`, t)}`;
-          return `IF({@taxable}="","",-N({@tipsSaved})+IF(Taxes_joint="Yes",${by('StdDed_joint', 'Fed_joint')},IF(Taxes_filing="Head of household",${by('StdDed_head', 'Fed_head')},${by('StdDed_single', 'Fed_single')})))`; // batch 53: head of household
+          return `IF({@taxable}="","",-N({@tipsSaved})+IF({@taxUnit}="Household",${by('StdDed_joint', 'Fed_joint')},IF(AND(Taxes_filing="Head of household",NOT(OR({@taxUnit}="P3",{@taxUnit}="P4",{@taxUnit}="P5",{@taxUnit}="P6",{@taxUnit}="P7"))),${by('StdDed_head', 'Fed_head')},${by('StdDed_single', 'Fed_single')})))`; // batch 53: head of household
         } },
     ],
     sheet: 'IF(COUNT(Income_M10)=0,"",SUM(Income_M10))', label: 'Federal tax a year, the household\'s return (or each person\'s)',
@@ -195,7 +197,7 @@ export const MATH = [
     app: c => (Object.keys(c.x.householdTax?.rows || {}).length ? c.x.householdTax.total.federal : null) },
   { id: 'M11', name: 'FICA', inputs: 'gross, year', unit: 'money', fns: ['income.fica'],
     cols: [{ area: 'income', key: 'M11', label: 'FICA a year (M11)', unit: 'money',
-      f: '(IF({@stack}="","",{@ssPart}+{@medPart}+(MAX(0,SUMIFS(Income_ficaBase,Income_taxUnit,{@taxUnit},Income_stack,"<="&{@stack})-IF(Taxes_joint="Yes",Medicare_over_joint,Medicare_over_single))-MAX(0,SUMIFS(Income_ficaBase,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-IF(Taxes_joint="Yes",Medicare_over_joint,Medicare_over_single)))*Medicare_addl))' }],
+      f: '(IF({@stack}="","",{@ssPart}+{@medPart}+(MAX(0,SUMIFS(Income_ficaBase,Income_taxUnit,{@taxUnit},Income_stack,"<="&{@stack})-IF({@taxUnit}="Household",Medicare_over_joint,Medicare_over_single))-MAX(0,SUMIFS(Income_ficaBase,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-IF({@taxUnit}="Household",Medicare_over_joint,Medicare_over_single)))*Medicare_addl))' }],
     sheet: 'IF(COUNT(Income_M11)=0,"",SUM(Income_M11))', label: 'Social Security and Medicare a year (per person, to the wage base), all income',
     app: c => (Object.keys(c.x.householdTax?.rows || {}).length ? c.x.householdTax.total.fica : null) },
   { id: 'M12', name: 'Take-home from gross', inputs: 'M10, M11, state and city tax', unit: 'money', fns: ['income.takeHomeFromGross', 'raise.raiseOf', 'income.stateTax', 'income.incomeRow', 'income.taxTypeOf', 'income.isBenefitRow', 'income.benefitRow', 'income.benefitWeeksThisYear',
@@ -210,7 +212,10 @@ export const MATH = [
         f: () => {
           const cum = op => `SUMIFS(Income_stateOwn,Income_taxUnit,{@taxUnit},Income_stack,"${op}"&{@stack})`;
           const on = (x, t, k) => bracket(`MAX(0,${x}-NY_std_${k})`, `${t}_${k}`);
-          const by = t => `IF(Taxes_filing="Married jointly",${on(cum('<='), t, 'joint')}-${on(cum('<'), t, 'joint')},IF(Taxes_filing="Head of household",${on(cum('<='), t, 'head')}-${on(cum('<'), t, 'head')},${on(cum('<='), t, 'single')}-${on(cum('<'), t, 'single')}))`;
+          // Batch 58: an adult past the couple (P3 to P7) files a return of their own as Single (QUESTIONS 412), as the app does.
+          const own = 'OR({@taxUnit}="P3",{@taxUnit}="P4",{@taxUnit}="P5",{@taxUnit}="P6",{@taxUnit}="P7")';
+          const by = t => `IF(${own},${on(cum('<='), t, 'single')}-${on(cum('<'), t, 'single')},${byStatus(t)})`;
+          const byStatus = t => `IF(Taxes_filing="Married jointly",${on(cum('<='), t, 'joint')}-${on(cum('<'), t, 'joint')},IF(Taxes_filing="Head of household",${on(cum('<='), t, 'head')}-${on(cum('<'), t, 'head')},${on(cum('<='), t, 'single')}-${on(cum('<'), t, 'single')}))`;
           return `IF({@stack}="","",IF(Profile_state<>"NY",0,${by('NY')}+IF(Profile_nyc="Yes",${by('NYC')},0)))`;
         } },
       { area: 'income', key: 'stateOwn', label: 'Adds to state taxable income', unit: 'money', f: 'IF({@stack}="","",MAX(0,{@taxedGross}-N({@pretax})))' },

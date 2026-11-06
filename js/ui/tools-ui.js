@@ -16,7 +16,6 @@ import { statusOf } from '../records.js';
 import { money, pct } from '../format.js';
 import { setHomeworkStatus, setHomeworkPerson, setHomeworkOwner, joyOf, confidenceOf } from '../program.js';
 import { HOMEWORK_STATUSES } from '../registry/program.js';
-import { PERSONS, personLabels } from '../registry/couples.js';
 import { JOY, CONFIDENCE } from '../registry/joy.js';
 import { identitySection } from './identity-ui.js';
 import { land } from './arrive.js';
@@ -69,7 +68,7 @@ function homeworkGroups(app, ctx, hw, fix) {
       S.toggle(HOMEWORK_STATUSES.map(s => [s, s]), x.status, v => setHomeworkStatus(ctx.store, x.key, v || 'To do', { by: 'coach' }), { label: `${x.label} status` }),
       x.program ? S.toggle([['client', 'Client'], ['coach', 'Me']], x.owner, v => setHomeworkOwner(ctx.store, x.key, v), { label: `${x.label}: whose job` }) : null,
       x.program ? null : h('label.field', { style: { width: '160px' } }, d),
-      x.program && ctx.couple ? S.toggle(PERSONS.map(p => [p, personLabels(ctx.store.doc)[p]]), x.person, v => setHomeworkPerson(ctx.store, x.key, v), { label: `${x.label} whose`, clearable: true }) : null, // F2
+      x.program && ctx.multi ? S.whosePick(ctx.store.doc, x.person, v => setHomeworkPerson(ctx.store, x.key, v), { label: `${x.label} whose` }) : null, // F2; batch 58 (QUESTIONS 415): every adult by name
       x.program && !x.r ? null : S.button('Open', { size: 'small', onClick: () => (x.r ? fix({ ...x, route: x.r.kind === 'debt' ? debtRoute(x.r) : ROUTE[x.r.kind] || '#/home/profile' }) : app.go(x.lifeKey ? '#/net-worth/protection' : '#/home/profile')) }));
   };
   const theirs = hw.filter(x => x.owner !== 'coach'), mine = hw.filter(x => x.owner === 'coach');

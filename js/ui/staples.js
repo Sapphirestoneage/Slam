@@ -18,9 +18,9 @@ import { addMonths, ymOf, monthName } from '../month.js';
 import { gatesOf, gatedOut } from '../gates.js';
 import { keepPlace } from './place.js';
 import { opened, install as installDismiss } from './dismiss.js';
-import { PERSONS, personLabels, onePerson, ownerOf, modeOf, ownPlanPerson, adultsOf, extraAdults, multiAdult, householdOf, amongOf, howOf, rowShare, splitWords, SPLIT_HOWS, SPLIT_HOW_WORDS } from '../registry/couples.js';
+import { PERSONS, personLabels, onePerson, ownerOf, modeOf, ownPlanPerson, adultsOf, extraAdults, multiAdult, householdOf, amongOf, howOf, rowShare, splitWords, SPLIT_HOWS, SPLIT_HOW_WORDS, inView as inPersonView, generalRow } from '../registry/couples.js';
 import { isBlankRow } from '../completion.js';
-import { audienceOf, viewStore, SHARE, seenOf, notesSeenOf, isMarked, SEEN, SEEN_WORDS, SEEN_TIPS, SHARE_NAMES, neutralName, PRIVATE_LINE } from '../privacy.js';
+import { audienceOf, viewStore, SHARE, seenOf, notesSeenOf, isMarked, SEEN, SEEN_WORDS, SEEN_TIPS, SHARE_NAMES, neutralName, PRIVATE_LINE, listPersonOf } from '../privacy.js';
 export { keepPlace };
 import { secWrap, sectionOpen, caretButton } from './sections.js';
 export { sec, secWrap, secCard, openAround, sectionOpen } from './sections.js'; // batch 13: the caret header on every section
@@ -66,6 +66,49 @@ export function createCtx({ store, ref, now = () => new Date(), viewer = () => (
   store.subscribe(() => ctx.refresh());
   return ctx;
 }
+// Batch 58 (QUESTIONS 413): the lists under the whose-numbers switch (Net worth and Cash flow) read one adult's plan
+// when the switch is on one adult in a household whose lists follow it (privacy.listPersonOf): that adult's rows and
+// the shared rows they are on, with each list's totals at their part, the same numbers as their strip. The amount box
+// of a shared row keeps the whole row (it is one bill, one account), and its part shows beside it. Budget categories
+// and the gut number are the plan's structure, never filtered; their amounts read the adult's own metrics. A row
+// added here is that adult's. With no adult picked (Everyone, a couple, one adult) it is the screen's ctx unchanged.
+export function viewCtx(ctx) {
+  let cache = null, key = null;
+  const c = Object.create(ctx);
+  Object.defineProperty(c, 'listPerson', { get: () => listPersonOf(ctx.store.doc) });
+  c.metrics = () => {
+    const P = c.listPerson, base = ctx.metrics();
+    if (!P || base.inputs?.person === P) return base;
+    if (cache && key.base === base && key.P === P) return cache;
+    key = { base, P };
+    return (cache = metrics(ctx.store.doc, ctx.ref, { now: ctx.now(), person: P }));
+  };
+  c.visible = pred => {
+    const all = ctx.visible(pred), P = c.listPerson;
+    if (!P) return all;
+    const mode = modeOf(ctx.store.doc.profile), H = c.metrics().inputs.household;
+    return all.filter(r => r.kind === 'spending' || inPersonView(r, P, mode, H));
+  };
+  return c;
+}
+// One adult's part of a row in the list's view (1 with no adult picked): their own row whole, a shared one at their
+// part (the same rule as the math's forPerson: a split typed or a household past two adults, else half).
+export function viewPart(ctx, r) {
+  const P = ctx.listPerson;
+  if (!P || r?.auto) return 1;
+  const mode = modeOf(ctx.store.doc.profile), o = ownerOf(r, mode);
+  if (o !== 'Joint') return o === P ? 1 : 0;
+  const H = ctx.metrics().inputs.household;
+  return generalRow(r, H) ? rowShare(r, P, H) : 0.5;
+}
+// A Budget line's amount a month in the list's view: a shared bill at the adult's part, as their own plan counts it
+// (after anything covered, paid back or split with roommates); null to use the line's own amount.
+export function viewLineAmount(ctx, r) {
+  if (!ctx.listPerson || r?.auto) return null;
+  const l = ctx.metrics().inputs.typedLines?.find(x => x.id === r.id);
+  return l?.coupleShared ? l.amount : null;
+}
+
 // Batch 28: the same household as anything shared sees it (the one-pager, Send summary, the Life Transitions share view):
 // private and coach-only rows folded into neutral words, the coach's notes gone, every total the same. Writes still go
 // to the real household (a one-pager box the coach types in).
@@ -105,6 +148,24 @@ export function addButton(thing, onClick) {
 // Owner column never pushes the table past the window.
 // Batch 49 (households of any size): every adult in the plan is a choice, and Joint (everyone on this row) opens how
 // it is split: among which adults (all, unless some are ticked), equally, by percent or by income.
+// Batch 58 (QUESTIONS 415): Whose, for anything that is not a row (an institution, a homework item): every adult in
+// the plan by name, then Joint. Past four choices the names wrap (a tap row), as on the Owner chip.
+export const whoseChoices = doc => [...adultsOf(doc).map(a => [a.id, a.name]), ['Joint', 'Joint']];
+export function whosePick(doc, value, onChange, { label }) {
+  const opts = whoseChoices(doc);
+  return (opts.length > 4 ? tapPick : toggle)(opts, value ?? null, onChange, { label, clearable: true });
+}
+// Batch 58 (QUESTIONS 413): in one adult's view a shared row keeps its whole amount in its own box, and a slim line
+// under the row says the adult's part ("Dev's part: $600 of the $3,000"), so the boxes down the column stay in one
+// place at every width and the list's total (their parts) reads straight off the rows. share: { whole, part } where
+// part is that adult's amount when the math has it (a Budget line after anything covered or paid back), else the
+// whole times their part.
+export function partLine(ctx, r, { whole = null, part = null } = {}) {
+  const P = ctx.listPerson;
+  if (!P || whole == null || ownerOf(r, modeOf(ctx.store.doc.profile)) !== 'Joint') return null;
+  const k = viewPart(ctx, r), mine = part ?? whole * k, name = personLabels(ctx.store.doc)[P] ?? P;
+  return h('span.muted.small.part-line', { title: `${Math.round(k * 1000) / 10}% of the whole. The list's total counts this part` }, `${name}'s part: ${money(mine)} of the ${money(whole)}`);
+}
 export function ownerToggle(ctx, r, up) {
   const doc = ctx.store.doc, names = personLabels(doc);
   const ids = extraAdults(doc).length ? [...adultsOf(doc).map(a => a.id), 'Joint'] : PERSONS;
@@ -748,9 +809,9 @@ export function sectionFooter(ctx, { add, total, count, done, of, left = [], onl
   const pctDone = of ? done / of : 0;
   return h('div.footer', {}, add, onlyLeft, bulk, h('span.spacer'),
     total !== undefined ? h('span', {}, h('span.label', {}, 'Total '), total) : null,
-    h('span.label', {}, `${count} ${count === 1 ? 'item' : 'items'}`),
-    h('span.row-line', { style: { gap: '8px' } }, h('div.progress', { role: 'progressbar', 'aria-valuenow': Math.round(pctDone * 100), 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': 'Complete' }, h('span', { style: { width: `${pctDone * 100}%` } })),
-      left.length ? h('button.btn.small.count-btn', { type: 'button', 'aria-label': `${done} of ${of} done; see what is left`, onclick: e => leftPopoverRef?.(e.currentTarget, left) }, `${done} of ${of} done`) : h('span.label', {}, `${done} of ${of} done`))); // item 3
+    of ? h('span.label', {}, `${count} ${count === 1 ? 'item' : 'items'}`) : null, // batch 58: nothing to fill in this view (one adult's read-only categories): no "0 of 0"
+    of ? h('span.row-line', { style: { gap: '8px' } }, h('div.progress', { role: 'progressbar', 'aria-valuenow': Math.round(pctDone * 100), 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': 'Complete' }, h('span', { style: { width: `${pctDone * 100}%` } })),
+      left.length ? h('button.btn.small.count-btn', { type: 'button', 'aria-label': `${done} of ${of} done; see what is left`, onclick: e => leftPopoverRef?.(e.currentTarget, left) }, `${done} of ${of} done`) : h('span.label', {}, `${done} of ${of} done`)) : null); // item 3
 }
 // The counter popover lives in arrive.js, which imports this file; the app hands it over once at start.
 let leftPopoverRef = null;
@@ -856,8 +917,10 @@ export function recordList(ctx, cfg) {
     });
     flashSaved(root.querySelector(`tr[data-id="${rec.id}"]`));
   };
+  const readOnly = r => !!cfg.readOnly?.(ctx, r); // batch 58: in one adult's view, a Budget category that is someone else's to type reads their lines
+  const ownerNew = () => (ctx.listPerson && !cfg.fixed ? { owner: ctx.listPerson } : {}); // batch 58: a row added in one adult's view is theirs
   const addNew = (type, name = null, after = null) => {
-    const r = ctx.store.add(cfg.kindOf?.(type) ?? cfg.kind, { name: name ?? null, ...(cfg.newValues?.(type) || {}) }, { type: type ?? cfg.defaultType ?? null, after });
+    const r = ctx.store.add(cfg.kindOf?.(type) ?? cfg.kind, { name: name ?? null, ...(cfg.newValues?.(type) || {}), ...ownerNew() }, { type: type ?? cfg.defaultType ?? null, after });
     requestAnimationFrame(() => {
       const tr = root.querySelector(`tr[data-id="${r.id}"]`);
       if (tr?.hidden) setFold(tr.dataset.group, false); // a new line opens its group
@@ -1039,7 +1102,7 @@ export function recordList(ctx, cfg) {
             cfg.groupExtra ? cfg.groupExtra(ctx, g, rows, m) : null, // batch 10: e.g. what the typical amounts would add up to
             // B6.6: add a line right in this section.
             cfg.groupAdd && cfg.groupAdd(g) ? h('button.btn.small.group-add', { type: 'button', 'data-focus': `group-add:${g}`, onclick: () => {
-              const r = ctx.store.add(cfg.kind, cfg.groupAdd(g), { type: null });
+              const r = ctx.store.add(cfg.kind, { ...cfg.groupAdd(g), ...ownerNew() }, { type: null });
               setFold(g, false);
               requestAnimationFrame(() => { const t = root.querySelector(`tr[data-id="${r.id}"]`); if (t?.hidden) setFold(t.dataset.group, false); t?.querySelector('input:not([type="checkbox"])')?.focus(); });
             } }, icon('plus'), 'Add a line') : null)));
@@ -1061,12 +1124,13 @@ export function recordList(ctx, cfg) {
           state.last = idx; refreshSelection();
         };
         const open = state.open === r.id;
-        const unfinished = !(cfg.coreFields ? (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields) : ['amount']).every(f => handled(r, f));
+        const unfinished = !readOnly(r) && !(cfg.coreFields ? (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields) : ['amount']).every(f => handled(r, f));
         if (state.onlyLeft && !unfinished) continue; // item 3: Show only what's left
         const tr = h(`tr.row${state.selected.has(r.id) ? '.selected' : ''}${unfinished ? '.left' : ''}`, { 'data-id': r.id, 'data-group': g, hidden: folded },
           h('td.check-cell', {}, box),
           cols.map((c, i) => h(`td.col-${slug(c.label)}${i === 0 ? '.col-first' : ''}${c.num ? '.num' : ''}`, {}, c.render(ctx, r, m, p => update(r, p), { remove: e => remove([r.id], e.currentTarget) }))),
-          h('td.col-status', {}, h('span.row-line.status-cell', { style: { gap: '6px', flexWrap: 'nowrap' } }, statusPicker(guessCore(r) ? 'Not sure' : r.status, s => update(r, { status: s }), { hasValue: hasCore(r) || guessCore(r), lock: ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? { on: r.values.locked === true, set: v => update(r, { locked: v }) } : null }),
+          readOnly(r) ? h('td.col-status', {}, h('span.tag.plain', { title: cfg.readOnlyTip ?? null }, cfg.readOnlyWord?.(r) ?? 'Read from the lines')) // batch 58: a row this view reads, not one it fills
+          : h('td.col-status', {}, h('span.row-line.status-cell', { style: { gap: '6px', flexWrap: 'nowrap' } }, statusPicker(guessCore(r) ? 'Not sure' : r.status, s => update(r, { status: s }), { hasValue: hasCore(r) || guessCore(r), lock: ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? { on: r.values.locked === true, set: v => update(r, { locked: v }) } : null }),
             unconfirmed(r) && !isBlankRow(r, coreOf(r)) ? h('button.btn.small.will-get', { type: 'button', title: 'Will get it: marks it Getting it and puts "Find: this" on the homework list, with where to look', 'aria-label': `Will get ${r.name || r.type || cfg.thing.one}`, onclick: () => willGet([r.id]) }, icon('clock'), h('span.will-get-text', {}, 'Will get it')) : null)), // batch 8 (B5)
           h('td.col-actions', {}, h('span.actions', {},
             h('button.caret', { type: 'button', 'aria-expanded': String(open), 'data-focus': 'more', onclick: () => setOpen(r.id) },
@@ -1079,7 +1143,8 @@ export function recordList(ctx, cfg) {
         body.append(tr);
         const note = cfg.rowNote?.(ctx, r, m); // e.g. "Looks like the same payment: keep one"
         const mark = seenLine(ctx, r); // batch 28: who sees this, in words; it is changed in the row's menu (one place)
-        if (note || mark) body.append(h(`tr.row-note${note ? '' : '.seen-only'}`, { 'data-for': r.id, 'data-group': g, hidden: folded }, h('td', { colspan: span }, mark, note)));
+        const part = cfg.share ? partLine(ctx, r, cfg.share(ctx, r)) : null; // batch 58: one adult's part of a shared row, under it
+        if (note || mark || part) body.append(h(`tr.row-note${note || part ? '' : '.seen-only'}`, { 'data-for': r.id, 'data-group': g, hidden: folded }, h('td', { colspan: span }, part, mark, note)));
         if (open) { const more = moreRow(r, g); more.hidden = folded; body.append(more); track(tr, more); }
       }
       // Batch 35: one slim line under a group (Assets: the money set aside for taxes, kept out of the Cash total).
@@ -1088,11 +1153,11 @@ export function recordList(ctx, cfg) {
     }
     if (state.open && !rowEls.has(state.open)) state.open = null;
     const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td.check-cell', {}), cfg.totals(ctx, all, m, cols))) : null; // batch 28: every row counts, seen or not
-    const counted = recs.filter(r => (cfg.countsBlank || !isBlankRow(r, coreOf(r))) && (!cfg.counts || cfg.counts(r))); // batch 34: a list whose blank rows are questions (Protection's usual list) counts them // batch 8 (B9): a blank row counts nowhere; batch 10: a list can leave rows out (Everything else, faded)
+    const counted = recs.filter(r => !readOnly(r) && (cfg.countsBlank || !isBlankRow(r, coreOf(r))) && (!cfg.counts || cfg.counts(r))); // batch 34: a list whose blank rows are questions (Protection's usual list) counts them // batch 8 (B9): a blank row counts nowhere; batch 10: a list can leave rows out (Everything else, faded)
     const leftRows = counted.filter(r => !coreOf(r).every(f => handled(r, f)));
     const done = counted.length - leftRows.length;
     // Batch 8 (B5, B6): one button for the whole section: every unconfirmed row to Getting it; every starter estimate kept.
-    const toGet = counted.filter(unconfirmed), toUse = recs.filter(r => r.status === 'Not sure' || isFaded(r));
+    const toGet = counted.filter(unconfirmed), toUse = recs.filter(r => !readOnly(r) && (r.status === 'Not sure' || isFaded(r)));
     const bulk = [toUse.length ? h('button.btn.small', { type: 'button', title: 'Keep every starter estimate as the number', onclick: () => useEstimates(toUse.map(r => r.id)) }, icon('check'), `Use all starter estimates (${toUse.length})`) : null,
       toGet.length ? h('button.btn.small', { type: 'button', title: 'Every unconfirmed row goes on the homework list as Find: …, marked Getting it', onclick: () => willGet(toGet.map(r => r.id)) }, icon('clock'), `Will get all of these (${toGet.length})`) : null];
     const leftItems = leftRows.map(r => { const f = coreOf(r).find(x => !handled(r, x)); return { id: r.id, name: r.name || r.type || cfg.thing.one, word: r.status && r.status !== 'Know it' ? r.status : 'missing', field: f, focus: cfg.focusOf?.(r, f) ?? `${r.id}:${f}`, parent: cfg.parentOf?.(ctx, r) ?? undefined, route: location.hash }; }); // batch 13: a list whose boxes have their own handles names them

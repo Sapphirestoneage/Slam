@@ -1455,3 +1455,31 @@ changes in the meeting are blue boxes holding the app's default. The Math rows p
 
 Every function used is on Google Sheets' function list (checked Nov 6). Workbook check: every Check at Matches on all
 22 households. Format 48. QUESTIONS 456 to 460.
+
+
+## Batch 58 (Nov 6 2026): households of any size, follow-ups to batch 49 (QUESTIONS 413, 415, 418, 419)
+
+1. One adult's view, one answer (QUESTIONS 413): past two adults, the lists under the whose-numbers switch (Assets,
+   Debt, Credit cards, Protection, Income, Taxes, Budget, Calendar, Month end) read the adult the switch is on: their
+   rows and the shared rows they are on, every total at their part, the same numbers as their strip (Dev's Budget
+   $1,490, not the household's $5,360). The rule is `listsFollowView` (js/registry/couples.js) and
+   `privacy.listPersonOf`; the lists get it through `viewCtx` (js/ui/staples.js) in tabPage, with `viewPart` and
+   `viewLineAmount` for the totals. A shared row keeps its whole amount in its box, and a slim line under it says the
+   adult's part ("Dev's part: $600 of the $3,000"), so the boxes stay in one column at every width. A Budget category typed for someone else reads the adult's lines (no box, "From the
+   lines"); a row added in a view is that adult's, and a starter line given an amount there becomes theirs. Taxes in
+   an adult past the couple's view says "Single, a return of their own" and reads their own return's rates
+   (householdRates). Everyone, a couple and one adult read as before (QUESTIONS 461 asks about couples).
+2. Whose (QUESTIONS 415): an institution's Whose and a homework item's Whose offer every adult by name, then Joint
+   (`whoseChoices`, a tap row past four); the Institutions tab's Whose takes P3 to P7.
+3. The poly household rebuilt (QUESTIONS 418): Cam is an adult in the plan (People: Partner, born 1992) with a
+   $3,600 paycheck, checking and a card of their own; the mortgage and the home split 40/40/20 on their rows (Cam
+   bought in for a fifth, QUESTIONS 463), utilities in thirds, groceries 50/25/25, the car and pets Ana's and Ben's.
+   Hand numbers in each of the four views (surplus $2,960, $1,810, $1,730, Everyone $6,500; net worth $134,500,
+   $119,500, $29,300, Everyone $283,300). fixtures/views-baseline.json and fixtures/savings-split-before.json regenerated
+   for poly-household only; no other persona or the Demo moved. The workbook taxes an adult past the couple on their own Single return, as the app
+   does (QUESTIONS 412's gap; poly is the first persona with that mix, and workbook-check is clean).
+4. Birth years (QUESTIONS 419, first half): each adult on People has Born, a slim chip that opens the decades, then
+   the years, with a year box; this client's and the partner's are the About you answers. New field people.birthYear
+   (spec F598, FORMATS 49). The engine's row per adult waits for batch 56.
+5. People's Taxes cell for this client is a link, "Set on Taxes ›" (or the status, "Married jointly ›"), that lands
+   on the filing status on Cash flow › Taxes. A list footer with nothing to fill in it no longer says "0 of 0 done".

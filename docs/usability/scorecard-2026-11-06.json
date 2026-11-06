@@ -4709,6 +4709,462 @@
      "reason": "private by design: never in a partner's view, the household's Client view or anything shared (tools/e2e/privacy.cjs); waits for Eli at sign-off"
     }
    }
+  },
+  {
+   "screen": "Budget (one adult's lines, past two adults)",
+   "route": "#/cash-flow/budget",
+   "area": "Cash flow",
+   "batch": 58,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says; checked in the browser at 1440, 1280 and 390 on three-adults (each adult), poly-household (Everyone, Ana, Cam), couple-separate and Maya"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "the list totals equal the strip in every adult's view (test/households.test.js adds them up for every adult of both households)"
+    },
+    "oneAnswer": {
+     "result": "minor",
+     "reason": "the gut number box and the X of Y filled counter are the household's in one adult's view (both personas use lines, so no number disagrees on screen)"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen (Demo and New, 1440, 1280 and 390, light and dark) and the same scan in each adult's view of three-adults, poly-household, couple-separate and Maya"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "nothing new to type"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: \"Dev's part: $600 of the $3,000\", \"From the lines\", \"Set on Taxes ›\""
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "a shared line says the adult's part on a slim line under it; a category typed for someone else says From the lines"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Assets (one adult's accounts and part of the shared ones)",
+   "route": "#/net-worth/assets",
+   "area": "Net worth",
+   "batch": 58,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says; checked in the browser at 1440, 1280 and 390 on three-adults (each adult), poly-household (Everyone, Ana, Cam), couple-separate and Maya"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "the list totals equal the strip in every adult's view (test/households.test.js adds them up for every adult of both households)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one adult's view gives one answer: the list, its totals and the strip read the same rows"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen (Demo and New, 1440, 1280 and 390, light and dark) and the same scan in each adult's view of three-adults, poly-household, couple-separate and Maya"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "nothing new to type"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: \"Dev's part: $600 of the $3,000\", \"From the lines\", \"Set on Taxes ›\""
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch line says whose rows show; each shared row says the adult's part"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Debt and Credit cards (one adult's part of a shared mortgage)",
+   "route": "#/net-worth/debt",
+   "area": "Net worth",
+   "batch": 58,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says; checked in the browser at 1440, 1280 and 390 on three-adults (each adult), poly-household (Everyone, Ana, Cam), couple-separate and Maya"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "the list totals equal the strip in every adult's view (test/households.test.js adds them up for every adult of both households)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one adult's view gives one answer: the list, its totals and the strip read the same rows"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen (Demo and New, 1440, 1280 and 390, light and dark) and the same scan in each adult's view of three-adults, poly-household, couple-separate and Maya"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "nothing new to type"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: \"Dev's part: $600 of the $3,000\", \"From the lines\", \"Set on Taxes ›\""
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch line says whose rows show; each shared row says the adult's part"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Income and Protection (one adult's rows)",
+   "route": "#/cash-flow/income",
+   "area": "Cash flow",
+   "batch": 58,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says; checked in the browser at 1440, 1280 and 390 on three-adults (each adult), poly-household (Everyone, Ana, Cam), couple-separate and Maya"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "the list totals equal the strip in every adult's view (test/households.test.js adds them up for every adult of both households)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one adult's view gives one answer: the list, its totals and the strip read the same rows"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen (Demo and New, 1440, 1280 and 390, light and dark) and the same scan in each adult's view of three-adults, poly-household, couple-separate and Maya"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "nothing new to type"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: \"Dev's part: $600 of the $3,000\", \"From the lines\", \"Set on Taxes ›\""
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch line says whose rows show; each shared row says the adult's part"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Taxes (an adult past the couple: their own return)",
+   "route": "#/cash-flow/taxes",
+   "area": "Cash flow",
+   "batch": 58,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says; checked in the browser at 1440, 1280 and 390 on three-adults (each adult), poly-household (Everyone, Ana, Cam), couple-separate and Maya"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "Cam's effective and next-dollar rates are Cam's own return's (15.2% and 19.7%), not the household's 16.4%"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one adult's view gives one answer: the list, its totals and the strip read the same rows"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen (Demo and New, 1440, 1280 and 390, light and dark) and the same scan in each adult's view of three-adults, poly-household, couple-separate and Maya"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "nothing new to type"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "says \"Single, a return of their own\" and \"less than your own return owes\" in Cam's view"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch line says whose rows show; each shared row says the adult's part"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Calendar and Month end (follow the switch past two adults in any mode)",
+   "route": "#/cash-flow/calendar",
+   "area": "Cash flow",
+   "batch": 58,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says; checked in the browser at 1440, 1280 and 390 on three-adults (each adult), poly-household (Everyone, Ana, Cam), couple-separate and Maya"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "the list totals equal the strip in every adult's view (test/households.test.js adds them up for every adult of both households)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one adult's view gives one answer: the list, its totals and the strip read the same rows"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen (Demo and New, 1440, 1280 and 390, light and dark) and the same scan in each adult's view of three-adults, poly-household, couple-separate and Maya"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "nothing new to type"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: \"Dev's part: $600 of the $3,000\", \"From the lines\", \"Set on Taxes ›\""
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch line says whose rows show; each shared row says the adult's part"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "About you › People (Born, the Taxes link)",
+   "route": "#/home/profile",
+   "area": "Home",
+   "batch": 58,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says; checked in the browser at 1440, 1280 and 390 on three-adults (each adult), poly-household (Everyone, Ana, Cam), couple-separate and Maya"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "this client's and the partner's Born are the About you answers (one value); Undo puts a year back"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one adult's view gives one answer: the list, its totals and the strip read the same rows"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen (Demo and New, 1440, 1280 and 390, light and dark) and the same scan in each adult's view of three-adults, poly-household, couple-separate and Maya"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "the birth year is two taps (the decade, then the year), or a year box"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: \"Dev's part: $600 of the $3,000\", \"From the lines\", \"Set on Taxes ›\""
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the Born chip shows the year once picked; Set on Taxes › lands on the filing status, outlined, clear of the sticky header"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Institutions and Homework (Whose: every adult by name)",
+   "route": "#/net-worth/assets",
+   "area": "Net worth",
+   "batch": 58,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says; checked in the browser at 1440, 1280 and 390 on three-adults (each adult), poly-household (Everyone, Ana, Cam), couple-separate and Maya"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "the list totals equal the strip in every adult's view (test/households.test.js adds them up for every adult of both households)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one adult's view gives one answer: the list, its totals and the strip read the same rows"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen (Demo and New, 1440, 1280 and 390, light and dark) and the same scan in each adult's view of three-adults, poly-household, couple-separate and Maya"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "a tap row of names, then Joint"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: \"Dev's part: $600 of the $3,000\", \"From the lines\", \"Set on Taxes ›\""
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch line says whose rows show; each shared row says the adult's part"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
   }
  ],
  "updated": {
@@ -4823,5 +5279,13 @@
   "major": 0,
   "minor": 1,
   "note": "Batch 60 re-scored Income (kinds of night in Tips and shifts), Income › What a shift really pays (a card a night, the set-aside line) and About you (NYC area). All pass; the one minor stays What a shift really pays coachable (waits for Eli, behind Phase 4 previews)."
+ },
+ "batch58": {
+  "date": "2026-11-06",
+  "screens": 8,
+  "blocker": 0,
+  "major": 0,
+  "minor": 1,
+  "note": "Batch 58 appended its screens (each with \"batch\": 58), scored after its changes; the rows above and the summary are as they were."
  }
 }

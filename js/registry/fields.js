@@ -481,12 +481,12 @@ export const AREAS = [
   {
     id: 'institutions', prefix: 'Inst', tab: 'Institutions', source: 'list', part: 'profile', path: 'institutions',
     about: 'The banks, credit unions, brokerages, workplace plans, lenders and insurers the household uses (batch 6). Name, kind, website, notes, whose. Never a login or a password.',
-    fields: [f('name', 'Institution'), pick('kind', 'Kind', ['Bank', 'Credit union', 'Brokerage', 'Workplace plan', 'Lender', 'Insurer', 'Other']), f('website', 'Website'), f('notes', 'Notes'), pick('owner', 'Whose', ['Me', 'Partner', 'Joint'])],
+    fields: [f('name', 'Institution'), pick('kind', 'Kind', ['Bank', 'Credit union', 'Brokerage', 'Workplace plan', 'Lender', 'Insurer', 'Other']), f('website', 'Website'), f('notes', 'Notes'), pick('owner', 'Whose', ['Me', 'Partner', 'Joint', 'P3', 'P4', 'P5', 'P6', 'P7'])], // batch 58 (QUESTIONS 415): P3 to P7 are the adults past the couple
   },
   {
     id: 'people', prefix: 'People', tab: 'People', source: 'list', part: 'profile', path: 'people',
     about: 'Batch 49: the adults in the plan past this client and the partner (P3 to P7: each with a view of their own) and the dependents (D1 ...: a child, a parent you support). This client and the partner are on Profile.',
-    fields: [f('name', 'Name'), pick('kind', 'Adult or dependent', ['Adult', 'Dependent']), pick('role', 'Role', ['Partner', 'Sibling', 'Parent', 'Adult child', 'Friend', 'Other adult', 'Child', 'Parent I support', 'Other dependent']), f('age', 'Age (a dependent)', 'number')],
+    fields: [f('name', 'Name'), pick('kind', 'Adult or dependent', ['Adult', 'Dependent']), pick('role', 'Role', ['Partner', 'Sibling', 'Parent', 'Adult child', 'Friend', 'Other adult', 'Child', 'Parent I support', 'Other dependent']), f('age', 'Age (a dependent)', 'number'), f('birthYear', 'Birth year (an adult)', 'number')], // batch 58 (QUESTIONS 419)
   },
   {
     id: 'gaps', prefix: 'Gaps', tab: 'Income gaps', source: 'list', part: 'profile', path: 'incomeGaps',

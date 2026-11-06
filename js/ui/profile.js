@@ -311,7 +311,7 @@ export function profileScreen(app, ctx) {
     people: peopleSummary(store.doc), // batch 49
   };
   const ids = ['why-now', 'applies', 'about', 'people', 'work', 'home', 'calendar', 'benefits', 'accounts', 'couple'];
-  const people = peopleSection(ctx, { section }); // batch 49: households of any size
+  const people = peopleSection(ctx, { section, app }); // batch 49: households of any size
   return [whyNow, hub, about, people, work, home, calendar, benefits, accounts, couple].map(willGetAll)
     .map((sec, i) => (sec ? secWrap(sec, `profile:${ids[i]}`, { open: i < 2, summary: sums[ids[i]] }) : sec)).concat([next]);
 }

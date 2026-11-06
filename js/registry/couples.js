@@ -42,6 +42,11 @@ export function adultsOf(doc) {
 export const adultIds = doc => adultsOf(doc).map(a => a.id);
 export const multiAdult = doc => adultsOf(doc).length > 1;
 export const manyAdults = doc => adultsOf(doc).length > 2;
+// Batch 58 (QUESTIONS 413): in one adult's view the lists (Budget, Income, Assets, Debt and the others under the
+// whose-numbers switch) show that adult's rows and their part of the shared ones, so a list's totals match that
+// adult's strip. The rule is for households past two adults; a couple's lists read as they always have (every row,
+// the household's totals) until Eli decides (QUESTIONS 420). One line to change: return multiAdult(doc).
+export const listsFollowView = doc => manyAdults(doc);
 // The household's size (the benefits lines read it): the adults in the plan and every dependent. Dependents are the
 // list on About you › People, else the Dependents count or the kids' ages, whichever is more (as before batch 49).
 export function householdSize(doc) {

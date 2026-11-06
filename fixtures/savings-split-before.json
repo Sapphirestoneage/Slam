@@ -577,50 +577,50 @@
  },
  "poly-household": {
   "all": {
-   "netWorth": 284000,
-   "liquidNetWorth": 29000,
-   "fiNumber": 2220000,
-   "surplus": 3470,
-   "savingsRate": 0.31922723091076355,
-   "debtTotal": 400000,
-   "debtPayments": 2600,
+   "netWorth": 283300,
+   "liquidNetWorth": 28300,
+   "fiNumber": 2130000,
+   "surplus": 6500,
+   "savingsRate": 0.47794117647058826,
+   "debtTotal": 403200,
+   "debtPayments": 2800,
    "debtFreeMonths": 268,
-   "debtInterest": 294348,
-   "monthsToFi": 251
+   "debtInterest": 294407,
+   "monthsToFi": 172
   },
   "Me": {
-   "netWorth": 149500,
-   "liquidNetWorth": 14500,
-   "fiNumber": 1110000,
-   "surplus": 2535,
-   "savingsRate": 0.4065757818765036,
-   "debtTotal": 200000,
-   "debtPayments": 1300,
-   "debtFreeMonths": 268,
-   "debtInterest": 147174,
-   "monthsToFi": 204
-  },
-  "Partner": {
    "netWorth": 134500,
    "liquidNetWorth": 14500,
-   "fiNumber": 1110000,
-   "surplus": 935,
-   "savingsRate": 0.2017259978425027,
-   "debtTotal": 200000,
-   "debtPayments": 1300,
+   "fiNumber": 852000,
+   "surplus": 2960,
+   "savingsRate": 0.5103448275862069,
+   "debtTotal": 160000,
+   "debtPayments": 1040,
    "debtFreeMonths": 268,
-   "debtInterest": 147174,
-   "monthsToFi": 333
+   "debtInterest": 117739,
+   "monthsToFi": 155
+  },
+  "Partner": {
+   "netWorth": 119500,
+   "liquidNetWorth": 14500,
+   "fiNumber": 717000,
+   "surplus": 1810,
+   "savingsRate": 0.430952380952381,
+   "debtTotal": 160000,
+   "debtPayments": 1040,
+   "debtFreeMonths": 268,
+   "debtInterest": 117739,
+   "monthsToFi": 188
   },
   "drill": {
    "days": 0,
    "withCard": 0,
-   "out": 43716.14,
+   "out": 50330.76,
    "reach": 0,
-   "elsewhere": 82,
-   "accounts": 2
+   "elsewhere": 154,
+   "accounts": 3
   },
-  "foo": "4",
+  "foo": "3",
   "little": true
  },
  "sandwich-parent": {

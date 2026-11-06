@@ -4,10 +4,10 @@
 import { h } from './dom.js';
 import { INCOME_KINDS, incomeKindOf } from '../capture.js';
 import { institutionPicker, institutionLink } from './institutions-ui.js';
-import { popover, closePop, tapPick, fromButton, amount, value, moneyInput, pctInput, textInput, nameInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, parkGroup, ownerToggle, openBlock } from './staples.js';
+import { popover, closePop, tapPick, fromButton, amount, value, moneyInput, pctInput, textInput, nameInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, parkGroup, ownerToggle, openBlock, viewPart } from './staples.js';
 import { asksTaxType, taxTypeFor } from '../math/portfolio.js';
 import { notesHidden, countable } from '../privacy.js';
-import { modeOf } from '../registry/couples.js';
+import { modeOf, EXTRA_IDS } from '../registry/couples.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
 import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom, isBenefitRow, householdRates, quarterlySetAside, irregularPlan, tipsDeductionOf, stateTaxLine, ctcLineOf, ctcKidsOf } from '../math/income.js';
 import { foo } from '../math/foo.js';
@@ -325,6 +325,8 @@ export function variableBlock(ctx) {
 // ---------- Assets (car loans and mortgages are the same records as on Debt, R049) ----------
 const groupOf = r => (r.kind === 'asset' ? 'Home or car' : r.values.group === 'investment' ? 'Investments' : 'Cash');
 const valOf = r => (r.kind === 'asset' ? r.values.value : r.values.balance);
+// Batch 58 (QUESTIONS 413): in one adult's view a shared account or home counts at their part (viewPart).
+const partVal = (ctx, r) => { const v = valOf(r); return v == null ? v : v * viewPart(ctx, r); };
 const forTaxes = (m, r) => !!m?.inputs.accounts.find(a => a.id === r.id)?.forTaxes; // batch 27: the metrics mark money set aside for taxes
 export const loanOf = (ctx, a) => ctx.store.find(d => d.kind === 'debt' && d.linkedTo === a.id)[0] || null;
 function setFinanced(ctx, a, how, anchor) {
@@ -402,15 +404,16 @@ export function assetList(ref) {
     focus: ['Account', 'Balance', 'Kind', 'Added monthly'], // session 1: type, balance, monthly contribution
     // Batch 35: the Cash subtotal leaves out money set aside for taxes (Purpose: Taxes), as the Cash strip does; it shows
     // as its own line under the group.
-    subtotal: (ctx, rows, m) => amount(ctx, sum(rows.filter(r => !forTaxes(m, r)), valOf), { chip: false }), // item 16: one unit per table
+    subtotal: (ctx, rows, m) => amount(ctx, sum(rows.filter(r => !forTaxes(m, r)), r => partVal(ctx, r)), { chip: false }), // item 16: one unit per table; batch 58: one adult's view sums their part
     groupFoot: (ctx, g, rows, m) => {
       const kept = rows.filter(r => forTaxes(m, r));
       if (g !== 'Cash' || !kept.length) return null;
       return h('span.muted.small', { title: 'Purpose: Taxes. It counts in net worth, and stays out of the Cash total, the cash layers (little e, big e) and the runway because it is already owed' },
-        `Set aside for taxes: ${money(sum(kept, valOf))}, owed, so not in the Cash total above`);
+        `Set aside for taxes: ${money(sum(kept, r => partVal(ctx, r)))}, owed, so not in the Cash total above`);
     },
-    footerTotal: (ctx, recs) => amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null),
-    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Account' ? h('td', {}, `${countable(recs).length} ${countable(recs).length === 1 ? 'item' : 'items'}`) : c.label === 'Balance' ? h('td.num', {}, amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null)) : h('td')), h('td'), h('td')],
+    share: (ctx, r) => ({ whole: valOf(r) ?? null }), // batch 58: one adult's part of a shared account or home, under the row
+    footerTotal: (ctx, recs) => amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, r => partVal(ctx, r)) : null),
+    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Account' ? h('td', {}, `${countable(recs).length} ${countable(recs).length === 1 ? 'item' : 'items'}`) : c.label === 'Balance' ? h('td.num', {}, amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, r => partVal(ctx, r)) : null)) : h('td')), h('td'), h('td')],
     strip: (ctx, m) => h('div', {}, summaryStrip(ctx, [
       // Total and liquid net worth sit in the Net worth headline above.
       { label: 'Cash', result: m.inputs.cash === null ? needs('M41', ['cash']) : { id: 'M41', value: m.inputs.cash, needs: [], unit: 'money', text: `Checking, savings and other cash: ${money(m.inputs.cash)}.${m.inputs.taxSetAside ? ` The ${money(m.inputs.taxSetAside)} set aside for taxes is not in it: it is owed.` : ''}` } },
@@ -609,7 +612,7 @@ export function taxesScreen(ctx) {
   const gross = taxed.length ? sum(taxed, i => i.gross) : null;
   // Batch 15, item 1: one return for the household (or one per person), FICA per person.
   const hh = x.householdTax;
-  const rates = householdRates(hh, ctx.ref);
+  const rates = householdRates(hh, ctx.ref, ctx.listPerson ? { person: ctx.listPerson } : {}); // batch 58: one adult's view reads their own return's rates
   const marginal = rates.value === null ? rates : { ...rates, value: rates.marginal, text: `The next dollar of pay is taxed at ${pct(rates.marginal)}: the federal bracket${rates.stateMarginal ? ', state and city' : ''} plus FICA.` };
   const seRows = Object.values(hh?.rows || {}).filter(t => t.taxType === '1099');
   const seTax = seRows.length ? { value: sum(seRows, t => t.fica) } : null;
@@ -622,7 +625,10 @@ export function taxesScreen(ctx) {
   const g = ctx.gates();
   return h('section.section.area-taxes', {}, h('div.section-title', {}, h('h2', {}, 'Filing')),
     h('div.card', {}, h('div.form-grid', {},
-      labelled('Filing status', h('span.row-line', { style: { gap: '8px' } }, tapPick(FILING, x.filingStatus, v => set({ filingStatus: v }), { label: 'Filing status', key: 'tax:filing', clearable: false }),
+      // Batch 58: an adult past the couple files a return of their own as Single (QUESTIONS 412); their view says so
+      // instead of offering the couple's filing status.
+      EXTRA_IDS.includes(ctx.listPerson) ? labelled('Filing status', h('span.computed.own-return', { title: 'An adult in the plan past the couple files a return of their own, as Single' }, 'Single, a return of their own'))
+      : labelled('Filing status', h('span.row-line', { style: { gap: '8px' } }, tapPick(FILING, x.filingStatus, v => set({ filingStatus: v }), { label: 'Filing status', key: 'tax:filing', clearable: false }),
         inferred ? h('span.tag.plain.guess', { title: FILING_GUESS_TIP }, 'Guess') : null)),
       metricCard(ctx, 'Effective rate', rates.value === null ? rates : { ...rates, value: rates.effective }),
       metricCard(ctx, 'Tax on your next dollar', marginal, { tip: 'Your marginal bracket: the federal bracket plus FICA on the next dollar you earn' })),
@@ -643,7 +649,7 @@ export function taxesScreen(ctx) {
     (() => { const td = tipsDeductionOf(hh, x.income, ctx.ref); return td ? h('div.nudge.tips-deduction', { style: { marginTop: '12px' } }, td.text, ' ', h('span.has-tip', { tabindex: 0, title: td.tip, 'aria-label': td.tip }, 'The rule')) : null; })(),
     // Batch 53: the Child Tax Credit, its own line (said apart from take-home: it lands when the return is filed).
     (() => { const c = ctcLineOf(hh, ctx.ref, { guessed: ctcKidsOf(p, ctx.ref).guessed }); return c ? h('div.nudge.ctc-line', { style: { marginTop: '12px' } }, c.text, ' ', h('span.has-tip', { tabindex: 0, title: c.tip, 'aria-label': c.tip }, 'The rule')) : null; })(),
-    gap > 100 ? h('div.nudge', { style: { marginTop: '12px' } }, `Your paychecks hold back about ${money(gap)} a year less than the household owes (each job withholds as if it were the only one). More withheld a paycheck (W-4 step 4c) or step 2 fixes it.`) : null,
+    gap > 100 ? h('div.nudge', { style: { marginTop: '12px' } }, `Your paychecks hold back about ${money(gap)} a year less than ${EXTRA_IDS.includes(ctx.listPerson) ? 'your own return owes' : 'the household owes'} (each job withholds as if it were the only one). More withheld a paycheck (W-4 step 4c) or step 2 fixes it.`) : null,
     ...benefits.map(i => h('div.nudge', { style: { marginTop: '12px' } }, `${i.r.name || 'Unemployment'}: ${money(i.benefit.thisYear)} taxed this year, federal and ${x.place?.state ?? 'state'} income tax ${money(i.tax.total)}, no Social Security or Medicare. ${i.withheld ? `${money(i.withheld)} withheld, ` : 'Nothing withheld, '}about ${money(i.due)} due when you file.`)),
     rows.length > 1 ? moreBlock('taxes:rows', () => h('table.rows.tax-rows', {}, h('thead', {}, h('tr', {}, ['Income', 'Federal', 'FICA', ...(x.place ? ['State and city'] : []), 'Total'].map(t => h('th', {}, t)))),
       h('tbody', {}, rows.map(i => h('tr', {}, h('td', {}, i.r.name || i.r.type), h('td.num', {}, money(i.tax.federal)), h('td.num', {}, money(i.tax.fica)), ...(x.place ? [h('td.num', {}, money(i.tax.state + i.tax.local))] : []), h('td.num', {}, money(i.tax.total)))))),

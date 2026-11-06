@@ -8,7 +8,7 @@ import { institutionLink } from './institutions-ui.js';
 import { cardPickLink } from './cards-ui.js';
 import { libraryCardOf } from '../cardlib.js';
 import { creditMove } from '../math/cards.js';
-import { splitBlock } from './staples.js';
+import { splitBlock, viewPart, viewLineAmount } from './staples.js';
 import { tapPick, openSource, recordList as S_recordList, popover as S_popover, closePop as S_closePop, moreBlock as S_moreBlock, secWrap as S_secWrap, fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, perChip, nameInput, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
 import { paidInFull } from '../completion.js';
 import { pct } from '../format.js';
@@ -32,7 +32,12 @@ const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const freqOf = ctx => ctx?.metrics?.().inputs.income.find(x => x.r.values.payFrequency)?.r.values.payFrequency ?? null;
 export const lineMonthlyOf = (r, freq = null) => (r.amount == null ? null : monthlyFrom(r.amount, r.per, freq).value);
 // A line someone confirmed as the same payment as a debt or a premium counts as $0 (enter once); a question alone does not.
-const keptIn = ctx => { const f = freqOf(ctx); const dup = ctx?.metrics?.().inputs.dupOf ?? {}; return r => (r.status === 'Not for me' || dup[r.id] ? 0 : lineMonthlyOf(r, f)); };
+// Batch 58 (QUESTIONS 423): in one adult's view an untagged starter line given an amount becomes that adult's, so a
+// number Cam types is Cam's, not split among everyone.
+const claim = (ctx, r, up) => (ctx?.listPerson && r.owner == null ? p => up(p && Object.values(p).some(v => v != null) ? { ...p, owner: ctx.listPerson } : p) : up);
+// Batch 58 (QUESTIONS 413): in one adult's view a shared line counts at their part, as their own plan counts it.
+const keptIn = ctx => { const f = freqOf(ctx); const dup = ctx?.metrics?.().inputs.dupOf ?? {}; return r => (r.status === 'Not for me' || dup[r.id] ? 0 : (ctx?.listPerson ? viewLineAmount(ctx, r) : null) ?? lineMonthlyOf(r, f)); };
+const balPart = (ctx, r) => (r.values.balance == null ? r.values.balance : r.values.balance * viewPart(ctx, r));
 const withAutos = (ctx, recs) => [...recs, ...(ctx.metrics().inputs.autoLines ?? [])];
 // A premium's own Budget line (Brandon section 4) is entered on Protection: its amount opens the coverage row.
 const premiumOf = (ctx, r) => (r.linkedTo ? ctx.store.get(r.linkedTo) : null)?.kind === 'coverage' ? ctx.store.get(r.linkedTo) : null;
@@ -110,12 +115,13 @@ export function debtList(ref, { cards = null } = {}) {
     // Enter once: the payment also shows in Cash flow as a Budget line From Debt.
     secondary: (ctx, r, up) => [labelled('In Cash flow', fromButton('Payment on the Budget', '#/cash-flow/budget', `auto:${r.id}`), { note: 'Entered here once; the Budget shows it From Debt' }), ...[debtSecondary(ctx, r, up)].flat()],
     tertiary: (ctx, r, up) => debtTertiary(ctx, r, up),
-    subtotal: (ctx, rows) => amount(ctx, sum(rows, r => r.values.balance), { chip: false }), // item 16
-    footerTotal: (ctx, recs) => amount(ctx, recs.some(r => r.values.balance != null) ? sum(recs, r => r.values.balance) : null),
+    share: (ctx, r) => ({ whole: r.values.balance ?? null }), // batch 58: one adult's part of a shared debt, under the row
+    subtotal: (ctx, rows) => amount(ctx, sum(rows, r => balPart(ctx, r)), { chip: false }), // item 16; batch 58: one adult's view sums their part
+    footerTotal: (ctx, recs) => amount(ctx, recs.some(r => r.values.balance != null) ? sum(recs, r => balPart(ctx, r)) : null),
     totals: (ctx, recs, m, cols) => {
       const cells = cols.map(c => {
         if (c.label === 'Debt') { const n = countable(recs).length; return h('td', {}, `${n} ${cards === 'only' ? (n === 1 ? 'card' : 'cards') : n === 1 ? 'debt' : 'debts'}`); } // batch 45: a coach-only row is not counted in Client view
-        if (c.label === 'Balance') return h('td.num', {}, amount(ctx, recs.some(r => r.values.balance != null) ? sum(recs, r => r.values.balance) : null));
+        if (c.label === 'Balance') return h('td.num', {}, amount(ctx, recs.some(r => r.values.balance != null) ? sum(recs, r => balPart(ctx, r)) : null));
         if (c.label === 'Payment / mo') { const ids = new Set(recs.map(r => r.id)), ds = m.debts.filter(d => ids.has(d.id)); return h('td.num', {}, amount(ctx, ds.some(d => d.payment != null) ? sum(ds, d => d.payment) : null)); } // batch 37: this list's own debts (Credit cards summed every debt: $780 against one card's $250)
         return h('td');
       });
@@ -218,14 +224,14 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
     columns: [
       { label: 'Line', render: (ctx, r, m, up) => nameInput(r.name, v => up({ name: v }), { hint: r.values.category || 'Add name', tip: r.values.category, width: 190, key: `${r.id}:name` }) }, // batch 8 (B11): wraps
       pass === 'Actual' ? null :
-      { label: 'Amount', num: true, render: (ctx, r, m, up) => h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
+      { label: 'Amount', num: true, render: (ctx, r, m, up0) => { const up = claim(ctx, r, up0); return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
         premiumOf(ctx, r) ? fromButton(`From ${premiumOf(ctx, r).type}`, '#/net-worth/protection', r.linkedTo, { value: amount(ctx, r.amount, { chip: false }) })
           : isFaded(r) ? fadedInput(r, up) // batch 10: the typical amount shows faded in the box and counts nowhere until used or typed
             : moneyInput(r.amount, v => up(typedPatch(r, v)), { key: `${r.id}:amount` }), // typing the real number clears Guess
         premiumOf(ctx, r) ? null : perChip(r.per, v => up({ per: v }), { key: `${r.id}:per` }), // batch 8 (B7): the period lives in the amount
         h('span.keep-slot', {}, isFaded(r) ? useButton(r, up)
           : r.status === 'Not sure' ? h('button.btn.small', { type: 'button', 'data-focus': 'keep', title: `The starter estimate (${moneyText(r.amount)}) is right: use it as your number. Or type your own.`, onclick: () => up({ status: null }) }, 'Use') : null), // batch 8 (B6)
-        shareChip(ctx, r)) }, // the slot keeps amounts lined up
+        shareChip(ctx, r)); } }, // the slot keeps amounts lined up
       ...monthCols,
       paidWithColumn ? { label: 'Paid with', render: (ctx, r, m, up) => {
         const cards = ctx.store.find(x => x.kind === 'debt' && x.type === 'Credit card');
@@ -247,6 +253,7 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
         : null),
     rowNote: (ctx, r, m) => (m.inputs.dupOf?.[r.id] ? dupNote(ctx, r, m.inputs.dupOf[r.id], { confirmed: true }) : m.inputs.askOf?.[r.id] ? dupNote(ctx, r, m.inputs.askOf[r.id]) : null),
     // Not for me counts as $0 everywhere (R058); its group shows what was cut.
+    share: (ctx, r) => ({ whole: r.amount == null ? null : lineMonthlyOf(r, freqOf(ctx)), part: viewLineAmount(ctx, r) }), // batch 58: one adult's part of a shared line, under the row
     subtotal: (ctx, rows) => (rows.every(r => r.status === 'Not for me') ? `$0, cut ${money(sum(rows, r => lineMonthlyOf(r, freqOf(ctx))))} a month` : `${money(sum(rows, keptIn(ctx)))} a month`),
     footerTotal: (ctx, recs) => { const all = withAutos(ctx, recs); return h('span', {}, amount(ctx, all.some(r => r.amount != null) ? sum(all, keptIn(ctx)) : null), h('span.muted', {}, ' a month')); },
     totals: (ctx, recs, m, cols) => { const all = withAutos(ctx, recs); return [...cols.map(c => c.label === 'Line' ? h('td', {}, `${countable(all).filter(r => r.status !== 'Not for me').length} lines`) : c.label === 'Amount' ? h('td.num', {}, amount(ctx, all.some(r => r.amount != null) ? sum(all, keptIn(ctx)) : null)) : h('td')), h('td'), h('td')]; },
@@ -343,8 +350,8 @@ export function irregularList(ref, { onWalk } = {}) {
         { note: r.values.sinking ? 'Tracked under Plan › Next 12 months' : null }),
       labelled('Sinking fund', select(savings.map(a => [a.id, a.name || a.type]), r.values.sinkingFund ?? null, v => up({ sinkingFund: v }), { label: 'Sinking fund', hint: savings.length ? 'Which savings account' : 'No savings account yet', width: 200 }), { note: 'Which savings account holds it' })];
     },
-    subtotal: (ctx, rows) => `${money(sum(rows, r => r.amount) / 12)} a month`,
-    footerTotal: (ctx, recs) => h('span', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, r => r.amount) / 12 : null), h('span.muted', {}, ' a month to set aside')),
+    subtotal: (ctx, rows) => `${money(sum(rows, r => (r.amount == null ? null : r.amount * viewPart(ctx, r))) / 12)} a month`, // batch 58: one adult's view sets aside their part
+    footerTotal: (ctx, recs) => h('span', {}, amount(ctx, recs.some(r => r.amount != null) ? sum(recs, r => (r.amount == null ? null : r.amount * viewPart(ctx, r))) / 12 : null), h('span.muted', {}, ' a month to set aside')),
   };
 }
 
@@ -392,6 +399,7 @@ function shareChip(ctx, r) {
   const p = ctx.store.doc.profile;
   // Batch 49: a shared bill in a household of any size says the part of the view on screen (or how many share it).
   if (manyAdults(ctx.store.doc) || splitTyped(r)) {
+    if (ctx.listPerson) return null; // batch 58: one adult's part shows under the Owner chip
     const l = ctx.metrics().inputs.typedLines.find(x => x.id === r.id), c = l?.coupleShared;
     if (!c) return null;
     const who = personLabels(ctx.store.doc)[ownPlanPerson(ctx.store.doc) ?? 'Me'];
@@ -602,14 +610,20 @@ export function categoryList(ref, { pass = 'Plan', ym = null } = {}) {
     filter: r => isCategoryRecord(r), order: (a, b) => CATEGORIES.indexOf(a.type) - CATEGORIES.indexOf(b.type),
     fixed: true, noAdd: true, moreLabel: 'Lines', notForMe: true, tableClass: 'cat-rows', paidWith: false, coreFields: ['amount'], focusOf: (r, f) => `cat:${r.type}:${f}`, // batch 13: Fix it lands on the category's box
     hasValue: (ctx, r) => catOf(ctx, r)?.amount != null,
+    // Batch 58 (QUESTIONS 413): in one adult's view a category typed for someone else reads that adult's own lines
+    // and their part of the shared ones (its amount, no status of its own); the lines under it are theirs to fill.
+    readOnly: (ctx, r) => !!ctx.listPerson && viewPart(ctx, r) <= 0,
+    readOnlyWord: r => (r.type === 'Debt' ? 'From Debt' : 'From the lines'),
+    readOnlyTip: 'This view counts this person\'s lines and their part of the shared ones',
     columns: [
       { label: 'Category', render: (ctx, r) => { const c = catOf(ctx, r); return h('span.stack', { style: { gap: '2px' } }, h('strong', {}, c?.name ?? r.name ?? r.type),
-        h('span.muted.small', {}, categoryLinesWords(c?.lines ?? [], fadedIn(ctx, r.type)))); } }, // batch 51 (QUESTIONS 378): coach-only lines only: "Includes amounts kept private"
+        h('span.muted.small', {}, !countable(c?.lines ?? []).length && ctx.listPerson && viewPart(ctx, r) <= 0 ? `No lines for ${personLabels(ctx.store.doc)[ctx.listPerson]} yet` : categoryLinesWords(c?.lines ?? [], fadedIn(ctx, r.type)))); } }, // batch 51 (QUESTIONS 378): coach-only lines only: "Includes amounts kept private"; batch 58: one adult's view of a category typed for someone else
       // Batch 19: what the amount reads from sits in its own column, right beside the box (under it on a phone), so the
       // box is always in the same place down the table (DESIGN.md rule 1b).
       { label: 'Note', head: '', num: true, render: (ctx, r, m, up) => {
         const c = catOf(ctx, r);
         if (!c) return null;
+        if (ctx.listPerson && viewPart(ctx, r) <= 0) return null; // batch 58: the status cell says where it reads from
         if (r.type === 'Debt') return h('span.muted.small.cat-note', { title: 'Each debt payment, entered once on Net worth > Debt' }, 'From Debt');
         // Batch 18 (QUESTIONS 229): an empty category offers its typical amount (the starter lines' typicals) in one tap,
         // marked Roughly; typing a real number clears the Roughly that came from it. Batch 19: it sits right before the
@@ -627,6 +641,9 @@ export function categoryList(ref, { pass = 'Plan', ym = null } = {}) {
           const fb = h('button.from-box', { type: 'button', 'data-focus': `cat:${r.type}:amount`, title: 'Entered on Debt; open it to change it', 'aria-label': `${money(c.amount)} a month, from Debt. Open Debt`, onclick: () => openSource('#/net-worth/debt', null) }, amount(ctx, c.amount, { chip: false }), icon('right'));
           return fb;
         }
+        // Batch 58 (QUESTIONS 413): in one adult's view a category total typed for someone else is not theirs to type
+        // over; it reads what their own lines and their part of the shared ones come to.
+        if (ctx.listPerson && viewPart(ctx, r) <= 0) return h('span.computed.cat-view-amount', { 'data-focus': `cat:${r.type}:amount`, title: `${personLabels(ctx.store.doc)[ctx.listPerson]}'s lines and their part of the shared ones. Type a line's amount under the caret` }, amount(ctx, c.amount ?? 0, { chip: false }));
         return moneyInput(r.amount, v => up({ amount: v, per: 'month', status: r.status === 'Not sure' || (r.values.usedTypical && r.status === 'Roughly') ? null : r.status, usedTypical: null }), { hint: c.from === 'lines' ? moneyText(c.linesSum) : 'A month', key: `cat:${r.type}:amount` }); // batch 18: typing a real number clears the Roughly that came from Use typical
       } },
     ],

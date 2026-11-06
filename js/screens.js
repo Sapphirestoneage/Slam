@@ -220,7 +220,8 @@ const CASH_FLOW = { income: MM.income, taxes: MM.taxes, budget: own('Budget', bu
 const TAB_PARTS = { 'net-worth': [NET_WORTH, netWorthStrip, 'Net worth'], 'cash-flow': [CASH_FLOW, cashFlowStrip, 'Cash flow'] };
 // One page (X013): every part of a tab top to bottom, each under its own heading. Net worth and Cash flow each have one.
 function tabPage(tabId, id) {
-  return (app, ctx) => {
+  return (app, ctx0) => {
+    const ctx = S.viewCtx(ctx0); // batch 58 (QUESTIONS 413): the lists here read the adult the whose-numbers switch is on
     const [parts, strip, name] = TAB_PARTS[tabId];
     if (!app.hasClient) return [head(parts[id].title), noClient(app)];
     const top = S.live(ctx, () => strip(ctx));

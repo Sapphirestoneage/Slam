@@ -148,7 +148,7 @@ export function setHomeworkPerson(store, key, person) {
 // owner (batch 7, item 9): 'client' (the default, and what every older item means) finds the number; 'coach' makes a
 // field and enters it, and never goes out with Send to client. noteId: the parking-lot note it came from.
 export function makeHomework(store, sid, label, { link = null, due = null, person = null, owner = null, noteId = null } = {}) {
-  const hw = { id: store.makeId(), label, from: sid, at: store.now(), status: 'To do', statusBy: null, ...(link ? { link } : {}), ...(due ? { due } : {}), ...(person ? { person } : {}), ...(owner === 'coach' ? { owner } : {}), ...(noteId ? { noteId } : {}) }; // person (F2): Me, Partner or Joint
+  const hw = { id: store.makeId(), label, from: sid, at: store.now(), status: 'To do', statusBy: null, ...(link ? { link } : {}), ...(due ? { due } : {}), ...(person ? { person } : {}), ...(owner === 'coach' ? { owner } : {}), ...(noteId ? { noteId } : {}) }; // person (F2): Me, Partner or Joint; batch 58: or an adult past the couple (P3 to P7)
   store.setIn('program', ['homework'], [...(store.doc.program?.homework || []), hw], 'Make homework');
   return hw;
 }

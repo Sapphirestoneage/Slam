@@ -3367,29 +3367,29 @@
  },
  "poly-household": {
   "all": {
-   "netWorth": 284000,
-   "liquidNetWorth": 29000,
-   "fiNumber": 2220000,
-   "surplus": 3470,
-   "savingsRate": 0.32,
-   "debtTotal": 400000,
-   "debtPayments": 2600,
+   "netWorth": 283300,
+   "liquidNetWorth": 28300,
+   "fiNumber": 2130000,
+   "surplus": 6500,
+   "savingsRate": 0.48,
+   "debtTotal": 403200,
+   "debtPayments": 2800,
    "debtFreeMonths": 268,
-   "debtInterest": 294348,
-   "monthsToFi": 251,
-   "takeHome": 10870,
-   "spending": 7400,
-   "housing": 2800,
-   "cash": 29000,
+   "debtInterest": 294407,
+   "monthsToFi": 172,
+   "takeHome": 13600,
+   "spending": 7100,
+   "housing": 2900,
+   "cash": 31500,
    "invested": 105000,
-   "runway": 3.92,
-   "ruleOf5": 53280,
-   "lines": 59,
-   "step": "4",
+   "runway": 4.44,
+   "ruleOf5": 51120,
+   "lines": 57,
+   "step": "3",
    "layers": [
     [
      "buffer",
-     3415.38,
+     3276.92,
      null
     ],
     [
@@ -3399,125 +3399,61 @@
     ],
     [
      "big-e:fat",
-     6840,
+     12600,
      null
     ],
     [
      "big-e:draftt",
-     18720,
+     20160,
      null
     ],
     [
      "big-e:full",
-     27720,
+     18360,
      null
     ]
    ],
    "st": [
-    10870,
-    3470,
-    2700.77,
-    284000
+    13600,
+    6500,
+    5453.85,
+    283300
    ],
    "cal": [
-    21,
-    2700.77,
-    741
+    43,
+    5453.85,
+    1508
    ],
    "mv": [
-    58,
-    950,
-    950
+    55,
+    4300,
+    4300
    ]
   },
   "Me": {
-   "netWorth": 149500,
-   "liquidNetWorth": 14500,
-   "fiNumber": 1110000,
-   "surplus": 2535,
-   "savingsRate": 0.41,
-   "debtTotal": 200000,
-   "debtPayments": 1300,
-   "debtFreeMonths": 268,
-   "debtInterest": 147174,
-   "monthsToFi": 204,
-   "takeHome": 6235,
-   "spending": 3700,
-   "housing": 1500,
-   "cash": 14500,
-   "invested": 60000,
-   "runway": 3.92,
-   "ruleOf5": 26640,
-   "lines": 59,
-   "step": "4",
-   "layers": [
-    [
-     "buffer",
-     1707.69,
-     null
-    ],
-    [
-     "little-e",
-     1000,
-     null
-    ],
-    [
-     "big-e:fat",
-     6840,
-     null
-    ],
-    [
-     "big-e:draftt",
-     9360,
-     null
-    ],
-    [
-     "big-e:full",
-     10440,
-     null
-    ]
-   ],
-   "st": [
-    6235,
-    2535,
-    2088.85,
-    149500
-   ],
-   "cal": [
-    19,
-    2088.85,
-    665
-   ],
-   "mv": [
-    58,
-    950,
-    950
-   ]
-  },
-  "Partner": {
    "netWorth": 134500,
    "liquidNetWorth": 14500,
-   "fiNumber": 1110000,
-   "surplus": 935,
-   "savingsRate": 0.2,
-   "debtTotal": 200000,
-   "debtPayments": 1300,
+   "fiNumber": 852000,
+   "surplus": 2960,
+   "savingsRate": 0.51,
+   "debtTotal": 160000,
+   "debtPayments": 1040,
    "debtFreeMonths": 268,
-   "debtInterest": 147174,
-   "monthsToFi": 333,
-   "takeHome": 4635,
-   "spending": 3700,
-   "housing": 1500,
+   "debtInterest": 117739,
+   "monthsToFi": 155,
+   "takeHome": 5800,
+   "spending": 2840,
+   "housing": 1140,
    "cash": 14500,
-   "invested": 45000,
-   "runway": 3.92,
-   "ruleOf5": 26640,
-   "lines": 59,
+   "invested": 60000,
+   "runway": 5.11,
+   "ruleOf5": 20448,
+   "lines": 54,
    "step": "4",
    "layers": [
     [
      "buffer",
-     1707.69,
+     1310.77,
      null
     ],
     [
@@ -3527,120 +3463,184 @@
     ],
     [
      "big-e:fat",
-     6840,
+     5940,
      null
     ],
     [
      "big-e:draftt",
-     9360,
+     7488,
      null
     ],
     [
      "big-e:full",
-     10440,
+     7020,
      null
     ]
    ],
    "st": [
-    4635,
-    935,
-    611.92,
+    5800,
+    2960,
+    2513.85,
     134500
    ],
    "cal": [
-    19,
-    611.92,
-    665
+    28,
+    2513.85,
+    971
    ],
    "mv": [
-    58,
-    950,
-    950
+    53,
+    1800,
+    1800
+   ]
+  },
+  "Partner": {
+   "netWorth": 119500,
+   "liquidNetWorth": 14500,
+   "fiNumber": 717000,
+   "surplus": 1810,
+   "savingsRate": 0.43,
+   "debtTotal": 160000,
+   "debtPayments": 1040,
+   "debtFreeMonths": 268,
+   "debtInterest": 117739,
+   "monthsToFi": 188,
+   "takeHome": 4200,
+   "spending": 2390,
+   "housing": 1140,
+   "cash": 14500,
+   "invested": 45000,
+   "runway": 6.07,
+   "ruleOf5": 17208,
+   "lines": 54,
+   "step": "4",
+   "layers": [
+    [
+     "buffer",
+     1103.08,
+     null
+    ],
+    [
+     "little-e",
+     1000,
+     null
+    ],
+    [
+     "big-e:fat",
+     4140,
+     null
+    ],
+    [
+     "big-e:draftt",
+     7488,
+     null
+    ],
+    [
+     "big-e:full",
+     5580,
+     null
+    ]
+   ],
+   "st": [
+    4200,
+    1810,
+    1486.92,
+    119500
+   ],
+   "cal": [
+    28,
+    1486.92,
+    966
+   ],
+   "mv": [
+    53,
+    1350,
+    1350
    ]
   },
   "fold:coach:all": {
-   "n": 70,
-   "names": 1383,
-   "netWorth": 284000,
-   "liquidNetWorth": 29000,
-   "fiNumber": 2220000,
-   "surplus": 3470,
-   "savingsRate": 0.31922723091076355,
-   "debtTotal": 400000,
-   "debtPayments": 2600,
+   "n": 68,
+   "names": 1254,
+   "netWorth": 283300,
+   "liquidNetWorth": 28300,
+   "fiNumber": 2130000,
+   "surplus": 6500,
+   "savingsRate": 0.47794117647058826,
+   "debtTotal": 403200,
+   "debtPayments": 2800,
    "debtFreeMonths": 268,
-   "debtInterest": 294348,
-   "monthsToFi": 251
+   "debtInterest": 294407,
+   "monthsToFi": 172
   },
   "fold:coach:Me": {
-   "n": 70,
-   "names": 1383,
-   "netWorth": 149500,
+   "n": 68,
+   "names": 1254,
+   "netWorth": 134500,
    "liquidNetWorth": 14500,
-   "fiNumber": 1110000,
-   "surplus": 2535,
-   "savingsRate": 0.4065757818765036,
-   "debtTotal": 200000,
-   "debtPayments": 1300,
+   "fiNumber": 852000,
+   "surplus": 2960,
+   "savingsRate": 0.5103448275862069,
+   "debtTotal": 160000,
+   "debtPayments": 1040,
    "debtFreeMonths": 268,
-   "debtInterest": 147174,
-   "monthsToFi": 204
+   "debtInterest": 117739,
+   "monthsToFi": 155
   },
   "fold:coach:Partner": {
-   "n": 70,
-   "names": 1383,
-   "netWorth": 134500,
+   "n": 68,
+   "names": 1254,
+   "netWorth": 119500,
    "liquidNetWorth": 14500,
-   "fiNumber": 1110000,
-   "surplus": 935,
-   "savingsRate": 0.2017259978425027,
-   "debtTotal": 200000,
-   "debtPayments": 1300,
+   "fiNumber": 717000,
+   "surplus": 1810,
+   "savingsRate": 0.430952380952381,
+   "debtTotal": 160000,
+   "debtPayments": 1040,
    "debtFreeMonths": 268,
-   "debtInterest": 147174,
-   "monthsToFi": 333
+   "debtInterest": 117739,
+   "monthsToFi": 188
   },
   "fold:client:all": {
-   "n": 70,
-   "names": 1383,
-   "netWorth": 284000,
-   "liquidNetWorth": 29000,
-   "fiNumber": 2220000,
-   "surplus": 3470,
-   "savingsRate": 0.31922723091076355,
-   "debtTotal": 400000,
-   "debtPayments": 2600,
+   "n": 68,
+   "names": 1254,
+   "netWorth": 283300,
+   "liquidNetWorth": 28300,
+   "fiNumber": 2130000,
+   "surplus": 6500,
+   "savingsRate": 0.47794117647058826,
+   "debtTotal": 403200,
+   "debtPayments": 2800,
    "debtFreeMonths": 268,
-   "debtInterest": 294348,
-   "monthsToFi": 251
+   "debtInterest": 294407,
+   "monthsToFi": 172
   },
   "fold:client:Me": {
-   "n": 70,
-   "names": 1383,
-   "netWorth": 149500,
-   "liquidNetWorth": 14500,
-   "fiNumber": 1110000,
-   "surplus": 2535,
-   "savingsRate": 0.4065757818765036,
-   "debtTotal": 200000,
-   "debtPayments": 1300,
-   "debtFreeMonths": 268,
-   "debtInterest": 147174,
-   "monthsToFi": 204
-  },
-  "fold:client:Partner": {
-   "n": 70,
-   "names": 1383,
+   "n": 68,
+   "names": 1254,
    "netWorth": 134500,
    "liquidNetWorth": 14500,
-   "fiNumber": 1110000,
-   "surplus": 935,
-   "savingsRate": 0.2017259978425027,
-   "debtTotal": 200000,
-   "debtPayments": 1300,
+   "fiNumber": 852000,
+   "surplus": 2960,
+   "savingsRate": 0.5103448275862069,
+   "debtTotal": 160000,
+   "debtPayments": 1040,
    "debtFreeMonths": 268,
-   "debtInterest": 147174,
-   "monthsToFi": 333
+   "debtInterest": 117739,
+   "monthsToFi": 155
+  },
+  "fold:client:Partner": {
+   "n": 68,
+   "names": 1254,
+   "netWorth": 119500,
+   "liquidNetWorth": 14500,
+   "fiNumber": 717000,
+   "surplus": 1810,
+   "savingsRate": 0.430952380952381,
+   "debtTotal": 160000,
+   "debtPayments": 1040,
+   "debtFreeMonths": 268,
+   "debtInterest": 117739,
+   "monthsToFi": 188
   }
  },
  "single-parent": {

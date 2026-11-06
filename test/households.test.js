@@ -176,3 +176,85 @@ test('the benefits cliff reads the household: every adult in the plan, and a sup
   const N = cliffOf(n, ref, { now, m: metrics(n, ref, { now }) }).household;
   assert.deepEqual([N.adults, N.kids, N.others, N.size], [1, 1, 1, 3]);
 });
+
+// ---------- Batch 58: follow-ups to batch 49 ----------
+import { createCtx, viewCtx, viewPart, viewLineAmount, whoseChoices } from '../js/ui/staples.js';
+import { listPersonOf } from '../js/privacy.js';
+import { listsFollowView } from '../js/registry/couples.js';
+const lineMonthly = r => (r.per === 'year' ? r.amount / 12 : r.amount);
+// What a list's totals come to in one view: each row the view lists, at the view's part (as the list footers add it).
+function listTotals(doc, person) {
+  const s = new Store({ ...doc, settings: { ...doc.settings, person } }, { now: () => NOW });
+  const c = viewCtx(createCtx({ store: s, ref, now: () => now }));
+  const m = c.metrics();
+  const bills = c.visible(r => r.kind === 'bill' && r.amount != null && r.status !== 'Not for me');
+  const lines = bills.reduce((t, r) => t + (viewLineAmount(c, r) ?? lineMonthly(r)), 0) + (m.inputs.autoLines ?? []).reduce((t, a) => t + a.amount, 0);
+  const val = r => (r.kind === 'asset' ? r.values.value : r.values.balance) ?? 0;
+  const owned = c.visible(r => r.kind === 'account' || r.kind === 'asset').reduce((t, r) => t + val(r) * viewPart(c, r), 0);
+  const owed = c.visible(r => r.kind === 'debt').reduce((t, r) => t + (r.values.balance ?? 0) * viewPart(c, r), 0);
+  return { c, m, lines, owned, owed };
+}
+
+test('QUESTIONS 413: in one adult\'s view the lists hold that adult\'s rows and their part of the shared ones, and add up to their strip', () => {
+  for (const id of ['three-adults', 'poly-household']) {
+    const doc = buildPersona(def(id));
+    for (const a of adultsOf(doc)) {
+      const { c, m, lines, owned, owed } = listTotals(doc, a.id);
+      assert.equal(c.listPerson, a.id, `${id}: the lists follow ${a.name}`);
+      assert.equal(Math.round(lines), Math.round(m.inputs.spending), `${id} ${a.name}: the Budget lines add up to the strip's spending`);
+      assert.equal(Math.round(owned - owed), Math.round(m.netWorth.value), `${id} ${a.name}: Assets less Debt is the strip's net worth`);
+    }
+  }
+  const poly = buildPersona(def('poly-household'));
+  const cam = listTotals(poly, 'P3');
+  assert.ok(!cam.c.visible(r => r.kind === 'bill').some(r => r.name === 'Pet costs'), 'the pets are Ana\'s and Ben\'s');
+  assert.equal(viewLineAmount(cam.c, poly.records.find(r => r.name === 'Groceries')), 250, 'Cam pays 25% of the groceries');
+  assert.equal(viewPart(cam.c, poly.records.find(r => r.name === 'Mortgage')), 0.2);
+});
+
+test('QUESTIONS 413: Everyone, a couple and one adult keep every row (the household\'s books)', () => {
+  const three = buildPersona(def('three-adults'));
+  assert.equal(listsFollowView(three), true);
+  const poly = buildPersona(def('poly-household'));
+  assert.equal(listPersonOf({ ...poly, settings: { ...poly.settings, person: 'all' } }), null, 'Everyone');
+  assert.equal(listPersonOf({ ...poly, settings: { ...poly.settings, person: 'P3' } }), 'P3');
+  const couple = buildPersona(def('couple-separate'));
+  assert.equal(listsFollowView(couple), false, 'a couple\'s lists read as before (QUESTIONS 420)');
+  assert.equal(listPersonOf({ ...couple, settings: { ...couple.settings, person: 'Partner' } }), null);
+  const s = new Store(couple, { now: () => NOW });
+  const c = viewCtx(createCtx({ store: s, ref, now: () => now }));
+  assert.equal(c.visible(r => r.kind === 'bill').length, createCtx({ store: s, ref, now: () => now }).visible(r => r.kind === 'bill').length);
+  assert.equal(listPersonOf(buildPersona(def('maya'))), null, 'one adult');
+});
+
+test('QUESTIONS 415: Whose on an institution or a homework item offers every adult by name, then Joint', () => {
+  assert.deepEqual(whoseChoices(buildPersona(def('poly-household'))).map(x => x[1]), ['Ana', 'Ben', 'Cam', 'Joint']);
+  assert.deepEqual(whoseChoices(buildPersona(def('couple-separate'))).map(x => x[0]), ['Me', 'Partner', 'Joint']);
+});
+
+test('QUESTIONS 418: the poly household holds Cam as an adult in the plan, with Cam\'s own paycheck, card and view', () => {
+  const doc = buildPersona(def('poly-household'));
+  assert.deepEqual(adultsOf(doc).map(a => a.name), ['Ana', 'Ben', 'Cam']);
+  const v = p => metrics(doc, ref, { now, person: p });
+  const [a, b, c, e] = ['Me', 'Partner', 'P3', null].map(v);
+  assert.equal(a.surplus.value + b.surplus.value + c.surplus.value, e.surplus.value);
+  assert.equal(a.netWorth.value + b.netWorth.value + c.netWorth.value, e.netWorth.value);
+  assert.equal(c.inputs.autoLines.find(x => x.name === 'Mortgage payment').amount, 520, 'the mortgage 40/40/20 on the row');
+  assert.ok(c.inputs.debts.some(d => d.name === "Cam's card"));
+  assert.ok(!doc.records.some(r => r.kind === 'income' && r.owner === 'Joint'), 'no more "Cam\'s share" as money coming in');
+  // Cam files a return of their own (QUESTIONS 412): Cam's view reads Cam's return, the household's reads all of them.
+  const camRate = householdRates(c.inputs.householdTax, ref, { person: 'P3' });
+  const camRows = Object.values(c.inputs.householdTax.rows).filter(r => r.person === 'P3');
+  assert.equal(camRate.effective, camRows.reduce((t, r) => t + r.total, 0) / camRows.reduce((t, r) => t + r.gross, 0));
+  assert.notEqual(camRate.effective, householdRates(e.inputs.householdTax, ref).effective);
+});
+import { householdRates } from '../js/math/income.js';
+
+test('QUESTIONS 419: each adult past the couple has a birth year on People, and it is registered', () => {
+  const s = fresh();
+  s.setDoc('profile', { firstName: 'Kai', mode: 'Married separate', household: 'Couple', partnerName: 'Lee' });
+  const id = addPerson(s, 'Adult');
+  setPerson(s, id, { name: 'Mo', birthYear: 1961 });
+  assert.equal(s.doc.profile.people.find(x => x.id === id).birthYear, 1961);
+  assert.equal(buildPersona(def('poly-household')).profile.people[0].birthYear, 1992);
+});
