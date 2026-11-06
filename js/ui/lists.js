@@ -585,7 +585,7 @@ export function categoryList(ref, { pass = 'Plan', ym = null } = {}) {
           : c.from === 'typed' && c.lines.length ? (c.unassigned > 0.5 ? h('span.muted.small.cat-note', {}, `${money(c.unassigned)} not assigned yet`) : h('span.muted.small.cat-note', {}, 'Fully itemized')) : null;
         // Batch 18 (QUESTIONS 229): an empty category offers its typical amount (the starter lines' typicals) in one tap,
         // marked Roughly; typing a real number clears the Roughly that came from it.
-        const typ = c.amount == null && r.status !== 'Not for me' ? categoryTypicalOf(ctx.visible(x => x.kind === 'bill'), r.type) : null;
+        const typ = c.amount == null && r.status !== 'Not for me' ? categoryTypicalOf(ctx.visible(x => x.kind === 'bill'), r.type, ctx.metrics().inputs.typicalScale ?? 1) : null;
         return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'wrap', gap: '6px' } },
           typ ? h('button.btn.small.use-typical', { type: 'button', 'data-focus': `cat:${r.type}:typical`, title: `Use the typical ${money(typ)} a month (what the starter lines add up to), marked Roughly. Or type the real number.`, onclick: () => up({ amount: typ, per: 'month', status: 'Roughly', usedTypical: true }) }, `Use typical ${money(typ)}`) : null,
           moneyInput(r.amount, v => up({ amount: v, per: 'month', status: r.status === 'Not sure' || (r.values.usedTypical && r.status === 'Roughly') ? null : r.status, usedTypical: null }), { hint: c.from === 'lines' ? moneyText(c.linesSum) : 'A month', key: `cat:${r.type}:amount` }), note);

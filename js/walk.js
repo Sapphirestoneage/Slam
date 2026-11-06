@@ -91,7 +91,7 @@ export function walkStops(ctx) {
     const key = it.focus.split(':')[1];
     const rec = live.find(r => isCategoryRecord(r) && r.type === key);
     // Batch 18 (QUESTIONS 229): one tap "Use typical $X", from the category's faded starter amounts, marked Rough.
-    const t = categoryTypicalOf(live.filter(r => r.kind === 'bill'), key);
+    const t = categoryTypicalOf(live.filter(r => r.kind === 'bill'), key, m.inputs?.typicalScale ?? 1);
     add({ key: it.focus, screen: 'Budget categories', route: '#/cash-flow/budget', focus: it.focus, id: rec?.id ?? null, field: 'amount', name: it.name.replace(': amount', ', a month'), park: rec ? { kind: 'category', id: rec.id } : null,
       typical: rec && t ? { label: `Use typical ${dollars(t)}`, why: 'The starter amounts for this category, marked Rough', apply: { kind: 'category', id: rec.id, amount: t } } : null });
   }

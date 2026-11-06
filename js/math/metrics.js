@@ -9,7 +9,7 @@ import { datedChanges } from './changes.js';
 import { gatesOf, visible } from '../gates.js';
 import { inView, modeOf, MODES, ownerOf, forPerson } from '../registry/couples.js';
 import { bigEMultiplierOf } from '../registry/assumptions.js';
-import { myShare, withHome, partnerSplits, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor, categoryTotals, isCategoryRecord } from './spending.js';
+import { myShare, withHome, partnerSplits, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor, categoryTotals, isCategoryRecord, typicalScaleOf } from './spending.js';
 import { cardMinimum, payoffMonths, totalInterest, payoffPlan, debtFirstPlan, isHeavyDebt, promoSoonIds, debtFreeCard, heroExtras } from './debt.js';
 import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
 import { link401k, matchFromTiers } from './portfolio.js';
@@ -218,6 +218,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
     place, link, sinkingMonthly, householdTax: hh, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, filingGuess, none, mode, person, splitShare,
     debtOrder: doc.settings?.debtOrder ?? 'avalanche', debtCustomOrder: doc.settings?.debtCustomOrder ?? [], debtExtra: doc.settings?.debtExtra ?? 0,
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || useLines ? 0 : debtPayments), // the lines hold each payment, From Debt
+    typicalScale: typicalScaleOf({ gut: gutOf(), includesDebt, debtPayments, categories, lines: typedLines }), // QUESTIONS 241
     autoLines, dupOf, askOf, typedLines, premiums, payFrequency, health: health ? { id: health.id, perPaycheck: healthPerPay, fromPay: !!healthFromPay, jobId: healthJob?.id ?? null } : null,
     paycheckPremiums: premiums.filter(p => p.paidFrom === 'Paycheck').reduce((s, p) => s + (p.monthly ?? 0), 0),
     afterTaxSaving: afterTaxContributions(live.filter(r => r.kind === 'account'), { payFrequency, payrollHsa: gates.hsa && income.some(i => (i.r.values.hsaFsa ?? 0) > 0) }).total,

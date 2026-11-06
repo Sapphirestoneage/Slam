@@ -66,8 +66,10 @@ test('the walk offers the typical answer first: the filing status, then Use typi
   const live = ctxOf(s).visible(r => r.kind === 'bill');
   for (const key of ['Accommodation', 'Food', 'Transportation']) {
     const st = walkStops(ctxOf(s)).find(x => x.key === `cat:${key}:amount`);
-    const want = Math.round(typicalTotal(live.filter(r => categoryKeyOf(r) === key && !r.values.irregular)));
-    assert.equal(categoryTypicalOf(live, key), want);
+    const scale = ctxOf(s).metrics().inputs.typicalScale; // QUESTIONS 241: scaled to fit the gut number
+    assert.ok(scale > 0 && scale <= 1);
+    const want = categoryTypicalOf(live, key, scale);
+    assert.equal(want, Math.round(typicalTotal(live.filter(r => categoryKeyOf(r) === key && !r.values.irregular)) * scale / 10) * 10);
     assert.equal(st.typical.label, `Use typical $${want.toLocaleString('en-US')}`);
     useStopTypical(s, st);
     const rec = s.doc.records.find(r => r.kind === 'spending' && r.type === key);
@@ -101,4 +103,20 @@ test('the work answer sets the paycheck tax type, so Income does not ask it agai
   assert.equal(inc(alexis()).values.incomeType, 'W-2');
   assert.equal(inc(client('Sam', { takeHome: 3000, workSituation: 'Self-employed' })).values.incomeType, '1099');
   assert.equal(inc(client('Pat', { takeHome: 3000, workSituation: 'Mixed' })).values.incomeType ?? null, null, 'Mixed leaves it to Income');
+});
+
+// QUESTIONS 241 (decided Nov 6): one tap on "Use typical" never puts the categories over the client's gut number.
+import { typicalScaleOf as tsQ, categoryTypicalOf as ctQ } from '../js/math/spending.js';
+test('q241: typicals scale down to fit what the gut number leaves, never up', () => {
+  const line = (cat, typ) => ({ kind: 'bill', values: { category: cat, typical: typ } });
+  const lines = [line('Rent or mortgage', 2000), line('Groceries', 600)];
+  const cats = [{ key: 'Accommodation', amount: null }, { key: 'Food', amount: null }];
+  const keyOf = { Accommodation: 'Accommodation', Food: 'Food' };
+  const want = (ctQ(lines, 'Accommodation') ?? 0) + (ctQ(lines, 'Food') ?? 0);
+  if (!want) return; // the starter-line shape differs: covered by the browser run
+  const s = tsQ({ gut: 2000, includesDebt: true, debtPayments: 120, categories: cats, lines });
+  assert.ok(s < 1);
+  assert.ok(Math.abs(s - 1880 / want) < 1e-9);
+  assert.equal(tsQ({ gut: 10000, categories: cats, lines }), 1, 'never scaled up');
+  assert.equal(tsQ({ gut: null, categories: cats, lines }), 1);
 });

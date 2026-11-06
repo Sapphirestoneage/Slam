@@ -265,7 +265,17 @@ export const typicalOf = r => r?.values?.typical ?? r?.typical ?? null;
 export const typicalTotal = lines => lines.filter(isFaded).reduce((s, l) => s + (monthlyFrom(typicalOf(l), l.per ?? 'month').value ?? 0), 0);
 // Batch 18: a category's typical amount, what its faded starter lines would add up to a month (the Budget group's
 // "Typical amounts would add up to" note), for the one-tap "Use typical $X" on the category row and in the walk.
-export const categoryTypicalOf = (lines, key) => { const t = typicalTotal(lines.filter(l => !l.values?.irregular && categoryKeyOf(l) === key)); return t > 0 ? Math.round(t) : null; };
+// scale (QUESTIONS 241): when the empty categories' typicals would add up to more than the gut number leaves for them,
+// each is scaled down by the same share, so one tap never puts the lines over the client's own number. Never scaled up.
+export const categoryTypicalOf = (lines, key, scale = 1) => { const t = typicalTotal(lines.filter(l => !l.values?.irregular && categoryKeyOf(l) === key)) * Math.min(1, Math.max(0, scale ?? 1)); return t > 0 ? Math.round(t / 10) * 10 : null; };
+// The share (1 or less) the empty categories' typicals are scaled by: what the gut number leaves after debt payments
+// (when it includes them) and the categories that already hold an amount, over what their typicals add up to.
+export function typicalScaleOf({ gut = null, includesDebt = false, debtPayments = 0, categories = [], lines = [] }) {
+  if (gut == null) return 1;
+  const room = gut - (includesDebt ? debtPayments : 0) - categories.filter(c => c.key !== 'Retirement' && c.key !== 'Debt' && c.amount != null).reduce((s, c) => s + c.amount, 0);
+  const want = categories.filter(c => c.key !== 'Retirement' && c.key !== 'Debt' && c.amount == null).reduce((s, c) => s + (categoryTypicalOf(lines, c.key) ?? 0), 0);
+  return want > 0 && room < want ? Math.max(0, room) / want : 1;
+}
 // Levels inside every group: 1 the big one, 2 the regulars, 3 folded into one Everything else line. A line with no
 // level is a 2 (a line the client adds); starter lines carry theirs from Reference data (spendingPresets.lines[].level).
 export const LEVEL_ELSE = 3;

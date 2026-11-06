@@ -399,3 +399,10 @@ after), persona and layout scripts; before and after screenshots at 1280 and 390
 The materiality bar (a fix counts when it saves more a year than this much of your time is worth) is now per client:
 taps on Plan › Goals › More for 1, 2, 4 or 8 hours at the real hourly wage and a floor of $50, $100, $250 or $500;
 blank keeps the defaults (2 hours, $100). Registered as client assumptions; export format 18.
+
+## Nov 6 2026: typicals fit the gut number (QUESTIONS 241)
+
+"Use typical $X" no longer adds up past the client's own gut number: when the empty categories' typicals would exceed
+what the gut number leaves (after debt payments it includes and the categories already set), each is scaled by the
+same share and rounded to $10 (js/math/spending.js typicalScaleOf, read by the walk and the Budget). Never scaled up.
+Questions 240 to 249 decided; 242 (the session pace) waits for Eli. QA: 576 tests, 0 fail.
