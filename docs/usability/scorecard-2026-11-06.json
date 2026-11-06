@@ -2951,6 +2951,463 @@
      "reason": "waits for Eli at sign-off"
     }
    }
+  },
+  {
+   "screen": "Budget (a month's own gut number, plain meanings)",
+   "route": "#/cash-flow/budget",
+   "area": "Cash flow",
+   "batch": 45,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 45 browser run at 1280 and 390"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-checked numbers match (test/batch45.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 45 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "Different in <month> is one tap, then one amount; the x goes back to the usual"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain meanings pair here now (Q345); none of the five terms shows in plain view on Budget today, so nothing reads differently yet"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the box shows the month's number; Month end's line names the split of it"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "in Client view a category whose only line is coach-only reads \"23 starter lines, none used yet\" beside \"$37 from the lines\" (QUESTIONS 378)"
+    }
+   }
+  },
+  {
+   "screen": "Calendar (whose numbers)",
+   "route": "#/cash-flow/calendar",
+   "area": "Cash flow",
+   "batch": 45,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 45 browser run at 1280 and 390"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-checked numbers match (test/batch45.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "a Living together couple's calendar reads the same plan as Home and Statements: Jordan's rent $1,440, Sam's $960 (was $1,200 in both); a Joint yearly bill lands at the yearly share"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 45 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps; one amount at most"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdict words, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the whose-numbers switch shows above the calendar"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Month end (whose numbers, the month's gut, the import)",
+   "route": "#/cash-flow/close",
+   "area": "Cash flow",
+   "batch": 45,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 45 browser run at 1280 and 390"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "Maya with $4,500 for November: the gut-only categories share $2,750 (hand-checked); Jordan's Same as plan keeps the whole $2,400 row and shows his $1,440"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 45 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "the import's matched rows go in without a tap (14 of 22 for Maya's Rocket Money file)"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdict words, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the footer names what stays out: \"14 of 22 go in. Left out until accepted: Parkside Rent, Starbucks, Netflix and 4 more\""
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "FOO (plain meanings)",
+   "route": "#/plan/foo",
+   "area": "Plan",
+   "batch": 45,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 45 browser run at 1280 and 390"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-checked numbers match (test/batch45.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 45 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps; one amount at most"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "big e reads \"big e (job-loss fund)\" the first time in plain view; chips and buttons keep the short name (Q345)"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action shows it worked"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Overview (Biggest share lock)",
+   "route": "#/report/overview",
+   "area": "Report",
+   "batch": 45,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 45 browser run at 1280 and 390"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-checked numbers match (test/batch45.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 45 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps; one amount at most"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdict words, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "a gut-only client sees Biggest share Locked with what lights it and one tap: Add Budget lines (Q349)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Credit cards (walk: the card limit)",
+   "route": "#/net-worth/credit-cards",
+   "area": "Net worth",
+   "batch": 45,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 45 browser run at 1280 and 390"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-checked numbers match (test/batch45.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 45 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "a short month asks each card's limit in the walk; I don't know is one tap and keeps Experian's typical"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdict words, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the walk bar says why: the month is short, so the room on the cards matters"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Income, Assets, Debt (Client view counts, the privacy eye)",
+   "route": "#/cash-flow/income",
+   "area": "Net worth and Cash flow",
+   "batch": 45,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 45 browser run at 1280 and 390"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-checked numbers match (test/batch45.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 45 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps; one amount at most"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "privacy marks use an eye with a slash; the lock means confirmed only (Q354)"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action shows it worked"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "Client view counts leave a coach-only row out (Q356); a private platform row shows its net only (Q353)"
+    }
+   }
+  },
+  {
+   "screen": "Coach tools › Data (the spreadsheet)",
+   "route": "#/tools/data",
+   "area": "Coach tools",
+   "batch": 45,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 45 browser run at 1280 and 390"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "Without private rows: the spreadsheet holds the shared backup's rows, the fan page at its $2,265 net with no fee or hold; a dated row opened in a later month reads Moved on since this file was made"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 45 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps; one amount at most"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdict words, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action shows it worked"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
   }
  ],
  "updated": {
@@ -3006,5 +3463,13 @@
   "major": 0,
   "minor": 1,
   "note": "Batch 43 appended its screens (each with \"batch\": 43), scored after its changes; the rows above and the summary are as they were."
+ },
+ "batch45": {
+  "date": "2026-11-06",
+  "screens": 8,
+  "blocker": 0,
+  "major": 0,
+  "minor": 1,
+  "note": "Batch 45 appended its screens (each with \"batch\": 45), scored after its fixes; the rows above and the summary are as they were."
  }
 }

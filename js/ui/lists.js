@@ -22,6 +22,7 @@ import { needs } from '../math/result.js';
 import { money } from '../format.js';
 import { estimateOf, actualOf, instances, monthName, planDiffs, addMonths, ymOf } from '../month.js';
 import { rangeLine } from './range-ui.js';
+import { countable } from '../privacy.js';
 
 const LOAN_TYPES = new Set(['Student loan', 'Car loan', 'Personal loan', 'Mortgage']);
 const short = v => (Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
@@ -112,7 +113,7 @@ export function debtList(ref, { cards = null } = {}) {
     footerTotal: (ctx, recs) => amount(ctx, recs.some(r => r.values.balance != null) ? sum(recs, r => r.values.balance) : null),
     totals: (ctx, recs, m, cols) => {
       const cells = cols.map(c => {
-        if (c.label === 'Debt') return h('td', {}, `${recs.length} ${cards === 'only' ? (recs.length === 1 ? 'card' : 'cards') : recs.length === 1 ? 'debt' : 'debts'}`);
+        if (c.label === 'Debt') { const n = countable(recs).length; return h('td', {}, `${n} ${cards === 'only' ? (n === 1 ? 'card' : 'cards') : n === 1 ? 'debt' : 'debts'}`); } // batch 45: a coach-only row is not counted in Client view
         if (c.label === 'Balance') return h('td.num', {}, amount(ctx, recs.some(r => r.values.balance != null) ? sum(recs, r => r.values.balance) : null));
         if (c.label === 'Payment / mo') { const ids = new Set(recs.map(r => r.id)), ds = m.debts.filter(d => ids.has(d.id)); return h('td.num', {}, amount(ctx, ds.some(d => d.payment != null) ? sum(ds, d => d.payment) : null)); } // batch 37: this list's own debts (Credit cards summed every debt: $780 against one card's $250)
         return h('td');
@@ -245,7 +246,7 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
     // Not for me counts as $0 everywhere (R058); its group shows what was cut.
     subtotal: (ctx, rows) => (rows.every(r => r.status === 'Not for me') ? `$0, cut ${money(sum(rows, r => lineMonthlyOf(r, freqOf(ctx))))} a month` : `${money(sum(rows, keptIn(ctx)))} a month`),
     footerTotal: (ctx, recs) => { const all = withAutos(ctx, recs); return h('span', {}, amount(ctx, all.some(r => r.amount != null) ? sum(all, keptIn(ctx)) : null), h('span.muted', {}, ' a month')); },
-    totals: (ctx, recs, m, cols) => { const all = withAutos(ctx, recs); return [...cols.map(c => c.label === 'Line' ? h('td', {}, `${all.filter(r => r.status !== 'Not for me').length} lines`) : c.label === 'Amount' ? h('td.num', {}, amount(ctx, all.some(r => r.amount != null) ? sum(all, keptIn(ctx)) : null)) : h('td')), h('td'), h('td')]; },
+    totals: (ctx, recs, m, cols) => { const all = withAutos(ctx, recs); return [...cols.map(c => c.label === 'Line' ? h('td', {}, `${countable(all).filter(r => r.status !== 'Not for me').length} lines`) : c.label === 'Amount' ? h('td.num', {}, amount(ctx, all.some(r => r.amount != null) ? sum(all, keptIn(ctx)) : null)) : h('td')), h('td'), h('td')]; },
   };
 }
 
@@ -593,7 +594,7 @@ export function categoryList(ref, { pass = 'Plan', ym = null } = {}) {
     hasValue: (ctx, r) => catOf(ctx, r)?.amount != null,
     columns: [
       { label: 'Category', render: (ctx, r) => { const c = catOf(ctx, r); return h('span.stack', { style: { gap: '2px' } }, h('strong', {}, c?.name ?? r.name ?? r.type),
-        h('span.muted.small', {}, c?.lines.length ? `${c.lines.length} ${c.lines.length === 1 ? 'line' : 'lines'}` : fadedIn(ctx, r.type) ? `${fadedIn(ctx, r.type)} starter lines, none used yet` : 'No lines: the amount alone counts')); } },
+        h('span.muted.small', {}, countable(c?.lines ?? []).length ? `${countable(c.lines).length} ${countable(c.lines).length === 1 ? 'line' : 'lines'}` : fadedIn(ctx, r.type) ? `${fadedIn(ctx, r.type)} starter lines, none used yet` : 'No lines: the amount alone counts')); } },
       // Batch 19: what the amount reads from sits in its own column, right beside the box (under it on a phone), so the
       // box is always in the same place down the table (DESIGN.md rule 1b).
       { label: 'Note', head: '', num: true, render: (ctx, r, m, up) => {

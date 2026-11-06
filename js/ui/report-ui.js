@@ -56,7 +56,9 @@ export function overviewScreen(app, ctx) {
     ...(debtFree ? [debtFree] : []),
     { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate, note: m.savingsRate.second, so: soWhat('savingsRate', m) },
     { id: 'draftt', label: 'Biggest share of take-home', tip: 'The biggest DRAFTT letter (Debt, Retirement, Accommodation, Food, Transportation, Therapy): the spending group that takes the most of take-home', result: topLetter ? { id: 'M29', value: topLetter[1], needs: [], unit: 'pct', text: shares.text } : { ...shares, value: null, needs: shares.needs?.length ? shares.needs : ['a tagged spending line'] },
-      home: HOME.budget, note: topLetter ? `${topLetter[0]}, share of take-home` : 'Share of take-home', so: soWhat('drafttTop', m, { top: topLetter }) },
+      home: HOME.budget, note: topLetter ? `${topLetter[0]}, share of take-home` : 'Share of take-home', so: soWhat('drafttTop', m, { top: topLetter }),
+      // Batch 45 (QUESTIONS 349): a gut-only client keeps the lock, with the one tap that lights it.
+      lock: !topLetter && x.takeHome != null && x.spendingSource !== 'lines' ? { reason: 'Spending is one gut number. Split it into Budget lines to see which group takes the most.', route: HOME.budget, label: 'Add Budget lines' } : null },
     { id: 'dti', label: 'Debt-to-income', result: ratios.dti, home: HOME.debt, so: soWhat('dti', m, ratios.dti), note: ctx.store.doc.settings?.phase4 === true && ratios.dti.value != null ? 'What you pay, over gross pay. A lender\'s read: Report › Lender\'s view' : null }, // batch 42: the two DTIs say how they differ
     { id: 'housing', label: 'Housing %', result: m.housingPct, home: HOME.budget, so: soWhat('housing', m) },
     { label: 'Job-loss fund target (big e)', tip: 'The Rule of 5: about one month of spending for every 5 years of age, the fund that carries you through a job loss', result: r5, home: HOME.assets, so: soWhat('ruleOf5', m) },
@@ -260,7 +262,7 @@ export function onePagerScreen(app, ctx) {
     S.button('Send summary', { kind: 'primary', iconName: 'mail', onClick: e => sendSummary(ctx, e.currentTarget) })),
   h('div.card.one-pager', {},
     h('h2', {}, `${doc.client.name || 'Client'}, ${new Date(ctx.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`),
-    doc.records.some(r => r.folded) ? h('p.private-line.muted.small.no-print', { title: 'Rows kept between a person and the coach show here as neutral words (Other income, Other spending). Every total still counts them' }, icon('lock'), `${PRIVATE_LINE}: shown as neutral words`) : null,
+    doc.records.some(r => r.folded) ? h('p.private-line.muted.small.no-print', { title: 'Rows kept between a person and the coach show here as neutral words (Other income, Other spending). Every total still counts them' }, icon('eye-off'), `${PRIVATE_LINE}: shown as neutral words`) : null,
     identityLine(ctx), // batch 25 (Phase 4): who they are with money, one line, and the wording it leads with
     movesBlock(app, ctx), // batch 12 (item 6): Your next 3 moves, then the tiles
     S.summaryStrip(ctx, [

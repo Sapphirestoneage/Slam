@@ -1022,3 +1022,38 @@ docs/usability/scorecard-2026-11-06.json: Fire drill appended with "batch": 44, 
 6. The workbook: M9Q (the meter, the question, the runner-up) is a From the app row; format 36, spec row M9Q
    (`tools/library/nextbest-spec.py`). `js/math/ranges.js` gained `knobsOf(..., { force })`, `runsOf`, `rangeFromRuns`
    and keeps each knob's runs, so Ask me next reruns one input, not the plan.
+## Batch 45 (Nov 6 2026): the decided small items (QUESTIONS 321, 333, 334, 344 to 346, 348, 349, 353, 354, 356)
+
+1. A month's own gut number (Q321): Budget's gut card has "Different in <month>" (one tap, one amount, an x back to the
+   usual), kept as spending.months.<month>.gut. Month end splits that month's gut-only categories from it (monthView,
+   gutSplitArgs on the inputs): Maya with $4,500 for December shares $2,750 instead of $1,750 (Food $493.04 from
+   $313.75, by hand); other months keep the usual split.
+2. The workbook keeps TODAY() (Q334): a row whose formula reads, through any cell or named range, a TODAY() this
+   household's dates can move (Starts in, Becomes mine in, a goal saved for each month) has a Check that says "Moved on
+   since this file was made (Nov 6)" in a later month instead of the gap (js/sheet/workbook.js markDated). The
+   multimillionaire and the transition persona have 15 such rows; the rest none. tools/workbook-check.mjs counts them
+   apart and stays clean; a LibreOffice test builds the file as of last month and finds M27 · sinking moved on.
+3. The spreadsheet follows What the files hold (Q333): Without private rows builds it from the shared backup, so the two
+   files hold the same household (checked in test/batch45.test.js).
+4. A short month asks each card's limit in the walk (Q344): one stop per card with no limit ("Visa's credit limit · the
+   month is short, so the room on the cards matters"); I don't know is the first tap and keeps Experian's typical
+   ($16,139 at 28), marked a guess.
+5. Plain meanings on Plan › FOO and Cash flow › Budget (Q345): "big e (job-loss fund)" on FOO; on Budget none of the
+   five terms shows in plain view today.
+6. Import (Q346): Save takes the matched rows by default, as YNAB and Rocket Money do; the footer names what stays out
+   ("14 of 22 go in. Left out until accepted: Parkside Rent, Starbucks, Netflix and 4 more").
+7. Calendar and Month end follow the whose-numbers switch for Dating and Living together (Q348): Jordan's rent $1,440,
+   Sam's $960 (both were $1,200); his checking starts his calendar; a Joint yearly bill lands at the yearly share ($720
+   of $1,200 for Jordan, it read $60); an amount typed in one person's view (Same as plan, a paid mark) is kept as the
+   whole row's.
+8. Overview's Biggest share for a gut-only client keeps its lock with "Add Budget lines ›" (Q349); SLAM has no gut only
+   for good choice, so it always shows.
+9. A private platform row folded or shared shows its net only (Q353): its amount is the payout after the fee and
+   chargebacks, with no fee and no chargebacks left (the same net, tax and totals); the hold stays in the app's folded
+   views and is left out of a shared file. The fan page: $2,975 less 20% less $115 = $2,265.
+10. Privacy marks use an eye with a slash (icon eye-off); the lock means confirmed (Q354).
+11. In Client view a coach-only row is left out of a list's row count and a Budget category's line count (Q356).
+12. Toasts look again while the screen is still drawing (1.5 s after they appear or the screen changes) and once a
+    scroll stops, and count headings and table headers as things not to cover (Batch 39's Budget minor). The layout
+    check on Budget, Calendar, Month end, FOO, Overview, Credit cards, Income, Debt, Assets and Coach tools › Data
+    went from 4 covered (the Fast Track toast on Assets after a scroll) to 0.

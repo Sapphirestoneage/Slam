@@ -158,7 +158,8 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
           return { v, s: applies ? 'input' : 'na', fmt: l.fld.type };
         }
         const tmpl = typeof l.col.f === 'function' ? l.col.f(item?.rec ?? { values: {}, kind: null }, c) : l.col.f;
-        return { f: compileRowFormula(tmpl, { letterOf, row: r, app: l.col.app, rec: item?.rec ?? null, c, where: `${area.tab}: ${l.label}` }), s: 'formula', fmt: l.col.unit };
+        const f = compileRowFormula(tmpl, { letterOf, row: r, app: l.col.app, rec: item?.rec ?? null, c, where: `${area.tab}: ${l.label}` });
+        return { f, s: 'formula', fmt: l.col.unit, ...(/\bTODAY\(/i.test(f) && datedRec(item?.rec) ? { today: true } : {}) }; // batch 45: a dated row (QUESTIONS 334)
       });
       rows.push(cells);
     }
@@ -177,7 +178,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
   }
 
   // ---------- Math ----------
-  const mRows = [[{ v: 'Math: every formula', s: 'title' }], [{ v: 'One row per formula in SLAM. Formula is live; The app\'s value is what SLAM shows; Check says Matches, or the gap.', s: 'about' }],
+  const mRows = [[{ v: 'Math: every formula', s: 'title' }], [{ v: 'One row per formula in SLAM. Formula is live; The app\'s value is what SLAM shows; Check says Matches, or the gap. A row that counts the months to a date says Moved on since this file was made, once a month has passed.', s: 'about' }],
     ['ID', 'In plain words', 'Formula', "The app's value", 'Check', 'Made of'].map(v => ({ v, s: 'head' }))];
   const mathSheet = { name: 'Math', kind: 'math', widths: [9, 60, 18, 18, 14, 36], freeze: { rows: 3, cols: 2 }, rows: mRows };
   const pending = [];
@@ -291,7 +292,65 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
   // Every name a formula uses must exist: the build fails here, never in the client's spreadsheet.
   for (const s of inputTabs) for (const row of s.rows.slice(1)) for (const cell of row) if (cell?.f) pending.push({ f: cell.f, where: s.name });
   for (const p of pending) checkNames(p.f, names, p.where);
+  markDated(sheets, names, now);
   return { sheets, names: [...names].map(([name, refr]) => ({ name, ref: refr })), baseline, context: c, client, at: now };
+}
+
+// Batch 45 (QUESTIONS 334): the file keeps TODAY(), so a row that counts the months to a date (a sinking fund, Starts in,
+// Becomes mine in) gives a new answer once a month has passed. Its Check then reads "Moved on since this file was made
+// (Nov 6)" instead of the gap, in a later month only; in the month it was made a gap still shows as one. A row is dated
+// when it reads, through any cell or named range on any tab, a TODAY() that this household's dates can move: a row with
+// Starts in or Becomes mine in, or a goal saved for each month (a blank row or a row with no date is not dated).
+const datedRec = r => !!r && !!(r.values?.startsIn || r.values?.takeover || (r.kind === 'event' && r.values?.sinking && r.values?.month));
+export const movedWords = now => `Moved on since this file was made (${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
+const colNum = l => [...l].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
+const colOf = n => { let s = ''; for (; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s; return s; };
+function cellsIn(sheet, a, b = a) {
+  const [, c1, r1] = /^([A-Z]+)(\d+)$/.exec(a), [, c2, r2] = /^([A-Z]+)(\d+)$/.exec(b);
+  const out = [];
+  for (let c = colNum(c1); c <= colNum(c2); c++) for (let r = +r1; r <= +r2; r++) out.push(`${sheet}!${colOf(c)}${r}`);
+  return out;
+}
+const unq = n => (n.startsWith("'") ? n.slice(1, -1).replace(/''/g, "'") : n);
+function refsOf(f, sheet, names) {
+  const t = f.replace(/"(?:[^"]|"")*"/g, '""');
+  const out = [];
+  const ext = /('(?:[^']|'')*'|[A-Za-z_][\w.]*)!\$?([A-Z]{1,3})\$?(\d+)(?::\$?([A-Z]{1,3})\$?(\d+))?/g;
+  for (const m of t.matchAll(ext)) out.push(...cellsIn(unq(m[1]), m[2] + m[3], m[4] ? m[4] + m[5] : undefined));
+  const rest = t.replace(ext, ' ');
+  for (const m of rest.matchAll(/\$?\b([A-Z]{1,3})\$?(\d+)(?::\$?([A-Z]{1,3})\$?(\d+))?\b/g)) out.push(...cellsIn(sheet, m[1] + m[2], m[3] ? m[3] + m[4] : undefined));
+  for (const m of rest.matchAll(/[A-Za-z_][A-Za-z0-9_]*/g)) if (names.has(m[0])) out.push(`@${m[0]}`);
+  return out;
+}
+function markDated(sheets, names, now) {
+  const users = new Map(); // a cell key or @name -> the formula cells that read it
+  const formulas = new Map();
+  const use = (dep, key) => { if (!users.has(dep)) users.set(dep, []); users.get(dep).push(key); };
+  const seeds = [];
+  if (!sheets.some(sh => sh.rows.some(row => row?.some(cell => cell?.today)))) return 0; // no dated row: nothing to follow
+  for (const sh of sheets) sh.rows.forEach((row, ri) => (row || []).forEach((cell, ci) => {
+    if (!cell?.f || cell.s === 'check') return;
+    const key = `${sh.name}!${colOf(ci + 1)}${ri + 1}`;
+    formulas.set(key, cell);
+    if (cell.today) seeds.push(key);
+    for (const d of refsOf(cell.f, sh.name, names)) use(d, key);
+  }));
+  for (const [name, refr] of names) { // a named range is read through its cells
+    const m = /^('(?:[^']|'')*'|[^!]+)!\$?([A-Z]+)\$?(\d+)(?::\$?([A-Z]+)\$?(\d+))?$/.exec(refr);
+    if (m) for (const k of cellsIn(unq(m[1]), m[2] + m[3], m[4] ? m[4] + m[5] : undefined)) use(k, `@${name}`);
+  }
+  const dated = new Set(seeds), todo = [...seeds];
+  while (todo.length) for (const u of users.get(todo.pop()) ?? []) if (!dated.has(u)) { dated.add(u); todo.push(u); }
+  const ym = `"${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}"`, words = movedWords(now);
+  let n = 0;
+  for (const sh of sheets) sh.rows.forEach((row, ri) => (row || []).forEach(cell => {
+    if (cell?.s !== 'check' || !cell.f) return;
+    const a = /ISNUMBER\(([A-Z]+\d+)\)/.exec(cell.f)?.[1];
+    if (!a || !dated.has(`${sh.name}!${a}`)) return;
+    cell.f = `IF(TEXT(TODAY(),"yyyy-mm")<>${ym},IF(${cell.f}="Matches","Matches","${words}"),${cell.f})`;
+    cell.dated = true; n++;
+  }));
+  return n;
 }
 
 function tabAbout(t) {

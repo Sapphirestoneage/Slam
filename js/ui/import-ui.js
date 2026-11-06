@@ -88,7 +88,7 @@ export function review(app, res, fileName, { ym = null, onSaved = null, bankMap 
     if (res.fmt.id) own[res.fmt.id] = { ...(own[res.fmt.id] || {}), ...S.mapEdits };
     const doc = { ...d, settings: { ...d.settings, merchantRules: { ...(d.settings?.merchantRules || {}), ...S.rules }, importCategoryMap: own } };
     list = matchAll(res.transactions.filter(t => t.date.startsWith(S.ym)), { doc, ref, fmt: res.fmt, now })
-      .map(t => { const p = S.picks.get(t.hash); const x = p ? pickFor(t, p, lines) : t; return { ...x, accepted: S.accepted.get(t.hash) ?? false, keepFirst: S.first.has(t.hash) }; });
+      .map(t => { const p = S.picks.get(t.hash); const x = p ? pickFor(t, p, lines) : t; return { ...x, accepted: S.accepted.get(t.hash) ?? (x.sure === 'Matched' && !x.duplicate), keepFirst: S.first.has(t.hash) }; }); // batch 45 (QUESTIONS 346): matched rows go in by default, as in YNAB and Rocket Money
   };
   const setAccepted = (rows, v) => { for (const t of rows) if (!t.duplicate) S.accepted.set(t.hash, v); };
   const body = h('div.imp-body');
@@ -162,9 +162,13 @@ export function review(app, res, fileName, { ym = null, onSaved = null, bankMap 
     const matched = list.filter(t => !t.duplicate && t.sure === 'Matched' && !t.accepted).length;
     // Batch 37 (Rocket Surgery): a first-time coach placed the 2 Not matched rows and pressed Save, and only those 2 went
     // in. The footer says what stays out and offers the matched ones in one tap, beside Save.
+    // Batch 45 (QUESTIONS 346): the matched rows are in from the start; the footer names what stays out until it is placed.
     const left = rv.newRows - savable.length;
-    status.textContent = !rv.newRows ? 'Nothing new: every row this month was imported before.' : left ? `${savable.length} of ${rv.newRows} accepted; the other ${left} stay out until accepted.` : `All ${rv.newRows} accepted.`;
-    footAccept.hidden = !matched;
+    const out = list.filter(t => !t.duplicate && !savable.includes(t));
+    const named = [...new Set(out.map(t => t.merchant || t.description || '(no name)'))];
+    const names = named.length > 3 ? `${named.slice(0, 3).join(', ')} and ${named.length - 3} more` : named.join(', ');
+    status.textContent = !rv.newRows ? 'Nothing new: every row this month was imported before.' : left ? `${savable.length} of ${rv.newRows} go in. Left out until accepted: ${names}.` : `All ${rv.newRows} go in.`;
+    footAccept.hidden = !matched; footAccept.style.display = matched ? '' : 'none'; // .btn's display would show a hidden button
     footAccept.lastChild.textContent = `Accept the ${matched} matched too`;
     body.replaceChildren(...[
       h('div.imp-summary', {}, h('span', {}, h('strong', {}, money(rv.spending, { cents: true })), ' spending'),

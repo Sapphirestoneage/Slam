@@ -165,6 +165,7 @@ export function dockedHeight({ without = null } = {}) {
   return Math.max(0, Math.round(vh - top));
 }
 export function toast(text, { undo = null, action = null } = {}) {
+  if (toastEl?._scroll) window.removeEventListener('scroll', toastEl._scroll, true);
   toastEl?.remove(); clearTimeout(toastTimer);
   toastEl = h('div.toast', { role: 'status' }, h('span', {}, text),
     undo ? h('button.btn', { type: 'button', onclick: () => { undo(); toastEl?.remove(); } }, icon('undo'), 'Undo') : null,
@@ -172,7 +173,7 @@ export function toast(text, { undo = null, action = null } = {}) {
   const dock = dockedHeight();
   if (dock) toastEl.style.setProperty('bottom', `${dock + 10}px`, 'important'); // above the docked bars (batch 18, item 6)
   document.body.append(toastEl);
-  dodge(toastEl);
+  dodge(toastEl); settleDodge(toastEl);
   toastTimer = setTimeout(() => toastEl?.remove(), undo ? 10000 : 5000); // 10 seconds when it can be undone
   return toastEl;
 }
@@ -185,7 +186,7 @@ function dodge(el) {
   if (el.style.getPropertyValue('bottom') === 'auto') el.style.removeProperty('bottom');
   if (window.innerWidth <= 700 || !el.isConnected) return;
   // Batch 37: an open popover and a section's closed line (its answer, like a card's fee check) count too.
-  const controls = [...document.querySelectorAll('main button, main input, main select, main a, .walk-bar button, .pop, main .sec-sum')].filter(c => c.checkVisibility?.() !== false).map(c => c.getBoundingClientRect()).filter(r => r.width && r.height);
+  const controls = [...document.querySelectorAll('main button, main input, main select, main textarea, main a, main [role=button], main [tabindex="0"], main h1, main h2, main h3, main th, .walk-bar button, .pop, main .sec-sum')].filter(c => c.checkVisibility?.() !== false).map(c => c.getBoundingClientRect()).filter(r => r.width && r.height);
   const hits = () => { const t = el.getBoundingClientRect(); return controls.filter(r => r.left < t.right && r.right > t.left && r.top < t.bottom && r.bottom > t.top).length; };
   const left = hits();
   if (!left) return;
@@ -204,7 +205,26 @@ function dodge(el) {
 }
 // A toast that outlives its screen: the "That moved the plan" line was about that screen's edit, so it goes; any
 // other checks the next screen and moves aside if it would cover a control there.
-if (typeof window !== 'undefined') window.addEventListener('hashchange', () => { if (toastEl?.dataset.moved) { toastEl.remove(); toastEl = null; } else setTimeout(() => { if (toastEl) dodge(toastEl); }, 120); });
+if (typeof window !== 'undefined') window.addEventListener('hashchange', () => { if (toastEl?.dataset.moved) { toastEl.remove(); toastEl = null; } else setTimeout(() => { if (toastEl) { dodge(toastEl); settleDodge(toastEl); } }, 120); });
+// Batch 45 (Batch 39's Budget minor): a screen still drawing when the toast arrives (the Demo's "Example numbers loaded"
+// on Budget) can put a row under it after the first look. For the next 1.5 seconds, each change to the screen looks
+// again, the way Batch 37 made toasts move off a popover that opens under them; after that the toast stays put.
+function settleDodge(el) {
+  const main = document.querySelector('main');
+  if (!main || !el?.isConnected || typeof MutationObserver === 'undefined') return;
+  el._settle?.disconnect();
+  let queued = false;
+  const mo = new MutationObserver(() => { if (queued) return; queued = true; requestAnimationFrame(() => { queued = false; if (el.isConnected) dodge(el); else mo.disconnect(); }); });
+  mo.observe(main, { childList: true, subtree: true });
+  el._settle = mo;
+  setTimeout(() => mo.disconnect(), 1500);
+  // Scrolling slides the page under a toast that stays put: once the scroll stops, it looks again.
+  if (!el._scroll) {
+    let t = null;
+    el._scroll = () => { clearTimeout(t); t = setTimeout(() => { if (el.isConnected) dodge(el); else window.removeEventListener('scroll', el._scroll, true); }, 120); };
+    window.addEventListener('scroll', el._scroll, { capture: true, passive: true });
+  }
+}
 
 // ---------- Saved moment (R164) ----------
 export function savedNote() { return h('span.saved-note', { 'aria-live': 'polite' }, icon('check'), 'Saved'); }
@@ -317,7 +337,7 @@ export function metricCard(ctx, label, result, { key = null, render = null, lowe
   const labelEl = home ? h(`a.label.metric-home${tip ? '.has-tip' : ''}`, { href: home, title: tip ? `${label}: ${tip}` : `Open where ${label.toLowerCase()} comes from` }, label) : h(`span.label${tip ? '.has-tip' : ''}`, { title: tip ? `${label}: ${tip}` : null }, label);
   if (lock) {
     return h('div.metric.locked', {}, labelEl, h('div.big', {}, icon('lock'), ' Locked'),
-      h('span.change.lock-why', {}, lock.reason, lock.route ? [' ', h('a', { href: lock.route }, 'Open ›')] : null));
+      h('span.change.lock-why', {}, lock.reason, lock.route ? [' ', h('a', { href: lock.route }, `${lock.label ?? 'Open'} ›`)] : null));
   }
   const locked = result.value === null || result.value === undefined;
   const snap = ctx.store.lastSnapshot();
@@ -916,8 +936,8 @@ export function recordList(ctx, cfg) {
       ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? item(r.values.locked === true ? 'Unlock (back to as typed)' : 'Lock it (confirmed)', 'check', () => update(r, { locked: r.values.locked !== true })) : null, // item 11: a guess becomes confirmed here, never as a nag
       item(state.open === r.id ? 'Hide details' : 'Details', 'right', () => setOpen(r.id)), // item 17: the detail is in the menu too
       // Batch 28: who sees this row, in taps; an income line has the one-tap preset too.
-      item(`Who sees this: ${SEEN_WORDS[seenOf(r)]}`, 'lock', () => requestAnimationFrame(() => seenPopover(ctx, view?.rows.get(r.id)?.querySelector('button.menu-btn') ?? btn, r, p => update(r, p)))),
-      r.kind === 'income' && seenOf(r) === 'Everyone' ? item('Keep this private', 'lock', () => { keepPrivate(ctx, r, p => update(r, p)); requestAnimationFrame(() => seenPopover(ctx, view?.rows.get(r.id)?.querySelector('button.menu-btn') ?? btn, ctx.store.get(r.id) ?? r, p => update(r, p))); }) : null,
+      item(`Who sees this: ${SEEN_WORDS[seenOf(r)]}`, 'eye-off', () => requestAnimationFrame(() => seenPopover(ctx, view?.rows.get(r.id)?.querySelector('button.menu-btn') ?? btn, r, p => update(r, p)))),
+      r.kind === 'income' && seenOf(r) === 'Everyone' ? item('Keep this private', 'eye-off', () => { keepPrivate(ctx, r, p => update(r, p)); requestAnimationFrame(() => seenPopover(ctx, view?.rows.get(r.id)?.querySelector('button.menu-btn') ?? btn, ctx.store.get(r.id) ?? r, p => update(r, p))); }) : null,
       item('Reset', 'reset', () => reset([r.id])),
       ...(cfg.menuExtra?.(ctx, r, p => update(r, p)) ?? []).map(x => item(x.label, x.icon ?? 'right', x.run)), // batch 10: Move up / Move down
       cfg.fixed ? null : item('Duplicate', 'copy', () => { ctx.store.duplicate(r.id); toast('Duplicated.', { undo: () => ctx.store.undo() }); }),
@@ -934,7 +954,7 @@ export function recordList(ctx, cfg) {
     // Batch 28: a row this viewer does not see is folded (js/privacy.js): it stays in every total and leaves the list.
     const all = cfg.order ? [...ctx.visible(cfg.filter)].sort(cfg.order) : ctx.visible(cfg.filter);
     const recs = all.filter(r => !r.folded), kept = all.length - recs.length;
-    const privateLine = kept ? h('p.private-line.muted.small', { title: 'Some rows here are kept between a person and the coach. Every total still counts them' }, icon('lock'), PRIVATE_LINE) : null;
+    const privateLine = kept ? h('p.private-line.muted.small', { title: 'Some rows here are kept between a person and the coach. Every total still counts them' }, icon('eye-off'), PRIVATE_LINE) : null;
     const head = h('div.section-title', {}, h('h2', {}, cfg.title), h('span.spacer'), cfg.headerExtra?.(ctx) ?? null,
       recs.length && !cfg.fixed ? h('button.btn.small.clear-all', { type: 'button', 'data-focus': `icon:Clear all ${cfg.thing.plural}`, title: `Clear all ${cfg.thing.plural} (asks first; you can undo it)`, onclick: e => confirmBox(e.currentTarget, { // batch 19: in words, not an eraser alone
         text: `Clear all ${recs.length} ${recs.length === 1 ? cfg.thing.one : cfg.thing.plural}? You can undo this.`,
@@ -1069,7 +1089,7 @@ export function seenLine(ctx, r, onClick = null) {
       : `Its notes: ${SEEN_WORDS[n]}`;
   const words = s === 'Everyone' ? `Notes: ${SEEN_WORDS[n]}` : SEEN_WORDS[s];
   const tip = `${SEEN_TIPS[s === 'Everyone' ? n : s]}. Change it in the row's menu`;
-  const inner = [icon('lock'), h('span.seen-word', {}, words), h('span.muted.small', {}, where)];
+  const inner = [icon('eye-off'), h('span.seen-word', {}, words), h('span.muted.small', {}, where)];
   return onClick ? h('button.seen-line', { type: 'button', title: tip, 'aria-label': `Who sees this: ${words}. ${where}. Change`, 'data-focus': `${r.id}:seen`, onclick: onClick }, inner)
     : h('span.seen-line', { title: tip }, inner);
 }

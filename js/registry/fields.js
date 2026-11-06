@@ -481,6 +481,7 @@ export const NOT_IN_SHEET = {
   'spending.basics': 'Fast Track totals, kept to compare with the lines',
   'spending.calendar': 'calendar marks (paid, moved, partial) and the starting balance; set on the calendar',
   'spending.months.closed': 'month-end close state; set on Month end',
+  'spending.months.gut': 'batch 45 (QUESTIONS 321): a gut number for one month, typed on Budget (Different in <month>); Month end splits that month\'s gut-only categories from it, and the month-end summary keeps it',
   'spending.months.statements': 'statement balances typed at month end; set on Month end',
   'spending.months.summary': 'the month-end summary; set on Month end',
   session: 'session agenda, notes, feelings and the one-pager; not money',

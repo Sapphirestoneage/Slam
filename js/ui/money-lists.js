@@ -6,7 +6,7 @@ import { INCOME_KINDS, incomeKindOf } from '../capture.js';
 import { institutionPicker, institutionLink } from './institutions-ui.js';
 import { popover, closePop, tapPick, fromButton, amount, value, moneyInput, pctInput, textInput, nameInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, parkGroup, ownerToggle, openBlock } from './staples.js';
 import { asksTaxType, taxTypeFor } from '../math/portfolio.js';
-import { notesHidden } from '../privacy.js';
+import { notesHidden, countable } from '../privacy.js';
 import { modeOf } from '../registry/couples.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
 import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom, isBenefitRow, householdRates, quarterlySetAside, irregularPlan, tipsDeductionOf, stateTaxLine } from '../math/income.js';
@@ -84,7 +84,7 @@ export function incomeList() {
     secondary: (ctx, r, up) => incomeSecondary(ctx, r, up),
     tertiary: (ctx, r, up) => incomeTertiary(ctx, r, up),
     footerTotal: (ctx, recs, m) => h('span', {}, amount(ctx, m.inputs.takeHome), h('span.muted', {}, ' a month')),
-    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Source' ? h('td', {}, `${recs.length} ${recs.length === 1 ? 'row' : 'rows'}`) : c.label === 'Amount' ? h('td.num', {}, amount(ctx, m.inputs.takeHome)) : h('td')), h('td'), h('td')],
+    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Source' ? h('td', {}, `${countable(recs).length} ${countable(recs).length === 1 ? 'row' : 'rows'}`) : c.label === 'Amount' ? h('td.num', {}, amount(ctx, m.inputs.takeHome)) : h('td')), h('td'), h('td')],
     strip: (ctx, m) => incomeStrip(ctx, m),
   };
 }
@@ -409,7 +409,7 @@ export function assetList(ref) {
         `Set aside for taxes: ${money(sum(kept, valOf))}, owed, so not in the Cash total above`);
     },
     footerTotal: (ctx, recs) => amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null),
-    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Account' ? h('td', {}, `${recs.length} ${recs.length === 1 ? 'item' : 'items'}`) : c.label === 'Balance' ? h('td.num', {}, amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null)) : h('td')), h('td'), h('td')],
+    totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Account' ? h('td', {}, `${countable(recs).length} ${countable(recs).length === 1 ? 'item' : 'items'}`) : c.label === 'Balance' ? h('td.num', {}, amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null)) : h('td')), h('td'), h('td')],
     strip: (ctx, m) => h('div', {}, summaryStrip(ctx, [
       // Total and liquid net worth sit in the Net worth headline above.
       { label: 'Cash', result: m.inputs.cash === null ? needs('M41', ['cash']) : { id: 'M41', value: m.inputs.cash, needs: [], unit: 'money', text: `Checking, savings and other cash: ${money(m.inputs.cash)}.${m.inputs.taxSetAside ? ` The ${money(m.inputs.taxSetAside)} set aside for taxes is not in it: it is owed.` : ''}` } },

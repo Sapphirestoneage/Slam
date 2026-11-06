@@ -110,7 +110,7 @@ async function runPersona(browser, id) {
         const what = /^Utilization/.test(l) ? (out.app.cards ? null : ['minor', 'asks for credit limits with no card on file'])
           : /^Debt-to-income/.test(l) ? (out.app.debts ? null : ['minor', 'locked with no debt, where it is 0%'])
           : /^Housing/.test(l) ? (out.app.owns ? ['major', 'asks for rent or a mortgage line from a homeowner'] : null)
-          : /DRAFTT/.test(l) ? null // needs Budget lines; a gut number alone cannot fill it, by design
+          : /DRAFTT|^Biggest share/.test(l) ? null // needs Budget lines, one tap away (batch 45, QUESTIONS 349); a gut number alone cannot fill it
           : out.app.takeHome != null && out.app.invested != null ? ['major', 'locked with take-home, spending and investments on file'] : null;
         if (what) story.push({ severity: what[0], what: `"${l}": ${what[1]}` });
       }

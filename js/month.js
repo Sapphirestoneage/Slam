@@ -3,7 +3,7 @@
 // Pure: reads a household doc, never touches the DOM. Budget, calendar and close are views of these records (R117).
 import { gatesOf, visible } from './gates.js';
 import { weekdayDays, holidayInMonth, SHABBAT_SPEND_DAY } from './math/holidays.js';
-import { myShare, withHome, categoryKeyOf, categoryName, CATEGORIES } from './math/spending.js';
+import { myShare, withHome, categoryKeyOf, categoryName, CATEGORIES, gutSplitOf } from './math/spending.js';
 import { payoffPlan } from './math/debt.js';
 import { runningBalance, gutSpread } from './math/calendar.js';
 import { inputsOf, metrics } from './math/metrics.js';
@@ -77,7 +77,7 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [], person 
     const status = mark.status || 'Planned';
     const k = partOf.get(rec.id) ?? 1;
     out.push({ ...x, key, recId: rec.id, origDate: x.date, date: status === 'Moved' && mark.date ? mark.date : x.date,
-      status, paid: mark.paid == null ? null : mark.paid * k, note: mark.note ?? null });
+      status, paid: mark.paid == null ? null : mark.paid * k, note: mark.note ?? null, ...(k !== 1 ? { share: k } : {}) }); // share: a typed paid amount is this view's part
   };
   const roommates = doc.profile?.roommates ?? 0;
   const cards = new Map(live.filter(r => r.kind === 'debt' && r.type === 'Credit card').map(r => [r.id, r]));
@@ -127,7 +127,9 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [], person 
       if (r.amount == null || !r.values.monthDue) continue;
       const mm = String(r.values.monthDue).padStart(2, '0');
       if (ym.slice(5) !== mm) continue;
-      const share = r.values.myShare ?? r.amount;
+      // Batch 45 (QUESTIONS 348): a shared yearly bill in one person's view (coupleBills) lands at that person's yearly
+      // share: the row then holds their part a month, so its year is twelve of those.
+      const share = r.coupleShared ? r.amount * 12 : r.values.myShare ?? r.amount;
       push(r, { kind: 'yearly', group: 'Bills', name: r.name || r.values.category || 'Yearly cost', date: dateOf(ym, r.values.dueDay || 1), planned: -share, lineId: r.id, guessDate: !r.values.dueDay, onCard: cards.get(r.paidWith)?.name ?? null });
       continue;
     }
@@ -237,10 +239,10 @@ export function moneyOf(i, { countMaybe = false } = {}) {
 }
 
 // The starting balance: what was typed, else checking, else all cash (Mockup: pulled from checking, editable).
-export function startBalance(doc, ref, now = new Date()) {
+export function startBalance(doc, ref, now = new Date(), { person = null } = {}) {
   const cal = doc.spending?.calendar || {};
   if (cal.start != null) return { value: cal.start, ym: cal.startYm || ymOf(now), typed: true };
-  const x = inputsOf(doc, ref, now);
+  const x = inputsOf(doc, ref, now, { person }); // batch 45: one person's view reads their checking (a Joint one at half)
   const checking = x.accounts.filter(a => /checking/i.test(a.type || '') && a.value != null);
   const v = checking.length ? checking.reduce((s, a) => s + a.value, 0) : x.cash;
   return { value: v, ym: ymOf(now), typed: false };
@@ -248,8 +250,8 @@ export function startBalance(doc, ref, now = new Date()) {
 
 // Running balance for one or more months, chained from the start month (M60). Months before the start have none.
 // low (overnight I): the line a day is flagged under; the calendar passes the Buffer layer's target when none is typed.
-export function balances(doc, ref, ym, months = 1, { now = new Date(), autoWins = [], low: lowLine = null } = {}) {
-  const st = startBalance(doc, ref, now);
+export function balances(doc, ref, ym, months = 1, { now = new Date(), autoWins = [], low: lowLine = null, person = null } = {}) { // person: batch 45 (QUESTIONS 348), as instances
+  const st = startBalance(doc, ref, now, { person });
   const cal = doc.spending?.calendar || {};
   const low = cal.low ?? lowLine ?? ref.defaults.lowBalanceLine;
   if (st.value == null) return { needs: ['a starting balance'], low };
@@ -257,7 +259,7 @@ export function balances(doc, ref, ym, months = 1, { now = new Date(), autoWins 
   let b = st.value;
   // Carry forward from the start month to the first month asked for.
   for (let m = st.ym; m < ym; m = addMonths(m, 1)) {
-    const r = monthRun(doc, ref, m, b, { now, autoWins, countMaybe: cal.countMaybe, before: m === st.ym && !st.typed ? isoOf(now.getTime()) : null });
+    const r = monthRun(doc, ref, m, b, { now, autoWins, person, countMaybe: cal.countMaybe, before: m === st.ym && !st.typed ? isoOf(now.getTime()) : null });
     b = r.rows[r.rows.length - 1].balance;
   }
   const rows = [];
@@ -267,7 +269,7 @@ export function balances(doc, ref, ym, months = 1, { now = new Date(), autoWins 
   const already = st.typed ? null : isoOf(now.getTime());
   for (let k = 0; k < months; k++) {
     const m = addMonths(ym, k);
-    const r = monthRun(doc, ref, m, b, { now, autoWins, countMaybe: cal.countMaybe, before: m === st.ym ? already : null });
+    const r = monthRun(doc, ref, m, b, { now, autoWins, person, countMaybe: cal.countMaybe, before: m === st.ym ? already : null });
     rows.push(...r.rows); insts.push(...r.list);
     b = r.rows[r.rows.length - 1].balance;
   }
@@ -334,7 +336,8 @@ export function monthView(doc, ref, ym, { now = new Date(), gutCats = false, per
   const x = inputsOf(doc, ref, now, { person });
   const dupOf = x.dupOf; // the same payment as a debt or a premium: counted there, once
   const md = monthDoc(doc, ym);
-  const split = gutCats && (md.gut ?? gutOf(doc)) != null ? x.gutSplit ?? {} : {};
+  // Batch 45 (QUESTIONS 321): a month with its own gut number (typed for that month on Budget) splits that number.
+  const split = !gutCats || (md.gut ?? gutOf(doc)) == null ? {} : md.gut != null && x.gutSplitArgs ? gutSplitOf({ ...x.gutSplitArgs, categories: x.categories, gut: md.gut }) : x.gutSplit ?? {};
   const all = ((person ? x.viewRecords : null) ?? visible(doc.records, g, ref)).filter(r => r.kind === 'bill' && !dupOf[r.id]);
   const folded = l => split[categoryKeyOf(l)] != null && md.lines?.[l.id]?.estimate == null && !(roughOf(doc, l) > 0); // a starter line of a gut-only category
   const lines = all.filter(l => !folded(l));
@@ -394,17 +397,17 @@ export const gutRecord = doc => doc.records.find(r => r.kind === 'spending' && r
 export const gutOf = doc => gutRecord(doc)?.amount ?? null;
 
 // Close: lock the month, keep the gut vs actual for accuracy, and carry variable misses to next month (Mockup: Close row).
-export function closeMonth(store, ref, ym, { now = new Date() } = {}) {
-  const v = monthView(store.doc, ref, ym, { now, gutCats: true }); // batch 33: the gut-only categories close too
+export function closeMonth(store, ref, ym, { now = new Date(), person = null } = {}) {
+  const v = monthView(store.doc, ref, ym, { now, gutCats: true, person }); // batch 33: the gut-only categories close too; batch 45: in the view on screen
   const next = addMonths(ym, 1);
   return store.transaction(`Closed ${monthName(ym)}`, () => {
     for (const r of v.rows) {
       if (r.actual == null) store.setIn('spending', ['months', ym, 'lines', r.line.id, 'actual'], 0); // a gap closes as $0 so the miss shows
       if (r.variable && r.actual != null && store.getIn('spending', ['months', next, 'lines', r.line.id, 'estimate']) == null && Math.abs(r.actual - (r.estimate ?? 0)) >= 1) {
-        store.setIn('spending', ['months', next, 'lines', r.line.id, 'estimate'], Math.round(r.actual));
+        store.setIn('spending', ['months', next, 'lines', r.line.id, 'estimate'], Math.round(r.actual / (person && !r.gutCat ? shareOf(r.line) || 1 : 1))); // a typed month number is the whole row's
       }
     }
-    const after = monthView(store.doc, ref, ym, { now, gutCats: true });
+    const after = monthView(store.doc, ref, ym, { now, gutCats: true, person });
     store.setIn('spending', ['months', ym, 'summary'], { gut: v.gut, estimate: after.totals.estimate, actual: after.totals.actual });
     store.setIn('spending', ['months', ym, 'closed'], true);
     store.setIn('spending', ['months', ym, 'closedAt'], now.toISOString());

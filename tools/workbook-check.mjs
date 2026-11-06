@@ -103,11 +103,13 @@ export async function check(list, { now = new Date(), keep = false } = {}) {
     for (const [label] of list) {
       const wb = new ExcelJS.Workbook();
       await wb.xlsx.readFile(join(dir, 'out', `${label}.xlsx`));
-      const off = [];
+      const off = [], moved = [];
       for (const ch of checksOf(plans[label])) {
         const ws = wb.getWorksheet(ch.sheet);
         const res = val(ws.getCell(ch.row, ch.col).value);
         if (res === 'Matches' || res == null) continue;
+        // Batch 45 (QUESTIONS 334): a dated row in a file opened in a later month says so; it is not a mismatch.
+        if (typeof res === 'string' && res.startsWith('Moved on since this file was made')) { moved.push(`${ch.sheet} ${ch.id}`); continue; }
         off.push({ sheet: ch.sheet, id: ch.id, name: ch.name, sheetValue: val(ws.getCell(ch.a).value), app: val(ws.getCell(ch.b).value), check: res,
           where: `${ch.sheet} ${ch.id}${ch.sheet === 'Math' ? '' : ` (${ch.name})`}` });
       }
@@ -123,7 +125,7 @@ export async function check(list, { now = new Date(), keep = false } = {}) {
             where: `${st.name} ${ws.getCell(ri + 1, ci + 1).address} (cached value, ${String(row[0]?.v ?? '')} ${String(row[1]?.v ?? '').slice(0, 40)})` });
         }));
       }
-      result[label] = keep ? Object.assign(off, { wb, plan: plans[label] }) : off;
+      result[label] = Object.assign(off, { moved }, keep ? { wb, plan: plans[label] } : {});
     }
     return result;
   } finally { rmSync(dir, { recursive: true, force: true }); }
@@ -137,7 +139,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const res = await check(list);
   let n = 0;
   for (const [label, off] of Object.entries(res)) {
-    console.log(`${label}: ${off.length ? `${off.length} differ` : 'every row matches'}`);
+    console.log(`${label}: ${off.length ? `${off.length} differ` : 'every row matches'}${off.moved?.length ? ` (${off.moved.length} dated rows moved on since the file was made)` : ''}`);
     for (const o of off) { console.log(`  ${lineOf(o)}`); n++; }
   }
   process.exit(n ? 1 : 0);

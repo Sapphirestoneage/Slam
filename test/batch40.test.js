@@ -59,10 +59,11 @@ const notFor = doc => {
 
 test('Q330: Overview hides only the cards a household cannot light', () => {
   // The multimillionaire: owns outright (no mortgage, no rent line), no debt, no cards, spending one gut number whose
-  // three lines are giving, family and tuition (no group letter): all four are hidden.
-  assert.deepEqual(notFor(persona('multimillionaire')), ['draftt', 'dti', 'housing', 'util']);
+  // three lines are giving, family and tuition (no group letter): three are hidden. Biggest share keeps its lock (batch
+  // 45, QUESTIONS 349): Budget lines would light it.
+  assert.deepEqual(notFor(persona('multimillionaire')), ['dti', 'housing', 'util']);
   // The dancer rents (Housing % stays, with its one-click unlock), has no debt and no cards, and a gut number only.
-  assert.deepEqual(notFor(persona('dancer')), ['draftt', 'dti', 'util']);
+  assert.deepEqual(notFor(persona('dancer')), ['dti', 'util']);
   // Tom owns with a mortgage and Maya has a card: their cards stay (a lock there asks for something they have).
   assert.deepEqual(notFor(persona('tom')), ['util'], 'a mortgage and a car loan: Housing %, Debt-to-income and Biggest share (the loan payments are Debt lines) stay; no card');
   assert.deepEqual(notFor(persona('maya')), [], 'her card payment is a Debt line, so Biggest share lights');

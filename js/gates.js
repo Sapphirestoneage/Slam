@@ -118,11 +118,12 @@ export function gateList(g) {
 // Batch 40 (QUESTIONS 330): the Overview cards this household cannot light, each with the one plain reason. A card
 // that a number on file would light keeps its lock (and its one-click unlock); these are hidden instead, with the
 // reason in one quiet line. x is metrics().inputs; ratios is debtRatios() (the same no-debt and no-card answers);
-// topLetter is the Biggest share card's own answer (null when no Budget line carries a group).
+// topLetter is the Biggest share card's own answer (null when no Budget line carries a group); kept for callers.
 export function overviewNotFor(x, { ratios = null, topLetter = null } = {}) {
   const out = [];
   const owed = (x.debts || []).filter(d => (d.balance ?? 0) > 0);
-  if (!topLetter && x.takeHome != null && x.spendingSource !== 'lines') out.push({ key: 'draftt', label: 'Biggest share of take-home', why: 'spending is one gut number, so there are no Budget lines to split by group' });
+  // Batch 45 (QUESTIONS 349): Biggest share is never hidden. A gut-only client lights it by adding Budget lines, so it
+  // keeps its lock with one tap to the lines (SLAM has no "gut only for good" choice that would hide it).
   if (!owed.length && ratios?.dti?.value === 0) out.push({ key: 'dti', label: 'Debt-to-income', why: 'no debt on file, so nothing comes out of income for it' });
   if (x.gates?.housing === 'Own' && x.housing == null && !(x.debts || []).some(d => d.type === 'Mortgage')) out.push({ key: 'housing', label: 'Housing %', why: 'you own outright, so there is no rent or mortgage line' });
   if (ratios?.util?.none) out.push({ key: 'util', label: 'Utilization', why: 'no credit cards on file' });

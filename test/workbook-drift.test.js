@@ -27,6 +27,16 @@ test('every persona, the Demo and Fast Track Alexis and Tom: every Math row and 
   assert.deepEqual(off, [], 'rows where the sheet and the app differ');
 });
 
+// Batch 45 (QUESTIONS 334): a file made last month and opened today: the multimillionaire's sinking fund rows have a
+// month less to go, so their Check cells say they moved on (not a gap); the rows with no date still match.
+test('a file made last month: the dated rows say Moved on since this file was made, nothing else differs on them', { skip: missing, timeout: 300000 }, async () => {
+  const made = new Date(); made.setDate(15); made.setMonth(made.getMonth() - 1);
+  const res = await check(HOUSEHOLDS.filter(([l]) => l === 'multimillionaire'), { now: made });
+  const r = res.multimillionaire;
+  assert.ok(r.moved.includes('Math M27 · sinking'), `moved: ${r.moved.join(', ')}`);
+  assert.ok(!r.some(o => o.check !== 'cached' && /M27 · sinking/.test(o.where)), 'the sinking row is not a mismatch');
+});
+
 test('the check says what is missing when it cannot run', () => {
   if (ExcelJS && soffice) assert.equal(missing, false, 'false, so node:test runs the check (a null skip skips it)');
   else assert.match(missing, /ExcelJS|LibreOffice/);

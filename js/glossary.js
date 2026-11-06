@@ -76,8 +76,9 @@ export const PLAIN = [
   { term: 'Picture', re: /\bPicture\b/, plain: 'how much is filled in' },
   { term: 'Certainty', re: /\bCertainty\b/, plain: 'how sure the plan is' }, // batch 43: the certainty meter on Home
 ];
-// The screens that pair them (Home, Goals, Transitions and its share view, Debt payoff).
-export const PLAIN_ON = ['#/home/session', '#/plan/goals', '#/plan/transitions', '#/plan/debt-payoff'];
+// The screens that pair them (Home, Goals, Transitions and its share view, Debt payoff; batch 45, QUESTIONS 345: Plan ›
+// FOO and Cash flow › Budget, the screens that use the terms most).
+export const PLAIN_ON = ['#/home/session', '#/plan/goals', '#/plan/transitions', '#/plan/debt-payoff', '#/plan/foo', '#/cash-flow/budget'];
 const TERMS = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
 const esc = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const RES = TERMS.map(t => [t, new RegExp(`(^|[^A-Za-z])${esc(t)}([^A-Za-z]|$)`, ['FI', 'APR', 'APY', 'FAT', 'Picture', 'Certainty'].includes(t) ? '' : 'i')]);

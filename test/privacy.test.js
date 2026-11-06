@@ -87,12 +87,17 @@ test('every total in every view equals the coach\'s, to the cent', () => {
 test('a folded row keeps its numbers and loses what says what it is', () => {
   const doc = persona();
   const f = foldDoc(doc, SHARE, ref);
-  const fan = f.records.find(r => r.values.chargebacks === 115);
+  const real = doc.records.find(r => r.values.chargebacks === 115);
+  const fan = f.records.find(r => r.id === real.id);
   assert.equal(fan.name, 'Self-employment');
   assert.equal(fan.notes, null); assert.equal(fan.privateNote, null);
   assert.equal(fan.values.platform, null);
-  assert.equal(fan.values.feePct, 0.2); assert.equal(fan.values.holdDays, 7); assert.equal(fan.values.payFrequency, 'week'); // the OnlyFans defaults, kept as numbers
-  assert.equal(fan.amount, 2975);
+  // Batch 45 (QUESTIONS 353): the net only. $2,975 a month less the 20% fee ($595) less $115 chargebacks = $2,265, with
+  // no fee and no chargebacks left to point at the platform; a shared copy has no hold either. The payout schedule stays.
+  assert.equal(fan.amount, 2265); assert.equal(fan.per, 'month');
+  assert.equal(fan.values.feePct, 0); assert.equal(fan.values.chargebacks, null); assert.equal(fan.values.holdDays, 0); assert.equal(fan.values.payFrequency, 'week');
+  // In an in-app folded view the hold stays in the math (the calendar lands it as late as before), not on screen.
+  assert.equal(foldDoc(doc, aud('client', 'all'), ref).records.find(r => r.id === real.id).values.holdDays, 7);
   const wise = f.records.find(r => r.values.balance === 3871);
   assert.equal(wise.name, 'Other savings'); assert.equal(wise.values.last4, undefined); assert.equal(wise.values.purpose, 'Taxes');
   assert.equal(f.records.find(r => r.values.balance === 1373).name, 'Other debt');
@@ -139,7 +144,7 @@ test('the view store reads the folded household and writes to the real one', () 
   v.update(id, { amount: 3000 });
   assert.equal(store.get(id).amount, 3000, 'the write reached the real row');
   assert.equal(store.get(id).name, 'Velvet Room fan page', 'and left its name alone');
-  assert.equal(viewStore(store, aud('client', 'all'), ref).get(id).amount, 3000, 'the next read folds the new revision');
+  assert.equal(viewStore(store, aud('client', 'all'), ref).get(id).amount, 2285, 'the next read folds the new revision (its net: 3,000 less 20% less 115)');
   assert.equal(viewStore(store, aud('client', 'Partner'), ref).get(id), null, 'Dana\'s view does not have it at all');
   assert.ok(store.canUndo); store.undo(); assert.equal(store.get(id).amount, 2975);
   // With nothing to fold the view store is the store.

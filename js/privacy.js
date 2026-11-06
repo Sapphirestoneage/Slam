@@ -80,17 +80,25 @@ export const notesHidden = (r, aud, mode = null) => !sees(notesSeenOf(r), r, aud
 const IDENTIFYING = ['institution', 'institutionId', 'last4', 'equity', 'what', 'coveredBy', 'website'];
 // An opaque key for an institution (a short hash of its id): equal for rows at one bank, and it names no bank.
 export const bankKeyOf = id => `bank${[...String(id)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7).toString(36)}`;
-function foldRecord(r, ref) {
+// Batch 45 (QUESTIONS 353): a private platform row shows its net only. A 20% fee and a 7-day hold say which platform it
+// is to someone who knows, so a folded row carries the payout after the fee and chargebacks as its amount, with no fee
+// and no chargebacks (the same net, so the same tax and every total). The hold stays in the math on the coach's own
+// screens' folded views (the calendar lands each payout as late as before; nothing on screen says how late) and is left
+// out of anything shared (a file), where the payout lands on its payout dates.
+function foldRecord(r, ref, { share = false } = {}) {
   const values = { ...r.values };
   const bank = values.institutionId ?? null;
   for (const k of IDENTIFYING) delete values[k];
   if (bank) values.bankKey = bankKeyOf(bank); // batch 44: the fire drill still knows which rows share a bank, not which bank
-  if (r.type === 'Platform' || values.platform) { // the fee, hold and payout schedule stay as numbers, so the payout is the same
+  let amount = r.amount, per = r.per;
+  if (r.type === 'Platform' || values.platform) {
     const p = platformOf(r, ref || {});
-    values.feePct = p.fee; values.holdDays = p.holdDays; values.payFrequency = p.payout;
+    if (p.net != null) { amount = Math.round(p.net * 100) / 100; per = 'month'; }
+    values.feePct = 0; values.chargebacks = null; values.payFrequency = p.payout;
+    values.holdDays = share ? 0 : p.holdDays;
     values.platform = null;
   }
-  return { ...r, name: neutralName(r), notes: null, privateNote: null, values, folded: seenOf(r) }; // folded: the mark it was folded for
+  return { ...r, amount, per, name: neutralName(r), notes: null, privateNote: null, values, folded: seenOf(r) }; // folded: the mark it was folded for
 }
 
 // The household as this audience sees it. The same object when nothing changes (the coach, nothing marked).
@@ -104,7 +112,7 @@ export function foldDoc(doc, aud, ref = null) {
   const kept = doc.records.filter(r => !rowLeftOut(r, aud, mode));
   if (kept.length !== doc.records.length) changed = true;
   const records = kept.map(r => {
-    if (rowHidden(r, aud, mode)) { changed = true; folded.add(r.id); return foldRecord(r, ref); }
+    if (rowHidden(r, aud, mode)) { changed = true; folded.add(r.id); return foldRecord(r, ref, { share: aud.who === 'share' }); }
     const dropNotes = r.notes && notesHidden(r, aud, mode), dropCoach = !coach && r.privateNote;
     if (!dropNotes && !dropCoach) return r;
     changed = true;
@@ -142,6 +150,9 @@ export function sharedBackup(doc, ref = null) {
 export const ownLineHidden = (doc, id) => { const r = id && doc?.records?.find(x => x.id === id); return !!r && r.folded === 'Coach only'; };
 // How many rows of a list this audience does not see (they still count in its totals).
 export const hiddenCount = recs => recs.filter(r => r.folded).length;
+// Batch 45 (QUESTIONS 356): what a count says in Client view: a coach-only row has no line of its own, so it is left out
+// of a list's row count and a Budget category's line count too (its amount stays in every total).
+export const countable = recs => recs.filter(r => r.folded !== 'Coach only');
 export const PRIVATE_LINE = 'Includes amounts kept private';
 
 // A store that reads the household as an audience sees it and writes to the real one. Every read (doc, get, find)

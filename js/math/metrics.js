@@ -246,6 +246,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || useLines ? 0 : debtPayments), // the lines hold each payment, From Debt
     typicalScale: typicalScaleOf({ gut: gutOf(), includesDebt, debtPayments, categories, lines: typedLines }), // QUESTIONS 241
     gutSplit: gutSplitOf({ gut: gutOf(), includesDebt, debtPayments, categories, lines: typedLines }), // batch 33: Month end's plan for the gut-only categories
+    gutSplitArgs: { includesDebt, debtPayments, lines: typedLines }, // batch 45 (QUESTIONS 321): a month with its own gut number splits that number
     // Batch 40 (QUESTIONS 332): the rows as this view counts them (one person's: theirs, the Joint ones at half, a shared
     // bill at their share; a couple keeping money apart together: a shared bill once, whole), so the calendar and the
     // statements can read the same plan when they are asked for a view. null: the household's rows as they are.

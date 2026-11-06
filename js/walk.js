@@ -11,6 +11,7 @@ import { isCategoryRecord, categoryKeyOf, categoryTypicalOf } from './math/spend
 import { whyAnswered } from './whynow.js';
 import { defaultFilingStatus } from './math/income.js';
 import { PROTECTION_TYPES } from './gates.js';
+import { typicalCardLimit } from './math/proposed.js';
 
 // Batch 18 (QUESTIONS 233, 234): session 1 is the first pass. Its walk stops only at empty core boxes (a rough or
 // guessed number waits for session 2), and Protection asks Have it? for Health and Life only; the rest of the usual
@@ -29,7 +30,7 @@ const PROFILE_BOX = {
   'Partner name': ['p:partnerName', 'partnerName', 'profile:about'], 'Partner birth year': ['p:partnerBirthYear', 'partnerBirthYear', 'profile:about'],
 };
 // Words for a stop's field, the way the bar says it ("Rent's due day").
-const WORD = { amount: 'amount', balance: 'balance', apr: 'APR', have: 'have it?', value: 'value', dueDay: 'due day', payFrequency: 'pay schedule' };
+const WORD = { amount: 'amount', balance: 'balance', apr: 'APR', have: 'have it?', value: 'value', dueDay: 'due day', payFrequency: 'pay schedule', limit: 'credit limit' };
 const BOX = { value: 'balance' }; // an asset's value box is its balance column (js/ui/money-lists.js)
 const ROUGH = new Set(['Roughly', 'Not sure']);
 // "Rent's due day"; a name with a note in it reads "Investments (all accounts): balance".
@@ -112,6 +113,14 @@ export function walkStops(ctx) {
     const cards = listCompletion(ctx, r => r.kind === 'debt' && r.type === 'Credit card', coreDebt);
     fromList('Credit cards', '#/net-worth/credit-cards', cards.core.items);
     roughOf('Credit cards', '#/net-worth/credit-cards', live.filter(r => r.kind === 'debt' && r.type === 'Credit card'), coreDebt);
+    // Batch 45 (QUESTIONS 344): when the month is short, the gap goes on the cards until they are full, so the walk asks
+    // each card's limit (one box per card). "I don't know" keeps Experian's typical limit at this age (marked a guess).
+    if (m.surplus?.value != null && m.surplus.value < -0.5) {
+      const typ = typicalCardLimit(ctx.ref, m.inputs.age);
+      for (const r of live.filter(x => x.kind === 'debt' && x.type === 'Credit card' && x.values?.limit == null && !x.fieldStatus?.limit && x.values?.payChoice !== 'In full' && x.status !== 'Not for me'))
+        add({ ...recStop('Credit cards', '#/net-worth/credit-cards', r, 'limit'), why: 'the month is short, so the room on the cards matters',
+          typical: { label: "I don't know", why: typ ? `Keeps the typical limit at this age (${dollars(typ)} across the cards, Experian), marked a guess` : 'Leave it blank, marked a guess', apply: { kind: 'unknown', id: r.id, field: 'limit' } } });
+    }
   }
 
   const coverage = live.filter(r => r.kind === 'coverage');
@@ -135,6 +144,7 @@ export function useStopTypical(store, stop) {
   if (!a) return false;
   if (a.kind === 'profile') store.setDoc('profile', a.patch);
   else if (a.kind === 'category') store.update(a.id, { amount: a.amount, per: 'month', status: 'Roughly', usedTypical: true });
+  else if (a.kind === 'unknown') store.setFieldStatus(a.id, a.field, 'Not sure'); // batch 45: the typical stands in, marked a guess
   return true;
 }
 // Batch 18: the rows a stop makes before it is landed on (session 1's Health and Life), one undo step.

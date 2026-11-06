@@ -11,10 +11,14 @@ import { maaserOf, KOSHER_NOTE } from '../community.js';
 import { drafttName } from '../math/spending.js';
 import * as S from './staples.js';
 import { ownLineHidden } from '../privacy.js';
+import { ownPlanPerson } from '../registry/couples.js';
+// Batch 45 (QUESTIONS 348): Calendar and Month end read the whose-numbers switch for a couple with no combined totals
+// (Dating, Living together), as Statements does: one person's own plan (their rows, a shared bill at their share).
+const viewPerson = ctx => ownPlanPerson(ctx.store.doc) ?? null;
 import { spendingList, categoryList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.js';
 import { ensureCategories } from '../presets.js';
 import { ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
-  closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS, planDiffs, closeStreak, collapseSpread, dayTotals, recurringBills, byCategory } from '../month.js';
+  closedMonths, mark, bonusPaycheck, shareOf, startBalance, gutRecord, GROUPS, planDiffs, closeStreak, collapseSpread, dayTotals, recurringBills, byCategory } from '../month.js';
 import { gutAccuracy, DRAFTT, gutVsLinesWords } from '../math/spending.js';
 import { statements, BUCKETS, defaultBucket } from '../math/statements.js';
 import { calendarMarkers } from '../math/markers.js';
@@ -191,7 +195,20 @@ function gutBox(ctx, view) {
     // Batch 18: where the number is from, as in Fast Track; statements or an app counts at Estimate on the Picture.
     rec ? S.toggle([['Gut', 'A gut guess'], ['Statements', 'Statements or an app']], rec.values.pass === 'Statements' ? 'Statements' : 'Gut', v => ctx.store.update(rec.id, { pass: v }), { label: 'Where the spending number is from', key: 'gut:from' }) : null);
   // Batch 13: the caret is the title; the box stays in the header line, so closed it is still one tap to type.
-  return S.secWrap(h('div.card.gut-card', {}, row, h('p.muted', { style: { margin: '8px 0 0' } }, words)), 'budget:gut', { head: row, open: true, summary: rec?.amount != null ? words : null });
+  return S.secWrap(h('div.card.gut-card', {}, row, h('p.muted', { style: { margin: '8px 0 0' } }, words), monthGut(ctx, rec)), 'budget:gut', { head: row, open: true, summary: rec?.amount != null ? words : null });
+}
+// Batch 45 (QUESTIONS 321): a gut number for one month (a holiday month, a trip). Month end splits that month's gut-only
+// categories from it; every other month keeps the usual one. One tap opens the box; the x goes back to the usual.
+function monthGut(ctx, rec) {
+  if (rec?.amount == null) return null;
+  const ym = UI.ym, own = ctx.store.getIn('spending', ['months', ym, 'gut']) ?? null;
+  const set = v => ctx.store.setIn('spending', ['months', ym, 'gut'], v == null ? undefined : v, `Gut number for ${monthName(ym)}`);
+  const tip = `Month end splits ${monthName(ym)}'s gut-only categories from this number; other months keep ${money(rec.amount)}`;
+  if (own == null && UI.monthGutOpen !== ym) return h('div.row-line.gut-month', { style: { gap: '8px', marginTop: '8px' } },
+    S.button(`Different in ${monthName(ym)}`, { size: 'small', iconName: 'plus', tip, onClick: () => { UI.monthGutOpen = ym; ctx.refresh(); } }));
+  return h('div.row-line.gut-month', { style: { gap: '8px', marginTop: '8px' } }, h('span.label.has-tip', { title: tip }, `${monthName(ym)} only`),
+    S.moneyInput(own, set, { hint: 'This month', key: 'gut:month' }),
+    S.iconButton('x', `Use the usual ${money(rec.amount)} in ${monthName(ym)}`, () => { UI.monthGutOpen = null; set(null); ctx.refresh(); }));
 }
 
 const fastTrackSummary = doc => { const b = Object.values(doc.spending.basics || {}).filter(v => v != null); return b.length ? `Fast Track total ${money(b.reduce((t, v) => t + v, 0))} a month` : 'Not used yet'; };
@@ -292,8 +309,9 @@ export function calendarScreen(app, ctx) {
   const cal = doc.spending.calendar || {};
   const redraw = () => app.render();
   const range = { Month: 1, '3 mo': 3, '6 mo': 6, Year: 12 }[UI.range] || 1;
-  const b = balances(doc, ctx.ref, UI.calYm, range, { now: ctx.now(), autoWins: milestoneWins(ctx), low: bufferLine(ctx) }); // I: days under the Buffer are flagged
-  const list = b.list || instances(doc, ctx.ref, UI.calYm, { now: ctx.now() });
+  const person = viewPerson(ctx);
+  const b = balances(doc, ctx.ref, UI.calYm, range, { now: ctx.now(), autoWins: milestoneWins(ctx), low: bufferLine(ctx), person }); // I: days under the Buffer are flagged
+  const list = b.list || instances(doc, ctx.ref, UI.calYm, { now: ctx.now(), person });
   const monthList = list.filter(i => i.date.startsWith(UI.calYm) || i.origDate?.startsWith(UI.calYm));
   if (!monthList.some(i => i.kind !== 'win')) {
     return [head('Calendar', 'Day by day, with a running balance'), h('div.card', {}, h('div.empty.center', {},
@@ -301,7 +319,7 @@ export function calendarScreen(app, ctx) {
       h('div.row-line', {}, S.button('Add a paycheck', { iconName: 'plus', onClick: () => app.go('#/cash-flow/income') }), S.button('Add a bill', { iconName: 'plus', onClick: () => app.go('#/cash-flow/budget') }),
         S.button('Add entry', { iconName: 'plus', onClick: e => entryForm(ctx, e.currentTarget, { date: dateOf(UI.calYm, 1) }) }))))];
   }
-  const st = startBalance(doc, ctx.ref, ctx.now());
+  const st = startBalance(doc, ctx.ref, ctx.now(), { person });
   const header = h('div.card.cal-head', {},
     h('div.row-line', { style: { gap: '10px' } },
       monthStepper(UI.calYm, v => { UI.calYm = v; UI.openDay = null; redraw(); }),
@@ -466,8 +484,8 @@ function instancePanel(ctx, anchor, i) {
       h('div.row-line', { style: { gap: '6px' } }, h('span.tag.plain', {}, i.status === 'Paid' && isIn ? 'Got it' : i.status)),
       S.labelled('Actual amount', amtBox),
       h('div.row-line', { style: { gap: '6px' } },
-        S.button(isIn ? 'Got it' : 'Paid', { kind: 'primary', iconName: 'check', onClick: () => set({ status: 'Paid', paid: (isIn ? 1 : -1) * (read() ?? Math.abs(i.planned)) }, isIn ? 'Marked Got it.' : 'Marked Paid.') }),
-        S.button('Partial', { onClick: () => set({ status: 'Partial', paid: (isIn ? 1 : -1) * (read() ?? 0) }, 'Marked Partial. The rest stays planned.') }),
+        S.button(isIn ? 'Got it' : 'Paid', { kind: 'primary', iconName: 'check', onClick: () => set({ status: 'Paid', paid: (isIn ? 1 : -1) * (read() ?? Math.abs(i.planned)) / (i.share || 1) }, isIn ? 'Marked Got it.' : 'Marked Paid.') }), // batch 45: kept as the whole row's
+        S.button('Partial', { onClick: () => set({ status: 'Partial', paid: (isIn ? 1 : -1) * (read() ?? 0) / (i.share || 1) }, 'Marked Partial. The rest stays planned.') }),
         S.button("Didn't happen", { onClick: () => set({ status: "Didn't happen" }, "Marked Didn't happen. It counts as $0 at month-end.") })),
       h('div.row-line', { style: { gap: '6px' } }, h('label.field', { style: { width: '170px' } }, dateBox),
         S.button('Move', { iconName: 'right', onClick: () => { if (!dateBox.value) return; if (dateBox.value === i.origDate) set({ status: 'Planned', date: undefined }, 'Back on its own day.'); else set({ status: 'Moved', date: dateBox.value }, `Moved to ${dayLabel(dateBox.value)}.`); } }),
@@ -567,7 +585,8 @@ export function closeScreen(app, ctx) {
   const now = thisYm(ctx);
   const since = ymOf(new Date(doc.createdAt || ctx.now())); // nothing to close before the client existed
   const months = Array.from({ length: 6 }, (_, k) => addMonths(now, -k)).filter(ym => ym >= since);
-  const views = months.map(ym => monthView(doc, ctx.ref, ym, { now: ctx.now(), gutCats: true })); // batch 33: the gut-only categories close too, against their gut split
+  const person = viewPerson(ctx);
+  const views = months.map(ym => monthView(doc, ctx.ref, ym, { now: ctx.now(), gutCats: true, person })); // batch 33: the gut-only categories close too, against their gut split
   const any = views.some(v => v.rows.some(r => (r.estimate ?? 0) > 0));
   // Batch 22: the month's transactions come in from the client's app (Rocket Money, Monarch) or bank; SLAM never syncs.
   const imp = importButton(app, { ym: UI.review ?? now, onSaved: ym => { UI.review = ym; UI.closeStep[ym] = 1; UI.closeBy[ym] = 'category'; app.render(); } });
@@ -589,7 +608,7 @@ function closeRow(app, ctx, v) {
   const doClose = e => {
     // One click: close, the three statements for the month (kept with it) and a snapshot (Phase 3.5).
     const go = () => {
-      closeMonth(ctx.store, ctx.ref, v.ym, { now: ctx.now() });
+      closeMonth(ctx.store, ctx.ref, v.ym, { now: ctx.now(), person: viewPerson(ctx) });
       const st = statements(ctx.store.doc, ctx.ref, { kind: 'month', ym: v.ym }, { now: ctx.now() });
       ctx.store.setIn('spending', ['months', v.ym, 'statements'], { netWorth: st.netWorth.netWorth, liquid: st.netWorth.liquid, surplus: st.income.surplus, startCash: st.cash.start, endCash: st.cash.end, unexplainedCash: st.tie.unexplainedCash }, 'Statements');
       app.snapshot(`Month-end ${monthName(v.ym)}`); /* M6.1 */
@@ -621,7 +640,8 @@ function stepper(app, v, step) {
 function review(app, ctx, v, doClose) {
   const step = UI.closeStep[v.ym] ?? 1;
   const go = n => () => { UI.closeStep[v.ym] = n; app.render(); };
-  const set = (r, val) => ctx.store.setIn('spending', ['months', v.ym, 'lines', r.line.id, 'actual'], val === null ? undefined : val, 'Actual');
+  const part = r => (viewPerson(ctx) && !r.gutCat ? shareOf(r.line) || 1 : 1); // batch 45: a typed actual is kept as the whole row's; this view shows its part
+  const set = (r, val) => ctx.store.setIn('spending', ['months', v.ym, 'lines', r.line.id, 'actual'], val === null ? undefined : val / part(r), 'Actual');
   const top = v.misses.slice(0, 3); // variable misses first (R145)
   const rows = [...v.rows.filter(r => (r.estimate ?? 0) > 0 || r.actual != null)].sort((a, b) => (b.variable - a.variable) || Math.abs(b.diff ?? 0) - Math.abs(a.diff ?? 0));
   const name = r => [h('span', {}, r.line.name || r.line.values.category), r.variable ? null : h('span.muted.small', {}, ' fixed'), r.priceUp ? h('span.tag.warn', { style: { marginLeft: '6px' } }, 'Price went up') : null];
@@ -703,7 +723,7 @@ function bulletChart(ctx, rows, gut) {
 
 // Home and Report read the first low day (R096).
 export function firstLowDay(ctx) {
-  const b = balances(ctx.store.doc, ctx.ref, thisYm(ctx), 2, { now: ctx.now(), autoWins: milestoneWins(ctx), low: bufferLine(ctx) });
+  const b = balances(ctx.store.doc, ctx.ref, thisYm(ctx), 2, { now: ctx.now(), autoWins: milestoneWins(ctx), low: bufferLine(ctx), person: viewPerson(ctx) });
   return b.firstLow ? { ...b.firstLow, low: b.low, label: dayLabel(b.firstLow.date) } : null;
 }
 // I (overnight): the Buffer layer's target (two weeks of spending), the low line unless one is typed on the calendar.
