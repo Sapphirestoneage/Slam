@@ -201,9 +201,10 @@ apply); sync conflicts; a copilot that is wrong confidently (every proposal show
 
 | Tool | Today (older suite) | Lands | How |
 |---|---|---|---|
-| Quantum collapse onboarding | Not a file; built as situation gating (D-142), the five-input opening (D-312), the doors (D-206, D-207) and the cost of not knowing (D-214) | Phase 4, Track 1 | Priors, ranges, Ask me next, certainty meter |
+| Quantum collapse onboarding | The standalone module from Aug 2026 (4 to 7 adaptive questions, early exits, the 44-tick collapse meter), plus the repo's pieces: situation gating (D-142), the five-input opening (D-312), the doors (D-206, D-207) and the cost of not knowing (D-214) | Phase 4, Track 1 | Priors, ranges, Ask me next, certainty meter |
+| FI Address and the personality types | Earlier standalone tools: the four-character FI Address and the 16 four-letter FI Personality types (named-tools.md) | Phase 4 | One optional tap screen in Discovery that tilts which skills and words lead |
 | Tax calculator | `rooms/tax.html`, `engines/tax.js`, `engines/taxroom.js` | Phase 5 (the cliff in Phase 4) | One tax function inside the projection |
-| Dual-age retirement calculator | `rooms/bridge.html` with The Number's stop and coast ages and `engines/trap.js` | Phase 5 | The dual-age view on Plan › Timeline, both partners |
+| Dual-age retirement calculator | Both (Eli, Nov 6): The Bridge (`rooms/bridge.html`, The Number's stop and coast ages, `engines/trap.js`) and Retirement for two (both partners' ages) | Phase 5 | The dual-age view on Plan › Timeline, both partners |
 | FI Skill Tree (625 skills) | `rooms/skill-tree.html`, `data/skill_tree.json` | Data in Batch 17; first slice Phase 4; later trees Phases 5 and 6 | `data/library/skills.json`, three at a time beside the FOO |
 | The learning path | The Stacker (three at a time), the unlearning ladder | Phase 4 | The learn and unlearn order per FOO step |
 

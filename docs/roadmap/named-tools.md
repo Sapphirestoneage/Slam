@@ -170,3 +170,32 @@ link resolves, no loops, tags name real areas and steps), registered in `REFEREN
 **Where it lands.** Phase 4 (the library's first slice: the learning order beside the FOO, three skills at a time on
 Home, from `docs/engines/library.md`), deepening in Phases 5 and 6 as the trees that need the projection
 (withdrawal, tax strategy) and the multimillionaire stage (real estate, entrepreneurship, family wealth) come in.
+
+## Earlier standalone tools (Eli's answer, Nov 6 2026)
+
+Eli: these "were previous tools, like the personality calculator kind of thing, to get letters like INFJ". They were
+built in chats as single HTML files, not in the Personalfinance repo. What each one did, from those chats:
+
+- **Quantum Collapse onboarding (Aug 2026, built to replace Money Map Pro's intake).** As few questions as possible,
+  each one eliminating plans rather than collecting a picture: 4 to 7 adaptive questions by income source, with
+  early exits when the answer already decides the plan (a deficit or a thin buffer skips the goal question).
+  Spending is never asked: it is take-home minus what is left over. Cash, debt and invested share one screen. Its
+  signature is a 44-tick collapse meter showing the possible plans shrinking from 248,832,000 to 1 by honest
+  branch-factor arithmetic, and a segmented progress bar that says "shortened" when triage removes a step. It
+  exported a full plan (FOO rung, next dollar, FI date). Gaps found then, which SLAM's Phase 4 version must close:
+  a forgiveness-track gate (never tell a PSLF borrower to pay the loan off), a match already captured, pre-tax gross
+  (take-home hides 401(k) saving), HSA eligibility, and a haircut for irregular yearly costs.
+- **The FI Address (July 2026).** A four-character, MBTI-style code placing anyone in the FI universe: familiarity,
+  route (employed or self-employed, and target), financial state and feeling, and the ceiling (can earn more, can
+  spend less). Plus a motion flag (! or *) for transitions (chosen, hybrid, imposed, the layoff case), a bandwidth
+  slider (Return on Hassle), and lowercase modifier letters (military, clergy, educator, medicine, equity pay,
+  cross-border). Spend is computed, shown back, and the gap with the self-report is the finding.
+- **The FI Personality Test (July 2026, in the Skill Tree).** 12 statements, 4 axes, 16 four-letter types (Earner
+  or Keeper, Paper or Operator, Guardian or Venturer, Exiter or Savorer), each with a superpower, a shadow and
+  prescribed trees, and a shareable card.
+- **The five-element money personality quiz (Aug 2026, SPARKS).** Water, Earth, Air, Fire and Spirit as muscles,
+  20 traits, a Sun, Moon and Rising stack, superpower, shadow and the floor (minimum viable competence).
+
+Where they land in SLAM: Quantum Collapse is Phase 4 Track 1 (its meter becomes the certainty meter; its early exits
+become Ask me next). The FI Address and the personality types are Phase 4 too, as one optional tap screen in
+Discovery whose letters tilt which skills and which wording SLAM leads with; never a gate, never a verdict.

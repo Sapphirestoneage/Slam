@@ -221,3 +221,9 @@ weekly amount), and only 6+ days past it and still Planned. test/late-bill.test.
 "FOO step holds two weeks later" checks are real tests again and pass for all 12.
 
 QA: 519 tests in UTC and America/New_York, 0 fail.
+
+## Nov 6 2026: Eli's answers on the roadmap tools (questions 202 to 204)
+
+The dual-age view does both (The Bridge's two ages and both partners'); the 625 skills stay public, credited to Eli,
+built in conjunction with Jonathan Mendonsa; Quantum Collapse, the FI Address and the personality types were earlier
+standalone tools, described in docs/roadmap/named-tools.md from Eli's past chats and placed in ROADMAP.md.

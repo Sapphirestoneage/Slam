@@ -2,6 +2,8 @@
  "id": "library.skills",
  "version": "1.0.0",
  "asOf": "2026-11-05",
+ "author": "Eli Saperstein (SLAM), built in conjunction with Jonathan Mendonsa (ChooseFI)",
+ "license": "Eli's own work, kept public in this repo with his permission (Nov 6 2026), under the repo license",
  "sourceAsOf": "2026-09-06",
  "source": "FI Skill Tree v6.3.1 (25 trees, 25 levels each, the S, A, B, C leverage tiers), as extracted into the public Sapphirestoneage/personalfinance repo (data/skill_tree.json and data/skill_links.json, version 3.0.0). Copied by tools/library/extract-skills.mjs.",
  "confidence": "convention",
