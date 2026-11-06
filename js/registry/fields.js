@@ -405,6 +405,7 @@ export const KINDS = Object.fromEntries(AREAS.filter(a => a.source === 'records'
 export const NOT_IN_SHEET = {
   'settings.timeView': 'the $ / Hours / FI days view, a screen setting',
   'settings.fastTrack': 'the last Fast Track run, kept to compare',
+  'settings.intake': 'when the pre-session intake was imported, and how many answers (Import intake on Coach tools > Data)',
   'settings.presetsAdded': 'marks that the starter lines were added once',
   'settings.migrated10': 'marks that batch 10 turned untouched starter amounts faded, once per file',
   'settings.fadedNote': 'how many starter amounts turned faded, for the one-time note on the Budget (cleared when it is closed)',

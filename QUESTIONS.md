@@ -381,3 +381,12 @@ Answered and built from the second overnight brief: 140 (a parked hole does not 
 188. **Phone in Lean FI.** Phone moved to Bills and subscriptions but stays in FAT (Lean FI, big e FAT), as it was through Accommodation. The other subscriptions stay out. OK?
 189. **Category typed vs Everything else.** Batch 8's rule stands: a typed category amount counts as done and the lines only move it when they add up to more. Everything else's rough bucket is one of those lines. Should a typed category also hide the bucket box?
 190. **Goal chips to milestones.** Debt free and FI or retire early add those milestones; Emergency fund, Buy a home, Save for a big event and Start investing add a Custom milestone with that name (the FOO steps are not goals in SLAM). Map them elsewhere?
+
+## Intake form (session 1) (Nov 5 2026)
+
+191. **Birth year only.** The form asks the year, not the month, to stay short; age can be a year off until the month is typed on About you. Ask the month too?
+192. **Account counts for investments only.** Tom gets a "how many of each" grid for retirement and investment accounts (blank rows to fill on the call); cash and debts come in as one total per type, as in Fast Track. Want a count grid for cash accounts and credit cards too (it adds two questions to Tom's path, none to Alexis's)?
+193. **Ranges.** Each money question has 6 to 9 range buttons; an open top ("Over $10,000") is worth 1.25 times its floor. Change any scale, or the open-top rule?
+194. **One other-income row.** Other money coming in becomes one income row, its type from the first source ticked (a rental, a side gig). Split it per source instead?
+195. **Not asked on the form.** Partner's name and pay, gross pay, NYC, APRs and the Looks right review are left for the call (see the report). Add any of them?
+

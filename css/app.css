@@ -343,3 +343,7 @@ body:has(.new-client-pop) .try-demo { visibility: hidden; } /* the New client bo
 .card.ft-slim { padding: 8px var(--s4); }
 @media (max-width: 760px) { .ft-slim-note { display: none; } }
 .ft-msg { color: var(--text); background: var(--warn-bg, var(--primary-light)); border-radius: 6px; padding: 4px 8px; font-size: .875rem; font-weight: 600; max-width: 320px; border-left: 3px solid var(--amber); }
+/* Import intake (CSV): the response picker. */
+.intake-pick { display: flex; flex-direction: column; gap: var(--s2); }
+.intake-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--s3); justify-content: flex-start; text-align: left; width: 100%; min-height: 44px; }
+.intake-box .review-line > div:first-child { min-width: 0; flex: 1 1 260px; }

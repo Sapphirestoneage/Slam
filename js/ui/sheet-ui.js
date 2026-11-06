@@ -10,6 +10,7 @@ import { compare, applyChanges, linesOf, unpicked } from '../import-sheet.js';
 import { loadExcelJS } from '../sheet/load.js';
 import { keyNumbers } from '../math/metrics.js';
 import { money, pct } from '../format.js';
+import { intakeButton } from './intake-ui.js';
 
 export const WORDS = {
   open: 'Open in a spreadsheet',
@@ -28,7 +29,8 @@ export function sheetButtons(app, { coachBox = true } = {}) {
   return h('div.sheet-actions', {},
     h('div.btn-line', {}, button(WORDS.open, { iconName: 'sheet', onClick: e => exportSheet(app, e.currentTarget) }), h('span.muted.small', {}, WORDS.openLine),
       coachBox && !clientView ? h('span.coach-only', {}, checkbox(WORDS.coach, UI.coach, v => { UI.coach = v; }, { key: 'sheet:coach' })) : null),
-    h('div.btn-line', {}, button(WORDS.back, { iconName: 'upload', onClick: () => importSheet(app), tip: WORDS.backTip }), h('span.muted.small', { title: WORDS.backTip }, WORDS.backLine)));
+    h('div.btn-line', {}, button(WORDS.back, { iconName: 'upload', onClick: () => importSheet(app), tip: WORDS.backTip }), h('span.muted.small', { title: WORDS.backTip }, WORDS.backLine)),
+    intakeButton(app));
 }
 
 export async function exportSheet(app, btn = null) {
@@ -67,7 +69,7 @@ export function importSheet(app) {
   input.click();
 }
 
-function overlayOf(label, box, onClose) {
+export function overlayOf(label, box, onClose) {
   const overlay = h('div.ft-overlay', { role: 'dialog', 'aria-modal': 'true', 'aria-label': label }, box);
   const close = () => { overlay.remove(); document.removeEventListener('keydown', onKey); onClose?.(); };
   const onKey = e => { if (e.key === 'Escape') close(); };

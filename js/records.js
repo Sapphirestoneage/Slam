@@ -22,9 +22,9 @@ export function sureOf(status, hasValue = true) {
   return hasValue ? 'Know it' : 'Missing';
 }
 export const PERIODS = ['paycheck', 'week', '2 weeks', 'twice a month', 'month', 'quarter', 'year'];
-export const SOURCES = ['manual', 'statement', 'bank', 'spreadsheet']; // R116, R118; spreadsheet: brought back from Open the books
+export const SOURCES = ['manual', 'statement', 'bank', 'spreadsheet', 'intake']; // R116, R118; spreadsheet: brought back from Open the books; intake: the pre-session form
 // Where a number came from, in the user's words.
-export const SOURCE_WORDS = { manual: 'Typed in', statement: 'From a statement', bank: 'From the bank', spreadsheet: 'From your spreadsheet', holdings: 'From the holdings' };
+export const SOURCE_WORDS = { manual: 'Typed in', statement: 'From a statement', bank: 'From the bank', spreadsheet: 'From your spreadsheet', intake: 'From the intake form', holdings: 'From the holdings' };
 
 const UNDO_LIMIT = 200;
 const clone = v => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));

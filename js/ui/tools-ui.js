@@ -164,5 +164,5 @@ export function discoveryScreen(app) {
       text('goal', 'Goal', 'In their words'), text('why', 'Why now', 'What prompted the call')),
     h('div.row-line', { style: { marginTop: '16px', gap: '10px' } }, S.button('Send to client file', { kind: 'primary', size: 'big', iconName: 'right', onClick: send }),
       h('span.muted', {}, 'Creates the client and opens Home.')),
-    h('p.muted.small', { style: { marginTop: '16px' } }, 'The pre-call form the client fills from a link needs a server to receive answers, so it is a later phase.'))];
+    h('p.muted.small', { style: { marginTop: '16px' } }, 'Sent the intake form instead? Coach tools, Data, Import intake (CSV).'))];
 }
