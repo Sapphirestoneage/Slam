@@ -117,7 +117,7 @@ export function pictureOf(doc, ref, { now = new Date() } = {}) {
     item({ id: 'gut', recId: allIn.id, field: 'amount', label: 'Monthly spending (the gut number)', group: 'spending', kind: 'gut', weight: WEIGHTS.gut, level, route: '#/cash-flow/budget', updatedAt: allIn.updatedAt,
       step: level === LEVELS.Missing ? 'Add the gut number' : 'Build it from the lines on Budget' });
   } else if (!categories.length) {
-    item({ id: 'spending', label: 'Monthly spending', group: 'spending', weight: WEIGHTS.gut, level: LEVELS.Missing, route: '#/cash-flow/budget', quick: 'spending' });
+    item({ id: 'spending', label: 'Monthly spending', group: 'spending', weight: WEIGHTS.gut, level: LEVELS.Missing, route: '#/cash-flow/budget', focus: 'gut', quick: 'spending' }); // Nov 6: Ask next and Fix it land on Your gut number, not the first category
   } else {
     for (const c of categories) item(c);
   }
