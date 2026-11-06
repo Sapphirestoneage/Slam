@@ -1425,3 +1425,33 @@ QUESTIONS 446 to 449.
 
 No screen reads the engine, so no number a client has seen moves. Workbook check: every row matches. Persona run: no
 screen changed.
+## Batch 62 (Nov 6 2026): the Phase 4 reads as live formulas
+
+The workbook is the coach's main tool now (ROADMAP "Direction"), so the reads that were "From the app" are formulas.
+Each read is a report tab built from `js/registry/reads.js` (and `reads-cliff.js`): one row per step with a plain
+label, the formula, the app's number and a Check; a step with no number in the app has no Check; the inputs a coach
+changes in the meeting are blue boxes holding the app's default. The Math rows point at the read's named rows.
+
+1. M9W What a lender sees (Lender tab): each income row read as a mortgage lender and a landlord read it (a paycheck
+   at its gross, cash tips only when reported; self-employment from the returns, two averaged and never more than the
+   latest; benefits by how long they run; a gift not at all), the debts a lender counts (a card at its minimum, a
+   student loan with no payment at LenderStudentPct), the DTI, the most home payment and the loan it carries (PV).
+2. M9F Bank fire drill, both readings (Fire drill tab): the account that freezes is a blue box; each account and card
+   at the same bank or not (a bank not answered: the same in the first reading, another bank in the second), what is
+   out of reach and what can be reached, the must-pay bills from the Budget lines by the new FireDrill table on
+   Assumptions (or the gut number), and the days, with and without the card room. The paychecks landing in the window
+   stay the app's (they are dated on the calendar).
+3. M9H Shift P&L (Shift P&L tab and the Income tab's Shift P&L columns), with Batch 60's kinds of night: each night's
+   boxes show as the app's values, its share of the row's tax and its real hourly are formulas.
+4. M9D What would move the credit score most (Credit score tab): the move in FICO's order, and the sentence.
+5. M9B The benefits cliff (Benefits cliff tab): the household's size and children (About you and People), each program
+   at today's income (SNAP's benefit formula, the health coverage chain, the children's coverage, the EITC, CCAP), each
+   program's status, line, distance and whether it counts, the next line, and the raise in the blue box: the tax on it
+   worked out again on the client's return (federal with the tips deduction, Social Security to the wage base,
+   Medicare, New York and NYC), the Child Tax Credit before and after, each program with the raise, and what it keeps.
+   The new Medicaid_states table on Assumptions. M10's Child Tax Credit row is a formula now too (Cliff_ctc0).
+6. Left from the app, each with its one-line reason on the Math tab: M83, M9T, M9L, M9S, M9C, M90, and the break-even
+   raise (QUESTIONS 459).
+
+Every function used is on Google Sheets' function list (checked Nov 6). Workbook check: every Check at Matches on all
+22 households. Format 48. QUESTIONS 456 to 460.

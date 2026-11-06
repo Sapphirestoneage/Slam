@@ -54,3 +54,27 @@ Batch 38 fixed these (the before list):
 | Projections (every column), FOO status (cached values) | every household with a projection; the Demo's downloaded file showed 50 Checks off in LibreOffice | each row's formulas all carried the app's balance as their cached value (the age read $23,540); now only the compared cell carries it |
 | Statements · Unexplained (M66) | multimillionaire, trans-transition (after rebasing on batch 34) | the net worth bridge gained a sinking funds line in the app; the sheet now has it as its own row and takes it off |
 | M69, FOO · The step you are on | multimillionaire | step 7 (Go all in) is a window beside the path, never the step you are on; the sheet matched the first In progress |
+
+## The reads as formulas (batch 62)
+
+The Phase 4 reads are live formulas now, each on a tab of its own (js/registry/reads.js, js/registry/reads-cliff.js),
+built like the report tabs: one row per step of the math with a plain label, the formula, the app's number and a
+Check. A step with no number of its own in the app has no Check. The Math tab's rows for these reads point at the
+read's named rows (Lender_dti, Drill_days, Shift_hourly, Credit_move, Cliff_next ...), so the two always agree.
+
+| Read | Tab | What the coach changes there | Per-row columns |
+| --- | --- | --- | --- |
+| M9W What a lender sees | Lender | the rate and taxes-and-insurance share are on Assumptions (This client) | Income: Lender reads it as, pace, returns, earned, mortgage, landlord; Debt: home loan, payment counted |
+| M9F Bank fire drill (both readings) | Fire drill | the account that freezes (a blue box, the app's pick in it) | Assets: name, bank, frozen, same bank (two readings), reach; Debt: the card's bank, room, minimum; Budget: the group of bills, must-pay |
+| M9H Shift P&L | Shift P&L | the shift boxes on Income; each kind of night's boxes show as the app's values | Income: Shift P&L columns (a row with nights is read one night at a time on the tab) |
+| M9D What would move the score | Credit score | Your credit on About you, each card on Debt | Debt: months since opened |
+| M9B The benefits cliff | Benefits cliff | the raise to test (a blue box, $5,000; the app's numbers are for $5,000) | People: child, child number |
+| M10 · ctc Child Tax Credit | Benefits cliff | (worked out with the tax on the raise) | |
+
+New reference tables on Assumptions: FireDrill (which Budget lines each group of bills holds, from the fire drill
+order) and Medicaid_states (the states that have not expanded Medicaid).
+
+Still from the app, each with its reason on the Math tab: the break-even raise (a search over every $100 step), the
+paychecks landing in the fire drill's window (dated on the calendar, M60), M9T, M9L and M83 (whole-plan runs that read
+the month-by-month debt plan, M34), M9S (a month-by-month walk of each repayment plan), M9C (the card library) and M90
+(it reads the cash layers, M68).
