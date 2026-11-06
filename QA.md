@@ -139,7 +139,7 @@ One row per screen touched, one column per category, each cell a pass or the fai
 
 ## Personas
 
-Twelve made-up households (README, Personas) prove each batch works for real people, from someone below zero to a
+Thirteen made-up households (README, Personas) prove each batch works for real people, from someone below zero to a
 multimillionaire, including the ones SLAM cannot fully hold yet (three adults, house fees, platform payouts, transition
 costs, business income, estates, college).
 

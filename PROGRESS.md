@@ -406,6 +406,18 @@ blank keeps the defaults (2 hours, $100). Registered as client assumptions; expo
 what the gut number leaves (after debt payments it includes and the categories already set), each is scaled by the
 same share and rounded to $10 (js/math/spending.js typicalScaleOf, read by the walk and the Budget). Never scaled up.
 Questions 240 to 249 decided; 242 (the session pace) waits for Eli. QA: 576 tests, 0 fail.
+## Batch 21 (Nov 6 2026): Life Transitions, the first Phase 4 feature
+
+A session that turns panic into a number (Eli's Nov 5 design chat). Plan › Transitions, behind a Phase 4 switch in Coach tools › Session (settings.phase4, on for a new household in this build). Find reaches it from job loss, laid off, quit, transition and runway.
+
+1. Here and there: a template in one tap (job loss, quitting, student to first job, getting married, a baby, divorce or breakup, kids grown and out, something else), the start and the destination as taps, a start month as taps (or another month), and which income stops (the template's default, one tap to change).
+2. The burn: full spending, DRAFTT needs, FAT and food and housing only, read from the Budget (DRAFTT and FAT are the cash layers' own numbers, one answer with big e), each with how long the money lasts at that level.
+3. The options ladder, cheapest first, prefilled and priced: the checking buffer, little e, big e and other cash, cut to the basics (a level and when it starts; it buys time, it adds no money), side income or selling things (quick picks, and the ways to earn quickly), unemployment (batch 15's rows and end date; one tap adds NY's most), family help (from Backups, only if real), investments, a 0% card (0% until its promo ends), a regular card ("Using $1,000 for 3 months costs about $60"), retirement money last (the 10% penalty and tax from the app's own tax math). Each rung toggles.
+4. The dip: an ECharts chart of the money left on every rung, month by month from today, each rung its own band, with Today, the end of benefits, each tripwire, the floor (the month the last rung runs out) and Plan B and C as dashed lines; the lines are spelled out under it. js/math/transitions.js (M90, registered with its spec row), tests in test/transitions.test.js.
+5. Tripwires: if (a rung is reached, no offer by a month, money left under 3 months) then (a list of taps), placed on the dip, in order, and in the session agenda as suggestions.
+6. Plan B and C: extra income from a month, a rung first, rungs left out, a deeper cut; one line each against the plan.
+7. Share view: one page for parents or a partner (the situation, the plan in order, decided ahead, the worst case, it is handled), no coach notes, one switch to hide the costly rungs' dollars, Print.
+8. A thirteenth persona, Riley Between (job loss), with every runway number worked by hand (tools/personas/defs/job-loss.mjs): DRAFTT $2,840, 24.0 months to Oct 2028; full 21.8, FAT 26.1, food and housing 28.0; Plan B 48.4.
 
 ## Batch 19 (Nov 6): columns that line up, rows that breathe, nothing stuck over a row
 

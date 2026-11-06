@@ -6,7 +6,7 @@
 // When the backup format changes, run this again and commit the new files.
 //   node tools/personas/build.mjs          writes fixtures/personas/*.json
 //   node tools/personas/build.mjs --check  exits 1 when a committed file is out of date (nothing is written)
-// A def: { id, name, about, profile, client, assumptions, settings, spending, records, expected, cannot, view }.
+// A def: { id, name, about, profile, client, assumptions, settings, spending, program, records, expected, cannot, view }.
 // records: [{ ref, kind, type, name, amount, per, owner, status, fieldStatus, linkedTo: '@ref', values }]. Every
 // def is made up and safe for the public repo.
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -40,6 +40,7 @@ export function buildPersona(def) {
     store.setDoc('assumptions', def.assumptions || {});
     store.setDoc('settings', { fastTrack: { at: NOW, seconds: 300, done: true }, ...(def.settings || {}) });
     if (def.spending) store.setDoc('spending', def.spending);
+    if (def.program) store.setDoc('program', def.program); // batch 21: a saved Life Transitions plan
     for (const r of def.records || []) {
       const { ref: key, kind, type = null, fieldStatus, linkedTo, paidWith, ...fields } = r;
       const link = v => (typeof v === 'string' && v.startsWith('@') ? refs[v.slice(1)]?.id ?? (() => { throw new Error(`${def.id}: no row ${v}`); })() : v ?? null);

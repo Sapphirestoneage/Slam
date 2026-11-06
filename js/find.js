@@ -16,7 +16,7 @@ const SCREEN_OF = { income: '#/cash-flow/income', benefit: '#/cash-flow/income',
   asset: '#/net-worth/assets', coverage: '#/net-worth/protection', milestone: '#/plan/goals' };
 const PLACE_OF = { '#/cash-flow/income': 'Cash flow › Income', '#/cash-flow/budget': 'Cash flow › Budget', '#/cash-flow/taxes': 'Cash flow › Taxes', '#/net-worth/assets': 'Net worth › Assets',
   '#/net-worth/debt': 'Net worth › Debt', '#/net-worth/credit-cards': 'Net worth › Credit cards', '#/net-worth/protection': 'Net worth › Protection', '#/plan/goals': 'Plan › Goals',
-  '#/plan/foo': 'Plan › FOO', '#/home/profile': 'Home › About you', '#/home/session': 'Home' };
+  '#/plan/foo': 'Plan › FOO', '#/home/profile': 'Home › About you', '#/home/session': 'Home', '#/plan/transitions': 'Plan › Transitions' };
 export const placeOf = route => PLACE_OF[route] ?? route;
 export const routeOfRecord = r => (r.kind === 'debt' ? (r.type === 'Credit card' ? '#/net-worth/credit-cards' : '#/net-worth/debt') : SCREEN_OF[r.kind] ?? null);
 const nameOf = r => r.name || r.values?.category || r.type || r.kind;

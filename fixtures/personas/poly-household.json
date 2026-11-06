@@ -52,6 +52,7 @@
   "assumptions": {},
   "settings": {
    "timeView": "$",
+   "phase4": true,
    "fastTrack": {
     "at": "2026-11-05T12:00:00.000Z",
     "seconds": 300,
