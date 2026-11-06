@@ -14,6 +14,7 @@ import { LEVELS, levelWord } from './program.js';
 import { categoryJoyOf, tripsOf, incomeKindOf, changeLog } from '../capture.js';
 import { compareOf } from '../math/proposed.js';
 import { READS } from './reads.js';
+import { RANGES_REPORT } from '../sheet/ranges.js';
 
 const MAX_ROWS = 600; // a table longer than this is written as values, marked From the app
 
@@ -213,6 +214,7 @@ export const REPORTS = [
       return [years, ...tables];
     },
   },
+  RANGES_REPORT, // batch 63: the corner method of M9R, live (js/sheet/ranges.js)
   {
     tab: 'Program', prefix: 'Program',
     about: 'The 12-session program: each session and its checklist, Answered and Solid with the pace, and the next small things. From the app (the ticks and levels live in SLAM).',

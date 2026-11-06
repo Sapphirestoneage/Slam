@@ -88,6 +88,7 @@ export const FORMATS = [
   { version: 47, shape: '7caa6b1e' }, // batch 56: M9J Social Security (each person's statement number and level, claim ages, the trust fund switch, the SS_ values and SS_fra table), the partner's own Retire by, go-go, slow-go and no-go spending, rules ProjectionSocialSecurity, ProjectionFiNet
   { version: 48, shape: 'a49bd526' }, // batch 62: the Phase 4 reads as live formulas: the Lender, Fire drill, Shift P&L, Credit score and Benefits cliff tabs, their columns on the Income, Debt, Assets, Budget and People tabs, and the FireDrill and Medicaid_states tables
   { version: 49, shape: '9f95f75d' }, // batch 58: People birth year for each adult past the couple (QUESTIONS 419), Institutions' Whose takes P3 to P7 (QUESTIONS 415)
+  { version: 50, shape: 'ce7c59ee' }, // batch 63: the Ranges tab (M9R live, with What widens it), the priors tables on Assumptions (M9E, M9A), the M9N part column on each tab with an Owner, the M53 changes as dated
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

@@ -147,7 +147,8 @@ test('the words: years for a wide date, months for a near one, "or later" when a
 
 test('registered: M9A with its reason, the PriorSpendShare rule with its source and date', () => {
   const m = mathById('M9A');
-  assert.ok(m && m.fromApp && m.fns.includes('agestart.agePlanOf'));
+  // Batch 63: the count and the typical fill-ins are sheet lookups; the plan run on them stays from the app, with its reason.
+  assert.ok(m && m.sheet && m.parts.some(p => p.key === 'fiLow' && p.fromApp) && m.fns.includes('agestart.agePlanOf'));
   const a = ASSUMPTIONS.find(x => x.id === 'rules.priorSpendShare');
   assert.ok(a && a.source && a.date === '2026-11-06' && a.get() === RULES.priorSpendShare);
   assert.ok(RULES.priorSpendShare > RULES.rangeSpendGut, 'wider than a gut spending number, so a gut answer narrows it');

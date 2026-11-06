@@ -454,6 +454,30 @@ export const TABLES = [
   { id: 'Priors_netWorth', label: 'Typical net worth by age of head (M9E: the SCF median)', columns: [['from', 'Age from', 'number'], ['band', 'Ages', 'text'], ['typical', 'Typical (median, else mean)', 'money']],
     rows: () => { const rows = (priorsData()?.rows || []).filter(r => r.field === 'netWorth' && r.ages).sort((a, b) => (a.ages[0] ?? 0) - (b.ages[0] ?? 0)).map(r => [r.ages[0] ?? 0, r.band, r.median ?? r.mean ?? null]); return rows.length ? rows : [[null, null, null]]; },
     source: () => 'Federal Reserve, Survey of Consumer Finances 2025, Table 2 (family net worth by age of head), via data/priors-2026.json', date: '2026-11-06' },
+  // Batch 63 (M9E, M9A in the sheet): the rest of the Primary rows, so typical at your age is a lookup here.
+  { id: 'Priors_ce', label: 'Typical spending by age of the reference person (M9E: the BLS Consumer Expenditure Survey, a year, every household size)', columns: [['from', 'Age from', 'number'], ['band', 'Ages', 'text'], ['total', 'Total spending a year', 'money'], ['insurance', 'Personal insurance and pensions a year (out before take-home)', 'money']],
+    rows: () => { const rows = priorsData()?.rows || []; const out = rows.filter(r => r.field === 'spending.total' && r.ages && r.household == null && r.place == null).sort((a, b) => (a.ages[0] ?? 0) - (b.ages[0] ?? 0))
+      .map(r => [r.ages[0] ?? 0, r.band, r.mean ?? null, rows.find(x => x.field === 'spending.personalInsurance' && x.band === r.band && x.household == null && x.place == null)?.mean ?? null]); return out.length ? out : [[null, null, null, null]]; },
+    source: () => 'BLS Consumer Expenditure Survey 2024, by age of reference person (on FRED), via data/priors-2026.json', date: '2026-11-06' },
+  { id: 'Priors_value', label: 'Typical at your age: the single figures (M9E, M9A; SCF medians among holders and the share holding any, CE all ages and one person, ACS rent, Census income)', columns: [['key', 'What', 'text'], ['value', 'Figure', 'number'], ['about', 'From', 'text']],
+    rows: () => { const d = priorsData(); if (!d) return [[null, null, null]]; const R = d.rows || []; const one = (field, pick = () => true) => R.find(r => r.field === field && pick(r));
+      const plain = r => r.household == null && r.place == null && !r.ages;
+      const list = [
+        ['ceTotalAll', one('spending.total', plain)?.mean, 'CE total spending a year, all ages'], ['ceInsuranceAll', one('spending.personalInsurance', plain)?.mean, 'CE personal insurance and pensions a year, all ages'],
+        ['ceTotalSolo', one('spending.total', r => r.household === 'Solo')?.mean, 'CE total spending a year, one person, all ages'], ['ceInsuranceSolo', one('spending.personalInsurance', r => r.household === 'Solo')?.mean, 'CE personal insurance and pensions a year, one person'],
+        ['cash', one('cash')?.median, 'SCF median transaction accounts, among holders'], ['cashShare', one('cash')?.share, 'SCF share holding any'],
+        ['card', one('card')?.median, 'SCF median card balance, among those carrying one'], ['cardShare', one('card')?.share, 'SCF share carrying a balance'],
+        ['studentLoans', one('studentLoans')?.median, 'SCF median education loans, among holders'], ['studentLoansShare', one('studentLoans')?.share, 'SCF share holding any'],
+        ['retirement', one('retirement')?.median, 'SCF median retirement accounts, among holders'], ['retirementShare', one('retirement')?.share, 'SCF share holding any'],
+        ['netWorthAll', one('netWorth', plain)?.median, 'SCF median net worth, all ages'], ['netWorthAll25', one('netWorth', plain)?.p25, 'SCF net worth, 25th percentile, all ages'], ['netWorthAll75', one('netWorth', plain)?.p75, 'SCF net worth, 75th percentile, all ages'],
+        ['rent', one('rent', r => r.place == null)?.median, 'ACS median gross rent, a month, national'], ['rentNY', one('rent', r => r.place === 'NY')?.median, 'ACS median gross rent, a month, New York State'],
+        ['income', one('income')?.median, 'Census median household income a year, all households'],
+      ];
+      return list.map(([k, v, a]) => [k, v ?? null, a]); },
+    source: () => 'data/priors-2026.json (the Primary rows of docs/engines/priors-sources.md: SCF 2025, CE 2024, ACS 2020 to 2024, Census 2025)', date: '2026-11-06' },
+  { id: 'Priors_place', label: 'Typical at your age: what a place scales spending and pay by (BEA Regional Price Parities 2024, US = 1)', columns: [['place', 'Place', 'text'], ['factor', 'Times the national figure', 'number']],
+    rows: () => { const P = priorsData()?.place || []; return P.length ? P.filter(x => x.field === 'spending').map(x => [x.place, x.factor]) : [[null, null]]; },
+    source: () => 'BEA Regional Price Parities 2024 (on FRED), via data/priors-2026.json', date: '2026-11-06' },
   { id: 'Housing', label: 'Housing categories (M2A)', columns: [['category', 'Category', 'text']],
     rows: () => LISTS.housing.map(t => [t]), source: RULE('js/math/metrics.js, M2A'), date: '2026-10-28' },
   { id: 'Heavy', label: 'Heavy debt types (FOO step 3)', columns: [['type', 'Debt type', 'text']],

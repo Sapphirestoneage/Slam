@@ -104,6 +104,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
       a.client ? { f: `IF(C${r}<>"",C${r},${fallback ? `${fallback}` : `B${r}`})`, s: 'formula', fmt: a.unit } : { f: `B${r}`, s: 'formula', fmt: a.unit },
       { v: a.source, s: 'note' }, { v: a.date, s: 'note' }]);
     define(a.name, absRange(aSheet.name, 'D', r));
+    if (a.client) define(`${a.name}_mine`, absRange(aSheet.name, 'C', r)); // batch 63: the client's own box, blank when the default is used
   }
   for (const t of TABLES) {
     aRows.push([]);
@@ -208,7 +209,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
     const sheet = { name: rep.tab, kind: 'report', widths: [], freeze: { rows: 3 }, rows };
     for (const t of rep.tables ? rep.tables(c) : [{ columns: rep.columns, sections: rep.sections(c) }]) {
       const head = t.columns;
-      head.forEach((h, i) => { sheet.widths[i] = Math.max(sheet.widths[i] ?? 0, h.width ?? 16); });
+      head.forEach((h, i) => { sheet.widths[i] = Math.max(sheet.widths[i] ?? 0, h.width ?? 16); if (h.group) (sheet.groups ||= []).push(colLetter(i + 1)); }); // batch 63: working columns, grouped and collapsed
       if (t.title) rows.push([{ v: t.title, s: 'section' }]);
       if (t.note) rows.push([{ v: t.note, s: 'note' }]);
       const letterOf = new Map(head.map((h, i) => [h.key, colLetter(i + 1)]));
@@ -238,6 +239,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
             // the age, contributions and growth on Projections all read as the year's balance).
             const chk = head.find(x => x.check);
             const pair = [chk?.check ?? ['f', 'app'], chk?.also].find(p => p?.[0] === h.key);
+            if (cell.name) define(`${rep.prefix}_${cell.name}`, absRange(sheet.name, letterOf.get(h.key), r)); // batch 63: a cell the Math tab reads
             return { f, s: row.total ? 'total' : 'formula', fmt: unit, cached: pair ? cells[pair[1]]?.v : undefined };
           }
           const v = unit === 'month' ? toCell('month', cell.v) : cell.v;
@@ -247,6 +249,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
         if (row.key && namedCol) define(`${rep.prefix}_${row.key}`, absRange(sheet.name, letterOf.get(namedCol.key), r));
         prevRow = r;
       }
+      for (const key of t.names || []) define(`${rep.prefix}_${key}`, absRange(sheet.name, letterOf.get(key), first, Math.max(first, last))); // batch 63: a whole column of the table
       rows.push([]);
     }
     sheets.push(sheet);

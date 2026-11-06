@@ -36,6 +36,8 @@ export async function writeWorkbook(ExcelJS, plan, { cache = true } = {}) {
     const ws = wb.addWorksheet(s.name, { state: s.hidden ? 'hidden' : 'visible', views: s.freeze ? [{ state: 'frozen', xSplit: s.freeze.cols ?? 0, ySplit: s.freeze.rows ?? 0 }] : [] });
     (s.widths || []).forEach((w, i) => { ws.getColumn(i + 1).width = w; });
     for (const letter of s.hiddenCols || []) ws.getColumn(letter).hidden = true;
+    for (const letter of s.groups || []) { const col = ws.getColumn(letter); col.outlineLevel = 1; col.hidden = true; } // batch 63: the working, collapsed
+    if (s.groups?.length) ws.properties.outlineProperties = { summaryRight: false };
     s.rows.forEach((row, ri) => {
       (row || []).forEach((cell, ci) => {
         if (!cell) return;

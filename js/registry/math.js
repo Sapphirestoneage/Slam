@@ -23,7 +23,7 @@ import { moneyAsTime, fiDate } from '../math/fi.js';
 import { monthsUntil } from '../math/portfolio.js';
 import { holidaysOf } from '../math/holidays.js';
 import { simpleMath } from '../math/simple.js';
-import { pictureOf, paceOf, unlockOf, confidenceOf, nextSmallThings } from '../math/picture.js';
+import { pictureOf, paceOf, unlockOf, confidenceOf, nextSmallThings, levelOf } from '../math/picture.js';
 import { sessionNo } from '../program.js';
 import { scorecardOf } from '../math/scorecard.js';
 import { ladderOf } from '../math/ladder.js';
@@ -45,16 +45,26 @@ import { skillLibrary } from '../library.js';
 import { libraryOf } from '../math/library.js';
 import { priorsData } from '../priorslib.js';
 import { typicalChecks, typicalBoxes, typicalOf, priorsOpts } from '../math/priors.js';
-import { agePlanOf, ageOnlyRangesOf } from '../math/agestart.js';
+import { agePlanOf, ageOnlyRangesOf, priorOf, answeredOf } from '../math/agestart.js';
+// Batch 63 (M9Q in the sheet): the key outputs the meter weighs, as [Key, label, weight, Ranges tab key, a date].
+const CERT_KEYS = [['Fi', 'FI date', 'CertaintyWeightFi', 'fi', true], ['DebtFree', 'Debt-free date', 'CertaintyWeightDebtFree', 'df', true], ['EfMonths', 'Emergency fund months', 'CertaintyWeightEf', 'ef', false], ['Surplus', 'Monthly surplus', 'CertaintyWeightSurplus', 'sur', false], ['NetWorth', 'Net worth', 'CertaintyWeightNetWorth', 'nw', false]];
+const CERT_W = `(${CERT_KEYS.map(([k, , w]) => `IF(Math_M9Q_cert${k}="",0,${w})`).join('+')})`;
+const ASK = new WeakMap();
+// Batch 63 (M9N in the sheet): the tabs whose rows have an Owner, and their prefixes.
+const M9N_PREFIX = { income: 'Income', debt: 'Debt', assets: 'Assets', protection: 'Protection', spending: 'Spend', goals: 'Goals' }; // calendar entries have no Owner column
+const M9N_AREAS = Object.keys(M9N_PREFIX);
+const askOf = c => { if (!ASK.has(c)) { let A = null; try { A = askNextOf(c.doc, c.ref, { now: c.now, m: c.m, R: c.ranges(), F: c.fooRange(), zero: zeroOf(c) }); } catch { A = null; } ASK.set(c, A); } return ASK.get(c); };
 // Batch 46 (QUESTIONS 371): the certainty meter's 0% is the plan from the age alone, as on screen.
 const zeroOf = c => { const d = priorsData(); return d ? ageOnlyRangesOf(c.doc, c.ref, d, { now: c.now }) : null; };
 import { creditHealth } from '../math/debt.js';
 import { identityOf } from '../math/identity.js';
 import { lenderOf } from '../math/lender.js';
-import { askNextOf } from '../math/nextbest.js';
+import { askNextOf, spanOf } from '../math/nextbest.js';
 import { cliffOf } from '../math/cliff.js';
-import { rowShare } from '../math/household.js';
-import { householdOf } from './couples.js';
+import { rowShare, amongOf } from '../math/household.js';
+import { householdOf, MAX_ADULTS } from './couples.js';
+import { setCatSum, rawChanges, STATUS_LEVEL, WIDTH } from '../sheet/ranges.js';
+import { TYPICAL as TYP, FILL, ANSWERED, farCount } from '../sheet/typical.js';
 import { shiftPnlsOf } from '../math/shiftpnl.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
@@ -113,6 +123,8 @@ const LINES_AT = (k, lv) => `SUMIFS(Spend_M21,Spend_InMath,"Yes",Spend_Kind,"Bud
 const CAT_LINES = k => `(${LINES_AT(k, '<>3')}+IF(COUNTIFS(Spend_InMath,"Yes",Spend_Kind,"Budget line",${LETTER(k)},Spend_level,"3",Spend_amount,"<>")>0,${LINES_AT(k, '3')},SUMIFS(Spend_elseAmount,Spend_InMath,"<>No",Spend_Kind,"Gut number or category",Spend_Type,"${k}",Spend_Status,"<>Not for me"))${k === 'Debt' ? '+SUM(Debt_auto)' : ''})`;
 const CAT_TYPED = k => `SUMIFS(Spend_amount,Spend_InMath,"<>No",Spend_Kind,"Gut number or category",Spend_Type,"${k}",Spend_Status,"<>Not for me")`; // a category row is a month
 const CAT_SUM = keep => CATEGORIES.filter(keep).map(k => `MAX(${CAT_TYPED(k)},${CAT_LINES(k)})`).join('+');
+// Batch 63 (M9R): the spending total on the lines path with every line at one end of its range (Spend_M21lo, amtLo).
+setCatSum(s => CAT_SUM(k => k !== 'Retirement').replace(/\bSpend_M21\b/g, `Spend_M21${s.toLowerCase()}`).replace(/\bSpend_amount\b/g, `Spend_amt${s}`));
 
 export const MATH = [
   { id: 'M00', name: 'Units', inputs: 'none', fns: [], unit: 'text',
@@ -430,7 +442,9 @@ export const MATH = [
       { area: 'assets', key: 'val', label: 'Value used', unit: 'money', f: `IF(${SKIP},"",IF({Status}="Not for me",0,IF({Kind}="Account",{balance},{value})))` },
       { area: 'assets', key: 'M40', label: 'Counts in net worth (M40)', unit: 'money', f: 'IF({@val}="","",{@val}-N({unvested}))' },
     ],
-    sheet: 'IF(COUNTIFS(Assets_InMath,"<>No")+COUNTIFS(Debt_InMath,"<>No")=0,IF(Profile_noneOfThese="Yes",0,""),SUM(Assets_M40)-SUM(Debt_balUsed))', label: 'Assets (vested only) minus debts',
+    // Batch 63: a row counts once it is a real row (it has a SLAM id) or has a number; the 20 blank rows say In the math
+    // Yes too, so a brand-new client read $0 here where SLAM has no net worth yet.
+    sheet: 'IF(COUNTIFS(Assets_InMath,"<>No",Assets_Id,"<>")+COUNTIFS(Assets_InMath,"<>No",Assets_Id,"",Assets_balance,"<>")+COUNTIFS(Assets_InMath,"<>No",Assets_Id,"",Assets_value,"<>")+COUNTIFS(Debt_InMath,"<>No",Debt_Id,"<>")+COUNTIFS(Debt_InMath,"<>No",Debt_Id,"",Debt_balance,"<>")=0,IF(Profile_noneOfThese="Yes",0,""),SUM(Assets_M40)-SUM(Debt_balUsed))', label: 'Assets (vested only) minus debts',
     app: c => c.m.netWorth.value },
   { id: 'M41', name: 'Liquid net worth', inputs: 'accounts, debts', unit: 'money', fns: ['assets.liquidNetWorth'],
     cols: [{ area: 'debt', key: 'consumer', label: 'Consumer debt', unit: 'number', f: 'IF(COUNTIF(Consumer_type,{Type})>0,1,0)' }],
@@ -485,7 +499,12 @@ export const MATH = [
         { key: `at${k + 1}`, name: `Known change ${k + 1} ahead: the month it starts on the path (months from now)`, unit: 'months', fromApp: 'the month from the dates on the Budget and Income rows (Becomes mine in, Starts in, benefits end), after the debt-first months', app: c => changeSlots(c.m)[k]?.at ?? null },
         { key: `ch${k + 1}`, name: `Known change ${k + 1} ahead: what goes in moves by this a month`, unit: 'money', fromApp: 'the change to the surplus from those rows (a bill that becomes yours, benefits that end)', app: c => changeSlots(c.m)[k]?.monthly ?? null },
         { key: `seg${k + 1}`, name: `Invested at known change ${k + 1}`, unit: 'money', sheet: `IF(Math_M53_at${k + 1}="","",FV(Math_M53_growth,Math_M53_at${k + 1}-${k ? `Math_M53_at${k}` : 'N(Math_M53_debtMonths)'},-(Math_M53_invest${Array.from({ length: k }, (_, j) => `+N(Math_M53_ch${j + 1})`).join('')}),-${k ? `Math_M53_seg${k}` : 'FV(Math_M53_growth,N(Math_M53_debtMonths),-Math_M53_before,-Math_M41_invested)'}))`,
-          app: c => { const sl = changeSlots(c.m)[k]; if (!sl || c.x.invested == null || c.m.investing?.monthly == null) return null; const pts = fiDate({ invested: c.x.invested, monthlyInvesting: c.m.investing.monthly, realReturn: c.x.realReturn, target: Number.MAX_VALUE }, { from: c.now, path: true, before: c.m.investing.before ?? null, changes: c.m.investing.changes ?? null }).points; return pts?.[sl.at] ?? null; } }]).flat()],
+          app: c => { const sl = changeSlots(c.m)[k]; if (!sl || c.x.invested == null || c.m.investing?.monthly == null) return null; const pts = fiDate({ invested: c.x.invested, monthlyInvesting: c.m.investing.monthly, realReturn: c.x.realReturn, target: Number.MAX_VALUE }, { from: c.now, path: true, before: c.m.investing.before ?? null, changes: c.m.investing.changes ?? null }).points; return pts?.[sl.at] ?? null; } }]).flat(),
+      // Batch 63 (M9R): each known change as dated, before the debt-first months move it, so each end of a range
+      // (Ranges tab) can start it after its own debt-first months.
+      ...Array.from({ length: CHANGE_SLOTS }, (_, k) => [
+        { key: `from${k + 1}`, name: `Known change ${k + 1} as dated: the month it starts (months from now, before any debt-first months)`, unit: 'months', fromApp: 'the month from the dates on the Budget and Income rows (Becomes mine in, Starts in, benefits end)', app: c => rawChanges(c.m)[k]?.at ?? null },
+        { key: `by${k + 1}`, name: `Known change ${k + 1} as dated: what goes in moves by this a month`, unit: 'money', fromApp: 'the change to the surplus from that row', app: c => rawChanges(c.m)[k]?.monthly ?? null }]).flat()],
     sheet: m53Sheet(),
     label: 'Months until investments reach the FI number, at what goes in each month', app: c => c.m.monthsToFi.value, never: c => !!c.m.monthsToFi.never },
   { id: 'M54', name: 'Coast FI', inputs: 'M50, M02, ages', unit: 'money', fns: ['fi.coastFi', 'foo.coastFiNumber'],
@@ -643,36 +662,86 @@ export const MATH = [
   // ---------- Batch 31: typical at your age (Phase 4, Track 1 groundwork) ----------
   { id: 'M9E', name: 'Typical at your age', inputs: 'age (About you: birth year and month), state, solo or couple, housing, roommates and how rent is given, the cash accounts\' balances, card balances, student loan balances, the gut spending number, the rent line; data/priors-2026.json (the Primary rows only); TypicalLow, TypicalHigh', unit: 'count',
     fns: ['priors.TYPICAL', 'priors.CE_CATEGORIES', 'priors.NO_ROW', 'priors.rowFor', 'priors.ageRatioOf', 'priors.shapeOf', 'priors.NYC_AREA', 'priors.inNycArea', 'priors.placeOf', 'priors.typicalOf', 'priors.farFrom', 'priors.typicalCheck', 'priors.typicalChecks', 'priors.shareOf', 'priors.shortRange', 'priors.typicalBoxes', 'priors.priorsOpts', 'priors.isRentLine'],
-    fromApp: 'which totals to test depends on the boxes the household has filled, so it is worked out in SLAM: it reads data/priors-2026.json: the closest row (its place, then solo or couple, then the age band); its 25th to 75th percentile where it gives them, else the source\'s median (SCF, ACS) or mean (CE) times TypicalLow and TypicalHigh; spending scaled by the place\'s price parity (the NY metro for NY), rent divided by the people it is split among; a total is far outside when above high x high / likely or below low x low / likely. The value counts the totals far outside (cash, cards, student loans, spending a month, rent)',
+    // Was from the app until batch 63 (which totals to test depends on the boxes the household has filled); the boxes are
+    // read here from the input tabs: cash accounts, card balances, student loans, the gut number and a renter's rent line(s).
+    // Batch 63: a lookup on the priors tables of the Assumptions tab (js/sheet/typical.js), no longer from the app.
+    sheet: farCount(), label: 'Totals far outside typical at your age (cash, cards, student loans, spending a month, rent)',
     app: c => { const d = priorsData(); if (!d) return null; const o = priorsOpts(c.doc?.profile); return typicalChecks(d, { age: c.x?.age ?? null, ...o, boxes: typicalBoxes(c.live, o) }).length; },
-    parts: [{ key: 'netWorth', name: 'Typical net worth at this age (the SCF median)', unit: 'money', // batch 38: a lookup on the Assumptions tab, no longer from the app
+    parts: [
+      ...[['cash', 'Typical cash at this age (checking and savings, all accounts; among those with any)', 'money'], ['card', 'Typical card balances (among those carrying one)', 'money'], ['studentLoans', 'Typical student loans (among those with any)', 'money'], ['spending', 'Typical spending a month, all in, at this age and place', 'money'], ['rent', 'Typical rent a month (your share where it is split)', 'money']].map(([k, name, unit]) => ({ key: k, name, unit,
+        sheet: `IF(ISERROR(${TYP[k]}),"",${TYP[k]})`, app: c => { const d = priorsData(); if (!d) return null; const o = priorsOpts(c.doc?.profile); return typicalOf(d, k, { age: c.x?.age ?? null, ...o })?.likely ?? null; } })),
+      { key: 'netWorth', name: 'Typical net worth at this age (the SCF median)', unit: 'money', // batch 38: a lookup on the Assumptions tab, no longer from the app
       sheet: 'IF(Profile_ageUsed="","",IFERROR(INDEX(Priors_netWorth_typical,MATCH(Profile_ageUsed,Priors_netWorth_from,1)),""))',
       app: c => { const d = priorsData(); return d ? typicalOf(d, 'netWorth', { age: c.x?.age ?? null })?.likely ?? null : null; } }] },
   // ---------- Batch 46: the plan from an age (Phase 4, Track 1, the age-only start) ----------
   { id: 'M9A', name: 'The plan from an age: typical for the age until answered', inputs: 'age (About you: birth year and month), state, solo or couple; which of take-home, spending, cash, invested and card balances are answered (a typed number, or a no on About you); data/priors-2026.json through M9E; PriorSpendShare, TypicalLow, TypicalHigh; the ranges method (M9R)', unit: 'count',
     fns: ['agestart.CORE', 'agestart.PLAN_OUTPUTS', 'agestart.priorFill', 'agestart.answeredOf', 'agestart.planLabel', 'agestart.priorOf', 'agestart.filledOf', 'agestart.agePlanOf', 'agestart.ageOnlyRangesOf', 'agestart.widthsOf', 'agestart.planWordsOf'],
-    fromApp: 'each blank core input is filled by its typical amount for the age (M9E) on a copy of the household that is never saved, and the whole plan is run again with each typical amount at its low and its high (M9R), pay and spending moving together while both are typical; a sheet cannot run the plan again per input. The value counts the core inputs still typical (0 once all five are answered)',
+    // Batch 63: the count and each typical fill-in are lookups (js/sheet/typical.js); the plan run on them stays in the app.
+    sheet: `IF(Profile_ageUsed="","",${Object.keys(ANSWERED).map(k => `IF(${ANSWERED[k]},0,1)`).join('+')})`, label: 'Core inputs still typical for the age (0 once take-home, spending, cash, invested and cards are all answered)',
     app: c => { const d = priorsData(); return d ? agePlanOf(c.doc, c.ref, d, { now: c.now })?.typical ?? null : null; },
-    parts: [['fi', 'FI date', 'months'], ['debtFree', 'Debt free', 'months'], ['efMonths', 'Emergency fund, months of spending held', 'number'], ['surplus', 'Monthly surplus', 'money']].flatMap(([k, label, unit]) => [
+    parts: [
+      ...[['income', 'Typical pay for the age, gross a year (all pay together)'], ['spending', 'Typical spending for the age, a month'], ['cash', 'Typical checking and savings for the age (those with none count as $0)'], ['invested', 'Typical invested for the age (those with none count as $0)'], ['card', 'Typical card balances for the age (those with none count as $0)']].flatMap(([k, name]) => [
+        { key: `typical_${k}`, name: `${name}: the fill-in while it is blank, never counted as the client's`, unit: 'money', sheet: `IF(Profile_ageUsed="","",IF(ISERROR(${FILL[k]}),"",${FILL[k]}))`,
+          app: c => { const d = priorsData(); if (!d) return null; const age = c.x?.age ?? null; if (age == null) return null; const o = priorsOpts(c.doc?.profile); return priorOf(d, k, { age, place: o.place, household: o.household })?.likely ?? null; } },
+        { key: `answered_${k}`, name: `${name.replace(/^Typical /, '').replace(/ for the age.*$/, '')}: answered (Yes), or still typical (No)`, unit: 'text', sheet: `IF(${ANSWERED[k]},"Yes","No")`,
+          app: c => (answeredOf(c.doc, c.ref)[k] ? 'Yes' : 'No') }]),
+      ...[['fi', 'FI date', 'months'], ['debtFree', 'Debt free', 'months'], ['efMonths', 'Emergency fund, months of spending held', 'number'], ['surplus', 'Monthly surplus', 'money']].flatMap(([k, label, unit]) => [
       { key: `${k}Low`, name: `${label}, typical for the age where not answered: low`, unit, fromApp: 'M9A: the plan run again with each typical amount at its low (M9R)', app: c => { const d = priorsData(); const r = d ? agePlanOf(c.doc, c.ref, d, { now: c.now })?.ranges?.[k] : null; return r?.low ?? null; } },
-      { key: `${k}High`, name: `${label}, typical for the age where not answered: high (blank when it never comes at that end)`, unit, fromApp: 'M9A: the plan run again with each typical amount at its high (M9R)', app: c => { const d = priorsData(); const r = d ? agePlanOf(c.doc, c.ref, d, { now: c.now })?.ranges?.[k] : null; return r?.high == null || r.high === Infinity ? null : r.high; } }]) },
+      { key: `${k}High`, name: `${label}, typical for the age where not answered: high (blank when it never comes at that end)`, unit, fromApp: 'M9A: the plan run again with each typical amount at its high (M9R)', app: c => { const d = priorsData(); const r = d ? agePlanOf(c.doc, c.ref, d, { now: c.now })?.ranges?.[k] : null; return r?.high == null || r.high === Infinity ? null : r.high; } }])] },
   // ---------- Ranges (Phase 4, Track 1; docs/engines/ranges.md) ----------
   { id: 'M9R', name: 'Ranges on the key outputs: low, likely and high', inputs: 'every input\'s level (M73: Know it, Roughly, Not sure, the gut number, a statements total) and its kind, the widths on the Assumptions tab (RangeBalance*, RangeSpend*, RangeIncome*, RangeVariable*, RangeApr*, AprGuessSwing, RoughBalanceShare, TypicalLow, TypicalHigh), the materiality (MaterialHours, MaterialFloor, RangeMinMonths, RangeMinEfMonths)', unit: 'count',
     fns: ['ranges.widthOf', 'ranges.knobsOf', 'ranges.OUTPUTS', 'ranges.combine', 'ranges.rangesOf', 'ranges.fooRangeOf', 'ranges.materialOf', 'ranges.rangeWordsOf', 'ranges.driverWords', 'ranges.fooWordsOf'],
-    fromApp: 'the whole plan is run again with each uncertain input at its low and at its high (two runs per input, every formula on this tab each time), which a sheet cannot do with named ranges; the swings combine as the root of the sum of their squares. The value counts the key outputs wide enough to show a range',
+    // Batch 63: the corner method in the sheet (js/sheet/ranges.js, the Ranges tab). Each input that can widen a range
+    // is a row of What widens it; these columns are what the spending lines and the tax on a gross need per row.
+    cols: [
+      { area: 'spending', key: 'rgCand', label: 'Ranges: a line that moves with spending (1) (M9R)', unit: 'number',
+        f: 'IF(AND({InMath}<>"No",{amount}<>"",N({amount})<>0,{Status}<>"Not for me",OR({Kind}="Budget line",AND({Kind}="Gut number or category",{Type}<>"All in"))),1,0)' },
+      { area: 'spending', key: 'rgLevel', label: 'Ranges: how sure the line is (Know it 100, Roughly 50, Guess 25)', unit: 'number',
+        f: (rec, c) => { const L = rec?.id ? levelOf(rec, 'amount', { months: c.doc.spending?.months || {} }) : null; const st = { 'Not sure': 25, 'Will email': 25, 'Not now': 25, Roughly: 50, Computed: 75 }[rec?.status] ?? 100; return `IF({@rgCand}=0,"",${L != null && L !== st && rec?.id ? L : STATUS_LEVEL('{Status}')})`; } },
+      { area: 'spending', key: 'rgLo', label: 'Ranges: the line at its low, times its amount', unit: 'number',
+        f: rec => `IF({@rgCand}=0,"",${rec?.values?.preset === true ? 'IF({Status}="Guess",TypicalLow,' : '('}1-${WIDTH('spending', '{@rgLevel}')}))` },
+      { area: 'spending', key: 'rgHi', label: 'Ranges: the line at its high, times its amount', unit: 'number',
+        f: rec => `IF({@rgCand}=0,"",${rec?.values?.preset === true ? 'IF({Status}="Guess",TypicalHigh,' : '('}1+${WIDTH('spending', '{@rgLevel}')}))` },
+      ...['lo', 'hi'].flatMap(s => { const F = s === 'lo' ? '{@rgLo}' : '{@rgHi}', SB = `IF({myShare}<>"",{@shareBase},{@shareBase}*${F})`; return [
+        { area: 'spending', key: `M21${s}`, label: `Ranges: my share a month with the line at its ${s === 'lo' ? 'low' : 'high'}`, unit: 'money',
+          f: `IF(OR(${F}="",{Kind}<>"Budget line",{@shareBase}=""),{@M21},{@coupleX}*IF(OR({Status}="Not for me",{@whoUsed}="Included in rent",{@whoUsed}="N/A"),${SB},MAX(0,${SB}-IF({reimbursed}="",0,{reimbursed}*${MONTH_FACTOR('{per}')}))))` },
+        { area: 'spending', key: `amt${s === 'lo' ? 'Lo' : 'Hi'}`, label: `Ranges: the amount with the line at its ${s === 'lo' ? 'low' : 'high'}`, unit: 'money', f: `IF({amount}="","",{amount}*IF(${F}="",1,${F}))` }]; }),
+      { area: 'income', key: 'rgStack', label: 'Ranges: order on the return as a number (-1: not taxed)', unit: 'number', f: 'IF({@stack}="",-1,{@stack})' },
+      { area: 'income', key: 'rgM', label: 'Ranges: Social Security counts twice (self-employed)', unit: 'number', f: 'IF({@taxType}="1099",2,1)' },
+      { area: 'income', key: 'rgFb', label: 'Ranges: FICA base a year as a number', unit: 'money', f: 'N({@ficaBase})' },
+      { area: 'income', key: 'rgCum', label: 'Ranges: FICA base a year for this person through this row', unit: 'money', f: 'IF({@stack}="",0,SUMIFS(Income_ficaBase,Income_taxPerson,{@taxPerson},Income_stack,"<="&{@stack}))' },
+    ],
+    sheet: '(Rg_fiWide="Yes")+(Rg_dfWide="Yes")+(Rg_efWide="Yes")+(Rg_surWide="Yes")+(Rg_nwWide="Yes")', label: 'Key outputs wide enough to show a range (the Ranges tab)',
     app: c => { const r = c.ranges(); return r ? ['fi', 'debtFree', 'efMonths', 'surplus', 'netWorth'].filter(k => r[k]?.material).length : null; },
     parts: [
-      ...[['fi', 'FI date', 'months'], ['debtFree', 'Debt-free date', 'months'], ['efMonths', 'Emergency fund, months of spending held', 'number'], ['surplus', 'Monthly surplus', 'money'], ['netWorth', 'Net worth', 'money']].flatMap(([k, label, unit]) => [
-        { key: `${k}Low`, name: `${label}: low (inputs at their low and high, swings combined)`, unit, fromApp: 'M9R: the plan run again with each input moved by its level', app: c => c.ranges()?.[k]?.low ?? null },
-        { key: `${k}Likely`, name: `${label}: likely (the number every screen shows)`, unit, fromApp: 'M9R: the plan as entered, the same number as its own row', app: c => c.ranges()?.[k]?.likely ?? null },
-        { key: `${k}High`, name: `${label}: high (blank when a date never comes at that end)`, unit, fromApp: 'M9R: the plan run again with each input moved by its level', app: c => c.ranges()?.[k]?.high ?? null }]),
+      ...[['fi', 'FI date', 'months', 'fi'], ['debtFree', 'Debt-free date', 'months', 'df'], ['efMonths', 'Emergency fund, months of spending held', 'number', 'ef'], ['surplus', 'Monthly surplus', 'money', 'sur'], ['netWorth', 'Net worth', 'money', 'nw']].flatMap(([k, label, unit, o]) => [
+        { key: `${k}Low`, name: `${label}: low (inputs at their low and high, swings combined; the Ranges tab)`, unit, sheet: `Rg_${o}Low`, app: c => c.ranges()?.[k]?.low ?? null },
+        { key: `${k}Likely`, name: `${label}: likely (the number every screen shows)`, unit, sheet: `Rg_${o}Likely`, app: c => c.ranges()?.[k]?.likely ?? null },
+        { key: `${k}High`, name: `${label}: high (blank when a date never comes at that end)`, unit, sheet: `Rg_${o}High`, app: c => c.ranges()?.[k]?.high ?? null }]),
       { key: 'fooLow', name: 'FOO step: the earliest step any one input reaches at its low or high', unit: 'text', fromApp: 'M9R: the FOO (M69) walked again with each input moved by its level', app: c => c.fooRange()?.low ?? null },
       { key: 'fooHigh', name: 'FOO step: the latest step any one input reaches at its low or high', unit: 'text', fromApp: 'M9R: the FOO (M69) walked again with each input moved by its level', app: c => c.fooRange()?.high ?? null },
     ] },
   // ---------- Batch 49: households of any size (Phase 4, Track 2) ----------
   { id: 'M9N', name: 'Households of any size: one adult\'s part of a shared row', inputs: 'the adults in the plan (this client, the partner in a couple mode, People P3 to P7), each row\'s Owner (Joint: everyone on this row), Shared among, Split how and the percents, Shared bills split on About you, each adult\'s take-home a month (By income), the roommates count',
     fns: ['household.SPLIT_HOWS', 'household.SPLIT_HOW_WORDS', 'household.amongList', 'household.splitTyped', 'household.generalRow', 'household.amongOf', 'household.howOf', 'household.rowShare', 'household.splitWords'],
-    fromApp: 'a view, not a total: the workbook keeps the household\'s books (every row whole), and one adult\'s part of a shared row (equally: 1 / the people it is shared among; by percent: the percent typed, the rest shared equally; by income: their take-home over theirs together) is what that adult\'s own view on screen counts',
+    // Batch 63: a column on every tab with an Owner (This client's part, M9N), from Shared among, Split how and the
+    // About you split; each adult's take-home (By income) and the percents typed on the Owner chip are the app's.
+    cols: M9N_AREAS.flatMap(area => [{ area, key: 'part9N', label: 'This client\'s part of a shared row (M9N)', unit: 'pct',
+      f: (rec, c) => {
+        const H = rec?.id ? householdOf(c.doc, { weights: c.m?.inputs?.household?.weights ?? {} }) : null;
+        const ADULTS = `MIN(${MAX_ADULTS},1+IF(IF(Profile_mode<>"",Profile_mode<>"Solo",Profile_household="Couple"),1,0)+COUNTIFS(People_kind,"<>Dependent",People_Id,"P?"))`;
+        const among = 'IF({splitAmong}="",' + ADULTS + ',LEN({splitAmong})-LEN(SUBSTITUTE({splitAmong},",",""))+1)';
+        const pct = rec?.values?.sharePct ?? rec?.values?.splitPcts?.Me ?? '';
+        const typed = H ? amongOf(rec, H).filter(id => id !== 'Me' && typeof { ...(rec.values?.sharePct != null ? { Me: rec.values.sharePct } : {}), ...(rec.values?.splitPcts || {}) }[id] === 'number') : [];
+        const others = typed.reduce((t, id) => t + rec.values.splitPcts[id], 0);
+        const w = H ? amongOf(rec, H).reduce((t, id) => t + Math.max(0, H.weights[id] ?? 0), 0) : 0, wMe = H ? Math.max(0, H.weights.Me ?? 0) : 0;
+        const how = `IF(OR({splitHow}="Equal",{splitHow}="Percent",{splitHow}="By income"),{splitHow},IF(AND(${pct === '' ? 'FALSE' : 'TRUE'},${ADULTS}>2),"Percent",IF(Profile_splitMethod="By income","By income","Equal")))`;
+        const percent = pct !== '' ? `MAX(0,${pct})` : `IF(${among}>${typed.length},MAX(0,1-${others})/(${among}-${typed.length}),0)`;
+        return `IF({owner}<>"Joint","",IF(AND({splitAmong}<>"",ISERROR(SEARCH("Me",{splitAmong}))),0,IF(${how}="Percent",${percent},IF(AND(${how}="By income",${w}>0),${wMe}/${w},1/${among}))))`;
+      } },
+      // Where the row stands in the file, so the Math row reads the first shared row as SLAM does (from the app: the file's order).
+      { area, key: 'joint9N', label: 'Shared row: its place in the file (M9N)', unit: 'number', f: rec => (rec?.id ? `IF({owner}="Joint",{app:place},"")` : '""'), app: { place: (rec, c) => c.doc.records.findIndex(r => r.id === rec.id) + 1 } }]),
+    sheet: `IF(COUNT(${M9N_AREAS.map(a => `${M9N_PREFIX[a]}_joint9N`).join(',')})=0,"",${M9N_AREAS.map(a => `SUMIFS(${M9N_PREFIX[a]}_part9N,${M9N_PREFIX[a]}_joint9N,MIN(${M9N_AREAS.map(b => `${M9N_PREFIX[b]}_joint9N`).join(',')}))`).join('+')})`,
     unit: 'pct', label: 'This client\'s part of the first shared row', app: c => { const r = (c.doc.records || []).find(x => x.owner === 'Joint'); if (!r) return null; return rowShare(r, 'Me', householdOf(c.doc, { weights: c.m?.inputs?.household?.weights ?? {} })); } },
   // ---------- Batch 42: the lender's-eye view (Phase 4, Track 2) ----------
   { id: 'M9W', name: 'What a lender sees: a mortgage lender, a landlord and a card issuer', inputs: 'each income row (its gross, cash tips and whether they are reported, the returns filed with self-employment: Tax returns filed, Net profit on the last return and the one before), benefits and their end dates, the debts\' payments (a card at its minimum), the home loan, the rent line, card balances, limits and statement days; LenderFront, LenderBack, LenderBackStrong, LenderBackDu, LenderFhaFront, LenderFhaBack, LenderRentTimes, LenderRentYearNyc, LenderDropLook, LenderBenefitYears, LenderLeaseMonths, LenderStudentPct, LenderMortgageRate (or the client\'s own), LenderMortgageYears, LenderTaxInsShare (or the client\'s own), UtilHigh, UtilBest', unit: 'pct',
@@ -702,11 +771,19 @@ export const MATH = [
     parts: [{ key: 'real', name: 'What that shift leaves, a shift: take-home less getting there, childcare and gear', unit: 'money', sheet: 'Shift_real', app: c => { const P = shiftPnlsOf(c.m, { ref: c.ref }); const r = P.rows.find(x => x.realHourly != null) ?? P.rows[0]; return r ? r.real : null; } }] },
   { id: 'M9Q', name: 'Ask me next and the certainty meter', inputs: 'the ranges (M9R) and their drivers, the Picture %\'s next small things (M73), These are big deals (M56), the FOO step\'s range, the weights and question times on the Assumptions tab (CertaintyWeight*, CertaintyOpenMonths, AskSeconds*)', unit: 'pct',
     fns: ['nextbest.KEYS', 'nextbest.WEIGHTS', 'nextbest.spanOf', 'nextbest.certaintyOf', 'nextbest.answerOf', 'nextbest.questionWords', 'nextbest.whyWords', 'nextbest.askNextOf', 'ranges.runsOf', 'ranges.rangeFromRuns', 'ranges.readOut', 'ranges.DATE'],
-    fromApp: 'the plan is run again with every input read as a guess (the all-guess widths), and once more for each input read at the level its answer reaches, which a sheet cannot do with named ranges. The value is the certainty meter: each key output\'s 1 minus its width over its all-guess width, weighted',
-    app: c => { const A = askNextOf(c.doc, c.ref, { now: c.now, m: c.m, R: c.ranges(), F: c.fooRange(), zero: zeroOf(c) }); return A.meter ? A.meter.value : null; },
+    // Batch 63: the meter is a formula over the ranges (M9R, the Ranges tab) and each output's width at 0%.
+    sheet: `IF(${CERT_W}=0,0,(${CERT_KEYS.map(([k, , w]) => `IF(Math_M9Q_cert${k}="",0,${w}*Math_M9Q_cert${k})`).join('+')})/${CERT_W})`,
+    label: 'The certainty meter: each key output\'s 1 minus its width over its width at 0%, weighted (CertaintyWeight*)',
+    app: c => askOf(c)?.meter?.value ?? null,
     parts: [
-      { key: 'ask', name: 'Ask me next: the question whose answer narrows the plan most per second', unit: 'text', fromApp: 'M9Q: each input read again at the level its answer reaches', app: c => askNextOf(c.doc, c.ref, { now: c.now, m: c.m, R: c.ranges(), F: c.fooRange(), zero: zeroOf(c) }).top?.question ?? null },
-      { key: 'then', name: 'Ask me next: the runner-up', unit: 'text', fromApp: 'M9Q: each input read again at the level its answer reaches', app: c => askNextOf(c.doc, c.ref, { now: c.now, m: c.m, R: c.ranges(), F: c.fooRange(), zero: zeroOf(c) }).runnerUp?.question ?? null },
+      ...CERT_KEYS.map(([k, label]) => ({ key: `zero${k}`, name: `${label}: its width at 0% (the wider of the plan from the age alone and every number read as a guess)`, unit: 'number',
+        fromApp: 'M9Q: the plan run again from the age alone on typical numbers (M9A) and with every input read as a guess; the wider of the two',
+        app: c => { const A = askOf(c); const key = k.charAt(0).toLowerCase() + k.slice(1); return A?.guess ? spanOf(key, A.guess[key]) : null; } })),
+      ...CERT_KEYS.map(([k, label, , o, date]) => ({ key: `cert${k}`, name: `How sure: ${label} (1 minus its width over its width at 0%)`, unit: 'pct',
+        sheet: `IF(OR(Rg_${o}Likely="",Math_M9Q_zero${k}="",N(Math_M9Q_zero${k})<=0),"",IF(AND(Rg_${o}High="",${date ? 'FALSE' : 'TRUE'}),"",MAX(0,MIN(1,1-IF(Rg_${o}High="",CertaintyOpenMonths,Rg_${o}High-Rg_${o}Low)/Math_M9Q_zero${k}))))`,
+        app: c => { const A = askOf(c); const key = k.charAt(0).toLowerCase() + k.slice(1); return A?.meter?.parts.find(p => p.key === key)?.value ?? null; } })),
+      { key: 'ask', name: 'Ask me next: the question whose answer narrows the plan most per second', unit: 'text', fromApp: 'M9Q: each input read again at the level its answer reaches, the debt plan run again for each, after the Picture %\'s next small things (M73, still in the app)', app: c => askOf(c)?.top?.question ?? null },
+      { key: 'then', name: 'Ask me next: the runner-up', unit: 'text', fromApp: 'M9Q: each input read again at the level its answer reaches', app: c => askOf(c)?.runnerUp?.question ?? null },
     ] },
   // ---------- Batch 47: the benefits cliff (Phase 4, Track 2) ----------
   { id: 'M9B', name: 'The benefits cliff: the lines a raise crosses and what the household keeps', inputs: 'the household size (Solo or couple, Dependents, Kids ages), State and NYC, Health coverage, every income row (earned or not, gross, pre-tax money, half the SE tax), the Rent or mortgage and Electric, gas, water lines, Filing status, the status taps (Getting it, Might qualify, Not on it), SNAP a month and Child care paid out of pocket; Poverty_base, Poverty_perPerson, the SNAP_limits, ACA_applicable, ACA_benchmark, EITC_2026, NY_chpBands, CCAP_line and CCAP_rates tables and the SNAP_*, Medicaid_*, NY_*, ACA_*, EITC_*, CCAP_* and CTC_* values; Child care help (CCAP) and Child care at full price (batch 53)', unit: 'money',
