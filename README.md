@@ -56,10 +56,10 @@ python3 -m http.server 8816 &
 node tools/e2e/personas.cjs            # every screen, for every persona, in the browser
 ```
 
-Twelve made-up households that run SLAM end to end, from below zero to a multimillionaire: Alexis (avoids money),
+Thirteen made-up households that run SLAM end to end, from below zero to a multimillionaire: Alexis (avoids money),
 Tom (a CPA with every account), Maya, a deficit, an unmarried couple splitting by income, a married couple with one
 paycheck and a baby, three adults in one home, a tipped bartender, a 1099 dancer, a fan-site creator with a part-time
-job, a worker planning gender-affirming care, and a 52-year-old with $4.2M. Each is written readably in
+job, a worker planning gender-affirming care, a 52-year-old with $4.2M, and someone just laid off (Life Transitions). Each is written readably in
 `tools/personas/defs/<id>.mjs`, with the 5 to 10 numbers a coach expects worked out by hand (the arithmetic is in each
 note) and a list of what SLAM cannot represent for that person yet. `tools/personas/build.mjs` turns each def into the
 app's own backup file in `fixtures/personas/`, so any of them opens through Coach tools › Data › Import.
@@ -173,7 +173,7 @@ The workbook is built only from the registries in `js/registry/`, so it stays co
 | `js/registry/joy.js` | The Joy number: the wording, asked at session start, in every snapshot, charted from Day 0 |
 | `js/capture.js`, `js/import/csv.js` | Captured for later (category joy, Trip, income type, the change log with who); the CSV statement import |
 | `js/math/proposed.js` | Current vs Proposed (M76): both sides, the differences, How we got this, Make Proposed the plan |
-| `tools/personas/`, `fixtures/personas/`, `test/personas.test.js`, `tools/e2e/personas.cjs` | The twelve persona households: their defs with hand-worked numbers, the built backup files, the number check and the browser run |
+| `tools/personas/`, `fixtures/personas/`, `test/personas.test.js`, `tools/e2e/personas.cjs` | The thirteen persona households: their defs with hand-worked numbers, the built backup files, the number check and the browser run |
 | `tools/e2e/walkthrough.cjs`, `test/walkthrough.test.js` | The full walkthrough: S1 to S12 in unit tests; every screen at three widths, light and dark, in the browser |
 | `MATH.md`, `SYNC.md`, `MORNING.md` | Every calculation reviewed (a self-review pending a CFP); the Google Sheets sync design; the overnight run's morning note |
 | `js/find.js`, `data/reference-2026.json` (findWords) | Find understands people: everyday words to a screen and a box, Add by type, a note when unsure (batch 14) |

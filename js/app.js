@@ -160,7 +160,8 @@ const app = {
     const modes = paged && this.hasClient ? h('span.row-line.mm-modes', { style: { gap: '8px', flexWrap: 'nowrap' } },
       S.button(fastTrackLabel(this.ctx), { iconName: 'right', onClick: () => startFastTrack(this, this.ctx) }),
       S.toggle([['sections', 'By section'], ['one', 'One page']], this.prefs[onePageKey] ? 'one' : 'sections', v => this.setPref(onePageKey, v === 'one'), { label: `${tab.name} layout` })) : null;
-    const subs = h('div.subtabs-in', {}, tab.subs.filter(s => !off.has(s.id) && !s.hidden).map(s => {
+    const phase4 = this.hasClient && this.store.doc.settings?.phase4 === true; // batch 21: Phase 4 previews (Coach tools › Session)
+    const subs = h('div.subtabs-in', {}, tab.subs.filter(s => !off.has(s.id) && !s.hidden && (!s.phase4 || phase4)).map(s => {
       const p = this.hasClient ? progressOf(this.ctx, tab.id, s.id) : null;
       const complete = p && p.of > 0 && p.done === p.of;
       return h('a.subtab', { href: `#/${tab.id}/${s.id}`, 'aria-current': s.id === sub.id ? 'page' : null, class: s.area ? `area-${s.area}` : null },

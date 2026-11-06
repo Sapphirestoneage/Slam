@@ -17,6 +17,7 @@ import { promoPayoffOf } from './math/debt.js';
 import { whyAnswered } from './whynow.js';
 import { scorecardOf, ratingOf } from './math/scorecard.js';
 import { THRESHOLDS } from './registry/scorecard.js';
+import { transitionOf, phase4On } from './math/transitions.js';
 
 export const STATE_WORDS = { 'Not started': 'Not started', 'In progress': 'In progress', 'Ready to close': 'Ready to close: end the session to review and save', Complete: 'Complete ✓', 'Already met': "Already met, you're ahead ✓" };
 export const sessionOf = doc => doc.session || {};
@@ -203,6 +204,8 @@ export function agendaOf(doc, ref, { now = new Date(), flags = [], P = programOf
     const pr = promoPayoffOf(r, now);
     if (pr) suggest({ kind: 'promo', label: `${r.name || 'Card'}: ${pr.text.replace(/^Pay/, 'pay')}`, link: { kind: 'record', recId: r.id, route: '#/net-worth/credit-cards' }, why: 'a 0% promo ends; this clears it in time' });
   }
+  // Batch 21: each Life Transitions tripwire is a suggestion (if/then, with the month it lands on the dip).
+  if (phase4On(doc) && doc.program?.transition?.template) for (const w of transitionOf(doc, ref, { now }).tripwires) suggest({ kind: 'tripwire', label: `Tripwire: ${w.text}`, link: { kind: 'route', route: '#/plan/transitions' }, why: w.ym ? `Life Transitions, ${new Date(`${w.ym}-15T12:00:00Z`).toLocaleString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })}` : 'Life Transitions, not reached in this plan' });
   const old = now.getTime() - AGENDA.staleDays * 86400000;
   for (const r of live.filter(r => ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) && r.updatedAt && Date.parse(r.updatedAt) < old).slice(0, 5)) {
     const days = Math.floor((now.getTime() - Date.parse(r.updatedAt)) / 86400000);

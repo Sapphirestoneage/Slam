@@ -75,8 +75,8 @@ for (const def of defs) {
   test(`persona ${def.id}: the FOO step holds two weeks later`, () => { assert.equal(b, a, `step ${a} on Nov 5, step ${b} on Nov 20`); });
 }
 
-test('personas: the twelve are all there, and the one-answer checks hold for each', () => {
-  assert.equal(defs.length, 12);
+test('personas: all thirteen are there, and the one-answer checks hold for each', () => {
+  assert.equal(defs.length, 13); // batch 21: the job-loss household (Life Transitions)
   for (const def of defs) {
     const doc = importFile(readFileSync(join(OUT_DIR, `${def.id}.json`), 'utf8'));
     const m = metrics(doc, ref, { now });

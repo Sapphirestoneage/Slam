@@ -140,6 +140,7 @@ export const AREAS = [
       f('settings.qqOpensLaunch', 'Quiet Quitting FI opens the launch window', 'yesno', { part: 'settings', key: 'qqOpensLaunch' }),
       pick('settings.dollars', "Plan shows today's or future dollars", ['real', 'nominal'], { part: 'settings', key: 'dollars' }),
       f('settings.debtExtra', 'Extra to debt a month (Make it the plan on Home)', 'money', { part: 'settings', key: 'debtExtra' }), // batch 11 (item 3)
+      f('settings.phase4', 'Phase 4 previews on (Life Transitions on Plan)', 'yesno', { part: 'settings', key: 'phase4' }), // batch 21: Coach tools › Session; on for new households in this build
       f('client.couple', 'Couple (from Solo or couple)', 'yesno', { part: 'client', key: 'couple', sheet: { skip: 'set by Solo or couple' } }),
     ],
   },
@@ -426,6 +427,7 @@ export const NOT_IN_SHEET = {
   'spending.months.actualFrom': 'where a month actual came from (csv); set by the statement import (J)',
   'settings.csvMaps': 'which CSV column is which, saved once per bank (J)',
   'program.proposed': 'the Proposed plan the coach edits on Plan › Current vs Proposed (K): spending, debt order, retire-by age, surplus invested, extra to debt, extra income (batch 12)',
+  'program.transition': 'the Life Transitions plan on Plan › Transitions (batch 21): the template, start and destination, the start month, each rung\'s on or off and any amount typed, the tripwires, Plan B and C, the share switch. A what-if like program.proposed: the Math tab shows its runway (M90), the household rows hold the money',
   'program.gap': 'the gap card (batch 12): the income option the coach fills (extra shifts or a side gig, a month)',
   'settings.csvRules': 'description words to Budget line, learned from each import (J)',
   'spending.basics': 'Fast Track totals, kept to compare with the lines',

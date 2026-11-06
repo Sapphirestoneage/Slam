@@ -34,6 +34,9 @@ export const RULES = {
   shortPlanMonths: 12, // batch 12 (QUESTIONS 200): the debt-free card's chips become +5% / +10% / +25% on a plan this short or shorter
   gapTrimLine: 0.25, gapTrimGut: 0.1, // batch 12 (item 5): what a gap lever closes: a quarter of the largest line that can move, or a tenth of the gut number with no lines
   nextBestMin: 100, // batch 12: an alternative shows as "Worth a look" on a FOO step when it beats the step by this much a year
+  // Batch 21 (Life Transitions, M90): retirement money taken before 59 and a half pays a 10% additional tax (IRS
+  // Topic 558); the dip runs at most this many months; a card's cost is shown on this example amount and time.
+  earlyPenalty: 0.1, penaltyAge: 59.5, transitionMaxMonths: 120, cardExampleAmount: 1000, cardExampleMonths: 3,
 };
 export const LISTS = {
   perMonth: { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, quarter: 1 / 3, year: 1 / 12 },
@@ -55,6 +58,10 @@ export const LISTS = {
     household: { label: 'Household supplies', categories: ['Household supplies', 'Laundry', 'Furniture and home'], defaultOn: false, defaultAs: 'The whole bill' },
   },
   sharedAs: ['Your share', 'The whole bill'], // the per-bill choice (shown as My share / Whole bill)
+  // Batch 21 (Life Transitions): the accounts that are retirement money, and the one with no early penalty (a 457(b)
+  // plan's money comes out after leaving the job with no 10% additional tax, IRS Topic 558).
+  retirementTypes: ['401(k)', '403(b)', '457', 'TSP', 'Solo 401(k)', 'Traditional IRA', 'Rollover IRA', 'SEP', 'SEP IRA', 'SIMPLE IRA', 'Roth IRA'],
+  penaltyFreeTypes: ['457'],
   highRateTypes: ['Personal loan', 'Buy now, pay later', 'Payday or cash advance', 'Medical', 'Family or friend', 'Tax debt', 'Business', '401(k) loan'],
 };
 
@@ -137,6 +144,11 @@ export const ASSUMPTIONS = [
   { id: 'rules.debtFirst', name: 'DebtFirst_rule', label: 'The debt rule: while heavy debt is carried, the surplus goes to it first (1 on, 0 off)', unit: 'number', get: () => RULES.debtFirst, source: RULE('js/math/metrics.js debtRuleOf; Batch 11 item 1'), date: '2026-11-05' },
   { id: 'rules.freedFollowsFoo', name: 'FreedFollowsFoo', label: 'Freed money follows the FOO: the surplus fills step 1 (buffer, little e) first, then heavy debt; after it the surplus and freed payments fill big e, then Tax-Free Growth, then are invested (1 on, 0 off)', unit: 'number', get: () => RULES.freedFollowsFoo, source: RULE('js/math/flow.js freedFlow, M79; Eli confirmed Nov 5 (QUESTIONS 196); step 1 first, QUESTIONS 217, Nov 6'), date: '2026-11-06' },
   { id: 'rules.nextBestMin', name: 'NextBestMin', label: 'Next best opportunity: an alternative shows on a FOO step when it beats the step by at least this a year', unit: 'money', get: () => RULES.nextBestMin, source: RULE('js/math/flow.js nextBest, M80; Eli Nov 5: "actually measure the next best opportunity"'), date: '2026-11-05' },
+  { id: 'rules.earlyPenalty', name: 'EarlyPenalty', label: 'Life Transitions: the additional tax on retirement money taken early', unit: 'pct', get: () => RULES.earlyPenalty, source: 'IRS Topic 558, additional tax on early distributions (10%)', date: '2026-11-06' },
+  { id: 'rules.penaltyAge', name: 'PenaltyAge', label: 'Life Transitions: the age from which retirement money comes out with no early penalty', unit: 'number', get: () => RULES.penaltyAge, source: 'IRS Topic 558 (age 59 and a half)', date: '2026-11-06' },
+  { id: 'rules.transitionMaxMonths', name: 'TransitionMaxMonths', label: 'Life Transitions: the dip runs this many months at most (past it: the money lasts)', unit: 'number', get: () => RULES.transitionMaxMonths, source: RULE('js/math/transitions.js dipOf, M90'), date: '2026-11-06' },
+  { id: 'rules.cardExampleAmount', name: 'CardExampleAmount', label: 'Life Transitions: a card rung shows its cost on this many dollars', unit: 'money', get: () => RULES.cardExampleAmount, source: RULE('js/math/transitions.js cardCost, M90 (Eli Nov 5: "using $1,000 for 3 months costs about $60")'), date: '2026-11-06' },
+  { id: 'rules.cardExampleMonths', name: 'CardExampleMonths', label: 'Life Transitions: a card rung shows its cost over this many months', unit: 'number', get: () => RULES.cardExampleMonths, source: RULE('js/math/transitions.js cardCost, M90'), date: '2026-11-06' },
   { id: 'rules.shortPlanMonths', name: 'ShortPlanMonths', label: 'Debt-free card: a plan this many months or shorter gets +5% / +10% / +25% chips instead of +$50 / +$100 / +$250', unit: 'number', get: () => RULES.shortPlanMonths, source: RULE('js/math/debt.js heroExtras; Batch 12 item 4 (QUESTIONS 200)'), date: '2026-11-05' },
   { id: 'rules.gapTrimLine', name: 'GapTrimLine', label: 'The gap: the spending lever trims the largest Level 1 or 2 line that can move by this share', unit: 'pct', get: () => RULES.gapTrimLine, source: RULE('js/math/gap.js gapOf, M81; Batch 12 item 5'), date: '2026-11-05' },
   { id: 'rules.gapTrimGut', name: 'GapTrimGut', label: 'The gap: with no spending lines, the spending lever trims the gut number by this share', unit: 'pct', get: () => RULES.gapTrimGut, source: RULE('js/math/gap.js gapOf, M81; Batch 12 item 5'), date: '2026-11-05' },
@@ -200,6 +212,7 @@ export const REFERENCE_LISTS = {
   categoryDefaults: 'the starting DRAFTT letter, amount and date for each Budget category',
   spendingPresets: 'starter Budget lines, each a Guess',
   year: 'the tax year this file is for', source: 'where this file came from',
+  transitions: 'Life Transitions (batch 21, js/math/transitions.js, M90): the templates (job loss, quitting, student to job, marriage, a baby, divorce, empty nest, something else), their start and destination words, which income types stop, how the cut starts, the tripwire choices and the ways to earn money quickly. Words and tap choices: no math reads a number from them',
   findWords: 'Find\'s everyday words (batch 14, js/find.js): what people type (401k, emergency fund, payday) and the screen and box each lands on, so Find reaches a thing in one search. Words, not numbers: no math reads them',
 };
 

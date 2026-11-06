@@ -128,6 +128,9 @@ export function sessionScreen(app, ctx, { fastTrackGap }) {
       // Answer to 49: the one-holding-over-25% flag, on unless the coach turns it off for this client.
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Concentration flag'), S.toggle([[true, 'On'], [false, 'Off']], !s.concentrationOff, v => ctx.store.setIn('session', ['concentrationOff'], !v, 'Concentration flag'), { label: 'Concentration flag' }),
         h('span.muted.small', {}, 'Flags one holding or theme over 25% of an account')),
+      // Batch 21: Phase 4 previews (Life Transitions on Plan), on for a new household in this build, until Phase 3 is signed off.
+      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Phase 4 previews'), S.toggle([[true, 'On'], [false, 'Off']], doc.settings?.phase4 === true, v => ctx.store.setDoc('settings', { phase4: v }), { label: 'Phase 4 previews' }),
+        h('span.muted.small', {}, 'Life Transitions on Plan')),
       // M9: community presets, off unless turned on for this client.
       h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Community presets'), S.toggle([[false, 'Off'], [true, 'On']], !!s.community, v => setCommunity(ctx, v), { label: 'Community presets' }),
         h('span.muted.small', {}, 'Yom tov and Pesach lines, a kosher grocery note, future tuition goals, maaser')),
