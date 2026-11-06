@@ -90,7 +90,7 @@ test('Alexis (mostly gut): the surplus crosses nothing, the debt-free date by ha
   // The gut number is the only input that moves it: 15% either way is $420.
   assert.equal(R.surplus.likely, -320);
   near(R.surplus.low, -740); near(R.surplus.high, 100);
-  assert.equal(rangeWordsOf('surplus', R.surplus, { now }).line, 'Likely $320 short a month, could be $740 short to $100');
+  assert.equal(rangeWordsOf('surplus', R.surplus, { now }).line, 'Could be $740 short to $100 a month');
   // Debt free: likely is the one plan's month; each input alone, run by hand on its own copy of the file.
   assert.equal(R.debtFree.likely, m.debtPlan.months);
   const card = s.doc.records.find(r => r.kind === 'debt');
@@ -104,7 +104,7 @@ test('Alexis (mostly gut): the surplus crosses nothing, the debt-free date by ha
   assert.equal(R.debtFree.low, Math.round(b - Math.sqrt((b - lo(apr)) ** 2 + (b - lo(spend)) ** 2 + (b - lo(bal)) ** 2)));
   assert.equal(R.debtFree.high, Math.round(b + Math.sqrt((hi(apr) - b) ** 2 + (hi(spend) - b) ** 2 + (hi(bal) - b) ** 2)));
   const w = rangeWordsOf('debtFree', R.debtFree, { now });
-  assert.match(w.line, /^Likely [A-Z][a-z]{2} \d{4}, could be [A-Z][a-z]{2} \d{4} to [A-Z][a-z]{2} \d{4}$/);
+  assert.match(w.line, /^Could be [A-Z][a-z]{2} \d{4} to [A-Z][a-z]{2} \d{4}$/);
   assert.deepEqual(w.drivers.map(d => d.id).sort(), [`${card.id}:apr`, 'spending'].sort(), 'the guessed APR and the gut number widen it most');
   assert.match(w.drivers.find(d => d.id === 'spending').words, /Gut spending number \(a guess\)/);
   assert.equal(w.drivers.find(d => d.field === 'apr').route, '#/net-worth/credit-cards', 'the tap opens the card\'s own box');
@@ -117,12 +117,12 @@ test('Maya (mixed): surplus, emergency fund months and net worth by hand; likely
   const R = rangesOf(s.doc, ref, { now, m });
   // Surplus: $2,400 x 26 / 12 = $5,200, less $3,500 gut, less the $200 card payment = $1,500; the gut 15% = $525.
   assert.equal(R.surplus.likely, 1500); near(R.surplus.low, 975); near(R.surplus.high, 2025);
-  assert.equal(rangeWordsOf('surplus', R.surplus, { now }).line, 'Likely $1,500 a month, could be $1,000 to $2,000');
+  assert.equal(rangeWordsOf('surplus', R.surplus, { now }).line, 'Could be $1,000 to $2,000 a month');
   // Net worth: $1,200 + $4,000 + $15,000 - $6,000 = $14,200. Checking and savings typed (2%: $24, $80), the invested
   // total rough (10%: $1,500), the card typed (2%: $120): sqrt(24^2 + 80^2 + 1,500^2 + 120^2) = 1,507.1.
   const sw = Math.sqrt(24 ** 2 + 80 ** 2 + 1500 ** 2 + 120 ** 2);
   assert.equal(R.netWorth.likely, 14200); near(R.netWorth.low, 14200 - sw); near(R.netWorth.high, 14200 + sw);
-  assert.equal(rangeWordsOf('netWorth', R.netWorth, { now }).line, 'Likely $14,200, could be $12,700 to $15,700');
+  assert.equal(rangeWordsOf('netWorth', R.netWorth, { now }).line, 'Could be $12,700 to $15,700');
   // Emergency fund months: $5,200 cash over $3,500 = 1.486. The gut number moves it to 5,200 / 2,975 and 5,200 / 4,025;
   // checking and savings at 2% add $104 between them, one at a time.
   const e = 5200 / 3500;
@@ -137,7 +137,7 @@ test('a surplus that could be nothing some months says so plainly, no red words'
   const s = maya(4800); // $5,200 - $4,800 - $200 = $200; the gut 15% is $720
   const R = rangesOf(s.doc, ref, { now });
   assert.equal(R.surplus.likely, 200);
-  assert.equal(rangeWordsOf('surplus', R.surplus, { now }).line, 'Likely $200 a month, could be anywhere from nothing to $900', 'the ends round to a step that fits a $1,440 width');
+  assert.equal(rangeWordsOf('surplus', R.surplus, { now }).line, 'Could be anywhere from nothing to $900 a month', 'the ends round to a step that fits a $1,440 width');
 });
 
 test('Tom: a statements total and a rough invested total widen the FI date; likely is his FI month', () => {

@@ -208,7 +208,7 @@ export function materialOf(key, r, { material, spending = null }) {
   return spending == null || months * Math.max(0, spending) >= material;
 }
 
-// The quiet line under a key number: "Likely Mar 2041, could be Aug 2039 to Jan 2044". null when there is nothing to
+// The quiet line under a key number: "Could be Aug 2039 to Jan 2044" (Nov 6: the big number above already says the likely one). null when there is nothing to
 // say (the range is under a material amount, or both ends read the same as likely). Months are counted from now.
 export function rangeWordsOf(key, r, { now = new Date() } = {}) {
   if (!r || !r.material) return null;
@@ -221,20 +221,20 @@ export function rangeWordsOf(key, r, { now = new Date() } = {}) {
   if (DATE.has(key)) {
     likely = at(r.likely); low = at(r.low); high = r.high == null ? null : at(r.high);
     if (low === likely && high === likely) return null;
-    line = high == null ? `Likely ${likely}, could be ${low} or later` : `Likely ${likely}, could be ${low} to ${high}`;
+    line = high == null ? `Could be ${low} or later` : `Could be ${low} to ${high}`;
   } else if (key === 'efMonths') {
     likely = mo(r.likely); low = mo(r.low); high = mo(r.high);
     if (low === likely && high === likely) return null;
-    line = `Likely ${likely} months, could be ${low} to ${high}`;
+    line = `Could be ${low} to ${high} months`;
   } else if (key === 'surplus') {
     const w = (v, exact) => (v < 0 ? `${$(-v, exact)} short` : $(v, exact));
     likely = w(r.likely, true); low = w(r.low); high = w(r.high);
     if (low === likely && high === likely) return null;
-    line = r.likely >= 0 && r.low < 0 ? `Likely ${likely} a month, could be anywhere from nothing to ${high}` : `Likely ${likely} a month, could be ${low} to ${high}`;
+    line = r.likely >= 0 && r.low < 0 ? `Could be anywhere from nothing to ${high} a month` : `Could be ${low} to ${high} a month`;
   } else {
     likely = $(r.likely, true); low = $(r.low); high = $(r.high);
     if (low === high) return null;
-    line = `Likely ${likely}, could be ${low} to ${high}`;
+    line = `Could be ${low} to ${high}`;
   }
   // The tap names what can still be pinned down: a number already at Know it is left off the list.
   return { key, likely, low, high, line, drivers: r.drivers.filter(d => d.share > 0 && !d.known).slice(0, 2).map(d => ({ ...d, words: driverWords(d) })) };

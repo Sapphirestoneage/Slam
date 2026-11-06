@@ -7,7 +7,7 @@ As built (batch 41), where it differs from the design below: the widths are RULE
 bill and a rate 0; Estimate 5%; Rough: balances 10%, spending 10%, steady pay 10%, pay that varies 30%, an APR 2
 points; Gut: balances 25%, spending 15% (QUESTIONS 244), steady pay 20%, pay that varies 40%, a guessed APR 5 points;
 a typical amount not answered yet TypicalLow to TypicalHigh), so a guess is always at least as wide as a rough
-number. The line under a number always names months ("Likely Mar 2041, could be Aug 2039 to Jan 2044", the batch 41
+number. The line under a number always names months ("Could be Aug 2039 to Jan 2044" under the big number, which already says the likely one; the batch 41
 brief), shows only when the inputs below Know it move it a material amount, and its tap names the two inputs that
 widen it most. The FOO step's ends are the steps the one-at-a-time runs reach (no squares for a place on a list).
 
@@ -28,7 +28,7 @@ Each input value carries `{ value, level, low, high }`:
 |---|---|
 | Missing | The prior (priors.md): 25th to 75th percentile for the age band, household and place |
 | Gut | The client's own range if given (the intake form's money ranges already store one), else the prior's range centred on the client's number |
-| Rough (Roughly) | Value plus or minus a width by field kind: balances 10%, monthly spending 20%, income 10% (W-2) or 30% (variable), APR 5 points if guessed |
+| Rough (Roughly) | Value plus or minus a width by field kind: balances 10%, monthly spending 10% (Q340: kept under the gut's 15%), income 10% (W-2) or 30% (variable), APR 5 points if guessed |
 | Estimate | Propagated from its parts (it is an output of other inputs) |
 | Actual (Know it) | Value plus or minus 2% for balances that move, exactly the value for fixed facts (a rate, a limit, a birth year) |
 
