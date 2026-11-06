@@ -135,8 +135,10 @@ export function identitySection(app, ctx) {
     const I = identityNow(ctx);
     if (!I.couple) IUI.person = 'Me';
     const P = I.people.find(p => p.person === IUI.person) ?? I.people[0];
-    const summary = I.done ? `${I.address.full} · ${I.people.map(p => p.letters.type).join(' and ')} · ${I.people.map(p => p.weather.level).join(' and ')}`
-      : I.later && !I.started ? 'Set for later · about 2 minutes of taps' : I.started ? `${I.taps} taps in · ${I.address.full}` : 'Optional · about 2 minutes of taps';
+    // Batch 34: on Discovery this sits under a new prospect's boxes but answers for the client already open: say whose.
+    const whose = `For ${I.couple ? `${I.people[0].name} and ${I.people[1].name}` : I.people[0].name}, open now · `;
+    const summary = whose + (I.done ? `${I.address.full} · ${I.people.map(p => p.letters.type).join(' and ')} · ${I.people.map(p => p.weather.level).join(' and ')}`
+      : I.later && !I.started ? 'Set for later · about 2 minutes of taps' : I.started ? `${I.taps} taps in · ${I.address.full}` : 'Optional · about 2 minutes of taps');
     clear(root, sec('disc:identity', { title: 'Who they are with money', summary, card: true, tip: 'The FI Address, the personality letters and the money weather. Optional; it only changes which skills and words lead' },
       h('p.id-disclaimer', {}, `For ${I.couple ? `${I.people[0].name} and ${I.people[1].name}` : I.people[0].name}, the client that is open. ${DISCLAIMER}`),
       whoToggle(I, draw),

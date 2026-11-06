@@ -20,6 +20,7 @@ import { pictureOf, unlockOf, confidenceOf, fiWordsOf } from '../math/picture.js
 import { homeworkAll } from '../program.js';
 import { closedMonths, monthName, ymOf, monthsBetween, addMonths } from '../month.js';
 import { money, pct } from '../format.js';
+import { keyNumbers } from '../math/metrics.js';
 import { whyText } from '../whynow.js';
 import { identityLine } from './identity-ui.js';
 
@@ -65,7 +66,7 @@ export function overviewScreen(app, ctx) {
       { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: HOME.netWorth, so: soWhat('netWorth', m) },
       { label: 'Liquid net worth', result: m.liquidNetWorth, home: HOME.assets, so: soWhat('liquid', m) },
       { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: HOME.surplus, so: soWhat('surplus', m) },
-      { label: 'Runway', result: m.runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: HOME.assets, so: soWhat('runway', m) }]),
+      { label: 'Runway', result: m.runwayMonths, key: 'runway', render: r => `${r.value.toFixed(1)} months`, home: HOME.assets, so: soWhat('runway', m) }]),
     // Batch 13 (item 1): Metrics is the core (open); the charts and fixed vs variable are caret sections, closed.
     S.sec('overview:metrics', { title: 'Metrics', open: true, summary: `${shelf.filter(i => i.result?.value != null).length} of ${shelf.length} lit` }, h('p.muted.small', { style: { margin: '0 0 8px' } }, 'Lit when the numbers behind them exist'), h('div.shelf', {}, shelf.map(i => S.metricCard(ctx, i.label, i.result, i)))),
     simpleMathSection(ctx), // batch 23: Your Shockingly Simple Math
@@ -326,17 +327,24 @@ export function historyScreen(app, ctx) {
   if (!snaps.length) return [head('History', 'Snapshots over time'), h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No snapshots yet'),
     h('span.muted', {}, 'End session saves one, so next time shows what changed.'), S.button('Save snapshot', { iconName: 'camera', onClick: () => app.snapshot('Snapshot') })))];
   const host = netWorthChart(snaps);
-  const first = snaps[0].metrics, last = snaps[snaps.length - 1].metrics;
-  return [head('History', 'Snapshots over time'),
-    S.summaryStrip(ctx, [
-      { label: 'Net worth change', result: { id: 'M40', value: first.netWorth == null || last.netWorth == null ? null : last.netWorth - first.netWorth, needs: [], unit: 'money', text: `From the first snapshot (${new Date(snaps[0].at).toLocaleDateString()}) to the last.` }, so: soWhat('netWorthChange', ctx.metrics(), { first, last }) },
-      { label: 'Debt paid down', result: { id: 'M30', value: first.debtTotal == null || last.debtTotal == null ? null : first.debtTotal - last.debtTotal, needs: [], unit: 'money', text: 'Total debt at the first snapshot minus total debt now.' }, so: soWhat('debtPaid', ctx.metrics(), { first, last }) },
+  // Batch 34 (Rocket Surgery): "what changed since last time" is the last snapshot against today, not the first
+  // snapshot against the last (with one snapshot that was always $0, and today's edits were never in it).
+  const first = snaps[0].metrics, lastSnap = snaps[snaps.length - 1], last = lastSnap.metrics, now = keyNumbers(ctx.metrics());
+  const day = at => new Date(at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const sinceWords = `since ${day(lastSnap.at)}`;
+  const longer = (k, f) => (snaps.length > 1 && first[k] != null && now[k] != null ? ` Since the first snapshot (${day(snaps[0].at)}): ${f(first[k], now[k])}.` : '');
+  const signed = v => `${v < 0 ? '−' : '+'}${money(Math.abs(v))}`;
+  const strip = S.summaryStrip(ctx, [
+      { label: `Net worth ${sinceWords}`, result: { id: 'M40', value: last.netWorth == null || now.netWorth == null ? null : now.netWorth - last.netWorth, needs: [], unit: 'money', text: `From the snapshot on ${day(lastSnap.at)} (${lastSnap.label}) to now.${longer('netWorth', (a, b) => signed(b - a))}` }, so: soWhat('netWorthChange', ctx.metrics(), { first, last: now }) },
+      { label: `Debt paid down ${sinceWords}`, result: { id: 'M30', value: last.debtTotal == null || now.debtTotal == null ? null : last.debtTotal - now.debtTotal, needs: [], unit: 'money', text: `Total debt at the snapshot on ${day(lastSnap.at)} minus total debt now.${longer('debtTotal', (a, b) => money(a - b))}` }, so: soWhat('debtPaid', ctx.metrics(), { first, last: now }) },
       { label: 'Gut accuracy', result: acc, note: acc.hidden ? 'After the first closed month' : 'Average miss of the first guess' },
-      { label: 'Snapshots', result: { id: 'M00', value: snaps.length, needs: [], unit: 'count', text: 'Saved at the end of sessions and before imports or resets.' }, render: r => String(r.value) }]),
+      { label: 'Snapshots', result: { id: 'M00', value: snaps.length, needs: [], unit: 'count', text: 'Saved at the end of sessions and before imports or resets.' }, render: r => String(r.value) }]);
+  strip.setAttribute('data-focus', 'history:since'); // batch 34: Find's "what changed" lands here
+  return [head('History', 'Snapshots over time'), strip,
     S.sec('history:net-worth', { title: 'Net worth over time', open: true }, () => h('div.card', {}, host)), // batch 13: caret sections
     h('div.card', { style: { marginTop: '16px' } }, h('div.list-scroll', {}, h('table.rows', {},
       h('thead', {}, h('tr', {}, ['Snapshot', 'When', 'Net worth', 'Debt', 'Savings rate', 'Surplus'].map((k, i) => h(`th${i > 1 ? '.num' : ''}`, {}, k)))),
-      h('tbody', {}, [...snaps].reverse().map(s => h('tr.row', {}, h('td.col-first', {}, s.label), h('td', {}, new Date(s.at).toLocaleString()),
+      h('tbody', {}, [{ label: 'Now', at: null, metrics: now }, ...[...snaps].reverse()].map(s => h(`tr.row${s.at ? '' : '.now-row'}`, {}, h('td.col-first', {}, s.at ? s.label : h('strong', {}, 'Now')), h('td', {}, s.at ? new Date(s.at).toLocaleString() : 'Today'),
         h('td.num', {}, money(s.metrics.netWorth)), h('td.num', {}, money(s.metrics.debtTotal)), h('td.num', {}, s.metrics.savingsRate == null ? '' : pct(s.metrics.savingsRate)), h('td.num', {}, money(s.metrics.surplus)))))))),
     S.sec('history:wrapped', { title: 'Wrapped, your year in review' }, () => wrapped(ctx, snaps, months, since)),
     S.sec('history:log', { title: 'Change log' }, () => changeLogTable(ctx))]; // F6: every edit with who

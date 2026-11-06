@@ -510,9 +510,9 @@ export function protectionList() {
       return !rest.length ? null : h('button.btn.small', { type: 'button', 'data-focus': 'add:usual-coverage', onclick: () => ctx.store.transaction('Add the usual coverage', () => {
         for (const t of rest) ctx.store.add('coverage', { name: null, values: {} }, { type: t });
       }) }, have.size ? `Add the rest of the usual list (${rest.length})` : 'Add the usual list'); },
-    coreFields: ['have'],
+    coreFields: ['have'], countsBlank: true, // batch 34: each usual-list row asks Have it?, so the foot counts it (as X of Y filled does)
     columns: [
-      { label: 'Coverage', render: (ctx, r, m, up) => select(types(ctx).map(t => [t, t === 'Renters or home' && ctx.gates().housing !== 'Own' ? 'Renters insurance' : t]), r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Coverage type', width: 170, key: `${r.id}:type` }) },
+      { label: 'Coverage', render: (ctx, r, m, up) => select(types(ctx).map(t => [t, t === 'Renters or home' && ctx.gates().housing !== 'Own' ? 'Renters insurance' : t]), r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Coverage type', width: 196, key: `${r.id}:type` }) }, // batch 34: "Renters insurance" in full
       { label: 'Have it?', render: (ctx, r, m, up) => toggle(['Have it', "Don't", 'Not sure'], r.values.have ?? null, v => up({ have: v }), { label: 'Have it', key: `${r.id}:have` }) },
       { label: 'Premium', num: true, render: (ctx, r, m, up) => pair(moneyInput(r.amount, v => {
         up({ amount: v });

@@ -257,7 +257,7 @@ export const SCREENS = {
   'tools/lists': (app, ctx) => (app.hasClient ? listsScreen(app, ctx) : [head('Coach tools'), noClient(app)]),
   'tools/discovery': app => discoveryScreen(app),
   'tools/data': (app, ctx) => [head('Coach tools', 'Export, import and reset'), h('div.card', {}, h('div.row-line', {},
-    S.button('Export', { kind: 'primary', iconName: 'download', onClick: () => app.exportNow() }),
+    S.button('Export a backup', { kind: 'primary', iconName: 'download', onClick: () => app.exportNow() }), // batch 34: "Export" beside the spreadsheet read as the spreadsheet
     S.button('Import', { iconName: 'upload', onClick: () => app.importFile() }),
     S.button('Reset client', { kind: 'danger', iconName: 'eraser', disabled: !app.hasClient, why: 'No client open', onClick: e => app.resetClient(e.currentTarget) }),
     h('span', { style: { flex: 1 } }),

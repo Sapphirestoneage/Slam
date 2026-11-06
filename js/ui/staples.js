@@ -770,7 +770,7 @@ export function recordList(ctx, cfg) {
     toast(n > 1 ? `Deleted ${n}.` : 'Deleted.', { undo: () => ctx.store.undo() });
   };
   // Batch 8 (B9): a row left with no name and nothing typed disappears on its own, without a toast.
-  const dropIfBlank = id => { const r = ctx.store.get(id); if (!r || cfg.fixed || !isBlankRow(r, coreOf(r))) return; if (state.open === id) state.open = null; ctx.store.remove([id], { withLinked: false, quiet: true }); };
+  const dropIfBlank = id => { const r = ctx.store.get(id); if (!r || cfg.fixed || cfg.countsBlank || !isBlankRow(r, coreOf(r))) return; if (state.open === id) state.open = null; ctx.store.remove([id], { withLinked: false, quiet: true }); };
   const reset = ids => { const n = ids.length; ctx.store.reset(ids); toast(n > 1 ? `Reset ${n}.` : 'Reset.', { undo: () => ctx.store.undo() }); };
 
   // ---------- in-place updates ----------
@@ -978,7 +978,7 @@ export function recordList(ctx, cfg) {
     }
     if (state.open && !rowEls.has(state.open)) state.open = null;
     const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td.check-cell', {}), cfg.totals(ctx, recs, m, cols))) : null;
-    const counted = recs.filter(r => !isBlankRow(r, coreOf(r)) && (!cfg.counts || cfg.counts(r))); // batch 8 (B9): a blank row counts nowhere; batch 10: a list can leave rows out (Everything else, faded)
+    const counted = recs.filter(r => (cfg.countsBlank || !isBlankRow(r, coreOf(r))) && (!cfg.counts || cfg.counts(r))); // batch 34: a list whose blank rows are questions (Protection's usual list) counts them // batch 8 (B9): a blank row counts nowhere; batch 10: a list can leave rows out (Everything else, faded)
     const leftRows = counted.filter(r => !coreOf(r).every(f => handled(r, f)));
     const done = counted.length - leftRows.length;
     // Batch 8 (B5, B6): one button for the whole section: every unconfirmed row to Getting it; every starter estimate kept.

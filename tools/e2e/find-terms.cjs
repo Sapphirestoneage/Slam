@@ -68,5 +68,12 @@ const TERMS = [
   ...['Uber', 'DoorDash'].map(term => ({ term, routes: [I, B], box: /:platform$|:amount$/ })),
   { term: 'payout', routes: [I], box: /:holdDays:n$|^add:income$/ },
   { term: 'taxes set aside', routes: [A], box: /:balance$|^add:asset$/ },
+  // Batch 34 (Rocket Surgery on the rest of the screens): the words a coach typed that found nothing.
+  { term: 'biggest hole', routes: ['#/plan/scorecard'], box: /^score:top$/ },
+  { term: 'when can I retire', routes: ['#/plan/timeline'], box: /^fi:when$/ },
+  { term: 'last month', routes: ['#/report/statements'], box: /^statements:tie$/ },
+  { term: 'what changed', routes: ['#/report/history'], box: /^history:since$/ },
+  { term: 'spreadsheet', routes: ['#/tools/data'], box: /^btn:Open in a spreadsheet$/ },
+  { term: 'sales call', routes: ['#/tools/discovery'], box: /^disc:name$/ },
 ];
 module.exports = { TERMS };

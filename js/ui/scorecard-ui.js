@@ -22,7 +22,7 @@ export function scorecardScreen(app, ctx) {
   const clearArea = (id, keys) => { const cur = { ...(doc.scorecard?.areas?.[id] || {}) }; for (const k of keys) delete cur[k]; ctx.store.setIn('scorecard', ['areas', id], Object.keys(cur).length ? cur : undefined, 'Scorecard'); };
   const choose = (id, on) => ctx.store.setIn('scorecard', ['chosen'], on ? [...(doc.scorecard?.chosen || []), id] : (doc.scorecard?.chosen || []).filter(x => x !== id), 'Top holes');
   // The rating: the coach's call wins; Auto puts the numbers' call back.
-  const picker = a => h('div.row-line.coach-only', { style: { gap: '6px', flexWrap: 'nowrap' } }, app.prefs.clientView ? null : ratingTag(a.rating),
+  const picker = a => h('div.row-line.coach-only', { style: { gap: '6px', flexWrap: 'nowrap' } }, // batch 34: the pressed switch is the rating (a Hole pill beside it said it twice)
     S.toggle(RATINGS.map(r => [r, r]), a.rating, v => (v ? setArea(a.id, { rating: v }) : clearArea(a.id, ['rating', 'reason'])), { label: `${a.name} rating` }),
     a.override ? S.button('Auto', { size: 'small', tip: a.auto ? `Back to the numbers' call: ${a.auto.rating}` : 'The numbers cannot rate this one', onClick: () => clearArea(a.id, ['rating', 'reason']) }) : null);
   const reasonBox = a => (a.override
@@ -45,7 +45,7 @@ export function scorecardScreen(app, ctx) {
   const addPayoff = (anchor, a) => S.popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, `${a.name}: payoff a year`), h('span.muted.small', {}, 'No rule for this area: your estimate of what filling it is worth a year.'),
     S.moneyInput(null, v => { S.closePop(); if (v != null) setArea(a.id, { payoff: v }); }, { hint: 'Add a year', key: `score:${a.id}:payoff` })), { width: 320 });
   const holeRow = a => h(`div.card.hole-row${a.parked ? '.parked' : ''}`, {},
-    h('div.hole-head', {}, h('span.rank', {}, `#${a.rank}`), h('strong.hole-name', {}, a.name), a.parked ? h('span.tag.plain', {}, 'Parked') : null, a.beforeHere ? h('span.tag.plain', {}, `Before FOO step ${sc.here}`) : null, h('span.tag.plain', { title: a.fooWords }, `FOO step ${a.foo}`), h('span.spacer'), clientTag(a), picker(a)),
+    h('div.hole-head', {}, h('span.rank', { 'data-focus': a.rank === 1 ? 'score:top' : null }, `#${a.rank}`), h('strong.hole-name', {}, a.name), a.parked ? h('span.tag.plain', {}, 'Parked') : null, a.beforeHere ? h('span.tag.plain', {}, `Before FOO step ${sc.here}`) : null, h('span.tag.plain', { title: a.fooWords }, `FOO step ${a.foo}`), h('span.spacer'), clientTag(a), picker(a)),
     a.parked ? h('div.row-line.coach-only', { style: { gap: '8px', marginTop: '6px' } }, h('span.muted.small', {}, `Parked ${new Date(a.parked.at).toLocaleDateString()}${a.parked.note ? `: ${a.parked.note}` : ''}. Back: ${parkedBack(a.parked, { n: sessionCount(doc), now: ctx.now() }).when}${parkedBack(a.parked, { n: sessionCount(doc), now: ctx.now() }).due ? ' (due now)' : ''}`), S.button('Unpark', { size: 'small', onClick: () => unparkHole(ctx.store, a.id) }), S.button('Make homework', { size: 'small', onClick: () => { makeHomework(ctx.store, `S${sessionCount(doc)}`, `Fill the ${a.name} hole`, { link: { kind: 'hole', areaId: a.id, route: '#/plan/scorecard' } }); S.toast('Homework made.', { undo: () => ctx.store.undo() }); } })) : null,
     h('div.hole-body', {},
       h('div.stack.hn-why', { style: { gap: '4px', minWidth: 0 } }, reasonBox(a), source(a)), // batch 19: a grid, so each number sits in the same place on every card
@@ -82,7 +82,7 @@ export function scorecardScreen(app, ctx) {
   const rescore = () => { ctx.store.setIn('scorecard', ['reviewedAt'], ctx.now().toISOString(), 'Re-scored'); S.toast('Marked as re-scored today.'); };
   const confirm = () => { ctx.store.setIn('program', ['fooConfirmed'], sc.here, 'FOO step'); S.toast(`FOO step ${sc.here} confirmed.`); };
   return [head('Scorecard', 'Eleven areas: Strong, OK or Hole; the holes ranked by what filling them pays for the effort',
-      S.button('Re-scored today', { iconName: 'check', tip: 'Marks the Revisit session\'s re-score', onClick: rescore })),
+      S.button('Mark re-scored today', { iconName: 'check', tip: 'Marks the Revisit session\'s re-score', onClick: rescore })), // batch 34: an action, not a status
     S.summaryStrip(ctx, [
       { label: 'Areas Strong or OK', result: { id: 'M74', value: sc.okCount, needs: [], unit: 'count', text: `${sc.okCount} of ${sc.of} areas rated Strong or OK; ${sc.holes.length} ${sc.holes.length === 1 ? 'hole' : 'holes'}; ${sc.unrated.length} not rated yet.` }, render: r => `${r.value} of ${sc.of}` },
       { label: 'Holes', result: { id: 'M74', value: sc.holes.length, needs: [], unit: 'count', text: 'The areas rated Hole, ranked below.' }, render: r => (sc.unrated.length ? `${r.value} found so far · ${sc.unrated.length} not rated yet` : String(r.value)) }, // item 36

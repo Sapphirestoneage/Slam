@@ -92,13 +92,21 @@ export function incomeMonth(doc, ref, ym, { now = new Date() } = {}) {
     const paid = i && (i.status === 'Paid' || i.status === 'Partial') && i.paid != null ? -i.paid : i?.status === "Didn't happen" ? 0 : a.amount;
     return { id: a.auto.sourceId, name: a.name, fixed: true, value: paid, debt: true, home: '#/net-worth/debt' };
   });
-  const all = [...lines, ...debtLines];
+  // Batch 34 (Rocket Surgery): while spending is the gut number, the part no line covers is spending too (the same
+  // weekly spending money the calendar shows), so the surplus here is the surplus on Home and Overview.
+  const gut = instances(doc, ref, ym, { now }).filter(i => i.kind === 'gut');
+  const gutLeft = -sum(gut, i => (i.status === 'Paid' || i.status === 'Partial' ? (i.paid ?? i.planned) : i.status === "Didn't happen" ? 0 : i.planned));
+  const gutLines = gutLeft > 0.005 ? [{ id: gut[0].recId, name: gut[0].name, fixed: false, value: round2(gutLeft), gut: true, home: '#/cash-flow/budget' }] : [];
+  const all = [...lines, ...gutLines, ...debtLines];
   const fixed = all.filter(l => l.fixed), variable = all.filter(l => !l.fixed);
   const gross = f.gross ?? 0, takeHome = f.takeHome ?? 0;
   const saved = (f.beforeTax ?? 0) + match;
+  // Batch 34: money set aside into sinking funds is spoken for (answer 62), so it comes out of the surplus here too,
+  // as its own line; it stays in the accounts, so the net worth bridge adds it back.
+  const sinking = m.surplus?.sinkingFunds ?? 0;
   return { ym, gross, match, taxes: f.taxes ?? 0, saved, takeHome, fixed, variable,
-    fixedTotal: sum(fixed, l => l.value), variableTotal: sum(variable, l => l.value),
-    surplus: takeHome - sum(all, l => l.value), logged, savedFromPaycheck: f.beforeTax ?? 0 };
+    fixedTotal: sum(fixed, l => l.value), variableTotal: sum(variable, l => l.value), sinking,
+    surplus: takeHome - sum(all, l => l.value) - sinking, logged, savedFromPaycheck: f.beforeTax ?? 0 };
 }
 
 // ---------- M64: Cash flow statement (cash basis), one month ----------
@@ -120,10 +128,10 @@ export function cashMonth(doc, ref, ym, { now = new Date(), startCash = null } =
   const countMaybe = !!doc.spending?.calendar?.countMaybe;
   const items = [], unmarked = [];
   for (const i of instances(doc, ref, ym, { now })) {
-    if (i.kind === 'win' || i.kind === 'gut' || (i.maybe && !countMaybe) || !i.date.startsWith(ym)) continue;
+    if (i.kind === 'win' || (i.maybe && !countMaybe) || !i.date.startsWith(ym)) continue; // batch 34: the gut's spending money leaves checking too
     if (i.onCard) continue; // swiped on a card: it leaves checking when the card is paid
     const amount = i.status === 'Paid' || i.status === 'Partial' ? (i.paid ?? i.planned) : i.status === "Didn't happen" ? 0 : i.planned;
-    if (i.status === 'Planned') unmarked.push({ date: i.date, name: i.name, amount: i.planned });
+    if (i.status === 'Planned' && i.kind !== 'gut') unmarked.push({ date: i.date, name: i.name, amount: i.planned });
     const bucket = marks[i.key]?.bucket || defaultBucket(i, doc);
     if (i.kind === 'debt') {
       // A payment is interest (Everyday, a cost of the month) and principal (Debt, paying down what is owed). Cards are Everyday.
@@ -174,11 +182,21 @@ export function statements(doc, ref, period, { now = new Date() } = {}) {
   const add = (list, k) => sum(list, x => x[k]);
   const income = { gross: add(inc, 'gross'), match: add(inc, 'match'), taxes: add(inc, 'taxes'), saved: add(inc, 'saved'), takeHome: add(inc, 'takeHome'),
     fixed: mergeLines(inc.flatMap(i => i.fixed)), variable: mergeLines(inc.flatMap(i => i.variable)), fixedTotal: add(inc, 'fixedTotal'), variableTotal: add(inc, 'variableTotal'),
-    surplus: add(inc, 'surplus'), savedFromPaycheck: add(inc, 'savedFromPaycheck') };
+    sinking: add(inc, 'sinking'), surplus: add(inc, 'surplus'), savedFromPaycheck: add(inc, 'savedFromPaycheck') };
   const flows = { start: cash[0].start, end: cash.at(-1).end, totals: Object.fromEntries(BUCKETS.map(b => [b, sum(cash, c => c.totals[b])])),
     everyday: cash.flatMap(c => c.everyday), investing: cash.flatMap(c => c.investing), debt: cash.flatMap(c => c.debt), unmarked: cash.flatMap(c => c.unmarked),
     principal: add(cash, 'principal'), contributions: add(cash, 'contributions'), withdrawals: add(cash, 'withdrawals') };
-  return { period, netWorth: nwEnd, netWorthStart: nwStart, income, cash: flows, tie: tieOut(nwStart, nwEnd, income, flows, inc) };
+  // Batch 34: when this file began. A period that ends before it has nothing on file (no balances to compare); a period
+  // it began in has no starting balance, so its cash cannot tie out until the next one.
+  const began = fileBegan(doc);
+  const onFile = !began || began < endIso(period);
+  const startKnown = !began || began <= startOf(months[0]);
+  return { period, netWorth: nwEnd, netWorthStart: nwStart, income, cash: flows, began, onFile, startKnown, tie: { ...tieOut(nwStart, nwEnd, income, flows, inc), startKnown } };
+}
+// The first record's add (or the file's own date): when this household's numbers start.
+export function fileBegan(doc) {
+  const adds = (doc.history || []).filter(h => h.op === 'add').map(h => h.at).sort();
+  return [adds[0], doc.createdAt].filter(Boolean).sort()[0] ?? null;
 }
 function mergeLines(lines) {
   const by = new Map();
@@ -196,8 +214,9 @@ export function tieOut(nwStart, nwEnd, income, cash, incMonths = []) {
   const contributions = cash.contributions + income.saved;
   const market = nwEnd.invested - nwStart.invested - contributions + cash.withdrawals;
   const other = nwEnd.real - nwStart.real;
-  const explained = income.surplus + income.saved + cash.principal + market + other;
-  const bridge = { change, surplus: income.surplus, saved: income.saved, debtPaidDown: cash.principal, market, other, unexplained: round2(change - explained) };
+  const sinking = income.sinking ?? 0; // set aside, still in the accounts
+  const explained = income.surplus + sinking + income.saved + cash.principal + market + other;
+  const bridge = { change, surplus: income.surplus, sinking, saved: income.saved, debtPaidDown: cash.principal, market, other, unexplained: round2(change - explained) };
   // M67: accrual surplus minus cash surplus, line by line. Cash surplus = everyday net + debt principal (before investing).
   const cashSurplus = cash.totals.Everyday + cash.totals.Debt;
   const paychecks = sum(cash.everyday.filter(i => i.kind === 'income'), i => i.amount);
@@ -208,6 +227,7 @@ export function tieOut(nwStart, nwEnd, income, cash, incMonths = []) {
     { name: 'Yearly and prepaid costs: set aside vs paid', value: sum(cash.everyday.filter(i => i.yearly), i => -i.amount)
       - sum(incMonths.flatMap(i => [...i.fixed, ...i.variable]).filter(l => l.yearly || l.prepaid), l => l.value) },
   ];
+  if (sinking) lines.push({ name: 'Set aside into sinking funds (still in your accounts)', value: -sinking }); // batch 34
   const accrualVsCash = income.surplus - cashSurplus;
   lines.push({ name: 'Bills planned vs paid (unmarked, partial, moved)', value: round2(accrualVsCash - sum(lines, l => l.value)) });
   return { unexplainedCash, cashOnStatement: cash.end, cashInAccounts: nwEnd.cash, bridge, accrualVsCash: { accrual: income.surplus, cash: cashSurplus, difference: accrualVsCash, lines } };
@@ -220,7 +240,8 @@ const row = (label, now, last, { lines = [], sign = '', total = false, tip = nul
   ({ label, now, last, change: last == null || now == null ? null : now - last, lines, sign, total, tip, home,
     text: text ?? `${label}: ${money0(now ?? 0)} this period${last == null ? '' : `, ${money0(last)} last period`}.` });
 const linesOf = (list, f = l => l.value) => list.map(l => ({ id: l.id ?? l.recId, name: l.name, value: f(l), home: l.home, date: l.date }));
-export function statementRows(cur, prev) {
+export function statementRows(cur, prevIn) {
+  const prev = prevIn && prevIn.onFile !== false ? prevIn : null; // batch 34: a period before the file began shows –, not $0
   const n = cur.netWorth, p = prev?.netWorth;
   const grp = (side, name) => (side || []).find(g => g.name === name);
   const netWorth = [
@@ -242,16 +263,18 @@ export function statementRows(cur, prev) {
     row('Take-home', i.takeHome, q?.takeHome ?? null, { sign: '=', total: true, home: '#/cash-flow/income' }),
     row('Fixed spending', i.fixedTotal, q?.fixedTotal ?? null, { sign: '−', lines: linesOf(i.fixed), home: '#/cash-flow/budget', tip: 'Expenses on an income statement' }),
     row('Variable spending', i.variableTotal, q?.variableTotal ?? null, { sign: '−', lines: linesOf(i.variable), home: '#/cash-flow/budget' }),
+    ...(i.sinking ? [row('Into sinking funds', i.sinking, q?.sinking ?? null, { sign: '−', home: '#/plan/goals', text: `Set aside each month for costs that come later: ${money0(i.sinking)}. Spoken for, so it comes out of the surplus; it stays in your accounts.` })] : []),
     row('Surplus', i.surplus, q?.surplus ?? null, { sign: '=', total: true, tip: 'Net income on an income statement',
-      text: `Take-home ${money0(i.takeHome)} minus spending ${money0(i.fixedTotal + i.variableTotal)} = ${i.surplus < 0 ? '−' : ''}${money0(i.surplus)}. Card spending counts when swiped; investment growth is not here.` }),
+      text: `Take-home ${money0(i.takeHome)} minus spending ${money0(i.fixedTotal + i.variableTotal)}${i.sinking ? ` minus ${money0(i.sinking)} into sinking funds` : ''} = ${i.surplus < 0 ? '−' : ''}${money0(i.surplus)}. Card spending counts when swiped; investment growth is not here.` }),
   ];
   const c = cur.cash, d = prev?.cash;
+  const known = cur.startKnown !== false, dKnown = prev?.startKnown !== false; // batch 34: no starting balance before the file began
   const cash = [
-    row('Starting cash', c.start, d?.start ?? null, { home: '#/net-worth/assets' }),
+    row('Starting cash', known ? c.start : null, dKnown ? d?.start ?? null : null, { home: '#/net-worth/assets', text: known ? null : 'This file began during this period, so there is no starting balance on file.' }),
     row('Everyday money', c.totals.Everyday, d?.totals.Everyday ?? null, { sign: '±', lines: linesOf(c.everyday, x => x.amount), tip: 'Operating activities on a statement of cash flows', text: 'Paychecks in; bills, card payments and loan interest out, counted when paid.' }),
     row('Investing', c.totals.Investing, d?.totals.Investing ?? null, { sign: '±', lines: linesOf(c.investing, x => x.amount), tip: 'Investing activities', text: 'Contributions out, withdrawals in, buying or selling a car or home.' }),
     row('Debt', c.totals.Debt, d?.totals.Debt ?? null, { sign: '±', lines: linesOf(c.debt, x => x.amount), tip: 'Financing activities', text: 'Principal paid out, new borrowing in.' }),
-    row('Ending cash', c.end, d?.end ?? null, { sign: '=', total: true, text: `Starting cash ${money0(c.start)} plus everyday, investing and debt = ${money0(c.end)}.` }),
+    row('Ending cash', known ? c.end : null, dKnown ? d?.end ?? null : null, { sign: '=', total: true, text: `Starting cash ${money0(c.start)} plus everyday, investing and debt = ${money0(c.end)}.` }),
   ];
   return { netWorth, below, income, cash };
 }

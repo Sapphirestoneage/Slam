@@ -99,7 +99,8 @@ const app = {
       if (v.rent != null) s.add('bill', { name: 'Rent', amount: v.rent, status: R, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date' } });
       if (v.debt != null) s.add('debt', { name: 'Total debt (from discovery)', status: R, values: { balance: v.debt } }, { type: 'Credit card' });
       if (v.savings != null) s.add('account', { name: 'Savings', status: R, values: { group: 'cash', balance: v.savings } }, { type: 'Savings or HYSA' });
-      s.setDoc('profile', { whyNow: v.why ?? null, goalWords: v.goal ?? null });
+      const chips = Array.isArray(v.goal) || Array.isArray(v.why) ? { chips: { goalWords: Array.isArray(v.goal) ? v.goal : [], whyNow: Array.isArray(v.why) ? v.why : [] } } : {}; // batch 34: tapped chips
+      s.setDoc('profile', { whyNow: Array.isArray(v.why) ? null : v.why ?? null, goalWords: Array.isArray(v.goal) ? null : v.goal ?? null, ...chips });
     });
     addPresets(s, ref);
     s.undoStack = [];

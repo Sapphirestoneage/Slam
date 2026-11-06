@@ -8,6 +8,7 @@ import { addMonths, monthName } from '../month.js';
 import { money } from '../format.js';
 import { inView } from '../math/time.js';
 import { payYourselfFirst } from '../math/simple.js';
+import { MODES, modeOf, personLabels } from '../registry/couples.js';
 
 export const SUI = { kind: 'month', ym: null, year: null, hours: false };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -32,7 +33,7 @@ export function statementsScreen(app, ctx) {
   const picker = h('div.card.statement-bar', {}, h('div.row-line', { style: { gap: '12px' } },
     S.toggle([['month', 'Month'], ['year', 'Year']], SUI.kind, v => { SUI.kind = v; app.render(); }, { label: 'Period' }),
     h('span.row-line.month-step', { style: { gap: '6px', flexWrap: 'nowrap' } }, S.iconButton('left', 'Previous period', () => step(-1)), h('strong', { style: { minWidth: '130px', textAlign: 'center' } }, label(p)), S.iconButton('right', 'Next period', () => step(1))),
-    h('span.muted', {}, `vs ${label(previous(p))}`), h('span', { style: { flex: 1 } }),
+    h('span.muted', {}, `vs ${label(previous(p))}${last.onFile ? '' : ' (nothing on file)'}`), h('span', { style: { flex: 1 } }),
     S.button('Print the set', { iconName: 'printer', onClick: () => printSet() })));
   // Pay yourself first: what comes off the top before any spending, a month and a paycheck.
   const pyf = payYourselfFirst(ctx.store.doc, ctx.ref, { now: ctx.now() });
@@ -45,8 +46,15 @@ export function statementsScreen(app, ctx) {
     key === 'income' ? offTop : null,
     h('div.st-head', {}, h('span'), h('span.num', {}, label(p)), h('span.num', {}, label(previous(p))), h('span.num', {}, 'Change')),
     [...list, ...below].map((r, i) => statementLine(ctx, r, `${key}:${i}`, v => fmt(v, { hours: hours && SUI.hours }))));
+  // Batch 34: a period before this file began has no balances on file; say so once instead of a row of $0.
+  const began = st.began ? new Date(st.began).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
+  const before = !st.onFile ? h('p.muted.st-began', {}, `This file began ${began}: nothing is on file for ${label(p)}. Income and spending show the plan.`) : null;
+  // Batch 34: a couple with no combined totals sees their own plan everywhere else; these statements count both.
+  const mode = modeOf(ctx.store.doc.profile);
+  const both = ctx.couple && mode && MODES[mode].combined === 'none'
+    ? h('p.muted.st-began', {}, `These statements count both of you. Home, Cash flow and Overview show ${personLabels(ctx.store.doc).Me}'s own plan.`) : null;
   return [head('Statements', 'Net worth, income and spending, and cash flow, tied out'),
-    picker,
+    picker, before, both,
     table('Net worth statement', 'The balance sheet: what you own and owe on the last day', rows.netWorth, { below: rows.below, key: 'nw' }),
     table('Income and spending statement', 'The income statement, accrual: spending counts when it happens, a card swipe included', rows.income, { hours: true, key: 'income' }),
     table('Cash flow statement', 'The statement of cash flows, cash basis: money counts when it moves', rows.cash, { hours: true, key: 'cash' }),
@@ -76,11 +84,18 @@ function tiePanel(app, ctx, st) {
       ` ${st.cash.unmarked.filter(u => u.date === d).map(u => u.name).join(', ')}`))) : h('span.muted', {}, 'Every item this period is marked. Check for spending that is not on the calendar.')), { width: 380 });
   const b = t.bridge, a = t.accrualVsCash;
   const line = (k, v, text) => h('div.tie-line', {}, h('span', {}, k), h('span.num', {}, S.mathButton({ id: 'Tie-out', value: v, needs: [], text }, `${v <= -0.5 ? '−' : ''}${money(Math.abs(v))}`)));
-  return h('section.card.tie-out', {}, h('h2', {}, 'Tie-out'),
+  // Batch 34: the month the file began has no starting balance, so the gap is the whole balance; say when it ties out.
+  if (t.startKnown === false) {
+    const began = new Date(st.began).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const next = st.period.kind === 'year' ? String(st.period.year + 1) : monthName(addMonths(st.period.ym, 1));
+    return h('section.card.tie-out', {}, h('h2', { 'data-focus': 'statements:tie' }, 'Tie-out'), h('div.tie-line', {}, h('span', {}, `Cash ties out from ${next}`),
+      h('span.muted', {}, `This file began ${began}, so there is no starting balance for ${st.period.kind === 'year' ? st.period.year : monthName(st.period.ym)}.`)));
+  }
+  return h('section.card.tie-out', {}, h('h2', { 'data-focus': 'statements:tie' }, 'Tie-out'),
     h('div.tie-line', {}, h('span', {}, Math.abs(gap) < 1 ? 'Cash ties out' : 'Unexplained cash'),
       h('span.num', {}, S.mathButton({ id: 'M65', value: gap, needs: [], text: `In your accounts ${money(t.cashInAccounts)}; the cash flow statement says ${money(t.cashOnStatement)}.` }, `${gap <= -0.5 ? '−' : ''}${money(Math.abs(gap))}`)),
       Math.abs(gap) >= 1 ? S.button('Find it', { size: 'small', iconName: 'search', onClick: findIt }) : null),
-    S.moreBlock('tie:bridge', () => h('div.stack', {}, line('Surplus', b.surplus, 'From the income and spending statement.'), line('Saved from paycheck', b.saved, '401(k), HSA and the match went straight to investments.'),
+    S.moreBlock('tie:bridge', () => h('div.stack', {}, line('Surplus', b.surplus, 'From the income and spending statement.'), b.sinking ? line('Set aside into sinking funds', b.sinking, 'Spoken for, but still in your accounts.') : null, line('Saved from paycheck', b.saved, '401(k), HSA and the match went straight to investments.'),
       line('Debt paid down', b.debtPaidDown, 'The principal part of debt payments: spending on the statement, but it lowers what you owe.'), line('Market change', b.market, 'Invested balance change minus contributions plus withdrawals.'),
       line('Other changes', b.other, 'Home and car value updates, gifts, write-offs.'), line('Unexplained', b.unexplained, 'What is left after everything above.')), { label: `Change in net worth: ${b.change <= -0.5 ? '−' : ''}${money(Math.abs(b.change))}` }),
     S.moreBlock('tie:accrual', () => h('div.stack', {}, a.lines.map(l => line(l.name, l.value, l.name))), { label: `Accrual vs cash surplus: ${a.difference <= -0.5 ? '−' : ''}${money(Math.abs(a.difference))}` }));

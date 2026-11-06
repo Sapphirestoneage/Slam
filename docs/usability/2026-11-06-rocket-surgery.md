@@ -208,3 +208,213 @@ twice); test/afford.test.js says why.
 Every screen visited, scored after the fixes against QA.md's 12 categories, is in
 `docs/usability/scorecard-2026-11-06.json` (route, and each category's pass or failure with severity and a one-line
 reason), ready for a sign-off page. Categories 5 (Obvious) and 12 (Coachable) wait for Eli's sign-off either way.
+
+## Batch 34: the screens Batch 20 did not score
+
+The same method as above, on the twelve screens left out of the first scorecard: Net worth › Debt and Protection,
+Plan › FOO (scored only: its code is Batch 26's tonight), Scorecard and Timeline, Report › Overview, Statements and
+History, and Coach tools › Lists, Session, Data and Discovery. Each screen got two or three real coach tasks, played by
+Eli (fluent, hates typing, wants things level: he goes straight to the tab) and by a first-time coach (types the
+client's words into Find first; a miss is a dead end and then a hunt through the tabs). The households are the personas
+in fixtures/personas, opened through Import. The strategy scripts react to what the screen shows, so the same scripts
+measured main at 4d2bf2f and this batch; they and their raw output stayed outside the repo. Time is estimated as above.
+
+### The tasks and what success means
+
+| # | Screen | Task | Household | Success means |
+|---|---|---|---|---|
+| D1 | Debt | When is she debt free, and what does Snowball change? | Maya | The debt-free date read, Snowball tapped, the date read again |
+| D2 | Debt | Add the car loan she just mentioned: $12,000 at 6.9%, $350 a month | Maya | The loan saved with all three numbers |
+| P1 | Protection | Mark what she has: health and renters yes, life and disability no | Maya | Four answers in; Gaps to fill says 2 |
+| P2 | Protection | What protection gaps does Tom have? | Tom | The gaps read off the screen |
+| F1 | FOO | What step is she on, and when is her emergency fund done? | Maya | The step and the job-loss fund's month |
+| F2 | FOO | What comes after the cards? | Alexis | The next step named |
+| S1 | Scorecard | What does the Scorecard say is the biggest hole? | Maya | The #1 hole named |
+| S2 | Scorecard | Put the top two holes in the plan | Maya | In the plan 2 of 3 |
+| T1 | Timeline | If she saves $500 more a month, how much sooner is FI? | Maya | "How much sooner" said from the screen |
+| T2 | Timeline | When is Tom FI on the pessimistic pace? | Tom | The date read |
+| O1 | Overview | If her pay stopped, how long would her cash last? | Alexis | The runway read |
+| O2 | Overview | The one number the client hears first, and where the surplus goes | Maya | The surplus and its words |
+| St1 | Statements | How much was left over last month? | Alexis | A surplus the client can believe (the same as Overview) |
+| St2 | Statements | Does her cash tie out this month? If not, find it | Maya | Tied out, or a gap Find it explains |
+| H1 | History | Show the client what changed since last month | Maya, with an October snapshot, then $600 off the card and $450 more in checking | Today's change against the October snapshot on screen |
+| H2 | History | Save a snapshot before the big change | Alexis | A snapshot saved |
+| L1 | Lists | Which numbers are still guesses? Fix the card APR (22.99%) | Maya | The APR typed where Fix now lands |
+| L2 | Lists | What homework does the client still owe? | Maya | The answer read |
+| Se1 | Session | Set a 45 minute session and hide coach-only items | Maya | Both saved |
+| Da1 | Data | Export the spreadsheet | Maya | The .xlsx downloaded |
+| Da2 | Data | Back up the client file before trying a reset | Tom | The .json backup downloaded |
+| Di1 | Discovery | Sales call: Jordan Lee, $4,000 take-home, $1,500 rent, $8,000 debt, $500 saved; debt feels out of control, wants to be debt free | (new) | Jordan's file made with every number and the goal |
+
+### What each user did, before the fixes
+
+**Statements (St1, St2): neither user could finish.** Alexis's statement said $1,510 left over; Overview said she is $200
+short. The income statement left out the gut number's spending money (the part no Budget line covers) and the sinking
+funds, so it showed a surplus for 13 of the 14 personas that no other screen had (the persona run flagged every one).
+October, before the file existed, showed $0 for every balance and a "+$14,200 change"; Starting cash was $0 though
+checking held $5,200, and the tie-out called the whole balance "Unexplained cash" with a Find it that listed paydays.
+
+**History (H1): a dead end for both.** "Net worth change" compared the first snapshot with the last, so with one
+snapshot it read $0, and the $600 paid off the card today was nowhere; the table had the October row and no row for
+now.
+
+**Find (every first-time run).** Twelve searches found nothing: biggest hole, fi date, when fi, how long would my cash
+last, last month, tie out, what changed, snapshot, guesses, session length, spreadsheet, sales call. "foo" went to
+Groceries and "backup" to the Cash layers (two wrong clicks, two Back presses).
+
+**Timeline (T1).** The slider moves in $50 steps (the keyboard moved it one step at a time) and the screen said the new
+date only: both users worked out 22.8 minus 19.8 years in their heads.
+
+**Discovery (Di1).** Goal and Why now were sentences to type while the client talks (9 typed boxes in all). Below the
+form, "Who they are with money" was open for Maya, the client already open, not for the prospect on the call.
+
+**Lists (L1).** Fix now went to Credit cards and focused the row's select box; both users hunted for the APR.
+
+**Session (Se1).** Session length was a typed box; On and Off swapped sides from switch to switch (Off On, On Off).
+
+**Data (Da1, Da2).** The primary button said Export: the first-time coach pressed it for the spreadsheet and got a
+backup file; for the backup, "Export" beside four other import and export buttons was unclear.
+
+**Protection (P1).** "Renters insuranc" was cut off in its box; with one row still unanswered the foot said "4 items, 4
+of 4 done" while there were five rows; and an unanswered usual-list row disappeared when focus left it (checked in the
+browser: 5 rows, then 4).
+
+**Debt (D1), Scorecard (S1, S2), Overview, FOO.** Debt said "If only each debt's own payment is paid: Nov 2030" twice
+(on Debt-free and on Interest left). Each hole said Hole twice (a pill, then the Strong / OK / Hole switch beside it),
+and "Re-scored today" was a button that read like a status. Overview put "Accommodation" (the Budget group) next to
+"Housing %" for the same rent. FOO says "big e" in plain view.
+
+### Findings, ranked
+
+Score is severity (blocker 3, major 2, minor 1) times how many of the 44 runs (22 tasks, 2 users) hit it. A finding
+seen only by eye, by the layout checker or by the persona run counts as one run (its counts are in the Runs column).
+
+| Rank | Finding | Screen (level) | Category | Severity | Runs | Score | Status |
+|---|---|---|---|---|---|---|---|
+| 1 | Find missed the everyday words for these screens (12 dead ends); "foo" went to Groceries, "backup" to Cash layers | Find (Words) | Findable | major | 14 | 28 | Fixed |
+| 2 | The income statement left out the gut's spending money and the sinking funds: Alexis $1,510 left over vs −$200 on Overview; 13 of 14 personas differed | Statements (Row) | Right | blocker | 2 + persona 13 | 6 | Fixed |
+| 3 | "What changed since last month" compared the first snapshot with the last ($0 with one snapshot); today's edits not in it; no row for now | History (Section) | Works | blocker | 2 | 6 | Fixed |
+| 4 | A month before the file began showed $0 balances and a "+$14,200 change"; the month it began called the whole balance "Unexplained cash" | Statements (Screen) | Right | major | 2 | 4 | Fixed |
+| 5 | No "sooner" words on the Timeline; the slider's $50 steps made +$500 a hunt | Timeline (Control) | Tells | major | 2 | 4 | Fixed |
+| 6 | Discovery's Goal and Why now were sentences to type during the call | Discovery (Control) | Easy | major | 2 | 4 | Fixed |
+| 7 | Lists' Fix now focused the row's select box, not the number to fix | Lists (Control) | Works | major | 2 | 4 | Fixed |
+| 8 | The primary "Export" read as the spreadsheet; which button is the backup was unclear | Data (Words) | Obvious | major | 2 | 4 | Fixed |
+| 9 | An unanswered usual-list coverage row vanished when focus left it | Protection (Row) | Works | major | by eye, checked in the browser | 2 | Fixed |
+| 10 | Session length typed; On and Off swapped sides from switch to switch | Session (Control) | Easy | minor | 2 | 2 | Fixed |
+| 11 | "Renters insuranc" cut off; the foot left the unanswered row out of its count | Protection (Control) | Looks | minor | 2 | 2 | Fixed |
+| 12 | "If only each debt's own payment is paid" twice on Debt | Debt (Words) | Words | minor | 2 | 2 | Fixed |
+| 13 | Hole said twice on every hole; "Re-scored today" a button that reads like a status | Scorecard (Control) | Obvious | minor | 2 | 2 | Fixed |
+| 14 | "Who they are with money" under the prospect's form answers for the client already open | Discovery (Section) | Obvious | minor | 2 | 2 | Fixed (its line names that client) |
+| 15 | The Debt APR box's name was its faded typical ("7.14") | Debt (Control) | Fits | minor | by eye | 1 | Fixed |
+| 16 | The Statements group buttons were different widths (12 column failures) and rows had 1px between them (50 cramped) | Statements (Row) | Looks | minor | layout 62 | 1 | Fixed |
+| 17 | A Living together couple: Statements count both people while Home, Cash flow and Overview show one (couple-separate $3,500 vs $1,300) | Statements (Screen) | One answer | major | persona 1 | 2 | Not fixed: one line now says so; question 332 |
+| 18 | Biggest share and Housing % stay locked for a gut-only client and a homeowner with no mortgage | Overview (Row) | Tells | major | persona 2 | 2 | Not fixed: question 330 |
+| 19 | Protection's "4 of 13 filled" (the whole screen) and "5 items, 4 of 5 done" (the rows) count different things without saying so | Protection (Words) | One answer | minor | 2 | 2 | Not fixed |
+| 20 | "Accommodation" next to "Housing %" on Overview | Overview (Words) | Words | minor | 2 | 2 | Not fixed: Accommodation is the Budget's own group name (one name everywhere) |
+| 21 | "big e" in plain view on FOO | FOO (Words) | Words | minor | 2 | 2 | Not fixed: Batch 26's code tonight |
+| 22 | Find "debt free" lands on Plan › Goals; "emergency fund" on Cash layers, not the FOO step | Find (Words) | Findable | minor | 2 | 2 | Not fixed: both are the decided homes (batches 14 and 18) |
+| 23 | Strong, OK and Hole are verdict-like words in plain view (QA.md names "strong") | Scorecard (Words) | Words | minor | by eye | 1 | Not fixed: question 331 |
+| 24 | Scorecard's Effort, hours is a typed box | Scorecard (Control) | Easy | minor | by eye | 1 | Not fixed |
+
+### What was fixed, and how small
+
+1. **Find** (data/reference-2026.json findWords, js/find.js place names): biggest hole and holes (the #1 hole on the
+   Scorecard), fi date and when can I retire (Timeline), how long would my cash last (Overview's Runway card), last month,
+   tie out and balance sheet (Statements), what changed and snapshot (History's strip), guesses and defaults (Lists),
+   client view, session length, notes and dark mode (Session), spreadsheet and excel (Open in a spreadsheet), export and
+   back up (Export a backup), sales call and prospect (Discovery), foo and next step (FOO). Each lands on its box.
+2. **The income statement's surplus is the monthly surplus** (js/math/statements.js, MATH.md 13): the gut's spending
+   money is a variable line (and leaves checking on the cash flow statement), and money into sinking funds is its own
+   line out of the surplus (answer 62) and back in the net worth bridge. 13 of the 14 personas now match Overview to the
+   dollar; the fourteenth is the couple in finding 17.
+3. **History compares the last snapshot with today**: "Net worth since Oct 6" and "Debt paid down since Oct 6" (the tip
+   adds since the first snapshot), and a Now row on top of the table.
+4. **Before the file began** (js/math/statements.js fileBegan): last month shows – and "(nothing on file)", a period
+   before the file says so in one line, and the month it began has no starting balance: "Cash ties out from December
+   2026. This file began Nov 5, so there is no starting balance for November 2026."
+5. **Timeline**: +$100, +$250, +$500 and +$1,000 as one tap beside the slider, and the line says "36 months sooner than
+   now" (the same words as Batch 20's moved toast).
+6. **Discovery**: Goal and Why now are the About you chips (tap several); they land on About you as the same chips.
+7. **Lists**: Fix now lights and focuses the number itself (the APR, the balance), the way Find does.
+8. **Data**: the primary button says Export a backup.
+9. **Protection**: unanswered usual-list rows stay (they are questions) and the foot counts them; the type box shows
+   Renters insurance in full.
+10. **Statements**: every group button one width, 6px between rows.
+11. **Session**: 30, 45, 60 and 90 min as taps (a length typed before stays one of them); every switch reads Off, On.
+12. **Debt**: the "only its own payment" date once, on Debt-free; the APR box is named "APR, typical 7.14%".
+13. **Scorecard**: one rating control per hole (the pressed switch); the button says Mark re-scored today; on a phone
+    the switch starts its own line on every card.
+14. **Discovery**: "Who they are with money" names the client it answers for ("For Maya, open now").
+15. **Statements for a couple with no combined totals**: one line says these count both people and the other screens
+    show one person's plan.
+
+Nothing added typing: Discovery lost two typed sentences and Session one typed number.
+
+### Before and after, per task
+
+| Task | Screen | User | Before: actions (taps, typed) | back | wrong | hesitations | dead ends | unclear | about | done | After: actions (taps, typed) | back | wrong | hesitations | dead ends | unclear | about | done |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| D1 | Debt | Eli | 3 (3, 0) | 0 | 0 | 0 | 0 | 1 | 14 s | yes | 3 (3, 0) | 0 | 0 | 0 | 0 | 0 | 9 s | yes |
+| D1 | Debt | first-time | 5 (4, 1) | 1 | 1 | 0 | 0 | 1 | 31 s | yes | 5 (4, 1) | 1 | 1 | 0 | 0 | 0 | 26 s | yes |
+| D2 | Debt | Eli | 7 (4, 3) | 0 | 0 | 0 | 0 | 0 | 27 s | yes | 7 (4, 3) | 0 | 0 | 0 | 0 | 0 | 27 s | yes |
+| D2 | Debt | first-time | 7 (3, 4) | 0 | 0 | 0 | 0 | 0 | 29 s | yes | 7 (3, 4) | 0 | 0 | 0 | 0 | 0 | 29 s | yes |
+| P1 | Protection | Eli | 7 (7, 0) | 0 | 0 | 1 | 0 | 1 | 34 s | yes | 7 (7, 0) | 0 | 0 | 1 | 0 | 0 | 29 s | yes |
+| P1 | Protection | first-time | 7 (6, 1) | 0 | 0 | 1 | 0 | 1 | 36 s | yes | 7 (6, 1) | 0 | 0 | 1 | 0 | 0 | 31 s | yes |
+| P2 | Protection | Eli | 2 (2, 0) | 0 | 0 | 0 | 0 | 0 | 6 s | yes | 2 (2, 0) | 0 | 0 | 0 | 0 | 0 | 6 s | yes |
+| P2 | Protection | first-time | 2 (1, 1) | 0 | 0 | 0 | 0 | 0 | 8 s | yes | 2 (1, 1) | 0 | 0 | 0 | 0 | 0 | 8 s | yes |
+| F1 | FOO | Eli | 2 (2, 0) | 0 | 0 | 0 | 0 | 1 | 11 s | yes | 2 (2, 0) | 0 | 0 | 0 | 0 | 1 | 11 s | yes |
+| F1 | FOO | first-time | 4 (3, 1) | 1 | 1 | 0 | 0 | 1 | 28 s | yes | 4 (3, 1) | 1 | 1 | 0 | 0 | 1 | 28 s | yes |
+| F2 | FOO | Eli | 2 (2, 0) | 0 | 0 | 0 | 0 | 0 | 6 s | yes | 2 (2, 0) | 0 | 0 | 0 | 0 | 0 | 6 s | yes |
+| F2 | FOO | first-time | 4 (3, 1) | 1 | 1 | 0 | 0 | 0 | 23 s | yes | 2 (1, 1) | 0 | 0 | 0 | 0 | 0 | 8 s | yes |
+| S1 | Scorecard | Eli | 2 (2, 0) | 0 | 0 | 0 | 0 | 0 | 6 s | yes | 2 (2, 0) | 0 | 0 | 0 | 0 | 0 | 6 s | yes |
+| S1 | Scorecard | first-time | 3 (2, 1) | 0 | 0 | 1 | 1 | 0 | 29 s | yes | 2 (1, 1) | 0 | 0 | 0 | 0 | 0 | 8 s | yes |
+| S2 | Scorecard | Eli | 4 (4, 0) | 0 | 0 | 0 | 0 | 1 | 17 s | yes | 4 (4, 0) | 0 | 0 | 0 | 0 | 0 | 12 s | yes |
+| S2 | Scorecard | first-time | 4 (3, 1) | 0 | 0 | 0 | 0 | 1 | 19 s | yes | 4 (3, 1) | 0 | 0 | 0 | 0 | 0 | 14 s | yes |
+| T1 | Timeline | Eli | 3 (3, 0) | 0 | 0 | 2 | 0 | 0 | 25 s | yes | 3 (3, 0) | 0 | 0 | 0 | 0 | 0 | 9 s | yes |
+| T1 | Timeline | first-time | 4 (3, 1) | 0 | 0 | 3 | 1 | 0 | 48 s | yes | 3 (2, 1) | 0 | 0 | 0 | 0 | 0 | 11 s | yes |
+| T2 | Timeline | Eli | 3 (3, 0) | 0 | 0 | 0 | 0 | 0 | 9 s | yes | 3 (3, 0) | 0 | 0 | 0 | 0 | 0 | 9 s | yes |
+| T2 | Timeline | first-time | 4 (3, 1) | 0 | 0 | 1 | 1 | 0 | 32 s | yes | 3 (2, 1) | 0 | 0 | 0 | 0 | 0 | 11 s | yes |
+| O1 | Overview | Eli | 1 (1, 0) | 0 | 0 | 0 | 0 | 0 | 3 s | yes | 1 (1, 0) | 0 | 0 | 0 | 0 | 0 | 3 s | yes |
+| O1 | Overview | first-time | 2 (1, 1) | 0 | 0 | 1 | 1 | 0 | 26 s | yes | 2 (1, 1) | 0 | 0 | 0 | 0 | 0 | 8 s | yes |
+| O2 | Overview | Eli | 1 (1, 0) | 0 | 0 | 0 | 0 | 1 | 8 s | yes | 1 (1, 0) | 0 | 0 | 0 | 0 | 1 | 8 s | yes |
+| O2 | Overview | first-time | 2 (1, 1) | 0 | 0 | 0 | 0 | 1 | 13 s | yes | 2 (1, 1) | 0 | 0 | 0 | 0 | 1 | 13 s | yes |
+| St1 | Statements | Eli | 3 (3, 0) | 0 | 0 | 1 | 0 | 0 | 32 s | no | 3 (3, 0) | 0 | 0 | 0 | 0 | 0 | 9 s | yes |
+| St1 | Statements | first-time | 4 (3, 1) | 0 | 0 | 2 | 1 | 0 | 55 s | no | 3 (2, 1) | 0 | 0 | 0 | 0 | 0 | 11 s | yes |
+| St2 | Statements | Eli | 3 (3, 0) | 0 | 0 | 3 | 0 | 0 | 48 s | no | 2 (2, 0) | 0 | 0 | 0 | 0 | 0 | 6 s | yes |
+| St2 | Statements | first-time | 4 (3, 1) | 0 | 0 | 4 | 1 | 0 | 71 s | no | 2 (1, 1) | 0 | 0 | 0 | 0 | 0 | 8 s | yes |
+| H1 | History | Eli | 2 (2, 0) | 0 | 0 | 1 | 1 | 0 | 39 s | no | 2 (2, 0) | 0 | 0 | 0 | 0 | 0 | 6 s | yes |
+| H1 | History | first-time | 3 (2, 1) | 0 | 0 | 2 | 2 | 0 | 62 s | no | 2 (1, 1) | 0 | 0 | 0 | 0 | 0 | 8 s | yes |
+| H2 | History | Eli | 3 (3, 0) | 0 | 0 | 0 | 0 | 0 | 9 s | yes | 3 (3, 0) | 0 | 0 | 0 | 0 | 0 | 9 s | yes |
+| H2 | History | first-time | 4 (3, 1) | 0 | 0 | 1 | 1 | 0 | 32 s | yes | 3 (2, 1) | 0 | 0 | 0 | 0 | 0 | 11 s | yes |
+| L1 | Lists | Eli | 4 (3, 1) | 0 | 0 | 1 | 0 | 0 | 22 s | yes | 3 (2, 1) | 0 | 0 | 0 | 0 | 0 | 11 s | yes |
+| L1 | Lists | first-time | 5 (3, 2) | 0 | 0 | 2 | 1 | 0 | 45 s | yes | 4 (2, 2) | 0 | 0 | 0 | 0 | 0 | 16 s | yes |
+| L2 | Lists | Eli | 1 (1, 0) | 0 | 0 | 0 | 0 | 0 | 3 s | yes | 1 (1, 0) | 0 | 0 | 0 | 0 | 0 | 3 s | yes |
+| L2 | Lists | first-time | 2 (1, 1) | 0 | 0 | 0 | 0 | 0 | 8 s | yes | 2 (1, 1) | 0 | 0 | 0 | 0 | 0 | 8 s | yes |
+| Se1 | Session | Eli | 4 (3, 1) | 0 | 0 | 2 | 0 | 0 | 30 s | yes | 4 (4, 0) | 0 | 0 | 0 | 0 | 0 | 12 s | yes |
+| Se1 | Session | first-time | 5 (3, 2) | 0 | 0 | 3 | 1 | 0 | 53 s | yes | 4 (3, 1) | 0 | 0 | 0 | 0 | 0 | 14 s | yes |
+| Da1 | Data | Eli | 3 (3, 0) | 0 | 0 | 0 | 0 | 0 | 9 s | yes | 3 (3, 0) | 0 | 0 | 0 | 0 | 0 | 9 s | yes |
+| Da1 | Data | first-time | 5 (4, 1) | 0 | 1 | 1 | 1 | 0 | 41 s | yes | 3 (2, 1) | 0 | 0 | 0 | 0 | 0 | 11 s | yes |
+| Da2 | Data | Eli | 3 (3, 0) | 0 | 0 | 0 | 0 | 0 | 9 s | yes | 3 (3, 0) | 0 | 0 | 0 | 0 | 0 | 9 s | yes |
+| Da2 | Data | first-time | 5 (4, 1) | 1 | 1 | 0 | 0 | 1 | 31 s | yes | 3 (2, 1) | 0 | 0 | 0 | 0 | 0 | 11 s | yes |
+| Di1 | Discovery | Eli | 10 (3, 7) | 0 | 0 | 3 | 0 | 0 | 68 s | yes | 10 (5, 5) | 0 | 0 | 0 | 0 | 0 | 40 s | yes |
+| Di1 | Discovery | first-time | 11 (3, 8) | 0 | 0 | 4 | 1 | 0 | 91 s | yes | 10 (4, 6) | 0 | 0 | 0 | 0 | 0 | 42 s | yes |
+| All | | | 169 actions | 4 | 5 | 40 | 14 | 11 | about 1246 s | 38 of 44 | 150 actions | 2 | 2 | 2 | 0 | 4 | about 584 s | 44 of 44 |
+
+Machine time per run was 0.7 to 32.2 s before and 0.7 to 31.8 s after (most of it the Import of the persona). The
+two wrong clicks left are finding 22; the two hesitations are finding 19 (P1); the four unclear words are findings 20
+and 21.
+
+Layout checker on these twelve screens (1440, 1280 and 390, light and dark, Demo and a new client), all checks: 62
+failures before (Statements: 12 column, 50 cramped), 0 after. The one failure the run still lists is Budget's
+just-after-loading-the-Demo toast, not on these screens. The checker and the persona run now also visit Statements,
+Data and Discovery (tools/e2e/walkthrough.cjs ROUTES).
+
+Persona run (14 personas, 27 screens at 1280): console errors 0 before and after; story blockers 14 to 2 (the two left
+are finding 17, couple-separate on Statements); story majors 3 to 3 (finding 18); layout findings 49 to 0.
+
+### Scorecard
+
+The twelve screens are appended to `docs/usability/scorecard-2026-11-06.json` (route, area, tasks, and each category's
+pass or failure with severity and a one-line reason), with their own summary under `batch34`: 0 blockers, 2 majors
+(findings 17 and 18), 11 minors; Timeline, History and Coach tools › Lists pass all 12. Categories 5 and 12 wait for
+Eli's sign-off.

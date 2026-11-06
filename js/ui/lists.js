@@ -80,7 +80,7 @@ export function debtList(ref, { cards = null } = {}) {
           const shown = `${+(typical * 100).toFixed(2)}`;
           return h('span.row-line.apr-guess', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
             h('button.btn.small.use-guess', { type: 'button', title: `Keep ${shown}% (the typical ${r.type.toLowerCase()} rate) as the APR`, 'aria-label': `Use ${shown}% as the APR for ${r.name || r.type}`, onclick: () => { ctx.store.transaction('Use the typical APR', () => { ctx.store.update(r.id, { apr: typical }); ctx.store.setFieldStatus(r.id, 'apr', null); }); toast(`APR set to ${shown}%.`, { undo: () => ctx.store.undo() }); } }, 'Use'), // batch 19: Use before the box, so the box sits in the same place as on rows without one
-            pctInput(null, v => up({ apr: v }), { key: `${r.id}:apr`, hint: shown }));
+            (() => { const f = pctInput(null, v => up({ apr: v }), { key: `${r.id}:apr`, hint: shown }); f.querySelector('input').setAttribute('aria-label', `APR, typical ${shown}%`); return f; })()); // batch 34: the box's name was "7.14"
         }
         const box = pctInput(r.values.apr, v => up({ apr: v }), { key: `${r.id}:apr`, hint: 'APR' });
         const lc = isCard(r) ? libraryCardOf(r) : null; // batch 30: the library's range is a hint only; the APR is the client's own
@@ -155,7 +155,7 @@ export function debtStrip(ctx, m) {
     (() => { const w = free.value !== null ? debtWordsOf(m, { now: ctx.now() }) : null, ranged = w && w.kind !== 'month';
       return { label: 'Debt-free', result: ranged ? { ...free, text: `${free.text} ${w.range.text}` } : free, key: 'debtFreeMonths', lowerIsGood: true, render: ranged ? () => w.text : dateOnly,
         note: free.value !== null ? [ranged ? `Likely ${w.likely}` : null, note, usable.length > 1 ? 'Freed payments roll into the next debt' : null].filter(Boolean).join(' · ') || null : null }; })(), // batch 13: the date assumes the roll, so it says so
-    { label: 'Interest left', result: interest, key: 'debtInterest', lowerIsGood: true, note },
+    { label: 'Interest left', result: interest, key: 'debtInterest', lowerIsGood: true, note: missing.length ? note : null }, // batch 34: the "only its own payment" date once, on Debt-free
   ]);
 }
 

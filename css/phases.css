@@ -166,6 +166,7 @@
 .discovery { max-width: 760px; }
 .discovery-grid { display: grid; grid-template-columns: 160px 1fr; gap: var(--s3); align-items: center; }
 .discovery-grid .field { width: 100% !important; max-width: 360px; }
+.discovery-grid .label:has(+ .why-chips) { align-self: start; padding-top: 8px; } /* batch 34: Goal and Why now sit level with their first row of chips */
 textarea.notes-box { width: 100%; min-height: 90px; border: 2px solid var(--border-input); border-radius: var(--r-input); background: var(--card); color: var(--text); font: inherit; padding: var(--s2); resize: vertical; }
 
 /* ---------- Phone ---------- */
@@ -263,6 +264,9 @@ ul.find-days { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
 }
 .st-group { align-items: start; }
 .st-group > .num { line-height: 36px; }
+/* Batch 34: every group's Details button one width (DESIGN 1b), and rows that breathe (1c) */
+.st-group > .more-wrap > button.caret { width: 100%; max-width: 260px; justify-content: space-between; }
+.st-line, .st-group { padding: 3px 0; }
 /* Phase 3.5: cash layers. */
 .layers-card { display: flex; flex-direction: column; gap: var(--s3); }
 .layer-list { display: grid; gap: 6px; }
@@ -310,6 +314,7 @@ ul.find-days { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
 .hole-row, .ok-row { margin-bottom: var(--s3); }
 .hole-head { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
 .hole-head .rank { font-weight: 800; color: var(--text-2); min-width: 32px; }
+@media (max-width: 600px) { .hole-head > .row-line.coach-only { flex-basis: 100%; } } /* batch 34: on a phone the rating switch starts its own line on every card, so the switches line up */
 .hole-name { font-size: 1.125rem; }
 .hole-head .spacer, .hole-line .spacer, .holes-card .spacer { flex: 1; }
 .hole-body { display: flex; flex-wrap: wrap; gap: var(--s4); align-items: flex-start; margin-top: var(--s3); }

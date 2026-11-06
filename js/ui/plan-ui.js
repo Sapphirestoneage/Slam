@@ -12,6 +12,7 @@ import { futureDollars } from '../math/fi.js';
 import { flowWords } from '../math/flow.js';
 import { gapCard } from './gap-ui.js';
 import { MILESTONES, fiTargets, monthsTo, projection, ladder, solveFor } from '../plan.js';
+import { movedWords } from '../sowhat.js';
 import { payoffPlan, customOrder, orderCost, debtFirstPlan } from '../math/debt.js';
 import { METHODS, suggestMethod } from '../registry/debt.js';
 import { moneyAsTime } from '../math/fi.js';
@@ -294,7 +295,11 @@ export function timelineScreen(app, ctx) {
   const paint = () => {
     const rr = monthsTo(m, m.fiNumber.value, { realReturn: r, extra: PUI.extra, now: ctx.now() });
     clear(out, `${PUI.extra >= 0 ? '+' : '−'}${money(Math.abs(PUI.extra))} a month`);
-    clear(result, rr.reached ? 'Already there' : rr.value == null ? 'Not on this path' : `FI ${whenText(ctx, rr.value)}${ageAt(m, rr.value) != null ? `, at ${ageAt(m, rr.value)}` : ''}`);
+    // Batch 34 (Rocket Surgery): what the extra moves, in words, so the coach can say "6 months sooner".
+    const base = PUI.extra ? monthsTo(m, m.fiNumber.value, { realReturn: r, extra: 0, now: ctx.now() }) : null;
+    const moved = base && !rr.reached ? movedWords({ fi: base.value }, { fi: rr.value }, ctx.now()) : null;
+    clear(result, rr.reached ? 'Already there' : rr.value == null ? 'Not on this path' : `FI ${whenText(ctx, rr.value)}${ageAt(m, rr.value) != null ? `, at ${ageAt(m, rr.value)}` : ''}`,
+      moved ? h('span.fi-moved', {}, ` · ${moved.replace(/^FI /, '').replace(/ \([^)]*\)$/, '')} than now`) : null);
     drawTimeline(host, ctx, m, r);
   };
   slider.oninput = () => { PUI.extra = Number(slider.value); paint(); };
@@ -302,11 +307,13 @@ export function timelineScreen(app, ctx) {
   queueMicrotask(paint);
   return [head('Timeline', 'Invested balance rising to your FI number'),
     h('div.card', { style: { marginBottom: '16px' } },
-      h('div.slider-row', {}, h('span.label', {}, 'Save more'), slider, out, PUI.extra ? S.button('Reset', { size: 'small', onClick: () => { PUI.extra = 0; app.render(); } }) : null),
+      h('div.slider-row', {}, h('span.label', {}, 'Save more'), slider, out,
+        S.toggle([100, 250, 500, 1000].map(n => [n, `+${money(n)}`]), PUI.extra, v => { PUI.extra = v ?? 0; app.render(); }, { label: 'Save more a month', clearable: true }), // batch 34: the usual amounts are one tap
+        PUI.extra ? S.button('Reset', { size: 'small', onClick: () => { PUI.extra = 0; app.render(); } }) : null),
       h('div.slider-row', { style: { marginTop: '10px' } }, h('span.label', {}, 'Pace'), S.toggle(['Optimistic', 'Likely', 'Pessimistic'], pace, v => { PUI.pace = v; app.render(); }, { label: 'Pace' }),
         S.checkbox('Show all three paces', PUI.bands, v => { PUI.bands = v; app.render(); }),
         h('span', { style: { flex: 1 } }), S.select(['FI timeline', 'Savings rate to years', 'Crossover point'], PUI.chart, v => { PUI.chart = v || 'FI timeline'; app.render(); }, { label: 'Chart', hint: 'FI timeline', width: 210 })),
-      h('p', { style: { marginTop: '12px', fontSize: '1.125rem' } }, result, sr != null ? h('span.muted', {}, ` · savings rate ${pct(Math.max(0, sr))}`) : null),
+      h('p', { style: { marginTop: '12px', fontSize: '1.125rem' }, 'data-focus': 'fi:when' }, result, sr != null ? h('span.muted', {}, ` · savings rate ${pct(Math.max(0, sr))}`) : null),
       PUI.chart === 'Savings rate to years' ? simpleLine(m, r) : null),
     h('div.card', {}, host)];
 }

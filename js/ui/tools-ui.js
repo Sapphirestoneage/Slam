@@ -19,6 +19,8 @@ import { HOMEWORK_STATUSES } from '../registry/program.js';
 import { PERSONS, personLabels } from '../registry/couples.js';
 import { JOY, CONFIDENCE } from '../registry/joy.js';
 import { identitySection } from './identity-ui.js';
+import { land } from './arrive.js';
+import { WHY_CHIPS } from '../whynow.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const ROUTE = { income: '#/cash-flow/income', benefit: '#/cash-flow/income', debt: '#/net-worth/debt', account: '#/net-worth/assets', asset: '#/net-worth/assets', coverage: '#/net-worth/protection', bill: '#/cash-flow/budget', milestone: '#/plan/goals', event: '#/plan/next-12-months' };
@@ -33,14 +35,17 @@ export function revisitList(ctx) {
 export function listsScreen(app, ctx) {
   const revisit = revisitList(ctx);
   const hw = homeworkItems(ctx);
-  const fix = x => { app.go(x.route); requestAnimationFrame(() => { const row = document.querySelector(`tr[data-id="${x.r.id}"]`); row?.classList.add('highlight'); row?.querySelector('input')?.focus(); }); };
+  // Batch 34 (Rocket Surgery): Fix now lights the box itself (the APR, the balance), the way Find and Fix it do; it used
+  // to focus the row's select box, so the coach hunted for the field.
+  const BOX = { debt: 'balance', account: 'balance', asset: 'value', bill: 'amount', income: 'amount', benefit: 'amount', spending: 'amount' };
+  const fix = x => { const field = x.field ?? BOX[x.r?.kind]; if (!x.r?.id) { app.go(x.route); return; } land(app, x.route, { id: x.r.id, focus: field ? `${x.r.id}:${field}` : null }); };
   const copyHomework = e => {
     const text = homeworkText(ctx.store.doc.client.name, hw);
     const fallback = () => { const ta = h('textarea.notes-box', { readonly: true }, text); S.popover(e.currentTarget, h('div.stack', {}, h('strong', {}, 'Copy and send'), ta), { width: 420 }); setTimeout(() => ta.select()); };
     try { navigator.clipboard.writeText(text).then(() => S.toast('Homework copied. Paste it into a message.'), fallback); } catch { fallback(); }
   };
   return [head('Coach tools', 'Lists'), h('div.grid2', {},
-    h('div.section', {}, h('div.section-title', {}, h('h2', {}, 'Revisit list'), h('span.muted', {}, `${revisit.length}`)), revisit.length
+    h('div.section', {}, h('div.section-title', {}, h('h2', { 'data-focus': 'lists:revisit' }, 'Revisit list'), h('span.muted', {}, `${revisit.length}`)), revisit.length
       ? h('div.card.tool-list', {}, revisit.slice(0, 40).map(x => h('div.row-line', { style: { gap: '10px' } },
         h('span', { style: { flex: 1, fontWeight: 600 } }, x.label), S.statusTag(x.status),
         h('span.muted.small', { style: { minWidth: '92px' }, title: x.why }, x.due ? 'Due now' : `Check ${new Date(`${x.next}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`),
@@ -124,14 +129,18 @@ export function sessionScreen(app, ctx, { fastTrackGap }) {
     h('div.card', {}, h('h3', {}, 'Notes'), h('div.stack', { style: { gap: '12px' } },
       note('privateNotes', 'Private notes', 'Only you see these'), note('sharedNotes', 'Shared notes', 'The client sees these'))),
     h('div.card', {}, h('h3', {}, 'This client'), h('div.stack', { style: { gap: '12px' } },
-      h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Session length'), S.textInput(s.length ?? null, v => ctx.store.setIn('session', ['length'], v === null ? undefined : Number(v), 'Session length'), { hint: `${ctx.ref.defaults.sessionMinutes} min`, width: 110 })),
+      // Batch 34 (Rocket Surgery): the usual lengths are taps (a length typed before stays one of them).
+      h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Session length'), (() => {
+        const minutes = [...new Set([30, 45, 60, 90, ...(s.length && ![30, 45, 60, 90].includes(s.length) ? [s.length] : [])])].sort((a, b) => a - b);
+        return S.toggle(minutes.map(n => [n, `${n} min`]), s.length ?? ctx.ref.defaults.sessionMinutes, v => ctx.store.setIn('session', ['length'], v ?? undefined, 'Session length'), { label: 'Session length' });
+      })()),
       h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Client view'), S.toggle([[false, 'Off'], [true, 'On']], !!app.prefs.clientView, v => app.setPref('clientView', v), { label: 'Client view' }), h('span.muted.small', {}, 'Hides coach-only items')),
       h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Confidence and Joy'), (() => { const c = confidenceOf(ctx.store.doc), j = joyOf(ctx.store.doc); const w = (M, v) => (v.value != null ? `${M.label} ${v.value} of ${M.max}${v.partner != null ? ` (partner ${v.partner})` : ''}` : `${M.label} not asked yet`); return h('span', {}, `${w(CONFIDENCE, c)} · ${w(JOY, j)}`); })(), h('span.muted.small', {}, 'Asked on Home at the start of each session')), // F4, answer 164
       // Answer to 49: the one-holding-over-25% flag, on unless the coach turns it off for this client.
-      h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Concentration flag'), S.toggle([[true, 'On'], [false, 'Off']], !s.concentrationOff, v => ctx.store.setIn('session', ['concentrationOff'], !v, 'Concentration flag'), { label: 'Concentration flag' }),
+      h('div.row-line.set-row', {}, h('span.label', { style: { width: '150px' } }, 'Concentration flag'), S.toggle([[false, 'Off'], [true, 'On']], !s.concentrationOff, v => ctx.store.setIn('session', ['concentrationOff'], !v, 'Concentration flag'), { label: 'Concentration flag' }),
         h('span.muted.small', {}, 'Flags one holding or theme over 25% of an account')),
       // Batch 21: Phase 4 previews (Life Transitions on Plan), on for a new household in this build, until Phase 3 is signed off.
-      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Phase 4 previews'), S.toggle([[true, 'On'], [false, 'Off']], doc.settings?.phase4 === true, v => ctx.store.setDoc('settings', { phase4: v }), { label: 'Phase 4 previews' }),
+      h('div.row-line', {}, h('span.label', { style: { width: '150px' } }, 'Phase 4 previews'), S.toggle([[false, 'Off'], [true, 'On']], doc.settings?.phase4 === true, v => ctx.store.setDoc('settings', { phase4: v }), { label: 'Phase 4 previews' }),
         h('span.muted.small', {}, 'Life Transitions on Plan')),
       // Batch 31 (QUESTIONS 208): the coach always sees typical-at-your-age; this shows the notes in client view too.
       typicalRow(ctx, doc),
@@ -156,6 +165,17 @@ export function discoveryScreen(app) {
   const vals = {};
   const money = (k, label) => h('div.discovery-row', { style: { display: 'contents' } }, h('span.label', {}, label), S.moneyInput(null, v => { vals[k] = v; }, { hint: 'Add amount', key: `disc:${k}` }));
   const text = (k, label, hint) => h('div.discovery-row', { style: { display: 'contents' } }, h('span.label', {}, label), S.textInput(null, v => { vals[k] = v; }, { hint, width: 360, key: `disc:${k}` }));
+  // Batch 34 (Rocket Surgery): Goal and Why now are the About you chips, tapped while the client talks (no sentences to
+  // type); they land on About you as the same chips. Their own words stay a box on About you.
+  const chips = (k, key, label) => {
+    vals[k] = [];
+    const tap = c => { const b = h('button.pick.why-chip', { type: 'button', 'aria-pressed': 'false', onclick: () => {
+      const on = !vals[k].includes(c); vals[k] = on ? [...vals[k], c] : vals[k].filter(x => x !== c);
+      b.setAttribute('aria-pressed', String(on)); clear(b, on ? icon('check') : null, c);
+    } }, c); return b; };
+    return h('div.discovery-row', { style: { display: 'contents' } }, h('span.label', {}, label),
+      h('div.picks.why-chips', { role: 'group', 'aria-label': label, 'data-disc': k, 'data-focus': `disc:${k}` }, WHY_CHIPS[key].filter(c => c !== 'Other').map(tap)));
+  };
   const send = () => {
     document.querySelectorAll('.discovery input').forEach(i => i.dispatchEvent(new Event('change')));
     if (!vals.name) { S.toast('Add the client\'s name first.'); document.querySelector('[data-focus="disc:name"]')?.focus(); return; }
@@ -165,7 +185,7 @@ export function discoveryScreen(app) {
     h('div.card.discovery', {}, h('div.discovery-grid', {},
       text('name', 'Client name', 'First and last'),
       money('takeHome', 'Take-home a month'), money('rent', 'Rent a month'), money('debt', 'Total debt'), money('savings', 'Savings'),
-      text('goal', 'Goal', 'In their words'), text('why', 'Why now', 'What prompted the call')),
+      chips('goal', 'goalWords', 'Goal'), chips('why', 'whyNow', 'Why now')),
     h('div.row-line', { style: { marginTop: '16px', gap: '10px' } }, S.button('Send to client file', { kind: 'primary', size: 'big', iconName: 'right', onClick: send }),
       h('span.muted', {}, 'Creates the client and opens Home.')),
     h('p.muted.small', { style: { marginTop: '16px' } }, 'Sent the intake form instead? Coach tools, Data, Import intake (CSV).')),

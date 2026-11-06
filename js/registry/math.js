@@ -466,7 +466,7 @@ export const MATH = [
     fromApp: 'counts the paydays in each month from the next payday; on Cash flow › Calendar', app: () => null },
 
   // ---------- Close the books ----------
-  { id: 'M62', name: 'Net worth statement', inputs: 'accounts, assets, debts', unit: 'money', fns: ['statements.netWorthStatement', 'statements.ASSET_ORDER', 'statements.DEBT_ORDER', 'statements.valueAt', 'statements.assetGroup', 'statements.debtGroup'],
+  { id: 'M62', name: 'Net worth statement', inputs: 'accounts, assets, debts', unit: 'money', fns: ['statements.netWorthStatement', 'statements.ASSET_ORDER', 'statements.DEBT_ORDER', 'statements.valueAt', 'statements.assetGroup', 'statements.debtGroup', 'statements.fileBegan'],
     sheet: 'Statements_netWorth', label: 'Net worth on the Statements tab (same total as M40)', app: c => c.nwStatement().netWorth },
   { id: 'M63', name: 'Income and spending statement (accrual)', inputs: 'income, lines, match', unit: 'money', fns: ['statements.incomeMonth', 'statements.statements', 'statements.statementRows', 'statements.periodMonths', 'statements.previous', 'statements.periodOf', 'metrics.flowOf'],
     sheet: 'Statements_surplus', label: 'Surplus on the Statements tab (a usual month on the plan)', app: c => c.m.surplus.value },
