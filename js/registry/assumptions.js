@@ -298,6 +298,10 @@ export const REFERENCE_FILES = [
   { id: 'library.unlearn', file: 'data/library/unlearn.json', label: 'The unlearn list: popular advice that fits one FOO step and not another, with the step it belongs to',
     source: 'SLAM\'s own (Eli Saperstein), written for SLAM\'s FOO steps in Batch 26; from names where each piece of advice is usually heard',
     date: '2026-11-06', readBy: 'Plan › FOO (the one thing to unlearn at each step), through js/math/library.js (M9K)' },
+  // Batch 36 (QUESTIONS 313): where a skill's words disagree with a SLAM rule, SLAM's rule in one line (the skill's words stay).
+  { id: 'library.slamRules', file: 'data/library/slam-rules.json', label: 'SLAM\'s rule beside a skill: one line per skill whose words disagree with a SLAM rule (the Rule of 5, heavy debt at 8%, the cash layers, the FOO order)',
+    source: 'SLAM\'s own (Eli Saperstein), from a scan of all 665 skills against RULES and the FOO in Batch 36; the skill files are not changed',
+    date: '2026-11-06', readBy: 'Plan › FOO (each step\'s Learn and unlearn) and Home (Learn next), through js/math/library.js (M9K)' },
   { id: 'library.cards', file: 'data/library/cards.json', label: 'The card library: current consumer cards of the biggest US issuers, store and secured cards (fee, APR range, rewards, credits, benefits)',
     source: 'The issuers\' own pages first (Chase, Capital One, Bank of America, Wells Fargo, US Bank, Citi, American Express, Apple), read 2026-11-06; each card names its source and whether it was checked there, on a review site, or not re-read (tools/library/cards-source.mjs)',
     date: '2026-11-06', readBy: 'Net worth > Credit cards (js/ui/cards-ui.js): Which card is it?, What your cards give you, the fee check (js/math/cards.js, M9C)' },

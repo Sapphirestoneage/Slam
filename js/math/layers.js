@@ -140,6 +140,13 @@ export function layerOptions(doc, ref, x, now = new Date()) {
   return { deductibles, gaps: doc.profile.incomeGaps || [], stability: doc.profile.incomeStability ?? null, mode: doc.settings?.layerMode || 'virtual',
     accounts: x.accounts.filter(a => a.group === 'cash' && !a.forTaxes), layerAccounts: doc.settings?.layerAccounts || {}, sinking, now };
 }
+// Batch 36 (QUESTIONS 310): one-tap starting points for the sleep-at-night number (profile.sleepAtNight): what the first
+// two layers hold together, and every layer through big e (not the sinking funds). null where a target is not known.
+export function sleepPicks(L) {
+  const upTo = n => { const ls = (L?.layers || []).slice(0, n); return ls.length && ls.every(l => l.target != null) ? Math.round(ls.reduce((s, l) => s + l.target, 0)) : null; };
+  const all = (L?.layers || []).filter(l => !l.id.startsWith('sink:'));
+  return [{ id: 'little', label: 'Buffer and little e', value: upTo(2) }, { id: 'all', label: 'Every layer', value: all.length && all.every(l => l.target != null) ? Math.round(all.reduce((s, l) => s + l.target, 0)) : null }].filter(p => p.value != null && p.value > 0);
+}
 export function layersOf(doc, ref, now = new Date()) {
   const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }); // batch 33: one person's cash layers in Dating and Living together (the FOO's big e)
   const x = m.inputs;

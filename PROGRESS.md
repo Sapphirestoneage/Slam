@@ -792,3 +792,13 @@ Findability: 138 of 138 (69 terms on the Demo and a Fast Track client), and the 
 Layout check on Income, Taxes and Assets (Demo and a new client, all widths and themes): 0 findings before and after
 (the 1 covered is the Demo's load toast on Budget). The three personas at 1440, 1280 and 390, light and dark, with Tips
 and shifts open: 0 findings.
+
+## Batch 36 (Nov 6 2026): library follow-ups (the Phase 4 switch, the sleep-at-night number, SLAM's rule beside a skill)
+
+Follow-ups from Batch 26 (QUESTIONS 307, 310, 313).
+
+1. QUESTIONS 307: Learn and unlearn on Plan › FOO and Home's "Learn next" line sit behind Phase 4 previews (settings.phase4, Coach tools › Session), like the rest of Phase 4. libraryOf is null with the switch off (libraryOn, M9K); the screens ask the switch before loading the skill files. On for a new household, so the personas keep it.
+2. QUESTIONS 310: a Sleep-at-night number (profile.sleepAtNight, money, spec row F488) on Net worth › Assets › Cash layers, one row under the layers with two one-tap picks before the box (Buffer and little e; Every layer, from M68 sleepPicks). It changes no layer. Know your sleep-at-night number ticks itself once it is set (a typed 0 counts). Rerank your costs ticks itself too: every repeating charge that can be cut has a Keep or Try to cut answer (the Bills list, or Looking for savings on a fixed Budget line). UNMAPPED is now empty. Find: "sleep at night", "swan".
+3. QUESTIONS 313: data/library/slam-rules.json (registered in REFERENCE_FILES), keyed by skill id: where a skill's words disagree with a SLAM rule, the card shows SLAM's rule in one line in place of the description, and the tip keeps the skill's own words ("The FI Skill Tree says: 3-6 months of expenses"). skills.json is not changed. Nine skills from a scan of all 665: Fund the true emergency fund, Size the fund to YOUR risk, Tier every dollar, Get one month ahead, Right-size downward, Triage by rate, Draw the payoff-vs-invest line, Kill the consumer debt, Build your contribution waterfall. The test checks every override is a real skill that shows, every rule it rests on is registered, and the 8% matches RULES.heavyApr.
+4. Cash layers: History, Income gaps and Backups of the backups are one width (a column failure when the section is open).
+5. Registered: profile.sleepAtNight, M68 sleepPicks, M9K libraryOn and slamRuleOf, format version 30; test/library-slice.test.js.

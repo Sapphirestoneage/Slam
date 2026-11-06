@@ -134,6 +134,7 @@ export const AREAS = [
       f('laterDue', "I'll find it later: due", 'text', { sheet: { skip: 'homework due dates; the Homework list in SLAM' } }),
       f('incomeGaps', 'Income gaps', 'text', { sheet: { skip: 'its own tab: Income gaps' } }),
       f('backups', 'Backups of the backups', 'text', { sheet: { skip: 'its own tab: Backups' } }),
+      f('sleepAtNight', 'Sleep-at-night number (the cash that lets you sleep)', 'money'), // batch 36 (QUESTIONS 310): on Assets › Cash layers; ticks Know your sleep-at-night number (M9K)
       f('institutions', 'Institutions', 'text', { sheet: { skip: 'its own tab: Institutions' } }), // batch 6
       // Your calendar (About you): holidays computed year to year (M78), and Shabbat as a weekly Budget line.
       f('calendars.jewish', 'Calendar: Jewish holidays', 'yesno'), f('calendars.shabbat', 'Calendar: Shabbat every week', 'yesno'),

@@ -1,0 +1,59 @@
+{
+  "id": "library.slamRules",
+  "version": "1.0.0",
+  "asOf": "2026-11-06",
+  "author": "SLAM (Eli Saperstein)",
+  "license": "Eli's own work, kept public in this repo under the repo license",
+  "source": "SLAM's own (QUESTIONS 313, Batch 36): each skill in data/library/skills.json or app-skills.json whose words disagree with one of SLAM's registered rules (RULES and the FOO in js/registry, the Rule of 5, heavy debt at 8%, little e and big e, the cash layers), with SLAM's rule in one line. The skill's own words are not changed.",
+  "confidence": "convention",
+  "confidenceNote": "A coaching reading of where the FI Skill Tree's words and SLAM's rules part ways, from a scan of all 665 skills on 2026-11-06. For the coach to correct line by line.",
+  "note": "rules is keyed by skill id. line is what the skill card shows in place of the skill's description (the description stays in the hover tip). rests names the registered rules the line comes from: RULES.<key> (js/registry/assumptions.js), FOO <step> (js/registry/foo.js), STABILITY_MULTIPLIER, bigEMonthsOf, or a math id (js/registry/math.js). test/library-slice.test.js checks every id is a real skill that shows, and every rests entry is registered.",
+  "counts": { "rules": 9 },
+  "rules": {
+    "cash-safety-net-fund-the-true-emergency-fund": {
+      "line": "SLAM: age / 5 months of spending, the Rule of 5",
+      "rests": ["bigEMonthsOf", "FOO 4"],
+      "says": "3-6 months of expenses"
+    },
+    "cash-safety-net-size-the-fund-to-your-risk": {
+      "line": "SLAM: age / 5 months, times 1.25 when pay varies and 1.5 when it is unpredictable",
+      "rests": ["bigEMonthsOf", "STABILITY_MULTIPLIER", "FOO 4"],
+      "says": "Dual-stable=3mo; solo-variable=9-12mo"
+    },
+    "cash-safety-net-tier-every-dollar": {
+      "line": "SLAM: two weeks of spending in checking (the Buffer), then little e, then big e",
+      "rests": ["RULES.bufferWeeks", "RULES.littleE", "M68", "FOO 1", "FOO 4"],
+      "says": "Checking(1mo) - HYSA(EF) - ladder(known costs)"
+    },
+    "cash-safety-net-get-one-month-ahead": {
+      "line": "SLAM: the Buffer in checking is two weeks of spending, then little e fills",
+      "rests": ["RULES.bufferWeeks", "RULES.littleE", "M68", "FOO 1"],
+      "says": "This month's bills from last month's income"
+    },
+    "cash-safety-net-right-size-downward": {
+      "line": "SLAM: backups add months of runway but never shrink big e",
+      "rests": ["M68", "bigEMonthsOf", "FOO 4"],
+      "says": "Shrink idle cash as backup layers grow"
+    },
+    "debt-leverage-triage-by-rate": {
+      "line": "SLAM: 8% or more is heavy debt and comes first (step 3); under 8% waits for step 9",
+      "rests": ["RULES.heavyApr", "FOO 3", "FOO 9"],
+      "says": "Over 8% emergency; 4-8% judgment; under 4% keep"
+    },
+    "debt-leverage-draw-the-payoff-vs-invest-line": {
+      "line": "SLAM: the line is 8%. At or over, pay it off right after the match; under, invest first",
+      "rests": ["RULES.heavyApr", "RULES.debtFirst", "FOO 2", "FOO 3", "FOO 9"],
+      "says": "Your rule, written, sleep included"
+    },
+    "debt-leverage-kill-the-consumer-debt": {
+      "line": "SLAM: step 3 clears every debt at 8% or more; a lower-rate debt waits for step 9",
+      "rests": ["RULES.heavyApr", "FOO 3", "FOO 9"],
+      "says": "Everything gone but (maybe) the mortgage"
+    },
+    "main-path-build-your-contribution-waterfall": {
+      "line": "SLAM: the match, then debt at 8% or more, then big e, then the Roth IRA and HSA, then the 401(k)",
+      "rests": ["RULES.heavyApr", "FOO 2", "FOO 3", "FOO 4", "FOO 5", "FOO 6"],
+      "says": "Personal priority order: match-HSA-IRA-401k-taxable"
+    }
+  }
+}

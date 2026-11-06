@@ -487,3 +487,4 @@ F484,Built,,Income,Income,Platform fee %,Secondary,,,,,,,,,Now,Added from the co
 F485,Built,,Income,Income,Payout hold (days),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.holdDays
 F486,Built,,Income,Income,Chargebacks and refunds a month,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.chargebacks
 F487,Built,,Profile,Profile,Skills done (the library),Secondary,,,,,,,,,Now,"Added from the code (js/registry/fields.js); stays in the app: one entry per skill id marked Done on Plan › FOO (done, by, on); the skills the data proves tick themselves (M9K)",,Home › About you,text,,,profile.library
+F488,Built,,Profile,Profile,Sleep-at-night number (the cash that lets you sleep),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Net worth › Assets › Cash layers,money,,,profile.sleepAtNight

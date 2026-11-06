@@ -2,10 +2,12 @@
 // The library's first slice (batch 26, M9K): on each Plan › FOO step a "Learn and unlearn" fold (three skills to learn,
 // one thing to unlearn, the done ones folded into a count), open on the step you are on and closed on the rest; on
 // Home, one slim "Learn next" line in the next-step card. The views only show what js/math/library.js returns.
+// Batch 36: all of it only while Phase 4 previews are on (QUESTIONS 307), and a skill whose words disagree with a SLAM
+// rule shows SLAM's rule in one line, its own words in the tip (QUESTIONS 313).
 import { h, icon } from './dom.js';
 import * as S from './staples.js';
 import { skillLibrary, loadSkillLibrary } from '../library.js';
-import { libraryOf, setSkillDone } from '../math/library.js';
+import { libraryOf, libraryOn, setSkillDone } from '../math/library.js';
 import { PROOF_FACTS, WORDS } from '../registry/library.js';
 import { stepHeadline } from '../registry/foo.js';
 import { land } from './arrive.js';
@@ -16,6 +18,7 @@ export const LUI = { open: {}, doneOpen: {} };
 
 // The picks for this client, or null while the files load (the screen redraws once they are in).
 export function libraryFor(app, ctx, { f = null } = {}) {
+  if (!libraryOn(ctx.store.doc)) return null; // Phase 4 previews off: no Learn and unlearn, no Learn next
   const lib = skillLibrary();
   if (!lib) { loadSkillLibrary(() => app.render()); return null; }
   return libraryOf(ctx.store.doc, ctx.ref, lib, { now: ctx.now(), flags: app.flags || [], f });
@@ -24,7 +27,8 @@ export function libraryFor(app, ctx, { f = null } = {}) {
 const tipOf = x => {
   const s = x.skill;
   const proof = x.self ? `Ticks itself when SLAM sees ${PROOF_FACTS[x.field]?.words ?? x.field}.` : s.proof ? `Done when: ${s.proof.replace(/^leveled when /, '')}.` : null;
-  return [s.does, s.fits, proof, s.treeName ? `${s.treeName}, level ${s.level}` : null].filter(Boolean).join(' · ');
+  const own = x.slam && s.description ? `${WORDS.slamTip}: ${s.description}` : null;
+  return [x.slam, own, s.does, s.fits, proof, s.treeName ? `${s.treeName}, level ${s.level}` : null].filter(Boolean).join(' · ');
 };
 const byWords = x => (x.by === 'data' ? 'ticked by the data' : x.by === 'client' ? 'ticked by you' : 'ticked by the coach');
 
@@ -34,7 +38,7 @@ function learnRow(ctx, x) {
     ? h('span.tag.plain.learn-act', { title: `Ticks itself when SLAM sees ${PROOF_FACTS[x.field]?.words ?? x.field}` }, WORDS.selfTick)
     : h('button.btn.small.learn-act', { type: 'button', 'data-focus': `learn:done:${s.id}`, title: s.proof ? `Done when: ${s.proof}` : 'Mark it done', onclick: () => { setSkillDone(ctx.store, s.id, true, { now: ctx.now() }); S.toast(`${s.name}: done.`, { undo: () => ctx.store.undo() }); } }, icon('check'), WORDS.done);
   return h('div.learn-row', { 'data-skill': s.id },
-    h('span.learn-words', { title: tipOf(x) }, h('strong', {}, s.name), s.description ? h('span.muted.small', {}, ` ${s.description}`) : null), act);
+    h('span.learn-words', { title: tipOf(x) }, h('strong', {}, s.name), x.slam ? h('span.small.learn-slam', {}, ` ${x.slam}`) : s.description ? h('span.muted.small', {}, ` ${s.description}`) : null), act);
 }
 function unlearnRow(u) {
   const when = u.status === 'notYet' ? `${WORDS.notYet}: step ${u.fitsAt}` : u.status === 'past' ? WORDS.past : null;

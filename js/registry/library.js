@@ -9,6 +9,9 @@
 //                  the three are three different things), then the band, the leverage tier (S, A, B, C), the level.
 //   Done           an app skill whose proof reads "leveled when the household shows it: <field>" ticks itself when
 //                  SLAM sees the fact (PROOF_FACTS); every other skill gets a one-tap Done kept in profile.library.
+//   SLAM's rule    data/library/slam-rules.json (batch 36, QUESTIONS 313): where a skill's words disagree with a SLAM
+//                  rule, the card shows SLAM's rule in one line and keeps the skill's own words in the tip.
+//   Phase 4        the blocks show only while Phase 4 previews are on (settings.phase4, QUESTIONS 307).
 
 // The proof text an app skill carries when the data can show it (data/library/app-skills.json).
 export const PROOF_PREFIX = 'leveled when the household shows it: ';
@@ -26,11 +29,11 @@ export const PROOF_FACTS = {
   termLife: { words: 'a life policy on Protection marked Have it, with its coverage amount', reads: 'a Life coverage row: have and coverage' },
   retireAge: { words: 'an FI age or a retire-by age set (not the 65 SLAM assumes)', reads: 'assumptions.fiAge or assumptions.retireAge' },
   rebalanceBand: { words: 'a target allocation turned on for an account', reads: 'an account row: targetOn' },
+  // Batch 36 (QUESTIONS 310): the two that had no SLAM fact.
+  swanTarget: { words: 'a sleep-at-night number on Net worth › Assets › Cash layers', reads: 'profile.sleepAtNight (the older app\'s SWAN target)' },
+  rerankCut: { words: 'a Keep or Try to cut answer on every repeating charge you can cut (the Bills list on Cash flow › Calendar, or Looking for savings on a Budget line)', reads: 'the Bills list (js/month.js recurringBills): every item that can be cut has a decision' },
 };
-export const UNMAPPED = {
-  swanTarget: 'SLAM has no sleep-at-night number yet (the older app\'s SWAN target); Know your sleep-at-night number gets the one-tap Done',
-  rerankCut: 'SLAM has no rerank-your-costs pass yet; Rerank your costs gets the one-tap Done',
-};
+export const UNMAPPED = {}; // batch 36: every proof field now has a SLAM fact
 
 // The same skill in both sets (by meaning): the app skill stands in, since its proof can tick itself, and it borrows its
 // twin's words (description, does, fits), leverage tier and tree; the twin is left out so a step never shows it twice.
@@ -70,4 +73,5 @@ export const WORDS = {
   past: 'From an earlier step',
   credit: 'Skills from the FI Skill Tree, by Eli Saperstein with Jonathan Mendonsa. The unlearn line is SLAM\'s own.',
   empty: 'Every skill for this step is done.',
+  slamTip: 'The FI Skill Tree says', // batch 36: the skill's own words, kept in the tip under SLAM's rule
 };

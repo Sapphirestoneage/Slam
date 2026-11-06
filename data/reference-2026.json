@@ -1571,6 +1571,22 @@
       },
       {
         "terms": [
+          "sleep at night",
+          "sleep at night number",
+          "sleep number",
+          "swan",
+          "swan number",
+          "cash to sleep"
+        ],
+        "label": "Sleep-at-night number (Cash layers)",
+        "go": [
+          "focus:sec:assets:layers@#/net-worth/assets"
+        ],
+        "add": "none",
+        "why": "batch 36 (QUESTIONS 310): the cash that lets the client sleep, typed under the layers on Assets > Cash layers"
+      },
+      {
+        "terms": [
           "credit card",
           "credit cards",
           "card",

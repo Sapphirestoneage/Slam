@@ -10,10 +10,14 @@
 //   Done         by the data (an app skill whose proof names a household fact SLAM can read), or by a tap
 //                (profile.library[id] = { done: true, by, on }). Done skills leave the three and fold into a count.
 //   Unlearn      the first entry in unlearn.json that shows at the step, with its status against the order.
+//   SLAM's rule  batch 36 (QUESTIONS 313): a skill listed in slam-rules.json carries slam (SLAM's line, shown on the
+//                card in place of the description, which stays in the tip).
+//   Phase 4      batch 36 (QUESTIONS 307): the whole library is behind settings.phase4; libraryOf is null when it is off.
 import { metrics } from './metrics.js';
 import { foo } from './foo.js';
 import { layersOf } from './layers.js';
 import { gatesOf, visible } from '../gates.js';
+import { recurringBills } from '../month.js';
 import { ORDER } from '../registry/foo.js';
 import { RULES } from '../registry/assumptions.js';
 import { PROOF_PREFIX, PROOF_FACTS, TILT_TREE_BY_AREA, TILT_TREE_BY_APP_TREE, SITUATIONS, LEVERAGE_ORDER, TWINS } from '../registry/library.js';
@@ -38,12 +42,16 @@ const FACT_READS = {
   termLife: ({ live }) => live.some(r => r.kind === 'coverage' && r.type === 'Life' && r.values?.have === 'Have it' && (r.values?.coverage ?? 0) > 0),
   retireAge: ({ doc }) => doc.assumptions?.fiAge != null || doc.assumptions?.retireAge != null,
   rebalanceBand: ({ live }) => live.some(r => r.kind === 'account' && r.values?.targetOn === true),
+  // Batch 36 (QUESTIONS 310): the sleep-at-night number typed on Cash layers (a typed 0 is an answer; blank is not), and
+  // the rerank done: every repeating charge that can be cut has a Keep or Try to cut answer (the Bills list).
+  swanTarget: ({ doc }) => doc.profile?.sleepAtNight != null && Number.isFinite(Number(doc.profile.sleepAtNight)),
+  rerankCut: ({ doc, ref, now }) => { const cut = recurringBills(doc, ref, now).items.filter(i => i.cut); return cut.length > 0 && cut.every(i => i.decision != null); },
 };
 // The facts the household shows, one boolean per mapped proof field.
 export function libraryFacts(doc, ref, { now = new Date(), m = null, f = null } = {}) {
   const mm = m ?? metrics(doc, ref, { now });
   const ff = f ?? foo(doc, ref, { now });
-  const c = { doc, x: mm.inputs, m: mm, f: ff, L: layersOf(doc, ref, now), live: visible(doc.records || [], gatesOf(doc.profile, doc.client), ref) };
+  const c = { doc, ref, now, x: mm.inputs, m: mm, f: ff, L: layersOf(doc, ref, now), live: visible(doc.records || [], gatesOf(doc.profile, doc.client), ref) };
   return Object.fromEntries(Object.keys(PROOF_FACTS).map(k => [k, !!FACT_READS[k]?.(c)]));
 }
 export const mappedFields = () => Object.keys(FACT_READS);
@@ -98,22 +106,30 @@ export function unlearnFor(step, entries = []) {
   return { ...e, status, fitsAt: fitsAt == null ? null : ORDER[fitsAt] };
 }
 
+// SLAM's rule for a skill (slam-rules.json, keyed by skill id), or null. An app skill standing in for a twin also takes
+// its twin's line, since it shows the twin's words.
+export const slamRuleOf = (skill, rules = {}) => rules[skill?.id]?.line ?? (skill?.twin ? rules[skill.twin]?.line : null) ?? null;
+
 // One step's block: the three to learn, the done ones (folded), the one to unlearn.
-export function learnFor(step, { skills = [], appSkills = [], unlearn = [], tilt = [], facts = {}, progress = {}, doc = null, shown = RULES.learnShown } = {}) {
+export function learnFor(step, { skills = [], appSkills = [], unlearn = [], slamRules = {}, tilt = [], facts = {}, progress = {}, doc = null, shown = RULES.learnShown } = {}) {
   const here = mergeTwins(skills, appSkills).filter(s => String(s.tags?.foo) === String(step) && (!doc || appliesTo(s, doc)));
-  const withDone = orderSkills(here, { tilt }).map(s => ({ skill: s, ...doneOf(s, { facts, progress }) }));
+  const withDone = orderSkills(here, { tilt }).map(s => ({ skill: s, slam: slamRuleOf(s, slamRules), ...doneOf(s, { facts, progress }) }));
   const open = withDone.filter(x => !x.done);
   return { step: String(step), learn: open.slice(0, shown), more: Math.max(0, open.length - shown), done: withDone.filter(x => x.done), total: withDone.length, unlearn: unlearnFor(step, unlearn), tilted: (tilt || []).length > 0 };
 }
 
-// Every step at once, for Plan › FOO and Home. lib: { skills, appSkills, unlearn } (the three files' arrays).
+// The library shows only while Phase 4 previews are on (Coach tools › Session; on for a new household).
+export const libraryOn = doc => doc?.settings?.phase4 === true;
+
+// Every step at once, for Plan › FOO and Home. lib: { skills, appSkills, unlearn, slamRules } (the files' contents).
+// null while the files load or while Phase 4 previews are off.
 export function libraryOf(doc, ref, lib, { now = new Date(), flags = [], m = null, f = null } = {}) {
-  if (!lib?.skills) return null;
+  if (!lib?.skills || !libraryOn(doc)) return null;
   const ff = f ?? foo(doc, ref, { now, flags });
   const facts = libraryFacts(doc, ref, { now, m, f: ff });
   const tilt = doc.profile?.identity?.tilt || [];
   const progress = doc.profile?.library || {};
-  const steps = Object.fromEntries(ORDER.map(id => [id, learnFor(id, { skills: lib.skills, appSkills: lib.appSkills || [], unlearn: lib.unlearn || [], tilt, facts, progress, doc })]));
+  const steps = Object.fromEntries(ORDER.map(id => [id, learnFor(id, { skills: lib.skills, appSkills: lib.appSkills || [], unlearn: lib.unlearn || [], slamRules: lib.slamRules || {}, tilt, facts, progress, doc })]));
   const here = ff.here;
   return { steps, here, facts, tilt, next: here ? steps[here]?.learn[0] ?? null : null };
 }

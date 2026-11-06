@@ -2,16 +2,20 @@
 // Batch 26: the library's first slice (js/math/library.js, M9K). Three skills to learn and one to unlearn at every FOO
 // step; the picks for Maya at step 3; Alexis's picks ordered by her KOGS tilt; the app skills that tick themselves
 // from a persona's data (Tom's full match); the one-tap Done kept in the client file; the unlearn list's shape; and
-// the two small fixes (QUESTIONS 273 and 280).
+// the two small fixes (QUESTIONS 273 and 280). Batch 36: behind the Phase 4 switch (QUESTIONS 307), the sleep-at-night
+// number and the rerank tick themselves (QUESTIONS 310), SLAM's rule beside a skill that disagrees with it (QUESTIONS 313).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { importFile, Store } from '../js/records.js';
+import { importFile, Store, newHousehold } from '../js/records.js';
+import { AREAS } from '../js/registry/fields.js';
 import { foo } from '../js/math/foo.js';
 import * as Lb from '../js/math/library.js';
-import { PROOF_FACTS, UNMAPPED, WORDS } from '../js/registry/library.js';
+import { PROOF_FACTS, UNMAPPED, WORDS, TWINS } from '../js/registry/library.js';
 import { ORDER } from '../js/registry/foo.js';
-import { RULES } from '../js/registry/assumptions.js';
+import { RULES, STABILITY_MULTIPLIER, bigEMonthsOf } from '../js/registry/assumptions.js';
+import { MATH } from '../js/registry/math.js';
+import { recurringBills } from '../js/month.js';
 import { libraryFrom } from '../js/library.js';
 import { defaultYears, askOf } from '../js/math/afford.js';
 
@@ -19,11 +23,13 @@ const root = new URL('../', import.meta.url);
 const read = p => JSON.parse(readFileSync(new URL(p, root), 'utf8'));
 const ref = read('data/reference-2026.json');
 const now = new Date('2026-11-05T12:00:00.000Z'); // the personas' moment (tools/personas/build.mjs)
-const lib = libraryFrom(read('data/library/skills.json'), read('data/library/app-skills.json'), read('data/library/unlearn.json'));
+const lib = libraryFrom(read('data/library/skills.json'), read('data/library/app-skills.json'), read('data/library/unlearn.json'), read('data/library/slam-rules.json'));
+const slamFile = read('data/library/slam-rules.json');
 const unlearnFile = read('data/library/unlearn.json');
 const persona = id => importFile(readFileSync(new URL(`fixtures/personas/${id}.json`, root), 'utf8'));
 const L = (doc, opts = {}) => Lb.libraryOf(doc, ref, lib, { now, ...opts });
 const names = B => B.learn.map(x => x.skill.name);
+const AREAS_FIELD = key => AREAS.find(a => a.id === 'profile').fields.find(f => f.key === key);
 
 test('the unlearn list: SLAM\'s own, at least one per FOO step, never shown at a step where it fits', () => {
   assert.match(unlearnFile.author, /^SLAM/);
@@ -137,9 +143,85 @@ test('every proof field in the app skills is mapped to a SLAM fact or listed wit
   assert.equal(new Set(fields).size, 12);
   for (const k of fields) assert.ok(PROOF_FACTS[k] || UNMAPPED[k], `${k}: mapped or listed`);
   assert.deepEqual(Object.keys(PROOF_FACTS).sort(), Lb.mappedFields().sort(), 'every mapped field has a reading');
-  assert.deepEqual(Object.keys(UNMAPPED).sort(), ['rerankCut', 'swanTarget']);
+  assert.deepEqual(Object.keys(UNMAPPED), [], 'batch 36: every proof field has a SLAM fact');
   const swan = lib.appSkills.find(s => s.id === 'know-your-number');
-  assert.equal(Lb.doneOf(swan, { facts: {} }).self, undefined, 'an unmapped proof gets the one-tap Done');
+  assert.equal(Lb.doneOf(swan, { facts: {} }).self, true, 'the sleep-at-night number ticks itself now');
+});
+
+test('QUESTIONS 310: the sleep-at-night number on Cash layers ticks Know your sleep-at-night number (Maya)', () => {
+  const store = new Store(persona('maya'), { now: () => now.toISOString() });
+  const step1 = () => L(store.doc).steps['1'];
+  const swan = lib.appSkills.find(s => s.id === 'know-your-number');
+  assert.equal(L(store.doc).facts.swanTarget, false, 'blank: not yet');
+  assert.ok(!step1().done.some(x => x.skill.id === 'know-your-number'), 'not done yet');
+  assert.deepEqual(Lb.doneOf(swan, { facts: L(store.doc).facts }), { done: false, by: null, field: 'swanTarget', self: true }, 'Ticks itself, not a Done button');
+  store.setDoc('profile', { sleepAtNight: 8000 });
+  assert.equal(L(store.doc).facts.swanTarget, true);
+  const x = step1().done.find(d => d.skill.id === 'know-your-number');
+  assert.ok(x && x.by === 'data', 'in the done list, ticked by the data');
+  store.setDoc('profile', { sleepAtNight: 0 });
+  assert.equal(L(store.doc).facts.swanTarget, true, 'a typed 0 is an answer');
+  store.setDoc('profile', { sleepAtNight: null });
+  assert.equal(L(store.doc).facts.swanTarget, false, 'cleared: not yet');
+  assert.equal(AREAS_FIELD('sleepAtNight')?.type, 'money', 'registered as a money field on the Profile tab');
+});
+
+test('QUESTIONS 310: Rerank your costs ticks itself once every repeating charge that can be cut has Keep or Try to cut', () => {
+  const store = new Store(persona('maya'), { now: () => now.toISOString() });
+  const cut = () => recurringBills(store.doc, ref, now).items.filter(i => i.cut);
+  assert.ok(cut().length > 0, 'Maya has repeating charges');
+  assert.equal(L(store.doc).facts.rerankCut, false);
+  const [first, ...rest] = cut();
+  store.update(first.id, { decision: 'Cancel' });
+  assert.equal(L(store.doc).facts.rerankCut, rest.length === 0, 'one answered is not the whole pass');
+  for (const i of rest) store.update(i.id, { decision: 'Keep' });
+  assert.equal(L(store.doc).facts.rerankCut, true);
+  assert.ok(L(store.doc).steps['1'].done.some(x => x.skill.id === 'rerank-your-costs' && x.by === 'data'));
+});
+
+test('QUESTIONS 307: the library sits behind the Phase 4 switch (on for new households and the personas)', () => {
+  const doc = persona('maya');
+  assert.equal(Lb.libraryOn(doc), true, 'the personas are new households: on');
+  assert.equal(Lb.libraryOn(newHousehold()), true, 'on for a new household');
+  assert.ok(L(doc));
+  doc.settings.phase4 = false;
+  assert.equal(Lb.libraryOn(doc), false);
+  assert.equal(L(doc), null, 'off: no Learn and unlearn, no Learn next');
+  const ui = readFileSync(new URL('js/ui/library-ui.js', root), 'utf8');
+  assert.match(ui, /if \(!libraryOn\(ctx\.store\.doc\)\) return null;/, 'the screens ask the switch before loading the files');
+});
+
+test('QUESTIONS 313: SLAM\'s rule beside a skill that disagrees with it; every override is a real skill that shows', () => {
+  const rules = slamFile.rules;
+  assert.equal(Object.keys(rules).length, slamFile.counts.rules);
+  const shown = Lb.mergeTwins(lib.skills, lib.appSkills);
+  const twins = new Set(Object.values(TWINS));
+  for (const [id, r] of Object.entries(rules)) {
+    const s = [...lib.skills, ...lib.appSkills].find(x => x.id === id);
+    assert.ok(s, `${id}: a real skill`);
+    assert.ok(!twins.has(id) || shown.some(x => x.twin === id), `${id}: shows on a card (directly or through its stand-in)`);
+    assert.match(r.line, /^SLAM: \S/, `${id}: one line that starts SLAM:`);
+    assert.ok(!r.line.includes(String.fromCharCode(0x2014)) && !/\n/.test(r.line), `${id}: no em dash, one line`);
+    assert.ok(r.rests.length, `${id}: names the rules it rests on`);
+    for (const k of r.rests) {
+      const ok = k.startsWith('RULES.') ? k.slice(6) in RULES : k.startsWith('FOO ') ? ORDER.includes(k.slice(4)) : k === 'STABILITY_MULTIPLIER' ? !!STABILITY_MULTIPLIER : k === 'bigEMonthsOf' ? typeof bigEMonthsOf === 'function' : MATH.some(m => m.id === k);
+      assert.ok(ok, `${id}: ${k} is registered`);
+    }
+    if (r.rests.includes('RULES.heavyApr')) assert.ok(r.line.includes(`${RULES.heavyApr * 100}%`), `${id}: the heavy line as registered`);
+    if (r.rests.includes('bigEMonthsOf')) assert.equal(bigEMonthsOf(50), 10, 'age / 5');
+    if (r.rests.includes('STABILITY_MULTIPLIER')) for (const v of Object.values(STABILITY_MULTIPLIER).filter(v => v !== 1)) assert.ok(r.line.includes(String(v)), `${id}: ${v}`);
+    if (r.rests.includes('RULES.bufferWeeks')) assert.equal(RULES.bufferWeeks, 2, `${id} says two weeks`);
+    assert.ok(s.description && s.description.includes(r.says), `${id}: says quotes the skill's own words, unchanged`);
+  }
+  // On the cards: Maya's step 3 and step 4, Alexis's step 4.
+  const M = L(persona('maya'));
+  const tri = M.steps['3'].learn.find(x => x.skill.id === 'debt-leverage-triage-by-rate');
+  assert.equal(tri.slam, rules['debt-leverage-triage-by-rate'].line);
+  assert.equal(M.steps['4'].learn.find(x => x.skill.id === 'cash-safety-net-fund-the-true-emergency-fund').slam, 'SLAM: age / 5 months of spending, the Rule of 5');
+  assert.equal(M.steps['3'].learn.find(x => x.skill.id === 'credit-cards-pay-in-full-always').slam, null, 'no rule, no line');
+  assert.equal(Lb.slamRuleOf({ id: 'x', twin: 'cash-safety-net-tier-every-dollar' }, rules), rules['cash-safety-net-tier-every-dollar'].line, 'a stand-in takes its twin\'s line');
+  // The skill files keep their words.
+  assert.equal(lib.skills.find(x => x.id === 'cash-safety-net-fund-the-true-emergency-fund').description, '3-6 months of expenses');
 });
 
 test('the one-tap Done: kept in the client file, out of the three, one undo step', () => {

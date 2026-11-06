@@ -270,6 +270,9 @@ ul.find-days { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
 .layer-bar { height: 10px; border-radius: 5px; background: var(--computed); overflow: hidden; }
 .layer-bar span { display: block; height: 100%; background: var(--assets); }
 .layer-row.full .layer-bar span { background: var(--good); }
+.sleep-row { gap: 8px; padding-top: 6px; border-top: 1px solid var(--border-row); } /* batch 36: the sleep-at-night number under the layers */
+.sleep-row .sleep-label { margin: 0 auto 0 0; }
+.layers-card > .more-wrap > .caret { width: 230px; box-sizing: border-box; justify-content: space-between; } /* batch 36: History, Income gaps and Backups, one width (DESIGN 1b) */
 @media (max-width: 760px) { .layer-row { grid-template-columns: 1fr auto; } .layer-row .layer-bar { grid-column: 1 / -1; } }
 /* Phase 3.5: Plan › FOO. */
 .foo-path { margin-bottom: var(--s3); }

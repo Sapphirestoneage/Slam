@@ -2,7 +2,7 @@
 // Net worth › Assets › Cash layers (Phase 3.5 section 3). Formatting only: js/math/layers.js does the math.
 import { h, icon } from './dom.js';
 import * as S from './staples.js';
-import { layersOf, recordDip, layerHistory } from '../math/layers.js';
+import { layersOf, recordDip, layerHistory, sleepPicks } from '../math/layers.js';
 import { money } from '../format.js';
 
 export const BACKUP_KINDS = ['Unemployment benefits', 'Disability coverage', 'Available credit', 'What you could cut', 'Family help'];
@@ -36,11 +36,20 @@ export function layersCard(ctx) {
     return h('div.row-line', { style: { gap: '8px' } }, h('span', { style: { minWidth: '190px' } }, kind),
       S.moneyInput(b?.amount ?? null, v => setBackups(v == null ? backups.filter(x => x.kind !== kind) : [...backups.filter(x => x.kind !== kind), { kind, amount: v }]), { hint: 'Dollars you could lean on', key: `backup:${kind}` }));
   };
+  // Batch 36 (QUESTIONS 310): the sleep-at-night number, one row under the layers; a tap on a pick fills it. It changes
+  // no layer: it is the client's own number, and it ticks Know your sleep-at-night number on Plan › FOO.
+  const sleep = doc.profile.sleepAtNight ?? null;
+  const setSleep = v => { ctx.store.setDoc('profile', { sleepAtNight: v }); if (v != null) S.toast('Sleep-at-night number saved.', { undo: () => ctx.store.undo() }); };
+  const sleepRow = h('div.row-line.sleep-row', {},
+    h('span.label.has-tip.sleep-label', { title: 'Sleep-at-night number: the cash that lets you sleep at night, in your own words. It does not change the layers.' }, 'Sleep-at-night number'),
+    ...sleepPicks(L).map(p => h('button.btn.small.sleep-pick', { type: 'button', 'aria-pressed': String(sleep === p.value), title: `Use ${money(p.value)}: ${p.label.toLowerCase()} together`, onclick: () => setSleep(p.value) }, `${p.label}: ${money(p.value)}`)),
+    S.moneyInput(sleep, v => setSleep(v), { hint: 'Add amount', key: 'layers:sleep' }));
   return h('div.card.layers-card', {},
     h('div.row-line', { style: { justifyContent: 'space-between' } }, h('span.muted', {}, 'Your cash fills these buckets in order: Buffer, little e, then big e. An emergency dips the Buffer first and big e last.'),
       S.button('Record a dip', { size: 'small', onClick: e => dipBox(e.currentTarget, ctx, L, cash) }),
       S.toggle([['virtual', 'One account, layers inside'], ['accounts', 'One account per layer']], mode, v => setSetting({ layerMode: v }), { label: 'How the layers are held' })),
     h('div.layer-list', {}, rows),
+    sleepRow,
     L.extra > 0.5 ? h('p.muted', { style: { margin: '8px 0 0' } }, `${money(L.extra)} of cash sits above every layer.`) : null,
     ctx.metrics().inputs.taxSetAside > 0.5 ? h('p.muted.small.tax-apart', { style: { margin: '8px 0 0' } }, `${money(ctx.metrics().inputs.taxSetAside)} set aside for taxes stays out of these layers: it is already owed.`) : null, // batch 27
     S.moreBlock('layers:history', () => historyBlock(ctx), { label: 'History' }),
