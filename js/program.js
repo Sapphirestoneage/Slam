@@ -298,7 +298,7 @@ export function startSession(store, ref = null, { now = new Date(), flags = [] }
 // carry over to the next one, the review (confirmed numbers, Move on anyway, a note) is kept on the session record,
 // and a snapshot is saved: Day 0 the first time, End of session N after, Graduation at the end. The snapshot stays
 // in the client file, so it exports and imports with everything else.
-export function endSession(store, ref, { homework = [], next = null, now = new Date(), flags = [], note = null, confirmed = [], decisions = {} } = {}) {
+export function endSession(store, ref, { homework = [], next = null, now = new Date(), flags = [], note = null, confirmed = [], decisions = {}, ease = null } = {}) { // ease (batch 14): { score 1 to 7, stuck }, optional
   const at = now.toISOString();
   const s = sessionOf(store.doc);
   const n = (s.count || 0) + 1;
@@ -330,7 +330,7 @@ export function endSession(store, ref, { homework = [], next = null, now = new D
       }
     }
     for (const i of toHomework) makeHomework(store, A.sid, i.label, { link: i.link });
-    store.setIn('program', ['reviews', cur.id], { at, movedOnAnyway: open.length > 0, carried: carry.map(o => o.label), homework: toHomework.map(o => o.label), confirmed, ...(note ? { note } : {}) });
+    store.setIn('program', ['reviews', cur.id], { at, movedOnAnyway: open.length > 0, carried: carry.map(o => o.label), homework: toHomework.map(o => o.label), confirmed, ...(note ? { note } : {}), ...(ease && (ease.score != null || ease.stuck) ? { ease: { score: ease.score ?? null, stuck: ease.stuck || null } } : {}) });
     // The recap: the agenda and its notes as they stood when the session ended.
     store.setIn('program', ['recaps', cur.id], { at, n, name: A.name, must: A.must.map(i => ({ label: i.label, done: i.done, note: i.note })), going: A.going.map(i => ({ label: i.label, done: i.done, note: i.note })),
       carried: carry.map(o => o.label), homework: toHomework.map(o => o.label), ...(note ? { note } : {}) });

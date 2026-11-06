@@ -3,11 +3,16 @@
 // Writes into the same records the full screens use, as one undo step, so every lens turns on and the coach can
 // keep going in full detail from there. Pure: no DOM.
 import { LOAN_FOR } from './gates.js';
+import { MODES } from './registry/couples.js';
 
 export const FT_DEBTS = [['Credit card', 'Credit cards'], ['Student loan', 'Student loans'], ['Personal loan', 'Other debts']];
 const has = v => v !== null && v !== undefined && v !== '';
 // Batch 8: the first word of the client name, for the First name box ("Maya Test" is "Maya").
 export const firstWord = name => (typeof name === 'string' && name.trim() ? name.trim().split(/\s+/)[0] : null);
+// Batch 14: the rest of the client name, for the last name ("Alexis Gillmore" is Gillmore); one word has none.
+export const lastWords = name => (typeof name === 'string' && name.trim().split(/\s+/).length > 1 ? name.trim().split(/\s+/).slice(1).join(' ') : null);
+// Batch 14 (item 7): the tap step, About you's switches and the Why now chips, so core About you is done after Fast Track.
+export const FT_TAPS = ['hasKids', 'hasPets', 'housing', 'hasCar', 'workSituation', 'mode', 'hsaEligible', 'fsa', 'equityPay', 'state'];
 // Batch 8: a paycheck amount needs how often it lands, or the math reads it as a month (M01 falls back to monthly).
 export const needsPayFrequency = a => has(a.takeHome) && a.takePer === 'paycheck' && !has(a.payFrequency);
 // Batch 8: Fast Track has been finished once for this client (Finish, not Save and close).
@@ -31,7 +36,7 @@ export function fastTrackAnswers(doc) {
     debts[t] = rows.length ? { balance: rows.reduce((s, r) => s + (r.values.balance ?? 0), 0), payment: rows.some(r => r.values.payment != null) ? rows.reduce((s, r) => s + (r.values.payment ?? 0), 0) : null, rows: rows.length } : { balance: null, payment: null, rows: 0 };
   }
   return {
-    firstName: has(p.firstName) ? p.firstName : firstWord(doc.client?.name), birthMonth: p.birthMonth ?? null, birthYear: p.birthYear ?? null, household: p.household ?? (doc.client?.couple ? 'Couple' : null),
+    firstName: has(p.firstName) ? p.firstName : firstWord(doc.client?.name), lastName: has(p.lastName) ? p.lastName : lastWords(doc.client?.name), birthMonth: p.birthMonth ?? null, birthYear: p.birthYear ?? null, household: p.household ?? (doc.client?.couple ? 'Couple' : null),
     takeHome: income?.values.basis === 'Gross' ? null : income?.amount ?? null, takePer: income?.per ?? 'month', payFrequency: income?.values.payFrequency ?? null,
     gut: gut?.amount ?? null, gutIncludesDebt: gut ? gut.values.includesDebtPayments !== false : true,
     checking: bal('Checking'), savings: bal('Savings or HYSA'),
@@ -40,6 +45,10 @@ export function fastTrackAnswers(doc) {
     hasCar: p.hasCar ?? (car ? true : null), carValue: car?.values.value ?? null, carLoanBalance: loan(car)?.values.balance ?? null, carLoanPayment: loan(car)?.values.payment ?? null,
     debts, noDebts: p.areas?.debt === false,
     fiAge: doc.assumptions?.fiAge ?? null,
+    // The tap step (batch 14): kids as yes or no (About you keeps the count), the rest as About you stores them.
+    hasKids: p.dependents == null ? null : p.dependents > 0, hasPets: p.hasPets ?? null, workSituation: p.workSituation ?? null, mode: p.mode ?? null,
+    hsaEligible: p.hsaEligible ?? null, fsa: p.fsa ?? null, equityPay: p.equityPay ?? null, state: p.state ?? null,
+    chips: { whyNow: [...(p.chips?.whyNow || [])], worry: [...(p.chips?.worry || [])], goalWords: [...(p.chips?.goalWords || [])] },
   };
 }
 
@@ -55,11 +64,20 @@ export function applyFastTrack(store, a, { seconds = null, now = new Date().toIS
     // About you
     const prof = {};
     if (has(a.firstName)) prof.firstName = a.firstName;
+    if (has(a.lastName)) prof.lastName = a.lastName;
     if (has(a.birthMonth)) prof.birthMonth = a.birthMonth;
     if (has(a.birthYear)) prof.birthYear = a.birthYear;
     if (has(a.household)) { prof.household = a.household; store.setDoc('client', { couple: a.household === 'Couple' }); }
     if (has(a.housing)) prof.housing = a.housing;
     if (a.hasCar === true || a.hasCar === false) prof.hasCar = a.hasCar;
+    // The tap step (batch 14): each switch as About you stores it; a mode sets Solo or couple the way About you does.
+    if (a.hasKids === true || a.hasKids === false) prof.dependents = a.hasKids ? Math.max(1, store.doc.profile.dependents ?? 0) : 0;
+    for (const k of ['hasPets', 'hsaEligible', 'fsa', 'equityPay']) if (a[k] === true || a[k] === false) prof[k] = a[k];
+    if (has(a.workSituation)) prof.workSituation = a.workSituation;
+    if (has(a.state)) prof.state = a.state;
+    const mode = a.mode ?? (a.household === 'Solo' && !store.doc.profile.mode ? 'Solo' : null); // Solo in step 1 is the Solo mode
+    if (has(mode) && MODES[mode]) { prof.mode = mode; prof.household = MODES[mode].couple ? 'Couple' : 'Solo'; store.setDoc('client', { couple: MODES[mode].couple }); }
+    if (a.chips && Object.values(a.chips).some(l => l?.length)) prof.chips = { ...(store.doc.profile.chips || {}), ...Object.fromEntries(Object.entries(a.chips).filter(([, l]) => l?.length)) };
 
     // Take-home (F019, F020)
     if (has(a.takeHome)) put(r => r.kind === 'income', 'income', 'Job', { name: find(r => r.kind === 'income')?.name ?? 'Take-home pay', amount: a.takeHome, per: a.takePer || 'month', values: { basis: 'Take-home', payFrequency: a.payFrequency ?? null } });
@@ -85,6 +103,9 @@ export function applyFastTrack(store, a, { seconds = null, now = new Date().toIS
     };
     if (a.housing === 'Own') thing('Home', a.homeValue, a.mortgageBalance, a.mortgagePayment);
     if (a.hasCar) thing('Car', a.carValue, a.carLoanBalance, a.carLoanPayment);
+    // Batch 14: a yes with no number yet still makes the row (as About you does), so Walk me through can ask its value.
+    if (a.housing === 'Own' && !find(r => r.kind === 'asset' && r.type === 'Home')) store.add('asset', { name: 'Home', values: {} }, { type: 'Home' });
+    if (a.hasCar === true && !find(r => r.kind === 'asset' && r.type === 'Car')) store.add('asset', { name: 'Car', values: {} }, { type: 'Car' });
     // Debts by type, as totals (R132). A type already listed row by row is left alone.
     for (const [type, label] of FT_DEBTS) {
       const d = a.debts?.[type];

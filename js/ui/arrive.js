@@ -53,18 +53,9 @@ function target(it) {
 function show({ scroll = true } = {}) {
   if (!state) return;
   const { list, i } = state, it = list[i];
-  unglow();
-  // Batch 10 (5b): a line under a closed category: open the category first, then look again.
-  if (it.parent && !document.querySelector(`tr[data-id="${CSS.escape(it.id)}"]`) && !document.querySelector(`[data-focus="${CSS.escape(it.focus ?? '')}"]`)) {
-    const c = caretOf(document.querySelector(`tr[data-id="${CSS.escape(it.parent)}"]`));
-    if (c) { c.click(); requestAnimationFrame(() => requestAnimationFrame(() => show({ scroll }))); return; }
-  }
-  let el = target(it);
-  if (!el?.matches('label.field, .seg, .stack, .row-line, input, select, .picks') && it.focus) { // the box is inside a closed Details panel: open it, then look again
-    const caret = caretOf(el) ?? caretOf(el?.closest?.('tr.row')); // batch 10 (5b): on the Budget the caret opens the side panel, where the day chips are
-    if (caret) { caret.click(); requestAnimationFrame(() => { const inner = target(it); if (inner && inner !== el) { el.classList.remove('glow'); light(inner, scroll); } }); }
-  }
-  if (el) light(el, scroll);
+  const at = place(it, { scroll, again: () => show({ scroll }) });
+  if (at === 'wait') return;
+  if (!at) state.app?.usage?.('deadEnd', { name: it.name }); // batch 14: Show me found no box
   const names = list.map(x => `${x.name}${x.word ? ` (${x.word})` : ''}`);
   const shown = names.length > 3 ? [...names.slice(0, 3), `+${names.length - 3} more`] : names;
   toastEl?.remove();
@@ -80,11 +71,45 @@ function show({ scroll = true } = {}) {
   const main = document.getElementById('main');
   if (main) main.prepend(toastEl); else document.body.append(toastEl);
 }
+// Light up one item's box (batch 14: shared by arrive, Find and Walk me through): open its Budget category first when
+// the line sits inside a closed one, open the row's Details when the box is inside, outline and focus it. Returns
+// 'wait' when a category had to open first (again runs once it has).
+export function place(it, { scroll = true, again = null } = {}) {
+  unglow();
+  // Batch 10 (5b): a line under a closed category: open the category first, then look again.
+  if (it.parent && !document.querySelector(`tr[data-id="${CSS.escape(it.id)}"]`) && !document.querySelector(`[data-focus="${CSS.escape(it.focus ?? '')}"]`)) {
+    const c = caretOf(document.querySelector(`tr[data-id="${CSS.escape(it.parent)}"]`));
+    if (c) { c.click(); requestAnimationFrame(() => requestAnimationFrame(() => (again ?? (() => place(it, { scroll })))())); return 'wait'; }
+  }
+  let el = target(it);
+  if (!el?.matches('label.field, .seg, .stack, .row-line, input, select, .picks') && it.focus) { // the box is inside a closed Details panel: open it, then look again
+    const caret = caretOf(el) ?? caretOf(el?.closest?.('tr.row')); // batch 10 (5b): on the Budget the caret opens the side panel, where the day chips are
+    if (caret) { caret.click(); requestAnimationFrame(() => { const inner = target(it); if (inner && inner !== el) { el.classList.remove('glow'); light(inner, scroll); } }); }
+  }
+  if (el) light(el, scroll);
+  return el;
+}
 function light(el, scroll) {
   el.classList.add('glow');
   if (scroll) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   (el.matches('input,select,button') ? el : el.querySelector('input,select,button'))?.focus({ preventScroll: true });
 }
+// Find (batch 14): go to the screen and light up one box, no bar. it: { id, focus, parent, parentCat }; parentCat names
+// the Budget category a line sits under (its row id is looked up here, since a category row is made on the screen).
+export function land(app, route, it, { after = null } = {}) {
+  closeToast();
+  const run = () => {
+    const parent = it.parent ?? (it.parentCat ? app.store?.records.find(r => r.kind === 'spending' && r.type === it.parentCat)?.id ?? null : null);
+    const one = { ...it, parent };
+    const done = () => { const el = target(one); after?.(el); };
+    if (place(one, { again: () => { place(one); requestAnimationFrame(done); } }) !== 'wait') requestAnimationFrame(done);
+    // A late redraw (a chart arriving, a refresh) can replace the box: look again once or twice so the outline stays.
+    for (const ms of [300, 800]) setTimeout(() => { const el = target(one); if (el && !el.classList.contains('glow') && !document.querySelector('.glow')) place(one, { scroll: false }); }, ms);
+  };
+  const soon = () => requestAnimationFrame(() => requestAnimationFrame(run));
+  if (route && location.hash !== route) { window.addEventListener('hashchange', soon, { once: true }); app.go(route); } else { app.render(); soon(); }
+}
+export { target as targetOf };
 export const arriving = () => !!state;
 export { closeToast as closeArrive };
 // Leaving the screen closes the toast (item 3): "On this screen" is only ever about this screen.

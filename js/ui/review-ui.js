@@ -11,18 +11,32 @@ import { follow } from './agenda-ui.js';
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const isoDay = d => d.toISOString().slice(0, 10);
 const LEVEL_TAG = { Missing: 'warn', Gut: 'guess', Rough: 'roughly', Estimate: 'plain', Actual: 'good' };
-export const RVW = { confirmed: [], decisions: {}, revisitDone: false }; // the rows confirmed and the carry-or-homework picks in this review
+export const RVW = { confirmed: [], decisions: {}, revisitDone: false, ease: { score: null, stuck: '' } }; // ease: batch 14, the coach's optional ease answer // the rows confirmed and the carry-or-homework picks in this review
 
 // Ends the session (or moves on to the next without one) with the review's picks and note; a backup file follows (R151).
 export function finishSession(app, ctx, { note = null } = {}) {
   const hw = homeworkAll(ctx.store.doc, ctx.visible(() => true)).filter(x => x.status !== 'Confirmed');
   const s = sessionOf(ctx.store.doc);
-  const r = endSession(ctx.store, ctx.ref, { homework: hw.map(x => x.label), next: s.next || isoDay(new Date(Date.now() + 14 * 86400000)), now: ctx.now(), flags: app.flags, note, confirmed: RVW.confirmed, decisions: RVW.decisions });
-  RVW.confirmed = []; RVW.decisions = {}; RVW.revisitDone = false;
+  const ease = inSession(ctx.store.doc) && (RVW.ease.score != null || RVW.ease.stuck) ? { ...RVW.ease } : null; // asked at End session only
+  const r = endSession(ctx.store, ctx.ref, { homework: hw.map(x => x.label), next: s.next || isoDay(new Date(Date.now() + 14 * 86400000)), now: ctx.now(), flags: app.flags, note, confirmed: RVW.confirmed, decisions: RVW.decisions, ease });
+  if (ease) app.usage?.('ease', { score: ease.score, stuck: ease.stuck || '', session: r.n });
+  RVW.confirmed = []; RVW.decisions = {}; RVW.revisitDone = false; RVW.ease = { score: null, stuck: '' };
   app.saveNow();
   try { app.exportNow({ quiet: true }); } catch { /* downloads can be blocked; the reminder stays */ }
   S.toast(r.first ? 'Session 1 saved, with the Day 0 snapshot.' : r.graduation ? 'Graduation saved, with the final snapshot.' : `Session ${r.n} saved. Snapshot taken.${r.carried.length ? ` ${r.carried.length} carried over.` : ''}${r.homework.length ? ` ${r.homework.length} made homework.` : ''}`);
   app.go('#/home/session');
+}
+
+// How easy was that session (batch 14, item 9): 1 to 7 as taps, and one line on where it got stuck. Both optional; kept
+// on the session record (program.reviews) and in the usage log.
+function easeAsk() {
+  const stuck = h('input', { placeholder: 'Optional: one line', 'aria-label': 'Where did you get stuck?', value: RVW.ease.stuck, 'data-focus': 'review:stuck' });
+  stuck.oninput = () => { RVW.ease.stuck = stuck.value.trim(); };
+  const chips = h('div.picks.ease-chips', { role: 'group', 'aria-label': 'How easy was that session, 1 to 7' }, [1, 2, 3, 4, 5, 6, 7].map(n => h('button.pick', { type: 'button', 'aria-pressed': String(RVW.ease.score === n), 'data-focus': `review:ease:${n}`,
+    title: n === 1 ? '1: very hard' : n === 7 ? '7: very easy' : String(n), onclick: e => { RVW.ease.score = RVW.ease.score === n ? null : n; e.currentTarget.parentElement.querySelectorAll('button').forEach((b, i) => b.setAttribute('aria-pressed', String(RVW.ease.score === i + 1))); } }, String(n))));
+  return h('div.card.ease-ask', { style: { marginBottom: '12px' } }, h('div.row-line', { style: { gap: '12px', alignItems: 'flex-start' } },
+    h('div.stack', { style: { gap: '6px' } }, h('span.label', { title: '1 very hard, 7 very easy. For the coach; optional.' }, 'How easy was that session? 1 to 7'), chips),
+    h('div.stack', { style: { gap: '6px' } }, h('span.label', {}, 'Where did you get stuck?'), h('label.field', { style: { width: '320px' } }, stuck))));
 }
 
 export function reviewScreen(app, ctx) {
@@ -62,6 +76,7 @@ export function reviewScreen(app, ctx) {
     !R.rows.length ? h('div.card', {}, h('p.muted', { style: { margin: 0 } }, s9 && live && !revisit ? 'Nothing changed during this session.' : 'No numbers to review yet.')) : null,
     R.saidDone.length ? h('div.card', { style: { marginBottom: '12px' } }, h('h3', { style: { margin: '0 0 8px' } }, 'Homework the client says is done'), h('div.review-list', {}, R.saidDone.map(hwRow))) : null,
     mode === 'revisit' ? null : h('div.card', { style: { marginBottom: '12px' } }, h('div.stack', { style: { gap: '6px' } }, h('span.label', {}, 'Note (optional, kept on the session record)'), note)),
+    mode === 'end' ? easeAsk() : null, // batch 14 (item 9): one slim optional question for the coach
     h('div.row-line', { style: { gap: '10px' } }, primary, h('span.muted.small', {}, mode === 'revisit' ? 'Then the session runs as usual; End session reviews again.' : 'Saves the snapshot, the homework and a backup file, then shows Send summary.'),
       graduated(doc) ? h('span.muted.small', {}, 'The program is complete.') : null)];
 }

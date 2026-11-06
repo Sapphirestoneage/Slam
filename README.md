@@ -72,7 +72,27 @@ each persona through Import in the browser, visits every screen at 1280, and wri
 story: no "no debt" words with debts on file, no lock asking for a number the household cannot have, no NaN, one answer
 per number across screens) to `PERSONAS_OUT` (default: a `slam-personas` folder in the system temp folder). About 3
 minutes. Every batch report includes its result (QA.md, Personas).
+### Findability and effort (batch 14)
 
+```
+node --test test/findability.test.js        # the 39 everyday terms, Add routing, APR once per debt (no browser)
+node tools/e2e/findability.cjs              # types each term into Find on the Demo and a Fast Track client
+node tools/e2e/effort.cjs                   # Alexis and Tom: New client, Start session 1, Walk me through
+```
+
+Both scripts need Playwright and a server (`SLAM_URL`, default http://localhost:8767). `findability.cjs` exits 1 when a
+term misses its screen and box (the terms and where each must land are in `tools/e2e/find-terms.cjs`). `effort.cjs`
+counts every click and keystroke and prints the effort scoreboard; the latest run is in QA.md under Effort targets:
+
+| Client | Actions to a rough picture | Picture after it | Core after it | Certainty after it | Actions to 99% (estimate) |
+|---|---|---|---|---|---|
+| Alexis | 97 (50 clicks, 47 keys; 13 walk stops) | 71% | 89% (25 of 28) | debt free in 64 months (FI not on her path yet) | about 159 |
+| Tom | 98 (48 clicks, 50 keys; 14 walk stops) | 64% | 90% (27 of 30) | FI 2037 to 2044: 6.5 years wide | about 164 |
+
+The words Find understands are a table in `data/reference-2026.json` (`findWords`): add a word there, with where it
+lands and why, and add the term to `tools/e2e/find-terms.cjs` so the check keeps it.
+
+## See the math
 
 Every number in SLAM can be opened in a spreadsheet. On Report › One-pager (or Coach tools › Data), **Open in a
 spreadsheet** downloads a workbook with every input, every formula live, and a Check beside each one against the
@@ -151,6 +171,11 @@ The workbook is built only from the registries in `js/registry/`, so it stays co
 | `tools/personas/`, `fixtures/personas/`, `test/personas.test.js`, `tools/e2e/personas.cjs` | The twelve persona households: their defs with hand-worked numbers, the built backup files, the number check and the browser run |
 | `tools/e2e/walkthrough.cjs`, `test/walkthrough.test.js` | The full walkthrough: S1 to S12 in unit tests; every screen at three widths, light and dark, in the browser |
 | `MATH.md`, `SYNC.md`, `MORNING.md` | Every calculation reviewed (a self-review pending a CFP); the Google Sheets sync design; the overnight run's morning note |
+| `js/find.js`, `data/reference-2026.json` (findWords) | Find understands people: everyday words to a screen and a box, Add by type, a note when unsure (batch 14) |
+| `js/walk.js`, `js/ui/walk-ui.js` | Walk me through: every empty or rough box in session order, one at a time; a new client's Start session 1 |
+| `js/ui/counts-ui.js`, `js/completion.js` | X of Y filled on Budget, Taxes, Protection and Goals; every screen's counts (fillCounts) |
+| `js/usage.js` | The usage log (no dollar amounts) and its CSV export on Coach tools › Data; the ease answer at End session |
+| `tools/e2e/findability.cjs`, `tools/e2e/effort.cjs`, `tools/e2e/drive.cjs` | The findability check and the effort scoreboard (Playwright) |
 | `PROGRESS.md`, `QUESTIONS.md`, `BACKLOG.md` | Where the build stands, open questions, later phases |
 
 ## License

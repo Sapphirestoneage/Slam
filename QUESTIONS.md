@@ -437,3 +437,15 @@ Answered and built from the second overnight brief: 140 (a parked hole does not 
 226. **Tax shares stack.** Each income row's tax is what it adds on top of the rows before it (jobs, then 1099, then unemployment), so a second job carries the higher rate. The alternative is a pro-rata share (each row at the average rate). Stacking also makes the 1099 set-aside exact. Keep stacking?
 227. **A partner's filing status.** When a couple files apart, the partner's return uses the same filing status as the client's (Single, separately, head of household). Fine for now, or should About you ask the partner's filing status?
 228. **Untaxed income on the flow strip.** Gross on the Cash flow strip counts only taxed pay, so with unemployment or family money Gross can read below Take-home and Taxes $0. Add benefits to Gross on the strip and the Statements tab (a sheet change), or label the strip "Gross pay from jobs"?
+
+221. **Paid-off wins on the calendar.** The calendar's "Paid off" and "Debt-free" wins still come from the old payoff plan (minimums plus no surplus), not the one debt plan, so they can land on a different month than the FOO and Home. Found here, not changed (calendar wins are batch 13's area); say if they should read the one plan.
+
+## Batch 14 (Nov 6 2026): Find, Walk me through, Start session 1, effort
+
+229. **Budget categories in the walk.** Alexis does not know her category amounts, so the walk parks Accommodation, Food and Transportation (Will get it) and core stops short of 100% only there. Should the walk offer "Use typical $X" for a category (one tap, marked Roughly, from the faded starter amounts), so core reaches 100% in session 1?
+230. **Emergency fund.** Find sends "emergency fund" to the savings balance on Assets (where the money is). Or should it open the Cash layers card (the big e target)?
+231. **Giving.** Find sends "giving" to the Giving switch on Plan › FOO first and the Budget line second. Right order?
+232. **How to count effort.** The scoreboard counts every keystroke (a $1,200 paycheck is 5 actions) and every tap. Measured that way a rough picture is about 97 actions; the old "about 50" did not count that way. Keep per-keystroke, or count a typed number as one action?
+233. **Rough boxes in the walk.** The walk stops at rough numbers too (the rough invested total, a guessed card APR), and Next keeps them. Keep, or empty boxes only in session 1?
+234. **Insurance in session 1.** The walk adds the usual coverage list in one tap and then asks Have it? for each row (six taps). Keep, or only Health and Life in session 1?
+235. **Filing status in the walk.** It is not in your list of screens, but it is a guess until picked and is the Taxes counter's one core box, so the walk asks it right after Income. OK?

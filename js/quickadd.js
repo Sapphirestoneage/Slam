@@ -29,9 +29,13 @@ export function parseQuickAdd(text) {
   if (aprM) { apr = Number(aprM[1] ?? aprM[2]) / 100; rest = rest.replace(aprM[0], ' '); }
   let per = null;
   for (const [re, p] of PERIODS) if (re.test(rest)) { per = p; rest = rest.replace(re, ' '); break; }
+  // Batch 14: an account's own number is part of its name, never the amount ("401(k) match" is not $401 of "(k) match").
+  const kept = [];
+  rest = rest.replace(/\b(?:401|403)\s*\(?[kb]\)?|\b(?:457|529|1099)\b(?!\s*(?:a|per|\/|every|monthly|weekly|yearly))/gi, s => { kept.push(s); return `\u0000${String.fromCharCode(96 + kept.length)}\u0000`; });
   const amtM = rest.match(/\$?\s*(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?\b/);
   const amount = amtM ? Number(`${amtM[1].replace(/,/g, '')}${amtM[2] ? `.${amtM[2]}` : ''}`) : null;
   if (amtM) rest = rest.replace(amtM[0], ' ');
+  rest = rest.replace(/\u0000([a-z])\u0000/g, (_, c) => kept[c.charCodeAt(0) - 97]);
   const name = rest.replace(/\s+/g, ' ').replace(/\b(at|for|per|a)\s*$/i, '').trim() || null;
   const k = KINDS.find(x => x.re.test(raw));
   if (k?.kind === 'debt') {
@@ -39,7 +43,7 @@ export function parseQuickAdd(text) {
       summary: `${k.type}${name ? ` "${name}"` : ''}, balance ${amount ?? 'not given'}${apr !== null ? `, APR ${+(apr * 100).toFixed(2)}%` : ''}` };
   }
   if (k?.kind === 'account') {
-    const key = (raw.match(k.re)?.[0] || '').toLowerCase().replace(/\s/g, '');
+    const key = (raw.match(k.re)?.[0] || '').toLowerCase().replace(/[\s()]/g, ''); // batch 14: '401(k' (the regex stops before the closing parenthesis) is 401k
     const type = k.group === 'cash' ? (/check/i.test(raw) ? 'Checking' : 'Savings or HYSA') : (INVEST_TYPES[key] || 'Other');
     return { kind: 'account', type, name, values: { group: k.group, balance: amount }, section: k.section,
       summary: `${type} account${name ? ` "${name}"` : ''}, balance ${amount ?? 'not given'}` };

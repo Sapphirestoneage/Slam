@@ -116,7 +116,7 @@ function incomeSecondary(ctx, r, up) {
     labelled('Type', select(['W-2', '1099', 'Business', 'Side hustle', 'Rental', 'Benefits', 'Other'], v.incomeType ?? null, y => up({ incomeType: y }), { label: 'Income type', hint: x?.taxType ?? 'Pick one', width: 150 }), { later: L(ctx, r, 'incomeType') }),
     // The 401(k), first pass (Income): dollars a paycheck and whether there is a match. The detail lives on the 401(k).
     applies('401k', { g }) && x?.taxType ? k401FirstPass(ctx, r, up, link) : null,
-    labelled('Bonus: $ and month', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.bonus, y => up({ bonus: y }), { hint: 'Bonus' }),
+    labelled('Bonus: $ and month', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, moneyInput(v.bonus, y => up({ bonus: y }), { hint: 'Bonus', key: `${r.id}:bonus` }),
       select(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], v.bonusMonth ?? null, y => up({ bonusMonth: y }), { label: 'Bonus month', hint: 'Month', width: 100 })), { later: L(ctx, r, 'bonus') }),
     // The Health coverage row owns the premium; Income borrows it (answer to Brandon question 71).
     applies('premium', { g }) && x?.taxType ? (m.inputs.health
@@ -162,7 +162,7 @@ function incomeTertiary(ctx, r, up) {
   const taxed = !!incomeRowOf(ctx.metrics(), r)?.taxType;
   return [
     applies('hsaFsa', { g }) && taxed ? labelled(`${g.hsa ? 'HSA' : 'FSA'} a paycheck`, moneyInput(v.hsaFsa, y => up({ hsaFsa: y }), { hint: 'Add amount' }), { later: L(ctx, r, 'hsaFsa') }) : null,
-    applies('equity', { g }) && taxed ? labelled('ESPP % and discount; RSUs', textInput(v.equity, y => up({ equity: y }), { hint: 'e.g. 10%, 15% off; 200 RSUs vest Mar', width: 300 }), { later: L(ctx, r, 'equity') }) : null,
+    applies('equity', { g }) && taxed ? labelled('ESPP % and discount; RSUs', textInput(v.equity, y => up({ equity: y }), { hint: 'e.g. 10%, 15% off; 200 RSUs vest Mar', width: 320 }), { later: L(ctx, r, 'equity') }) : null,
     taxed ? labelled('Raise % a year', pctInput(v.raisePct, y => up({ raisePct: y }), { hint: 'e.g. 3' }), { later: L(ctx, r, 'raisePct') }) : null,
     applies('otherPretax', { g }) && taxed ? labelled('Other before-tax a paycheck', moneyInput(v.otherPretax, y => up({ otherPretax: y }), { hint: 'Commuter, life' }), { later: L(ctx, r, 'otherPretax') }) : null,
     labelled('Coach notes', textInput(r.privateNote, y => up({ privateNote: y }), { hint: 'Add a private note', width: 320 }))];
@@ -404,7 +404,7 @@ export function protectionList() {
     filter: r => r.kind === 'coverage',
     picker: ctx => ({ top: types(ctx).slice(0, 4), other: types(ctx).slice(4) }),
     // The usual list in one click (renters insurance included); mark Don't for a gap.
-    headerExtra: ctx => (ctx.store.find(r => r.kind === 'coverage').length ? null : h('button.btn.small', { type: 'button', onclick: () => ctx.store.transaction('Add the usual coverage', () => {
+    headerExtra: ctx => (ctx.store.find(r => r.kind === 'coverage').length ? null : h('button.btn.small', { type: 'button', 'data-focus': 'add:usual-coverage', onclick: () => ctx.store.transaction('Add the usual coverage', () => {
       for (const t of types(ctx)) ctx.store.add('coverage', { name: null, values: {} }, { type: t });
     }) }, 'Add the usual list')),
     coreFields: ['have'],

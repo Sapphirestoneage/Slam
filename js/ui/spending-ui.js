@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Spending (build phase 6): Budget with five passes, irregular costs, the cash flow calendar and month-end close.
 // Every screen is a view of the same records (R117); the month model lives in js/month.js.
+import { fillCounter } from './counts-ui.js';
+import { budgetCompletion } from '../completion.js';
 import { h, clear, icon } from './dom.js';
 import { institutionsOf } from '../institutions.js';
 import { parseCsv, guessMap, toTransactions, dedupe, suggestLine, matchIncome, importTransactions, saveBankMap, bankMapOf, PDF_WHY } from '../import/csv.js';
@@ -77,7 +79,7 @@ export function budgetScreen(app, ctx) {
   // Batch 10: the one-time note for a file whose untouched starter amounts turned faded.
   const fadedNote = doc.settings?.fadedNote ? h('div.slim-note', { role: 'status' }, h('span', {}, 'Starter amounts you never changed are now shown faded. Use them with one click, or type the real number.'),
     h('button.icon-btn.tiny', { type: 'button', 'aria-label': 'Close this note', 'data-tip': 'Close', onclick: () => ctx.store.setDoc('settings', { fadedNote: null }) }, icon('x'))) : null;
-  return [head('Budget', 'Every spending line, planned and actual'), fadedNote, passBar, strip, doc.session?.community ? S.moreBlock('budget:community', () => S.live(ctx, () => communityCard(ctx)), { label: 'Community presets' }) : null, ...body,
+  return [head('Budget', 'Every spending line, planned and actual', S.live(ctx, () => fillCounter(app, budgetCompletion(ctx)) ?? h('span'))), fadedNote, passBar, strip, doc.session?.community ? S.moreBlock('budget:community', () => S.live(ctx, () => communityCard(ctx)), { label: 'Community presets' }) : null, ...body, // batch 14: X of Y filled in the head
     S.recordList(ctx, irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) })),
     S.moreBlock('budget:joy', () => S.live(ctx, () => categoryJoyBlock(ctx)), { label: 'Joy by category' })]; // F6: captured for a later Wrapped
 }

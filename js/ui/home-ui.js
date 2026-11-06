@@ -27,6 +27,9 @@ import { agendaPanel, follow } from './agenda-ui.js';
 import { arrive, leftPopover } from './arrive.js';
 import { money, pct } from '../format.js';
 import { defaultsInUse } from '../checks.js';
+import { walkButton, walkMeThrough } from './walk-ui.js';
+import { isFreshClient } from '../walk.js';
+import { startFastTrack } from './fasttrack-ui.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const isoDay = d => d.toISOString().slice(0, 10);
@@ -36,6 +39,8 @@ export function homeScreen(app, ctx) {
   const P = programOf(doc, ctx.ref, { now: ctx.now(), flags: app.flags });
   const open = P.sessions.find(s => s.id === HUI.open) || P.current;
   const low = firstLowDay(ctx);
+  // Batch 14 (item 6): a brand-new client sees one obvious first action; the rest waits, folded, until there is data.
+  if (isFreshClient(doc)) return [startOne(app, ctx, P), S.moreBlock('home:fresh-rest', () => h('div.stack', { style: { gap: '12px' } }, sessionStrip(app, ctx, P), pathRow(app, P, open), checklistCard(app, ctx, P, open), pictureCard(ctx, P)), { label: 'The program, the path and the picture' })];
   return [sessionStrip(app, ctx, P),
     gapOf(doc, P.m) ? gapCard(app, ctx, P.m) : debtHero(app, ctx, P.m), // batch 12 (item 5): a short month owns Home; else (batch 11) the debt-free date leads
     P.inSession ? joyAsk(ctx, P) : null, // F4: asked at the start of each session
@@ -57,6 +62,21 @@ export function homeScreen(app, ctx) {
     ctx.gates().betweenJobs ? S.summaryStrip(ctx, [{ label: 'Runway (between jobs)', result: P.m.runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/net-worth/assets' }]) : null, // R006
     day0Card(ctx, P),
     netWorthOverTime(app, ctx)];
+}
+
+// ---------- Start session 1 (batch 14, item 6) ----------
+// One big button: starts the session, runs Fast Track, then Walk me through. Benchmark: TurboTax's single Continue.
+function startOne(app, ctx, P) {
+  const go = () => {
+    if (!P.inSession) startSession(ctx.store, ctx.ref, { now: ctx.now(), flags: app.flags });
+    app.usage?.('start', { session: 1 });
+    startFastTrack(app, ctx, { then: () => walkMeThrough(app, ctx) });
+  };
+  return h('section.card.start-one', { 'aria-label': 'Start here' },
+    h('span.muted', {}, ctx.store.doc.client.name || 'New client', ' · ', h('a', { href: '#/home/profile' }, 'About you ›')),
+    h('h2', {}, 'Session 1: the first picture'),
+    S.button('Start session 1', { kind: 'primary', size: 'big', iconName: 'right', onClick: go }),
+    h('span.muted', {}, 'Starts the session, runs Fast Track (about 5 minutes), then walks you through each box that is left, one at a time.'));
 }
 
 // ---------- The debt-free card (batch 11, item 3) ----------
@@ -122,6 +142,7 @@ function sessionStrip(app, ctx, P) {
     h('span.spacer'),
     // Answer 90: focus mode (core columns only) is on by default; this shows every field mid-session, and back.
     P.inSession && s.guide ? S.checkbox('Show every field (not just what\'s missing)', !!s.allFields, v => ctx.store.setIn('session', ['allFields'], v, v ? 'Show every field' : 'Focus mode'), { key: 'home:all-fields' }) : null, // item 10
+    walkButton(app, ctx, { size: 'small' }), // batch 14 (item 5): every empty or rough box, one at a time
     P.inSession ? [S.button('End session', { kind: P.current.done || !hasNext ? 'primary' : 'secondary', size: P.current.done || !hasNext ? 'big' : null, iconName: 'check', onClick: () => app.go('#/home/review') }), P.current.done || !hasNext ? null : S.button('Next step', { kind: 'primary', size: 'big', iconName: 'right', onClick: nextStep })] // item 4: End session leads once the checklist is met, or once nothing is left to chase (batch 7, item 6)
       : [P.graduated ? null : S.button('Move to next session', { iconName: 'right', tip: 'Review the key numbers and move on without a live session', onClick: () => app.go('#/home/review') }),
         S.button('Start session', { kind: 'primary', size: 'big', onClick: start, disabled: P.graduated, why: P.graduated ? 'The program is complete' : null })]);

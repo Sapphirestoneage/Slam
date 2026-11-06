@@ -358,3 +358,17 @@ table.rows.bills-list th, table.rows.tax-rows th { position: static; }
   table.rows.bills-list tr { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 0; border-bottom: 1px solid var(--border-row); }
   table.rows.bills-list td { height: auto; padding: 0; border: 0; }
 }
+/* Batch 14: Fast Track's tap step (About you's switches and the Why now chips). */
+.ft-taps { gap: var(--s3) var(--s4); align-items: flex-start; }
+.ft-why .why-chips { gap: 6px; }
+/* Batch 14: Walk me through, a slim bar at the bottom of the window; the page makes room for it. */
+.walk-bar { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 90; width: min(920px, calc(100vw - 32px)); display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap;
+  padding: 8px 12px; background: var(--card); border: 1.5px solid var(--primary); border-radius: var(--r-card); box-shadow: var(--shadow-lift); }
+.walk-bar .walk-where { min-width: 0; }
+.walk-bar .spacer { flex: 1; }
+body.walking { padding-bottom: var(--walk-room, 88px); }
+/* Batch 14: a brand-new client's Home, one obvious first action. */
+.start-one { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s3); padding: var(--s5); }
+.start-one h2 { margin: 0; }
+.start-one + .more-wrap { margin-top: var(--s3); }
+.fill-line { margin: 0 0 var(--s2); }

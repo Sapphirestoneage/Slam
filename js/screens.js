@@ -17,6 +17,8 @@ import { overviewScreen, onePagerScreen, historyScreen } from './ui/report-ui.js
 import { statementsScreen } from './ui/statements-ui.js';
 import { layersCard } from './ui/layers-ui.js';
 import { arrive, leftPopover, missingFor } from './ui/arrive.js';
+import { fillCounter } from './ui/counts-ui.js';
+import { taxesCompletion, protectionCompletion } from './completion.js';
 import { institutionsCard } from './ui/institutions-ui.js';
 import { metrics as metricsOf } from './math/metrics.js';
 import { personLabels, modeOf, MODES, viewsOf } from './registry/couples.js';
@@ -130,8 +132,9 @@ const MM = {
     withChart(ctx, assetList(ctx.ref), assetCharts, 'assets'),
     S.moreBlock('assets:layers', () => S.live(ctx, () => layersCard(ctx)), { label: 'Cash layers: little e, gaps, big e' }),
     S.moreBlock('assets:institutions', () => S.live(ctx, () => institutionsCard(app, ctx)), { label: `Institutions (${(ctx.store.doc.profile.institutions || []).length})` })] }, // item 13
-  protection: { title: 'Protection', sub: 'Insurance coverage, gaps and life admin', body: (app, ctx) => [completion(app, listCompletion(ctx, r => r.kind === 'coverage', ['have'])), S.recordList(ctx, protectionList()), S.moreBlock('protection:life-admin', () => S.live(ctx, () => lifeAdminScreen(ctx)), { label: 'Life admin' })] },
-  taxes: { title: 'Taxes', sub: 'Filing status, last year, estimates', body: (app, ctx) => [h('div.visuals', {}, taxesScreen(ctx), S.visualsPanel(ctx, { charts: [incomeCharts[0]], area: 'taxes' }))] },
+  protection: { title: 'Protection', sub: 'Insurance coverage, gaps and life admin', body: (app, ctx) => [completion(app, listCompletion(ctx, r => r.kind === 'coverage', ['have'])) ?? h('div.fill-line', {}, S.live(ctx, () => fillCounter(app, protectionCompletion(ctx)) ?? h('span'))), S.recordList(ctx, protectionList()), S.moreBlock('protection:life-admin', () => S.live(ctx, () => lifeAdminScreen(ctx)), { label: 'Life admin' })] }, // batch 14: with no rows yet, X of Y filled counts Add the usual list
+  taxes: { title: 'Taxes', sub: 'Filing status, last year, estimates', body: (app, ctx) => [h('div.fill-line', {}, S.live(ctx, () => fillCounter(app, taxesCompletion(ctx)) ?? h('span'))), h('div.visuals', {}, taxesScreen(ctx), // batch 14: X of Y filled above
+     S.visualsPanel(ctx, { charts: [incomeCharts[0]], area: 'taxes' }))] },
 };
 // Headline strips (reorganize pass). Net worth: what you own and owe. Cash flow: the waterfall, top to bottom.
 const sumOf = (list, f) => list.reduce((t, x) => t + (f(x) ?? 0), 0);
@@ -239,7 +242,9 @@ export const SCREENS = {
     h('span', { style: { flex: 1 } }),
     S.button('Delete client', { kind: 'danger', iconName: 'trash', disabled: !app.hasClient, why: 'No client open', onClick: e => app.deleteClient(e.currentTarget) })),
   h('p.muted', { style: { marginTop: '12px' } }, app.backupText()),
-  h('h3', { style: { marginTop: '20px' } }, 'Spreadsheet'), sheetButtons(app))],
+  h('h3', { style: { marginTop: '20px' } }, 'Spreadsheet'), sheetButtons(app),
+  h('h3', { style: { marginTop: '20px' } }, 'Usage log'), h('div.row-line', {}, S.button('Export the usage log (CSV)', { iconName: 'download', disabled: !app.hasClient, why: 'No client open', onClick: () => app.exportUsage() }),
+    h('span.muted.small', {}, 'Time and clicks per screen, back presses, undos, Find words that found nothing, Show me dead ends and the ease answers. No dollar amounts.')))],
   'tools/session': (app, ctx) => sessionScreen(app, ctx, { fastTrackGap }),
 };
 

@@ -443,6 +443,7 @@ export const NOT_IN_SHEET = {
   history: 'dated history of every change; kept in the app and the backup file',
   snapshots: 'snapshots for change since last session; kept in the app and the backup file',
   parking: 'parking lot notes; kept in the app and the backup file',
+  usage: 'the usage log (batch 14): time and clicks per screen, back presses, undos, Find words that found nothing, Show me dead ends, Walk me through steps; no dollar amounts; Coach tools › Data exports it as CSV',
 };
 
 // Every field of an area that a record of this kind can carry.

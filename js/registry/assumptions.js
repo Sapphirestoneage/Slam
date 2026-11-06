@@ -200,6 +200,7 @@ export const REFERENCE_LISTS = {
   categoryDefaults: 'the starting DRAFTT letter, amount and date for each Budget category',
   spendingPresets: 'starter Budget lines, each a Guess',
   year: 'the tax year this file is for', source: 'where this file came from',
+  findWords: 'Find\'s everyday words (batch 14, js/find.js): what people type (401k, emergency fund, payday) and the screen and box each lands on, so Find reaches a thing in one search. Words, not numbers: no math reads them',
 };
 
 // Reference data that lives in its own file under data/library/ (a library, not a rate the math reads), each with

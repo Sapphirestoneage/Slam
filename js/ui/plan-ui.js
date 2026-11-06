@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Plan (build phase 7): Goals with presets and solvers, These are big deals, milestones, the FI timeline,
 // debt payoff, next 12 months. Scenarios stay a later phase.
+import { fillCounter } from './counts-ui.js';
+import { goalsCompletion } from '../completion.js';
 import { h, clear, icon } from './dom.js';
 import { simpleMath } from '../math/simple.js';
 import * as S from './staples.js';
@@ -91,7 +93,7 @@ export function goalsScreen(app, ctx) {
   const reveal = PUI.reveal;
   const top = h('div', {}, goalsTop(app, ctx, { reveal }));
   ctx.onRefresh(() => S.keepPlace(() => clear(top, goalsTop(app, ctx))));
-  return [head('Goals', 'FI target, assumptions, milestones'), S.live(ctx, () => gapCard(app, ctx, ctx.metrics(), { where: 'goals' }) ?? h('span')), top, S.live(ctx, () => goalChipSuggestions(ctx)), S.recordList(ctx, milestoneList())];
+  return [head('Goals', 'FI target, assumptions, milestones', S.live(ctx, () => fillCounter(app, goalsCompletion(ctx)) ?? h('span'))), S.live(ctx, () => gapCard(app, ctx, ctx.metrics(), { where: 'goals' }) ?? h('span')), top, S.live(ctx, () => goalChipSuggestions(ctx)), S.recordList(ctx, milestoneList())]; // batch 14: X of Y filled in the head
 }
 // Batch 10 (item 4): the goal chips from About you › Why now that match a Plan goal or FOO step, each with Add. The
 // coach confirms; nothing is added on its own. Not now sets one aside for this client.

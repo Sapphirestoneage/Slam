@@ -310,3 +310,37 @@ the surplus tile. QA: 525 tests in UTC and America/New_York, 0 fail, 2 todo (F-G
 Also: a 529 or a Goal account stays out of the FI path (question 214); the Home paycheck line uses the household's pay.
 
 QA: 540 tests in UTC and America/New_York (547 pass after the batch 12 rebase, 0 fail, 0 todo: the F-GUT and F-529 persona todos now pass; couple-joint now 293 months); test/batch15.test.js has 21, one a LibreOffice recalculation of the tax formulas, joint and apart. Layout check (1440 light, quick): 18 level, 30 clipped, 4 overflow, 5 covered, 76 askable, the same as before the batch (no new failures).
+
+## Batch 14 (Nov 6): Find understands people, Walk me through, Start session 1, the effort scoreboard
+
+Eli: "Part of the problem is I don't know how to enter everything because I don't know where everything is." The aim:
+about 20% of the effort for 80% of the picture, a clear way to 99%, and every release makes both easier.
+
+1. Find understands people: a table of everyday words (data/reference-2026.json findWords, registered as a word list
+   with its reason; js/find.js) sends 39 terms (rent, 401k, emergency fund, payday, credit score, life insurance ...) to
+   the right screen and box as the top result, landing on the box itself (a Budget line inside its category, a field in
+   a row's Details, a switch in a closed More block). Punctuation and spacing do not count ("401k" is "401(k)").
+2. Add goes where it belongs: an account word adds an account on Assets, a loan a debt, insurance a coverage row, an
+   income word income, a spending word (or a name with an amount) a Budget line; home value or FI age offer no Add;
+   anything unsure offers "Make a note for later" (the parking lot). "401(k) match" no longer reads as $401.
+3. Results say whose they are: "APR · Car loan", "APR · Credit card"; a field name shared by several groups says its
+   group; identical results show once.
+4. test/findability.test.js and tools/e2e/findability.cjs run the 39 terms on the Demo and a Fast Track client.
+5. Walk me through (Home's session strip and the docked agenda bar): every empty or rough box in session order (the
+   session 1 checklist, then About you, Income, the filing status, Budget categories, Assets, Debt, Credit cards,
+   Protection, Goals), one at a time, with a slim bar "3 of 14: Rent's due day · Skip · Will get it · Next"; the box is
+   outlined and focused and works as usual; Esc leaves (js/walk.js, js/ui/walk-ui.js).
+6. A brand-new client's Home is one card and one button, Start session 1 (it starts the session, runs Fast Track, then
+   Walk me through); the program, the path and the picture wait in a fold until there is data.
+7. Fast Track's tap step (step 2 of 9, What applies): kids, pets, car, housing, HSA, FSA, equity, work, household,
+   state and the Why now chips, with About you's own toggles; the last name comes from the client name. Core About you is
+   100% after Fast Track.
+8. X of Y filled on Budget, Taxes, Protection (with no rows: the usual list) and Goals; fillCounts lists every
+   screen's core and full counts. tools/e2e/effort.cjs runs Alexis and Tom and prints the scoreboard (QA.md, README).
+9. The usage log (js/usage.js, doc.usage, registered; no dollar amounts): time and clicks per screen, back presses,
+   undos, Find words that found nothing, Show me dead ends, the walk's steps; Coach tools › Data exports it as CSV. End
+   session asks the coach, optionally, "How easy was that session? 1 to 7" and "Where did you get stuck?" (kept on the
+   session record, program.reviews).
+
+QA: tests in UTC and America/New_York (test/findability.test.js, test/batch14.test.js); the findability and effort
+scripts; the layout checker; before and after screenshots at 1280 and 390.

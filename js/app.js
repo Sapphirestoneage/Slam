@@ -2,7 +2,7 @@
 // The shell (build phase 4): top bar, five tabs, sub-tabs, Find, the More menu (undo, redo, add anything, the
 // parking lot), time toggle, client view, gear. Each screen shows its first state from Words and states.
 import { h, clear, icon } from './ui/dom.js';
-import { arrive, leftPopover, missingFor } from './ui/arrive.js';
+import { arrive, leftPopover, missingFor, land } from './ui/arrive.js';
 import { layerSnapshot } from './math/layers.js';
 import { reportThis } from './ui/report-this.js';
 import { startTips } from './ui/tips.js';
@@ -15,13 +15,15 @@ import { addPresets, migrateBatch10 } from './presets.js';
 import { snapshotNumbers, inSession, programOf, agendaOf, makeHomework } from './program.js';
 import { saveFile, saveWords } from './ui/save-file.js';
 import { agendaPanel } from './ui/agenda-ui.js';
+import { walkButton, stopWalk } from './ui/walk-ui.js';
 import { TABS, parseRoute, search, routeForPlace, tabRoute } from './nav.js';
 import { SCREENS, progressOf } from './screens.js';
 import { startFastTrack, fastTrackLabel } from './ui/fasttrack-ui.js';
 import { keepPlace } from './ui/place.js';
 import { opened } from './ui/dismiss.js';
-import { parseQuickAdd } from './quickadd.js';
+import { addChoice } from './find.js';
 import { dueChecks } from './checks.js';
+import { logEvent, usageCsv } from './usage.js';
 
 const [ref, fields, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/fields.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
 
@@ -39,6 +41,7 @@ const app = {
   store: null, ctx: null, saver: null, hasClient: false,
 
   open(doc, { save = true } = {}) {
+    stopWalk({ quiet: true }); // batch 14: a walk belongs to one client
     this.saver?.flush(); this.saver?.stop();
     this.hasClient = !!doc;
     if (doc) migrateBatch10(doc, ref); // batch 10: untouched starter amounts become faded typicals; Bills and subscriptions; levels (once per file)
@@ -97,6 +100,23 @@ const app = {
     S.toast('Example numbers loaded. The Demo client is made up.');
   },
   go(hash) { if (location.hash === hash) this.render(); else location.hash = hash; },
+  // ---------- The usage log (batch 14, item 9): counts and words only, in the client file; saved a moment later ----------
+  _visit: null,
+  usage(e, data = {}, { debounce = null } = {}) {
+    if (!this.hasClient) return;
+    logEvent(this.store.doc, e, { screen: parseRoute(location.hash).hash.slice(2), ...data }, { debounce });
+    clearTimeout(this._usageSave); this._usageSave = setTimeout(() => { if (this.hasClient) saveClient(adapter, this.store.doc); }, 1500);
+  },
+  visitEnd() { // time and clicks on the screen just left
+    const v = this._visit;
+    if (v && this.hasClient && v.doc === this.store.doc) logEvent(this.store.doc, 'screen', { screen: v.screen, ms: Date.now() - v.at, clicks: v.clicks });
+    this._visit = null;
+  },
+  exportUsage() {
+    this.visitEnd(); this._visit = { screen: parseRoute(location.hash).hash.slice(2), at: Date.now(), clicks: 0, doc: this.store.doc };
+    const name = `slam-usage-${(this.store.doc.client.name || 'client').replace(/\W+/g, '-').toLowerCase()}-${new Date().toISOString().slice(0, 10)}.csv`;
+    saveFile(new Blob([usageCsv(this.store.doc)], { type: 'text/csv' }), name).then(r => S.toast(saveWords(r, 'The usage log') ?? 'Usage log downloaded.'));
+  },
 
   // ---------- top bar ----------
   chrome() {
@@ -117,7 +137,7 @@ const app = {
     const homeHref = tabRoute(TABS[0]);
     clear($('topbar'), h('div.topbar-in', {},
       h('div.tb-left', {},
-        h('span.row-line.history-btns', { style: { gap: '4px', flexWrap: 'nowrap' } }, S.button(h('span.sr', {}, 'Back'), { iconName: 'left', tip: 'Back', onClick: () => history.back() }), S.button(h('span.sr', {}, 'Forward'), { iconName: 'right', tip: 'Forward', onClick: () => history.forward() })), // item 1: every screen is browser history; batch 8 (C13): normal bordered buttons, always in the sticky bar
+        h('span.row-line.history-btns', { style: { gap: '4px', flexWrap: 'nowrap' } }, S.button(h('span.sr', {}, 'Back'), { iconName: 'left', tip: 'Back', onClick: () => { this.usage('back'); history.back(); } }), S.button(h('span.sr', {}, 'Forward'), { iconName: 'right', tip: 'Forward', onClick: () => history.forward() })), // item 1: every screen is browser history; batch 8 (C13): normal bordered buttons, always in the sticky bar
         h('a.site-id', { href: homeHref, title: 'Stress Less About Money' }, 'SLAM'), clientBtn,
         h('span.save-state', { id: 'save-state' })),
       h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: tabRoute(t), 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),
@@ -197,12 +217,13 @@ const app = {
       if (it.kind === 'add') return this.quickAdd(it.p);
       input.blur();
       this.goFound(it.r);
+      this.usage?.('find', { hit: it.r.kind });
     };
     const draw = () => {
       const q = input.value.trim();
       if (!q) { closeList(); return; }
-      const found = search(q, { fields, records: this.store.records }).slice(0, 8);
-      const add = this.hasClient ? parseQuickAdd(q) : null;
+      const found = search(q, { fields, records: this.store.records, doc: this.hasClient ? this.store.doc : null, ref }).slice(0, 8);
+      const add = this.hasClient ? addChoice(q, { ref }) : null; // batch 14: Add goes where it belongs, or a note for later
       items = [...found.map(r => ({ kind: 'find', r })), ...(add ? [{ kind: 'add', p: add }] : [])];
       sel = Math.min(sel, Math.max(0, items.length - 1));
       if (!list) {
@@ -211,10 +232,12 @@ const app = {
         forget = opened({ el: list, anchor: wrap, pop: true, close: closeList });
         input.setAttribute('aria-expanded', 'true');
       }
+      const addWords = p => (p.kind === 'note' ? [h('span.add-line', {}, icon('note'), `Make a note for later: ${p.name}`), h('span.where', {}, 'to the parking lot')]
+        : [h('span.add-line', {}, icon('plus'), `Add ${p.name || 'it'}${p.amount != null ? `, ${p.amount}${p.per ? ` a ${p.per}` : ''}` : p.values?.balance != null ? `, ${p.values.balance}` : ''}`), h('span.where', {}, `to ${p.section}`)]);
       clear(list, items.length ? items.map((it, i) => h('li', {}, h('button', { type: 'button', role: 'option', 'aria-selected': String(i === sel), onmousedown: e => e.preventDefault(), onclick: () => pick(it) },
-        it.kind === 'find' ? [h('span', {}, it.r.label), h('span.where', {}, it.r.where)]
-          : [h('span.add-line', {}, icon('plus'), `Add ${it.p.name || 'it'}${it.p.amount != null ? `, ${it.p.amount}${it.p.per ? ` a ${it.p.per}` : ''}` : ''}`), h('span.where', {}, `to ${it.p.section}`)])))
+        it.kind === 'find' ? [h('span', {}, it.r.label), h('span.where', {}, it.r.where)] : addWords(it.p))))
         : h('li.muted', {}, this.hasClient ? 'Nothing by that name yet.' : 'Nothing by that name yet. Open a client to add.'));
+      if (!found.length) this.usage?.('findMiss', { words: q }, { debounce: 'findMiss' }); // batch 14: the words, digits taken out
     };
     input.oninput = () => { sel = 0; draw(); };
     input.onkeydown = e => {
@@ -227,12 +250,15 @@ const app = {
   },
   quickAdd(p) {
     const { kind, type, section, summary, ...rest } = p;
+    if (kind === 'note') { this.store.addNote(p.name); S.toast('In the parking lot for later.', { undo: () => this.store.undo(), action: { label: 'Open it', run: () => this.openParking() } }); this.parkingDock(); return; }
     this.store.add(kind, rest, { type });
     this.go(routeForPlace(section));
     S.toast(`Added to ${section}.`, { undo: () => this.store.undo() });
   },
   goFound(r) {
     if (!r.route) return;
+    // Batch 14: a word lands on its box (opening a category or a row's Details on the way), with where it lives.
+    if (r.kind === 'word') { if (r.open) S.openBlock(r.open); land(this, r.route, { id: r.id, focus: r.focus, parentCat: r.parentCat }); S.toast(r.add ? `None yet. Add one here, on ${r.where}.` : `${r.label.split(' · ')[0]} lives on ${r.where}.`); return; }
     this.go(r.route);
     requestAnimationFrame(() => {
       const row = r.kind === 'record' ? document.querySelector(`tr[data-id="${r.id}"]`) : null;
@@ -329,7 +355,7 @@ const app = {
   },
 
   // ---------- Undo, settings, data ----------
-  undo() { const l = this.store.undo(); if (l) S.toast(`Undone: ${l}`); },
+  undo() { const l = this.store.undo(); if (l) { S.toast(`Undone: ${l}`); this.usage('undo'); } },
   redo() { const l = this.store.redo(); if (l) S.toast(`Redone: ${l}`); },
   setPref(k, v) { this.prefs = setPrefs(adapter, { [k]: v }); this.applyPrefs(); this.render(); },
   applyPrefs() {
@@ -353,6 +379,7 @@ const app = {
     const A = b.A;
     const back = b.back && b.back !== location.hash ? S.button('Back to where we were', { size: 'small', iconName: 'left', onClick: () => { const to = b.back; b.back = null; this.go(to); } }) : null;
     const head = h('div.tracker-head', {}, h('strong', {}, `Session ${A.n} · ${A.done} of ${A.of} done`), h('span.muted.small', {}, A.name), h('span.spacer'), back,
+      walkButton(this, this.ctx, { size: 'small' }), // batch 14 (item 5)
       S.button(b.open ? 'Hide the agenda' : 'Agenda', { size: 'small', iconName: b.open ? 'down' : 'up', onClick: () => { b.open = !b.open; this.agendaBar(); } }));
     clear(el, head, b.open ? h('div.tracker-body', {}, agendaPanel(this, this.ctx, A, { compact: true })) : null);
   },
@@ -423,7 +450,7 @@ const app = {
   },
   setupArrive() { S.setLeftPopover((anchor, items) => leftPopover(this, anchor, items)); },
   goToNeed(need) {
-    const r = search(need, { fields })[0];
+    const r = search(need, { fields, records: this.store.records, doc: this.store.doc, ref })[0];
     if (r?.route) arrive(this, r.route); // item 2: land and light up what needs work
   },
 
@@ -440,7 +467,7 @@ const app = {
     const screen = SCREENS[`${tab.id}/${sub.id}`];
     const draw = () => { this.chrome(); this.parkingDock(); clear($('main'), screen ? screen(this, this.ctx) : null); };
     // A redraw of the same screen never loses your place (R165): scroll, list scroll and the control you were on.
-    if (this._lastHash === hash) keepPlace(draw); else draw();
+    if (this._lastHash === hash) keepPlace(draw); else { this.visitEnd(); if (this.hasClient) this._visit = { screen: hash.slice(2), at: Date.now(), clicks: 0, doc: this.store.doc }; draw(); } // batch 14: time per screen
     // One page: a sub-tab click scrolls to its part (only when the place changes, not on every redraw).
     if (this.prefs[`onePage-${tab.id}`] && this._lastHash !== hash && this._lastHash?.startsWith(`#/${tab.id}/`)) document.getElementById(`part-${sub.id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     this._lastHash = hash;
@@ -461,7 +488,9 @@ document.addEventListener('slam:rerender', () => app.render({ keepPop: true }));
 window.addEventListener('hashchange', () => app.render());
 let resizeTimer = null; // the pinned parking lot has room only at 1280 and up
 window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (app.hasClient) app.parkingDock(); }, 150); });
+document.addEventListener('click', () => { if (app._visit) app._visit.clicks += 1; }, true); // batch 14: clicks per screen
 window.addEventListener('beforeunload', e => { // R084: warn before closing with unsaved work
+  app.visitEnd(); if (app.hasClient) saveClient(adapter, app.store.doc);
   app.saver?.flush();
   if (app.saver?.state === 'unsaved') { e.preventDefault(); e.returnValue = ''; }
 });

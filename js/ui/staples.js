@@ -58,7 +58,7 @@ export function iconButton(name, label, onClick, { tiny = false, disabled = fals
 }
 // Add button: '+ Add [thing]', outlined, bottom left of every section (R103).
 export function addButton(thing, onClick) {
-  return h('button.btn', { type: 'button', onclick: onClick, 'data-add': thing }, icon('plus'), `Add ${thing}`);
+  return h('button.btn', { type: 'button', onclick: onClick, 'data-add': thing, 'data-focus': `add:${thing}` }, icon('plus'), `Add ${thing}`); // batch 14: Find lands here when there is nothing yet
 }
 
 // Segmented toggle (Fixed | Variable, $ | Hours | FI days, Side | Below ...). The pick colors at once,
@@ -233,7 +233,7 @@ export function metricCard(ctx, label, result, { key = null, render = null, lowe
   const snap = ctx.store.lastSnapshot();
   const change = key && !locked ? changeSince(keyNumbers(ctx.metrics()), snap, key) : null;
   const good = change && (change.direction === 'down') === lowerIsGood;
-  return h(`div.metric${locked ? '.locked' : ''}`, {},
+  return h(`div.metric${locked ? '.locked' : ''}`, { 'data-focus': key ? `metric:${key}` : null }, // batch 14: Find lands on a headline number
     labelEl, // every number links to its home
     locked
       ? h('div.big', {}, result.never ? warnTag('Not on this path') : [icon('lock'), ` Locked: needs ${result.needs.length} ${result.needs.length === 1 ? 'number' : 'numbers'}`])

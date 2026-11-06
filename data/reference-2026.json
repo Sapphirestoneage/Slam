@@ -1290,5 +1290,656 @@
     "source": "SLAM spec, batch 10 (Eli, Nov 5 2026): faded typical amounts, levels, Bills and subscriptions",
     "date": "2026-11-05"
   },
-  "typicalRatesNote": "Credit card set to 25% on purpose (Nov 3): an unknown card APR shows a scary Guess until the real one is typed. The Fed G.19 average is 22.15%."
+  "typicalRatesNote": "Credit card set to 25% on purpose (Nov 3): an unknown card APR shows a scary Guess until the real one is typed. The Fed G.19 average is 22.15%.",
+  "findWords": {
+    "about": "Find understands people (batch 14): everyday words a coach or client types into Find, each pointing at the screen and the box where that thing lives, best first. go is a list of targets tried in order: a record field (kind[types]{categories}.field>box, * for one result per record), cat:Key (a Budget category amount), focus:key@route (a fixed box; ^block opens a closed More block first) or add:thing@route (the list's Add button when there is nothing yet). add says what Add makes from the same words (none: no Add, only Find; a note for later when unsure).",
+    "source": "SLAM rule, js/find.js (Eli, Nov 5 2026: \"I do not know where everything is\")",
+    "date": "2026-11-05",
+    "words": [
+      {
+        "terms": [
+          "rent",
+          "rent payment",
+          "my rent",
+          "housing payment",
+          "landlord"
+        ],
+        "label": "Rent",
+        "go": [
+          "bill{Rent or mortgage}.amount",
+          "cat:Accommodation"
+        ],
+        "add": "bill",
+        "why": "the rent line is a Budget line under Accommodation"
+      },
+      {
+        "terms": [
+          "paycheck",
+          "take home",
+          "take home pay",
+          "net pay",
+          "pay",
+          "income",
+          "wages",
+          "job",
+          "my pay"
+        ],
+        "label": "Take-home pay",
+        "go": [
+          "income[Job|Partner job].amount",
+          "income.amount",
+          "add:income@#/cash-flow/income"
+        ],
+        "add": "income",
+        "why": "people say paycheck; the box is the take-home amount on Income"
+      },
+      {
+        "terms": [
+          "salary",
+          "gross",
+          "gross pay",
+          "annual salary",
+          "yearly pay",
+          "before tax"
+        ],
+        "label": "Pay (salary or take-home)",
+        "go": [
+          "income[Job|Partner job].amount",
+          "income.amount",
+          "add:income@#/cash-flow/income"
+        ],
+        "add": "income",
+        "why": "salary is the same income row; Given as says take-home or gross"
+      },
+      {
+        "terms": [
+          "bonus",
+          "bonuses",
+          "annual bonus",
+          "year end bonus"
+        ],
+        "label": "Bonus",
+        "go": [
+          "income[Job|Partner job].bonus",
+          "income.bonus",
+          "add:income@#/cash-flow/income"
+        ],
+        "add": "income",
+        "why": "the bonus sits in the job row's details on Income"
+      },
+      {
+        "terms": [
+          "side income",
+          "side hustle",
+          "side gig",
+          "gig",
+          "freelance",
+          "1099 income",
+          "extra income"
+        ],
+        "label": "Side income",
+        "go": [
+          "income[Side hustle|Self-employed].amount",
+          "add:income@#/cash-flow/income"
+        ],
+        "add": "income:Side hustle",
+        "why": "a side hustle is its own income row"
+      },
+      {
+        "terms": [
+          "401k",
+          "401 k",
+          "403b",
+          "457",
+          "tsp",
+          "solo 401k",
+          "retirement account",
+          "401k balance",
+          "work retirement"
+        ],
+        "label": "401(k) balance",
+        "go": [
+          "account[401(k)|403(b)|457|TSP|Solo 401(k)].balance",
+          "add:asset@#/net-worth/assets"
+        ],
+        "add": "account:401(k)",
+        "why": "the spec calls it 401(k) or 403(b); people type 401k"
+      },
+      {
+        "terms": [
+          "401k match",
+          "401 k match",
+          "employer match",
+          "company match",
+          "match",
+          "matching"
+        ],
+        "label": "Employer match",
+        "go": [
+          "income[Job|Partner job].hasMatch>@seg:Employer match:Yes",
+          "account[401(k)|403(b)].balance",
+          "add:income@#/cash-flow/income"
+        ],
+        "add": "none",
+        "why": "the match is asked on the job row (Income) first; its tiers live on the 401(k)"
+      },
+      {
+        "terms": [
+          "roth",
+          "roth ira",
+          "ira",
+          "traditional ira",
+          "rollover ira",
+          "backdoor roth",
+          "roth balance"
+        ],
+        "label": "IRA balance",
+        "go": [
+          "account[Roth IRA|Traditional IRA|Rollover IRA].balance",
+          "add:asset@#/net-worth/assets"
+        ],
+        "add": "account:Roth IRA",
+        "why": "an IRA is an account on Assets"
+      },
+      {
+        "terms": [
+          "hsa",
+          "health savings",
+          "health savings account",
+          "hsa balance"
+        ],
+        "label": "HSA",
+        "go": [
+          "account[HSA].balance",
+          "focus:seg:HSA-eligible:true@#/home/profile"
+        ],
+        "add": "account:HSA",
+        "why": "an HSA shows on Assets once About you says the plan is HSA-eligible"
+      },
+      {
+        "terms": [
+          "checking",
+          "checking account",
+          "checking balance",
+          "debit"
+        ],
+        "label": "Checking balance",
+        "go": [
+          "account[Checking].balance",
+          "add:asset@#/net-worth/assets"
+        ],
+        "add": "account:Checking",
+        "why": "checking is a cash account on Assets"
+      },
+      {
+        "terms": [
+          "savings",
+          "savings account",
+          "hysa",
+          "high yield",
+          "high yield savings",
+          "money market",
+          "savings balance"
+        ],
+        "label": "Savings balance",
+        "go": [
+          "account[Savings or HYSA|Money market|CD].balance",
+          "add:asset@#/net-worth/assets"
+        ],
+        "add": "account:Savings or HYSA",
+        "why": "savings is a cash account on Assets"
+      },
+      {
+        "terms": [
+          "emergency fund",
+          "emergency savings",
+          "rainy day fund",
+          "rainy day",
+          "rule of 5",
+          "big e",
+          "cushion",
+          "safety net"
+        ],
+        "label": "Emergency fund (savings)",
+        "go": [
+          "account[Savings or HYSA|Money market|CD].balance",
+          "account[Checking].balance",
+          "add:asset@#/net-worth/assets"
+        ],
+        "add": "none",
+        "why": "the emergency fund is the savings balance; its target (Rule of 5, big e) shows on Assets and FOO"
+      },
+      {
+        "terms": [
+          "credit card",
+          "credit cards",
+          "card",
+          "cards",
+          "visa",
+          "amex",
+          "mastercard",
+          "discover",
+          "card balance",
+          "credit card debt"
+        ],
+        "label": "Card balance",
+        "go": [
+          "debt*[Credit card].balance",
+          "add:card@#/net-worth/credit-cards"
+        ],
+        "add": "debt:Credit card",
+        "why": "cards live on their own sub-tab, Credit cards"
+      },
+      {
+        "terms": [
+          "apr",
+          "interest rate",
+          "interest",
+          "rate",
+          "apy"
+        ],
+        "label": "APR",
+        "go": [
+          "debt*.apr"
+        ],
+        "add": "none",
+        "why": "every debt has an APR; one result per debt, with its name"
+      },
+      {
+        "terms": [
+          "credit score",
+          "fico",
+          "score",
+          "credit",
+          "credit report"
+        ],
+        "label": "Credit score",
+        "go": [
+          "focus:credit:score@#/net-worth/credit-cards"
+        ],
+        "add": "none",
+        "why": "the score sits under Credit health on Credit cards (the spec row says Debt)"
+      },
+      {
+        "terms": [
+          "student loan",
+          "student loans",
+          "student debt",
+          "navient",
+          "nelnet",
+          "sallie mae",
+          "mohela"
+        ],
+        "label": "Student loan balance",
+        "go": [
+          "debt*[Student loan].balance",
+          "add:debt@#/net-worth/debt"
+        ],
+        "add": "debt:Student loan",
+        "why": "a student loan is a row on Debt"
+      },
+      {
+        "terms": [
+          "car loan",
+          "auto loan",
+          "car payment",
+          "car note"
+        ],
+        "label": "Car loan balance",
+        "go": [
+          "debt*[Car loan].balance",
+          "add:debt@#/net-worth/debt"
+        ],
+        "add": "debt:Car loan",
+        "why": "the car loan is a row on Debt, linked to the car"
+      },
+      {
+        "terms": [
+          "car",
+          "vehicle",
+          "auto",
+          "my car",
+          "car value"
+        ],
+        "label": "Car value",
+        "go": [
+          "asset[Car].value>balance",
+          "focus:seg:Has a car:true@#/home/profile"
+        ],
+        "add": "none",
+        "why": "the car is a thing on Assets; About you says whether there is one"
+      },
+      {
+        "terms": [
+          "mortgage",
+          "home loan",
+          "mortgage balance"
+        ],
+        "label": "Mortgage balance",
+        "go": [
+          "debt*[Mortgage].balance",
+          "focus:seg:Housing:Own@#/home/profile"
+        ],
+        "add": "none",
+        "why": "a mortgage rides on the home; renting, About you says so"
+      },
+      {
+        "terms": [
+          "home value",
+          "house value",
+          "property value",
+          "home worth",
+          "house",
+          "my house"
+        ],
+        "label": "Home value",
+        "go": [
+          "asset[Home].value>balance",
+          "focus:seg:Housing:Own@#/home/profile"
+        ],
+        "add": "none",
+        "why": "the home is a thing on Assets; About you says own or rent"
+      },
+      {
+        "terms": [
+          "groceries",
+          "grocery",
+          "food",
+          "supermarket",
+          "food shopping"
+        ],
+        "label": "Groceries",
+        "go": [
+          "bill{Groceries|Groceries, dining out, coffee}.amount",
+          "cat:Food"
+        ],
+        "add": "bill",
+        "why": "groceries is a Budget line under Food"
+      },
+      {
+        "terms": [
+          "phone",
+          "phone bill",
+          "cell phone",
+          "phone plan",
+          "mobile",
+          "cell"
+        ],
+        "label": "Phone bill",
+        "go": [
+          "bill{Phone|Internet, phone}.amount",
+          "cat:Bills"
+        ],
+        "add": "bill",
+        "why": "the phone is a Budget line, not the phone number on About you"
+      },
+      {
+        "terms": [
+          "subscriptions",
+          "subscription",
+          "streaming",
+          "memberships",
+          "apps"
+        ],
+        "label": "Bills and subscriptions",
+        "go": [
+          "cat:Bills"
+        ],
+        "add": "bill",
+        "why": "subscriptions are their own Budget category"
+      },
+      {
+        "terms": [
+          "insurance",
+          "coverage",
+          "insurances",
+          "policies"
+        ],
+        "label": "Insurance",
+        "go": [
+          "coverage*.have",
+          "add:coverage@#/net-worth/protection"
+        ],
+        "add": "coverage",
+        "why": "every kind of coverage is a row on Protection"
+      },
+      {
+        "terms": [
+          "life insurance",
+          "life policy",
+          "term life",
+          "whole life"
+        ],
+        "label": "Life insurance",
+        "go": [
+          "coverage[Life].have",
+          "add:coverage@#/net-worth/protection"
+        ],
+        "add": "coverage:Life",
+        "why": "life insurance is a coverage row on Protection"
+      },
+      {
+        "terms": [
+          "renters insurance",
+          "renter s insurance",
+          "renters",
+          "home insurance",
+          "homeowners insurance",
+          "homeowner s insurance"
+        ],
+        "label": "Renters or home insurance",
+        "go": [
+          "coverage[Renters or home].have",
+          "add:coverage@#/net-worth/protection"
+        ],
+        "add": "coverage:Renters or home",
+        "why": "the coverage lives on Protection; its premium is a Budget line"
+      },
+      {
+        "terms": [
+          "taxes",
+          "tax",
+          "tax return",
+          "refund",
+          "tax refund",
+          "withholding",
+          "w4",
+          "w 4"
+        ],
+        "label": "Taxes",
+        "go": [
+          "focus:tax:filing@#/cash-flow/taxes"
+        ],
+        "add": "none",
+        "why": "taxes have their own sub-tab under Cash flow"
+      },
+      {
+        "terms": [
+          "filing status",
+          "filing",
+          "married filing jointly",
+          "head of household",
+          "joint return"
+        ],
+        "label": "Filing status",
+        "go": [
+          "focus:tax:filing@#/cash-flow/taxes"
+        ],
+        "add": "none",
+        "why": "filing status is on Taxes"
+      },
+      {
+        "terms": [
+          "goal",
+          "goals",
+          "milestone",
+          "milestones",
+          "saving for",
+          "save for"
+        ],
+        "label": "Goals",
+        "go": [
+          "milestone.name",
+          "add:milestone@#/plan/goals"
+        ],
+        "add": "none",
+        "why": "goals are milestones on Plan › Goals"
+      },
+      {
+        "terms": [
+          "fi age",
+          "fi",
+          "retire age",
+          "retirement age",
+          "retire by",
+          "retire at",
+          "when to retire",
+          "financial independence",
+          "retire"
+        ],
+        "label": "FI age",
+        "go": [
+          "focus:g:fiAge@#/plan/goals"
+        ],
+        "add": "none",
+        "why": "the FI target age is on Plan › Goals"
+      },
+      {
+        "terms": [
+          "retirement spending",
+          "spending in retirement",
+          "retirement budget",
+          "retired spending"
+        ],
+        "label": "Retirement spending",
+        "go": [
+          "focus:g:retSpend@#/plan/goals"
+        ],
+        "add": "none",
+        "why": "spending in retirement is on Plan › Goals"
+      },
+      {
+        "terms": [
+          "due date",
+          "due day",
+          "due",
+          "bill due",
+          "when it s due",
+          "due dates"
+        ],
+        "label": "Due day",
+        "go": [
+          "bill{Rent or mortgage}.dueDay",
+          "bill(fixed).dueDay",
+          "debt[Credit card].dueDay"
+        ],
+        "add": "none",
+        "why": "a fixed bill's day sits in its side panel on the Budget"
+      },
+      {
+        "terms": [
+          "payday",
+          "paydays",
+          "pay day",
+          "pay schedule",
+          "pay frequency",
+          "when paid",
+          "how often paid",
+          "paid every"
+        ],
+        "label": "Pay schedule",
+        "go": [
+          "income[Job|Partner job].payFrequency>freq",
+          "income.payFrequency>freq",
+          "add:income@#/cash-flow/income"
+        ],
+        "add": "none",
+        "why": "payday means the pay schedule, not a payday loan"
+      },
+      {
+        "terms": [
+          "kids",
+          "children",
+          "child",
+          "dependents",
+          "baby",
+          "kid"
+        ],
+        "label": "Kids",
+        "go": [
+          "focus:seg:Has kids:true@#/home/profile"
+        ],
+        "add": "none",
+        "why": "kids is a switch on About you; it adds the Kids lines"
+      },
+      {
+        "terms": [
+          "partner",
+          "spouse",
+          "husband",
+          "wife",
+          "boyfriend",
+          "girlfriend",
+          "couple",
+          "married",
+          "fiance"
+        ],
+        "label": "Partner (household)",
+        "go": [
+          "focus:p:mode@#/home/profile"
+        ],
+        "add": "none",
+        "why": "the household mode on About you sets solo or couple"
+      },
+      {
+        "terms": [
+          "giving",
+          "charity",
+          "tithe",
+          "tithing",
+          "donations",
+          "donate",
+          "tzedakah",
+          "maaser"
+        ],
+        "label": "Giving",
+        "go": [
+          "focus:seg:Giving:true@#/plan/foo^foo:settings",
+          "bill{Giving}.amount"
+        ],
+        "add": "none",
+        "why": "giving first is a switch on Plan › FOO; what is given is a Budget line"
+      },
+      {
+        "terms": [
+          "net worth",
+          "networth",
+          "what i m worth",
+          "total net worth"
+        ],
+        "label": "Net worth",
+        "go": [
+          "focus:metric:netWorth@#/net-worth/assets"
+        ],
+        "add": "none",
+        "why": "net worth is worked out on the Net worth tab"
+      },
+      {
+        "terms": [
+          "budget",
+          "spending",
+          "monthly spending",
+          "expenses",
+          "spend",
+          "what i spend"
+        ],
+        "label": "Spending, a month",
+        "go": [
+          "focus:gut@#/cash-flow/budget"
+        ],
+        "add": "none",
+        "why": "the Budget starts from the all-in gut number"
+      }
+    ]
+  }
 }

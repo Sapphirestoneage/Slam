@@ -4,7 +4,10 @@
 import { h, clear, icon } from './dom.js';
 import { moneyInput, toggle, select, textInput, labelled, summaryStrip, toast } from './staples.js';
 import { applyFastTrack, fastTrackAnswers, FT_DEBTS, needsPayFrequency, fastTrackDone } from '../fasttrack.js';
-import { HOUSING } from '../gates.js';
+import { HOUSING, WORK } from '../gates.js';
+import { MODE_NAMES } from '../registry/couples.js';
+import { WHY_CHIPS, WHY_LABELS } from '../whynow.js';
+import { STATES } from './profile.js';
 import { keyNumbers } from '../math/metrics.js';
 import { FREQ } from './money-lists.js';
 
@@ -13,7 +16,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 // Batch 8: Start until it has been finished once, then Redo.
 export const fastTrackLabel = ctx => (fastTrackDone(ctx.store.doc) ? 'Redo Fast Track' : 'Start Fast Track');
 
-export function startFastTrack(app, ctx) {
+export function startFastTrack(app, ctx, { then = null } = {}) { // then: what comes next (batch 14: Start session 1 and Walk me through go on to the walk)
   const a = fastTrackAnswers(ctx.store.doc);
   const started = Date.now();
   let step = 0;
@@ -25,6 +28,27 @@ export function startFastTrack(app, ctx) {
     labelled('Paying a month', big(a.debts[type].payment, v => { a.debts[type].payment = v; }, 'Add payment', `ft:${type}:pay`)),
     a.debts[type].rows > 1 ? h('span.muted.small', {}, `Already listed one by one (${a.debts[type].rows}); Fast Track leaves them as they are.`) : null);
 
+  // Batch 14 (item 7): About you's switches and the Why now chips on one tap screen, the same toggles and keys as
+  // About you (seg:Has kids:true ...), so core About you is done when Fast Track is.
+  const yn = (v, on, label) => toggle([[true, 'Yes'], [false, 'No']], v ?? null, on, { label, clearable: true });
+  const chipRow = key => h('div.stack.ft-why', { style: { gap: '6px' }, 'data-why': key }, h('span.label', {}, WHY_LABELS[key]),
+    h('div.picks.why-chips', { role: 'group', 'aria-label': WHY_LABELS[key] }, WHY_CHIPS[key].filter(c => c !== 'Other').map(c => {
+      const on = a.chips[key].includes(c);
+      return h('button.pick.why-chip', { type: 'button', 'aria-pressed': String(on), onclick: () => { a.chips[key] = on ? a.chips[key].filter(x => x !== c) : [...a.chips[key], c]; draw(); } }, on ? icon('check') : null, c);
+    })));
+  const tapStep = { title: 'What applies', help: 'One tap each. These add or remove whole sections everywhere; nothing is deleted.', body: () => h('div.stack', { style: { gap: '14px' } },
+    h('div.ft-grid.ft-taps', {},
+      labelled('Kids', yn(a.hasKids, v => set({ hasKids: v }), 'Has kids')),
+      labelled('Pets', yn(a.hasPets, v => set({ hasPets: v }), 'Has pets')),
+      labelled('Car', yn(a.hasCar, v => set({ hasCar: v }), 'Has a car')),
+      labelled('Housing', toggle(HOUSING, a.housing, v => set({ housing: v }), { label: 'Housing', clearable: true })),
+      labelled('HSA-eligible plan', yn(a.hsaEligible, v => set({ hsaEligible: v }), 'HSA-eligible')),
+      labelled('FSA at work', yn(a.fsa, v => set({ fsa: v }), 'FSA')),
+      labelled('Equity pay (ESPP, RSU)', yn(a.equityPay, v => set({ equityPay: v }), 'Equity pay')),
+      labelled('Work', select(WORK, a.workSituation, v => set({ workSituation: v }), { label: 'Work situation', hint: 'Pick one', width: 190, key: 'ft:work' })),
+      labelled('Household', select(MODE_NAMES, a.mode ?? (a.household === 'Solo' ? 'Solo' : null), v => set({ mode: v }), { label: 'Household mode', hint: 'Pick one', width: 190, key: 'ft:mode' })),
+      labelled('State', select(STATES, a.state, v => set({ state: v }), { label: 'State', hint: 'State', width: 110, key: 'ft:state' }))),
+    chipRow('whyNow'), chipRow('worry'), chipRow('goalWords')) };
   const STEPS = [
     { title: 'About you', help: 'Age drives the Rule of 5 and the FI timeline.', body: () => h('div.ft-grid', {},
       labelled('First name', textInput(a.firstName, v => set({ firstName: v }), { hint: 'First name', width: 220, key: 'ft:name' })),
@@ -32,6 +56,7 @@ export function startFastTrack(app, ctx) {
         select(MONTHS.map((m, i) => [String(i + 1), m]), a.birthMonth ? String(a.birthMonth) : null, v => set({ birthMonth: v ? Number(v) : null }), { label: 'Birth month', hint: 'Month', width: 110, key: 'ft:bm' }),
         textInput(a.birthYear, v => set({ birthYear: v && /^\d{4}$/.test(v) ? Number(v) : null }), { hint: 'Year', width: 96, key: 'ft:by' }))),
       labelled('Solo or couple', toggle(['Solo', 'Couple'], a.household, v => set({ household: v }), { label: 'Solo or couple' }))) },
+    tapStep,
     { title: 'Take-home pay', help: 'What lands in the account, after taxes. Any way they know it.', body: () => h('div.ft-grid', {},
       labelled('Take-home', big(a.takeHome, v => set({ takeHome: v }), 'Add amount', 'ft:take')),
       labelled('Per', toggle([['paycheck', 'Paycheck'], ['month', 'Month'], ['year', 'Year']], a.takePer, v => set({ takePer: v }), { label: 'Per' })),
@@ -88,8 +113,9 @@ export function startFastTrack(app, ctx) {
         { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate' }, { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi' }]),
       h('p.muted', {}, 'These are totals by area. Going through each tab in full detail tightens them; the gap is tracked on Coach tools.'),
       h('div.row-line', { style: { justifyContent: 'flex-end' } },
-        h('button.btn', { type: 'button', onclick: () => { close(); app.go('#/home/profile'); } }, 'Keep going in full detail'),
-        h('button.btn.primary', { type: 'button', onclick: () => { close(); app.go('#/home/session'); } }, 'Done')));
+        then ? null : h('button.btn', { type: 'button', onclick: () => { close(); app.go('#/home/profile'); } }, 'Keep going in full detail'),
+        h(`button.btn${then ? '' : '.primary'}`, { type: 'button', onclick: () => { close(); app.go('#/home/session'); } }, 'Done'),
+        then ? h('button.btn.primary', { type: 'button', onclick: () => { close(); then(); } }, 'Walk me through what is left', icon('right')) : null));
     toast('Fast Track saved.', { undo: () => ctx.store.undo() });
   };
   const draw = () => {

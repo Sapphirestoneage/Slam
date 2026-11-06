@@ -99,12 +99,19 @@ Not built, Built (code exists, not proven), Verified (a test or browser run show
 
 ## Effort targets (Alexis and Tom)
 
-| Metric | Nov 5 2026 | Target |
-|---|---|---|
-| Actions to a rough picture | about 50 | 40 or fewer |
-| Picture after the rough pass | 70 to 74% | 85% or more, core at 100% |
-| Certainty after the rough pass (FI or debt-free range) | 7 years, or locked | 2 years or less |
-| Actions to 99% | about 150 to 250 (estimate) | 100 or fewer |
+| Metric | Nov 5 2026 | Nov 6 2026, measured (batch 14) | Target |
+|---|---|---|---|
+| Actions to a rough picture | about 50 | 97 / 98 | 40 or fewer |
+| Picture after the rough pass | 70 to 74% | 71% / 64%; core 89% / 90% (only the three Budget categories, parked, are short) | 85% or more, core at 100% |
+| Certainty after the rough pass (FI or debt-free range) | 7 years, or locked | Alexis: debt free in 64 months (FI not on her path yet); Tom: FI 2037 to 2044, 6.5 years wide (Home now shows the step that narrows it instead) | 2 years or less |
+| Actions to 99% | about 150 to 250 (estimate) | about 159 / 164 | 100 or fewer |
+
+The Nov 6 column is `node tools/e2e/effort.cjs` (Alexis / Tom): New client, Start session 1 (Fast Track with its tap
+step) and Walk me through, every click and every keystroke counted (a typed number is one action per character, Enter
+or Tab one more), the walk answering what each client knows and pressing Will get it for the rest. The Nov 5 figures
+were estimates that did not count keystrokes per character, so the higher action count is a change of measure, not of
+the app: the same run before batch 14 has no tap step and no walk, and ends with core About you short and Protection
+empty. Actions to 99% is every box still open on the X of Y filled counters times the actions one box took in the walk.
 
 A change that makes any of these worse does not ship without a stated reason.
 

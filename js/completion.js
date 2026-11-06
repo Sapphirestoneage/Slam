@@ -11,6 +11,7 @@ import { LATER, fieldLabel, whereToFind } from './homework.js';
 import { rowLabel } from './institutions.js';
 import { asksTaxType } from './math/portfolio.js';
 import { categoryTotals, isCategoryRecord, CATEGORIES, categoryKeyOf } from './math/spending.js';
+import { profileCompletion } from './profile-completion.js';
 
 // A field is done when its status counts as done; the institution is done once the row points at an Institutions row.
 const isDone = (r, f) => (f === 'institution' && !!r.values?.institutionId) || countsAsDone(statusOf(r, f));
@@ -102,4 +103,59 @@ export function missingFor(ctx, hash) {
   const c = def === 'budget' ? budgetCompletion(ctx) : listCompletion(ctx, def[0], def[1]);
   const seen = new Set();
   return [...(c.core.items || []), ...(c.full.items || [])].filter(it => { const k = `${it.id}:${it.field}`; if (seen.has(k)) return false; seen.add(k); return true; }).map(it => ({ ...it, route: `#/${key}` }));
+}
+
+// ---------- Batch 14 (item 8): X of Y filled on Budget, Taxes, Protection and Goals, and every screen's counts ----------
+// A profile answer is handled when it has a value, or is parked (Will get it) or marked I don't have this.
+const answeredP = (p, k) => (p[k] !== null && p[k] !== undefined && p[k] !== '') || !!p.later?.[k] || !!p.none?.[k];
+const countOf = list => ({ done: list.filter(x => x.done).length, of: list.length, items: list.filter(x => !x.done).map(x => x.item) });
+// Taxes: core is the filing status picked (a guess until then); full adds last year's result and the W-4 basics.
+export function taxesCompletion(ctx) {
+  const p = ctx.store.doc.profile || {};
+  const it = (name, focus, level) => ({ id: null, name, field: focus, word: 'missing', level, focus, route: '#/cash-flow/taxes' });
+  const core = [{ done: answeredP(p, 'filingStatus'), item: it('Filing status', 'tax:filing', 'Core') }];
+  const full = [...core,
+    { done: answeredP(p, 'lastYearTax'), item: it('Last year: refund or owed', 'seg:Refund or owed:Refund', 'Full detail') },
+    ...(p.lastYearTax === 'Refund' || p.lastYearTax === 'Owed' ? [{ done: answeredP(p, 'lastYearAmount'), item: it('Last year: how much', 'tax:lastYear', 'Full detail') }] : []),
+    { done: answeredP(p, 'w4Status'), item: it('W-4 filing status', 'tax:w4', 'Full detail') },
+    { done: answeredP(p, 'w4Extra'), item: it('Extra withheld a paycheck', 'tax:w4extra', 'Full detail') }];
+  return { core: countOf(core), full: countOf(full) };
+}
+// Goals: core is the FI age; full adds spending in retirement and at least one goal named.
+export function goalsCompletion(ctx) {
+  const doc = ctx.store.doc, a = doc.assumptions || {};
+  const it = (name, focus, level) => ({ id: null, name, field: focus, word: 'missing', level, focus, route: '#/plan/goals' });
+  const core = [{ done: a.fiAge != null || !!doc.profile?.later?.fiAge, item: it('FI age', 'g:fiAge', 'Core') }];
+  const full = [...core,
+    { done: a.retirementSpending != null, item: it('Spending in retirement', 'g:retSpend', 'Full detail') },
+    { done: ctx.visible(r => r.kind === 'milestone').length > 0, item: it('A goal, named', 'add:milestone', 'Full detail') }];
+  return { core: countOf(core), full: countOf(full) };
+}
+// Protection: each coverage row's Have it? (core) and its details; with no rows yet, the one box is Add the usual list.
+export function protectionCompletion(ctx) {
+  const c = listCompletion(ctx, r => r.kind === 'coverage', ['have']);
+  const rows = ctx.visible(r => r.kind === 'coverage');
+  // The usual list's rows are blank until Have it? is answered; each still asks that one box.
+  const blank = rows.filter(r => isBlankRow(r, ['have']) && !isParked(r, 'have'));
+  const ask = blank.map(r => ({ id: r.id, name: `${r.type}: have it?`, field: 'have', word: 'missing', level: 'Core', focus: `${r.id}:have`, where: whereToFind('have', r.type), route: '#/net-worth/protection' }));
+  if (rows.length) return { core: { ...c.core, of: c.core.of + blank.length, items: [...c.core.items, ...ask] }, full: { ...c.full, of: c.full.of + blank.length, items: [...c.full.items, ...ask] } };
+  const item = { id: null, name: 'Insurance: add the usual list', field: 'add', word: 'missing', level: 'Core', focus: 'add:usual-coverage', route: '#/net-worth/protection' };
+  return { core: { done: 0, of: 1, parked: 0, missing: [item.name], items: [item] }, full: { done: 0, of: 1, parked: 0, missing: [item.name], items: [item] } };
+}
+// Every screen's core and full counts in one list (the effort scoreboard reads it; 99% means every full count is met).
+export function fillCounts(ctx) {
+  const pc = profileCompletion(ctx.store.doc);
+  const debtCore = r => (paidInFull(r) ? ['balance'] : ['balance', 'apr']);
+  const pair = c => ({ core: { done: c.core.done, of: c.core.of }, full: { done: c.full.done, of: c.full.of } });
+  return [
+    { screen: 'About you', ...pair(pc) },
+    { screen: 'Income', ...pair(listCompletion(ctx, r => r.kind === 'income' || r.kind === 'benefit', ['amount'])) },
+    { screen: 'Budget', ...pair(budgetCompletion(ctx)) },
+    { screen: 'Taxes', ...pair(taxesCompletion(ctx)) },
+    { screen: 'Assets', ...pair(listCompletion(ctx, r => r.kind === 'account' || r.kind === 'asset', r => [r.kind === 'asset' ? 'value' : 'balance'])) },
+    { screen: 'Debt', ...pair(listCompletion(ctx, r => r.kind === 'debt' && r.type !== 'Credit card', debtCore)) },
+    { screen: 'Credit cards', ...pair(listCompletion(ctx, r => r.kind === 'debt' && r.type === 'Credit card', debtCore)) },
+    { screen: 'Protection', ...pair(protectionCompletion(ctx)) },
+    { screen: 'Goals', ...pair(goalsCompletion(ctx)) },
+  ];
 }
