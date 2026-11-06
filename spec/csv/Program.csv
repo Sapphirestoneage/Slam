@@ -3,7 +3,7 @@ Section,Item,Detail,Notes
 Sessions,,Each client has a 12-session program. A session's checklist ticks itself from the data where it can (auto); the rest are checkboxes. Done when every item is ticked.,js/registry/program.js SESSIONS; js/program.js autoChecks
 Sessions,S1 First picture,Accounts set up (auto); Top-line numbers entered (Gut is OK) (auto); Money in one line generated (auto); Day 0 snapshot saved (auto),
 Sessions,S2 Real numbers,Big categories at Estimate or better (auto); Goals named (auto); FOO step identified (auto),
-Sessions,S3 Lock it,One month of Actuals (auto); Key numbers locked (auto); Whole picture about 90% (see Whole picture on Home) (auto),
+Sessions,S3 Lock it,One month of Actuals (auto); Key numbers locked (auto); Whole picture 95% or more (see Whole picture on Home) (auto),
 Sessions,S4 Goals,"Three short-term goals, each with an amount, a date and a need, want or wish tag (auto); Three long-term goals, each with an amount, a date and a need, want or wish tag (auto)",
 Sessions,S5 Full analysis,Every area rated (auto); Holes ranked (a payoff and an effort on each) (auto); FOO step confirmed (auto); Top 3 holes chosen (auto),
 Sessions,S6 Fill holes,The top hole filled (OK or Strong) (auto),Pulls the top hole on the Scorecard when it starts
@@ -31,18 +31,18 @@ Weights,otherLines,1,"The other Budget lines, as one item"
 Weights,age,1,Age (About you)
 Weights,areas,1,What you have today (About you)
 Pace,,The Picture % expected by the end of each session; later sessions hold the session 3 mark. Ahead: at or past this session's mark. On track: within the margin of what was due by now. Catch up: below it.,js/registry/program.js PACE
-Pace,S1,40%,
-Pace,S2,70%,
-Pace,S3,90%,
-Pace,S4,90%,
-Pace,S5,90%,
-Pace,S6,90%,
-Pace,S7,90%,
-Pace,S8,90%,
-Pace,S9,90%,
-Pace,S10,90%,
-Pace,S11,90%,
-Pace,S12,90%,
+Pace,S1,85%,
+Pace,S2,95%,
+Pace,S3,99%,
+Pace,S4,99%,
+Pace,S5,99%,
+Pace,S6,99%,
+Pace,S7,99%,
+Pace,S8,99%,
+Pace,S9,99%,
+Pace,S10,99%,
+Pace,S11,99%,
+Pace,S12,99%,
 Pace,Margin,5 points,
 Unlocks,,"A calculator shows locked, with a plain reason ('Unlocks when spending reaches Estimate (2 of 5 there)'), until every item in each group is at or above the level.",js/registry/program.js UNLOCKS
 Unlocks,FI date,income is in (every income item at 25+); spending is in (a gut number is enough) (every spending item at 25+); an invested balance is in (every invested item at 25+),

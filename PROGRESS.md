@@ -463,3 +463,6 @@ Persona run at 1280: layout items 629 before (unlabeled 414, column 44, sticky 1
 (the same Move to next session hover tip, once per persona); console errors 0 and story notes unchanged.
 QA: tests pass in UTC and America/New_York; before and after screenshots of Budget, Assets, Debt, Credit cards,
 Income and Goals at 1280 and 390.
+## Nov 6 2026: the session pace asks for the most a session can do
+
+Eli: "goal is as much as possible". PACE is now 85, 95, 99 by sessions 1 to 3 (was 40, 70, 90), held at 99; the session item reads "Whole picture 95% or more". Spec Program tab regenerated.

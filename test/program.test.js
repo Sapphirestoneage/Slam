@@ -183,13 +183,13 @@ test('next small things: three items, each with its gain and where to go; the ga
 
 test('pace: Ahead past the target, On track within the margin of what was due, Catch up below it', () => {
   assert.equal(paceOf(0, 1).word, 'On track', 'session 1 starts at 0 with nothing due yet');
-  assert.equal(paceOf(0.45, 1).word, 'Ahead');
-  assert.equal(paceOf(0.36, 2).word, 'On track'); // 40 due, margin 5
-  assert.equal(paceOf(0.30, 2).word, 'Catch up');
-  assert.equal(paceOf(0.92, 3).word, 'Ahead');
-  assert.equal(paceOf(0.88, 7).word, 'On track'); // held at 90
-  assert.deepEqual([PACE.expected[1], PACE.expected[2], PACE.expected[3]], [40, 70, 90]);
-  assert.match(paceOf(0.5, 2).text, /50% now; 70% expected by the end of session 2/);
+  assert.equal(paceOf(0.86, 1).word, 'Ahead');
+  assert.equal(paceOf(0.81, 2).word, 'On track'); // 85 due, margin 5
+  assert.equal(paceOf(0.70, 2).word, 'Catch up');
+  assert.equal(paceOf(0.99, 3).word, 'Ahead');
+  assert.equal(paceOf(0.95, 7).word, 'On track'); // held at 99
+  assert.deepEqual([PACE.expected[1], PACE.expected[2], PACE.expected[3]], [85, 95, 99]);
+  assert.match(paceOf(0.5, 2).text, /50% now; 85% was expected by now, 95% by the end of session 2/);
 });
 
 // ---------- Unlocks and confidence ----------

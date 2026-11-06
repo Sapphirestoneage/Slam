@@ -16,8 +16,9 @@ export const levelWord = level => (level === null || level === undefined ? null 
 export const WEIGHTS = { income: 3, debtBalance: 3, debtApr: 1, account: 3, thing: 1, gut: 6, draftt: 2, otherLines: 1, age: 1, areas: 1 };
 
 // The Picture % expected by the end of each session (points); later sessions hold the session 3 mark. Within the
-// margin counts as on track.
-export const PACE = { expected: { 1: 40, 2: 70, 3: 90 }, hold: 90, margin: 5 };
+// margin counts as on track. Eli, Nov 6: "goal is as much as possible": after batch 18 the rough pass reaches about
+// 80% in session 1, so the pace asks for the most a session can do (was 40, 70, 90).
+export const PACE = { expected: { 1: 85, 2: 95, 3: 99 }, hold: 99, margin: 5 };
 
 // What a calculator needs before it unlocks: every item in the group at or above the level. A group with no items
 // (no debts, per About you) has nothing to wait for.
@@ -61,7 +62,7 @@ export const SESSIONS = [
   { id: 'S3', name: 'Lock it', items: [
     { id: 'actuals', label: 'One month of Actuals', auto: 'monthOfActuals' },
     { id: 'locked', label: 'Key numbers locked', auto: 'keyNumbersLocked' },
-    { id: 'picture', label: 'Whole picture about 90% (see Whole picture on Home)', auto: 'picture90' }] }, // item 9: the item says which part it needs
+    { id: 'picture', label: 'Whole picture 95% or more (see Whole picture on Home)', auto: 'picture90' }] }, // item 9: the item says which part it needs
   { id: 'S4', name: 'Goals', items: [
     { id: 'short', label: 'Three short-term goals, each with an amount, a date and a need, want or wish tag', auto: 'shortGoals' },
     { id: 'long', label: 'Three long-term goals, each with an amount, a date and a need, want or wish tag', auto: 'longGoals' }] },
