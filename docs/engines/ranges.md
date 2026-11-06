@@ -1,6 +1,15 @@
 # Engine spec: ranges (a low, likely and high on every key output)
 
-Status: design, Batch 17. Nothing here is built. Phase 4, Track 1 (ROADMAP.md).
+Status: design, Batch 17. Built in Batch 41 (build order steps 1 to 4: `js/math/ranges.js`, M9R); the certainty meter
+(step 5) and the savings rate's range are next. Phase 4, Track 1 (ROADMAP.md).
+
+As built (batch 41), where it differs from the design below: the widths are RULES (Know it: balances 2%, a paycheck, a
+bill and a rate 0; Estimate 5%; Rough: balances 10%, spending 10%, steady pay 10%, pay that varies 30%, an APR 2
+points; Gut: balances 25%, spending 15% (QUESTIONS 244), steady pay 20%, pay that varies 40%, a guessed APR 5 points;
+a typical amount not answered yet TypicalLow to TypicalHigh), so a guess is always at least as wide as a rough
+number. The line under a number always names months ("Likely Mar 2041, could be Aug 2039 to Jan 2044", the batch 41
+brief), shows only when the inputs below Know it move it a material amount, and its tap names the two inputs that
+widen it most. The FOO step's ends are the steps the one-at-a-time runs reach (no squares for a place on a list).
 
 ## Purpose
 

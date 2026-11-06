@@ -37,7 +37,6 @@ import { foo } from '../math/foo.js';
 import { gapOf } from '../math/gap.js';
 import { nextMoves } from '../math/moves.js';
 import { transitionOf } from '../math/transitions.js';
-import { debtRangeOf } from '../math/metrics.js';
 import { cardsPicture, creditMove } from '../math/cards.js';
 import { cardLibrary } from '../cardlib.js';
 import { skillLibrary } from '../library.js';
@@ -383,8 +382,9 @@ export const MATH = [
     parts: [{ key: 'heavy', name: 'Months until the heavy debt is gone, on the same plan', unit: 'months', fromApp: 'the same simulation', app: c => (c.m.debtPlan?.debts.some(d => d.heavy) ? c.m.debtPlan.heavyMonths : null) },
       { key: 'minimum', name: 'Months until every debt is gone at each debt\'s own payment only', unit: 'months', fromApp: 'the same simulation with no surplus and no extra', app: c => c.m.debtPlanMinimum?.months ?? null },
       // Batch 24 (QUESTIONS 244): the range when an APR is a guess, a balance is rough or spending is a gut number.
-      { key: 'rangeLow', name: 'Debt free, soonest likely (months): rough inputs at their low and high, swings combined', unit: 'months', fromApp: 'the same simulation run again with each rough input moved (a guessed APR 5 points, a rough balance 10%, spending 15% or 5%)', app: c => debtRangeOf(c.m)?.low ?? null },
-      { key: 'rangeHigh', name: 'Debt free, latest likely (months)', unit: 'months', fromApp: 'the same simulation run again with each rough input moved', app: c => debtRangeOf(c.m)?.high ?? null }],
+      // Batch 41: from the one ranges method (M9R), so the sheet and every screen give the same range.
+      { key: 'rangeLow', name: 'Debt free, soonest likely (months): each input at its low and high by its level, swings combined (M9R)', unit: 'months', fromApp: 'the same simulation run again with each input moved by its level (M9R), the swings combined as the root of the sum of their squares', app: c => (c.ranges()?.debtFree ? c.ranges().debtFree.low : null) },
+      { key: 'rangeHigh', name: 'Debt free, latest likely (months; blank when an end never pays off)', unit: 'months', fromApp: 'the same simulation run again with each input moved by its level (M9R)', app: c => c.ranges()?.debtFree?.high ?? null }],
     app: c => (c.m.debtPlan?.debts.length ? c.m.debtPlan.months : null) },
   { id: 'M35', name: 'Utilization', inputs: 'cards', unit: 'pct', fns: ['debt.utilization', 'debt.creditHealth', 'debt.BUREAUS', 'debt.yearsText'],
     sheet: 'IF(SUMIFS(Debt_limit,Debt_Type,"Credit card",Debt_limit,">0")=0,"",SUMIFS(Debt_balance,Debt_Type,"Credit card",Debt_limit,">0")/SUMIFS(Debt_limit,Debt_Type,"Credit card",Debt_limit,">0"))',
@@ -619,6 +619,19 @@ export const MATH = [
     parts: [{ key: 'netWorth', name: 'Typical net worth at this age (the SCF median)', unit: 'money', // batch 38: a lookup on the Assumptions tab, no longer from the app
       sheet: 'IF(Profile_ageUsed="","",IFERROR(INDEX(Priors_netWorth_typical,MATCH(Profile_ageUsed,Priors_netWorth_from,1)),""))',
       app: c => { const d = priorsData(); return d ? typicalOf(d, 'netWorth', { age: c.x?.age ?? null })?.likely ?? null : null; } }] },
+  // ---------- Ranges (Phase 4, Track 1; docs/engines/ranges.md) ----------
+  { id: 'M9R', name: 'Ranges on the key outputs: low, likely and high', inputs: 'every input\'s level (M73: Know it, Roughly, Not sure, the gut number, a statements total) and its kind, the widths on the Assumptions tab (RangeBalance*, RangeSpend*, RangeIncome*, RangeVariable*, RangeApr*, AprGuessSwing, RoughBalanceShare, TypicalLow, TypicalHigh), the materiality (MaterialHours, MaterialFloor, RangeMinMonths, RangeMinEfMonths)', unit: 'count',
+    fns: ['ranges.widthOf', 'ranges.knobsOf', 'ranges.OUTPUTS', 'ranges.combine', 'ranges.rangesOf', 'ranges.fooRangeOf', 'ranges.materialOf', 'ranges.rangeWordsOf', 'ranges.driverWords', 'ranges.fooWordsOf'],
+    fromApp: 'the whole plan is run again with each uncertain input at its low and at its high (two runs per input, every formula on this tab each time), which a sheet cannot do with named ranges; the swings combine as the root of the sum of their squares. The value counts the key outputs wide enough to show a range',
+    app: c => { const r = c.ranges(); return r ? ['fi', 'debtFree', 'efMonths', 'surplus', 'netWorth'].filter(k => r[k]?.material).length : null; },
+    parts: [
+      ...[['fi', 'FI date', 'months'], ['debtFree', 'Debt-free date', 'months'], ['efMonths', 'Emergency fund, months of spending held', 'number'], ['surplus', 'Monthly surplus', 'money'], ['netWorth', 'Net worth', 'money']].flatMap(([k, label, unit]) => [
+        { key: `${k}Low`, name: `${label}: low (inputs at their low and high, swings combined)`, unit, fromApp: 'M9R: the plan run again with each input moved by its level', app: c => c.ranges()?.[k]?.low ?? null },
+        { key: `${k}Likely`, name: `${label}: likely (the number every screen shows)`, unit, fromApp: 'M9R: the plan as entered, the same number as its own row', app: c => c.ranges()?.[k]?.likely ?? null },
+        { key: `${k}High`, name: `${label}: high (blank when a date never comes at that end)`, unit, fromApp: 'M9R: the plan run again with each input moved by its level', app: c => c.ranges()?.[k]?.high ?? null }]),
+      { key: 'fooLow', name: 'FOO step: the earliest step any one input reaches at its low or high', unit: 'text', fromApp: 'M9R: the FOO (M69) walked again with each input moved by its level', app: c => c.fooRange()?.low ?? null },
+      { key: 'fooHigh', name: 'FOO step: the latest step any one input reaches at its low or high', unit: 'text', fromApp: 'M9R: the FOO (M69) walked again with each input moved by its level', app: c => c.fooRange()?.high ?? null },
+    ] },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },
   // ---------- Holidays (the calendar question on About you) ----------

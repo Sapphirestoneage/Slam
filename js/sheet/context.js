@@ -8,6 +8,7 @@ import { layersOf } from '../math/layers.js';
 import { fiTargets } from '../plan.js';
 import { statements, netWorthStatement, periodOf } from '../math/statements.js';
 import { taxRates } from '../math/income.js';
+import { rangesOf, fooRangeOf } from '../math/ranges.js';
 
 export function sheetContext(doc, ref, { now = new Date(), flags = [] } = {}) {
   const m = metrics(doc, ref, { now });
@@ -27,6 +28,9 @@ export function sheetContext(doc, ref, { now = new Date(), flags = [] } = {}) {
     targets: once(() => fiTargets(m, doc)),
     statements: safe(() => statements(doc, ref, periodOf('month', now), { now })),
     nwStatement: once(() => netWorthStatement(doc, { live })),
+    // Batch 41 (M9R): the key outputs' low, likely and high, the household's books like every row here.
+    ranges: safe(() => rangesOf(doc, ref, { now, m })),
+    fooRange: safe(() => fooRangeOf(doc, ref, { now, flags, person: null })),
     taxRates: once(() => (x.grossAnnual ? taxRates({ gross: x.grossAnnual, filingStatus: x.filingStatus, place: x.place }, ref) : null)),
   };
 }

@@ -5,11 +5,17 @@ const MINUS = '−';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const blank = v => v === null || v === undefined || Number.isNaN(v);
 
+// Batch 41: one formatter each, made once (toLocaleString with options builds a new one on every call, which was most of
+// the time the math took; the ranges run the math many times). The same text as before.
+const WHOLE = new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const CENTS = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const DIGITS = new Map();
+const digitsFmt = d => DIGITS.get(d) ?? DIGITS.set(d, new Intl.NumberFormat('en-US', { maximumFractionDigits: d })).get(d);
 // $1,240 in summaries; $15.99 in entry fields (cents: true); negative as −$240.
 export function money(v, { cents = false } = {}) {
   if (blank(v)) return EMPTY;
   const n = cents ? Math.round(v * 100) / 100 : Math.round(v);
-  const s = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });
+  const s = (cents ? CENTS : WHOLE).format(Math.abs(n));
   return `${n < 0 ? MINUS : ''}$${s}`;
 }
 
@@ -20,7 +26,7 @@ export function pct(v) {
   return `${n < 0 ? MINUS : ''}${Math.abs(n).toFixed(1)}%`;
 }
 
-export const number = (v, digits = 0) => (blank(v) ? EMPTY : v.toLocaleString('en-US', { maximumFractionDigits: digits }));
+export const number = (v, digits = 0) => (blank(v) ? EMPTY : digitsFmt(digits).format(v));
 
 // Nov 12, 2026
 export function date(d) {

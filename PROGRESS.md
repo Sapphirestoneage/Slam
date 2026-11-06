@@ -849,3 +849,36 @@ Batch 31 could use only a few Primary rows (QUESTIONS 314 to 318). This pass rea
 3. js/math/priors.js (M9E): the closest row wins (its place, then Solo or Couple, then the age band); 25th to 75th percentiles where a row gives them (QUESTIONS 314), else the stated spread; spending scaled by the place's price parity (the NY metro for NY clients, QUESTIONS 210); the one-person CE row for a person living alone (QUESTIONS 318); a rent check and faded range for a renter's rent line, divided by the people the rent is split among (QUESTIONS 316). priorsOpts reads them from About you; typicalBoxes takes the rent line unless the household owns or lives with family.
 4. js/ui/typical-ui.js: the rent line's amount box gets the faded range (coach view) and the note; a line with batch 10's own faded amount keeps it. css/typical.css: the note's rules are scoped to its wrap, because Budget's group line (batch 10) shares the class and was being stacked over the list's footer.
 5. Alexis: her $900 share reads against New York State's $1,621 split two ways ($811), inside typical, so no note; her $400 checking keeps its one note. Maya and Tom unchanged (Tom's cash note only). test/priors.test.js reads the persona files themselves.
+
+## Batch 41 (Nov 6 2026): ranges on every key output (Phase 4, Track 1, M9R)
+
+1. The math: `js/math/ranges.js` (M9R), the corner method in docs/engines/ranges.md. Likely is the plan as entered
+   (the number every screen already shows, to the dollar and the month); then the plan runs again with each uncertain
+   input at its low and its high, and the swings combine as the root of the sum of their squares. Outputs: the FI date,
+   the debt-free date, emergency fund months (runway), the monthly surplus, net worth, and the FOO step (the earliest
+   and latest step any one input reaches). Each input moves by its level and kind: 15 new rules in RULES
+   (RangeBalance*, RangeSpend*, RangeIncome*, RangeVariable*, RangeAprRough, RangeMinMonths, RangeMinEfMonths) beside
+   batch 24's RoughBalanceShare and AprGuessSwing; a typical amount not answered yet (a starter line still Not sure, a
+   blank APR read as typical) moves TypicalLow to TypicalHigh. A number at Know it with no width (a paycheck, a bill,
+   a rate) does not move; a balance at Know it moves 2% but never puts a line on screen by itself.
+2. Shown slim: the likely number stays the big one, and one quiet line goes under it ("Likely Aug 2031, could be Aug
+   2028 to Oct 2031") only when what is not known yet moves it more than the client's materiality (a surplus counts a
+   year of it; a date at least 2 months, valued at a month of spending; emergency fund months at least 1). In coach
+   view the line is a link-style button: a tap names the two inputs widening it most, each with Open the box (the
+   gut box glows on Budget, the card APR on Credit cards). Client view follows the typical-at-your-age switch
+   (QUESTIONS 208) and reads the line only. On Home (net worth, surplus, FI tiles, the debt-free card, runway when
+   between jobs, the FOO step beside Confirm FOO step), Plan › Goals (FI date, the reveal card), Plan › Debt payoff
+   and Net worth › Debt (debt-free), Report › Overview (net worth, surplus, runway, debt free) and the One-pager's FI
+   tile and summary. The FI date's old year-range headline at Low and Medium confidence (answer 122) and the
+   debt-free year range (batch 24) give way to the likely month plus this line, so every screen shows one range from
+   one method.
+3. The workbook: M9R and its parts (low, likely, high for each output, the FOO step's ends) are From the app rows (the
+   whole plan rerun per input cannot be named ranges); M34's range rows now read M9R. Format 32, spec row M9R
+   (`tools/library/ranges-spec.py`).
+4. Speed: `js/format.js` makes its number formatters once (toLocaleString with options built a new one per call,
+   most of the math's time): metrics 40 ms to 8 ms, the FOO 100 ms to 13 ms on Tom, so the ranges (two runs per
+   input) cost about 40 ms per change and every screen got faster. Same text as before.
+5. test/batch41.test.js: hand checks for an all Know it household (net worth 110,000 plus or minus 2,010, no line
+   anywhere), Alexis (surplus -320, -740 to 100; the debt-free ends from her card APR, gut number and balance run
+   one at a time), Maya (surplus, net worth 12,693 to 15,707, emergency fund months), a surplus that could be nothing
+   some months, Tom, the FOO step, materiality, and the workbook rows.

@@ -17,3 +17,11 @@ td.num .typical-wrap > .typical-note, .row-line[style*="flex-end"] > .typical-wr
   .typical-wrap > .typical-note, td.num .typical-wrap > .typical-note, .row-line[style*="flex-end"] > .typical-wrap > .typical-note { position: static; width: 0; min-width: 100%; height: auto; white-space: normal; align-items: flex-start; line-height: 1.25; font-size: 0.75rem; padding-top: 3px; }
   .typical-wrap > .typical-note > span { flex: 1 1 auto; }
 }
+
+/* Batch 41 (M9R): the quiet range line under a key number. Coach view: a link-style button (underlined, the info
+   icon) that opens what widens it; client view: plain muted text. Never red, never bold. */
+.range-line { display: flex; align-items: center; gap: 4px; min-height: 32px; font-size: 0.8125rem; font-weight: 500; line-height: 1.25; text-align: left; white-space: normal; }
+span.range-line { color: var(--text-2); min-height: 0; padding: 2px 0; }
+button.range-line .icon, button.range-line svg { width: 14px; height: 14px; flex: 0 0 auto; }
+.metric .range-line { margin-top: 0; }
+.range-pop .range-driver { justify-content: space-between; }

@@ -21,7 +21,7 @@ import { payoffPlan, debtToIncome, utilization, creditHealth, BUREAUS, yearsText
 import { needs } from '../math/result.js';
 import { money } from '../format.js';
 import { estimateOf, actualOf, instances, monthName, planDiffs, addMonths, ymOf } from '../month.js';
-import { debtWordsOf } from '../math/picture.js';
+import { rangeLine } from './range-ui.js';
 
 const LOAN_TYPES = new Set(['Student loan', 'Car loan', 'Personal loan', 'Mortgage']);
 const short = v => (Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
@@ -151,10 +151,9 @@ export function debtStrip(ctx, m) {
   return summaryStrip(ctx, [
     // Total debt sits in the Net worth headline above.
     { label: 'Monthly payments', result: payments, key: 'debtPayments', lowerIsGood: true },
-    // Batch 24 (QUESTIONS 244): rough inputs show the date as a range, the likely month in the note.
-    (() => { const w = free.value !== null ? debtWordsOf(m, { now: ctx.now() }) : null, ranged = w && w.kind !== 'month';
-      return { label: 'Debt-free', result: ranged ? { ...free, text: `${free.text} ${w.range.text}` } : free, key: 'debtFreeMonths', lowerIsGood: true, render: ranged ? () => w.text : dateOnly,
-        note: free.value !== null ? [ranged ? `Likely ${w.likely}` : null, note, usable.length > 1 ? 'Freed payments roll into the next debt' : null].filter(Boolean).join(' · ') || null : null }; })(), // batch 13: the date assumes the roll, so it says so
+    // Batch 41 (M9R): the likely month is the big one; the range is the quiet line under it, as on Home and Debt payoff.
+    { label: 'Debt-free', result: free, key: 'debtFreeMonths', lowerIsGood: true, render: dateOnly, range: free.value !== null && m === ctx.metrics() ? rangeLine(ctx, 'debtFree') : null, // a person's own view (a couple) has its own numbers: no range line there yet
+      note: free.value !== null ? [note, usable.length > 1 ? 'Freed payments roll into the next debt' : null].filter(Boolean).join(' · ') || null : null }, // batch 13: the date assumes the roll, so it says so
     { label: 'Interest left', result: interest, key: 'debtInterest', lowerIsGood: true, note: missing.length ? note : null }, // batch 34: the "only its own payment" date once, on Debt-free
   ]);
 }

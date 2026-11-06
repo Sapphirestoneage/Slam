@@ -3,6 +3,7 @@
 import { h, clear, icon } from './dom.js';
 import { STATUSES, SURE, sureOf, statusOf, changeSince, countsAsDone, SOURCE_WORDS } from '../records.js';
 import { metrics, keyNumbers } from '../math/metrics.js';
+import { rangesOf, fooRangeOf } from '../math/ranges.js';
 import { inView, timeChip } from '../math/time.js';
 import { money, pct, number, EMPTY, duration } from '../format.js';
 import { joinWords } from '../math/result.js';
@@ -26,12 +27,12 @@ export const handled = (r, f) => countsAsDone(statusOf(r, f)) || statusOf(r, f) 
 
 // ---------- Context: the store, the time view, the numbers, toasts ----------
 export function createCtx({ store, ref, now = () => new Date() }) {
-  let cache = null, cacheFor;
+  let cache = null, cacheFor, rcache = null, fcache = null;
   const listeners = new Set();
   const ctx = {
     store, ref, now,
     get timeMode() { return store.doc.settings.timeView || '$'; },
-    setTimeMode(mode) { store.doc.settings.timeView = mode; cache = null; ctx.refresh(); store._emit({ type: 'settings' }); },
+    setTimeMode(mode) { store.doc.settings.timeView = mode; cache = null; rcache = null; fcache = null; ctx.refresh(); store._emit({ type: 'settings' }); },
     get couple() { return ctx.gates().couple; },
     gates() { return gatesOf(store.doc.profile, store.doc.client); },
     // Rows that apply to this household: a gate that says no takes them off every list (R001).
@@ -39,10 +40,14 @@ export function createCtx({ store, ref, now = () => new Date() }) {
     // Batch 15 (question 212): a couple with no combined totals (Dating, Living together) sees one person's own plan
     // everywhere, this client's unless the person switch says the partner's.
     metrics() { const k = ownPlanPerson(store.doc); if (cache && cacheFor !== k) cache = null; cacheFor = k; return (cache ??= metrics(store.doc, ref, { now: now(), person: k })); }, // batch 33: the Both preview changes whose plan a screen reads
+    // Batch 41 (M9R): the key outputs' low, likely and high, on the same metrics (so likely is that very number); the FOO
+    // step's range apart, since each of its runs walks the whole FOO. Worked out once per change, like the metrics.
+    ranges() { const m = ctx.metrics(); if (rcache?.m !== m) rcache = { m, r: rangesOf(store.doc, ref, { now: now(), person: ownPlanPerson(store.doc), m }) }; return rcache.r; },
+    fooRange(flags = []) { const m = ctx.metrics(); if (fcache?.m !== m) fcache = { m, r: fooRangeOf(store.doc, ref, { now: now(), flags }) }; return fcache.r; },
     // Screens register here; the shell clears them when it leaves the screen (keep: shell-level).
     onRefresh(fn, { keep = false } = {}) { fn.keep = keep; listeners.add(fn); return () => listeners.delete(fn); },
     clearScreen() { for (const fn of listeners) if (!fn.keep) listeners.delete(fn); },
-    refresh() { cache = null; for (const fn of [...listeners]) fn(); },
+    refresh() { cache = null; rcache = null; fcache = null; for (const fn of [...listeners]) fn(); },
     goTo: () => {}, // the shell replaces this; the staples page stays put
   };
   store.subscribe(() => ctx.refresh());
@@ -266,7 +271,7 @@ function joinWordsEl(items) {
 }
 // lock: the program keeps this number locked until its inputs qualify (Phase 3), with the plain reason and where to
 // go. confidence: once unlocked, how sure the inputs are (shown instead of the Guess tag).
-export function metricCard(ctx, label, result, { key = null, render = null, lowerIsGood = false, note = null, home = null, so = null, lock = null, confidence = null, tip = null } = {}) {
+export function metricCard(ctx, label, result, { key = null, render = null, lowerIsGood = false, note = null, home = null, so = null, lock = null, confidence = null, tip = null, range = null } = {}) {
   // Batch 13 (item 6): tip keeps the term (DRAFTT, Rule of 5) in a hover tip while the label says it plainly.
   const labelEl = home ? h(`a.label.metric-home${tip ? '.has-tip' : ''}`, { href: home, title: tip ? `${label}: ${tip}` : `Open where ${label.toLowerCase()} comes from` }, label) : h(`span.label${tip ? '.has-tip' : ''}`, { title: tip ? `${label}: ${tip}` : null }, label);
   if (lock) {
@@ -283,6 +288,7 @@ export function metricCard(ctx, label, result, { key = null, render = null, lowe
       ? h('div.big', {}, result.never ? warnTag('Not on this path') : [icon('lock'), ` Locked: needs ${result.needs.length} ${result.needs.length === 1 ? 'number' : 'numbers'}`])
       : h('div.big', {}, mathButton(result, render ? render(result) : result.unit === 'months' ? `${Math.ceil(result.value)} months` : value(result, ctx)),
         result.unit === 'months' && !render ? h('span.when', {}, ` ${value(result, ctx).replace(/^.*\(/, '(')}`) : null),
+    !locked ? range : null, // batch 41: the quiet range line under the big number (js/ui/range-ui.js)
     locked && !result.never ? h('span.change', {}, needLinks(ctx, result.needs)) : null,
     result.guess && !confidence ? h('span', {}, guessTag()) : null,
     confidence && !locked ? h('span.coach-only', {}, h('span.tag.plain.confidence', { title: confidence.text }, confidence.label)) : null, // a coach's cue (hidden in Client view)

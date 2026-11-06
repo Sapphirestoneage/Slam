@@ -15,7 +15,8 @@ import { programOf, startSession, inSession, sessionOf, snapshotNumbers, day0Rep
 import { MEASURES, CONFIDENCE, JOY } from '../registry/joy.js';
 import { personLabels } from '../registry/couples.js';
 import { SESSIONS, MONEY_DATES, levelWord } from '../registry/program.js';
-import { fiWordsOf, debtWordsOf } from '../math/picture.js';
+import { fiWordsOf } from '../math/picture.js';
+import { rangeLine, fooRangeLine, rangeShown } from './range-ui.js';
 import { ladderOf } from '../math/ladder.js';
 import { debtHeroOf } from '../math/metrics.js';
 import { gapOf } from '../math/gap.js';
@@ -99,7 +100,7 @@ export const HERO = { extra: 0 };
 function runwayStrip(ctx, P) {
   const T = phase4On(ctx.store.doc) && ctx.store.doc.program?.transition?.template ? transitionOf(ctx.store.doc, ctx.ref, { now: ctx.now() }) : null;
   const plan = T && !T.dip?.needs ? { id: 'M90', value: T.runway, needs: [], unit: 'months', text: T.text } : null;
-  return S.summaryStrip(ctx, [{ label: 'Runway on cash alone', result: P.m.runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/net-worth/assets', tip: 'Cash divided by full spending, with nothing coming in' },
+  return S.summaryStrip(ctx, [{ label: 'Runway on cash alone', result: P.m.runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/net-worth/assets', tip: 'Cash divided by full spending, with nothing coming in', range: P.m === ctx.metrics() ? rangeLine(ctx, 'efMonths') : null },
     ...(plan ? [{ label: 'With the plan (Transitions)', result: plan, render: r => (r.value == null ? 'Past 10 years' : monthsText(r.value)), home: '#/plan/transitions', tip: 'Every rung that is on in Plan › Transitions: benefits, the cut, family help, cards and retirement money' }] : [])]);
 }
 function debtHero(app, ctx, m) {
@@ -130,15 +131,13 @@ function debtHero(app, ctx, m) {
     S.moreBlock('home:debt-hero', () => h('ul.hero-marks', {}, card.marks.map(mark)), { label: `Milestones (${card.marks.filter(k => k.done).length} of ${card.marks.length})` }));
 }
 
-// Batch 24 (QUESTIONS 244): the date as a range when an APR is a guess, a balance rough or spending a gut number,
-// the way the FI date shows (js/math/picture.js debtWordsOf); the likely month stays under it.
+// Batch 41 (M9R): the likely month is the big one (the one debt plan); the range is the quiet line under it, from the
+// one ranges method every screen uses (js/math/ranges.js).
 function debtDate(ctx, m, card) {
-  const w = card.months == null ? null : debtWordsOf(m, { now: ctx.now() });
   const at = mo => (mo == null ? 'not on this plan' : monthName(addMonths(ymOf(ctx.now()), mo), 'short'));
-  const text = !w || w.kind === 'month' ? m.debtPlan.text : `${m.debtPlan.text} ${w.range.text}`;
   return h('div.stack', { style: { gap: '2px' } },
-    h(`div.hero-date${w?.wide ? '.hero-wide' : ''}`, {}, S.mathButton({ id: 'M34', value: card.months, needs: [], unit: 'months', text }, !w || w.kind === 'month' ? at(card.months) : w.text)),
-    w && w.kind !== 'month' ? h('span.muted.small.has-tip', { title: w.narrow }, `Likely ${w.likely}`) : null);
+    h('div.hero-date', {}, S.mathButton({ id: 'M34', value: card.months, needs: [], unit: 'months', text: m.debtPlan.text }, at(card.months))),
+    card.months != null && card.months === m.debtPlan?.months ? rangeLine(ctx, 'debtFree') : null);
 }
 
 // ---------- The session strip ----------
@@ -226,7 +225,7 @@ function checklistCard(app, ctx, P, s) {
     i.key === 'day0' && !i.done ? S.button('Save Day 0 now', { size: 'small', iconName: 'camera', onClick: () => app.snapshot('Day 0', { day0: true, session: s.n }) }) : null,
     i.route && !i.done ? S.button('Open', { size: 'small', iconName: 'right', onClick: () => follow(app, { kind: 'route', route: i.route }) }) : null));
   const confirmFoo = current && A.must.some(i => i.key === 'fooConfirmed' && !i.done) && P.scorecard.here != null
-    ? h('div.row-line', { style: { gap: '8px', marginTop: '6px' } }, S.button(`Confirm FOO step ${P.scorecard.here}`, { size: 'small', iconName: 'check', onClick: () => { ctx.store.setIn('program', ['fooConfirmed'], P.scorecard.here, 'FOO step'); S.toast(`FOO step ${P.scorecard.here} confirmed.`); } }), h('span.muted.small', {}, 'from Plan › FOO')) : null;
+    ? h('div.row-line', { style: { gap: '8px', marginTop: '6px' } }, S.button(`Confirm FOO step ${P.scorecard.here}`, { size: 'small', iconName: 'check', onClick: () => { ctx.store.setIn('program', ['fooConfirmed'], P.scorecard.here, 'FOO step'); S.toast(`FOO step ${P.scorecard.here} confirmed.`); } }), h('span.muted.small', {}, 'from Plan › FOO'), fooRangeLine(ctx)) : null; // batch 41: when one input could move the step
   return h('div.card.session-card.coach-only', {},
     h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, `Session ${s.n} · ${s.name}`), h(`span.tag.${s.done ? 'good' : 'plain'}`, {}, s.stateWord), s.done ? null : h('span.muted.small', {}, `${s.items.filter(i => i.done).length} of ${s.items.length}`), h('span.muted', {}, current ? 'the agenda' : '')),
     current ? h('div', { style: { marginTop: '10px' } }, agendaPanel(app, ctx, A)) : h('div.checklist', { style: { marginTop: '10px', marginBottom: 0 } }, items),
@@ -422,17 +421,19 @@ function nextThings(app, ctx, P) {
 export function moneyInOneLine(app, ctx, m = ctx.metrics()) {
   const fi = fiCard(ctx, m);
   const when = m.monthsToFi.value;
-  const words = fi.lock || when == null ? null : fiWordsOf(m, fi.confidence, { now: ctx.now() });
+  const words = fi.lock || when == null ? null : fiWordsOf(m, null, { now: ctx.now() }); // batch 41: the likely month; the range is the line under the tile
+  const fiAbout = words && rangeShown(ctx, 'fi') ? 'around' : 'in';
+  const debtAt = monthName(addMonths(ymOf(ctx.now()), m.debtPlan?.months ?? 0), 'short'), debtAbout = rangeShown(ctx, 'debtFree') ? 'around ' : '';
   const G = gapOf(ctx.store.doc, m); // batch 12 (item 5): a short month says so first
   const sentence = G ? G.text : words?.past ? words.sentence : fi.lock ? (m.surplus.value !== null ? `You keep ${money(m.surplus.value)} a month. The FI date ${fi.lock.reason.replace(/^Unlocks/, 'unlocks')}` : null)
-    : m.surplus.value !== null && words && m.debtRule?.on && m.debtPlan?.months != null ? `Your ${money(m.surplus.value)} a month goes to heavy debt first: debt free ${(dw => (!dw || dw.kind === 'month' ? monthName(addMonths(ymOf(ctx.now()), m.debtPlan.months), 'short') : dw.wide ? `likely ${dw.likely}` : `around ${dw.text}`))(debtWordsOf(m, { now: ctx.now() }))}, then FI ${words.kind === 'month' ? `in ${words.text}` : `around ${words.text}`}.` // batch 11: the debt rule
-    : m.surplus.value !== null && words ? `You keep ${money(m.surplus.value)} a month and are on track for FI ${words.kind === 'month' ? `in ${words.text}` : `around ${words.text}`}${m.inputs.age !== null && words.kind === 'month' ? `, at ${Math.floor(m.inputs.age + when / 12)}` : ''}.`
+    : m.surplus.value !== null && words && m.debtRule?.on && m.debtPlan?.months != null ? `Your ${money(m.surplus.value)} a month goes to heavy debt first: debt free ${debtAbout}${debtAt}, then FI ${fiAbout} ${words.text}.` // batch 11: the debt rule
+    : m.surplus.value !== null && words ? `You keep ${money(m.surplus.value)} a month and are on track for FI ${fiAbout} ${words.text}${m.inputs.age !== null && fiAbout === 'in' ? `, at ${Math.floor(m.inputs.age + when / 12)}` : ''}.`
       : m.surplus.value !== null && m.surplus.value < 0 ? `You spend ${money(-m.surplus.value)} a month more than comes in.` : null;
   return h('section.section', {}, h('div.section-title', {}, h('h2', {}, 'Money in one line')),
     sentence ? h('p', { style: { fontSize: '1.125rem', fontWeight: 600 } }, sentence) : null,
     S.summaryStrip(ctx, [
-      { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: '#/report/overview', so: soWhat('netWorth', m) },
-      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: '#/cash-flow/budget', so: soWhat('surplus', m, { lowDay: firstLowDay(ctx) }) },
+      { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: '#/report/overview', so: soWhat('netWorth', m), range: rangeLine(ctx, 'netWorth') },
+      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: '#/cash-flow/budget', so: soWhat('surplus', m, { lowDay: firstLowDay(ctx) }), range: rangeLine(ctx, 'surplus') },
       { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: '#/report/overview', note: m.savingsRate.second, so: soWhat('savingsRate', m) },
       { ...fi, home: '#/plan/goals', so: soWhat('fi', m) }]));
 }

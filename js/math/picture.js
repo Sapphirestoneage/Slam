@@ -180,7 +180,7 @@ export function confidenceOf(key, picture, { now = new Date() } = {}) {
   // Batch 15, item 7: the inputs still under Estimate, heaviest first, for the one sentence a too-wide range shows.
   const weak = its.filter(it => it.level < LEVELS.Estimate).sort((a, b) => b.weight - a.weight).map(it => it.label);
   return { word, label: `${word} confidence`, step, avg, aged, of: its.length, atEstimate, range: FI_RANGE[word], weak,
-    text: `${atEstimate} of ${its.length} numbers at Estimate or better${aged ? `, ${aged} older than ${RULES.agedCheckDays} days` : ''}.${word === 'High' ? '' : ` Shown as a year range: spending ${Math.round(FI_RANGE[word] * 100)}% lower to higher.`}` };
+    text: `${atEstimate} of ${its.length} numbers at Estimate or better${aged ? `, ${aged} older than ${RULES.agedCheckDays} days` : ''}.${word === 'High' ? '' : ' The line under the date says how far the numbers not known yet could move it.'}` }; // batch 41: the range is M9R's (js/math/ranges.js)
 }
 
 // The FI date in words at a confidence (answer 122): a month at High; a year range at Medium (spending 5% either way,

@@ -25,7 +25,8 @@ import { yearItems, usualDates, sinkingOf, takingOver } from '../year.js';
 import { TUITION_GOAL } from '../community.js';
 import { holidayYm } from '../math/holidays.js';
 import { fiGate } from './report-ui.js';
-import { fiWordsOf, debtWordsOf } from '../math/picture.js';
+import { fiWordsOf } from '../math/picture.js';
+import { rangeLine } from './range-ui.js';
 import { changeWords } from '../math/changes.js';
 import { outsourceCheck } from '../math/time.js';
 import { affordSection } from './afford-ui.js';
@@ -69,7 +70,8 @@ export function revealCard(app, ctx, m) {
   paint();
   return h('div.card.reveal-card', {},
     h('div.row-line', { style: { gap: '24px', alignItems: 'baseline' } },
-      h('div', {}, h('span.label', {}, 'FI date'), h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, fiWordsOf(m, gate.confidence, { now: ctx.now() }).text) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))), confidenceTag(gate.confidence)),
+      h('div', {}, h('span.label', {}, 'FI date'), h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, fiWordsOf(m, null, { now: ctx.now() }).text) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))), confidenceTag(gate.confidence),
+        gate.unlocked && fiWhen != null ? rangeLine(ctx, 'fi') : null),
       h('div', {}, h('span.label', {}, 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? S.mathButton(m.fiNumber, money(m.fiNumber.value)) : h('span.muted', { style: { fontSize: '1rem' } }, 'Needs ', S.needLinks(ctx, m.fiNumber.needs))))),
     m.fiNumber.value != null && gate.unlocked ? h('div.slider-row', { style: { marginTop: '12px' } }, h('span.label', {}, 'Save more'), slider, out, result) : null);
 }
@@ -130,8 +132,10 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
       S.labelled('FI age', S.textInput(fiAge, v => setA({ fiAge: v === null ? null : Number(v) }), { hint: 'Age', width: 100, key: 'g:fiAge' })),
       S.button('Just show me', { onClick: () => { setA({ fiAge: null }); S.parkProfile(ctx.store, 'fiAge').none.set(true); }, tip: 'Skip the age and show the earliest date' })),
     h('div', {}, h('span.label', {}, 'FI date'),
-      h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, fiWordsOf(m, gate.confidence, { now: ctx.now() }).text) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))),
-      gate.unlocked && fiWhen != null ? h('span.muted', {}, `${ageAt(m, fiWhen) != null && gate.confidence?.word === 'High' ? `At ${ageAt(m, fiWhen)} · ` : ''}${fiWordsOf(m, gate.confidence, { now: ctx.now() }).years} `, confidenceTag(gate.confidence)) : null,
+      h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, fiWordsOf(m, null, { now: ctx.now() }).text) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))),
+      // Batch 41 (M9R): the likely month is the big one; the range is one quiet line under it.
+      gate.unlocked && fiWhen != null ? rangeLine(ctx, 'fi') : null,
+      gate.unlocked && fiWhen != null ? h('span.muted', {}, `${ageAt(m, fiWhen) != null ? `At ${ageAt(m, fiWhen)} · ` : ''}${fiWordsOf(m, null, { now: ctx.now() }).years} `, confidenceTag(gate.confidence)) : null,
       gate.unlocked ? investingLine(ctx, m) : null,
       changesLines(ctx, m)),
     h('div', {}, h('span.label', {}, nominal ? 'FI number, in future dollars' : 'FI number'), h('div', { style: { fontSize: '1.5rem', fontWeight: 700 } }, m.fiNumber.value != null ? (nominal && fiWhen != null
@@ -168,7 +172,7 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
   const fiCard = h('div.card.fi-card', { style: { marginBottom: '16px' } }, left, right);
   // Batch 13 (item 1): the FI date and its assumptions are the core (open); the big deals, the FI ladder and the
   // outsource lens are caret sections, closed, each with its one line.
-  const fiSec = S.sec('goals:fi', { title: 'FI date and assumptions', open: true, area: 'goals', summary: fiWhen != null && gate.unlocked ? `FI ${fiWordsOf(m, gate.confidence, { now: ctx.now() }).text}` : null }, fiCard);
+  const fiSec = S.sec('goals:fi', { title: 'FI date and assumptions', open: true, area: 'goals', summary: fiWhen != null && gate.unlocked ? `FI ${fiWordsOf(m, null, { now: ctx.now() }).text}` : null }, fiCard);
   const deals = S.secCard(bigDealsCard(ctx, m, gate), 'goals:big-deals', { summary: m.bigDeals?.value ? `${m.bigDeals.value} moves the FI date the most` : null });
   const fiLadder = S.secCard(ladderCard(ctx, m, gate), 'goals:fi-ladder', { summary: 'Lean, Coast, Barista, Regular and Fat FI' });
   const lens = outsourceLens(ctx, m);
@@ -436,13 +440,11 @@ export function payoffScreen(app, ctx) {
       h('div.slider-row', { style: { marginTop: '10px' } }, h('span.label', {}, 'Extra'), slider, out, h('span.muted.small', {}, 'A what-if: nothing is saved')),
       payoffRuleLine(ctx, m, usable)),
     S.summaryStrip(ctx, [
-      // Batch 24 (QUESTIONS 244): the plan as it stands (no what-if extra, the order in use) shows the range.
-      (() => { const w = !PUI.extraDebt && p.months != null && p.months === m.debtPlan?.months ? debtWordsOf(m, { now: ctx.now() }) : null, ranged = w && w.kind !== 'month';
-        return { label: 'Debt-free', result: p.months == null ? { id: 'M34', value: null, never: true, needs: [] } : { id: 'M34', value: p.months, needs: [], unit: 'months', text: ranged ? `${p.text} ${w.range.text}` : p.text },
-          render: () => (ranged ? w.text : at(p.months)), note: ranged ? h('span.has-tip', { title: w.narrow }, `Likely ${w.likely}`) : null }; })(),
+      // Batch 41 (M9R): the plan as it stands (no what-if extra, the order in use) carries the range line.
+      { label: 'Debt-free', result: p.months == null ? { id: 'M34', value: null, never: true, needs: [] } : { id: 'M34', value: p.months, needs: [], unit: 'months', text: p.text },
+        render: () => at(p.months), range: !PUI.extraDebt && p.months != null && p.months === m.debtPlan?.months ? rangeLine(ctx, 'debtFree') : null },
       { label: 'Interest still to pay', result: { id: 'M34', value: p.months == null ? null : p.interest, needs: p.months == null ? ['payments that clear every debt'] : [], unit: 'money', text: p.text } },
-      (() => { const w = !PUI.extraDebt && p.months != null && p.months === m.debtPlan?.months ? debtWordsOf(m, { now: ctx.now() }) : null, ranged = w && w.kind !== 'month' && !w.wide;
-        return { label: 'Months', result: { id: 'M34', value: p.months, needs: [], unit: 'count', text: p.text }, render: r => (ranged && w.low !== w.high ? `${w.low} to ${w.high}` : `${r.value}`) }; })(),
+      { label: 'Months', result: { id: 'M34', value: p.months, needs: [], unit: 'count', text: p.text }, render: r => `${r.value}` },
       order === 'custom' ? { label: 'vs Avalanche (optimal)', result: { id: 'M34', value: cost.extraInterest, needs: cost.extraInterest == null ? ['both plans to finish'] : [], unit: 'money', text: `Interest with your order minus interest with Avalanche${cost.extraMonths ? `; ${cost.extraMonths} more ${Math.abs(cost.extraMonths) === 1 ? 'month' : 'months'}` : ''}.${costDays?.fiDays != null ? ` That is ${costDays.fiDays.toFixed(1)} FI days.` : ''}` }, note: costDays?.fiDays != null ? `${costDays.fiDays.toFixed(1)} FI days of extra interest` : 'Extra interest from your order' } :
       { label: `vs ${order === 'avalanche' ? 'snowball' : 'avalanche'}`, result: (() => { const o = plans[order === 'avalanche' ? 'snowball' : 'avalanche']; const d = o.months == null || p.months == null ? null : o.interest - p.interest; return { id: 'M34', value: d, needs: d == null ? ['both plans to finish'] : [], unit: 'money', text: `Interest with ${order === 'avalanche' ? 'snowball' : 'avalanche'} minus interest with ${order}.` }; })(), note: 'Interest saved by this order' }]),
     h('div.report-grid', {}, h('div.card', {}, h('strong', {}, 'Balance per debt'), payoffChart(ctx, p)), h('div.card', {}, h('strong', {}, 'Order compared'), compareChart(ctx, plans))),

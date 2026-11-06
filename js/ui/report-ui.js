@@ -17,6 +17,8 @@ import { drafttShares } from '../math/spending.js';
 import { gutAccuracy } from '../math/spending.js';
 import { fiTargets, ladder, agenda } from '../plan.js';
 import { pictureOf, unlockOf, confidenceOf, fiWordsOf } from '../math/picture.js';
+import { rangeLine } from './range-ui.js';
+import { rangeWordsOf } from '../math/ranges.js';
 import { homeworkAll } from '../program.js';
 import { closedMonths, monthName, ymOf, monthsBetween, addMonths } from '../month.js';
 import { money, pct } from '../format.js';
@@ -47,7 +49,7 @@ export function overviewScreen(app, ctx) {
   // Batch 11 (item 1): the one debt-free date, the same as Home, FOO and Debt.
   const P = m.debtPlan, freeAt = P?.debts.length && P.months != null ? monthName(addMonths(ymOf(ctx.now()), P.months), 'short') : null;
   const debtFree = P?.debts.length ? { label: 'Debt free', result: P.months == null ? { id: 'M34', value: null, never: true, needs: [] } : { id: 'M34', value: P.months, needs: [], unit: 'months', text: P.text }, render: () => freeAt, home: '#/plan/debt-payoff',
-    note: m.debtRule?.on ? 'The surplus goes to heavy debt first' : null } : null;
+    note: m.debtRule?.on ? 'The surplus goes to heavy debt first' : null, range: rangeLine(ctx, 'debtFree') } : null;
   const shelf = [
     ...(debtFree ? [debtFree] : []),
     { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate, note: m.savingsRate.second, so: soWhat('savingsRate', m) },
@@ -63,10 +65,10 @@ export function overviewScreen(app, ctx) {
   ];
   return [head('Overview', 'Read only. Every number links to its home'),
     S.summaryStrip(ctx, [
-      { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: HOME.netWorth, so: soWhat('netWorth', m) },
+      { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: HOME.netWorth, so: soWhat('netWorth', m), range: rangeLine(ctx, 'netWorth') },
       { label: 'Liquid net worth', result: m.liquidNetWorth, home: HOME.assets, so: soWhat('liquid', m) },
-      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: HOME.surplus, so: soWhat('surplus', m) },
-      { label: 'Runway', result: m.runwayMonths, key: 'runway', render: r => `${r.value.toFixed(1)} months`, home: HOME.assets, so: soWhat('runway', m) }]),
+      { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: HOME.surplus, so: soWhat('surplus', m), range: rangeLine(ctx, 'surplus') },
+      { label: 'Runway', result: m.runwayMonths, key: 'runway', render: r => `${r.value.toFixed(1)} months`, home: HOME.assets, so: soWhat('runway', m), range: rangeLine(ctx, 'efMonths') }]),
     // Batch 13 (item 1): Metrics is the core (open); the charts and fixed vs variable are caret sections, closed.
     S.sec('overview:metrics', { title: 'Metrics', open: true, summary: `${shelf.filter(i => i.result?.value != null).length} of ${shelf.length} lit` }, h('p.muted.small', { style: { margin: '0 0 8px' } }, 'Lit when the numbers behind them exist'), h('div.shelf', {}, shelf.map(i => S.metricCard(ctx, i.label, i.result, i)))),
     simpleMathSection(ctx), // batch 23: Your Shockingly Simple Math
@@ -186,7 +188,8 @@ export function summaryText(ctx) {
   const doc = ctx.store.doc;
   const op = doc.session.onePager || {};
   const gate = fiGate(ctx);
-  const fiWords = gate.unlocked && m.monthsToFi.value != null ? fiWordsOf(m, gate.confidence, { now: ctx.now() }) : null; // locked by the program: no date yet
+  const fiWords = gate.unlocked && m.monthsToFi.value != null ? fiWordsOf(m, null, { now: ctx.now() }) : null; // locked by the program: no date yet
+  const fiRange = fiWords && !fiWords.past ? rangeWordsOf('fi', ctx.ranges?.()?.fi, { now: ctx.now() }) : null; // batch 41: the same range as the screens (M9R)
   const line = (k, v) => (v == null || v === '' ? null : `${k}: ${v}`);
   const hw = homeworkItems(ctx);
   return [
@@ -196,7 +199,7 @@ export function summaryText(ctx) {
     line('Monthly surplus', m.surplus.value == null ? null : money(m.surplus.value)),
     line('Savings rate', m.savingsRate.value == null ? null : pct(m.savingsRate.value)),
     line('Debt free', m.debtRule?.heavy && m.debtPlan?.months != null ? `${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.months), 'short')}${m.debtRule.on ? ' (the surplus goes to heavy debt first)' : ''}` : null), // batch 11
-    line('FI date', fiWords == null ? null : `${fiWords.text}${fiWords.kind === 'month' ? '' : ` (${gate.confidence?.label ?? 'a range'})`}`),
+    line('FI date', fiWords == null ? null : `${fiWords.past ? 'reached' : fiWords.text}${fiRange ? ` (could be ${fiRange.low}${fiRange.high ? ` to ${fiRange.high}` : ' or later'})` : ''}`),
     '',
     ...(mv => (mv.length ? ['Your next moves:', ...mv.map((x, i) => `${i + 1}. ${x.text}`), ''] : []))(nextMoves(doc, ctx.ref, { now: ctx.now() })), // batch 12 (item 6)
     hw.length ? 'To do:' : null, ...hw.map(x => `- ${x.label}${x.where ? ` (look on: ${x.where})` : ''}`),
@@ -258,7 +261,7 @@ export function onePagerScreen(app, ctx) {
       h('div', {}, h('h3', {}, 'To-dos'), hw.filter(x => x.owner !== 'coach').length ? h('ul.op-list', {}, hw.filter(x => x.owner !== 'coach').map(x => h('li', {}, x.label, x.where ? h('span.muted.small', {}, ` · ${x.where}`) : null))) : h('p.muted', {}, "No homework yet. Tap Will get it on any number to add it.")), // the client's own items; the coach's stay on Coach tools (batch 7, item 9)
       h('div', {}, h('h3', {}, 'Goals'), h('ul.op-list', {},
         m.debtRule?.heavy && m.debtPlan?.months != null ? h('li', {}, `Debt free ${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.months), 'short')}${m.debtRule.on ? ': the surplus goes to heavy debt first' : ''}`) : null, // batch 11
-        m.monthsToFi.value != null && fiGate(ctx).unlocked ? h('li', {}, `FI ${fiWordsOf(m, fiGate(ctx).confidence, { now: ctx.now() })?.past ? 'reached' : fiWordsOf(m, fiGate(ctx).confidence, { now: ctx.now() })?.text ?? ''}${doc.assumptions.fiAge ? `, target age ${doc.assumptions.fiAge}` : ''}`) : null,
+        m.monthsToFi.value != null && fiGate(ctx).unlocked ? h('li', {}, `FI ${fiWordsOf(m, null, { now: ctx.now() })?.past ? 'reached' : fiWordsOf(m, null, { now: ctx.now() })?.text ?? ''}${doc.assumptions.fiAge ? `, target age ${doc.assumptions.fiAge}` : ''}`) : null,
         goals.map(g => h('li', {}, g.name || g.type)), !goals.length && (m.monthsToFi.value == null || !fiGate(ctx).unlocked) ? h('li.muted', {}, fiGate(ctx).unlocked ? 'Set an FI target on Plan' : `FI date: ${fiGate(ctx).reason}`) : null))),
     S.sec('one-pager:notes', { title: 'Strengths, struggles, do more, do less', level: 'h3', summary: `${['strengths', 'struggles', 'doMore', 'doLess'].filter(k => op[k]).length} of 4 written` }, // batch 13: the coach's four boxes fold
       h('div.op-grid', { style: { marginTop: '8px' } }, box('strengths', 'Strengths', 'What is going well'), box('struggles', 'Struggles', 'What is hard right now')),
@@ -285,10 +288,10 @@ export function fiGate(ctx) {
 export function fiCard(ctx, m) {
   const v = m.monthsToFi.value;
   const g = fiGate(ctx);
-  const words = g.unlocked && v != null ? fiWordsOf(m, g.confidence, { now: ctx.now() }) : null;
+  const words = g.unlocked && v != null ? fiWordsOf(m, null, { now: ctx.now() }) : null; // batch 41: the likely month; the range is the quiet line under it (M9R)
   // Answer 123: line 1 is the path the FI date assumes; line 2 the other path, only when the two differ.
   const iv = m.investing, alt = iv?.investSurplus ? m.fiPaths?.idle : m.fiPaths?.invested;
-  const altWords = words && alt?.value != null ? fiWordsOf({ ...m, monthsToFi: alt, investing: { ...iv, investSurplus: !iv.investSurplus, monthly: iv.investSurplus ? iv.idle : iv.invested } }, g.confidence, { now: ctx.now() }) : null;
+  const altWords = words && alt?.value != null ? fiWordsOf({ ...m, monthsToFi: alt, investing: { ...iv, investSurplus: !iv.investSurplus, monthly: iv.investSurplus ? iv.idle : iv.invested } }, null, { now: ctx.now() }) : null;
   const safer = words ? saferFi(m, { from: ctx.now() }) : null; // batch 5 C: a second, smaller line under 45
   const lines = !words ? null : words.past ? h('span.stack.fi-lines', {}, h('strong', {}, 'FI reached')) : h('span.stack.fi-lines', {},
     h('span', {}, iv?.debtFirst ? 'Heavy debt first: ' : m.fooFlow?.waitMonths ? 'big e first: ' : iv?.investSurplus ? 'Invest your surplus: ' : 'Surplus sits in checking: ', h('strong', {}, words.past ? 'FI reached' : `FI ${words.kind === 'month' ? 'in' : 'around'} ${words.text}`)),
@@ -296,7 +299,7 @@ export function fiCard(ctx, m) {
     safer ? h('span.muted.small.fi-safer', { title: safer.words }, safer.text) : null,
     altWords && altWords.text !== words.text ? h('span.muted.small', {}, `${iv?.investSurplus ? 'If it sits in checking' : 'If invested'}: ${altWords.text}`) : alt?.never && words ? h('span.muted.small', {}, `${iv?.investSurplus ? 'If it sits in checking' : 'If invested'}: not on this path`) : null);
   return { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi', home: HOME.fi, lock: g.unlocked ? null : { reason: g.reason, route: g.route }, confidence: g.confidence,
-    render: words ? () => words.text : null, note: lines ?? (v == null ? null : `${(v / 12).toFixed(1)} years from now`) };
+    render: words ? () => words.text : null, note: lines ?? (v == null ? null : `${(v / 12).toFixed(1)} years from now`), range: words && !words.past ? rangeLine(ctx, 'fi') : null };
 }
 
 // ---------- History ----------
