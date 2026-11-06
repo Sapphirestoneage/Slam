@@ -61,6 +61,8 @@ export const RULES = {
   lenderFront: 0.28, lenderBack: 0.36, lenderBackStrong: 0.45, lenderBackDu: 0.5, lenderFhaFront: 0.31, lenderFhaBack: 0.43,
   lenderRentTimes: 3, lenderRentYearNyc: 40, lenderDropLook: 0.2, lenderBenefitYears: 3, lenderLeaseMonths: 12, lenderStudentPct: 0.01,
   lenderMortgageRate: 0.062, lenderMortgageYears: 30, lenderTaxInsShare: 0.25,
+  // Batch 44 (the bank fire drill, M9F): the drill reads the next this many days of the calendar.
+  fireDrillDays: 30,
 };
 export const LISTS = {
   perMonth: { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, quarter: 1 / 3, year: 1 / 12 },
@@ -245,6 +247,7 @@ export const ASSUMPTIONS = [
   { id: 'rules.inquiriesMany', name: 'InquiriesMany', label: 'Your credit: this many hard inquiries in 2 years makes holding off on applications the next step', unit: 'number', get: () => RULES.inquiriesMany, source: RULE('js/math/cards.js creditMove, M9D; the Credit health note (more than 2 holds a strong score at OK)'), date: '2026-11-06' },
   { id: 'rules.learnShown', name: 'LearnShown', label: 'The library: skills to learn shown at each FOO step', unit: 'number', get: () => RULES.learnShown, source: RULE('js/math/library.js, M9K; the older suite\'s Stacker, three at a time (docs/engines/library.md)'), date: '2026-11-06' },
   { id: 'rules.carPaymentYears', name: 'CarPaymentYears', label: 'Can I afford it?: a car payment starts at this many years (other monthly costs start at For good)', unit: 'number', get: () => RULES.carPaymentYears, source: RULE('js/math/afford.js, M83; QUESTIONS 273 (decided Nov 6)'), date: '2026-11-06' },
+  { id: 'rules.fireDrillDays', name: 'FireDrillDays', label: 'Fire drill: the days of the calendar read when an account freezes', unit: 'number', get: () => RULES.fireDrillDays, source: RULE('js/math/firedrill.js, M9F: about a pay cycle or two, the time a direct deposit change takes, and the time a closed account takes to send its balance back'), date: '2026-11-06' },
   { id: 'rules.typicalLow', name: 'TypicalLow', label: 'Typical at your age: the low end of a typical range, times the source\'s median (or mean)', unit: 'number', get: () => RULES.typicalLow, source: RULE('js/math/priors.js, M9E; docs/engines/priors.md, until percentiles are read'), date: '2026-11-06' },
   { id: 'rules.typicalHigh', name: 'TypicalHigh', label: 'Typical at your age: the high end of a typical range, times the source\'s median (or mean)', unit: 'number', get: () => RULES.typicalHigh, source: RULE('js/math/priors.js, M9E; docs/engines/priors.md, until percentiles are read'), date: '2026-11-06' },
   // Batch 42: the lender's-eye view (M9W).
@@ -280,6 +283,9 @@ export const TABLES = [
   // Batch 27: platform income (each row: the fee, the days a payout is held, the usual payout schedule, and where it came from).
   { id: 'Platforms', label: 'Platforms: fee, hold and payout schedule (prefilled on a Platform income row)', columns: [['platform', 'Platform', 'text'], ['fee', 'Fee', 'pct'], ['hold', 'Hold, days', 'number'], ['payout', 'Payout', 'text'], ['source', 'Source', 'text']],
     rows: r => Object.entries(r.platforms).map(([k, p]) => [k, p.fee, p.holdDays, p.payout, p.source]), source: 'Each row names its source (checked Nov 6 2026; the unverified ones are on QUESTIONS)', date: '2026-11-06' },
+  // Batch 44: the order to pay in when not everything can be paid (the bank fire drill, M9F).
+  { id: 'Bill_order', label: 'Fire drill: the order to pay in when not everything can be paid (first to last), and whether a card can usually pay it', columns: [['n', 'Order', 'number'], ['tier', 'Bills', 'text'], ['card', 'A card can pay it', 'text']],
+    rows: r => r.fireDrill.order.map((o, i) => [i + 1, o.label, o.card ? 'Yes' : 'No']), source: r => r.fireDrill.source, date: '2026-11-06' },
   { id: 'NYC_single', label: 'NYC brackets, single', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.local.NYC.brackets.single), source: r => r.tax.local.NYC.source, date: '2026-11-03' },
   { id: 'NYC_joint', label: 'NYC brackets, joint', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.local.NYC.brackets.joint), source: r => r.tax.local.NYC.source, date: '2026-11-03' },
   { id: 'NYC_head', label: 'NYC brackets, head of household', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.local.NYC.brackets.head), source: r => r.tax.local.NYC.source, date: '2026-11-03' },
@@ -335,6 +341,7 @@ export const REFERENCE_LISTS = {
   'studentLoans.saveEnded': 'the day a court order ended SAVE, March 10 2026 (Tate Law, Oct 4 2026); words only',
   lists: 'picker lists (debt types, account types, statuses) and, since batch 20, the usual 401(k) match formulas as taps (matchPicks: the job row\'s first tier)',
   platforms: 'the Platforms table (batch 27)',
+  fireDrill: 'batch 44: the Bill_order table (each tier\'s Budget categories, DRAFTT letters, debt types and calendar kinds, and words for whom to call), its source and date, and the stranded money links (the DOL Retirement Savings Lost and Found, MissingMoney with NAUPA). Words and tap groups: the only numbers are the order itself',
   'tax.noWageTax': 'the states with no tax on wages (batch 35, QUESTIONS 306): words on Taxes only ("FL has no state income tax on wages"); no math reads it',
   categoryDefaults: 'the starting DRAFTT letter, amount and date for each Budget category',
   spendingPresets: 'starter Budget lines, each a Guess',

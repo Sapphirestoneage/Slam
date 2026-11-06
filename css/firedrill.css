@@ -1,0 +1,36 @@
+/* Net worth › Fire drill (batch 44). Calm: one card with the account picked by a tap and three numbers, slim rows. */
+.fd-hero { display: flex; flex-direction: column; gap: var(--s3); margin-bottom: var(--s4); }
+.fd-q { margin: 0; font-size: var(--fs-section); }
+.fd-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); }
+.fd-tile { display: flex; flex-direction: column; gap: 2px; padding: var(--s3); border: 1px solid var(--border-row); border-radius: var(--r-input); min-width: 0; }
+.fd-big { font-size: 1.5rem; line-height: 1.2; }
+.fd-big .math { font-size: inherit; font-weight: inherit; }
+.fd-note { margin: 0; }
+.fd-list { display: flex; flex-direction: column; }
+.fd-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.2fr) 112px; gap: 4px var(--s3); align-items: center; padding: 8px 0; border-top: 1px solid var(--border-row); min-height: 40px; }
+.fd-list > .fd-row:first-child, .fd-list > h3 + .fd-row { border-top: 0; }
+.fd-row-pick { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.fd-row-top { grid-template-columns: minmax(0, 1fr) 112px; border-top: 0; padding: 0; }
+.fd-row > .seg, .fd-row > .tag { justify-self: start; }
+.fd-name { min-width: 0; overflow-wrap: anywhere; }
+.fd-amt { text-align: right; white-space: nowrap; }
+.fd-how, .fd-when { min-width: 0; }
+.fd-tier { margin: var(--s3) 0 2px; font-size: var(--fs-label); color: var(--text-2); }
+.fd-list > .fd-tier:first-child { margin-top: 0; }
+.fd-where { margin-top: var(--s4); }
+.fd-must { margin: var(--s3) 0 0; }
+.fd-checks { display: flex; flex-direction: column; }
+.fd-check { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; border-top: 1px solid var(--border-row); }
+.fd-check:first-child { border-top: 0; }
+.fd-ok { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.fd-link { align-self: flex-start; }
+[data-sec^="drill:"] .sec-body h3 { font-size: var(--fs-label); margin: var(--s3) 0 4px; }
+[data-sec^="drill:"] .sec-body > h3:first-child { margin-top: 0; }
+@media (max-width: 760px) {
+  .fd-tiles { grid-template-columns: minmax(0, 1fr); }
+  .fd-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .fd-row > .fd-amt { grid-column: 2; grid-row: 1; }
+  .fd-row > :nth-child(2):not(.fd-amt) { grid-column: 1 / -1; grid-row: 2; }
+  .fd-row-pick { grid-template-columns: minmax(0, 1fr); }
+  .fd-row-top { grid-template-columns: minmax(0, 1fr) auto; }
+}

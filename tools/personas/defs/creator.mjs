@@ -42,6 +42,12 @@ export default {
     gap: { value: 2350, note: '$5,274.50 - $2,924.50 = $2,350 a month (all of OnlyFans).' },
     says: ['File your 2026 return showing all of OnlyFans', 'most mortgage lenders wait for the second', 'Needs a card limit'],
   },
+  // Batch 44: Net worth › Fire drill as of Nov 5 2026 (the 30 days Nov 5 to Dec 4). test/firedrill.test.js.
+  fireDrill: {
+    account: 'Checking', outOfReach: 7669.24, reach: 6000, mustPay: 3379.75, days: 53, withCard: 53, held: 540.82,
+    note: 'Opens on checking, where the larger take-home lands (the job, $2,383.33 a month). The job pays $1,100 on Nov 6, Nov 20 and Dec 4 ($3,300); OnlyFans pays $2,350 x 12 / 52 = $542.31 each Monday after the 7-day hold: Nov 9, 16, 23 and 30 ($2,169.24). Out of reach: $2,200 + $3,300 + $2,169.24 = $7,669.24. Reachable: the HYSA $6,000. Must-pay: the gut number $3,600 less the $300 card payment in it, plus the card minimum ($29 + $2,900 x 21% / 12 = $79.75): $3,379.75. $6,000 / ($3,379.75 x 12 / 365 = $111.11 a day) = 53.99, so 53 days. Held on OnlyFans at any time: $2,350 x 12 / 365 x 7 = $540.82.',
+    says: ['$7,669', 'About 53 days', 'close accounts tied to adult work', 'OnlyFans: payouts held back', '$541', 'Payout settings on each platform'],
+  },
   cannot: [
     // Batch 27 cleared: platform payouts (gross, the platform fee, chargebacks a month, the hold and the payout schedule)
     // are a Platform income row, and the calendar lands each payout after the hold.

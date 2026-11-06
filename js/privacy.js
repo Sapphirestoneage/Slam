@@ -78,9 +78,13 @@ export const notesHidden = (r, aud, mode = null) => !sees(notesSeenOf(r), r, aud
 
 // What says what a row is, beyond its name and notes: taken off a folded row (nothing the math reads).
 const IDENTIFYING = ['institution', 'institutionId', 'last4', 'equity', 'what', 'coveredBy', 'website'];
+// An opaque key for an institution (a short hash of its id): equal for rows at one bank, and it names no bank.
+export const bankKeyOf = id => `bank${[...String(id)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7).toString(36)}`;
 function foldRecord(r, ref) {
   const values = { ...r.values };
+  const bank = values.institutionId ?? null;
   for (const k of IDENTIFYING) delete values[k];
+  if (bank) values.bankKey = bankKeyOf(bank); // batch 44: the fire drill still knows which rows share a bank, not which bank
   if (r.type === 'Platform' || values.platform) { // the fee, hold and payout schedule stay as numbers, so the payout is the same
     const p = platformOf(r, ref || {});
     values.feePct = p.fee; values.holdDays = p.holdDays; values.payFrequency = p.payout;

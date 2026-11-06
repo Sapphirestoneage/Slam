@@ -8,6 +8,8 @@ export default {
     workSituation: 'Self-employed', housing: 'Rent', hasCar: true, hasPets: true, incomeStability: 'Unpredictable', healthCoverage: 'ACA',
     variable: { typical: 6175, lowest: 4116.67, setAside: 0.28 }, // batch 27: Use your shifts ($475 a shift after fees x 13, and x 2 / 3 in the slow months); fees are on the shifts now
     areas: { cash: true, investments: false, real: true, debt: false },
+    // Batch 44: the two banks on Institutions, so the fire drill knows the savings is out of a freeze at bank A.
+    institutions: [{ id: 'dancer-bank-a', name: 'Bank A', kind: 'Bank', website: null, notes: null, owner: null }, { id: 'dancer-bank-b', name: 'Online Bank B', kind: 'Bank', website: null, notes: null, owner: null }],
   },
   records: [
     // Batch 27: the shifts are the row: 3 a week at about $575 a shift in dances (card and cash), less an $80 house fee
@@ -17,9 +19,9 @@ export default {
       returnsFiled: '2 or more', returnLast: 52000, returnBefore: 41000 } }, // batch 42: her 2024 and 2025 returns (Schedule C net) showed less than she earns now
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 3300, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Cash on hand', name: 'Cash at home', values: { group: 'cash', balance: 2500 } },
-    { kind: 'account', type: 'Checking', name: 'Checking (bank A)', values: { group: 'cash', balance: 1800 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Savings (online bank B)', values: { group: 'cash', balance: 4000, purpose: 'Emergency' } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Quarterly tax set-aside', values: { group: 'cash', balance: 3500, purpose: 'Taxes' } }, // batch 27: owed, kept out of emergency cash
+    { kind: 'account', type: 'Checking', name: 'Checking (bank A)', values: { group: 'cash', balance: 1800, institutionId: 'dancer-bank-a' } },
+    { kind: 'account', type: 'Savings or HYSA', name: 'Savings (online bank B)', values: { group: 'cash', balance: 4000, purpose: 'Emergency', institutionId: 'dancer-bank-b' } },
+    { kind: 'account', type: 'Savings or HYSA', name: 'Quarterly tax set-aside', values: { group: 'cash', balance: 3500, purpose: 'Taxes', institutionId: 'dancer-bank-b' } }, // batch 27: owed, kept out of emergency cash
     { kind: 'asset', type: 'Car', name: 'Car (paid off)', values: { value: 12000, financed: 'Paid off' } },
     { kind: 'coverage', type: 'Health', name: 'ACA plan', amount: 280, per: 'month', values: { have: 'Have it', deductible: 5000, paidFrom: 'Budget' } },
   ],
@@ -44,10 +46,17 @@ export default {
     loan: { value: 132865, tol: 50, note: 'Home payment min(28% x $3,875 = $1,085, 36% x $3,875 = $1,395) = $1,085; 75% carries the loan: $813.75 a month at 6.2% for 30 years x 163.28 = $132,865.' },
     says: ['File your 2026 return showing all of Dancing', '$63,050 a year', 'Deposit cash as it comes in'],
   },
+  // Batch 44: what Net worth › Fire drill says (as of NOW, Nov 5 2026: the 30 days Nov 5 to Dec 4). test/firedrill.test.js
+  // checks the numbers; the browser run checks the words show.
+  fireDrill: {
+    account: 'Checking (bank A)', outOfReach: 8925, reach: 6500, taxesNotCounted: 3500, mustPay: 3300, days: 59, withCard: 59, ready: 2, items: 5,
+    note: 'The shifts land in checking every Friday: Nov 6, 13, 20, 27 and Dec 4, $475 x 3 shifts = $1,425 each, $7,125 in the 30 days. Out of reach: $1,800 + $7,125 = $8,925. Still reachable: savings at Online Bank B $4,000 + cash at home $2,500 = $6,500 (the $3,500 for taxes is listed, not counted). Must-pay: the gut number $3,300 (no debts). $6,500 / ($3,300 x 12 / 365 = $108.49 a day) = 59.9, so 59 days. Ready: the second bank (Online Bank B) and a month outside the main bank ($6,500 >= $3,300); 2 of 5.',
+    says: ['If this account froze today', '$8,925', '$6,500', 'About 59 days', 'close accounts tied to adult work', 'set aside for taxes, not counted', 'Savings (online bank B) at Online Bank B'],
+  },
   cannot: [
     // Batch 27 cleared: house fees and tip-out per shift are on the shift job; cash at home is a Cash on hand account
     // (counted as cash, with its loss-risk note); the quarterly tax money is Purpose: Taxes, outside big e and the runway.
-    'Bank-closure risk: no flag for an industry banks close accounts for, no second-bank plan.',
+    // Batch 44 cleared: bank-closure risk is Net worth › Fire drill (the calm note for adult and cash work, the second bank, the backup plan).
     'No employer benefits: nothing suggests a SEP IRA or Solo 401(k) for a 1099 earner with no investments.',
   ],
 };

@@ -208,6 +208,7 @@ export const AREAS = [
       // A Platform row: amount is the gross a month; the fee and hold are prefilled from the Platforms table.
       pick('platform', 'Platform', ['OnlyFans', 'Fansly', 'Patreon', 'Etsy', 'Uber', 'DoorDash', 'Upwork', 'Other'], { kinds: ['income'] }),
       f('feePct', 'Platform fee %', 'pct', { kinds: ['income'] }), f('holdDays', 'Payout hold (days)', 'number', { kinds: ['income'] }),
+      f('landsIn', 'Lands in (which account)', 'text', { kinds: ['income'], sheet: { skip: 'points at a checking or savings row by its id; set it on Net worth › Fire drill' } }), // batch 44
       f('chargebacks', 'Chargebacks and refunds a month', 'money', { kinds: ['income'] }),
       // Batch 42 (the lender's-eye view, M9W): the returns a self-employment row has on file, as a lender reads them.
       pick('returnsFiled', 'Tax returns filed with this income', ['2 or more', '1', 'None'], { kinds: ['income'] }),
@@ -247,6 +248,7 @@ export const AREAS = [
       f('taxPlan', 'Payment plan in place', 'yesno'), f('guaranteed', 'Personally guaranteed', 'yesno'),
       f('institution', 'Institution'), f('opened', 'Opened', 'month'),
       f('institutionId', 'Institution (from the list)', 'text', { sheet: { skip: 'points at an Institutions row by id; the Institution column shows its name' } }),
+      f('bankKey', 'Same bank as (kept private)', 'text', { sheet: { skip: 'batch 44: on a row kept private, an opaque key in place of its institution, so the fire drill still knows which rows share a bank; set by the fold' } }),
       CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(), ...SEEN_F,
     ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'a debt uses Balance and Payment' } } : x)),
   },
@@ -254,7 +256,7 @@ export const AREAS = [
     id: 'assets', prefix: 'Assets', tab: 'Assets', source: 'records', kinds: { account: 'Account', asset: 'Home or car' },
     about: 'Cash, investments, and things you own.',
     types: {
-      account: ['Checking', 'Savings or HYSA', 'Money market', 'CD', 'Cash on hand', '401(k)', '403(b)', '457', 'TSP', 'Roth IRA', 'Traditional IRA', 'Rollover IRA', 'SEP', 'Solo 401(k)', 'HSA', '529', 'Brokerage', 'Crypto', 'Other', 'All investments'],
+      account: ['Checking', 'Savings or HYSA', 'Money market', 'CD', 'Cash on hand', 'Payment app', '401(k)', '403(b)', '457', 'TSP', 'Roth IRA', 'Traditional IRA', 'Rollover IRA', 'SEP', 'Solo 401(k)', 'HSA', '529', 'Brokerage', 'Crypto', 'Other', 'All investments'],
       asset: ['Car', 'Home', 'Other property', 'Business', 'Valuables', 'Money owed to you'],
     },
     fields: [
@@ -268,6 +270,7 @@ export const AREAS = [
       f('unvested', 'Unvested', 'money', { kinds: ['account'] }),
       f('institution', 'Institution', 'text', { kinds: ['account'] }), // the older typed name; the Institutions list is the home now
       f('institutionId', 'Institution (from the list)', 'text', { kinds: ['account'], sheet: { skip: 'points at an Institutions row by id; the Institution column shows its name' } }),
+      f('bankKey', 'Same bank as (kept private)', 'text', { kinds: ['account'], sheet: { skip: 'batch 44: on a row kept private, an opaque key in place of its institution, so the fire drill still knows which rows share a bank; set by the fold' } }),
       f('apy', 'APY', 'pct', { kinds: ['account'] }), pick('yieldKind', 'APY or 7-day yield', ['APY', '7-day yield'], { kinds: ['account'] }),
       pick('purpose', 'Purpose', ['Emergency', 'Sinking fund', 'Goal', 'Taxes', 'General'], { kinds: ['account'] }), // batch 27: Taxes is owed money, kept out of emergency cash
       f('contribution', 'Putting in', 'money', { kinds: ['account'] }),
@@ -468,6 +471,7 @@ export const NOT_IN_SHEET = {
   'spending.months.actualFrom': 'where a month actual came from (csv); set by the statement import (J)',
   'settings.csvMaps': 'which CSV column is which, saved once per bank (J)',
   'program.proposed': 'the Proposed plan the coach edits on Plan › Current vs Proposed (K): spending, debt order, retire-by age, surplus invested, extra to debt, extra income (batch 12)',
+  'program.fireDrill': 'the bank fire drill on Net worth › Fire drill (batch 44): the account picked, same bank or another bank as said on the drill, the backup plan ticks (and where the payroll form lives) and the stranded money ticks, each with the day it was ticked. A checklist, not a number: the Math tab shows the drill (M9F) and the household rows hold the money',
   'program.transition': 'the Life Transitions plan on Plan › Transitions (batch 21): the template, start and destination, the start month, each rung\'s on or off and any amount typed, the tripwires, Plan B and C, the share switch. A what-if like program.proposed: the Math tab shows its runway (M90), the household rows hold the money',
   'session.weather': 'the money weather per session and person (batch 25, Coach tools › Discovery): six tap answers each; Clear, Fair, Overcast or Storm is worked out (M95)',
   'program.gap': 'the gap card (batch 12): the income option the coach fills (extra shifts or a side gig, a month)',

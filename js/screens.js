@@ -31,6 +31,7 @@ import { reviewScreen } from './ui/review-ui.js';
 import { goalsScreen, timelineScreen, payoffScreen, nextYearScreen, scenariosScreen } from './ui/plan-ui.js';
 import { transitionsScreen } from './ui/transitions-ui.js';
 import { lenderScreen } from './ui/lender-ui.js';
+import { fireDrillScreen } from './ui/firedrill-ui.js';
 import { AREAS, recordFor } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
 import { statusOf, countsAsDone } from './records.js';
@@ -234,6 +235,7 @@ export const SCREENS = {
   'net-worth/debt': tabPage('net-worth', 'debt'),
   'net-worth/credit-cards': tabPage('net-worth', 'credit-cards'),
   'net-worth/protection': tabPage('net-worth', 'protection'),
+  'net-worth/fire-drill': (app, ctx) => (app.hasClient ? fireDrillScreen(app, ctx) : [head('Bank fire drill'), noClient(app)]), // batch 44
 
   'cash-flow/income': tabPage('cash-flow', 'income'),
   'cash-flow/taxes': tabPage('cash-flow', 'taxes'),

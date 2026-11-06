@@ -4498,5 +4498,655 @@
   "livesOn": "Home › About you",
   "scope": "Now",
   "phase": ""
+ },
+ {
+  "id": "F451",
+  "field": "Benefits started",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F452",
+  "field": "Benefits end",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F453",
+  "field": "Have 10% federal tax withheld",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F454",
+  "field": "Bills list: keep or try to cut",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F455",
+  "field": "Starts in (a known cost ahead)",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F456",
+  "field": "Paid to my partner (moves money between you)",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F457",
+  "field": "Phase 4 previews on (Life Transitions on Plan)",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F458",
+  "field": "Card from the library",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F459",
+  "field": "Card credits and benefits used",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F460",
+  "field": "FI Address taps",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F461",
+  "field": "Personality letters answers",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F462",
+  "field": "Skill trees the letters lead with",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F463",
+  "field": "Who they are with money: do this later",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F464",
+  "field": "First borrowed",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F465",
+  "field": "Shifts a week",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F466",
+  "field": "Pay a shift (before tax)",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F467",
+  "field": "Hourly pay",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F468",
+  "field": "Hours a shift",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F469",
+  "field": "House or stage fee a shift",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F470",
+  "field": "Card tips (on the paycheck)",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F471",
+  "field": "Card tips per",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F472",
+  "field": "Cash tips",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F473",
+  "field": "Cash tips per",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F474",
+  "field": "Cash tips reported",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F475",
+  "field": "Tip-out as",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F476",
+  "field": "Tip-out %",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F477",
+  "field": "Tip-out a shift",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F478",
+  "field": "Sales a shift",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F479",
+  "field": "Slow season months",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F480",
+  "field": "Shifts a week in the slow season",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F481",
+  "field": "Busy season months",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F482",
+  "field": "Shifts a week in the busy season",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F483",
+  "field": "Platform",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F484",
+  "field": "Platform fee %",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F485",
+  "field": "Payout hold (days)",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F486",
+  "field": "Chargebacks and refunds a month",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F487",
+  "field": "Skills done (the library)",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F488",
+  "field": "Sleep-at-night number (the cash that lets you sleep)",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets › Cash layers",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F489",
+  "field": "Who sees this (blank: everyone)",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F490",
+  "field": "Who sees its notes (blank: as the row)",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F491",
+  "field": "Name when shared",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F492",
+  "field": "Who sees this (blank: everyone)",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F493",
+  "field": "Who sees its notes (blank: as the row)",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F494",
+  "field": "Name when shared",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F495",
+  "field": "Who sees this (blank: everyone)",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F496",
+  "field": "Who sees its notes (blank: as the row)",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F497",
+  "field": "Name when shared",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F498",
+  "field": "Who sees this (blank: everyone)",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F499",
+  "field": "Who sees its notes (blank: as the row)",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F500",
+  "field": "Name when shared",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F501",
+  "field": "Who sees this (blank: everyone)",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F502",
+  "field": "Who sees its notes (blank: as the row)",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F503",
+  "field": "Name when shared",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F504",
+  "field": "Who sees this (blank: everyone)",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F505",
+  "field": "Who sees its notes (blank: as the row)",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F506",
+  "field": "Name when shared",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F507",
+  "field": "Who sees this (blank: everyone)",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F508",
+  "field": "Who sees its notes (blank: as the row)",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F509",
+  "field": "Name when shared",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F510",
+  "field": "Tax returns filed with this income",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F511",
+  "field": "Net profit on the last return filed (a year)",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F512",
+  "field": "Net profit on the return before that (a year)",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F513",
+  "field": "Lands in (which account)",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F514",
+  "field": "Same bank as (kept private)",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F515",
+  "field": "Same bank as (kept private)",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
  }
 ]

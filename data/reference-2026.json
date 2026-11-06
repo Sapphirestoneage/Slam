@@ -425,7 +425,8 @@
       "Savings or HYSA",
       "Money market",
       "CD",
-      "Cash on hand"
+      "Cash on hand",
+      "Payment app"
     ],
     "statuses": [
       "Know it",
@@ -2047,6 +2048,35 @@
       },
       {
         "terms": [
+          "fire drill",
+          "bank closed",
+          "account closed",
+          "account frozen",
+          "frozen account",
+          "bank froze",
+          "closed my account",
+          "debanked",
+          "second bank",
+          "backup card",
+          "direct deposit",
+          "stranded money",
+          "unclaimed property",
+          "unclaimed money",
+          "missing money",
+          "old 401k",
+          "lost 401k",
+          "held payout",
+          "payout hold"
+        ],
+        "label": "Bank fire drill",
+        "go": [
+          "focus:firedrill@#/net-worth/fire-drill"
+        ],
+        "add": "none",
+        "why": "Net worth › Fire drill: if an account froze today, what can still be reached, the order to pay in, the backup plan and stranded money (batch 44, Phase 4)"
+      },
+      {
+        "terms": [
           "import",
           "import transactions",
           "csv",
@@ -3147,6 +3177,110 @@
       "holdDays": 0,
       "payout": "month",
       "source": "SLAM default: no fee and no hold until typed"
+    }
+  },
+  "fireDrill": {
+    "about": "Batch 44 (M9F, js/math/firedrill.js): the bank fire drill. order is the order to pay in when not everything can be paid, first to last; each tier lists the Budget categories, DRAFTT letters, debt types and calendar kinds it holds, and card says whether a credit card can usually pay it (not rent, not another debt).",
+    "source": "CFPB, Your Money, Your Goals: Prioritizing bills (files.consumerfinance.gov/f/documents/cfpb_ymyg_behind-on-bills_print.pdf: stay housed and keep utilities connected, keep the job, then other loans and credit cards) and CFPB, Tools to help when you can't pay your bills (Apr 17 2020: cover food, housing, utilities and phone first); the NFCC counselors' order (keep the roof, the heat, the car you work from and the food before the debts), via the older suite's data/bill_triage.json (Sep 6 2026). Checked Nov 6 2026",
+    "date": "2026-11-06",
+    "order": [
+      {
+        "id": "housing",
+        "label": "Housing",
+        "categories": [
+          "Rent or mortgage",
+          "Renters or home insurance"
+        ],
+        "debtTypes": [
+          "Mortgage"
+        ],
+        "card": false,
+        "call": "Your landlord or mortgage servicer, before the due date: ask for a few days or a payment plan. A HUD-approved housing counselor is free (hud.gov)."
+      },
+      {
+        "id": "utilities",
+        "label": "Utilities and phone",
+        "categories": [
+          "Electric, gas, water",
+          "Internet, phone",
+          "Internet",
+          "Phone"
+        ],
+        "card": true,
+        "call": "The utility: ask for a payment arrangement. 211 knows local help with energy bills."
+      },
+      {
+        "id": "food",
+        "label": "Food",
+        "draftt": [
+          "Food"
+        ],
+        "gut": true,
+        "card": true,
+        "call": "211 or a food bank. Using one while an account is sorted out is what it is for."
+      },
+      {
+        "id": "transport",
+        "label": "Getting to work",
+        "draftt": [
+          "Transportation"
+        ],
+        "debtTypes": [
+          "Car loan"
+        ],
+        "card": true,
+        "call": "The car lender: ask to move one payment to the end of the loan."
+      },
+      {
+        "id": "health",
+        "label": "Health and childcare",
+        "draftt": [
+          "Therapy"
+        ],
+        "categories": [
+          "Kids",
+          "Health insurance"
+        ],
+        "card": true,
+        "call": "The provider or the plan: ask to change the payment date."
+      },
+      {
+        "id": "minimums",
+        "label": "Minimum payments",
+        "debts": true,
+        "card": false,
+        "call": "The card or loan company: ask for its hardship program by name. A nonprofit counselor at nfcc.org is free."
+      },
+      {
+        "id": "taxes",
+        "label": "Tax payments",
+        "kinds": [
+          "tax"
+        ],
+        "draftt": [
+          "Taxes"
+        ],
+        "card": false,
+        "call": "The IRS: a short payment plan can be set up online."
+      },
+      {
+        "id": "rest",
+        "label": "Everything else",
+        "card": true,
+        "call": "Pause it, or move its date, until the account is sorted out."
+      }
+    ],
+    "links": {
+      "plans": {
+        "site": "lostandfound.dol.gov",
+        "url": "https://lostandfound.dol.gov",
+        "how": "The Department of Labor's Retirement Savings Lost and Found (live since Dec 2024): search by Social Security number for a plan from any past job."
+      },
+      "unclaimed": {
+        "site": "missingmoney.com",
+        "url": "https://www.missingmoney.com",
+        "how": "Old deposits, refunds and final paychecks go to the state when a business cannot reach you. MissingMoney (run with NAUPA, the state treasurers' unclaimed property group) searches most states at once; unclaimed.org links each state's own site."
+      }
     }
   }
 }

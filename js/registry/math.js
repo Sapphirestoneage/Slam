@@ -37,6 +37,7 @@ import { foo } from '../math/foo.js';
 import { gapOf } from '../math/gap.js';
 import { nextMoves } from '../math/moves.js';
 import { transitionOf } from '../math/transitions.js';
+import { fireDrillOf } from '../math/firedrill.js';
 import { cardsPicture, creditMove } from '../math/cards.js';
 import { cardLibrary } from '../cardlib.js';
 import { skillLibrary } from '../library.js';
@@ -645,6 +646,14 @@ export const MATH = [
       { key: 'landlord', name: 'Income a landlord can count, a month', unit: 'money', fromApp: 'the rows read as a landlord reads them: the latest return for self-employment', app: c => lenderOf(c.doc, c.ref, { now: c.now, m: c.m }).landlordIncome },
       { key: 'loan', name: 'Home loan the usual lines clear on the income a lender can count', unit: 'money', fromApp: 'the most home payment (LenderFront and LenderBack less the other debts), less taxes and insurance, as a loan at LenderMortgageRate over LenderMortgageYears', app: c => lenderOf(c.doc, c.ref, { now: c.now, m: c.m }).mortgage.loan },
     ] },
+  // ---------- Batch 44: the bank fire drill and stranded money (Phase 4 Track 2) ----------
+  { id: 'M9F', name: 'Bank fire drill: days the reachable money covers the must-pay bills', inputs: 'the bank accounts (balance, bank on Institutions, owner, Purpose: Taxes), Lands in on each paycheck, Paid with on a bill, cash at home, each card\'s limit and balance and bank, M60 the calendar\'s next FireDrillDays days, the must-pay Budget lines (housing, utilities and phone, food, getting to work, health and childcare) or the gut number, M30 the minimum on each debt, Bill_order, platform holds (M12)', unit: 'days',
+    fns: ['firedrill.BANK_TYPES', 'firedrill.WORKPLACE', 'firedrill.fireDrillState', 'firedrill.setFireDrill', 'firedrill.bankAccounts', 'firedrill.mainAccount', 'firedrill.landsInOf', 'firedrill.drawsFromOf', 'firedrill.sameBankOf', 'firedrill.tierOf', 'firedrill.minimumOf', 'firedrill.mustPayOf', 'firedrill.daysCovered', 'firedrill.payOrder', 'firedrill.fireDrillOf', 'firedrill.platformHeld', 'firedrill.closureRiskOf', 'firedrill.backupPlanOf'],
+    fromApp: 'which paychecks and bills land on the picked account comes from the calendar\'s dated entries (a month of instances), so it is worked out in SLAM: cash at other banks plus cash at home, over the must-pay bills a month x 12 / 365, whole days (the account the paycheck lands in, as the screen opens)',
+    app: c => fireDrillOf(c.doc, c.ref, { now: c.now }).result?.value ?? null,
+    parts: [{ key: 'withCard', name: 'Days covered with the backup card\'s room (a card cannot pay rent or another debt)', unit: 'days', fromApp: 'the fewer of (cash + card room) / every must-pay a day and cash / (housing and minimums) a day', app: c => fireDrillOf(c.doc, c.ref, { now: c.now }).cover?.withCard ?? null },
+      { key: 'outOfReach', name: 'Out of reach if it froze today: its balance, the same bank\'s accounts, and the paychecks that land there in the window', unit: 'money', fromApp: 'M9F: from the calendar\'s next FireDrillDays days', app: c => fireDrillOf(c.doc, c.ref, { now: c.now }).unreachable?.total ?? null },
+      { key: 'mustPay', name: 'Must-pay bills a month (the DRAFTT needs and the minimums)', unit: 'money', fromApp: 'M9F: the must-pay Budget lines plus each debt\'s minimum, or the gut number with only a gut number', app: c => fireDrillOf(c.doc, c.ref, { now: c.now }).must?.monthly ?? null }] },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },
   // ---------- Holidays (the calendar question on About you) ----------

@@ -38,6 +38,13 @@ export default {
     runwayMonths: { value: 3.443, unit: 'months', tol: 0.01, note: '$21,000 / $6,100.' },
     bigETarget: { value: 42700, unit: 'money', note: '7 x $6,100.' },
   },
+  // Batch 44: Net worth › Fire drill as of Nov 5 2026 (the 30 days Nov 5 to Dec 4). test/firedrill.test.js.
+  fireDrill: {
+    account: 'Joint checking', outOfReach: 15969.24, reach: 15000, mustPay: 6100, days: 74, withCard: 74, stranded: 2,
+    note: "Priya's pay lands in joint checking every 2 weeks: $7,200 x 12 / 26 = $3,323.08 on Nov 6, Nov 20 and Dec 4 ($9,969.24). Out of reach: $6,000 + $9,969.24 = $15,969.24. Reachable: the joint HYSA $15,000. Must-pay: the gut number $6,100, which holds the $2,300 mortgage (housing, first in the order); no other debt. $15,000 / ($6,100 x 12 / 365 = $200.55 a day) = 74.8, so 74 days. Priya's 401(k) gets her 6%, so it is not listed as stranded: 2 rows (old jobs' plans, unclaimed property).",
+    says: ['$15,969', '$15,000', 'About 74 days', 'Mortgage payment', 'Housing'],
+    notSays: ['close accounts tied to adult work'],
+  },
   cannot: [
     'College costs: a 529 stays out of FI (batch 15), but there is no per-child goal, no college cost, no years until college.',
     'One income household: no field for the stay-at-home partner (spousal IRA eligibility, the value of the care, a return-to-work date).',

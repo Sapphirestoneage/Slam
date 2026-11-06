@@ -34,7 +34,25 @@
     "investments": false,
     "real": true,
     "debt": false
-   }
+   },
+   "institutions": [
+    {
+     "id": "dancer-bank-a",
+     "name": "Bank A",
+     "kind": "Bank",
+     "website": null,
+     "notes": null,
+     "owner": null
+    },
+    {
+     "id": "dancer-bank-b",
+     "name": "Online Bank B",
+     "kind": "Bank",
+     "website": null,
+     "notes": null,
+     "owner": null
+    }
+   ]
   },
   "assumptions": {},
   "settings": {
@@ -150,7 +168,8 @@
     "covers": null,
     "values": {
      "group": "cash",
-     "balance": 1800
+     "balance": 1800,
+     "institutionId": "dancer-bank-a"
     },
     "notes": null,
     "privateNote": null,
@@ -175,7 +194,8 @@
     "values": {
      "group": "cash",
      "balance": 4000,
-     "purpose": "Emergency"
+     "purpose": "Emergency",
+     "institutionId": "dancer-bank-b"
     },
     "notes": null,
     "privateNote": null,
@@ -200,7 +220,8 @@
     "values": {
      "group": "cash",
      "balance": 3500,
-     "purpose": "Taxes"
+     "purpose": "Taxes",
+     "institutionId": "dancer-bank-b"
     },
     "notes": null,
     "privateNote": null,

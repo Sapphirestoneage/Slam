@@ -2708,6 +2708,70 @@
      "reason": "answers 'what can I get approved for' in one look; the rate (6.2%) and taxes and insurance share (25%) behind the loan size wait for Eli (QUESTIONS)"
     }
    }
+  },
+  {
+   "screen": "Fire drill",
+   "route": "#/net-worth/fire-drill",
+   "area": "Net worth",
+   "batch": 44,
+   "tasks": [
+    "Find it from the client's words (bank closed)",
+    "What if the savings froze instead",
+    "The savings is at the same bank (and undo)",
+    "Add the card's limit",
+    "Tick the second bank and pick where the payroll form lives",
+    "Tick unclaimed property as checked"
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "all six tasks done in the think-aloud run on Maya at 1280; each tap saves and Undo puts it back"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-checked in test/firedrill.test.js: days covered, the card limit on rent, the order walk, card minimums, the platform hold, and four personas (dancer 59 days, creator 53, Maya 33, Priya and Dev 74); the $8,000 limit task gave 49 days, as worked by hand"
+    },
+    "oneAnswer": {
+     "result": "minor",
+     "reason": "Must-pay bills a month ($3,685 for Maya) is a new number beside the spending number ($3,500) and Cash layers' DRAFTT; it has its own name and Show the math says what is in it, but a client may ask why it is not the spending number"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, Demo and a new client, and for four personas with every section open"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find: bank closed, unclaimed property and old 401k land on it in one search (find-terms); a sub-tab beside Protection"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps only, but a card limit typed when it is missing"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "from the client's side, no verdict words, no em dashes; the closure note is calm and only for platform, cash and 1099 work"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the three numbers and each section's line move on every tap; a tick shows the day it was checked; empty states say what to do"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "1440, 1280 and 390, light and dark; rows stack on a phone"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opens with no visible wait (one month or two of calendar entries)"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off; nothing coach-only on it"
+    }
+   }
   }
  ],
  "updated": {
@@ -2747,5 +2811,13 @@
    "minor": 2,
    "allPass": []
   }
+ },
+ "batch44": {
+  "date": "2026-11-06",
+  "screens": 1,
+  "blocker": 0,
+  "major": 0,
+  "minor": 1,
+  "note": "Batch 44 appended Fire drill (\"batch\": 44), scored after its fixes; the rows above and the summary are as they were."
  }
 }

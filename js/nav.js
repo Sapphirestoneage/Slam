@@ -10,7 +10,7 @@ export const TABS = [
   { id: 'home', name: 'Home', job: 'This session: the program, the picture, the next small things', subs: [
     { id: 'session', name: 'Home' }, { id: 'profile', name: 'About you', area: 'needs' }, { id: 'review', name: 'Review', hidden: true }] }, // Review: the gate before a session ends (no sub-tab of its own)
   { id: 'net-worth', name: 'Net worth', job: 'What you own and owe', subs: [
-    { id: 'assets', name: 'Assets', area: 'assets' }, { id: 'debt', name: 'Debt', area: 'debt' }, { id: 'credit-cards', name: 'Credit cards', area: 'debt' }, { id: 'protection', name: 'Protection', area: 'goals' }] },
+    { id: 'assets', name: 'Assets', area: 'assets' }, { id: 'debt', name: 'Debt', area: 'debt' }, { id: 'credit-cards', name: 'Credit cards', area: 'debt' }, { id: 'protection', name: 'Protection', area: 'goals' }, { id: 'fire-drill', name: 'Fire drill', area: 'assets', phase4: true }] }, // batch 44: the bank fire drill, a Phase 4 preview
   { id: 'cash-flow', name: 'Cash flow', job: 'Money in and out: income, taxes, budget, calendar, close', subs: [
     { id: 'income', name: 'Income', area: 'income' }, { id: 'taxes', name: 'Taxes', area: 'taxes' }, { id: 'budget', name: 'Budget', area: 'needs' },
     { id: 'calendar', name: 'Calendar', area: 'needs' }, { id: 'close', name: 'Month end', area: 'needs' }] },
