@@ -643,7 +643,7 @@ function fadedInput(r, up, key = `${r.id}:amount`) {
 function typicalNote(ctx, rows) {
   const x = ctx.metrics().inputs;
   const t = groupTypicalOf(rows.filter(r => !r.auto), { categories: x.categories, scale: x.typicalScale ?? 1 }); // batch 33 (Q290): the same scaled typical as the Plan pass
-  return t ? h('span.muted.small.typical-note', { title: 'The faded typical amounts count nowhere until you use one or type the real number' }, `Typical amounts would add up to ${money(t)} a month (for reference, not their number)`) : null;
+  return t ? h('span.muted.small.typical-note', { title: 'The faded typical amounts count nowhere until you use one or type the real number' }, `Typical for the empty lines: ${money(t)} a month, not counted`) : null;
 }
 // The Everything else header: the sum of its pieces when any has a number, else one rough amount for the whole bucket
 // (kept on the category row as elseAmount). Once a piece has a number the pieces win and the bucket reads as replaced.

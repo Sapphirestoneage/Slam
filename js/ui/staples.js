@@ -906,7 +906,7 @@ export function recordList(ctx, cfg) {
     const cols = focus ? shown.filter(c => focus.includes(c.label)) : shown;
     const extraCols = focus ? shown.filter(c => !focus.includes(c.label)) : [];
     const span = cols.length + 3;
-    const thead = h('thead', {}, h('tr', {}, h('th.check-cell', {}, allBox), cols.map(c => h(`th${c.num ? '.num' : ''}`, {}, c.head ?? c.label)), h('th', {}, 'Status'), h('th', {}, h('span.sr', {}, 'Actions'))));
+    const thead = h('thead', {}, h('tr', {}, h('th.check-cell', {}, allBox), cols.map(c => h(`th.col-${slug(c.label)}${c.num ? '.num' : ''}`, {}, c.head ?? c.label)), h('th', {}, 'Status'), h('th', {}, h('span.sr', {}, 'Actions'))));
     const groups = new Map();
     for (const r of [...recs, ...autos]) { const g = cfg.groupBy?.(r) ?? ''; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(r); }
     for (const g of cfg.lastGroups || []) if (groups.has(g)) { const rows = groups.get(g); groups.delete(g); groups.set(g, rows); } // e.g. Not for me sits at the bottom

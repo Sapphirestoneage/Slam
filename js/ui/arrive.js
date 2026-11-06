@@ -96,7 +96,9 @@ function light(el, scroll) {
   // Only scroll when the box is off screen (Eli, Nov 6: taps were knocking him back up the page); the docked bars at
   // the bottom take about 140px.
   const r = el.getBoundingClientRect?.();
-  const visible = r && r.top >= 64 && r.bottom <= window.innerHeight - 140;
+  // A box below 64px can still sit under the sticky sub-tabs or a table's sticky header: ask what is actually on top of it.
+  const onTop = () => { const x = r.left + Math.min(r.width / 2, 24), y = r.top + Math.min(r.height / 2, 12); const at = document.elementFromPoint?.(x, y); return !at || el.contains(at) || at.contains(el); };
+  const visible = r && r.top >= 64 && r.bottom <= window.innerHeight - 140 && onTop();
   if (scroll && !visible) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   (el.matches('input,select,button') ? el : el.querySelector('input,select,button'))?.focus({ preventScroll: true });
 }
