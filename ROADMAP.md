@@ -61,6 +61,8 @@ and the app fits lives that do not look like a W-2 brochure.
 
 ### Track 2: SLAM for real lives, wave 1
 
+**First build after Phase 3 sign-off (Eli, Nov 6 2026): Life Transitions**, its own session: the options ladder (every money source cheapest first, each priced), the dip track with its floor, tripwires, Plan B and C, a share view for parents or a partner, and templates (student to job, job loss, quitting, marriage, kids, divorce, empty nest). Graceful degradation (full, DRAFTT, FAT, food and housing) folds in. See docs/roadmap/named-tools.md.
+
 - **Who sees this, discretion.** A per-client setting for what shows in client view, on the one-pager and in exports;
   neutral labels for any income, account or category the client wants kept quiet; a quick hide for a screen share.
 - **Income by type.** Paychecks, cash, tips, platform payouts (gig apps, marketplaces, creator platforms) and irregular
