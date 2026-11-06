@@ -1,0 +1,1156 @@
+{
+ "date": "2026-11-06",
+ "batch": 20,
+ "source": "docs/usability/2026-11-06-rocket-surgery.md",
+ "rubric": "QA.md, the 12 categories",
+ "categories": [
+  "works",
+  "right",
+  "oneAnswer",
+  "looks",
+  "obvious",
+  "findable",
+  "easy",
+  "words",
+  "tells",
+  "fits",
+  "fast",
+  "coachable"
+ ],
+ "note": "After the Batch 20 fixes, rebased on main with Batches 22, 23, 24 and 30. Categories 5 (obvious) and 12 (coachable) wait for Eli at sign-off.",
+ "summary": {
+  "screens": 19,
+  "blocker": 0,
+  "major": 6,
+  "minor": 15,
+  "allPass": [
+   "Assets",
+   "About you",
+   "Debt payoff",
+   "Next 12 months"
+  ]
+ },
+ "screens": [
+  {
+   "screen": "Home",
+   "route": "#/home/session",
+   "tasks": [
+    1,
+    2,
+    4,
+    5,
+    7,
+    8
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "a Living together couple: the FOO step and the Scorecard behind Home still count both people (finding 23)"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "big e, little e and Picture in plain view on the debt card and the ladder; tips explain them"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Fast Track",
+   "route": "#/home/session (Start session 1)",
+   "tasks": [
+    1
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "About you help is two sentences of rules (\"these add or remove whole sections everywhere\")"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Walk me through (bar)",
+   "route": "#/cash-flow/taxes (first walk stop)",
+   "tasks": [
+    1
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "Skip and Next both move on when the box is empty (finding 24)"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdicts, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Taxes",
+   "route": "#/cash-flow/taxes",
+   "tasks": [
+    1
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "\"Step 1(c) on your W-4\" and \"Step 4(c)\" are form words in plain view"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Income",
+   "route": "#/cash-flow/income",
+   "tasks": [
+    2,
+    7
+   ],
+   "categories": {
+    "works": {
+     "result": "failure",
+     "severity": "major",
+     "reason": "\"Add your 401(k) for the details\" still adds an empty 401(k) that locks the FI date until its balance is in (finding 29)"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "failure",
+     "severity": "major",
+     "reason": "a raise with Given as Both needs a typed gross and a guessed take-home; no raise tap (finding 16)"
+    },
+    "words": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "Per month sits beside the yearly gross box, so the gross reads as a month (finding 27)"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Budget",
+   "route": "#/cash-flow/budget",
+   "tasks": [
+    2,
+    3
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "failure",
+     "severity": "major",
+     "reason": "the Plan and Actual passes show different groups and typical totals for one category (finding 22); the sub-tab 1/3 vs 1 of 4 filled (finding 25)"
+    },
+    "looks": {
+     "result": "failure",
+     "severity": "major",
+     "reason": "the line side panel covers the right of the lines table at 1280 (Status, Will get it cut) (finding 17)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdicts, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Calendar",
+   "route": "#/cash-flow/calendar",
+   "tasks": [
+    2,
+    6
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdicts, no em dashes"
+    },
+    "tells": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "days before today still carry the low-line sign in the grid (finding 28)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Month end",
+   "route": "#/cash-flow/close",
+   "tasks": [
+    3
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "failure",
+     "severity": "major",
+     "reason": "a gut-only category has no actual to compare: the close now says it leaves them out, but cannot compare them (finding 12)"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdicts, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Credit cards",
+   "route": "#/net-worth/credit-cards",
+   "tasks": [
+    2
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "the Use button beside a guessed APR does not say what it uses"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdicts, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Assets",
+   "route": "#/net-worth/assets",
+   "tasks": [
+    2,
+    4
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdicts, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "About you",
+   "route": "#/home/profile",
+   "tasks": [
+    7
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdicts, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Goals",
+   "route": "#/plan/goals",
+   "tasks": [
+    4,
+    6
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "big e in plain view in the FI date lines; tips explain it"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Debt payoff",
+   "route": "#/plan/debt-payoff",
+   "tasks": [
+    4
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdicts, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Current vs Proposed",
+   "route": "#/plan/scenarios",
+   "tasks": [
+    5,
+    7
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "failure",
+     "severity": "major",
+     "reason": "a Current with a monthly shortfall shows the same 5-year net worth as a Proposed that closes it (finding 18)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdicts, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "10px of sideways scroll once at 1440 for the Demo (layout leftover)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Next 12 months",
+   "route": "#/plan/next-12-months",
+   "tasks": [
+    6
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdicts, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Transitions",
+   "route": "#/plan/transitions",
+   "tasks": [
+    8
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "a Living together couple: the burn and the rungs count both people (finding 23)"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "DRAFTT needs, FAT, little e, big e and \"Here and there\" in plain view on the coach screen; tips explain them"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Transitions share view",
+   "route": "#/plan/transitions?view=share",
+   "tasks": [
+    8
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "on screen the app top bar and sub-tabs stay above the page (Print leaves them out)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdicts, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "One-pager",
+   "route": "#/report/one-pager",
+   "tasks": [
+    4
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "a Living together couple: the cards date in the next moves comes from the household FOO (finding 23)"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words, no verdicts, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Find (top bar)",
+   "route": "top bar, every screen",
+   "tasks": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the persona hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per fact across the screens visited"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "both users said what it is for and found the next step"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and one-tap Use where a typical exists"
+    },
+    "words": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "\"apr\" lists debt types the client does not have (finding 26)"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked (Saved, the moved line, toasts)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
+    }
+   }
+  }
+ ]
+}

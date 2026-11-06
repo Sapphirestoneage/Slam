@@ -20,7 +20,9 @@ test('Maya: a $2,000 trip in March is $500 a month from now, the tightest day, h
   assert.equal(r.needs.length, 0);
   assert.equal(r.sinking.monthly, 500); // $2,000 over Nov, Dec, Jan, Feb
   assert.equal(r.calendar.date, '2027-03-08'); // the tightest day in March, with the trip on the 1st
-  assert.equal(Math.round(r.calendar.value), 3350);
+  // Batch 20: today's checking ($1,200 on Nov 5) already paid what fell on Nov 1 (rent $1,750, the card $200, the
+  // first spending block $350), so the running balance no longer takes them out again: $3,350 + $2,300 = $5,650.
+  assert.equal(Math.round(r.calendar.value), 5650);
   assert.equal(r.calendar.above, true);
   assert.equal(r.foo.step, '3');
   assert.equal(r.foo.before, '2027-03');

@@ -614,3 +614,16 @@ SLAM's own versions of three tools Eli built in chats (the FI Address, the FI Pe
 6. Where it shows: the tilt (all 25 tree ids ranked: the type's three first, a couple's in turn) is kept at profile.identity.tilt for the library (batch 26), and the one-pager leads with one line (the letters and the wording they lead with; the weather is coach only).
 7. Fast Track's done screen offers it as an optional step (Start, or Do this later in one tap); Fast Track itself and the effort counts are unchanged (35 and 38).
 8. js/math/identity.js (M95, with its spec row), the wording in js/registry/identity.js, fields profile.identity.address, letters, tilt and later (sheet skip reasons, spec rows F460 to F463) and session.weather (app data), test/identity.test.js; made-up answers on Alexis (KOGS, the Homesteader, Overcast; 21 taps) and Priya and Dev (EPGX and KOVS, Clear and Overcast; 28 taps on the short read).
+
+## Batch 20 (Nov 6 2026): Rocket Surgery, eight real tasks and the tweaks they asked for
+
+Steve Krug's method, adapted: eight tasks (Alexis's first session, Maya's homework call and Month end, a couple keeping money separate, a short month, Tom's trip and raise, a job loss), each played by Eli and by a first-time coach, with every action, back press, wrong click, failed Find, dead end, hesitation and unclear word recorded. The report, the ranked findings and before and after counts are in docs/usability/2026-11-06-rocket-surgery.md; every visited screen's 12-category score is in docs/usability/scorecard-2026-11-06.json (with its route, for a sign-off page).
+
+1. The running balance no longer takes out bills dated before today again when the start is today's checking, and only days from today on are flagged ("Cash dips on Sun, Nov 1" was rent already paid). MATH.md 13.
+2. Toasts move aside when they would cover a button or a box; Find no longer shows "lives on" over the screen after landing on its box; new Find words for raise, what if, close the month and a short month.
+3. An edit that moves the FI date, the debt-free date, what is free or the FOO step says so in one toast with Undo ("That moved the plan: FI 11 months sooner (Sep 2036) · $850 a month more free").
+4. A new screen opens at its top; Back and Forward return to the place.
+5. A couple with no combined totals sees the same person's plan on Home, the ladder, Current vs Proposed and the one-pager as on Cash flow and Plan, with the whose-numbers switch on Home, Goals and Debt payoff.
+6. The employer match is one tap (the usual formulas, lists.matchPicks); an empty list's Add picker opens at its button; Home names both runways for a job loss; Month end says what a gut-only close leaves out and has Same as plan; Fast Track's count follows the answers and its end screen and the share view use plain words; the clipped Move to next session tip is short.
+
+Before and after (16 runs): 169 actions to 138, 28 hesitations to 2, 6 dead ends to 0, 2 back presses and 2 wrong clicks to 0, tasks done 6 to 16 (task 4 partly: no household view in Living together; task 6 by Batch 23's screen). Effort scoreboard unchanged (35 / 38).
