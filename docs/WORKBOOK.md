@@ -177,7 +177,7 @@ Institution (its bank; QUESTIONS 460) typed in the sheet comes back as that Inst
 a shift, hours, tips, fee and tip-out are formulas over them, written night by night (as js/math/earnings.js adds them
 up), so a changed night, a new night and a deleted night (No by default) come back, and the row is added up again. Typing over a grey cell is
 listed and never saved. A copy made Without private rows comes back too: its private rows (neutral names there) are
-never read, renamed or deleted, and the review never names them. A file of format 48 or before (a tab per area: Debt,
+never read, renamed or deleted, and the review never names them. A file of format 49 or before (a tab per area: Debt,
 Spending lines ...) is read by its old tab names and headers, with a note saying so.
 
 Checked by: `node tools/workbook-check.mjs` (every Check on every tab, every household), `node tools/sheets-check.mjs`
