@@ -164,6 +164,12 @@ export const AREAS = [
       // Batch 53: New York's child care help (CCAP), one tap, and what care costs at full price.
       pick('cliff.ccap', 'Benefits now: Child care help (CCAP)', ['Getting it', 'Might qualify', 'Not on it']),
       f('cliff.careFull', 'Child care at full price, a month', 'money'),
+      // Batch 56 (Social Security, M9J): each person's benefit at full retirement age off their my Social Security
+      // statement, and how sure it is (blank: Know it). No number: estimated from pay, a Gut range (js/math/socialsecurity.js).
+      f('ss.benefit', 'Social Security at full retirement age, a month (my Social Security statement)', 'money'),
+      pick('ss.level', 'Social Security number: how sure', ['Gut', 'Estimate', 'Know it']),
+      f('ss.benefitPartner', 'Partner: Social Security at full retirement age, a month', 'money'),
+      pick('ss.levelPartner', 'Partner: Social Security number, how sure', ['Gut', 'Estimate', 'Know it']),
       f('benefits', 'Employer benefits', 'text', { sheet: { skip: 'a set of benefit answers, each with have it, amount and per; on About you › Benefits' } }),
       f('lifeAdmin', 'Life admin checklist', 'text', { sheet: { skip: 'done / not yet / not for me per item; on Net worth › Protection' } }),
       f('taxHistory', 'Refund history', 'text', { area: 'taxes', sheet: { skip: 'two earlier tax years; on the Taxes tab of SLAM' } }),

@@ -37,6 +37,12 @@
     "real": true,
     "debt": true
    },
+   "ss": {
+    "benefit": 3280,
+    "level": "Know it",
+    "benefitPartner": 640,
+    "levelPartner": "Know it"
+   },
    "identity": {
     "address": {
      "feel": "calm",

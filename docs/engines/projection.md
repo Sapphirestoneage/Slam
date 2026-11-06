@@ -1,7 +1,46 @@
 # Engine spec: the year-by-year projection
 
-Status: core built, Batch 50 (`js/math/projection.js`, M9P). Math only: no screen reads it yet, so no number a client
-has seen moves. Designed in Batch 17. Phase 5 (ROADMAP.md).
+Status: core built, Batch 50 (`js/math/projection.js`, M9P); Social Security, each partner's own stop age, go-go,
+slow-go and no-go spending and the FI test net of guaranteed income, Batch 56 (`js/math/socialsecurity.js`, M9J). Math
+only: no screen reads it yet, so no number a client has seen moves. Designed in Batch 17. Phase 5 (ROADMAP.md).
+
+## As built (Batch 56)
+
+- **Social Security** (`js/math/socialsecurity.js`, M9J). Each person's benefit at full retirement age (the PIA): the
+  number off their my Social Security statement (`profile.ss.benefit`, `ss.benefitPartner`) with a level (Gut,
+  Estimate, Know it; blank reads Know it; Gut moves it 20% either way, Estimate 5%), else an estimate from pay, always a
+  Gut range: the stated rule is today's gross on their earned rows every year from 22 to the stop age (the same share
+  of the national average wage), capped at the wage base, the best 35 years averaged into AIME, through the PIA formula
+  (90%, 32%, 15% at the 2026 bend points $1,286 and $7,749; the AIME 20% either way for the range). Full retirement
+  age by birth year (SS_fra). Claim age 62 to 70 (`assumptions.ssClaimAge`, `partnerSsClaimAge`; blank: full
+  retirement age): 5/9 of 1% a month off for 36 months, 5/12 beyond, 8% a year added to 70. The spousal top-up: half
+  the partner's PIA less your own, from the later of the two claims, 25/36 of 1% a month off for 36 months, 5/12 beyond,
+  nothing for waiting. From the month one partner reaches Plan to age, the other keeps the larger of their own and the
+  benefit the partner was getting (at least 82.5% of the PIA of a partner who claimed early). The trust fund switch
+  (`ssTrustCut`, off, one tap): 83% from January 2034 (the 2026 Trustees Report). Today's dollars: the COLA (2.8% for
+  2026) only keeps pace with prices, so a benefit is flat in real terms and the COLA drops out. Every figure is on the
+  Assumptions tab with its ssa.gov page.
+- **In the engine.** Each benefit is income from its claim month (`years[].socialSecurity`, `months[].socialSecurity`,
+  flags `ssStart`, `ssSpousal`, and `earningsTest` for a claim before full retirement age while still working); once
+  work stops it covers spending before any account is drawn, and what it leaves over is invested (taxable: no pay, no
+  IRA room). In one person's view only their own benefit counts. `RULES.projectionSocialSecurity` (1) turns it on in
+  `plan` mode; `today` mode never counts it, so parity with M53 is untouched. Lena and Marco (aca-couple) now last to
+  Plan to age (without the benefits the money ran out at 73); stopping at 62 and 60 it runs out at 68 instead of 66.
+- **The FI test net of guaranteed income**, an option (`fiNet: true`, `RULES.projectionFiNet` 0): the FI number less
+  the lasting benefits (once all are claimed, after any cut) at the withdrawal rate, plus what the months before the
+  claim still need, counted at no growth (`fiTarget` on the result). Tom: $866,400 plus 229 months of $3,612, FI in 114
+  months instead of 129. Off by default, so no FI date moves.
+- **Each partner's own stop age** (QUESTIONS 406): `assumptions.partnerRetireAge`, blank the client's. Once one
+  partner's planned stop comes, a short month is drawn for in the withdrawal order (cash, then the accounts), never
+  left uncovered while the other still works.
+- **Go-go, slow-go and no-go** (`spendingPhases`, off by default): once work stops, spending other than the debt
+  payments inside the spending number, times 100% to 75, 85% to 85 and 75% after, by the client's age (shares and ages
+  are client fields; 85% is the BLS Consumer Expenditure Survey 2024's 75-and-over against 65 to 74, 85.4%; the 75% is
+  the older suite's convention).
+- **The hand-built check** now has the benefit rows on Inputs (the statement or the PIA formula on the estimated AIME,
+  the claim factor, the spousal top-up), Social Security added to Invested from each claim month, two stop ages, and a
+  fifth household, Lena and Marco: every benefit row to the cent, year 1 to the dollar and year 30 within 1% (Tom
+  $6,774,233; Lena and Marco $387,989, both as the sheet).
 
 ## As built (Batch 50)
 
@@ -33,16 +72,17 @@ builds) and dated spending, income and one-off changes (the debt plan and the FO
   (PLAN_DIFFERS): three get an earlier FI date because their last debt sits inside the monthly numbers and is paid off
   before FI (today's math keeps paying it forever, the engine gives the payment back to the month); Lena and Marco's
   FI never comes because work stops at 65 (M53 keeps them working to 83). Debt-free dates and Next 12 months match in both.
-- The FI test is today's (invested against the FI number, M50); "net of guaranteed income" waits for Social Security,
-  since today the only candidates are rent and benefits, which SLAM reads as one net number.
+- The FI test is today's (invested against the FI number, M50). Batch 56 adds "net of guaranteed income" as an option
+  (off), counting Social Security only: rent and benefits are already inside SLAM's one net surplus.
 - Money the debt plan sets aside and does not need (the last payment on a debt) stays in checking, so net worth keeps
   it; the FI date never counted it.
 - A short month while working is drawn from cash and then shown as not covered, never borrowed (Current vs Proposed's
   net worth puts it on the card; the engine does not).
 
 **Not in yet** (`NOT_IN` on the result): full tax depth (capital gains, the ACA credit, Roth conversions, state
-brackets by year), tax and the 10% penalty on withdrawals, Social Security, RMDs (flagged at 73 only as an age marker),
-go-go, slow-go and no-go spending, a second stop age for a partner, two IRAs for a couple, Triple D and Monte Carlo,
+brackets by year), tax and the 10% penalty on withdrawals, the tax on Social Security and the earnings test (Batch 56 flags it), Social
+Security for a third adult or more, a survivor claiming before their own full retirement age, RMDs (flagged at 73 only
+as an age marker), two IRAs for a couple, Triple D and Monte Carlo,
 coast age, the sources for each gap year, and every screen moved onto the engine (build order step 9).
 
 **The hand-built check** (ROADMAP's done means): `tools/projection/build.mjs` rebuilds Maya, Alexis, Tom and Priya and

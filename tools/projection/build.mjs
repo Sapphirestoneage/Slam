@@ -10,6 +10,9 @@
 // What the sheet takes from the app, each labelled on Inputs: big e and FOO step 1 still to fill (the cash layers,
 // M68), this year's Tax-Free Growth room (flow.js), and take-home once work stops (SLAM's tax function, M10). Everything
 // else is typed numbers and formulas.
+// Batch 56: Social Security (M9J) on the Inputs tab for each person (the statement's number, or the PIA formula on the
+// estimated AIME, the claim factor, the spousal top-up), added to Invested from each claim month; two stop ages (a
+// couple's two earners, each at their own age; one earner: both the same); Lena and Marco (aca-couple) added.
 import { readFileSync, mkdirSync, mkdtempSync, copyFileSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -23,7 +26,7 @@ import { loadExcel, soffice } from '../workbook-check.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const REF = JSON.parse(readFileSync(join(root, 'data', 'reference-2026.json'), 'utf8'));
 export const NOW = new Date('2026-11-05T12:00:00.000Z'); // the personas' moment (tools/personas/build.mjs)
-export const CHECK_IDS = ['maya', 'alexis', 'tom', 'couple-joint'];
+export const CHECK_IDS = ['maya', 'alexis', 'tom', 'couple-joint', 'aca-couple'];
 export const OUT_DIR = join(root, 'docs', 'engines', 'projection-check');
 export const personaDoc = id => { const r = importFile(readFileSync(join(root, 'fixtures', 'personas', `${id}.json`), 'utf8')); return r.doc ?? r; };
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -34,13 +37,22 @@ export function sheetInputs(doc, ref = REF, now = NOW) {
   const job = x.income.find(i => i.r === x.link.job), v = job?.r.values ?? {};
   const tiers = x.link.incomeTiers || [];
   const me = P.people[0];
-  const earner = P.people.find(p => x.income.some(i => (i.r.owner ?? 'Me') === p.key && ['Job', 'Partner job', 'Side hustle', 'Self-employed', 'Platform'].includes(i.r.type))) ?? me;
+  const EARNED = ['Job', 'Partner job', 'Side hustle', 'Self-employed', 'Platform'];
+  const earners = P.people.filter(p => x.income.some(i => (i.r.owner ?? 'Me') === p.key && EARNED.includes(i.r.type))).sort((a, b) => P.schedule.stopMonths[a.key] - P.schedule.stopMonths[b.key]);
+  const earner = earners[0] ?? me, second = earners.at(-1) ?? earner;
+  const jobOwner = job ? (job.r.owner ?? 'Me') : null;
+  const SS = P.socialSecurity.people || [];
+  const grossOf = key => x.income.filter(i => (i.r.owner ?? 'Me') === key && EARNED.includes(i.r.type) && i.gross != null).reduce((s, i) => s + i.gross, 0);
+  const ssIn = n => { const p = P.people[n], s = SS[n]; return p && s ? { typed: s.source === 'statement' ? s.pia : null, gross: grossOf(p.key), stopAge: p.stopAge, birthYear: Math.floor(p.bornIndex / 12), birthMonth: (p.bornIndex % 12) + 1, claimMonths: s.claimMonths, fraMonths: s.fraMonths, engine: s } : null; };
   const debts = m.debtPlan.debts.map((d, i) => ({ ...d, order: i }));
   const nowYm = now.toISOString().slice(0, 7);
   const B = P.start;
   return {
     name: doc.profile?.firstName ?? doc.id, nowYear: Number(nowYm.slice(0, 4)), nowMonth: Number(nowYm.slice(5, 7)),
     birthYear: Math.floor(earner.bornIndex / 12), birthMonth: (earner.bornIndex % 12) + 1, stopAge: earner.stopAge, meBirthYear: Math.floor(me.bornIndex / 12), meBirthMonth: (me.bornIndex % 12) + 1,
+    birthYear2: Math.floor(second.bornIndex / 12), birthMonth2: (second.bornIndex % 12) + 1, stopAge2: second.stopAge,
+    takeHome1: P.schedule.takeHomeAt?.[earner.key] ?? P.schedule.takeHomeAfterStop ?? x.takeHome, payrollMid: earners.length > 1 && jobOwner === second.key ? 1 : 0,
+    ss: [ssIn(0), ssIn(1)], wageBase: ref.tax.socialSecurityWageBase, ssRef: ref.socialSecurity,
     takeHome: x.takeHome, spending: x.spending, debtOut: x.debtPaymentsOutsideSpending ?? 0, sinking: x.sinkingMonthly ?? 0,
     gross: job?.gross ?? 0, pct: v.contributionPct ?? x.link.incomePct ?? 0, hsaPerPay: x.gates.hsa ? v.hsaFsa ?? 0 : 0, paychecks: PAYS[v.payFrequency] ?? 26,
     matchPct: tiers[0]?.rate ?? 0, matchCap: tiers[0]?.upTo ?? 0, // one tier for these four (more tiers: the match formula on the Math tab)
@@ -70,9 +82,12 @@ export function buildBook(ExcelJS, id, I) {
   const f = s => ({ formula: s });
   put('NowYear', 'This year', I.nowYear, 'Today: Nov 5 2026');
   put('NowMonth', 'This month (1 to 12)', I.nowMonth, '');
-  put('BirthYear', 'Birth year of the person whose pay stops', I.birthYear, 'About you');
+  put('BirthYear', 'Birth year of the person whose pay stops first', I.birthYear, 'About you');
   put('BirthMonth', 'Birth month', I.birthMonth, 'About you');
   put('StopAge', 'Work stops at this age', I.stopAge, 'Plan › Retire by or the FI age (65 when blank)');
+  put('BirthYear2', 'Birth year of the person whose pay stops last (one earner: the same person)', I.birthYear2, 'About you');
+  put('BirthMonth2', 'Birth month', I.birthMonth2, 'About you');
+  put('StopAge2', 'Their work stops at this age', I.stopAge2, 'Plan › the partner\'s own Retire by (QUESTIONS 406; blank: the same age)');
   put('MeBirthYear', 'Client birth year', I.meBirthYear, 'About you');
   put('MeBirthMonth', 'Client birth month', I.meBirthMonth, 'About you');
   put('TakeHome', 'Take-home a month', I.takeHome, 'Income');
@@ -98,6 +113,8 @@ export function buildBook(ExcelJS, id, I) {
   put('Flow', 'The FOO flow runs (1: the surplus is invested and is not short)', I.flow, 'Plan › Goals: Invest my surplus');
   put('DebtRule', 'Surplus to heavy debt first (1 yes)', I.debtRule, 'Plan › Goals');
   put('THAfter', 'Take-home a month once work stops', I.takeHomeAfter, 'From the app: SLAM\'s tax function (M10) on the income that keeps going');
+  put('TH1', 'Take-home a month once the first stops, before the second', I.takeHome1, 'From the app: SLAM\'s tax function (M10) on the pay that keeps going (one earner: as above)');
+  put('PayMid', 'The 401(k) job belongs to the one who stops last (1 yes)', I.payrollMid, 'Its payroll saving keeps going until they stop');
   put('Extra', 'Extra to debt a month', I.extra, 'Debt payoff');
   inp.addRow([]); inp.addRow(['Worked out', null, null]).font = { bold: true };
   put('Gm', 'Growth a month', f('(1+RealRet)^(1/12)'), '(1 + return)^(1/12), as the FI date (M53) grows it');
@@ -105,7 +122,41 @@ export function buildBook(ExcelJS, id, I) {
   put('Payroll', 'Into the 401(k) and HSA from pay, and the match, a month', f('Gross*Pct/12+HsaPerPay*Paychecks/12+MIN(Pct,MatchCap)*MatchPct*Gross/12'), 'Gross x share / 12 + HSA x paychecks / 12 + match');
   put('SF', 'Surplus the FOO routes, a month', f('Surplus-Contributions-Goal'), 'Surplus less what is already saved out of it');
   put('NowIdx', 'This month as a number', f('NowYear*12+NowMonth-1'), 'year x 12 + month - 1');
-  put('TMonths', 'Months until work stops', f('MAX(0,(BirthYear+StopAge)*12+BirthMonth-1-NowIdx)'), 'From the birth month and the stop age');
+  put('TMonths', 'Months until work stops (the first to stop)', f('MAX(0,(BirthYear+StopAge)*12+BirthMonth-1-NowIdx)'), 'From the birth month and the stop age');
+  put('T2Months', 'Months until work stops for the last to stop', f('MAX(TMonths,(BirthYear2+StopAge2)*12+BirthMonth2-1-NowIdx)'), 'The same as TMonths with one earner');
+  // ---------- Social Security (M9J): each person's benefit, from the claim month ----------
+  inp.addRow([]); inp.addRow(['Social Security (M9J, today\'s dollars: the COLA only keeps pace with prices)', null, null]).font = { bold: true };
+  const R = I.ssRef;
+  put('SsBend1', 'PIA formula: first bend point (2026)', R.bendPoint1, 'SSA, ssa.gov/oact/cola/bendpoints.html');
+  put('SsBend2', 'PIA formula: second bend point (2026)', R.bendPoint2, 'SSA');
+  put('WageBase', 'Social Security wage base (2026)', I.wageBase, 'SSA');
+  put('Early36', 'Own benefit: off a month early, first 36 months', R.earlyFirst36, '5/9 of 1% (ssa.gov/oact/quickcalc/early_late.html)');
+  put('EarlyMore', 'Own benefit: off a month early, beyond 36', R.earlyBeyond, '5/12 of 1%');
+  put('Delayed', 'Delayed credits a year past full retirement age, to 70', R.delayedPerYear, '8%');
+  put('Sp36', 'Spousal: off a month early, first 36 months', R.spousalFirst36, '25/36 of 1% (ssa.gov/oact/quickcalc/spouse.html)');
+  put('SpMore', 'Spousal: off a month early, beyond 36', R.spousalBeyond, '5/12 of 1%');
+  const who = ['Client', 'Partner'];
+  I.ss.forEach((s, n) => {
+    const P = `P${n + 1}`;
+    if (!s) { put(`${P}_Own`, `${who[n]}: no one, so no benefit`, 0, ''); put(`${P}_Claim`, `${who[n]}: claims in month`, 100000, ''); put(`${P}_Spousal`, `${who[n]}: spousal top-up`, 0, ''); put(`${P}_SpFrom`, `${who[n]}: spousal from month`, 100000, ''); put(`${P}_PIA`, `${who[n]}: PIA`, 0, ''); return; }
+    put(`${P}_Typed`, `${who[n]}: benefit at full retirement age off the statement, a month (blank: estimated)`, s.typed, 'About you › Social Security');
+    put(`${P}_Gross`, `${who[n]}: gross pay a year on earned rows`, s.gross, 'Income');
+    put(`${P}_Stop`, `${who[n]}: stop age`, s.stopAge, 'Plan');
+    put(`${P}_AIME`, `${who[n]}: estimated AIME (today's pay every year from 22 to the stop age, best 35)`, f(`MIN(${P}_Gross,WageBase)*MIN(35,MAX(0,${P}_Stop-22))/35/12`), 'The stated estimate rule (js/math/socialsecurity.js)');
+    put(`${P}_PIA`, `${who[n]}: benefit at full retirement age (PIA)`, f(`IF(${P}_Typed<>"",${P}_Typed,0.9*MIN(${P}_AIME,SsBend1)+0.32*MAX(0,MIN(${P}_AIME,SsBend2)-SsBend1)+0.15*MAX(0,${P}_AIME-SsBend2))`), 'The statement, else 90% / 32% / 15% of AIME by the bend points');
+    put(`${P}_FRA`, `${who[n]}: full retirement age, months`, s.fraMonths, 'SS_fra by birth year');
+    put(`${P}_ClaimAge`, `${who[n]}: claim age, months`, s.claimMonths, 'Plan (blank: full retirement age)');
+    put(`${P}_Factor`, `${who[n]}: claim factor`, f(`IF(${P}_ClaimAge>=${P}_FRA,1+Delayed/12*(MIN(${P}_ClaimAge,840)-${P}_FRA),1-MIN(${P}_FRA-${P}_ClaimAge,36)*Early36-MAX(0,${P}_FRA-${P}_ClaimAge-36)*EarlyMore)`), 'Early: 5/9 then 5/12 of 1% a month off; late: 8% a year');
+    put(`${P}_Own`, `${who[n]}: own benefit a month once claimed`, f(`${P}_PIA*${P}_Factor`), '');
+    put(`${P}_Claim`, `${who[n]}: claims in month (from now)`, f(`(${s.birthYear}*12+${s.birthMonth - 1}+${P}_ClaimAge)-NowIdx`), 'Birth month plus the claim age');
+  });
+  I.ss.forEach((s, n) => {
+    if (!s) return;
+    const P = `P${n + 1}`, O = `P${2 - n}`;
+    put(`${P}_SpFrom`, `${who[n]}: spousal top-up from month (the later of the two claims)`, f(I.ss[1 - n] ? `MAX(${P}_Claim,${O}_Claim)` : '100000'), 'A spouse\'s benefit needs the worker to have filed');
+    put(`${P}_SpAge`, `${who[n]}: age then, months`, f(`${P}_ClaimAge+${P}_SpFrom-${P}_Claim`), '');
+    put(`${P}_Spousal`, `${who[n]}: spousal top-up a month`, f(I.ss[1 - n] ? `MAX(0,0.5*${O}_PIA-${P}_PIA)*IF(${P}_SpAge>=${P}_FRA,1,1-MIN(${P}_FRA-${P}_SpAge,36)*Sp36-MAX(0,${P}_FRA-${P}_SpAge-36)*SpMore)` : '0'), 'Half the partner\'s PIA less your own, reduced if early; nothing for waiting');
+  });
   // ---------- Debts: each segment between two payoffs (Debt plan tab) ----------
   const D = I.debts;
   const dp = wb.addWorksheet('Debt plan');
@@ -183,6 +234,8 @@ export function buildBook(ExcelJS, id, I) {
   put('N2', 'Drawn a month once work stops and the debts are gone', f('N1-Ended'), '');
   put('Need0', 'Short a month while working, while heavy debt is paid', f('MAX(0,-SF)'), 'No borrowing: cash covers it while it lasts, then it is not covered');
   put('Need1', 'Short a month while working, after', f('MAX(0,-(SF+Freed))'), '');
+  put('NMid', 'Drawn a month between the two stops (negative: invested)', f('Spending+DebtOut+Sinking+Contributions+Goal-TH1-IF(TMonths>=HMonths,Freed,0)-IF(AND(DebtFree>0,TMonths>=DebtFree),Ended,0)'), 'One partner stopped: the other\'s take-home, less what is still saved; drawn from cash, then the accounts');
+  put('PinvMid', 'Going into investments a month between the two stops', f('PayMid*Payroll+Contributions+MAX(0,-NMid)'), '');
   // ---------- Year 1, month by month ----------
   const y1 = wb.addWorksheet('Year 1');
   const heads = ['Month', 'k', 'Phase', 'Surplus', 'To route', ...D.flatMap(d => [`${d.name} owed`, `${d.name} interest`, `${d.name} paid`]), 'Unused debt money', 'Short', 'Cash', 'Not covered', 'Invested', 'Earmarked', 'Debt', 'Net worth'];
@@ -234,9 +287,10 @@ export function buildBook(ExcelJS, id, I) {
   // cash before work stops, at month E: today's cash, FOO step 1 and big e money, the last debt's leftover, less what
   // a short month took (no borrowing)
   const cashPre = E => `(Cash0+IF(Flow=1,MAX(0,SF)*${months('0', 'FMonths', '0', E)}+(SF+Freed)*${months('HMonths', 'WMonths', '0', E)},0)+IF(AND(DebtFree>0,${E}>=DebtFree),LastPay,0)-Need0*MIN(${E},HMonths)-Need1*MAX(0,MIN(${E},TMonths)-HMonths))`;
-  put('CashT', 'Cash the month work stops', f(`MAX(0,${cashPre('TMonths')})`), 'Cash goes first once work stops');
-  put('NT', 'Drawn a month just after work stops', f('IF(TMonths>=DebtFree,N2,N1)'), '');
-  put('XMonth', 'Month the cash runs out once work stops', f('TMonths+CashT/NT'), 'Then the investments pay (withdrawal order: cash, then the accounts)');
+  put('CashT', 'Cash the month work stops (the first to stop)', f(`MAX(0,${cashPre('TMonths')})`), 'Cash goes first once work stops');
+  put('CashT2', 'Cash the month the last stops', f('MAX(0,CashT-MAX(0,NMid)*(T2Months-TMonths))'), '');
+  put('NT', 'Drawn a month just after work stops for both', f('IF(T2Months>=DebtFree,N2,N1)'), '');
+  put('XMonth', 'Month the cash runs out once work stops', f('IF(AND(NMid>0,CashT<NMid*(T2Months-TMonths)),TMonths+CashT/NMid,T2Months+CashT2/NT)'), 'Then the investments pay (withdrawal order: cash, then the accounts)');
   for (let y = 1; y <= 30; y++) {
     const R = 2 + y, P = R - 1, first = y === 1;
     const A = `${12 * (y - 1)}`, E = `${12 * y}`;
@@ -245,14 +299,19 @@ export function buildBook(ExcelJS, id, I) {
     ys.getCell(c('Months to its end')).value = 12 * y;
     ys.getCell(c('Age at its end')).value = f(`INT((NowIdx+${E}-1-(MeBirthYear*12+MeBirthMonth-1))/12)`);
     ys.getCell(c('Cash before work stops')).value = f(cashPre(`MIN(${E},TMonths)`));
-    ys.getCell(c('Cash')).value = f(`IF(${E}<=TMonths,MAX(0,${c('Cash before work stops')}),MAX(0,CashT-NT*(${E}-TMonths)))`);
+    ys.getCell(c('Cash')).value = f(`IF(${E}<=TMonths,MAX(0,${c('Cash before work stops')}),IF(${E}<=T2Months,MAX(0,CashT-MAX(0,NMid)*(${E}-TMonths)),MAX(0,CashT2-NT*(${E}-T2Months))))`);
     ys.getCell(c('Not covered (so far)')).value = f(`MAX(0,-${c('Cash before work stops')})`);
     const prevInv = first ? 'Invested0' : p('Invested');
     // the last debt's leftover, when it lands after the cash is gone, takes that much off the next month's draw
     const lastBack = `IF(AND(DebtFree>0,DebtFree>=TMonths,DebtFree>INT(XMonth)),${seg('LastPay', 'DebtFree', 'DebtFree+1', A, E)},0)`;
-    const draws = [seg('(1-(XMonth-INT(XMonth)))*IF(INT(XMonth)>=DebtFree,N2,N1)', 'INT(XMonth)', 'INT(XMonth)+1', A, E), seg('N1', 'INT(XMonth)+1', 'MAX(DebtFree,INT(XMonth)+1)', A, E), seg('N2', 'MAX(DebtFree,INT(XMonth)+1)', '100000', A, E), `-${lastBack}`].join('+');
-    ys.getCell(c('Invested')).value = f(`${prevInv}*Gm^12+${seg('Wait', '0', 'MIN(WMonths,TMonths)', A, E)}+${seg('Pinv', 'WMonths', 'TMonths', A, E)}+IF(DebtFree>0,${seg('Ended', 'MAX(DebtFree,WMonths)', 'TMonths', A, E)},0)-(${draws})`);
-    ys.getCell(c('Earmarked')).value = f(`${first ? 'Earmarked0' : p('Earmarked')}*Gm^12+${seg('Goal', '0', 'TMonths', A, E)}`);
+    // after the cash is gone: what is left of that month, then the draw between the stops, then once both stopped
+    const lo = 'MAX(T2Months,INT(XMonth)+1)';
+    const draws = [seg('(1-(XMonth-INT(XMonth)))*IF(INT(XMonth)<T2Months,NMid,IF(INT(XMonth)>=DebtFree,N2,N1))', 'INT(XMonth)', 'INT(XMonth)+1', A, E), seg('NMid', 'INT(XMonth)+1', 'T2Months', A, E),
+      seg('N1', lo, `MAX(DebtFree,${lo})`, A, E), seg('N2', `MAX(DebtFree,${lo})`, '100000', A, E), `-${lastBack}`].join('+');
+    // Social Security from each claim month (the cash is gone by then in every household here, so it all lands in Invested)
+    const ss = [seg('P1_Own', 'P1_Claim', '100000', A, E), seg('P1_Spousal', 'P1_SpFrom', '100000', A, E), seg('P2_Own', 'P2_Claim', '100000', A, E), seg('P2_Spousal', 'P2_SpFrom', '100000', A, E)].join('+');
+    ys.getCell(c('Invested')).value = f(`${prevInv}*Gm^12+${seg('Wait', '0', 'MIN(WMonths,TMonths)', A, E)}+${seg('Pinv', 'WMonths', 'TMonths', A, E)}+IF(DebtFree>0,${seg('Ended', 'MAX(DebtFree,WMonths)', 'TMonths', A, E)},0)+${seg('PinvMid', 'TMonths', 'T2Months', A, E)}-(${draws})+${ss}`);
+    ys.getCell(c('Earmarked')).value = f(`${first ? 'Earmarked0' : p('Earmarked')}*Gm^12+${seg('Goal', '0', 'T2Months', A, E)}`);
     const bal = (i, M) => { // debt i owed at month M, from its segments
       let s = '0';
       for (const q of [...segs].reverse()) s = `IF(${M}<Seg${q.j}_End,MAX(0,-FV(${dn(i, 'Apr')}/12,${M}-Seg${q.j}_Start,-Seg${q.j}_Pay${i + 1},Seg${q.j}_Owed${i + 1})),${s})`;

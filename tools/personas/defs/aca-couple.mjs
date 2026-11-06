@@ -11,6 +11,7 @@ export default {
     areas: { cash: true, investments: true, real: false, debt: false },
     worry: 'Whether the raise is worth it', goalWords: 'Know what a raise really pays',
     cliff: { aca: 'Getting it' },
+    ss: { benefit: 2140, level: 'Know it', benefitPartner: 1890, levelPartner: 'Estimate' }, // batch 56: Lena's statement; Marco's from memory of last year's
   },
   client: { couple: true },
   records: [

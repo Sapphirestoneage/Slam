@@ -33,7 +33,11 @@
     "debt": true
    },
    "whyNow": "Wants a second opinion on FI at 50",
-   "goalWords": "Work optional at 50"
+   "goalWords": "Work optional at 50",
+   "ss": {
+    "benefit": 3612,
+    "level": "Know it"
+   }
   },
   "assumptions": {
    "fiAge": 50

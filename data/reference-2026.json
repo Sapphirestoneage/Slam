@@ -3454,5 +3454,40 @@
   },
   "mileage": {
     "rate": 0.725
+  },
+  "socialSecurity": {
+    "source": "SSA Office of the Chief Actuary: bend points ssa.gov/oact/cola/bendpoints.html (2026: $1,286 and $7,749), the PIA formula ssa.gov/oact/cola/piaformula.html, the average wage index ssa.gov/oact/cola/AWI.html (2024: $69,846.57, the index the 2026 bend points come from), full retirement age ssa.gov/oact/progdata/nra.html, early and late factors ssa.gov/oact/quickcalc/early_late.html, spousal ssa.gov/oact/quickcalc/spouse.html, survivors ssa.gov/survivor/amount, the COLA ssa.gov/oact/cola/colaseries.html; read Nov 6 2026",
+    "bendPoint1": 1286,
+    "bendPoint2": 7749,
+    "piaRate1": 0.9,
+    "piaRate2": 0.32,
+    "piaRate3": 0.15,
+    "awi2024": 69846.57,
+    "computationYears": 35,
+    "careerStartAge": 22,
+    "earliestAge": 62,
+    "latestAge": 70,
+    "earlyFirst36": 0.005555555555555556,
+    "earlyBeyond": 0.004166666666666667,
+    "delayedPerYear": 0.08,
+    "spousalShare": 0.5,
+    "spousalFirst36": 0.006944444444444444,
+    "spousalBeyond": 0.004166666666666667,
+    "survivorFloor": 0.825,
+    "cola2026": 0.028,
+    "fra": [[0, 780], [1938, 782], [1939, 784], [1940, 786], [1941, 788], [1942, 790], [1943, 792], [1955, 794], [1956, 796], [1957, 798], [1958, 800], [1959, 802], [1960, 804]],
+    "trustFund": {
+      "year": 2034,
+      "payable": 0.83,
+      "source": "The 2026 OASDI Trustees Report (released June 9 2026): the combined OASI and DI trust fund reserves are projected to be depleted in 2034, when continuing income pays about 83% of scheduled benefits (ssa.gov/oact/tr/2026/II_E_conclu.html; SSA press release June 9 2026). The retirement fund alone (OASI) runs out in late 2032, at 78%"
+    }
+  },
+  "retirementPhases": {
+    "goGo": 1,
+    "slowGo": 0.85,
+    "noGo": 0.75,
+    "slowGoAge": 75,
+    "noGoAge": 85,
+    "source": "Go-go, slow-go and no-go: the older suite's defaults (money-rooms-v3 data/assumptions.json: 100%, 85% from 75, 75% from 85). The 85% matches the BLS Consumer Expenditure Survey 2024: households 75 and over spent $55,834 a year against $65,354 at 65 to 74 (85.4%; FRED series CXUTOTALEXPLB0409M and CXUTOTALEXPLB0408M, read Nov 6 2026). The CE has no 85-plus row, so the 75% is the stated convention"
   }
 }

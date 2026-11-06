@@ -406,6 +406,7 @@ blank keeps the defaults (2 hours, $100). Registered as client assumptions; expo
 what the gut number leaves (after debt payments it includes and the categories already set), each is scaled by the
 same share and rounded to $10 (js/math/spending.js typicalScaleOf, read by the walk and the Budget). Never scaled up.
 Questions 240 to 249 decided; 242 (the session pace) waits for Eli. QA: 576 tests, 0 fail.
+
 ## Batch 21 (Nov 6 2026): Life Transitions, the first Phase 4 feature
 
 A session that turns panic into a number (Eli's Nov 5 design chat). Plan › Transitions, behind a Phase 4 switch in Coach tools › Session (settings.phase4, on for a new household in this build). Find reaches it from job loss, laid off, quit, transition and runway.
@@ -496,6 +497,7 @@ bank" (Find: import, csv, rocket money, monarch, transactions). It replaces the 
 QA: 610 tests (597 pass, 13 skipped) in UTC and America/New_York after the rebase on batch 21; export format 20; test/import-apps.test.js with made-up CSVs in
 fixtures/import; Maya's November from Rocket Money and from Monarch checked in the browser at 1280 and 390; layout
 check unchanged (the same 4 old failures, none on Month end).
+
 ## Batch 24 (Nov 6 2026): ranges on the debt-free date, Roth contributions, Gross as all income
 
 1. Gross is every income (QUESTIONS 228): the Cash flow waterfall's first step is "Gross, all income" (a paycheck's
@@ -627,6 +629,7 @@ Steve Krug's method, adapted: eight tasks (Alexis's first session, Maya's homewo
 6. The employer match is one tap (the usual formulas, lists.matchPicks); an empty list's Add picker opens at its button; Home names both runways for a job loss; Month end says what a gut-only close leaves out and has Same as plan; Fast Track's count follows the answers and its end screen and the share view use plain words; the clipped Move to next session tip is short.
 
 Before and after (16 runs): 169 actions to 138, 28 hesitations to 2, 6 dead ends to 0, 2 back presses and 2 wrong clicks to 0, tasks done 6 to 16 (task 4 partly: no household view in Living together; task 6 by Batch 23's screen). Effort scoreboard unchanged (35 / 38).
+
 ## Batch 29 (Nov 6 2026): the true cost of debt, borrowing, and the student loan decision
 
 Eli's Level 15 Borrow design (Oct 11 to 12 2026), folded into Plan › Debt payoff as four caret sections, closed until
@@ -742,6 +745,7 @@ Alexis (born 1998, $400 checking): the note under her checking box in coach view
 is on; a new blank Savings row reads 4.9K to 12K. Maya ($5,200 cash in two accounts) gets none; Tom ($38,000 cash) gets
 "Above what most households have in checking and savings" under his savings. Tests: test/priors.test.js (every figure
 in the file is on a Primary row of priors-sources.md; nothing Secondary is in it). Spec row M9E, format 28.
+
 ## Batch 33 (Nov 6 2026): the Rocket Surgery majors left open
 
 Batch 20's think-aloud left four majors and a row of minors open; each is the least change that solves it (Krug: tweak, don't redesign), taps over typing.
@@ -882,6 +886,7 @@ Batch 31 could use only a few Primary rows (QUESTIONS 314 to 318). This pass rea
    anywhere), Alexis (surplus -320, -740 to 100; the debt-free ends from her card APR, gut number and balance run
    one at a time), Maya (surplus, net worth 12,693 to 15,707, emergency fund months), a surplus that could be nothing
    some months, Tom, the FOO step, materiality, and the workbook rows.
+
 ## Batch 37 (Nov 6 2026): Rocket Surgery on the Phase 4 and new screens, the card room, plain words
 
 Batch 20's method on the screens built tonight (Transitions from scratch, Discovery's Who they are with money, Can I afford it?, the card library, borrowing and the student loan, the month end import, Simple Math): seven real tasks, Eli and a first-time coach, 26 runs before and after (docs/usability/2026-11-06-rocket-surgery.md, Batch 37). Before: 20 of 26 done, 10 hesitations, 3 dead ends, 42 unclear words, 1 wrong turn; after: 26 of 26, 3 hesitations, none of the rest. Each fix is the least change.
@@ -921,6 +926,7 @@ docs/usability/scorecard-2026-11-06.json: 11 screens appended with "batch": 37, 
 Tests: test/batch40.test.js (5, hand-checked) and the whole suite pass in UTC and America/New_York. Persona run: story
 blockers 2 to 0, majors 5 to 0, layout 0. Layout check on Overview, Statements, Goals and the One-pager (all widths and
 themes, Demo and a new client): 0 findings before and after (the 1 covered is the Demo's load toast on Budget).
+
 ## Batch 28 (Nov 6 2026): who sees this (Phase 4 Track 2, wave 1)
 
 Eli's lens: many clients earn in ways they keep discreet (adult and sex work, cash tips, side income), couples keep
@@ -981,6 +987,7 @@ separate money, and families share a screen. One layer, js/privacy.js, sits wher
    earned), the creator's OnlyFans has one return ($14,500: a mortgage lender counts only the job); the bartender's
    unreported cash tips are the $1,430 gap; the teacher (W-2) and Tom read with no gap. Each def's `lender` says what
    the screen should say; test/lender.test.js checks it.
+
 ## Batch 44 (Nov 6 2026): the bank fire drill and stranded money (Phase 4 Track 2, wave 1)
 
 ROADMAP's "Bank closure fire drill and stranded money", with the older suite's When It Won't All Get Paid (bill triage) and Left Behind (old plans) folded in. Net worth › Fire drill, a Phase 4 preview, one entry point (the sub-tab, and Find: bank closed, account frozen, unclaimed property, old 401k).
@@ -991,6 +998,7 @@ ROADMAP's "Bank closure fire drill and stranded money", with the older suite's W
 4. Registered: M9F with three parts (From the app), FireDrillDays, the Bill_order table, income.landsIn (skipped: an id), program.fireDrill (not in the sheet), format 33, spec rows (`tools/library/firedrill-spec.py`, spec_link).
 
 docs/usability/scorecard-2026-11-06.json: Fire drill appended with "batch": 44, 0 blockers, 0 majors, 1 minor. Questions 364 to 370.
+
 ## Batch 43 (Nov 6 2026): Ask me next and the certainty meter (Phase 4, Track 1)
 
 1. Ask me next (`js/math/nextbest.js`, M9Q, docs/engines/next-best.md "As built"): the one input whose answer narrows
@@ -1022,6 +1030,7 @@ docs/usability/scorecard-2026-11-06.json: Fire drill appended with "batch": 44, 
 6. The workbook: M9Q (the meter, the question, the runner-up) is a From the app row; format 36, spec row M9Q
    (`tools/library/nextbest-spec.py`). `js/math/ranges.js` gained `knobsOf(..., { force })`, `runsOf`, `rangeFromRuns`
    and keeps each knob's runs, so Ask me next reruns one input, not the plan.
+
 ## Batch 45 (Nov 6 2026): the decided small items (QUESTIONS 321, 333, 334, 344 to 346, 348, 349, 353, 354, 356)
 
 1. A month's own gut number (Q321): Budget's gut card has "Different in <month>" (one tap, one amount, an x back to the
@@ -1058,7 +1067,6 @@ docs/usability/scorecard-2026-11-06.json: Fire drill appended with "batch": 44, 
     check on Budget, Calendar, Month end, FOO, Overview, Credit cards, Income, Debt, Assets and Coach tools › Data
     went from 4 covered (the Fast Track toast on Assets after a scroll) to 0.
 
-
 ## Batch 46 (Nov 6 2026): the age-only start (Phase 4, Track 1)
 
 1. QUESTIONS 336 (decided): the CE one-person row is scaled by the age band's ratio to all ages (the band's figure over
@@ -1089,6 +1097,7 @@ docs/usability/scorecard-2026-11-06.json: Fire drill appended with "batch": 44, 
 5. Checked: tests 809 pass in both time zones; tools/workbook-check.mjs clean; layout checker 0 failures on Home (new
    client, before and after an age) and every Fast Track step at 1440, 1280 and 390, light and dark (one level
    finding at 390 fixed); the persona run 0 errors, 0 story blockers. QUESTIONS 380 to 387.
+
 ## Batch 48 (Nov 6 2026): the Lender's view and Fire drill small items, and the walk starting with Ask next
 
 QUESTIONS 357, 358, 360, 365 to 368 and 373, as decided.
@@ -1120,7 +1129,6 @@ QUESTIONS 357, 358, 360, 365 to 368 and 373, as decided.
    lands on the Lender's view. test/batch48.test.js (hand-worked) and test/firedrill.test.js.
 
 docs/usability/scorecard-2026-11-06.json: Lender's view, Fire drill, Goals (More), Assets (workplace plan) and the walk bar appended with "batch": 48, 0 blockers, 0 majors, 3 minors. Questions 388 to 391.
-
 
 ## Batch 47 (Nov 6 2026): the benefits cliff (Phase 4 Track 2, real lives wave 1)
 
@@ -1219,7 +1227,6 @@ failures. Persona run: 15 personas, 0 errors, 0 story notes. Workbook check: eve
    before in every view, on every screen's numbers and in each audience's fold (fixtures/views-baseline.json, written
    from main before the batch; tools/personas/views.mjs).
 
-
 ## Batch 51 (Nov 6 2026): four decided small items, and Shift P&L (Phase 5, real lives wave 2)
 
 1. QUESTIONS 374: a month's own gut number (Different in <month> on Budget) is what that month's lines compare with on
@@ -1302,6 +1309,7 @@ QUESTIONS 380 closed; 395 half done (the 2027 marketplace prices are in, the FFY
 Tests pass in UTC and New York time (see the report for counts). Workbook check: every row matches. Persona run: 19 personas, 0
 errors, 0 story notes. Layout checker on Raise and benefits and Home (1280 and 390, light, Demo and New): 0 failures
 before and after.
+
 ## Batch 53 (Nov 6 2026): head of household, the Child Tax Credit and New York's child care help
 
 QUESTIONS 396 and 398, owed from batch 47.
@@ -1389,3 +1397,31 @@ The layout checker's Shift client also scans Tips and shifts open with the two n
 time (see the report for counts). Workbook check: every row matches. Layout checker on Income (with What a shift
 really pays and Tips and shifts open) and About you, 1440, 1280 and 390, light and dark: 0 failures before and after.
 QUESTIONS 446 to 449.
+
+## Batch 56 (Nov 6 2026): Social Security, spending phases and each partner's own stop age (Phase 5, M9J and M9P, math only)
+
+1. `js/math/socialsecurity.js` (M9J): each person's benefit at full retirement age from the my Social Security
+   statement number with its level (Gut, Estimate, Know it), or an estimate from pay (today's gross every year from 22
+   to the stop age, capped at the wage base, best 35, the PIA formula at the 2026 bend points; always a Gut range); full
+   retirement age by birth year; claim age 62 to 70 with the reduction or delayed credits; the spousal top-up from the
+   later claim; a survivor keeping the larger (82.5% floor); the trust fund switch (83% from 2034, off). Every figure
+   from ssa.gov and the 2026 Trustees Report, read Nov 6, on the Assumptions tab (SS_ values, the SS_fra table). The
+   COLA is nominal only, so it drops out in today's dollars.
+2. The engine (M9P): benefits from each claim month (income once work stops, what is left over invested), flags for
+   each claim, the spousal start and the earnings test; each partner's own stop age (QUESTIONS 406, PartnerRetireAge);
+   one partner's planned stop drawn for, never left short; go-go, slow-go and no-go spending (off; shares and ages are
+   client fields, from the older suite and the BLS CE 2024); the FI test net of guaranteed income as an option (off).
+   The today mode is untouched: parity with M53, M34 and Next 12 months for every persona and the Demo. Lena and
+   Marco's money now lasts to Plan to age (it ran out at 73 without the benefits).
+3. Personas: statement numbers for Tom ($3,612), Lena ($2,140, Know it) and Marco ($1,890, Estimate), Priya ($3,280)
+   and Dev ($640, so a $1,000 spousal top-up); Maya on the earnings estimate (about $3,040). Worked by hand in
+   test/socialsecurity.test.js (12 tests).
+4. The hand-built spreadsheets: benefit rows on Inputs (the statement or the PIA formula, the claim factor, the spousal
+   top-up), Social Security into Invested from each claim month, two stop ages, and Lena and Marco added: five
+   households, every benefit row to the cent, year 1 to the dollar, year 30 within 1%.
+5. Registered: M9J, ten client fields (claim ages, the partner's Retire by, the trust fund switch, the phases), four
+   profile fields (each statement number and level), rules ProjectionSocialSecurity (1) and ProjectionFiNet (0), format
+   47, spec rows F584 to F597 and M9J. projection.md's Status says what is in. QUESTIONS 450 to 455.
+
+No screen reads the engine, so no number a client has seen moves. Workbook check: every row matches. Persona run: no
+screen changed.

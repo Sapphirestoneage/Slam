@@ -2,8 +2,9 @@
 // 1. Parity: with the new parts off (mode 'today') the engine gives today's FI date (M53), debt-free date (M31, M34)
 //    and Next 12 months for every persona and the Demo client, to the month. With them on (the default, 'plan'), every
 //    household gives the same numbers except the ones listed in PLAN_DIFFERS, each with its reason.
-// 2. The hand-built spreadsheets (tools/projection/build.mjs): Maya, Alexis, Tom and Priya and Dev rebuilt in plain
-//    formulas, recalculated by LibreOffice: the engine matches them to the dollar in year 1 and within 1% at year 30.
+// 2. The hand-built spreadsheets (tools/projection/build.mjs): Maya, Alexis, Tom, Priya and Dev, and Lena and Marco
+//    (batch 56: Social Security on, two stop ages) rebuilt in plain formulas, recalculated by LibreOffice: the engine
+//    matches them to the dollar in year 1 and within 1% at year 30, and each benefit row to the cent.
 // 3. The parts: limits by age, a raise, the withdrawal order, no silent loan, events, the cache and speed.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -38,8 +39,8 @@ const sum = row => (row || []).reduce((s, v) => s + v, 0);
 export const PLAN_DIFFERS = {
   'couple-separate': { fi: 279, why: 'Jordan\'s student loan is the last debt, gone in month 110; its $210 a month comes back and is invested, so FI comes 9 months sooner than M53\'s 288.' },
   teacher: { fi: 334, why: 'The student loan is gone in month 72; its $263 a month comes back and is invested, so FI comes 30 months sooner than M53\'s 364.' },
-  'aca-couple': { fi: null, why: 'M53 puts Lena and Marco\'s FI at 525 months (Lena 83) because it keeps them working until then; the engine stops work at 65 (Retire by is blank), so FI never comes and the money runs out at 73 (QUESTIONS, Batch 50: work stops at 65).' },
-  'sandwich-parent': { fi: null, why: 'M53 puts Nadia\'s FI at 464 months (age 78) because it keeps her working until then; the engine stops work at 65 (Retire by is blank), so FI never comes and the money lasts to 81 (batch 49\'s persona; QUESTIONS, Batch 50: work stops at 65).' },
+  'sandwich-parent': { fi: null, why: 'M53 puts Nadia\'s FI at 464 months (age 78) because it keeps her working until then; the engine stops work at 65 (Retire by is blank), so FI never comes; with Social Security from 67 (about $2,346 a month, estimated from pay, batch 56) the money lasts to Plan to age (without it, to 81) (batch 49\'s persona; QUESTIONS 407).' },
+  'aca-couple': { fi: null, why: 'M53 puts Lena and Marco\'s FI at 525 months (Lena 83) because it keeps them working until then; the engine stops work at 65 (Retire by is blank, QUESTIONS 407), so FI never comes; with Social Security from 67 ($1,890 and $2,140, batch 56) the money lasts to Plan to age (without it, it ran out at 73).' },
   demo: { fi: 264, why: 'The car loan ($320) and the student loan ($210) are gone by month 54; today\'s math rolls the car payment into the student loan and then drops both, the engine gives the $530 a month back once the last is gone, so FI comes 30 months sooner than M53\'s 294.' },
 };
 
@@ -181,6 +182,7 @@ test('people, ages and the dual-age view for a couple', () => {
   assert.deepEqual(P.years[29].ages, { Me: 65, Partner: 66 });
   assert.equal(P.years.length, Math.ceil((90 * 12 - people[0].ageMonths) / 12), 'through Plan to age for the younger');
   assert.ok(P.flags.some(f => f.kind === 'age' && f.person === 'Partner' && f.age === 59.5));
+  assert.deepEqual(P.dualAge.map(a => a.reachableAges.socialSecurity), [67, 67], 'batch 56: each person\'s claim age');
 });
 
 test('pure, deterministic, cached per input version, and fast (a full run under 30 ms for Maya)', () => {
@@ -235,6 +237,14 @@ test('the engine matches the hand-built spreadsheets: to the dollar in year 1, w
       assert.ok(Math.abs(notCovered - unmet) <= Math.max(1, 0.01 * unmet), `${id}: not covered by year 30, sheet ${notCovered}, engine ${unmet}`);
       const ages = valueOf(y30.getCell(colY('Age at its end')));
       assert.equal(ages, P.years[29].ages.Me, `${id}: age at year 30`);
+      // Batch 56: the benefit rows on Inputs (the statement or the PIA formula, the claim factor, the spousal top-up).
+      const inp = book.getWorksheet('Inputs'), byLabel = {};
+      inp.eachRow(r => { byLabel[r.getCell(1).value] = valueOf(r.getCell(2)); });
+      P.socialSecurity.people.forEach((s, n) => {
+        const who = ['Client', 'Partner'][n];
+        assert.ok(Math.abs(byLabel[`${who}: own benefit a month once claimed`] - s.own) < 0.01, `${id} ${who}: own benefit, sheet ${byLabel[`${who}: own benefit a month once claimed`]}, engine ${s.own}`);
+        assert.ok(Math.abs(byLabel[`${who}: spousal top-up a month`] - s.spousal) < 0.01, `${id} ${who}: spousal top-up`);
+      });
     } finally { rmSync(dir, { recursive: true, force: true }); }
   }
 });

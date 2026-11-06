@@ -8,6 +8,7 @@ export default {
     workSituation: 'Employed (W-2)', housing: 'Own', hasCar: true, hasPets: false, incomeStability: 'Steady', healthCoverage: 'Employer',
     hsaEligible: true, equityPay: true, areas: { cash: true, investments: true, real: true, debt: true },
     whyNow: 'Wants a second opinion on FI at 50', goalWords: 'Work optional at 50',
+    ss: { benefit: 3612, level: 'Know it' }, // batch 56: off his my Social Security statement (at 67, if he kept earning to then)
   },
   assumptions: { fiAge: 50 },
   records: [

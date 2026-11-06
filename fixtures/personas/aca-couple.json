@@ -38,6 +38,12 @@
    "goalWords": "Know what a raise really pays",
    "cliff": {
     "aca": "Getting it"
+   },
+   "ss": {
+    "benefit": 2140,
+    "level": "Know it",
+    "benefitPartner": 1890,
+    "levelPartner": "Estimate"
    }
   },
   "assumptions": {},

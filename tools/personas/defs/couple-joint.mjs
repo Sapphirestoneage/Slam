@@ -7,6 +7,7 @@ export default {
     household: 'Couple', mode: 'Married merged', moneyStyle: 'Joint', dependents: 1, kidAges: [1],
     workSituation: 'Employed (W-2)', housing: 'Own', hasCar: true, hasPets: false, incomeStability: 'Steady', healthCoverage: 'Employer',
     areas: { cash: true, investments: true, real: true, debt: true },
+    ss: { benefit: 3280, level: 'Know it', benefitPartner: 640, levelPartner: 'Know it' }, // batch 56: both statements; Dev's few years of pay before the baby
     // Batch 25: made-up answers to who they are with money. The address is the household's (FWC and both arrows); the
     // letters are each partner's: Priya EPGX, Dev KOVS.
     identity: { address: { feel: 'calm', earnMore: true, spendLess: true }, letters: { Me: [1, 1, 1, 1, -1, -1, -1, -1, 1, 1, 1, -1], Partner: [-1, -1, -1, 0, 1, 1, 1, 1, -1, -1, 0, 1] } },

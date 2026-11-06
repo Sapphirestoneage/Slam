@@ -19,9 +19,14 @@
 //   'today': the new features off (no stop, no payment coming back, no limits, no growth), so it must give today's FI
 //     date (M53), debt-free date (M31, M34) and Next 12 months to the month. test/projection.test.js checks both.
 //
+// Batch 56 adds Social Security (M9J, js/math/socialsecurity.js: each person's benefit from their claim month, the
+// spousal top-up, a survivor keeping the larger, the trust fund switch), each partner's own stop age (QUESTIONS 406),
+// go-go, slow-go and no-go spending once work stops (off by default) and the FI test net of guaranteed income (an
+// option, off by default). None of them runs in 'today' mode.
+//
 // Seams left for later batches, each marked SEAM below: full tax depth (a withdrawal is not taxed yet, nor is the 10%
-// penalty applied; a raise is taxed by today's tax function at today's tables, which is right in real dollars because
-// the brackets are indexed), Social Security, RMDs, retirement spending phases, Triple D and Monte Carlo.
+// penalty applied, nor the tax on benefits; a raise is taxed by today's tax function at today's tables, which is right
+// in real dollars because the brackets are indexed), the earnings test (flagged), RMDs, Triple D and Monte Carlo.
 import { metrics } from './metrics.js';
 import { debtFirstPlan } from './debt.js';
 import { freedFlow, taxFreeRoom } from './flow.js';
@@ -29,6 +34,7 @@ import { changeAt } from './fi.js';
 import { householdTax, householdRates } from './income.js';
 import { afterTaxContributions } from './linked.js';
 import { accessRule } from './portfolio.js';
+import { householdBenefits } from './socialsecurity.js';
 import { proposedDoc, PROPOSED_KEYS, proposedOf } from './proposed.js';
 import { RULES, LISTS } from '../registry/assumptions.js';
 import { gatesOf } from '../gates.js';
@@ -57,15 +63,19 @@ export function bucketOf(type, taxType = null) {
 }
 
 // The people, read in one place (Batch 49 changes the people model: only this function reads it). Each person: who,
-// the month index they were born (year x 12 + month), their age in months today, life expectancy and stop age.
+// the month index they were born (year x 12 + month), their age in months today, life expectancy and stop age, and
+// for Social Security (batch 56) the statement's number, its level and the claim age. The partner's stop age is their
+// own Retire by (QUESTIONS 406), else the same age as the client's.
 export function peopleOf(doc, ref, now = new Date()) {
-  const p = doc.profile || {}, a = doc.assumptions || {};
+  const p = doc.profile || {}, a = doc.assumptions || {}, ss = p.ss || {};
   const nowI = ymIndex(ymOf(now));
   const le = a.lifeExpectancy ?? ref.defaults.lifeExpectancy;
   const stop = a.fiAge ?? a.retireAge ?? ref.defaults.retireAge; // the same stop age as M54 and Retire by (x.retireAge)
   const born = (y, m, age) => (y != null && y !== '' ? Number(y) * 12 + (Number(m ?? 1) - 1) : age != null && age !== '' ? nowI - Number(age) * 12 : null);
-  const out = [{ key: 'Me', name: p.firstName || 'You', bornIndex: born(p.birthYear, p.birthMonth, p.age), lifeExpectancy: le, stopAge: stop }];
-  if (gatesOf(p, doc.client).couple) out.push({ key: 'Partner', name: p.partnerName || 'Partner', bornIndex: born(p.partnerBirthYear, p.partnerBirthMonth, null), lifeExpectancy: le, stopAge: stop });
+  const out = [{ key: 'Me', name: p.firstName || 'You', bornIndex: born(p.birthYear, p.birthMonth, p.age), lifeExpectancy: le, stopAge: stop,
+    ssBenefit: ss.benefit ?? null, ssLevel: ss.level ?? null, ssClaimAge: a.ssClaimAge ?? null }];
+  if (gatesOf(p, doc.client).couple) out.push({ key: 'Partner', name: p.partnerName || 'Partner', bornIndex: born(p.partnerBirthYear, p.partnerBirthMonth, null), lifeExpectancy: le, stopAge: a.partnerRetireAge ?? stop,
+    ssBenefit: ss.benefitPartner ?? null, ssLevel: ss.levelPartner ?? null, ssClaimAge: a.partnerSsClaimAge ?? null });
   return out.map(x => ({ ...x, ageMonths: x.bornIndex == null ? null : nowI - x.bornIndex }));
 }
 
@@ -93,13 +103,15 @@ const eventChanges = list => list.flatMap(e => (e.kind === 'spending' ? [{ at: e
     : e.kind === 'oneOff' ? [{ at: e.at, monthly: -e.value, name: e.name ?? 'A one-off cost' }, { at: e.at + 1, monthly: e.value, name: e.name ?? 'A one-off cost' }] : []));
 
 const CACHE = new WeakMap();
-const keyOf = (now, o) => JSON.stringify([ymOf(now), now.toISOString().slice(0, 10), o.person, o.mode, o.events, o.incomeGrowth]);
+const keyOf = (now, o) => JSON.stringify([ymOf(now), now.toISOString().slice(0, 10), o.person, o.mode, o.events, o.incomeGrowth, o.socialSecurity, o.fiNet]);
 
 // The engine. Returns { id: 'M9P', value (months to FI), months (the first 12), years, start, people, fiMonths, fiYm,
-// fiAge, debtFreeMonths, heavyMonths, shortfallYears, lastsToAge, dualAge, flags, notIn, text }. Cached per input
-// version (doc._rev, bumped by the store on every change) and options.
-export function project(doc, ref, { now = new Date(), person = null, mode = 'plan', events = [], m = null, incomeGrowth = null } = {}) {
-  const opts = { person, mode, events: events || [], incomeGrowth };
+// fiAge, debtFreeMonths, heavyMonths, shortfallYears, lastsToAge, dualAge, socialSecurity, flags, notIn, text }. Cached
+// per input version (doc._rev, bumped by the store on every change) and options. socialSecurity: false leaves the
+// benefits out (null: RULES.projectionSocialSecurity); fiNet: true reads the FI test net of guaranteed income (null:
+// RULES.projectionFiNet). Neither runs in 'today' mode.
+export function project(doc, ref, { now = new Date(), person = null, mode = 'plan', events = [], m = null, incomeGrowth = null, socialSecurity = null, fiNet = null } = {}) {
+  const opts = { person, mode, events: events || [], incomeGrowth, socialSecurity, fiNet };
   const key = keyOf(now, opts), rev = doc._rev ?? 0;
   let hit = CACHE.get(doc);
   if (hit && hit.rev === rev && hit.map.has(key)) return hit.map.get(key);
@@ -109,7 +121,7 @@ export function project(doc, ref, { now = new Date(), person = null, mode = 'pla
   return out;
 }
 
-function run(doc, ref, { now, person, mode, events, m, incomeGrowth }) {
+function run(doc, ref, { now, person, mode, events, m, incomeGrowth, socialSecurity, fiNet }) {
   const today = mode === 'today';
   const at0 = events.filter(e => !e.at), later = events.filter(e => e.at > 0);
   let d = doc, M = m;
@@ -179,6 +191,40 @@ function run(doc, ref, { now, person, mode, events, m, incomeGrowth }) {
   const ageAt = (p, k) => (p.bornIndex == null ? null : (nowI + k - p.bornIndex) / 12);
   const me = people[0];
 
+  // ---- Social Security (M9J): each person's benefit from their claim month, in today's dollars. Their own from the
+  // statement's number or the estimate from pay (today's gross on their earned rows), the spousal top-up, and from the
+  // month one reaches Plan to age the other keeps the larger. In one person's view only that person's benefit counts.
+  const A0 = d.assumptions || {};
+  const ssOn = !today && !!ref.socialSecurity && (socialSecurity ?? !!RULES.projectionSocialSecurity);
+  const grossOf = key => rows.filter(r => r.earned && r.person === key && r.gross != null).reduce((s, r) => s + r.gross, 0);
+  const trustCut = A0.ssTrustCut === 1 || A0.ssTrustCut === true;
+  const ssPlan = ssOn ? householdBenefits(people.map(p => ({ ...p, gross: grossOf(p.key), endIndex: p.bornIndex == null ? Infinity : p.bornIndex + 12 * p.lifeExpectancy })), ref.socialSecurity,
+    { wageBase: ref.tax.socialSecurityWageBase, widths: { Gut: RULES.rangeIncomeGut, Estimate: RULES.rangeIncomeEstimate }, trustCut }) : null;
+  const viewAt = person && person !== 'all' ? people.findIndex(p => p.key === person) : -1;
+  const ssArr = new Array(horizon).fill(0);
+  if (ssPlan) { // the benefits only change at a claim, a spousal start, a death or the trust fund year: work out each stretch once
+    const cuts = [...new Set([0, horizon, ...ssPlan.people.flatMap(p => [p.claimIndex, p.spousalIndex, p.endIndex]), trustCut ? ref.socialSecurity.trustFund.year * 12 : null]
+      .filter(i => i != null && Number.isFinite(i)).map(i => Math.min(horizon, Math.max(0, i - nowI))))].sort((p, q) => p - q);
+    for (let j = 0; j + 1 < cuts.length; j++) { const v = viewAt >= 0 ? ssPlan.each(nowI + cuts[j])[viewAt] ?? 0 : ssPlan.at(nowI + cuts[j]); ssArr.fill(v, cuts[j], cuts[j + 1]); }
+  }
+  // The FI test net of guaranteed income (projection.md step 12), an option: the FI number less the benefits once all
+  // are claimed (their lasting level, after any cut) at the withdrawal rate, plus what the months before them still
+  // need, counted at no growth.
+  const fiNetOn = !!ssPlan && !today && (fiNet ?? !!RULES.projectionFiNet);
+  const claimKs = (ssPlan?.people || []).filter(p => p.claimIndex != null && (p.own > 0 || p.spousal > 0)).flatMap(p => [p.claimIndex, p.spousalIndex ?? p.claimIndex]).map(i => Math.max(0, i - nowI));
+  const lastClaim = claimKs.length ? Math.min(horizon, Math.max(...claimKs)) : horizon;
+  const firstEnd = Math.min(horizon, ...(ssPlan?.people || []).map(p => p.endIndex - nowI));
+  const lasting = lastClaim < firstEnd ? Math.min(...ssArr.slice(lastClaim, firstEnd)) : 0;
+  const bridgeFrom = new Array(horizon + 1).fill(0);
+  for (let k = horizon - 1; k >= 0; k--) bridgeFrom[k] = bridgeFrom[k + 1] + (k < lastClaim ? Math.max(0, lasting - ssArr[k]) : 0);
+  // Go-go, slow-go and no-go (off by default): once work stops, spending other than debt payments times the share for
+  // the client's age. The debt payments inside the spending number keep their own schedule (they come back when paid).
+  const phasesOn = !today && (A0.spendingPhases === 1 || A0.spendingPhases === true);
+  const RP = ref.retirementPhases || {};
+  const ph = { goGo: A0.goGoShare ?? RP.goGo ?? 1, slowGo: A0.slowGoShare ?? RP.slowGo ?? 1, noGo: A0.noGoShare ?? RP.noGo ?? 1, slowAge: A0.slowGoAge ?? RP.slowGoAge ?? Infinity, noAge: A0.noGoAge ?? RP.noGoAge ?? Infinity };
+  const phaseOf = k => { const age = ageAt(me, k); return age == null ? 1 : age < ph.slowAge ? ph.goGo : age < ph.noAge ? ph.slowGo : ph.noGo; };
+  const living = Math.max(0, (A0.retirementSpending ?? x.spending ?? 0) - (x.debtPaymentsOutsideSpending === 0 ? (plan.debts || []).reduce((s, q) => s + (q.payment ?? 0), 0) : 0));
+
   // ---- The tax seam: take-home in a month where pay has grown or a job has stopped, by today's tax function.
   const growth = today ? 0 : incomeGrowth ?? RULES.projectionIncomeGrowth ?? 0;
   const taxRows = (list, f) => list.filter(r => r.gross != null && r.taxType).map(r => ({ id: r.id, person: r.person, gross: r.earned ? r.gross * f : r.gross, pretax: r.earned ? r.pretax * f : r.pretax, taxType: r.taxType, tips: r.tips }));
@@ -227,8 +273,9 @@ function run(doc, ref, { now, person, mode, events, m, incomeGrowth }) {
 
   const g = (1 + x.realReturn) ** (1 / 12), gc = (1 + (RULES.projectionCashReturn ?? 0)) ** (1 / 12);
   const target = M.fiNumber.value;
+  const targetAt = k => (fiNetOn ? Math.max(0, target - 12 * lasting / x.withdrawalRate) + bridgeFrom[Math.min(horizon, k + 1)] : target);
   const fiCap = today ? RULES.maxMonths : horizon;
-  let fiMonths = invested() >= target ? 0 : null;
+  let fiMonths = invested() >= targetAt(-1) ? 0 : null;
   const family = !!x.gates.couple;
   const room0 = taxFreeRoom(d, x, ref, now);
   const cum = {}; // calendar-year running totals for the limits: `${year}|${person}|${kind}`
@@ -256,9 +303,21 @@ function run(doc, ref, { now, person, mode, events, m, incomeGrowth }) {
   const months = [], years = [], flags = [];
   let yr = null, firstUnmet = null;
   const newYear = y => ({ year: y + 1, startYm: addMonths(nowYm, 12 * y), takeHome: 0, payroll: 0, match: 0, contributions: 0, toEarmarked: 0, surplus: 0, toDebt: 0, interest: 0, debtPaid: 0,
-    toCash: 0, toInvested: 0, growth: 0, withdrawn: 0, shortfall: 0, unmet: 0, limited: 0, k401: 0, in: {}, out: {}, start: snap(12 * y), flags: [] });
+    toCash: 0, toInvested: 0, growth: 0, withdrawn: 0, shortfall: 0, unmet: 0, limited: 0, k401: 0, socialSecurity: 0, phaseCut: 0, in: {}, out: {}, start: snap(12 * y), flags: [] });
   const flag = (k, kind, extra = {}) => { const f = { kind, month: k, ym: addMonths(nowYm, k), year: Math.floor(k / 12) + 1, ...extra }; flags.push(f); if (yr) yr.flags.push(f); };
   let stopped = false;
+  // Social Security's marks: each claim, and a claim before full retirement age while that person still works (the
+  // earnings test can hold some of it back: SEAM, not in yet), and the month a survivor's benefit starts.
+  const ssMarks = new Map();
+  const mark = (k, v) => { if (k >= 0 && k < horizon) ssMarks.set(k, [...(ssMarks.get(k) || []), v]); };
+  for (const [n, p] of (ssPlan?.people || []).entries()) {
+    if (viewAt >= 0 && n !== viewAt) continue;
+    if (p.claimIndex == null || !(p.own > 0 || p.spousal > 0)) continue;
+    const kc = p.claimIndex - nowI;
+    if (p.own > 0) mark(kc, [p.key, 'ssStart', { age: p.claimMonths / 12, monthly: p.own + (p.spousalIndex === p.claimIndex ? p.spousal : 0) }]);
+    if (p.spousal > 0 && (p.spousalIndex !== p.claimIndex || !(p.own > 0))) mark(p.spousalIndex - nowI, [p.key, 'ssSpousal', { age: (p.spousalIndex - (p.claimIndex - p.claimMonths)) / 12, monthly: p.spousal }]);
+    if (p.claimMonths < p.fraMonths && earnedPeople.has(p.key) && kc < stopMonth[p.key]) mark(kc, [p.key, 'earningsTest', { note: 'Claimed before full retirement age while still working: the earnings test can hold some of it back (not in yet)' }]);
+  }
 
   // Income only changes where a person stops or (with a raise) at each plan anniversary.
   const incPoints = new Set(Object.values(stopMonth).filter(Number.isFinite));
@@ -269,9 +328,11 @@ function run(doc, ref, { now, person, mode, events, m, incomeGrowth }) {
     if (k % 12 === 0) { yr = newYear(y); years.push(yr); }
     for (const [who, a] of markAt.get(k) || []) flag(k, 'age', { person: who, age: a });
     if (!today) for (const p of people) if (k === stopMonth[p.key] && earnedPeople.has(p.key)) flag(k, 'stop', { person: p.key, age: p.stopAge });
+    for (const [who, kind, extra] of ssMarks.get(k) || []) flag(k, kind, { person: who, ...extra });
     if (k === 0 || incPoints.has(k)) inc = incomeAt(k);
     const retired = !today && earnedPeople.size > 0 && rows.every((r, i) => !r.earned || !inc.active[i]);
     const noEarners = earnedPeople.size === 0;
+    const someStopped = !today && [...earnedPeople].some(key => k >= stopMonth[key]); // one partner's planned stop is drawn for, never left short
     if (retired && !stopped) stopped = true;
     // 1. Growth for the month (M53's order: grow, then this month's money goes in).
     monthIn = 0;
@@ -302,8 +363,10 @@ function run(doc, ref, { now, person, mode, events, m, incomeGrowth }) {
     // 3. The month's surplus: today's (M27) with the known changes ahead, then what the projection moves.
     const ended = !today && plan.months != null && k >= plan.months ? endedPay : 0;
     const dSpend = retired && (d.assumptions || {}).retirementSpending != null && x.spending != null ? x.spending - d.assumptions.retirementSpending : 0;
-    const S = surplus0 + changeAt(allChanges, k) + inc.dTH + back + ended + dSpend;
-    yr.takeHome += (x.takeHome ?? 0) + inc.dTH + back; yr.surplus += S;
+    const dPhase = retired && phasesOn ? (1 - phaseOf(k)) * living : 0;
+    const ssK = ssArr[k];
+    const S = surplus0 + changeAt(allChanges, k) + inc.dTH + back + ended + dSpend + dPhase + ssK;
+    yr.takeHome += (x.takeHome ?? 0) + inc.dTH + back; yr.surplus += S; yr.socialSecurity += ssK; yr.phaseCut += dPhase;
     // 4. Contributions set on accounts and Retirement lines (out of the surplus), the goal money, then the FOO flow.
     let contrib = 0;
     if (!retired) {
@@ -319,6 +382,7 @@ function run(doc, ref, { now, person, mode, events, m, incomeGrowth }) {
     const where = dest(k);
     if (where === 'debt') { if (k >= F) yr.toDebt += Math.max(0, sf); if (sf < 0) need = -sf; }
     else if (where === 'cash') { if (A >= 0) { B.cash += A; yr.toCash += A; } else need = -A; }
+    else if (A >= 0 && retired) add('taxable', A); // no pay, so no IRA room: what the benefits leave over is invested
     else if (A >= 0) {
       const room = roomOf(cy);
       const r1 = Math.min(A, room.roth); room.roth -= r1; add('roth', r1);
@@ -329,7 +393,7 @@ function run(doc, ref, { now, person, mode, events, m, incomeGrowth }) {
     // 5. A shortfall: cash first; once work stops (or with no pay at all), the accounts in the withdrawal order.
     if (need > 0.005) {
       yr.shortfall += need;
-      const order = !today && (retired || noEarners) ? WITHDRAW_ORDER : ['cash'];
+      const order = !today && (retired || noEarners || someStopped) ? WITHDRAW_ORDER : ['cash'];
       for (const b of order) {
         if (need <= 0.005) break;
         const got = Math.min(need, Math.max(0, B[b]));
@@ -354,8 +418,8 @@ function run(doc, ref, { now, person, mode, events, m, incomeGrowth }) {
     if (plan.months != null && k + 1 === plan.months && plan.debts.length) flag(k, 'debtFree');
     // 7. Close the month: the FI test (M50 against what is invested, earmarked money left out, like M53).
     const tot = invested();
-    if (fiMonths == null && tot >= target && k + 1 <= fiCap) { fiMonths = k + 1; flag(k, 'fi'); }
-    if (k < 12) months.push({ k, ym: addMonths(nowYm, k), step: stepAt(k), where, surplus: S, toDebt: where === 'debt' && k >= F ? Math.max(0, sf) : 0, toInvested: monthIn, payroll, ...snap(k + 1), shortfall: yr.unmet });
+    if (fiMonths == null && tot >= targetAt(k) && k + 1 <= fiCap) { fiMonths = k + 1; flag(k, 'fi'); }
+    if (k < 12) months.push({ k, ym: addMonths(nowYm, k), step: stepAt(k), where, surplus: S, socialSecurity: ssK, toDebt: where === 'debt' && k >= F ? Math.max(0, sf) : 0, toInvested: monthIn, payroll, ...snap(k + 1), shortfall: yr.unmet });
     if (k % 12 === 11 || k === horizon - 1) {
       Object.assign(yr, { end: snap(k + 1), step: stepAt(k), ages: Object.fromEntries(people.map(p => [p.key, ageAt(p, k) == null ? null : Math.floor(ageAt(p, k) + 1e-9)])), working: people.filter(p => earnedPeople.has(p.key) && k < stopMonth[p.key]).map(p => p.key) });
     }
@@ -373,15 +437,20 @@ function run(doc, ref, { now, person, mode, events, m, incomeGrowth }) {
     const age = p.ageMonths == null ? null : p.ageMonths / 12;
     const fiAt = fiMonths == null || age == null ? null : age + fiMonths / 12;
     const optionalAge = fiAt == null ? p.stopAge : Math.min(p.stopAge, Math.floor(fiAt));
-    return { person: p.key, optionalAge, stopAge: p.stopAge, fiAge: fiAt == null ? null : Math.floor(fiAt), reachableAges: { retirementAccounts: 59.5, ...(plan55 ? { ruleOf55: 55 } : {}), medicare: 65, socialSecurity: null }, gapYears: Math.max(0, 59.5 - optionalAge), sources: null };
+    const ssP = ssPlan?.people.find(q => q.key === p.key);
+    return { person: p.key, optionalAge, stopAge: p.stopAge, fiAge: fiAt == null ? null : Math.floor(fiAt), reachableAges: { retirementAccounts: 59.5, ...(plan55 ? { ruleOf55: 55 } : {}), medicare: 65, socialSecurity: ssP?.claimMonths != null ? ssP.claimMonths / 12 : null }, gapYears: Math.max(0, 59.5 - optionalAge), sources: null };
   });
   const money = v => `$${Math.round(v).toLocaleString('en-US')}`;
   const end = years.at(-1)?.end;
-  return { ...base, value: fiMonths, needs: [], months, years, start, flags, fiMonths, fiNever: fiMonths == null, fiYm, fiAge, fiNumber: target, debtFreeMonths: plan.months, heavyMonths: plan.heavyMonths, debtFreeYm: plan.months == null ? null : addMonths(nowYm, plan.months),
-    shortfallYears, lastsToAge, dualAge, coastAge: null, triple: null, horizon, schedule: { F, H, W, freed, endedPay, stopMonths: stopMonth, takeHomeAfterStop: Object.values(stopMonth).some(Number.isFinite) ? (x.takeHome ?? 0) + incomeAt(Math.max(...Object.values(stopMonth).filter(Number.isFinite))).dTH : null },
-    text: `${years.length} years from ${nowYm}, a month at a time: ${fiMonths == null ? 'FI is not reached on this path' : `FI in ${fiMonths} months (${fiYm})`}${plan.debts.length ? `, ${plan.months == null ? 'the debts are never cleared' : `debt free in ${plan.months} months`}` : ''}${today ? '' : `, work stopping at ${me.stopAge}`}; net worth at the end ${end ? money(end.netWorth) : 'unknown'}${shortfallYears.length ? `; short in ${shortfallYears.length} ${shortfallYears.length === 1 ? 'year' : 'years'}` : ''}.` };
+  const socialSecurityOut = ssPlan ? { on: true, trustCut, fiNet: fiNetOn, lastingMonthly: lasting, fromMonth: claimKs.length ? Math.min(...claimKs) : null,
+    people: ssPlan.people.map((p, n) => ({ key: p.key, counted: viewAt < 0 || n === viewAt, source: p.source, level: p.level ?? null, pia: p.pia, low: p.low ?? null, high: p.high ?? null, fraMonths: p.fraMonths ?? null, claimMonths: p.claimMonths ?? null,
+      claimYm: p.claimIndex == null ? null : addMonths(nowYm, p.claimIndex - nowI), own: p.own, spousal: p.spousal ?? 0, spousalYm: p.spousalIndex == null ? null : addMonths(nowYm, p.spousalIndex - nowI), words: p.words })) } : { on: false };
+  return { ...base, value: fiMonths, needs: [], months, years, start, flags, fiMonths, fiNever: fiMonths == null, fiYm, fiAge, fiNumber: target, fiTarget: fiMonths == null ? null : targetAt(fiMonths - 1), debtFreeMonths: plan.months, heavyMonths: plan.heavyMonths, debtFreeYm: plan.months == null ? null : addMonths(nowYm, plan.months),
+    shortfallYears, lastsToAge, dualAge, socialSecurity: socialSecurityOut, coastAge: null, triple: null, horizon, schedule: { F, H, W, freed, endedPay, stopMonths: stopMonth, takeHomeAfterStop: Object.values(stopMonth).some(Number.isFinite) ? (x.takeHome ?? 0) + incomeAt(Math.max(...Object.values(stopMonth).filter(Number.isFinite))).dTH : null,
+      takeHomeAt: Object.fromEntries(Object.entries(stopMonth).filter(([, s]) => Number.isFinite(s)).map(([key, s]) => [key, (x.takeHome ?? 0) + incomeAt(s).dTH])) },
+    text: `${years.length} years from ${nowYm}, a month at a time: ${fiMonths == null ? 'FI is not reached on this path' : `FI in ${fiMonths} months (${fiYm})`}${plan.debts.length ? `, ${plan.months == null ? 'the debts are never cleared' : `debt free in ${plan.months} months`}` : ''}${today ? '' : `, work stopping at ${me.stopAge}`}${ssPlan && lasting ? `, Social Security ${money(lasting)} a month once claimed` : ''}; net worth at the end ${end ? money(end.netWorth) : 'unknown'}${shortfallYears.length ? `; short in ${shortfallYears.length} ${shortfallYears.length === 1 ? 'year' : 'years'}` : ''}.` };
 }
 
 // What the core leaves out (projection.md Status). Also on the result as notIn.
-export const NOT_IN = ['full tax depth (capital gains, state brackets by year, the ACA credit, Roth conversions)', 'tax and the 10% penalty on withdrawals', 'Social Security', 'RMDs from 73',
-  'go-go, slow-go and no-go spending', 'a second stop age for a partner', 'two IRAs for a couple', 'Triple D and Monte Carlo', 'dated events beyond spending, income and one-off costs'];
+export const NOT_IN = ['full tax depth (capital gains, state brackets by year, the ACA credit, Roth conversions)', 'tax and the 10% penalty on withdrawals', 'the tax on Social Security benefits and the earnings test before full retirement age',
+  'Social Security for a third adult or more, and a survivor claiming before their own full retirement age', 'RMDs from 73', 'two IRAs for a couple', 'Triple D and Monte Carlo', 'dated events beyond spending, income and one-off costs'];

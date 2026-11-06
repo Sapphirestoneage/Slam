@@ -85,6 +85,7 @@ export const FORMATS = [
   { version: 44, shape: '7b631d3a' }, // batch 53: head of household (StdDed_head, Fed_head), the Child Tax Credit (CTC_*, M10 ctc), New York's child care help (cliff.ccap, cliff.careFull, CCAP_*, M9B ccap)
   { version: 45, shape: '7b631d3a' }, // batch 55: the same columns as 44; the account type Savings or HYSA split into Savings and High-yield savings (often online), an older file's rows read as Savings (js/records.js migrate, js/import-sheet.js); the money-control map's fields (ctl*) are skipped, private by design
   { version: 46, shape: '52719be6' }, // batch 60: nights on an income row (kinds of night, the row's boxes their sum) and NYC area on About you (the typical numbers read the NY metro)
+  { version: 47, shape: '7caa6b1e' }, // batch 56: M9J Social Security (each person's statement number and level, claim ages, the trust fund switch, the SS_ values and SS_fra table), the partner's own Retire by, go-go, slow-go and no-go spending, rules ProjectionSocialSecurity, ProjectionFiNet
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)
