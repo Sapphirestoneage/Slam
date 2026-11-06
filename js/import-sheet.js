@@ -2,14 +2,14 @@
 // Bring a spreadsheet back: read an edited workbook and compare it with SLAM. Pure: no DOM. Reads the Assumptions tab
 // and every screen tab through the field registry: a row by the hidden key in its column A (a field, a record's id, a
 // section band, a blank row), a column by the hidden row of keys above its header (batch 59), never by position. A
-// file of format 45 or before (one tab per area) is read by its tab names and headers. The review screen
+// file of format 46 or before (one tab per area) is read by its tab names and headers. The review screen
 // (js/ui/sheet-ui.js) shows the result; applyChanges saves what was kept.
 //
 // compare(grid, doc) returns, by area: Changed (field, old, new), New rows, Removed rows; Changed assumptions;
 // Couldn't tell what this is; typed over a formula; bad values with their cell; columns left alone. Each line has a
 // decision: 'keep' (Yes) or 'skip' (No). A conflict (the same number changed in SLAM and in the spreadsheet) starts
 // with none and needs an answer. Nothing is saved here.
-import { nightsStale } from './math/earnings.js';
+import { nightsStale, hasNights, nightsRollUp, NIGHT_KEYS, setNight, addNight, removeNight } from './math/earnings.js';
 import { AREAS, sheetFields } from './registry/fields.js';
 import { ASSUMPTIONS } from './registry/assumptions.js';
 import { DATA_TAB, OLD_DATA_TAB, STATUS_WORDS, KEY, toCell, partOf, rowsForArea, formulaCols, colLetter } from './sheet/workbook.js';
@@ -18,7 +18,7 @@ import { foldDoc, SHARE } from './privacy.js';
 import { fingerprint, FORMAT_VERSION } from './sheet/format.js';
 const OLD_TYPES = { 'Savings or HYSA': 'Savings' };
 
-const STATUS_BACK = { ...Object.fromEntries(Object.entries(STATUS_WORDS).map(([k, v]) => [v.toLowerCase(), k])), "i'll find it later": 'Will email' }; // the old word, in files of format 45 and before
+const STATUS_BACK = { ...Object.fromEntries(Object.entries(STATUS_WORDS).map(([k, v]) => [v.toLowerCase(), k])), "i'll find it later": 'Will email' }; // the old word, in files of format 46 and before
 const getPath = (o, path) => path.split('.').reduce((v, k) => (v == null ? undefined : v[k]), o);
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 const isBlankCell = v => v === null || v === undefined || (typeof v === 'string' && v.trim() === '');
@@ -95,7 +95,7 @@ export function gridFromPlan(plan) {
 
 // Where each area's rows and fields are in a grid. The screen tabs (batch 59 on) are read by their hidden column A:
 // a table by its #keys and #head rows, its sections by their bands, a doc field by its field: row, a result by its
-// math: row. A file of format 45 or before has one tab per area (area.tab) with its header on the first row.
+// math: row. A file of format 46 or before has one tab per area (area.tab) with its header on the first row.
 export function locate(grid) {
   const out = { layout: null, tables: {}, fields: new Map(), formulaRows: [] };
   for (const tab of Object.keys(grid)) {
@@ -234,12 +234,15 @@ export function compare(grid, doc, { asNew = false, ref = null } = {}) {
       }
     };
     let sec = {}; // the defaults of the section a row sits in (from its band)
+    const nightRows = {}; // batch 60: a shift row's kinds of night, as rows under it
+    const nightParents = new Map(); // a row with nights: its row index and name
     for (const ri of t.data) {
       const row = rows[ri] || [];
       const a = row[idCol];
       const key = typeof a === 'string' ? a.trim() : a == null ? '' : String(a);
       if (t.screens && key.startsWith(KEY.sec)) { sec = decodeDefaults(key.slice(KEY.sec.length)); continue; }
       if (t.screens && key === KEY.gap) continue;
+      if (t.screens && key.startsWith(KEY.night)) { const [recId, nightId] = key.slice(KEY.night.length).split(':'); (nightRows[recId] ??= []).push({ ri, nightId, row }); continue; } // read with its row, below
       const slot = t.screens && key.startsWith(`${KEY.blank}:`) ? decodeDefaults(key.slice(KEY.blank.length + 1)) : {};
       const rawId = !key || (t.screens && key.startsWith(KEY.blank)) ? null : key;
       const id = asNew ? null : rawId;
@@ -266,8 +269,15 @@ export function compare(grid, doc, { asNew = false, ref = null } = {}) {
         if (!item) { out.unknown.push(line({ op: 'row', area: area.id, tab, name: `${tab}: ${rowName}`, cell: cellOf(tab, ri, idCol), decision: 'skip', note: wasRow ? 'Deleted in SLAM after the file was made, so its edits were not read.' : 'Its SLAM id is not one SLAM knows.' })); continue; }
         const kind = item.rec?.kind;
         const conflict = changedInSlam(id);
+        const rolled = t.screens && item.rec && hasNights(item.rec.values) ? new Set(Object.keys(nightsRollUp(item.rec.values))) : null;
+        if (rolled) nightParents.set(id, { ri, rowName, item });
         for (const x of cols) {
           if (x.f.kinds && kind && !x.f.kinds.includes(kind)) continue;
+          if (rolled?.has(x.f.key)) { // worked out from the nights under it: typing over it is listed, never saved
+            const v = row[x.i];
+            if (formulas?.[tab] && !isBlankCell(v) && !isFormula(tab, ri, x.i) && !x.f.key.endsWith('Per') && !same(fromCell(x.f.type, v, x.f).value, asStored(x.f.type, nowOf(item, x.f), x.f))) out.typedOver.push({ cell: cellOf(tab, ri, x.i), name: `${rowName}: ${x.f.label}`, value: v, text: `You typed over ${rowName}: ${x.f.label}. SLAM adds it up from the nights under it; your number was ${v}.` });
+            continue;
+          }
           const wasStored = wasRow ? fromCell(x.f.type, wasRow[x.f.key] ?? null, x.f).value ?? null : asStored(x.f.type, nowOf(item, x.f), x.f);
           fieldLine(area, x.f, row[x.i], { tab, ri, ci: x.i, rowName, item, wasStored, recId: id, gate: conflict });
         }
@@ -313,6 +323,38 @@ export function compare(grid, doc, { asNew = false, ref = null } = {}) {
       } else {
         group.added.push(line({ op: 'add', area: area.id, tab, values, label: `New ${area.tab.toLowerCase().replace(/s$/, '')}`, name: values.name ?? values.kind ?? rowName, to: values, cell: cellOf(tab, ri, 1) }));
       }
+    }
+    // Batch 60 (QUESTIONS 448): each night under a shift row: a changed number, a night added in the blank night row (or
+    // any row inserted among them), a night deleted (offered, No by default, like a row).
+    for (const [recId, list] of Object.entries(nightRows)) {
+      const parent = nightParents.get(recId);
+      if (!parent) continue;
+      const { item, rowName } = parent;
+      const was = baseArea?.[recId]?._nights ?? item.rec.values.nights.map(n => ({ ...n }));
+      const nightFields = ['name', ...NIGHT_KEYS].map(k => fields.find(f => f.key === k)).filter(Boolean);
+      const at = k => cols.find(x => x.f.key === k)?.i ?? -1;
+      const seenN = new Set();
+      for (const { ri, nightId, row } of list) {
+        const values = {};
+        for (const f of nightFields) { const i = at(f.key); if (i < 0 || isBlankCell(row[i])) continue; const r = fromCell(f.type, row[i], f); if (r.bad) out.bad.push({ cell: cellOf(tab, ri, i), tab, name: rowName, label: f.label, value: row[i], text: `${cellOf(tab, ri, i)} (${rowName}, a night, ${f.label}): ${r.bad}. Skipped.` }); else values[f.key] = r.value; }
+        const old = was.find(n => n.id === nightId);
+        if (!old || nightId === 'new') {
+          if (!Object.keys(values).some(k => k !== 'name')) continue;
+          group.changed.push(line({ op: 'night', how: 'add', area: area.id, tab, recId, values, label: `New night: ${values.name ?? 'a kind of night'}`, name: rowName, from: null, to: Object.entries(values).filter(([k]) => k !== 'name').map(([k, v]) => `${nightFields.find(f => f.key === k).label} ${v}`).join(', '), cell: cellOf(tab, ri, 1) }));
+          continue;
+        }
+        seenN.add(nightId);
+        for (const f of nightFields) {
+          const i = at(f.key);
+          if (i < 0) continue;
+          const to = values[f.key] ?? null, from = old[f.key] ?? null;
+          if (same(to, from)) continue;
+          const now = item.rec.values.nights.find(n => n.id === nightId)?.[f.key] ?? null;
+          if (same(to, now)) continue;
+          group.changed.push(line({ op: 'night', how: 'edit', area: area.id, tab, recId, nightId, field: f.key, fld: f, label: `${old.name ?? 'Night'}: ${f.label}`, name: rowName, from: now, to, cell: cellOf(tab, ri, i) }));
+        }
+      }
+      for (const n of was) if (!seenN.has(n.id) && item.rec.values.nights.some(x => x.id === n.id)) group.changed.push(line({ op: 'night', how: 'remove', decision: 'skip', area: area.id, tab, recId, nightId: n.id, label: `${n.name ?? 'Night'}: taken out of your spreadsheet`, name: rowName, from: n.name ?? 'a night', to: '(deleted)' }));
     }
     // In SLAM but not in the spreadsheet: Removed in the spreadsheet, never deleted unless kept. A private row of a copy
     // without private rows is never offered.
@@ -368,6 +410,7 @@ export function applyChanges(store, res, { metrics = null } = {}) {
   try {
     store.transaction('Spreadsheet import', () => {
       const lists = {};
+      const nightOps = {};
       const touched = new Set();
       for (const c of list) {
         const area = AREAS.find(a => a.id === c.area);
@@ -385,6 +428,7 @@ export function applyChanges(store, res, { metrics = null } = {}) {
           if (c.fld.key === 'household') store.setDoc('client', { couple: c.to === 'Couple' }); // as on About you
           continue;
         }
+        if (c.op === 'night') { (nightOps[c.recId] ??= []).push(c); continue; } // applied together, below
         if (area?.source === 'records') {
           if (c.op === 'edit') { store.update(c.recId, { [c.field]: c.to }); touched.add(c.recId); }
           else if (c.op === 'status') { store.update(c.recId, { status: c.to }); touched.add(c.recId); }
@@ -420,6 +464,18 @@ export function applyChanges(store, res, { metrics = null } = {}) {
         }
       }
       for (const [id, l] of Object.entries(lists)) { const area = AREAS.find(a => a.id === id); store.setDoc(area.part, { [area.path]: l }); }
+      // Batch 60: a row's nights, edited, added and deleted in one go, with the row's shift boxes added up again.
+      for (const [id, ops] of Object.entries(nightOps)) {
+        const rec = store.get(id);
+        if (!rec) continue;
+        let v = { ...rec.values };
+        const step = patch => { v = { ...v, ...patch }; };
+        for (const c of ops.filter(x => x.how === 'edit')) if (hasNights(v)) step(setNight(v, c.nightId, { [c.field]: c.to }));
+        for (const c of ops.filter(x => x.how === 'add')) { step(addNight(v)); step(setNight(v, v.nights.at(-1).id, c.values)); }
+        for (const c of ops.filter(x => x.how === 'remove')) if (hasNights(v)) step(removeNight(v, c.nightId));
+        store.update(id, { nights: v.nights ?? null, ...Object.fromEntries([...NIGHT_KEYS, 'cardTipsPer', 'cashTipsPer'].map(k => [k, v[k] ?? null])) });
+        touched.add(id);
+      }
       for (const id of touched) if (store.get(id)) store.update(id, { source: 'spreadsheet' });
       for (const id of touched) if (nightsStale(store.get(id)?.values)) store.update(id, { nights: null }); // batch 60: a typed Shifts a week or Pay a shift wins over the row's kinds of night
     });

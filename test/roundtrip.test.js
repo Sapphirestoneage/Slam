@@ -252,7 +252,7 @@ test('a copy made Without private rows comes back cleanly: no private row is rea
   assert.equal(store.get(plain.id).values.balance, 4321);
 });
 
-test('a file of format 45 (a tab per area) still comes back by its old tabs, with a clear note', () => {
+test('a file of format 46 (a tab per area) still comes back by its old tabs, with a clear note', () => {
   // The old layout as those files have it: the header on the first row, the rows under it, the Profile on row 2.
   const store = new Store(HOUSEHOLDS.find(([l]) => l === 'demo')[1](), { now: () => NOW.toISOString() });
   const plan = buildWorkbook(store.doc, ref, { now: NOW });
@@ -261,7 +261,7 @@ test('a file of format 45 (a tab per area) still comes back by its old tabs, wit
   const old = {};
   Object.defineProperty(old, '_formulas', { value: {}, enumerable: false });
   old._meta = grid._meta.map(r => [...r]);
-  old._meta.find(r => r[0] === 'Export format version')[1] = 45;
+  old._meta.find(r => r[0] === 'Export format version')[1] = 46;
   for (const area of AREAS.filter(a => a.source !== 'doc')) {
     const t = where.tables[area.id];
     old[area.tab] = [t.head.map((h, i) => (i === 0 ? 'SLAM id (leave as is)' : h)), ...t.data.map(ri => grid[t.tab][ri]).filter(r => r[0] && !String(r[0]).startsWith('#')).map(r => [...r])];
@@ -275,4 +275,40 @@ test('a file of format 45 (a tab per area) still comes back by its old tabs, wit
   assert.equal(res.layout, 'areas');
   assert.equal(res.olderFormat, true);
   assert.deepEqual(linesOf(res).map(l => `${l.tab} ${l.name} ${l.label}`), ['Debt Car loan Balance']);
+});
+
+test('a shift row\'s kinds of night are rows under it: a changed night, a new one and a deleted one come back (QUESTIONS 448)', () => {
+  const store = new Store(persona('dancer'), { now: () => NOW.toISOString() });
+  const row = store.doc.records.find(r => r.values?.nights?.length > 1);
+  assert.ok(row, 'the dancer has kinds of night');
+  const plan = buildWorkbook(store.doc, ref, { now: NOW });
+  const grid = gridFromPlan(plan);
+  const t = locate(grid).tables.income;
+  const rows = grid[t.tab];
+  const at = key => t.keys.indexOf(key);
+  // The row's shift boxes are formulas over the nights (their cached values are the app's roll-up).
+  const parent = plan.sheets.find(s => s.name === t.tab).rows.find(r => r[0]?.v === row.id);
+  for (const k of ['shiftsWeek', 'payShift', 'houseFee']) assert.ok(parent[at(k)].f, `${k} is a formula`);
+  assert.equal(parent[at('shiftsWeek')].cached, row.values.shiftsWeek);
+  const [first, second] = row.values.nights;
+  rows[rows.findIndex(r => r[0] === `${KEY.night}${row.id}:${first.id}`)][at('payShift')] = 700;
+  const blank = rows.findIndex(r => r[0] === `${KEY.night}${row.id}:new`);
+  Object.assign(rows[blank], { [at('name')]: 'Sunday', [at('shiftsWeek')]: 1, [at('payShift')]: 300 });
+  rows.splice(rows.findIndex(r => r[0] === `${KEY.night}${row.id}:${second.id}`), 1);
+  const res = compare(grid, store.doc, { ref });
+  assert.deepEqual(linesOf(res).map(l => `${l.how} ${l.label}`), [`edit ${first.name}: Pay a shift (before tax)`, 'add New night: Sunday', `remove ${second.name}: taken out of your spreadsheet`]);
+  assert.equal(linesOf(res).find(l => l.how === 'remove').decision, 'skip', 'a deleted night is a No until you say Yes');
+  for (const l of linesOf(res)) l.decision = 'keep';
+  applyChanges(store, res);
+  const v = store.get(row.id).values;
+  assert.deepEqual(v.nights.map(n => [n.name, n.shiftsWeek, n.payShift]), [[first.name, first.shiftsWeek, 700], ['Sunday', 1, 300]]);
+  assert.equal(v.shiftsWeek, first.shiftsWeek + 1, 'the row adds its nights up again');
+  assert.ok(Math.abs(v.payShift - (700 * first.shiftsWeek + 300) / (first.shiftsWeek + 1)) < 0.01);
+  // Typing over the row's own Shifts a week is listed and never saved.
+  const g2 = gridFromPlan(buildWorkbook(store.doc, ref, { now: NOW }));
+  const t2 = locate(g2).tables.income, ri = g2[t2.tab].findIndex(r => r[0] === row.id);
+  g2[t2.tab][ri][t2.keys.indexOf('shiftsWeek')] = 9;
+  g2._formulas[t2.tab].delete(`${ri}:${t2.keys.indexOf('shiftsWeek')}`);
+  const r2 = compare(g2, store.doc, { ref });
+  assert.deepEqual([linesOf(r2).length, r2.typedOver.length], [0, 1]);
 });

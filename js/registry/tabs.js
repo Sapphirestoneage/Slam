@@ -26,7 +26,7 @@ export const SCREEN_TABS = [
     about: 'You: who is in the plan and what applies. Fill in the blue boxes from the top; the tab\'s result above fills in as you go.',
     blocks: [
       { math: 'Where this stands', rows: ['M73=Picture', 'M73_answered=Answered', 'M73_solid=Solid', 'M9Q_ask=Ask next'] },
-      { form: 'profile', title: 'About you', fields: [P('client.name'), ...['firstName', 'lastName', 'birthMonth', 'birthYear', 'age', 'state', 'nyc', 'partnerName', 'partnerBirthYear', 'kidAges', 'healthCoverage', 'email', 'phone'].map(P)], cols: ['ageUsed'] },
+      { form: 'profile', title: 'About you', fields: [P('client.name'), ...['firstName', 'lastName', 'birthMonth', 'birthYear', 'age', 'state', 'nyc', 'nycArea', 'partnerName', 'partnerBirthYear', 'kidAges', 'healthCoverage', 'email', 'phone'].map(P)], cols: ['ageUsed'] },
       { form: 'profile', title: 'What applies to me', fields: ['hasCar', 'dependents', 'hasPets', 'housing', 'workSituation', 'hsaEligible', 'fsa', 'equityPay', 'mode', 'household'].map(P) },
       { form: 'profile', title: 'Why now', fields: [P('whyNow'), P('worry'), P('goalWords'), ...keys('chips', ['whyNow', 'worry', 'goalWords']), ...keys('chipStar', ['whyNow', 'worry', 'goalWords']), ...keys('chipOther', ['whyNow', 'worry', 'goalWords'])] },
       { table: 'people', title: 'People' },

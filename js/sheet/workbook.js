@@ -8,24 +8,25 @@
 // js/import-sheet.js reads the tab back by those keys and never by position.
 import { AREAS, sheetFields, fieldsFor } from '../registry/fields.js';
 import { SCREEN_TABS, sectionsOf, decodeDefaults, tabOfArea } from '../registry/tabs.js';
+import { hasNights, NIGHT_KEYS, nightsRollUp } from '../math/earnings.js';
 import { MATH, rowsOf } from '../registry/math.js';
 import { ASSUMPTIONS, TABLES, sourceOf } from '../registry/assumptions.js';
 import { REPORTS } from '../registry/reports.js';
 import { sheetContext } from './context.js';
 import { FORMAT_VERSION, APP_VERSION, shapeOf, fingerprint } from './format.js';
 
-export const BLANK_ROWS = 20; // the old layout's blank rows (format 45 and before); each section now ends with its own
+export const BLANK_ROWS = 20; // the old layout's blank rows (format 46 and before); each section now ends with its own
 export const LIST_TAB = '_lists'; // hidden: the long dropdown lists (Excel keeps a list typed into a rule under 255 characters)
 export const REPO = 'https://github.com/sapphirestoneage/slam';
 export const DATA_TAB = '_meta';
 export const OLD_DATA_TAB = 'SLAM data'; // the first files made (Nov 3 2026) kept it here
 export const COACH_TAB = 'Coach notes';
 // The stored statuses as the sheet shows them (one sureness system: Not sure is a Guess).
-// Batch 59: the words of the app's status picker (Will get it was "I'll find it later" in files of format 45 and before).
+// Batch 59: the words of the app's status picker (Will get it was "I'll find it later" in files of format 46 and before).
 export const STATUS_WORDS = { 'Know it': 'Know it', Roughly: 'Roughly', 'Not sure': 'Guess', 'Not for me': 'Not for me', 'Will email': 'Will get it', 'Not now': 'Not now', Computed: 'Worked out' };
 export const STATUS_LIST = ['Know it', 'Roughly', 'Guess', 'Will get it', 'Not now', 'Not for me'];
 // What column A of a screen tab says (hidden): the import reads each row by it.
-export const KEY = { field: 'field:', col: 'col:', math: 'math:', keys: '#keys:', head: '#head:', sec: '#sec:', blank: '#new', end: '#end:', gap: '#gap', block: '#block:' };
+export const KEY = { night: '#night:', field: 'field:', col: 'col:', math: 'math:', keys: '#keys:', head: '#head:', sec: '#sec:', blank: '#new', end: '#end:', gap: '#gap', block: '#block:' };
 const FMT = { money: '"$"#,##0', cents: '"$"#,##0.00', pct: '0.0#%', months: '0', number: 'General', years: '0.0', day: '0', date: 'yyyy-mm-dd', month: 'yyyy-mm', text: '@', choice: '@', yesno: '@', list: '@' };
 const TOL = { money: 1, cents: 0.01, pct: 0.0005, months: 1, number: 0.01, years: 0.05 }; // within $1 or 1 month; a cent where the app shows cents (cents: true)
 const BUILTIN = { Kind: 'Kind', Type: 'Type', Status: 'Status', InMath: 'In the math' };
@@ -255,6 +256,10 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
           const real = item && !item.slot ? item : null;
           const r = at();
           const rowBase = real ? (base[real.id] = {}) : null;
+          // Batch 60 (QUESTIONS 448): a shift row's kinds of night sit as rows under it, and its shift boxes are formulas over them.
+          const nights = real?.rec?.kind === 'income' && hasNights(real.rec.values) ? real.rec.values.nights : null;
+          const rolled = nights ? nightFormulas(real.rec.values, nights, letterOf, r) : null;
+          if (nights && rowBase) rowBase._nights = nights.map(n => ({ id: n.id, name: n.name ?? null, ...Object.fromEntries(NIGHT_KEYS.map(k => [k, n[k] ?? null])) }));
           rows.push(layout.map(l => {
             if (l.kind === 'id') return { v: real?.id ?? (item?.slot ? `${KEY.blank}:${Object.entries(item.slot).map(([k, v]) => `${k}=${v}`).join(';')}` : KEY.blank), s: 'key', fmt: 'text' };
             if (l.kind === 'month') return { v: real?.ym ?? null, s: real ? 'formulaValue' : 'input', fmt: 'text' };
@@ -270,12 +275,22 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
               const applies = !l.fld.kinds || !kind || l.fld.kinds.includes(kind);
               const v = real ? toCell(l.fld.type, real.get(l.fld)) : item?.slot?.[l.fld.key] ?? null;
               if (rowBase && applies) rowBase[l.fld.key] = v instanceof Date ? v.toISOString().slice(0, 10) : v;
+              if (rolled?.[l.fld.key]) return { f: rolled[l.fld.key], s: 'formula', fmt: l.fld.type, cached: typeof v === 'number' ? v : undefined };
+              if (rolled && /^(card|cash)TipsPer$/.test(l.fld.key)) return { v, s: 'formulaValue', fmt: l.fld.type }; // a night's tips are a shift's
               return { v, s: applies ? 'input' : 'na', fmt: l.fld.type };
             }
             const tmpl = typeof l.col.f === 'function' ? l.col.f(real?.rec ?? { values: {}, kind: null }, c) : l.col.f;
             const f = compileRowFormula(tmpl, { letterOf, row: r, app: l.col.app, rec: real?.rec ?? null, c, where: `${tab.name}: ${l.label}` });
             return { f, s: 'formula', fmt: l.col.unit, ...(/\bTODAY\(/i.test(f) && datedRec(real?.rec) ? { today: true } : {}) }; // batch 45: a dated row (QUESTIONS 334)
           }));
+          for (const n of nights ? [...nights, null] : []) { // each night, then a blank one to add a night
+            rows.push(layout.map(l => {
+              if (l.kind === 'id') return { v: `${KEY.night}${real.id}:${n?.id ?? 'new'}`, s: 'key', fmt: 'text' };
+              if (l.kind === 'field' && (l.key === 'name' || NIGHT_KEYS.includes(l.key))) return { v: n ? (l.key === 'name' ? n.name ?? null : n[l.key] ?? null) : null, s: 'input', fmt: l.fld.type, night: true };
+              if (l.kind === 'builtin' && l.key === 'Kind') return { v: null, s: 'key' }; // not a row of its own: no formula counts it
+              return { v: null, s: l.kind === 'formula' ? 'na' : 'na' };
+            }));
+          }
         }
         const to = rows.length;
         if (to >= from) { // this section's dropdowns: its own types, every choice, Yes or No, the statuses
@@ -517,6 +532,27 @@ export function tableLayout(area, { coach = false } = {}) {
   if (isRecords) L.push({ key: 'Kind', label: BUILTIN.Kind, kind: 'builtin' });
   L.forEach((l, i) => { l.letter = colLetter(i + 1); });
   return L;
+}
+// Batch 60 (QUESTIONS 448): a shift row's own shift boxes as formulas over its night rows (the rows under it), as
+// js/math/earnings.js nightsRollUp adds them up: shifts a week summed; pay, hours, tips, the fee and the tip-out averaged
+// over the shifts (a night with no number is left out of the top, never the shifts); hours only when every night worked
+// has them. Written out night by night (no arrays), so Google Sheets and Excel read them the same.
+export function nightFormulas(v, nights, letterOf, r) {
+  const rows = nights.map((_, i) => r + 1 + i);
+  const at = (key, row) => `${letterOf.get(key)}${row}`;
+  const S = row => `N(${at('shiftsWeek', row)})`;
+  const total = `(${rows.map(S).join('+')})`;
+  const avg = cell => `IF(OR(${total}=0,COUNT(${rows.map(cell).join(',')})=0),"",(${rows.map(x => `N(${cell(x)})*${S(x)}`).join('+')})/${total})`;
+  const pay = x => `IF(${at('payShift', x)}<>"",${at('payShift', x)},IF(AND(${at('hourly', r)}<>"",${at('hoursShift', x)}<>""),${at('hourly', r)}*${at('hoursShift', x)},""))`;
+  const keys = Object.keys(nightsRollUp(v)).filter(k => !k.endsWith('Per'));
+  const f = {
+    shiftsWeek: `IF(${total}=0,"",${total})`,
+    payShift: avg(pay),
+    hoursShift: `IF(OR(${rows.map(x => `AND(${S(x)}<>0,${at('hoursShift', x)}="")`).join(',')}),"",${avg(x => at('hoursShift', x))})`,
+    cardTips: avg(x => at('cardTips', x)), cashTips: avg(x => at('cashTips', x)), houseFee: avg(x => at('houseFee', x)),
+    tipOutAmount: avg(x => at('tipOutAmount', x)), salesShift: avg(x => at('salesShift', x)),
+  };
+  return Object.fromEntries(keys.filter(k => f[k] && letterOf.has(k)).map(k => [k, f[k]]));
 }
 // A field's dropdown: its choices, Yes or No, or a Budget line's categories (a list, not a rule: another word still goes in).
 export function listOf(fld, ref = null) {

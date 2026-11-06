@@ -136,15 +136,16 @@ const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 // What changed, and Yes or No on keeping it. A conflict says what each side did and needs an answer.
 function question(l) {
   const t = l.fld?.type;
-  if (l.op === 'add') return 'Add it to SLAM?';
-  if (l.op === 'remove') return 'Delete it in SLAM too?';
+  if (l.op === 'add' || l.how === 'add') return 'Add it to SLAM?';
+  if (l.op === 'remove' || l.how === 'remove') return 'Delete it in SLAM too?';
   if (l.conflict) return "Keep your spreadsheet's number?";
   return 'Keep this change?';
 }
 function whatChanged(l) {
   const t = l.fld?.type;
   if (l.op === 'add') return newRowText(l);
-  if (l.op === 'remove') return 'Taken out of your spreadsheet. It stays in SLAM unless you say Yes.';
+  if (l.how === 'add') return l.to || 'No numbers yet'; // batch 60: a new kind of night under a shift row
+  if (l.op === 'remove' || l.how === 'remove') return 'Taken out of your spreadsheet. It stays in SLAM unless you say Yes.';
   if (l.conflict) return `Both changed it after the file was made. In SLAM: ${shown(l.was, t)} to ${shown(l.from, t)}. In your spreadsheet: ${shown(l.was, t)} to ${shown(l.to, t)}.`;
   return `${shown(l.from, t)} to ${shown(l.to, t)}`;
 }

@@ -110,7 +110,7 @@ them, each section with the app's own title.
 | # | Tab | Today's screens it holds | Top to bottom |
 | --- | --- | --- | --- |
 | 1 | You | Home › About you, People, Coach tools › Discovery and Session | Where this stands (the Picture: answered, solid; Ask next), About you, What applies to me, Why now, People (a table), Work and home, Home and shared bills, Couples split, Which do you have today, Your community and calendar, Who they are with money, Session |
-| 2 | Money in | Cash flow › Income, Taxes, Plan › Raise and benefits | Where this stands (take-home, gross, taxes, the effective rate), Income by person and type (a band each; Other benefits last), Taxes (filing, W-4, last year), Variable income, Work hours, Benefits now (with child care help), more about money in (the Child Tax Credit, match, safe budget, real hourly, what a shift really pays), what a raise does to your benefits |
+| 2 | Money in | Cash flow › Income, Taxes, Plan › Raise and benefits | Where this stands (take-home, gross, taxes, the effective rate), Income by person and type (a band each; a shift row's kinds of night as rows under it, its shift boxes formulas over them; Other benefits last), Taxes (filing, W-4, last year), Variable income, Work hours, Benefits now (with child care help), more about money in (the Child Tax Credit, match, safe budget, real hourly, what a shift really pays), what a raise does to your benefits |
 | 3 | Money out | Cash flow › Budget, Calendar, Month end, Plan › Next 12 months | Where this stands (spending, the gut number, the categories, gut accuracy), the gut number first, then a band per category in the app's order (Accommodation, Food, Transportation, Debt, Health and self-care, Taxes, Retirement, Bills and subscriptions, Other) with its lines, then Irregular and yearly costs; Settings for this budget; more about money out (sinking funds, bonus months, holidays); Calendar entries and wins; Month end (a band per month) |
 | 4 | Own and owe | Net worth › Assets, Debt, Credit cards, Protection, Fire drill, Report › Lender's view | Where this stands (net worth, liquid, cash, invested, runway), Assets (Cash, Investments, Home or car), Order to pay off debt, Debt (Credit cards, Loans, Other), what you owe comes to (utilization, debt-to-income), Your credit, what your cards give you, Protection, Cash layers, Income gaps, Backups, Institutions, the bank fire drill, what a lender sees |
 | 5 | The plan | Home, Plan › FOO, Scorecard, Current vs Proposed | Where this stands (surplus, savings rate, the FOO step, your next 3 moves), where each dollar goes (take-home to surplus, and the DRAFTT shares), Extra to debt, Giving, launch and the job, the FOO steps, what the freed money does, the Scorecard, Current vs Proposed |
@@ -170,9 +170,12 @@ a record's id, `#sec:kind=bill;draftt=Food` (a band, with what a new row in it i
 hidden row of column keys sits above each table's header. "Bring a spreadsheet back" reads by those keys, never by
 position, so inserted rows and columns, sorted rows and renamed headers all still read. A new row takes its section: a
 card under Credit cards, a cash account under Cash, a line under Food (its category still decides its letter), a month
-line under its month. A row deleted in the file is offered for deletion (No by default). Typing over a grey cell is
+line under its month. A row deleted in the file is offered for deletion (No by default). A shift row's kinds of night
+(batch 60, QUESTIONS 448) are rows under it (`#night:` keys) with a blank one to add a night; the row's Shifts a week, Pay
+a shift, hours, tips, fee and tip-out are formulas over them, written night by night (as js/math/earnings.js adds them
+up), so a changed night, a new night and a deleted night (No by default) come back, and the row is added up again. Typing over a grey cell is
 listed and never saved. A copy made Without private rows comes back too: its private rows (neutral names there) are
-never read, renamed or deleted, and the review never names them. A file of format 45 or before (a tab per area: Debt,
+never read, renamed or deleted, and the review never names them. A file of format 46 or before (a tab per area: Debt,
 Spending lines ...) is read by its old tab names and headers, with a note saying so.
 
 Checked by: `node tools/workbook-check.mjs` (every Check on every tab, every household), `node tools/sheets-check.mjs`
