@@ -177,7 +177,7 @@ export function tipsDeductionOf(hh, income, ref) {
   const typed = rows.filter(i => i.computed === 'gross' && i.taxType !== '1099' && (i.tipsYear ?? 0) > 0);
   const refund = typed.reduce((s2, i) => s2 + Math.max(0, (i.withheld ?? 0) - (i.tax?.total ?? 0)), 0);
   const why = d.phasedOut ? ` (less, because income is over ${fmt.money(hh.joint ? t.phaseOutJoint : t.phaseOutSingle)})` : d.capped ? ` (the most a year is ${fmt.money(t.deductionCap)})` : '';
-  return { saved: d.saved, deduction: d.deduction, tips: d.tips, refund, unreported, tip,
+  return { saved: d.saved, deduction: d.deduction, tips: d.tips, refund, unreported,
     text: `Tips deduction: ${fmt.money(d.deduction)} of reported tips off federal taxable income${why}, ${fmt.money(d.saved)} less federal income tax a year.${refund > 0.5 ? ` Your paychecks do not know it yet: about ${fmt.money(refund)} comes back when you file.` : ''}${none}`,
     tip: `${tip}${refund > 0.5 ? ' Paychecks are held back as if there were no deduction; the W-4\'s deductions line (step 4b) holds back less instead.' : ''}` };
 }
