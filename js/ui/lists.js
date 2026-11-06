@@ -179,7 +179,7 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
   // Answer 89: on Plan the Plan column shows only when this month differs from the usual for at least one line.
   const monthCols = pass === 'Plan' && !planColumn ? [] : monthColumns(pass, ym);
   return {
-    kind: 'bill', area: 'needs', title: only ? `${categoryName(only)}: the lines` : `Spending lines: ${pass}, ${monthName(ym)}`, thing: { one: 'line', plural: 'lines' }, caret: !only, parentOf: only ? ctx => ctx.store.find(x => isCategoryRecord(x) && x.type === only)[0]?.id : undefined, // batch 13: inside a category the category row is the caret, and Fix it opens it first
+    kind: 'bill', area: 'needs', tableClass: 'amount-left', title: only ? `${categoryName(only)}: the lines` : `Spending lines: ${pass}, ${monthName(ym)}`, thing: { one: 'line', plural: 'lines' }, caret: !only, parentOf: only ? ctx => ctx.store.find(x => isCategoryRecord(x) && x.type === only)[0]?.id : undefined, // batch 13: inside a category the category row is the caret, and Fix it opens it first
     filter: r => r.kind === 'bill' && !r.values.irregular && (!only || categoryKeyOf(r) === only),
     // Eliminated lines fold away at the bottom; one tap brings one back.
     // Answer to 92: the T letter reads Health and self-care (therapy, insurance, copays, prescriptions); haircuts, personal

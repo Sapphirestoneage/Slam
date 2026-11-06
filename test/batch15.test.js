@@ -410,7 +410,7 @@ test('item 1 and 13: opened in a spreadsheet, the household tax formulas give th
     const dir = mkdtempSync(join(tmpdir(), 'slam-b15-'));
     const file = join(dir, 'book.xlsx');
     writeFileSync(file, Buffer.from(await workbookBuffer(ExcelJS, buildWorkbook(s.doc, ref, { now }), { cache: false })));
-    execFileSync(soffice, ['--headless', '--calc', '--convert-to', 'xlsx', '--outdir', join(dir, 'out'), file], { stdio: 'ignore', timeout: 120000 });
+    execFileSync(soffice, [`-env:UserInstallation=file://${join(dir, 'lo-profile')}`, '--headless', '--calc', '--convert-to', 'xlsx', '--outdir', join(dir, 'out'), file], { stdio: 'ignore', timeout: 120000 });
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.readFile(join(dir, 'out', 'book.xlsx'));
     const off = offChecks(wb.getWorksheet('Math'));

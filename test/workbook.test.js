@@ -91,7 +91,7 @@ async function recalculated(doc) {
   const dir = mkdtempSync(join(tmpdir(), 'slam-sheet-'));
   const file = join(dir, 'book.xlsx');
   writeFileSync(file, Buffer.from(await workbookBuffer(ExcelJS, buildWorkbook(doc, ref, { now: NOW }), { cache: false })));
-  execFileSync(soffice, ['--headless', '--calc', '--convert-to', 'xlsx', '--outdir', join(dir, 'out'), file], { stdio: 'ignore', timeout: 120000 });
+  execFileSync(soffice, [`-env:UserInstallation=file://${join(dir, 'lo-profile')}`, '--headless', '--calc', '--convert-to', 'xlsx', '--outdir', join(dir, 'out'), file], { stdio: 'ignore', timeout: 120000 });
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(join(dir, 'out', 'book.xlsx'));
   return wb;

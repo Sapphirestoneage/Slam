@@ -31,7 +31,7 @@ async function recalc(doc, edit = null) {
   await wb.xlsx.load(await workbookBuffer(ExcelJS, buildWorkbook(doc, ref, { now: NOW }), { cache: false }));
   if (edit) edit(wb);
   await wb.xlsx.writeFile(join(dir, 'book.xlsx'));
-  execFileSync(soffice, ['--headless', '--calc', '--convert-to', 'xlsx', '--outdir', join(dir, 'out'), join(dir, 'book.xlsx')], { stdio: 'ignore', timeout: 120000 });
+  execFileSync(soffice, [`-env:UserInstallation=file://${join(dir, 'lo-profile')}`, '--headless', '--calc', '--convert-to', 'xlsx', '--outdir', join(dir, 'out'), join(dir, 'book.xlsx')], { stdio: 'ignore', timeout: 120000 });
   const out = new ExcelJS.Workbook();
   await out.xlsx.readFile(join(dir, 'out', 'book.xlsx'));
   return out;

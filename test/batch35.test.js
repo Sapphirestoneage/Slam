@@ -118,7 +118,7 @@ async function incomeOff(doc) {
   const { workbookBuffer } = await import('../js/sheet/excel.js');
   const dir = mkdtempSync(join(tmpdir(), 'slam-b35-'));
   writeFileSync(join(dir, 'book.xlsx'), Buffer.from(await workbookBuffer(ExcelJS, buildWorkbook(doc, ref, { now }), { cache: false })));
-  execFileSync(soffice, ['--headless', '--calc', '--convert-to', 'xlsx', '--outdir', join(dir, 'out'), join(dir, 'book.xlsx')], { stdio: 'ignore', timeout: 120000 });
+  execFileSync(soffice, [`-env:UserInstallation=file://${join(dir, 'lo-profile')}`, '--headless', '--calc', '--convert-to', 'xlsx', '--outdir', join(dir, 'out'), join(dir, 'book.xlsx')], { stdio: 'ignore', timeout: 120000 });
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(join(dir, 'out', 'book.xlsx'));
   const val = v => (v && typeof v === 'object' ? v.result ?? v.error ?? null : v);

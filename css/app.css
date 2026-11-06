@@ -294,12 +294,12 @@ table.rows.mini th, table.rows.mini td { padding: 4px 6px; white-space: nowrap; 
 .menu-item.danger { color: var(--danger); }
 .pop:has(.row-menu) { min-width: 0; padding: var(--s2); }
 .keep-slot { display: inline-flex; min-width: 64px; }
-/* Nov 6: the Amount column starts every box at the same place, so boxes line up row to row whatever chip follows
+/* Nov 6 (spending lines only; Income's rows carry a label before the box): the Amount column starts every box at the same place, so boxes line up row to row whatever chip follows
    (Use $80, your share, whole bill, $70 your share). Helper text under the box starts with it. */
-table.rows th.col-amount { text-align: left; }
-table.rows td.col-amount > .row-line { justify-content: flex-start !important; }
-table.rows td.col-amount .typical-wrap { align-items: flex-start; }
-table.rows td.col-amount .typical-wrap > .typical-note { left: 0; right: auto; }
+table.rows.amount-left th.col-amount { text-align: left; }
+table.rows.amount-left td.col-amount > .row-line { justify-content: flex-start !important; }
+table.rows.amount-left td.col-amount .typical-wrap { align-items: flex-start; }
+table.rows.amount-left td.col-amount .typical-wrap > .typical-note { left: 0; right: auto; }
 
 /* Fix pass 4: clickable things look clickable. 32px hit area on every button, segment and chip; 36px in rows. */
 .btn.small, .icon-btn.tiny, .caret, .status-btn, .seg button, .chip, .more-chips, .deal-opt, a.tag, .day-top .icon-btn, .topbar .seg button { min-height: 32px; }
