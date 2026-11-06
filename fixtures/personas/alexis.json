@@ -46,7 +46,57 @@
    },
    "whyNow": "Friend made me come",
    "worry": "Opening my card statement",
-   "goalWords": "Stop feeling sick about money"
+   "goalWords": "Stop feeling sick about money",
+   "identity": {
+    "address": {
+     "feel": "uneasy",
+     "earnMore": false,
+     "spendLess": true
+    },
+    "letters": {
+     "Me": [
+      0,
+      -1,
+      1,
+      -1,
+      1,
+      0,
+      -1,
+      1,
+      -1,
+      -1,
+      1,
+      1
+     ]
+    },
+    "tilt": [
+     "deals-smart-buying",
+     "cash-safety-net",
+     "main-path",
+     "financial-ops-tooling",
+     "real-estate",
+     "side-hustles",
+     "debt-leverage",
+     "insurance-protection",
+     "money-psychology",
+     "time-capital",
+     "social-capital",
+     "portfolio-design",
+     "tax-strategy",
+     "income-career",
+     "entrepreneurship",
+     "credit-cards",
+     "alternatives-speculation",
+     "geo-arbitrage-location",
+     "health-longevity",
+     "family-generational-wealth",
+     "withdrawal-decumulation",
+     "knowledge",
+     "pre-retirement-design",
+     "storms-windfalls",
+     "the-long-game"
+    ]
+   }
   },
   "assumptions": {},
   "settings": {
@@ -2348,7 +2398,21 @@
   "snapshots": [],
   "parking": [],
   "spending": {},
-  "session": {},
+  "session": {
+   "weather": {
+    "1": {
+     "at": "2026-11-05T12:00:00.000Z",
+     "Me": [
+      2,
+      2,
+      2,
+      1,
+      0,
+      1
+     ]
+    }
+   }
+  },
   "program": {},
   "scorecard": {},
   "createdAt": "2026-11-05T12:00:00.000Z",

@@ -21,6 +21,7 @@ import { homeworkAll } from '../program.js';
 import { closedMonths, monthName, ymOf, monthsBetween, addMonths } from '../month.js';
 import { money, pct } from '../format.js';
 import { whyText } from '../whynow.js';
+import { identityLine } from './identity-ui.js';
 
 export const RUI = { liquid: false, tab: 'Savings' };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -245,6 +246,7 @@ export function onePagerScreen(app, ctx) {
     S.button('Send summary', { kind: 'primary', iconName: 'mail', onClick: e => sendSummary(ctx, e.currentTarget) })),
   h('div.card.one-pager', {},
     h('h2', {}, `${doc.client.name || 'Client'}, ${new Date(ctx.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`),
+    identityLine(ctx), // batch 25 (Phase 4): who they are with money, one line, and the wording it leads with
     movesBlock(app, ctx), // batch 12 (item 6): Your next 3 moves, then the tiles
     S.summaryStrip(ctx, [
       { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: HOME.netWorth, so: soWhat('netWorth', m) },

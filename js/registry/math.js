@@ -39,6 +39,7 @@ import { debtRangeOf } from '../math/metrics.js';
 import { cardsPicture, creditMove } from '../math/cards.js';
 import { cardLibrary } from '../cardlib.js';
 import { creditHealth } from '../math/debt.js';
+import { identityOf } from '../math/identity.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -518,6 +519,12 @@ export const MATH = [
     fromApp: 'one line in FICO\'s order of weight: on-time payments (a late payment or autopay off), then utilization over UtilHigh, then over UtilBest, then hard inquiries at InquiriesMany, then the age of the oldest card',
     app: c => { const cards = c.live.filter(r => r.kind === 'debt' && r.type === 'Credit card'); const cr = c.doc.profile?.credit || {}; const H = creditHealth(cards.map(r => ({ id: r.id, balance: r.values.balance, limit: r.values.limit, opened: r.values.opened })), { now: c.now });
       return creditMove({ score: cr.score ?? null, overall: H.overall, cards: cards.map(r => ({ balance: r.values.balance ?? 0, limit: r.values.limit ?? 0 })), latePayments: cr.latePayments ?? null, autopayOff: cards.filter(r => r.values.autopay === 'Off').length, inquiries: cr.inquiries ?? null, oldestMonths: H.oldestMonths }).key; } },
+  { id: 'M95', name: 'Who they are with money', inputs: 'the work situation, what is invested, cash and runway (M27), heavy debt, Why now and the goal chips, equity pay, Confidence (F4), the FI Address taps, the 12 letters taps per person, the 6 weather taps per person and session', unit: 'text',
+    fns: ['identity.identityOn', 'identity.isCouple', 'identity.peopleOf', 'identity.inTransition', 'identity.addressFacts', 'identity.familiarityOf', 'identity.stateOf', 'identity.routeOf', 'identity.feelOf', 'identity.stateChar', 'identity.ceilingChar', 'identity.addressOf', 'identity.axisScores', 'identity.tieBreaks', 'identity.lettersOf', 'identity.weatherScore', 'identity.weatherHistory', 'identity.weatherOf', 'identity.tiltOf', 'identity.treeName', 'identity.leadOf', 'identity.asksOf', 'identity.identityOf', 'identity.onePagerLine', 'identity.setAddress', 'identity.toggleModifier', 'identity.setLetter', 'identity.setWeather', 'identity.setLater'],
+    fromApp: 'tap scoring, not a dollar formula (batch 25, Phase 4): the FI Address (familiarity, route and target, state and feeling, the ceiling, a motion flag, modifiers), the four letters (each axis -3 to 3 from Agree 1, Neutral 0, Disagree -1; a tie leans on what SLAM knows) with the 3 skill trees each type points to, the weather (six answers 0 to 2, two turned around, scaled to 12: Clear to 2, Fair to 5, Overcast to 8, Storm above), a couple\'s one ask each, and the tilt (25 tree ids ranked). The value is the client\'s four letters (Coach tools › Discovery)',
+    app: c => identityOf(c.doc, c.ref, { now: c.now, m: c.m }).people[0].letters.type,
+    parts: [{ key: 'address', name: 'FI Address', unit: 'text', fromApp: 'the four characters, the motion flag and the modifiers, read mostly from the household plus up to four taps', app: c => identityOf(c.doc, c.ref, { now: c.now, m: c.m }).address.full },
+      { key: 'weather', name: 'Money weather (latest)', unit: 'text', fromApp: 'the latest session\'s six taps, scaled to 12', app: c => identityOf(c.doc, c.ref, { now: c.now, m: c.m }).people[0].weather.latest }] },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },
   // ---------- Holidays (the calendar question on About you) ----------

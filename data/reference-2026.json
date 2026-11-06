@@ -2043,6 +2043,26 @@
         ],
         "add": "debt:Credit card",
         "why": "batch 30: a card picked from the library shows its rewards, credits and benefits, and the fee check, on Credit cards"
+      },
+      {
+        "terms": [
+          "money personality",
+          "personality",
+          "personality test",
+          "fi address",
+          "money weather",
+          "money anxiety",
+          "money stress",
+          "who they are with money",
+          "money type",
+          "letters"
+        ],
+        "label": "Who they are with money",
+        "go": [
+          "focus:identity@#/tools/discovery"
+        ],
+        "add": "none",
+        "why": "Coach tools › Discovery: the FI Address, the personality letters and the money weather (batch 25, Phase 4)"
       }
     ]
   },

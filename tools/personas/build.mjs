@@ -6,7 +6,7 @@
 // When the backup format changes, run this again and commit the new files.
 //   node tools/personas/build.mjs          writes fixtures/personas/*.json
 //   node tools/personas/build.mjs --check  exits 1 when a committed file is out of date (nothing is written)
-// A def: { id, name, about, profile, client, assumptions, settings, spending, program, records, expected, cannot, view }.
+// A def: { id, name, about, profile, client, assumptions, settings, spending, program, session, records, expected, cannot, view }.
 // records: [{ ref, kind, type, name, amount, per, owner, status, fieldStatus, linkedTo: '@ref', values }]. Every
 // def is made up and safe for the public repo.
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -14,6 +14,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Store, newHousehold, exportFile } from '../../js/records.js';
 import { addPresets, migrateBatch10 } from '../../js/presets.js';
+import { identityOf } from '../../js/math/identity.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const NOW = '2026-11-05T12:00:00.000Z'; // every persona is built, and checked, as of this moment
@@ -41,6 +42,7 @@ export function buildPersona(def) {
     store.setDoc('settings', { fastTrack: { at: NOW, seconds: 300, done: true }, ...(def.settings || {}) });
     if (def.spending) store.setDoc('spending', def.spending);
     if (def.program) store.setDoc('program', def.program); // batch 21: a saved Life Transitions plan
+    if (def.session) store.setDoc('session', def.session); // batch 25: made-up money weather answers (session.weather)
     for (const r of def.records || []) {
       const { ref: key, kind, type = null, fieldStatus, linkedTo, paidWith, ...fields } = r;
       const link = v => (typeof v === 'string' && v.startsWith('@') ? refs[v.slice(1)]?.id ?? (() => { throw new Error(`${def.id}: no row ${v}`); })() : v ?? null);
@@ -51,6 +53,7 @@ export function buildPersona(def) {
   });
   addPresets(store, ref);
   migrateBatch10(store.doc, ref);
+  if (store.doc.profile.identity?.letters) store.doc.profile.identity.tilt = identityOf(store.doc, ref, { now: new Date(NOW) }).tilt; // batch 25: the tilt is kept with the letters, as the app keeps it
   // History keeps when each row was added (the statements read it); the field-by-field entries of the build itself
   // are left out, as they would only say every value was typed at NOW.
   store.doc.history = store.doc.history.filter(h => h.op === 'add');

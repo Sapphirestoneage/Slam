@@ -17,6 +17,7 @@ import { setHomeworkStatus, setHomeworkPerson, setHomeworkOwner, joyOf, confiden
 import { HOMEWORK_STATUSES } from '../registry/program.js';
 import { PERSONS, personLabels } from '../registry/couples.js';
 import { JOY, CONFIDENCE } from '../registry/joy.js';
+import { identitySection } from './identity-ui.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const ROUTE = { income: '#/cash-flow/income', benefit: '#/cash-flow/income', debt: '#/net-worth/debt', account: '#/net-worth/assets', asset: '#/net-worth/assets', coverage: '#/net-worth/protection', bill: '#/cash-flow/budget', milestone: '#/plan/goals', event: '#/plan/next-12-months' };
@@ -164,5 +165,6 @@ export function discoveryScreen(app) {
       text('goal', 'Goal', 'In their words'), text('why', 'Why now', 'What prompted the call')),
     h('div.row-line', { style: { marginTop: '16px', gap: '10px' } }, S.button('Send to client file', { kind: 'primary', size: 'big', iconName: 'right', onClick: send }),
       h('span.muted', {}, 'Creates the client and opens Home.')),
-    h('p.muted.small', { style: { marginTop: '16px' } }, 'Sent the intake form instead? Coach tools, Data, Import intake (CSV).'))];
+    h('p.muted.small', { style: { marginTop: '16px' } }, 'Sent the intake form instead? Coach tools, Data, Import intake (CSV).')),
+    identitySection(app, app.ctx)]; // batch 25 (Phase 4): who they are with money, for the client that is open
 }

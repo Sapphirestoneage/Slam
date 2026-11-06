@@ -10,6 +10,7 @@ import { WHY_CHIPS, WHY_LABELS } from '../whynow.js';
 import { STATES } from './profile.js';
 import { keyNumbers } from '../math/metrics.js';
 import { FREQ } from './money-lists.js';
+import { identityWanted, identityFastTrack, identityOffer } from './identity-ui.js';
 
 const TYPICAL_FREQ = '2 weeks'; // batch 18: the most common US pay schedule, filled in when Paycheck is tapped
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -117,6 +118,9 @@ export function startFastTrack(app, ctx, { then = null } = {}) { // then: what c
   const finish = () => {
     const seconds = save(true); // batch 8: the Start buttons now say Redo
     clearInterval(tick);
+    doneScreen(seconds, true);
+  };
+  const doneScreen = (seconds, saidSaved) => {
     const m = ctx.metrics();
     const missing = ['netWorth', 'surplus', 'savingsRate', 'monthsToFi'].filter(k => m[k].value === null);
     clear(box,
@@ -125,11 +129,13 @@ export function startFastTrack(app, ctx, { then = null } = {}) { // then: what c
       summaryStrip(ctx, [{ label: 'Net worth', result: m.netWorth, key: 'netWorth' }, { label: 'Monthly surplus', result: m.surplus, key: 'surplus' },
         { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate' }, { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi' }]),
       h('p.muted', {}, 'These are totals by area. Going through each tab in full detail tightens them; the gap is tracked on Coach tools.'),
+      // Batch 25 (Phase 4): an optional last step, who they are with money; Do this later is one tap.
+      identityWanted(ctx) ? identityOffer(ctx, () => { document.removeEventListener('keydown', keys); identityFastTrack(app, ctx, box, { onDone: () => { document.addEventListener('keydown', keys); doneScreen(seconds, false); }, onClose: close }); }, () => doneScreen(seconds, false)) : null,
       h('div.row-line', { style: { justifyContent: 'flex-end' } },
         then ? null : h('button.btn', { type: 'button', onclick: () => { close(); app.go('#/home/profile'); } }, 'Keep going in full detail'),
         h(`button.btn${then ? '' : '.primary'}`, { type: 'button', onclick: () => { close(); app.go('#/home/session'); } }, 'Done'),
         then ? h('button.btn.primary', { type: 'button', onclick: () => { close(); then(); } }, 'Walk me through what is left', icon('right')) : null));
-    toast('Fast Track saved.', { undo: () => ctx.store.undo() });
+    if (saidSaved) toast('Fast Track saved.', { undo: () => ctx.store.undo() });
   };
   const draw = () => {
     const L = live();

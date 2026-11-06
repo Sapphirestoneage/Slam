@@ -36,6 +36,70 @@
     "investments": true,
     "real": true,
     "debt": true
+   },
+   "identity": {
+    "address": {
+     "feel": "calm",
+     "earnMore": true,
+     "spendLess": true
+    },
+    "letters": {
+     "Me": [
+      1,
+      1,
+      1,
+      1,
+      -1,
+      -1,
+      -1,
+      -1,
+      1,
+      1,
+      1,
+      -1
+     ],
+     "Partner": [
+      -1,
+      -1,
+      -1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      -1,
+      -1,
+      0,
+      1
+     ]
+    },
+    "tilt": [
+     "income-career",
+     "geo-arbitrage-location",
+     "main-path",
+     "time-capital",
+     "cash-safety-net",
+     "real-estate",
+     "side-hustles",
+     "entrepreneurship",
+     "financial-ops-tooling",
+     "portfolio-design",
+     "tax-strategy",
+     "deals-smart-buying",
+     "debt-leverage",
+     "alternatives-speculation",
+     "insurance-protection",
+     "withdrawal-decumulation",
+     "knowledge",
+     "money-psychology",
+     "social-capital",
+     "pre-retirement-design",
+     "credit-cards",
+     "health-longevity",
+     "family-generational-wealth",
+     "storms-windfalls",
+     "the-long-game"
+    ]
    }
   },
   "assumptions": {},
@@ -2344,7 +2408,29 @@
   "snapshots": [],
   "parking": [],
   "spending": {},
-  "session": {},
+  "session": {
+   "weather": {
+    "1": {
+     "at": "2026-11-05T12:00:00.000Z",
+     "Me": [
+      0,
+      0,
+      1,
+      2,
+      0,
+      2
+     ],
+     "Partner": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    }
+   }
+  },
   "program": {},
   "scorecard": {},
   "createdAt": "2026-11-05T12:00:00.000Z",

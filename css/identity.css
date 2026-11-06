@@ -1,0 +1,44 @@
+/* Who they are with money (batch 25, Phase 4): Coach tools › Discovery and Fast Track's optional step. Calm: no red,
+   the result as a plain card, one tap per line. */
+.id-root { margin-top: var(--s5); max-width: 980px; }
+.id-root .sec-body > .sec { margin-top: var(--s3); }
+.id-disclaimer { color: var(--text-2); font-size: .875rem; margin: 0 0 var(--s3); }
+.id-code-card { display: flex; flex-direction: column; gap: var(--s2); }
+.id-code { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.id-char { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 110px; max-width: 170px; flex: 1 1 110px; padding: var(--s2) var(--s3);
+  border: 1px solid var(--border-row); border-radius: var(--r-input); text-align: center; cursor: help; }
+.id-ch { font-size: 1.75rem; line-height: 1.1; font-weight: 700; }
+.id-mods { font-size: 1.25rem; }
+.id-word { font-size: .8125rem; color: var(--text-2); line-height: 1.3; }
+.id-flag { min-width: 90px; flex: 0 1 120px; }
+.id-route { margin: 0; line-height: 1.5; }
+.id-rows { display: flex; flex-direction: column; }
+.id-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px var(--s4); align-items: center; padding: 8px 0; border-top: 1px solid var(--border-row); }
+.id-row:first-child { border-top: 0; }
+.id-row .seg { justify-self: end; }
+.id-text { line-height: 1.4; }
+.id-n { display: inline-block; min-width: 24px; color: var(--text-2); font-weight: 700; font-size: .875rem; }
+.id-mods-row .picks { justify-content: flex-end; }
+.id-result { display: flex; flex-direction: column; gap: 8px; padding: var(--s3); border: 1px solid var(--border-row); border-radius: var(--r-input); }
+.id-type { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px var(--s3); }
+.id-big { font-size: 1.75rem; line-height: 1.1; letter-spacing: .04em; }
+.id-type-name { font-weight: 600; }
+.id-kv { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px var(--s3); align-items: baseline; }
+.id-trees { display: flex; flex-wrap: wrap; gap: 6px; }
+.id-calm { margin: 0; padding: 8px var(--s3); border-left: 3px solid var(--border-input); background: var(--chip); color: var(--chip-text); border-radius: 4px; }
+.id-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); }
+.id-side { display: flex; flex-direction: column; gap: 8px; padding: var(--s3); border: 1px solid var(--border-row); border-radius: var(--r-input); min-width: 0; }
+.id-side h3 { margin: 0; color: var(--text); font-size: 1rem; }
+.id-side .id-kv { grid-template-columns: 90px minmax(0, 1fr); }
+.id-pair-why { grid-column: 1 / -1; margin: 0; }
+.id-offer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); padding: var(--s3); margin: 0 0 var(--s3); border: 1px solid var(--border-row); border-radius: var(--r-input); }
+.op-identity { margin: 0 0 var(--s3); line-height: 1.5; }
+@media (max-width: 760px) {
+  .id-row { grid-template-columns: minmax(0, 1fr); }
+  .id-row .seg { justify-self: start; }
+  .id-mods-row .picks { justify-content: flex-start; }
+  .id-char { min-width: calc(50% - var(--s2)); max-width: none; }
+  .id-kv { grid-template-columns: minmax(0, 1fr); }
+  .id-pair { grid-template-columns: minmax(0, 1fr); }
+}
+.id-pair > .id-result { align-self: start; }

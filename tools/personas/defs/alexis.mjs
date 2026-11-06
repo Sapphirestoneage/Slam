@@ -10,7 +10,10 @@ export default {
     shared: { rent: true, utilities: true, internet: true, renters: false, groceries: false, household: false },
     sharedAs: { rent: 'Your share', utilities: 'The whole bill', internet: 'The whole bill' },
     whyNow: 'Friend made me come', worry: 'Opening my card statement', goalWords: 'Stop feeling sick about money',
+    // Batch 25: made-up answers to who they are with money (3 address taps, 12 letters): NJU and the down arrow, KOGS.
+    identity: { address: { feel: 'uneasy', earnMore: false, spendLess: true }, letters: { Me: [0, -1, 1, -1, 1, 0, -1, 1, -1, -1, 1, 1] } },
   },
+  session: { weather: { 1: { at: '2026-11-05T12:00:00.000Z', Me: [2, 2, 2, 1, 0, 1] } } }, // batch 25: the money weather, session 1: Overcast
   records: [
     { kind: 'income', type: 'Job', name: 'Paycheck', amount: 1200, per: '2 weeks', values: { basis: 'Take-home', payFrequency: '2 weeks', incomeType: 'W-2' } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 2800, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },

@@ -7,8 +7,12 @@ export default {
     household: 'Couple', mode: 'Married merged', moneyStyle: 'Joint', dependents: 1, kidAges: [1],
     workSituation: 'Employed (W-2)', housing: 'Own', hasCar: true, hasPets: false, incomeStability: 'Steady', healthCoverage: 'Employer',
     areas: { cash: true, investments: true, real: true, debt: true },
+    // Batch 25: made-up answers to who they are with money. The address is the household's (FWC and both arrows); the
+    // letters are each partner's: Priya EPGX, Dev KOVS.
+    identity: { address: { feel: 'calm', earnMore: true, spendLess: true }, letters: { Me: [1, 1, 1, 1, -1, -1, -1, -1, 1, 1, 1, -1], Partner: [-1, -1, -1, 0, 1, 1, 1, 1, -1, -1, 0, 1] } },
   },
   client: { couple: true },
+  session: { weather: { 1: { at: '2026-11-05T12:00:00.000Z', Me: [0, 0, 1, 2, 0, 2], Partner: [1, 1, 1, 1, 1, 1] } } }, // batch 25: Priya Clear, Dev Overcast
   records: [
     { kind: 'income', type: 'Job', name: "Priya's salary", owner: 'Me', amount: 7200, per: 'month', values: { basis: 'Both', gross: 120000, payFrequency: '2 weeks', incomeType: 'W-2', contributionPct: 0.06, hasMatch: 'Yes', matchPct: 1, matchCapPct: 0.04 } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 6100, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
