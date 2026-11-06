@@ -8,6 +8,8 @@
 - No red and no verdict words. No em dashes. Copy is written from the user's side.
 - Buttons look like buttons. Inputs have visible borders. Slim or collapsed by default.
 - Every screen works at 1440, 1280 and 390 wide.
+- Read `DESIGN.md` before any UI work.
+- A batch is not done until `node tools/e2e/layout.cjs` passes (or its remaining failures are listed in the batch report).
 
 ## Every field and formula is registered
 

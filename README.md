@@ -29,6 +29,21 @@ when ExcelJS is installed (`npm install`, or `npm install --no-save exceljs@4.4.
 LibreOffice when that is installed, checking every formula against the app. Without them those few tests
 skip with a message.
 
+### Layout check
+
+```
+python3 -m http.server 8767 &
+node tools/e2e/layout.cjs
+```
+
+Opens every screen at 1440, 1280 and 390 wide, light and dark, for the Demo client and a new client made through Fast
+Track, opens Details panels, and checks the rules in `DESIGN.md`: boxes level in a row, no clipped text, no sideways
+scroll, nothing covering anything, and every What's missing item landing on a box. It needs Playwright (not a SLAM
+dependency). It writes `layout.json`, `report.md` and a few screenshots to `LAYOUT_OUT` (default: a `slam-layout`
+folder in the system temp folder) and exits 1 when anything fails. `SLAM_URL` points it at another server;
+`LAYOUT_QUICK=1` runs 1440 light only; `LAYOUT_OFFLINE=1` stands in for the CDN and fonts where they are blocked
+(`ECHARTS` gives the local echarts.min.js). About 10 minutes for the full run.
+
 ## See the math
 
 Every number in SLAM can be opened in a spreadsheet. On Report › One-pager (or Coach tools › Data), **Open in a
