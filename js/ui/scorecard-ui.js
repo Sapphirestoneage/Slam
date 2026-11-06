@@ -65,7 +65,7 @@ export function scorecardScreen(app, ctx) {
   // Item 35: an area the data cannot rate yet shows the one to three inputs it needs, right here.
   const p = doc.profile, setP = (part, patch) => ctx.store.setDoc('profile', { [part]: { ...(p[part] || {}), ...patch } });
   const needsOf = a => {
-    if (a.id === 'taxes') { const t = p.taxes || {}; return [S.labelled("Last year: refund (+) or owed (-)", S.moneyInput(t.lastYear ?? null, v => setP('taxes', { lastYear: v }), { hint: 'e.g. 1,200 or -800', key: 'score:taxes:lastYear' })),
+    if (a.id === 'taxes') { const t = p.taxes || {}; return [S.labelled("Last year: refund (+) or owed (-)", S.moneyInput(t.lastYear ?? null, v => setP('taxes', { lastYear: v }), { hint: 'e.g. 1,200 or -800', width: 180, key: 'score:taxes:lastYear' })),
       S.labelled('Withholding changed since?', S.toggle(['Yes', 'No'], t.withholdingChanged === true ? 'Yes' : t.withholdingChanged === false ? 'No' : null, v => setP('taxes', { withholdingChanged: v === 'Yes' }), { label: 'Withholding changed', clearable: true }))]; }
     if (a.id === 'income') { const f = p.incomeFacts || {}; const d = h('input', { type: 'month', value: f.lastRaiseDate || '', 'aria-label': 'Last raise' }); d.onchange = () => setP('incomeFacts', { lastRaiseDate: d.value || null });
       return [S.labelled('Last raise', h(`label.field${f.lastRaiseDate ? '.filled' : ''}`, { style: { width: '150px' } }, d)), S.labelled('Raise amount (a year)', S.moneyInput(f.lastRaiseAmount ?? null, v => setP('incomeFacts', { lastRaiseAmount: v }), { hint: 'Add amount', key: 'score:income:raise' })),
@@ -77,8 +77,8 @@ export function scorecardScreen(app, ctx) {
     return null;
   };
   const unratedRow = a => { const needs = needsOf(a); return h('div.card.ok-row', {}, h('div.hole-head', {}, h('strong.hole-name', {}, a.name), ratingTag(null), h('span.spacer'), picker(a)),
-    needs ? h('div.row-line', { style: { gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' } }, h('span.muted.small', {}, 'Needs: '), ...needs) : h('div.row-line', { style: { gap: '12px' } }, h('span.reason.muted', {}, a.reason), h('a', { href: a.route }, 'Open ›'))); };
-  const section = (title, list, row, note = null) => (list.length ? h('section.section', {}, h('div.section-title.area-goals', {}, h('h2', {}, title), h('span.muted', {}, note ?? `${list.length}`)), list.map(row)) : null);
+    needs ? h('div.row-line', { style: { gap: '12px', flexWrap: 'wrap', alignItems: 'flex-start' } }, h('span.muted.small', {}, 'Needs: '), ...needs) : h('div.row-line', { style: { gap: '12px' } }, h('span.reason.muted', {}, a.reason), h('a', { href: a.route }, 'Open ›'))); };
+  const section = (title, list, row, note = null) => (list.length ? S.secWrap(h('section.section', {}, h('div.section-title.area-goals', {}, h('h2', {}, title), h('span.muted', {}, note ?? `${list.length}`)), list.map(row)) , `score:${title}`, { open: title === 'Holes, ranked', summary: list.map(a => a.name).join(', ') }) : null); // batch 13: caret sections; the holes (the core) start open
   const rescore = () => { ctx.store.setIn('scorecard', ['reviewedAt'], ctx.now().toISOString(), 'Re-scored'); S.toast('Marked as re-scored today.'); };
   const confirm = () => { ctx.store.setIn('program', ['fooConfirmed'], sc.here, 'FOO step'); S.toast(`FOO step ${sc.here} confirmed.`); };
   return [head('Scorecard', 'Eleven areas: Strong, OK or Hole; the holes ranked by what filling them pays for the effort',

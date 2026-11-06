@@ -8,7 +8,7 @@ import { STABILITY_MULTIPLIER } from '../registry/assumptions.js';
 import { metrics } from '../math/metrics.js';
 import { setHouseholdMode } from '../couples.js';
 import { h, icon } from './dom.js';
-import { textInput, toggle, select, stepper, checkbox, labelled, moreBlock, pctInput, toast, laterButton, button, moneyInput, parkProfile } from './staples.js';
+import { textInput, toggle, select, stepper, checkbox, labelled, moreBlock, pctInput, toast, laterButton, button, moneyInput, parkProfile, tapPick, secWrap } from './staples.js';
 import { gatesOf, syncCount, WORK, HOUSING, COVERAGE, AREAS, REAL_TYPES, recordFor } from '../gates.js';
 import { ageOf } from '../math/metrics.js';
 import { profileCompletion } from '../profile-completion.js';
@@ -98,11 +98,11 @@ export function profileScreen(app, ctx) {
       gate('Kids', yesNo(g.kids, setKids, 'Has kids'), g.kids ? `${p.dependents} under About you` : null),
       gate('Pets', yesNo(g.pets, v => set({ hasPets: v }), 'Has pets'), null, 'hasPets'),
       gate('Housing', pick(HOUSING.slice(0, 3), g.housing, setHousing, 'Housing')),
-      gate('Work', select(WORK, g.work, v => set({ workSituation: v }), { label: 'Work situation', width: 190, key: 'p:hub-work' })),
+      gate('Work', tapPick(WORK, g.work, v => set({ workSituation: v }), { label: 'Work situation', key: 'p:hub-work' })), // batch 13: 6 choices are taps
       gate('HSA-eligible plan', yesNo(p.hsaEligible ?? null, v => set({ hsaEligible: v }), 'HSA-eligible'), null, 'hsaEligible'),
       gate('FSA at work', yesNo(p.fsa ?? null, v => set({ fsa: v }), 'FSA'), null, 'fsa'),
       gate('Equity pay (ESPP, RSU)', yesNo(p.equityPay ?? null, v => set({ equityPay: v }), 'Equity pay'), null, 'equityPay'),
-      gate('Household', select(MODE_NAMES, modeOf(p), setMode, { label: 'Household mode', width: 190, key: 'p:mode' }), modeOf(p) ? MODES[modeOf(p)].words : 'Solo, dating, living together, engaged, married')));
+      gate('Household', (() => { const t = tapPick(MODE_NAMES, modeOf(p), setMode, { label: 'Household mode', key: 'p:mode', clearable: false }); t.title = modeOf(p) ? MODES[modeOf(p)].words : 'Solo, dating, living together, engaged or married'; return t; })())));
 
   // ---------- About you ----------
   const about = section('About you', 'needs',
@@ -119,20 +119,20 @@ export function profileScreen(app, ctx) {
       ...(p.dependents ? Array.from({ length: p.dependents }, (_, i) => labelled(`Child ${i + 1} age`, textInput(p.kidAges?.[i] ?? null, v => {
         const ages = [...(p.kidAges || [])]; ages[i] = v === null ? null : Number(v); set({ kidAges: ages });
       }, { hint: 'Age', width: 80, key: `p:kid${i}` }))) : []),
-      field('Health coverage', 'healthCoverage', select(COVERAGE, p.healthCoverage ?? null, v => set({ healthCoverage: v }), { label: 'Health coverage', width: 170, key: 'p:health' })),
+      field('Health coverage', 'healthCoverage', tapPick(COVERAGE, p.healthCoverage ?? null, v => set({ healthCoverage: v }), { label: 'Health coverage', key: 'p:health' })),
       field('Email', 'email', textInput(p.email, v => set({ email: v }), { hint: 'Add email', width: 240, key: 'p:email' })),
       field('Phone', 'phone', textInput(p.phone, v => set({ phone: v }), { hint: 'Add phone', width: 160, key: 'p:phone' })))));
 
   // ---------- Work and home ----------
   const work = section('Work and home', 'needs',
     h('div.form-grid', {},
-      field('Work situation', 'workSituation', select(WORK, g.work, v => set({ workSituation: v }), { label: 'Work situation', width: 200, key: 'p:work' }),
+      field('Work situation', 'workSituation', tapPick(WORK, g.work, v => set({ workSituation: v }), { label: 'Work situation', key: 'p:work' }),
         { note: g.betweenJobs ? 'Unemployment and runway show on Income' : g.variable ? 'Variable income shows on Income' : null }),
       field('Housing', 'housing', pick(HOUSING, g.housing, setHousing, 'Housing'))),
     moreBlock('profile:work', () => h('div.form-grid', {},
       field('Worst case: all on me', 'worstCase', yesNo(p.worstCase ?? null, v => set({ worstCase: v }), 'Worst case'), { note: 'Counts housing with no roommate share' }),
       field('big e multiplier', 'bigEMultiplier', textInput(p.bigEMultiplier == null ? null : String(p.bigEMultiplier), v => { const n = v == null || v === '' ? null : Number(v); set({ bigEMultiplier: n != null && Number.isFinite(n) && n > 0 ? n : null }); }, { hint: `${STABILITY_MULTIPLIER[p.incomeStability] ?? 1} from stability`, width: 120, key: 'p:bigEMult' }), { note: 'big e = age / 5 months x this. Blank: Steady 1, Varies 1.25, Unpredictable 1.5 (answer 172)' }),
-      field('Income stability', 'incomeStability', pick(['Steady', 'Varies', 'Unpredictable'], p.incomeStability, v => set({ incomeStability: v }), 'Income stability'), { note: 'Moves the Rule of 5 target' }))));
+      field('Income stability', 'incomeStability', pick(['Steady', 'Varies', 'Unpredictable'], p.incomeStability, v => set({ incomeStability: v }), 'Income stability'), { note: 'Moves the job-loss fund target' }))));
 
   // ---------- Home and shared bills (batch 5, E): who you live with, how many ways a bill is split (you included), and
   // per bill whether it is split and whether the amount is given as your share or the whole bill. Every Budget line
@@ -283,7 +283,24 @@ export function profileScreen(app, ctx) {
   const next = h('div.next-step', {}, c.core.ready
     ? button('Next: Income', { kind: 'primary', iconName: 'right', onClick: () => app.go('#/cash-flow/income') })
     : h('p.muted', {}, `${c.core.missing.length} to go before Next (${c.core.missing.slice(0, 3).join(', ')}${c.core.missing.length > 3 ? ' and more' : ''}). Answer each, or tap Will get it.`));
-  return [whyNow, hub, about, work, home, calendar, benefits, accounts, couple].map(willGetAll).concat([next]);
+  // Batch 13 (item 1): every section is a caret header; Why now and What applies to me (the core) start open, the rest
+  // closed, each with a one-line summary.
+  const yn = v => (v === true ? 'yes' : v === false ? 'no' : '?');
+  const said = (...parts) => parts.filter(Boolean).join(' · ') || 'Not answered yet';
+  const why = chipsOf(p, 'whyNow');
+  const sums = {
+    'why-now': said(why.length ? `${why.slice(0, 2).join(', ')}${why.length > 2 ? ` +${why.length - 2}` : ''}` : null, chipsOf(p, 'worry')[0], chipsOf(p, 'goalWords')[0]),
+    applies: said(`Car ${yn(g.car)}`, `Kids ${yn(g.kids)}`, g.housing, g.work, modeOf(p)),
+    about: said([p.firstName, p.lastName].filter(Boolean).join(' '), age !== null ? `age ${age}` : null, p.state),
+    work: said(g.work, g.housing, p.incomeStability),
+    home: `${roommates} ${roommates === 1 ? 'roommate' : 'roommates'}, split ${ways} ${ways === 1 ? 'way' : 'ways'}`,
+    calendar: said(HOLIDAY_SETS.filter(x => cal[x.id]).map(x => x.label).join(', ') || 'No holidays ticked'),
+    benefits: null, accounts: p.noneOfThese ? 'None of these' : said(AREAS.filter(([k]) => (areas[k] ?? rowsIn(k) > 0) === true).map(([, l]) => l).join(', ')),
+    couple: said(modeOf(p), p.moneyStyle),
+  };
+  const ids = ['why-now', 'applies', 'about', 'work', 'home', 'calendar', 'benefits', 'accounts', 'couple'];
+  return [whyNow, hub, about, work, home, calendar, benefits, accounts, couple].map(willGetAll)
+    .map((sec, i) => (sec ? secWrap(sec, `profile:${ids[i]}`, { open: i < 2, summary: sums[ids[i]] }) : sec)).concat([next]);
 }
 
 export { profileCompletion } from '../profile-completion.js';

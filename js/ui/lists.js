@@ -5,7 +5,7 @@ import { addPresets } from '../presets.js';
 import { METHODS } from '../registry/debt.js';
 import { personLabels } from '../registry/couples.js';
 import { institutionLink } from './institutions-ui.js';
-import { recordList as S_recordList, popover as S_popover, closePop as S_closePop, moreBlock as S_moreBlock, fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, perChip, nameInput, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
+import { tapPick, recordList as S_recordList, popover as S_popover, closePop as S_closePop, moreBlock as S_moreBlock, secWrap as S_secWrap, fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, perChip, nameInput, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
 import { paidInFull } from '../completion.js';
 import { pct } from '../format.js';
 import { feeApr, promoPayoffOf } from '../math/debt.js';
@@ -78,7 +78,7 @@ export function debtList(ref, { cards = null } = {}) {
             pctInput(null, v => up({ apr: v }), { key: `${r.id}:apr`, hint: shown }),
             h('button.btn.small.use-guess', { type: 'button', title: `Keep ${shown}% (the typical ${r.type.toLowerCase()} rate) as the APR`, 'aria-label': `Use ${shown}% as the APR for ${r.name || r.type}`, onclick: () => { ctx.store.transaction('Use the typical APR', () => { ctx.store.update(r.id, { apr: typical }); ctx.store.setFieldStatus(r.id, 'apr', null); }); toast(`APR set to ${shown}%.`, { undo: () => ctx.store.undo() }); } }, 'Use'));
         }
-        return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, d?.aprGuess ? h('span.tag.guess', {}, '? Guess') : null, pctInput(r.values.apr, v => up({ apr: v }), { key: `${r.id}:apr` }));
+        return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, d?.aprGuess ? h('span.tag.guess', {}, '? Guess') : null, pctInput(r.values.apr, v => up({ apr: v }), { key: `${r.id}:apr`, hint: 'APR' }));
       } },
       { label: 'Payment / mo', num: true, render: (ctx, r, m, up) => {
         const d = m.debts.find(x => x.id === r.id);
@@ -144,7 +144,7 @@ export function debtStrip(ctx, m) {
   return summaryStrip(ctx, [
     // Total debt sits in the Net worth headline above.
     { label: 'Monthly payments', result: payments, key: 'debtPayments', lowerIsGood: true },
-    { label: 'Debt-free', result: free, key: 'debtFreeMonths', lowerIsGood: true, render: dateOnly, note: free.value !== null ? note : null },
+    { label: 'Debt-free', result: free, key: 'debtFreeMonths', lowerIsGood: true, render: dateOnly, note: free.value !== null ? [note, usable.length > 1 ? 'Freed payments roll into the next debt' : null].filter(Boolean).join(' · ') || null : null }, // batch 13: the date assumes the roll, so it says so
     { label: 'Interest left', result: interest, key: 'debtInterest', lowerIsGood: true, note },
   ]);
 }
@@ -153,8 +153,11 @@ export function debtStrip(ctx, m) {
 export function debtRatios(ctx, m) {
   const usable = m.inputs.debts.filter(d => d.balance > 0);
   const gross = m.inputs.grossAnnual === null ? null : m.inputs.grossAnnual / 12; // typed or worked out from take-home (R046)
-  const dti = debtToIncome({ monthlyDebtPayments: usable.length ? sum(m.inputs.debts, d => d.payment) : null, grossMonthly: gross });
+  // Batch 13: no debt on file is a real 0% (no payments), not a lock; no card means utilization does not apply.
+  const noDebt = !ctx.store.find(r => r.kind === 'debt').length || m.inputs.gates?.areas?.debt === false;
+  const dti = debtToIncome({ monthlyDebtPayments: usable.length ? sum(m.inputs.debts, d => d.payment) : noDebt ? 0 : null, grossMonthly: gross });
   const cards = ctx.store.find(r => r.kind === 'debt' && r.type === 'Credit card').map(r => ({ balance: r.values.balance, limit: r.values.limit }));
+  if (!cards.length) return { dti, util: { id: 'M35', value: 0, needs: [], unit: 'pct', none: true, text: 'No credit cards on file, so there is no utilization to count.' } };
   const util = utilization(cards);
   return { dti, util: util.hidden ? needs('M35', ['credit limits'], { unit: 'pct' }) : util };
 }
@@ -167,7 +170,7 @@ export function spendingList(ref, { pass = 'Plan', ym = null, groupBy = 'DRAFTT'
   // Answer 89: on Plan the Plan column shows only when this month differs from the usual for at least one line.
   const monthCols = pass === 'Plan' && !planColumn ? [] : monthColumns(pass, ym);
   return {
-    kind: 'bill', area: 'needs', title: only ? `${categoryName(only)}: the lines` : `Spending lines: ${pass}, ${monthName(ym)}`, thing: { one: 'line', plural: 'lines' },
+    kind: 'bill', area: 'needs', title: only ? `${categoryName(only)}: the lines` : `Spending lines: ${pass}, ${monthName(ym)}`, thing: { one: 'line', plural: 'lines' }, caret: !only, parentOf: only ? ctx => ctx.store.find(x => isCategoryRecord(x) && x.type === only)[0]?.id : undefined, // batch 13: inside a category the category row is the caret, and Fix it opens it first
     filter: r => r.kind === 'bill' && !r.values.irregular && (!only || categoryKeyOf(r) === only),
     // Eliminated lines fold away at the bottom; one tap brings one back.
     // Answer to 92: the T letter reads Health and self-care (therapy, insurance, copays, prescriptions); haircuts, personal
@@ -369,7 +372,7 @@ export const debtCharts = [
 ];
 
 // ---------- Debt detail behind More, by type (Mockup: Debt) ----------
-const stress = (r, up) => labelled('Stress 1 to 5', toggle(['1', '2', '3', '4', '5'], r.stress ? String(r.stress) : null, v => up({ stress: Number(v) }), { label: 'Stress' }));
+const stress = (r, up) => labelled('Stress 1 to 5', toggle(['1', '2', '3', '4', '5'], r.stress ? String(r.stress) : null, v => up({ stress: Number(v) }), { label: 'Stress', key: `${r.id}:stress` }));
 // Batch 5 (E3): a split bill says on the row what the amount is: "$1,500 your share" or "$240 whole bill, $60 your share".
 function shareChip(ctx, r) {
   if (r.amount == null) return null;
@@ -397,19 +400,19 @@ function debtSecondary(ctx, r, up) {
         textInput(v.promoEnd, x => up({ promoEnd: x }), { hint: 'YYYY-MM', width: 110 })), { note: promoPayoffOf(r, ctx.now())?.text ?? 'Warns 60 days before it ends' }) : null,
       labelled('Due day', textInput(v.dueDay, x => up({ dueDay: x }), { hint: 'Add day', width: 90, key: `${r.id}:dueDay` }), { note: 'Shows on the cash flow calendar; a fixed line with no day sits on the 1st with a ? badge' }),
       labelled('Statement closes on day', dayBox(v.statementDay, x => up({ statementDay: x })), { note: 'The balance reported to the bureaus', ...park(ctx, r, 'statementDay') }),
-      labelled('Credit limit', moneyInput(v.limit, x => up({ limit: x }), { hint: 'Add limit' }), { note: 'For utilization' }),
+      labelled('Credit limit', moneyInput(v.limit, x => up({ limit: x }), { hint: 'Add limit', key: `${r.id}:limit` }), { note: 'For utilization' }),
       labelled('Utilization', v.limit && v.balance != null ? h('span.computed', { title: 'Balance divided by limit' }, pct(v.balance / v.limit)) : h('span.muted', {}, 'Needs balance and limit'),
         { note: v.limit && v.balance / v.limit > 0.3 ? 'Over 30% can lower your score' : null }),
       labelled('Autopay', toggle(['On', 'Off'], v.autopay ?? null, x => up({ autopay: x }), { label: 'Autopay', clearable: true }), { note: v.autopay === 'Off' ? 'Turn it on for at least the minimum: one late payment hurts' : null, ...park(ctx, r, 'autopay') }),
-      labelled('Rewards', select(['Cash back', 'Points', 'Miles', 'None'], v.rewards ?? null, x => up({ rewards: x }), { label: 'Rewards type', width: 140 }), park(ctx, r, 'rewards')),
+      labelled('Rewards', tapPick(['Cash back', 'Points', 'Miles', 'None'], v.rewards ?? null, x => up({ rewards: x }), { label: 'Rewards type' }), park(ctx, r, 'rewards')),
       labelled('Personal or business', toggle(['Personal', 'Business'], v.use ?? null, x => up({ use: x }), { label: 'Personal or business' })),
       billsOnCard(ctx, r),
       stress(r, up), hassle(r, up)];
   }
   if (r.type === 'Student loan') {
     return [
-      labelled('Federal or private', toggle(['Federal', 'Private'], v.federal ?? null, x => up({ federal: x }), { label: 'Federal or private' })),
-      applies('repaymentPlan', { g, r }) ? labelled('Repayment plan', select(['Standard', 'Income-driven', 'Other'], v.plan ?? null, x => up({ plan: x }), { label: 'Repayment plan', width: 170 })) : null,
+      labelled('Federal or private', toggle(['Federal', 'Private'], v.federal ?? null, x => up({ federal: x }), { label: 'Federal or private', key: `${r.id}:federal` })),
+      applies('repaymentPlan', { g, r }) ? labelled('Repayment plan', tapPick(['Standard', 'Income-driven', 'Other'], v.plan ?? null, x => up({ plan: x }), { label: 'Repayment plan' })) : null,
       labelled('Servicer', textInput(v.servicer, x => up({ servicer: x }), { hint: 'Add servicer', width: 170 })),
       stress(r, up), hassle(r, up)];
   }
@@ -419,7 +422,7 @@ function debtSecondary(ctx, r, up) {
     return [
       labelled(`Linked ${kind.toLowerCase()}`, select(things.map(a => [a.id, a.name || kind]), r.linkedTo, x => up({ linkedTo: x }), { label: `Linked ${kind.toLowerCase()}`, hint: things.length ? `Pick the ${kind.toLowerCase()}` : `No ${kind.toLowerCase()} on Assets yet`, width: 190 }),
         { note: 'The same loan shows on the asset' }),
-      r.type === 'Car loan' ? labelled('Months left', textInput(v.monthsLeft, x => up({ monthsLeft: x === null ? null : Number(x) }), { hint: 'Add months', width: 110 }), { note: 'Checks the payoff date' })
+      r.type === 'Car loan' ? labelled('Months left', textInput(v.monthsLeft, x => up({ monthsLeft: x === null ? null : Number(x) }), { hint: 'Add months', width: 130 }), { note: 'Checks the payoff date' })
         : labelled('Fixed or adjustable', toggle(['Fixed', 'Adjustable'], v.rateType ?? null, x => up({ rateType: x }), { label: 'Fixed or adjustable' })),
       r.type === 'Mortgage' ? labelled('Years left', textInput(v.yearsLeft, x => up({ yearsLeft: x === null ? null : Number(x) }), { hint: 'Add years', width: 100 })) : null,
       stress(r, up), hassle(r, up)];
@@ -516,8 +519,8 @@ export function creditCard(ctx) {
       labelled('Hard inquiries in the last 2 years', tapCount(c.inquiries ?? null, n => set({ inquiries: n }), 'Hard inquiries in the last 2 years'), { note: 'More than 2 holds a strong score at OK' }),
       labelled('Credit freeze', h('div.row-line', { style: { gap: '6px', flexWrap: 'wrap' } }, BUREAUS.map(b => h('button.chip-btn', { type: 'button', 'aria-pressed': String(freeze[b] === true), title: freeze[b] === true ? `Frozen at ${b}. Tap to mark it off` : `Tap to mark it frozen at ${b}`, onclick: () => set({ [`freeze${b}`]: freeze[b] === true ? false : true }) }, `${b}: ${freeze[b] === true ? 'on' : freeze[b] === false ? 'off' : 'not set'}`))),
         { note: H.frozen.length === 3 ? 'Frozen at all three' : 'A freeze stops new accounts in your name' }));
-  return h('section.section.area-debt', {}, h('div.section-title', {}, h('h2', {}, 'Credit health')),
-    h('div.card', {}, scoreLine, S_moreBlock('cards:credit-health', rest, { label: 'Each card, account age, late payments, inquiries, freeze' })));
+  return S_secWrap(h('section.section.area-debt', {}, h('div.section-title', {}, h('h2', {}, 'Credit health')),
+    h('div.card', {}, scoreLine, S_moreBlock('cards:credit-health', rest, { label: 'Each card, account age, late payments, inquiries, freeze' }))), 'cards:health', { summary: [c.score != null ? `Score ${c.score}${c.source ? ` (${c.source})` : ''}` : 'No score yet', H.overall != null ? `Utilization ${pct(H.overall)}` : cards.length ? 'Utilization needs a card limit' : null].filter(Boolean).join(' · ') }); // batch 13: a caret section, closed by default
 }
 const mathButtonFor = (r, text) => h('span', { title: r.text }, text);
 // The month a card was opened, as two taps (a month, then a year): no typing.
@@ -548,13 +551,13 @@ function debtTertiary(ctx, r, up) {
   if (r.type === 'Credit card') {
     return [labelled('Opened', openedPicker(ctx, r), { note: 'Card age' }), // batch 11: two taps, no typing
       labelled('Annual fee', moneyInput(v.annualFee, x => up({ annualFee: x }), { hint: 'Add fee' })),
-      labelled('Sign-up bonus: $, spend, by when', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+      labelled('Sign-up bonus: $, spend, by when', h('span.row-line', { style: { gap: '6px', flexWrap: 'wrap' } },
         moneyInput(v.bonus, x => up({ bonus: x }), { hint: 'Bonus' }), moneyInput(v.bonusSpend, x => up({ bonusSpend: x }), { hint: 'Spend' }),
-        textInput(v.bonusBy, x => up({ bonusBy: x }), { hint: 'YYYY-MM-DD', width: 120 }))), notes];
+        (() => { const d = h('input', { type: 'date', value: v.bonusBy || '', 'aria-label': 'Bonus by' }); d.onchange = () => up({ bonusBy: d.value || null }); return h(`label.field${v.bonusBy ? '.filled' : ''}`, { style: { width: '170px' } }, d); })())), notes]; // batch 13: a date picker, not typed YYYY-MM-DD
   }
   if (r.type === 'Student loan') {
     return [applies('pslf', { g, r }) ? labelled('PSLF eligible', yn3(v.pslf, x => up({ pslf: x }), 'PSLF')) : null,
-      labelled('Forbearance or deferment', select(['None', 'Forbearance', 'Deferment'], v.forbearance ?? null, x => up({ forbearance: x }), { label: 'Forbearance or deferment', width: 170 })), notes];
+      labelled('Forbearance or deferment', tapPick(['None', 'Forbearance', 'Deferment'], v.forbearance ?? null, x => up({ forbearance: x }), { label: 'Forbearance or deferment' })), notes];
   }
   return [notes];
 }
@@ -568,7 +571,7 @@ export function categoryList(ref, { pass = 'Plan', ym = null } = {}) {
   return {
     kind: 'spending', area: 'needs', title: 'Budget by category', thing: { one: 'category', plural: 'categories' }, key: 'categories',
     filter: r => isCategoryRecord(r), order: (a, b) => CATEGORIES.indexOf(a.type) - CATEGORIES.indexOf(b.type),
-    fixed: true, noAdd: true, moreLabel: 'Lines', notForMe: true, paidWith: false, coreFields: ['amount'],
+    fixed: true, noAdd: true, moreLabel: 'Lines', notForMe: true, paidWith: false, coreFields: ['amount'], focusOf: (r, f) => `cat:${r.type}:${f}`, // batch 13: Fix it lands on the category's box
     hasValue: (ctx, r) => catOf(ctx, r)?.amount != null,
     columns: [
       { label: 'Category', render: (ctx, r) => { const c = catOf(ctx, r); return h('span.stack', { style: { gap: '2px' } }, h('strong', {}, c?.name ?? r.name ?? r.type),
@@ -576,7 +579,7 @@ export function categoryList(ref, { pass = 'Plan', ym = null } = {}) {
       { label: 'Amount', num: true, render: (ctx, r, m, up) => {
         const c = catOf(ctx, r);
         if (!c) return null;
-        if (r.type === 'Debt') return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } }, fromButton('From Debt', '#/net-worth/debt', null, { value: amount(ctx, c.amount, { chip: false }) }), h('span.muted.small', {}, 'a month'));
+        if (r.type === 'Debt') return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } }, (() => { const fb = fromButton('From Debt', '#/net-worth/debt', null, { value: amount(ctx, c.amount, { chip: false }) }); fb.dataset.focus = `cat:${r.type}:amount`; return fb; })(), h('span.muted.small', {}, 'a month')); // batch 13: Fix it lands on the button that opens Debt
         const note = c.from === 'updated' ? h('span.computed.small.cat-note', { title: `The lines add up to ${money(c.linesSum)}, more than the ${money(c.typed)} typed, so the category reads the line total.` }, `${money(c.linesSum)} · updated from ${money(c.typed)}`)
           : c.from === 'lines' ? h('span.computed.small.cat-note', { title: 'No amount typed: the category reads its lines' }, `${money(c.linesSum)} from the lines`)
           : c.from === 'typed' && c.lines.length ? (c.unassigned > 0.5 ? h('span.muted.small.cat-note', {}, `${money(c.unassigned)} not assigned yet`) : h('span.muted.small.cat-note', {}, 'Fully itemized')) : null;
@@ -616,7 +619,7 @@ function elseBucket(ctx, key, rows) {
   const e = everythingElse(rows.filter(r => !r.auto), cat?.values?.elseAmount ?? null, r => (r.amount == null ? 0 : monthlyFrom(r.amount, r.per).value));
   return h('span.row-line.else-bucket', { style: { gap: '8px', flexWrap: 'wrap' } },
     e.from === 'pieces' ? h('span.computed.small', { title: 'The lines inside have numbers, so they are what counts' }, `${money(e.piecesSum)} from ${e.real} ${e.real === 1 ? 'line' : 'lines'}${e.replaced ? ` · replaces the ${money(e.bucket)} rough amount` : ''}`)
-      : cat ? h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } }, h('span.label', {}, 'One rough amount'), moneyInput(e.bucket, v => ctx.store.update(cat.id, { elseAmount: v }), { hint: 'A month', key: `else:${key}:amount` })) : null);
+      : cat ? h('span.row-line', { style: { gap: '6px', flexWrap: 'wrap' } }, h('span.label', {}, 'One rough amount'), moneyInput(e.bucket, v => ctx.store.update(cat.id, { elseAmount: v }), { hint: 'A month', key: `else:${key}:amount` })) : null);
 }
 // The timing sentence (5b). Every part is a tap: how often, then day chips (1st, 15th, Last day, Other opens a 1 to 31
 // grid), weekday chips or month chips. No typing.
@@ -636,7 +639,7 @@ function timingRow(ctx, r, up) {
     t.freq === 'month' || (t.freq === 'year' && t.month) ? dayChips : null,
     t.freq === 'week' ? chips(WEEKDAY_CHIPS, t.weekday, v => tap({ weekday: v }), 'Weekday', `${r.id}:weekday`) : null,
     t.freq === 'year' ? chips(MONTH_CHIPS, t.month, v => tap({ month: v }), 'Month', `${r.id}:monthDue`) : null,
-    h('div.row-line', { style: { gap: '8px', flexWrap: 'wrap' } }, h('span.label.has-tip', { title: 'Same amount every time feeds the fixed floor: what you pay no matter what' }, 'Amount'),
+    h('div.row-line', { style: { gap: '8px', flexWrap: 'wrap' } }, h('span.label.has-tip', { title: 'Same amount every time feeds the fixed floor: what you pay no matter what' }, 'Each time'),
       toggle([['Fixed', 'Same amount every time'], ['Variable', 'It changes']], r.values.amountType ?? null, v => up({ amountType: v }), { label: 'Amount is' })));
 }
 // Who pays (5c): one segmented row (Me / Splitting / Someone else / Not for me; the stored values stay), its detail

@@ -4,9 +4,9 @@
 import { h } from './dom.js';
 import { popover, closePop, toast, button } from './staples.js';
 
-export function reportThis(app) {
-  const btn = h('button.report-this.no-print', { type: 'button', title: 'Something confusing or broken? Tell us here' }, 'Report this');
-  btn.onclick = () => {
+// Batch 13 (item 3): opened from the More menu (anchor: the More button), so it never floats over the page.
+export function reportThis(app, btn) {
+  {
     if (!app.hasClient) { toast('Open a client first: the note is saved in their file.'); return; }
     const screen = { route: location.hash || '#/home/session', title: document.querySelector('main h1')?.textContent?.trim() || null };
     const box = h('textarea.notes-box', { placeholder: 'What happened, or what did you expect?', 'aria-label': 'What happened', rows: 4 });
@@ -23,8 +23,7 @@ export function reportThis(app) {
       h('span.muted.small', {}, `On ${screen.title || 'this screen'}. Saved with the time.`), h('label.field', { style: { width: '100%' } }, box),
       h('div.row-line', { style: { gap: '8px' } }, button('Save note', { kind: 'primary', size: 'small', onClick: save }), button('Cancel', { size: 'small', onClick: closePop }))), { width: 340 });
     setTimeout(() => box.focus());
-  };
-  document.body.append(btn);
+  }
 }
 
 // Coach tools › Session: the notes so far.
@@ -32,5 +31,5 @@ export function feedbackCard(ctx) {
   const list = ctx.store.doc.session?.feedback || [];
   return h('div.card', {}, h('h3', {}, `Beta notes (${list.length})`), list.length
     ? h('table.rows.mini', {}, h('tbody', {}, [...list].reverse().map(f => h('tr', {}, h('td', {}, new Date(f.at).toLocaleString()), h('td', {}, f.title || f.screen), h('td', { style: { whiteSpace: 'normal' } }, f.note)))))
-    : h('p.muted.small', {}, 'None yet. The Report this button at the bottom right of every screen adds one; the export includes them.'));
+    : h('p.muted.small', {}, 'None yet. More › Report this screen, on every screen, adds one; the export includes them.'));
 }

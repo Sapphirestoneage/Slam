@@ -372,7 +372,7 @@ async function fastTrack(page, meta, { finish }) {
     if (/done|Every lens|Almost/.test(title)) { await scanHere(page, { ...meta, route: 'Fast Track: done', state: '' }, ['level', 'clipped', 'overflow']); break; }
     // Simple answers: the first choice of every toggle with none picked, the first option of every select, round numbers.
     await page.evaluate(() => {
-      for (const seg of document.querySelectorAll('.ft-box .seg')) if (!seg.querySelector('[aria-pressed="true"], .on, [aria-checked="true"]')) seg.querySelector('button')?.click();
+      for (const seg of document.querySelectorAll('.ft-box .seg, .ft-box .tap-pick')) if (!seg.querySelector('[aria-pressed="true"], .on, [aria-checked="true"]')) seg.querySelector('button')?.click(); // a row of tap chips (batch 13) answers like a toggle
     });
     await settle(page, 120);
     const boxes = page.locator('.ft-box input:not([type=checkbox])');

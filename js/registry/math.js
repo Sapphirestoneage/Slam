@@ -270,8 +270,8 @@ export const MATH = [
       app: c => (c.x.takeHome ? sum(c.x.lines.filter(l => l.draftt === k), l => myShare(l, { roommates: c.x.roommates }).value) / c.x.takeHome : null) })) },
   { id: 'M2A', name: 'Housing %', inputs: 'rent or mortgage, utilities', unit: 'pct', fns: ['spending.housingPct'],
     cols: [{ area: 'spending', key: 'housing', label: 'Housing share a month (M2A)', unit: 'money', f: 'IF(OR(COUNTIF(Housing_category,{category})=0,{InMath}<>"Yes"),"",{@M21})' }],
-    sheet: 'IF(OR(Math_M12="",COUNTIFS(Spend_category,"Rent or mortgage",Spend_amount,"<>",Spend_InMath,"Yes")=0),"",SUM(Spend_housing)/Math_M12)',
-    label: 'Your share of rent and utilities over take-home (the reference line is Housing_line)', app: c => c.m.housingPct.value },
+    sheet: 'IF(Math_M12="","",IF(COUNTIFS(Spend_category,"Rent or mortgage",Spend_amount,"<>",Spend_InMath,"Yes")>0,SUM(Spend_housing)/Math_M12,IF(SUMIFS(Debt_payUsed,Debt_Type,"Mortgage")>0,(SUM(Spend_housing)+SUMIFS(Debt_payUsed,Debt_Type,"Mortgage"))/Math_M12,"")))',
+    label: 'Your share of rent (or the mortgage payment) and utilities over take-home (the reference line is Housing_line)', app: c => c.m.housingPct.value },
   { id: 'M2B', name: 'Accrual spread and prepaid balance', inputs: 'amount, date paid, months covered', unit: 'money', fns: ['spending.prepaidLeft'],
     fromApp: 'needs the date each prepayment was made, kept on the Budget line in SLAM', app: () => null },
 

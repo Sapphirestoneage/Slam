@@ -56,7 +56,7 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
     s.status === 'Optional' && s.id !== '0b' ? h('p.muted.small.foo-slim', {}, s.note) : S.moreBlock(`foo:step:${s.id}`, () => stepDetail(ctx, s, f), { label: 'Full detail' })); // answer 181: step 8 stays, one slim line
   const giving = p.giving || {};
   const setGiving = patch => setP({ giving: { ...giving, ...patch } });
-  const settings = S.moreBlock('foo:settings', () => h('div.stack', { style: { gap: '12px' } },
+  const settings = S.sec('foo:settings', { title: 'Giving, launch and the job', summary: [giving.on ? 'Giving on' : 'Giving off', p.keepJobAfterLaunch ? `Keep a job: ${p.keepJobAfterLaunch}` : null].filter(Boolean).join(' · ') }, () => h('div.card', {}, h('div.stack', { style: { gap: '12px' } },
     S.labelled('Giving (step 5b, beside the tax-free step)', h('div.row-line', { style: { gap: '8px' } },
       S.toggle([[false, 'Off'], [true, 'On']], !!giving.on, v => setGiving({ on: v }), { label: 'Giving' }),
       giving.on ? S.toggle([['pct', '% of pay'], ['amount', 'A set amount']], giving.mode || 'pct', v => setGiving({ mode: v }), { label: 'Giving as' }) : null,
@@ -65,15 +65,15 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
       giving.on && giving.mode === 'amount' ? S.moneyInput(giving.amount ?? null, v => setGiving({ amount: v }), { hint: 'A month', key: 'foo:give-amt' }) : null), { note: 'Off for everyone until turned on. Giving unlocks once heavy debt is paid off. Oxygen mask on you first.' }),
     S.labelled('After launch, will you keep a job?', S.toggle([['Yes', 'Yes'], ['No', 'No']], p.keepJobAfterLaunch ?? null, v => setP({ keepJobAfterLaunch: v }), { label: 'Keep a job after launch', clearable: true }),
       { note: 'Asked once: it feeds Quiet Quitting FI (a kept job adds its match) and Barista FI' }),
-    S.checkbox('Quiet Quitting FI opens the launch window', !!set.qqOpensLaunch, v => ctx.store.setDoc('settings', { qqOpensLaunch: v }), { key: 'foo:qq-opens' })), { label: 'Giving, launch and the job question' });
+    S.checkbox('Quiet Quitting FI opens the launch window', !!set.qqOpensLaunch, v => ctx.store.setDoc('settings', { qqOpensLaunch: v }), { key: 'foo:qq-opens' })))); // batch 13: a caret section, closed by default
   return [head('FOO', 'Your order of operations: what to fund next, and when',
       S.toggle([[false, 'SLAM path'], [true, "With the Money Guy's original"]], FUI.original, v => { FUI.original = v; app.render(); }, { label: 'Show the original nine' })),
     f.gap ? gapCard(app, ctx, undefined, { where: 'foo' }) : null, // batch 12 (item 5): the gap on top
-    path, settings,
-    h(`div.foo-cols${FUI.original ? '.two' : ''}`, {},
+    S.sec('foo:path-sec', { title: 'Your path', open: true, summary: f.here ? `You are at step ${f.here}` : null }, path), settings, // batch 13: the path and the steps are the core (open)
+    S.sec('foo:steps', { title: 'Every step', open: true, summary: `${f.steps.filter(s => s.status === 'Done').length} of ${f.steps.length} done` }, h(`div.foo-cols${FUI.original ? '.two' : ''}`, {},
       h('div.foo-steps', {}, doneLine(f), f.steps.filter(s => s.status !== 'Done' || FUI.showDone).map(stepRow)), // item 32: done steps fold into one slim line
       FUI.original ? h('div.card.foo-original', {}, h('h2', {}, "The Money Guy's original"), h('ol', {}, ORIGINAL.map(o => h('li', {}, o))),
-        h('p.muted.small', {}, 'For comparison. SLAM adds joy up front, giving at the tax-free step, income gaps, the three big e layers, Quiet Quitting FI and a launch window.')) : null)];
+        h('p.muted.small', {}, 'For comparison. SLAM adds joy up front, giving at the tax-free step, income gaps, the three big e layers, Quiet Quitting FI and a launch window.')) : null))];
 }
 
 // Item 32: the done steps as one slim line, opened on request.
@@ -91,7 +91,7 @@ function stepDetail(ctx, s, f) {
     const setL = patch => ctx.store.setDoc('profile', { launch: { ...launch, ...patch } });
     const d = h('input', { type: 'month', value: launch.date || '', 'aria-label': 'Launch month' });
     d.onchange = () => setL({ date: d.value || null });
-    extra.push(h('div.row-line', { style: { gap: '8px' } }, S.select(LAUNCH_MOVES, launch.move ?? null, v => setL({ move: v }), { label: 'Launch move', hint: 'Pick a launch move', width: 230 }),
+    extra.push(h('div.row-line', { style: { gap: '8px' } }, S.tapPick(LAUNCH_MOVES, launch.move ?? null, v => setL({ move: v }), { label: 'Launch move' }),
       h(`label.field${launch.date ? '.filled' : ''}`, { style: { width: '170px' } }, d)));
   }
   if (s.id === '6' && f.qq?.reached) extra.push(h('p.qq-reached', {}, h('strong', {}, f.qq.reachedText)));

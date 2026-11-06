@@ -93,7 +93,7 @@ export function goalsScreen(app, ctx) {
   const reveal = PUI.reveal;
   const top = h('div', {}, goalsTop(app, ctx, { reveal }));
   ctx.onRefresh(() => S.keepPlace(() => clear(top, goalsTop(app, ctx))));
-  return [head('Goals', 'FI target, assumptions, milestones', S.live(ctx, () => fillCounter(app, goalsCompletion(ctx)) ?? h('span'))), S.live(ctx, () => gapCard(app, ctx, ctx.metrics(), { where: 'goals' }) ?? h('span')), top, S.live(ctx, () => goalChipSuggestions(ctx)), S.recordList(ctx, milestoneList())]; // batch 14: X of Y filled in the head
+  return [head('Goals', 'FI target, assumptions, milestones', S.live(ctx, () => fillCounter(app, goalsCompletion(ctx)) ?? h('span'))), S.live(ctx, () => gapCard(app, ctx, ctx.metrics(), { where: 'goals' }) ?? h('span')), top, S.live(ctx, () => goalChipSuggestions(ctx)), S.recordList(ctx, { ...milestoneList(), open: false })]; // batch 14: X of Y filled in the head; batch 13: milestones start closed
 }
 // Batch 10 (item 4): the goal chips from About you › Why now that match a Plan goal or FOO step, each with Add. The
 // coach confirms; nothing is added on its own. Not now sets one aside for this client.
@@ -101,14 +101,14 @@ function goalChipSuggestions(ctx) {
   const p = ctx.store.doc.profile;
   const list = goalSuggestions(p, ctx.visible(r => r.kind === 'milestone' || r.kind === 'event'));
   if (!list.length) return h('span');
-  return h('div.card.goal-suggest', {}, h('div.row-line', { style: { gap: '8px' } }, h('strong', {}, 'From Why now'), h('span.muted.small', {}, 'Goals they picked. Add the ones that fit.')),
+  return S.secCard(h('div.card.goal-suggest', {}, h('div.row-line', { style: { gap: '8px' } }, h('h3', {}, 'From Why now'), h('span.muted.small', {}, 'Goals they picked. Add the ones that fit.')),
     h('div.stack', { style: { gap: '6px', marginTop: '8px' } }, list.map(g => h('div.row-line', { style: { gap: '10px', flexWrap: 'wrap' } },
       h('span', { style: { flex: '1 1 220px' } }, g.main ? '★ ' : '', h('strong', {}, g.chip), h('span.muted.small', {}, ` · ${g.step}`)),
       // Batch 12 (item 7): a FOO step is opened, not added; a Fund the Future goal is an event saved for each month.
       g.kind === 'foo' ? S.button(`Open step ${g.fooStep}`, { size: 'small', iconName: 'right', kind: 'primary', onClick: () => { location.hash = '#/plan/foo'; } })
         : g.kind === 'future' ? S.button('Add', { size: 'small', iconName: 'plus', kind: 'primary', onClick: () => { ctx.store.add('event', { name: g.name, values: { sinking: true } }); S.toast(`${g.name} added to Fund the Future: set its amount and month under Sinking funds.`, { undo: () => ctx.store.undo() }); } })
         : S.button('Add', { size: 'small', iconName: 'plus', kind: 'primary', onClick: () => { ctx.store.add('milestone', { name: g.name, values: { mode: g.type === 'Custom' ? 'date' : 'when' } }, { type: g.type }); S.toast(`${g.name} added to the milestones.`, { undo: () => ctx.store.undo() }); } }),
-      S.button('Not now', { size: 'small', onClick: () => ctx.store.setDoc('profile', { goalSuggest: [...(p.goalSuggest || []), g.chip] }) })))));
+      S.button('Not now', { size: 'small', onClick: () => ctx.store.setDoc('profile', { goalSuggest: [...(p.goalSuggest || []), g.chip] }) }))))), 'goals:why-now', { summary: `${list.length} to add` });
 }
 function goalsTop(app, ctx, { reveal = false } = {}) {
   const m = ctx.metrics();
@@ -156,9 +156,15 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
     S.moreBlock('goals:tertiary', () => h('div.stack', { style: { gap: '12px' } },
       presetRow('Inflation', 'inflation', ref.presets.inflation.values, v => `${Math.round(v * 100)}%`, 'Used for future dollars'),
       h('div.preset-row', {}, h('span.label', {}, 'Life expectancy'), S.textInput(a.lifeExpectancy ?? null, v => setA({ lifeExpectancy: v === null ? null : Number(v) }), { hint: String(ref.defaults.lifeExpectancy), width: 90 })),
-      h('div.preset-row', {}, h('span.label', {}, 'Social Security'), S.select(['Full scheduled', 'Reduced %', 'None'], a.socialSecurity ?? null, v => setA({ socialSecurity: v }), { label: 'Social Security', hint: 'Pick one', width: 170 }))), { label: 'More: inflation, life expectancy, Social Security' }));
+      h('div.preset-row', {}, h('span.label', {}, 'Social Security'), S.tapPick(['Full scheduled', 'Reduced %', 'None'], a.socialSecurity ?? null, v => setA({ socialSecurity: v }), { label: 'Social Security' }))), { label: 'More: inflation, life expectancy, Social Security' }));
   const fiCard = h('div.card.fi-card', { style: { marginBottom: '16px' } }, left, right);
-  return reveal ? [revealCard(app, ctx, m), bigDealsCard(ctx, m, gate), fiCard, ladderCard(ctx, m, gate), outsourceLens(ctx, m)] : [fiCard, bigDealsCard(ctx, m, gate), ladderCard(ctx, m, gate), outsourceLens(ctx, m)];
+  // Batch 13 (item 1): the FI date and its assumptions are the core (open); the big deals, the FI ladder and the
+  // outsource lens are caret sections, closed, each with its one line.
+  const fiSec = S.sec('goals:fi', { title: 'FI date and assumptions', open: true, area: 'goals', summary: fiWhen != null && gate.unlocked ? `FI ${fiWordsOf(m, gate.confidence, { now: ctx.now() }).text}` : null }, fiCard);
+  const deals = S.secCard(bigDealsCard(ctx, m, gate), 'goals:big-deals', { summary: m.bigDeals?.value ? `${m.bigDeals.value} moves the FI date the most` : null });
+  const fiLadder = S.secCard(ladderCard(ctx, m, gate), 'goals:fi-ladder', { summary: 'Lean, Coast, Barista, Regular and Fat FI' });
+  const lens = outsourceLens(ctx, m);
+  return reveal ? [revealCard(app, ctx, m), deals, fiSec, fiLadder, lens] : [fiSec, deals, fiLadder, lens];
 }
 
 // Batch 15, items 6 and 13: the known changes ahead, one line each ("Benefits end Jan 2027: your month changes by
@@ -188,7 +194,7 @@ function outsourceLens(ctx, m) {
     rate?.guess && OUT.what ? h('span.muted.small', {}, 'Your hourly wage is a guess until work hours are in (About you).') : null);
   };
   draw();
-  return S.moreBlock('goals:outsource', () => h('div.card.outsource', {}, host), { label: `Is it worth paying for? Your time at ${rate?.value ? `${money(rate.value, { cents: true })} an hour` : 'your hourly wage'}` });
+  return S.sec('goals:outsource', { title: 'Is it worth paying for?', summary: `Your time at ${rate?.value ? `${money(rate.value, { cents: true })} an hour` : 'your hourly wage'}` }, () => h('div.card.outsource', {}, host)); // batch 13: a caret section like the rest
 }
 
 // These are big deals (M56): one assumption at a time; click an option to use it.
@@ -196,7 +202,7 @@ function bigDealsCard(ctx, m, gate) {
   const bd = m.bigDeals;
   const a = ctx.store.doc.assumptions;
   if (!gate.unlocked) return h('div.card', { style: { marginBottom: '16px' } }, h('div.section-title.area-goals', {}, h('h2', {}, 'These are big deals')), h('p', { style: { margin: 0 } }, lockedLine(gate)));
-  if (bd.value === null) return h('div.card', { style: { marginBottom: '16px' } }, h('h2', {}, 'These are big deals'), h('p.muted', {}, 'Needs invested, monthly investing and spending to compare FI dates.'));
+  if (bd.value === null) return h('div.card', { style: { marginBottom: '16px' } }, h('div.section-title.area-goals', {}, h('h2', {}, 'These are big deals')), h('p.muted', {}, 'Needs invested, monthly investing and spending to compare FI dates.'));
   const maxSpread = Math.max(1, ...bd.rows.map(r => r.spread ?? 0));
   const cur = { Return: a.realReturn ?? ctx.ref.presets.realReturn.default, 'Withdrawal rate': a.withdrawalRate ?? ctx.ref.presets.withdrawalRate.default, Spending: 1 };
   const key = { Return: 'realReturn', 'Withdrawal rate': 'withdrawalRate' };
@@ -251,7 +257,7 @@ function milestoneList() {
       // Session 4: each goal gets an amount, a horizon and a need, want or wish tag (an FI milestone's amount is its target).
       { label: 'Amount', render: (ctx, r, m, up) => { const t = fiTargets(ctx.metrics(), ctx.store.doc)[r.type]?.value ?? null; return r.amount == null && t != null ? h('span.computed', { title: 'The target' }, money(t)) : S.moneyInput(r.amount, v => up({ amount: v }), { hint: 'Add amount', key: `${r.id}:amount` }); } },
       { label: 'Short or long term', render: (ctx, r, m, up) => S.toggle([['Short term', 'Short'], ['Long term', 'Long']], r.values.horizon ?? null, v => up({ horizon: v }), { label: 'Short or long term', clearable: true }) },
-      { label: 'Need, want or wish', render: (ctx, r, m, up) => S.select(['Need', 'Want', 'Wish'], r.values.tag ?? null, v => up({ tag: v }), { label: 'Need, want or wish', hint: 'Tag', width: 110, key: `${r.id}:tag` }) },
+      { label: 'Need, want or wish', render: (ctx, r, m, up) => S.toggle(['Need', 'Want', 'Wish'], r.values.tag ?? null, v => up({ tag: v }), { label: 'Need, want or wish', clearable: true, key: `${r.id}:tag` }) },
       { label: 'Whose', couple: true, render: (ctx, r, m, up) => S.ownerToggle(ctx, r, up) }, // F2
     ],
     secondary: (ctx, r) => [
@@ -430,6 +436,7 @@ function payoffRuleLine(ctx, m, usable) {
   const r = m.debtRule || {}, guessed = usable.filter(d => d.aprGuess);
   return h('div.stack', { style: { gap: '2px', marginTop: '8px' } },
     r.on ? h('span.muted.small', {}, `Your ${money(r.toDebt)} surplus goes to the heavy debt first; each debt keeps its own payment.`) : r.heavy ? h('span.muted.small', {}, 'Heavy debt first is off on Plan › Goals: each debt gets its own payment and any extra.') : null,
+    usable.length > 1 ? h('span.muted.small', {}, 'Freed payments roll into the next debt: once one is paid off, its payment goes to the next.') : null, // batch 13
     m.debtPlanMinimum && m.debtPlanMinimum !== m.debtPlan ? h('span.muted.small', {}, `If only each debt's own payment is paid: debt free ${at(m.debtPlanMinimum.months)}.`) : null,
     guessed.length ? h('span.muted.small', {}, `${guessed.map(d => d.name).join(', ')}: the APR is a guess (${guessed.map(d => pct(d.apr)).join(', ')}) until typed on `, h('a', { href: '#/net-worth/credit-cards' }, 'Credit cards ›')) : null);
 }
@@ -484,7 +491,7 @@ export function eventList() {
     newValues: type => ({ name: type }),
     coreFields: ['amount'],
     columns: [
-      { label: 'Event', render: (ctx, r, m, up) => S.textInput(r.name, v => up({ name: v }), { hint: r.type || 'Name it', width: 190, key: `${r.id}:name` }) },
+      { label: 'Event', render: (ctx, r, m, up) => S.nameInput(r.name, v => up({ name: v }), { hint: r.type || 'Name it', width: 190, key: `${r.id}:name` }) }, // batch 13: a long name wraps
       { label: 'Rough cost', num: true, render: (ctx, r, m, up) => S.moneyInput(r.amount, v => up({ amount: v }), { hint: 'Add cost', key: `${r.id}:amount` }) },
       { label: 'Month', render: (ctx, r, m, up) => {
         if (r.values.holiday) { const ym = holidayYm(r.values.holiday, ctx.now()); return h('span.computed', { title: 'Dated by the holiday each year (About you › Your calendar)' }, ym ? `${monthName(ym, 'short')} · every year` : 'Every year'); }
@@ -565,7 +572,7 @@ function sinkingFunds(ctx) {
     const up = patch => ctx.store.update(x.id, patch);
     const acct = accounts.find(a => a.id === v.sinkingFund);
     const tags = (acct?.values.tags || []).map(t => t.name).filter(Boolean);
-    return h('tr', {},
+    return h('tr.row', {}, // batch 13: a card on a phone like every other list row
       h('td', {}, h('strong', {}, x.name), h('div.muted.small', {}, x.source),
         // A yearly cost from the Budget is already in spending as its monthly set-aside, so Free after savings leaves it out.
         x.rec.kind === 'bill' && x.rec.values.irregular ? h('div.muted.small', {}, 'Already counted in spending') : null),
@@ -593,8 +600,8 @@ export function scenariosScreen(app, ctx) {
   const C = compareOf(doc, ref0(ctx), { now: ctx.now(), flags: app.flags });
   const propose = patch => { setProposed(ctx.store, patch); app.render(); }; // program.proposed is app data (NOT_IN_SHEET), not a field
   const editor = h('div.card', {}, h('div.row-line', { style: { gap: '10px' } }, h('h2', {}, 'Proposed'), h('span.muted', {}, 'A copy you edit; nothing changes until you make it the plan'), h('span.spacer'), C.has ? S.button('Clear', { size: 'small', onClick: () => { clearProposed(ctx.store); app.render(); } }) : null),
-    h('div.row-line', { style: { gap: '12px', flexWrap: 'wrap', marginTop: '8px', alignItems: 'flex-end' } },
-      S.labelled('Spending a month', S.moneyInput(p.spending ?? null, v => propose({ spending: v }), { hint: C.current.spending != null ? `now ${money(C.current.spending)}` : 'Add spending', key: 'prop:spending' })),
+    h('div.row-line', { style: { gap: '12px', flexWrap: 'wrap', marginTop: '8px', alignItems: 'flex-start' } },
+      S.labelled('Spending a month', S.moneyInput(p.spending ?? null, v => propose({ spending: v }), { hint: C.current.spending != null ? `now ${money(C.current.spending)}` : 'Add spending', key: 'prop:spending', width: 170 })),
       S.labelled('Debt order', S.select(METHODS.map(m => [m.id, m.name]), p.debtOrder ?? null, v => propose({ debtOrder: v }), { label: 'Proposed debt order', hint: `now ${METHODS.find(m => m.id === C.current.debtOrder)?.name ?? C.current.debtOrder}`, width: 170 })),
       // Batch 11 (item 7): Retire by starts from the FI age on Goals; a change here is the proposal.
       S.labelled('Retire by (age)', S.stepper(p.fiAge ?? C.current.fiAge ?? null, v => propose({ fiAge: v === C.current.fiAge ? null : v }), { min: 30, max: 80, label: 'Proposed retire-by age', key: 'prop:fiAge' })),

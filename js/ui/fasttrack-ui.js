@@ -2,7 +2,7 @@
 // Fast Track as a mode on top of My Money (X011): one question at a time, big boxes, Enter moves on,
 // a clock against the 5-minute target, and the four headline numbers at the end (R068).
 import { h, clear, icon } from './dom.js';
-import { moneyInput, toggle, select, textInput, labelled, summaryStrip, toast } from './staples.js';
+import { moneyInput, toggle, select, tapPick, textInput, labelled, summaryStrip, toast } from './staples.js';
 import { applyFastTrack, fastTrackAnswers, FT_DEBTS, needsPayFrequency, fastTrackDone } from '../fasttrack.js';
 import { HOUSING, WORK } from '../gates.js';
 import { MODE_NAMES } from '../registry/couples.js';
@@ -50,7 +50,7 @@ export function startFastTrack(app, ctx, { then = null } = {}) { // then: what c
       labelled('State', select(STATES, a.state, v => set({ state: v }), { label: 'State', hint: 'State', width: 110, key: 'ft:state' }))),
     chipRow('whyNow'), chipRow('worry'), chipRow('goalWords')) };
   const STEPS = [
-    { title: 'About you', help: 'Age drives the Rule of 5 and the FI timeline.', body: () => h('div.ft-grid', {},
+    { title: 'About you', help: 'Age sets the job-loss fund target and the FI timeline.', body: () => h('div.ft-grid', {},
       labelled('First name', textInput(a.firstName, v => set({ firstName: v }), { hint: 'First name', width: 220, key: 'ft:name' })),
       labelled('Born', h('span.row-line', { style: { gap: '8px', flexWrap: 'nowrap' } },
         select(MONTHS.map((m, i) => [String(i + 1), m]), a.birthMonth ? String(a.birthMonth) : null, v => set({ birthMonth: v ? Number(v) : null }), { label: 'Birth month', hint: 'Month', width: 110, key: 'ft:bm' }),
@@ -61,7 +61,7 @@ export function startFastTrack(app, ctx, { then = null } = {}) { // then: what c
       labelled('Take-home', big(a.takeHome, v => set({ takeHome: v }), 'Add amount', 'ft:take')),
       labelled('Per', toggle([['paycheck', 'Paycheck'], ['month', 'Month'], ['year', 'Year']], a.takePer, v => set({ takePer: v }), { label: 'Per' })),
       labelled('Paid', h('span.row-line', { style: { gap: '8px' } },
-        select(FREQ, a.payFrequency, v => { set({ payFrequency: v }); if (v && freqMsg) { freqMsg = false; draw(); } }, { label: 'Pay frequency', hint: 'How often', width: 210, key: 'ft:freq' }),
+        tapPick(FREQ.map(([k, t]) => [k, t.replace(/ \(.*\)$/, '')]), a.payFrequency, v => { set({ payFrequency: v }); if (v && freqMsg) { freqMsg = false; draw(); } }, { label: 'Pay frequency', key: 'ft:freq' }),
         freqMsg ? h('span.ft-msg', { role: 'alert' }, 'Pick how often they\'re paid so we can turn the paycheck into a month') : null))) },
     { title: 'Spending, all in', help: "Their gut: 'what do you think you spend in a month?' Kept to compare later.", body: () => h('div.ft-grid', {},
       labelled('A month, all in', big(a.gut, v => set({ gut: v }), 'Add amount', 'ft:gut')),

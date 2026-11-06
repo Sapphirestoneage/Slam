@@ -238,7 +238,7 @@ export function housingPct({ housing, takeHome }) {
   const m = missing({ 'rent or mortgage': housing, 'take-home': takeHome });
   if (m.length) return needs('M2A', m, { unit: 'pct' });
   const v = housing / takeHome;
-  return ok('M2A', v, `Housing ${fmt.money(housing)} (your share of rent and utilities) divided by ${fmt.money(takeHome)} take-home = ${fmt.pct(v)}. The reference line is 35%.`, { unit: 'pct' });
+  return ok('M2A', v, `Housing ${fmt.money(housing)} (your share of rent or the mortgage payment, and utilities) divided by ${fmt.money(takeHome)} take-home = ${fmt.pct(v)}. The reference line is 35%.`, { unit: 'pct' });
 }
 
 // ---------- Batch 7 (A): the category-first Budget ----------

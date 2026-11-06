@@ -17,6 +17,8 @@ import { opened, install as installDismiss } from './dismiss.js';
 import { PERSONS, personLabels, onePerson, ownerOf, modeOf, ownPlanPerson } from '../registry/couples.js';
 import { isBlankRow } from '../completion.js';
 export { keepPlace };
+import { secWrap, sectionOpen, caretButton } from './sections.js';
+export { sec, secWrap, secCard, openAround, sectionOpen } from './sections.js'; // batch 13: the caret header on every section
 
 // A core field is handled when it is done, or on the Homework list (batch 7, item 4), or the institution comes from the
 // Institutions list (item 3). The same rule as js/completion.js, so a row's amber marker agrees with the counters.
@@ -65,10 +67,17 @@ export function addButton(thing, onClick) {
 // even where nothing redraws (a box that only keeps the answer until Save).
 // clearable: clicking the picked one again takes the answer back (an answer, not a setting).
 // The Owner tag (F2): Person A, Person B or Joint, with the names once typed. A retirement or health account is one person's.
+// Batch 13: in a table row it is one slim chip with the name (like the /mo chip); a tap opens the choices, so the
+// Owner column never pushes the table past the window.
 export function ownerToggle(ctx, r, up) {
   const names = personLabels(ctx.store.doc);
   const options = (onePerson(r) ? PERSONS.filter(p => p !== 'Joint') : PERSONS).map(p => [p, names[p]]);
-  return toggle(options, ownerOf(r, modeOf(ctx.store.doc.profile)), v => up({ owner: v }), { label: 'Owner' });
+  const cur = ownerOf(r, modeOf(ctx.store.doc.profile));
+  const label = names[cur] ?? cur;
+  const b = h('button.per-chip.owner-chip', { type: 'button', 'aria-label': `Owner: ${label}. Change`, title: `Owner: ${label}. Click to change`, 'data-focus': `${r.id}:owner` }, label, icon('down'));
+  b.onclick = () => popover(b, h('div.stack', { style: { gap: '6px' } }, h('h3', {}, 'Whose is it'),
+    toggle(options, cur, v => { closePop(); up({ owner: v }); }, { label: 'Owner' })), { width: 300 });
+  return b;
 }
 export function toggle(options, value, onChange, { label = null, clearable = false, key = null } = {}) {
   return h('div.seg', { role: 'group', 'aria-label': label, 'data-focus': key }, // key: the row field's handle for Show me (batch 7, item 3)
@@ -223,8 +232,9 @@ function joinWordsEl(items) {
 }
 // lock: the program keeps this number locked until its inputs qualify (Phase 3), with the plain reason and where to
 // go. confidence: once unlocked, how sure the inputs are (shown instead of the Guess tag).
-export function metricCard(ctx, label, result, { key = null, render = null, lowerIsGood = false, note = null, home = null, so = null, lock = null, confidence = null } = {}) {
-  const labelEl = home ? h('a.label.metric-home', { href: home, title: `Open where ${label.toLowerCase()} comes from` }, label) : h('span.label', {}, label);
+export function metricCard(ctx, label, result, { key = null, render = null, lowerIsGood = false, note = null, home = null, so = null, lock = null, confidence = null, tip = null } = {}) {
+  // Batch 13 (item 6): tip keeps the term (DRAFTT, Rule of 5) in a hover tip while the label says it plainly.
+  const labelEl = home ? h(`a.label.metric-home${tip ? '.has-tip' : ''}`, { href: home, title: tip ? `${label}: ${tip}` : `Open where ${label.toLowerCase()} comes from` }, label) : h(`span.label${tip ? '.has-tip' : ''}`, { title: tip ? `${label}: ${tip}` : null }, label);
   if (lock) {
     return h('div.metric.locked', {}, labelEl, h('div.big', {}, icon('lock'), ' Locked'),
       h('span.change.lock-why', {}, lock.reason, lock.route ? [' ', h('a', { href: lock.route }, 'Open ›')] : null));
@@ -252,6 +262,16 @@ function formatDiff(d, key) {
   if (key === 'savingsRate') return pct(Math.abs(d)).replace('%', ' pts');
   if (key === 'monthsToFi' || key === 'debtFreeMonths') return `${Math.abs(d)} months`;
   return money(Math.abs(d));
+}
+// Batch 13 (item 2): a strip of numbers as one slim line (Monarch's summary): the few that matter, each a Show the math
+// button; the caret opens every number (the full strip or waterfall) under it. Remembered like any section.
+export function slimStrip(ctx, id, title, items, full, { open = false, tip = 'Show every number' } = {}) {
+  const isOpen = sectionOpen(id, open);
+  const item = i => h('span.slim-item', {}, i.home ? h('a.label.metric-home', { href: i.home }, i.label) : h('span.label', {}, i.label),
+    i.result.value === null || i.result.value === undefined ? h('span.muted', {}, EMPTY) : h('strong.slim-num', {}, mathButton(i.result, i.text ?? value(i.result, ctx))));
+  return h(`div.slim-strip.card.sec${isOpen ? '' : '.sec-closed'}`, { 'data-sec': id },
+    h('div.slim-line.sec-head', {}, caretButton(title, isOpen, tip), h('span.slim-nums', {}, items.filter(Boolean).map(item))),
+    h('div.slim-full', {}, full));
 }
 export function summaryStrip(ctx, items) {
   return h('div.strip', {}, items.map(i => metricCard(ctx, i.label, i.result, i)));
@@ -310,9 +330,9 @@ export function nameInput(value, onChange, { hint = 'Add name', width = 180, key
   return h(`label.field.name-field${value ? '.filled' : ''}`, { style: { width: `${width}px` }, title: tip }, ta);
 }
 export function perPicker(value, onChange, { key = null } = {}) {
-  const s = h('select', { 'aria-label': 'per', 'data-focus': key }, ['paycheck', 'week', 'month', 'quarter', 'year'].map(p => h('option', { value: p, selected: p === value }, `per ${p}`)));
+  const s = h('select', { 'aria-label': 'per', 'data-focus': key }, ['paycheck', 'week', 'month', 'quarter', 'year'].map(p => h('option', { value: p, selected: p === value }, p))); // batch 13: under a Per header the word itself, so it shows in full
   s.onchange = () => onChange(s.value);
-  return h('label.field.filled', { style: { width: '130px' } }, s);
+  return h('label.field.filled', { style: { width: '124px' } }, s);
 }
 // Dropdown: one from a short list (Mockup 'Dropdown'). Unanswered shows the hint, never a made-up pick.
 export function select(options, value, onChange, { label, hint = 'Pick one', width = 200, key = null } = {}) {
@@ -322,6 +342,19 @@ export function select(options, value, onChange, { label, hint = 'Pick one', wid
     value && !options.some(o => (Array.isArray(o) ? o[0] : o) === value) ? h('option', { value, selected: true }, value) : null); // the current value always shows
   s.onchange = () => onChange(s.value === '' ? null : s.value);
   return h(`label.field${value ? '.filled' : ''}`, { style: { width: `${width}px` } }, s);
+}
+// Batch 13 (item 5): a short list (6 or fewer) is a row of tap chips, not a dropdown. Unanswered shows none picked;
+// tapping the picked one again takes the answer back (like the About you toggles). Wraps on a narrow screen.
+export function tapPick(options, value, onChange, { label = null, key = null, clearable = true } = {}) {
+  return h('div.picks.tap-pick', { role: 'group', 'aria-label': label, 'data-focus': key },
+    options.map(o => {
+      const [v, text] = Array.isArray(o) ? o : [o, o];
+      return h('button.pick', { type: 'button', 'aria-pressed': String(v === value), onclick: e => {
+        const off = clearable && e.currentTarget.getAttribute('aria-pressed') === 'true';
+        for (const b of e.currentTarget.parentNode.children) b.setAttribute('aria-pressed', String(!off && b === e.currentTarget));
+        onChange(off ? null : v);
+      } }, text);
+    }));
 }
 export function checkbox(label, checked, onChange, { key = null } = {}) {
   const box = h('input', { type: 'checkbox', checked: !!checked, 'data-focus': key });
@@ -335,7 +368,7 @@ export function checkbox(label, checked, onChange, { key = null } = {}) {
 // handle Show me can find, with no list of names to keep: the first input, select or toggle inside it that has none.
 export const labelled = (label, input, { note = null, later = null, none = null, tip = null } = {}) => {
   const key = later?.key ?? none?.key ?? null;
-  if (key && input?.querySelector) { const el = input.matches?.('.seg') ? input : input.querySelector('input:not([data-focus]), select:not([data-focus]), .seg'); if (el && !el.dataset.focus) el.dataset.focus = key; }
+  if (key && input?.querySelector) { const el = input.matches?.('.seg, .picks') ? input : input.querySelector('input:not([data-focus]), select:not([data-focus]), .seg, .picks'); if (el && !el.dataset.focus) el.dataset.focus = key; } // batch 13: a row of tap chips gets the handle too
   return h(`div.stack${later?.on || none?.on ? '.parked' : ''}`, {}, h(`span.label${tip ? '.has-tip' : ''}`, tip ? { title: `${label}: ${tip}` } : {}, label), input,
     note ? h('span.muted.small', {}, note) : null, later || none ? parkButtons({ later, none }, label) : null);
 };
@@ -472,8 +505,8 @@ export function whoPays(rec, update, { roommates = 0, profile = null, detailOnly
     top === 'Split' && v === 'My share' ? h('span.row-line', { style: { gap: '8px' } }, h('span.label', {}, 'Total bill'), h('span.computed', {}, total),
       h('span.label', {}, 'My share a month'), moneyInput(rec.values.myShare, x => update({ myShare: x }), { hint: 'Add my share' })) : null,
     top === 'Someone else' ? h('span.row-line', { style: { gap: '8px' } }, // M7.1: who, and when it becomes yours
-      select(['Parents', 'Partner', 'Employer', 'Landlord (in rent)', 'Other'], v === 'Included in rent' ? 'Landlord (in rent)' : rec.values.coveredBy ?? null,
-        x => update(x === 'Landlord (in rent)' ? { whoPays: 'Included in rent', coveredBy: x } : { whoPays: 'Covered by someone', coveredBy: x }), { label: 'Who covers it', hint: 'Who covers it', width: 170 }),
+      tapPick(['Parents', 'Partner', 'Employer', 'Landlord (in rent)', 'Other'], v === 'Included in rent' ? 'Landlord (in rent)' : rec.values.coveredBy ?? null,
+        x => update(x === 'Landlord (in rent)' ? { whoPays: 'Included in rent', coveredBy: x } : { whoPays: 'Covered by someone', coveredBy: x }), { label: 'Who covers it', clearable: false }), // batch 13: 5 choices are taps
       takeoverBox(rec, update)) : null,
     // Part of a bill (F089): they cover all of it, or an amount of it, in the same period as the bill.
     top === 'Someone else' && v === 'Covered by someone' ? (() => {
@@ -537,6 +570,7 @@ export function openAddPicker(anchor, { thing, top, other = [], onPick }) {
 
 // ---------- Payoff bar (R159) ----------
 export function payoffCell(ctx, d, longest) {
+  if (!d) return h('span.muted', {}, EMPTY); // batch 13: a row the plan does not hold (another person's, in a couple) shows a dash, not an error
   // Batch 11 (item 1): one payoff date per debt, from the one plan (the surplus on heavy debt first); when a debt's
   // own payment alone gives a different date, one line says so.
   if (d.planMonths != null) {
@@ -809,7 +843,9 @@ export function recordList(ctx, cfg) {
     const addBtn = cfg.noAdd ? null : addButton(cfg.thing.one, e => picker ? openAddPicker(e.currentTarget, { thing: cfg.thing.one, ...picker, onPick: (t, own) => addNew(t, own) }) : addNew(null));
     const autos = cfg.autoRows?.(ctx, m) ?? []; // entered elsewhere, shown here (From Debt): no input, no menu
     const lead = cfg.lead?.(ctx, m) ?? null; // batch 11: a row that lives elsewhere but counts here (the cards on Debt)
-    if (!recs.length && !autos.length) { view = null; return h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, lead, h('div.list', {}, emptyList(cfg.emptyThing?.(ctx) ?? cfg.thing, e => addBtn?.click()))); }
+    // Batch 13 (item 1): the list's header is a caret; closed, it says what is in it in one line.
+    const secOf = (el, sum) => cfg.caret === false ? el : secWrap(el, `list:${listKey}`, { open: cfg.open ?? true, summary: cfg.summary?.(ctx, recs, m) ?? sum });
+    if (!recs.length && !autos.length) { view = null; return secOf(h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, lead, h('div.list', {}, emptyList(cfg.emptyThing?.(ctx) ?? cfg.thing, e => addBtn?.click()))), cfg.emptyThing?.(ctx)?.empty ?? cfg.thing.empty ?? `No ${cfg.thing.plural} yet`); }
 
     const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all', 'data-focus': 'select-all', title: 'Select all' });
     allBox.onchange = () => { if (allBox.checked) recs.forEach(r => state.selected.add(r.id)); else state.selected.clear(); refreshSelection(); };
@@ -876,7 +912,7 @@ export function recordList(ctx, cfg) {
           h('td.check-cell', {}, box),
           cols.map((c, i) => h(`td.col-${slug(c.label)}${i === 0 ? '.col-first' : ''}${c.num ? '.num' : ''}`, {}, c.render(ctx, r, m, p => update(r, p), { remove: e => remove([r.id], e.currentTarget) }))),
           h('td.col-status', {}, h('span.row-line.status-cell', { style: { gap: '6px', flexWrap: 'nowrap' } }, statusPicker(guessCore(r) ? 'Not sure' : r.status, s => update(r, { status: s }), { hasValue: hasCore(r) || guessCore(r), lock: ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? { on: r.values.locked === true, set: v => update(r, { locked: v }) } : null }),
-            unconfirmed(r) && !isBlankRow(r, coreOf(r)) ? h('button.btn.small.will-get', { type: 'button', title: 'Marks it Getting it and puts "Find: this" on the homework list, with where to look', 'aria-label': `Will get ${r.name || r.type || cfg.thing.one}`, onclick: () => willGet([r.id]) }, icon('clock'), h('span.will-get-text', {}, 'Will get it')) : null)), // batch 8 (B5)
+            unconfirmed(r) && !isBlankRow(r, coreOf(r)) ? h('button.btn.small.will-get', { type: 'button', title: 'Will get it: marks it Getting it and puts "Find: this" on the homework list, with where to look', 'aria-label': `Will get ${r.name || r.type || cfg.thing.one}`, onclick: () => willGet([r.id]) }, icon('clock'), h('span.will-get-text', {}, 'Will get it')) : null)), // batch 8 (B5)
           h('td.col-actions', {}, h('span.actions', {},
             h('button.caret', { type: 'button', 'aria-expanded': String(open), 'data-focus': 'more', onclick: () => setOpen(r.id) },
               open ? 'Less' : view.moreLabel, icon(open ? 'down' : 'right')),
@@ -900,7 +936,7 @@ export function recordList(ctx, cfg) {
     const toGet = counted.filter(unconfirmed), toUse = recs.filter(r => r.status === 'Not sure' || isFaded(r));
     const bulk = [toUse.length ? h('button.btn.small', { type: 'button', title: 'Keep every starter estimate as the number', onclick: () => useEstimates(toUse.map(r => r.id)) }, icon('check'), `Use all starter estimates (${toUse.length})`) : null,
       toGet.length ? h('button.btn.small', { type: 'button', title: 'Every unconfirmed row goes on the homework list as Find: …, marked Getting it', onclick: () => willGet(toGet.map(r => r.id)) }, icon('clock'), `Will get all of these (${toGet.length})`) : null];
-    const leftItems = leftRows.map(r => { const f = coreOf(r).find(x => !handled(r, x)); return { id: r.id, name: r.name || r.type || cfg.thing.one, word: r.status && r.status !== 'Know it' ? r.status : 'missing', field: f, focus: `${r.id}:${f}`, route: location.hash }; });
+    const leftItems = leftRows.map(r => { const f = coreOf(r).find(x => !handled(r, x)); return { id: r.id, name: r.name || r.type || cfg.thing.one, word: r.status && r.status !== 'Know it' ? r.status : 'missing', field: f, focus: cfg.focusOf?.(r, f) ?? `${r.id}:${f}`, parent: cfg.parentOf?.(ctx, r) ?? undefined, route: location.hash }; }); // batch 13: a list whose boxes have their own handles names them
     const onlyLeft = recs.length > 8 && leftRows.length ? h('label.check-inline.only-left', {}, (() => { const b = h('input', { type: 'checkbox', checked: state.onlyLeft ? 'checked' : null }); b.onchange = () => { state.onlyLeft = b.checked; ctx.refresh(); }; return b; })(), ` Show only what's left (${leftRows.length})`) : null;
     const out = h(`div.section.area-${cfg.area}`, {}, head,
       cfg.strip ? (focus ? moreBlock(`focus:strip:${listKey}`, () => cfg.strip(ctx, ctx.metrics()), { label: 'Totals and chart' }) : cfg.strip(ctx, m)) : null, // item 19
@@ -909,7 +945,9 @@ export function recordList(ctx, cfg) {
         sectionFooter(ctx, { add: addBtn, total: cfg.footerTotal?.(ctx, recs, m), count: counted.length, done, of: counted.length, left: leftItems, onlyLeft, bulk }),
         keyboardHint()));
     refreshSelection();
-    return out;
+    const totalEl = cfg.footerTotal?.(ctx, recs, m);
+    const totalText = totalEl ? (() => { const c = totalEl.cloneNode(true); c.querySelectorAll('.time-chip').forEach(x => x.remove()); return c.textContent.replace(/\s+/g, ' ').trim(); })() : '';
+    return secOf(out, [`${counted.length} ${counted.length === 1 ? cfg.thing.one : cfg.thing.plural}`, totalText && totalText !== EMPTY ? totalText : null, counted.length ? `${done} of ${counted.length} done` : null].filter(Boolean).join(' · '));
   }
   ctx.onRefresh(draw);
   draw();
@@ -954,15 +992,18 @@ function bulkBar(ctx, sel, a, cfg = {}) {
 
 // ---------- Visuals panel (ECharts, area hues) ----------
 export function visualsPanel(ctx, { charts, area }) {
-  // DMMT 'Watch': Side on wide screens (1600px and up, so a full row still fits), Below otherwise; Hide is one click.
-  const state = { pick: charts[0].name, place: window.innerWidth >= 1600 ? 'Side' : 'Below' };
-  const wrap = h('div.vis-panel.card');
+  // DMMT 'Watch': Side on wide screens (1600px and up, so a full row still fits), Below otherwise.
+  // Batch 13 (item 1): the chart is a caret section like every other, closed by default; closed, it is one slim line
+  // naming the chart (Hide is the caret now).
+  const id = `chart:${area}`;
+  const state = { pick: charts[0].name, place: window.innerWidth >= 1600 ? 'Side' : 'Below', open: sectionOpen(id, false) };
+  const wrap = h(`div.vis-panel.card.sec${state.open ? '' : '.sec-closed'}`, { 'data-sec': id });
   // Where it sits starts from CSS (by screen width), so the first paint never shifts the page; a pick sets a class.
-  const place = () => { const v = wrap.closest('.visuals'); for (const [c, p] of [['below', 'Below'], ['side', 'Side'], ['hidden', 'Hide']]) v?.classList.toggle(c, state.place === p); };
+  const place = () => { const v = wrap.closest('.visuals'); for (const [c, p] of [['below', 'Below'], ['side', 'Side']]) v?.classList.toggle(c, state.open && state.place === p); v?.classList.toggle('hidden', !state.open); };
   let chart = null, host = null;
   const paint = () => {
     const c = charts.find(x => x.name === state.pick);
-    if (state.place === 'Hide' || !host) return;
+    if (!state.open || !host) return;
     const data = c.data(ctx);
     chart?.dispose(); chart = null;
     if (data.needs) { clear(host, chartEmpty(ctx, data.needs)); host.style.height = 'auto'; return; }
@@ -972,19 +1013,20 @@ export function visualsPanel(ctx, { charts, area }) {
     chart = window.echarts.init(host, null, { renderer: 'svg' });
     chart.setOption(c.option(data, chartTheme(area)));
   };
+  wrap._secOnToggle = open => { state.open = open; place(); if (host) host.hidden = !open; if (open) requestAnimationFrame(paint); else { chart?.dispose(); chart = null; } };
   const build = () => {
     const pick = h('select.plain', { 'aria-label': 'Chart', 'data-focus': `chart:${area}` }, charts.map(x => h('option', { selected: x.name === state.pick }, x.name)));
     pick.onchange = () => { state.pick = pick.value; paint(); };
-    host = h('div.chart', { hidden: state.place === 'Hide' });
+    host = h('div.chart', { hidden: !state.open });
     new ResizeObserver(() => chart?.resize()).observe(host);
-    // Hide, Side and Below only move the panel: no redraw.
-    clear(wrap, h('div.bar-top', {}, h('span.dot', { class: `area-${area}` }), h('strong', {}, 'Chart'), pick, h('span', { style: { flex: 1 } }),
-      toggle(['Hide', 'Side', 'Below'], state.place, p => { const was = state.place; state.place = p; place(); host.hidden = p === 'Hide'; if (was === 'Hide') paint(); else chart?.resize(); }, { label: 'Where the chart sits' })),
+    // Side and Below only move the panel: no redraw.
+    clear(wrap, h('div.bar-top.sec-head', {}, h('span.dot', { class: `area-${area}` }), h('h3', {}, caretButton('Chart', state.open)), h('span.sec-sum', {}, state.pick), pick, h('span', { style: { flex: 1 } }),
+      toggle(['Side', 'Below'], state.place, p => { state.place = p; place(); chart?.resize(); }, { label: 'Where the chart sits' })),
     host);
   };
   ctx.onRefresh(() => keepPlace(() => { build(); paint(); }));
   build();
-  queueMicrotask(paint); // the chart needs the panel on the page to measure
+  queueMicrotask(() => { place(); paint(); }); // the chart needs the panel on the page to measure
   return wrap;
 }
 export function chartTheme(area) {
@@ -1009,12 +1051,24 @@ export function sidePanel(ctx, { title, build, anchor = null, key = null }) {
   sideEl = el;
   // An inspector beside the table (YNAB): on wide screens the page makes room and the panel starts under the sticky
   // bars, so it covers nothing; at 760px and below it is a bottom sheet over the page (a modal sheet).
-  const phone = window.matchMedia?.('(max-width: 760px)').matches;
-  if (phone) el.setAttribute('aria-modal', 'true');
-  else { const bars = [document.getElementById('subtabs'), document.getElementById('topbar')].find(b => b && !b.hidden && b.getBoundingClientRect().height); el.style.top = `${Math.round(bars ? bars.getBoundingClientRect().bottom : 60)}px`; document.body.classList.add('side-open'); }
+  // Batch 13 (item 3): the layout follows the window. Wider than 760px the page reflows beside the panel (body.side-open
+  // pads the page, the bars and the bottom bars), so nothing it does not own sits under it; at 760px and below it is a
+  // bottom sheet (modal). A resize across 760px switches between the two.
+  const mq = window.matchMedia?.('(max-width: 760px)');
+  const fit = () => {
+    const phone = !!mq?.matches;
+    if (phone) { el.setAttribute('aria-modal', 'true'); el.style.top = ''; document.body.classList.remove('side-open'); return; }
+    el.removeAttribute('aria-modal');
+    const bars = [document.getElementById('subtabs'), document.getElementById('topbar')].find(b => b && !b.hidden && b.getBoundingClientRect().height);
+    el.style.top = `${Math.round(bars ? bars.getBoundingClientRect().bottom : 60)}px`; document.body.classList.add('side-open');
+  };
+  fit();
+  mq?.addEventListener?.('change', fit);
+  const stopFit = () => mq?.removeEventListener?.('change', fit);
   document.body.append(el);
   draw();
-  sideStop = ctx.onRefresh(draw);
+  const off = ctx.onRefresh(draw);
+  sideStop = () => { off(); stopFit(); };
   sideOff = opened({ el, anchor, close: () => { if (sideEl === el) { sideOff = null; closeSidePanel(); } } });
   requestAnimationFrame(() => el.querySelector('button:not(.icon-btn), input')?.focus({ preventScroll: true }));
   return { close: closeSidePanel, el };

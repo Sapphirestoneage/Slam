@@ -24,6 +24,7 @@ import { opened } from './ui/dismiss.js';
 import { addChoice } from './find.js';
 import { dueChecks } from './checks.js';
 import { logEvent, usageCsv } from './usage.js';
+import { setSectionClient, sectionTools, openAround } from './ui/sections.js';
 
 const [ref, fields, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/fields.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
 
@@ -44,6 +45,7 @@ const app = {
     stopWalk({ quiet: true }); // batch 14: a walk belongs to one client
     this.saver?.flush(); this.saver?.stop();
     this.hasClient = !!doc;
+    setSectionClient(doc?.id); // batch 13: which sections are open is remembered per client, in this browser
     if (doc) migrateBatch10(doc, ref); // batch 10: untouched starter amounts become faded typicals; Bills and subscriptions; levels (once per file)
     this.store = new Store(doc || newHousehold({ name: null }));
     this.store.who = this.prefs?.clientView ? 'Client' : 'Coach'; // F6: the change log says who
@@ -262,6 +264,7 @@ const app = {
     this.go(r.route);
     requestAnimationFrame(() => {
       const row = r.kind === 'record' ? document.querySelector(`tr[data-id="${r.id}"]`) : null;
+      openAround(row); // batch 13: a row inside a closed section opens it
       if (row?.hidden) document.querySelector(`tr.group[data-group="${CSS.escape(row.dataset.group)}"] button.fold`)?.click(); // open its folded group
       (row || $('main').querySelector('h1'))?.classList.add('highlight');
       row?.querySelector('input')?.focus({ preventScroll: true });
@@ -278,6 +281,7 @@ const app = {
       item('Redo', 'redo', () => this.redo(), { disabled: !this.store.canRedo }),
       item('Add anything', 'plus', () => this.addAnything(anchor), { disabled: !this.hasClient }),
       this.prefs.clientView ? null : item('Parking lot', 'note', () => this.openParking(anchor), { disabled: !this.hasClient }), // coach only
+      item('Report this screen', 'flag', () => reportThis(this, anchor)), // batch 13 (item 3): in the More menu, so it never sits over a control
       h('span.muted.small', {}, 'Ctrl+Z undoes, Ctrl+Shift+Z redoes, / finds or adds.')), { width: 300 });
   },
   addAnything(anchor) {
@@ -454,6 +458,13 @@ const app = {
     if (r?.route) arrive(this, r.route); // item 2: land and light up what needs work
   },
 
+  // Batch 13: Open all · Close all, at the top right, on a screen with two or more caret sections.
+  sectionLinks() {
+    const main = $('main'), links = sectionTools(main);
+    if (!links) return;
+    const host = main.querySelector(':scope > .page-head > .row-line') ?? null;
+    if (host) host.append(links); else main.prepend(links);
+  },
   renderSoon() { if (!this._soon) this._soon = requestAnimationFrame(() => { this._soon = null; this.render({ keepPop: true }); }); },
   // ---------- render ----------
   render({ keepPop = false } = {}) {
@@ -463,9 +474,10 @@ const app = {
       this.go('#/home/session'); return;
     }
     if (!keepPop) S.closePop();
+    if (this._lastHash !== hash) S.closeSidePanel(); // batch 13 (item 3): the panel belongs to a row on this screen; leaving the screen closes it
     this.ctx.clearScreen();
     const screen = SCREENS[`${tab.id}/${sub.id}`];
-    const draw = () => { this.chrome(); this.parkingDock(); clear($('main'), screen ? screen(this, this.ctx) : null); };
+    const draw = () => { this.chrome(); this.parkingDock(); clear($('main'), screen ? screen(this, this.ctx) : null); this.sectionLinks(); };
     // A redraw of the same screen never loses your place (R165): scroll, list scroll and the control you were on.
     if (this._lastHash === hash) keepPlace(draw); else { this.visitEnd(); if (this.hasClient) this._visit = { screen: hash.slice(2), at: Date.now(), clicks: 0, doc: this.store.doc }; draw(); } // batch 14: time per screen
     // One page: a sub-tab click scrolls to its part (only when the place changes, not on every redraw).
@@ -500,4 +512,4 @@ const last = app.prefs.clientId ? loadClient(adapter, app.prefs.clientId) : null
 app.open(last, { save: false });
 window.slam = app; // for the console and the screenshot script
 startTips(document.body); // B8: plain-language tooltips
-reportThis(app); // B9: Report this on every screen
+// B9: Report this is on every screen, in the top bar's More menu (batch 13: no floating button over the page).

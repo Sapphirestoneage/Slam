@@ -6,7 +6,7 @@ import { weekdayDays, holidayInMonth, SHABBAT_SPEND_DAY } from './math/holidays.
 import { myShare, withHome } from './math/spending.js';
 import { payoffPlan } from './math/debt.js';
 import { runningBalance, gutSpread } from './math/calendar.js';
-import { inputsOf } from './math/metrics.js';
+import { inputsOf, metrics } from './math/metrics.js';
 import { monthlyFrom, quarterlySetAside } from './math/income.js';
 
 // ---------- Dates (UTC, so a day is a day everywhere) ----------
@@ -179,16 +179,27 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [] } = {}) 
   // Wins: typed ones, then payoffs and milestones the projection reaches (R095).
   for (const r of live.filter(x => x.kind === 'win' && x.values.date?.startsWith(ym))) push(r, { kind: 'win', group: 'Wins', name: r.name || 'A win', date: r.values.date, planned: 0 });
   if (cal.autoWins !== false) {
-    for (const w of [...debtWins(inputs, now), ...autoWins]) if (w.date.startsWith(ym)) out.push({ key: `auto:${w.name}@${w.date}`, recId: null, kind: 'win', group: 'Wins', name: w.name, date: w.date, origDate: w.date, planned: 0, status: 'Planned', auto: true });
+    for (const w of [...debtWins(inputs, now, debtPlanOf(doc, ref, now)), ...autoWins]) if (w.date.startsWith(ym)) out.push({ key: `auto:${w.name}@${w.date}`, recId: null, kind: 'win', group: 'Wins', name: w.name, date: w.date, origDate: w.date, planned: 0, status: 'Planned', auto: true });
   }
   return out.sort((a, b) => a.date.localeCompare(b.date) || b.planned - a.planned);
 }
 
 // Payoff dates from the plan become wins on the calendar.
-export function debtWins(inputs, now = new Date()) {
+// Batch 13 (answer to Q221): the wins read the one debt plan (m.debtPlan: the surplus, freed payments, FOO step 1
+// first), so "Paid off" and "Debt-free" land on the same month as Home, Debt and the FOO. plan: m.debtPlan; without
+// it (an older caller) the payments alone are used.
+const PLANS = new WeakMap();
+export function debtPlanOf(doc, ref, now = new Date()) {
+  const k = `${doc._rev ?? 0}|${ymOf(now)}`, c = PLANS.get(doc);
+  if (c?.k === k) return c.p;
+  const p = metrics(doc, ref, { now }).debtPlan ?? null;
+  PLANS.set(doc, { k, p });
+  return p;
+}
+export function debtWins(inputs, now = new Date(), plan = null) {
   const ds = inputs.debts.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null);
   if (!ds.length) return [];
-  const p = payoffPlan(ds, { order: inputs.debtOrder });
+  const p = plan?.debts ? plan : payoffPlan(ds, { order: inputs.debtOrder });
   const base = ymOf(now);
   const wins = p.debts.filter(d => d.paidOffMonth).map(d => ({ name: `Paid off: ${d.name}`, date: dateOf(addMonths(base, d.paidOffMonth), 1) }));
   if (p.months) wins.push({ name: 'Debt-free', date: dateOf(addMonths(base, p.months), 1) });

@@ -85,7 +85,7 @@ function defaultsSection(app, ctx, fix) {
 function timerCard(ctx) {
   const t = ctx.store.doc.session?.timer || {};
   return h('div.card', {}, h('h3', {}, 'Onboarding timer'), h('p.muted.small', {}, 'For testing. Times are from the first Profile answer; the export includes them.'),
-    h('table.rows.mini', {}, h('tbody', {}, TIMER_MARKS.map(([k, label]) => h('tr', {}, h('td', {}, label),
+    h('table.rows.mini.timer-table', {}, h('tbody', {}, TIMER_MARKS.map(([k, label]) => h('tr', {}, h('td', {}, label),
       h('td', {}, t[k] ? new Date(t[k]).toLocaleString() : h('span.muted', {}, 'Not yet')),
       h('td.num', {}, k === 'profileStarted' ? '' : duration(t.seconds?.[k])))))));
 }

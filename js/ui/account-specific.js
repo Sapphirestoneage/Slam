@@ -2,7 +2,7 @@
 // Brandon section 3: fields only some accounts have. 401(k): Roth or traditional, per paycheck and % of salary,
 // match tiers, vesting. HSA: cash vs invested, self-directed vs managed with a fee comparison.
 import { h } from './dom.js';
-import { moneyInput, pctInput, textInput, toggle, select, labelled, moreBlock, button, iconButton, warnTag, park } from './staples.js';
+import { moneyInput, pctInput, textInput, toggle, select, tapPick, labelled, moreBlock, button, iconButton, warnTag, park } from './staples.js';
 import { uninvestedOf, matchFromTiers, contributionSplit, vestedOf, hsaFeeCompare, paychecksPerYear, link401k, hsaProgress, rothLog } from '../math/portfolio.js';
 import { benefitYearly } from '../benefits.js';
 import { money, pct } from '../format.js';
@@ -49,7 +49,7 @@ function matchBlock(ctx, r, up, L) {
         m ? shown(`Match: ${money(m.dollars)} a year (${pct(m.pctOfPay)} of pay)`) : tiers.length ? h('span.muted.small', {}, 'Needs your % of salary and gross pay') : null,
         m?.leftOnTable ? warnTag(`Put in ${pct(m.fullMatchAt)} to get the full match`) : null)),
     h('div.form-grid', {},
-      labelled('Vesting schedule', select(['Immediate', 'Cliff', 'Graded'], v.vestingSchedule ?? null, x => up({ vestingSchedule: x }), { label: 'Vesting schedule', width: 140 }), { later: L('vestingSchedule') }),
+      labelled('Vesting schedule', tapPick(['Immediate', 'Cliff', 'Graded'], v.vestingSchedule ?? null, x => up({ vestingSchedule: x }), { label: 'Vesting schedule' }), { later: L('vestingSchedule') }),
       v.vestingSchedule && v.vestingSchedule !== 'Immediate' ? labelled('Fully vested after', row(numInput(v.vestYears ?? null, x => up({ vestYears: x }), { hint: 'Years', width: 72 }), h('span.muted', {}, 'years'))) : null,
       labelled('Unvested (match not yours yet)', moneyInput(v.unvested ?? null, x => up({ unvested: x }), { hint: 'Add amount' }), { later: L('unvested') }),
       vest ? labelled('Vested (yours if you leave)', shown(money(vest.vested), 'Balance minus unvested')) : null));

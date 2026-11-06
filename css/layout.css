@@ -1,0 +1,82 @@
+/* Batch 13: layout, organization and Don't Make Me Think across screens.
+   Kept in its own file so the other batches' CSS (app, shell, phases) merges cleanly. */
+
+/* ---------- Item 1: the caret header on every section ---------- */
+.sec-head { flex-wrap: wrap; row-gap: 4px; }
+.sec-head h2, .sec-head h3 { margin: 0; font-size: var(--fs-section); }
+.sec-caret { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; min-height: 32px; font-weight: 700; color: var(--text); border-radius: 8px; padding-right: 6px; }
+.sec-chev { display: inline-grid; place-items: center; width: 26px; height: 26px; flex: none; border: 1.5px solid var(--border-input); border-radius: 7px; background: var(--card); color: var(--text); }
+.sec-chev svg { width: 16px; height: 16px; }
+.sec-caret:hover .sec-chev { border-color: var(--primary); box-shadow: var(--shadow-lift); }
+.sec-caret:hover .sec-title-text { text-decoration: underline; text-underline-offset: 3px; }
+.sec-caret:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.sec-sum { color: var(--text-2); font-size: .9375rem; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 160px; }
+.sec:not(.sec-closed) > .sec-head .sec-sum, .sec:not(.sec-closed) > .sec-head-host > .sec-head .sec-sum { display: none; }
+.sec.sec-closed > :not(.sec-head):not(.sec-head-host),
+.sec.sec-closed > .sec-head-host > :not(.sec-head) { display: none !important; }
+.sec.sec-closed { margin-bottom: var(--s3); }
+.sec.sec-closed > .sec-head, .sec.sec-closed > .sec-head-host > .sec-head { margin-bottom: 0; }
+/* A card whose header row is the caret (Home's cards): closed, it is one slim line. */
+.card.sec.sec-closed { padding-top: var(--s2); padding-bottom: var(--s2); }
+.card.sec > .sec-head:not(.section-title) { margin-bottom: var(--s2); }
+.sec-head h2 .sec-caret, .sec-head h3 .sec-caret { font-size: inherit; }
+@media (max-width: 760px) { .sec-sum { white-space: normal; flex-basis: 100%; } }
+/* Open all · Close all: two small links at the top right of a screen with two or more sections. */
+.sec-all { display: flex; justify-content: flex-end; align-items: center; gap: 6px; font-size: .8125rem; margin: -4px 0 6px; }
+.page-head .sec-all { margin: 0; }
+@media print { .sec.sec-closed > * { display: revert !important; } .sec-chev, .sec-all { display: none !important; } }
+/* The chart: a caret section; closed, the pick and Side / Below hide and the list takes the full width. */
+.vis-panel.sec-closed .bar-top { margin-bottom: 0; }
+.vis-panel.sec-closed .bar-top > select, .vis-panel.sec-closed .bar-top > .seg { display: none; }
+.vis-panel:not(.sec-closed) .bar-top > .sec-sum { display: none; }
+.vis-panel .bar-top h3 { margin: 0; font-size: 1rem; }
+.visuals.hidden { grid-template-columns: minmax(0, 1fr) !important; }
+
+/* ---------- Item 2: slim strips (Cash flow, Net worth, the Budget's totals) ---------- */
+.slim-strip { padding: 6px var(--s4); margin-bottom: var(--s3); }
+.slim-line { display: flex; align-items: center; gap: var(--s4); flex-wrap: wrap; row-gap: 4px; min-height: 36px; }
+.slim-line .sec-caret { font-size: .9375rem; }
+.slim-nums { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px var(--s5); }
+.slim-item { display: inline-flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+.slim-item .label { color: var(--text-2); font-size: .875rem; }
+.slim-num { font-size: 1.125rem; font-weight: 700; }
+.slim-strip:not(.sec-closed) .slim-nums { display: none; }
+.slim-full > .card { box-shadow: none; padding: 0; margin: 6px 0 4px; background: transparent; }
+.slim-full > .strip { margin: 6px 0 4px; }
+@media (max-width: 760px) { .slim-line { gap: 4px var(--s3); } .slim-nums { gap: 2px var(--s4); } }
+
+/* ---------- Item 5: short lists are taps ---------- */
+.tap-pick .pick { min-height: 32px; }
+@media (min-width: 761px) { .gate:has(> .tap-pick) { grid-column: span 2; } }
+.gut-row h3 { margin: 0; font-size: 1rem; }
+/* The row's status and its clock (Will get it) sit level on one line; the clock is icon-only (its name is in the tip). */
+.status-cell { display: inline-flex; flex-direction: row; align-items: center; gap: 6px; white-space: nowrap; }
+.status-cell .will-get { min-height: 32px; width: 32px; padding: 0; justify-content: center; }
+.status-cell .will-get .will-get-text { display: none; }
+table.rows tr.row .status-cell .will-get { min-height: 36px; height: 36px; width: 36px; }
+
+/* ---------- Item 3: side panels push the page; nothing sits under them ---------- */
+body.side-open .tracker { right: min(440px, 100vw); }
+body.side-open.parking-pinned .parking-dock { display: none; } /* one column at the right edge at a time below 1440 */
+body.side-open.parking-pinned main.shell-page, body.side-open.parking-pinned .banner { padding-right: calc(min(440px, 100vw) + 16px); }
+@media (min-width: 1440px) {
+  body.side-open.parking-pinned .parking-dock { display: block; }
+  body.side-open.parking-pinned .side-panel { right: 340px; }
+  body.side-open.parking-pinned main.shell-page, body.side-open.parking-pinned .banner { padding-right: calc(440px + 356px); }
+  body.side-open.parking-pinned .tracker { right: calc(440px + 340px); }
+}
+body.parking-pinned .tracker { right: 340px; }
+@media (max-width: 1279px) { body.parking-pinned .tracker { right: 0; } }
+
+/* ---------- Item 4: boxes level in a row ---------- */
+.ft-grid { align-items: flex-start; } /* Fast Track: labels on one line, so the boxes start level */
+.gut-row { align-items: flex-start; }
+.gut-row > h3 { align-self: center; }
+table.rows.mini.timer-table td { white-space: normal; overflow-wrap: anywhere; } /* the onboarding timer fits a phone instead of scrolling sideways */
+.session-strip > .btn { flex: none; }
+.owner-chip { gap: 4px; min-height: 32px; padding: 0 8px; white-space: nowrap; color: var(--text); }
+.owner-chip svg { width: 14px; height: 14px; }
+table.rows tr.row .owner-chip { min-height: 36px; }
+@media (min-width: 761px) and (max-width: 1439px) { table.rows td, table.rows th { padding-left: 5px; padding-right: 5px; } } /* the wide lists (Income for a couple) fit 1280 */
+.layer .stack > span.row-line { align-items: flex-start; } /* a box and its toggle in one Details row start level */
+.timer-table { table-layout: fixed; width: 100%; }

@@ -56,10 +56,10 @@ export function budgetScreen(app, ctx) {
     S.moreBlock('budget:settings', () => h('div.row-line', { style: { gap: '20px', alignItems: 'flex-start' } },
       S.labelled('Use for surplus and FI', S.toggle([['gut', 'Gut number'], ['lines', 'The categories']], m.inputs.spendingSource, v => ctx.store.setDoc('spending', { source: v }), { label: 'Spending used for the math' }),
         { note: m.inputs.gutTotal === null ? 'No gut number yet, so the categories are used' : `Gut ${money(m.inputs.gutTotal)} · categories ${money(m.inputs.lineTotal ?? 0)}` }),
-      S.labelled('Group by', S.toggle(['DRAFTT', 'Category', ['Who', 'Who covers it']], UI.groupBy, v => { UI.groupBy = v; redraw(); }, { label: 'Group by' }), { note: 'DRAFTT letters, plain categories, or who pays' }),
+      S.labelled('Group by', S.toggle([['DRAFTT', 'Spending group'], 'Category', ['Who', 'Who covers it']], UI.groupBy, v => { UI.groupBy = v; redraw(); }, { label: 'Group by' }), { tip: 'Spending group is the DRAFTT letters: Debt, Retirement, Accommodation, Food, Transportation, Therapy', note: 'Spending groups, plain categories, or who pays' }),
       S.labelled('Basis', S.toggle([['accrual', 'Accrual'], ['cash', 'Cash']], doc.spending.basis || 'accrual', v => ctx.store.setDoc('spending', { basis: v }), { label: 'Cash or accrual' }),
         { note: 'Accrual spreads yearly and prepaid costs across the months' }),
-      S.labelled('Period', S.select(Object.keys(PERIOD), UI.period, v => { UI.period = v || 'Monthly'; redraw(); }, { label: 'Period', hint: 'Monthly', width: 140 })),
+      S.labelled('Period', S.toggle(Object.keys(PERIOD), UI.period, v => { UI.period = v || 'Monthly'; redraw(); }, { label: 'Period' })), // batch 13: 4 choices are a tap
       S.labelled('Cards', S.checkbox('Most spending goes on cards', cardsMost, v => ctx.store.setDoc('profile', { mostOnCards: v })), { note: 'Shows Paid with on every line' })), { label: 'Settings for this budget' }));
   const view = monthView(doc, ctx.ref, UI.ym, { now: ctx.now() });
   if (UI.pass !== 'Actual') UI.pass = 'Plan';
@@ -72,16 +72,16 @@ export function budgetScreen(app, ctx) {
     h('div.visuals', {}, UI.pass === 'Plan' && UI.budgetView === 'categories' ? S.recordList(ctx, categoryList(ctx.ref, { pass: UI.pass, ym: UI.ym }))
       : S.recordList(ctx, spendingList(ctx.ref, { pass: UI.pass, ym: UI.ym, groupBy: UI.groupBy, paidWithColumn: cardsMost, planColumn: shownPlanCol })),
       S.visualsPanel(ctx, { charts: budgetCharts, area: 'needs' })),
-    UI.pass === 'Plan' ? S.moreBlock('budget:fast-track', () => fastTrackTotals(ctx), { label: 'Fast Track totals (by area)' }) : null];
+    UI.pass === 'Plan' ? S.sec('budget:fast-track', { title: 'Fast Track totals (by area)', summary: fastTrackSummary(doc) }, () => fastTrackTotals(ctx)) : null];
   // The strip follows the lines as they change (the lists keep their own state, so the screen is not rebuilt).
   const strip = h('div', {}, budgetStrip(ctx, view));
   ctx.onRefresh(() => S.keepPlace(() => clear(strip, budgetStrip(ctx, monthView(doc, ctx.ref, UI.ym, { now: ctx.now() })))));
   // Batch 10: the one-time note for a file whose untouched starter amounts turned faded.
   const fadedNote = doc.settings?.fadedNote ? h('div.slim-note', { role: 'status' }, h('span', {}, 'Starter amounts you never changed are now shown faded. Use them with one click, or type the real number.'),
     h('button.icon-btn.tiny', { type: 'button', 'aria-label': 'Close this note', 'data-tip': 'Close', onclick: () => ctx.store.setDoc('settings', { fadedNote: null }) }, icon('x'))) : null;
-  return [head('Budget', 'Every spending line, planned and actual', S.live(ctx, () => fillCounter(app, budgetCompletion(ctx)) ?? h('span'))), fadedNote, passBar, strip, doc.session?.community ? S.moreBlock('budget:community', () => S.live(ctx, () => communityCard(ctx)), { label: 'Community presets' }) : null, ...body, // batch 14: X of Y filled in the head
-    S.recordList(ctx, irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) })),
-    S.moreBlock('budget:joy', () => S.live(ctx, () => categoryJoyBlock(ctx)), { label: 'Joy by category' })]; // F6: captured for a later Wrapped
+  return [head('Budget', 'Every spending line, planned and actual', S.live(ctx, () => fillCounter(app, budgetCompletion(ctx)) ?? h('span'))), fadedNote, passBar, strip, doc.session?.community ? S.sec('budget:community', { title: 'Community presets' }, () => S.live(ctx, () => communityCard(ctx))) : null, ...body, // batch 14: X of Y filled in the head
+    S.recordList(ctx, { ...irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) }), open: false }), // batch 13: secondary sections start closed
+    S.sec('budget:joy', { title: 'Joy by category', summary: 'How much joy each category brings, for a later Wrapped' }, () => S.live(ctx, () => categoryJoyBlock(ctx)))]; // F6: captured for a later Wrapped
 }
 
 // Answer 168: each Income row's take-home a paycheck and its schedule, for matching money in.
@@ -180,12 +180,12 @@ function budgetStrip(ctx, view) {
   const anyReal = lines.length > 0 || autos.length > 0 || (m.inputs.categories ?? []).some(c => c.typed != null || c.else?.bucket != null);
   if (!anyReal && UI.pass !== 'Actual') {
     const gut = m.inputs.gutTotal;
-    return S.summaryStrip(ctx, [{ label: 'Spending, your gut number', result: gut == null ? { id: 'M27', value: null, needs: ['a gut number'], unit: 'money' } : { id: 'M27', value: gut * k, needs: [], unit: 'money', text: `Your gut number: ${money(gut)} a month. The lines take over once they hold real amounts.` }, note: gut == null ? null : 'Until the lines hold real amounts' },
+    return budgetSlim(ctx, [{ label: 'Spending, your gut number', result: gut == null ? { id: 'M27', value: null, needs: ['a gut number'], unit: 'money' } : { id: 'M27', value: gut * k, needs: [], unit: 'money', text: `Your gut number: ${money(gut)} a month. The lines take over once they hold real amounts.` }, note: gut == null ? null : 'Until the lines hold real amounts' },
       { label: `Yearly costs set aside${k > 1 ? `, ${UI.period}` : ''}`, result: res(setAside, `Each yearly cost divided by 12: ${money(setAside)} a month.`) }]);
   }
   const share = v => (th ? ` · ${pct(v / th)} of take-home` : '');
   const items = [
-    { label: `Fixed${k > 1 ? `, ${UI.period}` : ''}`, result: res(fixed, `Lines tagged Fixed amount${autos.length ? ` and ${autos.length} debt ${autos.length === 1 ? 'payment' : 'payments'} from Debt` : ''}, the ${monthName(UI.ym)} plan: ${money(fixed)} a month. This is the floor you pay no matter what; it feeds runway and Lean FI.`), note: `The floor${share(fixed)}`, home: '#/cash-flow/budget' },
+    { label: `Fixed${k > 1 ? `, ${UI.period}` : ''}`, result: res(fixed, `Lines tagged Fixed amount${autos.length ? ` and ${autos.length} debt ${autos.length === 1 ? 'payment' : 'payments'} from Debt` : ''}, the ${monthName(UI.ym)} plan: ${money(fixed)} a month. This is the floor you pay no matter what; it feeds runway and Lean FI.`), note: `Paid no matter what${share(fixed)}`, home: '#/cash-flow/budget' },
     { label: `Variable${k > 1 ? `, ${UI.period}` : ''}`, result: res(variable, `Lines tagged Variable amount: ${money(variable)} a month.`), note: share(variable).replace(' · ', '') || null },
     { label: `Yearly costs set aside${k > 1 ? `, ${UI.period}` : ''}`, result: res(setAside, cash ? `Yearly costs due in ${monthName(UI.ym)}: ${money(setAside)} (cash view).` : `Each yearly cost divided by 12: ${money(setAside)} a month.`) },
   ];
@@ -198,7 +198,12 @@ function budgetStrip(ctx, view) {
     items.push(per ? { label: 'Per paycheck', result: { id: 'M20', value: (fixed + variable + setAside) / per.per, needs: [], unit: 'money', text: `Spending ${money(fixed + variable + setAside)} a month over ${per.per.toFixed(2)} paychecks a month (${per.label}).` }, note: 'What each paycheck has to cover' }
       : gutVsLines(fixed + variable + setAside, view.gut));
   }
-  return S.summaryStrip(ctx, items);
+  return budgetSlim(ctx, items);
+}
+// Batch 13 (item 2): the Budget's own totals as one slim line; the caret opens the cards with their notes.
+const SLIM_LABEL = { 'Spending, your gut number': 'Gut number', 'Yearly costs set aside': 'Yearly set aside', 'Gut vs lines': 'Lines vs gut' };
+function budgetSlim(ctx, items) {
+  return S.slimStrip(ctx, 'budget:totals', 'Totals', items.map(i => ({ ...i, label: SLIM_LABEL[i.label] ?? i.label.replace(/, .*$/, ''), text: i.render && i.result.value != null ? i.render(i.result) : undefined })), S.summaryStrip(ctx, items), { tip: 'Open the totals: fixed, variable, yearly, and how the lines compare' });
 }
 // Words, not a bare negative: "Lines are $1,950 under your gut number".
 export function gutWords(lines, gut) {
@@ -227,12 +232,14 @@ function gutBox(ctx, view) {
     else ctx.store.add('spending', { name: 'Monthly spending, all in', amount: v, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } }, { type: 'All in' });
   };
   const lineTotal = view.totals.rough + sum(ctx.metrics().inputs.autoLines ?? [], a => a.amount); // with the debt payments, From Debt, as on the strip
-  return h('div.card.gut-card', {},
-    h('div.row-line', { style: { gap: '12px' } }, h('strong', {}, 'Your gut number'), S.moneyInput(rec?.amount ?? null, set, { hint: 'A month, all in', key: 'gut' }),
-      rec ? S.toggle([[true, 'Includes debt payments'], [false, 'Not debt payments']], rec.values.includesDebtPayments !== false, v => ctx.store.update(rec.id, { includesDebtPayments: v }), { label: 'Includes debt payments' }) : null),
-    h('p.muted', { style: { margin: '8px 0 0' } }, rec?.amount != null ? gutVsLinesWords({ gut: rec.amount, lineTotal, categories: ctx.metrics().inputs.categories }).text : 'What do you think you spend in a month? Ask before looking at anything; it is kept to compare later.')); // batch 12 (item 3)
+  const words = rec?.amount != null ? gutVsLinesWords({ gut: rec.amount, lineTotal, categories: ctx.metrics().inputs.categories }).text : 'What do you think you spend in a month? Ask before looking at anything; it is kept to compare later.'; // batch 12 (item 3)
+  const row = h('div.row-line.gut-row', { style: { gap: '12px' } }, h('h3', {}, 'Your gut number'), S.moneyInput(rec?.amount ?? null, set, { hint: 'A month, all in', key: 'gut' }),
+    rec ? S.toggle([[true, 'Includes debt payments'], [false, 'Not debt payments']], rec.values.includesDebtPayments !== false, v => ctx.store.update(rec.id, { includesDebtPayments: v }), { label: 'Includes debt payments' }) : null);
+  // Batch 13: the caret is the title; the box stays in the header line, so closed it is still one tap to type.
+  return S.secWrap(h('div.card.gut-card', {}, row, h('p.muted', { style: { margin: '8px 0 0' } }, words)), 'budget:gut', { head: row, open: true, summary: rec?.amount != null ? words : null });
 }
 
+const fastTrackSummary = doc => { const b = Object.values(doc.spending.basics || {}).filter(v => v != null); return b.length ? `Fast Track total ${money(b.reduce((t, v) => t + v, 0))} a month` : 'Not used yet'; };
 // Fast Track totals (the old Basics pass): one total per area (R132), with what the lines say beside them.
 function fastTrackTotals(ctx) {
   const doc = ctx.store.doc;
@@ -300,7 +307,7 @@ export const budgetCharts = [
     },
   },
   {
-    name: 'DRAFTT shares',
+    name: 'Share of take-home by group',
     data: ctx => {
       const lines = ctx.visible(r => r.kind === 'bill' && r.status !== 'Not for me' && r.amount != null);
       if (!lines.length) return { needs: ['a spending line'] };
@@ -353,11 +360,11 @@ export function calendarScreen(app, ctx) {
     S.moreBlock('cal:settings', () => h('div.row-line.cal-settings', { style: { gap: '16px', marginTop: '10px', alignItems: 'flex-end' } },
       S.labelled('Starting balance', S.moneyInput(cal.start ?? null, v => { ctx.store.setIn('spending', ['calendar', 'start'], v === null ? undefined : v, 'Starting balance'); ctx.store.setIn('spending', ['calendar', 'startYm'], v === null ? undefined : UI.calYm); },
         { hint: st.value == null ? 'Add balance' : `${moneyText(st.value)} (checking)`, key: 'cal:start' }), { note: cal.start != null ? `As of the start of ${monthName(cal.startYm || UI.calYm)}` : 'Pulled from checking; type to change' }),
-      S.labelled('Low balance line', S.moneyInput(cal.low ?? null, v => ctx.store.setIn('spending', ['calendar', 'low'], v === null ? undefined : v, 'Low balance line'), { hint: bufferLine(ctx) != null ? `Buffer ${moneyText(bufferLine(ctx))}` : moneyText(ctx.ref.defaults.lowBalanceLine), key: 'cal:low' }), { note: 'Blank: the Buffer layer (two weeks of spending)' }),
+      S.labelled('Low balance line', S.moneyInput(cal.low ?? null, v => ctx.store.setIn('spending', ['calendar', 'low'], v === null ? undefined : v, 'Low balance line'), { hint: bufferLine(ctx) != null ? moneyText(bufferLine(ctx)) : moneyText(ctx.ref.defaults.lowBalanceLine), key: 'cal:low' }), { note: 'Blank: two weeks of spending', tip: 'Blank uses the Buffer layer from Cash layers: two weeks of spending, so checking never bounces' }),
       S.labelled('Markers', h('div.seg.multi', { role: 'group', 'aria-label': 'Markers' }, h('button', { type: 'button', 'aria-pressed': String(UI.markers), title: 'FOO dates, the month-end close day, and your holidays (About you › Your calendar)', onclick: () => { UI.markers = !UI.markers; redraw(); } }, 'Markers'))),
       S.checkbox('Count maybe money', !!cal.countMaybe, v => ctx.store.setIn('spending', ['calendar', 'countMaybe'], v, 'Count maybe')),
       S.checkbox('Wins on their own', cal.autoWins !== false, v => ctx.store.setIn('spending', ['calendar', 'autoWins'], v, 'Auto wins'))),
-    { label: `Balance ${st.value == null ? 'not set' : money(st.value)} · low line ${money(cal.low ?? bufferLine(ctx) ?? ctx.ref.defaults.lowBalanceLine)}${cal.low == null && bufferLine(ctx) != null ? ' (the Buffer)' : ''} · ${UI.show.size === GROUPS.length ? 'showing all' : `showing ${UI.show.size} of ${GROUPS.length}`}` }));
+    { label: `Balance ${st.value == null ? 'not set' : money(st.value)} · your low-balance line ${money(cal.low ?? bufferLine(ctx) ?? ctx.ref.defaults.lowBalanceLine)} · ${UI.show.size === GROUPS.length ? 'showing all' : `showing ${UI.show.size} of ${GROUPS.length}`}` }));
   // Item 28: filter chips by type sit on the header, not in the settings.
   const filters = h('div.row-line.cal-filters', { style: { gap: '6px', marginTop: '8px', flexWrap: 'wrap' } }, h('span.muted.small', {}, 'Show'), GROUPS.map(gp => h(`button.btn.small.filter-chip.${CHIP[gp] || 'out'}`, { type: 'button', 'aria-pressed': String(UI.show.has(gp)), onclick: () => { UI.show.has(gp) ? UI.show.delete(gp) : UI.show.add(gp); redraw(); } }, h('span.dot'), gp)));
   header.append(filters);
@@ -378,7 +385,7 @@ export function calendarScreen(app, ctx) {
   if (UI.markers) for (const mk of calendarMarkers(doc, ctx.ref, UI.calYm, { now: ctx.now(), flags: app.flags || [] })) { if (!marks.has(mk.date)) marks.set(mk.date, []); marks.get(mk.date).push(mk); if (!byDay.has(mk.date)) byDay.set(mk.date, []); }
   return [head('Calendar', 'Day by day, with a running balance'), header, ...notes,
     UI.view === 'list' ? null : monthGrid(ctx, byDay, endOf, b.low, marks), dayList(ctx, byDay, endOf, b.low, marks, { force: UI.view === 'list' }), // item 28: Month, or the Full list on any width
-    h('div.card.cal-chart', {}, h('div.bar-top', {}, h('strong', {}, `Running balance, ${UI.range === 'Month' ? monthName(UI.calYm) : `${UI.range} from ${monthName(UI.calYm)}`}`)), balanceChart(ctx, b))];
+    S.sec('cal:balance-chart', { title: `Running balance, ${UI.range === 'Month' ? monthName(UI.calYm) : `${UI.range} from ${monthName(UI.calYm)}`}`, summary: b.firstLow ? `Dips under your low-balance line on ${dayLabel(b.firstLow.date)}` : 'Stays above your low-balance line' }, () => h('div.card.cal-chart', {}, balanceChart(ctx, b)))]; // batch 13: a caret section, closed
 }
 // Batch 15, item 9: the Bills list (Monarch recurring, Rocket Money subscriptions). Every repeating charge by its next
 // date, with how often, paid with, and Keep or Try to cut on what can be cut.
@@ -409,7 +416,7 @@ function chipOf(ctx, i) {
   const amt = i.kind === 'win' ? '' : ` ${sign(i.planned)}${money(Math.abs(i.status === 'Paid' && i.paid != null ? i.paid : i.planned))}`;
   const label = i.kind === 'win' ? `★ ${i.name}` : i.maybe ? `~ ${i.name}` : `${i.name}`;
   if (i.kind === 'spread') { // item 29: one bar for the week's spending money, expandable by category
-    const bar = h('button.chip.spread.out', { type: 'button', title: `Spending money this week: ${i.parts.length} ${i.parts.length === 1 ? 'line' : 'lines'}`, onclick: e => { e.stopPropagation(); spreadPanel(ctx, e.currentTarget, i); } }, h('span.chip-name', {}, `Spending money${i.weekly ? ' this week' : ''}`), h('span.chip-amt', {}, `${sign(i.planned)}${money(Math.abs(i.planned))}`));
+    const bar = h('button.chip.spread.out', { type: 'button', title: `Spending money this week: ${i.parts.length} ${i.parts.length === 1 ? 'line' : 'lines'}`, onclick: e => { e.stopPropagation(); spreadPanel(ctx, e.currentTarget, i); } }, h('span.chip-name', { title: `Spending money${i.weekly ? ' this week' : ''}: ${money(Math.abs(i.planned))}` }, 'Spending'), h('span.chip-amt', {}, `${sign(i.planned)}${money(Math.abs(i.planned))}`));
     return bar;
   }
   const canMove = i.kind !== 'win' && i.status !== 'Paid';
@@ -420,7 +427,7 @@ function chipOf(ctx, i) {
   const btn = h(`button.chip.${cls}`, { type: 'button',
     title: `${i.name}${amt}${i.onCard ? ` · on ${i.onCard}` : ''} · ${i.status}${i.guessDate ? ' · guessed day' : ''}`,
     onclick: e => { e.stopPropagation(); instancePanel(ctx, e.currentTarget, i); } },
-  handle, i.guessDate ? h('span.guess-badge', { title: 'Guessed day: the line has no due day yet' }, '?') : null, i.status === 'Paid' ? icon('check') : null, h('span.chip-name', {}, label), amt ? h('span.chip-amt', {}, amt) : null); // item 30
+  handle, i.guessDate ? h('span.guess-badge', { title: 'Guessed day: the line has no due day yet' }, '?') : null, i.status === 'Paid' ? icon('check') : null, h('span.chip-name', { title: `${label}${amt}` }, label), amt ? h('span.chip-amt', {}, amt) : null); // item 30
   return btn;
 }
 // Item 29: what a week's spending money is made of, by category; each line opens its own panel.
@@ -611,9 +618,10 @@ export function closeScreen(app, ctx) {
   const streak = closeStreak(doc, ctx.now());
   return [head('Month end', 'Plan vs actual'),
     h('p.muted', { style: { margin: '0 0 8px' } }, h('strong', {}, streak.words), streak.months ? ` · ${monthName(streak.first)} to ${monthName(streak.last)}. One missed month inside a run is a grace month.` : ' Close a month to start the streak.'), // L (overnight)
-    S.moreBlock('close:import', () => csvImportBlock(app, ctx), { label: 'Import a bank statement (CSV)' }), // J (overnight)
-    acc.hidden ? null : S.summaryStrip(ctx, [{ label: 'Gut accuracy', result: acc, note: 'How far the first guess was off, on average' }]),
-    h('div.close-list', {}, views.map(v => closeRow(app, ctx, v)))];
+    S.sec('close:months', { title: 'The last 6 months', open: true, summary: `${views.filter(v => v.closed).length} of ${views.length} closed` }, // batch 13: caret sections; the months are the core
+      acc.hidden ? null : S.summaryStrip(ctx, [{ label: 'Gut accuracy', result: acc, note: 'How far the first guess was off, on average' }]),
+      h('div.close-list', {}, views.map(v => closeRow(app, ctx, v)))),
+    S.sec('close:import', { title: 'Import a bank statement (CSV)', summary: 'Amounts land on the Budget as actuals' }, () => h('div.card', {}, csvImportBlock(app, ctx)))]; // J (overnight)
 }
 function closeRow(app, ctx, v) {
   const withEst = v.rows.filter(r => (r.estimate ?? 0) > 0);

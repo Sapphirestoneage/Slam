@@ -41,26 +41,37 @@ export function homeScreen(app, ctx) {
   const low = firstLowDay(ctx);
   // Batch 14 (item 6): a brand-new client sees one obvious first action; the rest waits, folded, until there is data.
   if (isFreshClient(doc)) return [startOne(app, ctx, P), S.moreBlock('home:fresh-rest', () => h('div.stack', { style: { gap: '12px' } }, sessionStrip(app, ctx, P), pathRow(app, P, open), checklistCard(app, ctx, P, open), pictureCard(ctx, P)), { label: 'The program, the path and the picture' })];
+  // Batch 13 (item 7): for a returning client the most useful things come first (the debt-free card when it applies,
+  // then the agenda, then the picture); everything else is a caret section, closed, with its one-line summary.
+  // (Batch 14 owns the new client's Start session 1; the session strip at the top is left as it is.)
+  const textOf = el => el?.textContent?.replace(/\s+/g, ' ').trim() || null;
+  const card = S.secCard; // a card whose header row has its title
+  const fold = (el, id, title, summary = null) => (el ? S.sec(id, { title, summary }, el) : null); // a card with no title of its own
+  const money1 = moneyInOneLine(app, ctx, P.m);
+  const things = nextThings(app, ctx, P);
+  const ladder = ladderCard(app, ctx);
+  const payday = paydayCard(app, ctx);
+  const items = openItems(app, ctx);
   return [sessionStrip(app, ctx, P),
     gapOf(doc, P.m) ? gapCard(app, ctx, P.m) : debtHero(app, ctx, P.m), // batch 12 (item 5): a short month owns Home; else (batch 11) the debt-free date leads
     P.inSession ? joyAsk(ctx, P) : null, // F4: asked at the start of each session
     endedLine(app, ctx, P),
     pathRow(app, P, open),
     checklistCard(app, ctx, P, open),
-    pictureCard(ctx, P),
-    ladderCard(app, ctx),
-    joyCard(ctx),
-    P.afterIntake ? holesCard(app, ctx, P) : null,
-    filledCard(ctx, P),
-    P.afterIntake && !P.scorecard.open.length ? nextChapterCard(ctx, { unrated: P.scorecard.unrated, parked: P.scorecard.parkedHoles }) : null, // answers 137, 140: only an open hole blocks
-    nextThings(app, ctx, P),
-    moneyInOneLine(app, ctx, P.m),
-    P.inSession ? wrapUp(app, ctx, P) : null,
-    paydayCard(app, ctx),
-    openItems(app, ctx),
+    card(pictureCard(ctx, P), 'home:picture', { open: true, summary: `Picture ${P.pace.points}% · ${P.pace.word}` }),
+    P.inSession ? card(wrapUp(app, ctx, P), 'home:wrap-up', { open: true }) : null,
     low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below the low line (${money(low.low)}) on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/cash-flow/calendar') })) : null, // R096
     ctx.gates().betweenJobs ? S.summaryStrip(ctx, [{ label: 'Runway (between jobs)', result: P.m.runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/net-worth/assets' }]) : null, // R006
-    day0Card(ctx, P),
+    card(money1, 'home:money-line', { summary: textOf(money1.querySelector(':scope > p')) ?? 'Net worth, surplus, savings rate, FI date' }),
+    card(things, 'home:next-things', { summary: P.next[0] ? `${P.next[0].label} first` : 'Every number is at Actual' }),
+    fold(ladder, 'home:ladder-card', 'The ladder', [textOf(ladder?.querySelector('.ladder-name')), [...(ladder?.querySelectorAll('.bar-row > span') ?? [])].map(textOf).find(t => /% there$/.test(t || ''))].filter(Boolean).join(' · ') || null),
+    fold(payday, 'home:payday', 'Next paycheck', textOf(payday?.querySelector('p'))),
+    card(items, 'home:open-items', { summary: textOf(items?.querySelector('.tag')) ? `${textOf(items.querySelector('.tag'))} open` : null }),
+    P.afterIntake ? card(holesCard(app, ctx, P), 'home:holes') : null,
+    card(filledCard(ctx, P), 'home:filled'),
+    P.afterIntake && !P.scorecard.open.length ? card(nextChapterCard(ctx, { unrated: P.scorecard.unrated, parked: P.scorecard.parkedHoles }), 'home:chapter') : null, // answers 137, 140: only an open hole blocks
+    fold(joyCard(ctx), 'home:joy-card', 'Confidence and Joy'),
+    card(day0Card(ctx, P), 'home:day0'),
     netWorthOverTime(app, ctx)];
 }
 
@@ -103,7 +114,7 @@ function debtHero(app, ctx, m) {
   return h('section.card.debt-hero', { 'aria-label': 'Debt free' },
     h('div.row-line.hero-top', { style: { gap: '18px', alignItems: 'baseline' } },
       h('div', {}, h('span.label', {}, 'Debt free'), h('div.hero-date', {}, S.mathButton({ id: 'M34', value: card.months, needs: [], unit: 'months', text: m.debtPlan.text }, at(card.months)))),
-      h('div', {}, h('span.label', {}, 'Going to debt'), h('div.hero-num', {}, `${money(card.monthly)} a month`)),
+      h('div', {}, h('span.label', {}, 'Going to debt'), h('div.hero-num', {}, `${money(card.monthly)} a month`), m.inputs.debts.filter(d => (d.balance ?? 0) > 0).length > 1 ? h('span.muted.small', {}, 'Freed payments roll into the next debt') : null), // batch 13
       next && !next.done ? h('div', {}, h('span.label', {}, 'Next milestone'), h('div.hero-num', {}, next.name), h('span.muted.small', {}, `${money(next.left)} to go · ${at(next.months)}`)) : null,
       h('span.spacer'), chips),
     whatIf,
@@ -244,7 +255,7 @@ function pictureCard(ctx, P) {
   const sc = P.scorecard;
   const paceTag = h(`span.tag.pace-tag.${pace.word === 'Ahead' ? 'ahead' : pace.word === 'On track' ? 'ontrack' : 'catchup'}`, {}, pace.word);
   if (P.afterIntake) { // the picture is in: now the areas count
-    return h('div.card.picture-card', {},
+    return h('div.card.picture-card', {}, h('div.row-line', { style: { gap: '8px' } }, h('h2', {}, 'Whole picture')), // batch 13: a title for the caret
       h('div.bar-row', {}, h('span.pct', {}, `${sc.okCount} of ${sc.of} areas Strong or OK`), bar(sc.of ? sc.okCount / sc.of : 0, { wide: true, label: 'Areas Strong or OK' }),
         h('span.muted', {}, P.day0Ok != null ? `Day 0: ${P.day0Ok}` : 'Day 0: not scored yet', sc.unrated.length ? ` · ${sc.unrated.length} not rated yet` : '', sc.holes.length ? ` · ${sc.holes.length} ${sc.holes.length === 1 ? 'hole' : 'holes'}` : ' · no hole left'),
         h('a', { href: '#/plan/scorecard' }, 'Scorecard ›')),
@@ -371,7 +382,7 @@ function gamePlan(ctx) {
     S.labelled('Next-year plan notes', notes),
     h('div.row-line', { style: { gap: '12px', alignItems: 'flex-end' } },
       S.labelled('Yearly review date', h(`label.field${p.reviewDate ? '.filled' : ''}`, { style: { width: '170px' } }, d)),
-      S.labelled('Monthly money date', S.select(MONEY_DATES, p.moneyDate ?? null, v => save({ moneyDate: v }), { label: 'Monthly money date', hint: 'Pick a cadence', width: 230, key: 'plan:moneyDate' })))));
+      S.labelled('Monthly money date', S.tapPick(MONEY_DATES, p.moneyDate ?? null, v => save({ moneyDate: v }), { label: 'Monthly money date', key: 'plan:moneyDate' })))));
 }
 
 // ---------- The next small things ----------
@@ -484,9 +495,8 @@ function day0Card(ctx, P) {
 function netWorthOverTime(app, ctx) {
   const snaps = ctx.store.doc.snapshots.filter(x => x.metrics && x.metrics.netWorth != null);
   if (!snaps.length) return null;
-  return h('div.nw-time', {}, h('div.row-line', { style: { gap: '8px' } },
-    S.moreBlock('home:nw', () => (snaps.length >= 2 ? netWorthChart(snaps, { height: 220 }) : h('p.muted', {}, 'One snapshot so far. The line starts with the second one.')),
-      { label: `Net worth over time (${snaps.length} ${snaps.length === 1 ? 'snapshot' : 'snapshots'})` }),
-    S.button('Save snapshot', { size: 'small', iconName: 'camera', onClick: () => { app.snapshot('Snapshot'); } })));
+  return S.sec('home:nw', { title: 'Net worth over time', summary: `${snaps.length} ${snaps.length === 1 ? 'snapshot' : 'snapshots'}`, // batch 13: a caret section like the rest
+    extra: S.button('Save snapshot', { size: 'small', iconName: 'camera', onClick: () => { app.snapshot('Snapshot'); } }) },
+  () => h('div.card', {}, snaps.length >= 2 ? netWorthChart(snaps, { height: 220 }) : h('p.muted', { style: { margin: 0 } }, 'One snapshot so far. The line starts with the second one.')));
 }
 export { inSession };

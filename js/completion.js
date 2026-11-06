@@ -95,6 +95,8 @@ export const MISSING = {
   'net-worth/protection': [r => r.kind === 'coverage', ['have']],
   'cash-flow/budget': 'budget', // batch 7 (A): the categories
 };
+// Batch 13: where an item's box lives. Debt counts the credit cards (one row there), but their boxes are on Credit cards.
+export const itemRoute = (ctx, hash, it) => (routeKey(hash) === 'net-worth/debt' && ctx.store.get(it.id)?.type === 'Credit card' ? '#/net-worth/credit-cards' : hash);
 export const routeKey = hash => { const { tab, sub } = parseRoute(hash); return `${tab.id}/${sub.id}`; };
 // The fields that need work on a screen, core first: [{ id, name, field, word, level, focus, where, route }].
 export function missingFor(ctx, hash) {
@@ -102,7 +104,8 @@ export function missingFor(ctx, hash) {
   if (!def) return [];
   const c = def === 'budget' ? budgetCompletion(ctx) : listCompletion(ctx, def[0], def[1]);
   const seen = new Set();
-  return [...(c.core.items || []), ...(c.full.items || [])].filter(it => { const k = `${it.id}:${it.field}`; if (seen.has(k)) return false; seen.add(k); return true; }).map(it => ({ ...it, route: `#/${key}` }));
+  const elsewhere = it => key === 'net-worth/debt' && itemRoute(ctx, hash, it) !== hash; // batch 13: "On this screen" lists only boxes on this screen (a card's boxes are on Credit cards)
+  return [...(c.core.items || []), ...(c.full.items || [])].filter(it => { const k = `${it.id}:${it.field}`; if (seen.has(k) || elsewhere(it)) return false; seen.add(k); return true; }).map(it => ({ ...it, route: `#/${key}` }));
 }
 
 // ---------- Batch 14 (item 8): X of Y filled on Budget, Taxes, Protection and Goals, and every screen's counts ----------

@@ -197,8 +197,12 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   const earmarkedTotal = accounts.filter(a => a.group === 'investment' && earmarked(a)).reduce((s, a) => s + (a.value ?? 0), 0);
   const brokerage = accounts.filter(a => a.type === 'Brokerage').reduce((s, a) => s + (a.value ?? 0), 0);
   const housingLines = lines.filter(l => HOUSING.has(l.category));
-  const housing = housingLines.some(l => l.category === 'Rent or mortgage' && l.amount !== null)
-    ? housingLines.reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0) : null;
+  // Batch 13: a homeowner pays the mortgage on Debt (From Debt), not as a Rent or mortgage line, so with no rent line the
+  // mortgage payment is the housing cost (plus any utilities lines). The sheet's M2A does the same.
+  const rentLine = housingLines.some(l => l.category === 'Rent or mortgage' && l.amount !== null);
+  const mortgagePay = debts.filter(d => d.type === 'Mortgage' && d.payment != null).reduce((s, d) => s + d.payment, 0);
+  const housing = rentLine || mortgagePay > 0
+    ? housingLines.reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0) + (rentLine ? 0 : mortgagePay) : null;
   // Sinking funds on events: what is still to save, spread over the months left (yearly Budget costs are already spending).
   const ymNow = now.getFullYear() * 12 + now.getMonth();
   const sinkingMonthly = live.filter(r => r.kind === 'event' && r.values.sinking && r.amount != null && r.status !== 'Not for me').reduce((s, r) => {

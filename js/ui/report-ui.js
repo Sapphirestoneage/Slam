@@ -45,15 +45,15 @@ export function overviewScreen(app, ctx) {
   const shelf = [
     ...(debtFree ? [debtFree] : []),
     { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate, note: m.savingsRate.second, so: soWhat('savingsRate', m) },
-    { label: 'Biggest DRAFTT letter', result: topLetter ? { id: 'M29', value: topLetter[1], needs: [], unit: 'pct', text: shares.text } : { ...shares, value: null, needs: shares.needs?.length ? shares.needs : ['a tagged spending line'] },
+    { label: 'Biggest share of take-home', tip: 'The biggest DRAFTT letter (Debt, Retirement, Accommodation, Food, Transportation, Therapy): the spending group that takes the most of take-home', result: topLetter ? { id: 'M29', value: topLetter[1], needs: [], unit: 'pct', text: shares.text } : { ...shares, value: null, needs: shares.needs?.length ? shares.needs : ['a tagged spending line'] },
       home: HOME.budget, note: topLetter ? `${topLetter[0]}, share of take-home` : 'Share of take-home', so: soWhat('drafttTop', m, { top: topLetter }) },
     { label: 'Debt-to-income', result: ratios.dti, home: HOME.debt, so: soWhat('dti', m, ratios.dti) },
     { label: 'Housing %', result: m.housingPct, home: HOME.budget, so: soWhat('housing', m) },
-    { label: 'Rule of 5 cushion', result: r5, home: HOME.assets, so: soWhat('ruleOf5', m) },
-    { label: 'Tax rate', result: tax, home: HOME.taxes, note: tax.marginal != null ? `Last dollar ${pct(tax.marginal)}` : null, so: soWhat('taxRate', m, tax) },
-    { label: 'Utilization', result: ratios.util, home: HOME.debt, so: soWhat('util', m, ratios.util) },
+    { label: 'Job-loss fund target (big e)', tip: 'The Rule of 5: about one month of spending for every 5 years of age, the fund that carries you through a job loss', result: r5, home: HOME.assets, so: soWhat('ruleOf5', m) },
+    { label: 'Tax rate', result: tax, home: HOME.taxes, note: tax.marginal != null ? h('span.has-tip', { title: 'Your marginal bracket: the rate on the next dollar you earn' }, `Tax on your next dollar ${pct(tax.marginal)}`) : null, so: soWhat('taxRate', m, tax) },
+    { label: 'Utilization', result: ratios.util, home: HOME.debt, render: ratios.util.none ? () => 'No cards' : null, so: ratios.util.none ? null : soWhat('util', m, ratios.util) },
     { label: 'Of the way to FI', result: l.value === null ? l : { id: 'M55', value: l.value['Regular FI'], needs: l.value['Regular FI'] == null ? ['an FI number'] : [], unit: 'pct', text: l.text }, home: HOME.fi,
-      note: l.value?.['Coast FI'] != null ? `Coast ${pct(Math.min(1, l.value['Coast FI']))} · Lean ${pct(Math.min(1, l.value['Lean FI'] ?? 0))}` : null, so: soWhat('ofFi', m, { value: l.value?.['Regular FI'] ?? null }) },
+      note: l.value?.['Coast FI'] != null ? h('span', {}, h('span.has-tip', { title: 'Coast FI: enough invested that growth alone reaches FI by the FI age, so you could stop saving' }, `Can stop saving ${pct(Math.min(1, l.value['Coast FI']))}`), ' · ', h('span.has-tip', { title: 'Lean FI: enough to cover a bare-bones budget for good' }, `Bare-bones FI ${pct(Math.min(1, l.value['Lean FI'] ?? 0))}`)) : null, so: soWhat('ofFi', m, { value: l.value?.['Regular FI'] ?? null }) },
   ];
   return [head('Overview', 'Read only. Every number links to its home'),
     S.summaryStrip(ctx, [
@@ -61,10 +61,10 @@ export function overviewScreen(app, ctx) {
       { label: 'Liquid net worth', result: m.liquidNetWorth, home: HOME.assets, so: soWhat('liquid', m) },
       { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: HOME.surplus, so: soWhat('surplus', m) },
       { label: 'Runway', result: m.runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: HOME.assets, so: soWhat('runway', m) }]),
-    h('div.section-title', {}, h('h2', {}, 'Metrics'), h('span.muted', {}, 'Lit when the numbers behind them exist')),
-    h('div.shelf', {}, shelf.map(i => S.metricCard(ctx, i.label, i.result, i))),
-    h('div.report-grid', {}, donutCard(app, ctx, m), sankeyCard(ctx, m)),
-    fixedVariable(ctx, m)];
+    // Batch 13 (item 1): Metrics is the core (open); the charts and fixed vs variable are caret sections, closed.
+    S.sec('overview:metrics', { title: 'Metrics', open: true, summary: `${shelf.filter(i => i.result?.value != null).length} of ${shelf.length} lit` }, h('p.muted.small', { style: { margin: '0 0 8px' } }, 'Lit when the numbers behind them exist'), h('div.shelf', {}, shelf.map(i => S.metricCard(ctx, i.label, i.result, i)))),
+    S.sec('overview:charts', { title: 'Where the money goes', summary: 'Spending by group and the cash flow chart' }, () => h('div.report-grid', {}, donutCard(app, ctx, m), sankeyCard(ctx, m))),
+    (() => { const fv = fixedVariable(ctx, m); return fv ? S.sec('overview:fixed', { title: 'Fixed and variable', summary: 'What you pay no matter what, and what moves' }, fv) : null; })()];
 }
 
 function donutCard(app, ctx, m) {
@@ -252,8 +252,9 @@ export function onePagerScreen(app, ctx) {
         m.debtRule?.heavy && m.debtPlan?.months != null ? h('li', {}, `Debt free ${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.months), 'short')}${m.debtRule.on ? ': the surplus goes to heavy debt first' : ''}`) : null, // batch 11
         m.monthsToFi.value != null && fiGate(ctx).unlocked ? h('li', {}, `FI ${fiWordsOf(m, fiGate(ctx).confidence, { now: ctx.now() })?.past ? 'reached' : fiWordsOf(m, fiGate(ctx).confidence, { now: ctx.now() })?.text ?? ''}${doc.assumptions.fiAge ? `, target age ${doc.assumptions.fiAge}` : ''}`) : null,
         goals.map(g => h('li', {}, g.name || g.type)), !goals.length && (m.monthsToFi.value == null || !fiGate(ctx).unlocked) ? h('li.muted', {}, fiGate(ctx).unlocked ? 'Set an FI target on Plan' : `FI date: ${fiGate(ctx).reason}`) : null))),
-    h('div.op-grid', { style: { marginTop: '16px' } }, box('strengths', 'Strengths', 'What is going well'), box('struggles', 'Struggles', 'What is hard right now')),
-    h('div.op-grid', { style: { marginTop: '16px' } }, box('doMore', 'Do more', 'Keep doing'), box('doLess', 'Do less', 'Ease off')),
+    S.sec('one-pager:notes', { title: 'Strengths, struggles, do more, do less', level: 'h3', summary: `${['strengths', 'struggles', 'doMore', 'doLess'].filter(k => op[k]).length} of 4 written` }, // batch 13: the coach's four boxes fold
+      h('div.op-grid', { style: { marginTop: '8px' } }, box('strengths', 'Strengths', 'What is going well'), box('struggles', 'Struggles', 'What is hard right now')),
+      h('div.op-grid', { style: { marginTop: '16px' } }, box('doMore', 'Do more', 'Keep doing'), box('doLess', 'Do less', 'Ease off'))),
     h('p.disclaimer', {}, 'Coach, not a licensed financial advisor.'))]; // R182
 }
 
@@ -325,13 +326,13 @@ export function historyScreen(app, ctx) {
       { label: 'Debt paid down', result: { id: 'M30', value: first.debtTotal == null || last.debtTotal == null ? null : first.debtTotal - last.debtTotal, needs: [], unit: 'money', text: 'Total debt at the first snapshot minus total debt now.' }, so: soWhat('debtPaid', ctx.metrics(), { first, last }) },
       { label: 'Gut accuracy', result: acc, note: acc.hidden ? 'After the first closed month' : 'Average miss of the first guess' },
       { label: 'Snapshots', result: { id: 'M00', value: snaps.length, needs: [], unit: 'count', text: 'Saved at the end of sessions and before imports or resets.' }, render: r => String(r.value) }]),
-    S.moreBlock('history:net-worth', () => h('div.card', {}, host), { label: 'Net worth over time' }),
+    S.sec('history:net-worth', { title: 'Net worth over time', open: true }, () => h('div.card', {}, host)), // batch 13: caret sections
     h('div.card', { style: { marginTop: '16px' } }, h('div.list-scroll', {}, h('table.rows', {},
       h('thead', {}, h('tr', {}, ['Snapshot', 'When', 'Net worth', 'Debt', 'Savings rate', 'Surplus'].map((k, i) => h(`th${i > 1 ? '.num' : ''}`, {}, k)))),
       h('tbody', {}, [...snaps].reverse().map(s => h('tr.row', {}, h('td.col-first', {}, s.label), h('td', {}, new Date(s.at).toLocaleString()),
         h('td.num', {}, money(s.metrics.netWorth)), h('td.num', {}, money(s.metrics.debtTotal)), h('td.num', {}, s.metrics.savingsRate == null ? '' : pct(s.metrics.savingsRate)), h('td.num', {}, money(s.metrics.surplus)))))))),
-    S.moreBlock('history:wrapped', () => wrapped(ctx, snaps, months, since), { label: 'Wrapped, your year in review' }),
-    S.moreBlock('history:log', () => changeLogTable(ctx), { label: 'Change log' })]; // F6: every edit with who
+    S.sec('history:wrapped', { title: 'Wrapped, your year in review' }, () => wrapped(ctx, snaps, months, since)),
+    S.sec('history:log', { title: 'Change log' }, () => changeLogTable(ctx))]; // F6: every edit with who
 }
 // F6: the change log, newest first: when, what, field, from, to, who (Coach or Client).
 function changeLogTable(ctx) {

@@ -9,6 +9,7 @@
 import { h, icon } from './dom.js';
 import * as S from './staples.js';
 import { missingFor, routeKey, MISSING, rowsOn } from '../completion.js';
+import { openAround } from './sections.js';
 export { missingFor, routeKey, MISSING };
 
 let toastEl = null, state = null;
@@ -46,6 +47,7 @@ const caretOf = row => row?.querySelector('td.col-actions button.caret[aria-expa
 function target(it) {
   const field = it.focus ? document.querySelector(`[data-focus="${CSS.escape(it.focus)}"]`) : null;
   const row = it.id ? document.querySelector(`tr[data-id="${CSS.escape(it.id)}"]`) : null;
+  openAround(field ?? row); // batch 13: a box inside a closed section opens the section first
   if (row?.hidden) document.querySelector(`tr.group[data-group="${CSS.escape(row.dataset.group)}"] button.fold`)?.click();
   if (field) return field.matches('input,select,button') ? field.closest('label.field, .seg') ?? field : field;
   return row ?? null;

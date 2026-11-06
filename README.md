@@ -152,7 +152,8 @@ The workbook is built only from the registries in `js/registry/`, so it stays co
 | `js/registry/scorecard.js`, `js/math/scorecard.js`, `js/ui/scorecard-ui.js` | The Scorecard (M74): eleven areas Strong, OK or Hole from the numbers or the coach, the holes ranked by payoff for the effort, the goals, the next chapter; Plan › Scorecard and Home after session 3 |
 | `js/registry/foo.js`, `js/ui/agenda-ui.js`, `js/ui/review-ui.js` | SLAM's own FOO with its prerequisites and locks; the Agenda (Must do, Going over, notes, links, Suggested for today; the docked bar in a session); the review gate before a session ends |
 | `js/benefits.js`, `js/year.js`, `js/lifeadmin.js`, `js/community.js`, `js/timer.js` | Benefits and withholding flag; your year, sinking funds, taking over; life admin; community presets; onboarding timer |
-| `js/payday.js`, `js/glossary.js`, `js/ui/tips.js`, `js/ui/report-this.js` | Payday card; plain-language tooltips; Report this |
+| `js/payday.js`, `js/glossary.js`, `js/ui/tips.js`, `js/ui/report-this.js` | Payday card; plain-language tooltips; Report this (More › Report this screen) |
+| `js/ui/sections.js`, `css/layout.css` | The caret header on every section (open or closed per client, in this browser), Open all · Close all, the slim strips, side panels that push the page |
 | `js/math/statements.js`, `js/ui/statements-ui.js` | Report › Statements: net worth, income and spending, cash flow, and the tie-out (M62 to M67) |
 | `js/math/layers.js`, `js/ui/layers-ui.js` | Cash layers: little e, income gaps, big e, backups of the backups (M68) |
 | `js/math/foo.js`, `js/ui/foo-ui.js`, `data/flags.json` | Plan › FOO: the SLAM order of operations, Quiet Quitting FI, the path, efficiency flags as data (M69 to M71) |
