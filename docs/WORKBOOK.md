@@ -110,7 +110,7 @@ them, each section with the app's own title.
 | # | Tab | Today's screens it holds | Top to bottom |
 | --- | --- | --- | --- |
 | 1 | You | Home › About you, People, Coach tools › Discovery and Session | Where this stands (the Picture: answered, solid; Ask next), About you, What applies to me, Why now, People (a table), Work and home, Home and shared bills, Couples split, Which do you have today, Your community and calendar, Who they are with money, Session |
-| 2 | Money in | Cash flow › Income, Taxes, Plan › Raise and benefits | Where this stands (take-home, gross, taxes, the effective rate), Income by person and type (a band each; Other benefits last), Taxes (filing, W-4, last year), Variable income, Work hours, Benefits now, more about money in (match, safe budget, real hourly, what a shift really pays), what a raise does to your benefits |
+| 2 | Money in | Cash flow › Income, Taxes, Plan › Raise and benefits | Where this stands (take-home, gross, taxes, the effective rate), Income by person and type (a band each; Other benefits last), Taxes (filing, W-4, last year), Variable income, Work hours, Benefits now (with child care help), more about money in (the Child Tax Credit, match, safe budget, real hourly, what a shift really pays), what a raise does to your benefits |
 | 3 | Money out | Cash flow › Budget, Calendar, Month end, Plan › Next 12 months | Where this stands (spending, the gut number, the categories, gut accuracy), the gut number first, then a band per category in the app's order (Accommodation, Food, Transportation, Debt, Health and self-care, Taxes, Retirement, Bills and subscriptions, Other) with its lines, then Irregular and yearly costs; Settings for this budget; more about money out (sinking funds, bonus months, holidays); Calendar entries and wins; Month end (a band per month) |
 | 4 | Own and owe | Net worth › Assets, Debt, Credit cards, Protection, Fire drill, Report › Lender's view | Where this stands (net worth, liquid, cash, invested, runway), Assets (Cash, Investments, Home or car), Order to pay off debt, Debt (Credit cards, Loans, Other), what you owe comes to (utilization, debt-to-income), Your credit, what your cards give you, Protection, Cash layers, Income gaps, Backups, Institutions, the bank fire drill, what a lender sees |
 | 5 | The plan | Home, Plan › FOO, Scorecard, Current vs Proposed | Where this stands (surplus, savings rate, the FOO step, your next 3 moves), where each dollar goes (take-home to surplus, and the DRAFTT shares), Extra to debt, Giving, launch and the job, the FOO steps, what the freed money does, the Scorecard, Current vs Proposed |
@@ -120,7 +120,8 @@ them, each section with the app's own title.
 | | Assumptions, Math, Captured | (the engine room, at the end) | Every rate and limit (its own tab, as before); every formula with its Check; what is kept for a later Wrapped |
 | | _lists, _meta (hidden) | | The long dropdown lists; who, when, the format and the baseline |
 
-Screens of today's app with no tab: Report › History (dated history and snapshots stay in the app and the backup
+Screens of today's app with no tab: Net worth › Money control (private by design, batch 55: the workbook leaves it
+out), Report › History (dated history and snapshots stay in the app and the backup
 file), Coach tools › Lists (worked out from the rows on the other tabs) and Coach tools › Data (the buttons that make and
 read this file). Every tab name fits Excel's 31 characters and is one Google Sheets takes, so no short form was needed.
 `test/coverage.test.js` fails when a field of About you, Taxes or a setting has no row, when a table has no home, or

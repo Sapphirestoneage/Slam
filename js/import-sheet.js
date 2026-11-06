@@ -244,8 +244,8 @@ export function compare(grid, doc, { asNew = false, ref = null } = {}) {
       const rawId = !key || (t.screens && key.startsWith(KEY.blank)) ? null : key;
       const id = asNew ? null : rawId;
       // A cell counts as typed when it holds something other than what the row was given (a backup's name).
-      const typed = ({ f, i }) => !isBlankCell(row[i]) && !(slot[f.key] != null && String(row[i]).trim().toLowerCase() === String(slot[f.key]).toLowerCase());
-      const filled = cols.filter(typed);
+      const isTyped = ({ f, i }) => !isBlankCell(row[i]) && !(slot[f.key] != null && String(row[i]).trim().toLowerCase() === String(slot[f.key]).toLowerCase());
+      const filled = cols.filter(isTyped);
       if (!rawId && !filled.length) continue; // a blank row (Kind and In the math are filled in for you)
       const nameCell = cols.find(x => x.f.key === 'name');
       const typed = typeCol >= 0 && !isBlankCell(row[typeCol]) ? String(row[typeCol]).trim() : null;

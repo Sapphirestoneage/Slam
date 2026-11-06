@@ -46,9 +46,9 @@ export const SCREEN_TABS = [
       { form: 'taxes', title: 'Taxes', fields: ['taxes.filingStatus', 'taxes.w4Status', 'taxes.w4Extra', 'taxes.quarterlyPaid', 'taxes.lastYearTax', 'taxes.lastYearAmount', P('taxes.lastYear'), P('taxes.withholdingChanged')], cols: ['filing', 'joint'] },
       { form: 'profile', title: 'Variable income', fields: keys('variable', ['last12', 'typical', 'lowest', 'setAside', 'business', 'months']) },
       { form: 'profile', title: 'Work hours', fields: keys('hours', ['paidHours', 'commuteHours', 'prepHours', 'workCosts']) },
-      { form: 'profile', title: 'Benefits now', fields: [...keys('cliff', ['snap', 'medicaid', 'essential', 'aca', 'kids', 'eitc', 'snapAmount', 'careCosts'])] },
-      { math: 'More about money in', rows: ['M10_tips', 'M12_extra', 'M12_platform', 'M14_marginal=Marginal tax rate', 'M15=Employer match a year', 'M16=Variable income safe budget', 'M16_rate', 'M17=Real hourly wage', 'M9H_real', 'M9H'] },
-      { math: 'What a raise does to your benefits', rows: ['M9B', 'M9B_snap', 'M9B_help', 'M9B_eitc', 'M9B_raise5k'] },
+      { form: 'profile', title: 'Benefits now', fields: [...keys('cliff', ['snap', 'medicaid', 'essential', 'aca', 'kids', 'eitc', 'ccap', 'snapAmount', 'careCosts', 'careFull'])] },
+      { math: 'More about money in', rows: ['M10_tips', 'M10_ctc=Child Tax Credit a year', 'M12_extra', 'M12_platform', 'M14_marginal=Marginal tax rate', 'M15=Employer match a year', 'M16=Variable income safe budget', 'M16_rate', 'M17=Real hourly wage', 'M9H_real', 'M9H'] },
+      { math: 'What a raise does to your benefits', rows: ['M9B', 'M9B_snap', 'M9B_help', 'M9B_eitc', 'M9B_ccap', 'M9B_raise5k'] },
     ] },
   { name: 'Money out', screens: ['#/cash-flow/budget', '#/cash-flow/calendar', '#/cash-flow/close', '#/plan/next-12-months'],
     about: 'Money out: your gut number first, then each category and its lines. Fill in the blue boxes from the top; spending above fills in as you go.',
@@ -123,6 +123,7 @@ export const SCREEN_TABS = [
 
 // Screens of the app with no tab, and why (docs/WORKBOOK.md).
 export const NO_TAB = [
+  ['Net worth › Money control', 'who is on each account and who can move or freeze it is private by design (batch 55): the workbook leaves it out'],
   ['Report › History', 'dated history and snapshots stay in the app and the backup file'],
   ['Coach tools › Lists', 'the Revisit, Homework and Defaults in use lists are worked out in the app from the rows on the other tabs'],
   ['Coach tools › Data', 'the buttons that make and read this file'],
