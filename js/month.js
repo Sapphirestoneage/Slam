@@ -204,7 +204,7 @@ function buildInstances(doc, ref, ym, { now = new Date(), autoWins = [], person 
 
 // Batch 40: the part of a row one person's view counts (a shared bill's share, a Joint row's half), for amounts typed
 // on the whole row elsewhere (a calendar mark, a month's typed estimate or actual).
-export const shareOf = r => r?.coupleShared?.share ?? (r?.halved ? 0.5 : 1);
+export const shareOf = r => r?.coupleShared?.share ?? (r?.halved ? r.viewShare ?? 0.5 : 1); // batch 49: a shared row's part in a household of any size
 
 // Payoff dates from the plan become wins on the calendar.
 // Batch 13 (answer to Q221): the wins read the one debt plan (m.debtPlan: the surplus, freed payments, FOO step 1

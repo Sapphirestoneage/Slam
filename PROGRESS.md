@@ -1187,3 +1187,34 @@ failures. Persona run: 15 personas, 0 errors, 0 story notes. Workbook check: eve
 4. Registered: M9P (months to FI, debt free, net worth at 10 and 30 years, the age the money lasts to) as a From the app
    row, rules ProjectionRaise and ProjectionCashReturn (both 0), format 40, spec row M9P. projection.md's Status says
    what is in and what is not.
+
+## Batch 49 (Nov 6 2026): households of any size (Phase 4 Track 2, real lives wave 1, M9N)
+
+1. The model: a household holds 1 to 6 adults and any dependents. This client is Me and a partner is Partner, as every
+   file has always stored them; more adults (P3 to P7) and dependents (D1 ...: a child, a parent you support) live in
+   profile.people, each with a name and a role (js/registry/couples.js adultsOf, dependentsOf, householdSize). Home ›
+   About you › People lists them in one grid (name, role in taps, taxes), with Add an adult (up to six) and Add a
+   dependent; the partner files together or apart in one tap when married (the Filing status), and any other adult
+   files a return of their own (Single). A Dependents count typed before comes into the list the first time one is
+   added, and the count and the kids' ages follow the list after that. Taking an adult out moves their rows to this
+   client (Undo puts them back). New fields: the People tab (name, adult or dependent, role, age), Shared among, Split
+   how and the percents on every row, Owner P3 to P7; spec rows, M9N on the Math tab, FORMATS 37.
+2. Splits generalised (js/math/household.js rowShare): a shared row (Owner Joint, or a bill split with them) splits
+   equally, by percent (the rest shared by the people with none typed) or by income (each adult's take-home), among
+   any of the adults (blank: everyone). The Owner chip's popover holds it: the names, Joint, then Shared among (taps),
+   Split (Equally, By percent, By income) and one percent box each for By percent; a bill's Who pays › Splitting shows
+   the same. Past two adults every shared row takes the split math, in every mode; a couple's file only on a row with
+   a split typed, so every couple reads as before. The household (Everyone) counts a shared bill once, whole (less the
+   roommates' part: roommates outside the plan stay the roommates count); each adult's view counts their part, and a
+   row shared among others is not in it. Each adult past the couple is taxed on their own return.
+3. Views: the whose-numbers switch lists each adult, then Everyone (Living together's Both preview is Everyone
+   (preview) past two adults); Home, Plan, FOO, Statements, Calendar and Month end follow it as before, for any adult.
+   Privacy: a row private to one adult is left out of every other adult's view and folded in Everyone (every total the
+   coach's). The workbook keeps the household's books (every row whole). Overview's debt-to-income and utilization in
+   one person's view read that view's own debts (it locked "needs 1 number" in Riley's view with only others' debts).
+4. Personas: three-adults (Riley and Jules, partners not married, and Riley's brother Dev: rent 40/40/20, groceries
+   35/35/30, utilities in thirds, internet for two) with hand-worked numbers in each of the four views (surplus $3,010,
+   $1,970, $1,510, Everyone $6,490); sandwich-parent (Nadia, her son and the mother she supports: one adult, a
+   household of three, head of household). test/households.test.js proves every persona and the Demo read exactly as
+   before in every view, on every screen's numbers and in each audience's fold (fixtures/views-baseline.json, written
+   from main before the batch; tools/personas/views.mjs).

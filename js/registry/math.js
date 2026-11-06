@@ -53,6 +53,8 @@ import { identityOf } from '../math/identity.js';
 import { lenderOf } from '../math/lender.js';
 import { askNextOf } from '../math/nextbest.js';
 import { cliffOf } from '../math/cliff.js';
+import { rowShare } from '../math/household.js';
+import { householdOf } from './couples.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -153,8 +155,8 @@ export const MATH = [
           return `IF(OR(${SKIP},{Kind}<>"Income"),"",IF({@taxType}="Unemployment",0,(${premium}+N({hsaFsa})+N({otherPretax}))*${PAYS_A_YEAR}+N({@M13})*N({@pct})+IF({contributionPct}="",${perPay},0)*${PAYS_A_YEAR}-N({app:roth})))`;
         },
         app: { roth: (rec, c) => inc(rec, c)?.roth ?? 0 } },
-      { area: 'income', key: 'taxPerson', label: 'Whose tax', unit: 'text', f: 'IF({@taxType}="","",IF(OR({owner}="Partner",AND({owner}="",{Type}="Partner job")),"Partner","Me"))' },
-      { area: 'income', key: 'taxUnit', label: 'Tax return', unit: 'text', f: 'IF({@taxType}="","",IF(Taxes_joint="Yes","Household",{@taxPerson}))' },
+      { area: 'income', key: 'taxPerson', label: 'Whose tax', unit: 'text', f: 'IF({@taxType}="","",IF(OR({owner}="P3",{owner}="P4",{owner}="P5",{owner}="P6",{owner}="P7"),{owner},IF(OR({owner}="Partner",AND({owner}="",{Type}="Partner job")),"Partner","Me")))' }, // batch 49: an adult past the couple files their own return
+      { area: 'income', key: 'taxUnit', label: 'Tax return', unit: 'text', f: 'IF({@taxType}="","",IF(AND(Taxes_joint="Yes",OR({@taxPerson}="Me",{@taxPerson}="Partner")),"Household",{@taxPerson}))' },
       { area: 'income', key: 'stack', label: 'Order on the return (jobs, then 1099, then unemployment)', unit: 'number',
         f: 'IF(OR({@taxType}="",{@taxedGross}=""),"",IF({@taxType}="1099",1,IF({@taxType}="Unemployment",2,0))*100000+ROW())' },
       { area: 'income', key: 'ficaBase', label: 'FICA base a year', unit: 'money', f: 'IF({@stack}="","",IF({@taxType}="Unemployment",0,IF({@taxType}="1099",{@taxedGross}*SE_base,{@taxedGross})))' },
@@ -648,6 +650,11 @@ export const MATH = [
       { key: 'fooLow', name: 'FOO step: the earliest step any one input reaches at its low or high', unit: 'text', fromApp: 'M9R: the FOO (M69) walked again with each input moved by its level', app: c => c.fooRange()?.low ?? null },
       { key: 'fooHigh', name: 'FOO step: the latest step any one input reaches at its low or high', unit: 'text', fromApp: 'M9R: the FOO (M69) walked again with each input moved by its level', app: c => c.fooRange()?.high ?? null },
     ] },
+  // ---------- Batch 49: households of any size (Phase 4, Track 2) ----------
+  { id: 'M9N', name: 'Households of any size: one adult\'s part of a shared row', inputs: 'the adults in the plan (this client, the partner in a couple mode, People P3 to P7), each row\'s Owner (Joint: everyone on this row), Shared among, Split how and the percents, Shared bills split on About you, each adult\'s take-home a month (By income), the roommates count',
+    fns: ['household.SPLIT_HOWS', 'household.SPLIT_HOW_WORDS', 'household.amongList', 'household.splitTyped', 'household.generalRow', 'household.amongOf', 'household.howOf', 'household.rowShare', 'household.splitWords'],
+    fromApp: 'a view, not a total: the workbook keeps the household\'s books (every row whole), and one adult\'s part of a shared row (equally: 1 / the people it is shared among; by percent: the percent typed, the rest shared equally; by income: their take-home over theirs together) is what that adult\'s own view on screen counts',
+    unit: 'pct', label: 'This client\'s part of the first shared row', app: c => { const r = (c.doc.records || []).find(x => x.owner === 'Joint'); if (!r) return null; return rowShare(r, 'Me', householdOf(c.doc, { weights: c.m?.inputs?.household?.weights ?? {} })); } },
   // ---------- Batch 42: the lender's-eye view (Phase 4, Track 2) ----------
   { id: 'M9W', name: 'What a lender sees: a mortgage lender, a landlord and a card issuer', inputs: 'each income row (its gross, cash tips and whether they are reported, the returns filed with self-employment: Tax returns filed, Net profit on the last return and the one before), benefits and their end dates, the debts\' payments (a card at its minimum), the home loan, the rent line, card balances, limits and statement days; LenderFront, LenderBack, LenderBackStrong, LenderBackDu, LenderFhaFront, LenderFhaBack, LenderRentTimes, LenderRentYearNyc, LenderDropLook, LenderBenefitYears, LenderLeaseMonths, LenderStudentPct, LenderMortgageRate (or the client\'s own), LenderMortgageYears, LenderTaxInsShare (or the client\'s own), UtilHigh, UtilBest', unit: 'pct',
     fns: ['lender.RETURNS_FILED', 'lender.lenderOn', 'lender.lastReturnYear', 'lender.lenderKind', 'lender.returnsOf', 'lender.lenderRows', 'lender.lenderDebts', 'lender.loanFromPayment', 'lender.maxHomePayment', 'lender.dtiPlace', 'lender.lenderOf', 'lender.LENDER_RATES', 'lender.LENDER_SHARES', 'lender.lenderTermsOf', 'lender.rateWords'],

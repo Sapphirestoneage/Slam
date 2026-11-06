@@ -40,7 +40,13 @@ const CHECK = f('checkOn', 'Check again on', 'date');
 const NAME = top('name', 'Name', 'text');
 const AMOUNT = (label = 'Amount') => top('amount', label, 'money');
 const PER = (label = 'Per') => top('per', label, 'choice', { options: PERS });
-const OWNER = top('owner', 'Owner', 'choice', { options: ['Me', 'Partner', 'Joint'] });
+const OWNER = top('owner', 'Owner', 'choice', { options: ['Me', 'Partner', 'Joint', 'P3', 'P4', 'P5', 'P6', 'P7'] }); // batch 49: P3 to P7 are the adults past the couple (About you › People)
+// Batch 49 (households of any size, M9N): how a shared row is split among the adults in the plan. Blank: everyone, as About you says (By income, else equally).
+const SPLIT_F = [
+  f('splitAmong', 'Shared among (blank: everyone in the plan)', 'list'),
+  pick('splitHow', 'Split how (blank: as About you says)', ['Equal', 'Percent', 'By income']),
+  f('splitPcts', 'Split by percent: each adult\'s part', 'text', { sheet: { skip: 'one percent per adult (an id and a share); set on the row\'s Owner chip in SLAM. Each person\'s part counts in their own view only; the household books count the whole row' } }),
+];
 const NOTES = top('notes', 'Notes', 'text');
 const STRESS = top('stress', 'Stress (1 to 5)', 'number');
 const PAID_WITH = top('paidWith', 'Paid with', 'text', { sheet: { skip: 'points at another row (checking, savings or a card) by its id; set it in SLAM' } });
@@ -146,6 +152,7 @@ export const AREAS = [
       f('later', "I'll find it later", 'text', { sheet: { skip: 'homework flags on profile answers; the Homework list in SLAM' } }),
       f('laterDue', "I'll find it later: due", 'text', { sheet: { skip: 'homework due dates; the Homework list in SLAM' } }),
       f('incomeGaps', 'Income gaps', 'text', { sheet: { skip: 'its own tab: Income gaps' } }),
+      f('people', 'People in the plan', 'text', { sheet: { skip: 'its own tab: People' } }), // batch 49
       f('backups', 'Backups of the backups', 'text', { sheet: { skip: 'its own tab: Backups' } }),
       f('sleepAtNight', 'Sleep-at-night number (the cash that lets you sleep)', 'money'), // batch 36 (QUESTIONS 310): on Assets › Cash layers; ticks Know your sleep-at-night number (M9K)
       f('institutions', 'Institutions', 'text', { sheet: { skip: 'its own tab: Institutions' } }), // batch 6
@@ -222,7 +229,7 @@ export const AREAS = [
       f('what', 'What it is', 'text', { kinds: ['benefit'] }),
       pick('how', 'How it works', ['Reimbursed', 'Stipend', 'Pretax', 'Match', 'Discount'], { kinds: ['benefit'] }),
       pick('using', 'Using it?', ['Yes', 'No', 'Partly'], { kinds: ['benefit'] }),
-      CHECK, LOCKED(), OWNER, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, STRESS, ...SEEN_F,
+      CHECK, LOCKED(), OWNER, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, STRESS, ...SEEN_F, ...SPLIT_F,
     ],
   },
   {
@@ -254,7 +261,7 @@ export const AREAS = [
       f('institution', 'Institution'), f('opened', 'Opened', 'month'),
       f('institutionId', 'Institution (from the list)', 'text', { sheet: { skip: 'points at an Institutions row by id; the Institution column shows its name' } }),
       f('bankKey', 'Same bank as (kept private)', 'text', { sheet: { skip: 'batch 44: on a row kept private, an opaque key in place of its institution, so the fire drill still knows which rows share a bank; set by the fold' } }),
-      CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(), ...SEEN_F,
+      CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(), ...SEEN_F, ...SPLIT_F,
     ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'a debt uses Balance and Payment' } } : x)),
   },
   {
@@ -312,7 +319,7 @@ export const AREAS = [
       f('tags', 'Tags', 'list', { kinds: ['account'] }),
       f('matchTiers', 'Match tiers', 'text', { kinds: ['account'], sheet: { skip: 'a table of match tiers on the 401(k); the first tier is on Income as match % and up to %' } }),
       f('rothLog', 'Roth IRA log', 'text', { kinds: ['account'], sheet: { skip: 'a dated list of Roth IRA contributions; edit it in SLAM' } }),
-      CHECK, LOCKED(), OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(), ...SEEN_F,
+      CHECK, LOCKED(), OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(), ...SEEN_F, ...SPLIT_F,
     ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'an account uses Balance, a thing you own uses Value' } } : x)),
   },
   {
@@ -334,7 +341,7 @@ export const AREAS = [
       pick('decision', 'Bills list: keep or try to cut', ['Keep', 'Cancel']), // batch 15: the recurring bills list (Cancel shows as Try to cut)
       f('notSame', 'Not the same as a Budget line', 'yesno', { sheet: { skip: 'an answer to Same as your ...?; asked in SLAM' } }),
       f('sameAs', 'Same as a Budget line', 'text', { sheet: { skip: 'an answer to Same as your ...?; asked in SLAM' } }),
-      CHECK, OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, ...SEEN_F,
+      CHECK, OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, ...SEEN_F, ...SPLIT_F,
     ],
   },
   {
@@ -394,7 +401,7 @@ export const AREAS = [
       f('includesDebtPayments', 'Includes debt payments', 'yesno', { kinds: ['spending'] }),
       f('pass', 'Budget pass', 'text', { kinds: ['spending'], sheet: { skip: 'where the gut number came from (Gut, or Statements when read off statements or an app); set by Fast Track and the gut box' } }),
       f('maaser', 'Maaser line', 'yesno', { kinds: ['bill'], sheet: { skip: 'set by the community preset' } }),
-      CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, ...SEEN_F,
+      CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, ...SEEN_F, ...SPLIT_F,
     ],
   },
   {
@@ -409,7 +416,7 @@ export const AREAS = [
       f('category', 'Counts as', 'text', { kinds: ['entry'] }),
       f('trip', 'Trip', 'yesno', { kinds: ['entry'] }), // F6: the Trip tag on a calendar entry
       f('lineId', 'Budget line', 'text', { kinds: ['entry'], sheet: { skip: 'points at a Budget line by its id; pick it in SLAM' } }),
-      NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, ...SEEN_F,
+      NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, ...SEEN_F, ...SPLIT_F,
     ].map(x => (['per', 'owner', 'stress'].includes(x.key) ? { ...x, unused: true, sheet: { skip: 'not used on calendar entries' } } : x)),
   },
   {
@@ -431,13 +438,18 @@ export const AREAS = [
       f('fundTag', 'Purpose tag', 'text', { kinds: ['event'] }),
       f('coverageId', 'For this coverage', 'text', { kinds: ['event'], sheet: { skip: 'points at a Protection row by its id; set by Add the usual dates' } }),
       f('holiday', 'Holiday (the block re-dates itself each year)', 'text', { kinds: ['event'] }),
-      NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, ...SEEN_F,
+      NOTES, coachNote(), PER(), OWNER, STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, ...SEEN_F, ...SPLIT_F,
     ].map(x => (['per', 'stress'].includes(x.key) ? { ...x, unused: true, sheet: { skip: 'not used on goals and events' } } : x)), // owner: a goal is one person's or Joint (F2)
   },
   {
     id: 'institutions', prefix: 'Inst', tab: 'Institutions', source: 'list', part: 'profile', path: 'institutions',
     about: 'The banks, credit unions, brokerages, workplace plans, lenders and insurers the household uses (batch 6). Name, kind, website, notes, whose. Never a login or a password.',
     fields: [f('name', 'Institution'), pick('kind', 'Kind', ['Bank', 'Credit union', 'Brokerage', 'Workplace plan', 'Lender', 'Insurer', 'Other']), f('website', 'Website'), f('notes', 'Notes'), pick('owner', 'Whose', ['Me', 'Partner', 'Joint'])],
+  },
+  {
+    id: 'people', prefix: 'People', tab: 'People', source: 'list', part: 'profile', path: 'people',
+    about: 'Batch 49: the adults in the plan past this client and the partner (P3 to P7: each with a view of their own) and the dependents (D1 ...: a child, a parent you support). This client and the partner are on Profile.',
+    fields: [f('name', 'Name'), pick('kind', 'Adult or dependent', ['Adult', 'Dependent']), pick('role', 'Role', ['Partner', 'Sibling', 'Parent', 'Adult child', 'Friend', 'Other adult', 'Child', 'Parent I support', 'Other dependent']), f('age', 'Age (a dependent)', 'number')],
   },
   {
     id: 'gaps', prefix: 'Gaps', tab: 'Income gaps', source: 'list', part: 'profile', path: 'incomeGaps',

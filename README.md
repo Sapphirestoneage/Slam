@@ -64,10 +64,10 @@ python3 -m http.server 8816 &
 node tools/e2e/personas.cjs            # every screen, for every persona, in the browser
 ```
 
-Seventeen made-up households that run SLAM end to end, from below zero to a multimillionaire: Alexis (avoids money),
+Nineteen made-up households that run SLAM end to end, from below zero to a multimillionaire: Alexis (avoids money),
 Tom (a CPA with every account), Maya, a deficit, an unmarried couple splitting by income, a married couple with one
 paycheck and a baby, three adults in one home, a tipped bartender, a 1099 dancer, a fan-site creator with a part-time
-job, a worker planning gender-affirming care, a 52-year-old with $4.2M, someone just laid off (Life Transitions), a teacher on PSLF (the student loan decision), and a married couple where one partner's fan-site income is kept between them and the coach (who sees this), a single parent on SNAP and Medicaid in New York and a couple just under the 400% marketplace line (the benefits cliff). Each is written readably in
+job, a worker planning gender-affirming care, a 52-year-old with $4.2M, someone just laid off (Life Transitions), a teacher on PSLF (the student loan decision), and a married couple where one partner's fan-site income is kept between them and the coach (who sees this), a single parent on SNAP and Medicaid in New York and a couple just under the 400% marketplace line (the benefits cliff), three adults who each have a plan (two partners and a brother who pays a share by percent) and a single mom who supports her mother (households of any size). Each is written readably in
 `tools/personas/defs/<id>.mjs`, with the 5 to 10 numbers a coach expects worked out by hand (the arithmetic is in each
 note) and a list of what SLAM cannot represent for that person yet. `tools/personas/build.mjs` turns each def into the
 app's own backup file in `fixtures/personas/`, so any of them opens through Coach tools › Data › Import.
@@ -192,7 +192,7 @@ The workbook is built only from the registries in `js/registry/`, so it stays co
 | `docs/backlog-brandon.md` | The Nov 2 beta feedback, tagged NOW or LATER |
 | `data/reference-2026.json` | Presets, limits, rates, lists from the Reference data tab |
 | `js/registry/ladder.js`, `js/math/ladder.js` | The ladder (M75): steps in FOO order and markers slotted by date; Home's next step and next marker |
-| `js/registry/couples.js`, `js/couples.js` | Couples: person tags, the six household modes and their defaults, the per-person view, the by-income split |
+| `js/registry/couples.js`, `js/couples.js`, `js/math/household.js`, `js/ui/people-ui.js` | Households: person tags, the six household modes and their defaults, up to six adults and any dependents (About you › People), the per-person views, the split of a shared row (equally, by percent, by income, among any of the adults; batch 49) |
 | `js/registry/debt.js` | Debt payoff methods (Avalanche, Snowball, Return on Hassle, Stress, Custom) and the suggestion from stress |
 | `js/registry/joy.js` | The Joy number: the wording, asked at session start, in every snapshot, charted from Day 0 |
 | `js/capture.js`, `js/import/csv.js` | Captured for later (category joy, Trip, income type, the change log with who); the CSV statement import |

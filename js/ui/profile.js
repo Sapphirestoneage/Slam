@@ -18,6 +18,8 @@ import { HOLIDAY_SETS, nextHoliday, SHABBAT_SPEND_DAY } from '../math/holidays.j
 import { COMMUNITIES, setCommunityOn } from '../community.js';
 import { money, pct } from '../format.js';
 import { WHY_CHIPS, WHY_LABELS, chipsOf, whyAnswered, toggleChip, starChip } from '../whynow.js';
+import { peopleSection, peopleSummary } from './people-ui.js';
+import { dependentsOf } from '../registry/couples.js';
 
 export const STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI',
   'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
@@ -116,8 +118,9 @@ export function profileScreen(app, ctx) {
     moreBlock('profile:about', () => h('div.form-grid', {},
       g.couple ? field('Partner first name', 'partnerName', textInput(p.partnerName, v => set({ partnerName: v }), { hint: 'Partner name', width: 200, key: 'p:partnerName' })) : null,
       g.couple ? field('Partner birth month and year', 'partnerBirthYear', birth('partnerBirthMonth', 'partnerBirthYear', 'Partner')) : null,
-      field('Dependents', 'dependents', stepper(p.dependents ?? null, n => set({ dependents: n, kidAges: (p.kidAges || []).slice(0, n) }), { label: 'Dependents', key: 'p:dependents' })),
-      ...(p.dependents ? Array.from({ length: p.dependents }, (_, i) => labelled(`Child ${i + 1} age`, textInput(p.kidAges?.[i] ?? null, v => {
+      dependentsOf(store.doc).length ? labelled('Dependents', h('span.computed', { title: 'Each one by name and age under People' }, `${dependentsOf(store.doc).length}, under People`)) // batch 49: the list on People is the one answer
+        : field('Dependents', 'dependents', stepper(p.dependents ?? null, n => set({ dependents: n, kidAges: (p.kidAges || []).slice(0, n) }), { label: 'Dependents', key: 'p:dependents' })),
+      ...(p.dependents && !dependentsOf(store.doc).length ? Array.from({ length: p.dependents }, (_, i) => labelled(`Child ${i + 1} age`, textInput(p.kidAges?.[i] ?? null, v => {
         const ages = [...(p.kidAges || [])]; ages[i] = v === null ? null : Number(v); set({ kidAges: ages });
       }, { hint: 'Age', width: 80, key: `p:kid${i}` }))) : []),
       field('Health coverage', 'healthCoverage', tapPick(COVERAGE, p.healthCoverage ?? null, v => set({ healthCoverage: v }), { label: 'Health coverage', key: 'p:health' })),
@@ -295,9 +298,11 @@ export function profileScreen(app, ctx) {
     calendar: said(HOLIDAY_SETS.filter(x => cal[x.id]).map(x => x.label).join(', ') || 'No holidays ticked'),
     benefits: null, accounts: p.noneOfThese ? 'None of these' : said(AREAS.filter(([k]) => (areas[k] ?? rowsIn(k) > 0) === true).map(([, l]) => l).join(', ')),
     couple: said(modeOf(p), p.moneyStyle),
+    people: peopleSummary(store.doc), // batch 49
   };
-  const ids = ['why-now', 'applies', 'about', 'work', 'home', 'calendar', 'benefits', 'accounts', 'couple'];
-  return [whyNow, hub, about, work, home, calendar, benefits, accounts, couple].map(willGetAll)
+  const ids = ['why-now', 'applies', 'about', 'people', 'work', 'home', 'calendar', 'benefits', 'accounts', 'couple'];
+  const people = peopleSection(ctx, { section }); // batch 49: households of any size
+  return [whyNow, hub, about, people, work, home, calendar, benefits, accounts, couple].map(willGetAll)
     .map((sec, i) => (sec ? secWrap(sec, `profile:${ids[i]}`, { open: i < 2, summary: sums[ids[i]] }) : sec)).concat([next]);
 }
 

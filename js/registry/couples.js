@@ -8,8 +8,60 @@ export const PERSONS = ['Me', 'Partner', 'Joint'];
 // The names on the tags: the client's first name and the partner's, else Person A and Person B.
 export function personLabels(doc) {
   const p = doc?.profile || {};
-  return { Me: p.firstName || doc?.client?.name?.split(' ')[0] || 'Person A', Partner: p.partnerName || 'Person B', Joint: 'Joint' };
+  const out = { Me: p.firstName || doc?.client?.name?.split(' ')[0] || 'Person A', Partner: p.partnerName || 'Person B', Joint: 'Joint' };
+  for (const x of extraAdults(doc)) out[x.id] = x.name || `Person ${String.fromCharCode(64 + Number(x.id.slice(1)))}`; // batch 49: P3 reads Person C until named
+  return out;
 }
+
+// ---------- Batch 49: households of any size ----------
+// The split math itself (one adult's part of a shared row) lives in js/math/household.js; it is re-exported here.
+import { SPLIT_HOWS, SPLIT_HOW_WORDS, splitTyped, generalRow, amongOf, howOf, rowShare, splitWords } from '../math/household.js';
+export { SPLIT_HOWS, SPLIT_HOW_WORDS, splitTyped, generalRow, amongOf, howOf, rowShare, splitWords };
+// A household holds 1 to MAX_ADULTS adults and any number of dependents. This client is Me; a partner (a couple mode)
+// is Partner, as every file has always stored them; more adults live in profile.people with the ids P3 to P7, and
+// dependents (a child, a parent you support) with D1, D2 ... An adult is in the plan: their own rows, a view of their
+// own, a share of the rows they share. A dependent is in the household (its size, the benefits lines) and has no view.
+// Roommates who are not in the plan stay the roommates count on About you: they share bills, they have no view.
+// A file with no profile.people reads exactly as before (Me, and Partner in a couple mode).
+export const MAX_ADULTS = 6;
+export const EXTRA_IDS = ['P3', 'P4', 'P5', 'P6', 'P7'];
+export const ADULT_ROLES = ['Partner', 'Sibling', 'Parent', 'Adult child', 'Friend', 'Other adult'];
+export const DEPENDENT_ROLES = ['Child', 'Parent I support', 'Other dependent'];
+export const PERSON_KINDS = ['Adult', 'Dependent'];
+const coupleOf = doc => { const p = doc?.profile || {}; return p.mode ? MODES[p.mode]?.couple ?? false : p.household ? p.household === 'Couple' : !!doc?.client?.couple; }; // the same rule as gatesOf().couple
+export const extraAdults = doc => (Array.isArray(doc?.profile?.people) ? doc.profile.people : []).filter(x => x && EXTRA_IDS.includes(x.id) && x.kind !== 'Dependent');
+export const dependentsOf = doc => (Array.isArray(doc?.profile?.people) ? doc.profile.people : []).filter(x => x && x.kind === 'Dependent');
+// Every adult in the plan, in order: [{ id, name, role }].
+export function adultsOf(doc) {
+  const names = personLabels(doc);
+  const list = [{ id: 'Me', name: names.Me, role: 'Me' }];
+  if (coupleOf(doc)) list.push({ id: 'Partner', name: names.Partner, role: 'Partner' });
+  for (const x of extraAdults(doc)) if (list.length < MAX_ADULTS) list.push({ id: x.id, name: names[x.id], role: x.role ?? null });
+  return list;
+}
+export const adultIds = doc => adultsOf(doc).map(a => a.id);
+export const multiAdult = doc => adultsOf(doc).length > 1;
+export const manyAdults = doc => adultsOf(doc).length > 2;
+// The household's size (the benefits lines read it): the adults in the plan and every dependent. Dependents are the
+// list on About you › People, else the Dependents count or the kids' ages, whichever is more (as before batch 49).
+export function householdSize(doc) {
+  const p = doc?.profile || {};
+  const ages = (Array.isArray(p.kidAges) ? p.kidAges : String(p.kidAges ?? '').split(',')).filter(v => v !== null && v !== '' && !Number.isNaN(Number(v)));
+  const kids = Math.max(dependentsOf(doc).length, Number(p.dependents) || 0, ages.length);
+  return { adults: adultsOf(doc).length, dependents: kids, size: adultsOf(doc).length + kids };
+}
+// The person a view id stands for: an adult in the plan, else this client (an id left over from someone removed).
+// 'Me', 'Partner' and 'all' read as they always have.
+export const validPerson = (doc, v) => (v == null || v === 'all' || v === 'Me' || v === 'Partner' ? v : adultIds(doc).includes(v) ? v : 'Me');
+
+// The household as the split math reads it: the adults, the default method and each adult's take-home a month (for
+// By income). many: more than two adults, so every shared row takes the split math (a couple's file never does
+// unless a row has a split typed).
+export function householdOf(doc, { weights = {} } = {}) {
+  const ids = adultIds(doc);
+  return { ids, many: ids.length > 2, method: doc?.profile?.splitMethod === 'By income' ? 'By income' : 'Equal', weights, splitMine: doc?.profile?.splitMine ?? null };
+}
+
 
 // Household modes. couple: the partner's rows and the Owner tag show. view: the default person filter on Net worth
 // and Cash flow (all: the household together; Me: this client alone, the partner's rows set aside). merged: shared
@@ -42,20 +94,27 @@ export const ownerOf = (r, mode = null) => { const o = r?.owner ?? (r?.type === 
 // balances, values, payments and limits are halved; a one-person account is never Joint, so never halved.
 const HALF = ['balance', 'value', 'payment', 'limit', 'contribution'];
 export const halfOf = r => ({ ...r, amount: r.amount == null ? r.amount : r.amount / 2, values: Object.fromEntries(Object.entries(r.values || {}).map(([k, v]) => [k, HALF.includes(k) && typeof v === 'number' ? v / 2 : v])), halved: true });
-export const forPerson = (r, person, mode = null) => (person && person !== 'all' && ownerOf(r, mode) === 'Joint' ? halfOf(r) : r);
-// Does a row count in a person's view? Their own rows and the Joint ones; 'all' takes everything.
-export const inView = (r, person, mode = null) => !person || person === 'all' || ownerOf(r, mode) === person || ownerOf(r, mode) === 'Joint';
+// Batch 49: a shared row in a household of any size counts at the person's part of it (rowShare), not at half.
+export const shareRow = (r, k) => ({ ...r, amount: r.amount == null ? r.amount : r.amount * k, values: Object.fromEntries(Object.entries(r.values || {}).map(([f, v]) => [f, HALF.includes(f) && typeof v === 'number' ? v * k : v])), halved: true, viewShare: k });
+export const forPerson = (r, person, mode = null, H = null) => (person && person !== 'all' && ownerOf(r, mode) === 'Joint' ? (generalRow(r, H) ? shareRow(r, rowShare(r, person, H)) : halfOf(r)) : r);
+// Does a row count in a person's view? Their own rows and the Joint ones; 'all' takes everything. Batch 49: a Joint
+// row split among some of the adults counts only in theirs.
+export const inView = (r, person, mode = null, H = null) => !person || person === 'all' || ownerOf(r, mode) === person || (ownerOf(r, mode) === 'Joint' && (!generalRow(r, H) || amongOf(r, H).includes(person)));
 // The person options for a mode: the combined view (its label by mode, none in Dating and Living together), then each person.
-export const viewsOf = (mode, names) => [...(MODES[mode]?.together ? [['all', MODES[mode].together]] : []), ['Me', names.Me], ['Partner', names.Partner]];
+// Batch 49: with more than two adults the combined view is Everyone, then each adult; adults: adultsOf(doc).
+export const viewsOf = (mode, names, adults = null) => (adults && adults.length > 2
+  ? [...(MODES[mode]?.together ? [['all', 'Everyone']] : []), ...adults.map(a => [a.id, names[a.id] ?? a.name])]
+  : [...(MODES[mode]?.together ? [['all', MODES[mode].together]] : []), ['Me', names.Me], ['Partner', names.Partner]]);
 // Batch 15 (question 212): a couple with no combined totals (Dating, Living together) sees one person's own plan
 // everywhere: this client's, unless the person switch says the partner's. Other modes: the household (null).
 // Batch 33 (QUESTIONS 287): Living together's "Both (preview)", read-only, on the screens that offer it (Home, Goals,
 // Debt payoff). The shell says which screen is open (setBothScreen); the switch's pick ('all') stays in settings.person.
 // On a screen that offers it, 'all' is the two together (the household); anywhere else it reads as this client.
-export const BOTH_PREVIEW = { modes: ['Living together'], label: 'Both (preview)' };
+export const BOTH_PREVIEW = { modes: ['Living together'], label: 'Both (preview)', many: 'Everyone (preview)' };
+export const bothLabel = doc => (manyAdults(doc) ? BOTH_PREVIEW.many : BOTH_PREVIEW.label); // batch 49: "Both" is Everyone past two adults
 const shown = { both: false };
 export const setBothScreen = on => { shown.both = !!on; };
 export const bothScreen = () => shown.both;
 export const offersBoth = doc => BOTH_PREVIEW.modes.includes(modeOf(doc?.profile));
 export const bothPreviewOn = doc => shown.both && offersBoth(doc) && doc.settings?.person === 'all';
-export const ownPlanPerson = doc => { const mode = modeOf(doc?.profile); return mode && MODES[mode].couple && MODES[mode].combined === 'none' ? (bothPreviewOn(doc) ? null : doc.settings?.person === 'Partner' ? 'Partner' : 'Me') : null; };
+export const ownPlanPerson = doc => { const mode = modeOf(doc?.profile); return mode && MODES[mode].couple && MODES[mode].combined === 'none' ? (bothPreviewOn(doc) ? null : doc.settings?.person === 'Partner' ? 'Partner' : EXTRA_IDS.includes(doc.settings?.person) ? validPerson(doc, doc.settings.person) : 'Me') : null; }; // batch 49: any adult

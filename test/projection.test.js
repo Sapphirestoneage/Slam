@@ -39,6 +39,7 @@ export const PLAN_DIFFERS = {
   'couple-separate': { fi: 279, why: 'Jordan\'s student loan is the last debt, gone in month 110; its $210 a month comes back and is invested, so FI comes 9 months sooner than M53\'s 288.' },
   teacher: { fi: 334, why: 'The student loan is gone in month 72; its $263 a month comes back and is invested, so FI comes 30 months sooner than M53\'s 364.' },
   'aca-couple': { fi: null, why: 'M53 puts Lena and Marco\'s FI at 525 months (Lena 83) because it keeps them working until then; the engine stops work at 65 (Retire by is blank), so FI never comes and the money runs out at 73 (QUESTIONS, Batch 50: work stops at 65).' },
+  'sandwich-parent': { fi: null, why: 'M53 puts Nadia\'s FI at 464 months (age 78) because it keeps her working until then; the engine stops work at 65 (Retire by is blank), so FI never comes and the money lasts to 81 (batch 49\'s persona; QUESTIONS, Batch 50: work stops at 65).' },
   demo: { fi: 264, why: 'The car loan ($320) and the student loan ($210) are gone by month 54; today\'s math rolls the car payment into the student loan and then drops both, the engine gives the $530 a month back once the last is gone, so FI comes 30 months sooner than M53\'s 294.' },
 };
 

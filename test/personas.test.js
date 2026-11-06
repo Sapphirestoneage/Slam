@@ -57,8 +57,8 @@ for (const def of defs) {
   test(`persona ${def.id}: the file matches its def`, { todo: fresh ? false : 'out of date: run node tools/personas/build.mjs' }, () => { assert.ok(fresh); });
   const doc = existsSync(path) ? importFile(readFileSync(path, 'utf8')) : null;
   for (const [key, e] of Object.entries(def.expected)) {
-    const view = e.view === 'all' ? null : def.view ?? null;
-    const got = doc ? appValue(key, doc, view) : undefined;
+    const view = e.view === 'all' ? null : e.view ?? def.view ?? null; // batch 49: an entry can name its own view (key:Name, view: 'Partner' or 'P3')
+    const got = doc ? appValue(key.split(':')[0], doc, view) : undefined;
     const ok = doc && close(got, e);
     // A known gap (e.finding) that still differs is a todo; once the app agrees it passes, and the finding can go.
     test(`persona ${def.id}: ${key} is ${e.value} (${e.note.slice(0, 60)})`, { todo: e.finding && !ok ? `finding ${e.finding}: the app says ${JSON.stringify(got)}` : false }, () => {
@@ -77,8 +77,8 @@ for (const def of defs) {
   test(`persona ${def.id}: the FOO step holds two weeks later`, () => { assert.equal(b, a, `step ${a} on Nov 5, step ${b} on Nov 20`); });
 }
 
-test('personas: all seventeen are there, and the one-answer checks hold for each', () => {
-  assert.equal(defs.length, 17); // batch 47: the single parent on SNAP and Medicaid, the couple near the 400% line (the benefits cliff); batch 21: the job-loss household (Life Transitions); batch 29: the PSLF teacher; batch 28: the private couple (who sees this)
+test('personas: all nineteen are there, and the one-answer checks hold for each', () => {
+  assert.equal(defs.length, 19); // batch 49: three adults in one home, the single parent who supports her mother (households of any size); batch 47: the single parent on SNAP and Medicaid, the couple near the 400% line (the benefits cliff); batch 21: the job-loss household (Life Transitions); batch 29: the PSLF teacher; batch 28: the private couple (who sees this)
   for (const def of defs) {
     const doc = importFile(readFileSync(join(OUT_DIR, `${def.id}.json`), 'utf8'));
     const m = metrics(doc, ref, { now });

@@ -89,23 +89,28 @@ export function stateTax({ gross, pretax = 0, filingStatus = 'Single', place = n
 export const STACK = { 'W-2': 0, '1099': 1, Unemployment: 2 };
 const rankOf = t => STACK[t] ?? 0;
 export const noFica = t => t === 'Unemployment';
+// Batch 49: an adult past the couple (P3 to P7: a sibling, a parent, a friend in the plan) files a return of their own,
+// as Single; the couple's filing status is the client's and the partner's only.
+const OWN_RETURN = new Set(['P3', 'P4', 'P5', 'P6', 'P7']);
 export function householdTax(rows, { filingStatus = 'Single', place = null, year = null } = {}, ref) {
   const t = ref.tax, joint = filingKey(filingStatus) === 'joint';
-  const list = rows.filter(r => r.gross != null && r.taxType).map((r, i) => ({ ...r, tips: Math.min(r.tips ?? 0, Math.max(0, r.gross)), i, unit: joint ? 'Household' : r.person === 'Partner' ? 'Partner' : 'Me', rank: rankOf(r.taxType) }))
+  const personOf = r => (r.person === 'Partner' ? 'Partner' : OWN_RETURN.has(r.person) ? r.person : 'Me');
+  const list = rows.filter(r => r.gross != null && r.taxType).map((r, i) => ({ ...r, tips: Math.min(r.tips ?? 0, Math.max(0, r.gross)), i, unit: OWN_RETURN.has(r.person) ? r.person : joint ? 'Household' : personOf(r), rank: rankOf(r.taxType) }))
     .sort((a, b) => a.unit.localeCompare(b.unit) || a.rank - b.rank || a.i - b.i);
   const out = {}, units = {};
   const st = place?.state ? t.state?.[place.state] : null;
-  const fedTax = x => byBrackets(x, t.brackets[filingKey(filingStatus)]);
-  const pk = placeKey(filingStatus);
-  const stateOn = x => (st ? byBrackets(Math.max(0, x - st.standardDeduction[pk]), st.brackets[pk]).tax : 0);
-  const cityOn = x => (st && place.nyc && ref.tax.local?.NYC ? byBrackets(Math.max(0, x - st.standardDeduction[pk]), ref.tax.local.NYC.brackets[pk]).tax : 0);
-  const std = t.standardDeduction[filingKey(filingStatus)];
-  const over = t.additionalMedicareOver[filingKey(filingStatus)];
+  const statusOf = u => (OWN_RETURN.has(u) ? 'Single' : filingStatus);
+  const fedTax = (x, u = null) => byBrackets(x, t.brackets[filingKey(statusOf(u))]);
+  const pkOf = u => placeKey(statusOf(u));
+  const stateOn = (x, u = null) => { const pk = pkOf(u); return st ? byBrackets(Math.max(0, x - st.standardDeduction[pk]), st.brackets[pk]).tax : 0; };
+  const cityOn = (x, u = null) => { const pk = pkOf(u); return st && place.nyc && ref.tax.local?.NYC ? byBrackets(Math.max(0, x - st.standardDeduction[pk]), ref.tax.local.NYC.brackets[pk]).tax : 0; };
+  const stdOf = u => t.standardDeduction[filingKey(statusOf(u))];
+  const overOf = u => t.additionalMedicareOver[filingKey(statusOf(u))];
   const ssBase = {}, uBase = {}, uFed = {}, uState = {};
   for (const r of list) {
     const se = r.taxType === '1099', none = noFica(r.taxType);
     const base = none ? 0 : se ? r.gross * t.selfEmployedBase : r.gross;
-    const p = r.person === 'Partner' ? 'Partner' : 'Me';
+    const p = personOf(r), u = r.unit, std = stdOf(u), over = overOf(u);
     const before = ssBase[p] ?? 0; ssBase[p] = before + base;
     const ssRate = se ? t.socialSecurityRate * 2 : t.socialSecurityRate;
     const ss = (Math.min(ssBase[p], t.socialSecurityWageBase) - Math.min(before, t.socialSecurityWageBase)) * ssRate;
@@ -115,10 +120,10 @@ export function householdTax(rows, { filingStatus = 'Single', place = null, year
     const seHalf = se ? (ss + medicare) / 2 : 0;
     const own = Math.max(0, r.gross - (r.pretax ?? 0) - seHalf);
     const fb = uFed[r.unit] ?? 0; uFed[r.unit] = fb + own;
-    const federal = fedTax(Math.max(0, uFed[r.unit] - std)).tax - fedTax(Math.max(0, fb - std)).tax;
+    const federal = fedTax(Math.max(0, uFed[r.unit] - std), u).tax - fedTax(Math.max(0, fb - std), u).tax;
     const sOwn = Math.max(0, r.gross - (r.pretax ?? 0));
     const sb = uState[r.unit] ?? 0; uState[r.unit] = sb + sOwn;
-    const state = stateOn(uState[r.unit]) - stateOn(sb), local = cityOn(uState[r.unit]) - cityOn(sb);
+    const state = stateOn(uState[r.unit], u) - stateOn(sb, u), local = cityOn(uState[r.unit], u) - cityOn(sb, u);
     const fica = ss + medicare + addl;
     out[r.id] = { federal, state, local, fica, socialSecurity: ss, medicare: medicare + addl, seHalf, total: federal + state + local + fica, unit: r.unit, person: p, taxType: r.taxType, gross: r.gross };
   }
@@ -134,9 +139,9 @@ export function householdTax(rows, { filingStatus = 'Single', place = null, year
   for (const r of list) if ((r.tips ?? 0) > 0 && out[r.id]) tipsUnits[r.unit] = (tipsUnits[r.unit] ?? 0) + r.tips;
   const tipsDed = {};
   for (const [u, tips] of Object.entries(tipsUnits)) {
-    const line = joint ? tr.phaseOutJoint : tr.phaseOutSingle;
+    const line = joint && !OWN_RETURN.has(u) ? tr.phaseOutJoint : tr.phaseOutSingle, std = stdOf(u);
     const deduction = tipsOn ? Math.max(0, Math.min(tr.deductionCap, tips) - Math.max(0, uFed[u] - line) * tr.phaseOutPer1000 / 1000) : 0;
-    const saved = fedTax(Math.max(0, uFed[u] - std)).tax - fedTax(Math.max(0, uFed[u] - std - deduction)).tax;
+    const saved = fedTax(Math.max(0, uFed[u] - std), u).tax - fedTax(Math.max(0, uFed[u] - std - deduction), u).tax;
     tipsDed[u] = { tips, deduction, saved, capped: tips > tr.deductionCap, phasedOut: uFed[u] > line };
   }
   for (const r of list) {
@@ -146,7 +151,8 @@ export function householdTax(rows, { filingStatus = 'Single', place = null, year
     x.tipsSaved = share; x.federal -= share; x.total -= share;
   }
   for (const [u, taxable] of Object.entries(uFed)) {
-    const f = fedTax(Math.max(0, taxable - std - (tipsDed[u]?.deduction ?? 0)));
+    const std = stdOf(u), pk = pkOf(u);
+    const f = fedTax(Math.max(0, taxable - std - (tipsDed[u]?.deduction ?? 0)), u);
     const sTax = st ? byBrackets(Math.max(0, uState[u] - st.standardDeduction[pk]), st.brackets[pk]) : { marginal: 0 };
     const cTax = st && place.nyc && ref.tax.local?.NYC ? byBrackets(Math.max(0, uState[u] - st.standardDeduction[pk]), ref.tax.local.NYC.brackets[pk]) : { marginal: 0 };
     units[u] = { taxable: Math.max(0, taxable - std - (tipsDed[u]?.deduction ?? 0)), federalMarginal: f.marginal, stateMarginal: sTax.marginal + cTax.marginal, base: uBase[u] ?? 0, tips: tipsDed[u] ?? null };
@@ -197,11 +203,12 @@ export function stateTaxLine(state, ref) {
 export function householdRates(hh, ref, { person = 'Me' } = {}) {
   const t = hh?.total;
   if (!t || !t.gross) return needs('M14', ['gross pay'], { unit: 'pct' });
-  const unit = hh.joint ? 'Household' : person === 'Partner' ? 'Partner' : 'Me';
+  const who = person === 'Partner' ? 'Partner' : OWN_RETURN.has(person) ? person : 'Me'; // batch 49: an adult with a return of their own
+  const unit = OWN_RETURN.has(who) ? who : hh.joint ? 'Household' : who;
   const u = hh.units[unit] ?? Object.values(hh.units)[0];
-  const mine = Object.values(hh.rows).filter(r => (hh.joint || r.person === (person === 'Partner' ? 'Partner' : 'Me')) && r.taxType !== 'Unemployment' && r.taxType !== '1099');
-  const ssBase = Object.values(hh.rows).filter(r => r.person === (person === 'Partner' ? 'Partner' : 'Me') && r.taxType !== 'Unemployment').reduce((s2, r) => s2 + (r.taxType === '1099' ? r.gross * ref.tax.selfEmployedBase : r.gross), 0);
-  const fica = (ssBase < ref.tax.socialSecurityWageBase ? ref.tax.socialSecurityRate : 0) + ref.tax.medicareRate + ((u?.base ?? 0) > ref.tax.additionalMedicareOver[hh.joint ? 'joint' : 'single'] ? ref.tax.additionalMedicareRate : 0);
+  const mine = Object.values(hh.rows).filter(r => ((hh.joint && !OWN_RETURN.has(who) && !OWN_RETURN.has(r.person)) || r.person === who) && r.taxType !== 'Unemployment' && r.taxType !== '1099');
+  const ssBase = Object.values(hh.rows).filter(r => r.person === who && r.taxType !== 'Unemployment').reduce((s2, r) => s2 + (r.taxType === '1099' ? r.gross * ref.tax.selfEmployedBase : r.gross), 0);
+  const fica = (ssBase < ref.tax.socialSecurityWageBase ? ref.tax.socialSecurityRate : 0) + ref.tax.medicareRate + ((u?.base ?? 0) > ref.tax.additionalMedicareOver[hh.joint && !OWN_RETURN.has(who) ? 'joint' : 'single'] ? ref.tax.additionalMedicareRate : 0);
   const ficaMarginal = mine.length || !Object.values(hh.rows).length ? fica : 0;
   const marginal = (u?.federalMarginal ?? 0) + (u?.stateMarginal ?? 0) + ficaMarginal;
   const effective = t.all / t.gross;

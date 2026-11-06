@@ -25,6 +25,7 @@ import { householdTax } from './income.js';
 import { ageOf } from './metrics.js';
 import { lenderKind } from './lender.js';
 import { myShare } from './spending.js';
+import { extraAdults, dependentsOf } from '../registry/couples.js';
 
 export const CLIFF_STATUS = ['Getting it', 'Might qualify', 'Not on it'];
 export const CLIFF_PROGRAMS = [
@@ -48,9 +49,12 @@ export const fplOf = (ref, size) => ref.studentLoans.poverty.base + ref.studentL
 // The household as the lines read it: who is in it, what it makes a year, and its shelter costs a month.
 export function cliffHousehold(doc, ref, { now = new Date(), m } = {}) {
   const p = doc.profile || {}, x = m.inputs;
-  const adults = p.household === 'Couple' ? 2 : 1;
+  const adults = (p.household === 'Couple' ? 2 : 1) + extraAdults(doc).length; // batch 49: the adults past the couple on About you › People
   const ages = (Array.isArray(p.kidAges) ? p.kidAges : String(p.kidAges ?? '').split(',')).map(num).filter(v => v !== null);
-  const kids = Math.max(num(p.dependents) ?? 0, ages.length);
+  // Batch 49: with dependents listed on About you › People, the children are the ones whose role is Child (or not set);
+  // a parent you support (or another dependent) is in the household's size but is not a child for the EITC or CHIP.
+  const deps = dependentsOf(doc), others = deps.filter(x => x.role && x.role !== 'Child').length;
+  const kids = deps.length ? Math.max(deps.length - others, ages.length) : Math.max(num(p.dependents) ?? 0, ages.length);
   const hh = x.householdTax?.rows || {};
   let earned = 0, unearned = 0, pretax = 0, seHalf = 0;
   const rows = [];
@@ -68,7 +72,7 @@ export function cliffHousehold(doc, ref, { now = new Date(), m } = {}) {
   const monthOf = cat => lines.filter(l => l.category === cat && l.amount != null).reduce((s, l) => s + (myShare(l, { roommates }).value ?? 0), 0);
   const age = ageOf(p, now);
   return {
-    state: p.state || null, nyc: p.nyc === true, coverage: p.healthCoverage ?? null, adults, kids, ages, size: adults + kids, age,
+    state: p.state || null, nyc: p.nyc === true, coverage: p.healthCoverage ?? null, adults, kids, others, ages, size: adults + kids + others, age,
     elderly: age !== null && age >= 60, care: p.cliff?.careCosts === true, joint: x.filingStatus === 'Married jointly',
     filingStatus: x.filingStatus, place: x.place, earned, unearned, gross: earned + unearned, magi: Math.max(0, earned + unearned - pretax - seHalf),
     rentMonthly: monthOf('Rent or mortgage'), utilitiesMonthly: monthOf('Electric, gas, water'), taxRows: rows, has: rows.length > 0,

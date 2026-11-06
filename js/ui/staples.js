@@ -18,7 +18,7 @@ import { addMonths, ymOf, monthName } from '../month.js';
 import { gatesOf, gatedOut } from '../gates.js';
 import { keepPlace } from './place.js';
 import { opened, install as installDismiss } from './dismiss.js';
-import { PERSONS, personLabels, onePerson, ownerOf, modeOf, ownPlanPerson } from '../registry/couples.js';
+import { PERSONS, personLabels, onePerson, ownerOf, modeOf, ownPlanPerson, adultsOf, extraAdults, multiAdult, householdOf, amongOf, howOf, rowShare, splitWords, SPLIT_HOWS, SPLIT_HOW_WORDS } from '../registry/couples.js';
 import { isBlankRow } from '../completion.js';
 import { audienceOf, viewStore, SHARE, seenOf, notesSeenOf, isMarked, SEEN, SEEN_WORDS, SEEN_TIPS, SHARE_NAMES, neutralName, PRIVATE_LINE } from '../privacy.js';
 export { keepPlace };
@@ -43,6 +43,7 @@ export function createCtx({ store, ref, now = () => new Date(), viewer = () => (
     get timeMode() { return store.doc.settings.timeView || '$'; },
     setTimeMode(mode) { store.doc.settings.timeView = mode; cache = null; rcache = null; fcache = null; acache = null; ctx.refresh(); store._emit({ type: 'settings' }); },
     get couple() { return ctx.gates().couple; },
+    get multi() { return ctx.gates().couple || multiAdult(store.doc); }, // batch 49: more than one adult in the plan (a couple, or more adults on About you › People)
     gates() { return gatesOf(store.doc.profile, store.doc.client); },
     // Rows that apply to this household: a gate that says no takes them off every list (R001).
     visible(pred) { const g = ctx.gates(); return ctx.store.find(r => pred(r) && !gatedOut(r, g, ref)); },
@@ -102,15 +103,45 @@ export function addButton(thing, onClick) {
 // The Owner tag (F2): Person A, Person B or Joint, with the names once typed. A retirement or health account is one person's.
 // Batch 13: in a table row it is one slim chip with the name (like the /mo chip); a tap opens the choices, so the
 // Owner column never pushes the table past the window.
+// Batch 49 (households of any size): every adult in the plan is a choice, and Joint (everyone on this row) opens how
+// it is split: among which adults (all, unless some are ticked), equally, by percent or by income.
 export function ownerToggle(ctx, r, up) {
-  const names = personLabels(ctx.store.doc);
-  const options = (onePerson(r) ? PERSONS.filter(p => p !== 'Joint') : PERSONS).map(p => [p, names[p]]);
-  const cur = ownerOf(r, modeOf(ctx.store.doc.profile));
+  const doc = ctx.store.doc, names = personLabels(doc);
+  const ids = extraAdults(doc).length ? [...adultsOf(doc).map(a => a.id), 'Joint'] : PERSONS;
+  const options = (onePerson(r) ? ids.filter(p => p !== 'Joint') : ids).map(p => [p, names[p]]);
+  const cur = ownerOf(r, modeOf(doc.profile));
   const label = names[cur] ?? cur;
   const b = h('button.per-chip.owner-chip', { type: 'button', 'aria-label': `Owner: ${label}. Change`, title: `Owner: ${label}. Click to change`, 'data-focus': `${r.id}:owner` }, label, icon('down'));
-  b.onclick = () => popover(b, h('div.stack', { style: { gap: '6px' } }, h('h3', {}, 'Whose is it'),
-    toggle(options, cur, v => { closePop(); up({ owner: v }); }, { label: 'Owner' })), { width: 300 });
+  b.onclick = () => {
+    const box = h('div.stack', { style: { gap: '6px' } });
+    const fresh = () => ctx.store.get(r.id) ?? r;
+    const draw = () => { const x = fresh(), now = ownerOf(x, modeOf(ctx.store.doc.profile)); clear(box, h('h3', {}, 'Whose is it'),
+      (options.length > 4 ? tapPick : toggle)(options, now, v => { if (v == null) return; up({ owner: v }); if (v === 'Joint' && adultsOf(ctx.store.doc).length > 1) draw(); else closePop(); }, { label: 'Owner', clearable: false }), // batch 49: past four choices the names wrap
+      now === 'Joint' ? splitBlock(ctx, x, p => { up(p); draw(); }) : null); };
+    draw();
+    popover(b, box, { width: 340 });
+  };
   return b;
+}
+// How a shared row is split, in taps: the adults it is shared among, then the method; By percent opens one box each.
+export function splitBlock(ctx, r, up) {
+  const doc = ctx.store.doc, names = personLabels(doc), adults = adultsOf(doc);
+  if (adults.length < 2) return null;
+  const H = householdOf(doc, { weights: ctx.metrics().inputs.household?.weights ?? {} });
+  const among = amongOf(r, H), how = howOf(r, H);
+  const tick = id => {
+    const next = among.includes(id) ? among.filter(x => x !== id) : [...among, id];
+    if (!next.length) return;
+    up({ splitAmong: next.length === adults.length ? null : adults.map(a => a.id).filter(x => next.includes(x)) });
+  };
+  const pcts = r.values?.splitPcts || {};
+  return h('div.stack.split-block', { style: { gap: '6px' } },
+    h('span.label.has-tip', { title: 'Shared among: tap a name to take them off this row or put them back. Blank is everyone in the plan' }, 'Shared among'),
+    h('div.picks.split-among', { role: 'group', 'aria-label': 'Shared among' }, adults.map(a => h('button.pick', { type: 'button', 'aria-pressed': String(among.includes(a.id)), onclick: () => tick(a.id) }, among.includes(a.id) ? icon('check') : null, names[a.id] ?? a.name))),
+    h('span.label', {}, 'Split'),
+    toggle(SPLIT_HOWS.map(x => [x, SPLIT_HOW_WORDS[x]]), r.values?.splitHow ?? null, v => up({ splitHow: v }), { label: 'Split how', clearable: true }),
+    how === 'Percent' ? h('div.split-pcts', {}, among.map(id => labelled(names[id] ?? id, pctInput(typeof pcts[id] === 'number' ? pcts[id] : null, v => { const next = { ...(r.values?.splitPcts || {}) }; if (v == null) delete next[id]; else next[id] = v; up({ splitPcts: Object.keys(next).length ? next : null }); }, { hint: `${Math.round(rowShare(r, id, H) * 100)}`, key: `${r.id}:pct:${id}` })))) : null,
+    h('span.muted.small.split-now', {}, splitWords(r, H, names)));
 }
 export function toggle(options, value, onChange, { label = null, clearable = false, key = null } = {}) {
   return h('div.seg', { role: 'group', 'aria-label': label, 'data-focus': key }, // key: the row field's handle for Show me (batch 7, item 3)
@@ -972,7 +1003,7 @@ export function recordList(ctx, cfg) {
     const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all', 'data-focus': 'select-all', title: 'Select all' });
     allBox.onchange = () => { if (allBox.checked) recs.forEach(r => state.selected.add(r.id)); else state.selected.clear(); refreshSelection(); };
     const focus = focusOn(ctx) && cfg.focus ? cfg.focus : null;
-    const shown = cfg.columns.filter(c => c && (!c.couple || ctx.couple) && (!c.focusOnly || focus));
+    const shown = cfg.columns.filter(c => c && (!c.couple || ctx.multi) && (!c.focusOnly || focus)); // batch 49: the Owner column for any household with more than one adult
     const cols = focus ? shown.filter(c => focus.includes(c.label)) : shown;
     const extraCols = focus ? shown.filter(c => !focus.includes(c.label)) : [];
     const span = cols.length + 3;

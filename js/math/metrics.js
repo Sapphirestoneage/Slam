@@ -7,7 +7,7 @@ import { monthlyFrom, incomeRow, defaultFilingStatus, householdTax } from './inc
 import { fmt } from './result.js';
 import { datedChanges } from './changes.js';
 import { gatesOf, visible } from '../gates.js';
-import { inView, modeOf, MODES, ownerOf, forPerson } from '../registry/couples.js';
+import { inView, modeOf, MODES, ownerOf, forPerson, householdOf, generalRow, rowShare, amongOf, EXTRA_IDS } from '../registry/couples.js';
 import { bigEMultiplierOf } from '../registry/assumptions.js';
 import { myShare, withHome, partnerSplits, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor, categoryTotals, isCategoryRecord, typicalScaleOf, gutSplitOf } from './spending.js';
 import { cardMinimum, payoffMonths, totalInterest, payoffPlan, debtFirstPlan, isHeavyDebt, promoSoonIds, debtFreeCard, heroExtras } from './debt.js';
@@ -41,7 +41,12 @@ function read(record, field, guessValue = null, { blankIsGuess = false } = {}) {
 // the partner) is one cost for the couple: the household counts it once, whole; each person's view counts their share
 // of it (By income or a typed share, else half). A payment to the partner (Paid to my partner) and money from the
 // partner (From partner) move money between the two: each person's view keeps them, the household leaves both out.
-export function coupleBills(bills, { person = null, mode, profile, share = 0.5, roommates = 0, now = new Date() }) {
+// Batch 49 (households of any size): H is the household (householdOf). A row that takes the split math (every shared
+// row past two adults, or one with a split typed) is shared among its adults (amongOf): the household counts what the
+// people in the plan pay of it once, whole (the bill less the roommates' part when it is split with roommates too),
+// and each adult's view counts their part (rowShare: equally, by percent or by income). A row split among some of the
+// adults is not in anyone else's view.
+export function coupleBills(bills, { person = null, mode, profile, share = 0.5, roommates = 0, now = new Date(), H = null }) {
   const together = !person || person === 'all';
   const out = [];
   for (const r of bills) {
@@ -49,8 +54,9 @@ export function coupleBills(bills, { person = null, mode, profile, share = 0.5, 
     if (r.values?.toPartner === 'Yes') { if (!together && owner === person) out.push(r); continue; }
     const amount = read(r, 'amount').v;
     const line = withHome({ ...r, ...r.values, amount }, profile);
-    const split = line.whoPays === 'Split' && partnerSplits(profile);
+    const split = line.whoPays === 'Split' && (partnerSplits(profile) || (!!H && H.ids.length > 1 && generalRow(r, H)));
     if (owner !== 'Joint' && !split) { if (together || owner === person) out.push(r); continue; }
+    if (generalRow(r, H)) { const g = sharedBill(r, line, { person, together, H, roommates, now }); if (g) out.push(g); continue; }
     const mineNow = myShare(line, { roommates, now }).value;
     if (mineNow == null) { if (together || owner === person || owner === 'Joint') out.push(r); continue; }
     const p = line.whoPays === 'Split' && line.sharePct != null ? line.sharePct : share; // this client's part of the couple's cost
@@ -61,6 +67,36 @@ export function coupleBills(bills, { person = null, mode, profile, share = 0.5, 
       values: { ...r.values, whoPays: 'Me', amountIs: null, splitBy: null, sharePct: null, myShare: null, coveredAmount: null, reimbursed: null, takeover: null, startsIn: null, coveredBy: null } });
   }
   return out;
+}
+
+// Batch 49: one shared bill in a household of any size. The plan's cost: what the bill comes to after anything
+// covered or paid back (myShare with no split), less the roommates' part (one part each, as the adults have); a typed
+// My share amount or an amount that is Your share is this client's part, so the plan's cost is that over their share.
+function sharedBill(r, line, { person, together, H, roommates, now }) {
+  const among = amongOf(r, H), mine = rowShare(r, 'Me', H);
+  const own = { ...line, whoPays: line.whoPays === 'Split' ? 'Me' : line.whoPays, splitBy: 1, sharePct: null, amountIs: null, myShare: null };
+  const base = myShare(own, { roommates: 0, now }).value;
+  if (base == null && line.myShare == null) return together || among.includes(person) ? r : null;
+  const yours = line.myShare != null || (line.amountIs ?? null) === 'Your share';
+  const outside = line.whoPays === 'Split' ? roommates : 0;
+  const plan = yours ? (mine > 0 ? (line.myShare ?? base) / mine : (line.myShare ?? base)) : base * among.length / (among.length + outside);
+  const k = together ? 1 : rowShare(r, person, H);
+  if (!together && k <= 0) return null;
+  return { ...r, owner: 'Joint', amount: plan * k, per: 'month', coupleShared: { couple: plan, share: k, among },
+    values: { ...r.values, whoPays: 'Me', amountIs: null, splitBy: null, sharePct: null, myShare: null, coveredAmount: null, reimbursed: null, takeover: null, startsIn: null, coveredBy: null } };
+}
+
+// Batch 49: each adult's take-home a month, for a split By income (their own rows, as typed or worked out on Income).
+function weightsOf(rows, mode, opts) {
+  const w = {};
+  for (const r of rows) {
+    if (r.kind !== 'income') continue;
+    const who = ownerOf(r, mode);
+    if (who === 'Joint') continue;
+    const v = incomeRow(r, opts).takeHome.value;
+    if (v != null) w[who] = (w[who] ?? 0) + v;
+  }
+  return w;
 }
 
 export const placeOf = p => (p?.state === 'NY' ? { state: 'NY', nyc: p.nyc === true } : null);
@@ -76,11 +112,15 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   const mode = modeOf(doc.profile);
   const liveAll = visible(doc.records, gates, ref); // gated-out rows count nowhere (R001, R066)
   const together = !person || person === 'all';
-  const transfer = r => r.kind === 'income' && r.type === 'From partner' && !!MODES[mode]?.couple; // batch 15: money between the two
-  const live = liveAll.filter(r => inView(r, person, mode) && !(together && transfer(r))).map(r => forPerson(r, person, mode)); // a person view keeps theirs and the Joint ones at half (F2, answer 157)
   const filingStatus = doc.profile.filingStatus ?? defaultFilingStatus(doc.profile); // answer 174: Single, or Married jointly once the stage is Married; a Guess until typed
   const filingGuess = doc.profile.filingStatus == null;
   const place = placeOf(doc.profile); // B5.1: NY and NYC tax when the Profile says so
+  // Batch 49: the household (its adults, the split method, each adult's take-home for a split By income).
+  const H0 = householdOf(doc);
+  const H = H0.many || liveAll.some(r => generalRow(r, H0)) ? householdOf(doc, { weights: weightsOf(liveAll, mode, { filingStatus, ref, place, now }) }) : H0;
+  const multi = !!MODES[mode]?.couple || H.ids.some(id => EXTRA_IDS.includes(id));
+  const transfer = r => r.kind === 'income' && r.type === 'From partner' && multi; // batch 15: money between the two
+  const live = liveAll.filter(r => inView(r, person, mode, H) && !(together && transfer(r))).map(r => forPerson(r, person, mode, H)); // a person view keeps theirs and the Joint ones at their part (F2, answer 157; batch 49)
   const link = link401k(live); // B3.10: Income and the 401(k) fill each other in
   // Answer to Brandon question 71: the Health coverage row owns the premium. Paid from the paycheck, the job borrows
   // it ("From Health") and it comes out of take-home once; any premium typed on Income is set aside.
@@ -113,11 +153,11 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   // A row given as gross takes home its gross less its share; a row given as take-home keeps what was typed, and the
   // difference between its share and what its paychecks hold back is what is still due (two jobs, a side hustle).
   const hhIncome = liveAll.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(withLink(r), { filingStatus, ref, place, now }) }));
-  const hh = householdTax(hhIncome.map(i => ({ id: i.r.id, person: ownerOf(i.r, mode) === 'Partner' ? 'Partner' : 'Me', gross: i.benefit ? i.benefit.thisYear : i.gross, pretax: i.pretax, taxType: i.benefit ? 'Unemployment' : i.taxType, tips: i.tipsYear ?? 0 })), { filingStatus, place, year: now.getFullYear() }, ref); // batch 35: reported tips, for the tips deduction
+  const hh = householdTax(hhIncome.map(i => ({ id: i.r.id, person: ownerOf(i.r, mode) === 'Partner' ? 'Partner' : EXTRA_IDS.includes(ownerOf(i.r, mode)) ? ownerOf(i.r, mode) : 'Me', gross: i.benefit ? i.benefit.thisYear : i.gross, pretax: i.pretax, taxType: i.benefit ? 'Unemployment' : i.taxType, tips: i.tipsYear ?? 0 })), { filingStatus, place, year: now.getFullYear() }, ref); // batch 35: reported tips, for the tips deduction
   for (const i of income) {
     const sh = hh.rows[i.r.id];
     if (!sh) continue;
-    const k = i.r.halved ? 0.5 : 1;
+    const k = i.r.viewShare ?? (i.r.halved ? 0.5 : 1);
     const tax = Object.fromEntries(['federal', 'state', 'local', 'fica', 'socialSecurity', 'medicare', 'total'].map(f => [f, sh[f] * k]));
     i.tax = tax;
     if (i.benefit) { i.withheld = i.benefit.withheld; i.due = Math.max(0, tax.total - i.withheld); continue; }
@@ -176,8 +216,8 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   // Enter once, show in both: each debt's payment is a line From Debt; a typed line that looks like a debt payment or
   // a premium already paid asks "Same as your ...?" and is left out only after Yes (js/math/linked.js).
   const payFrequency = income.find(i => i.r.values.payFrequency)?.r.values.payFrequency ?? null;
-  const coupleApart = !!(mode && MODES[mode].couple && MODES[mode].split);
-  const billRows = coupleApart ? coupleBills(liveAll.filter(r => r.kind === 'bill'), { person, mode, profile, share: profile.splitMine ?? 0.5, roommates: doc.profile.roommates ?? 0, now }) : live.filter(r => r.kind === 'bill');
+  const coupleApart = !!(mode && MODES[mode].couple && MODES[mode].split) || H.many; // batch 49: past two adults every mode splits shared bills
+  const billRows = coupleApart ? coupleBills(liveAll.filter(r => r.kind === 'bill'), { person, mode, profile, share: profile.splitMine ?? 0.5, roommates: doc.profile.roommates ?? 0, now, H }) : live.filter(r => r.kind === 'bill');
   const typedLines = billRows.map(r => withHome({ ...r, ...r.values, amount: read(r, 'amount').v }, profile)); // About you › Home fills the blanks; the by-income split when chosen (F2)
   const autoLines = debtLines(debts);
   const premiums = premiumSources(live.filter(r => r.kind === 'coverage'), payFrequency);
@@ -241,7 +281,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   }, 0);
   const a = doc.assumptions;
   const out = {
-    place, link, sinkingMonthly, householdTax: hh, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, grossAllAnnual, taxSetAside, gates, filingStatus, filingGuess, none, mode, person, splitShare,
+    household: H, place, link, sinkingMonthly, householdTax: hh, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, grossAllAnnual, taxSetAside, gates, filingStatus, filingGuess, none, mode, person, splitShare,
     debtOrder: doc.settings?.debtOrder ?? 'avalanche', debtCustomOrder: doc.settings?.debtCustomOrder ?? [], debtExtra: doc.settings?.debtExtra ?? 0,
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || useLines ? 0 : debtPayments), // the lines hold each payment, From Debt
     typicalScale: typicalScaleOf({ gut: gutOf(), includesDebt, debtPayments, categories, lines: typedLines }), // QUESTIONS 241

@@ -13,7 +13,7 @@
 // This is the one layer data passes through on its way out of the coach's view: the app's ctx reads its doc through
 // viewStore (Client view and the couple views), and shareDoc / shareCtx feed every shared output.
 import { LISTS } from './registry/assumptions.js';
-import { MODES, modeOf, ownerOf, bothPreviewOn } from './registry/couples.js';
+import { MODES, modeOf, ownerOf, bothPreviewOn, validPerson, extraAdults, EXTRA_IDS } from './registry/couples.js';
 import { platformOf } from './math/earnings.js';
 
 export const SEEN = LISTS.privacy.seen;
@@ -45,9 +45,10 @@ export const neutralName = r => r?.values?.shareName || LISTS.privacy.neutral[ki
 export function personView(doc) {
   const mode = modeOf(doc?.profile), p = doc?.settings?.person;
   const v = p ?? (mode ? MODES[mode].view : 'all');
-  return v === 'all' && mode && !MODES[mode].together && !bothPreviewOn(doc) ? 'Me' : v; // batch 33: Living together's Both preview
+  return v === 'all' && mode && !MODES[mode].together && !bothPreviewOn(doc) ? 'Me' : validPerson(doc, v); // batch 33: Living together's Both preview; batch 49: any adult in the plan
 }
-const isCouple = doc => { const mode = modeOf(doc?.profile); return !!(mode && MODES[mode].couple); };
+// Batch 49: a couple, or any household with more than one adult in the plan (each adult has a view of their own).
+const isCouple = doc => { const mode = modeOf(doc?.profile); return !!(mode && MODES[mode].couple) || extraAdults(doc).length > 0; };
 
 // Who is looking. who: coach (Client view off), client (Client view on) or share (anything that leaves the session).
 export function audienceOf(doc, { clientView = false, share = false } = {}) {
@@ -57,7 +58,7 @@ export const SHARE = { who: 'share', person: 'all', couple: false };
 const audKey = a => `${a.who}:${a.person}:${a.couple ? 1 : 0}`;
 
 // Whose private row it is: its owner; a Joint row marked private is this client's.
-const privOwner = (r, mode) => (ownerOf(r, mode) === 'Partner' ? 'Partner' : 'Me');
+const privOwner = (r, mode) => (ownerOf(r, mode) === 'Partner' ? 'Partner' : EXTRA_IDS.includes(ownerOf(r, mode)) ? ownerOf(r, mode) : 'Me'); // batch 49: any adult's
 // Can this audience see a row (or its notes) marked `seen`?
 function sees(seen, r, aud, mode) {
   if (seen === 'Everyone') return true;
@@ -69,10 +70,10 @@ function sees(seen, r, aud, mode) {
   return aud.person === privOwner(r, mode);
 }
 export const rowHidden = (r, aud, mode = null) => !sees(seenOf(r), r, aud, mode);
-// In one partner's view, a row of the other partner's that is not for everyone is left out altogether, not folded:
+// In one partner's view (batch 49: one adult's, in a household of any size), a row of another adult's that is not for everyone is left out altogether, not folded:
 // a folded line there would still carry its amount into the household lines (the cash layers, the charts), and that
 // partner's own numbers never counted it. A Joint row is never left out (it counts at half in each person's view).
-export const rowLeftOut = (r, aud, mode = null) => aud.who !== 'share' && aud.couple && ['Me', 'Partner'].includes(aud.person)
+export const rowLeftOut = (r, aud, mode = null) => aud.who !== 'share' && aud.couple && (['Me', 'Partner'].includes(aud.person) || EXTRA_IDS.includes(aud.person))
   && rowHidden(r, aud, mode) && ownerOf(r, mode) !== 'Joint' && ownerOf(r, mode) !== aud.person;
 export const notesHidden = (r, aud, mode = null) => !sees(notesSeenOf(r), r, aud, mode);
 

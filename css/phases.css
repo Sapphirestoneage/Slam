@@ -677,3 +677,19 @@ button.seen-line:hover .seen-word { text-decoration: underline; }
 .seen-line .seen-word { font-weight: 600; color: var(--text); }
 .private-line { display: flex; align-items: center; gap: 6px; margin: 6px 0; }
 .private-line svg { width: 14px; height: 14px; flex: none; }
+
+/* Batch 49: About you › People (households of any size). One grid, so every row's boxes line up down the column. */
+.people-table { display: grid; grid-template-columns: minmax(170px, 200px) minmax(0, 1fr) minmax(110px, 180px) 40px; gap: 8px 12px; align-items: center; }
+.people-row { display: contents; }
+.people-head .label { padding-bottom: 2px; }
+.people-sum { margin: 0; }
+.split-block .picks { flex-wrap: wrap; }
+.split-pcts { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 640px) {
+  .people-table { grid-template-columns: minmax(0, 1fr) 40px; }
+  .people-row > :nth-child(2), .people-row > :nth-child(3) { grid-column: 1 / 2; }
+  .people-head { display: none; }
+}
+.people-row .person-name { padding: 6px 0; }
+/* Batch 49: one width for the Owner chip down a table, so a short name (Dev) and a long one (Joint, Riley) leave the next column level. */
+table.rows tr.row .owner-chip { min-width: 84px; justify-content: space-between; }

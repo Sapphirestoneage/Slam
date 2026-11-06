@@ -3892,6 +3892,520 @@
      "reason": "answers is the raise worth it in one sentence; waits for Eli at sign-off; nothing coach-only on it"
     }
    }
+  },
+  {
+   "screen": "About you (People: adults and dependents)",
+   "route": "#/home/profile",
+   "area": "Home",
+   "batch": 49,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 49 browser runs at 1440, 1280 and 390 (three-adults, sandwich-parent, a six-adult copy)"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-worked numbers match in every view (test/personas.test.js three-adults, sandwich-parent; test/households.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each adult's numbers are the same here as on Home, Plan and the strips for the same view; the views add up to Everyone"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 49 scans: Demo, New and the three-adult household)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "Add an adult or a dependent is one tap; the role is a tap; the partner files together or apart in one tap"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: Shared among, Equally, By percent, By income, Everyone"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch says whose numbers show (\"Dev's rows and their part of the shared ones\")"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark, with up to six names"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "one tap changes whose numbers show while talking"
+    }
+   }
+  },
+  {
+   "screen": "Home (whose numbers: each adult and Everyone)",
+   "route": "#/home/session",
+   "area": "Home",
+   "batch": 49,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 49 browser runs at 1440, 1280 and 390 (three-adults, sandwich-parent, a six-adult copy)"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-worked numbers match in every view (test/personas.test.js three-adults, sandwich-parent; test/households.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each adult's numbers are the same here as on Home, Plan and the strips for the same view; the views add up to Everyone"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 49 scans: Demo, New and the three-adult household)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "names and roles are taps; only a name and an age are typed"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: Shared among, Equally, By percent, By income, Everyone"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch says whose numbers show (\"Dev's rows and their part of the shared ones\")"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark, with up to six names"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "one tap changes whose numbers show while talking"
+    }
+   }
+  },
+  {
+   "screen": "Assets (Owner chip: each adult, Joint and its split)",
+   "route": "#/net-worth/assets",
+   "area": "Net worth",
+   "batch": 49,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 49 browser runs at 1440, 1280 and 390 (three-adults, sandwich-parent, a six-adult copy)"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-worked numbers match in every view (test/personas.test.js three-adults, sandwich-parent; test/households.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each adult's numbers are the same here as on Home, Plan and the strips for the same view; the views add up to Everyone"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 49 scans: Demo, New and the three-adult household)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "Shared among and Split are taps; By percent asks one box per adult, the rest is worked out"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: Shared among, Equally, By percent, By income, Everyone"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch says whose numbers show (\"Dev's rows and their part of the shared ones\")"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark, with up to six names"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "one tap changes whose numbers show while talking"
+    }
+   }
+  },
+  {
+   "screen": "Budget (a shared bill split among the adults)",
+   "route": "#/cash-flow/budget",
+   "area": "Cash flow",
+   "batch": 49,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 49 browser runs at 1440, 1280 and 390 (three-adults, sandwich-parent, a six-adult copy)"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-worked numbers match in every view (test/personas.test.js three-adults, sandwich-parent; test/households.test.js)"
+    },
+    "oneAnswer": {
+     "result": "failure",
+     "reason": "the list and its Totals show the household's rows on one adult's view, beside that adult's strip (as for couples before; QUESTIONS 381)",
+     "severity": "minor"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 49 scans: Demo, New and the three-adult household)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "names and roles are taps; only a name and an age are typed"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: Shared among, Equally, By percent, By income, Everyone"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch says whose numbers show (\"Dev's rows and their part of the shared ones\")"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark, with up to six names"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "one tap changes whose numbers show while talking"
+    }
+   }
+  },
+  {
+   "screen": "Calendar (one adult's part of a shared bill)",
+   "route": "#/cash-flow/calendar",
+   "area": "Cash flow",
+   "batch": 49,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 49 browser runs at 1440, 1280 and 390 (three-adults, sandwich-parent, a six-adult copy)"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-worked numbers match in every view (test/personas.test.js three-adults, sandwich-parent; test/households.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each adult's numbers are the same here as on Home, Plan and the strips for the same view; the views add up to Everyone"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 49 scans: Demo, New and the three-adult household)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "names and roles are taps; only a name and an age are typed"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: Shared among, Equally, By percent, By income, Everyone"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch says whose numbers show (\"Dev's rows and their part of the shared ones\")"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark, with up to six names"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "one tap changes whose numbers show while talking"
+    }
+   }
+  },
+  {
+   "screen": "Month end (one adult's lines)",
+   "route": "#/cash-flow/close",
+   "area": "Cash flow",
+   "batch": 49,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 49 browser runs at 1440, 1280 and 390 (three-adults, sandwich-parent, a six-adult copy)"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-worked numbers match in every view (test/personas.test.js three-adults, sandwich-parent; test/households.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each adult's numbers are the same here as on Home, Plan and the strips for the same view; the views add up to Everyone"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 49 scans: Demo, New and the three-adult household)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "names and roles are taps; only a name and an age are typed"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: Shared among, Equally, By percent, By income, Everyone"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch says whose numbers show (\"Dev's rows and their part of the shared ones\")"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark, with up to six names"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "one tap changes whose numbers show while talking"
+    }
+   }
+  },
+  {
+   "screen": "FOO (one adult's plan)",
+   "route": "#/plan/foo",
+   "area": "Plan",
+   "batch": 49,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 49 browser runs at 1440, 1280 and 390 (three-adults, sandwich-parent, a six-adult copy)"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-worked numbers match in every view (test/personas.test.js three-adults, sandwich-parent; test/households.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each adult's numbers are the same here as on Home, Plan and the strips for the same view; the views add up to Everyone"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 49 scans: Demo, New and the three-adult household)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "names and roles are taps; only a name and an age are typed"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: Shared among, Equally, By percent, By income, Everyone"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch says whose numbers show (\"Dev's rows and their part of the shared ones\")"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark, with up to six names"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "one tap changes whose numbers show while talking"
+    }
+   }
+  },
+  {
+   "screen": "Statements (one adult's, or Everyone)",
+   "route": "#/report/statements",
+   "area": "Report",
+   "batch": 49,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 49 browser runs at 1440, 1280 and 390 (three-adults, sandwich-parent, a six-adult copy)"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-worked numbers match in every view (test/personas.test.js three-adults, sandwich-parent; test/households.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each adult's numbers are the same here as on Home, Plan and the strips for the same view; the views add up to Everyone"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 49 scans: Demo, New and the three-adult household)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "names and roles are taps; only a name and an age are typed"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: Shared among, Equally, By percent, By income, Everyone"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch says whose numbers show (\"Dev's rows and their part of the shared ones\")"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark, with up to six names"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "one tap changes whose numbers show while talking"
+    }
+   }
+  },
+  {
+   "screen": "Overview (one adult's debt ratios)",
+   "route": "#/report/overview",
+   "area": "Report",
+   "batch": 49,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the batch 49 browser runs at 1440, 1280 and 390 (three-adults, sandwich-parent, a six-adult copy)"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "debt-to-income and utilization read the view's own debts: 0% and No cards on Riley's view, not a lock"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each adult's numbers are the same here as on Home, Plan and the strips for the same view; the views add up to Everyone"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark (batch 49 scans: Demo, New and the three-adult household)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: Find reaches it in one search"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "names and roles are taps; only a name and an age are typed"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words: Shared among, Equally, By percent, By income, Everyone"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the switch says whose numbers show (\"Dev's rows and their part of the shared ones\")"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark, with up to six names"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "one tap changes whose numbers show while talking"
+    }
+   }
   }
  ],
  "updated": {
@@ -3982,5 +4496,13 @@
   "major": 0,
   "minor": 1,
   "note": "Batch 52 updated the Fire drill row in place (\"batch\": 52: the two readings, the bank taps on the card on top, the childcare line); the minor is the must-pay number beside the spending number, as before."
+ },
+ "batch49": {
+  "date": "2026-11-06",
+  "screens": 9,
+  "blocker": 0,
+  "major": 0,
+  "minor": 1,
+  "note": "Batch 49 appended its screens (each with \"batch\": 49), scored after its changes; the rows above and the summary are as they were."
  }
 }

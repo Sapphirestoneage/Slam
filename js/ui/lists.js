@@ -3,11 +3,12 @@
 import { h, icon } from './dom.js';
 import { addPresets } from '../presets.js';
 import { METHODS } from '../registry/debt.js';
-import { personLabels } from '../registry/couples.js';
+import { personLabels, manyAdults, splitTyped, ownPlanPerson } from '../registry/couples.js';
 import { institutionLink } from './institutions-ui.js';
 import { cardPickLink } from './cards-ui.js';
 import { libraryCardOf } from '../cardlib.js';
 import { creditMove } from '../math/cards.js';
+import { splitBlock } from './staples.js';
 import { tapPick, openSource, recordList as S_recordList, popover as S_popover, closePop as S_closePop, moreBlock as S_moreBlock, secWrap as S_secWrap, fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, perChip, nameInput, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
 import { paidInFull } from '../completion.js';
 import { pct } from '../format.js';
@@ -164,9 +165,11 @@ export function debtRatios(ctx, m) {
   const usable = m.inputs.debts.filter(d => d.balance > 0);
   const gross = m.inputs.grossAnnual === null ? null : m.inputs.grossAnnual / 12; // typed or worked out from take-home (R046)
   // Batch 13: no debt on file is a real 0% (no payments), not a lock; no card means utilization does not apply.
-  const noDebt = !ctx.store.find(r => r.kind === 'debt').length || m.inputs.gates?.areas?.debt === false;
+  // Batch 49: in one person's view the debts are that view's own (another adult's card is not theirs to pay).
+  const own = m.inputs.person && m.inputs.person !== 'all' && m.inputs.viewRecords ? m.inputs.viewRecords.filter(r => r.kind === 'debt') : null;
+  const noDebt = !(own ?? ctx.store.find(r => r.kind === 'debt')).length || m.inputs.gates?.areas?.debt === false;
   const dti = debtToIncome({ monthlyDebtPayments: usable.length ? sum(m.inputs.debts, d => d.payment) : noDebt ? 0 : null, grossMonthly: gross });
-  const cards = ctx.store.find(r => r.kind === 'debt' && r.type === 'Credit card').map(r => ({ balance: r.values.balance, limit: r.values.limit }));
+  const cards = (own ?? ctx.store.find(r => r.kind === 'debt')).filter(r => r.type === 'Credit card').map(r => ({ balance: r.values.balance, limit: r.values.limit }));
   if (!cards.length) return { dti, util: { id: 'M35', value: 0, needs: [], unit: 'pct', none: true, text: 'No credit cards on file, so there is no utilization to count.' } };
   const util = utilization(cards);
   return { dti, util: util.hidden ? needs('M35', ['credit limits'], { unit: 'pct' }) : util };
@@ -387,6 +390,13 @@ const stress = (r, up) => labelled('Stress 1 to 5', toggle(['1', '2', '3', '4', 
 function shareChip(ctx, r) {
   if (r.amount == null) return null;
   const p = ctx.store.doc.profile;
+  // Batch 49: a shared bill in a household of any size says the part of the view on screen (or how many share it).
+  if (manyAdults(ctx.store.doc) || splitTyped(r)) {
+    const l = ctx.metrics().inputs.typedLines.find(x => x.id === r.id), c = l?.coupleShared;
+    if (!c) return null;
+    const who = personLabels(ctx.store.doc)[ownPlanPerson(ctx.store.doc) ?? 'Me'];
+    return h('span.computed.small.share-chip', { title: `The bill is shared by ${c.among?.length ?? 2} people in the plan` }, c.share < 1 ? `whole bill, ${money(l.amount)} ${who}'s` : `shared by ${c.among?.length ?? 2}`);
+  }
   const line = withHome({ ...r, ...r.values, amount: r.amount }, p);
   if ((line.whoPays ?? null) !== 'Split') return null;
   const mine = myShare(line, { roommates: p.roommates ?? 0 });
@@ -689,6 +699,7 @@ function whoRow(ctx, r, up) {
   return h('div.stack', { style: { gap: '10px' } },
     toggle([['Me', 'Me'], ['Split', 'Splitting'], ['Someone else', 'Someone else'], ['Not for me', 'Not for me']], top, x => pick(x ?? 'Me'), { label: 'Who pays' }),
     top === 'Split' || top === 'Someone else' ? h('div.who-detail', {}, whoPays(r, up, { roommates: ctx.store.doc.profile.roommates ?? 0, profile: ctx.store.doc.profile, detailOnly: true })) : null,
+    top === 'Split' && ctx.multi ? h('div.who-detail', {}, splitBlock(ctx, r, up)) : null, // batch 49: among which adults, and how
     top === 'Not for me' ? null : h('div.row-line', { style: { gap: '8px', flexWrap: 'wrap' } }, h('span.label', {}, 'Paid with'),
       toggle([['checking', 'Checking'], ['card', 'Credit card']], way, w => up({ paidWith: w === 'card' ? (cards.length === 1 ? cards[0].id : 'card') : 'checking' }), { label: 'Paid with' }),
       way === 'card' && cards.length > 1 ? select(cards.map(c => [c.id, c.name || 'Credit card']), cards.some(c => c.id === p) ? p : null, v => up({ paidWith: v }), { label: 'Which card', hint: 'Which card', width: 160 }) : null,
