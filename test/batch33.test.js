@@ -51,8 +51,13 @@ test('Current vs Proposed: a $400 a month shortfall is card borrowing, so closin
   c = compareOf(doc, ref, { now });
   const nw5 = c.rows.find(r => r.key === 'nw5');
   assert.equal(c.proposed.shortfall.monthly, 0);
-  assert.ok(nw5.proposed - nw5.current > 20000, 'five years of a $400 gap on the card is not the same net worth');
-  assert.ok(c.rows.find(r => r.key === 'nw5').how.current.some(t => /shortfall goes on the card/.test(t)));
+  // Batch 37 (Q320): the borrowing stops at the card room ($32,727 typical at 33, less $2,500 owed), full in Jun 2030,
+  // so the Current side has no 5-year number; the Proposed side that closes the gap does ($1,952).
+  assert.equal(nw5.current, null);
+  assert.equal(nw5.full.current, '2030-06');
+  assert.equal(Math.round(nw5.proposed), 1952);
+  assert.ok(nw5.how.current.some(t => /shortfall goes on the card/.test(t)));
+  assert.ok(nw5.how.current.some(t => /cannot be covered/.test(t)));
   assert.equal(Math.round(shortfallOwed(100, 0.12, 12)), 1268); // $100 a month at 1% a month for a year
 });
 

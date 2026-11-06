@@ -114,7 +114,7 @@ export function debtList(ref, { cards = null } = {}) {
       const cells = cols.map(c => {
         if (c.label === 'Debt') return h('td', {}, `${recs.length} ${cards === 'only' ? (recs.length === 1 ? 'card' : 'cards') : recs.length === 1 ? 'debt' : 'debts'}`);
         if (c.label === 'Balance') return h('td.num', {}, amount(ctx, recs.some(r => r.values.balance != null) ? sum(recs, r => r.values.balance) : null));
-        if (c.label === 'Payment / mo') return h('td.num', {}, amount(ctx, m.debts.some(d => d.payment != null) ? sum(m.debts, d => d.payment) : null));
+        if (c.label === 'Payment / mo') { const ids = new Set(recs.map(r => r.id)), ds = m.debts.filter(d => ids.has(d.id)); return h('td.num', {}, amount(ctx, ds.some(d => d.payment != null) ? sum(ds, d => d.payment) : null)); } // batch 37: this list's own debts (Credit cards summed every debt: $780 against one card's $250)
         return h('td');
       });
       return [...cells, h('td'), h('td')];

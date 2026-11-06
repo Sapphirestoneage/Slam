@@ -51,7 +51,7 @@ test('Maya: a big goal saved faster than the free money allows says the date it 
   assert.equal(r.over, 1000);
   assert.equal(r.fullAt, '2028-07'); // $30,000 / $1,500 = 20 months from Nov 2026
   assert.equal(r.waits, true);
-  assert.equal(r.numbers[1].show, 'Waits for the gap');
+  assert.equal(r.numbers[1].show, 'On hold'); // batch 37: was Waits for the gap
 });
 
 test('Tom: a $400 a month car payment moves the FI date (for good, and for 5 years)', () => {

@@ -159,5 +159,6 @@ export function cardsPicture({ cardRows = [], lines = [], coverage = [], library
     return card ? { id: r.id, card, label: `${issuerName(card)} ${card.name}`, check: feeCheck(card, { fee: r.values.annualFee, uses: r.values.cardUse || {}, spend, rate, assumptions }) } : null;
   }).filter(Boolean);
   const paid = [...lines.filter(l => !l.auto), ...coverage.filter(c => c.values?.have !== "Don't").map(c => ({ id: c.id, name: c.name, category: c.type, amount: c.amount, per: c.per }))];
-  return { spend, held, doubled: doubledUp(held, paid, freq) };
+  const checked = [...new Set(held.flatMap(x => Object.keys(DOUBLE_WORDS).filter(k => x.card?.benefits?.[k])))].map(k => DOUBLE_WORDS[k].what); // batch 37: what the paying-twice check looked for
+  return { spend, held, doubled: doubledUp(held, paid, freq), checked };
 }

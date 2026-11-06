@@ -630,6 +630,8 @@ export function scenariosScreen(app, ctx) {
       S.labelled('Extra to debt a month', S.moneyInput(p.extraDebt ?? null, v => propose({ extraDebt: v }), { hint: 'Add extra', key: 'prop:extra' })),
       S.labelled('Extra income a month', S.moneyInput(p.extraIncome ?? null, v => propose({ extraIncome: v }), { hint: 'Add income', key: 'prop:income' })))); // batch 12: Use the gap fills it
   const fmt = (r, v) => (v == null ? '–' : r.unit === 'money' ? S.amount(ctx, v) : r.unit === 'pct' ? pct(v) : r.unit === 'month' ? monthName(v, 'short') : String(v));
+  // Batch 37 (Q320): past the card room the month cannot be covered, so the cell says when, not a number.
+  const cellOf = (r, k) => (r.full?.[k] ? h('span.has-tip', { title: 'The shortfall fills the room on the cards by then; How we got this shows it' }, `Card full ${monthName(r.full[k], 'short')}`) : fmt(r, r[k]));
   const diffCell = r => {
     if (r.unit === 'month') return r.diffMonths == null ? '' : r.diffMonths === 0 ? 'Same' : `${r.diffMonths < 0 ? '' : '+'}${r.diffMonths} months${r.diffMonths < 0 ? ' sooner' : ' later'}`;
     if (r.unit === 'pct') return r.diff == null ? '' : `${r.diff > 0 ? '+' : ''}${(r.diff * 100).toFixed(1)} pts`;
@@ -641,13 +643,14 @@ export function scenariosScreen(app, ctx) {
     h('div', {}, h('strong', {}, 'Current'), h('ol.how-list', {}, r.how.current.map(t => h('li', {}, t)))),
     h('div', {}, h('strong', {}, 'Proposed'), h('ol.how-list', {}, r.how.proposed.map(t => h('li', {}, t))))), { width: 420 }), { tiny: true });
   const table = h('div.card', {}, h('table.rows.compare', {}, h('thead', {}, h('tr', {}, h('th', {}, ''), h('th.num', {}, 'Current'), h('th.num', {}, 'Proposed'), h('th.num', {}, 'Difference'), h('th', {}, h('span.sr', {}, 'How we got this')))),
-    h('tbody', {}, C.rows.map(r => h('tr', {}, h('td', {}, r.label), h('td.num', {}, fmt(r, r.current)), h('td.num', {}, fmt(r, r.proposed)), h('td.num', {}, diffCell(r)), h('td.how-cell', {}, how(r)))))),
+    h('tbody', {}, C.rows.map(r => h('tr', {}, h('td', {}, r.label), h('td.num', {}, cellOf(r, 'current')), h('td.num', {}, cellOf(r, 'proposed')), h('td.num', {}, diffCell(r)), h('td.how-cell', {}, how(r)))))),
     S.moreBlock('prop:choices', () => h('table.rows', {}, h('tbody', {}, C.choices.map(c => h('tr', {}, h('td', {}, c.label), h('td.num', {}, c.unit === 'money' ? money(c.current ?? 0) : String(c.current ?? '–')), h('td.num', {}, c.unit === 'money' ? money(c.proposed ?? 0) : String(c.proposed ?? '–')))))), { label: 'The choices side by side' }),
     h('div.row-line', { style: { gap: '10px', marginTop: '10px' } }, S.button('Make Proposed the plan', { kind: 'primary', disabled: !C.has, why: C.has ? null : 'Change something under Proposed first', onClick: () => { makeProposedThePlan(ctx.store, ref0(ctx), { now: ctx.now() }); S.toast('Proposed is the plan now.', { undo: () => ctx.store.undo() }); app.render(); } }),
       h('span.muted.small', {}, 'Writes the choices onto the file in one step; Undo puts it back.')));
   const rule = ctx.metrics().debtRule;
   // Batch 33 (QUESTIONS 289): a short month is borrowed on the card, said in one line.
-  const shortLine = sd => (sd.shortfall?.monthly ? `${money(sd.shortfall.monthly)} a month short: carried as card borrowing at ${(sd.shortfall.apr * 100).toFixed(1)}%${sd.shortfall.from === 'card' ? ', the highest card APR' : ', a typical card APR'}` : null);
+  // Batch 37 (Q320): the borrowing stops at the room on the cards; past it, one plain line says the month cannot be covered.
+  const shortLine = sd => (sd.shortfall?.monthly ? `${money(sd.shortfall.monthly)} a month short: carried as card borrowing at ${(sd.shortfall.apr * 100).toFixed(1)}%${sd.shortfall.from === 'card' ? ', the highest card APR' : ', a typical card APR'}${sd.shortfall.fullYm ? `, until the cards are full in ${monthName(sd.shortfall.fullYm, 'short')} (${money(sd.shortfall.room)} of room${sd.shortfall.roomFrom === 'typical' ? ', a typical limit' : ''}). From then the month cannot be covered` : ''}` : null);
   const shorts = [shortLine(C.current) ? `Current is ${shortLine(C.current)}` : null, shortLine(C.proposed) ? `Proposed is ${shortLine(C.proposed)}` : null].filter(Boolean);
   return [head('Current vs Proposed', 'Today against the plan you are proposing'), editor,
     rule?.on ? h('p.muted.small', { style: { margin: '0 0 8px' } }, 'Both sides send the surplus to heavy debt first, then invest it (change it on Plan › Goals).') : null,

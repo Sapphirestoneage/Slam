@@ -116,6 +116,7 @@ export function popover(anchor, content, { width = null } = {}) {
   openPop = pop; popAnchor = anchor;
   forgetPop = opened({ el: pop, anchor, pop: true, close: () => { if (openPop === pop) closePop(); } });
   setTimeout(() => pop.querySelector('input, button')?.focus());
+  if (toastEl) dodge(toastEl); // batch 37: a toast still showing moves off a popover opened under it
   return pop;
 }
 if (typeof document !== 'undefined') installDismiss(document, window);
@@ -149,17 +150,31 @@ export function toast(text, { undo = null, action = null } = {}) {
   toastTimer = setTimeout(() => toastEl?.remove(), undo ? 10000 : 5000); // 10 seconds when it can be undone
   return toastEl;
 }
+// Batch 37: a toast whose message is done (Transitions' Cleared, once a template is picked) goes at once.
+export function clearToast() { toastEl?.remove(); toastEl = null; clearTimeout(toastTimer); }
 // Batch 20 (Rocket Surgery): a toast never sits over a button or a box (DESIGN.md rule 4). Bottom left first; when
 // that covers a control (Make Proposed the plan, Add line), bottom right; on a phone it spans the width as before.
 function dodge(el) {
-  el.style.removeProperty('left'); el.style.removeProperty('right');
+  el.style.removeProperty('left'); el.style.removeProperty('right'); el.style.removeProperty('top');
+  if (el.style.getPropertyValue('bottom') === 'auto') el.style.removeProperty('bottom');
   if (window.innerWidth <= 700 || !el.isConnected) return;
-  const controls = [...document.querySelectorAll('main button, main input, main select, main a, .walk-bar button')].filter(c => c.checkVisibility?.() !== false).map(c => c.getBoundingClientRect()).filter(r => r.width && r.height);
+  // Batch 37: an open popover and a section's closed line (its answer, like a card's fee check) count too.
+  const controls = [...document.querySelectorAll('main button, main input, main select, main a, .walk-bar button, .pop, main .sec-sum')].filter(c => c.checkVisibility?.() !== false).map(c => c.getBoundingClientRect()).filter(r => r.width && r.height);
   const hits = () => { const t = el.getBoundingClientRect(); return controls.filter(r => r.left < t.right && r.right > t.left && r.top < t.bottom && r.bottom > t.top).length; };
   const left = hits();
   if (!left) return;
   el.style.setProperty('left', 'auto', 'important'); el.style.setProperty('right', '24px', 'important');
-  if (hits() > left) { el.style.removeProperty('left'); el.style.removeProperty('right'); }
+  const right = hits();
+  if (!right) return;
+  // Batch 37: both bottom corners cover something (an open Details panel on Credit cards): try the top right, just
+  // under the top bars, and keep whichever place covers least.
+  const bottom = el.style.getPropertyValue('bottom'), bottomP = el.style.getPropertyPriority('bottom');
+  const bars = Math.max(0, ...[...document.querySelectorAll('header, .topbar, .subtabs, nav.tabs')].filter(b => getComputedStyle(b).position.match(/fixed|sticky/) && b.getBoundingClientRect().top < 140).map(b => b.getBoundingClientRect().bottom));
+  el.style.setProperty('top', `${Math.round(bars) + 10}px`, 'important'); el.style.setProperty('bottom', 'auto', 'important');
+  const top = hits();
+  if (top < Math.min(left, right)) return;
+  el.style.removeProperty('top'); el.style.removeProperty('bottom'); if (bottom) el.style.setProperty('bottom', bottom, bottomP);
+  if (right > left) { el.style.removeProperty('left'); el.style.removeProperty('right'); }
 }
 // A toast that outlives its screen: the "That moved the plan" line was about that screen's edit, so it goes; any
 // other checks the next screen and moves aside if it would cover a control there.

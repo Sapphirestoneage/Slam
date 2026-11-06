@@ -78,7 +78,7 @@
 .solver { background: var(--bg); border-radius: var(--r-input); padding: var(--s3); }
 .deals { display: grid; gap: var(--s2); }
 .deal { display: grid; grid-template-columns: 150px 1fr; gap: var(--s3); align-items: center; }
-.deal-opts { display: flex; gap: 6px; flex-wrap: wrap; }
+.deal-opts { display: grid; grid-template-columns: repeat(auto-fill, 132px); gap: 6px; } /* batch 37: one track width, so the options line up down the rows (column check) */
 .deal-opt { all: unset; box-sizing: border-box; cursor: pointer; border: 2px solid var(--border-input); border-radius: var(--r-button); padding: 4px 10px; font-size: .875rem; font-weight: 600; min-width: 92px; text-align: center; }
 .deal-opt[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
 .deal-opt small { display: block; font-weight: 500; font-size: .75rem; opacity: .85; }

@@ -67,7 +67,7 @@ export function secWrap(el, id, { summary = null, open = false, head = null, tip
   if (!hd || !hx) return el;
   const isOpen = sectionOpen(id, open);
   const title = [...hx.childNodes];
-  hx.replaceChildren(caretButton('', isOpen, tip));
+  hx.replaceChildren(caretButton('', isOpen, tip, id)); // batch 37: data-focus sec:<id>, so Find can land on a wrapped section too
   hx.querySelector('.sec-title-text').append(...title);
   hd.classList.add('sec-head');
   if (summary) hx.after(sumEl(summary));

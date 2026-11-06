@@ -882,3 +882,16 @@ Batch 31 could use only a few Primary rows (QUESTIONS 314 to 318). This pass rea
    anywhere), Alexis (surplus -320, -740 to 100; the debt-free ends from her card APR, gut number and balance run
    one at a time), Maya (surplus, net worth 12,693 to 15,707, emergency fund months), a surplus that could be nothing
    some months, Tom, the FOO step, materiality, and the workbook rows.
+## Batch 37 (Nov 6 2026): Rocket Surgery on the Phase 4 and new screens, the card room, plain words
+
+Batch 20's method on the screens built tonight (Transitions from scratch, Discovery's Who they are with money, Can I afford it?, the card library, borrowing and the student loan, the month end import, Simple Math): seven real tasks, Eli and a first-time coach, 26 runs before and after (docs/usability/2026-11-06-rocket-surgery.md, Batch 37). Before: 20 of 26 done, 10 hesitations, 3 dead ends, 42 unclear words, 1 wrong turn; after: 26 of 26, 3 hesitations, none of the rest. Each fix is the least change.
+
+1. The card room on Current vs Proposed (QUESTIONS 320): a short month is borrowed on the cards only up to their room (each card's limit less its balance, else the typical limit at the client's age, Experian June 2026, registered as Typical_card_limit and the Card_limit table, less what the cards owe). Past it the month cannot be covered: the 5 and 10 year cells say "Card full" and the month, and one line says so. The deficit persona: $30,227 of room, full Jun 2030 (month 43, its def's cardFullMonths, worked by hand); it was −$52,428 and −$265,580.
+2. Plain words in plain view (Batch 33's minors): on Home, Goals, Transitions (and the share view) and Debt payoff, the first time big e, little e, DRAFTT, FAT and Picture show they read big e (job-loss fund), little e (small emergency fund), DRAFTT needs (rent, food, transport, debt, taxes), FAT (food, rent, transport), Picture (how much is filled in), the term keeping its hover tip (js/glossary.js PLAIN, js/ui/tips.js pairTerms). The share view's Decided ahead uses the plain rung names.
+3. Credit cards: the totals row summed every debt's payment ($780 for one $250 card); it sums the list's own. What your cards give you says "Paying twice: nothing found" and what it checked when nothing doubles up; Find: paying twice, phone insurance, extended warranty.
+4. Toasts avoid open popovers and sections' closed lines, try the top right when both bottom corners cover a control, and move when a popover opens under them; Transitions' Cleared toast goes once a template is picked.
+5. Can I afford it?: On hold, "while the wedding is saved for; was Mar 2027", in place of Waits for the gap.
+6. Month end import: the footer says how many rows stay out and offers Accept the matched too beside Save (a first-time coach had saved 2 of 22).
+7. Small: Find simple math, the gap box's "$ $ a month", the big deals options on one track width (the layout checker's 6 old column findings on Goals).
+
+docs/usability/scorecard-2026-11-06.json: 11 screens appended with "batch": 37, 0 blockers, 0 majors, 5 minors. Questions 344 to 347.

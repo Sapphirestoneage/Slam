@@ -166,7 +166,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
       payment = min.value; paymentIsMinimum = min.value !== null;
     }
     return { id: r.id, name: r.name ?? r.type, type: r.type, balance, balanceRough: balance != null && roughAt(r, 'balance'), apr: apr.v, aprGuess: !!apr.guess, payment, paymentIsMinimum, inFull, choice, stress: r.stress, hassle: r.values.hassle ?? null, linkedTo: r.linkedTo,
-      promoEnd: r.values.promoEnd ?? null, forgiven: r.values?.pslf === 'Yes' || r.values?.forgiveness === true || r.values?.forgiveness === 'Yes' };
+      promoEnd: r.values.promoEnd ?? null, limit: r.values.limit ?? null, forgiven: r.values?.pslf === 'Yes' || r.values?.forgiveness === true || r.values?.forgiveness === 'Yes' };
   }).map(d => { // batch 29: a forgiveness loan with its payments left typed ends there on the one plan (the rest is forgiven)
     const left = live.find(r => r.id === d.id)?.values?.paymentsLeft;
     const rec = live.find(r => r.id === d.id);

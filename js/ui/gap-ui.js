@@ -15,7 +15,7 @@ export function gapCard(app, ctx, m = ctx.metrics(), { where = 'home' } = {}) {
   const row = l => h('li.gap-lever', {},
     h('span.gap-name', {}, l.name, l.amount != null && l.id !== 'income' ? h('span.muted.small', {}, ` · ${money(l.amount)} a month`) : null),
     h('span.muted.small.gap-how', {}, l.how),
-    l.id === 'income' ? S.moneyInput(l.amount, setIncome, { hint: '$ a month', key: `gap:income:${where}` }) : null,
+    l.id === 'income' ? S.moneyInput(l.amount, setIncome, { hint: 'A month', key: `gap:income:${where}` }) : null,
     h('span.gap-closes', {}, l.closes == null ? h('span.muted', {}, '') : `closes ${money(l.closes)}`),
     l.route ? h('a.small', { href: l.route }, 'Open ›') : h('span'));
   const use = () => { setProposed(ctx.store, gapProposal(G)); S.toast('Proposed: a plan that closes the gap. Compare it here; nothing changes until you make it the plan.', { undo: () => ctx.store.undo() }); app.go('#/plan/scenarios'); };

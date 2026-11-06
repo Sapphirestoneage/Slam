@@ -10,6 +10,7 @@ import { importFile } from '../js/records.js';
 import { metrics, keyNumbers } from '../js/math/metrics.js';
 import { foo } from '../js/math/foo.js';
 import { layersOf } from '../js/math/layers.js';
+import { compareOf } from '../js/math/proposed.js';
 import { loadDefs, fileText, OUT_DIR, NOW } from '../tools/personas/build.mjs';
 
 const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
@@ -36,6 +37,7 @@ export function appValue(key, doc, view = null) {
     case 'runwayMonths': return m.runwayMonths.value;
     case 'bigETarget': return m.ruleOf5.value;
     case 'littleEFull': return layersOf(doc, ref, now).littleFull;
+    case 'cardFullMonths': return compareOf(doc, ref, { now }).current.shortfall.full ?? 'none'; // batch 37 (Q320): Current vs Proposed's card room runs out
     default: throw new Error(`No app value for ${key}`);
   }
 }

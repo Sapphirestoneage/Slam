@@ -44,7 +44,7 @@ function pickTemplate(ctx) {
   const list = ctx.ref.transitions?.templates || [];
   return h('div.card.tr-start', {}, h('h2', {}, 'What is changing?'),
     h('p.muted', {}, 'Pick the one closest. Everything after it is read from the numbers already here.'),
-    S.tapPick(list.map(t => [t.id, t.label]), null, id => { const t = list.find(x => x.id === id); if (t) put(ctx, templateDefaults(ctx, t)); }, { label: 'What is changing', clearable: false }));
+    S.tapPick(list.map(t => [t.id, t.label]), null, id => { const t = list.find(x => x.id === id); if (t) { S.clearToast(); put(ctx, templateDefaults(ctx, t)); } }, { label: 'What is changing', clearable: false })); // batch 37: the Cleared toast is done once a template is picked
 }
 
 // ---------- The headline: one calm number ----------
@@ -57,7 +57,7 @@ function headline(ctx, T) {
       h('span.muted', {}, months == null ? 'What comes in covers the burn.' : `From ${mon(lad.start)} to ${mon(T.floorYm)}, using every rung that is on.`)),
     h('div.tr-hero-side', {},
       h('span.tag.plain', {}, `${p.tpl.label}: ${p.from} to ${p.to}`),
-      cut?.on ? h('span.muted.small', {}, `At ${levelName(cut.level)} (${money(cut.burn)} a month)${cut.when === 'reached' ? ' once it is reached' : ''}`) : null,
+      cut?.on ? h('span.muted.small', {}, `At ${levelName(cut.level)}, ${money(cut.burn)} a month${cut.when === 'reached' ? ' once it is reached' : ''}`) : null, // batch 37: no brackets of its own, so the plain meaning can pair with the term
       ben ? h('span.muted.small', {}, `Unemployment ${money(ben.amount)} a month until ${mon(ben.until)}`) : null,
       T.tripwires.length ? h('span.muted.small', {}, `${T.tripwires.length} ${T.tripwires.length === 1 ? 'tripwire' : 'tripwires'} set, the first in ${mon(T.tripwires.filter(t => t.ym).sort((a, b) => a.k - b.k)[0]?.ym) || 'time'}`) : null));
 }
@@ -269,7 +269,7 @@ function shareView(app, ctx, T) {
     h('p', {}, `${p.tpl.label}, from ${mon(lad.start)}. ${T.levels[0].burn != null ? `A month costs ${money(T.levels[0].burn)} at full spending` : ''}${lad.rungs.find(r => r.id === 'cut' && r.on) ? `, and ${money(lad.rungs.find(r => r.id === 'cut').burn)} with the cut` : ''}.`),
     h('h2', {}, 'The plan, in order'),
     h('ol.tr-share-list', {}, on.map(r => h('li', {}, h('strong', {}, RUNGS.find(x => x.id === r.id)?.plain ?? r.name), ` · ${amt(r)}`))), // batch 20: plain names for parents
-    wires.length ? [h('h2', {}, 'Decided ahead'), h('ul', {}, wires.map(w => h('li', {}, `${w.text} (${mon(w.ym)})`)))] : null,
+    wires.length ? [h('h2', {}, 'Decided ahead'), h('ul', {}, wires.map(w => h('li', {}, `${w.plainText ?? w.text} (${mon(w.ym)})`)))] : null, // batch 37: plain rung names, as in The plan, in order
     h('h2', {}, 'The worst case'),
     h('p', {}, T.floorYm ? `If nothing changes at all, the last of the money runs out in ${mon(T.floorYm)}, ${monthsText(T.runway)} from the start.${wires.length ? ` The first decision comes well before that, in ${mon(wires[0].ym)}.` : ''}` : 'What comes in covers the burn: there is no floor in sight.'),
     T.plans.length ? h('p', {}, T.plans.map(x => x.text).join(' ')) : null,

@@ -382,6 +382,11 @@
     "Personal loan": 0.1186,
     "Car loan": 0.0714
   },
+  "typicalCardLimit": {
+    "all": 35687,
+    "byAge": [[18, 16139], [30, 32727], [46, 43481], [62, 44653], [81, 33185]],
+    "source": "Experian, What's the Average Credit Limit on a Credit Card? (June 2026 data; by generation: Gen Z 18 to 29, Millennials 30 to 45, Gen X 46 to 61, Baby Boomers 62 to 80, Silent 81 and up)"
+  },
   "hoursPerMonthFallback": 173,
   "lists": {
     "debtTypesTop": [
@@ -2101,6 +2106,39 @@
         ],
         "add": "debt:Credit card",
         "why": "batch 30: a card picked from the library shows its rewards, credits and benefits, and the fee check, on Credit cards"
+      },
+      {
+        "terms": [
+          "simple math",
+          "shockingly simple math",
+          "shockingly simple",
+          "years to fi",
+          "mr money mustache",
+          "savings rate table"
+        ],
+        "label": "Your Shockingly Simple Math",
+        "go": [
+          "focus:sec:overview:simple-math@#/report/overview"
+        ],
+        "add": "none",
+        "why": "batch 37 (Rocket Surgery): Find said only Make a note for simple math; the table sits under the fold on Report › Overview"
+      },
+      {
+        "terms": [
+          "paying twice",
+          "doubling up",
+          "doubled up",
+          "double coverage",
+          "phone insurance",
+          "rental car insurance",
+          "extended warranty"
+        ],
+        "label": "What your cards give you",
+        "go": [
+          "focus:sec:cards:give@#/net-worth/credit-cards"
+        ],
+        "add": "none",
+        "why": "batch 37 (Rocket Surgery): the paying-twice notes and the benefits are under What your cards give you on Credit cards"
       },
       {
         "terms": [

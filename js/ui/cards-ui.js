@@ -105,7 +105,10 @@ export function cardsGiveSection(ctx) {
   const fees = shownHeld.filter(x => !x.check.noFee && x.check.line);
   const summary = !lib ? 'Loading the card library' : fees.length ? fees.map(x => `${x.card.name}: ${x.check.line.replace(/\.$/, '')}`).join(' · ')
     : shownHeld.length ? `${shownHeld.map(x => x.card.name).join(', ')}: rewards, credits and benefits` : 'Pick each card to see its rewards and benefits';
-  const body = () => h('div.card', {}, held.map(x => heldCard(ctx, rows.find(r => r.id === x.id), x, lib)),
+  // Batch 37 (Rocket Surgery): asked to find a benefit paid for twice, both users found nothing to say "none" with. One
+  // line says what was checked when nothing doubles up (the notes themselves stay under the cards, always in view).
+  const noneLine = P?.checked?.length && !P.doubled.length ? h('p.muted.small.doubled-none', { style: { margin: '8px 0 0' } }, icon('check'), ` Paying twice: nothing found. No Budget line or Protection row pays for ${P.checked.join(', ')} too.`) : null;
+  const body = () => h('div.card', {}, held.map(x => heldCard(ctx, rows.find(r => r.id === x.id), x, lib)), noneLine,
     unpicked.length ? h('div.stack', { style: { gap: '6px', marginTop: held.length ? '12px' : 0 } }, unpicked.map(r => h('div.row-line', { style: { gap: '8px' } }, h('span', {}, r.name || 'Card'), cardPickLink(ctx, r, { asButton: true })))) : null);
   return secWrap(h('section.section.area-debt.cards-give', {}, h('div.section-title', {}, h('h2', {}, 'What your cards give you')), body()), 'cards:give', { summary });
 }

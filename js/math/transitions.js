@@ -254,11 +254,12 @@ export function dipOf(lad, { order = null, off = [], level = null, extra = [], c
 export function tripwiresOf(lad, dip, plan) {
   return (plan?.tripwires || []).map(t => {
     const c = t.if || {};
-    let k = null, words = '';
-    if (c.kind === 'rung') { const r = lad.rungs.find(x => x.id === c.rung); k = dip.reached[c.rung] ?? null; words = `If I reach ${r?.short ?? 'that rung'}`; }
+    let k = null, words = '', plain = null;
+    if (c.kind === 'rung') { const r = lad.rungs.find(x => x.id === c.rung); k = dip.reached[c.rung] ?? null; words = `If I reach ${r?.short ?? 'that rung'}`;
+      const pl = RUNGS.find(x => x.id === c.rung)?.plain; if (pl) plain = `If I reach ${pl.charAt(0).toLowerCase()}${pl.slice(1).replace(/^a /, 'the ')}`; } // batch 37: the share view's words for parents
     else if (c.kind === 'date' && c.ym) { k = Math.max(0, monthsBetween(lad.here, c.ym)); words = `If no offer by ${monthName(c.ym, 'short')}`; }
     else if (c.kind === 'left') { const n = c.months ?? 3; const p = dip.path.find(q => q.burn != null && q.left < n * q.burn); k = p ? p.k : null; words = `If the money left drops under ${n} months`; }
-    return { ...t, k, ym: k == null ? null : addMonths(lad.here, Math.floor(k)), words, text: `${words}, ${t.then ? t.then.charAt(0).toLowerCase() + t.then.slice(1) : 'I act'}`, never: k == null };
+    return { ...t, k, ym: k == null ? null : addMonths(lad.here, Math.floor(k)), words, text: `${words}, ${t.then ? t.then.charAt(0).toLowerCase() + t.then.slice(1) : 'I act'}`, plainText: `${plain ?? words}, ${t.then ? t.then.charAt(0).toLowerCase() + t.then.slice(1) : 'I act'}`, never: k == null };
   }).sort((a, b) => (a.k ?? Infinity) - (b.k ?? Infinity)); // in the order they come up
 }
 

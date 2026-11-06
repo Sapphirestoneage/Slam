@@ -1994,6 +1994,656 @@
      "reason": "the coach answered the task question from this screen; waits for Eli at sign-off"
     }
    }
+  },
+  {
+   "screen": "Transitions (from scratch, tripwire, Plan B)",
+   "route": "#/plan/transitions",
+   "area": "Plan",
+   "batch": 37,
+   "tasks": [
+    9
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "the other-month box under Starts shows the browser's dashes (\"---------- ---\") until a month is picked"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search from the client's words; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and quick picks; nothing typed but a few letters or one amount"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "DRAFTT, FAT, little e and big e carry their plain meaning the first time (batch 37); the tripwire chips keep the short names"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the tripwire and Plan B show at once on the dip and in their lists; the Cleared toast goes once a template is picked (batch 37)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Transitions share view",
+   "route": "#/plan/transitions?view=share",
+   "area": "Plan",
+   "batch": 37,
+   "tasks": [
+    9
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search from the client's words; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "one tap from the plan; one switch hides the costly dollars"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain rung names in The plan, in order and now in Decided ahead too (batch 37)"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Discovery: Who they are with money",
+   "route": "#/tools/discovery",
+   "area": "Coach tools",
+   "batch": 37,
+   "tasks": [
+    10
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find \"money personality\" lands on the section; Find \"one-pager\" reaches the result line"
+    },
+    "easy": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "the taps are the questions (21 a person, 45 for a couple); Who is answering does not move on to the partner by itself"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words; Eli's terms carry their plain meaning the first time and a hover tip"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "One-pager (Who you are with money line)",
+   "route": "#/report/one-pager",
+   "area": "Report",
+   "batch": 37,
+   "tasks": [
+    10
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search from the client's words; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and quick picks; nothing typed but a few letters or one amount"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words; Eli's terms carry their plain meaning the first time and a hover tip"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the line leads the one-pager; the weather is coach only; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Goals: Can I afford it?",
+   "route": "#/plan/goals",
+   "area": "Plan",
+   "batch": 37,
+   "tasks": [
+    11
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan); These are big deals lines up (6 old column findings fixed)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search from the client's words; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and quick picks; nothing typed but a few letters or one amount"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "On hold, while the wedding is saved for, in place of Waits for the gap; big e and little e carry their plain meaning (batch 37)"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Credit cards (card library)",
+   "route": "#/net-worth/credit-cards",
+   "area": "Net worth",
+   "batch": 37,
+   "tasks": [
+    12
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "the totals row sums this list's own card payments (it said $780 for one $250 card; batch 37)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "with a card's Details open, the pick's toast has no free corner and sits over Open all at the top right for 10 seconds"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find \"which card\", \"annual fee\", \"paying twice\" land (batch 37 added the paying-twice words)"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and quick picks; nothing typed but a few letters or one amount"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words; Eli's terms carry their plain meaning the first time and a hover tip"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the fee answer on the closed line; a paying-twice note, or one line saying none was found and what was checked (batch 37)"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Debt payoff (true cost, borrowing, student loan)",
+   "route": "#/plan/debt-payoff",
+   "area": "Plan",
+   "batch": 37,
+   "tasks": [
+    13
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search from the client's words; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and quick picks; nothing typed but a few letters or one amount"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "the borrowing table's big e reads big e (job-loss fund) the first time (batch 37)"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Month end (import)",
+   "route": "#/cash-flow/close",
+   "area": "Cash flow",
+   "batch": 37,
+   "tasks": [
+    14
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "Save says how many of the rows go in and what stays out; Accept the matched too sits beside it (batch 37)"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search from the client's words; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "matched rows still wait for one tap before Save (question 346: take them by default, as Rocket Money and YNAB do)"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words; Eli's terms carry their plain meaning the first time and a hover tip"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Overview (Your Shockingly Simple Math)",
+   "route": "#/report/overview",
+   "area": "Report",
+   "batch": 37,
+   "tasks": [
+    15
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "Find \"simple math\" lands (batch 37), but the section sits 962px down at 1280, under the tiles"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and quick picks; nothing typed but a few letters or one amount"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words; Eli's terms carry their plain meaning the first time and a hover tip"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Current vs Proposed (a short month)",
+   "route": "#/plan/scenarios",
+   "area": "Plan",
+   "batch": 37,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "a short month borrows only up to the card room, then says the month cannot be covered (question 320): the deficit persona is Card full Jun 2030, by hand"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search from the client's words; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and quick picks; nothing typed but a few letters or one amount"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain words; Eli's terms carry their plain meaning the first time and a hover tip"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "one line says where the borrowing stops; How we got this has each step"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Home (plain words)",
+   "route": "#/home/session",
+   "area": "Home",
+   "batch": 37,
+   "tasks": [],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "every button did what it says in the runs"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "numbers matched the app math and the hand numbers"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "each number is the same here as on the screens it comes from"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find reaches it in one search from the client's words; it opens at its top and Back returns"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps and quick picks; nothing typed but a few letters or one amount"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "big e, little e and Picture carry their plain meaning the first time (batch 37; the batch 20 row's minor)"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each action showed it worked"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, every section open (batch 37 scan)"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opened with no visible wait in the runs"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
   }
  ],
  "updated": {
@@ -2014,5 +2664,13 @@
     "Coach tools › Lists"
    ]
   }
+ },
+ "batch37": {
+  "date": "2026-11-06",
+  "screens": 11,
+  "blocker": 0,
+  "major": 0,
+  "minor": 5,
+  "note": "Batch 37 appended its screens (each with \"batch\": 37), scored after its fixes; the rows above and the summary are as they were."
  }
 }

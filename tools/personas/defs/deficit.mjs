@@ -27,6 +27,7 @@ export default {
     monthsToFi: { value: 'never', unit: 'months', note: 'Nothing invested, a gap every month.' },
     runwayMonths: { value: 0.0167, unit: 'months', tol: 0.005, note: '$50 / $3,000.' },
     littleEFull: { value: false, unit: 'bool', note: '$50.' },
+    cardFullMonths: { value: 43, unit: 'months', note: 'Current vs Proposed borrows the $400 gap on the store card at 29.99% (QUESTIONS 320). No limit is typed, so the room is the typical limit at 33 (Experian, Millennials, $32,727) less the $2,500 owed: $30,227. Owed after n months = 400 x ((1 + 0.2999/12)^n - 1) / (0.2999/12): $29,133 at 42, $30,262 at 43, so the cards are full in month 43 (Jun 2030) and net worth in 5 and 10 years is not a number (it was -$52,428 and -$265,580 before the cap).' },
   },
   cannot: [
     'A payday loan is a lump due every 2 weeks with a fee, not a monthly payment against an APR; the fee fields exist (Fee per period, Periods a year) but the payoff math reads APR and Payment, so the coach has to turn the fee into both.',

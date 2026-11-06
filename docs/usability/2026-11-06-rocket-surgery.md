@@ -418,3 +418,134 @@ The twelve screens are appended to `docs/usability/scorecard-2026-11-06.json` (r
 pass or failure with severity and a one-line reason), with their own summary under `batch34`: 0 blockers, 2 majors
 (findings 17 and 18), 11 minors; Timeline, History and Coach tools › Lists pass all 12. Categories 5 and 12 wait for
 Eli's sign-off.
+## Batch 37: the Phase 4 and new screens (Nov 6 2026)
+
+The same method on the screens built tonight: real tasks, each played by Eli (fluent, hates typing, wants things level)
+and a first-time coach (reads every label, types the client's words into Find), each as a strategy script that reacts
+to the screen, run on main at e3c8ce9 (before) and on this batch (after). Hesitations, dead ends and unclear words were
+counted by the scripts; what the screenshots showed was added by eye and is marked so.
+
+### The tasks and what success means
+
+| # | Task | Household | Success means |
+|---|---|---|---|
+| 9 | Plan › Transitions from scratch for a layoff: Start over, the template, a tripwire, Plan B, the share view | job-loss (Riley) | The share view open with the situation, the plan in order, decided ahead (the new tripwire in it) and the worst case; Plan B drawn |
+| 10 | Coach tools › Discovery, Who they are with money: the address, the letters and the weather; then find the result on the one-pager | Alexis; couple-separate (Jordan and Sam), answers cleared first | The letters and the weather showing for each person, and the one-pager's "Who you are with money" line |
+| 11 | Plan › Goals › Can I afford it?: a $2,000 trip in March, a $400 car payment, a $20,000 wedding next year | Maya, Tom, deficit | An answer in words for each, with what it moves, every number readable without a tip |
+| 12 | Net worth › Credit cards: pick a card from the library, check its fee, find a benefit paid for twice | Demo, Maya | The card filled from the library, the fee answer read, and an answer on paying twice (a note, or a line saying none) |
+| 13 | Plan › Debt payoff: two car offers and paying cash side by side; the student loan drill-down | Maya, Tom, the PSLF teacher | Offer 1, Offer 2 and Pay cash compared; Standard, IBR and RAP (with PSLF) for the teacher |
+| 14 | Cash flow › Month end: import Rocket Money's November file, place the Not matched rows, save, see plan vs actual | Maya, fixtures/import/rocket-money-nov.csv | The month saved with the matched rows in it (10 rows or more) and plan vs actual By category |
+| 15 | Report › Overview: Your Shockingly Simple Math | Maya | The table open with Maya's row |
+
+### What each user did, before the fixes
+
+**9. Riley's layoff (13 actions each, done).** Start over said "Cleared. Pick what is changing to start again." with
+Undo, and that toast stayed up through the next taps: it sat over the tripwire popover's Then chips and Add button and
+over the share view (by eye). The burn, the ladder and the headline said DRAFTT, FAT, little e and big e with nothing
+saying what they are; the share view, meant for parents, said "If I reach little e" under Decided ahead.
+
+**10. Discovery (26 and 25 actions for Alexis, 45 and 44 for the couple, done).** No hesitation: each block opens by
+itself once the one before is answered, and Find "money personality" and "one-pager" land. The taps are the questions
+(3 for the address, 12 letters and 6 weather taps a person). Nothing to fix.
+
+**11. Can I afford it? (12 and 13 actions, done).** Every answer said "big e and little e are not touched" with nothing
+saying what they are. The wedding ($1,667 a month against Maya's $1,500 of free money) showed "Heavy Debt done: Waits
+for the gap" and "FI date: Waits for the gap": both users stopped on it (by eye; Maya has no gap). The deficit
+persona's gap card on Goals had "$ $ a month" in the extra income box (by eye).
+
+**12. The card library (6 and 9 actions, not done).** "Which card is it?", sapph, one tap: good. The Credit cards
+totals row said Payment / mo $780 for one card paying $250 (it summed every debt in the household; by eye, a wrong
+number). The pick's toast sat over the closed line that carries the fee answer. Neither the Demo nor Maya has a line
+that doubles a card benefit, and nothing said so: Eli looked under each benefit; the first-time coach's Find "paying
+twice" found only Make a note.
+
+**13. Borrowing and the student loan (8 to 10 actions, done).** Clean; the comparison table's last row said "big e"
+with nothing saying what it is.
+
+**14. Month end import (10 and 9 actions; the first-time coach not done).** Eli tapped Accept all matched first. The
+first-time coach placed the 2 Not matched rows (two taps each) and pressed Save: 2 rows of 22 saved, rent and the
+groceries left out, plan vs actual mostly empty (a wrong turn: Undo, accept, Save again).
+
+**15. Simple Math (3 actions each).** It sits 962px down Overview at 1280 (both hesitated); the first-time coach's
+Find "simple math" found only Make a note.
+
+### Findings, ranked
+
+Score is severity (blocker 3, major 2, minor 1) times the runs (of 26) that hit it.
+
+| Rank | Finding | Screen (level) | Category | Severity | Runs | Score | Status |
+|---|---|---|---|---|---|---|---|
+| 30 | Eli's terms in plain view with no plain meaning: big e, little e, DRAFTT, FAT, Picture (Batch 33's minors) | Transitions, Goals, Debt payoff, Home (Words) | Words | minor | 18 | 18 | Fixed: paired the first time on a screen |
+| 31 | Credit cards' totals row summed every debt's payment ($780 against one card's $250) | Credit cards (Row) | Right | blocker | 4 | 12 | Fixed |
+| 32 | No answer when no benefit is paid for twice; Find "paying twice" found nothing | Credit cards (Section) | Tells | major | 4 | 8 | Fixed: one line says none was found and what was checked; Find words |
+| 33 | Transitions' Cleared toast outlived its job and sat over the tripwire popover and the share view | Transitions (Control) | Looks | major | 2 | 4 | Fixed |
+| 34 | Can I afford it?: "Waits for the gap" on a cost bigger than the free money | Goals (Words) | Words | major | 2 | 4 | Fixed: "On hold, while the wedding is saved for; was Mar 2027" |
+| 35 | Import: Save saved only the rows tapped Accept; a first-time coach saved 2 of 22 | Month end (Control) | Works | major | 1 | 2 | Fixed: the footer says what stays out, "Accept the 14 matched too" beside Save (question 346) |
+| 36 | Find "simple math" found nothing; the section is under the fold | Overview (Words) | Findable | minor | 2 | 2 | Fixed (Find); the place stays |
+| 37 | Current vs Proposed borrowed a short month without limit (−$265,580 in 10 years, a number nobody could reach) | Current vs Proposed (Row) | Right | major | owed | | Fixed (question 320) |
+| 38 | The share view's Decided ahead said "If I reach little e" | Transitions share view (Words) | Words | minor | 2 | 2 | Fixed: the plain rung names |
+| 39 | A toast covered the closed line with the fee answer; with Details open both bottom corners cover a control | Credit cards (Control) | Looks | minor | 2 | 2 | Better: the toast avoids closed lines and popovers and tries the top right; it can still sit over Open all for 10 s |
+| 40 | The gap card's extra income box read "$ $ a month" | Goals, Home (Words) | Looks | minor | 1 | 1 | Fixed |
+| 41 | These are big deals: the option buttons did not line up down the rows (the layout checker's column check, 6 on main) | Goals (Section) | Looks | minor | | | Fixed |
+
+### What was fixed, and how small
+
+1. **Plain meanings** (js/glossary.js PLAIN, js/ui/tips.js pairTerms): on Home, Goals, Transitions (and the share view)
+   and Debt payoff, the first time big e, little e, DRAFTT, FAT or Picture shows in plain view it reads "big e (job-loss
+   fund)", "little e (small emergency fund)", "DRAFTT needs (rent, food, transport, debt, taxes)", "FAT (food, rent,
+   transport)", "Picture (how much is filled in)"; the term keeps its hover tip; chips and buttons keep the short name.
+2. **The totals row** (js/ui/lists.js): Payment / mo sums the list's own debts.
+3. **Paying twice** (js/math/cards.js checked, js/ui/cards-ui.js): "Paying twice: nothing found. No Budget line or
+   Protection row pays for rental car damage, longer warranties on things you buy too." Find: paying twice, doubling up,
+   double coverage, phone insurance, rental car insurance, extended warranty; simple math, shockingly simple, years to fi.
+4. **Toasts** (js/ui/staples.js): a toast avoids open popovers and sections' closed lines; when both bottom corners
+   cover a control it tries the top right under the bars; it moves when a popover opens under it; Transitions clears the
+   Cleared toast once a template is picked.
+5. **On hold** (js/math/afford.js): the FOO step and FI tiles say On hold and for how long, instead of Waits for the gap.
+6. **The import footer** (js/ui/import-ui.js): "2 of 22 accepted; the other 20 stay out until accepted." and Accept the
+   14 matched too, beside Save.
+7. **The card room** (js/math/proposed.js, question 320): see PROGRESS, Batch 37.
+8. Small: the share view's plain tripwire words, the gap box hint, the big deals options on one track width.
+
+### Before and after, per task
+
+| Task | User | Before: actions (taps, typed) | back | wrong | hesitations | dead ends | unclear | about | done | After: actions (taps, typed) | back | wrong | hesitations | dead ends | unclear | about | done |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 9 | Eli | 13 (13, 0) | 0 | 0 | 1 | 0 | 6 | 77 s | yes | 13 (13, 0) | 0 | 0 | 0 | 0 | 0 | 39 s | yes |
+| 9 | first-time | 13 (12, 1) | 0 | 0 | 1 | 0 | 6 | 79 s | yes | 13 (12, 1) | 0 | 0 | 0 | 0 | 0 | 41 s | yes |
+| 10 (Alexis) | Eli | 26 (26, 0) | 0 | 0 | 0 | 0 | 0 | 78 s | yes | 26 (26, 0) | 0 | 0 | 0 | 0 | 0 | 78 s | yes |
+| 10 (Alexis) | first-time | 25 (23, 2) | 0 | 0 | 0 | 0 | 0 | 79 s | yes | 25 (23, 2) | 0 | 0 | 0 | 0 | 0 | 79 s | yes |
+| 10 (couple) | Eli | 45 (45, 0) | 0 | 0 | 0 | 0 | 0 | 135 s | yes | 45 (45, 0) | 0 | 0 | 0 | 0 | 0 | 135 s | yes |
+| 10 (couple) | first-time | 44 (42, 2) | 0 | 0 | 0 | 0 | 0 | 136 s | yes | 44 (42, 2) | 0 | 0 | 0 | 0 | 0 | 136 s | yes |
+| 11 (Maya) | Eli | 12 (12, 0) | 0 | 0 | 0 | 0 | 6 | 66 s | yes | 12 (12, 0) | 0 | 0 | 0 | 0 | 0 | 36 s | yes |
+| 11 (Maya) | first-time | 13 (12, 1) | 0 | 0 | 0 | 0 | 6 | 71 s | yes | 13 (12, 1) | 0 | 0 | 0 | 0 | 0 | 41 s | yes |
+| 11 (Tom) | Eli | 12 (12, 0) | 0 | 0 | 0 | 0 | 6 | 66 s | yes | 12 (12, 0) | 0 | 0 | 0 | 0 | 0 | 36 s | yes |
+| 11 (Tom) | first-time | 13 (12, 1) | 0 | 0 | 0 | 0 | 6 | 71 s | yes | 13 (12, 1) | 0 | 0 | 0 | 0 | 0 | 41 s | yes |
+| 11 (deficit) | Eli | 12 (12, 0) | 0 | 0 | 0 | 0 | 0 | 36 s | yes | 12 (12, 0) | 0 | 0 | 0 | 0 | 0 | 36 s | yes |
+| 11 (deficit) | first-time | 13 (12, 1) | 0 | 0 | 0 | 0 | 0 | 41 s | yes | 13 (12, 1) | 0 | 0 | 0 | 0 | 0 | 41 s | yes |
+| 12 (Demo) | Eli | 6 (5, 1) | 0 | 0 | 1 | 0 | 0 | 43 s | no | 6 (5, 1) | 0 | 0 | 0 | 0 | 0 | 20 s | yes |
+| 12 (Demo) | first-time | 9 (5, 4) | 0 | 0 | 2 | 1 | 0 | 76 s | no | 6 (4, 2) | 0 | 0 | 1 | 0 | 0 | 30 s | yes |
+| 12 (Maya) | Eli | 6 (5, 1) | 0 | 0 | 1 | 0 | 0 | 43 s | no | 6 (5, 1) | 0 | 0 | 0 | 0 | 0 | 20 s | yes |
+| 12 (Maya) | first-time | 9 (5, 4) | 0 | 0 | 2 | 1 | 0 | 76 s | no | 6 (4, 2) | 0 | 0 | 1 | 0 | 0 | 30 s | yes |
+| 13 (Maya) | Eli | 9 (9, 0) | 0 | 0 | 0 | 0 | 1 | 32 s | yes | 9 (9, 0) | 0 | 0 | 0 | 0 | 0 | 27 s | yes |
+| 13 (Maya) | first-time | 8 (7, 1) | 0 | 0 | 0 | 0 | 1 | 31 s | yes | 8 (7, 1) | 0 | 0 | 0 | 0 | 0 | 26 s | yes |
+| 13 (Tom) | Eli | 9 (9, 0) | 0 | 0 | 0 | 0 | 1 | 32 s | yes | 9 (9, 0) | 0 | 0 | 0 | 0 | 0 | 27 s | yes |
+| 13 (Tom) | first-time | 8 (7, 1) | 0 | 0 | 0 | 0 | 1 | 31 s | yes | 8 (7, 1) | 0 | 0 | 0 | 0 | 0 | 26 s | yes |
+| 13 (teacher) | Eli | 10 (10, 0) | 0 | 0 | 0 | 0 | 1 | 35 s | yes | 10 (10, 0) | 0 | 0 | 0 | 0 | 0 | 30 s | yes |
+| 13 (teacher) | first-time | 9 (8, 1) | 0 | 0 | 0 | 0 | 1 | 34 s | yes | 9 (8, 1) | 0 | 0 | 0 | 0 | 0 | 29 s | yes |
+| 14 | Eli | 10 (10, 0) | 0 | 0 | 0 | 0 | 0 | 30 s | yes | 10 (10, 0) | 0 | 0 | 0 | 0 | 0 | 30 s | yes |
+| 14 | first-time | 9 (8, 1) | 0 | 1 | 0 | 0 | 0 | 50 s | no | 10 (9, 1) | 0 | 0 | 0 | 0 | 0 | 32 s | yes |
+| 15 | Eli | 3 (3, 0) | 0 | 0 | 1 | 0 | 0 | 17 s | yes | 3 (3, 0) | 0 | 0 | 1 | 0 | 0 | 17 s | yes |
+| 15 | first-time | 3 (1, 2) | 0 | 0 | 1 | 1 | 0 | 46 s | no | 2 (1, 1) | 0 | 0 | 0 | 0 | 0 | 8 s | yes |
+| All | | 349 actions | | 1 | 10 | 3 | 42 | about 1511 s | 20 of 26 | 343 actions | | 0 | 3 | 0 | 0 | about 1091 s | 26 of 26 |
+
+"About" is the Batch 20 estimate (3 s a tap, 5 s a typed number, 8 s a hesitation, 6 s a wrong click, 10 s a dead end, 5 s an
+unclear word, 15 s for a task not done). The scripts do not see a wrong number on screen, so three by-eye findings are
+not in the counts: Credit cards' $780 (finding 31), Waits for the gap (34) and the toast over the tripwire popover (33,
+counted once as a hesitation on "Sell the car"). Left after: the Simple Math section still sits under the fold at 1280
+(Eli scrolls, one hesitation), and with Details open on a card the pick's toast sits over Open all at the top right for
+its 10 seconds (one hesitation for the first-time coach). Task 10 needed nothing: its taps are the questions.
+
+The scripts and their raw output stayed outside the repo (the build notes). Each screen, scored after the fixes, is
+appended to `docs/usability/scorecard-2026-11-06.json` with "batch": 37 (the Batch 20 and 33 rows above it are as they
+were).

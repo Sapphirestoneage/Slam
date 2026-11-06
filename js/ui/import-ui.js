@@ -93,6 +93,7 @@ export function review(app, res, fileName, { ym = null, onSaved = null, bankMap 
   const setAccepted = (rows, v) => { for (const t of rows) if (!t.duplicate) S.accepted.set(t.hash, v); };
   const body = h('div.imp-body');
   const save = button('Save', { kind: 'primary', iconName: 'check', onClick: () => doSave() });
+  const footAccept = button('Accept the matched too', { iconName: 'check', onClick: () => { setAccepted(list.filter(t => t.sure === 'Matched'), true); rematch(); draw(); } });
   const status = h('span.muted.small', { 'aria-live': 'polite' });
   const otherMonths = months.filter(m => m !== S.ym);
 
@@ -158,8 +159,13 @@ export function review(app, res, fileName, { ym = null, onSaved = null, bankMap 
     const savable = list.filter(t => t.accepted && !t.duplicate && !(t.kind === 'spend' && !t.lineId && !t.newCategory));
     save.lastChild.textContent = `Save ${savable.length} as ${monthName(S.ym)} actuals`;
     save.disabled = !savable.length;
-    status.textContent = !rv.newRows ? 'Nothing new: every row this month was imported before.' : `${savable.length} of ${rv.newRows} accepted. The rest are left out.`;
     const matched = list.filter(t => !t.duplicate && t.sure === 'Matched' && !t.accepted).length;
+    // Batch 37 (Rocket Surgery): a first-time coach placed the 2 Not matched rows and pressed Save, and only those 2 went
+    // in. The footer says what stays out and offers the matched ones in one tap, beside Save.
+    const left = rv.newRows - savable.length;
+    status.textContent = !rv.newRows ? 'Nothing new: every row this month was imported before.' : left ? `${savable.length} of ${rv.newRows} accepted; the other ${left} stay out until accepted.` : `All ${rv.newRows} accepted.`;
+    footAccept.hidden = !matched;
+    footAccept.lastChild.textContent = `Accept the ${matched} matched too`;
     body.replaceChildren(...[
       h('div.imp-summary', {}, h('span', {}, h('strong', {}, money(rv.spending, { cents: true })), ' spending'),
         h('span.muted', {}, `${rv.counts.Matched} matched · ${rv.counts.Guessed} guessed · ${rv.counts['Not matched']} not matched${rv.duplicates ? ` · ${rv.duplicates} already imported` : ''}`),
@@ -182,7 +188,7 @@ export function review(app, res, fileName, { ym = null, onSaved = null, bankMap 
     h('div.ft-head', {}, icon('upload'), h('h2', { style: { margin: 0 } }, 'Review before saving'), h('span', { style: { flex: 1 } }), button('Cancel', { onClick: () => close() })),
     h('p.muted.imp-found', {}, `${formatWords(res.fmt, res.transactions.length)} ${otherMonths.length ? 'One month comes in at a time.' : ''} Nothing is saved until you press Save.`),
     monthPick, body,
-    h('div.ft-foot', {}, save, button('Cancel', { onClick: () => close() }), status, h('span.muted.small', {}, 'Undo puts the whole import back.')));
+    h('div.ft-foot', {}, footAccept, save, button('Cancel', { onClick: () => close() }), status, h('span.muted.small', {}, 'Undo puts the whole import back.')));
   draw();
   close = overlayOf('Review the import', box);
   return box;

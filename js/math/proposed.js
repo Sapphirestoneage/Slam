@@ -41,14 +41,42 @@ export function proposedDoc(doc, ref, { now = new Date() } = {}) {
 // (cash, things, minus debts) stays, plus the debt paid down by then on the payoff plan.
 // Batch 33 (QUESTIONS 289): a monthly shortfall is borrowed on the card: the client's highest card APR, else the
 // typical card APR (Reference data). Owed after n months: the shortfall each month, growing at APR / 12 a month.
+// Batch 37 (QUESTIONS 320): the borrowing stops at the room on the cards: each card's limit less its balance where
+// limits are typed, else the typical limit at the client's age (Reference data, Experian) less what the cards owe.
+// Past that point the month cannot be covered, so net worth from then on is not given as a number.
+export function typicalCardLimit(ref, age) {
+  const T = ref?.typicalCardLimit;
+  if (!T) return null;
+  let v = T.all ?? null;
+  if (age != null) for (const [from, limit] of T.byAge || []) if (age >= from) v = limit;
+  return v;
+}
 export function shortfallOf(m, ref) {
   const short = m.surplus?.value != null && m.surplus.value < -0.5 ? -m.surplus.value : 0;
-  const cards = (m.inputs.debts || []).filter(d => d.type === 'Credit card' && d.apr != null);
+  const all = (m.inputs.debts || []).filter(d => d.type === 'Credit card');
+  const cards = all.filter(d => d.apr != null);
   const apr = cards.length ? Math.max(...cards.map(d => d.apr)) : ref?.typicalRates?.['Credit card'] ?? null;
-  return { monthly: short, apr, from: cards.length ? 'card' : 'typical' };
+  const typed = all.filter(d => d.limit != null);
+  const limit = typed.length ? typed.reduce((s, d) => s + d.limit, 0) : typicalCardLimit(ref, m.inputs.age);
+  const room = typed.length ? typed.reduce((s, d) => s + Math.max(0, d.limit - (d.balance ?? 0)), 0)
+    : limit == null ? null : Math.max(0, limit - all.reduce((s, d) => s + (d.balance ?? 0), 0));
+  return { monthly: short, apr, from: cards.length ? 'card' : 'typical', room, limit, roomFrom: typed.length ? 'limits' : 'typical' };
 }
 export const shortfallOwed = (monthly, apr, months) => (!monthly || !months ? 0 : !apr ? monthly * months : monthly * ((1 + apr / 12) ** months - 1) / (apr / 12));
-export function netWorthIn(m, years, { extraDebt = 0, shortfall = null } = {}) {
+// What the card owes month by month: the whole gap through the first k months, then `late` a month; full: the first
+// month the owed amount would pass the room (null when it never does within n months).
+export function shortfallPath(shortfall, k, late, n) {
+  const i = (shortfall?.apr ?? 0) / 12;
+  let owed = 0, full = null;
+  if (!shortfall?.monthly) return { owed, full };
+  for (let t = 1; t <= n; t++) {
+    const next = owed * (1 + i) + (t <= k ? shortfall.monthly : late);
+    if (shortfall.room != null && next > shortfall.room + 0.5) { full = t; owed = shortfall.room; break; }
+    owed = next;
+  }
+  return { owed, full };
+}
+export function netWorthIn(m, years, { extraDebt = 0, shortfall = null, now = null } = {}) {
   const r = m.inputs.realReturn ?? 0, n = years * 12, monthly = m.investing?.monthly ?? 0, inv = m.inputs.invested ?? 0, nw = m.netWorth.value;
   if (nw == null) return { value: null, steps: ['Net worth needs a balance.'] };
   // The same monthly growth as the FI date (M53): (1 + r)^(1/12), with the debt-first months first (batch 11).
@@ -62,16 +90,20 @@ export function netWorthIn(m, years, { extraDebt = 0, shortfall = null } = {}) {
   const debtNow = ds.reduce((s, d) => s + d.balance, 0), paid = Math.max(0, debtNow - left);
   // The shortfall is borrowed while it lasts: the whole gap through the debt-first months, then whatever going in is
   // still below zero once the freed payments come back (none, when they cover it).
-  const late = monthly < 0 ? -monthly : k ? 0 : shortfall?.monthly ?? 0, grow = t => (shortfall?.apr ? (1 + shortfall.apr / 12) ** t : 1);
-  const owed = shortfall?.monthly ? shortfallOwed(shortfall.monthly, shortfall.apr, k) * grow(n - k) + shortfallOwed(late, shortfall.apr, n - k) : 0;
-  const value = grown + (nw - inv) + paid - owed;
-  return { value, owed, steps: [
+  const late = monthly < 0 ? -monthly : k ? 0 : shortfall?.monthly ?? 0;
+  const { owed, full } = shortfallPath(shortfall, k, late, n);
+  const when = t => (now ? monthName(addMonths(ymOf(now), t), 'short') : `month ${t}`);
+  const roomWords = s => `${money(s.room)} of room on the cards (${s.roomFrom === 'limits' ? 'the limits typed less what they owe' : `a typical limit at this age, ${money(s.limit)}, less what they owe`})`;
+  const card = owed || full ? `The ${money(shortfall.monthly)} a month shortfall goes on the card at ${(shortfall.apr * 100).toFixed(1)}%${shortfall.from === 'card' ? ' (the highest card APR)' : ' (a typical card APR)'}${k < n && late !== shortfall.monthly ? `, ${late ? `${money(late)} a month` : 'nothing'} once the freed payments come back` : ''}` : null;
+  const value = full ? null : grown + (nw - inv) + paid - owed;
+  return { value, owed, full, steps: [
     `Invested today ${money(inv)} grows at ${(r * 100).toFixed(1)}% real for ${years} years: ${money(inv * g)}.`,
     k ? `${money(b.monthly)} a month going in for the ${k} months ${waitWords(b)}, then ${money(monthly)} a month: ${money(grown - inv * g)}.` : `${money(monthly)} a month going in, ${n} months, grows to ${money(grown - inv * g)}.`,
     `The rest of net worth (cash, things, minus debts) stays: ${money(nw - inv)}.`,
     `Debt paid down on the ${m.inputs.debtOrder} plan${extraDebt || m.inputs.debtExtra ? ` with ${money(extraDebt || m.inputs.debtExtra)} extra` : ''}${m.debtRule?.on ? ', the surplus on heavy debt first' : ''} by then: ${money(paid)} of ${money(debtNow)}.`,
-    ...(owed ? [`The ${money(shortfall.monthly)} a month shortfall goes on the card at ${(shortfall.apr * 100).toFixed(1)}%${shortfall.from === 'card' ? ' (the highest card APR)' : ' (a typical card APR)'}${k < n && late !== shortfall.monthly ? `, ${late ? `${money(late)} a month` : 'nothing'} once the freed payments come back` : ''}: ${money(owed)} owed by then.`] : []),
-    `Net worth in ${years} years: ${money(value)}.`] };
+    ...(full ? [`${card}, until it reaches the ${roomWords(shortfall)} in ${when(full)}.`, `From ${when(full)} the month cannot be covered: there is no card room left to carry it, so there is no net worth number for ${years} years.`]
+      : owed ? [`${card}: ${money(owed)} owed by then${shortfall.room != null ? `, within the ${roomWords(shortfall)}` : ''}.`] : []),
+    ...(full ? [] : [`Net worth in ${years} years: ${money(value)}.`])] };
 }
 const money = v => (v == null ? '–' : `${Math.round(v) < 0 ? '−' : ''}$${Math.abs(Math.round(v)).toLocaleString('en-US')}`); // batch 33: −$65, not $-65
 function side(doc, ref, { now, flags, extraDebt = 0 }) {
@@ -79,12 +111,13 @@ function side(doc, ref, { now, flags, extraDebt = 0 }) {
   const fi = m.monthsToFi.value;
   const L = ladderOf(doc, ref, { now, flags });
   const shortfall = shortfallOf(m, ref); // batch 33 (Q289): a short month is borrowed, so a plan that closes the gap shows the difference
-  const nw5 = netWorthIn(m, 5, { shortfall }), nw10 = netWorthIn(m, 10, { shortfall }); // the extra is on the copy's debt plan (proposedDoc)
+  const nw5 = netWorthIn(m, 5, { shortfall, now }), nw10 = netWorthIn(m, 10, { shortfall, now }); // the extra is on the copy's debt plan (proposedDoc)
   const at = mo => (mo == null ? null : addMonths(ymOf(now), mo));
-  return { m, shortfall, fiMonths: fi, fiDate: fi == null ? null : at(Math.ceil(fi)),
+  const full = nw10.full ?? nw5.full ?? null; // batch 37 (Q320): the month the card room runs out, if it does in 10 years
+  return { m, shortfall: { ...shortfall, full, fullYm: full == null ? null : at(full) }, fiMonths: fi, fiDate: fi == null ? null : at(Math.ceil(fi)),
     fiSteps: [`Invested ${money(m.inputs.invested)}; ${m.investing?.before ? `${money(m.investing.before.monthly)} a month going in for the ${m.investing.before.months} months ${waitWords(m.investing.before)}, then ` : ''}${money(m.investing?.monthly)} a month going in at ${((m.inputs.realReturn ?? 0) * 100).toFixed(1)}% real.`, `FI number ${money(m.fiNumber.value)} (spending ${money(m.annualSpending)} a year over the ${((m.inputs.withdrawalRate ?? 0.04) * 100).toFixed(1)}% withdrawal rate).`, fi == null ? 'No FI date yet: something is missing.' : `Months until invested reaches the FI number: ${Math.ceil(fi)} (${monthName(at(Math.ceil(fi)))}).`],
     savingsRate: m.savingsRate.value, savingsSteps: [m.savingsRate.text ?? 'Savings rate: surplus plus after-tax savings over take-home.'],
-    nw5: nw5.value, nw5Steps: nw5.steps, nw10: nw10.value, nw10Steps: nw10.steps,
+    nw5: nw5.value, nw5Steps: nw5.steps, nw5Full: nw5.full ? at(nw5.full) : null, nw10: nw10.value, nw10Steps: nw10.steps, nw10Full: nw10.full ? at(nw10.full) : null,
     nextStep: L.next ? { name: L.next.name, date: L.next.date, pct: L.next.pct } : null, nextMarker: L.nextMarker ? { name: L.nextMarker.name, date: L.nextMarker.date } : null,
     ladderSteps: [L.next ? `Next step ${L.next.name}: ${Math.round(L.next.pct * 100)}% there; its gap over what goes to savings a month gives ${L.next.date ? monthName(L.next.date) : 'no date'}.` : 'Every step done.', L.nextMarker ? `Next marker ${L.nextMarker.name}: the months-to math on invested gives ${L.nextMarker.date ? monthName(L.nextMarker.date) : 'no date'}.` : 'Every marker reached.'],
     debtMonths: m.debtPlan?.debts.length ? m.debtPlan.months : null, debtFree: m.debtPlan?.debts.length && m.debtPlan.months != null ? at(m.debtPlan.months) : null, debtSteps: [m.debtPlan?.text ?? 'No debt with a balance, an APR and a payment.'],
@@ -99,8 +132,8 @@ export function compareOf(doc, ref, { now = new Date(), flags = [] } = {}) {
   const rows = [
     { key: 'fiDate', label: 'FI date', unit: 'month', current: current.fiDate, proposed: proposed.fiDate, diffMonths: d(current.fiMonths, proposed.fiMonths), how: { current: current.fiSteps, proposed: proposed.fiSteps } },
     { key: 'savingsRate', label: 'Savings rate', unit: 'pct', current: current.savingsRate, proposed: proposed.savingsRate, diff: d(current.savingsRate, proposed.savingsRate), how: { current: current.savingsSteps, proposed: proposed.savingsSteps } },
-    { key: 'nw5', label: 'Net worth in 5 years', unit: 'money', current: current.nw5, proposed: proposed.nw5, diff: d(current.nw5, proposed.nw5), how: { current: current.nw5Steps, proposed: proposed.nw5Steps } },
-    { key: 'nw10', label: 'Net worth in 10 years', unit: 'money', current: current.nw10, proposed: proposed.nw10, diff: d(current.nw10, proposed.nw10), how: { current: current.nw10Steps, proposed: proposed.nw10Steps } },
+    { key: 'nw5', label: 'Net worth in 5 years', unit: 'money', current: current.nw5, proposed: proposed.nw5, full: { current: current.nw5Full, proposed: proposed.nw5Full }, diff: d(current.nw5, proposed.nw5), how: { current: current.nw5Steps, proposed: proposed.nw5Steps } },
+    { key: 'nw10', label: 'Net worth in 10 years', unit: 'money', current: current.nw10, proposed: proposed.nw10, full: { current: current.nw10Full, proposed: proposed.nw10Full }, diff: d(current.nw10, proposed.nw10), how: { current: current.nw10Steps, proposed: proposed.nw10Steps } },
     { key: 'debtFree', label: 'Debt free', unit: 'month', current: current.debtFree, proposed: proposed.debtFree, diffMonths: d(current.debtMonths, proposed.debtMonths), how: { current: current.debtSteps, proposed: proposed.debtSteps } },
     { key: 'nextStep', label: 'Next step', unit: 'text', current: current.nextStep ? `${current.nextStep.name}${current.nextStep.date ? `, ${monthName(current.nextStep.date, 'short')}` : ''}` : 'Every step done', proposed: proposed.nextStep ? `${proposed.nextStep.name}${proposed.nextStep.date ? `, ${monthName(proposed.nextStep.date, 'short')}` : ''}` : 'Every step done', how: { current: current.ladderSteps, proposed: proposed.ladderSteps } },
     { key: 'nextMarker', label: 'Next marker', unit: 'text', current: current.nextMarker ? `${current.nextMarker.name}${current.nextMarker.date ? `, ${monthName(current.nextMarker.date, 'short')}` : ''}` : 'Every marker reached', proposed: proposed.nextMarker ? `${proposed.nextMarker.name}${proposed.nextMarker.date ? `, ${monthName(proposed.nextMarker.date, 'short')}` : ''}` : 'Every marker reached', how: { current: current.ladderSteps, proposed: proposed.ladderSteps } },
