@@ -103,7 +103,7 @@ test('items 33 to 35: step 8 with nothing to fund is not Done and every step has
   assert.notEqual(s8.status, 'Done', 'item 33: nothing to fund is not done');
   assert.equal(s8.status, 'Optional'); assert.match(s8.note, /Nothing to fund yet/);
   assert.ok(F.steps.every(x => x.progress >= 0 && x.progress <= 1) && F.steps.find(x => x.id === '1').progress === 1 && F.steps.find(x => x.id === '4').progress > 0 && F.steps.find(x => x.id === '4').progress < 1);
-  assert.ok(Object.keys(STEP_CARDS).length === 11 && STEP_CARDS['4'].short === 'big e' && /age divided by 5/.test(STEP_CARDS['4'].why));
+  assert.ok(Object.keys(STEP_CARDS).length === 11 && STEP_CARDS['4'].short === 'Build your job-loss fund' && /^big e · Your age divided by 5/.test(STEP_CARDS['4'].full) && /age divided by 5/.test(STEP_CARDS['4'].why));
   const area = id => scorecardOf(s.doc, ref, { now, flags }).areas.find(a => a.id === id);
   assert.equal(area('taxes').rating, null);
   s.setDoc('profile', { taxes: { lastYear: 2400 } });

@@ -3,6 +3,7 @@
 // Pure: reads the household file and the metrics; no DOM. Each step: Done, In progress, Next or Later, the dollars
 // left, a projected date and what it is made of.
 import { metrics } from './metrics.js';
+import { isHeavyDebt } from './debt.js';
 import { matchFromTiers } from './portfolio.js';
 import { layersOf } from './layers.js';
 import { monthsTo } from '../plan.js';
@@ -11,9 +12,7 @@ import { yearItems, sinkingOf } from '../year.js';
 import { RULES, LISTS } from '../registry/assumptions.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
-import { PREREQS, CONDITIONS, ORDER } from '../registry/foo.js';
-const HIGH = new Set(LISTS.heavyDebt);
-const HIGH_APR = RULES.heavyApr;
+import { PREREQS, CONDITIONS, ORDER, stepHeadline } from '../registry/foo.js';
 const PAYDAY = new Set(['Payday or cash advance']);
 const TRUE_FI_TAX = RULES.trueFiTax; // a rough tax on withdrawals until retirement taxes are modelled
 export const forgiveness = r => r?.values?.pslf === 'Yes' || r?.values?.forgiveness === true || r?.values?.forgiveness === 'Yes';
@@ -53,7 +52,7 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
   const coast = coastFiNumber({ fiNumber: fiN, realReturn: x.realReturn, age, fiAge });
   const invested = x.invested ?? 0;
   const debts = x.debts.map(d => ({ ...d, rec: recOf(d.id) }));
-  const heavy = debts.filter(d => (HIGH.has(d.type) || (d.apr ?? 0) >= HIGH_APR) && !forgiveness(d.rec) && (d.balance ?? 0) > 0);
+  const heavy = debts.filter(d => isHeavyDebt({ ...d, forgiven: forgiveness(d.rec) }));
   const low = debts.filter(d => !heavy.includes(d) && !forgiveness(d.rec) && (d.balance ?? 0) > 0);
   const order = set.debtOrder ?? 'stress';
   const sortDebt = list => [...list].sort((a, b) => (order === 'snowball' ? (a.balance - b.balance) : order === 'avalanche' ? (b.apr ?? 0) - (a.apr ?? 0) : (b.stress ?? 0) - (a.stress ?? 0) || (b.apr ?? 0) - (a.apr ?? 0)));
@@ -78,40 +77,40 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
 
   const steps = [];
   const add = s => steps.push({ left: 0, parts: [], note: null, ...s });
-  add({ id: '0b', name: 'Bedazzle your basic life', done: joy.length > 0 && joy.every(l => (l.amount ?? 0) > 0), started: joy.length > 0, optional: !joy.length, parts: joy.map(l => ({ name: l.name, value: l.amount })),
+  add({ id: '0b', name: stepHeadline('0b'), done: joy.length > 0 && joy.every(l => (l.amount ?? 0) > 0), started: joy.length > 0, optional: !joy.length, parts: joy.map(l => ({ name: l.name, value: l.amount })),
     note: joy.length ? 'Your joy lines are funded in the plan.' : 'Pick the lines that bring you joy (Budget, a line\'s More).' });
   const e = layer('little-e'), buf = layer('buffer');
   const bleed = [{ name: 'No late bills', done: !late.length }, { name: 'Payday and cash-advance debt at $0', done: !paydayDebt.length, left: sum(paydayDebt, d => d.balance) },
     { name: 'Buffer full', done: !!buf?.full, left: buf?.left ?? 0 }, { name: 'little e full', done: e.full, left: e.left }, ...soonGaps.map(g => ({ name: `${g.name} covered`, done: g.full, left: g.left }))];
-  add({ id: '1', name: 'Stop the bleeding', done: bleed.every(b => b.done), started: bleed.some(b => b.done), left: sum(bleed, b => b.left ?? 0), parts: bleed });
+  add({ id: '1', name: stepHeadline('1'), done: bleed.every(b => b.done), started: bleed.some(b => b.done), left: sum(bleed, b => b.left ?? 0), parts: bleed });
   const matchOffered = (x.link.incomeTiers || []).length > 0;
-  add({ id: '2', name: 'Take the free money', done: !matchOffered || !mt?.leftOnTable, started: (pctIn ?? 0) > 0, left: matchOffered && mt?.leftOnTable ? Math.max(0, (fullMatchAt - (pctIn ?? 0)) * (gross ?? 0)) : 0,
+  add({ id: '2', name: stepHeadline('2'), done: !matchOffered || !mt?.leftOnTable, started: (pctIn ?? 0) > 0, left: matchOffered && mt?.leftOnTable ? Math.max(0, (fullMatchAt - (pctIn ?? 0)) * (gross ?? 0)) : 0,
     note: !matchOffered ? 'No match on file.' : mt?.leftOnTable ? `Put in ${(fullMatchAt * 100).toFixed(1)}% to get the full match.` : 'You get the full match.',
     parts: x.accounts.filter(a => a.unvested).map(a => ({ name: `${a.name}: unvested`, value: a.unvested })), parallel: true });
-  add({ id: '3', name: 'Clear the heavy debt', done: !heavy.length, started: heavy.some(d => d.payment > 0), left: sum(heavy, d => d.balance),
+  add({ id: '3', name: stepHeadline('3'), done: !heavy.length, started: heavy.some(d => d.payment > 0), left: sum(heavy, d => d.balance),
     parts: sortDebt(heavy).map(d => ({ name: d.name, value: d.balance, apr: d.apr })), note: debts.some(d => forgiveness(d.rec)) ? 'A loan marked PSLF or forgiveness skips this step.' : `In your payoff order (${order}).`, parallel: true });
-  add({ id: '4', name: 'big e', done: bigE.length > 0 && bigE.every(l => l.full), started: bigE.some(l => l.filled > 0), left: sum(bigE, l => l.left ?? 0), parts: bigE.map(l => ({ name: l.name, value: l.filled, target: l.target })) });
-  add({ id: '5', name: 'Roth and HSA', done: rothThisYear >= iraLimit - 0.5 && (!x.gates.hsa || hsaIn >= hsaLimit - 0.5), started: rothThisYear > 0 || hsaIn > 0,
+  add({ id: '4', name: stepHeadline('4'), done: bigE.length > 0 && bigE.every(l => l.full), started: bigE.some(l => l.filled > 0), left: sum(bigE, l => l.left ?? 0), parts: bigE.map(l => ({ name: l.name, value: l.filled, target: l.target })) });
+  add({ id: '5', name: stepHeadline('5'), done: rothThisYear >= iraLimit - 0.5 && (!x.gates.hsa || hsaIn >= hsaLimit - 0.5), started: rothThisYear > 0 || hsaIn > 0,
     left: Math.max(0, iraLimit - rothThisYear) + (x.gates.hsa ? Math.max(0, hsaLimit - hsaIn) : 0), note: (x.grossAnnual ?? 0) > (ref.limits.rothIncome?.[x.gates.couple ? 'joint' : 'single'] ?? Infinity) ? 'Over the Roth IRA income limit: a backdoor Roth (a traditional IRA contribution, then a conversion) still works.' : 'A Roth IRA and an invested HSA, maxed for the year.' });
   // Giving (batch 3, superseding the Nov 3 giving-first rule): off by default; at the Roth IRA step, never first in line.
-  if (!give) add({ id: '5b', name: 'Give', done: false, started: false, off: true, left: null, note: 'Off. Turn it on under Giving once heavy debt is paid off: a percent or an amount.' });
-  else if (!giveMonthly) add({ id: '5b', name: 'Give', done: false, started: false, left: null, note: 'Set a percent or an amount to give.' });
-  else add({ id: '5b', name: 'Give', done: givingLines >= giveMonthly - 0.5, started: givingLines > 0, left: Math.max(0, giveMonthly - givingLines), monthly: true,
-    note: `${give.mode === 'amount' ? `$${Math.round(give.amount ?? 0)} a month` : `${Math.round((give.pct ?? 0) * 100)}% of ${give.base === 'net' ? 'take-home' : 'gross'}`}, at the Roth IRA step.`, giveMonthly });
+  if (!give) add({ id: '5b', name: stepHeadline('5b'), done: false, started: false, off: true, left: null, note: 'Off. Turn it on under Giving once heavy debt is paid off: a percent or an amount. Oxygen mask on you first.' });
+  else if (!giveMonthly) add({ id: '5b', name: stepHeadline('5b'), done: false, started: false, left: null, note: 'Set a percent or an amount to give.' });
+  else add({ id: '5b', name: stepHeadline('5b'), done: givingLines >= giveMonthly - 0.5, started: givingLines > 0, left: Math.max(0, giveMonthly - givingLines), monthly: true,
+    note: `${give.mode === 'amount' ? `$${Math.round(give.amount ?? 0)} a month` : `${Math.round((give.pct ?? 0) * 100)}% of ${give.base === 'net' ? 'take-home' : 'gross'}`}, beside the tax-free step.`, giveMonthly });
   const pastCoast = coast != null && invested >= coast;
   const pastQQ = qq.value != null && invested >= qq.value;
   // Step 7 opens at Coast FI, or at Quiet Quitting FI when that toggle is on; step 6 is done the moment 7 opens.
-  add({ id: '6', name: 'Prepay retirement', done: pastCoast || (!!set.qqOpensLaunch && pastQQ), started: qq.value != null && invested >= qq.value, left: coast == null ? null : Math.max(0, coast - invested),
+  add({ id: '6', name: stepHeadline('6'), done: pastCoast || (!!set.qqOpensLaunch && pastQQ), started: qq.value != null && invested >= qq.value, left: coast == null ? null : Math.max(0, coast - invested),
     parts: [{ name: 'Quiet Quitting FI', value: qq.value, done: qq.value != null && invested >= qq.value, text: qq.text }, { name: 'Coast FI', value: coast, done: pastCoast }],
     note: 'Maxing the 401(k) is the lever inside this step.' });
   const opensAt = set.qqOpensLaunch ? 'qq' : 'coast';
   const open = opensAt === 'qq' ? qq.value != null && invested >= qq.value : pastCoast;
   const launch = p.launch?.move && p.launch?.date ? p.launch : null;
-  add({ id: '7', name: 'SPARKS launch window', done: open && !!launch, started: open, note: open ? (launch ? `${launch.move}, ${launch.date}. Only the Roth keeps being topped up.` : 'Open: pick a launch move and date.') : `Opens at ${opensAt === 'qq' ? 'Quiet Quitting FI' : 'Coast FI'}.` });
+  add({ id: '7', name: stepHeadline('7'), done: open && !!launch, started: open, note: open ? (launch ? `${launch.move}, ${launch.date}. Only the Roth keeps being topped up.` : 'Open: pick a launch move and date.') : `Opens at ${opensAt === 'qq' ? 'Quiet Quitting FI' : 'Coast FI'}.` });
   const future = [...sink.map(s => ({ name: s.name, done: s.funded != null && s.funded >= 1, left: s.target == null ? 0 : Math.max(0, s.target - (s.saved ?? 0)) })), ...laterGaps.map(g => ({ name: g.name, done: g.full, left: g.left }))];
   // Item 33 (batch 6): with nothing to fund yet the step waits (optional), it is not Done; the old every() on an empty list read Done and drew a full green bar.
-  add({ id: '8', name: 'Fund the future', done: future.length > 0 && future.every(f => f.done), started: future.some(f => f.done), left: sum(future, f => f.left), parts: future, optional: future.length === 0, note: future.length ? null : 'Nothing to fund yet: add a sinking fund on an event, or a later income gap.' });
-  add({ id: '9', name: 'Low-rate debt, then FI', done: !low.length && fiN != null && invested >= fiN, started: !low.length, left: sum(low, d => d.balance) + (fiN == null ? 0 : Math.max(0, fiN - invested)),
+  add({ id: '8', name: stepHeadline('8'), done: future.length > 0 && future.every(f => f.done), started: future.some(f => f.done), left: sum(future, f => f.left), parts: future, optional: future.length === 0, note: future.length ? null : 'Nothing to fund yet: add a sinking fund on an event, or a later income gap.' });
+  add({ id: '9', name: stepHeadline('9'), done: !low.length && fiN != null && invested >= fiN, started: !low.length, left: sum(low, d => d.balance) + (fiN == null ? 0 : Math.max(0, fiN - invested)),
     parts: [...sortDebt(low).map(d => ({ name: d.name, value: d.balance })), { name: 'FI', value: fiN, done: fiN != null && invested >= fiN }, { name: 'True FI (after tax)', value: fiN == null ? null : fiN / (1 - TRUE_FI_TAX), text: `The FI number grossed up for about ${TRUE_FI_TAX * 100}% tax on what you take out (a rough rate until retirement taxes are in).` }] });
 
   // Prerequisites (js/registry/foo.js): a step is reached when every step before it that counts is done; a locked step
@@ -141,7 +140,7 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
     if (s.done) { s.status = 'Done'; continue; }
     if (s.locked) { s.status = 'Locked'; continue; } // waits for its prerequisite; never blocks the path
     if (s.off) { s.status = 'Off'; continue; } // giving, until it is turned on
-    if (s.optional) { s.status = 'Optional'; continue; } // Bedazzle waits until joy lines are picked; it never blocks
+    if (s.optional) { s.status = 'Optional'; continue; } // Spend on what you love waits until joy lines are picked; it never blocks
     if (s.id === '7') { s.status = s.started ? 'In progress' : 'Later'; continue; } // a window: open or not, wherever you are
     if (s.id === '5b') { s.status = s.started ? 'In progress' : 'Next'; continue; } // giving sits beside the Roth step; it never blocks
     if (!here) { here = s.id; s.status = 'In progress'; continue; }
@@ -170,13 +169,16 @@ export function foo(doc, ref, { now = new Date(), flags = [] } = {}) {
       const t = monthsTo(m, fiN, { now }).value;
       s.months = Number.isFinite(months) && t != null ? Math.max(Math.ceil(months), t) : null;
     } else if (s.id === '7' && s.status !== 'In progress') { s.months = steps.find(x => x.id === '6')?.months ?? null; } // the window opens when step 6 is done
-    else { months += surplus ? (s.monthly ? 0 : s.left / surplus) : Infinity; s.months = Number.isFinite(months) ? Math.ceil(months) : null; }
+    else if (s.id === '3' && m.debtPlan?.debts.some(d => d.heavy)) { // batch 11: the one debt plan (the surplus to heavy debt first, M34)
+      const hm = m.debtPlan.heavyMonths; s.months = hm; months = hm == null ? Infinity : Math.max(months, hm);
+      s.minimumMonths = m.debtPlanMinimum?.heavyMonths ?? null; // the same debt at its own payment only, for the one-line note
+    } else { months += surplus ? (s.monthly ? 0 : s.left / surplus) : Infinity; s.months = Number.isFinite(months) ? Math.ceil(months) : null; }
     s.date = s.months == null ? null : addMonths(ymOf(now), s.months);
   }
   const facts = factsOf({ x, m, steps, L, coast, qq, invested, debts, low, doc, k401Limit: ref.limits['401k'].base });
   const raised = flags.filter(f => (f.all || []).length && f.all.every(k => facts[k]));
   for (const f of raised) { const s = steps.find(st => st.id === String(f.step)); if (s) (s.flags ||= []).push(f); }
-  return { steps, here, qq, coast, yearlyMinimum, keepJob, flags: raised, facts, path: pathOf({ steps, debts, m, doc, now, coast, qq }) };
+  return { steps, here, qq, coast, yearlyMinimum, keepJob, flags: raised, facts, debtText: m.debtPlan?.text ?? null, heavyPayments: m.debtPlan?.heavyPayments ?? 0, path: pathOf({ steps, debts, m, doc, now, coast, qq }) };
 }
 
 // What an override costs, in FI days a year: giving while carrying heavy debt costs that debt's APR on the money; any
@@ -193,7 +195,7 @@ function overrideCost(s, { heavy, m, x, steps = [], coast = null, invested = nul
   const rate = apr ?? x.realReturn;
   const dollars = monthly * 12 * rate;
   const fiDays = dollars / (m.annualSpending / 365);
-  return { dollars, fiDays, rate, text: `${s.name === 'Give' ? 'Giving' : s.name} $${Math.round(monthly).toLocaleString('en-US')} a month ${apr != null ? `while carrying ${(apr * 100).toFixed(0)}% debt` : 'before the step opens'} costs about ${Math.round(fiDays)} FI days a year.` };
+  return { dollars, fiDays, rate, text: `${s.id === '5b' ? 'Giving' : s.name} $${Math.round(monthly).toLocaleString('en-US')} a month ${apr != null ? `while carrying ${(apr * 100).toFixed(0)}% debt` : 'before the step opens'} costs about ${Math.round(fiDays)} FI days a year.` };
 }
 
 // M71: the facts the flags in data/flags.json test. A new flag needs only a new combination of these.
@@ -220,7 +222,7 @@ function pathOf({ steps, debts, m, doc, now, coast, qq }) {
   const base = ymOf(now), out = [];
   const at = n => (n == null ? null : addMonths(base, Math.ceil(n)));
   for (const s of steps) if (s.date) out.push({ ym: s.date, name: `${s.name}${s.status === 'Done' ? ' (done)' : ''}`, step: s.id });
-  for (const d of m.debts) { const months = d.payoff?.value; if (months != null && months > 0) out.push({ ym: at(months), name: `${d.name} paid off at today's payment`, step: '3' }); }
+  for (const d of m.inputs.debts) { const months = d.planMonths; if (months != null && months > 0) out.push({ ym: at(months), name: `${d.name} paid off`, step: d.heavy ? '3' : '9' }); } // batch 11: one payoff date per debt, from the one plan
   for (const r of doc.records.filter(r => r.kind === 'debt' && r.values.promoEnd)) out.push({ ym: String(r.values.promoEnd).slice(0, 7), name: `${r.name || r.type}: promo APR ends`, step: '3' });
   for (const r of doc.records.filter(r => r.kind === 'account' && r.values.vestYears && r.values.vestingSchedule && r.values.vestingSchedule !== 'Immediate')) out.push({ ym: addMonths(base, Math.round(r.values.vestYears * 12)), name: `${r.name || r.type}: fully vested`, step: '2' });
   const y = now.getUTCFullYear();

@@ -10,6 +10,7 @@ import { myShare, wholeBill, splitOf, withHome, isFaded, typicalOf } from '../ma
 import { nextCheck } from '../checks.js';
 import { parseQuickAdd } from '../quickadd.js';
 import { canQuickFill, quickFill } from './quickfill.js';
+import { addMonths, ymOf, monthName } from '../month.js';
 import { gatesOf, gatedOut } from '../gates.js';
 import { keepPlace } from './place.js';
 import { opened, install as installDismiss } from './dismiss.js';
@@ -254,7 +255,7 @@ export function summaryStrip(ctx, items) {
   return h('div.strip', {}, items.map(i => metricCard(ctx, i.label, i.result, i)));
 }
 export function emptyList(thing, onAdd) {
-  return h('div.empty', {}, h('span.title', {}, `No ${thing.plural} yet`), addButton(thing.one, onAdd));
+  return h('div.empty', {}, h('span.title', {}, thing.empty ?? `No ${thing.plural} yet`), addButton(thing.one, onAdd));
 }
 export function chartEmpty(ctx, needs) {
   return h('div.chart-empty', {}, h('div', {},
@@ -396,6 +397,17 @@ export function parseNum(s) {
   return Number.isFinite(n) ? n : null;
 }
 // Minus, a box you can type in, plus. The first + from blank is 1 (or the minimum, if higher).
+// Batch 11 (item 7): a slider that runs below and above zero shows its fill from a marked zero point to the thumb, so
+// +$0 sits on the zero mark with nothing filled (the browser's own fill starts at the left end and reads as an amount).
+export function zeroSlider({ min, max, step, value, label, key = null }) {
+  const input = h('input.zero-slider', { type: 'range', min, max, step, 'aria-label': label, 'data-focus': key });
+  input.value = String(value);
+  const zero = ((0 - min) / (max - min)) * 100;
+  const paint = () => { const v = ((Number(input.value) - min) / (max - min)) * 100; input.style.setProperty('--zero', `${zero}%`); input.style.setProperty('--lo', `${Math.min(zero, v)}%`); input.style.setProperty('--hi', `${Math.max(zero, v)}%`); };
+  input.addEventListener('input', paint);
+  paint();
+  return input;
+}
 export function stepper(value, onChange, { min = 0, max = 20, label = 'Count', key = null } = {}) {
   const v = value ?? null;
   const clamp = n => Math.min(max, Math.max(min, n));
@@ -523,6 +535,18 @@ export function openAddPicker(anchor, { thing, top, other = [], onPick }) {
 
 // ---------- Payoff bar (R159) ----------
 export function payoffCell(ctx, d, longest) {
+  // Batch 11 (item 1): one payoff date per debt, from the one plan (the surplus on heavy debt first); when a debt's
+  // own payment alone gives a different date, one line says so.
+  if (d.planMonths != null) {
+    const ym = monthName(addMonths(ymOf(ctx.now()), d.planMonths), 'short');
+    const plan = ctx.metrics().debtPlan;
+    const width = longest ? Math.max(4, (d.planMonths / longest) * 100) : 0;
+    const alone = d.minimumMonths != null && d.minimumMonths !== d.planMonths ? monthName(addMonths(ymOf(ctx.now()), d.minimumMonths), 'short') : d.minimumMonths == null && d.payoff?.never ? 'never' : null;
+    return h('div.payoff', {},
+      h('span.computed', {}, mathButton({ id: 'M34', value: d.planMonths, needs: [], unit: 'months', text: plan?.text ?? '' }, `${ym} · ${d.planMonths} ${d.planMonths === 1 ? 'month' : 'months'}`)),
+      h('div.bar', { role: 'img', 'aria-label': `${d.planMonths} months` }, h('span', { style: { width: `${width}%` } })),
+      alone ? h('span.muted.small.payoff-alone', {}, `If only the ${money(d.payment)} ${d.paymentIsMinimum ? 'minimum' : 'payment'} is paid: ${alone}`) : null);
+  }
   const p = d.payoff;
   if (p.never) return h('div.payoff', {}, mathButton(p, `Needs ${money(p.paymentNeeded)}/mo`), h('div.bar', {}, h('span', { style: { width: '0' } })));
   if (p.value === null) return h('div.payoff', {}, h('span.muted', {}, `Needs ${joinWords(p.needs)}`), h('div.bar', {}));
@@ -738,6 +762,10 @@ export function recordList(ctx, cfg) {
   const coreOf = r => (typeof cfg.coreFields === 'function' ? cfg.coreFields(r) : cfg.coreFields || ['amount']);
   // A blank core number reads Missing on its face.
   const hasCore = r => (cfg.hasValue ? cfg.hasValue(ctx, r) : coreOf(r).every(f => { const v = f in r && f !== 'values' ? r[f] : r.values?.[f]; return v !== null && v !== undefined && v !== ''; }));
+  // Batch 11 (item 5b): a blank core number marked Not sure is filled by a typical value (a Guess), so the row's one
+  // status reads Rough (Guess), agreeing with the footer that counts it handled, never Missing.
+  const blankF = (r, f) => { const v = f in r && f !== 'values' ? r[f] : r.values?.[f]; return v === null || v === undefined || v === ''; };
+  const guessCore = r => !r.status && coreOf(r).some(f => blankF(r, f) && r.fieldStatus?.[f] === 'Not sure') && coreOf(r).every(f => !blankF(r, f) || r.fieldStatus?.[f] === 'Not sure');
   // Batch 8 (B5, B6): a row is unconfirmed while its face is not Know it (blank, Rough or a Guess) and it is not already Getting it.
   const unconfirmed = r => !['Not for me', 'Will email', 'Computed'].includes(r.status) && sureOf(r.status, hasCore(r)) !== 'Know it' && !(r.values?.locked === true);
   const willGet = ids => { ctx.store.setStatus(ids, 'Will email'); toast(`${ids.length === 1 ? 'Find: it is' : `Find: ${ids.length} are`} on the homework list, with where to look.`, { undo: () => ctx.store.undo() }); };
@@ -778,7 +806,8 @@ export function recordList(ctx, cfg) {
     const picker = typeof cfg.picker === 'function' ? cfg.picker(ctx) : cfg.picker;
     const addBtn = cfg.noAdd ? null : addButton(cfg.thing.one, e => picker ? openAddPicker(e.currentTarget, { thing: cfg.thing.one, ...picker, onPick: (t, own) => addNew(t, own) }) : addNew(null));
     const autos = cfg.autoRows?.(ctx, m) ?? []; // entered elsewhere, shown here (From Debt): no input, no menu
-    if (!recs.length && !autos.length) { view = null; return h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, h('div.list', {}, emptyList(cfg.thing, e => addBtn?.click()))); }
+    const lead = cfg.lead?.(ctx, m) ?? null; // batch 11: a row that lives elsewhere but counts here (the cards on Debt)
+    if (!recs.length && !autos.length) { view = null; return h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, lead, h('div.list', {}, emptyList(cfg.emptyThing?.(ctx) ?? cfg.thing, e => addBtn?.click()))); }
 
     const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all', 'data-focus': 'select-all', title: 'Select all' });
     allBox.onchange = () => { if (allBox.checked) recs.forEach(r => state.selected.add(r.id)); else state.selected.clear(); refreshSelection(); };
@@ -844,7 +873,7 @@ export function recordList(ctx, cfg) {
         const tr = h(`tr.row${state.selected.has(r.id) ? '.selected' : ''}${unfinished ? '.left' : ''}`, { 'data-id': r.id, 'data-group': g, hidden: folded },
           h('td.check-cell', {}, box),
           cols.map((c, i) => h(`td.col-${slug(c.label)}${i === 0 ? '.col-first' : ''}${c.num ? '.num' : ''}`, {}, c.render(ctx, r, m, p => update(r, p), { remove: e => remove([r.id], e.currentTarget) }))),
-          h('td.col-status', {}, h('span.row-line.status-cell', { style: { gap: '6px', flexWrap: 'nowrap' } }, statusPicker(r.status, s => update(r, { status: s }), { hasValue: hasCore(r), lock: ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? { on: r.values.locked === true, set: v => update(r, { locked: v }) } : null }),
+          h('td.col-status', {}, h('span.row-line.status-cell', { style: { gap: '6px', flexWrap: 'nowrap' } }, statusPicker(guessCore(r) ? 'Not sure' : r.status, s => update(r, { status: s }), { hasValue: hasCore(r) || guessCore(r), lock: ['income', 'debt', 'account', 'asset', 'bill'].includes(r.kind) ? { on: r.values.locked === true, set: v => update(r, { locked: v }) } : null }),
             unconfirmed(r) && !isBlankRow(r, coreOf(r)) ? h('button.btn.small.will-get', { type: 'button', title: 'Marks it Getting it and puts "Find: this" on the homework list, with where to look', 'aria-label': `Will get ${r.name || r.type || cfg.thing.one}`, onclick: () => willGet([r.id]) }, icon('clock'), h('span.will-get-text', {}, 'Will get it')) : null)), // batch 8 (B5)
           h('td.col-actions', {}, h('span.actions', {},
             h('button.caret', { type: 'button', 'aria-expanded': String(open), 'data-focus': 'more', onclick: () => setOpen(r.id) },
@@ -873,6 +902,7 @@ export function recordList(ctx, cfg) {
     const onlyLeft = recs.length > 8 && leftRows.length ? h('label.check-inline.only-left', {}, (() => { const b = h('input', { type: 'checkbox', checked: state.onlyLeft ? 'checked' : null }); b.onchange = () => { state.onlyLeft = b.checked; ctx.refresh(); }; return b; })(), ` Show only what's left (${leftRows.length})`) : null;
     const out = h(`div.section.area-${cfg.area}`, {}, head,
       cfg.strip ? (focus ? moreBlock(`focus:strip:${listKey}`, () => cfg.strip(ctx, ctx.metrics()), { label: 'Totals and chart' }) : cfg.strip(ctx, m)) : null, // item 19
+      lead,
       h('div.list', {}, h('div.list-scroll', { 'data-scroll-key': listKey }, h('table.rows', {}, thead, body, tfoot)), view.bulkHost,
         sectionFooter(ctx, { add: addBtn, total: cfg.footerTotal?.(ctx, recs, m), count: counted.length, done, of: counted.length, left: leftItems, onlyLeft, bulk }),
         keyboardHint()));

@@ -53,9 +53,9 @@ export function pictureOf(doc, ref, { now = new Date() } = {}) {
   // Debts: the balance counts most, the APR a little (the payment is often worked out).
   if (g.areas.debt !== false) {
     const debts = live.filter(r => r.kind === 'debt');
-    if (!debts.length && g.areas.debt === true) item({ id: 'debt', label: 'Debt balances', group: 'debt', weight: WEIGHTS.debtBalance, level: LEVELS.Missing, route: '#/net-worth/debt' });
+    if (!debts.length && g.areas.debt === true) item({ id: 'debt', label: 'Debt balances', group: 'debt', sub: 'debtBalance', weight: WEIGHTS.debtBalance, level: LEVELS.Missing, route: '#/net-worth/debt' });
     for (const r of debts) {
-      recItem(r, 'balance', { label: `${name(r)} balance`, group: 'debt', weight: WEIGHTS.debtBalance, route: debtRoute(r) });
+      recItem(r, 'balance', { label: `${name(r)} balance`, group: 'debt', sub: 'debtBalance', weight: WEIGHTS.debtBalance, route: debtRoute(r) });
       recItem(r, 'apr', { label: `${name(r)} APR`, group: 'debt', weight: WEIGHTS.debtApr, route: debtRoute(r) });
     }
   }

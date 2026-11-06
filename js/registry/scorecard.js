@@ -11,17 +11,17 @@ export { ORDER as FOO_ORDER } from './foo.js';
 // id, name, the step of SLAM's own FOO it belongs to (js/registry/foo.js; fooWhen moves it with the facts), the usual
 // effort to fill it (hours, editable per client), where it lives. Answer 135: goals and mindset sit at step 0.
 export const AREAS = [
-  { id: 'cashFlow', name: 'Cash flow', foo: '1', fooWords: 'Stop the bleeding', effort: 4, route: '#/cash-flow/budget' },
-  { id: 'emergency', name: 'Emergency fund', foo: '1', fooWhen: f => (f.littleFull ? '4' : '1'), fooWords: 'little e at step 1, then big e at step 4', effort: 2, route: '#/net-worth/assets' },
-  { id: 'debt', name: 'Debt', foo: '3', fooWords: 'Clear the heavy debt', effort: 3, route: '#/plan/debt-payoff' }, // F3: the hole links to the payoff calculators
-  { id: 'credit', name: 'Credit', foo: '3', fooWords: 'Clear the heavy debt (cards)', effort: 2, route: '#/net-worth/credit-cards' },
-  { id: 'retirement', name: 'Retirement accounts', foo: '2', fooWhen: f => (f.matchOffered && f.matchLeft > 0 ? '2' : '5'), fooWords: 'Take the free money while match is on the table, then Roth and HSA', effort: 1, route: '#/net-worth/assets' },
+  { id: 'cashFlow', name: 'Cash flow', foo: '1', fooWords: 'Stop going backwards', effort: 4, route: '#/cash-flow/budget' },
+  { id: 'emergency', name: 'Emergency fund', foo: '1', fooWhen: f => (f.littleFull ? '4' : '1'), fooWords: 'little e at step 1, then Build your job-loss fund at step 4', effort: 2, route: '#/net-worth/assets' },
+  { id: 'debt', name: 'Debt', foo: '3', fooWords: 'Pay off high-interest debt', effort: 3, route: '#/plan/debt-payoff' }, // F3: the hole links to the payoff calculators
+  { id: 'credit', name: 'Credit', foo: '3', fooWords: 'Pay off high-interest debt (cards)', effort: 2, route: '#/net-worth/credit-cards' },
+  { id: 'retirement', name: 'Retirement accounts', foo: '2', fooWhen: f => (f.matchOffered && f.matchLeft > 0 ? '2' : '5'), fooWords: 'Get the full match while match is on the table, then Max out tax-free accounts', effort: 1, route: '#/net-worth/assets' },
   { id: 'investing', name: 'Investing', foo: '6', fooWords: 'Prepay retirement (Coast FI)', effort: 2, route: '#/net-worth/assets' },
-  { id: 'taxes', name: 'Taxes', foo: '5', fooWords: 'Roth and HSA (the tax levers)', effort: 2, route: '#/cash-flow/taxes' },
-  { id: 'protection', name: 'Protection', foo: '1', fooWords: 'Stop the bleeding (coverage, deductibles)', effort: 2, route: '#/net-worth/protection' },
-  { id: 'income', name: 'Income', foo: '1', fooWords: 'Stop the bleeding', effort: 8, route: '#/cash-flow/income' },
-  { id: 'goals', name: 'Goals', foo: '0b', fooWords: 'Step 0, with mindset', effort: 1, route: '#/plan/goals' },
-  { id: 'mindset', name: 'Mindset', foo: '0b', fooWords: 'Step 0, with goals', effort: 4, route: '#/home/session' },
+  { id: 'taxes', name: 'Taxes', foo: '5', fooWords: 'Max out tax-free accounts (the tax levers)', effort: 2, route: '#/cash-flow/taxes' },
+  { id: 'protection', name: 'Protection', foo: '1', fooWords: 'Stop going backwards (coverage, deductibles)', effort: 2, route: '#/net-worth/protection' },
+  { id: 'income', name: 'Income', foo: '1', fooWords: 'Stop going backwards', effort: 8, route: '#/cash-flow/income' },
+  { id: 'goals', name: 'Goals', foo: '0b', fooWords: 'Spend on what you love (step 0b), with mindset', effort: 1, route: '#/plan/goals' },
+  { id: 'mindset', name: 'Mindset', foo: '0b', fooWords: 'Spend on what you love (step 0b), with goals', effort: 4, route: '#/home/session' },
 ];
 
 // The rules' thresholds. Each area with a clear rule is suggested from the data; the rest (Taxes, and any area the

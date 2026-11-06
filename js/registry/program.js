@@ -33,7 +33,8 @@ export const UNLOCKS = {
     { group: 'spending', min: LEVELS.Gut, label: 'spending is in (a gut number is enough)' },
     { group: 'invested', min: LEVELS.Gut, label: 'an invested balance is in' },
     { group: 'age', min: LEVELS.Actual, label: 'your age is in' }] },
-  payoff: { label: 'Debt payoff', needs: [{ group: 'debt', min: LEVELS.Estimate, label: 'debts reach Estimate' }] },
+  // Batch 11 (item 2): open as soon as a debt has a balance and a payment; a guessed APR is fine and shows as a guess.
+  payoff: { label: 'Debt payoff', needs: [{ group: 'debtBalance', min: LEVELS.Gut, label: 'a debt has a balance and a payment' }] },
 };
 // Confidence of an unlocked number: the weighted level of its inputs (High at or over 90, Medium at or over 75,
 // else Low); any input older than the aged-check days (js/checks.js) drops it one step.

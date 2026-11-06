@@ -227,21 +227,23 @@ export function scorecardOf(doc, ref, { now = new Date(), flags = [] } = {}) {
     const time = payoff ? moneyAsTime({ amount: payoff.value, hourlyWage: hourly, annualSpending }).value : null;
     const foo = a.fooWhen ? a.fooWhen(f) : a.foo; // the step on SLAM's own FOO, moved by the facts (little e then big e)
     const beforeHere = hereAt >= 0 && FOO_ORDER.indexOf(foo) < hereAt;
+    // Batch 11, the debt rule: while the surplus goes to heavy debt first, a hole at a later FOO step waits behind it.
+    const waits = !!f.m.debtRule?.on && FOO_ORDER.indexOf(foo) > FOO_ORDER.indexOf('3');
     const parked = o.parked ? { at: o.parked.at, note: o.parked.note ?? null, back: o.parked.back ?? { kind: 'next' }, atSession: o.parked.atSession ?? null } : null;
     const math = [
       `${a.name}: ${rating ?? 'not rated'}${source === 'coach' ? " (the coach's call)" : source === 'auto' ? ' (from the numbers)' : ''}. ${reason}`,
       payoff ? `Payoff: ${payoff.text}${time?.fiDays != null ? ` That is ${fmt.number(time.fiDays, 1)} FI days${time.hours != null ? ` or ${fmt.number(time.hours, 1)} hours of work` : ''}.` : ''}` : rating === 'Hole' ? 'Payoff: no rule for this area; type one on the Scorecard.' : null,
       rating === 'Hole' ? `Effort: ${effort} ${effort === 1 ? 'hour' : 'hours'}${o.effort != null ? ' (set by the coach)' : ' (the usual)'}.` : null,
       score != null ? `Best return: ${money(payoff.value)} a year over ${effort} hours = ${money(score)} a year per hour.` : null,
-      rating === 'Hole' ? `FOO step ${foo} (${a.fooWords}); ${f.here == null ? 'the FOO has no step yet' : `you are on step ${f.here}`}: ${beforeHere ? 'before your step, so it ranks first' : 'at or after your step'}.` : null,
+      rating === 'Hole' ? `FOO step ${foo} (${a.fooWords}); ${f.here == null ? 'the FOO has no step yet' : `you are on step ${f.here}`}: ${beforeHere ? 'before your step, so it ranks first' : waits ? 'after heavy debt: the surplus goes to heavy debt first, so it ranks after Debt' : 'at or after your step'}.` : null,
       parked ? `Parked${parked.note ? `: ${parked.note}` : ''}. It ranks last until it is unparked.` : null,
     ].filter(Boolean);
-    return { ...a, foo, rating, reason, source, auto, override, coachReason: o.reason ?? null, payoff, fiDays: time?.fiDays ?? null, hours: time?.hours ?? null, effort, effortSet: o.effort != null, score, beforeHere, chosen: chosen.includes(a.id), parked, math };
+    return { ...a, foo, rating, reason, source, auto, override, coachReason: o.reason ?? null, payoff, fiDays: time?.fiDays ?? null, hours: time?.hours ?? null, effort, effortSet: o.effort != null, score, beforeHere, waits, chosen: chosen.includes(a.id), parked, math };
   });
   // Ranked: parked holes last (answer 136), a hole with no payoff last before them (133), then the ones before the
   // client's FOO step first, then best return.
   const holes = areas.filter(a => a.rating === 'Hole')
-    .sort((a, b) => (Number(!!a.parked) - Number(!!b.parked)) || (Number(!a.payoff) - Number(!b.payoff)) || (Number(b.beforeHere) - Number(a.beforeHere)) || ((b.score ?? -1) - (a.score ?? -1)) || ((b.payoff?.value ?? 0) - (a.payoff?.value ?? 0)));
+    .sort((a, b) => (Number(!!a.parked) - Number(!!b.parked)) || (Number(!a.payoff) - Number(!b.payoff)) || (Number(b.beforeHere) - Number(a.beforeHere)) || (Number(a.waits) - Number(b.waits)) || ((b.score ?? -1) - (a.score ?? -1)) || ((b.payoff?.value ?? 0) - (a.payoff?.value ?? 0)));
   holes.forEach((h, i) => { h.rank = i + 1; });
   const okCount = areas.filter(a => a.rating === 'Strong' || a.rating === 'OK').length;
   return { areas, holes, ok: areas.filter(a => a.rating === 'OK'), strong: areas.filter(a => a.rating === 'Strong'), unrated: areas.filter(a => !a.rating),

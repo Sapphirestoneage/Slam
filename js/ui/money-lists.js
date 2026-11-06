@@ -3,8 +3,8 @@
 // Detail stays behind More (R023); fields that do not apply to this household never show (gates.js).
 import { h } from './dom.js';
 import { INCOME_KINDS, incomeKindOf } from '../capture.js';
-import { institutionPicker } from './institutions-ui.js';
-import { fromButton, amount, value, moneyInput, pctInput, textInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, parkGroup, ownerToggle } from './staples.js';
+import { institutionPicker, institutionLink } from './institutions-ui.js';
+import { fromButton, amount, value, moneyInput, pctInput, textInput, nameInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, parkGroup, ownerToggle } from './staples.js';
 import { asksTaxType, taxTypeFor } from '../math/portfolio.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
 import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom } from '../math/income.js';
@@ -247,7 +247,8 @@ export function assetList(ref) {
     kindOf: type => (type ? recordFor(type, ref).kind : 'account'),
     newValues: type => ({ values: type ? { ...recordFor(type, ref).values } : { group: 'cash' } }),
     columns: [
-      { label: 'Account', render: (ctx, r, m, up) => h('span.stack.inst-cell', { style: { gap: '4px' } }, r.kind === 'account' ? institutionPicker(ctx, r, up) : null, textInput(r.name, v => up({ name: v }), { hint: r.kind === 'account' ? 'Nickname (optional)' : r.type || 'Add name', tip: r.type, width: 170, key: `${r.id}:name` })) }, // item 14: [Institution] · [Nickname]
+      // Batch 11 (items 5e, 5f): the name wraps instead of clipping; the institution is a small Add bank link under it.
+      { label: 'Account', render: (ctx, r, m, up) => h('span.stack.inst-cell', { style: { gap: '2px' } }, nameInput(r.name, v => up({ name: v }), { hint: r.kind === 'account' ? 'Nickname (optional)' : r.type || 'Add name', tip: r.type, width: 190, key: `${r.id}:name` }), r.kind === 'account' ? institutionLink(ctx, r, up) : null) },
       { label: 'Balance', num: true, render: (ctx, r, m, up) => {
         if (r.kind === 'asset') return moneyInput(r.values.value, v => up({ value: v }), { hint: 'Add value', key: `${r.id}:balance` });
         if (r.values.taxType === 'Both') { // R018: two boxes, one balance
@@ -260,8 +261,8 @@ export function assetList(ref) {
       } },
       { label: 'Kind', render: (ctx, r, m, up) => {
         if (r.kind === 'asset') return LOAN_FOR[r.type] ? loanCells(ctx, r) : h('span.muted', {}, r.type || 'Other');
-        if (r.values.group === 'investment') return select(ref.lists.investmentTypes.filter(t => t !== 'HSA' || ctx.gates().hsa || r.type === 'HSA'), r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Account type', width: 160, key: `${r.id}:type` });
-        return select(ref.lists.cashTypes, r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Account type', width: 160, key: `${r.id}:type` }); // B2.18: the kind of account, apart from the bank
+        if (r.values.group === 'investment') return select(ref.lists.investmentTypes.filter(t => t !== 'HSA' || ctx.gates().hsa || r.type === 'HSA'), r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Account type', width: 180, key: `${r.id}:type` });
+        return select(ref.lists.cashTypes, r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Account type', width: 180, key: `${r.id}:type` }); // B2.18: the kind of account, apart from the bank
       } },
       // Focus mode only: what goes in each month, typed as a month and saved in the cadence it was entered in (answer 91).
       { label: 'Added monthly', num: true, focusOnly: true, render: (ctx, r, m, up) => { // item 18

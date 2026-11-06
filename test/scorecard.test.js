@@ -90,7 +90,9 @@ test('holes: payoff a year with its math, FI days and hours, effort (editable), 
   assert.ok(Math.abs(debt.score - debt.payoff.value / debt.effort) < 1e-9);
   assert.ok(!ret.beforeHere && !debt.beforeHere, 'no match on file: retirement sits at step 5, after step 3; debt is the step itself');
   assert.ok(area(sc, 'goals').beforeHere, 'goals sit at step 0, before step 3, but with no payoff they rank last');
-  assert.deepEqual(sc.holes.map(h => h.id), ['retirement', 'debt', 'goals'], 'best return first; no payoff last');
+  // Batch 11, the debt rule: while the surplus pays the 22% card first, Retirement accounts (step 5) waits behind Debt.
+  assert.deepEqual(sc.holes.map(h => h.id), ['debt', 'retirement', 'goals'], 'heavy debt first; no payoff last');
+  assert.ok(ret.waits && ret.math.some(t => /ranks after Debt/.test(t)));
   assert.deepEqual(sc.holes.map(h => h.rank), [1, 2, 3]);
   assert.ok(debt.math.some(t => /Best return/.test(t)) && debt.math.some(t => /FOO step 3/.test(t)));
   // Effort and a typed payoff for an area with no rule.
@@ -99,7 +101,7 @@ test('holes: payoff a year with its math, FI days and hours, effort (editable), 
   const sc2 = scorecardOf(d.doc, ref, { now });
   assert.equal(area(sc2, 'debt').effort, 10); assert.equal(area(sc2, 'debt').effortSet, true);
   assert.equal(area(sc2, 'goals').payoff.value, 1200); assert.equal(area(sc2, 'goals').payoff.typed, true);
-  assert.deepEqual(sc2.holes.map(h => h.id), ['goals', 'retirement', 'debt'], 'goals (step 0, before step 3) ranks first once it has a payoff; debt last at 10 hours');
+  assert.deepEqual(sc2.holes.map(h => h.id), ['goals', 'debt', 'retirement'], 'goals (step 0, before step 3) ranks first once it has a payoff; debt still before retirement while it takes the surplus');
   assert.equal(PAYOFF.credit.aprPoints, 0.02);
 });
 
@@ -138,16 +140,16 @@ test('S6 to S8 pull the top hole when they start and are done when it is OK or S
   const d = demoStore();
   d.setIn('session', ['count'], 5, 'count'); // sessions 1 to 5 ended
   const r = startSession(d, ref, { now });
-  assert.equal(r.sid, 'S6'); assert.equal(r.target, 'retirement');
-  assert.equal(d.doc.program.targets.S6, 'retirement');
+  assert.equal(r.sid, 'S6'); assert.equal(r.target, 'debt'); // batch 11: heavy debt takes the surplus first, so it is the top hole
+  assert.equal(d.doc.program.targets.S6, 'debt');
   let s6 = sessionsOf(d.doc, ref, { now })[5];
-  assert.equal(s6.target.id, 'retirement'); assert.equal(s6.items[0].done, false); assert.match(s6.items[0].detail, /Retirement accounts: Hole/);
-  d.setIn('scorecard', ['areas', 'retirement'], { rating: 'OK', reason: '6% going in from next paycheck' }, 'Scorecard');
+  assert.equal(s6.target.id, 'debt'); assert.equal(s6.items[0].done, false); assert.match(s6.items[0].detail, /Debt: Hole/);
+  d.setIn('scorecard', ['areas', 'debt'], { rating: 'OK', reason: 'Paying it down on the plan' }, 'Scorecard');
   s6 = sessionsOf(d.doc, ref, { now })[5];
   assert.equal(s6.items[0].done, true); assert.equal(s6.done, true);
-  // S7 would pull the next top hole (debt) now; a hole session with no hole left is done.
-  assert.equal(targetOf(d.doc, 'S7', scorecardOf(d.doc, ref, { now })), 'debt');
-  for (const id of ['debt', 'goals']) d.setIn('scorecard', ['areas', id], { rating: 'OK', reason: 'Done' }, 'Scorecard');
+  // S7 would pull the next top hole (retirement) now; a hole session with no hole left is done.
+  assert.equal(targetOf(d.doc, 'S7', scorecardOf(d.doc, ref, { now })), 'retirement');
+  for (const id of ['retirement', 'goals']) d.setIn('scorecard', ['areas', id], { rating: 'OK', reason: 'Done' }, 'Scorecard');
   let list = sessionsOf(d.doc, ref, { now });
   assert.equal(list[6].items[0].done, true); assert.equal(list[6].items[0].detail, 'No hole left');
   assert.equal(list[9].items[0].id, 'chapter', 'answer 137: only a hole blocks the next chapter; unrated areas get a nudge'); assert.equal(list[9].items[0].done, false);
@@ -313,19 +315,19 @@ test('Move on anyway with nothing open leaves no carry-over; the snapshot comes 
 test('Park it: a parked hole drops to the bottom, labeled, is not pulled by a hole session, and can be unparked', () => {
   const d = demoStore();
   let sc = scorecardOf(d.doc, ref, { now });
-  assert.deepEqual(sc.holes.map(h => h.id), ['retirement', 'debt', 'goals']);
-  parkHole(d, 'retirement', 'Waiting on the new job');
+  assert.deepEqual(sc.holes.map(h => h.id), ['debt', 'retirement', 'goals']);
+  parkHole(d, 'debt', 'Waiting on the new job');
   sc = scorecardOf(d.doc, ref, { now });
-  assert.deepEqual(sc.holes.map(h => h.id), ['debt', 'goals', 'retirement']);
+  assert.deepEqual(sc.holes.map(h => h.id), ['retirement', 'goals', 'debt']);
   assert.equal(sc.holes[2].parked.note, 'Waiting on the new job'); assert.equal(sc.holes[2].rank, 3);
   assert.ok(sc.holes[2].math.some(t => /Parked: Waiting/.test(t)));
-  assert.equal(targetOf(d.doc, 'S6', sc), 'debt');
+  assert.equal(targetOf(d.doc, 'S6', sc), 'retirement');
   d.setIn('session', ['count'], 5, 'count');
-  assert.equal(startSession(d, ref, { now }).target, 'debt');
-  unparkHole(d, 'retirement');
-  assert.equal(scorecardOf(d.doc, ref, { now }).holes[0].id, 'retirement');
+  assert.equal(startSession(d, ref, { now }).target, 'retirement');
+  unparkHole(d, 'debt');
+  assert.equal(scorecardOf(d.doc, ref, { now }).holes[0].id, 'debt');
   d.undo();
-  assert.equal(scorecardOf(d.doc, ref, { now }).holes[0].id, 'debt', 'parking undoes like the rest');
+  assert.equal(scorecardOf(d.doc, ref, { now }).holes[0].id, 'retirement', 'parking undoes like the rest');
 });
 
 test('answers 132 and 133: little e and big e rate the emergency fund; cards over 30% used is a Hole; a hole with no payoff ranks last', () => {

@@ -2,7 +2,13 @@
 // M30 to M37: minimums, payoff months, interest, fee APR, payoff order, utilization, DTI, promo.
 import { ok, needs, missing, fmt } from './result.js';
 import { duration } from '../format.js';
-import { RULES } from '../registry/assumptions.js';
+import { RULES, LISTS } from '../registry/assumptions.js';
+
+const HEAVY_TYPES = new Set(LISTS.heavyDebt);
+// Heavy debt (FOO step 3): a balance on a heavy type (cards, payday, personal, BNPL, medical, tax) or any APR at or over
+// RULES.heavyApr (8%), unless it is on a forgiveness plan (PSLF). One definition for the FOO, the ladder, the Scorecard
+// and the debt-first rule (batch 11).
+export const isHeavyDebt = d => (d?.balance ?? 0) > 0 && !d.forgiven && (HEAVY_TYPES.has(d.type) || (d.apr ?? 0) >= RULES.heavyApr);
 
 // M30: credit card minimum. A statement number overrides it (R036, R060).
 export function cardMinimum({ balance, apr }) {
@@ -123,6 +129,66 @@ export function payoffPlan(debts, { extra = 0, order = 'avalanche', maxMonths = 
       : 'These payments never clear every debt.' };
 }
 
+// The debt rule (batch 11, RULES.surplusToHeavyDebt): while heavy debt is carried, the monthly surplus goes to it
+// first, on top of every debt's own payment, in the payoff order (a promo ending soon first). Freed payments roll to
+// the next heavy debt. Once the heavy debt is gone the surplus (and the freed heavy payments) go to investing, so
+// low-rate debt keeps its own payment; an extra (a what-if, or settings.debtExtra) keeps rolling to it. This is the
+// one plan every screen reads: each debt's payoff month, the heavy-debt-free month and the debt-free month.
+export function debtFirstPlan(debts, { order = 'avalanche', ids = [], first = [], surplus = 0, extra = 0, maxMonths = 1200 } = {}) {
+  const usable = debts.filter(d => !d.inFull && (d.balance ?? 0) > 0 && d.apr != null && d.payment != null);
+  const skipped = debts.filter(d => !d.inFull && (d.balance ?? 0) > 0 && !usable.includes(d)).map(d => d.name);
+  const top = new Set(first);
+  const sortGroup = list => { const s = order === 'custom' ? customOrder(list, ids) : order === 'given' ? [...list] : [...list].sort(ORDERS[order] || (() => 0)); return [...s.filter(d => top.has(d.id)), ...s.filter(d => !top.has(d.id))]; };
+  const heavyList = sortGroup(usable.filter(isHeavyDebt)), lowList = sortGroup(usable.filter(d => !isHeavyDebt(d)));
+  const list = [...heavyList.map(d => ({ ...d, heavy: true })), ...lowList.map(d => ({ ...d, heavy: false }))].map(d => ({ ...d, left: d.balance, paidOffMonth: null, interest: 0 }));
+  const toDebt = Math.max(0, surplus || 0), more = Math.max(0, extra || 0);
+  let month = 0, total = 0, heavyMonths = heavyList.length ? null : 0;
+  const path = [list.map(d => d.left)];
+  while (list.some(d => d.left > 0.005) && month < maxMonths) {
+    month += 1;
+    const heavyOpen = list.some(d => d.heavy && d.left > 0.005);
+    let freedHeavy = 0, freedLow = 0;
+    for (const d of list) {
+      if (d.left <= 0.005) { if (d.heavy) freedHeavy += d.payment; else freedLow += d.payment; continue; }
+      const i = d.left * d.apr / 12;
+      d.interest += i; total += i; d.left += i;
+      const pay = Math.min(d.left, d.payment);
+      d.left -= pay;
+      if (d.heavy) freedHeavy += d.payment - pay; else freedLow += d.payment - pay;
+    }
+    // The surplus and the freed heavy payments go only to heavy debt; an extra and freed low-rate payments to any, in order.
+    let heavyPool = heavyOpen ? toDebt + freedHeavy : 0, pool = more + freedLow;
+    for (const d of list) {
+      if (d.left <= 0.005 || !d.heavy || heavyPool <= 0) continue;
+      const pay = Math.min(d.left, heavyPool);
+      d.left -= pay; heavyPool -= pay;
+    }
+    for (const d of list) {
+      if (d.left <= 0.005 || pool <= 0) continue;
+      const pay = Math.min(d.left, pool);
+      d.left -= pay; pool -= pay;
+    }
+    for (const d of list) if (d.left <= 0.005 && d.paidOffMonth === null) d.paidOffMonth = month;
+    if (heavyMonths === null && !list.some(d => d.heavy && d.left > 0.005)) heavyMonths = month;
+    path.push(list.map(d => Math.max(0, d.left)));
+  }
+  const done = list.every(d => d.left <= 0.005);
+  const heavyPayments = heavyList.reduce((s, d) => s + d.payment, 0);
+  const words = [toDebt ? `${fmt.money(toDebt)} of surplus` : null, more ? `${fmt.money(more)} extra` : null].filter(Boolean).join(' and ');
+  return { id: 'M34', order, months: done ? month : null, heavyMonths, interest: total, surplus: toDebt, extra: more, heavyPayments, skipped, path,
+    debts: list.map(({ id, name, type, balance, payment, apr, aprGuess, heavy, paidOffMonth, interest }) => ({ id, name, type, balance, payment, apr, aprGuess: !!aprGuess, heavy, paidOffMonth, interest })),
+    text: !list.length ? 'No debt with a balance, an APR and a payment.' : done
+      ? `Every debt gets its own payment${words ? `, and ${words} a month goes to the heavy debt first (${order})` : ''}. ${heavyList.length ? `The heavy debt is gone in ${heavyMonths} ${heavyMonths === 1 ? 'month' : 'months'}; ` : ''}every debt is gone in ${month} months, with ${fmt.money(total)} of interest.`
+      : 'These payments never clear every debt.' };
+}
+// A 0% promo ending within 60 days goes to the top of the order (R075). promoEnd: YYYY-MM or YYYY-MM-DD.
+export function promoSoonIds(debts, now = new Date()) {
+  return debts.filter(d => d.promoEnd).filter(d => {
+    const end = Date.parse(`${String(d.promoEnd).length === 7 ? `${d.promoEnd}-01` : d.promoEnd}T00:00:00Z`);
+    return end >= now.getTime() - 86400000 && end - now.getTime() <= 60 * 86400000;
+  }).map(d => d.id);
+}
+
 // M35: utilization. No limits: hidden.
 export function utilization(cards) {
   const withLimits = cards.filter(c => c.limit);
@@ -148,3 +214,52 @@ export function promoPayment({ balance, monthsLeft }) {
   const v = balance / monthsLeft;
   return ok('M37', v, `${fmt.money(balance)} divided by the ${monthsLeft} months left on the promo = ${fmt.money(v)} a month.`);
 }
+
+// The debt-free card (batch 11, item 3; Undebt.it and Tally: one date, milestones). From the one plan: the debt-free
+// month, what goes to debt a month (every payment plus the surplus on heavy debt), what-ifs for an extra a month
+// (never saved), and the milestones: 25% and 50% of the debt gone, the first debt paid off, debt free, each with its
+// month on the plan; the next one with the dollars still to go. start: the debt total at Day 0 when there is one.
+export const HERO_EXTRAS = [50, 100, 250];
+export function debtFreeCard(plan, { start = null, extras = HERO_EXTRAS, rerun = null } = {}) {
+  if (!plan?.debts?.length) return null;
+  const now = plan.path[0].reduce((s, v) => s + v, 0);
+  const from = Math.max(start ?? 0, now);
+  const totalAt = row => row.reduce((s, v) => s + v, 0);
+  const monthWhen = goal => { const i = plan.path.findIndex(row => totalAt(row) <= goal + 0.005); return i < 0 ? null : i; };
+  const paidSoFar = Math.max(0, from - now);
+  const firstOff = plan.debts.filter(d => d.paidOffMonth != null).sort((a, b) => a.paidOffMonth - b.paidOffMonth)[0] ?? null;
+  const one = plan.debts.length === 1;
+  const marks = [
+    { id: 'quarter', name: '25% gone', goal: from * 0.75 },
+    { id: 'half', name: '50% gone', goal: from * 0.5 },
+    ...(one ? [] : [{ id: 'first', name: firstOff ? `First debt paid off: ${firstOff.name}` : 'First debt paid off', goal: null, months: firstOff?.paidOffMonth ?? null, left: firstOff ? firstOff.balance : null }]),
+    { id: 'free', name: 'Debt free', goal: 0 },
+  ].map(k => {
+    const done = k.goal != null ? now <= k.goal + 0.005 : false;
+    const months = k.goal != null ? (done ? 0 : monthWhen(k.goal)) : k.months;
+    const left = k.goal != null ? Math.max(0, now - k.goal) : k.left;
+    return { id: k.id, name: k.name, done, months, left };
+  });
+  const next = marks.find(k => !k.done) ?? null;
+  const monthly = plan.debts.reduce((s, d) => s + d.payment, 0) + (plan.surplus ?? 0) + (plan.extra ?? 0);
+  const lastPay = p => (p.months ? p.path[p.months - 1].reduce((s, v) => s + v, 0) * (1 + Math.max(0, ...p.debts.map(d => d.apr ?? 0)) / 12) : 0); // about what the final month still owes
+  const whatIf = rerun ? extras.map(x => { const q = rerun(x); return { extra: x, months: q.months, interestSaved: q.months == null || plan.months == null ? null : Math.max(0, plan.interest - q.interest), lastPayment: q.months == null ? null : Math.min(lastPay(q), monthly + x) }; }) : [];
+  return { months: plan.months, heavyMonths: plan.heavyMonths, monthly, interest: plan.interest, lastPayment: plan.months == null ? null : Math.min(lastPay(plan), monthly), owed: now, start: from, paidSoFar, marks, next, whatIf,
+    text: plan.months == null ? plan.text : `${fmt.money(monthly)} a month goes to debt: each debt's own payment${plan.surplus ? ` plus ${fmt.money(plan.surplus)} of surplus on the heavy debt first` : ''}${plan.extra ? ` plus ${fmt.money(plan.extra)} extra` : ''}. ${fmt.money(now)} owed is gone in ${plan.months} ${plan.months === 1 ? 'month' : 'months'}.` };
+}
+
+// Credit health (batch 11, item 6): utilization per card and overall, the oldest account's age and the average age
+// (from each card's Opened month, YYYY-MM), hard inquiries in the last two years and the freeze at the three bureaus.
+export const BUREAUS = ['Equifax', 'Experian', 'TransUnion'];
+export function creditHealth(cards, { now = new Date(), inquiries = null, freeze = {} } = {}) {
+  const ym = d => (/^\d{4}-\d{2}/.test(String(d || '')) ? String(d).slice(0, 7) : null);
+  const ageMonths = d => { const v = ym(d); if (!v) return null; const [y, m] = v.split('-').map(Number); return Math.max(0, (now.getUTCFullYear() - y) * 12 + (now.getUTCMonth() + 1 - m)); };
+  const per = cards.map(c => ({ id: c.id ?? null, name: c.name ?? 'Card', util: c.limit ? (c.balance ?? 0) / c.limit : null, ageMonths: ageMonths(c.opened) }));
+  const overall = utilization(cards);
+  const ages = per.map(p => p.ageMonths).filter(v => v != null);
+  const oldest = ages.length ? Math.max(...ages) : null, average = ages.length ? ages.reduce((s, v) => s + v, 0) / ages.length : null;
+  const frozen = BUREAUS.filter(b => freeze?.[b] === true), thawed = BUREAUS.filter(b => freeze?.[b] === false);
+  return { id: 'M35', per, overall: overall.hidden ? null : overall.value, oldestMonths: oldest, averageMonths: average, inquiries: inquiries ?? null, frozen, thawed,
+    text: [overall.hidden ? null : overall.text, ages.length ? `Oldest card ${(oldest / 12).toFixed(1)} years; average ${(average / 12).toFixed(1)} years across ${ages.length} ${ages.length === 1 ? 'card' : 'cards'} with an opened month.` : null].filter(Boolean).join(' ') };
+}
+export const yearsText = months => (months == null ? null : months < 12 ? `${months} ${months === 1 ? 'month' : 'months'}` : `${(months / 12).toFixed(1)} years`);

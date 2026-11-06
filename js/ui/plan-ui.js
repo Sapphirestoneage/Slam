@@ -7,7 +7,7 @@ import * as S from './staples.js';
 import { goalSuggestions } from '../whynow.js';
 import { futureDollars } from '../math/fi.js';
 import { MILESTONES, fiTargets, monthsTo, projection, ladder, solveFor } from '../plan.js';
-import { payoffPlan, customOrder, orderCost } from '../math/debt.js';
+import { payoffPlan, customOrder, orderCost, debtFirstPlan } from '../math/debt.js';
 import { METHODS, suggestMethod } from '../registry/debt.js';
 import { moneyAsTime } from '../math/fi.js';
 import { compareOf, proposedOf, setProposed, clearProposed, makeProposedThePlan } from '../math/proposed.js';
@@ -48,7 +48,7 @@ winSources.push(ctx => {
 export function revealCard(app, ctx, m) {
   const fiWhen = m.monthsToFi.value;
   const gate = fiGate(ctx);
-  const slider = h('input', { type: 'range', min: -1000, max: 3000, step: 50, value: PUI.extra, 'aria-label': 'Save more or less a month', 'data-focus': 'reveal:save-more' });
+  const slider = S.zeroSlider({ min: -1000, max: 3000, step: 50, value: PUI.extra, label: 'Save more or less a month', key: 'reveal:save-more' });
   const out = h('strong'), result = h('span.fi-when');
   const paint = () => {
     const rr = m.fiNumber.value == null ? null : monthsTo(m, m.fiNumber.value, { realReturn: m.inputs.realReturn, extra: PUI.extra, now: ctx.now() });
@@ -69,9 +69,16 @@ function investingLine(ctx, m) {
   const iv = m.investing;
   if (!iv) return null;
   const on = iv.investSurplus;
-  const parts = [iv.alreadyIn ? `${money(iv.alreadyIn)} from your paycheck (401(k), HSA, match)` : null, on && iv.surplus ? `your ${money(iv.surplus)} surplus` : null].filter(Boolean);
+  const r = m.debtRule || {};
+  const at = mo => monthName(addMonths(ymOf(ctx.now()), mo), 'short');
+  const parts = [iv.alreadyIn ? `${money(iv.alreadyIn)} from your paycheck (401(k), HSA, match)` : null, on && iv.surplus ? `your ${money(iv.surplus)} surplus` : null, on && iv.freed ? `the ${money(iv.freed)} freed from heavy debt` : null].filter(Boolean);
+  // Batch 11 (item 1): while heavy debt is carried, the surplus pays it first; Invest my surplus takes over after.
+  const debtLine = r.heavy ? h('span.row-line', { style: { gap: '8px' } },
+    S.toggle([[1, 'Heavy debt first'], [0, 'Invest from today']], r.wanted ? 1 : 0, v => ctx.store.setDoc('assumptions', { debtFirst: v }), { label: 'Where the surplus goes while heavy debt is carried' }),
+    h('span.muted.small', {}, r.on ? `Until ${m.debtRule.heavyMonths == null ? 'the heavy debt is gone' : at(m.debtRule.heavyMonths)} the surplus pays heavy debt; then it is ${on ? 'invested' : 'kept'}.` : 'The surplus is invested from today while heavy debt is still carried.')) : null;
   return h('div.stack', { style: { gap: '6px', marginTop: '8px' } },
-    h('span.muted.small', {}, parts.length ? `Counts ${money(iv.monthly ?? 0)} a month going in: ${parts.join(' + ')}. Inflation is covered: returns are after inflation.` : 'Nothing is going in yet. Inflation is covered: returns are after inflation.'),
+    h('span.muted.small', {}, parts.length ? `${r.on ? 'After the heavy debt, counts' : 'Counts'} ${money(iv.monthly ?? 0)} a month going in: ${parts.join(' + ')}. Inflation is covered: returns are after inflation.` : 'Nothing is going in yet. Inflation is covered: returns are after inflation.'),
+    debtLine,
     h('span.row-line', { style: { gap: '8px' } },
       S.toggle([[0, 'Surplus stays surplus'], [1, 'Invest my surplus']], on ? 1 : 0, v => ctx.store.setDoc('assumptions', { investSurplus: v }), { label: 'Invest my surplus' }),
       !on && m.surplus.value > 0 ? h('span.muted.small', {}, `Investing your ${money(m.surplus.value)} a month moves the FI date sooner.`) : null));
@@ -227,7 +234,7 @@ export function timelineScreen(app, ctx) {
   const r = ref.presets.pace[pace] ?? m.inputs.realReturn;
   const res = monthsTo(m, m.fiNumber.value, { realReturn: r, extra: PUI.extra, now: ctx.now() });
   const sr = m.inputs.takeHome ? (m.surplus.value + PUI.extra) / m.inputs.takeHome : null;
-  const slider = h('input', { type: 'range', min: -1000, max: 3000, step: 50, value: PUI.extra, 'aria-label': 'Save more or less a month' });
+  const slider = S.zeroSlider({ min: -1000, max: 3000, step: 50, value: PUI.extra, label: 'Save more or less a month' }); // batch 11 (item 7): fill from the zero mark
   const out = h('strong', {}, `${PUI.extra >= 0 ? '+' : '−'}${money(Math.abs(PUI.extra))} a month`);
   const result = h('span.fi-when');
   const host = h('div.chart', { style: { height: '340px' } });
@@ -314,15 +321,11 @@ export function promoSoon(ctx) {
     return end >= now.getTime() - 86400000 && end - now.getTime() <= 60 * 86400000;
   });
 }
+// Batch 11: every order is the one debt plan's shape (the surplus to heavy debt first while the debt rule is on, a
+// promo ending soon first), so the order in use with no what-if extra is exactly the date every other screen shows.
 export function planDebts(ctx, { order, extra = 0 } = {}) {
-  const m = ctx.metrics();
-  const ds = m.inputs.debts.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null);
-  const soon = new Set(promoSoon(ctx).map(r => r.id));
-  const o = order || m.inputs.debtOrder;
-  if (o === 'custom') { const sorted = customOrder(ds, ctx.store.doc.settings.debtCustomOrder || []); return payoffPlan([...sorted.filter(d => soon.has(d.id)), ...sorted.filter(d => !soon.has(d.id))], { order: 'given', extra }); }
-  if (!soon.size) return payoffPlan(ds, { order: o, extra });
-  const rest = payoffPlan(ds.filter(d => !soon.has(d.id)), { order: o }).debts.map(x => ds.find(d => d.name === x.name)).filter(Boolean);
-  return payoffPlan([...ds.filter(d => soon.has(d.id)), ...rest], { order: 'given', extra });
+  const m = ctx.metrics(), x = m.inputs;
+  return debtFirstPlan(x.debts, { order: order || x.debtOrder, ids: ctx.store.doc.settings.debtCustomOrder || [], first: promoSoon(ctx).map(r => r.id), surplus: m.debtRule?.toDebt ?? 0, extra: (x.debtExtra ?? 0) + extra });
 }
 export function payoffScreen(app, ctx) {
   const m = ctx.metrics();
@@ -330,7 +333,7 @@ export function payoffScreen(app, ctx) {
   if (!ds.length) return [head('Debt payoff', 'Each debt shrinking to zero'), h('div.card', {}, h('div.empty.center', {}, h('span.title', {}, ctx.gates().areas.debt === false ? 'No debt, per About you' : 'No debts to pay off'),
     S.button('Open Debt', { iconName: 'right', onClick: () => app.go('#/net-worth/debt') })))];
   const usable = ds.filter(d => d.apr != null && d.payment != null);
-  if (!usable.length) return [head('Debt payoff', 'Each debt shrinking to zero'), h('div.card', {}, S.chartEmpty(ctx, ['a balance, APR and payment']))];
+  if (!usable.length) return [head('Debt payoff', 'Each debt shrinking to zero'), h('div.card', {}, S.chartEmpty(ctx, ['a balance and a payment']))];
   const gate = fiGate(ctx).payoff;
   if (!gate.unlocked) return [head('Debt payoff', 'Each debt shrinking to zero'), lockedCard(gate)];
   const order = m.inputs.debtOrder;
@@ -370,7 +373,8 @@ export function payoffScreen(app, ctx) {
       h('div.slider-row', {}, h('span.label', {}, 'Order'), S.toggle(ORDER_NAMES, order, setOrder, { label: 'Payoff order' }),
         h('span.muted.small', {}, METHODS.find(x => x.id === order)?.words ?? '')),
       suggestion, customList,
-      h('div.slider-row', { style: { marginTop: '10px' } }, h('span.label', {}, 'Extra'), slider, out)),
+      h('div.slider-row', { style: { marginTop: '10px' } }, h('span.label', {}, 'Extra'), slider, out, h('span.muted.small', {}, 'A what-if: nothing is saved')),
+      payoffRuleLine(ctx, m, usable)),
     S.summaryStrip(ctx, [
       { label: 'Debt-free', result: p.months == null ? { id: 'M34', value: null, never: true, needs: [] } : { id: 'M34', value: p.months, needs: [], unit: 'months', text: p.text }, render: () => at(p.months) },
       { label: 'Interest still to pay', result: { id: 'M34', value: p.months == null ? null : p.interest, needs: p.months == null ? ['payments that clear every debt'] : [], unit: 'money', text: p.text } },
@@ -378,6 +382,16 @@ export function payoffScreen(app, ctx) {
       order === 'custom' ? { label: 'vs Avalanche (optimal)', result: { id: 'M34', value: cost.extraInterest, needs: cost.extraInterest == null ? ['both plans to finish'] : [], unit: 'money', text: `Interest with your order minus interest with Avalanche${cost.extraMonths ? `; ${cost.extraMonths} more ${Math.abs(cost.extraMonths) === 1 ? 'month' : 'months'}` : ''}.${costDays?.fiDays != null ? ` That is ${costDays.fiDays.toFixed(1)} FI days.` : ''}` }, note: costDays?.fiDays != null ? `${costDays.fiDays.toFixed(1)} FI days of extra interest` : 'Extra interest from your order' } :
       { label: `vs ${order === 'avalanche' ? 'snowball' : 'avalanche'}`, result: (() => { const o = plans[order === 'avalanche' ? 'snowball' : 'avalanche']; const d = o.months == null || p.months == null ? null : o.interest - p.interest; return { id: 'M34', value: d, needs: d == null ? ['both plans to finish'] : [], unit: 'money', text: `Interest with ${order === 'avalanche' ? 'snowball' : 'avalanche'} minus interest with ${order}.` }; })(), note: 'Interest saved by this order' }]),
     h('div.report-grid', {}, h('div.card', {}, h('strong', {}, 'Balance per debt'), payoffChart(ctx, p)), h('div.card', {}, h('strong', {}, 'Order compared'), compareChart(ctx, plans)))];
+}
+// Batch 11: the rule the date assumes, and the date if only each debt's own payment is paid, in one line each; a
+// guessed APR says so.
+function payoffRuleLine(ctx, m, usable) {
+  const at = mo => (mo == null ? 'never' : monthName(addMonths(ymOf(ctx.now()), mo), 'short'));
+  const r = m.debtRule || {}, guessed = usable.filter(d => d.aprGuess);
+  return h('div.stack', { style: { gap: '2px', marginTop: '8px' } },
+    r.on ? h('span.muted.small', {}, `Your ${money(r.toDebt)} surplus goes to the heavy debt first; each debt keeps its own payment.`) : r.heavy ? h('span.muted.small', {}, 'Heavy debt first is off on Plan › Goals: each debt gets its own payment and any extra.') : null,
+    m.debtPlanMinimum && m.debtPlanMinimum !== m.debtPlan ? h('span.muted.small', {}, `If only each debt's own payment is paid: debt free ${at(m.debtPlanMinimum.months)}.`) : null,
+    guessed.length ? h('span.muted.small', {}, `${guessed.map(d => d.name).join(', ')}: the APR is a guess (${guessed.map(d => pct(d.apr)).join(', ')}) until typed on `, h('a', { href: '#/net-worth/credit-cards' }, 'Credit cards ›')) : null);
 }
 function payoffChart(ctx, p) {
   const host = h('div.chart', { style: { height: '300px' } });
@@ -542,7 +556,8 @@ export function scenariosScreen(app, ctx) {
     h('div.row-line', { style: { gap: '12px', flexWrap: 'wrap', marginTop: '8px', alignItems: 'flex-end' } },
       S.labelled('Spending a month', S.moneyInput(p.spending ?? null, v => propose({ spending: v }), { hint: C.current.spending != null ? `now ${money(C.current.spending)}` : 'Add spending', key: 'prop:spending' })),
       S.labelled('Debt order', S.select(METHODS.map(m => [m.id, m.name]), p.debtOrder ?? null, v => propose({ debtOrder: v }), { label: 'Proposed debt order', hint: `now ${METHODS.find(m => m.id === C.current.debtOrder)?.name ?? C.current.debtOrder}`, width: 170 })),
-      S.labelled('Retire by (age)', S.stepper(p.fiAge ?? null, v => propose({ fiAge: v }), { min: 30, max: 80, label: 'Proposed retire-by age', key: 'prop:fiAge' })),
+      // Batch 11 (item 7): Retire by starts from the FI age on Goals; a change here is the proposal.
+      S.labelled('Retire by (age)', S.stepper(p.fiAge ?? C.current.fiAge ?? null, v => propose({ fiAge: v === C.current.fiAge ? null : v }), { min: 30, max: 80, label: 'Proposed retire-by age', key: 'prop:fiAge' })),
       S.labelled('Surplus invested', S.toggle([[true, 'Yes'], [false, 'No']], p.investSurplus ?? null, v => propose({ investSurplus: v }), { label: 'Proposed surplus invested', clearable: true })),
       S.labelled('Extra to debt a month', S.moneyInput(p.extraDebt ?? null, v => propose({ extraDebt: v }), { hint: 'Add extra', key: 'prop:extra' }))));
   const fmt = (r, v) => (v == null ? '–' : r.unit === 'money' ? S.amount(ctx, v) : r.unit === 'pct' ? pct(v) : r.unit === 'month' ? monthName(v, 'short') : String(v));
@@ -552,15 +567,18 @@ export function scenariosScreen(app, ctx) {
     if (r.unit === 'money') return r.diff == null ? '' : h('span', {}, r.diff > 0 ? '+' : r.diff < 0 ? '−' : '', S.amount(ctx, Math.abs(r.diff)));
     return r.current === r.proposed ? 'Same' : 'Changes';
   };
-  const how = r => S.moreBlock(`prop:how:${r.key}`, () => h('div.row-line', { style: { gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap' } },
-    h('div', { style: { flex: '1 1 260px' } }, h('strong', {}, 'Current'), h('ol.how-list', {}, r.how.current.map(t => h('li', {}, t)))),
-    h('div', { style: { flex: '1 1 260px' } }, h('strong', {}, 'Proposed'), h('ol.how-list', {}, r.how.proposed.map(t => h('li', {}, t))))), { label: 'How we got this' });
-  const table = h('div.card', {}, h('table.rows.compare', {}, h('thead', {}, h('tr', {}, h('th', {}, ''), h('th.num', {}, 'Current'), h('th.num', {}, 'Proposed'), h('th.num', {}, 'Difference'))),
-    h('tbody', {}, C.rows.flatMap(r => [h('tr', {}, h('td', {}, r.label), h('td.num', {}, fmt(r, r.current)), h('td.num', {}, fmt(r, r.proposed)), h('td.num', {}, diffCell(r))), h('tr.how-row', {}, h('td', { colSpan: 4 }, how(r)))]))),
+  // Batch 11 (item 7): How we got this is a small icon button at the end of each row; the same steps open in a popover.
+  const how = r => S.iconButton('info', `How we got this: ${r.label}`, e => S.popover(e.currentTarget, h('div.stack', { style: { gap: '8px' } }, h('h3', {}, `How we got this: ${r.label}`),
+    h('div', {}, h('strong', {}, 'Current'), h('ol.how-list', {}, r.how.current.map(t => h('li', {}, t)))),
+    h('div', {}, h('strong', {}, 'Proposed'), h('ol.how-list', {}, r.how.proposed.map(t => h('li', {}, t))))), { width: 420 }), { tiny: true });
+  const table = h('div.card', {}, h('table.rows.compare', {}, h('thead', {}, h('tr', {}, h('th', {}, ''), h('th.num', {}, 'Current'), h('th.num', {}, 'Proposed'), h('th.num', {}, 'Difference'), h('th', {}, h('span.sr', {}, 'How we got this')))),
+    h('tbody', {}, C.rows.map(r => h('tr', {}, h('td', {}, r.label), h('td.num', {}, fmt(r, r.current)), h('td.num', {}, fmt(r, r.proposed)), h('td.num', {}, diffCell(r)), h('td.how-cell', {}, how(r)))))),
     S.moreBlock('prop:choices', () => h('table.rows', {}, h('tbody', {}, C.choices.map(c => h('tr', {}, h('td', {}, c.label), h('td.num', {}, c.unit === 'money' ? money(c.current ?? 0) : String(c.current ?? '–')), h('td.num', {}, c.unit === 'money' ? money(c.proposed ?? 0) : String(c.proposed ?? '–')))))), { label: 'The choices side by side' }),
     h('div.row-line', { style: { gap: '10px', marginTop: '10px' } }, S.button('Make Proposed the plan', { kind: 'primary', disabled: !C.has, why: C.has ? null : 'Change something under Proposed first', onClick: () => { makeProposedThePlan(ctx.store, ref0(ctx), { now: ctx.now() }); S.toast('Proposed is the plan now.', { undo: () => ctx.store.undo() }); app.render(); } }),
       h('span.muted.small', {}, 'Writes the choices onto the file in one step; Undo puts it back.')));
-  return [head('Current vs Proposed', 'Today against the plan you are proposing'), editor, table];
+  const rule = ctx.metrics().debtRule;
+  return [head('Current vs Proposed', 'Today against the plan you are proposing'), editor,
+    rule?.on ? h('p.muted.small', { style: { margin: '0 0 8px' } }, 'Both sides send the surplus to heavy debt first, then invest it (change it on Plan › Goals).') : null, table];
 }
 const ref0 = ctx => ctx.ref;
 

@@ -24,7 +24,7 @@ import { fooScreen } from './ui/foo-ui.js';
 import { scorecardScreen } from './ui/scorecard-ui.js';
 import { reviewScreen } from './ui/review-ui.js';
 import { goalsScreen, timelineScreen, payoffScreen, nextYearScreen, scenariosScreen } from './ui/plan-ui.js';
-import { AREAS } from './gates.js';
+import { AREAS, recordFor } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
 import { statusOf, countsAsDone } from './records.js';
 import { money } from './format.js';
@@ -76,12 +76,23 @@ function completion(app, c) {
       coreItems.length ? [h('h3.missing-head', {}, `Core (${coreItems.length})`), h('ul.missing', {}, coreItems.map(link))] : null,
       fullItems.length ? [h('h3.missing-head', {}, `Full detail (${fullItems.length})`), h('ul.missing', {}, fullItems.map(link))] : null), { label: `What's missing (${left})` }) : null);
 }
-// R015: an area turned off on the Profile leaves a slim way back.
+// R015: an area turned off on the Profile leaves a slim way back. Batch 11 (item 5d): + Add one asks which (two or
+// three taps, e.g. Home or Car), turns the area on and adds that row in one undoable step; no toast.
+const AREA_PICKS = { real: ['Home', 'Car'], cash: ['Checking', 'Savings or HYSA'], investments: ['401(k)', 'Roth IRA', 'Brokerage'] };
 const addArea = (app, ctx, k, label) => h('a.add-area', { href: '#', onclick: e => {
   e.preventDefault();
-  const p = ctx.store.doc.profile;
-  ctx.store.setDoc('profile', { areas: { ...(p.areas || {}), [k]: true }, noneOfThese: false });
-  S.toast(`${label} is back.`, { undo: () => ctx.store.undo() });
+  const turnOn = (extra = {}) => { const p = ctx.store.doc.profile; ctx.store.setDoc('profile', { areas: { ...(p.areas || {}), [k]: true }, noneOfThese: false, ...extra }); };
+  const picks = AREA_PICKS[k];
+  if (!picks) { turnOn(); return; }
+  const btn = e.currentTarget;
+  S.popover(btn, h('div.stack', { style: { gap: '8px' } }, h('h3', {}, `Add ${label.toLowerCase()}`),
+    h('div.row-line', { style: { gap: '8px' } }, picks.map(t => h('button.btn', { type: 'button', onclick: () => {
+      S.closePop();
+      const spec = recordFor(t, ctx.ref);
+      let id = null;
+      ctx.store.transaction(`Add ${t}`, () => { turnOn(t === 'Car' ? { hasCar: true } : {}); id = ctx.store.add(spec.kind, { name: t === 'Savings or HYSA' ? 'Savings' : t, values: { ...spec.values } }, { type: t }).id; });
+      requestAnimationFrame(() => document.querySelector(`tr[data-id="${id}"] input:not([type="checkbox"])`)?.focus());
+    } }, t)))), { width: 280 });
 } }, '+ Add one');
 const offAreas = (app, ctx, keys) => {
   const g = ctx.gates();
@@ -106,7 +117,7 @@ const MM = {
   debt: { title: 'Debt', sub: 'Every debt and its payoff', body: (app, ctx) => (ctx.gates().areas.debt === false
     ? [h('div.card', {}, h('div.empty', {}, h('span.title', {}, 'No debt, per About you'), addArea(app, ctx, 'debt', 'Debt')))]
     : [completion(app, listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr'])), hasAny(ctx, ['debt']) ? null : fastTrack(app, ctx),
-      withChart(ctx, debtList(ctx.ref, { cards: 'none' }), debtCharts, 'debt'), S.live(ctx, () => cardsLink(ctx))]) },
+      withChart(ctx, debtList(ctx.ref, { cards: 'none' }), debtCharts, 'debt'), S.live(ctx, () => (ctx.visible(r => r.kind === 'debt' && r.type === 'Credit card').length ? null : cardsLink(ctx)))]) }, // batch 11 (5a): with cards, they are a row in the list (lead)
   // Answer to 56: credit cards are standard debt with a sub-tab of their own: the cards, utilization, the score.
   'credit-cards': { title: 'Credit cards', sub: 'Every card, how much of the limits you use, your score', body: (app, ctx) => (ctx.gates().areas.debt === false
     ? [h('div.card', {}, h('div.empty', {}, h('span.title', {}, 'No debt, per About you'), addArea(app, ctx, 'debt', 'Debt')))]

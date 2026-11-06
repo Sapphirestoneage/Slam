@@ -37,7 +37,7 @@ export function monthsTo(m, target, { realReturn = m.inputs.realReturn, extra = 
   if (target == null) return { value: null, needs: ['a target'] };
   if (m.inputs.invested != null && m.inputs.invested >= target) return { value: 0, reached: true };
   const now$ = m.investing?.monthly ?? m.surplus.value; // what goes in today (answer to 11), plus any extra
-  return fiDate({ invested: m.inputs.invested, monthlyInvesting: now$ === null ? null : now$ + extra, realReturn, target }, { from: now });
+  return fiDate({ invested: m.inputs.invested, monthlyInvesting: now$ === null ? null : now$ + extra, realReturn, target }, { from: now, before: m.investing?.before ? { ...m.investing.before, monthly: m.investing.before.monthly + extra } : null }); // batch 11: the debt-first months come first
 }
 
 // A milestone row's projected date.
@@ -51,7 +51,7 @@ export function projection(m, doc, rec, now = new Date()) {
     const ds = m.inputs.debts.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null);
     if (!m.inputs.debts.some(d => d.balance > 0)) return { months: 0, date: at(0), reached: true, text: 'No debt' };
     if (!ds.length) return { months: null, date: null, text: 'Needs balance, APR and payment' };
-    const p = payoffPlan(ds, { order: m.inputs.debtOrder });
+    const p = m.debtPlan ?? payoffPlan(ds, { order: m.inputs.debtOrder }); // the one debt plan (batch 11)
     return p.months === null ? { months: null, date: null, text: 'Payments never clear it' } : { months: p.months, date: at(p.months), text: monthName(addMonths(base, p.months)) };
   }
   const target = fiTargets(m, doc)[t];

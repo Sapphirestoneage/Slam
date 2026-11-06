@@ -388,7 +388,9 @@ export function parkHole(store, id, opts = null) {
 // When a parked hole comes back: due or not, and the words for it (Next session; In 2 sessions (session 7); Mar 3, 2027).
 export function parkedBack(parked, { n, now = new Date() }) {
   const b = parked?.back || { kind: 'next' }, from = parked?.atSession ?? n - 1; // parked before bring-backs existed: due now
-  if (b.kind === 'date') { const due = b.date ? Date.parse(`${b.date}T12:00:00`) <= now.getTime() : false; return { due, when: b.date ? new Date(`${b.date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'a date', at: b.date ?? null }; }
+  // A bring-back date is a calendar day with no zone: read it as noon UTC on that day, and say it in UTC, so the due
+  // check and the words agree in every time zone (batch 11: it read a zoneless date-time as local time).
+  if (b.kind === 'date') { const t = b.date ? Date.parse(`${b.date}T12:00:00Z`) : NaN; const due = Number.isFinite(t) && t <= now.getTime(); return { due, when: Number.isFinite(t) ? new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) : 'a date', at: b.date ?? null }; }
   const target = from + (b.kind === 'sessions' ? Math.max(1, b.n ?? 1) : 1);
   return { due: n >= target, when: target === from + 1 ? `Next session (session ${target})` : `In ${target - from} sessions (session ${target})`, at: `S${target}` };
 }

@@ -6,7 +6,7 @@
 import { metrics } from './metrics.js';
 import { foo } from './foo.js';
 import { layersOf } from './layers.js';
-import { payoffPlan } from './debt.js';
+import { isHeavyDebt } from './debt.js';
 import { fiDate } from './fi.js';
 import { fiTargets, monthsTo } from '../plan.js';
 import { addMonths, ymOf } from '../month.js';
@@ -16,7 +16,7 @@ import { gatesOf } from '../gates.js';
 
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const CONSUMER = new Set(LISTS.consumerDebt);
-const isHeavy = d => (d.balance ?? 0) > 0 && (new Set(LISTS.heavyDebt).has(d.type) || (d.apr ?? 0) >= RULES.heavyApr);
+const isHeavy = isHeavyDebt;
 
 // Where a payoff path crosses down to a share of the start: the first month the heavy total is at or under it.
 const monthsToShare = (path, start, share) => { const goal = start * (1 - share); const i = path.findIndex(row => sum(row, v => v) <= goal + 0.005); return i < 0 ? null : i; };
@@ -36,7 +36,9 @@ export function ladderOf(doc, ref, { now = new Date(), flags = [] } = {}) {
   const day0Heavy = day0 ? (day0.records || []).filter(r => r.kind === 'debt' && isHeavy({ balance: r.values?.balance, type: r.type, apr: r.values?.apr })) : null;
   const heavyStart = day0Heavy ? sum(day0Heavy, r => r.values.balance) : sum(heavyNow, d => d.balance);
   const heavyLeft = sum(heavyNow, d => d.balance);
-  const heavyPlan = heavyNow.length ? payoffPlan(heavyNow.filter(d => !d.inFull && d.apr != null && d.payment != null), { order: x.debtOrder }) : null;
+  // Batch 11: the one debt plan (the surplus to heavy debt first). The heavy rows of its path, for the quarter marks.
+  const P = m.debtPlan, hIdx = (P?.debts || []).map((d, i) => (d.heavy ? i : -1)).filter(i => i >= 0);
+  const heavyPlan = heavyNow.length && hIdx.length ? { months: P.heavyMonths, path: P.path.map(row => hIdx.map(i => row[i])) } : null;
   const facts = { matchOffered: (x.link.incomeTiers || []).length > 0, heavyDebt: heavyStart > 0 };
   const months = v => (v == null ? null : Math.max(0, Math.ceil(v)));
   const at = n => (n == null ? null : addMonths(ymOf(now), n));
@@ -47,7 +49,7 @@ export function ladderOf(doc, ref, { now = new Date(), flags = [] } = {}) {
     if (s.id === 'littleE') { const l = L?.layers.find(l => l.id === 'little-e'); done = !!l?.full; pct = l?.target ? Math.min(1, (l.filled ?? 0) / l.target) : 0; mo = done ? 0 : surplusIn && l ? months(l.left / surplusIn) : null; if (l?.target) { have = Math.min(l.filled ?? 0, l.target); target = l.target; } }
     else if (s.id === 'match') { const st = step('2'); done = !!st?.done; pct = done ? 1 : (st?.started ? 0.5 : 0); mo = done ? 0 : null; }
     else if (s.share != null) { const paid = heavyStart ? (heavyStart - heavyLeft) / heavyStart : 0; done = paid >= s.share - 1e-9; pct = Math.min(1, paid / s.share); mo = done ? 0 : heavyPlan?.path ? monthsToShare(heavyPlan.path, heavyStart, s.share) : null; if (mo == null && !done && heavyPlan?.months != null && s.share === 1) mo = heavyPlan.months; if (heavyStart) { target = heavyStart * s.share; have = Math.min(heavyStart - heavyLeft, target); } }
-    else if (s.id === 'bigE') { const ls = L?.layers.filter(l => l.id.startsWith('big-e')) ?? []; const t = L?.needsAge ? 0 : sum(ls, l => l.target), filled = sum(ls, l => l.filled); done = t > 0 && ls.every(l => l.full); pct = t ? Math.min(1, filled / t) : 0; mo = done ? 0 : surplusIn && t ? months((t - filled) / surplusIn) : (step('4')?.months ?? null); if (t) { target = t; have = Math.min(filled, t); } if (L?.needsAge) s = { ...s, what: 'Add your age to set big e (the Rule of 5)' }; } // no spending or no age: nothing to fill, nothing done
+    else if (s.id === 'bigE') { const ls = L?.layers.filter(l => l.id.startsWith('big-e')) ?? []; const t = L?.needsAge ? 0 : sum(ls, l => l.target), filled = sum(ls, l => l.filled); done = t > 0 && ls.every(l => l.full); pct = t ? Math.min(1, filled / t) : 0; mo = done ? 0 : m.debtRule?.on && step('4')?.months != null ? step('4').months : surplusIn && t ? months((t - filled) / surplusIn) : (step('4')?.months ?? null); if (t) { target = t; have = Math.min(filled, t); } if (L?.needsAge) s = { ...s, what: 'Add your age to set big e (the Rule of 5)' }; } // no spending or no age: nothing to fill, nothing done
     const round = v => (v == null ? null : Math.round(v));
     return { ...s, kind: 'step', done, pct, months: mo, date: at(mo), have: round(have), target: round(target), left: target == null ? null : Math.max(0, round(target) - round(have)) };
   });
@@ -55,7 +57,7 @@ export function ladderOf(doc, ref, { now = new Date(), flags = [] } = {}) {
   const T = fiTargets(m, doc);
   const nw = m.netWorth.value;
   const consumer = x.debts.filter(d => CONSUMER.has(d.type) && (d.balance ?? 0) > 0);
-  const consumerPlan = consumer.length ? payoffPlan(consumer.filter(d => !d.inFull && d.apr != null && d.payment != null), { order: x.debtOrder }) : null;
+  const consumerPlan = consumer.length ? (() => { const ms = consumer.map(d => d.planMonths); return { months: ms.every(v => v != null) ? Math.max(...ms) : null }; })() : null; // each debt's month on the one plan
   const qq = F?.qq?.value ?? null, coast = F?.coast ?? m.coastFi.value ?? null;
   const targetOf = { qq, coast, lean: T['Lean FI']?.value ?? null, fi: m.fiNumber.value, fat: m.fiNumber.value == null ? null : m.fiNumber.value * RULES.fatFactor };
   const markers = MARKERS.map(k => {
@@ -77,5 +79,5 @@ export function ladderOf(doc, ref, { now = new Date(), flags = [] } = {}) {
   const next = steps.find(s => !s.done) ?? null;
   const nextMarker = sortedMarkers.find(k => !k.reached) ?? null;
   const wins = steps.filter(s => s.done).length + markers.filter(k => k.reached).length;
-  return { steps, markers: sortedMarkers, rungs, lastDone, next, nextMarker, wins, day0: day0 ? { at: day0.at, netWorth: day0.metrics?.netWorth ?? null } : null, heavy: { start: heavyStart, left: heavyLeft } };
+  return { steps, markers: sortedMarkers, rungs, lastDone, next, nextMarker, wins, day0: day0 ? { at: day0.at, netWorth: day0.metrics?.netWorth ?? null } : null, heavy: { start: heavyStart, left: heavyLeft, months: heavyPlan?.months ?? null, date: at(heavyPlan?.months ?? null) } };
 }

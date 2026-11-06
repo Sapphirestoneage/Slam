@@ -104,7 +104,8 @@ export const AREAS = [
       f('credit.score', 'Credit score', 'number'), f('credit.source', 'Where you checked it'), f('credit.checked', 'Credit score checked on', 'date'),
       f('credit.scorePartner', 'Credit score (partner)', 'number'), f('credit.sourcePartner', 'Where the partner checked it'), f('credit.checkedPartner', 'Partner score checked on', 'date'), // item 34: per person
       f('credit.latePayments', 'Late payments in the last 2 years', 'yesno'), f('credit.lateCount', 'How many late payments', 'number'),
-      f('credit.oldestAccountYears', 'Age of oldest account (years)', 'number'), f('credit.inquiries', 'Hard inquiries in the last year', 'number'),
+      f('credit.oldestAccountYears', 'Age of oldest account (years)', 'number'), f('credit.inquiries', 'Hard inquiries in the last 2 years', 'number'), // batch 11: two years, as the bureaus keep them
+      f('credit.freezeEquifax', 'Credit freeze at Equifax', 'yesno'), f('credit.freezeExperian', 'Credit freeze at Experian', 'yesno'), f('credit.freezeTransUnion', 'Credit freeze at TransUnion', 'yesno'), // batch 11 (item 6)
       // Item 35: what Taxes and Income need to rate themselves.
       f('taxes.lastYear', 'Last year: refund (+) or owed (-)', 'money'), f('taxes.withholdingChanged', 'Withholding changed since', 'yesno'),
       f('incomeFacts.lastRaiseDate', 'Last raise', 'month'), f('incomeFacts.lastRaiseAmount', 'Last raise amount (a year)', 'money'), pick('incomeFacts.marketRate', 'Paid at market rate', ['Yes', 'No', 'Unsure']),
@@ -138,6 +139,7 @@ export const AREAS = [
       pick('settings.layerMode', 'Cash layers kept', ['virtual', 'accounts'], { part: 'settings', key: 'layerMode' }),
       f('settings.qqOpensLaunch', 'Quiet Quitting FI opens the launch window', 'yesno', { part: 'settings', key: 'qqOpensLaunch' }),
       pick('settings.dollars', "Plan shows today's or future dollars", ['real', 'nominal'], { part: 'settings', key: 'dollars' }),
+      f('settings.debtExtra', 'Extra to debt a month (Make it the plan on Home)', 'money', { part: 'settings', key: 'debtExtra' }), // batch 11 (item 3)
       f('client.couple', 'Couple (from Solo or couple)', 'yesno', { part: 'client', key: 'couple', sheet: { skip: 'set by Solo or couple' } }),
     ],
   },

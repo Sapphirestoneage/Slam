@@ -15,7 +15,7 @@ import { gutAccuracy } from '../math/spending.js';
 import { fiTargets, ladder, agenda } from '../plan.js';
 import { pictureOf, unlockOf, confidenceOf, fiWordsOf } from '../math/picture.js';
 import { homeworkAll } from '../program.js';
-import { closedMonths, monthName, ymOf, monthsBetween } from '../month.js';
+import { closedMonths, monthName, ymOf, monthsBetween, addMonths } from '../month.js';
 import { money, pct } from '../format.js';
 import { whyText } from '../whynow.js';
 
@@ -36,7 +36,12 @@ export function overviewScreen(app, ctx) {
   const topLetter = shares.value ? Object.entries(shares.value).sort((a, b) => b[1] - a[1]).find(([, v]) => v > 0) : null;
   const l = ladder(m, ctx.store.doc);
   const r5 = m.ruleOf5;
+  // Batch 11 (item 1): the one debt-free date, the same as Home, FOO and Debt.
+  const P = m.debtPlan, freeAt = P?.debts.length && P.months != null ? monthName(addMonths(ymOf(ctx.now()), P.months), 'short') : null;
+  const debtFree = P?.debts.length ? { label: 'Debt free', result: P.months == null ? { id: 'M34', value: null, never: true, needs: [] } : { id: 'M34', value: P.months, needs: [], unit: 'months', text: P.text }, render: () => freeAt, home: '#/plan/debt-payoff',
+    note: m.debtRule?.on ? 'The surplus goes to heavy debt first' : null } : null;
   const shelf = [
+    ...(debtFree ? [debtFree] : []),
     { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate', home: HOME.savingsRate, note: m.savingsRate.second, so: soWhat('savingsRate', m) },
     { label: 'Biggest DRAFTT letter', result: topLetter ? { id: 'M29', value: topLetter[1], needs: [], unit: 'pct', text: shares.text } : { ...shares, value: null, needs: shares.needs?.length ? shares.needs : ['a tagged spending line'] },
       home: HOME.budget, note: topLetter ? `${topLetter[0]}, share of take-home` : 'Share of take-home', so: soWhat('drafttTop', m, { top: topLetter }) },
@@ -181,6 +186,7 @@ export function summaryText(ctx) {
     line('Net worth', m.netWorth.value == null ? null : money(m.netWorth.value)),
     line('Monthly surplus', m.surplus.value == null ? null : money(m.surplus.value)),
     line('Savings rate', m.savingsRate.value == null ? null : pct(m.savingsRate.value)),
+    line('Debt free', m.debtRule?.heavy && m.debtPlan?.months != null ? `${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.months), 'short')}${m.debtRule.on ? ' (the surplus goes to heavy debt first)' : ''}` : null), // batch 11
     line('FI date', fiWords == null ? null : `${fiWords.text}${fiWords.kind === 'month' ? '' : ` (${gate.confidence?.label ?? 'a range'})`}`),
     '',
     hw.length ? 'To do:' : null, ...hw.map(x => `- ${x.label}${x.where ? ` (look on: ${x.where})` : ''}`),
@@ -239,6 +245,7 @@ export function onePagerScreen(app, ctx) {
     h('div.op-grid', {},
       h('div', {}, h('h3', {}, 'To-dos'), hw.filter(x => x.owner !== 'coach').length ? h('ul.op-list', {}, hw.filter(x => x.owner !== 'coach').map(x => h('li', {}, x.label, x.where ? h('span.muted.small', {}, ` · ${x.where}`) : null))) : h('p.muted', {}, "No homework yet. Tap Will get it on any number to add it.")), // the client's own items; the coach's stay on Coach tools (batch 7, item 9)
       h('div', {}, h('h3', {}, 'Goals'), h('ul.op-list', {},
+        m.debtRule?.heavy && m.debtPlan?.months != null ? h('li', {}, `Debt free ${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.months), 'short')}${m.debtRule.on ? ': the surplus goes to heavy debt first' : ''}`) : null, // batch 11
         m.monthsToFi.value != null && fiGate(ctx).unlocked ? h('li', {}, `FI ${fiWordsOf(m, fiGate(ctx).confidence, { now: ctx.now() })?.text ?? ''}${doc.assumptions.fiAge ? `, target age ${doc.assumptions.fiAge}` : ''}`) : null,
         goals.map(g => h('li', {}, g.name || g.type)), !goals.length && (m.monthsToFi.value == null || !fiGate(ctx).unlocked) ? h('li.muted', {}, fiGate(ctx).unlocked ? 'Set an FI target on Plan' : `FI date: ${fiGate(ctx).reason}`) : null))),
     h('div.op-grid', { style: { marginTop: '16px' } }, box('strengths', 'Strengths', 'What is going well'), box('struggles', 'Struggles', 'What is hard right now')),
@@ -262,8 +269,8 @@ export function fiCard(ctx, m) {
   const altWords = words && alt?.value != null ? fiWordsOf({ ...m, monthsToFi: alt, investing: { ...iv, investSurplus: !iv.investSurplus, monthly: iv.investSurplus ? iv.idle : iv.invested } }, g.confidence, { now: ctx.now() }) : null;
   const safer = words ? saferFi(m, { from: ctx.now() }) : null; // batch 5 C: a second, smaller line under 45
   const lines = !words ? null : h('span.stack.fi-lines', {},
-    h('span', {}, iv?.investSurplus ? 'Invest your surplus: ' : 'Surplus sits in checking: ', h('strong', {}, `FI ${words.kind === 'month' ? 'in' : 'around'} ${words.text}`)),
-    h('span.muted.small', {}, iv?.investSurplus ? 'assumes your surplus gets invested' : 'assumes the surplus is not invested', ` · ${words.years}`),
+    h('span', {}, iv?.debtFirst ? 'Heavy debt first: ' : iv?.investSurplus ? 'Invest your surplus: ' : 'Surplus sits in checking: ', h('strong', {}, `FI ${words.kind === 'month' ? 'in' : 'around'} ${words.text}`)),
+    h('span.muted.small', {}, iv?.debtFirst ? `assumes the surplus pays heavy debt until ${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.heavyMonths ?? 0), 'short')}, then ${iv.investSurplus ? 'is invested' : 'stays in checking'}` : iv?.investSurplus ? 'assumes your surplus gets invested' : 'assumes the surplus is not invested', ` · ${words.years}`),
     safer ? h('span.muted.small.fi-safer', { title: safer.words }, safer.text) : null,
     altWords && altWords.text !== words.text ? h('span.muted.small', {}, `${iv?.investSurplus ? 'If it sits in checking' : 'If invested'}: ${altWords.text}`) : alt?.never && words ? h('span.muted.small', {}, `${iv?.investSurplus ? 'If it sits in checking' : 'If invested'}: not on this path`) : null);
   return { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi', home: HOME.fi, lock: g.unlocked ? null : { reason: g.reason, route: g.route }, confidence: g.confidence,

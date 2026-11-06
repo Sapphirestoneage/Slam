@@ -90,7 +90,7 @@ export function scorecardScreen(app, ctx) {
       { label: 'FOO step', result: { id: 'M69', value: sc.here == null ? null : Number(sc.here) || 0, needs: sc.here == null ? ['a surplus'] : [], unit: 'count', text: 'The step you are on (Plan › FOO). Holes before it rank first.' }, render: () => `${sc.here}`,
         note: doc.program?.fooConfirmed === sc.here ? 'Confirmed' : null }]),
     sc.here != null && doc.program?.fooConfirmed !== sc.here ? h('div.row-line', { style: { marginBottom: '16px', gap: '10px' } }, S.button(`Confirm FOO step ${sc.here}`, { iconName: 'check', onClick: confirm }), h('span.muted.small', {}, 'Session 5 asks for it; the step comes from Plan › FOO.')) : null,
-    section('Holes, ranked', sc.holes, holeRow, sc.holes.length ? `${sc.holes.length} · before your FOO step first, then best return${sc.parkedHoles.length ? `; ${sc.parkedHoles.length} parked at the bottom` : ''}` : 'None'),
+    section('Holes, ranked', sc.holes, holeRow, sc.holes.length ? `${sc.holes.length} · before your FOO step first${sc.holes.some(x => x.waits) ? ', heavy debt before what comes after it' : ''}, then best return${sc.parkedHoles.length ? `; ${sc.parkedHoles.length} parked at the bottom` : ''}` : 'None'),
     section('Not rated yet', sc.unrated, unratedRow),
     section('OK', sc.ok, okRow),
     section('Strong', sc.strong, strongRow),

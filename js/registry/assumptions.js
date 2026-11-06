@@ -24,6 +24,7 @@ export const RULES = {
   saferWithdrawal: 0.035, saferUnderAge: 45, // batch 5 C: a second FI line at a safer rate when FI would come before this age
   fatFactor: 1.5, trueFiTax: 0.15, heavyApr: 0.08, variableGuessShare: 0.75, maxMonths: 70 * 12,
   roughCheckDays: 30, agedCheckDays: 90,
+  debtFirst: 1, // batch 11: while heavy debt is carried the surplus goes to it first (1 on, 0 off); js/math/metrics.js debtRuleOf
 };
 export const LISTS = {
   perMonth: { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, quarter: 1 / 3, year: 1 / 12 },
@@ -61,6 +62,7 @@ export const ASSUMPTIONS = [
   { id: 'presets.inflation.default', name: 'Inflation', label: 'Inflation (for the nominal view only)', unit: 'pct', get: r => r.presets.inflation.default, client: 'inflation', source: 'Your Oct 28 defaults (2%, 3%)', date: '2026-10-28' },
   { id: 'defaults.retireAge', name: 'RetireAge', label: 'Retire by (age)', unit: 'number', get: r => r.defaults.retireAge, client: 'retireAge', source: SPEC, date: '2026-11-03' },
   { id: 'client.investSurplus', name: 'InvestSurplus', label: 'Invest my surplus: 1 or blank yes, 0 no (the surplus sits in checking)', unit: 'number', get: () => 1, client: 'investSurplus', source: 'Plan › Goals (Nov 5 answer to 123; it was off by default on Nov 3)', date: '2026-11-05' },
+  { id: 'client.debtFirst', name: 'DebtFirst', label: 'Heavy debt first: 1 or blank yes, 0 no (the surplus is invested or stays, as Invest my surplus says)', unit: 'number', get: () => 1, client: 'debtFirst', source: 'Plan › Goals (Batch 11 item 1)', date: '2026-11-05' },
   { id: 'client.fiAge', name: 'FiAge', label: 'FI target age (blank: Retire by)', unit: 'number', get: () => null, client: 'fiAge', fallback: 'RetireAge', source: 'Plan › Goals', date: '2026-11-03' },
   { id: 'client.retirementSpending', name: 'RetirementSpending', label: 'Spending in retirement, a month (blank: today\'s spending)', unit: 'money', get: () => null, client: 'retirementSpending', fallback: 'Math_M27_spending', source: 'Plan › Goals (R030)', date: '2026-11-03' },
   { id: 'client.partTimeIncome', name: 'PartTimeIncome', label: 'Part-time income after launch, a month', unit: 'money', get: () => null, client: 'partTimeIncome', source: 'Plan › Goals (Barista FI)', date: '2026-11-03' },
@@ -119,6 +121,7 @@ export const ASSUMPTIONS = [
   { id: 'rules.variableGuessShare', name: 'VarGuess', label: 'Variable income: share of a typical month when no lowest month', unit: 'pct', get: () => RULES.variableGuessShare, source: RULE('js/math/income.js, M16'), date: '2026-10-28' },
   { id: 'rules.roughCheckDays', name: 'CheckRough', label: 'Check a Roughly number again after, days', unit: 'number', get: () => RULES.roughCheckDays, source: RULE('js/checks.js, R061'), date: '2026-11-03' },
   { id: 'rules.agedCheckDays', name: 'CheckAged', label: 'Check any number again after, days', unit: 'number', get: () => RULES.agedCheckDays, source: RULE('js/checks.js, R061'), date: '2026-11-03' },
+  { id: 'rules.debtFirst', name: 'DebtFirst_rule', label: 'The debt rule: while heavy debt is carried, the surplus goes to it first (1 on, 0 off)', unit: 'number', get: () => RULES.debtFirst, source: RULE('js/math/metrics.js debtRuleOf; Batch 11 item 1'), date: '2026-11-05' },
   { id: 'rules.maxMonths', name: 'MaxMonths', label: 'Longest FI path looked at, months', unit: 'number', get: () => RULES.maxMonths, source: RULE('js/math/fi.js, M53 (70 years)'), date: '2026-10-28' },
 ];
 

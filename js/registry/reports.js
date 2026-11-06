@@ -149,7 +149,7 @@ export const REPORTS = [
     tables: c => {
       const YEARS = 50;
       const path = c.x.invested == null || c.m.investing?.monthly == null ? []
-        : fiDate({ invested: c.x.invested, monthlyInvesting: c.m.investing.monthly, realReturn: c.x.realReturn, target: Number.MAX_VALUE }, { from: c.now, path: true }).points || [];
+        : fiDate({ invested: c.x.invested, monthlyInvesting: c.m.investing.monthly, realReturn: c.x.realReturn, target: Number.MAX_VALUE }, { from: c.now, path: true, before: c.m.investing.before ?? null }).points || [];
       const years = { title: 'Year by year: investments, with what goes in every month (M53)', columns: [
         { key: 'year', label: 'Year', unit: 'number', width: 9 }, { key: 'age', label: 'Age', unit: 'number', width: 9 },
         { key: 'start', label: 'Balance at the start', unit: 'money' }, { key: 'added', label: 'Contributions', unit: 'money' },
@@ -161,8 +161,9 @@ export const REPORTS = [
         year: { v: i + 1 },
         age: { f: 'IF(Profile_ageUsed="","",Profile_ageUsed+{col:year})' },
         start: { f: i === 0 ? 'N(Math_M41_invested)' : '{prev:end}' },
-        added: { f: 'N(Math_M53_invest)*12' },
-        end: { f: 'FV(Math_M53_growth,12,-N(Math_M53_invest),-{col:start})' },
+        // Batch 11: the months the surplus pays heavy debt first put in Math_M53_before; the rest of the year Math_M53_invest.
+        added: { f: `MAX(0,MIN(12,N(Math_M53_debtMonths)-${i * 12}))*N(Math_M53_before)+(12-MAX(0,MIN(12,N(Math_M53_debtMonths)-${i * 12})))*N(Math_M53_invest)` },
+        end: { f: `FV(Math_M53_growth,12-MAX(0,MIN(12,N(Math_M53_debtMonths)-${i * 12})),-N(Math_M53_invest),-FV(Math_M53_growth,MAX(0,MIN(12,N(Math_M53_debtMonths)-${i * 12})),-N(Math_M53_before),-{col:start}))` },
         growth: { f: '{col:end}-{col:start}-{col:added}' },
         fi: { f: 'Math_M50' },
         reached: { f: 'IF(Math_M50="","",IF({col:end}>=Math_M50,"Yes","No"))' },

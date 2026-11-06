@@ -4,7 +4,7 @@ import { h, icon } from './dom.js';
 import { addPresets } from '../presets.js';
 import { METHODS } from '../registry/debt.js';
 import { personLabels } from '../registry/couples.js';
-import { institutionPicker } from './institutions-ui.js';
+import { institutionLink } from './institutions-ui.js';
 import { recordList as S_recordList, popover as S_popover, closePop as S_closePop, moreBlock as S_moreBlock, fromButton, confirmBox, toast, button, warnTag, moneyText, value, amount, iconButton, moneyInput, pctInput, textInput, perPicker, perChip, nameInput, toggle, select, labelled, payoffCell, summaryStrip, whoPays, WHO, whoOf, hoursChip, park, parkProfile, metricCard, ownerToggle } from './staples.js';
 import { paidInFull } from '../completion.js';
 import { pct } from '../format.js';
@@ -14,10 +14,10 @@ import { monthlyFrom } from '../math/income.js';
 import { withHome, myShare, DRAFTT, drafttName, CATEGORIES, categoryName, categoryKeyOf, isCategoryRecord, isFaded, typicalOf, typicalTotal, levelOf, LEVEL_ELSE, everythingElse } from '../math/spending.js';
 import { FREQS, DAY_CHIPS, WEEKDAY_CHIPS, MONTH_CHIPS, timingOf, timingPatch, timingWords, ordinal } from '../timing.js';
 import { applies } from '../gates.js';
-import { payoffPlan, debtToIncome, utilization } from '../math/debt.js';
+import { payoffPlan, debtToIncome, utilization, creditHealth, BUREAUS, yearsText } from '../math/debt.js';
 import { needs } from '../math/result.js';
 import { money } from '../format.js';
-import { estimateOf, actualOf, instances, monthName, planDiffs } from '../month.js';
+import { estimateOf, actualOf, instances, monthName, planDiffs, addMonths, ymOf } from '../month.js';
 
 const LOAN_TYPES = new Set(['Student loan', 'Car loan', 'Personal loan', 'Mortgage']);
 const short = v => (Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
@@ -56,7 +56,7 @@ export function debtList(ref, { cards = null } = {}) {
     focus: ['Debt', 'Balance', 'APR', 'Payment / mo'], // session 1: type, balance, APR, minimum
     paidWith: false,
     columns: [
-      { label: 'Debt', render: (ctx, r, m, up) => h('span.stack.inst-cell', { style: { gap: '4px' } }, institutionPicker(ctx, r, up, { width: 150 }), textInput(r.name, v => up({ name: v }), { hint: 'Nickname (optional)', tip: r.type, width: 150, key: `${r.id}:name` })) }, // item 14
+      { label: 'Debt', render: (ctx, r, m, up) => h('span.stack.inst-cell', { style: { gap: '2px' } }, nameInput(r.name, v => up({ name: v }), { hint: 'Nickname (optional)', tip: r.type, width: 170, key: `${r.id}:name` }), institutionLink(ctx, r, up, { word: isCard(r) ? 'Add issuer' : 'Add lender' })) }, // batch 11 (5e, 5f): a link, then a name that wraps
       // Batch 7, item 11: a card's first question is whether the statement is paid in full each month. In full: the
       // balance is the statement balance (it still counts for utilization), there is no APR and no payment to ask.
       // Carries: the balance carried, the APR (a 25% guess until typed) and the payment, like any debt.
@@ -70,6 +70,14 @@ export function debtList(ref, { cards = null } = {}) {
       { label: 'APR', num: true, render: (ctx, r, m, up) => {
         if (paidInFull(r)) return h('span.muted.small', { title: 'Paid in full each month: no interest' }, 'None: paid in full');
         const d = m.debts.find(x => x.id === r.id);
+        // Batch 11 (item 5b): a guessed APR is the faded typical rate in the box itself, with one tap to keep it.
+        const typical = ctx.ref.typicalRates?.[r.type] ?? null;
+        if (d?.aprGuess && typical != null && (r.values.apr === null || r.values.apr === undefined)) {
+          const shown = `${+(typical * 100).toFixed(2)}`;
+          return h('span.row-line.apr-guess', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap', gap: '6px' } },
+            pctInput(null, v => up({ apr: v }), { key: `${r.id}:apr`, hint: shown }),
+            h('button.btn.small.use-guess', { type: 'button', title: `Keep ${shown}% (the typical ${r.type.toLowerCase()} rate) as the APR`, 'aria-label': `Use ${shown}% as the APR for ${r.name || r.type}`, onclick: () => { ctx.store.transaction('Use the typical APR', () => { ctx.store.update(r.id, { apr: typical }); ctx.store.setFieldStatus(r.id, 'apr', null); }); toast(`APR set to ${shown}%.`, { undo: () => ctx.store.undo() }); } }, 'Use'));
+        }
         return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'nowrap' } }, d?.aprGuess ? h('span.tag.guess', {}, '? Guess') : null, pctInput(r.values.apr, v => up({ apr: v }), { key: `${r.id}:apr` }));
       } },
       { label: 'Payment / mo', num: true, render: (ctx, r, m, up) => {
@@ -84,7 +92,7 @@ export function debtList(ref, { cards = null } = {}) {
       } },
       { label: 'Pays off', render: (ctx, r, m) => {
         const d = m.debts.find(x => x.id === r.id);
-        const longest = Math.max(0, ...m.debts.map(x => x.payoff.value ?? 0));
+        const longest = Math.max(0, ...m.debts.map(x => x.planMonths ?? x.payoff.value ?? 0));
         return payoffCell(ctx, d, longest);
       } },
       { label: 'Owner', couple: true, render: (ctx, r, m, up) => ownerToggle(ctx, r, up) },
@@ -104,6 +112,9 @@ export function debtList(ref, { cards = null } = {}) {
       return [...cells, h('td'), h('td')];
     },
     strip: (ctx, m) => (cards === 'only' ? cardsStrip(ctx, m) : debtStrip(ctx, m)),
+    stripWhenEmpty: cards === 'none', // batch 11: the debt-free date shows even when the cards are the only debt
+    lead: cards === 'none' ? ctx => { const cs = ctx.visible(r => r.kind === 'debt' && r.type === 'Credit card'); return cs.length ? cardsRow(ctx, cs) : null; } : null,
+    emptyThing: cards === 'none' ? ctx => (ctx.visible(r => r.kind === 'debt' && r.type === 'Credit card').length ? { one: 'debt', plural: 'debts', empty: 'No other debts yet: a student loan, a car loan, a personal loan' } : null) : null,
   };
 }
 
@@ -121,11 +132,13 @@ export function debtStrip(ctx, m) {
   // Debts missing an APR or payment are left out of the date and interest, and named under the number.
   const complete = usable.filter(d => !d.inFull && d.apr != null && d.payment != null);
   const missing = usable.filter(d => !d.inFull && !complete.includes(d));
-  const plan = payoffPlan(complete, { order: m.inputs.debtOrder });
+  const plan = m.debtPlan; // batch 11: the one debt plan (the surplus to heavy debt first)
   const free = !complete.length ? needs('M34', usable.length ? missing.map(d => `${d.name} ${d.apr == null ? 'APR' : 'payment'}`) : ['a debt'], { unit: 'months' })
     : plan.months === null ? { ...needs('M34', []), never: true } : { id: 'M34', value: plan.months, needs: [], unit: 'months', text: plan.text };
   const interest = free.value === null ? { ...free, unit: 'money' } : { id: 'M32', value: plan.interest, needs: [], unit: 'money', text: `Paying every debt as planned, the interest still to come adds up to ${money(plan.interest)}.` };
-  const note = missing.length ? `${missing.map(d => d.name).join(', ')} ${missing.length === 1 ? 'needs' : 'need'} ${missing.some(d => d.apr == null) ? 'an APR' : 'a payment'}` : null;
+  const alone = m.debtPlanMinimum && m.debtPlanMinimum !== plan ? m.debtPlanMinimum.months : undefined;
+  const aloneNote = alone === undefined || alone === plan.months ? null : `If only each debt's own payment is paid: ${alone == null ? 'never' : monthName(addMonths(ymOf(ctx.now()), alone), 'short')}`;
+  const note = missing.length ? `${missing.map(d => d.name).join(', ')} ${missing.length === 1 ? 'needs' : 'need'} ${missing.some(d => d.apr == null) ? 'an APR' : 'a payment'}` : aloneNote;
   const dateOnly = r => { const t = value(r, ctx); return t.match(/\((.*)\)/)?.[1] ?? t; };
   return summaryStrip(ctx, [
     // Total debt sits in the Net worth headline above.
@@ -443,39 +456,81 @@ function cardsStrip(ctx, m) {
   ]);
 }
 // Debt › a line pointing at the cards, which now have their own sub-tab.
+// Batch 11 (item 5a): on Debt the cards are one linked row, "Credit cards (N) · $X ›", in the payoff order like any debt.
 export function cardsLink(ctx) {
   const cards = ctx.visible(r => r.kind === 'debt' && r.type === 'Credit card');
-  const owed = cards.reduce((t, r) => t + (r.values.balance ?? 0), 0);
-  return h('div.row-line.cards-link', { style: { gap: '10px', margin: '8px 0 16px' } },
-    h('span', {}, cards.length ? `Credit cards: ${cards.length} ${cards.length === 1 ? 'card' : 'cards'}, ${money(owed)} owed. They count in the totals above.` : 'No credit cards yet.'),
-    h('button.btn.small', { type: 'button', onclick: () => { location.hash = '#/net-worth/credit-cards'; } }, cards.length ? 'Open Credit cards' : 'Add a card on Credit cards'));
+  if (!cards.length) return h('div.row-line.cards-link', { style: { gap: '10px', margin: '8px 0 16px' } }, h('span.muted', {}, 'No credit cards yet.'),
+    h('button.btn.small', { type: 'button', onclick: () => { location.hash = '#/net-worth/credit-cards'; } }, 'Add a card on Credit cards'));
+  return cardsRow(ctx, cards);
 }
+function cardsRow(ctx, cards) {
+  const m = ctx.metrics();
+  const owed = cards.reduce((t, r) => t + (r.values.balance ?? 0), 0);
+  const plan = m.debtPlan?.debts || [];
+  const rank = cards.map(r => plan.findIndex(d => d.id === r.id)).filter(i => i >= 0);
+  const months = cards.map(r => m.inputs.debts.find(d => d.id === r.id)?.planMonths).filter(v => v != null);
+  const last = months.length ? Math.max(...months) : null;
+  return h('a.cards-row', { href: '#/net-worth/credit-cards', 'aria-label': `Credit cards: ${cards.length}, ${money(owed)} owed. Open Credit cards` },
+    rank.length ? h('span.rank', { title: 'Place in the payoff order' }, `#${Math.min(...rank) + 1}`) : null,
+    h('strong', {}, `Credit cards (${cards.length})`), h('span', {}, ` · ${money(owed)}`),
+    last != null ? h('span.muted.small', {}, `paid off ${monthName(addMonths(ymOf(ctx.now()), last), 'short')}`) : null,
+    h('span.spacer'), h('span.cards-row-go', {}, 'Open', icon('right')));
+}
+// Batch 11 (item 6): Credit health, slim. One line shows the score, where and when it was checked, and overall
+// utilization; the rest (each card's utilization, the oldest and average account age from the cards' opened months,
+// late payments, hard inquiries in the last 2 years as a tap count, and the freeze at the three bureaus) is folded.
 export function creditCard(ctx) {
   const cards = ctx.visible(r => r.kind === 'debt' && r.type === 'Credit card');
-  const util = utilization(cards.map(r => ({ balance: r.values.balance, limit: r.values.limit })));
   const p = ctx.store.doc.profile;
   const c = p.credit || {};
   const set = patch => ctx.store.setDoc('profile', { credit: { ...c, ...patch } });
   const d = h('input', { type: 'date', value: c.checked || '', 'aria-label': 'Date checked' });
   d.onchange = () => set({ checked: d.value || null });
-  const per = cards.filter(r => r.values.limit && r.values.balance != null);
-  return h('section.section.area-debt', {}, h('div.section-title', {}, h('h2', {}, 'Credit')),
-    h('div.card', {}, h('div.form-grid', {},
-      cards.length ? metricCard(ctx, 'Card utilization, all cards', util.hidden ? needs('M35', ['credit limits'], { unit: 'pct' }) : util,
-        { lowerIsGood: true, note: per.length > 1 ? per.map(r => `${r.name || 'Card'} ${pct(r.values.balance / r.values.limit)}`).join(' · ') : 'Under 30% helps your score; under 10% is best' }) : null,
-      labelled('Credit score', textInput(c.score == null ? null : String(c.score), x => { const n = Number(x); set({ score: Number.isInteger(n) && n >= 300 && n <= 900 ? n : null }); }, { hint: '300 to 850', width: 110 }), parkProfile(ctx.store, 'creditScore')),
-      labelled('Where you checked it', select(['Credit Karma', 'Bank or card app', 'Experian', 'Equifax', 'TransUnion', 'myFICO', 'Other'], c.source ?? null, x => set({ source: x }), { label: 'Score source', width: 170 })),
-      labelled('Date checked', h(`label.field${c.checked ? '.filled' : ''}`, { style: { width: '160px' } }, d)),
-      // Item 34: the partner's score, late payments, the oldest account, hard inquiries. The Scorecard rates Credit from these.
+  const freeze = Object.fromEntries(BUREAUS.map(b => [b, c[`freeze${b}`] ?? null]));
+  const H = creditHealth(cards.map(r => ({ id: r.id, name: r.name || 'Card', balance: r.values.balance, limit: r.values.limit, opened: r.values.opened })), { now: ctx.now(), inquiries: c.inquiries ?? null, freeze });
+  const util = H.overall == null ? needs('M35', ['a credit limit on a card'], { unit: 'pct' }) : { id: 'M35', value: H.overall, needs: [], unit: 'pct', text: H.text };
+  const openLimits = e => { e.preventDefault(); const c = document.querySelector('[data-focus="more:cards:credit-health"]'); if (c && c.getAttribute('aria-expanded') !== 'true') c.click(); setTimeout(() => document.querySelector('.credit-cards-table input')?.focus(), 30); };
+  const scoreLine = h('div.row-line.credit-line', { style: { gap: '12px', alignItems: 'flex-start', flexWrap: 'wrap' } },
+    labelled('Credit score', textInput(c.score == null ? null : String(c.score), x => { const n = Number(x); set({ score: Number.isInteger(n) && n >= 300 && n <= 900 ? n : null }); }, { hint: '300 to 850', width: 110 }), parkProfile(ctx.store, 'creditScore')),
+    labelled('Where you checked it', select(['Credit Karma', 'Bank or card app', 'Experian', 'Equifax', 'TransUnion', 'myFICO', 'Other'], c.source ?? null, x => set({ source: x }), { label: 'Score source', width: 170 })),
+    labelled('Date checked', h(`label.field${c.checked ? '.filled' : ''}`, { style: { width: '160px' } }, d)),
+    cards.length ? h('div.stack', { style: { gap: '2px' } }, h('span.label', {}, 'Utilization, all cards'), H.overall == null ? h('button.inst-link', { type: 'button', onclick: openLimits }, icon('plus'), ' Add a card limit') : h('strong.credit-util', {}, mathButtonFor(util, pct(H.overall)))) : null);
+  const tapCount = (v, onPick, label) => toggle([[0, '0'], [1, '1'], [2, '2'], [3, '3'], [4, '4+']], v == null ? null : Math.min(4, v), onPick, { label, clearable: true });
+  const perCard = cards.length ? h('div.stack', { style: { gap: '6px' } }, h('span.label', {}, 'Each card'),
+    h('table.rows.mini.credit-cards-table', {}, h('thead', {}, h('tr', {}, ['Card', 'Limit', 'Used', 'Opened', 'Age'].map(t => h('th', {}, t)))),
+      h('tbody', {}, cards.map(r => { const x = H.per.find(q => q.id === r.id); return h('tr', {},
+        h('td', {}, r.name || 'Card'),
+        h('td', {}, moneyInput(r.values.limit ?? null, v => ctx.store.update(r.id, { limit: v }), { hint: 'Add limit', key: `${r.id}:limit:health` })),
+        h('td.num', {}, x?.util == null ? h('span.muted.small', {}, '–') : pct(x.util)),
+        h('td', {}, openedPicker(ctx, r)),
+        h('td', {}, x?.ageMonths == null ? h('span.muted.small', {}, 'Pick the month') : yearsText(x.ageMonths))); })))) : null;
+  const rest = () => h('div.form-grid.credit-more', {},
+    perCard,
+    cards.length ? h('div.stack', { style: { gap: '2px' } }, h('span.label', {}, 'Account age'), H.oldestMonths == null ? h('span.muted.small', {}, 'Pick each card\'s opened month') : h('span', {}, `Oldest ${yearsText(H.oldestMonths)} · average ${yearsText(Math.round(H.averageMonths))}`)) : null,
       ...(ctx.couple ? [labelled(`Credit score (${personLabels(p ? ctx.store.doc : {}).Partner})`, textInput(c.scorePartner == null ? null : String(c.scorePartner), x => { const n = Number(x); set({ scorePartner: Number.isInteger(n) && n >= 300 && n <= 900 ? n : null }); }, { hint: '300 to 850', width: 110 })),
         labelled('Where checked (partner)', select(['Credit Karma', 'Bank or card app', 'Experian', 'Equifax', 'TransUnion', 'myFICO', 'Other'], c.sourcePartner ?? null, x => set({ sourcePartner: x }), { label: 'Partner score source', width: 170 })),
         labelled('Date checked (partner)', (() => { const d2 = h('input', { type: 'date', value: c.checkedPartner || '', 'aria-label': 'Partner date checked' }); d2.onchange = () => set({ checkedPartner: d2.value || null }); return h(`label.field${c.checkedPartner ? '.filled' : ''}`, { style: { width: '160px' } }, d2); })())] : []),
-      labelled('Late payments in the last 2 years', h('span.row-line', { style: { gap: '6px' } }, toggle(['Yes', 'No'], c.latePayments === true ? 'Yes' : c.latePayments === false ? 'No' : null, x => set({ latePayments: x === 'Yes', ...(x === 'No' ? { lateCount: null } : {}) }), { label: 'Late payments', clearable: true }),
-        c.latePayments === true ? textInput(c.lateCount == null ? null : String(c.lateCount), x => { const n = Number(x); set({ lateCount: Number.isInteger(n) && n >= 0 ? n : null }); }, { hint: 'How many', width: 90 }) : null)),
-      labelled('Age of oldest account', h('span.row-line', { style: { gap: '6px' } }, textInput(c.oldestAccountYears == null ? null : String(c.oldestAccountYears), x => { const n = Number(x); set({ oldestAccountYears: Number.isFinite(n) && n >= 0 ? n : null }); }, { hint: 'Years', width: 90 }), h('span.muted.small', {}, 'years'))),
-      labelled('Hard inquiries in the last year', textInput(c.inquiries == null ? null : String(c.inquiries), x => { const n = Number(x); set({ inquiries: Number.isInteger(n) && n >= 0 ? n : null }); }, { hint: 'How many', width: 90 }), { note: 'More than 2 holds a strong score at OK' }))));
+      labelled('Late payments in the last 2 years', h('span.row-line', { style: { gap: '6px' } }, toggle(['Yes', 'No'], c.latePayments === true ? 'Yes' : c.latePayments === false ? 'No' : null, x => set({ latePayments: x === 'Yes', ...(x === 'No' ? { lateCount: null } : {}) }), { label: 'Late payments' }),
+        c.latePayments === true ? tapCount(c.lateCount ?? null, n => set({ lateCount: n }), 'How many late payments') : null)),
+      labelled('Hard inquiries in the last 2 years', tapCount(c.inquiries ?? null, n => set({ inquiries: n }), 'Hard inquiries in the last 2 years'), { note: 'More than 2 holds a strong score at OK' }),
+      labelled('Credit freeze', h('div.row-line', { style: { gap: '6px', flexWrap: 'wrap' } }, BUREAUS.map(b => h('button.chip-btn', { type: 'button', 'aria-pressed': String(freeze[b] === true), title: freeze[b] === true ? `Frozen at ${b}. Tap to mark it off` : `Tap to mark it frozen at ${b}`, onclick: () => set({ [`freeze${b}`]: freeze[b] === true ? false : true }) }, `${b}: ${freeze[b] === true ? 'on' : freeze[b] === false ? 'off' : 'not set'}`))),
+        { note: H.frozen.length === 3 ? 'Frozen at all three' : 'A freeze stops new accounts in your name' }));
+  return h('section.section.area-debt', {}, h('div.section-title', {}, h('h2', {}, 'Credit health')),
+    h('div.card', {}, scoreLine, S_moreBlock('cards:credit-health', rest, { label: 'Each card, account age, late payments, inquiries, freeze' })));
 }
-
+const mathButtonFor = (r, text) => h('span', { title: r.text }, text);
+// The month a card was opened, as two taps (a month, then a year): no typing.
+function openedPicker(ctx, r) {
+  const v = /^\d{4}-\d{2}/.test(String(r.values.opened || '')) ? String(r.values.opened).slice(0, 7) : null;
+  const [y, mo] = v ? v.split('-') : [null, null];
+  const thisYear = ctx.now().getUTCFullYear();
+  const years = Array.from({ length: 41 }, (_, i) => String(thisYear - i));
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((t, i) => [String(i + 1).padStart(2, '0'), t]);
+  const put = (yy, mm) => { if (yy && mm) ctx.store.update(r.id, { opened: `${yy}-${mm}` }); else if (yy && !mm) ctx.store.update(r.id, { opened: `${yy}-01` }); };
+  return h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+    select(months, mo, x => put(y ?? String(thisYear), x), { label: `${r.name || 'Card'} opened month`, hint: 'Month', width: 96, key: `${r.id}:openedMonth` }),
+    select(years, y, x => put(x, mo ?? '01'), { label: `${r.name || 'Card'} opened year`, hint: 'Year', width: 96, key: `${r.id}:openedYear` }));
+}
 // R103: the card lists the bills charged to it. R104: paid in full they are spending; carried, they add to the balance.
 function billsOnCard(ctx, card) {
   const bills = ctx.visible(x => x.kind === 'bill' && x.paidWith === card.id && x.status !== 'Not for me');
@@ -490,7 +545,7 @@ function debtTertiary(ctx, r, up) {
   const v = r.values;
   const notes = labelled('Coach notes', textInput(r.privateNote, x => up({ privateNote: x }), { hint: 'Add a private note', width: 360 }));
   if (r.type === 'Credit card') {
-    return [labelled('Opened', textInput(v.opened, x => up({ opened: x }), { hint: 'YYYY-MM', width: 110 }), { note: 'Card age' }), // the institution is the row's picker (batch 7, item 3)
+    return [labelled('Opened', openedPicker(ctx, r), { note: 'Card age' }), // batch 11: two taps, no typing
       labelled('Annual fee', moneyInput(v.annualFee, x => up({ annualFee: x }), { hint: 'Add fee' })),
       labelled('Sign-up bonus: $, spend, by when', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
         moneyInput(v.bonus, x => up({ bonus: x }), { hint: 'Bonus' }), moneyInput(v.bonusSpend, x => up({ bonusSpend: x }), { hint: 'Spend' }),

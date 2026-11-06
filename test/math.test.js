@@ -218,7 +218,9 @@ test('show the math: every demo number explains itself in plain words', () => {
     assert.ok(!/undefined|NaN|null/.test(m[key].text), `${key}: ${m[key].text}`);
   }
   assert.match(m.surplus.text, /\$4,800 take-home minus \$3,600 spending/);
-  assert.match(m.monthsToFi.text, /303 months \(Feb 2052\)/);
+  // Batch 11, the debt rule: the $4,200 card at 22% takes the surplus first (4 months), then the surplus and the freed $250 go in.
+  assert.match(m.monthsToFi.text, /\$0 a month for the 4 months the surplus pays heavy debt first, then \$1,450 a month, .* in 282 months \(May 2050\)/);
+  assert.match(m.fiPaths.invested.text, /303 months \(Feb 2052\)/);
 });
 
 test('a blank household shows needs, never 0', () => {

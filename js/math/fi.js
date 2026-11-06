@@ -40,18 +40,22 @@ export function baristaFiNumber({ annualSpending, partTimeIncome, withdrawalRate
 }
 
 // M53: months until invested reaches the FI number. Monthly growth then the month's investing.
-export function fiDate({ invested, monthlyInvesting, realReturn, target }, { from = new Date(), path = false } = {}) {
+// before (batch 11, the debt rule): { months, monthly } goes in for the first months instead (while the surplus pays
+// heavy debt first), then monthlyInvesting.
+export function fiDate({ invested, monthlyInvesting, realReturn, target }, { from = new Date(), path = false, before = null } = {}) {
   const m = missing({ invested, 'monthly investing': monthlyInvesting, 'return': realReturn, 'FI number': target });
   if (m.length) return needs('M53', m, { unit: 'months' });
   const g = (1 + realReturn) ** (1 / 12);
   let b = invested, n = 0;
   const points = [b];
-  while (b < target && n < MAX_MONTHS) { b = b * g + monthlyInvesting; n += 1; if (path) points.push(b); }
+  const going = k => (before && k < before.months ? before.monthly : monthlyInvesting);
+  while (b < target && n < MAX_MONTHS) { b = b * g + going(n); n += 1; if (path) points.push(b); }
   if (b < target) {
     return { id: 'M53', value: null, needs: [], never: true, unit: 'months', guess: false,
       text: 'Not on this path within 70 years. Try the solver to see what would get there.', points: path ? points : undefined };
   }
-  return { ...ok('M53', n, `Starting at ${fmt.money(invested)}, growing ${fmt.pct(realReturn)} a year after inflation and adding ${fmt.money(monthlyInvesting)} a month, investments reach ${fmt.money(target)} in ${duration(n, from)}.`, { unit: 'months' }), points: path ? points : undefined };
+  const lead = before && before.months > 0 ? `adding ${fmt.money(before.monthly)} a month for the ${before.months} ${before.months === 1 ? 'month' : 'months'} the surplus pays heavy debt first, then ${fmt.money(monthlyInvesting)} a month` : `adding ${fmt.money(monthlyInvesting)} a month`;
+  return { ...ok('M53', n, `Starting at ${fmt.money(invested)}, growing ${fmt.pct(realReturn)} a year after inflation and ${lead}, investments reach ${fmt.money(target)} in ${duration(n, from)}.`, { unit: 'months' }), points: path ? points : undefined };
 }
 
 // The FI date as a range (answer 122): the months to FI with spending lower and higher by a share, from the metrics.
@@ -59,7 +63,7 @@ export function fiDate({ invested, monthlyInvesting, realReturn, target }, { fro
 export function fiRangeOf(m, share, { from = new Date() } = {}) {
   const x = m.inputs, spend = x.retirementSpending, going = m.investing?.monthly ?? null;
   if (isBlank(spend) || isBlank(x.invested) || going === null || isBlank(x.withdrawalRate)) return null;
-  const run = k => fiDate({ invested: x.invested, monthlyInvesting: going - (m.investing.investSurplus ? spend * (k - 1) : 0), realReturn: x.realReturn, target: spend * 12 * k / x.withdrawalRate }, { from });
+  const run = k => fiDate({ invested: x.invested, monthlyInvesting: going - (m.investing.investSurplus ? spend * (k - 1) : 0), realReturn: x.realReturn, target: spend * 12 * k / x.withdrawalRate }, { from, before: m.investing.before ?? null });
   const lo = run(1 - share), hi = run(1 + share);
   return { share, low: lo.value, high: hi.value, highNever: !!hi.never, lowNever: !!lo.never, base: m.monthsToFi.value };
 }
@@ -73,7 +77,7 @@ export function saferFi(m, { from = new Date() } = {}) {
   const fiAge = x.age + base / 12;
   if (fiAge >= RULES.saferUnderAge) return null;
   const target = x.retirementSpending * 12 / RULES.saferWithdrawal;
-  const r = fiDate({ invested: x.invested, monthlyInvesting: m.investing?.monthly ?? 0, realReturn: x.realReturn, target }, { from });
+  const r = fiDate({ invested: x.invested, monthlyInvesting: m.investing?.monthly ?? 0, realReturn: x.realReturn, target }, { from, before: m.investing?.before ?? null });
   const monthAt = n => new Date(from.getFullYear(), from.getMonth() + n, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   return { rate: RULES.saferWithdrawal, fiAge, target, months: r.value, never: !!r.never, text: r.never ? `At a safer ${(RULES.saferWithdrawal * 100).toFixed(1)}% for a longer retirement: not on this path within 70 years` : `At a safer ${(RULES.saferWithdrawal * 100).toFixed(1)}% for a longer retirement: FI ${monthAt(r.value)}`, words: `FI at ${Math.round(fiAge)} is a long retirement; ${(RULES.saferWithdrawal * 100).toFixed(1)}% needs ${Math.round(target).toLocaleString('en-US')} instead of ${Math.round(m.fiNumber.value).toLocaleString('en-US')}.` };
 }

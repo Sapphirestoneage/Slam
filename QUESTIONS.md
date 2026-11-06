@@ -390,3 +390,10 @@ Answered and built from the second overnight brief: 140 (a parked hole does not 
 194. **One other-income row.** Other money coming in becomes one income row, its type from the first source ticked (a rental, a side gig). Split it per source instead?
 195. **Not asked on the form.** Partner's name and pay, gross pay, NYC, APRs and the Looks right review are left for the call (see the report). Add any of them?
 
+## Batch 11 (Nov 5 2026): the debt rule, the debt-free card, FOO names, credit health
+
+196. **Low-rate debt after the heavy debt.** The debt rule sends the surplus to heavy debt only. Once it is gone the surplus (and the freed heavy payments) are invested and low-rate debt keeps its own payment, as FOO step 9 has it. An extra made the plan on Home (settings.debtExtra) rolls to any debt. Is that right, or should the freed heavy payments roll onto the low-rate debt (a full snowball) before investing?
+197. **The spec's Demo FI date.** The Demo client's expected 303 months assumes the surplus is invested from today. With the debt rule the app says 282 months (the $4,200 card at 22% takes the surplus for 4 months, then the surplus plus the freed $250 go in). The demo check now reads the invested-from-today path; should the spec's Demo tab move to the debt-first number?
+198. **What counts as a guessed APR on the row.** A blank APR marked Not sure now reads Rough on the row's one status (the footer already counted it handled). A blank APR with nothing marked still reads Missing (and the 25% fills in only as a Guess in the math). OK?
+199. **Hard inquiries: a year or two?** The Scorecard's "more than 2 holds a strong score at OK" was written for the last year; the box now asks for the last 2 years, as the bureaus keep them. Keep the line at 2, or raise it for the longer window?
+200. **The +$50 what-if for Maya.** Her plan is only 4 months, so +$50 and +$100 land in the same month; the card says so with the interest saved and the smaller last payment instead of a new date. Fine, or should the chips scale (for example +5%, +10%, +25% of what goes to debt) when the plan is short?

@@ -20,16 +20,19 @@ export function soWhat(key, m, { lowDay = null, first = null, last = null } = {}
       if (v === null) return null;
       if (guessed) return { text: `This counts ${x.guessLines} guessed ${x.guessLines === 1 ? 'line' : 'lines'} on the high side, so it may look lower than it is.`, action: { label: 'Check the guessed lines', href: '#/cash-flow/budget' } };
       if (lowDay) return { text: `Your cash dips below ${money(lowDay.low)} on ${lowDay.label}, even with money left over this month.`, action: { label: 'See the calendar', href: '#/cash-flow/calendar' } };
-      return v < 0 ? { text: `You spend ${money(v)} a month more than comes in.`, action: { label: 'Find what to trim', href: '#/cash-flow/budget' } }
-        : { text: `What is left each month after everything is paid: ${money(v)} you can save.` };
+      if (v < 0) return { text: `You spend ${money(v)} a month more than comes in.`, action: { label: 'Find what to trim', href: '#/cash-flow/budget' } };
+      // Batch 11, the debt rule: while heavy debt is carried, the surplus goes there first.
+      if (m.debtRule?.on && v > 0) return { text: `What is left each month after everything is paid: ${money(v)}, and it goes to your heavy debt first.`, action: { label: 'See the payoff plan', href: '#/plan/debt-payoff' } };
+      return { text: `What is left each month after everything is paid: ${money(v)} you can save.` };
     case 'savingsRate':
       if (v === null) return null;
+      if (m.debtRule?.on && (m.surplus?.value ?? 0) > 0) return { text: `${pct(v)} of what comes in is left over. Until the heavy debt is gone it pays that debt; then it is yours to save.`, action: { label: 'See the payoff plan', href: '#/plan/debt-payoff' } };
       return v < 0.1 ? { text: `You save ${pct(v)} of what comes in. Getting to 10% is the first step.`, action: { label: 'Find money to save', href: '#/cash-flow/budget' } }
-        : { text: `You save ${pct(v)} of what comes in${v >= 0.2 ? ', which is strong' : ''}.` };
+        : { text: `You save ${pct(v)} of what comes in.` }; // batch 11: no verdict words
     case 'fi':
       if (r?.never) return { text: 'At this pace you never quite get there. Saving a little more changes that.', action: { label: 'Try saving more', href: '#/plan/timeline' } };
       if (v === null) return null;
-      return { text: `The day work becomes optional: about ${Math.round(v / 12)} years from now, if nothing changes.` };
+      return { text: `The day work becomes optional: about ${Math.round(v / 12)} years from now, if nothing changes${m.debtRule?.on ? ', with the surplus paying heavy debt first' : ''}.` };
     case 'liquid':
       if (v === null) return null;
       return v < 0 ? { text: 'Card and other quick debts are bigger than your cash.', action: { label: 'See your debts', href: '#/net-worth/debt' } }

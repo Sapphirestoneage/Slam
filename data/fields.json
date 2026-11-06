@@ -633,7 +633,7 @@
   "id": "F064",
   "field": "Phone plan",
   "area": "Needs",
-  "group": "Phone and subscriptions",
+  "group": "Bills and subscriptions",
   "layer": "Secondary",
   "livesOn": "Cash flow › Budget",
   "scope": "Now",
@@ -643,7 +643,7 @@
   "id": "F065",
   "field": "Subscriptions (list)",
   "area": "Needs",
-  "group": "Phone and subscriptions",
+  "group": "Bills and subscriptions",
   "layer": "Tertiary",
   "livesOn": "Cash flow › Budget",
   "scope": "Now",
@@ -3876,6 +3876,626 @@
   "group": "Backups",
   "layer": "Secondary",
   "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F389",
+  "field": "Locked (confirmed)",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F390",
+  "field": "Locked (confirmed)",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F391",
+  "field": "Locked (confirmed)",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F392",
+  "field": "Locked (confirmed)",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F393",
+  "field": "Short or long term",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F394",
+  "field": "Need, want or wish",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F395",
+  "field": "Household mode",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F396",
+  "field": "Owner",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F397",
+  "field": "Shared bills split",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F398",
+  "field": "Hassle (1 to 5)",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F399",
+  "field": "Income type",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F400",
+  "field": "Trip",
+  "area": "Needs",
+  "group": "Calendar entries",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Calendar",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F401",
+  "field": "Last paycheck matched",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F402",
+  "field": "Last paycheck date",
+  "area": "Income",
+  "group": "Income",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Income",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F403",
+  "field": "big e multiplier (blank: from income stability)",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F404",
+  "field": "Institutions",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F405",
+  "field": "Institution (from the list)",
+  "area": "Debt",
+  "group": "Debt",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Debt",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F406",
+  "field": "Institution (from the list)",
+  "area": "Assets",
+  "group": "Assets",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F407",
+  "field": "Insurer (from the Institutions list)",
+  "area": "Protection",
+  "group": "Protection",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Protection",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F408",
+  "field": "Institution",
+  "area": "Assets",
+  "group": "Institutions",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F409",
+  "field": "Kind",
+  "area": "Assets",
+  "group": "Institutions",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F410",
+  "field": "Website",
+  "area": "Assets",
+  "group": "Institutions",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F411",
+  "field": "Notes",
+  "area": "Assets",
+  "group": "Institutions",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F412",
+  "field": "Whose",
+  "area": "Assets",
+  "group": "Institutions",
+  "layer": "Secondary",
+  "livesOn": "Net worth › Assets",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F413",
+  "field": "Credit score (partner)",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F414",
+  "field": "Where the partner checked it",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F415",
+  "field": "Partner score checked on",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F416",
+  "field": "Late payments in the last 2 years",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F417",
+  "field": "How many late payments",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F418",
+  "field": "Age of oldest account (years)",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F419",
+  "field": "Hard inquiries in the last year",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F420",
+  "field": "Last year: refund (+) or owed (-)",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F421",
+  "field": "Withholding changed since",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F422",
+  "field": "Last raise",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F423",
+  "field": "Last raise amount (a year)",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F424",
+  "field": "Paid at market rate",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F425",
+  "field": "Calendar: Jewish holidays",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F426",
+  "field": "Calendar: Shabbat every week",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F427",
+  "field": "Calendar: Muslim holidays",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F428",
+  "field": "Calendar: Christian holidays",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F429",
+  "field": "Calendar: Orthodox Christian holidays",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F430",
+  "field": "Calendar: US holidays",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F431",
+  "field": "Weekly: lands on (0 Sunday to 6 Saturday)",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F432",
+  "field": "Holiday (the block re-dates itself each year)",
+  "area": "Goals",
+  "group": "Goals and events",
+  "layer": "Secondary",
+  "livesOn": "Plan › Goals",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F433",
+  "field": "What prompted this call: chips",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F434",
+  "field": "Biggest worry: chips",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F435",
+  "field": "Goal: chips",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F436",
+  "field": "What prompted this call: the main one",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F437",
+  "field": "Biggest worry: the main one",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F438",
+  "field": "Goal: the main one",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F439",
+  "field": "What prompted this call: Other",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F440",
+  "field": "Biggest worry: Other",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F441",
+  "field": "Goal: Other",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F442",
+  "field": "Goal suggestions set aside",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F443",
+  "field": "Typical amount (for reference, not counted)",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F444",
+  "field": "Amount came from Use typical",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F445",
+  "field": "Level in its group (1, 2, 3 = Everything else; blank is 2)",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F446",
+  "field": "Everything else, one rough amount a month",
+  "area": "Needs",
+  "group": "Spending lines",
+  "layer": "Secondary",
+  "livesOn": "Cash flow › Budget",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F447",
+  "field": "Credit freeze at Equifax",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F448",
+  "field": "Credit freeze at Experian",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F449",
+  "field": "Credit freeze at TransUnion",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
+  "scope": "Now",
+  "phase": ""
+ },
+ {
+  "id": "F450",
+  "field": "Extra to debt a month (Make it the plan on Home)",
+  "area": "Profile",
+  "group": "Profile",
+  "layer": "Secondary",
+  "livesOn": "Home › About you",
   "scope": "Now",
   "phase": ""
  }

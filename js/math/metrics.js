@@ -8,13 +8,13 @@ import { gatesOf, visible } from '../gates.js';
 import { inView, modeOf, MODES, ownerOf, forPerson } from '../registry/couples.js';
 import { bigEMultiplierOf } from '../registry/assumptions.js';
 import { myShare, withHome, supportReceived, monthlySurplus, savingsRate, housingPct, fixedFloor, categoryTotals, isCategoryRecord } from './spending.js';
-import { cardMinimum, payoffMonths, totalInterest, payoffPlan } from './debt.js';
+import { cardMinimum, payoffMonths, totalInterest, payoffPlan, debtFirstPlan, isHeavyDebt, promoSoonIds, debtFreeCard } from './debt.js';
 import { netWorth, liquidNetWorth, runway, ruleOf5 } from './assets.js';
 import { link401k, matchFromTiers } from './portfolio.js';
 import { fiNumber, fiDate, coastFi, bigDeals } from './fi.js';
 import { hourlyRate } from './time.js';
 import { debtLines, premiumSources, duplicates, afterTaxContributions } from './linked.js';
-import { LISTS } from '../registry/assumptions.js';
+import { LISTS, RULES } from '../registry/assumptions.js';
 
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
 const HOUSING = new Set(LISTS.housing);
@@ -99,7 +99,8 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
       const min = cardMinimum({ balance, apr: apr.v });
       payment = min.value; paymentIsMinimum = min.value !== null;
     }
-    return { id: r.id, name: r.name ?? r.type, type: r.type, balance, apr: apr.v, aprGuess: !!apr.guess, payment, paymentIsMinimum, inFull, choice, stress: r.stress, hassle: r.values.hassle ?? null, linkedTo: r.linkedTo };
+    return { id: r.id, name: r.name ?? r.type, type: r.type, balance, apr: apr.v, aprGuess: !!apr.guess, payment, paymentIsMinimum, inFull, choice, stress: r.stress, hassle: r.values.hassle ?? null, linkedTo: r.linkedTo,
+      promoEnd: r.values.promoEnd ?? null, forgiven: r.values?.pslf === 'Yes' || r.values?.forgiveness === true || r.values?.forgiveness === 'Yes' };
   });
   // Enter once, show in both: each debt's payment is a line From Debt; a typed line that looks like a debt payment or
   // a premium already paid asks "Same as your ...?" and is left out only after Yes (js/math/linked.js).
@@ -127,8 +128,9 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   const accounts = live.filter(r => r.kind === 'account').map(r => ({ id: r.id, name: r.name ?? r.type, group: r.values.group, type: r.type, value: read(r, 'balance').v, unvested: r.values.unvested ?? null }));
   const things = live.filter(r => r.kind === 'asset').map(r => ({ id: r.id, name: r.name ?? r.type, type: r.type, value: read(r, 'value').v }));
   const none = gates.none; // R002: 'None of these' counts as done, with zeros
-  const cash = accounts.some(a => a.group === 'cash') ? accounts.filter(a => a.group === 'cash').reduce((s, a) => s + (a.value ?? 0), 0) : none ? 0 : null;
-  const invested = accounts.some(a => a.group === 'investment') ? accounts.filter(a => a.group === 'investment').reduce((s, a) => s + (a.value ?? 0), 0) : none ? 0 : null;
+  // Batch 11 (item 9): an area answered "none" (About you, or a 0 typed in Fast Track) is a real $0, not a missing number.
+  const cash = accounts.some(a => a.group === 'cash') ? accounts.filter(a => a.group === 'cash').reduce((s, a) => s + (a.value ?? 0), 0) : none || gates.areas.cash === false ? 0 : null;
+  const invested = accounts.some(a => a.group === 'investment') ? accounts.filter(a => a.group === 'investment').reduce((s, a) => s + (a.value ?? 0), 0) : none || gates.areas.investments === false ? 0 : null;
   const brokerage = accounts.filter(a => a.type === 'Brokerage').reduce((s, a) => s + (a.value ?? 0), 0);
   const housingLines = lines.filter(l => HOUSING.has(l.category));
   const housing = housingLines.some(l => l.category === 'Rent or mortgage' && l.amount !== null)
@@ -146,7 +148,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   const a = doc.assumptions;
   return {
     place, link, sinkingMonthly, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, filingGuess, none, mode, person, splitShare,
-    debtOrder: doc.settings?.debtOrder ?? 'avalanche',
+    debtOrder: doc.settings?.debtOrder ?? 'avalanche', debtCustomOrder: doc.settings?.debtCustomOrder ?? [], debtExtra: doc.settings?.debtExtra ?? 0,
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || useLines ? 0 : debtPayments), // the lines hold each payment, From Debt
     autoLines, dupOf, askOf, typedLines, premiums, payFrequency, health: health ? { id: health.id, perPaycheck: healthPerPay, fromPay: !!healthFromPay, jobId: healthJob?.id ?? null } : null,
     paycheckPremiums: premiums.filter(p => p.paidFrom === 'Paycheck').reduce((s, p) => s + (p.monthly ?? 0), 0),
@@ -208,14 +210,27 @@ export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
   const alreadyIn = pretaxSaving + match;
   const contributions = (x.afterTaxSaving ?? 0) + (x.retirementLines ?? 0);
   const surplus = out.surplus.value;
-  const invested = surplus === null ? null : alreadyIn + surplus; // the surplus invested
+  // Batch 11, the debt rule (debtRuleOf): while heavy debt is carried the surplus goes to it first, by default. The
+  // one debt plan every screen reads is built here; the FI path invests only what the paycheck already puts in until
+  // the heavy debt is gone, then the surplus plus the freed heavy payments (or, with Surplus stays surplus, only the
+  // contributions).
+  const rule = debtRuleOf(doc, x.debts);
+  const toDebt = rule.on && surplus !== null ? Math.max(0, surplus - contributions) : 0;
+  out.debtPlan = debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: promoSoonIds(x.debts, now), surplus: toDebt, extra: x.debtExtra });
+  out.debtPlanMinimum = rule.on || x.debtExtra ? debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: promoSoonIds(x.debts, now) }) : out.debtPlan; // each debt at its own payment only
+  out.debtRule = { ...rule, toDebt, heavyMonths: out.debtPlan.heavyMonths, first: promoSoonIds(x.debts, now) };
+  for (const d of [...x.debts, ...out.debts]) { const p = out.debtPlan.debts.find(q => q.id === d.id); d.planMonths = d.inFull ? null : p?.paidOffMonth ?? null; d.minimumMonths = d.inFull ? null : out.debtPlanMinimum.debts.find(q => q.id === d.id)?.paidOffMonth ?? null; d.heavy = isHeavyDebt(d); }
+  const freed = rule.on ? out.debtPlan.heavyPayments : 0;
+  const invested = surplus === null ? null : alreadyIn + surplus + freed; // the surplus invested (and, after the heavy debt, its freed payments)
   const idle = surplus === null ? null : alreadyIn + contributions; // the surplus sits in checking
   const monthlyInvesting = investSurplus ? invested : idle;
-  out.investing = { investSurplus, alreadyIn, contributions, surplus: investSurplus ? surplus : 0, monthly: monthlyInvesting, invested, idle };
-  const fi = m$ => fiDate({ invested: x.invested, monthlyInvesting: m$, realReturn: x.realReturn, target: out.fiNumber.value }, { from: now });
+  const H = out.debtPlan.heavyMonths;
+  const before = rule.on && surplus !== null ? { months: H ?? RULES.maxMonths, monthly: alreadyIn + contributions } : null; // while the surplus pays heavy debt
+  out.investing = { investSurplus, debtFirst: rule.on, alreadyIn, contributions, surplus: investSurplus ? surplus : 0, monthly: monthlyInvesting, invested, idle, before, freed };
+  const fi = (m$, b = before) => fiDate({ invested: x.invested, monthlyInvesting: m$, realReturn: x.realReturn, target: out.fiNumber.value }, { from: now, before: b });
   out.monthsToFi = fi(monthlyInvesting);
-  // Both paths, for the FI card: with the surplus invested, and if it sits in checking.
-  out.fiPaths = { invested: fi(invested), idle: fi(idle) };
+  // The paths, for the FI card: the one in use, with the surplus invested from today, and if it sits in checking.
+  out.fiPaths = { invested: fi(surplus === null ? null : alreadyIn + surplus, null), idle: fi(idle, null), debtFirst: rule.heavy ? fi(monthlyInvesting, { months: H ?? RULES.maxMonths, monthly: alreadyIn + contributions }) : null };
   if (out.monthsToFi.value === null && !out.monthsToFi.never) { // say what to type, not which result is missing
     const root = [...new Set([...out.surplus.needs, ...out.fiNumber.needs, ...(x.invested === null ? ['invested'] : [])])];
     if (root.length) out.monthsToFi = needs('M53', root, { unit: 'months' });
@@ -258,9 +273,29 @@ export function keyNumbers(m) {
   const ds = m.inputs.debts;
   const debtTotal = ds.length ? ds.reduce((s, d) => s + (d.balance ?? 0), 0) : null;
   const debtPayments = ds.some(d => d.payment != null) ? ds.reduce((s, d) => s + (d.payment ?? 0), 0) : null;
-  const plan = ds.length ? payoffPlan(ds.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null), { order: m.inputs.debtOrder }) : null;
+  const plan = ds.length ? m.debtPlan ?? payoffPlan(ds.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null), { order: m.inputs.debtOrder }) : null; // the one debt plan (batch 11)
   return { netWorth: m.netWorth.value, liquidNetWorth: m.liquidNetWorth.value, fiNumber: m.fiNumber.value, surplus: m.surplus.value, savingsRate: m.savingsRate.value, debtTotal, debtPayments,
     debtFreeMonths: plan?.months ?? null, debtInterest: plan && plan.months !== null ? Math.round(plan.interest) : null, monthsToFi: m.monthsToFi.value };
 }
 
 export const firstDebt = (m, type) => m.debts.find(d => d.type === type) || { payoff: needs('M31', [`a ${type.toLowerCase()}`]), interest: needs('M32', [`a ${type.toLowerCase()}`]) };
+
+// The debt rule (batch 11, RULES.debtFirst): is the surplus going to heavy debt first? On by default while any heavy
+// debt (APR at or over RULES.heavyApr, or a heavy type) is carried; a client can turn it off (assumptions.debtFirst 0,
+// the toggle on Plan › Goals). With no heavy debt it is off by itself and Invest my surplus takes over.
+export function debtRuleOf(doc, debts) {
+  const heavy = (debts || []).filter(isHeavyDebt);
+  const own = doc.assumptions?.debtFirst;
+  const wanted = own == null ? !!RULES.debtFirst : !(own === false || own === 0);
+  return { heavy: heavy.length > 0, heavyDebts: heavy.map(d => d.id), wanted, on: wanted && heavy.length > 0, chosen: own != null };
+}
+// The debt-free card for Home (batch 11, item 3): the one plan, Day 0's debt total as the start, and the what-ifs
+// (+$50, +$100, +$250 a month) run on the same plan. A what-if is never saved.
+export function debtHeroOf(doc, m) {
+  const x = m.inputs;
+  if (!m.debtRule?.heavy || !m.debtPlan?.debts.length) return null;
+  const day0 = (doc.snapshots || []).find(s => s.day0) ?? null;
+  const start = day0 ? (day0.records || []).filter(r => r.kind === 'debt' && r.values?.payChoice !== 'In full').reduce((s, r) => s + (r.values?.balance ?? 0), 0) : null;
+  const rerun = extra => debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: m.debtRule.first ?? [], surplus: m.debtRule.toDebt, extra: (x.debtExtra ?? 0) + extra });
+  return debtFreeCard(m.debtPlan, { start, rerun });
+}

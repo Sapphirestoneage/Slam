@@ -93,11 +93,15 @@ export function applyFastTrack(store, a, { seconds = null, now = new Date().toIS
       if (rows.length > 1) continue;
       const r = put(x => x.kind === 'debt' && x.type === type, 'debt', type, { name: rows[0]?.name ?? `${label} (total)`, values: { balance: d.balance ?? null, payment: d.payment ?? null } });
       if (r.values.apr == null && !r.fieldStatus.apr) store.setFieldStatus(r.id, 'apr', 'Not sure'); // a typical rate fills in, marked Guess (R055)
+      // Batch 11 (item 5c): a card total typed with a monthly payment is carried, not paid in full.
+      if (type === 'Credit card' && has(d.payment) && (d.balance ?? 0) > 0 && r.values.payChoice == null) store.update(r.id, { payChoice: 'Custom' });
     }
     // Which areas they have (R001): from what was given; a skipped step leaves its area unanswered
     const areas = { ...(store.doc.profile.areas || {}) };
-    if (has(a.checking) || has(a.savings)) areas.cash = (a.checking ?? 0) + (a.savings ?? 0) > 0 || areas.cash === true;
-    if (has(a.invested)) areas.investments = a.invested > 0 || areas.investments === true;
+    // Batch 11 (item 9): a typed 0 is an answer. The area stays on (a $0 row is on file, so the FI date and runway read
+    // $0, not a missing number); only a blank leaves it unanswered.
+    if (has(a.checking) || has(a.savings)) areas.cash = true;
+    if (has(a.invested)) areas.investments = true;
     if (a.hasCar === true || a.housing === 'Own') areas.real = true; else if (a.hasCar === false && has(a.housing)) areas.real = areas.real === true;
     const anyDebt = FT_DEBTS.some(([t]) => has(a.debts?.[t]?.balance) && a.debts[t].balance > 0) || has(a.carLoanBalance) || has(a.mortgageBalance);
     if (a.noDebts) areas.debt = anyDebt; else if (anyDebt) areas.debt = true;

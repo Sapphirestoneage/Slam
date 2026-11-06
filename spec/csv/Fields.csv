@@ -446,3 +446,7 @@ F443,Built,Session 1,Needs,Spending lines,"Typical amount (for reference, not co
 F444,Built,Session 1,Needs,Spending lines,Amount came from Use typical,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js); stays in the app: set by the Use button; the Status column says Roughly,,Cash flow › Budget,choice,,,spending.usedTypical
 F445,Built,Session 1,Needs,Spending lines,"Level in its group (1, 2, 3 = Everything else; blank is 2)",Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,whole number,,,spending.level
 F446,Built,Session 1,Needs,Spending lines,"Everything else, one rough amount a month",Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Budget,money,,,spending.elseAmount
+F447,Built,,Profile,Profile,Credit freeze at Equifax,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.credit.freezeEquifax
+F448,Built,,Profile,Profile,Credit freeze at Experian,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.credit.freezeExperian
+F449,Built,,Profile,Profile,Credit freeze at TransUnion,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.credit.freezeTransUnion
+F450,Built,,Profile,Profile,Extra to debt a month (Make it the plan on Home),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,money,,,profile.settings.debtExtra

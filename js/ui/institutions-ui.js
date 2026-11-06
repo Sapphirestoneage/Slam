@@ -17,6 +17,19 @@ export function institutionPicker(ctx, r, up, { width = 170 } = {}) {
   }, { label: `Institution for ${r.name || r.type || r.kind}`, hint: 'Institution', width, key: `${r.id}:institutionId` });
   return sel;
 }
+// Batch 11 (item 5f, the Monarch pattern): in a row, the institution is a small "Add bank" link; once picked it reads
+// as a label (click it to change). A popover holds the list and + New institution, so a row has one box, not two.
+export function institutionLink(ctx, r, up, { word = 'Add bank' } = {}) {
+  const list = institutionsOf(ctx.store.doc);
+  const cur = list.find(i => i.id === r.values.institutionId) ?? null;
+  const b = h(`button.inst-link${cur ? '.set' : ''}`, { type: 'button', 'aria-label': cur ? `Institution: ${cur.name}. Change` : `${word} for ${r.name || r.type || r.kind}`, 'data-focus': `${r.id}:institutionId`, title: cur ? 'Change the institution' : null },
+    cur ? cur.name : [icon('plus'), ` ${word}`]);
+  b.onclick = () => S.popover(b, h('div.stack', { style: { gap: '6px' } }, h('h3', {}, 'Institution'),
+    list.length ? h('div.row-line', { style: { gap: '6px', flexWrap: 'wrap' } }, list.map(i => h('button.btn.small', { type: 'button', 'aria-pressed': String(i.id === cur?.id), onclick: () => { S.closePop(); up({ institutionId: i.id }); } }, i.name))) : h('span.muted.small', {}, 'None yet.'),
+    h('div.row-line', { style: { gap: '6px' } }, h('button.btn.small', { type: 'button', onclick: () => { S.closePop(); newInstitution(ctx, b, row => up({ institutionId: row.id })); } }, icon('plus'), 'New institution'),
+      cur ? h('button.btn.small', { type: 'button', onclick: () => { S.closePop(); up({ institutionId: null }); } }, 'Clear') : null)), { width: 300 });
+  return b;
+}
 function newInstitution(ctx, anchor, onMade) {
   const name = h('input', { placeholder: 'Name (e.g. Chase)', 'aria-label': 'Institution name' });
   let kind = null;

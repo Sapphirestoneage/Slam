@@ -34,6 +34,17 @@ const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
 const INCOME = '{Kind}="Income"';
 const SKIP = '{InMath}="No"';
+// M53 in the sheet (batch 11): months from a start balance S at P a month to the FI number, with the same "Never" past
+// the longest path; then the debt-first months (Math_M53_debtMonths at Math_M53_before) run first.
+const nper = (S, P, cap = 'MaxMonths') => `IF(Math_M53_growth=0,IF(${P}>0,IF(ROUNDUP((Math_M50-${S})/${P}-0.000000001,0)>${cap},"Never",ROUNDUP((Math_M50-${S})/${P}-0.000000001,0)),"Never"),IF(${S}+${P}/Math_M53_growth<=0,"Never",IF(ROUNDUP(LN((Math_M50+${P}/Math_M53_growth)/(${S}+${P}/Math_M53_growth))/LN(1+Math_M53_growth)-0.000000001,0)>${cap},"Never",ROUNDUP(LN((Math_M50+${P}/Math_M53_growth)/(${S}+${P}/Math_M53_growth))/LN(1+Math_M53_growth)-0.000000001,0))))`;
+function m53Sheet() {
+  const H = 'N(Math_M53_debtMonths)', inv = 'Math_M41_invested', B = 'Math_M53_before', P = 'Math_M53_invest';
+  const after = `FV(Math_M53_growth,${H},-${B},-${inv})`;
+  const phase1 = nper(inv, B);
+  const lead = `IF(${after}>=Math_M50,${phase1},IF(ISNUMBER(${nper(after, P, `MaxMonths-${H}`)}),${H}+${nper(after, P, `MaxMonths-${H}`)},"Never"))`;
+  return `IF(OR(${inv}="",Math_M27="",Math_M50=""),"",IF(${inv}>=Math_M50,0,IF(${H}=0,${nper(inv, P)},${lead})))`;
+}
+
 const MONTH_FACTOR = per => `IFERROR(INDEX(Per_month,MATCH(${per},Per_name,0)),1)`;
 const PAYS_A_YEAR = 'IFERROR(INDEX(Per_year,MATCH({payFrequency},Per_name,0)),26)';
 const bracket = (t, table) => `SUMPRODUCT((${t}>${table}_over)*(${t}-${table}_over)*${table}_step)`;
@@ -250,10 +261,12 @@ export const MATH = [
     cols: [{ area: 'debt', key: 'M33', label: 'Fee as an APR (M33)', unit: 'pct', f: 'IF(OR({fee}="",N({balance})=0,{periods}=""),"",{fee}/{balance}*{periods})' }],
     sheet: 'IF(COUNT(Debt_M33)=0,"",MAX(Debt_M33))', label: 'Highest fee APR',
     app: c => { const v = c.live.filter(r => r.kind === 'debt').map(r => feeApr({ fee: r.values.fee ?? null, amount: r.values.balance || null, periodsPerYear: r.values.periods ?? null }).value).filter(x => x != null); return v.length ? Math.max(...v) : null; } },
-  { id: 'M34', name: 'Payoff order with extra payment', inputs: 'debts, extra, order', unit: 'months', fns: ['debt.payoffPlan', 'debt.simulateDebt', 'debt.hasslePerDollar', 'debt.customOrder', 'debt.orderCost'],
-    fromApp: 'a month-by-month simulation that rolls each cleared payment onto the next debt (up to 1,200 rows)',
-    app: c => { const ds = c.x.debts.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null); return ds.length ? payoffPlan(ds, { order: c.x.debtOrder }).months : null; } },
-  { id: 'M35', name: 'Utilization', inputs: 'cards', unit: 'pct', fns: ['debt.utilization'],
+  { id: 'M34', name: 'Payoff order with extra payment', inputs: 'debts, extra, order, the surplus while heavy debt is carried (the debt rule)', unit: 'months', fns: ['debt.payoffPlan', 'debt.simulateDebt', 'debt.hasslePerDollar', 'debt.customOrder', 'debt.orderCost', 'debt.debtFirstPlan', 'debt.isHeavyDebt', 'debt.promoSoonIds', 'metrics.debtRuleOf', 'debt.debtFreeCard', 'debt.HERO_EXTRAS'],
+    fromApp: 'a month-by-month simulation: every debt gets its payment, the surplus goes to heavy debt first in the payoff order (batch 11, the debt rule), and each cleared payment rolls forward (up to 1,200 rows)',
+    parts: [{ key: 'heavy', name: 'Months until the heavy debt is gone, on the same plan', unit: 'months', fromApp: 'the same simulation', app: c => (c.m.debtPlan?.debts.some(d => d.heavy) ? c.m.debtPlan.heavyMonths : null) },
+      { key: 'minimum', name: 'Months until every debt is gone at each debt\'s own payment only', unit: 'months', fromApp: 'the same simulation with no surplus and no extra', app: c => c.m.debtPlanMinimum?.months ?? null }],
+    app: c => (c.m.debtPlan?.debts.length ? c.m.debtPlan.months : null) },
+  { id: 'M35', name: 'Utilization', inputs: 'cards', unit: 'pct', fns: ['debt.utilization', 'debt.creditHealth', 'debt.BUREAUS', 'debt.yearsText'],
     sheet: 'IF(SUMIFS(Debt_limit,Debt_Type,"Credit card",Debt_limit,">0")=0,"",SUMIFS(Debt_balance,Debt_Type,"Credit card",Debt_limit,">0")/SUMIFS(Debt_limit,Debt_Type,"Credit card",Debt_limit,">0"))',
     app: c => utilization(c.doc.records.filter(r => r.kind === 'debt' && r.type === 'Credit card').map(r => ({ balance: r.values.balance, limit: r.values.limit }))).value },
   { id: 'M36', name: 'Debt-to-income', inputs: 'debts, gross', unit: 'pct', fns: ['debt.debtToIncome'],
@@ -309,9 +322,15 @@ export const MATH = [
       { key: 'safer', name: 'Safer line: months to FI at the safer withdrawal rate when FI would come before the safer-under age', unit: 'months', fromApp: 'the same path run to spending x 12 / SaferWithdrawal; shown as a second, smaller line (batch 5 C)', app: c => saferFi(c.m, { from: c.now })?.months ?? null },
       // Answers 123 to 125: what goes in each month. The surplus is invested unless InvestSurplus is 0; then only the
       // after-tax contributions and Retirement lines (paid out of the surplus) go in.
-      { key: 'invest', name: 'Invested a month: 401(k), HSA, match, plus the surplus (or, with Invest my surplus off, the after-tax contributions and Retirement lines)', unit: 'money',
-        sheet: 'IF(Math_M27="","",Math_M28_pretax+Math_M28_match+IF(N(InvestSurplus)=0,N(Math_M28_afterTax)+N(Math_M27_retire),Math_M27))', app: c => c.m.investing?.monthly ?? null }],
-    sheet: 'IF(OR(Math_M41_invested="",Math_M27="",Math_M50=""),"",IF(Math_M41_invested>=Math_M50,0,IF(Math_M53_growth=0,IF(Math_M53_invest>0,IF(ROUNDUP((Math_M50-Math_M41_invested)/Math_M53_invest-0.000000001,0)>MaxMonths,"Never",ROUNDUP((Math_M50-Math_M41_invested)/Math_M53_invest-0.000000001,0)),"Never"),IF(Math_M41_invested+Math_M53_invest/Math_M53_growth<=0,"Never",IF(ROUNDUP(LN((Math_M50+Math_M53_invest/Math_M53_growth)/(Math_M41_invested+Math_M53_invest/Math_M53_growth))/LN(1+Math_M53_growth)-0.000000001,0)>MaxMonths,"Never",ROUNDUP(LN((Math_M50+Math_M53_invest/Math_M53_growth)/(Math_M41_invested+Math_M53_invest/Math_M53_growth))/LN(1+Math_M53_growth)-0.000000001,0))))))',
+      // Batch 11, the debt rule: while heavy debt is carried the surplus goes to it first, so for those months only what
+      // the paycheck and the accounts already put in is invested; after them the surplus and the freed heavy payments.
+      { key: 'debtMonths', name: 'Months the surplus pays heavy debt first (0 when the rule is off or there is none)', unit: 'months', fromApp: 'the month-by-month debt-first plan (M34) with the surplus on the heavy debt', app: c => c.m.investing?.before?.months ?? 0 },
+      { key: 'freed', name: 'Heavy debt payments freed once it is paid, a month', unit: 'money', fromApp: 'the payments on the heavy debts in the debt-first plan (M34)', app: c => c.m.investing?.freed ?? 0 },
+      { key: 'before', name: 'Invested a month while the surplus pays heavy debt: 401(k), HSA, match, after-tax contributions and Retirement lines', unit: 'money',
+        sheet: 'IF(Math_M27="","",Math_M28_pretax+Math_M28_match+N(Math_M28_afterTax)+N(Math_M27_retire))', app: c => (c.m.investing?.before ? c.m.investing.before.monthly : c.m.surplus.value == null ? null : (c.m.investing?.alreadyIn ?? 0) + (c.m.investing?.contributions ?? 0)) },
+      { key: 'invest', name: 'Invested a month: 401(k), HSA, match, plus the surplus and any freed heavy payments (or, with Invest my surplus off, the after-tax contributions and Retirement lines)', unit: 'money',
+        sheet: 'IF(Math_M27="","",Math_M28_pretax+Math_M28_match+IF(N(InvestSurplus)=0,N(Math_M28_afterTax)+N(Math_M27_retire),Math_M27+N(Math_M53_freed)))', app: c => c.m.investing?.monthly ?? null }],
+    sheet: m53Sheet(),
     label: 'Months until investments reach the FI number, at what goes in each month', app: c => c.m.monthsToFi.value, never: c => !!c.m.monthsToFi.never },
   { id: 'M54', name: 'Coast FI', inputs: 'M50, M02, ages', unit: 'money', fns: ['fi.coastFi', 'foo.coastFiNumber'],
     sheet: 'IF(OR(Math_M50="",Profile_ageUsed="",FiAge=""),"",Math_M50/(1+RealReturn)^MAX(0,FiAge-Profile_ageUsed))', label: 'The FI number brought back to today at the return', app: c => c.m.coastFi.value },
@@ -410,7 +429,7 @@ export const SUPPORT = {
   'result.missing': 'lists blank inputs', 'result.joinWords': 'joins words for Needs ...', 'result.fmt': 'number formats for the math text',
   'metrics.inputsOf': 'reads the records into formula inputs (the Inputs tabs)', 'metrics.metrics': 'runs every formula for the screens (the Math tab)',
   'metrics.placeOf': 'NY and NYC from the Profile (Profile tab: State, Live in New York City)', 'metrics.ageOf': 'age from birth year (Profile tab: Age worked out)',
-  'metrics.keyNumbers': 'the numbers a snapshot keeps', 'metrics.firstDebt': 'the first debt of a type, for the demo check',
+  'metrics.keyNumbers': 'the numbers a snapshot keeps', 'metrics.debtHeroOf': 'the debt-free card on Home, from the one debt plan (M34)', 'metrics.firstDebt': 'the first debt of a type, for the demo check',
   'linked.autoId': 'ids for lines From Debt', 'linked.isAuto': 'spots a line From Debt', 'linked.debtLines': 'each debt payment as a Budget line (Debt tab: Budget line From Debt)',
   'linked.paidFromOf': 'paycheck or Budget for a premium', 'linked.premiumSources': 'premiums as spending', 'linked.duplicates': 'counts a line and its debt or premium once (In the math: Counted once)',
   'linked.afterTaxContributions': 'savings put in after tax',

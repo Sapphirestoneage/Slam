@@ -13,7 +13,7 @@ export function appAnswers(doc, ref, now) {
     realReturn: { value: m.inputs.realReturn, needs: [] },
     ruleOf5Months: { value: m.ruleOf5.months ?? null, needs: m.ruleOf5.months === undefined ? m.ruleOf5.needs : [] },
     ruleOf5Target: m.ruleOf5, ruleOf5KeepPace: { value: m.ruleOf5.keepPace ?? null, needs: m.ruleOf5.needs },
-    fiNumber: m.fiNumber, monthsToFi: m.monthsToFi, coastFi: m.coastFi, supportReceived: m.supportReceived,
+    fiNumber: m.fiNumber, monthsToFi: m.fiPaths?.invested ?? m.monthsToFi, /* the spec's Demo check: the surplus invested from today; the app's FI date pays heavy debt first (batch 11) */ coastFi: m.coastFi, supportReceived: m.supportReceived,
   };
 }
 
