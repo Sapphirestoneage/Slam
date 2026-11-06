@@ -17,6 +17,12 @@ import { creditMove } from '../math/cards.js';
 import { creditHealth } from '../math/debt.js';
 import { CLIFF_COLS, cliffSections } from './reads-cliff.js';
 import { bankKeyOf } from '../privacy.js';
+import { nightCellName } from './tabs.js';
+
+const NIGHT_OF = { Shifts: 'shiftsWeek', Pay: 'payShift', Hours: 'hoursShift', Card: 'cardTips', Cash: 'cashTips', Fee: 'houseFee', OutAmt: 'tipOutAmount', Sales: 'salesShift' };
+// Batch 59 (QUESTIONS 460): a row's bank is its Institution column on Own and owe (typed there, it comes back); a private
+// row keeps only its bank key, which the app gives.
+const keyOnly = (rec, c) => (institutionOf(c.doc, rec) || rec.values?.institution ? '' : rec.values?.bankKey ?? '');
 
 const SKIP = '{InMath}="No"';
 // Every read's table: the step in plain words, its formula (named), the app's number and the Check.
@@ -95,8 +101,8 @@ const tierFormula = order => `IF({Kind}<>"Budget line","",${order.filter(o => o.
 const DRILL_COLS = [
   { area: 'assets', key: 'drillName', label: 'Fire drill: the account', unit: 'text', f: 'IF(OR({Kind}<>"Account",{group}<>"cash",{Status}="Not for me"),"",IF({name}<>"",{name},{Type}))' },
   { area: 'assets', key: 'drillWhat', label: 'Fire drill: at a bank, or in hand', unit: 'text', f: `IF({@drillName}="","",IF({Type}="Cash on hand","In hand",IF(${BANKISH},"Bank","")))` },
-  { area: 'assets', key: 'drillBank', label: 'Fire drill: its bank (from Institutions; blank: not answered)', unit: 'text',
-    f: 'IF({@drillWhat}<>"Bank","",IF({app:bank}<>"",{app:bank},""))', app: { bank: (rec, c) => bankOf(c, rec) } },
+  { area: 'assets', key: 'drillBank', label: 'Fire drill: its bank (its Institution; blank: not answered)', unit: 'text',
+    f: 'IF({@drillWhat}<>"Bank","",IF({institution}<>"",{institution},{app:key}))', app: { key: keyOnly } },
   { area: 'assets', key: 'drillFrozen', label: 'Fire drill: the account that freezes (1)', unit: 'number', f: 'IF({@drillWhat}<>"Bank","",IF({@drillName}=Drill_account,1,0))' },
   { area: 'assets', key: 'drillSame', label: 'Fire drill: at the same bank, as it stands (not answered: the same)', unit: 'number',
     f: `IF(OR({@drillWhat}<>"Bank",{@drillFrozen}=1),"",IF(OR({Type}="Payment app",Drill_type="Payment app"),0,${sameRule(1)}))`, app: { said: saidOf } },
@@ -105,7 +111,7 @@ const DRILL_COLS = [
   { area: 'assets', key: 'drillReach', label: 'Fire drill: cash you can still reach', unit: 'money', f: 'IF({@drillWhat}="In hand",N({balance}),IF(AND({@drillSame}=0,{purpose}<>"Taxes"),N({balance}),""))' },
   { area: 'assets', key: 'drillReach2', label: 'Fire drill: cash you can still reach, the other reading', unit: 'money', f: 'IF({@drillWhat}="In hand",N({balance}),IF(AND({@drillSame2}=0,{purpose}<>"Taxes"),N({balance}),""))' },
   { area: 'debt', key: 'drillCardBank', label: 'Fire drill: the card\'s bank (blank: not answered)', unit: 'text',
-    f: 'IF(OR({Type}<>"Credit card",{Status}="Not for me"),"",IF({app:bank}<>"",{app:bank},""))', app: { bank: (rec, c) => bankOf(c, rec) } },
+    f: 'IF(OR({Type}<>"Credit card",{Status}="Not for me"),"",IF({institution}<>"",{institution},{app:key}))', app: { key: keyOnly } },
   { area: 'debt', key: 'drillCardSame', label: 'Fire drill: the card is at the same bank, as it stands (not answered: the same)', unit: 'number',
     f: 'IF(OR({Type}<>"Credit card",{Status}="Not for me"),"",IF(AND({@drillCardBank}<>"",Drill_bank<>""),IF({@drillCardBank}=Drill_bank,1,0),IF({app:said}="same",1,IF({app:said}="other",0,1))))', app: { said: saidOf } },
   { area: 'debt', key: 'drillCardSame2', label: 'Fire drill: the card is at the same bank, the other reading', unit: 'number',
@@ -203,7 +209,8 @@ function nightRows(x, nights, k0, P, row) {
   nights.forEach((nt, i) => {
     const k = keys[i], n = v.nights?.[i] ?? {}, r = name => `{row:${k}${name}}`;
     const A = P.rows.find(p => p.rowId === x.r.id && p.nightId === nt.id) ?? null;
-    const given = (name, label, val, unit = 'money') => ({ key: `${k}${name}`, name: `${label} (on Income › Tips and shifts in SLAM)`, unit, given: true, value: val ?? null });
+    // Batch 59 (QUESTIONS 458): each night's boxes are its own row under the shift row on Money in; read them there.
+    const given = (name, label, val, unit = 'money', key = NIGHT_OF[name]) => ({ key: `${k}${name}`, name: `${label} (the night's row on Money in)`, unit, f: `IF(${nightCellName(x.r.id, nt.id, key)}="","",${nightCellName(x.r.id, nt.id, key)})`, app: val ?? null });
     out.push({ title: `${x.r.name || x.r.type}, ${nt.name}: one shift`, rows: [
       given('Shifts', 'Shifts a week', n.shiftsWeek, 'number'), given('Pay', 'Pay a shift', n.payShift), given('Hours', 'Hours a shift', n.hoursShift, 'number'),
       given('Card', 'Card tips a shift', n.cardTips), given('Cash', 'Cash tips a shift', n.cashTips), given('Fee', 'House or stage fee a shift', n.houseFee),

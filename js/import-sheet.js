@@ -2,7 +2,7 @@
 // Bring a spreadsheet back: read an edited workbook and compare it with SLAM. Pure: no DOM. Reads the Assumptions tab
 // and every screen tab through the field registry: a row by the hidden key in its column A (a field, a record's id, a
 // section band, a blank row), a column by the hidden row of keys above its header (batch 59), never by position. A
-// file of format 47 or before (one tab per area) is read by its tab names and headers. The review screen
+// file of format 48 or before (one tab per area) is read by its tab names and headers. The review screen
 // (js/ui/sheet-ui.js) shows the result; applyChanges saves what was kept.
 //
 // compare(grid, doc) returns, by area: Changed (field, old, new), New rows, Removed rows; Changed assumptions;
@@ -15,10 +15,11 @@ import { ASSUMPTIONS } from './registry/assumptions.js';
 import { DATA_TAB, OLD_DATA_TAB, STATUS_WORDS, KEY, toCell, partOf, rowsForArea, formulaCols, colLetter } from './sheet/workbook.js';
 import { decodeDefaults, tabOfArea, SCREEN_TABS } from './registry/tabs.js';
 import { foldDoc, SHARE } from './privacy.js';
+import { addInstitution } from './institutions.js';
 import { fingerprint, FORMAT_VERSION } from './sheet/format.js';
 const OLD_TYPES = { 'Savings or HYSA': 'Savings' };
 
-const STATUS_BACK = { ...Object.fromEntries(Object.entries(STATUS_WORDS).map(([k, v]) => [v.toLowerCase(), k])), "i'll find it later": 'Will email' }; // the old word, in files of format 47 and before
+const STATUS_BACK = { ...Object.fromEntries(Object.entries(STATUS_WORDS).map(([k, v]) => [v.toLowerCase(), k])), "i'll find it later": 'Will email' }; // the old word, in files of format 48 and before
 const getPath = (o, path) => path.split('.').reduce((v, k) => (v == null ? undefined : v[k]), o);
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 const isBlankCell = v => v === null || v === undefined || (typeof v === 'string' && v.trim() === '');
@@ -95,7 +96,7 @@ export function gridFromPlan(plan) {
 
 // Where each area's rows and fields are in a grid. The screen tabs (batch 59 on) are read by their hidden column A:
 // a table by its #keys and #head rows, its sections by their bands, a doc field by its field: row, a result by its
-// math: row. A file of format 47 or before has one tab per area (area.tab) with its header on the first row.
+// math: row. A file of format 48 or before has one tab per area (area.tab) with its header on the first row.
 export function locate(grid) {
   const out = { layout: null, tables: {}, fields: new Map(), formulaRows: [] };
   for (const tab of Object.keys(grid)) {
@@ -430,7 +431,10 @@ export function applyChanges(store, res, { metrics = null } = {}) {
         }
         if (c.op === 'night') { (nightOps[c.recId] ??= []).push(c); continue; } // applied together, below
         if (area?.source === 'records') {
-          if (c.op === 'edit') { store.update(c.recId, { [c.field]: c.to }); touched.add(c.recId); }
+          if (c.op === 'edit' && c.field === 'institution' && (c.area === 'assets' || c.area === 'debt')) { // batch 59 (QUESTIONS 460): the bank by name, on the Institutions list
+            const inst = c.to ? addInstitution(store, { name: c.to, kind: c.area === 'debt' && store.get(c.recId)?.type !== 'Credit card' ? 'Lender' : 'Bank' }) : null;
+            store.update(c.recId, { institutionId: inst?.id ?? null, institution: inst?.name ?? null }); touched.add(c.recId);
+          } else if (c.op === 'edit') { store.update(c.recId, { [c.field]: c.to }); touched.add(c.recId); }
           else if (c.op === 'status') { store.update(c.recId, { status: c.to }); touched.add(c.recId); }
           else if (c.op === 'remove') store.remove(c.recId);
           else if (c.op === 'add') {

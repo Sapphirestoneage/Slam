@@ -7,7 +7,8 @@
 // what each row is (a field, a table's keys and header, a section band, a record's id, a blank row, a math row), so
 // js/import-sheet.js reads the tab back by those keys and never by position.
 import { AREAS, sheetFields, fieldsFor } from '../registry/fields.js';
-import { SCREEN_TABS, sectionsOf, decodeDefaults, tabOfArea } from '../registry/tabs.js';
+import { SCREEN_TABS, sectionsOf, decodeDefaults, tabOfArea, nightCellName } from '../registry/tabs.js';
+import { institutionOf } from '../institutions.js';
 import { hasNights, NIGHT_KEYS, nightsRollUp } from '../math/earnings.js';
 import { MATH, rowsOf } from '../registry/math.js';
 import { ASSUMPTIONS, TABLES, sourceOf } from '../registry/assumptions.js';
@@ -15,14 +16,14 @@ import { REPORTS } from '../registry/reports.js';
 import { sheetContext } from './context.js';
 import { FORMAT_VERSION, APP_VERSION, shapeOf, fingerprint } from './format.js';
 
-export const BLANK_ROWS = 20; // the old layout's blank rows (format 47 and before); each section now ends with its own
+export const BLANK_ROWS = 20; // the old layout's blank rows (format 48 and before); each section now ends with its own
 export const LIST_TAB = '_lists'; // hidden: the long dropdown lists (Excel keeps a list typed into a rule under 255 characters)
 export const REPO = 'https://github.com/sapphirestoneage/slam';
 export const DATA_TAB = '_meta';
 export const OLD_DATA_TAB = 'SLAM data'; // the first files made (Nov 3 2026) kept it here
 export const COACH_TAB = 'Coach notes';
 // The stored statuses as the sheet shows them (one sureness system: Not sure is a Guess).
-// Batch 59: the words of the app's status picker (Will get it was "I'll find it later" in files of format 47 and before).
+// Batch 59: the words of the app's status picker (Will get it was "I'll find it later" in files of format 48 and before).
 export const STATUS_WORDS = { 'Know it': 'Know it', Roughly: 'Roughly', 'Not sure': 'Guess', 'Not for me': 'Not for me', 'Will email': 'Will get it', 'Not now': 'Not now', Computed: 'Worked out' };
 export const STATUS_LIST = ['Know it', 'Roughly', 'Guess', 'Will get it', 'Not now', 'Not for me'];
 // What column A of a screen tab says (hidden): the import reads each row by it.
@@ -285,6 +286,8 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
             return { f, s: 'formula', fmt: l.col.unit, ...(/\bTODAY\(/i.test(f) && datedRec(real?.rec) ? { today: true } : {}) }; // batch 45: a dated row (QUESTIONS 334)
           }));
           for (const n of nights ? [...nights, null] : []) { // each night, then a blank one to add a night
+            const nr = at();
+            if (n) for (const k of NIGHT_KEYS) if (letterOf.has(k)) define(nightCellName(real.id, n.id, k), absRange(sheet.name, letterOf.get(k), nr)); // Shift P&L reads them
             rows.push(layout.map(l => {
               if (l.kind === 'id') return { v: `${KEY.night}${real.id}:${n?.id ?? 'new'}`, s: 'key', fmt: 'text' };
               if (l.kind === 'field' && (l.key === 'name' || NIGHT_KEYS.includes(l.key))) return { v: n ? (l.key === 'name' ? n.name ?? null : n[l.key] ?? null) : null, s: 'input', fmt: l.fld.type, night: true };
@@ -353,6 +356,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
     if (which === 'years') tables = tables.slice(0, 1);
     if (which === 'debts') tables = tables.slice(1);
     const pad = off ? [{ v: KEY.gap, s: 'key' }] : [];
+    if (off && rep.read) rows.push([{ v: `${KEY.block}${rep.tab}`, s: 'key' }, { v: rep.tab, s: 'section' }], [...pad, { v: rep.about, s: 'note' }]); // batch 62's reads: their name and what they are
     if (off && !tables.length) rows.push([...pad, { v: 'Nothing here yet for this household.', s: 'note' }]);
     for (const t of tables) {
       const head = t.columns;
@@ -527,7 +531,9 @@ export function tableLayout(area, { coach = false } = {}) {
   if (area.source === 'months') L.push({ key: 'month', label: 'Month (YYYY-MM)', kind: 'month' }, { key: 'line', label: 'Budget line', kind: 'line' });
   if (name) L.push({ key: 'name', label: name.label, kind: 'field', fld: name });
   if (isRecords) L.push({ key: 'Type', label: BUILTIN.Type, kind: 'builtin' }, { key: 'Status', label: BUILTIN.Status, kind: 'builtin' });
-  for (const f of fields) if (f !== name) L.push({ key: f.key, label: f.label, kind: 'field', fld: f });
+  const bank = (area.id === 'assets' || area.id === 'debt') ? fields.find(f => f.key === 'institution') : null; // batch 59 (QUESTIONS 460): each row's bank, up front
+  if (bank) L.push({ key: bank.key, label: bank.label, kind: 'field', fld: bank });
+  for (const f of fields) if (f !== name && f !== bank) L.push({ key: f.key, label: f.label, kind: 'field', fld: f });
   if (isRecords) L.push({ key: 'InMath', label: BUILTIN.InMath, kind: 'builtin' });
   for (const col of formulaCols().filter(x => x.area === area.id)) L.push({ key: col.key, label: col.label, kind: 'formula', col });
   if (isRecords) L.push({ key: 'Kind', label: BUILTIN.Kind, kind: 'builtin' });
@@ -585,7 +591,9 @@ function fitWidths(sheet) {
 export function rowsForArea(area, doc, c) {
   if (area.source === 'doc') return [{ id: 'doc', get: fld => getPath(doc[partOf(area, fld)] || {}, fld.key) }];
   if (area.source === 'records') {
-    return doc.records.filter(r => area.kinds[r.kind]).map(rec => ({ id: rec.id, rec, get: fld => (fld.where === 'top' ? rec[fld.key] : rec.values?.[fld.key]) }));
+    // Batch 59 (QUESTIONS 460): an account's or a debt's Institution is the name of its Institutions row (else the older typed name).
+    const bankName = rec => ((area.id === 'assets' || area.id === 'debt') ? institutionOf(doc, rec)?.name ?? rec.values?.institution ?? null : rec.values?.institution);
+    return doc.records.filter(r => area.kinds[r.kind]).map(rec => ({ id: rec.id, rec, get: fld => (fld.where === 'top' ? rec[fld.key] : fld.key === 'institution' ? bankName(rec) : rec.values?.[fld.key]) }));
   }
   if (area.source === 'list') {
     const list = getPath(doc[area.part] || {}, area.path) || [];

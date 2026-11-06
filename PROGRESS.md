@@ -1538,7 +1538,7 @@ tool ("sheet for me, app for clients"), in Google Sheets, with tabs that follow 
    then the boxes in the order a coach asks them, each section with the app's title: forms for About you, Taxes and the
    settings, tables with a bold band per section (Budget by category, Assets by Cash, Investments, Home or car, Debt by
    Credit cards, Loans, Other, Income by person and type, months on Month end). Results are live formulas off the Math
-   tab with the app's value and a Check. History, Lists, Data and Money control have no tab, each with why. Format 48.
+   tab with the app's value and a Check. History, Lists, Data and Money control have no tab, each with why. Format 49.
 2. Google Sheets first: tools/sheets-check.mjs and test/sheets.test.js check every household's formulas against Google
    Sheets' function list (data/google-sheets-functions.json, read off support.google.com), for ranges used for one value
    (no implicit intersection in Sheets), Excel-only forms, range names (the True FI rule's range is now FiTrueTax) and
@@ -1555,6 +1555,10 @@ tool ("sheet for me, app for clients"), in Google Sheets, with tabs that follow 
    each table and form of every input tab brings back exactly those changes and saves them. Batch 60's kinds of night
    (QUESTIONS 448, decided): on Money in a shift row's nights are rows under it, the row's shift boxes formulas over
    them; a changed, new or deleted night comes back and the row is added up again (test/roundtrip.test.js).
+   Batch 62's reads (QUESTIONS 456, 458, 460, decided): Shift P&L and Benefits cliff are blocks of Money in, Fire drill,
+   Lender and Credit score of Own and owe; Shift P&L reads each night's boxes off its night row (named cells
+   Night_<row>_<night>_<box>); Assets and Debt carry each row's bank (its Institution) up front, the Fire drill's banks
+   read it, and a bank typed there comes back as an Institutions row.
 5. Looks (js/sheet/excel.js): bands for sections, blue bordered boxes (unlocked) for inputs, grey borderless worked-out
    cells, output-only tabs protected, frozen title lines, fitted widths, $ and % formats, a dropdown on every tap
    (statuses as the app says them, Will get it included; Who pays, Owner, a section's own types, the categories).

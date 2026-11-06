@@ -11,17 +11,18 @@ import { buildWorkbook } from '../js/sheet/workbook.js';
 import { MATH } from '../js/registry/math.js';
 import { READS } from '../js/registry/reads.js';
 import { RULES } from '../js/registry/assumptions.js';
+import { tabOfReport } from '../js/registry/tabs.js';
 
 const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
 const persona = id => importFile(readFileSync(new URL(`../fixtures/personas/${id}.json`, import.meta.url), 'utf8'));
 const now = new Date('2026-11-05T12:00:00Z');
 const near = (a, b, tol = 0.01) => assert.ok(Math.abs(a - b) <= tol, `${a} is not ${b}`);
 
-test('each read is a tab, and its Math rows are formulas off the read\'s named rows', () => {
+test('each read is a block of its session tab, and its Math rows are formulas off the read\'s named rows', () => {
   const plan = buildWorkbook(persona('single-parent'), ref, { now });
   const names = new Set(plan.names.map(n => n.name));
   for (const r of READS) {
-    assert.ok(plan.sheets.some(s => s.name === r.tab), `${r.tab} tab`);
+    assert.ok(plan.sheets.find(s => s.name === tabOfReport(r.tab))?.rows.some(row => row?.[0]?.v === `#block:${r.tab}`), `${r.tab} on ${tabOfReport(r.tab)}`); // batch 59 (QUESTIONS 456)
     const e = MATH.find(x => x.id === r.math);
     assert.ok(e.sheet && e.sheet.startsWith(`${r.prefix}_`), `${r.math} reads ${r.prefix}`);
     assert.ok(names.has(e.sheet), `${e.sheet} is a named range`);
@@ -31,11 +32,11 @@ test('each read is a tab, and its Math rows are formulas off the read\'s named r
 
 test('the inputs a coach changes are blue boxes holding the app\'s default', () => {
   const plan = buildWorkbook(persona('single-parent'), ref, { now });
-  const cliff = plan.sheets.find(s => s.name === 'Benefits cliff');
-  const raise = cliff.rows.find(r => /^Raise a year/.test(r?.[0]?.v ?? ''));
-  assert.equal(raise[1].s, 'input'); assert.equal(raise[1].v, 5000);
-  const drill = plan.sheets.find(s => s.name === 'Fire drill');
-  assert.equal(drill.rows.find(r => /^The account \(/.test(r?.[0]?.v ?? ''))[1].s, 'input');
+  const cliff = plan.sheets.find(s => s.name === tabOfReport('Benefits cliff')); // batch 59: Money in (column A is the hidden keys)
+  const raise = cliff.rows.find(r => /^Raise a year/.test(r?.[1]?.v ?? ''));
+  assert.equal(raise[2].s, 'input'); assert.equal(raise[2].v, 5000);
+  const drill = plan.sheets.find(s => s.name === tabOfReport('Fire drill'));
+  assert.equal(drill.rows.find(r => /^The account \(/.test(r?.[1]?.v ?? ''))[2].s, 'input');
 });
 
 test('the single parent: what a $5,000 raise keeps after tax, by hand', () => {

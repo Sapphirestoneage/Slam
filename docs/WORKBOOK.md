@@ -57,7 +57,8 @@ Batch 38 fixed these (the before list):
 
 ## The reads as formulas (batch 62)
 
-The Phase 4 reads are live formulas now, each on a tab of its own (js/registry/reads.js, js/registry/reads-cliff.js),
+The Phase 4 reads are live formulas now (js/registry/reads.js, js/registry/reads-cliff.js), each a block of its session tab
+(batch 59, QUESTIONS 456: Shift P&L and Benefits cliff on Money in; Fire drill, Lender and Credit score on Own and owe),
 built like the report tabs: one row per step of the math with a plain label, the formula, the app's number and a
 Check. A step with no number of its own in the app has no Check. The Math tab's rows for these reads point at the
 read's named rows (Lender_dti, Drill_days, Shift_hourly, Credit_move, Cliff_next ...), so the two always agree.
@@ -66,7 +67,7 @@ read's named rows (Lender_dti, Drill_days, Shift_hourly, Credit_move, Cliff_next
 | --- | --- | --- | --- |
 | M9W What a lender sees | Lender | the rate and taxes-and-insurance share are on Assumptions (This client) | Income: Lender reads it as, pace, returns, earned, mortgage, landlord; Debt: home loan, payment counted |
 | M9F Bank fire drill (both readings) | Fire drill | the account that freezes (a blue box, the app's pick in it) | Assets: name, bank, frozen, same bank (two readings), reach; Debt: the card's bank, room, minimum; Budget: the group of bills, must-pay |
-| M9H Shift P&L | Shift P&L | the shift boxes on Income; each kind of night's boxes show as the app's values | Income: Shift P&L columns (a row with nights is read one night at a time on the tab) |
+| M9H Shift P&L | Shift P&L | the shift boxes on Income; each kind of night's boxes are read off the night's own row on Money in (QUESTIONS 458) | Income: Shift P&L columns (a row with nights is read one night at a time on the tab) |
 | M9D What would move the score | Credit score | Your credit on About you, each card on Debt | Debt: months since opened |
 | M9B The benefits cliff | Benefits cliff | the raise to test (a blue box, $5,000; the app's numbers are for $5,000) | People: child, child number |
 | M10 · ctc Child Tax Credit | Benefits cliff | (worked out with the tax on the raise) | |
@@ -110,9 +111,9 @@ them, each section with the app's own title.
 | # | Tab | Today's screens it holds | Top to bottom |
 | --- | --- | --- | --- |
 | 1 | You | Home › About you, People, Coach tools › Discovery and Session | Where this stands (the Picture: answered, solid; Ask next), About you, What applies to me, Why now, People (a table), Work and home, Home and shared bills, Couples split, Which do you have today, Your community and calendar, Who they are with money, Session |
-| 2 | Money in | Cash flow › Income, Taxes, Plan › Raise and benefits | Where this stands (take-home, gross, taxes, the effective rate), Income by person and type (a band each; a shift row's kinds of night as rows under it, its shift boxes formulas over them; Other benefits last), Taxes (filing, W-4, last year), Variable income, Work hours, Benefits now (with child care help), more about money in (the Child Tax Credit, match, safe budget, real hourly, what a shift really pays), what a raise does to your benefits |
+| 2 | Money in | Cash flow › Income, Taxes, Plan › Raise and benefits | Where this stands (take-home, gross, taxes, the effective rate), Income by person and type (a band each; a shift row's kinds of night as rows under it, its shift boxes formulas over them; Other benefits last), Taxes (filing, W-4, last year), Variable income, Work hours, Benefits now (with child care help), more about money in (the Child Tax Credit, match, safe budget, real hourly), the Shift P&L read (its nights from the night rows), the Benefits cliff read |
 | 3 | Money out | Cash flow › Budget, Calendar, Month end, Plan › Next 12 months | Where this stands (spending, the gut number, the categories, gut accuracy), the gut number first, then a band per category in the app's order (Accommodation, Food, Transportation, Debt, Health and self-care, Taxes, Retirement, Bills and subscriptions, Other) with its lines, then Irregular and yearly costs; Settings for this budget; more about money out (sinking funds, bonus months, holidays); Calendar entries and wins; Month end (a band per month) |
-| 4 | Own and owe | Net worth › Assets, Debt, Credit cards, Protection, Fire drill, Report › Lender's view | Where this stands (net worth, liquid, cash, invested, runway), Assets (Cash, Investments, Home or car), Order to pay off debt, Debt (Credit cards, Loans, Other), what you owe comes to (utilization, debt-to-income), Your credit, what your cards give you, Protection, Cash layers, Income gaps, Backups, Institutions, the bank fire drill, what a lender sees |
+| 4 | Own and owe | Net worth › Assets, Debt, Credit cards, Protection, Fire drill, Report › Lender's view | Where this stands (net worth, liquid, cash, invested, runway), Assets (Cash, Investments, Home or car; each row's bank, its Institution, up front), Order to pay off debt, Debt (Credit cards, Loans, Other; each row's Institution up front), what you owe comes to (utilization, debt-to-income), Your credit, what your cards give you, the Credit score read, Protection, Cash layers, Income gaps, Backups, Institutions, the Fire drill read (its bank from the Institution column), the Lender read |
 | 5 | The plan | Home, Plan › FOO, Scorecard, Current vs Proposed | Where this stands (surplus, savings rate, the FOO step, your next 3 moves), where each dollar goes (take-home to surplus, and the DRAFTT shares), Extra to debt, Giving, launch and the job, the FOO steps, what the freed money does, the Scorecard, Current vs Proposed |
 | 6 | The future | Plan › Goals, Timeline, Debt payoff, Transitions | Where this stands (months to FI and its range, months to debt free and its range), FI date and assumptions, Social Security (and the year-by-year plan's results), the FI numbers, Goals (milestones and dated events), big deals and the ladder, year by year to FI, debt free and each debt month by month, Life Transitions |
 | 7 | Statements | Report › Statements | The three statements and the tie-out (nothing to type) |
@@ -170,12 +171,13 @@ a record's id, `#sec:kind=bill;draftt=Food` (a band, with what a new row in it i
 hidden row of column keys sits above each table's header. "Bring a spreadsheet back" reads by those keys, never by
 position, so inserted rows and columns, sorted rows and renamed headers all still read. A new row takes its section: a
 card under Credit cards, a cash account under Cash, a line under Food (its category still decides its letter), a month
-line under its month. A row deleted in the file is offered for deletion (No by default). A shift row's kinds of night
+line under its month. A row deleted in the file is offered for deletion (No by default). An account's or a debt's
+Institution (its bank; QUESTIONS 460) typed in the sheet comes back as that Institutions row, added when new. A shift row's kinds of night
 (batch 60, QUESTIONS 448) are rows under it (`#night:` keys) with a blank one to add a night; the row's Shifts a week, Pay
 a shift, hours, tips, fee and tip-out are formulas over them, written night by night (as js/math/earnings.js adds them
 up), so a changed night, a new night and a deleted night (No by default) come back, and the row is added up again. Typing over a grey cell is
 listed and never saved. A copy made Without private rows comes back too: its private rows (neutral names there) are
-never read, renamed or deleted, and the review never names them. A file of format 47 or before (a tab per area: Debt,
+never read, renamed or deleted, and the review never names them. A file of format 48 or before (a tab per area: Debt,
 Spending lines ...) is read by its old tab names and headers, with a note saying so.
 
 Checked by: `node tools/workbook-check.mjs` (every Check on every tab, every household), `node tools/sheets-check.mjs`

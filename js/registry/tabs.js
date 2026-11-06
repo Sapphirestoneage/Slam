@@ -47,8 +47,9 @@ export const SCREEN_TABS = [
       { form: 'profile', title: 'Variable income', fields: keys('variable', ['last12', 'typical', 'lowest', 'setAside', 'business', 'months']) },
       { form: 'profile', title: 'Work hours', fields: keys('hours', ['paidHours', 'commuteHours', 'prepHours', 'workCosts']) },
       { form: 'profile', title: 'Benefits now', fields: [...keys('cliff', ['snap', 'medicaid', 'essential', 'aca', 'kids', 'eitc', 'ccap', 'snapAmount', 'careCosts', 'careFull'])] },
-      { math: 'More about money in', rows: ['M10_tips', 'M10_ctc=Child Tax Credit a year', 'M12_extra', 'M12_platform', 'M14_marginal=Marginal tax rate', 'M15=Employer match a year', 'M16=Variable income safe budget', 'M16_rate', 'M17=Real hourly wage', 'M9H_real', 'M9H'] },
-      { math: 'What a raise does to your benefits', rows: ['M9B', 'M9B_snap', 'M9B_help', 'M9B_eitc', 'M9B_ccap', 'M9B_raise5k'] },
+      { math: 'More about money in', rows: ['M10_tips', 'M10_ctc=Child Tax Credit a year', 'M12_extra', 'M12_platform', 'M14_marginal=Marginal tax rate', 'M15=Employer match a year', 'M16=Variable income safe budget', 'M16_rate', 'M17=Real hourly wage'] },
+      { report: 'Shift P&L' }, // batch 62's reads, as blocks of their session tab (QUESTIONS 456)
+      { report: 'Benefits cliff' },
     ] },
   { name: 'Money out', screens: ['#/cash-flow/budget', '#/cash-flow/calendar', '#/cash-flow/close', '#/plan/next-12-months'],
     about: 'Money out: your gut number first, then each category and its lines. Fill in the blue boxes from the top; spending above fills in as you go.',
@@ -70,15 +71,16 @@ export const SCREEN_TABS = [
       { table: 'debt', title: 'Debt (credit cards first)' },
       { math: 'What you owe comes to', rows: ['M30', 'M31', 'M32', 'M33', 'M36=Debt-to-income', 'M35=Utilization', 'M37'] },
       { form: 'profile', title: 'Your credit', fields: keys('credit', ['score', 'source', 'checked', 'scorePartner', 'sourcePartner', 'checkedPartner', 'latePayments', 'lateCount', 'oldestAccountYears', 'inquiries', 'freezeEquifax', 'freezeExperian', 'freezeTransUnion']) },
-      { math: 'What your cards give you', rows: ['M9C', 'M9C_doubled', 'M9D'] },
+      { math: 'What your cards give you', rows: ['M9C', 'M9C_doubled'] },
+      { report: 'Credit score' },
       { table: 'protection', title: 'Protection' },
       { form: 'profile', title: 'Cash layers', fields: [P('sleepAtNight'), P('settings.layerMode')] },
       { math: 'Cash layers', rows: ['M43=Rule of 5 target', 'M43_months', 'M43_gap', 'M68_littleE'] },
       { table: 'gaps', title: 'Income gaps' },
       { table: 'backups', title: 'Backups' },
       { table: 'institutions', title: 'Institutions' },
-      { math: 'If one account froze today', rows: ['M9F_outOfReach', 'M9F', 'M9F_withCard', 'M9F_mustPay'] },
-      { math: 'What a lender sees', rows: ['M9W', 'M9W_counted', 'M9W_earned', 'M9W_gap', 'M9W_landlord', 'M9W_loan'] },
+      { report: 'Fire drill' },
+      { report: 'Lender' },
     ] },
   { name: 'The plan', screens: ['#/home/session', '#/plan/foo', '#/plan/scorecard', '#/plan/scenarios'],
     about: 'The plan: where each dollar goes, and the FOO step you are on. Fill in the blue boxes from the top; the surplus above fills in as you go.',
@@ -134,6 +136,9 @@ export const NO_TAB = [
 // The engine room after the screens: Assumptions (every rate and limit, its own tab), Math (every formula, the Check
 // beside each), Captured (kept for a later Wrapped).
 export const ENGINE_TABS = ['Assumptions', 'Math', 'Captured'];
+
+// Batch 59 (QUESTIONS 458): the named cell of one night's box on Money in (the night's row under its shift row).
+export const nightCellName = (recId, nightId, key) => `Night_${String(recId).replace(/[^A-Za-z0-9]/g, '_')}_${String(nightId).replace(/[^A-Za-z0-9]/g, '_')}_${key}`;
 
 export const tabOfArea = id => SCREEN_TABS.find(t => t.blocks.some(b => b.table === id))?.name ?? null;
 export const tabOfField = fid => SCREEN_TABS.find(t => t.blocks.some(b => b.form && b.fields.includes(fid)))?.name ?? null;
