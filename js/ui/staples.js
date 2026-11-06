@@ -5,6 +5,8 @@ import { STATUSES, SURE, sureOf, statusOf, changeSince, countsAsDone, SOURCE_WOR
 import { metrics, keyNumbers } from '../math/metrics.js';
 import { rangesOf, fooRangeOf } from '../math/ranges.js';
 import { askNextOf } from '../math/nextbest.js';
+import { ageOnlyRangesOf } from '../math/agestart.js';
+import { priorsData } from '../priorslib.js';
 import { inView, timeChip } from '../math/time.js';
 import { money, pct, number, EMPTY, duration } from '../format.js';
 import { joinWords } from '../math/result.js';
@@ -53,7 +55,7 @@ export function createCtx({ store, ref, now = () => new Date(), viewer = () => (
     ranges() { const m = ctx.metrics(), d = ctx.store.doc; if (rcache?.m !== m) rcache = { m, r: rangesOf(d, ref, { now: now(), person: ownPlanPerson(d), m }) }; return rcache.r; },
     fooRange(flags = []) { const m = ctx.metrics(); if (fcache?.m !== m) fcache = { m, r: fooRangeOf(ctx.store.doc, ref, { now: now(), flags }) }; return fcache.r; },
     // Batch 43 (M9Q): Ask me next and the certainty meter, on the same ranges and the same folded household, once per change.
-    askNext(flags = []) { const m = ctx.metrics(), d = ctx.store.doc; if (acache?.m !== m) acache = { m, r: askNextOf(d, ref, { now: now(), person: ownPlanPerson(d), m, R: ctx.ranges(), F: ctx.fooRange(flags), flags }) }; return acache.r; },
+    askNext(flags = []) { const m = ctx.metrics(), d = ctx.store.doc; if (acache?.m !== m) { const data = priorsData(); acache = { m, r: askNextOf(d, ref, { now: now(), person: ownPlanPerson(d), m, R: ctx.ranges(), F: ctx.fooRange(flags), flags, zero: data ? ageOnlyRangesOf(d, ref, data, { now: now() }) : null }) }; } return acache.r; }, // batch 46 (QUESTIONS 371): 0% is the plan from the age alone
     // Screens register here; the shell clears them when it leaves the screen (keep: shell-level).
     onRefresh(fn, { keep = false } = {}) { fn.keep = keep; listeners.add(fn); return () => listeners.delete(fn); },
     clearScreen() { for (const fn of listeners) if (!fn.keep) listeners.delete(fn); },

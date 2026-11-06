@@ -69,6 +69,10 @@ export const RULES = {
   lenderMortgageRate: 0.0718, lenderMortgageYears: 30, lenderTaxInsShare: 0.25,
   // Batch 44 (the bank fire drill, M9F): the drill reads the next this many days of the calendar.
   fireDrillDays: 30,
+  // Batch 46 (the age-only start, M9A): pay and spending move together while both are typical (people who earn more
+  // spend more) and the share spent moves this far either way; once one is answered the other moves this far. Wider
+  // than a gut spending number (rangeSpendGut), so a gut answer still narrows the plan.
+  priorSpendShare: 0.25,
 };
 export const LISTS = {
   perMonth: { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, quarter: 1 / 3, year: 1 / 12 },
@@ -265,6 +269,7 @@ export const ASSUMPTIONS = [
   { id: 'rules.carPaymentYears', name: 'CarPaymentYears', label: 'Can I afford it?: a car payment starts at this many years (other monthly costs start at For good)', unit: 'number', get: () => RULES.carPaymentYears, source: RULE('js/math/afford.js, M83; QUESTIONS 273 (decided Nov 6)'), date: '2026-11-06' },
   { id: 'rules.fireDrillDays', name: 'FireDrillDays', label: 'Fire drill: the days of the calendar read when an account freezes', unit: 'number', get: () => RULES.fireDrillDays, source: RULE('js/math/firedrill.js, M9F: about a pay cycle or two, the time a direct deposit change takes, and the time a closed account takes to send its balance back'), date: '2026-11-06' },
   { id: 'rules.typicalLow', name: 'TypicalLow', label: 'Typical at your age: the low end of a typical range, times the source\'s median (or mean)', unit: 'number', get: () => RULES.typicalLow, source: RULE('js/math/priors.js, M9E; docs/engines/priors.md, until percentiles are read'), date: '2026-11-06' },
+  { id: 'rules.priorSpendShare', name: 'PriorSpendShare', label: 'Typical at your age, not answered yet: the share of pay spent moves this far either way, and so does pay or spending once the other is answered (wider than RangeSpendGut, so a gut answer narrows it)', unit: 'pct', get: () => RULES.priorSpendShare, source: RULE('js/math/agestart.js, M9A; docs/engines/priors.md, How a range narrows (batch 46)'), date: '2026-11-06' },
   { id: 'rules.typicalHigh', name: 'TypicalHigh', label: 'Typical at your age: the high end of a typical range, times the source\'s median (or mean)', unit: 'number', get: () => RULES.typicalHigh, source: RULE('js/math/priors.js, M9E; docs/engines/priors.md, until percentiles are read'), date: '2026-11-06' },
   // Batch 42: the lender's-eye view (M9W).
   { id: 'rules.lenderFront', name: 'LenderFront', label: 'Lender\'s view: a conventional lender\'s usual line for the home payment (with taxes and insurance), share of gross pay', unit: 'pct', get: () => RULES.lenderFront, source: 'The traditional 28/36 rule (lender practice; Fannie Mae\'s Selling Guide sets only the total since 2017), via Money.com, What is the 28/36 rule', date: '2026-11-06' },

@@ -1,7 +1,8 @@
 // The layout checker: the owner's repeat design complaints (DESIGN.md) as checks that fail.
 // Serve the app (python3 -m http.server 8767), then: node tools/e2e/layout.cjs
 // Visits every screen in walkthrough.cjs at 1440, 1280 and 390 wide, light and dark, for the Demo client and for a
-// brand-new client made through the UI and Fast Track, opens Details panels on the list screens, and runs nine checks:
+// brand-new client made through the UI and Fast Track (batch 46: its Home before and after an age, the plan from an
+// age), opens Details panels on the list screens, and runs nine checks:
 //   level    boxes (and their labels) in one visual row start at the same top edge, within 2px
 //   clipped  inputs, selects, buttons and cut-off text show in full
 //   overflow no sideways scroll and nothing past the right edge
@@ -703,6 +704,15 @@ if (require.main === module) (async () => {
       await page.locator('.new-client-pop input').fill('Layout Test');
       await scanHere(page, { route: 'New client box', width: 1440, theme: 'light', client: 'New' }, ['level', 'clipped', 'covered', 'unlabeled']);
       await page.locator('.new-client-pop button', { hasText: /^Create$/ }).click(); await settle(page, 600);
+      // Batch 46: Home for a brand-new client, the plan from an age: before there is an age, then with only an age.
+      const freshHome = async state => { for (const width of WIDTHS) for (const theme of THEMES) {
+        await page.setViewportSize({ width, height: width < 600 ? 844 : 1000 }); await setTheme(page, theme); await go(page, '#/home/session');
+        await scanHere(page, { route: 'Home (new client)', width, theme, client: 'New', state }, [...STILL, 'covered']);
+      } };
+      await freshHome('no age yet');
+      await page.locator('.age-plan input[data-focus="plan:by"]').fill('1990'); await page.locator('.age-plan input[data-focus="plan:by"]').press('Tab'); await settle(page, 400);
+      await freshHome('an age only');
+      await setTheme(page, 'light');
       for (const width of WIDTHS) { // each step of Fast Track at every width; the real answers go in at the last one
         await page.setViewportSize({ width, height: width < 600 ? 844 : 1000 });
         await fastTrack(page, { width, theme: 'light', client: 'New' }, { finish: width === WIDTHS[WIDTHS.length - 1] });

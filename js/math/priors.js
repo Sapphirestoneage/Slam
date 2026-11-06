@@ -11,6 +11,12 @@
 // place (place: 'NY', ACS rent for New York State); the closest row wins (place, then household, then age band).
 // Spending scales by a place row (BEA price parities: the NY metro for NY clients, QUESTIONS 210). Rent is new: the
 // ACS median gross rent, a renter's share when the rent is split with roommates.
+// Batch 46 (Phase 4, Track 1, the age-only start; QUESTIONS 336): one rule for every all-ages row read at an age, the
+// age band's ratio to all ages. The CE one-person row (all ages, average age 56) is scaled by the band's CE figure over
+// the all-ages figure (per category where both tables have it, else the totals), so a 25 year old living alone is not
+// read as a 56 year old living alone. Income, cash and retirement have no Primary age row, so data.shapes says which
+// age split shapes them (income and cash like CE spending, retirement like SCF net worth). priorFill turns a range into
+// all households' 25th, middle and 75th when only a share has any (those with none count as $0).
 import { fmt } from './result.js';
 import { RULES } from '../registry/assumptions.js';
 import { splitWaysOf } from './spending.js';
@@ -31,9 +37,8 @@ export const TYPICAL = {
 // CE categories as a month (spending.<key>): the shape for a later Budget check, no note yet.
 export const CE_CATEGORIES = ['total', 'food', 'foodAtHome', 'foodAway', 'housing', 'shelter', 'utilities', 'transportation', 'vehiclePurchases', 'healthCare', 'entertainment', 'apparel', 'personalInsurance', 'cashContributions'];
 // No Primary row yet: these say why instead of a range (empty is not zero).
-export const NO_ROW = {
-  income: 'No Primary household income by age yet (Census H-10 is still Secondary)',
-};
+// Batch 46: income now reads the all-households median shaped by age (data.shapes), so nothing is left here.
+export const NO_ROW = {};
 
 const inBand = (ages, age) => !ages || (age != null && (ages[0] == null || age >= ages[0]) && (ages[1] == null || age <= ages[1]));
 // The row for a field: of the rows that fit (their place, household and age band each match or are not set), the
@@ -65,12 +70,42 @@ export function priorsOpts(profile = {}) {
 }
 
 const center = r => r.median ?? r.mean ?? null;
+const plain = r => r.household == null && r.place == null;
+// The age band's ratio to all ages for a CE field (QUESTIONS 336): the band's figure over the all-ages figure, both
+// rows of every household size; a category with no all-ages row uses the totals. Null with no age or no row.
+export function ageRatioOf(data, field, age) {
+  if (age == null) return null;
+  const rows = data?.rows || [];
+  const pick = f => ({ band: rows.find(r => r.field === f && plain(r) && r.ages && inBand(r.ages, age)), all: rows.find(r => r.field === f && plain(r) && !r.ages) });
+  let p = pick(field), via = field;
+  if (!(p.band && p.all) && field !== 'spending.total') { p = pick('spending.total'); via = 'spending.total'; }
+  if (!(p.band && p.all)) return null;
+  const b = center(p.band), a = center(p.all);
+  return b > 0 && a > 0 ? { factor: b / a, field: via, band: p.band.band, bandValue: b, allValue: a, allYear: p.all.period ?? p.all.year } : null;
+}
+// A row read at an age: the one-person row times its age ratio (QUESTIONS 336); any other row as it is.
+const atAge = (data, r, field, age) => {
+  const q = r && r.household === 'Solo' && !r.ages && r.unit === 'year' ? ageRatioOf(data, field, age) : null;
+  return q ? { ...r, mean: r.mean * q.factor, mean0: r.mean, band: q.band, ages: true, ratio: q } : r;
+};
 // Spending all in, a month: CE total expenditures less personal insurance and pensions (payroll taxes and retirement
 // contributions, which come out before take-home), over 12. Both rows from the same band, or nothing.
 function spendingRow(data, age, pick) {
-  const t = rowFor(data, 'spending.total', age, pick), p = rowFor(data, 'spending.personalInsurance', age, pick);
-  if (!t || !p || t.band !== p.band || t.household !== p.household) return null;
-  return { ...t, field: 'spending', mean: (t.mean - p.mean) / 12, unit: 'month', table: `${t.table} less ${p.table.replace(/, annual.*$/, '')}, over 12` };
+  const t0 = rowFor(data, 'spending.total', age, pick), p0 = rowFor(data, 'spending.personalInsurance', age, pick);
+  if (!t0 || !p0 || t0.band !== p0.band || t0.household !== p0.household) return null;
+  const t = atAge(data, t0, 'spending.total', age), p = atAge(data, p0, 'spending.personalInsurance', age);
+  return { ...t, field: 'spending', mean: (t.mean - p.mean) / 12, mean0: (t0.mean - p0.mean) / 12, unit: 'month', table: `${t.table} less ${p.table.replace(/, annual.*$/, '')}, over 12` };
+}
+// What shapes an all-ages row by age (data.shapes): its factor (the age's, and living alone's, figure over the
+// all-ages figure), or null when there is nothing to shape by.
+export function shapeOf(data, field, { age = null, household = null } = {}) {
+  const S = (data?.shapes || []).find(x => x.field === field);
+  if (!S || (age == null && household == null)) return null;
+  const all = (data.rows || []).find(r => r.field === S.by && plain(r) && !r.ages);
+  const row = atAge(data, rowFor(data, S.by, age, { household }), S.by, age);
+  const v = row ? center(row) : null, a = all ? center(all) : null;
+  if (!(v > 0 && a > 0) || row === all) return null;
+  return { factor: v / a, by: S.by, band: row.ages ? row.band : null, household: row.household ?? null, value: v, allValue: a, placeBy: S.placeBy ?? null, note: S.note };
 }
 
 // The typical range: { field, low, likely, high, by: 'median' | 'mean', band, who, allAges, household, percentiles,
@@ -80,23 +115,28 @@ function spendingRow(data, age, pick) {
 export function typicalOf(data, field, { age = null, place = null, household = null, split = 1, low = RULES.typicalLow, high = RULES.typicalHigh } = {}) {
   if (NO_ROW[field]) return null;
   const pick = { place, household };
-  const r = field === 'spending' ? spendingRow(data, age, pick) : field.startsWith('spending.') ? ((x) => (x ? { ...x, mean: x.mean / 12, unit: 'month' } : null))(rowFor(data, field, age, pick)) : rowFor(data, field, age, pick);
+  const r = field === 'spending' ? spendingRow(data, age, pick) : field.startsWith('spending.') ? ((x) => (x ? { ...x, mean: x.mean / 12, mean0: x.mean0 != null ? x.mean0 / 12 : undefined, unit: 'month' } : null))(atAge(data, rowFor(data, field, age, pick), field, age)) : rowFor(data, field, age, pick);
   const c = r ? center(r) : null;
   if (c == null || r.unit === 'share') return null;
-  const p = r.place != null ? null : placeOf(data, field, place);
+  const sh = !r.ages ? shapeOf(data, field, { age, household }) : null; // batch 46: an all-ages row shaped by age
+  const p = r.place != null ? null : placeOf(data, sh?.placeBy ?? field, place);
   const ways = field === 'rent' && split > 1 ? split : 1;
-  const f = (p?.factor ?? 1) / ways;
+  const f = (p?.factor ?? 1) * (sh?.factor ?? 1) / ways;
   const pct = r.median != null && r.p25 != null && r.p75 != null;
   const likely = c * f, lo = pct ? r.p25 * f : likely * low, hi = pct ? r.p75 * f : likely * high;
   const by = r.median != null ? 'median' : 'mean';
   const src = data.sources?.[r.source]?.name ?? r.source;
-  const at = r.household === 'Solo' ? 'living alone' : r.place != null ? `in ${r.area ?? r.place}` : r.ages ? `at ${r.band}` : 'at all ages';
+  const band = r.ratio?.band ?? sh?.band ?? r.band;
+  const at = r.household === 'Solo' ? `living alone${r.ratio ? ` at ${band}` : ''}` : r.place != null ? `in ${r.area ?? r.place}` : r.ages ? `at ${r.band}` : sh?.band ? `at ${sh.band}${sh.household === 'Solo' ? ', living alone' : ''}` : sh?.household === 'Solo' ? 'living alone' : 'at all ages';
   const where = r.place != null ? '' : p ? `, scaled for ${p.area ?? p.place} (${p.table})` : ', national';
   const parts = ways > 1 ? `, split ${ways} ways (your share)` : '';
+  const x2 = v => (Math.round(v * 100) / 100).toFixed(2);
+  const scaled = r.ratio ? `, scaled to ${band} by ${band}'s ratio to all ages (${x2(r.ratio.factor)}: ${band}'s ${money(r.ratio.bandValue)} against all ages' ${money(r.ratio.allValue)} a year${r.ratio.field === 'spending.total' && !['spending', 'spending.total'].includes(field) ? ', the totals' : ''}, all ages ${r.ratio.allYear})` : '';
+  const shaped = sh ? `, shaped${sh.band ? ` for ${sh.band}` : ''}${sh.household === 'Solo' ? ' living alone' : ''} like ${sh.by === 'netWorth' ? 'net worth' : 'spending'} (${x2(sh.factor)} of all ages)` : '';
   const spread = pct ? 'The range is the published 25th to 75th percentile' : `The range is SLAM's ${low} to ${high} spread around it (no percentiles published)`;
-  return { field, low: lo, likely, high: hi, by, band: r.band, who: r.who, allAges: !r.ages, household: r.household ?? null, percentiles: pct, split: ways, source: src, table: r.table, link: r.link, year: r.year,
-    place: r.place ?? p?.place ?? 'national', area: r.area ?? p?.area ?? null, among: r.among ?? null,
-    basis: `Typical ${at}: ${money(lo)} to ${money(hi)}${r.unit === 'month' ? ' a month' : ''}. ${src}${r.period ? '' : `, ${r.year}`}, ${r.table}: ${by} ${money(c)}${r.among ? ` among ${r.among}` : ''}${where}${parts}${f !== 1 ? `: ${money(likely)}` : ''}. ${spread}` };
+  return { field, low: lo, likely, high: hi, by, band, who: r.who, allAges: !r.ages && !sh?.band, household: r.household ?? sh?.household ?? null, percentiles: pct, split: ways, source: src, table: r.table, link: r.link, year: r.year,
+    place: r.place ?? p?.place ?? 'national', area: r.area ?? p?.area ?? null, among: r.among ?? null, ratio: r.ratio ?? null, shape: sh,
+    basis: `Typical ${at}: ${money(lo)} to ${money(hi)}${r.unit === 'month' ? ' a month' : ''}. ${src}${r.period ? '' : `, ${r.year}`}, ${r.table}: ${by} ${money(r.mean0 ?? c)}${r.among ? ` among ${r.among}` : ''}${scaled}${shaped}${where}${parts}${f !== 1 || r.ratio ? `: ${money(likely)}` : ''}. ${spread}` };
 }
 
 // Which side of the range a value is far outside, or null. sides limits it (a debt notes only the high side).

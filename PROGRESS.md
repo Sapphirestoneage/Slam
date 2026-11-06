@@ -1057,3 +1057,35 @@ docs/usability/scorecard-2026-11-06.json: Fire drill appended with "batch": 44, 
     scroll stops, and count headings and table headers as things not to cover (Batch 39's Budget minor). The layout
     check on Budget, Calendar, Month end, FOO, Overview, Credit cards, Income, Debt, Assets and Coach tools › Data
     went from 4 covered (the Fast Track toast on Assets after a scroll) to 0.
+
+
+## Batch 46 (Nov 6 2026): the age-only start (Phase 4, Track 1)
+
+1. QUESTIONS 336 (decided): the CE one-person row is scaled by the age band's ratio to all ages (the band's figure over
+   the all-ages figure, per category where both tables have it, else the totals), and the tip says how ("scaled to 25
+   to 34 by 25 to 34's ratio to all ages (0.99: $74,475 against $75,172 a year)"). A 28 year old living alone now reads
+   $3,671 a month all in, not the 56 year old average's $3,705 (hand-checked in test/batch46.test.js). The all-ages
+   total is the 2022-23 US figure from the BLS NY metro release (the 2024 table was not reachable; QUESTIONS 380).
+   `data.shapes` shapes the rows with no age split by the same rule: income and cash like CE spending, retirement like
+   SCF net worth. New Primary rows: the Census 2025 median household income ($87,460) and the CE all-ages total.
+2. Math: `js/math/agestart.js` (M9A). From an age alone (plus the state and Solo or Couple) every blank core input
+   (pay, spending, checking and savings, invested, card balances) is filled by its typical amount on a copy of the
+   household that is never saved and never counts toward the Picture %; a typical amount is all households' 25th,
+   middle and 75th (those with none count as $0: cards are $0 at the middle, about $2,800 at the 75th). Each is a knob
+   for the one ranges method (M9R, `extra` knobs; a likely FI date that never comes shows its soonest end, "2053 or
+   later"). Pay and spending move together while both are typical; the share spent moves PriorSpendShare (25%, new
+   RULE) either way, and once one is answered the other moves 25%, so an answer never widens the pair. Maya, three
+   answers in a row: surplus range $2,100 wide, then $2,070, $1,060; emergency fund 1.9 months wide to 0.5; FI from "or
+   later" to 2044 to 2056. Registered: M9A (fromApp, 8 parts), spec Math row, format 37.
+3. Screens: Home for a brand-new client shows the plan under Start session 1: "Typical for 25 to 34 year olds living
+   alone in New York", Born, Solo or couple and State as taps on the card, the four ranges, "Not your numbers yet: each
+   answer replaces a typical one", and Batch 43's Ask next with Open the box. Fast Track carries the same plan as one
+   slim strip under the progress bar that narrows on every answer ("Your answers so far; the rest typical for ...").
+   Coach view always; client view only with Typical at your age on (QUESTIONS 208), else the questions only. The
+   sources sit behind one info button. The layout checker now scans the new client's Home before and after an age.
+4. QUESTIONS 371 (decided): the certainty meter's 0% is the plan from the age alone (`ageOnlyRangesOf`, passed to
+   `askNextOf` as `zero` on screen and in the workbook); with no age the all-guess width stands. Maya after Fast Track
+   reads 78% (was 55%), Alexis 49% (54%), Tom 72% (79%); next-best.md "As built" says so (QUESTIONS 387).
+5. Checked: tests 809 pass in both time zones; tools/workbook-check.mjs clean; layout checker 0 failures on Home (new
+   client, before and after an age) and every Fast Track step at 1440, 1280 and 390, light and dark (one level
+   finding at 390 fixed); the persona run 0 errors, 0 story blockers. QUESTIONS 380 to 387.

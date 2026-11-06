@@ -91,7 +91,7 @@ renters and owners). Once take-home is known, switch to the CE rows by income qu
 | same | New York State | 2024 | 107.921 | [FRED NYRPPALL, from BEA](https://fred.stlouisfed.org/data/NYRPPALL) | Primary (FRED mirror of BEA) | Not used (210 picked the metro); here for a later upstate switch |
 | same | New Jersey | 2024 | 108.805 | [FRED NJRPPALL, from BEA](https://fred.stlouisfed.org/data/NJRPPALL) | Primary (FRED mirror of BEA) | Spending for a NJ client times 1.08805 |
 | Regional price parity, housing services (US = 100) | New York-Newark-Jersey City metro | 2024 | 148.616 | [FRED RPPSERVERENT35620, from BEA](https://fred.stlouisfed.org/data/RPPSERVERENT35620) | Primary (FRED mirror of BEA) | Not used for rent: it prices a like-for-like unit, so the national median times 1.486 (about $2,100) overstates what NY renters pay (Secondary pages put the metro median near $1,830 to $1,890) |
-| CE average annual expenditures, NY metro against the US | New York metro | 2022 to 2023 | $90,291 against $75,172 (1.20); housing $33,626 (37.2%); 2.6 people per unit; income before taxes $122,473 | [BLS, Consumer Expenditures in the New York Metropolitan Area: 2022-23, Table 1](https://www.bls.gov/regions/northeast/news-release/2024/consumerexpenditures_newyork_20241118.htm) | Primary | A cross-check on the price parity: NY metro households spend about 20% more, partly from higher incomes, which is why the price parity (12%) is the scale. The 2023-24 release (Jan 6 2026) is only on FRASER as a PDF, not reachable |
+| CE average annual expenditures, NY metro against the US | New York metro | 2022 to 2023 | $90,291 against $75,172 (1.20); housing $33,626 (37.2%); 2.6 people per unit; income before taxes $122,473 | [BLS, Consumer Expenditures in the New York Metropolitan Area: 2022-23, Table 1](https://www.bls.gov/regions/northeast/news-release/2024/consumerexpenditures_newyork_20241118.htm) | Primary | A cross-check on the price parity: NY metro households spend about 20% more, partly from higher incomes, which is why the price parity (12%) is the scale. The 2023-24 release (Jan 6 2026) is only on FRASER as a PDF, not reachable. Batch 46: the US figure ($75,172) is the all-ages total in the age band's ratio to all ages (QUESTIONS 336, 380) |
 
 ## Rent
 
@@ -203,6 +203,9 @@ tonight). The exact URLs that were tried and refused, or gave no figures:
 - Student loans by age (FSA portfolio by age): `https://studentaid.gov/data-center/student/portfolio` (refused); the
   xls is listed on [catalog.data.gov](https://catalog.data.gov/dataset/federal-student-loan-portfolio) (portfolio-by-age.xls), not read.
 - Still from batch 24: www2.census.gov (P60-289 table1.xlsx, HINC-01 2026) for income by age.
+- Batch 46: the CE 2024 all consumer units table (`https://fred.stlouisfed.org/data/CXUTOTALEXPLB0101M` and the BLS release
+  `https://www.bls.gov/news.release/archives/cesan_12192025.htm`): the permission step was not answered, so the all-ages
+  total is the 2022-23 figure above.
 
 ## Next steps
 

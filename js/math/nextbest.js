@@ -2,8 +2,9 @@
 // M9Q (Phase 4, Track 1, docs/engines/next-best.md): Ask me next and the certainty meter. Built on the ranges (M9R,
 // js/math/ranges.js): each key output's low, likely and high, and the drivers that widen it.
 //
-// The certainty meter: for each key output, 1 minus its width over the width it would have with every input on file read
-// as a guess (SLAM's stand-in for age-only until the age-only start is built), clamped 0 to 1; the meter is their
+// The certainty meter: for each key output, 1 minus its width over the width a plan from the age alone has (batch 46,
+// QUESTIONS 371: agestart.js ageOnlyRangesOf, passed in as zero), else over the width it would have with every input on
+// file read as a guess (no age yet, or no priors), clamped 0 to 1; the meter is their
 // weighted average (RULES certaintyWeight*). Everything a guess reads 0%, everything at Know it near 100%. A date that
 // could run on and never come counts as RULES.certaintyOpenMonths wide. It answers "how sure is this plan", which the
 // Picture % ("how many boxes are filled") does not.
@@ -82,7 +83,9 @@ export function whyWords(n) {
 
 // Everything for Home: the meter, the next question and the runner-up. R: rangesOf for the same metrics; F: the FOO
 // step's range (fooRangeOf), or null to leave the FOO out; flags: the FOO's flags (as the FOO screen reads them).
-export function askNextOf(doc, ref, { now = new Date(), person = null, m = null, R = null, F = null, flags = [] } = {}) {
+// zero (QUESTIONS 371, batch 46): the ranges of the plan from the age alone (agestart.js ageOnlyRangesOf), the meter's
+// 0% and the width each answer's drop is measured against; without it (no age, or no priors) the all-guess widths stand.
+export function askNextOf(doc, ref, { now = new Date(), person = null, m = null, R = null, F = null, flags = [], zero = null } = {}) {
   const base = m ?? metrics(doc, ref, { now, person });
   const b = readOut(base);
   if (!R) return { meter: null, questions: [], top: null, runnerUp: null };
@@ -90,7 +93,7 @@ export function askNextOf(doc, ref, { now = new Date(), person = null, m = null,
   // The all-guess widths: every input on file read as a guess (a typical amount stays typical).
   const guessKnobs = knobsOf(doc, ref, { force: (id, level, prior) => (prior ? null : LEVELS.Gut) });
   const guessRuns = runsOf(doc, ref, guessKnobs, { now, person }).map(({ k, low, high }) => ({ id: k.id, low, high }));
-  const guess = Object.fromEntries(KEYS.map(k => [k, rangeFromRuns(k, b[k], guessRuns)]));
+  const guess = Object.fromEntries(KEYS.map(k => [k, (zero && spanOf(k, zero[k]) ? zero[k] : null) ?? rangeFromRuns(k, b[k], guessRuns)]));
   // The meter.
   const parts = KEYS.map(k => ({ key: k, weight: W[k], value: certaintyOf(k, R[k], guess[k]) })).filter(p => p.value != null);
   const wsum = parts.reduce((s, p) => s + p.weight, 0);

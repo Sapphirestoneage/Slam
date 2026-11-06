@@ -75,6 +75,7 @@ export const FORMATS = [
   { version: 34, shape: 'd2b2a232' }, // batch 42: M9W the lender's-eye view, Income › Tax returns filed and the last two returns' net profit, rules Lender*
   { version: 35, shape: '30c2fd8b' }, // batch 44: M9F the bank fire drill (days covered, with the card, out of reach, must-pay), income Lands in and bankKey (skipped), table Bill_order, rule FireDrillDays
   { version: 36, shape: '7d731cd2' }, // batch 43: M9Q Ask me next and the certainty meter, rules CertaintyWeight*, CertaintyOpenMonths, AskSeconds*
+  { version: 37, shape: 'fe5cb0eb' }, // batch 46: M9A the plan from an age (typical for the age until answered), rule PriorSpendShare
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

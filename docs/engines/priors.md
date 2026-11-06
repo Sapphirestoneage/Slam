@@ -9,7 +9,8 @@ the closest-row pick (a place row, then the household type, then the age band): 
 one-person row, NY spending scales by the NY metro's BEA price parity (QUESTIONS 210), rent is the ACS median gross
 rent (New York State for NY renters until the metro figure is read, a share divided by the people splitting it), and
 a row that gives its 25th and 75th percentiles uses them (only net worth for all ages so far). Conditioning on
-income and category sums are not built.
+income and category sums are not built. Batch 46 built the age-only start (`js/math/agestart.js`, M9A; see "The
+age-only start" below).
 
 ## Purpose
 
@@ -125,3 +126,42 @@ narrows the range.
 3. Conditioning rules (spending on income, debts on has-any, category sums), with tests.
 4. The faded starter amounts read the priors; Fast Track starts from age.
 5. ranges.md's propagation consumes the priors; the certainty meter.
+
+## The age-only start (Batch 46, M9A)
+
+What a brand-new client with only an age sees, on Home and at the top of Fast Track: the FI date, the debt-free date,
+emergency fund months and the monthly surplus, each a range, labeled "Typical for 25 to 34 year olds living alone in
+New York" (the CE age band, living alone for Solo, and the place where a Primary row scales it, else "the US"), with
+one line saying these are not their numbers yet and the next Fast Track question. Coach view always; client view only
+with Typical at your age on (QUESTIONS 208), otherwise the client sees the questions.
+
+1. **One rule for an all-ages row read at an age: the age band's ratio to all ages** (QUESTIONS 336). The CE
+   one-person row is scaled by the band's CE figure over the all-ages figure (per category where both tables have it;
+   only the total has an all-ages row so far, so the categories use the totals). The all-ages total is the BLS NY
+   metro release's US column for 2022-23 ($75,172): the 2024 all-ages table was not reachable, so the ratio reads
+   about 4% high (QUESTIONS 380). `data.shapes` names what shapes the rows with no age split: income and cash like CE
+   spending (by age, and by living alone), retirement like SCF net worth by age.
+2. **Pay.** The Census median household income ($87,460, 2025, all households) shaped like spending, gross, through
+   SLAM's tax math (M12). A place scales it by the same price parity as spending until a Primary place income row is
+   read (QUESTIONS 381).
+3. **All households' range when only a share has any** (`priorFill`). An SCF row is among holders (44.7% carry a
+   card balance, 54.9% hold a retirement account). A household's place p among all households is the holders' place
+   1 - (1 - p) / share, $0 below it. So cards are $0 at the 25th and the middle and about $2,800 at the 75th; student
+   loans (20%) are $0 throughout and stay out; retirement is $0 at the 25th. This replaces "for a share under 50% the
+   likely value is 0" above with the same idea made exact.
+4. **Pay and spending move together** while both are typical (people who earn more spend more): one knob moves both
+   from low to high, and the share of pay spent moves PriorSpendShare (25%) either way. Once one is answered the
+   other stays at its typical amount and moves PriorSpendShare: never wider than before, and wider than a gut
+   spending number (15%), so a gut answer still narrows the plan.
+5. **The run.** The typical amounts fill a copy of the household that is never saved and never counts toward the
+   Picture %; each is a knob at its own low and high, and the ranges method (M9R) combines them. A likely FI date
+   that never comes on typical numbers still shows its soonest end ("2053 or later").
+
+What narrows: for Maya (28, living alone in New York) the surplus range goes from $2,100 wide (age only) to $2,070
+(take-home), $1,060 (a gut spending number); the emergency fund from 1.9 months wide to 0.5 once checking and savings
+are in; the FI date gets both ends once pay and spending are answered (2044 to 2056). An answer can move a range
+rather than narrow it when it is far from typical (a take-home well under typical spending pushes the debt-free date
+out); test/batch46.test.js checks the narrowing for Maya and Tom.
+
+Not built yet: spending by income (CE by income quintile), rent as its own prior on Home (CE spending already holds
+shelter), housing with family near zero, the self-employed's wider income range.

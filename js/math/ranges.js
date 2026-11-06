@@ -57,7 +57,7 @@ const PRIOR = () => ({ low: RULES.typicalLow, high: RULES.typicalHigh });
 // own, or null to keep it. Ask me next reads one input at the level its answer reaches; the certainty meter reads every
 // input as a guess (its stand-in for age-only). A typical amount read at a level of its own is the client's number then.
 export function knobsOf(doc, ref, { force = null } = {}) {
-  const live = visible(doc.records, gatesOf(doc.profile, doc.client), ref);
+  const live = visible(doc.records, gatesOf(doc.profile, doc.client), ref).filter(r => !r.prior); // batch 46: a prior (M9A) brings its own knob
   const months = doc.spending?.months || {};
   const lv = (r, f) => levelOf(r, f, { months });
   const name = r => r.name || r.type || 'Item';
@@ -122,14 +122,21 @@ export function knobsOf(doc, ref, { force = null } = {}) {
 // The outputs every run reads. Dates are months from now; a date that never comes on its path is Infinity.
 export const DATE = new Set(['fi', 'debtFree']);
 export const OUTPUTS = { fi: 'FI date', debtFree: 'Debt-free date', efMonths: 'Emergency fund, months of spending held', surplus: 'Monthly surplus', netWorth: 'Net worth' };
-export function readOut(m) {
+export function readOut(m, { zeroDebt = false } = {}) {
   const fi = m.monthsToFi?.value ?? (m.monthsToFi?.never ? Infinity : null);
-  const plan = m.debtPlan?.debts?.length ? m.debtPlan : null;
-  return { fi, debtFree: plan ? plan.months ?? Infinity : null, efMonths: m.runwayMonths?.value ?? null, surplus: m.surplus?.value ?? null, netWorth: m.netWorth?.value ?? null };
+  const plan = m.debtPlan?.debts?.length && !(zeroDebt && !m.debtPlan.debts.some(d => (d.balance ?? 0) > 0)) ? m.debtPlan : null;
+  return { fi, debtFree: plan ? plan.months ?? Infinity : zeroDebt ? 0 : null, efMonths: m.runwayMonths?.value ?? null, surplus: m.surplus?.value ?? null, netWorth: m.netWorth?.value ?? null };
 }
 
 // Root of the sum of the squares, one side at a time (ranges.md steps 3 to 6).
-export function combine(base, runs, { date = false, floor = null } = {}) {
+// openBase (batch 46, the age-only start): a likely date that never comes still gives the soonest end the runs reach
+// ("2051 or later"); without it there is no range.
+export function combine(base, runs, { date = false, floor = null, openBase = false } = {}) {
+  if (base === Infinity && openBase) {
+    const lows = runs.flatMap(r => [r.low, r.high]).filter(v => v !== null && v !== undefined && v !== Infinity);
+    const low = lows.length ? Math.max(floor ?? -Infinity, Math.min(...lows)) : null;
+    return { low: low === null ? null : date ? Math.round(low) : low, likely: Infinity, high: null, never: true, width: Infinity, drivers: [] };
+  }
   if (base === null || base === undefined || base === Infinity) return null;
   const each = runs.map(r => {
     const vals = [r.low, r.high].map(v => (v === null || v === undefined ? base : v));
@@ -151,18 +158,20 @@ export function combine(base, runs, { date = false, floor = null } = {}) {
 
 // Every key output's range for a household. m: the metrics every screen already shows (so likely is that number, to
 // the dollar and the month); person: whose plan (a couple with no combined totals walks one person's).
-export function rangesOf(doc, ref, { now = new Date(), person = null, m = null } = {}) {
+// extra: knobs from outside (batch 46: the priors of the age-only start, M9A); zeroDebt: no debt reads as debt free now
+// (a prior card that is $0 at likely); openBase: see combine.
+export function rangesOf(doc, ref, { now = new Date(), person = null, m = null, extra = [], zeroDebt = false, openBase = false } = {}) {
   const base = m ?? metrics(doc, ref, { now, person });
-  const knobs = knobsOf(doc, ref);
-  const b = readOut(base);
-  const runs = runsOf(doc, ref, knobs, { now, person });
+  const knobs = [...knobsOf(doc, ref), ...extra];
+  const b = readOut(base, { zeroDebt });
+  const runs = runsOf(doc, ref, knobs, { now, person, zeroDebt });
   const out = {};
   const spend = base.inputs?.spending ?? null;
   const material = materialityOf(base.hourly, doc.assumptions).value;
   const known = k => !k.prior && k.level >= LEVELS.Actual;
   for (const key of Object.keys(OUTPUTS)) {
     const swings = runs.map(({ k, low, high }) => ({ id: k.id, label: k.label, recId: k.recId, field: k.field, route: k.route, focus: k.focus, level: k.level, prior: k.prior, known: known(k), low: low[key], high: high[key] }));
-    const o = { date: DATE.has(key), floor: DATE.has(key) || key === 'efMonths' ? 0 : null };
+    const o = { date: DATE.has(key), floor: DATE.has(key) || key === 'efMonths' ? 0 : null, openBase: openBase && DATE.has(key) };
     const r = combine(b[key], swings, o);
     if (r) {
       // Shown only when what is not known yet moves it a material amount: numbers typed at Know it still widen the
@@ -177,8 +186,9 @@ export function rangesOf(doc, ref, { now = new Date(), person = null, m = null }
   return { ...out, knobs: knobs.map(({ apply, ...k }) => k), runs: runs.map(({ k, low, high }) => ({ id: k.id, low, high })), material, now };
 }
 // Each knob run at its low and at its high, the outputs read off each run.
-export function runsOf(doc, ref, knobs, { now = new Date(), person = null } = {}) {
-  return knobs.map(k => ({ k, low: readOut(metrics(k.apply(doc, 'low'), ref, { now, person })), high: readOut(metrics(k.apply(doc, 'high'), ref, { now, person })) }));
+export function runsOf(doc, ref, knobs, { now = new Date(), person = null, zeroDebt = false } = {}) {
+  const rd = x => readOut(x, { zeroDebt }); // batch 46: zeroDebt, see rangesOf
+  return knobs.map(k => ({ k, low: rd(metrics(k.apply(doc, 'low'), ref, { now, person })), high: rd(metrics(k.apply(doc, 'high'), ref, { now, person })) }));
 }
 // One output's range from a set of runs ({ id, low, high } with each side's outputs read): the same combine rangesOf uses.
 export function rangeFromRuns(key, likely, runs) {

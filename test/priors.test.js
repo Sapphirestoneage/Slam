@@ -20,7 +20,7 @@ test('the file: its shape, registered with its source and date', () => {
   assert.ok(data.place.length, 'batch 39: the BEA price parities for the NY metro and NJ');
   for (const p of data.place) assert.ok(p.field && p.place && p.area && p.factor > 0 && data.sources[p.source] && p.table && /^https:\/\//.test(p.link) && p.year >= 2024, `place ${p.place}`);
   for (const r of data.rows) {
-    assert.ok(r.field && r.band && r.who && r.unit && r.table && /^https:\/\//.test(r.link) && r.year >= 2024, `${r.field} ${r.band}: field, band, who, unit, table, link, year`);
+    assert.ok(r.field && r.band && r.who && r.unit && r.table && /^https:\/\//.test(r.link) && (r.year >= 2024 || r.olderBecause), `${r.field} ${r.band}: field, band, who, unit, table, link, year (older only with the reason, batch 46)`);
     assert.ok(data.sources[r.source], `${r.field} ${r.band}: source ${r.source}`);
     assert.ok(r.ages === null || (Array.isArray(r.ages) && r.ages.length === 2), `${r.field} ${r.band}: ages`);
     assert.ok(r.median != null || r.mean != null || r.share != null, `${r.field} ${r.band}: a figure`);
@@ -56,8 +56,11 @@ test('rows by age: the band, else all ages; empty is not zero', () => {
   assert.equal(rowFor(data, 'spending.total', 28).mean, 74475);
   assert.equal(rowFor(data, 'spending.foodAway', 40).mean, 5049, 'batch 39: the CE categories for 35 to 44');
   assert.equal(rowFor(data, 'spending.total', 80).mean, 55834);
-  assert.equal(typicalOf(data, 'income', { age: 28 }), null, 'income by age is still Secondary');
-  assert.equal(typicalOf(data, 'retirement', { age: 28 }).likely, 106000, 'all ages only');
+  // Batch 46: income and retirement have all-ages rows only, shaped by age (data.shapes): income like CE spending,
+  // retirement like SCF net worth. The age band's ratio to all ages (QUESTIONS 336).
+  near(typicalOf(data, 'income', { age: 28 }).likely, 87460 * 74475 / 75172);
+  near(typicalOf(data, 'retirement', { age: 28 }).likely, 106000 * 33000 / 215900);
+  assert.equal(typicalOf(data, 'retirement').likely, 106000, 'no age: all ages, as it is');
   near(typicalOf(data, 'spending', { age: 38 }).likely, (91229 - 13465) / 12);
 });
 
@@ -69,8 +72,9 @@ test('the closest row: its place, then living alone, then the age band', () => {
   assert.equal(rowFor(data, 'rent', 28, { place: 'CA' }).median, 1413, 'no row for the place: national');
   assert.equal(rowFor(data, 'netWorth', 28, { household: 'Solo' }).band, 'under 35', 'no Solo row: the age band');
   const s = typicalOf(data, 'spending', { age: 28, household: 'Solo' });
-  near(s.likely, (48794 - 4329) / 12); assert.equal(s.household, 'Solo'); assert.equal(s.who, 'people who live alone');
-  assert.match(s.basis, /^Typical living alone: .*one-person households of every age \(average age 56\.3\)/);
+  near(s.likely, (48794 - 4329) / 12 * 74475 / 75172); assert.equal(s.household, 'Solo'); assert.equal(s.who, 'people who live alone'); // batch 46, QUESTIONS 336
+  assert.match(s.basis, /^Typical living alone at 25 to 34: .*mean \$3,705 among one-person households of every age \(average age 56\.3\), scaled to 25 to 34 by 25 to 34's ratio to all ages \(0\.99: 25 to 34's \$74,475 against all ages' \$75,172 a year, all ages 2022 to 2023\)/);
+  near(typicalOf(data, 'spending', { household: 'Solo' }).likely, (48794 - 4329) / 12, 0.5, 'no age: the one-person row as published');
   assert.deepEqual(priorsOpts({ state: 'NY', household: 'Solo', housing: 'Rent', roommates: 1, shared: { rent: true }, sharedAs: { rent: 'Your share' } }), { place: 'NY', household: 'Solo', split: 2, housing: 'Rent' });
   assert.equal(priorsOpts({ roommates: 1, sharedAs: { rent: 'The whole bill' } }).split, 1, 'the whole bill is not divided');
   assert.equal(priorsOpts({ roommates: 0 }).split, 1);
@@ -103,10 +107,13 @@ test('rent: the ACS median gross rent, a NY renter reads New York State, a share
 
 test('the range: the median (or mean) times the stated spread, with its basis', () => {
   const r = typicalOf(data, 'cash', { age: 28 });
-  assert.equal(r.by, 'median'); assert.equal(r.likely, 8200);
-  near(r.low, 8200 * RULES.typicalLow); near(r.high, 8200 * RULES.typicalHigh);
-  assert.equal(r.allAges, true); assert.equal(r.place, 'national');
-  assert.match(r.basis, /Typical at all ages: \$4,920 to \$12,300\. Survey of Consumer Finances 2025.*Table 3.*median \$8,200 among the 98\.7%/);
+  // Batch 46: cash is shaped like CE spending by age (25 to 34's $74,475 over all ages' $75,172).
+  const k = 74475 / 75172;
+  assert.equal(r.by, 'median'); near(r.likely, 8200 * k);
+  near(r.low, 8200 * k * RULES.typicalLow); near(r.high, 8200 * k * RULES.typicalHigh);
+  assert.equal(r.allAges, false); assert.equal(r.place, 'national');
+  assert.match(r.basis, /Typical at 25 to 34: \$4,874 to \$12,186\. Survey of Consumer Finances 2025.*Table 3.*median \$8,200 among the 98\.7%.*, shaped for 25 to 34 like spending \(0\.99 of all ages\)/);
+  assert.equal(typicalOf(data, 'cash').likely, 8200, 'no age: all ages');
   const s = typicalOf(data, 'spending', { age: 28 });
   near(s.likely, (74475 - 10701) / 12); assert.equal(s.by, 'mean'); assert.equal(s.band, '25 to 34');
   assert.match(s.basis, /a month/);
@@ -123,9 +130,9 @@ test('a place row scales spending: the NY metro for NY clients (QUESTIONS 210); 
   assert.equal(typicalOf(data, 'cash', { place: 'NY' }).place, 'national');
   assert.equal(placeOf(data, 'spending.food', 'NY').factor, 1.12563, 'the parts of spending scale too');
   const r = typicalOf(data, 'spending', { age: 28, place: 'NY', household: 'Solo' });
-  near(r.likely, (48794 - 4329) / 12 * 1.12563); assert.equal(r.place, 'NY'); assert.equal(r.area, 'the New York metro');
+  near(r.likely, (48794 - 4329) / 12 * 74475 / 75172 * 1.12563); assert.equal(r.place, 'NY'); assert.equal(r.area, 'the New York metro');
   assert.match(r.basis, /scaled for the New York metro \(Regional Price Parities: All Items, New York-Newark-Jersey City MSA, 2024: 112\.563/);
-  near(typicalOf(data, 'spending', { age: 38, place: 'NJ', household: 'Solo' }).likely, (48794 - 4329) / 12 * 1.08805);
+  near(typicalOf(data, 'spending', { age: 38, place: 'NJ', household: 'Solo' }).likely, (48794 - 4329) / 12 * 91229 / 75172 * 1.08805);
   const withCash = { ...data, place: [{ field: 'cash', place: 'NY', area: 'NY', factor: 1.2, source: 'made up for the test' }] };
   assert.equal(typicalOf(withCash, 'cash', { place: 'NY' }).likely, 8200 * 1.2);
 });
@@ -183,7 +190,7 @@ test('the persona files: Alexis reads New York rent split with her roommate; May
   assert.equal(higher[0].text, 'Above what most renters in New York State pay in rent a month');
   assert.match(higher[0].tip, /New York State: median \$1,621.*split 2 ways/);
   const spend = typicalOf(data, 'spending', { age: 28, ...o });
-  near(spend.likely, (48794 - 4329) / 12 * 1.12563); assert.equal(spend.who, 'people who live alone');
+  near(spend.likely, (48794 - 4329) / 12 * 74475 / 75172 * 1.12563); // batch 46, QUESTIONS 336 assert.equal(spend.who, 'people who live alone');
   assert.deepEqual(checksFor(maya), [], 'Maya: $5,200 cash, $6,000 cards, $3,500 spending and $1,750 rent are all inside typical for NY');
   assert.equal(typicalOf(data, 'rent', { age: 30, ...priorsOpts(maya.profile) }).likely, 1621, 'no roommates: the whole rent');
   const t = checksFor(tom);

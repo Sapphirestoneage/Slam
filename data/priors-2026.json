@@ -36,6 +36,18 @@
    "name": "Regional Price Parities by state and metro area, 2024",
    "publisher": "Bureau of Economic Analysis, read on FRED (its mirror)",
    "link": "https://fred.stlouisfed.org/series/RPPALL35620"
+  },
+  "ce2223ny": {
+   "name": "Consumer Expenditures in the New York Metropolitan Area: 2022-23 (its United States column)",
+   "publisher": "Bureau of Labor Statistics",
+   "link": "https://www.bls.gov/regions/northeast/news-release/2024/consumerexpenditures_newyork_20241118.htm",
+   "released": "2024-11-18"
+  },
+  "p60289": {
+   "name": "Income in the United States: 2025 (P60-289), highlights",
+   "publisher": "U.S. Census Bureau",
+   "link": "https://www.census.gov/library/publications/2026/demo/p60-289.html",
+   "released": "2026-09"
   }
  },
  "rows": [
@@ -2217,6 +2229,22 @@
    "among": "one-person households of every age (average age 56.3)"
   },
   {
+   "field": "spending.total",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "mean": 75172,
+   "unit": "year",
+   "source": "ce2223ny",
+   "table": "Table 1, United States column: average annual expenditures, all consumer units, 2022-23",
+   "link": "https://www.bls.gov/regions/northeast/news-release/2024/consumerexpenditures_newyork_20241118.htm",
+   "year": 2023,
+   "period": "2022 to 2023",
+   "olderBecause": "the all-ages 2024 total (BLS cesan, Dec 19 2025) was not reachable from the build; this is the newest all-ages total read on a Primary page, the 2022-23 average, about 4% under 2024's (QUESTIONS 380)",
+   "among": "households of every size and age (CE consumer units)",
+   "role": "The denominator of the age band's ratio to all ages (QUESTIONS 336): it scales the one-person row and shapes income and cash by age"
+  },
+  {
    "field": "retirement",
    "band": "all ages",
    "ages": null,
@@ -2274,6 +2302,19 @@
    "year": 2024,
    "among": "renter households (rent plus utilities)",
    "period": "2020 to 2024"
+  },
+  {
+   "field": "income",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "median": 87460,
+   "unit": "year",
+   "source": "p60289",
+   "table": "Median household income, 2025 (all households, gross, in 2025 dollars)",
+   "link": "https://www.census.gov/library/publications/2026/demo/p60-289.html",
+   "year": 2025,
+   "among": "all households"
   }
  ],
  "place": [
@@ -2306,6 +2347,25 @@
   "Cash, cards, student loans and retirement by age (SCF historical tables and Data Interactive): not reachable; the report gives them for all families only",
   "Household income by age (Census H-10 and its percentiles): Secondary",
   "Average card debt by generation (Experian) and student loans by age (FSA portfolio by age, located but not readable): Secondary",
-  "CE one-person households by age: no published cross-table; the one-person row is all ages"
+  "CE one-person households by age: no published cross-table; the one-person row is scaled by the age band's ratio to all ages (QUESTIONS 336, batch 46)",
+  "CE all consumer units for 2024 (BLS cesan, Dec 19 2025): not reachable; the all-ages total is the 2022-23 average from the NY metro release (QUESTIONS 380)"
+ ],
+ "shapes": [
+  {
+   "field": "income",
+   "by": "spending.total",
+   "placeBy": "spending",
+   "note": "Income by age is still Secondary (Census H-10), so the all-households median is shaped like spending: times the age band's (and living alone's) CE total over the all-ages total, and for a place by its price parity (no Primary place income row yet)"
+  },
+  {
+   "field": "cash",
+   "by": "spending.total",
+   "note": "Cash by age is not reachable (SCF historical tables), so the all-ages median is shaped like spending (cash is spending money): times the age band's (and living alone's) CE total over the all-ages total"
+  },
+  {
+   "field": "retirement",
+   "by": "netWorth",
+   "note": "Retirement accounts by age are not reachable (SCF historical tables), so the all-ages median among holders is shaped by the age band's median net worth over the all-ages median (the SCF's own age split)"
+  }
  ]
 }

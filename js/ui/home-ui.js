@@ -32,6 +32,7 @@ import { walkButton, walkMeThrough, startSessionOne } from './walk-ui.js';
 import { isFreshClient } from '../walk.js';
 import { transitionOf, phase4On, monthsText } from '../math/transitions.js';
 import { startFastTrack } from './fasttrack-ui.js';
+import { agePlanCard } from './agestart-ui.js';
 import { affordHomeLine } from './afford-ui.js';
 import { learnNextLine, learnNextName } from './library-ui.js';
 import { askNextCard, meterWord, certaintyPoints } from './ask-ui.js';
@@ -45,7 +46,8 @@ export function homeScreen(app, ctx) {
   const open = P.sessions.find(s => s.id === HUI.open) || P.current;
   const low = firstLowDay(ctx);
   // Batch 14 (item 6): a brand-new client sees one obvious first action; the rest waits, folded, until there is data.
-  if (isFreshClient(doc)) return [startOne(app, ctx, P), S.moreBlock('home:fresh-rest', () => h('div.stack', { style: { gap: '12px' } }, sessionStrip(app, ctx, P), pathRow(app, P, open), checklistCard(app, ctx, P, open), pictureCard(ctx, P)), { label: 'The program, the path and the picture' })];
+  // Batch 46 (Phase 4, Track 1): the plan from an age sits under it, typical for the age until each answer comes in.
+  if (isFreshClient(doc)) return [startOne(app, ctx, P), agePlanCard(app, ctx, { onNext: step => startFastTrack(app, ctx, { at: step }) }), S.moreBlock('home:fresh-rest', () => h('div.stack', { style: { gap: '12px' } }, sessionStrip(app, ctx, P), pathRow(app, P, open), checklistCard(app, ctx, P, open), pictureCard(ctx, P)), { label: 'The program, the path and the picture' })];
   // Batch 13 (item 7): for a returning client the most useful things come first (the debt-free card when it applies,
   // then the agenda, then the picture); everything else is a caret section, closed, with its one-line summary.
   // (Batch 14 owns the new client's Start session 1; the session strip at the top is left as it is.)

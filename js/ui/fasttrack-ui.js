@@ -11,6 +11,8 @@ import { STATES } from './profile.js';
 import { keyNumbers } from '../math/metrics.js';
 import { FREQ } from './money-lists.js';
 import { identityWanted, identityFastTrack, identityOffer } from './identity-ui.js';
+import { agePlanStrip } from './agestart-ui.js';
+import { Store } from '../records.js';
 
 const TYPICAL_FREQ = '2 weeks'; // batch 18: the most common US pay schedule, filled in when Paycheck is tapped
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -18,7 +20,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 // Batch 8: Start until it has been finished once, then Redo.
 export const fastTrackLabel = ctx => (fastTrackDone(ctx.store.doc) ? 'Redo Fast Track' : 'Start Fast Track');
 
-export function startFastTrack(app, ctx, { then = null } = {}) { // then: what comes next (batch 14: Start session 1 and Walk me through go on to the walk)
+export function startFastTrack(app, ctx, { then = null, at = null } = {}) { // then: what comes next (batch 14: Start session 1 and Walk me through go on to the walk); at: the step to open on (batch 46: Home's next question)
   const a = fastTrackAnswers(ctx.store.doc);
   const started = Date.now();
   let step = 0;
@@ -102,6 +104,11 @@ export function startFastTrack(app, ctx, { then = null } = {}) { // then: what c
   ];
 
   const live = () => STEPS.filter(x => !x.skip?.());
+  if (at) step = Math.max(0, live().findIndex(x => x.title === at));
+  // Batch 46 (M9A): the plan from the answers so far, typical for the age for the rest, on a copy that is never saved.
+  const planSlot = h('div.ft-plan-slot');
+  const planDoc = () => { const st = new Store(JSON.parse(JSON.stringify(ctx.store.doc))); try { applyFastTrack(st, a, { now: new Date().toISOString() }); } catch { /* an answer half typed: the plan as on file */ } return st.doc; };
+  const replan = () => clear(planSlot, agePlanStrip(app, ctx, planDoc()));
   // Batch 20 (Rocket Surgery): on About you the count follows the answers as they are tapped (a renter with no car has
   // no Home and car step), so it never reads "Step 1 of 7" and then "Step 2 of 6".
   const total = () => { if (step !== 0) return live().length; const was = { ...homeAsk }; Object.assign(homeAsk, { housing: a.housing == null, car: a.hasCar == null }); const n = live().length; Object.assign(homeAsk, was); return n; };
@@ -110,6 +117,9 @@ export function startFastTrack(app, ctx, { then = null } = {}) { // then: what c
   overlay.append(box);
   const recount = () => setTimeout(() => { const c = box.querySelector('.ft-count'); if (c) c.textContent = `Step ${step + 1} of ${total()}`; });
   box.addEventListener('click', recount); box.addEventListener('change', recount);
+  let planTimer = null; // a typed box (change) or a tapped toggle (click) redraws the plan, once
+  const replanSoon = () => { clearTimeout(planTimer); planTimer = setTimeout(() => { if (planSlot.isConnected) replan(); }, 60); };
+  box.addEventListener('change', replanSoon); box.addEventListener('click', replanSoon);
   const clock = h('span.ft-clock', { 'aria-live': 'off' });
   const tick = setInterval(() => { const s = Math.round((Date.now() - started) / 1000); clock.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} of about 5:00`; }, 1000);
   const close = () => { clearInterval(tick); overlay.remove(); document.removeEventListener('keydown', keys); };
@@ -150,12 +160,14 @@ export function startFastTrack(app, ctx, { then = null } = {}) { // then: what c
       h('div.ft-head', {}, h('strong', {}, 'Fast Track'), h('span.muted.ft-count', {}, `Step ${step + 1} of ${total()}`), h('span', { style: { flex: 1 } }), clock,
         h('button.icon-btn.tiny', { type: 'button', 'aria-label': 'Close without saving', 'data-tip': 'Close without saving', onclick: close }, icon('x'))),
       h('div.ft-progress', { role: 'progressbar', 'aria-valuenow': step + 1, 'aria-valuemin': 1, 'aria-valuemax': total() }, h('span', { style: { width: `${((step + 1) / total()) * 100}%` } })),
+      planSlot,
       h('h2', {}, s.title), h('p.muted', {}, s.help), s.body(),
       h('div.ft-foot', {},
         h('button.btn', { type: 'button', disabled: step === 0, onclick: () => { step -= 1; draw(); } }, 'Back'),
         h('span', { style: { flex: 1 } }),
         h('button.btn', { type: 'button', onclick: () => { save(); close(); toast('Saved what you have.', { undo: () => ctx.store.undo() }); } }, 'Save and close'),
         h('button.btn.primary', { type: 'button', onclick: () => next() }, last ? 'Finish' : 'Next', icon('right'))));
+    replan();
     setTimeout(() => box.querySelector('input, select')?.focus(), 30);
   };
   const next = () => { document.activeElement?.dispatchEvent?.(new Event('change'));

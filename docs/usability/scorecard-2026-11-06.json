@@ -3408,6 +3408,122 @@
      "reason": "waits for Eli at sign-off"
     }
    }
+  },
+  {
+   "screen": "Home (new client: the plan from an age)",
+   "route": "#/home/session (a brand-new client)",
+   "batch": 46,
+   "tasks": [
+    1
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "Born, Solo or couple and State save to About you and redraw the plan; Open the box lands on Ask next's box; checked at 1440, 1280 and 390"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "the four ranges are M9A's (test/batch46.test.js hand checks QUESTIONS 336 and the card prior; ages 23, 38 and 61, Solo and Couple, NY and elsewhere); nothing typical is saved or counted in the Picture %"
+    },
+    "oneAnswer": {
+     "result": "minor",
+     "reason": "the plan's typical surplus and FI date are not the Home metrics of a returning client (those are the client's own numbers); the label says Typical for ..."
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on Home (new client) before and after an age, 1440, 1280 and 390, light and dark"
+    },
+    "obvious": {
+     "result": "minor",
+     "reason": "waits for Eli: a first-timer may read the FI date as a promise; the line under it says these are not their numbers yet"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "it is Home, the first screen a new client lands on"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "an age is a 4-digit year; Solo or couple is a tap; State a pick"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "Typical for 25 to 34 year olds living alone in New York; no verdict words, no em dashes, no red; sources behind one info button"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the plan appears as soon as a birth year is in; Ask next names the next question"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "two by two at 390; the info button stays beside the title"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "about 50 to 80 ms per plan (a dozen plan runs)"
+    },
+    "coachable": {
+     "result": "minor",
+     "reason": "waits for Eli at sign-off; client view shows the questions only unless Typical at your age is on (QUESTIONS 208)"
+    }
+   }
+  },
+  {
+   "screen": "Fast Track (the plan strip)",
+   "route": "#/home/session (Start session 1)",
+   "batch": 46,
+   "tasks": [
+    1
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "the strip redraws on every typed box and tap, from a copy of the household that is never saved"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "the same M9A numbers as Home for the same answers; Maya: surplus $2,100 wide, then $2,070, then $1,060"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one plan; Done shows the client's own four numbers"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean on every Fast Track step at 1440, 1280 and 390"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "the title says what is typical and what is theirs"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "inside Fast Track, under the progress bar"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "nothing to type: it reads the answers"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "Your answers so far; the rest typical for ..."
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "each answer narrows it on screen"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "wraps to three lines at 390, one slim dashed box"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "no visible wait on a typed box"
+    },
+    "coachable": {
+     "result": "minor",
+     "reason": "waits for Eli at sign-off; hidden in client view unless Typical at your age is on"
+    }
+   }
   }
  ],
  "updated": {
@@ -3471,5 +3587,16 @@
   "major": 0,
   "minor": 1,
   "note": "Batch 45 appended its screens (each with \"batch\": 45), scored after its fixes; the rows above and the summary are as they were."
+ },
+ "batch46": {
+  "source": "Batch 46 (the age-only start), scored by Claude against QA.md",
+  "note": "Two touched screens. Categories 5 (obvious) and 12 (coachable) wait for Eli at sign-off.",
+  "summary": {
+   "screens": 2,
+   "blocker": 0,
+   "major": 0,
+   "minor": 4,
+   "allPass": []
+  }
  }
 }
