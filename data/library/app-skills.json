@@ -1,0 +1,1279 @@
+{
+ "id": "library.appSkills",
+ "version": "1.0.0",
+ "asOf": "2026-11-06",
+ "author": "Eli Saperstein (SLAM), built in conjunction with Jonathan Mendonsa (ChooseFI)",
+ "license": "Eli's own work, kept public in this repo with his permission (Nov 6 2026), under the repo license",
+ "sourceAsOf": "2026-09-06",
+ "source": "The older app's own skills (the six app trees: keeper, anchor, compounder, earner, ledger, planning), from the public Sapphirestoneage/personalfinance repo (data/skill_tree.json version 3.0.0, its gates read against data/foo_rules.json). Copied by tools/library/extract-app-skills.mjs.",
+ "confidence": "convention",
+ "confidenceNote": "A curriculum, not a measurement. The proof is the older app's own test for when a skill is leveled; the tags (Scorecard area and FOO step) are SLAM's reading of its gate, for the coach to correct.",
+ "note": "The second skill set (QUESTIONS 207), the same shape as skills.json. tier is the band; level is the order within the tree; leverage, description, does and fits are null (the older app has none). prerequisites can cross the six trees. proof is the older app's text; provenBy names the household facts it read; appliesWhen when it applies. tags.foo is a SLAM FOO step id (js/registry/foo.js), tags.gate the older app's own step number (0 to 9), tags.fooBy the rule. kind do: proven by doing it or by the data, not by learning. Not read by the app yet.",
+ "counts": {
+  "skills": 40,
+  "trees": 6
+ },
+ "trees": [
+  {
+   "id": "keeper",
+   "name": "Keeping it",
+   "order": 26,
+   "area": "cashFlow"
+  },
+  {
+   "id": "anchor",
+   "name": "The anchor",
+   "order": 27,
+   "area": "emergency"
+  },
+  {
+   "id": "compounder",
+   "name": "Compounding",
+   "order": 28,
+   "area": "retirement"
+  },
+  {
+   "id": "earner",
+   "name": "Earning",
+   "order": 29,
+   "area": "income"
+  },
+  {
+   "id": "ledger",
+   "name": "The ledger",
+   "order": 30,
+   "area": "cashFlow"
+  },
+  {
+   "id": "planning",
+   "name": "Planning ahead",
+   "order": 31,
+   "area": "goals"
+  }
+ ],
+ "bands": [
+  {
+   "id": "foundation",
+   "label": "Foundation",
+   "order": 1
+  },
+  {
+   "id": "optimization",
+   "label": "Optimization",
+   "order": 2
+  },
+  {
+   "id": "advanced",
+   "label": "Advanced",
+   "order": 3
+  },
+  {
+   "id": "expert",
+   "label": "Expert",
+   "order": 4
+  },
+  {
+   "id": "endgame",
+   "label": "Endgame",
+   "order": 5
+  }
+ ],
+ "skills": [
+  {
+   "id": "enter-the-facts",
+   "tree": "keeper",
+   "treeName": "Keeping it",
+   "tier": "foundation",
+   "level": 1,
+   "leverage": null,
+   "name": "Enter the facts",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the household shows it: grossAnnualIncome",
+   "minutes": "one sitting",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "fact:grossAnnualIncome"
+   ],
+   "tags": {
+    "area": "cashFlow",
+    "foo": "1",
+    "fooBy": "tree keeper (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "know-your-number",
+   "tree": "anchor",
+   "treeName": "The anchor",
+   "tier": "foundation",
+   "level": 1,
+   "leverage": null,
+   "name": "Know your sleep-at-night number",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the household shows it: swanTarget",
+   "minutes": "one sitting",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "fact:swanTarget"
+   ],
+   "tags": {
+    "area": "emergency",
+    "foo": "1",
+    "fooBy": "gate: older app step 1, Starter emergency fund (~$1,000 or 1 month of expenses)",
+    "gate": 1,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "capture-the-match",
+   "tree": "compounder",
+   "treeName": "Compounding",
+   "tier": "foundation",
+   "level": 1,
+   "leverage": null,
+   "name": "Capture the full match",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the household shows it: capturingFullMatch",
+   "minutes": "one sitting",
+   "prerequisites": [
+    "enter-the-facts"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [
+    {
+     "field": "situation",
+     "op": "in",
+     "value": [
+      "employed",
+      "mixed"
+     ]
+    }
+   ],
+   "provenBy": [
+    "fact:capturingFullMatch"
+   ],
+   "tags": {
+    "area": "retirement",
+    "foo": "2",
+    "fooBy": "gate: older app step 2, Capture the full employer 401(k) match",
+    "gate": 2,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "name-your-debt",
+   "tree": "keeper",
+   "treeName": "Keeping it",
+   "tier": "foundation",
+   "level": 2,
+   "leverage": null,
+   "name": "Name every debt and its rate",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the household shows it: totalDebt",
+   "minutes": "one sitting",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "fact:totalDebt",
+    "debtPaid"
+   ],
+   "tags": {
+    "area": "cashFlow",
+    "foo": "3",
+    "fooBy": "gate: older app step 3, Pay off high-interest debt (above ~7–8%)",
+    "gate": 3,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "starter-fund",
+   "tree": "anchor",
+   "treeName": "The anchor",
+   "tier": "foundation",
+   "level": 2,
+   "leverage": null,
+   "name": "Hold a starter fund",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the household shows it: cashSavings",
+   "minutes": "one sitting",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "fact:cashSavings"
+   ],
+   "tags": {
+    "area": "emergency",
+    "foo": "1",
+    "fooBy": "gate: older app step 1, Starter emergency fund (~$1,000 or 1 month of expenses)",
+    "gate": 1,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "know-your-bracket",
+   "tree": "compounder",
+   "treeName": "Compounding",
+   "tier": "foundation",
+   "level": 2,
+   "leverage": null,
+   "name": "Know your marginal bracket",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the household shows it: marginalRate",
+   "minutes": "one sitting",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "fact:marginalRate"
+   ],
+   "tags": {
+    "area": "taxes",
+    "foo": "4",
+    "fooBy": "gate: older app step 4, Build the full emergency fund (3–6 months)",
+    "gate": 4,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "track-a-month",
+   "tree": "keeper",
+   "treeName": "Keeping it",
+   "tier": "foundation",
+   "level": 3,
+   "leverage": null,
+   "name": "Track one whole month",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the household shows it: monthlyExpenses",
+   "minutes": "one sitting",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "fact:monthlyExpenses",
+    "log30"
+   ],
+   "tags": {
+    "area": "cashFlow",
+    "foo": "1",
+    "fooBy": "tree keeper (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "rerank-your-costs",
+   "tree": "keeper",
+   "treeName": "Keeping it",
+   "tier": "optimization",
+   "level": 4,
+   "leverage": null,
+   "name": "Rerank your costs",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the household shows it: rerankCut",
+   "minutes": "one sitting",
+   "prerequisites": [
+    "track-a-month"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "fact:rerankCut"
+   ],
+   "tags": {
+    "area": "cashFlow",
+    "foo": "1",
+    "fooBy": "tree keeper (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "raise-one-point",
+   "tree": "compounder",
+   "treeName": "Compounding",
+   "tier": "optimization",
+   "level": 3,
+   "leverage": null,
+   "name": "Raise the contribution one point",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "one sitting",
+   "prerequisites": [
+    "capture-the-match"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "retirement",
+    "foo": "5",
+    "fooBy": "gate: older app step 5, Max the HSA if eligible",
+    "gate": 5,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "cover-checkup",
+   "tree": "anchor",
+   "treeName": "The anchor",
+   "tier": "foundation",
+   "level": 3,
+   "leverage": null,
+   "name": "Do the Coverage Checkup",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the household shows it: oopMax",
+   "minutes": "one sitting",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "fact:oopMax"
+   ],
+   "tags": {
+    "area": "protection",
+    "foo": "1",
+    "fooBy": "gate: older app step 1, Starter emergency fund (~$1,000 or 1 month of expenses)",
+    "gate": 1,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "term-life",
+   "tree": "anchor",
+   "treeName": "The anchor",
+   "tier": "optimization",
+   "level": 4,
+   "leverage": null,
+   "name": "Buy term life at 10–12× income",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the household shows it: termLife",
+   "minutes": "one sitting",
+   "prerequisites": [
+    "cover-checkup"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "fact:termLife"
+   ],
+   "tags": {
+    "area": "protection",
+    "foo": "1",
+    "fooBy": "gate: older app step 1, Starter emergency fund (~$1,000 or 1 month of expenses)",
+    "gate": 1,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "pick-a-stop-age",
+   "tree": "compounder",
+   "treeName": "Compounding",
+   "tier": "foundation",
+   "level": 4,
+   "leverage": null,
+   "name": "Pick a stop age",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the household shows it: retireAge",
+   "minutes": "one sitting",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "fact:retireAge"
+   ],
+   "tags": {
+    "area": "retirement",
+    "foo": "2",
+    "fooBy": "tree compounder (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "set-a-mix",
+   "tree": "compounder",
+   "treeName": "Compounding",
+   "tier": "optimization",
+   "level": 5,
+   "leverage": null,
+   "name": "Set a target mix",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the household shows it: rebalanceBand",
+   "minutes": "one sitting",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "fact:rebalanceBand"
+   ],
+   "tags": {
+    "area": "investing",
+    "foo": "5",
+    "fooBy": "gate: older app step 6, Max a Roth IRA (or backdoor Roth)",
+    "gate": 6,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "cook-dinner",
+   "tree": "keeper",
+   "treeName": "Keeping it",
+   "tier": "foundation",
+   "level": 5,
+   "leverage": null,
+   "name": "Cook dinner",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "15 minutes",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "cashFlow",
+    "foo": "1",
+    "fooBy": "tree keeper (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "weekly-shop",
+   "tree": "keeper",
+   "treeName": "Keeping it",
+   "tier": "foundation",
+   "level": 6,
+   "leverage": null,
+   "name": "One weekly shop from a list",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "15 minutes",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "cashFlow",
+    "foo": "1",
+    "fooBy": "tree keeper (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "no-spend-day",
+   "tree": "keeper",
+   "treeName": "Keeping it",
+   "tier": "foundation",
+   "level": 7,
+   "leverage": null,
+   "name": "Two no-spend days a week",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "15 minutes",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "cashFlow",
+    "foo": "1",
+    "fooBy": "tree keeper (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "pack-lunch",
+   "tree": "keeper",
+   "treeName": "Keeping it",
+   "tier": "foundation",
+   "level": 8,
+   "leverage": null,
+   "name": "Pack lunch",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "15 minutes",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "cashFlow",
+    "foo": "1",
+    "fooBy": "tree keeper (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "cut-one-line",
+   "tree": "keeper",
+   "treeName": "Keeping it",
+   "tier": "optimization",
+   "level": 9,
+   "leverage": null,
+   "name": "Cut one flagged line",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "15 minutes",
+   "prerequisites": [
+    "rerank-your-costs"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "cashFlow",
+    "foo": "1",
+    "fooBy": "tree keeper (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "track-daily",
+   "tree": "keeper",
+   "treeName": "Keeping it",
+   "tier": "foundation",
+   "level": 10,
+   "leverage": null,
+   "name": "Log spending daily",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "15 minutes",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "log30"
+   ],
+   "tags": {
+    "area": "cashFlow",
+    "foo": "1",
+    "fooBy": "tree keeper (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "negotiate-a-bill",
+   "tree": "earner",
+   "treeName": "Earning",
+   "tier": "foundation",
+   "level": 1,
+   "leverage": null,
+   "name": "Call one bill a month and ask",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "15 minutes",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "income",
+    "foo": "1",
+    "fooBy": "tree earner (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "ask-for-the-raise",
+   "tree": "earner",
+   "treeName": "Earning",
+   "tier": "advanced",
+   "level": 2,
+   "leverage": null,
+   "name": "Ask for the raise",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "15 minutes",
+   "prerequisites": [
+    "negotiate-a-bill"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "income",
+    "foo": "1",
+    "fooBy": "tree earner (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "know-your-market",
+   "tree": "earner",
+   "treeName": "Earning",
+   "tier": "optimization",
+   "level": 3,
+   "leverage": null,
+   "name": "Know your market rate",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "15 minutes",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "income",
+    "foo": "1",
+    "fooBy": "tree earner (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "rebalance",
+   "tree": "compounder",
+   "treeName": "Compounding",
+   "tier": "optimization",
+   "level": 6,
+   "leverage": null,
+   "name": "Rebalance to the band",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "15 minutes",
+   "prerequisites": [
+    "set-a-mix"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "investing",
+    "foo": "5",
+    "fooBy": "gate: older app step 6, Max a Roth IRA (or backdoor Roth)",
+    "gate": 6,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "refresh-the-three",
+   "tree": "anchor",
+   "treeName": "The anchor",
+   "tier": "foundation",
+   "level": 5,
+   "leverage": null,
+   "name": "Refresh the three that move",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "15 minutes",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "snapshot"
+   ],
+   "tags": {
+    "area": "emergency",
+    "foo": "1",
+    "fooBy": "tree anchor (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "annual-review",
+   "tree": "anchor",
+   "treeName": "The anchor",
+   "tier": "optimization",
+   "level": 6,
+   "leverage": null,
+   "name": "The annual review",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "15 minutes",
+   "prerequisites": [
+    "refresh-the-three"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "snapshot"
+   ],
+   "tags": {
+    "area": "emergency",
+    "foo": "1",
+    "fooBy": "tree anchor (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "automate-savings",
+   "tree": "compounder",
+   "treeName": "Compounding",
+   "tier": "foundation",
+   "level": 7,
+   "leverage": null,
+   "name": "Automate the savings",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you have done it once and can say what it changed",
+   "minutes": "one sitting",
+   "prerequisites": [],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "retirement",
+    "foo": "5",
+    "fooBy": "gate: older app step 5, Max the HSA if eligible",
+    "gate": 5,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "read-plan-summary",
+   "tree": "compounder",
+   "treeName": "Compounding",
+   "tier": "foundation",
+   "level": 8,
+   "leverage": null,
+   "name": "Read your plan’s summary description",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you can name the match, the vesting schedule and the fund line-up without looking",
+   "minutes": "15 minutes",
+   "prerequisites": [
+    "enter-the-facts"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [
+    {
+     "field": "situation",
+     "op": "in",
+     "value": [
+      "employed",
+      "mixed"
+     ]
+    }
+   ],
+   "provenBy": [
+    "fact:employerMatch"
+   ],
+   "tags": {
+    "area": "retirement",
+    "foo": "2",
+    "fooBy": "tree compounder (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "close-a-month",
+   "tree": "ledger",
+   "treeName": "The ledger",
+   "tier": "foundation",
+   "level": 1,
+   "leverage": null,
+   "name": "Close a month in the ledger",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when a month is closed and read back in Estimated vs Actual",
+   "minutes": "one sitting",
+   "prerequisites": [
+    "track-a-month"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "monthClosed"
+   ],
+   "tags": {
+    "area": "cashFlow",
+    "foo": "1",
+    "fooBy": "tree ledger (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "log-thirty",
+   "tree": "ledger",
+   "treeName": "The ledger",
+   "tier": "foundation",
+   "level": 2,
+   "leverage": null,
+   "name": "Log thirty dated expenses",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when thirty receipts are in the log on their dates",
+   "minutes": "15 minutes",
+   "prerequisites": [
+    "track-a-month"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "log30"
+   ],
+   "tags": {
+    "area": "cashFlow",
+    "foo": "1",
+    "fooBy": "tree ledger (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "read-the-variance",
+   "tree": "ledger",
+   "treeName": "The ledger",
+   "tier": "optimization",
+   "level": 3,
+   "leverage": null,
+   "name": "Read what you guessed wrong",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you can name the bucket you guess worst and by how much",
+   "minutes": "15 minutes",
+   "prerequisites": [
+    "close-a-month"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "monthClosed"
+   ],
+   "tags": {
+    "area": "cashFlow",
+    "foo": "1",
+    "fooBy": "tree ledger (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "quarterly-estimates",
+   "tree": "earner",
+   "treeName": "Earning",
+   "tier": "optimization",
+   "level": 4,
+   "leverage": null,
+   "name": "Send the quarterly estimate",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the four dates are on the calendar and the first one is paid",
+   "minutes": "one sitting",
+   "prerequisites": [
+    "know-your-bracket"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [
+    {
+     "field": "situation",
+     "op": "in",
+     "value": [
+      "selfEmployed",
+      "mixed"
+     ]
+    }
+   ],
+   "provenBy": [],
+   "tags": {
+    "area": "taxes",
+    "foo": "1",
+    "fooBy": "tree earner (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "name-beneficiaries",
+   "tree": "planning",
+   "treeName": "Planning ahead",
+   "tier": "foundation",
+   "level": 1,
+   "leverage": null,
+   "name": "Name your beneficiaries",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when every account with a beneficiary line has a name on it",
+   "minutes": "15 minutes",
+   "prerequisites": [
+    "enter-the-facts"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "fact:beneficiariesSet"
+   ],
+   "tags": {
+    "area": "protection",
+    "foo": "1",
+    "fooBy": "tree planning (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "write-a-will",
+   "tree": "planning",
+   "treeName": "Planning ahead",
+   "tier": "optimization",
+   "level": 2,
+   "leverage": null,
+   "name": "Write a will",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when a signed will exists and someone knows where it is",
+   "minutes": "a weekend",
+   "prerequisites": [
+    "name-beneficiaries"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [
+    "fact:willExists"
+   ],
+   "tags": {
+    "area": "protection",
+    "foo": "1",
+    "fooBy": "tree planning (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "backdoor-roth",
+   "tree": "compounder",
+   "treeName": "Compounding",
+   "tier": "advanced",
+   "level": 9,
+   "leverage": null,
+   "name": "Run a backdoor Roth",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the contribution and the conversion both show on the statement",
+   "minutes": "one sitting",
+   "prerequisites": [
+    "set-a-mix"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "retirement",
+    "foo": "5",
+    "fooBy": "gate: older app step 6, Max a Roth IRA (or backdoor Roth)",
+    "gate": 6,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "know-your-swr",
+   "tree": "compounder",
+   "treeName": "Compounding",
+   "tier": "advanced",
+   "level": 10,
+   "leverage": null,
+   "name": "Know your safe withdrawal rate",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when you can say what a 3.5% and a 4% draw each mean for your number",
+   "minutes": "15 minutes",
+   "prerequisites": [
+    "know-your-number"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "retirement",
+    "foo": "2",
+    "fooBy": "tree compounder (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "bridge-account-plan",
+   "tree": "compounder",
+   "treeName": "Compounding",
+   "tier": "expert",
+   "level": 11,
+   "leverage": null,
+   "name": "Plan the bridge to 59½",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the taxable balance covers the years before 59½",
+   "minutes": "one sitting",
+   "prerequisites": [
+    "know-your-swr",
+    "backdoor-roth"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "retirement",
+    "foo": "6",
+    "fooBy": "gate: older app step 8, Hyper-accumulation / taxable brokerage",
+    "gate": 8,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "tax-loss-harvesting",
+   "tree": "compounder",
+   "treeName": "Compounding",
+   "tier": "expert",
+   "level": 12,
+   "leverage": null,
+   "name": "Tax loss harvesting",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when a loss has been harvested and the wash-sale window respected",
+   "minutes": "one sitting",
+   "prerequisites": [
+    "set-a-mix"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "taxes",
+    "foo": "6",
+    "fooBy": "gate: older app step 8, Hyper-accumulation / taxable brokerage",
+    "gate": 8,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "worst-year-drill",
+   "tree": "anchor",
+   "treeName": "The anchor",
+   "tier": "expert",
+   "level": 7,
+   "leverage": null,
+   "name": "Price the worst plausible year",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the worst year is priced and something stands behind each line",
+   "minutes": "one sitting",
+   "prerequisites": [
+    "cover-checkup"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "emergency",
+    "foo": "1",
+    "fooBy": "tree anchor (no gate)",
+    "gate": null,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "roth-conversion-ladder",
+   "tree": "compounder",
+   "treeName": "Compounding",
+   "tier": "endgame",
+   "level": 13,
+   "leverage": null,
+   "name": "Build a Roth conversion ladder",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the first rung is converted and the five-year clock is written down",
+   "minutes": "a weekend",
+   "prerequisites": [
+    "bridge-account-plan"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "taxes",
+    "foo": "9",
+    "fooBy": "gate: older app step 9, Prepay low-interest debt or fund other goals",
+    "gate": 9,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  },
+  {
+   "id": "donor-advised-fund",
+   "tree": "planning",
+   "treeName": "Planning ahead",
+   "tier": "endgame",
+   "level": 3,
+   "leverage": null,
+   "name": "Open a donor-advised fund",
+   "description": null,
+   "does": null,
+   "fits": null,
+   "proof": "leveled when the fund is open and one grant has gone out",
+   "minutes": "one sitting",
+   "prerequisites": [
+    "write-a-will"
+   ],
+   "opensFrom": [],
+   "opens": [],
+   "appliesWhen": [],
+   "provenBy": [],
+   "tags": {
+    "area": "goals",
+    "foo": "9",
+    "fooBy": "gate: older app step 9, Prepay low-interest debt or fund other goals",
+    "gate": 9,
+    "kind": "do"
+   },
+   "source": "data/skill_tree.json"
+  }
+ ]
+}

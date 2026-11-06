@@ -9,6 +9,7 @@ import { DRAFTT, drafttName, isCategoryRecord, isFaded, categoryKeyOf, levelOf a
 import { debtRoute } from '../nav.js';
 import { LEVELS, WEIGHTS, PACE, UNLOCKS, CONFIDENCE, FI_RANGE, SESSIONS } from '../registry/program.js';
 import { fiRangeOf } from './fi.js';
+import { debtRangeOf } from './metrics.js';
 import { RULES } from '../registry/assumptions.js';
 
 const isBlank = v => v === null || v === undefined || v === '';
@@ -207,4 +208,29 @@ export function fiWordsOf(m, conf, { now = new Date() } = {}) {
   const text = hi == null ? `${lo} or later` : lo === hi ? String(lo) : `${lo} to ${hi}`;
   const yl = Math.round(r.low / 12), yh = r.high == null ? null : Math.round(r.high / 12);
   return { kind: hi == null || lo !== hi ? 'range' : 'year', text, low: r.low, high: r.high, years: yh == null ? `${yl} years or more from now` : yl === yh ? `about ${yl} years from now` : `about ${yl} to ${yh} years from now` };
+}
+
+// Batch 24 (QUESTIONS 244): the debt-free date in words, by the FI date's display rules. Nothing rough: the month.
+// Rough inputs (debtRangeOf): a year range, one year when both ends land in it, always with the likely month beside
+// it; wider than RULES.fiRangeMaxYears, or an end that never pays off, says what would narrow it instead.
+export function debtWordsOf(m, { now = new Date(), range = debtRangeOf(m) } = {}) {
+  const base = m.debtPlan?.debts?.length ? m.debtPlan.months : null;
+  if (base == null) return null;
+  const at = n => new Date(now.getFullYear(), now.getMonth() + n, 1);
+  const monthAt = n => at(n).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }), yearAt = n => at(n).getFullYear();
+  if (!range || range.low == null) return { kind: 'month', text: monthAt(base), likely: monthAt(base), low: base, high: base, range: null };
+  const lo = yearAt(range.low), hi = range.high == null ? null : yearAt(range.high);
+  const what = range.drivers.slice(0, 2).map(d => d.label);
+  const narrow = what.length ? `Firm up ${what.join(' and ')} to narrow it` : 'Firm up the rough numbers to narrow it';
+  if (hi == null || hi - lo > RULES.fiRangeMaxYears) {
+    return { kind: 'wide', wide: true, text: `Firm up ${what.join(' and ') || 'the rough numbers'} to see a date`, likely: monthAt(base), low: range.low, high: range.high, range, narrow,
+      months: range.high == null ? `${range.low} months or more` : `${range.low} to ${range.high} months` };
+  }
+  // A short plan reads in months (a year would hide it): a range of a year or less names the two months.
+  const short = range.high - range.low <= 12;
+  const mm = n => at(n).toLocaleDateString('en-US', { month: 'short' });
+  const text = short ? (range.low === range.high ? monthAt(range.low) : yearAt(range.low) === yearAt(range.high) ? `${mm(range.low)} to ${monthAt(range.high)}` : `${monthAt(range.low)} to ${monthAt(range.high)}`)
+    : lo === hi ? String(lo) : `${lo} to ${hi}`;
+  return { kind: short ? 'months' : lo === hi ? 'year' : 'range', text, likely: monthAt(base), low: range.low, high: range.high, range, narrow,
+    months: range.low === range.high ? `${range.low} months` : `${range.low} to ${range.high} months` };
 }

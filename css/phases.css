@@ -560,6 +560,7 @@ body.side-open main.shell-page, body.side-open .banner { padding-right: calc(min
 .debt-hero { margin-bottom: var(--s4); padding: 12px 16px; border-left: 4px solid var(--primary); }
 .debt-hero .hero-top { flex-wrap: wrap; row-gap: 8px; }
 .debt-hero .hero-date { font-size: 1.5rem; font-weight: 800; line-height: 1.2; }
+.debt-hero .hero-date.hero-wide { font-size: 1rem; font-weight: 700; max-width: 260px; }
 .debt-hero .hero-num { font-size: 1.0625rem; font-weight: 700; }
 .debt-hero .hero-chips { gap: 6px; flex-wrap: wrap; }
 .chip-btn { min-height: 34px; padding: 0 12px; border: 1.5px solid var(--primary); border-radius: 999px; background: var(--card); color: var(--primary); font: inherit; font-weight: 700; font-size: .875rem; cursor: pointer; }

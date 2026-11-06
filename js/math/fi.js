@@ -73,12 +73,20 @@ export function waitWords(before) {
 
 // The FI date as a range (answer 122): the months to FI with spending lower and higher by a share, from the metrics.
 // Spending moves the FI number and, when the surplus is invested, what goes in each month.
+// Batch 24 (QUESTIONS 245): rough invested balances (marked Roughly or Not sure) widen it too, RULES.roughBalanceShare
+// either way; the two swings combine as the root of the sum of their squares (docs/engines/ranges.md).
 export function fiRangeOf(m, share, { from = new Date() } = {}) {
   const x = m.inputs, spend = x.retirementSpending, going = m.investing?.monthly ?? null;
   if (isBlank(spend) || isBlank(x.invested) || going === null || isBlank(x.withdrawalRate)) return null;
-  const run = k => fiDate({ invested: x.invested, monthlyInvesting: going - (m.investing.investSurplus ? spend * (k - 1) : 0), realReturn: x.realReturn, target: spend * 12 * k / x.withdrawalRate }, { from, before: m.investing.before ?? null, changes: m.investing.changes ?? null });
+  const run = (k, inv = x.invested) => fiDate({ invested: inv, monthlyInvesting: going - (m.investing.investSurplus ? spend * (k - 1) : 0), realReturn: x.realReturn, target: spend * 12 * k / x.withdrawalRate }, { from, before: m.investing.before ?? null, changes: m.investing.changes ?? null });
   const lo = run(1 - share), hi = run(1 + share);
-  return { share, low: lo.value, high: hi.value, highNever: !!hi.never, lowNever: !!lo.never, base: m.monthsToFi.value };
+  const rough = (x.investedRough ?? 0) * (RULES.roughBalanceShare ?? 0);
+  if (!rough) return { share, low: lo.value, high: hi.value, highNever: !!hi.never, lowNever: !!lo.never, base: m.monthsToFi.value };
+  const base = run(1), iLo = run(1, x.invested + rough), iHi = run(1, Math.max(0, x.invested - rough));
+  if (base.value == null) return { share, low: lo.value, high: hi.value, highNever: !!hi.never, lowNever: !!lo.never, base: m.monthsToFi.value };
+  const b = base.value, never = !!hi.never || !!iHi.never || hi.value == null || iHi.value == null;
+  const down = Math.sqrt((b - (lo.value ?? b)) ** 2 + (b - (iLo.value ?? b)) ** 2), up = never ? null : Math.sqrt((hi.value - b) ** 2 + (iHi.value - b) ** 2);
+  return { share, rough, low: Math.max(0, Math.round(b - down)), high: up == null ? null : Math.round(b + up), highNever: never, lowNever: !!lo.never, base: m.monthsToFi.value };
 }
 
 // Batch 5 C (MATH.md flag 1): when FI would come before saferUnderAge, a second line at the safer withdrawal rate

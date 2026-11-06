@@ -59,6 +59,7 @@ export const FORMATS = [
   { version: 18, shape: '05099ecd' }, // Nov 6 2026: materiality hours and floor per client (assumptions.materialHours, materialFloor)
   { version: 19, shape: 'c33c4b9f' }, // batch 21: settings.phase4 and M90 (Life Transitions)
   { version: 20, shape: '314ea84e' }, // Nov 6 2026 (batch 22): M25 by category, this month (Month end after an import)
+  { version: 21, shape: 'b67d018a' }, // batch 24: M34 rangeLow and rangeHigh (the debt-free range), rules AprGuessSwing and RoughBalanceShare
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

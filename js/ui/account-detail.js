@@ -123,7 +123,6 @@ function growthBlock(r, up, L) {
   return h('div.form-grid', {},
     labelled('Contributions to date', moneyInput(v.contributionsToDate ?? null, x => up({ contributionsToDate: x }), { hint: 'Add total' }), { later: L('contributionsToDate') }),
     labelled('Cost basis', moneyInput(v.costBasis ?? null, x => up({ costBasis: x }), { hint: 'Add basis' }), { note: 'Blank uses contributions', later: L('costBasis') }),
-    roth ? labelled('Roth contributions so far', moneyInput(v.rothBasis ?? null, x => up({ rothBasis: x }), { hint: 'Add amount' }), { note: 'Can come out any time, no tax or penalty', later: L('rothBasis') }) : null,
     roth && g.rothEarnings !== undefined ? labelled('Earnings (wait for 59½)', shown(money(g.rothEarnings), 'Balance minus contributions')) : null,
     labelled('Gain you have not sold', g.unrealized === null ? h('span.muted', {}, 'Needs a balance and a basis')
       : shown(`${money(g.unrealized)}${g.unrealizedPct !== null ? ` (${pct(g.unrealizedPct)})` : ''}`, `Balance minus ${g.basisFrom}`)),

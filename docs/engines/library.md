@@ -86,8 +86,11 @@ The skills file (done); the unlearn file (from the older suite, to verify); a sk
 
 - The source ladder puts "Upgrade to index funds" before "Capture the full 401(k) match" in Main Path, while the FOO
   puts the match first; the library order follows the FOO tags, not the tree's level, when they disagree.
-- 40 skills of the older app's own (keeper, anchor, compounder, earner, ledger, planning trees) are not in the file;
-  they already carry FOO gates and data proofs and could seed the first slice.
+- The older app's own 40 skills (keeper, anchor, compounder, earner, ledger, planning trees) are the second set,
+  data/library/app-skills.json (batch 24, QUESTIONS 207), the same shape, made by tools/library/extract-app-skills.mjs.
+  Their gates use the older app's own 0 to 9 ladder (its data/foo_rules.json), so each is read into SLAM's step by
+  meaning (its step 6, the Roth IRA, is SLAM's step 5); a skill with no gate takes its tree's home step. tags.gate keeps
+  the original number. They carry data proofs and could seed the first slice.
 - Only 58 of 625 tags come from a word rule; the rest come from the tree's level band and need a read.
 
 ## Build order

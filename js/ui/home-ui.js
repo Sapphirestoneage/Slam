@@ -15,7 +15,7 @@ import { programOf, startSession, inSession, sessionOf, snapshotNumbers, day0Rep
 import { MEASURES, CONFIDENCE, JOY } from '../registry/joy.js';
 import { personLabels } from '../registry/couples.js';
 import { SESSIONS, MONEY_DATES, levelWord } from '../registry/program.js';
-import { fiWordsOf } from '../math/picture.js';
+import { fiWordsOf, debtWordsOf } from '../math/picture.js';
 import { ladderOf } from '../math/ladder.js';
 import { debtHeroOf } from '../math/metrics.js';
 import { gapOf } from '../math/gap.js';
@@ -109,13 +109,24 @@ function debtHero(app, ctx, m) {
   const next = card.next;
   return h('section.card.debt-hero', { 'aria-label': 'Debt free' },
     h('div.row-line.hero-top', { style: { gap: '18px', alignItems: 'baseline' } },
-      h('div', {}, h('span.label', {}, 'Debt free'), h('div.hero-date', {}, S.mathButton({ id: 'M34', value: card.months, needs: [], unit: 'months', text: m.debtPlan.text }, at(card.months)))),
+      h('div', {}, h('span.label', {}, 'Debt free'), debtDate(ctx, m, card)),
       h('div', {}, h('span.label', {}, 'Going to debt'), h('div.hero-num', {}, `${money(card.monthly)} a month`), m.inputs.debts.filter(d => (d.balance ?? 0) > 0).length > 1 ? h('span.muted.small', {}, 'Freed payments roll into the next debt') : null), // batch 13
       next && !next.done ? h('div', {}, h('span.label', {}, 'Next milestone'), h('div.hero-num', {}, next.name), h('span.muted.small', {}, `${money(next.left)} to go · ${at(next.months)}`)) : null,
       h('span.spacer'), chips),
     whatIf,
     card.then ? h('p.muted.small.hero-then', {}, `After that, ${money(card.then.monthly)} a month fills big e by ${at(card.then.months)}${card.then.taxFree != null && card.then.taxFree > card.then.months ? `, then the Roth IRA by ${at(card.then.taxFree)}` : ''}, then it is invested.`) : null, // batch 12 (M79): freed money follows the FOO
     S.moreBlock('home:debt-hero', () => h('ul.hero-marks', {}, card.marks.map(mark)), { label: `Milestones (${card.marks.filter(k => k.done).length} of ${card.marks.length})` }));
+}
+
+// Batch 24 (QUESTIONS 244): the date as a range when an APR is a guess, a balance rough or spending a gut number,
+// the way the FI date shows (js/math/picture.js debtWordsOf); the likely month stays under it.
+function debtDate(ctx, m, card) {
+  const w = card.months == null ? null : debtWordsOf(m, { now: ctx.now() });
+  const at = mo => (mo == null ? 'not on this plan' : monthName(addMonths(ymOf(ctx.now()), mo), 'short'));
+  const text = !w || w.kind === 'month' ? m.debtPlan.text : `${m.debtPlan.text} ${w.range.text}`;
+  return h('div.stack', { style: { gap: '2px' } },
+    h(`div.hero-date${w?.wide ? '.hero-wide' : ''}`, {}, S.mathButton({ id: 'M34', value: card.months, needs: [], unit: 'months', text }, !w || w.kind === 'month' ? at(card.months) : w.text)),
+    w && w.kind !== 'month' ? h('span.muted.small.has-tip', { title: w.narrow }, `Likely ${w.likely}`) : null);
 }
 
 // ---------- The session strip ----------
@@ -402,7 +413,7 @@ export function moneyInOneLine(app, ctx, m = ctx.metrics()) {
   const words = fi.lock || when == null ? null : fiWordsOf(m, fi.confidence, { now: ctx.now() });
   const G = gapOf(ctx.store.doc, m); // batch 12 (item 5): a short month says so first
   const sentence = G ? G.text : words?.past ? words.sentence : fi.lock ? (m.surplus.value !== null ? `You keep ${money(m.surplus.value)} a month. The FI date ${fi.lock.reason.replace(/^Unlocks/, 'unlocks')}` : null)
-    : m.surplus.value !== null && words && m.debtRule?.on && m.debtPlan?.months != null ? `Your ${money(m.surplus.value)} a month goes to heavy debt first: debt free ${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.months), 'short')}, then FI ${words.kind === 'month' ? `in ${words.text}` : `around ${words.text}`}.` // batch 11: the debt rule
+    : m.surplus.value !== null && words && m.debtRule?.on && m.debtPlan?.months != null ? `Your ${money(m.surplus.value)} a month goes to heavy debt first: debt free ${(dw => (!dw || dw.kind === 'month' ? monthName(addMonths(ymOf(ctx.now()), m.debtPlan.months), 'short') : dw.wide ? `likely ${dw.likely}` : `around ${dw.text}`))(debtWordsOf(m, { now: ctx.now() }))}, then FI ${words.kind === 'month' ? `in ${words.text}` : `around ${words.text}`}.` // batch 11: the debt rule
     : m.surplus.value !== null && words ? `You keep ${money(m.surplus.value)} a month and are on track for FI ${words.kind === 'month' ? `in ${words.text}` : `around ${words.text}`}${m.inputs.age !== null && words.kind === 'month' ? `, at ${Math.floor(m.inputs.age + when / 12)}` : ''}.`
       : m.surplus.value !== null && m.surplus.value < 0 ? `You spend ${money(-m.surplus.value)} a month more than comes in.` : null;
   return h('section.section', {}, h('div.section-title', {}, h('h2', {}, 'Money in one line')),

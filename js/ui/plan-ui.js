@@ -24,7 +24,7 @@ import { yearItems, usualDates, sinkingOf, takingOver } from '../year.js';
 import { TUITION_GOAL } from '../community.js';
 import { holidayYm } from '../math/holidays.js';
 import { fiGate } from './report-ui.js';
-import { fiWordsOf } from '../math/picture.js';
+import { fiWordsOf, debtWordsOf } from '../math/picture.js';
 import { changeWords } from '../math/changes.js';
 import { outsourceCheck } from '../math/time.js';
 
@@ -427,9 +427,13 @@ export function payoffScreen(app, ctx) {
       h('div.slider-row', { style: { marginTop: '10px' } }, h('span.label', {}, 'Extra'), slider, out, h('span.muted.small', {}, 'A what-if: nothing is saved')),
       payoffRuleLine(ctx, m, usable)),
     S.summaryStrip(ctx, [
-      { label: 'Debt-free', result: p.months == null ? { id: 'M34', value: null, never: true, needs: [] } : { id: 'M34', value: p.months, needs: [], unit: 'months', text: p.text }, render: () => at(p.months) },
+      // Batch 24 (QUESTIONS 244): the plan as it stands (no what-if extra, the order in use) shows the range.
+      (() => { const w = !PUI.extraDebt && p.months != null && p.months === m.debtPlan?.months ? debtWordsOf(m, { now: ctx.now() }) : null, ranged = w && w.kind !== 'month';
+        return { label: 'Debt-free', result: p.months == null ? { id: 'M34', value: null, never: true, needs: [] } : { id: 'M34', value: p.months, needs: [], unit: 'months', text: ranged ? `${p.text} ${w.range.text}` : p.text },
+          render: () => (ranged ? w.text : at(p.months)), note: ranged ? h('span.has-tip', { title: w.narrow }, `Likely ${w.likely}`) : null }; })(),
       { label: 'Interest still to pay', result: { id: 'M34', value: p.months == null ? null : p.interest, needs: p.months == null ? ['payments that clear every debt'] : [], unit: 'money', text: p.text } },
-      { label: 'Months', result: { id: 'M34', value: p.months, needs: [], unit: 'count', text: p.text }, render: r => `${r.value}` },
+      (() => { const w = !PUI.extraDebt && p.months != null && p.months === m.debtPlan?.months ? debtWordsOf(m, { now: ctx.now() }) : null, ranged = w && w.kind !== 'month' && !w.wide;
+        return { label: 'Months', result: { id: 'M34', value: p.months, needs: [], unit: 'count', text: p.text }, render: r => (ranged && w.low !== w.high ? `${w.low} to ${w.high}` : `${r.value}`) }; })(),
       order === 'custom' ? { label: 'vs Avalanche (optimal)', result: { id: 'M34', value: cost.extraInterest, needs: cost.extraInterest == null ? ['both plans to finish'] : [], unit: 'money', text: `Interest with your order minus interest with Avalanche${cost.extraMonths ? `; ${cost.extraMonths} more ${Math.abs(cost.extraMonths) === 1 ? 'month' : 'months'}` : ''}.${costDays?.fiDays != null ? ` That is ${costDays.fiDays.toFixed(1)} FI days.` : ''}` }, note: costDays?.fiDays != null ? `${costDays.fiDays.toFixed(1)} FI days of extra interest` : 'Extra interest from your order' } :
       { label: `vs ${order === 'avalanche' ? 'snowball' : 'avalanche'}`, result: (() => { const o = plans[order === 'avalanche' ? 'snowball' : 'avalanche']; const d = o.months == null || p.months == null ? null : o.interest - p.interest; return { id: 'M34', value: d, needs: d == null ? ['both plans to finish'] : [], unit: 'money', text: `Interest with ${order === 'avalanche' ? 'snowball' : 'avalanche'} minus interest with ${order}.` }; })(), note: 'Interest saved by this order' }]),
     h('div.report-grid', {}, h('div.card', {}, h('strong', {}, 'Balance per debt'), payoffChart(ctx, p)), h('div.card', {}, h('strong', {}, 'Order compared'), compareChart(ctx, plans)))];

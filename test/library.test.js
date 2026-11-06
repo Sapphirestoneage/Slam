@@ -71,3 +71,46 @@ test('every file in data/library/ is registered with its source and date', () =>
     assert.equal(d.asOf, r.date, `${r.id}: the file's asOf is the registered date`);
   }
 });
+
+// Batch 24 (QUESTIONS 207): the second set, the older app's own 40 skills, the same shape, tagged by FOO step.
+const app = JSON.parse(readFileSync(new URL('data/library/app-skills.json', root), 'utf8'));
+test('the app skills: all 40, six trees, the same shape as the 625, credited the same way', () => {
+  assert.equal(app.skills.length, 40);
+  assert.equal(app.counts.skills, 40);
+  assert.deepEqual(app.trees.map(t => t.id).sort(), ['anchor', 'compounder', 'earner', 'keeper', 'ledger', 'planning']);
+  assert.equal(app.author, lib.author);
+  assert.equal(app.license, lib.license);
+  const keys = Object.keys(skills[0]);
+  for (const s of app.skills) for (const k of keys) assert.ok(k in s, `${s.id}: has ${k}`);
+  const all = [...skills, ...app.skills];
+  assert.equal(new Set(all.map(s => s.id)).size, all.length, 'ids are unique across both sets');
+  for (const s of app.skills) {
+    assert.ok(s.name && s.proof, `${s.id}: name and proof`);
+    assert.ok(app.trees.some(t => t.id === s.tree), `${s.id}: its tree`);
+    assert.ok(app.bands.some(b => b.id === s.tier), `${s.id}: its band`);
+    assert.equal(s.source, 'data/skill_tree.json');
+  }
+});
+
+test('the app skills: prerequisites resolve within the set and nothing loops', () => {
+  const byId = new Map(app.skills.map(s => [s.id, s]));
+  for (const s of app.skills) for (const p of s.prerequisites) assert.ok(byId.has(p), `${s.id}: ${p} is an app skill`);
+  const state = new Map();
+  const visit = id => { if (state.get(id) === 'done') return; assert.notEqual(state.get(id), 'open', `a loop through ${id}`); state.set(id, 'open'); byId.get(id).prerequisites.forEach(visit); state.set(id, 'done'); };
+  app.skills.forEach(s => visit(s.id));
+});
+
+test('the app skills: tags name a real area and FOO step, read from the gate', () => {
+  const areas = new Set(AREAS.map(a => a.id));
+  for (const s of app.skills) {
+    assert.ok(areas.has(s.tags.area), `${s.id}: area ${s.tags.area}`);
+    assert.ok(ORDER.includes(s.tags.foo), `${s.id}: FOO step ${s.tags.foo}`);
+    assert.ok(s.tags.gate == null ? /^tree /.test(s.tags.fooBy) : /^gate: older app step \d/.test(s.tags.fooBy), `${s.id}: fooBy says the rule`);
+    assert.equal(s.tags.kind, 'do');
+  }
+  const tag = id => app.skills.find(s => s.id === id).tags;
+  assert.deepEqual([tag('capture-the-match').foo, tag('capture-the-match').gate], ['2', 2], 'the match gate is step 2 in both ladders');
+  assert.equal(tag('backdoor-roth').foo, '5', 'the older app step 6 (Roth IRA) is SLAM step 5, Max out tax-free accounts');
+  assert.equal(tag('starter-fund').foo, '1');
+  assert.equal(tag('roth-conversion-ladder').foo, '9');
+});

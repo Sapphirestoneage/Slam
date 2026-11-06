@@ -41,6 +41,8 @@ export function fastTrackAnswers(doc) {
     gut: gut?.amount ?? null, gutIncludesDebt: gut ? gut.values.includesDebtPayments !== false : true, gutFrom: gut?.values.pass === 'Statements' ? 'Statements' : 'Gut',
     checking: bal('Checking'), savings: bal('Savings or HYSA'),
     invested: invested.length ? invested.reduce((s, r) => s + (r.values.balance ?? 0), 0) : null, investedRows: invested.length,
+    // Batch 24 (QUESTIONS 248): an owned home's loan, one tap (Mortgage or Paid off), from the Home row as it stands.
+    homeLoan: home?.values.financed === 'Paid off' && !loan(home) ? 'Paid off' : loan(home) || home?.values.financed === 'Financed' ? 'Mortgage' : null,
     housing: p.housing ?? null, homeValue: home?.values.value ?? null, mortgageBalance: loan(home)?.values.balance ?? null, mortgagePayment: loan(home)?.values.payment ?? null,
     hasCar: p.hasCar ?? (car ? true : null), carValue: car?.values.value ?? null, carLoanBalance: loan(car)?.values.balance ?? null, carLoanPayment: loan(car)?.values.payment ?? null,
     debts, noDebts: p.areas?.debt === false,
@@ -109,6 +111,17 @@ export function applyFastTrack(store, a, { seconds = null, now = new Date().toIS
     // Batch 14: a yes with no number yet still makes the row (as About you does), so Walk me through can ask its value.
     if (a.housing === 'Own' && !find(r => r.kind === 'asset' && r.type === 'Home')) store.add('asset', { name: 'Home', values: {} }, { type: 'Home' });
     if (a.hasCar === true && !find(r => r.kind === 'asset' && r.type === 'Car')) store.add('asset', { name: 'Car', values: {} }, { type: 'Car' });
+    // Batch 24 (QUESTIONS 248): Mortgage adds the loan row (type Mortgage, on the Home, as on Debt) for the walk to
+    // fill; Paid off marks the home paid off and drops an empty loan row. A loan with numbers is never removed here.
+    const homeRec = a.housing === 'Own' ? find(r => r.kind === 'asset' && r.type === 'Home') : null;
+    if (homeRec && a.homeLoan === 'Mortgage') {
+      if (!find(r => r.kind === 'debt' && r.linkedTo === homeRec.id)) store.add('debt', { name: 'Mortgage', linkedTo: homeRec.id, values: {} }, { type: 'Mortgage' });
+      store.update(homeRec.id, { financed: 'Financed' });
+    } else if (homeRec && a.homeLoan === 'Paid off') {
+      const l = find(r => r.kind === 'debt' && r.linkedTo === homeRec.id);
+      if (l && l.values.balance == null && l.values.payment == null) store.remove(l.id);
+      if (!find(r => r.kind === 'debt' && r.linkedTo === homeRec.id)) store.update(homeRec.id, { financed: 'Paid off' });
+    }
     // Debts by type, as totals (R132). A type already listed row by row is left alone.
     for (const [type, label] of FT_DEBTS) {
       const d = a.debts?.[type];
@@ -127,7 +140,7 @@ export function applyFastTrack(store, a, { seconds = null, now = new Date().toIS
     if (has(a.checking) || has(a.savings)) areas.cash = true;
     if (has(a.invested)) areas.investments = true;
     if (a.hasCar === true || a.housing === 'Own') areas.real = true; else if (a.hasCar === false && has(a.housing)) areas.real = areas.real === true;
-    const anyDebt = FT_DEBTS.some(([t]) => has(a.debts?.[t]?.balance) && a.debts[t].balance > 0) || has(a.carLoanBalance) || has(a.mortgageBalance);
+    const anyDebt = FT_DEBTS.some(([t]) => has(a.debts?.[t]?.balance) && a.debts[t].balance > 0) || has(a.carLoanBalance) || has(a.mortgageBalance) || (a.housing === 'Own' && a.homeLoan === 'Mortgage');
     if (a.noDebts) areas.debt = anyDebt; else if (anyDebt) areas.debt = true;
     prof.areas = areas;
     store.setDoc('profile', prof);

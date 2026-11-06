@@ -496,3 +496,40 @@ bank" (Find: import, csv, rocket money, monarch, transactions). It replaces the 
 QA: 610 tests (597 pass, 13 skipped) in UTC and America/New_York after the rebase on batch 21; export format 20; test/import-apps.test.js with made-up CSVs in
 fixtures/import; Maya's November from Rocket Money and from Monarch checked in the browser at 1280 and 390; layout
 check unchanged (the same 4 old failures, none on Month end).
+## Batch 24 (Nov 6 2026): ranges on the debt-free date, Roth contributions, Gross as all income
+
+1. Gross is every income (QUESTIONS 228): the Cash flow waterfall's first step is "Gross, all income" (a paycheck's
+   gross, a benefit before any withholding, untaxed money as it lands), so it never reads below take-home; the same on
+   Report › Statements, the Statements tab of the export (a formula from Income M13 and M01) and the Overview cash flow
+   chart. grossAnnual stays jobs only for the tax rates, the match and the Roth limit (js/math/metrics.js).
+2. Roth IRA contributions (QUESTIONS 252): the account's Details show "Roth IRA contributions so far" with one tap,
+   Same as the balance, before the box (the field rothBasis, renamed; the log by tax year stands in when it is blank).
+   Life Transitions' retirement rung takes contributions out with no tax or penalty and taxes and penalizes only the
+   growth, each account's tax stacked on the one before (one return). Riley's numbers do not change (no Roth IRA);
+   test/transitions.test.js works a Roth on top of her 401(k) by hand: the rung goes from $31,202 to $40,380.
+3. The debt-free date as a range (QUESTIONS 244, 245): js/math/metrics.js debtRangeOf runs the one debt plan again with
+   each rough input at its low and high (a guessed APR 5 points, a balance marked Roughly or Not sure 10%, spending 15%
+   for a gut number or 5% from statements) and combines the swings as the root of the sum of their squares
+   (docs/engines/ranges.md). js/math/picture.js debtWordsOf shows it by the FI date's rules (a year range, the 5-year
+   cap saying what narrows it) with the likely month under it; a range a year wide or less names its months. Home's
+   debt-free card, Debt's strip and Debt payoff (with no what-if on) show it; Money in one line says "around". Alexis
+   from Fast Track: likely Mar 2032, 2029 to 2033 (37 to 85 months, the guessed APR and the gut spending), which is the
+   QA table's honest range. Rough invested balances now widen the FI range too (fiRangeOf, 10% either way): Tom 155 to
+   185 months, still 2039 to 2042. RULES.aprGuessSwing and roughBalanceShare; M34 rangeLow and rangeHigh; FORMATS 20.
+4. The app skills (QUESTIONS 207): data/library/app-skills.json, the older app's own 40 skills in six trees, the same
+   shape as skills.json with their proof text, credited the same way, registered in REFERENCE_FILES and tested in
+   test/library.test.js (tools/library/extract-app-skills.mjs). Their gates use the older app's 0 to 9 ladder, read
+   into SLAM's step by meaning (its step 6, the Roth IRA, is SLAM's 5); tags.gate keeps the original.
+5. A home's loan in one tap (QUESTIONS 248): Fast Track's About you asks Home loan (Mortgage or Paid off) when Own is
+   picked. Mortgage adds a Mortgage row on the Home for the walk to fill (its balance and APR are walk stops); Paid off
+   marks the home paid off and hides the two mortgage boxes on Home and car.
+6. Report › Overview's tax rate reads the household's rates (as Taxes does), so unemployment alone shows 0.0% instead of
+   a lock (the batch 21 story finding on the job-loss persona, now off its def).
+7. Priors check (docs only): docs/engines/priors-sources.md now reads the SCF 2025 report itself (net worth by age,
+   Table 2; card balances, student loans, Table 4; transaction accounts, Table 3; late payments, Table 5) and the SHED
+   emergency savings table: those rows are Primary with table and page. Still unverified, each with why: the Census age
+   medians and ACS rent (www2.census.gov and the Census API refused), the SCF retirement shares by age (not in the
+   report; the historical tables not found).
+
+QA: tests pass in UTC and America/New_York; layout check on the touched screens unchanged (the four old items);
+persona run: no new findings, the job-loss Overview tax-rate major gone.

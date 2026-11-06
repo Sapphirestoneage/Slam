@@ -241,7 +241,7 @@ export const AREAS = [
       f('vestYears', 'Fully vested after (years)', 'number', { kinds: ['account'] }),
       f('contributionsYtd', 'Put in this year', 'money', { kinds: ['account'] }),
       f('contributionsToDate', 'Contributions to date', 'money', { kinds: ['account'] }),
-      f('costBasis', 'Cost basis', 'money', { kinds: ['account'] }), f('rothBasis', 'Roth contributions so far', 'money', { kinds: ['account'] }),
+      f('costBasis', 'Cost basis', 'money', { kinds: ['account'] }), f('rothBasis', 'Roth IRA contributions so far', 'money', { kinds: ['account'] }),
       f('realized', 'Gains sold this year', 'money', { kinds: ['account'] }), f('dividends', 'Dividends this year', 'money', { kinds: ['account'] }),
       f('shortTerm', 'Short-term gains', 'money', { kinds: ['account'] }), f('longTerm', 'Long-term gains', 'money', { kinds: ['account'] }),
       f('fees', 'Expense ratio', 'pct', { kinds: ['account'] }), f('accountFee', 'Account fee a year', 'money', { kinds: ['account'] }),

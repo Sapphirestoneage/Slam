@@ -26,6 +26,7 @@ export const RULES = {
   roughCheckDays: 30, agedCheckDays: 90,
   leanSeasonMonths: 3, // batch 15: an irregular income's lean-season fund holds this many months of the swing (no twelve months typed)
   fiRangeMaxYears: 5, // batch 15: an FI range wider than this many years shows the one step that narrows it instead
+  aprGuessSwing: 0.05, roughBalanceShare: 0.10, // batch 24 (QUESTIONS 244, 245): a guessed APR 5 points either way, a rough balance 10% (docs/engines/ranges.md)
   materialHours: 2, materialFloor: 100, // batch 15: a task is worth doing when its dollars a year beat these hours at the real hourly wage (never under $100)
   debtFirst: 1, // batch 11: while heavy debt is carried the surplus goes to it first (1 on, 0 off); js/math/metrics.js debtRuleOf
   // Batch 12 (QUESTIONS 196, Eli Nov 5): freed money follows the FOO. After heavy debt the surplus and the freed payments
@@ -153,6 +154,8 @@ export const ASSUMPTIONS = [
   { id: 'rules.gapTrimLine', name: 'GapTrimLine', label: 'The gap: the spending lever trims the largest Level 1 or 2 line that can move by this share', unit: 'pct', get: () => RULES.gapTrimLine, source: RULE('js/math/gap.js gapOf, M81; Batch 12 item 5'), date: '2026-11-05' },
   { id: 'rules.gapTrimGut', name: 'GapTrimGut', label: 'The gap: with no spending lines, the spending lever trims the gut number by this share', unit: 'pct', get: () => RULES.gapTrimGut, source: RULE('js/math/gap.js gapOf, M81; Batch 12 item 5'), date: '2026-11-05' },
   { id: 'rules.leanSeasonMonths', name: 'LeanSeasonMonths', label: 'Irregular income: lean-season fund, months of the swing', unit: 'number', get: () => RULES.leanSeasonMonths, source: RULE('js/math/income.js irregularPlan; batch 15 item 11 (QUESTIONS: confirm 3)'), date: '2026-11-06' },
+  { id: 'rules.aprGuessSwing', name: 'AprGuessSwing', label: 'Debt-free range: a guessed APR moves this many points either way', unit: 'pct', get: () => RULES.aprGuessSwing, source: RULE('js/math/metrics.js debtRangeOf; docs/engines/ranges.md (APR 5 points if guessed); QUESTIONS 244'), date: '2026-11-06' },
+  { id: 'rules.roughBalanceShare', name: 'RoughBalanceShare', label: 'Debt-free and FI ranges: a balance marked Roughly or Not sure moves this share either way', unit: 'pct', get: () => RULES.roughBalanceShare, source: RULE('js/math/metrics.js debtRangeOf, js/math/fi.js fiRangeOf; docs/engines/ranges.md (balances 10%); QUESTIONS 244, 245'), date: '2026-11-06' },
   { id: 'rules.fiRangeMaxYears', name: 'FiRangeMaxYears', label: 'FI date range: widest shown, years (wider shows the one step that narrows it)', unit: 'number', get: () => RULES.fiRangeMaxYears, source: RULE('js/math/picture.js fiWordsOf; batch 15 item 7 (QUESTIONS: confirm 5)'), date: '2026-11-06' },
   { id: 'rules.materialHours', name: 'MaterialHours', label: 'Worth doing: dollars a year beat this many hours at your real hourly wage', unit: 'number', get: () => RULES.materialHours, client: 'materialHours', source: RULE('js/plan.js next3 (R073); batch 15 item 4 (QUESTIONS: confirm 2 hours)'), date: '2026-11-06' },
   { id: 'rules.materialFloor', name: 'MaterialFloor', label: 'Worth doing: never under this many dollars a year', unit: 'money', get: () => RULES.materialFloor, client: 'materialFloor', source: RULE('js/plan.js next3 (R073)'), date: '2026-11-06' },
@@ -226,6 +229,10 @@ export const REFERENCE_FILES = [
   { id: 'library.skills', file: 'data/library/skills.json', label: 'The skill library: the FI Skill Tree\'s 625 skills (25 trees, 25 levels)',
     source: 'FI Skill Tree v6.3.1, from the public Sapphirestoneage/personalfinance repo (data/skill_tree.json, data/skill_links.json), copied by tools/library/extract-skills.mjs',
     date: '2026-11-05', readBy: 'nothing yet (Phase 4 library slice)' },
+  // Batch 24 (QUESTIONS 207): the second set, the older app's own 40 skills, tagged by FOO step from their gates.
+  { id: 'library.appSkills', file: 'data/library/app-skills.json', label: 'The skill library, second set: the older app\'s own 40 skills (six trees, with their proofs)',
+    source: 'The older app\'s skills (data/skill_tree.json, the six app trees, gates read against data/foo_rules.json), from the public Sapphirestoneage/personalfinance repo, copied by tools/library/extract-app-skills.mjs',
+    date: '2026-11-06', readBy: 'nothing yet (Phase 4 library slice)' },
 ];
 
 export const valueOf = (a, ref) => a.get(ref);

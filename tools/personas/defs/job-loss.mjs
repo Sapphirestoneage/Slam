@@ -66,7 +66,5 @@ export default {
       note: '$1,500 a month more from month 3: $240 short in Nov and Dec, $1,260 over in Jan to Mar (into the buffer), then $1,340 a month. $55,202 - $480 + $3,780 = $58,502. The 0% card is reached in May 2028, after its promo, so its 23% takes $133.75 of its room; the regular card (Aug 2028) $213.53. 5 + ($58,502 - $347.28) / $1,340 = 48.399 months.' },
     cardExample: { apr: 0.24, cost: 60, note: '$1,000 x 24% / 12 x 3 months = $60.' },
   },
-  cannot: [
-    'Report › Overview keeps the tax rate locked for a household whose only income is unemployment (no job gross on file), though the benefits are taxed on Taxes.',
-  ],
+  cannot: [], // batch 24: Report › Overview reads the benefit's taxes now (the household rates, as on Taxes)
 };

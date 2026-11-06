@@ -34,6 +34,7 @@ import { foo } from '../math/foo.js';
 import { gapOf } from '../math/gap.js';
 import { nextMoves } from '../math/moves.js';
 import { transitionOf } from '../math/transitions.js';
+import { debtRangeOf } from '../math/metrics.js';
 
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
@@ -308,10 +309,13 @@ export const MATH = [
     cols: [{ area: 'debt', key: 'M33', label: 'Fee as an APR (M33)', unit: 'pct', f: 'IF(OR({fee}="",N({balance})=0,{periods}=""),"",{fee}/{balance}*{periods})' }],
     sheet: 'IF(COUNT(Debt_M33)=0,"",MAX(Debt_M33))', label: 'Highest fee APR',
     app: c => { const v = c.live.filter(r => r.kind === 'debt').map(r => feeApr({ fee: r.values.fee ?? null, amount: r.values.balance || null, periodsPerYear: r.values.periods ?? null }).value).filter(x => x != null); return v.length ? Math.max(...v) : null; } },
-  { id: 'M34', name: 'Payoff order with extra payment', inputs: 'debts, extra, order, the surplus while heavy debt is carried (the debt rule)', unit: 'months', fns: ['debt.payoffPlan', 'debt.simulateDebt', 'debt.hasslePerDollar', 'debt.customOrder', 'debt.orderCost', 'debt.debtFirstPlan', 'debt.isHeavyDebt', 'debt.promoSoonIds', 'metrics.debtRuleOf', 'debt.debtFreeCard', 'debt.HERO_EXTRAS', 'debt.heroExtras', 'debt.SHORT_PLAN_SHARES'],
+  { id: 'M34', name: 'Payoff order with extra payment', inputs: 'debts, extra, order, the surplus while heavy debt is carried (the debt rule)', unit: 'months', fns: ['debt.payoffPlan', 'debt.simulateDebt', 'debt.hasslePerDollar', 'debt.customOrder', 'debt.orderCost', 'debt.debtFirstPlan', 'debt.isHeavyDebt', 'debt.promoSoonIds', 'metrics.debtRuleOf', 'debt.debtFreeCard', 'debt.HERO_EXTRAS', 'debt.heroExtras', 'debt.SHORT_PLAN_SHARES', 'metrics.debtRangeOf', 'picture.debtWordsOf'],
     fromApp: 'a month-by-month simulation: every debt gets its payment, the surplus goes to heavy debt first in the payoff order (batch 11, the debt rule), and each cleared payment rolls forward (up to 1,200 rows)',
     parts: [{ key: 'heavy', name: 'Months until the heavy debt is gone, on the same plan', unit: 'months', fromApp: 'the same simulation', app: c => (c.m.debtPlan?.debts.some(d => d.heavy) ? c.m.debtPlan.heavyMonths : null) },
-      { key: 'minimum', name: 'Months until every debt is gone at each debt\'s own payment only', unit: 'months', fromApp: 'the same simulation with no surplus and no extra', app: c => c.m.debtPlanMinimum?.months ?? null }],
+      { key: 'minimum', name: 'Months until every debt is gone at each debt\'s own payment only', unit: 'months', fromApp: 'the same simulation with no surplus and no extra', app: c => c.m.debtPlanMinimum?.months ?? null },
+      // Batch 24 (QUESTIONS 244): the range when an APR is a guess, a balance is rough or spending is a gut number.
+      { key: 'rangeLow', name: 'Debt free, soonest likely (months): rough inputs at their low and high, swings combined', unit: 'months', fromApp: 'the same simulation run again with each rough input moved (a guessed APR 5 points, a rough balance 10%, spending 15% or 5%)', app: c => debtRangeOf(c.m)?.low ?? null },
+      { key: 'rangeHigh', name: 'Debt free, latest likely (months)', unit: 'months', fromApp: 'the same simulation run again with each rough input moved', app: c => debtRangeOf(c.m)?.high ?? null }],
     app: c => (c.m.debtPlan?.debts.length ? c.m.debtPlan.months : null) },
   { id: 'M35', name: 'Utilization', inputs: 'cards', unit: 'pct', fns: ['debt.utilization', 'debt.creditHealth', 'debt.BUREAUS', 'debt.yearsText'],
     sheet: 'IF(SUMIFS(Debt_limit,Debt_Type,"Credit card",Debt_limit,">0")=0,"",SUMIFS(Debt_balance,Debt_Type,"Credit card",Debt_limit,">0")/SUMIFS(Debt_limit,Debt_Type,"Credit card",Debt_limit,">0"))',

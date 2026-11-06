@@ -84,6 +84,31 @@ test('the card example and the retirement cost are the hand numbers', () => {
   assert.equal(withdrawalCost({ gross: 10000, age: 40, base: 0, penaltyFree: true }, ref).penalty, 0, 'a 457 has no penalty');
 });
 
+// Batch 24 (QUESTIONS 252): a Roth IRA's contributions come out with no tax or penalty; only the growth is taxed.
+test('a Roth IRA: contributions come out free, only the growth is taxed and penalized', () => {
+  const NY = { state: 'NY', nyc: false };
+  // $10,000 with $7,000 put in: $3,000 of growth. Penalty 10% x $3,000 = $300. Tax on top of $13,000 of benefits:
+  // federal $16,000 - $16,100 = $0 taxable, so $0; NY on $16,000 - $8,000 = $8,000 x 3.9% = $312 less $195 on $5,000 = $117.
+  const w = withdrawalCost({ gross: 10000, age: 36, base: 13000, filingStatus: 'Single', place: NY, contributions: 7000 }, ref);
+  near(w.free, 7000, 0.01); near(w.penalty, 300, 0.01); near(w.tax, 117, 1); near(w.net, 9583, 1);
+  // Taking less than the contributions: all of it free.
+  const all = withdrawalCost({ gross: 6000, age: 36, base: 13000, filingStatus: 'Single', place: NY, contributions: 7000 }, ref);
+  assert.deepEqual([all.penalty, all.tax, all.net], [0, 0, 6000]);
+  // On Riley's ladder, after the 401(k): the Roth's $3,000 of growth stacks on $13,000 + $42,000 = $55,000. Federal
+  // $38,900 to $41,900 taxable, all at 12% = $360; NY $47,000 to $50,000, all at 5.4% = $162. Penalty $300. The Roth
+  // keeps $10,000 - $300 - $522 = $9,178; the rung is $31,202 + $9,178 = $40,380. A blank box is the cautious view.
+  const doc = riley();
+  const roth = (values) => ({ ...doc.records.find(r => r.type === '401(k)'), id: 'roth-1', type: 'Roth IRA', name: 'Roth IRA', values: { group: 'investment', balance: 10000, ...values } });
+  doc.records.push(roth({ rothBasis: 7000 }));
+  const r = transitionOf(doc, ref, { now }).ladder.rungs.find(x => x.id === 'retirement');
+  near(r.amount, 40380, 1); near(r.penalty, 4500, 0.01); near(r.tax, 6598 + 522, 1); near(r.free, 7000, 0.01);
+  assert.match(r.costText, /\$7,000 of Roth IRA contributions comes out free/);
+  // The contribution log stands in when the box is blank (one basis, js/math/portfolio.js growthOf).
+  const doc2 = riley();
+  doc2.records.push(roth({ rothLog: [{ taxYear: 2025, amount: 7000 }] }));
+  near(transitionOf(doc2, ref, { now }).ladder.rungs.find(x => x.id === 'retirement').amount, 40380, 1);
+});
+
 // A small household built in code: cash only, Budget lines, an optional job.
 function household({ job = 0, lines = [[2000, 'Accommodation'], [500, 'Food'], [300, 'Other']], cash = 6000, template = 'job-loss', rungs = {} } = {}) {
   const s = new Store(newHousehold({ name: 'Test', now: NOW }));

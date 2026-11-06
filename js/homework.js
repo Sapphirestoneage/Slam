@@ -49,7 +49,7 @@ const LABEL = {
   contributionPct: '401(k) %', k401Paycheck: '401(k) a paycheck', hasMatch: 'employer match', matchPct: 'employer match', matchCapPct: 'match limit', bonus: 'bonus', premium: 'health premium', hsaFsa: 'HSA or FSA amount',
   vesting: 'match vesting', equity: 'equity pay', raisePct: 'raise %', otherPretax: 'other before-tax', balance: 'balance', institution: 'institution',
   last4: 'last 4 digits', apr: 'APR', apy: 'APY', yield7: '7-day yield', contribution: 'putting in', taxType: 'Roth or traditional', unvested: 'unvested amount',
-  costBasis: 'cost basis', rothBasis: 'Roth contributions so far', contributionsToDate: 'contributions to date', dividends: 'dividends', realized: 'realized gains',
+  costBasis: 'cost basis', rothBasis: 'Roth IRA contributions so far', contributionsToDate: 'contributions to date', dividends: 'dividends', realized: 'realized gains',
   fees: 'expense ratio', accountFee: 'account fee', beneficiary: 'beneficiary', holdings: 'holdings', allocation: 'allocation', hsaInvested: 'invested amount',
   hsaCash: 'cash amount', hsaManagedFee: 'managed fee', hsaSelfFee: 'self-directed fee', matchTiers: 'match tiers', vestingSchedule: 'vesting schedule', value: 'value',
   statementDay: 'statement closing day', autopay: 'autopay', rewards: 'rewards type', creditScore: 'Credit score', deductible: 'deductible', oopMax: 'out-of-pocket max', copays: 'copays', term: 'short-term or long-term', benefitPct: 'replaces this % of your pay', duration: 'benefit period', waiting: 'waiting period', coverage: 'coverage amount', plannedChange: 'planned change', lastYearAmount: 'Last year\'s refund or amount owed', w4Status: 'W-4 filing status', w4Extra: 'Extra withholding a paycheck',

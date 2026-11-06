@@ -235,7 +235,7 @@ export function statementRows(cur, prev) {
     { lines: linesOf(n.unvested), text: 'Employer money that is not yours until it vests. Shown, not counted in net worth.' })] : [];
   const i = cur.income, q = prev?.income;
   const income = [
-    row('Gross pay', i.gross, q?.gross ?? null, { home: '#/cash-flow/income', tip: 'Revenue on an income statement' }),
+    row('Gross, all income', i.gross, q?.gross ?? null, { home: '#/cash-flow/income', tip: 'Revenue on an income statement: every paycheck before tax, benefits and untaxed money' }),
     row('Employer match', i.match, q?.match ?? null, { sign: '+', home: '#/net-worth/assets', text: `Your employer's 401(k) match: ${money0(i.match)}, its own line of income.` }),
     row('Taxes', i.taxes, q?.taxes ?? null, { sign: '−', home: '#/cash-flow/taxes' }),
     row('Saved from paycheck', i.saved, q?.saved ?? null, { sign: '−', text: `401(k), HSA and the match, saved before the money reaches you: ${money0(i.saved)}. Pay yourself first.` }),

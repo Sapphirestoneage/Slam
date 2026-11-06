@@ -353,6 +353,12 @@ function assetSecondary(ctx, r, up) {
       toggle(['Paycheck', 'Year'], v.contributionPer ?? 'Year', x => up({ contributionPer: x }), { label: 'Per' })), { later: later('contribution') }),
     asksTaxType(r.type) ? labelled('Pretax, Roth or both', toggle(['Pretax', 'Roth', 'Both'], v.taxType ?? null, x => up({ taxType: x }), { label: 'Pretax or Roth' }), { later: later('taxType') })
       : known ? labelled('Pretax or Roth', h('span.computed', { title: 'Set by the account type' }, known === 'Roth' ? 'Roth: taxed now, tax-free later' : 'Pretax: tax break now, taxed when taken out')) : null,
+    // QUESTIONS 252: what went into a Roth IRA comes out any time with no tax or penalty; only the growth waits.
+    // One tap when it was never invested long (the balance is all contributions), else the box.
+    r.type === 'Roth IRA' ? (el => { el.classList.add('wide'); return el; })(labelled('Roth IRA contributions so far', h('span.row-line', { style: { gap: '6px', flexWrap: 'nowrap' } },
+      v.balance != null ? button('Same as the balance', { size: 'small', onClick: () => up({ rothBasis: v.balance }) }) : null,
+      moneyInput(v.rothBasis ?? null, x => up({ rothBasis: x }), { hint: 'Add amount' })),
+    { tip: 'What you have put in. It comes out any time with no tax or penalty; only the growth waits for 59 and a half', later: later('rothBasis') })) : null,
     asksTaxType(r.type) ? labelled('Unvested', moneyInput(v.unvested, x => up({ unvested: x }), { hint: 'Add amount' }), { note: 'Shown, not counted in net worth', later: later('unvested') }) : null,
     limitUsed({ contributions: 0, type: r.type, age: 30 }, ctx.ref).value !== null ? labelled('Limit used this year', h('span.computed', {}, lim.value === null ? `Needs ${lim.needs[0]}` : `${value(lim)} of ${money(lim.limit)}${employerHsa ? `, with ${money(employerHsa)} from your employer` : ''}`)) : null];
 }

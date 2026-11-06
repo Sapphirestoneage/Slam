@@ -11,7 +11,7 @@ import * as S from './staples.js';
 import { sheetButtons } from './sheet-ui.js';
 import { soWhat } from '../sowhat.js';
 import { debtRatios } from './lists.js';
-import { taxRates, monthlyFrom } from '../math/income.js';
+import { taxRates, householdRates, monthlyFrom } from '../math/income.js';
 import { drafttShares } from '../math/spending.js';
 import { gutAccuracy } from '../math/spending.js';
 import { fiTargets, ladder, agenda } from '../plan.js';
@@ -33,7 +33,10 @@ export function overviewScreen(app, ctx) {
   const m = ctx.metrics();
   const x = m.inputs;
   const ratios = debtRatios(ctx, m);
-  const tax = x.grossAnnual ? taxRates({ gross: x.grossAnnual, filingStatus: x.filingStatus, place: x.place }, ctx.ref) : { id: 'M14', value: null, needs: ['gross pay'], unit: 'pct' };
+  // Batch 24 (item 6): the household's rates, the same as the Taxes tab, so a household whose only income is
+  // unemployment gets its rate from the benefit's taxes (the job-loss persona read locked here).
+  const tax = x.householdTax?.total?.gross ? householdRates(x.householdTax, ctx.ref)
+    : x.grossAnnual ? taxRates({ gross: x.grossAnnual, filingStatus: x.filingStatus, place: x.place }, ctx.ref) : { id: 'M14', value: null, needs: ['gross pay'], unit: 'pct' };
   const shares = drafttShares(x.lines, x.takeHome, { roommates: x.roommates });
   const topLetter = shares.value ? Object.entries(shares.value).sort((a, b) => b[1] - a[1]).find(([, v]) => v > 0) : null;
   const l = ladder(m, ctx.store.doc);
@@ -125,13 +128,13 @@ function sankeyCard(ctx, m) {
   const debtPay = x.debtPaymentsOutsideSpending ?? 0;
   const spend = x.spending;
   const needs = lines.length ? Math.max(0, spend - wants) : spend;
-  const taxes = x.grossAnnual ? Math.max(0, x.grossAnnual / 12 - x.takeHome) : 0;
+  const taxes = m.flow?.gross ? Math.max(0, m.flow.gross - x.takeHome) : 0; // every income before tax (QUESTIONS 228), so untaxed money is not read as tax saved
   const saving = Math.max(0, m.surplus.value ?? 0);
   const short2 = Math.max(0, -(m.surplus.value ?? 0));
-  const src = taxes ? 'Gross pay' : 'Take-home';
+  const src = taxes ? 'Gross, all income' : 'Take-home';
   const links = [
-    taxes ? { source: 'Gross pay', target: 'Taxes', value: taxes } : null,
-    taxes ? { source: 'Gross pay', target: 'Take-home', value: x.takeHome } : null,
+    taxes ? { source: 'Gross, all income', target: 'Taxes', value: taxes } : null,
+    taxes ? { source: 'Gross, all income', target: 'Take-home', value: x.takeHome } : null,
     { source: 'Take-home', target: lines.length ? 'Needs' : 'Spending', value: needs },
     lines.length && wants ? { source: 'Take-home', target: 'Wants', value: wants } : null,
     debtPay ? { source: 'Take-home', target: 'Debt payments', value: debtPay } : null,
@@ -142,7 +145,7 @@ function sankeyCard(ctx, m) {
   queueMicrotask(() => {
     if (!window.echarts || !host.isConnected) return;
     const t = S.chartTheme('income');
-    const col = { 'Gross pay': t.area, 'Take-home': t.area, Taxes: S.chartTheme('taxes').area, Needs: S.chartTheme('needs').area, Spending: S.chartTheme('needs').area, Wants: S.chartTheme('goals').area, 'Debt payments': S.chartTheme('debt').area, Saving: S.chartTheme('assets').area, Shortfall: t.text2 };
+    const col = { 'Gross, all income': t.area, 'Take-home': t.area, Taxes: S.chartTheme('taxes').area, Needs: S.chartTheme('needs').area, Spending: S.chartTheme('needs').area, Wants: S.chartTheme('goals').area, 'Debt payments': S.chartTheme('debt').area, Saving: S.chartTheme('assets').area, Shortfall: t.text2 };
     const c = window.echarts.init(host, null, { renderer: 'svg' });
     c.setOption({
       textStyle: { fontFamily: t.font, color: t.text }, tooltip: { trigger: 'item', valueFormatter: v => `${money(v)} a month` },

@@ -17,12 +17,16 @@ import { fiNumber, fiDate, coastFi, bigDeals } from './fi.js';
 import { hourlyRate } from './time.js';
 import { debtLines, premiumSources, duplicates, afterTaxContributions } from './linked.js';
 import { LISTS, RULES } from '../registry/assumptions.js';
+import { FI_RANGE } from '../registry/program.js';
 import { cashLayers, layerOptions } from './layers.js';
 import { freedFlow, taxFreeRoom } from './flow.js';
 
 const PAYS = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
 const HOUSING = new Set(LISTS.housing);
 const CONSUMER = new Set(LISTS.consumerDebt);
+// Batch 24 (QUESTIONS 244, 245): a balance marked Roughly or Not sure is rough; the debt-free and FI ranges move it.
+const ROUGH = new Set(['Roughly', 'Not sure']);
+const roughAt = (r, field) => ROUGH.has(statusOf(r, field));
 
 // A value as the math should see it: Not for me is zero (R058); Not sure with nothing typed is a Guess (R055).
 function read(record, field, guessValue = null, { blankIsGuess = false } = {}) {
@@ -136,6 +140,11 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
     ? income.reduce((s, x) => (s === null || x.takeHome.value === null ? null : s + x.takeHome.value), 0)
     : null;
   const grossAnnual = income.some(x => x.gross !== null) ? income.reduce((s, x) => s + (x.gross ?? 0), 0) : null;
+  // QUESTIONS 228: the Cash flow strip's and the Statements' Gross is every income before tax: a paycheck's gross, a
+  // benefit before its withholding, and money that is not taxed (family help, gifts) as it lands, so it never reads
+  // below take-home. grossAnnual stays jobs only (the tax rates, the match, the Roth limit read it).
+  const grossOfRow = i => i.benefit ? i.benefit.monthly * 12 : i.gross ?? (!i.taxType && i.takeHome.value != null ? i.takeHome.value * 12 : null);
+  const grossAllAnnual = income.some(i => grossOfRow(i) !== null) ? income.reduce((s, i) => s + (grossOfRow(i) ?? 0), 0) : null;
   const debts = live.filter(r => r.kind === 'debt').map(r => {
     // A blank APR is a Guess until it is typed (answer to the APR question), not only when marked Not sure.
     const apr = read(r, 'apr', ref.typicalRates[r.type] ?? null, { blankIsGuess: true });
@@ -151,7 +160,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
       const min = cardMinimum({ balance, apr: apr.v });
       payment = min.value; paymentIsMinimum = min.value !== null;
     }
-    return { id: r.id, name: r.name ?? r.type, type: r.type, balance, apr: apr.v, aprGuess: !!apr.guess, payment, paymentIsMinimum, inFull, choice, stress: r.stress, hassle: r.values.hassle ?? null, linkedTo: r.linkedTo,
+    return { id: r.id, name: r.name ?? r.type, type: r.type, balance, balanceRough: balance != null && roughAt(r, 'balance'), apr: apr.v, aprGuess: !!apr.guess, payment, paymentIsMinimum, inFull, choice, stress: r.stress, hassle: r.values.hassle ?? null, linkedTo: r.linkedTo,
       promoEnd: r.values.promoEnd ?? null, forgiven: r.values?.pslf === 'Yes' || r.values?.forgiveness === true || r.values?.forgiveness === 'Yes' };
   });
   // Enter once, show in both: each debt's payment is a line From Debt; a typed line that looks like a debt payment or
@@ -182,7 +191,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   const spending = useLines ? lineTotal : gutOf();
   const debtPayments = debts.reduce((s, d) => s + (d.inFull ? 0 : d.payment ?? 0), 0);
   const includesDebt = allIn ? allIn.values.includesDebtPayments !== false : false;
-  const accounts = live.filter(r => r.kind === 'account').map(r => ({ id: r.id, name: r.name ?? r.type, group: r.values.group, type: r.type, value: read(r, 'balance').v, unvested: r.values.unvested ?? null }));
+  const accounts = live.filter(r => r.kind === 'account').map(r => ({ id: r.id, name: r.name ?? r.type, group: r.values.group, type: r.type, value: read(r, 'balance').v, rough: roughAt(r, 'balance'), unvested: r.values.unvested ?? null }));
   const things = live.filter(r => r.kind === 'asset').map(r => ({ id: r.id, name: r.name ?? r.type, type: r.type, value: read(r, 'value').v }));
   const none = gates.none; // R002: 'None of these' counts as done, with zeros
   // Batch 11 (item 9): an area answered "none" (About you, or a 0 typed in Fast Track) is a real $0, not a missing number.
@@ -195,6 +204,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   // (or the area is answered none); a blank balance is not known yet, not $0.
   const investedKnown = accounts.some(a => a.group === 'investment') ? accounts.filter(a => a.group === 'investment').every(a => a.value != null) : invested === 0;
   const earmarkedTotal = accounts.filter(a => a.group === 'investment' && earmarked(a)).reduce((s, a) => s + (a.value ?? 0), 0);
+  const investedRough = accounts.filter(a => a.group === 'investment' && !earmarked(a) && a.rough).reduce((s, a) => s + (a.value ?? 0), 0); // QUESTIONS 245
   const brokerage = accounts.filter(a => a.type === 'Brokerage').reduce((s, a) => s + (a.value ?? 0), 0);
   const housingLines = lines.filter(l => HOUSING.has(l.category));
   // Batch 13: a homeowner pays the mortgage on Debt (From Debt), not as a Rent or mortgage line, so with no rent line the
@@ -215,14 +225,17 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   }, 0);
   const a = doc.assumptions;
   const out = {
-    place, link, sinkingMonthly, householdTax: hh, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, gates, filingStatus, filingGuess, none, mode, person, splitShare,
+    place, link, sinkingMonthly, householdTax: hh, takeHome, spending, lines, debts, accounts, things, cash, invested, brokerage, housing, income, grossAnnual, grossAllAnnual, gates, filingStatus, filingGuess, none, mode, person, splitShare,
     debtOrder: doc.settings?.debtOrder ?? 'avalanche', debtCustomOrder: doc.settings?.debtCustomOrder ?? [], debtExtra: doc.settings?.debtExtra ?? 0,
     debtPaymentsOutsideSpending: spending === null ? null : ((!useLines && includesDebt) || useLines ? 0 : debtPayments), // the lines hold each payment, From Debt
     typicalScale: typicalScaleOf({ gut: gutOf(), includesDebt, debtPayments, categories, lines: typedLines }), // QUESTIONS 241
     autoLines, dupOf, askOf, typedLines, premiums, payFrequency, health: health ? { id: health.id, perPaycheck: healthPerPay, fromPay: !!healthFromPay, jobId: healthJob?.id ?? null } : null,
     paycheckPremiums: premiums.filter(p => p.paidFrom === 'Paycheck').reduce((s, p) => s + (p.monthly ?? 0), 0),
     afterTaxSaving: afterTaxContributions(live.filter(r => r.kind === 'account'), { payFrequency, payrollHsa: gates.hsa && income.some(i => (i.r.values.hsaFsa ?? 0) > 0) }).total,
-    goalSaving: afterTaxContributions(live.filter(r => r.kind === 'account' && (r.type === '529' || r.values?.purpose === 'Goal')), { payFrequency }).total, earmarked: earmarkedTotal, investedKnown,
+    goalSaving: afterTaxContributions(live.filter(r => r.kind === 'account' && (r.type === '529' || r.values?.purpose === 'Goal')), { payFrequency }).total, earmarked: earmarkedTotal, investedKnown, investedRough,
+    // QUESTIONS 244: how far the spending number may be off, for the debt-free range: a gut number 15% (the FI range at
+    // Low), a total from statements or Budget lines with a guess among them 5% (Medium), lines all typed 0.
+    spendingShare: !useLines ? (allIn?.values?.pass === 'Statements' ? FI_RANGE.Medium : FI_RANGE.Low) : lines.some(l => l.amount != null && ROUGH.has(statusOf(l, 'amount'))) ? FI_RANGE.Medium : 0,
     spendingSource: useLines ? 'lines' : 'gut', lineTotal, retirementLines: useLines ? retirementLines : 0, categories,
     guessLines: lines.filter(l => l.status === 'Not sure' && l.preset).length,
     guessTotal: lines.filter(l => l.status === 'Not sure' && l.preset).reduce((s, l) => s + (myShare(l, { roommates: doc.profile.roommates ?? 0 }).value ?? 0), 0), gutTotal: allIn ? gutOf() : null,
@@ -301,7 +314,7 @@ export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
   const firstMonths = toDebt > 0 && firstLeft > 0.5 ? Math.ceil(firstLeft / toDebt - 1e-9) : 0;
   out.debtPlan = debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: promoSoonIds(x.debts, now), surplus: toDebt, extra: x.debtExtra, surplusFrom: firstMonths, changes: rule.on ? surplusChanges : null });
   out.debtPlanMinimum = rule.on || x.debtExtra ? debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: promoSoonIds(x.debts, now) }) : out.debtPlan; // each debt at its own payment only
-  out.debtRule = { ...rule, toDebt, heavyMonths: out.debtPlan.heavyMonths, first: promoSoonIds(x.debts, now), changes: rule.on ? surplusChanges : null };
+  out.debtRule = { ...rule, toDebt, toDebtRaw: rule.on && surplus !== null ? surplus - contributions - goalSaving : null, firstLeft, heavyMonths: out.debtPlan.heavyMonths, first: promoSoonIds(x.debts, now), changes: rule.on ? surplusChanges : null };
   for (const d of [...x.debts, ...out.debts]) { const p = out.debtPlan.debts.find(q => q.id === d.id); d.planMonths = d.inFull ? null : p?.paidOffMonth ?? null; d.minimumMonths = d.inFull ? null : out.debtPlanMinimum.debts.find(q => q.id === d.id)?.paidOffMonth ?? null; d.heavy = isHeavyDebt(d); }
   const freed = rule.on ? out.debtPlan.heavyPayments : 0;
   const invested = surplus === null ? null : alreadyIn + surplus - goalSaving + freed; // the surplus invested (and, after the heavy debt, its freed payments), less what goes to a 529 or a goal
@@ -342,7 +355,7 @@ export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
 // are out, so the rows always add up (it holds paycheck premiums too, and says so). Savings are Retirement-letter lines
 // plus what x.afterTaxSaving and x.setAside add (after-tax contributions, savings goals, sinking funds).
 export function flowOf(x, { pretaxSaving = 0, setAside = 0 } = {}) {
-  const gross = x.grossAnnual === null ? null : x.grossAnnual / 12;
+  const gross = (x.grossAllAnnual ?? x.grossAnnual) == null ? null : (x.grossAllAnnual ?? x.grossAnnual) / 12; // every income (QUESTIONS 228)
   const beforeTax = pretaxSaving || 0;
   const takeHome = x.takeHome;
   const premiums = x.paycheckPremiums ?? 0;
@@ -394,4 +407,49 @@ export function debtHeroOf(doc, m) {
   const rerun = extra => debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: m.debtRule.first ?? [], surplus: m.debtRule.toDebt, extra: (x.debtExtra ?? 0) + extra, surplusFrom: m.debtPlan?.surplusFrom ?? 0, changes: m.debtRule.changes ?? null });
   const card = debtFreeCard(m.debtPlan, { start, rerun, extras: heroExtras(m.debtPlan) });
   return card && { ...card, short: m.debtPlan.months != null && m.debtPlan.months <= RULES.shortPlanMonths, then: m.fooFlow?.bigEMonths ? { monthly: m.fooFlow.monthly, months: m.fooFlow.bigEEnd, taxFree: m.fooFlow.taxFreeEnd } : null }; // batch 12: what the money does next (M79)
+}
+
+// Batch 24 (QUESTIONS 244): the debt-free date as a range when its inputs are rough, by the ranges engine's method
+// (docs/engines/ranges.md): the one debt plan run again with each rough input at its low and its high, the rest as
+// entered, and the swings combined as the root of the sum of their squares. The rough inputs: a guessed APR (RULES.
+// aprGuessSwing points either way), a balance marked Roughly or Not sure (RULES.roughBalanceShare either way) and the
+// spending number (x.spendingShare: 15% for a gut number, 5% from statements), which moves what goes to debt each
+// month while the surplus pays heavy debt first. A card paid its minimum gets the minimum of the moved balance and APR.
+// null when nothing is rough (the date stands as one month) or there is no date. high is null when an end never pays off.
+export function debtRangeOf(m) {
+  const x = m.inputs, P = m.debtPlan, rule = m.debtRule || {};
+  if (!P?.debts?.length || P.months == null) return null;
+  const live = d => (d.balance ?? 0) > 0 && !d.inFull;
+  const fix = d => (d.paymentIsMinimum ? { ...d, payment: cardMinimum({ balance: d.balance, apr: d.apr }).value ?? d.payment } : d);
+  const run = ({ debts = x.debts, toDebt = rule.toDebt ?? 0 } = {}) => {
+    const from = toDebt > 0 && (rule.firstLeft ?? 0) > 0.5 ? Math.ceil(rule.firstLeft / toDebt - 1e-9) : 0;
+    return debtFirstPlan(debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: rule.first ?? [], surplus: toDebt, extra: x.debtExtra, surplusFrom: from, changes: rule.changes ?? null }).months;
+  };
+  const base = run();
+  const swings = [];
+  const guessed = x.debts.filter(d => live(d) && d.aprGuess);
+  if (guessed.length) {
+    const at = s => x.debts.map(d => (live(d) && d.aprGuess ? fix({ ...d, apr: Math.max(0, d.apr + s) }) : d));
+    swings.push({ input: 'apr', label: guessed.length === 1 ? `the ${guessed[0].type === 'Credit card' ? 'card' : guessed[0].name} APR` : 'the APRs', low: run({ debts: at(-RULES.aprGuessSwing) }), high: run({ debts: at(RULES.aprGuessSwing) }) });
+  }
+  const rough = x.debts.filter(d => live(d) && d.balanceRough);
+  if (rough.length) {
+    const at = k => x.debts.map(d => (live(d) && d.balanceRough ? fix({ ...d, balance: d.balance * k }) : d));
+    swings.push({ input: 'balance', label: rough.length === 1 ? `the ${rough[0].type === 'Credit card' ? 'card' : rough[0].name} balance` : 'the debt balances', low: run({ debts: at(1 - RULES.roughBalanceShare) }), high: run({ debts: at(1 + RULES.roughBalanceShare) }) });
+  }
+  if (rule.on && rule.toDebtRaw != null && x.spending != null && x.spendingShare) {
+    const d$ = x.spending * x.spendingShare;
+    swings.push({ input: 'spending', label: 'monthly spending', low: run({ toDebt: Math.max(0, rule.toDebtRaw + d$) }), high: run({ toDebt: Math.max(0, rule.toDebtRaw - d$) }) });
+  }
+  const moving = swings.filter(s => s.low !== base || s.high !== base);
+  if (!moving.length) return null;
+  const never = moving.some(s => s.low == null || s.high == null);
+  const lows = moving.map(s => Math.min(...[s.low, s.high].filter(v => v != null), base));
+  const highs = moving.map(s => Math.max(...[s.low, s.high].filter(v => v != null), base));
+  const down = Math.sqrt(lows.reduce((t, v) => t + (base - v) ** 2, 0)), up = Math.sqrt(highs.reduce((t, v) => t + (v - base) ** 2, 0));
+  const drivers = moving.map((s, i) => ({ input: s.input, label: s.label, low: s.low, high: s.high, width: s.low == null || s.high == null ? Infinity : highs[i] - lows[i] })).sort((a, b) => b.width - a.width);
+  const low = Math.max(0, Math.round(base - down)), high = never ? null : Math.round(base + up);
+  const each = drivers.map(d => `${d.label} alone moves it ${d.low ?? 'never'} to ${d.high ?? 'never'} months`).join('; ');
+  return { base, low, high, highNever: never, drivers,
+    text: `Likely ${base} months. Rough numbers move it: ${each}. Together (the root of the sum of the squares): ${low} to ${high ?? 'never'} months.` };
 }

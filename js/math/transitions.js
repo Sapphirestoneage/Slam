@@ -15,6 +15,7 @@
 import { metrics } from './metrics.js';
 import { layersOf } from './layers.js';
 import { myShare } from './spending.js';
+import { growthOf } from './portfolio.js';
 import { federalTax, stateTax, isBenefitRow } from './income.js';
 import { endYm } from './changes.js';
 import { addMonths, ymOf, monthsBetween, monthName } from '../month.js';
@@ -55,13 +56,16 @@ export function cardCost(apr, { amount = RULES.cardExampleAmount, months = RULES
 
 // Retirement money taken out now: the 10% additional tax before 59 and a half (none on a 457), and income tax on top
 // of the year's other income (federal, and state and city when About you says NY), from the app's own tax math.
-export function withdrawalCost({ gross, age = null, base = 0, filingStatus = 'Single', place = null, penaltyFree = false }, ref) {
-  if (!gross) return { gross: 0, penalty: 0, tax: 0, net: 0, rate: 0 };
-  const penalty = penaltyFree || (age != null && age >= RULES.penaltyAge) ? 0 : gross * RULES.earlyPenalty;
+// QUESTIONS 252: a Roth IRA's contributions (contributions, the "Roth IRA contributions so far" box) come out first,
+// with no tax and no penalty (IRS Pub 590-B, ordering rules); only the growth past them is taxed and penalized.
+export function withdrawalCost({ gross, age = null, base = 0, filingStatus = 'Single', place = null, penaltyFree = false, contributions = 0 }, ref) {
+  if (!gross) return { gross: 0, penalty: 0, tax: 0, net: 0, rate: 0, free: 0 };
+  const free = Math.min(gross, Math.max(0, contributions ?? 0)), growth = gross - free;
+  const penalty = penaltyFree || (age != null && age >= RULES.penaltyAge) ? 0 : growth * RULES.earlyPenalty;
   const taxAt = g => { const s = stateTax({ gross: g, filingStatus, place }, ref); return (federalTax({ gross: g, filingStatus }, ref).value ?? 0) + s.state + s.local; };
-  const tax = Math.max(0, taxAt(base + gross) - taxAt(base));
+  const tax = growth ? Math.max(0, taxAt(base + growth) - taxAt(base)) : 0;
   const net = Math.max(0, gross - penalty - tax);
-  return { gross, penalty, tax, net, rate: (penalty + tax) / gross };
+  return { gross, penalty, tax, net, rate: (penalty + tax) / gross, free };
 }
 
 // The levels of the burn, from the Budget. Full is what leaves each month (spending plus any debt payments outside
@@ -136,7 +140,15 @@ export function ladderOf(doc, ref, { now = new Date(), plan = transitionPlan(doc
   const benefitEndK = benefitEnd ? Math.max(0, monthsBetween(here, benefitEnd)) : null;
   const benefitMonths = benefitEndK == null ? null : Math.max(0, benefitEndK - startK);
   const taxBase = sum(keeps, i => i.gross ?? i.monthly * 12) + sum(benefitRows, i => i.benefit.monthly) * Math.min(12, benefitMonths ?? 12);
-  const wd = retAccts.map(a => ({ ...a, ...withdrawalCost({ gross: a.value, age: x.age, base: taxBase, filingStatus: x.filingStatus, place: x.place, penaltyFree: LISTS.penaltyFreeTypes.includes(a.type) }, ref) }));
+  // Each account's tax stacks on the ones before it (the same return); a Roth IRA's contributions come out free.
+  let stacked = taxBase;
+  const wd = retAccts.map(a => {
+    const rec = live.find(r => r.id === a.id);
+    const contributions = a.type === 'Roth IRA' ? growthOf(a.type, rec?.values || {}, a.value).rothBasis ?? 0 : 0;
+    const w = withdrawalCost({ gross: a.value, age: x.age, base: stacked, filingStatus: x.filingStatus, place: x.place, penaltyFree: LISTS.penaltyFreeTypes.includes(a.type), contributions }, ref);
+    stacked += w.gross - w.free;
+    return { ...a, ...w };
+  });
   const familyBackup = sum((doc.profile.backups || []).filter(b => b.kind === 'Family help'), b => b.amount ?? 0) || null;
 
   const typedAmount = id => (taps[id]?.amount != null ? taps[id].amount : null);
@@ -149,7 +161,7 @@ export function ladderOf(doc, ref, { now = new Date(), plan = transitionPlan(doc
   const fam = typedAmount('family') ?? familyBackup;
   const side = { amount: taps.side?.amount ?? null, per: taps.side?.per ?? 'month' };
   const benefitDue = sum(benefitRows, i => i.due);
-  const retNet = sum(wd, a => a.net), retGross = sum(wd, a => a.gross), retPenalty = sum(wd, a => a.penalty), retTax = sum(wd, a => a.tax);
+  const retNet = sum(wd, a => a.net), retGross = sum(wd, a => a.gross), retPenalty = sum(wd, a => a.penalty), retTax = sum(wd, a => a.tax), retFree = sum(wd, a => a.free);
 
   const R = {
     buffer: { amount: buffer, from: 'household', cost: 0, costText: 'Free: this is what it is for', note: `What the buffer layer holds (${RULES.bufferWeeks} weeks of spending)` },
@@ -168,8 +180,8 @@ export function ladderOf(doc, ref, { now = new Date(), plan = transitionPlan(doc
       note: zero.length ? zero.map(c => c.name).join(', ') : null, needs: card0Room == null ? (zero.length ? 'the credit limit' : null) : null },
     card: { amount: cardRoom, apr: cardApr, aprGuess: regular.some(c => c.aprGuess), from: typedAmount('card') != null ? 'typed' : regular.length ? 'household' : 'none',
       costText: cardCost(cardApr).text, note: regular.length ? `Room on ${regular.map(c => c.name).join(', ')}` : null, needs: cardRoom == null ? (regular.length ? 'the credit limit' : 'room on a card') : null },
-    retirement: { amount: retAccts.length ? retNet : null, gross: retGross, penalty: retPenalty, tax: retTax, from: retAccts.length ? 'household' : 'none',
-      costText: retAccts.length ? `${retPenalty ? `The ${fmt.pct(RULES.earlyPenalty)} penalty (${fmt.money(Math.round(retPenalty))}) and tax` : 'Income tax'} (about ${fmt.money(Math.round(retTax))}): you keep about ${fmt.money(Math.round(retNet))} of ${fmt.money(Math.round(retGross))}` : 'No retirement money on file',
+    retirement: { amount: retAccts.length ? retNet : null, gross: retGross, penalty: retPenalty, tax: retTax, free: retFree, from: retAccts.length ? 'household' : 'none',
+      costText: retAccts.length ? `${retPenalty ? `The ${fmt.pct(RULES.earlyPenalty)} penalty (${fmt.money(Math.round(retPenalty))}) and tax (about ${fmt.money(Math.round(retTax))})` : retTax > 0.5 ? `Income tax (about ${fmt.money(Math.round(retTax))})` : 'No tax or penalty'}: you keep about ${fmt.money(Math.round(retNet))} of ${fmt.money(Math.round(retGross))}${retFree ? ` (${fmt.money(Math.round(retFree))} of Roth IRA contributions comes out free)` : ''}` : 'No retirement money on file',
       note: retAccts.map(a => a.name).join(', ') || null },
   };
   const defaults = { buffer: buffer > 0, littleE: littleE > 0, bigE: bigE > 0, cut: plan ? ['start'].includes(plan.tpl?.cut?.when) : false, side: side.amount != null, benefits: benefitRows.length > 0,

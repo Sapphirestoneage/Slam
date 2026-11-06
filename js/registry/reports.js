@@ -74,7 +74,7 @@ export const REPORTS = [
         ] },
         { title: 'Income and spending, a usual month on the plan (M63)', rows: [
           { key: 'payFirst', name: 'Pay yourself first (comes off the top)', unit: 'money', fromApp: 'the 401(k), HSA, match and after-tax savings, a month', app: pyf },
-          { key: 'gross', name: 'Gross pay', unit: 'money', f: 'IF(Math_M13="","",Math_M13/12)', app: f.gross },
+          { key: 'gross', name: 'Gross, all income (paychecks before tax, benefits, untaxed money)', unit: 'money', f: 'IF(AND(COUNT(Income_M13)=0,COUNT(Income_M01)=0),"",SUM(Income_M13)/12+SUMIFS(Income_M01,Income_taxType,"")+SUMIFS(Income_M01,Income_taxType,"Unemployment")+SUMIFS(Income_M01,Income_taxType,"Benefits"))', app: f.gross },
           { key: 'match', name: 'Employer match', unit: 'money', f: 'Math_M28_match', app: c.m.savingsRate.match ?? 0 },
           { key: 'beforeTax', name: 'Saved from paycheck (401(k) and HSA)', unit: 'money', f: 'Math_M28_pretax', app: f.beforeTax },
           { key: 'taxes', name: 'Taxes (and premiums taken from pay)', unit: 'money', f: 'IF(OR(Statements_gross="",Math_M12=""),"",MAX(0,Statements_gross-Statements_beforeTax-Math_M12))', app: f.taxes },

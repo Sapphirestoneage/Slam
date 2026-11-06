@@ -187,7 +187,7 @@ export function cashFlowStrip(ctx) {
   const slim = [r('Take-home', f.takeHome, 'What lands in checking each month.', '#/cash-flow/income'), r('Spending', f.spending, gut ? 'The gut number, a month.' : 'Every line, your share, plus debt payments, a month.', '#/cash-flow/budget'),
     f.savings ? r('Savings', f.savings, 'Retirement lines, after-tax contributions, savings goals and sinking funds, a month.') : null, r('Free', f.free, 'Take-home minus spending minus savings.')];
   return h('div', {}, personBar(ctx), S.slimStrip(ctx, 'strip:cash-flow', 'Cash flow', slim, h('div.card.waterfall', { role: 'group', 'aria-label': 'Cash flow, top to bottom' },
-    step('Gross', f.gross, 'Every paycheck before tax, a month.', { home: '#/cash-flow/income' }),
+    step('Gross, all income', f.gross, 'Every paycheck before tax, plus benefits before any withholding and money that is not taxed, a month.', { home: '#/cash-flow/income' }),
     step(f.premiums ? 'Taxes and premiums' : 'Taxes', f.taxes, `Gross minus what is saved from the paycheck minus take-home${f.premiums ? `, including ${money(f.premiums)} of premiums from the paycheck` : ''}.`, { sign: '−', home: '#/cash-flow/taxes' }),
     step('Saved from paycheck', f.beforeTax, '401(k) (traditional or Roth) and HSA money taken from the paycheck, a month. A Roth 401(k) is taxed first, so it does not lower your tax.', { sign: '−' }),
     step('Take-home', f.takeHome, 'What lands in checking each month.', { sign: '=', total: true, home: '#/cash-flow/income' }),
@@ -195,7 +195,7 @@ export function cashFlowStrip(ctx) {
       : [step('Fixed', f.fixed, 'Lines marked Fixed, your share, plus debt payments.', { sign: '−', home: '#/cash-flow/budget' }),
         step('Variable', f.variable, 'Every other line, your share.', { sign: '−', home: '#/cash-flow/budget' })],
     step('Savings', f.savings, 'Retirement lines, after-tax contributions, savings goals and sinking funds, a month.', { sign: '−' }),
-    step('Free', f.free, 'Take-home minus spending minus savings.', { sign: '=', total: true })), { tip: 'Open the whole waterfall: gross, taxes, saved from the paycheck, take-home, spending, savings, free' }));
+    step('Free', f.free, 'Take-home minus spending minus savings.', { sign: '=', total: true })), { tip: 'Open the whole waterfall: gross (all income), taxes, saved from the paycheck, take-home, spending, savings, free' }));
 }
 
 const NET_WORTH = { assets: MM.assets, debt: MM.debt, 'credit-cards': MM['credit-cards'], protection: MM.protection };
