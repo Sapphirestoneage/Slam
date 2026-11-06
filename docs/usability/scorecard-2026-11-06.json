@@ -2705,7 +2705,7 @@
     "coachable": {
      "result": "failure",
      "severity": "minor",
-     "reason": "answers 'what can I get approved for' in one look; the rate (6.2%) and taxes and insurance share (25%) behind the loan size wait for Eli (QUESTIONS)"
+     "reason": "answers 'what can I get approved for' in one look; the rate (7.18%, Freddie Mac Nov 5 2026) and the taxes and insurance share (25%) behind the loan size are set in Assumptions"
     }
    }
   },

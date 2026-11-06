@@ -43,7 +43,7 @@ export default {
     landlordIncome: { value: 4333.33, note: 'A landlord reads the latest return: $52,000 / 12.' },
     dti: { value: 0, note: 'No debts: 0%.' },
     gap: { value: 2300, note: '$6,175 - $3,875 = $2,300 a month.' },
-    loan: { value: 132865, tol: 50, note: 'Home payment min(28% x $3,875 = $1,085, 36% x $3,875 = $1,395) = $1,085; 75% carries the loan: $813.75 a month at 6.2% for 30 years x 163.28 = $132,865.' },
+    loan: { value: 120122, tol: 50, note: 'Home payment min(28% x $3,875 = $1,085, 36% x $3,875 = $1,395) = $1,085; 75% carries the loan: $813.75 a month at 7.18% for 30 years x 147.616 = $120,122.' },
     says: ['File your 2026 return showing all of Dancing', '$63,050 a year', 'Deposit cash as it comes in'],
   },
   // Batch 44: what Net worth › Fire drill says (as of NOW, Nov 5 2026: the 30 days Nov 5 to Dec 4). test/firedrill.test.js

@@ -32,7 +32,7 @@ export default {
     landlordIncome: { value: 4833.33, note: 'The same.' },
     dti: { value: 0.0544, tol: 0.0005, note: 'The IBR payment $263 / $4,833.33 = 5.4%.' },
     gap: { value: 0, note: 'Nothing earned is out of sight.' },
-    loan: { value: 165724, tol: 50, note: 'min(28% x $4,833.33 = $1,353.33, 36% x $4,833.33 - $263 = $1,477) = $1,353.33; 75% = $1,015 at 6.2% for 30 years x 163.28 = $165,724.' },
+    loan: { value: 149830, tol: 50, note: 'min(28% x $4,833.33 = $1,353.33, 36% x $4,833.33 - $263 = $1,477) = $1,353.33; 75% = $1,015 at 7.18% for 30 years x 147.616 = $149,830.' },
     says: ['4 times', 'At or over the 3 times line', 'No cards on file', 'Everything you earn'],
   },
   cannot: [

@@ -100,8 +100,8 @@ test('debts as a lender counts them: a card at its minimum, no family loan, a st
 });
 
 test('the home loan a payment carries, and the most payment the usual lines allow', () => {
-  // $1,000 less 25% taxes and insurance = $750 at 6.2% / 12 for 360 months: 750 x (1 - 1.0051667^-360) / 0.0051667 = 122,456.
-  near(loanFromPayment(1000), 122456, 5);
+  // $1,000 less 25% taxes and insurance = $750 at 7.18% / 12 for 360 months: 750 x (1 - 1.0059833^-360) / 0.0059833 = 110,712.
+  near(loanFromPayment(1000), 110712, 5);
   assert.equal(loanFromPayment(0), 0);
   near(maxHomePayment(5000, 0), 1400); // 28% binds before 36%
   near(maxHomePayment(5000, 600), 1200); // 36% x 5,000 - 600
