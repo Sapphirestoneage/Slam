@@ -760,6 +760,14 @@ export const SUPPORT = {
   'portfolio.matchFromTiers': 'the match from its tiers (M15)', 'portfolio.contributionSplit': 'inside one account: pretax and Roth',
   'portfolio.asksTaxType': 'which account types are asked Pretax or Roth (batch 7, item 5)', 'portfolio.taxTypeFor': 'the tax type an account name already answers (Roth IRA, Traditional IRA)',
   'portfolio.vestedOf': 'inside one account: vested', 'portfolio.hsaFeeCompare': 'inside one account: HSA fees', 'portfolio.link401k': 'Income and the 401(k) fill each other (Income tab: 401(k) % used)',
+  // Batch 55: the money-control map, private by design (js/math/control.js), so the workbook leaves it out: no number,
+  // and nothing of it may leave this client's own view.
+  'control.CONTROL_KEYS': 'the money-control map\'s tap fields (private by design: the workbook leaves the map out)', 'control.ROLES': 'the money-control map: the roles someone else can have on a row',
+  'control.peopleOf': 'the money-control map: the household\'s adults, read through one accessor', 'control.controlState': 'the money-control map: the What to set up ticks (program.control)',
+  'control.setControl': 'the money-control map: saves a tick', 'control.whoWords': 'the money-control map: the words for who (You, a partner, Someone else, The bank)',
+  'control.controlRow': 'the money-control map: one row (who sees, moves and can stop it, and its one calm line); private by design, never in the workbook',
+  'control.controlMap': 'the money-control map on Net worth › Money control; private by design, never in the workbook, a partner\'s view or anything shared',
+  'control.checklistOf': 'the money-control map: What to set up (an account, a login, statements and a card in your own name)',
   'portfolio.paychecksLeft': 'paychecks left this year', 'portfolio.hsaProgress': 'inside one account: HSA this year', 'portfolio.rothLog': 'inside one account: the Roth IRA log',
 };
 

@@ -226,7 +226,9 @@
     "covers": null,
     "values": {
      "group": "cash",
-     "balance": 3000
+     "balance": 3000,
+     "ctlLogin": "Partner",
+     "ctlMail": "Partner"
     },
     "notes": null,
     "privateNote": null,
@@ -337,7 +339,7 @@
    {
     "id": "couple-separate-012",
     "kind": "account",
-    "type": "Savings or HYSA",
+    "type": "Savings",
     "name": "Sam's savings",
     "amount": null,
     "per": "month",
@@ -399,7 +401,10 @@
     "values": {
      "balance": 6000,
      "apr": 0.079,
-     "payment": 260
+     "payment": 260,
+     "ctlOn": {
+      "Me": "Cosigner"
+     }
     },
     "notes": null,
     "privateNote": null,

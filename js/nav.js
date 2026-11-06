@@ -10,7 +10,7 @@ export const TABS = [
   { id: 'home', name: 'Home', job: 'This session: the program, the picture, the next small things', subs: [
     { id: 'session', name: 'Home' }, { id: 'profile', name: 'About you', area: 'needs' }, { id: 'review', name: 'Review', hidden: true }] }, // Review: the gate before a session ends (no sub-tab of its own)
   { id: 'net-worth', name: 'Net worth', job: 'What you own and owe', subs: [
-    { id: 'assets', name: 'Assets', area: 'assets' }, { id: 'debt', name: 'Debt', area: 'debt' }, { id: 'credit-cards', name: 'Credit cards', area: 'debt' }, { id: 'protection', name: 'Protection', area: 'goals' }, { id: 'fire-drill', name: 'Fire drill', area: 'assets', phase4: true }] }, // batch 44: the bank fire drill, a Phase 4 preview
+    { id: 'assets', name: 'Assets', area: 'assets' }, { id: 'debt', name: 'Debt', area: 'debt' }, { id: 'credit-cards', name: 'Credit cards', area: 'debt' }, { id: 'protection', name: 'Protection', area: 'goals' }, { id: 'fire-drill', name: 'Fire drill', area: 'assets', phase4: true }, { id: 'money-control', name: 'Money control', area: 'assets', phase4: true, control: true }] }, // batch 44: the bank fire drill, a Phase 4 preview; batch 55: the money-control map (control: never where js/privacy.js controlSeen says no)
   { id: 'cash-flow', name: 'Cash flow', job: 'Money in and out: income, taxes, budget, calendar, close', subs: [
     { id: 'income', name: 'Income', area: 'income' }, { id: 'taxes', name: 'Taxes', area: 'taxes' }, { id: 'budget', name: 'Budget', area: 'needs' },
     { id: 'calendar', name: 'Calendar', area: 'needs' }, { id: 'close', name: 'Month end', area: 'needs' }] },
@@ -71,7 +71,7 @@ export const VIEWS = [{ label: 'Bills list', where: 'Cash flow › Calendar › 
 // Find (R168 '/'): the everyday words first (batch 14: js/find.js, the table in data/reference-2026.json), then
 // fields, screens and the client's own records. Punctuation and spacing do not count ("401k" finds "401(k)").
 // Identical results show once; two fields with the same name say which group each is in.
-export function search(query, { fields = [], records = [], doc = null, ref = null } = {}) {
+export function search(query, { fields = [], records = [], doc = null, ref = null, controlHidden = false } = {}) {
   records = records.filter(r => !r.folded); // batch 28: a row this viewer does not see is not found (js/privacy.js)
   const q = norm(query);
   if (!q) return [];
@@ -115,7 +115,8 @@ export function search(query, { fields = [], records = [], doc = null, ref = nul
   for (const list of byLabel.values()) if (list.length > 1) for (const f of list) if (f.group && !f.label.includes(f.group)) f.label = `${f.label} · ${f.group}`;
   out.push(...fieldHits);
   const seen = new Set();
-  return out.sort((a, b) => a.score - b.score || (a.kind === 'word' ? 0 : a.label.length - b.label.length))
+  const noMap = controlHidden || !!doc?.controlHidden; // batch 55: the money-control map is not found where it does not exist (js/privacy.js)
+  return out.filter(r => !(noMap && r.route === '#/net-worth/money-control')).sort((a, b) => a.score - b.score || (a.kind === 'word' ? 0 : a.label.length - b.label.length))
     .filter(r => { const k = `${r.label}|${r.where}`; if (seen.has(k)) return false; seen.add(k); return true; })
     .map(({ score, group, ...r }) => r).slice(0, 12);
 }

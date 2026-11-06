@@ -15,6 +15,7 @@
 import { LISTS } from './registry/assumptions.js';
 import { MODES, modeOf, ownerOf, bothPreviewOn, validPerson, extraAdults, EXTRA_IDS } from './registry/couples.js';
 import { platformOf } from './math/earnings.js';
+import { CONTROL_KEYS } from './math/control.js';
 
 export const SEEN = LISTS.privacy.seen;
 export const SHARE_NAMES = LISTS.privacy.shareNames;
@@ -119,12 +120,30 @@ export function foldDoc(doc, aud, ref = null) {
     changed = true;
     return { ...r, notes: dropNotes ? null : r.notes, privateNote: coach ? r.privateNote : null };
   });
-  if (aud.who !== 'share') return changed ? { ...doc, records } : doc;
+  if (aud.who !== 'share') { const out = changed ? { ...doc, records } : doc; return controlSeen(aud) ? out : withoutControl(out); }
   const { privateNotes, feedback, timer, ...session } = doc.session || {};
   const spending = { ...(doc.spending || {}) }; delete spending.transactions;
   const settings = { ...(doc.settings || {}) }; delete settings.csvRules; delete settings.merchantRules;
-  return { ...doc, records, session, spending, settings, parking: [], sharedCopy: true,
-    history: (doc.history || []).filter(e => !folded.has(e.id) && !['privateNote', 'notes'].includes(e.field)) };
+  // Batch 55: a snapshot keeps a copy of every row, so a shared copy folds those too (a private row by its neutral name).
+  const snapshots = (doc.snapshots || []).map(sn => (sn.records ? { ...sn, records: sn.records.filter(r => !rowLeftOut(r, aud, mode)).map(r => (rowHidden(r, aud, mode) ? foldRecord(r, ref, { share: true }) : { ...r, notes: notesHidden(r, aud, mode) ? null : r.notes, privateNote: null })) } : sn));
+  return withoutControl({ ...doc, records, session, spending, settings, parking: [], sharedCopy: true, snapshots,
+    history: (doc.history || []).filter(e => !folded.has(e.id) && !['privateNote', 'notes'].includes(e.field)) });
+}
+
+// Batch 55: the money-control map (js/math/control.js) is this client's alone, so private by design. Who sees it: the
+// coach (in every view but the partner's), and in Client view only the client it belongs to (this client's own view,
+// or a household of one). Never a partner's view, the household view in Client view, or anything shared.
+export const controlSeen = aud => (aud.who === 'coach' ? ['all', 'Me'].includes(aud.person) : aud.who === 'client' ? !aud.couple || aud.person === 'Me' : false); // batch 49: any other adult's view is a partner's view here
+const stripControl = r => (r?.values && CONTROL_KEYS.some(k => k in r.values) ? { ...r, values: Object.fromEntries(Object.entries(r.values).filter(([k]) => !CONTROL_KEYS.includes(k))) } : r);
+const controlEntry = e => CONTROL_KEYS.includes(e.field) || (e.part === 'program' && /^control\b/.test(e.field ?? ''));
+// The household with the map taken out: every control tap on every row, program.control, the change log's control
+// entries (and the taps inside a removed row the log keeps) and the snapshots' copies. controlHidden tells the shell
+// the screen does not exist here (no sub-tab, no Find result, the route lands on Assets).
+function withoutControl(doc) {
+  const { control, ...program } = doc.program || {};
+  return { ...doc, controlHidden: true, records: doc.records.map(stripControl), program,
+    history: (doc.history || []).filter(e => !controlEntry(e)).map(e => (e.was ? { ...e, was: stripControl(e.was) } : e)),
+    snapshots: (doc.snapshots || []).map(s => (s.records ? { ...s, records: s.records.map(stripControl) } : s)) };
 }
 
 // Memo: one folded doc per household revision and audience, so screens and caches see one stable object.

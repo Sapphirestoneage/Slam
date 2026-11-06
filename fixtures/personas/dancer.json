@@ -188,7 +188,7 @@
    {
     "id": "dancer-005",
     "kind": "account",
-    "type": "Savings or HYSA",
+    "type": "Savings",
     "name": "Savings (online bank B)",
     "amount": null,
     "per": "month",
@@ -214,7 +214,7 @@
    {
     "id": "dancer-006",
     "kind": "account",
-    "type": "Savings or HYSA",
+    "type": "Savings",
     "name": "Quarterly tax set-aside",
     "amount": null,
     "per": "month",

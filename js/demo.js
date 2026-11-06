@@ -19,7 +19,7 @@ export function householdFromInputs(inputs, { name = 'Demo client', now } = {}) 
     if (has('rent')) store.add('bill', { name: 'Rent', amount: inputs.rent, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date' } });
     if (has('utilities')) store.add('bill', { name: 'Utilities', amount: inputs.utilities, values: { category: 'Electric, gas, water', draftt: 'Accommodation', amountType: 'Variable', timing: 'Fixed date' } });
     if (has('phoneCoveredByParents')) store.add('bill', { name: 'Phone', amount: inputs.phoneCoveredByParents, status: 'Roughly', values: { category: 'Internet, phone', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date', whoPays: 'Covered by someone', coveredBy: 'Parents' } });
-    if (has('cash')) store.add('account', { name: 'Savings', values: { group: 'cash', balance: inputs.cash } }, { type: 'Savings or HYSA' });
+    if (has('cash')) store.add('account', { name: 'Savings', values: { group: 'cash', balance: inputs.cash } }, { type: 'Savings' });
     if (has('invested')) store.add('account', { name: 'Investments (all accounts)', values: { group: 'investment', balance: inputs.invested } }, { type: 'All investments' });
     let car = null;
     if (has('carValue')) car = store.add('asset', { name: 'Car', values: { value: inputs.carValue } }, { type: 'Car' });

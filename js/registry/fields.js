@@ -20,6 +20,9 @@ const PERS = PERIODS;
 const FREQS = ['week', '2 weeks', 'twice a month', 'month'];
 const MONTHS3 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const YES_NO_WORDS = ['Yes', 'No'];
+// Batch 55 (QUESTIONS 400): the savings types. "Savings or HYSA" split in two; every older row reads as Savings
+// (js/records.js migrate), and the second starts on Another bank in the fire drill like an online bank's name.
+export const SAVINGS_TYPES = ['Savings', 'High-yield savings (often online)'];
 
 const f = (key, label, type = 'text', opts = {}) => ({ key, label, type, sheet: true, where: 'values', ...opts });
 const top = (key, label, type, opts = {}) => f(key, label, type, { where: 'top', ...opts });
@@ -32,6 +35,17 @@ const SEEN_F = [
   f('seen', 'Who sees this (blank: everyone)', 'choice', { options: LISTS.privacy.seen }),
   f('notesSeen', 'Who sees its notes (blank: as the row)', 'choice', { options: LISTS.privacy.seen }),
   f('shareName', 'Name when shared', 'choice', { options: LISTS.privacy.shareNames }),
+];
+// Batch 55 (js/math/control.js): the money-control map's taps on an account, a card, a loan and a paycheck. Private by
+// design: the workbook leaves them out, and js/privacy.js takes them out of a partner's view and anything shared.
+const CTL_WHY = 'batch 55: the money-control map, private by design: never in the workbook, a partner\'s view or anything shared (js/privacy.js); set on Net worth › Money control';
+const CTL = (opts = {}) => [
+  f('ctlOn', 'Money control: who else is on it, and as what', 'text', { sheet: { skip: CTL_WHY }, ...opts }),
+  f('ctlMail', 'Money control: where its statements go', 'choice', { options: ['Me', 'Shared', 'Partner', 'P3', 'P4', 'P5', 'P6', 'P7', 'Other'], sheet: { skip: CTL_WHY }, ...opts }),
+  f('ctlLogin', 'Money control: who has the login', 'choice', { options: ['Me', 'Shared', 'Partner', 'P3', 'P4', 'P5', 'P6', 'P7', 'Other', 'None'], sheet: { skip: CTL_WHY }, ...opts }),
+  f('ctlSees', 'Money control: who can see it', 'list', { sheet: { skip: CTL_WHY }, ...opts }),
+  f('ctlMoves', 'Money control: who can move money out', 'list', { sheet: { skip: CTL_WHY }, ...opts }),
+  f('ctlStops', 'Money control: who can freeze or close it', 'list', { sheet: { skip: CTL_WHY }, ...opts }),
 ];
 // The next check date for a rough or aged number (js/checks.js): set it to check sooner or later than the rule.
 const CHECK = f('checkOn', 'Check again on', 'date');
@@ -240,6 +254,7 @@ export const AREAS = [
       f('what', 'What it is', 'text', { kinds: ['benefit'] }),
       pick('how', 'How it works', ['Reimbursed', 'Stipend', 'Pretax', 'Match', 'Discount'], { kinds: ['benefit'] }),
       pick('using', 'Using it?', ['Yes', 'No', 'Partly'], { kinds: ['benefit'] }),
+      ...CTL({ kinds: ['income'] }),
       CHECK, LOCKED(), OWNER, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, STRESS, ...SEEN_F, ...SPLIT_F,
     ],
   },
@@ -272,6 +287,7 @@ export const AREAS = [
       f('institution', 'Institution'), f('opened', 'Opened', 'month'),
       f('institutionId', 'Institution (from the list)', 'text', { sheet: { skip: 'points at an Institutions row by id; the Institution column shows its name' } }),
       f('bankKey', 'Same bank as (kept private)', 'text', { sheet: { skip: 'batch 44: on a row kept private, an opaque key in place of its institution, so the fire drill still knows which rows share a bank; set by the fold' } }),
+      ...CTL(),
       CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(), ...SEEN_F, ...SPLIT_F,
     ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'a debt uses Balance and Payment' } } : x)),
   },
@@ -279,7 +295,7 @@ export const AREAS = [
     id: 'assets', prefix: 'Assets', tab: 'Assets', source: 'records', kinds: { account: 'Account', asset: 'Home or car' },
     about: 'Cash, investments, and things you own.',
     types: {
-      account: ['Checking', 'Savings or HYSA', 'Money market', 'CD', 'Cash on hand', 'Payment app', '401(k)', '403(b)', '457', 'TSP', 'Roth IRA', 'Traditional IRA', 'Rollover IRA', 'SEP', 'Solo 401(k)', 'HSA', '529', 'Brokerage', 'Crypto', 'Other', 'All investments'],
+      account: ['Checking', ...SAVINGS_TYPES, 'Money market', 'CD', 'Cash on hand', 'Payment app', '401(k)', '403(b)', '457', 'TSP', 'Roth IRA', 'Traditional IRA', 'Rollover IRA', 'SEP', 'Solo 401(k)', 'HSA', '529', 'Brokerage', 'Crypto', 'Other', 'All investments'],
       asset: ['Car', 'Home', 'Other property', 'Business', 'Valuables', 'Money owed to you'],
     },
     fields: [
@@ -330,6 +346,7 @@ export const AREAS = [
       f('tags', 'Tags', 'list', { kinds: ['account'] }),
       f('matchTiers', 'Match tiers', 'text', { kinds: ['account'], sheet: { skip: 'a table of match tiers on the 401(k); the first tier is on Income as match % and up to %' } }),
       f('rothLog', 'Roth IRA log', 'text', { kinds: ['account'], sheet: { skip: 'a dated list of Roth IRA contributions; edit it in SLAM' } }),
+      ...CTL({ kinds: ['account'] }),
       CHECK, LOCKED(), OWNER, NOTES, coachNote(), STRESS, SOURCE, PAID_WITH, LINKED_TO, COVERS, AMOUNT('Amount (unused)'), PER(), ...SEEN_F, ...SPLIT_F,
     ].map(x => (x.key === 'amount' || x.key === 'per' ? { ...x, unused: true, sheet: { skip: 'an account uses Balance, a thing you own uses Value' } } : x)),
   },
@@ -500,6 +517,7 @@ export const NOT_IN_SHEET = {
   'spending.months.actualFrom': 'where a month actual came from (csv); set by the statement import (J)',
   'settings.csvMaps': 'which CSV column is which, saved once per bank (J)',
   'program.proposed': 'the Proposed plan the coach edits on Plan › Current vs Proposed (K): spending, debt order, retire-by age, surplus invested, extra to debt, extra income (batch 12)',
+  'program.control': 'batch 55: the money-control map\'s What to set up ticks on Net worth › Money control (each with the day it was ticked); private by design, so never in the workbook, a partner\'s view or anything shared (js/privacy.js)',
   'program.fireDrill': 'the bank fire drill on Net worth › Fire drill (batch 44): the account picked, same bank or another bank as said on the drill, the backup plan ticks (and where the payroll form lives) and the stranded money ticks, each with the day it was ticked. A checklist, not a number: the Math tab shows the drill (M9F) and the household rows hold the money',
   'program.transition': 'the Life Transitions plan on Plan › Transitions (batch 21): the template, start and destination, the start month, each rung\'s on or off and any amount typed, the tripwires, Plan B and C, the share switch. A what-if like program.proposed: the Math tab shows its runway (M90), the household rows hold the money',
   'session.weather': 'the money weather per session and person (batch 25, Coach tools › Discovery): six tap answers each; Clear, Fair, Overcast or Storm is worked out (M95)',

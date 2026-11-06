@@ -83,7 +83,7 @@ LINKS = {
     "F168": DEBT("401(k) loan"), "F169": "debt.balance", "F170": "debt.apr", "F171": "debt.payment", "F172": "notyet: the note that a 401(k) loan is due if you leave the job",
     "F173": DEBT("Business"), "F174": "debt.balance", "F175": "debt.apr", "F176": "debt.payment", "F177": "debt.guaranteed",
     "F178": "debt.stress", "F179": "math:M31", "F180": "math:M32", "F181": "math:M36", "F182": "math:M35", "F183": "math:M34; profile.settings.debtOrder",
-    "F184": "type:assets:Checking; assets.balance; assets.group", "F185": "type:assets:Savings or HYSA", "F186": "assets.institution",
+    "F184": "type:assets:Checking; assets.balance; assets.group", "F185": "type:assets:Savings; type:assets:High-yield savings (often online)", "F186": "assets.institution",
     "F187": "assets.apy; assets.yieldKind", "F188": "assets.purpose", "F189": "kind:account", "F190": "assets.balance; assets.asOf", "F191": "assets.institution",
     "F192": "assets.contribution; assets.contributionPer; assets.salaryPct; assets.payFrequency; assets.contributionsYtd; assets.contributionsToDate",
     "F193": "assets.taxType; assets.pretaxBalance; assets.rothBalance; assets.rothSplitBy; assets.rothPct; assets.rothPerPaycheck",

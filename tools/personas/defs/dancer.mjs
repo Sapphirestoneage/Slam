@@ -23,8 +23,8 @@ export default {
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 3300, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Cash on hand', name: 'Cash at home', values: { group: 'cash', balance: 2500 } },
     { kind: 'account', type: 'Checking', name: 'Checking (bank A)', values: { group: 'cash', balance: 1800, institutionId: 'dancer-bank-a' } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Savings (online bank B)', values: { group: 'cash', balance: 4000, purpose: 'Emergency', institutionId: 'dancer-bank-b' } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Quarterly tax set-aside', values: { group: 'cash', balance: 3500, purpose: 'Taxes', institutionId: 'dancer-bank-b' } }, // batch 27: owed, kept out of emergency cash
+    { kind: 'account', type: 'Savings', name: 'Savings (online bank B)', values: { group: 'cash', balance: 4000, purpose: 'Emergency', institutionId: 'dancer-bank-b' } },
+    { kind: 'account', type: 'Savings', name: 'Quarterly tax set-aside', values: { group: 'cash', balance: 3500, purpose: 'Taxes', institutionId: 'dancer-bank-b' } }, // batch 27: owed, kept out of emergency cash
     { kind: 'asset', type: 'Car', name: 'Car (paid off)', values: { value: 12000, financed: 'Paid off' } },
     { kind: 'coverage', type: 'Health', name: 'ACA plan', amount: 280, per: 'month', values: { have: 'Have it', deductible: 5000, paidFrom: 'Budget' } },
   ],

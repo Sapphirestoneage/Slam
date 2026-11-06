@@ -186,7 +186,7 @@
    {
     "id": "poly-household-006",
     "kind": "account",
-    "type": "Savings or HYSA",
+    "type": "Savings",
     "name": "Joint HYSA",
     "amount": null,
     "per": "month",

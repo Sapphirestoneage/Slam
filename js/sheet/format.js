@@ -83,6 +83,7 @@ export const FORMATS = [
   { version: 42, shape: '6e45b952' }, // batch 51: M9H Shift P&L, Income › getting to a shift, childcare, outfits and gear, the hours around a shift, rule MileageRate
   { version: 43, shape: 'a8ebfcce' }, // batch 57: M73 answered and solid (the Picture split into quantity and quality), the Pace table's Reads and Due at start columns
   { version: 44, shape: '7b631d3a' }, // batch 53: head of household (StdDed_head, Fed_head), the Child Tax Credit (CTC_*, M10 ctc), New York's child care help (cliff.ccap, cliff.careFull, CCAP_*, M9B ccap)
+  { version: 45, shape: '7b631d3a' }, // batch 55: the same columns as 44; the account type Savings or HYSA split into Savings and High-yield savings (often online), an older file's rows read as Savings (js/records.js migrate, js/import-sheet.js); the money-control map's fields (ctl*) are skipped, private by design
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
-export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;
+export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

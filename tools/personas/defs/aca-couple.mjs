@@ -18,7 +18,7 @@ export default {
     { kind: 'income', type: 'Job', name: "Marco's paycheck", owner: 'Partner', amount: 38000, per: 'year', values: { basis: 'Gross', payFrequency: '2 weeks', incomeType: 'W-2' } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 5200, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Checking', name: 'Joint checking', owner: 'Joint', values: { group: 'cash', balance: 4000 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Savings', owner: 'Joint', values: { group: 'cash', balance: 9000 } },
+    { kind: 'account', type: 'Savings', name: 'Savings', owner: 'Joint', values: { group: 'cash', balance: 9000 } },
     { kind: 'account', type: 'Roth IRA', name: 'Roth IRAs', owner: 'Joint', values: { group: 'investment', balance: 22000 } },
     { kind: 'bill', name: 'Rent', amount: 1700, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date' } },
   ],

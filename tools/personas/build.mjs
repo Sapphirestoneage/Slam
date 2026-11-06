@@ -50,6 +50,8 @@ export function buildPersona(def) {
       for (const [f, s] of Object.entries(fieldStatus || {})) store.setFieldStatus(rec.id, f, s);
       if (key) refs[key] = rec;
     }
+    // Batch 55: a paycheck's Lands in may name an account listed after it ('@ref'), so it is linked once every row is in.
+    for (const rec of store.doc.records) if (typeof rec.values?.landsIn === 'string' && rec.values.landsIn.startsWith('@')) rec.values.landsIn = refs[rec.values.landsIn.slice(1)]?.id ?? (() => { throw new Error(`${def.id}: no row ${rec.values.landsIn}`); })();
   });
   addPresets(store, ref);
   migrateBatch10(store.doc, ref);

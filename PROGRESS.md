@@ -1311,3 +1311,50 @@ QUESTIONS 396 and 398, owed from batch 47.
 3. New York's child care help (CCAP, Q396): a seventh benefit on Raise and benefits, a tap like the others; the line is 85% of the state median income for the family's size (OCFS, June 1 2026 to May 31 2027; $97,853 for 3), the family share 1% of income over the poverty line, weekly, rounded down to the half dollar; a raise reads the share's rise, and past the line care at full price (one box, with a one-tap Use of the typical from the OCFS market rates). Other states say not modelled yet.
 4. Registered: StdDed_head, Medicare_over_head, nine CTC_* values, four CCAP_* values, tables Fed_head, CCAP_line and CCAP_rates, each with source and date; fields cliff.ccap and cliff.careFull (spec rows via spec_link); M10 part ctc, M9B part ccap; the spec's M10 and M9B rows (tools/library/b53-spec.py); format 44. Find: ccap, child care subsidy, child tax credit.
 5. Jasmine now gets CCAP (care $2,100 a month at full price) and the Child Tax Credit ($3,785: $385 off her tax, $3,400 refunded). With head of household and the credit her $13,000 raise leaves her $430 ahead (batch 47 read -$305), and no raise to $50,000 leaves her behind; her surplus moves from -$561 to -$494 a month. fixtures/views-baseline.json (batch 49's every-view check) has her entry written again; no other household moved. On batch 49's People list, a dependent whose role is not Child counts as an other dependent ($500) and still guesses Head of household; the children are read through one accessor (income.kidsOf) for the cliff, the credit and the guess.
+
+## Batch 55 (Nov 6 2026): the money-control map, and two Fire drill smalls
+
+ROADMAP Phase 5, real lives wave 2: "money-control map (who can see, move and stop each account)", for clients in
+relationships where money is used for control and for adult and cash workers whose accounts get closed (the panel's
+Lindsey Swanson and Jessica Goedtel lenses). QUESTIONS 400 and 402 as decided; questions 441 to 445.
+
+1. Fire drill (QUESTIONS 402): while answers are open, each of the three tiles whose readings differ shows both the
+   same way, two equal lines ("$0 if they are all at this bank · $4,000 if savings is elsewhere"), not the worst case
+   big and the other small; a tile whose two readings agree keeps one number (QUESTIONS 399). js/ui/firedrill-ui.js,
+   css/firedrill.css.
+2. The savings type split (QUESTIONS 400): "Savings or HYSA" is now Savings and High-yield savings (often online)
+   (`SAVINGS_TYPES`, js/registry/fields.js; Reference data cashTypes; Find; Fast Track, the intake, quick add, the
+   Demo). js/records.js `migrate` turns every older row into Savings, and an older spreadsheet's type comes back as
+   Savings (js/import-sheet.js). The second type counts like an online bank's name in the Fire drill (its tap starts on
+   Another bank, still unanswered); plain Savings does not (QUESTIONS 367). The spec row F185 names both types; FORMATS
+   version 45 (the same columns as 44). test/batch55.test.js proves no number moves: every persona and the Demo, opened from
+   files with the old type, give exactly what main gave before the split (fixtures/savings-split-before.json).
+3. The money-control map (js/math/control.js, js/ui/control-ui.js, css/control.css): Net worth › Money control, a
+   Phase 4 preview beside Fire drill. For each account, card, loan and paycheck in the client's name, joint, or someone
+   else's that the client is on or their pay lands in: who else is on it (with a role: joint owner, authorized user,
+   cosigner, payee), where its statements and login go, and the grid's three columns, Sees it / Can move money out /
+   Can freeze or close it, as taps (the household's people from one accessor, `peopleOf`, plus Someone else, the bank
+   or platform, Nobody else). A column not tapped is read from the rest and shows faded while nothing on the row is
+   answered. One calm line per row where control sits with someone else ("Sam can move all of this and you cannot
+   see it", "Your name is on this loan with Sam: a missed payment shows on your credit too", "The platform can close
+   the account and hold what it owes you"); What to set up: an account in your own name only, your own login,
+   statements to your own email, a card in your own name (Ready from the answers, Looks ready when only read, or a
+   tick). Slim: the card on top, then the grid and the checklist closed; Details open one row's taps.
+4. Private by design: js/privacy.js `controlSeen`. The coach sees the map (not on the partner's view); in Client view
+   only the client it belongs to (their own view, or a household of one). Everywhere else the fold takes out every
+   control tap, program.control, the change log's control entries and the snapshots' copies, and marks the household
+   `controlHidden`: no sub-tab, no Find result, the route lands on Assets. The one-pager, Send summary, the share view,
+   the shared backup and the shared spreadsheet never carry it; the workbook leaves it out (each field is
+   `sheet: { skip }` with the reason, the functions are in SUPPORT with theirs). Found on the way: the shared backup
+   kept the snapshots' copies of private rows by name; it now folds them (QUESTIONS 444).
+5. Registered: 18 fields (ctlOn, ctlMail, ctlLogin, ctlSees, ctlMoves, ctlStops on Income, Debt and Assets; spec rows
+   via spec_link), program.control (NOT_IN_SHEET), Find words. Personas: the discreet couple and Jordan and Sam carry
+   control taps with hand-worked maps (each def's control block); Maya shows a short all-yours map. The persona
+   builder links a paycheck's Lands in to a row listed after it ('@ref'). tools/e2e/privacy.cjs checks the map shows
+   in Remy's own Client view and never in Dana's, the household's Client view, the coach's screen on Dana's view, the
+   share outputs or either shared export.
+
+docs/usability/scorecard-2026-11-06.json: Money control added ("batch": 55, 0 blockers, 0 majors, 1 minor) and the Fire
+drill row updated in place ("batch": 55). Layout checker (all checks) on Fire drill and Money control, Demo and New, and
+with every section and a Details open for three personas at 1440, 1280 and 390, light and dark: 0 failures. Persona
+run: 19 personas, 0 errors, 0 story notes. Workbook check: every row matches. Privacy run: no leaks.

@@ -22,7 +22,7 @@ export default {
       hoursShift: 8, prepHours: 0.5, travelHours: 1, windDownHours: 0.5, travelBy: 'Ride', travelCost: 14, gearCost: 120, gearShifts: 40 } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 2600, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Checking', name: 'Checking', values: { group: 'cash', balance: 1100 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Savings', values: { group: 'cash', balance: 600 } },
+    { kind: 'account', type: 'Savings', name: 'Savings', values: { group: 'cash', balance: 600 } },
     { kind: 'account', type: 'Roth IRA', name: 'Roth IRA', values: { group: 'investment', balance: 3000 } },
     { kind: 'asset', type: 'Car', name: 'Car (paid off)', values: { value: 7000, financed: 'Paid off' } },
     { kind: 'debt', type: 'Credit card', name: 'Card', values: { balance: 1800, apr: 0.27, payment: 90, payChoice: 'Custom' } },

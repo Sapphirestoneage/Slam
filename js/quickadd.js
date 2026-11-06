@@ -44,7 +44,7 @@ export function parseQuickAdd(text) {
   }
   if (k?.kind === 'account') {
     const key = (raw.match(k.re)?.[0] || '').toLowerCase().replace(/[\s()]/g, ''); // batch 14: '401(k' (the regex stops before the closing parenthesis) is 401k
-    const type = k.group === 'cash' ? (/check/i.test(raw) ? 'Checking' : 'Savings or HYSA') : (INVEST_TYPES[key] || 'Other');
+    const type = k.group === 'cash' ? (/check/i.test(raw) ? 'Checking' : /hysa|high.?yield|online/i.test(raw) ? 'High-yield savings (often online)' : 'Savings') : (INVEST_TYPES[key] || 'Other');
     return { kind: 'account', type, name, values: { group: k.group, balance: amount }, section: k.section,
       summary: `${type} account${name ? ` "${name}"` : ''}, balance ${amount ?? 'not given'}` };
   }

@@ -101,7 +101,7 @@ const app = {
       if (v.takeHome != null) s.add('income', { name: 'Take-home pay', amount: v.takeHome, per: 'month', status: R, source: 'manual', values: { basis: 'Take-home' } }, { type: 'Job' });
       if (v.rent != null) s.add('bill', { name: 'Rent', amount: v.rent, status: R, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date' } });
       if (v.debt != null) s.add('debt', { name: 'Total debt (from discovery)', status: R, values: { balance: v.debt } }, { type: 'Credit card' });
-      if (v.savings != null) s.add('account', { name: 'Savings', status: R, values: { group: 'cash', balance: v.savings } }, { type: 'Savings or HYSA' });
+      if (v.savings != null) s.add('account', { name: 'Savings', status: R, values: { group: 'cash', balance: v.savings } }, { type: 'Savings' });
       const chips = Array.isArray(v.goal) || Array.isArray(v.why) ? { chips: { goalWords: Array.isArray(v.goal) ? v.goal : [], whyNow: Array.isArray(v.why) ? v.why : [] } } : {}; // batch 34: tapped chips
       s.setDoc('profile', { whyNow: Array.isArray(v.why) ? null : v.why ?? null, goalWords: Array.isArray(v.goal) ? null : v.goal ?? null, ...chips });
     });
@@ -174,7 +174,8 @@ const app = {
       S.button(fastTrackLabel(this.ctx), { iconName: 'right', onClick: () => startFastTrack(this, this.ctx) }),
       S.toggle([['sections', 'By section'], ['one', 'One page']], this.prefs[onePageKey] ? 'one' : 'sections', v => this.setPref(onePageKey, v === 'one'), { label: `${tab.name} layout` })) : null;
     const phase4 = this.hasClient && this.store.doc.settings?.phase4 === true; // batch 21: Phase 4 previews (Coach tools › Session)
-    const subs = h('div.subtabs-in', {}, tab.subs.filter(s => !off.has(s.id) && !s.hidden && (!s.phase4 || phase4)).map(s => {
+    const noMap = this.hasClient && !!this.ctx.store.doc.controlHidden; // batch 55: the money-control map does not exist in this view (js/privacy.js)
+    const subs = h('div.subtabs-in', {}, tab.subs.filter(s => !off.has(s.id) && !s.hidden && (!s.phase4 || phase4) && !(s.control && noMap)).map(s => {
       const p = this.hasClient ? progressOf(this.ctx, tab.id, s.id) : null;
       const complete = p && p.of > 0 && p.done === p.of;
       return h('a.subtab', { href: `#/${tab.id}/${s.id}`, 'aria-current': s.id === sub.id ? 'page' : null, class: s.area ? `area-${s.area}` : null },
@@ -519,6 +520,9 @@ const app = {
       S.toast('Coach tools are off in Client view.', { action: { label: 'Turn Client view off', run: () => { this.setPref('clientView', false); this.go(hash); } } });
       this.go('#/home/session'); return;
     }
+    // Batch 55: in a view that may not see the money-control map (a partner's view, the household in Client view), the
+    // screen does not exist: its route lands on Assets with no word about it.
+    if (sub.control && this.hasClient && this.ctx.store.doc.controlHidden) { history.replaceState(null, '', '#/net-worth/assets'); this.render({ keepPop }); return; }
     if (!keepPop) S.closePop();
     if (this._lastHash !== hash) S.closeSidePanel(); // batch 13 (item 3): the panel belongs to a row on this screen; leaving the screen closes it
     this.ctx.clearScreen();

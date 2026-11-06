@@ -121,7 +121,7 @@
    {
     "id": "teacher-004",
     "kind": "account",
-    "type": "Savings or HYSA",
+    "type": "Savings",
     "name": "Savings",
     "amount": null,
     "per": "month",

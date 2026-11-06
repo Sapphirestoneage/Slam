@@ -24,7 +24,7 @@ export default {
   records: [
     { kind: 'income', type: 'Unemployment', name: 'Unemployment benefits', amount: 600, per: 'week', values: { payFrequency: 'week', benefitStart: '2026-10-19', benefitEnd: '2027-04-18', withhold: 'No' } },
     { kind: 'account', type: 'Checking', name: 'Checking', values: { group: 'cash', balance: 2500 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Savings', values: { group: 'cash', balance: 9000 } },
+    { kind: 'account', type: 'Savings', name: 'Savings', values: { group: 'cash', balance: 9000 } },
     { kind: 'account', type: '401(k)', name: '401(k) from the old job', values: { group: 'investment', balance: 42000, taxType: 'Pretax' } },
     { kind: 'debt', type: 'Credit card', name: 'Everyday card', values: { balance: 3000, apr: 0.24, payment: 100, payChoice: 'Custom', limit: 8000 } },
     { kind: 'debt', type: 'Credit card', name: 'Balance transfer card', values: { balance: 500, apr: 0.2299, payment: 50, payChoice: 'Custom', limit: 5000, promoApr: 0, promoEnd: '2027-12' } },

@@ -16,7 +16,7 @@ export default {
     { kind: 'income', type: 'Platform', name: 'OnlyFans', amount: 3125, per: 'month', status: 'Roughly', values: { platform: 'OnlyFans', chargebacks: 150, payFrequency: 'week', nextPayday: '2026-11-09', returnsFiled: '1', returnLast: 14500 } }, // batch 42: started mid-2025, one return so far
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 3600, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Checking', name: 'Checking', values: { group: 'cash', balance: 2200 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'HYSA', values: { group: 'cash', balance: 6000 } },
+    { kind: 'account', type: 'Savings', name: 'HYSA', values: { group: 'cash', balance: 6000 } },
     { kind: 'account', type: 'HSA', name: 'HSA', values: { group: 'investment', balance: 3500, hsaStyle: 'Self-directed' } },
     { kind: 'account', type: 'Roth IRA', name: 'Roth IRA', values: { group: 'investment', balance: 9000 } },
     { kind: 'debt', type: 'Credit card', name: 'Card', values: { balance: 2900, apr: 0.21, payment: 300, payChoice: 'Custom' } },

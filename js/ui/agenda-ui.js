@@ -52,7 +52,7 @@ export function agendaPanel(app, ctx, A, { compact = false } = {}) {
   const linkPicker = (anchor, it) => {
     const q = h('input', { placeholder: 'Find a field, a row or a screen', 'aria-label': 'Find a field, a row or a screen' });
     const list = h('div.stack', { style: { gap: '4px' } });
-    q.oninput = () => { const found = search(q.value, { fields: app.fields || [], records: ctx.store.records }).slice(0, 6);
+    q.oninput = () => { const found = search(q.value, { fields: app.fields || [], records: ctx.store.records, controlHidden: !!ctx.store.doc.controlHidden }).slice(0, 6);
       list.replaceChildren(...found.map(r => h('button.btn.small', { type: 'button', onclick: () => { S.closePop(); setLink(it, r.kind === 'record' ? { kind: 'record', recId: r.id, route: r.route } : { kind: 'route', route: r.route }); } }, `${r.label} · ${r.where}`))); };
     S.popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, `Link ${it.label} to`),
       h('div.row-line', { style: { gap: '6px' } }, ...[['The Scorecard', { kind: 'hole', route: '#/plan/scorecard' }], ['The homework list', { kind: 'homework', route: '#/tools/lists' }], ['The parking lot', { kind: 'parking' }]]

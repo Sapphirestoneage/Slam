@@ -196,7 +196,7 @@ test('M4.1: the year lists events, yearly costs and card fees by month; usual da
 test('M5: a sinking fund has monthly needed and % funded; a linked purpose tag supplies the dollars', () => {
   const now = new Date('2026-11-10T12:00:00Z');
   const s = fresh();
-  const acct = s.add('account', { values: { group: 'cash', balance: 3000, tags: [{ name: 'Wedding', target: 1200, dollars: 300 }] } }, { type: 'Savings or HYSA' });
+  const acct = s.add('account', { values: { group: 'cash', balance: 3000, tags: [{ name: 'Wedding', target: 1200, dollars: 300 }] } }, { type: 'Savings' });
   const e = s.add('event', { name: 'Wedding', amount: 1200, values: { month: '2027-05', sinking: true, sinkingFund: acct.id, fundTag: 'Wedding' } }, { type: 'Wedding' });
   const item = yearItems(s.records, now).all.find(x => x.id === e.id);
   const f = sinkingOf(item, { records: s.records, now });

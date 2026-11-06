@@ -3,6 +3,7 @@
 // Writes into the same records the full screens use, as one undo step, so every lens turns on and the coach can
 // keep going in full detail from there. Pure: no DOM.
 import { LOAN_FOR } from './gates.js';
+import { SAVINGS_TYPES } from './registry/fields.js';
 import { MODES } from './registry/couples.js';
 
 export const FT_DEBTS = [['Credit card', 'Credit cards'], ['Student loan', 'Student loans'], ['Personal loan', 'Other debts']];
@@ -25,7 +26,7 @@ export function fastTrackAnswers(doc) {
   const one = pred => recs.find(pred) || null;
   const income = one(r => r.kind === 'income');
   const gut = one(r => r.kind === 'spending' && r.type === 'All in');
-  const bal = type => one(r => r.kind === 'account' && r.type === type)?.values.balance ?? null;
+  const bal = type => one(r => r.kind === 'account' && [type].flat().includes(r.type))?.values.balance ?? null; // a list: the savings types (batch 55)
   const invested = recs.filter(r => r.kind === 'account' && r.values.group === 'investment');
   const home = one(r => r.kind === 'asset' && r.type === 'Home');
   const car = one(r => r.kind === 'asset' && r.type === 'Car');
@@ -39,7 +40,7 @@ export function fastTrackAnswers(doc) {
     firstName: has(p.firstName) ? p.firstName : firstWord(doc.client?.name), lastName: has(p.lastName) ? p.lastName : lastWords(doc.client?.name), birthMonth: p.birthMonth ?? null, birthYear: p.birthYear ?? null, household: p.household ?? (doc.client?.couple ? 'Couple' : null),
     takeHome: income?.values.basis === 'Gross' ? null : income?.amount ?? null, takePer: income?.per ?? 'month', payFrequency: income?.values.payFrequency ?? null,
     gut: gut?.amount ?? null, gutIncludesDebt: gut ? gut.values.includesDebtPayments !== false : true, gutFrom: gut?.values.pass === 'Statements' ? 'Statements' : 'Gut',
-    checking: bal('Checking'), savings: bal('Savings or HYSA'),
+    checking: bal('Checking'), savings: bal(SAVINGS_TYPES),
     invested: invested.length ? invested.reduce((s, r) => s + (r.values.balance ?? 0), 0) : null, investedRows: invested.length,
     // Batch 24 (QUESTIONS 248): an owned home's loan, one tap (Mortgage or Paid off), from the Home row as it stands.
     homeLoan: home?.values.financed === 'Paid off' && !loan(home) ? 'Paid off' : loan(home) || home?.values.financed === 'Financed' ? 'Mortgage' : null,
@@ -91,7 +92,7 @@ export function applyFastTrack(store, a, { seconds = null, now = new Date().toIS
 
     // Cash (F184, F185)
     if (has(a.checking)) put(r => r.kind === 'account' && r.type === 'Checking', 'account', 'Checking', { name: find(r => r.kind === 'account' && r.type === 'Checking')?.name ?? 'Checking', values: { group: 'cash', balance: a.checking } });
-    if (has(a.savings)) put(r => r.kind === 'account' && r.type === 'Savings or HYSA', 'account', 'Savings or HYSA', { name: find(r => r.kind === 'account' && r.type === 'Savings or HYSA')?.name ?? 'Savings', values: { group: 'cash', balance: a.savings } });
+    if (has(a.savings)) put(r => r.kind === 'account' && SAVINGS_TYPES.includes(r.type), 'account', 'Savings', { name: find(r => r.kind === 'account' && SAVINGS_TYPES.includes(r.type))?.name ?? 'Savings', values: { group: 'cash', balance: a.savings } });
     // Investments (F189, F190): one total, unless the accounts are already listed one by one
     if (has(a.invested)) {
       const rows = recs().filter(r => r.kind === 'account' && r.values.group === 'investment');

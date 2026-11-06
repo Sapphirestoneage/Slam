@@ -1,0 +1,39 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* Batch 55: Net worth › Money control (js/ui/control-ui.js). The grid reads like Monarch's accounts list: a name column,
+   three short columns (Sees it, Can move money out, Can freeze or close it) and one Details button, each one width. */
+.mc-hero { display: flex; flex-direction: column; gap: var(--s3); margin-bottom: var(--s4); }
+.mc-q { margin: 0; font-size: var(--fs-section); }
+.mc-lines { display: flex; flex-direction: column; }
+.mc-line { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 4px var(--s3); padding: 8px 0; border-top: 1px solid var(--border-row); }
+.mc-line:first-child { border-top: 0; }
+.mc-line-name { min-width: 0; overflow-wrap: anywhere; }
+.mc-none, .mc-private { margin: 0; }
+.mc-grid { display: flex; flex-direction: column; }
+.mc-row { display: grid; grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr)) 104px; gap: 4px var(--s3); align-items: center; padding: 10px 0; border-top: 1px solid var(--border-row); min-height: 44px; }
+.mc-row.mc-head { border-top: 0; padding: 0 0 4px; min-height: 0; }
+.mc-grid > h3 + .mc-row, .mc-grid > .mc-head + h3 + .mc-row { border-top: 0; }
+.mc-kind { margin: var(--s3) 0 2px; font-size: var(--fs-label); color: var(--text-2); }
+.mc-name { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.mc-row-line { color: var(--text); }
+.mc-cell { min-width: 0; overflow-wrap: anywhere; font-size: .875rem; }
+.mc-read { color: var(--text-2); font-style: italic; }
+.mc-lab { display: none; }
+.mc-details { width: 104px; justify-content: center; justify-self: end; }
+.mc-detail { display: flex; flex-direction: column; gap: var(--s3); padding: var(--s3); margin: 0 0 var(--s3); border: 1px solid var(--border-row); border-radius: var(--r-input); }
+.mc-tap { display: flex; flex-direction: column; gap: 6px; }
+.mc-role { display: flex; align-items: center; gap: 8px var(--s3); flex-wrap: wrap; }
+.mc-multi .pick.likely:not([aria-pressed="true"]) { outline: 2px dashed var(--primary); outline-offset: -5px; }
+.mc-checks { display: flex; flex-direction: column; }
+.mc-check { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; border-top: 1px solid var(--border-row); }
+.mc-check:first-child { border-top: 0; }
+.mc-ok { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+@media (max-width: 760px) {
+  .mc-line { grid-template-columns: minmax(0, 1fr); }
+  .mc-row { grid-template-columns: minmax(0, 1fr) 104px; }
+  .mc-row.mc-head { display: none; }
+  .mc-row > .mc-name { grid-column: 1; grid-row: 1; }
+  .mc-row > .mc-details { grid-column: 2; grid-row: 1; align-self: start; }
+  .mc-row > .mc-cell { grid-column: 1 / -1; }
+  .mc-lab { display: inline; color: var(--text-2); font-style: normal; }
+  .mc-row > .mc-na { display: none; }
+}

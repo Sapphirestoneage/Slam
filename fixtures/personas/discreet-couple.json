@@ -105,7 +105,8 @@
      "nextPayday": "2026-11-13",
      "seen": "Me and my coach",
      "notesSeen": "Coach only",
-     "shareName": "Self-employment"
+     "shareName": "Self-employment",
+     "landsIn": "discreet-couple-009"
     },
     "notes": "Payouts every Friday to the Wise account",
     "privateNote": "Remy has not told family about the page; nothing printed should name it.",
@@ -254,7 +255,9 @@
     "covers": null,
     "values": {
      "group": "cash",
-     "balance": 2140
+     "balance": 2140,
+     "ctlLogin": "Shared",
+     "ctlMail": "Shared"
     },
     "notes": null,
     "privateNote": null,
@@ -265,7 +268,7 @@
    {
     "id": "discreet-couple-009",
     "kind": "account",
-    "type": "Savings or HYSA",
+    "type": "Savings",
     "name": "Wise payout account",
     "amount": null,
     "per": "month",
@@ -281,7 +284,10 @@
      "balance": 3871,
      "purpose": "Taxes",
      "last4": "7781",
-     "seen": "Me and my coach"
+     "seen": "Me and my coach",
+     "ctlOn": {},
+     "ctlLogin": "Me",
+     "ctlMail": "Me"
     },
     "notes": null,
     "privateNote": null,
@@ -355,7 +361,10 @@
      "balance": 2000,
      "apr": 0.24,
      "payment": 80,
-     "payChoice": "Custom"
+     "payChoice": "Custom",
+     "ctlOn": {
+      "Partner": "Authorized user"
+     }
     },
     "notes": null,
     "privateNote": null,

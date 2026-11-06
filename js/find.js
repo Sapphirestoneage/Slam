@@ -103,7 +103,7 @@ export function addChoice(text, { ref = null, words = wordsOf(ref) } = {}) {
     if (kind === 'none') return hasAmount && p.kind !== 'bill' ? p : null; // "home value" or "FI age": Find, no Add
     if (kind === 'bill') return { ...p, kind: 'bill', type: null, section: ADD_ROUTE.bill };
     if (kind === 'income') return { ...p, kind: 'income', type: type || p.type || 'Job', amount: p.amount ?? null, per: p.per || 'month', section: ADD_ROUTE.income, summary: `Income "${p.name || known.label}"` };
-    if (kind === 'account') return { kind: 'account', type: type || p.type, name: p.name, values: { group: ['Checking', 'Savings or HYSA'].includes(type) ? 'cash' : 'investment', balance: p.amount ?? p.values?.balance ?? null }, section: ADD_ROUTE.account, summary: `${type} account` };
+    if (kind === 'account') return { kind: 'account', type: type || p.type, name: p.name, values: { group: (ref?.lists?.cashTypes || ['Checking', 'Savings']).includes(type) ? 'cash' : 'investment', balance: p.amount ?? p.values?.balance ?? null }, section: ADD_ROUTE.account, summary: `${type} account` };
     if (kind === 'debt') return { kind: 'debt', type: type || p.type || 'Personal loan', name: p.name, values: { balance: p.values?.balance ?? p.amount ?? null, apr: p.values?.apr ?? null }, section: type === 'Credit card' ? 'Net worth › Credit cards' : ADD_ROUTE.debt, summary: `${type} "${p.name}"` };
     if (kind === 'coverage') return { kind: 'coverage', type: type || 'Health', name: null, values: {}, section: ADD_ROUTE.coverage, summary: `${type || 'Coverage'} coverage row` };
   }

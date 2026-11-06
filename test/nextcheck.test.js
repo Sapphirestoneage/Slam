@@ -13,7 +13,7 @@ const at = iso => () => `${iso}T12:00:00.000Z`;
 test('a Roughly number is checked 30 days after it changed; any number at 90; Not sure at once', () => {
   const s = new Store(newHousehold({ name: 'Checks' }), { now: at('2026-11-03') });
   const rough = s.add('debt', { name: 'Card', status: 'Roughly', values: { balance: 4000 } }, { type: 'Credit card' });
-  const known = s.add('account', { name: 'Savings', values: { group: 'cash', balance: 5000 } }, { type: 'Savings or HYSA' });
+  const known = s.add('account', { name: 'Savings', values: { group: 'cash', balance: 5000 } }, { type: 'Savings' });
   const unsure = s.add('debt', { name: 'Loan', status: 'Not sure', values: {} }, { type: 'Personal loan' });
   const now = new Date('2026-11-03T12:00:00Z');
   assert.equal(nextCheck(rough, { now }).next, '2026-12-03');

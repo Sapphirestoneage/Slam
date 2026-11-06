@@ -30,6 +30,8 @@ const FILE = path.join(__dirname, '..', '..', 'fixtures', 'personas', 'discreet-
 const REMY = { names: ['Velvet Room', 'OnlyFans', 'Wise payout', '7781'], amounts: ['2,975', '3,871'] };
 const DANA = { names: ['Lantern'], amounts: ['1,373'] };
 const COACH = { names: ['Discreet PO box', 'has not told family', 'Payouts every Friday'], amounts: [/\$37(?![\d,.])/] };
+// Batch 55: words only the money-control map says (tools/personas/defs/discreet-couple.mjs, control).
+const MAP = ['Dana can charge on this card', 'Where someone else has a hand in your money'];
 const join = (...xs) => ({ names: xs.flatMap(x => x.names), amounts: xs.flatMap(x => x.amounts) });
 // never: names searched everywhere, amounts searched everywhere. rows: amounts searched in the lines of their own a
 // row has (list rows, calendar chips, month-end lines, Overview rows). In the household view a private row may still
@@ -112,10 +114,25 @@ const KEYS = ['netWorth', 'liquidNetWorth', 'surplus', 'savingsRate', 'debtTotal
         results.push({ W, view: v.id, route: r, hits });
       }
       if (v.shows && !saw) problems.push(`${W} ${v.id}: ${v.shows} should show in this view and did not`);
+      // Batch 55: the money-control map is Remy's alone. It shows in Remy's own Client view; in Dana's view, the
+      // household's Client view and the coach's screen on Dana's view it does not exist: no sub-tab, no Find result,
+      // the route lands on Assets, and none of its words show anywhere.
+      await go('#/net-worth/money-control');
+      const at = await page.evaluate(() => ({ hash: location.hash, tab: [...document.querySelectorAll('.subtab')].some(e => /Money control/.test(e.textContent)), text: document.body.innerText,
+        find: (window.slam.ctx.store.doc.controlHidden ? 'hidden' : 'seen') }));
+      const mapShows = v.id === 'remy';
+      if (mapShows !== (at.hash === '#/net-worth/money-control' && at.tab && MAP.every(w => at.text.includes(w)))) problems.push(`${W} ${v.id}: the money-control map ${mapShows ? 'should show and did not' : `leaked (${at.hash}, sub-tab ${at.tab})`}`);
+      if (!mapShows) {
+        for (const r of ['#/net-worth/assets', '#/net-worth/debt', '#/net-worth/credit-cards', '#/home/session']) { await go(r); const t = await page.evaluate(pageText); const hit = MAP.filter(w => t.includes(w)); if (hit.length) problems.push(`${W} ${v.id} ${r}: map words ${hit.join(', ')}`); }
+        const ctl = await page.evaluate(() => JSON.stringify(window.slam.ctx.store.doc)); if (/"ctl(On|Mail|Login|Sees|Moves|Stops)"/.test(ctl)) problems.push(`${W} ${v.id}: control taps in this view's household`);
+      }
     }
+    // The coach sees the map on the household view (every row's taps).
+    await set(false, 'all'); await go('#/net-worth/money-control');
+    if (!(await page.evaluate(m => location.hash === '#/net-worth/money-control' && m.every(w => document.body.innerText.includes(w)), MAP))) problems.push(`${W} coach: the map did not show`);
 
     // Anything shared: the one-pager (coach and client view), Send summary, the Life Transitions share view.
-    const never = join(REMY, DANA, COACH);
+    const never = join(REMY, DANA, COACH, { names: MAP, amounts: [] }); // batch 55: nothing of the money-control map either
     for (const cv of [false, true]) {
       await set(cv, 'all'); await go('#/report/one-pager');
       await check(`one-pager${cv ? ' (client view)' : ''}`, never, { math: false });
@@ -145,6 +162,7 @@ const KEYS = ['netWorth', 'liquidNetWorth', 'surplus', 'savingsRate', 'debtTotal
       const jt = fs.readFileSync(json, 'utf8');
       const jh = [...found(jt, never.names), ...found(jt, COACH.names)]; if (jh.length) problems.push(`backup without private rows: ${jh.join(', ')}`);
       if (!/"sharedCopy": true/.test(jt)) problems.push('backup without private rows: not marked as a shared copy');
+      if (/"ctl(On|Mail|Login|Sees|Moves|Stops)"|"control":/.test(jt)) problems.push('backup without private rows: the money-control map is in it'); // batch 55
       if (fs.existsSync(EXCELJS)) {
         const xlsx = await save('Open in a spreadsheet');
         const { execSync } = require('child_process');
@@ -155,11 +173,13 @@ const KEYS = ['netWorth', 'liquidNetWorth', 'surplus', 'savingsRate', 'debtTotal
         // platform name is not looked for here (test/privacy.test.js checks the household's own tabs for it).
         const xh = found(all, never.names.filter(x => x !== 'OnlyFans')); if (xh.length) problems.push(`spreadsheet without private rows: ${xh.join(', ')}`);
         if (!all.includes('Self-employment')) problems.push('spreadsheet without private rows: the neutral name is missing');
+        if (/ctlOn|ctlMail|ctlLogin|Money control:/.test(all)) problems.push('spreadsheet without private rows: the money-control map is in it'); // batch 55
       } else console.log('(ExcelJS not found: the spreadsheet export was not checked)');
       // The full export still has everything (the choice is the only thing that changes it).
       await page.locator('.export-choice button', { hasText: 'Everything' }).first().click(); await page.waitForTimeout(200);
       const full = fs.readFileSync(await save(/^Export( a backup)?$/), 'utf8');
       if (!full.includes('Velvet Room')) problems.push('the full backup lost the private row');
+      if (!full.includes('"ctlLogin"')) problems.push('the full backup lost the money-control taps');
     }
     if (errors.length) problems.push(...errors.map(e => `${W} error: ${e}`));
     await ctx.close();

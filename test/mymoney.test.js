@@ -127,7 +127,7 @@ test('Fast Track turns on every lens and keeps the totals by area (R068, R132)',
   assert.equal(s.undoStack.length, 1, 'one undo step');
   // Again, from what is on file: nothing doubles up
   applyFastTrack(s, { ...fastTrackAnswers(s.doc), savings: 7000 });
-  assert.equal(s.find(r => r.kind === 'account' && r.type === 'Savings or HYSA').length, 1);
+  assert.equal(s.find(r => r.kind === 'account' && r.type === 'Savings').length, 1);
   assert.equal(metrics(s.doc, ref, { now }).netWorth.value, 2500 + 7000 + 30000 + 9000 - 5000 - 3000);
 });
 

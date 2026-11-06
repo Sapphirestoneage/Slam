@@ -19,14 +19,16 @@ export default {
     { kind: 'spending', type: 'All in', name: "Sam's spending, all in", owner: 'Partner', amount: 2100, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'bill', name: 'Rent', amount: 2400, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date' } },
     { kind: 'bill', name: 'Electric, gas, water', amount: 200, values: { category: 'Electric, gas, water', draftt: 'Accommodation', amountType: 'Variable' } },
-    { kind: 'account', type: 'Checking', name: "Jordan's checking", owner: 'Me', values: { group: 'cash', balance: 3000 } },
+    // Batch 55 (the money-control map): Sam set up Jordan's checking app and keeps the login, and its statements go to
+    // Sam's email; Jordan cosigned Sam's car loan.
+    { kind: 'account', type: 'Checking', name: "Jordan's checking", owner: 'Me', values: { group: 'cash', balance: 3000, ctlLogin: 'Partner', ctlMail: 'Partner' } },
     { kind: 'account', type: 'Roth IRA', name: "Jordan's Roth IRA", owner: 'Me', values: { group: 'investment', balance: 12000 } },
     { kind: 'debt', type: 'Student loan', name: "Jordan's student loan", owner: 'Me', values: { balance: 18000, apr: 0.055, payment: 210, federal: 'Federal' } },
     { kind: 'debt', type: 'Credit card', name: "Jordan's card", owner: 'Me', values: { balance: 1500, apr: 0.24, payment: 100, payChoice: 'Custom' } },
     { kind: 'account', type: 'Checking', name: "Sam's checking", owner: 'Partner', values: { group: 'cash', balance: 1500 } },
-    { kind: 'account', type: 'Savings or HYSA', name: "Sam's savings", owner: 'Partner', values: { group: 'cash', balance: 2000 } },
+    { kind: 'account', type: 'Savings', name: "Sam's savings", owner: 'Partner', values: { group: 'cash', balance: 2000 } },
     { ref: 'car', kind: 'asset', type: 'Car', name: "Sam's car", owner: 'Partner', values: { value: 9000, financed: 'Financed' } },
-    { kind: 'debt', type: 'Car loan', name: "Sam's car loan", owner: 'Partner', linkedTo: '@car', values: { balance: 6000, apr: 0.079, payment: 260 } },
+    { kind: 'debt', type: 'Car loan', name: "Sam's car loan", owner: 'Partner', linkedTo: '@car', values: { balance: 6000, apr: 0.079, payment: 260, ctlOn: { Me: 'Cosigner' } } },
   ],
   expected: {
     takeHome: { value: 4500, unit: 'money', note: "Jordan's own take-home." },
@@ -42,6 +44,19 @@ export default {
     householdSurplus: { value: 2200, unit: 'money', view: 'all', note: 'Both together: $7,500 - $3,200 - $2,100 = $2,200. Living together shows no combined totals, so this is only what a combined view should say if one shows.' },
   },
   // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  // Batch 55 (the money-control map): Jordan's own map. Jordan's checking: Sam has the login and the statements go to
+  // Sam's email, so Sam can move the money (the login) and Jordan cannot see it (the statements and the login both leave
+  // Jordan out): "Sam can move all of this and you cannot see it." The paycheck lands there (its owner's checking), so
+  // "Sam can move this pay once it lands." Sam's car loan is Sam's, with Jordan on it as cosigner: it is on Jordan's map,
+  // "Your name is on this loan with Sam: a missed payment shows on your credit too." The Roth IRA, the card and the
+  // student loan read as Jordan's alone. Checklist: no account in Jordan's own name only (Sam moves the checking), so
+  // the login and statements items are open too; Jordan's card (tagged Jordan's) is ready.
+  control: {
+    rows: ["Jordan's checking", "Jordan's Roth IRA", "Jordan's card", "Jordan's student loan", "Sam's car loan", "Jordan's paycheck"], answered: 2,
+    lines: { "Jordan's checking": 'Sam can move all of this and you cannot see it.', "Sam's car loan": 'Your name is on this loan with Sam: a missed payment shows on your credit too.', "Jordan's paycheck": 'Sam can move this pay once it lands.' },
+    cols: { "Jordan's checking": { sees: ['Partner'], moves: ['Me', 'Partner'], stops: ['Me', 'Bank'] }, "Sam's car loan": { sees: ['Me', 'Partner'], moves: null, stops: null } },
+    checklist: [['own', 'open', null], ['login', 'open', null], ['email', 'open', null], ['card', 'ready', "Jordan's card"]],
+  },
   cliff: {
     near: { value: false, note: '$106,600 a year for two in IL with work coverage: SNAP for 2 is $28,140, the EITC ends at $26,820 joint with no children.' },
     says: ['Nowhere near a benefit line'],

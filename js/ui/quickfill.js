@@ -36,7 +36,7 @@ const QUICK = {
   cash: {
     label: 'Cash in checking and savings', money: true, where: '#/net-worth/assets',
     get: ctx => first(ctx, r => r.kind === 'account' && r.values.group === 'cash')?.values.balance ?? null,
-    save: (ctx, v) => { const r = first(ctx, r => r.kind === 'account' && r.values.group === 'cash'); r ? ctx.store.update(r.id, { balance: v }) : ctx.store.add('account', { name: 'Savings', values: { group: 'cash', balance: v } }, { type: 'Savings or HYSA' }); },
+    save: (ctx, v) => { const r = first(ctx, r => r.kind === 'account' && r.values.group === 'cash'); r ? ctx.store.update(r.id, { balance: v }) : ctx.store.add('account', { name: 'Savings', values: { group: 'cash', balance: v } }, { type: 'Savings' }); },
   },
   invested: {
     label: 'Invested, all accounts', money: true, where: '#/net-worth/assets',

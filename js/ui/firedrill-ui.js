@@ -40,7 +40,7 @@ const splitButton = app => S.button('Split it on Budget', { size: 'small', iconN
 // QUESTIONS 388, 389: until each account and card with no bank set is answered, the days read two ways in one calm
 // line, and the card asks Same bank / Another bank for each one as a tap. A name that sounds like an online bank starts
 // on Another bank as the likely answer (dashed, not pressed): it still counts as not answered until tapped.
-const GENERIC = /^(savings|checking|money market|cd|savings or hysa)$/i;
+const GENERIC = /^(savings|checking|money market|cd|high-yield savings \(often online\))$/i;
 const nameIn = n => (GENERIC.test(n) ? n.toLowerCase() : n);
 const listOf = names => (names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0] ?? '');
 const dayWords = n => plural(n, 'day');
@@ -65,32 +65,37 @@ function askRows(ctx, D) {
       bankTap(ctx, D, x),
       h('strong.fd-amt', {}, x.kind === 'card' ? (x.limit != null ? `${money(x.limit)} limit` : '–') : money(x.balance ?? 0))))));
 }
+// QUESTIONS 402: while answers are open, a tile whose two readings differ shows both the same way: two equal lines,
+// "$0 if they are all at this bank · $4,000 if savings is elsewhere" (the dot is read out, the lines stack).
+const twoLines = (a, b) => h('span.fd-two', {}, h('span.fd-line', {}, a), h('span.sr', {}, ' · '), h('span.fd-line', {}, b));
 function hero(app, ctx, D, B) {
   const a = D.account, u = D.unreachable, r = D.reachable, c = D.cover, R = D.readings;
   const two = R && R.differ && c.cash != null;
   const pick = S.tapPick(D.accounts.map(x => [x.id, x.id === D.defaultId ? `${x.name} (paycheck)` : x.name]), a.id,
     v => setFireDrill(ctx.store, { account: v ?? null }, 'Fire drill: account'), { label: 'Which account froze', clearable: false });
-  const tile = (label, big, small, focus = null) => h('div.fd-tile', {}, h('span.label', {}, label), h('strong.fd-big', focus ? { 'data-focus': focus } : {}, big), small ? h('span.muted.small', {}, small) : null);
+  const tile = (label, big, small, { focus = null, pair = false } = {}) => h(`div.fd-tile${pair ? '.fd-tile-two' : ''}`, {}, h('span.label', {}, label),
+    h(`strong.fd-big${pair ? '.fd-big-two' : ''}`, focus ? { 'data-focus': focus } : {}, big), small ? h('span.muted.small', {}, small) : null);
   const assumed = u.sameBank.filter(x => x.assumed), assumedTotal = assumed.reduce((t, x) => t + (x.balance ?? 0), 0);
   const known = u.sameBankTotal - assumedTotal;
+  const elsewhere = R ? `${listOf(R.names.map(nameIn))} ${R.names.length > 1 ? 'are' : 'is'} elsewhere` : null;
+  const atWords = R?.pending.length > 1 ? 'if they are all at this bank' : R ? `if ${nameIn(R.pending[0].name)} is at this bank` : '';
+  // Each tile reads both ways only when its own two readings differ (QUESTIONS 399: equal halves read as noise).
+  const outTwo = !!R && R.elsewhere.outOfReach !== u.total, reachTwo = !!R && R.elsewhere.reach !== r.cash;
   const outSmall = [`${money(u.balance)} in ${a.name}`, known ? `${money(known)} at the same bank` : null,
-    assumedTotal ? `${money(assumedTotal)} if ${listOf(assumed.map(x => nameIn(x.name)))} ${assumed.length > 1 ? 'are' : 'is'} at this bank` : null,
+    assumedTotal && !outTwo ? `${money(assumedTotal)} if ${listOf(assumed.map(x => nameIn(x.name)))} ${assumed.length > 1 ? 'are' : 'is'} at this bank` : null,
     u.paychecks ? `${money(u.paychecks)} of pay landing there` : null].filter(Boolean).join(' + ');
   const places = r.accounts.filter(x => (x.balance ?? 0) > 0);
-  const elsewhere = two ? `${listOf(R.names.map(nameIn))} ${R.names.length > 1 ? 'are' : 'is'} elsewhere` : null;
-  const reachSmall = [places.length ? places.map(x => x.name).join(', ') : u.sameBank.length && !two ? 'Nothing outside this bank yet' : !two ? 'Nothing outside this account yet' : null,
-    two && R.elsewhere.reach !== r.cash ? `${money(R.elsewhere.reach)} if ${elsewhere}` : null].filter(Boolean).join(' · ');
-  const atWords = R?.pending.length > 1 ? 'if they are all at this bank' : R ? `if ${nameIn(R.pending[0].name)} is at this bank` : '';
+  const reachSmall = places.length ? places.map(x => x.name).join(', ') : reachTwo ? null : u.sameBank.length ? 'Nothing outside this bank yet' : 'Nothing outside this account yet';
   const days = c.cash == null ? h('span.muted', {}, 'Needs spending')
-    : two ? h('span.fd-two', {}, S.mathButton(D.result, `${dayWords(c.cash)} ${atWords}`), h('span.muted', {}, ' · '), S.mathButton(R.elsewhere.result, `${dayWords(R.elsewhere.days)} if ${elsewhere}`))
+    : two ? twoLines(S.mathButton(D.result, `${dayWords(c.cash)} ${atWords}`), S.mathButton(R.elsewhere.result, `${dayWords(R.elsewhere.days)} if ${elsewhere}`))
       : S.mathButton(D.result, c.cash === 0 ? '0 days' : `About ${plural(c.cash, 'day')}`);
   return h('div.card.fd-hero', {},
     h('h2.fd-q', {}, 'If this account froze today'),
     pick,
     askRows(ctx, D),
     h('div.fd-tiles', {},
-      tile('Out of reach for now', money(u.total), outSmall),
-      tile('You can still reach', money(r.cash), reachSmall || null),
+      tile('Out of reach for now', outTwo ? twoLines(`${money(u.total)} ${atWords}`, `${money(R.elsewhere.outOfReach)} if ${elsewhere}`) : money(u.total), outSmall, { pair: outTwo }),
+      tile('You can still reach', reachTwo ? twoLines(`${money(r.cash)} ${atWords}`, `${money(R.elsewhere.reach)} if ${elsewhere}`) : money(r.cash), reachSmall, { pair: reachTwo }),
       h(`div.fd-tile${two ? '.fd-tile-two' : ''}`, {}, h('span.label', {}, 'Covers the must-pay bills'), h(`strong.fd-big${two ? '.fd-big-two' : ''}`, { 'data-focus': 'firedrill' }, days),
         !two && c.withCard != null && c.withCard > c.cash ? h('span.muted.small', {}, `About ${plural(c.withCard, 'day')} with the card's room`) : null,
         D.must?.source === 'gut' ? h('span.muted.small', {}, GUT_WORDS) : h('span.muted.small', {}, 'Housing, utilities, food, getting to work and childcare, health, minimums'),

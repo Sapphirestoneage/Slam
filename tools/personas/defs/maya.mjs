@@ -11,7 +11,7 @@ export default {
     { kind: 'income', type: 'Job', name: 'Paycheck', amount: 2400, per: '2 weeks', values: { basis: 'Take-home', payFrequency: '2 weeks', incomeType: 'W-2' } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 3500, status: 'Roughly', values: { includesDebtPayments: false, pass: 'Gut' } },
     { kind: 'account', type: 'Checking', name: 'Checking', values: { group: 'cash', balance: 1200 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Savings', values: { group: 'cash', balance: 4000 } },
+    { kind: 'account', type: 'Savings', name: 'Savings', values: { group: 'cash', balance: 4000 } },
     { kind: 'account', type: 'All investments', name: 'Investments (all accounts)', status: 'Roughly', values: { group: 'investment', balance: 15000 } },
     { kind: 'debt', type: 'Credit card', name: 'Credit cards (total)', fieldStatus: { apr: 'Not sure' }, values: { balance: 6000, payment: 200, payChoice: 'Custom' } },
     { kind: 'bill', name: 'Rent', amount: 1750, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date' } },
@@ -39,6 +39,16 @@ export default {
     notSays: ['close accounts tied to adult work'],
   },
   // Batch 47 (the benefits cliff, M9B): Plan › Raise and benefits says it is nowhere near a line.
+  // Batch 55 (the money-control map, js/math/control.js): one person, nothing answered, so every row reads from who owns
+  // it: all hers. Sees: you; moves: you; can freeze or close it: the bank (or the firm, the card issuer, the payer) and
+  // her. The checklist: Checking looks ready (read, not answered: nobody else is in the household, but "who else is on
+  // it" is not tapped yet); the card in her name is ready (one person, so the owner is a fact); the login and the
+  // statements are open until tapped.
+  control: {
+    rows: ['Checking', 'Savings', 'Investments (all accounts)', 'Credit cards (total)', 'Paycheck'], lines: {}, answered: 0,
+    cols: { Checking: { sees: ['Me'], moves: ['Me'], stops: ['Me', 'Bank'] }, 'Credit cards (total)': { sees: ['Me'], moves: ['Me'], stops: ['Me', 'Bank'] }, Paycheck: { sees: ['Me'], moves: ['Me'], stops: ['Me', 'Bank'] } },
+    checklist: [['own', 'likely', 'Checking'], ['login', 'open', null], ['email', 'open', null], ['card', 'ready', 'Credit cards (total)']],
+  },
   cliff: {
     near: { value: false, note: '$86,000 a year in New York City with work coverage: every line is below her.' },
     says: ['Nowhere near a benefit line'],

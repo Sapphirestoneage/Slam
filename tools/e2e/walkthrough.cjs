@@ -4,7 +4,7 @@
 // pre-installed on the build machine; it is not a dependency of SLAM.
 const { chromium } = require('playwright');
 const BASE = process.env.SLAM_URL || 'http://localhost:8765';
-const ROUTES = ['#/home/session', '#/home/profile', '#/net-worth/assets', '#/net-worth/debt', '#/net-worth/credit-cards', '#/net-worth/protection', '#/net-worth/fire-drill', '#/cash-flow/income', '#/cash-flow/taxes', '#/cash-flow/budget', '#/cash-flow/calendar', '#/cash-flow/close',
+const ROUTES = ['#/home/session', '#/home/profile', '#/net-worth/assets', '#/net-worth/debt', '#/net-worth/credit-cards', '#/net-worth/protection', '#/net-worth/fire-drill', '#/net-worth/money-control', '#/cash-flow/income', '#/cash-flow/taxes', '#/cash-flow/budget', '#/cash-flow/calendar', '#/cash-flow/close',
   '#/plan/goals', '#/plan/foo', '#/plan/scorecard', '#/plan/timeline', '#/plan/debt-payoff', '#/plan/next-12-months', '#/plan/scenarios', '#/plan/transitions', '#/plan/cliff', '#/report/overview', '#/report/one-pager', '#/report/history', '#/tools/lists', '#/tools/session',
   '#/report/statements', '#/report/lender', '#/tools/data', '#/tools/discovery'];
 (async () => {

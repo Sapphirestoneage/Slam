@@ -12,7 +12,7 @@ export default {
     { kind: 'income', type: 'Job', name: 'School district salary', amount: 3900, per: 'month', values: { basis: 'Both', gross: 58000, payFrequency: 'month', incomeType: 'W-2' } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 2900, status: 'Roughly', values: { includesDebtPayments: false, pass: 'Gut' } },
     { kind: 'account', type: 'Checking', name: 'Checking', values: { group: 'cash', balance: 1500 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Savings', values: { group: 'cash', balance: 6000 } },
+    { kind: 'account', type: 'Savings', name: 'Savings', values: { group: 'cash', balance: 6000 } },
     { kind: 'account', type: '403(b)', name: '403(b)', values: { group: 'investment', balance: 12000, taxType: 'Pretax' } },
     { kind: 'debt', type: 'Student loan', name: 'Federal student loans', values: { balance: 48000, apr: 0.055, payment: 263, federal: 'Federal', plan: 'IBR', pslf: 'Yes', paymentsLeft: 72, firstBorrowed: 'July 2014 to June 2026' } },
     { kind: 'bill', name: 'Rent', amount: 1200, values: { category: 'Rent or mortgage', draftt: 'Accommodation', amountType: 'Fixed', timing: 'Fixed date' } },

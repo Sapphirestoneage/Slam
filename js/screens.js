@@ -34,6 +34,7 @@ import { lenderScreen } from './ui/lender-ui.js';
 import { cliffScreen } from './ui/cliff-ui.js';
 import { fireDrillScreen } from './ui/firedrill-ui.js';
 import { shiftSection } from './ui/shiftpnl-ui.js';
+import { controlScreen } from './ui/control-ui.js';
 import { AREAS, recordFor } from './gates.js';
 import { keyNumbers } from './math/metrics.js';
 import { statusOf, countsAsDone } from './records.js';
@@ -89,7 +90,7 @@ function completion(app, c) {
 }
 // R015: an area turned off on the Profile leaves a slim way back. Batch 11 (item 5d): + Add one asks which (two or
 // three taps, e.g. Home or Car), turns the area on and adds that row in one undoable step; no toast.
-const AREA_PICKS = { real: ['Home', 'Car'], cash: ['Checking', 'Savings or HYSA'], investments: ['401(k)', 'Roth IRA', 'Brokerage'] };
+const AREA_PICKS = { real: ['Home', 'Car'], cash: ['Checking', 'Savings'], investments: ['401(k)', 'Roth IRA', 'Brokerage'] };
 const addArea = (app, ctx, k, label) => h('a.add-area', { href: '#', onclick: e => {
   e.preventDefault();
   const turnOn = (extra = {}) => { const p = ctx.store.doc.profile; ctx.store.setDoc('profile', { areas: { ...(p.areas || {}), [k]: true }, noneOfThese: false, ...extra }); };
@@ -101,7 +102,7 @@ const addArea = (app, ctx, k, label) => h('a.add-area', { href: '#', onclick: e 
       S.closePop();
       const spec = recordFor(t, ctx.ref);
       let id = null;
-      ctx.store.transaction(`Add ${t}`, () => { turnOn(t === 'Car' ? { hasCar: true } : {}); id = ctx.store.add(spec.kind, { name: t === 'Savings or HYSA' ? 'Savings' : t, values: { ...spec.values } }, { type: t }).id; });
+      ctx.store.transaction(`Add ${t}`, () => { turnOn(t === 'Car' ? { hasCar: true } : {}); id = ctx.store.add(spec.kind, { name: t, values: { ...spec.values } }, { type: t }).id; });
       requestAnimationFrame(() => document.querySelector(`tr[data-id="${id}"] input:not([type="checkbox"])`)?.focus());
     } }, t)))), { width: 280 });
 } }, '+ Add one');
@@ -242,6 +243,7 @@ export const SCREENS = {
   'net-worth/credit-cards': tabPage('net-worth', 'credit-cards'),
   'net-worth/protection': tabPage('net-worth', 'protection'),
   'net-worth/fire-drill': (app, ctx) => (app.hasClient ? fireDrillScreen(app, ctx) : [head('Bank fire drill'), noClient(app)]), // batch 44
+  'net-worth/money-control': (app, ctx) => (app.hasClient ? controlScreen(app, ctx) : [head('Money control'), noClient(app)]), // batch 55: private by design (js/privacy.js)
 
   'cash-flow/income': tabPage('cash-flow', 'income'),
   'cash-flow/taxes': tabPage('cash-flow', 'taxes'),

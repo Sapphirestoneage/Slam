@@ -40,7 +40,7 @@ test('(a) a payday loan and negative net worth land on step 1', () => {
 
 test('(b) a PSLF borrower with cards: step 3 skips the loan', () => {
   const f = home(s => {
-    s.add('account', { name: 'Savings', values: { group: 'cash', balance: 20000 } }, { type: 'Savings or HYSA' });
+    s.add('account', { name: 'Savings', values: { group: 'cash', balance: 20000 } }, { type: 'Savings' });
     s.add('debt', { name: 'Federal loans', values: { balance: 60000, apr: 0.065, payment: 400, federal: 'Federal', pslf: 'Yes' } }, { type: 'Student loan' });
     s.add('debt', { name: 'Visa', values: { balance: 3000, apr: 0.24, payment: 150 } }, { type: 'Credit card' });
   });
@@ -54,7 +54,7 @@ test('(b) a PSLF borrower with cards: step 3 skips the loan', () => {
 test('(c) Coast FI reached: step 7 opens', () => {
   const f = home(s => {
     s.setDoc('assumptions', { fiAge: 60 });
-    s.add('account', { name: 'Savings', values: { group: 'cash', balance: 40000 } }, { type: 'Savings or HYSA' });
+    s.add('account', { name: 'Savings', values: { group: 'cash', balance: 40000 } }, { type: 'Savings' });
     s.add('account', { name: 'Brokerage', values: { group: 'investment', balance: 400000 } }, { type: 'Brokerage' });
   });
   assert.equal(step(f, '6').status, 'Done');
@@ -79,7 +79,7 @@ test('(d) giving: off by default; on, its only prerequisite is no heavy debt (ov
 
 test('steps 2 and 3 can be in progress together; 6 and 7 never overlap', () => {
   const f = home(s => {
-    s.add('account', { name: 'Savings', values: { group: 'cash', balance: 3500 } }, { type: 'Savings or HYSA' }); // the Buffer and little e full
+    s.add('account', { name: 'Savings', values: { group: 'cash', balance: 3500 } }, { type: 'Savings' }); // the Buffer and little e full
     s.add('debt', { name: 'Visa', values: { balance: 3000, apr: 0.24, payment: 150 } }, { type: 'Credit card' });
     s.update(s.find(r => r.kind === 'income')[0].id, { contributionPct: 0.02, matchPct: 1, matchCapPct: 0.05 });
   });
@@ -90,7 +90,7 @@ test('steps 2 and 3 can be in progress together; 6 and 7 never overlap', () => {
 
 test('efficiency flags come from data/flags.json and land on their stop', () => {
   const f = home(s => {
-    s.add('account', { name: 'Savings', values: { group: 'cash', balance: 90000 } }, { type: 'Savings or HYSA' });
+    s.add('account', { name: 'Savings', values: { group: 'cash', balance: 90000 } }, { type: 'Savings' });
   });
   assert.ok(f.flags.some(x => x.id === 'cash-above-layers'));
   assert.ok(step(f, '4').flags.some(x => x.id === 'cash-above-layers'));

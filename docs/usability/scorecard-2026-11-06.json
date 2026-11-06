@@ -19,10 +19,10 @@
  ],
  "note": "After the Batch 20 fixes, rebased on main with Batches 22, 23, 24 and 30. Categories 5 (obvious) and 12 (coachable) wait for Eli at sign-off. Batch 33 (Nov 6) re-scored the screens it fixed: Home, Income, Budget, Calendar, Month end, Goals, Debt payoff, Current vs Proposed, Transitions, the One-pager and Find, and added FOO and Scorecard (couples only).",
  "summary": {
-  "screens": 21,
+  "screens": 22,
   "blocker": 0,
   "major": 0,
-  "minor": 9,
+  "minor": 10,
   "allPass": [
    "Income",
    "Budget",
@@ -3591,13 +3591,15 @@
    "screen": "Fire drill",
    "route": "#/net-worth/fire-drill",
    "area": "Net worth",
-   "batch": 52,
+   "batch": 55,
    "tasks": [
     "Is the savings reachable? (both readings until Same bank or Another bank is tapped on the card on top)",
     "Answer the creator's HYSA (starts on Another bank as the likely answer)",
     "Split the must-pay out (gut only)",
     "Mark the 403(b) Current job or Old job",
-    "Read the order with only the childcare line beside getting to work"
+    "Read the order with only the childcare line beside getting to work",
+    "Read all three tiles while savings is not answered (two equal lines each, QUESTIONS 402)",
+    "Type the savings High-yield savings (often online): its tap starts on Another bank (QUESTIONS 400)"
    ],
    "categories": {
     "works": {
@@ -3615,7 +3617,7 @@
     },
     "looks": {
      "result": "pass",
-     "reason": "layout checker (all checks) on Fire drill and Home at 1440, 1280 and 390, light and dark, Demo and New: no failures; again with Phase 4 on for the Demo so the tap row shows: no failures; persona run (all 15): 0 layout findings, 0 story notes"
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, Demo and a new client, and with every section open for the discreet couple, Jordan and Sam, and Maya (batch 55)"
     },
     "obvious": {
      "result": "pass",
@@ -3635,7 +3637,7 @@
     },
     "tells": {
      "result": "pass",
-     "reason": "each tap moves the three tiles at once; the readings collapse to one number when the answers settle it"
+     "reason": "each tap moves the three tiles at once; the readings collapse to one number when the answers settle it; batch 55: every tile shows its two readings as two equal lines while answers are open, one number when they agree"
     },
     "fits": {
      "result": "pass",
@@ -4643,10 +4645,74 @@
      "reason": "waits for Eli at sign-off; the line shows in Client view with the plain words beside the terms"
     }
    }
+  },
+  {
+   "screen": "Money control",
+   "route": "#/net-worth/money-control",
+   "area": "Net worth",
+   "batch": 55,
+   "tasks": [
+    "Find it from the client's words (who can see my account)",
+    "Say Jordan's checking login is only Jordan's",
+    "Say nobody else is on it and statements go to Jordan's own email",
+    "Read What to set up",
+    "Undo the last tap",
+    "Switch to Sam's view: the screen is gone"
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "all six tasks done in the browser on Jordan and Sam at 1280; each tap saves (the ctl* values), the lines and the checklist move, Details stays open across the redraw, Undo puts it back"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "hand-worked in test/batch55.test.js and each def's control block: the discreet couple (4 lines, 4 of 4 ready), Jordan and Sam (3 lines, 1 of 4), Maya (all hers, a card ready, Checking looks ready); no number moves (the map is read, never counted)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one line per row, the same words on the card on top and in the grid's cells; the savings and card names are the rows' own names"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker clean at 1440, 1280 and 390, light and dark, Demo and a new client; and with both sections and a Details open for three personas"
+    },
+    "obvious": {
+     "result": "minor",
+     "reason": "three short columns and a Details button read like Monarch's accounts list; faded read words are explained in one line above the grid and a tip, but a first-timer may not see why a column is faded until Details is open"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find: money control, who can see my account, joint account, authorized user, cosigner land on it; a Net worth sub-tab beside Fire drill (a Phase 4 preview); never found where it does not exist"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "every answer is a tap (people, Someone else, the bank, Nobody else); no typing"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "\"Dana can move all of this and you cannot see it\": plain, calm, from the client's side; no verdict words, no red, no em dashes"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the card on top and the cells move on every tap; read columns show faded; the checklist says Ready, Looks ready or a box to tick"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "1440, 1280 and 390, light and dark; the grid stacks with a label on each cell on a phone"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "opens with no visible wait"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "private by design: never in a partner's view, the household's Client view or anything shared (tools/e2e/privacy.cjs); waits for Eli at sign-off"
+    }
+   }
   }
  ],
  "updated": {
-  "batch": 53,
+  "batch": 55,
   "date": "2026-11-06"
  },
  "batch34": {

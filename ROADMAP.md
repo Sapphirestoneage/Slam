@@ -136,6 +136,9 @@ end of life and the dual-age question has an answer.
 - **Real lives wave 2.** Default vs my wishes map (what happens by default if nothing is written, against what the
   client wants); conditional support runway (help that could stop: a parent, a partner, a benefit); shift P&L (what a
   shift really pays after travel, childcare and time); money-control map (who can see, move and stop each account).
+  The money-control map (batch 55, Net worth › Money control) is private by design: it is the client's alone, never in
+  a partner's view, never in the household view in Client view, never on the one-pager, Send summary, a share view, a
+  shared copy or the workbook (js/privacy.js `controlSeen` takes it out of each).
 
 **Engines.** Projection (new), tax (ported step by step from the older `engines/tax.js` onto SLAM's verified tables),
 decumulation, Social Security, VPW, Triple D, the trap test's four paths, events.

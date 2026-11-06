@@ -106,7 +106,7 @@
    {
     "id": "job-loss-003",
     "kind": "account",
-    "type": "Savings or HYSA",
+    "type": "Savings",
     "name": "Savings",
     "amount": null,
     "per": "month",

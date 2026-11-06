@@ -18,7 +18,7 @@ export default {
     { kind: 'income', type: 'Rental', name: "Cam's share of the house (20% mortgage, 1/3 utilities, 1/4 groceries)", owner: 'Joint', amount: 870, per: 'month', values: { incomeType: 'Other' } },
     { kind: 'spending', type: 'All in', name: 'Household spending, all in (whole bills)', amount: 7400, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Checking', name: 'Joint checking', owner: 'Joint', values: { group: 'cash', balance: 9000 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Joint HYSA', owner: 'Joint', values: { group: 'cash', balance: 20000 } },
+    { kind: 'account', type: 'Savings', name: 'Joint HYSA', owner: 'Joint', values: { group: 'cash', balance: 20000 } },
     { kind: 'account', type: '401(k)', name: "Ana's 401(k)", owner: 'Me', values: { group: 'investment', balance: 60000 } },
     { kind: 'account', type: '403(b)', name: "Ben's 403(b)", owner: 'Partner', values: { group: 'investment', balance: 45000 } },
     { ref: 'home', kind: 'asset', type: 'Home', name: 'Home (Ana and Ben on the deed)', owner: 'Joint', values: { value: 550000, financed: 'Financed' } },

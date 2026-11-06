@@ -32,7 +32,7 @@ export default {
     { kind: 'account', type: 'Checking', name: "Riley's checking", owner: 'Me', values: { group: 'cash', balance: 4000 } },
     { kind: 'account', type: 'Checking', name: "Jules's checking", owner: 'Partner', values: { group: 'cash', balance: 3000 } },
     { kind: 'account', type: 'Checking', name: "Dev's checking", owner: 'P3', values: { group: 'cash', balance: 1500 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Riley and Jules savings', owner: 'Joint', values: { group: 'cash', balance: 6000, splitAmong: ['Me', 'Partner'] } },
+    { kind: 'account', type: 'Savings', name: 'Riley and Jules savings', owner: 'Joint', values: { group: 'cash', balance: 6000, splitAmong: ['Me', 'Partner'] } },
     { kind: 'account', type: 'Roth IRA', name: "Riley's Roth IRA", owner: 'Me', values: { group: 'investment', balance: 20000 } },
     { kind: 'debt', type: 'Student loan', name: "Jules's student loan", owner: 'Partner', values: { balance: 12000, apr: 0.05, payment: 150, federal: 'Federal' } },
     { kind: 'debt', type: 'Credit card', name: "Dev's card", owner: 'P3', values: { balance: 2400, apr: 0.24, payment: 150, payChoice: 'Custom' } },

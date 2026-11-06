@@ -196,7 +196,7 @@
    {
     "id": "couple-joint-004",
     "kind": "account",
-    "type": "Savings or HYSA",
+    "type": "Savings",
     "name": "Joint HYSA",
     "amount": null,
     "per": "month",

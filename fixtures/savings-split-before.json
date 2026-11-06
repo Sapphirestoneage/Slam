@@ -1,0 +1,962 @@
+{
+ "aca-couple": {
+  "all": {
+   "netWorth": 35000,
+   "liquidNetWorth": 13000,
+   "fiNumber": 1560000,
+   "surplus": 509.7666666666664,
+   "savingsRate": 0.08927977208642497,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": 525
+  },
+  "Me": {
+   "netWorth": 28500,
+   "liquidNetWorth": 6500,
+   "fiNumber": 780000,
+   "surplus": 718.0166666666664,
+   "savingsRate": 0.21639935503639215,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": 340
+  },
+  "Partner": {
+   "netWorth": 6500,
+   "liquidNetWorth": 6500,
+   "fiNumber": 780000,
+   "surplus": -208.25,
+   "savingsRate": -0.08707013692902686,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 20905.81,
+   "reach": 0,
+   "elsewhere": 52,
+   "accounts": 2
+  },
+  "foo": "4",
+  "little": true
+ },
+ "alexis": {
+  "all": {
+   "netWorth": -3800,
+   "liquidNetWorth": -3800,
+   "fiNumber": 840000,
+   "surplus": -200,
+   "savingsRate": -0.07692307692307693,
+   "debtTotal": 4200,
+   "debtPayments": 120,
+   "debtFreeMonths": 57,
+   "debtInterest": 2579,
+   "monthsToFi": null
+  },
+  "Me": {
+   "netWorth": -3800,
+   "liquidNetWorth": -3800,
+   "fiNumber": 840000,
+   "surplus": -200,
+   "savingsRate": -0.07692307692307693,
+   "debtTotal": 4200,
+   "debtPayments": 120,
+   "debtFreeMonths": 57,
+   "debtInterest": 2579,
+   "monthsToFi": null
+  },
+  "Partner": {
+   "netWorth": null,
+   "liquidNetWorth": null,
+   "fiNumber": null,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 4000,
+   "reach": 0,
+   "elsewhere": 0,
+   "accounts": 1
+  },
+  "foo": "1",
+  "little": false
+ },
+ "bartender": {
+  "all": {
+   "netWorth": 9900,
+   "liquidNetWorth": -100,
+   "fiNumber": 780000,
+   "surplus": 780,
+   "savingsRate": 0.23076923076923078,
+   "debtTotal": 1800,
+   "debtPayments": 90,
+   "debtFreeMonths": 6,
+   "debtInterest": 208,
+   "monthsToFi": 343
+  },
+  "Me": {
+   "netWorth": 9900,
+   "liquidNetWorth": -100,
+   "fiNumber": 780000,
+   "surplus": 780,
+   "savingsRate": 0.23076923076923078,
+   "debtTotal": 1800,
+   "debtPayments": 90,
+   "debtFreeMonths": 6,
+   "debtInterest": 208,
+   "monthsToFi": 343
+  },
+  "Partner": {
+   "netWorth": null,
+   "liquidNetWorth": null,
+   "fiNumber": null,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 4400,
+   "reach": 0,
+   "elsewhere": 7,
+   "accounts": 2
+  },
+  "foo": "1",
+  "little": false
+ },
+ "couple-joint": {
+  "all": {
+   "netWorth": 272000,
+   "liquidNetWorth": 21000,
+   "fiNumber": 1830000,
+   "surplus": 1100,
+   "savingsRate": 0.25609756097560976,
+   "debtTotal": 360000,
+   "debtPayments": 2300,
+   "debtFreeMonths": 314,
+   "debtInterest": 360299,
+   "monthsToFi": 293
+  },
+  "Me": {
+   "netWorth": 168500,
+   "liquidNetWorth": 10500,
+   "fiNumber": 915000,
+   "surplus": 4150,
+   "savingsRate": 0.6280487804878049,
+   "debtTotal": 180000,
+   "debtPayments": 1150,
+   "debtFreeMonths": 314,
+   "debtInterest": 180150,
+   "monthsToFi": 112
+  },
+  "Partner": {
+   "netWorth": 103500,
+   "liquidNetWorth": 10500,
+   "fiNumber": 915000,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": 180000,
+   "debtPayments": 1150,
+   "debtFreeMonths": 314,
+   "debtInterest": 180150,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 30969.24,
+   "reach": 0,
+   "elsewhere": 74,
+   "accounts": 2
+  },
+  "foo": "4",
+  "little": true
+ },
+ "couple-separate": {
+  "all": {
+   "netWorth": 2000,
+   "liquidNetWorth": 5000,
+   "fiNumber": 1590000,
+   "surplus": 2200,
+   "savingsRate": 0.29333333333333333,
+   "debtTotal": 25500,
+   "debtPayments": 570,
+   "debtFreeMonths": 59,
+   "debtInterest": 3636,
+   "monthsToFi": 291
+  },
+  "Me": {
+   "netWorth": -4500,
+   "liquidNetWorth": 1500,
+   "fiNumber": 960000,
+   "surplus": 1300,
+   "savingsRate": 0.28888888888888886,
+   "debtTotal": 19500,
+   "debtPayments": 310,
+   "debtFreeMonths": 110,
+   "debtInterest": 4948,
+   "monthsToFi": 288
+  },
+  "Partner": {
+   "netWorth": 6500,
+   "liquidNetWorth": 3500,
+   "fiNumber": 630000,
+   "surplus": 900,
+   "savingsRate": 0.3,
+   "debtTotal": 6000,
+   "debtPayments": 260,
+   "debtFreeMonths": 26,
+   "debtInterest": 529,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 15153.86,
+   "reach": 0,
+   "elsewhere": 20,
+   "accounts": 3
+  },
+  "foo": "3",
+  "little": true
+ },
+ "creator": {
+  "all": {
+   "netWorth": 17800,
+   "liquidNetWorth": 5300,
+   "fiNumber": 1080000,
+   "surplus": 539.2115738333332,
+   "savingsRate": 0.15245157410204116,
+   "debtTotal": 2900,
+   "debtPayments": 300,
+   "debtFreeMonths": 4,
+   "debtInterest": 119,
+   "monthsToFi": 365
+  },
+  "Me": {
+   "netWorth": 17800,
+   "liquidNetWorth": 5300,
+   "fiNumber": 1080000,
+   "surplus": 539.2115738333332,
+   "savingsRate": 0.15245157410204116,
+   "debtTotal": 2900,
+   "debtPayments": 300,
+   "debtFreeMonths": 4,
+   "debtInterest": 119,
+   "monthsToFi": 365
+  },
+  "Partner": {
+   "netWorth": null,
+   "liquidNetWorth": null,
+   "fiNumber": null,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 13669.24,
+   "reach": 0,
+   "elsewhere": 53,
+   "accounts": 2
+  },
+  "foo": "3",
+  "little": true
+ },
+ "dancer": {
+  "all": {
+   "netWorth": 23800,
+   "liquidNetWorth": 8300,
+   "fiNumber": 990000,
+   "surplus": 1475.8085892083336,
+   "savingsRate": 0.3090175331865577,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": 294
+  },
+  "Me": {
+   "netWorth": 23800,
+   "liquidNetWorth": 8300,
+   "fiNumber": 990000,
+   "surplus": 1475.8085892083336,
+   "savingsRate": 0.3090175331865577,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": 294
+  },
+  "Partner": {
+   "netWorth": null,
+   "liquidNetWorth": null,
+   "fiNumber": null,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 59,
+   "withCard": 59,
+   "out": 8925,
+   "reach": 6500,
+   "elsewhere": null,
+   "accounts": 3
+  },
+  "foo": "4",
+  "little": true
+ },
+ "deficit": {
+  "all": {
+   "netWorth": 250,
+   "liquidNetWorth": -3250,
+   "fiNumber": 900000,
+   "surplus": -400,
+   "savingsRate": -0.15384615384615385,
+   "debtTotal": 3300,
+   "debtPayments": 335,
+   "debtFreeMonths": 78,
+   "debtInterest": 22772,
+   "monthsToFi": null
+  },
+  "Me": {
+   "netWorth": 250,
+   "liquidNetWorth": -3250,
+   "fiNumber": 900000,
+   "surplus": -400,
+   "savingsRate": -0.15384615384615385,
+   "debtTotal": 3300,
+   "debtPayments": 335,
+   "debtFreeMonths": 78,
+   "debtInterest": 22772,
+   "monthsToFi": null
+  },
+  "Partner": {
+   "netWorth": null,
+   "liquidNetWorth": null,
+   "fiNumber": null,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 2650,
+   "reach": 0,
+   "elsewhere": 0,
+   "accounts": 1
+  },
+  "foo": "1",
+  "little": false
+ },
+ "discreet-couple": {
+  "all": {
+   "netWorth": 26238,
+   "liquidNetWorth": 3967,
+   "fiNumber": 1350000,
+   "surplus": 4317.367750950001,
+   "savingsRate": 0.48964360712808414,
+   "debtTotal": 3373,
+   "debtPayments": 140,
+   "debtFreeMonths": 1,
+   "debtInterest": 73,
+   "monthsToFi": 181
+  },
+  "Me": {
+   "netWorth": 4011,
+   "liquidNetWorth": 140,
+   "fiNumber": 720000,
+   "surplus": 2217.3677509500003,
+   "savingsRate": 0.48022333731026473,
+   "debtTotal": 2000,
+   "debtPayments": 80,
+   "debtFreeMonths": 1,
+   "debtInterest": 40,
+   "monthsToFi": null
+  },
+  "Partner": {
+   "netWorth": 22227,
+   "liquidNetWorth": 3827,
+   "fiNumber": 630000,
+   "surplus": 2100,
+   "savingsRate": 0.5,
+   "debtTotal": 1373,
+   "debtPayments": 60,
+   "debtFreeMonths": 1,
+   "debtInterest": 33,
+   "monthsToFi": 172
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 22074.45,
+   "reach": 0,
+   "elsewhere": 14,
+   "accounts": 3
+  },
+  "foo": "3",
+  "little": true
+ },
+ "job-loss": {
+  "all": {
+   "netWorth": 50000,
+   "liquidNetWorth": 8000,
+   "fiNumber": 936000,
+   "surplus": -520,
+   "savingsRate": -0.2,
+   "debtTotal": 3500,
+   "debtPayments": 150,
+   "debtFreeMonths": 32,
+   "debtInterest": 1257,
+   "monthsToFi": null
+  },
+  "Me": {
+   "netWorth": 50000,
+   "liquidNetWorth": 8000,
+   "fiNumber": 936000,
+   "surplus": -520,
+   "savingsRate": -0.2,
+   "debtTotal": 3500,
+   "debtPayments": 150,
+   "debtFreeMonths": 32,
+   "debtInterest": 1257,
+   "monthsToFi": null
+  },
+  "Partner": {
+   "netWorth": null,
+   "liquidNetWorth": null,
+   "fiNumber": null,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 13900,
+   "reach": 0,
+   "elsewhere": 97,
+   "accounts": 2
+  },
+  "foo": "1",
+  "little": true
+ },
+ "maya": {
+  "all": {
+   "netWorth": 14200,
+   "liquidNetWorth": -800,
+   "fiNumber": 1050000,
+   "surplus": 1500,
+   "savingsRate": 0.28846153846153844,
+   "debtTotal": 6000,
+   "debtPayments": 200,
+   "debtFreeMonths": 4,
+   "debtInterest": 300,
+   "monthsToFi": 273
+  },
+  "Me": {
+   "netWorth": 14200,
+   "liquidNetWorth": -800,
+   "fiNumber": 1050000,
+   "surplus": 1500,
+   "savingsRate": 0.28846153846153844,
+   "debtTotal": 6000,
+   "debtPayments": 200,
+   "debtFreeMonths": 4,
+   "debtInterest": 300,
+   "monthsToFi": 273
+  },
+  "Partner": {
+   "netWorth": null,
+   "liquidNetWorth": null,
+   "fiNumber": null,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 12400,
+   "reach": 0,
+   "elsewhere": 33,
+   "accounts": 2
+  },
+  "foo": "3",
+  "little": true
+ },
+ "multimillionaire": {
+  "all": {
+   "netWorth": 7965000,
+   "liquidNetWorth": 1980000,
+   "fiNumber": 3000000,
+   "surplus": 8842.857142857143,
+   "savingsRate": 0.406612747768512,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": 0
+  },
+  "Me": {
+   "netWorth": 5472500,
+   "liquidNetWorth": 990000,
+   "fiNumber": 3000000,
+   "surplus": 15128.57142857143,
+   "savingsRate": 0.6884620686486239,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": 13
+  },
+  "Partner": {
+   "netWorth": 2492500,
+   "liquidNetWorth": 990000,
+   "fiNumber": 3000000,
+   "surplus": -5571.428571428572,
+   "savingsRate": -2.2285714285714286,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": 179
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 226661.55,
+   "reach": 0,
+   "elsewhere": 304,
+   "accounts": 2
+  },
+  "foo": "8",
+  "little": true
+ },
+ "poly-household": {
+  "all": {
+   "netWorth": 284000,
+   "liquidNetWorth": 29000,
+   "fiNumber": 2220000,
+   "surplus": 3470,
+   "savingsRate": 0.31922723091076355,
+   "debtTotal": 400000,
+   "debtPayments": 2600,
+   "debtFreeMonths": 268,
+   "debtInterest": 294348,
+   "monthsToFi": 251
+  },
+  "Me": {
+   "netWorth": 149500,
+   "liquidNetWorth": 14500,
+   "fiNumber": 1110000,
+   "surplus": 2535,
+   "savingsRate": 0.4065757818765036,
+   "debtTotal": 200000,
+   "debtPayments": 1300,
+   "debtFreeMonths": 268,
+   "debtInterest": 147174,
+   "monthsToFi": 204
+  },
+  "Partner": {
+   "netWorth": 134500,
+   "liquidNetWorth": 14500,
+   "fiNumber": 1110000,
+   "surplus": 935,
+   "savingsRate": 0.2017259978425027,
+   "debtTotal": 200000,
+   "debtPayments": 1300,
+   "debtFreeMonths": 268,
+   "debtInterest": 147174,
+   "monthsToFi": 333
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 43716.14,
+   "reach": 0,
+   "elsewhere": 82,
+   "accounts": 2
+  },
+  "foo": "4",
+  "little": true
+ },
+ "sandwich-parent": {
+  "all": {
+   "netWorth": 4500,
+   "liquidNetWorth": 4500,
+   "fiNumber": 1098000,
+   "surplus": 540,
+   "savingsRate": 0.12857142857142856,
+   "debtTotal": 3000,
+   "debtPayments": 100,
+   "debtFreeMonths": 5,
+   "debtInterest": 166,
+   "monthsToFi": 464
+  },
+  "Me": {
+   "netWorth": 4500,
+   "liquidNetWorth": 4500,
+   "fiNumber": 1098000,
+   "surplus": 540,
+   "savingsRate": 0.12857142857142856,
+   "debtTotal": 3000,
+   "debtPayments": 100,
+   "debtFreeMonths": 5,
+   "debtInterest": 166,
+   "monthsToFi": 464
+  },
+  "Partner": {
+   "netWorth": null,
+   "liquidNetWorth": null,
+   "fiNumber": null,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 11700,
+   "reach": 0,
+   "elsewhere": 45,
+   "accounts": 2
+  },
+  "foo": "3",
+  "little": true
+ },
+ "single-parent": {
+  "all": {
+   "netWorth": -1500,
+   "liquidNetWorth": -1500,
+   "fiNumber": 750000,
+   "surplus": -493.5166666666669,
+   "savingsRate": -0.23881957270403031,
+   "debtTotal": 1800,
+   "debtPayments": 60,
+   "debtFreeMonths": 53,
+   "debtInterest": 1331,
+   "monthsToFi": null
+  },
+  "Me": {
+   "netWorth": -1500,
+   "liquidNetWorth": -1500,
+   "fiNumber": 750000,
+   "surplus": -493.5166666666669,
+   "savingsRate": -0.23881957270403031,
+   "debtTotal": 1800,
+   "debtPayments": 60,
+   "debtFreeMonths": 53,
+   "debtInterest": 1331,
+   "monthsToFi": null
+  },
+  "Partner": {
+   "netWorth": null,
+   "liquidNetWorth": null,
+   "fiNumber": null,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 3161.28,
+   "reach": 0,
+   "elsewhere": 0,
+   "accounts": 1
+  },
+  "foo": "1",
+  "little": false
+ },
+ "teacher": {
+  "all": {
+   "netWorth": -28500,
+   "liquidNetWorth": 7500,
+   "fiNumber": 870000,
+   "surplus": 737,
+   "savingsRate": 0.18897435897435896,
+   "debtTotal": 48000,
+   "debtPayments": 263,
+   "debtFreeMonths": 72,
+   "debtInterest": 15278,
+   "monthsToFi": 364
+  },
+  "Me": {
+   "netWorth": -28500,
+   "liquidNetWorth": 7500,
+   "fiNumber": 870000,
+   "surplus": 737,
+   "savingsRate": 0.18897435897435896,
+   "debtTotal": 48000,
+   "debtPayments": 263,
+   "debtFreeMonths": 72,
+   "debtInterest": 15278,
+   "monthsToFi": 364
+  },
+  "Partner": {
+   "netWorth": null,
+   "liquidNetWorth": null,
+   "fiNumber": null,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 11400,
+   "reach": 0,
+   "elsewhere": 57,
+   "accounts": 2
+  },
+  "foo": "4",
+  "little": true
+ },
+ "three-adults": {
+  "all": {
+   "netWorth": 20100,
+   "liquidNetWorth": 12100,
+   "fiNumber": 1653000,
+   "surplus": 6490,
+   "savingsRate": 0.5408333333333334,
+   "debtTotal": 14400,
+   "debtPayments": 300,
+   "debtFreeMonths": 98,
+   "debtInterest": 2675,
+   "monthsToFi": 158
+  },
+  "Me": {
+   "netWorth": 27000,
+   "liquidNetWorth": 7000,
+   "fiNumber": 597000,
+   "surplus": 3010,
+   "savingsRate": 0.602,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": 130
+  },
+  "Partner": {
+   "netWorth": -6000,
+   "liquidNetWorth": 6000,
+   "fiNumber": 609000,
+   "surplus": 1970,
+   "savingsRate": 0.4925,
+   "debtTotal": 12000,
+   "debtPayments": 150,
+   "debtFreeMonths": 98,
+   "debtInterest": 2627,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 29192.31,
+   "reach": 0,
+   "elsewhere": 63,
+   "accounts": 4
+  },
+  "foo": "4",
+  "little": true
+ },
+ "tom": {
+  "all": {
+   "netWorth": 891000,
+   "liquidNetWorth": 128000,
+   "fiNumber": 1950000,
+   "surplus": 3700,
+   "savingsRate": 0.48210610185246666,
+   "debtTotal": 685000,
+   "debtPayments": 4250,
+   "debtFreeMonths": 254,
+   "debtInterest": 391418,
+   "monthsToFi": 129
+  },
+  "Me": {
+   "netWorth": 891000,
+   "liquidNetWorth": 128000,
+   "fiNumber": 1950000,
+   "surplus": 3700,
+   "savingsRate": 0.48210610185246666,
+   "debtTotal": 685000,
+   "debtPayments": 4250,
+   "debtFreeMonths": 254,
+   "debtInterest": 391418,
+   "monthsToFi": 129
+  },
+  "Partner": {
+   "netWorth": null,
+   "liquidNetWorth": null,
+   "fiNumber": null,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 51969.24,
+   "reach": 0,
+   "elsewhere": 140,
+   "accounts": 2
+  },
+  "foo": "4",
+  "little": true
+ },
+ "trans-transition": {
+  "all": {
+   "netWorth": 112000,
+   "liquidNetWorth": 22000,
+   "fiNumber": 1290000,
+   "surplus": 1052.1739130434783,
+   "savingsRate": 0.28892873151053344,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": 175
+  },
+  "Me": {
+   "netWorth": 112000,
+   "liquidNetWorth": 22000,
+   "fiNumber": 1290000,
+   "surplus": 1052.1739130434783,
+   "savingsRate": 0.28892873151053344,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": 175
+  },
+  "Partner": {
+   "netWorth": null,
+   "liquidNetWorth": null,
+   "fiNumber": null,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 31415.38,
+   "reach": 0,
+   "elsewhere": 127,
+   "accounts": 2
+  },
+  "foo": "4",
+  "little": true
+ },
+ "demo": {
+  "all": {
+   "netWorth": 8300,
+   "liquidNetWorth": 1800,
+   "fiNumber": 1080000,
+   "surplus": 1200,
+   "savingsRate": 0.25,
+   "debtTotal": 29200,
+   "debtPayments": 780,
+   "debtFreeMonths": 54,
+   "debtInterest": 3537,
+   "monthsToFi": 294
+  },
+  "Me": {
+   "netWorth": 8300,
+   "liquidNetWorth": 1800,
+   "fiNumber": 1080000,
+   "surplus": 1200,
+   "savingsRate": 0.25,
+   "debtTotal": 29200,
+   "debtPayments": 780,
+   "debtFreeMonths": 54,
+   "debtInterest": 3537,
+   "monthsToFi": 294
+  },
+  "Partner": {
+   "netWorth": null,
+   "liquidNetWorth": null,
+   "fiNumber": null,
+   "surplus": null,
+   "savingsRate": null,
+   "debtTotal": null,
+   "debtPayments": null,
+   "debtFreeMonths": null,
+   "debtInterest": null,
+   "monthsToFi": null
+  },
+  "drill": {
+   "days": 0,
+   "withCard": 0,
+   "out": 10800,
+   "reach": 0,
+   "elsewhere": 0,
+   "accounts": 1
+  },
+  "foo": "3",
+  "little": true
+ }
+}

@@ -156,7 +156,7 @@
    {
     "id": "tom-005",
     "kind": "account",
-    "type": "Savings or HYSA",
+    "type": "Savings",
     "name": "HYSA",
     "amount": null,
     "per": "month",

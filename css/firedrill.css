@@ -46,5 +46,7 @@
 .fd-ask-q { margin: 0; }
 .seg button.likely:not([aria-pressed="true"]) { background: color-mix(in srgb, var(--primary) 14%, var(--card)); outline: 2px dashed var(--primary); outline-offset: -5px; }
 .fd-big-two { font-size: var(--fs-body); line-height: 1.5; }
-.fd-two { display: inline; }
-.fd-two .math { font-size: inherit; }
+.fd-two { display: flex; flex-direction: column; gap: 2px; }
+.fd-two .math { font-size: inherit; text-align: left; }
+/* Batch 55 (QUESTIONS 402): every tile shows its two readings as two equal lines, neither one big. */
+.fd-line { display: block; font-weight: 600; }

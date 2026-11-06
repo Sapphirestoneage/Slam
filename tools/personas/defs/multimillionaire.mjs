@@ -18,7 +18,7 @@ export default {
     { kind: 'income', type: 'Partner job', name: "Lee's part-time work", owner: 'Partner', amount: 2500, per: 'month', values: { basis: 'Take-home', payFrequency: '2 weeks', incomeType: 'W-2' } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in (tuition, parents and giving included)', amount: 14000, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Checking', name: 'Joint checking', owner: 'Joint', values: { group: 'cash', balance: 60000 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Joint HYSA', owner: 'Joint', values: { group: 'cash', balance: 140000 } },
+    { kind: 'account', type: 'Savings', name: 'Joint HYSA', owner: 'Joint', values: { group: 'cash', balance: 140000 } },
     { kind: 'account', type: '401(k)', name: "Robin's 401(k)", owner: 'Me', values: { group: 'investment', balance: 1500000 } },
     { kind: 'account', type: '401(k)', name: "Lee's 401(k)", owner: 'Partner', values: { group: 'investment', balance: 600000 } },
     { kind: 'account', type: 'Roth IRA', name: "Robin's Roth IRA (backdoor)", owner: 'Me', values: { group: 'investment', balance: 200000, contribution: 8600, contributionPer: 'Year' } },

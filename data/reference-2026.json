@@ -436,7 +436,8 @@
     ],
     "cashTypes": [
       "Checking",
-      "Savings or HYSA",
+      "Savings",
+      "High-yield savings (often online)",
       "Money market",
       "CD",
       "Cash on hand",
@@ -1451,7 +1452,7 @@
       {"terms": ["doordash", "door dash"], "label": "DoorDash", "go": ["income[Platform]{DoorDash}.platform", "bill{Dining out and takeout|Takeout and delivery|Delivery}.amount", "cat:Food"], "add": "bill", "why": "batch 35: a DoorDash Platform row when the client delivers; else the takeout on Budget (most clients order)"},
       {"terms": ["platform", "platforms", "platform income", "creator income", "content creator", "fan site", "gig app", "marketplace"], "label": "Platform income", "go": ["income*[Platform].platform", "add:income@#/cash-flow/income"], "add": "income:Platform", "why": "batch 35: OnlyFans, Fansly, Patreon, Etsy, Uber, DoorDash and Upwork are Platform income rows"},
       {"terms": ["payout", "payouts", "payout hold", "payout schedule", "pending balance", "payout date"], "label": "Payout hold (a Platform row)", "go": ["income*[Platform].holdDays>holdDays:n", "add:income@#/cash-flow/income"], "add": "none", "why": "batch 35: the days a platform holds a payout before it lands (the calendar lands it after), on the Platform row"},
-      {"terms": ["taxes set aside", "tax set aside", "set aside for taxes", "tax money", "tax account", "tax bucket", "money for taxes"], "label": "Set aside for taxes (Purpose: Taxes)", "go": ["account{Taxes}.balance", "add:asset@#/net-worth/assets"], "add": "account:Savings or HYSA", "why": "batch 27 and 35: quarterly tax money is an account with Purpose: Taxes on Assets, kept out of the Cash total and the layers"},
+      {"terms": ["taxes set aside", "tax set aside", "set aside for taxes", "tax money", "tax account", "tax bucket", "money for taxes"], "label": "Set aside for taxes (Purpose: Taxes)", "go": ["account{Taxes}.balance", "add:asset@#/net-worth/assets"], "add": "account:Savings", "why": "batch 27 and 35: quarterly tax money is an account with Purpose: Taxes on Assets, kept out of the Cash total and the layers"},
       {
         "terms": [
           "401k",
@@ -1550,10 +1551,10 @@
         ],
         "label": "Savings balance",
         "go": [
-          "account[Savings or HYSA|Money market|CD].balance",
+          "account[Savings|High-yield savings (often online)|Money market|CD].balance",
           "add:asset@#/net-worth/assets"
         ],
-        "add": "account:Savings or HYSA",
+        "add": "account:Savings",
         "why": "savings is a cash account on Assets"
       },
       {
@@ -1587,7 +1588,7 @@
         ],
         "label": "Emergency fund savings",
         "go": [
-          "account[Savings or HYSA|Money market|CD].balance",
+          "account[Savings|High-yield savings (often online)|Money market|CD].balance",
           "account[Checking].balance",
           "add:asset@#/net-worth/assets"
         ],
@@ -2092,6 +2093,30 @@
         ],
         "add": "none",
         "why": "Net worth › Fire drill: if an account froze today, what can still be reached, the order to pay in, the backup plan and stranded money (batch 44, Phase 4)"
+      },
+      {
+        "terms": [
+          "money control",
+          "control map",
+          "who can see my account",
+          "who can move my money",
+          "joint account",
+          "authorized user",
+          "cosigner",
+          "cosigned",
+          "my own account",
+          "account in my name",
+          "partner controls money",
+          "financial control",
+          "who has the login",
+          "statements go to"
+        ],
+        "label": "Money control",
+        "go": [
+          "focus:moneycontrol@#/net-worth/money-control"
+        ],
+        "add": "none",
+        "why": "Net worth › Money control: who can see, move and stop each account, card, loan and paycheck; private by design (batch 55, Phase 4 preview)"
       },
       {
         "terms": [

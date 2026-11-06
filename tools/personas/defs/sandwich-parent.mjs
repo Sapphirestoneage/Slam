@@ -20,7 +20,7 @@ export default {
     { kind: 'bill', name: "Rosa's prescriptions", amount: 120, values: { category: 'Prescriptions', draftt: 'Therapy', amountType: 'Variable' } },
     { kind: 'bill', name: 'To Rosa', amount: 300, values: { category: 'Family support', draftt: 'Other', amountType: 'Fixed' } },
     { kind: 'account', type: 'Checking', name: 'Checking', values: { group: 'cash', balance: 2500 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Savings', values: { group: 'cash', balance: 5000 } },
+    { kind: 'account', type: 'Savings', name: 'Savings', values: { group: 'cash', balance: 5000 } },
     { kind: 'debt', type: 'Credit card', name: 'Card', values: { balance: 3000, apr: 0.22, payment: 100, payChoice: 'Custom' } },
   ],
   expected: {

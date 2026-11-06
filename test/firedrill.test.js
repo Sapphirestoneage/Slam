@@ -76,11 +76,11 @@ test('banks: the same institution, or what the coach said; the everyday account 
   assert.deepEqual(sameBankOf({ id: 'a', bank: null }, { id: 'b', bank: null }), { same: false, known: false });
   assert.deepEqual(sameBankOf({ id: 'a' }, { id: 'b' }, { 'b:a': true }), { same: true, known: true, from: 'said' });
   // QUESTIONS 367: a bank account with no bank set counts as the same bank until answered; a payment app is never a bank's.
-  assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking' }, { id: 'b', type: 'Savings or HYSA' }), { same: true, known: false, assumed: true });
-  assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking' }, { id: 'b', type: 'Savings or HYSA' }, { 'a:b': false }), { same: false, known: true, from: 'said' });
+  assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking' }, { id: 'b', type: 'Savings' }), { same: true, known: false, assumed: true });
+  assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking' }, { id: 'b', type: 'Savings' }, { 'a:b': false }), { same: false, known: true, from: 'said' });
   assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking' }, { id: 'b', type: 'Payment app' }), { same: false, known: true, from: 'app' });
-  assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking', bank: 'x' }, { id: 'b', type: 'Savings or HYSA', bank: 'y' }), { same: false, known: true, from: 'institutions' });
-  const accts = [{ id: 's', type: 'Savings or HYSA' }, { id: 'p', type: 'Checking', owner: 'Partner' }, { id: 'j', type: 'Checking', owner: 'Joint' }];
+  assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking', bank: 'x' }, { id: 'b', type: 'Savings', bank: 'y' }), { same: false, known: true, from: 'institutions' });
+  const accts = [{ id: 's', type: 'Savings' }, { id: 'p', type: 'Checking', owner: 'Partner' }, { id: 'j', type: 'Checking', owner: 'Joint' }];
   assert.equal(mainAccount(accts, 'Partner').id, 'p');
   assert.equal(mainAccount(accts).id, 'j');
   assert.equal(drawsFromOf({ paidWith: 'savings' }, accts).id, 's');
@@ -92,7 +92,7 @@ test('a name that sounds like an online bank starts on Another bank, and still c
   assert.match(ref.fireDrill.onlineBanks.source, /2026/);
   assert.deepEqual(onlineWordsOf({ name: 'HYSA' }, words), ['hysa']);
   assert.deepEqual(onlineWordsOf({ name: 'Savings', bankName: 'Ally Bank' }, words), ['ally']);
-  assert.deepEqual(onlineWordsOf({ name: 'Savings or HYSA' }, []), []);
+  assert.deepEqual(onlineWordsOf({ name: 'Savings' }, []), []);
   assert.deepEqual(onlineWordsOf({ name: 'Tallyho savings' }, words), []); // a word, not a piece of one
   const chk = { id: 'a', name: 'Checking' };
   assert.equal(likelyOtherOf(chk, { id: 'b', name: 'Savings' }, words, generic), false); // most keep savings where checking is (QUESTIONS 367)
@@ -119,7 +119,7 @@ test('a platform holds back the net a day times the hold days', () => {
 test('picking another account, and saying it is at another bank, moves the drill', () => {
   const path = join(OUT_DIR, 'maya.json');
   const doc = importFile(readFileSync(path, 'utf8'));
-  const savings = doc.records.find(r => r.kind === 'account' && r.type === 'Savings or HYSA');
+  const savings = doc.records.find(r => r.kind === 'account' && r.type === 'Savings');
   const checking = doc.records.find(r => r.kind === 'account' && r.type === 'Checking');
   // QUESTIONS 367: no bank set on either, so they count as one bank. Checking froze: $1,200 + $4,000 + $7,200 of pay
   // out of reach, nothing to reach, 0 days.

@@ -365,7 +365,7 @@ export function assetList(ref) {
     picker: ctx => {
       const g = ctx.gates();
       const ok = t => { const k = recordFor(t, ref); const a = k.kind === 'asset' ? 'real' : k.values.group === 'investment' ? 'investments' : 'cash'; return g.areas[a] !== false && (t !== 'HSA' || g.hsa); };
-      return { top: ['Checking', 'Savings or HYSA', '401(k)', 'Roth IRA', 'Car', 'Home'].filter(ok).slice(0, 4),
+      return { top: ['Checking', 'Savings', '401(k)', 'Roth IRA', 'Car', 'Home'].filter(ok).slice(0, 4),
         other: [...ref.lists.cashTypes, ...ref.lists.investmentTypes, ...REAL_TYPES].filter(ok) };
     },
     kindOf: type => (type ? recordFor(type, ref).kind : 'account'),

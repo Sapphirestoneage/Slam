@@ -15,7 +15,7 @@ export default {
     { kind: 'income', type: 'Rental', name: 'Rental, net of its loan and costs', amount: 400, per: 'month', values: { incomeType: 'Rental' } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 6500, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Checking', name: 'Checking', values: { group: 'cash', balance: 8000 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'HYSA', values: { group: 'cash', balance: 30000, purpose: 'Emergency' } },
+    { kind: 'account', type: 'Savings', name: 'HYSA', values: { group: 'cash', balance: 30000, purpose: 'Emergency' } },
     { kind: 'account', type: '401(k)', name: '401(k)', values: { group: 'investment', balance: 240000, taxType: 'Pretax' } },
     { kind: 'account', type: 'Roth IRA', name: 'Roth IRA (backdoor)', values: { group: 'investment', balance: 55000, contribution: 7500, contributionPer: 'Year', rothBasis: 38000 } },
     { kind: 'account', type: 'HSA', name: 'HSA', values: { group: 'investment', balance: 25000, hsaStyle: 'Self-directed' } },

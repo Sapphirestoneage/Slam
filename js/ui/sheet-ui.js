@@ -4,6 +4,7 @@
 import { h, icon } from './dom.js';
 import { button, checkbox, toast, toggle } from './staples.js';
 import { isMarked, sharedBackup } from '../privacy.js';
+import { CONTROL_KEYS } from '../math/control.js';
 import { saveFile, saveWords } from './save-file.js';
 import { buildWorkbook } from '../sheet/workbook.js';
 import { workbookBuffer, readWorkbook } from '../sheet/excel.js';
@@ -24,12 +25,13 @@ export const WORDS = {
   choice: 'What the files hold',
   full: 'Everything',
   shared: 'Without private rows',
-  sharedTip: 'Rows marked Me and my coach or Coach only become neutral lines (Other income, Other spending) with their notes, platform and account details left out; every total is the same. A copy with an id of its own: it never writes over this client',
+  sharedTip: 'Rows marked Me and my coach or Coach only become neutral lines (Other income, Other spending) with their notes, platform and account details left out; every total is the same. The money-control map is left out. A copy with an id of its own: it never writes over this client',
 };
 export const UI = { coach: false, shared: false };
 // The one choice for the backup and the spreadsheet (Coach tools › Data, and beside the spreadsheet button elsewhere).
 export function exportChoice(app) {
-  if (!app.hasClient || !app.store?.doc?.records?.some(r => isMarked(r) || r.privateNote)) return null; // nothing to leave out
+  const d = app.store?.doc;
+  if (!app.hasClient || !(d?.records?.some(r => isMarked(r) || r.privateNote || CONTROL_KEYS.some(k => r.values?.[k] != null)) || d?.program?.control)) return null; // nothing to leave out (batch 55: the money-control map is left out too)
   return h('div.row-line.export-choice', { style: { gap: '8px' } }, h('span.label.has-tip', { title: WORDS.sharedTip }, WORDS.choice),
     toggle([[false, WORDS.full], [true, WORDS.shared]], UI.shared, v => { UI.shared = v; }, { label: WORDS.choice }));
 }

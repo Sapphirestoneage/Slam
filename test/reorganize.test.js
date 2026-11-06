@@ -92,7 +92,7 @@ test('after-tax contributions are savings; a 401(k) is before-tax and stays on I
     { id: 'r', type: 'Roth IRA', values: { group: 'investment', contribution: 6000, contributionPer: 'Year' } },
     { id: 'b', type: 'Brokerage', values: { group: 'investment', contribution: 100, contributionPer: 'Paycheck' } },
     { id: 'k', type: '401(k)', values: { group: 'investment', contribution: 300, contributionPer: 'Paycheck' } },
-    { id: 's', type: 'Savings or HYSA', values: { group: 'cash', contribution: 50 } },
+    { id: 's', type: 'Savings', values: { group: 'cash', contribution: 50 } },
   ];
   const c = afterTaxContributions(accts, { payFrequency: '2 weeks' });
   assert.deepEqual(c.parts.map(p => p.id), ['r', 'b']);
@@ -153,7 +153,7 @@ test('Free after savings: savings goals and sinking funds come out of free to sp
   const s = new Store(newHousehold({ name: 'Synthetic', now: '2026-11-01T09:00:00.000Z' }));
   s.add('income', { name: 'Job', amount: 2000, per: 'paycheck', values: { payFrequency: 'twice a month', paydays: [7, 22] } }, { type: 'Job' });
   s.add('bill', { name: 'Rent', amount: 1500, values: { draftt: 'Accommodation', amountType: 'Fixed', dueDay: 1 } });
-  s.add('account', { name: 'Savings', values: { group: 'cash', balance: 1000, tags: [{ name: 'Trip', target: 2200, dollars: 1000, date: '2027-11' }] } }, { type: 'Savings or HYSA' });
+  s.add('account', { name: 'Savings', values: { group: 'cash', balance: 1000, tags: [{ name: 'Trip', target: 2200, dollars: 1000, date: '2027-11' }] } }, { type: 'Savings' });
   const save = setAsideOf(s.doc, ref, now);
   assert.equal(Math.round(save.goals), 100, '$1,200 left over 12 months');
   const d = paydayOf(s.doc, ref, now);

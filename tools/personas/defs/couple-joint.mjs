@@ -17,7 +17,7 @@ export default {
     { kind: 'income', type: 'Job', name: "Priya's salary", owner: 'Me', amount: 7200, per: 'month', values: { basis: 'Both', gross: 120000, payFrequency: '2 weeks', incomeType: 'W-2', contributionPct: 0.06, hasMatch: 'Yes', matchPct: 1, matchCapPct: 0.04 } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 6100, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Checking', name: 'Joint checking', owner: 'Joint', values: { group: 'cash', balance: 6000 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'Joint HYSA', owner: 'Joint', values: { group: 'cash', balance: 15000, purpose: 'Emergency' } },
+    { kind: 'account', type: 'Savings', name: 'Joint HYSA', owner: 'Joint', values: { group: 'cash', balance: 15000, purpose: 'Emergency' } },
     { kind: 'account', type: '401(k)', name: "Priya's 401(k)", owner: 'Me', values: { group: 'investment', balance: 85000 } },
     { kind: 'account', type: 'Roth IRA', name: "Dev's Roth IRA", owner: 'Partner', values: { group: 'investment', balance: 20000 } },
     { kind: 'account', type: '529', name: "Baby's 529", owner: 'Joint', values: { group: 'investment', balance: 8000, contribution: 200, contributionPer: 'Month', purpose: 'Goal' } },

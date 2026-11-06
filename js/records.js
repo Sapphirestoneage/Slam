@@ -390,6 +390,9 @@ export function migrate(doc) {
   for (const k of ['profile', 'assumptions', 'settings', 'client', 'spending', 'session', 'program', 'scorecard']) doc[k] ??= {};
   moveFieldIds(doc); // field IDs renumbered when fields.json was rebuilt from the spec (js/fields-map.js)
   migrateInstitutions(doc); // batch 6: typed institution names become rows on the Institutions list (deduped), pointed at by id
+  // Batch 55 (QUESTIONS 400): the account type "Savings or HYSA" split into Savings and High-yield savings (often
+  // online). Every older row becomes Savings, so no number moves; a coach picks the second type by a tap.
+  for (const r of doc.records) if (r.kind === 'account' && r.type === 'Savings or HYSA') r.type = 'Savings';
   // Batch 5 (Nov 6): "Splitting shared bills with N" (people besides you) became "Split N ways" (you included), so N + 1.
   if (doc.profile.splitWith != null && doc.profile.splitWays == null) doc.profile.splitWays = doc.profile.splitWith + 1;
   delete doc.profile.splitWith;

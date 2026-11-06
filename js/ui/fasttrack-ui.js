@@ -84,7 +84,7 @@ export function startFastTrack(app, ctx, { then = null, at = null } = {}) { // t
       labelled('Where is it from?', toggle([['Gut', 'A gut guess'], ['Statements', 'Statements or an app']], a.gutFrom ?? 'Gut', v => set({ gutFrom: v }), { label: 'Where the spending number is from' }))) },
     { title: 'Cash and investments', help: 'Rough is fine. Blank if they do not know; 0 if there is none. Investments: every retirement and brokerage account together; split it out later.', body: () => h('div.ft-grid', {},
       labelled('Checking', big(a.checking, v => set({ checking: v }), 'Add balance', 'ft:chk')),
-      labelled('Savings or HYSA', big(a.savings, v => set({ savings: v }), 'Add balance', 'ft:sav')),
+      labelled('Savings', big(a.savings, v => set({ savings: v }), 'Add balance', 'ft:sav')),
       labelled('Invested, all accounts', big(a.invested, v => set({ invested: v }), 'Add total', 'ft:inv')),
       a.investedRows > 1 ? h('span.muted.small', {}, `Already listed one by one (${a.investedRows}); Fast Track leaves them as they are.`) : null) },
     { title: 'Home and car', help: 'What it is worth today, and what is still owed.', skip: () => !homeAsk.housing && !homeAsk.car && a.housing !== 'Own' && a.hasCar !== true, body: () => h('div.ft-grid', {},

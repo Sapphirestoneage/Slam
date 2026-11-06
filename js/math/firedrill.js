@@ -39,7 +39,8 @@ const DAY = 86400000;
 const isoOf = t => new Date(t).toISOString().slice(0, 10);
 const round2 = x => Math.round(x * 100) / 100;
 const sum = (list, f = x => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
-export const BANK_TYPES = ['Checking', 'Savings or HYSA', 'Money market', 'CD', 'Payment app']; // where a bank or an app holds the money (Cash on hand is in hand)
+const HYSA = 'High-yield savings (often online)'; // QUESTIONS 400: its type reads like an online bank's name (SAVINGS_TYPES, js/registry/fields.js)
+export const BANK_TYPES = ['Checking', 'Savings', HYSA, 'Money market', 'CD', 'Payment app']; // where a bank or an app holds the money (Cash on hand is in hand)
 export const WORKPLACE = ['401(k)', '403(b)', '457', 'TSP'];
 const MUST = ['housing', 'utilities', 'food', 'transport', 'health', 'minimums'];
 
@@ -91,10 +92,11 @@ const isApp = a => a?.type === 'Payment app';
 export const sameBankAcct = (a, b, said = {}) => (a && b && a.id !== b.id && (isApp(a) || isApp(b)) ? { same: false, known: true, from: 'app' } : sameBankOf(a, b, said, { assume: true }));
 
 // QUESTIONS 388: does a row's name (or its bank's name) suggest an online bank? words: ref.fireDrill.onlineBanks.words.
-// The type "Savings or HYSA" is every savings account's type, so the type alone does not count.
+// QUESTIONS 400: the type "High-yield savings (often online)" counts like a name (its words are generic: they name no
+// bank); plain Savings does not, as most people keep savings where checking is (QUESTIONS 367).
 const esc = w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 export function onlineWordsOf(row, words = []) {
-  const text = [row?.name, row?.bankName].filter(Boolean).join(' ');
+  const text = [row?.name, row?.bankName, row?.type === HYSA ? HYSA : null].filter(Boolean).join(' ');
   return words.filter(w => new RegExp(`(^|[^a-z0-9])${esc(w)}($|[^a-z0-9])`, 'i').test(text)).map(w => w.toLowerCase());
 }
 // Likely another bank: either row looks like an online bank, unless both name the same one (Ally checking, Ally savings).

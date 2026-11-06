@@ -12,6 +12,7 @@ import { applyFastTrack, fastTrackAnswers, FT_DEBTS, firstWord } from './fasttra
 import { setHouseholdMode } from './couples.js';
 import { syncCount, LOAN_FOR } from './gates.js';
 import { LATER } from './homework.js';
+import { SAVINGS_TYPES } from './registry/fields.js';
 
 const blank = v => v === null || v === undefined || String(v).trim() === '';
 export const norm = s => String(s ?? '').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -244,7 +245,7 @@ export function applyIntake(store, plan, { ref, metrics = null, now = new Date()
         takeHome: () => [one(r => r.kind === 'income') ?? store.add('income', { name: 'Take-home pay', values: { basis: 'Take-home' } }, { type: 'Job' }), 'amount'],
         gut: () => [one(r => r.kind === 'spending' && r.type === 'All in') ?? store.add('spending', { name: 'Monthly spending, all in', values: { pass: 'Gut' } }, { type: 'All in' }), 'amount'],
         checking: () => [one(r => r.kind === 'account' && r.type === 'Checking') ?? store.add('account', { name: 'Checking', values: { group: 'cash' } }, { type: 'Checking' }), 'balance'],
-        savings: () => [one(r => r.kind === 'account' && r.type === 'Savings or HYSA') ?? store.add('account', { name: 'Savings', values: { group: 'cash' } }, { type: 'Savings or HYSA' }), 'balance'],
+        savings: () => [one(r => r.kind === 'account' && SAVINGS_TYPES.includes(r.type)) ?? store.add('account', { name: 'Savings', values: { group: 'cash' } }, { type: 'Savings' }), 'balance'],
         invested: () => [one(r => r.kind === 'account' && r.values.group === 'investment') ?? store.add('account', { name: 'Investments (all accounts)', values: { group: 'investment' } }, { type: 'All investments' }), 'balance'],
         homeValue: () => [asset('Home'), 'value'], carValue: () => [asset('Car'), 'value'],
         mortgageBalance: () => [loan('Home'), 'balance'], mortgagePayment: () => [loan('Home'), 'payment'],

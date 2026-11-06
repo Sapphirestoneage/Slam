@@ -11,6 +11,7 @@ import { AREAS, sheetFields } from './registry/fields.js';
 import { ASSUMPTIONS } from './registry/assumptions.js';
 import { DATA_TAB, OLD_DATA_TAB, STATUS_WORDS, toCell, partOf, rowsForArea, formulaCols, colLetter } from './sheet/workbook.js';
 import { fingerprint, FORMAT_VERSION } from './sheet/format.js';
+const OLD_TYPES = { 'Savings or HYSA': 'Savings' };
 
 const STATUS_BACK = Object.fromEntries(Object.entries(STATUS_WORDS).map(([k, v]) => [v.toLowerCase(), k]));
 const getPath = (o, path) => path.split('.').reduce((v, k) => (v == null ? undefined : v[k]), o);
@@ -160,7 +161,8 @@ export function compare(grid, doc, { asNew = false, ref = null } = {}) {
       const filled = cols.filter(({ i }) => !isBlankCell(row[i]));
       if (!rawId && !filled.length) continue; // a blank row (Kind and In the math are filled in for you)
       const nameCell = cols.find(x => x.f.key === 'name');
-      const typeWord = typeCol >= 0 && !isBlankCell(row[typeCol]) ? String(row[typeCol]).trim() : null;
+      const typed = typeCol >= 0 && !isBlankCell(row[typeCol]) ? String(row[typeCol]).trim() : null;
+      const typeWord = OLD_TYPES[typed] ?? typed; // batch 55 (QUESTIONS 400): an older workbook's Savings or HYSA reads as Savings, as js/records.js migrates it
       const rowName = (nameCell && !isBlankCell(row[nameCell.i]) ? String(row[nameCell.i]) : null) ?? typeWord ?? `row ${ri + 1}`;
       typedOver(ri, rowName);
       if (id) {

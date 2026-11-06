@@ -11,7 +11,7 @@ export default {
     { kind: 'income', type: 'Job', name: 'Salary', amount: 6800, per: 'month', values: { basis: 'Both', gross: 140000, payFrequency: '2 weeks', incomeType: 'W-2', contributionPct: 0.08, hasMatch: 'Yes', matchPct: 0.5, matchCapPct: 0.06 } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 4300, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Checking', name: 'Checking', values: { group: 'cash', balance: 4000 } },
-    { kind: 'account', type: 'Savings or HYSA', name: 'HYSA', values: { group: 'cash', balance: 18000 } },
+    { kind: 'account', type: 'Savings', name: 'HYSA', values: { group: 'cash', balance: 18000 } },
     { kind: 'account', type: 'Roth IRA', name: 'Roth IRA', values: { group: 'investment', balance: 28000 } },
     { kind: 'account', type: '401(k)', name: '401(k)', values: { group: 'investment', balance: 62000 } },
     { kind: 'coverage', type: 'Health', name: 'Health (covers 70% after the deductible)', amount: 150, per: 'month', values: { have: 'Have it', deductible: 2500, paidFrom: 'Paycheck' } },
