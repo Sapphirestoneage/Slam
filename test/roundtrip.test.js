@@ -252,7 +252,7 @@ test('a copy made Without private rows comes back cleanly: no private row is rea
   assert.equal(store.get(plain.id).values.balance, 4321);
 });
 
-test('a file of format 46 (a tab per area) still comes back by its old tabs, with a clear note', () => {
+test('a file of format 47 (a tab per area) still comes back by its old tabs, with a clear note', () => {
   // The old layout as those files have it: the header on the first row, the rows under it, the Profile on row 2.
   const store = new Store(HOUSEHOLDS.find(([l]) => l === 'demo')[1](), { now: () => NOW.toISOString() });
   const plan = buildWorkbook(store.doc, ref, { now: NOW });
@@ -261,7 +261,7 @@ test('a file of format 46 (a tab per area) still comes back by its old tabs, wit
   const old = {};
   Object.defineProperty(old, '_formulas', { value: {}, enumerable: false });
   old._meta = grid._meta.map(r => [...r]);
-  old._meta.find(r => r[0] === 'Export format version')[1] = 46;
+  old._meta.find(r => r[0] === 'Export format version')[1] = 47;
   for (const area of AREAS.filter(a => a.source !== 'doc')) {
     const t = where.tables[area.id];
     old[area.tab] = [t.head.map((h, i) => (i === 0 ? 'SLAM id (leave as is)' : h)), ...t.data.map(ri => grid[t.tab][ri]).filter(r => r[0] && !String(r[0]).startsWith('#')).map(r => [...r])];

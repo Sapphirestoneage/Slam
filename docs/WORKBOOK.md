@@ -114,7 +114,7 @@ them, each section with the app's own title.
 | 3 | Money out | Cash flow › Budget, Calendar, Month end, Plan › Next 12 months | Where this stands (spending, the gut number, the categories, gut accuracy), the gut number first, then a band per category in the app's order (Accommodation, Food, Transportation, Debt, Health and self-care, Taxes, Retirement, Bills and subscriptions, Other) with its lines, then Irregular and yearly costs; Settings for this budget; more about money out (sinking funds, bonus months, holidays); Calendar entries and wins; Month end (a band per month) |
 | 4 | Own and owe | Net worth › Assets, Debt, Credit cards, Protection, Fire drill, Report › Lender's view | Where this stands (net worth, liquid, cash, invested, runway), Assets (Cash, Investments, Home or car), Order to pay off debt, Debt (Credit cards, Loans, Other), what you owe comes to (utilization, debt-to-income), Your credit, what your cards give you, Protection, Cash layers, Income gaps, Backups, Institutions, the bank fire drill, what a lender sees |
 | 5 | The plan | Home, Plan › FOO, Scorecard, Current vs Proposed | Where this stands (surplus, savings rate, the FOO step, your next 3 moves), where each dollar goes (take-home to surplus, and the DRAFTT shares), Extra to debt, Giving, launch and the job, the FOO steps, what the freed money does, the Scorecard, Current vs Proposed |
-| 6 | The future | Plan › Goals, Timeline, Debt payoff, Transitions | Where this stands (months to FI and its range, months to debt free and its range), FI date and assumptions, the FI numbers, Goals (milestones and dated events), big deals and the ladder, year by year to FI, debt free and each debt month by month, Life Transitions |
+| 6 | The future | Plan › Goals, Timeline, Debt payoff, Transitions | Where this stands (months to FI and its range, months to debt free and its range), FI date and assumptions, Social Security (and the year-by-year plan's results), the FI numbers, Goals (milestones and dated events), big deals and the ladder, year by year to FI, debt free and each debt month by month, Life Transitions |
 | 7 | Statements | Report › Statements | The three statements and the tie-out (nothing to type) |
 | 8 | One-pager | Report › One-pager, Overview | The metrics, the ranges, your next 3 moves, the program and the picture (nothing to type) |
 | | Assumptions, Math, Captured | (the engine room, at the end) | Every rate and limit (its own tab, as before); every formula with its Check; what is kept for a later Wrapped |
@@ -175,7 +175,7 @@ line under its month. A row deleted in the file is offered for deletion (No by d
 a shift, hours, tips, fee and tip-out are formulas over them, written night by night (as js/math/earnings.js adds them
 up), so a changed night, a new night and a deleted night (No by default) come back, and the row is added up again. Typing over a grey cell is
 listed and never saved. A copy made Without private rows comes back too: its private rows (neutral names there) are
-never read, renamed or deleted, and the review never names them. A file of format 46 or before (a tab per area: Debt,
+never read, renamed or deleted, and the review never names them. A file of format 47 or before (a tab per area: Debt,
 Spending lines ...) is read by its old tab names and headers, with a note saying so.
 
 Checked by: `node tools/workbook-check.mjs` (every Check on every tab, every household), `node tools/sheets-check.mjs`

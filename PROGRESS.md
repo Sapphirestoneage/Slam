@@ -1538,7 +1538,7 @@ tool ("sheet for me, app for clients"), in Google Sheets, with tabs that follow 
    then the boxes in the order a coach asks them, each section with the app's title: forms for About you, Taxes and the
    settings, tables with a bold band per section (Budget by category, Assets by Cash, Investments, Home or car, Debt by
    Credit cards, Loans, Other, Income by person and type, months on Month end). Results are live formulas off the Math
-   tab with the app's value and a Check. History, Lists, Data and Money control have no tab, each with why. Format 47.
+   tab with the app's value and a Check. History, Lists, Data and Money control have no tab, each with why. Format 48.
 2. Google Sheets first: tools/sheets-check.mjs and test/sheets.test.js check every household's formulas against Google
    Sheets' function list (data/google-sheets-functions.json, read off support.google.com), for ranges used for one value
    (no implicit intersection in Sheets), Excel-only forms, range names (the True FI rule's range is now FiTrueTax) and

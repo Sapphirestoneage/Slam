@@ -15,14 +15,14 @@ import { REPORTS } from '../registry/reports.js';
 import { sheetContext } from './context.js';
 import { FORMAT_VERSION, APP_VERSION, shapeOf, fingerprint } from './format.js';
 
-export const BLANK_ROWS = 20; // the old layout's blank rows (format 46 and before); each section now ends with its own
+export const BLANK_ROWS = 20; // the old layout's blank rows (format 47 and before); each section now ends with its own
 export const LIST_TAB = '_lists'; // hidden: the long dropdown lists (Excel keeps a list typed into a rule under 255 characters)
 export const REPO = 'https://github.com/sapphirestoneage/slam';
 export const DATA_TAB = '_meta';
 export const OLD_DATA_TAB = 'SLAM data'; // the first files made (Nov 3 2026) kept it here
 export const COACH_TAB = 'Coach notes';
 // The stored statuses as the sheet shows them (one sureness system: Not sure is a Guess).
-// Batch 59: the words of the app's status picker (Will get it was "I'll find it later" in files of format 46 and before).
+// Batch 59: the words of the app's status picker (Will get it was "I'll find it later" in files of format 47 and before).
 export const STATUS_WORDS = { 'Know it': 'Know it', Roughly: 'Roughly', 'Not sure': 'Guess', 'Not for me': 'Not for me', 'Will email': 'Will get it', 'Not now': 'Not now', Computed: 'Worked out' };
 export const STATUS_LIST = ['Know it', 'Roughly', 'Guess', 'Will get it', 'Not now', 'Not for me'];
 // What column A of a screen tab says (hidden): the import reads each row by it.

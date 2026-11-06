@@ -100,6 +100,8 @@ export const SCREEN_TABS = [
     blocks: [
       { math: 'Where this stands', rows: ['M53=Months to FI', 'M9R_fiLow=Months to FI, soonest likely', 'M9R_fiHigh=Months to FI, latest likely', 'M34=Months to debt free', 'M34_rangeLow=Debt free, soonest likely', 'M34_rangeHigh=Debt free, latest likely'] },
       { form: 'profile', title: 'FI date and assumptions', fields: [P('settings.dollars')] },
+      { form: 'profile', title: 'Social Security', fields: keys('ss', ['benefit', 'level', 'benefitPartner', 'levelPartner']) },
+      { math: 'Social Security and the year-by-year plan', rows: ['M9J', 'M9J_piaMe', 'M9J_atClaimMe', 'M9J_partner', 'M9P', 'M9P_debtFree', 'M9P_netWorth10', 'M9P_netWorth30', 'M9P_lastsTo'] },
       { math: 'FI number', rows: ['M50=FI number', 'M50_later', 'M51=Lean FI number', 'M52=Barista FI number', 'M54=FI number in today\'s dollars', 'M55=Of the way to FI', 'M53_safer', 'M72=Years to FI from $0 at your savings rate', 'M70', 'M83'] },
       { table: 'goals', title: 'Goals: milestones and dated events' },
       { math: 'These are big deals', rows: ['M56', 'M75', 'M75_next', 'M75_marker'] },
