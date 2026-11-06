@@ -32,9 +32,9 @@ export default {
   },
   // Batch 44: Net worth › Fire drill as of Nov 5 2026 (the 30 days Nov 5 to Dec 4). test/firedrill.test.js.
   fireDrill: {
-    account: 'Checking', outOfReach: 8400, reach: 4000, mustPay: 3685, days: 33, withCard: 33, ready: 0, items: 4,
-    note: 'Paychecks land in checking Nov 6, Nov 20 and Dec 4, $2,400 each: $1,200 + $7,200 = $8,400 out of reach. Savings $4,000 can still be reached (no bank on Institutions, so it counts until the coach taps Same bank). Must-pay: the gut number $3,500 (not including debt) + the card minimum, the larger of $25 and 1% of $6,000 + $6,000 x 25% / 12 = $60 + $125 = $185: $3,685. $4,000 / ($3,685 x 12 / 365 = $121.15 a day) = 33.0, so 33 days. The card has no limit typed, so no room counts (the drill shows an Add limit box).',
-    says: ['$8,400', '$4,000', 'About 33 days', 'room on the card', 'Payroll app or HR portal'],
+    account: 'Checking', outOfReach: 12400, reach: 0, mustPay: 3685, days: 0, withCard: 0, ready: 0, items: 4,
+    note: 'Paychecks land in checking Nov 6, Nov 20 and Dec 4, $2,400 each. Savings has no bank on Institutions, so it counts as at the same bank until the coach taps Another bank (QUESTIONS 367): $1,200 + $4,000 + $7,200 = $12,400 out of reach, $0 to reach, 0 days. Must-pay: the gut number $3,500 (not including debt) + the card minimum, the larger of $25 and 1% of $6,000 + $6,000 x 25% / 12 = $60 + $125 = $185: $3,685, all her spending since the needs are not split out yet (QUESTIONS 366). Tapping Another bank on savings gives $4,000 / ($3,685 x 12 / 365 = $121.15 a day) = 33.0, so 33 days (test/firedrill.test.js). The card has no limit typed, so no room counts (the drill shows an Add limit box).',
+    says: ['$12,400', '0 days', 'counted as the same bank', 'All your spending, since the needs are not split out yet', 'Split it on Budget', 'room on the card', 'Payroll app or HR portal'],
     notSays: ['close accounts tied to adult work'],
   },
   cannot: [],

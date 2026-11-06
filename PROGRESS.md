@@ -1089,3 +1089,34 @@ docs/usability/scorecard-2026-11-06.json: Fire drill appended with "batch": 44, 
 5. Checked: tests 809 pass in both time zones; tools/workbook-check.mjs clean; layout checker 0 failures on Home (new
    client, before and after an age) and every Fast Track step at 1440, 1280 and 390, light and dark (one level
    finding at 390 fixed); the persona run 0 errors, 0 story blockers. QUESTIONS 380 to 387.
+## Batch 48 (Nov 6 2026): the Lender's view and Fire drill small items, and the walk starting with Ask next
+
+QUESTIONS 357, 358, 360, 365 to 368 and 373, as decided.
+
+1. The mortgage rate and the taxes-and-insurance share are per client (QUESTIONS 357, 360), the way materiality is:
+   `assumptions.lenderRate` and `assumptions.lenderTaxIns` (client keys on the Assumptions tab, a blue cell each; blank
+   follows RULES: Freddie Mac's 7.18% and 25%). Taps for the common values (6%, 6.5%, 7%, 7.18% today, 7.5%, 8%; 15%
+   to 35%) and an Other box, on Plan › Goals › More and on the Lender's view, whose mortgage card now says what it used
+   ("At 7.18% over 30 years (this week's rate), 25% of the payment for taxes and insurance (a national share)") with a
+   Change caret under it. Tapping today's rate clears the client's own, so it follows the weekly update. The rate moves
+   the loan size, never the DTI. `lenderTermsOf`, `loanFromPayment(..., { share })` in js/math/lender.js.
+2. One return on file (QUESTIONS 358): the cautious number stays big; one line under it, "Once next year's return is
+   filed at this pace: about $146,000 of home loan" (the creator: ($14,500 + $28,200) / 2 = $21,350 a year counted,
+   $4,703.67 a month, $1,317.03 home payment, at 7.18% and 25%), its working in the hover tip.
+3. Fire drill (M9F): the pay order puts childcare beside getting to work ("Getting to work and childcare": the Kids
+   category moved there), health after them (QUESTIONS 365); the Bill_order table and its source line say so. With only
+   a gut number, the days tile and the must-pay line say "all your spending, since the needs are not split out yet",
+   with Split it on Budget (QUESTIONS 366). A bank account with no bank set counts as at the same bank as the frozen
+   one until someone taps Another bank, marked "counted as the same bank, out of reach" (QUESTIONS 367; a payment app
+   is never a bank's, and cards keep counting their room until Same bank). Maya, the creator and Priya and Dev now read
+   0 days until Another bank is tapped (their defs and test/firedrill.test.js re-worked by hand).
+4. Each workplace plan (401(k), 403(b), 457, TSP) has one tap, From which job: Current job / Old job, on its Assets row
+   and on its Stranded money row (`account.planJob`). Stranded money lists Old job plans, and plans with nothing going in
+   that are not marked Current job (QUESTIONS 368).
+5. Walk me through starts with the Ask next question (QUESTIONS 373): taken when the walk starts, first while it is
+   still open (an answer takes it off), tagged Ask next in the bar with its why, under the same key as that box further
+   down so nothing is asked twice; then the walk as before (js/walk.js `askStopOf`, `walkStops(ctx, { ask })`).
+6. Registered: the two client keys, account.planJob (a column; spec row via spec_link), format 38; Find: mortgage rate
+   lands on the Lender's view. test/batch48.test.js (hand-worked) and test/firedrill.test.js.
+
+docs/usability/scorecard-2026-11-06.json: Lender's view, Fire drill, Goals (More), Assets (workplace plan) and the walk bar appended with "batch": 48, 0 blockers, 0 majors, 3 minors. Questions 388 to 391.

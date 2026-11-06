@@ -44,9 +44,9 @@ export default {
   },
   // Batch 44: Net worth › Fire drill as of Nov 5 2026 (the 30 days Nov 5 to Dec 4). test/firedrill.test.js.
   fireDrill: {
-    account: 'Checking', outOfReach: 7669.24, reach: 6000, mustPay: 3379.75, days: 53, withCard: 53, held: 540.82,
-    note: 'Opens on checking, where the larger take-home lands (the job, $2,383.33 a month). The job pays $1,100 on Nov 6, Nov 20 and Dec 4 ($3,300); OnlyFans pays $2,350 x 12 / 52 = $542.31 each Monday after the 7-day hold: Nov 9, 16, 23 and 30 ($2,169.24). Out of reach: $2,200 + $3,300 + $2,169.24 = $7,669.24. Reachable: the HYSA $6,000. Must-pay: the gut number $3,600 less the $300 card payment in it, plus the card minimum ($29 + $2,900 x 21% / 12 = $79.75): $3,379.75. $6,000 / ($3,379.75 x 12 / 365 = $111.11 a day) = 53.99, so 53 days. Held on OnlyFans at any time: $2,350 x 12 / 365 x 7 = $540.82.',
-    says: ['$7,669', 'About 53 days', 'close accounts tied to adult work', 'OnlyFans: payouts held back', '$541', 'Payout settings on each platform'],
+    account: 'Checking', outOfReach: 13669.24, reach: 0, mustPay: 3379.75, days: 0, withCard: 0, held: 540.82,
+    note: 'Opens on checking, where the larger take-home lands (the job, $2,383.33 a month). The job pays $1,100 on Nov 6, Nov 20 and Dec 4 ($3,300); OnlyFans pays $2,350 x 12 / 52 = $542.31 each Monday after the 7-day hold: Nov 9, 16, 23 and 30 ($2,169.24). The HYSA has no bank set, so it counts as at the same bank until Another bank is tapped (QUESTIONS 367). Out of reach: $2,200 + $6,000 + $3,300 + $2,169.24 = $13,669.24; nothing to reach, 0 days. With Another bank tapped on the HYSA: $6,000 reachable, 53 days (below). Must-pay: the gut number $3,600 less the $300 card payment in it, plus the card minimum ($29 + $2,900 x 21% / 12 = $79.75): $3,379.75. With the HYSA at another bank: $6,000 / ($3,379.75 x 12 / 365 = $111.11 a day) = 53.99, so 53 days. Held on OnlyFans at any time: $2,350 x 12 / 365 x 7 = $540.82.',
+    says: ['$13,669', '0 days', 'counted as the same bank', 'close accounts tied to adult work', 'OnlyFans: payouts held back', '$541', 'Payout settings on each platform'],
   },
   cannot: [
     // Batch 27 cleared: platform payouts (gross, the platform fee, chargebacks a month, the hold and the payout schedule)

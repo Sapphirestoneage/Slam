@@ -1325,7 +1325,7 @@
     "source": "SLAM rule, js/find.js (Eli, Nov 5 2026: \"I do not know where everything is\")",
     "date": "2026-11-05",
     "words": [
-      {"terms": ["lender", "lenders view", "what a lender sees", "lender's eye view", "dti", "debt to income", "qualify for a mortgage", "mortgage qualify", "how much house", "how much house can i afford", "preapproval", "pre approval", "apartment application", "rent application", "income for rent", "3x rent", "40x rent", "proof of income", "income verification", "documented income", "two years of returns"], "label": "What a lender sees", "go": ["focus:lender@#/report/lender"], "add": "none", "why": "batch 42: Report › Lender's view: a mortgage lender, a landlord and a card issuer, each with the one number they read (Phase 4)"},
+      {"terms": ["lender", "lenders view", "what a lender sees", "lender's eye view", "dti", "debt to income", "qualify for a mortgage", "mortgage qualify", "how much house", "how much house can i afford", "preapproval", "pre approval", "apartment application", "rent application", "income for rent", "3x rent", "40x rent", "proof of income", "income verification", "documented income", "two years of returns", "mortgage rate", "interest rate for a mortgage", "property tax and insurance"], "label": "What a lender sees", "go": ["focus:lender@#/report/lender"], "add": "none", "why": "batch 42: Report › Lender's view: a mortgage lender, a landlord and a card issuer, each with the one number they read (Phase 4)"},
       {"terms": ["certainty", "how sure", "how sure is the plan", "certainty meter", "plan certainty"], "label": "Certainty (how sure the plan is)", "go": ["focus:sec:home:picture@#/home/session"], "add": "none", "why": "batch 43: the certainty meter on Home, where the Picture % stood"},
       {"terms": ["ask next", "ask me next", "what to ask next", "next question", "what should i ask"], "label": "Ask next", "go": ["focus:btn:Open the box@#/home/session"], "add": "none", "why": "batch 43: the one question that narrows the plan most, on Home"},
       {"terms": ["true cost", "true cost of debt", "cost of debt", "what my debt costs", "interest in today's dollars", "debt fi", "fi months"], "label": "The true cost of each debt", "go": ["focus:sec:payoff:truecost@#/plan/debt-payoff"], "add": "none", "why": "batch 29: one line per debt on Plan › Debt payoff (interest in today's dollars, the FI months it costs, the rate after tax)"},
@@ -3182,8 +3182,8 @@
     }
   },
   "fireDrill": {
-    "about": "Batch 44 (M9F, js/math/firedrill.js): the bank fire drill. order is the order to pay in when not everything can be paid, first to last; each tier lists the Budget categories, DRAFTT letters, debt types and calendar kinds it holds, and card says whether a credit card can usually pay it (not rent, not another debt).",
-    "source": "CFPB, Your Money, Your Goals: Prioritizing bills (files.consumerfinance.gov/f/documents/cfpb_ymyg_behind-on-bills_print.pdf: stay housed and keep utilities connected, keep the job, then other loans and credit cards) and CFPB, Tools to help when you can't pay your bills (Apr 17 2020: cover food, housing, utilities and phone first); the NFCC counselors' order (keep the roof, the heat, the car you work from and the food before the debts), via the older suite's data/bill_triage.json (Sep 6 2026). Checked Nov 6 2026",
+    "about": "Batch 44 (M9F, js/math/firedrill.js): the bank fire drill. order is the order to pay in when not everything can be paid, first to last (childcare beside getting to work, QUESTIONS 365); each tier lists the Budget categories, DRAFTT letters, debt types and calendar kinds it holds, and card says whether a credit card can usually pay it (not rent, not another debt).",
+    "source": "CFPB, Your Money, Your Goals: Prioritizing bills (files.consumerfinance.gov/f/documents/cfpb_ymyg_behind-on-bills_print.pdf: stay housed and keep utilities connected, keep the job, then other loans and credit cards) and CFPB, Tools to help when you can't pay your bills (Apr 17 2020: cover food, housing, utilities and phone first); the NFCC counselors' order (keep the roof, the heat, the car you work from and the food before the debts), via the older suite's data/bill_triage.json (Sep 6 2026). Childcare sits beside getting to work, ahead of health: both keep the paycheck coming (QUESTIONS 365, Nov 6 2026; the older suite put childcare needed for work with housing). Checked Nov 6 2026",
     "date": "2026-11-06",
     "order": [
       {
@@ -3223,24 +3223,26 @@
       },
       {
         "id": "transport",
-        "label": "Getting to work",
+        "label": "Getting to work and childcare",
         "draftt": [
           "Transportation"
+        ],
+        "categories": [
+          "Kids"
         ],
         "debtTypes": [
           "Car loan"
         ],
         "card": true,
-        "call": "The car lender: ask to move one payment to the end of the loan."
+        "call": "The car lender: ask to move one payment to the end of the loan. The daycare or sitter: ask for a few days; a state child care assistance office (childcare.gov) can help."
       },
       {
         "id": "health",
-        "label": "Health and childcare",
+        "label": "Health",
         "draftt": [
           "Therapy"
         ],
         "categories": [
-          "Kids",
           "Health insurance"
         ],
         "card": true,

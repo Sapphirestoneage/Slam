@@ -40,9 +40,9 @@ export default {
   },
   // Batch 44: Net worth › Fire drill as of Nov 5 2026 (the 30 days Nov 5 to Dec 4). test/firedrill.test.js.
   fireDrill: {
-    account: 'Joint checking', outOfReach: 15969.24, reach: 15000, mustPay: 6100, days: 74, withCard: 74, stranded: 2,
-    note: "Priya's pay lands in joint checking every 2 weeks: $7,200 x 12 / 26 = $3,323.08 on Nov 6, Nov 20 and Dec 4 ($9,969.24). Out of reach: $6,000 + $9,969.24 = $15,969.24. Reachable: the joint HYSA $15,000. Must-pay: the gut number $6,100, which holds the $2,300 mortgage (housing, first in the order); no other debt. $15,000 / ($6,100 x 12 / 365 = $200.55 a day) = 74.8, so 74 days. Priya's 401(k) gets her 6%, so it is not listed as stranded: 2 rows (old jobs' plans, unclaimed property).",
-    says: ['$15,969', '$15,000', 'About 74 days', 'Mortgage payment', 'Housing'],
+    account: 'Joint checking', outOfReach: 30969.24, reach: 0, mustPay: 6100, days: 0, withCard: 0, stranded: 2,
+    note: "Priya's pay lands in joint checking every 2 weeks: $7,200 x 12 / 26 = $3,323.08 on Nov 6, Nov 20 and Dec 4 ($9,969.24). The joint HYSA has no bank set, so it counts as at the same bank until Another bank is tapped (QUESTIONS 367): $6,000 + $15,000 + $9,969.24 = $30,969.24 out of reach, nothing to reach, 0 days. With Another bank tapped: the joint HYSA $15,000 reachable. Must-pay: the gut number $6,100, which holds the $2,300 mortgage (housing, first in the order); no other debt. Then $15,000 / ($6,100 x 12 / 365 = $200.55 a day) = 74.8, so 74 days. Priya's 401(k) gets her 6%, so it is not listed as stranded: 2 rows (old jobs' plans, unclaimed property).",
+    says: ['$30,969', '0 days', 'counted as the same bank', 'Mortgage payment', 'Housing'],
     notSays: ['close accounts tied to adult work'],
   },
   cannot: [

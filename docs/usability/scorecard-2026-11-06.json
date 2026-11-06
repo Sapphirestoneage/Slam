@@ -3524,6 +3524,309 @@
      "reason": "waits for Eli at sign-off; hidden in client view unless Typical at your age is on"
     }
    }
+  },
+  {
+   "screen": "Report › Lender's view",
+   "route": "#/report/lender",
+   "area": "Report",
+   "batch": 48,
+   "tasks": [
+    "Which rate is the loan size at? (one look)",
+    "Change it to 6.5% for this client (one tap)",
+    "What happens once next year's return is filed (one return on file)"
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "Change opens the taps under the card; 6.5% saved and the loan moved from $91,000 to $97,000 for the creator at 1280 and 390, Undo puts it back; tapping today's rate clears the client's own"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "test/batch48.test.js: the loan at 6.5% and 30% ($221,495 on a $2,000 payment), the creator at 7.18% ($90,657) and after next year's return ($145,810), all worked by hand; the DTI does not move with the rate"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one rate per client, the same on Goals › More and here; the line names it"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker (all checks) on this screen at 1440, 1280 and 390, light and dark, Demo and New: no failures; the new parts also scanned open (creator and teacher, six sizes): 0 findings"
+    },
+    "obvious": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "the rate line is small print under the card's numbers; the moves still wrap to five lines at 1280 (as before)"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find: mortgage rate, property tax and insurance land here, beside the rate line"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps for 6% to 8% and 15% to 35%; Other is the only box"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "no verdict words or em dashes; this week's rate and a national share say where the defaults come from"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the rate line and the loan size change on the tap"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "the taps wrap inside the card at 1280 and stack at 390"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "no visible wait"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "answers 'what rate is that at' and 'what if I file next year' in one look; waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Fire drill",
+   "route": "#/net-worth/fire-drill",
+   "area": "Net worth",
+   "batch": 48,
+   "tasks": [
+    "Is the savings reachable? (counted as the same bank until Another bank)",
+    "Split the must-pay out (gut only)",
+    "Mark the 403(b) Current job or Old job",
+    "Read the order with childcare"
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "Another bank, Split it on Budget and Current job / Old job each did what they say for Maya, the creator and the teacher at 1280 and 390; Current job takes the plan off Stranded money with Undo"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "test/firedrill.test.js re-worked by hand: Maya 12,400 out of reach and 0 days, 33 days once Another bank is tapped; the creator 13,669.24; Priya and Dev 30,969.24; the plan rules (Old job listed, Current job not, idle unmarked listed)"
+    },
+    "oneAnswer": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "Must-pay a month still sits beside the spending number; with a gut number it now says it is all the spending, which helps"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker (all checks) on this screen at 1440, 1280 and 390, light and dark, Demo and New: no failures; the new parts also scanned open (creator and teacher, six sizes): 0 findings"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "the assumed bank says 'counted as the same bank, out of reach' on its row; waits for Eli at sign-off"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged: bank closed, old 401k, unclaimed property"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps only"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain; 'Getting to work and childcare', 'Health'; no verdict words"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the three numbers move on each tap; a toast with Undo when a plan leaves the list"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "the plan row's tap goes under its name at 390"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "no visible wait"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "shows the risk by default (0 days until another bank is named), which is the point of the drill (QUESTIONS 367, 388)"
+    }
+   }
+  },
+  {
+   "screen": "Goals (More: mortgage rate)",
+   "route": "#/plan/goals",
+   "area": "Plan",
+   "batch": 48,
+   "tasks": [
+    "Set the client's mortgage rate and taxes-and-insurance share"
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "taps and Other save to the client's assumptions and show on the Lender's view"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "the same numbers the Lender's view reads (one function, lenderTermsOf)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one value per client"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker (all checks) on this screen at 1440, 1280 and 390, light and dark, Demo and New: no failures; the new parts also scanned open (creator and teacher, six sizes): 0 findings"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "label over its taps like the rows above it"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "in the More caret with the other per-client assumptions; its label names the mortgage rate"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "taps, one box"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain; says where the defaults come from"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the tap shows pressed"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "taps wrap at 390"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "no visible wait"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Assets (workplace plan row)",
+   "route": "#/net-worth/assets",
+   "area": "Net worth",
+   "batch": 48,
+   "tasks": [
+    "Say the 403(b) is from an old job"
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "From which job saves on the row and shows on the Fire drill, both ways"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "the field drives only the Stranded money list (test/firedrill.test.js)"
+    },
+    "oneAnswer": {
+     "result": "pass",
+     "reason": "one field, shown in both places"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "layout checker (all checks) on this screen at 1440, 1280 and 390, light and dark, Demo and New: no failures; the new parts also scanned open (creator and teacher, six sizes): 0 findings (the pre-existing Fast Track toast covers on Assets 1440 light New are the same 5 as before)"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "first thing in the row's Details, with a hover tip saying where it shows"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "Find: old 401k lands on the Fire drill, where the same tap sits"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "one tap"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the tap shows pressed"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "1440, 1280, 390"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "no visible wait"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "waits for Eli at sign-off"
+    }
+   }
+  },
+  {
+   "screen": "Walk me through (bar)",
+   "route": "#/home/session",
+   "area": "Home",
+   "batch": 48,
+   "tasks": [
+    "Start the walk on Maya: the first stop is the Ask next question"
+   ],
+   "categories": {
+    "works": {
+     "result": "pass",
+     "reason": "Maya at 1280 and 390: 1 of 12 is 'Ask next: What you spend a month, read off a bank or card app' on Budget, then the walk as before"
+    },
+    "right": {
+     "result": "pass",
+     "reason": "test/batch48.test.js: the first stop is Ask next's top question, then the old order with nothing asked twice; answered, it drops off and the walk does not chase the next one"
+    },
+    "oneAnswer": {
+     "result": "failure",
+     "severity": "minor",
+     "reason": "Walk me through (10) on the button, '1 of 12' in the bar (it was 10 and 11 before: the walk makes Health and Life; now also Ask next) (QUESTIONS 391)"
+    },
+    "looks": {
+     "result": "pass",
+     "reason": "the Ask next tag sits inline in the bar at 1280 and 390"
+    },
+    "obvious": {
+     "result": "pass",
+     "reason": "the tag and the why say why this box comes first"
+    },
+    "findable": {
+     "result": "pass",
+     "reason": "unchanged"
+    },
+    "easy": {
+     "result": "pass",
+     "reason": "one stop more only when it is not already a walk box"
+    },
+    "words": {
+     "result": "pass",
+     "reason": "plain"
+    },
+    "tells": {
+     "result": "pass",
+     "reason": "the bar says why"
+    },
+    "fits": {
+     "result": "pass",
+     "reason": "390 checked"
+    },
+    "fast": {
+     "result": "pass",
+     "reason": "Ask next is worked out once when the walk starts (about 0.2 s)"
+    },
+    "coachable": {
+     "result": "pass",
+     "reason": "the walk now opens with the question that moves the plan most; waits for Eli at sign-off"
+    }
+   }
   }
  ],
  "updated": {
@@ -3598,5 +3901,13 @@
    "minor": 4,
    "allPass": []
   }
+ },
+ "batch48": {
+  "date": "2026-11-06",
+  "screens": 5,
+  "blocker": 0,
+  "major": 0,
+  "minor": 3,
+  "note": "Batch 48 appended its screens (each with \"batch\": 48), scored after its changes; the rows above and the summary are as they were."
  }
 }

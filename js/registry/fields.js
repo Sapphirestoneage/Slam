@@ -276,6 +276,7 @@ export const AREAS = [
       f('contribution', 'Putting in', 'money', { kinds: ['account'] }),
       pick('contributionPer', 'Putting in per', ['Paycheck', 'Year', 'Month'], { kinds: ['account'] }),
       f('salaryPct', '% of salary', 'pct', { kinds: ['account'] }),
+      pick('planJob', 'Workplace plan: from the current job or an old one', ['Current job', 'Old job'], { kinds: ['account'] }), // batch 48 (QUESTIONS 368): Old job lists it under Fire drill › Stranded money
       f('payFrequency', 'Pay frequency', 'choice', { options: FREQS, kinds: ['account'] }),
       pick('rothSplitBy', 'Roth part as', ['Percent', 'Amount'], { kinds: ['account'] }),
       f('rothPct', 'Roth part %', 'pct', { kinds: ['account'] }), f('rothPerPaycheck', 'Roth part a paycheck', 'money', { kinds: ['account'] }),

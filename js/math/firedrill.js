@@ -4,20 +4,21 @@
 // The drill: pick a bank account (by default the one the paycheck lands in). If it froze today, with no notice:
 //   - which paychecks land in it and which bills draw from it in the next RULES.fireDrillDays days (from the calendar,
 //     js/month.js instances, so every date and amount is the one Cash flow › Calendar shows);
-//   - the cash that is out of reach: its balance, any account known to be at the same bank, and the paychecks that
-//     would land there in the window;
+//   - the cash that is out of reach: its balance, any account at the same bank, and the paychecks that would land
+//     there in the window. An account with no bank set counts as at the same bank until someone taps Another bank
+//     (QUESTIONS 367: banks often freeze every account a person has there); a payment app is never a bank's;
 //   - what can still be reached: cash at other banks, cash at home, and the room on a card that is not at that bank
 //     (a card with no limit typed has no room counted). Money set aside for taxes is listed apart and not counted,
 //     as the runway and the layers do;
-//   - how many days that covers the must-pay bills: housing, utilities and phone, food, getting to work, health and
-//     childcare (the DRAFTT needs), and the minimum on every other debt. With only a gut number, the whole gut number
+//   - how many days that covers the must-pay bills: housing, utilities and phone, food, getting to work and
+//     childcare, health (the DRAFTT needs), and the minimum on every other debt. With only a gut number, the whole gut number
 //     counts (the must-pay part is not split out yet). A card cannot pay rent or another debt, so the days with the
 //     card are the fewer of (cash + card room) / every must-pay a day and cash / (housing and minimums) a day;
-//   - the order to pay in when not all can be paid (ref.fireDrill.order: housing, utilities, food, getting to work,
-//     health, then minimums; CFPB and NFCC, js/registry/assumptions.js): every outflow in the window, in that order,
+//   - the order to pay in when not all can be paid (ref.fireDrill.order: housing, utilities, food, getting to work
+//     and childcare, health, then minimums; CFPB and NFCC, js/registry/assumptions.js; childcare QUESTIONS 365): every outflow in the window, in that order,
 //     paid from what can be reached until it runs out (what the card can take goes on it after the cash).
 // Stranded money: what a platform holds back (the net a day x the hold days), payment app balances, workplace plans
-// with nothing going in (likely from an old job), the DOL's Retirement Savings Lost and Found and unclaimed property
+// marked Old job, and those with nothing going in that are not marked Current job (QUESTIONS 368), the DOL's Retirement Savings Lost and Found and unclaimed property
 // (missingmoney.com, run with NAUPA). Each is a row the coach ticks as checked (program.fireDrill.stranded).
 // The backup plan: a second bank at a different institution, a backup card, a direct deposit split, where the payroll
 // change form lives, and (for platform, cash and self-employed work) a month of must-pay money outside the main bank.
@@ -73,14 +74,18 @@ export function drawsFromOf(r, accounts, cards = []) {
   return mainAccount(accounts, owner);
 }
 // Two rows at the same bank: both banks known and equal, or the coach said so on the drill (program.fireDrill.sameBank,
-// keyed 'a:b'; true same, false another bank). known: whether it is known either way.
-export function sameBankOf(a, b, said = {}) {
+// keyed 'a:b'; true same, false another bank). known: whether it is known either way. Not known: assume says which
+// way it counts (QUESTIONS 367: a bank account counts as the same bank until someone taps Another bank; a card does not).
+export function sameBankOf(a, b, said = {}, { assume = false } = {}) {
   if (!a || !b) return { same: false, known: false };
   if (a.id === b.id) return { same: true, known: true };
   if (a.bank && b.bank) return { same: a.bank === b.bank, known: true, from: 'institutions' };
   const v = said[`${a.id}:${b.id}`] ?? said[`${b.id}:${a.id}`];
-  return typeof v === 'boolean' ? { same: v, known: true, from: 'said' } : { same: false, known: false };
+  return typeof v === 'boolean' ? { same: v, known: true, from: 'said' } : assume ? { same: true, known: false, assumed: true } : { same: false, known: false };
 }
+// Two bank accounts with no bank said: the same bank, unless either is a payment app (an app is never a bank's).
+const assumeSame = (a, b) => a?.type !== 'Payment app' && b?.type !== 'Payment app';
+export const sameBankAcct = (a, b, said = {}) => sameBankOf(a, b, said, { assume: assumeSame(a, b) });
 
 // Which tier of the order a calendar entry (or a Budget line) belongs to. order: ref.fireDrill.order.
 export function tierOf(item, order) {
@@ -116,7 +121,7 @@ export function mustPayOf(x, order) {
     const monthly = lines + minimums + housingDebt + carDebt;
     const housing = housingLines + housingDebt;
     return { source: 'lines', monthly, housing, minimums, cardable: Math.max(0, monthly - housing - minimums), lines: must.length,
-      text: `${must.length} must-pay Budget ${must.length === 1 ? 'line' : 'lines'} (housing, utilities and phone, food, getting to work, health and childcare) ${fmt.money(lines)}${housingDebt + carDebt ? ` + ${fmt.money(housingDebt + carDebt)} of mortgage and car payments` : ''} + ${fmt.money(minimums)} of minimum payments = ${fmt.money(monthly)} a month.` };
+      text: `${must.length} must-pay Budget ${must.length === 1 ? 'line' : 'lines'} (housing, utilities and phone, food, getting to work and childcare, health) ${fmt.money(lines)}${housingDebt + carDebt ? ` + ${fmt.money(housingDebt + carDebt)} of mortgage and car payments` : ''} + ${fmt.money(minimums)} of minimum payments = ${fmt.money(monthly)} a month.` };
   }
   if (x.gutTotal == null) return null;
   // A gut number that holds the debt payments keeps the mortgage and car payments as they are; every other debt's
@@ -129,7 +134,7 @@ export function mustPayOf(x, order) {
   const parts = [`Your spending number ${fmt.money(x.gutTotal)}`, otherPay ? `less ${fmt.money(otherPay)} of debt payments in it` : null,
     added ? `+ ${fmt.money(added)} of mortgage and car payments` : null, minimums || otherPay ? `+ ${fmt.money(minimums)} of minimum payments` : null].filter(Boolean);
   return { source: 'gut', monthly, housing, minimums, cardable: Math.max(0, monthly - housing - minimums), lines: 0,
-    text: `${parts.join(' ')} = ${fmt.money(monthly)} a month. All of it counts until Budget splits out the must-pay part.` };
+    text: `${parts.join(' ')} = ${fmt.money(monthly)} a month: all your spending, since the needs are not split out yet (Budget lines split them).` };
 }
 
 // Days a pot covers. Whole days, rounded down: the day it runs short is not covered.
@@ -202,7 +207,7 @@ export function fireDrillOf(doc, ref, { now = new Date(), account = undefined } 
     const line = r?.kind === 'bill' ? { category: r.values?.category, draftt: r.values?.draftt } : {};
     return { ...i, dir: 'out', amount, where: src?.card ? null : src?.id ?? null, card: src?.card ?? null, debtType: d?.type ?? null, debt: d, ...line, gut: !!i.gut };
   });
-  const atFrozen = id => { const a = accounts.find(y => y.id === id); return !!a && sameBankOf(acct, a, said).same; };
+  const atFrozen = id => { const a = accounts.find(y => y.id === id); return !!a && sameBankAcct(acct, a, said).same; };
   const group = list => { // one row per thing (a paycheck's dates together, a weekly line's weeks together)
     const m = new Map();
     for (const e of list) {
@@ -217,8 +222,9 @@ export function fireDrillOf(doc, ref, { now = new Date(), account = undefined } 
   const inElsewhere = entries.filter(e => e.dir === 'in' && !(e.where && atFrozen(e.where)));
 
   // Out of reach and still reachable.
-  const sameBank = accounts.filter(a => a.id !== acct.id && sameBankOf(acct, a, said).same);
-  const others = accounts.filter(a => a.id !== acct.id && !sameBankOf(acct, a, said).same).map(a => ({ ...a, known: sameBankOf(acct, a, said).known }));
+  const rel = a => sameBankAcct(acct, a, said);
+  const sameBank = accounts.filter(a => a.id !== acct.id && rel(a).same).map(a => ({ ...a, known: rel(a).known, assumed: !!rel(a).assumed }));
+  const others = accounts.filter(a => a.id !== acct.id && !rel(a).same).map(a => ({ ...a, known: rel(a).known }));
   const inHand = (doc.records || []).filter(r => r.kind === 'account' && r.values?.group === 'cash' && r.type === 'Cash on hand' && r.status !== 'Not for me')
     .map(r => ({ id: r.id, name: r.name || r.type, type: r.type, balance: r.values.balance ?? null, inHand: true }));
   const reachAccts = [...others.filter(a => !a.forTaxes), ...inHand];
@@ -311,10 +317,16 @@ export function backupPlanOf(doc, ref, D, { now = new Date() } = {}) {
   }
   for (const a of D.accounts.filter(y => y.type === 'Payment app')) stranded.push({ id: `app:${a.id}`, kind: 'app', label: `${a.name}: a payment app balance`, amount: a.balance,
     how: 'A payment app balance is not a bank account. Move what is not needed this week to the bank you keep.' });
-  const plans = (doc.records || []).filter(r => r.kind === 'account' && WORKPLACE.includes(r.type) && r.status !== 'Not for me' && r.values?.contribution == null && r.values?.salaryPct == null
-    && !x.income.some(i => (i.r.values?.contributionPct ?? 0) > 0 && (r.owner ?? 'Me') === (i.r.owner ?? 'Me')));
-  for (const r of plans) stranded.push({ id: `plan:${r.id}`, kind: 'plan', label: `${r.name || r.type}: nothing going in`, amount: r.values?.balance ?? null,
-    how: 'From a job before this one? Four choices: leave it, roll it to an IRA, roll it into the new job\'s plan, or cash it out (taxed, plus a 10% penalty before 59 and a half). Ask for a direct transfer, never a check.' });
+  // QUESTIONS 368: a plan marked Old job is listed; one with nothing going in is listed unless it is marked Current job.
+  const idle = r => r.values?.contribution == null && r.values?.salaryPct == null && !x.income.some(i => (i.r.values?.contributionPct ?? 0) > 0 && (r.owner ?? 'Me') === (i.r.owner ?? 'Me'));
+  const plans = (doc.records || []).filter(r => r.kind === 'account' && WORKPLACE.includes(r.type) && r.status !== 'Not for me'
+    && (r.values?.planJob === 'Old job' || (r.values?.planJob !== 'Current job' && idle(r))));
+  const choices = 'Four choices: leave it, roll it to an IRA, roll it into the new job\'s plan, or cash it out (taxed, plus a 10% penalty before 59 and a half). Ask for a direct transfer, never a check.';
+  for (const r of plans) {
+    const old = r.values?.planJob === 'Old job';
+    stranded.push({ id: `plan:${r.id}`, kind: 'plan', recId: r.id, job: r.values?.planJob ?? null, label: `${r.name || r.type}: ${old ? 'from an old job' : 'nothing going in'}`, amount: r.values?.balance ?? null,
+      how: old ? choices : `From a job before this one? ${choices}` });
+  }
   const links = ref.fireDrill?.links || {};
   stranded.push({ id: 'oldPlans', kind: 'search', label: 'Plans from old jobs', amount: null, url: links.plans?.url ?? null, site: links.plans?.site ?? null,
     how: links.plans?.how ?? 'Search the Department of Labor\'s Retirement Savings Lost and Found for a plan from any past job.' });

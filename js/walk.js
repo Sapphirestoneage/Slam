@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Walk me through (batch 14, item 5): every empty or rough box, one at a time, like a TurboTax interview. The order is
-// the program's session 1 checklist first (what you have, the top-line numbers), then the core boxes screen by screen:
+// Walk me through (batch 14, item 5): every empty or rough box, one at a time, like a TurboTax interview. Since batch 48
+// the first stop is the Ask next question (QUESTIONS 373); then the order is the program's session 1 checklist first (what you have, the top-line numbers), then the core boxes screen by screen:
 // About you, Income (with the filing status on Taxes), Budget categories, Assets, Debt, Credit cards, Protection, Goals (Fast Track runs before the walk
 // when it has not been done). Each stop names a real box (a data-focus handle) and how to park it (Will get it).
 // The list is worked out again after every step, so a box filled along the way drops off. Pure: no DOM.
@@ -37,14 +37,31 @@ const ROUGH = new Set(['Roughly', 'Not sure']);
 const label = (n, w) => (/[()]/.test(n) || w.endsWith("?") ? `${n}: ${w}` : /s$/i.test(n) ? `${n}' ${w}` : `${n}'s ${w}`);
 
 export const WALK_SCREENS = ['About you', 'Income', 'Taxes', 'Budget categories', 'Assets', 'Debt', 'Credit cards', 'Protection', 'Goals'];
+const SCREEN_OF = [['#/home/profile', 'About you'], ['#/cash-flow/income', 'Income'], ['#/cash-flow/taxes', 'Taxes'], ['#/cash-flow/budget', 'Budget categories'], ['#/net-worth/assets', 'Assets'],
+  ['#/net-worth/debt', 'Debt'], ['#/net-worth/credit-cards', 'Credit cards'], ['#/net-worth/protection', 'Protection'], ['#/plan/goals', 'Goals']];
+
+// Batch 48 (QUESTIONS 373): the walk starts with the Ask next question (M9Q, js/math/nextbest.js), the one answer that
+// narrows the plan most, then carries on as before. q: Ask next's top question when the walk starts. The stop keeps the
+// key the same box has further down the list, so it is never asked twice.
+export function askStopOf(q) {
+  if (!q) return null;
+  const rec = q.recId && q.field ? { kind: 'record', id: q.recId, field: q.field } : null;
+  return { key: rec ? `${q.recId}:${q.field}` : `ask:${q.id}`, ask: { id: q.id, question: q.question }, screen: SCREEN_OF.find(([r]) => String(q.route || '').startsWith(r))?.[1] ?? 'Ask next',
+    route: q.route, focus: q.focus ?? null, id: q.recId ?? null, field: q.field ?? null, name: q.question, why: q.why ?? null, park: rec };
+}
+// Is the Ask next stop still open: the same question is still on Ask next's list (an answer takes it off or changes it).
+const askOpen = (ctx, stop) => (ctx.askNext?.()?.questions || []).some(x => x.id === stop.ask.id && x.question === stop.ask.question);
 
 // The stops for this client now, in order: [{ key, screen, name, route, focus, id, field, parentCat, open, park }].
 // park: { kind: 'profile', key } or { kind: 'record', id, field } or { kind: 'category', id } (Will get it).
-export function walkStops(ctx) {
+// ask: the Ask next stop the walk started with (askStopOf), first while it is still open.
+export function walkStops(ctx, { ask = null } = {}) {
   const doc = ctx.store.doc, p = doc.profile || {};
   const out = [];
   const seen = new Set();
-  const add = s => { if (!seen.has(s.key)) { seen.add(s.key); out.push(s); } };
+  const lead = ask && askOpen(ctx, ask) ? ask : null;
+  const add = s => { if (!seen.has(s.key) && !(lead && s !== lead && lead.focus && s.focus === lead.focus)) { seen.add(s.key); out.push(s); } };
+  if (lead) add(lead);
   const recStop = (screen, route, r, field, { name = null, rough = false } = {}) => ({
     key: `${r.id}:${field}`, screen, route, id: r.id, field, focus: `${r.id}:${BOX[r.kind === 'asset' ? field : ''] ?? field}`,
     name: `${label(name ?? (r.name || r.type || 'This'), WORD[field] ?? field)}${rough ? (statusOf(r, field) === 'Not sure' ? ' (a guess)' : ' (rough)') : ''}`, park: { kind: 'record', id: r.id, field } });

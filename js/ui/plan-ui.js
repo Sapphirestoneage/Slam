@@ -2,6 +2,7 @@
 // Plan (build phase 7): Goals with presets and solvers, These are big deals, milestones, the FI timeline,
 // debt payoff, next 12 months. Scenarios stay a later phase.
 import { RULES } from '../registry/assumptions.js';
+import { lenderTermsControls } from './lender-ui.js';
 import { fillCounter } from './counts-ui.js';
 import { goalsCompletion } from '../completion.js';
 import { h, clear, icon } from './dom.js';
@@ -168,7 +169,9 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
       h('div.preset-row', {}, h('span.label', {}, 'Worth doing'), S.toggle([1, 2, 4, 8].map(v => [v, `${v} ${v === 1 ? 'hour' : 'hours'}`]), a.materialHours ?? RULES.materialHours, v => setA({ materialHours: v }), { label: 'Worth doing: hours at your real hourly wage' }),
         S.toggle([50, 100, 250, 500].map(v => [v, `at least $${v}`]), a.materialFloor ?? RULES.materialFloor, v => setA({ materialFloor: v }), { label: 'Worth doing: never under' }),
         h('span.muted.small', {}, 'A fix counts when it saves more a year than this much of your time is worth')),
-      h('div.preset-row', {}, h('span.label', {}, 'Social Security'), S.tapPick(['Full scheduled', 'Reduced %', 'None'], a.socialSecurity ?? null, v => setA({ socialSecurity: v }), { label: 'Social Security' }))), { label: 'More: inflation, life expectancy, worth doing, Social Security' }));
+      h('div.preset-row', {}, h('span.label', {}, 'Social Security'), S.tapPick(['Full scheduled', 'Reduced %', 'None'], a.socialSecurity ?? null, v => setA({ socialSecurity: v }), { label: 'Social Security' })),
+      // Batch 48 (QUESTIONS 357, 360): the Lender's view reads this client's mortgage rate and taxes-and-insurance share.
+      lenderTermsControls(ctx)), { label: 'More: inflation, life expectancy, worth doing, Social Security, mortgage rate' }));
   const fiCard = h('div.card.fi-card', { style: { marginBottom: '16px' } }, left, right);
   // Batch 13 (item 1): the FI date and its assumptions are the core (open); the big deals, the FI ladder and the
   // outsource lens are caret sections, closed, each with its one line.

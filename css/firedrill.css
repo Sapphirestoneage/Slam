@@ -34,3 +34,9 @@
   .fd-row-pick { grid-template-columns: minmax(0, 1fr); }
   .fd-row-top { grid-template-columns: minmax(0, 1fr) auto; }
 }
+/* Batch 48: a workplace plan's Current job / Old job tap on its stranded row (QUESTIONS 368); the gut-only must-pay
+   line with its one tap to Budget (QUESTIONS 366). */
+.fd-row-top.fd-row-plan { grid-template-columns: minmax(0, 1fr) auto 112px; }
+.fd-split { margin-top: 6px; }
+.fd-must { gap: 8px var(--s3); flex-wrap: wrap; align-items: center; }
+@media (max-width: 760px) { .fd-row-top.fd-row-plan { grid-template-columns: minmax(0, 1fr) auto; } }

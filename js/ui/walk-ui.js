@@ -5,14 +5,14 @@
 // js/walk.js and are worked out again at every step, so anything filled along the way drops off.
 import { h, clear, icon } from './dom.js';
 import * as S from './staples.js';
-import { walkStops, parkStop, useStopTypical, makeStopRows } from '../walk.js';
+import { walkStops, parkStop, useStopTypical, makeStopRows, askStopOf } from '../walk.js';
 import { ensureCategories } from '../presets.js';
 import { land } from './arrive.js';
 import { fastTrackDone } from '../fasttrack.js';
 import { startFastTrack } from './fasttrack-ui.js';
 import { startSession, inSession } from '../program.js';
 
-const W = { on: false, passed: [], made: [], cur: null, bar: null, app: null, keys: null, off: null, soon: false, quiet: false };
+const W = { on: false, passed: [], made: [], cur: null, bar: null, app: null, keys: null, off: null, soon: false, quiet: false, ask: null };
 export const walking = () => W.on;
 
 // Start: Fast Track first when it has not been finished, then the walk.
@@ -21,6 +21,8 @@ export function walkMeThrough(app, ctx) {
   stopWalk({ quiet: true });
   Object.assign(W, { on: true, passed: [], made: [], cur: null, app });
   ensureCategories(ctx.store); // the Budget's category rows, so a category stop can offer Use typical from the first one
+  // Batch 48 (QUESTIONS 373): the first stop is Ask next's question, as Home shows it now; then the walk as before.
+  W.ask = askStopOf(ctx.askNext?.(app.flags ?? [])?.top ?? null);
   // Batch 18: a tap that answers the box (Have it?, a pick, Use typical) or a typed number moves on by itself; Next
   // stays for keeping what is there. Only a change that fills the current box moves on.
   // Eli, Nov 6 ("when I click on a cell it knocks me back up"): only a change made in the walk's own box moves the
@@ -46,7 +48,7 @@ function stopWalk({ quiet = false } = {}) {
 export { stopWalk };
 // The next stop not passed yet (filled, skipped or parked ones drop off), landed on.
 function next(app) {
-  const stops = walkStops(app.ctx);
+  const stops = walkStops(app.ctx, { ask: W.ask });
   const left = stops.filter(s => !W.passed.includes(s.key) && !W.made.includes(s.key));
   if (!left.length) {
     stopWalk({ quiet: true });
@@ -76,7 +78,7 @@ function inCurrentBox(el) {
 // The current box got its answer (it dropped off the list): count it and go on.
 function filledNow(app) {
   if (!W.on || !W.cur) return;
-  if (walkStops(app.ctx).some(x => x.key === W.cur.key)) return;
+  if (walkStops(app.ctx, { ask: W.ask }).some(x => x.key === W.cur.key)) return;
   W.passed.push(W.cur.key);
   app.usage?.('walk', { step: 'filled' });
   next(app);
@@ -97,7 +99,8 @@ function draw(app, n, of) {
   const s = W.cur;
   W.bar?.remove();
   W.bar = h('div.walk-bar', { role: 'region', 'aria-label': 'Walk me through' },
-    h('span.walk-where', {}, h('strong', {}, `${n} of ${of}: `), s.name, h('span.muted.small', {}, ` · ${s.why ? `${s.why} · ` : ''}${s.screen}`)),
+    h('span.walk-where', {}, h('strong', {}, `${n} of ${of}: `), s.ask ? h('span.tag.plain.walk-ask', { title: 'The one answer that narrows the plan most right now (Home, Ask next)' }, 'Ask next') : null, s.ask ? ' ' : null, s.name,
+      h('span.muted.small', {}, ` · ${s.why ? `${s.why} · ` : ''}${s.screen}`)),
     h('span.spacer'),
     // Batch 18: the typical answer is the first tap (Use typical $X, or the filing status the household implies).
     s.typical ? h('button.btn.small.primary', { type: 'button', 'data-focus': 'walk:typical', title: s.typical.why, onclick: () => move(app, 'typical') }, s.typical.label) : null,

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { importFile } from '../js/records.js';
-import { fireDrillOf, backupPlanOf, daysCovered, payOrder, tierOf, platformHeld, mustPayOf, sameBankOf, mainAccount, minimumOf, drawsFromOf } from '../js/math/firedrill.js';
+import { fireDrillOf, backupPlanOf, daysCovered, payOrder, tierOf, platformHeld, mustPayOf, sameBankOf, sameBankAcct, mainAccount, minimumOf, drawsFromOf } from '../js/math/firedrill.js';
 import { loadDefs, OUT_DIR, NOW } from '../tools/personas/build.mjs';
 
 const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
@@ -13,10 +13,15 @@ const order = ref.fireDrill.order;
 const now = new Date(NOW);
 const near = (a, b, tol = 0.01) => assert.ok(Math.abs(a - b) <= tol, `${a} is not ${b}`);
 
-test('the order to pay in is housing, utilities, food, getting to work, health, minimums, taxes, the rest (CFPB, NFCC)', () => {
+test('the order to pay in is housing, utilities, food, getting to work and childcare, health, minimums, taxes, the rest (CFPB, NFCC)', () => {
   assert.deepEqual(order.map(o => o.id), ['housing', 'utilities', 'food', 'transport', 'health', 'minimums', 'taxes', 'rest']);
+  assert.deepEqual(order.map(o => o.label).slice(3, 5), ['Getting to work and childcare', 'Health']); // QUESTIONS 365
   assert.match(ref.fireDrill.source, /CFPB/);
   assert.match(ref.fireDrill.source, /NFCC/);
+  assert.match(ref.fireDrill.source, /QUESTIONS 365/);
+  assert.equal(tierOf({ category: 'Kids', draftt: 'Other' }, order).id, 'transport'); // childcare keeps the paycheck coming, like the car
+  assert.equal(tierOf({ category: 'Health insurance', draftt: 'Other' }, order).id, 'health');
+  assert.equal(tierOf({ category: 'Therapy', draftt: 'Therapy' }, order).id, 'health');
   assert.equal(tierOf({ category: 'Rent or mortgage', draftt: 'Accommodation' }, order).id, 'housing');
   assert.equal(tierOf({ category: 'Household supplies', draftt: 'Accommodation' }, order).id, 'rest'); // a need, but not the roof
   assert.equal(tierOf({ category: 'Phone', draftt: 'Bills' }, order).id, 'utilities');
@@ -64,6 +69,11 @@ test('banks: the same institution, or what the coach said; the everyday account 
   assert.deepEqual(sameBankOf({ id: 'a', bank: 'x' }, { id: 'b', bank: 'x' }), { same: true, known: true, from: 'institutions' });
   assert.deepEqual(sameBankOf({ id: 'a', bank: null }, { id: 'b', bank: null }), { same: false, known: false });
   assert.deepEqual(sameBankOf({ id: 'a' }, { id: 'b' }, { 'b:a': true }), { same: true, known: true, from: 'said' });
+  // QUESTIONS 367: a bank account with no bank set counts as the same bank until Another bank is tapped; a payment app never.
+  assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking' }, { id: 'b', type: 'Savings or HYSA' }), { same: true, known: false, assumed: true });
+  assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking' }, { id: 'b', type: 'Savings or HYSA' }, { 'a:b': false }), { same: false, known: true, from: 'said' });
+  assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking' }, { id: 'b', type: 'Payment app' }), { same: false, known: false });
+  assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking', bank: 'x' }, { id: 'b', type: 'Savings or HYSA', bank: 'y' }), { same: false, known: true, from: 'institutions' });
   const accts = [{ id: 's', type: 'Savings or HYSA' }, { id: 'p', type: 'Checking', owner: 'Partner' }, { id: 'j', type: 'Checking', owner: 'Joint' }];
   assert.equal(mainAccount(accts, 'Partner').id, 'p');
   assert.equal(mainAccount(accts).id, 'j');
@@ -77,24 +87,55 @@ test('a platform holds back the net a day times the hold days', () => {
   assert.equal(platformHeld({ net: 2350, holdDays: 0 }), null);
 });
 
-test('picking another account, and saying it is at the same bank, moves the drill', () => {
+test('picking another account, and saying it is at another bank, moves the drill', () => {
   const path = join(OUT_DIR, 'maya.json');
   const doc = importFile(readFileSync(path, 'utf8'));
   const savings = doc.records.find(r => r.kind === 'account' && r.type === 'Savings or HYSA');
   const checking = doc.records.find(r => r.kind === 'account' && r.type === 'Checking');
-  const s = fireDrillOf(doc, ref, { now, account: savings.id });
-  // Savings froze: nothing lands there; checking $1,200 is reachable.
-  assert.equal(s.incoming.length, 0);
-  assert.equal(s.reachable.cash, 1200);
-  doc.program = { fireDrill: { sameBank: { [`${checking.id}:${savings.id}`]: true } } };
+  // QUESTIONS 367: no bank set on either, so they count as one bank. Checking froze: $1,200 + $4,000 + $7,200 of pay
+  // out of reach, nothing to reach, 0 days.
   const t = fireDrillOf(doc, ref, { now });
-  // Checking froze and savings is at the same bank: $1,200 + $4,000 + $7,200 of pay out of reach, nothing to reach.
   assert.equal(t.unreachable.total, 12400);
+  assert.equal(t.unreachable.sameBank[0].assumed, true);
   assert.equal(t.reachable.cash, 0);
   assert.equal(t.cover.cash, 0);
   // Rent ($1,750 on Dec 1, the day guessed) comes first in the order and is not covered.
   assert.equal(t.order[0].name, 'Rent');
   near(t.order[0].short, 1750);
+  // Savings froze, and checking (the same bank) with it: the pay landing in checking is out of reach too.
+  const s = fireDrillOf(doc, ref, { now, account: savings.id });
+  assert.equal(s.unreachable.total, 12400);
+  assert.equal(s.reachable.cash, 0);
+  // Another bank tapped: checking froze, savings $4,000 is reachable. $4,000 / ($3,685 x 12 / 365 = $121.15 a day) = 33.0,
+  // so 33 days; out of reach $1,200 + $7,200 = $8,400.
+  doc.program = { fireDrill: { sameBank: { [`${checking.id}:${savings.id}`]: false } } };
+  const o = fireDrillOf(doc, ref, { now });
+  assert.equal(o.unreachable.total, 8400);
+  assert.equal(o.reachable.cash, 4000);
+  assert.equal(o.cover.cash, 33);
+  // And savings froze: nothing lands there; checking $1,200 is reachable.
+  const s2 = fireDrillOf(doc, ref, { now, account: savings.id });
+  assert.equal(s2.incoming.length, 0);
+  assert.equal(s2.reachable.cash, 1200);
+});
+
+test('must-pay with only a gut number says it is all the spending (QUESTIONS 366)', () => {
+  const doc = importFile(readFileSync(join(OUT_DIR, 'maya.json'), 'utf8'));
+  const D = fireDrillOf(doc, ref, { now });
+  assert.equal(D.must.source, 'gut');
+  assert.match(D.must.text, /all your spending, since the needs are not split out yet/);
+});
+
+test('workplace plans: Old job is stranded, Current job is not, unmarked with nothing going in is asked (QUESTIONS 368)', () => {
+  const doc = importFile(readFileSync(join(OUT_DIR, 'maya.json'), 'utf8'));
+  const add = (type, values) => { const r = { id: `p${doc.records.length}`, kind: 'account', type, name: type, values: { group: 'investment', balance: 9000, ...values } }; doc.records.push(r); return r; };
+  const idle = add('403(b)', {}), cur = add('401(k)', { planJob: 'Current job' }), old = add('457', { planJob: 'Old job', contribution: 100, contributionPer: 'Paycheck' }), going = add('TSP', { salaryPct: 0.05 });
+  const D = fireDrillOf(doc, ref, { now }), B = backupPlanOf(doc, ref, D, { now });
+  const plans = B.stranded.filter(s => s.kind === 'plan');
+  assert.deepEqual(plans.map(s => s.recId).sort(), [idle.id, old.id].sort());
+  assert.equal(plans.find(s => s.recId === old.id).label, '457: from an old job');
+  assert.equal(plans.find(s => s.recId === idle.id).label, '403(b): nothing going in');
+  assert.ok(!plans.some(s => s.recId === cur.id || s.recId === going.id));
 });
 
 const defs = (await loadDefs()).filter(d => d.fireDrill);

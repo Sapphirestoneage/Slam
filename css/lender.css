@@ -41,3 +41,9 @@
   .ln-table td[data-label]::before { content: attr(data-label); color: var(--text-2); font-size: .875rem; font-weight: 600; }
   .ln-big { font-size: 1.5rem; }
 }
+/* Batch 48 (QUESTIONS 357, 358, 360): the next return's line, and the rate and share this client's numbers use. */
+.ln-next { color: var(--text); }
+.ln-terms { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.ln-terms .more-wrap { width: 100%; }
+.ln-terms-pick { margin-top: 6px; padding: var(--s3); box-shadow: none; }
+.ln-terms-rows .preset-row .label { min-width: 0; }

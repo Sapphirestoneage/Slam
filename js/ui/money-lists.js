@@ -16,6 +16,7 @@ import { RULES } from '../registry/assumptions.js';
 import { limitUsed } from '../math/assets.js';
 import { accountBlocks, accountFlags, stampBalance } from './account-detail.js';
 import { is401k, yearly401k } from './account-specific.js';
+import { WORKPLACE } from '../math/firedrill.js';
 import { netWorthCheck, yearlyContribution, link401k, contributionFromMonthly } from '../math/portfolio.js';
 import { benefitYearly, withholdingFlag } from '../benefits.js';
 import { lifeAdminItems, lifeAdminPatch, LIFE_STATES } from '../lifeadmin.js';
@@ -446,6 +447,9 @@ function assetSecondary(ctx, r, up) {
   // a Brokerage, Crypto or 529 is never asked. Unvested is a workplace-plan thing, so it stays on those types only.
   const known = taxTypeFor(r.type);
   return [
+    // Batch 48 (QUESTIONS 368): a workplace plan says which job it is from; Old job lists it under Fire drill › Stranded money.
+    WORKPLACE.includes(r.type) ? labelled('From which job', toggle(['Current job', 'Old job'], v.planJob ?? null, x => up({ planJob: x }), { label: 'From which job', clearable: true, key: `${r.id}:planJob` }),
+      { tip: 'An old job\'s plan is listed under Fire drill, Stranded money, with what can be done with it' }) : null,
     is401k(r) ? null : labelled('Putting in', h('span.row-line', { style: { gap: '6px', flexWrap: 'wrap' } }, moneyInput(v.contribution, x => up({ contribution: x }), { hint: 'Add amount' }),
       toggle(['Paycheck', 'Year'], v.contributionPer ?? 'Year', x => up({ contributionPer: x }), { label: 'Per' })), { later: later('contribution') }),
     asksTaxType(r.type) ? labelled('Pretax, Roth or both', toggle(['Pretax', 'Roth', 'Both'], v.taxType ?? null, x => up({ taxType: x }), { label: 'Pretax or Roth' }), { later: later('taxType') })

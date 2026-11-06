@@ -30,11 +30,14 @@ export function fireDrillScreen(app, ctx) {
   }
   const D = fireDrillOf(doc, ctx.ref, { now: ctx.now() });
   const B = backupPlanOf(doc, ctx.ref, D, { now: ctx.now() });
-  return [head('Bank fire drill', SUB), hero(ctx, D, B), nextDays(ctx, D), reach(ctx, D), payOrderSec(ctx, D), backupSec(ctx, B), strandedSec(ctx, B)];
+  return [head('Bank fire drill', SUB), hero(app, ctx, D, B), nextDays(ctx, D), reach(app, ctx, D), payOrderSec(ctx, D), backupSec(ctx, B), strandedSec(ctx, B)];
 }
 
 // ---------- The card on top: the account, by a tap, and three numbers ----------
-function hero(ctx, D, B) {
+// QUESTIONS 366: with only a gut number the must-pay part is all the spending; one tap to Budget splits it out.
+const GUT_WORDS = 'All your spending, since the needs are not split out yet';
+const splitButton = app => S.button('Split it on Budget', { size: 'small', iconName: 'right', tip: 'Budget lines split the needs (housing, food, getting to work) from the rest', onClick: () => app.go('#/cash-flow/budget') });
+function hero(app, ctx, D, B) {
   const a = D.account, u = D.unreachable, r = D.reachable, c = D.cover;
   const pick = S.tapPick(D.accounts.map(x => [x.id, x.id === D.defaultId ? `${x.name} (paycheck)` : x.name]), a.id,
     v => setFireDrill(ctx.store, { account: v ?? null }, 'Fire drill: account'), { label: 'Which account froze', clearable: false });
@@ -47,9 +50,11 @@ function hero(ctx, D, B) {
     pick,
     h('div.fd-tiles', {},
       tile('Out of reach for now', money(u.total), outSmall),
-      tile('You can still reach', money(r.cash), places.length ? places.map(x => x.name).join(', ') : 'Nothing outside this account yet'),
+      tile('You can still reach', money(r.cash), places.length ? places.map(x => x.name).join(', ') : u.sameBank.length ? 'Nothing outside this bank yet' : 'Nothing outside this account yet'),
       h('div.fd-tile', {}, h('span.label', {}, 'Covers the must-pay bills'), h('strong.fd-big', { 'data-focus': 'firedrill' }, days),
-        c.withCard != null && c.withCard > c.cash ? h('span.muted.small', {}, `About ${plural(c.withCard, 'day')} with the card's room`) : h('span.muted.small', {}, 'Housing, utilities, food, getting to work, minimums'))),
+        c.withCard != null && c.withCard > c.cash ? h('span.muted.small', {}, `About ${plural(c.withCard, 'day')} with the card's room`) : null,
+        D.must?.source === 'gut' ? h('span.muted.small', {}, GUT_WORDS) : h('span.muted.small', {}, 'Housing, utilities, food, getting to work and childcare, health, minimums'),
+        D.must?.source === 'gut' ? h('span.fd-split', {}, splitButton(app)) : null)),
     B.risk ? h('p.fd-note.muted.small', {}, 'Banks and payment apps sometimes close accounts tied to adult work, platform payouts or a lot of cash deposits, often with little notice. A plan made ahead of time turns that day into a hassle instead of a scramble.') : null);
 }
 
@@ -73,13 +78,14 @@ function nextDays(ctx, D) {
 }
 
 // ---------- What can still be reached ----------
-function reach(ctx, D) {
+function reach(app, ctx, D) {
   const a = D.account, r = D.reachable, fd = fireDrillState(ctx.store.doc);
   const said = (o, v) => setFireDrill(ctx.store, { sameBank: { ...(fd.sameBank || {}), [`${a.id}:${o.id}`]: v } }, 'Fire drill: same bank');
+  // QUESTIONS 367: an account with no bank set counts as at the same bank (out of reach) until Another bank is tapped.
   const bankPick = o => (o.bank && a.bank ? h('span.tag.plain', {}, o.same ? 'Same bank, may freeze too' : o.bankName ?? 'Another bank') // both banks known (Institutions)
     : S.toggle([['same', 'Same bank'], ['other', 'Another bank']], o.known ? (o.same ? 'same' : 'other') : null, v => said(o, v === 'same' ? true : v === 'other' ? false : undefined), { label: `${o.name}: which bank`, clearable: true }));
-  const others = [...D.others, ...D.unreachable.sameBank.map(o => ({ ...o, same: true, known: true }))];
-  const acctRows = others.map(o => h('div.fd-row', {}, h('span.fd-name', {}, o.name, o.forTaxes ? h('span.muted.small', {}, ' · set aside for taxes, not counted') : null),
+  const others = [...D.others, ...D.unreachable.sameBank.map(o => ({ ...o, same: true }))];
+  const acctRows = others.map(o => h('div.fd-row', {}, h('span.fd-name', {}, o.name, o.forTaxes ? h('span.muted.small', {}, ' · set aside for taxes, not counted') : o.assumed ? h('span.muted.small', {}, ' · counted as the same bank, out of reach') : null),
     bankPick({ ...o, same: o.same ?? false }), h('strong.fd-amt', {}, money(o.balance ?? 0))));
   const handRows = r.accounts.filter(x => x.inHand).map(o => h('div.fd-row', {}, h('span.fd-name', {}, o.name), h('span.muted.small', {}, 'In hand'), h('strong.fd-amt', {}, money(o.balance ?? 0))));
   const cardRows = r.cards.map(c => h('div.fd-row', {}, h('span.fd-name', {}, c.name, h('span.muted.small', {}, c.same ? ' · same bank, may close too' : ' · room on the card')),
@@ -87,10 +93,11 @@ function reach(ctx, D) {
     h('strong.fd-amt', {}, c.room == null ? '–' : money(c.room))));
   const asks = others.some(o => !(o.bank && a.bank));
   return sec('drill:reach', { title: 'What you could still reach', summary: `${money(r.cash)} of cash${r.cardRoom ? ` and ${money(r.cardRoom)} on a card` : ''}`, card: true },
-    asks ? h('p.muted.small', {}, `Is it at the same bank as ${a.name}? A bank closing an account often freezes every account that person has there.`) : null,
+    asks ? h('p.muted.small', {}, `Is it at the same bank as ${a.name}? A bank closing an account often freezes every account that person has there, so an account counts as the same bank until you tap Another bank.`) : null,
     acctRows.length || handRows.length ? h('div.fd-list', {}, acctRows, handRows) : h('p.muted.small', {}, `Every dollar is in ${a.name}. The backup plan below starts a second place.`),
     cardRows.length ? [h('h3', {}, 'Cards'), h('div.fd-list', {}, cardRows)] : null,
-    D.must ? h('p.small.fd-must', {}, 'Must-pay bills: ', S.mathButton({ id: 'M9F', value: D.must.monthly, needs: [], text: D.must.text }, `${money(D.must.monthly)} a month`)) : null);
+    D.must ? h('div.row-line.fd-must', {}, h('span.small', {}, 'Must-pay bills: ', S.mathButton({ id: 'M9F', value: D.must.monthly, needs: [], text: D.must.text }, `${money(D.must.monthly)} a month`),
+      D.must.source === 'gut' ? h('span.muted', {}, `: ${GUT_WORDS.toLowerCase()}`) : null), D.must.source === 'gut' ? splitButton(app) : null) : null);
 }
 
 // ---------- The order to pay in ----------
@@ -109,7 +116,7 @@ function payOrderSec(ctx, D) {
   });
   const covered = !D.shortTiers.length;
   const src = ctx.ref.fireDrill?.source ?? '';
-  return sec('drill:order', { title: 'If not everything can be paid', summary: covered ? 'What you can reach pays all of it, in this order' : 'Housing first, then utilities, food, getting to work, minimums', card: true,
+  return sec('drill:order', { title: 'If not everything can be paid', summary: covered ? 'What you can reach pays all of it, in this order' : 'Housing first, then utilities, food, getting to work and childcare, health, minimums', card: true,
     tip: `The order to pay in, from CFPB and nonprofit credit counselors: what a missed bill takes away, and whether it can be undone. ${src}` },
   h('p.muted.small', {}, `The next ${D.days} days, paid in this order from ${money(D.pool)}: the cash you can still reach${D.reachable.comingIn ? ' and pay landing somewhere else' : ''}. Bills on a card that still works are left out.`),
   rows.length ? h('div.fd-list', {}, rows) : h('p.muted.small', {}, 'Nothing is due in these days.'));
@@ -132,9 +139,16 @@ function backupSec(ctx, B) {
 }
 
 // ---------- Stranded money ----------
+// QUESTIONS 368: a workplace plan's one tap, Current job or Old job; Current job takes it off this list.
+export function planJobToggle(ctx, id, value, name) {
+  return S.toggle(['Current job', 'Old job'], value ?? null, v => {
+    ctx.store.update(id, { planJob: v });
+    if (v === 'Current job') S.toast(`${name}: from the current job, so it is off Stranded money.`, { undo: () => ctx.store.undo() });
+  }, { label: `${name}: current job or an old one`, clearable: true, key: `${id}:planJob` });
+}
 function strandedSec(ctx, B) {
   const rows = B.stranded.map(s => h('div.fd-check', {},
-    h('div.fd-row.fd-row-top', {}, S.checkbox(s.label, s.done, v => tick(ctx, 'stranded', s.id, v)), s.amount != null ? h('strong.fd-amt', {}, money(s.amount)) : h('span')),
+    h(`div.fd-row.fd-row-top${s.kind === 'plan' ? '.fd-row-plan' : ''}`, {}, S.checkbox(s.label, s.done, v => tick(ctx, 'stranded', s.id, v)), s.kind === 'plan' ? planJobToggle(ctx, s.recId, s.job, s.label.split(':')[0]) : null, s.amount != null ? h('strong.fd-amt', {}, money(s.amount)) : h('span')),
     h('span.muted.small', {}, s.how),
     s.url ? h('a.small.fd-link', { href: s.url, target: '_blank', rel: 'noopener' }, `Open ${s.site}`) : null,
     s.done && s.at ? h('span.muted.small', {}, `Checked ${day(s.at)}`) : null));

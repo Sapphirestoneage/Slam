@@ -138,13 +138,27 @@ export function lenderDebts(debts, { records = [], hasRental = false } = {}) {
   return out;
 }
 
-// The home loan a monthly payment carries: the payment less taxes and insurance (RULES.lenderTaxInsShare), at the
-// rate and term in RULES, as a loan amount.
-export function loanFromPayment(payment, { rate = RULES.lenderMortgageRate, years = RULES.lenderMortgageYears } = {}) {
+// The home loan a monthly payment carries: the payment less taxes and insurance (share, RULES.lenderTaxInsShare by
+// default), at the rate and term (RULES by default), as a loan amount.
+export function loanFromPayment(payment, { rate = RULES.lenderMortgageRate, years = RULES.lenderMortgageYears, share = RULES.lenderTaxInsShare } = {}) {
   if (!(payment > 0)) return 0;
-  const pi = payment * (1 - RULES.lenderTaxInsShare), r = rate / 12, n = years * 12;
+  const pi = payment * (1 - share), r = rate / 12, n = years * 12;
   return r === 0 ? pi * n : pi * (1 - (1 + r) ** -n) / r;
 }
+// Batch 48 (QUESTIONS 357, 360): the mortgage rate and the taxes-and-insurance share are each client's to pick, the way
+// materiality is (doc.assumptions.lenderRate, lenderTaxIns, on Plan › Goals › More and from the Lender's view); blank
+// uses RULES (the rate is Freddie Mac's weekly 30-year fixed, the share a rough national one).
+const loanAt = (p, T) => loanFromPayment(p, { rate: T.rate, years: T.years, share: T.share });
+export const LENDER_RATES = [0.06, 0.065, 0.07, 0.075, 0.08];
+export const LENDER_SHARES = [0.15, 0.2, 0.25, 0.3, 0.35];
+export function lenderTermsOf(doc) {
+  const a = doc?.assumptions || {};
+  const mineRate = num(a.lenderRate), mineShare = num(a.lenderTaxIns);
+  const rate = mineRate ?? RULES.lenderMortgageRate, share = mineShare ?? RULES.lenderTaxInsShare;
+  return { rate, share, years: RULES.lenderMortgageYears, rateMine: mineRate !== null, shareMine: mineShare !== null,
+    text: `${rateWords(rate)} over ${RULES.lenderMortgageYears} years${mineRate !== null ? '' : ' (this week\'s rate)'}, ${whole(share)} of the payment for taxes and insurance${mineShare !== null ? '' : ' (a national share)'}` };
+}
+export const rateWords = r => `${+(r * 100).toFixed(2)}%`; // 7.18%, 6.5%, 7%
 // The most a home payment can be on this income a month and these other debts (the usual conventional lines).
 export const maxHomePayment = (gross, other) => Math.max(0, Math.min(RULES.lenderFront * gross, RULES.lenderBack * gross - other));
 
@@ -173,45 +187,55 @@ export function lenderOf(doc, ref, { now = new Date(), m } = {}) {
   const dtiOn = g => (g > 0 ? (D.housing + D.other) / g : null);
   const dti = dtiOn(mortgageIncome), dtiEarned = dtiOn(earned);
   const front = D.housing > 0 && mortgageIncome > 0 ? D.housing / mortgageIncome : null;
+  const T = lenderTermsOf(doc);
+  const loanOf = p => loanAt(p, T); // at this client's rate and share
   const maxPay = maxHomePayment(mortgageIncome, D.other), maxPayEarned = maxHomePayment(earned, D.other);
-  const loan = loanFromPayment(maxPay), loanEarned = loanFromPayment(maxPayEarned);
+  const loan = loanOf(maxPay), loanEarned = loanOf(maxPayEarned);
   const owner = D.housing > 0;
   const mortgageMoves = [];
   const gainOf = (g, other) => maxHomePayment(g, other) - maxPay;
   for (const r of rows) {
     if (r.tipsHidden > 0) {
       const g = mortgageIncome + r.tipsHidden / 12, gain = gainOf(g, D.other);
-      mortgageMoves.push({ id: `tips:${r.id}`, kind: 'tips', rowId: r.id, gain, loanGain: loanFromPayment(maxPay + gain) - loan, dti: dtiOn(g),
-        text: `Report the cash tips on ${r.name} (${fmt.money(r.tipsHidden / 12)} a month) to your employer. Once two years of W-2s show them, a lender counts ${fmt.money(g)} a month, and the home loan it clears grows by about ${k(loanFromPayment(maxPay + gain) - loan)}.` });
+      mortgageMoves.push({ id: `tips:${r.id}`, kind: 'tips', rowId: r.id, gain, loanGain: loanOf(maxPay + gain) - loan, dti: dtiOn(g),
+        text: `Report the cash tips on ${r.name} (${fmt.money(r.tipsHidden / 12)} a month) to your employer. Once two years of W-2s show them, a lender counts ${fmt.money(g)} a month, and the home loan it clears grows by about ${k(loanOf(maxPay + gain) - loan)}.` });
     }
     if (r.kind === 'self' && r.pace > 0 && r.returns) {
       const R = r.returns;
       const next = R.n >= 1 ? Math.min(((R.last ?? 0) + r.pace) / 2, r.pace) : 0;
       const delta = next - R.mortgage;
       const yr = R.year + 1;
-      if (R.n === 0) mortgageMoves.push({ id: `file:${r.id}`, kind: 'file', rowId: r.id, gain: gainOf(mortgageIncome + r.pace / 12, D.other), later: true, loanGain: loanFromPayment(maxHomePayment(mortgageIncome + r.pace / 12, D.other)) - loan,
-        text: `File your ${yr} return with ${r.name} on it (${fmt.money(r.pace)} a year). Once two returns show it, a lender counts about ${fmt.money(r.pace / 12)} a month more, about ${k(loanFromPayment(maxHomePayment(mortgageIncome + r.pace / 12, D.other)) - loan)} more home loan.` });
+      if (R.n === 0) mortgageMoves.push({ id: `file:${r.id}`, kind: 'file', rowId: r.id, gain: gainOf(mortgageIncome + r.pace / 12, D.other), later: true, loanGain: loanOf(maxHomePayment(mortgageIncome + r.pace / 12, D.other)) - loan,
+        text: `File your ${yr} return with ${r.name} on it (${fmt.money(r.pace)} a year). Once two returns show it, a lender counts about ${fmt.money(r.pace / 12)} a month more, about ${k(loanOf(maxHomePayment(mortgageIncome + r.pace / 12, D.other)) - loan)} more home loan.` });
       else if (delta > 1) {
         const g = mortgageIncome + delta / 12, gain = gainOf(g, D.other);
-        mortgageMoves.push({ id: `file:${r.id}`, kind: 'file', rowId: r.id, gain, loanGain: loanFromPayment(maxPay + gain) - loan, dti: dtiOn(g),
-          text: `File your ${yr} return showing all of ${r.name} (${fmt.money(r.pace)} a year). The two years a lender reads become ${fmt.money(next)} a year: ${fmt.money(delta / 12)} a month more, about ${k(loanFromPayment(maxPay + gain) - loan)} more home loan.` });
+        mortgageMoves.push({ id: `file:${r.id}`, kind: 'file', rowId: r.id, gain, loanGain: loanOf(maxPay + gain) - loan, dti: dtiOn(g),
+          text: `File your ${yr} return showing all of ${r.name} (${fmt.money(r.pace)} a year). The two years a lender reads become ${fmt.money(next)} a year: ${fmt.money(delta / 12)} a month more, about ${k(loanOf(maxPay + gain) - loan)} more home loan.` });
       }
     }
   }
   const payable = D.list.filter(d => !d.housing && d.payment > 0).sort((a, b) => b.payment / b.balance - a.payment / a.balance)[0];
   if (payable) {
     const gain = gainOf(mortgageIncome, D.other - payable.payment);
-    mortgageMoves.push({ id: `pay:${payable.id}`, kind: 'pay', debtId: payable.id, gain, loanGain: loanFromPayment(maxPay + gain) - loan, dti: dtiOn(mortgageIncome) === null ? null : (D.housing + D.other - payable.payment) / mortgageIncome,
-      text: `Pay off ${payable.name} (${fmt.money(payable.balance)}). Its ${fmt.money(payable.payment)} a month${payable.minimum ? ' minimum' : ''} leaves the DTI${dti !== null ? ` (${fmt.pct(dti)} to ${fmt.pct((D.housing + D.other - payable.payment) / mortgageIncome)})` : ''}, and the home loan it clears grows by about ${k(loanFromPayment(maxPay + gain) - loan)}.` });
+    mortgageMoves.push({ id: `pay:${payable.id}`, kind: 'pay', debtId: payable.id, gain, loanGain: loanOf(maxPay + gain) - loan, dti: dtiOn(mortgageIncome) === null ? null : (D.housing + D.other - payable.payment) / mortgageIncome,
+      text: `Pay off ${payable.name} (${fmt.money(payable.balance)}). Its ${fmt.money(payable.payment)} a month${payable.minimum ? ' minimum' : ''} leaves the DTI${dti !== null ? ` (${fmt.pct(dti)} to ${fmt.pct((D.housing + D.other - payable.payment) / mortgageIncome)})` : ''}, and the home loan it clears grows by about ${k(loanOf(maxPay + gain) - loan)}.` });
   }
   mortgageMoves.sort((a, b) => b.gain - a.gain);
+  // Batch 48 (QUESTIONS 358): with one return on file the cautious number stays; one line says what next year's return,
+  // filed at this year's pace, would let a lender count: the two returns averaged, never more than the latest.
+  const one = rows.filter(r => r.kind === 'self' && r.returns?.n === 1 && r.pace > 0);
+  const nextIncome = one.length ? mortgageIncome + one.reduce((s, r) => s + (Math.min(((r.returns.last ?? 0) + r.pace) / 2, r.pace) - r.returns.mortgage) / 12, 0) : null;
+  const nextLoan = nextIncome === null ? null : loanOf(maxHomePayment(nextIncome, D.other));
+  const afterNext = nextIncome === null || nextLoan <= loan + 0.5 ? null : { income: nextIncome, loan: nextLoan, year: one[0].returns.year + 1, dti: dtiOn(nextIncome),
+    text: `Once next year's return is filed at this pace: about ${k(nextLoan)}`,
+    tip: one.map(r => `${r.name}: (${fmt.money(r.returns.last ?? 0)} on the ${r.returns.year} return + ${fmt.money(r.pace)} this year) / 2 = ${fmt.money(Math.min(((r.returns.last ?? 0) + r.pace) / 2, r.pace))} a year a lender counts once the ${r.returns.year + 1} return is filed.`).join(' ') + ` ${fmt.money(nextIncome)} a month counted clears a home payment of up to ${fmt.money(maxHomePayment(nextIncome, D.other))}: about a ${k(nextLoan)} loan at ${T.text}.` };
   const mortgage = {
-    income: mortgageIncome, dti, dtiEarned, front, owner, housing: D.housing, other: D.other, maxPay, maxPayEarned, loan, loanEarned,
+    income: mortgageIncome, dti, dtiEarned, front, owner, housing: D.housing, other: D.other, maxPay, maxPayEarned, loan, loanEarned, terms: T, afterNext,
     place: dtiPlace(dti),
     limits: `Conventional loans look for ${whole(RULES.lenderBack)} or less of gross pay going to debt payments (up to ${whole(RULES.lenderBackStrong)} to ${whole(RULES.lenderBackDu)} with a high score and savings), ${whole(RULES.lenderFront)} or less to the home; FHA ${whole(RULES.lenderFhaFront)} and ${whole(RULES.lenderFhaBack)}.`,
     moves: mortgageMoves.filter(v => v.gain > 0.5).slice(0, 2),
     text: mortgageIncome > 0
-      ? `${fmt.money(D.housing + D.other)} of debt payments a month${owner ? ` (${fmt.money(D.housing)} of it the home, ${fmt.pct(front)} on its own)` : ''} over ${fmt.money(mortgageIncome)} a month a lender can count = ${fmt.pct(dti)}. With today's other debts the usual lines (${whole(RULES.lenderFront)} to the home, ${whole(RULES.lenderBack)} in all) clear a home payment of up to ${fmt.money(maxPay)} a month: about a ${k(loan)} loan at ${fmt.pct(RULES.lenderMortgageRate)} over ${RULES.lenderMortgageYears} years, with ${whole(RULES.lenderTaxInsShare)} of the payment for taxes and insurance.`
+      ? `${fmt.money(D.housing + D.other)} of debt payments a month${owner ? ` (${fmt.money(D.housing)} of it the home, ${fmt.pct(front)} on its own)` : ''} over ${fmt.money(mortgageIncome)} a month a lender can count = ${fmt.pct(dti)}. With today's other debts the usual lines (${whole(RULES.lenderFront)} to the home, ${whole(RULES.lenderBack)} in all) clear a home payment of up to ${fmt.money(maxPay)} a month: about a ${k(loan)} loan at ${T.text}.`
       : 'No income a mortgage lender can count yet.',
   };
   // ---------- The landlord: gross a month a landlord can count, as times the rent ----------

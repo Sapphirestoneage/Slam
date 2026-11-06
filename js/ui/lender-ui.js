@@ -10,7 +10,8 @@ import { h, icon } from './dom.js';
 import * as S from './staples.js';
 import { sec } from './sections.js';
 import { money, pct } from '../format.js';
-import { lenderOf, lenderOn, RETURNS_FILED } from '../math/lender.js';
+import { lenderOf, lenderOn, RETURNS_FILED, lenderTermsOf, LENDER_RATES, LENDER_SHARES, rateWords } from '../math/lender.js';
+import { RULES } from '../registry/assumptions.js';
 import { land } from './arrive.js';
 import { debtRatios } from './lists.js';
 import { ownLineHidden } from '../privacy.js';
@@ -53,12 +54,13 @@ function gapLine(L) {
 }
 
 // ---------- The three reads ----------
-function read(cls, who, look, { big, bigTip, under = null, place = null, limits, moves, empty = null, extra = null, guess = false }) {
+function read(cls, who, look, { big, bigTip, under = null, after = null, place = null, limits, moves, empty = null, extra = null, guess = false }) {
   return h(`div.card.ln-read.${cls}`, {},
     h('div.ln-who', {}, h('h2', {}, who), tip(limits)),
     h('span.label', {}, look),
     h('div.ln-big-row', {}, h('strong.ln-big', { title: bigTip }, big), guess ? S.guessTag() : null),
     under ? h('span.ln-under', {}, under) : null,
+    after,
     place ? h('p.ln-place', {}, place) : null,
     empty, extra,
     moves?.length ? h('div.ln-moves', {}, h('span.label', {}, moves.length === 1 ? 'The move that changes it most' : 'The moves that change it most'),
@@ -70,6 +72,11 @@ function mortgageRead(app, ctx, L) {
   return read('ln-mortgage', 'A mortgage lender', 'Debt payments over the income a lender can count (DTI)', {
     big: M.dti === null ? 'No income counted yet' : pct(M.dti), bigTip: M.text, guess: L.guess,
     under: M.dti === null ? null : `${money(M.income)} a month counted · clears about ${k(M.loan)} of home loan`,
+    // Batch 48 (QUESTIONS 358): one return on file keeps the cautious number big; one line says what the next return brings.
+    after: M.dti === null ? null : [M.afterNext ? h('span.ln-under.ln-next', { title: M.afterNext.tip }, `${M.afterNext.text} of home loan`) : null,
+      // QUESTIONS 357, 360: the rate and share it used, one tap to change them for this client.
+      h('div.ln-terms', { 'data-focus': 'lender:terms' }, h('span.muted.small', {}, `At ${M.terms.text}`),
+        S.moreBlock('lender:terms', () => h('div.card.ln-terms-pick', {}, lenderTermsControls(ctx)), { label: 'Change' }))],
     place: M.place, limits: M.limits, moves: M.moves,
     extra: over != null && M.dti !== null && Math.abs(over - M.dti) > 0.0005 ? h('p.muted.small.ln-note', { title: 'Overview divides what you pay on your debts by your gross pay. A lender reads each card at its minimum and counts only income it can see.' }, `Overview's debt-to-income is ${pct(over)}: what you pay, over your gross pay.`) : null,
   });
@@ -134,4 +141,28 @@ function debtsSection(L) {
       h('tbody', {}, D.list.map(d => h('tr', {}, h('td', {}, d.name, d.housing ? h('span.muted.small', {}, ' · the home') : d.minimum ? h('span.muted.small', {}, ' · its minimum') : null), h('td.num', { 'data-label': 'Balance' }, money(d.balance)), h('td.num', { 'data-label': 'Counted a month' }, money(d.payment)))),
         D.left.map(d => h('tr.ln-left', {}, h('td', {}, d.name, h('span.muted.small', {}, ` · left out: ${d.why}`)), h('td.num', { 'data-label': 'Balance' }, money(d.balance)), h('td.num', { 'data-label': 'Counted a month' }, money(0)))))),
     D.list.some(d => d.minimum) ? h('p.muted.small.ln-foot', {}, 'A lender reads each card at the minimum on the credit report, not what you pay.') : null));
+}
+
+// Batch 48 (QUESTIONS 357, 360): this client's mortgage rate and taxes-and-insurance share, taps for the common values and
+// a box for any other; blank (or this week's rate) follows RULES. On Plan › Goals › More and on the Lender's view.
+const near = (a, b) => a != null && b != null && Math.abs(a - b) < 1e-9;
+const round5 = v => (v == null ? null : Math.round(v * 1e5) / 1e5);
+export function lenderTermsControls(ctx) {
+  const T = lenderTermsOf(ctx.store.doc);
+  const setA = patch => ctx.store.setDoc('assumptions', patch);
+  const today = RULES.lenderMortgageRate, share = RULES.lenderTaxInsShare;
+  const rates = [...LENDER_RATES.filter(v => !near(v, today)), today].sort((a, b) => a - b);
+  const shares = LENDER_SHARES.includes(share) ? LENDER_SHARES : [...LENDER_SHARES, share].sort((a, b) => a - b);
+  const onRate = v => setA({ lenderRate: v == null || near(v, today) ? null : round5(v) });
+  const onShare = v => setA({ lenderTaxIns: v == null || near(v, share) ? null : round5(v) });
+  const rateOther = T.rateMine && !rates.some(v => near(v, T.rate)), shareOther = T.shareMine && !shares.some(v => near(v, T.share));
+  return h('div.stack.ln-terms-rows', { style: { gap: '12px' } },
+    h('div.preset-row', {}, h('span.label', {}, 'Mortgage rate'),
+      S.tapPick(rates.map(v => [v, near(v, today) ? `${rateWords(v)} today` : rateWords(v)]), rateOther ? null : rates.find(v => near(v, T.rate)) ?? null, onRate, { label: 'Mortgage rate, 30-year fixed', key: 'g:lenderRate' }),
+      S.pctInput(rateOther ? T.rate : null, onRate, { hint: 'Other', key: 'g:lenderRate:box' }),
+      h('span.muted.small', {}, `30-year fixed. Today is Freddie Mac's weekly rate (${rateWords(today)})`)),
+    h('div.preset-row', {}, h('span.label', {}, 'Taxes and insurance'),
+      S.tapPick(shares.map(v => [v, `${Math.round(v * 100)}%`]), shareOther ? null : shares.find(v => near(v, T.share)) ?? null, onShare, { label: 'Taxes and insurance, share of the home payment', key: 'g:lenderTaxIns' }),
+      S.pctInput(shareOther ? T.share : null, onShare, { hint: 'Other', key: 'g:lenderTaxIns:box' }),
+      h('span.muted.small', {}, `Of the home payment. ${Math.round(share * 100)}% is a national share; NY property taxes run higher`)));
 }
