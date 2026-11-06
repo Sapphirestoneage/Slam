@@ -50,23 +50,23 @@ test('every registry field has its column or row, every math entry its row, ever
   assert.ok(!text.includes('\u2014'), 'no em dash anywhere in the file');
 });
 
-test('each screen tab looks like the app: a line saying which screen it is, bands for sections, boxes for inputs, dropdowns for taps', () => {
+test('each tab reads top to bottom: one line saying what to do, its result at the top, bands for sections, boxes for inputs, dropdowns for taps', () => {
   const plan = buildWorkbook(everyField(), ref, { now: NOW });
   for (const t of SCREEN_TABS) {
     const s = plan.sheets.find(x => x.name === t.name);
     assert.equal(s.rows[0][1].v, t.name);
-    assert.match(s.rows[1][1].v, / in SLAM/);
+    assert.match(s.rows[1][1].v, /^[A-Z][^:]*: .*(Fill in the blue boxes from the top|Nothing to type here)/);
     assert.ok(s.freeze?.rows >= 2, `${t.name}: frozen`);
     assert.deepEqual(s.hiddenCols.slice(0, 1), ['A']);
   }
-  const budget = plan.sheets.find(x => x.name === 'Cash flow › Budget');
-  const bands = budget.bands.map(r => budget.rows[r - 1][1].v);
+  const budget = plan.sheets.find(x => x.name === 'Money out');
+  const bands = tableIn(plan, 'spending').bands;
   assert.deepEqual(bands.slice(0, 4), ['Your gut number', 'Accommodation', 'Food', 'Transportation']);
   assert.ok(bands.includes('Irregular and yearly costs') && bands.includes('Health and self-care'));
-  const debt = plan.sheets.find(x => x.name === 'Net worth › Debt');
-  assert.deepEqual(debt.bands.map(r => debt.rows[r - 1][1].v), ['Credit cards', 'Loans', 'Other']);
-  const assets = plan.sheets.find(x => x.name === 'Net worth › Assets');
-  assert.deepEqual(assets.bands.map(r => assets.rows[r - 1][1].v), ['Cash', 'Investments', 'Home or car']);
+  assert.deepEqual(tableIn(plan, 'debt').bands, ['Credit cards', 'Loans', 'Other']);
+  assert.deepEqual(tableIn(plan, 'assets').bands, ['Cash', 'Investments', 'Home or car']);
+  // The tab's result sits at the top, before the first box.
+  for (const t of SCREEN_TABS.filter(x => x.blocks.some(b => b.form || b.table))) assert.ok(t.blocks[0].math === 'Where this stands', `${t.name}: its result first`);
   // Dropdowns: the statuses as the app says them, each choice, Yes or No, owners, the categories.
   const t = tableIn(plan, 'spending');
   const letter = key => String.fromCharCode(65 + t.keys.indexOf(key));
@@ -74,10 +74,10 @@ test('each screen tab looks like the app: a line saying which screen it is, band
   assert.ok(rules.some(v => v.col === letter('Status') && v.list.join() === 'Know it,Roughly,Guess,Will get it,Not now,Not for me'));
   assert.ok(rules.some(v => v.col === letter('whoPays') && v.list.includes('Covered by someone')));
   assert.ok(rules.some(v => v.list.includes('Groceries') && v.ref), 'the categories, from the hidden lists tab');
-  const about = plan.sheets.find(x => x.name === 'Home › About you');
+  const about = plan.sheets.find(x => x.name === 'You');
   assert.ok(about.validations.some(v => v.list.includes('Married merged')), 'Household mode is a pick');
   // Output-only tabs are locked; tabs with boxes are not (rows can be added and deleted).
-  assert.equal(plan.sheets.find(x => x.name === 'Report › Overview').protect, true);
+  assert.equal(plan.sheets.find(x => x.name === 'One-pager').protect, true);
   assert.equal(budget.protect, false);
 });
 

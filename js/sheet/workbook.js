@@ -14,14 +14,14 @@ import { REPORTS } from '../registry/reports.js';
 import { sheetContext } from './context.js';
 import { FORMAT_VERSION, APP_VERSION, shapeOf, fingerprint } from './format.js';
 
-export const BLANK_ROWS = 20; // the old layout's blank rows (format 43 and before); each section now ends with its own
+export const BLANK_ROWS = 20; // the old layout's blank rows (format 45 and before); each section now ends with its own
 export const LIST_TAB = '_lists'; // hidden: the long dropdown lists (Excel keeps a list typed into a rule under 255 characters)
 export const REPO = 'https://github.com/sapphirestoneage/slam';
 export const DATA_TAB = '_meta';
 export const OLD_DATA_TAB = 'SLAM data'; // the first files made (Nov 3 2026) kept it here
 export const COACH_TAB = 'Coach notes';
 // The stored statuses as the sheet shows them (one sureness system: Not sure is a Guess).
-// Batch 59: the words of the app's status picker (Will get it was "I'll find it later" in files of format 43 and before).
+// Batch 59: the words of the app's status picker (Will get it was "I'll find it later" in files of format 45 and before).
 export const STATUS_WORDS = { 'Know it': 'Know it', Roughly: 'Roughly', 'Not sure': 'Guess', 'Not for me': 'Not for me', 'Will email': 'Will get it', 'Not now': 'Not now', Computed: 'Worked out' };
 export const STATUS_LIST = ['Know it', 'Roughly', 'Guess', 'Will get it', 'Not now', 'Not for me'];
 // What column A of a screen tab says (hidden): the import reads each row by it.
@@ -80,15 +80,16 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
   sheets.push({ name: 'Start here', kind: 'start', widths: [110], rows: [
     [{ v: `SLAM: the books for ${client}`, s: 'title' }],
     [{ v: `Made ${day}${coach ? ' (coach copy, with coach-only notes)' : shared ? ' (a copy without private rows: they show as neutral lines such as Other income, and every total is the same)' : ''}.`, s: 'text' }],
-    [{ v: 'This file holds every number SLAM has for this household, and the math behind each one, as live formulas. Its tabs are the app\'s screens, in the same order, with the same sections.', s: 'text' }],
+    [{ v: 'This file holds every number SLAM has for this household, and the math behind each one, as live formulas. Its tabs follow a session: You, Money in, Money out, Own and owe, The plan, The future, then Statements and the One-pager. Made for Google Sheets (upload it to Google Drive); it opens in Excel too.', s: 'text' }],
     [],
     [{ v: 'How to use it', s: 'section' }],
-    [{ v: 'Blue boxes are your numbers, as in the app. Change one and everything else updates.', s: 'text' }],
-    [{ v: 'Grey cells are worked out. Click one to see its math; typing over it is never saved.', s: 'text' }],
+    [{ v: 'Each tab reads top to bottom: one line saying what to do, the tab\'s result at the top, then the boxes in the order a coach asks them.', s: 'text' }],
+    [{ v: 'Blue boxes with a border are your numbers. Change one and everything else updates.', s: 'text' }],
+    [{ v: 'Grey cells with no border are worked out. Click one to see its math; typing over it is never saved.', s: 'text' }],
     [{ v: 'A bold band is a section of the screen. Each section ends with a blank row or two for a new entry; insert more rows inside a section if you need them.', s: 'text' }],
     [{ v: 'A box with a small arrow is a tap in the app: pick from its list.', s: 'text' }],
     [{ v: 'Each result shows the app\'s value beside it and a Check: Matches, or the gap.', s: 'text' }],
-    [{ v: "When you're ready, bring this file back into SLAM (Report, One-pager, Bring a spreadsheet back). You'll see every change before anything is saved.", s: 'text' }],
+    [{ v: "When you're ready, bring this file back into SLAM (Bring a spreadsheet back, on the One-pager). From Google Sheets, download it first: File, Download, Microsoft Excel (.xlsx). You'll see every change before anything is saved.", s: 'text' }],
     [],
     [{ v: 'Tabs', s: 'section' }],
     ...SCREEN_TABS.map(t => [{ v: `${t.name}: ${t.about}`, s: 'text' }]),
@@ -130,16 +131,18 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
   const pending = [];
 
   // ---------- The screen tabs (batch 59): one per screen, in nav order, each with the screen's sections ----------
-  const lists = new Map(); // a long dropdown list's text -> its named range on the hidden _lists tab
+  // A long dropdown list's text -> its column on the hidden _lists tab. The rule points at the cells themselves (Google
+  // Sheets keeps a list from a range, not from a name).
+  const lists = new Map();
   const listRef = list => {
     const text = list.join('\n');
-    if (!lists.has(text)) lists.set(text, { name: `List_${lists.size + 1}`, list });
-    return lists.get(text).name;
+    if (!lists.has(text)) lists.set(text, { ref: absRange(LIST_TAB, colLetter(lists.size + 1), 1, list.length), list });
+    return lists.get(text).ref;
   };
   const inputTabs = [];
   const placed = new Set(); // the report tabs that live on a screen tab
   for (const tab of SCREEN_TABS) {
-    const sheet = { name: tab.name, kind: 'screen', route: tab.route, rows: [], widths: [], hiddenCols: ['A'], hiddenRows: [], validations: [], bands: [] };
+    const sheet = { name: tab.name, kind: 'screen', screens: tab.screens, rows: [], widths: [], hiddenCols: ['A'], hiddenRows: [], validations: [], bands: [] };
     const rows = sheet.rows;
     const at = () => rows.length + 1; // the next row's number
     rows.push([{ v: KEY.gap, s: 'key' }, { v: tab.name, s: 'title' }]);
@@ -402,7 +405,6 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
     const height = Math.max(...all.map(x => x.list.length));
     sheets.push({ name: LIST_TAB, kind: 'lists', hidden: true, protect: true, widths: all.map(() => 24),
       rows: Array.from({ length: height }, (_, i) => all.map(x => ({ v: x.list[i] ?? null, s: 'text', fmt: 'text' }))) });
-    all.forEach((x, i) => define(x.name, absRange(LIST_TAB, colLetter(i + 1), 1, x.list.length)));
   }
 
   // ---------- _meta (hidden, protected): who and when, the format version, a fingerprint of each record, and what

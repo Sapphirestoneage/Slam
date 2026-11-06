@@ -51,7 +51,7 @@ test('a balance, a new spending line, a deleted debt row and the return: exactly
   };
   const s = fresh();
   const res = edit(s);
-  assert.deepEqual(words(res).sort(), ['Assumptions: edit Assumptions Return a year, after inflation', 'Net worth › Debt: edit Credit card Balance', 'Net worth › Debt: remove Student loan', 'Cash flow › Budget: add Gym'].sort());
+  assert.deepEqual(words(res).sort(), ['Assumptions: edit Assumptions Return a year, after inflation', 'Own and owe: edit Credit card Balance', 'Own and owe: remove Student loan', 'Money out: add Gym'].sort());
   assert.equal(linesOf(res).find(l => l.op === 'remove').decision, 'skip', 'a removed row is never deleted unless kept');
   applyChanges(s, res);
   assert.equal(s.find(r => r.name === 'Student loan').length, 1, 'still there: the removal was not kept');
@@ -154,7 +154,7 @@ test('an older file still imports: missing columns are left alone, unknown ones 
   set(grid, 'debt', 'Credit card', 'Balance', 4000);
   const res = compare(grid, s.doc);
   assert.equal(res.olderFormat, true);
-  assert.deepEqual(words(res), ['Net worth › Debt: edit Credit card Balance']);
+  assert.deepEqual(words(res), ['Own and owe: edit Credit card Balance']);
   assert.ok(res.leftAlone.some(x => /Promo ends/.test(x)));
   assert.ok(res.unknown.some(u => /Nickname/.test(u.name)), "the new column is under Couldn't tell what this is");
   applyChanges(s, res);
@@ -198,7 +198,7 @@ test('bad values are listed with their cell and skipped', () => {
   set(grid, 'debt', 'Credit card', 'Bonus: spend by', 'someday');
   const res = compare(grid, s.doc);
   assert.equal(res.bad.length, 2);
-  assert.match(res.bad.find(b => /Student loan/.test(b.text)).text, /^Net worth › Debt![A-Z]+\d+ \(Student loan, APR\): lots is not a number\. Skipped\.$/);
+  assert.match(res.bad.find(b => /Student loan/.test(b.text)).text, /^Own and owe![A-Z]+\d+ \(Student loan, APR\): lots is not a number\. Skipped\.$/);
   assert.deepEqual(words(res), []);
 });
 
@@ -220,7 +220,7 @@ test('a sheet with no _meta tab is matched by its hidden keys', () => {
   set(grid, 'assets', 'Savings', 'Balance', 6500);
   const res = compare(grid, s.doc);
   assert.equal(res.noMeta, true);
-  assert.deepEqual(words(res), ['Net worth › Assets: edit Savings Balance']);
+  assert.deepEqual(words(res), ['Own and owe: edit Savings Balance']);
 });
 
 test('cells read back the way people type them', () => {

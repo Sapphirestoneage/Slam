@@ -188,7 +188,7 @@ test('the Demo client\'s workbook has every tab, column and row the registries c
 
 // Batch 59: the tabs follow the screens. A new field of About you, Taxes or a setting needs a row on the tab of the
 // screen it is asked on; a new screen needs a tab, or a line in NO_TAB with why.
-test('every doc field has one row on a screen tab, every table one home, every screen a tab or a reason', () => {
+test('every doc field has one row on a tab, every table one home, every screen of the app a tab or a reason', () => {
   const placed = SCREEN_TABS.flatMap(t => t.blocks.filter(b => b.form).flatMap(b => b.fields));
   const problems = [];
   for (const a of AREAS.filter(x => x.source === 'doc')) for (const f of sheetFields(a, { coach: true })) {
@@ -201,7 +201,7 @@ test('every doc field has one row on a screen tab, every table one home, every s
     if (t.name.length > 31 || /[[\]:*?/\\]/.test(t.name) || /^'|'$/.test(t.name)) problems.push(`${t.name}: not a tab name Excel takes`);
     if (/\u2014/.test(t.about)) problems.push(`${t.name}: an em dash in its line`);
   }
-  const routes = new Set(SCREEN_TABS.flatMap(t => [t.route, ...(t.also || [])]));
+  const routes = new Set(SCREEN_TABS.flatMap(t => t.screens));
   for (const tab of [...NAV, NAV_TOOLS]) for (const sub of tab.subs.filter(x => !x.hidden)) {
     const where = `${tab.name} › ${sub.name}`;
     if (!routes.has(`#/${tab.id}/${sub.id}`) && !NO_TAB.some(([n]) => n === where)) problems.push(`${where}: no tab and no reason in NO_TAB`);

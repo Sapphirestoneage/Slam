@@ -2,7 +2,7 @@
 // Bring a spreadsheet back: read an edited workbook and compare it with SLAM. Pure: no DOM. Reads the Assumptions tab
 // and every screen tab through the field registry: a row by the hidden key in its column A (a field, a record's id, a
 // section band, a blank row), a column by the hidden row of keys above its header (batch 59), never by position. A
-// file of format 43 or before (one tab per area) is read by its tab names and headers. The review screen
+// file of format 45 or before (one tab per area) is read by its tab names and headers. The review screen
 // (js/ui/sheet-ui.js) shows the result; applyChanges saves what was kept.
 //
 // compare(grid, doc) returns, by area: Changed (field, old, new), New rows, Removed rows; Changed assumptions;
@@ -18,7 +18,7 @@ import { foldDoc, SHARE } from './privacy.js';
 import { fingerprint, FORMAT_VERSION } from './sheet/format.js';
 const OLD_TYPES = { 'Savings or HYSA': 'Savings' };
 
-const STATUS_BACK = { ...Object.fromEntries(Object.entries(STATUS_WORDS).map(([k, v]) => [v.toLowerCase(), k])), "i'll find it later": 'Will email' }; // the old word, in files of format 43 and before
+const STATUS_BACK = { ...Object.fromEntries(Object.entries(STATUS_WORDS).map(([k, v]) => [v.toLowerCase(), k])), "i'll find it later": 'Will email' }; // the old word, in files of format 45 and before
 const getPath = (o, path) => path.split('.').reduce((v, k) => (v == null ? undefined : v[k]), o);
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 const isBlankCell = v => v === null || v === undefined || (typeof v === 'string' && v.trim() === '');
@@ -95,7 +95,7 @@ export function gridFromPlan(plan) {
 
 // Where each area's rows and fields are in a grid. The screen tabs (batch 59 on) are read by their hidden column A:
 // a table by its #keys and #head rows, its sections by their bands, a doc field by its field: row, a result by its
-// math: row. A file of format 43 or before has one tab per area (area.tab) with its header on the first row.
+// math: row. A file of format 45 or before has one tab per area (area.tab) with its header on the first row.
 export function locate(grid) {
   const out = { layout: null, tables: {}, fields: new Map(), formulaRows: [] };
   for (const tab of Object.keys(grid)) {

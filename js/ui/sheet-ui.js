@@ -16,7 +16,7 @@ import { intakeButton } from './intake-ui.js';
 
 export const WORDS = {
   open: 'Open in a spreadsheet',
-  openLine: 'Download a file with every number and formula. Opens in Excel, or upload it to Google Drive to open in Google Sheets.',
+  openLine: 'Download a file with every number and formula. Upload it to Google Drive to open it in Google Sheets, or open it in Excel.', // batch 59: Google Sheets first
   back: 'Bring a spreadsheet back',
   backLine: "Been using your spreadsheet? Upload it here. You'll see every change before anything is saved.",
   backTip: 'From Google Sheets, download it first: File, Download, Microsoft Excel (.xlsx).',
@@ -25,7 +25,7 @@ export const WORDS = {
   choice: 'What the files hold',
   full: 'Everything',
   shared: 'Without private rows',
-  sharedTip: 'Rows marked Me and my coach or Coach only become neutral lines (Other income, Other spending) with their notes, platform and account details left out; every total is the same. The money-control map is left out. A copy with an id of its own: it never writes over this client',
+  sharedTip: 'Rows marked Me and my coach or Coach only become neutral lines (Other income, Other spending) with their notes, platform and account details left out; every total is the same. The money-control map is left out. A backup made this way has an id of its own and never writes over this client; a spreadsheet made this way comes back with its private rows left as they are',
 };
 export const UI = { coach: false, shared: false };
 // The one choice for the backup and the spreadsheet (Coach tools › Data, and beside the spreadsheet button elsewhere).
@@ -66,7 +66,7 @@ export async function exportSheet(app, btn = null) {
     const plan = buildWorkbook(doc, app.ctx.ref, { now, coach, shared, flags: app.flags || [] });
     const blob = new Blob([await workbookBuffer(ExcelJS, plan)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const result = await saveFile(blob, `slam-${slug(plan.client)}-${shared ? 'shared-' : ''}${now.toISOString().slice(0, 10)}.xlsx`); // batch 7, item 1: works inside the artifact too
-    toast(saveWords(result, 'The spreadsheet') ?? `Spreadsheet downloaded${coach ? ', with coach-only notes' : shared ? ', without private rows' : ''}. Open it in Excel, or upload it to Google Drive.`);
+    toast(saveWords(result, 'The spreadsheet') ?? `Spreadsheet downloaded${coach ? ', with coach-only notes' : shared ? ', without private rows' : ''}. Upload it to Google Drive to open it in Google Sheets, or open it in Excel.`);
   } catch (e) {
     toast(e.message || 'The spreadsheet could not be made.');
   } finally { if (btn) btn.disabled = false; }

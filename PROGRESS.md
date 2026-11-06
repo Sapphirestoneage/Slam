@@ -1526,3 +1526,34 @@ Workbook check: every Check matches on all 22 households; the drift test passes.
 reads every Batch 63 row as Matches (rows from other batches that read 0 for an empty file are in QUESTIONS). The
 Ranges tab of the Demo, Maya and an age-only client was opened in LibreOffice and rendered. Every function is on
 Google Sheets' list. Format 50. QUESTIONS 465 to 470.
+
+## Batch 59 (Nov 6 2026): the workbook's tabs follow the session, Google Sheets first, and every input tab comes back
+
+Eli asked (about 2 pm): screens map to tabs, and round trip. At 3:30 pm the direction moved: the workbook is his main
+tool ("sheet for me, app for clients"), in Google Sheets, with tabs that follow the session (the app's nav will match).
+1. Tabs (js/registry/tabs.js, docs/WORKBOOK.md "Tabs follow the session"): You, Money in, Money out (the gut number
+   first, then the Budget lines), Own and owe, The plan (FOO and where each dollar goes), The future (FI date and range,
+   debt-free date, Goals), Statements, One-pager, then Assumptions, Math (the engine room) and Captured. Each input tab
+   reads top to bottom: one line saying what to do, Where this stands (the tab's result, filling in as the boxes do),
+   then the boxes in the order a coach asks them, each section with the app's title: forms for About you, Taxes and the
+   settings, tables with a bold band per section (Budget by category, Assets by Cash, Investments, Home or car, Debt by
+   Credit cards, Loans, Other, Income by person and type, months on Month end). Results are live formulas off the Math
+   tab with the app's value and a Check. History, Lists and Data have no tab, each with why. Format 46.
+2. Google Sheets first: tools/sheets-check.mjs and test/sheets.test.js check every household's formulas against Google
+   Sheets' function list (data/google-sheets-functions.json, read off support.google.com), for ranges used for one value
+   (no implicit intersection in Sheets), Excel-only forms, range names (the True FI rule's range is now FiTrueTax) and
+   dropdowns (each list rule reads cells on the hidden _lists tab). Nothing found in the formulas themselves.
+3. Build (js/sheet/workbook.js): a hidden column A says what each row is, a hidden row of keys sits over each header;
+   every named range and formula means what it did. workbook-check: every Check on every tab matches for all 19
+   personas, the Demo and Fast Track Alexis and Tom.
+4. Round trip (js/import-sheet.js): Bring a spreadsheet back reads every tab by those keys, never by position; a new
+   row takes its section (a card under Credit cards, a line under Food, an investment under Investments); a deleted
+   row is offered for deletion; typing over a grey cell is listed, never saved; a copy made Without private rows comes
+   back without reading, renaming, deleting or naming its private rows (it was refused before); a file of format 43 or
+   before reads by its old tabs, with a note. The review groups changes by tab in session order. test/roundtrip.test.js:
+   every persona, the Demo and Fast Track Alexis and Tom through ExcelJS: untouched brings back nothing, and one cell in
+   each table and form of every input tab brings back exactly those changes and saves them.
+5. Looks (js/sheet/excel.js): bands for sections, blue bordered boxes (unlocked) for inputs, grey borderless worked-out
+   cells, output-only tabs protected, frozen title lines, fitted widths, $ and % formats, a dropdown on every tap
+   (statuses as the app says them, Will get it included; Who pays, Owner, a section's own types, the categories).
+   The Open in a spreadsheet line and Start here say Google Sheets first. QUESTIONS 471 to 477.

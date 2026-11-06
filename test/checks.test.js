@@ -62,7 +62,7 @@ test('rent +$100 in the file moves surplus, savings rate and the FI date the way
     const doc = make();
     const before = mathRows(await recalc(doc));
     const after = mathRows(await recalc(doc, wb => {
-      const ws = wb.getWorksheet('Cash flow › Budget'); // batch 59: Budget lines sit on the Budget screen's tab, under its header
+      const ws = wb.getWorksheet('Money out'); // batch 59: Budget lines sit on the Money out tab, under their header
       let head = null;
       ws.eachRow(row => { if (row.getCell(1).value === '#head:spending') { head = row.values; return; } if (head && row.getCell(head.indexOf('Name')).value === 'Rent') { const c = row.getCell(head.indexOf('Amount')); c.value = c.value + 100; } });
     }));

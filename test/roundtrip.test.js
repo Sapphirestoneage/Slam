@@ -37,30 +37,24 @@ function tablesOf(sheet) {
   return out;
 }
 
-// One edit for a tab: a typed cell of a real row, else a form field, else a new row in a blank one. Returns the cells
-// to set ({ r, c, v }, 1-based) and what SLAM should hold after saving.
-function editFor(sheet, doc) {
+// One edit for each block of a tab that has boxes: a typed cell of a real row of each table (else a new row in one of its
+// blank rows), and one answer of each form. Returns [{ cells: [{ r, c, v }] (1-based), what SLAM should hold }].
+function editsFor(sheet, doc) {
   const input = cell => cell?.s === 'input';
+  const out = [];
   for (const t of tablesOf(sheet)) {
     const area = AREAS.find(a => a.id === t.area);
+    let done = false;
     for (const row of t.rows.filter(x => x.key && !x.key.startsWith('#'))) {
       const ci = t.keys.findIndex((k, i) => i > 0 && input(sheet.rows[row.ri][i]) && sheet.rows[row.ri][i].fmt === 'money');
       if (ci < 0) continue;
       const was = sheet.rows[row.ri][ci].v;
       const v = typeof was === 'number' ? was + 1 : 123;
-      return { cells: [{ r: row.ri + 1, c: ci + 1, v }], kind: 'edit', area: area.id, id: row.key, field: t.keys[ci], v };
+      out.push({ cells: [{ r: row.ri + 1, c: ci + 1, v }], kind: 'edit', area: area.id, id: row.key, field: t.keys[ci], v });
+      done = true; break;
     }
-  }
-  for (const [ri, row] of sheet.rows.entries()) {
-    const k = String(row?.[0]?.v ?? '');
-    if (!k.startsWith(KEY.field) || !input(row[2])) continue;
-    const fmt = row[2].fmt, was = row[2].v;
-    if (fmt === 'money' || fmt === 'number') return { cells: [{ r: ri + 1, c: 3, v: typeof was === 'number' ? was + 1 : 7 }], kind: 'field', id: k.slice(KEY.field.length), v: typeof was === 'number' ? was + 1 : 7 };
-    if (fmt === 'yesno') return { cells: [{ r: ri + 1, c: 3, v: was === 'Yes' ? 'No' : 'Yes' }], kind: 'field', id: k.slice(KEY.field.length), v: was !== 'Yes' };
-  }
-  for (const t of tablesOf(sheet)) { // no rows yet: fill a blank one
-    const area = AREAS.find(a => a.id === t.area);
-    const row = t.rows.find(x => x.key === KEY.blank);
+    if (done) continue;
+    const row = t.rows.find(x => x.key === KEY.blank); // no rows yet: fill a blank one
     if (!row) continue;
     const at = key => t.keys.indexOf(key) + 1;
     const cells = [];
@@ -70,18 +64,29 @@ function editFor(sheet, doc) {
       if (!line) continue;
       cells.push({ r: row.ri + 1, c: at('line'), v: line.name }, { r: row.ri + 1, c: at('estimate'), v: 99 });
       if (!row.sec.month) cells.push({ r: row.ri + 1, c: at('month'), v: '2026-11' });
-      return { cells, kind: 'add', area: area.id, name: `${line.name}, ${row.sec.month ?? '2026-11'}` };
+      out.push({ cells, kind: 'add', area: area.id, name: `${line.name}, ${row.sec.month ?? '2026-11'}` });
+      continue;
     }
     if (at('name')) cells.push({ r: row.ri + 1, c: at('name'), v: name });
+    else if (area.id === 'backups') { const slot = t.rows.find(x => x.key.startsWith(`${KEY.blank}:`)); if (!slot) continue; cells.push({ r: slot.ri + 1, c: at('amount'), v: 50 }); out.push({ cells, kind: 'add', area: area.id, name: decodeDefaults(slot.key.slice(KEY.blank.length + 1)).kind, by: 'kind' }); continue; }
     const kind = row.sec.kind ?? Object.keys(area.kinds || {})[0];
     const type = row.sec.type ?? area.types?.[kind]?.[0];
     if (at('Type') && type) cells.push({ r: row.ri + 1, c: at('Type'), v: type });
     const money = t.keys.findIndex((k, i) => i > 0 && input(sheet.rows[row.ri][i]) && sheet.rows[row.ri][i].fmt === 'money');
     if (money > 0) cells.push({ r: row.ri + 1, c: money + 1, v: 50 });
     if (at('date')) cells.push({ r: row.ri + 1, c: at('date'), v: new Date(Date.UTC(2026, 10, 20)) });
-    return { cells, kind: 'add', area: area.id, name };
+    out.push({ cells, kind: 'add', area: area.id, name });
   }
-  return null;
+  let block = null, used = null;
+  for (const [ri, row] of sheet.rows.entries()) {
+    const k = String(row?.[0]?.v ?? '');
+    if (k.startsWith(KEY.block)) { block = k; continue; }
+    if (!k.startsWith(KEY.field) || !input(row[2]) || used === block) continue;
+    const fmt = row[2].fmt, was = row[2].v, id = k.slice(KEY.field.length);
+    if (fmt === 'money' || fmt === 'number') { const v = typeof was === 'number' ? was + 1 : 7; out.push({ cells: [{ r: ri + 1, c: 3, v }], kind: 'field', id, v }); used = block; }
+    else if (fmt === 'yesno') { out.push({ cells: [{ r: ri + 1, c: 3, v: was === 'Yes' ? 'No' : 'Yes' }], kind: 'field', id, v: was !== 'Yes' }); used = block; }
+  }
+  return out;
 }
 
 async function fileOf(plan) {
@@ -94,7 +99,7 @@ async function gridOf(buf) {
 }
 
 for (const [label, make] of HOUSEHOLDS) {
-  test(`${label}: untouched brings back nothing; one cell on each editable tab brings back exactly those changes`, { skip, timeout: 120000 }, async () => {
+  test(`${label}: untouched brings back nothing; one cell in each table and form of every input tab brings back exactly those changes`, { skip, timeout: 120000 }, async () => {
     const store = new Store(make(), { now: () => NOW.toISOString() });
     const plan = buildWorkbook(store.doc, ref, { now: NOW });
     const buf = await fileOf(plan);
@@ -105,15 +110,18 @@ for (const [label, make] of HOUSEHOLDS) {
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(buf);
     const edits = [];
-    for (const sheet of plan.sheets.filter(s => s.kind === 'screen' && s.rows.some(r => r?.some(c => c?.s === 'input')))) {
-      const e = editFor(sheet, store.doc);
-      if (!e) continue;
-      for (const c of e.cells) wb.getWorksheet(sheet.name).getCell(c.r, c.c).value = c.v;
-      edits.push({ ...e, tab: sheet.name });
+    const tabs = plan.sheets.filter(s => s.kind === 'screen' && s.rows.some(r => r?.some(c => c?.s === 'input')));
+    for (const sheet of tabs) {
+      const list = editsFor(sheet, store.doc);
+      assert.ok(list.length, `${sheet.name}: something to change`);
+      for (const e of list) {
+        for (const c of e.cells) wb.getWorksheet(sheet.name).getCell(c.r, c.c).value = c.v;
+        edits.push({ ...e, tab: sheet.name });
+      }
     }
+    assert.deepEqual(tabs.map(t => t.name), ['You', 'Money in', 'Money out', 'Own and owe', 'The plan', 'The future'], 'every input tab');
     const aRow = plan.sheets.find(s => s.name === 'Assumptions').rows.findIndex(r => r?.[0]?.v === 'Return a year, after inflation');
     wb.getWorksheet('Assumptions').getCell(aRow + 1, 3).value = 0.055;
-    assert.ok(edits.length >= 12, `edits on ${edits.length} tabs: ${edits.map(e => e.tab).join(', ')}`);
     const grid = await gridOf(await wb.xlsx.writeBuffer());
     const res = compare(grid, store.doc, { ref });
     const lines = linesOf(res);
@@ -136,7 +144,7 @@ for (const [label, make] of HOUSEHOLDS) {
         assert.ok(Object.values(store.doc.spending.months || {}).some(m => Object.values(m.lines || {}).some(x => x.estimate === 99)), `${e.tab}: the new month line`);
       } else {
         const area = AREAS.find(a => a.id === e.area);
-        const hit = area.source === 'records' ? store.doc.records.some(r => r.name === e.name) : (area.path.split('.').reduce((o, k) => o?.[k], store.doc[area.part]) || []).some(x => x.name === e.name);
+        const hit = area.source === 'records' ? store.doc.records.some(r => r.name === e.name) : (area.path.split('.').reduce((o, k) => o?.[k], store.doc[area.part]) || []).some(x => x[e.by ?? 'name'] === e.name);
         assert.ok(hit, `${e.tab}: the new row ${e.name}`);
       }
     }
@@ -171,7 +179,7 @@ test('the Demo: a new row in a section takes that section (a card under Credit c
   const res = compare(grid, store.doc, { ref });
   const added = res.areas.flatMap(g => g.added);
   const card = added.find(l => l.name === 'Store card');
-  assert.deepEqual([card.kind, card.type, card.tab], ['debt', 'Credit card', 'Net worth › Debt']);
+  assert.deepEqual([card.kind, card.type, card.tab], ['debt', 'Credit card', 'Own and owe']);
   const food = added.find(l => l.name === 'Farmers market');
   assert.equal(food.defaults.draftt, 'Food');
   const ask = res.unknown.find(u => u.name === 'Brokerage');
@@ -189,7 +197,7 @@ test('the Demo: a new row in a section takes that section (a card under Credit c
 test('typing over a formula on a screen tab is listed and never saved', () => {
   const store = new Store(HOUSEHOLDS.find(([l]) => l === 'demo')[1](), { now: () => NOW.toISOString() });
   const grid = gridFromPlan(buildWorkbook(store.doc, ref, { now: NOW }));
-  const tab = 'Report › Overview';
+  const tab = 'One-pager';
   const ri = grid[tab].findIndex(r => r[0] === `${KEY.math}M27`);
   grid[tab][ri][2] = 5000;
   grid._formulas[tab].delete(`${ri}:2`);
@@ -244,7 +252,7 @@ test('a copy made Without private rows comes back cleanly: no private row is rea
   assert.equal(store.get(plain.id).values.balance, 4321);
 });
 
-test('a file of format 43 (a tab per area) still comes back by its old tabs, with a clear note', () => {
+test('a file of format 45 (a tab per area) still comes back by its old tabs, with a clear note', () => {
   // The old layout as those files have it: the header on the first row, the rows under it, the Profile on row 2.
   const store = new Store(HOUSEHOLDS.find(([l]) => l === 'demo')[1](), { now: () => NOW.toISOString() });
   const plan = buildWorkbook(store.doc, ref, { now: NOW });
@@ -253,7 +261,7 @@ test('a file of format 43 (a tab per area) still comes back by its old tabs, wit
   const old = {};
   Object.defineProperty(old, '_formulas', { value: {}, enumerable: false });
   old._meta = grid._meta.map(r => [...r]);
-  old._meta.find(r => r[0] === 'Export format version')[1] = 43;
+  old._meta.find(r => r[0] === 'Export format version')[1] = 45;
   for (const area of AREAS.filter(a => a.source !== 'doc')) {
     const t = where.tables[area.id];
     old[area.tab] = [t.head.map((h, i) => (i === 0 ? 'SLAM id (leave as is)' : h)), ...t.data.map(ri => grid[t.tab][ri]).filter(r => r[0] && !String(r[0]).startsWith('#')).map(r => [...r])];

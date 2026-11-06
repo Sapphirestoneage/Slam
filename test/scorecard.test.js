@@ -219,7 +219,7 @@ test('the scorecard, goals and holes export and import with the client file, and
   assert.equal(e.doc.scorecard.nextChapter.text, 'Kids');
   assert.equal(e.find(r => r.kind === 'milestone' && r.values.tag === 'Want').length, 1);
   const plan = buildWorkbook(d.doc, ref, { now });
-  const tab = plan.sheets.find(s => s.name === 'Plan › Scorecard'); // batch 59: the tab follows the screen
+  const tab = plan.sheets.find(s => s.name === 'The plan'); // batch 59: the tabs follow the session
   assert.ok(tab, 'a Scorecard tab');
   const text = JSON.stringify(tab.rows);
   assert.match(text, /Retirement accounts/); assert.match(text, /Holes, ranked \(2\)/, "the trip makes Goals OK"); assert.match(text, /Trip/); assert.match(text, /Kids/);

@@ -1,14 +1,14 @@
 # The workbook check
 
 "Open in a spreadsheet" (Report › One-pager) writes a workbook with every input, every formula live, and a Check
-beside each formula: Matches, or the gap to the app's number. Its tabs are the app's screens (batch 59, below). The check below makes sure every household opens
+beside each formula: Matches, or the gap to the app's number. Its tabs follow the session (batch 59, below). The check below makes sure every household opens
 with every Check at Matches, so the file a client opens in Excel or Google Sheets gives the same numbers as SLAM.
 
 ## How it works
 
 1. `buildWorkbook` (js/sheet/workbook.js) builds the plan from the registries; ExcelJS writes the .xlsx.
 2. LibreOffice opens each file headless, recalculates every formula and saves it back (`soffice --convert-to xlsx`).
-3. Every Check cell on every tab (Math, and each screen tab's results and report tables) is read back. A row is off when its Check is not
+3. Every Check cell on every tab (Math, and each session tab's results and report tables) is read back. A row is off when its Check is not
    Matches; the list shows the sheet's value, the app's value and where.
 4. The file the app downloads also carries each formula's expected result (a cached value), which LibreOffice shows
    until it recalculates. Each cached value must be what its formula really gives, or the cell is listed too.
@@ -97,82 +97,84 @@ LN, FV, ISNUMBER, ISERROR, IFERROR, N, LEN, SUBSTITUTE, SEARCH. A formula with k
 month, starting balance and months to FI in cells of their own, so no formula is long enough for LibreOffice to stop
 reading it (one long one read #N/A).
 
-## Tabs follow the screens
+## Tabs follow the session
 
-Batch 59 (Eli, Nov 6: "screens map to tabs, and round trip"). The workbook reads like the app: one tab per screen and
-sub-tab, in the order of `js/nav.js`, named like the app, each with the screen's own sections in the screen's order and
-the same labels. Moving between the app and Excel is the same place with the same words. The list lives in
-`js/registry/tabs.js` (`SCREEN_TABS`); `test/coverage.test.js` fails when a field of About you, Taxes or a setting has no
-row on a tab, when a table has no home, or when a screen has neither a tab nor a reason. Every name fits Excel's 31
-characters and uses none of its banned characters (`: \ / ? * [ ]`), so no short form was needed.
+Batch 59. Eli asked (Nov 6, about 2 pm): "screens map to tabs, and round trip". At 3:30 pm the direction moved: the
+workbook is his main tool ("sheet for me, app for clients"), in **Google Sheets**, and its tabs follow the session,
+which the app's nav will be made to match. The list lives in `js/registry/tabs.js` (`SCREEN_TABS`).
 
-| # | Screen in the app | Tab | What is on it |
+Each input tab reads top to bottom as "fill it out and fill it out some more": one line saying what to do, the tab's
+result at the top (a "Where this stands" block that fills in as the boxes do), then the boxes in the order a coach asks
+them, each section with the app's own title.
+
+| # | Tab | Today's screens it holds | Top to bottom |
 | --- | --- | --- | --- |
-| 1 | Home | Home | Money in one line (results), Next small things (Extra to debt a month), the program: sessions, the Picture, next small things |
-| 2 | Home › About you | Home › About you | Why now, What applies to me, About you (with Age worked out), People (a table), Work and home, Home and shared bills, Couples split, Your community and calendar, Which do you have today |
-| 3 | Net worth › Assets | Net worth › Assets | Assets in three bands (Cash, Investments, Home or car), what it comes to, Cash layers (sleep-at-night number, how the layers are held, little e), Income gaps, Backups (one row per backup), Institutions |
-| 4 | Net worth › Debt | Net worth › Debt | Order, Debt in three bands (Credit cards, Loans, Other), what it comes to |
-| 5 | Net worth › Credit cards | Net worth › Credit cards | Utilization and promo payoff, what your cards give you, Your credit (score, late payments, freezes), what would move your score |
-| 6 | Net worth › Protection | Net worth › Protection | Coverage |
-| 7 | Net worth › Fire drill | Net worth › Fire drill | If this account froze today (results) |
-| 8 | Cash flow › Income | Cash flow › Income | Income by person and type (a band each; Other benefits last), Variable income, Work hours, what it comes to |
-| 9 | Cash flow › Taxes | Cash flow › Taxes | Filing (with Filing status used and Files jointly worked out), what you pay |
-| 10 | Cash flow › Budget | Cash flow › Budget | Settings for this budget, Budget by category: Your gut number, then a band per category in the app's order (Accommodation, Food, Transportation, Debt, Health and self-care, Taxes, Retirement, Bills and subscriptions, Other), each with its category row and lines, then Irregular and yearly costs; what it comes to |
-| 11 | Cash flow › Calendar | Cash flow › Calendar | Money in and out, Wins, the running balance |
-| 12 | Cash flow › Month end | Cash flow › Month end | The months (a band per month), what it comes to |
-| 13 | Plan › Goals | Plan › Goals | FI date and assumptions (today's or future dollars), FI date (results), These are big deals and the ladder, Milestones and Upcoming events |
-| 14 | Plan › FOO | Plan › FOO | Giving, launch and the job, the steps (the FOO report), what the freed money does |
-| 15 | Plan › Scorecard | Plan › Scorecard | What the Income area asks (last raise, market rate), the Scorecard report |
-| 16 | Plan › Timeline | Plan › Timeline | Year by year to FI (row formulas) |
-| 17 | Plan › Debt payoff | Plan › Debt payoff | Debt free (results and range), the true cost of each debt, each debt month by month |
-| 18 | Plan › Next 12 months | Plan › Next 12 months | Sinking funds, your year (bonus months, holiday dates) |
-| 19 | Plan › Current vs Proposed | Plan › Current vs Proposed | Proposed (results), both sides and the steps |
-| 20 | Plan › Transitions | Plan › Transitions | What is changing? (the runway) |
-| 21 | Plan › Raise and benefits | Plan › Raise and benefits | Your benefits now (six taps, SNAP a month, child care), what a raise does |
-| 22 | Report › Overview | Report › Overview | Metrics, Your Shockingly Simple Math, Where the money goes, Fixed and variable, Ranges |
-| 23 | Report › Statements | Report › Statements | The three statements and the tie-out |
-| 24 | Report › Lender's view | Report › Lender's view | What each one counts |
-| 25 | Coach tools › Session and Discovery | Coach tools | Session (Phase 4 previews), Discovery, Ask me next |
-| | (engine room) | Assumptions, Math, Captured | Every rate and limit (its own tab, as before); every formula with its Check; what is kept for a later Wrapped |
-| | (hidden) | _lists, _meta | The long dropdown lists; who, when, the format and the baseline |
+| 1 | You | Home › About you, People, Coach tools › Discovery and Session | Where this stands (the Picture: answered, solid; Ask next), About you, What applies to me, Why now, People (a table), Work and home, Home and shared bills, Couples split, Which do you have today, Your community and calendar, Who they are with money, Session |
+| 2 | Money in | Cash flow › Income, Taxes, Plan › Raise and benefits | Where this stands (take-home, gross, taxes, the effective rate), Income by person and type (a band each; Other benefits last), Taxes (filing, W-4, last year), Variable income, Work hours, Benefits now, more about money in (match, safe budget, real hourly, what a shift really pays), what a raise does to your benefits |
+| 3 | Money out | Cash flow › Budget, Calendar, Month end, Plan › Next 12 months | Where this stands (spending, the gut number, the categories, gut accuracy), the gut number first, then a band per category in the app's order (Accommodation, Food, Transportation, Debt, Health and self-care, Taxes, Retirement, Bills and subscriptions, Other) with its lines, then Irregular and yearly costs; Settings for this budget; more about money out (sinking funds, bonus months, holidays); Calendar entries and wins; Month end (a band per month) |
+| 4 | Own and owe | Net worth › Assets, Debt, Credit cards, Protection, Fire drill, Report › Lender's view | Where this stands (net worth, liquid, cash, invested, runway), Assets (Cash, Investments, Home or car), Order to pay off debt, Debt (Credit cards, Loans, Other), what you owe comes to (utilization, debt-to-income), Your credit, what your cards give you, Protection, Cash layers, Income gaps, Backups, Institutions, the bank fire drill, what a lender sees |
+| 5 | The plan | Home, Plan › FOO, Scorecard, Current vs Proposed | Where this stands (surplus, savings rate, the FOO step, your next 3 moves), where each dollar goes (take-home to surplus, and the DRAFTT shares), Extra to debt, Giving, launch and the job, the FOO steps, what the freed money does, the Scorecard, Current vs Proposed |
+| 6 | The future | Plan › Goals, Timeline, Debt payoff, Transitions | Where this stands (months to FI and its range, months to debt free and its range), FI date and assumptions, the FI numbers, Goals (milestones and dated events), big deals and the ladder, year by year to FI, debt free and each debt month by month, Life Transitions |
+| 7 | Statements | Report › Statements | The three statements and the tie-out (nothing to type) |
+| 8 | One-pager | Report › One-pager, Overview | The metrics, the ranges, your next 3 moves, the program and the picture (nothing to type) |
+| | Assumptions, Math, Captured | (the engine room, at the end) | Every rate and limit (its own tab, as before); every formula with its Check; what is kept for a later Wrapped |
+| | _lists, _meta (hidden) | | The long dropdown lists; who, when, the format and the baseline |
 
-Screens with no tab: Report › One-pager (the page this file is opened from: its numbers are on Report › Overview and
-Plan › Goals), Report › History (dated history and snapshots stay in the app and the backup file), Coach tools › Lists
-(the Revisit, Homework and Defaults in use lists are worked out from the rows on the other tabs) and Coach tools › Data
-(the buttons that make and read this file).
+Screens of today's app with no tab: Report › History (dated history and snapshots stay in the app and the backup
+file), Coach tools › Lists (worked out from the rows on the other tabs) and Coach tools › Data (the buttons that make and
+read this file). Every tab name fits Excel's 31 characters and is one Google Sheets takes, so no short form was needed.
+`test/coverage.test.js` fails when a field of About you, Taxes or a setting has no row, when a table has no home, or
+when a screen of the app has neither a tab nor a reason.
 
-Three screens share one table, because a named range is one column on one tab and every formula reads it:
+Some screens share one table, because a named range is one column on one tab and every formula reads it: Credit cards
+are the first band of the Debt table, dated events (shown on Plan › Next 12 months) a band of the Goals table, Other
+benefits the last band of the Income table. With the session tabs they now sit on the same tab as their screen anyway.
 
-- **Credit cards** are rows of the Debt table, in its Credit cards band on Net worth › Debt. The Credit cards tab shows
-  what they add up to and holds Your credit.
-- **Upcoming events** (shown on Plan › Next 12 months) are rows of the Goals table on Plan › Goals, in their own band.
-- **Other benefits** (from work) are rows of the Income table, in the last band of Cash flow › Income.
+### Google Sheets first
 
-**The Math tab stays the engine room**, at the end beside Assumptions. Every result a screen shows is on that screen's
+The file is written as .xlsx (ExcelJS) and opened in Google Sheets by uploading it to Drive. `tools/sheets-check.mjs`
+(and `test/sheets.test.js`, on every household) lists anything that would not work the same there:
+
+- a function not on Google Sheets' function list (`data/google-sheets-functions.json`, from
+  support.google.com/docs/table/25273, checked Nov 6 2026). The workbook uses ABS, AND, COUNT, COUNTIF, COUNTIFS,
+  DATE, FV, IF, IFERROR, INDEX, ISNUMBER, LEFT, LN, MATCH, MAX, MID, MIN, MONTH, N, NPER, OR, ROUND, ROUNDUP, ROW, SUM,
+  SUMIFS, SUMPRODUCT, TEXT, TODAY, VALUE and YEAR, all on it;
+- a range used for one value (Excel and LibreOffice take the cell on the formula's own row; Sheets does not): a range is
+  used only inside SUMPRODUCT or as a whole argument of a function that takes one (SUM, SUMIFS, INDEX, MATCH ...);
+- an Excel-only form (structured table references, spills, `_xlfn.` functions), a range name Sheets refuses (one
+  starting with True or False: the True FI tax rule's range is `FiTrueTax` for that reason), a dropdown list from a name
+  (each list rule points at the cells on `_lists`).
+
+Sheets turns a protected tab into a protected range (a warning when you type there), so the look carries the meaning:
+an input is a blue box with a border, a worked-out cell is grey with no border. The recalculation check below runs in
+LibreOffice, not in Sheets itself (no Sheets in this container); the static check is what keeps the formulas inside
+what Sheets supports.
+
+**The Math tab stays the engine room**, at the end beside Assumptions. Every result a tab shows is on that
 tab as a live formula (`=Math_M27`) with the app's value and a Check; the Math tab keeps all 200 rows in the order the
 math is built, because most rows are steps of another (M27's six parts feed M28, M53 and the FOO) and folding them into
-the screens would scatter one formula's inputs over several tabs. One home for every formula, many places to read it.
+the session tabs would scatter one formula's inputs over several tabs. One home for every formula, many places to read it.
 
-**How a tab is laid out.** Row 1 is the screen's name, row 2 one line saying which screen it is and what to do there.
-Then the sections, in the screen's order: a form (a label and a blue box per answer) or a table (a header, then a bold
+**How a tab is laid out.** Row 1 is the tab's name, row 2 one line saying what to do there, then Where this stands.
+Then the sections, in the order a coach asks them: a form (a label and a blue box per answer) or a table (a header, then a bold
 band per section, its rows, and one or two blank rows to add to it). Blue bordered boxes are inputs (unlocked); grey
-cells are worked out; a tab with nothing to type (Overview, Statements, Fire drill and the like, and Math) is protected.
+cells are worked out; a tab with nothing to type (Statements, One-pager, Math) is protected.
 Input tabs are not protected so rows can be inserted and deleted. Every tap in the app is a dropdown: Know it, Roughly,
 Guess, Will get it, Not now, Not for me; Who pays; Owner; a section's own types; the categories; Yes or No. A list too long
-for a rule (or with a comma in it) lives on the hidden `_lists` tab. Panes freeze on the title and the first table's
-header; widths fit what each column holds; money shows as `$1,650` (cents where the app shows cents), percents as `22.15%`.
+for a rule (or with a comma in it) lives on the hidden `_lists` tab. Panes freeze on the title and its line (and on a
+table's header when a tab opens on one); widths fit what each column holds; money shows as `$1,650` (cents where the app shows cents), percents as `22.15%`.
 
-**How it comes back.** Column A of every screen tab is hidden and says what each row is: `field:profile.age`,
+**How it comes back.** Column A of every session tab is hidden and says what each row is: `field:profile.age`,
 a record's id, `#sec:kind=bill;draftt=Food` (a band, with what a new row in it is), `#new` (a blank row), `math:M27`, and a
 hidden row of column keys sits above each table's header. "Bring a spreadsheet back" reads by those keys, never by
 position, so inserted rows and columns, sorted rows and renamed headers all still read. A new row takes its section: a
 card under Credit cards, a cash account under Cash, a line under Food (its category still decides its letter), a month
 line under its month. A row deleted in the file is offered for deletion (No by default). Typing over a grey cell is
 listed and never saved. A copy made Without private rows comes back too: its private rows (neutral names there) are
-never read, renamed or deleted, and the review never names them. A file of format 43 or before (a tab per area: Debt,
+never read, renamed or deleted, and the review never names them. A file of format 45 or before (a tab per area: Debt,
 Spending lines ...) is read by its old tab names and headers, with a note saying so.
 
-Checked by: `node tools/workbook-check.mjs` (every Check on every tab, every household), `test/roundtrip.test.js` (every
-persona, the Demo and Fast Track Alexis and Tom: untouched brings back nothing; one cell on each editable tab brings back
-exactly those changes and saves them; a new row takes its section; typing over a formula; the private copy; a format 43
+Checked by: `node tools/workbook-check.mjs` (every Check on every tab, every household), `node tools/sheets-check.mjs`
+(Google Sheets), `test/roundtrip.test.js` (every persona, the Demo and Fast Track Alexis and Tom: untouched brings back
+nothing; one cell in each table and form of every input tab brings back exactly those changes and saves them; a new row takes its section; typing over a formula; the private copy; a format 43
 file), `test/coverage.test.js` (every field has a row, every screen a tab or a reason).

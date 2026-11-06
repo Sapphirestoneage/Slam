@@ -9,7 +9,7 @@ export function tableIn(plan, area) {
     const end = sheet.rows.findIndex((r, i) => i > headAt && r?.[0]?.v === `${KEY.end}${area}`);
     const body = sheet.rows.slice(headAt + 1, end);
     return { sheet, headAt, head: sheet.rows[headAt].map(c => c?.v ?? null), keys: sheet.rows[headAt - 1].map(c => c?.v ?? null),
-      rows: body.filter(r => r?.[0]?.v && !String(r[0].v).startsWith('#')) };
+      rows: body.filter(r => r?.[0]?.v && !String(r[0].v).startsWith('#')), bands: body.filter(r => String(r?.[0]?.v ?? '').startsWith(KEY.sec)).map(r => r[1].v) };
   }
   return null;
 }
