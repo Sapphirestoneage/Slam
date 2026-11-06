@@ -34,6 +34,7 @@ export function pairTerms(main, hash = location.hash) {
     if (seen.some(el => el.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
     for (const el of seen) el.replaceWith(document.createTextNode(el.firstChild.textContent));
     const m = node.nodeValue.match(p.re), at = m.index, end = at + m[0].length;
+    if (/^\s*\(/.test(node.nodeValue.slice(end))) continue; // its first mention already says what it is ("big e (your job-loss fund)")
     const tip = GLOSSARY[p.term];
     const pair = h('span.term-pair', { 'data-term': p.term }, h(`span${tip ? '.has-tip' : ''}`, tip ? { title: `${p.term}: ${tip}` } : {}, m[0]), ` (${p.plain})`);
     const rest = node.splitText(at); rest.nodeValue = rest.nodeValue.slice(end - at);
