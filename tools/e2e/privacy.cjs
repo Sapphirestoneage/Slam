@@ -1,4 +1,4 @@
-// The leak test (batch 28, who sees this): opens the private couple (fixtures/personas/private-couple.json: Remy's fan
+// The leak test (batch 28, who sees this): opens the discreet couple (fixtures/personas/discreet-couple.json: Remy's fan
 // page income and its payout account kept between Remy and the coach, Dana's private store card, a coach-only note
 // and a coach-only Budget line) through Import, then looks at every place data leaves the coach's view and searches
 // what it finds for the private names, notes and amounts:
@@ -24,7 +24,7 @@ const OUT = process.env.PRIVACY_OUT || path.join(os.tmpdir(), 'slam-privacy');
 const ECHARTS = process.env.ECHARTS || '';
 const EXCELJS = process.env.EXCELJS || path.join(__dirname, '..', '..', 'node_modules', 'exceljs', 'dist', 'exceljs.min.js');
 const WIDTHS = (process.env.PRIVACY_WIDTHS || '1280,390').split(',').map(Number);
-const FILE = path.join(__dirname, '..', '..', 'fixtures', 'personas', 'private-couple.json');
+const FILE = path.join(__dirname, '..', '..', 'fixtures', 'personas', 'discreet-couple.json');
 
 // What each audience must never see. Names are searched everywhere (also in the app's math texts); amounts in what is shown.
 const REMY = { names: ['Velvet Room', 'OnlyFans', 'Wise payout', '7781'], amounts: ['2,975', '3,871'] };
@@ -141,7 +141,7 @@ const KEYS = ['netWorth', 'liquidNetWorth', 'surplus', 'savingsRate', 'debtTotal
       await page.locator('.export-choice button', { hasText: 'Without private rows' }).first().click(); await page.waitForTimeout(200);
       await page.screenshot({ path: path.join(OUT, `data-${W}.png`), fullPage: true });
       const save = async label => { const [d] = await Promise.all([page.waitForEvent('download', { timeout: 20000 }), page.locator('button', { hasText: label }).first().click()]); const to = path.join(OUT, d.suggestedFilename()); await d.saveAs(to); return to; };
-      const json = await save(/^Export$/);
+      const json = await save(/^Export( a backup)?$/);
       const jt = fs.readFileSync(json, 'utf8');
       const jh = [...found(jt, never.names), ...found(jt, COACH.names)]; if (jh.length) problems.push(`backup without private rows: ${jh.join(', ')}`);
       if (!/"sharedCopy": true/.test(jt)) problems.push('backup without private rows: not marked as a shared copy');
@@ -158,7 +158,7 @@ const KEYS = ['netWorth', 'liquidNetWorth', 'surplus', 'savingsRate', 'debtTotal
       } else console.log('(ExcelJS not found: the spreadsheet export was not checked)');
       // The full export still has everything (the choice is the only thing that changes it).
       await page.locator('.export-choice button', { hasText: 'Everything' }).first().click(); await page.waitForTimeout(200);
-      const full = fs.readFileSync(await save(/^Export$/), 'utf8');
+      const full = fs.readFileSync(await save(/^Export( a backup)?$/), 'utf8');
       if (!full.includes('Velvet Room')) problems.push('the full backup lost the private row');
     }
     if (errors.length) problems.push(...errors.map(e => `${W} error: ${e}`));

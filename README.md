@@ -93,7 +93,7 @@ this; an income row also has Keep this private). `js/privacy.js` is the one laye
 the coach's view: Client view and the couple views read the household through it, and the one-pager, Send summary, the
 Life Transitions share view and an export made Without private rows read it as anything shared sees it. A row a viewer
 may not see is folded, never removed: a neutral name, no notes or account details, every number kept, so every total
-equals the coach's. The test opens the private couple persona and searches every screen in each view, the shared
+equals the coach's. The test opens the discreet couple persona and searches every screen in each view, the shared
 pages and both exports for the private names and amounts. `EXCELJS` points at a local exceljs.min.js where the CDN is
 blocked; `PRIVACY_WIDTHS` (default 1280,390).
 ### Findability and effort (batch 14)

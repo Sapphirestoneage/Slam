@@ -4,7 +4,7 @@
 // the coach keeps a coach-only note on the platform row and one coach-only Budget line. Every total in every view is
 // the coach's total; only the names change (test/privacy.test.js, tools/e2e/privacy.cjs).
 export default {
-  id: 'private-couple', order: 15, name: 'Remy and Dana', view: 'all',
+  id: 'discreet-couple', order: 15, name: 'Remy and Dana', view: 'all',
   about: 'Made up. Married, money kept separate. Remy: a cafe job ($1,350 every 2 weeks) and a fan page on OnlyFans (about $2,975 a month gross, $115 chargebacks, weekly payouts) kept between Remy and the coach, its payouts in a separate account; Dana: a W-2 job ($4,200 a month), a 401(k) and a store card Dana keeps private.',
   profile: {
     firstName: 'Remy', lastName: 'Persona', partnerName: 'Dana', birthYear: 1997, birthMonth: 4, partnerBirthYear: 1994, state: 'IL',

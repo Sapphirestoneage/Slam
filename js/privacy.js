@@ -13,7 +13,7 @@
 // This is the one layer data passes through on its way out of the coach's view: the app's ctx reads its doc through
 // viewStore (Client view and the couple views), and shareDoc / shareCtx feed every shared output.
 import { LISTS } from './registry/assumptions.js';
-import { MODES, modeOf, ownerOf } from './registry/couples.js';
+import { MODES, modeOf, ownerOf, bothPreviewOn } from './registry/couples.js';
 import { platformOf } from './math/earnings.js';
 
 export const SEEN = LISTS.privacy.seen;
@@ -45,7 +45,7 @@ export const neutralName = r => r?.values?.shareName || LISTS.privacy.neutral[ki
 export function personView(doc) {
   const mode = modeOf(doc?.profile), p = doc?.settings?.person;
   const v = p ?? (mode ? MODES[mode].view : 'all');
-  return v === 'all' && mode && !MODES[mode].together ? 'Me' : v;
+  return v === 'all' && mode && !MODES[mode].together && !bothPreviewOn(doc) ? 'Me' : v; // batch 33: Living together's Both preview
 }
 const isCouple = doc => { const mode = modeOf(doc?.profile); return !!(mode && MODES[mode].couple); };
 

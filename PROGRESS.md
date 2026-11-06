@@ -947,7 +947,7 @@ separate money, and families share a screen. One layer, js/privacy.js, sits wher
    back refuses it.
 3. Keep this private: one tap in an income row's menu marks it Me and my coach and names it Other income in anything
    shared; the popover offers Self-employment and Consulting as taps.
-4. Tests: a new persona, the private couple (Remy's fan page on OnlyFans and its payout account kept between Remy and
+4. Tests: a new persona, the discreet couple (tools/personas/defs/discreet-couple.mjs: Remy's fan page on OnlyFans and its payout account kept between Remy and
    the coach, Dana's private store card, a coach-only note and a coach-only Budget line; net worth $26,238 hand-worked).
    test/privacy.test.js (7): who sees what, every total equal in every view, what a fold keeps and drops, the shared
    backup and spreadsheet carry no private name, the view store writes through. tools/e2e/privacy.cjs (the browser leak

@@ -1,6 +1,6 @@
 // Batch 28 (who sees this, js/privacy.js): a row, and its notes, marked Everyone, Me and my coach, or Coach only is
 // folded for every audience that may not see it: renamed to a neutral word, its notes and identifying details gone,
-// every number the math reads kept. The private couple persona (Remy's fan page and its payout account kept between
+// every number the math reads kept. The discreet couple persona (Remy's fan page and its payout account kept between
 // Remy and the coach, Dana's private store card, a coach-only note and a coach-only Budget line) checks that nothing
 // private reaches a partner's view, Client view, a share or an export, and that every total equals the coach's.
 // The browser half is tools/e2e/privacy.cjs.
@@ -17,7 +17,7 @@ import { createCtx, shareCtx } from '../js/ui/staples.js';
 
 const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
 const now = new Date('2026-11-05T12:00:00Z');
-const persona = () => importFile(readFileSync(new URL('../fixtures/personas/private-couple.json', import.meta.url), 'utf8'));
+const persona = () => importFile(readFileSync(new URL('../fixtures/personas/discreet-couple.json', import.meta.url), 'utf8'));
 const REMY = ['Velvet Room', 'OnlyFans', 'Wise payout', '7781'];
 const DANA = ['Lantern'];
 const COACH = ['Discreet PO box', 'has not told family', 'Payouts every Friday'];
