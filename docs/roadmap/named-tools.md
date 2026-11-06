@@ -199,3 +199,31 @@ built in chats as single HTML files, not in the Personalfinance repo. What each 
 Where they land in SLAM: Quantum Collapse is Phase 4 Track 1 (its meter becomes the certainty meter; its early exits
 become Ask me next). The FI Address and the personality types are Phase 4 too, as one optional tap screen in
 Discovery whose letters tilt which skills and which wording SLAM leads with; never a gate, never a verdict.
+
+## Everything else built in chats (Nov 6 2026 sweep)
+
+Found in Eli's past chats and notes; none of these live in the Personalfinance repo. Where each would land in SLAM:
+
+| Tool | What it did | Lands |
+|---|---|---|
+| Life Transitions (Nov 5 2026 design) | Options ladder (every money source cheapest first, each priced: buffer, little e, big e, cut to Basics, side income, benefits, family, 0% card, card, retirement last), the dip track with a floor line, tripwires decided calm, Plan B and C, a share view for parents or a partner; templates for student to job, job loss, quitting, marriage, kids, divorce, empty nest | Phase 4, its own session; first Real lives build |
+| Graceful degradation and backups of the backups | Months at full spending, then DRAFTT, then FAT, then food and housing only; runway, ability to cut, unemployment, disability, term life | Phase 4, folds into Life Transitions and big e |
+| "Can I?" affordability screen (Cashflow tool v43) | Type a purchase, see whether it fits this month and what it moves | Phase 4, Plan |
+| True Cost of Debt (Level 15 Borrow) | Inflation-adjusted cost, opportunity cost vs earning power bought, taxes, FIRE view; loan comparison | Phase 4, Debt payoff |
+| Student Loan Decision ("What It Takes") | Repayment plans and forgiveness paths compared | Phase 4, Debt |
+| Your Shockingly Simple Math | MMM's savings-rate table re-run on the client's numbers, with the assumption waterfall | Phase 4, Report |
+| Money Mirror | Financial Enneagram, five-element radar, anxiety weather gauge (Clear to Storm), couples overlay with one concrete ask per partner | Phase 4, Discovery (couples) |
+| What Matters | Ranked things to fund and problems to remove, spending tagged to them, conflicts flagged | Phase 5, Goals and the one-pager |
+| Life Pyramid (Maslow) | Needs by stage as a pyramid that doubles as a bar chart | A lens like DRAFTT, Phase 5 |
+| Scenario blocks and the life simulator | Stacked, dated hypotheticals (home, car, kid, job change, sabbatical, geo arbitrage, side hustle, inheritance, marriage), drag to reorder life events | Phase 5, on the projection engine |
+| Timeline Comparator | Three career paths side by side | Phase 5, with scenario blocks |
+| Modern Orthodox life planner | Tuition as the sun, 23 communities' costs, levers (educator tuition, ESAs, Pesach home or away, community choice), a pre-marriage alignment quiz | Phase 4, the community presets grow into it |
+| Aliyah Math | US vs Israel | Phase 5, a geo arbitrage block |
+| Windfall waterfall | Where a bonus or windfall goes, in FOO order | Phase 4, Plan |
+| Card library and card benefits | Big banks' cards as prefill templates | Phase 4 (queued) |
+| Government benefits | Benefits and cliffs | Phase 4, the benefits cliff |
+| Hours back, memory dividends, purpose and happiness | Money as time and joy | Joy measures, Phase 5 |
+| SLAM Profit Engine, Pricing Your Power workbook, Offer Scorecard | Business P&L by model, seasonal budget presets, offer portfolio, Dream, Normal, Disaster | Phase 5 shift P&L and business income; seasonal presets feed irregular income now |
+| Dungeons & Dividends | Six stats, HP as liquidity runway, AC, death saves, three scores (gold, well-rounded, fit) | Client view of the Scorecard as a character sheet, Phase 7 |
+| Bonus Hunt, credit score game, Ledgerfell, type chart | Games | Library side quests, after Phase 7 |
+| Sky, Dante spheres, decision tree map | Visual metaphors for progress | Visual layer, Phase 7 |
