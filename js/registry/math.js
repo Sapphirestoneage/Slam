@@ -29,7 +29,7 @@ import { scorecardOf } from '../math/scorecard.js';
 import { ladderOf } from '../math/ladder.js';
 import { saferFi } from '../math/fi.js';
 import { compareOf, netWorthIn } from '../math/proposed.js';
-import { closeStreak } from '../month.js';
+import { closeStreak, byCategory, monthView, ymOf } from '../month.js';
 import { foo } from '../math/foo.js';
 import { gapOf } from '../math/gap.js';
 import { nextMoves } from '../math/moves.js';
@@ -227,7 +227,11 @@ export const MATH = [
   { id: 'M25', name: 'Estimate vs actual', inputs: 'estimate, actual', unit: 'money', fns: ['spending.estimateVsActual'],
     cols: [{ area: 'months', key: 'M25', label: 'Actual minus plan (M25)', unit: 'money', f: 'IF(OR({estimate}="",{actual}=""),"",{actual}-{estimate})' }],
     sheet: 'SUM(Months_M25)', label: 'Every month with both a plan and an actual: actual minus plan, added up',
-    app: c => sum(Object.values(c.doc.spending?.months || {}).flatMap(mo => Object.values(mo.lines || {})), l => estimateVsActual({ estimate: l.estimate ?? null, actual: l.actual ?? null }).value) },
+    app: c => sum(Object.values(c.doc.spending?.months || {}).flatMap(mo => Object.values(mo.lines || {})), l => estimateVsActual({ estimate: l.estimate ?? null, actual: l.actual ?? null }).value),
+    // Batch 22: the same comparison per Budget category for this month (Month end, after an import); js/month.js byCategory.
+    parts: [{ key: 'byCategory', name: 'This month, actual minus plan, added up over the categories that have an actual', unit: 'money',
+      fromApp: 'each Budget category is the sum of its lines for the month (plan, and actual from Month end, the calendar or an import); the Months tab has the line rows',
+      app: c => { const v = byCategory(monthView(c.doc, c.ref, ymOf(c.now), { now: c.now })).filter(x => x.diff != null); return v.length ? sum(v, x => x.diff) : null; } }] },
   { id: 'M26', name: 'Gut accuracy', inputs: 'closed months', unit: 'pct', fns: ['spending.gutAccuracy', 'spending.gutVsLinesWords'],
     fromApp: 'an average across closed months of each first guess against the actual; the close history stays in SLAM', app: () => null },
   { id: 'M27', name: 'Monthly surplus', inputs: 'M12, M21, debts', unit: 'money', fns: ['spending.monthlySurplus'],

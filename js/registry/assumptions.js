@@ -213,6 +213,9 @@ export const REFERENCE_LISTS = {
   spendingPresets: 'starter Budget lines, each a Guess',
   year: 'the tax year this file is for', source: 'where this file came from',
   transitions: 'Life Transitions (batch 21, js/math/transitions.js, M90): the templates (job loss, quitting, student to job, marriage, a baby, divorce, empty nest, something else), their start and destination words, which income types stop, how the cut starts, the tripwire choices and the ways to earn money quickly. Words and tap choices: no math reads a number from them',
+  importFormats: 'batch 22: the CSV exports SLAM recognizes (Rocket Money, Monarch, a bank), each by its header row, with its columns, sign and source links (js/import/apps.js). Words, not numbers',
+  importCategories: 'batch 22: each app\'s own category names to SLAM\'s Budget line categories (or income, transfer, debt, leave out), with sources; a client\'s own edits are kept in settings.importCategoryMap',
+  merchantWords: 'batch 22: merchant words to a Budget line category (or paycheck, transfer, debt), the last matching step on an import; shown as Guessed',
   findWords: 'Find\'s everyday words (batch 14, js/find.js): what people type (401k, emergency fund, payday) and the screen and box each lands on, so Find reaches a thing in one search. Words, not numbers: no math reads them',
 };
 

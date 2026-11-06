@@ -1980,6 +1980,28 @@
         ],
         "add": "none",
         "why": "Plan › Transitions: how long the money lasts and what to do, in order (batch 21, Phase 4)"
+      },
+      {
+        "terms": [
+          "import",
+          "import transactions",
+          "csv",
+          "transactions",
+          "rocket money",
+          "rocket",
+          "monarch",
+          "monarch money",
+          "bank export",
+          "bank csv",
+          "statement upload",
+          "import csv"
+        ],
+        "label": "Import a month of transactions",
+        "go": [
+          "focus:import-tx@#/cash-flow/close"
+        ],
+        "add": "none",
+        "why": "batch 22: a Rocket Money, Monarch or bank CSV comes in on Cash flow > Month end (also Coach tools > Data); the review comes before anything is saved"
       }
     ]
   },
@@ -2219,6 +2241,590 @@
       "Sell things I do not use",
       "Weekend or seasonal shifts",
       "Freelance on a platform"
+    ]
+  },
+  "importFormats": {
+    "about": "Batch 22: the transaction exports a coach drops into SLAM at month end. Each format is recognized by its header row (detect: every one of these headers is there, any order, any case). columns: the header row as the app writes it. roles: which column is which. sign: out-positive means money out is a positive number (it is turned around on the way in), out-negative means money out is negative. The generic bank CSV has no fixed header: the date, description and amount (or debit and credit) columns are guessed from the header words, and asked for when they cannot be.",
+    "source": "Rocket Money: Transactions, Export (help article) and the header row of an export; Monarch: Settings, Data, Download transactions (help articles and two converters that read the file). Links per format.",
+    "date": "2026-11-06",
+    "formats": [
+      {
+        "id": "rocket",
+        "name": "Rocket Money",
+        "how": "Rocket Money on the web: Transactions, Export, Export again; the file comes by email (Download File).",
+        "detect": [
+          "Date",
+          "Original Date",
+          "Account Name",
+          "Custom Name",
+          "Amount",
+          "Category"
+        ],
+        "columns": [
+          "Date",
+          "Original Date",
+          "Account Type",
+          "Account Name",
+          "Account Number",
+          "Institution Name",
+          "Name",
+          "Custom Name",
+          "Amount",
+          "Description",
+          "Category",
+          "Note",
+          "Ignored From",
+          "Tax Deductible",
+          "Transaction Tags"
+        ],
+        "roles": {
+          "date": "Date",
+          "merchant": [
+            "Custom Name",
+            "Name"
+          ],
+          "description": "Description",
+          "amount": "Amount",
+          "category": "Category",
+          "account": "Account Name",
+          "ignored": "Ignored From"
+        },
+        "sign": "out-positive",
+        "signNote": "Spending is written as a positive amount; the direction is checked against the Income rows in the file and kept as is when they say otherwise.",
+        "sources": [
+          "https://help.rocketmoney.com/en/articles/10296106-exporting-transactions",
+          "https://github.com/weinfurtmatthew-rgb/Finance-tracker/pull/19",
+          "https://help.rocketmoney.com/en/articles/3584527-working-with-credit-card-payments-transfers"
+        ],
+        "checked": "The help article gives the steps but not the columns; the header row is the one Rocket Money writes (Account Name, Account Number, Institution Name, Name, Custom Name are named in the converter linked here). A coach who sees a different header: the file falls back to the generic bank CSV."
+      },
+      {
+        "id": "monarch",
+        "name": "Monarch",
+        "how": "Monarch: Settings, Data, Download transactions (or Transactions, the download button). Every account comes in one CSV.",
+        "detect": [
+          "Date",
+          "Merchant",
+          "Category",
+          "Account",
+          "Original Statement",
+          "Amount"
+        ],
+        "columns": [
+          "Date",
+          "Merchant",
+          "Category",
+          "Account",
+          "Original Statement",
+          "Notes",
+          "Amount",
+          "Tags",
+          "Owner"
+        ],
+        "roles": {
+          "date": "Date",
+          "merchant": [
+            "Merchant"
+          ],
+          "description": "Original Statement",
+          "amount": "Amount",
+          "category": "Category",
+          "account": "Account"
+        },
+        "sign": "out-negative",
+        "signNote": "Money out is negative and money in positive, credit cards too; dates are YYYY-MM-DD. Owner comes after Tags on household plans.",
+        "sources": [
+          "https://help.monarch.com/hc/en-us/articles/4409682789908",
+          "https://beancount.io/tools/csv-to-beancount/monarch",
+          "https://waypointbudget.com/blog/move-from-monarch-money-to-waypoint-budget"
+        ],
+        "checked": "Date, Merchant, Category, Account, Original Statement, Notes, Amount, Tags in this order (both converters); Owner on household plans."
+      },
+      {
+        "id": "bank",
+        "name": "Bank CSV",
+        "how": "Any bank: download the month as CSV (Activity or Statements, Download, CSV).",
+        "detect": [],
+        "columns": [],
+        "roles": {
+          "date": "a header with date or posted",
+          "description": "description, memo, payee, details or name",
+          "amount": "amount (signed)",
+          "debit": "debit, withdrawal or money out",
+          "credit": "credit, deposit or money in"
+        },
+        "sign": "out-negative",
+        "signNote": "A signed amount: money out negative. A debit column is money out, a credit column money in.",
+        "sources": [
+          "js/import/csv.js guessMap (overnight J)"
+        ],
+        "checked": "the column guess from the existing statement import"
+      }
+    ]
+  },
+  "importCategories": {
+    "about": "Batch 22: how each app's own category names land on SLAM's Budget categories (the category on a Budget line). A name maps to a line category, or to @income (money in), @transfer (between the client's own accounts or a card payment, kept out of spending), @debt (a loan or card payment, kept out of spending and marked Paid on the calendar), @ignore (left out) or null (not matched: the coach picks). A coach can change any of these for one client on the import review; that change is kept with the client (settings.importCategoryMap).",
+    "source": "Monarch: Default Categories (help article); Rocket Money: Internal Transfers and Credit Card Payment from the help article on transfers, the other names as they appear in an export. Matched to SLAM categories by the coach rule (Eli, Nov 6 2026: keep tracking in Rocket Money or Monarch, bring the month in).",
+    "date": "2026-11-06",
+    "sources": {
+      "rocket": [
+        "https://help.rocketmoney.com/en/articles/3584527-working-with-credit-card-payments-transfers",
+        "https://help.rocketmoney.com/en/articles/10296106-exporting-transactions"
+      ],
+      "monarch": [
+        "https://help.monarch.com/hc/en-us/articles/360048883851"
+      ]
+    },
+    "rocket": {
+      "Auto & Transport": "Transit",
+      "Bills & Utilities": "Electric, gas, water",
+      "Business": null,
+      "Cash & Checks": null,
+      "Charitable Donations": "Giving",
+      "Credit Card Payment": "@debt",
+      "Dining & Drinks": "Dining out",
+      "Education": "Education",
+      "Entertainment & Rec.": "Entertainment",
+      "Family Care": "Family support",
+      "Fees": "Fees",
+      "Gifts": "Gifts",
+      "Groceries": "Groceries",
+      "Health & Wellness": "Gym or fitness",
+      "Home & Garden": "Household supplies",
+      "Income": "@income",
+      "Internal Transfers": "@transfer",
+      "Investment": "@transfer",
+      "Legal": "Fees",
+      "Loan Payment": "@debt",
+      "Medical": "Copays",
+      "Personal Care": "Personal care",
+      "Pets": "Pets",
+      "Shopping": "Other wants",
+      "Software & Tech": "Apps and cloud",
+      "Taxes": null,
+      "Travel & Vacation": "Travel",
+      "Uncategorized": null
+    },
+    "monarch": {
+      "Paychecks": "@income",
+      "Interest": "@income",
+      "Business Income": "@income",
+      "Other Income": "@income",
+      "Dividends & Capital Gains": "@income",
+      "Transfer": "@transfer",
+      "Credit Card Payment": "@debt",
+      "Buy": "@transfer",
+      "Sell": "@transfer",
+      "Balance Adjustments": "@ignore",
+      "Charity": "Giving",
+      "Gifts": "Gifts",
+      "Auto Payment": "@debt",
+      "Public Transit": "Transit",
+      "Gas": "Gas or charging",
+      "Auto Maintenance": "Car maintenance, registration",
+      "Parking & Tolls": "Tolls and parking",
+      "Taxi & Ride Shares": "Rideshare",
+      "Mortgage": "Rent or mortgage",
+      "Rent": "Rent or mortgage",
+      "Home Improvement": "Furniture and home",
+      "Garbage": "Electric, gas, water",
+      "Water": "Electric, gas, water",
+      "Gas & Electric": "Electric, gas, water",
+      "Internet & Cable": "Internet",
+      "Phone": "Phone",
+      "Groceries": "Groceries",
+      "Restaurants & Bars": "Dining out",
+      "Coffee Shops": "Coffee and snacks",
+      "Travel & Vacation": "Travel",
+      "Entertainment & Recreation": "Entertainment",
+      "Personal": "Personal care",
+      "Pets": "Pets",
+      "Fun Money": "Other wants",
+      "Shopping": "Other wants",
+      "Clothing": "Clothes",
+      "Furniture & Housewares": "Furniture and home",
+      "Electronics": "Tech",
+      "Child Care": "Kids",
+      "Child Activities": "Kids",
+      "Student Loans": "@debt",
+      "Education": "Education",
+      "Medical": "Copays",
+      "Dentist": "Copays",
+      "Fitness": "Gym or fitness",
+      "Loan Repayment": "@debt",
+      "Financial & Legal Services": "Fees",
+      "Financial Fees": "Fees",
+      "Cash & ATM": null,
+      "Insurance": null,
+      "Taxes": null,
+      "Uncategorized": null,
+      "Check": null,
+      "Miscellaneous": null
+    }
+  },
+  "merchantWords": {
+    "about": "Batch 22: the last step of matching. Words in a transaction's merchant or description (lower case, whole words or the start of one) and the Budget line category they point to. A Budget line's own name counts too (a line called Rent catches RENT PAYMENT). kind: paycheck or transfer instead of a category keeps the row out of spending. A match from these words is shown as Guessed.",
+    "source": "SLAM rule (Eli, Nov 6 2026): common US merchants, made up for matching, not a list from any app",
+    "date": "2026-11-06",
+    "words": [
+      {
+        "words": [
+          "payroll",
+          "direct dep",
+          "direct deposit",
+          "paycheck",
+          "salary"
+        ],
+        "kind": "paycheck"
+      },
+      {
+        "words": [
+          "transfer to",
+          "transfer from",
+          "online transfer",
+          "xfer",
+          "to savings",
+          "from savings",
+          "to checking",
+          "from checking",
+          "internal transfer"
+        ],
+        "kind": "transfer"
+      },
+      {
+        "words": [
+          "payment thank you",
+          "autopay payment",
+          "credit card payment",
+          "card payment",
+          "epay",
+          "card services"
+        ],
+        "kind": "debt"
+      },
+      {
+        "words": [
+          "rent",
+          "landlord",
+          "property management",
+          "apartments",
+          "mgmt"
+        ],
+        "category": "Rent or mortgage"
+      },
+      {
+        "words": [
+          "con edison",
+          "coned",
+          "pseg",
+          "national grid",
+          "electric",
+          "water dept",
+          "utility"
+        ],
+        "category": "Electric, gas, water"
+      },
+      {
+        "words": [
+          "spectrum",
+          "comcast",
+          "xfinity",
+          "optimum",
+          "fios internet",
+          "internet"
+        ],
+        "category": "Internet"
+      },
+      {
+        "words": [
+          "verizon",
+          "t-mobile",
+          "tmobile",
+          "at&t",
+          "mint mobile"
+        ],
+        "category": "Phone"
+      },
+      {
+        "words": [
+          "lemonade",
+          "renters insurance",
+          "state farm",
+          "geico",
+          "allstate"
+        ],
+        "category": "Renters or home insurance"
+      },
+      {
+        "words": [
+          "trader joe",
+          "whole foods",
+          "safeway",
+          "kroger",
+          "stop & shop",
+          "shoprite",
+          "aldi",
+          "wegmans",
+          "publix",
+          "costco",
+          "h mart",
+          "grocery",
+          "market"
+        ],
+        "category": "Groceries"
+      },
+      {
+        "words": [
+          "doordash",
+          "uber eats",
+          "grubhub",
+          "seamless",
+          "chipotle",
+          "restaurant",
+          "pizza",
+          "diner",
+          "sushi",
+          "thai"
+        ],
+        "category": "Dining out"
+      },
+      {
+        "words": [
+          "starbucks",
+          "dunkin",
+          "coffee",
+          "cafe",
+          "bakery"
+        ],
+        "category": "Coffee and snacks"
+      },
+      {
+        "words": [
+          "sweetgreen",
+          "cava",
+          "pret",
+          "just salad"
+        ],
+        "category": "Work lunches"
+      },
+      {
+        "words": [
+          "mta",
+          "omny",
+          "metrocard",
+          "nj transit",
+          "path",
+          "amtrak",
+          "metro"
+        ],
+        "category": "Transit"
+      },
+      {
+        "words": [
+          "uber",
+          "lyft"
+        ],
+        "category": "Rideshare"
+      },
+      {
+        "words": [
+          "shell",
+          "exxon",
+          "mobil",
+          "chevron",
+          "bp",
+          "sunoco",
+          "gas station"
+        ],
+        "category": "Gas or charging"
+      },
+      {
+        "words": [
+          "netflix",
+          "hulu",
+          "disney",
+          "peacock",
+          "paramount",
+          "youtube premium"
+        ],
+        "category": "Streaming"
+      },
+      {
+        "words": [
+          "spotify",
+          "apple music",
+          "tidal"
+        ],
+        "category": "Music"
+      },
+      {
+        "words": [
+          "icloud",
+          "google storage",
+          "dropbox",
+          "adobe",
+          "chatgpt",
+          "apple.com/bill"
+        ],
+        "category": "Apps and cloud"
+      },
+      {
+        "words": [
+          "amazon prime",
+          "prime membership",
+          "costco membership"
+        ],
+        "category": "Memberships"
+      },
+      {
+        "words": [
+          "new york times",
+          "nytimes",
+          "substack",
+          "washington post"
+        ],
+        "category": "News"
+      },
+      {
+        "words": [
+          "equinox",
+          "planet fitness",
+          "blink",
+          "crunch",
+          "classpass",
+          "peloton",
+          "gym"
+        ],
+        "category": "Gym or fitness"
+      },
+      {
+        "words": [
+          "cvs",
+          "walgreens",
+          "duane reade",
+          "rite aid",
+          "pharmacy"
+        ],
+        "category": "Prescriptions"
+      },
+      {
+        "words": [
+          "therapy",
+          "counseling",
+          "talkspace",
+          "betterhelp"
+        ],
+        "category": "Therapy"
+      },
+      {
+        "words": [
+          "salon",
+          "barber",
+          "sephora",
+          "ulta"
+        ],
+        "category": "Personal care"
+      },
+      {
+        "words": [
+          "target",
+          "walmart",
+          "bed bath",
+          "home depot",
+          "lowes",
+          "ikea"
+        ],
+        "category": "Household supplies"
+      },
+      {
+        "words": [
+          "laundromat",
+          "laundry",
+          "dry clean"
+        ],
+        "category": "Laundry"
+      },
+      {
+        "words": [
+          "uniqlo",
+          "zara",
+          "h&m",
+          "gap",
+          "nike",
+          "old navy"
+        ],
+        "category": "Clothes"
+      },
+      {
+        "words": [
+          "ticketmaster",
+          "amc",
+          "broadway",
+          "telecharge",
+          "todaytix",
+          "cinema",
+          "theater",
+          "theatre"
+        ],
+        "category": "Entertainment"
+      },
+      {
+        "words": [
+          "bar",
+          "pub",
+          "brewery",
+          "tavern",
+          "lounge"
+        ],
+        "category": "Nights out"
+      },
+      {
+        "words": [
+          "airbnb",
+          "delta",
+          "jetblue",
+          "united",
+          "american airlines",
+          "hotel",
+          "expedia"
+        ],
+        "category": "Travel"
+      },
+      {
+        "words": [
+          "petco",
+          "chewy",
+          "petsmart",
+          "vet"
+        ],
+        "category": "Pets"
+      },
+      {
+        "words": [
+          "overdraft",
+          "atm fee",
+          "monthly fee",
+          "service fee",
+          "late fee"
+        ],
+        "category": "Fees"
+      },
+      {
+        "words": [
+          "charity",
+          "donation",
+          "tzedakah"
+        ],
+        "category": "Giving"
+      },
+      {
+        "words": [
+          "amazon",
+          "etsy",
+          "ebay"
+        ],
+        "category": "Other wants"
+      }
     ]
   }
 }

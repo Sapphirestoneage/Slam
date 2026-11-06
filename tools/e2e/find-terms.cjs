@@ -43,5 +43,7 @@ const TERMS = [
   { term: 'giving', routes: ['#/plan/foo', B], box: /^seg:Giving:true$|:amount$/ },
   { term: 'net worth', routes: [A], box: /^metric:netWorth$/ },
   { term: 'budget', routes: [B], box: /^gut$/ },
+  // Batch 22: a month of transactions from the client's app or bank comes in on Month end.
+  ...['import', 'csv', 'rocket money', 'monarch', 'transactions'].map(term => ({ term, routes: ['#/cash-flow/close'], box: /^import-tx$/ })),
 ];
 module.exports = { TERMS };

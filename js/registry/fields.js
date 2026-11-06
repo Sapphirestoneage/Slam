@@ -430,6 +430,8 @@ export const NOT_IN_SHEET = {
   'program.transition': 'the Life Transitions plan on Plan › Transitions (batch 21): the template, start and destination, the start month, each rung\'s on or off and any amount typed, the tripwires, Plan B and C, the share switch. A what-if like program.proposed: the Math tab shows its runway (M90), the household rows hold the money',
   'program.gap': 'the gap card (batch 12): the income option the coach fills (extra shifts or a side gig, a month)',
   'settings.csvRules': 'description words to Budget line, learned from each import (J)',
+  'settings.merchantRules': 'batch 22: Always put this merchant here, merchant name to a Budget line (or a transfer, a paycheck, a debt payment, left out); set on the import review',
+  'settings.importCategoryMap': 'batch 22: this client\'s own edits to how Rocket Money or Monarch categories land on Budget categories; set on the import review',
   'spending.basics': 'Fast Track totals, kept to compare with the lines',
   'spending.calendar': 'calendar marks (paid, moved, partial) and the starting balance; set on the calendar',
   'spending.months.closed': 'month-end close state; set on Month end',

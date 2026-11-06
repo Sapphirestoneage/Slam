@@ -4,6 +4,7 @@ import { h, icon } from './ui/dom.js';
 import { budgetCompletion, itemRoute } from './completion.js';
 import { paycheckSection } from './ui/paycheck-ui.js';
 import * as S from './ui/staples.js';
+import { importButton } from './ui/import-ui.js';
 import { sheetButtons } from './ui/sheet-ui.js';
 import { creditCard, cardsLink, debtList, spendingList, debtCharts, debtRatios } from './ui/lists.js';
 import { incomeList, benefitList, variableBlock, assetList, protectionList, taxesScreen, lifeAdminScreen, listCompletion, incomeCharts, assetCharts } from './ui/money-lists.js';
@@ -256,6 +257,7 @@ export const SCREENS = {
     S.button('Delete client', { kind: 'danger', iconName: 'trash', disabled: !app.hasClient, why: 'No client open', onClick: e => app.deleteClient(e.currentTarget) })),
   h('p.muted', { style: { marginTop: '12px' } }, app.backupText()),
   h('h3', { style: { marginTop: '20px' } }, 'Spreadsheet'), sheetButtons(app),
+  h('h3', { style: { marginTop: '20px' } }, 'Transactions'), h('div.sheet-actions', {}, importButton(app)), // batch 22: Rocket Money, Monarch or a bank CSV
   h('h3', { style: { marginTop: '20px' } }, 'Usage log'), h('div.row-line', {}, S.button('Export the usage log (CSV)', { iconName: 'download', disabled: !app.hasClient, why: 'No client open', onClick: () => app.exportUsage() }),
     h('span.muted.small', {}, 'Time and clicks per screen, back presses, undos, Find words that found nothing, Show me dead ends and the ease answers. No dollar amounts.')))],
   'tools/session': (app, ctx) => sessionScreen(app, ctx, { fastTrackGap }),

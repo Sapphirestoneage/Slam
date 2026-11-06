@@ -3,7 +3,7 @@
 // Pure: reads a household doc, never touches the DOM. Budget, calendar and close are views of these records (R117).
 import { gatesOf, visible } from './gates.js';
 import { weekdayDays, holidayInMonth, SHABBAT_SPEND_DAY } from './math/holidays.js';
-import { myShare, withHome } from './math/spending.js';
+import { myShare, withHome, categoryKeyOf, categoryName, CATEGORIES } from './math/spending.js';
 import { payoffPlan } from './math/debt.js';
 import { runningBalance, gutSpread } from './math/calendar.js';
 import { inputsOf, metrics } from './math/metrics.js';
@@ -327,6 +327,24 @@ export function monthView(doc, ref, ym, { now = new Date() } = {}) {
     totals: { rough: sum(r => r.rough), estimate: sum(r => r.estimate), actual: rows.some(r => r.actual != null) ? sum(r => r.actual) : null,
       fixed: rows.filter(r => !r.variable).reduce((s, r) => s + (r.estimate ?? 0), 0), variable: rows.filter(r => r.variable).reduce((s, r) => s + (r.estimate ?? 0), 0) },
   };
+}
+
+// Batch 22 (M25, by category): the month's plan and actual per Budget category (the category rows: Accommodation, Food,
+// ...), each the sum of its lines. A category shows once a line in it has a plan or an actual; its actual is blank
+// until one of its lines has one. Lines with a plan and no actual count their plan only.
+export function byCategory(view) {
+  const out = new Map();
+  for (const r of view.rows) {
+    if (!((r.estimate ?? 0) > 0) && r.actual == null) continue;
+    const key = categoryKeyOf(r.line);
+    const c = out.get(key) ?? { key, name: categoryName(key), plan: 0, actual: null, lines: 0, withActual: 0 };
+    c.plan += r.estimate ?? 0; c.lines++;
+    if (r.actual != null) { c.actual = (c.actual ?? 0) + r.actual; c.withActual++; }
+    out.set(key, c);
+  }
+  const round = v => (v == null ? null : Math.round(v * 100) / 100);
+  return [...out.values()].sort((a, b) => CATEGORIES.indexOf(a.key) - CATEGORIES.indexOf(b.key))
+    .map(c => ({ ...c, plan: round(c.plan), actual: round(c.actual), diff: c.actual == null ? null : round(c.actual - c.plan) }));
 }
 
 // The Gut pass is the one all-in number (R131); Fast Track writes it too.

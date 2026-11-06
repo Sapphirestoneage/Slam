@@ -4,8 +4,7 @@
 import { fillCounter } from './counts-ui.js';
 import { budgetCompletion } from '../completion.js';
 import { h, clear, icon } from './dom.js';
-import { institutionsOf } from '../institutions.js';
-import { parseCsv, guessMap, toTransactions, dedupe, suggestLine, matchIncome, importTransactions, saveBankMap, bankMapOf, PDF_WHY } from '../import/csv.js';
+import { importButton } from './import-ui.js';
 import { layersOf } from '../math/layers.js';
 import { categoriesOf, categoryJoyOf, rateCategoryJoy } from '../capture.js';
 import { maaserOf, KOSHER_NOTE } from '../community.js';
@@ -14,7 +13,7 @@ import * as S from './staples.js';
 import { spendingList, categoryList, irregularList, IRREGULAR, lineMonthlyOf } from './lists.js';
 import { ensureCategories } from '../presets.js';
 import { ymOf, addMonths, monthName, daysIn, dateOf, instances, balances, monthView, closeMonth, reopenMonth, carry,
-  closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS, planDiffs, closeStreak, collapseSpread, dayTotals, recurringBills } from '../month.js';
+  closedMonths, mark, bonusPaycheck, startBalance, gutRecord, GROUPS, planDiffs, closeStreak, collapseSpread, dayTotals, recurringBills, byCategory } from '../month.js';
 import { gutAccuracy, DRAFTT, gutVsLinesWords } from '../math/spending.js';
 import { statements, BUCKETS, defaultBucket } from '../math/statements.js';
 import { calendarMarkers } from '../math/markers.js';
@@ -82,53 +81,6 @@ export function budgetScreen(app, ctx) {
   return [head('Budget', 'Every spending line, planned and actual', S.live(ctx, () => fillCounter(app, budgetCompletion(ctx)) ?? h('span'))), fadedNote, passBar, strip, doc.session?.community ? S.sec('budget:community', { title: 'Community presets' }, () => S.live(ctx, () => communityCard(ctx))) : null, ...body, // batch 14: X of Y filled in the head
     S.recordList(ctx, { ...irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) }), open: false }), // batch 13: secondary sections start closed
     S.sec('budget:joy', { title: 'Joy by category', summary: 'How much joy each category brings, for a later Wrapped' }, () => S.live(ctx, () => categoryJoyBlock(ctx)))]; // F6: captured for a later Wrapped
-}
-
-// Answer 168: each Income row's take-home a paycheck and its schedule, for matching money in.
-const PAY_PER_YEAR = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 };
-function incomesForMatch(ctx) {
-  return ctx.metrics().inputs.income.map(i => { const f = i.r.values?.payFrequency || 'month'; return { id: i.r.id, name: i.r.name || i.r.type, perPay: i.takeHome?.value != null ? i.takeHome.value * 12 / (PAY_PER_YEAR[f] ?? 12) : null, payFrequency: f, nextPayday: i.r.values?.nextPayday ?? null }; });
-}
-// J (overnight): a bank CSV in three steps: the file and the bank, the column map (kept per bank), then a review of
-// each row with its Budget line (suggested from saved rules), duplicates left out; Import puts each amount on its
-// line's month as an actual. PDF stays a stub with its reason on the button.
-const CSV = { bank: '', rows: null, map: null, hasHeader: true, list: null, name: '' };
-function csvImportBlock(app, ctx) {
-  const doc = ctx.store.doc;
-  const lines = ctx.visible(r => r.kind === 'bill');
-  const redraw = () => app.render();
-  const insts = institutionsOf(doc).map(i => i.name); // item 15: the column map is saved per institution
-  const bankBox = insts.length ? S.select(insts, CSV.bank || null, v => { CSV.bank = v || ''; CSV.map = CSV.bank && bankMapOf(doc, CSV.bank) ? { ...bankMapOf(doc, CSV.bank) } : CSV.map; }, { label: 'Institution', hint: 'Pick the institution', width: 220 })
-    : S.textInput(CSV.bank || null, v => { CSV.bank = v || ''; }, { hint: 'Bank name (add it under Institutions to keep the map)', width: 260, key: 'csv:bank' });
-  const file = h('input', { type: 'file', accept: '.csv,text/csv', 'aria-label': 'CSV file' });
-  file.onchange = () => { const f = file.files?.[0]; if (!f) return; CSV.name = f.name; f.text().then(text => { CSV.rows = parseCsv(text); const saved = CSV.bank ? bankMapOf(doc, CSV.bank) : null; CSV.map = saved ? { ...saved } : guessMap(CSV.rows[0] || []); CSV.hasHeader = saved?.hasHeader ?? true; CSV.list = null; redraw(); }); };
-  const step1 = h('div.row-line', { style: { gap: '10px', flexWrap: 'wrap' } }, S.labelled('Bank', bankBox), S.labelled('CSV file', h('label.field', { style: { width: '260px' } }, file)),
-    S.button('PDF statement', { disabled: true, why: PDF_WHY }), CSV.name ? h('span.muted.small', {}, `${CSV.name}: ${CSV.rows?.length ?? 0} rows`) : null);
-  if (!CSV.rows) return h('div.stack', { style: { gap: '8px' } }, h('span.muted.small', {}, 'Export a CSV from the bank, name the bank, pick which column is which once; next time the map is remembered. Imported amounts land on the Budget as actuals.'), step1);
-  const headers = CSV.hasHeader ? CSV.rows[0] : CSV.rows[0].map((_, i) => `Column ${i + 1}`);
-  const colPick = role => S.select(headers.map((hd, i) => [String(i), hd || `Column ${i + 1}`]), CSV.map[role] == null ? null : String(CSV.map[role]), v => { CSV.map[role] = v == null ? null : Number(v); }, { label: role, hint: 'Not in this file', width: 170 });
-  const step2 = h('div.stack', { style: { gap: '8px' } }, h('strong', {}, 'Which column is which'),
-    h('div.row-line', { style: { gap: '10px', flexWrap: 'wrap' } }, S.labelled('Date', colPick('date')), S.labelled('Description', colPick('description')), S.labelled('Amount (signed)', colPick('amount')), S.labelled('or Debit', colPick('debit')), S.labelled('and Credit', colPick('credit')),
-      S.labelled('First row', S.toggle([[true, 'Headers'], [false, 'Data']], CSV.hasHeader, v => { CSV.hasHeader = v; }, { label: 'First row' }))),
-    h('div.row-line', { style: { gap: '8px' } }, S.button('Review the rows', { kind: 'primary', onClick: () => {
-      if (CSV.map.date == null || (CSV.map.amount == null && CSV.map.debit == null && CSV.map.credit == null)) { S.toast('Pick the date column and an amount column.'); return; }
-      if (CSV.bank) saveBankMap(ctx.store, CSV.bank, CSV.map, { hasHeader: CSV.hasHeader });
-      const tx = dedupe(toTransactions(CSV.rows, CSV.map, { hasHeader: CSV.hasHeader, bank: CSV.bank || null }), doc.spending?.transactions || []);
-      const incomes = incomesForMatch(ctx);
-      CSV.list = tx.map(t => ({ ...t, ...suggestLine(t.description, { rules: doc.settings?.csvRules || [], transactions: doc.spending?.transactions || [] }), ...(matchIncome(t, incomes) || {}), skip: t.duplicate }));
-      redraw(); } }), S.button('Start over', { onClick: () => { Object.assign(CSV, { rows: null, map: null, list: null, name: '' }); redraw(); } })));
-  if (!CSV.list) return h('div.stack', { style: { gap: '10px' } }, step1, step2);
-  const dupes = CSV.list.filter(t => t.duplicate).length;
-  const rowOf = (t, i) => h(`div.row-line.csv-row${t.duplicate ? '.muted' : ''}`, { style: { gap: '8px', flexWrap: 'wrap' } },
-    S.checkbox('', !t.skip, v => { t.skip = !v; }, { key: `csv:${i}:keep` }), h('span.small', { style: { minWidth: '86px' } }, t.date), h('span', { style: { flex: '1 1 200px' } }, t.description || '(no description)'), h('span.num', {}, money(t.amount)),
-    t.amount > 0 ? S.select([['', 'Money in, no paycheck'], ...incomesForMatch(ctx).map(i => [i.id, `Paycheck: ${i.name}`])], t.incomeId ?? '', v => { t.incomeId = v || null; }, { label: `Paycheck for ${t.description}`, width: 200 }) // answer 168
-      : S.select([['', 'Skip (no line)'], ...lines.map(l => [l.id, l.name || l.values.category || l.type])], t.lineId ?? '', v => { t.lineId = v || null; }, { label: `Line for ${t.description}`, width: 200 }),
-    t.duplicate ? h('span.tag.plain', {}, 'Already imported') : t.incomeId ? h('span.muted.small', {}, 'within 5% of a paycheck, near payday') : t.why ? h('span.muted.small', {}, t.why) : null);
-  const step3 = h('div.stack', { style: { gap: '6px' } }, h('div.row-line', { style: { gap: '10px' } }, h('strong', {}, `Review ${CSV.list.length} rows`), dupes ? h('span.muted.small', {}, `${dupes} already imported, left out`) : null, h('span.spacer'),
-    S.button(`Import ${CSV.list.filter(t => !t.skip && !t.duplicate).length}`, { kind: 'primary', onClick: () => { const r = importTransactions(ctx.store, CSV.list, { bank: CSV.bank || null, now: ctx.now().toISOString() }); Object.assign(CSV, { rows: null, map: null, list: null, name: '' }); S.toast(`${r.imported} imported as actuals; ${r.skipped} left out.`, { undo: () => ctx.store.undo() }); redraw(); } })),
-    h('span.muted.small', {}, 'Money out goes onto its Budget line for that month as an actual (the line counts as Actual); a paycheck lands on its Income row as the last pay matched. Each line you pick becomes a rule for next time.'),
-    ...CSV.list.map(rowOf));
-  return h('div.stack', { style: { gap: '10px' } }, step1, step3);
 }
 
 // F6: a dated joy rating, 1 to 5, per spending category on the Budget. Kept with its date; the latest shows.
@@ -613,17 +565,18 @@ export function closeScreen(app, ctx) {
   const months = Array.from({ length: 6 }, (_, k) => addMonths(now, -k)).filter(ym => ym >= since);
   const views = months.map(ym => monthView(doc, ctx.ref, ym, { now: ctx.now() }));
   const any = views.some(v => v.rows.some(r => (r.estimate ?? 0) > 0));
-  if (!any) return [head('Month end', 'Plan vs actual'), h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No closed months yet'),
+  // Batch 22: the month's transactions come in from the client's app (Rocket Money, Monarch) or bank; SLAM never syncs.
+  const imp = importButton(app, { ym: UI.review ?? now, onSaved: ym => { UI.review = ym; UI.closeStep[ym] = 1; UI.closeBy[ym] = 'category'; app.render(); } });
+  if (!any) return [head('Month end', 'Plan vs actual'), imp, h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No closed months yet'),
     h('span.muted', {}, 'Plan a month on Budget, mark what was paid on the calendar, then close it here.'), S.button('Open Budget', { iconName: 'right', onClick: () => app.go('#/cash-flow/budget') })))];
   UI.review ??= views.find(v => !v.closed)?.ym ?? now;
   const acc = gutAccuracy(closedMonths(doc));
   const streak = closeStreak(doc, ctx.now());
-  return [head('Month end', 'Plan vs actual'),
+  return [head('Month end', 'Plan vs actual'), imp,
     h('p.muted', { style: { margin: '0 0 8px' } }, h('strong', {}, streak.words), streak.months ? ` · ${monthName(streak.first)} to ${monthName(streak.last)}. One missed month inside a run is a grace month.` : ' Close a month to start the streak.'), // L (overnight)
     S.sec('close:months', { title: 'The last 6 months', open: true, summary: `${views.filter(v => v.closed).length} of ${views.length} closed` }, // batch 13: caret sections; the months are the core
       acc.hidden ? null : S.summaryStrip(ctx, [{ label: 'Gut accuracy', result: acc, note: 'How far the first guess was off, on average' }]),
-      h('div.close-list', {}, views.map(v => closeRow(app, ctx, v)))),
-    S.sec('close:import', { title: 'Import a bank statement (CSV)', summary: 'Amounts land on the Budget as actuals' }, () => h('div.card', {}, csvImportBlock(app, ctx)))]; // J (overnight)
+      h('div.close-list', {}, views.map(v => closeRow(app, ctx, v))))];
 }
 function closeRow(app, ctx, v) {
   const withEst = v.rows.filter(r => (r.estimate ?? 0) > 0);
@@ -656,6 +609,7 @@ function closeRow(app, ctx, v) {
 // Guided close (polish item 8): 1 Confirm actuals, 2 Review biggest misses (variable first), 3 Carry forward.
 const CLOSE_STEPS = ['Confirm actuals', 'Review biggest misses', 'Carry forward'];
 UI.closeStep = {};
+UI.closeBy = {}; // batch 22: step 1 by category (after an import) or by line (where actuals are typed)
 function stepper(app, v, step) {
   return h('ol.close-steps', { 'aria-label': 'Month end steps' }, CLOSE_STEPS.map((name, i) => h(`li${i + 1 === step ? '.on' : i + 1 < step ? '.done' : ''}`, {},
     h('button', { type: 'button', 'aria-current': i + 1 === step ? 'step' : null, onclick: () => { UI.closeStep[v.ym] = i + 1; app.render(); } }, h('span.n', {}, String(i + 1)), name))));
@@ -675,7 +629,13 @@ function review(app, ctx, v, doClose) {
   let body;
   if (step === 1) {
     const missing = rows.filter(r => r.actual == null).length;
-    body = [h('p.muted', {}, missing ? `${missing} ${missing === 1 ? 'line has' : 'lines have'} no actual yet. Lines marked Paid on the calendar are already in; type the rest.` : 'Every line has an actual.'),
+    const by = UI.closeBy[v.ym] ?? (v.rows.some(r => ctx.store.getIn('spending', ['months', v.ym, 'lines', r.line.id, 'actualFrom']) === 'csv') ? 'category' : 'line');
+    const byPick = h('div.row-line.close-by', {}, S.toggle([['category', 'By category'], ['line', 'By line']], by, x => { UI.closeBy[v.ym] = x; app.render(); }, { label: 'Show the month' }));
+    const cats = by === 'category' ? byCategory(v) : null; // batch 22: plan vs actual per Budget category
+    body = cats ? [byPick, h('p.muted', {}, missing ? `${missing} ${missing === 1 ? 'line has' : 'lines have'} no actual yet. Switch to By line to type them.` : 'Every line has an actual.'),
+      table(['Category', 'Plan', 'Actual', 'Difference'], cats, c => [h('td.col-first', {}, h('strong', {}, c.name), h('span.muted.small', {}, ` ${c.withActual} of ${c.lines} ${c.lines === 1 ? 'line' : 'lines'}`)),
+        h('td.num', {}, money(c.plan)), h('td.num', {}, c.actual == null ? h('span.muted', {}, 'No actual') : money(c.actual)), h('td.num', {}, diff(c))]),
+      nav(S.button('Next: review the misses', { kind: 'primary', iconName: 'right', onClick: go(2) }))] : [byPick, h('p.muted', {}, missing ? `${missing} ${missing === 1 ? 'line has' : 'lines have'} no actual yet. Lines marked Paid on the calendar are already in; type the rest.` : 'Every line has an actual.'),
       table(['Line', 'Plan', 'Actual'], rows, r => [h('td.col-first', {}, name(r)), h('td.num', {}, money(r.estimate ?? 0), r.fromRough ? h('span.muted.small', {}, ' usual') : null),
         h('td.num', {}, v.closed ? money(r.actual) : S.moneyInput(r.actualFrom === 'typed' ? r.actual : null, val => set(r, val), { hint: r.actual == null ? 'Add actual' : moneyText(r.actual), key: `close:${v.ym}:${r.line.id}` }))]),
       nav(S.button('Next: review the misses', { kind: 'primary', iconName: 'right', onClick: go(2) }))];

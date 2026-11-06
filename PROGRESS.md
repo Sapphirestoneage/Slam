@@ -466,3 +466,33 @@ Income and Goals at 1280 and 390.
 ## Nov 6 2026: the session pace asks for the most a session can do
 
 Eli: "goal is as much as possible". PACE is now 85, 95, 99 by sessions 1 to 3 (was 40, 70, 90), held at 99; the session item reads "Whole picture 95% or more". Spec Program tab regenerated.
+
+## Batch 22 (Nov 6 2026): import the month from Rocket Money, Monarch or the bank
+
+SLAM never syncs. The client keeps tracking in Rocket Money or Monarch; at month end the coach drops the CSV export in.
+Cash flow › Month end and Coach tools › Data have one button, "Import this month from Rocket Money, Monarch or your
+bank" (Find: import, csv, rocket money, monarch, transactions). It replaces the old statement import's three steps.
+
+1. Formats. Rocket Money and Monarch are told by their header row; any other bank CSV by its date, description and
+   amount (or debit and credit) columns, and an unknown header asks once which column is which (kept for that header).
+   One line says what was found ("Found a Rocket Money export: 23 transactions."). Columns, sign and source links are
+   in Reference data (importFormats) and at the top of js/import/apps.js. Rocket Money writes spending as positive; the
+   file's Income rows confirm the direction.
+2. Matching, in order: the coach's rule for the merchant (settings.merchantRules), the app's own category through a
+   map (importCategories in Reference data; a client's edits in settings.importCategoryMap, editable on the review),
+   refined by merchant words inside the same spending group (Bills & Utilities plus RENT is Rent), then merchant words
+   alone (merchantWords, and each line's own name). Paychecks (answer 168), transfers between the client's accounts
+   (by category, words, or the same amount out of one account and into another within 3 days), card and loan payments
+   and rows the app ignores stay out of spending. Each row says Matched, Guessed or Not matched.
+3. The review, before anything is saved: grouped by spending group with its month total, Not matched first, each row a
+   tap to pick its line (chips by category, or Not spending) and "Always put this merchant here" once placed by hand.
+   Accept all matched, Accept these per group. A row placed by hand stays where it is until Save.
+4. Save: accepted rows are kept dated (spending.transactions), add to the line's actual for the month (a refund takes
+   off), make a line for a category the client has none for, mark the calendar Paid (a fixed-date bill's day, the
+   paycheck, the card payment) and land paychecks on the Income row. Rows of another month never go in; a file brought
+   in twice adds nothing (each row's date, amount and text, with #2 for a second identical row). One undo step.
+5. Month end step 1 shows plan vs actual By category after an import (By line to type), M25's new part.
+
+QA: 610 tests (597 pass, 13 skipped) in UTC and America/New_York after the rebase on batch 21; export format 20; test/import-apps.test.js with made-up CSVs in
+fixtures/import; Maya's November from Rocket Money and from Monarch checked in the browser at 1280 and 390; layout
+check unchanged (the same 4 old failures, none on Month end).
