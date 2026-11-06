@@ -137,9 +137,9 @@ with Typical at your age on (QUESTIONS 208), otherwise the client sees the quest
 
 1. **One rule for an all-ages row read at an age: the age band's ratio to all ages** (QUESTIONS 336). The CE
    one-person row is scaled by the band's CE figure over the all-ages figure (per category where both tables have it;
-   only the total has an all-ages row so far, so the categories use the totals). The all-ages total is the BLS NY
-   metro release's US column for 2022-23 ($75,172): the 2024 all-ages table was not reachable, so the ratio reads
-   about 4% high (QUESTIONS 380). `data.shapes` names what shapes the rows with no age split: income and cash like CE
+   shelter and utilities, not in the all-ages Table A, use the totals). Batch 54: the all-ages rows are the BLS 2024
+   all consumer units table ($78,535 total), so the ratio is the same year as the age bands (QUESTIONS 380 closed; it
+   was the 2022-23 $75,172, about 4% high). `data.shapes` names what shapes the rows with no age split: income and cash like CE
    spending (by age, and by living alone), retirement like SCF net worth by age.
 2. **Pay.** The Census median household income ($87,460, 2025, all households) shaped like spending, gross, through
    SLAM's tax math (M12). A place scales it by the same price parity as spending until a Primary place income row is

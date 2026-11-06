@@ -1271,3 +1271,34 @@ completed ... quantity versus quality".
    answer: raises Answered"); how it picks is unchanged.
 5. Tools: the effort run prints Answered and Solid, runs Maya with EFFORT_CLIENTS=Maya, and drive.cjs taps Fast Track's
    own buttons (About you under it has the same ones). Format 43. QUESTIONS 427 to 430.
+
+## Batch 54 (Nov 6 2026): the second data pass (every source earlier batches could not open)
+
+QUESTIONS 380 closed; 395 half done (the 2027 marketplace prices are in, the FFY 2027 SNAP GIS is not).
+
+1. CE 2024, all consumer units (QUESTIONS 336, 380): the BLS release of Dec 19 2025, Table A, read on bls.gov (the
+   total also on FRED CXUTOTALEXPLB0101M). `data/priors-2026.json` replaces the 2022-23 NY metro release's US column
+   ($75,172) with 13 all-ages rows (total $78,535, food $10,169, housing $26,266, personal insurance and pensions
+   $9,797 and the rest); shelter and utilities are not in Table A, so they use the totals. Every age ratio is now the
+   same year as its age band, and each category reads its own ratio. A 28 year old living alone: $3,461.92 a month
+   all in (was $3,671.06; 4 points from the newer total, the rest because personal insurance and pensions at 25 to 34
+   are 1.09 times all ages). test/priors.test.js and test/batch46.test.js reworked by hand (the age-only surplus width
+   for Maya is $2,006 against $1,057 after three answers, 1.90 times, so its check is now "under 1 / 1.85"; batch 51's
+   Q387 test: Tom's age-only net worth width $83,698, was $83,744; Alexis's meter 68.6%, was 69.3%).
+2. The 2027 marketplace benchmark (QUESTIONS 395): KFF's state table for 2027 (second-lowest silver, 40-year-old),
+   every state; US $703 (was $625), New York $1,041 (was $817). Lena and Marco: help $16,399.20 (was $11,023.20); a
+   $5,000 raise leaves them $12,651.70 behind (was $7,275.70) until it is $21,900 (was $14,800); raises from $2,600 to
+   $21,800 leave them behind. Riley (Florida, $738): help $4,761.30 (was $4,101.30). test/cliff.test.js reworked; the
+   Raise and benefits footnote says the 2027 plan.
+3. Source lines moved to Primary on Assumptions (values unchanged): New York's EITC 30% (Form IT-215 for 2025, line
+   11), New York's Medicaid lines 138%, 154%, 223% (NY DOH GIS 26 MA/05 attachment 1, effective Jan 1 2026), Child
+   Health Plus free to 222% and $15 to $60 a child (NYSOH At a Glance 2026), Fannie Mae's 1% student loan payment
+   (B3-6-05, 08/05/2026) and three-year continuance (B3-3.1-01, 10/07/2026).
+4. Not reached (each URL in docs/engines/priors-sources.md, "Batch 54"): the NY metro rent (ACS 1-year B25064 for CBSA
+   35620; the Census API query needs an approval), the SCF 2025 by age (JavaScript table, xlsx, zip), the CE New York
+   metro 2023-24 (FRASER PDF), federal student loans by age (xls only), OTDA's FFY 2027 SNAP GIS, HUD 4000.1's decline
+   rule. NY renters still read New York State (QUESTIONS 335 stands).
+
+Tests pass in UTC and New York time (see the report for counts). Workbook check: every row matches. Persona run: 19 personas, 0
+errors, 0 story notes. Layout checker on Raise and benefits and Home (1280 and 390, light, Demo and New): 0 failures
+before and after.

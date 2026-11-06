@@ -59,7 +59,7 @@ export default {
   cliff: {
     near: { value: true, note: 'The premium help is a Getting it (a Guess from About you).' },
     acaLine: { value: 63840, note: '400% x $15,960.' },
-    help: { value: 4101.3, tol: 0.05, note: '$43,620 / $15,960 = 273.3% of the line, in the 250% to 300% band: 8.66% + 46.6% of the way to 10.22% = 9.387%, so $4,094.70 a year paid; the Florida benchmark $683 a month = $8,196; help $4,101.30.' },
+    help: { value: 4761.3, tol: 0.05, note: '$43,620 / $15,960 = 273.3% of the line, in the 250% to 300% band: 8.66% + 46.6% of the way to 10.22% = 9.387%, so $4,094.70 a year paid; the Florida benchmark $738 a month (KFF, 2027; batch 54, was $683) = $8,856; help $4,761.30.' },
     next: { value: 'aca', note: 'The premium help ends at $63,840, $20,220 above her.' },
     says: ['Marketplace premium help'],
   },

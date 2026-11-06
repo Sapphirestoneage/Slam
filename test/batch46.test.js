@@ -27,16 +27,20 @@ const answer = (s, patch) => { const a = fastTrackAnswers(s.doc); Object.assign(
 
 test('QUESTIONS 336 by hand: a 25 to 34 year old living alone reads the one-person row times 25 to 34 over all ages', () => {
   const q = ageRatioOf(data, 'spending.total', 28);
-  assert.equal(q.band, '25 to 34'); near(q.factor, 74475 / 75172, 1e-12); // 0.990728
+  assert.equal(q.band, '25 to 34'); near(q.factor, 74475 / 78535, 1e-12); // 0.948303 (batch 54: the 2024 all-ages total)
   const s = typicalOf(data, 'spending', { age: 28, household: 'Solo' });
-  // ($48,794 - $4,329) / 12 = $3,705.42 a month, times 0.990728 = $3,671.06.
-  near(s.likely, 3671.06); assert.equal(s.band, '25 to 34');
-  assert.match(s.basis, /mean \$3,705 among one-person households of every age \(average age 56\.3\), scaled to 25 to 34 by 25 to 34's ratio to all ages \(0\.99: 25 to 34's \$74,475 against all ages' \$75,172 a year, all ages 2022 to 2023\)/);
-  // A category with no all-ages row of its own uses the totals, and the tip says so: food $5,644 / 12 x 0.990728.
+  // Batch 54: each part by its own ratio. Total $48,794 x 0.948303 = $46,271.51; personal insurance and pensions
+  // $4,329 x $10,701 / $9,797 = $4,728.45; ($46,271.51 - $4,728.45) / 12 = $3,461.92 (was $3,671.06).
+  near(s.likely, 3461.92); assert.equal(s.band, '25 to 34');
+  assert.match(s.basis, /mean \$3,705 among one-person households of every age \(average age 56\.3\), scaled to 25 to 34 by 25 to 34's ratio to all ages \(0\.95: 25 to 34's \$74,475 against all ages' \$78,535 a year, all ages 2024\)/);
+  // Batch 54: food has its own all-ages row now: $5,644 / 12 x $9,630 / $10,169 = $445.40. A category with no all-ages
+  // row (shelter, not in Table A) uses the totals, and the tip says so: $12,954 / 12 x 0.948303 = $1,023.69.
   const f = typicalOf(data, 'spending.food', { age: 28, household: 'Solo' });
-  near(f.likely, 465.97); assert.match(f.basis, /a year, the totals, all ages/);
-  // 61 living alone: 55 to 64's $84,946 over $75,172 = 1.130022, so $3,705.42 x 1.130022 = $4,187.2.
-  near(typicalOf(data, 'spending', { age: 61, household: 'Solo' }).likely, 4187.2, 0.05);
+  near(f.likely, 445.40); assert.doesNotMatch(f.basis, /the totals/);
+  const sh = typicalOf(data, 'spending.shelter', { age: 28, household: 'Solo' });
+  near(sh.likely, 1023.69); assert.match(sh.basis, /a year, the totals, all ages/);
+  // 61 living alone: $48,794 x $84,946 / $78,535 = $52,777.17, less $4,329 x $12,172 / $9,797 = $5,378.44, over 12 = $3,949.89.
+  near(typicalOf(data, 'spending', { age: 61, household: 'Solo' }).likely, 3949.89, 0.05);
   // A couple (households of every size) reads its age band as before, and no age reads the row as published.
   near(typicalOf(data, 'spending', { age: 28, household: 'Couple' }).likely, (74475 - 10701) / 12);
   near(typicalOf(data, 'spending', { household: 'Solo' }).likely, 3705.42);
@@ -44,11 +48,11 @@ test('QUESTIONS 336 by hand: a 25 to 34 year old living alone reads the one-pers
 });
 
 test('the shapes: income and cash like spending by age (and living alone), retirement like net worth', () => {
-  near(shapeOf(data, 'income', { age: 28, household: 'Solo' }).factor, 48794 * (74475 / 75172) / 75172, 1e-9);
-  near(typicalOf(data, 'income', { age: 61 }).likely, 87460 * 84946 / 75172, 0.01);
-  near(typicalOf(data, 'income', { age: 61, place: 'NY' }).likely, 87460 * 84946 / 75172 * 1.12563, 0.01); // the price parity stands in for a NY income row
+  near(shapeOf(data, 'income', { age: 28, household: 'Solo' }).factor, 48794 * (74475 / 78535) / 78535, 1e-9);
+  near(typicalOf(data, 'income', { age: 61 }).likely, 87460 * 84946 / 78535, 0.01);
+  near(typicalOf(data, 'income', { age: 61, place: 'NY' }).likely, 87460 * 84946 / 78535 * 1.12563, 0.01); // the price parity stands in for a NY income row
   near(typicalOf(data, 'retirement', { age: 61 }).likely, 106000 * 411900 / 215900, 0.01);
-  near(typicalOf(data, 'cash', { age: 23, household: 'Solo' }).likely, 8200 * 48794 * (47283 / 75172) / 75172, 0.01);
+  near(typicalOf(data, 'cash', { age: 23, household: 'Solo' }).likely, 8200 * 48794 * (47283 / 78535) / 78535, 0.01);
   assert.equal(shapeOf(data, 'card', { age: 28 }), null, 'cards: all ages, no shape');
 });
 
@@ -124,7 +128,9 @@ test('each answer replaces its typical amount and the ranges narrow, three answe
   const maya = narrows([{ takeHome: 2400, takePer: 'paycheck', payFrequency: '2 weeks' }, { gut: 3500, gutIncludesDebt: false }, { checking: 1200, savings: 4000 }], { birthYear: 1996, household: 'Solo', state: 'NY' });
   assert.equal(maya[0].fi, Infinity, 'age only: FI could be decades away or never');
   assert.ok(Number.isFinite(maya[2].fi), 'with her pay and spending: an FI range with two ends');
-  assert.ok(maya[3].surplus < maya[0].surplus / 1.9, 'the surplus range is about half as wide');
+  // Batch 54: the 2024 all-ages CE total lowers the age-only spending a little, so the age-only width is $2,006 a
+  // month (was $2,123) against $1,057 after three answers: 1.90 times (was 2.01).
+  assert.ok(maya[3].surplus < maya[0].surplus / 1.85, 'the surplus range is about half as wide');
   const tom = narrows([{ takeHome: 9800, takePer: 'month' }, { gut: 6500, gutIncludesDebt: true, gutFrom: 'Statements' }, { checking: 8000, savings: 30000 }, { invested: 410000 }], { birthYear: 1988, household: 'Solo', state: 'NY' });
   assert.ok(tom[4].fi < tom[2].fi, 'his invested total narrows the FI date again');
 });

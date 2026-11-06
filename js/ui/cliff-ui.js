@@ -120,5 +120,5 @@ function howSection(C) {
   return sec('cliff:how', { title: 'How the lines work', summary: `Poverty line for ${C.household.size}: ${money(C.fpl)} a year (2026)` },
     () => h('div.card', {}, h('ul.cf-how', {}, shown.map(p => h('li', {}, h('strong', {}, p.label), ` ${RULES_WORDS[p.id]}`)),
       gone.map(p => h('li.muted', {}, h('strong', {}, p.label), ` ${p.why}`))),
-    h('p.muted.small.cf-foot', {}, 'Lines checked Nov 6 2026 (Assumptions tab). The marketplace benchmark is the 2026 plan for a 40-year-old; 2027 prices are not on file yet. Not here yet: child care subsidies, housing help, WIC, the Child Tax Credit.')));
+    h('p.muted.small.cf-foot', {}, 'Lines checked Nov 6 2026 (Assumptions tab). The marketplace benchmark is the 2027 average plan for a 40-year-old (KFF). Not here yet: child care subsidies, housing help, WIC, the Child Tax Credit.')));
 }

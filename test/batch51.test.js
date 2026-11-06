@@ -95,11 +95,12 @@ function meterParts(s) {
 }
 test('Q387: Tom\'s net worth and Alexis\'s debt-free date are measured against their own all-guess widths (by hand)', () => {
   const tom = meterParts(client('Tom', { birthYear: 1988, takeHome: 9800, takePer: 'month', gut: 6500, gutIncludesDebt: true, gutFrom: 'Statements', checking: 8000, savings: 30000, invested: 410000, housing: 'Own', hasCar: true, homeValue: 650000, carValue: 22000, fiAge: 50 }));
-  // Tom's net worth after Fast Track runs $1,076,982 to $1,163,018 ($86,037 wide). A plan from his age alone is $83,744
-  // wide, narrower than his own range, so it read 0%. His own numbers all read as guesses: $384,723 wide. The wider
+  // Tom's net worth after Fast Track runs $1,076,982 to $1,163,018 ($86,037 wide). A plan from his age alone is $83,698
+  // wide (batch 54: $83,744 before the 2024 all-ages CE total moved his age-only spending), narrower than his own
+  // range, so it read 0%. His own numbers all read as guesses: $384,723 wide. The wider
   // zero is the all-guess one: 1 - 86,037 / 384,723 = 77.6%.
   near(tom.R.netWorth.width, 86036.72, 1);
-  near(spanOf('netWorth', tom.zero.netWorth), 83744.27, 1);
+  near(spanOf('netWorth', tom.zero.netWorth), 83697.50, 1);
   near(tom.guess('netWorth'), 384723.28, 1);
   near(tom.part('netWorth'), 1 - 86036.72 / 384723.28, 0.001);
   assert.ok(tom.part('netWorth') > 0.7, 'no longer near 0%');
@@ -112,9 +113,11 @@ test('Q387: Tom\'s net worth and Alexis\'s debt-free date are measured against t
   assert.equal(spanOf('debtFree', alexis.zero.debtFree), 55);
   assert.equal(alexis.guess('debtFree'), 113);
   near(alexis.part('debtFree'), 1 - 50 / 113, 1e-9);
-  // The meter after Fast Track: Tom 87%, Alexis 69% (were 73% and 49%).
+  // The meter after Fast Track: Tom 87%, Alexis 69% (were 73% and 49%). Batch 54: the 2024 all-ages CE total narrows
+  // Alexis's age-only surplus to $2,006 wide (was $2,123), so her surplus part is 1 - 840 / 2,006 = 58.1% (was 60.4%)
+  // and the meter 68.6% (was 69.3%).
   near(tom.A.meter.value, 0.873, 0.005);
-  near(alexis.A.meter.value, 0.693, 0.005);
+  near(alexis.A.meter.value, 0.686, 0.005);
 });
 
 // ---------- Shift P&L (M9H) ----------

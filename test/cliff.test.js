@@ -60,12 +60,12 @@ test('health coverage is one chain: Medicaid, the Essential Plan (NY), help, ful
   assert.equal(healthAt(ny, ref, 29000).on, 'medicaid'); // 134%
   assert.equal(healthAt(ny, ref, 40000).on, 'essential'); // 185%, free
   assert.equal(healthAt(ny, ref, 40000).cost, 0);
-  const a = healthAt(ny, ref, 84000); // 388%, 10.22%: 8,584.80 of a 2 x 817 x 12 = 19,608 benchmark
+  const a = healthAt(ny, ref, 84000); // 388%, 10.22%: 8,584.80 of a 2 x 1,041 x 12 = 24,984 benchmark (KFF 2027, batch 54)
   assert.equal(a.on, 'aca');
   near(a.cost, 8584.8);
-  near(a.help, 11023.2);
+  near(a.help, 16399.2);
   assert.equal(healthAt(ny, ref, 90000).on, 'full');
-  near(healthAt(ny, ref, 90000).cost, 19608);
+  near(healthAt(ny, ref, 90000).cost, 24984);
   // Texas has not expanded Medicaid: under 100% of the line there is no help at all (the coverage gap).
   assert.equal(healthAt(H({ state: 'TX' }), ref, 12000).on, 'gap');
   assert.equal(healthAt(H({ state: 'TX' }), ref, 20000).on, 'aca');

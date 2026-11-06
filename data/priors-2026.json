@@ -2,7 +2,7 @@
  "id": "priors",
  "asOf": "2026-11-06",
  "year": 2026,
- "source": "docs/engines/priors-sources.md, only the rows marked Primary (read on the publisher's page or its FRED mirror; batch 17, the batch 24 verify pass and the batch 39 data pass). Nothing Secondary or Not found is here",
+ "source": "docs/engines/priors-sources.md, only the rows marked Primary (read on the publisher's page or its FRED mirror; batch 17, the batch 24 verify pass the batch 39 data pass and the batch 54 data pass). Nothing Secondary or Not found is here",
  "range": "Where a row gives its 25th and 75th percentiles (p25, p75), those are the range. Every other range is SLAM's stated spread around the source's figure (RULES typicalLow and typicalHigh, docs/engines/priors.md): the median where the source gives one (SCF, ACS), else the mean (CE)",
  "sources": {
   "scf2025": {
@@ -37,11 +37,11 @@
    "publisher": "Bureau of Economic Analysis, read on FRED (its mirror)",
    "link": "https://fred.stlouisfed.org/series/RPPALL35620"
   },
-  "ce2223ny": {
-   "name": "Consumer Expenditures in the New York Metropolitan Area: 2022-23 (its United States column)",
+  "ce2024all": {
+   "name": "Consumer Expenditures in 2024 (news release, Table A: all consumer units)",
    "publisher": "Bureau of Labor Statistics",
-   "link": "https://www.bls.gov/regions/northeast/news-release/2024/consumerexpenditures_newyork_20241118.htm",
-   "released": "2024-11-18"
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "released": "2025-12-19"
   },
   "p60289": {
    "name": "Income in the United States: 2025 (P60-289), highlights",
@@ -2233,16 +2233,170 @@
    "band": "all ages",
    "ages": null,
    "who": "households",
-   "mean": 75172,
+   "mean": 78535,
    "unit": "year",
-   "source": "ce2223ny",
-   "table": "Table 1, United States column: average annual expenditures, all consumer units, 2022-23",
-   "link": "https://www.bls.gov/regions/northeast/news-release/2024/consumerexpenditures_newyork_20241118.htm",
-   "year": 2023,
-   "period": "2022 to 2023",
-   "olderBecause": "the all-ages 2024 total (BLS cesan, Dec 19 2025) was not reachable from the build; this is the newest all-ages total read on a Primary page, the 2022-23 average, about 4% under 2024's (QUESTIONS 380)",
+   "source": "ce2024all",
+   "table": "Table A, all consumer units: Average annual expenditures, 2024 annual mean",
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "year": 2024,
    "among": "households of every size and age (CE consumer units)",
-   "role": "The denominator of the age band's ratio to all ages (QUESTIONS 336): it scales the one-person row and shapes income and cash by age"
+   "role": "The denominator of the age band's ratio to all ages (QUESTIONS 336): it scales the one-person row and shapes income and cash by age. Each category below is its own ratio; shelter and utilities (not in Table A) use the totals"
+  },
+  {
+   "field": "spending.food",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "mean": 10169,
+   "unit": "year",
+   "source": "ce2024all",
+   "table": "Table A, all consumer units: Food, 2024 annual mean",
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "year": 2024,
+   "among": "households of every size and age (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAtHome",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "mean": 6224,
+   "unit": "year",
+   "source": "ce2024all",
+   "table": "Table A, all consumer units: Food at home, 2024 annual mean",
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "year": 2024,
+   "among": "households of every size and age (CE consumer units)"
+  },
+  {
+   "field": "spending.foodAway",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "mean": 3945,
+   "unit": "year",
+   "source": "ce2024all",
+   "table": "Table A, all consumer units: Food away from home, 2024 annual mean",
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "year": 2024,
+   "among": "households of every size and age (CE consumer units)"
+  },
+  {
+   "field": "spending.housing",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "mean": 26266,
+   "unit": "year",
+   "source": "ce2024all",
+   "table": "Table A, all consumer units: Housing, 2024 annual mean",
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "year": 2024,
+   "among": "households of every size and age (CE consumer units)"
+  },
+  {
+   "field": "spending.rentedDwellings",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "mean": 5660,
+   "unit": "year",
+   "source": "ce2024all",
+   "table": "Table A, all consumer units: Rented dwellings, 2024 annual mean",
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "year": 2024,
+   "among": "households of every size and age (CE consumer units)"
+  },
+  {
+   "field": "spending.apparel",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "mean": 2001,
+   "unit": "year",
+   "source": "ce2024all",
+   "table": "Table A, all consumer units: Apparel and services, 2024 annual mean",
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "year": 2024,
+   "among": "households of every size and age (CE consumer units)"
+  },
+  {
+   "field": "spending.transportation",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "mean": 13318,
+   "unit": "year",
+   "source": "ce2024all",
+   "table": "Table A, all consumer units: Transportation, 2024 annual mean",
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "year": 2024,
+   "among": "households of every size and age (CE consumer units)"
+  },
+  {
+   "field": "spending.vehiclePurchases",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "mean": 5337,
+   "unit": "year",
+   "source": "ce2024all",
+   "table": "Table A, all consumer units: Vehicle purchases (net outlay), 2024 annual mean",
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "year": 2024,
+   "among": "households of every size and age (CE consumer units)"
+  },
+  {
+   "field": "spending.healthCare",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "mean": 6197,
+   "unit": "year",
+   "source": "ce2024all",
+   "table": "Table A, all consumer units: Healthcare, 2024 annual mean",
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "year": 2024,
+   "among": "households of every size and age (CE consumer units)"
+  },
+  {
+   "field": "spending.entertainment",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "mean": 3609,
+   "unit": "year",
+   "source": "ce2024all",
+   "table": "Table A, all consumer units: Entertainment, 2024 annual mean",
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "year": 2024,
+   "among": "households of every size and age (CE consumer units)"
+  },
+  {
+   "field": "spending.cashContributions",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "mean": 2292,
+   "unit": "year",
+   "source": "ce2024all",
+   "table": "Table A, all consumer units: Cash contributions, 2024 annual mean",
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "year": 2024,
+   "among": "households of every size and age (CE consumer units)"
+  },
+  {
+   "field": "spending.personalInsurance",
+   "band": "all ages",
+   "ages": null,
+   "who": "households",
+   "mean": 9797,
+   "unit": "year",
+   "source": "ce2024all",
+   "table": "Table A, all consumer units: Personal insurance and pensions, 2024 annual mean",
+   "link": "https://www.bls.gov/news.release/archives/cesan_12192025.htm",
+   "year": 2024,
+   "among": "households of every size and age (CE consumer units)"
   },
   {
    "field": "retirement",
@@ -2346,9 +2500,9 @@
   "Rent by age of householder: no published table (ACS PUMS only)",
   "Cash, cards, student loans and retirement by age (SCF historical tables and Data Interactive): not reachable; the report gives them for all families only",
   "Household income by age (Census H-10 and its percentiles): Secondary",
-  "Average card debt by generation (Experian) and student loans by age (FSA portfolio by age, located but not readable): Secondary",
+  "Average card debt by generation (Experian) and student loans by age (FSA portfolio by age: only an xls, portfolio-by-age.xls on data.ed.gov, batch 54): Secondary",
   "CE one-person households by age: no published cross-table; the one-person row is scaled by the age band's ratio to all ages (QUESTIONS 336, batch 46)",
-  "CE all consumer units for 2024 (BLS cesan, Dec 19 2025): not reachable; the all-ages total is the 2022-23 average from the NY metro release (QUESTIONS 380)"
+  "CE all consumer units, shelter and utilities for 2024: not in the release's Table A; those two categories use the totals for the age ratio (batch 54)"
  ],
  "shapes": [
   {
