@@ -224,9 +224,9 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
       for (const item of flat) {
         if (!item) { prevRow = null; continue; }
         const { row, r } = item;
-        const cells = normalizeReportRow(row);
+        const cells = normalizeReportRow(rep.read ? readRow(row, rep.prefix) : row);
         rows[r - 1] = head.map(h => {
-          if (h.check) return { f: reportCheck(h, letterOf, r, row.unit ?? head.find(x => x.key === h.check[0]).unit), s: 'check' };
+          if (h.check) return rep.read && row.app === undefined ? { v: null } : { f: reportCheck(h, letterOf, r, row.unit ?? head.find(x => x.key === h.check[0]).unit), s: 'check' }; // batch 62: a step with no number in the app has no Check
           const cell = cells[h.key];
           const unit = h.unit === 'row' ? row.unit : h.unit;
           if (!cell) return { v: null };
@@ -241,7 +241,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
             return { f, s: row.total ? 'total' : 'formula', fmt: unit, cached: pair ? cells[pair[1]]?.v : undefined };
           }
           const v = unit === 'month' ? toCell('month', cell.v) : cell.v;
-          return { v, s: cell.fromApp || h.key === 'app' || h.key.startsWith('app') ? 'app' : cell.note ? 'note' : 'text', fmt: unit };
+          return { v, s: cell.input ? 'input' : cell.fromApp || h.key === 'app' || h.key.startsWith('app') ? 'app' : cell.note ? 'note' : 'text', fmt: unit };
         });
         const namedCol = head.find(h => cells[h.key]?.named) ?? head.find(h => h.named);
         if (row.key && namedCol) define(`${rep.prefix}_${row.key}`, absRange(sheet.name, letterOf.get(namedCol.key), r));
@@ -411,6 +411,14 @@ function compileReportFormula(tmpl, { letterOf, row, prev, first, last, where })
     if (!prev) throw new Error(`${where}: no row above for {prev:${key}}`);
     return `${letter}${prev}`;
   });
+}
+// Batch 62 (js/registry/reads.js): a read's row. {row:key} is another row of the read (its named cell); an input row is
+// a blue box holding the app's default; a row with no app() shows no app's value.
+function readRow(row, prefix) {
+  const f = row.f?.replace(/\{row:([A-Za-z0-9_]+)\}/g, (all, k) => `${prefix}_${k}`);
+  const app = { v: row.app ?? null };
+  if (row.input) return { cells: { name: { v: row.name }, f: { v: row.value ?? null, input: true }, app } };
+  return { cells: { name: { v: row.name }, f: row.fromApp ? { v: row.app ?? null, fromApp: true } : { f }, app } };
 }
 // A short row ({ name, f | fromApp, app }) as cells. A row from the app shows the app's number in the Formula column.
 function normalizeReportRow(row) {

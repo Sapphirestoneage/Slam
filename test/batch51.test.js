@@ -195,7 +195,7 @@ test('Shift P&L: a private shift row in a partner\'s or shared view is not liste
 
 test('registered: M9H, the mileage rate with its source and date, and every new field', () => {
   const e = mathById('M9H');
-  assert.ok(e && e.fromApp && e.fns.includes('shiftpnl.shiftPnlsOf'));
+  assert.ok(e && e.sheet === 'Shift_hourly' && e.fns.includes('shiftpnl.shiftPnlsOf')) // batch 62: a live formula now (the Shift P&L tab);
   const a = ASSUMPTIONS.find(x => x.id === 'mileage.rate');
   assert.ok(a && /IR-2025-128/.test(a.source) && a.date === '2026-11-06' && a.get(ref) === 0.725);
   const keys = new Set(AREAS.flatMap(t => t.fields.map(f => f.key)));

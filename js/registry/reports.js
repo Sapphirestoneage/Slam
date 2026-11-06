@@ -13,6 +13,7 @@ import { unlockOf, confidenceOf } from '../math/picture.js';
 import { LEVELS, levelWord } from './program.js';
 import { categoryJoyOf, tripsOf, incomeKindOf, changeLog } from '../capture.js';
 import { compareOf } from '../math/proposed.js';
+import { READS } from './reads.js';
 
 const MAX_ROWS = 600; // a table longer than this is written as values, marked From the app
 
@@ -265,4 +266,5 @@ export const REPORTS = [
       ];
     },
   },
+  ...READS, // batch 62: the Phase 4 reads as live formulas
 ];
