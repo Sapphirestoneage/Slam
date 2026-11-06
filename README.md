@@ -7,6 +7,9 @@ JavaScript modules, no build step.
 `spec/SLAM Build Spec.xlsx` is the only source of truth. Every tab is also in
 `spec/csv/` (rebuild with `python3 tools/xlsx_to_csv.py`); read the CSVs.
 
+`ROADMAP.md` is the plan after Phase 3; the engine designs it names are in `docs/engines/`, and the older suite's
+tools, with a call on each, in `docs/roadmap/`.
+
 ## Run it
 
 ```

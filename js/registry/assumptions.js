@@ -178,5 +178,14 @@ export const REFERENCE_LISTS = {
   year: 'the tax year this file is for', source: 'where this file came from',
 };
 
+// Reference data that lives in its own file under data/library/ (a library, not a rate the math reads), each with
+// where it came from and when it was taken. test/library.test.js fails when a file there is not listed here, or when a
+// listed file's own id, source or asOf does not match. Batch 17: the skill library, no UI yet (docs/engines/library.md).
+export const REFERENCE_FILES = [
+  { id: 'library.skills', file: 'data/library/skills.json', label: 'The skill library: the FI Skill Tree\'s 625 skills (25 trees, 25 levels)',
+    source: 'FI Skill Tree v6.3.1, from the public Sapphirestoneage/personalfinance repo (data/skill_tree.json, data/skill_links.json), copied by tools/library/extract-skills.mjs',
+    date: '2026-11-05', readBy: 'nothing yet (Phase 4 library slice)' },
+];
+
 export const valueOf = (a, ref) => a.get(ref);
 export const sourceOf = (t, ref) => (typeof t.source === 'function' ? t.source(ref) : t.source);
