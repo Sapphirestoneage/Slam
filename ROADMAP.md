@@ -45,6 +45,8 @@ and the app fits lives that do not look like a W-2 brochure.
 
 ### Track 1: Quantum Collapse
 
+"Typical at your age" ranges: the coach always sees them; one switch shows them in client view (Eli, Nov 6).
+
 - **Priors by age.** Typical values by age band (and household type where the data has it) for take-home, spending by
   category, rent, debts, balances, retirement savings and emergency savings, from public surveys
   (`docs/engines/priors-sources.md`). Each prior is a range (25th to 75th percentile), never a single number, and it is

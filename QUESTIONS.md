@@ -407,7 +407,7 @@ Answered and built from the second overnight brief: 140 (a parked hole does not 
 205. **The FOO tags.** 58 of 625 tags come from a word rule; 567 from each tree's level band (tools/library/extract-skills.mjs). Review them tree by tree before the Phase 4 slice, or accept them and fix as they show up?
 206. **Match before index funds.** The source ladder puts "Upgrade to index funds" (level 2) before "Capture the full 401(k) match" (level 3). The library will follow the FOO (match first) when the two disagree. OK?
 207. **The 40 app skills.** The older app's own 40 skills (already gated by FOO step, with data proofs) are left out of the 625. Add them as a second set for the first slice?
-208. **Priors in client view.** Show "typical at your age" ranges to clients, or coach-only until the copy is tested?
+208. **Priors in client view.** Show "typical at your age" ranges to clients, or coach-only until the copy is tested? **Answered Nov 6 (Eli):** both, with a switch: the coach always sees the typical-at-your-age ranges; one switch shows them in client view.
 209. **Picture % and the certainty meter.** The program's pace (40, 70, 90 by sessions 1 to 3) reads the Picture %. Plan: the certainty meter becomes the headline and Picture % stays underneath for the pace. OK, or move the pace onto the meter?
 210. **Place for NY clients.** Default the priors to the New York metro row or to New York State?
 211. **Real lives definitions.** ROADMAP.md reads "default vs my wishes map" as what happens by default if nothing is written against what the client wants, "conditional support runway" as help that could stop, "shift P&L" as a shift's pay after travel, childcare and time, and "money-control map" as who can see, move and stop each account. Right?
