@@ -146,6 +146,9 @@ export const AREAS = [
         .map(x => { const [k, l] = x.split(':'); return pick(`cliff.${k}`, `Benefits now: ${l}`, ['Getting it', 'Might qualify', 'Not on it']); }),
       f('cliff.snapAmount', 'SNAP a month (from the benefit letter)', 'money'),
       f('cliff.careCosts', 'Child care paid out of pocket', 'yesno'),
+      // Batch 53: New York's child care help (CCAP), one tap, and what care costs at full price.
+      pick('cliff.ccap', 'Benefits now: Child care help (CCAP)', ['Getting it', 'Might qualify', 'Not on it']),
+      f('cliff.careFull', 'Child care at full price, a month', 'money'),
       f('benefits', 'Employer benefits', 'text', { sheet: { skip: 'a set of benefit answers, each with have it, amount and per; on About you › Benefits' } }),
       f('lifeAdmin', 'Life admin checklist', 'text', { sheet: { skip: 'done / not yet / not for me per item; on Net worth › Protection' } }),
       f('taxHistory', 'Refund history', 'text', { area: 'taxes', sheet: { skip: 'two earlier tax years; on the Taxes tab of SLAM' } }),

@@ -43,7 +43,9 @@
     "snap": "Getting it",
     "medicaid": "Getting it",
     "kids": "Getting it",
-    "eitc": "Getting it"
+    "eitc": "Getting it",
+    "ccap": "Getting it",
+    "careFull": 2100
    }
   },
   "assumptions": {},

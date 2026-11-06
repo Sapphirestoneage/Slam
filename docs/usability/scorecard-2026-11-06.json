@@ -3833,31 +3833,34 @@
    "screen": "Raise and benefits",
    "route": "#/plan/cliff",
    "area": "Plan",
-   "batch": 47,
+   "batch": 53,
    "tasks": [
     "Find it from the client's words (food stamps)",
     "Test a $10,000 raise",
     "Type a $13,000 raise (the SNAP line)",
     "Mark the Essential Plan Getting it, then undo",
     "Use the $543 SNAP estimate as her amount",
-    "Say child care is paid out of pocket"
+    "Say child care is paid out of pocket",
+    "Batch 53: mark Child care help (CCAP) Getting it and Use the typical full price",
+    "Batch 53: test a $13,000 raise and read the Child Tax Credit line",
+    "Batch 53: find it from child care subsidy and child tax credit"
    ],
    "categories": {
     "works": {
      "result": "pass",
-     "reason": "all six tasks done in the browser on Jasmine at 1280; each tap saves (profile.cliff) and Undo takes it back; the raise stays as tested while the taps redraw"
+     "reason": "all six tasks done in the browser on Jasmine at 1280; each tap saves (profile.cliff) and Undo takes it back; the raise stays as tested while the taps redraw. Batch 53: CCAP tap, the full price box with its one-tap Use, and the Child Tax Credit row checked on Jasmine at 1440, 1280 and 390"
     },
     "right": {
      "result": "pass",
-     "reason": "hand-checked in test/cliff.test.js: the poverty line, the SNAP lines and benefit (Jasmine $543), the IRS 2027 table, the health chain, New York children's bands, the 2026 EITC, the raise and break-even; every persona's cliff block (Jasmine -$305 at $13,000 until $13,700; Lena and Marco -$7,275.70 at $5,000 until $14,800)"
+     "reason": "hand-checked in test/cliff.test.js: the poverty line, the SNAP lines and benefit (Jasmine $543), the IRS 2027 table, the health chain, New York children's bands, the 2026 EITC, the raise and break-even; batch 53: head of household brackets (Jasmine's $13,000 raise: $1,300 federal, $250.00 less than the single brackets), the Child Tax Credit ($3,785 now, +$615 at $13,000) and CCAP (85% SMI $97,853 for 3, 1% over the poverty line weekly); every persona's cliff block (Jasmine +$430 at $13,000 and no raise to $50,000 leaves her behind; Lena and Marco -$12,651.70 at $5,000 until $21,900 on batch 54's 2027 prices)"
     },
     "oneAnswer": {
      "result": "pass",
-     "reason": "one poverty line (studentLoans.poverty) for the student loans and the cliff; the raise's tax is the household's own tax (M12); each benefit has one name across the screen"
+     "reason": "one poverty line (studentLoans.poverty) for the student loans and the cliff; the raise's tax is the household's own tax (M12); each benefit has one name across the screen; batch 53: the filing status is one field (About you and Taxes write the same answer), the Child Tax Credit is the tax function's own (Taxes and the raise read the same number)"
     },
     "looks": {
      "result": "pass",
-     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, Demo and a new client; and with every section open for Jasmine and Lena and Marco at 1280 and 390"
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark, Demo and a new client; and with every section open for Jasmine and Lena and Marco at 1280 and 390; batch 53: layout checker clean again on Raise and benefits, About you and Taxes, all widths and themes"
     },
     "obvious": {
      "result": "pass",
@@ -3865,15 +3868,15 @@
     },
     "findable": {
      "result": "pass",
-     "reason": "Find: food stamps, snap, medicaid, eitc, subsidy cliff land on it in one search; a Plan sub-tab after Transitions"
+     "reason": "Find: food stamps, snap, medicaid, eitc, subsidy cliff land on it in one search; a Plan sub-tab after Transitions; batch 53: ccap, child care subsidy, child tax credit"
     },
     "easy": {
      "result": "pass",
-     "reason": "three raise taps, a tap per benefit, a one-tap Use for SNAP; typing only for a raise not on the chips"
+     "reason": "three raise taps, a tap per benefit, a one-tap Use for SNAP; typing only for a raise not on the chips; batch 53: CCAP is a tap, its price a one-tap Use of the typical"
     },
     "words": {
      "result": "minor",
-     "reason": "Line and Worth now are short column heads explained in a foot note and tips; MAGI only in a hover tip. Ahead and behind are plain, no verdict words, no em dashes"
+     "reason": "Line and Worth now are short column heads explained in a foot note and tips; MAGI only in a hover tip. Ahead and behind are plain, no verdict words, no em dashes. Batch 53: the Child Tax Credit says phase-out, not a cliff, in a foot line"
     },
     "tells": {
      "result": "pass",
@@ -4643,7 +4646,7 @@
   }
  ],
  "updated": {
-  "batch": 51,
+  "batch": 53,
   "date": "2026-11-06"
  },
  "batch34": {

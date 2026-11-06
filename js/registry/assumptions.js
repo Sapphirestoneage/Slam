@@ -115,6 +115,12 @@ export const LISTS = {
 const SPEC = 'SLAM Build Spec, Reference data tab';
 const IRS = 'IRS Notice 2025-67';
 const IRS_TAX = 'IRS 2026 inflation adjustments, via Journal of Accountancy';
+// Batch 53: head of household and the Child Tax Credit. irs.gov itself could not be opened tonight (the fetch was not
+// allowed), so each figure is read from two secondary pages that quote the Revenue Procedure.
+const IRS_HEAD = 'IRS Rev. Proc. 2025-32 sec. 4.01 Table 2 (heads of households) and sec. 4.14(1) ($24,150), quoted by fedratecalc.com (2026 tax brackets) and Current Federal Tax Developments (Oct 9 2025); the deduction also by KPMG TaxNewsFlash and Journal of Accountancy (Oct 2025). Read Nov 6 2026';
+const IRS_CTC = 'IRC 24 as amended by P.L. 119-21 (OBBBA) sec. 70104; 2026 amounts IRS Rev. Proc. 2025-32 sec. 4.05 ($2,200 under 24(a), $1,700 under 24(d)(1)(A)), quoted by Current Federal Tax Developments (Oct 9 2025); thresholds, $500, $2,500, 15% and under 17 from 26 U.S.C. 24(h)(3), (h)(4), (h)(6), (d)(1)(B) and (c)(1) as quoted by fedratecalc.com (Child Tax Credit 2026). Read Nov 6 2026';
+const OCFS_CCAP = 'NY OCFS CCAP income standards and family share examples effective 6/1/2026 to 5/31/2027, as posted by Onondaga County DSS (onondaga.gov/dss/childcare); the 1% of income over the State Income Standard rule per 18 NYCRR Part 415 (childery.com, New York subsidies, matches every example). ocfs.ny.gov could not be opened tonight. Read Nov 6 2026';
+const OCFS_RATES = 'NY OCFS child care market rates effective Oct 1 2024, day care center, weekly (30 hours or more): New York City as posted by the Day Care Council of New York (dccnyinc.org); outside NYC, Ontario County\'s posted rates (ontariocountyny.gov), a Finger Lakes county used for the rest of the state (each county has its own; unverified for other counties). Read Nov 6 2026';
 const FED = 'Federal Reserve G.19, Q2 2026 (released Aug 7 2026)';
 const RULE = file => `SLAM rule (${file})`;
 
@@ -155,12 +161,14 @@ export const ASSUMPTIONS = [
   // 2026 taxes.
   { id: 'tax.standardDeduction.single', name: 'StdDed_single', label: 'Standard deduction, single', unit: 'money', get: r => r.tax.standardDeduction.single, source: IRS_TAX, date: '2026-10-28' },
   { id: 'tax.standardDeduction.joint', name: 'StdDed_joint', label: 'Standard deduction, married jointly', unit: 'money', get: r => r.tax.standardDeduction.joint, source: IRS_TAX, date: '2026-10-28' },
+  { id: 'tax.standardDeduction.head', name: 'StdDed_head', label: 'Standard deduction, head of household', unit: 'money', get: r => r.tax.standardDeduction.head, source: IRS_HEAD, date: '2026-11-06' },
   { id: 'tax.socialSecurityWageBase', name: 'SS_wageBase', label: 'Social Security wage base', unit: 'money', get: r => r.tax.socialSecurityWageBase, source: 'SSA 2026 announcement', date: '2026-10-28' },
   { id: 'tax.socialSecurityRate', name: 'SS_rate', label: 'Social Security rate', unit: 'pct', get: r => r.tax.socialSecurityRate, source: 'Statutory', date: '2026-10-28' },
   { id: 'tax.medicareRate', name: 'Medicare_rate', label: 'Medicare rate', unit: 'pct', get: r => r.tax.medicareRate, source: 'Statutory', date: '2026-10-28' },
   { id: 'tax.additionalMedicareRate', name: 'Medicare_addl', label: 'Additional Medicare rate', unit: 'pct', get: r => r.tax.additionalMedicareRate, source: 'Statutory', date: '2026-10-28' },
   { id: 'tax.additionalMedicareOver.single', name: 'Medicare_over_single', label: 'Additional Medicare starts, single', unit: 'money', get: r => r.tax.additionalMedicareOver.single, source: 'Statutory', date: '2026-10-28' },
   { id: 'tax.additionalMedicareOver.joint', name: 'Medicare_over_joint', label: 'Additional Medicare starts, joint', unit: 'money', get: r => r.tax.additionalMedicareOver.joint, source: 'Statutory', date: '2026-10-28' },
+  { id: 'tax.additionalMedicareOver.head', name: 'Medicare_over_head', label: 'Additional Medicare starts, head of household (the single line)', unit: 'money', get: r => r.tax.additionalMedicareOver.head, source: 'Statutory: IRC 3101(b)(2), $200,000 for every return other than joint or separate', date: '2026-11-06' },
   { id: 'tax.selfEmployedRate', name: 'SE_rate', label: 'Self-employment tax rate', unit: 'pct', get: r => r.tax.selfEmployedRate, source: 'Statutory', date: '2026-10-28' },
   { id: 'tax.selfEmployedBase', name: 'SE_base', label: 'Self-employment tax on this share of earnings', unit: 'pct', get: r => r.tax.selfEmployedBase, source: 'Statutory', date: '2026-10-28' },
   { id: 'tax.state.NY.standardDeduction.single', name: 'NY_std_single', label: 'NY standard deduction, single', unit: 'money', get: r => r.tax.state.NY.standardDeduction.single, source: 'NY Tax Law (see the NY brackets note)', date: '2026-11-03' },
@@ -244,6 +252,16 @@ export const ASSUMPTIONS = [
   // Batch 29 (the true cost of debt and the student loan decision, js/math/truecost.js and studentloan.js).
   { id: 'tax.mortgageDebtLimit', name: 'MortgageDebtLimit', label: 'Home loan interest is deductible on this much debt (itemizers only)', unit: 'money', get: r => r.tax.mortgageDebtLimit, source: 'IRC 163(h)(3)(F), made permanent by the 2025 law (P.L. 119-21) (unverified: from memory; confirm in IRS Pub. 936 for 2026)', date: '2026-11-06' },
   { id: 'tax.saltCap', name: 'SaltCap', label: 'State and local taxes an itemizer can deduct, a year', unit: 'money', get: r => r.tax.saltCap, source: 'P.L. 119-21 sec. 70120: $40,000 for 2025 plus 1% a year (unverified: from memory; confirm in the 2026 Schedule A instructions)', date: '2026-11-06' },
+  // Batch 53: the Child Tax Credit (js/math/income.js childTaxCredit, in householdTax).
+  { id: 'tax.ctc.perChild', name: 'CTC_perChild', label: 'Child Tax Credit: a child under 17, a year', unit: 'money', get: r => r.tax.ctc.perChild, source: IRS_CTC, date: '2026-11-06' },
+  { id: 'tax.ctc.otherDependent', name: 'CTC_other', label: 'Child Tax Credit: each other dependent (not refundable)', unit: 'money', get: r => r.tax.ctc.otherDependent, source: IRS_CTC, date: '2026-11-06' },
+  { id: 'tax.ctc.refundableMax', name: 'CTC_refundMax', label: 'Child Tax Credit: the most of it back as a refund, a child', unit: 'money', get: r => r.tax.ctc.refundableMax, source: IRS_CTC, date: '2026-11-06' },
+  { id: 'tax.ctc.earnedFloor', name: 'CTC_earnedFloor', label: 'Child Tax Credit: the refund counts earnings over this', unit: 'money', get: r => r.tax.ctc.earnedFloor, source: IRS_CTC, date: '2026-11-06' },
+  { id: 'tax.ctc.refundableRate', name: 'CTC_refundRate', label: 'Child Tax Credit: share of earnings over the floor that can come back', unit: 'pct', get: r => r.tax.ctc.refundableRate, source: IRS_CTC, date: '2026-11-06' },
+  { id: 'tax.ctc.phaseOutSingle', name: 'CTC_phaseSingle', label: 'Child Tax Credit: fades over this income (MAGI), any return but joint', unit: 'money', get: r => r.tax.ctc.phaseOutSingle, source: IRS_CTC, date: '2026-11-06' },
+  { id: 'tax.ctc.phaseOutJoint', name: 'CTC_phaseJoint', label: 'Child Tax Credit: fades over this income (MAGI), married jointly', unit: 'money', get: r => r.tax.ctc.phaseOutJoint, source: IRS_CTC, date: '2026-11-06' },
+  { id: 'tax.ctc.phaseOutPer1000', name: 'CTC_phaseStep', label: 'Child Tax Credit: dollars it fades by for each $1,000 (or part) over the line', unit: 'money', get: r => r.tax.ctc.phaseOutPer1000, source: IRS_CTC, date: '2026-11-06' },
+  { id: 'tax.ctc.ageUnder', name: 'CTC_ageUnder', label: 'Child Tax Credit: a child under this age at the end of the year', unit: 'number', get: r => r.tax.ctc.ageUnder, source: IRS_CTC, date: '2026-11-06' },
   // Batch 47: the benefits cliff (js/math/cliff.js, M9B). The poverty line is studentLoans.poverty above (the one copy).
   { id: 'cliff.snap.grossEach', name: 'SNAP_grossEach', label: 'SNAP: the federal gross line a month (130%) for each person past 8', unit: 'money', get: r => r.cliff.snap.grossEach, source: 'USDA FNS, SNAP FY2027 Cost-of-Living Adjustments (usda.gov/sites/default/files/guidance-documents/fna.snap-cola2027.pdf, Oct 1 2026 to Sep 30 2027), read Nov 6 2026', date: '2026-11-06' },
   { id: 'cliff.snap.netEach', name: 'SNAP_netEach', label: 'SNAP: the federal net line a month (100%) for each person past 8', unit: 'money', get: r => r.cliff.snap.netEach, source: 'USDA FNS, SNAP FY2027 Cost-of-Living Adjustments (usda.gov/sites/default/files/guidance-documents/fna.snap-cola2027.pdf, Oct 1 2026 to Sep 30 2027), read Nov 6 2026', date: '2026-11-06' },
@@ -271,6 +289,11 @@ export const ASSUMPTIONS = [
   { id: 'cliff.aca.benchmarkUs', name: 'ACA_benchmarkUs', label: 'Marketplace: the US average benchmark silver plan a month for a 40-year-old (a state not in the table)', unit: 'money', get: r => r.cliff.aca.benchmarkUs, source: "KFF, Marketplace Average Monthly Benchmark Premiums, 2027 (second-lowest silver, 40-year-old, weighted by county plan selections), kff.org/affordable-care-act/state-indicator/marketplace-average-benchmark-premiums/, read Nov 6 2026 (batch 54; 2026 was US $625, New York $817)", date: '2026-11-06' },
   { id: 'cliff.eitc.childlessAgeMin', name: 'EITC_ageMin', label: 'EITC with no children: youngest age', unit: 'number', get: r => r.cliff.eitc.childlessAgeMin, source: 'IRC 32(c)(1)(A)(ii): an eligible individual with no qualifying child is at least 25 and under 65 (statute, from the code, not opened tonight)', date: '2026-11-06' },
   { id: 'cliff.eitc.childlessAgeMax', name: 'EITC_ageMax', label: 'EITC with no children: oldest age', unit: 'number', get: r => r.cliff.eitc.childlessAgeMax, source: 'IRC 32(c)(1)(A)(ii): an eligible individual with no qualifying child is at least 25 and under 65 (statute, from the code, not opened tonight)', date: '2026-11-06' },
+  // Batch 53: New York's child care help (CCAP); the line by family size is the CCAP_line table.
+  { id: 'cliff.ccap.smi85Each', name: 'CCAP_lineEach', label: 'Child care help (NY CCAP): the line for each person past 8, a year (the step between 7 and 8 on the OCFS table)', unit: 'money', get: r => r.cliff.ccap.smi85Each, source: OCFS_CCAP, date: '2026-11-06' },
+  { id: 'cliff.ccap.shareRate', name: 'CCAP_shareRate', label: 'Child care help (NY CCAP): the family pays this share of its income over the poverty line, a year', unit: 'pct', get: r => r.cliff.ccap.shareRate, source: OCFS_CCAP, date: '2026-11-06' },
+  { id: 'cliff.ccap.shareRoundWeekly', name: 'CCAP_round', label: 'Child care help (NY CCAP): the weekly family share is rounded down to this (read from the OCFS examples)', unit: 'money', get: r => r.cliff.ccap.shareRoundWeekly, source: OCFS_CCAP, date: '2026-11-06' },
+  { id: 'cliff.ccap.ageUnder', name: 'CCAP_ageUnder', label: 'Child care help (NY CCAP): children under this age', unit: 'number', get: r => r.cliff.ccap.ageUnder, source: OCFS_CCAP, date: '2026-11-06' },
   { id: 'cliff.eitc.nyShare', name: 'EITC_nyShare', label: "New York's earned income credit, share of the federal one", unit: 'pct', get: r => r.cliff.eitc.nyShare, source: 'NY Tax Law 606(d): 30%, confirmed on tax.ny.gov, Form IT-215 (2025) line 11: "New York State earned income credit (NYS EIC) rate 30% (.30)" (tax.ny.gov/pdf/2025/inc/it215_2025_fill_in.pdf, read Nov 6 2026, batch 54). A 45% rate is Assembly bill A5661, in committee since Jan 7 2026 and not law (legilist.com, read Nov 6 2026; QUESTIONS 394)', date: '2026-11-06' },
   { id: 'studentLoans.poverty.base', name: 'Poverty_base', label: 'Poverty guideline, one person (48 states and DC)', unit: 'money', get: r => r.studentLoans.poverty.base, source: 'HHS 2026 poverty guidelines (Federal Register, Jan 26 2026: the LSC table is 125% of it)', date: '2026-11-06' },
   { id: 'studentLoans.poverty.perPerson', name: 'Poverty_perPerson', label: 'Poverty guideline, each added person', unit: 'money', get: r => r.studentLoans.poverty.perPerson, source: 'HHS 2026 poverty guidelines (Federal Register, Jan 26 2026)', date: '2026-11-06' },
@@ -335,6 +358,7 @@ const billOrderHolds = o => [...(o.categories || []), ...Object.entries(o.lines 
 export const TABLES = [
   { id: 'Fed_single', label: 'Federal brackets, single', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.brackets.single), source: IRS_TAX, date: '2026-10-28' },
   { id: 'Fed_joint', label: 'Federal brackets, married jointly', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.brackets.joint), source: IRS_TAX, date: '2026-10-28' },
+  { id: 'Fed_head', label: 'Federal brackets, head of household', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.brackets.head), source: IRS_HEAD, date: '2026-11-06' },
   { id: 'NY_single', label: 'NY brackets, single', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.state.NY.brackets.single), source: r => r.tax.state.NY.source, date: '2026-11-03' },
   { id: 'NY_joint', label: 'NY brackets, joint', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.state.NY.brackets.joint), source: r => r.tax.state.NY.source, date: '2026-11-03' },
   { id: 'NY_head', label: 'NY brackets, head of household', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.state.NY.brackets.head), source: r => r.tax.state.NY.source, date: '2026-11-03' },
@@ -359,6 +383,11 @@ export const TABLES = [
     rows: r => Object.entries(r.cliff.aca.benchmark40), source: "KFF, Marketplace Average Monthly Benchmark Premiums, 2027 (second-lowest silver, 40-year-old, weighted by county plan selections), kff.org/affordable-care-act/state-indicator/marketplace-average-benchmark-premiums/, read Nov 6 2026 (batch 54; 2026 was US $625, New York $817). New York rates every age the same", date: '2026-11-06' },
   { id: 'EITC_2026', label: 'EITC, tax year 2026, by children: earnings for the full credit, the full credit, where it starts to fade (single or head of household, joint) and where it ends', columns: [['kids', 'Children', 'number'], ['earned', 'Earnings for the full credit', 'money'], ['max', 'Full credit', 'money'], ['fromSingle', 'Fades from, single', 'money'], ['fromJoint', 'Fades from, joint', 'money'], ['endSingle', 'Ends, single', 'money'], ['endJoint', 'Ends, joint', 'money']],
     rows: r => r.cliff.eitc.rows, source: 'IRS Rev. Proc. 2025-32 sec. 4 (2026 inflation adjustments; via Current Federal Tax Developments, Oct 9 2025), read Nov 6 2026', date: '2026-11-06' },
+  // Batch 53: New York's child care help (CCAP, M9B).
+  { id: 'CCAP_line', label: 'Child care help (NY CCAP): the line a year by family size, 85% of the state median income (June 1 2026 to May 31 2027)', columns: [['size', 'People', 'number'], ['line', 'Line a year', 'money']],
+    rows: r => r.cliff.ccap.smi85.map((v, i) => [i + 1, v]), source: OCFS_CCAP + '. One person: childery.com (the county page starts at 2)', date: '2026-11-06' },
+  { id: 'CCAP_rates', label: 'Child care at full price (typical): a day care center a week by age, New York City and the rest of the state', columns: [['under', 'Under age', 'number'], ['nyc', 'New York City', 'money'], ['rest', 'Rest of the state', 'money']],
+    rows: r => r.cliff.ccap.ageBands.map((b, i) => [b, r.cliff.ccap.weekly.nyc[i], r.cliff.ccap.weekly.rest[i]]), source: OCFS_RATES, date: '2026-11-06' },
   { id: 'NY_chpBands', label: 'New York Child Health Plus: the premium a child a month, up to each multiple of the poverty line (free to 222%)', columns: [['upTo', 'Up to, times the line', 'number'], ['premium', 'A child a month', 'money']],
     rows: r => r.cliff.ny.chpBands, source: 'NY State of Health, Child Health Plus At a Glance, 2026 (dated 9/2025, on the 2025 poverty line): one person free to $34,743, then $15, $30, $45 and $60 a child a month to $39,125, $46,950, $54,775 and $62,600, which are 222%, 250%, 300%, 350% and 400% of $15,650 (the percentages; dollars move with the poverty line), read Nov 6 2026 (batch 54)', date: '2026-11-06' },
   { id: 'RAP_bands', label: 'RAP: share of the whole AGI a year by income (batch 29)', columns: [['over', 'AGI over', 'money'], ['rate', 'Share of AGI', 'pct']],
@@ -408,10 +437,12 @@ export const REFERENCE_LISTS = {
   typicalRatesNote: 'a note: the card Guess is 25% on purpose; the Fed average is 22.15%',
   'typicalCardLimit.byAge': 'the Card_limit table', 'typicalCardLimit.source': 'the source of the typical card limits (Experian, June 2026)',
   'limits.rothIncome.note': 'a note on the Roth income limit',
-  'tax.brackets': 'the Fed_single and Fed_joint tables', 'tax.quarterlyDue': 'the QuarterlyDue table',
+  'tax.brackets': 'the Fed_single, Fed_joint and Fed_head tables', 'tax.quarterlyDue': 'the QuarterlyDue table',
   'tax.state.NY.brackets': 'the NY tables', 'tax.state.NY.source': 'the NY tables source', 'tax.local': 'the NYC tables',
   'cliff.about': 'batch 47: what the cliff tables are and which year each is for (words)', 'cliff.asOf': 'the day the benefit lines were checked (batch 47)',
   'cliff.snap.gross': 'the SNAP_limits table', 'cliff.snap.net': 'the SNAP_limits table', 'cliff.snap.maxAllotment': 'the SNAP_limits table', 'cliff.snap.standardDeduction': 'the SNAP_limits table',
+  'cliff.ccap.smi85': 'the CCAP_line table (batch 53)', 'cliff.ccap.weekly': 'the CCAP_rates table (batch 53)', 'cliff.ccap.ageBands': 'the CCAP_rates table (batch 53)',
+  'cliff.ccap.effective': 'the dates the CCAP lines hold, June 1 2026 to May 31 2027 (words)',
   'cliff.aca.applicable': 'the ACA_applicable table', 'cliff.aca.benchmark40': 'the ACA_benchmark table', 'cliff.eitc.rows': 'the EITC_2026 table', 'cliff.ny.chpBands': 'the NY_chpBands table',
   'cliff.medicaid.nonExpansion': 'the ten states that have not expanded Medicaid (KFF, Status of State Action on the Medicaid Expansion Decision, updated Oct 1 2026): AL, FL, GA, KS, MS, SC, TN, TX, WI, WY',
   'studentLoans.rap.bands': 'the RAP_bands table', 'studentLoans.tiered': 'the Tiered_standard table', 'studentLoans.asOf': 'the day the student loan rules were checked (batch 29)',

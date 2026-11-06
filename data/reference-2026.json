@@ -91,7 +91,8 @@
     "saltCap": 40400,
     "standardDeduction": {
       "single": 16100,
-      "joint": 32200
+      "joint": 32200,
+      "head": 24150
     },
     "brackets": {
       "single": [
@@ -153,7 +154,8 @@
           768700,
           0.37
         ]
-      ]
+      ],
+      "head": [[0, 0.1], [17700, 0.12], [67450, 0.22], [105700, 0.24], [201750, 0.32], [256200, 0.35], [640600, 0.37]]
     },
     "socialSecurityWageBase": 184500,
     "socialSecurityRate": 0.062,
@@ -161,7 +163,8 @@
     "additionalMedicareRate": 0.009,
     "additionalMedicareOver": {
       "single": 200000,
-      "joint": 250000
+      "joint": 250000,
+      "head": 200000
     },
     "selfEmployedRate": 0.153,
     "selfEmployedBase": 0.9235,
@@ -370,6 +373,17 @@
       "lastYear": 2028,
       "reportOver": 20,
       "unreportedPenalty": 0.5
+    },
+    "ctc": {
+      "perChild": 2200,
+      "otherDependent": 500,
+      "refundableMax": 1700,
+      "earnedFloor": 2500,
+      "refundableRate": 0.15,
+      "phaseOutSingle": 200000,
+      "phaseOutJoint": 400000,
+      "phaseOutPer1000": 50,
+      "ageUnder": 17
     },
     "noWageTax": {
       "states": ["AK", "FL", "NV", "NH", "SD", "TN", "TX", "WA", "WY"],
@@ -1325,7 +1339,7 @@
     "source": "SLAM rule, js/find.js (Eli, Nov 5 2026: \"I do not know where everything is\")",
     "date": "2026-11-05",
     "words": [
-      {"terms": ["benefits cliff", "cliff", "raise and benefits", "snap", "food stamps", "ebt", "medicaid", "essential plan", "child health plus", "chip", "eitc", "earned income credit", "premium tax credit", "aca subsidy", "obamacare subsidy", "marketplace help", "subsidy cliff", "lose benefits", "losing benefits", "is the raise worth it", "take the raise", "more hours"], "label": "What a raise does to your benefits", "go": ["focus:cliff@#/plan/cliff"], "add": "none", "why": "batch 47: Plan › Raise and benefits: the SNAP, Medicaid, Essential Plan, marketplace and EITC lines a raise crosses, and what you keep (Phase 4)"},
+      {"terms": ["benefits cliff", "cliff", "raise and benefits", "snap", "food stamps", "ebt", "medicaid", "essential plan", "child health plus", "chip", "eitc", "earned income credit", "premium tax credit", "aca subsidy", "obamacare subsidy", "marketplace help", "subsidy cliff", "lose benefits", "losing benefits", "is the raise worth it", "take the raise", "more hours", "ccap", "child care subsidy", "child care assistance", "daycare subsidy", "child tax credit", "ctc"], "label": "What a raise does to your benefits", "go": ["focus:cliff@#/plan/cliff"], "add": "none", "why": "batch 47: Plan › Raise and benefits: the SNAP, Medicaid, Essential Plan, marketplace and EITC lines a raise crosses, and what you keep (Phase 4)"},
       {"terms": ["lender", "lenders view", "what a lender sees", "lender's eye view", "dti", "debt to income", "qualify for a mortgage", "mortgage qualify", "how much house", "how much house can i afford", "preapproval", "pre approval", "apartment application", "rent application", "income for rent", "3x rent", "40x rent", "proof of income", "income verification", "documented income", "two years of returns", "mortgage rate", "interest rate for a mortgage", "property tax and insurance"], "label": "What a lender sees", "go": ["focus:lender@#/report/lender"], "add": "none", "why": "batch 42: Report › Lender's view: a mortgage lender, a landlord and a card issuer, each with the one number they read (Phase 4)"},
       {"terms": ["shift p&l", "shift pnl", "what a shift pays", "what a shift really pays", "real hourly", "real hourly rate", "pay per shift", "best night", "which night pays best", "is a shift worth it", "outfit costs", "babysitter for shifts"], "label": "What a shift really pays", "go": ["focus:sec:income:shifts@#/cash-flow/income"], "add": "none", "why": "batch 51: Cash flow › Income, a shift after travel, childcare, outfits and every hour around it (Phase 5)"},
       {"terms": ["certainty", "how sure", "how sure is the plan", "certainty meter", "plan certainty"], "label": "Certainty (how sure the plan is)", "go": ["focus:sec:home:picture@#/home/session"], "add": "none", "why": "batch 43: the certainty meter on Home, where the Picture % stood"},
@@ -3139,6 +3153,19 @@
       "childlessAgeMin": 25,
       "childlessAgeMax": 64,
       "nyShare": 0.3
+    },
+    "ccap": {
+      "smi85": [60576, 79214, 97853, 116492, 135131, 153770, 157264, 160759],
+      "smi85Each": 3495,
+      "effective": "2026-06-01 to 2027-05-31",
+      "shareRate": 0.01,
+      "shareRoundWeekly": 0.5,
+      "ageUnder": 13,
+      "ageBands": [1.5, 3, 6, 13],
+      "weekly": {
+        "nyc": [500, 450, 439, 325],
+        "rest": [385, 365, 340, 286]
+      }
     }
   },
   "studentLoans": {

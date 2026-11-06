@@ -9,7 +9,7 @@ import { asksTaxType, taxTypeFor } from '../math/portfolio.js';
 import { notesHidden, countable } from '../privacy.js';
 import { modeOf } from '../registry/couples.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
-import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom, isBenefitRow, householdRates, quarterlySetAside, irregularPlan, tipsDeductionOf, stateTaxLine } from '../math/income.js';
+import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom, isBenefitRow, householdRates, quarterlySetAside, irregularPlan, tipsDeductionOf, stateTaxLine, ctcLineOf, ctcKidsOf } from '../math/income.js';
 import { foo } from '../math/foo.js';
 import { raiseOf } from '../math/raise.js';
 import { RULES } from '../registry/assumptions.js';
@@ -599,6 +599,7 @@ export function lifeAdminScreen(ctx) {
 
 // ---------- Taxes (Mockup: Taxes › Filing) ----------
 export const FILING = ['Single', 'Married jointly', 'Married separately', 'Head of household'];
+export const FILING_GUESS_TIP = 'A guess: Married jointly once the relationship stage is Married, Head of household with a dependent on About you, else Single. Pick one to confirm.';
 export function taxesScreen(ctx) {
   const m = ctx.metrics();
   const x = m.inputs;
@@ -622,7 +623,7 @@ export function taxesScreen(ctx) {
   return h('section.section.area-taxes', {}, h('div.section-title', {}, h('h2', {}, 'Filing')),
     h('div.card', {}, h('div.form-grid', {},
       labelled('Filing status', h('span.row-line', { style: { gap: '8px' } }, tapPick(FILING, x.filingStatus, v => set({ filingStatus: v }), { label: 'Filing status', key: 'tax:filing', clearable: false }),
-        inferred ? h('span.tag.plain.guess', { title: 'A guess: Single, or Married jointly once the relationship stage is Married. Pick one to confirm.' }, 'Guess') : null)),
+        inferred ? h('span.tag.plain.guess', { title: FILING_GUESS_TIP }, 'Guess') : null)),
       metricCard(ctx, 'Effective rate', rates.value === null ? rates : { ...rates, value: rates.effective }),
       metricCard(ctx, 'Tax on your next dollar', marginal, { tip: 'Your marginal bracket: the federal bracket plus FICA on the next dollar you earn' })),
     // Withholding (M3): last year's result and the W-4 basics, with one plain flag.
@@ -640,6 +641,8 @@ export function taxesScreen(ctx) {
       ` Due ${q.due.map(due).join(', ')}. Your rates with self-employment tax in, on top of your other income.`) : null,
     // Batch 35 (QUESTIONS 300): the federal tips deduction, its own line (reported tips only).
     (() => { const td = tipsDeductionOf(hh, x.income, ctx.ref); return td ? h('div.nudge.tips-deduction', { style: { marginTop: '12px' } }, td.text, ' ', h('span.has-tip', { tabindex: 0, title: td.tip, 'aria-label': td.tip }, 'The rule')) : null; })(),
+    // Batch 53: the Child Tax Credit, its own line (said apart from take-home: it lands when the return is filed).
+    (() => { const c = ctcLineOf(hh, ctx.ref, { guessed: ctcKidsOf(p, ctx.ref).guessed }); return c ? h('div.nudge.ctc-line', { style: { marginTop: '12px' } }, c.text, ' ', h('span.has-tip', { tabindex: 0, title: c.tip, 'aria-label': c.tip }, 'The rule')) : null; })(),
     gap > 100 ? h('div.nudge', { style: { marginTop: '12px' } }, `Your paychecks hold back about ${money(gap)} a year less than the household owes (each job withholds as if it were the only one). More withheld a paycheck (W-4 step 4c) or step 2 fixes it.`) : null,
     ...benefits.map(i => h('div.nudge', { style: { marginTop: '12px' } }, `${i.r.name || 'Unemployment'}: ${money(i.benefit.thisYear)} taxed this year, federal and ${x.place?.state ?? 'state'} income tax ${money(i.tax.total)}, no Social Security or Medicare. ${i.withheld ? `${money(i.withheld)} withheld, ` : 'Nothing withheld, '}about ${money(i.due)} due when you file.`)),
     rows.length > 1 ? moreBlock('taxes:rows', () => h('table.rows.tax-rows', {}, h('thead', {}, h('tr', {}, ['Income', 'Federal', 'FICA', ...(x.place ? ['State and city'] : []), 'Total'].map(t => h('th', {}, t)))),

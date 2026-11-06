@@ -14,7 +14,7 @@
 // Pure: no DOM.
 import { metrics, flowOf } from './metrics.js';
 import { layersOf } from './layers.js';
-import { householdRates } from './income.js';
+import { householdRates, filingKey } from './income.js';
 import { isHeavyDebt } from './debt.js';
 import { interestDeduction } from './studentloan.js';
 import { fmt } from './result.js';
@@ -133,7 +133,7 @@ export function afterTaxOf(doc, ref, m, d) {
   const homeInterest = homeLoans.reduce((s, q) => s + q.balance * (q.apr ?? 0), 0) * share;
   const propertyTax = (asset?.values?.propertyTax ?? 0) * 12;
   const salt = Math.min(ref.tax.saltCap, (x.householdTax?.total?.state ?? 0) + (x.householdTax?.total?.local ?? 0) + propertyTax);
-  const std = ref.tax.standardDeduction[x.filingStatus === 'Married jointly' ? 'joint' : 'single'];
+  const std = ref.tax.standardDeduction[filingKey(x.filingStatus)]; // batch 53: head of household has its own
   const over = Math.max(0, homeInterest + salt - std);
   const mine = homeInterest ? interest * share / homeInterest : 0;
   const saving = Math.min(interest * share, over * mine) * fed, rate = d.apr - saving / d.balance;

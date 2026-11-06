@@ -3,6 +3,7 @@
 import { ok, needs, missing, fmt } from './result.js';
 import { RULES, LISTS } from '../registry/assumptions.js';
 import { workOf, workCash, workText, platformOf, reportedTipsYear } from './earnings.js';
+import { dependentsOf } from '../registry/couples.js';
 
 // M01: any period to monthly.
 const PER_MONTH = LISTS.perMonth; // the Per table in the assumptions registry
@@ -18,9 +19,41 @@ export function monthlyFrom(amount, per, payFrequency = null) {
     : `${fmt.money(amount, { cents: true })} per ${per === 'paycheck' ? `paycheck (${p})` : p} is ${fmt.money(v, { cents: true })} a month.`);
 }
 
-const filingKey = s => (s === 'Married jointly' || s === 'joint' ? 'joint' : 'single');
-// Answer 174 (replaces R041): Single, or Married jointly once the household's relationship stage is Married; a Guess until a filing status is typed.
-export function defaultFilingStatus(profile) { const mode = profile?.mode ?? (profile?.household === 'Couple' ? 'Married merged' : null); return mode && /^Married/.test(mode) ? 'Married jointly' : 'Single'; }
+// Batch 53 (QUESTIONS 398): head of household has its own federal brackets and standard deduction (Rev. Proc. 2025-32).
+// Married filing separately still reads the single table (its brackets differ only at the 35% line).
+export const filingKey = s => (s === 'Married jointly' || s === 'joint' ? 'joint' : s === 'Head of household' || s === 'head' ? 'head' : 'single');
+// The children on About you, read in one place (batch 53, on batch 49's people model): with dependents listed on About
+// you › People, the children are the ones whose role is Child (or not set), each with their age, and a parent you
+// support (or another dependent) is counted apart (others); else the Dependents count or the kids' ages, whichever is
+// more. ages: each child's age (null when not typed).
+const numOr = x => (x === null || x === undefined || x === '' || Number.isNaN(Number(x)) ? null : Number(x));
+export function kidsOf(profile) {
+  const raw = Array.isArray(profile?.kidAges) ? profile.kidAges : String(profile?.kidAges ?? '').split(',').filter(x => x.trim() !== '');
+  const typed = raw.map(numOr);
+  const deps = dependentsOf({ profile });
+  if (deps.length) {
+    const kids = deps.filter(x => !x.role || x.role === 'Child'), others = deps.length - kids.length;
+    const count = Math.max(kids.length, typed.length);
+    return { count, ages: Array.from({ length: count }, (_, i) => numOr(kids[i]?.age) ?? typed[i] ?? null), others };
+  }
+  const count = Math.max(numOr(profile?.dependents) ?? 0, typed.length);
+  return { count, ages: Array.from({ length: count }, (_, i) => typed[i] ?? null), others: 0 };
+}
+// For the Child Tax Credit: children under 17 (an age not typed counts as under 17, a Guess) and other dependents
+// (older children and the dependents who are not children).
+export function ctcKidsOf(profile, ref) {
+  const { ages, others } = kidsOf(profile), under = ref.tax.ctc.ageUnder;
+  const kids = ages.filter(a => a === null || a < under).length;
+  return { kids, others: ages.length - kids + others, guessed: ages.some(a => a === null) };
+}
+// Answer 174 (replaces R041), batch 53: Married jointly once the household's relationship stage is Married; else Head
+// of household with a dependent on About you; else Single. A Guess until a filing status is picked (About you, Taxes).
+export function defaultFilingStatus(profile) {
+  const mode = profile?.mode ?? (profile?.household === 'Couple' ? 'Married merged' : null);
+  if (mode && /^Married/.test(mode)) return 'Married jointly';
+  const k = kidsOf(profile);
+  return k.count + k.others > 0 ? 'Head of household' : 'Single';
+}
 
 // M10: federal income tax on annual numbers.
 export function federalTax({ gross, pretax = 0, filingStatus = 'Single', selfEmployedHalf = 0 }, ref) {
@@ -86,13 +119,35 @@ export function stateTax({ gross, pretax = 0, filingStatus = 'Single', place = n
 // it, so the shares add up to the return's tax and a second job shows the rate it really pays.
 // rows: [{ id, person: 'Me' | 'Partner', gross, pretax, taxType, tips }]. Unemployment: income tax, no FICA. tips: the
 // row's reported tips a year (batch 35); year: the tax year, for the tips deduction's years (blank: always on).
+// Batch 53: the Child Tax Credit for one return (IRC 24 as the 2025 law left it, P.L. 119-21 sec. 70104; the 2026
+// amounts from Rev. Proc. 2025-32 sec. 4.05). $2,200 a child under 17 plus $500 for each other dependent, less $50 for
+// each $1,000 (or part of one) of income over $200,000 ($400,000 married jointly): a slow phase-out, never a cliff.
+// It comes off the return's income tax first (the part that cannot go below zero); what is left comes back as a
+// refund (the additional child tax credit), up to $1,700 a child and 15% of earnings over $2,500 (Schedule 8812).
+// magi: the return's income (gross less pre-tax money and half the SE tax); incomeTax: its federal income tax.
+// Not modelled: the Social Security tax route for three or more children (8812 Part II-B) and the SSN rules (every
+// child and the parent are taken to have one).
+export function childTaxCredit({ kids = 0, others = 0, magi = 0, incomeTax = 0, earned = 0, joint = false }, ref) {
+  const C = ref.tax.ctc;
+  const phaseStart = joint ? C.phaseOutJoint : C.phaseOutSingle;
+  const most = kids * C.perChild + others * C.otherDependent;
+  const cut = Math.ceil(Math.max(0, magi - phaseStart) / 1000) * C.phaseOutPer1000;
+  const credit = Math.max(0, most - cut);
+  const nonrefundable = Math.min(credit, Math.max(0, incomeTax));
+  const refundable = Math.max(0, Math.min(credit - nonrefundable, kids * C.refundableMax, C.refundableRate * Math.max(0, earned - C.earnedFloor)));
+  return { kids, others, most, cut, credit, nonrefundable, refundable, total: nonrefundable + refundable, phaseStart, phasedOut: cut > 0, joint };
+}
+
 export const STACK = { 'W-2': 0, '1099': 1, Unemployment: 2 };
 const rankOf = t => STACK[t] ?? 0;
 export const noFica = t => t === 'Unemployment';
 // Batch 49: an adult past the couple (P3 to P7: a sibling, a parent, a friend in the plan) files a return of their own,
 // as Single; the couple's filing status is the client's and the partner's only.
 const OWN_RETURN = new Set(['P3', 'P4', 'P5', 'P6', 'P7']);
-export function householdTax(rows, { filingStatus = 'Single', place = null, year = null } = {}, ref) {
+// children (batch 53): { kids, others } on the return that claims them (the household's when joint, else Me's), for the
+// Child Tax Credit. It is said apart (ctc) and is not taken off federal: take-home is what the paychecks hold back,
+// and the credit lands when the return is filed (unless the W-4's step 3 claims it), as the EITC does.
+export function householdTax(rows, { filingStatus = 'Single', place = null, year = null, children = null } = {}, ref) {
   const t = ref.tax, joint = filingKey(filingStatus) === 'joint';
   const personOf = r => (r.person === 'Partner' ? 'Partner' : OWN_RETURN.has(r.person) ? r.person : 'Me');
   const list = rows.filter(r => r.gross != null && r.taxType).map((r, i) => ({ ...r, tips: Math.min(r.tips ?? 0, Math.max(0, r.gross)), i, unit: OWN_RETURN.has(r.person) ? r.person : joint ? 'Household' : personOf(r), rank: rankOf(r.taxType) }))
@@ -159,11 +214,18 @@ export function householdTax(rows, { filingStatus = 'Single', place = null, year
   }
   const all = Object.values(out);
   const add = k => all.reduce((s2, x) => s2 + (x[k] ?? 0), 0);
+  const kidsUnit = joint ? 'Household' : 'Me';
+  const ctc = children && (children.kids > 0 || children.others > 0) && uFed[kidsUnit] != null ? (() => {
+    const mine = all.filter(x => x.unit === kidsUnit);
+    const earned = list.filter(r => r.unit === kidsUnit && !noFica(r.taxType)).reduce((s2, r) => s2 + Math.max(0, r.gross - (r.pretax ?? 0) - (out[r.id]?.seHalf ?? 0)), 0);
+    return { ...childTaxCredit({ kids: children.kids, others: children.others, magi: uFed[kidsUnit], incomeTax: mine.reduce((s2, x) => s2 + x.federal, 0), earned, joint }, ref), unit: kidsUnit, earned };
+  })() : null;
   const total = { federal: add('federal'), state: add('state'), local: add('local'), fica: add('fica'), all: add('total'), gross: add('gross'), tipsSaved: add('tipsSaved') };
   const tipsList = Object.values(tipsDed);
   const tips = tipsList.length ? { tips: tipsList.reduce((s2, d) => s2 + d.tips, 0), deduction: tipsList.reduce((s2, d) => s2 + d.deduction, 0), saved: total.tipsSaved,
     inWindow: tipsOn, separate: sep, capped: tipsList.some(d => d.capped), phasedOut: tipsList.some(d => d.phasedOut), year } : null;
-  return { rows: out, units, total, joint, tips, text: `${all.length} income ${all.length === 1 ? 'row' : 'rows'} on ${Object.keys(units).length === 1 ? 'one return' : `${Object.keys(units).length} returns`}: federal ${fmt.money(total.federal)} + FICA ${fmt.money(total.fica)}${st ? ` + ${place.state} ${fmt.money(total.state)}${place.nyc ? ` + NYC ${fmt.money(total.local)}` : ''}` : ''} = ${fmt.money(total.all)} a year.` };
+  total.ctc = ctc?.total ?? 0;
+  return { rows: out, units, total, joint, tips, ctc, text: `${all.length} income ${all.length === 1 ? 'row' : 'rows'} on ${Object.keys(units).length === 1 ? 'one return' : `${Object.keys(units).length} returns`}: federal ${fmt.money(total.federal)} + FICA ${fmt.money(total.fica)}${st ? ` + ${place.state} ${fmt.money(total.state)}${place.nyc ? ` + NYC ${fmt.money(total.local)}` : ''}` : ''} = ${fmt.money(total.all)} a year.` };
 }
 
 // Batch 35: the tips deduction as Taxes says it, in one line. hh: householdTax; income: the metrics' income rows (each
@@ -186,6 +248,17 @@ export function tipsDeductionOf(hh, income, ref) {
   return { saved: d.saved, deduction: d.deduction, tips: d.tips, refund, unreported,
     text: `Tips deduction: ${fmt.money(d.deduction)} of reported tips off federal taxable income${why}, ${fmt.money(d.saved)} less federal income tax a year.${refund > 0.5 ? ` Your paychecks do not know it yet: about ${fmt.money(refund)} comes back when you file.` : ''}${none}`,
     tip: `${tip}${refund > 0.5 ? ' Paychecks are held back as if there were no deduction; the W-4\'s deductions line (step 4b) holds back less instead.' : ''}` };
+}
+
+// Batch 53: the Child Tax Credit as Taxes says it, in one line (null with no child or dependent on About you).
+export function ctcLineOf(hh, ref, { guessed = false } = {}) {
+  const c = hh?.ctc, C = ref.tax.ctc;
+  if (!c) return null;
+  const who = [c.kids ? `${c.kids} ${c.kids === 1 ? 'child' : 'children'} under ${C.ageUnder}` : null, c.others ? `${c.others} other ${c.others === 1 ? 'dependent' : 'dependents'}` : null].filter(Boolean).join(' and ');
+  const tip = `IRC 24 (P.L. 119-21; 2026 amounts, Rev. Proc. 2025-32): ${fmt.money(C.perChild)} a child under ${C.ageUnder} and ${fmt.money(C.otherDependent)} for each other dependent, less $${C.phaseOutPer1000} for each $1,000 of income over ${fmt.money(C.phaseOutSingle)} (${fmt.money(C.phaseOutJoint)} married jointly): it fades slowly, it never ends at once. It comes off federal income tax first; what is left comes back as a refund, up to ${fmt.money(C.refundableMax)} a child and ${Math.round(C.refundableRate * 100)}% of earnings over ${fmt.money(C.earnedFloor)}. Each child needs a Social Security number.${guessed ? ' A child with no age typed is counted as under 17.' : ''}`;
+  if (c.total <= 0.5) return { total: 0, tip, text: `Child Tax Credit: none at this income for ${who}${c.phasedOut ? ` (it phases out over ${fmt.money(c.phaseStart)})` : ' (no earnings or tax yet)'}.` };
+  const parts = [c.nonrefundable > 0.5 ? `${fmt.money(c.nonrefundable)} off your federal tax` : null, c.refundable > 0.5 ? `${fmt.money(c.refundable)} back as a refund` : null].filter(Boolean).join(' and ');
+  return { total: c.total, tip, text: `Child Tax Credit: ${fmt.money(c.total)} a year for ${who} (${parts}), when you file. Take-home here is before it${c.phasedOut ? `; it is smaller because income is over ${fmt.money(c.phaseStart)}` : ''}.` };
 }
 
 // Batch 35 (QUESTIONS 306): what Taxes says about state tax, in one line. NY (and NYC) is worked out; a state with no

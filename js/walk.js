@@ -101,7 +101,7 @@ export function walkStops(ctx, { ask = null } = {}) {
   if (!p.filingStatus && !p.later?.filingStatus && !p.none?.filingStatus && income.length) {
     const guess = defaultFilingStatus(p); // batch 18: the typical answer from the household is the first tap
     add({ key: 'tax:filing', screen: 'Taxes', route: '#/cash-flow/taxes', focus: 'tax:filing', name: 'Filing status (a guess until picked)', park: { kind: 'profile', key: 'filingStatus' },
-      typical: { label: guess, why: `Typical for ${p.mode || p.household || 'Solo'}`, apply: { kind: 'profile', patch: { filingStatus: guess } } } });
+      typical: { label: guess, why: guess === 'Head of household' ? 'Typical with a dependent and no marriage' : `Typical for ${p.mode || p.household || 'Solo'}`, apply: { kind: 'profile', patch: { filingStatus: guess } } } });
   }
 
   const bud = budgetCompletion(ctx);

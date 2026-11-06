@@ -18,14 +18,20 @@
 //   Children             New York: Medicaid to 154% (223% under age 1), Child Health Plus free to 222%, then $15 to $60
 //                        a month a child by band to 400%, full price over it (not priced here).
 //   EITC                 the federal credit for tax year 2026 by children, phased in and out, plus New York's share.
+//   Child care (CCAP)    New York only (batch 53): children under 13, up to 85% of the state median income for the
+//                        family's size (OCFS, June 1 2026 to May 31 2027); the family pays 1% of its income over the
+//                        State Income Standard (the poverty line) a year, as a weekly fee rounded down to the half
+//                        dollar, and over the line the help ends and care is full price.
+//   Child Tax Credit     not a benefit to tap: it comes with the return (income.childTaxCredit, in householdTax), so
+//                        the raise counts how it changes. A phase-out, never a cliff.
 // Health coverage is one chain (Medicaid, then the Essential Plan in New York, then the marketplace with help, then full
 // price): what a raise costs there is what the next coverage costs over what the household pays now.
 import { fmt } from './result.js';
-import { householdTax } from './income.js';
+import { householdTax, kidsOf, ctcKidsOf } from './income.js';
 import { ageOf } from './metrics.js';
 import { lenderKind } from './lender.js';
 import { myShare } from './spending.js';
-import { extraAdults, dependentsOf } from '../registry/couples.js';
+import { extraAdults } from '../registry/couples.js';
 
 export const CLIFF_STATUS = ['Getting it', 'Might qualify', 'Not on it'];
 export const CLIFF_PROGRAMS = [
@@ -34,6 +40,7 @@ export const CLIFF_PROGRAMS = [
   { id: 'essential', label: 'The Essential Plan', short: 'the Essential Plan' },
   { id: 'aca', label: 'Marketplace premium help', short: 'the premium help' },
   { id: 'kids', label: 'Children\'s coverage (Medicaid, Child Health Plus)', short: 'the children\'s coverage' },
+  { id: 'ccap', label: 'Child care help (CCAP)', short: 'child care help' },
   { id: 'eitc', label: 'Earned income credit (EITC)', short: 'the EITC' },
 ];
 export const RAISE_PICKS = [1000, 5000, 10000];
@@ -50,11 +57,11 @@ export const fplOf = (ref, size) => ref.studentLoans.poverty.base + ref.studentL
 export function cliffHousehold(doc, ref, { now = new Date(), m } = {}) {
   const p = doc.profile || {}, x = m.inputs;
   const adults = (p.household === 'Couple' ? 2 : 1) + extraAdults(doc).length; // batch 49: the adults past the couple on About you › People
-  const ages = (Array.isArray(p.kidAges) ? p.kidAges : String(p.kidAges ?? '').split(',')).map(num).filter(v => v !== null);
   // Batch 49: with dependents listed on About you › People, the children are the ones whose role is Child (or not set);
   // a parent you support (or another dependent) is in the household's size but is not a child for the EITC or CHIP.
-  const deps = dependentsOf(doc), others = deps.filter(x => x.role && x.role !== 'Child').length;
-  const kids = deps.length ? Math.max(deps.length - others, ages.length) : Math.max(num(p.dependents) ?? 0, ages.length);
+  // Batch 53: read through income.kidsOf, the one accessor (the Child Tax Credit and the filing status guess read it too).
+  const K = kidsOf(p), ages = K.ages.filter(v => v !== null);
+  const kids = K.count, others = K.others;
   const hh = x.householdTax?.rows || {};
   let earned = 0, unearned = 0, pretax = 0, seHalf = 0;
   const rows = [];
@@ -77,6 +84,9 @@ export function cliffHousehold(doc, ref, { now = new Date(), m } = {}) {
     filingStatus: x.filingStatus, place: x.place, earned, unearned, gross: earned + unearned, magi: Math.max(0, earned + unearned - pretax - seHalf),
     rentMonthly: monthOf('Rent or mortgage'), utilitiesMonthly: monthOf('Electric, gas, water'), taxRows: rows, has: rows.length > 0,
     statuses: p.cliff || {}, snapTyped: num(p.cliff?.snapAmount),
+    // Batch 53: CCAP reads the children under 13 (an age not typed counts) and child care at full price a month.
+    careKids: K.ages.filter(a => a === null || a < ref.cliff.ccap.ageUnder).length, careAges: K.ages, careFull: num(p.cliff?.careFull),
+    children: ctcKidsOf(p, ref),
   };
 }
 
@@ -167,12 +177,34 @@ export function eitcOf(H, ref, { earned = H.earned, agi = H.magi } = {}) {
   return { federal, state, total: federal + state, end, thr, kids: n, ageOut: false };
 }
 
+// ---------- Child care help (CCAP, New York) ----------
+// The line a year for this family's size: 85% of the state median income.
+export const ccapLine = (H, ref) => bySize(ref.cliff.ccap.smi85, ref.cliff.ccap.smi85Each, H.size);
+// The family share a year at this gross: 1% of the income over the State Income Standard (the poverty line), paid
+// weekly, rounded down to the half dollar (as OCFS's examples are). Null over the line: no help.
+export function ccapAt(H, ref, gross) {
+  const A = ref.cliff.ccap, line = ccapLine(H, ref);
+  if (H.state !== 'NY' || !H.careKids) return null;
+  if (gross > line + 0.5) return { eligible: false, line, weekly: null, share: null };
+  const weekly = Math.floor(A.shareRate * Math.max(0, gross - fplOf(ref, H.size)) / 52 / A.shareRoundWeekly) * A.shareRoundWeekly;
+  return { eligible: true, line, weekly, share: weekly * 52 };
+}
+// What care costs at full price a month, typical for the children's ages (OCFS market rates for a day care center,
+// weekly, New York City or the rest of the state): a starting point the client confirms, never counted until typed.
+export function careTypical(H, ref) {
+  const A = ref.cliff.ccap;
+  if (H.state !== 'NY' || !H.careKids) return null;
+  const rates = A.weekly[H.nyc ? 'nyc' : 'rest'];
+  const weekly = H.careAges.filter(a => a === null || a < A.ageUnder).reduce((s, a) => s + rates[Math.max(0, A.ageBands.findIndex(b => (a ?? 4) < b))], 0);
+  return Math.round(weekly * 52 / 12);
+}
+
 // ---------- Each program at one income ----------
 // add: a raise or a new income a year (earned, a paycheck).
 export function programsAt(H, ref, add = 0) {
   const gross = H.gross + add, earned = H.earned + add, magi = H.magi + add;
   const snap = snapBenefit(H, ref, { gross, earned });
-  return { snap, health: healthAt(H, ref, magi), kids: kidsAt(H, ref, magi), eitc: eitcOf(H, ref, { earned, agi: magi }), gross, earned, magi };
+  return { snap, health: healthAt(H, ref, magi), kids: kidsAt(H, ref, magi), eitc: eitcOf(H, ref, { earned, agi: magi }), ccap: ccapAt(H, ref, gross), gross, earned, magi };
 }
 
 // What the household's status is on each program: as tapped, or a Guess from About you and the income.
@@ -185,6 +217,7 @@ function statusGuess(id, H, ref, now) {
   if (id === 'aca') return c === 'ACA' && now.health.on === 'aca' ? 'Getting it' : (c === 'None' || c == null) && now.health.on === 'aca' ? 'Might qualify' : 'Not on it';
   if (id === 'kids') return H.kids && r <= N.aca.cliffMultiple ? (c === 'Medicaid' ? 'Getting it' : 'Might qualify') : 'Not on it';
   if (id === 'eitc') return now.eitc.total > 0 ? 'Might qualify' : 'Not on it';
+  if (id === 'ccap') return now.ccap?.eligible ? 'Might qualify' : 'Not on it';
   return 'Not on it';
 }
 function applies(id, H, ref) {
@@ -192,6 +225,9 @@ function applies(id, H, ref) {
   if (id === 'essential' && H.state !== 'NY') return 'The Essential Plan is New York\'s.';
   if (id === 'kids' && !H.kids) return 'No children on About you.';
   if (id === 'kids' && H.state !== 'NY') return `Children's Medicaid and CHIP lines vary by state; ${H.state || 'your state'}'s are not on file yet.`;
+  if (id === 'ccap' && !H.kids) return 'No children on About you.';
+  if (id === 'ccap' && !H.careKids) return 'Child care help is for children under 13.';
+  if (id === 'ccap' && H.state !== 'NY') return `Child care help lines vary by state; ${H.state || 'your state'}'s are not modelled yet (New York's CCAP is).`;
   return null;
 }
 
@@ -207,6 +243,7 @@ function lineOf(id, H, ref, now) {
     const next = steps.find(s => s * f > H.magi + 0.5) ?? N.aca.cliffMultiple;
     return { yearly: f * next, basis: 'magi', at: H.magi, multiple: next };
   }
+  if (id === 'ccap') return { yearly: ccapLine(H, ref), basis: 'gross', at: H.gross, multiple: null, why: 'New York: 85% of the state median income for the family\'s size' };
   return { yearly: now.eitc.end, basis: 'earned', at: Math.max(H.earned, H.magi), multiple: null };
 }
 // What it is worth a year now.
@@ -214,16 +251,23 @@ function worthOf(id, now, H) {
   if (id === 'snap') return now.snap.monthly * 12;
   if (HEALTH.has(id)) return now.health.on === id ? now.health.help : 0;
   if (id === 'kids') return now.kids ? (now.kids.cost ?? 0) : 0;
+  if (id === 'ccap') return now.ccap?.eligible && H.careFull !== null ? Math.max(0, H.careFull * 12 - now.ccap.share) : 0;
   return now.eitc.total;
 }
 
 // ---------- The raise ----------
-const taxOf = (H, ref, add) => householdTax(add > 0 ? [...H.taxRows, { id: 'cliff:raise', person: 'Me', gross: add, pretax: 0, taxType: 'W-2', tips: 0 }] : H.taxRows,
-  { filingStatus: H.filingStatus, place: H.place }, ref).total.all;
+// The household's tax a year with the raise on top, and the Child Tax Credit on that return (batch 53).
+const taxAt = (H, ref, add) => householdTax(add > 0 ? [...H.taxRows, { id: 'cliff:raise', person: 'Me', gross: add, pretax: 0, taxType: 'W-2', tips: 0 }] : H.taxRows,
+  { filingStatus: H.filingStatus, place: H.place, children: H.children ?? null }, ref);
+const taxOf = (H, ref, add) => { const t = taxAt(H, ref, add); return { all: t.total.all, ctc: t.ctc?.total ?? 0, kids: t.ctc ? t.ctc.kids + t.ctc.others : 0, phaseStart: t.ctc?.phaseStart ?? null }; };
 // The raise (or new income) a year: what it keeps after tax, what each counted benefit loses, and the net.
 export function raiseOf(H, ref, raise, { counted, base = programsAt(H, ref, 0), tax0 = taxOf(H, ref, 0) } = {}) {
   const at = programsAt(H, ref, raise);
-  const afterTax = raise - (taxOf(H, ref, raise) - tax0);
+  const t1 = taxOf(H, ref, raise);
+  const afterTax = raise - (t1.all - tax0.all);
+  // The Child Tax Credit (batch 53): it comes with the return, so it always counts; it grows while the tax it comes
+  // off grows, and fades slowly past $200,000 ($400,000 joint).
+  const ctc = tax0.kids ? { change: t1.ctc - tax0.ctc, base: tax0.ctc, at: t1.ctc, phaseStart: tax0.phaseStart } : null;
   const lost = [];
   if (counted.has('snap')) {
     const typed = H.snapTyped, est = base.snap.monthly - at.snap.monthly;
@@ -240,9 +284,14 @@ export function raiseOf(H, ref, raise, { counted, base = programsAt(H, ref, 0), 
     const d = unpriced ? null : (at.kids?.cost ?? 0) - (base.kids.cost ?? 0);
     if (unpriced || d > 0.5) lost.push({ id: 'kids', amount: d, ends: at.kids?.on !== base.kids.on, unpriced });
   }
+  if (counted.has('ccap') && base.ccap?.eligible) {
+    if (!at.ccap?.eligible) lost.push({ id: 'ccap', amount: H.careFull !== null ? Math.max(0, H.careFull * 12 - base.ccap.share) : null, ends: true, unpriced: H.careFull === null });
+    else { const d = at.ccap.share - base.ccap.share; if (d > 0.5) lost.push({ id: 'ccap', amount: d, ends: false, weekly: at.ccap.weekly, was: base.ccap.weekly }); }
+  }
   if (counted.has('eitc')) { const d = base.eitc.total - at.eitc.total; if (d > 0.5) lost.push({ id: 'eitc', amount: d, ends: at.eitc.total <= 0 }); }
   const lostTotal = lost.reduce((s, l) => s + (l.amount ?? 0), 0);
-  return { raise, afterTax, tax: raise - afterTax, lost, lostTotal, net: afterTax - lostTotal, unpriced: lost.some(l => l.unpriced), at };
+  const ctcChange = ctc?.change ?? 0;
+  return { raise, afterTax, tax: raise - afterTax, lost, lostTotal, ctc, net: afterTax - lostTotal + ctcChange, unpriced: lost.some(l => l.unpriced), at };
 }
 // The smallest raise at or above this one that leaves the household no worse off (steps of $100), or null past $150,000.
 export function breakEven(H, ref, raise, opts) {
@@ -262,6 +311,8 @@ function lostText(l, H, ref, at) {
     return `${label(l.id)} ends: you move to ${ON[l.to]}${l.amount > 0.5 ? `, about ${fmt.money(l.amount)} a year` : ''}`;
   }
   if (l.id === 'kids') return l.unpriced ? 'Child Health Plus goes to full price (not priced here)' : `The children's coverage costs ${fmt.money(l.amount)} more a year`;
+  if (l.id === 'ccap') return l.ends ? (l.unpriced ? 'Child care help ends: care goes to full price (add its price under Your benefits now to count it)' : `Child care help ends: care goes to full price, ${fmt.money(l.amount)} more a year`)
+    : `Child care costs ${fmt.money(l.amount)} more a year (your share goes from ${fmt.money(l.was, { cents: true })} to ${fmt.money(l.weekly, { cents: true })} a week)`;
   return l.ends ? `The EITC ends: ${fmt.money(l.amount)} a year` : `The EITC drops by ${fmt.money(l.amount)} a year`;
 }
 
@@ -282,7 +333,7 @@ export function cliffOf(doc, ref, { now = new Date(), m, raise = null } = {}) {
   });
   // Getting it with an income already over its line (a renewal not yet run): the raise cannot cross it again, so it is
   // said apart and left out of the raise. Health counts only for the program the income puts the household on now.
-  for (const p of programs) if (p.applies && p.status === 'Getting it') p.past = p.id === 'snap' ? !base.snap.eligible : HEALTH.has(p.id) ? base.health.on !== p.id : p.id === 'eitc' ? base.eitc.total <= 0 : p.over;
+  for (const p of programs) if (p.applies && p.status === 'Getting it') p.past = p.id === 'snap' ? !base.snap.eligible : HEALTH.has(p.id) ? base.health.on !== p.id : p.id === 'eitc' ? base.eitc.total <= 0 : p.id === 'ccap' ? !base.ccap?.eligible : p.over;
   const live = programs.filter(p => p.applies && p.status !== 'Not on it');
   const counted = new Set(programs.filter(p => p.applies && p.status === 'Getting it' && !p.past).map(p => p.id));
   const past = programs.filter(p => p.past);
@@ -318,7 +369,9 @@ export function cliffOf(doc, ref, { now = new Date(), m, raise = null } = {}) {
     nowhere: !near ? `Nowhere near a benefit line: at ${k(H.gross)} a year before tax${['Employer', "Parent's plan", 'Other'].includes(H.coverage) ? ', with health coverage through work or family,' : ''} no line a raise could cross applies.` : null,
     raise: R ? { ...R, even, say, crossed: crossed.map(p => p.id), might: might.map(p => p.id),
       mightText: might.length ? `It also passes the line for ${might.map(p => short(p.id)).join(' and ')}, which you might qualify for now.` : null,
-      rows: R.lost.map(l => ({ ...l, label: label(l.id), text: lostText(l, H, ref, R.at) })) } : null,
+      rows: R.lost.map(l => ({ ...l, label: label(l.id), text: lostText(l, H, ref, R.at) })),
+      ctcRow: R.ctc && Math.abs(R.ctc.change) > 0.5 ? { amount: R.ctc.change, text: R.ctc.change > 0 ? `The Child Tax Credit grows by ${fmt.money(R.ctc.change)} a year (more of it comes off the tax)` : `The Child Tax Credit shrinks by ${fmt.money(-R.ctc.change)} a year` } : null,
+      ctcText: R.ctc ? `The Child Tax Credit (${fmt.money(R.ctc.at)} a year with this raise) is a phase-out, not a cliff: it fades by $50 for each $1,000 over ${fmt.money(R.ctc.phaseStart)}, so a raise never ends it at once.${Math.abs(R.ctc.change) <= 0.5 ? ' This raise does not change it.' : ''}` : null } : null,
     value: R ? R.net : null,
   };
 }

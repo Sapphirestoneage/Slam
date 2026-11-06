@@ -3,7 +3,7 @@
 // One place maps records to formula inputs, so every screen shows the same answer.
 import { statusOf } from '../records.js';
 import { isBlank, needs } from './result.js';
-import { monthlyFrom, incomeRow, defaultFilingStatus, householdTax } from './income.js';
+import { monthlyFrom, incomeRow, defaultFilingStatus, householdTax, ctcKidsOf } from './income.js';
 import { fmt } from './result.js';
 import { datedChanges } from './changes.js';
 import { gatesOf, visible } from '../gates.js';
@@ -153,7 +153,7 @@ export function inputsOf(doc, ref, now = new Date(), { person = null } = {}) {
   // A row given as gross takes home its gross less its share; a row given as take-home keeps what was typed, and the
   // difference between its share and what its paychecks hold back is what is still due (two jobs, a side hustle).
   const hhIncome = liveAll.filter(r => r.kind === 'income').map(r => ({ r, ...incomeRow(withLink(r), { filingStatus, ref, place, now }) }));
-  const hh = householdTax(hhIncome.map(i => ({ id: i.r.id, person: ownerOf(i.r, mode) === 'Partner' ? 'Partner' : EXTRA_IDS.includes(ownerOf(i.r, mode)) ? ownerOf(i.r, mode) : 'Me', gross: i.benefit ? i.benefit.thisYear : i.gross, pretax: i.pretax, taxType: i.benefit ? 'Unemployment' : i.taxType, tips: i.tipsYear ?? 0 })), { filingStatus, place, year: now.getFullYear() }, ref); // batch 35: reported tips, for the tips deduction
+  const hh = householdTax(hhIncome.map(i => ({ id: i.r.id, person: ownerOf(i.r, mode) === 'Partner' ? 'Partner' : EXTRA_IDS.includes(ownerOf(i.r, mode)) ? ownerOf(i.r, mode) : 'Me', gross: i.benefit ? i.benefit.thisYear : i.gross, pretax: i.pretax, taxType: i.benefit ? 'Unemployment' : i.taxType, tips: i.tipsYear ?? 0 })), { filingStatus, place, year: now.getFullYear(), children: ctcKidsOf(doc.profile, ref) }, ref); // batch 35: reported tips, for the tips deduction; batch 53: the children, for the Child Tax Credit
   for (const i of income) {
     const sh = hh.rows[i.r.id];
     if (!sh) continue;

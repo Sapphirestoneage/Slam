@@ -137,12 +137,13 @@ for (const def of defs) {
       near: () => C.near, size: () => C.household.size, past: () => C.past, next: () => C.next?.id ?? null,
       snapLine: () => P('snap').line, snapMonthly: () => C.base.snap.monthly, medicaidLine: () => P('medicaid').line, essentialLine: () => P('essential').line,
       acaLine: () => P('aca').line, zones: () => C.zones.map(z => [z.from, z.to]), help: () => C.base.health.help, eitc: () => C.base.eitc.total,
+      ccapLine: () => P('ccap').line, ccapShare: () => C.base.ccap?.share ?? null, ctc: () => m.inputs.householdTax.ctc?.total ?? 0, // batch 53
     };
     const words = [C.nextText, C.nowhere, C.pastText, C.zonesText];
     for (const [key, e] of Object.entries(def.cliff)) {
       if (key === 'says') continue;
       let m2 = /^raise(\d+)$/.exec(key);
-      if (m2) { const R = raiseNet(Number(m2[1])); near(R.net, e.value, e.tol ?? 0.01); words.push(R.say, R.mightText, ...R.rows.map(x => x.text)); continue; }
+      if (m2) { const R = raiseNet(Number(m2[1])); near(R.net, e.value, e.tol ?? 0.01); words.push(R.say, R.mightText, R.ctcRow?.text, R.ctcText, ...R.rows.map(x => x.text)); continue; }
       m2 = /^breakEven(\d+)$/.exec(key);
       if (m2) { assert.equal(raiseNet(Number(m2[1])).even, e.value, key); continue; }
       m2 = /^health(\d+)$/.exec(key);
@@ -156,3 +157,75 @@ for (const def of defs) {
     assert.doesNotMatch(all, /\u2014|NaN|undefined|\bat risk\b|\bbad\b|\bgood\b/);
   });
 }
+
+// ---------- Batch 53: head of household, the Child Tax Credit, New York's child care help ----------
+import { federalTax, householdTax, childTaxCredit, defaultFilingStatus, kidsOf, ctcKidsOf, ctcLineOf } from '../js/math/income.js';
+import { ccapLine, ccapAt, careTypical } from '../js/math/cliff.js';
+
+test('head of household: the 2026 brackets and the $24,150 deduction (Rev. Proc. 2025-32)', () => {
+  // $28,000: taxable 3,850 at 10% = $385 (single: 11,900, $1,190).
+  near(federalTax({ gross: 28000, filingStatus: 'Head of household' }, ref).value, 385);
+  near(federalTax({ gross: 28000, filingStatus: 'Single' }, ref).value, 1190);
+  // $100,000: taxable 75,850: 1,770 + 12% x 49,750 = 7,740, + 22% x 8,400 = 1,848: $9,588.
+  near(federalTax({ gross: 100000, filingStatus: 'Head of household' }, ref).value, 9588);
+  // Jasmine's $13,000 raise: federal on it $1,300 as head of household (all at 10%), $1,550 on the single brackets: $250.00 less.
+  const fed = (fs, g) => householdTax([{ id: 'a', person: 'Me', gross: g, pretax: 0, taxType: 'W-2' }], { filingStatus: fs }, ref).total.federal;
+  near(fed('Head of household', 41000) - fed('Head of household', 28000), 1300);
+  near(fed('Single', 41000) - fed('Single', 28000), 1550);
+  near((fed('Single', 41000) - fed('Single', 28000)) - (fed('Head of household', 41000) - fed('Head of household', 28000)), 250);
+});
+
+test('the filing status guess: Married jointly once married, Head of household with a dependent, else Single', () => {
+  assert.equal(defaultFilingStatus({ household: 'Solo', dependents: 2 }), 'Head of household');
+  assert.equal(defaultFilingStatus({ household: 'Solo', dependents: 0 }), 'Single');
+  assert.equal(defaultFilingStatus({ household: 'Solo', kidAges: [3] }), 'Head of household');
+  assert.equal(defaultFilingStatus({ mode: 'Married merged', dependents: 1 }), 'Married jointly');
+  assert.deepEqual(kidsOf({ dependents: 3, kidAges: [4, 8] }), { count: 3, ages: [4, 8, null], others: 0 });
+  // Batch 49's People list: a child with an age, and a parent you support (an other dependent, not a child).
+  const people = { people: [{ id: 'D1', kind: 'Dependent', role: 'Child', age: 6 }, { id: 'D2', kind: 'Dependent', role: 'Parent I support', age: 71 }], dependents: 2, kidAges: [6] };
+  assert.deepEqual(kidsOf(people), { count: 1, ages: [6], others: 1 });
+  assert.deepEqual(ctcKidsOf(people, ref), { kids: 1, others: 1, guessed: false });
+  assert.equal(defaultFilingStatus({ household: 'Solo', people: [{ id: 'D1', kind: 'Dependent', role: 'Parent I support' }] }), 'Head of household');
+  assert.deepEqual(ctcKidsOf({ dependents: 3, kidAges: [4, 17] }, ref), { kids: 2, others: 1, guessed: true }); // 17 is too old; no age typed counts as under 17
+});
+
+test('the Child Tax Credit: $2,200 a child, off the tax first, the refund to $1,700 a child, a slow phase-out', () => {
+  // Jasmine: 2 children, tax $385, earnings $28,000: $385 off, refund min(4,015, 3,400, 3,825) = 3,400.
+  const j = childTaxCredit({ kids: 2, magi: 28000, incomeTax: 385, earned: 28000 }, ref);
+  near(j.nonrefundable, 385); near(j.refundable, 3400); near(j.total, 3785);
+  // Low earnings: $10,000 earned, no tax: the refund is 15% of 7,500 = $1,125.
+  near(childTaxCredit({ kids: 1, magi: 10000, incomeTax: 0, earned: 10000 }, ref).total, 1125);
+  // Over the line: $210,500 single with 1 child: 11 thousands (10,500 rounds up) x $50 = $550 off, $1,650 left.
+  const hi = childTaxCredit({ kids: 1, magi: 210500, incomeTax: 40000, earned: 210500 }, ref);
+  near(hi.credit, 1650); assert.equal(hi.phasedOut, true);
+  // Married jointly the line is $400,000: nothing off at $210,500.
+  near(childTaxCredit({ kids: 1, magi: 210500, incomeTax: 30000, earned: 210500, joint: true }, ref).credit, 2200);
+  // An other dependent is $500 and not refundable.
+  near(childTaxCredit({ others: 1, magi: 20000, incomeTax: 0, earned: 20000 }, ref).total, 0);
+  // In the household tax: on Me's return, said apart (federal is before it).
+  const hh = householdTax([{ id: 'a', person: 'Me', gross: 28000, pretax: 0, taxType: 'W-2' }], { filingStatus: 'Head of household', children: { kids: 2, others: 0 } }, ref);
+  near(hh.total.federal, 385); near(hh.ctc.total, 3785); near(hh.total.ctc, 3785);
+  assert.match(ctcLineOf(hh, ref).text, /Child Tax Credit: \$3,785 a year for 2 children under 17 \(\$385 off your federal tax and \$3,400 back as a refund\)/);
+  assert.equal(householdTax([{ id: 'a', person: 'Me', gross: 28000, pretax: 0, taxType: 'W-2' }], { filingStatus: 'Single' }, ref).ctc, null);
+});
+
+test('New York child care help (CCAP): 85% of the state median income, 1% of income over the poverty line', () => {
+  const j = H({ size: 3, kids: 2, careKids: 2, careAges: [4, 8], earned: 28000, gross: 28000 });
+  assert.equal(ccapLine(j, ref), 97853); // OCFS, 3 people, June 1 2026 to May 31 2027
+  assert.equal(ccapLine(H({ size: 9 }), ref), 160759 + 3495); // past 8: the step between 7 and 8
+  assert.equal(ccapAt(j, ref, 28000).share, 0); // $6.80 a year is 13 cents a week: $0
+  assert.equal(ccapAt(j, ref, 41000).weekly, 2.5); // 136.80 / 52 = 2.63
+  assert.equal(ccapAt(j, ref, 97853).weekly, 13.5); // the county table's example at 85% SMI for 3: $13.50
+  assert.equal(ccapAt(j, ref, 97900).eligible, false);
+  assert.equal(ccapAt(H({ state: 'PA', size: 3, careKids: 2 }), ref, 28000), null); // not modelled outside New York
+  assert.equal(careTypical(j, ref), Math.round((340 + 286) * 52 / 12)); // a 4-year-old and an 8-year-old outside NYC
+  // A raise across the line: 3 people at $96,000, care $2,000 a month: the help ends, $24,000 less the $676 share a year.
+  const near97 = H({ size: 3, kids: 2, careKids: 2, careAges: [4, 8], earned: 96000, gross: 96000, magi: 96000, careFull: 2000,
+    taxRows: [{ id: 'j', person: 'Me', gross: 96000, pretax: 0, taxType: 'W-2', tips: 0 }] });
+  const r = raiseOf(near97, ref, 3000, { counted: new Set(['ccap']) });
+  const lost = r.lost.find(l => l.id === 'ccap');
+  assert.equal(lost.ends, true);
+  near(lost.amount, 24000 - ccapAt(near97, ref, 96000).share); // share: 1% of 68,680 = 686.80 / 52 = 13.21, $13.00 a week, $676
+  near(ccapAt(near97, ref, 96000).share, 676);
+  assert.ok(r.net < 0);
+});

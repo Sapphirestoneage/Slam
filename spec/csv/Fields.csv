@@ -561,3 +561,5 @@ F558,Built,,Income,Income,Childcare hours a shift,Secondary,,,,,,,,,Now,Added fr
 F559,Built,,Income,Income,Childcare: the sitter's rate an hour,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.sitterRate
 F560,Built,,Income,Income,Outfits and gear: what they cost,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,money,,,income.gearCost
 F561,Built,,Income,Income,Outfits and gear: shifts they last,Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Cash flow › Income,whole number,,,income.gearShifts
+F562,Built,,Profile,Profile,Benefits now: Child care help (CCAP),Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,choice,,,profile.cliff.ccap
+F563,Built,,Profile,Profile,"Child care at full price, a month",Secondary,,,,,,,,,Now,Added from the code (js/registry/fields.js),,Home › About you,money,,,profile.cliff.careFull

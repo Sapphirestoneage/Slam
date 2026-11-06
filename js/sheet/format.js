@@ -82,6 +82,7 @@ export const FORMATS = [
   { version: 41, shape: '3cf3c796' }, // batch 49: M9N households of any size, the People tab (name, adult or dependent, role, age), Shared among and Split how on every row (the percents skipped), Owner P3 to P7
   { version: 42, shape: '6e45b952' }, // batch 51: M9H Shift P&L, Income › getting to a shift, childcare, outfits and gear, the hours around a shift, rule MileageRate
   { version: 43, shape: 'a8ebfcce' }, // batch 57: M73 answered and solid (the Picture split into quantity and quality), the Pace table's Reads and Due at start columns
+  { version: 44, shape: '7b631d3a' }, // batch 53: head of household (StdDed_head, Fed_head), the Child Tax Credit (CTC_*, M10 ctc), New York's child care help (cliff.ccap, cliff.careFull, CCAP_*, M9B ccap)
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

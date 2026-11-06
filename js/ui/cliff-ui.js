@@ -12,7 +12,7 @@ import * as S from './staples.js';
 import { sec } from './sections.js';
 import { money } from '../format.js';
 import { metrics } from '../math/metrics.js';
-import { cliffOf, cliffOn, CLIFF_STATUS, RAISE_PICKS } from '../math/cliff.js';
+import { cliffOf, cliffOn, careTypical, CLIFF_STATUS, RAISE_PICKS } from '../math/cliff.js';
 
 const head = (title, sub) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null));
 const tip = text => h('span.ln-tip', { title: text, tabindex: '0', role: 'img', 'aria-label': text }, icon('info'));
@@ -25,8 +25,10 @@ const RULES_WORDS = {
   essential: 'New York\'s free plan, up to 200% of the poverty line since July 1 2026 (the 200% to 250% band ended). Above it, a marketplace plan with the premium credit.',
   aca: 'The premium tax credit pays the benchmark plan less a share of income (2.15% to 10.22% for 2027). Over 400% of the poverty line there is no credit at all: the rule that lifted that line ended with 2025.',
   kids: 'New York: Medicaid to 154% of the poverty line (223% under age 1), Child Health Plus free to 222%, then $15 to $60 a month a child up to 400%, full price over it.',
+  ccap: 'New York\'s Child Care Assistance Program: children under 13, up to 85% of the state median income for the family\'s size (OCFS, June 1 2026 to May 31 2027). The family pays 1% of its income over the poverty line a year, as a weekly fee; over the line the help ends and care is full price. Once approved it holds for 12 months, so a raise counts at the next renewal.',
   eitc: 'The federal credit for tax year 2026 grows with earnings, then fades on each dollar past a threshold until it runs out; New York adds 30% of it.',
 };
+const CTC_WORDS = 'Not a benefit to sign up for: it comes with the tax return. $2,200 a child under 17 ($500 for another dependent), off federal income tax first and the rest back as a refund up to $1,700 a child. It fades by $50 for each $1,000 over $200,000 ($400,000 married jointly): a phase-out, not a cliff.';
 const BASIS = { gross: 'a year before tax', magi: 'a year before tax, less pre-tax money', earned: 'a year earned' };
 
 export function cliffScreen(app, ctx) {
@@ -79,9 +81,11 @@ function raiseBody(ctx, doc, m, draw) {
     h('table.rows.mini.cf-table', {}, h('tbody', {},
       row('The raise after tax', R.afterTax),
       R.rows.map(r => row(r.text, -(r.amount ?? 0))),
+      R.ctcRow ? row(R.ctcRow.text, R.ctcRow.amount) : null,
       h('tr.cf-net', {}, h('td', {}, h('strong', {}, 'What you keep, a year')), h('td.num', {}, h('strong', {}, `${R.net < 0 ? '-' : '+'}${money(Math.abs(R.net))}`))))),
     R.mightText ? h('p.muted.small.cf-foot', {}, R.mightText) : null,
-    h('p.muted.small.cf-foot', {}, counted ? `Counts the ${counted === 1 ? 'benefit' : 'benefits'} marked Getting it, as a year${C.counted.includes('snap') ? `; SNAP from the benefit formula${C.household.snapTyped !== null ? ' (your amount, less what the formula takes off)' : ''}` : ''}${C.counted.some(id => ['medicaid', 'essential', 'aca'].includes(id)) ? '; health coverage as what the next plan costs over what you pay now' : ''}.` : 'No benefit is marked Getting it, so only tax comes off.')];
+    R.ctcText ? h('p.muted.small.cf-foot', {}, R.ctcText) : null,
+    h('p.muted.small.cf-foot', {}, counted ? `Counts the ${counted === 1 ? 'benefit' : 'benefits'} marked Getting it, as a year${C.counted.includes('snap') ? `; SNAP from the benefit formula${C.household.snapTyped !== null ? ' (your amount, less what the formula takes off)' : ''}` : ''}${C.counted.some(id => ['medicaid', 'essential', 'aca'].includes(id)) ? '; health coverage as what the next plan costs over what you pay now' : ''}${C.counted.includes('ccap') ? '; child care help as your weekly share, or full price over its line' : ''}.` : 'No benefit is marked Getting it, so only tax comes off.')];
 }
 
 // ---------- Your benefits now: a tap each ----------
@@ -96,21 +100,37 @@ function nowSection(ctx, C) {
       h('tbody', {}, shown.map(p => h('tr', { 'data-id': p.id },
         h('td', {}, h('span.ln-name', {}, p.label, tip(RULES_WORDS[p.id]), p.guess ? S.guessTag() : null, p.guess ? h('span.muted.small', {}, p.status) : null)),
         h('td.num', { 'data-label': 'Line', title: `${k(p.line)} ${BASIS[p.basis]}` }, p.over ? `Past ${k(p.line)}` : k(p.line)),
-        h('td.num', { 'data-label': 'Worth now' }, p.status !== 'Not on it' && p.worth > 0.5 ? `${money(p.worth)} a year` : p.id === 'kids' && p.status !== 'Not on it' && C.base.kids?.cost === 0 ? 'Free' : h('span.muted', {}, 'None')),
+        h('td.num', { 'data-label': 'Worth now' }, p.status !== 'Not on it' && p.worth > 0.5 ? `${money(p.worth)} a year` : p.id === 'kids' && p.status !== 'Not on it' && C.base.kids?.cost === 0 ? 'Free'
+          : p.id === 'ccap' && p.status !== 'Not on it' && C.household.careFull === null ? h('span.muted', { title: 'Add what care costs at full price below' }, 'Add its price') : h('span.muted', {}, 'None')),
         h('td.cf-you', { 'data-label': 'You' }, S.toggle(CLIFF_STATUS, p.guess ? null : p.status, v => save({ [p.id]: v }), { label: `${p.label}: you`, clearable: true, key: `cliff:${p.id}` })))))),
-    snapExtras(C, save),
+    extras(ctx, C, save),
     h('p.muted.small.cf-foot', {}, 'Line: where it ends (or, for the children, where it changes), a year. Worth now: what it pays or saves you a year.')));
+}
+function extras(ctx, C, save) {
+  const snap = snapExtras(C, save), care = careExtras(ctx, C, save);
+  return snap.length || care ? h('div.row-line.cf-extras', {}, ...snap, care) : null;
+}
+// Batch 53: CCAP is worth what care costs at full price less the family share, so its price is one box, with the
+// typical price for the children's ages (OCFS market rates) a tap away.
+function careExtras(ctx, C, save) {
+  const p = C.programs.find(x => x.id === 'ccap');
+  if (!p?.applies || p.status === 'Not on it') return null;
+  const H = C.household, typical = careTypical(H, ctx.ref);
+  return S.labelled('Child care at full price, a month', h('span.row-line.ln-box', {},
+    typical && H.careFull === null ? S.button(`Use ${money(typical)}`, { size: 'small', tip: `Typical for ${H.careKids === 1 ? 'one child' : `${H.careKids} children`} of these ages at a day care center (OCFS market rates, ${H.nyc ? 'New York City' : 'outside New York City'})`, onClick: () => save({ careFull: typical }) }) : null,
+    S.moneyInput(H.careFull, v => save({ careFull: v }), { hint: 'Add amount', cents: false, key: 'cliff:careFull', width: 130 })),
+  { tip: 'What care would cost with no help. CCAP is worth this less your share; over its line you pay all of it' });
 }
 function snapExtras(C, save) {
   const p = C.programs.find(x => x.id === 'snap');
-  if (!p?.applies || p.status === 'Not on it') return null;
+  if (!p?.applies || p.status === 'Not on it') return [];
   const H = C.household;
   const est = C.base.snap.monthly;
-  return h('div.row-line.cf-extras', {},
+  return [
     S.labelled('SNAP a month (the benefit letter)', h('span.row-line.ln-box', {},
       est > 0 ? S.button(`Use ${money(est)}`, { size: 'small', tip: 'What the SNAP formula gives at your income', onClick: () => save({ snapAmount: est }) }) : null,
       S.moneyInput(H.snapTyped, v => save({ snapAmount: v }), { hint: 'Add amount', cents: false, key: 'cliff:snapAmount', width: 130 }))),
-    H.state === 'NY' ? S.labelled('Child care paid out of pocket', S.toggle(['Yes', 'No'], H.care ? 'Yes' : C.household.statuses.careCosts === false ? 'No' : null, v => save({ careCosts: v === null ? null : v === 'Yes' }), { label: 'Child care paid out of pocket', clearable: true, key: 'cliff:careCosts' }), { tip: 'In New York it moves the SNAP line from 150% to 200% of the poverty line' }) : null);
+    H.state === 'NY' ? S.labelled('Child care paid out of pocket', S.toggle(['Yes', 'No'], H.care ? 'Yes' : C.household.statuses.careCosts === false ? 'No' : null, v => save({ careCosts: v === null ? null : v === 'Yes' }), { label: 'Child care paid out of pocket', clearable: true, key: 'cliff:careCosts' }), { tip: 'In New York it moves the SNAP line from 150% to 200% of the poverty line' }) : null];
 }
 
 // ---------- How the lines work ----------
@@ -119,6 +139,7 @@ function howSection(C) {
   const gone = C.programs.filter(p => !p.applies);
   return sec('cliff:how', { title: 'How the lines work', summary: `Poverty line for ${C.household.size}: ${money(C.fpl)} a year (2026)` },
     () => h('div.card', {}, h('ul.cf-how', {}, shown.map(p => h('li', {}, h('strong', {}, p.label), ` ${RULES_WORDS[p.id]}`)),
+      C.household.children?.kids || C.household.children?.others ? h('li', {}, h('strong', {}, 'Child Tax Credit'), ` ${CTC_WORDS}`) : null,
       gone.map(p => h('li.muted', {}, h('strong', {}, p.label), ` ${p.why}`))),
-    h('p.muted.small.cf-foot', {}, 'Lines checked Nov 6 2026 (Assumptions tab). The marketplace benchmark is the 2027 average plan for a 40-year-old (KFF). Not here yet: child care subsidies, housing help, WIC, the Child Tax Credit.')));
+    h('p.muted.small.cf-foot', {}, 'Lines checked Nov 6 2026 (Assumptions tab). The marketplace benchmark is the 2027 average plan for a 40-year-old (KFF). Not here yet: housing help, WIC, the Empire State Child Credit, and child care help outside New York.')));
 }

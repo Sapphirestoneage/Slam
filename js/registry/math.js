@@ -143,9 +143,10 @@ export const MATH = [
   // Batch 15, item 1: income tax once per return (Married jointly: one; else one per person), FICA per person with the
   // Social Security wage base per person. Rows stack in order (jobs, then 1099, then unemployment; then row order):
   // each row's tax is the return's tax with it minus the tax without it, so the rows add up to the return.
-  { id: 'M10', name: 'Federal income tax', inputs: 'gross, before-tax deductions, filing status', unit: 'money', fns: ['income.federalTax', 'income.defaultFilingStatus', 'income.householdTax', 'income.STACK', 'income.noFica', 'income.tipsDeductionOf', 'earnings.reportedTipsYear', 'income.stateTaxLine'], // batch 35: the tips deduction; the state line on Taxes
+  { id: 'M10', name: 'Federal income tax', inputs: 'gross, before-tax deductions, filing status', unit: 'money', fns: ['income.federalTax', 'income.defaultFilingStatus', 'income.householdTax', 'income.STACK', 'income.noFica', 'income.tipsDeductionOf', 'earnings.reportedTipsYear', 'income.stateTaxLine',
+    'income.filingKey', 'income.kidsOf', 'income.ctcKidsOf', 'income.childTaxCredit', 'income.ctcLineOf'], // batch 35: the tips deduction; the state line on Taxes; batch 53: head of household, the children, the Child Tax Credit
     cols: [
-      { area: 'taxes', key: 'filing', label: 'Filing status used', unit: 'text', f: 'IF({filingStatus}<>"",{filingStatus},IF(OR(LEFT(Profile_mode,7)="Married",AND(Profile_mode="",Profile_household="Couple")),"Married jointly","Single"))' },
+      { area: 'taxes', key: 'filing', label: 'Filing status used', unit: 'text', f: 'IF({filingStatus}<>"",{filingStatus},IF(OR(LEFT(Profile_mode,7)="Married",AND(Profile_mode="",Profile_household="Couple")),"Married jointly",IF(OR(N(Profile_dependents)>0,Profile_kidAges<>""),"Head of household","Single")))' }, // batch 53: a dependent and no marriage: Head of household
       { area: 'taxes', key: 'joint', label: 'Files jointly', unit: 'text', f: 'IF({@filing}="Married jointly","Yes","No")' },
       { area: 'income', key: 'pct', label: '401(k) % used', unit: 'pct', f: `IF(${INCOME},IF({contributionPct}<>"",{contributionPct},{app:linkPct}),"")`,
         app: { linkPct: (rec, c) => (c.x.link.job?.id === rec.id && rec.values.contributionPct == null ? c.x.link.incomePct ?? '' : '') } },
@@ -167,7 +168,7 @@ export const MATH = [
       { area: 'income', key: 'own', label: 'Adds to taxable income (federal)', unit: 'money',
         f: 'IF({@stack}="","",MAX(0,{@taxedGross}-N({@pretax})-IF({@taxType}="1099",({@ssPart}+{@medPart})/2,0)))' },
       { area: 'income', key: 'taxable', label: 'Taxable a year (federal), the return through this row', unit: 'money',
-        f: 'IF({@stack}="","",MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<="&{@stack})-IF(Taxes_joint="Yes",StdDed_joint,StdDed_single)))' },
+        f: 'IF({@stack}="","",MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<="&{@stack})-IF(Taxes_joint="Yes",StdDed_joint,IF(Taxes_filing="Head of household",StdDed_head,StdDed_single))))' },
       // Batch 35 (QUESTIONS 300): the federal tips deduction, once per return: the reported tips kept (tipsQ, never past the
       // row's taxed gross), up to Tips_cap, less Tips_phaseStep for each $1,000 of income over the line; none married
       // filing separately or outside its years. Each tipped row takes its share of what the return saves, by its tips.
@@ -177,14 +178,20 @@ export const MATH = [
         f: (rec, c) => `IF(OR({@stack}="",N({@tipsQ})=0),"",IF(OR(Taxes_filing="Married separately",${c.now.getFullYear()}<Tips_firstYear,${c.now.getFullYear()}>Tips_lastYear),0,MAX(0,MIN(Tips_cap,SUMIFS(Income_tipsQ,Income_taxUnit,{@taxUnit}))-MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit})-IF(Taxes_joint="Yes",Tips_phaseJoint,Tips_phaseSingle))*Tips_phaseStep/1000)))` },
       { area: 'income', key: 'tipsSaved', label: 'Federal tax the tips deduction saves a year (this row\'s share)', unit: 'money',
         f: () => {
-          const T = 'MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit})-IF(Taxes_joint="Yes",StdDed_joint,StdDed_single))', L = `MAX(0,${T}-{@tipsDed})`;
-          return `IF({@tipsDed}="","",IF(Taxes_joint="Yes",${bracket(T, 'Fed_joint')}-${bracket(L, 'Fed_joint')},${bracket(T, 'Fed_single')}-${bracket(L, 'Fed_single')})*{@tipsQ}/SUMIFS(Income_tipsQ,Income_taxUnit,{@taxUnit}))`;
+          const T = 'MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit})-IF(Taxes_joint="Yes",StdDed_joint,IF(Taxes_filing="Head of household",StdDed_head,StdDed_single)))', L = `MAX(0,${T}-{@tipsDed})`;
+          return `IF({@tipsDed}="","",IF(Taxes_joint="Yes",${bracket(T, 'Fed_joint')}-${bracket(L, 'Fed_joint')},IF(Taxes_filing="Head of household",${bracket(T, 'Fed_head')}-${bracket(L, 'Fed_head')},${bracket(T, 'Fed_single')}-${bracket(L, 'Fed_single')}))*{@tipsQ}/SUMIFS(Income_tipsQ,Income_taxUnit,{@taxUnit}))`;
         } },
       { area: 'income', key: 'M10', label: 'Federal tax a year (M10)', unit: 'money',
-        f: `IF({@taxable}="","",-N({@tipsSaved})+IF(Taxes_joint="Yes",${bracket('{@taxable}', 'Fed_joint')}-${bracket('MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-StdDed_joint)', 'Fed_joint')},${bracket('{@taxable}', 'Fed_single')}-${bracket('MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-StdDed_single)', 'Fed_single')}))` },
+        f: () => {
+          const by = (std, t) => `${bracket('{@taxable}', t)}-${bracket(`MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-${std})`, t)}`;
+          return `IF({@taxable}="","",-N({@tipsSaved})+IF(Taxes_joint="Yes",${by('StdDed_joint', 'Fed_joint')},IF(Taxes_filing="Head of household",${by('StdDed_head', 'Fed_head')},${by('StdDed_single', 'Fed_single')})))`; // batch 53: head of household
+        } },
     ],
     sheet: 'IF(COUNT(Income_M10)=0,"",SUM(Income_M10))', label: 'Federal tax a year, the household\'s return (or each person\'s)',
-    parts: [{ key: 'tips', name: 'Tips deduction: federal income tax it saves a year (reported tips only; batch 35)', unit: 'money', sheet: 'IF(COUNT(Income_tipsSaved)=0,"",SUM(Income_tipsSaved))', app: c => (c.x.householdTax?.tips ? c.x.householdTax.total.tipsSaved : null) }],
+    parts: [{ key: 'tips', name: 'Tips deduction: federal income tax it saves a year (reported tips only; batch 35)', unit: 'money', sheet: 'IF(COUNT(Income_tipsSaved)=0,"",SUM(Income_tipsSaved))', app: c => (c.x.householdTax?.tips ? c.x.householdTax.total.tipsSaved : null) },
+      { key: 'ctc', name: 'Child Tax Credit a year: off the federal tax, then the rest as a refund (batch 53; not in take-home, it lands when the return is filed)', unit: 'money',
+        fromApp: 'per return from the children\'s ages (under CTC_ageUnder) and the return\'s income, tax and earnings: CTC_perChild a child and CTC_other each other dependent, less CTC_phaseStep for each $1,000 or part over CTC_phaseSingle (CTC_phaseJoint), off the income tax first, the rest back up to CTC_refundMax a child and CTC_refundRate of earnings over CTC_earnedFloor; on Taxes in SLAM',
+        app: c => c.x.householdTax?.ctc?.total ?? null }],
     app: c => (Object.keys(c.x.householdTax?.rows || {}).length ? c.x.householdTax.total.federal : null) },
   { id: 'M11', name: 'FICA', inputs: 'gross, year', unit: 'money', fns: ['income.fica'],
     cols: [{ area: 'income', key: 'M11', label: 'FICA a year (M11)', unit: 'money',
@@ -694,15 +701,17 @@ export const MATH = [
       { key: 'then', name: 'Ask me next: the runner-up', unit: 'text', fromApp: 'M9Q: each input read again at the level its answer reaches', app: c => askNextOf(c.doc, c.ref, { now: c.now, m: c.m, R: c.ranges(), F: c.fooRange(), zero: zeroOf(c) }).runnerUp?.question ?? null },
     ] },
   // ---------- Batch 47: the benefits cliff (Phase 4, Track 2) ----------
-  { id: 'M9B', name: 'The benefits cliff: the lines a raise crosses and what the household keeps', inputs: 'the household size (Solo or couple, Dependents, Kids ages), State and NYC, Health coverage, every income row (earned or not, gross, pre-tax money, half the SE tax), the Rent or mortgage and Electric, gas, water lines, Filing status, the status taps (Getting it, Might qualify, Not on it), SNAP a month and Child care paid out of pocket; Poverty_base, Poverty_perPerson, the SNAP_limits, ACA_applicable, ACA_benchmark, EITC_2026 and NY_chpBands tables and the SNAP_*, Medicaid_*, NY_*, ACA_*, EITC_* values', unit: 'money',
-    fns: ['cliff.CLIFF_STATUS', 'cliff.CLIFF_PROGRAMS', 'cliff.RAISE_PICKS', 'cliff.cliffOn', 'cliff.fplOf', 'cliff.cliffHousehold', 'cliff.snapLine', 'cliff.snapBenefit', 'cliff.applicablePct', 'cliff.benchmarkOf', 'cliff.healthAt', 'cliff.kidsAt', 'cliff.eitcOf', 'cliff.programsAt', 'cliff.raiseOf', 'cliff.breakEven', 'cliff.cliffOf'],
+  { id: 'M9B', name: 'The benefits cliff: the lines a raise crosses and what the household keeps', inputs: 'the household size (Solo or couple, Dependents, Kids ages), State and NYC, Health coverage, every income row (earned or not, gross, pre-tax money, half the SE tax), the Rent or mortgage and Electric, gas, water lines, Filing status, the status taps (Getting it, Might qualify, Not on it), SNAP a month and Child care paid out of pocket; Poverty_base, Poverty_perPerson, the SNAP_limits, ACA_applicable, ACA_benchmark, EITC_2026, NY_chpBands, CCAP_line and CCAP_rates tables and the SNAP_*, Medicaid_*, NY_*, ACA_*, EITC_*, CCAP_* and CTC_* values; Child care help (CCAP) and Child care at full price (batch 53)', unit: 'money',
+    fns: ['cliff.CLIFF_STATUS', 'cliff.CLIFF_PROGRAMS', 'cliff.RAISE_PICKS', 'cliff.cliffOn', 'cliff.fplOf', 'cliff.cliffHousehold', 'cliff.snapLine', 'cliff.snapBenefit', 'cliff.applicablePct', 'cliff.benchmarkOf', 'cliff.healthAt', 'cliff.kidsAt', 'cliff.eitcOf', 'cliff.programsAt', 'cliff.raiseOf', 'cliff.breakEven', 'cliff.cliffOf',
+      'cliff.ccapLine', 'cliff.ccapAt', 'cliff.careTypical'], // batch 53: New York's child care help
     fromApp: 'each program is read at today\'s income and again with the raise (SNAP\'s benefit formula, the health coverage chain, the EITC phase-out, the household\'s tax on the raise), and the break-even is a search in $100 steps, so it is worked out in SLAM',
     label: 'Distance to the next benefit line, a year', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m }).next?.distance ?? null,
     parts: [
       { key: 'snap', name: 'SNAP a month at today\'s income (the benefit formula)', unit: 'money', fromApp: 'the most for the size less 30% of net income (above)', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m }).base.snap.monthly },
       { key: 'help', name: 'Health coverage help a year at today\'s income (Medicaid, the Essential Plan or the premium credit)', unit: 'money', fromApp: 'the benchmark plan less what the household pays on the coverage its income puts it on', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m }).base.health.help },
       { key: 'eitc', name: 'EITC a year at today\'s earnings (federal and New York)', unit: 'money', fromApp: 'the EITC_2026 table, phased in and out, plus EITC_nyShare in New York', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m }).base.eitc.total },
-      { key: 'raise5k', name: 'A $5,000 raise: kept after tax less the benefits it costs, a year', unit: 'money', fromApp: 'the raise taxed with the household and each Getting it program read again (above)', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m, raise: 5000 }).raise.net },
+      { key: 'ccap', name: 'Child care help (NY CCAP): the family share a year at today\'s income (batch 53)', unit: 'money', fromApp: 'CCAP_shareRate of the income over the poverty line, weekly, rounded down to CCAP_round; none over the CCAP_line table', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m }).base.ccap?.share ?? null },
+      { key: 'raise5k', name: 'A $5,000 raise: kept after tax less the benefits it costs, plus what it changes in the Child Tax Credit, a year', unit: 'money', fromApp: 'the raise taxed with the household and each Getting it program read again (above)', app: c => cliffOf(c.doc, c.ref, { now: c.now, m: c.m, raise: 5000 }).raise.net },
     ] },
   // ---------- Batch 50: the year-by-year projection engine, the core (Phase 5; docs/engines/projection.md) ----------
   { id: 'M9P', name: 'The year-by-year projection: months to FI on the full plan', inputs: 'M27 the surplus and the known changes ahead, M34 the one debt plan, M79 the FOO flow (big e, Tax-Free Growth room), M50 the FI number, M02 the return, each income row and its person (W-2, side work and self-employment stop at the stop age, the rest keeps going), M10 SLAM\'s tax function for a raise or a job that stops, the 401(k), HSA and IRA limits by age (limits in the reference data), each account\'s tax type, birth years, Retire by or the FI age, Plan to age, ProjectionRaise, ProjectionCashReturn', unit: 'months',

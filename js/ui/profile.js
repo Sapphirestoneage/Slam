@@ -13,10 +13,11 @@ import { gatesOf, syncCount, WORK, HOUSING, COVERAGE, AREAS, REAL_TYPES, recordF
 import { ageOf } from '../math/metrics.js';
 import { profileCompletion } from '../profile-completion.js';
 import { BENEFITS, HAVE, TRANSIT, commuterSavings } from '../benefits.js';
-import { taxRates, monthlyFrom } from '../math/income.js';
+import { taxRates, monthlyFrom, defaultFilingStatus } from '../math/income.js';
 import { HOLIDAY_SETS, nextHoliday, SHABBAT_SPEND_DAY } from '../math/holidays.js';
 import { COMMUNITIES, setCommunityOn } from '../community.js';
 import { money, pct } from '../format.js';
+const FILING_STATUSES = ['Single', 'Married jointly', 'Married separately', 'Head of household'];
 import { WHY_CHIPS, WHY_LABELS, chipsOf, whyAnswered, toggleChip, starChip } from '../whynow.js';
 import { peopleSection, peopleSummary } from './people-ui.js';
 import { dependentsOf } from '../registry/couples.js';
@@ -123,6 +124,9 @@ export function profileScreen(app, ctx) {
       ...(p.dependents && !dependentsOf(store.doc).length ? Array.from({ length: p.dependents }, (_, i) => labelled(`Child ${i + 1} age`, textInput(p.kidAges?.[i] ?? null, v => {
         const ages = [...(p.kidAges || [])]; ages[i] = v === null ? null : Number(v); set({ kidAges: ages });
       }, { hint: 'Age', width: 80, key: `p:kid${i}` }))) : []),
+      // Batch 53 (QUESTIONS 398): the filing status, a tap; with a dependent and no marriage it starts on Head of household.
+      field('Filing status', 'filingStatus', h('span.row-line', { style: { gap: '8px' } }, tapPick(FILING_STATUSES, p.filingStatus ?? defaultFilingStatus(p), v => set({ filingStatus: v }), { label: 'Filing status', key: 'p:filing', clearable: false }),
+        p.filingStatus ? null : h('span.tag.plain.guess', { title: 'A guess: Married jointly once married, Head of household with a dependent, else Single. Tap one to confirm.' }, 'Guess'))),
       field('Health coverage', 'healthCoverage', tapPick(COVERAGE, p.healthCoverage ?? null, v => set({ healthCoverage: v }), { label: 'Health coverage', key: 'p:health' })),
       field('Email', 'email', textInput(p.email, v => set({ email: v }), { hint: 'Add email', width: 240, key: 'p:email' })),
       field('Phone', 'phone', textInput(p.phone, v => set({ phone: v }), { hint: 'Add phone', width: 160, key: 'p:phone' })))));
