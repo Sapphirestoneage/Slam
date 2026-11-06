@@ -82,12 +82,16 @@ node tools/e2e/effort.cjs                   # Alexis and Tom: New client, Start 
 
 Both scripts need Playwright and a server (`SLAM_URL`, default http://localhost:8767). `findability.cjs` exits 1 when a
 term misses its screen and box (the terms and where each must land are in `tools/e2e/find-terms.cjs`). `effort.cjs`
-counts every click and keystroke and prints the effort scoreboard; the latest run is in QA.md under Effort targets:
+counts every action (a tap, a pick or a typed number is one; keystrokes apart), prints each client's actions in order
+with what each was for, a sensitivity table for the headline date, and what is still open; the latest run is in QA.md
+under Effort targets (EFFORT_QUIET=1 hides the action lists):
 
 | Client | Actions to a rough picture | Picture after it | Core after it | Certainty after it | Actions to 99% (estimate) |
 |---|---|---|---|---|---|
-| Alexis | 97 (50 clicks, 47 keys; 13 walk stops) | 71% | 89% (25 of 28) | debt free in 64 months (FI not on her path yet) | about 159 |
-| Tom | 98 (48 clicks, 50 keys; 14 walk stops) | 64% | 90% (27 of 30) | FI 2037 to 2044: 6.5 years wide | about 164 |
+| Alexis, before batch 18 | 58 (49 taps, 9 typed; 47 keystrokes; 13 walk stops) | 71% | 89% (25 of 28) | debt free in 64 months | about 105 |
+| Tom, before batch 18 | 56 (46 taps, 10 typed; 63 keystrokes; 12 walk stops) | 73% | 90% (27 of 30) | FI 2037 to 2044: 6.5 years wide | about 112 |
+| Alexis, after | 35 (26 taps, 9 typed; 47 keystrokes; 7 walk stops) | 77% | 100% (25 of 25) | debt free in 64 months (37 to 85 with the APR and spending ranges) | about 71 |
+| Tom, after | 38 (28 taps, 10 typed; 63 keystrokes; 6 walk stops) | 86% | 100% (26 of 26) | FI 2039 to 2042: 2.2 years wide | about 70 |
 
 The words Find understands are a table in `data/reference-2026.json` (`findWords`): add a word there, with where it
 lands and why, and add the term to `tools/e2e/find-terms.cjs` so the check keeps it.

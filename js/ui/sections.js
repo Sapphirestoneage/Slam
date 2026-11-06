@@ -37,8 +37,9 @@ export function setAllSections(root, open) { for (const el of root.querySelector
 
 // The caret button: a bordered chevron box and the title, inside the heading (a heading may hold a button, not the
 // other way round).
-export function caretButton(title, open, tip) {
-  const b = h('button.sec-caret', { type: 'button', 'aria-expanded': String(open), title: tip || null },
+// Batch 18: the caret carries data-focus sec:<id>, so Find and Show me can land on a section (and open it) by name.
+export function caretButton(title, open, tip, id = null) {
+  const b = h('button.sec-caret', { type: 'button', 'aria-expanded': String(open), title: tip || null, 'data-focus': id ? `sec:${id}` : null },
     h('span.sec-chev', { 'aria-hidden': 'true' }, icon(open ? 'down' : 'right')), h('span.sec-title-text', {}, title));
   b.onclick = () => { const el = b.closest('.sec'); setSection(el, el.classList.contains('sec-closed')); };
   return b;
@@ -50,7 +51,7 @@ const sumEl = summary => (summary ? h('span.sec-sum', { title: typeof summary ==
 export function sec(id, { title, summary = null, open = false, area = null, extra = [], tip = null, card = false, level = 'h2' } = {}, ...kids) {
   const isOpen = sectionOpen(id, open);
   const lazy = kids.length === 1 && typeof kids[0] === 'function';
-  const head = h('div.section-title.sec-head', {}, h(level, {}, caretButton(title, isOpen, tip)), sumEl(summary), h('span.spacer'), ...[extra].flat());
+  const head = h('div.section-title.sec-head', {}, h(level, {}, caretButton(title, isOpen, tip, id)), sumEl(summary), h('span.spacer'), ...[extra].flat());
   const body = h(`div.sec-body${card ? '.card' : ''}`, {}, lazy ? (isOpen ? kids[0]() : null) : kids);
   const el = h(`section.section.sec${area ? `.area-${area}` : ''}${isOpen ? '' : '.sec-closed'}`, { 'data-sec': id }, head, body);
   if (lazy && !isOpen) el._secBuild = kids[0];

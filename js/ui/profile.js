@@ -97,8 +97,9 @@ export function profileScreen(app, ctx) {
       gate('Car', yesNo(g.car, setCar, 'Has a car'), null, 'hasCar'),
       gate('Kids', yesNo(g.kids, setKids, 'Has kids'), g.kids ? `${p.dependents} under About you` : null),
       gate('Pets', yesNo(g.pets, v => set({ hasPets: v }), 'Has pets'), null, 'hasPets'),
-      gate('Housing', pick(HOUSING.slice(0, 3), g.housing, setHousing, 'Housing')),
-      gate('Work', tapPick(WORK, g.work, v => set({ workSituation: v }), { label: 'Work situation', key: 'p:hub-work' })), // batch 13: 6 choices are taps
+      gate('Housing', pick(HOUSING, g.housing, setHousing, 'Housing'), null, 'housing'),
+      // Batch 18: Work and Housing are asked here only (Work and home asked them a second time, the same fields).
+      gate('Work', tapPick(WORK, g.work, v => set({ workSituation: v }), { label: 'Work situation', key: 'p:hub-work' }), g.betweenJobs ? 'Unemployment and runway show on Income' : g.variable ? 'Variable income shows on Income' : null, 'workSituation'), // batch 13: 6 choices are taps
       gate('HSA-eligible plan', yesNo(p.hsaEligible ?? null, v => set({ hsaEligible: v }), 'HSA-eligible'), null, 'hsaEligible'),
       gate('FSA at work', yesNo(p.fsa ?? null, v => set({ fsa: v }), 'FSA'), null, 'fsa'),
       gate('Equity pay (ESPP, RSU)', yesNo(p.equityPay ?? null, v => set({ equityPay: v }), 'Equity pay'), null, 'equityPay'),
@@ -125,10 +126,7 @@ export function profileScreen(app, ctx) {
 
   // ---------- Work and home ----------
   const work = section('Work and home', 'needs',
-    h('div.form-grid', {},
-      field('Work situation', 'workSituation', tapPick(WORK, g.work, v => set({ workSituation: v }), { label: 'Work situation', key: 'p:work' }),
-        { note: g.betweenJobs ? 'Unemployment and runway show on Income' : g.variable ? 'Variable income shows on Income' : null }),
-      field('Housing', 'housing', pick(HOUSING, g.housing, setHousing, 'Housing'))),
+    h('p.muted', {}, 'Work and housing are under What applies to me.'),
     moreBlock('profile:work', () => h('div.form-grid', {},
       field('Worst case: all on me', 'worstCase', yesNo(p.worstCase ?? null, v => set({ worstCase: v }), 'Worst case'), { note: 'Counts housing with no roommate share' }),
       field('big e multiplier', 'bigEMultiplier', textInput(p.bigEMultiplier == null ? null : String(p.bigEMultiplier), v => { const n = v == null || v === '' ? null : Number(v); set({ bigEMultiplier: n != null && Number.isFinite(n) && n > 0 ? n : null }); }, { hint: `${STABILITY_MULTIPLIER[p.incomeStability] ?? 1} from stability`, width: 120, key: 'p:bigEMult' }), { note: 'big e = age / 5 months x this. Blank: Steady 1, Varies 1.25, Unpredictable 1.5 (answer 172)' }),

@@ -404,9 +404,11 @@ export function protectionList() {
     filter: r => r.kind === 'coverage',
     picker: ctx => ({ top: types(ctx).slice(0, 4), other: types(ctx).slice(4) }),
     // The usual list in one click (renters insurance included); mark Don't for a gap.
-    headerExtra: ctx => (ctx.store.find(r => r.kind === 'coverage').length ? null : h('button.btn.small', { type: 'button', 'data-focus': 'add:usual-coverage', onclick: () => ctx.store.transaction('Add the usual coverage', () => {
-      for (const t of types(ctx)) ctx.store.add('coverage', { name: null, values: {} }, { type: t });
-    }) }, 'Add the usual list')),
+    // Batch 18: session 1 adds Health and Life only (QUESTIONS 234); the same button then adds the rest of the list.
+    headerExtra: ctx => { const have = new Set(ctx.store.find(r => r.kind === 'coverage').map(r => r.type)); const rest = types(ctx).filter(t => !have.has(t));
+      return !rest.length ? null : h('button.btn.small', { type: 'button', 'data-focus': 'add:usual-coverage', onclick: () => ctx.store.transaction('Add the usual coverage', () => {
+        for (const t of rest) ctx.store.add('coverage', { name: null, values: {} }, { type: t });
+      }) }, have.size ? `Add the rest of the usual list (${rest.length})` : 'Add the usual list'); },
     coreFields: ['have'],
     columns: [
       { label: 'Coverage', render: (ctx, r, m, up) => select(types(ctx).map(t => [t, t === 'Renters or home' && ctx.gates().housing !== 'Own' ? 'Renters insurance' : t]), r.type, v => ctx.store.update(r.id, { type: v }), { label: 'Coverage type', width: 170, key: `${r.id}:type` }) },

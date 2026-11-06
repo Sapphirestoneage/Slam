@@ -234,7 +234,9 @@ function gutBox(ctx, view) {
   const lineTotal = view.totals.rough + sum(ctx.metrics().inputs.autoLines ?? [], a => a.amount); // with the debt payments, From Debt, as on the strip
   const words = rec?.amount != null ? gutVsLinesWords({ gut: rec.amount, lineTotal, categories: ctx.metrics().inputs.categories }).text : 'What do you think you spend in a month? Ask before looking at anything; it is kept to compare later.'; // batch 12 (item 3)
   const row = h('div.row-line.gut-row', { style: { gap: '12px' } }, h('h3', {}, 'Your gut number'), S.moneyInput(rec?.amount ?? null, set, { hint: 'A month, all in', key: 'gut' }),
-    rec ? S.toggle([[true, 'Includes debt payments'], [false, 'Not debt payments']], rec.values.includesDebtPayments !== false, v => ctx.store.update(rec.id, { includesDebtPayments: v }), { label: 'Includes debt payments' }) : null);
+    rec ? S.toggle([[true, 'Includes debt payments'], [false, 'Not debt payments']], rec.values.includesDebtPayments !== false, v => ctx.store.update(rec.id, { includesDebtPayments: v }), { label: 'Includes debt payments' }) : null,
+    // Batch 18: where the number is from, as in Fast Track; statements or an app counts at Estimate on the Picture.
+    rec ? S.toggle([['Gut', 'A gut guess'], ['Statements', 'Statements or an app']], rec.values.pass === 'Statements' ? 'Statements' : 'Gut', v => ctx.store.update(rec.id, { pass: v }), { label: 'Where the spending number is from' }) : null);
   // Batch 13: the caret is the title; the box stays in the header line, so closed it is still one tap to type.
   return S.secWrap(h('div.card.gut-card', {}, row, h('p.muted', { style: { margin: '8px 0 0' } }, words)), 'budget:gut', { head: row, open: true, summary: rec?.amount != null ? words : null });
 }

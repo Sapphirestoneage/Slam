@@ -309,7 +309,7 @@ export const AREAS = [
       pick('draftt', 'DRAFTT letter', ['Debt', 'Retirement', 'Accommodation', 'Food', 'Transportation', 'Taxes', 'Therapy', 'Bills', 'Wants'], { kinds: ['bill'] }), // batch 10: Bills (Bills and subscriptions) and Wants sit outside DRAFTT, like Other (blank)
       // Batch 10: a starter line's typical amount, kept apart from the amount: shown faded, counted nowhere until used.
       f('typical', 'Typical amount (for reference, not counted)', 'money', { kinds: ['bill'] }),
-      f('usedTypical', 'Amount came from Use typical', 'yesno', { kinds: ['bill'], sheet: { skip: 'set by the Use button; the Status column says Roughly' } }),
+      f('usedTypical', 'Amount came from Use typical', 'yesno', { kinds: ['bill', 'spending'], sheet: { skip: 'set by the Use button; the Status column says Roughly' } }),
       f('level', 'Level in its group (1, 2, 3 = Everything else; blank is 2)', 'number', { kinds: ['bill'] }),
       f('elseAmount', 'Everything else, one rough amount a month', 'money', { kinds: ['spending'] }), // on a category row: counts while none of its level 3 lines has a number
       pick('amountType', 'Amount is', ['Fixed', 'Variable', 'Range'], { kinds: ['bill'] }),
@@ -343,7 +343,7 @@ export const AREAS = [
       f('notSame', 'Not the same as a debt or premium', 'yesno', { kinds: ['bill'], sheet: { skip: 'an answer to Same as your ...?; asked in SLAM' } }),
       f('sameAs', 'Same as a debt or premium', 'text', { kinds: ['bill'], sheet: { skip: 'an answer to Same as your ...?; asked in SLAM' } }),
       f('includesDebtPayments', 'Includes debt payments', 'yesno', { kinds: ['spending'] }),
-      f('pass', 'Budget pass', 'text', { kinds: ['spending'], sheet: { skip: 'which Budget pass the gut number came from; set by the app' } }),
+      f('pass', 'Budget pass', 'text', { kinds: ['spending'], sheet: { skip: 'where the gut number came from (Gut, or Statements when read off statements or an app); set by Fast Track and the gut box' } }),
       f('maaser', 'Maaser line', 'yesno', { kinds: ['bill'], sheet: { skip: 'set by the community preset' } }),
       CHECK, LOCKED(), OWNER, STRESS, NOTES, coachNote(), SOURCE, PAID_WITH, LINKED_TO, COVERS,
     ],

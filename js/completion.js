@@ -128,7 +128,8 @@ export function taxesCompletion(ctx) {
 export function goalsCompletion(ctx) {
   const doc = ctx.store.doc, a = doc.assumptions || {};
   const it = (name, focus, level) => ({ id: null, name, field: focus, word: 'missing', level, focus, route: '#/plan/goals' });
-  const core = [{ done: a.fiAge != null || !!doc.profile?.later?.fiAge, item: it('FI age', 'g:fiAge', 'Core') }];
+  const core = [{ done: a.fiAge != null || !!doc.profile?.later?.fiAge || !!doc.profile?.none?.fiAge, item: it('FI age', 'g:fiAge', 'Core') }]; // batch 18: none.fiAge is "just show me the date"
+
   const full = [...core,
     { done: a.retirementSpending != null, item: it('Spending in retirement', 'g:retSpend', 'Full detail') },
     { done: ctx.visible(r => r.kind === 'milestone').length > 0, item: it('A goal, named', 'add:milestone', 'Full detail') }];

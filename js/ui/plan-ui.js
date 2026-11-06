@@ -124,7 +124,7 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
   const left = h('div.stack', { style: { gap: '12px' } },
     h('div.row-line', { style: { gap: '10px', alignItems: 'flex-end' } },
       S.labelled('FI age', S.textInput(fiAge, v => setA({ fiAge: v === null ? null : Number(v) }), { hint: 'Age', width: 100, key: 'g:fiAge' })),
-      S.button('Just show me', { onClick: () => setA({ fiAge: null }), tip: 'Skip the age and show the earliest date' })),
+      S.button('Just show me', { onClick: () => { setA({ fiAge: null }); S.parkProfile(ctx.store, 'fiAge').none.set(true); }, tip: 'Skip the age and show the earliest date' })),
     h('div', {}, h('span.label', {}, 'FI date'),
       h('div.fi-big', {}, !gate.unlocked ? lockedLine(gate) : fiWhen != null ? S.mathButton(m.monthsToFi, fiWordsOf(m, gate.confidence, { now: ctx.now() }).text) : m.monthsToFi.never ? S.warnTag('Not on this path') : h('span.muted', { style: { fontSize: '1rem' } }, 'Locked: ', S.needLinks(ctx, m.monthsToFi.needs))),
       gate.unlocked && fiWhen != null ? h('span.muted', {}, `${ageAt(m, fiWhen) != null && gate.confidence?.word === 'High' ? `At ${ageAt(m, fiWhen)} · ` : ''}${fiWordsOf(m, gate.confidence, { now: ctx.now() }).years} `, confidenceTag(gate.confidence)) : null,

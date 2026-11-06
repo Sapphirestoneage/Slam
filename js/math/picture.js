@@ -23,7 +23,10 @@ export function levelOf(rec, field, { months = {} } = {}) {
   if (rec.values?.locked === true) return LEVELS.Actual;
   if (CONFIRMED_SOURCES.has(rec.source)) return LEVELS.Actual;
   if (rec.kind === 'bill' && Object.values(months).some(m => m?.lines?.[rec.id]?.actual != null)) return LEVELS.Actual;
-  if (rec.kind === 'spending' && rec.type === 'All in') return LEVELS.Gut; // the gut number is a gut number, however sure (a category row counts like any typed number)
+  // The gut number is a gut number, however sure (a category row counts like any typed number). Batch 18: an all-in
+  // total read off statements or a budget app (Fast Track's "Where is it from?", values.pass Statements) is not a guess:
+  // it counts at Estimate, real data that is not yet itemized.
+  if (rec.kind === 'spending' && rec.type === 'All in') return rec.values?.pass === 'Statements' ? LEVELS.Estimate : LEVELS.Gut;
   if (['Not sure', 'Will email', 'Not now'].includes(status)) return LEVELS.Gut;
   if (status === 'Roughly') return LEVELS.Rough;
   if (status === 'Computed') return LEVELS.Estimate; // worked out from a typed number

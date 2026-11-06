@@ -27,7 +27,7 @@ import { agendaPanel, follow } from './agenda-ui.js';
 import { arrive, leftPopover } from './arrive.js';
 import { money, pct } from '../format.js';
 import { defaultsInUse } from '../checks.js';
-import { walkButton, walkMeThrough } from './walk-ui.js';
+import { walkButton, walkMeThrough, startSessionOne } from './walk-ui.js';
 import { isFreshClient } from '../walk.js';
 import { startFastTrack } from './fasttrack-ui.js';
 
@@ -78,11 +78,7 @@ export function homeScreen(app, ctx) {
 // ---------- Start session 1 (batch 14, item 6) ----------
 // One big button: starts the session, runs Fast Track, then Walk me through. Benchmark: TurboTax's single Continue.
 function startOne(app, ctx, P) {
-  const go = () => {
-    if (!P.inSession) startSession(ctx.store, ctx.ref, { now: ctx.now(), flags: app.flags });
-    app.usage?.('start', { session: 1 });
-    startFastTrack(app, ctx, { then: () => walkMeThrough(app, ctx) });
-  };
+  const go = () => startSessionOne(app, ctx);
   return h('section.card.start-one', { 'aria-label': 'Start here' },
     h('span.muted', {}, ctx.store.doc.client.name || 'New client', ' · ', h('a', { href: '#/home/profile' }, 'About you ›')),
     h('h2', {}, 'Session 1: the first picture'),

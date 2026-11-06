@@ -57,12 +57,14 @@ test('5: Walk me through visits the empty and rough boxes in session order, each
   const s = alexis();
   const stops = walkStops(ctxOf(s));
   assert.ok(stops.length >= 5);
-  for (const st of stops) assert.ok(st.focus && st.route?.startsWith('#/') && st.name, `${st.key}: a box, a screen and words`);
+  for (const st of stops) assert.ok((st.focus || st.make) && st.route?.startsWith('#/') && st.name, `${st.key}: a box (or rows the walk makes), a screen and words`);
   assert.equal(new Set(stops.map(x => x.key)).size, stops.length, 'each box once');
   const order = stops.map(x => WALK_SCREENS.indexOf(x.screen));
   assert.deepEqual(order, [...order].sort((a, b) => a - b), `screens in order: ${stops.map(x => x.screen).join(', ')}`);
   assert.ok(stops.some(x => x.focus === 'cat:Accommodation:amount'), 'the Budget categories are asked');
-  assert.ok(stops.some(x => /a guess/.test(x.name) && x.field === 'apr'), 'the guessed card APR is a rough box');
+  assert.ok(!stops.some(x => /\((rough|a guess)\)$/.test(x.name) && !x.why), 'batch 18: session 1 stops only at empty core boxes (and the one rough input that moves the headline date most)');
+  s.setDoc('session', { count: 1 });
+  assert.ok(walkStops(ctxOf(s)).some(x => /a guess/.test(x.name) && x.field === 'apr'), 'from session 2 the guessed card APR is a rough box');
   assert.ok(!stops.some(x => x.screen === 'About you'), 'About you is done by Fast Track');
 });
 
@@ -82,6 +84,8 @@ test('5: Will get it parks the box (homework) and it drops off the walk; filling
   parkStop(s, first);
   ctx.refresh?.();
   assert.ok(!walkStops(ctxOf(s)).some(x => x.key === first.key));
+  assert.ok(!walkStops(ctxOf(s)).some(x => x.key === 'goal:fiAge'), 'batch 18: Finish with no FI age is "just show me the date"');
+  s.setDoc('profile', { none: {} });
   const fi = walkStops(ctxOf(s)).find(x => x.key === 'goal:fiAge');
   s.setDoc('assumptions', { fiAge: 55 });
   assert.ok(fi && !walkStops(ctxOf(s)).some(x => x.key === 'goal:fiAge'));

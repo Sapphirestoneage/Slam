@@ -63,10 +63,11 @@ test('Find: APR on the Demo client lists each debt once, with its name', () => {
 
 test('Find: payday is the pay schedule, credit score is on Credit cards, life insurance on Protection', () => {
   const doc = demo();
-  assert.match(find(doc, 'payday')[0].focus, /:freq$/);
+  assert.match(find(doc, 'payday')[0].focus, /:payFrequency$/); // batch 13 renamed the box
   assert.equal(find(doc, 'credit score')[0].route, '#/net-worth/credit-cards');
   assert.equal(find(doc, 'life insurance')[0].route, '#/net-worth/protection');
   assert.equal(find(doc, 'emergency fund')[0].route, '#/net-worth/assets');
+  assert.deepEqual(find(doc, 'emergency fund').slice(0, 2).map(r => r.focus.startsWith('sec:') ? r.focus : 'balance'), ['sec:assets:layers', 'balance'], 'batch 18: the Cash layers card first, the savings balance second');
 });
 
 test('Add goes where it belongs: never a Budget line for a word that is not spending', () => {

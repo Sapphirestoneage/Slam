@@ -363,3 +363,34 @@ Also: the calendar's "Paid off" and "Debt-free" wins read the one debt plan (m.d
 
 Layout check (tools/e2e/layout.cjs, all widths and both themes, Demo and a new client): before (main at 8cc9b3b) level 87, clipped 119, overflow 12, covered 1186, askable 76; after (rebased on batches 12, 14, 15 and 16) level 0, clipped 1, overflow 1, covered 3, askable 0. What remains: the "Example numbers loaded" toast in the moment just after loading the Demo (covered 3, gone after 5 seconds); a hover tip on Move to next session where the run's last click left the mouse (clipped 1, 390 dark, a tooltip, not the button); Current vs Proposed 10px wide once at 1440 light, which did not reproduce on its own (overflow 1). Persona run at 1280 (tools/e2e/personas.cjs): the first run on this branch (mid-batch) had 53 layout items and 23 story notes; now 1 layout item (a hover tip on Move to next session, where the run's Import click left the mouse) and 7 story notes, outside layout. At 390, Next 12 months' sinking funds were wider than the phone (on main too): the rows are cards now. Debt threw for a couple filing apart (on main too): a row the plan does not hold shows a dash.
 QA: 559 tests pass in UTC and America/New_York (test/batch13.test.js: the wins and the debt plan, a homeowner's Housing %, the open-sections memory stays out of the file).
+
+## Batch 18 (Nov 6): effort, a rough picture in 35 to 38 actions
+
+Measured with tools/e2e/effort.cjs on Alexis and Tom (QA.md, Effort targets), against main at batch 13.
+
+1. Measure first. A tap, a pick or a typed number is one action, keystrokes apart (QUESTIONS 232). The script prints
+   every action in order with what it was for, a sensitivity table (each rough input moved on its own), what raises the
+   Picture most and every box still open. Before: 58 / 56 actions, 71% / 73%, core 89% / 90%, FI 6.5 years wide.
+2. One-tap typicals. Every empty Budget category offers "Use typical $X" (its starter lines' typicals, marked Roughly),
+   on the Budget row and as the walk's first button; the walk's filing status offers the household's typical (Single)
+   first. Paycheck fills in Every 2 weeks.
+3. Cut actions. New client's first button is Create and start session 1. Fast Track: About you and its switches on one
+   screen, No to the rest, Cash and investments on one screen, Home and car only when there is one to value, a blank FI
+   age is "just show me the date", the work answer sets the paycheck's tax type. The walk moves on when a tap or a typed
+   number fills the box, stops only at empty core boxes in session 1 (plus the guessed APR on heavy debt, the input that
+   moves the debt-free date most), and asks Have it? for Health and Life only (it adds the two rows itself). About you
+   asks Work and Housing once (What applies to me), not again under Work and home.
+4. Certainty. Fast Track and the gut box ask where the spending number is from; Statements or an app counts at Estimate,
+   so Tom's FI confidence is Medium (5%) and his range is 2.2 years (was 6.5). A typed 0 invested is a known answer.
+5. Picture. Alexis 77% (her gut number holds it; her bank app's total would take her to about 90%), Tom 86%; core 100%
+   for both. No weights changed.
+6. The walk bar and toasts stack: a toast sits above the walk bar, the walk bar above the agenda bar (and the phone tab
+   bar), nothing covering another (S.dockedHeight).
+7. Actions to 99%: about 71 / 70 (was 105 / 112).
+
+Also: Find's "emergency fund" lands on the Cash layers card first and the savings balance second (QUESTIONS 230; every
+caret section's button carries data-focus sec:<id>); a Find target that opens a caret section opens it (giving lands on
+the Giving switch again); "payday" follows batch 13's pay frequency box. After: 35 / 38 actions, 77% / 86%, core 100%.
+
+QA: tests pass in UTC and America/New_York (test/batch18.test.js); effort, findability (76 of 78 before, 78 of 78
+after), persona and layout scripts; before and after screenshots at 1280 and 390.

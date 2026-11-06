@@ -117,11 +117,28 @@ if (typeof document !== 'undefined') installDismiss(document, window);
 
 // ---------- Toasts: bottom left; 5 seconds, or 10 with Undo ----------
 let toastEl = null, toastTimer = null;
+// Batch 18 (item 6): the bars docked at the bottom of the window (the phone tab bar, the agenda bar, the walk bar),
+// stacked: how far up from the window's bottom edge the highest of them reaches, so the next one sits above it and
+// nothing covers another. without: a bar to leave out (the walk bar measures what is under it).
+export function dockedHeight({ without = null } = {}) {
+  const vh = window.innerHeight;
+  let top = vh;
+  for (const el of document.querySelectorAll('#tracker, .tabs, .walk-bar')) {
+    if (el === without || el.hidden || !el.isConnected) continue;
+    const cs = getComputedStyle(el);
+    if (cs.position !== 'fixed' || cs.display === 'none') continue;
+    const r = el.getBoundingClientRect();
+    if (r.height && r.top < top) top = r.top;
+  }
+  return Math.max(0, Math.round(vh - top));
+}
 export function toast(text, { undo = null, action = null } = {}) {
   toastEl?.remove(); clearTimeout(toastTimer);
   toastEl = h('div.toast', { role: 'status' }, h('span', {}, text),
     undo ? h('button.btn', { type: 'button', onclick: () => { undo(); toastEl?.remove(); } }, icon('undo'), 'Undo') : null,
     action ? h('button.btn', { type: 'button', onclick: () => { action.run(); toastEl?.remove(); } }, action.label) : null);
+  const dock = dockedHeight();
+  if (dock) toastEl.style.setProperty('bottom', `${dock + 10}px`, 'important'); // above the docked bars (batch 18, item 6)
   document.body.append(toastEl);
   toastTimer = setTimeout(() => toastEl?.remove(), undo ? 10000 : 5000); // 10 seconds when it can be undone
 }

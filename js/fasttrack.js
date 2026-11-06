@@ -38,7 +38,7 @@ export function fastTrackAnswers(doc) {
   return {
     firstName: has(p.firstName) ? p.firstName : firstWord(doc.client?.name), lastName: has(p.lastName) ? p.lastName : lastWords(doc.client?.name), birthMonth: p.birthMonth ?? null, birthYear: p.birthYear ?? null, household: p.household ?? (doc.client?.couple ? 'Couple' : null),
     takeHome: income?.values.basis === 'Gross' ? null : income?.amount ?? null, takePer: income?.per ?? 'month', payFrequency: income?.values.payFrequency ?? null,
-    gut: gut?.amount ?? null, gutIncludesDebt: gut ? gut.values.includesDebtPayments !== false : true,
+    gut: gut?.amount ?? null, gutIncludesDebt: gut ? gut.values.includesDebtPayments !== false : true, gutFrom: gut?.values.pass === 'Statements' ? 'Statements' : 'Gut',
     checking: bal('Checking'), savings: bal('Savings or HYSA'),
     invested: invested.length ? invested.reduce((s, r) => s + (r.values.balance ?? 0), 0) : null, investedRows: invested.length,
     housing: p.housing ?? null, homeValue: home?.values.value ?? null, mortgageBalance: loan(home)?.values.balance ?? null, mortgagePayment: loan(home)?.values.payment ?? null,
@@ -80,9 +80,12 @@ export function applyFastTrack(store, a, { seconds = null, now = new Date().toIS
     if (a.chips && Object.values(a.chips).some(l => l?.length)) prof.chips = { ...(store.doc.profile.chips || {}), ...Object.fromEntries(Object.entries(a.chips).filter(([, l]) => l?.length)) };
 
     // Take-home (F019, F020)
-    if (has(a.takeHome)) put(r => r.kind === 'income', 'income', 'Job', { name: find(r => r.kind === 'income')?.name ?? 'Take-home pay', amount: a.takeHome, per: a.takePer || 'month', values: { basis: 'Take-home', payFrequency: a.payFrequency ?? null } });
+    // Batch 18: the work answer above already says the pay's tax type (W-2 or 1099), so Income does not ask it again.
+    const taxType = { 'Employed (W-2)': 'W-2', 'Self-employed': '1099' }[a.workSituation] ?? null;
+    const job = find(r => r.kind === 'income');
+    if (has(a.takeHome)) put(r => r.kind === 'income', 'income', 'Job', { name: job?.name ?? 'Take-home pay', amount: a.takeHome, per: a.takePer || 'month', values: { basis: 'Take-home', payFrequency: a.payFrequency ?? null, ...(taxType && !job?.values.incomeType ? { incomeType: taxType } : {}) } });
     // Gut spending (F043): one all-in number, kept to compare later (R131)
-    if (has(a.gut)) put(r => r.kind === 'spending' && r.type === 'All in', 'spending', 'All in', { name: 'Monthly spending, all in', amount: a.gut, status: 'Roughly', values: { includesDebtPayments: a.gutIncludesDebt !== false, pass: 'Gut' } });
+    if (has(a.gut)) put(r => r.kind === 'spending' && r.type === 'All in', 'spending', 'All in', { name: 'Monthly spending, all in', amount: a.gut, status: 'Roughly', values: { includesDebtPayments: a.gutIncludesDebt !== false, pass: a.gutFrom === 'Statements' ? 'Statements' : 'Gut' } }); // batch 18: from statements or an app counts at Estimate (js/math/picture.js)
 
     // Cash (F184, F185)
     if (has(a.checking)) put(r => r.kind === 'account' && r.type === 'Checking', 'account', 'Checking', { name: find(r => r.kind === 'account' && r.type === 'Checking')?.name ?? 'Checking', values: { group: 'cash', balance: a.checking } });
@@ -90,7 +93,7 @@ export function applyFastTrack(store, a, { seconds = null, now = new Date().toIS
     // Investments (F189, F190): one total, unless the accounts are already listed one by one
     if (has(a.invested)) {
       const rows = recs().filter(r => r.kind === 'account' && r.values.group === 'investment');
-      if (rows.length <= 1) put(r => r.kind === 'account' && r.values.group === 'investment', 'account', 'All investments', { name: rows[0]?.name ?? 'Investments (all accounts)', status: rows[0] ? rows[0].status : 'Roughly', values: { group: 'investment', balance: a.invested } });
+      if (rows.length <= 1) put(r => r.kind === 'account' && r.values.group === 'investment', 'account', 'All investments', { name: rows[0]?.name ?? 'Investments (all accounts)', status: rows[0] ? rows[0].status : Number(a.invested) > 0 ? 'Roughly' : null, values: { group: 'investment', balance: a.invested } }); // batch 18: a typed 0 (nothing invested) is a known answer, not a rough total
     }
     // Home and car (F202, F204), each with its loan on the same record as Debt (R049)
     const thing = (type, value, loanBal, loanPay) => {
@@ -130,6 +133,9 @@ export function applyFastTrack(store, a, { seconds = null, now = new Date().toIS
     store.setDoc('profile', prof);
     // FI age or 'just show me' (F214)
     if (has(a.fiAge)) store.setDoc('assumptions', { fiAge: a.fiAge });
+    // Batch 18: Finish with the FI age left blank is the step's own answer, "skip to just see the date", so Goals and
+    // the walk do not ask it again.
+    else if (finished && store.doc.assumptions?.fiAge == null) { const bag = 'none'; store.setDoc('profile', { [bag]: { ...(store.doc.profile[bag] || {}), fiAge: true } }); } // profile.none, as I don't have this sets it (js/ui/staples.js parkProfile)
     store.setDoc('settings', { fastTrack: { at: now, seconds, ...(finished || fastTrackDone(store.doc) ? { done: true } : {}) } }); // batch 8: Finish marks it done; a redo keeps it
   });
 }

@@ -15,7 +15,7 @@ import { addPresets, migrateBatch10 } from './presets.js';
 import { snapshotNumbers, inSession, programOf, agendaOf, makeHomework } from './program.js';
 import { saveFile, saveWords } from './ui/save-file.js';
 import { agendaPanel } from './ui/agenda-ui.js';
-import { walkButton, stopWalk } from './ui/walk-ui.js';
+import { walkButton, stopWalk, startSessionOne } from './ui/walk-ui.js';
 import { TABS, parseRoute, search, routeForPlace, tabRoute } from './nav.js';
 import { SCREENS, progressOf } from './screens.js';
 import { startFastTrack, fastTrackLabel } from './ui/fasttrack-ui.js';
@@ -24,7 +24,7 @@ import { opened } from './ui/dismiss.js';
 import { addChoice } from './find.js';
 import { dueChecks } from './checks.js';
 import { logEvent, usageCsv } from './usage.js';
-import { setSectionClient, sectionTools, openAround } from './ui/sections.js';
+import { setSectionClient, sectionTools, openAround, rememberSection } from './ui/sections.js';
 
 const [ref, fields, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/fields.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
 
@@ -72,10 +72,13 @@ const app = {
   newClientNamed(name) { this.open(createClient(adapter, name || 'New client', new Date().toISOString())); this.store.undoStack = []; return this.store; },
   newClient(anchor) {
     const input = h('input', { placeholder: 'Client name', 'aria-label': 'Client name' });
-    const go = () => { const name = input.value.trim(); if (!name) return; S.closePop(); this.open(createClient(adapter, name, new Date().toISOString())); addPresets(this.store, ref); this.store.undoStack = []; this.go('#/home/session'); }; // every new client starts with the usual list
-    input.onkeydown = e => { if (e.key === 'Enter') go(); };
+    // Batch 18: the first button (and Enter) creates the client and starts session 1 (Fast Track, then the walk);
+    // Create alone opens the new client's Home.
+    const go = (start = false) => { const name = input.value.trim(); if (!name) return; S.closePop(); this.open(createClient(adapter, name, new Date().toISOString())); addPresets(this.store, ref); this.store.undoStack = []; this.go('#/home/session'); // every new client starts with the usual list
+      if (start) setTimeout(() => startSessionOne(this, this.ctx), 0); };
+    input.onkeydown = e => { if (e.key === 'Enter') go(true); };
     S.popover(anchor, h('div.stack.new-client-pop', { style: { gap: '12px' } }, h('strong', {}, 'New client'), h('label.field', {}, input),
-      h('div.row-line', {}, S.button('Create', { kind: 'primary', onClick: go }), S.button('Cancel', { onClick: S.closePop })),
+      h('div.row-line', {}, S.button('Create and start session 1', { kind: 'primary', onClick: () => go(true) }), S.button('Create', { onClick: () => go() }), S.button('Cancel', { onClick: S.closePop })),
       h('a', { href: '#/tools/discovery', onclick: () => S.closePop() }, 'From a discovery call ›')), { width: 340 });
   },
   // Discovery table (R180): creates the client, fills each number as Roughly, opens Home.
@@ -260,7 +263,8 @@ const app = {
   goFound(r) {
     if (!r.route) return;
     // Batch 14: a word lands on its box (opening a category or a row's Details on the way), with where it lives.
-    if (r.kind === 'word') { if (r.open) S.openBlock(r.open); land(this, r.route, { id: r.id, focus: r.focus, parentCat: r.parentCat }); S.toast(r.add ? `None yet. Add one here, on ${r.where}.` : `${r.label.split(' · ')[0]} lives on ${r.where}.`); return; }
+    // Batch 18: a ^block that is a caret section (batch 13) opens too.
+    if (r.kind === 'word') { if (r.open) { S.openBlock(r.open); rememberSection(r.open, true); } land(this, r.route, { id: r.id, focus: r.focus, parentCat: r.parentCat }); S.toast(r.add ? `None yet. Add one here, on ${r.where}.` : `${r.label.split(' · ')[0]} lives on ${r.where}.`); return; }
     this.go(r.route);
     requestAnimationFrame(() => {
       const row = r.kind === 'record' ? document.querySelector(`tr[data-id="${r.id}"]`) : null;

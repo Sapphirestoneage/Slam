@@ -16,7 +16,7 @@ const TERMS = [
   { term: 'HSA', routes: [A, Y], box: /:balance$|^seg:HSA-eligible:true$/ },
   { term: 'checking', routes: [A], box: /:balance$|^add:asset$/ },
   { term: 'savings', routes: [A], box: /:balance$|^add:asset$/ },
-  { term: 'emergency fund', routes: [A], box: /:balance$|^add:asset$/ },
+  { term: 'emergency fund', routes: [A], box: /^sec:assets:layers$|:balance$|^add:asset$/ }, // batch 18: the Cash layers card first, the savings balance second
   { term: 'credit card', routes: [C], box: /:balance$|^add:card$/ },
   { term: 'APR', routes: [D, C], box: /:apr$/ },
   { term: 'credit score', routes: [C], box: /^credit:score$/ },
@@ -37,7 +37,7 @@ const TERMS = [
   { term: 'FI age', routes: [G], box: /^g:fiAge$/ },
   { term: 'retirement spending', routes: [G], box: /^g:retSpend$/ },
   { term: 'due date', routes: [B, C], box: /:dueDay$/ },
-  { term: 'payday', routes: [I], box: /:freq$|^add:income$/ },
+  { term: 'payday', routes: [I], box: /:payFrequency$|^add:income$/ },
   { term: 'kids', routes: [Y], box: /^seg:Has kids:true$/ },
   { term: 'partner', routes: [Y], box: /^p:mode$/ },
   { term: 'giving', routes: ['#/plan/foo', B], box: /^seg:Giving:true$|:amount$/ },

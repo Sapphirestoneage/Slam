@@ -99,19 +99,33 @@ Not built, Built (code exists, not proven), Verified (a test or browser run show
 
 ## Effort targets (Alexis and Tom)
 
-| Metric | Nov 5 2026 | Nov 6 2026, measured (batch 14) | Target |
-|---|---|---|---|
-| Actions to a rough picture | about 50 | 97 / 98 | 40 or fewer |
-| Picture after the rough pass | 70 to 74% | 71% / 64%; core 89% / 90% (only the three Budget categories, parked, are short) | 85% or more, core at 100% |
-| Certainty after the rough pass (FI or debt-free range) | 7 years, or locked | Alexis: debt free in 64 months (FI not on her path yet); Tom: FI 2037 to 2044, 6.5 years wide (Home now shows the step that narrows it instead) | 2 years or less |
-| Actions to 99% | about 150 to 250 (estimate) | about 159 / 164 | 100 or fewer |
+| Metric | Nov 5 2026 | Nov 6 2026, measured (batch 14) | Nov 6 2026, before batch 18 (main at batch 13, new count) | Nov 6 2026, after batch 18 | Target |
+|---|---|---|---|---|---|
+| Actions to a rough picture | about 50 | 97 / 98 | 58 / 56 | 35 / 38 | 40 or fewer |
+| Picture after the rough pass | 70 to 74% | 71% / 64%; core 89% / 90% | 71% / 73%; core 89% / 90% | 77% / 86%; core 100% / 100% | 85% or more, core at 100% |
+| Certainty after the rough pass (FI or debt-free range) | 7 years, or locked | Alexis: debt free in 64 months; Tom: FI 2037 to 2044, 6.5 years wide | the same | Alexis: debt free in 64 months, honestly 37 to 85 months (about 4 years: the guessed card APR and the gut spending); Tom: FI 2039 to 2042, 2.2 years wide | 2 years or less |
+| Actions to 99% | about 150 to 250 (estimate) | about 159 / 164 | about 105 / 112 | about 71 / 70 | 100 or fewer |
 
-The Nov 6 column is `node tools/e2e/effort.cjs` (Alexis / Tom): New client, Start session 1 (Fast Track with its tap
-step) and Walk me through, every click and every keystroke counted (a typed number is one action per character, Enter
-or Tab one more), the walk answering what each client knows and pressing Will get it for the rest. The Nov 5 figures
-were estimates that did not count keystrokes per character, so the higher action count is a change of measure, not of
-the app: the same run before batch 14 has no tap step and no walk, and ends with core About you short and Protection
-empty. Actions to 99% is every box still open on the X of Y filled counters times the actions one box took in the walk.
+`node tools/e2e/effort.cjs` (Alexis / Tom): New client, Create and start session 1 (Fast Track) and Walk me through, the
+walk answering what each client knows and pressing Will get it for the rest. Since batch 18 (QUESTIONS 232) a tap, a pick
+or a typed number is one action and keystrokes are reported apart (Alexis 47, Tom 63); the batch 14 column counted every
+keystroke. The script prints every action in order with what it was for, a sensitivity table (each rough input moved on
+its own: how wide it makes the FI or debt-free date), what still raises the Picture most, and every box still open.
+Actions to 99% is every box still open on the X of Y filled counters times the actions one walk box took (at least 1.5:
+a tap, or a typed number that moves on by itself, and sometimes a picker).
+
+The two clients as the script answers them: the build notes, plus two batch 18 readings (QUESTIONS 240). Tom's $6,500
+is read off his statements (the notes call Alexis's and Maya's numbers gut, not Tom's), and he types his home and car
+values (about $650,000 and $22,000). Where the targets are not met, the input that would meet them:
+- Alexis's Picture (77%): her spending is a gut number, 25% of her Picture weight, and a gut stays at Gut by rule (answer
+  127). The one input that moves her past 85%: her spending read off her bank app (Statements, Estimate: about 90%).
+  Use typical on the three categories is not knowledge of her, so it does not raise the Picture (by design).
+- Alexis's debt-free range: the card APR (a guess at 25%; 20% to 30% moves the date from 53 to 85 months) and the gut
+  spending (15% lower brings it to 37 months). The walk asks the APR in session 1 (it moves the date most); her card app
+  has it.
+- Tom's FI range (2.2 years): spending from statements is Medium confidence, 5% either way, worth 2.3 years at his
+  horizon. Under 2 years needs spending known better than 5% (a month or more of actuals, session 3's Actual pass) and
+  the invested total at Know it; then the date is one month (High).
 
 A change that makes any of these worse does not ship without a stated reason.
 

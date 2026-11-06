@@ -7,14 +7,24 @@
 import { profileCompletion } from './profile-completion.js';
 import { listCompletion, budgetCompletion, paidInFull, protectionCompletion } from './completion.js';
 import { statusOf } from './records.js';
-import { isCategoryRecord, categoryKeyOf } from './math/spending.js';
+import { isCategoryRecord, categoryKeyOf, categoryTypicalOf } from './math/spending.js';
 import { whyAnswered } from './whynow.js';
+import { defaultFilingStatus } from './math/income.js';
+import { PROTECTION_TYPES } from './gates.js';
+
+// Batch 18 (QUESTIONS 233, 234): session 1 is the first pass. Its walk stops only at empty core boxes (a rough or
+// guessed number waits for session 2), and Protection asks Have it? for Health and Life only; the rest of the usual
+// list comes in session 2 or from the Protection screen.
+export const SESSION1_COVERAGE = ['Health', 'Life'];
+export const inSessionOne = doc => (doc.session?.count || 0) === 0;
+// The money words for a typical choice ("Use typical $2,480").
+const dollars = v => `$${Math.round(v).toLocaleString('en-US')}`;
 
 // Each About you core answer: its box and its key in profile.later (Will get it).
 const PROFILE_BOX = {
   'What prompted this call': ['p:whyNow:chips', 'whyNow'], 'Biggest worry': ['p:worry:chips', 'worry'], 'Goal in their words': ['p:goalWords:chips', 'goalWords'],
   'First name': ['p:firstName', 'firstName'], 'Last name': ['p:lastName', 'lastName'], 'Birth year': ['p:birthYear', 'birthYear'], State: ['p:state', 'state'],
-  'Solo or couple': ['p:mode', 'household'], 'Work situation': ['p:work', 'workSituation'], Housing: ['seg:Housing:Rent', 'housing'], Car: ['seg:Has a car:true', 'hasCar'],
+  'Solo or couple': ['p:mode', 'household'], 'Work situation': ['p:hub-work', 'workSituation'], Housing: ['seg:Housing:Rent', 'housing'], Car: ['seg:Has a car:true', 'hasCar'],
   Pets: ['seg:Has pets:true', 'hasPets'], 'Which do you have today': ['p:area-cash', 'areas'],
   'Partner name': ['p:partnerName', 'partnerName', 'profile:about'], 'Partner birth year': ['p:partnerBirthYear', 'partnerBirthYear', 'profile:about'],
 };
@@ -35,7 +45,7 @@ export function walkStops(ctx) {
   const seen = new Set();
   const add = s => { if (!seen.has(s.key)) { seen.add(s.key); out.push(s); } };
   const recStop = (screen, route, r, field, { name = null, rough = false } = {}) => ({
-    key: `${r.id}:${field}`, screen, route, id: r.id, field, focus: `${r.id}:${BOX[r.kind === 'asset' ? field : ''] ?? (field === 'payFrequency' ? 'freq' : field)}`,
+    key: `${r.id}:${field}`, screen, route, id: r.id, field, focus: `${r.id}:${BOX[r.kind === 'asset' ? field : ''] ?? field}`,
     name: `${label(name ?? (r.name || r.type || 'This'), WORD[field] ?? field)}${rough ? (statusOf(r, field) === 'Not sure' ? ' (a guess)' : ' (rough)') : ''}`, park: { kind: 'record', id: r.id, field } });
   const m = ctx.metrics();
   const live = ctx.visible(() => true);
@@ -59,20 +69,31 @@ export function walkStops(ctx) {
 
   // ---------- Income, Budget categories, Assets, Debt, Credit cards, Protection ----------
   const fromList = (screen, route, items) => { for (const it of items) { const r = doc.records.find(x => x.id === it.id); if (r) add({ ...recStop(screen, route, r, it.field, { name: it.name.split(': ')[0] }) }); } };
-  const roughOf = (screen, route, recs, fields) => { for (const r of recs) for (const f of fields(r)) if (ROUGH.has(statusOf(r, f))) add(recStop(screen, route, r, f, { rough: true })); };
+  const first = inSessionOne(doc);
+  // Session 1 keeps one rough stop: a guessed APR on heavy debt while the debt-free date is the headline, the input
+  // that moves that date most (batch 18, item 4). The rest wait for session 2.
+  const headline = new Set(m.debtRule?.heavy ? (m.inputs.debts || []).filter(d => d.aprGuess && d.heavy).map(d => d.id) : []);
+  const roughOf = (screen, route, recs, fields) => { for (const r of recs) for (const f of fields(r)) if (ROUGH.has(statusOf(r, f)) && (!first || (f === 'apr' && headline.has(r.id)))) add({ ...recStop(screen, route, r, f, { rough: true }), why: headline.has(r.id) && f === 'apr' ? 'it moves the debt-free date most' : null }); };
   const inc = listCompletion(ctx, r => r.kind === 'income' || r.kind === 'benefit', ['amount']);
   fromList('Income', '#/cash-flow/income', inc.core.items);
   for (const r of income) if (!r.values?.payFrequency && r.per === 'paycheck') add(recStop('Income', '#/cash-flow/income', r, 'payFrequency'));
   roughOf('Income', '#/cash-flow/income', income, () => ['amount']);
 
   // Taxes (one tap): the filing status is a guess until it is picked.
-  if (!p.filingStatus && !p.later?.filingStatus && !p.none?.filingStatus && income.length) add({ key: 'tax:filing', screen: 'Taxes', route: '#/cash-flow/taxes', focus: 'tax:filing', name: 'Filing status (a guess until picked)', park: { kind: 'profile', key: 'filingStatus' } });
+  if (!p.filingStatus && !p.later?.filingStatus && !p.none?.filingStatus && income.length) {
+    const guess = defaultFilingStatus(p); // batch 18: the typical answer from the household is the first tap
+    add({ key: 'tax:filing', screen: 'Taxes', route: '#/cash-flow/taxes', focus: 'tax:filing', name: 'Filing status (a guess until picked)', park: { kind: 'profile', key: 'filingStatus' },
+      typical: { label: guess, why: `Typical for ${p.mode || p.household || 'Solo'}`, apply: { kind: 'profile', patch: { filingStatus: guess } } } });
+  }
 
   const bud = budgetCompletion(ctx);
   for (const it of bud.core.items) {
     const key = it.focus.split(':')[1];
     const rec = live.find(r => isCategoryRecord(r) && r.type === key);
-    add({ key: it.focus, screen: 'Budget categories', route: '#/cash-flow/budget', focus: it.focus, id: rec?.id ?? null, field: 'amount', name: it.name.replace(': amount', ', a month'), park: rec ? { kind: 'category', id: rec.id } : null });
+    // Batch 18 (QUESTIONS 229): one tap "Use typical $X", from the category's faded starter amounts, marked Rough.
+    const t = categoryTypicalOf(live.filter(r => r.kind === 'bill'), key);
+    add({ key: it.focus, screen: 'Budget categories', route: '#/cash-flow/budget', focus: it.focus, id: rec?.id ?? null, field: 'amount', name: it.name.replace(': amount', ', a month'), park: rec ? { kind: 'category', id: rec.id } : null,
+      typical: rec && t ? { label: `Use typical ${dollars(t)}`, why: 'The starter amounts for this category, marked Rough', apply: { kind: 'category', id: rec.id, amount: t } } : null });
   }
   for (const it of bud.full.items.filter(x => x.field === 'dueDay')) {
     const r = doc.records.find(x => x.id === it.id);
@@ -94,12 +115,35 @@ export function walkStops(ctx) {
   }
 
   const coverage = live.filter(r => r.kind === 'coverage');
-  if (!coverage.length) add({ key: 'add:usual-coverage', screen: 'Protection', route: '#/net-worth/protection', focus: 'add:usual-coverage', name: 'Insurance: add the usual list (one tap), then have it or not', park: null });
-  else for (const it of protectionCompletion(ctx).core.items) { const r = doc.records.find(x => x.id === it.id); if (r) add({ ...recStop('Protection', '#/net-worth/protection', r, 'have', { name: r.type === 'Renters or home' && ctx.gates().housing !== 'Own' ? 'Renters insurance' : `${r.type} insurance` }) }); }
+  const usual = PROTECTION_TYPES.filter(t => t !== 'Car' || ctx.gates().car !== false);
+  if (!coverage.length && first) add({ key: 'make:coverage', screen: 'Protection', route: '#/net-worth/protection', focus: null, name: 'Health and Life insurance', park: null, make: SESSION1_COVERAGE });
+  else if (!coverage.length) add({ key: 'add:usual-coverage', screen: 'Protection', route: '#/net-worth/protection', focus: 'add:usual-coverage', name: 'Insurance: add the usual list (one tap), then have it or not', park: null });
+  else {
+    for (const it of protectionCompletion(ctx).core.items) { const r = doc.records.find(x => x.id === it.id); if (r) add({ ...recStop('Protection', '#/net-worth/protection', r, 'have', { name: r.type === 'Renters or home' && ctx.gates().housing !== 'Own' ? 'Renters insurance' : `${r.type} insurance` }) }); }
+    const rest = usual.filter(t => !coverage.some(r => r.type === t));
+    if (!first && rest.length) add({ key: 'add:usual-coverage', screen: 'Protection', route: '#/net-worth/protection', focus: 'add:usual-coverage', name: `Insurance: add the rest of the usual list (${rest.length})`, park: null });
+  }
 
   // ---------- Goals ----------
-  if (doc.assumptions?.fiAge == null && !p.later?.fiAge) add({ key: 'goal:fiAge', screen: 'Goals', route: '#/plan/goals', focus: 'g:fiAge', name: 'When work should be optional (FI age)', park: { kind: 'profile', key: 'fiAge' } });
+  if (doc.assumptions?.fiAge == null && !p.later?.fiAge && !p.none?.fiAge) add({ key: 'goal:fiAge', screen: 'Goals', route: '#/plan/goals', focus: 'g:fiAge', name: 'When work should be optional (FI age)', park: { kind: 'profile', key: 'fiAge' } });
   return out;
+}
+
+// Batch 18: the one-tap typical answer for a stop (Use typical $X, or the filing status the household implies).
+export function useStopTypical(store, stop) {
+  const a = stop.typical?.apply;
+  if (!a) return false;
+  if (a.kind === 'profile') store.setDoc('profile', a.patch);
+  else if (a.kind === 'category') store.update(a.id, { amount: a.amount, per: 'month', status: 'Roughly', usedTypical: true });
+  return true;
+}
+// Batch 18: the rows a stop makes before it is landed on (session 1's Health and Life), one undo step.
+export function makeStopRows(store, stop) {
+  if (!stop.make?.length) return 0;
+  const have = new Set(store.find(r => r.kind === 'coverage').map(r => r.type));
+  const add = stop.make.filter(t => !have.has(t));
+  if (add.length) store.transaction('Add Health and Life insurance', () => { for (const t of add) store.add('coverage', { name: null, values: {} }, { type: t }); });
+  return add.length;
 }
 
 // Will get it for one stop: the box goes on the homework list (Getting it), the way each screen's own button does.

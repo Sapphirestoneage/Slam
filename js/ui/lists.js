@@ -11,7 +11,7 @@ import { pct } from '../format.js';
 import { feeApr, promoPayoffOf } from '../math/debt.js';
 import { WEEKDAYS, SHABBAT_SPEND_DAY } from '../math/holidays.js';
 import { monthlyFrom } from '../math/income.js';
-import { withHome, myShare, DRAFTT, drafttName, CATEGORIES, categoryName, categoryKeyOf, isCategoryRecord, isFaded, typicalOf, typicalTotal, levelOf, LEVEL_ELSE, everythingElse } from '../math/spending.js';
+import { withHome, myShare, DRAFTT, drafttName, CATEGORIES, categoryName, categoryKeyOf, isCategoryRecord, isFaded, typicalOf, typicalTotal, categoryTypicalOf, levelOf, LEVEL_ELSE, everythingElse } from '../math/spending.js';
 import { FREQS, DAY_CHIPS, WEEKDAY_CHIPS, MONTH_CHIPS, timingOf, timingPatch, timingWords, ordinal } from '../timing.js';
 import { applies } from '../gates.js';
 import { payoffPlan, debtToIncome, utilization, creditHealth, BUREAUS, yearsText } from '../math/debt.js';
@@ -583,8 +583,12 @@ export function categoryList(ref, { pass = 'Plan', ym = null } = {}) {
         const note = c.from === 'updated' ? h('span.computed.small.cat-note', { title: `The lines add up to ${money(c.linesSum)}, more than the ${money(c.typed)} typed, so the category reads the line total.` }, `${money(c.linesSum)} · updated from ${money(c.typed)}`)
           : c.from === 'lines' ? h('span.computed.small.cat-note', { title: 'No amount typed: the category reads its lines' }, `${money(c.linesSum)} from the lines`)
           : c.from === 'typed' && c.lines.length ? (c.unassigned > 0.5 ? h('span.muted.small.cat-note', {}, `${money(c.unassigned)} not assigned yet`) : h('span.muted.small.cat-note', {}, 'Fully itemized')) : null;
+        // Batch 18 (QUESTIONS 229): an empty category offers its typical amount (the starter lines' typicals) in one tap,
+        // marked Roughly; typing a real number clears the Roughly that came from it.
+        const typ = c.amount == null && r.status !== 'Not for me' ? categoryTypicalOf(ctx.visible(x => x.kind === 'bill'), r.type) : null;
         return h('span.row-line', { style: { justifyContent: 'flex-end', flexWrap: 'wrap', gap: '6px' } },
-          moneyInput(r.amount, v => up({ amount: v, per: 'month', status: r.status === 'Not sure' ? null : r.status }), { hint: c.from === 'lines' ? moneyText(c.linesSum) : 'A month', key: `cat:${r.type}:amount` }), note);
+          typ ? h('button.btn.small.use-typical', { type: 'button', 'data-focus': `cat:${r.type}:typical`, title: `Use the typical ${money(typ)} a month (what the starter lines add up to), marked Roughly. Or type the real number.`, onclick: () => up({ amount: typ, per: 'month', status: 'Roughly', usedTypical: true }) }, `Use typical ${money(typ)}`) : null,
+          moneyInput(r.amount, v => up({ amount: v, per: 'month', status: r.status === 'Not sure' || (r.values.usedTypical && r.status === 'Roughly') ? null : r.status, usedTypical: null }), { hint: c.from === 'lines' ? moneyText(c.linesSum) : 'A month', key: `cat:${r.type}:amount` }), note);
       } },
     ],
     // The caret: this category's lines, with their own add button; a line added here stays in the category.

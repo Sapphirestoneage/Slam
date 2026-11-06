@@ -263,6 +263,9 @@ export const isFaded = r => (r?.kind === undefined || r.kind === 'bill') && blan
 export const typicalOf = r => r?.values?.typical ?? r?.typical ?? null;
 // What the typical amounts of the faded lines would add up to, a month (for reference, not their number).
 export const typicalTotal = lines => lines.filter(isFaded).reduce((s, l) => s + (monthlyFrom(typicalOf(l), l.per ?? 'month').value ?? 0), 0);
+// Batch 18: a category's typical amount, what its faded starter lines would add up to a month (the Budget group's
+// "Typical amounts would add up to" note), for the one-tap "Use typical $X" on the category row and in the walk.
+export const categoryTypicalOf = (lines, key) => { const t = typicalTotal(lines.filter(l => !l.values?.irregular && categoryKeyOf(l) === key)); return t > 0 ? Math.round(t) : null; };
 // Levels inside every group: 1 the big one, 2 the regulars, 3 folded into one Everything else line. A line with no
 // level is a 2 (a line the client adds); starter lines carry theirs from Reference data (spendingPresets.lines[].level).
 export const LEVEL_ELSE = 3;

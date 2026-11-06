@@ -1500,7 +1500,25 @@
           "cushion",
           "safety net"
         ],
-        "label": "Emergency fund (savings)",
+        "label": "Emergency fund (Cash layers: big e)",
+        "go": [
+          "focus:sec:assets:layers@#/net-worth/assets"
+        ],
+        "add": "none",
+        "why": "batch 18 (QUESTIONS 230): the emergency fund's target and how full it is (little e, big e) are the Cash layers card on Assets; the savings balance comes second"
+      },
+      {
+        "terms": [
+          "emergency fund",
+          "emergency savings",
+          "rainy day fund",
+          "rainy day",
+          "rule of 5",
+          "big e",
+          "cushion",
+          "safety net"
+        ],
+        "label": "Emergency fund savings",
         "go": [
           "account[Savings or HYSA|Money market|CD].balance",
           "account[Checking].balance",
@@ -1849,8 +1867,8 @@
         ],
         "label": "Pay schedule",
         "go": [
-          "income[Job|Partner job].payFrequency>freq",
-          "income.payFrequency>freq",
+          "income[Job|Partner job].payFrequency",
+          "income.payFrequency",
           "add:income@#/cash-flow/income"
         ],
         "add": "none",
