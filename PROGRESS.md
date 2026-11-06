@@ -757,3 +757,38 @@ Batch 20's think-aloud left four majors and a row of minors open; each is the le
 9. Minors: the calendar grid no longer flags days already gone (28), Find's apr leaves out debt types the client does not have (26), the gross box under Given as Both says /yr (27), the Budget counter reads "1 of 4 filled · core 1 of 3" beside the sub-tab's 1/3 (25). Finding 24 (Skip and Next) stays as batch 18 decided.
 
 Rocket Surgery tasks 3, 4, 5 and 7 again (both users): task 3 done (every line and five gut-only categories closed, 11 actions, from not done), task 4 done (2 taps: Sam, then Both), task 5 done with the two sides apart, task 7 in 4 and 3 actions with no hesitation (from 5 and 5, one hesitation each). docs/usability/scorecard-2026-11-06.json re-scored: 0 blockers, 0 majors, 9 minors (from 6 majors, 15 minors).
+
+## Batch 35 (Nov 6 2026): income by type, follow-ups (QUESTIONS 300 to 306)
+
+1. The federal tips deduction is taken off the household's income tax (QUESTIONS 300, T.D. 10044): householdTax works
+   it once per return on reported tips only (card tips, and cash tips when Cash tips reported? is Yes, less the tip-out
+   on them; reportedTipsYear), up to $25,000, 2025 to 2028, less 10% of income over $150,000 / $300,000 joint, none
+   married filing separately; income tax only. Each tipped row takes its share. Taxes shows it as its own line
+   (tipsDeductionOf) with the rule in a hover tip. Riley the bartender, hand-checked: $60 card tips x 13 shifts x 12 =
+   $9,360 off a taxable $10,360, federal $1,036 to $100, $936 saved; her paycheck was typed as take-home, so about $936
+   comes back when she files and the plan's $3,380 stays. Her unreported cash tips get none, and the line says so.
+2. Taxes says what it does with the state (QUESTIONS 306, stateTaxLine): "CA state income tax is not counted yet: it
+   comes in Phase 5"; the nine states with no tax on wages (tax.noWageTax, Tax Foundation 2026) say there is none.
+3. The workbook knows tips, shifts, house fees and Platform rows (QUESTIONS 305): Income columns for shifts a month,
+   pay, card and cash tips, tip-out, fees, worked out from (Paycheck or Shifts), the gross from shifts, cash on top, the
+   platform fee (typed or the Platforms table) and payout; M13 and M12 read them; M10 takes off each row's share of the
+   tips deduction (M10 · tips); M12 · extra and M12 · platform add up the cash on top and the payouts; Statements' Gross
+   adds the cash tips kept. Recalculated in LibreOffice, every income Math row and the Statements income lines match the
+   app on the bartender, dancer, creator and a household with every path (test/batch35.test.js); the projections now
+   match too (they were off by the tips before).
+4. Find: tips, cash tips, tip-out, shifts, house fee, stage fee land on the job row's Tips and shifts (opened first: a
+   target can now name a closed block, ^income:work:{id}); OnlyFans, Fansly, Patreon, Etsy, Upwork and platform on the
+   Platform row (or Add income); payout on its hold; Uber and DoorDash on the client's Platform row, else the rides or
+   takeout on Budget; taxes set aside on the account with Purpose: Taxes (or Add asset). A target's {…} now also matches
+   a row's platform or purpose. All in tools/e2e/find-terms.cjs.
+5. Assets: the Cash group subtotal leaves out money with Purpose: Taxes, as the Cash strip does (Nova: $11,800 before,
+   $8,300 now), and a slim line under the group says "Set aside for taxes: $3,500, owed, so not in the Cash total above"
+   (a list can now have a groupFoot).
+6. Income: a Job row with tips or shifts says them on the row ("$260 a shift after tip-out · 3 shifts a week",
+   workLine), a link under the name that opens the row's Details with Tips and shifts open.
+
+Tests: test/batch35.test.js (10, four of them LibreOffice) and the whole suite pass in UTC and America/New_York.
+Findability: 138 of 138 (69 terms on the Demo and a Fast Track client), and the new terms land on the personas' boxes.
+Layout check on Income, Taxes and Assets (Demo and a new client, all widths and themes): 0 findings before and after
+(the 1 covered is the Demo's load toast on Budget). The three personas at 1440, 1280 and 390, light and dark, with Tips
+and shifts open: 0 findings.

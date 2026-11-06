@@ -80,10 +80,33 @@ export function workCash(w, { paycheckTyped = false, taxType = 'W-2' } = {}) {
   return { mode: 'shifts', extra, grossYear: grossMonth * 12, grossExtra: (untaxedCash - outCash) * 12, cashMonth: m(w.cash), tipOutMonth: m(w.tipOut), feeMonth: m(w.fee), taxedTipsMonth: taxedTips - outTaxed };
 }
 
+// Batch 35 (QUESTIONS 300): the tips this row reports, a year, for the federal tips deduction (T.D. 10044). Card tips
+// are reported (they run through payroll); cash tips only when Cash tips reported? is Yes; unreported cash tips get
+// none. Only the tips kept count (IRS Publication 531): a shift job takes the tip-out off the taxed tips the same way
+// its gross does (workCash); a paycheck job pays its tip-out from the cash, so it comes off reported cash only.
+export function reportedTipsYear(w, c) {
+  if (!w?.any || !c) return 0;
+  const m = x => x?.month ?? 0;
+  if (c.mode === 'shifts') return Math.max(0, c.taxedTipsMonth ?? 0) * 12;
+  const cash = w.reported === 'Yes' ? Math.max(0, m(w.cash) - m(w.tipOut)) : 0;
+  return (m(w.card) + cash) * 12;
+}
+
 // The take-home a shift: the row's whole take-home a month (after tax, fees and tip-out) over its shifts a month.
 export function perShift(takeHomeMonth, w) {
   if (takeHomeMonth == null || !w?.shiftsMonth) return null;
   return takeHomeMonth / w.shiftsMonth;
+}
+
+// Batch 35: the one line a Job row shows on itself when it has tips or shifts ("$260 a shift after tip-out · 3 shifts
+// a week"), so the coach sees it without opening the row. Short, so it stays one line in the Source column.
+export function workLine(w, c, takeHomeMonth) {
+  if (!w?.any || !c) return null;
+  const ps = perShift(takeHomeMonth, w);
+  const off = [c.feeMonth ? 'fees' : null, c.tipOutMonth ? 'tip-out' : null].filter(Boolean).join(' and ');
+  const first = ps != null ? `${fmt.money(ps)} a shift${off ? ` after ${off}` : ''}`
+    : c.extra ? `${fmt.money(c.extra)} a month in cash tips${c.tipOutMonth ? ' after tip-out' : ''}` : 'Tips and shifts';
+  return w.shifts != null ? `${first} · ${w.shifts} ${w.shifts === 1 ? 'shift' : 'shifts'} a week` : first;
 }
 
 // The words for one shift job: what each part is, a shift and a month, and the take-home a shift.
@@ -114,8 +137,8 @@ export function tipsTaxNote(w, c, { marginal = null, federalMarginal = null, yea
   const inWindow = year >= t.firstYear && year <= t.lastYear;
   const deduction = inWindow ? Math.min(yearly, t.deductionCap) * (federalMarginal ?? 0) : 0;
   if (w.reported === 'Yes') {
-    return { reported: true, yearly, deduction, line: inWindow ? `Reported, so they may count for the federal tips deduction through ${t.lastYear}.` : 'Reported, so they are taxed through the paycheck.', text: inWindow
-      ? `Reported cash tips may count for the federal tips deduction (up to ${fmt.money(t.deductionCap)} a year, ${t.firstYear} to ${t.lastYear}${federalMarginal ? `; about ${fmt.money(deduction)} less federal income tax here` : ''}). Social Security and Medicare still apply.`
+    return { reported: true, yearly, deduction, line: inWindow ? `Reported, so they count for the federal tips deduction through ${t.lastYear} (on Taxes).` : 'Reported, so they are taxed through the paycheck.', text: inWindow
+      ? `Reported cash tips count for the federal tips deduction (up to ${fmt.money(t.deductionCap)} a year, ${t.firstYear} to ${t.lastYear}${federalMarginal ? `; about ${fmt.money(deduction)} less federal income tax here` : ''}). Social Security and Medicare still apply.`
       : 'Reported tips are taxed through the paycheck.' };
   }
   const exposure = marginal == null ? yearly * fica : yearly * Math.max(marginal, fica);

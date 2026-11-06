@@ -972,6 +972,9 @@ export function recordList(ctx, cfg) {
         if (note) body.append(h('tr.row-note', { 'data-for': r.id, 'data-group': g, hidden: folded }, h('td', { colspan: span }, note)));
         if (open) { const more = moreRow(r, g); more.hidden = folded; body.append(more); track(tr, more); }
       }
+      // Batch 35: one slim line under a group (Assets: the money set aside for taxes, kept out of the Cash total).
+      const foot = multi ? cfg.groupFoot?.(ctx, g, rows, m) : null;
+      if (foot) body.append(h('tr.group-foot', { 'data-group': g, hidden: folded }, h('td', { colspan: span }, foot)));
     }
     if (state.open && !rowEls.has(state.open)) state.open = null;
     const tfoot = cfg.totals ? h('tfoot', {}, h('tr', {}, h('td.check-cell', {}), cfg.totals(ctx, recs, m, cols))) : null;

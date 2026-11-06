@@ -272,6 +272,7 @@ export const REFERENCE_LISTS = {
   'studentLoans.saveEnded': 'the day a court order ended SAVE, March 10 2026 (Tate Law, Oct 4 2026); words only',
   lists: 'picker lists (debt types, account types, statuses) and, since batch 20, the usual 401(k) match formulas as taps (matchPicks: the job row\'s first tier)',
   platforms: 'the Platforms table (batch 27)',
+  'tax.noWageTax': 'the states with no tax on wages (batch 35, QUESTIONS 306): words on Taxes only ("FL has no state income tax on wages"); no math reads it',
   categoryDefaults: 'the starting DRAFTT letter, amount and date for each Budget category',
   spendingPresets: 'starter Budget lines, each a Guess',
   year: 'the tax year this file is for', source: 'where this file came from',

@@ -67,6 +67,7 @@ export const FORMATS = [
   { version: 26, shape: 'da9adc90' }, // batch 27: income by type (tips, shifts, Platform rows), Purpose: Taxes, the Platforms table
   { version: 27, shape: '27bcbd80' }, // batch 26: profile.library (skills done), M9K (learn and unlearn at each FOO step), rules LearnShown and CarPaymentYears
   { version: 28, shape: '3e1794ab' }, // Nov 6 2026 (batch 31): M9E typical at your age (data/priors-2026.json), rules TypicalLow, TypicalHigh
+  { version: 29, shape: '45a738f7' }, // batch 35: workbook formulas for tips, shifts, house fees and Platform rows (Income), M10 tips (the tips deduction), M12 extra and platform
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;

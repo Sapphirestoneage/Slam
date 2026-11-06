@@ -370,6 +370,11 @@
       "lastYear": 2028,
       "reportOver": 20,
       "unreportedPenalty": 0.5
+    },
+    "noWageTax": {
+      "states": ["AK", "FL", "NV", "NH", "SD", "TN", "TX", "WA", "WY"],
+      "source": "Tax Foundation, State Individual Income Tax Rates and Brackets (2026): nine states tax no wage income (New Hampshire's tax on interest and dividends ended Jan 1 2025; Washington taxes only some capital gains)",
+      "date": "2026-11-06"
     }
   },
   "typicalRates": {
@@ -1407,6 +1412,21 @@
         "add": "income:Side hustle",
         "why": "a side hustle is its own income row"
       },
+      {"terms": ["tips", "cash tips", "tip income", "tip money", "tipped", "gratuity", "gratuities"], "label": "Cash tips (Tips and shifts)", "go": ["income[Job|Partner job|Side hustle|Self-employed].cashTips^income:work:{id}", "add:income@#/cash-flow/income"], "add": "income", "why": "batch 35: tips are parts of the job row, in its Details under Tips and shifts (card tips, cash tips, reported or not)"},
+      {"terms": ["tip-out", "tip out", "tipout", "tip outs", "tip share", "tip pool", "tipping out"], "label": "Tip-out (Tips and shifts)", "go": ["income[Job|Partner job|Side hustle|Self-employed].tipOutBy^income:work:{id}", "add:income@#/cash-flow/income"], "add": "none", "why": "batch 35: what is shared with the bar back, bussers, DJ or house, on the job row's Tips and shifts"},
+      {"terms": ["shifts", "shift", "shift work", "shifts a week", "pay a shift", "per shift"], "label": "Shifts a week (Tips and shifts)", "go": ["income[Job|Partner job|Side hustle|Self-employed].shiftsWeek^income:work:{id}", "add:income@#/cash-flow/income"], "add": "income", "why": "batch 35: shifts a week, pay a shift and the take-home a shift are on the job row's Tips and shifts"},
+      {"terms": ["house fee", "house fees", "stage fee", "stage fees", "club fee", "club fees", "tip in"], "label": "House or stage fee a shift (Tips and shifts)", "go": ["income[Job|Partner job|Side hustle|Self-employed].houseFee^income:work:{id}", "add:income@#/cash-flow/income"], "add": "none", "why": "batch 35: what the club or venue charges a shift, on the job row's Tips and shifts"},
+      {"terms": ["onlyfans", "only fans"], "label": "OnlyFans income (a Platform row)", "go": ["income[Platform]{OnlyFans}.platform", "add:income@#/cash-flow/income"], "add": "income:Platform", "why": "batch 35: OnlyFans pays out through a Platform income row on Income (its fee and hold are prefilled)"},
+      {"terms": ["fansly"], "label": "Fansly income (a Platform row)", "go": ["income[Platform]{Fansly}.platform", "add:income@#/cash-flow/income"], "add": "income:Platform", "why": "batch 35: Fansly pays out through a Platform income row on Income (its fee and hold are prefilled)"},
+      {"terms": ["patreon", "patreon income"], "label": "Patreon income (a Platform row)", "go": ["income[Platform]{Patreon}.platform", "add:income@#/cash-flow/income"], "add": "income:Platform", "why": "batch 35: Patreon pays out through a Platform income row on Income (its fee and hold are prefilled)"},
+      {"terms": ["etsy", "etsy shop", "etsy sales"], "label": "Etsy income (a Platform row)", "go": ["income[Platform]{Etsy}.platform", "add:income@#/cash-flow/income"], "add": "income:Platform", "why": "batch 35: Etsy pays out through a Platform income row on Income (its fee and hold are prefilled)"},
+      {"terms": ["upwork", "up work"], "label": "Upwork income (a Platform row)", "go": ["income[Platform]{Upwork}.platform", "add:income@#/cash-flow/income"], "add": "income:Platform", "why": "batch 35: Upwork pays out through a Platform income row on Income (its fee and hold are prefilled)"},
+      {"terms": ["uber driver", "driving for uber", "rideshare driver", "uber driving", "dasher", "dashing", "doordash driver", "delivery driver", "gig driver"], "label": "Rideshare or delivery income (a Platform row)", "go": ["income[Platform]{Uber|DoorDash}.platform", "add:income@#/cash-flow/income"], "add": "income:Platform", "why": "batch 35: driving or delivering is a Platform income row (Uber and DoorDash pay the worker net, so the fee is 0)"},
+      {"terms": ["uber"], "label": "Uber", "go": ["income[Platform]{Uber}.platform", "bill{Rideshare|Transit, Uber|Uber and Lyft|Uber, Lyft, taxis}.amount", "cat:Transportation"], "add": "bill", "why": "batch 35: an Uber Platform row when the client drives; else the rides on Budget (most clients ride)"},
+      {"terms": ["doordash", "door dash"], "label": "DoorDash", "go": ["income[Platform]{DoorDash}.platform", "bill{Dining out and takeout|Takeout and delivery|Delivery}.amount", "cat:Food"], "add": "bill", "why": "batch 35: a DoorDash Platform row when the client delivers; else the takeout on Budget (most clients order)"},
+      {"terms": ["platform", "platforms", "platform income", "creator income", "content creator", "fan site", "gig app", "marketplace"], "label": "Platform income", "go": ["income*[Platform].platform", "add:income@#/cash-flow/income"], "add": "income:Platform", "why": "batch 35: OnlyFans, Fansly, Patreon, Etsy, Uber, DoorDash and Upwork are Platform income rows"},
+      {"terms": ["payout", "payouts", "payout hold", "payout schedule", "pending balance", "payout date"], "label": "Payout hold (a Platform row)", "go": ["income*[Platform].holdDays>holdDays:n", "add:income@#/cash-flow/income"], "add": "none", "why": "batch 35: the days a platform holds a payout before it lands (the calendar lands it after), on the Platform row"},
+      {"terms": ["taxes set aside", "tax set aside", "set aside for taxes", "tax money", "tax account", "tax bucket", "money for taxes"], "label": "Set aside for taxes (Purpose: Taxes)", "go": ["account{Taxes}.balance", "add:asset@#/net-worth/assets"], "add": "account:Savings or HYSA", "why": "batch 27 and 35: quarterly tax money is an account with Purpose: Taxes on Assets, kept out of the Cash total and the layers"},
       {
         "terms": [
           "401k",

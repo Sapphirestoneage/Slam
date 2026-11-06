@@ -215,6 +215,14 @@ table.rows tr.row.auto td { background: color-mix(in srgb, var(--debt) 6%, trans
 button.tag.from-tag { border: 0; cursor: pointer; font: inherit; font-size: .8125rem; font-weight: 700; min-height: 32px; }
 button.tag.from-tag:hover { filter: brightness(.95); text-decoration: underline; }
 table.rows tr.row-note td { height: auto; padding: 6px var(--s3) 10px; background: color-mix(in srgb, var(--warn) 6%, transparent); }
+table.rows tr.group-foot td { height: auto; padding: 4px var(--s3) 10px; } /* batch 35: one slim line under a group (Assets: set aside for taxes) */
+/* Batch 35: the tips and shifts line on a Job row wraps under the name rather than widening the column; the cell is a
+   grid whose room above the name grows with the line below it, so the name stays centered and level with the row. */
+td.col-first > .inst-cell > .inst-link.work-line { white-space: normal; max-width: 230px; line-height: 1.25; }
+@media (min-width: 761px) {
+  td.col-first > .inst-cell:has(> .work-line) { display: grid; grid-template-rows: 1fr auto 1fr; }
+  td.col-first > .inst-cell:has(> .work-line)::before { height: auto; }
+}
 .dup-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .dup-note .tag.warn { white-space: normal; height: auto; min-height: 24px; padding: 4px 10px; }
 .reveal-card { margin-bottom: var(--s3); }

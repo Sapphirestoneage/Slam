@@ -4,10 +4,10 @@
 import { h } from './dom.js';
 import { INCOME_KINDS, incomeKindOf } from '../capture.js';
 import { institutionPicker, institutionLink } from './institutions-ui.js';
-import { popover, closePop, tapPick, fromButton, amount, value, moneyInput, pctInput, textInput, nameInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, parkGroup, ownerToggle } from './staples.js';
+import { popover, closePop, tapPick, fromButton, amount, value, moneyInput, pctInput, textInput, nameInput, perPicker, toggle, select, labelled, summaryStrip, moreBlock, button, toast, metricCard, confirmBox, warnTag, parkProfile, park, parkGroup, ownerToggle, openBlock } from './staples.js';
 import { asksTaxType, taxTypeFor } from '../math/portfolio.js';
 import { applies, recordFor, REAL_TYPES, PROTECTION_TYPES, LOAN_FOR } from '../gates.js';
-import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom, isBenefitRow, householdRates, quarterlySetAside, irregularPlan } from '../math/income.js';
+import { incomeRow, taxRates, takeHomeFromGross, fica, variableSafeBudget, monthlyFrom, isBenefitRow, householdRates, quarterlySetAside, irregularPlan, tipsDeductionOf, stateTaxLine } from '../math/income.js';
 import { foo } from '../math/foo.js';
 import { raiseOf } from '../math/raise.js';
 import { RULES } from '../registry/assumptions.js';
@@ -22,6 +22,7 @@ import { needs } from '../math/result.js';
 import { statusOf, countsAsDone } from '../records.js';
 import { money, pct } from '../format.js';
 import { workBlock, platformBlock, seasonsFill } from './earnings-ui.js';
+import { workLine } from '../math/earnings.js';
 
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const short = v => (Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : money(v));
@@ -61,7 +62,11 @@ export function incomeList() {
     coreFields: ['amount'],
     focus: ['Source', 'Amount', 'Given as', 'Per', 'Pay frequency'], // session 1: take-home or gross, and how often
     columns: [
-      { label: 'Source', render: (ctx, r, m, up) => nameInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 170, key: `${r.id}:name` }) }, // batch 13: a long name wraps
+      { label: 'Source', render: (ctx, r, m, up) => { // batch 13: a long name wraps
+        const name = nameInput(r.name, v => up({ name: v }), { hint: r.type || 'Add name', tip: r.type, width: 170, key: `${r.id}:name` });
+        const line = WORK_TYPES.has(r.type) ? workRowLink(r, incomeRowOf(m, r)) : null; // batch 35: tips and shifts in one line on the row
+        return line ? h('span.stack.inst-cell', { style: { gap: '2px' } }, name, line) : name;
+      } },
       { label: 'Amount', num: true, render: (ctx, r, m, up) => (r.values.basis === 'Both' && incomeRowOf(m, r)?.taxType
         ? h('span.row-line', { style: { gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' } }, // Brandon B1.6: both typed, both kept (batch 13: stacked when the row is tight)
           moneyInput(r.amount, v => up({ amount: v }), { hint: 'Take-home', key: `${r.id}:amount` }), yearBox(moneyInput(r.values.gross, v => up({ gross: v }), { hint: 'Gross a year', key: `${r.id}:gross` })))
@@ -106,6 +111,21 @@ function benefitSecondary(ctx, r, up) {
     labelled('Coach notes', textInput(r.privateNote, y => up({ privateNote: y }), { hint: 'Add a private note', width: 320 }))];
 }
 const WORK_TYPES = new Set(['Job', 'Partner job', 'Side hustle', 'Self-employed']); // batch 27: rows that can have tips and shifts
+// Batch 35: a Job row with tips or shifts says them on the row ("$260 a shift after tip-out · 3 shifts a week"); a tap
+// opens the row's Details with Tips and shifts open. The words are js/math/earnings.js workLine.
+function workRowLink(r, x) {
+  const text = x?.work?.any ? workLine(x.work, x.cash, x.takeHome?.value) : null;
+  if (!text) return null;
+  const block = `income:work:${r.id}`;
+  return h('button.inst-link.work-line', { type: 'button', 'data-focus': `${r.id}:workLine`, title: 'Open Tips and shifts', onclick: e => {
+    openBlock(block);
+    const caret = e.currentTarget.closest('tr')?.querySelector('td.col-actions button.caret');
+    if (caret?.getAttribute('aria-expanded') === 'false') { caret.click(); return; }
+    const inner = document.querySelector(`[data-focus="more:${CSS.escape(block)}"]`);
+    if (inner?.getAttribute('aria-expanded') === 'false') inner.click();
+    inner?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  } }, text);
+}
 function incomeSecondary(ctx, r, up) {
   if (isBenefitRow(r)) return benefitSecondary(ctx, r, up);
   const g = ctx.gates();
@@ -302,6 +322,7 @@ export function variableBlock(ctx) {
 // ---------- Assets (car loans and mortgages are the same records as on Debt, R049) ----------
 const groupOf = r => (r.kind === 'asset' ? 'Home or car' : r.values.group === 'investment' ? 'Investments' : 'Cash');
 const valOf = r => (r.kind === 'asset' ? r.values.value : r.values.balance);
+const forTaxes = (m, r) => !!m?.inputs.accounts.find(a => a.id === r.id)?.forTaxes; // batch 27: the metrics mark money set aside for taxes
 export const loanOf = (ctx, a) => ctx.store.find(d => d.kind === 'debt' && d.linkedTo === a.id)[0] || null;
 function setFinanced(ctx, a, how, anchor) {
   const loan = loanOf(ctx, a);
@@ -376,7 +397,15 @@ export function assetList(ref) {
     tertiary: (ctx, r, up) => assetTertiary(ctx, r, up),
     coreFields: [],
     focus: ['Account', 'Balance', 'Kind', 'Added monthly'], // session 1: type, balance, monthly contribution
-    subtotal: (ctx, rows) => amount(ctx, sum(rows, valOf), { chip: false }), // item 16: one unit per table
+    // Batch 35: the Cash subtotal leaves out money set aside for taxes (Purpose: Taxes), as the Cash strip does; it shows
+    // as its own line under the group.
+    subtotal: (ctx, rows, m) => amount(ctx, sum(rows.filter(r => !forTaxes(m, r)), valOf), { chip: false }), // item 16: one unit per table
+    groupFoot: (ctx, g, rows, m) => {
+      const kept = rows.filter(r => forTaxes(m, r));
+      if (g !== 'Cash' || !kept.length) return null;
+      return h('span.muted.small', { title: 'Purpose: Taxes. It counts in net worth, and stays out of the Cash total, the cash layers (little e, big e) and the runway because it is already owed' },
+        `Set aside for taxes: ${money(sum(kept, valOf))}, owed, so not in the Cash total above`);
+    },
     footerTotal: (ctx, recs) => amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null),
     totals: (ctx, recs, m, cols) => [...cols.map(c => c.label === 'Account' ? h('td', {}, `${recs.length} ${recs.length === 1 ? 'item' : 'items'}`) : c.label === 'Balance' ? h('td.num', {}, amount(ctx, recs.some(r => valOf(r) != null) ? sum(recs, valOf) : null)) : h('td')), h('td'), h('td')],
     strip: (ctx, m) => h('div', {}, summaryStrip(ctx, [
@@ -603,6 +632,8 @@ export function taxesScreen(ctx) {
     // Batch 15, item 3: quarterly estimates from the real rates (SE tax in), with the four due dates (they are on the calendar).
     q ? h('div.nudge.quarterly', { style: { marginTop: '12px' } }, h('strong', {}, `Set aside ${Math.round((q.rate ?? 0) * 100)} cents of each self-employment dollar: ${money(q.each)} a quarter.`),
       ` Due ${q.due.map(due).join(', ')}. Your rates with self-employment tax in, on top of your other income.`) : null,
+    // Batch 35 (QUESTIONS 300): the federal tips deduction, its own line (reported tips only).
+    (() => { const td = tipsDeductionOf(hh, x.income, ctx.ref); return td ? h('div.nudge.tips-deduction', { style: { marginTop: '12px' } }, td.text, ' ', h('span.has-tip', { tabindex: 0, title: td.tip, 'aria-label': td.tip }, 'The rule')) : null; })(),
     gap > 100 ? h('div.nudge', { style: { marginTop: '12px' } }, `Your paychecks hold back about ${money(gap)} a year less than the household owes (each job withholds as if it were the only one). More withheld a paycheck (W-4 step 4c) or step 2 fixes it.`) : null,
     ...benefits.map(i => h('div.nudge', { style: { marginTop: '12px' } }, `${i.r.name || 'Unemployment'}: ${money(i.benefit.thisYear)} taxed this year, federal and ${x.place?.state ?? 'state'} income tax ${money(i.tax.total)}, no Social Security or Medicare. ${i.withheld ? `${money(i.withheld)} withheld, ` : 'Nothing withheld, '}about ${money(i.due)} due when you file.`)),
     rows.length > 1 ? moreBlock('taxes:rows', () => h('table.rows.tax-rows', {}, h('thead', {}, h('tr', {}, ['Income', 'Federal', 'FICA', ...(x.place ? ['State and city'] : []), 'Total'].map(t => h('th', {}, t)))),
@@ -620,7 +651,7 @@ export function taxesScreen(ctx) {
       }),
       applies('quarterly', { g, taxTypes: taxed.map(i => i.taxType) }) ? labelled('Quarterly estimates paid this year', moneyInput(p.quarterlyPaid ?? null, v => set({ quarterlyPaid: v }), { hint: 'Add amount', key: 'tax:quarterly' })) : null,
       applies('seTax', { g, taxTypes: taxed.map(i => i.taxType) }) ? labelled('Self-employment tax a year', h('span.computed', {}, seTax ? money(seTax.value) : 'Needs 1099 income')) : null), { label: 'Earlier years and estimates' }),
-    h('p.muted', { style: { marginTop: '12px' } }, `Gross used: ${gross === null ? 'none yet (add take-home or gross on Income)' : `${money(gross)} a year`}. ${x.place ? `Federal, FICA, NY state${x.place.nyc ? ' and NYC' : ''} tax.${/joint/i.test(x.filingStatus) || x.place.nyc ? ` ${/joint/i.test(x.filingStatus) ? 'NY joint brackets' : ''}${/joint/i.test(x.filingStatus) && x.place.nyc ? ' and ' : ''}${x.place.nyc ? 'NYC rates' : ''}: not yet confirmed against the law.` : ''}` : 'Federal and FICA; state tax is in for New York only so far.'}`)));
+    h('p.muted', { style: { marginTop: '12px' } }, `Gross used: ${gross === null ? 'none yet (add take-home or gross on Income)' : `${money(gross)} a year`}. ${x.place ? `Federal, FICA, NY state${x.place.nyc ? ' and NYC' : ''} tax.${/joint/i.test(x.filingStatus) || x.place.nyc ? ` ${/joint/i.test(x.filingStatus) ? 'NY joint brackets' : ''}${/joint/i.test(x.filingStatus) && x.place.nyc ? ' and ' : ''}${x.place.nyc ? 'NYC rates' : ''}: not yet confirmed against the law.` : ''}` : stateTaxLine(p.state ?? null, ctx.ref)}`))); // batch 35 (QUESTIONS 306): a state other than NY says it is not counted yet
 }
 
 // Completion (R065) lives in js/completion.js (pure, tested); re-exported here for older readers.

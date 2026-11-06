@@ -118,9 +118,9 @@ export const MATH = [
   { id: 'M13', name: 'Gross from take-home', inputs: 'take-home, deductions', unit: 'money', fns: ['income.grossFromTakeHome'],
     cols: [
       { area: 'income', key: 'taxType', label: 'Taxed as', unit: 'text',
-        f: `IF(${INCOME},IF({incomeType}<>"",{incomeType},IF(OR({Type}="Job",{Type}="Partner job"),"W-2",IF(OR({Type}="Side hustle",{Type}="Self-employed"),"1099",IF({Type}="Unemployment","Unemployment","")))),"")` },
+        f: `IF(${INCOME},IF({incomeType}<>"",{incomeType},IF(OR({Type}="Job",{Type}="Partner job"),"W-2",IF(OR({Type}="Side hustle",{Type}="Self-employed",{Type}="Platform"),"1099",IF({Type}="Unemployment","Unemployment","")))),"")` },
       { area: 'income', key: 'M13', label: 'Gross a year (M13)', unit: 'money',
-        f: `IF(OR(${SKIP},{Kind}<>"Income",{@taxType}="Unemployment"),"",IF({basis}="Gross",IF({@M01}="","",{@M01}*12),IF({gross}<>"",{gross},{app:solved})))`,
+        f: `IF(OR(${SKIP},{Kind}<>"Income",{@taxType}="Unemployment"),"",IF({@workMode}="Shifts",{@workGross},IF({Type}="Platform",IF({@platNet}="","",{@platNet}*12),IF({basis}="Gross",IF({@M01}="","",{@M01}*12),IF({gross}<>"",{gross},{app:solved})))))`, // batch 35: a shift job's gross is its shifts; a platform's is its payouts
         app: { solved: (rec, c) => (inc(rec, c)?.computed === 'gross' ? Math.round(inc(rec, c).gross) : '') } },
       // Batch 15, item 13: unemployment is taxed on the weeks paid this tax year (26 back from the end date when no start is typed).
       { area: 'income', key: 'uiYear', label: 'Unemployment taxed this year', unit: 'money',
@@ -133,7 +133,7 @@ export const MATH = [
   // Batch 15, item 1: income tax once per return (Married jointly: one; else one per person), FICA per person with the
   // Social Security wage base per person. Rows stack in order (jobs, then 1099, then unemployment; then row order):
   // each row's tax is the return's tax with it minus the tax without it, so the rows add up to the return.
-  { id: 'M10', name: 'Federal income tax', inputs: 'gross, before-tax deductions, filing status', unit: 'money', fns: ['income.federalTax', 'income.defaultFilingStatus', 'income.householdTax', 'income.STACK', 'income.noFica'],
+  { id: 'M10', name: 'Federal income tax', inputs: 'gross, before-tax deductions, filing status', unit: 'money', fns: ['income.federalTax', 'income.defaultFilingStatus', 'income.householdTax', 'income.STACK', 'income.noFica', 'income.tipsDeductionOf', 'earnings.reportedTipsYear', 'income.stateTaxLine'], // batch 35: the tips deduction; the state line on Taxes
     cols: [
       { area: 'taxes', key: 'filing', label: 'Filing status used', unit: 'text', f: 'IF({filingStatus}<>"",{filingStatus},IF(OR(LEFT(Profile_mode,7)="Married",AND(Profile_mode="",Profile_household="Couple")),"Married jointly","Single"))' },
       { area: 'taxes', key: 'joint', label: 'Files jointly', unit: 'text', f: 'IF({@filing}="Married jointly","Yes","No")' },
@@ -158,10 +158,23 @@ export const MATH = [
         f: 'IF({@stack}="","",MAX(0,{@taxedGross}-N({@pretax})-IF({@taxType}="1099",({@ssPart}+{@medPart})/2,0)))' },
       { area: 'income', key: 'taxable', label: 'Taxable a year (federal), the return through this row', unit: 'money',
         f: 'IF({@stack}="","",MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<="&{@stack})-IF(Taxes_joint="Yes",StdDed_joint,StdDed_single)))' },
+      // Batch 35 (QUESTIONS 300): the federal tips deduction, once per return: the reported tips kept (tipsQ, never past the
+      // row's taxed gross), up to Tips_cap, less Tips_phaseStep for each $1,000 of income over the line; none married
+      // filing separately or outside its years. Each tipped row takes its share of what the return saves, by its tips.
+      { area: 'income', key: 'tipsQ', label: 'Reported tips kept a year (tips deduction)', unit: 'money',
+        f: 'IF(OR({@workMode}="",{@stack}=""),"",MIN(MAX(0,{@taxedGross}),IF({@workMode}="Shifts",MAX(0,{@tipsTaxedMo}-{@outTaxedMo}),N({@cardMo})+IF({cashReported}="Yes",MAX(0,N({@cashMo})-{@tipOutMo}),0))*12))' },
+      { area: 'income', key: 'tipsDed', label: 'Tips deduction on this return a year', unit: 'money',
+        f: (rec, c) => `IF(OR({@stack}="",N({@tipsQ})=0),"",IF(OR(Taxes_filing="Married separately",${c.now.getFullYear()}<Tips_firstYear,${c.now.getFullYear()}>Tips_lastYear),0,MAX(0,MIN(Tips_cap,SUMIFS(Income_tipsQ,Income_taxUnit,{@taxUnit}))-MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit})-IF(Taxes_joint="Yes",Tips_phaseJoint,Tips_phaseSingle))*Tips_phaseStep/1000)))` },
+      { area: 'income', key: 'tipsSaved', label: 'Federal tax the tips deduction saves a year (this row\'s share)', unit: 'money',
+        f: () => {
+          const T = 'MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit})-IF(Taxes_joint="Yes",StdDed_joint,StdDed_single))', L = `MAX(0,${T}-{@tipsDed})`;
+          return `IF({@tipsDed}="","",IF(Taxes_joint="Yes",${bracket(T, 'Fed_joint')}-${bracket(L, 'Fed_joint')},${bracket(T, 'Fed_single')}-${bracket(L, 'Fed_single')})*{@tipsQ}/SUMIFS(Income_tipsQ,Income_taxUnit,{@taxUnit}))`;
+        } },
       { area: 'income', key: 'M10', label: 'Federal tax a year (M10)', unit: 'money',
-        f: `IF({@taxable}="","",IF(Taxes_joint="Yes",${bracket('{@taxable}', 'Fed_joint')}-${bracket('MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-StdDed_joint)', 'Fed_joint')},${bracket('{@taxable}', 'Fed_single')}-${bracket('MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-StdDed_single)', 'Fed_single')}))` },
+        f: `IF({@taxable}="","",-N({@tipsSaved})+IF(Taxes_joint="Yes",${bracket('{@taxable}', 'Fed_joint')}-${bracket('MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-StdDed_joint)', 'Fed_joint')},${bracket('{@taxable}', 'Fed_single')}-${bracket('MAX(0,SUMIFS(Income_own,Income_taxUnit,{@taxUnit},Income_stack,"<"&{@stack})-StdDed_single)', 'Fed_single')}))` },
     ],
     sheet: 'IF(COUNT(Income_M10)=0,"",SUM(Income_M10))', label: 'Federal tax a year, the household\'s return (or each person\'s)',
+    parts: [{ key: 'tips', name: 'Tips deduction: federal income tax it saves a year (reported tips only; batch 35)', unit: 'money', sheet: 'IF(COUNT(Income_tipsSaved)=0,"",SUM(Income_tipsSaved))', app: c => (c.x.householdTax?.tips ? c.x.householdTax.total.tipsSaved : null) }],
     app: c => (Object.keys(c.x.householdTax?.rows || {}).length ? c.x.householdTax.total.federal : null) },
   { id: 'M11', name: 'FICA', inputs: 'gross, year', unit: 'money', fns: ['income.fica'],
     cols: [{ area: 'income', key: 'M11', label: 'FICA a year (M11)', unit: 'money',
@@ -171,7 +184,7 @@ export const MATH = [
   { id: 'M12', name: 'Take-home from gross', inputs: 'M10, M11, state and city tax', unit: 'money', fns: ['income.takeHomeFromGross', 'raise.raiseOf', 'income.stateTax', 'income.incomeRow', 'income.taxTypeOf', 'income.isBenefitRow', 'income.benefitRow', 'income.benefitWeeksThisYear',
     // Batch 27: income by type (tips, shifts, platform payouts), folded into each row's take-home.
     'earnings.SHIFTS_PER_MONTH', 'earnings.MONTHS3', 'earnings.TIP_OUT_BY', 'earnings.WORK_KEYS', 'earnings.hasWork', 'earnings.workOf', 'earnings.workCash', 'earnings.perShift', 'earnings.workText', 'earnings.tipsTaxNote',
-    'earnings.seasonShifts', 'earnings.hasSeasons', 'earnings.shiftMonthsOf', 'earnings.PLATFORMS', 'earnings.platformOf', 'earnings.heldDates'],
+    'earnings.workLine', 'earnings.seasonShifts', 'earnings.hasSeasons', 'earnings.shiftMonthsOf', 'earnings.PLATFORMS', 'earnings.platformOf', 'earnings.heldDates'],
     cols: [
       { area: 'income', key: 'state', label: 'State and city tax a year', unit: 'money',
         f: () => {
@@ -181,11 +194,37 @@ export const MATH = [
           return `IF({@stack}="","",IF(Profile_state<>"NY",0,${by('NY')}+IF(Profile_nyc="Yes",${by('NYC')},0)))`;
         } },
       { area: 'income', key: 'stateOwn', label: 'Adds to state taxable income', unit: 'money', f: 'IF({@stack}="","",MAX(0,{@taxedGross}-N({@pretax})))' },
-      { area: 'income', key: 'M12', label: 'Take-home a month (M12)', unit: 'money',
-        f: `IF(OR(${SKIP},{Kind}<>"Income"),"",IF({@taxType}="Unemployment",IF({@M01}="","",{@M01}*(1-IF({withhold}="Yes",UI_withhold,0))),IF(AND({@taxType}<>"",{@M13}<>"",OR({basis}="Gross",{amount}="")),({@M13}-{@M10}-{@M11}-{@state}-{@pretax}-N({app:roth}))/12,{@M01})))`,
+      // Batch 35 (QUESTIONS 305): tips, shifts and house fees (js/math/earnings.js workOf and workCash), so the workbook
+      // matches the app. A shift a week is 52 / 12 a month. Paycheck: the Amount is typed, the cash tips ride on top less
+      // the tip-out and fees. Shifts: no Amount, the gross is the shifts' pay plus reported tips less the tip-out on them
+      // (and the house fee on a 1099 row); cash that is not reported rides on top.
+      { area: 'income', key: 'shiftsMo', label: 'Shifts a month', unit: 'number', f: `IF(OR(${SKIP},{Kind}<>"Income",{shiftsWeek}=""),"",{shiftsWeek}*52/12)` },
+      { area: 'income', key: 'payMo', label: 'Pay from shifts a month', unit: 'money', f: 'IF(OR({@shiftsMo}="",AND({payShift}="",OR({hourly}="",{hoursShift}=""))),"",IF({payShift}<>"",{payShift},{hourly}*{hoursShift})*{@shiftsMo})' },
+      { area: 'income', key: 'cardMo', label: 'Card tips a month', unit: 'money', f: 'IF({cardTips}="","",IF({cardTipsPer}="month",{cardTips},IF({@shiftsMo}="","",{cardTips}*{@shiftsMo})))' },
+      { area: 'income', key: 'cashMo', label: 'Cash tips a month', unit: 'money', f: 'IF({cashTips}="","",IF({cashTipsPer}="month",{cashTips},IF({@shiftsMo}="","",{cashTips}*{@shiftsMo})))' },
+      { area: 'income', key: 'tipOutMo', label: 'Tip-out a month', unit: 'money',
+        f: 'IF({tipOutBy}="% of sales",IF(OR({tipOutPct}="",{salesShift}="",{@shiftsMo}=""),0,{tipOutPct}*{salesShift}*{@shiftsMo}),IF({tipOutBy}="% of tips",IF({tipOutPct}="",0,{tipOutPct}*(N({@cardMo})+N({@cashMo}))),IF(AND({tipOutBy}="$ a shift",{tipOutAmount}<>"",{@shiftsMo}<>""),{tipOutAmount}*{@shiftsMo},0)))' },
+      { area: 'income', key: 'feeMo', label: 'House or stage fees a month', unit: 'money', f: 'IF(AND({houseFee}<>"",{@shiftsMo}<>""),{houseFee}*{@shiftsMo},0)' },
+      { area: 'income', key: 'workMode', label: 'Tips and shifts worked out from', unit: 'text',
+        f: `IF(OR(${SKIP},{Kind}<>"Income",{Type}="Platform",{@taxType}="Unemployment",AND({shiftsWeek}="",{payShift}="",{hourly}="",{hoursShift}="",{houseFee}="",{cardTips}="",{cashTips}="",{tipOutBy}="",{tipOutPct}="",{tipOutAmount}="",{salesShift}="")),"",IF(OR({amount}<>"",{@payMo}=""),"Paycheck","Shifts"))` },
+      { area: 'income', key: 'tipsTaxedMo', label: 'Reported tips a month (card, and cash when reported)', unit: 'money', f: 'IF({@workMode}="","",N({@cardMo})+IF({cashReported}="Yes",N({@cashMo}),0))' },
+      { area: 'income', key: 'outTaxedMo', label: 'Tip-out off the taxed tips a month', unit: 'money', f: 'IF({@workMode}<>"Shifts",0,IF({@taxType}="1099",{@tipOutMo},MIN({@tipOutMo},{@tipsTaxedMo})))' },
+      { area: 'income', key: 'workGross', label: 'Gross from the shifts a year', unit: 'money', f: 'IF({@workMode}<>"Shifts","",MAX(0,{@payMo}+{@tipsTaxedMo}-{@outTaxedMo}-IF({@taxType}="1099",{@feeMo},0))*12)' },
+      { area: 'income', key: 'workExtra', label: 'Cash on top a month (tips after the tip-out and fees)', unit: 'money',
+        f: 'IF({@workMode}="","",IF({@workMode}="Paycheck",N({@cashMo})-{@tipOutMo}-{@feeMo},N({@cashMo})-IF({cashReported}="Yes",N({@cashMo}),0)-({@tipOutMo}-{@outTaxedMo})-IF({@taxType}="1099",0,{@feeMo})))' },
+      { area: 'income', key: 'grossExtraMo', label: 'Cash tips kept a month, not in the gross (the tip-out off)', unit: 'money', f: 'IF({@workMode}="","",{@workExtra}+IF(OR({@workMode}="Paycheck",{@taxType}<>"1099"),{@feeMo},0))' },
+      // Platform rows (earnings.platformOf): the Amount is the gross a month; the fee is typed or the Platforms table's.
+      { area: 'income', key: 'platFee', label: 'Platform fee used', unit: 'pct',
+        f: `IF(OR(${SKIP},{Type}<>"Platform"),"",IF({feePct}<>"",{feePct},IFERROR(INDEX(Platforms_fee,MATCH(IF({platform}="","Other",{platform}),Platforms_platform,0)),IFERROR(INDEX(Platforms_fee,MATCH("Other",Platforms_platform,0)),0))))` },
+      { area: 'income', key: 'platNet', label: 'Paid out a month (platform)', unit: 'money', f: 'IF(OR({@platFee}="",{@M01}=""),"",MAX(0,{@M01}*(1-{@platFee})-N({chargebacks})))' },
+      { area: 'income', key: 'paid', label: 'Paycheck or payout part a month', unit: 'money',
+        f: `IF(OR(${SKIP},{Kind}<>"Income"),"",IF({@taxType}="Unemployment",IF({@M01}="","",{@M01}*(1-IF({withhold}="Yes",UI_withhold,0))),IF(AND({@taxType}<>"",{@M13}<>"",OR({basis}="Gross",{amount}="",{@workMode}="Shifts",{Type}="Platform")),({@M13}-{@M10}-{@M11}-{@state}-{@pretax}-N({app:roth}))/12,IF({Type}="Platform",{@platNet},{@M01}))))`,
         app: { roth: (rec, c) => (inc(rec, c)?.roth ?? 0) + (inc(rec, c)?.afterTax ?? 0) } },
+      { area: 'income', key: 'M12', label: 'Take-home a month (M12)', unit: 'money', f: 'IF({@paid}="","",{@paid}+N({@workExtra}))' },
     ],
     sheet: 'IF(COUNTIFS(Income_Kind,"Income",Income_InMath,"<>No")=0,"",SUM(Income_M12))', label: 'Take-home a month, all income',
+    parts: [{ key: 'extra', name: 'Cash tips on top of paychecks a month, after the tip-out and fees (batch 35)', unit: 'money', sheet: 'IF(COUNT(Income_workExtra)=0,"",SUM(Income_workExtra))', app: c => (c.x.income.some(i => i.work?.any) ? sum(c.x.income, i => i.extra ?? 0) : null) },
+      { key: 'platform', name: 'Paid out by platforms a month, after their fees and chargebacks (batch 35)', unit: 'money', sheet: 'IF(COUNT(Income_platNet)=0,"",SUM(Income_platNet))', app: c => (c.x.income.some(i => i.platform) ? sum(c.x.income, i => i.platform?.net ?? 0) : null) }],
     app: c => c.x.takeHome },
   { id: 'M14', name: 'Effective and marginal tax rate', inputs: 'M10, M11', unit: 'pct', fns: ['income.taxRates', 'income.householdRates'],
     sheet: 'IF(N(SUM(Income_taxedGross))=0,"",(N(Math_M10)+N(Math_M11)+SUM(Income_state))/SUM(Income_taxedGross))', label: 'Effective rate: all income tax over everything taxed',

@@ -68,7 +68,7 @@ function workBody(ctx, r, up, x) {
         toggle(PER_TAPS, v.cashTipsPer ?? 'shift', y => up({ cashTipsPer: y }), { label: 'Cash tips per' })), { tip: 'Cash in hand at the end of the shift, before the tip-out' }),
       labelled('Cash tips reported?', toggle(['Yes', 'No'], v.cashReported ?? null, y => up({ cashReported: y }), { label: 'Cash tips reported', clearable: true }), { tip: 'Reported to the employer (or on the return) so tax is worked out on them' })),
     group('Tip-out',
-      labelled('Tip-out as', toggle(TIP_OUT_BY, v.tipOutBy ?? null, y => up({ tipOutBy: y }), { label: 'Tip-out as', clearable: true }), { tip: 'What you share with the bar back, bussers, DJ or house, paid from your cash' }),
+      labelled('Tip-out as', toggle(TIP_OUT_BY, v.tipOutBy ?? null, y => up({ tipOutBy: y }), { label: 'Tip-out as', clearable: true, key: `${r.id}:tipOutBy` }), { tip: 'What you share with the bar back, bussers, DJ or house, paid from your cash' }),
       ...tipOutBox),
     group('Seasons',
       labelled('Slow months', monthTaps(v.slowMonths, y => up({ slowMonths: y }), 'Slow months')),

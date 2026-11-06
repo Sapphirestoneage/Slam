@@ -2,7 +2,7 @@
 // M01, M10 to M17: periods, taxes, take-home, match, variable income, real hourly wage.
 import { ok, needs, missing, fmt } from './result.js';
 import { RULES, LISTS } from '../registry/assumptions.js';
-import { workOf, workCash, workText, platformOf } from './earnings.js';
+import { workOf, workCash, workText, platformOf, reportedTipsYear } from './earnings.js';
 
 // M01: any period to monthly.
 const PER_MONTH = LISTS.perMonth; // the Per table in the assumptions registry
@@ -84,13 +84,14 @@ export function stateTax({ gross, pretax = 0, filingStatus = 'Single', place = n
 // person (two jobs never pay Social Security past it). Rows are stacked in a fixed order (jobs, then self-employment,
 // then unemployment; record order within each), and each row's share is the tax it adds on top of the rows before
 // it, so the shares add up to the return's tax and a second job shows the rate it really pays.
-// rows: [{ id, person: 'Me' | 'Partner', gross, pretax, taxType }]. Unemployment: income tax, no FICA.
+// rows: [{ id, person: 'Me' | 'Partner', gross, pretax, taxType, tips }]. Unemployment: income tax, no FICA. tips: the
+// row's reported tips a year (batch 35); year: the tax year, for the tips deduction's years (blank: always on).
 export const STACK = { 'W-2': 0, '1099': 1, Unemployment: 2 };
 const rankOf = t => STACK[t] ?? 0;
 export const noFica = t => t === 'Unemployment';
-export function householdTax(rows, { filingStatus = 'Single', place = null } = {}, ref) {
+export function householdTax(rows, { filingStatus = 'Single', place = null, year = null } = {}, ref) {
   const t = ref.tax, joint = filingKey(filingStatus) === 'joint';
-  const list = rows.filter(r => r.gross != null && r.taxType).map((r, i) => ({ ...r, i, unit: joint ? 'Household' : r.person === 'Partner' ? 'Partner' : 'Me', rank: rankOf(r.taxType) }))
+  const list = rows.filter(r => r.gross != null && r.taxType).map((r, i) => ({ ...r, tips: Math.min(r.tips ?? 0, Math.max(0, r.gross)), i, unit: joint ? 'Household' : r.person === 'Partner' ? 'Partner' : 'Me', rank: rankOf(r.taxType) }))
     .sort((a, b) => a.unit.localeCompare(b.unit) || a.rank - b.rank || a.i - b.i);
   const out = {}, units = {};
   const st = place?.state ? t.state?.[place.state] : null;
@@ -121,16 +122,73 @@ export function householdTax(rows, { filingStatus = 'Single', place = null } = {
     const fica = ss + medicare + addl;
     out[r.id] = { federal, state, local, fica, socialSecurity: ss, medicare: medicare + addl, seHalf, total: federal + state + local + fica, unit: r.unit, person: p, taxType: r.taxType, gross: r.gross };
   }
+  // Batch 35 (QUESTIONS 300): the federal tips deduction, once per return, on reported tips only (rows' tips: what
+  // each row reports and keeps, reportedTipsYear). T.D. 10044: up to the cap a return for tax years firstYear to
+  // lastYear, then less $100 for each $1,000 of income over the line (worked as 10% of the excess, as Schedule 1-A
+  // does; the return's income before the standard deduction stands in for MAGI). Married filing separately gets none.
+  // It lowers federal income tax only: Social Security and Medicare are already worked out above, on every tip.
+  // Each row with tips takes its share of what the return saves, by its tips.
+  const tr = t.tips, sep = filingStatus === 'Married separately';
+  const tipsOn = !!tr && !sep && (year == null || (year >= tr.firstYear && year <= tr.lastYear));
+  const tipsUnits = {};
+  for (const r of list) if ((r.tips ?? 0) > 0 && out[r.id]) tipsUnits[r.unit] = (tipsUnits[r.unit] ?? 0) + r.tips;
+  const tipsDed = {};
+  for (const [u, tips] of Object.entries(tipsUnits)) {
+    const line = joint ? tr.phaseOutJoint : tr.phaseOutSingle;
+    const deduction = tipsOn ? Math.max(0, Math.min(tr.deductionCap, tips) - Math.max(0, uFed[u] - line) * tr.phaseOutPer1000 / 1000) : 0;
+    const saved = fedTax(Math.max(0, uFed[u] - std)).tax - fedTax(Math.max(0, uFed[u] - std - deduction)).tax;
+    tipsDed[u] = { tips, deduction, saved, capped: tips > tr.deductionCap, phasedOut: uFed[u] > line };
+  }
+  for (const r of list) {
+    const d = tipsDed[r.unit], x = out[r.id];
+    if (!d || !x || !(r.tips > 0)) continue;
+    const share = d.saved * r.tips / d.tips;
+    x.tipsSaved = share; x.federal -= share; x.total -= share;
+  }
   for (const [u, taxable] of Object.entries(uFed)) {
-    const f = fedTax(Math.max(0, taxable - std));
+    const f = fedTax(Math.max(0, taxable - std - (tipsDed[u]?.deduction ?? 0)));
     const sTax = st ? byBrackets(Math.max(0, uState[u] - st.standardDeduction[pk]), st.brackets[pk]) : { marginal: 0 };
     const cTax = st && place.nyc && ref.tax.local?.NYC ? byBrackets(Math.max(0, uState[u] - st.standardDeduction[pk]), ref.tax.local.NYC.brackets[pk]) : { marginal: 0 };
-    units[u] = { taxable: Math.max(0, taxable - std), federalMarginal: f.marginal, stateMarginal: sTax.marginal + cTax.marginal, base: uBase[u] ?? 0 };
+    units[u] = { taxable: Math.max(0, taxable - std - (tipsDed[u]?.deduction ?? 0)), federalMarginal: f.marginal, stateMarginal: sTax.marginal + cTax.marginal, base: uBase[u] ?? 0, tips: tipsDed[u] ?? null };
   }
   const all = Object.values(out);
-  const add = k => all.reduce((s2, x) => s2 + x[k], 0);
-  const total = { federal: add('federal'), state: add('state'), local: add('local'), fica: add('fica'), all: add('total'), gross: add('gross') };
-  return { rows: out, units, total, joint, text: `${all.length} income ${all.length === 1 ? 'row' : 'rows'} on ${Object.keys(units).length === 1 ? 'one return' : `${Object.keys(units).length} returns`}: federal ${fmt.money(total.federal)} + FICA ${fmt.money(total.fica)}${st ? ` + ${place.state} ${fmt.money(total.state)}${place.nyc ? ` + NYC ${fmt.money(total.local)}` : ''}` : ''} = ${fmt.money(total.all)} a year.` };
+  const add = k => all.reduce((s2, x) => s2 + (x[k] ?? 0), 0);
+  const total = { federal: add('federal'), state: add('state'), local: add('local'), fica: add('fica'), all: add('total'), gross: add('gross'), tipsSaved: add('tipsSaved') };
+  const tipsList = Object.values(tipsDed);
+  const tips = tipsList.length ? { tips: tipsList.reduce((s2, d) => s2 + d.tips, 0), deduction: tipsList.reduce((s2, d) => s2 + d.deduction, 0), saved: total.tipsSaved,
+    inWindow: tipsOn, separate: sep, capped: tipsList.some(d => d.capped), phasedOut: tipsList.some(d => d.phasedOut), year } : null;
+  return { rows: out, units, total, joint, tips, text: `${all.length} income ${all.length === 1 ? 'row' : 'rows'} on ${Object.keys(units).length === 1 ? 'one return' : `${Object.keys(units).length} returns`}: federal ${fmt.money(total.federal)} + FICA ${fmt.money(total.fica)}${st ? ` + ${place.state} ${fmt.money(total.state)}${place.nyc ? ` + NYC ${fmt.money(total.local)}` : ''}` : ''} = ${fmt.money(total.all)} a year.` };
+}
+
+// Batch 35: the tips deduction as Taxes says it, in one line. hh: householdTax; income: the metrics' income rows (each
+// with its tax share and withholding). A job typed as take-home holds back as if there were no deduction, so what it
+// saves comes back when the return is filed (or less is held back through the W-4's deductions line). Cash tips that
+// are not reported get none, and the line says so. Returns null when no row has tips.
+export function tipsDeductionOf(hh, income, ref) {
+  const t = ref.tax.tips, d = hh?.tips;
+  const rows = (income || []).filter(i => i.work?.any && (i.work.card || i.work.cash));
+  if (!rows.length) return null;
+  const unreported = rows.filter(i => i.work.cash && i.work.reported !== 'Yes').length > 0;
+  const none = unreported ? ' Cash tips not reported get none.' : '';
+  const tip = `IRS T.D. 10044 (Apr 2026): tips reported in a job on the IRS list of tipped jobs (bartenders, servers, dancers and digital creators are on it) come off federal taxable income, up to ${fmt.money(t.deductionCap)} a return, tax years ${t.firstYear} to ${t.lastYear}, less $${t.phaseOutPer1000} for each $1,000 of income over ${fmt.money(t.phaseOutSingle)} (${fmt.money(t.phaseOutJoint)} married jointly). Married filing separately gets none. Income tax only: Social Security and Medicare still apply to every tip.`;
+  if (!d || !d.tips) return { saved: 0, deduction: 0, tips: 0, refund: 0, unreported, tip, text: `Tips deduction: none yet, because no tips are reported. Reported tips would come off federal taxable income (up to ${fmt.money(t.deductionCap)} a year through ${t.lastYear}).` };
+  if (d.separate) return { saved: 0, deduction: 0, tips: d.tips, refund: 0, unreported, tip, text: `Tips deduction: none on a married filing separately return (it needs a joint return).${none}` };
+  if (!d.inWindow) return { saved: 0, deduction: 0, tips: d.tips, refund: 0, unreported, tip, text: `Tips deduction: none for ${d.year} (it covers ${t.firstYear} to ${t.lastYear}).${none}` };
+  const typed = rows.filter(i => i.computed === 'gross' && i.taxType !== '1099' && (i.tipsYear ?? 0) > 0);
+  const refund = typed.reduce((s2, i) => s2 + Math.max(0, (i.withheld ?? 0) - (i.tax?.total ?? 0)), 0);
+  const why = d.phasedOut ? ` (less, because income is over ${fmt.money(hh.joint ? t.phaseOutJoint : t.phaseOutSingle)})` : d.capped ? ` (the most a year is ${fmt.money(t.deductionCap)})` : '';
+  return { saved: d.saved, deduction: d.deduction, tips: d.tips, refund, unreported, tip,
+    text: `Tips deduction: ${fmt.money(d.deduction)} of reported tips off federal taxable income${why}, ${fmt.money(d.saved)} less federal income tax a year.${refund > 0.5 ? ` Your paychecks do not know it yet: about ${fmt.money(refund)} comes back when you file.` : ''}${none}`,
+    tip: `${tip}${refund > 0.5 ? ' Paychecks are held back as if there were no deduction; the W-4\'s deductions line (step 4b) holds back less instead.' : ''}` };
+}
+
+// Batch 35 (QUESTIONS 306): what Taxes says about state tax, in one line. NY (and NYC) is worked out; a state with no
+// tax on wages has none to count; any other state is not counted yet (Phase 5). state: the profile's two letters.
+export function stateTaxLine(state, ref) {
+  if (!state) return 'Federal and FICA. Pick a state on About you: state tax is worked out for New York so far.';
+  if (state === 'NY') return null; // the NY line says what it counts
+  if ((ref.tax.noWageTax?.states || []).includes(state)) return `Federal and FICA. ${state} has no state income tax on wages, so there is none to count.`;
+  return `Federal and FICA. ${state} state income tax is not counted yet: it comes in Phase 5.`;
 }
 
 // The household's rates (Taxes): effective is all tax over everything taxed; marginal is the next dollar of pay on
@@ -305,9 +363,10 @@ export function incomeRow(r, opts) {
   const row = c.mode === 'shifts' ? { ...r, amount: null, values: { ...r.values, basis: 'Take-home', gross: c.grossYear } } : r;
   const out = rowCore(row, opts);
   const paid = out.takeHome?.value ?? null;
-  if (paid === null) return { ...out, work: w, cash: c, extra: c.extra, grossExtra: c.grossExtra };
+  const tipsYear = reportedTipsYear(w, c); // batch 35: the reported tips the household's return deducts (householdTax)
+  if (paid === null) return { ...out, work: w, cash: c, extra: c.extra, grossExtra: c.grossExtra, tipsYear };
   const total = paid + c.extra;
-  return { ...out, work: w, cash: c, paycheck: paid, extra: c.extra, grossExtra: c.grossExtra,
+  return { ...out, work: w, cash: c, paycheck: paid, extra: c.extra, grossExtra: c.grossExtra, tipsYear,
     takeHome: { ...out.takeHome, value: total, text: `${out.takeHome.text} ${workText(w, c, total)}`.trim() } };
 }
 function rowCore(r, { filingStatus = 'Single', ref, place = null, now = new Date() }) {

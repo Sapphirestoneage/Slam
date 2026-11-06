@@ -1,4 +1,4 @@
-// The everyday terms Find must understand (39 from batch 14, item 1; more from batches 20, 22 and 23) and where each must land: the screens it may land on
+// The everyday terms Find must understand (39 from batch 14, item 1; more from batches 20, 22, 23, 29 and 35) and where each must land: the screens it may land on
 // (the second is where the client has none of that thing yet, e.g. no HSA: About you says whether the plan allows one)
 // and the box, as a pattern on the box's data-focus. Read by tools/e2e/findability.cjs and test/findability.test.js.
 const A = '#/net-worth/assets', D = '#/net-worth/debt', C = '#/net-worth/credit-cards', P = '#/net-worth/protection', I = '#/cash-flow/income', B = '#/cash-flow/budget',
@@ -57,5 +57,16 @@ const TERMS = [
   { term: 'true cost', routes: ['#/plan/debt-payoff'], box: /^sec:payoff:truecost$/ },
   { term: 'borrow', routes: ['#/plan/debt-payoff'], box: /^sec:payoff:borrow$/ },
   { term: 'refinance', routes: ['#/plan/debt-payoff'], box: /^sec:payoff:borrow$/ },
+  // Batch 35: income by type (batch 27). Tips, shifts and fees land on the job row's Tips and shifts (opened); a
+  // platform on its Platform row, or Add income with none yet; Uber and DoorDash on the client's own Platform row, else
+  // their rides or takeout on Budget (most clients ride and order); money set aside for taxes on its account.
+  ...['tips', 'cash tips'].map(term => ({ term, routes: [I], box: /:cashTips$|^add:income$/ })),
+  { term: 'tip-out', routes: [I], box: /:tipOutBy$|^add:income$/ },
+  { term: 'shifts', routes: [I], box: /:shiftsWeek$|^add:income$/ },
+  ...['house fee', 'stage fee'].map(term => ({ term, routes: [I], box: /:houseFee$|^add:income$/ })),
+  ...['OnlyFans', 'Fansly', 'Patreon', 'Etsy', 'Upwork', 'platform'].map(term => ({ term, routes: [I], box: /:platform$|^add:income$/ })),
+  ...['Uber', 'DoorDash'].map(term => ({ term, routes: [I, B], box: /:platform$|:amount$/ })),
+  { term: 'payout', routes: [I], box: /:holdDays:n$|^add:income$/ },
+  { term: 'taxes set aside', routes: [A], box: /:balance$|^add:asset$/ },
 ];
 module.exports = { TERMS };

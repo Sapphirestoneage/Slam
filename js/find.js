@@ -21,9 +21,12 @@ export const placeOf = route => PLACE_OF[route] ?? route;
 export const routeOfRecord = r => (r.kind === 'debt' ? (r.type === 'Credit card' ? '#/net-worth/credit-cards' : '#/net-worth/debt') : SCREEN_OF[r.kind] ?? null);
 const nameOf = r => r.name || r.values?.category || r.type || r.kind;
 
-// One target, written kind[types]{categories}(fixed).field>box with * for one result per row; cat:Key; focus:key@route;
-// add:thing@route. Returns the hits for this client: [{ route, focus, id, field, parentCat, rec }] or [].
-const TARGET = /^(\w+)(\*)?(?:\[([^\]]+)\])?(?:\{([^}]+)\})?(?:\((\w+)\))?\.(\w+)(?:>(@?.+))?$/;
+// One target, written kind[types]{categories}(fixed).field>box^block with * for one result per row; cat:Key;
+// focus:key@route; add:thing@route. {categories} matches a row's category, name, platform or purpose (batch 35:
+// {Uber} is a Platform row on Uber, {Taxes} an account set aside for taxes). ^block names a closed More block on the
+// row to open first, {id} standing for the row's id (batch 35: ^income:work:{id} is the row's Tips and shifts).
+// Returns the hits for this client: [{ route, focus, id, field, parentCat, rec, open }] or [].
+const TARGET = /^(\w+)(\*)?(?:\[([^\]]+)\])?(?:\{([^}]+)\})?(?:\((\w+)\))?\.(\w+)(?:>(@?[^^]+))?(?:\^(.+))?$/;
 export function resolveTarget(t, recs) {
   if (t.startsWith('focus:') || t.startsWith('add:')) { // focus:key@route^block: ^ names a closed More block to open first
     const [key, rest] = t.split('@');
@@ -33,14 +36,15 @@ export function resolveTarget(t, recs) {
   if (t.startsWith('cat:')) return [{ route: '#/cash-flow/budget', focus: `${t}:amount`, field: 'amount', id: recs.find(r => isCategoryRecord(r) && r.type === t.slice(4))?.id ?? null }];
   const m = t.match(TARGET);
   if (!m) return [];
-  const [, kind, each, types, cats, flag, field, box] = m;
+  const [, kind, each, types, cats, flag, field, box, block] = m;
   const typeList = types ? types.split('|') : null, catList = cats ? cats.split('|') : null;
-  const rows = recs.filter(r => r.kind === kind && (!typeList || typeList.includes(r.type)) && (!catList || catList.includes(r.values?.category) || catList.includes(r.name))
+  const rows = recs.filter(r => r.kind === kind && (!typeList || typeList.includes(r.type)) && (!catList || [r.values?.category, r.name, r.values?.platform, r.values?.purpose].some(v => v != null && catList.includes(v)))
     && (flag !== 'fixed' || (r.values?.amountType === 'Fixed' && !r.values?.irregular)) && r.status !== 'Not for me');
   return (each ? rows : rows.slice(0, 1)).map(r => ({
     route: routeOfRecord(r), id: r.id, field, rec: r,
     focus: box?.startsWith('@') ? box.slice(1) : `${r.id}:${box ?? field}`,
     parentCat: kind === 'bill' ? categoryKeyOf(r) : null,
+    open: block ? block.replace('{id}', r.id) : null,
   }));
 }
 
