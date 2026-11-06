@@ -1,7 +1,8 @@
 # Engine spec: the library (the skill order beside the FOO)
 
-Status: design, Batch 17. Data is in (`data/library/skills.json`); nothing reads it yet. Phase 4 first slice
-(ROADMAP.md).
+Status: first slice built, Batch 26 (js/math/library.js M9K, js/ui/library-ui.js, data/library/unlearn.json): Learn and
+unlearn on each Plan › FOO step and Learn next on Home. The order built is the tilt (one per tree), then band, leverage
+and level, not the rank below; the Scorecard hole and the tier openings are not used yet. Phase 4 first slice (ROADMAP.md).
 
 ## Purpose
 

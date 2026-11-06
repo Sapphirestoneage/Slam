@@ -41,6 +41,9 @@ export const RULES = {
   // Batch 30 (the card library, M9C and M9D): a card with a fee is set against a no-fee card at this flat rate; the
   // score line names utilization over utilHigh, then over utilBest, and this many hard inquiries in 2 years (myFICO).
   plainCardRate: 0.02, utilHigh: 0.3, utilBest: 0.1, inquiriesMany: 3,
+  // Batch 26 (the library's first slice, M9K): three skills to learn at each FOO step (the older Stacker's rule,
+  // docs/engines/library.md). Can I afford it? (QUESTIONS 273): a car payment starts at this many years; other monthly costs For good.
+  learnShown: 3, carPaymentYears: 5,
 };
 export const LISTS = {
   perMonth: { week: 52 / 12, '2 weeks': 26 / 12, 'twice a month': 2, month: 1, quarter: 1 / 3, year: 1 / 12 },
@@ -198,6 +201,8 @@ export const ASSUMPTIONS = [
   { id: 'rules.utilHigh', name: 'UtilHigh', label: 'Your credit: utilization over this moves the score most after on-time payments', unit: 'pct', get: () => RULES.utilHigh, source: 'myFICO, What\'s in my FICO Scores (amounts owed are 30% of the score; under 30% utilization is the common guide)', date: '2026-11-06' },
   { id: 'rules.utilBest', name: 'UtilBest', label: 'Your credit: utilization under this is where the best scores sit', unit: 'pct', get: () => RULES.utilBest, source: 'myFICO, What\'s in my FICO Scores (people with top scores use under 10% of their limits)', date: '2026-11-06' },
   { id: 'rules.inquiriesMany', name: 'InquiriesMany', label: 'Your credit: this many hard inquiries in 2 years makes holding off on applications the next step', unit: 'number', get: () => RULES.inquiriesMany, source: RULE('js/math/cards.js creditMove, M9D; the Credit health note (more than 2 holds a strong score at OK)'), date: '2026-11-06' },
+  { id: 'rules.learnShown', name: 'LearnShown', label: 'The library: skills to learn shown at each FOO step', unit: 'number', get: () => RULES.learnShown, source: RULE('js/math/library.js, M9K; the older suite\'s Stacker, three at a time (docs/engines/library.md)'), date: '2026-11-06' },
+  { id: 'rules.carPaymentYears', name: 'CarPaymentYears', label: 'Can I afford it?: a car payment starts at this many years (other monthly costs start at For good)', unit: 'number', get: () => RULES.carPaymentYears, source: RULE('js/math/afford.js, M83; QUESTIONS 273 (decided Nov 6)'), date: '2026-11-06' },
   { id: 'rules.maxMonths', name: 'MaxMonths', label: 'Longest FI path looked at, months', unit: 'number', get: () => RULES.maxMonths, source: RULE('js/math/fi.js, M53 (70 years)'), date: '2026-10-28' },
 ];
 
@@ -278,11 +283,15 @@ export const REFERENCE_LISTS = {
 export const REFERENCE_FILES = [
   { id: 'library.skills', file: 'data/library/skills.json', label: 'The skill library: the FI Skill Tree\'s 625 skills (25 trees, 25 levels)',
     source: 'FI Skill Tree v6.3.1, from the public Sapphirestoneage/personalfinance repo (data/skill_tree.json, data/skill_links.json), copied by tools/library/extract-skills.mjs',
-    date: '2026-11-05', readBy: 'nothing yet (Phase 4 library slice)' },
+    date: '2026-11-05', readBy: 'Plan › FOO (each step\'s Learn and unlearn) and Home (Learn next), through js/math/library.js (M9K)' },
   // Batch 24 (QUESTIONS 207): the second set, the older app's own 40 skills, tagged by FOO step from their gates.
   { id: 'library.appSkills', file: 'data/library/app-skills.json', label: 'The skill library, second set: the older app\'s own 40 skills (six trees, with their proofs)',
     source: 'The older app\'s skills (data/skill_tree.json, the six app trees, gates read against data/foo_rules.json), from the public Sapphirestoneage/personalfinance repo, copied by tools/library/extract-app-skills.mjs',
-    date: '2026-11-06', readBy: 'nothing yet (Phase 4 library slice)' },
+    date: '2026-11-06', readBy: 'Plan › FOO and Home, through js/math/library.js (M9K): the picks, and the data proofs that tick themselves' },
+  // Batch 26: the unlearn list, SLAM's own (popular advice that fits one FOO stage and not another).
+  { id: 'library.unlearn', file: 'data/library/unlearn.json', label: 'The unlearn list: popular advice that fits one FOO step and not another, with the step it belongs to',
+    source: 'SLAM\'s own (Eli Saperstein), written for SLAM\'s FOO steps in Batch 26; from names where each piece of advice is usually heard',
+    date: '2026-11-06', readBy: 'Plan › FOO (the one thing to unlearn at each step), through js/math/library.js (M9K)' },
   { id: 'library.cards', file: 'data/library/cards.json', label: 'The card library: current consumer cards of the biggest US issuers, store and secured cards (fee, APR range, rewards, credits, benefits)',
     source: 'The issuers\' own pages first (Chase, Capital One, Bank of America, Wells Fargo, US Bank, Citi, American Express, Apple), read 2026-11-06; each card names its source and whether it was checked there, on a review site, or not re-read (tools/library/cards-source.mjs)',
     date: '2026-11-06', readBy: 'Net worth > Credit cards (js/ui/cards-ui.js): Which card is it?, What your cards give you, the fee check (js/math/cards.js, M9C)' },

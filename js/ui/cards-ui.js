@@ -13,6 +13,12 @@ import { institutionsOf, addInstitution } from '../institutions.js';
 import { money } from '../format.js';
 
 const KIND = { 'Cash back': 'Cash back', Points: 'Points', Miles: 'Miles', None: 'None' };
+// QUESTIONS 280: the cards not rechecked on Nov 6 (verified: unverified) say so beside their name in coach view and stay
+// out of client view (the search, the held card's details and the closed line).
+const NOT_RECHECKED = 'not rechecked yet';
+const unchecked = c => c?.verified === 'unverified';
+const clientView = () => typeof document !== 'undefined' && document.documentElement.dataset.clientView === 'on';
+const recheckTag = c => (unchecked(c) ? h('span.tag.plain.coach-only.recheck-tag', { title: `From mid 2026, not read again on the issuer's page. To check: ${(c.unverified || []).join('; ')}` }, NOT_RECHECKED) : null);
 const cardRows = ctx => ctx.visible(r => r.kind === 'debt' && r.type === 'Credit card');
 // Start loading the library as soon as Credit cards draws; redraw once it is in.
 const ensure = ctx => { if (!cardLibrary()) loadCardLibrary(() => ctx.refresh?.()); return cardLibrary(); };
@@ -37,9 +43,9 @@ function openPicker(ctx, r, anchor) {
   const list = h('div.stack.card-results', { style: { gap: '6px' } });
   const draw = () => {
     if (!lib) { list.replaceChildren(h('span.muted.small', {}, 'Loading the card library...')); return; }
-    const found = searchCards(lib.cards, input.value, { limit: 7 });
+    const found = searchCards(clientView() ? lib.cards.filter(c => !unchecked(c)) : lib.cards, input.value, { limit: 7 });
     list.replaceChildren(...(input.value.trim() ? (found.length ? found.map(c => h('button.btn.small.card-result', { type: 'button', onclick: () => { S.closePop(); pickCard(ctx, r, c); } },
-      h('strong', {}, `${issuerName(c)} ${c.name}`), h('span.muted', {}, ` · ${c.annualFee ? `${money(c.annualFee)} fee` : 'no fee'}${c.secured ? ' · secured' : ''}`))) : [h('span.muted.small', {}, 'Not in the library. Type the name in the box and pick the issuer.')])
+      h('strong', {}, `${issuerName(c)} ${c.name}`), h('span.muted', {}, ` · ${c.annualFee ? `${money(c.annualFee)} fee` : 'no fee'}${c.secured ? ' · secured' : ''}`), recheckTag(c))) : [h('span.muted.small', {}, 'Not in the library. Type the name in the box and pick the issuer.')])
       : [h('span.muted.small', {}, `${lib.cards.length} cards from the biggest issuers, store and secured cards.`)]));
   };
   input.oninput = draw;
@@ -77,10 +83,10 @@ function heldCard(ctx, r, held, lib) {
   const benefitRows = Object.entries(c.benefits || {}).map(([k, v]) => h('div.card-give-row', {}, h('span.stack', { style: { gap: '2px' } }, h('strong', {}, lib.benefitKinds[k] ?? k), h('span.muted.small', {}, typeof v === 'string' ? v : v.words)),
     h('span'), useTap(ctx, r, `b:${k}`, lib.benefitKinds[k] ?? k)));
   const facts = [c.annualFee ? `${money(c.annualFee)} annual fee` : 'No annual fee', c.apr ? `typical APR ${c.apr[0]}% to ${c.apr[1]}% (the APR box is yours)` : c.aprNote, c.foreignFee === 0 ? 'no foreign fee' : c.foreignFee ? `${+(c.foreignFee * 100).toFixed(1)}% foreign fee` : null, c.secured ? 'secured' : null].filter(Boolean).join(' · ');
-  const checked = c.verified === 'issuer' ? 'Checked on the issuer\'s page' : c.verified === 'secondary' ? 'Checked on a review site' : 'Not re-checked';
-  return h('div.card-give', { 'data-card': r.id },
-    h('div.row-line', { style: { gap: '8px', flexWrap: 'wrap' } }, h('h3.card-give-name', {}, held.label), h('span.spacer'), cardPickLink(ctx, r, { asButton: true })),
-    h('p.muted.small', { style: { margin: '2px 0 6px' } }, facts, ' · ', h('a', { href: c.source, target: '_blank', rel: 'noopener', title: `${checked} on ${c.checked}${c.unverified?.length ? `. To check: ${c.unverified.join('; ')}` : ''}` }, `${checked} ${c.checked}`)),
+  const checked = c.verified === 'issuer' ? 'Checked on the issuer\'s page' : c.verified === 'secondary' ? 'Checked on a review site' : null;
+  return h(`div.card-give${unchecked(c) ? '.coach-only' : ''}`, { 'data-card': r.id },
+    h('div.row-line', { style: { gap: '8px', flexWrap: 'wrap' } }, h('h3.card-give-name', {}, held.label), recheckTag(c), h('span.spacer'), cardPickLink(ctx, r, { asButton: true })),
+    h('p.muted.small', { style: { margin: '2px 0 6px' } }, facts, ' · ', h('a', { href: c.source, target: '_blank', rel: 'noopener', title: checked ? `${checked} on ${c.checked}` : `Not rechecked yet. To check: ${(c.unverified || []).join('; ')}` }, checked ? `${checked} ${c.checked}` : 'Source')),
     chk.noFee ? null : h('p.fee-check', { style: { margin: '0 0 4px' }, title: chk.text }, h('strong', {}, chk.line), chk.asked ? h('span.muted.small', {}, ` Tap Use it on the credits you use (${chk.asked} not tapped yet).`) : null),
     chk.plainLine ? h('p.muted.small', { style: { margin: '0 0 6px' } }, chk.plainLine) : null,
     h('div.stack.card-give-list', { style: { gap: '6px' } }, rewardRow, creditRows.length ? h('span.label', {}, 'Credits') : null, ...creditRows, benefitRows.length ? h('span.label', {}, 'Benefits') : null, ...benefitRows));
@@ -95,9 +101,10 @@ export function cardsGiveSection(ctx) {
   const P = lib ? cardsPicture({ cardRows: rows, lines: m.inputs.lines, coverage: ctx.visible(x => x.kind === 'coverage'), library: lib, rate: m.hourly, assumptions: ctx.store.doc.assumptions, freq: m.inputs.payFrequency }) : null;
   const held = P?.held || [];
   const unpicked = rows.filter(r => !held.some(x => x.id === r.id));
-  const fees = held.filter(x => !x.check.noFee && x.check.line);
+  const shownHeld = clientView() ? held.filter(x => !unchecked(x.card)) : held; // QUESTIONS 280
+  const fees = shownHeld.filter(x => !x.check.noFee && x.check.line);
   const summary = !lib ? 'Loading the card library' : fees.length ? fees.map(x => `${x.card.name}: ${x.check.line.replace(/\.$/, '')}`).join(' · ')
-    : held.length ? `${held.map(x => x.card.name).join(', ')}: rewards, credits and benefits` : 'Pick each card to see its rewards and benefits';
+    : shownHeld.length ? `${shownHeld.map(x => x.card.name).join(', ')}: rewards, credits and benefits` : 'Pick each card to see its rewards and benefits';
   const body = () => h('div.card', {}, held.map(x => heldCard(ctx, rows.find(r => r.id === x.id), x, lib)),
     unpicked.length ? h('div.stack', { style: { gap: '6px', marginTop: held.length ? '12px' : 0 } }, unpicked.map(r => h('div.row-line', { style: { gap: '8px' } }, h('span', {}, r.name || 'Card'), cardPickLink(ctx, r, { asButton: true })))) : null);
   return secWrap(h('section.section.area-debt.cards-give', {}, h('div.section-title', {}, h('h2', {}, 'What your cards give you')), body()), 'cards:give', { summary });
@@ -111,6 +118,6 @@ export function doubledNotes(ctx) {
   const m = ctx.metrics();
   const P = cardsPicture({ cardRows: rows, lines: m.inputs.lines, coverage: ctx.visible(x => x.kind === 'coverage'), library: lib, freq: m.inputs.payFrequency });
   if (!P?.doubled.length) return null;
-  return h('div.stack.doubled-notes', { style: { gap: '4px', margin: '4px 0 12px' } }, P.doubled.map(d => h('p.note-line', { style: { margin: 0 }, title: P.held.find(x => x.id === d.cardId)?.card.benefits[d.kind]?.words ?? P.held.find(x => x.id === d.cardId)?.card.benefits[d.kind] ?? null }, icon('info'), ' ', d.text,
+  return h('div.stack.doubled-notes', { style: { gap: '4px', margin: '4px 0 12px' } }, P.doubled.map(d => h(`p.note-line${unchecked(P.held.find(x => x.id === d.cardId)?.card) ? '.coach-only' : ''}`, { style: { margin: 0 }, title: P.held.find(x => x.id === d.cardId)?.card.benefits[d.kind]?.words ?? P.held.find(x => x.id === d.cardId)?.card.benefits[d.kind] ?? null }, icon('info'), ' ', d.text,
     d.lineId ? h('button.link-btn', { type: 'button', style: { marginLeft: '6px' }, onclick: () => { location.hash = ctx.store.get(d.lineId)?.kind === 'coverage' ? '#/net-worth/protection' : '#/cash-flow/budget'; } }, 'See the line') : null)));
 }

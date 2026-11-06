@@ -700,3 +700,16 @@ Tests: test/batch27.test.js (11) and the persona suite pass in UTC and America/N
 Assets (Demo and a new client, all widths and themes): 0 findings before and after; the 3 covered are the Demo's load
 toast on Budget and Debt. The open Tips and shifts, Platform and Cash on hand details scanned on the three personas at
 1280 and 390: 0 findings.
+
+## Batch 26 (Nov 6 2026): the skill library's first slice (Phase 4)
+
+Two orders of operations side by side: the FOO says what to fund next, the library says what to learn, and what to unlearn, at that stage. Skills from the FI Skill Tree (Eli with Jonathan Mendonsa) and the older app's 40; the unlearn list is SLAM's own.
+
+1. Plan › FOO: every step gets a collapsed "Learn and unlearn" fold beside Full detail (on one line): three skills to learn and one thing to unlearn, the done ones folded into a count. The step you are on opens by default. Maya at step 3: Pay in full, always; Triage by rate; Name every debt and its rate; unlearn "You can't take it with you: spend it and die with zero" (Not yet: step 9).
+2. The order (js/math/library.js, M9K): the skills tagged to the step in skills.json and app-skills.json (an app skill that only fits a job is left out for the self-employed; nine app skills stand in for their twin in the 625 and borrow its words). With a tilt (profile.identity.tilt, batch 25) the tree's place in it leads, one skill per tree first; then the band, the leverage tier and the level. Alexis (KOGS): Buy used first, Hold a starter fund, Lock the logins.
+3. Level itself: the 12 app-skill proofs "leveled when the household shows it: <field>" map to SLAM facts for 10 (income, the full match, every debt with a real APR, little e, a filing status, Budget lines, a health plan's out-of-pocket max, a life policy, an FI age, a target allocation) and tick themselves ("Ticks itself"); swanTarget and rerankCut have no SLAM fact yet and get the one-tap Done. Every other skill has a one-tap Done kept in profile.library (by coach or client, with the date; one undo step; Not done yet takes it back). Tom: Capture the full match ticks itself.
+4. The unlearn list (data/library/unlearn.json, 14 entries, at least one per step): popular advice that fits one stage and not another, with the step it belongs to, in plain words (Die With Zero at step 3, Mr. Money Mustache frugality at step 9, Baby Step 1's $1,000 at step 4, the 401(k) before the Roth at step 5). Registered in REFERENCE_FILES.
+5. Home: the ladder card (the next step) gets one slim line, "Learn next: <skill> ›", that opens the step's fold on Plan › FOO; the ladder's closed line carries it too.
+6. QUESTIONS 273: Can I afford it? starts a car payment at 5 years (RULES.carPaymentYears) and every other monthly cost at For good (Tom's $400 car payment: FI 3 months later instead of 12).
+7. QUESTIONS 280: the 14 cards not rechecked on Nov 6 say "not rechecked yet" beside their name in coach view; client view leaves them out of the card search, the held card's details and the closed line.
+8. Registered: profile.library (spec row F487), M9K (spec Math row), rules LearnShown and CarPaymentYears, format version 27; test/library-slice.test.js.

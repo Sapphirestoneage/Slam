@@ -9,6 +9,7 @@ import { foo, ORIGINAL } from '../math/foo.js';
 import { monthName } from '../month.js';
 import { money } from '../format.js';
 import { gapCard } from './gap-ui.js';
+import { libraryFor, learnBlock } from './library-ui.js';
 
 export const FUI = { original: false };
 export const LAUNCH_MOVES = ['Quit and take time off', 'Go part-time', 'Take a sabbatical', 'Start something of my own', 'Move somewhere cheaper'];
@@ -19,6 +20,7 @@ import { overrideStep, clearOverride } from '../program.js';
 export function fooScreen(app, ctx, { flags = [] } = {}) {
   const doc = ctx.store.doc, p = doc.profile, set = doc.settings;
   const f = foo(doc, ctx.ref, { now: ctx.now(), flags });
+  const L = libraryFor(app, ctx, { f }); // batch 26 (M9K): three to learn and one to unlearn at each step
   const setP = patch => ctx.store.setDoc('profile', patch);
   const when = s => (s.status === 'Done' ? 'Done' : s.date ? monthName(s.date, 'short') : s.status === 'Optional' ? (s.id === '0b' ? 'Pick joy lines' : 'Nothing to fund yet') : s.status === 'Off' ? 'Off' : s.status === 'Locked' ? '' : s.left == null && s.id === '5b' ? 'Set an amount' : s.status === 'Later' ? '' : f.gap ? 'After the gap' : 'Needs a surplus');
   // The path: one stop per step, you-are-here on the current one; the dated stops open below it.
@@ -53,7 +55,9 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
     s.worthALook ? h('p.small.foo-slim.foo-worth', { title: s.worthALook.how }, s.worthALook.text) : null, // batch 12 (M80): the next best opportunity, one line; the order stays
     s.skipCost ? h('p.foo-flag.coach-only', {}, s.skipCost.text) : null, // answer 175
     s.flags?.length ? s.flags.map(fl => h('p.foo-flag', {}, fl.text)) : null,
-    s.status === 'Optional' && s.id !== '0b' ? h('p.muted.small.foo-slim', {}, s.note) : S.moreBlock(`foo:step:${s.id}`, () => stepDetail(ctx, s, f), { label: 'Full detail' })); // answer 181: step 8 stays, one slim line
+    s.status === 'Optional' && s.id !== '0b' ? h('p.muted.small.foo-slim', {}, s.note) : null, // answer 181: step 8 stays, one slim line
+    // Batch 26: Full detail and Learn and unlearn side by side on one line; whichever is open shows below both.
+    h('div.foo-folds', {}, s.status === 'Optional' && s.id !== '0b' ? null : S.moreBlock(`foo:step:${s.id}`, () => stepDetail(ctx, s, f), { label: 'Full detail' }), learnBlock(app, ctx, L, s.id)));
   const giving = p.giving || {};
   const setGiving = patch => setP({ giving: { ...giving, ...patch } });
   const settings = S.sec('foo:settings', { title: 'Giving, launch and the job', summary: [giving.on ? 'Giving on' : 'Giving off', p.keepJobAfterLaunch ? `Keep a job: ${p.keepJobAfterLaunch}` : null].filter(Boolean).join(' · ') }, () => h('div.card', {}, h('div.stack', { style: { gap: '12px' } },

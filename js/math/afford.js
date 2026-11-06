@@ -15,6 +15,7 @@ import { fmt } from './result.js';
 import { STEP_NAMES } from '../registry/foo.js';
 import { balances, ymOf, addMonths, monthsBetween, monthName, gutRecord } from '../month.js';
 import { setAsideOf } from '../payday.js';
+import { RULES } from '../registry/assumptions.js';
 
 export const AFFORD_KINDS = ['once', 'monthly', 'goal'];
 const KIND_WORDS = { once: 'a one-time cost', monthly: 'a monthly cost', goal: 'a big goal' };
@@ -23,6 +24,10 @@ const mon = ym => (ym ? monthName(ym, 'short') : null);
 const clone = x => (typeof structuredClone === 'function' ? structuredClone(x) : JSON.parse(JSON.stringify(x)));
 const bufferOf = L => { const t = L.layers.find(l => l.id === 'buffer')?.target; return t != null && t > 0 ? Math.round(t) : null; }; // the calendar's line (spending-ui bufferLine)
 const freeOf = (doc, ref, m, now) => flowOf(m.inputs, { pretaxSaving: m.pretaxSaving, setAside: setAsideOf(doc, ref, now).total }).free; // the Cash flow strip's Free
+
+// How long a monthly cost runs before anyone picks (QUESTIONS 273): a car payment ends (RULES.carPaymentYears, 5 years,
+// a typical loan); every other monthly cost is For good (null), which also raises retirement spending.
+export const defaultYears = name => (name === 'A car payment' ? RULES.carPaymentYears : null);
 
 // The question, cleaned: { kind, amount, ym, years (a monthly cost: how long, null for good), name, draftt }.
 export function askOf(ask = {}, now = new Date()) {

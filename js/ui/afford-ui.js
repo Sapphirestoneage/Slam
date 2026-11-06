@@ -8,7 +8,7 @@
 // YNAB's give every dollar a job (a cost has to come from somewhere, so the answer says from where).
 import { h, clear } from './dom.js';
 import * as S from './staples.js';
-import { affordOf } from '../math/afford.js';
+import { affordOf, defaultYears } from '../math/afford.js';
 import { addMonths, ymOf, monthName } from '../month.js';
 import { money } from '../format.js';
 import { rememberSection } from './sections.js';
@@ -56,7 +56,7 @@ function body(app, ctx, draw) {
   const amountBox = S.moneyInput(PICKS[AF.kind].includes(AF.amount) ? null : AF.amount, v => pick({ amount: v }), { hint: 'Other amount', key: 'af:amount', width: 140, cents: false });
   const form = h('div.af-form', {},
     row('What is it', S.toggle([['once', 'One-time'], ['monthly', 'A monthly cost'], ['goal', 'A big goal']], AF.kind, v => pick({ kind: v, name: null, amount: null, ym: v === 'monthly' ? here : null, years: null }), { label: 'What is it' })),
-    row('What for', S.tapPick(WHAT[AF.kind], AF.name, v => pick({ name: v }), { label: 'What for' })),
+    row('What for', S.tapPick(WHAT[AF.kind], AF.name, v => pick({ name: v, ...(AF.kind === 'monthly' ? { years: defaultYears(v) } : {}) }), { label: 'What for' })), // QUESTIONS 273: a car payment starts at 5 years, the rest For good
     row(AF.kind === 'monthly' ? 'How much a month' : 'How much', h('div.row-line.af-amount', {}, S.tapPick(PICKS[AF.kind].map(v => [v, short(v)]), PICKS[AF.kind].includes(AF.amount) ? AF.amount : null, v => pick({ amount: v }), { label: 'How much' }), amountBox)),
     AF.kind === 'goal'
       ? row('When', S.tapPick(GOAL_WHEN.map(([n, t]) => [addMonths(here, n), t]), AF.ym, v => pick({ ym: v }), { label: 'When' }))

@@ -1,0 +1,140 @@
+{
+  "id": "library.unlearn",
+  "version": "1.0.0",
+  "asOf": "2026-11-06",
+  "author": "SLAM (Eli Saperstein)",
+  "license": "Eli's own work, kept public in this repo under the repo license",
+  "source": "SLAM's own: written for SLAM's FOO steps (js/registry/foo.js) in Batch 26. Each entry is a piece of popular advice that is right at one stage and not at another; from names where the advice is usually heard, as a pointer, not a quote.",
+  "confidence": "convention",
+  "confidenceNote": "A coaching reading, not a measurement. The steps where each piece of advice belongs are SLAM's own call, for the coach to correct line by line.",
+  "note": "advice is the popular rule as people say it. from is where it is usually heard (null for everyday advice). rightAt lists the FOO steps where the advice fits; rightWords says that stage in plain words. showAt lists the steps where it shows as the one thing to unlearn (never a step in rightAt). line is what SLAM says there. At a step the first entry that lists it shows; its status is Not yet when every rightAt step comes later in the order, and From an earlier step when every one came before.",
+  "counts": { "entries": 14 },
+  "entries": [
+    {
+      "id": "cut-every-treat",
+      "advice": "Cut every treat until you are out of debt",
+      "from": null,
+      "rightAt": ["1"],
+      "rightWords": "a month that runs short",
+      "showAt": ["0b"],
+      "line": "Cutting every treat works for a few weeks when the month runs short. As the whole plan it makes people quit. Pick the few things you love, fund them on purpose, and cut the rest."
+    },
+    {
+      "id": "invest-every-spare-dollar",
+      "advice": "Invest every spare dollar now: time in the market beats everything",
+      "from": null,
+      "rightAt": ["5", "6"],
+      "rightWords": "once the basics are covered and the high-interest debt is gone",
+      "showAt": ["1"],
+      "line": "Time in the market matters, once surprises stop landing on a card. While the month is going backwards, the next surprise eats the investment. Stop the bleeding first, then let compounding work."
+    },
+    {
+      "id": "six-months-first",
+      "advice": "Keep six months of expenses in cash before anything else",
+      "from": null,
+      "rightAt": ["4"],
+      "rightWords": "Build your job-loss fund, after the match and the high-interest debt",
+      "showAt": ["1", "2"],
+      "line": "The big fund is step 4. For now, $1,000 (or your deductible, if it is smaller) keeps a flat tire off the card. The months of spending come after the match and the high-interest debt."
+    },
+    {
+      "id": "no-investing-until-debt-free",
+      "advice": "Pay off every debt before you invest a dime",
+      "from": "Dave Ramsey's Baby Steps",
+      "rightAt": ["3"],
+      "rightWords": "debt at 8% or more, once the full match is in",
+      "showAt": ["2"],
+      "line": "The match is a 50 to 100% return the day it lands. No card charges that much. Put in enough to get the whole match, even while you pay down the cards."
+    },
+    {
+      "id": "die-with-zero",
+      "advice": "You can't take it with you: spend it and die with zero",
+      "from": "Die With Zero (Bill Perkins)",
+      "rightAt": ["9"],
+      "rightWords": "work optional, with more saved than you will spend",
+      "showAt": ["3"],
+      "line": "Die With Zero is a great book for people with more saved than they will ever spend. With a card at 25%, every dollar spent now costs a quarter more next year. Save it for Full Freedom."
+    },
+    {
+      "id": "one-thousand-is-enough",
+      "advice": "$1,000 is all the emergency fund you need",
+      "from": "Dave Ramsey's Baby Step 1",
+      "rightAt": ["1"],
+      "rightWords": "Stop going backwards, while the high-interest debt is still there",
+      "showAt": ["4"],
+      "line": "$1,000 was the starter, and it did its job. With the high-interest debt gone, a job loss needs months, not a grand: your age divided by 5 months of spending."
+    },
+    {
+      "id": "max-the-401k-first",
+      "advice": "Max out the 401(k) first",
+      "from": null,
+      "rightAt": ["6"],
+      "rightWords": "Prepay retirement, once the Roth IRA and the HSA are full",
+      "showAt": ["5"],
+      "line": "After the match, a Roth IRA and an HSA usually beat more 401(k): tax-free growth and more choice of funds. Maxing the 401(k) is the lever one step later, for Coast FI."
+    },
+    {
+      "id": "give-when-rich",
+      "advice": "Wait until you are rich to give",
+      "from": null,
+      "rightAt": ["1", "2", "3"],
+      "rightWords": "while you carry debt at 8% or more",
+      "showAt": ["5b"],
+      "line": "Holding off made sense while the cards were growing. They are gone now. Giving a percent you pick, from money you have, does not put you at risk."
+    },
+    {
+      "id": "pay-off-the-mortgage-first",
+      "advice": "Pay off the mortgage early before you invest more",
+      "from": null,
+      "rightAt": ["9"],
+      "rightWords": "Make work optional, where low-rate debt is the last thing paid",
+      "showAt": ["6"],
+      "line": "A low-rate mortgage is the last debt in the order. An extra dollar to it now is a dollar not compounding toward Coast FI. Pay it off at step 9, if at all."
+    },
+    {
+      "id": "stay-until-the-number",
+      "advice": "Never leave a steady job until everything is paid off and you hit your number",
+      "from": null,
+      "rightAt": ["1", "2", "3", "4"],
+      "rightWords": "while the basics are still being built",
+      "showAt": ["7"],
+      "line": "That holds while the basics are open. At Coast FI, retirement takes care of itself, so the window for your own thing is open now. Waiting until you feel ready can mean missing it."
+    },
+    {
+      "id": "every-dollar-to-retirement",
+      "advice": "Every extra dollar goes into retirement accounts",
+      "from": null,
+      "rightAt": ["5", "6"],
+      "rightWords": "Max out tax-free accounts and Prepay retirement",
+      "showAt": ["8"],
+      "line": "Retirement is on track. A home, kids or travel come before 59 and a half, so this money needs to sit where you can reach it: sinking funds and a regular brokerage account."
+    },
+    {
+      "id": "frugal-is-freedom",
+      "advice": "Squeeze every dollar: frugal is freedom",
+      "from": "Mr. Money Mustache",
+      "rightAt": ["1", "3", "4", "6"],
+      "rightWords": "the building years, from Stop going backwards to Coast FI",
+      "showAt": ["9"],
+      "line": "Living lean got you here. With the number banked, more cutting buys nothing. The new skill is spending on purpose, on the people and things you love."
+    },
+    {
+      "id": "save-a-thousand-first",
+      "advice": "Save $1,000 before anything else",
+      "from": "Dave Ramsey's Baby Step 1",
+      "rightAt": ["1"],
+      "rightWords": "Stop going backwards",
+      "showAt": ["3"],
+      "line": "You already have it. Now every spare dollar goes to the debt at 8% or more: cash past little e while a card grows is paying 25% to hold about 4%."
+    },
+    {
+      "id": "renting-is-throwing-money-away",
+      "advice": "Renting is throwing money away: buy as soon as you can",
+      "from": null,
+      "rightAt": ["8"],
+      "rightWords": "Pay for the next big goals, with the down payment saved",
+      "showAt": ["3", "4"],
+      "line": "Buying makes sense once the cards are gone, the job-loss fund is full and the down payment is saved. Before that, a house turns every repair into new debt."
+    }
+  ]
+}

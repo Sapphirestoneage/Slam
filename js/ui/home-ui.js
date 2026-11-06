@@ -32,6 +32,7 @@ import { isFreshClient } from '../walk.js';
 import { transitionOf, phase4On, monthsText } from '../math/transitions.js';
 import { startFastTrack } from './fasttrack-ui.js';
 import { affordHomeLine } from './afford-ui.js';
+import { learnNextLine, learnNextName } from './library-ui.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const isoDay = d => d.toISOString().slice(0, 10);
@@ -67,7 +68,7 @@ export function homeScreen(app, ctx) {
     ctx.gates().betweenJobs ? runwayStrip(ctx, P) : null, // R006
     card(money1, 'home:money-line', { summary: textOf(money1.querySelector(':scope > p')) ?? 'Net worth, surplus, savings rate, FI date' }),
     card(things, 'home:next-things', { summary: P.next[0] ? `${P.next[0].label} first` : 'Every number is at Actual' }),
-    fold(ladder, 'home:ladder-card', 'The ladder', [textOf(ladder?.querySelector('.ladder-name')), [...(ladder?.querySelectorAll('.bar-row > span') ?? [])].map(textOf).find(t => /% there$/.test(t || ''))].filter(Boolean).join(' · ') || null),
+    fold(ladder, 'home:ladder-card', 'The ladder', [textOf(ladder?.querySelector('.ladder-name')), [...(ladder?.querySelectorAll('.bar-row > span') ?? [])].map(textOf).find(t => /% there$/.test(t || '')), ladder && learnNextName(app, ctx) ? `Learn next: ${learnNextName(app, ctx)}` : null].filter(Boolean).join(' · ') || null),
     fold(payday, 'home:payday', 'Next paycheck', textOf(payday?.querySelector('p'))),
     card(items, 'home:open-items', { summary: textOf(items?.querySelector('.tag')) ? `${textOf(items.querySelector('.tag'))} open` : null }),
     P.afterIntake ? card(holesCard(app, ctx, P), 'home:holes') : null,
@@ -349,7 +350,7 @@ function ladderCard(app, ctx) {
   const rung = r => h(`div.rung${r.done || r.reached ? '.won' : ''}.${r.kind}`, {}, h('span.box', {}, r.done || r.reached ? icon('check') : ''), h('strong', {}, r.name), h('span.tag.plain', {}, r.kind === 'step' ? 'step' : 'marker'),
     h('span.muted.small', {}, r.what), h('span.spacer'), h('span.small', {}, r.done || r.reached ? 'Done' : [r.kind === 'step' ? `${Math.round(r.pct * 100)}%` : null, amounts(r), when(r)].filter(Boolean).join(' · ')));
   const day0 = L.day0 ? h('div.rung.day0', {}, h('span.box', {}, '·'), h('span.muted.small', {}, `Day 0: ${new Date(L.day0.at).toLocaleDateString()}${L.day0.netWorth != null ? `, net worth ${money(L.day0.netWorth)}` : ''}`)) : null;
-  return h('div.card.ladder-card', {}, big, small,
+  return h('div.card.ladder-card', {}, big, learnNextLine(app, ctx), small, // batch 26: one slim line, Learn next (Plan › FOO)
     S.moreBlock('home:ladder', () => h('div.rungs', {}, day0, L.rungs.map(rung), h('p.muted.small', { style: { margin: '6px 0 0' } }, 'Steps are in order, like the FOO. Markers slot in by when the math expects them. Steps that do not apply (no match offered, no heavy debt) are left out.')), { label: `The whole ladder (${wins.length} of ${L.rungs.length})` }));
 }
 

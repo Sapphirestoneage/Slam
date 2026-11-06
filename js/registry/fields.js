@@ -95,6 +95,8 @@ export const AREAS = [
       f('identity.letters', 'Personality letters answers', 'text', { sheet: { skip: 'twelve Agree, Neutral or Disagree taps per person on Coach tools › Discovery; the four letters are worked out (M95)' } }),
       f('identity.tilt', 'Skill trees the letters lead with', 'list', { sheet: { skip: 'the 25 skill tree ids ranked by the letters (M95), kept for the library on Plan › FOO; set by the app' } }),
       f('identity.later', 'Who they are with money: do this later', 'yesno', { sheet: { skip: 'Do this later on Fast Track; set in SLAM' } }),
+      // Batch 26 (the library's first slice, M9K): the skills marked done with one tap on Plan › FOO (by the coach or the client, with the date). Skills the data proves are not stored.
+      f('library', 'Skills done (the library)', 'text', { sheet: { skip: 'one entry per skill id marked Done on Plan › FOO (done, by, on); the skills the data proves tick themselves (M9K)' } }),
       f('areas.cash', 'Has cash', 'yesno'), f('areas.investments', 'Has investments', 'yesno'), f('areas.real', 'Has a home or car', 'yesno'), f('areas.debt', 'Has debt', 'yesno'),
       f('noneOfThese', 'None of these (no money areas)', 'yesno'),
       f('counts', 'How many of each', 'text', { sheet: { skip: 'the counts typed on About you only make blank rows; the rows themselves are on each tab' } }),

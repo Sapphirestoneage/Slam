@@ -40,6 +40,8 @@ import { transitionOf } from '../math/transitions.js';
 import { debtRangeOf } from '../math/metrics.js';
 import { cardsPicture, creditMove } from '../math/cards.js';
 import { cardLibrary } from '../cardlib.js';
+import { skillLibrary } from '../library.js';
+import { libraryOf } from '../math/library.js';
 import { creditHealth } from '../math/debt.js';
 import { identityOf } from '../math/identity.js';
 
@@ -508,7 +510,7 @@ export const MATH = [
       { key: 'food', name: 'Months at food and housing only', unit: 'months', fromApp: 'the same run with the burn held at food and housing', app: c => transitionOf(c.doc, c.ref, { now: c.now }).levels[3].runway }] },
   // ---------- Can I afford it? (batch 23) ----------
   { id: 'M83', name: 'Can I afford it?', inputs: 'a cost (one-time, a month, or a big goal), its amount and month; M60 the calendar and its low-balance line, M69 the FOO step and its date, M53 the FI date, M68 the cash layers, the free money a month', unit: 'months',
-    fns: ['afford.AFFORD_KINDS', 'afford.askOf', 'afford.affordDoc', 'afford.affordOf'],
+    fns: ['afford.AFFORD_KINDS', 'afford.defaultYears', 'afford.askOf', 'afford.affordDoc', 'afford.affordOf'],
     fromApp: 'two runs of the same math, on the file and on a copy with the cost in (a one-time cost or goal as a Fund the Future sinking fund until its month, a monthly cost as spending from its month): the tightest day on the calendar, the FOO step date and the FI date on each side; the row here is a $1,000 one-time cost next month',
     label: 'FI date moves (months) with a $1,000 one-time cost next month', app: c => affordOf(c.doc, c.ref, { kind: 'once', amount: 1000, ym: addMonths(ymOf(c.now), 1) }, { now: c.now }).fi?.moved ?? null },
   // ---------- Batch 30: the card library (Net worth › Credit cards) ----------
@@ -543,6 +545,11 @@ export const MATH = [
     fns: ['studentloan.FIRST_BORROWED', 'studentloan.PAYMENTS_MADE', 'studentloan.povertyLine', 'studentloan.levelPayment', 'studentloan.ibrPayment', 'studentloan.rapRate', 'studentloan.rapPayment', 'studentloan.repay', 'studentloan.interestDeduction', 'studentloan.studentLoanOf', 'studentloan.studentLoanPlans'],
     fromApp: 'a month-by-month walk of each plan (simple interest on federal loans, the RAP interest waiver and $50 principal match) to forgiveness or payoff, and the federal tax on what IBR or RAP forgives in today\'s dollars; the row is the lowest total paid plus tax across the plans',
     label: 'Lowest total paid plus tax across the plans', app: c => studentLoanPlans(c.doc, c.ref, { now: c.now }).value },
+  { id: 'M9K', name: 'Learn and unlearn at each FOO step', inputs: 'M69 the FOO step you are on, the skill files (data/library/skills.json, app-skills.json, unlearn.json), the tilt (profile.identity.tilt, M95), the household facts the app skills\' proofs name (income, the match, debts and APRs, little e, filing status, the Budget lines, health and life coverage, the FI age, a target allocation), the skills marked done (profile.library), LearnShown', unit: 'text',
+    fns: ['library.proofField', 'library.libraryFacts', 'library.mappedFields', 'library.appliesTo', 'library.tiltTree', 'library.mergeTwins', 'library.doneOf', 'library.orderSkills', 'library.unlearnFor', 'library.learnFor', 'library.libraryOf', 'library.setSkillDone'],
+    fromApp: 'a reading order, not a dollar formula (batch 26, Phase 4): the skills tagged to each FOO step, ordered by the tilt (the tree\'s place in it, one per tree first) when there is one, then the band, the leverage tier and the level; LearnShown of them not done; an app skill whose proof names a household fact ticks itself when the fact shows; the first unlearn entry for the step, Not yet or From an earlier step against the order. The value is the first skill to learn at the step you are on (Home\'s Learn next)',
+    app: c => { const lib = skillLibrary(); return lib ? libraryOf(c.doc, c.ref, lib, { now: c.now, m: c.m })?.next?.skill.name ?? null : null; },
+    parts: [{ key: 'ticked', name: 'Skills the data ticks', unit: 'count', fromApp: 'the app skills whose proof field the household shows (FOO step 2, little e, the coverage rows and the rest)', app: c => { const lib = skillLibrary(); if (!lib) return null; const L = libraryOf(c.doc, c.ref, lib, { now: c.now, m: c.m }); return Object.values(L.steps).reduce((n, b) => n + b.done.filter(x => x.by === 'data').length, 0); } }] },
   { id: 'M77', name: 'Month close streak', inputs: 'the closed months', unit: 'count', fns: [], // js/month.js closeStreak (outside js/math, with the other month-close math)
     fromApp: 'months closed in a row counted back from last month (this month once closed), one grace month allowed inside the run', app: c => closeStreak(c.doc, c.now).months },
   // ---------- Holidays (the calendar question on About you) ----------

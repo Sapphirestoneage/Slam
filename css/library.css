@@ -1,0 +1,31 @@
+/* The library's first slice (batch 26, Phase 4): Learn and unlearn on each Plan › FOO step, and Home's Learn next line.
+   Slim: a caret fold, one line per skill, the Done buttons and the Ticks itself tags in one column of one width. */
+.learn-wrap { margin-top: 6px; }
+.foo-folds > .learn-wrap { margin-top: 0; }
+.learn-caret { min-width: 200px; justify-content: space-between; }
+.learn-caret .muted { font-weight: 500; margin-right: auto; }
+.learn-body { margin-top: var(--s2); padding-top: var(--s2); border-top: 1px dashed var(--border-row); display: flex; flex-direction: column; gap: var(--s2); }
+.learn-list, .learn-done-list { display: flex; flex-direction: column; gap: 6px; }
+.learn-row { display: grid; grid-template-columns: minmax(0, 1fr) 132px; gap: 6px var(--s3); align-items: center; min-height: 32px; }
+.learn-words { line-height: 1.35; cursor: help; min-width: 0; }
+.learn-act { justify-self: end; width: 132px; justify-content: center; box-sizing: border-box; }
+span.learn-act:empty { visibility: hidden; }
+.learn-row.done strong { font-weight: 600; }
+.unlearn-row { padding: 6px 10px; border-left: 3px solid var(--goals); background: var(--chip); border-radius: 0 var(--r-input) var(--r-input) 0; }
+.unlearn-row .learn-words { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.unlearn-row .label { margin: 0; }
+.unlearn-line { margin: 4px 0 0; line-height: 1.4; }
+.learn-done { margin-top: 2px; }
+.learn-done-list { margin-top: 6px; }
+.learn-next { margin: 8px 0 0; }
+.recheck-tag { margin-left: 6px; }
+@media (max-width: 760px) {
+  .learn-row { grid-template-columns: minmax(0, 1fr) 112px; }
+  .learn-act { width: 112px; }
+}
+/* Plan › FOO: a step's two folds sit on one line (their buttons first, then whichever body is open, full width). */
+.foo-folds { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 6px; }
+.foo-folds > .more-wrap, .foo-folds > .learn-wrap { display: contents; }
+.foo-folds > * > .caret { order: 0; }
+.foo-folds > * > .more-body, .foo-folds > * > .learn-body { order: 1; flex: 1 1 100%; min-width: 0; }
+.foo-folds .more-body { margin-top: 2px; }

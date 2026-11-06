@@ -65,6 +65,7 @@ export const FORMATS = [
   { version: 24, shape: '221ccf4a' }, // batch 25: profile.identity (address, letters, tilt, later) and M95 (who they are with money)
   { version: 25, shape: 'cb99234a' }, // batch 29: M9T, M9L, M9S (the true cost of debt, the student loan decision) and Debt › First borrowed
   { version: 26, shape: 'da9adc90' }, // batch 27: income by type (tips, shifts, Platform rows), Purpose: Taxes, the Platforms table
+  { version: 27, shape: '27bcbd80' }, // batch 26: profile.library (skills done), M9K (learn and unlearn at each FOO step), rules LearnShown and CarPaymentYears
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.find(f => f.shape === shape)?.version ?? null;
