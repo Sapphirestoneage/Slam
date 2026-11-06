@@ -6,7 +6,9 @@ typical range in a blank core box (coach view) and the one-line note under a typ
 (`js/ui/typical-ui.js`, one hook in moneyInput). No row publishes percentiles yet, so every range is the stated
 spread (RULES typicalLow 0.6, typicalHigh 1.5) around the median (SCF) or mean (CE). Batch 39 (the data pass) added
 the closest-row pick (a place row, then the household type, then the age band): a person living alone reads the CE
-one-person row, NY spending scales by the NY metro's BEA price parity (QUESTIONS 210), rent is the ACS median gross
+one-person row, spending in the NYC area (About you: on with Live in NYC, a tap for Long Island, Westchester, Rockland,
+Orange, Putnam and nearby New Jersey; batch 60, QUESTIONS 432) scales by the NY metro's BEA price parity (QUESTIONS
+210) and the rest of New York by the state's, rent is the ACS median gross
 rent (New York State for NY renters until the metro figure is read, a share divided by the people splitting it), and
 a row that gives its 25th and 75th percentiles uses them (only net worth for all ages so far). Conditioning on
 income and category sums are not built. Batch 46 built the age-only start (`js/math/agestart.js`, M9A; see "The

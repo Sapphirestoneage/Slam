@@ -104,7 +104,27 @@
      "travelBy": "Drive",
      "milesShift": 24,
      "gearCost": 360,
-     "gearShifts": 30
+     "gearShifts": 30,
+     "nights": [
+      {
+       "id": "fri-sat",
+       "name": "Friday and Saturday",
+       "shiftsWeek": 2,
+       "payShift": 650,
+       "hoursShift": 8,
+       "houseFee": 100,
+       "tipOutAmount": 20
+      },
+      {
+       "id": "weeknight",
+       "name": "Weeknight",
+       "shiftsWeek": 1,
+       "payShift": 425,
+       "hoursShift": 5,
+       "houseFee": 40,
+       "tipOutAmount": 20
+      }
+     ]
     },
     "notes": null,
     "privateNote": null,

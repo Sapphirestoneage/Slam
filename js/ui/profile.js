@@ -21,6 +21,7 @@ const FILING_STATUSES = ['Single', 'Married jointly', 'Married separately', 'Hea
 import { WHY_CHIPS, WHY_LABELS, chipsOf, whyAnswered, toggleChip, starChip } from '../whynow.js';
 import { peopleSection, peopleSummary } from './people-ui.js';
 import { dependentsOf } from '../registry/couples.js';
+import { NYC_AREA } from '../math/priors.js';
 
 export const STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI',
   'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
@@ -108,6 +109,9 @@ export function profileScreen(app, ctx) {
       gate('Equity pay (ESPP, RSU)', yesNo(p.equityPay ?? null, v => set({ equityPay: v }), 'Equity pay'), null, 'equityPay'),
       gate('Household', (() => { const t = tapPick(MODE_NAMES, modeOf(p), setMode, { label: 'Household mode', key: 'p:mode', clearable: false }); t.title = modeOf(p) ? MODES[modeOf(p)].words : 'Solo, dating, living together, engaged or married'; return t; })())));
 
+  // Batch 60 (QUESTIONS 432): NYC area, one tap. Blank follows Live in NYC (on when it is on).
+  const nycAreaField = () => labelled('NYC area?', toggle([[true, 'Yes'], [false, 'No']], p.nycArea ?? (p.state === 'NY' && p.nyc === true ? true : null), v => set({ nycArea: v }), { label: 'NYC area', key: 'p:nycArea' }),
+    { note: 'Typical prices', tip: `The city and around it: ${NYC_AREA.NY.join(', ')} in New York; ${NYC_AREA.NJ.join(', ')} in New Jersey. Typical spending reads the New York metro's prices; elsewhere it reads the state's` });
   // ---------- About you ----------
   const about = section('About you', 'needs',
     h('div.form-grid', {},
@@ -115,7 +119,9 @@ export function profileScreen(app, ctx) {
       field('Last name', 'lastName', textInput(p.lastName, v => set({ lastName: v }), { hint: 'Last name', width: 200, key: 'p:lastName' })),
       field('Birth month and year', 'birthYear', birth('birthMonth', 'birthYear', 'Your'), { note: age !== null ? `Age ${age}` : 'Works out age' }),
       field('State', 'state', select(STATES, p.state ?? null, v => set({ state: v }), { label: 'State', hint: 'State', width: 110, key: 'p:state' }), { note: 'Tax rules' }),
-      p.state === 'NY' ? field('Live in New York City?', 'nyc', yesNo(p.nyc ?? null, v => set({ nyc: v }), 'Live in NYC'), { note: 'NYC has its own income tax' }) : null), // Solo or couple is asked once, under What applies to me
+      p.state === 'NY' ? field('Live in New York City?', 'nyc', yesNo(p.nyc ?? null, v => set({ nyc: v }), 'Live in NYC'), { note: 'NYC has its own income tax' }) : null, // Solo or couple is asked once, under What applies to me
+      // Batch 60 (QUESTIONS 432): one tap, on when Live in NYC is on; the typical numbers read the NY metro's prices.
+      p.state === 'NY' || p.state === 'NJ' ? nycAreaField() : null),
     moreBlock('profile:about', () => h('div.form-grid', {},
       g.couple ? field('Partner first name', 'partnerName', textInput(p.partnerName, v => set({ partnerName: v }), { hint: 'Partner name', width: 200, key: 'p:partnerName' })) : null,
       g.couple ? field('Partner birth month and year', 'partnerBirthYear', birth('partnerBirthMonth', 'partnerBirthYear', 'Partner')) : null,

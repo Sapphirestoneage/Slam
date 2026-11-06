@@ -1358,3 +1358,34 @@ docs/usability/scorecard-2026-11-06.json: Money control added ("batch": 55, 0 bl
 drill row updated in place ("batch": 55). Layout checker (all checks) on Fire drill and Money control, Demo and New, and
 with every section and a Details open for three personas at 1440, 1280 and 390, light and dark: 0 failures. Persona
 run: 19 personas, 0 errors, 0 story notes. Workbook check: every row matches. Privacy run: no leaks.
+
+## Batch 60 (Nov 6 2026): three decided small items (QUESTIONS 422, 424, 432)
+
+1. Kinds of night on one income row (QUESTIONS 422). `js/math/earnings.js`: `values.nights` holds each kind of night
+   (its shifts a week, pay a shift or the row's hourly x its hours, hours, card and cash tips, house fee, and the tip-out
+   as a $ amount or the sales the row's % is of); `workOf` adds them up, so the row's take-home is their sum. Every tap
+   also writes the row's own shift boxes as the nights' roll-up (`nightsRollUp`: shifts summed, the rest averaged over
+   the shifts), so the workbook, the seasons and the calendar read the same totals with no formula change; a
+   spreadsheet import that types over them folds the nights away (`nightsStale`, the typed number wins). Income ›
+   Tips and shifts: Add a kind of night (the first turns the row into its first night plus a blank one), Copy and the
+   bin on each, one night left folds back into the row. Shift P&L (`js/math/shiftpnl.js` `nightsOf`): one card a night,
+   ranked by the real hour, each night's take-home its gross less fee and tip-out less its share of the row's tax (by
+   what it adds to the taxed gross; by shifts on a paycheck row), adding up to the row's to the cent; getting there,
+   outfits and the hours around a shift stay the row's. The dancer now has Friday and Saturday (2 a week, $650, $100
+   fee, 8 hours) and a weeknight (1, $425, $40, 5 hours), which add up to her old row exactly: $34.59 and $31.61 a real
+   hour (the weeknight pays more on the clock, $56.46 against $51.24, but the drive and outfits are the same). A test
+   turns every persona's shift row into one night and proves every number is unchanged; her own numbers are unchanged.
+2. Shift P&L with tax set aside on the cash tips too (QUESTIONS 424, Lindsey Swanson's lens): a second calm line,
+   "If tax were set aside on the cash tips too: $X a real hour", only when a row has unreported cash tips, at the tips
+   note's own rate (`earnings.unreportedTaxRate`, now shared). The bartender: $110 a shift x 17.65% = $19.42, $20.96 a
+   real hour (beside $22.90).
+3. NYC area on About you (QUESTIONS 432): one tap (New York and New Jersey), on when Live in NYC is on; its tip lists
+   the counties. `profile.nycArea` (registered, spec rows F582 and F583, format 46). The priors read a list of places, closest
+   first: the NYC area reads the NY metro's rows ('NY metro': the price parity 112.563, and the metro rent once it is
+   in), then its own state's; the rest of New York now reads New York State's parity (107.921, FRED NYRPPALL, checked
+   Nov 6), so Alexis's typical spending and her meter move a little (68.1%, was 68.6%). Maya (NYC) is unchanged.
+
+The layout checker's Shift client also scans Tips and shifts open with the two nights. Tests pass in UTC and New York
+time (see the report for counts). Workbook check: every row matches. Layout checker on Income (with What a shift
+really pays and Tips and shifts open) and About you, 1440, 1280 and 390, light and dark: 0 failures before and after.
+QUESTIONS 446 to 449.

@@ -74,8 +74,8 @@ export function planLabel(data, { age, place = null, household = null }) {
   const q = ageRatioOf(data, 'spending.total', age);
   const band = q?.band ?? null;
   const who = !band ? 'people' : /^under /.test(band) ? `people ${band}` : / and over$/.test(band) ? `people ${band}` : `${band} year olds`;
-  const area = (data?.place || []).find(x => x.place === place);
-  const where = area ? ({ NY: 'New York', NJ: 'New Jersey' }[place] ?? area.area) : 'the US';
+  const area = [].concat(place ?? []).map(pl => (data?.place || []).find(x => x.place === pl)).find(Boolean); // the closest place first (batch 60)
+  const where = area ? ({ 'NY metro': 'the New York area', NY: 'New York', NJ: 'New Jersey' }[area.place] ?? area.area) : 'the US';
   return { band, where, text: `Typical for ${who}${household === 'Solo' ? ' living alone' : ''} in ${where}` };
 }
 

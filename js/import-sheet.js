@@ -7,6 +7,7 @@
 // Couldn't tell what this is; typed over a formula; bad values with their cell; columns left alone. Each line has a
 // decision: 'keep' (Yes) or 'skip' (No). A conflict (the same number changed in SLAM and in the spreadsheet) starts
 // with none and needs an answer. Nothing is saved here.
+import { nightsStale } from './math/earnings.js';
 import { AREAS, sheetFields } from './registry/fields.js';
 import { ASSUMPTIONS } from './registry/assumptions.js';
 import { DATA_TAB, OLD_DATA_TAB, STATUS_WORDS, toCell, partOf, rowsForArea, formulaCols, colLetter } from './sheet/workbook.js';
@@ -315,6 +316,7 @@ export function applyChanges(store, res, { metrics = null } = {}) {
       }
       for (const [id, l] of Object.entries(lists)) { const area = AREAS.find(a => a.id === id); store.setDoc(area.part, { [area.path]: l }); }
       for (const id of touched) if (store.get(id)) store.update(id, { source: 'spreadsheet' });
+      for (const id of touched) if (nightsStale(store.get(id)?.values)) store.update(id, { nights: null }); // batch 60: a typed Shifts a week or Pay a shift wins over the row's kinds of night
     });
   } finally { store.source = was; }
   return list.length;

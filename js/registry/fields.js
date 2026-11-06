@@ -86,6 +86,7 @@ export const AREAS = [
       f('birthMonth', 'Birth month (1 to 12)', 'number'), f('birthYear', 'Birth year', 'number'),
       f('state', 'State', 'text', { named: 'Profile_state' }),
       f('nyc', 'Live in New York City', 'yesno', { named: 'Profile_nyc' }),
+      f('nycArea', 'NYC area (blank: as Live in New York City)', 'yesno'), // batch 60 (QUESTIONS 432): the typical numbers read the NY metro's rows
       pick('household', 'Solo or couple', ['Solo', 'Couple'], { named: 'Profile_household' }),
       pick('mode', 'Household mode', ['Solo', 'Dating', 'Living together', 'Engaged', 'Married separate', 'Married merged']), // F2: sets Solo or couple, the default view and the filing status (js/registry/couples.js)
       pick('splitMethod', 'Shared bills split', ['50/50', 'By income']), // F2: By income uses each person's take-home as the share when none is typed
@@ -234,6 +235,8 @@ export const AREAS = [
       f('salesShift', 'Sales a shift', 'money', { kinds: ['income'] }),
       f('slowMonths', 'Slow season months', 'list', { kinds: ['income'] }), f('slowShifts', 'Shifts a week in the slow season', 'number', { kinds: ['income'] }),
       f('busyMonths', 'Busy season months', 'list', { kinds: ['income'] }), f('busyShifts', 'Shifts a week in the busy season', 'number', { kinds: ['income'] }),
+      // Batch 60 (QUESTIONS 422): kinds of night on one row, each with its own shifts, pay, hours, tips, fee and tip-out.
+      f('nights', 'Kinds of night', 'text', { kinds: ['income'], sheet: { skip: 'one entry per kind of night (its shifts a week, pay, hours, card and cash tips, house fee and tip-out); set on Income › Tips and shifts. The row\'s Shifts a week, Pay a shift, House fee, tips and tip-out columns hold the nights added together, so its take-home works out the same' } }),
       // A Platform row: amount is the gross a month; the fee and hold are prefilled from the Platforms table.
       pick('platform', 'Platform', ['OnlyFans', 'Fansly', 'Patreon', 'Etsy', 'Uber', 'DoorDash', 'Upwork', 'Other'], { kinds: ['income'] }),
       f('feePct', 'Platform fee %', 'pct', { kinds: ['income'] }), f('holdDays', 'Payout hold (days)', 'number', { kinds: ['income'] }),

@@ -676,6 +676,10 @@ td.col-first > .inst-cell:has(> .inst-link)::before { content: ''; display: bloc
 .work-block .work-group + .work-group { padding-top: 10px; border-top: 1px dashed var(--border-row); }
 .work-block .month-taps { flex-wrap: wrap; }
 .work-result .stack { gap: 2px; }
+/* Batch 60 (QUESTIONS 422): each kind of night is its own slim box, its name taps on top, Copy and the bin at the end */
+.work-night { border: 1px solid var(--border-row); border-radius: var(--r-input); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.work-night-head .spacer { flex: 1 1 auto; }
+.work-night .form-grid { margin: 0; }
 
 /* Batch 33 (QUESTIONS 288): the raise taps take two columns of a row's details; a phone's details are one column */
 .raise-taps { grid-column: span 2; }

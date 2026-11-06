@@ -42,8 +42,9 @@ export default {
   // Batch 51 (Shift P&L, M9H): what Cash flow › Income › What a shift really pays says, worked by hand.
   shiftPnl: {
     rows: [{ name: 'Bar job', gross: 309.62, fee: 0, tipOut: 30, tax: 19.62, takeHome: 260, travel: 28, childcare: 0, gear: 3, real: 229, hours: 10, ownHourly: 32.50, realHourly: 22.90, hourly: 19.54 }],
-    note: 'Take-home a shift: $3,380 / 13 = $260 (Tips and shifts). Gross: the paycheck before tax $26,460 / 12 / 13 = $169.62 (wage and card tips) plus $140 cash tips = $309.62; less the $30 tip-out (3% of $1,000); tax and deductions from the paycheck ($2,205 - $1,950) / 13 = $19.62. Getting there: a ride both ways, 2 x $14 = $28. Shoes and shirts: $120 / 40 = $3. $260 - $28 - $3 = $229 the shift leaves. Hours: 0.5 + 1 + 8 + 0.5 = 10, so $22.90 an hour (on the clock: $260 / 8 = $32.50). Her hourly value: $3,380 / 173 = $19.54 (a guess), $3.36 under the real hourly.',
-    says: ['What a shift really pays', '$229.00', '$22.90 an hour', 'Tip-out', 'A ride'],
+    note: 'Take-home a shift: $3,380 / 13 = $260 (Tips and shifts). Gross: the paycheck before tax $26,460 / 12 / 13 = $169.62 (wage and card tips) plus $140 cash tips = $309.62; less the $30 tip-out (3% of $1,000); tax and deductions from the paycheck ($2,205 - $1,950) / 13 = $19.62. Getting there: a ride both ways, 2 x $14 = $28. Shoes and shirts: $120 / 40 = $3. $260 - $28 - $3 = $229 the shift leaves. Hours: 0.5 + 1 + 8 + 0.5 = 10, so $22.90 an hour (on the clock: $260 / 8 = $32.50). Her hourly value: $3,380 / 173 = $19.54 (a guess), $3.36 under the real hourly. Batch 60 (QUESTIONS 424): the cash tips are not reported, so a second line: $140 - $30 tip-out = $110 a shift x 17.65% (10% federal + 7.65% FICA, the tips note\'s rate) = $19.42 set aside; $229.00 - $19.42 = $209.59 over 10 hours: $20.96 a real hour.',
+    ifCashTaxed: 20.96,
+    says: ['What a shift really pays', '$229.00', '$22.90 an hour', 'Tip-out', 'A ride', 'If tax were set aside on the cash tips too:', '$20.96 a real hour'],
   },
   // Batch 42 (the lender's-eye view, M9W): what Report › Lender's view should say, worked by hand.
   lender: {

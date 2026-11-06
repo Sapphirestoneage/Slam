@@ -115,9 +115,12 @@ test('Q387: Tom\'s net worth and Alexis\'s debt-free date are measured against t
   near(alexis.part('debtFree'), 1 - 50 / 113, 1e-9);
   // The meter after Fast Track: Tom 87%, Alexis 69% (were 73% and 49%). Batch 54: the 2024 all-ages CE total narrows
   // Alexis's age-only surplus to $2,006 wide (was $2,123), so her surplus part is 1 - 840 / 2,006 = 58.1% (was 60.4%)
-  // and the meter 68.6% (was 69.3%).
+  // and the meter 68.6% (was 69.3%). Batch 60 (QUESTIONS 432): she is in New York but not the NYC area, so her age-only
+  // spending reads New York State's prices (107.921, not the metro's 112.563): $1,917 wide, 1 - 840 / 1,917 = 56.2%, and
+  // the meter 68.1%.
   near(tom.A.meter.value, 0.873, 0.005);
-  near(alexis.A.meter.value, 0.686, 0.005);
+  near(alexis.part('surplus'), 1 - 840 / 1916.70, 0.001);
+  near(alexis.A.meter.value, 0.681, 0.005);
 });
 
 // ---------- Shift P&L (M9H) ----------

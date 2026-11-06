@@ -34,9 +34,83 @@ function perBoth(amount, per, shiftsMonth) {
 }
 export const hasWork = v => WORK_KEYS.some(k => num(v?.[k]) !== null || (k === 'tipOutBy' && v?.[k]));
 
-// The shifts, pay, tips, tip-out and fees of one row, a shift and a month.
+// Batch 60 (QUESTIONS 422): one row can hold several kinds of night (a Friday and Saturday pay differently from a
+// weeknight), each with its own shifts a week, pay a shift (or the row's hourly x its own hours), hours, card and cash
+// tips a shift, house fee and tip-out (a $ amount, or the sales it is a % of; Tip-out as, the %, Cash tips reported and
+// the seasons stay the row's). The row is their sum. values.nights = [{ id, name, shiftsWeek, payShift, hoursShift,
+// cardTips, cashTips, houseFee, tipOutAmount, salesShift }].
+export const NIGHT_KEYS = ['shiftsWeek', 'payShift', 'hoursShift', 'cardTips', 'cashTips', 'houseFee', 'tipOutAmount', 'salesShift'];
+export const NIGHT_NAMES = ['Friday and Saturday', 'Weeknight', 'Sunday', 'Day shift', 'Late night', 'Holiday'];
+export const hasNights = v => Array.isArray(v?.nights) && v.nights.length > 0;
+// One night as a row of its own: the row's values with the night's in place of the shift keys, tips a shift.
+export const nightValues = (v, n) => ({ ...v, nights: undefined, cardTipsPer: 'shift', cashTipsPer: 'shift', ...Object.fromEntries(NIGHT_KEYS.map(k => [k, n?.[k] ?? null])) });
+const nightLabel = (n, i) => n?.name || `Night ${i + 1}`;
+// The row's own shift boxes as the nights add up (shifts a week summed; pay, hours, tips, fee and tip-out averaged over
+// the shifts), written beside the nights so everything that reads the row (the workbook, the seasons, the calendar)
+// sees the same totals. Each a shift x the shifts gives back the nights' sum.
+export function nightsRollUp(v) {
+  if (!hasNights(v)) return {};
+  const ns = v.nights.map(n => ({ n, w: workOf({ values: nightValues(v, n) }) }));
+  const s = ns.reduce((t, x) => t + (x.w.shifts ?? 0), 0);
+  const avg = get => { const xs = ns.filter(x => get(x) != null); return xs.length && s ? xs.reduce((t, x) => t + get(x) * (x.w.shifts ?? 0), 0) / s : null; };
+  const hours = ns.every(x => !x.w.shifts || num(x.n.hoursShift) != null) ? avg(x => num(x.n.hoursShift)) : null; // every night worked has its hours
+  const tipOut = v.tipOutBy === '$ a shift' ? { tipOutAmount: avg(x => num(x.n.tipOutAmount)) } : v.tipOutBy === '% of sales' ? { salesShift: avg(x => num(x.n.salesShift)) } : {};
+  return { shiftsWeek: s || null, payShift: avg(x => x.w.pay?.shift ?? null), hoursShift: hours, cardTips: avg(x => x.w.card?.shift ?? null), cardTipsPer: 'shift',
+    cashTips: avg(x => x.w.cash?.shift ?? null), cashTipsPer: 'shift', houseFee: avg(x => x.w.fee?.shift ?? null), ...tipOut };
+}
+// The taps on Tips and shifts (batch 60): each returns the patch for the row's values, the nights with the row's boxes
+// rolled up beside them. The first Add turns the row's own boxes into the first night (tips typed a month become a
+// shift's share) and adds a blank one; a blank night adds nothing until it has shifts. Removing down to one night folds
+// it back into the row.
+const nextId = ns => { let k = ns.length + 1; while (ns.some(n => n.id === `n${k}`)) k++; return `n${k}`; };
+const unusedName = ns => NIGHT_NAMES.find(x => !ns.some(n => n.name === x)) ?? null;
+const withNights = (v, nights) => (nights.length > 1 ? { nights, ...nightsRollUp({ ...v, nights }) } : { nights: null, ...nightsRollUp({ ...v, nights }) });
+export function nightFromRow(v = {}) {
+  const w = workOf({ values: { ...v, nights: null } });
+  return { id: 'n1', name: NIGHT_NAMES[0], ...Object.fromEntries(NIGHT_KEYS.map(k => [k, num(v[k])])), cardTips: w.card?.shift ?? null, cashTips: w.cash?.shift ?? null };
+}
+export function addNight(v = {}) {
+  const ns = hasNights(v) ? v.nights : [nightFromRow(v)];
+  return withNights(v, [...ns, { id: nextId(ns), name: unusedName(ns), ...Object.fromEntries(NIGHT_KEYS.map(k => [k, null])) }]);
+}
+export function copyNight(v, id) {
+  const ns = v.nights || [], n = ns.find(x => x.id === id);
+  if (!n) return {};
+  const i = ns.indexOf(n);
+  return withNights(v, [...ns.slice(0, i + 1), { ...n, id: nextId(ns), name: unusedName(ns) }, ...ns.slice(i + 1)]);
+}
+export const removeNight = (v, id) => withNights(v, (v.nights || []).filter(n => n.id !== id));
+export const setNight = (v, id, change) => withNights(v, (v.nights || []).map(n => (n.id === id ? { ...n, ...change } : n)));
+
+// True when the row's own boxes no longer match its nights (a spreadsheet import typed over Shifts a week or Pay a
+// shift): the typed numbers win, so the importer folds the nights away (QUESTIONS 422, the round trip).
+export function nightsStale(v) {
+  if (!hasNights(v)) return false;
+  return Object.entries(nightsRollUp(v)).some(([k, x]) => (k.endsWith('Per') ? (v[k] ?? 'shift') !== x // blank Per reads as a shift
+    : typeof x === 'number' && typeof v[k] === 'number' ? Math.abs(x - v[k]) > 0.005 : (x ?? null) !== (v[k] ?? null)));
+}
+
+// A part (pay, card, cash, fee, tip-out) of every night added up: a month, and a shift over all the shifts.
+function sumPart(list, key, shiftsMonth) {
+  const xs = list.filter(w => w[key]?.month != null);
+  if (!xs.length) return null;
+  const month = xs.reduce((t, w) => t + w[key].month, 0);
+  return { shift: shiftsMonth ? month / shiftsMonth : null, month, per: 'shift' };
+}
+
+// The shifts, pay, tips, tip-out and fees of one row, a shift and a month. A row with nights is their sum, and keeps
+// each night's own (w.nights: { id, name, w }).
 export function workOf(r) {
   const v = r?.values || {};
+  if (hasNights(v)) {
+    const nights = v.nights.map((n, i) => ({ id: n.id ?? `n${i}`, name: nightLabel(n, i), w: workOf({ values: nightValues(v, n) }) }));
+    const ws = nights.map(x => x.w);
+    const shifts = ws.reduce((t, w) => t + (w.shifts ?? 0), 0), shiftsMonth = shifts * SHIFTS_PER_MONTH;
+    const pay = sumPart(ws, 'pay', shiftsMonth), tipOut = sumPart(ws, 'tipOut', shiftsMonth);
+    if (tipOut) tipOut.by = v.tipOutBy ?? null;
+    return { any: true, shifts, shiftsMonth, pay: pay ? { ...pay, hourly: false } : null, card: sumPart(ws, 'card', shiftsMonth), cash: sumPart(ws, 'cash', shiftsMonth),
+      fee: sumPart(ws, 'fee', shiftsMonth), tipOut, reported: v.cashReported ?? null, rate: num(v.tipOutPct), nights };
+  }
   const shifts = num(v.shiftsWeek);
   const shiftsMonth = shifts === null ? null : shifts * SHIFTS_PER_MONTH;
   const payShift = num(v.payShift) ?? (num(v.hourly) !== null && num(v.hoursShift) !== null ? v.hourly * v.hoursShift : null);
@@ -114,6 +188,7 @@ export function workText(w, c, takeHomeMonth) {
   if (!w?.any || !c) return '';
   const parts = [];
   const at = (x, word) => (x?.shift != null ? `${fmt.money(x.shift, { cents: true })} ${word} a shift` : x?.month != null ? `${fmt.money(x.month, { cents: true })} ${word} a month` : null);
+  if (w.nights) parts.push(`${w.nights.map(n => `${n.name}: ${n.w.shifts ?? 0} a week${n.w.pay?.shift != null ? ` at ${fmt.money(n.w.pay.shift, { cents: true })} pay a shift` : ''}`).join('; ')}.`); // batch 60: the kinds of night, added up below
   if (w.shifts != null) parts.push(`${w.shifts} ${w.shifts === 1 ? 'shift' : 'shifts'} a week is ${fmt.number(Math.round(w.shiftsMonth * 100) / 100)} a month (x 52 / 12).`);
   const list = [w.pay ? at(w.pay, 'pay') : null, w.card ? `${at(w.card, 'card tips')}${c.mode === 'paycheck' ? ' (in the paycheck)' : ''}` : null, w.cash ? at(w.cash, 'cash tips') : null,
     w.tipOut ? `minus ${at(w.tipOut, `tip-out${w.tipOut.by === '$ a shift' ? '' : ` (${fmt.pct(w.rate)} of ${w.tipOut.by === '% of sales' ? 'sales' : 'tips'})`}`)}` : null,
@@ -129,11 +204,13 @@ export function workText(w, c, takeHomeMonth) {
 // Cash tips that are not reported: still income for the plan. The calm note: what reporting changes, and roughly what
 // the tax on them would be (income tax at this return's rate plus Social Security and Medicare, 7.65%), with the
 // federal tips deduction (2025 to 2028) that only counts reported tips. year: the tax year shown.
+// The share of unreported cash tips that would go to tax if it came up: income tax at the return's next-dollar rate
+// (FICA in it), or Social Security and Medicare alone when that is higher. Shift P&L's set-aside line reads it too.
+export const unreportedTaxRate = (marginal, ref) => { const fica = ref.tax.socialSecurityRate + ref.tax.medicareRate; return marginal == null ? fica : Math.max(marginal, fica); };
 export function tipsTaxNote(w, c, { marginal = null, federalMarginal = null, year = 2026, ref }) {
   if (!w?.cash || !c?.cashMonth) return null;
   const t = ref.tax.tips;
   const yearly = Math.max(0, c.cashMonth - (c.mode === 'paycheck' ? c.tipOutMonth : 0)) * 12;
-  const fica = ref.tax.socialSecurityRate + ref.tax.medicareRate;
   const inWindow = year >= t.firstYear && year <= t.lastYear;
   const deduction = inWindow ? Math.min(yearly, t.deductionCap) * (federalMarginal ?? 0) : 0;
   if (w.reported === 'Yes') {
@@ -141,7 +218,7 @@ export function tipsTaxNote(w, c, { marginal = null, federalMarginal = null, yea
       ? `Reported cash tips count for the federal tips deduction (up to ${fmt.money(t.deductionCap)} a year, ${t.firstYear} to ${t.lastYear}${federalMarginal ? `; about ${fmt.money(deduction)} less federal income tax here` : ''}). Social Security and Medicare still apply.`
       : 'Reported tips are taxed through the paycheck.' };
   }
-  const exposure = marginal == null ? yearly * fica : yearly * Math.max(marginal, fica);
+  const exposure = yearly * unreportedTaxRate(marginal, ref);
   return { reported: false, yearly, exposure, deduction, line: `Not reported yet: they still count here as money in hand, with about ${fmt.money(exposure)} a year of tax on them if it came up.`, text: `${fmt.money(yearly)} a year in cash tips counts here as money in hand. Unreported, it is still taxable: about ${fmt.money(exposure)} a year if it came up later, plus a penalty of up to half the Social Security and Medicare part. Reporting it (to the employer by the 10th, for months of ${fmt.money(t.reportOver)} or more) adds to your Social Security record and the income a lender or landlord can see${inWindow ? `, and lets it count for the tips deduction through ${t.lastYear}` : ''}.` };
 }
 

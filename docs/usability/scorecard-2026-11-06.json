@@ -286,7 +286,7 @@
    "categories": {
     "works": {
      "result": "pass",
-     "reason": "with an all-accounts investments total, \"Is part of this a 401(k)? Split it out\" moves that part into a 401(k) row; invested and the FI date stay (batch 33, Q291)"
+     "reason": "with an all-accounts investments total, \"Is part of this a 401(k)? Split it out\" moves that part into a 401(k) row; invested and the FI date stay (batch 33, Q291); batch 60: Tips and shifts: Add a kind of night, Copy and the bin each do what they say (checked at 1280 and 390: copy, edit, remove, one left folds back into the row)"
     },
     "right": {
      "result": "pass",
@@ -298,7 +298,7 @@
     },
     "looks": {
      "result": "pass",
-     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark"
+     "reason": "layout checker clean on this screen at 1440, 1280 and 390, light and dark; batch 60: the Shift client also scans Tips and shifts open with two nights, clean"
     },
     "obvious": {
      "result": "pass",
@@ -310,7 +310,7 @@
     },
     "easy": {
      "result": "pass",
-     "reason": "a raise is one tap (+3%, +5%, +10% or a %): the new gross and take-home from the tax math, and the toast says what it moved (batch 33, Q288)"
+     "reason": "a raise is one tap (+3%, +5%, +10% or a %): the new gross and take-home from the tax math, and the toast says what it moved (batch 33, Q288); batch 60: a kind of night is a tap (its name, its shifts a week), only its pay and tips are typed"
     },
     "words": {
      "result": "pass",
@@ -632,7 +632,7 @@
    "categories": {
     "works": {
      "result": "pass",
-     "reason": "every button did what it says in the runs"
+     "reason": "every button did what it says in the runs; batch 60: NYC area is one tap, on when Live in NYC is on, and the typical numbers read the NY metro (checked at 1280 and 390)"
     },
     "right": {
      "result": "pass",
@@ -660,7 +660,7 @@
     },
     "words": {
      "result": "pass",
-     "reason": "plain words, no verdicts, no em dashes"
+     "reason": "plain words, no verdicts, no em dashes; batch 60: NYC area says Typical prices under it and lists the counties in its hover tip"
     },
     "tells": {
      "result": "pass",
@@ -4426,19 +4426,19 @@
     },
     "right": {
      "result": "pass",
-     "reason": "hand-worked in test/batch51.test.js: the dancer $337.97 and $33.80 an hour, the bartender $229.00 and $22.90; the take-home a shift ties to Tips and shifts to the cent"
+     "reason": "hand-worked in test/batch51.test.js: the dancer $337.97 and $33.80 an hour, the bartender $229.00 and $22.90; the take-home a shift ties to Tips and shifts to the cent; batch 60 (test/batch60.test.js): the dancer's two nights $34.59 and $31.61 a real hour, adding up to her row to the cent; the bartender's set-aside line $20.96"
     },
     "oneAnswer": {
      "result": "pass",
-     "reason": "one take-home a shift (the same as Tips and shifts); the costs are a view, so the surplus does not move"
+     "reason": "one take-home a shift (the same as Tips and shifts); the costs are a view, so the surplus does not move; batch 60: the set-aside line uses the tips note's own rate, and each night's take-home adds up to the row's"
     },
     "looks": {
      "result": "pass",
-     "reason": "layout checker (Shift client) clean closed and open at 1440, 1280 and 390, light and dark; amounts in one column down each list"
+     "reason": "layout checker (Shift client) clean closed and open at 1440, 1280 and 390, light and dark; amounts in one column down each list; batch 60: clean with two nights"
     },
     "obvious": {
      "result": "pass",
-     "reason": "the title says what it is; three tiles answer it before any row"
+     "reason": "the title says what it is; three tiles answer it before any row; batch 60: each kind of night is its own card titled with the row and the night, and Pays most per real hour names one"
     },
     "findable": {
      "result": "pass",
@@ -4450,7 +4450,7 @@
     },
     "words": {
      "result": "pass",
-     "reason": "from the client's side (The shift leaves you, A real hour); no verdict words, no red"
+     "reason": "from the client's side (The shift leaves you, A real hour); no verdict words, no red; batch 60: \"If tax were set aside on the cash tips too: $X a real hour\", no verdict"
     },
     "tells": {
      "result": "pass",
@@ -4712,7 +4712,7 @@
   }
  ],
  "updated": {
-  "batch": 55,
+  "batch": 60,
   "date": "2026-11-06"
  },
  "batch34": {
@@ -4815,5 +4815,13 @@
   "major": 0,
   "minor": 0,
   "note": "Batch 57 added Home: Whole picture (Answered and Solid). Ask next's why line now names the half it raises; its row (batch 43) is unchanged."
+ },
+ "batch60": {
+  "date": "2026-11-06",
+  "screens": 3,
+  "blocker": 0,
+  "major": 0,
+  "minor": 1,
+  "note": "Batch 60 re-scored Income (kinds of night in Tips and shifts), Income › What a shift really pays (a card a night, the set-aside line) and About you (NYC area). All pass; the one minor stays What a shift really pays coachable (waits for Eli, behind Phase 4 previews)."
  }
 }

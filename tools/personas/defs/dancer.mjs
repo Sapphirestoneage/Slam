@@ -2,7 +2,7 @@
 // can close an account without warning, so money is spread across two banks and some cash at home.
 export default {
   id: 'dancer', order: 9, name: 'Nova Dancer',
-  about: 'Made up. 1099 dancer, 3 shifts a week (13 a month): about $575 a shift in cash and card ($7,475 a month), an $80 house fee and a $20 tip-out a shift, quarterly taxes set aside in their own account, no employer benefits, accounts at two banks and cash at home in case a bank closes one; slow January and February at 2 shifts a week.',
+  about: 'Made up. 1099 dancer, 3 shifts a week (13 a month): Friday and Saturday at $650 a shift with a $100 house fee and a weeknight at $425 with a $40 fee, about $575 a shift in cash and card ($7,475 a month), an $80 house fee and a $20 tip-out a shift on average, quarterly taxes set aside in their own account, no employer benefits, accounts at two banks and cash at home in case a bank closes one; slow January and February at 2 shifts a week.',
   profile: {
     firstName: 'Nova', lastName: 'Dancer', birthYear: 1997, birthMonth: 4, state: 'NV', household: 'Solo', mode: 'Solo',
     workSituation: 'Self-employed', housing: 'Rent', hasCar: true, hasPets: true, incomeStability: 'Unpredictable', healthCoverage: 'ACA',
@@ -19,7 +19,15 @@ export default {
       returnsFiled: '2 or more', returnLast: 52000, returnBefore: 41000, // batch 42: her 2024 and 2025 returns (Schedule C net) showed less than she earns now
       // Batch 51 (Shift P&L): a 7-hour shift, 1.5 hours getting ready (hair, makeup), 1 hour driving there and back
       // (24 miles), half an hour winding down; outfits, shoes and makeup about $360 every 30 shifts.
-      hoursShift: 7, prepHours: 1.5, travelHours: 1, windDownHours: 0.5, travelBy: 'Drive', milesShift: 24, gearCost: 360, gearShifts: 30 } },
+      hoursShift: 7, prepHours: 1.5, travelHours: 1, windDownHours: 0.5, travelBy: 'Drive', milesShift: 24, gearCost: 360, gearShifts: 30,
+      // Batch 60 (QUESTIONS 422): two kinds of night. Friday and Saturday, 2 a week: $650 a shift, a $100 house fee, $20
+      // tip-out, 8 hours. A weeknight, 1 a week: $425, a $40 house fee, $20 tip-out, 5 hours. The row's boxes above are
+      // what they add up to: (2 x $650 + $425) / 3 = $575, (2 x $100 + $40) / 3 = $80, $20, (2 x 8 + 5) / 3 = 7 hours, so
+      // every number of hers is as before.
+      nights: [
+        { id: 'fri-sat', name: 'Friday and Saturday', shiftsWeek: 2, payShift: 650, hoursShift: 8, houseFee: 100, tipOutAmount: 20 },
+        { id: 'weeknight', name: 'Weeknight', shiftsWeek: 1, payShift: 425, hoursShift: 5, houseFee: 40, tipOutAmount: 20 },
+      ] } },
     { kind: 'spending', type: 'All in', name: 'Monthly spending, all in', amount: 3300, status: 'Roughly', values: { includesDebtPayments: true, pass: 'Gut' } },
     { kind: 'account', type: 'Cash on hand', name: 'Cash at home', values: { group: 'cash', balance: 2500 } },
     { kind: 'account', type: 'Checking', name: 'Checking (bank A)', values: { group: 'cash', balance: 1800, institutionId: 'dancer-bank-a' } },
@@ -51,9 +59,13 @@ export default {
   },
   // Batch 51 (Shift P&L, M9H): what Cash flow › Income › What a shift really pays says, worked by hand.
   shiftPnl: {
-    rows: [{ name: 'Dancing', gross: 575, fee: 80, tipOut: 20, tax: 107.63, takeHome: 367.37, travel: 17.40, childcare: 0, gear: 12, real: 337.97, hours: 10, ownHourly: 52.48, realHourly: 33.80, hourly: 27.61 }],
-    note: 'Take-home a shift: $4,775.81 / 13 = $367.37 (Tips and shifts). Gross $575, less the $80 house fee and $20 tip-out = $475; tax set aside $475 - $367.37 = $107.63. Getting there: 24 miles x $0.725 (IRS 2026) = $17.40. Outfits: $360 / 30 = $12.00. $367.37 - $17.40 - $12.00 = $337.97 the shift leaves. Hours: 1.5 + 1 + 7 + 0.5 = 10, so $33.80 an hour (on the clock: $367.37 / 7 = $52.48). Her hourly value: $4,775.81 / 173 hours = $27.61 (a guess until work hours are in), $6.19 under the real hourly.',
-    says: ['What a shift really pays', '$337.97', '$33.80 an hour', 'House fee', 'Driving'],
+    // Batch 60: two nights, ranked by the real hour.
+    rows: [
+      { name: 'Dancing, Friday and Saturday', gross: 650, fee: 100, tipOut: 20, tax: 120.09, takeHome: 409.91, travel: 17.40, childcare: 0, gear: 12, real: 380.51, hours: 11, ownHourly: 51.24, realHourly: 34.59, hourly: 27.61 },
+      { name: 'Dancing, Weeknight', gross: 425, fee: 40, tipOut: 20, tax: 82.71, takeHome: 282.29, travel: 17.40, childcare: 0, gear: 12, real: 252.89, hours: 8, ownHourly: 56.46, realHourly: 31.61, hourly: 27.61 },
+    ],
+    note: 'The row: take-home $4,775.81 a month (13 shifts), $6,175 after the house fees and tip-out, so the tax set aside is $6,175 - $4,775.81 = $1,399.19 a month, 22.659% of each dollar after fees (1099: all of it is taxed). Friday and Saturday (2 a week, 8.67 a month): $650 - $100 fee - $20 tip-out = $530; tax $530 x 22.659% = $120.09; take-home $409.91. Getting there: 24 miles x $0.725 (IRS 2026) = $17.40; outfits $360 / 30 = $12.00; $409.91 - $29.40 = $380.51 the shift leaves, over 1.5 + 1 + 8 + 0.5 = 11 hours: $34.59 an hour (on the clock $409.91 / 8 = $51.24). Weeknight (1 a week, 4.33 a month): $425 - $40 - $20 = $365; tax $82.71; take-home $282.29; less $29.40 = $252.89, over 1.5 + 1 + 5 + 0.5 = 8 hours: $31.61 an hour (on the clock $282.29 / 5 = $56.46, more than Friday and Saturday, but the drive, the outfits and the hours around it are the same on a shorter night). Check: $409.91 x 8.67 + $282.29 x 4.33 = $3,552.53 + $1,223.28 = $4,775.81. Her hourly value: $4,775.81 / 173 hours = $27.61 (a guess until work hours are in). No cash tips, so no set-aside line.',
+    says: ['What a shift really pays', '$380.51', '$34.59 an hour', 'Friday and Saturday', 'Weeknight', 'Pays most per real hour: Dancing, Friday and Saturday', 'House or stage fee', 'Drive'],
   },
   // Batch 44: what Net worth › Fire drill says (as of NOW, Nov 5 2026: the 30 days Nov 5 to Dec 4). test/firedrill.test.js
   // checks the numbers; the browser run checks the words show.

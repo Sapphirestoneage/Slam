@@ -125,12 +125,14 @@ test('the range: the median (or mean) times the stated spread, with its basis', 
   assert.equal(shortRange({ low: 640, high: 1600 }), '640 to 1.6K');
 });
 
-test('a place row scales spending: the NY metro for NY clients (QUESTIONS 210); balances stay national', () => {
-  assert.equal(placeOf(data, 'cash', 'NY'), null);
-  assert.equal(typicalOf(data, 'cash', { place: 'NY' }).place, 'national');
-  assert.equal(placeOf(data, 'spending.food', 'NY').factor, 1.12563, 'the parts of spending scale too');
-  const r = typicalOf(data, 'spending', { age: 28, place: 'NY', household: 'Solo' });
-  near(r.likely, (48794 * 74475 / 78535 - 4329 * 10701 / 9797) / 12 * 1.12563); assert.equal(r.place, 'NY'); assert.equal(r.area, 'the New York metro');
+test('a place row scales spending: the NY metro for the NYC area (QUESTIONS 210, 432); balances stay national', () => {
+  const metro = ['NY metro', 'NY']; // batch 60: the NYC area reads the metro, then New York State
+  assert.equal(placeOf(data, 'cash', metro), null);
+  assert.equal(typicalOf(data, 'cash', { place: metro }).place, 'national');
+  assert.equal(placeOf(data, 'spending.food', metro).factor, 1.12563, 'the parts of spending scale too');
+  assert.equal(placeOf(data, 'spending.food', 'NY').factor, 1.07921, 'the rest of New York: the state');
+  const r = typicalOf(data, 'spending', { age: 28, place: metro, household: 'Solo' });
+  near(r.likely, (48794 * 74475 / 78535 - 4329 * 10701 / 9797) / 12 * 1.12563); assert.equal(r.place, 'NY metro'); assert.equal(r.area, 'the New York metro');
   assert.match(r.basis, /scaled for the New York metro \(Regional Price Parities: All Items, New York-Newark-Jersey City MSA, 2024: 112\.563/);
   near(typicalOf(data, 'spending', { age: 38, place: 'NJ', household: 'Solo' }).likely, (48794 * 91229 / 78535 - 4329 * 13465 / 9797) / 12 * 1.08805);
   const withCash = { ...data, place: [{ field: 'cash', place: 'NY', area: 'NY', factor: 1.2, source: 'made up for the test' }] };
@@ -190,9 +192,9 @@ test('the persona files: Alexis reads New York rent split with her roommate; May
   assert.equal(higher[0].text, 'Above what most renters in New York State pay in rent a month');
   assert.match(higher[0].tip, /New York State: median \$1,621.*split 2 ways/);
   const spend = typicalOf(data, 'spending', { age: 28, ...o });
-  near(spend.likely, (48794 * 74475 / 78535 - 4329 * 10701 / 9797) / 12 * 1.12563); // batch 46, QUESTIONS 336 assert.equal(spend.who, 'people who live alone');
+  near(spend.likely, (48794 * 74475 / 78535 - 4329 * 10701 / 9797) / 12 * 1.07921); // batch 46, QUESTIONS 336; batch 60: New York State's prices (not in the NYC area) assert.equal(spend.who, 'people who live alone');
   assert.deepEqual(checksFor(maya), [], 'Maya: $5,200 cash, $6,000 cards, $3,500 spending and $1,750 rent are all inside typical for NY');
-  assert.equal(typicalOf(data, 'rent', { age: 30, ...priorsOpts(maya.profile) }).likely, 1621, 'no roommates: the whole rent');
+  assert.equal(typicalOf(data, 'rent', { age: 30, ...priorsOpts(maya.profile) }).likely, 1621, 'no roommates: the whole rent (the NYC area has no metro rent row yet, so the state\'s)');
   const t = checksFor(tom);
   assert.deepEqual(t.map(c => [c.field, c.dir]), [['cash', 'above']], 'Tom: only his $38,000 cash; he owns, so no rent check');
   assert.deepEqual(typicalBoxes(tom.records, priorsOpts(tom.profile)).rent, []);

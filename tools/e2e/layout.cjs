@@ -723,7 +723,7 @@ if (require.main === module) (async () => {
     await ctx.close();
   }
   // Batch 51: a client with shift rows (the dancer persona, through Import): Cash flow › Income with What a shift really
-  // pays closed and open, at every width and theme.
+  // pays closed and open, and (batch 60) its Tips and shifts open with the kinds of night, at every width and theme.
   if (CLIENTS.includes('Shift')) {
     const { ctx, page } = await newContext(browser);
     try {
@@ -741,6 +741,14 @@ if (require.main === module) (async () => {
         await page.locator('[data-sec="income:shifts"]').scrollIntoViewIfNeeded().catch(() => {});
         await scanHere(page, { ...meta, state: 'What a shift really pays open' }, [...STILL, 'covered']);
         if ((await caret.getAttribute('aria-expanded').catch(() => null)) === 'true') { await caret.click().catch(() => {}); await settle(page, 200); }
+        // Batch 60: the row's Tips and shifts open, with its two kinds of night (QUESTIONS 422).
+        const work = page.locator('button.work-line').first();
+        if (await work.count()) {
+          await work.click().catch(() => {}); await settle(page, 500);
+          await page.locator('.work-nights').first().scrollIntoViewIfNeeded().catch(() => {});
+          await scanHere(page, { ...meta, state: 'Tips and shifts open (kinds of night)' }, [...STILL, 'covered']);
+          await page.keyboard.press('Escape').catch(() => {}); await settle(page, 200);
+        }
       }
     } catch (e) { errors.push(`shift client: ${e.message.split('\n')[0]}`); }
     await ctx.close();

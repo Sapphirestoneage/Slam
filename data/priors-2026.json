@@ -2474,12 +2474,22 @@
  "place": [
   {
    "field": "spending",
-   "place": "NY",
+   "place": "NY metro",
    "area": "the New York metro",
    "factor": 1.12563,
    "source": "rpp2024",
    "table": "Regional Price Parities: All Items, New York-Newark-Jersey City MSA, 2024: 112.563 (United States = 100)",
    "link": "https://fred.stlouisfed.org/data/RPPALL35620",
+   "year": 2024
+  },
+  {
+   "field": "spending",
+   "place": "NY",
+   "area": "New York State",
+   "factor": 1.07921,
+   "source": "rpp2024",
+   "table": "Regional Price Parities: All Items, New York State, 2024: 107.921 (United States = 100)",
+   "link": "https://fred.stlouisfed.org/data/NYRPPALL",
    "year": 2024
   },
   {
@@ -2493,7 +2503,7 @@
    "year": 2024
   }
  ],
- "placeNote": "NY clients read the New York metro (QUESTIONS 210) where a Primary figure gives it: spending scales by the metro's BEA price parity. Rent has no Primary metro figure yet (data.census.gov and the Census API were not reachable), so a NY renter reads New York State's median gross rent and says so. Cash, cards, loans and net worth stay national (no Primary place row). A place row is { field, place, area, factor, source, table, link, year }; a row with its own place (rent) is used as is",
+ "placeNote": "Clients in the NYC area (About you, QUESTIONS 432: the five boroughs, Long Island, Westchester, Rockland, Orange, Putnam and nearby New Jersey) read the New York metro (place 'NY metro', QUESTIONS 210) where a Primary figure gives it, then their own state: spending scales by the metro's BEA price parity. The rest of New York reads New York State's parity (107.921, batch 60). Rent has no Primary metro figure yet (data.census.gov and the Census API were not reachable), so a NY renter reads New York State's median gross rent and says so. Cash, cards, loans and net worth stay national (no Primary place row). A place row is { field, place, area, factor, source, table, link, year }; a row with its own place (rent) is used as is",
  "leftOut": [
   "NY metro median gross rent (ACS B25064 for CBSA 35620): no Primary page reachable (USAFacts says about $1,830 for 2020-2024, Secondary)",
   "Gross rent quartiles: the ACS publishes contract rent quartiles (B25057, B25059), not gross; neither was reachable",

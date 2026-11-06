@@ -50,7 +50,8 @@ test('QUESTIONS 336 by hand: a 25 to 34 year old living alone reads the one-pers
 test('the shapes: income and cash like spending by age (and living alone), retirement like net worth', () => {
   near(shapeOf(data, 'income', { age: 28, household: 'Solo' }).factor, 48794 * (74475 / 78535) / 78535, 1e-9);
   near(typicalOf(data, 'income', { age: 61 }).likely, 87460 * 84946 / 78535, 0.01);
-  near(typicalOf(data, 'income', { age: 61, place: 'NY' }).likely, 87460 * 84946 / 78535 * 1.12563, 0.01); // the price parity stands in for a NY income row
+  near(typicalOf(data, 'income', { age: 61, place: ['NY metro', 'NY'] }).likely, 87460 * 84946 / 78535 * 1.12563, 0.01); // the price parity stands in for a NY income row
+  near(typicalOf(data, 'income', { age: 61, place: 'NY' }).likely, 87460 * 84946 / 78535 * 1.07921, 0.01); // batch 60: New York outside the NYC area reads the state's parity
   near(typicalOf(data, 'retirement', { age: 61 }).likely, 106000 * 411900 / 215900, 0.01);
   near(typicalOf(data, 'cash', { age: 23, household: 'Solo' }).likely, 8200 * 48794 * (47283 / 78535) / 78535, 0.01);
   assert.equal(shapeOf(data, 'card', { age: 28 }), null, 'cards: all ages, no shape');
@@ -125,7 +126,7 @@ function narrows(steps, profile) {
 }
 
 test('each answer replaces its typical amount and the ranges narrow, three answers in a row (Maya and Tom)', () => {
-  const maya = narrows([{ takeHome: 2400, takePer: 'paycheck', payFrequency: '2 weeks' }, { gut: 3500, gutIncludesDebt: false }, { checking: 1200, savings: 4000 }], { birthYear: 1996, household: 'Solo', state: 'NY' });
+  const maya = narrows([{ takeHome: 2400, takePer: 'paycheck', payFrequency: '2 weeks' }, { gut: 3500, gutIncludesDebt: false }, { checking: 1200, savings: 4000 }], { birthYear: 1996, household: 'Solo', state: 'NY', nyc: true }); // batch 60: Maya lives in NYC, so the metro's prices
   assert.equal(maya[0].fi, Infinity, 'age only: FI could be decades away or never');
   assert.ok(Number.isFinite(maya[2].fi), 'with her pay and spending: an FI range with two ends');
   // Batch 54: the 2024 all-ages CE total lowers the age-only spending a little, so the age-only width is $2,006 a

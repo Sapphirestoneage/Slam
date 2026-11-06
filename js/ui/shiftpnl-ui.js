@@ -9,6 +9,7 @@ import * as S from './staples.js';
 import { sec } from './sections.js';
 import { money } from '../format.js';
 import { shiftPnlsOf, TRAVEL_BY } from '../math/shiftpnl.js';
+import { setNight } from '../math/earnings.js';
 import { PRIVATE_LINE } from '../privacy.js';
 
 const c2 = v => money(v, { cents: true });
@@ -43,8 +44,14 @@ export function shiftSection(app, ctx) {
 }
 
 function rowCard(ctx, p, named) {
-  const rec = ctx.store.get(p.id), v = rec?.values || {};
-  const up = patch => ctx.store.update(p.id, patch);
+  const rec = ctx.store.get(p.rowId), rv = rec?.values || {};
+  const up = patch => ctx.store.update(p.rowId, patch);
+  // Batch 60: a night's card shows its own hours a shift; getting there, childcare, outfits and the hours around a
+  // shift are the row's, the same on every night.
+  const night = p.nightId ? (rv.nights || []).find(n => n.id === p.nightId) : null;
+  const v = night ? { ...rv, hoursShift: night.hoursShift ?? null } : rv;
+  const setHours = y => (night ? up(setNight(rv, p.nightId, { hoursShift: y })) : up({ hoursShift: y }));
+  const shared = night ? `The same on every night of ${p.rowName}` : null;
   const tile = (label, big, small, focus) => h('div.fd-tile', {}, h('span.label', {}, label), h('strong.fd-big', focus ? { 'data-focus': focus } : {}, big), small ? h('span.muted.small', {}, small) : null);
   const hourly = p.realHourly == null ? h('span.muted', {}, 'Needs the hours a shift')
     : S.mathButton(p.result, `${c2(p.realHourly)} an hour`);
@@ -58,16 +65,16 @@ function rowCard(ctx, p, named) {
     p.tipOut ? line('Tip-out', minus(p.tipOut)) : null,
     line(p.taxWord, minus(p.tax), { tip: p.unreportedCash ? `Cash tips not reported have no tax set aside here; Tips and shifts says roughly what it would be (${c2(p.unreportedCash)} a shift in cash)` : 'What lies between the gross and the take-home on this row: its share of the household\'s tax' }),
     line('Take-home a shift', c2(p.takeHome), { strong: true, tip: 'The same take-home a shift as Tips and shifts on the row' }),
-    line('Getting there', p.costs.travel ? minus(p.costs.travel.amount) : '–', { ctl: travelCtl(ctx, p, v, up), key: `${p.id}:travelBy` }),
-    ctx.gates().kids || v.sitterHours != null || v.sitterRate != null ? line('Childcare', p.costs.childcare ? minus(p.costs.childcare.amount) : '–', { ctl: sitterCtl(p, v, up), key: `${p.id}:sitter` }) : null,
-    line('Outfits and gear', p.costs.gear ? minus(p.costs.gear.amount) : '–', { ctl: gearCtl(p, v, up), key: `${p.id}:gear`, tip: 'Outfits, shoes, makeup, hair and nails, spread over the shifts they last' }),
+    line('Getting there', p.costs.travel ? minus(p.costs.travel.amount) : '–', { tip: shared, ctl: travelCtl(ctx, p, v, up), key: `${p.id}:travelBy` }),
+    ctx.gates().kids || v.sitterHours != null || v.sitterRate != null ? line('Childcare', p.costs.childcare ? minus(p.costs.childcare.amount) : '–', { tip: shared, ctl: sitterCtl(p, v, up), key: `${p.id}:sitter` }) : null,
+    line('Outfits and gear', p.costs.gear ? minus(p.costs.gear.amount) : '–', { ctl: gearCtl(p, v, up), key: `${p.id}:gear`, tip: `Outfits, shoes, makeup, hair and nails, spread over the shifts they last${shared ? `. ${shared}` : ''}` }),
     line('The shift leaves you', realBtn, { strong: true }),
   ];
   const hours = [
-    line('Getting ready', v.prepHours != null ? hrs(v.prepHours) : '–', { ctl: numTaps(['0', '0.5', '1', '1.5', '2'], v.prepHours, y => up({ prepHours: y }), 'Getting ready, hours', `${p.id}:prepHours`) }),
-    line('Travel, there and back', v.travelHours != null ? hrs(v.travelHours) : '–', { ctl: numTaps(['0.5', '1', '1.5', '2'], v.travelHours, y => up({ travelHours: y }), 'Travel hours, there and back', `${p.id}:travelHours`) }),
-    line('The shift', v.hoursShift != null ? hrs(v.hoursShift) : '–', { ctl: numTaps(['4', '5', '6', '7', '8', '10', '12'], v.hoursShift, y => up({ hoursShift: y }), 'Hours a shift', `${p.id}:hoursShiftPnl`) }),
-    line('Winding down after', v.windDownHours != null ? hrs(v.windDownHours) : '–', { ctl: numTaps(['0', '0.5', '1'], v.windDownHours, y => up({ windDownHours: y }), 'Winding down, hours', `${p.id}:windDownHours`) }),
+    line('Getting ready', v.prepHours != null ? hrs(v.prepHours) : '–', { tip: shared, ctl: numTaps(['0', '0.5', '1', '1.5', '2'], v.prepHours, y => up({ prepHours: y }), 'Getting ready, hours', `${p.id}:prepHours`) }),
+    line('Travel, there and back', v.travelHours != null ? hrs(v.travelHours) : '–', { tip: shared, ctl: numTaps(['0.5', '1', '1.5', '2'], v.travelHours, y => up({ travelHours: y }), 'Travel hours, there and back', `${p.id}:travelHours`) }),
+    line('The shift', v.hoursShift != null ? hrs(v.hoursShift) : '–', { ctl: numTaps(['4', '5', '6', '7', '8', '10', '12'], v.hoursShift, setHours, 'Hours a shift', `${p.id}:hoursShiftPnl`) }),
+    line('Winding down after', v.windDownHours != null ? hrs(v.windDownHours) : '–', { tip: shared, ctl: numTaps(['0', '0.5', '1'], v.windDownHours, y => up({ windDownHours: y }), 'Winding down, hours', `${p.id}:windDownHours`) }),
     line('Every hour a shift takes', p.hours.total != null ? hrs(p.hours.total) : '–', { strong: true }),
   ];
   return h('div.card.sp-card', { 'data-focus': `shift:${p.id}` },
@@ -77,6 +84,9 @@ function rowCard(ctx, p, named) {
       tile('The shift leaves you', S.mathButton({ id: 'M9H', value: p.real, needs: [], unit: 'money', text: p.result.text }, c2(p.real)), 'After getting there, childcare and gear'),
       tile('A real hour', hourly, p.hours.total != null ? `Over ${hrs(p.hours.total)}; on the clock ${c2(p.ownHourly)}` : 'Tap the hours below', `shift:${p.id}:hourly`)),
     vsWords ? h('p.muted.small.sp-vs', {}, vsWords) : null,
+    // QUESTIONS 424 (Lindsey Swanson's lens): the same shift with tax set aside on the unreported cash tips too.
+    p.ifCashTaxed ? h('p.muted.small.sp-cash', { 'data-focus': `shift:${p.id}:cashTaxed` }, 'If tax were set aside on the cash tips too: ',
+      S.mathButton({ id: 'M9H', value: p.ifCashTaxed.realHourly, needs: [], unit: 'money', text: p.ifCashTaxed.text }, `${c2(p.ifCashTaxed.realHourly)} a real hour`)) : null,
     h('div.sp-cols', {},
       h('div.sp-list', {}, h('h4.sp-head', {}, 'Money a shift'), money1),
       h('div.sp-list', {}, h('h4.sp-head', {}, 'Hours a shift'), hours)));

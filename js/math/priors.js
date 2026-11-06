@@ -9,7 +9,8 @@
 // likely (2.25 and 0.36 of likely at 0.6 and 1.5).
 // Batch 39 (the data pass): a row can be for one household type (household: 'Solo', the CE one-person row) or one
 // place (place: 'NY', ACS rent for New York State); the closest row wins (place, then household, then age band).
-// Spending scales by a place row (BEA price parities: the NY metro for NY clients, QUESTIONS 210). Rent is new: the
+// Spending scales by a place row (BEA price parities: the NY metro for NY clients, QUESTIONS 210; batch 60, QUESTIONS 432:
+// the metro for the NYC area, New York State for the rest of the state). Rent is new: the
 // ACS median gross rent, a renter's share when the rent is split with roommates.
 // Batch 46 (Phase 4, Track 1, the age-only start; QUESTIONS 336): one rule for every all-ages row read at an age, the
 // age band's ratio to all ages. The CE one-person row (all ages, average age 56) is scaled by the band's CE figure over
@@ -40,6 +41,16 @@ export const CE_CATEGORIES = ['total', 'food', 'foodAtHome', 'foodAway', 'housin
 // Batch 46: income now reads the all-households median shaped by age (data.shapes), so nothing is left here.
 export const NO_ROW = {};
 
+// Batch 60 (QUESTIONS 432): a place can be a list, closest first. A client in the NYC area reads the New York metro's
+// rows ('NY metro': the price parity, and the metro rent once it is in the data), then the state's where the metro has
+// none; anyone else in New York reads New York State's.
+const placesOf = place => (place == null ? [] : Array.isArray(place) ? place : [place]);
+export const NYC_AREA = {
+  NY: ['the five boroughs', 'Nassau', 'Suffolk', 'Westchester', 'Rockland', 'Orange', 'Putnam'],
+  NJ: ['Bergen', 'Hudson', 'Essex', 'Passaic', 'Union', 'Middlesex', 'Monmouth', 'Morris', 'Somerset', 'Sussex', 'Hunterdon', 'Ocean'],
+};
+// In the NYC area: the answer, else on when Live in NYC is on (QUESTIONS 432). Only asked in New York and New Jersey.
+export const inNycArea = (p = {}) => (p?.state === 'NY' || p?.state === 'NJ') && (p.nycArea ?? (p.state === 'NY' && p.nyc === true));
 const inBand = (ages, age) => !ages || (age != null && (ages[0] == null || age >= ages[0]) && (ages[1] == null || age <= ages[1]));
 // The row for a field: of the rows that fit (their place, household and age band each match or are not set), the
 // closest one: its own place counts most, then its household type, then the age band. So a person living alone reads
@@ -47,26 +58,28 @@ const inBand = (ages, age) => !ages || (age != null && (ages[0] == null || age >
 // rent, and anyone else the national all-ages row (which says so). Null when nothing fits.
 export function rowFor(data, field, age = null, { place = null, household = null } = {}) {
   let best = null, top = -1;
+  const places = placesOf(place);
   for (const r of data?.rows || []) {
     if (r.field !== field) continue;
-    if (r.place != null && r.place !== place) continue;
+    if (r.place != null && !places.includes(r.place)) continue;
     if (r.household != null && r.household !== household) continue;
     if (r.ages && !inBand(r.ages, age)) continue;
-    const score = (r.place != null ? 4 : 0) + (r.household != null ? 2 : 0) + (r.ages ? 1 : 0);
+    const score = (r.place != null ? 4 * (places.length - places.indexOf(r.place)) : 0) + (r.household != null ? 2 : 0) + (r.ages ? 1 : 0); // the closer place first
     if (score > top) { best = r; top = score; }
   }
   return best;
 }
 // A place scale where a primary row gives one: for a field or its parts (spending covers spending.food).
-export const placeOf = (data, field, place) => (place ? (data?.place || []).find(p => p.place === place && (p.field === field || field.startsWith(`${p.field}.`) || p.field === '*')) ?? null : null);
+export const placeOf = (data, field, place) => placesOf(place).map(pl => (data?.place || []).find(p => p.place === pl && (p.field === field || field.startsWith(`${p.field}.`) || p.field === '*'))).find(Boolean) ?? null;
 
-// The household facts the rows are picked by, from About you: the state (NY reads the NY metro where a row has it),
+// The household facts the rows are picked by, from About you: the state (the NYC area reads the NY metro where a row
+// has it, then its own state; batch 60),
 // Solo or Couple, and for rent how many ways it is split when the amount given is the person's own share.
 export function priorsOpts(profile = {}) {
   const p = profile || {};
   const share = p.shared?.rent !== false && (p.sharedAs?.rent ?? 'Your share') === 'Your share';
   const ways = p.roommates != null || p.splitWays != null ? splitWaysOf(p) : 1;
-  return { place: p.state ?? null, household: p.household === 'Solo' || p.household === 'Couple' ? p.household : null, split: share && ways > 1 ? ways : 1, housing: p.housing ?? null };
+  return { place: inNycArea(p) ? ['NY metro', p.state] : p.state ?? null, household: p.household === 'Solo' || p.household === 'Couple' ? p.household : null, split: share && ways > 1 ? ways : 1, housing: p.housing ?? null };
 }
 
 const center = r => r.median ?? r.mean ?? null;
