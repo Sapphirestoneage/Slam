@@ -426,7 +426,7 @@ const app = {
     const A = b.A;
     const back = b.back && b.back !== location.hash ? S.button('Back to where we were', { size: 'small', iconName: 'left', onClick: () => { const to = b.back; b.back = null; this.go(to); } }) : null;
     const head = h('div.tracker-head', {}, h('strong', {}, `Session ${A.n} · ${A.done} of ${A.of} done`), h('span.muted.small', {}, A.name), h('span.spacer'), back,
-      walkButton(this, this.ctx, { size: 'small' }), // batch 14 (item 5)
+      walkButton(this, this.ctx, { size: 'small', withAsk: parseRoute(location.hash).hash === '#/home/session' }), // batch 14 (item 5); on Home it counts the Ask next stop too (QUESTIONS 391)
       S.button(b.open ? 'Hide the agenda' : 'Agenda', { size: 'small', iconName: b.open ? 'down' : 'up', onClick: () => { b.open = !b.open; this.agendaBar(); } }));
     clear(el, head, b.open ? h('div.tracker-body', {}, agendaPanel(this, this.ctx, A, { compact: true })) : null);
   },

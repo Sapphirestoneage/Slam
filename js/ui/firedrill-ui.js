@@ -37,22 +37,62 @@ export function fireDrillScreen(app, ctx) {
 // QUESTIONS 366: with only a gut number the must-pay part is all the spending; one tap to Budget splits it out.
 const GUT_WORDS = 'All your spending, since the needs are not split out yet';
 const splitButton = app => S.button('Split it on Budget', { size: 'small', iconName: 'right', tip: 'Budget lines split the needs (housing, food, getting to work) from the rest', onClick: () => app.go('#/cash-flow/budget') });
+// QUESTIONS 388, 389: until each account and card with no bank set is answered, the days read two ways in one calm
+// line, and the card asks Same bank / Another bank for each one as a tap. A name that sounds like an online bank starts
+// on Another bank as the likely answer (dashed, not pressed): it still counts as not answered until tapped.
+const GENERIC = /^(savings|checking|money market|cd|savings or hysa)$/i;
+const nameIn = n => (GENERIC.test(n) ? n.toLowerCase() : n);
+const listOf = names => (names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0] ?? '');
+const dayWords = n => plural(n, 'day');
+export function bankTap(ctx, D, x) {
+  const a = D.account, fd = fireDrillState(ctx.store.doc);
+  const seg = S.toggle([['same', 'Same bank'], ['other', 'Another bank']], x.answer, v => setFireDrill(ctx.store, { sameBank: { ...(fd.sameBank || {}), [`${a.id}:${x.id}`]: v === 'same' ? true : v === 'other' ? false : undefined } }, 'Fire drill: same bank'),
+    { label: `${x.name}: which bank`, clearable: true, key: `fd:bank:${x.id}` });
+  if (x.answer == null && x.likely === 'other') {
+    const b = seg.children[1];
+    b.classList.add('likely');
+    b.title = 'Likely: the name sounds like an online bank. Tap to say so';
+  }
+  return seg;
+}
+function askRows(ctx, D) {
+  if (!D.asks?.length) return null;
+  const a = D.account;
+  return h('div.fd-ask', {},
+    h('p.small.fd-ask-q', {}, `At the same bank as ${a.name}? Banks often freeze every account and card a person has there.`),
+    h('div.fd-list', {}, D.asks.map(x => h('div.fd-row', { 'data-ask': x.id },
+      h('span.fd-name', {}, x.name, h('span.muted.small', {}, x.answer == null && x.likely === 'other' ? ' · sounds like an online bank' : x.kind === 'card' && !/card/i.test(x.name) ? ' · card' : x.forTaxes ? ' · for taxes' : '')),
+      bankTap(ctx, D, x),
+      h('strong.fd-amt', {}, x.kind === 'card' ? (x.limit != null ? `${money(x.limit)} limit` : '–') : money(x.balance ?? 0))))));
+}
 function hero(app, ctx, D, B) {
-  const a = D.account, u = D.unreachable, r = D.reachable, c = D.cover;
+  const a = D.account, u = D.unreachable, r = D.reachable, c = D.cover, R = D.readings;
+  const two = R && R.differ && c.cash != null;
   const pick = S.tapPick(D.accounts.map(x => [x.id, x.id === D.defaultId ? `${x.name} (paycheck)` : x.name]), a.id,
     v => setFireDrill(ctx.store, { account: v ?? null }, 'Fire drill: account'), { label: 'Which account froze', clearable: false });
   const tile = (label, big, small, focus = null) => h('div.fd-tile', {}, h('span.label', {}, label), h('strong.fd-big', focus ? { 'data-focus': focus } : {}, big), small ? h('span.muted.small', {}, small) : null);
-  const outSmall = [`${money(u.balance)} in ${a.name}`, u.sameBankTotal ? `${money(u.sameBankTotal)} at the same bank` : null, u.paychecks ? `${money(u.paychecks)} of pay landing there` : null].filter(Boolean).join(' + ');
+  const assumed = u.sameBank.filter(x => x.assumed), assumedTotal = assumed.reduce((t, x) => t + (x.balance ?? 0), 0);
+  const known = u.sameBankTotal - assumedTotal;
+  const outSmall = [`${money(u.balance)} in ${a.name}`, known ? `${money(known)} at the same bank` : null,
+    assumedTotal ? `${money(assumedTotal)} if ${listOf(assumed.map(x => nameIn(x.name)))} ${assumed.length > 1 ? 'are' : 'is'} at this bank` : null,
+    u.paychecks ? `${money(u.paychecks)} of pay landing there` : null].filter(Boolean).join(' + ');
   const places = r.accounts.filter(x => (x.balance ?? 0) > 0);
-  const days = c.cash == null ? h('span.muted', {}, 'Needs spending') : S.mathButton(D.result, c.cash === 0 ? '0 days' : `About ${plural(c.cash, 'day')}`);
+  const elsewhere = two ? `${listOf(R.names.map(nameIn))} ${R.names.length > 1 ? 'are' : 'is'} elsewhere` : null;
+  const reachSmall = [places.length ? places.map(x => x.name).join(', ') : u.sameBank.length && !two ? 'Nothing outside this bank yet' : !two ? 'Nothing outside this account yet' : null,
+    two && R.elsewhere.reach !== r.cash ? `${money(R.elsewhere.reach)} if ${elsewhere}` : null].filter(Boolean).join(' · ');
+  const atWords = R?.pending.length > 1 ? 'if they are all at this bank' : R ? `if ${nameIn(R.pending[0].name)} is at this bank` : '';
+  const days = c.cash == null ? h('span.muted', {}, 'Needs spending')
+    : two ? h('span.fd-two', {}, S.mathButton(D.result, `${dayWords(c.cash)} ${atWords}`), h('span.muted', {}, ' · '), S.mathButton(R.elsewhere.result, `${dayWords(R.elsewhere.days)} if ${elsewhere}`))
+      : S.mathButton(D.result, c.cash === 0 ? '0 days' : `About ${plural(c.cash, 'day')}`);
   return h('div.card.fd-hero', {},
     h('h2.fd-q', {}, 'If this account froze today'),
     pick,
+    askRows(ctx, D),
     h('div.fd-tiles', {},
       tile('Out of reach for now', money(u.total), outSmall),
-      tile('You can still reach', money(r.cash), places.length ? places.map(x => x.name).join(', ') : u.sameBank.length ? 'Nothing outside this bank yet' : 'Nothing outside this account yet'),
-      h('div.fd-tile', {}, h('span.label', {}, 'Covers the must-pay bills'), h('strong.fd-big', { 'data-focus': 'firedrill' }, days),
-        c.withCard != null && c.withCard > c.cash ? h('span.muted.small', {}, `About ${plural(c.withCard, 'day')} with the card's room`) : null,
+      tile('You can still reach', money(r.cash), reachSmall || null),
+      h(`div.fd-tile${two ? '.fd-tile-two' : ''}`, {}, h('span.label', {}, 'Covers the must-pay bills'), h(`strong.fd-big${two ? '.fd-big-two' : ''}`, { 'data-focus': 'firedrill' }, days),
+        !two && c.withCard != null && c.withCard > c.cash ? h('span.muted.small', {}, `About ${plural(c.withCard, 'day')} with the card's room`) : null,
         D.must?.source === 'gut' ? h('span.muted.small', {}, GUT_WORDS) : h('span.muted.small', {}, 'Housing, utilities, food, getting to work and childcare, health, minimums'),
         D.must?.source === 'gut' ? h('span.fd-split', {}, splitButton(app)) : null)),
     B.risk ? h('p.fd-note.muted.small', {}, 'Banks and payment apps sometimes close accounts tied to adult work, platform payouts or a lot of cash deposits, often with little notice. A plan made ahead of time turns that day into a hassle instead of a scramble.') : null);
@@ -81,19 +121,23 @@ function nextDays(ctx, D) {
 function reach(app, ctx, D) {
   const a = D.account, r = D.reachable, fd = fireDrillState(ctx.store.doc);
   const said = (o, v) => setFireDrill(ctx.store, { sameBank: { ...(fd.sameBank || {}), [`${a.id}:${o.id}`]: v } }, 'Fire drill: same bank');
-  // QUESTIONS 367: an account with no bank set counts as at the same bank (out of reach) until Another bank is tapped.
-  const bankPick = o => (o.bank && a.bank ? h('span.tag.plain', {}, o.same ? 'Same bank, may freeze too' : o.bankName ?? 'Another bank') // both banks known (Institutions)
-    : S.toggle([['same', 'Same bank'], ['other', 'Another bank']], o.known ? (o.same ? 'same' : 'other') : null, v => said(o, v === 'same' ? true : v === 'other' ? false : undefined), { label: `${o.name}: which bank`, clearable: true }));
+  // QUESTIONS 367, 388: an account with no bank set reads as at the same bank (out of reach) until it is answered; the
+  // card on top shows the other reading beside it. A payment app is never a bank's.
+  const ask = id => D.asks.find(x => x.id === id);
+  const bankPick = o => (o.from === 'app' ? h('span.tag.plain', {}, 'Payment app, not a bank')
+    : o.bank && a.bank ? h('span.tag.plain', {}, o.same ? 'Same bank, may freeze too' : o.bankName ?? 'Another bank') // both banks known (Institutions)
+      : ask(o.id) ? bankTap(ctx, D, ask(o.id))
+        : S.toggle([['same', 'Same bank'], ['other', 'Another bank']], o.known ? (o.same ? 'same' : 'other') : null, v => said(o, v === 'same' ? true : v === 'other' ? false : undefined), { label: `${o.name}: which bank`, clearable: true }));
   const others = [...D.others, ...D.unreachable.sameBank.map(o => ({ ...o, same: true }))];
-  const acctRows = others.map(o => h('div.fd-row', {}, h('span.fd-name', {}, o.name, o.forTaxes ? h('span.muted.small', {}, ' · set aside for taxes, not counted') : o.assumed ? h('span.muted.small', {}, ' · counted as the same bank, out of reach') : null),
+  const acctRows = others.map(o => h('div.fd-row', {}, h('span.fd-name', {}, o.name, o.forTaxes ? h('span.muted.small', {}, ' · set aside for taxes, not counted') : o.assumed ? h('span.muted.small', {}, ' · read as the same bank until answered') : null),
     bankPick({ ...o, same: o.same ?? false }), h('strong.fd-amt', {}, money(o.balance ?? 0))));
   const handRows = r.accounts.filter(x => x.inHand).map(o => h('div.fd-row', {}, h('span.fd-name', {}, o.name), h('span.muted.small', {}, 'In hand'), h('strong.fd-amt', {}, money(o.balance ?? 0))));
-  const cardRows = r.cards.map(c => h('div.fd-row', {}, h('span.fd-name', {}, c.name, h('span.muted.small', {}, c.same ? ' · same bank, may close too' : ' · room on the card')),
+  const cardRows = r.cards.map(c => h('div.fd-row', {}, h('span.fd-name', {}, c.name, h('span.muted.small', {}, c.assumed ? ' · bank not answered yet, read as the same bank' : c.same ? ' · same bank, may close too' : ' · room on the card')),
     c.limit == null ? S.moneyInput(null, v => ctx.store.update(c.id, { limit: v }), { hint: 'Add limit', cents: false, width: 132, key: `${c.id}:limit` }) : h('span.muted.small', {}, `${money(c.limit)} limit, ${money(c.balance)} used`),
     h('strong.fd-amt', {}, c.room == null ? '–' : money(c.room))));
-  const asks = others.some(o => !(o.bank && a.bank));
+  const asks = others.some(o => !(o.bank && a.bank) && o.from !== 'app');
   return sec('drill:reach', { title: 'What you could still reach', summary: `${money(r.cash)} of cash${r.cardRoom ? ` and ${money(r.cardRoom)} on a card` : ''}`, card: true },
-    asks ? h('p.muted.small', {}, `Is it at the same bank as ${a.name}? A bank closing an account often freezes every account that person has there, so an account counts as the same bank until you tap Another bank.`) : null,
+    asks ? h('p.muted.small', {}, `Is it at the same bank as ${a.name}? A bank closing an account often freezes every account that person has there, so until each is answered the days read both ways on the card above.`) : null,
     acctRows.length || handRows.length ? h('div.fd-list', {}, acctRows, handRows) : h('p.muted.small', {}, `Every dollar is in ${a.name}. The backup plan below starts a second place.`),
     cardRows.length ? [h('h3', {}, 'Cards'), h('div.fd-list', {}, cardRows)] : null,
     D.must ? h('div.row-line.fd-must', {}, h('span.small', {}, 'Must-pay bills: ', S.mathButton({ id: 'M9F', value: D.must.monthly, needs: [], text: D.must.text }, `${money(D.must.monthly)} a month`),

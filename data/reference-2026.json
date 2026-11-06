@@ -3287,8 +3287,8 @@
     }
   },
   "fireDrill": {
-    "about": "Batch 44 (M9F, js/math/firedrill.js): the bank fire drill. order is the order to pay in when not everything can be paid, first to last (childcare beside getting to work, QUESTIONS 365); each tier lists the Budget categories, DRAFTT letters, debt types and calendar kinds it holds, and card says whether a credit card can usually pay it (not rent, not another debt).",
-    "source": "CFPB, Your Money, Your Goals: Prioritizing bills (files.consumerfinance.gov/f/documents/cfpb_ymyg_behind-on-bills_print.pdf: stay housed and keep utilities connected, keep the job, then other loans and credit cards) and CFPB, Tools to help when you can't pay your bills (Apr 17 2020: cover food, housing, utilities and phone first); the NFCC counselors' order (keep the roof, the heat, the car you work from and the food before the debts), via the older suite's data/bill_triage.json (Sep 6 2026). Childcare sits beside getting to work, ahead of health: both keep the paycheck coming (QUESTIONS 365, Nov 6 2026; the older suite put childcare needed for work with housing). Checked Nov 6 2026",
+    "about": "Batch 44 (M9F, js/math/firedrill.js): the bank fire drill. order is the order to pay in when not everything can be paid, first to last (the childcare line beside getting to work, QUESTIONS 365 and 390); each tier lists the Budget categories, the lines within a category (lines: a category and the words a line's name holds), DRAFTT letters, debt types and calendar kinds it holds, and card says whether a credit card can usually pay it (not rent, not another debt). onlineBanks: the words that suggest an online bank (QUESTIONS 388).",
+    "source": "CFPB, Your Money, Your Goals: Prioritizing bills (files.consumerfinance.gov/f/documents/cfpb_ymyg_behind-on-bills_print.pdf: stay housed and keep utilities connected, keep the job, then other loans and credit cards) and CFPB, Tools to help when you can't pay your bills (Apr 17 2020: cover food, housing, utilities and phone first); the NFCC counselors' order (keep the roof, the heat, the car you work from and the food before the debts), via the older suite's data/bill_triage.json (Sep 6 2026). Childcare sits beside getting to work, ahead of health: both keep the paycheck coming (QUESTIONS 365, Nov 6 2026; the older suite put childcare needed for work with housing). Only the childcare line moves up (Childcare and babysitting, or a Kids line named for daycare, a nanny or a sitter); kids' clothes, activities, school and supplies stay with everything else (QUESTIONS 390, Nov 6 2026). Checked Nov 6 2026",
     "date": "2026-11-06",
     "order": [
       {
@@ -3332,9 +3332,9 @@
         "draftt": [
           "Transportation"
         ],
-        "categories": [
-          "Kids"
-        ],
+        "lines": {
+          "Kids": ["childcare", "child care", "daycare", "day care", "babysit", "nanny", "sitter", "preschool", "after school", "after-school"]
+        },
         "debtTypes": [
           "Car loan"
         ],
@@ -3379,6 +3379,13 @@
         "call": "Pause it, or move its date, until the account is sorted out."
       }
     ],
+    "onlineBanks": {
+      "about": "Batch 52 (QUESTIONS 388): words in an account's or card's name (or its bank's name) that suggest an online bank, so the drill's Same bank / Another bank tap starts on Another bank as the likely answer. A hint only: the row still counts as not answered until tapped. generic: words that say online but name no bank, so two rows that share only one of them are not read as the same bank.",
+      "words": ["HYSA", "high-yield", "high yield", "online", "internet bank", "Ally", "Marcus", "SoFi", "Capital One 360", "Discover", "American Express", "Amex", "Apple", "Synchrony", "Barclays", "CIT", "Wealthfront", "Betterment", "Chime", "Varo", "Axos", "UFB", "Openbank", "Bask", "LendingClub", "Quontic", "EverBank", "Laurel Road", "Live Oak", "Sallie Mae", "Popular Direct", "Bread"],
+      "generic": ["HYSA", "high-yield", "high yield", "online", "internet bank"],
+      "source": "Banks with no branches that sell high-yield savings or cards nationally, by name from each bank's own site (checked Nov 6 2026); a SLAM list, kept short on purpose. A word here only picks which tap starts highlighted.",
+      "date": "2026-11-06"
+    },
     "links": {
       "plans": {
         "site": "lostandfound.dol.gov",

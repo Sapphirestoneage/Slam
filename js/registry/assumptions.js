@@ -321,6 +321,11 @@ export const ASSUMPTIONS = [
 // Tables: rows of numbers. Each column is a named range (Table_column) the formulas read.
 const bracketRows = list => list.map(([over, rate], i) => [over, rate, rate - (list[i - 1]?.[1] ?? 0)]);
 const BRACKET_COLS = [['over', 'Income over', 'money'], ['rate', 'Rate', 'pct'], ['step', 'Rate step (this rate minus the one before)', 'pct']];
+// Bill_order's Holds column: the Budget categories, the lines within a category, the DRAFTT letters, the debts and the
+// calendar kinds a fire drill tier holds (ref.fireDrill.order).
+const billOrderHolds = o => [...(o.categories || []), ...Object.entries(o.lines || {}).map(([c, w]) => `${c} lines named ${w.slice(0, 4).join(', ')} and the like`),
+  ...(o.draftt || []).map(d => `${d} (DRAFTT)`), ...(o.debtTypes || []), ...(o.debts ? ['the minimum on every other debt'] : []), ...(o.kinds || []).map(k => (k === 'tax' ? 'tax payments' : k)),
+  ...(o.gut ? ['a gut number'] : [])].join('; ') || 'everything else';
 export const TABLES = [
   { id: 'Fed_single', label: 'Federal brackets, single', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.brackets.single), source: IRS_TAX, date: '2026-10-28' },
   { id: 'Fed_joint', label: 'Federal brackets, married jointly', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.brackets.joint), source: IRS_TAX, date: '2026-10-28' },
@@ -333,8 +338,9 @@ export const TABLES = [
   { id: 'Platforms', label: 'Platforms: fee, hold and payout schedule (prefilled on a Platform income row)', columns: [['platform', 'Platform', 'text'], ['fee', 'Fee', 'pct'], ['hold', 'Hold, days', 'number'], ['payout', 'Payout', 'text'], ['source', 'Source', 'text']],
     rows: r => Object.entries(r.platforms).map(([k, p]) => [k, p.fee, p.holdDays, p.payout, p.source]), source: 'Each row names its source (checked Nov 6 2026; the unverified ones are on QUESTIONS)', date: '2026-11-06' },
   // Batch 44: the order to pay in when not everything can be paid (the bank fire drill, M9F).
-  { id: 'Bill_order', label: 'Fire drill: the order to pay in when not everything can be paid (first to last), and whether a card can usually pay it', columns: [['n', 'Order', 'number'], ['tier', 'Bills', 'text'], ['card', 'A card can pay it', 'text']],
-    rows: r => r.fireDrill.order.map((o, i) => [i + 1, o.label, o.card ? 'Yes' : 'No']), source: r => r.fireDrill.source, date: '2026-11-06' },
+  // Batch 52 (QUESTIONS 390): what each tier holds, so the childcare line's place (not the whole Kids category) shows.
+  { id: 'Bill_order', label: 'Fire drill: the order to pay in when not everything can be paid (first to last), what each holds, and whether a card can usually pay it', columns: [['n', 'Order', 'number'], ['tier', 'Bills', 'text'], ['holds', 'Holds', 'text'], ['card', 'A card can pay it', 'text']],
+    rows: r => r.fireDrill.order.map((o, i) => [i + 1, o.label, billOrderHolds(o), o.card ? 'Yes' : 'No']), source: r => r.fireDrill.source, date: '2026-11-06' },
   { id: 'NYC_single', label: 'NYC brackets, single', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.local.NYC.brackets.single), source: r => r.tax.local.NYC.source, date: '2026-11-03' },
   { id: 'NYC_joint', label: 'NYC brackets, joint', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.local.NYC.brackets.joint), source: r => r.tax.local.NYC.source, date: '2026-11-03' },
   { id: 'NYC_head', label: 'NYC brackets, head of household', columns: BRACKET_COLS, rows: r => bracketRows(r.tax.local.NYC.brackets.head), source: r => r.tax.local.NYC.source, date: '2026-11-03' },
@@ -405,7 +411,7 @@ export const REFERENCE_LISTS = {
   'studentLoans.saveEnded': 'the day a court order ended SAVE, March 10 2026 (Tate Law, Oct 4 2026); words only',
   lists: 'picker lists (debt types, account types, statuses) and, since batch 20, the usual 401(k) match formulas as taps (matchPicks: the job row\'s first tier)',
   platforms: 'the Platforms table (batch 27)',
-  fireDrill: 'batch 44: the Bill_order table (each tier\'s Budget categories, DRAFTT letters, debt types and calendar kinds, and words for whom to call), its source and date, and the stranded money links (the DOL Retirement Savings Lost and Found, MissingMoney with NAUPA). Words and tap groups: the only numbers are the order itself',
+  fireDrill: 'batch 44: the Bill_order table (each tier\'s Budget categories, DRAFTT letters, debt types and calendar kinds, and words for whom to call), its source and date, and the stranded money links (the DOL Retirement Savings Lost and Found, MissingMoney with NAUPA); batch 52: the lines within a category a tier holds (the childcare line, QUESTIONS 390) and onlineBanks, the words that start the Same bank / Another bank tap on Another bank (QUESTIONS 388). Words and tap groups: the only numbers are the order itself',
   'tax.noWageTax': 'the states with no tax on wages (batch 35, QUESTIONS 306): words on Taxes only ("FL has no state income tax on wages"); no math reads it',
   categoryDefaults: 'the starting DRAFTT letter, amount and date for each Budget category',
   spendingPresets: 'starter Budget lines, each a Guess',

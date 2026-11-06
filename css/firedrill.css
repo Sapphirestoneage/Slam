@@ -40,3 +40,11 @@
 .fd-split { margin-top: 6px; }
 .fd-must { gap: 8px var(--s3); flex-wrap: wrap; align-items: center; }
 @media (max-width: 760px) { .fd-row-top.fd-row-plan { grid-template-columns: minmax(0, 1fr) auto; } }
+/* Batch 52 (QUESTIONS 388, 389): the Same bank / Another bank tap row on the card on top, the likely answer (dashed, not
+   pressed), and the two readings of the days in one calm line. */
+.fd-ask { display: flex; flex-direction: column; gap: 4px; padding: var(--s2) var(--s3); border: 1px solid var(--border-row); border-radius: var(--r-input); }
+.fd-ask-q { margin: 0; }
+.seg button.likely:not([aria-pressed="true"]) { background: color-mix(in srgb, var(--primary) 14%, var(--card)); outline: 2px dashed var(--primary); outline-offset: -5px; }
+.fd-big-two { font-size: var(--fs-body); line-height: 1.5; }
+.fd-two { display: inline; }
+.fd-two .math { font-size: inherit; }

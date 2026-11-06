@@ -175,7 +175,7 @@ function sessionStrip(app, ctx, P) {
     h('span.spacer'),
     // Answer 90: focus mode (core columns only) is on by default; this shows every field mid-session, and back.
     P.inSession && s.guide ? S.checkbox('Show every field (not just what\'s missing)', !!s.allFields, v => ctx.store.setIn('session', ['allFields'], v, v ? 'Show every field' : 'Focus mode'), { key: 'home:all-fields' }) : null, // item 10
-    walkButton(app, ctx, { size: 'small' }), // batch 14 (item 5): every empty or rough box, one at a time
+    walkButton(app, ctx, { size: 'small', withAsk: true }), // batch 14 (item 5): every empty or rough box, one at a time; batch 52: counts the Ask next stop (QUESTIONS 391)
     P.inSession ? [S.button('End session', { kind: P.current.done || !hasNext ? 'primary' : 'secondary', size: P.current.done || !hasNext ? 'big' : null, iconName: 'check', onClick: () => app.go('#/home/review') }), P.current.done || !hasNext ? null : S.button('Next step', { kind: 'primary', size: 'big', iconName: 'right', onClick: nextStep })] // item 4: End session leads once the checklist is met, or once nothing is left to chase (batch 7, item 6)
       : [P.graduated ? null : S.button('Move to next session', { iconName: 'right', tip: 'Move on without a live session', onClick: () => app.go('#/home/review') }),
         S.button('Start session', { kind: 'primary', size: 'big', onClick: start, disabled: P.graduated, why: P.graduated ? 'The program is complete' : null })]);

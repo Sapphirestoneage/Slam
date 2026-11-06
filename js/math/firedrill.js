@@ -5,13 +5,16 @@
 //   - which paychecks land in it and which bills draw from it in the next RULES.fireDrillDays days (from the calendar,
 //     js/month.js instances, so every date and amount is the one Cash flow › Calendar shows);
 //   - the cash that is out of reach: its balance, any account at the same bank, and the paychecks that would land
-//     there in the window. An account with no bank set counts as at the same bank until someone taps Another bank
-//     (QUESTIONS 367: banks often freeze every account a person has there); a payment app is never a bank's;
+//     there in the window. An account or card with no bank set counts as at the same bank until someone answers it
+//     (QUESTIONS 367, 389: banks often freeze every account and card a person has there); a payment app is never a bank's.
+//     Until each one is answered there are two readings (QUESTIONS 388): the drill as it stands (all at this bank) and
+//     readings.elsewhere (every unanswered one at another bank). One whose name suggests an online bank (ref.fireDrill.
+//     onlineBanks) carries likely: 'other', a hint for the tap only: it still counts as unanswered;
 //   - what can still be reached: cash at other banks, cash at home, and the room on a card that is not at that bank
 //     (a card with no limit typed has no room counted). Money set aside for taxes is listed apart and not counted,
 //     as the runway and the layers do;
 //   - how many days that covers the must-pay bills: housing, utilities and phone, food, getting to work and
-//     childcare, health (the DRAFTT needs), and the minimum on every other debt. With only a gut number, the whole gut number
+//     childcare (the childcare line only, QUESTIONS 390), health (the DRAFTT needs), and the minimum on every other debt. With only a gut number, the whole gut number
 //     counts (the must-pay part is not split out yet). A card cannot pay rent or another debt, so the days with the
 //     card are the fewer of (cash + card room) / every must-pay a day and cash / (housing and minimums) a day;
 //   - the order to pay in when not all can be paid (ref.fireDrill.order: housing, utilities, food, getting to work
@@ -75,7 +78,7 @@ export function drawsFromOf(r, accounts, cards = []) {
 }
 // Two rows at the same bank: both banks known and equal, or the coach said so on the drill (program.fireDrill.sameBank,
 // keyed 'a:b'; true same, false another bank). known: whether it is known either way. Not known: assume says which
-// way it counts (QUESTIONS 367: a bank account counts as the same bank until someone taps Another bank; a card does not).
+// way it counts (QUESTIONS 367, 389: a bank account or a card counts as the same bank until someone answers it).
 export function sameBankOf(a, b, said = {}, { assume = false } = {}) {
   if (!a || !b) return { same: false, known: false };
   if (a.id === b.id) return { same: true, known: true };
@@ -83,14 +86,30 @@ export function sameBankOf(a, b, said = {}, { assume = false } = {}) {
   const v = said[`${a.id}:${b.id}`] ?? said[`${b.id}:${a.id}`];
   return typeof v === 'boolean' ? { same: v, known: true, from: 'said' } : assume ? { same: true, known: false, assumed: true } : { same: false, known: false };
 }
-// Two bank accounts with no bank said: the same bank, unless either is a payment app (an app is never a bank's).
-const assumeSame = (a, b) => a?.type !== 'Payment app' && b?.type !== 'Payment app';
-export const sameBankAcct = (a, b, said = {}) => sameBankOf(a, b, said, { assume: assumeSame(a, b) });
+// Two bank accounts with no bank said: the same bank. A payment app is never a bank's, so that one is known.
+const isApp = a => a?.type === 'Payment app';
+export const sameBankAcct = (a, b, said = {}) => (a && b && a.id !== b.id && (isApp(a) || isApp(b)) ? { same: false, known: true, from: 'app' } : sameBankOf(a, b, said, { assume: true }));
+
+// QUESTIONS 388: does a row's name (or its bank's name) suggest an online bank? words: ref.fireDrill.onlineBanks.words.
+// The type "Savings or HYSA" is every savings account's type, so the type alone does not count.
+const esc = w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+export function onlineWordsOf(row, words = []) {
+  const text = [row?.name, row?.bankName].filter(Boolean).join(' ');
+  return words.filter(w => new RegExp(`(^|[^a-z0-9])${esc(w)}($|[^a-z0-9])`, 'i').test(text)).map(w => w.toLowerCase());
+}
+// Likely another bank: either row looks like an online bank, unless both name the same one (Ally checking, Ally savings).
+export function likelyOtherOf(a, b, words = [], generic = []) {
+  const wa = onlineWordsOf(a, words), wb = onlineWordsOf(b, words);
+  if (!wa.length && !wb.length) return false;
+  const brand = w => !generic.map(g => g.toLowerCase()).includes(w);
+  return !wa.filter(brand).some(w => wb.includes(w));
+}
 
 // Which tier of the order a calendar entry (or a Budget line) belongs to. order: ref.fireDrill.order.
 export function tierOf(item, order) {
   const t = order.find(o => (o.kinds || []).includes(item.kind)
     || (item.debtType && (o.debtTypes || []).includes(item.debtType))
+    || (item.category && item.line && (o.lines?.[item.category] || []).some(w => String(item.line).toLowerCase().includes(w.toLowerCase()))) // QUESTIONS 390: one line of a category
     || (item.category && (o.categories || []).includes(item.category))
     || (item.gut && o.gut)
     || (item.draftt && (o.draftt || []).includes(item.draftt)));
@@ -113,7 +132,7 @@ export function mustPayOf(x, order) {
   const housingDebt = sum(x.debts.filter(d => d.type === 'Mortgage'), d => (d.inFull ? 0 : d.payment ?? 0));
   const carDebt = sum(x.debts.filter(d => d.type === 'Car loan'), d => (d.inFull ? 0 : d.payment ?? 0));
   const typed = (x.typedLines || []).filter(l => l.amount != null && !x.dupOf?.[l.id] && l.status !== 'Not for me');
-  const tierLine = l => tierOf({ category: l.category, draftt: l.draftt }, order).id;
+  const tierLine = l => tierOf({ category: l.category, draftt: l.draftt, line: l.name }, order).id;
   const housingLines = sum(typed.filter(l => tierLine(l) === 'housing'), mine);
   if (x.spendingSource === 'lines') {
     const must = typed.filter(l => MUST.includes(tierLine(l)) || inFat(l));
@@ -171,9 +190,10 @@ function windowOf(doc, ref, now, days) {
   return { from, to, list };
 }
 
-// The drill for one account. opts.account: its id (default: where the paycheck lands).
-export function fireDrillOf(doc, ref, { now = new Date(), account = undefined } = {}) {
-  const fd = fireDrillState(doc), said = fd.sameBank || {};
+// The drill for one account. opts.account: its id (default: where the paycheck lands). opts.other: ids of rows to read
+// as at another bank (the second reading, QUESTIONS 388).
+export function fireDrillOf(doc, ref, { now = new Date(), account = undefined, other = null } = {}) {
+  const fd = fireDrillState(doc);
   const order = ref.fireDrill?.order || [];
   const days = RULES.fireDrillDays;
   const accounts = bankAccounts(doc);
@@ -187,13 +207,15 @@ export function fireDrillOf(doc, ref, { now = new Date(), account = undefined } 
   const acct = accounts.find(a => a.id === pickId) ?? defaultAcct;
   const base = { accounts, account: acct, defaultId: defaultAcct?.id ?? null, days, order };
   if (!acct) return { ...base, result: needs('M9F', ['a checking or savings account'], { unit: 'days' }) };
+  const said = { ...(fd.sameBank || {}) };
+  for (const id of other || []) said[`${acct.id}:${id}`] = false;
 
   // The calendar's next days, each entry with where its money goes.
   const W = windowOf(doc, ref, now, days);
   const debtsById = new Map(x.debts.map(d => [d.id, d]));
   const cardOf = id => cards.find(c => c.id === id) ?? null;
   const bankOfRow = r => (institutionOf(doc, r) ? bankKeyOf(institutionOf(doc, r).id) : r.values?.bankKey ?? null);
-  const frozenCard = c => sameBankOf(acct, { id: c.id, bank: bankOfRow(c) }, said).same;
+  const frozenCard = c => sameBankOf(acct, { id: c.id, bank: bankOfRow(c) }, said, { assume: true }).same; // QUESTIONS 389
   const entries = W.list.map(i => {
     const r = recs.get(i.recId) ?? null;
     if (i.kind === 'income') {
@@ -204,7 +226,7 @@ export function fireDrillOf(doc, ref, { now = new Date(), account = undefined } 
     const card = i.onCard ? cards.find(c => c.name === i.onCard) ?? null : null;
     const src = card ? { card: card.id } : r && (r.kind === 'bill' || r.kind === 'debt') ? drawsFromOf(r, accounts, cards) : mainAccount(accounts);
     const d = r?.kind === 'debt' ? debtsById.get(r.id) : null;
-    const line = r?.kind === 'bill' ? { category: r.values?.category, draftt: r.values?.draftt } : {};
+    const line = r?.kind === 'bill' ? { category: r.values?.category, draftt: r.values?.draftt, line: r.name ?? null } : {};
     return { ...i, dir: 'out', amount, where: src?.card ? null : src?.id ?? null, card: src?.card ?? null, debtType: d?.type ?? null, debt: d, ...line, gut: !!i.gut };
   });
   const atFrozen = id => { const a = accounts.find(y => y.id === id); return !!a && sameBankAcct(acct, a, said).same; };
@@ -223,15 +245,15 @@ export function fireDrillOf(doc, ref, { now = new Date(), account = undefined } 
 
   // Out of reach and still reachable.
   const rel = a => sameBankAcct(acct, a, said);
-  const sameBank = accounts.filter(a => a.id !== acct.id && rel(a).same).map(a => ({ ...a, known: rel(a).known, assumed: !!rel(a).assumed }));
-  const others = accounts.filter(a => a.id !== acct.id && !rel(a).same).map(a => ({ ...a, known: rel(a).known }));
+  const sameBank = accounts.filter(a => a.id !== acct.id && rel(a).same).map(a => ({ ...a, known: rel(a).known, assumed: !!rel(a).assumed, from: rel(a).from ?? null }));
+  const others = accounts.filter(a => a.id !== acct.id && !rel(a).same).map(a => ({ ...a, known: rel(a).known, from: rel(a).from ?? null }));
   const inHand = (doc.records || []).filter(r => r.kind === 'account' && r.values?.group === 'cash' && r.type === 'Cash on hand' && r.status !== 'Not for me')
     .map(r => ({ id: r.id, name: r.name || r.type, type: r.type, balance: r.values.balance ?? null, inHand: true }));
   const reachAccts = [...others.filter(a => !a.forTaxes), ...inHand];
   const cardRows = cards.map(c => {
-    const bank = bankOfRow(c), sb = sameBankOf(acct, { id: c.id, bank }, said);
+    const bank = bankOfRow(c), sb = sameBankOf(acct, { id: c.id, bank }, said, { assume: true }); // QUESTIONS 389
     const limit = c.values?.limit ?? null, balance = c.values?.balance ?? 0;
-    return { id: c.id, name: c.name || 'Credit card', limit, balance, room: limit == null || sb.same ? null : Math.max(0, round2(limit - balance)), same: sb.same, known: sb.known, bankName: institutionOf(doc, c)?.name ?? null };
+    return { id: c.id, name: c.name || 'Credit card', limit, balance, room: limit == null || sb.same ? null : Math.max(0, round2(limit - balance)), same: sb.same, known: sb.known, assumed: !!sb.assumed, from: sb.from ?? null, bankName: institutionOf(doc, c)?.name ?? null };
   });
   const reachCash = round2(sum(reachAccts, a => a.balance));
   const cardRoom = round2(sum(cardRows, c => c.room));
@@ -268,10 +290,34 @@ export function fireDrillOf(doc, ref, { now = new Date(), account = undefined } 
     : `Cash you can still reach ${fmt.money(reachCash)} / (${fmt.money(must.monthly)} of must-pay bills a month x 12 / 365 = ${fmt.money(must.monthly * 12 / 365)} a day) = ${cover.cash} days.${cardRoom ? ` With ${fmt.money(cardRoom)} of card room (a card cannot pay rent or another debt): ${cover.withCard} days.` : ''}`;
   const result = must == null ? needs('M9F', ['spending (a gut number or Budget lines)'], { unit: 'days' }) : ok('M9F', cover.cash, text, { unit: 'days' });
 
+  // QUESTIONS 388, 389: every account and card whose bank is not known yet, and the second reading with all of them at
+  // another bank. names: the ones whose answer moves the money (a balance, pay landing there, a card's room).
+  // asks: every account and card whose bank Institutions does not settle, answered (answer 'same' or 'other', tapped on
+  // the drill) or not (null); pending: the ones not answered yet.
+  const ob = ref.fireDrill?.onlineBanks || {};
+  const answerOf = r => (r.from === 'said' ? (r.same ? 'same' : 'other') : null);
+  const asks = [
+    ...accounts.filter(a => a.id !== acct.id && (!rel(a).known || rel(a).from === 'said')).map(a => ({ id: a.id, kind: 'account', name: a.name, balance: a.balance, forTaxes: a.forTaxes, answer: answerOf(rel(a)), likely: likelyOtherOf(acct, a, ob.words, ob.generic) ? 'other' : null })),
+    ...cardRows.filter(c => !c.known || c.from === 'said').map(c => ({ id: c.id, kind: 'card', name: c.name, balance: c.balance, limit: c.limit, answer: answerOf(c), likely: likelyOtherOf(acct, c, ob.words, ob.generic) ? 'other' : null })),
+  ];
+  const pending = asks.filter(x => x.answer == null);
+  let readings = null;
+  if (pending.length && !other) {
+    const B = fireDrillOf(doc, ref, { now, account: acct.id, other: pending.map(p => p.id) });
+    const moves = p => (p.kind === 'card' ? (B.reachable.cards.find(c => c.id === p.id)?.room ?? 0) > 0
+      : !p.forTaxes && ((p.balance ?? 0) > 0 || entries.some(e => e.dir === 'in' && e.where === p.id)));
+    const names = pending.filter(moves).map(p => p.name);
+    const differ = B.cover.cash !== cover.cash || B.cover.withCard !== cover.withCard;
+    const elsewhere = { days: B.cover.cash, withCard: B.cover.withCard, reach: B.reachable.cash, cardRoom: B.reachable.cardRoom, outOfReach: B.unreachable.total,
+      result: B.result.value == null ? B.result : { ...B.result, text: `${B.result.text} This reads ${names.length ? names.join(', ') : 'each one not answered yet'} as at another bank.` } };
+    readings = { pending, names: names.length ? names : pending.map(p => p.name), differ, at: { days: cover.cash, withCard: cover.withCard, reach: reachCash }, elsewhere };
+    if (result.value != null) result.text = `${result.text} This reads ${pending.map(p => p.name).join(', ')} as at the same bank, out of reach, until each is answered.`;
+  }
+
   return { ...base, window: { from: W.from, to: W.to }, isDefault: acct.id === defaultAcct?.id,
     incoming: group(inFrozen), outgoing: group(outFrozen), nextPaycheck: next ? { name: next.name, date: next.date, amount: next.amount } : null,
     unreachable, reachable: { accounts: reachAccts, cards: cardRows, cash: reachCash, cardRoom, taxes, comingIn: round2(sum(inElsewhere, e => e.amount)) },
-    others, must, cover, order: walk, pool, shortTiers, result };
+    others, must, cover, order: walk, pool, shortTiers, result, asks, pending, readings };
 }
 
 // Platform payouts held back: the net a day times the hold days.

@@ -3591,21 +3591,22 @@
    "screen": "Fire drill",
    "route": "#/net-worth/fire-drill",
    "area": "Net worth",
-   "batch": 48,
+   "batch": 52,
    "tasks": [
-    "Is the savings reachable? (counted as the same bank until Another bank)",
+    "Is the savings reachable? (both readings until Same bank or Another bank is tapped on the card on top)",
+    "Answer the creator's HYSA (starts on Another bank as the likely answer)",
     "Split the must-pay out (gut only)",
     "Mark the 403(b) Current job or Old job",
-    "Read the order with childcare"
+    "Read the order with only the childcare line beside getting to work"
    ],
    "categories": {
     "works": {
      "result": "pass",
-     "reason": "Another bank, Split it on Budget and Current job / Old job each did what they say for Maya, the creator and the teacher at 1280 and 390; Current job takes the plan off Stranded money with Undo"
+     "reason": "Same bank / Another bank on the card on top answered Maya's savings and card, the creator's HYSA and card, and Priya and Dev's HYSA at 1440, 1280 and 390; the tile went from two readings to one number; the answered row stays, pressed, so the page does not jump and it can be changed"
     },
     "right": {
      "result": "pass",
-     "reason": "test/firedrill.test.js re-worked by hand: Maya 12,400 out of reach and 0 days, 33 days once Another bank is tapped; the creator 13,669.24; Priya and Dev 30,969.24; the plan rules (Old job listed, Current job not, idle unmarked listed)"
+     "reason": "test/firedrill.test.js and the four personas' fireDrill blocks re-worked by hand: Maya 0 days if all at this bank, 33 if savings is elsewhere; the creator 0 and 53 (HYSA likely another bank, still unanswered); Priya and Dev 0 and 74; the dancer one number, 59; an unanswered card counts no room (QUESTIONS 389); only the childcare line in the getting-to-work tier (QUESTIONS 390); workbook check: every row matches"
     },
     "oneAnswer": {
      "result": "failure",
@@ -3614,11 +3615,11 @@
     },
     "looks": {
      "result": "pass",
-     "reason": "layout checker (all checks) on this screen at 1440, 1280 and 390, light and dark, Demo and New: no failures; the new parts also scanned open (creator and teacher, six sizes): 0 findings"
+     "reason": "layout checker (all checks) on Fire drill and Home at 1440, 1280 and 390, light and dark, Demo and New: no failures; again with Phase 4 on for the Demo so the tap row shows: no failures; persona run (all 15): 0 layout findings, 0 story notes"
     },
     "obvious": {
      "result": "pass",
-     "reason": "the assumed bank says 'counted as the same bank, out of reach' on its row; waits for Eli at sign-off"
+     "reason": "the question sits right under the account pick ('At the same bank as Checking?'); the likely answer is dashed, not pressed, and its row says 'sounds like an online bank'; waits for Eli at sign-off"
     },
     "findable": {
      "result": "pass",
@@ -3630,15 +3631,15 @@
     },
     "words": {
      "result": "pass",
-     "reason": "plain; 'Getting to work and childcare', 'Health'; no verdict words"
+     "reason": "'0 days if they are all at this bank · 33 days if savings is elsewhere' in place of a lone 0 days; no verdict words"
     },
     "tells": {
      "result": "pass",
-     "reason": "the three numbers move on each tap; a toast with Undo when a plan leaves the list"
+     "reason": "each tap moves the three tiles at once; the readings collapse to one number when the answers settle it"
     },
     "fits": {
      "result": "pass",
-     "reason": "the plan row's tap goes under its name at 390"
+     "reason": "at 390 each tap row puts its two taps under the name and the two readings wrap inside the tile"
     },
     "fast": {
      "result": "pass",
@@ -3646,7 +3647,7 @@
     },
     "coachable": {
      "result": "pass",
-     "reason": "shows the risk by default (0 days until another bank is named), which is the point of the drill (QUESTIONS 367, 388)"
+     "reason": "shows the risk and the other reading side by side, so the coach asks the one question that settles it (QUESTIONS 388)"
     }
    }
   },
@@ -3973,5 +3974,13 @@
   "major": 0,
   "minor": 3,
   "note": "Batch 48 appended its screens (each with \"batch\": 48), scored after its changes; the rows above and the summary are as they were."
+ },
+ "batch52": {
+  "date": "2026-11-06",
+  "screens": 1,
+  "blocker": 0,
+  "major": 0,
+  "minor": 1,
+  "note": "Batch 52 updated the Fire drill row in place (\"batch\": 52: the two readings, the bank taps on the card on top, the childcare line); the minor is the must-pay number beside the spending number, as before."
  }
 }

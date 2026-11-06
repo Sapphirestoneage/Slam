@@ -1130,3 +1130,36 @@ ROADMAP's "The benefits cliff: which lines a raise crosses (SNAP, Medicaid, the 
 2. Registered: 27 cliff values and 5 tables on Assumptions, each with its source and date (the poverty line is studentLoans.poverty, the one copy); About you › Benefits now (six taps), SNAP a month, Child care paid out of pocket (spec rows via spec_link); M9B with four parts on the Math tab (tools/library/cliff-spec.py); format 39.
 3. The screen: one slim card (the next line in dollars a year, the raises that leave you behind, a line for anything already past its line), the raise tester (+$1k, +$5k, +$10k or a box: one sentence, then kept after tax, each benefit lost, what you keep), then two closed sections: Your benefits now (a tap each: Getting it, Might qualify, Not on it; a Guess from Health coverage until tapped; SNAP a month with a one-tap Use; child care in New York) and How the lines work. A household nowhere near any line gets one line and the closed taps.
 4. Personas: two new households, Jasmine (single parent in Rochester, NY on SNAP and Medicaid: a $13,000 raise crosses the $40,980 SNAP line and leaves her $305 behind until it is $13,700) and Lena and Marco (a NY couple at $84,000 on the marketplace: $11,023 of help ends at $86,560, so raises from $2,600 to $14,700 leave them behind). Every def has a cliff block (hand-worked numbers, or "nowhere near" for the W-2 households); the job-loss household's Essential Plan ends $720 above its unemployment, the deficit's Medicaid is already past its line.
+
+## Batch 52 (Nov 6 2026): the Fire drill's two readings, the childcare line, and the walk button's count
+
+QUESTIONS 388 to 391, as decided.
+
+1. Two readings until every bank is answered (QUESTIONS 388, 389). An account or card whose bank Institutions does not
+   settle reads as at the same bank as the frozen one (as before for accounts; cards now too, so an unanswered card
+   counts no room). Until each one is answered the days tile reads both ways in one calm line, each half a Show the
+   math button: "0 days if they are all at this bank · 33 days if savings is elsewhere" (Maya; the creator 0 and 53,
+   Priya and Dev 0 and 74). It names only what moves the money (a balance, pay landing there, a card's room). The Out
+   of reach and You can still reach tiles carry the same "if" in their small line. The card on top asks "At the same
+   bank as Checking?" with Same bank / Another bank for each account and card as a tap row under the account pick; an
+   answered row stays, pressed, so the page does not jump. When the readings agree (Maya's card with no limit once
+   savings is answered) the tile shows one number. A payment app is never a bank's, so it is not asked. Math:
+   `fireDrillOf` returns `asks`, `pending` and `readings` (the second reading is the same drill with every unanswered
+   row at another bank, `opts.other`); M9F's value stays the first reading.
+2. Likely another bank (QUESTIONS 388): a name (or its bank's name) with a word from `ref.fireDrill.onlineBanks`
+   (HYSA, online, Ally, Marcus, SoFi, Discover, American Express and the like, with source and date) starts its tap on
+   Another bank, dashed and not pressed, and its row says "sounds like an online bank"; it still counts as unanswered.
+   The type "Savings or HYSA" alone does not count (it is every savings account's type); two rows naming the same
+   online bank (Ally checking, Ally savings) are not hinted. `onlineWordsOf`, `likelyOtherOf`.
+3. The childcare line, not the Kids category (QUESTIONS 390): the getting-to-work tier holds Kids lines whose name has
+   childcare, daycare, babysit, nanny, sitter, preschool or after school (`lines` on the tier; `tierOf` reads the line's
+   name); kids' clothes, activities, school and supplies stay with everything else, and a pet's daycare stays a pet's.
+   Bill_order gains a Holds column (what each tier holds); its source line says so.
+4. Walk me through (N) on Home counts the Ask next stop, and counts the rows the walk makes the way the bar does, so
+   the button and "1 of N" agree (Maya 12 and 12, was 10 and 12); the agenda bar's button does the same on Home only
+   (QUESTIONS 391).
+5. test/firedrill.test.js and the four personas' fireDrill blocks (elsewhere, pending, notes, says) re-worked by hand.
+
+docs/usability/scorecard-2026-11-06.json: the Fire drill row updated in place ("batch": 52), 0 blockers, 0 majors, 1
+minor (as before). Layout checker on Fire drill and Home (all checks, Demo and New, and the Demo with Phase 4 on): 0
+failures. Persona run: 15 personas, 0 errors, 0 story notes. Workbook check: every row matches.

@@ -124,8 +124,11 @@ export function startSessionOne(app, ctx) {
   app.usage?.('start', { session: 1 });
   startFastTrack(app, ctx, { then: () => walkMeThrough(app, ctx) });
 }
-// The button, on Home and in the docked agenda bar.
-export function walkButton(app, ctx, { size = null, kind = 'secondary' } = {}) {
-  const left = walkStops(ctx).length;
+// The button, on Home and in the docked agenda bar. Batch 52 (QUESTIONS 391): on Home the count takes in the Ask next
+// stop the walk starts with (Home has Ask next worked out already, so it costs nothing there), so the button and the
+// bar agree; elsewhere it leaves Ask next out (about 0.2 s, too slow for every screen).
+export function walkButton(app, ctx, { size = null, kind = 'secondary', withAsk = false } = {}) {
+  const ask = withAsk ? askStopOf(ctx.askNext?.(app.flags ?? [])?.top ?? null) : null;
+  const left = walkStops(ctx, { ask }).reduce((n, x) => n + (x.make ? x.make.length : 1), 0); // as the bar counts: rows the walk makes count as the boxes they become
   return S.button(left ? `Walk me through (${left})` : 'Walk me through', { size, kind, iconName: 'right', tip: 'Every empty or rough box, one at a time', onClick: () => walkMeThrough(app, ctx) });
 }

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { importFile } from '../js/records.js';
-import { fireDrillOf, backupPlanOf, daysCovered, payOrder, tierOf, platformHeld, mustPayOf, sameBankOf, sameBankAcct, mainAccount, minimumOf, drawsFromOf } from '../js/math/firedrill.js';
+import { fireDrillOf, backupPlanOf, daysCovered, payOrder, tierOf, platformHeld, mustPayOf, sameBankOf, sameBankAcct, mainAccount, minimumOf, drawsFromOf, likelyOtherOf, onlineWordsOf } from '../js/math/firedrill.js';
 import { loadDefs, OUT_DIR, NOW } from '../tools/personas/build.mjs';
 
 const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
@@ -19,7 +19,13 @@ test('the order to pay in is housing, utilities, food, getting to work and child
   assert.match(ref.fireDrill.source, /CFPB/);
   assert.match(ref.fireDrill.source, /NFCC/);
   assert.match(ref.fireDrill.source, /QUESTIONS 365/);
-  assert.equal(tierOf({ category: 'Kids', draftt: 'Other' }, order).id, 'transport'); // childcare keeps the paycheck coming, like the car
+  // QUESTIONS 390: only the childcare line moves up beside getting to work; the rest of Kids stays with everything else.
+  assert.equal(tierOf({ category: 'Kids', draftt: 'Other', line: 'Childcare and babysitting' }, order).id, 'transport'); // keeps the paycheck coming, like the car
+  assert.equal(tierOf({ category: 'Kids', draftt: 'Other', line: 'After-school program' }, order).id, 'transport');
+  assert.equal(tierOf({ category: 'Kids', draftt: 'Other', line: "Kids' clothes and shoes" }, order).id, 'rest');
+  assert.equal(tierOf({ category: 'Kids', draftt: 'Other' }, order).id, 'rest');
+  assert.equal(tierOf({ category: 'Pets', draftt: 'Other', line: 'Boarding, walker, daycare' }, order).id, 'rest'); // a pet's daycare is not childcare
+  assert.match(ref.fireDrill.source, /QUESTIONS 390/);
   assert.equal(tierOf({ category: 'Health insurance', draftt: 'Other' }, order).id, 'health');
   assert.equal(tierOf({ category: 'Therapy', draftt: 'Therapy' }, order).id, 'health');
   assert.equal(tierOf({ category: 'Rent or mortgage', draftt: 'Accommodation' }, order).id, 'housing');
@@ -69,16 +75,39 @@ test('banks: the same institution, or what the coach said; the everyday account 
   assert.deepEqual(sameBankOf({ id: 'a', bank: 'x' }, { id: 'b', bank: 'x' }), { same: true, known: true, from: 'institutions' });
   assert.deepEqual(sameBankOf({ id: 'a', bank: null }, { id: 'b', bank: null }), { same: false, known: false });
   assert.deepEqual(sameBankOf({ id: 'a' }, { id: 'b' }, { 'b:a': true }), { same: true, known: true, from: 'said' });
-  // QUESTIONS 367: a bank account with no bank set counts as the same bank until Another bank is tapped; a payment app never.
+  // QUESTIONS 367: a bank account with no bank set counts as the same bank until answered; a payment app is never a bank's.
   assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking' }, { id: 'b', type: 'Savings or HYSA' }), { same: true, known: false, assumed: true });
   assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking' }, { id: 'b', type: 'Savings or HYSA' }, { 'a:b': false }), { same: false, known: true, from: 'said' });
-  assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking' }, { id: 'b', type: 'Payment app' }), { same: false, known: false });
+  assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking' }, { id: 'b', type: 'Payment app' }), { same: false, known: true, from: 'app' });
   assert.deepEqual(sameBankAcct({ id: 'a', type: 'Checking', bank: 'x' }, { id: 'b', type: 'Savings or HYSA', bank: 'y' }), { same: false, known: true, from: 'institutions' });
   const accts = [{ id: 's', type: 'Savings or HYSA' }, { id: 'p', type: 'Checking', owner: 'Partner' }, { id: 'j', type: 'Checking', owner: 'Joint' }];
   assert.equal(mainAccount(accts, 'Partner').id, 'p');
   assert.equal(mainAccount(accts).id, 'j');
   assert.equal(drawsFromOf({ paidWith: 'savings' }, accts).id, 's');
   assert.equal(drawsFromOf({ paidWith: 'c1' }, accts, [{ id: 'c1' }]).card, 'c1');
+});
+
+test('a name that sounds like an online bank starts on Another bank, and still counts as not answered (QUESTIONS 388)', () => {
+  const { words, generic } = ref.fireDrill.onlineBanks;
+  assert.match(ref.fireDrill.onlineBanks.source, /2026/);
+  assert.deepEqual(onlineWordsOf({ name: 'HYSA' }, words), ['hysa']);
+  assert.deepEqual(onlineWordsOf({ name: 'Savings', bankName: 'Ally Bank' }, words), ['ally']);
+  assert.deepEqual(onlineWordsOf({ name: 'Savings or HYSA' }, []), []);
+  assert.deepEqual(onlineWordsOf({ name: 'Tallyho savings' }, words), []); // a word, not a piece of one
+  const chk = { id: 'a', name: 'Checking' };
+  assert.equal(likelyOtherOf(chk, { id: 'b', name: 'Savings' }, words, generic), false); // most keep savings where checking is (QUESTIONS 367)
+  assert.equal(likelyOtherOf(chk, { id: 'b', name: 'Marcus savings' }, words, generic), true);
+  assert.equal(likelyOtherOf(chk, { id: 'b', name: 'Joint HYSA' }, words, generic), true);
+  assert.equal(likelyOtherOf({ id: 'a', name: 'Ally checking' }, { id: 'b', name: 'Ally savings' }, words, generic), false); // the same online bank
+  assert.equal(likelyOtherOf({ id: 'a', name: 'Online checking' }, { id: 'b', name: 'Online HYSA' }, words, generic), true); // "online" names no bank
+  // The creator's HYSA: likely another bank, still pending, so the days read both ways (0 and 53).
+  const doc = importFile(readFileSync(join(OUT_DIR, 'creator.json'), 'utf8'));
+  const D = fireDrillOf(doc, ref, { now });
+  const hysa = D.pending.find(p => p.name === 'HYSA');
+  assert.equal(hysa.likely, 'other');
+  assert.equal(hysa.answer, null);
+  assert.equal(D.cover.cash, 0);
+  assert.equal(D.readings.elsewhere.days, 53);
 });
 
 test('a platform holds back the net a day times the hold days', () => {
@@ -99,6 +128,19 @@ test('picking another account, and saying it is at another bank, moves the drill
   assert.equal(t.unreachable.sameBank[0].assumed, true);
   assert.equal(t.reachable.cash, 0);
   assert.equal(t.cover.cash, 0);
+  // QUESTIONS 388, 389: savings and the card are not answered, so there are two readings: 0 days if they are all at
+  // this bank, 33 days ($4,000 / $121.15 a day) if savings is elsewhere. The card has no limit, so it moves nothing and
+  // is not named; it is still asked. Neither name sounds like an online bank.
+  const card = doc.records.find(r => r.kind === 'debt' && r.type === 'Credit card');
+  assert.deepEqual(t.pending.map(p => [p.id, p.kind, p.likely]), [[savings.id, 'account', null], [card.id, 'card', null]]);
+  assert.equal(t.readings.differ, true);
+  assert.deepEqual(t.readings.names, ['Savings']);
+  assert.equal(t.readings.at.days, 0);
+  assert.equal(t.readings.elsewhere.days, 33);
+  assert.equal(t.readings.elsewhere.reach, 4000);
+  assert.equal(t.readings.elsewhere.outOfReach, 8400);
+  assert.match(t.result.text, /as at the same bank, out of reach, until each is answered/);
+  assert.match(t.readings.elsewhere.result.text, /This reads Savings as at another bank/);
   // Rent ($1,750 on Dec 1, the day guessed) comes first in the order and is not covered.
   assert.equal(t.order[0].name, 'Rent');
   near(t.order[0].short, 1750);
@@ -113,6 +155,26 @@ test('picking another account, and saying it is at another bank, moves the drill
   assert.equal(o.unreachable.total, 8400);
   assert.equal(o.reachable.cash, 4000);
   assert.equal(o.cover.cash, 33);
+  // The card is still not answered, but it moves nothing (no limit): two readings that agree.
+  assert.deepEqual(o.pending.map(p => p.kind), ['card']);
+  assert.equal(o.readings.differ, false);
+  assert.deepEqual(o.asks.map(x => x.answer), ['other', null]);
+  // Card answered too: nothing pending, one number, as before.
+  doc.program.fireDrill.sameBank[`${checking.id}:${card.id}`] = false;
+  const all = fireDrillOf(doc, ref, { now });
+  assert.equal(all.pending.length, 0);
+  assert.equal(all.readings, null);
+  assert.equal(all.cover.cash, 33);
+  // With a limit typed, an unanswered card counts no room while read as the same bank (QUESTIONS 389), and its room in
+  // the other reading: an $8,000 limit with $6,000 used is $2,000 of room, and now the card is named.
+  delete doc.program.fireDrill.sameBank[`${checking.id}:${card.id}`];
+  card.values.limit = 8000;
+  const lim = fireDrillOf(doc, ref, { now });
+  assert.equal(lim.reachable.cards[0].room, null);
+  assert.equal(lim.reachable.cards[0].assumed, true);
+  assert.equal(lim.readings.elsewhere.cardRoom, 2000);
+  assert.deepEqual(lim.readings.names, [card.name]);
+  delete card.values.limit;
   // And savings froze: nothing lands there; checking $1,200 is reachable.
   const s2 = fireDrillOf(doc, ref, { now, account: savings.id });
   assert.equal(s2.incoming.length, 0);
@@ -160,6 +222,10 @@ for (const def of defs) {
     if (e.items != null) assert.equal(B.items.length, e.items);
     if (e.held != null) near(B.stranded.find(s => s.kind === 'platform').amount, e.held);
     if (e.stranded != null) assert.equal(B.stranded.length, e.stranded);
+    // QUESTIONS 388: the second reading, with every account and card not answered at another bank.
+    if (e.elsewhere === null) assert.ok(!D.readings?.differ, 'one number');
+    else if (e.elsewhere != null) { assert.equal(D.readings.elsewhere.days, e.elsewhere.days); near(D.readings.elsewhere.reach, e.elsewhere.reach); assert.deepEqual(D.readings.names, e.elsewhere.names); }
+    if (e.pending != null) assert.deepEqual(D.pending.map(p => [p.name, p.likely]), e.pending);
   });
 }
 
