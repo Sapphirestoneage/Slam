@@ -2,6 +2,8 @@
 // Every number says "so what" (polish item 6): one plain sentence of meaning, from the client's side, and one action
 // link when something is off. Pure: takes the metrics (and a few extras), returns { text, action: { label, href } }.
 
+import { addMonths, ymOf, monthName } from './month.js';
+
 const money = v => `$${Math.round(Math.abs(v)).toLocaleString('en-US')}`;
 const pct = v => `${Math.round(v * 100)}%`;
 const extraValue = e => (e?.value === null || e?.value === undefined ? null : e.value);
@@ -80,4 +82,23 @@ export function soWhat(key, m, { lowDay = null, first = null, last = null } = {}
     case 'ofFi': { const f = extraValue(arguments[2]); return f === null ? null : { text: `You are ${pct(Math.min(1, f))} of the way to work being optional.` }; }
     default: return null;
   }
+}
+
+// Batch 20 (Rocket Surgery): what an edit moved, in one line, so the coach can say it ("FI 11 months sooner (Oct
+// 2037) · $850 a month more free"). a and b: { fi, debt, surplus, step } before and after (months from now, dollars a
+// month, the FOO step's name). Returns null when none of them moved.
+export function movedWords(a, b, now = new Date()) {
+  if (!a || !b) return null;
+  const when = n => monthName(addMonths(ymOf(now), n), 'short');
+  const months = n => `${n} ${n === 1 ? 'month' : 'months'}`;
+  const date = (label, x, y) => {
+    if (x === y) return null;
+    if (x != null && y != null) return `${label} ${months(Math.abs(y - x))} ${y < x ? 'sooner' : 'later'} (${when(y)})`;
+    if (y != null) return `${label} ${when(y)}`;
+    return `${label} needs a number now`;
+  };
+  const d = a.surplus != null && b.surplus != null ? Math.round(b.surplus - a.surplus) : 0;
+  const step = b.step && a.step !== b.step ? `the next step is ${b.step}` : null;
+  const out = [date('FI', a.fi, b.fi), date('debt free', a.debt, b.debt), Math.abs(d) >= 1 ? `${money(d)} a month ${d > 0 ? 'more' : 'less'} free` : null, step].filter(Boolean);
+  return out.length ? out.join(' · ') : null;
 }

@@ -186,7 +186,9 @@ test('S1 to S5 on a couple at -$40k with mixed tags and three debts, switching D
   assert.equal(d.doc.settings.person, 'Me');
   assert.equal(metrics(d.doc, ref, { now: T.now, person: 'Me' }).netWorth.value, 2000 + 1500 - 9500 - 10000, 'Joint rows at half in one person\'s view (answer 157)');
   const ladder = ladderOf(d.doc, ref, opts());
-  assert.ok(!ladder.markers.find(k => k.id === 'nwZero').reached && ladder.markers.find(k => k.id === 'nwZero').months > 0, 'net worth positive is a marker ahead');
+  // Batch 20: in Dating the ladder is Ada's own plan, as Home and Plan show it (her own month is short, so no date yet).
+  const nwz = ladder.markers.find(k => k.id === 'nwZero');
+  assert.ok(!nwz.reached && nwz.value === 2000 + 1500 - 9500 - 10000, 'net worth positive is a marker ahead, on her own numbers');
   const e1 = endSession(d, ref, opts());
   assert.deepEqual([e1.snap.metrics.joy, e1.snap.metrics.joyPartner], [3, 6]);
   // S2 (Engaged): the merge preview, the disclosure checklist suggested.

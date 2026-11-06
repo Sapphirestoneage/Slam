@@ -17,13 +17,16 @@ import { saveFile, saveWords } from './ui/save-file.js';
 import { agendaPanel } from './ui/agenda-ui.js';
 import { walkButton, stopWalk, startSessionOne } from './ui/walk-ui.js';
 import { TABS, parseRoute, search, routeForPlace, tabRoute } from './nav.js';
-import { SCREENS, progressOf } from './screens.js';
+import { SCREENS, progressOf, personBar } from './screens.js';
+import { ownPlanPerson } from './registry/couples.js';
 import { startFastTrack, fastTrackLabel } from './ui/fasttrack-ui.js';
 import { keepPlace } from './ui/place.js';
 import { opened } from './ui/dismiss.js';
 import { addChoice } from './find.js';
 import { dueChecks } from './checks.js';
 import { logEvent, usageCsv } from './usage.js';
+import { movedWords } from './sowhat.js';
+import { foo } from './math/foo.js';
 import { setSectionClient, sectionTools, openAround, rememberSection } from './ui/sections.js';
 
 const [ref, fields, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/fields.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
@@ -61,6 +64,9 @@ const app = {
       if (mode !== this.ctx.timeMode || !$('main').querySelector('.list-wrap')) { mode = this.ctx.timeMode; this.renderSoon(); }
       else keepPlace(() => this.chrome());
     }, { keep: true });
+    // Batch 20 (Rocket Surgery): an edit that moves the FI date, the debt-free date or what is free says so in one line.
+    this._headline = doc ? this.headlineOf() : null;
+    this.store.subscribe(change => this.headlineMoved(change));
     if (doc) {
       if (save) saveClient(adapter, doc);
       this.saver = autosave(this.store, adapter, { onState: () => this.saveState() });
@@ -143,7 +149,7 @@ const app = {
     const homeHref = tabRoute(TABS[0]);
     clear($('topbar'), h('div.topbar-in', {},
       h('div.tb-left', {},
-        h('span.row-line.history-btns', { style: { gap: '4px', flexWrap: 'nowrap' } }, S.button(h('span.sr', {}, 'Back'), { iconName: 'left', tip: 'Back', onClick: () => { this.usage('back'); history.back(); } }), S.button(h('span.sr', {}, 'Forward'), { iconName: 'right', tip: 'Forward', onClick: () => history.forward() })), // item 1: every screen is browser history; batch 8 (C13): normal bordered buttons, always in the sticky bar
+        h('span.row-line.history-btns', { style: { gap: '4px', flexWrap: 'nowrap' } }, S.button(h('span.sr', {}, 'Back'), { iconName: 'left', tip: 'Back', onClick: () => { this.usage('back'); this._histNav = true; history.back(); } }), S.button(h('span.sr', {}, 'Forward'), { iconName: 'right', tip: 'Forward', onClick: () => { this._histNav = true; history.forward(); } })), // item 1: every screen is browser history; batch 8 (C13): normal bordered buttons, always in the sticky bar
         h('a.site-id', { href: homeHref, title: 'Stress Less About Money' }, 'SLAM'), clientBtn,
         h('span.save-state', { id: 'save-state' })),
       h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: tabRoute(t), 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),
@@ -266,7 +272,7 @@ const app = {
     if (!r.route) return;
     // Batch 14: a word lands on its box (opening a category or a row's Details on the way), with where it lives.
     // Batch 18: a ^block that is a caret section (batch 13) opens too.
-    if (r.kind === 'word') { if (r.open) { S.openBlock(r.open); rememberSection(r.open, true); } land(this, r.route, { id: r.id, focus: r.focus, parentCat: r.parentCat }); S.toast(r.add ? `None yet. Add one here, on ${r.where}.` : `${r.label.split(' · ')[0]} lives on ${r.where}.`); return; }
+    if (r.kind === 'word') { if (r.open) { S.openBlock(r.open); rememberSection(r.open, true); } land(this, r.route, { id: r.id, focus: r.focus, parentCat: r.parentCat }); if (r.add) S.toast(`None yet. Add one here, on ${r.where}.`); return; } // batch 20: the result already said where it lives and the box lights up, so no toast over the screen
     this.go(r.route);
     requestAnimationFrame(() => {
       const row = r.kind === 'record' ? document.querySelector(`tr[data-id="${r.id}"]`) : null;
@@ -365,6 +371,27 @@ const app = {
   },
 
   // ---------- Undo, settings, data ----------
+  headlineOf() {
+    const m = this.ctx.metrics();
+    let step = null;
+    try { const F = foo(this.store.doc, ref, { now: this.ctx.now(), flags: this.flags }); step = F.steps.find(x => x.id === F.here)?.name ?? null; } catch { step = null; }
+    return { fi: m.monthsToFi?.value ?? null, debt: m.debtPlan?.months ?? null, surplus: m.surplus?.value ?? null, step };
+  },
+  headlineMoved(change) {
+    if (!this.hasClient) return;
+    const was = this._headline, now = this.headlineOf();
+    this._headline = now;
+    if (!was || change?.type !== 'change') return; // undo, redo and snapshots move it back on purpose
+    if (document.querySelector('.ft-overlay, .walk-bar')) return; // Fast Track and the walk are still gathering
+    const up = document.querySelector('.toast');
+    if (up && !up.dataset.moved) return; // another toast (with its own Undo) stays
+    const from = up ? this._movedFrom : was; // edits in a row add up while the line is showing
+    const words = movedWords(from, now, this.ctx.now());
+    if (!words) { up?.remove(); return; }
+    this._movedFrom = from;
+    const el = S.toast(`That moved the plan: ${words}.`, { undo: () => this.store.undo() });
+    if (el) el.dataset.moved = '1';
+  },
   undo() { const l = this.store.undo(); if (l) { S.toast(`Undone: ${l}`); this.usage('undo'); } },
   redo() { const l = this.store.redo(); if (l) S.toast(`Redone: ${l}`); },
   setPref(k, v) { this.prefs = setPrefs(adapter, { [k]: v }); this.applyPrefs(); this.render(); },
@@ -483,9 +510,18 @@ const app = {
     if (this._lastHash !== hash) S.closeSidePanel(); // batch 13 (item 3): the panel belongs to a row on this screen; leaving the screen closes it
     this.ctx.clearScreen();
     const screen = SCREENS[`${tab.id}/${sub.id}`];
-    const draw = () => { this.chrome(); this.parkingDock(); clear($('main'), screen ? screen(this, this.ctx) : null); this.sectionLinks(); };
+    // Batch 20 (Rocket Surgery): a couple with no combined totals picks whose plan Home, Goals and Debt payoff show, as on Net worth and Cash flow.
+    const whose = this.hasClient && ownPlanPerson(this.store.doc) && (`${tab.id}/${sub.id}` === 'home/session' || ['plan/goals', 'plan/debt-payoff'].includes(`${tab.id}/${sub.id}`)) ? personBar(this.ctx) : null;
+    const draw = () => { this.chrome(); this.parkingDock(); clear($('main'), whose, screen ? screen(this, this.ctx) : null); this.sectionLinks(); };
     // A redraw of the same screen never loses your place (R165): scroll, list scroll and the control you were on.
-    if (this._lastHash === hash) keepPlace(draw); else { this.visitEnd(); if (this.hasClient) this._visit = { screen: hash.slice(2), at: Date.now(), clicks: 0, doc: this.store.doc }; draw(); } // batch 14: time per screen
+    // Batch 20 (Rocket Surgery): a new screen opens at its top (a tab tap used to land half way down, where the last
+    // screen was scrolled); Back and Forward return to where that screen was left.
+    if (this._lastHash === hash) keepPlace(draw); else {
+      if (this._lastHash) (this._scrolls ??= {})[this._lastHash] = window.scrollY;
+      const hist = this._histNav; this._histNav = false;
+      this.visitEnd(); if (this.hasClient) this._visit = { screen: hash.slice(2), at: Date.now(), clicks: 0, doc: this.store.doc }; draw(); // batch 14: time per screen
+      window.scrollTo(0, hist ? this._scrolls?.[hash] ?? 0 : 0);
+    }
     // One page: a sub-tab click scrolls to its part (only when the place changes, not on every redraw).
     if (this.prefs[`onePage-${tab.id}`] && this._lastHash !== hash && this._lastHash?.startsWith(`#/${tab.id}/`)) document.getElementById(`part-${sub.id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     this._lastHash = hash;

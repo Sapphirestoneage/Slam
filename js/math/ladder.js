@@ -13,6 +13,7 @@ import { addMonths, ymOf } from '../month.js';
 import { STEPS, MARKERS, LADDER } from '../registry/ladder.js';
 import { LISTS, RULES } from '../registry/assumptions.js';
 import { gatesOf } from '../gates.js';
+import { ownPlanPerson } from '../registry/couples.js';
 
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const CONSUMER = new Set(LISTS.consumerDebt);
@@ -22,7 +23,7 @@ const isHeavy = isHeavyDebt;
 const monthsToShare = (path, start, share) => { const goal = start * (1 - share); const i = path.findIndex(row => sum(row, v => v) <= goal + 0.005); return i < 0 ? null : i; };
 
 export function ladderOf(doc, ref, { now = new Date(), flags = [] } = {}) {
-  const m = metrics(doc, ref, { now }), x = m.inputs;
+  const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }), x = m.inputs; // batch 20: one person's plan for a couple with no combined totals, as on Plan
   const gates = gatesOf(doc.profile, doc.client);
   const hasNw = (doc.records || []).some(r => ['account', 'debt', 'asset'].includes(r.kind)); // empty is not zero: no net worth marker until something is typed
   let F = null, L = null;

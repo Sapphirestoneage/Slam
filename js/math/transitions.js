@@ -24,10 +24,11 @@ import { gatesOf, visible } from '../gates.js';
 import { fmt } from './result.js';
 
 // The ladder, cheapest first. kind: lump (dollars you draw down), cut (lowers the burn), flow (money in each month).
+// plain (batch 20): the name on the share view, for parents or a partner who do not know SLAM's words.
 export const RUNGS = [
-  { id: 'buffer', name: 'Checking buffer', short: 'the buffer', kind: 'lump' },
-  { id: 'littleE', name: 'little e', short: 'little e', kind: 'lump' },
-  { id: 'bigE', name: 'big e and other savings', short: 'big e', kind: 'lump' },
+  { id: 'buffer', name: 'Checking buffer', short: 'the buffer', plain: 'The cushion kept in checking', kind: 'lump' },
+  { id: 'littleE', name: 'little e', short: 'little e', plain: 'A small emergency fund', kind: 'lump' },
+  { id: 'bigE', name: 'big e and other savings', short: 'big e', plain: 'The emergency fund and other savings', kind: 'lump' },
   { id: 'cut', name: 'Cut to the basics', short: 'the cut', kind: 'cut' },
   { id: 'side', name: 'Side income or selling things', short: 'side income', kind: 'flow' },
   { id: 'benefits', name: 'Unemployment or other benefits', short: 'the end of benefits', kind: 'flow' },

@@ -133,7 +133,7 @@ The same math run twice: on the file, and on a copy with the choices applied (a 
 
 ## 13. Statements, calendar and the month close (M60 to M67, M77)
 
-Running balance: a day-by-day walk from the starting balance through every dated paycheck, bill, debt payment and entry, with paid, moved and partial marks; a day under the low line (the Buffer unless typed) is flagged. The net worth statement is M40 on the last day; the income statement is accrual (a card swipe counts when it happens); the cash flow statement counts money when it moves; the tie-out compares the two. Close streak: months closed in a row, one grace month allowed.
+Running balance: a day-by-day walk from the starting balance through every dated paycheck, bill, debt payment and entry, with paid, moved and partial marks; a day under the low line (the Buffer unless typed) is flagged. Batch 20: when the starting balance is read off today's checking (not typed on the calendar), it already holds what left it earlier this month, so entries dated before today come off once, not twice, and only days from today on are flagged (Maya's rent on the 1st was taken out of a balance that had already paid it). The net worth statement is M40 on the last day; the income statement is accrual (a card swipe counts when it happens); the cash flow statement counts money when it moves; the tie-out compares the two. Close streak: months closed in a row, one grace month allowed.
 
 ## Unit-error hunt (per-month vs per-year), Nov 6
 

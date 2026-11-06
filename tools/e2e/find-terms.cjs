@@ -1,4 +1,4 @@
-// The 39 everyday terms Find must understand (batch 14, item 1) and where each must land: the screens it may land on
+// The everyday terms Find must understand (39 from batch 14, item 1; more from batches 20, 22 and 23) and where each must land: the screens it may land on
 // (the second is where the client has none of that thing yet, e.g. no HSA: About you says whether the plan allows one)
 // and the box, as a pattern on the box's data-focus. Read by tools/e2e/findability.cjs and test/findability.test.js.
 const A = '#/net-worth/assets', D = '#/net-worth/debt', C = '#/net-worth/credit-cards', P = '#/net-worth/protection', I = '#/cash-flow/income', B = '#/cash-flow/budget',
@@ -50,5 +50,8 @@ const TERMS = [
   { term: 'afford', routes: [G], box: /^sec:goals:afford$/ },
   { term: 'trip', routes: [G], box: /^sec:goals:afford$/ },
   { term: 'buy', routes: [G], box: /^sec:goals:afford$/ },
+  // Batch 20 (Rocket Surgery): words coaches typed that found nothing or the wrong place.
+  { term: 'raise', routes: [I], box: /:amount$|^add:income$/ },
+  { term: 'close the month', routes: ['#/cash-flow/close'], box: /^sec:close:months$/ },
 ];
 module.exports = { TERMS };

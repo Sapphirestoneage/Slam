@@ -218,7 +218,7 @@ export const REFERENCE_LISTS = {
   'limits.rothIncome.note': 'a note on the Roth income limit',
   'tax.brackets': 'the Fed_single and Fed_joint tables', 'tax.quarterlyDue': 'the QuarterlyDue table',
   'tax.state.NY.brackets': 'the NY tables', 'tax.state.NY.source': 'the NY tables source', 'tax.local': 'the NYC tables',
-  lists: 'picker lists (debt types, account types, statuses)',
+  lists: 'picker lists (debt types, account types, statuses) and, since batch 20, the usual 401(k) match formulas as taps (matchPicks: the job row\'s first tier)',
   categoryDefaults: 'the starting DRAFTT letter, amount and date for each Budget category',
   spendingPresets: 'starter Budget lines, each a Guess',
   year: 'the tax year this file is for', source: 'where this file came from',

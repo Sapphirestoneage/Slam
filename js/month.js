@@ -237,23 +237,26 @@ export function balances(doc, ref, ym, months = 1, { now = new Date(), autoWins 
   let b = st.value;
   // Carry forward from the start month to the first month asked for.
   for (let m = st.ym; m < ym; m = addMonths(m, 1)) {
-    const r = monthRun(doc, ref, m, b, { now, autoWins, countMaybe: cal.countMaybe });
+    const r = monthRun(doc, ref, m, b, { now, autoWins, countMaybe: cal.countMaybe, before: m === st.ym && !st.typed ? isoOf(now.getTime()) : null });
     b = r.rows[r.rows.length - 1].balance;
   }
   const rows = [];
   const insts = [];
+  // Batch 20 (Rocket Surgery): a start balance read off today's checking already holds what left it earlier this
+  // month, so days before today do not take it out again ("Cash dips on Sun, Nov 1" was a bill already paid).
+  const already = st.typed ? null : isoOf(now.getTime());
   for (let k = 0; k < months; k++) {
     const m = addMonths(ym, k);
-    const r = monthRun(doc, ref, m, b, { now, autoWins, countMaybe: cal.countMaybe });
+    const r = monthRun(doc, ref, m, b, { now, autoWins, countMaybe: cal.countMaybe, before: m === st.ym ? already : null });
     rows.push(...r.rows); insts.push(...r.list);
     b = r.rows[r.rows.length - 1].balance;
   }
-  const lowDays = rows.filter(r => r.balance < low);
+  const lowDays = rows.filter(r => r.balance < low && (!already || r.date >= already)); // a day already gone is not a warning
   return { rows, list: insts, low, firstLow: lowDays[0] || null, lowest: rows.reduce((a, r) => (r.balance < a.balance ? r : a), rows[0]), start: st };
 }
 function monthRun(doc, ref, ym, start, opts) {
   const list = instances(doc, ref, ym, opts);
-  const entries = list.flatMap(i => moneyOf(i, opts));
+  const entries = list.flatMap(i => moneyOf(i, opts)).filter(e => !opts.before || e.date >= opts.before);
   const r = runningBalance({ start, from: `${ym}-01`, to: dateOf(ym, 31), entries });
   return { rows: r.value, list };
 }

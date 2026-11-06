@@ -140,8 +140,25 @@ export function toast(text, { undo = null, action = null } = {}) {
   const dock = dockedHeight();
   if (dock) toastEl.style.setProperty('bottom', `${dock + 10}px`, 'important'); // above the docked bars (batch 18, item 6)
   document.body.append(toastEl);
+  dodge(toastEl);
   toastTimer = setTimeout(() => toastEl?.remove(), undo ? 10000 : 5000); // 10 seconds when it can be undone
+  return toastEl;
 }
+// Batch 20 (Rocket Surgery): a toast never sits over a button or a box (DESIGN.md rule 4). Bottom left first; when
+// that covers a control (Make Proposed the plan, Add line), bottom right; on a phone it spans the width as before.
+function dodge(el) {
+  el.style.removeProperty('left'); el.style.removeProperty('right');
+  if (window.innerWidth <= 700 || !el.isConnected) return;
+  const controls = [...document.querySelectorAll('main button, main input, main select, main a, .walk-bar button')].filter(c => c.checkVisibility?.() !== false).map(c => c.getBoundingClientRect()).filter(r => r.width && r.height);
+  const hits = () => { const t = el.getBoundingClientRect(); return controls.filter(r => r.left < t.right && r.right > t.left && r.top < t.bottom && r.bottom > t.top).length; };
+  const left = hits();
+  if (!left) return;
+  el.style.setProperty('left', 'auto', 'important'); el.style.setProperty('right', '24px', 'important');
+  if (hits() > left) { el.style.removeProperty('left'); el.style.removeProperty('right'); }
+}
+// A toast that outlives its screen: the "That moved the plan" line was about that screen's edit, so it goes; any
+// other checks the next screen and moves aside if it would cover a control there.
+if (typeof window !== 'undefined') window.addEventListener('hashchange', () => { if (toastEl?.dataset.moved) { toastEl.remove(); toastEl = null; } else setTimeout(() => { if (toastEl) dodge(toastEl); }, 120); });
 
 // ---------- Saved moment (R164) ----------
 export function savedNote() { return h('span.saved-note', { 'aria-live': 'polite' }, icon('check'), 'Saved'); }
@@ -868,7 +885,7 @@ export function recordList(ctx, cfg) {
     const lead = cfg.lead?.(ctx, m) ?? null; // batch 11: a row that lives elsewhere but counts here (the cards on Debt)
     // Batch 13 (item 1): the list's header is a caret; closed, it says what is in it in one line.
     const secOf = (el, sum) => cfg.caret === false ? el : secWrap(el, `list:${listKey}`, { open: cfg.open ?? true, summary: cfg.summary?.(ctx, recs, m) ?? sum });
-    if (!recs.length && !autos.length) { view = null; return secOf(h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, lead, h('div.list', {}, emptyList(cfg.emptyThing?.(ctx) ?? cfg.thing, e => addBtn?.click()))), cfg.emptyThing?.(ctx)?.empty ?? cfg.thing.empty ?? `No ${cfg.thing.plural} yet`); }
+    if (!recs.length && !autos.length) { view = null; return secOf(h(`div.section.area-${cfg.area}`, {}, head, cfg.strip && cfg.stripWhenEmpty ? cfg.strip(ctx, m) : null, lead, h('div.list', {}, emptyList(cfg.emptyThing?.(ctx) ?? cfg.thing, e => (picker ? openAddPicker(e.currentTarget, { thing: cfg.thing.one, ...picker, onPick: (t, own) => addNew(t, own) }) : addNew(null))))), cfg.emptyThing?.(ctx)?.empty ?? cfg.thing.empty ?? `No ${cfg.thing.plural} yet`); }
 
     const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all', 'data-focus': 'select-all', title: 'Select all' });
     allBox.onchange = () => { if (allBox.checked) recs.forEach(r => state.selected.add(r.id)); else state.selected.clear(); refreshSelection(); };

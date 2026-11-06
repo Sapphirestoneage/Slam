@@ -29,6 +29,7 @@ import { money, pct } from '../format.js';
 import { defaultsInUse } from '../checks.js';
 import { walkButton, walkMeThrough, startSessionOne } from './walk-ui.js';
 import { isFreshClient } from '../walk.js';
+import { transitionOf, phase4On, monthsText } from '../math/transitions.js';
 import { startFastTrack } from './fasttrack-ui.js';
 import { affordHomeLine } from './afford-ui.js';
 
@@ -63,7 +64,7 @@ export function homeScreen(app, ctx) {
     card(pictureCard(ctx, P), 'home:picture', { open: true, summary: `Picture ${P.pace.points}% · ${P.pace.word}` }),
     P.inSession ? card(wrapUp(app, ctx, P), 'home:wrap-up', { open: true }) : null,
     low ? h('div.banner-inline', {}, '⚠ ', `Cash dips below the low line (${money(low.low)}) on ${low.label}: ${money(low.balance)}.`, S.button('Open the calendar', { iconName: 'right', onClick: () => app.go('#/cash-flow/calendar') })) : null, // R096
-    ctx.gates().betweenJobs ? S.summaryStrip(ctx, [{ label: 'Runway (between jobs)', result: P.m.runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/net-worth/assets' }]) : null, // R006
+    ctx.gates().betweenJobs ? runwayStrip(ctx, P) : null, // R006
     card(money1, 'home:money-line', { summary: textOf(money1.querySelector(':scope > p')) ?? 'Net worth, surplus, savings rate, FI date' }),
     card(things, 'home:next-things', { summary: P.next[0] ? `${P.next[0].label} first` : 'Every number is at Actual' }),
     fold(ladder, 'home:ladder-card', 'The ladder', [textOf(ladder?.querySelector('.ladder-name')), [...(ladder?.querySelectorAll('.bar-row > span') ?? [])].map(textOf).find(t => /% there$/.test(t || ''))].filter(Boolean).join(' · ') || null),
@@ -92,6 +93,14 @@ function startOne(app, ctx, P) {
 // One date (Undebt.it, Tally), what goes to debt a month, tap chips for +$50 / +$100 / +$250 a month that show the new
 // date (a what-if only: nothing is saved unless Make it the plan), and the milestones with the next one's dollars left.
 export const HERO = { extra: 0 };
+// R006, batch 20 (Rocket Surgery): Home said "Runway 3.7 months" while Plan › Transitions said "The money lasts 24.0
+// months" for the same question. Each now says what it counts, and the plan's number links to its screen.
+function runwayStrip(ctx, P) {
+  const T = phase4On(ctx.store.doc) && ctx.store.doc.program?.transition?.template ? transitionOf(ctx.store.doc, ctx.ref, { now: ctx.now() }) : null;
+  const plan = T && !T.dip?.needs ? { id: 'M90', value: T.runway, needs: [], unit: 'months', text: T.text } : null;
+  return S.summaryStrip(ctx, [{ label: 'Runway on cash alone', result: P.m.runwayMonths, render: r => `${r.value.toFixed(1)} months`, home: '#/net-worth/assets', tip: 'Cash divided by full spending, with nothing coming in' },
+    ...(plan ? [{ label: 'With the plan (Transitions)', result: plan, render: r => (r.value == null ? 'Past 10 years' : monthsText(r.value)), home: '#/plan/transitions', tip: 'Every rung that is on in Plan › Transitions: benefits, the cut, family help, cards and retirement money' }] : [])]);
+}
 function debtHero(app, ctx, m) {
   const card = debtHeroOf(ctx.store.doc, m);
   if (!card) return null;
@@ -164,7 +173,7 @@ function sessionStrip(app, ctx, P) {
     P.inSession && s.guide ? S.checkbox('Show every field (not just what\'s missing)', !!s.allFields, v => ctx.store.setIn('session', ['allFields'], v, v ? 'Show every field' : 'Focus mode'), { key: 'home:all-fields' }) : null, // item 10
     walkButton(app, ctx, { size: 'small' }), // batch 14 (item 5): every empty or rough box, one at a time
     P.inSession ? [S.button('End session', { kind: P.current.done || !hasNext ? 'primary' : 'secondary', size: P.current.done || !hasNext ? 'big' : null, iconName: 'check', onClick: () => app.go('#/home/review') }), P.current.done || !hasNext ? null : S.button('Next step', { kind: 'primary', size: 'big', iconName: 'right', onClick: nextStep })] // item 4: End session leads once the checklist is met, or once nothing is left to chase (batch 7, item 6)
-      : [P.graduated ? null : S.button('Move to next session', { iconName: 'right', tip: 'Review the key numbers and move on without a live session', onClick: () => app.go('#/home/review') }),
+      : [P.graduated ? null : S.button('Move to next session', { iconName: 'right', tip: 'Move on without a live session', onClick: () => app.go('#/home/review') }),
         S.button('Start session', { kind: 'primary', size: 'big', onClick: start, disabled: P.graduated, why: P.graduated ? 'The program is complete' : null })]);
 }
 // End (R181): snapshot (Day 0 the first time), homework, one-pager, next date, a backup file; then Send summary.

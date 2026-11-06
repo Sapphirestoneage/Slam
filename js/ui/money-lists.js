@@ -149,11 +149,23 @@ function k401FirstPass(ctx, r, up, link) {
       labelled('401(k) a paycheck', moneyInput(olderPct ? null : perPaycheck, y => up({ k401Paycheck: y, contributionPct: null }), {
         hint: 'Add amount' }),
       { note: fromAcct ? 'From your 401(k)' : olderPct ? `Set as ${pct(v.contributionPct)} of pay${x?.gross && n ? ` (about ${money(x.gross * v.contributionPct / n)})` : ''}; type dollars to replace it` : 'Pay stub: 401(k) line', later: L(ctx, r, 'k401Paycheck') }),
-      labelled('Employer match?', tiers.length
+      labelled('Employer match?', link.incomeTiersFrom && tiers.length
         ? h('span.computed', { title: 'Set on your 401(k)' }, tiers.map((t, i) => `${pct(t.rate)} of the ${i ? 'next' : 'first'} ${pct(t.upTo)}`).join(', '))
-        : toggle(['Yes', 'No', "Don't know"], hasMatch, y => up({ hasMatch: y }), { label: 'Employer match', clearable: true }),
-      { note: tiers.length ? (link.incomeTiersFrom ? 'From your 401(k)' : null) : hasMatch === 'Yes' ? 'Add how much on the 401(k)' : null, later: L(ctx, r, 'hasMatch') }),
+        : h('div.stack', { style: { gap: '6px' } },
+          toggle(['Yes', 'No', "Don't know"], hasMatch, y => up({ hasMatch: y, ...(y === 'Yes' ? {} : { matchPct: null, matchCapPct: null }) }), { label: 'Employer match', clearable: true }),
+          // Batch 20 (Rocket Surgery): how much, in one tap (the usual formulas). It used to say "Add how much on the
+          // 401(k)", whose button added an empty 401(k) that dropped the Picture and locked the FI date.
+          hasMatch === 'Yes' ? matchPicks(ctx, r, v, up) : null),
+      { note: link.incomeTiersFrom && tiers.length ? 'From your 401(k)' : hasMatch === 'Yes' && !tiers.length ? 'Tap how much; other formulas on the 401(k)' : null, later: L(ctx, r, 'hasMatch') }),
       labelled('The rest', details, { note: 'Roth or traditional, % of salary, match, vesting' })));
+}
+// The usual match formulas as taps (data/reference-2026.json lists.matchPicks); the pick is the job row's first tier.
+function matchPicks(ctx, r, v, up) {
+  const picks = ctx.ref.lists?.matchPicks || [];
+  if (!picks.length) return null;
+  const now = v.matchPct != null && v.matchCapPct != null ? `${v.matchPct}|${v.matchCapPct}` : null;
+  return tapPick(picks.map(p => [`${p.rate}|${p.upTo}`, p.label]), now, y => { const [rate, upTo] = y ? y.split('|').map(Number) : [null, null]; up({ matchPct: rate, matchCapPct: upTo }); },
+    { label: 'How much the employer matches', key: `${r.id}:matchPick` });
 }
 function incomeTertiary(ctx, r, up) {
   if (isBenefitRow(r)) return [];

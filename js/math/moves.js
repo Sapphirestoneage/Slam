@@ -9,13 +9,14 @@ import { scorecardOf } from './scorecard.js';
 import { homeworkList } from '../homework.js';
 import { gatesOf, visible } from '../gates.js';
 import { addMonths, ymOf } from '../month.js';
+import { ownPlanPerson } from '../registry/couples.js';
 
 const money = v => `$${Math.round(v).toLocaleString('en-US')}`;
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const monthWords = ym => (ym ? `${MON[Number(ym.slice(5, 7)) - 1]} ${ym.slice(0, 4)}` : null);
 
 export function nextMoves(doc, ref, { now = new Date(), flags = [], limit = 3 } = {}) {
-  const m = metrics(doc, ref, { now });
+  const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }); // batch 20: one person's plan in Dating and Living together, as on Home
   const F = foo(doc, ref, { now, flags });
   const at = n => (n == null ? null : addMonths(ymOf(now), Math.max(0, Math.ceil(n))));
   const out = [], used = new Set();
@@ -28,10 +29,11 @@ export function nextMoves(doc, ref, { now = new Date(), flags = [], limit = 3 } 
     if (!s || ['Done', 'Locked', 'Off', 'Optional'].includes(s.status)) return null;
     if (s.id === '1' && F.gap) return { key: 'foo:1', step: '1', amount: F.gap.short, ym: at(1), route: '#/home/session', text: `${lead}Close the ${money(F.gap.short)} a month gap: the gap card's levers, by ${monthWords(at(1))}` };
     if (s.id === '3') {
+      // Batch 20: "debt free" only when the heavy debt is all the debt; else "the cards paid off" (a student loan still runs).
       const hero = debtHeroOf(doc, m), months = s.months ?? s.ifPaid ?? null;
       const monthly = hero?.monthly ?? m.debtPlan?.debts.reduce((t, d) => t + (d.payment ?? 0), 0) ?? null;
       if (monthly == null || months == null) return null;
-      return { key: 'foo:3', step: '3', amount: monthly, ym: at(months), route: '#/plan/debt-payoff', text: `${lead}Pay ${money(monthly)} a month to the ${heavyWords(m)}${split(monthly)}: debt free ${monthWords(at(months))}${F.gap ? ' once the gap is closed' : ''}` };
+      return { key: 'foo:3', step: '3', amount: monthly, ym: at(months), route: '#/plan/debt-payoff', text: `${lead}Pay ${money(monthly)} a month to the ${heavyWords(m)}${split(monthly)}: ${(m.debtPlan?.debts || []).every(d => d.heavy) ? 'debt free' : `${heavyWords(m) === 'cards' ? 'the cards' : heavyWords(m)} paid off`} ${monthWords(at(months))}${F.gap ? ' once the gap is closed' : ''}` };
     }
     if (s.date == null || !s.left) return null;
     const monthly = s.flowMonthly ?? null;

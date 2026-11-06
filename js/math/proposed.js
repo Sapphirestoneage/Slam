@@ -10,6 +10,7 @@ import { waitWords } from './fi.js';
 import { addMonths, ymOf, monthName } from '../month.js';
 import { METHODS } from '../registry/debt.js';
 import { blankRecord } from '../records.js';
+import { ownPlanPerson } from '../registry/couples.js';
 
 // Batch 12 (Use the gap): extra income on the proposed copy is one take-home row a month.
 export const extraIncomeRecord = amount => ({ ...blankRecord('income', 'Side hustle'), id: 'proposed-extra-income', name: 'Extra shifts or a side gig', amount, per: 'month', status: 'Roughly', values: { basis: 'Take-home', payFrequency: 'month', incomeType: 'Side hustle' } });
@@ -59,7 +60,7 @@ export function netWorthIn(m, years, { extraDebt = 0 } = {}) {
 }
 const money = v => (v == null ? '–' : `$${Math.round(v).toLocaleString('en-US')}`);
 function side(doc, ref, { now, flags, extraDebt = 0 }) {
-  const m = metrics(doc, ref, { now });
+  const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }); // batch 20: a couple with no combined totals compares one person's plan, as Home and Plan show it
   const fi = m.monthsToFi.value;
   const L = ladderOf(doc, ref, { now, flags });
   const nw5 = netWorthIn(m, 5), nw10 = netWorthIn(m, 10); // the extra is on the copy's debt plan (proposedDoc)

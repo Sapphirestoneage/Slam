@@ -568,7 +568,7 @@ export function closeScreen(app, ctx) {
   // Batch 22: the month's transactions come in from the client's app (Rocket Money, Monarch) or bank; SLAM never syncs.
   const imp = importButton(app, { ym: UI.review ?? now, onSaved: ym => { UI.review = ym; UI.closeStep[ym] = 1; UI.closeBy[ym] = 'category'; app.render(); } });
   if (!any) return [head('Month end', 'Plan vs actual'), imp, h('div.list', {}, h('div.empty', {}, h('span.title', {}, 'No closed months yet'),
-    h('span.muted', {}, 'Plan a month on Budget, mark what was paid on the calendar, then close it here.'), S.button('Open Budget', { iconName: 'right', onClick: () => app.go('#/cash-flow/budget') })))];
+    h('span.muted', {}, 'Plan a month on Budget, mark what was paid on the calendar, then close it here.'), openBudgetButton(app)))]; // batch 20: Find's "close the month" lands here when no month has a plan yet
   UI.review ??= views.find(v => !v.closed)?.ym ?? now;
   const acc = gutAccuracy(closedMonths(doc));
   const streak = closeStreak(doc, ctx.now());
@@ -632,17 +632,19 @@ function review(app, ctx, v, doClose) {
     const by = UI.closeBy[v.ym] ?? (v.rows.some(r => ctx.store.getIn('spending', ['months', v.ym, 'lines', r.line.id, 'actualFrom']) === 'csv') ? 'category' : 'line');
     const byPick = h('div.row-line.close-by', {}, S.toggle([['category', 'By category'], ['line', 'By line']], by, x => { UI.closeBy[v.ym] = x; app.render(); }, { label: 'Show the month' }));
     const cats = by === 'category' ? byCategory(v) : null; // batch 22: plan vs actual per Budget category
-    body = cats ? [byPick, h('p.muted', {}, missing ? `${missing} ${missing === 1 ? 'line has' : 'lines have'} no actual yet. Switch to By line to type them.` : 'Every line has an actual.'),
+    body = cats ? [byPick, gutOnly(app, ctx, v), h('p.muted', {}, missing ? `${missing} ${missing === 1 ? 'line has' : 'lines have'} no actual yet. Switch to By line to type them.` : 'Every line has an actual.'),
       table(['Category', 'Plan', 'Actual', 'Difference'], cats, c => [h('td.col-first', {}, h('strong', {}, c.name), h('span.muted.small', {}, ` ${c.withActual} of ${c.lines} ${c.lines === 1 ? 'line' : 'lines'}`)),
         h('td.num', {}, money(c.plan)), h('td.num', {}, c.actual == null ? h('span.muted', {}, 'No actual') : money(c.actual)), h('td.num', {}, diff(c))]),
-      nav(S.button('Next: review the misses', { kind: 'primary', iconName: 'right', onClick: go(2) }))] : [byPick, h('p.muted', {}, missing ? `${missing} ${missing === 1 ? 'line has' : 'lines have'} no actual yet. Lines marked Paid on the calendar are already in; type the rest.` : 'Every line has an actual.'),
-      table(['Line', 'Plan', 'Actual'], rows, r => [h('td.col-first', {}, name(r)), h('td.num', {}, money(r.estimate ?? 0), r.fromRough ? h('span.muted.small', {}, ' usual') : null),
+      nav(S.button('Next: review the misses', { kind: 'primary', iconName: 'right', onClick: go(2) }))] : [byPick, gutOnly(app, ctx, v), h('p.muted', {}, missing ? `${missing} ${missing === 1 ? 'line has' : 'lines have'} no actual yet. Lines marked Paid on the calendar are already in; type the rest.` : 'Every line has an actual.'),
+      // Batch 20 (Rocket Surgery): a bill paid as planned is one tap (Same as plan sits in its own column, before the box).
+      table(['Line', 'Plan', '', 'Actual'], rows, r => [h('td.col-first', {}, name(r)), h('td.num', {}, money(r.estimate ?? 0), r.fromRough ? h('span.muted.small', {}, ' usual') : null),
+        h('td.num.use-plan', {}, !v.closed && r.actual == null && (r.estimate ?? 0) > 0 ? S.button(`Same as plan ${money(r.estimate)}`, { size: 'small', tip: `It was ${money(r.estimate)}, as planned`, onClick: () => set(r, Math.round(r.estimate * 100) / 100) }) : null),
         h('td.num', {}, v.closed ? money(r.actual) : S.moneyInput(r.actualFrom === 'typed' ? r.actual : null, val => set(r, val), { hint: r.actual == null ? 'Add actual' : moneyText(r.actual), key: `close:${v.ym}:${r.line.id}` }))]),
       nav(S.button('Next: review the misses', { kind: 'primary', iconName: 'right', onClick: go(2) }))];
   } else if (step === 2) {
     const shown = rows.filter(r => r.actual != null && r.diff != null && Math.abs(r.diff) >= 0.5);
     body = [top.length ? h('div.misses', {}, h('span.label', {}, 'Biggest misses'), top.map(r => h('span.miss', {}, h('strong', {}, r.line.name || r.line.values.category), ` ${r.diff > 0 ? '+' : '−'}${money(Math.abs(r.diff))}`,
-      r.variable ? null : h('span.muted', {}, ' (fixed)')))) : h('p.muted', {}, v.rows.some(r => r.actual != null) ? 'Everything landed on plan.' : 'No actuals yet. Go back a step to add them.'),
+      r.variable ? null : h('span.muted', {}, ' (fixed)')))) : h('p.muted', {}, v.rows.some(r => r.actual != null) ? (gutOnlyOf(ctx, v) ? 'Every line with an actual landed on plan. The gut-only categories are not in this close.' : 'Everything landed on plan.') : 'No actuals yet. Go back a step to add them.'),
       shown.length ? table(['Line', 'Plan', 'Actual', 'Difference'], shown, r => [h('td.col-first', {}, name(r)), h('td.num', {}, money(r.estimate ?? 0)), h('td.num', {}, money(r.actual)), h('td.num', {}, diff(r))]) : null,
       bulletChart(ctx, rows.filter(r => r.actual != null).slice(0, 12), v.gut),
       nav(S.button('Next: carry forward', { kind: 'primary', iconName: 'right', onClick: go(3) }), go(1))];
@@ -654,6 +656,26 @@ function review(app, ctx, v, doClose) {
       nav(v.closed ? S.button('Done', { kind: 'primary', iconName: 'check', onClick: () => { UI.review = null; app.render(); } }) : S.button('Close month', { kind: 'primary', iconName: 'check', onClick: doClose }), go(2))];
   }
   return h('div.review', {}, stepper(app, v, step), ...body);
+}
+function openBudgetButton(app) {
+  const b = S.button('Open Budget', { iconName: 'right', onClick: () => app.go('#/cash-flow/budget') });
+  b.dataset.focus = 'sec:close:months'; // the same box Find's month-end words land on when the months are there
+  return b;
+}
+// Batch 20 (Rocket Surgery): Month end compares lines; categories that hold only the gut number have none, so a
+// gut-only client's close compared Rent alone and said "Everything landed on plan". One line says what is left out.
+function gutOnlyOf(ctx, v) {
+  if (v.gut == null) return null;
+  const cats = ctx.metrics().inputs.categories.filter(c => c.key !== 'Debt' && c.key !== 'Retirement' && c.counts && c.amount == null);
+  if (!cats.length) return null;
+  return { names: cats.map(c => c.name), left: Math.max(0, v.gut - (v.totals.estimate ?? 0)) };
+}
+function gutOnly(app, ctx, v) {
+  const g = gutOnlyOf(ctx, v);
+  if (!g) return null;
+  const names = g.names.length > 2 ? `${g.names.slice(0, 2).join(', ')} and ${g.names.length - 2} more` : g.names.join(' and ');
+  return h('div.row-line.gut-only', { style: { gap: '12px' } }, h('span.muted', {}, `${names} ${g.names.length === 1 ? 'has' : 'have'} only the gut number${g.left ? ` (${money(g.left)} of ${money(v.gut)})` : ''}, so this close leaves ${g.names.length === 1 ? 'it' : 'them'} out.`),
+    S.button('Add their lines', { size: 'small', iconName: 'right', onClick: () => { UI.pass = 'Actual'; app.go('#/cash-flow/budget'); } }));
 }
 function bulletChart(ctx, rows, gut) {
   if (!rows.length) return null;

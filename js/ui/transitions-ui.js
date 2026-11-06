@@ -268,7 +268,7 @@ function shareView(app, ctx, T) {
     h('h2', {}, 'The situation'),
     h('p', {}, `${p.tpl.label}, from ${mon(lad.start)}. ${T.levels[0].burn != null ? `A month costs ${money(T.levels[0].burn)} at full spending` : ''}${lad.rungs.find(r => r.id === 'cut' && r.on) ? `, and ${money(lad.rungs.find(r => r.id === 'cut').burn)} with the cut` : ''}.`),
     h('h2', {}, 'The plan, in order'),
-    h('ol.tr-share-list', {}, on.map(r => h('li', {}, h('strong', {}, r.name), ` · ${amt(r)}`))),
+    h('ol.tr-share-list', {}, on.map(r => h('li', {}, h('strong', {}, RUNGS.find(x => x.id === r.id)?.plain ?? r.name), ` · ${amt(r)}`))), // batch 20: plain names for parents
     wires.length ? [h('h2', {}, 'Decided ahead'), h('ul', {}, wires.map(w => h('li', {}, `${w.text} (${mon(w.ym)})`)))] : null,
     h('h2', {}, 'The worst case'),
     h('p', {}, T.floorYm ? `If nothing changes at all, the last of the money runs out in ${mon(T.floorYm)}, ${monthsText(T.runway)} from the start.${wires.length ? ` The first decision comes well before that, in ${mon(wires[0].ym)}.` : ''}` : 'What comes in covers the burn: there is no floor in sight.'),

@@ -8,7 +8,7 @@ import { foo } from './math/foo.js';
 import { gatesOf, visible } from './gates.js';
 import { SESSIONS, PACE, LEVELS, REVIEW, AGENDA, HOMEWORK_STATUSES, levelWord } from './registry/program.js';
 import { homeworkList } from './homework.js';
-import { MODES, modeOf, DISCLOSURE } from './registry/couples.js';
+import { MODES, modeOf, DISCLOSURE, ownPlanPerson } from './registry/couples.js';
 import { layerSnapshot } from './math/layers.js';
 import { JOY, CONFIDENCE } from './registry/joy.js';
 import { fmt } from './math/result.js';
@@ -229,7 +229,7 @@ export function filledHoles(doc, sc) {
 // Everything Home shows about the program, worked out once.
 export const sessionCount = doc => sessionNo(doc); // the session being prepared or run, for callers without a ref
 export function programOf(doc, ref, { now = new Date(), flags = [] } = {}) {
-  const m = metrics(doc, ref, { now });
+  const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }); // batch 20: a couple with no combined totals sees the same person's plan on Home as on Cash flow and Plan
   const picture = pictureOf(doc, ref, { now });
   const sc = scorecardOf(doc, ref, { now, flags });
   const sessions = sessionsOf(doc, ref, { now, flags, picture, m, sc });
@@ -244,7 +244,7 @@ export function programOf(doc, ref, { now = new Date(), flags = [] } = {}) {
 export function snapshotNumbers(doc, ref, { now = new Date(), flags = [] } = {}) {
   const sc = scorecardOf(doc, ref, { now, flags });
   const joy = joyOf(doc), conf = confidenceOf(doc);
-  return { ...keyNumbers(metrics(doc, ref, { now })), picturePct: pictureOf(doc, ref, { now }).pct, scoreOk: sc.okCount, scoreOf: sc.of, joy: joy.value, joyPartner: joy.partner, confidence: conf.value, confidencePartner: conf.partner, // F4: both measures ride in every snapshot
+  return { ...keyNumbers(metrics(doc, ref, { now, person: ownPlanPerson(doc) })), picturePct: pictureOf(doc, ref, { now }).pct, scoreOk: sc.okCount, scoreOf: sc.of, joy: joy.value, joyPartner: joy.partner, confidence: conf.value, confidencePartner: conf.partner, // F4: both measures ride in every snapshot
     scorecard: Object.fromEntries(sc.areas.map(a => [a.id, { rating: a.rating, payoff: a.payoff?.value ?? null, fiDays: a.fiDays }])) };
 }
 

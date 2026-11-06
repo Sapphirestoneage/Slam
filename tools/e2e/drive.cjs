@@ -82,7 +82,7 @@ async function fastTrack(page, client, c = counter(page)) {
     if (!(await has(page.locator('.ft-box')))) break;
     const title = (await page.locator('.ft-box h2').first().innerText().catch(() => '')).trim();
     c.step = `Fast Track ${title}`;
-    if (/done|Every lens|Almost/i.test(title)) break;
+    if (/done|Every lens|Almost|first picture/i.test(title)) break; // batch 20: the end screen says "The first picture"
     if (/About you/.test(title)) { await settle(page, 100); const by = byFocus(page, 'ft:by'); if (!(await by.inputValue())) await c.type(by, client.birthYear); await seg('Solo or couple', client.taps.household === 'Couple' ? 'Couple' : 'Solo'); await settle(page, 150); }
     if (/About you|switch|tap|What applies/i.test(title)) await tapStep(page, client, c);
     else if (/Take-home/.test(title)) { await money('ft:take', client.takeHome); await seg('Per', client.per); await settle(page, 150); if (client.freq) { const f = byFocus(page, 'ft:freq'); const v = await valueOf(f); if (v !== client.freq && !v.endsWith(client.freq)) await c.pick(f, client.freq); } }

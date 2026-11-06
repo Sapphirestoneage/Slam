@@ -66,6 +66,9 @@
 .misses { display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; }
 .miss { background: var(--bg); border-radius: 999px; padding: 4px 12px; }
 .review-table td { height: 44px; }
+.review-table td.use-plan { width: 1%; white-space: nowrap; padding-right: 12px; } /* batch 20: Same as plan sits right before the Actual box */
+.review-table td.col-first { width: 60%; }
+@media (max-width: 760px) { .review-table tr.row td.use-plan { width: auto; flex: 1 1 100%; order: 5; padding-right: 0; } .review-table tr.row td.use-plan:empty { display: none; } } /* on a phone it sits under the box */
 
 /* ---------- Plan ---------- */
 .fi-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s4); align-items: start; }

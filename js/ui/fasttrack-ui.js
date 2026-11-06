@@ -102,9 +102,14 @@ export function startFastTrack(app, ctx, { then = null } = {}) { // then: what c
   ];
 
   const live = () => STEPS.filter(x => !x.skip?.());
+  // Batch 20 (Rocket Surgery): on About you the count follows the answers as they are tapped (a renter with no car has
+  // no Home and car step), so it never reads "Step 1 of 7" and then "Step 2 of 6".
+  const total = () => { if (step !== 0) return live().length; const was = { ...homeAsk }; Object.assign(homeAsk, { housing: a.housing == null, car: a.hasCar == null }); const n = live().length; Object.assign(homeAsk, was); return n; };
   const overlay = h('div.ft-overlay', { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Fast Track' });
   const box = h('div.ft-box');
   overlay.append(box);
+  const recount = () => setTimeout(() => { const c = box.querySelector('.ft-count'); if (c) c.textContent = `Step ${step + 1} of ${total()}`; });
+  box.addEventListener('click', recount); box.addEventListener('change', recount);
   const clock = h('span.ft-clock', { 'aria-live': 'off' });
   const tick = setInterval(() => { const s = Math.round((Date.now() - started) / 1000); clock.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} of about 5:00`; }, 1000);
   const close = () => { clearInterval(tick); overlay.remove(); document.removeEventListener('keydown', keys); };
@@ -125,10 +130,10 @@ export function startFastTrack(app, ctx, { then = null } = {}) { // then: what c
     const missing = ['netWorth', 'surplus', 'savingsRate', 'monthsToFi'].filter(k => m[k].value === null);
     clear(box,
       h('div.ft-head', {}, h('strong', {}, 'Fast Track done'), h('span.muted', {}, `${Math.floor(seconds / 60)} min ${seconds % 60} s`)),
-      h('h2', { style: { margin: '8px 0 16px' } }, missing.length ? 'Almost: a lens still needs a number' : 'Every lens is on'),
+      h('h2', { style: { margin: '8px 0 16px' } }, (n => (n ? `The first picture: ${n === 1 ? 'one number still needs' : `${n} numbers still need`} an answer` : 'The first picture'))(missing.filter(k => !m[k].never).length)), // batch 20: "a lens" read as jargon; a date not on this path is an answer
       summaryStrip(ctx, [{ label: 'Net worth', result: m.netWorth, key: 'netWorth' }, { label: 'Monthly surplus', result: m.surplus, key: 'surplus' },
         { label: 'Savings rate', result: m.savingsRate, key: 'savingsRate' }, { label: 'FI date', result: m.monthsToFi, key: 'monthsToFi' }]),
-      h('p.muted', {}, 'These are totals by area. Going through each tab in full detail tightens them; the gap is tracked on Coach tools.'),
+      h('p.muted', {}, 'Rough totals for now. Walk me through asks what is left, one box at a time, and each answer tightens them.'),
       // Batch 25 (Phase 4): an optional last step, who they are with money; Do this later is one tap.
       identityWanted(ctx) ? identityOffer(ctx, () => { document.removeEventListener('keydown', keys); identityFastTrack(app, ctx, box, { onDone: () => { document.addEventListener('keydown', keys); doneScreen(seconds, false); }, onClose: close }); }, () => doneScreen(seconds, false)) : null,
       h('div.row-line', { style: { justifyContent: 'flex-end' } },
@@ -142,9 +147,9 @@ export function startFastTrack(app, ctx, { then = null } = {}) { // then: what c
     const s = L[step];
     const last = step === L.length - 1;
     clear(box,
-      h('div.ft-head', {}, h('strong', {}, 'Fast Track'), h('span.muted', {}, `Step ${step + 1} of ${L.length}`), h('span', { style: { flex: 1 } }), clock,
+      h('div.ft-head', {}, h('strong', {}, 'Fast Track'), h('span.muted.ft-count', {}, `Step ${step + 1} of ${total()}`), h('span', { style: { flex: 1 } }), clock,
         h('button.icon-btn.tiny', { type: 'button', 'aria-label': 'Close without saving', 'data-tip': 'Close without saving', onclick: close }, icon('x'))),
-      h('div.ft-progress', { role: 'progressbar', 'aria-valuenow': step + 1, 'aria-valuemin': 1, 'aria-valuemax': L.length }, h('span', { style: { width: `${((step + 1) / L.length) * 100}%` } })),
+      h('div.ft-progress', { role: 'progressbar', 'aria-valuenow': step + 1, 'aria-valuemin': 1, 'aria-valuemax': total() }, h('span', { style: { width: `${((step + 1) / total()) * 100}%` } })),
       h('h2', {}, s.title), h('p.muted', {}, s.help), s.body(),
       h('div.ft-foot', {},
         h('button.btn', { type: 'button', disabled: step === 0, onclick: () => { step -= 1; draw(); } }, 'Back'),
