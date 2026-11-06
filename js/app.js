@@ -17,7 +17,7 @@ import { saveFile, saveWords } from './ui/save-file.js';
 import { agendaPanel } from './ui/agenda-ui.js';
 import { TABS, parseRoute, search, routeForPlace, tabRoute } from './nav.js';
 import { SCREENS, progressOf } from './screens.js';
-import { startFastTrack } from './ui/fasttrack-ui.js';
+import { startFastTrack, fastTrackLabel } from './ui/fasttrack-ui.js';
 import { keepPlace } from './ui/place.js';
 import { opened } from './ui/dismiss.js';
 import { parseQuickAdd } from './quickadd.js';
@@ -68,7 +68,7 @@ const app = {
     const input = h('input', { placeholder: 'Client name', 'aria-label': 'Client name' });
     const go = () => { const name = input.value.trim(); if (!name) return; S.closePop(); this.open(createClient(adapter, name, new Date().toISOString())); addPresets(this.store, ref); this.store.undoStack = []; this.go('#/home/session'); }; // every new client starts with the usual list
     input.onkeydown = e => { if (e.key === 'Enter') go(); };
-    S.popover(anchor, h('div.stack', { style: { gap: '12px' } }, h('strong', {}, 'New client'), h('label.field', {}, input),
+    S.popover(anchor, h('div.stack.new-client-pop', { style: { gap: '12px' } }, h('strong', {}, 'New client'), h('label.field', {}, input),
       h('div.row-line', {}, S.button('Create', { kind: 'primary', onClick: go }), S.button('Cancel', { onClick: S.closePop })),
       h('a', { href: '#/tools/discovery', onclick: () => S.closePop() }, 'From a discovery call ›')), { width: 340 });
   },
@@ -132,7 +132,7 @@ const app = {
     const paged = ['net-worth', 'cash-flow'].includes(tab.id);
     const onePageKey = `onePage-${tab.id}`;
     const modes = paged && this.hasClient ? h('span.row-line.mm-modes', { style: { gap: '8px', flexWrap: 'nowrap' } },
-      S.button('Start Fast Track', { iconName: 'right', onClick: () => startFastTrack(this, this.ctx) }),
+      S.button(fastTrackLabel(this.ctx), { iconName: 'right', onClick: () => startFastTrack(this, this.ctx) }),
       S.toggle([['sections', 'By section'], ['one', 'One page']], this.prefs[onePageKey] ? 'one' : 'sections', v => this.setPref(onePageKey, v === 'one'), { label: `${tab.name} layout` })) : null;
     const subs = h('div.subtabs-in', {}, tab.subs.filter(s => !off.has(s.id) && !s.hidden).map(s => {
       const p = this.hasClient ? progressOf(this.ctx, tab.id, s.id) : null;

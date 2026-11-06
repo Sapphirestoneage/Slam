@@ -3,17 +3,21 @@
 // a clock against the 5-minute target, and the four headline numbers at the end (R068).
 import { h, clear, icon } from './dom.js';
 import { moneyInput, toggle, select, textInput, labelled, summaryStrip, toast } from './staples.js';
-import { applyFastTrack, fastTrackAnswers, FT_DEBTS } from '../fasttrack.js';
+import { applyFastTrack, fastTrackAnswers, FT_DEBTS, needsPayFrequency, fastTrackDone } from '../fasttrack.js';
 import { HOUSING } from '../gates.js';
 import { keyNumbers } from '../math/metrics.js';
 import { FREQ } from './money-lists.js';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+// Batch 8: Start until it has been finished once, then Redo.
+export const fastTrackLabel = ctx => (fastTrackDone(ctx.store.doc) ? 'Redo Fast Track' : 'Start Fast Track');
+
 export function startFastTrack(app, ctx) {
   const a = fastTrackAnswers(ctx.store.doc);
   const started = Date.now();
   let step = 0;
+  let freqMsg = false; // batch 8: Next on a paycheck with no How often
   const set = patch => Object.assign(a, patch);
   const big = (v, on, hint, key) => { const f = moneyInput(v, on, { hint, key }); f.classList.add('big'); f.style.width = '220px'; return f; };
   const debtRow = ([type, label]) => h('div.ft-debt', {}, h('strong', {}, label),
@@ -31,7 +35,9 @@ export function startFastTrack(app, ctx) {
     { title: 'Take-home pay', help: 'What lands in the account, after taxes. Any way they know it.', body: () => h('div.ft-grid', {},
       labelled('Take-home', big(a.takeHome, v => set({ takeHome: v }), 'Add amount', 'ft:take')),
       labelled('Per', toggle([['paycheck', 'Paycheck'], ['month', 'Month'], ['year', 'Year']], a.takePer, v => set({ takePer: v }), { label: 'Per' })),
-      labelled('Paid', select(FREQ, a.payFrequency, v => set({ payFrequency: v }), { label: 'Pay frequency', hint: 'How often', width: 210, key: 'ft:freq' }))) },
+      labelled('Paid', h('span.row-line', { style: { gap: '8px' } },
+        select(FREQ, a.payFrequency, v => { set({ payFrequency: v }); if (v && freqMsg) { freqMsg = false; draw(); } }, { label: 'Pay frequency', hint: 'How often', width: 210, key: 'ft:freq' }),
+        freqMsg ? h('span.ft-msg', { role: 'alert' }, 'Pick how often they\'re paid so we can turn the paycheck into a month') : null))) },
     { title: 'Spending, all in', help: "Their gut: 'what do you think you spend in a month?' Kept to compare later.", body: () => h('div.ft-grid', {},
       labelled('A month, all in', big(a.gut, v => set({ gut: v }), 'Add amount', 'ft:gut')),
       labelled('Does that include debt payments?', toggle([[true, 'Yes'], [false, 'No']], a.gutIncludesDebt, v => set({ gutIncludesDebt: v }), { label: 'Includes debt payments' }))) },
@@ -63,15 +69,15 @@ export function startFastTrack(app, ctx) {
   const clock = h('span.ft-clock', { 'aria-live': 'off' });
   const tick = setInterval(() => { const s = Math.round((Date.now() - started) / 1000); clock.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} of about 5:00`; }, 1000);
   const close = () => { clearInterval(tick); overlay.remove(); document.removeEventListener('keydown', keys); };
-  const save = () => {
+  const save = (finished = false) => {
     const seconds = Math.round((Date.now() - started) / 1000);
-    applyFastTrack(ctx.store, a, { seconds });
+    applyFastTrack(ctx.store, a, { seconds, finished });
     const s = ctx.store.doc.settings.fastTrack;
     s.result = keyNumbers(ctx.metrics()); // R069: kept to measure the gap once the full detail is in
     return seconds;
   };
   const finish = () => {
-    const seconds = save();
+    const seconds = save(true); // batch 8: the Start buttons now say Redo
     clearInterval(tick);
     const m = ctx.metrics();
     const missing = ['netWorth', 'surplus', 'savingsRate', 'monthsToFi'].filter(k => m[k].value === null);
@@ -101,7 +107,10 @@ export function startFastTrack(app, ctx) {
         h('button.btn.primary', { type: 'button', onclick: () => next() }, last ? 'Finish' : 'Next', icon('right'))));
     setTimeout(() => box.querySelector('input, select')?.focus(), 30);
   };
-  const next = () => { document.activeElement?.dispatchEvent?.(new Event('change')); if (step === STEPS.length - 1) finish(); else { step += 1; draw(); } };
+  const next = () => { document.activeElement?.dispatchEvent?.(new Event('change'));
+    if (STEPS[step].title === 'Take-home pay' && needsPayFrequency(a)) { freqMsg = true; draw(); setTimeout(() => box.querySelector('select')?.focus(), 40); return; } // batch 8
+    freqMsg = false;
+    if (step === STEPS.length - 1) finish(); else { step += 1; draw(); } };
   // Nothing is saved until Finish or Save and close; closing keeps the client as it was.
   const keys = e => {
     if (e.key === 'Escape') close();

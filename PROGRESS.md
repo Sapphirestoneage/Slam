@@ -94,6 +94,19 @@ Manual browser checks for this pass (the automated ones ran in Chromium; worth o
 - Batch 5 E (Nov 6): About you › Home and shared bills rebuilt. A My share / Whole bill toggle next to each checked bill (profile.sharedAs); the defaults with roommates in config (rent on as my share; electric, gas, water and internet on as the whole bill; renters, groceries and household supplies off); a bill given as my share is never divided again, a whole bill is divided by the split count, shown inline on the Budget line and beside each bill on About you; "Split N ways (you + R roommates)" replaces "Splitting with N", the count includes the client (older files: N becomes N + 1 ways; a ticked bill with no choice keeps the old whole-bill meaning); "I'll find it later" only while a field is empty. Export format 11's shape updated (still the one batch 5 bump); the spec's F090 and F091 relinked. Tests: 3 roommates split 4 ways; rent $1,500 as my share stays $1,500; electric $240 as the whole bill is $60. Question 176.
 - Batch 6 (Nov 6): usability from Eli's screen walkthrough, items 1 to 36: history arrows and arrive-and-highlight, clickable counters, the agenda folded and session states, Know it as confirmed, Institutions, one unit per table and no sideways or nested scroll, the calendar's Month and Full list views with day totals, a weekly Spending money bar and a drag handle, FOO tiles with cards in config and partial bars (step 8 no longer Done with nothing to fund), credit inputs per person, inline inputs on unrated areas, honest zeros. Format 12. QUESTIONS 177 to 181.
 
+## Batch 9 (Nov 5): fixes from a think-aloud usability test
+
+Six small things a first-time user tripped on, fixed without touching anything else.
+
+1. The top bar fits at 390: the tools row wraps to a second line instead of scrolling sideways, so Client view and the gear are always reachable (css/shell.css).
+2. Agenda rows stack at phone width: the box and the words take the full line and the Note, Save Day 0 now and Open buttons wrap below (css/phases.css).
+3. Fast Track's First name starts as the first word of the client name ("Maya Test" is "Maya"), and only when no first name is on file (js/fasttrack.js firstWord).
+4. A paycheck needs How often: with Per = Paycheck and no frequency, Next says "Pick how often they're paid so we can turn the paycheck into a month" beside the box and stays put (js/fasttrack.js needsPayFrequency). Without it, M01 read the paycheck as a month (marked roughly), so an every-2-weeks $2,000 counted as $2,000 a month instead of $4,333. Month and Year need nothing.
+5. Once Fast Track has been finished (Finish, not Save and close; settings.fastTrack.done), both buttons say Redo Fast Track and the big card on an empty screen is one slim line.
+6. Home with no client: the Try with example numbers button hides while the New client box is open, so the box never covers it.
+
+QA: 315 tests pass (test/batch9.test.js covers firstWord, needsPayFrequency and fastTrackDone); each fix checked in the browser at 1440, 1280 and 390 with no sideways overflow and no console errors beyond the blocked font and CDN loads.
+
 ## Batch 7 (Nov 5): Eli's walkthrough of the SLAM for Eli artifact
 
 Twelve items from one sitting, each a screenshot and a sentence, built as one batch. The rule they add up to: nothing on

@@ -337,3 +337,9 @@ table.rows tr.group .group-line .fold { width: auto; flex: 1; }
 .review-group h4 { margin: var(--s3) 0 var(--s1); font-size: .875rem; color: var(--text-2); }
 .review-line { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); padding: 6px 0; border-bottom: 1px solid var(--border-row); flex-wrap: wrap; }
 .review-line .seg button { min-height: 32px; }
+
+/* Batch 8 */
+body:has(.new-client-pop) .try-demo { visibility: hidden; } /* the New client box sits where this button is */
+.card.ft-slim { padding: 8px var(--s4); }
+@media (max-width: 760px) { .ft-slim-note { display: none; } }
+.ft-msg { color: var(--text); background: var(--warn-bg, var(--primary-light)); border-radius: 6px; padding: 4px 8px; font-size: .875rem; font-weight: 600; max-width: 320px; border-left: 3px solid var(--amber); }

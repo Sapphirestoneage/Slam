@@ -333,6 +333,12 @@ body:has(.tracker:not([hidden])) main.shell-page { padding-bottom: 72px; }
 .fi-lines { gap: 2px; margin-top: 4px; }
 .foo-step.locked { opacity: .85; }
 .foo-lock { color: var(--text-2); font-size: .875rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+/* Batch 8: at phone width an agenda row stacks: the box and the words on one line, full width; its buttons wrap below. */
+@media (max-width: 760px) {
+  .check-item { flex-wrap: wrap; row-gap: 8px; }
+  .check-item > div { flex: 1 1 calc(100% - 40px) !important; }
+  .check-item .field { max-width: 100%; }
+}
 @media (max-width: 760px) { .tracker { bottom: 58px; padding: 6px 12px; } body:has(.tracker:not([hidden])) main.shell-page { padding-bottom: 120px; } }
 
 /* The ladder (M75) */

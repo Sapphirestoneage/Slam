@@ -8,7 +8,8 @@ import { sheetButtons } from './ui/sheet-ui.js';
 import { creditCard, cardsLink, debtList, spendingList, debtCharts, debtRatios } from './ui/lists.js';
 import { incomeList, benefitList, variableBlock, assetList, protectionList, taxesScreen, lifeAdminScreen, listCompletion, incomeCharts, assetCharts } from './ui/money-lists.js';
 import { profileScreen, profileCompletion } from './ui/profile.js';
-import { startFastTrack } from './ui/fasttrack-ui.js';
+import { startFastTrack, fastTrackLabel } from './ui/fasttrack-ui.js';
+import { fastTrackDone } from './fasttrack.js';
 import { budgetScreen, calendarScreen, closeScreen } from './ui/spending-ui.js';
 import { homeScreen } from './ui/home-ui.js';
 import { listsScreen, sessionScreen, discoveryScreen } from './ui/tools-ui.js';
@@ -40,13 +41,17 @@ const listEmpty = (one, plural, why) => h('div.list', {}, h('div.empty', {}, h('
 export function noClient(app) {
   return center(h('span.title', {}, 'Start with a new client'),
     S.button('New client', { kind: 'primary', size: 'big', iconName: 'plus', onClick: e => app.newClient(e.currentTarget) }),
-    S.button('Try with example numbers', { onClick: () => app.loadDemo() }));
+    tryDemo(app)); // batch 8: hidden while the New client box is open, so the box never covers it
+}
+function tryDemo(app) { const b = S.button('Try with example numbers', { onClick: () => app.loadDemo() }); b.classList.add('try-demo'); return b;
 }
 
 // Words: Net worth or Cash flow, nothing entered. Fast Track is the one main button.
 function fastTrack(app, ctx) {
+  if (fastTrackDone(ctx.store.doc)) return h('div.card.ft-slim', {}, h('div.row-line', { style: { gap: '10px' } }, // batch 8: one line once finished
+    S.button(fastTrackLabel(ctx), { size: 'small', iconName: 'right', onClick: () => startFastTrack(app, ctx) }), h('span.muted.small.ft-slim-note', {}, 'Done once; run it again any time')));
   return h('div.card', {}, h('div.empty', {},
-    S.button('Start Fast Track', { kind: 'primary', size: 'big', onClick: () => startFastTrack(app, ctx) }),
+    S.button(fastTrackLabel(ctx), { kind: 'primary', size: 'big', onClick: () => startFastTrack(app, ctx) }),
     h('span.muted', {}, 'about 5 minutes')));
 }
 const hasAny = (ctx, kinds) => ctx.store.records.some(r => kinds.includes(r.kind));

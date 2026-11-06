@@ -112,7 +112,7 @@ textarea.note-input { width: 100%; min-height: 70px; border: 2px solid var(--bor
   .topbar-in { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 8px; }
   .tb-left { flex: 1 1 100%; }
   .tabs { order: 2; width: 100%; overflow-x: auto; }
-  .tb-right { order: 3; width: 100%; overflow-x: auto; justify-content: flex-start; padding-bottom: 2px; }
+  .tb-right { order: 3; width: 100%; flex-wrap: wrap; justify-content: flex-start; row-gap: 6px; padding-bottom: 2px; } /* batch 8: wraps, nothing hides past the edge */
   .tb-right > .field { display: none; }
   .subtabs { top: 0; }
   .subtabs-in { overflow-x: auto; padding: 8px 12px; }

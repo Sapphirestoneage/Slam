@@ -6,6 +6,12 @@ import { LOAN_FOR } from './gates.js';
 
 export const FT_DEBTS = [['Credit card', 'Credit cards'], ['Student loan', 'Student loans'], ['Personal loan', 'Other debts']];
 const has = v => v !== null && v !== undefined && v !== '';
+// Batch 8: the first word of the client name, for the First name box ("Maya Test" is "Maya").
+export const firstWord = name => (typeof name === 'string' && name.trim() ? name.trim().split(/\s+/)[0] : null);
+// Batch 8: a paycheck amount needs how often it lands, or the math reads it as a month (M01 falls back to monthly).
+export const needsPayFrequency = a => has(a.takeHome) && a.takePer === 'paycheck' && !has(a.payFrequency);
+// Batch 8: Fast Track has been finished once for this client (Finish, not Save and close).
+export const fastTrackDone = doc => !!doc?.settings?.fastTrack?.done;
 
 // What is already on file, so running Fast Track again starts from it.
 export function fastTrackAnswers(doc) {
@@ -25,7 +31,7 @@ export function fastTrackAnswers(doc) {
     debts[t] = rows.length ? { balance: rows.reduce((s, r) => s + (r.values.balance ?? 0), 0), payment: rows.some(r => r.values.payment != null) ? rows.reduce((s, r) => s + (r.values.payment ?? 0), 0) : null, rows: rows.length } : { balance: null, payment: null, rows: 0 };
   }
   return {
-    firstName: p.firstName ?? doc.client?.name ?? null, birthMonth: p.birthMonth ?? null, birthYear: p.birthYear ?? null, household: p.household ?? (doc.client?.couple ? 'Couple' : null),
+    firstName: has(p.firstName) ? p.firstName : firstWord(doc.client?.name), birthMonth: p.birthMonth ?? null, birthYear: p.birthYear ?? null, household: p.household ?? (doc.client?.couple ? 'Couple' : null),
     takeHome: income?.values.basis === 'Gross' ? null : income?.amount ?? null, takePer: income?.per ?? 'month', payFrequency: income?.values.payFrequency ?? null,
     gut: gut?.amount ?? null, gutIncludesDebt: gut ? gut.values.includesDebtPayments !== false : true,
     checking: bal('Checking'), savings: bal('Savings or HYSA'),
@@ -37,7 +43,7 @@ export function fastTrackAnswers(doc) {
   };
 }
 
-export function applyFastTrack(store, a, { seconds = null, now = new Date().toISOString() } = {}) {
+export function applyFastTrack(store, a, { seconds = null, now = new Date().toISOString(), finished = false } = {}) {
   const recs = () => store.doc.records;
   const find = pred => recs().find(pred) || null;
   const put = (pred, kind, type, fields) => {
@@ -99,6 +105,6 @@ export function applyFastTrack(store, a, { seconds = null, now = new Date().toIS
     store.setDoc('profile', prof);
     // FI age or 'just show me' (F214)
     if (has(a.fiAge)) store.setDoc('assumptions', { fiAge: a.fiAge });
-    store.setDoc('settings', { fastTrack: { at: now, seconds } });
+    store.setDoc('settings', { fastTrack: { at: now, seconds, ...(finished || fastTrackDone(store.doc) ? { done: true } : {}) } }); // batch 8: Finish marks it done; a redo keeps it
   });
 }
