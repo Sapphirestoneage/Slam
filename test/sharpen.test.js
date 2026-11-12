@@ -6,7 +6,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Store, newHousehold } from '../js/records.js';
 import { QUESTIONS, answer, planOf, numbersOf } from '../js/journey.js';
-import { LEVELS, levelsOf, sharpnessOf } from '../js/sharpen.js';
+import { LEVELS as ALL_LEVELS, levelsOf, levelsFor, sharpnessOf } from '../js/sharpen.js';
+import { setSituation, answerBenefit, jobAheadOf, withJobAhead, startJob, questionsFor, progressOf, onFile } from '../js/journey.js';
+const LEVELS = ALL_LEVELS.filter(l => l.id !== 'ahead'); // the nine levels of someone with a job (the job ahead is for between jobs)
 import { growthOf, flowOf, debtOf, timelineOf } from '../js/charts.js';
 import { metrics } from '../js/math/metrics.js';
 
@@ -22,7 +24,8 @@ const near = (a, b, tol, what) => assert.ok(Math.abs(a - b) <= tol, `${what}: ap
 
 test('nine levels, each a few taps, each naming what it unlocks', () => {
   const s = full();
-  assert.deepEqual(LEVELS.map(l => l.n), [2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.deepEqual(levelsFor(s.doc).map(l => l.n), [2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.deepEqual(levelsFor(s.doc).map(l => l.def.id), ['where', 'owe', 'work', 'accounts', 'time', 'own', 'taxes', 'safety', 'finish']);
   for (const L of LEVELS) { const f = L.fields(s.doc, ref); const shown = f.filter(x => !x.when || x.when(L.read(s.doc, ref))); assert.ok(shown.length >= 1 && shown.length <= 6, `${L.id}: ${shown.length} boxes`); assert.ok(L.unlocks.length && L.title && L.why); }
   assert.ok(levelsOf(s.doc).every(l => l.state === 'open'));
   assert.deepEqual([sharpnessOf(s.doc, true).done, sharpnessOf(s.doc, true).total], [1, 10]);
@@ -117,4 +120,59 @@ test('every picture adds up to the engine\'s own totals', () => {
   const t = timelineOf(p);
   assert.ok(t.points.length >= 3 && t.points.every(x => x.at > 0 && x.at <= 1));
   assert.equal(growthOf(metrics(new Store(newHousehold({ name: 'x' })).doc, ref, { now })), null, 'no numbers, no picture');
+});
+
+// ---- Between jobs: the journey reshapes, the plan counts benefits that end and a job that starts.
+const laidOff = () => {
+  const s = new Store(newHousehold({ name: 'Me' })); s.setDoc('profile', { birthYear: 2001, state: 'NY', nyc: false });
+  answer(s, 'income', { takeHome: 4200 }); // the job they had
+  setSituation(s, 'between');
+  answerBenefit(s, { weekly: 504, weeks: 16 }, { now });
+  answer(s, 'spending', { gut: 2600 }); answer(s, 'cash', { checking: 3000, savings: 9000 }); answer(s, 'invested', { invested: 30000 }); answer(s, 'card', {}, { none: true });
+  return s;
+};
+
+test('between jobs: the pay question asks what is coming in, and the levels reshape', () => {
+  const s = laidOff();
+  assert.equal(questionsFor(s.doc)[0].title, 'What is coming in right now?');
+  assert.equal(onFile(s.doc, 'income', { ref, now }).benefit, 504);
+  assert.equal(progressOf(s.doc, ref, { now }).done, true);
+  const rows = s.doc.records.filter(r => r.kind === 'income');
+  assert.deepEqual(rows.map(r => [r.type, r.amount, r.per]), [['Unemployment', 504, 'week']], 'the old job row is gone, benefits are the one income row');
+  near(metrics(s.doc, ref, { now }).inputs.takeHome, 504 * 52 / 12, 0.01, 'benefits a month');
+  const L = levelsOf(s.doc);
+  assert.deepEqual(L.map(l => l.id), ['safety', 'ahead', 'where', 'owe', 'accounts', 'own', 'taxes', 'finish'], 'the safety net and the job ahead come first; work plan and hours are absent');
+  assert.deepEqual(L.map(l => l.n), [2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.equal(sharpnessOf(s.doc, true).total, 9);
+  const locked = numbersOf(planOf(s.doc, ref, priors, { flags, now }), s.doc, ref, { now }).filter(n => n.level && !n.value).map(n => n.level);
+  assert.ok(!locked.includes('work') && !locked.includes('time'), 'a level that is absent locks nothing');
+});
+
+test('between jobs: the plan shows how long the money lasts, then counts the job ahead from its month', () => {
+  const s = laidOff();
+  let p = planOf(s.doc, ref, priors, { flags, now });
+  assert.ok(p.between && p.between.runway > 6 && p.between.lasts && p.between.job === null);
+  assert.equal(p.m.monthsToFi.value, null, 'benefits alone never reach FI');
+  ALL_LEVELS.find(l => l.id === 'ahead').write(s, { months: 4, grossYear: 75000 });
+  const j = jobAheadOf(s.doc, ref, { now });
+  assert.deepEqual([j.ym, j.months, j.grossYear], ['2027-03', 4, 75000]);
+  assert.ok(j.monthly > 75000 / 12 * 0.6 && j.monthly < 75000 / 12 * 0.9);
+  p = planOf(s.doc, ref, priors, { flags, now });
+  assert.equal(p.between.job.covered, true);
+  const ch = p.m.investing.changes;
+  assert.ok(ch.some(c => c.at === 4 && Math.abs(c.monthly - j.monthly) < 0.01), 'pay starts in month 4');
+  assert.ok(ch.some(c => c.at === 4 && c.monthly < 0), 'benefits stop when the job starts, not after');
+  assert.ok(p.m.monthsToFi.value > 0, 'with the job counted there is an FI date');
+  assert.equal(s.doc.whatIf, undefined, 'the job ahead is read on a copy: nothing extra is saved');
+  assert.equal(withJobAhead(s.doc, ref, { now }).records.find(r => r.type === 'Unemployment').values.benefitEnd, '2027-02-28');
+  // the same plan by hand once the job has started: its pay less spending, invested
+  const fiAhead = p.m.monthsToFi.value;
+  startJob(s, ref, { now });
+  assert.equal(s.doc.profile.workSituation, 'Employed (W-2)');
+  assert.deepEqual(s.doc.records.filter(r => r.kind === 'income').map(r => [r.type, r.amount, r.per, r.values.basis]), [['Job', 75000, 'year', 'Gross']]);
+  assert.deepEqual(levelsOf(s.doc).map(l => l.id), ['where', 'owe', 'work', 'accounts', 'time', 'own', 'taxes', 'safety', 'finish'], 'the work levels are back');
+  const after = planOf(s.doc, ref, priors, { flags, now });
+  assert.equal(after.between, null);
+  assert.ok(after.m.monthsToFi.value < fiAhead, 'starting now beats starting in four months');
+  near(after.m.surplus.value, j.monthly - 2600, 1, 'left over once working');
 });

@@ -8,6 +8,7 @@
 // A field is { id, label, type: 'money' | 'pct' | 'pick', options (pick: [[value, label]]; pct: [numbers]),
 //   picks (money: one-tap amounts), when(values) -> shown }.
 import { applyFastTrack, fastTrackAnswers } from './fasttrack.js';
+import { setTransition } from './math/transitions.js';
 
 const has = v => v !== null && v !== undefined && v !== '';
 const num = v => (has(v) && Number.isFinite(Number(v)) ? Math.max(0, Number(v)) : null);
@@ -16,6 +17,9 @@ const job = doc => recs(doc, r => r.kind === 'income')[0] ?? null;
 const owed = doc => recs(doc, r => r.kind === 'debt' && (r.values?.balance ?? 0) > 0 && !r.linkedTo); // a loan on a home or car is asked with it, in level 7
 const loanOn = (doc, type) => { const a = recs(doc, r => r.kind === 'asset' && r.type === type)[0]; return a ? recs(doc, r => r.kind === 'debt' && r.linkedTo === a.id)[0] ?? null : null; };
 const invested = doc => recs(doc, r => r.kind === 'account' && r.values?.group === 'investment');
+const between = doc => doc.profile?.workSituation === 'Between jobs';
+const ymAt = (months, now = new Date()) => { const d = new Date(now.getFullYear(), now.getMonth() + months, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
+const monthsTo = (ym, now = new Date()) => { const [y, m] = ym.split('-').map(Number); return (y - now.getFullYear()) * 12 + (m - 1 - now.getMonth()); };
 const WEEKS = 52 / 12; // hours are asked by the week and kept by the month, as the coach app keeps them
 
 // Level 2: the three needs, as lines beside the gut number (the gut number stays the total).
@@ -60,7 +64,7 @@ export const LEVELS = [
     done: doc => owed(doc).every(d => has(d.values.apr) && d.fieldStatus?.apr !== 'Not sure' && has(d.values.payment)),
     skip: doc => (owed(doc).length ? null : 'No debt on file, so there is nothing to answer here.') },
 
-  { n: 4, id: 'work', title: 'Your plan at work', why: 'What you put into a 401(k), and what your job adds.', unlocks: ['Your true savings rate', 'Free money from a match'],
+  { n: 4, id: 'work', applies: doc => !between(doc), title: 'Your plan at work', why: 'What you put into a 401(k), and what your job adds.', unlocks: ['Your true savings rate', 'Free money from a match'],
     fields: (doc, ref) => [
       { id: 'contributionPct', label: 'How much of your pay goes into a 401(k)?', type: 'pct', options: [0, 0.03, 0.05, 0.06, 0.1, 0.15] },
       { id: 'match', label: 'Does your job match it?', type: 'pick', options: [['none', 'No match'], ...(ref.lists?.matchPicks || []).map((m, i) => [`m${i}`, m.label]), ['unknown', 'Not sure']] }],
@@ -96,7 +100,7 @@ export const LEVELS = [
     done: doc => invested(doc).length > 0 && !invested(doc).some(r => r.type === 'All investments' && (r.values.balance ?? 0) > 0),
     skip: doc => (invested(doc).some(r => (r.values.balance ?? 0) > 0) ? null : 'Nothing invested yet, so there is nothing to split.') },
 
-  { n: 6, id: 'time', title: 'Your time', why: 'The hours your job really takes.', unlocks: ['Your real hourly wage', 'Any price in hours of your life'],
+  { n: 6, id: 'time', applies: doc => !between(doc), title: 'Your time', why: 'The hours your job really takes.', unlocks: ['Your real hourly wage', 'Any price in hours of your life'],
     fields: () => [
       { id: 'paid', label: 'Hours you work in a usual week', type: 'pick', options: [20, 30, 40, 45, 50, 60].map(h => [h, String(h)]) },
       { id: 'commute', label: 'Hours a week getting there and back', type: 'pick', options: [0, 2, 5, 8, 10].map(h => [h, String(h)]) },
@@ -157,14 +161,32 @@ export const LEVELS = [
     done: doc => has(doc.assumptions?.fiAge), skip: () => null },
 ];
 
-export const levelOf = id => LEVELS.find(l => l.id === id || l.n === id) ?? null;
+// Between jobs only: the job ahead, one expected pay number as a placeholder, kept on the Life Transitions plan.
+const AHEAD = { n: 0, id: 'ahead', applies: between, title: 'The job ahead', why: 'When you expect to start, and about what it pays. A guess is fine: it is a placeholder.', unlocks: ['Your plan with the next job counted', 'Whether your money covers the gap'],
+  fields: () => [
+    { id: 'months', label: 'When do you expect to start?', type: 'pick', options: [[1, 'Next month'], [2, 'In 2 months'], [3, 'In 3 months'], [4, 'In 4 months'], [6, 'In 6 months'], [9, 'In 9 months']] },
+    { id: 'grossYear', label: 'About what it pays a year, before taxes', type: 'money', picks: [40000, 55000, 70000, 85000, 100000] }],
+  read(doc) { const n = doc.program?.transition?.next; return { months: n?.ym ? Math.max(1, monthsTo(n.ym)) : null, grossYear: n?.grossYear ?? null }; },
+  write(store, v) { const n = store.doc.program?.transition?.next || {}; setTransition(store, { template: store.doc.program?.transition?.template ?? 'job-loss', next: { ym: num(v.months) !== null ? ymAt(Math.round(num(v.months))) : n.ym ?? null, grossYear: num(v.grossYear) ?? n.grossYear ?? null } }); },
+  done: doc => has(doc.program?.transition?.next?.ym) && doc.program.transition.next.grossYear > 0, skip: () => null };
+LEVELS.push(AHEAD);
+// The order between jobs: the safety net and the job ahead first, then the rest; levels about a job at work are absent.
+const BETWEEN_ORDER = ['safety', 'ahead', 'where', 'owe', 'accounts', 'own', 'taxes', 'finish'];
+
+export const levelOf = id => LEVELS.find(l => l.id === id) ?? null;
+// The levels that apply to this person, in their order, numbered from 2 (level 1 is the five questions).
+export function levelsFor(doc) {
+  const list = LEVELS.filter(l => !l.applies || l.applies(doc));
+  const ordered = between(doc) ? BETWEEN_ORDER.map(id => list.find(l => l.id === id)).filter(Boolean) : list.slice().sort((a, b) => a.n - b.n);
+  return ordered.map((l, i) => ({ def: l, n: i + 2 }));
+}
 // Where each level stands: { n, id, title, why, unlocks, state: 'done' | 'skip' | 'open', note }. A level with nothing
 // to answer (no debt, nothing invested) counts as done and says why.
 export function levelsOf(doc) {
-  return LEVELS.map(l => { const note = l.skip(doc), done = !note && l.done(doc); return { n: l.n, id: l.id, title: l.title, why: l.why, unlocks: l.unlocks, state: note ? 'skip' : done ? 'done' : 'open', note }; });
+  return levelsFor(doc).map(({ def: l, n }) => { const note = l.skip(doc), done = !note && l.done(doc); return { n, id: l.id, title: l.title, why: l.why, unlocks: l.unlocks, state: note ? 'skip' : done ? 'done' : 'open', note }; });
 }
 // Levels finished out of ten (level 1 is the five questions).
 export function sharpnessOf(doc, firstDone) {
   const L = levelsOf(doc), done = L.filter(l => l.state !== 'open').length + (firstDone ? 1 : 0);
-  return { done, total: LEVELS.length + 1, next: L.find(l => l.state === 'open') ?? null };
+  return { done, total: L.length + 1, next: L.find(l => l.state === 'open') ?? null };
 }

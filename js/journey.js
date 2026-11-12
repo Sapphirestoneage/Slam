@@ -7,7 +7,8 @@
 // The promise this file keeps: a number is asked once. Every question reads what is already on file (Fast Track's own
 // reader), so a number typed here shows in the coach app and a number typed there is never asked again here.
 import { metrics, ageOf, placeOf } from './math/metrics.js';
-import { taxRates, defaultFilingStatus } from './math/income.js';
+import { taxRates, defaultFilingStatus, takeHomeFromGross } from './math/income.js';
+import { transitionOf, setTransition } from './math/transitions.js';
 import { benefitOf } from './math/socialsecurity.js';
 import { levelsOf, BUCKET_KIND } from './sharpen.js';
 import { agePlanOf, answeredOf, filledOf, CORE, planWordsOf } from './math/agestart.js';
@@ -39,6 +40,75 @@ export const QUESTIONS = [
   { key: 'invested', title: 'How much do you have invested?', help: 'Every account together: 401(k), IRA, brokerage.', boxes: [{ id: 'invested', label: 'Invested, all accounts' }], max: 300000, step: 1000, none: 'Nothing yet' },
   { key: 'card', title: 'Do you owe anything?', help: 'What you owe today on each. Leave a box empty if you have none of it.', boxes: [{ id: 'Credit card', label: 'Credit cards' }, { id: 'Student loan', label: 'Student loans' }, { id: 'Personal loan', label: 'Other debts' }], max: 60000, step: 500, none: 'No debt' },
 ];
+// ---------- Your work right now ----------
+// One tap on the first screen reshapes the journey (a question that does not apply is absent, not hidden). Two
+// situations so far: working, and between jobs. It is About you's own field (profile.workSituation).
+export const SITUATIONS = [['working', 'I have a job'], ['between', 'I am between jobs']];
+export const situationOf = doc => (doc.profile?.workSituation === 'Between jobs' ? 'between' : 'working');
+export const situationSet = doc => doc.profile?.workSituation != null;
+export function setSituation(store, id) { store.setDoc('profile', { workSituation: id === 'between' ? 'Between jobs' : 'Employed (W-2)' }); }
+const BENEFIT_Q = { key: 'income', title: 'What is coming in right now?', help: 'Unemployment benefits, each week. A rough number is fine.', boxes: [{ id: 'benefit', label: 'Unemployment, a week' }], max: 1000, step: 10, none: 'Nothing right now' };
+// The five questions for this person: between jobs, the pay question asks what is coming in now.
+export const questionsFor = doc => (situationOf(doc) === 'between' ? QUESTIONS.map(q => (q.key === 'income' ? BENEFIT_Q : q)) : QUESTIONS);
+const benefitRow = doc => (doc.records || []).find(r => r.kind === 'income' && r.type === 'Unemployment') ?? null;
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const ymAt = (months, now) => { const d = new Date(now.getFullYear(), now.getMonth() + months, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
+const monthsTo = (ym, now) => { const [y, m] = ym.split('-').map(Number); return (y - now.getFullYear()) * 12 + (m - 1 - now.getMonth()); };
+// What is on file about benefits: { weekly, weeks (left, from today) } or nulls.
+export function benefitOnFile(doc, { now = new Date() } = {}) {
+  const r = benefitRow(doc);
+  const end = r?.values?.benefitEnd ? new Date(`${r.values.benefitEnd}T12:00:00`) : null;
+  return { weekly: r?.amount ?? null, weeks: end ? Math.max(0, Math.round((end - now) / (7 * 86400000))) : null };
+}
+// Save the benefit: one Unemployment row, a week, ending in that many weeks. A job row from before is taken off (its
+// pay is no longer coming in); a typed $0 is the answer "nothing right now".
+export function answerBenefit(store, { weekly, weeks = null }, { now = new Date() } = {}) {
+  const v = num(weekly);
+  if (v === null) return false;
+  const end = num(weeks) != null && v > 0 ? iso(new Date(now.getFullYear(), now.getMonth(), now.getDate() + Math.round(num(weeks) * 7))) : null;
+  store.transaction('What is coming in', () => {
+    for (const r of store.doc.records.filter(x => x.kind === 'income' && x.type !== 'Unemployment')) store.remove(r.id);
+    const r = benefitRow(store.doc);
+    if (r) store.update(r.id, { amount: v, per: 'week', benefitEnd: end });
+    else store.add('income', { name: 'Unemployment benefits', amount: v, per: 'week', values: { benefitEnd: end } }, { type: 'Unemployment' });
+    if (!store.doc.program?.transition?.template) setTransition(store, { template: 'job-loss' });
+  });
+  return true;
+}
+// The job ahead: an expected start month and a yearly pay, one number as a placeholder (Eli, Nov 12). It is kept on the
+// Life Transitions plan (doc.program.transition.next), which the coach app already has.
+export function jobAheadOf(doc, ref, { now = new Date() } = {}) {
+  const n = doc.program?.transition?.next;
+  if (!n?.ym || !(n.grossYear > 0)) return null;
+  const take = takeHomeFromGross({ gross: n.grossYear, filingStatus: doc.taxes?.filingStatus ?? defaultFilingStatus(doc.profile || {}), place: placeOf(doc.profile || {}) }, ref);
+  return { ym: n.ym, grossYear: n.grossYear, months: Math.max(0, monthsTo(n.ym, now)), monthly: take.value == null ? null : take.value / 12, text: take.text };
+}
+export function setJobAhead(store, { months, grossYear }, { now = new Date() } = {}) {
+  setTransition(store, { template: store.doc.program?.transition?.template ?? 'job-loss', next: { ym: num(months) === null ? store.doc.program?.transition?.next?.ym ?? null : ymAt(Math.round(num(months)), now), grossYear: num(grossYear) ?? store.doc.program?.transition?.next?.grossYear ?? null } });
+}
+// The household as the plan reads it between jobs: the same file, with the job ahead as a known change (pay that
+// starts in its month, the engine's own "starts" change, as js/math/truecost.js adds one) and benefits that stop the
+// day before it starts when they would have run past it. A copy: nothing here is saved.
+export function withJobAhead(doc, ref, { now = new Date() } = {}) {
+  if (situationOf(doc) !== 'between') return doc;
+  const j = jobAheadOf(doc, ref, { now });
+  if (!j || j.monthly == null) return doc;
+  const lastDay = iso(new Date(Number(j.ym.slice(0, 4)), Number(j.ym.slice(5, 7)) - 1, 0));
+  const records = (doc.records || []).map(r => (r.kind === 'income' && r.type === 'Unemployment' && (!r.values?.benefitEnd || r.values.benefitEnd > lastDay) ? { ...r, values: { ...r.values, benefitEnd: lastDay } } : r));
+  return { ...doc, records, whatIf: { changes: [...(doc.whatIf?.changes || []), { id: 'job-ahead', kind: 'starts', ym: j.ym, at: j.months, surplus: j.monthly, spending: 0, name: 'Your next job' }] } };
+}
+// "I started": the job ahead becomes the pay on file (a yearly salary, taxes worked out), benefits come off, and the
+// levels about a job at work come back. Nothing else is asked again.
+export function startJob(store, ref, { now = new Date() } = {}) {
+  const j = jobAheadOf(store.doc, ref, { now });
+  store.transaction('I started a job', () => {
+    for (const r of store.doc.records.filter(x => x.kind === 'income' && x.type === 'Unemployment')) store.remove(r.id);
+    if (j) store.add('income', { name: 'Take-home pay', amount: j.grossYear, per: 'year', values: { basis: 'Gross', incomeType: 'W-2', payFrequency: '2 weeks' } }, { type: 'Job' });
+    store.setDoc('profile', { workSituation: 'Employed (W-2)' });
+    setTransition(store, { next: null });
+  });
+}
+
 const has = v => v !== null && v !== undefined && v !== '';
 const num = v => (has(v) && Number.isFinite(Number(v)) ? Math.max(0, Number(v)) : null);
 
@@ -48,7 +118,7 @@ export function progressOf(doc, ref, { now = new Date() } = {}) {
   const age = ageOf(doc.profile || {}, now);
   const answered = answeredOf(doc, ref);
   const count = QUESTIONS.filter(q => answered[q.key]).length;
-  return { hasAge: age != null, age, answered, count, total: QUESTIONS.length, next: QUESTIONS.find(q => !answered[q.key])?.key ?? null, done: age != null && count === QUESTIONS.length };
+  return { hasAge: age != null, age, answered, count, total: QUESTIONS.length, next: QUESTIONS.find(q => !answered[q.key])?.key ?? null, done: age != null && count === QUESTIONS.length, situation: situationOf(doc) };
 }
 
 // What is already on file for a question's boxes, so it is shown, not asked again: { boxId: number or null }.
@@ -61,6 +131,7 @@ export function payOnFile(doc) {
 }
 export function onFile(doc, key, { ref = null, now = new Date() } = {}) {
   const a = fastTrackAnswers(doc);
+  if (key === 'income' && situationOf(doc) === 'between') return { benefit: benefitOnFile(doc, { now }).weekly };
   if (key === 'income') {
     if (has(a.takeHome) && a.takePer === 'month') return { takeHome: a.takeHome };
     const how = payOnFile(doc); // by paycheck, salary or hour: the box shows what that comes to a month
@@ -116,7 +187,8 @@ export const SPEND_PARTS = [['housing', 'Rent or mortgage'], ['food', 'Food'], [
 export const sumParts = parts => SPEND_PARTS.reduce((s, [k]) => s + (num(parts?.[k]) ?? 0), 0);
 
 // One-tap amounts for a question, from what is typical at this age (rounded so they read as amounts, not statistics).
-export function quickPicks(plan, key) {
+export function quickPicks(plan, key, { doc = null, ref = null } = {}) {
+  if (key === 'income' && doc && situationOf(doc) === 'between') return [300, 400, 500, ref?.limits?.unemployment?.NY?.maxWeekly ?? 600]; // the last is New York's most a week
   const p = plan?.priors?.find(x => x.key === key);
   if (!p) return [];
   // The pay prior is a year of gross pay; the engine's own tax math already turned its likely into take-home a month.
@@ -151,7 +223,8 @@ export function spanWords(months) {
 
 // Everything the plan screen shows, from the household as it stands. With blanks left, each blank is filled by what is
 // typical at this age (never saved), and the plan says so. Null with no age.
-export function planOf(doc, ref, priors, { flags = [], now = new Date() } = {}) {
+export function planOf(file, ref, priors, { flags = [], now = new Date() } = {}) {
+  const doc = withJobAhead(file, ref, { now });
   const P = agePlanOf(doc, ref, priors, { now });
   if (!P) return null;
   const F = filledOf(doc, ref, priors, { now });
@@ -172,7 +245,15 @@ export function planOf(doc, ref, priors, { flags = [], now = new Date() } = {}) 
   const quarter = rows.find(r => /^heavy(25|50|75)$/.test(r.id) && !r.reached)?.id ?? null;
   const milestones = rows.filter(r => !/^heavy(25|50|75)$/.test(r.id) || r.id === quarter).map(r => ({ id: r.id, name: PLAIN[r.id]?.[0] ?? r.name, what: PLAIN[r.id]?.[1] ?? r.what, done: !!r.reached, months: r.reached ? 0 : r.months, date: r.reached ? 'Done' : monthWords(r.months, now), pct: r.pct ?? null, have: r.have ?? null, target: r.target ?? null }))
     .sort((a, b) => (a.done === b.done ? a.months - b.months : a.done ? -1 : 1));
-  return { basis, label: P.label, age: P.age, answered: P.answered, typical: P.typical, priors: P.priors, next: P.next, words: P.words, fi, widthMonths: width, step: next, steps, milestones, wins: milestones.filter(x => x.done).length, m, filled: F.doc };
+  // Between jobs: how long the money lasts (the Life Transitions dip: cash, benefits until they end, then each rung),
+  // and the job ahead when one is on file.
+  let between = null;
+  if (situationOf(file) === 'between') {
+    const T = transitionOf(F.doc, ref, { now }), j = jobAheadOf(file, ref, { now });
+    between = { runway: T.runway, lasts: T.dip?.needs ? null : T.runway == null ? 'More than 10 years' : monthWords(Math.floor(T.runway), now), text: T.text,
+      job: j ? { date: j.months <= 0 ? 'This month' : monthWords(j.months, now), months: j.months, monthly: j.monthly, grossYear: j.grossYear, covered: T.runway == null || T.runway >= j.months } : null };
+  }
+  return { between, basis, label: P.label, age: P.age, answered: P.answered, typical: P.typical, priors: P.priors, next: P.next, words: P.words, fi, widthMonths: width, step: next, steps, milestones, wins: milestones.filter(x => x.done).length, m, filled: F.doc };
 }
 
 // The words for how much one answer moved the plan: "Your FI range went from 2049 or later to 2045 to 2058." Null when
@@ -208,8 +289,8 @@ export function numbersOf(plan, doc, ref, { now = new Date() } = {}) {
   const barista = baristaFiNumber({ annualSpending: m.annualSpending, partTimeIncome: 12000, withdrawalRate: x.withdrawalRate });
   const all = ['income', 'spending', 'cash', 'invested', 'card'];
   // Numbers a Sharpen it level opens (js/sharpen.js). Until that level is answered the number shows what opens it.
-  const open = new Set(levelsOf(doc).filter(l => l.state === 'open').map(l => l.n));
-  const gate = (n, row) => (open.has(n) ? { ...row, value: null, ask: [], level: n, text: null } : { ...row, level: n });
+  const open = new Set(levelsOf(doc).filter(l => l.state === 'open').map(l => l.id)); // a level that does not apply to this person locks nothing
+  const gate = (id, row) => (open.has(id) ? { ...row, value: null, ask: [], level: id, text: null } : { ...row, level: id });
   const lean = mile('lean'), leanT = lean?.target ?? null;
   const gross = x.income?.[0]?.gross ?? null;
   const tax = gross == null ? null : taxRates({ gross, pretax: (m.pretaxSaving ?? 0) * 12, filingStatus: doc.taxes?.filingStatus ?? defaultFilingStatus(doc.profile || {}), place: placeOf(doc.profile || {}) }, ref);
@@ -218,14 +299,14 @@ export function numbersOf(plan, doc, ref, { now = new Date() } = {}) {
   const born = doc.profile?.birthYear != null ? doc.profile.birthYear * 12 + ((doc.profile.birthMonth ?? 7) - 1) : null;
   const ss = born == null || gross == null ? null : benefitOf({ key: 'Me', bornIndex: born, stopAge: doc.assumptions?.fiAge ?? x.retireAge, gross }, ref.socialSecurity, { wageBase: ref.tax.socialSecurityWageBase, widths: { Gut: RULES.rangeIncomeGut, Estimate: RULES.rangeIncomeEstimate } });
   const more = [
-    gate(2, R('housingPct', 'Each month', 'Housing, as a share of your pay', m.housingPct, 'housing35', ['income'], v => fmt.pct(v))),
-    gate(2, { id: 'leanFi', group: 'Independence', label: 'Lean FI number (needs only)', idea: 'flavors', value: leanT != null ? `${fmt.money(leanT)}${lean?.date ? `, reached ${lean.date}` : ''}` : null, text: '25 times a year of food, housing and getting around.', ask: [], typical: false }),
-    gate(3, { id: 'debtInterest', group: 'What you have', label: 'Interest you will pay on your debt', idea: 'avalanche', value: m.debtPlan?.interest != null && x.debts.length ? fmt.money(Math.round(m.debtPlan.interest)) : x.debts.length ? null : 'None', text: m.debtPlan?.text ?? null, ask: [], typical: false }),
-    gate(4, { id: 'pretax', group: 'Each month', label: 'Going into your 401(k) from your paycheck', idea: 'savingsRate', value: `${fmt.money(Math.round(m.pretaxSaving ?? 0))} a month`, text: m.savingsRate.text, ask: [], typical: false }),
-    gate(5, { id: 'buckets', group: 'What you have', label: 'Your tax buckets', idea: 'taxBuckets', value: Object.keys(kinds).length ? Object.entries(kinds).map(([k, v]) => `${k}: ${fmt.money(v)}`).join(' · ') : 'Nothing invested yet', text: 'Taxed later: 401(k) and traditional IRA. Never taxed again: a Roth IRA or an HSA. Reachable any time: a brokerage account.', ask: [], typical: false }),
-    gate(8, { id: 'taxRate', group: 'Each month', label: 'Your tax rate, all in', idea: null, value: tax?.value != null ? fmt.pct(tax.value) : null, text: tax?.text ?? null, ask: tax ? [] : ['income'], typical: false }),
-    gate(8, { id: 'marginal', group: 'Each month', label: 'What your next dollar of pay is taxed at', idea: null, value: tax?.marginal != null ? fmt.pct(tax.marginal) : null, text: tax?.text ?? null, ask: tax ? [] : ['income'], typical: false }),
-    gate(10, { id: 'socialSecurity', group: 'Independence', label: 'Social Security, a month (not counted in your date)', idea: null, value: ss?.own ? `About ${fmt.money(Math.round(ss.own / 10) * 10)}` : null, text: ss?.words ?? null, ask: [], typical: false }),
+    gate('where', R('housingPct', 'Each month', 'Housing, as a share of your pay', m.housingPct, 'housing35', ['income'], v => fmt.pct(v))),
+    gate('where', { id: 'leanFi', group: 'Independence', label: 'Lean FI number (needs only)', idea: 'flavors', value: leanT != null ? `${fmt.money(leanT)}${lean?.date ? `, reached ${lean.date}` : ''}` : null, text: '25 times a year of food, housing and getting around.', ask: [], typical: false }),
+    gate('owe', { id: 'debtInterest', group: 'What you have', label: 'Interest you will pay on your debt', idea: 'avalanche', value: m.debtPlan?.interest != null && x.debts.length ? fmt.money(Math.round(m.debtPlan.interest)) : x.debts.length ? null : 'None', text: m.debtPlan?.text ?? null, ask: [], typical: false }),
+    gate('work', { id: 'pretax', group: 'Each month', label: 'Going into your 401(k) from your paycheck', idea: 'savingsRate', value: `${fmt.money(Math.round(m.pretaxSaving ?? 0))} a month`, text: m.savingsRate.text, ask: [], typical: false }),
+    gate('accounts', { id: 'buckets', group: 'What you have', label: 'Your tax buckets', idea: 'taxBuckets', value: Object.keys(kinds).length ? Object.entries(kinds).map(([k, v]) => `${k}: ${fmt.money(v)}`).join(' · ') : 'Nothing invested yet', text: 'Taxed later: 401(k) and traditional IRA. Never taxed again: a Roth IRA or an HSA. Reachable any time: a brokerage account.', ask: [], typical: false }),
+    gate('taxes', { id: 'taxRate', group: 'Each month', label: 'Your tax rate, all in', idea: null, value: tax?.value != null ? fmt.pct(tax.value) : null, text: tax?.text ?? null, ask: tax ? [] : ['income'], typical: false }),
+    gate('taxes', { id: 'marginal', group: 'Each month', label: 'What your next dollar of pay is taxed at', idea: null, value: tax?.marginal != null ? fmt.pct(tax.marginal) : null, text: tax?.text ?? null, ask: tax ? [] : ['income'], typical: false }),
+    gate('finish', { id: 'socialSecurity', group: 'Independence', label: 'Social Security, a month (not counted in your date)', idea: null, value: ss?.own ? `About ${fmt.money(Math.round(ss.own / 10) * 10)}` : null, text: ss?.words ?? null, ask: [], typical: false }),
   ];
   const first = [
     R('surplus', 'Each month', 'Left over each month', m.surplus, null, ['income', 'spending']),
@@ -247,7 +328,7 @@ export function numbersOf(plan, doc, ref, { now = new Date() } = {}) {
     R('barista', 'Independence', 'Barista FI number (with $1,000 a month of part-time pay)', barista, 'flavors', ['spending']),
     target('nw100k', 'Your first $100k', 'first100k', all),
   ];
-  const hourly = first.find(n => n.id === 'hourly'); if (m.hourly?.guess && open.has(6)) hourly.sharper = 6; // a guess until Your time is answered
+  const hourly = first.find(n => n.id === 'hourly'); if (m.hourly?.guess && open.has('time')) hourly.sharper = 'time'; // a guess until Your time is answered
   const baristaRow = first.find(n => n.id === 'barista');
   if (doc.assumptions?.partTimeIncome != null) { const b = baristaFiNumber({ annualSpending: (x.retirementSpending ?? 0) * 12, partTimeIncome: doc.assumptions.partTimeIncome * 12, withdrawalRate: x.withdrawalRate }); Object.assign(baristaRow, { label: `Barista FI number (with ${fmt.money(doc.assumptions.partTimeIncome)} a month of part-time pay)`, value: b.value == null ? null : fmt.money(Math.max(0, b.value)), text: b.text }); }
   const order = ['Each month', 'Safety', 'What you have', 'Independence'];
@@ -281,7 +362,8 @@ export function resetTweaks(store, ref) {
 }
 
 // What one option would do, without saving it: the FI date with that option on a copy of the household.
-export function previewTweak(doc, ref, priors, tweak, value, { now = new Date() } = {}) {
+export function previewTweak(file, ref, priors, tweak, value, { now = new Date() } = {}) {
+  const doc = withJobAhead(file, ref, { now });
   const copy = { ...doc, [tweak.part]: { ...(doc[tweak.part] || {}), [tweak.id]: value } };
   const F = filledOf(copy, ref, priors, { now });
   const m = F ? metrics(F.doc, ref, { now }) : null, mo = m?.monthsToFi.value ?? null;
@@ -290,7 +372,8 @@ export function previewTweak(doc, ref, priors, tweak, value, { now = new Date() 
 }
 
 // Try it: spend less or earn more each month, on a copy (never saved). { before, after, date, moved (months sooner) }.
-export function whatIf(doc, ref, priors, { spendLess = 0, earnMore = 0 } = {}, { now = new Date() } = {}) {
+export function whatIf(file, ref, priors, { spendLess = 0, earnMore = 0 } = {}, { now = new Date() } = {}) {
+  const doc = withJobAhead(file, ref, { now });
   const F = filledOf(doc, ref, priors, { now });
   if (!F) return null;
   const m0 = metrics(F.doc, ref, { now }), x = m0.inputs;
