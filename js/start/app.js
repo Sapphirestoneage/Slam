@@ -4,7 +4,7 @@
 import { h, clear } from '../ui/dom.js';
 import { Store, exportFile } from '../records.js';
 import { localAdapter, memoryAdapter, loadClient, createClient, autosave } from '../storage.js';
-import { STAGES, QUESTIONS, progressOf, onFile, answer, quickPicks, planOf, movedWords, numbersOf, tweaksOf, setTweak, resetTweaks, previewTweak, whatIf, spanWords } from '../journey.js';
+import { STAGES, QUESTIONS, PAY_WAYS, PAY_FREQUENCIES, SPEND_PARTS, sumParts, answerPay, payOnFile, progressOf, onFile, answer, quickPicks, planOf, movedWords, numbersOf, tweaksOf, setTweak, resetTweaks, previewTweak, whatIf, spanWords } from '../journey.js';
 import { SOURCES, IDEAS, ideaOf, ideasBy, creditWords } from '../registry/credits.js';
 import { fmt } from '../math/result.js';
 
@@ -27,14 +27,21 @@ function open(doc) {
 }
 open((mine().clientId && loadClient(adapter, mine().clientId)) || createClient(adapter, 'My plan', new Date().toISOString()));
 
+// Closing the tab or switching apps saves right away (a phone may never come back to finish the usual one-second wait).
+for (const ev of ['pagehide', 'visibilitychange']) window.addEventListener(ev, () => saver?.flush());
+
 const $ = id => document.getElementById(id);
-const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false };
+const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40 };
 const money = v => fmt.money(v);
 const P = () => progressOf(store.doc, ref);
 const plan = () => planOf(store.doc, ref, priors, { flags });
 
-function go(stage, { q = null, flash = null } = {}) {
-  ui.stage = stage; ui.flash = flash; ui.confirmReset = false;
+// Every move is a step in the browser's history, so the phone's Back button (and the Back button on each screen) goes
+// to the screen you were on. The address says where you are (#/tune, #/numbers/spending), so a link opens there too.
+const hashOf = (stage, q) => `#/${stage}${stage === 'numbers' && q ? `/${q}` : ''}`;
+let depth = 0;
+function show(stage, { q = null, flash = null } = {}) {
+  ui.stage = stage; ui.flash = flash; ui.confirmReset = false; ui.way = null; ui.addUp = false;
   if (q) ui.q = q;
   if (stage !== 'numbers') ui.note = null;
   remember({ stage });
@@ -42,6 +49,19 @@ function go(stage, { q = null, flash = null } = {}) {
   window.scrollTo({ top: 0 });
   $('main').focus({ preventScroll: true });
 }
+function go(stage, { q = null, flash = null, note = null } = {}) {
+  const same = stage === ui.stage && (stage !== 'numbers' || !q || q === ui.q);
+  ui.note = note;
+  if (!same) history.pushState({ stage, q: q ?? ui.q, depth: ++depth }, '', hashOf(stage, q ?? ui.q));
+  show(stage, { q, flash });
+}
+window.addEventListener('popstate', e => {
+  const st = e.state ?? (() => { const [, stage, q] = location.hash.split('/'); return { stage: STAGES.some(x => x.id === stage) ? stage : 'you', q: q ?? null, depth: 0 }; })();
+  depth = st.depth ?? 0;
+  show(st.stage, { q: st.q });
+});
+const back = () => (depth > 0 ? history.back() : go(STAGES[Math.max(0, STAGES.findIndex(x => x.id === ui.stage) - 1)].id));
+const backBar = () => (ui.stage === 'you' ? null : h('div.st-back', {}, h('button.st-btn.slim', { type: 'button', onClick: back }, '‹ Back')));
 
 // ---------- pieces ----------
 const btn = (label, onClick, kind = '') => h(`button.st-btn${kind ? '.' + kind.split(' ').join('.') : ''}`, { type: 'button', onClick }, label);
@@ -115,52 +135,78 @@ function planCard(pl, p) {
 }
 
 // ---------- 2. Your numbers ----------
+const WAY_BOX = { month: 'Take-home pay a month', paycheck: 'One paycheck, after taxes', salary: 'Yearly salary, before taxes', hourly: 'Pay an hour, before taxes' };
+const WAY_MAX = { month: [15000, 100], paycheck: [8000, 50], salary: [300000, 1000], hourly: [150, 1] };
 function numbers(p, pl) {
   const key = ui.q && QUESTIONS.some(q => q.key === ui.q) ? ui.q : p.next ?? QUESTIONS[0].key;
   const q = QUESTIONS.find(x => x.key === key), at = QUESTIONS.indexOf(q);
-  const file = onFile(store.doc, key);
-  const vals = Object.fromEntries(q.boxes.map(b => [b.id, file[b.id] ?? null]));
-  const picks = quickPicks(pl, key);
+  const file = onFile(store.doc, key, { ref });
+  const how = key === 'income' ? payOnFile(store.doc) : null;
+  const way = key === 'income' ? ui.way ?? 'month' : null; // how pay is given: a month, a paycheck, a salary, an hour
+  const parts = key === 'spending' && ui.addUp; // spending, added up from the parts someone can name
+  const boxes = way && way !== 'month' ? [{ id: 'takeHome', label: WAY_BOX[way] }] : parts ? SPEND_PARTS.map(([id, label]) => ({ id, label })) : q.boxes;
+  const [max, step] = way ? WAY_MAX[way] : [q.max, q.step];
+  const start = way && way !== 'month' ? { takeHome: how?.mode === way ? how.amount : null } : parts ? { ...(mine().parts || {}) } : file;
+  const vals = Object.fromEntries(boxes.map(b => [b.id, start[b.id] ?? null]));
+  const picks = way && way !== 'month' ? [] : parts ? [] : quickPicks(pl, key);
   const inputs = {};
+  const total = h('strong', {}, money(sumParts(vals)));
   const set = (id, v, { from = null } = {}) => {
     vals[id] = v;
     const { text, range } = inputs[id];
     if (from !== 'text') text.value = v == null ? '' : Number(v).toLocaleString('en-US');
-    if (from !== 'range') range.value = String(Math.min(q.max, v ?? 0));
+    if (range && from !== 'range') range.value = String(Math.min(max, v ?? 0));
+    if (parts) total.textContent = money(sumParts(vals));
   };
   const box = (b, i) => {
     const text = h('input', { type: 'text', inputmode: 'numeric', id: `box-${i}`, autocomplete: 'off', placeholder: '0', 'aria-label': b.label, value: vals[b.id] == null ? '' : Number(vals[b.id]).toLocaleString('en-US'),
       onInput: e => { const n = e.target.value.replace(/[^\d.]/g, ''); set(b.id, n === '' ? null : Number(n), { from: 'text' }); }, onKeydown: e => { if (e.key === 'Enter') save(); } });
-    const range = h('input', { type: 'range', min: 0, max: q.max, step: q.step, value: String(Math.min(q.max, vals[b.id] ?? 0)), 'aria-label': `${b.label}, slider`, onInput: e => set(b.id, Number(e.target.value), { from: 'range' }) });
+    const range = parts ? null : h('input', { type: 'range', min: 0, max, step, value: String(Math.min(max, vals[b.id] ?? 0)), 'aria-label': `${b.label}, slider`, onInput: e => set(b.id, Number(e.target.value), { from: 'range' }) });
     inputs[b.id] = { text, range };
     return h('div.st-box', {}, h('label', { for: `box-${i}` }, b.label), h('div.in', {}, h('span', {}, '$'), text), range);
   };
   const after = () => {
-    const before = pl, now = plan(), np = P();
-    ui.note = movedWords(before, now) ?? 'Saved.';
+    const now = plan(), np = P();
+    const note = movedWords(pl, now) ?? 'Saved.';
     if (np.done && !p.done) return go('plan');
-    ui.q = QUESTIONS[Math.min(QUESTIONS.length - 1, at + 1)].key;
-    if (at === QUESTIONS.length - 1) ui.q = np.next ?? key;
-    render(); window.scrollTo({ top: 0 });
+    const next = at === QUESTIONS.length - 1 ? np.next ?? key : QUESTIONS[at + 1].key;
+    if (next === key) { ui.note = note; ui.way = null; ui.addUp = false; render(); window.scrollTo({ top: 0 }); } else go('numbers', { q: next, note });
   };
-  const save = () => { if (answer(store, key, vals)) after(); else { $('need').hidden = false; inputs[q.boxes[0].id].text.focus(); } };
+  const same = () => p.answered[key] && !way?.match(/paycheck|salary|hourly/) && !parts && q.boxes.every(b => (vals[b.id] ?? null) === (file[b.id] ?? null));
+  const save = () => {
+    if (same()) return after(); // nothing changed: go on without rewriting what is on file
+    const ok = way && key === 'income' ? answerPay(store, { mode: way, amount: vals.takeHome, frequency: ui.freq, hours: ui.hours })
+      : parts ? (sumParts(vals) > 0 && (remember({ parts: vals }), answer(store, key, { gut: sumParts(vals) })))
+        : answer(store, key, vals);
+    if (ok) after(); else { $('need').hidden = false; inputs[boxes[0].id].text.focus(); }
+  };
   const none = () => { answer(store, key, {}, { none: true }); after(); };
-  const first = q.boxes[0].id;
+  const first = boxes[0].id;
+  const pick = (list, on, onPick) => h('div.st-chips', {}, list.map(([k, l]) => chip(l, on === k, () => onPick(k))));
+  const ways = key === 'income' ? h('div.st-help', {}, h('div.st-small', { style: { fontWeight: 700, marginBottom: '6px' } }, 'Not sure of the monthly number? Tell us what you do know:'), pick(PAY_WAYS, way, k => { ui.way = k; render(); })) : null;
+  const extra = way === 'paycheck' ? h('div.st-help', {}, h('div.st-small', { style: { fontWeight: 700, marginBottom: '6px' } }, 'How often do you get paid?'), pick(PAY_FREQUENCIES, ui.freq, k => { ui.freq = k; render(); }))
+    : way === 'hourly' ? h('div.st-help', {}, h('div.st-small', { style: { fontWeight: 700, marginBottom: '6px' } }, 'Hours in a usual week'), pick([[20, '20'], [30, '30'], [40, '40'], [50, '50']], ui.hours, k => { ui.hours = k; render(); })) : null;
+  const addUp = key === 'spending' ? h('div.st-help', {}, pick([[false, 'I have a rough number'], [true, 'Help me add it up']], ui.addUp, k => { ui.addUp = k; render(); })) : null;
+  const onFileLine = how && way === 'month' ? h('p.st-small.st-soft', { style: { margin: '6px 0 0' } }, how.mode === 'salary' ? `From your ${money(how.amount)} salary, after taxes.` : `From your ${money(how.amount)} paycheck.`) : null;
   return h('div.st-two', {},
     h('div', {},
       ui.note ? h('div.st-note', { role: 'status' }, ui.note) : null,
       h('div.st-card', {},
-        h('div.st-qdots', { role: 'tablist', 'aria-label': 'The five questions' }, QUESTIONS.map((x, i) => h(`button${p.answered[x.key] ? '.done' : ''}`, { type: 'button', 'aria-current': x.key === key ? 'true' : null, title: p.answered[x.key] ? 'Answered. Tap to change it.' : 'Not answered yet', onClick: () => { ui.q = x.key; ui.note = null; render(); } }, `${p.answered[x.key] ? '✓ ' : ''}${i + 1}`))),
+        h('div.st-qdots', { role: 'tablist', 'aria-label': 'The five questions' }, QUESTIONS.map((x, i) => h(`button${p.answered[x.key] ? '.done' : ''}`, { type: 'button', 'aria-current': x.key === key ? 'true' : null, title: p.answered[x.key] ? 'Answered. Tap to change it.' : 'Not answered yet', onClick: () => go('numbers', { q: x.key }) }, `${p.answered[x.key] ? '✓ ' : ''}${i + 1}`))),
         h('div.st-eyebrow', {}, `Question ${at + 1} of ${QUESTIONS.length}`),
         h('h1', {}, q.title),
-        h('p.st-soft', {}, q.help),
-        h('div.st-boxes', {}, q.boxes.map(box)),
+        h('p.st-soft', {}, way === 'salary' || way === 'hourly' ? 'We work out the taxes for you.' : parts ? 'Fill in the ones you know. Leave the rest empty.' : q.help),
+        addUp,
+        h(`div.st-boxes${parts ? '.tight' : ''}`, {}, boxes.map(box)),
+        parts ? h('p', { style: { margin: '8px 0 0' } }, 'That adds up to ', total, ' a month.') : null,
+        onFileLine, extra,
         picks.length ? h('div.st-picks', {}, h('div.st-soft.st-small', {}, q.boxes.length > 1 ? `Typical at your age for ${q.boxes[0].label.toLowerCase()}. Tap one to use it:` : 'Typical at your age. Tap one to use it:'), h('div.st-chips', {}, picks.map(v => chip(money(v), false, () => set(first, v))))) : null,
-        h('p.st-small', { id: 'need', hidden: true, role: 'alert', style: { margin: '10px 0 0', fontWeight: 700 } }, q.none ? `Type a number, drag the slider, or tap "${q.none}".` : 'Type a number, drag the slider, or tap a typical amount.'),
+        ways,
+        h('p.st-small', { id: 'need', hidden: true, role: 'alert', style: { margin: '10px 0 0', fontWeight: 700 } }, q.none ? `Type a number, drag the slider, or tap "${q.none}".` : 'Type a number or drag the slider first.'),
         h('div.st-row', { style: { marginTop: '16px' } },
-          btn(p.answered[key] ? 'Save the change' : at === QUESTIONS.length - 1 ? 'Save and see my plan' : 'Save and go on', save, 'primary big'),
+          btn(p.answered[key] ? 'Save and go on' : at === QUESTIONS.length - 1 ? 'Save and see my plan' : 'Save and go on', save, 'primary big'),
           q.none ? btn(q.none, none) : null,
-          !p.answered[key] && at < QUESTIONS.length - 1 ? btn('Skip for now', () => { ui.q = QUESTIONS[at + 1].key; ui.note = 'Skipped. A typical amount stands in until you come back.'; render(); }, 'text') : null)),
+          !p.answered[key] && at < QUESTIONS.length - 1 ? btn('Skip for now', () => go('numbers', { q: QUESTIONS[at + 1].key, note: 'Skipped. A typical amount stands in until you come back.' }), 'text') : null)),
       p.done ? h('div.st-row', {}, btn('See my plan', () => go('plan'), 'primary')) : null),
     planCard(pl, p));
 }
@@ -300,7 +346,7 @@ function foot() {
     const a = h('a', { href: URL.createObjectURL(blob), download: `my-plan-${new Date().toISOString().slice(0, 10)}.json` });
     document.body.append(a); a.click(); a.remove();
   };
-  const over = () => { open(createClient(adapter, 'My plan', new Date().toISOString())); Object.assign(ui, { q: null, note: null, decade: null, lever: { spendLess: 0, earnMore: 0 } }); remember({ elsewhere: false }); go('you'); };
+  const over = () => { open(createClient(adapter, 'My plan', new Date().toISOString())); Object.assign(ui, { q: null, note: null, decade: null, lever: { spendLess: 0, earnMore: 0 } }); remember({ elsewhere: false, parts: null }); go('you'); };
   clear($('foot'),
     h('span.grow', {}, 'Your numbers stay in this browser. Nothing is sent anywhere. This is education, not personal financial advice.'),
     btn('Download a backup', download, 'slim'),
@@ -315,7 +361,7 @@ function render() {
   if (!p.hasAge && STAGES.find(s => s.id === ui.stage)?.needs === 'age') ui.stage = 'you';
   const pl = p.hasAge ? plan() : null;
   top(); track(p, pl);
-  clear($('main'), SCREENS[ui.stage](p, pl));
+  clear($('main'), backBar(), SCREENS[ui.stage](p, pl));
   foot();
   const lit = $('main').querySelector('.flash');
   if (lit) { lit.querySelector('details')?.setAttribute('open', ''); setTimeout(() => lit.scrollIntoView({ block: 'center' }), 0); }
@@ -323,7 +369,9 @@ function render() {
 
 // Come back where you left off: the plan when the picture is done, the next question when it is not.
 const start = P();
-ui.stage = !start.hasAge ? 'you' : start.done ? (['plan', 'tune', 'all', 'credits'].includes(mine().stage) ? mine().stage : 'plan') : 'numbers';
-ui.q = start.next;
+const [, linked, linkedQ] = location.hash.split('/'); // a link to a screen (#/tune) opens there
+ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'tune', 'all', 'credits'].includes(mine().stage) ? mine().stage : 'plan') : 'numbers';
+ui.q = QUESTIONS.some(x => x.key === linkedQ) ? linkedQ : start.next;
+history.replaceState({ stage: ui.stage, q: ui.q, depth: 0 }, '', hashOf(ui.stage, ui.q));
 render();
 if (!mine().tour) tour(0);

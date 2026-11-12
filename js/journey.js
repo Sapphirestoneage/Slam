@@ -47,9 +47,20 @@ export function progressOf(doc, ref, { now = new Date() } = {}) {
 }
 
 // What is already on file for a question's boxes, so it is shown, not asked again: { boxId: number or null }.
-export function onFile(doc, key) {
+// How pay is on file when it is not a monthly take-home number: { mode: 'paycheck' | 'salary', amount, frequency } or null.
+export function payOnFile(doc) {
+  const r = (doc.records || []).find(x => x.kind === 'income');
+  if (!r || !has(r.amount)) return null;
+  if (r.values?.basis === 'Gross') return { mode: 'salary', amount: r.amount, frequency: null };
+  return r.per === 'paycheck' ? { mode: 'paycheck', amount: r.amount, frequency: r.values?.payFrequency ?? null } : null;
+}
+export function onFile(doc, key, { ref = null, now = new Date() } = {}) {
   const a = fastTrackAnswers(doc);
-  if (key === 'income') return { takeHome: a.takePer === 'month' || !has(a.takeHome) ? a.takeHome : null };
+  if (key === 'income') {
+    if (has(a.takeHome) && a.takePer === 'month') return { takeHome: a.takeHome };
+    const how = payOnFile(doc); // by paycheck, salary or hour: the box shows what that comes to a month
+    return { takeHome: how && ref ? Math.round(metrics(doc, ref, { now }).inputs.takeHome ?? 0) || null : null };
+  }
   if (key === 'spending') return { gut: a.gut };
   if (key === 'cash') return { checking: a.checking, savings: a.savings };
   if (key === 'invested') return { invested: a.invested };
@@ -74,6 +85,30 @@ export function answer(store, key, values, { none = false } = {}) {
   }
   return true;
 }
+
+// Pay, for someone who does not know the monthly number. Each way writes the one income row every screen reads:
+//   paycheck: what one paycheck is and how often it lands (the engine turns it into a month)
+//   salary:   a yearly salary before tax (the engine's own tax math works out the take-home)
+//   hourly:   an hourly rate and hours a week, saved as that yearly salary (rate x hours x 52)
+export const PAY_WAYS = [['month', 'A month'], ['paycheck', 'A paycheck'], ['salary', 'A yearly salary'], ['hourly', 'An hour']];
+export const PAY_FREQUENCIES = [['week', 'Every week'], ['2 weeks', 'Every 2 weeks'], ['twice a month', 'Twice a month'], ['month', 'Once a month']];
+export function answerPay(store, { mode, amount, frequency = '2 weeks', hours = 40 }) {
+  const v = num(amount);
+  if (v === null || v === 0) return false;
+  if (mode === 'month') { applyFastTrack(store, { takeHome: v, takePer: 'month' }); return true; }
+  if (mode === 'paycheck') { applyFastTrack(store, { takeHome: v, takePer: 'paycheck', payFrequency: frequency }); return true; }
+  const year = mode === 'hourly' ? v * (num(hours) || 40) * 52 : v;
+  const row = store.doc.records.find(r => r.kind === 'income');
+  const fields = { amount: year, per: 'year', basis: 'Gross', incomeType: 'W-2', payFrequency: row?.values?.payFrequency ?? '2 weeks' };
+  store.transaction('Pay', () => {
+    if (row) store.update(row.id, fields);
+    else { const { amount: a, per, ...values } = fields; store.add('income', { name: 'Take-home pay', amount: a, per, values }, { type: 'Job' }); }
+  });
+  return true;
+}
+// Spending, added up: the parts someone can name, summed into the one all-in number (the parts are the screen's to remember).
+export const SPEND_PARTS = [['housing', 'Rent or mortgage'], ['food', 'Food'], ['transport', 'Getting around'], ['bills', 'Bills'], ['debt', 'Debt payments'], ['rest', 'Everything else']];
+export const sumParts = parts => SPEND_PARTS.reduce((s, [k]) => s + (num(parts?.[k]) ?? 0), 0);
 
 // One-tap amounts for a question, from what is typical at this age (rounded so they read as amounts, not statistics).
 export function quickPicks(plan, key) {
@@ -170,7 +205,7 @@ export function numbersOf(plan, doc, ref, { now = new Date() } = {}) {
   return [
     R('surplus', 'Each month', 'Left over each month', m.surplus, null, ['income', 'spending']),
     R('savingsRate', 'Each month', 'Savings rate', m.savingsRate, 'savingsRate', ['income', 'spending'], v => fmt.pct(v)),
-    R('simpleYears', 'Each month', 'Working years left at this savings rate', simple, 'simpleMath', ['income', 'spending'], v => `${Math.round(v)} years`),
+    R('simpleYears', 'Each month', 'Years to FI at this savings rate, starting from zero', simple, 'simpleMath', ['income', 'spending'], v => `${(Math.round(v * 10) / 10).toFixed(1)} years`),
     R('hourly', 'Each month', 'What an hour of your work earns', m.hourly, 'realWage', ['income'], v => `${fmt.money(v, { cents: true })} an hour`),
     R('runway', 'Safety', 'How long your cash lasts', m.runwayMonths, null, ['cash', 'spending'], months),
     { id: 'littleE', group: 'Safety', label: 'little e (small emergencies)', idea: 'starterFund', value: little ? (little.done ? `Covered (${fmt.money(little.target ?? 0)})` : `${fmt.money(little.have ?? 0)} of ${fmt.money(little.target ?? 0)}`) : null, text: 'Covers a plumbing-size emergency: $1,000 or your highest deductible, whichever is smaller.', ask: little ? [] : ['cash'], typical: rests('cash') },

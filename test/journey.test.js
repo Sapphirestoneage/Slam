@@ -102,3 +102,54 @@ test('toggles write the fields the coach app reads, preview without saving, and 
   assert.ok(w.moved > 0 && w.surplus === 1900);
   assert.equal(metrics(s.doc, ref, { now }).monthsToFi.value, base, 'try it saves nothing');
 });
+
+// ---- The math, checked by hand: each headline number recomputed here from first principles, not by calling the engine.
+test('the headline numbers match a by-hand recomputation', () => {
+  // No debt, and cash already past big e (age 25: 5 months x $3,000 = $15,000), so every surplus dollar is invested.
+  const s = person();
+  answer(s, 'income', { takeHome: 5000 }); answer(s, 'spending', { gut: 3000 });
+  answer(s, 'cash', { checking: 3000, savings: 20000 }); answer(s, 'invested', { invested: 40000 }); answer(s, 'card', {}, { none: true });
+  const m = metrics(s.doc, ref, { now });
+  const near = (a, b, tol, what) => assert.ok(Math.abs(a - b) <= tol, `${what}: app ${a}, by hand ${b}`);
+  near(m.surplus.value, 5000 - 3000, 0.01, 'left over');
+  near(m.savingsRate.value, 2000 / 5000, 1e-9, 'savings rate');
+  near(m.fiNumber.value, 3000 * 12 / 0.04, 0.01, 'FI number (25x)');
+  near(m.runwayMonths.value, 23000 / 3000, 1e-9, 'runway');
+  near(m.netWorth.value, 3000 + 20000 + 40000, 0.01, 'net worth');
+  near(m.ruleOf5.value, 25 / 5 * 3000, 0.01, 'Rule of 5');
+  near(m.coastFi.value, 900000 / 1.07 ** (65 - 25), 1, 'Coast FI');
+  // FI date: $40,000 growing 7% a year (compounded monthly), $2,000 added each month, until it reaches $900,000.
+  const g = 1.07 ** (1 / 12);
+  let bal = 40000, n = 0;
+  while (bal < 900000) { bal = bal * g + 2000; n++; }
+  near(m.monthsToFi.value, n, 1, 'months to FI');
+  // The shockingly simple math: from $0, saving 40% of pay, years until 25x spending.
+  const p = planOf(s.doc, ref, priors, { flags, now });
+  const simple = numbersOf(p, s.doc, ref, { now }).find(x => x.id === 'simpleYears');
+  let b2 = 0, k = 0;
+  while (b2 < 0.6 * 12 / 0.04) { b2 = b2 * g + 0.4; k++; }
+  near(parseFloat(simple.value), k / 12, 0.15, 'years from zero at a 40% savings rate');
+  // A change of assumption does what the formula says: 3% withdrawal is spending x 12 / 0.03.
+  setTweak(s, tweaksOf(s.doc, ref).find(t => t.id === 'withdrawalRate'), 0.03);
+  near(metrics(s.doc, ref, { now }).fiNumber.value, 36000 / 0.03, 0.01, 'FI number at 3%');
+});
+
+test('pay by paycheck, salary or hour lands on one income row; spending parts add up', async () => {
+  const { answerPay, payOnFile, sumParts } = await import('../js/journey.js');
+  const take = s => Math.round(metrics(s.doc, ref, { now }).inputs.takeHome);
+  let s = person(); answerPay(s, { mode: 'paycheck', amount: 1900, frequency: '2 weeks' });
+  assert.equal(take(s), Math.round(1900 * 26 / 12));
+  s = person(); answerPay(s, { mode: 'paycheck', amount: 2000, frequency: 'twice a month' });
+  assert.equal(take(s), 4000);
+  s = person(); answerPay(s, { mode: 'salary', amount: 65000 });
+  assert.ok(take(s) > 65000 / 12 * 0.6 && take(s) < 65000 / 12 * 0.9, 'take-home is the salary less a believable tax');
+  assert.equal(onFile(s.doc, 'income', { ref, now }).takeHome, take(s));
+  assert.deepEqual(payOnFile(s.doc), { mode: 'salary', amount: 65000, frequency: null });
+  const hourly = person(); answerPay(hourly, { mode: 'hourly', amount: 30, hours: 40 });
+  assert.equal(payOnFile(hourly.doc).amount, 30 * 40 * 52);
+  answerPay(s, { mode: 'month', amount: 4000 });
+  assert.equal(s.doc.records.filter(r => r.kind === 'income').length, 1);
+  assert.equal(take(s), 4000);
+  assert.equal(answerPay(s, { mode: 'salary', amount: null }), false);
+  assert.equal(sumParts({ housing: 1500, food: 600, rest: 700, bills: '' }), 2800);
+});
