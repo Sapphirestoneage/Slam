@@ -67,6 +67,8 @@ export const RULES = {
   lenderFront: 0.28, lenderBack: 0.36, lenderBackStrong: 0.45, lenderBackDu: 0.5, lenderFhaFront: 0.31, lenderFhaBack: 0.43,
   lenderRentTimes: 3, lenderRentYearNyc: 40, lenderDropLook: 0.2, lenderBenefitYears: 3, lenderLeaseMonths: 12, lenderStudentPct: 0.01,
   lenderMortgageRate: 0.0718, lenderMortgageYears: 30, lenderTaxInsShare: 0.25,
+  // The self-serve home what-if (js/home.js): starting guesses, each one a tap to change on the screen (Eli, Nov 12 2026).
+  homePmi: 0.005, homeClosing: 0.03, homeGrowth: 0.03, homeInvestGrowth: 0.07, homeRentGrowth: 0.03,
   // Batch 44 (the bank fire drill, M9F): the drill reads the next this many days of the calendar.
   fireDrillDays: 30,
   // Batch 46 (the age-only start, M9A): pay and spending move together while both are typical (people who earn more
@@ -380,6 +382,11 @@ export const ASSUMPTIONS = [
   { id: 'rules.lenderMortgageRate', name: 'LenderMortgageRate', label: 'Lender\'s view: the 30-year fixed rate a home loan size is shown at', unit: 'pct', get: () => RULES.lenderMortgageRate, client: 'lenderRate', source: 'Freddie Mac PMMS, 30-year fixed 7.18% in the week of Nov 5 2026 (via Mortgage News Daily\'s Freddie Mac page, read Nov 6 2026; QUESTIONS 357). Update it weekly or when it moves a quarter point. Each client can set their own on Plan › Goals › More or from the Lender\'s view (QUESTIONS 357)', date: '2026-11-06' },
   { id: 'rules.lenderMortgageYears', name: 'LenderMortgageYears', label: 'Lender\'s view: the term a home loan size is shown at, years', unit: 'number', get: () => RULES.lenderMortgageYears, source: RULE('js/math/lender.js, M9W: the usual 30-year fixed'), date: '2026-11-06' },
   { id: 'rules.lenderTaxInsShare', name: 'LenderTaxInsShare', label: 'Lender\'s view: share of a home payment that goes to property tax and home insurance (the rest carries the loan)', unit: 'pct', get: () => RULES.lenderTaxInsShare, client: 'lenderTaxIns', source: RULE('js/math/lender.js, M9W: a rough national share; it varies a lot by place (QUESTIONS 360: each client can set their own on Plan › Goals › More, NY property taxes run higher)'), date: '2026-11-06' },
+  { id: 'rules.homePmi', name: 'HomePmi', label: 'Home what-if: mortgage insurance a year under 20% down, as a share of the loan', unit: 'pct', get: () => RULES.homePmi, source: RULE('js/home.js: a starting guess Eli chose on Nov 12 2026 (QUESTIONS 487); the person changes it with a tap'), date: '2026-11-12' },
+  { id: 'rules.homeClosing', name: 'HomeClosing', label: 'Home what-if: closing costs, as a share of the price', unit: 'pct', get: () => RULES.homeClosing, source: RULE('js/home.js: a starting guess Eli chose on Nov 12 2026 (QUESTIONS 487); the person changes it with a tap'), date: '2026-11-12' },
+  { id: 'rules.homeGrowth', name: 'HomeGrowth', label: 'Home what-if: how much homes go up a year', unit: 'pct', get: () => RULES.homeGrowth, source: RULE('js/home.js: a starting guess Eli chose on Nov 12 2026 (QUESTIONS 487); the person changes it with a tap'), date: '2026-11-12' },
+  { id: 'rules.homeInvestGrowth', name: 'HomeInvestGrowth', label: 'Home what-if: how much investments go up a year in the own-or-rent view', unit: 'pct', get: () => RULES.homeInvestGrowth, source: RULE('js/home.js: a starting guess Eli chose on Nov 12 2026 (QUESTIONS 487); the person changes it with a tap'), date: '2026-11-12' },
+  { id: 'rules.homeRentGrowth', name: 'HomeRentGrowth', label: 'Home what-if: how much rent goes up a year', unit: 'pct', get: () => RULES.homeRentGrowth, source: RULE('js/home.js: a starting guess Eli chose on Nov 12 2026 (QUESTIONS 487); the person changes it with a tap'), date: '2026-11-12' },
   { id: 'rules.maxMonths', name: 'MaxMonths', label: 'Longest FI path looked at, months', unit: 'number', get: () => RULES.maxMonths, source: RULE('js/math/fi.js, M53 (70 years)'), date: '2026-10-28' },
 ];
 

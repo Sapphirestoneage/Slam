@@ -39,7 +39,7 @@ export const STAGES = [
 // The five questions, in Fast Track's order. boxes: what is typed (one box, or a few on one screen). max: the slider's
 // top. none: the one-tap answer for "I have none of this".
 export const QUESTIONS = [
-  { key: 'income', title: 'How much lands in your bank account each month?', help: 'Your pay after taxes. A rough number is fine.', boxes: [{ id: 'takeHome', label: 'Take-home pay a month' }], max: 15000, step: 100, none: null },
+  { key: 'income', title: 'How much lands in your bank account each month?', help: 'Your pay after taxes. A rough number is fine.', boxes: [{ id: 'takeHome', label: 'Take-home pay a month' }], max: 15000, step: 100, none: 'No pay right now' },
   { key: 'spending', title: 'About how much do you spend in a month?', help: 'Everything: rent, food, fun, debt payments. Your gut number is fine.', boxes: [{ id: 'gut', label: 'Spending a month' }], max: 12000, step: 100, none: null },
   { key: 'cash', title: 'How much is in checking and savings?', help: 'What you could get to this week.', boxes: [{ id: 'checking', label: 'Checking' }, { id: 'savings', label: 'Savings' }], max: 50000, step: 500, none: 'Close to nothing' },
   { key: 'invested', title: 'How much do you have invested?', help: 'Every account together: 401(k), IRA, brokerage.', boxes: [{ id: 'invested', label: 'Invested, all accounts' }], max: 300000, step: 1000, none: 'Nothing yet' },

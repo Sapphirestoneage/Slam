@@ -39,7 +39,7 @@ const ROUTES = (() => {
 const WIDTHS = process.env.LAYOUT_WIDTHS ? process.env.LAYOUT_WIDTHS.split(',').map(Number) : QUICK ? [1440] : [1440, 1280, 390];
 const THEMES = process.env.LAYOUT_THEMES ? process.env.LAYOUT_THEMES.split(',') : QUICK ? ['light'] : ['light', 'dark'];
 const ONLY = process.env.LAYOUT_ROUTES ? process.env.LAYOUT_ROUTES.split(',') : null; // batch 19: a few screens while fixing them
-const CLIENTS = process.env.LAYOUT_CLIENTS ? process.env.LAYOUT_CLIENTS.split(',') : ['Demo', 'New', 'Shift']; // batch 51: Shift, a client with shift rows (the dancer persona)
+const CLIENTS = process.env.LAYOUT_CLIENTS ? process.env.LAYOUT_CLIENTS.split(',') : ['Demo', 'New', 'Shift', 'Start']; // batch 51: Shift, a client with shift rows (the dancer persona)
 const CHECKS = ['level', 'clipped', 'overflow', 'covered', 'askable', 'column', 'sticky', 'unlabeled', 'cramped'];
 const STILL = ['level', 'clipped', 'overflow', 'column', 'unlabeled', 'cramped']; // what a scan of a screen at rest runs
 const SHOTS_PER_CHECK = 3;
@@ -676,8 +676,38 @@ async function runClient(page, client) {
   }
 }
 
+// The self-serve journey (start.html): a new person answers the five questions, then every screen is scanned at each
+// width and theme, with its folds closed and then open. START_ROUTES is the journey's own list of screens.
+const START_ROUTES = ['you', 'numbers/income', 'plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'credits'];
+async function runStart(browser) {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  await ctx.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
+  const page = await ctx.newPage();
+  page.on('pageerror', e => errors.push(`Start: ${String(e).slice(0, 200)}`));
+  await page.goto(`${BASE}/start.html`, { waitUntil: 'load' }); await settle(page, 700);
+  await page.locator('.st-chip', { hasText: /^2000s$/ }).click(); await page.locator('.st-years .st-chip', { hasText: /^2001$/ }).click();
+  await page.locator('.st-chip', { hasText: 'buy a home' }).click({ force: true }).catch(() => {});
+  await page.locator('.st-btn.primary.big').first().click(); await settle(page, 300);
+  for (const v of [['4200'], ['3100'], ['500', '1000'], ['18000'], ['3200', '20000']]) { for (let i = 0; i < v.length; i++) await page.fill(`#box-${i}`, v[i]); await page.locator('.st-btn.primary.big').first().click(); await settle(page, 250); }
+  for (const width of WIDTHS) for (const theme of THEMES) {
+    console.log(`  Start at ${width} ${theme}...`);
+    await page.setViewportSize({ width, height: width < 600 ? 844 : 1000 }); await page.emulateMedia({ colorScheme: theme });
+    for (const r of START_ROUTES) {
+      if (ONLY && !ONLY.some(o => r.includes(o))) continue;
+      const meta = { route: `start.html#/${r}`, width, theme, client: 'Start' };
+      try {
+        await page.goto(`${BASE}/start.html#/${r}`, { waitUntil: 'load' }); await page.reload({ waitUntil: 'load' }); await settle(page, 500);
+        await scanHere(page, meta, [...STILL, 'covered', 'sticky']);
+        const n = await page.evaluate(() => { let k = 0; document.querySelectorAll('main details:not([open])').forEach(d => { d.open = true; k++; }); return k; });
+        if (n) { await settle(page, 200); await scanHere(page, { ...meta, state: 'every fold open' }, STILL); }
+      } catch (e) { errors.push(`Start ${r} ${width} ${theme}: ${e.message.split('\n')[0]}`); }
+    }
+  }
+  await ctx.close();
+}
+
 // Required from another script (tools/e2e/personas.cjs), it only hands over its checks; run directly, it runs.
-module.exports = { scan, landing, ROUTES, CHECKS, STILL, fastTrack };
+module.exports = { scan, landing, ROUTES, CHECKS, STILL, fastTrack, START_ROUTES };
 if (require.main === module) (async () => {
   const t0 = Date.now();
   fs.mkdirSync(OUT, { recursive: true });
@@ -696,6 +726,7 @@ if (require.main === module) (async () => {
     await runClient(page, 'Demo');
     await ctx.close();
   }
+  if (CLIENTS.includes('Start')) await runStart(browser);
   // A brand-new client: Home > New client > name > Create, then Fast Track with simple numbers.
   if (CLIENTS.includes('New')) {
     const { ctx, page } = await newContext(browser);

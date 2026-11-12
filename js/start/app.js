@@ -14,7 +14,7 @@ import { lifeScreen } from './life-ui.js';
 import { drillsOf, skillsOf, priceTagOf } from '../drills.js';
 import { lifeOf } from '../lifetime/inputs.js';
 import { WORRIES, WORRY_GROUPS, worryOf } from '../worries.js';
-import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOME_NOW, HOME_PMI, HOME_CLOSING, HOME_GUESS, HOME_GROWTHS, HOME_INVEST, HOME_HORIZONS } from '../home.js';
+import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOME_NOW, HOME_PMI, HOME_CLOSING, HOME_GUESS, HOME_GROWTHS, HOME_INVEST, HOME_HORIZONS, HOME_RENT_GROWTHS } from '../home.js';
 import { MIRRORS, mirrorOf, pctToFi, snapshotOf, auditOf, auditWords, FEELINGS, valuesOf, sinceWords } from '../mirror.js';
 import { readFile } from '../import/apps.js';
 
@@ -48,7 +48,22 @@ open((here().clientId && loadClient(adapter, here().clientId)) || createClient(a
 for (const ev of ['pagehide', 'visibilitychange']) window.addEventListener(ev, () => saver?.flush());
 
 const $ = id => document.getElementById(id);
-const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null, price: null, more: false, pic: 'growth', drill: null, tweak: null, worryGroup: null, homeOpen: false, slot: 0, audit: null, auditNote: null, since: null, valuesOpen: false, loadNote: null };
+// A private link: the whole plan, squeezed into the link itself. Nothing is uploaded; whoever has the link has the plan.
+const LINK = '#/open/';
+async function pack(doc) {
+  const file = exportFile(doc); file.household = { ...file.household, history: [], snapshots: [] };
+  const zipped = new Uint8Array(await new Response(new Blob([JSON.stringify(file)]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
+  let bin = ''; for (const b of zipped) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+async function unpack(text) {
+  const bin = atob(text.replace(/-/g, '+').replace(/_/g, '/'));
+  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  return importFile(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text());
+}
+const carried = location.hash.startsWith(LINK) ? location.hash.slice(LINK.length) : null;
+if (carried) history.replaceState(null, '', location.pathname); // the plan does not stay in the address bar
+const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null, price: null, more: false, pic: 'growth', drill: null, tweak: null, worryGroup: null, homeOpen: false, stepsOpen: false, stmtOpen: false, linkNote: null, slot: 0, audit: null, auditNote: null, since: null, valuesOpen: false, loadNote: null };
 const money = v => fmt.money(v);
 const P = () => progressOf(store.doc, ref);
 const plan = () => planOf(store.doc, ref, priors, { flags });
@@ -106,7 +121,7 @@ function top() {
 function track(p, pl) {
   if (!p.hasAge) return clear($('track'));
   const sh = p.done ? sharpnessOf(store.doc, true) : null;
-  const line = p.done ? `Level ${sh.done} of ${sh.total}. ${sh.total - sh.done ? `${sh.total - sh.done} to go.` : 'All done.'} ${pl.wins} ${pl.wins === 1 ? 'win' : 'wins'} so far.` : `${p.count} of ${p.total} questions answered.`;
+  const line = p.done ? `Level ${sh.done} of ${sh.total}. ${pl.wins} ${pl.wins === 1 ? 'win' : 'wins'}.` : `${p.count} of ${p.total} answered.`;
   clear($('track'),
     h('span.st-pips', { role: 'img', 'aria-label': line }, p.done ? Array.from({ length: sh.total }, (_, i) => h(`i${i < sh.done ? '.on' : ''}`)) : QUESTIONS.map(q => h(`i${p.answered[q.key] ? '.on' : ''}`))),
     h('span.st-trackline', {}, line),
@@ -286,8 +301,8 @@ function yourPlan(p, pl) {
   const W = worryOf(mine().worry), done = mine().done || {};
   const worry = W ? h('div.st-card', {},
     h('div.st-row.end', {}, h('div', {}, h('div.st-eyebrow', {}, 'You came here for'), h('h2', { style: { margin: 0 } }, W.label)), btn('Change', () => go('you'), 'slim')),
-    h('div.st-row', { style: { marginTop: '10px' } }, W.see.map(([label, stage, at], i) => btn(label, () => (stage === 'numbers' ? go('numbers', { q: at ?? p.next ?? QUESTIONS[0].key }) : go(stage, { flash: at })), i ? '' : 'primary'))),
-    h('details.st-fold', { open: true }, h('summary', {}, `First steps (${W.steps.filter((_, i) => done[`worry:${W.id}:${i}`]).length} of ${W.steps.length} done)`),
+    h('div.st-row', { style: { marginTop: '10px' } }, W.see.map(([label, stage, at], i) => btn(label, () => (stage === 'numbers' ? go('numbers', { q: at ?? p.next ?? QUESTIONS[0].key }) : go(stage, { flash: at })), i ? 'slim' : 'primary'))),
+    h('details.st-fold', { open: ui.stepsOpen ? true : null, onToggle: e => { ui.stepsOpen = e.target.open; } }, h('summary', {}, `First steps (${W.steps.filter((_, i) => done[`worry:${W.id}:${i}`]).length} of ${W.steps.length} done)`),
       h('div.st-ticks', {}, W.steps.map((text, i) => { const id = `worry:${W.id}:${i}`; return h('button.st-tick', { type: 'button', 'aria-pressed': done[id] ? 'true' : 'false', onClick: () => { remember({ done: { ...(mine().done || {}), [id]: !done[id] } }); render(); } }, h('span.box', {}, done[id] ? '✓' : ''), h('span', {}, text)); })))) : null;
   const pct = pctToFi(pl);
   const ring = v => { const r = 20, c = 2 * Math.PI * r, el = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); el.setAttribute('viewBox', '0 0 48 48'); el.setAttribute('width', '48'); el.setAttribute('height', '48');
@@ -333,7 +348,7 @@ function yourPlan(p, pl) {
     worry,
     gap,
     mirrorOf(mine().mirror).order.map(k => cards[k]),
-    h('div.st-row', {}, btn('See it in pictures', () => go('see'), 'primary big'), btn('Your whole life', () => go('life')), btn('Sharpen it', () => go('sharpen'))),
+    h('div.st-row', {}, btn('See it in pictures', () => go('see'), 'primary big')),
   ];
 }
 
@@ -379,8 +394,8 @@ function statementCard(p, pl) {
   const saved = mine().audit, a = ui.audit ?? saved, gut = onFile(store.doc, 'spending', { ref }).gut ?? pl.m.inputs.spending ?? null;
   const pickFile = h('input', { type: 'file', accept: '.csv,text/csv', id: 'stmt-file', class: 'st-file', onChange: async e => { const f = e.target.files[0]; if (!f) return; const out = auditOf(readFile(await f.text(), ref, { doc: store.doc }), ref); ui.audit = out.problem ? null : out; ui.auditNote = out.problem ?? null; render(); document.getElementById('stmt')?.scrollIntoView({ block: 'start' }); } });
   const use = () => { answer(store, 'spending', { gut: a.monthly }); remember({ audit: { name: a.name, months: a.months, count: a.count, monthly: a.monthly, rows: a.rows.slice(0, 12) } }); ui.audit = null; ui.auditNote = 'Saved. Your plan now runs on your statement.'; render(); };
-  return h(`div.st-card${ui.flash === 'statement' ? '.flash' : ''}`, { id: 'stmt' },
-    h('div.st-eyebrow', {}, 'The fastest way to a sharp plan'), h('h2', {}, saved && !ui.audit ? 'Your spending, from your statement' : 'Use a statement, skip the guessing'),
+  return h(`details.st-card${ui.flash === 'statement' ? '.flash' : ''}`, { id: 'stmt', open: ui.flash === 'statement' || ui.audit || ui.auditNote || ui.stmtOpen ? true : null, onToggle: e => { ui.stmtOpen = e.target.open; } },
+    h('summary.st-sum', {}, h('strong', {}, saved && !ui.audit ? 'Your spending, from your statement' : 'Use a statement, skip the guessing'), h('span.st-soft', {}, saved ? `${money(saved.monthly)} a month` : 'Fastest')),
     a ? [h('p', { style: { fontWeight: 700 } }, auditWords(a, ui.audit ? gut : null)),
       h('div.st-rows', {}, a.rows.slice(0, 6).map(r => h('div.st-srow', {}, h('span', {}, r.name), h('span.v', {}, money(r.monthly)))), a.rows.length > 6 ? h('details.st-fold', {}, h('summary', {}, `Show all ${a.rows.length}`), a.rows.slice(6).map(r => h('div.st-srow', {}, h('span', {}, r.name), h('span.v', {}, money(r.monthly))))) : null),
       ui.audit ? h('div.st-row', { style: { marginTop: '12px' } }, btn(`Use ${money(a.monthly)} a month`, use, 'primary big'), btn('Keep my number', () => { ui.audit = null; render(); }, 'text')) : null]
@@ -439,7 +454,7 @@ function sharpen(p, pl) {
   const nextOpen = L.find(x => x.state === 'open')?.id ?? null;
   const card = lv => {
     const open = ui.level === lv.id;
-    return h(`div.st-card.st-level${lv.state !== 'open' ? '.done' : ''}${ui.flash === lv.id ? '.flash' : ''}`, { id: `level-${lv.id}` },
+    return h(`div.st-card.st-level${lv.state !== 'open' ? '.done' : ''}${ui.flash === lv.id ? '.flash' : ''}${open || lv.id === nextOpen ? '' : '.compact'}`, { id: `level-${lv.id}` },
       ui.note && ui.noteAt === lv.id ? h('div.st-note', { role: 'status' }, ui.note) : null,
       h('div.st-levelhead', {}, h('span.st-lvl', {}, lv.state === 'open' ? lv.n : '✓'),
         h('div', {}, h('h2', { style: { margin: 0 } }, `Level ${lv.n}: ${lv.title}`), lv.id === nextOpen || open ? [h('div.st-soft.st-small', {}, lv.note ?? lv.why), h('div.st-small', { style: { marginTop: '4px' } }, h('strong', {}, 'Unlocks: '), lv.unlocks.join(', '))] : null),
@@ -448,7 +463,6 @@ function sharpen(p, pl) {
   };
   return [
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Sharpen it'), h('h1', {}, `You are at level ${sh.done} of ${sh.total}`),
-      h('p', {}, 'Each level is a few taps and unlocks new numbers. Do them in any order, or stop whenever the plan is clear enough for you.'),
       h('span.st-pips.big', { role: 'img', 'aria-label': `${sh.done} of ${sh.total} levels` }, Array.from({ length: sh.total }, (_, i) => h(`i${i < sh.done ? '.on' : ''}`)))),
     (() => { const b = p.done ? blurOf(pl) : null; if (!b || !b.guess || b.top.share < 0.5 || !(b.top.spanMonths > 12)) return null;
       const open = L.find(x => x.id === b.fix && x.state === 'open');
@@ -503,8 +517,8 @@ function tune(p, pl) {
         row('Down payment', HOME_DOWNS, H.down, v => `${+(v * 100).toFixed(1)}%`, 'down'),
         row('Rate', HOME_RATES, pick.rate ?? null, v => `${+(v * 100).toFixed(1)}%`, 'rate'),
         row('Housing I pay today, a month', HOME_NOW, H.today, v => (v ? money(v) : 'Nothing'), 'now'),
-        H.insured ? row('Mortgage insurance, a year (under 20% down)', HOME_PMI, H.pmiRate, v => `${+(v * 100).toFixed(1)}% of the loan`, 'pmi') : null,
-        row('Closing costs', HOME_CLOSING, H.closingShare, v => `${+(v * 100).toFixed(0)}% of the price`, 'closing'),
+        H.insured ? row('Mortgage insurance a year, as a share of the loan', HOME_PMI, H.pmiRate, v => `${+(v * 100).toFixed(1)}%`, 'pmi') : null,
+        row('Closing costs, as a share of the price', HOME_CLOSING, H.closingShare, v => `${+(v * 100).toFixed(0)}%`, 'closing'),
         h('dl.st-kv', { style: { marginTop: '12px' } },
           h('dt', {}, 'Cash down'), h('dd', {}, money(Math.round(H.cash))),
           h('dt', {}, 'Closing costs, about'), h('dd', {}, money(Math.round(H.closing))),
@@ -527,7 +541,8 @@ function tune(p, pl) {
             h('div.st-field', {}, h('div.st-flabel', {}, 'Homes go up, a year'), h('div.st-chips', {}, HOME_GROWTHS.map(v => chip(pc(v), G.homeGrowth === v, () => guess({ homeGrowth: v }))))),
             h('div.st-field', {}, h('div.st-flabel', {}, 'Investments go up, a year'), h('div.st-chips', {}, HOME_INVEST.map(v => chip(pc(v), G.investGrowth === v, () => guess({ investGrowth: v }))))),
             R ? h('div.st-field', {}, h('div.st-flabel', {}, 'Years you would stay'), h('div.st-chips', {}, HOME_HORIZONS.map(v => chip(String(v), G.horizon === v, () => guess({ horizon: v }))))) : null,
-            h('p.st-small.st-soft', {}, `Rent is counted as rising ${pc(G.rentGrowth)} a year. Whoever pays less in a month invests the difference. Selling costs are not counted.`)); })(),
+            h('div.st-field', {}, h('div.st-flabel', {}, 'Rent goes up, a year'), h('div.st-chips', {}, HOME_RENT_GROWTHS.map(v => chip(pc(v), G.rentGrowth === v, () => guess({ rentGrowth: v }))))),
+            h('p.st-small.st-soft', {}, 'These are starting guesses. Tap any of them to use your own. Whoever pays less in a month invests the difference. Selling costs are not counted.')); })(),
         h('details.st-fold', {}, h('summary', {}, 'The loan, year by year'),
           h('div.st-rows', {}, h('div.st-srow4.head', {}, h('span', {}, 'Year'), h('span', {}, 'Interest'), h('span', {}, 'Paid down'), h('span', {}, 'Still owed')),
             scheduleOf(H.loan, { rate: H.rate }).filter(r => r.year <= 5 || r.year % 5 === 0).map(r => h('div.st-srow4', {}, h('span', {}, String(r.year)), h('span', {}, money(Math.round(r.interest))), h('span', {}, money(Math.round(r.paid))), h('span', {}, money(Math.round(r.balance)))))))); })(),
@@ -614,6 +629,12 @@ function foot() {
   clear($('foot'),
     h('span.grow', {}, 'Your numbers stay in this browser. Nothing is sent anywhere. This is education, not personal financial advice.'),
     btn('Download a backup', download, 'slim'),
+    btn('Copy a private link', async () => {
+      try { const url = `${location.origin}${location.pathname}${LINK}${await pack(store.doc)}`;
+        try { await navigator.clipboard.writeText(url); ui.linkNote = 'Link copied. It carries this whole plan, so send it only to someone you want to see it. Nothing was uploaded.'; foot(); }
+        catch { clear($('overlay'), h('div.st-shade', {}, h('div.st-tour', { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Your private link' }, h('h1', {}, 'Your private link'), h('p', {}, 'Press and hold to copy it. It carries this whole plan, so send it only to someone you want to see it.'), h('textarea.st-linkbox', { readonly: true, rows: 5, 'aria-label': 'Your private link', onFocus: e => e.target.select() }, url), h('div.st-row.end', {}, btn('Done', () => clear($('overlay')), 'primary'))))); }
+      } catch { ui.linkNote = 'This browser cannot make a link. Use Download a backup.'; foot(); } }, 'slim'),
+    ui.linkNote ? h('span', { role: 'status' }, ui.linkNote) : null,
     h('label.st-btn.slim', { for: 'load-file' }, 'Load a backup'),
     h('input', { type: 'file', accept: '.json,application/json', id: 'load-file', class: 'st-file', onChange: async e => { const f = e.target.files[0]; if (!f) return;
       try { const doc = importFile(await f.text()); saveClient(adapter, doc); open(doc); ui.loadNote = null; go('plan'); } catch (err) { ui.loadNote = err.message || 'That file could not be read.'; foot(); } } }),
@@ -702,3 +723,8 @@ if (start.hasAge && start.done) {
 }
 history.replaceState({ stage: ui.stage, q: ui.q, depth: 0 }, '', hashOf(ui.stage, ui.q));
 render();
+if (carried) clear($('overlay'), h('div.st-shade', {}, h('div.st-tour', { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Open a plan from a link' },
+  h('h1', {}, 'This link carries a plan'), h('p', {}, 'Open it on this device? It is saved here, in this browser.'),
+  h('div.st-row.end', {}, btn('Not now', () => clear($('overlay')), 'text'), btn('Open it', async () => {
+    try { const doc = await unpack(carried); saveClient(adapter, doc); open(doc); clear($('overlay')); go('plan'); }
+    catch { clear($('overlay'), h('div.st-shade', {}, h('div.st-tour', { role: 'alert' }, h('h1', {}, 'That link did not open'), h('p', {}, 'It may have been cut short when it was sent. Ask for it again, or use a backup file.'), btn('OK', () => clear($('overlay')), 'primary')))); } }, 'primary')))));
