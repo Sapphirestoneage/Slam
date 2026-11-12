@@ -511,6 +511,14 @@ export const KINDS = Object.fromEntries(AREAS.filter(a => a.source === 'records'
 // Doc parts whose keys are not money inputs and stay in the app (also checked by the test).
 export const NOT_IN_SHEET = {
   'settings.timeView': 'the $ / Hours / FI days view, a screen setting',
+  'assumptions.lifeStrategy': 'a Lifetime plan choice on the self-serve journey (how money comes out after work); the lifetime engine (M9U) is app-only, so the sheet has no use for it yet',
+  'assumptions.lifeRate': 'a Lifetime plan choice on the self-serve journey (the starting withdrawal rate); the lifetime engine (M9U) is app-only, so the sheet has no use for it yet',
+  'assumptions.lifeClaimAge': 'a Lifetime plan choice on the self-serve journey (the Social Security claim age); the lifetime engine (M9U) is app-only, so the sheet has no use for it yet',
+  'assumptions.lifeFill': 'a Lifetime plan choice on the self-serve journey (Roth conversions); the lifetime engine (M9U) is app-only, so the sheet has no use for it yet',
+  'assumptions.lifeStocks': 'a Lifetime plan choice on the self-serve journey (the share in stocks); the lifetime engine (M9U) is app-only, so the sheet has no use for it yet',
+  'assumptions.lifeHealth': 'a Lifetime plan choice on the self-serve journey (health cover a month before 65); the lifetime engine (M9U) is app-only, so the sheet has no use for it yet',
+  'assumptions.lifeEras': 'a Lifetime plan choice on the self-serve journey (whether spending drifts with age); the lifetime engine (M9U) is app-only, so the sheet has no use for it yet',
+  'assumptions.lifeRetireAge': 'a Lifetime plan choice on the self-serve journey (the age work stops, when picked); the lifetime engine (M9U) is app-only, so the sheet has no use for it yet',
   'settings.start': 'the self-serve journey\'s own choices (what brought you here, what matters most, a home priced, drills ticked, the last statement read): screen choices, not money inputs',
   'settings.fastTrack': 'the last Fast Track run, kept to compare',
   'settings.intake': 'when the pre-session intake was imported, and how many answers (Import intake on Coach tools > Data)',

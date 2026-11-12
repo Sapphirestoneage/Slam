@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// The Whole life screen (start.html): the year-by-year plan from js/lifetime, with scenario blocks to layer on, the
+// The Lifetime plan screen (start.html): the year-by-year plan from js/math/lifetime.js, with scenario blocks to layer on, the
 // choices about the future, and the stress tests. It only shows what the engine returns. The choices and blocks are
 // this screen's own (kept in the browser beside the plan, not in the household file yet: QUESTIONS.md).
 import { h } from '../ui/dom.js';

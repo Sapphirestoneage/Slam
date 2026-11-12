@@ -14,9 +14,10 @@ import { lifeScreen } from './life-ui.js';
 import { drillsOf, skillsOf, priceTagOf } from '../drills.js';
 import { lifeOf } from '../lifetime/inputs.js';
 import { WORRIES, WORRY_GROUPS, worryOf } from '../worries.js';
-import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOME_NOW, HOME_PMI, HOME_CLOSING, HOME_GUESS, HOME_GROWTHS, HOME_INVEST, HOME_HORIZONS, HOME_RENT_GROWTHS } from '../home.js';
+import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOME_NOW, HOME_PMI, HOME_CLOSING, HOME_GUESS, HOME_GROWTHS, HOME_INVEST, HOME_HORIZONS, HOME_RENT_GROWTHS, HOME_SELLING, interestNote } from '../home.js';
 import { MIRRORS, mirrorOf, pctToFi, snapshotOf, auditOf, auditWords, FEELINGS, valuesOf, sinceWords } from '../mirror.js';
 import { readFile } from '../import/apps.js';
+import { dedupe, importTransactions } from '../import/csv.js';
 
 const [ref, priors, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/priors-2026.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
 const hist = await fetch('data/history-returns.json').then(r => r.json());
@@ -104,7 +105,7 @@ const basisTag = p => h(`span.st-tag${p.basis === 'yours' ? '.yours' : ''}`, {},
 
 // Four tabs and More: everything fits a phone without sideways scrolling.
 const TABS = [['plan', 'Plan'], ['see', 'See'], ['drills', 'Practice'], ['sharpen', 'Sharpen']];
-const MORE = [['you', 'About you'], ['numbers', 'Your five numbers'], ['life', 'Whole life'], ['tune', 'What if'], ['all', 'All your numbers'], ['summary', 'One-page summary'], ['credits', 'Credits']];
+const MORE = [['you', 'About you'], ['numbers', 'Your five numbers'], ['life', 'Lifetime plan'], ['tune', 'What if'], ['all', 'All your numbers'], ['summary', 'One-page summary'], ['credits', 'Credits']];
 function top() {
   const p = P();
   const tab = (id, label) => h('button.st-stage', { type: 'button', disabled: !p.hasAge, title: p.hasAge ? null : 'Pick the year you were born first', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label);
@@ -302,6 +303,7 @@ function yourPlan(p, pl) {
   const worry = W ? h('div.st-card', {},
     h('div.st-row.end', {}, h('div', {}, h('div.st-eyebrow', {}, 'You came here for'), h('h2', { style: { margin: 0 } }, W.label)), btn('Change', () => go('you'), 'slim')),
     h('div.st-row', { style: { marginTop: '10px' } }, W.see.map(([label, stage, at], i) => btn(label, () => (stage === 'numbers' ? go('numbers', { q: at ?? p.next ?? QUESTIONS[0].key }) : go(stage, { flash: at })), i ? 'slim' : 'primary'))),
+    W.why ? h('details.st-fold', {}, h('summary', {}, 'Why many people leave it'), h('ul.st-why', {}, W.why.map(t => h('li', {}, t)))) : null,
     h('details.st-fold', { open: ui.stepsOpen ? true : null, onToggle: e => { ui.stepsOpen = e.target.open; } }, h('summary', {}, `First steps (${W.steps.filter((_, i) => done[`worry:${W.id}:${i}`]).length} of ${W.steps.length} done)`),
       h('div.st-ticks', {}, W.steps.map((text, i) => { const id = `worry:${W.id}:${i}`; return h('button.st-tick', { type: 'button', 'aria-pressed': done[id] ? 'true' : 'false', onClick: () => { remember({ done: { ...(mine().done || {}), [id]: !done[id] } }); render(); } }, h('span.box', {}, done[id] ? '✓' : ''), h('span', {}, text)); })))) : null;
   const pct = pctToFi(pl);
@@ -385,15 +387,16 @@ function see(p, pl) {
     h('h1', {}, 'Your plan in pictures'),
     h('div.st-chips', { style: { marginBottom: '12px' } }, PICS.map(([k, l]) => chip(l, pic === k, () => { ui.pic = k; ui.flash = null; render(); }))),
     shown,
-    h('div.st-row', {}, btn('Your whole life', () => go('life'), 'primary big'), btn('Sharpen it', () => go('sharpen'))),
+    h('div.st-row', {}, btn('Your lifetime plan', () => go('life'), 'primary big'), btn('Sharpen it', () => go('sharpen'))),
   ];
 }
 
 // ---------- A statement, read in the browser: spending a month by category, next to the number from memory ----------
 function statementCard(p, pl) {
   const saved = mine().audit, a = ui.audit ?? saved, gut = onFile(store.doc, 'spending', { ref }).gut ?? pl.m.inputs.spending ?? null;
-  const pickFile = h('input', { type: 'file', accept: '.csv,text/csv', id: 'stmt-file', class: 'st-file', onChange: async e => { const f = e.target.files[0]; if (!f) return; const out = auditOf(readFile(await f.text(), ref, { doc: store.doc }), ref); ui.audit = out.problem ? null : out; ui.auditNote = out.problem ?? null; render(); document.getElementById('stmt')?.scrollIntoView({ block: 'start' }); } });
-  const use = () => { answer(store, 'spending', { gut: a.monthly }); remember({ audit: { name: a.name, months: a.months, count: a.count, monthly: a.monthly, rows: a.rows.slice(0, 12) } }); ui.audit = null; ui.auditNote = 'Saved. Your plan now runs on your statement.'; render(); };
+  const pickFile = h('input', { type: 'file', accept: '.csv,text/csv', id: 'stmt-file', class: 'st-file', onChange: async e => { const f = e.target.files[0]; if (!f) return; const read0 = readFile(await f.text(), ref, { doc: store.doc }), out = auditOf(read0, ref); ui.audit = out.problem ? null : out; ui.read = out.problem ? null : read0; ui.auditNote = out.problem ?? null; render(); document.getElementById('stmt')?.scrollIntoView({ block: 'start' }); } });
+  const use = () => { answer(store, 'spending', { gut: a.monthly });
+    const kept = ui.read ? importTransactions(store, dedupe(ui.read.transactions.filter(t => !t.ignored), store.doc.spending?.transactions || []), { bank: a.name }) : null; ui.read = null; remember({ audit: { name: a.name, months: a.months, count: a.count, monthly: a.monthly, rows: a.rows.slice(0, 12) } }); ui.audit = null; ui.auditNote = `Saved. Your plan now runs on your statement.${kept?.imported ? ` ${kept.imported} transactions are kept in your file.` : ''}`; render(); };
   return h(`details.st-card${ui.flash === 'statement' ? '.flash' : ''}`, { id: 'stmt', open: ui.flash === 'statement' || ui.audit || ui.auditNote || ui.stmtOpen ? true : null, onToggle: e => { ui.stmtOpen = e.target.open; } },
     h('summary.st-sum', {}, h('strong', {}, saved && !ui.audit ? 'Your spending, from your statement' : 'Use a statement, skip the guessing'), h('span.st-soft', {}, saved ? `${money(saved.monthly)} a month` : 'Fastest')),
     a ? [h('p', { style: { fontWeight: 700 } }, auditWords(a, ui.audit ? gut : null)),
@@ -533,6 +536,7 @@ function tune(p, pl) {
         H.notes.map(n => h('p.st-small.st-soft', { style: { margin: '4px 0 0' } }, n)),
         (() => { const G = { ...HOME_GUESS, ...(pick.guess || {}) }, guess = patch => choose({ guess: { ...(pick.guess || {}), ...patch } });
           const R = H.today > 0 ? rentOrBuy({ price: H.price, down: H.down, rate: H.rate, pmi: H.insured ? H.pmiRate : 0, closing: H.closingShare, rent: H.today, ...G }) : null;
+          const IN = interestNote(H.loan, H.rate, ref, !!G.joint);
           const pc = v => `${+(v * 100).toFixed(0)}%`;
           return h('details.st-fold', { open: ui.rentOpen ? true : null, onToggle: e => { ui.rentOpen = e.target.open; } }, h('summary', {}, 'Own it or keep renting?'),
             R ? [h('dl.st-kv', {}, h('dt', {}, `Own: what you have after ${R.horizon} years`), h('dd', {}, money(Math.round(R.owner))), h('dt', {}, `Rent at ${money(H.today)} and invest the rest`), h('dd', {}, money(Math.round(R.renter)))),
@@ -542,7 +546,11 @@ function tune(p, pl) {
             h('div.st-field', {}, h('div.st-flabel', {}, 'Investments go up, a year'), h('div.st-chips', {}, HOME_INVEST.map(v => chip(pc(v), G.investGrowth === v, () => guess({ investGrowth: v }))))),
             R ? h('div.st-field', {}, h('div.st-flabel', {}, 'Years you would stay'), h('div.st-chips', {}, HOME_HORIZONS.map(v => chip(String(v), G.horizon === v, () => guess({ horizon: v }))))) : null,
             h('div.st-field', {}, h('div.st-flabel', {}, 'Rent goes up, a year'), h('div.st-chips', {}, HOME_RENT_GROWTHS.map(v => chip(pc(v), G.rentGrowth === v, () => guess({ rentGrowth: v }))))),
-            h('p.st-small.st-soft', {}, 'These are starting guesses. Tap any of them to use your own. Whoever pays less in a month invests the difference. Selling costs are not counted.')); })(),
+            h('div.st-field', {}, h('div.st-flabel', {}, 'Selling costs, as a share of the sale'), h('div.st-chips', {}, HOME_SELLING.map(v => chip(pc(v), (G.selling ?? 0.06) === v, () => guess({ selling: v }))))),
+            h('div.st-field', {}, h('div.st-flabel', {}, 'Taxes filed'), h('div.st-chips', {}, [[false, 'On my own'], [true, 'Jointly']].map(([v, l]) => chip(l, !!G.joint === v, () => guess({ joint: v }))))),
+            R ? h('p.st-small', {}, `Selling takes about ${money(Math.round(R.cost))}. `, R.gainTax > 0 ? `Tax on the gain is about ${money(Math.round(R.gainTax))}.` : 'The gain is inside the tax-free amount for a home you lived in.') : null,
+            IN ? h('p.st-small', {}, `Year one's loan interest is about ${money(Math.round(IN.interest))}. The standard deduction is ${money(IN.standard)}, so the interest ${IN.itemize ? 'could lower your tax if you itemize' : 'alone does not lower your tax'}. It is not counted above.`) : null,
+            h('p.st-small.st-soft', {}, 'These are starting guesses. Tap any of them to use your own. Whoever pays less in a month invests the difference. Tax on investment growth is left out on both sides.')); })(),
         h('details.st-fold', {}, h('summary', {}, 'The loan, year by year'),
           h('div.st-rows', {}, h('div.st-srow4.head', {}, h('span', {}, 'Year'), h('span', {}, 'Interest'), h('span', {}, 'Paid down'), h('span', {}, 'Still owed')),
             scheduleOf(H.loan, { rate: H.rate }).filter(r => r.year <= 5 || r.year % 5 === 0).map(r => h('div.st-srow4', {}, h('span', {}, String(r.year)), h('span', {}, money(Math.round(r.interest))), h('span', {}, money(Math.round(r.paid))), h('span', {}, money(Math.round(r.balance)))))))); })(),
@@ -644,11 +652,20 @@ function foot() {
       : btn('Start over', () => { ui.confirmReset = true; foot(); }, 'slim'));
 }
 
-const life = (p, pl) => lifeScreen({ pl, store, ref, hist, mine, remember, render, go, btn, chip, credit, flash: ui.flash });
+const LIFE_KEYS = { strategy: 'lifeStrategy', rate: 'lifeRate', claimAge: 'lifeClaimAge', fill: 'lifeFill', stocks: 'lifeStocks', health: 'lifeHealth', eras: 'lifeEras', retireAge: 'lifeRetireAge' };
+const lifeOn = () => { const a = store.doc.assumptions || {}, out = { ...(mine().life || {}) }; for (const [k, f] of Object.entries(LIFE_KEYS)) if (a[f] !== undefined && a[f] !== null) out[k] = a[f]; return out; };
+const lifeMine = () => ({ ...mine(), life: lifeOn() });
+const lifeRemember = patch => {
+  if (!patch.life) return remember(patch);
+  const rest = { ...patch.life }, v = k => { const x = rest[k]; delete rest[k]; return x ?? null; };
+  store.setDoc('assumptions', { lifeStrategy: v('strategy'), lifeRate: v('rate'), lifeClaimAge: v('claimAge'), lifeFill: v('fill'), lifeStocks: v('stocks'), lifeHealth: v('health'), lifeEras: v('eras'), lifeRetireAge: v('retireAge') });
+  remember({ life: rest });
+};
+const life = (p, pl) => lifeScreen({ pl, store, ref, hist, mine: lifeMine, remember: lifeRemember, render, go, btn, chip, credit, flash: ui.flash });
 // ---------- Fire drills and skills ----------
 function drills(p, pl) {
   const done = mine().done || {}, tick = id => { remember({ done: { ...(mine().done || {}), [id]: !done[id] } }); render(); };
-  let life = null; try { life = lifeOf(pl, store.doc, ref, hist, mine().life || {}); } catch { life = null; }
+  let life = null; try { life = lifeOf(pl, store.doc, ref, hist, lifeOn()); } catch { life = null; }
   const D = drillsOf(pl, store.doc, ref, priors, { life }), S = skillsOf(pl, store.doc, ref);
   const all = [...D.map(d => `drill:${d.id}`), ...S.map(k => `skill:${k.id}`)], n = all.filter(id => done[id]).length;
   const doneBtn = id => h('button.st-btn.slim', { type: 'button', 'aria-pressed': done[id] ? 'true' : 'false', class: done[id] ? 'primary' : '', onClick: () => tick(id) }, done[id] ? '✓ Done' : 'I did it');
@@ -668,7 +685,7 @@ function drills(p, pl) {
     D.map(drill),
     S.length ? h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Skills'), h('h2', {}, `${S.length} money ${S.length === 1 ? 'skill' : 'skills'} your plan says you have not used yet`), h('p', { style: { marginBottom: 0 } }, 'Each is a few minutes, and each is worth a number on your plan.')) : null,
     S.map(skill),
-    h('div.st-row', {}, btn('Sharpen it', () => go('sharpen'), 'primary'), btn('Your whole life', () => go('life'))),
+    h('div.st-row', {}, btn('Sharpen it', () => go('sharpen'), 'primary'), btn('Your lifetime plan', () => go('life'))),
   ];
 }
 

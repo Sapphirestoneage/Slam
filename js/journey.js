@@ -27,7 +27,7 @@ export const STAGES = [
   { id: 'numbers', label: 'Your numbers', needs: 'age' },
   { id: 'plan', label: 'Your plan', needs: 'age' },
   { id: 'see', label: 'See it', needs: 'age' },
-  { id: 'life', label: 'Whole life', needs: 'age' },
+  { id: 'life', label: 'Lifetime', needs: 'age' },
   { id: 'drills', label: 'Fire drills', needs: 'age' },
   { id: 'sharpen', label: 'Sharpen it', needs: 'age' },
   { id: 'tune', label: 'What if', needs: 'age' },

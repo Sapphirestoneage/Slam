@@ -26,16 +26,16 @@ test('the home screen: cash, loan, share of pay, and the insurance note under 20
   assert.ok(Math.abs(b.extra - (b.all - 2000)) < 1e-9);
 });
 
-test('worries: 25 of them, each with a place to look and steps, in plain words', () => {
-  assert.equal(WORRIES.length, 25);
-  assert.equal(new Set(WORRIES.map(w => w.id)).size, 25);
+test('worries: 26 of them, each with a place to look and steps, in plain words', () => {
+  assert.equal(WORRIES.length, 26);
+  assert.equal(new Set(WORRIES.map(w => w.id)).size, 26);
   const groups = new Set(WORRY_GROUPS.map(g => g[0])), stages = new Set(STAGES.map(s => s.id)), sits = new Set(SITUATIONS.map(s => s[0]));
   for (const w of WORRIES) {
     assert.ok(groups.has(w.group), w.id);
-    assert.ok(w.see.length >= 2 && w.see.length <= 3 && w.steps.length >= 3 && w.steps.length <= 5, w.id);
+    assert.ok(w.see.length >= 2 && w.see.length <= 3 && w.steps.length >= 3 && w.steps.length <= 6, w.id);
     for (const [label, stage] of w.see) { assert.ok(label && stages.has(stage), `${w.id}: ${stage}`); }
     if (w.sit) assert.ok(sits.has(w.sit));
-    const words = [w.label, ...w.steps, ...w.see.map(s => s[0])].join(' ');
+    const words = [w.label, ...w.steps, ...(w.why || []), ...w.see.map(s => s[0])].join(' ');
     assert.doesNotMatch(words, new RegExp(String.fromCharCode(8212)), `${w.id}: no em dashes`);
     assert.doesNotMatch(words, /\b(should|must|bad|wrong|fail|warning|risky|danger)\b/i, `${w.id}: no verdict words`);
   }
@@ -67,7 +67,7 @@ test('the loan year by year: interest and paydown add up to the payments, and it
 });
 
 test('own or rent, by hand on flat numbers', () => {
-  const flat = { rate: 0, share: 0, homeGrowth: 0, investGrowth: 0, rentGrowth: 0, horizon: 10 };
+  const flat = { rate: 0, share: 0, homeGrowth: 0, investGrowth: 0, rentGrowth: 0, horizon: 10, selling: 0 };
   // $360,000, nothing down, no interest: $1,000 a month, the same as rent. After 10 years the owner has paid $120,000 of the loan.
   const a = rentOrBuy({ ...flat, price: 360000, down: 0, rent: 1000 });
   assert.ok(Math.abs(a.owner - 120000) < 0.01 && a.renter === 0); assert.equal(a.even, 1);
@@ -78,6 +78,12 @@ test('own or rent, by hand on flat numbers', () => {
   const c = rentOrBuy({ price: 750000, down: 0.2, rate: 0.07, rent: 2000, homeGrowth: 0, investGrowth: 0.09, rentGrowth: 0, horizon: 10 });
   assert.ok(c.renter > c.owner);
   assert.equal(rentOrBuy({ price: 500000, down: 0.2, rent: 0 }), null);
+  // Selling costs 6% of the sale; a gain past $250,000 is taxed at 15% (twice the tax-free amount on a joint return).
+  const d = rentOrBuy({ ...flat, price: 360000, down: 1, rent: 1000, selling: 0.06 });
+  assert.ok(Math.abs(d.owner - (480000 - 21600)) < 0.01);
+  const grow = { rate: 0, share: 0, investGrowth: 0, rentGrowth: 0, horizon: 10, selling: 0, price: 1000000, down: 1, rent: 1000, homeGrowth: 2 ** 0.1 - 1 };
+  const e = rentOrBuy(grow), f = rentOrBuy({ ...grow, joint: true });
+  assert.ok(Math.abs(e.gainTax - (1000000 - 250000) * 0.15) < 1); assert.ok(Math.abs(f.gainTax - (1000000 - 500000) * 0.15) < 1);
 });
 
 test('the mirror: four ways to lead the plan, percent of the way, a year at a glance', () => {

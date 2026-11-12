@@ -18,6 +18,13 @@ export const HOME_RENT_GROWTHS = [0, 0.02, 0.03, 0.04, 0.05];
 export const HOME_GROWTHS = [0, 0.02, 0.03, 0.04, 0.05];
 export const HOME_INVEST = [0.05, 0.07, 0.09];
 export const HOME_HORIZONS = [5, 10, 15, 30];
+export const HOME_SELLING = [0, 0.03, 0.06, 0.08];
+// Year one's interest next to the standard deduction: mortgage interest only lowers tax for someone who itemizes.
+export function interestNote(loan, rate, ref, joint = false) {
+  const first = scheduleOf(loan, { rate })[0]?.interest ?? 0, std = ref?.tax?.standardDeduction?.[joint ? 'joint' : 'single'] ?? null;
+  if (!first || std == null) return null;
+  return { interest: first, standard: std, itemize: first > std };
+}
 
 // The all-in monthly payment for a loan: principal and interest at the rate and term, with taxes and insurance as the
 // same share of the payment the lender view uses.
@@ -80,8 +87,9 @@ export function scheduleOf(loan, { rate = RULES.lenderMortgageRate, years = RULE
 // Own or rent, side by side. The owner pays the loan, taxes, insurance (and mortgage insurance while the loan is over
 // 80% of the price). The renter pays rent and keeps the cash up front invested. Whoever pays less in a month invests
 // the difference. At the end: the owner has the home's value less the loan plus what they invested; the renter has
-// their investments. Selling costs are not counted.
-export function rentOrBuy({ price, down, rate = RULES.lenderMortgageRate, years = RULES.lenderMortgageYears, share = RULES.lenderTaxInsShare, pmi = 0, closing = 0, rent, homeGrowth = HOME_GUESS.homeGrowth, investGrowth = HOME_GUESS.investGrowth, rentGrowth = HOME_GUESS.rentGrowth, horizon = HOME_GUESS.horizon } = {}) {
+// their investments. Selling the home costs a share of the sale price, and a gain above the tax-free amount (IRS
+// Topic 701) is taxed. Tax on the investments' growth is left out on both sides.
+export function rentOrBuy({ price, down, rate = RULES.lenderMortgageRate, years = RULES.lenderMortgageYears, share = RULES.lenderTaxInsShare, pmi = 0, closing = 0, rent, homeGrowth = HOME_GUESS.homeGrowth, investGrowth = HOME_GUESS.investGrowth, rentGrowth = HOME_GUESS.rentGrowth, horizon = HOME_GUESS.horizon, selling = RULES.homeSelling, joint = false } = {}) {
   if (!(price > 0) || !(rent > 0)) return null;
   const cash = price * down, loan = price - cash, first = paymentFor(loan, { rate, years, share });
   const r = rate / 12, g = (1 + investGrowth) ** (1 / 12) - 1;
@@ -96,10 +104,12 @@ export function rentOrBuy({ price, down, rate = RULES.lenderMortgageRate, years 
       if (own > rnt) renterPot += own - rnt; else ownerPot += rnt - own;
       bal -= pr;
     }
-    return { owner: price * (1 + homeGrowth) ** n - Math.max(0, bal) + ownerPot, renter: renterPot };
+    const sale = price * (1 + homeGrowth) ** n, cost = sale * selling;
+    const gainTax = Math.max(0, sale - cost - price - RULES.homeGainFree * (joint ? 2 : 1)) * RULES.homeGainRate;
+    return { owner: sale - cost - gainTax - Math.max(0, bal) + ownerPot, renter: renterPot, sale, cost, gainTax };
   };
   const at = run(horizon);
   let even = null;
   for (let y = 1; y <= 30; y++) { const t = run(y); if (t.owner >= t.renter) { even = y; break; } }
-  return { ...at, horizon, even, homeGrowth, investGrowth, rentGrowth };
+  return { ...at, horizon, even, homeGrowth, investGrowth, rentGrowth, selling };
 }
