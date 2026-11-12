@@ -33,7 +33,7 @@ a { color: var(--primary); text-underline-offset: 2px; }
 
 /* Top bar and stages */
 .st-top { position: sticky; top: 0; z-index: 5; background: var(--primary-dark); color: #fff; padding: 6px 12px; display: flex; gap: 8px 16px; align-items: center; }
-.st-brand { font-weight: 800; letter-spacing: -.01em; margin-right: auto; color: #fff; text-decoration: none; white-space: nowrap; }
+.st-brand { display: inline-flex; align-items: center; min-height: 44px; font-weight: 800; letter-spacing: -.01em; margin-right: auto; color: #fff; text-decoration: none; white-space: nowrap; }
 .st-stages { display: flex; gap: 4px; flex: 1; justify-content: flex-end; min-width: 0; }
 .st-stage { flex: 1 1 0; max-width: 130px; min-width: 0; min-height: 44px; padding: 0 4px; border-radius: 10px; border: 2px solid rgba(255, 255, 255, .55); background: transparent; color: #fff; font: inherit; font-weight: 700; font-size: .875rem; cursor: pointer; }
 .st-stage:hover:not([disabled]) { background: rgba(255, 255, 255, .14); }
@@ -243,3 +243,15 @@ details.st-drill:not([open]) > summary h2 { font-size: 1rem; }
 .st-tick[aria-pressed="true"] .box { background: var(--primary); }
 .st-tick[aria-pressed="true"] { border-color: var(--primary); }
 @media (max-width: 520px) { .st-tiles { grid-template-columns: 1fr 1fr; gap: 8px; } .st-tile { padding: 12px; } .st-tile .v { font-size: 1.2rem; } }
+.st-ring { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.st-ring-bg { stroke: var(--border-row); } .st-ring-on { stroke: var(--primary); }
+.st-c-mark { stroke-dasharray: 3 4; }
+.st-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.st-file:focus-visible + *, label.st-btn:focus-within { outline: 3px solid var(--primary); outline-offset: 2px; }
+.st-slotnav { justify-content: space-between; margin-top: 8px; padding: 8px; border: 2px solid var(--border-row); border-radius: 12px; }
+.st-srow4 { display: grid; grid-template-columns: 3rem 1fr 1fr 1fr; gap: 8px; padding: 5px 0; text-align: right; font-size: .875rem; }
+.st-srow4 span:first-child { text-align: left; } .st-srow4.head { font-weight: 700; }
+@media print { .st-top, .st-track, .st-foot, .st-back, .st-noprint, #overlay { display: none !important; } body { background: #fff; } .st-card { box-shadow: none; border-color: #999; } .st-main { padding: 0; max-width: none; } }
+.st-do .st-eyebrow { color: var(--text); }
+.st-people a.st-small { display: inline-flex; align-items: center; min-height: 44px; }
+h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }

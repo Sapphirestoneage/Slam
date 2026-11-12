@@ -32,6 +32,7 @@ export const STAGES = [
   { id: 'sharpen', label: 'Sharpen it', needs: 'age' },
   { id: 'tune', label: 'What if', needs: 'age' },
   { id: 'all', label: 'All your numbers', needs: 'age' },
+  { id: 'summary', label: 'One page', needs: 'age' },
   { id: 'credits', label: 'Credits', needs: null },
 ];
 
@@ -214,7 +215,7 @@ const PLAIN = {
   qq: ['Quiet Quitting FI', 'Enough invested that the yearly minimum alone gets you to FI'],
   coast: ['Coast FI', 'Enough invested that you could stop adding and still get there'],
   nw100k: ['Your first $100k', 'Six figures of net worth'],
-  fi: ['FI: work becomes optional', '25 times what you spend in a year'],
+  fi: ['Work becomes optional (FI)', '25 times what you spend in a year'],
   fat: ['Fat FI', 'FI with half again as much room to spend'],
   lean: ['Lean FI', 'FI on needs only: food, housing and transportation'],
 };
@@ -279,7 +280,7 @@ export function movedWords(before, after) {
   const parts = [];
   const open = /^Past /.test(after.words.fi ?? ''); // one half of the picture (pay with typical spending, or the reverse) can read as never: say what comes next instead
   if (open && after.typical > 0) parts.push('Saved. The next answer fills in the other half of the picture.');
-  else if (before.words.fi !== after.words.fi) parts.push(`Your FI range went from ${before.words.fi} to ${after.words.fi}.`);
+  else if (before.words.fi !== after.words.fi) parts.push(`Your date range went from ${before.words.fi} to ${after.words.fi}.`);
   else if (before.words.debtFree !== after.words.debtFree) parts.push(`Debt free went from ${before.words.debtFree} to ${after.words.debtFree}.`);
   else if (before.words.surplus !== after.words.surplus) parts.push(`What is left each month is now ${after.words.surplus}.`);
   if (after.typical === 0 && before.typical > 0) parts.push('Every number in your plan is now yours.');
@@ -316,7 +317,7 @@ export function numbersOf(plan, doc, ref, { now = new Date() } = {}) {
   const ss = born == null || gross == null ? null : benefitOf({ key: 'Me', bornIndex: born, stopAge: doc.assumptions?.fiAge ?? x.retireAge, gross }, ref.socialSecurity, { wageBase: ref.tax.socialSecurityWageBase, widths: { Gut: RULES.rangeIncomeGut, Estimate: RULES.rangeIncomeEstimate } });
   const more = [
     gate('where', R('housingPct', 'Each month', 'Housing, as a share of your pay', m.housingPct, 'housing35', ['income'], v => fmt.pct(v))),
-    gate('where', { id: 'leanFi', group: 'Independence', label: 'Lean FI number (needs only)', idea: 'flavors', value: leanT != null ? `${fmt.money(leanT)}${lean?.date ? `, reached ${lean.date}` : ''}` : null, text: '25 times a year of food, housing and getting around.', ask: [], typical: false }),
+    gate('where', { id: 'leanFi', group: 'Independence', label: 'Needs-only number (Lean FI)', idea: 'flavors', value: leanT != null ? `${fmt.money(leanT)}${lean?.date ? `, reached ${lean.date}` : ''}` : null, text: '25 times a year of food, housing and getting around.', ask: [], typical: false }),
     gate('owe', { id: 'debtInterest', group: 'What you have', label: 'Interest you will pay on your debt', idea: 'avalanche', value: m.debtPlan?.interest != null && x.debts.length ? fmt.money(Math.round(m.debtPlan.interest)) : x.debts.length ? null : 'None', text: m.debtPlan?.text ?? null, ask: [], typical: false }),
     gate('work', { id: 'pretax', group: 'Each month', label: 'Going into your 401(k) from your paycheck', idea: 'savingsRate', value: `${fmt.money(Math.round(m.pretaxSaving ?? 0))} a month`, text: m.savingsRate.text, ask: [], typical: false }),
     gate('accounts', { id: 'buckets', group: 'What you have', label: 'Your tax buckets', idea: 'taxBuckets', value: Object.keys(kinds).length ? Object.entries(kinds).map(([k, v]) => `${k}: ${fmt.money(v)}`).join(' · ') : 'Nothing invested yet', text: 'Taxed later: 401(k) and traditional IRA. Never taxed again: a Roth IRA or an HSA. Reachable any time: a brokerage account.', ask: [], typical: false }),
@@ -327,7 +328,7 @@ export function numbersOf(plan, doc, ref, { now = new Date() } = {}) {
   const first = [
     R('surplus', 'Each month', 'Left over each month', m.surplus, null, ['income', 'spending']),
     R('savingsRate', 'Each month', 'Savings rate', m.savingsRate, 'savingsRate', ['income', 'spending'], v => fmt.pct(v)),
-    R('simpleYears', 'Each month', 'Years to FI at this savings rate, starting from zero', simple, 'simpleMath', ['income', 'spending'], v => `${(Math.round(v * 10) / 10).toFixed(1)} years`),
+    R('simpleYears', 'Each month', 'Years until work is optional at this savings rate, starting from zero', simple, 'simpleMath', ['income', 'spending'], v => `${(Math.round(v * 10) / 10).toFixed(1)} years`),
     R('hourly', 'Each month', 'What an hour of your work earns', m.hourly, 'realWage', ['income'], v => `${fmt.money(v, { cents: true })} an hour`),
     R('runway', 'Safety', 'How long your cash lasts', m.runwayMonths, null, ['cash', 'spending'], months),
     { id: 'littleE', group: 'Safety', label: 'little e (small emergencies)', idea: 'starterFund', value: little ? (little.done ? `Covered (${fmt.money(little.target ?? 0)})` : `${fmt.money(little.have ?? 0)} of ${fmt.money(little.target ?? 0)}`) : null, text: 'Covers a plumbing-size emergency: $1,000 or your highest deductible, whichever is smaller.', ask: little ? [] : ['cash'], typical: rests('cash') },
@@ -335,9 +336,9 @@ export function numbersOf(plan, doc, ref, { now = new Date() } = {}) {
     R('netWorth', 'What you have', 'Net worth', m.netWorth, null, ['cash', 'invested', 'card']),
     R('liquid', 'What you have', 'Net worth you can reach', m.liquidNetWorth, null, ['cash', 'card']),
     { id: 'debtFree', group: 'What you have', label: 'Debt free (cards and other consumer debt)', idea: 'avalanche', value: debtFree ? debtFree.date : x.debts.length ? null : 'No debt', text: debtFree?.what ?? 'Nothing owed.', ask: [], typical: rests('card', 'income', 'spending') },
-    R('fiNumber', 'Independence', 'Your FI number', m.fiNumber, 'fiNumber', ['spending']),
+    R('fiNumber', 'Independence', 'Your freedom number (FI number)', m.fiNumber, 'fiNumber', ['spending']),
     R('fiDate', 'Independence', 'Work becomes optional', m.monthsToFi, 'indexReturns', all, when),
-    R('coastFi', 'Independence', 'Coast FI number', m.coastFi, 'coastFi', ['spending']),
+    R('coastFi', 'Independence', 'Stop-adding number (Coast FI)', m.coastFi, 'coastFi', ['spending']),
     target('coast', 'Coast FI reached', 'coastFi', all),
     target('qq', 'Quiet Quitting FI reached', 'quietQuitting', all),
     target('fat', 'Fat FI reached', 'flavors', all),

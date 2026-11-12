@@ -511,6 +511,7 @@ export const KINDS = Object.fromEntries(AREAS.filter(a => a.source === 'records'
 // Doc parts whose keys are not money inputs and stay in the app (also checked by the test).
 export const NOT_IN_SHEET = {
   'settings.timeView': 'the $ / Hours / FI days view, a screen setting',
+  'settings.start': 'the self-serve journey\'s own choices (what brought you here, what matters most, a home priced, drills ticked, the last statement read): screen choices, not money inputs',
   'settings.fastTrack': 'the last Fast Track run, kept to compare',
   'settings.intake': 'when the pre-session intake was imported, and how many answers (Import intake on Coach tools > Data)',
   'settings.presetsAdded': 'marks that the starter lines were added once',

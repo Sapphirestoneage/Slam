@@ -30,7 +30,7 @@ export function lifeScreen({ pl, store, ref, hist, mine, remember, render, go, b
     h('p', { style: { marginBottom: 0 } }, 'With what is left over each month today, the money does not last through age 90 from any stopping age up to 80. Spending less, earning more, or a scenario like part-time work changes that. Try the sliders on See it.'))];
   const own = s.retireAge != null, st = STRATEGIES.find(x => x.id === s.strategy);
   const hero = h('div.st-card.hero', {},
-    h('div.st-eyebrow', {}, 'Whole life'), h('div.st-soft', {}, own ? 'If you stop work at' : 'Work can become optional at'),
+    h('h1.st-eyebrow', {}, 'Whole life'), h('div.st-soft', {}, own ? 'If you stop work at' : 'Work can become optional at'),
     h('div.st-big', {}, `age ${L.age}`),
     own ? h('p', {}, L.run.ok ? 'On a smooth market the money lasts to 90.' : `On a smooth market the money runs short at ${L.run.ranOutAge}.`, L.safe.age != null ? ` History would have carried age ${L.safe.age}.` : '')
       : h('p', {}, `Planned one year at a time to age 90, then run through every stretch of market history since ${hist.first}. It held in ${fmt.pct(L.safe.replay.success)} of them. On a perfectly smooth market it would be age ${L.smooth.age}.`),

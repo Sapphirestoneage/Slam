@@ -52,6 +52,7 @@ export const IDEAS = [
   { id: 'taxBuckets', name: 'Three tax buckets', by: ['moneyguy', 'madfi'], plain: 'Money taxed later, money never taxed again, and money you can reach any time. The mix decides how early you can use it.', where: { stage: 'all', at: 'buckets' } },
   { id: 'growthChart', name: 'What you put in vs what growth adds', by: ['pfc'], plain: 'One picture of compounding: your deposits in one color, the growth on top in another.', where: { stage: 'see', at: 'growth' } },
   { id: 'sankey', name: 'A map of where your pay goes', by: ['projectionlab'], plain: 'One flow from your paycheck to everything it pays for.', where: { stage: 'see', at: 'flow' } },
+  { id: 'valueMatrix', name: 'The value matrix', by: ['choosefi'], plain: 'Sort your spending by what you love, like, tolerate or dislike, then trim from the bottom.', where: { stage: 'tune', at: 'values' } },
   { id: 'priceTag', name: 'Every monthly cost has a price in freedom', by: ['slam', 'ymoyl'], plain: '$100 a month takes $30,000 invested to pay for forever. Any cost can be read in dollars, hours of work, and days of freedom.', where: { stage: 'tune', at: 'price' } },
   { id: 'fireDrills', name: 'Money fire drills', by: ['slam'], plain: 'Rehearse the thing you fear on your own numbers, then take one small safe dose in real life.', where: { stage: 'drills', at: null } },
   { id: 'rothLadder', name: 'Roth conversion ladder', by: ['madfi'], plain: 'Move taxed-later money to Roth in low-income years. After five years it comes out with no penalty.', where: { stage: 'life', at: null } },

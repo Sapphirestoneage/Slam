@@ -26,12 +26,13 @@ export function growthChart(g, { onPick = null } = {}) {
     ticks.map(t => [s('line', { x1: L, x2: W - R, y1: Y(t), y2: Y(t), class: 'st-c-grid' }), s('text', { x: L - 6, y: Y(t) + 4, class: 'st-c-axis', 'text-anchor': 'end' }, short(t))]),
     s('path', { d: area(r => r.total), class: 'st-c-grown' }), s('path', { d: area(r => r.put), class: 'st-c-put' }),
     s('line', { x1: L, x2: W - R, y1: Y(g.target), y2: Y(g.target), class: 'st-c-target' }),
-    s('text', { x: L + 6, y: Y(g.target) - 6, class: 'st-c-label' }, `Your FI number: ${money(g.target)}`),
+    s('text', { x: L + 6, y: Y(g.target) - 6, class: 'st-c-label' }, `Your freedom number: ${money(g.target)}`),
+    (g.marks || []).map(([v, label]) => [s('line', { x1: L, x2: W - R, y1: Y(v), y2: Y(v), class: 'st-c-grid st-c-mark' }), s('text', { x: W - R - 4, y: Y(v) - 4, class: 'st-c-axis', 'text-anchor': 'end' }, `${label}: ${short(v)}`)]),
     rows.map((r, i) => (i % every === 0 || i === n ? s('text', { x: X(i), y: H - 8, class: 'st-c-axis', 'text-anchor': i === n ? 'end' : 'middle' }, String(r.year)) : null)),
     mark);
   const slider = h('input', { type: 'range', min: 0, max: n, step: 1, value: String(n), 'aria-label': 'Pick a year', onInput: e => read(Number(e.target.value)) });
   read(n);
-  return h('div', {}, chart, legend([['put', 'What you put in'], ['grown', 'What growth adds'], ['target', 'Your FI number']]), h('label.st-small.st-soft', {}, 'Drag to any year'), slider, out);
+  return h('div', {}, chart, legend([['put', 'What you put in'], ['grown', 'What growth adds'], ['target', 'Your freedom number']]), h('label.st-small.st-soft', {}, 'Drag to any year'), slider, out);
 }
 
 // ---------- where the money goes: one band from your pay to each place it lands ----------

@@ -42,3 +42,80 @@ test('worries: 25 of them, each with a place to look and steps, in plain words',
   assert.ok(WORRIES.filter(w => w.group === 'people').length >= 8);
   assert.equal(worryOf('home').see[0][2], 'home'); assert.equal(worryOf('nope'), null);
 });
+
+import { scheduleOf, rentOrBuy } from '../js/home.js';
+import { MIRRORS, mirrorOf, pctToFi, snapshotOf, auditOf, auditWords, valuesOf, sinceWords } from '../js/mirror.js';
+import { readFile } from '../js/import/apps.js';
+import { readFileSync } from 'node:fs';
+const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
+
+test('mortgage insurance and closing costs are in the home numbers', () => {
+  const pl = { m: { inputs: { takeHome: 8000 } } };
+  const a = homeOf(null, null, null, pl, { price: 400000, down: 0.05, rate: 0.07, pmi: 0.005, closing: 0.03, now: 2000 });
+  assert.ok(Math.abs(a.pmi - 380000 * 0.005 / 12) < 1e-9); assert.equal(Math.round(a.closing), 12000); assert.equal(Math.round(a.upfront), 32000);
+  assert.ok(Math.abs(a.all - (a.pi + a.taxIns + a.pmi)) < 1e-9); assert.ok(Math.abs(a.extra - (a.all - 2000)) < 1e-9);
+  assert.equal(homeOf(null, null, null, pl, { price: 400000, down: 0.2 }).pmi, 0);
+});
+
+test('the loan year by year: interest and paydown add up to the payments, and it ends at zero', () => {
+  const rows = scheduleOf(500000, { rate: 0.07, years: 30 });
+  assert.equal(rows.length, 30); assert.ok(rows.at(-1).balance < 0.01);
+  assert.ok(Math.abs(rows.reduce((s, r) => s + r.paid, 0) - 500000) < 0.01);
+  assert.ok(Math.abs(rows[0].interest + rows[0].paid - 3326.51 * 12) < 0.2);
+  assert.ok(rows[0].interest > rows[0].paid && rows.at(-1).interest < rows.at(-1).paid);
+  assert.deepEqual(scheduleOf(0), []);
+});
+
+test('own or rent, by hand on flat numbers', () => {
+  const flat = { rate: 0, share: 0, homeGrowth: 0, investGrowth: 0, rentGrowth: 0, horizon: 10 };
+  // $360,000, nothing down, no interest: $1,000 a month, the same as rent. After 10 years the owner has paid $120,000 of the loan.
+  const a = rentOrBuy({ ...flat, price: 360000, down: 0, rent: 1000 });
+  assert.ok(Math.abs(a.owner - 120000) < 0.01 && a.renter === 0); assert.equal(a.even, 1);
+  // All cash: the owner has no payment and invests the $1,000 rent; the renter keeps the $360,000.
+  const b = rentOrBuy({ ...flat, price: 360000, down: 1, rent: 1000 });
+  assert.ok(Math.abs(b.owner - 480000) < 0.01 && Math.abs(b.renter - 360000) < 0.01);
+  // Cheap rent and fast investment growth: renting is ahead at 10 years.
+  const c = rentOrBuy({ price: 750000, down: 0.2, rate: 0.07, rent: 2000, homeGrowth: 0, investGrowth: 0.09, rentGrowth: 0, horizon: 10 });
+  assert.ok(c.renter > c.owner);
+  assert.equal(rentOrBuy({ price: 500000, down: 0.2, rent: 0 }), null);
+});
+
+test('the mirror: four ways to lead the plan, percent of the way, a year at a glance', () => {
+  assert.equal(MIRRORS.length, 4); assert.equal(mirrorOf('nope').id, 'date');
+  for (const m of MIRRORS) for (const k of ['hero', 'step', 'tiles', 'milestones']) assert.ok(m.order.includes(k), `${m.id} shows ${k}`);
+  const pl = { m: { fiNumber: { value: 960000 }, inputs: { invested: 29500, takeHome: 4000, spending: 3000 }, surplus: { value: 1000 }, investing: { monthly: 600 }, savingsRate: { value: 0.25 } } };
+  assert.ok(Math.abs(pctToFi(pl) - 29500 / 960000) < 1e-12); assert.equal(pctToFi({}), null);
+  const snap = snapshotOf(pl);
+  assert.deepEqual(snap.map(r => r.value), ['$48,000', '$36,000', '$12,000', '$7,200', '25.0%']);
+});
+
+test('a Rocket Money export becomes spending a month, without transfers or card payments', () => {
+  const read = readFile(readFileSync(new URL('../fixtures/import/rocket-money-nov.csv', import.meta.url), 'utf8'), ref);
+  const a = auditOf(read, ref);
+  assert.ok(!a.problem, a.problem); assert.ok(a.months >= 1); assert.ok(a.monthly > 0);
+  assert.equal(a.monthly, a.rows.reduce((s, r) => s + r.monthly, 0));
+  assert.ok(a.rows.every(r => !/transfer|credit card payment|paycheck/i.test(r.name)));
+  const byHand = read.transactions.filter(t => t.amount < 0 && !t.ignored && !String(ref.importCategories.rocket[t.appCategory] ?? '').startsWith('@')).reduce((s, t) => s - t.amount, 0);
+  assert.ok(Math.abs(a.monthly - byHand / a.months) <= a.rows.length);
+  assert.match(auditWords(a, a.monthly + 500), /\$500 a month lower/);
+  assert.ok(auditOf(readFile(readFileSync(new URL('../fixtures/import/unknown-nov.csv', import.meta.url), 'utf8'), ref), ref).problem);
+});
+
+test('the value matrix and what changed since last time', () => {
+  const v = valuesOf([{ name: 'Rent', monthly: 1500 }, { name: 'Dining out', monthly: 400 }, { name: 'Subscriptions', monthly: 100 }], { 'Dining out': 'tolerate', Subscriptions: 'dislike', Rent: 'like' });
+  assert.equal(v.loose, 500); assert.equal(v.half, 250); assert.equal(v.marked, 3); assert.equal(v.totals.like, 1500);
+  assert.equal(sinceWords({ at: '2026-11-01', fi: 'Nov 2051', worth: 1000 }, { at: '2026-11-01', fi: 'Oct 2051', worth: 2000 }), null);
+  assert.equal(sinceWords({ at: '2026-11-01', fi: 'Nov 2051', worth: 1000 }, { at: '2026-11-12', fi: 'Aug 2051', worth: 2500 }), 'Since Nov 1: your date went from Nov 2051 to Aug 2051, and your net worth is up $1,500.');
+  assert.equal(sinceWords({ at: '2026-11-01', fi: 'Nov 2051', worth: 1000 }, { at: '2026-11-12', fi: 'Nov 2051', worth: 1000 }), 'Nothing has moved since Nov 1.');
+});
+
+import { LEVELS } from '../js/sharpen.js';
+import { QUESTIONS } from '../js/journey.js';
+import { newHousehold } from '../js/records.js';
+test('nothing is asked twice: no two levels or questions share a field', () => {
+  const doc = newHousehold({ name: 'T' });
+  const seen = new Map();
+  for (const q of QUESTIONS) for (const b of q.boxes) { assert.ok(!seen.has(`q:${b.id}`), b.id); seen.set(`q:${b.id}`, q.key); }
+  for (const lv of LEVELS) for (const f of lv.fields(doc, ref)) { const k = `l:${f.id}`; assert.ok(!seen.has(k), `${f.id} is asked in ${seen.get(k)} and ${lv.id}`); seen.set(k, lv.id); }
+  assert.ok(seen.size > 20);
+});
