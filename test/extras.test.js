@@ -103,3 +103,27 @@ test('a decision receipt: which choice is sooner, which is kinder, and when they
   assert.equal(r.a.months, 100); assert.equal(r.b.months, 25); assert.equal(r.sooner, 'b'); assert.equal(r.kinder, 'a'); assert.equal(r.split, true); assert.equal(r.gap, 75);
   const s = receiptOf({}, {}, {}, { cost: 500 }, { cost: 500 }, { run: fake }); assert.equal(s.sooner, 'same'); assert.equal(s.split, false); assert.equal(s.a.months, 150);
 });
+
+import { seriesOf, LINES, affordOnce, unevenOf, overlapOf } from '../js/extras.js';
+test('your money, line by line: debt first, then cash, then investing, by hand at no growth', () => {
+  const pl = { age: 30, milestones: [{ id: 'fi', months: 36 }], m: { inputs: { cash: 1000, invested: 5000, realReturn: 0, debts: [{ balance: 3000 }] }, fooFlow: { monthly: 1000, waitMonths: 6 } } };
+  const s = seriesOf(pl); assert.equal(s.points.length, 4);
+  // Year 1: three months clear the debt, three fill cash (+$3,000), six are invested (+$6,000).
+  assert.deepEqual([s.points[1].debt, s.points[1].cash, s.points[1].invested, s.points[1].putIn, s.points[1].growth, s.points[1].netWorth], [0, 4000, 11000, 11000, 0, 15000]);
+  assert.equal(s.points[3].invested, 35000); assert.equal(s.points[0].netWorth, 3000);
+  const g = seriesOf({ ...pl, m: { ...pl.m, inputs: { ...pl.m.inputs, realReturn: 0.05 } } }); assert.ok(g.points[3].growth > 0); assert.ok(Math.abs(g.points[3].invested - g.points[3].putIn - g.points[3].growth) < 1e-6);
+  for (const [k] of LINES) assert.ok(k in s.points[0]);
+  // A loan with its own payment walks down on it: $12,000 at 0%, $500 a month, is gone in two years.
+  const loan = seriesOf({ age: 30, milestones: [{ id: 'fi', months: 36 }], m: { inputs: { cash: 0, invested: 0, realReturn: 0, debts: [{ balance: 12000, apr: 0, payment: 500 }] }, fooFlow: { monthly: 0, waitMonths: 0 } } });
+  assert.deepEqual(loan.points.map(p => p.debt), [12000, 6000, 0, 0]);
+});
+
+test('can I afford this, uneven pay, and overlapping subscriptions, by hand', () => {
+  const a = affordOnce({ price: 2500, cash: 10000, spending: 3000, surplus: 1000, ret: 0.05, years: 20 });
+  assert.equal(a.fromCash, true); assert.equal(a.monthsLeft, 2.5); assert.equal(a.monthsOfKeeping, 2.5); assert.ok(Math.abs(a.later - 2500 * 1.05 ** 20) < 1e-6);
+  assert.equal(affordOnce({ price: 5000, cash: 1000 }).fromCash, false);
+  const u = unevenOf({ low: 2000, usual: 4000, high: 8000, spending: 2800 }); // halfway between slow and usual: $3,000
+  assert.equal(u.pay, 3000); assert.equal(u.buffer, 6000); assert.equal(u.shortInLow, 1000); assert.equal(u.lowMonthsCovered, 6); assert.equal(u.extraInHigh, 5000); assert.equal(u.covers, true);
+  assert.equal(unevenOf({ low: 5000, usual: 4000, high: 8000 }), null);
+  const o = overlapOf({ video: true, music: true }, 15, { doc: {}, run: fake }); assert.equal(o.monthly, 30); assert.equal(o.yearly, 360); assert.equal(o.moved, 3); assert.deepEqual(o.groups, ['Streaming video', 'Music']);
+});

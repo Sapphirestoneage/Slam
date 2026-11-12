@@ -229,3 +229,55 @@ export function receiptOf(doc, ref, priors, a = {}, b = {}, { now = new Date(), 
   const kinder = A.life === B.life ? 'same' : A.life > B.life ? 'a' : 'b';
   return { a: A, b: B, sooner, kinder, gap: A.months != null && B.months != null ? Math.abs(A.months - B.months) : null, split: sooner !== 'same' && kinder !== 'same' && sooner != null && sooner !== kinder };
 }
+
+// ---------- Your money, line by line: a plain walk of the plan, a point a year. ----------
+// What is kept each month pays debt first, then fills cash until the plan starts investing (M79's wait), then is
+// invested. Lines: what you put in (what is invested today plus what you add), growth on it, the two together, cash,
+// debt, and net worth. Debt interest and minimum payments are already inside spending, so they are not walked here.
+export const LINES = [['invested', 'Invested'], ['putIn', 'What you put in'], ['growth', 'Growth'], ['cash', 'Cash'], ['debt', 'Debt'], ['netWorth', 'Net worth']];
+export function seriesOf(pl, { maxYears = 40 } = {}) {
+  const x = pl?.m?.inputs; if (!x) return null;
+  const f = pl.m.fooFlow, monthly = Math.max(0, f?.monthly ?? pl.m.surplus?.value ?? 0), wait = f?.waitMonths ?? 0;
+  const r = (1 + (x.realReturn ?? 0.05)) ** (1 / 12) - 1, fi = pl.milestones?.find(m => m.id === 'fi')?.months ?? null;
+  const end = Math.min(maxYears * 12, Math.max(12, Math.ceil((fi ?? maxYears * 12) / 12) * 12));
+  let cash = x.cash ?? 0, inv = x.invested ?? 0, putIn = inv, debt = 0;
+  // Each debt walks on its own payment and rate when they are on file; without them it holds flat until it is paid from what is kept.
+  const owed = (x.debts || []).map(d => ({ left: d.balance ?? 0, apr: d.apr ?? 0, payment: d.payment ?? 0 })), sum = () => owed.reduce((t, d) => t + d.left, 0);
+  debt = sum();
+  const point = m => ({ month: m, year: m / 12, age: pl.age != null ? pl.age + m / 12 : null, invested: inv, putIn, growth: inv - putIn, cash, debt, netWorth: cash + inv - debt });
+  const points = [point(0)];
+  for (let m = 1; m <= end; m++) {
+    inv *= 1 + r;
+    for (const d of owed) if (d.left > 0 && d.payment > 0) d.left = Math.max(0, d.left * (1 + d.apr / 12) - d.payment);
+    if (m <= wait) { let extra = monthly; for (const d of owed) { const pay = Math.min(d.left, extra); d.left -= pay; extra -= pay; } cash += extra; } else { inv += monthly; putIn += monthly; }
+    debt = sum();
+    if (m % 12 === 0) points.push(point(m));
+  }
+  return { points, monthly, wait, end };
+}
+
+// ---------- Can I afford this? One purchase, against the cash on hand and what is kept each month. ----------
+export const PRICES = [200, 500, 1000, 2500, 5000, 10000, 25000];
+export function affordOnce({ price, cash = 0, spending = 0, surplus = 0, ret = 0.05, years = 20 }) {
+  if (!(price > 0)) return null;
+  const left = cash - price, monthsLeft = spending > 0 ? left / spending : null;
+  return { price, fromCash: left >= 0, cashLeft: left, monthsLeft, monthsOfKeeping: surplus > 0 ? price / surplus : null, later: price * (1 + ret) ** years, years };
+}
+
+// ---------- Uneven pay: a steady paycheck to yourself, a buffer, and where a good month goes. ----------
+export const PAY_PICKS = [1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000, 15000];
+export function unevenOf({ low, usual, high, spending = 0 }) {
+  if (!(low > 0) || !(usual >= low) || !(high >= usual)) return null;
+  const pay = Math.min(usual, Math.max(low, Math.round((low + usual) / 2 / 50) * 50)); // between a slow month and a usual one
+  const buffer = Math.max(spending, pay) * 2, shortInLow = Math.max(0, pay - low);
+  return { pay, buffer, shortInLow, extraInHigh: high - pay, covers: spending > 0 ? pay >= spending : null, lowMonthsCovered: shortInLow > 0 ? Math.floor(buffer / shortInLow) : null };
+}
+
+// ---------- Subscriptions that do the same job. ----------
+export const OVERLAPS = [['video', 'Streaming video'], ['music', 'Music'], ['cloud', 'Cloud storage'], ['news', 'News and magazines'], ['fitness', 'Fitness apps and gyms'], ['delivery', 'Delivery passes'], ['games', 'Games'], ['software', 'Apps that do the same job']];
+export const SUB_PRICES = [8, 12, 15, 20, 30];
+export function overlapOf(marked = {}, each = 12, { doc, ref, priors, now = new Date(), run = whatIf } = {}) {
+  const groups = OVERLAPS.filter(([k]) => marked[k]), monthly = groups.length * each;
+  const w = monthly > 0 && doc ? run(doc, ref, priors, { spendLess: monthly }, { now }) : null;
+  return { groups: groups.map(g => g[1]), monthly, yearly: monthly * 12, moved: w?.moved ?? null, date: w?.date ?? null };
+}

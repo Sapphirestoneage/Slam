@@ -17,7 +17,7 @@ import { WORRIES, WORRY_GROUPS, worryOf } from '../worries.js';
 import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOME_NOW, HOME_PMI, HOME_CLOSING, HOME_GUESS, HOME_GROWTHS, HOME_INVEST, HOME_HORIZONS, HOME_RENT_GROWTHS, HOME_SELLING, interestNote } from '../home.js';
 import { MIRRORS, mirrorOf, pctToFi, snapshotOf, auditOf, auditWords, FEELINGS, valuesOf, sinceWords } from '../mirror.js';
 import { readFile } from '../import/apps.js';
-import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP, flowTimeOf, designOf, LIFE_AGES, LIFE_PLACE, LIFE_WORK, LIFE_TRAVEL, LIFE_GIVE, receiptOf, CHOICES, PAY_STEPS, COST_STEPS, FEELS, FEEL_SIDES } from '../extras.js';
+import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP, flowTimeOf, designOf, LIFE_AGES, LIFE_PLACE, LIFE_WORK, LIFE_TRAVEL, LIFE_GIVE, receiptOf, CHOICES, PAY_STEPS, COST_STEPS, FEELS, FEEL_SIDES, LINES, seriesOf, PRICES, affordOnce, PAY_PICKS, unevenOf, OVERLAPS, SUB_PRICES, overlapOf } from '../extras.js';
 import { dedupe, importTransactions } from '../import/csv.js';
 
 const [ref, priors, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/priors-2026.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
@@ -396,7 +396,7 @@ function see(p, pl) {
   const ret = tweaksOf(store.doc, ref).find(t => t.id === 'realReturn');
   const f = flowOf(pl.m), d = debtOf(pl.m), t = timelineOf(pl);
   const card = (id, eyebrow, title, body, idea) => h(`div.st-card${ui.flash === id ? '.flash' : ''}`, {}, h('div.st-eyebrow', {}, eyebrow), h('h2', {}, title), body, idea ? credit(idea) : null);
-  const PICS = [['growth', 'Growth'], ['flow', 'Where it goes'], ['money', 'Over time'], ['timeline', 'Your path'], ['debt', 'Debt']];
+  const PICS = [['growth', 'Growth'], ['flow', 'Where it goes'], ['lines', 'Line by line'], ['money', 'Over time'], ['timeline', 'Your path'], ['debt', 'Debt']];
   const FT = flowTimeOf(pl), when = mo => (mo == null ? 'the day work is optional' : mo === 0 ? 'today' : monthWords(mo));
   const pic = PICS.some(([k]) => k === ui.flash) ? (ui.pic = ui.flash) : ui.pic;
   const shown = pic === 'growth' ? card('growth', 'Picture 1 of 5', 'How your money grows', [hold,
@@ -404,6 +404,7 @@ function see(p, pl) {
       h('details.st-fold', {}, h('summary', {}, 'Change the growth rate'),
         h('div.st-chips', {}, ret.options.map(o => chip(o.label, ret.value === o.value, () => { setTweak(store, ret, o.value); render(); }))))], 'growthChart')
     : pic === 'flow' ? card('flow', 'Picture 2 of 5', 'Where your money goes each month', f ? flowChart(f) : h('p.st-soft', {}, 'This picture needs your pay and your spending.'), 'sankey')
+    : pic === 'lines' ? card('lines', 'Line by line', 'Every part of your money, year by year', linesPicture(pl), null)
     : pic === 'money' ? card('money', 'Over time', 'Where your money goes each month, and when it moves on', !FT ? h('p.st-soft', {}, 'This picture needs money left over each month.') : views('money', [
         ['road', 'Road', () => h('div.st-road', {}, FT.phases.map((ph, i) => h(`div.st-leg.c${i % 4}`, { style: { flexGrow: String(Math.max(1, Math.sqrt(ph.months ?? 60))) } }, h('b', {}, ph.name), h('span', {}, `${when(ph.from)} to ${when(ph.to)}`), h('span', {}, ph.total != null ? `${money(ph.total)} in all` : `${money(ph.monthly)} a month`))))],
         ['buckets', 'Buckets', () => h('div.st-buckets', {}, FT.phases.map((ph, i) => h('div.st-bk', {}, h(`div.st-bucket.big.c${i % 4}`, {}, h('i', { style: { height: i === 0 ? '12%' : '0%' } })), h('b', {}, ph.name), h('span', {}, ph.target != null ? `${money(ph.target)} to fill` : ph.total != null ? `${money(ph.total)} in all` : 'Keeps filling'), h('span', {}, i === 0 ? 'Filling now' : `Starts ${when(ph.from)}`))))],
@@ -434,6 +435,29 @@ function statementCard(p, pl) {
     ui.audit ? h('p.st-small.st-soft', {}, 'Use it only if the file covers every account you spend from. One card alone will read low.') : null,
     ui.auditNote ? h('p.st-note', { role: 'status' }, ui.auditNote) : null,
     h('div.st-row', { style: { marginTop: '10px' } }, h('label.st-btn', { for: 'stmt-file', class: a ? '' : 'primary' }, a ? 'Pick a different file' : 'Pick a file'), pickFile));
+}
+
+// ---------- Line by line: tap a line on or off ----------
+function linesPicture(pl) {
+  const S = seriesOf(pl); if (!S || S.points.length < 2) return h('p.st-soft', {}, 'This picture needs your numbers.');
+  const on = mine().lines || ['invested', 'putIn', 'growth'], shown = LINES.filter(([k]) => on.includes(k));
+  const toggle = k => { const next = on.includes(k) ? on.filter(x => x !== k) : [...on, k]; remember({ lines: next.length ? next : [k] }); render(); };
+  const legend = h('div.st-chips', { role: 'group', 'aria-label': 'Lines to show' }, LINES.map(([k, l], i) => h(`button.st-chip.st-lkey.l${i}`, { type: 'button', 'aria-pressed': on.includes(k) ? 'true' : 'false', onClick: () => toggle(k) }, h('i'), l)));
+  const chart = () => { const W = 360, H = 230, L = 46, R = 8, T = 10, B = 26, P = S.points, vals = shown.flatMap(([k]) => P.map(p => p[k]));
+    const max = Math.max(1, ...vals), min = Math.min(0, ...vals), X = i => L + (W - L - R) * (i / (P.length - 1)), Y = v => T + (H - T - B) * (1 - (v - min) / (max - min));
+    const short = v => (Math.abs(v) >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}k` : `$${Math.round(v)}`);
+    const ticks = [min, min + (max - min) / 2, max], last = P.at(-1);
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); el.setAttribute('viewBox', `0 0 ${W} ${H}`); el.setAttribute('class', 'st-chart'); el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', `${shown.map(([k, l]) => `${l} ${short(last[k])}`).join(', ')} after ${Math.round(last.year)} years`);
+    el.innerHTML = ticks.map(t => `<line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}" class="st-c-grid"/><text x="${L - 4}" y="${Y(t) + 4}" text-anchor="end" class="st-c-axis">${short(t)}</text>`).join('')
+      + [0, Math.floor((P.length - 1) / 2), P.length - 1].map(i => `<text x="${X(i)}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === P.length - 1 ? 'end' : 'middle'}" class="st-c-axis">${P[i].age != null ? `Age ${Math.round(P[i].age)}` : `Year ${P[i].year}`}</text>`).join('')
+      + shown.map(([k]) => `<polyline fill="none" class="st-line l${LINES.findIndex(x => x[0] === k)}" points="${P.map((p, i) => `${X(i).toFixed(1)},${Y(p[k]).toFixed(1)}`).join(' ')}"/>`).join('');
+    return el; };
+  const table = () => h('div.st-rows', {}, h('div.st-srow4.head', { style: { gridTemplateColumns: `3.5rem repeat(${shown.length}, 1fr)` } }, h('span', {}, 'Age'), shown.map(([, l]) => h('span', {}, l))),
+    S.points.filter((p, i) => i === 0 || i === S.points.length - 1 || p.year % 5 === 0).map(p => h('div.st-srow4', { style: { gridTemplateColumns: `3.5rem repeat(${shown.length}, 1fr)` } }, h('span', {}, String(Math.round(p.age ?? p.year))), shown.map(([k]) => h('span', {}, money(Math.round(p[k])))))));
+  const last = S.points.at(-1);
+  return [legend, views('lines', [['chart', 'Chart', chart], ['table', 'Numbers', table], ['words', 'In words', () => h('p', {}, `After ${Math.round(last.year)} years: ${shown.map(([k, l]) => `${l.toLowerCase()} ${money(Math.round(last[k]))}`).join(', ')}.`)]]),
+    h('p.st-small.st-soft', {}, `A simple walk of your plan in today's dollars: what you keep each month pays debt first, then fills your cash, then is invested. A loan with a payment on file walks down on it; one without holds flat until you add it in Sharpen. Tap a line to hide it.`)];
 }
 
 // ---------- Sharpen it: levels 2 to 10 ----------
@@ -564,6 +588,32 @@ function movesCard(pl) {
     h('p.st-small.st-soft', {}, 'The dates are worked out from your numbers. The effects on the rest of life are the usual ones, from the SPARKS tradeoff notes. Yours may differ.')]);
 }
 
+function affordCard(pl) {
+  const price = mine().price1 ?? 1000, x = pl.m.inputs, A = affordOnce({ price, cash: x.cash ?? 0, spending: x.spending ?? 0, surplus: Math.max(0, pl.m.surplus?.value ?? 0), ret: x.realReturn ?? 0.05 });
+  return foldCard('afford', 'Can I afford this?', money(price), [
+    chipRow('It costs', PRICES, price, v => money(v), v => { remember({ price1: v }); ui.flash = null; ui.openCard = 'afford'; render(); }),
+    h('p.st-readout', { role: 'status' }, A.fromCash ? `Your cash covers it and leaves ${money(Math.round(A.cashLeft))}${A.monthsLeft != null ? `, about ${A.monthsLeft.toFixed(1)} months of spending` : ''}.` : `It is ${money(Math.round(-A.cashLeft))} more than your cash on hand.`, A.monthsOfKeeping != null ? ` It is ${A.monthsOfKeeping < 1 ? `${Math.round(A.monthsOfKeeping * 30)} days` : `${A.monthsOfKeeping.toFixed(1)} months`} of what you keep.` : ''),
+    h('p.st-small', {}, `Left invested for ${A.years} years, the same ${money(price)} would be about ${money(Math.round(A.later))} in today's dollars. Worth it is your call: that is the trade.`),
+    !A.fromCash && A.monthsOfKeeping != null ? h('p.st-small', {}, `Saving for it first takes about ${Math.ceil(A.monthsOfKeeping)} ${Math.ceil(A.monthsOfKeeping) === 1 ? 'month' : 'months'}.`) : null]);
+}
+function overlapCard() {
+  const st = mine().overlap || {}, marked = st.marked || {}, each = st.each ?? 12, O = overlapOf(marked, each, { doc: store.doc, ref, priors });
+  const save = patch => { remember({ overlap: { ...st, ...patch } }); ui.flash = null; ui.openCard = 'overlap'; render(); };
+  return foldCard('overlap', 'Subscriptions that do the same job', O.monthly ? `${money(O.monthly)} a month` : '', [
+    h('div.st-field', {}, h('div.st-flabel', {}, 'I pay for two or more of these'), h('div.st-chips', {}, OVERLAPS.map(([k, l]) => chip(l, !!marked[k], () => save({ marked: { ...marked, [k]: !marked[k] } }))))),
+    chipRow('Each one costs about, a month', SUB_PRICES, each, v => money(v), v => save({ each: v })),
+    h('p.st-readout', { role: 'status' }, O.monthly ? `Keeping one in each group and dropping the other frees about ${money(O.monthly)} a month, ${money(O.yearly)} a year.${O.moved > 0 ? ` Invested, work becomes optional ${spanWords(O.moved)} sooner.` : ''}` : 'Tap any group where you pay for two that do the same thing.'),
+    O.monthly ? h('p.st-small', {}, 'Is one worth keeping? Ask: did I open it in the last 30 days, and would I pay for it again today?') : null,
+    h('div.st-row', {}, btn('Price any monthly cost', () => go('tune', { flash: 'price' }), 'slim'))]);
+}
+function unevenCard(pl) {
+  const st = mine().uneven || {}, U = unevenOf({ low: st.low, usual: st.usual, high: st.high, spending: pl.m.inputs.spending ?? 0 });
+  const save = patch => { remember({ uneven: { ...st, ...patch } }); ui.flash = null; ui.openCard = 'uneven'; render(); };
+  return foldCard('uneven', 'My pay is uneven: what do I pay myself?', U ? `${money(U.pay)} a month` : '3 taps', [
+    chipRow('A slow month brings in', PAY_PICKS, st.low ?? null, v => money(v), v => save({ low: v })), chipRow('A usual month', PAY_PICKS, st.usual ?? null, v => money(v), v => save({ usual: v })), chipRow('A great month', PAY_PICKS, st.high ?? null, v => money(v), v => save({ high: v })),
+    h('p.st-readout', { role: 'status' }, !U ? 'Tap all three, from slow to great.' : `Pay yourself ${money(U.pay)} a month, the same every month. Keep ${money(U.buffer)} in a holding account so slow months do not show up in your life.`),
+    U ? h('p.st-small', {}, U.shortInLow > 0 ? `A slow month comes up ${money(U.shortInLow)} short, and the buffer covers ${U.lowMonthsCovered} of those in a row. ` : '', `A great month leaves ${money(U.extraInHigh)}: refill the buffer first, then your next step.`, U.covers === false ? ` Your spending is above ${money(U.pay)}, so the first job is the gap between them.` : '') : null]);
+}
 function nextCard() {
   const ans = mine().next || {}, N = nextDollarOf(ans);
   return foldCard('next', 'Which account gets my next dollar?', N.here ? N.here.name : '5 taps', [
@@ -656,7 +706,7 @@ function tune(p, pl) {
           h('div.st-rows', {}, h('div.st-srow4.head', {}, h('span', {}, 'Year'), h('span', {}, 'Interest'), h('span', {}, 'Paid down'), h('span', {}, 'Still owed')),
             scheduleOf(H.loan, { rate: H.rate }).filter(r => r.year <= 5 || r.year % 5 === 0).map(r => h('div.st-srow4', {}, h('span', {}, String(r.year)), h('span', {}, money(Math.round(r.interest))), h('span', {}, money(Math.round(r.paid))), h('span', {}, money(Math.round(r.balance)))))))); })(),
     valueCard(pl),
-    spendCard(p, pl), feesCard(pl), movesCard(pl), nextCard(), raiseCard(pl), startedCard(pl), parentsCard(),
+    spendCard(p, pl), feesCard(pl), movesCard(pl), nextCard(), raiseCard(pl), startedCard(pl), parentsCard(), affordCard(pl), overlapCard(), unevenCard(pl),
     h('div.st-card', {}, tweaks.map(t => h(`details.st-tweak${ui.flash === t.id ? '.flash' : ''}`, { open: ui.flash === t.id || ui.tweak === t.id ? true : null, onToggle: e => { if (e.target.open) ui.tweak = t.id; } },
       h('summary.st-sum', {}, h('strong', {}, t.label), h('span.st-soft', {}, t.options.find(o => o.value === t.value)?.label ?? '')), h('div.st-soft.st-small', {}, t.help),
       h('div.st-opts', {}, t.options.map(o => {

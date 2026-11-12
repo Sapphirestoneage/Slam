@@ -276,3 +276,10 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-road { display: flex; flex-wrap: wrap; gap: 4px; } .st-leg { flex: 1 1 140px; min-width: 0; padding: 10px; border-radius: 10px; border: 2px solid var(--primary); display: grid; gap: 2px; font-size: .875rem; }
 .st-leg.c0 { background: var(--primary); color: var(--on-primary); } .st-leg.c1, .st-leg.c3 { background: var(--card); } .st-leg.c2 { background: var(--border-row); }
 .st-buckets { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; text-align: center; font-size: .875rem; } .st-bk { display: grid; gap: 2px; }
+.st-line { stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.st-line.l0, .st-lkey.l0 i { stroke: #1d4ed8; background: #1d4ed8; } .st-line.l1, .st-lkey.l1 i { stroke: #0f766e; background: #0f766e; } .st-line.l1 { stroke-dasharray: 8 4; }
+.st-line.l2, .st-lkey.l2 i { stroke: #7c3aed; background: #7c3aed; } .st-line.l2 { stroke-dasharray: 2 5; } .st-line.l3, .st-lkey.l3 i { stroke: #0891b2; background: #0891b2; } .st-line.l3 { stroke-dasharray: 12 4 2 4; }
+.st-line.l4, .st-lkey.l4 i { stroke: #b45309; background: #b45309; } .st-line.l4 { stroke-dasharray: 5 5; } .st-line.l5, .st-lkey.l5 i { stroke: #334155; background: #334155; }
+.st-lkey { gap: 8px; } .st-lkey i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; flex: none; }
+.st-lkey[aria-pressed="false"] i { opacity: .35; }
+.st-lkey[aria-pressed="true"] { background: var(--card); color: var(--text); border-color: var(--text); border-width: 3px; }
