@@ -28,7 +28,7 @@ export const WORRIES = [
     see: [['My lifetime plan', 'life', 'scenarios'], ['My milestones', 'plan', 'milestones'], ['My finish level', 'sharpen', 'finish']],
     steps: ['Set the wedding budget from cash you have or will save by the date.', 'Share your full pictures with each other: debts, credit, accounts.', 'Update who gets each account and policy if something happens to you.', 'Talk through one shared goal and one goal each of you keeps.'] },
   { id: 'fights', group: 'people', label: 'We fight about money',
-    see: [['Where my money goes', 'see', 'flow'], ['What a monthly cost takes', 'tune', 'price'], ['My next step', 'plan', 'next']],
+    see: [['A money meeting for two', 'meet', null], ['Where my money goes', 'see', 'flow'], ['My next step', 'plan', 'next']],
     steps: ['Pick a calm time, 20 minutes, with the numbers in front of both of you.', 'Each name one thing money is for, before talking about any purchase.', 'Agree on a no-questions amount each of you spends freely each month.', 'Choose one next step together and put the next talk on the calendar.'] },
   { id: 'split', group: 'people', label: 'A breakup or divorce',
     see: [['My plan on my own numbers', 'numbers', null], ['How long my cash lasts', 'plan', null], ['Practice a big bill', 'drills', null]],
@@ -47,7 +47,7 @@ export const WORRIES = [
     steps: ['There is no rush on big choices. Most can wait months.', 'Gather the basics: death certificates, accounts, policies, bills in their name.', 'Keep any money that arrives in savings until you are ready to decide.', 'An estate lawyer or a fee-only planner can carry the paperwork with you.'] },
 
   { id: 'advisor', group: 'money', label: 'I want out of my advisor',
-    see: [['My accounts level', 'sharpen', 'accounts'], ['How my money grows', 'see', 'growth'], ['All my numbers', 'all', 'statements']],
+    see: [['What my fees cost me', 'tune', 'fees'], ['My accounts level', 'sharpen', 'accounts'], ['All my numbers', 'all', 'statements']],
     steps: ['List every account they hold for you: type, balance, and what you pay in fees.', 'Open the same account types at the firm you are moving to.', 'Ask the new firm to pull the accounts over. A direct transfer of a retirement account is not a taxable event.', 'Ask the old firm what it charges to close or transfer each account.', 'Insurance policies are separate. If one is whole life, pick "I was sold whole life insurance" for its own steps.'] },
   { id: 'wholeLife', group: 'money', label: 'I was sold whole life insurance',
     see: [['What a monthly cost takes', 'tune', 'price'], ['My safety level', 'sharpen', 'safety'], ['All my numbers', 'all', 'statements']],

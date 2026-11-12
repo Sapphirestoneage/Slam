@@ -62,6 +62,7 @@ export const IDEAS = [
   { id: 'scenarios', name: 'Life in layers', by: ['slam', 'projectionlab'], plain: 'A kid, time off, part-time years, a home: each a block you place on your timeline and stack.', where: { stage: 'life', at: 'scenarios' } },
   { id: 'sequenceRisk', name: 'Sequence of returns risk', by: ['ern'], plain: 'A bad market early in retirement matters more than one later. The history test shows which start years hurt.', where: { stage: 'life', at: 'stress' } },
   { id: 'quickWins', name: 'Stackable quick wins', by: ['choosefi'], plain: 'Small moves that add up: travel rewards, bank bonuses, cutting a bill.', where: null },
+  { id: 'dieWithZero', name: 'The spend-more number', by: ['perkins', 'slam'], plain: 'How much more you could spend every month and still have work optional by the age you pick.', where: { stage: 'tune', at: 'spendMore' } },
   { id: 'memoryDividend', name: 'Memory dividends and time buckets', by: ['perkins'], plain: 'Matching spending to the years you can best enjoy it.', where: null },
 ];
 

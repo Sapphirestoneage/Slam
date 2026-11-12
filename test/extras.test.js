@@ -1,0 +1,54 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spendMoreOf, feesOf, movesOf, MOVES, LIFE_SIDES, CHECKUP, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet } from '../js/extras.js';
+
+// A stand-in for the journey's what-if: months to FI rise 1 for each $10 more spent, from 100.
+const fake = (doc, ref, priors, { spendLess = 0, earnMore = 0 } = {}) => { const after = 100 - spendLess / 10 - earnMore / 20; return { before: 100, after, moved: 100 - after, surplus: 2000, date: 'x' }; };
+
+test('how much more could I spend: the most a month that still gets there by the age', () => {
+  // Age 55, by 65: 120 months allowed. 100 months now, so 20 months of room, at $10 a month each: $200.
+  const r = spendMoreOf({}, {}, {}, { age: 55, byAge: 65, run: fake });
+  assert.ok(r.on && r.amount >= 190 && r.amount <= 200, String(r.amount));
+  assert.deepEqual(spendMoreOf({}, {}, {}, { age: 60, byAge: 65, run: fake }), { amount: 0, byAge: 65, on: false }); // 60 months allowed, 100 needed
+  assert.equal(spendMoreOf({}, {}, {}, { age: 30, byAge: 67, run: fake }).amount, 2000);                           // everything left over still fits
+  assert.equal(spendMoreOf({}, {}, {}, { age: 70, byAge: 65, run: fake }), null);
+});
+
+test('what fees cost, by hand: $100,000 for 30 years at 5% and at 4%', () => {
+  const f = feesOf({ balance: 100000, monthly: 0, years: 30, ret: 0.05, fee: 0.01, low: 0 });
+  assert.ok(Math.abs(f.without - 432194.24) < 0.01); assert.ok(Math.abs(f.withFee - 324339.75) < 0.01); assert.ok(Math.abs(f.cost - 107854.49) < 0.01);
+  const g = feesOf({ balance: 0, monthly: 100, years: 2, ret: 0, fee: 0, low: 0 }); assert.equal(g.without, 2400); assert.equal(g.cost, 0);
+  assert.ok(feesOf({ balance: 50000, monthly: 500, years: 30, ret: 0.05, fee: 0.015 }).cost > feesOf({ balance: 50000, monthly: 500, years: 30, ret: 0.05, fee: 0.005 }).cost);
+});
+
+test('which move fits: sized from the household, sorted by what you care about', () => {
+  const pl = { m: { inputs: { takeHome: 5000, spending: 4000 } } };
+  const all = movesOf({}, {}, {}, pl, { run: fake });
+  assert.equal(all.length, MOVES.length); assert.equal(all[0].id, 'move');               // 25% of $4,000 = $1,000 less: 100 months
+  assert.equal(all.find(m => m.id === 'raise').amount, 500); assert.equal(all.find(m => m.id === 'hack').amount, 480);
+  const care = movesOf({}, {}, {}, pl, { care: ['time'], run: fake });
+  assert.ok(care.filter(m => m.fits).every(m => m.sides.time >= 0)); assert.ok(care.findIndex(m => !m.fits) > care.findIndex(m => m.fits));
+  assert.deepEqual(care.find(m => m.id === 'side').costs, ['time']);
+  assert.deepEqual(movesOf({}, {}, {}, { m: { inputs: {} } }, { run: fake }), []);
+  for (const m of MOVES) assert.deepEqual(Object.keys(m.sides).sort(), LIFE_SIDES.map(s => s[0]).sort());
+});
+
+test('the checkup counts what is covered and lists what is not', () => {
+  const c = checkupOf({ match: 'yes', term: 'na', will: 'no', freeze: 'unsure' });
+  assert.equal(c.have, 1); assert.equal(c.of, CHECKUP.length - 1); assert.equal(c.answered, 4); assert.deepEqual(c.todo.map(t => t.id), ['will', 'freeze']);
+});
+
+test('a money meeting: answers travel in a link and sit side by side', () => {
+  const a = { for: 'Safety', who: 'Me', free: '$100' }, b = { for: 'Freedom', who: 'You', free: '$100' };
+  assert.deepEqual(unpackMeet(packMeet(a)), a); assert.equal(unpackMeet('not a link'), null); assert.deepEqual(unpackMeet(packMeet({ for: 'Yachts', who: 'Me' })), { who: 'Me' });
+  const m = meetOf(a, b); assert.equal(m.done, false); assert.equal(m.same, 2); assert.deepEqual(m.differ.map(r => r.id), ['for']);
+  const full = Object.fromEntries(MEET.map(q => [q.id, q.a[0]])); assert.equal(meetOf(full, full).done, true);
+  assert.equal(meetOf({ who: 'Me' }, { who: 'Me' }).rows.find(r => r.id === 'who').same, false); // both said "me": that is a difference
+});
+
+test('the words: plain, no em dashes, no verdict words', () => {
+  const words = [...CHECKUP.flatMap(c => [c.q, c.next]), ...HAPPENS.flatMap(h => [h.title, ...h.steps]), ...MEET.flatMap(m => [m.q, ...m.a]), ...MOVES.map(m => m.name)].join(' ');
+  assert.doesNotMatch(words, new RegExp(String.fromCharCode(8212))); assert.doesNotMatch(words, /\b(should|must|bad|wrong|fail|warning|risky|danger)\b/i);
+  assert.equal(HAPPENS.length, 3); for (const h of HAPPENS) assert.ok(h.steps.length >= 5 && /^What to do first/.test(h.steps.at(-1)));
+});

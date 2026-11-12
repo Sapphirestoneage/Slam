@@ -17,6 +17,7 @@ import { WORRIES, WORRY_GROUPS, worryOf } from '../worries.js';
 import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOME_NOW, HOME_PMI, HOME_CLOSING, HOME_GUESS, HOME_GROWTHS, HOME_INVEST, HOME_HORIZONS, HOME_RENT_GROWTHS, HOME_SELLING, interestNote } from '../home.js';
 import { MIRRORS, mirrorOf, pctToFi, snapshotOf, auditOf, auditWords, FEELINGS, valuesOf, sinceWords } from '../mirror.js';
 import { readFile } from '../import/apps.js';
+import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet } from '../extras.js';
 import { dedupe, importTransactions } from '../import/csv.js';
 
 const [ref, priors, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/priors-2026.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
@@ -63,8 +64,9 @@ async function unpack(text) {
   return importFile(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text());
 }
 const carried = location.hash.startsWith(LINK) ? location.hash.slice(LINK.length) : null;
+const MEETLINK = '#/meet/', meetIn = location.hash.startsWith(MEETLINK) && location.hash.length > MEETLINK.length ? unpackMeet(location.hash.slice(MEETLINK.length)) : null;
 if (carried) history.replaceState(null, '', location.pathname); // the plan does not stay in the address bar
-const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null, price: null, more: false, pic: 'growth', drill: null, tweak: null, worryGroup: null, homeOpen: false, stepsOpen: false, stmtOpen: false, linkNote: null, slot: 0, audit: null, auditNote: null, since: null, valuesOpen: false, loadNote: null };
+const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null, price: null, more: false, pic: 'growth', drill: null, tweak: null, worryGroup: null, homeOpen: false, stepsOpen: false, stmtOpen: false, linkNote: null, openCard: null, meetNote: null, slot: 0, audit: null, auditNote: null, since: null, valuesOpen: false, loadNote: null };
 const money = v => fmt.money(v);
 const P = () => progressOf(store.doc, ref);
 const plan = () => planOf(store.doc, ref, priors, { flags });
@@ -105,7 +107,7 @@ const basisTag = p => h(`span.st-tag${p.basis === 'yours' ? '.yours' : ''}`, {},
 
 // Four tabs and More: everything fits a phone without sideways scrolling.
 const TABS = [['plan', 'Plan'], ['see', 'See'], ['drills', 'Practice'], ['sharpen', 'Sharpen']];
-const MORE = [['you', 'About you'], ['numbers', 'Your five numbers'], ['life', 'Lifetime plan'], ['tune', 'What if'], ['all', 'All your numbers'], ['summary', 'One-page summary'], ['credits', 'Credits']];
+const MORE = [['you', 'About you'], ['numbers', 'Your five numbers'], ['life', 'Lifetime plan'], ['tune', 'What if'], ['all', 'All your numbers'], ['summary', 'One-page summary'], ['meet', 'Money meeting for two'], ['credits', 'Credits']];
 function top() {
   const p = P();
   const tab = (id, label) => h('button.st-stage', { type: 'button', disabled: !p.hasAge, title: p.hasAge ? null : 'Pick the year you were born first', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label);
@@ -342,6 +344,7 @@ function yourPlan(p, pl) {
       h('p', {}, 'That is how long you could go with no pay coming in, at what you spend now.'),
       h('div.st-row', {}, btn('Practice it', () => go('drills'), 'primary'), btn('Test my plan against history', () => go('life', { flash: 'stress' })))),
     enjoy: h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Yours to enjoy'), h('div.st-soft', {}, 'Left over each month, after everything'), h('div.st-big', {}, N2('surplus')),
+      (() => { const sm = p.done ? spendMoreOf(store.doc, ref, priors, { age: pl.age, byAge: mine().spendBy ?? 65 }) : null; return sm?.on && sm.amount > 0 ? h('p', { style: { fontWeight: 700 } }, `You could spend ${money(sm.amount)} more a month and work would still be optional by ${sm.byAge}.`) : null; })(),
       h('p', {}, 'See what you love spending on and what you only put up with, and what any monthly cost takes from your date.'),
       h('div.st-row', {}, btn('What do I love spending on?', () => go('tune', { flash: 'values' }), 'primary'), btn('Price a monthly cost', () => go('tune', { flash: 'price' })))),
   };
@@ -476,6 +479,11 @@ function sharpen(p, pl) {
     ui.note && !ui.noteAt ? h('div.st-note', { role: 'status' }, ui.note) : null,
     !p.done ? h('div.st-card', {}, h('div.st-levelhead', {}, h('span.st-lvl', {}, 1), h('div', {}, h('h2', { style: { margin: 0 } }, 'Level 1: the five questions'), h('div.st-soft.st-small', {}, `${p.count} of ${p.total} answered.`)), btn('Finish it', () => go('numbers', { q: p.next }), 'slim primary'))) : null,
     statementCard(p, pl),
+    (() => { const ans = mine().checkup || {}, C = checkupOf(ans);
+      return foldCard('checkup', 'The checkup: what a planner would ask', C.answered ? `${C.have} of ${C.of} covered` : '11 taps', [
+        CHECKUP.map(c => h('div.st-field', {}, h('div.st-flabel', {}, c.q), h('div.st-chips', {}, CHECK_ANSWERS.map(([k, l]) => chip(l, ans[c.id] === k, () => { remember({ checkup: { ...ans, [c.id]: k } }); ui.flash = null; ui.openCard = 'checkup'; render(); }))),
+          ans[c.id] === 'no' || ans[c.id] === 'unsure' ? h('p.st-small', { style: { margin: '6px 0 0' } }, c.next) : null)),
+        C.todo.length ? h('p.st-readout', { role: 'status' }, `${C.todo.length} to look into. Each one shows its first step above.`) : C.answered === CHECKUP.length ? h('p.st-readout', { role: 'status' }, 'Everything here is covered.') : null]); })(),
     L.filter(x => x.state === 'open' || ui.level === x.id || ui.flash === x.id).map(card),
     (() => { const rest = L.filter(x => x.state !== 'open' && ui.level !== x.id && ui.flash !== x.id); return rest.length ? h('details.st-card', {}, h('summary.st-sum', {}, h('strong', {}, 'Levels you finished'), h('span.st-soft', {}, String(rest.length))), rest.map(card)) : null; })(),
     h('div.st-row', {}, btn('See all your numbers', () => go('all'), 'primary'), btn('See it in pictures', () => go('see'))),
@@ -496,6 +504,39 @@ function valueCard(pl) {
         V.marked ? h('dl.st-kv', {}, FEELINGS.map(([k, l]) => [h('dt', {}, l), h('dd', {}, `${money(V.totals[k])} a month`)])) : null,
         V.loose > 0 ? h('p.st-readout', { role: 'status' }, `${money(V.loose)} a month goes to things you tolerate or dislike. `, w?.moved > 0 ? `Trimming half of it moves your date ${spanWords(w.moved)} sooner, to ${w.date}.` : `Half of it is ${money(V.half)} a month.`) : null,
         credit('valueMatrix')]);
+}
+
+// ---------- How much more could I spend, what my fees cost, and which move fits my life ----------
+const foldCard = (id, title, right, body) => h(`details.st-card${ui.flash === id ? '.flash' : ''}`, { open: ui.flash === id || ui.openCard === id ? true : null, onToggle: e => { if (e.target.open) ui.openCard = id; else if (ui.openCard === id) ui.openCard = null; } }, h('summary.st-sum', {}, h('strong', {}, title), h('span.st-soft', {}, right)), body);
+const chipRow = (label, list, on, words, onPick) => h('div.st-field', {}, h('div.st-flabel', {}, label), h('div.st-chips', {}, list.map(v => chip(words(v), on === v, () => onPick(v)))));
+function spendCard(p, pl) {
+  const by = mine().spendBy ?? 65, sm = p.done ? spendMoreOf(store.doc, ref, priors, { age: pl.age, byAge: by }) : null;
+  return foldCard('spendMore', 'How much more could I spend?', sm?.on ? `${money(sm.amount)} a month` : '', [
+    chipRow('And still have work optional by age', SPEND_AGES.filter(a => a > pl.age), by, v => String(v), v => { remember({ spendBy: v }); ui.flash = null; ui.openCard = 'spendMore'; render(); }),
+    h('p.st-readout', { role: 'status' }, !p.done ? 'Answer the five questions first.' : !sm ? 'Pick a later age.' : !sm.on ? `On your numbers today, work is not optional by ${by} yet, so there is no room to add. Your next step is what moves it.` : sm.amount > 0 ? `You could spend ${money(sm.amount)} more a month, every month, and still get there by ${by}. That is ${money(sm.amount * 12)} a year.` : `You are right on the line for ${by}.`),
+    h('p.st-small.st-soft', {}, 'It counts the higher spending for the rest of your life, not only now.'), credit('dieWithZero')]);
+}
+function feesCard(pl) {
+  const f = mine().fees || {}, fee = f.fee ?? 0.01, years = f.years ?? 30, x = pl.m.inputs;
+  const R = feesOf({ balance: x.invested ?? 0, monthly: pl.m.investing?.monthly ?? 0, years, ret: x.realReturn ?? 0.05, fee });
+  const pickFee = patch => { remember({ fees: { ...f, ...patch } }); ui.flash = null; ui.openCard = 'fees'; render(); };
+  return foldCard('fees', 'What are my fees costing me?', `${money(Math.round(R.cost))} over ${years} years`, [
+    chipRow('What you pay a year, all in (advisor plus funds)', FEE_PICKS, fee, v => `${+(v * 100).toFixed(2)}%`, v => pickFee({ fee: v })),
+    chipRow('Over how many years', FEE_YEARS, years, v => String(v), v => pickFee({ years: v })),
+    h('dl.st-kv', {}, h('dt', {}, `At ${+(fee * 100).toFixed(2)}% a year`), h('dd', {}, money(Math.round(R.withFee))), h('dt', {}, 'In a low-fee index fund (0.05%)'), h('dd', {}, money(Math.round(R.without))), h('dt', {}, 'The difference'), h('dd', {}, h('strong', {}, money(Math.round(R.cost))))),
+    h('p.st-readout', { role: 'status' }, R.cost > 0 ? `That is ${fmt.pct(R.share)} of what you would have had. It uses what you have invested today and what your plan adds each month.` : 'At that fee there is nothing to save.'),
+    h('p.st-small.st-soft', {}, 'Find the fee on your statement: an advisory fee is a percent of your balance, and each fund lists its expense ratio.')]);
+}
+function movesCard(pl) {
+  const care = mine().care || [], M = movesOf(store.doc, ref, priors, pl, { care, housing: mine().parts?.housing ?? null });
+  const toggle = k => { remember({ care: care.includes(k) ? care.filter(x => x !== k) : [...care, k] }); ui.flash = null; ui.openCard = 'moves'; render(); };
+  const mark = v => (v > 0 ? 'helps' : v < 0 ? 'costs you' : 'about the same');
+  return foldCard('moves', 'Which move fits my life?', M.length ? `${M.filter(m => m.fits).length} of ${M.length} fit` : '', !M.length ? h('p', {}, 'This needs your pay and your spending.') : [
+    h('div.st-field', {}, h('div.st-flabel', {}, 'What I will not give up (tap any)'), h('div.st-chips', {}, LIFE_SIDES.map(([k, l]) => chip(l, care.includes(k), () => toggle(k))))),
+    M.map(m => h(`details.st-tweak`, {}, h('summary.st-sum', {}, h('strong', {}, m.name), h('span.st-soft', {}, m.moved > 0 ? `${spanWords(m.moved)} sooner` : 'No change')),
+      h('p.st-small', {}, `${money(m.amount)} a month ${m.kind === 'more' ? 'more coming in' : 'less going out'}. `, m.date ? `Work becomes optional ${m.date}. ` : '', m.fits ? '' : `It usually costs you: ${m.costs.map(k => LIFE_SIDES.find(s => s[0] === k)[1].toLowerCase()).join(', ')}.`),
+      h('dl.st-kv', {}, LIFE_SIDES.map(([k, l]) => [h('dt', {}, l), h('dd', {}, mark(m.sides[k]))])))),
+    h('p.st-small.st-soft', {}, 'The dates are worked out from your numbers. The effects on the rest of life are the usual ones, from the SPARKS tradeoff notes. Yours may differ.')]);
 }
 
 // ---------- What if ----------
@@ -555,6 +596,7 @@ function tune(p, pl) {
           h('div.st-rows', {}, h('div.st-srow4.head', {}, h('span', {}, 'Year'), h('span', {}, 'Interest'), h('span', {}, 'Paid down'), h('span', {}, 'Still owed')),
             scheduleOf(H.loan, { rate: H.rate }).filter(r => r.year <= 5 || r.year % 5 === 0).map(r => h('div.st-srow4', {}, h('span', {}, String(r.year)), h('span', {}, money(Math.round(r.interest))), h('span', {}, money(Math.round(r.paid))), h('span', {}, money(Math.round(r.balance)))))))); })(),
     valueCard(pl),
+    spendCard(p, pl), feesCard(pl), movesCard(pl),
     h('div.st-card', {}, tweaks.map(t => h(`details.st-tweak${ui.flash === t.id ? '.flash' : ''}`, { open: ui.flash === t.id || ui.tweak === t.id ? true : null, onToggle: e => { if (e.target.open) ui.tweak = t.id; } },
       h('summary.st-sum', {}, h('strong', {}, t.label), h('span.st-soft', {}, t.options.find(o => o.value === t.value)?.label ?? '')), h('div.st-soft.st-small', {}, t.help),
       h('div.st-opts', {}, t.options.map(o => {
@@ -683,6 +725,9 @@ function drills(p, pl) {
       h('p', {}, 'A money fear, run on your own numbers. Then one small rep in real life.'),
       h('span.st-meter', {}, `${n} of ${all.length} done`, h('span.st-bar', {}, h('b', { style: { width: `${all.length ? Math.max(2, n / all.length * 100) : 0}%` } })))),
     D.map(drill),
+    h('h2', { style: { marginTop: '8px' } }, 'What actually happens'),
+    h('p.st-soft.st-small', {}, 'The real order of events, so the fear has edges.'),
+    HAPPENS.map(x => h('details.st-card', {}, h('summary.st-sum', {}, h('strong', {}, x.title), h('span.st-soft', {}, `${x.steps.length} steps`)), h('ol.st-steps', {}, x.steps.map(t => h('li', {}, t))))),
     S.length ? h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Skills'), h('h2', {}, `${S.length} money ${S.length === 1 ? 'skill' : 'skills'} your plan says you have not used yet`), h('p', { style: { marginBottom: 0 } }, 'Each is a few minutes, and each is worth a number on your plan.')) : null,
     S.map(skill),
     h('div.st-row', {}, btn('Sharpen it', () => go('sharpen'), 'primary'), btn('Your lifetime plan', () => go('life'))),
@@ -715,7 +760,26 @@ function summary(p, pl) {
   ];
 }
 
-const SCREENS = { summary, you, numbers, plan: yourPlan, see, life, drills, sharpen, tune, all: allNumbers, credits };
+// ---------- A money meeting for two ----------
+function meet() {
+  const st = mine().meet || {}, a = st.mine || {}, theirs = st.theirs || null, M = meetOf(a, theirs || {});
+  const mineDone = MEET.every(m => a[m.id]);
+  const pick = (id, v) => { remember({ meet: { ...st, mine: { ...a, [id]: v } } }); render(); };
+  const link = `${location.origin}${location.pathname}${MEETLINK}${packMeet(a)}`;
+  const copy = async () => { try { await navigator.clipboard.writeText(link); ui.meetNote = 'Link copied. Send it to them. It carries your eight answers and nothing else.'; } catch { ui.meetNote = link; } render(); };
+  return [
+    h('div.st-card.hero', {}, h('h1', {}, 'A money meeting for two'), h('p', { style: { marginBottom: 0 } }, theirs && !mineDone ? 'Their answers are in. Yours first, on your own. Then you see both.' : 'Eight taps each, on your own phones. Then the answers sit side by side, and you talk about the ones that differ.')),
+    !mineDone || !theirs ? h('div.st-card', {}, MEET.map(m => h('div.st-field', {}, h('div.st-flabel', {}, m.q), h('div.st-chips', {}, m.a.map(v => chip(v, a[m.id] === v, () => pick(m.id, v))))))) : null,
+    mineDone && !theirs ? h('div.st-card', {}, h('h2', {}, 'Now send it to them'), h('p', {}, 'They answer on their phone without seeing yours, then send the link back.'), btn('Copy the link', copy, 'primary big'), ui.meetNote ? h('p.st-note', { role: 'status', style: { wordBreak: 'break-all' } }, ui.meetNote) : null) : null,
+    mineDone && theirs ? h('div.st-card', {}, h('div.st-eyebrow', {}, 'Side by side'), h('h2', {}, `You match on ${M.same} of ${MEET.length}`),
+      M.rows.map(r => h(`div.st-meet${r.same ? '' : '.differ'}`, {}, h('div.st-flabel', {}, r.q), h('div.st-srow', {}, h('span', {}, 'You'), h('span.v', {}, r.mine)), h('div.st-srow', {}, h('span', {}, 'Them'), h('span.v', {}, r.theirs ?? 'No answer')))),
+      M.differ.length ? h('p.st-readout', {}, `Start with: ${M.differ[0].q.toLowerCase()}. Each of you says why, before anyone answers back.`) : h('p.st-readout', {}, 'You match on all of it.'),
+      h('div.st-row', {}, btn('Send mine back to them', copy, 'primary'), btn('Start over', () => { remember({ meet: null }); ui.meetNote = null; render(); }, 'text')),
+      ui.meetNote ? h('p.st-note', { role: 'status', style: { wordBreak: 'break-all' } }, ui.meetNote) : null) : null,
+  ];
+}
+
+const SCREENS = { meet, summary, you, numbers, plan: yourPlan, see, life, drills, sharpen, tune, all: allNumbers, credits };
 function render() {
   const p = P();
   if (!p.hasAge && STAGES.find(s => s.id === ui.stage)?.needs === 'age') ui.stage = 'you';
@@ -730,7 +794,7 @@ function render() {
 // Come back where you left off: the plan when the picture is done, the next question when it is not.
 const start = P();
 const [, linked, linkedQ] = location.hash.split('/'); // a link to a screen (#/tune) opens there
-ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'credits'].includes(here().stage) ? here().stage : 'plan') : 'numbers';
+ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'meet', 'credits'].includes(here().stage) ? here().stage : 'plan') : 'numbers';
 ui.q = QUESTIONS.some(x => x.key === linkedQ) ? linkedQ : start.next;
 if (start.hasAge && start.done) {
   const pl0 = plan(), nw = numbersOf(pl0, store.doc, ref).find(n => n.id === 'netWorth');
@@ -738,6 +802,7 @@ if (start.hasAge && start.done) {
   ui.since = sinceWords(mine().last, now);
   if (mine().last?.at !== now.at) remember({ last: now });
 }
+if (meetIn) { remember({ meet: { ...(mine().meet || {}), theirs: meetIn } }); ui.stage = 'meet'; }
 history.replaceState({ stage: ui.stage, q: ui.q, depth: 0 }, '', hashOf(ui.stage, ui.q));
 render();
 if (carried) clear($('overlay'), h('div.st-shade', {}, h('div.st-tour', { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Open a plan from a link' },
