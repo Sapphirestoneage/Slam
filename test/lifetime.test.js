@@ -4,8 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { lifetime, earliestFreedom, taxableSocialSecurity, yearTax, fillRoom, needAt, STRATEGIES } from '../js/lifetime/engine.js';
-import { replay, shuffle, safeFreedom, mixOf } from '../js/lifetime/stress.js';
+import { lifetime, earliestFreedom, taxableSocialSecurity, yearTax, fillRoom, needAt, STRATEGIES } from '../js/math/lifetime.js';
+import { replay, shuffle, safeFreedom, mixOf } from '../js/math/stress.js';
 import { lifeOf, strategiesOf, fillsOf, claimsOf, stressOf } from '../js/lifetime/inputs.js';
 import { federalTax } from '../js/math/income.js';
 import { Store, newHousehold } from '../js/records.js';

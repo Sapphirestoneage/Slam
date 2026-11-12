@@ -119,3 +119,17 @@ test('nothing is asked twice: no two levels or questions share a field', () => {
   for (const lv of LEVELS) for (const f of lv.fields(doc, ref)) { const k = `l:${f.id}`; assert.ok(!seen.has(k), `${f.id} is asked in ${seen.get(k)} and ${lv.id}`); seen.set(k, lv.id); }
   assert.ok(seen.size > 20);
 });
+
+import { payoffPlan, promoMonthsOf } from '../js/math/debt.js';
+test('a 0% offer charges no interest while it runs, then the card\'s own rate (QUESTIONS 481)', () => {
+  const now = new Date(2026, 10, 12);
+  assert.equal(promoMonthsOf({ promoEnd: '2027-05' }, now), 6); assert.equal(promoMonthsOf({ promoEnd: '2026-01' }, now), 0); assert.equal(promoMonthsOf({}, now), 0);
+  const card = { name: 'Card', balance: 1200, apr: 0.24, payment: 100 };
+  const plain = payoffPlan([card], { now }), promo = payoffPlan([{ ...card, promoMonths: 12 }], { now });
+  assert.equal(promo.months, 12); assert.equal(promo.interest, 0); // $100 a month clears $1,200 inside the offer
+  assert.ok(plain.interest > 150 && plain.months > 12);
+  // Six months at 0%: $600 left, then 2% a month on what is left.
+  const half = payoffPlan([{ ...card, promoMonths: 6 }], { now });
+  let left = 600, interest = 0, n = 6; while (left > 0.005) { const i = left * 0.02; interest += i; left += i; left -= Math.min(left, 100); n++; }
+  assert.equal(half.months, n); assert.ok(Math.abs(half.interest - interest) < 1e-9);
+});

@@ -92,6 +92,7 @@ export const FORMATS = [
   { version: 49, shape: '9f95f75d' }, // batch 58: People birth year for each adult past the couple (QUESTIONS 419), Institutions' Whose takes P3 to P7 (QUESTIONS 415)
   { version: 50, shape: 'ce7c59ee' }, // batch 63: the Ranges tab (M9R live, with What widens it), the priors tables on Assumptions (M9E, M9A), the M9N part column on each tab with an Owner, the M53 changes as dated
   { version: 51, shape: '5b0d406e' }, // batch 59: the tabs follow the session (You, Money in, Money out, Own and owe, The plan, The future, Statements, One-pager; the screen's sections as bands), read back by hidden keys; a shift row's nights as rows under it; files of 50 and before come back by their old tabs
+  { version: 52, shape: '93336d55' }, // Nov 12 2026: the lifetime plan (M9U) and its history test (M9V) registered as app-only; home what-if guesses on the assumptions list
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

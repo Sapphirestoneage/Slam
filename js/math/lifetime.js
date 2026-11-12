@@ -10,7 +10,7 @@
 // retirees they fall in the 0% band, so the tax shown is a little low for larger incomes); state rules that exclude
 // retirement income are not applied (state tax is the ordinary rate); required minimum distributions; and health cost
 // before 65 is the person's own guess, with no subsidy math.
-import { federalTax, stateTax } from '../math/income.js';
+import { federalTax, stateTax } from './income.js';
 
 // Social Security counted as income: the provisional-income rule (26 U.S.C. 86). The thresholds are set in the law and
 // are not indexed. [first, second] by filing status.

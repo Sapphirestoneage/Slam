@@ -6,7 +6,7 @@
 import { fmt } from './math/result.js';
 import { employerMatch } from './math/income.js';
 import { cardCost } from './math/transitions.js';
-import { lifetime, worked } from './lifetime/engine.js';
+import { lifetime, worked } from './math/lifetime.js';
 import { whatIf, monthWords, spanWords, situationOf, jobAheadOf } from './journey.js';
 
 const $ = v => fmt.money(Math.round(v));

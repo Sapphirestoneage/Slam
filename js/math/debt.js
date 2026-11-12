@@ -96,10 +96,18 @@ export function orderCost(debts, { order = 'custom', ids = [], extra = 0, agains
 }
 
 // M34: payoff order with an extra payment, rolling each cleared payment forward.
-export function payoffPlan(debts, { extra = 0, order = 'avalanche', maxMonths = 1200 } = {}) {
+// Months a 0% (or lower) offer still runs on a debt, counted from now: promoMonths when given, else from promoEnd
+// (YYYY-MM or YYYY-MM-DD). During them the debt is charged promoApr (0 when blank), then its own rate (QUESTIONS 481).
+export function promoMonthsOf(d, now = new Date()) {
+  if (d.promoMonths != null) return Math.max(0, d.promoMonths);
+  if (!d.promoEnd) return 0;
+  const [y, m] = String(d.promoEnd).split('-').map(Number);
+  return Number.isFinite(y) && Number.isFinite(m) ? Math.max(0, (y - now.getFullYear()) * 12 + (m - 1 - now.getMonth())) : 0;
+}
+export function payoffPlan(debts, { extra = 0, order = 'avalanche', maxMonths = 1200, now = new Date() } = {}) {
   const usable = debts.filter(d => d.balance > 0 && d.apr !== null && d.apr !== undefined && d.payment !== null && d.payment !== undefined);
   const skipped = debts.filter(d => !usable.includes(d)).map(d => d.name);
-  const list = usable.map(d => ({ ...d, left: d.balance, paidOffMonth: null, interest: 0 })).sort(ORDERS[order] || (() => 0)); // 'given': keep the order passed in (a promo ending soon goes first, R075)
+  const list = usable.map(d => ({ ...d, left: d.balance, paidOffMonth: null, interest: 0, promoLeft: promoMonthsOf(d, now) })).sort(ORDERS[order] || (() => 0)); // 'given': keep the order passed in (a promo ending soon goes first, R075)
   let month = 0, total = 0;
   const path = [list.map(d => d.left)];
   while (list.some(d => d.left > 0.005) && month < maxMonths) {
@@ -108,7 +116,7 @@ export function payoffPlan(debts, { extra = 0, order = 'avalanche', maxMonths = 
     for (const d of list) if (d.left <= 0.005) pool += d.payment; // rolled forward
     for (const d of list) {
       if (d.left <= 0.005) continue;
-      const i = d.left * d.apr / 12;
+      const i = d.left * (month <= d.promoLeft ? d.promoApr ?? 0 : d.apr) / 12;
       d.interest += i; total += i;
       d.left += i;
       const pay = Math.min(d.left, d.payment);

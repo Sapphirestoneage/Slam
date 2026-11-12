@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Stress tests for a whole-life plan (js/lifetime/engine.js). Two kinds, both on the free years only (the working
+// Stress tests for a whole-life plan (js/math/lifetime.js). Two kinds, both on the free years only (the working
 // years grow at the plan's own return):
 //   replay   every stretch of real history long enough to hold the free years, in order, as it happened
 //            (data/history-returns.json: US stocks and bonds, after inflation, each year since 1871)
 //   shuffle  the same real years drawn in random order, many times (a Monte Carlo that keeps each year's real stock
 //            and bond pair together); seeded, so the same plan gives the same answer
 // Pure: no DOM. The past is not a forecast, and the screen says so.
-import { lifetime, worked } from './engine.js';
+import { lifetime, worked } from './lifetime.js';
 
 export const mixOf = (hist, stocks = 0.8) => hist.years.map(y => ({ year: y.year, r: stocks * y.stocks + (1 - stocks) * y.bonds }));
 const median = list => { const a = [...list].sort((p, q) => p - q); return a.length ? a[Math.floor((a.length - 1) / 2)] : null; };

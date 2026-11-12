@@ -5,7 +5,7 @@
 import { h } from '../ui/dom.js';
 import { fmt } from '../math/result.js';
 import { lifeOf, stressOf, strategiesOf, fillsOf, claimsOf, DEFAULTS } from '../lifetime/inputs.js';
-import { STRATEGIES } from '../lifetime/engine.js';
+import { STRATEGIES } from '../math/lifetime.js';
 import { lifeChart } from './charts-ui.js';
 
 const money = v => fmt.money(Math.round(v / 100) * 100);
@@ -25,12 +25,12 @@ export function lifeScreen({ pl, store, ref, hist, mine, remember, render, go, b
   const key = JSON.stringify([s, store.doc._rev, store.doc.updatedAt]);
   if (cache.key !== key) cache = { key, life: lifeOf(pl, store.doc, ref, hist, s), extra: {} };
   const L = cache.life, lazy = (name, f) => (cache.extra[name] ??= f());
-  if (!L.ready) return [h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Whole life'), h('h1', {}, 'This needs your spending first'), btn('Answer it', () => go('numbers', { q: 'spending' }), 'primary'))];
-  if (L.age == null) return [h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Whole life'), h('h1', {}, 'No age works yet on these numbers'),
+  if (!L.ready) return [h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Lifetime plan'), h('h1', {}, 'This needs your spending first'), btn('Answer it', () => go('numbers', { q: 'spending' }), 'primary'))];
+  if (L.age == null) return [h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Lifetime plan'), h('h1', {}, 'No age works yet on these numbers'),
     h('p', { style: { marginBottom: 0 } }, 'With what is left over each month today, the money does not last through age 90 from any stopping age up to 80. Spending less, earning more, or a scenario like part-time work changes that. Try the sliders on See it.'))];
   const own = s.retireAge != null, st = STRATEGIES.find(x => x.id === s.strategy);
   const hero = h('div.st-card.hero', {},
-    h('h1.st-eyebrow', {}, 'Whole life'), h('div.st-soft', {}, own ? 'If you stop work at' : 'Work can become optional at'),
+    h('h1.st-eyebrow', {}, 'Lifetime plan'), h('div.st-soft', {}, own ? 'If you stop work at' : 'Work can become optional at'),
     h('div.st-big', {}, `age ${L.age}`),
     own ? h('p', {}, L.run.ok ? 'On a smooth market the money lasts to 90.' : `On a smooth market the money runs short at ${L.run.ranOutAge}.`, L.safe.age != null ? ` History would have carried age ${L.safe.age}.` : '')
       : h('p', {}, `Planned one year at a time to age 90, then run through every stretch of market history since ${hist.first}. It held in ${fmt.pct(L.safe.replay.success)} of them. On a perfectly smooth market it would be age ${L.smooth.age}.`),

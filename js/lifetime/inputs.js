@@ -3,8 +3,8 @@
 // metrics) into the engine's input, runs it, and returns what the Whole life screen shows. The choices that are about
 // the future (strategy, claim age, conversions, stock share, health cost, scenario blocks) are passed in as settings;
 // the screen keeps them. Pure: no DOM, no storage.
-import { lifetime, earliestFreedom, STRATEGIES, FILLS, needAt } from './engine.js';
-import { replay, shuffle, safeFreedom } from './stress.js';
+import { lifetime, earliestFreedom, STRATEGIES, FILLS, needAt } from '../math/lifetime.js';
+import { replay, shuffle, safeFreedom } from '../math/stress.js';
 import { benefitOf } from '../math/socialsecurity.js';
 import { placeOf } from '../math/metrics.js';
 import { defaultFilingStatus } from '../math/income.js';
