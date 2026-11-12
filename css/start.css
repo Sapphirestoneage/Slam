@@ -264,3 +264,4 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-people li .st-row.end { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
 .st-why { margin: 4px 0 8px; padding-left: 20px; } .st-why li { margin-bottom: 6px; }
 .st-meet { padding: 8px 0; border-bottom: 2px solid var(--border-row); } .st-meet.differ { border-left: 6px solid var(--primary); padding-left: 10px; }
+.st-field > .st-chips { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); } .st-field > .st-chips > .st-chip { white-space: normal; line-height: 1.2; padding: 4px 6px; overflow-wrap: anywhere; }
