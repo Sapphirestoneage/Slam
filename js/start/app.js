@@ -13,6 +13,8 @@ import { growthChart, flowChart, debtChart, timelineChart } from './charts-ui.js
 import { lifeScreen } from './life-ui.js';
 import { drillsOf, skillsOf, priceTagOf } from '../drills.js';
 import { lifeOf } from '../lifetime/inputs.js';
+import { WORRIES, WORRY_GROUPS, worryOf } from '../worries.js';
+import { homeOf, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOME_NOW } from '../home.js';
 
 const [ref, priors, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/priors-2026.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
 const hist = await fetch('data/history-returns.json').then(r => r.json());
@@ -38,7 +40,7 @@ open((mine().clientId && loadClient(adapter, mine().clientId)) || createClient(a
 for (const ev of ['pagehide', 'visibilitychange']) window.addEventListener(ev, () => saver?.flush());
 
 const $ = id => document.getElementById(id);
-const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null, price: null };
+const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null, price: null, more: false, pic: 'growth', drill: null, tweak: null, worryGroup: null, homeOpen: false };
 const money = v => fmt.money(v);
 const P = () => progressOf(store.doc, ref);
 const plan = () => planOf(store.doc, ref, priors, { flags });
@@ -77,27 +79,30 @@ const chip = (label, on, onClick) => h('button.st-chip', { type: 'button', 'aria
 const credit = id => { const i = ideaOf(id); return i ? h('button.st-credit', { type: 'button', title: `Where this idea comes from: ${creditWords(id)}`, onClick: () => go('credits', { flash: i.by[0] }) }, `From ${creditWords(id)}`) : null; };
 const basisTag = p => h(`span.st-tag${p.basis === 'yours' ? '.yours' : ''}`, {}, p.basis === 'yours' ? 'From your numbers' : p.basis === 'typical' ? p.label : `Part yours, part typical (${p.typical} to go)`);
 
+// Four tabs and More: everything fits a phone without sideways scrolling.
+const TABS = [['plan', 'Plan'], ['see', 'See'], ['drills', 'Practice'], ['sharpen', 'Sharpen']];
+const MORE = [['you', 'About you'], ['numbers', 'Your five numbers'], ['life', 'Whole life'], ['tune', 'What if'], ['all', 'All your numbers'], ['credits', 'Credits']];
 function top() {
   const p = P();
+  const tab = (id, label) => h('button.st-stage', { type: 'button', disabled: !p.hasAge, title: p.hasAge ? null : 'Pick the year you were born first', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label);
+  const inMore = MORE.some(([id]) => id === ui.stage);
   clear($('top'),
-    h('a.st-brand', { href: '#', onClick: e => { e.preventDefault(); go('you'); } }, 'Stress Less About Money'),
-    btn('How this works', () => tour(0), 'slim'),
-    h('nav.st-stages', { 'aria-label': 'Steps' }, STAGES.map((s, i) => {
-      const locked = s.needs === 'age' && !p.hasAge;
-      const done = (s.id === 'you' && p.hasAge) || (s.id === 'numbers' && p.done);
-      return h(`button.st-stage${done ? '.done' : ''}`, { type: 'button', disabled: locked, title: locked ? 'Pick the year you were born first' : null, 'aria-current': ui.stage === s.id ? 'step' : null, onClick: () => go(s.id) }, h('span.n', {}, done ? '✓' : i + 1), s.label);
-    })));
+    h('a.st-brand', { href: '#', onClick: e => { e.preventDefault(); ui.more = false; go('you'); } }, 'Stress Less About Money'),
+    h('nav.st-stages', { 'aria-label': 'Sections' }, TABS.map(([id, label]) => tab(id, label)),
+      h('button.st-stage', { type: 'button', 'aria-expanded': ui.more ? 'true' : 'false', 'aria-current': inMore ? 'page' : null, onClick: () => { ui.more = !ui.more; top(); } }, 'More')),
+    ui.more ? h('div.st-more', {}, MORE.map(([id, label]) => h('button.st-btn', { type: 'button', disabled: !p.hasAge && STAGES.find(x => x.id === id)?.needs === 'age', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label)),
+      h('button.st-btn.text', { type: 'button', onClick: () => { ui.more = false; top(); tour(0); } }, 'How this works')) : null);
 }
 
+// One line that says where you are and what is left.
 function track(p, pl) {
   if (!p.hasAge) return clear($('track'));
-  const toFi = pl.m.fiNumber.value ? Math.min(1, (pl.m.inputs.invested ?? 0) / pl.m.fiNumber.value) : null;
+  const sh = p.done ? sharpnessOf(store.doc, true) : null;
+  const line = p.done ? `Level ${sh.done} of ${sh.total}. ${sh.total - sh.done ? `${sh.total - sh.done} to go.` : 'All done.'} ${pl.wins} ${pl.wins === 1 ? 'win' : 'wins'} so far.` : `${p.count} of ${p.total} questions answered.`;
   clear($('track'),
-    h('span.st-meter', {}, 'Your picture', h('span.st-pips', { role: 'img', 'aria-label': `${p.count} of ${p.total} answered` }, QUESTIONS.map(q => h(`i${p.answered[q.key] ? '.on' : ''}`))), `${p.count} of ${p.total}`),
-    toFi != null && p.done ? h('span.st-meter', {}, 'On the way to FI', h('span.st-bar', {}, h('b', { style: { width: `${Math.max(2, toFi * 100)}%` } })), fmt.pct(toFi)) : null,
-    p.done ? (() => { const sh = sharpnessOf(store.doc, true); return h('span.st-meter', {}, 'Sharpness', h('strong', {}, `Level ${sh.done} of ${sh.total}`)); })() : null,
-    h('span.st-meter', {}, 'Wins so far', h('strong', {}, String(pl.wins))),
-    !p.done ? btn(p.count ? 'Keep going' : 'Start the 5 questions', () => go('numbers', { q: p.next }), 'slim primary') : null);
+    h('span.st-pips', { role: 'img', 'aria-label': line }, p.done ? Array.from({ length: sh.total }, (_, i) => h(`i${i < sh.done ? '.on' : ''}`)) : QUESTIONS.map(q => h(`i${p.answered[q.key] ? '.on' : ''}`))),
+    h('span.st-trackline', {}, line),
+    !p.done && ui.stage !== 'numbers' ? btn(p.count ? 'Keep going' : 'Start', () => go('numbers', { q: p.next }), 'slim primary') : null);
 }
 
 // ---------- 1. You ----------
@@ -111,21 +116,24 @@ function you(p) {
   const setPlace = k => { remember({ elsewhere: k === 'else' }); store.setDoc('profile', k === 'nyc' ? { state: 'NY', nyc: true } : k === 'ny' ? { state: 'NY', nyc: false } : k === 'nj' ? { state: 'NJ', nyc: null } : { state: null, nyc: null }); render(); };
   return [
     h('div.st-card.hero', {},
-      h('div.st-eyebrow', {}, 'Step 1'),
       h('h1', {}, 'A money plan, starting from one tap'),
-      h('p', {}, 'Tell us when you were born and you get a plan right away, built from what is typical at your age. Then five quick questions turn it into yours.')),
+      h('p', { style: { marginBottom: 0 } }, 'Pick your birth year and a plan shows right away. Five quick questions make it yours.')),
     h('div.st-card', {},
       h('h2', {}, 'When were you born?'),
       h('div.st-chips', {}, decades.map(d => chip(`${d}s`, decade === d, () => { ui.decade = d; render(); }))),
       years.length ? h('div.st-years', {}, years.map(y => chip(String(y), prof.birthYear === y, () => setYear(y)))) : h('p.st-soft.st-small', { style: { marginTop: '10px' } }, 'Pick the decade, then the year.')),
     h('div.st-card', {},
       h('h2', {}, 'Where do you live?'),
-      h('p.st-soft.st-small', {}, 'Costs differ by place, so the typical numbers do too. Skip it if you like.'),
       h('div.st-chips', {}, [['nyc', 'New York City'], ['ny', 'New York, outside the city'], ['nj', 'New Jersey'], ['else', 'Somewhere else']].map(([k, l]) => chip(l, place === k, () => setPlace(k))))),
     h('div.st-card', {},
       h('h2', {}, 'Your work right now'),
-      h('p.st-soft.st-small', {}, 'The questions change to fit. You can switch any time, and nothing you entered is asked again.'),
       h('div.st-chips', {}, SITUATIONS.map(([k, l]) => chip(l, situationSet(store.doc) && situationOf(store.doc) === k, () => { setSituation(store, k); render(); })))),
+    h('div.st-card', {},
+      h('h2', {}, 'What brought you here?'),
+      mine().worry ? h('div.st-row', {}, h('strong', {}, worryOf(mine().worry)?.label), btn('Change', () => { remember({ worry: null }); render(); }, 'slim')) : [
+        h('p.st-soft.st-small', {}, 'Optional. Pick one and your plan opens on it.'),
+        WORRY_GROUPS.map(([g, label]) => h('details.st-fold', { open: ui.worryGroup === g ? true : null, onToggle: e => { if (e.target.open) ui.worryGroup = g; } }, h('summary', {}, label),
+          h('div.st-chips', {}, WORRIES.filter(w => w.group === g).map(w => chip(w.label, false, () => { remember({ worry: w.id }); if (w.sit) setSituation(store, w.sit); render(); })))))]),
     p.hasAge
       ? h('div.st-row', {}, btn(`I'm ${p.age}. Show my plan`, () => go('numbers', { q: p.next ?? QUESTIONS[0].key }), 'primary big'))
       : h('p.st-soft', {}, 'Your plan shows as soon as you pick a year.'),
@@ -261,7 +269,14 @@ function yourPlan(p, pl) {
     B.job ? h('p', { style: { fontWeight: 700 } }, `Job expected ${B.job.date}, about ${money(Math.round(B.job.monthly))} a month after taxes. `, B.job.covered ? 'Your money covers the gap.' : 'Your money runs short before then, so the first step below matters most.')
       : h('div.st-row', {}, h('span', {}, 'Have a start date or an offer in mind?'), btn('Add the job ahead', () => go('sharpen', { flash: 'ahead' }), 'slim primary')),
     B.job ? h('div.st-row', {}, btn('I started this job', () => { startJob(store, ref); ui.note = null; render(); window.scrollTo({ top: 0 }); }), btn('Change the job ahead', () => go('sharpen', { flash: 'ahead' }), 'text')) : null) : null;
+  const W = worryOf(mine().worry), done = mine().done || {};
+  const worry = W ? h('div.st-card', {},
+    h('div.st-row.end', {}, h('div', {}, h('div.st-eyebrow', {}, 'You came here for'), h('h2', { style: { margin: 0 } }, W.label)), btn('Change', () => go('you'), 'slim')),
+    h('div.st-row', { style: { marginTop: '10px' } }, W.see.map(([label, stage, at], i) => btn(label, () => (stage === 'numbers' ? go('numbers', { q: at ?? p.next ?? QUESTIONS[0].key }) : go(stage, { flash: at })), i ? '' : 'primary'))),
+    h('details.st-fold', { open: true }, h('summary', {}, `First steps (${W.steps.filter((_, i) => done[`worry:${W.id}:${i}`]).length} of ${W.steps.length} done)`),
+      h('div.st-ticks', {}, W.steps.map((text, i) => { const id = `worry:${W.id}:${i}`; return h('button.st-tick', { type: 'button', 'aria-pressed': done[id] ? 'true' : 'false', onClick: () => { remember({ done: { ...(mine().done || {}), [id]: !done[id] } }); render(); } }, h('span.box', {}, done[id] ? '✓' : ''), h('span', {}, text)); })))) : null;
   return [
+    worry,
     gap,
     h('div.st-card.hero', {},
       h('div.st-eyebrow', {}, B ? 'After that' : 'Your plan'),
@@ -285,7 +300,9 @@ function yourPlan(p, pl) {
     h(`div.st-card${ui.flash === 'milestones' ? '.flash' : ''}`, {},
       h('div.st-eyebrow', {}, 'Milestones'),
       h('h2', {}, pl.wins ? `${pl.wins} already done. Here is what comes next.` : 'Wins on the way, soonest first'),
-      h('ul.st-list', {}, pl.milestones.map(x => h(`li${x.done ? '.done' : ''}`, {}, h('span.dot', {}, x.done ? '✓' : ''), h('span', {}, x.name, h('small', {}, x.what)), h('span.when', {}, x.date)))),
+      (() => { const li = x => h(`li${x.done ? '.done' : ''}`, {}, h('span.dot', {}, x.done ? '✓' : ''), h('span', {}, x.name, h('small', {}, x.what)), h('span.when', {}, x.date));
+        const next = pl.milestones.filter(x => !x.done).slice(0, 3), rest = pl.milestones.filter(x => !next.includes(x));
+        return [h('ul.st-list', {}, next.map(li)), rest.length ? h('details.st-fold', {}, h('summary', {}, `Show all ${pl.milestones.length}`), h('ul.st-list', {}, rest.map(li))) : null]; })(),
       credit('milestones')),
     h('div.st-row', {}, btn('See it in pictures', () => go('see'), 'primary big'), btn('Your whole life', () => go('life')), btn('Sharpen it', () => go('sharpen'))),
   ];
@@ -309,15 +326,19 @@ function see(p, pl) {
   const ret = tweaksOf(store.doc, ref).find(t => t.id === 'realReturn');
   const f = flowOf(pl.m), d = debtOf(pl.m), t = timelineOf(pl);
   const card = (id, eyebrow, title, body, idea) => h(`div.st-card${ui.flash === id ? '.flash' : ''}`, {}, h('div.st-eyebrow', {}, eyebrow), h('h2', {}, title), body, idea ? credit(idea) : null);
-  return [
-    h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'See it'), h('h1', {}, 'Your plan in four pictures'), h('p', { style: { marginBottom: 0 } }, 'Each one is drawn from your numbers. ', pl.basis === 'yours' ? '' : 'Some are still typical for your age, so the pictures sharpen as you answer more.')),
-    card('growth', 'Picture 1', 'How your money grows', [hold,
+  const PICS = [['growth', 'Growth'], ['flow', 'Where it goes'], ['timeline', 'Your path'], ['debt', 'Debt']];
+  const pic = PICS.some(([k]) => k === ui.flash) ? (ui.pic = ui.flash) : ui.pic;
+  const shown = pic === 'growth' ? card('growth', 'Picture 1 of 4', 'How your money grows', [hold,
       h('h3', { style: { marginTop: '14px' } }, 'Try it'), lever('spendLess', 'Spend less', 1500, 50), lever('earnMore', 'Earn more', 3000, 100), res,
-      h('h3', { style: { marginTop: '14px' } }, 'Growth a year, after inflation'),
-      h('div.st-chips', {}, ret.options.map(o => chip(o.label, ret.value === o.value, () => { setTweak(store, ret, o.value); render(); })))], 'growthChart'),
-    card('flow', 'Picture 2', 'Where your money goes each month', f ? flowChart(f) : h('p.st-soft', {}, 'This picture needs your pay and your spending.'), 'sankey'),
-    card('timeline', 'Picture 3', 'Your path, one win at a time', t ? timelineChart(t) : h('p.st-soft', {}, 'Every milestone on your list is done.'), 'milestones'),
-    d ? card('debt', 'Picture 4', 'Your debt, falling to zero', debtChart(d, monthWords), 'avalanche') : card('debt', 'Picture 4', 'Your debt', h('p', { style: { marginBottom: 0 } }, pl.m.inputs.debts.length ? 'Add each debt\'s rate and payment in Sharpen it to see it fall to zero.' : 'No debt on file. Nothing to draw here.'), null),
+      h('details.st-fold', {}, h('summary', {}, 'Change the growth rate'),
+        h('div.st-chips', {}, ret.options.map(o => chip(o.label, ret.value === o.value, () => { setTweak(store, ret, o.value); render(); }))))], 'growthChart')
+    : pic === 'flow' ? card('flow', 'Picture 2 of 4', 'Where your money goes each month', f ? flowChart(f) : h('p.st-soft', {}, 'This picture needs your pay and your spending.'), 'sankey')
+    : pic === 'timeline' ? card('timeline', 'Picture 3 of 4', 'Your path, one win at a time', t ? timelineChart(t) : h('p.st-soft', {}, 'Every milestone on your list is done.'), 'milestones')
+    : d ? card('debt', 'Picture 4 of 4', 'Your debt, falling to zero', debtChart(d, monthWords), 'avalanche') : card('debt', 'Picture 4 of 4', 'Your debt', h('p', { style: { marginBottom: 0 } }, pl.m.inputs.debts.length ? 'Add each debt\'s rate and payment in Sharpen to see it fall to zero.' : 'No debt on file. Nothing to draw here.'), null);
+  return [
+    h('h1', {}, 'Your plan in pictures'),
+    h('div.st-chips', { style: { marginBottom: '12px' } }, PICS.map(([k, l]) => chip(l, pic === k, () => { ui.pic = k; ui.flash = null; render(); }))),
+    shown,
     h('div.st-row', {}, btn('Your whole life', () => go('life'), 'primary big'), btn('Sharpen it', () => go('sharpen'))),
   ];
 }
@@ -361,13 +382,14 @@ function sharpen(p, pl) {
     };
     return h('div.st-form', {}, box, h('div.st-row', { style: { marginTop: '14px' } }, btn('Save', save, 'primary big'), btn('Close', () => { ui.level = null; ui.form = null; ui.note = null; ui.noteAt = null; render(); }, 'text')));
   };
+  const nextOpen = L.find(x => x.state === 'open')?.id ?? null;
   const card = lv => {
     const open = ui.level === lv.id;
     return h(`div.st-card.st-level${lv.state !== 'open' ? '.done' : ''}${ui.flash === lv.id ? '.flash' : ''}`, { id: `level-${lv.id}` },
       ui.note && ui.noteAt === lv.id ? h('div.st-note', { role: 'status' }, ui.note) : null,
       h('div.st-levelhead', {}, h('span.st-lvl', {}, lv.state === 'open' ? lv.n : '✓'),
-        h('div', {}, h('h2', { style: { margin: 0 } }, `Level ${lv.n}: ${lv.title}`), h('div.st-soft.st-small', {}, lv.note ?? lv.why), h('div.st-small', { style: { marginTop: '4px' } }, h('strong', {}, 'Unlocks: '), lv.unlocks.join(', '))),
-        lv.state === 'skip' ? h('span.st-tag.yours', {}, 'Nothing to do') : open ? null : btn(lv.state === 'done' ? 'Change' : 'Answer', () => { ui.level = lv.id; ui.form = null; ui.note = null; ui.noteAt = null; render(); document.getElementById(`level-${lv.id}`)?.scrollIntoView({ block: 'start' }); }, lv.state === 'done' ? 'slim' : 'slim primary')),
+        h('div', {}, h('h2', { style: { margin: 0 } }, `Level ${lv.n}: ${lv.title}`), lv.state === 'open' || open ? [h('div.st-soft.st-small', {}, lv.note ?? lv.why), h('div.st-small', { style: { marginTop: '4px' } }, h('strong', {}, 'Unlocks: '), lv.unlocks.join(', '))] : null),
+        lv.state === 'skip' ? h('span.st-tag.yours', {}, 'Nothing to do') : open ? null : btn(lv.state === 'done' ? 'Change' : 'Answer', () => { ui.level = lv.id; ui.form = null; ui.note = null; ui.noteAt = null; render(); document.getElementById(`level-${lv.id}`)?.scrollIntoView({ block: 'start' }); }, lv.state === 'done' || lv.id !== nextOpen ? 'slim' : 'slim primary')),
       open ? form(lv) : null);
   };
   return [
@@ -387,12 +409,12 @@ function sharpen(p, pl) {
   ];
 }
 
-// ---------- 4. Tune it ----------
+// ---------- What if ----------
 function tune(p, pl) {
   const tweaks = tweaksOf(store.doc, ref).filter(t => t.show !== false);
   const base = pl.fi.months;
   return [
-    h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Tune it'), h('h1', {}, 'Change an assumption, watch the date move'),
+    h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'What if'), h('h1', {}, 'Change one thing, watch the date move'),
       h('p', { style: { marginBottom: 0 } }, 'Each choice shows the date it gives you. Tap one to use it. To try spending less or earning more, use the sliders on See it. ', base != null && !pl.fi.far ? `Right now: ${pl.fi.date}.` : `Right now: ${pl.words.fi}.`)),
     (() => { const amount = ui.price ?? 100, t = priceTagOf(pl, store.doc, ref, priors, amount);
       return h(`div.st-card${ui.flash === 'price' ? '.flash' : ''}`, {}, h('h2', {}, 'What does a monthly cost really cost?'), h('div.st-soft.st-small', {}, 'Pick an amount: a subscription, a car payment, a habit.'),
@@ -401,8 +423,25 @@ function tune(p, pl) {
           t.hours != null ? [h('dt', {}, `Hours of your work each month${t.hourlyGuess ? ' (at a 40-hour week)' : ''}`), h('dd', {}, `${(Math.round(t.hours * 10) / 10).toFixed(1)}`)] : null,
           t.moved != null && t.moved > 0 ? [h('dt', {}, 'Without it, work becomes optional'), h('dd', {}, `${spanWords(t.moved)} sooner`)] : null),
         h('p.st-small.st-soft', { style: { margin: '8px 0 0' } }, `${money(amount)} a month is ${money(amount * 12)} a year. At a ${fmt.pct(t.rate)} withdrawal rate, that takes ${money(t.forever)} invested.`), credit('priceTag')); })(),
-    h('div.st-card', {}, tweaks.map(t => h(`div.st-tweak${ui.flash === t.id ? '.flash' : ''}`, {},
-      h('h2', { style: { marginBottom: '2px' } }, t.label), h('div.st-soft.st-small', {}, t.help),
+    (() => { const pick = mine().home || {}, H = homeOf(store.doc, ref, priors, pl, pick), choose = patch => { remember({ home: { ...pick, ...patch } }); ui.flash = null; ui.homeOpen = true; render(); };
+      const row = (label, list, on, words, key) => h('div.st-field', {}, h('div.st-flabel', {}, label), h('div.st-chips', {}, list.map(v => chip(words(v), on === v, () => choose({ [key]: v })))));
+      return h(`details.st-card${ui.flash === 'home' ? '.flash' : ''}`, { open: ui.flash === 'home' || ui.homeOpen ? true : null },
+        h('summary.st-sum', {}, h('strong', {}, 'What if I buy a home?'), h('span.st-soft', {}, `${money(Math.round(H.all))} a month`)),
+        row('Price', HOME_PRICES, H.price, v => money(v), 'price'),
+        row('Down payment', HOME_DOWNS, H.down, v => `${+(v * 100).toFixed(1)}%`, 'down'),
+        row('Rate', HOME_RATES, pick.rate ?? null, v => `${+(v * 100).toFixed(1)}%`, 'rate'),
+        row('Housing I pay today, a month', HOME_NOW, H.today, v => (v ? money(v) : 'Nothing'), 'now'),
+        h('dl.st-kv', { style: { marginTop: '12px' } },
+          h('dt', {}, 'Cash down'), h('dd', {}, money(Math.round(H.cash))),
+          h('dt', {}, 'Loan'), h('dd', {}, money(Math.round(H.loan))),
+          h('dt', {}, `Loan payment at ${+(H.rate * 100).toFixed(2)}%`), h('dd', {}, money(Math.round(H.pi))),
+          h('dt', {}, 'Taxes and insurance, about'), h('dd', {}, money(Math.round(H.taxIns))),
+          h('dt', {}, 'All in, a month'), h('dd', {}, h('strong', {}, money(Math.round(H.all)))),
+          H.share != null ? [h('dt', {}, 'Share of your take-home pay'), h('dd', {}, fmt.pct(H.share))] : null),
+        h('p.st-readout', { role: 'status' }, H.line),
+        H.notes.map(n => h('p.st-small.st-soft', { style: { margin: '4px 0 0' } }, n))); })(),
+    h('div.st-card', {}, tweaks.map(t => h(`details.st-tweak${ui.flash === t.id ? '.flash' : ''}`, { open: ui.flash === t.id || ui.tweak === t.id ? true : null, onToggle: e => { if (e.target.open) ui.tweak = t.id; } },
+      h('summary.st-sum', {}, h('strong', {}, t.label), h('span.st-soft', {}, t.options.find(o => o.value === t.value)?.label ?? '')), h('div.st-soft.st-small', {}, t.help),
       h('div.st-opts', {}, t.options.map(o => {
         const pv = previewTweak(store.doc, ref, priors, t, o.value);
         return h('button.st-opt', { type: 'button', 'aria-pressed': t.value === o.value ? 'true' : 'false', onClick: () => { setTweak(store, t, o.value); render(); } }, h('b', {}, o.label), o.note ? h('span', {}, o.note) : null, pv.date ? h('em', {}, pv.date) : null);
@@ -430,7 +469,7 @@ function allNumbers(p, pl) {
       statementsOf(pl, store.doc, ref).map(st => h('details.st-fold.st-stmt', { open: ui.flash === 'statements' ? true : null }, h('summary', {}, `${st.title} (${st.sub.toLowerCase()})`),
         h('div.st-rows', {}, st.rows.map(r => h(`div.st-srow.${r.kind}`, {}, h('span', {}, r.label), h('span.v', {}, `${r.sign ? `${r.sign} ` : ''}${r.value}`)))),
         st.note ? h('p.st-small.st-soft', { style: { margin: '6px 0 0' } }, st.note) : null))),
-    groups.map(g => h('div.st-card', {}, h('h2', {}, g), nums.filter(n => n.group === g).map(row))),
+    groups.map(g => { const list = nums.filter(n => n.group === g); return h('details.st-card.st-group', { open: list.some(n => n.id === ui.flash) ? true : null }, h('summary.st-sum', {}, h('strong', {}, g), h('span.st-soft', {}, `${list.filter(n => n.value).length} of ${list.length}`)), list.map(row)); }),
     h('div.st-row', {}, btn('Who these ideas come from', () => go('credits'), 'primary')),
   ];
 }
@@ -443,8 +482,8 @@ function credits(p) {
       h('p', { style: { marginBottom: 0 } }, `${IDEAS.filter(i => i.where).length} ideas from the FIRE world are built into your plan. Here is who is best known for each, and where to find it.`)),
     h('div.st-people', {}, order.map(k => {
       const s = SOURCES[k];
-      return h(`div.st-card${ui.flash === k ? '.flash' : ''}`, {},
-        h('h2', { style: { marginBottom: '2px' } }, s.name), h('div.st-soft.st-small', {}, s.who), h('p', { style: { margin: '8px 0 0' } }, s.best),
+      return h(`details.st-card${ui.flash === k ? '.flash' : ''}`, { open: ui.flash === k ? true : null },
+        h('summary.st-sum', {}, h('strong', {}, s.name), h('span.st-soft', {}, `${ideasBy(k).length} ${ideasBy(k).length === 1 ? 'idea' : 'ideas'}`)), h('div.st-soft.st-small', {}, s.who), h('p', { style: { margin: '8px 0 0' } }, s.best),
         s.link ? h('a.st-small', { href: s.link, target: '_blank', rel: 'noopener' }, 'Read the original') : null,
         h('ul', {}, ideasBy(k).map(i => h('li', {}, h('div.st-row.end', {}, h('strong', {}, i.name),
           i.where ? (p.hasAge || i.where.stage === 'you' ? btn('Show me', () => go(i.where.stage, { flash: i.where.at }), 'slim') : null) : h('span.st-later', {}, 'Coming later')),
@@ -458,7 +497,7 @@ const TOUR = [
   ['Pick the year you were born', 'That alone gives you a plan, built from what is typical at your age. It is a wide range on purpose.'],
   ['Answer five questions', 'Mostly taps and sliders. Rough numbers are fine, and you can skip one and come back. You are never asked the same thing twice.'],
   ['Get your plan', 'One clear next step, the milestones ahead, and the date work becomes optional.'],
-  ['See it, sharpen it, tune it', 'Four pictures of your plan. Nine short levels that unlock more numbers. Assumptions you can change to watch the date move. Every number says how it is worked out and whose idea it is.'],
+  ['See it, sharpen it, ask what if', 'Four pictures of your plan. Short levels that unlock more numbers. Things you can change to watch the date move. Every number says how it is worked out and whose idea it is.'],
 ];
 function tour(i) {
   const close = () => { remember({ tour: true }); clear($('overlay')); };
@@ -478,7 +517,7 @@ function foot() {
     const a = h('a', { href: URL.createObjectURL(blob), download: `my-plan-${new Date().toISOString().slice(0, 10)}.json` });
     document.body.append(a); a.click(); a.remove();
   };
-  const over = () => { open(createClient(adapter, 'My plan', new Date().toISOString())); Object.assign(ui, { q: null, note: null, decade: null, lever: { spendLess: 0, earnMore: 0 } }); remember({ elsewhere: false, parts: null, life: null, done: null }); go('you'); };
+  const over = () => { open(createClient(adapter, 'My plan', new Date().toISOString())); Object.assign(ui, { q: null, note: null, decade: null, lever: { spendLess: 0, earnMore: 0 } }); remember({ elsewhere: false, parts: null, life: null, done: null, worry: null, home: null }); go('you'); };
   clear($('foot'),
     h('span.grow', {}, 'Your numbers stay in this browser. Nothing is sent anywhere. This is education, not personal financial advice.'),
     btn('Download a backup', download, 'slim'),
@@ -495,8 +534,9 @@ function drills(p, pl) {
   const D = drillsOf(pl, store.doc, ref, priors, { life }), S = skillsOf(pl, store.doc, ref);
   const all = [...D.map(d => `drill:${d.id}`), ...S.map(k => `skill:${k.id}`)], n = all.filter(id => done[id]).length;
   const doneBtn = id => h('button.st-btn.slim', { type: 'button', 'aria-pressed': done[id] ? 'true' : 'false', class: done[id] ? 'primary' : '', onClick: () => tick(id) }, done[id] ? '✓ Done' : 'I did it');
-  const drill = d => h(`div.st-card.st-level${done[`drill:${d.id}`] ? '.done' : ''}`, {},
-    h('div.st-levelhead', {}, h('span.st-lvl', {}, done[`drill:${d.id}`] ? '✓' : '!'), h('div', {}, h('div.st-soft.st-small', {}, d.fear), h('h2', { style: { margin: 0 } }, d.headline)), d.calm ? h('span.st-tag.yours', {}, 'Covered') : null),
+  const firstOpen = D.find(d => !done[`drill:${d.id}`])?.id ?? null;
+  const drill = d => h(`details.st-card.st-level.st-drill${done[`drill:${d.id}`] ? '.done' : ''}`, { open: (ui.drill ?? firstOpen) === d.id ? true : null, onToggle: e => { if (e.target.open) ui.drill = d.id; } },
+    h('summary.st-levelhead', {}, h('span.st-lvl', {}, done[`drill:${d.id}`] ? '✓' : '!'), h('div', {}, h('div.st-soft.st-small', {}, d.fear), h('h2', { style: { margin: 0 } }, d.headline)), d.calm ? h('span.st-tag.yours', {}, 'Covered') : null),
     h('div', { style: { marginTop: '10px' } }, d.lines.map(l => h('p', { style: { margin: '0 0 6px' } }, l))),
     h('details.st-fold', {}, h('summary', {}, 'What actually happens'), h('ol.st-steps', {}, d.happens.map(x => h('li', {}, x)))),
     h('div.st-do', {}, h('div.st-eyebrow', {}, d.rep.minutes ? `Your rep, ${d.rep.minutes} minutes` : 'Your rep'), h('div', {}, d.rep.text), h('div', { style: { marginTop: '8px' } }, doneBtn(`drill:${d.id}`))));
@@ -505,7 +545,7 @@ function drills(p, pl) {
     h('details.st-fold', { style: { marginTop: '6px' } }, h('summary', {}, `How, in ${k.minutes} minutes`), h('ol.st-steps', {}, k.steps.map(x => h('li', {}, x)))));
   return [
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Fire drills'), h('h1', {}, 'Practice it before it happens'),
-      h('p', {}, 'Each drill takes something people fear about money and runs it on your own numbers, so you know what it would cost and what you would do first. Then one small rep in real life.'),
+      h('p', {}, 'A money fear, run on your own numbers. Then one small rep in real life.'),
       h('span.st-meter', {}, `${n} of ${all.length} done`, h('span.st-bar', {}, h('b', { style: { width: `${all.length ? Math.max(2, n / all.length * 100) : 0}%` } })))),
     D.map(drill),
     S.length ? h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Skills'), h('h2', {}, `${S.length} money ${S.length === 1 ? 'skill' : 'skills'} your plan says you have not used yet`), h('p', { style: { marginBottom: 0 } }, 'Each is a few minutes, and each is worth a number on your plan.')) : null,
@@ -523,7 +563,7 @@ function render() {
   clear($('main'), backBar(), SCREENS[ui.stage](p, pl));
   foot();
   const lit = $('main').querySelector('.flash');
-  if (lit) { lit.querySelector('details')?.setAttribute('open', ''); setTimeout(() => lit.scrollIntoView({ block: 'center' }), 0); }
+  if (lit) { lit.querySelector('details')?.setAttribute('open', ''); lit.closest('details')?.setAttribute('open', ''); setTimeout(() => lit.scrollIntoView({ block: 'center' }), 0); }
 }
 
 // Come back where you left off: the plan when the picture is done, the next question when it is not.
@@ -533,4 +573,3 @@ ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : 
 ui.q = QUESTIONS.some(x => x.key === linkedQ) ? linkedQ : start.next;
 history.replaceState({ stage: ui.stage, q: ui.q, depth: 0 }, '', hashOf(ui.stage, ui.q));
 render();
-if (!mine().tour) tour(0);

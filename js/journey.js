@@ -30,7 +30,7 @@ export const STAGES = [
   { id: 'life', label: 'Whole life', needs: 'age' },
   { id: 'drills', label: 'Fire drills', needs: 'age' },
   { id: 'sharpen', label: 'Sharpen it', needs: 'age' },
-  { id: 'tune', label: 'Tune it', needs: 'age' },
+  { id: 'tune', label: 'What if', needs: 'age' },
   { id: 'all', label: 'All your numbers', needs: 'age' },
   { id: 'credits', label: 'Credits', needs: null },
 ];
