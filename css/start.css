@@ -136,6 +136,14 @@ a { color: var(--primary); text-underline-offset: 2px; }
 .st-num.flash, .st-tweak.flash, .st-card.flash { animation: st-flash 1.6s ease-out; }
 @keyframes st-flash { from { box-shadow: 0 0 0 4px var(--primary); } to { box-shadow: 0 0 0 4px transparent; } }
 
+.st-stmt { border-top: 2px solid var(--border-row); padding: 8px 0; }
+.st-stmt > summary { font-size: 1rem; }
+.st-srow { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 5px 0; }
+.st-srow .v { font-weight: 700; text-align: right; white-space: nowrap; }
+.st-srow.line { padding-left: 16px; color: var(--text-2); }
+.st-srow.head { font-weight: 700; }
+.st-srow.total { font-weight: 800; border-top: 2px solid var(--border-row); margin-top: 2px; }
+
 /* Credits */
 .st-people { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
 .st-people .st-card { margin: 0; }

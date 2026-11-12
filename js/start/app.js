@@ -4,7 +4,7 @@
 import { h, clear } from '../ui/dom.js';
 import { Store, exportFile } from '../records.js';
 import { localAdapter, memoryAdapter, loadClient, createClient, autosave } from '../storage.js';
-import { SITUATIONS, situationOf, situationSet, setSituation, questionsFor, benefitOnFile, answerBenefit, startJob, STAGES, QUESTIONS, PAY_WAYS, PAY_FREQUENCIES, SPEND_PARTS, sumParts, answerPay, payOnFile, progressOf, onFile, answer, quickPicks, planOf, movedWords, numbersOf, tweaksOf, setTweak, resetTweaks, previewTweak, whatIf, spanWords, monthWords } from '../journey.js';
+import { SITUATIONS, situationOf, situationSet, setSituation, questionsFor, benefitOnFile, answerBenefit, startJob, STAGES, QUESTIONS, PAY_WAYS, PAY_FREQUENCIES, SPEND_PARTS, sumParts, answerPay, payOnFile, progressOf, onFile, answer, quickPicks, planOf, movedWords, numbersOf, statementsOf, tweaksOf, setTweak, resetTweaks, previewTweak, whatIf, spanWords, monthWords } from '../journey.js';
 import { SOURCES, IDEAS, ideaOf, ideasBy, creditWords } from '../registry/credits.js';
 import { fmt } from '../math/result.js';
 import { LEVELS, levelsOf, sharpnessOf, levelOf } from '../sharpen.js';
@@ -326,11 +326,12 @@ function sharpen(p, pl) {
   const field = (f, v, redraw, sync) => {
     const set = (val, { keep = false } = {}) => { v[f.id] = val; if (keep) sync(); else redraw(); };
     const wrap = el => { el.dataset.field = f.id; el.hidden = !!(f.when && !f.when(v)); return el; };
-    if (f.type === 'pick') return wrap(h('div.st-field', {}, h('div.st-flabel', {}, f.label), h('div.st-chips', {}, f.options.map(([val, label]) => chip(label, v[f.id] === val, () => set(val))))));
+    const label = f.labelOf ? f.labelOf(v) : f.label;
+    if (f.type === 'pick') return wrap(h('div.st-field', {}, h('div.st-flabel', {}, label), h('div.st-chips', {}, f.options.map(([val, label]) => chip(label, v[f.id] === val, () => set(val))))));
     const pct = f.type === 'pct', shown = v[f.id] == null ? '' : pct ? String(+(v[f.id] * 100).toFixed(2)) : Number(v[f.id]).toLocaleString('en-US');
-    const input = h('input', { type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: '0', 'aria-label': f.label, value: shown, onInput: e => { const n = e.target.value.replace(/[^\d.]/g, ''); set(n === '' ? null : pct ? Number(n) / 100 : Number(n), { keep: true }); } });
+    const input = h('input', { type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: '0', 'aria-label': label, value: shown, onInput: e => { const n = e.target.value.replace(/[^\d.]/g, ''); set(n === '' ? null : pct ? Number(n) / 100 : Number(n), { keep: true }); } });
     const picks = pct ? f.options.map(o => [o, `${+(o * 100).toFixed(1)}%`]) : (f.picks || []).map(o => [o, money(o)]);
-    return wrap(h('div.st-field', {}, h('div.st-flabel', {}, f.label),
+    return wrap(h('div.st-field', {}, h('div.st-flabel', {}, label),
       h('div.st-box.narrow', {}, h('div.in', {}, pct ? null : h('span', {}, '$'), input, pct ? h('span', {}, '%') : null)),
       picks.length ? h('div.st-chips', { style: { marginTop: '8px' } }, picks.map(([val, label]) => chip(label, v[f.id] === val, () => set(val)))) : null));
   };
@@ -408,6 +409,10 @@ function allNumbers(p, pl) {
   return [
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'All your numbers'), h('h1', {}, `${nums.filter(n => n.value).length} numbers, each one explained`),
       h('p', { style: { marginBottom: 0 } }, 'Tap "How this is worked out" on any of them. A tag shows when a number still leans on a typical amount.')),
+    h(`div.st-card${ui.flash === 'statements' ? '.flash' : ''}`, {}, h('div.st-eyebrow', {}, 'Your statements'), h('h2', {}, 'The full picture, line by line'),
+      statementsOf(pl, store.doc, ref).map(st => h('details.st-fold.st-stmt', { open: ui.flash === 'statements' ? true : null }, h('summary', {}, `${st.title} (${st.sub.toLowerCase()})`),
+        h('div.st-rows', {}, st.rows.map(r => h(`div.st-srow.${r.kind}`, {}, h('span', {}, r.label), h('span.v', {}, `${r.sign ? `${r.sign} ` : ''}${r.value}`)))),
+        st.note ? h('p.st-small.st-soft', { style: { margin: '6px 0 0' } }, st.note) : null))),
     groups.map(g => h('div.st-card', {}, h('h2', {}, g), nums.filter(n => n.group === g).map(row))),
     h('div.st-row', {}, btn('Who these ideas come from', () => go('credits'), 'primary')),
   ];

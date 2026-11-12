@@ -15,6 +15,11 @@ const num = v => (has(v) && Number.isFinite(Number(v)) ? Math.max(0, Number(v)) 
 const recs = (doc, pred) => (doc.records || []).filter(pred);
 const job = doc => recs(doc, r => r.kind === 'income')[0] ?? null;
 const owed = doc => recs(doc, r => r.kind === 'debt' && (r.values?.balance ?? 0) > 0 && !r.linkedTo); // a loan on a home or car is asked with it, in level 7
+// The debts level 3 splits: the three kinds level 1 asks as totals. [type, one of them, many of them].
+const DEBT_TYPES = [['Credit card', 'Card', 'credit cards'], ['Student loan', 'Student loan', 'student loans'], ['Personal loan', 'Other debt', 'other debts']];
+const MAX_EACH = 5;
+const TOP = new Set(['Credit card', 'Student loan', 'Car loan', 'Mortgage']);
+const rowsOf = (doc, type) => recs(doc, r => r.kind === 'debt' && !r.linkedTo && ((r.values?.balance ?? 0) > 0 || has(r.values?.apr)) && (type === 'Personal loan' ? !TOP.has(r.type) : r.type === type));
 const loanOn = (doc, type) => { const a = recs(doc, r => r.kind === 'asset' && r.type === type)[0]; return a ? recs(doc, r => r.kind === 'debt' && r.linkedTo === a.id)[0] ?? null : null; };
 const invested = doc => recs(doc, r => r.kind === 'account' && r.values?.group === 'investment');
 const between = doc => doc.profile?.workSituation === 'Between jobs';
@@ -47,17 +52,40 @@ export const LEVELS = [
     },
     done: doc => NEEDS.every(([letter]) => needLine(doc, letter)), skip: () => null },
 
-  { n: 3, id: 'owe', title: 'What your debt costs', why: 'The rate and the payment on each debt.', unlocks: ['Your real debt-free date', 'Interest you will pay'],
-    fields: doc => owed(doc).flatMap(d => [
-      { id: `apr:${d.id}`, label: `${d.name.replace(/ \(total\)$/, '')}: interest rate`, type: 'pct', options: d.type === 'Credit card' ? [0, 0.18, 0.22, 0.25, 0.29] : [0.03, 0.05, 0.07, 0.09, 0.12] },
-      { id: `pay:${d.id}`, label: `${d.name.replace(/ \(total\)$/, '')}: what you pay a month`, type: 'money', picks: [50, 100, 200, 300, 500] }]),
-    read: doc => Object.fromEntries(owed(doc).flatMap(d => [[`apr:${d.id}`, d.fieldStatus?.apr === 'Not sure' ? null : d.values.apr ?? null], [`pay:${d.id}`, d.values.payment ?? null]])),
+  // Level 3: each debt on its own. A type answered as one total in level 1 can be split: say how many there are, then
+  // each one's balance, rate and payment (and for a card, how long a 0% offer has left). Up to five of each type.
+  { n: 3, id: 'owe', title: 'What your debt costs', why: 'Each card and loan on its own: what is owed, the rate and the payment.', unlocks: ['Your real debt-free date', 'Interest you will pay', 'Which debt to pay first'],
+    fields: doc => DEBT_TYPES.filter(([type]) => rowsOf(doc, type).length).flatMap(([type, one, many]) => [
+      { id: `count:${type}`, label: `How many ${many} do you owe on?`, type: 'pick', options: [1, 2, 3, 4, 5].map(n => [n, String(n)]) },
+      ...Array.from({ length: MAX_EACH }, (_, i) => { const on = v => (v[`count:${type}`] ?? 1) > i, name = v => ((v[`count:${type}`] ?? 1) > 1 ? `${one} ${i + 1}` : one); return [
+        { id: `bal:${type}:${i}`, label: `${one} ${i + 1}: what you owe`, type: 'money', picks: null, when: v => on(v) && (v[`count:${type}`] ?? 1) > 1 },
+        { id: `apr:${type}:${i}`, label: `${one} ${i + 1}: interest rate`, labelOf: v => `${name(v)}: interest rate`, type: 'pct', options: type === 'Credit card' ? [0.17, 0.2, 0.22, 0.25, 0.29] : [0.03, 0.05, 0.07, 0.09, 0.12], when: on },
+        { id: `pay:${type}:${i}`, label: `${one} ${i + 1}: what you pay a month`, labelOf: v => `${name(v)}: what you pay a month`, type: 'money', picks: [50, 100, 200, 300, 500], when: on },
+        ...(type === 'Credit card' ? [{ id: `promo:${type}:${i}`, label: `${one} ${i + 1}: a 0% offer?`, labelOf: v => `${name(v)}: a 0% offer?`, type: 'pick', options: [[0, 'No'], [3, '3 more months'], [6, '6 more months'], [12, '12 more months'], [18, '18 more months']], when: on }] : []),
+      ]; }).flat()]),
+    read(doc) {
+      const out = {};
+      for (const [type] of DEBT_TYPES) { const rows = rowsOf(doc, type); if (!rows.length) continue;
+        out[`count:${type}`] = rows.length;
+        rows.slice(0, MAX_EACH).forEach((d, i) => { out[`bal:${type}:${i}`] = d.values.balance ?? null; out[`apr:${type}:${i}`] = d.fieldStatus?.apr === 'Not sure' ? null : d.values.apr ?? null; out[`pay:${type}:${i}`] = d.values.payment ?? null;
+          if (type === 'Credit card') out[`promo:${type}:${i}`] = d.values.promoEnd ? Math.max(0, monthsTo(String(d.values.promoEnd).slice(0, 7))) : d.values.apr != null && d.fieldStatus?.apr !== 'Not sure' ? 0 : null; }); }
+      return out;
+    },
     write(store, v) {
       store.transaction('What your debt costs', () => {
-        for (const d of owed(store.doc)) {
-          const apr = num(v[`apr:${d.id}`]), payment = num(v[`pay:${d.id}`]);
-          if (apr !== null) { store.update(d.id, { apr }); store.setFieldStatus(d.id, 'apr', 'Know it'); }
-          if (payment !== null) store.update(d.id, { payment, ...(d.type === 'Credit card' ? { payChoice: 'Custom' } : {}) });
+        for (const [type, one] of DEBT_TYPES) {
+          const rows = rowsOf(store.doc, type); if (!rows.length) continue;
+          const n = Math.min(MAX_EACH, Math.max(1, num(v[`count:${type}`]) ?? rows.length));
+          for (const extra of rows.slice(n)) store.remove(extra.id); // fewer than before: the rest come off
+          for (let i = 0; i < n; i++) {
+            const bal = num(v[`bal:${type}:${i}`]), apr = num(v[`apr:${type}:${i}`]), payment = num(v[`pay:${type}:${i}`]), promo = num(v[`promo:${type}:${i}`]);
+            let d = rows[i];
+            if (!d) d = store.add('debt', { name: `${one} ${i + 1}`, values: { balance: bal ?? 0 } }, { type: type === 'Personal loan' ? 'Personal loan' : type });
+            else if (n > 1) store.update(d.id, { ...(bal !== null ? { balance: bal } : {}), ...(/\(total\)$/.test(d.name) || /^.+ \d$/.test(d.name) ? { name: `${one} ${i + 1}` } : {}) });
+            if (apr !== null) { store.update(d.id, { apr }); store.setFieldStatus(d.id, 'apr', 'Know it'); }
+            if (payment !== null) store.update(d.id, { payment, ...(type === 'Credit card' ? { payChoice: 'Custom' } : {}) });
+            if (type === 'Credit card' && promo !== null) store.update(d.id, promo > 0 ? { promoApr: 0, promoEnd: ymAt(Math.round(promo)) } : { promoApr: null, promoEnd: null });
+          }
         }
       });
     },

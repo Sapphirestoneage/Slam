@@ -9,6 +9,8 @@
 import { metrics, ageOf, placeOf } from './math/metrics.js';
 import { taxRates, defaultFilingStatus, takeHomeFromGross } from './math/income.js';
 import { transitionOf, setTransition } from './math/transitions.js';
+import { netWorthStatement } from './math/statements.js';
+import { flowOf } from './charts.js';
 import { benefitOf } from './math/socialsecurity.js';
 import { levelsOf, BUCKET_KIND } from './sharpen.js';
 import { agePlanOf, answeredOf, filledOf, CORE, planWordsOf } from './math/agestart.js';
@@ -333,6 +335,35 @@ export function numbersOf(plan, doc, ref, { now = new Date() } = {}) {
   if (doc.assumptions?.partTimeIncome != null) { const b = baristaFiNumber({ annualSpending: (x.retirementSpending ?? 0) * 12, partTimeIncome: doc.assumptions.partTimeIncome * 12, withdrawalRate: x.withdrawalRate }); Object.assign(baristaRow, { label: `Barista FI number (with ${fmt.money(doc.assumptions.partTimeIncome)} a month of part-time pay)`, value: b.value == null ? null : fmt.money(Math.max(0, b.value)), text: b.text }); }
   const order = ['Each month', 'Safety', 'What you have', 'Independence'];
   return [...first, ...more].sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group));
+}
+
+// The three statements, as rows a screen can show: what you own and owe (the engine's net worth statement, M62), your
+// month (pay to what is left, the same parts the flow picture draws) and your investments (each account, what kind
+// of money it is, and what goes in each month). A row is { label, value, kind: 'head' | 'line' | 'total', sign }.
+export function statementsOf(plan, doc, ref) {
+  const m = plan.m, x = m.inputs, $ = v => fmt.money(Math.round(v));
+  const N = netWorthStatement(doc);
+  const side = (groups, sign) => groups.flatMap(g => [{ label: g.name, value: $(g.total), kind: 'head', sign }, ...(g.lines.length > 1 ? g.lines.map(l => ({ label: l.name, value: l.value == null ? 'Not entered' : $(l.value), kind: 'line' })) : [])]);
+  const worth = { id: 'worth', title: 'What you own and owe', sub: 'A net worth statement', rows: [
+    ...side(N.assets, ''), { label: 'Everything you own', value: $(N.totalAssets), kind: 'total' },
+    ...side(N.debts, '−'), { label: 'Everything you owe', value: $(N.totalDebts), kind: 'total', sign: '−' },
+    { label: 'Net worth', value: $(N.netWorth), kind: 'total', sign: '=' }],
+    note: N.assets.length + N.debts.length === 0 ? 'Nothing entered yet.' : N.missing.length ? `Still to enter: ${N.missing.join(', ')}.` : null };
+  const f = flowOf(m);
+  const month = { id: 'month', title: 'Your month', sub: 'A cash flow statement', rows: f ? [
+    { label: f.from, value: $(f.total), kind: 'total' },
+    ...f.parts.filter(p => p.kind !== 'left').map(p => ({ label: p.label, value: $(p.amount), kind: 'line', sign: '−' })),
+    ...f.parts.filter(p => p.kind === 'left').map(p => ({ label: p.short ? 'Short each month' : 'Left over each month', value: $(p.amount), kind: 'total', sign: '=' }))] : [],
+    note: !f ? 'Needs your pay and your spending.' : f.split ? null : 'Spending is one number so far. Level "Where it goes" splits it.' };
+  const accts = (doc.records || []).filter(r => r.kind === 'account' && r.values?.group === 'investment');
+  const going = m.investing?.monthly ?? null;
+  const invest = { id: 'invest', title: 'Your investments', sub: 'An investment statement', rows: [
+    ...accts.map(r => ({ label: r.type === 'All investments' ? 'All accounts together' : `${r.name}${BUCKET_KIND[r.type] ? ` (${BUCKET_KIND[r.type].toLowerCase()})` : ''}`, value: $(r.values.balance ?? 0), kind: 'line' })),
+    { label: 'Invested today', value: $(x.invested ?? 0), kind: 'total' },
+    ...(m.pretaxSaving ? [{ label: 'From your paycheck into a 401(k), a month', value: $(m.pretaxSaving), kind: 'line', sign: '+' }] : []),
+    ...(going != null ? [{ label: m.investing?.before?.months ? `Going in each month, after the first ${m.investing.before.months} months` : 'Going in each month', value: $(going), kind: 'total', sign: '+' }] : [])],
+    note: m.investing?.before?.months ? `For the first ${m.investing.before.months} months your left-over money pays down debt and fills your emergency cash first.` : null };
+  return [worth, month, invest];
 }
 
 // The toggles. Each writes a field the coach app already has (Plan, Assumptions and Debt payoff), so nothing is new on

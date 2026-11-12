@@ -19,14 +19,14 @@ const ANSWERS = { income: { takeHome: 4200 }, spending: { gut: 3100 }, cash: { c
 const full = () => { const s = new Store(newHousehold({ name: 'Me' })); s.setDoc('profile', { birthYear: 2001, state: 'NY', nyc: true }); for (const q of QUESTIONS) answer(s, q.key, ANSWERS[q.key]); return s; };
 const VALUES = { where: { rent: 1500, food: 600, transport: 130 }, work: { contributionPct: 0.06, match: 'm0' }, accounts: { k401: 9000, roth: 6000, brokerage: 3000 }, time: { paid: 45, commute: 5, costs: 150 },
   own: { housing: 'Rent', hasCar: false }, taxes: { filingStatus: 'Single' }, safety: { incomeStability: 'Varies', healthCoverage: 'Employer' }, finish: { fiAge: 55, retirementSpending: 2800, partTimeIncome: 1000 } };
-const valuesFor = (L, s) => (L.id === 'owe' ? Object.fromEntries(L.fields(s.doc, ref).map(f => [f.id, f.type === 'pct' ? (/Credit/.test(f.label) ? 0.22 : 0.055) : 210])) : VALUES[L.id]);
+const valuesFor = (L, s) => { if (L.id !== 'owe') return VALUES[L.id]; const v = L.read(s.doc, ref); for (const f of L.fields(s.doc, ref).filter(x => !x.when || x.when(v))) { if (f.id.startsWith('apr:')) v[f.id] = /Credit/.test(f.id) ? 0.22 : 0.055; if (f.id.startsWith('pay:')) v[f.id] = 210; if (f.id.startsWith('promo:')) v[f.id] = 0; } return v; };
 const near = (a, b, tol, what) => assert.ok(Math.abs(a - b) <= tol, `${what}: app ${a}, by hand ${b}`);
 
 test('nine levels, each a few taps, each naming what it unlocks', () => {
   const s = full();
   assert.deepEqual(levelsFor(s.doc).map(l => l.n), [2, 3, 4, 5, 6, 7, 8, 9, 10]);
   assert.deepEqual(levelsFor(s.doc).map(l => l.def.id), ['where', 'owe', 'work', 'accounts', 'time', 'own', 'taxes', 'safety', 'finish']);
-  for (const L of LEVELS) { const f = L.fields(s.doc, ref); const shown = f.filter(x => !x.when || x.when(L.read(s.doc, ref))); assert.ok(shown.length >= 1 && shown.length <= 6, `${L.id}: ${shown.length} boxes`); assert.ok(L.unlocks.length && L.title && L.why); }
+  for (const L of LEVELS) { const f = L.fields(s.doc, ref); const shown = f.filter(x => !x.when || x.when(L.read(s.doc, ref))); assert.ok(shown.length >= 1 && shown.length <= (L.id === 'owe' ? 9 : 6), `${L.id}: ${shown.length} boxes`); assert.ok(L.unlocks.length && L.title && L.why); }
   assert.ok(levelsOf(s.doc).every(l => l.state === 'open'));
   assert.deepEqual([sharpnessOf(s.doc, true).done, sharpnessOf(s.doc, true).total], [1, 10]);
 });
@@ -53,12 +53,36 @@ test('a level, once done, stays done: a car loan is asked with the car and never
   assert.equal(lv('owe').done(s.doc), true);
   lv('own').write(s, { housing: 'Rent', hasCar: true, carValue: 9000, carLoanBalance: 4000, carLoanApr: 0.07, carLoanPayment: 300 }, ref);
   assert.equal(lv('owe').done(s.doc), true, 'level 3 stays done');
-  assert.equal(lv('owe').fields(s.doc, ref).length, 4, 'the car loan is not one of its questions');
+  assert.ok(!lv('owe').fields(s.doc, ref).some(f => /\bcar\b/i.test(f.label)), 'the car loan is not one of its questions');
   const back = lv('own').read(s.doc, ref);
   assert.deepEqual([back.carLoanBalance, back.carLoanApr, back.carLoanPayment], [4000, 0.07, 300]);
   const loan = metrics(s.doc, ref, { now }).inputs.debts.find(d => d.type === 'Car loan');
   assert.deepEqual([loan.apr, loan.aprGuess, loan.payment], [0.07, false, 300]);
   assert.equal(levelsOf(s.doc).filter(l => l.state === 'done').map(l => l.n).join(), '3,7');
+});
+
+test('level 3 splits a total into each card and loan, with its own rate, payment and 0% offer', () => {
+  const s = full(), owe = LEVELS.find(l => l.id === 'owe');
+  const v = owe.read(s.doc, ref);
+  assert.deepEqual([v['count:Credit card'], v['bal:Credit card:0'], v['count:Student loan']], [1, 3200, 1]);
+  Object.assign(v, { 'count:Credit card': 3, 'bal:Credit card:0': 1800, 'apr:Credit card:0': 0.25, 'pay:Credit card:0': 90, 'promo:Credit card:0': 0,
+    'bal:Credit card:1': 1000, 'apr:Credit card:1': 0.17, 'pay:Credit card:1': 50, 'promo:Credit card:1': 0,
+    'bal:Credit card:2': 400, 'apr:Credit card:2': 0.22, 'pay:Credit card:2': 40, 'promo:Credit card:2': 6,
+    'apr:Student loan:0': 0.055, 'pay:Student loan:0': 220 });
+  owe.write(s, v, ref);
+  const cards = s.doc.records.filter(r => r.kind === 'debt' && r.type === 'Credit card');
+  assert.deepEqual(cards.map(c => [c.name, c.values.balance, c.values.apr, c.values.payment]), [['Card 1', 1800, 0.25, 90], ['Card 2', 1000, 0.17, 50], ['Card 3', 400, 0.22, 40]]);
+  assert.equal(cards[2].values.promoApr, 0); assert.match(cards[2].values.promoEnd, /^\d{4}-\d{2}$/);
+  assert.equal(owe.done(s.doc), true);
+  const back = owe.read(s.doc, ref);
+  assert.deepEqual([back['count:Credit card'], back['bal:Credit card:1'], back['apr:Credit card:1'], back['promo:Credit card:2']], [3, 1000, 0.17, 6]);
+  const m = metrics(s.doc, ref, { now });
+  assert.equal(m.inputs.debts.filter(d => d.type === 'Credit card').length, 3);
+  assert.equal(m.inputs.debts.reduce((a, d) => a + d.balance, 0), 1800 + 1000 + 400 + 20000);
+  assert.equal(onFile(s.doc, 'card', { ref, now })['Credit card'], 3200, 'level 1 still shows the cards as one total');
+  // back to two cards: the third comes off
+  owe.write(s, { ...back, 'count:Credit card': 2 }, ref);
+  assert.equal(s.doc.records.filter(r => r.kind === 'debt' && r.type === 'Credit card').length, 2);
 });
 
 test('a level with nothing to answer says so and counts as done', () => {
@@ -175,4 +199,21 @@ test('between jobs: the plan shows how long the money lasts, then counts the job
   assert.equal(after.between, null);
   assert.ok(after.m.monthsToFi.value < fiAhead, 'starting now beats starting in four months');
   near(after.m.surplus.value, j.monthly - 2600, 1, 'left over once working');
+});
+
+test('the three statements add up: own and owe, the month, the investments', async () => {
+  const { statementsOf } = await import('../js/journey.js');
+  const s = full();
+  for (const L of LEVELS) L.write(s, valuesFor(L, s), ref);
+  const p = planOf(s.doc, ref, priors, { flags, now });
+  const [worth, month, invest] = statementsOf(p, s.doc, ref);
+  const val = r => Number(r.value.replace(/[$,]/g, ''));
+  const total = (st, label) => val(st.rows.find(r => r.label === label));
+  assert.equal(total(worth, 'Everything you own') - total(worth, 'Everything you owe'), total(worth, 'Net worth'));
+  assert.equal(total(worth, 'Net worth'), p.m.netWorth.value);
+  const out = month.rows.filter(r => r.sign === '−').reduce((a, r) => a + val(r), 0);
+  near(val(month.rows[0]) - out, val(month.rows.at(-1)), 3, 'pay less everything it goes to is what is left');
+  assert.equal(val(month.rows.at(-1)), 1100);
+  assert.equal(total(invest, 'Invested today'), 18000);
+  assert.equal(invest.rows.filter(r => r.kind === 'line' && /taxed|reachable/.test(r.label)).length, 3);
 });
