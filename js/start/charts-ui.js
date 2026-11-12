@@ -77,3 +77,26 @@ export function timelineChart(t) {
     h('ol.st-list', {}, t.points.map((p, i) => h('li', {}, h('span.dot', {}, i + 1), h('span', {}, p.name), h('span.when', {}, p.date)))),
     t.done.length ? h('p.st-readout', {}, h('strong', {}, `Already done: `), t.done.join(', '), '.') : null);
 }
+
+// ---------- whole life: the three kinds of money, stacked, from today to the plan's last year ----------
+export function lifeChart(run, retireAge) {
+  const W = 360, H = 250, L = 44, R = 10, T = 14, B = 28, rows = run.years, n = rows.length - 1;
+  const top = Math.max(...rows.map(r => r.total), 1) * 1.06;
+  const X = i => L + (W - L - R) * (n ? i / n : 0), Y = v => T + (H - T - B) * (1 - v / top);
+  const area = f => `M${X(0)},${Y(0)} ${rows.map((r, i) => `L${X(i)},${Y(f(r))}`).join(' ')} L${X(n)},${Y(0)} Z`;
+  const at = rows.findIndex(r => r.age === retireAge), every = Math.max(1, Math.ceil(n / 5));
+  const mark = s('line', { x1: X(Math.max(0, at)), x2: X(Math.max(0, at)), y1: T, y2: H - B, class: 'st-c-cursor' });
+  const out = h('p.st-readout', { role: 'status' });
+  const read = i => { const r = rows[i]; mark.setAttribute('x1', X(i)); mark.setAttribute('x2', X(i));
+    out.replaceChildren(h('strong', {}, `Age ${r.age}: ${money(r.total)}. `), r.phase === 'work' ? `Still working. ${money(r.saved)} goes in this year.`
+      : `You spend ${money(r.spend)}.${r.ss ? ` Social Security pays ${money(r.ss)}.` : ''}${r.earned ? ` Work pays ${money(r.earned)}.` : ''} ${money(r.withdraw)} comes out of your accounts${r.tax > 0.5 ? `, ${money(r.tax)} of it for tax` : ''}.${r.convert ? ` ${money(r.convert)} moves to Roth.` : ''}${r.short ? ` Short by ${money(r.short)}.` : ''}`); };
+  const chart = svg(W, H, `Your money from age ${rows[0].age} to ${rows[n].age}`,
+    [0.25, 0.5, 0.75, 1].map(t => top / 1.06 * t).map(t => [s('line', { x1: L, x2: W - R, y1: Y(t), y2: Y(t), class: 'st-c-grid' }), s('text', { x: L - 6, y: Y(t) + 4, class: 'st-c-axis', 'text-anchor': 'end' }, short(t))]),
+    s('path', { d: area(r => r.taxable + r.pretax + r.roth), class: 'st-c-roth' }), s('path', { d: area(r => r.taxable + r.pretax), class: 'st-c-pretax' }), s('path', { d: area(r => r.taxable), class: 'st-c-taxable' }),
+    at >= 0 ? [s('line', { x1: X(at), x2: X(at), y1: T, y2: H - B, class: 'st-c-target' }), s('text', { x: X(at) + (at > n * 0.7 ? -6 : 6), y: T + 10, class: 'st-c-label', 'text-anchor': at > n * 0.7 ? 'end' : 'start' }, `Work optional: ${retireAge}`)] : null,
+    rows.map((r, i) => (i % every === 0 || i === n ? s('text', { x: X(i), y: H - 8, class: 'st-c-axis', 'text-anchor': i === n ? 'end' : i ? 'middle' : 'start' }, String(r.age)) : null)),
+    mark);
+  const slider = h('input', { type: 'range', min: 0, max: n, step: 1, value: String(Math.max(0, at)), 'aria-label': 'Pick an age', onInput: e => read(Number(e.target.value)) });
+  read(Math.max(0, at));
+  return h('div', {}, chart, legend([['taxable', 'Reachable any time'], ['pretax', 'Taxed later'], ['roth', 'Never taxed again']]), h('label.st-small.st-soft', {}, 'Drag to any age'), slider, out);
+}

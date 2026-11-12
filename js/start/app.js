@@ -10,8 +10,10 @@ import { fmt } from '../math/result.js';
 import { LEVELS, levelsOf, sharpnessOf, levelOf } from '../sharpen.js';
 import { growthOf, flowOf, debtOf, timelineOf } from '../charts.js';
 import { growthChart, flowChart, debtChart, timelineChart } from './charts-ui.js';
+import { lifeScreen } from './life-ui.js';
 
 const [ref, priors, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/priors-2026.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
+const hist = await fetch('data/history-returns.json').then(r => r.json());
 
 let adapter;
 try { localStorage.setItem('slam.test', '1'); localStorage.removeItem('slam.test'); adapter = localAdapter(); } catch { adapter = memoryAdapter(); }
@@ -283,7 +285,7 @@ function yourPlan(p, pl) {
       h('h2', {}, pl.wins ? `${pl.wins} already done. Here is what comes next.` : 'Wins on the way, soonest first'),
       h('ul.st-list', {}, pl.milestones.map(x => h(`li${x.done ? '.done' : ''}`, {}, h('span.dot', {}, x.done ? '✓' : ''), h('span', {}, x.name, h('small', {}, x.what)), h('span.when', {}, x.date)))),
       credit('milestones')),
-    h('div.st-row', {}, btn('See it in pictures', () => go('see'), 'primary big'), btn('Sharpen it', () => go('sharpen')), btn('Tune it', () => go('tune'))),
+    h('div.st-row', {}, btn('See it in pictures', () => go('see'), 'primary big'), btn('Your whole life', () => go('life')), btn('Sharpen it', () => go('sharpen'))),
   ];
 }
 
@@ -314,7 +316,7 @@ function see(p, pl) {
     card('flow', 'Picture 2', 'Where your money goes each month', f ? flowChart(f) : h('p.st-soft', {}, 'This picture needs your pay and your spending.'), 'sankey'),
     card('timeline', 'Picture 3', 'Your path, one win at a time', t ? timelineChart(t) : h('p.st-soft', {}, 'Every milestone on your list is done.'), 'milestones'),
     d ? card('debt', 'Picture 4', 'Your debt, falling to zero', debtChart(d, monthWords), 'avalanche') : card('debt', 'Picture 4', 'Your debt', h('p', { style: { marginBottom: 0 } }, pl.m.inputs.debts.length ? 'Add each debt\'s rate and payment in Sharpen it to see it fall to zero.' : 'No debt on file. Nothing to draw here.'), null),
-    h('div.st-row', {}, btn('Sharpen it', () => go('sharpen'), 'primary big'), btn('Tune it', () => go('tune'))),
+    h('div.st-row', {}, btn('Your whole life', () => go('life'), 'primary big'), btn('Sharpen it', () => go('sharpen'))),
   ];
 }
 
@@ -461,7 +463,7 @@ function foot() {
     const a = h('a', { href: URL.createObjectURL(blob), download: `my-plan-${new Date().toISOString().slice(0, 10)}.json` });
     document.body.append(a); a.click(); a.remove();
   };
-  const over = () => { open(createClient(adapter, 'My plan', new Date().toISOString())); Object.assign(ui, { q: null, note: null, decade: null, lever: { spendLess: 0, earnMore: 0 } }); remember({ elsewhere: false, parts: null }); go('you'); };
+  const over = () => { open(createClient(adapter, 'My plan', new Date().toISOString())); Object.assign(ui, { q: null, note: null, decade: null, lever: { spendLess: 0, earnMore: 0 } }); remember({ elsewhere: false, parts: null, life: null }); go('you'); };
   clear($('foot'),
     h('span.grow', {}, 'Your numbers stay in this browser. Nothing is sent anywhere. This is education, not personal financial advice.'),
     btn('Download a backup', download, 'slim'),
@@ -470,7 +472,8 @@ function foot() {
       : btn('Start over', () => { ui.confirmReset = true; foot(); }, 'slim'));
 }
 
-const SCREENS = { you, numbers, plan: yourPlan, see, sharpen, tune, all: allNumbers, credits };
+const life = (p, pl) => lifeScreen({ pl, store, ref, hist, mine, remember, render, go, btn, chip, credit, flash: ui.flash });
+const SCREENS = { you, numbers, plan: yourPlan, see, life, sharpen, tune, all: allNumbers, credits };
 function render() {
   const p = P();
   if (!p.hasAge && STAGES.find(s => s.id === ui.stage)?.needs === 'age') ui.stage = 'you';
@@ -485,7 +488,7 @@ function render() {
 // Come back where you left off: the plan when the picture is done, the next question when it is not.
 const start = P();
 const [, linked, linkedQ] = location.hash.split('/'); // a link to a screen (#/tune) opens there
-ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'sharpen', 'tune', 'all', 'credits'].includes(mine().stage) ? mine().stage : 'plan') : 'numbers';
+ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'life', 'sharpen', 'tune', 'all', 'credits'].includes(mine().stage) ? mine().stage : 'plan') : 'numbers';
 ui.q = QUESTIONS.some(x => x.key === linkedQ) ? linkedQ : start.next;
 history.replaceState({ stage: ui.stage, q: ui.q, depth: 0 }, '', hashOf(ui.stage, ui.q));
 render();

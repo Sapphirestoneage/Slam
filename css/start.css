@@ -186,6 +186,14 @@ a { color: var(--primary); text-underline-offset: 2px; }
 .st-do { border: 2px solid var(--good); background: var(--saved); border-radius: 12px; padding: 10px 12px; margin: 12px 0 4px; font-weight: 600; }
 .st-do .st-eyebrow { color: var(--good); margin-bottom: 2px; }
 
+.st-c-taxable { fill: var(--assets); } .st-c-pretax { fill: var(--primary); } .st-c-roth { fill: var(--good); }
+.st-legend i.taxable { background: var(--assets); } .st-legend i.pretax { background: var(--primary); } .st-legend i.roth { background: var(--good); }
+.st-block { border: 2px solid var(--border-row); border-radius: 12px; padding: 12px; margin: 10px 0; }
+.st-step { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+.st-step button { width: 40px; height: 40px; border-radius: 10px; border: 2px solid var(--primary); background: var(--card); color: var(--primary); font: inherit; font-size: 1.2rem; font-weight: 800; cursor: pointer; }
+.st-step button:hover { background: var(--primary); color: var(--on-primary); }
+.st-step span { min-width: 78px; text-align: center; }
+
 /* Levels */
 .st-levelhead { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; }
 .st-lvl { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; border: 2px solid var(--primary); color: var(--primary); }
