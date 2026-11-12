@@ -23,6 +23,31 @@ export function taxableSocialSecurity(ss, other, filingStatus = 'Single') {
   if (prov <= t2) return Math.min(ss / 2, (prov - t1) / 2);
   return Math.min(ss * 0.85, (prov - t2) * 0.85 + Math.min(ss / 2, (t2 - t1) / 2));
 }
+// Long-term gains: the top of the 0% and 15% bands by taxable income (IRS Rev. Proc. 2025-32, tax year 2026).
+const GAIN_BANDS = { single: [49450, 545500], joint: [98900, 613700], head: [66200, 579600] };
+export function gainsTax(gains, ordinaryTaxable, key = 'single') {
+  if (!(gains > 0)) return 0;
+  const [t0, t1] = GAIN_BANDS[key] ?? GAIN_BANDS.single, lo = Math.max(0, ordinaryTaxable), hi = lo + gains;
+  const at15 = Math.max(0, Math.min(hi, t1) - Math.max(lo, t0)), at20 = Math.max(0, hi - Math.max(lo, t1));
+  return at15 * 0.15 + at20 * 0.20;
+}
+// Required withdrawals from taxed-later money: the balance divided by this number at each age (IRS Publication 590-B,
+// Uniform Lifetime Table). They start at 73, or 75 for someone born in 1960 or later (SECURE 2.0).
+const UNIFORM = { 73: 26.5, 74: 25.5, 75: 24.6, 76: 23.7, 77: 22.9, 78: 22.0, 79: 21.1, 80: 20.2, 81: 19.4, 82: 18.5, 83: 17.7, 84: 16.8, 85: 16.0, 86: 15.2, 87: 14.4, 88: 13.7, 89: 12.9, 90: 12.2, 91: 11.5, 92: 10.8, 93: 10.1, 94: 9.5, 95: 8.9, 96: 8.4, 97: 7.8, 98: 7.3, 99: 6.8, 100: 6.4 };
+export const requiredWithdrawal = (age, pretax, startAge = 73) => (age >= startAge && pretax > 0 && UNIFORM[Math.min(100, age)] ? pretax / UNIFORM[Math.min(100, age)] : 0);
+// The Marketplace premium credit for 2026 (IRS Rev. Proc. 2025-25; the 2025 HHS poverty guideline, which 2026 coverage
+// uses): the benchmark premium less a share of income that rises with income, and nothing past four times the
+// poverty line. Under the line there is no credit (Medicaid is the route there, and is not counted).
+const POVERTY = { one: 15650, each: 5500 };
+const ACA_BANDS = [[1.33, 0.0210, 0.0210], [1.5, 0.0314, 0.0419], [2, 0.0419, 0.0660], [2.5, 0.0660, 0.0844], [3, 0.0844, 0.0996], [4, 0.0996, 0.0996]];
+export function premiumCredit(income, benchmark, people = 1) {
+  if (!(benchmark > 0)) return 0;
+  const ratio = income / (POVERTY.one + POVERTY.each * (people - 1));
+  if (ratio < 1 || ratio > 4) return 0;
+  let from = 1;
+  for (const [to, a, b] of ACA_BANDS) { if (ratio <= to) return Math.max(0, benchmark - income * (a + (b - a) * ((ratio - from) / (to - from)))); from = to; }
+  return 0;
+}
 const PENALTY_AGE = 60;     // 59 and a half, in whole years: pretax money and Roth growth are free of the 10% penalty from here
 const PENALTY = 0.10;
 const SEASON = 5;           // years a Roth conversion waits before it can come out penalty-free
@@ -42,13 +67,17 @@ export const FILLS = [
 const keyOf = fs => (fs === 'Married jointly' ? 'joint' : fs === 'Head of household' ? 'head' : 'single');
 // Income tax for one free year: federal plus state on ordinary income (pretax withdrawals, conversions, part-time
 // pay, and the taxed part of Social Security). No payroll tax here: part-time pay is small and this is a plan.
-export function yearTax({ ordinary, ss }, tax, ref) {
-  const taxedSs = taxableSocialSecurity(ss, ordinary, tax.filingStatus);
+// gains: what was earned on money sold from a taxable account this year. It stacks on top of ordinary income: any
+// standard deduction ordinary income did not use shelters it first, then the 0%, 15% and 20% bands. States tax it as income.
+export function yearTax({ ordinary, ss, gains = 0 }, tax, ref) {
+  const taxedSs = taxableSocialSecurity(ss, ordinary + gains, tax.filingStatus);
   const gross = ordinary + taxedSs;
-  if (gross <= 0) return 0;
-  const fed = federalTax({ gross, filingStatus: tax.filingStatus }, ref).value ?? 0;
-  const st = stateTax({ gross: ordinary, filingStatus: tax.filingStatus, place: tax.place ?? null }, ref);
-  return fed + (st.state ?? 0) + (st.local ?? 0);
+  if (gross + gains <= 0) return 0;
+  const fed = gross > 0 ? federalTax({ gross, filingStatus: tax.filingStatus }, ref).value ?? 0 : 0;
+  const st = stateTax({ gross: ordinary + gains, filingStatus: tax.filingStatus, place: tax.place ?? null }, ref);
+  const k = keyOf(tax.filingStatus), std = ref.tax.standardDeduction[k] ?? 0;
+  const onGains = gainsTax(Math.max(0, gains - Math.max(0, std - gross)), Math.max(0, gross - std), k);
+  return fed + onGains + (st.state ?? 0) + (st.local ?? 0);
 }
 // How much ordinary income fits before the fill line: the standard deduction, or the top of the 12% bracket.
 export function fillRoom(fill, tax, ref) {
@@ -57,12 +86,14 @@ export function fillRoom(fill, tax, ref) {
   return fill === 'deduction' ? std : std + (ref.tax.brackets[k].find(([, rate]) => rate > 0.12)?.[0] ?? 0);
 }
 
+// People in the plan who are under 65 at this age of the first person (health cover is bought until Medicare).
+export const under65 = (age, x) => (age < 65 ? 1 : 0) + (x.partner && age - x.age + x.partner.age < 65 ? 1 : 0);
 // What life costs in a free year, before any strategy: the base spending by era (go-go, slow-go, no-go), health cost
 // before 65, and every block that is on at that age.
 export function needAt(age, x) {
   const e = x.eras || {};
   const era = age >= (e.noGoAge ?? 200) ? e.noGo ?? 1 : age >= (e.slowGoAge ?? 200) ? e.slowGo ?? 1 : 1;
-  let need = x.spendingAfter * era + (age < 65 ? x.tax?.health ?? 0 : 0);
+  let need = x.spendingAfter * era + under65(age, x) * (x.tax?.health ?? 0);
   for (const b of x.blocks || []) { if (age >= b.fromAge && age <= b.toAge) need += b.spending ?? 0; if (age === b.fromAge) need += b.once ?? 0; }
   return Math.max(0, need);
 }
@@ -72,9 +103,11 @@ const blockIncome = (age, x) => (x.blocks || []).reduce((s, b) => s + (age >= b.
 // can come out free (what was put in, and conversions that have waited five years), then pretax (10% penalty), then
 // Roth growth (10% penalty). After: taxable, pretax, Roth. Returns { pretax (ordinary income), penalty, short }.
 function draw(b, amount, age) {
-  let left = amount, pretax = 0, penalty = 0;
+  let left = amount, pretax = 0, penalty = 0, gains = 0;
   const take = (key, cap = Infinity) => { const v = Math.min(left, Math.max(0, Math.min(b[key], cap))); b[key] -= v; left -= v; return v; };
-  take('taxable');
+  // Money sold from the taxable account is part what was put in (basis, already taxed) and part gain, in proportion.
+  const had = b.taxable, sold = take('taxable');
+  if (sold > 0 && had > 0) { const share = Math.min(1, Math.max(0, (b.basis ?? had) / had)); gains = sold * (1 - share); b.basis = Math.max(0, (b.basis ?? had) - sold * share); }
   if (age < PENALTY_AGE) {
     const free = take('roth', b.rothFree); b.rothFree -= free;
     const p = take('pretax'); pretax += p; penalty += p * PENALTY;
@@ -83,7 +116,7 @@ function draw(b, amount, age) {
     pretax += take('pretax');
     const r = take('roth'); b.rothFree = Math.max(0, b.rothFree - r);
   }
-  return { pretax, penalty, short: left > 0.5 ? left : 0 };
+  return { pretax, penalty, gains, short: left > 0.5 ? left : 0 };
 }
 
 // The run. x:
@@ -95,13 +128,15 @@ function draw(b, amount, age) {
 // returns(k): the real return for year k of the plan (0 = this year); defaults to x.realReturn every year.
 // Out: { years: [...], ok, ranOutAge, atRetire, end, lifetimeTax, lowestSpend (as a share of need), penalties }.
 export function lifetime(x, ref, { returns = null } = {}) {
-  const b = { taxable: x.start.taxable ?? 0, pretax: x.start.pretax ?? 0, roth: x.start.roth ?? 0, rothFree: Math.min(x.start.rothFree ?? 0, x.start.roth ?? 0) };
+  const b = { taxable: x.start.taxable ?? 0, pretax: x.start.pretax ?? 0, roth: x.start.roth ?? 0, rothFree: Math.min(x.start.rothFree ?? 0, x.start.roth ?? 0), basis: Math.min(x.start.basis ?? x.start.taxable ?? 0, x.start.taxable ?? 0) };
+  const P = x.partner || null, lastAge = x.planAge + (P ? Math.max(0, x.age - P.age) : 0); // with two people, the plan runs until the younger one reaches the last year
+  const pSs = P ? (typeof P.ss?.yearly === 'function' ? P.ss.yearly(x.retireAge) : P.ss?.yearly ?? 0) : 0, people = P ? 2 : 1, rmdAge = x.rmdAge ?? 73;
   const total = () => b.taxable + b.pretax + b.roth;
   const years = [], season = []; // season: [{ at: plan year, amount }] conversions waiting five years
   const tax = x.tax || { filingStatus: 'Single' }, room = fillRoom(tax.fill, tax, ref);
   const ssYearly = typeof x.ss?.yearly === 'function' ? x.ss.yearly(x.retireAge) : x.ss?.yearly ?? 0; // stopping work sooner lowers the benefit
   let atRetire = null, ranOutAge = null, lifetimeTax = 0, penalties = 0, lowest = 1, adjust = 1, wr0 = null;
-  for (let k = 0, age = x.age; age <= x.planAge; k++, age++) {
+  for (let k = 0, age = x.age; age <= lastAge; k++, age++) {
     const r = returns ? returns(k) : x.realReturn;
     const free = age >= x.retireAge;
     for (const s of season) if (s.at + SEASON === k) b.rothFree += s.amount; // a conversion from five years ago can now come out
@@ -114,7 +149,7 @@ export function lifetime(x, ref, { returns = null } = {}) {
       let put = { ...s };
       if (extra > 0) for (const key of ['taxable', 'roth']) { const cut = Math.min(put[key], extra); put[key] -= cut; extra -= cut; }
       else if (extra < 0) put.taxable += -extra;
-      b.taxable += put.taxable; b.roth += put.roth; b.rothFree += put.roth; b.pretax += put.pretax;
+      b.taxable += put.taxable; b.basis += put.taxable; b.roth += put.roth; b.rothFree += put.roth; b.pretax += put.pretax;
       row.saved = put.taxable + put.roth + put.pretax;
       if (extra > 0.5) { const d = draw(b, extra, age); row.withdraw = extra - d.short; row.penalty = d.penalty; row.short = d.short; penalties += d.penalty; }
     } else {
@@ -130,31 +165,39 @@ export function lifetime(x, ref, { returns = null } = {}) {
         adjust = Math.max(0.7, adjust); // a cut never goes below 70% of what life costs
         spend = need * adjust;
       }
-      const ss = age >= (x.ss?.claimAge ?? 200) ? ssYearly : 0;
+      const ss = (age >= (x.ss?.claimAge ?? 200) ? ssYearly : 0) + (P && age - x.age + P.age >= (P.ss?.claimAge ?? 200) ? pSs : 0);
+      const rmd = requiredWithdrawal(age, b.pretax, rmdAge), benchmark = x.tax?.aca ? under65(age, x) * (tax.health ?? 0) : 0;
       const earned = (age <= (x.partTime?.untilAge ?? -1) ? x.partTime.yearly ?? 0 : 0) + blockIncome(age, x);
       // Fill the bracket first: move pretax to Roth up to the line (never more than is there).
       let convert = 0;
       if (room > 0 && b.pretax > 0) { convert = Math.min(b.pretax, Math.max(0, room - earned)); }
       // What must come out: spending less what comes in, plus this year's tax (found by going round a few times).
-      let fromPortfolio = Math.max(0, spend - ss - earned), taxDue = 0, got = null, snap = null;
-      for (let i = 0; i < 6; i++) {
+      // The premium credit depends on this year's income, which depends on what is taken out, so it goes round too.
+      let fromPortfolio = Math.max(0, spend - ss - earned), taxDue = 0, credit = 0, got = null, snap = null;
+      for (let i = 0; i < 8; i++) {
         snap = { ...b };
-        got = draw(snap, fromPortfolio + taxDue, age);
-        const pre = Math.max(0, got.pretax), conv = Math.min(convert, Math.max(0, snap.pretax));
-        const t = yearTax({ ordinary: pre + conv + earned, ss }, tax, ref) + got.penalty;
-        if (Math.abs(t - taxDue) < 1) { taxDue = t; break; }
-        taxDue = t;
+        got = draw(snap, Math.max(0, fromPortfolio - credit) + taxDue, age);
+        const pre = Math.max(got.pretax, Math.min(rmd, b.pretax)), conv = Math.min(convert, Math.max(0, snap.pretax));
+        const t = yearTax({ ordinary: pre + conv + earned, ss, gains: got.gains }, tax, ref) + got.penalty;
+        const c = benchmark > 0 ? Math.min(benchmark, premiumCredit(pre + conv + earned + got.gains + ss, benchmark, people)) : 0;
+        if (Math.abs(t - taxDue) < 1 && Math.abs(c - credit) < 1) { taxDue = t; credit = c; break; }
+        taxDue = t; credit = (credit + c) / 2; // ease toward it: the 400% line is a cliff
       }
+      fromPortfolio = Math.max(0, fromPortfolio - credit);
       const d = draw(b, fromPortfolio + taxDue, age);
+      // A required withdrawal larger than what was needed still comes out: it is taxed and lands in the taxable account.
+      const forced = Math.min(b.pretax, Math.max(0, rmd - d.pretax));
+      if (forced > 0) { b.pretax -= forced; b.taxable += forced; b.basis += forced; }
       const conv = Math.min(convert, Math.max(0, b.pretax));
       b.pretax -= conv; b.roth += conv; if (conv > 0) season.push({ at: k, amount: conv });
+      row.rmd = rmd; row.gains = d.gains; row.credit = credit;
       Object.assign(row, { need, spend: d.short ? Math.max(0, spend - d.short) : spend, tax: taxDue - d.penalty, ss, earned, withdraw: fromPortfolio + taxDue - d.short, convert: conv, penalty: d.penalty, short: d.short });
       lifetimeTax += taxDue - d.penalty; penalties += d.penalty;
       if (need > 0) lowest = Math.min(lowest, row.spend / need);
     }
     if (row.short > 0.5 && ranOutAge === null) ranOutAge = age;
     for (const key of ['taxable', 'pretax', 'roth']) b[key] *= 1 + r;
-    b.rothFree = Math.min(b.rothFree, b.roth);
+    b.rothFree = Math.min(b.rothFree, b.roth); b.basis = Math.min(b.basis, b.taxable);
     years.push({ ...row, taxable: b.taxable, pretax: b.pretax, roth: b.roth, total: total() });
   }
   return { years, ok: ranOutAge === null, ranOutAge, atRetire: atRetire ?? total(), end: total(), lifetimeTax, penalties, lowestSpend: lowest };

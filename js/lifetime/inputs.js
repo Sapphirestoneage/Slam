@@ -11,7 +11,8 @@ import { defaultFilingStatus } from '../math/income.js';
 import { RULES } from '../registry/assumptions.js';
 import { BUCKET_KIND } from '../sharpen.js';
 
-export const DEFAULTS = { strategy: 'fixed', rate: 0.04, claimAge: 67, fill: 'none', stocks: 0.8, health: 0, eras: true, blocks: [], retireAge: null, target: 0.95 };
+export const DEFAULTS = { strategy: 'fixed', rate: 0.04, claimAge: 67, fill: 'none', stocks: 0.8, health: 0, eras: true, blocks: [], retireAge: null, target: 0.95, aca: true, partnerGap: null, partnerSs: 0 };
+// partnerGap: the second person's age less yours (null: planning for one). partnerSs: their benefit a month, today's dollars.
 const BUCKET = { 'Taxed later': 'pretax', 'Never taxed again': 'roth', 'Reachable any time': 'taxable' };
 
 // The engine's input for this household. notes: what had to be assumed, in words a person can read.
@@ -33,16 +34,22 @@ export function lifeInputOf(plan, doc, ref, settings = {}) {
   const born = p.birthYear != null ? p.birthYear * 12 + ((p.birthMonth ?? 7) - 1) : null;
   const ssFor = stopAge => (born == null || !gross ? 0 : (benefitOf({ key: 'Me', bornIndex: born, stopAge, gross, ssClaimAge: s.claimAge }, ref.socialSecurity, { wageBase: ref.tax.socialSecurityWageBase, widths: { Gut: RULES.rangeIncomeGut, Estimate: RULES.rangeIncomeEstimate } }).own ?? 0) * 12);
   if (!gross) notes.push('No pay on file, so Social Security is not counted.');
+  if (start.taxable > 0) notes.push('Money in taxable accounts today is counted as already taxed. Growth from here is taxed when it is sold.');
+  const two = s.partnerGap != null;
+  if (two) notes.push('Planning for two: both of you are counted to the last year, taxes are filed jointly, and required withdrawals follow your age.');
+  start.basis = start.taxable;
   const ph = ref.retirementPhases || {};
   const part = doc.assumptions?.partTimeIncome;
   return { notes, x: {
+    partner: two ? { age: plan.age + s.partnerGap, ss: { claimAge: s.claimAge, yearly: (s.partnerSs ?? 0) * 12 } } : null,
+    rmdAge: p.birthYear != null && p.birthYear >= 1960 ? 75 : 73,
     age: plan.age, planAge: ref.defaults?.lifeExpectancy ?? 90, retireAge: s.retireAge ?? plan.age, realReturn: x.realReturn, start, work,
     spendingAfter: (x.retirementSpending ?? x.spending ?? 0) * 12,
     eras: s.eras ? { slowGoAge: ph.slowGoAge, noGoAge: ph.noGoAge, slowGo: ph.slowGo, noGo: ph.noGo } : null,
     ss: { claimAge: s.claimAge, yearly: ssFor }, partTime: part ? { yearly: part * 12, untilAge: 64 } : null,
     blocks: (s.blocks || []).filter(b => b.fromAge != null && ((b.spending ?? 0) || (b.income ?? 0) || (b.once ?? 0))),
     strategy: { id: s.strategy, rate: s.rate },
-    tax: { filingStatus: doc.taxes?.filingStatus ?? defaultFilingStatus(p), place: placeOf(p), fill: s.fill, health: (s.health ?? 0) * 12 },
+    tax: { filingStatus: two ? 'Married jointly' : doc.taxes?.filingStatus ?? defaultFilingStatus(p), place: placeOf(p), fill: s.fill, health: (s.health ?? 0) * 12, aca: s.aca !== false },
   } };
 }
 

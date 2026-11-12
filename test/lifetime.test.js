@@ -142,3 +142,57 @@ test('from a household: an age to plan on, less than 25 times spending once Soci
   assert.ok(kid.age > life.age);
   assert.equal(lifeOf(plan, s.doc, ref, hist, { retireAge: life.age + 3 }).age, life.age + 3, 'your own age is used when you pick one');
 });
+
+import { gainsTax, requiredWithdrawal, premiumCredit, under65 } from '../js/math/lifetime.js';
+test('long-term gains stack on ordinary income: 0%, then 15%, then 20% (2026 bands)', () => {
+  assert.equal(gainsTax(40000, 0, 'single'), 0);                                   // all inside the 0% band
+  assert.ok(Math.abs(gainsTax(83900, 0, 'single') - (83900 - 49450) * 0.15) < 1e-9); // 5,167.50
+  assert.equal(gainsTax(10000, 50000, 'single'), 1500);                            // ordinary income already past the 0% band
+  assert.ok(Math.abs(gainsTax(100000, 500000, 'single') - (45500 * 0.15 + 54500 * 0.20)) < 1e-9);
+  assert.equal(gainsTax(98900, 0, 'joint'), 0);
+  // The standard deduction that ordinary income did not use shelters gains first: $60,000 of gains and nothing else
+  // leaves $43,900 taxable, inside the 0% band, so no federal tax (a place with no state tax).
+  const tax = { filingStatus: 'Single', place: { state: 'TX' } };
+  const none = yearTax({ ordinary: 0, ss: 0, gains: 60000 }, tax, ref), more = yearTax({ ordinary: 0, ss: 0, gains: 100000 }, tax, ref);
+  assert.ok(more - none >= (100000 - 16100 - 49450) * 0.15 - 1);
+  assert.equal(yearTax({ ordinary: 30000, ss: 0 }, tax, ref), yearTax({ ordinary: 30000, ss: 0, gains: 0 }, tax, ref));
+});
+
+test('required withdrawals: the balance over the table\'s number, from 73 (or 75), taxed and moved to taxable', () => {
+  assert.equal(requiredWithdrawal(72, 500000), 0); assert.ok(Math.abs(requiredWithdrawal(75, 246000) - 10000) < 1e-9); assert.equal(requiredWithdrawal(74, 255000, 75), 0);
+  const x = { age: 75, planAge: 76, retireAge: 75, realReturn: 0, start: { taxable: 0, pretax: 246000, roth: 0 }, work: { saving: { pretax: 0, roth: 0, taxable: 0 } }, spendingAfter: 0, ss: { claimAge: 67, yearly: 0 }, strategy: { id: 'fixed' }, tax: { filingStatus: 'Single', place: { state: 'TX' } } };
+  const y = lifetime(x, ref).years[0];
+  assert.ok(Math.abs(y.rmd - 10000) < 1e-6);
+  assert.ok(Math.abs(y.pretax - 236000) < 1 && Math.abs(y.taxable - 10000) < 1, `${y.pretax} ${y.taxable}`); // $10,000 is under the standard deduction: no tax, and nothing was needed for spending
+  assert.equal(lifetime({ ...x, rmdAge: 77 }, ref).years[0].taxable, 0);
+});
+
+test('the Marketplace credit for 2026: a sliding share of income, and nothing past four times the poverty line', () => {
+  assert.ok(Math.abs(premiumCredit(31300, 9600) - (9600 - 31300 * 0.066)) < 1e-6);       // 200% of $15,650: 6.60%
+  assert.ok(Math.abs(premiumCredit(15650 * 1.4, 9600) - (9600 - 15650 * 1.4 * (0.0314 + (0.0419 - 0.0314) * (0.07 / 0.17)))) < 1e-6);
+  assert.ok(Math.abs(premiumCredit(62600, 9600) - (9600 - 62600 * 0.0996)) < 1e-6);      // exactly 400%
+  assert.equal(premiumCredit(62601, 9600), 0); assert.equal(premiumCredit(15000, 9600), 0); assert.equal(premiumCredit(31300, 0), 0);
+  assert.ok(premiumCredit(42300, 9600, 2) > premiumCredit(42300, 9600, 1));              // two people: a higher poverty line
+});
+
+test('gains are taxed when taxable money is sold, and the credit lowers what cover costs before 65', () => {
+  const base = { age: 60, planAge: 62, retireAge: 60, realReturn: 0, work: { saving: { pretax: 0, roth: 0, taxable: 0 } }, ss: { claimAge: 67, yearly: 0 }, strategy: { id: 'fixed' } };
+  const tax = { filingStatus: 'Single', place: { state: 'TX' } };
+  // $200,000 a year sold from an account that is half gain: $100,000 of gains, $83,900 taxable, 15% above $49,450.
+  const g = lifetime({ ...base, start: { taxable: 2000000, pretax: 0, roth: 0, basis: 1000000 }, spendingAfter: 190000, tax }, ref).years[0];
+  assert.ok(g.gains > 95000 && g.gains < 105000, String(g.gains)); assert.ok(g.tax > 4000 && g.tax < 6500, String(g.tax));
+  assert.equal(lifetime({ ...base, start: { taxable: 2000000, pretax: 0, roth: 0 }, spendingAfter: 190000, tax }, ref).years[0].tax, 0); // all basis: nothing to tax
+  // Cover at $800 a month, $30,000 a year of spending from taxed-later money: income near 250% of the line.
+  const h = { ...base, start: { taxable: 0, pretax: 900000, roth: 0 }, spendingAfter: 30000 };
+  const off = lifetime({ ...h, tax: { ...tax, health: 9600 } }, ref).years[0], on = lifetime({ ...h, tax: { ...tax, health: 9600, aca: true } }, ref).years[0];
+  assert.equal(off.credit, 0); assert.ok(on.credit > 4000 && on.credit < 9600, String(on.credit)); assert.ok(on.withdraw < off.withdraw - 4000);
+});
+
+test('planning for two: both benefits, joint taxes, cover for each person under 65, and the younger one\'s years', () => {
+  const x = { age: 66, planAge: 90, retireAge: 66, realReturn: 0.03, start: { taxable: 0, pretax: 800000, roth: 0 }, work: { saving: { pretax: 0, roth: 0, taxable: 0 } }, spendingAfter: 50000, ss: { claimAge: 67, yearly: 24000 }, strategy: { id: 'fixed' }, tax: { filingStatus: 'Married jointly', place: { state: 'TX' }, health: 9600 } };
+  const one = lifetime(x, ref), two = lifetime({ ...x, partner: { age: 61, ss: { claimAge: 67, yearly: 18000 } } }, ref);
+  assert.equal(one.years.length, 25); assert.equal(two.years.length, 30);        // five more years for the younger one
+  assert.equal(under65(66, { ...x, partner: { age: 61 } }), 1); assert.equal(under65(70, { ...x, partner: { age: 61 } }), 0);
+  assert.equal(two.years[0].need, 59600); assert.equal(one.years[0].need, 50000); // cover for the one under 65
+  assert.equal(two.years[1].ss, 24000); assert.equal(two.years[6].ss, 42000);    // theirs starts when they reach 67
+});
