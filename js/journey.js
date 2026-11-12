@@ -6,7 +6,10 @@
 //
 // The promise this file keeps: a number is asked once. Every question reads what is already on file (Fast Track's own
 // reader), so a number typed here shows in the coach app and a number typed there is never asked again here.
-import { metrics, ageOf } from './math/metrics.js';
+import { metrics, ageOf, placeOf } from './math/metrics.js';
+import { taxRates, defaultFilingStatus } from './math/income.js';
+import { benefitOf } from './math/socialsecurity.js';
+import { levelsOf, BUCKET_KIND } from './sharpen.js';
 import { agePlanOf, answeredOf, filledOf, CORE, planWordsOf } from './math/agestart.js';
 import { ladderOf } from './math/ladder.js';
 import { foo } from './math/foo.js';
@@ -20,6 +23,8 @@ export const STAGES = [
   { id: 'you', label: 'You', needs: null },
   { id: 'numbers', label: 'Your numbers', needs: 'age' },
   { id: 'plan', label: 'Your plan', needs: 'age' },
+  { id: 'see', label: 'See it', needs: 'age' },
+  { id: 'sharpen', label: 'Sharpen it', needs: 'age' },
   { id: 'tune', label: 'Tune it', needs: 'age' },
   { id: 'all', label: 'All your numbers', needs: 'age' },
   { id: 'credits', label: 'Credits', needs: null },
@@ -202,7 +207,27 @@ export function numbersOf(plan, doc, ref, { now = new Date() } = {}) {
   const debtFree = plan.milestones.find(r => r.id === 'consumerFree');
   const barista = baristaFiNumber({ annualSpending: m.annualSpending, partTimeIncome: 12000, withdrawalRate: x.withdrawalRate });
   const all = ['income', 'spending', 'cash', 'invested', 'card'];
-  return [
+  // Numbers a Sharpen it level opens (js/sharpen.js). Until that level is answered the number shows what opens it.
+  const open = new Set(levelsOf(doc).filter(l => l.state === 'open').map(l => l.n));
+  const gate = (n, row) => (open.has(n) ? { ...row, value: null, ask: [], level: n, text: null } : { ...row, level: n });
+  const lean = mile('lean'), leanT = lean?.target ?? null;
+  const gross = x.income?.[0]?.gross ?? null;
+  const tax = gross == null ? null : taxRates({ gross, pretax: (m.pretaxSaving ?? 0) * 12, filingStatus: doc.taxes?.filingStatus ?? defaultFilingStatus(doc.profile || {}), place: placeOf(doc.profile || {}) }, ref);
+  const kinds = {};
+  for (const r of (doc.records || []).filter(r => r.kind === 'account' && r.values?.group === 'investment')) { const k = BUCKET_KIND[r.type] ?? 'Reachable any time'; kinds[k] = (kinds[k] ?? 0) + (r.values.balance ?? 0); }
+  const born = doc.profile?.birthYear != null ? doc.profile.birthYear * 12 + ((doc.profile.birthMonth ?? 7) - 1) : null;
+  const ss = born == null || gross == null ? null : benefitOf({ key: 'Me', bornIndex: born, stopAge: doc.assumptions?.fiAge ?? x.retireAge, gross }, ref.socialSecurity, { wageBase: ref.tax.socialSecurityWageBase, widths: { Gut: RULES.rangeIncomeGut, Estimate: RULES.rangeIncomeEstimate } });
+  const more = [
+    gate(2, R('housingPct', 'Each month', 'Housing, as a share of your pay', m.housingPct, 'housing35', ['income'], v => fmt.pct(v))),
+    gate(2, { id: 'leanFi', group: 'Independence', label: 'Lean FI number (needs only)', idea: 'flavors', value: leanT != null ? `${fmt.money(leanT)}${lean?.date ? `, reached ${lean.date}` : ''}` : null, text: '25 times a year of food, housing and getting around.', ask: [], typical: false }),
+    gate(3, { id: 'debtInterest', group: 'What you have', label: 'Interest you will pay on your debt', idea: 'avalanche', value: m.debtPlan?.interest != null && x.debts.length ? fmt.money(Math.round(m.debtPlan.interest)) : x.debts.length ? null : 'None', text: m.debtPlan?.text ?? null, ask: [], typical: false }),
+    gate(4, { id: 'pretax', group: 'Each month', label: 'Going into your 401(k) from your paycheck', idea: 'savingsRate', value: `${fmt.money(Math.round(m.pretaxSaving ?? 0))} a month`, text: m.savingsRate.text, ask: [], typical: false }),
+    gate(5, { id: 'buckets', group: 'What you have', label: 'Your tax buckets', idea: 'taxBuckets', value: Object.keys(kinds).length ? Object.entries(kinds).map(([k, v]) => `${k}: ${fmt.money(v)}`).join(' · ') : 'Nothing invested yet', text: 'Taxed later: 401(k) and traditional IRA. Never taxed again: a Roth IRA or an HSA. Reachable any time: a brokerage account.', ask: [], typical: false }),
+    gate(8, { id: 'taxRate', group: 'Each month', label: 'Your tax rate, all in', idea: null, value: tax?.value != null ? fmt.pct(tax.value) : null, text: tax?.text ?? null, ask: tax ? [] : ['income'], typical: false }),
+    gate(8, { id: 'marginal', group: 'Each month', label: 'What your next dollar of pay is taxed at', idea: null, value: tax?.marginal != null ? fmt.pct(tax.marginal) : null, text: tax?.text ?? null, ask: tax ? [] : ['income'], typical: false }),
+    gate(10, { id: 'socialSecurity', group: 'Independence', label: 'Social Security, a month (not counted in your date)', idea: null, value: ss?.own ? `About ${fmt.money(Math.round(ss.own / 10) * 10)}` : null, text: ss?.words ?? null, ask: [], typical: false }),
+  ];
+  const first = [
     R('surplus', 'Each month', 'Left over each month', m.surplus, null, ['income', 'spending']),
     R('savingsRate', 'Each month', 'Savings rate', m.savingsRate, 'savingsRate', ['income', 'spending'], v => fmt.pct(v)),
     R('simpleYears', 'Each month', 'Years to FI at this savings rate, starting from zero', simple, 'simpleMath', ['income', 'spending'], v => `${(Math.round(v * 10) / 10).toFixed(1)} years`),
@@ -222,6 +247,11 @@ export function numbersOf(plan, doc, ref, { now = new Date() } = {}) {
     R('barista', 'Independence', 'Barista FI number (with $1,000 a month of part-time pay)', barista, 'flavors', ['spending']),
     target('nw100k', 'Your first $100k', 'first100k', all),
   ];
+  const hourly = first.find(n => n.id === 'hourly'); if (m.hourly?.guess && open.has(6)) hourly.sharper = 6; // a guess until Your time is answered
+  const baristaRow = first.find(n => n.id === 'barista');
+  if (doc.assumptions?.partTimeIncome != null) { const b = baristaFiNumber({ annualSpending: (x.retirementSpending ?? 0) * 12, partTimeIncome: doc.assumptions.partTimeIncome * 12, withdrawalRate: x.withdrawalRate }); Object.assign(baristaRow, { label: `Barista FI number (with ${fmt.money(doc.assumptions.partTimeIncome)} a month of part-time pay)`, value: b.value == null ? null : fmt.money(Math.max(0, b.value)), text: b.text }); }
+  const order = ['Each month', 'Safety', 'What you have', 'Independence'];
+  return [...first, ...more].sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group));
 }
 
 // The toggles. Each writes a field the coach app already has (Plan, Assumptions and Debt payoff), so nothing is new on
@@ -268,7 +298,7 @@ export function whatIf(doc, ref, priors, { spendLess = 0, earnMore = 0 } = {}, {
   const scale = r => (r.kind === 'income' && has(r.amount) ? { ...r, amount: r.amount * inf } : (r.kind === 'spending' || r.kind === 'bill') && has(r.amount) ? { ...r, amount: r.amount * sf } : r);
   const m1 = metrics({ ...F.doc, records: F.doc.records.map(scale) }, ref, { now });
   const b = m0.monthsToFi.value, a = m1.monthsToFi.value;
-  return { before: b, after: a, beforeDate: monthWords(b, now), date: monthWords(a, now), moved: b != null && a != null ? b - a : null, surplus: m1.surplus.value };
+  return { before: b, after: a, beforeDate: monthWords(b, now), date: monthWords(a, now), moved: b != null && a != null ? b - a : null, surplus: m1.surplus.value, m: m1 };
 }
 
 export { CORE, planWordsOf };

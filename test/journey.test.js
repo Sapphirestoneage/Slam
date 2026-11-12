@@ -73,7 +73,7 @@ test('every number has a value or a question to answer, and every idea a credit'
   const s = full(), p = planOf(s.doc, ref, priors, { flags, now });
   const nums = numbersOf(p, s.doc, ref, { now });
   assert.ok(nums.length >= 15);
-  for (const n of nums) { assert.ok(n.value, `${n.label} has a value`); assert.equal(n.typical, false); if (n.idea) assert.ok(ideaOf(n.idea), n.idea); }
+  for (const n of nums.filter(x => !x.level)) { assert.ok(n.value, `${n.label} has a value`); assert.equal(n.typical, false); if (n.idea) assert.ok(ideaOf(n.idea), n.idea); }
   const half = person(); answer(half, 'income', ANSWERS.income);
   assert.ok(numbersOf(planOf(half.doc, ref, priors, { flags, now }), half.doc, ref, { now }).some(n => n.typical), 'a number on a typical amount says so');
   for (const i of IDEAS) {
