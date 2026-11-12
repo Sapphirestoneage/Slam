@@ -17,7 +17,7 @@ import { WORRIES, WORRY_GROUPS, worryOf } from '../worries.js';
 import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOME_NOW, HOME_PMI, HOME_CLOSING, HOME_GUESS, HOME_GROWTHS, HOME_INVEST, HOME_HORIZONS, HOME_RENT_GROWTHS, HOME_SELLING, interestNote } from '../home.js';
 import { MIRRORS, mirrorOf, pctToFi, snapshotOf, auditOf, auditWords, FEELINGS, valuesOf, sinceWords } from '../mirror.js';
 import { readFile } from '../import/apps.js';
-import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP } from '../extras.js';
+import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP, flowTimeOf, designOf, LIFE_AGES, LIFE_PLACE, LIFE_WORK, LIFE_TRAVEL, LIFE_GIVE, receiptOf, CHOICES, PAY_STEPS, COST_STEPS, FEELS, FEEL_SIDES } from '../extras.js';
 import { dedupe, importTransactions } from '../import/csv.js';
 
 const [ref, priors, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/priors-2026.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
@@ -66,7 +66,7 @@ async function unpack(text) {
 const carried = location.hash.startsWith(LINK) ? location.hash.slice(LINK.length) : null;
 const MEETLINK = '#/meet/', meetIn = location.hash.startsWith(MEETLINK) && location.hash.length > MEETLINK.length ? unpackMeet(location.hash.slice(MEETLINK.length)) : null;
 if (carried) history.replaceState(null, '', location.pathname); // the plan does not stay in the address bar
-const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null, price: null, more: false, pic: 'growth', drill: null, tweak: null, worryGroup: null, homeOpen: false, stepsOpen: false, stmtOpen: false, linkNote: null, openCard: null, meetNote: null, dateDraft: null, slot: 0, audit: null, auditNote: null, since: null, valuesOpen: false, loadNote: null };
+const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null, price: null, more: false, pic: 'growth', drill: null, tweak: null, worryGroup: null, homeOpen: false, stepsOpen: false, stmtOpen: false, linkNote: null, openCard: null, meetNote: null, dateDraft: null, decide: null, decideNote: null, slot: 0, audit: null, auditNote: null, since: null, valuesOpen: false, loadNote: null };
 const money = v => fmt.money(v);
 const P = () => progressOf(store.doc, ref);
 const plan = () => planOf(store.doc, ref, priors, { flags });
@@ -107,7 +107,7 @@ const basisTag = p => h(`span.st-tag${p.basis === 'yours' ? '.yours' : ''}`, {},
 
 // Four tabs and More: everything fits a phone without sideways scrolling.
 const TABS = [['plan', 'Plan'], ['see', 'See'], ['drills', 'Practice'], ['sharpen', 'Sharpen']];
-const MORE = [['you', 'About you'], ['numbers', 'Your five numbers'], ['life', 'Lifetime plan'], ['tune', 'What if'], ['all', 'All your numbers'], ['summary', 'One-page summary'], ['date', 'Monthly money date'], ['meet', 'Money meeting for two'], ['credits', 'Credits']];
+const MORE = [['you', 'About you'], ['numbers', 'Your five numbers'], ['life', 'Lifetime plan'], ['tune', 'What if'], ['all', 'All your numbers'], ['summary', 'One-page summary'], ['design', 'Design my life'], ['decide', 'Compare two choices'], ['date', 'Monthly money date'], ['meet', 'Money meeting for two'], ['credits', 'Credits']];
 function top() {
   const p = P();
   const tab = (id, label) => h('button.st-stage', { type: 'button', disabled: !p.hasAge, title: p.hasAge ? null : 'Pick the year you were born first', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label);
@@ -129,6 +129,23 @@ function track(p, pl) {
     h('span.st-pips', { role: 'img', 'aria-label': line }, p.done ? Array.from({ length: sh.total }, (_, i) => h(`i${i < sh.done ? '.on' : ''}`)) : QUESTIONS.map(q => h(`i${p.answered[q.key] ? '.on' : ''}`))),
     h('span.st-trackline', {}, line),
     !p.done && ui.stage !== 'numbers' ? btn(p.count ? 'Keep going' : 'Start', () => go('numbers', { q: p.next }), 'slim primary') : null);
+}
+
+// ---------- One number, several pictures: the person picks the one that reads best to them ----------
+function views(id, list) {
+  const on = (mine().views || {})[id] ?? list[0][0], cur = list.find(v => v[0] === on) ?? list[0];
+  return h('div.st-views', {}, cur[2](), h('div.st-viewpick', { role: 'group', 'aria-label': 'Show it as' }, list.map(([k, label]) => h('button.st-viewbtn', { type: 'button', 'aria-pressed': k === cur[0] ? 'true' : 'false', onClick: () => { remember({ views: { ...(mine().views || {}), [id]: k } }); render(); } }, label))));
+}
+function progressViews(pct, label) {
+  const w = `${Math.max(2, Math.round(pct * 100))}%`, words = h('span', {}, h('strong', {}, fmt.pct(pct)), ` ${label}`);
+  const ringEl = () => { const r = 20, c = 2 * Math.PI * r, el = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); el.setAttribute('viewBox', '0 0 48 48'); el.setAttribute('width', '56'); el.setAttribute('height', '56'); el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = `<circle cx="24" cy="24" r="${r}" fill="none" stroke-width="6" class="st-ring-bg"/><circle cx="24" cy="24" r="${r}" fill="none" stroke-width="6" class="st-ring-on" stroke-dasharray="${Math.max(1.5, pct * c)} ${c}" transform="rotate(-90 24 24)" stroke-linecap="round"/>`; return el; };
+  return views('progress', [
+    ['ring', 'Ring', () => h('div.st-ring', { role: 'img', 'aria-label': `${fmt.pct(pct)} ${label}` }, ringEl(), words)],
+    ['bar', 'Bar', () => h('div.st-pv', { role: 'img', 'aria-label': `${fmt.pct(pct)} ${label}` }, h('div.st-pbar', {}, h('i', { style: { width: w } })), words)],
+    ['thermo', 'Thermometer', () => h('div.st-ring', { role: 'img', 'aria-label': `${fmt.pct(pct)} ${label}` }, h('div.st-thermo', {}, h('i', { style: { height: w } })), words)],
+    ['bucket', 'Bucket', () => h('div.st-ring', { role: 'img', 'aria-label': `${fmt.pct(pct)} ${label}` }, h('div.st-bucket', {}, h('i', { style: { height: w } })), words)],
+  ]);
 }
 
 // ---------- 1. You ----------
@@ -315,7 +332,7 @@ function yourPlan(p, pl) {
   const cards = {
     hero: h('div.st-card.hero', {},
       h('div.st-eyebrow', {}, B ? 'After that' : 'Your plan'),
-      pct != null && !(B && !B.job) ? h('div.st-ring', { role: 'img', 'aria-label': `${fmt.pct(pct)} of the way there` }, ring(pct), h('span', {}, h('strong', {}, fmt.pct(pct)), ' of the way there')) : null,
+      pct != null && !(B && !B.job) ? progressViews(pct, 'of the way there') : null,
       h('div.st-soft', {}, 'Work becomes optional'),
       h('div.st-big', {}, B && !B.job ? 'Shows with the job ahead' : fiLine ?? 'Not yet known'),
       B && !B.job ? h('p', {}, 'Benefits alone do not get there. Add when you expect to start and about what it pays, and this fills in.') : off ? h('p', {}, 'Right now little or nothing is left over to invest, so there is no date to show. Your next step is the way in.') : pl.basis === 'yours' && pl.fi.age && !pl.fi.far ? h('p', {}, `You would be ${pl.fi.age}. The likely range is ${pl.words.fi}.`) : null,
@@ -379,15 +396,21 @@ function see(p, pl) {
   const ret = tweaksOf(store.doc, ref).find(t => t.id === 'realReturn');
   const f = flowOf(pl.m), d = debtOf(pl.m), t = timelineOf(pl);
   const card = (id, eyebrow, title, body, idea) => h(`div.st-card${ui.flash === id ? '.flash' : ''}`, {}, h('div.st-eyebrow', {}, eyebrow), h('h2', {}, title), body, idea ? credit(idea) : null);
-  const PICS = [['growth', 'Growth'], ['flow', 'Where it goes'], ['timeline', 'Your path'], ['debt', 'Debt']];
+  const PICS = [['growth', 'Growth'], ['flow', 'Where it goes'], ['money', 'Over time'], ['timeline', 'Your path'], ['debt', 'Debt']];
+  const FT = flowTimeOf(pl), when = mo => (mo == null ? 'the day work is optional' : mo === 0 ? 'today' : monthWords(mo));
   const pic = PICS.some(([k]) => k === ui.flash) ? (ui.pic = ui.flash) : ui.pic;
-  const shown = pic === 'growth' ? card('growth', 'Picture 1 of 4', 'How your money grows', [hold,
+  const shown = pic === 'growth' ? card('growth', 'Picture 1 of 5', 'How your money grows', [hold,
       h('h3', { style: { marginTop: '14px' } }, 'Try it'), lever('spendLess', 'Spend less', 1500, 50), lever('earnMore', 'Earn more', 3000, 100), res,
       h('details.st-fold', {}, h('summary', {}, 'Change the growth rate'),
         h('div.st-chips', {}, ret.options.map(o => chip(o.label, ret.value === o.value, () => { setTweak(store, ret, o.value); render(); }))))], 'growthChart')
-    : pic === 'flow' ? card('flow', 'Picture 2 of 4', 'Where your money goes each month', f ? flowChart(f) : h('p.st-soft', {}, 'This picture needs your pay and your spending.'), 'sankey')
-    : pic === 'timeline' ? card('timeline', 'Picture 3 of 4', 'Your path, one win at a time', t ? timelineChart(t) : h('p.st-soft', {}, 'Every milestone on your list is done.'), 'milestones')
-    : d ? card('debt', 'Picture 4 of 4', 'Your debt, falling to zero', debtChart(d, monthWords), 'avalanche') : card('debt', 'Picture 4 of 4', 'Your debt', h('p', { style: { marginBottom: 0 } }, pl.m.inputs.debts.length ? 'Add each debt\'s rate and payment in Sharpen to see it fall to zero.' : 'No debt on file. Nothing to draw here.'), null);
+    : pic === 'flow' ? card('flow', 'Picture 2 of 5', 'Where your money goes each month', f ? flowChart(f) : h('p.st-soft', {}, 'This picture needs your pay and your spending.'), 'sankey')
+    : pic === 'money' ? card('money', 'Over time', 'Where your money goes each month, and when it moves on', !FT ? h('p.st-soft', {}, 'This picture needs money left over each month.') : views('money', [
+        ['road', 'Road', () => h('div.st-road', {}, FT.phases.map((ph, i) => h(`div.st-leg.c${i % 4}`, { style: { flexGrow: String(Math.max(1, Math.sqrt(ph.months ?? 60))) } }, h('b', {}, ph.name), h('span', {}, `${when(ph.from)} to ${when(ph.to)}`), h('span', {}, ph.total != null ? `${money(ph.total)} in all` : `${money(ph.monthly)} a month`))))],
+        ['buckets', 'Buckets', () => h('div.st-buckets', {}, FT.phases.map((ph, i) => h('div.st-bk', {}, h(`div.st-bucket.big.c${i % 4}`, {}, h('i', { style: { height: i === 0 ? '12%' : '0%' } })), h('b', {}, ph.name), h('span', {}, ph.target != null ? `${money(ph.target)} to fill` : ph.total != null ? `${money(ph.total)} in all` : 'Keeps filling'), h('span', {}, i === 0 ? 'Filling now' : `Starts ${when(ph.from)}`))))],
+        ['list', 'List', () => h('ol.st-list', {}, FT.phases.map((ph, i) => h(`li${i === 0 ? '.here' : ''}`, {}, h('span.dot', {}, i + 1), h('span', {}, ph.name, h('small', {}, `${money(ph.monthly)} a month${ph.months != null ? ` for ${spanWords(ph.months)}` : ''}`)), h('span.when', {}, i === 0 ? 'Now' : when(ph.from)))))],
+      ]), 'foo')
+    : pic === 'timeline' ? card('timeline', 'Picture 4 of 5', 'Your path, one win at a time', t ? timelineChart(t) : h('p.st-soft', {}, 'Every milestone on your list is done.'), 'milestones')
+    : d ? card('debt', 'Picture 5 of 5', 'Your debt, falling to zero', debtChart(d, monthWords), 'avalanche') : card('debt', 'Picture 5 of 5', 'Your debt', h('p', { style: { marginBottom: 0 } }, pl.m.inputs.debts.length ? 'Add each debt\'s rate and payment in Sharpen to see it fall to zero.' : 'No debt on file. Nothing to draw here.'), null);
   return [
     h('h1', {}, 'Your plan in pictures'),
     h('div.st-chips', { style: { marginBottom: '12px' } }, PICS.map(([k, l]) => chip(l, pic === k, () => { ui.pic = k; ui.flash = null; render(); }))),
@@ -816,6 +839,55 @@ function meet() {
   ];
 }
 
+// ---------- Design the life, get the bill ----------
+function design(p, pl) {
+  const pick = mine().design || {}, x = pl.m.inputs, rate = pl.m.fiNumber?.value > 0 && pl.m.annualSpending?.value > 0 ? pl.m.annualSpending.value / pl.m.fiNumber.value : 0.04;
+  const D = designOf({ age: pl.age, spending: x.spending, invested: x.invested ?? 0, surplus: Math.max(0, pl.m.surplus?.value ?? 0), ret: x.realReturn ?? 0.05, rate }, pick);
+  const choose = patch => { remember({ design: { ...pick, ...patch } }); render(); };
+  const row = (label, list, key, dflt) => h('div.st-field', {}, h('div.st-flabel', {}, label), h('div.st-chips', {}, list.map(([k, l]) => chip(l, (pick[key] ?? dflt) === k, () => choose({ [key]: k })))));
+  return [
+    h('div.st-card.hero', {}, h('h1', {}, 'Design the life, get the bill'), h('p', { style: { marginBottom: 0 } }, 'Start from the life, not the money. Five taps, then what it asks of you each month from now.')),
+    h('div.st-card', {},
+      h('div.st-field', {}, h('div.st-flabel', {}, 'The age this life starts'), h('div.st-chips', {}, LIFE_AGES.filter(a => a > pl.age).map(a => chip(String(a), pick.age === a, () => choose({ age: a }))))),
+      row('Where I live', LIFE_PLACE, 'place', 'same'), row('How I work', LIFE_WORK, 'work', 'none'), row('How I travel', LIFE_TRAVEL, 'travel', 'none'), row('Who I look after', LIFE_GIVE, 'give', 'none')),
+    !x.spending ? h('div.st-card', {}, h('p', {}, 'This needs your spending first.'), btn('Answer it', () => go('numbers', { q: 'spending' }), 'primary')) : !D ? h('div.st-card', {}, h('p', { style: { margin: 0 } }, 'Tap an age to see the bill.')) : h('div.st-card.hero', {},
+      h('div.st-eyebrow', {}, `The bill for this life at ${D.at}`),
+      h('dl.st-kv', {}, D.lines.map(([l, v]) => [h('dt', {}, l), h('dd', {}, `${money(Math.round(v))} a month`)]), h('dt', {}, 'What it costs'), h('dd', {}, h('strong', {}, `${money(Math.round(D.cost))} a month`)),
+        D.fromWork ? [h('dt', {}, 'Covered by the work you chose'), h('dd', {}, `${money(D.fromWork)} a month`)] : null,
+        h('dt', {}, 'Your money has to cover'), h('dd', {}, `${money(Math.round(D.fromMoney))} a month`), h('dt', {}, 'Invested by then'), h('dd', {}, h('strong', {}, money(Math.round(D.number))))),
+      h('div.st-soft', { style: { marginTop: '12px' } }, 'What it asks of you, starting Monday'), h('div.st-big', {}, `${money(Math.round(D.monthly))} a month`),
+      h('p.st-readout', { role: 'status' }, D.on ? `You keep ${money(Math.round(D.surplus))} a month, so you are already on pace for this life at ${D.at}.` : `You keep ${money(Math.round(D.surplus))} a month today. The gap is ${money(Math.round(D.gap))} a month.${D.ageOnPace ? ` At today's pace this life starts at ${D.ageOnPace}.` : ''}`),
+      !D.on ? h('div.st-row', {}, btn('Ways to close the gap', () => go('tune', { flash: 'moves' }), 'primary'), btn('What a raise is worth', () => go('tune', { flash: 'raise' }))) : h('div.st-row', {}, btn('How much more could I spend?', () => go('tune', { flash: 'spendMore' }), 'primary')),
+      h('p.st-small.st-soft', {}, `In today's dollars, growing ${fmt.pct(x.realReturn ?? 0.05)} a year after inflation, and taking ${fmt.pct(rate)} a year once this life starts. Taxes and Social Security are in your Lifetime plan, not here.`)),
+  ];
+}
+
+// ---------- Compare two choices, and keep the receipt ----------
+function decide(p, pl) {
+  const st = ui.decide || (ui.decide = { a: { name: CHOICES[0] }, b: { name: CHOICES[1] } }), list = mine().receipts || [];
+  const R = p.done ? receiptOf(store.doc, ref, priors, st.a, st.b) : null;
+  const edit = (k, patch) => { ui.decide = { ...st, [k]: { ...st[k], ...patch } }; render(); };
+  const signed = v => (v === 0 ? 'No change' : `${v > 0 ? '+' : '-'}${money(Math.abs(v))}`);
+  const side = (k, title) => { const c = st[k], r = R?.[k];
+    return h('div.st-card', {}, h('div.st-eyebrow', {}, title),
+      h('div.st-field', {}, h('div.st-flabel', {}, 'What is it?'), h('div.st-chips', {}, CHOICES.map(n => chip(n, c.name === n, () => edit(k, { name: n }))))),
+      h('div.st-field', {}, h('div.st-flabel', {}, 'Pay a month, after taxes'), h('div.st-chips', {}, PAY_STEPS.map(v => chip(signed(v), (c.pay ?? 0) === v, () => edit(k, { pay: v }))))),
+      h('div.st-field', {}, h('div.st-flabel', {}, 'Spending a month'), h('div.st-chips', {}, COST_STEPS.map(v => chip(signed(v), (c.cost ?? 0) === v, () => edit(k, { cost: v }))))),
+      FEEL_SIDES.map(([f, l]) => h('div.st-field', {}, h('div.st-flabel', {}, l), h('div.st-chips', {}, FEELS.map(([v, w]) => chip(w, (c[f] ?? 0) === v, () => edit(k, { [f]: v })))))),
+      r ? h('p.st-readout', { role: 'status' }, r.date ? `Work becomes optional ${r.date}.` : 'No date on these numbers.') : null); };
+  const pickIt = k => { const r = R[k], other = R[k === 'a' ? 'b' : 'a']; remember({ receipts: [...list, { at: new Date().toISOString().slice(0, 10), chose: r.name, over: other.name, date: r.date, otherDate: other.date, life: r.life, otherLife: other.life }].slice(-20) }); ui.decideNote = `Saved. You chose "${r.name}" on purpose, with the numbers in front of you.`; render(); };
+  return [
+    h('div.st-card.hero', {}, h('h1', {}, 'Compare two choices'), h('p', { style: { marginBottom: 0 } }, 'Put them side by side: what each does to your date and to your days. Then keep the receipt.')),
+    side('a', 'Choice one'), side('b', 'Choice two'),
+    !R ? h('div.st-card', {}, h('p', { style: { margin: 0 } }, 'Answer the five questions first, then the dates show.')) : h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Side by side'),
+      h('dl.st-kv', {}, h('dt', {}, R.a.name), h('dd', {}, R.a.date ?? 'No date'), h('dt', {}, R.b.name), h('dd', {}, R.b.date ?? 'No date')),
+      h('p.st-readout', { role: 'status' }, R.sooner == null ? 'One of these has no date on your numbers.' : R.sooner === 'same' ? 'They land on the same date.' : `"${R[R.sooner].name}" gets you there ${spanWords(R.gap)} sooner.`, R.kinder === 'same' ? ' Day to day, you marked them the same.' : ` Day to day, you marked "${R[R.kinder].name}" as better.`, R.split ? ' So this is time against money. Only you can price that.' : ''),
+      h('div.st-row', {}, btn(`I choose: ${R.a.name}`, () => pickIt('a'), 'primary'), btn(`I choose: ${R.b.name}`, () => pickIt('b'), 'primary')),
+      ui.decideNote ? h('p.st-note', { role: 'status' }, ui.decideNote) : null),
+    list.length ? h('details.st-card', {}, h('summary.st-sum', {}, h('strong', {}, 'My receipts'), h('span.st-soft', {}, String(list.length))), h('ul.st-list', {}, [...list].reverse().map(r => h('li', {}, h('span.dot', {}, '✓'), h('span', {}, `${r.chose}, over ${r.over.toLowerCase()}`, h('small', {}, `${r.date ?? 'No date'} against ${r.otherDate ?? 'no date'}`)), h('span.when', {}, r.at))))) : null,
+  ];
+}
+
 // ---------- The monthly money date: five taps ----------
 function moneyDate(p, pl) {
   const list = mine().dates || [], D = datesOf(list), today = new Date().toISOString().slice(0, 10), draft = ui.dateDraft || {};
@@ -836,7 +908,7 @@ function moneyDate(p, pl) {
   ];
 }
 
-const SCREENS = { date: moneyDate, meet, summary, you, numbers, plan: yourPlan, see, life, drills, sharpen, tune, all: allNumbers, credits };
+const SCREENS = { design, decide, date: moneyDate, meet, summary, you, numbers, plan: yourPlan, see, life, drills, sharpen, tune, all: allNumbers, credits };
 function render() {
   const p = P();
   if (!p.hasAge && STAGES.find(s => s.id === ui.stage)?.needs === 'age') ui.stage = 'you';
@@ -851,7 +923,7 @@ function render() {
 // Come back where you left off: the plan when the picture is done, the next question when it is not.
 const start = P();
 const [, linked, linkedQ] = location.hash.split('/'); // a link to a screen (#/tune) opens there
-ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'meet', 'date', 'credits'].includes(here().stage) ? here().stage : 'plan') : 'numbers';
+ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'meet', 'date', 'design', 'decide', 'credits'].includes(here().stage) ? here().stage : 'plan') : 'numbers';
 ui.q = QUESTIONS.some(x => x.key === linkedQ) ? linkedQ : start.next;
 if (start.hasAge && start.done) {
   const pl0 = plan(), nw = numbersOf(pl0, store.doc, ref).find(n => n.id === 'netWorth');

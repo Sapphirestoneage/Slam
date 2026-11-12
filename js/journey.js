@@ -35,6 +35,8 @@ export const STAGES = [
   { id: 'summary', label: 'One page', needs: 'age' },
   { id: 'meet', label: 'Meeting for two', needs: null },
   { id: 'date', label: 'Money date', needs: 'age' },
+  { id: 'design', label: 'Design my life', needs: 'age' },
+  { id: 'decide', label: 'Compare two choices', needs: 'age' },
   { id: 'credits', label: 'Credits', needs: null },
 ];
 

@@ -77,3 +77,29 @@ test('the climb, a raise, a habit, creep, and the money date, by hand', () => {
   const words = [...NEXT_ASKS.flatMap(q => [q.q, ...q.a.map(x => x[1])]), ...nextDollarOf({ over: 'yes' }).steps.flatMap(x => [x.name, x.why]), ...PARENT_ASKS.map(q => q.q), ...RAISE_SCRIPT].join(' ');
   assert.doesNotMatch(words, new RegExp(String.fromCharCode(8212))); assert.doesNotMatch(words, /\b(should|must|bad|wrong|fail|warning|risky|danger)\b/i);
 });
+
+import { flowTimeOf, designOf, receiptOf } from '../js/extras.js';
+test('where the money goes over time: the plan\'s phases with their months and totals', () => {
+  const pl = { steps: [{ id: '4', name: 'Build your job-loss fund' }, { id: '5', name: 'Max out tax-free accounts' }], milestones: [{ id: 'fi', months: 311 }],
+    m: { fooFlow: { monthly: 1100, steps: [{ id: '3', from: 0, to: 0, monthly: 1100, left: null }, { id: '4', from: 0, to: 17, monthly: 1100, left: 18600 }, { id: '5', from: 17, to: 24, monthly: 1100, left: 7500 }, { id: 'rest', from: 24, to: null, monthly: 1100, left: null }] } } };
+  const f = flowTimeOf(pl);
+  assert.deepEqual(f.phases.map(p => [p.name, p.from, p.to, p.total]), [['Build your job-loss fund', 0, 17, 18700], ['Max out tax-free accounts', 17, 24, 7700], ['Invest for the day work is optional', 24, 311, 315700]]);
+  assert.equal(f.end, 311); assert.equal(flowTimeOf({ m: {} }), null);
+});
+
+test('design the life, get the bill, by hand', () => {
+  // Age 30, a life at 50 on $4,000 a month somewhere cheaper ($3,000), a few trips ($400), a little work ($1,500).
+  // From money: $1,900 a month, $22,800 a year, at 4%: $570,000. Nothing invested, 5% a year for 20 years.
+  const d = designOf({ age: 30, spending: 4000, invested: 0, surplus: 1000, ret: 0.05, rate: 0.04 }, { age: 50, place: 'less', work: 'some', travel: 'some' });
+  assert.equal(d.cost, 3400); assert.equal(d.fromMoney, 1900); assert.equal(d.number, 570000);
+  const yearly = 570000 * 0.05 / (1.05 ** 20 - 1); assert.ok(Math.abs(d.monthly - yearly / 12) < 1e-6); // about $1,436.50 a month
+  assert.ok(Math.abs(d.gap - (yearly / 12 - 1000)) < 1e-6); assert.equal(d.on, false); assert.ok(d.ageOnPace > 50);
+  const rich = designOf({ age: 30, spending: 4000, invested: 2000000, surplus: 0 }, { age: 40 }); assert.equal(rich.monthly, 0); assert.ok(rich.on); assert.equal(rich.ageOnPace, 31);
+  assert.equal(designOf({ age: 30, spending: 4000 }, { age: 30 }), null); assert.equal(designOf({ age: 30, spending: 4000 }, {}), null);
+});
+
+test('a decision receipt: which choice is sooner, which is kinder, and when they pull apart', () => {
+  const r = receiptOf({}, {}, {}, { name: 'Stay as I am' }, { name: 'A new job', pay: 1500, time: -1, calm: -1 }, { run: fake });
+  assert.equal(r.a.months, 100); assert.equal(r.b.months, 25); assert.equal(r.sooner, 'b'); assert.equal(r.kinder, 'a'); assert.equal(r.split, true); assert.equal(r.gap, 75);
+  const s = receiptOf({}, {}, {}, { cost: 500 }, { cost: 500 }, { run: fake }); assert.equal(s.sooner, 'same'); assert.equal(s.split, false); assert.equal(s.a.months, 150);
+});

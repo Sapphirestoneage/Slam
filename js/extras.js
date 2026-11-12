@@ -184,3 +184,48 @@ export const PARENT_ASKS = [
   { id: 'care', q: 'There is a plan for care if they need help at home' }, { id: 'talk', q: 'We have talked about money at least once' },
 ];
 export const PARENT_HELP = [0, 250, 500, 1000, 2000];
+
+// ---------- Where each month's money goes, over time: the plan's own order (M79), as phases with dates. ----------
+export function flowTimeOf(pl) {
+  const f = pl?.m?.fooFlow, fi = pl?.milestones?.find(x => x.id === 'fi')?.months ?? null;
+  if (!f?.steps?.length || !(f.monthly > 0)) return null;
+  const nameOf = id => (id === 'rest' ? 'Invest for the day work is optional' : pl.steps?.find(s => s.id === id)?.name ?? `Step ${id}`);
+  const phases = f.steps.map(s => ({ id: s.id, name: nameOf(s.id), from: s.from, to: s.to ?? (fi != null && fi > s.from ? fi : null), monthly: s.monthly, target: s.left ?? null }))
+    .filter(p => p.to == null || p.to > p.from)
+    .map(p => ({ ...p, months: p.to == null ? null : p.to - p.from, total: p.to == null ? null : p.monthly * (p.to - p.from) }));
+  return phases.length ? { monthly: f.monthly, phases, end: phases.at(-1).to } : null;
+}
+
+// ---------- Design the life, get the bill: a life at an age, priced, and what it asks of each month from now. ----------
+export const LIFE_AGES = [35, 40, 45, 50, 55, 60];
+export const LIFE_PLACE = [['less', 'Somewhere cheaper', 0.75], ['same', 'Like where I am now', 1], ['more', 'Somewhere pricier', 1.3]];
+export const LIFE_WORK = [['none', 'Not working', 0], ['some', 'A little, for fun', 1500], ['half', 'Half-time work I like', 3000]];
+export const LIFE_TRAVEL = [['none', 'Close to home', 0], ['some', 'A few trips a year', 400], ['lots', 'On the road a lot', 1200]];
+export const LIFE_GIVE = [['none', 'Just us', 0], ['some', 'Helping family or giving', 500], ['lots', 'Giving a lot', 1500]];
+const pickOf = (list, id) => list.find(x => x[0] === id) ?? list[0];
+export function designOf({ age, spending, invested = 0, surplus = 0, ret = 0.05, rate = 0.04 }, pick = {}) {
+  const at = pick.age ?? null;
+  if (age == null || !(spending > 0) || at == null || at <= age) return null;
+  const place = pickOf(LIFE_PLACE, pick.place ?? 'same'), work = pickOf(LIFE_WORK, pick.work ?? 'none'), travel = pickOf(LIFE_TRAVEL, pick.travel ?? 'none'), give = pickOf(LIFE_GIVE, pick.give ?? 'none');
+  const cost = spending * place[2] + travel[2] + give[2], fromWork = work[2], fromMoney = Math.max(0, cost - fromWork);
+  const number = fromMoney * 12 / rate;
+  const need = years => { const g = (1 + ret) ** years, grownNow = invested * g; return Math.max(0, (number - grownNow) * (ret === 0 ? 1 / years : ret / (g - 1)) / 12); };
+  const years = at - age, monthly = need(years), gap = Math.max(0, monthly - surplus);
+  let ageOnPace = null; for (let a = age + 1; a <= 80; a++) if (need(a - age) <= surplus) { ageOnPace = a; break; }
+  return { at, years, cost, fromWork, fromMoney, number, monthly, surplus, gap, on: gap <= 0, ageOnPace, lines: [['Everyday life', spending * place[2]], ['Travel', travel[2]], ['Family and giving', give[2]]].filter(l => l[1] > 0) };
+}
+
+// ---------- Decision receipts: two choices, side by side, and a record of which one you picked. ----------
+export const CHOICES = ['Stay as I am', 'A new job', 'A move', 'Buying a home', 'A baby', 'Back to school', 'My own business', 'Time off'];
+export const PAY_STEPS = [-3000, -1500, -500, 0, 500, 1500, 3000];
+export const COST_STEPS = [-1500, -500, 0, 500, 1500, 3000];
+export const FEELS = [[-1, 'Worse'], [0, 'Same'], [1, 'Better']];
+export const FEEL_SIDES = [['time', 'Free time'], ['calm', 'Calm'], ['people', 'Time with people']];
+export function receiptOf(doc, ref, priors, a = {}, b = {}, { now = new Date(), run = whatIf } = {}) {
+  const side = c => { const w = run(doc, ref, priors, { earnMore: c.pay ?? 0, spendLess: -(c.cost ?? 0) }, { now }); const life = FEEL_SIDES.reduce((s, [k]) => s + (c[k] ?? 0), 0);
+    return { name: c.name ?? null, pay: c.pay ?? 0, cost: c.cost ?? 0, months: w?.after ?? null, date: w?.date ?? null, moved: w?.moved ?? null, life }; };
+  const A = side(a), B = side(b);
+  const sooner = A.months == null || B.months == null ? null : A.months === B.months ? 'same' : A.months < B.months ? 'a' : 'b';
+  const kinder = A.life === B.life ? 'same' : A.life > B.life ? 'a' : 'b';
+  return { a: A, b: B, sooner, kinder, gap: A.months != null && B.months != null ? Math.abs(A.months - B.months) : null, split: sooner !== 'same' && kinder !== 'same' && sooner != null && sooner !== kinder };
+}

@@ -265,3 +265,14 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-why { margin: 4px 0 8px; padding-left: 20px; } .st-why li { margin-bottom: 6px; }
 .st-meet { padding: 8px 0; border-bottom: 2px solid var(--border-row); } .st-meet.differ { border-left: 6px solid var(--primary); padding-left: 10px; }
 .st-field > .st-chips { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); } .st-field > .st-chips > .st-chip { white-space: normal; line-height: 1.2; padding: 4px 6px; overflow-wrap: anywhere; }
+.st-views { margin-bottom: 8px; }
+.st-viewpick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.st-viewbtn { min-height: 44px; padding: 0 12px; border-radius: 10px; border: 2px solid var(--border-input); background: var(--card); color: var(--text); font: inherit; font-size: .875rem; font-weight: 700; cursor: pointer; }
+.st-viewbtn[aria-pressed="true"] { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
+.st-pv { display: grid; gap: 6px; } .st-pbar { height: 18px; border-radius: 9px; background: var(--border-row); overflow: hidden; } .st-pbar i { display: block; height: 100%; background: var(--primary); border-radius: 9px; }
+.st-thermo { width: 18px; height: 56px; border-radius: 9px; background: var(--border-row); display: flex; align-items: flex-end; overflow: hidden; flex: none; } .st-thermo i { display: block; width: 100%; background: var(--primary); }
+.st-bucket { width: 48px; height: 48px; border: 3px solid var(--text-2); border-top: 0; border-radius: 0 0 12px 12px; display: flex; align-items: flex-end; overflow: hidden; flex: none; box-sizing: border-box; } .st-bucket i { display: block; width: 100%; background: var(--primary); }
+.st-bucket.big { width: 64px; height: 64px; margin: 0 auto 6px; }
+.st-road { display: flex; flex-wrap: wrap; gap: 4px; } .st-leg { flex: 1 1 140px; min-width: 0; padding: 10px; border-radius: 10px; border: 2px solid var(--primary); display: grid; gap: 2px; font-size: .875rem; }
+.st-leg.c0 { background: var(--primary); color: var(--on-primary); } .st-leg.c1, .st-leg.c3 { background: var(--card); } .st-leg.c2 { background: var(--border-row); }
+.st-buckets { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; text-align: center; font-size: .875rem; } .st-bk { display: grid; gap: 2px; }
