@@ -52,3 +52,28 @@ test('the words: plain, no em dashes, no verdict words', () => {
   assert.doesNotMatch(words, new RegExp(String.fromCharCode(8212))); assert.doesNotMatch(words, /\b(should|must|bad|wrong|fail|warning|risky|danger)\b/i);
   assert.equal(HAPPENS.length, 3); for (const h of HAPPENS) assert.ok(h.steps.length >= 5 && /^What to do first/.test(h.steps.at(-1)));
 });
+
+import { nextDollarOf, NEXT_ASKS, climbOf, raiseOf, startedOf, creepOf, datesOf, PARENT_ASKS, RAISE_SCRIPT } from '../js/extras.js';
+test('which account next: the order bends to five answers', () => {
+  assert.equal(nextDollarOf({}).here, null);
+  const a = nextDollarOf({ match: 'some', debt: 'yes', cushion: 'low', hsa: 'yes', over: 'no' }); assert.equal(a.here.id, 'starter');
+  assert.equal(nextDollarOf({ match: 'some', debt: 'yes', cushion: 'some', hsa: 'yes', over: 'no' }).here.id, 'match');
+  assert.equal(nextDollarOf({ match: 'all', debt: 'yes', cushion: 'some', hsa: 'yes', over: 'no' }).here.id, 'debt');
+  assert.equal(nextDollarOf({ match: 'none', debt: 'no', cushion: 'some', hsa: 'no', over: 'no' }).here.id, 'cushion');
+  const b = nextDollarOf({ match: 'none', debt: 'no', cushion: 'full', hsa: 'no', over: 'yes' });
+  assert.equal(b.here.id, 'roth'); assert.match(b.here.name, /back door/); assert.ok(!b.steps.some(s => s.id === 'match' || s.id === 'hsa'));
+  assert.equal(nextDollarOf({ match: 'all', debt: 'no', cushion: 'full', hsa: 'unsure', over: 'no' }).here.id, 'hsa');
+  assert.equal(NEXT_ASKS.length, 5);
+});
+
+test('the climb, a raise, a habit, creep, and the money date, by hand', () => {
+  const c = climbOf(-3700, 1100); assert.equal(c[0].months, 4); assert.equal(c[1].months, 13); assert.equal(c[2].months, 95); assert.equal(climbOf(12000, 0)[2].months, null); assert.ok(climbOf(12000, 500)[1].done);
+  const r = raiseOf({}, {}, {}, { raise: 6000, run: fake }); // $6,000 a year, 70% kept: $350 a month; the stand-in moves 1 month per $20
+  assert.equal(r.monthly, 350); assert.equal(r.moved, 17.5); assert.equal(r.daysPerThousand, Math.round(17.5 * 30.44 / 6));
+  const s = startedOf({ monthly: 100, years: 2, ret: 0.05 }); assert.equal(s.put, 2400); assert.ok(Math.abs(s.value - 2460) < 1e-9); // 1,200 * 1.05 + 1,200
+  assert.equal(startedOf({ monthly: 100, years: 2, ret: 0 }).value, 2400);
+  assert.equal(creepOf(3000, 3100).up, false); assert.ok(creepOf(3000, 3200).up); assert.ok(Math.abs(creepOf(3000, 3300).change - 0.1) < 1e-12); assert.equal(creepOf(0, 100), null);
+  const d = datesOf([{ at: '2026-11-12', calm: 4, joy: 3 }, { at: '2026-10-10', calm: 2, joy: 3 }]); assert.equal(d.count, 2); assert.equal(d.calm, 2); assert.equal(d.joy, 0); assert.equal(datesOf([]).last, null);
+  const words = [...NEXT_ASKS.flatMap(q => [q.q, ...q.a.map(x => x[1])]), ...nextDollarOf({ over: 'yes' }).steps.flatMap(x => [x.name, x.why]), ...PARENT_ASKS.map(q => q.q), ...RAISE_SCRIPT].join(' ');
+  assert.doesNotMatch(words, new RegExp(String.fromCharCode(8212))); assert.doesNotMatch(words, /\b(should|must|bad|wrong|fail|warning|risky|danger)\b/i);
+});

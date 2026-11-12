@@ -17,7 +17,7 @@ import { WORRIES, WORRY_GROUPS, worryOf } from '../worries.js';
 import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOME_NOW, HOME_PMI, HOME_CLOSING, HOME_GUESS, HOME_GROWTHS, HOME_INVEST, HOME_HORIZONS, HOME_RENT_GROWTHS, HOME_SELLING, interestNote } from '../home.js';
 import { MIRRORS, mirrorOf, pctToFi, snapshotOf, auditOf, auditWords, FEELINGS, valuesOf, sinceWords } from '../mirror.js';
 import { readFile } from '../import/apps.js';
-import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet } from '../extras.js';
+import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP } from '../extras.js';
 import { dedupe, importTransactions } from '../import/csv.js';
 
 const [ref, priors, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/priors-2026.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
@@ -66,7 +66,7 @@ async function unpack(text) {
 const carried = location.hash.startsWith(LINK) ? location.hash.slice(LINK.length) : null;
 const MEETLINK = '#/meet/', meetIn = location.hash.startsWith(MEETLINK) && location.hash.length > MEETLINK.length ? unpackMeet(location.hash.slice(MEETLINK.length)) : null;
 if (carried) history.replaceState(null, '', location.pathname); // the plan does not stay in the address bar
-const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null, price: null, more: false, pic: 'growth', drill: null, tweak: null, worryGroup: null, homeOpen: false, stepsOpen: false, stmtOpen: false, linkNote: null, openCard: null, meetNote: null, slot: 0, audit: null, auditNote: null, since: null, valuesOpen: false, loadNote: null };
+const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null, price: null, more: false, pic: 'growth', drill: null, tweak: null, worryGroup: null, homeOpen: false, stepsOpen: false, stmtOpen: false, linkNote: null, openCard: null, meetNote: null, dateDraft: null, slot: 0, audit: null, auditNote: null, since: null, valuesOpen: false, loadNote: null };
 const money = v => fmt.money(v);
 const P = () => progressOf(store.doc, ref);
 const plan = () => planOf(store.doc, ref, priors, { flags });
@@ -107,7 +107,7 @@ const basisTag = p => h(`span.st-tag${p.basis === 'yours' ? '.yours' : ''}`, {},
 
 // Four tabs and More: everything fits a phone without sideways scrolling.
 const TABS = [['plan', 'Plan'], ['see', 'See'], ['drills', 'Practice'], ['sharpen', 'Sharpen']];
-const MORE = [['you', 'About you'], ['numbers', 'Your five numbers'], ['life', 'Lifetime plan'], ['tune', 'What if'], ['all', 'All your numbers'], ['summary', 'One-page summary'], ['meet', 'Money meeting for two'], ['credits', 'Credits']];
+const MORE = [['you', 'About you'], ['numbers', 'Your five numbers'], ['life', 'Lifetime plan'], ['tune', 'What if'], ['all', 'All your numbers'], ['summary', 'One-page summary'], ['date', 'Monthly money date'], ['meet', 'Money meeting for two'], ['credits', 'Credits']];
 function top() {
   const p = P();
   const tab = (id, label) => h('button.st-stage', { type: 'button', disabled: !p.hasAge, title: p.hasAge ? null : 'Pick the year you were born first', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label);
@@ -339,6 +339,8 @@ function yourPlan(p, pl) {
       (() => { const li = x => h(`li${x.done ? '.done' : ''}`, {}, h('span.dot', {}, x.done ? '✓' : ''), h('span', {}, x.name, h('small', {}, x.what)), h('span.when', {}, x.date));
         const next = pl.milestones.filter(x => !x.done).slice(0, 3), rest = pl.milestones.filter(x => !next.includes(x));
         return [h('ul.st-list', {}, next.map(li)), rest.length ? h('details.st-fold', {}, h('summary', {}, `Show all ${pl.milestones.length}`), h('ul.st-list', {}, rest.map(li))) : null]; })(),
+      (() => { const C = climbOf(pl.m.netWorth?.value ?? null, pl.m.surplus?.value ?? 0); if (!C) return null; const next = C.find(x => !x.done);
+        return h('details.st-fold', {}, h('summary', {}, next ? `Your climb: next is ${next.name.toLowerCase()}` : 'Your climb: past the first million'), h('ul.st-list', {}, C.map(x => h(`li${x.done ? '.done' : ''}`, {}, h('span.dot', {}, x.done ? '✓' : ''), h('span', {}, x.name), h('span.when', {}, x.done ? 'Done' : x.months == null ? 'Needs money left over' : x.months > 480 ? 'Growth gets you there' : monthWords(x.months))))), h('p.st-small.st-soft', {}, 'At what you keep each month, before any growth. Growth makes it sooner.')); })(),
       credit('milestones')),
     safe: h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'If something goes sideways'), h('div.st-soft', {}, 'Your cash covers'), h('div.st-big', {}, N2('runway')),
       h('p', {}, 'That is how long you could go with no pay coming in, at what you spend now.'),
@@ -539,6 +541,41 @@ function movesCard(pl) {
     h('p.st-small.st-soft', {}, 'The dates are worked out from your numbers. The effects on the rest of life are the usual ones, from the SPARKS tradeoff notes. Yours may differ.')]);
 }
 
+function nextCard() {
+  const ans = mine().next || {}, N = nextDollarOf(ans);
+  return foldCard('next', 'Which account gets my next dollar?', N.here ? N.here.name : '5 taps', [
+    NEXT_ASKS.map(q => h('div.st-field', {}, h('div.st-flabel', {}, q.q), h('div.st-chips', {}, q.a.map(([k, l]) => chip(l, ans[q.id] === k, () => { remember({ next: { ...ans, [q.id]: k } }); ui.flash = null; ui.openCard = 'next'; render(); }))))),
+    N.answered ? [h('p.st-readout', { role: 'status' }, `Your next dollar: ${N.here.name.toLowerCase()}. ${N.here.why}`, N.here.check ? ' Check with your plan first whether it allows one.' : ''),
+      h('ol.st-list', {}, N.steps.map((x, i) => h(`li${x.done ? '.done' : x === N.here ? '.here' : ''}`, {}, h('span.dot', {}, x.done ? '✓' : i + 1), h('span', {}, x.name, h('small', {}, x.why)), h('span.when', {}, x.done ? 'Done' : x === N.here ? 'You are here' : ''))))] : h('p.st-soft', {}, 'Answer all five and the order shows.'),
+    credit('foo')]);
+}
+function raiseCard(pl) {
+  const raise = mine().raise ?? 5000, R = raiseOf(store.doc, ref, priors, { raise });
+  return foldCard('raise', 'What is a raise worth to me?', R.moved > 0 ? `${spanWords(R.moved)} sooner` : '', [
+    chipRow('A raise of, a year before taxes', RAISES, raise, v => money(v), v => { remember({ raise: v }); ui.flash = null; ui.openCard = 'raise'; render(); }),
+    h('p.st-readout', { role: 'status' }, R.moved > 0 ? `About ${money(Math.round(R.monthly))} more a month after taxes. Invested, work becomes optional ${R.date}, ${spanWords(R.moved)} sooner. Each $1,000 of raise buys about ${R.daysPerThousand} days.` : `About ${money(Math.round(R.monthly))} more a month after taxes.`),
+    h('p.st-small.st-soft', {}, `It counts ${Math.round((1 - KEPT) * 100)}% going to taxes, a guess, and all of the rest being invested.`),
+    h('details.st-fold', {}, h('summary', {}, 'How to ask'), h('ol.st-steps', {}, RAISE_SCRIPT.map(t => h('li', {}, t))))]);
+}
+function startedCard(pl) {
+  const st = mine().habit || {}, monthly = st.monthly ?? 200, years = st.years ?? 5, S = startedOf({ monthly, years, ret: pl.m.inputs.realReturn ?? 0.05 });
+  const pickIt = patch => { remember({ habit: { ...st, ...patch } }); ui.flash = null; ui.openCard = 'started'; render(); };
+  return foldCard('started', 'If I start now', `${money(Math.round(S.value))} in ${years} years`, [
+    chipRow('A month', HABITS, monthly, v => money(v), v => pickIt({ monthly: v })), chipRow('For this many years', SPANS, years, v => String(v), v => pickIt({ years: v })),
+    h('p.st-readout', { role: 'status' }, `${money(monthly)} a month for ${years} ${years === 1 ? 'year' : 'years'} is ${money(S.put)} put in and about ${money(Math.round(S.value))} at the end, in today's dollars.`),
+    h('p.st-small', {}, `Started ${years} ${years === 1 ? 'year' : 'years'} ago, it would be about that much today. That window is closed. This one is open.`)]);
+}
+function parentsCard() {
+  const st = mine().parents || {}, ans = st.ans || {}, help = st.help ?? 0, w = help > 0 ? whatIf(store.doc, ref, priors, { spendLess: -help }) : null;
+  const save = patch => { remember({ parents: { ...st, ...patch } }); ui.flash = null; ui.openCard = 'parents'; render(); };
+  const yes = PARENT_ASKS.filter(q => ans[q.id] === 'yes').length;
+  return foldCard('parents', 'My parents and my plan', Object.keys(ans).length ? `${yes} of ${PARENT_ASKS.length} in place` : '', [
+    PARENT_ASKS.map(q => h('div.st-field', {}, h('div.st-flabel', {}, q.q), h('div.st-chips', {}, [['yes', 'Yes'], ['no', 'No'], ['unsure', 'Not sure']].map(([k, l]) => chip(l, ans[q.id] === k, () => save({ ans: { ...ans, [q.id]: k } })))))),
+    chipRow('If I helped them with this much a month', PARENT_HELP, help, v => (v ? money(v) : 'Nothing'), v => save({ help: v })),
+    help > 0 ? h('p.st-readout', { role: 'status' }, w?.moved != null && w.moved < 0 ? `Work becomes optional ${w.date}, ${spanWords(-w.moved)} later. Knowing the number is what lets you choose it.` : w?.moved === 0 ? 'Your date holds.' : 'At that amount nothing is left to invest on your numbers today.') : null,
+    PARENT_ASKS.some(q => ans[q.id] === 'no' || ans[q.id] === 'unsure') ? h('p.st-small', {}, 'One talk covers most of these. Start with where the documents are. It is the easiest to ask.') : null]);
+}
+
 // ---------- What if ----------
 function tune(p, pl) {
   const tweaks = tweaksOf(store.doc, ref).filter(t => t.show !== false);
@@ -596,7 +633,7 @@ function tune(p, pl) {
           h('div.st-rows', {}, h('div.st-srow4.head', {}, h('span', {}, 'Year'), h('span', {}, 'Interest'), h('span', {}, 'Paid down'), h('span', {}, 'Still owed')),
             scheduleOf(H.loan, { rate: H.rate }).filter(r => r.year <= 5 || r.year % 5 === 0).map(r => h('div.st-srow4', {}, h('span', {}, String(r.year)), h('span', {}, money(Math.round(r.interest))), h('span', {}, money(Math.round(r.paid))), h('span', {}, money(Math.round(r.balance)))))))); })(),
     valueCard(pl),
-    spendCard(p, pl), feesCard(pl), movesCard(pl),
+    spendCard(p, pl), feesCard(pl), movesCard(pl), nextCard(), raiseCard(pl), startedCard(pl), parentsCard(),
     h('div.st-card', {}, tweaks.map(t => h(`details.st-tweak${ui.flash === t.id ? '.flash' : ''}`, { open: ui.flash === t.id || ui.tweak === t.id ? true : null, onToggle: e => { if (e.target.open) ui.tweak = t.id; } },
       h('summary.st-sum', {}, h('strong', {}, t.label), h('span.st-soft', {}, t.options.find(o => o.value === t.value)?.label ?? '')), h('div.st-soft.st-small', {}, t.help),
       h('div.st-opts', {}, t.options.map(o => {
@@ -779,7 +816,27 @@ function meet() {
   ];
 }
 
-const SCREENS = { meet, summary, you, numbers, plan: yourPlan, see, life, drills, sharpen, tune, all: allNumbers, credits };
+// ---------- The monthly money date: five taps ----------
+function moneyDate(p, pl) {
+  const list = mine().dates || [], D = datesOf(list), today = new Date().toISOString().slice(0, 10), draft = ui.dateDraft || {};
+  const feel = (key, label, lo, hi) => h('div.st-field', {}, h('div.st-flabel', {}, label), h('div.st-chips', {}, FEEL.map(v => chip(v === 1 ? `1 ${lo}` : v === 5 ? `5 ${hi}` : String(v), draft[key] === v, () => { ui.dateDraft = { ...draft, [key]: v }; render(); }))));
+  const s = pl.step, doneToday = D.last?.at === today;
+  const finish = () => { if (!(draft.calm && draft.joy)) return; remember({ dates: [...list.filter(x => x.at !== today), { at: today, calm: draft.calm, joy: draft.joy, did: !!draft.did, fi: pl.fi?.date ?? pl.words.fi ?? null }].slice(-24) }); ui.dateDraft = null; render(); window.scrollTo({ top: 0 }); };
+  const word = v => (v > 0 ? `up ${v}` : v < 0 ? `down ${-v}` : 'the same');
+  return [
+    h('div.st-card.hero', {}, h('h1', {}, 'Your monthly money date'), h('p', { style: { marginBottom: 0 } }, doneToday ? `Done for today. ${D.count} so far.` : 'Five taps. Same day each month works well.')),
+    ui.since ? h('div.st-note', { role: 'status' }, ui.since) : null,
+    doneToday ? h('div.st-card', {}, h('h2', {}, 'How it is going'), h('dl.st-kv', {}, h('dt', {}, 'Calm about money'), h('dd', {}, `${D.last.calm} of 5${D.calm != null ? `, ${word(D.calm)} since last time` : ''}`), h('dt', {}, 'Joy from how I use it'), h('dd', {}, `${D.last.joy} of 5${D.joy != null ? `, ${word(D.joy)} since last time` : ''}`), h('dt', {}, 'Work becomes optional'), h('dd', {}, D.last.fi ?? 'Not yet known')),
+      h('div.st-row', { style: { marginTop: '12px' } }, btn('See my plan', () => go('plan'), 'primary'))) : h('div.st-card', {},
+      h('div.st-field', {}, h('div.st-flabel', {}, '1. Did anything change this month?'), h('div.st-row', {}, btn('My pay', () => go('numbers', { q: 'income' }), 'slim'), btn('My spending', () => go('numbers', { q: 'spending' }), 'slim'), btn('What I have', () => go('numbers', { q: 'cash' }), 'slim'), btn('What I owe', () => go('numbers', { q: 'card' }), 'slim'))),
+      s ? h('div.st-field', {}, h('div.st-flabel', {}, `2. Your step was: ${s.name}. Did you move on it?`), h('div.st-chips', {}, [[true, 'Yes'], [false, 'Not this month']].map(([v, l]) => chip(l, draft.did === v, () => { ui.dateDraft = { ...draft, did: v }; render(); })))) : null,
+      feel('calm', '3. How calm do you feel about money?', 'tense', 'calm'), feel('joy', '4. How much joy is your money buying?', 'little', 'a lot'),
+      h('div.st-flabel', {}, '5. One win this month, said out loud.'),
+      h('div.st-row', { style: { marginTop: '12px' } }, btn('Done', finish, draft.calm && draft.joy ? 'primary big' : 'big'), !(draft.calm && draft.joy) ? h('span.st-small.st-soft', {}, 'Tap 3 and 4 first.') : null)),
+  ];
+}
+
+const SCREENS = { date: moneyDate, meet, summary, you, numbers, plan: yourPlan, see, life, drills, sharpen, tune, all: allNumbers, credits };
 function render() {
   const p = P();
   if (!p.hasAge && STAGES.find(s => s.id === ui.stage)?.needs === 'age') ui.stage = 'you';
@@ -794,11 +851,11 @@ function render() {
 // Come back where you left off: the plan when the picture is done, the next question when it is not.
 const start = P();
 const [, linked, linkedQ] = location.hash.split('/'); // a link to a screen (#/tune) opens there
-ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'meet', 'credits'].includes(here().stage) ? here().stage : 'plan') : 'numbers';
+ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'meet', 'date', 'credits'].includes(here().stage) ? here().stage : 'plan') : 'numbers';
 ui.q = QUESTIONS.some(x => x.key === linkedQ) ? linkedQ : start.next;
 if (start.hasAge && start.done) {
   const pl0 = plan(), nw = numbersOf(pl0, store.doc, ref).find(n => n.id === 'netWorth');
-  const now = { at: new Date().toISOString().slice(0, 10), fi: pl0.fi?.date ?? pl0.words.fi ?? null, worth: pl0.m.netWorth?.value ?? null };
+  const now = { at: new Date().toISOString().slice(0, 10), fi: pl0.fi?.date ?? pl0.words.fi ?? null, worth: pl0.m.netWorth?.value ?? null, spend: pl0.m.inputs.spending ?? null };
   ui.since = sinceWords(mine().last, now);
   if (mine().last?.at !== now.at) remember({ last: now });
 }

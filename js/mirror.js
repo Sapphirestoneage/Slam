@@ -71,6 +71,7 @@ export function sinceWords(prev, now) {
   if (!prev || !now || prev.at === now.at) return null;
   const parts = [];
   if (prev.fi && now.fi && prev.fi !== now.fi) parts.push(`your date went from ${prev.fi} to ${now.fi}`);
+  if (prev.spend > 0 && now.spend > 0 && (now.spend - prev.spend) / prev.spend >= 0.05) parts.push(`your spending is up ${fmt.pct((now.spend - prev.spend) / prev.spend)}, ${fmt.money(Math.round(now.spend - prev.spend))} a month`);
   if (prev.worth != null && now.worth != null && Math.round(prev.worth) !== Math.round(now.worth)) { const d = now.worth - prev.worth; parts.push(`your net worth is ${d > 0 ? 'up' : 'down'} ${fmt.money(Math.abs(Math.round(d)))}`); }
   const day = new Date(`${prev.at}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   return parts.length ? `Since ${day}: ${parts.join(', and ')}.` : `Nothing has moved since ${day}.`;

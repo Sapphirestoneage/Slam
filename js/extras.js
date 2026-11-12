@@ -112,3 +112,75 @@ export function meetOf(mine = {}, theirs = {}) {
 }
 export const packMeet = a => btoa(JSON.stringify(a)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 export function unpackMeet(t) { try { const o = JSON.parse(atob(String(t).replace(/-/g, '+').replace(/_/g, '/'))); return o && typeof o === 'object' ? Object.fromEntries(MEET.filter(m => m.a.includes(o[m.id])).map(m => [m.id, o[m.id]])) : null; } catch { return null; } }
+
+// ---------- Which account next? The usual order for the next dollar, shaped by five taps. ----------
+// Roth IRA income limit for 2026: the phase-out starts near $153,000 on your own and $242,000 filing jointly.
+export const NEXT_ASKS = [
+  { id: 'match', q: 'My job matches what I put in a retirement plan', a: [['all', 'Yes, and I take all of it'], ['some', 'Yes, I take some'], ['none', 'No match']] },
+  { id: 'debt', q: 'I carry debt above about 8% a year', a: [['yes', 'Yes'], ['no', 'No']] },
+  { id: 'cushion', q: 'Cash on hand covers', a: [['low', 'Under a month'], ['some', '1 to 3 months'], ['full', 'More than 3 months']] },
+  { id: 'hsa', q: 'My health plan allows an HSA', a: [['yes', 'Yes'], ['no', 'No'], ['unsure', 'Not sure']] },
+  { id: 'over', q: 'My income is over the Roth limit (about $153,000 on my own, $242,000 together)', a: [['yes', 'Yes'], ['no', 'No']] },
+];
+export function nextDollarOf(ans = {}) {
+  const steps = [
+    { id: 'starter', name: 'A month of cash', why: 'So one surprise does not land on a card.', done: ans.cushion === 'some' || ans.cushion === 'full' },
+    { id: 'match', name: 'Your job\'s full match', why: 'It is the only place a dollar doubles the day you put it in.', done: ans.match === 'all', skip: ans.match === 'none' },
+    { id: 'debt', name: 'Debt above about 8%', why: 'Paying it off earns that rate, for sure.', done: ans.debt === 'no' },
+    { id: 'cushion', name: 'Three months or more of cash', why: 'So a job loss is a pause in the plan.', done: ans.cushion === 'full' },
+    { id: 'hsa', name: 'Your HSA', why: 'No tax going in, growing, or coming out for health costs.', done: false, skip: ans.hsa === 'no', check: ans.hsa === 'unsure' },
+    { id: 'roth', name: ans.over === 'yes' ? 'A Roth IRA by the back door' : 'A Roth IRA', why: ans.over === 'yes' ? 'Over the income limit, the route is a traditional IRA with no deduction, then a conversion.' : 'Growth and withdrawals later are tax-free.', done: false },
+    { id: 'plan', name: 'The rest of your plan at work, up to the limit', why: 'More room for money that grows without a yearly tax bill.', done: false, skip: false },
+    { id: 'taxable', name: 'A regular investment account', why: 'No limits and no lock. Low-fee index funds keep the tax small.', done: false },
+  ].filter(s => !s.skip);
+  const answered = NEXT_ASKS.every(q => ans[q.id]);
+  const here = answered ? steps.find(s => !s.done) ?? steps.at(-1) : null;
+  return { steps, here, answered };
+}
+
+// ---------- The climb: net worth today and the marks ahead, at what is kept each month (before any growth). ----------
+export const CLIMB_MARKS = [[0, 'Above zero'], [10000, 'First $10,000'], [100000, 'First $100,000'], [1000000, 'First million']];
+export function climbOf(netWorth, monthly) {
+  if (netWorth == null) return null;
+  return CLIMB_MARKS.map(([at, name]) => ({ at, name, done: netWorth >= at, months: netWorth >= at ? 0 : monthly > 0 ? Math.ceil((at - netWorth) / monthly) : null }));
+}
+
+// ---------- What a raise is worth: after tax, in days of freedom, with the words to ask for it. ----------
+export const RAISES = [2000, 5000, 10000, 20000];
+export const KEPT = 0.7; // about 30% of a raise goes to taxes: a guess the screen names
+export function raiseOf(doc, ref, priors, { raise = 5000, kept = KEPT, now = new Date(), run = whatIf } = {}) {
+  const monthly = raise * kept / 12, w = run(doc, ref, priors, { earnMore: monthly }, { now });
+  const moved = w?.moved ?? null;
+  return { raise, monthly, moved, date: w?.date ?? null, daysPerThousand: moved != null && raise > 0 ? Math.round(moved * 30.44 / (raise / 1000)) : null };
+}
+export const RAISE_SCRIPT = ['Start with what you did: two or three results from the last year, with numbers where you have them.', 'Name the number: "Based on that, I am asking for a raise of $X."', 'Then stop talking. Let them answer first.', 'If it is a no: "What would I need to show for this to be a yes in six months?" and get a date.'];
+
+// ---------- If I had started, and if I start now: the same monthly amount, then and from today. ----------
+export const HABITS = [50, 100, 200, 500, 1000];
+export const SPANS = [1, 3, 5, 10, 20];
+export function startedOf({ monthly = 200, years = 5, ret = 0.05 } = {}) {
+  const put = monthly * 12 * years, value = ret === 0 ? put : monthly * 12 * (((1 + ret) ** years - 1) / ret);
+  return { put, value, growth: value - put, monthly, years };
+}
+
+// ---------- Spending creeping up: this visit against the last one. ----------
+export function creepOf(before, after, { line = 0.05 } = {}) {
+  if (!(before > 0) || !(after > 0)) return null;
+  const change = (after - before) / before;
+  return { change, more: after - before, up: change >= line };
+}
+
+// ---------- The money date: five taps, once a month. ----------
+export const FEEL = [1, 2, 3, 4, 5];
+export function datesOf(list = []) {
+  const all = [...list].sort((a, b) => a.at.localeCompare(b.at)), last = all.at(-1) ?? null, prev = all.at(-2) ?? null;
+  return { count: all.length, last, prev, calm: last && prev ? last.calm - prev.calm : null, joy: last && prev ? last.joy - prev.joy : null };
+}
+
+// ---------- My parents: six taps, and what helping them would do to my date. ----------
+export const PARENT_ASKS = [
+  { id: 'income', q: 'They have enough coming in to live on' }, { id: 'docs', q: 'I know where their documents and accounts are' },
+  { id: 'will', q: 'They have a will' }, { id: 'proxy', q: 'Someone is named to make health and money choices for them' },
+  { id: 'care', q: 'There is a plan for care if they need help at home' }, { id: 'talk', q: 'We have talked about money at least once' },
+];
+export const PARENT_HELP = [0, 250, 500, 1000, 2000];

@@ -678,7 +678,7 @@ async function runClient(page, client) {
 
 // The self-serve journey (start.html): a new person answers the five questions, then every screen is scanned at each
 // width and theme, with its folds closed and then open. START_ROUTES is the journey's own list of screens.
-const START_ROUTES = ['you', 'numbers/income', 'plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'meet', 'credits'];
+const START_ROUTES = ['you', 'numbers/income', 'plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'meet', 'date', 'credits'];
 async function runStart(browser) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   await ctx.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
