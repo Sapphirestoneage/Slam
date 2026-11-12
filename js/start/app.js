@@ -11,6 +11,8 @@ import { LEVELS, levelsOf, sharpnessOf, levelOf } from '../sharpen.js';
 import { growthOf, flowOf, debtOf, timelineOf } from '../charts.js';
 import { growthChart, flowChart, debtChart, timelineChart } from './charts-ui.js';
 import { lifeScreen } from './life-ui.js';
+import { drillsOf, skillsOf, priceTagOf } from '../drills.js';
+import { lifeOf } from '../lifetime/inputs.js';
 
 const [ref, priors, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/priors-2026.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
 const hist = await fetch('data/history-returns.json').then(r => r.json());
@@ -36,7 +38,7 @@ open((mine().clientId && loadClient(adapter, mine().clientId)) || createClient(a
 for (const ev of ['pagehide', 'visibilitychange']) window.addEventListener(ev, () => saver?.flush());
 
 const $ = id => document.getElementById(id);
-const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null };
+const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null, price: null };
 const money = v => fmt.money(v);
 const P = () => progressOf(store.doc, ref);
 const plan = () => planOf(store.doc, ref, priors, { flags });
@@ -386,6 +388,13 @@ function tune(p, pl) {
   return [
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Tune it'), h('h1', {}, 'Change an assumption, watch the date move'),
       h('p', { style: { marginBottom: 0 } }, 'Each choice shows the date it gives you. Tap one to use it. To try spending less or earning more, use the sliders on See it. ', base != null && !pl.fi.far ? `Right now: ${pl.fi.date}.` : `Right now: ${pl.words.fi}.`)),
+    (() => { const amount = ui.price ?? 100, t = priceTagOf(pl, store.doc, ref, priors, amount);
+      return h(`div.st-card${ui.flash === 'price' ? '.flash' : ''}`, {}, h('h2', {}, 'What does a monthly cost really cost?'), h('div.st-soft.st-small', {}, 'Pick an amount: a subscription, a car payment, a habit.'),
+        h('div.st-chips', { style: { margin: '8px 0' } }, [10, 25, 50, 100, 200, 500].map(v => chip(`${money(v)} a month`, amount === v, () => { ui.price = v; render(); }))),
+        h('dl.st-kv', {}, h('dt', {}, 'Invested, to pay for it forever'), h('dd', {}, money(t.forever)),
+          t.hours != null ? [h('dt', {}, `Hours of your work each month${t.hourlyGuess ? ' (at a 40-hour week)' : ''}`), h('dd', {}, `${(Math.round(t.hours * 10) / 10).toFixed(1)}`)] : null,
+          t.moved != null && t.moved > 0 ? [h('dt', {}, 'Without it, work becomes optional'), h('dd', {}, `${spanWords(t.moved)} sooner`)] : null),
+        h('p.st-small.st-soft', { style: { margin: '8px 0 0' } }, `${money(amount)} a month is ${money(amount * 12)} a year. At a ${fmt.pct(t.rate)} withdrawal rate, that takes ${money(t.forever)} invested.`), credit('priceTag')); })(),
     h('div.st-card', {}, tweaks.map(t => h(`div.st-tweak${ui.flash === t.id ? '.flash' : ''}`, {},
       h('h2', { style: { marginBottom: '2px' } }, t.label), h('div.st-soft.st-small', {}, t.help),
       h('div.st-opts', {}, t.options.map(o => {
@@ -463,7 +472,7 @@ function foot() {
     const a = h('a', { href: URL.createObjectURL(blob), download: `my-plan-${new Date().toISOString().slice(0, 10)}.json` });
     document.body.append(a); a.click(); a.remove();
   };
-  const over = () => { open(createClient(adapter, 'My plan', new Date().toISOString())); Object.assign(ui, { q: null, note: null, decade: null, lever: { spendLess: 0, earnMore: 0 } }); remember({ elsewhere: false, parts: null, life: null }); go('you'); };
+  const over = () => { open(createClient(adapter, 'My plan', new Date().toISOString())); Object.assign(ui, { q: null, note: null, decade: null, lever: { spendLess: 0, earnMore: 0 } }); remember({ elsewhere: false, parts: null, life: null, done: null }); go('you'); };
   clear($('foot'),
     h('span.grow', {}, 'Your numbers stay in this browser. Nothing is sent anywhere. This is education, not personal financial advice.'),
     btn('Download a backup', download, 'slim'),
@@ -473,7 +482,33 @@ function foot() {
 }
 
 const life = (p, pl) => lifeScreen({ pl, store, ref, hist, mine, remember, render, go, btn, chip, credit, flash: ui.flash });
-const SCREENS = { you, numbers, plan: yourPlan, see, life, sharpen, tune, all: allNumbers, credits };
+// ---------- Fire drills and skills ----------
+function drills(p, pl) {
+  const done = mine().done || {}, tick = id => { remember({ done: { ...(mine().done || {}), [id]: !done[id] } }); render(); };
+  let life = null; try { life = lifeOf(pl, store.doc, ref, hist, mine().life || {}); } catch { life = null; }
+  const D = drillsOf(pl, store.doc, ref, priors, { life }), S = skillsOf(pl, store.doc, ref);
+  const all = [...D.map(d => `drill:${d.id}`), ...S.map(k => `skill:${k.id}`)], n = all.filter(id => done[id]).length;
+  const doneBtn = id => h('button.st-btn.slim', { type: 'button', 'aria-pressed': done[id] ? 'true' : 'false', class: done[id] ? 'primary' : '', onClick: () => tick(id) }, done[id] ? '✓ Done' : 'I did it');
+  const drill = d => h(`div.st-card.st-level${done[`drill:${d.id}`] ? '.done' : ''}`, {},
+    h('div.st-levelhead', {}, h('span.st-lvl', {}, done[`drill:${d.id}`] ? '✓' : '!'), h('div', {}, h('div.st-soft.st-small', {}, d.fear), h('h2', { style: { margin: 0 } }, d.headline)), d.calm ? h('span.st-tag.yours', {}, 'Covered') : null),
+    h('div', { style: { marginTop: '10px' } }, d.lines.map(l => h('p', { style: { margin: '0 0 6px' } }, l))),
+    h('details.st-fold', {}, h('summary', {}, 'What actually happens'), h('ol.st-steps', {}, d.happens.map(x => h('li', {}, x)))),
+    h('div.st-do', {}, h('div.st-eyebrow', {}, d.rep.minutes ? `Your rep, ${d.rep.minutes} minutes` : 'Your rep'), h('div', {}, d.rep.text), h('div', { style: { marginTop: '8px' } }, doneBtn(`drill:${d.id}`))));
+  const skill = k => h(`div.st-card.st-level${done[`skill:${k.id}`] ? '.done' : ''}`, {},
+    h('div.st-levelhead', {}, h('span.st-lvl', {}, done[`skill:${k.id}`] ? '✓' : '+'), h('div', {}, h('h2', { style: { margin: 0 } }, k.title), h('div.st-small', {}, k.why)), doneBtn(`skill:${k.id}`)),
+    h('details.st-fold', { style: { marginTop: '6px' } }, h('summary', {}, `How, in ${k.minutes} minutes`), h('ol.st-steps', {}, k.steps.map(x => h('li', {}, x)))));
+  return [
+    h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Fire drills'), h('h1', {}, 'Practice it before it happens'),
+      h('p', {}, 'Each drill takes something people fear about money and runs it on your own numbers, so you know what it would cost and what you would do first. Then one small rep in real life.'),
+      h('span.st-meter', {}, `${n} of ${all.length} done`, h('span.st-bar', {}, h('b', { style: { width: `${all.length ? Math.max(2, n / all.length * 100) : 0}%` } })))),
+    D.map(drill),
+    S.length ? h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Skills'), h('h2', {}, `${S.length} money ${S.length === 1 ? 'skill' : 'skills'} your plan says you have not used yet`), h('p', { style: { marginBottom: 0 } }, 'Each is a few minutes, and each is worth a number on your plan.')) : null,
+    S.map(skill),
+    h('div.st-row', {}, btn('Sharpen it', () => go('sharpen'), 'primary'), btn('Your whole life', () => go('life'))),
+  ];
+}
+
+const SCREENS = { you, numbers, plan: yourPlan, see, life, drills, sharpen, tune, all: allNumbers, credits };
 function render() {
   const p = P();
   if (!p.hasAge && STAGES.find(s => s.id === ui.stage)?.needs === 'age') ui.stage = 'you';
@@ -488,7 +523,7 @@ function render() {
 // Come back where you left off: the plan when the picture is done, the next question when it is not.
 const start = P();
 const [, linked, linkedQ] = location.hash.split('/'); // a link to a screen (#/tune) opens there
-ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'life', 'sharpen', 'tune', 'all', 'credits'].includes(mine().stage) ? mine().stage : 'plan') : 'numbers';
+ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'credits'].includes(mine().stage) ? mine().stage : 'plan') : 'numbers';
 ui.q = QUESTIONS.some(x => x.key === linkedQ) ? linkedQ : start.next;
 history.replaceState({ stage: ui.stage, q: ui.q, depth: 0 }, '', hashOf(ui.stage, ui.q));
 render();
