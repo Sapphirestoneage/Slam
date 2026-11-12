@@ -4,7 +4,7 @@
 import { h, clear } from '../ui/dom.js';
 import { Store, exportFile } from '../records.js';
 import { localAdapter, memoryAdapter, loadClient, createClient, autosave } from '../storage.js';
-import { SITUATIONS, situationOf, situationSet, setSituation, questionsFor, benefitOnFile, answerBenefit, startJob, STAGES, QUESTIONS, PAY_WAYS, PAY_FREQUENCIES, SPEND_PARTS, sumParts, answerPay, payOnFile, progressOf, onFile, answer, quickPicks, planOf, movedWords, numbersOf, statementsOf, tweaksOf, setTweak, resetTweaks, previewTweak, whatIf, spanWords, monthWords } from '../journey.js';
+import { SITUATIONS, situationOf, situationSet, setSituation, questionsFor, benefitOnFile, answerBenefit, startJob, STAGES, QUESTIONS, PAY_WAYS, PAY_FREQUENCIES, SPEND_PARTS, sumParts, answerPay, payOnFile, progressOf, onFile, answer, quickPicks, planOf, movedWords, numbersOf, statementsOf, blurOf, tweaksOf, setTweak, resetTweaks, previewTweak, whatIf, spanWords, monthWords } from '../journey.js';
 import { SOURCES, IDEAS, ideaOf, ideasBy, creditWords } from '../registry/credits.js';
 import { fmt } from '../math/result.js';
 import { LEVELS, levelsOf, sharpnessOf, levelOf } from '../sharpen.js';
@@ -374,6 +374,12 @@ function sharpen(p, pl) {
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Sharpen it'), h('h1', {}, `You are at level ${sh.done} of ${sh.total}`),
       h('p', {}, 'Each level is a few taps and unlocks new numbers. Do them in any order, or stop whenever the plan is clear enough for you.'),
       h('span.st-pips.big', { role: 'img', 'aria-label': `${sh.done} of ${sh.total} levels` }, Array.from({ length: sh.total }, (_, i) => h(`i${i < sh.done ? '.on' : ''}`)))),
+    (() => { const b = p.done ? blurOf(pl) : null; if (!b || !b.guess || b.top.share < 0.5 || !(b.top.spanMonths > 12)) return null;
+      const open = L.find(x => x.id === b.fix && x.state === 'open');
+      return h('div.st-card', {}, h('div.st-eyebrow', {}, 'What is blurring your plan most'),
+        h('p', { style: { fontWeight: 700 } }, `Your date can land anywhere in a ${spanWords(b.top.spanMonths)} window, and ${fmt.pct(b.top.share)} of that comes from one number: ${b.top.label.toLowerCase()}.`),
+        b.fix === 'statement' ? h('p', { style: { marginBottom: 0 } }, 'It is a number from memory, and memory is usually off. A bank or card statement is what pins it down. That upload is the next thing being built. Until then, "Help me add it up" on question 2 gets it closer.', ' ', btn('Add it up', () => go('numbers', { q: 'spending' }), 'slim primary'))
+          : open ? h('div.st-row', {}, h('span', {}, `Level ${open.n} fixes it.`), btn('Answer it', () => go('sharpen', { flash: open.id }), 'slim primary')) : null); })(),
     ui.note && !ui.noteAt ? h('div.st-note', { role: 'status' }, ui.note) : null,
     !p.done ? h('div.st-card', {}, h('div.st-levelhead', {}, h('span.st-lvl', {}, 1), h('div', {}, h('h2', { style: { margin: 0 } }, 'Level 1: the five questions'), h('div.st-soft.st-small', {}, `${p.count} of ${p.total} answered.`)), btn('Finish it', () => go('numbers', { q: p.next }), 'slim primary'))) : null,
     L.map(card),

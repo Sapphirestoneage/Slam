@@ -260,6 +260,18 @@ export function planOf(file, ref, priors, { flags = [], now = new Date() } = {})
   return { between, basis, label: P.label, age: P.age, answered: P.answered, typical: P.typical, priors: P.priors, next: P.next, words: P.words, fi, widthMonths: width, step: next, steps, milestones, wins: milestones.filter(x => x.done).length, m, filled: F.doc };
 }
 
+// What is blurring the plan most: the engine's own ranges (M9R) say how wide the FI date is and how much of that
+// width each input is responsible for. { spanMonths (null when open-ended), top: { label, share, spanMonths }, fix:
+// a Sharpen it level id, 'statement' (a gut spending number: only a statement narrows it), or null }.
+const BLUR_FIX = [[/gut spending|spending/i, 'statement'], [/APR|payment/i, 'owe'], [/investment|balance.*(401|IRA|brokerage)/i, 'accounts'], [/take-home|pay\b|income/i, 'taxes']];
+export function blurOf(plan) {
+  const r = plan.fi?.range, top = r?.drivers?.[0];
+  if (!r || !top || !(top.share > 0)) return null;
+  const span = r.high == null || r.low == null ? null : r.high - r.low;
+  const own = top.low != null && top.high != null ? Math.abs(top.high - top.low) : null;
+  return { spanMonths: span, top: { label: top.label, share: top.share, spanMonths: own }, fix: BLUR_FIX.find(([re]) => re.test(top.label))?.[1] ?? null, guess: top.known === false };
+}
+
 // The words for how much one answer moved the plan: "Your FI range went from 2049 or later to 2045 to 2058." Null when
 // nothing a person would notice changed.
 export function movedWords(before, after) {

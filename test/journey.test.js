@@ -153,3 +153,11 @@ test('pay by paycheck, salary or hour lands on one income row; spending parts ad
   assert.equal(answerPay(s, { mode: 'salary', amount: null }), false);
   assert.equal(sumParts({ housing: 1500, food: 600, rest: 700, bills: '' }), 2800);
 });
+
+test('what blurs the plan most is named, with its share: a gut spending number is nearly all of it', async () => {
+  const { blurOf } = await import('../js/journey.js');
+  const b = blurOf(planOf(full().doc, ref, priors, { flags, now }));
+  assert.match(b.top.label, /spending/i);
+  assert.ok(b.top.share > 0.9 && b.top.spanMonths > 60 && b.guess === true);
+  assert.equal(b.fix, 'statement');
+});
