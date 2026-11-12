@@ -23,7 +23,7 @@ const near = (a, b, tol, what) => assert.ok(Math.abs(a - b) <= tol, `${what}: ap
 test('nine levels, each a few taps, each naming what it unlocks', () => {
   const s = full();
   assert.deepEqual(LEVELS.map(l => l.n), [2, 3, 4, 5, 6, 7, 8, 9, 10]);
-  for (const L of LEVELS) { const f = L.fields(s.doc, ref); assert.ok(f.length >= 1 && f.length <= 6, `${L.id}: ${f.length} boxes`); assert.ok(L.unlocks.length && L.title && L.why); }
+  for (const L of LEVELS) { const f = L.fields(s.doc, ref); const shown = f.filter(x => !x.when || x.when(L.read(s.doc, ref))); assert.ok(shown.length >= 1 && shown.length <= 6, `${L.id}: ${shown.length} boxes`); assert.ok(L.unlocks.length && L.title && L.why); }
   assert.ok(levelsOf(s.doc).every(l => l.state === 'open'));
   assert.deepEqual([sharpnessOf(s.doc, true).done, sharpnessOf(s.doc, true).total], [1, 10]);
 });
@@ -42,6 +42,20 @@ test('each level saves, reads back what was saved, and counts as done', () => {
   assert.equal(s.doc.records.filter(r => r.kind === 'income').length, 1);
   assert.equal(s.doc.records.filter(r => r.kind === 'account' && r.values.group === 'investment').length, 3);
   assert.equal(sharpnessOf(s.doc, true).done, 10);
+});
+
+test('a level, once done, stays done: a car loan is asked with the car and never reopens the debt level', () => {
+  const s = full(), lv = id => LEVELS.find(l => l.id === id);
+  lv('owe').write(s, valuesFor(lv('owe'), s), ref);
+  assert.equal(lv('owe').done(s.doc), true);
+  lv('own').write(s, { housing: 'Rent', hasCar: true, carValue: 9000, carLoanBalance: 4000, carLoanApr: 0.07, carLoanPayment: 300 }, ref);
+  assert.equal(lv('owe').done(s.doc), true, 'level 3 stays done');
+  assert.equal(lv('owe').fields(s.doc, ref).length, 4, 'the car loan is not one of its questions');
+  const back = lv('own').read(s.doc, ref);
+  assert.deepEqual([back.carLoanBalance, back.carLoanApr, back.carLoanPayment], [4000, 0.07, 300]);
+  const loan = metrics(s.doc, ref, { now }).inputs.debts.find(d => d.type === 'Car loan');
+  assert.deepEqual([loan.apr, loan.aprGuess, loan.payment], [0.07, false, 300]);
+  assert.equal(levelsOf(s.doc).filter(l => l.state === 'done').map(l => l.n).join(), '3,7');
 });
 
 test('a level with nothing to answer says so and counts as done', () => {

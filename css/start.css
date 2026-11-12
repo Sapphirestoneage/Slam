@@ -185,6 +185,7 @@ a { color: var(--primary); text-underline-offset: 2px; }
 .st-level { padding: 14px 16px; margin-bottom: 10px; }
 .st-form { margin-top: 14px; padding-top: 14px; border-top: 2px solid var(--border-row); }
 .st-field { margin-bottom: 16px; }
+.st-field[hidden] { display: none; }
 .st-flabel { font-weight: 700; margin-bottom: 6px; }
 .st-box.narrow { max-width: 240px; }
 .st-box.narrow .in { height: 46px; }

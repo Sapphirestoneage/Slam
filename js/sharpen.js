@@ -13,7 +13,8 @@ const has = v => v !== null && v !== undefined && v !== '';
 const num = v => (has(v) && Number.isFinite(Number(v)) ? Math.max(0, Number(v)) : null);
 const recs = (doc, pred) => (doc.records || []).filter(pred);
 const job = doc => recs(doc, r => r.kind === 'income')[0] ?? null;
-const owed = doc => recs(doc, r => r.kind === 'debt' && (r.values?.balance ?? 0) > 0);
+const owed = doc => recs(doc, r => r.kind === 'debt' && (r.values?.balance ?? 0) > 0 && !r.linkedTo); // a loan on a home or car is asked with it, in level 7
+const loanOn = (doc, type) => { const a = recs(doc, r => r.kind === 'asset' && r.type === type)[0]; return a ? recs(doc, r => r.kind === 'debt' && r.linkedTo === a.id)[0] ?? null : null; };
 const invested = doc => recs(doc, r => r.kind === 'account' && r.values?.group === 'investment');
 const WEEKS = 52 / 12; // hours are asked by the week and kept by the month, as the coach app keeps them
 
@@ -115,13 +116,20 @@ export const LEVELS = [
       { id: 'housing', label: 'Your home', type: 'pick', options: [['Rent', 'I rent'], ['Own', 'I own'], ['Family', 'I live with family']] },
       { id: 'homeValue', label: 'What the home is worth', type: 'money', picks: null, when: v => v.housing === 'Own' },
       { id: 'mortgageBalance', label: 'What is left on the mortgage', type: 'money', picks: [0], when: v => v.housing === 'Own' },
+      { id: 'mortgageApr', label: 'Mortgage interest rate', type: 'pct', options: [0.03, 0.04, 0.05, 0.06, 0.07], when: v => v.housing === 'Own' && num(v.mortgageBalance) > 0 },
+      { id: 'mortgagePayment', label: 'Mortgage payment a month', type: 'money', picks: null, when: v => v.housing === 'Own' && num(v.mortgageBalance) > 0 },
       { id: 'hasCar', label: 'Do you have a car?', type: 'pick', options: [[true, 'Yes'], [false, 'No']] },
       { id: 'carValue', label: 'What the car is worth', type: 'money', picks: [5000, 10000, 20000, 30000], when: v => v.hasCar === true },
-      { id: 'carLoanBalance', label: 'What is left on the car loan', type: 'money', picks: [0], when: v => v.hasCar === true }],
-    read(doc) { const a = fastTrackAnswers(doc); return { housing: a.housing, homeValue: a.homeValue, mortgageBalance: a.mortgageBalance ?? (a.homeLoan === 'Paid off' ? 0 : null), hasCar: a.hasCar, carValue: a.carValue, carLoanBalance: a.carLoanBalance }; },
+      { id: 'carLoanBalance', label: 'What is left on the car loan', type: 'money', picks: [0], when: v => v.hasCar === true },
+      { id: 'carLoanApr', label: 'Car loan interest rate', type: 'pct', options: [0.03, 0.05, 0.07, 0.09, 0.12], when: v => v.hasCar === true && num(v.carLoanBalance) > 0 },
+      { id: 'carLoanPayment', label: 'Car payment a month', type: 'money', picks: [200, 300, 400, 500, 600], when: v => v.hasCar === true && num(v.carLoanBalance) > 0 }],
+    read(doc) { const a = fastTrackAnswers(doc); return { housing: a.housing, homeValue: a.homeValue, mortgageBalance: a.mortgageBalance ?? (a.homeLoan === 'Paid off' ? 0 : null), hasCar: a.hasCar, carValue: a.carValue, carLoanBalance: a.carLoanBalance,
+      mortgageApr: loanOn(doc, 'Home')?.values.apr ?? null, mortgagePayment: a.mortgagePayment ?? null, carLoanApr: loanOn(doc, 'Car')?.values.apr ?? null, carLoanPayment: a.carLoanPayment ?? null }; },
     write(store, v) {
       const pos = k => (num(v[k]) > 0 ? num(v[k]) : null);
-      applyFastTrack(store, { housing: v.housing ?? null, hasCar: v.hasCar ?? null, homeValue: num(v.homeValue), mortgageBalance: pos('mortgageBalance'), homeLoan: v.housing === 'Own' && num(v.mortgageBalance) === 0 ? 'Paid off' : null, carValue: num(v.carValue), carLoanBalance: pos('carLoanBalance') });
+      applyFastTrack(store, { housing: v.housing ?? null, hasCar: v.hasCar ?? null, homeValue: num(v.homeValue), mortgageBalance: pos('mortgageBalance'), homeLoan: v.housing === 'Own' && num(v.mortgageBalance) === 0 ? 'Paid off' : null, carValue: num(v.carValue), carLoanBalance: pos('carLoanBalance'),
+        mortgagePayment: pos('mortgageBalance') ? num(v.mortgagePayment) : null, carLoanPayment: pos('carLoanBalance') ? num(v.carLoanPayment) : null });
+      for (const [type, key] of [['Home', 'mortgageApr'], ['Car', 'carLoanApr']]) { const loan = loanOn(store.doc, type); if (loan && num(v[key]) !== null) { store.update(loan.id, { apr: num(v[key]) }); store.setFieldStatus(loan.id, 'apr', 'Know it'); } }
     },
     done: doc => has(doc.profile?.housing) && (doc.profile?.hasCar === true || doc.profile?.hasCar === false), skip: () => null },
 

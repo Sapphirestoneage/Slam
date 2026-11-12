@@ -34,7 +34,7 @@ open((mine().clientId && loadClient(adapter, mine().clientId)) || createClient(a
 for (const ev of ['pagehide', 'visibilitychange']) window.addEventListener(ev, () => saver?.flush());
 
 const $ = id => document.getElementById(id);
-const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null };
+const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null };
 const money = v => fmt.money(v);
 const P = () => progressOf(store.doc, ref);
 const plan = () => planOf(store.doc, ref, priors, { flags });
@@ -45,7 +45,7 @@ const hashOf = (stage, q) => `#/${stage}${stage === 'numbers' && q ? `/${q}` : '
 let depth = 0;
 function show(stage, { q = null, flash = null } = {}) {
   ui.stage = stage; ui.flash = flash; ui.confirmReset = false; ui.way = null; ui.addUp = false; ui.form = null;
-  ui.level = stage === 'sharpen' && levelOf(flash) ? levelOf(flash).id : null;
+  ui.level = stage === 'sharpen' && levelOf(flash) ? levelOf(flash).id : null; ui.noteAt = null;
   if (q) ui.q = q;
   if (stage !== 'numbers' && stage !== 'sharpen') ui.note = null;
   remember({ stage });
@@ -302,44 +302,55 @@ function see(p, pl) {
 // ---------- Sharpen it: levels 2 to 10 ----------
 function sharpen(p, pl) {
   const L = levelsOf(store.doc), sh = sharpnessOf(store.doc, p.done);
-  const field = (f, v, redraw) => {
-    if (f.when && !f.when(v)) return null;
-    const set = (val, { keep = false } = {}) => { v[f.id] = val; if (!keep) redraw(); };
-    if (f.type === 'pick') return h('div.st-field', {}, h('div.st-flabel', {}, f.label), h('div.st-chips', {}, f.options.map(([val, label]) => chip(label, v[f.id] === val, () => set(val)))));
+  // Every field is drawn; one that does not apply yet is hidden, so typing a loan balance shows its rate and payment
+  // boxes at once without the box being typed in losing its place.
+  const field = (f, v, redraw, sync) => {
+    const set = (val, { keep = false } = {}) => { v[f.id] = val; if (keep) sync(); else redraw(); };
+    const wrap = el => { el.dataset.field = f.id; el.hidden = !!(f.when && !f.when(v)); return el; };
+    if (f.type === 'pick') return wrap(h('div.st-field', {}, h('div.st-flabel', {}, f.label), h('div.st-chips', {}, f.options.map(([val, label]) => chip(label, v[f.id] === val, () => set(val))))));
     const pct = f.type === 'pct', shown = v[f.id] == null ? '' : pct ? String(+(v[f.id] * 100).toFixed(2)) : Number(v[f.id]).toLocaleString('en-US');
     const input = h('input', { type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: '0', 'aria-label': f.label, value: shown, onInput: e => { const n = e.target.value.replace(/[^\d.]/g, ''); set(n === '' ? null : pct ? Number(n) / 100 : Number(n), { keep: true }); } });
     const picks = pct ? f.options.map(o => [o, `${+(o * 100).toFixed(1)}%`]) : (f.picks || []).map(o => [o, money(o)]);
-    return h('div.st-field', {}, h('div.st-flabel', {}, f.label),
+    return wrap(h('div.st-field', {}, h('div.st-flabel', {}, f.label),
       h('div.st-box.narrow', {}, h('div.in', {}, pct ? null : h('span', {}, '$'), input, pct ? h('span', {}, '%') : null)),
-      picks.length ? h('div.st-chips', { style: { marginTop: '8px' } }, picks.map(([val, label]) => chip(label, v[f.id] === val, () => set(val)))) : null);
+      picks.length ? h('div.st-chips', { style: { marginTop: '8px' } }, picks.map(([val, label]) => chip(label, v[f.id] === val, () => set(val)))) : null));
   };
   const form = lv => {
     const def = levelOf(lv.id);
     if (!ui.form || ui.form.id !== lv.id) { const start = def.read(store.doc, ref); if (lv.id === 'where' && mine().parts) { const pt = mine().parts; start.rent ??= pt.housing ?? null; start.food ??= pt.food ?? null; start.transport ??= pt.transport ?? null; } ui.form = { id: lv.id, v: start }; }
     const v = ui.form.v, box = h('div');
-    const redraw = () => box.replaceChildren(...def.fields(store.doc, ref).map(f => field(f, v, redraw)).filter(Boolean));
+    const fields = def.fields(store.doc, ref);
+    const sync = () => { for (const f of fields) { const el = box.querySelector(`[data-field="${CSS.escape(f.id)}"]`); if (el) el.hidden = !!(f.when && !f.when(v)); } };
+    const redraw = () => box.replaceChildren(...fields.map(f => field(f, v, redraw, sync)));
     redraw();
+    // Save goes straight on to the next level that still needs an answer (no trip back to the top): it opens, with
+    // what this one unlocked said just above it, and the screen moves to it.
     const save = () => {
       const before = pl; def.write(store, v, ref);
       const after = plan(), moved = movedWords(before, after);
-      ui.note = `Level ${lv.n} saved. Unlocked: ${lv.unlocks.join(', ')}.${moved ? ` ${moved}` : ''}`;
-      ui.form = null; ui.level = null; render(); window.scrollTo({ top: 0 });
+      const open = levelsOf(store.doc).filter(x => x.state === 'open' && x.id !== lv.id);
+      const next = open.find(x => x.n > lv.n) ?? open[0] ?? null;
+      ui.note = `Level ${lv.n} done. Unlocked: ${lv.unlocks.join(', ')}.${moved ? ` ${moved}` : ''}${next ? '' : ' That was the last level.'}`;
+      ui.form = null; ui.level = next?.id ?? null; ui.noteAt = next?.id ?? null; render();
+      const el = next ? document.getElementById(`level-${next.id}`) : null;
+      if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - (document.getElementById('top').offsetHeight + 12) }); else window.scrollTo({ top: 0 });
     };
-    return h('div.st-form', {}, box, h('div.st-row', { style: { marginTop: '14px' } }, btn('Save', save, 'primary big'), btn('Close', () => { ui.level = null; ui.form = null; render(); }, 'text')));
+    return h('div.st-form', {}, box, h('div.st-row', { style: { marginTop: '14px' } }, btn('Save', save, 'primary big'), btn('Close', () => { ui.level = null; ui.form = null; ui.note = null; ui.noteAt = null; render(); }, 'text')));
   };
   const card = lv => {
     const open = ui.level === lv.id;
     return h(`div.st-card.st-level${lv.state !== 'open' ? '.done' : ''}${ui.flash === lv.n || ui.flash === lv.id ? '.flash' : ''}`, { id: `level-${lv.id}` },
+      ui.note && ui.noteAt === lv.id ? h('div.st-note', { role: 'status' }, ui.note) : null,
       h('div.st-levelhead', {}, h('span.st-lvl', {}, lv.state === 'open' ? lv.n : '✓'),
         h('div', {}, h('h2', { style: { margin: 0 } }, `Level ${lv.n}: ${lv.title}`), h('div.st-soft.st-small', {}, lv.note ?? lv.why), h('div.st-small', { style: { marginTop: '4px' } }, h('strong', {}, 'Unlocks: '), lv.unlocks.join(', '))),
-        lv.state === 'skip' ? h('span.st-tag.yours', {}, 'Nothing to do') : open ? null : btn(lv.state === 'done' ? 'Change' : 'Answer', () => { ui.level = lv.id; ui.form = null; ui.note = null; render(); document.getElementById(`level-${lv.id}`)?.scrollIntoView({ block: 'start' }); }, lv.state === 'done' ? 'slim' : 'slim primary')),
+        lv.state === 'skip' ? h('span.st-tag.yours', {}, 'Nothing to do') : open ? null : btn(lv.state === 'done' ? 'Change' : 'Answer', () => { ui.level = lv.id; ui.form = null; ui.note = null; ui.noteAt = null; render(); document.getElementById(`level-${lv.id}`)?.scrollIntoView({ block: 'start' }); }, lv.state === 'done' ? 'slim' : 'slim primary')),
       open ? form(lv) : null);
   };
   return [
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Sharpen it'), h('h1', {}, `You are at level ${sh.done} of ${sh.total}`),
       h('p', {}, 'Each level is a few taps and unlocks new numbers. Do them in any order, or stop whenever the plan is clear enough for you.'),
       h('span.st-pips.big', { role: 'img', 'aria-label': `${sh.done} of ${sh.total} levels` }, Array.from({ length: sh.total }, (_, i) => h(`i${i < sh.done ? '.on' : ''}`)))),
-    ui.note ? h('div.st-note', { role: 'status' }, ui.note) : null,
+    ui.note && !ui.noteAt ? h('div.st-note', { role: 'status' }, ui.note) : null,
     !p.done ? h('div.st-card', {}, h('div.st-levelhead', {}, h('span.st-lvl', {}, 1), h('div', {}, h('h2', { style: { margin: 0 } }, 'Level 1: the five questions'), h('div.st-soft.st-small', {}, `${p.count} of ${p.total} answered.`)), btn('Finish it', () => go('numbers', { q: p.next }), 'slim primary'))) : null,
     L.map(card),
     h('div.st-row', {}, btn('See all your numbers', () => go('all'), 'primary'), btn('See it in pictures', () => go('see'))),
