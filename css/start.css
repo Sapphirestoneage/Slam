@@ -297,3 +297,22 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-solid .st-solidtitle { flex: 1; min-width: 0; display: grid; } .st-solid .st-solidtitle strong { font-weight: 600; } .st-solid small { font-size: .875rem; }
 .st-changed { border: 3px solid var(--primary); }
 .st-donebar { display: flex; align-items: center; gap: 10px; font-size: .875rem; font-weight: 700; margin: 4px 0 4px; }
+.st-map { position: relative; padding: 4px 0 8px; }
+.st-maplines { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.st-edge { fill: none; stroke: var(--border-input); stroke-width: 2; opacity: .55; stroke-dasharray: 4 5; }
+.st-edge.on { stroke: var(--primary); stroke-dasharray: none; opacity: .6; }
+.st-edge.dim { opacity: .12; } .st-edge.hot { opacity: 1; stroke-width: 3.5; stroke: var(--primary); }
+.st-tier { position: relative; z-index: 1; margin-bottom: 34px; }
+.st-tier-h { font-size: .875rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text-2); margin: 0 0 8px; background: var(--bg, transparent); width: fit-content; padding-right: 8px; }
+.st-tier-row { display: flex; flex-wrap: wrap; gap: 10px 12px; justify-content: center; }
+.st-node { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 8px; align-items: center; text-align: left; min-height: 56px; min-width: 132px; max-width: 200px; flex: 1 1 132px; padding: 8px 12px; border-radius: 14px; border: 2px solid var(--border-input); background: var(--card); color: var(--text); font: inherit; cursor: pointer; box-shadow: var(--shadow, none); }
+.st-node .st-nodemark { grid-row: 1 / 3; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; border: 2px solid var(--border-input); }
+.st-node .st-nodename { font-weight: 700; line-height: 1.2; } .st-node .st-nodeword { font-size: .875rem; color: var(--text-2); }
+.st-node.done { border-color: var(--primary); } .st-node.done .st-nodemark { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.st-node.ready { border-color: var(--primary); border-style: solid; } .st-node.ready .st-nodemark { border-color: var(--primary); color: var(--primary); }
+.st-node.waiting { border-style: dashed; background: transparent; box-shadow: none; } .st-node.waiting .st-nodename { color: var(--text-2); font-weight: 600; }
+.st-node.sel { outline: 4px solid var(--primary); outline-offset: 2px; } .st-node.near { border-width: 3px; border-color: var(--primary); }
+.st-mapsel { position: sticky; top: 96px; z-index: 3; border: 3px solid var(--primary); }
+.st-edge { opacity: .22; } .st-edge.on { opacity: .3; } .st-edge.dim { opacity: .07; } .st-edge.hot { opacity: 1; }
+.st-node.waiting { background: var(--card); }
+@media (max-width: 640px) { .st-mapsel { position: fixed; left: 8px; right: 8px; bottom: 8px; top: auto; margin: 0; max-height: 46vh; overflow-y: auto; box-shadow: var(--shadow-lift); } .st-map:has(.sel) { padding-bottom: 48vh; } }

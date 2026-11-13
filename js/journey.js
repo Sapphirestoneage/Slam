@@ -32,6 +32,7 @@ export const STAGES = [
   { id: 'sharpen', label: 'Sharpen it', needs: 'age' },
   { id: 'tune', label: 'What if', needs: 'age' },
   { id: 'all', label: 'All your numbers', needs: 'age' },
+  { id: 'map', label: 'Your map', needs: null },
   { id: 'summary', label: 'One page', needs: 'age' },
   { id: 'meet', label: 'Meeting for two', needs: null },
   { id: 'date', label: 'Money date', needs: 'age' },

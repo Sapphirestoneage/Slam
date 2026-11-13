@@ -17,6 +17,7 @@ import { WORRIES, WORRY_GROUPS, worryOf, WORRY_TOOLS, MIRROR_TOOLS, TOOL_GROUPS 
 import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOME_NOW, HOME_PMI, HOME_CLOSING, HOME_GUESS, HOME_GROWTHS, HOME_INVEST, HOME_HORIZONS, HOME_RENT_GROWTHS, HOME_SELLING, interestNote } from '../home.js';
 import { MIRRORS, mirrorOf, pctToFi, snapshotOf, auditOf, auditWords, FEELINGS, valuesOf, sinceWords } from '../mirror.js';
 import { readFile } from '../import/apps.js';
+import { MAP_TIERS, mapOf } from '../map.js';
 import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP, flowTimeOf, designOf, LIFE_AGES, LIFE_PLACE, LIFE_WORK, LIFE_TRAVEL, LIFE_GIVE, receiptOf, CHOICES, PAY_STEPS, COST_STEPS, FEELS, FEEL_SIDES, guideOf, LINES, seriesOf, PRICES, affordOnce, PAY_PICKS, unevenOf, OVERLAPS, SUB_PRICES, overlapOf } from '../extras.js';
 import { dedupe, importTransactions } from '../import/csv.js';
 
@@ -67,7 +68,7 @@ async function unpack(text) {
 const carried = location.hash.startsWith(LINK) ? location.hash.slice(LINK.length) : null;
 const MEETLINK = '#/meet/', meetIn = location.hash.startsWith(MEETLINK) && location.hash.length > MEETLINK.length ? unpackMeet(location.hash.slice(MEETLINK.length)) : null;
 if (carried) history.replaceState(null, '', location.pathname); // the plan does not stay in the address bar
-const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null, price: null, more: false, pic: 'growth', drill: null, tweak: null, worryGroup: null, homeOpen: false, stepsOpen: false, stmtOpen: false, linkNote: null, openCard: null, meetNote: null, dateDraft: null, decide: null, decideNote: null, slot: 0, audit: null, auditNote: null, since: null, valuesOpen: false, loadNote: null };
+const ui = { stage: 'you', q: null, note: null, flash: null, lever: { spendLess: 0, earnMore: 0 }, decade: null, confirmReset: false, way: null, addUp: false, freq: '2 weeks', hours: 40, level: null, form: null, noteAt: null, weeks: null, benefitDraft: null, price: null, more: false, pic: 'growth', drill: null, tweak: null, worryGroup: null, homeOpen: false, stepsOpen: false, stmtOpen: false, linkNote: null, openCard: null, meetNote: null, dateDraft: null, mapSel: null, decide: null, decideNote: null, slot: 0, audit: null, auditNote: null, since: null, valuesOpen: false, loadNote: null };
 const money = v => fmt.money(v);
 const P = () => progressOf(store.doc, ref);
 const plan = () => planOf(store.doc, ref, priors, { flags });
@@ -108,7 +109,7 @@ const basisTag = p => h(`span.st-tag${p.basis === 'yours' ? '.yours' : ''}`, {},
 
 // Four tabs and More: everything fits a phone without sideways scrolling.
 const TABS = [['plan', 'Plan'], ['see', 'See'], ['drills', 'Practice'], ['sharpen', 'Sharpen']];
-const MORE_GROUPS = [['You', [['you', 'About you'], ['numbers', 'Your five numbers'], ['all', 'All your numbers'], ['summary', 'One-page summary']]], ['Plan ahead', [['life', 'Lifetime plan'], ['tune', 'What if'], ['design', 'Design my life'], ['decide', 'Compare two choices']]], ['Keep it going', [['date', 'Monthly money date'], ['meet', 'Money meeting for two']]], ['About', [['credits', 'Credits']]]];
+const MORE_GROUPS = [['You', [['map', 'Your map'], ['you', 'About you'], ['numbers', 'Your five numbers'], ['all', 'All your numbers'], ['summary', 'One-page summary']]], ['Plan ahead', [['life', 'Lifetime plan'], ['tune', 'What if'], ['design', 'Design my life'], ['decide', 'Compare two choices']]], ['Keep it going', [['date', 'Monthly money date'], ['meet', 'Money meeting for two']]], ['About', [['credits', 'Credits']]]];
 const MORE = MORE_GROUPS.flatMap(g => g[1]);
 function top() {
   const p = P();
@@ -133,6 +134,48 @@ function track(p, pl) {
     h('span.st-trackline', {}, line),
     !p.done && ui.stage !== 'numbers' ? btn(p.count ? 'Keep going' : 'Start', () => go('numbers', { q: p.next }), 'slim primary') : null);
 }
+
+// ---------- Your map: the whole journey as a web ----------
+const markSeen = key => { const seen = mine().seen || {}; if (!seen[key] && store) remember({ seen: { ...seen, [key]: true } }); };
+function mapScreen(p, pl) {
+  const m = mine(), seen = m.seen || {}, d = m.done || {}, solid = id => !!(m.solid || {})[id], L = p.done ? levelsOf(store.doc) : [];
+  const M = mapOf({ answered: { age: p.hasAge, ...p.answered }, done: {
+    plan: p.done, growth: seen.growth, flow: seen.flow, lines: seen.lines, road: seen.money, debt: seen.debt,
+    statement: !!m.audit, levels: L.length > 0 && L.every(l => l.state !== 'open'), checkup: checkupOf(m.checkup || {}).answered === CHECKUP.length,
+    spendTools: ['price', 'afford', 'values', 'overlap', 'spendMore'].some(solid), earnTools: ['raise', 'uneven', 'moves'].some(solid), home: solid('home'), fees: solid('fees') || solid('next'),
+    design: m.design?.age != null, decide: (m.receipts || []).length > 0, life: seen.life, stress: seen.life, drills: Object.keys(d).some(k => d[k] && /^(drill|skill):/.test(k)), date: (m.dates || []).length > 0, summary: seen.summary } });
+  const sel = M.nodes.find(n => n.id === ui.mapSel) ?? null, name = id => M.nodes.find(n => n.id === id).name;
+  const WORD = { done: 'Done', ready: 'Ready', waiting: 'Waiting' };
+  const open = n => (n.go.stage === 'numbers' ? go('numbers', { q: n.go.q }) : go(n.go.stage, { flash: n.go.flash }));
+  const node = n => h(`button.st-node.${n.state}${sel?.id === n.id ? '.sel' : ''}${sel && (sel.needs.includes(n.id) || sel.feeds.includes(n.id)) ? '.near' : ''}`, { type: 'button', 'data-node': n.id, 'aria-pressed': sel?.id === n.id ? 'true' : 'false', onClick: () => { ui.mapSel = sel?.id === n.id ? null : n.id; render(); } },
+    h('span.st-nodemark', {}, n.state === 'done' ? '✓' : n.state === 'ready' ? '›' : ''), h('span.st-nodename', {}, n.name), h('span.st-nodeword', {}, WORD[n.state]));
+  return [
+    h('div.st-card.hero', {}, h('h1', {}, 'Your map'), h('p', { style: { marginBottom: '8px' } }, 'Everything you tell the app feeds what it can show you next. Tap any point to see what goes into it and what it leads to.'),
+      h('div.st-donebar', { role: 'status' }, h('span', {}, `${M.done} done, ${M.ready} ready, ${M.waiting} waiting on an answer`)),
+      M.next ? h('div.st-row', {}, btn(`Next on the map: ${M.next.name}`, () => open(M.next), 'primary')) : null),
+    sel ? h('div.st-card.st-mapsel', { role: 'region', 'aria-label': sel.name },
+      h('div.st-row.end', {}, h('div', {}, h('div.st-eyebrow', {}, WORD[sel.state]), h('h2', { style: { margin: 0 } }, sel.name)), btn('Close', () => { ui.mapSel = null; render(); }, 'slim text')),
+      h('p', { style: { margin: '6px 0' } }, sel.gives),
+      h('dl.st-kv', {}, sel.needs.length ? [h('dt', {}, 'Goes into it'), h('dd', {}, sel.needs.map(name).join(', '))] : null, sel.missing.length ? [h('dt', {}, 'Still needs'), h('dd', {}, h('strong', {}, sel.missing.join(', ')))] : null, sel.feeds.length ? [h('dt', {}, 'Leads to'), h('dd', {}, sel.feeds.map(name).join(', '))] : null),
+      h('div.st-row', { style: { marginTop: '8px' } }, btn(sel.state === 'waiting' ? `Answer ${sel.missing[0].toLowerCase()} first` : sel.state === 'done' ? 'Open it' : 'Go', () => (sel.state === 'waiting' ? open(M.nodes.find(n => n.name === sel.missing[0])) : open(sel)), 'primary'))) : null,
+    h('div.st-map', { id: 'map' }, MAP_TIERS.map(([k, label]) => h('section.st-tier', {}, h('h2.st-tier-h', {}, label), h('div.st-tier-row', {}, M.nodes.filter(n => n.tier === k).map(node))))),
+    h('script', { type: 'application/json', id: 'map-edges' }, JSON.stringify({ edges: M.edges, sel: sel?.id ?? null, state: Object.fromEntries(M.nodes.map(n => [n.id, n.state])) })),
+  ];
+}
+// The lines are drawn after the points are on the page, from the bottom of each feeder to the top of what it feeds.
+function drawMapLines() {
+  const box = document.getElementById('map'), data = document.getElementById('map-edges'); if (!box || !data) return;
+  box.querySelector('svg')?.remove();
+  const { edges, sel, state } = JSON.parse(data.textContent), b = box.getBoundingClientRect(), NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'st-maplines'); svg.setAttribute('width', b.width); svg.setAttribute('height', b.height); svg.setAttribute('aria-hidden', 'true');
+  const at = id => { const r = box.querySelector(`[data-node="${id}"]`)?.getBoundingClientRect(); return r ? { x: r.left - b.left + r.width / 2, top: r.top - b.top, bottom: r.bottom - b.top } : null; };
+  for (const e of edges) { const a = at(e.from), c = at(e.to); if (!a || !c) continue;
+    const y1 = a.bottom, y2 = c.top, mid = (y1 + y2) / 2, path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', y2 > y1 ? `M${a.x},${y1} C${a.x},${mid} ${c.x},${mid} ${c.x},${y2}` : `M${a.x},${y1} C${a.x},${y1 + 18} ${c.x},${y1 + 18} ${c.x},${c.bottom}`);
+    path.setAttribute('class', `st-edge ${state[e.from] === 'done' ? 'on' : ''} ${sel ? (e.from === sel || e.to === sel ? 'hot' : 'dim') : ''}`); svg.append(path); }
+  box.prepend(svg);
+}
+window.addEventListener('resize', () => { if (ui.stage === 'map') drawMapLines(); });
 
 // ---------- Solid for now: mark a card done, and it goes quiet until your numbers change ----------
 // The mark keeps the numbers it was made on. When pay, spending, cash, investments or debt move, the card wakes up.
@@ -165,6 +208,7 @@ function guideCard(p, slim = false) {
     h('div.st-row.end', {}, h('div', {}, h('div.st-eyebrow', {}, 'You are here'), h('h2', { style: { margin: '0 0 8px' } }, n.here)), btn('Hide', () => hide(true), 'slim text')),
     n.caughtUp ? h('p', { style: { margin: 0 } }, 'Nothing is waiting on you. Come back next month for your money date, or explore anything you like.')
       : h('div.st-row', {}, btn(`Do this next: ${n.label}`, act, 'primary big'), n.minutes ? h('span.st-small.st-soft', {}, `About ${n.minutes} ${n.minutes === 1 ? 'minute' : 'minutes'}`) : null),
+    h('div.st-row', { style: { marginTop: '8px' } }, btn('See the whole map', () => go('map'), 'slim')),
     G.done.length ? h('details.st-fold', {}, h('summary', {}, `What you have done (${G.done.length})`), h('ul.st-list', {}, G.done.map(t => h('li.done', {}, h('span.dot', {}, '✓'), h('span', {}, t))))) : null);
 }
 
@@ -437,6 +481,7 @@ function see(p, pl) {
   const PICS = [['growth', 'Growth'], ['flow', 'Where it goes'], ['lines', 'Line by line'], ['money', 'Over time'], ['timeline', 'Your path'], ['debt', 'Debt']];
   const FT = flowTimeOf(pl), when = mo => (mo == null ? 'the day work is optional' : mo === 0 ? 'today' : monthWords(mo));
   const pic = PICS.some(([k]) => k === ui.flash) ? (ui.pic = ui.flash) : ui.pic;
+  if (p.done) markSeen(pic);
   const shown = pic === 'growth' ? card('growth', 'Picture 1 of 5', 'How your money grows', [hold,
       h('h3', { style: { marginTop: '14px' } }, 'Try it'), lever('spendLess', 'Spend less', 1500, 50), lever('earnMore', 'Earn more', 3000, 100), res,
       h('details.st-fold', {}, h('summary', {}, 'Change the growth rate'),
@@ -1008,13 +1053,15 @@ function moneyDate(p, pl) {
   ];
 }
 
-const SCREENS = { design, decide, date: moneyDate, meet, summary, you, numbers, plan: yourPlan, see, life, drills, sharpen, tune, all: allNumbers, credits };
+const SCREENS = { map: mapScreen, design, decide, date: moneyDate, meet, summary, you, numbers, plan: yourPlan, see, life, drills, sharpen, tune, all: allNumbers, credits };
 function render() {
   const p = P();
   if (!p.hasAge && STAGES.find(s => s.id === ui.stage)?.needs === 'age') ui.stage = 'you';
   const pl = p.hasAge ? plan() : null;
   top(); track(p, pl);
-  clear($('main'), backBar(), p.hasAge && !['plan', 'you', 'numbers'].includes(ui.stage) ? guideCard(p, true) : null, SCREENS[ui.stage](p, pl));
+  clear($('main'), backBar(), p.hasAge && !['plan', 'you', 'numbers', 'map'].includes(ui.stage) ? guideCard(p, true) : null, SCREENS[ui.stage](p, pl));
+  if (ui.stage === 'map') requestAnimationFrame(drawMapLines);
+  if (p.done && ['life', 'summary'].includes(ui.stage)) markSeen(ui.stage);
   foot();
   const lit = $('main').querySelector('.flash');
   if (lit) { lit.querySelector('details')?.setAttribute('open', ''); lit.closest('details')?.setAttribute('open', ''); setTimeout(() => lit.scrollIntoView({ block: 'center' }), 0); }
@@ -1023,7 +1070,7 @@ function render() {
 // Come back where you left off: the plan when the picture is done, the next question when it is not.
 const start = P();
 const [, linked, linkedQ] = location.hash.split('/'); // a link to a screen (#/tune) opens there
-ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'meet', 'date', 'design', 'decide', 'credits'].includes(here().stage) ? here().stage : 'plan') : 'numbers';
+ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'meet', 'date', 'design', 'decide', 'map', 'credits'].includes(here().stage) ? here().stage : 'plan') : 'numbers';
 ui.q = QUESTIONS.some(x => x.key === linkedQ) ? linkedQ : start.next;
 if (start.hasAge && start.done) {
   const pl0 = plan(), nw = numbersOf(pl0, store.doc, ref).find(n => n.id === 'netWorth');
