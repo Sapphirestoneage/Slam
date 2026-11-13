@@ -18,6 +18,8 @@ import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOM
 import { MIRRORS, mirrorOf, pctToFi, snapshotOf, auditOf, auditWords, FEELINGS, valuesOf, sinceWords } from '../mirror.js';
 import { readFile } from '../import/apps.js';
 import { MAP_TIERS, mapOf } from '../map.js';
+import { DEBT_BOOK, bookOf } from '../book.js';
+import { bookUI } from './book-ui.js';
 import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP, flowTimeOf, designOf, LIFE_AGES, LIFE_PLACE, LIFE_WORK, LIFE_TRAVEL, LIFE_GIVE, receiptOf, CHOICES, PAY_STEPS, COST_STEPS, FEELS, FEEL_SIDES, guideOf, LINES, seriesOf, PRICES, affordOnce, PAY_PICKS, unevenOf, OVERLAPS, SUB_PRICES, overlapOf } from '../extras.js';
 import { dedupe, importTransactions } from '../import/csv.js';
 
@@ -89,7 +91,7 @@ function show(stage, { q = null, flash = null } = {}) {
 }
 function go(stage, { q = null, flash = null, note = null } = {}) {
   const same = stage === ui.stage && (stage !== 'numbers' || !q || q === ui.q);
-  ui.note = note;
+  ui.note = note; ui.arrived = true;
   if (!same) history.pushState({ stage, q: q ?? ui.q, depth: ++depth }, '', hashOf(stage, q ?? ui.q));
   show(stage, { q, flash });
 }
@@ -208,20 +210,31 @@ function guideNow(p) {
 // Where the pulse lands: the tab that leads to the next step, and the thing to tap once you are there.
 const TAB_OF = { plan: 'plan', see: 'see', drills: 'drills', sharpen: 'sharpen' };
 const nodeOfNext = n => (n.stage === 'you' ? 'age' : n.stage === 'numbers' ? n.q : n.stage === 'plan' ? 'plan' : n.stage === 'date' ? 'date' : n.flash === 'statement' ? 'statement' : n.flash === 'checkup' ? 'checkup' : 'levels');
+const guideOn = () => !mine().guideOff;
+// One thing pulses on every screen: the next step itself when it lives here, the next thing to answer inside an open
+// form, and failing those the button that leads to the next step. Hide turns all of it off.
 function pulseHere(p) {
-  if (mine().guideOff || !p.hasAge) return;
-  const n = guideNow(p).next; if (n.caughtUp || n.stage !== ui.stage) return;
-  const sel = n.stage === 'numbers' ? (ui.q === n.q ? 'main .st-btn.primary.big' : null) : n.stage === 'plan' ? '.st-tick[aria-pressed="false"]' : n.flash === 'statement' ? '#stmt label.st-btn, #stmt > summary' : n.flash === 'checkup' ? 'details.st-card > summary' : n.stage === 'sharpen' ? `#level-${n.flash} .st-levelhead .st-btn` : n.stage === 'date' ? 'main .st-field .st-chips' : null;
-  if (!sel) return;
-  const el = n.flash === 'checkup' ? [...document.querySelectorAll(sel)].find(x => /The checkup/.test(x.textContent)) : document.querySelector(sel);
-  el?.classList.add('st-pulse');
+  if (!guideOn()) return;
+  const main = $('main'), on = () => document.querySelector('#main .st-pulse');
+  const add = el => { if (el && !on()) el.classList.add('st-pulse'); };
+  if (!p.hasAge) return add(main.querySelector('.st-years') ?? main.querySelector('.st-card:not(.hero) .st-chips'));
+  const n = guideNow(p).next;
+  if (!n.caughtUp && n.stage === ui.stage) {
+    const sel = n.stage === 'numbers' ? null : n.stage === 'plan' ? '.st-tick[aria-pressed="false"]' : n.flash === 'statement' ? '#stmt label.st-btn, #stmt > summary' : n.flash === 'checkup' ? null : n.stage === 'sharpen' ? `#level-${n.flash} .st-levelhead .st-btn` : n.stage === 'date' ? 'main .st-field .st-chips' : null;
+    add(n.flash === 'checkup' ? [...document.querySelectorAll('details.st-card > summary')].find(x => /The checkup/.test(x.textContent)) : sel ? document.querySelector(sel) : null);
+  }
+  const here = on(); if (here && ui.arrived) { const r = here.getBoundingClientRect(); if (r.top < 60 || r.bottom > innerHeight - 20) setTimeout(() => here.scrollIntoView({ block: 'center' }), 0); }
+  ui.arrived = false;
+  add(main.querySelector('.st-nextbar .st-btn.primary'));
+  if (ui.stage === 'numbers') { const box = main.querySelector('.st-boxes .st-box .in'), empty = box && !box.querySelector('input')?.value; add(empty ? box : main.querySelector('.st-btn.primary.big')); }
+  add(main.querySelector('.st-btn.primary.big') ?? main.querySelector('.st-btn.primary'));
 }
 function guideCard(p, slim = false) {
   const off = !!mine().guideOff, hide = v => { remember({ guideOff: v }); render(); };
   if (off) return slim ? null : h('div.st-row', {}, btn('Show my next step', () => hide(false), 'slim'));
   const G = guideNow(p);
   const n = G.next, act = () => (n.stage === 'numbers' ? go('numbers', { q: n.q }) : n.stage === 'plan' && n.flash ? (ui.stepsOpen = true, ui.stage === 'plan' ? (ui.flash = n.flash, render()) : go('plan', { flash: n.flash })) : go(n.stage, { flash: n.flash }));
-  if (slim) return n.caughtUp ? null : h('div.st-nextbar', { role: 'region', 'aria-label': 'Your next step' }, h(`strong.st-count${G.step > (ui.lastStep ?? G.step) ? '.st-bump' : ''}`, {}, `Step ${G.step} of ${G.of}`), btn(n.label, act, 'slim primary st-pulse'), btn('Hide', () => hide(true), 'slim text'));
+  if (slim) return n.caughtUp ? null : h('div.st-nextbar', { role: 'region', 'aria-label': 'Your next step' }, h(`strong.st-count${G.step > (ui.lastStep ?? G.step) ? '.st-bump' : ''}`, {}, `Step ${G.step} of ${G.of}`), btn(n.label, act, 'slim primary'), btn('Hide', () => hide(true), 'slim text'));
   return h('div.st-card.st-guide', {},
     h('div.st-row.end', {}, h('div', {}, h(`div.st-eyebrow.st-count${G.step > (ui.lastStep ?? G.step) ? '.st-bump' : ''}`, {}, `You are here: step ${G.step} of ${G.of}`), h('h2', { style: { margin: '0 0 8px' } }, n.here)), btn('Hide', () => hide(true), 'slim text')),
     n.caughtUp ? h('p', { style: { margin: 0 } }, 'Nothing is waiting on you. Come back next month for your money date, or explore anything you like.')
@@ -321,6 +334,7 @@ function numbers(p, pl) {
   if (benefit && ui.benefitDraft != null) vals.benefit = ui.benefitDraft; // a tap on the weeks redraws: keep what was typed
   const picks = way && way !== 'month' ? [] : parts ? [] : quickPicks(pl, key, { doc: store.doc, ref });
   const inputs = {};
+  const owes = key === 'card'; // what you owe is a list by kind, not three boxes
   const total = h('strong', {}, money(sumParts(vals)));
   const set = (id, v, { from = null } = {}) => {
     vals[id] = v;
@@ -329,6 +343,8 @@ function numbers(p, pl) {
     if (benefit) ui.benefitDraft = v;
     if (range && from !== 'range') range.value = String(Math.min(max, v ?? 0));
     if (parts) total.textContent = money(sumParts(vals));
+    const b = inputs[boxes[0].id].text.closest('.in'), sv = document.querySelector('#main .st-btn.primary.big'); // the pulse moves from the box to Save once there is a number
+    if (guideOn() && sv && (b.classList.contains('st-pulse') || sv.classList.contains('st-pulse'))) { const filled = boxes.some(x => vals[x.id] != null); b.classList.toggle('st-pulse', !filled); sv.classList.toggle('st-pulse', filled); }
   };
   const box = (b, i) => {
     const text = h('input', { type: 'text', inputmode: 'numeric', id: `box-${i}`, autocomplete: 'off', placeholder: '0', 'aria-label': b.label, value: vals[b.id] == null ? '' : Number(vals[b.id]).toLocaleString('en-US'),
@@ -346,6 +362,7 @@ function numbers(p, pl) {
   };
   const same = () => p.answered[key] && !benefit && !way?.match(/paycheck|salary|hourly/) && !parts && q.boxes.every(b => (vals[b.id] ?? null) === (file[b.id] ?? null));
   const save = () => {
+    if (owes) { if (bookOf(store.doc, DEBT_BOOK).total > 0 || p.answered.card) return after(); $('need').hidden = false; return; }
     if (same()) return after(); // nothing changed: go on without rewriting what is on file
     const ok = benefit ? answerBenefit(store, { weekly: vals.benefit, weeks: ui.weeks }) : way && key === 'income' ? answerPay(store, { mode: way, amount: vals.takeHome, frequency: ui.freq, hours: ui.hours })
       : parts ? (sumParts(vals) > 0 && (remember({ parts: vals }), answer(store, key, { gut: sumParts(vals) })))
@@ -368,14 +385,14 @@ function numbers(p, pl) {
         h('div.st-qdots', { role: 'tablist', 'aria-label': 'The five questions' }, QS.map((x, i) => h(`button${p.answered[x.key] ? '.done' : ''}`, { type: 'button', 'aria-current': x.key === key ? 'true' : null, title: p.answered[x.key] ? 'Answered. Tap to change it.' : 'Not answered yet', onClick: () => go('numbers', { q: x.key }) }, `${p.answered[x.key] ? '✓ ' : ''}${i + 1}`))),
         h('div.st-eyebrow', {}, `Question ${at + 1} of ${QUESTIONS.length}`),
         h('h1', {}, q.title),
-        h('p.st-soft', {}, way === 'salary' || way === 'hourly' ? 'We work out the taxes for you.' : parts ? 'Fill in the ones you know. Leave the rest empty.' : q.help),
+        h('p.st-soft', {}, owes ? 'Add each card and loan on its own. What you owe today is enough for now.' : way === 'salary' || way === 'hourly' ? 'We work out the taxes for you.' : parts ? 'Fill in the ones you know. Leave the rest empty.' : q.help),
         addUp,
-        h(`div.st-boxes${parts ? '.tight' : ''}`, {}, boxes.map(box)),
+        owes ? bookUI({ store, book: DEBT_BOOK, front: ['balance'], pulse: guideOn(), btn, chip, onState: st => { ui.bookState = st; requestAnimationFrame(() => { const b = document.querySelector('#main .st-btn.primary.big'), a = document.querySelector('#main .st-booksec .st-bookhead .st-btn'); const inBook = document.querySelector('#main .st-book .st-pulse'); b?.classList.toggle('st-pulse', guideOn() && !inBook && st.count > 0); a?.classList.toggle('st-pulse', guideOn() && !inBook && st.count === 0); }); } }) : h(`div.st-boxes${parts ? '.tight' : ''}`, {}, boxes.map(box)),
         parts ? h('p', { style: { margin: '8px 0 0' } }, 'That adds up to ', total, ' a month.') : null,
         onFileLine, extra,
-        picks.length ? h('div.st-picks', {}, h('div.st-soft.st-small', {}, benefit ? 'Tap one to use it. The last is the most New York pays a week:' : q.boxes.length > 1 ? `Typical at your age for ${q.boxes[0].label.toLowerCase()}. Tap one to use it:` : 'Typical at your age. Tap one to use it:'), h('div.st-chips', {}, picks.map(v => chip(money(v), false, () => set(first, v))))) : null,
+        picks.length && !owes ? h('div.st-picks', {}, h('div.st-soft.st-small', {}, benefit ? 'Tap one to use it. The last is the most New York pays a week:' : q.boxes.length > 1 ? `Typical at your age for ${q.boxes[0].label.toLowerCase()}. Tap one to use it:` : 'Typical at your age. Tap one to use it:'), h('div.st-chips', {}, picks.map(v => chip(money(v), false, () => set(first, v))))) : null,
         ways,
-        h('p.st-small', { id: 'need', hidden: true, role: 'alert', style: { margin: '10px 0 0', fontWeight: 700 } }, q.none ? `Type a number, drag the slider, or tap "${q.none}".` : key === 'income' ? 'Type a number or drag the slider first. No pay coming in right now? Open More, then About you, and pick "I am between jobs".' : 'Type a number or drag the slider first.'),
+        h('p.st-small', { id: 'need', hidden: true, role: 'alert', style: { margin: '10px 0 0', fontWeight: 700 } }, owes ? 'Add what you owe with an Add button, or tap "No debt".' : q.none ? `Type a number, drag the slider, or tap "${q.none}".` : key === 'income' ? 'Type a number or drag the slider first. No pay coming in right now? Open More, then About you, and pick "I am between jobs".' : 'Type a number or drag the slider first.'),
         h('div.st-row', { style: { marginTop: '16px' } },
           btn(p.answered[key] ? 'Save and go on' : at === QUESTIONS.length - 1 ? 'Save and see my plan' : 'Save and go on', save, 'primary big'),
           q.none ? btn(q.none, none) : null,
@@ -578,8 +595,24 @@ function sharpen(p, pl) {
       h('div.st-box.narrow', {}, h('div.in', {}, pct ? null : h('span', {}, '$'), input, pct ? h('span', {}, '%') : null)),
       picks.length ? h('div.st-chips', { style: { marginTop: '8px' } }, picks.map(([val, label]) => chip(label, v[f.id] === val, () => set(val)))) : null));
   };
+  const leave = lv => {
+    const after = plan(), moved = movedWords(pl, after);
+    const open = levelsOf(store.doc).filter(x => x.state === 'open' && x.id !== lv.id);
+    const next = open.find(x => x.n > lv.n) ?? open[0] ?? null, did = levelsOf(store.doc).find(x => x.id === lv.id)?.state !== 'open';
+    ui.note = did ? `Level ${lv.n} done. Unlocked: ${lv.unlocks.join(', ')}.${moved ? ` ${moved}` : ''}${next ? '' : ' That was the last level.'}` : `Saved. Level ${lv.n} still wants a rate and a payment on each one.`;
+    ui.form = null; ui.level = did ? next?.id ?? null : null; ui.noteAt = did ? next?.id ?? null : lv.id; render();
+    const el = document.getElementById(`level-${did && next ? next.id : lv.id}`);
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - (document.getElementById('top').offsetHeight + 12) });
+  };
+  // Level 3: every card and loan on its own, sorted by kind, each with its own Add button.
+  const oweForm = lv => {
+    const save = btn('Save', () => leave(lv), 'primary big');
+    return h('div.st-form', {}, bookUI({ store, book: DEBT_BOOK, pulse: guideOn(), btn, chip, onState: st => requestAnimationFrame(() => save.classList.toggle('st-pulse', guideOn() && !document.querySelector('#main .st-book .st-pulse'))) }),
+      h('div.st-row', { style: { marginTop: '14px' } }, save, btn('Close', () => { ui.level = null; ui.form = null; ui.note = null; ui.noteAt = null; render(); }, 'text')));
+  };
   const form = lv => {
     const def = levelOf(lv.id);
+    if (lv.id === 'owe') return oweForm(lv);
     if (!ui.form || ui.form.id !== lv.id) { const start = def.read(store.doc, ref); if (lv.id === 'where' && mine().parts) { const pt = mine().parts; start.rent ??= pt.housing ?? null; start.food ??= pt.food ?? null; start.transport ??= pt.transport ?? null; } ui.form = { id: lv.id, v: start }; }
     const v = ui.form.v, box = h('div');
     const fields = def.fields(store.doc, ref);
@@ -588,8 +621,13 @@ function sharpen(p, pl) {
     const slots = () => [...new Set(fields.filter(f => slotOf(f) && !(f.when && !f.when(v))).map(slotOf))];
     const nav = h('div.st-row.st-slotnav');
     const hidden = f => { const S = slots(), at = Math.min(ui.slot, S.length - 1); return !!(f.when && !f.when(v)) || (S.length > 1 && slotOf(f) != null && slotOf(f) !== S[at]); };
+    const saveBtn = btn('Save', () => save(), 'primary big');
+    const mark = () => { box.querySelectorAll('.st-pulse').forEach(e => e.classList.remove('st-pulse')); saveBtn.classList.remove('st-pulse'); if (!guideOn()) return;
+      const todo = fields.find(f => !hidden(f) && v[f.id] == null), el = todo ? box.querySelector(`[data-field="${CSS.escape(todo.id)}"]`) : null;
+      if (el && !el.contains(document.activeElement)) (el.querySelector('.st-box .in') ?? el.querySelector('.st-chips'))?.classList.add('st-pulse'); else if (!todo) saveBtn.classList.add('st-pulse'); };
     const sync = () => { for (const f of fields) { const el = box.querySelector(`[data-field="${CSS.escape(f.id)}"]`); if (el) el.hidden = hidden(f); }
       const S = slots(), at = Math.min(ui.slot, S.length - 1); nav.hidden = S.length < 2;
+      mark();
       nav.replaceChildren(btn('‹ Back one', () => { ui.slot = Math.max(0, at - 1); sync(); }, 'slim'), h('strong', {}, `${at + 1} of ${S.length}`), btn('Next one ›', () => { ui.slot = Math.min(S.length - 1, at + 1); sync(); nav.scrollIntoView({ block: 'center' }); }, at < S.length - 1 ? 'slim primary' : 'slim')); };
     const redraw = () => { box.replaceChildren(...fields.map(f => field(f, v, redraw, sync))); sync(); };
     redraw();
@@ -605,7 +643,7 @@ function sharpen(p, pl) {
       const el = next ? document.getElementById(`level-${next.id}`) : null;
       if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - (document.getElementById('top').offsetHeight + 12) }); else window.scrollTo({ top: 0 });
     };
-    return h('div.st-form', {}, box, nav, h('div.st-row', { style: { marginTop: '14px' } }, btn('Save', save, 'primary big'), btn('Close', () => { ui.level = null; ui.form = null; ui.note = null; ui.noteAt = null; render(); }, 'text')));
+    return h('div.st-form', {}, box, nav, h('div.st-row', { style: { marginTop: '14px' } }, saveBtn, btn('Close', () => { ui.level = null; ui.form = null; ui.note = null; ui.noteAt = null; render(); }, 'text')));
   };
   const nextOpen = L.find(x => x.state === 'open')?.id ?? null;
   const card = lv => {
@@ -614,7 +652,7 @@ function sharpen(p, pl) {
       ui.note && ui.noteAt === lv.id ? h('div.st-note', { role: 'status' }, ui.note) : null,
       h('div.st-levelhead', {}, h('span.st-lvl', {}, lv.state === 'open' ? lv.n : '✓'),
         h('div', {}, h('h2', { style: { margin: 0 } }, `Level ${lv.n}: ${lv.title}`), lv.id === nextOpen || open ? [h('div.st-soft.st-small', {}, lv.note ?? lv.why), h('div.st-small', { style: { marginTop: '4px' } }, h('strong', {}, 'Unlocks: '), lv.unlocks.join(', '))] : null),
-        lv.state === 'skip' ? h('span.st-tag.yours', {}, 'Nothing to do') : open ? null : btn(lv.state === 'done' ? 'Change' : 'Answer', () => { ui.level = lv.id; ui.slot = 0; ui.form = null; ui.note = null; ui.noteAt = null; render(); document.getElementById(`level-${lv.id}`)?.scrollIntoView({ block: 'start' }); }, lv.state === 'done' || lv.id !== nextOpen ? 'slim' : 'slim primary')),
+        lv.state === 'skip' && lv.id === 'owe' && !open ? btn('Add a debt', () => { ui.level = lv.id; ui.note = null; render(); }, 'slim') : lv.state === 'skip' ? h('span.st-tag.yours', {}, 'Nothing to do') : open ? null : btn(lv.state === 'done' ? 'Change' : 'Answer', () => { ui.level = lv.id; ui.slot = 0; ui.form = null; ui.note = null; ui.noteAt = null; render(); document.getElementById(`level-${lv.id}`)?.scrollIntoView({ block: 'start' }); }, lv.state === 'done' || lv.id !== nextOpen ? 'slim' : 'slim primary')),
       open ? form(lv) : null);
   };
   return [
@@ -1077,10 +1115,11 @@ function render() {
   if (!p.hasAge && STAGES.find(s => s.id === ui.stage)?.needs === 'age') ui.stage = 'you';
   const pl = p.hasAge ? plan() : null;
   top(); track(p, pl);
-  clear($('main'), backBar(), p.hasAge && !['plan', 'you', 'numbers', 'map'].includes(ui.stage) ? guideCard(p, true) : null, SCREENS[ui.stage](p, pl));
+  clear($('main'), backBar(), p.hasAge && !['plan', 'you', 'map'].includes(ui.stage) && !(ui.stage === 'numbers' && guideNow(p).next.stage === 'numbers') ? guideCard(p, true) : null, SCREENS[ui.stage](p, pl));
   if (ui.stage === 'map') requestAnimationFrame(drawMapLines);
   pulseHere(p);
   if (p.hasAge) ui.lastStep = guideNow(p).step;
+  pin({ seenAt: Date.now() });
   if (p.done && ['life', 'summary'].includes(ui.stage)) markSeen(ui.stage);
   foot();
   const lit = $('main').querySelector('.flash');
@@ -1097,6 +1136,12 @@ if (start.hasAge && start.done) {
   const now = { at: localDay(), fi: pl0.fi?.date ?? pl0.words.fi ?? null, worth: pl0.m.netWorth?.value ?? null, spend: pl0.m.inputs.spending ?? null };
   ui.since = sinceWords(mine().last, now);
   if (mine().last?.at !== now.at) remember({ last: now });
+}
+// Coming back: open on the screen where the next step lives, with it pulsing. A link to a screen still wins.
+const away = Date.now() - (here().seenAt ?? 0) > 30 * 60000; // back after a while: a leftover screen in the address does not count as a link
+if (start.hasAge && start.done && (away || !STAGES.some(x => x.id === linked)) && guideOn()) {
+  const n0 = guideNow(start).next;
+  if (!n0.caughtUp) { ui.stage = n0.stage; if (n0.stage === 'numbers') ui.q = n0.q; ui.flash = n0.flash ?? null; if (n0.stage === 'plan' && n0.flash) ui.stepsOpen = true; ui.arrived = true; } else ui.stage = 'plan';
 }
 if (meetIn) { remember({ meet: { ...(mine().meet || {}), theirs: meetIn } }); ui.stage = 'meet'; }
 history.replaceState({ stage: ui.stage, q: ui.q, depth: 0 }, '', hashOf(ui.stage, ui.q));

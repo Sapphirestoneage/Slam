@@ -678,7 +678,7 @@ async function runClient(page, client) {
 
 // The self-serve journey (start.html): a new person answers the five questions, then every screen is scanned at each
 // width and theme, with its folds closed and then open. START_ROUTES is the journey's own list of screens.
-const START_ROUTES = ['you', 'numbers/income', 'plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'meet', 'date', 'design', 'decide', 'map', 'credits'];
+const START_ROUTES = ['you', 'numbers/income', 'numbers/card', 'plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'meet', 'date', 'design', 'decide', 'map', 'credits'];
 async function runStart(browser) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   await ctx.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
@@ -688,7 +688,10 @@ async function runStart(browser) {
   await page.locator('.st-chip', { hasText: /^2000s$/ }).click(); await page.locator('.st-years .st-chip', { hasText: /^2001$/ }).click();
   await page.locator('.st-chip', { hasText: 'buy a home' }).click({ force: true }).catch(() => {});
   await page.locator('.st-btn.primary.big').first().click(); await settle(page, 300);
-  for (const v of [['4200'], ['3100'], ['500', '1000'], ['18000'], ['3200', '20000']]) { for (let i = 0; i < v.length; i++) await page.fill(`#box-${i}`, v[i]); await page.locator('.st-btn.primary.big').first().click(); await settle(page, 250); }
+  for (const v of [['4200'], ['3100'], ['500', '1000'], ['18000']]) { for (let i = 0; i < v.length; i++) await page.fill(`#box-${i}`, v[i]); await page.locator('.st-btn.primary.big').first().click(); await settle(page, 250); }
+  // question 5: what you owe is a list by kind, each with its own Add button
+  for (const [sec, amount] of [['cards', '3200'], ['student', '20000']]) { await page.locator(`[data-sec="${sec}"] .st-bookhead .st-btn`).click(); await page.fill('.st-bookitem.open input', amount); await page.locator('.st-bookitem.open .st-btn.primary').click(); }
+  await page.locator('.st-btn.primary.big').first().click(); await settle(page, 250);
   for (const width of WIDTHS) for (const theme of THEMES) {
     console.log(`  Start at ${width} ${theme}...`);
     await page.setViewportSize({ width, height: width < 600 ? 844 : 1000 }); await page.emulateMedia({ colorScheme: theme });
