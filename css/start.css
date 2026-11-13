@@ -283,3 +283,8 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-lkey { gap: 8px; } .st-lkey i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; flex: none; }
 .st-lkey[aria-pressed="false"] i { opacity: .35; }
 .st-lkey[aria-pressed="true"] { background: var(--card); color: var(--text); border-color: var(--text); border-width: 3px; }
+.st-group-h { margin: 20px 0 8px; font-size: 1.05rem; }
+.st-more { max-height: calc(100vh - 72px); overflow-y: auto; }
+.st-more-h { font-size: .875rem; font-weight: 800; color: var(--text-2); margin-top: 6px; }
+.st-more-h:first-child { margin-top: 0; }
+@media (min-width: 641px) { .st-more { grid-template-columns: 1fr 1fr; min-width: 440px; } .st-more-h { grid-column: 1 / -1; } }

@@ -13,7 +13,7 @@ import { growthChart, flowChart, debtChart, timelineChart } from './charts-ui.js
 import { lifeScreen } from './life-ui.js';
 import { drillsOf, skillsOf, priceTagOf } from '../drills.js';
 import { lifeOf } from '../lifetime/inputs.js';
-import { WORRIES, WORRY_GROUPS, worryOf } from '../worries.js';
+import { WORRIES, WORRY_GROUPS, worryOf, WORRY_TOOLS, MIRROR_TOOLS, TOOL_GROUPS } from '../worries.js';
 import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOME_NOW, HOME_PMI, HOME_CLOSING, HOME_GUESS, HOME_GROWTHS, HOME_INVEST, HOME_HORIZONS, HOME_RENT_GROWTHS, HOME_SELLING, interestNote } from '../home.js';
 import { MIRRORS, mirrorOf, pctToFi, snapshotOf, auditOf, auditWords, FEELINGS, valuesOf, sinceWords } from '../mirror.js';
 import { readFile } from '../import/apps.js';
@@ -107,7 +107,8 @@ const basisTag = p => h(`span.st-tag${p.basis === 'yours' ? '.yours' : ''}`, {},
 
 // Four tabs and More: everything fits a phone without sideways scrolling.
 const TABS = [['plan', 'Plan'], ['see', 'See'], ['drills', 'Practice'], ['sharpen', 'Sharpen']];
-const MORE = [['you', 'About you'], ['numbers', 'Your five numbers'], ['life', 'Lifetime plan'], ['tune', 'What if'], ['all', 'All your numbers'], ['summary', 'One-page summary'], ['design', 'Design my life'], ['decide', 'Compare two choices'], ['date', 'Monthly money date'], ['meet', 'Money meeting for two'], ['credits', 'Credits']];
+const MORE_GROUPS = [['You', [['you', 'About you'], ['numbers', 'Your five numbers'], ['all', 'All your numbers'], ['summary', 'One-page summary']]], ['Plan ahead', [['life', 'Lifetime plan'], ['tune', 'What if'], ['design', 'Design my life'], ['decide', 'Compare two choices']]], ['Keep it going', [['date', 'Monthly money date'], ['meet', 'Money meeting for two']]], ['About', [['credits', 'Credits']]]];
+const MORE = MORE_GROUPS.flatMap(g => g[1]);
 function top() {
   const p = P();
   const tab = (id, label) => h('button.st-stage', { type: 'button', disabled: !p.hasAge, title: p.hasAge ? null : 'Pick the year you were born first', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label);
@@ -116,7 +117,7 @@ function top() {
     h('a.st-brand', { href: '#', onClick: e => { e.preventDefault(); ui.more = false; go('you'); } }, 'Stress Less About Money'),
     h('nav.st-stages', { 'aria-label': 'Sections' }, TABS.map(([id, label]) => tab(id, label)),
       h('button.st-stage', { type: 'button', 'aria-expanded': ui.more ? 'true' : 'false', 'aria-current': inMore ? 'page' : null, onClick: () => { ui.more = !ui.more; top(); } }, 'More')),
-    ui.more ? h('div.st-more', {}, MORE.map(([id, label]) => h('button.st-btn', { type: 'button', disabled: !p.hasAge && STAGES.find(x => x.id === id)?.needs === 'age', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label)),
+    ui.more ? h('div.st-more', {}, MORE_GROUPS.map(([title, items]) => [h('div.st-more-h', {}, title), items.map(([id, label]) => h('button.st-btn', { type: 'button', disabled: !p.hasAge && STAGES.find(x => x.id === id)?.needs === 'age', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label))]),
       h('button.st-btn.text', { type: 'button', onClick: () => { ui.more = false; top(); tour(0); } }, 'How this works')) : null);
 }
 
@@ -653,17 +654,17 @@ function parentsCard() {
 function tune(p, pl) {
   const tweaks = tweaksOf(store.doc, ref).filter(t => t.show !== false);
   const base = pl.fi.months;
-  return [
-    h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'What if'), h('h1', {}, 'Change one thing, watch the date move'),
-      h('p', { style: { marginBottom: 0 } }, 'Each choice shows the date it gives you. Tap one to use it. To try spending less or earning more, use the sliders on See it. ', base != null && !pl.fi.far ? `Right now: ${pl.fi.date}.` : `Right now: ${pl.words.fi}.`)),
-    (() => { const amount = ui.price ?? 100, t = priceTagOf(pl, store.doc, ref, priors, amount);
+  // Every tool on this screen, by id. The three that fit what brought the person here (or what matters most to
+  // them) go first; the rest sit in four groups, all folded.
+  const C = {
+    price: (() => { const amount = ui.price ?? 100, t = priceTagOf(pl, store.doc, ref, priors, amount);
       return h(`div.st-card${ui.flash === 'price' ? '.flash' : ''}`, {}, h('h2', {}, 'What does a monthly cost really cost?'), h('div.st-soft.st-small', {}, 'Pick an amount: a subscription, a car payment, a habit.'),
         h('div.st-chips', { style: { margin: '8px 0' } }, [10, 25, 50, 100, 200, 500].map(v => chip(`${money(v)} a month`, amount === v, () => { ui.price = v; render(); }))),
         h('dl.st-kv', {}, h('dt', {}, 'Invested, to pay for it forever'), h('dd', {}, money(t.forever)),
           t.hours != null ? [h('dt', {}, `Hours of your work each month${t.hourlyGuess ? ' (at a 40-hour week)' : ''}`), h('dd', {}, `${(Math.round(t.hours * 10) / 10).toFixed(1)}`)] : null,
           t.moved != null && t.moved > 0 ? [h('dt', {}, 'Without it, work becomes optional'), h('dd', {}, `${spanWords(t.moved)} sooner`)] : null),
         h('p.st-small.st-soft', { style: { margin: '8px 0 0' } }, `${money(amount)} a month is ${money(amount * 12)} a year. At a ${fmt.pct(t.rate)} withdrawal rate, that takes ${money(t.forever)} invested.`), credit('priceTag')); })(),
-    (() => { const pick = mine().home || {}, H = homeOf(store.doc, ref, priors, pl, pick), choose = patch => { remember({ home: { ...pick, ...patch } }); ui.flash = null; ui.homeOpen = true; render(); };
+    home: (() => { const pick = mine().home || {}, H = homeOf(store.doc, ref, priors, pl, pick), choose = patch => { remember({ home: { ...pick, ...patch } }); ui.flash = null; ui.homeOpen = true; render(); };
       const row = (label, list, on, words, key) => h('div.st-field', {}, h('div.st-flabel', {}, label), h('div.st-chips', {}, list.map(v => chip(words(v), on === v, () => choose({ [key]: v })))));
       return h(`details.st-card${ui.flash === 'home' ? '.flash' : ''}`, { open: ui.flash === 'home' || ui.homeOpen ? true : null },
         h('summary.st-sum', {}, h('strong', {}, 'What if I buy a home?'), h('span.st-soft', {}, `${money(Math.round(H.all))} a month`)),
@@ -705,8 +706,16 @@ function tune(p, pl) {
         h('details.st-fold', {}, h('summary', {}, 'The loan, year by year'),
           h('div.st-rows', {}, h('div.st-srow4.head', {}, h('span', {}, 'Year'), h('span', {}, 'Interest'), h('span', {}, 'Paid down'), h('span', {}, 'Still owed')),
             scheduleOf(H.loan, { rate: H.rate }).filter(r => r.year <= 5 || r.year % 5 === 0).map(r => h('div.st-srow4', {}, h('span', {}, String(r.year)), h('span', {}, money(Math.round(r.interest))), h('span', {}, money(Math.round(r.paid))), h('span', {}, money(Math.round(r.balance)))))))); })(),
-    valueCard(pl),
-    spendCard(p, pl), feesCard(pl), movesCard(pl), nextCard(), raiseCard(pl), startedCard(pl), parentsCard(), affordCard(pl), overlapCard(), unevenCard(pl),
+    values: valueCard(pl), spendMore: spendCard(p, pl), fees: feesCard(pl), moves: movesCard(pl), next: nextCard(), raise: raiseCard(pl), started: startedCard(pl), parents: parentsCard(), afford: affordCard(pl), overlap: overlapCard(), uneven: unevenCard(pl),
+  };
+  const W = worryOf(mine().worry), first = (W && WORRY_TOOLS[W.id]) || MIRROR_TOOLS[mirrorOf(mine().mirror).id] || [], rest = ids => ids.filter(id => !first.includes(id)).map(id => C[id]);
+  const group = (title, ids) => { const cards = rest(ids); return cards.length ? [h('h2.st-group-h', {}, title), cards] : null; };
+  return [
+    h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'What if'), h('h1', {}, 'Change one thing, watch the date move'),
+      h('p', { style: { marginBottom: 0 } }, 'Each choice shows the date it gives you. Tap one to use it. To try spending less or earning more, use the sliders on See it. ', base != null && !pl.fi.far ? `Right now: ${pl.fi.date}.` : `Right now: ${pl.words.fi}.`)),
+    first.length ? [h('h2.st-group-h', {}, W ? `For you: ${W.label.toLowerCase()}` : 'For you'), first.map(id => C[id])] : null,
+    TOOL_GROUPS.map(([title, ids]) => group(title, ids)),
+    h('h2.st-group-h', {}, 'The plan\'s assumptions'),
     h('div.st-card', {}, tweaks.map(t => h(`details.st-tweak${ui.flash === t.id ? '.flash' : ''}`, { open: ui.flash === t.id || ui.tweak === t.id ? true : null, onToggle: e => { if (e.target.open) ui.tweak = t.id; } },
       h('summary.st-sum', {}, h('strong', {}, t.label), h('span.st-soft', {}, t.options.find(o => o.value === t.value)?.label ?? '')), h('div.st-soft.st-small', {}, t.help),
       h('div.st-opts', {}, t.options.map(o => {

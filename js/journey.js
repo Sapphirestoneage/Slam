@@ -299,10 +299,10 @@ const askFor = list => [...new Set((list || []).map(n => NEED_Q.find(([re]) => r
 export function numbersOf(plan, doc, ref, { now = new Date() } = {}) {
   const m = plan.m, x = m.inputs, answered = new Set(plan.answered);
   const rests = (...keys) => keys.some(k => !answered.has(k));
-  const R = (id, group, label, r, idea, uses, show = v => fmt.money(v)) => ({ id, group, label, idea, value: r?.value == null ? null : show(r.value), text: r?.text ?? null, ask: r?.value == null ? askFor(r?.needs) : [], typical: rests(...uses) });
+  const R = (id, group, label, r, idea, uses, show = v => fmt.money(v)) => ({ id, group, label, idea, value: r?.value == null || (typeof r.value === 'number' && !Number.isFinite(r.value)) ? null : show(r.value), text: typeof r?.value === 'number' && !Number.isFinite(r.value) ? null : r?.text ?? null, ask: r?.value == null ? askFor(r?.needs) : [], typical: rests(...uses) });
   const months = v => `${(Math.round(v * 10) / 10).toFixed(1)} months`;
   const when = v => `${monthWords(v, now)} (${spanWords(v)})`;
-  const simple = simpleMath({ savingsRate: m.savingsRate.value, realReturn: x.realReturn, withdrawalRate: x.withdrawalRate });
+  const simple = simpleMath({ savingsRate: Number.isFinite(m.savingsRate.value) ? m.savingsRate.value : null, realReturn: x.realReturn, withdrawalRate: x.withdrawalRate });
   const mile = id => plan.milestones.find(r => r.id === id);
   const little = mile('littleE');
   const target = (id, label, idea, uses, row = mile(id)) => ({ id, group: 'Independence', label, idea, value: row ? row.date : null, text: row?.what ?? null, ask: [], typical: rests(...uses) });

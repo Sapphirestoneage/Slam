@@ -30,7 +30,7 @@ export function snapshotOf(pl) {
     { label: 'Spending', value: $(y(x.spending)), sign: '−', kind: 'line' },
     { label: 'Left over', value: $(y(left)), kind: 'total' },
     invest != null ? { label: 'Of that, invested', value: $(y(invest)), kind: 'line' } : null,
-    m.savingsRate?.value != null ? { label: 'Savings rate', value: fmt.pct(m.savingsRate.value), kind: 'line' } : null,
+    Number.isFinite(m.savingsRate?.value) ? { label: 'Savings rate', value: fmt.pct(m.savingsRate.value), kind: 'line' } : null,
   ].filter(Boolean);
 }
 
