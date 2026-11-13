@@ -18,8 +18,9 @@ import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOM
 import { MIRRORS, mirrorOf, pctToFi, snapshotOf, auditOf, auditWords, FEELINGS, valuesOf, sinceWords } from '../mirror.js';
 import { readFile } from '../import/apps.js';
 import { MAP_TIERS, mapOf } from '../map.js';
-import { DEBT_BOOK, bookOf } from '../book.js';
-import { bookUI } from './book-ui.js';
+import { DEBT_BOOK, HAVE_BOOK, IN_BOOK, OUT_BOOK, bookOf, whereOf } from '../book.js';
+import { bookUI, openRow } from './book-ui.js';
+import { pictureOf, nextSmallThings } from '../math/picture.js';
 import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP, flowTimeOf, designOf, LIFE_AGES, LIFE_PLACE, LIFE_WORK, LIFE_TRAVEL, LIFE_GIVE, receiptOf, CHOICES, PAY_STEPS, COST_STEPS, FEELS, FEEL_SIDES, guideOf, LINES, seriesOf, PRICES, affordOnce, PAY_PICKS, unevenOf, OVERLAPS, SUB_PRICES, overlapOf } from '../extras.js';
 import { dedupe, importTransactions } from '../import/csv.js';
 
@@ -111,7 +112,7 @@ const basisTag = p => h(`span.st-tag${p.basis === 'yours' ? '.yours' : ''}`, {},
 
 // Four tabs and More: everything fits a phone without sideways scrolling.
 const TABS = [['plan', 'Plan'], ['see', 'See'], ['drills', 'Practice'], ['sharpen', 'Sharpen']];
-const MORE_GROUPS = [['You', [['map', 'Your map'], ['you', 'About you'], ['numbers', 'Your five numbers'], ['all', 'All your numbers'], ['summary', 'One-page summary']]], ['Plan ahead', [['life', 'Lifetime plan'], ['tune', 'What if'], ['design', 'Design my life'], ['decide', 'Compare two choices']]], ['Keep it going', [['date', 'Monthly money date'], ['meet', 'Money meeting for two']]], ['About', [['credits', 'Credits']]]];
+const MORE_GROUPS = [['You', [['map', 'Your map'], ['you', 'About you'], ['numbers', 'Your five numbers'], ['all', 'All your numbers'], ['books', 'Line by line'], ['summary', 'One-page summary']]], ['Plan ahead', [['life', 'Lifetime plan'], ['tune', 'What if'], ['design', 'Design my life'], ['decide', 'Compare two choices']]], ['Keep it going', [['date', 'Monthly money date'], ['meet', 'Money meeting for two']]], ['About', [['credits', 'Credits']]]];
 const MORE = MORE_GROUPS.flatMap(g => g[1]);
 function top() {
   const p = P();
@@ -599,20 +600,21 @@ function sharpen(p, pl) {
     const after = plan(), moved = movedWords(pl, after);
     const open = levelsOf(store.doc).filter(x => x.state === 'open' && x.id !== lv.id);
     const next = open.find(x => x.n > lv.n) ?? open[0] ?? null, did = levelsOf(store.doc).find(x => x.id === lv.id)?.state !== 'open';
-    ui.note = did ? `Level ${lv.n} done. Unlocked: ${lv.unlocks.join(', ')}.${moved ? ` ${moved}` : ''}${next ? '' : ' That was the last level.'}` : `Saved. Level ${lv.n} still wants a rate and a payment on each one.`;
+    ui.note = did ? `Level ${lv.n} done. Unlocked: ${lv.unlocks.join(', ')}.${moved ? ` ${moved}` : ''}${next ? '' : ' That was the last level.'}` : lv.id === 'owe' ? `Saved. Level ${lv.n} still wants a rate and a payment on each one.` : `Saved. Level ${lv.n} is done once every dollar invested sits in a named account.`;
     ui.form = null; ui.level = did ? next?.id ?? null : null; ui.noteAt = did ? next?.id ?? null : lv.id; render();
     const el = document.getElementById(`level-${did && next ? next.id : lv.id}`);
     if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - (document.getElementById('top').offsetHeight + 12) });
   };
   // Level 3: every card and loan on its own, sorted by kind, each with its own Add button.
-  const oweForm = lv => {
+  const oweForm = (lv, book = DEBT_BOOK, only = null) => {
     const save = btn('Save', () => leave(lv), 'primary big');
-    return h('div.st-form', {}, bookUI({ store, book: DEBT_BOOK, pulse: guideOn(), btn, chip, onState: st => requestAnimationFrame(() => save.classList.toggle('st-pulse', guideOn() && !document.querySelector('#main .st-book .st-pulse'))) }),
+    return h('div.st-form', {}, book === HAVE_BOOK ? h('p.st-small', { style: { marginTop: 0 } }, 'Add each account. The total you gave earlier shrinks as you list them, so nothing counts twice.') : null, bookUI({ store, book, only, pulse: guideOn(), btn, chip, onState: st => requestAnimationFrame(() => save.classList.toggle('st-pulse', guideOn() && !document.querySelector('#main .st-book .st-pulse'))) }),
       h('div.st-row', { style: { marginTop: '14px' } }, save, btn('Close', () => { ui.level = null; ui.form = null; ui.note = null; ui.noteAt = null; render(); }, 'text')));
   };
   const form = lv => {
     const def = levelOf(lv.id);
     if (lv.id === 'owe') return oweForm(lv);
+    if (lv.id === 'accounts') return oweForm(lv, HAVE_BOOK, ['work', 'ira', 'open', 'hsa']);
     if (!ui.form || ui.form.id !== lv.id) { const start = def.read(store.doc, ref); if (lv.id === 'where' && mine().parts) { const pt = mine().parts; start.rent ??= pt.housing ?? null; start.food ??= pt.food ?? null; start.transport ??= pt.transport ?? null; } ui.form = { id: lv.id, v: start }; }
     const v = ui.form.v, box = h('div');
     const fields = def.fields(store.doc, ref);
@@ -674,7 +676,8 @@ function sharpen(p, pl) {
         C.todo.length ? h('p.st-readout', { role: 'status' }, `${C.todo.length} to look into. Each one shows its first step above.`) : C.answered === CHECKUP.length ? h('p.st-readout', { role: 'status' }, 'Everything here is covered.') : null]), pl); })(),
     L.filter(x => x.state === 'open' || ui.level === x.id || ui.flash === x.id).map(card),
     (() => { const rest = L.filter(x => x.state !== 'open' && ui.level !== x.id && ui.flash !== x.id); return rest.length ? h('details.st-card', {}, h('summary.st-sum', {}, h('strong', {}, 'Levels you finished'), h('span.st-soft', {}, String(rest.length))), rest.map(card)) : null; })(),
-    h('div.st-row', {}, btn('See all your numbers', () => go('all'), 'primary'), btn('See it in pictures', () => go('see'))),
+    pictureCard(true),
+    h('div.st-row', {}, btn('See all your numbers', () => go('all'), 'primary'), btn('Line by line', () => go('books')), btn('See it in pictures', () => go('see'))),
   ];
 }
 
@@ -695,6 +698,42 @@ function valueCard(pl) {
 }
 
 // ---------- How much more could I spend, what my fees cost, and which move fits my life ----------
+// ---------- The whole picture: how much is in, and how much of it is solid (the coach app's own measure) ----------
+const BAR_WORDS = { know: 'Known', statement: 'From a statement', rough: 'Roughly', gut: 'A guess', missing: 'Not in yet' };
+function pictureCard(slim = false) {
+  const P0 = pictureOf(store.doc, ref), top3 = nextSmallThings(P0, 3);
+  const goTo = it => { const w = whereOf(store.doc, it); if (w.stage === 'books') { if (w.row) openRow(w.book, w.row); ui.openCard = `book-${w.book}`; go('books', { flash: w.book }); } else if (w.stage === 'numbers') go('numbers', { q: w.q }); else go(w.stage, { flash: w.flash }); };
+  const bar = h('div.st-picbar', { role: 'img', 'aria-label': P0.bar.filter(b => b.count).map(b => `${BAR_WORDS[b.key]}: ${b.count}`).join(', ') }, P0.bar.filter(b => b.share > 0).map(b => h(`i.${b.key}`, { style: { width: `${(b.share * 100).toFixed(1)}%` } })));
+  const body = [bar,
+    h('div.st-piclegend', {}, P0.bar.filter(b => b.count).map(b => h('span', {}, h(`i.${b.key}`), `${BAR_WORDS[b.key]} ${b.count}`))),
+    top3.length ? h('div', { style: { marginTop: '10px' } }, h('div.st-small', { style: { fontWeight: 700, marginBottom: '6px' } }, 'What would sharpen it most'), h('div.st-ticks', {}, top3.map(it => h('button.st-btn.slim.st-picnext', { type: 'button', onClick: () => goTo(it) }, h('strong', {}, it.label.replace(' APR', ' interest rate').replace('(the gut number)', '(your rough number)').replace(/ balance$/, '')), h('span.st-small', {}, it.kind === 'gut' ? 'List your lines, or use a statement' : it.level === 0 ? 'Add the number' : it.level <= 25 ? 'Swap the guess for your number' : it.level <= 50 ? 'Check it, then tap "I know it"' : 'Pin it down with a statement'))))) : h('p.st-small', { style: { margin: '8px 0 0' } }, 'Every number is in and solid.')];
+  const head = `${Math.round(P0.answered * 100)}% in, ${Math.round(P0.solid * 100)}% of that solid`;
+  return slim ? h('details.st-card', { open: ui.openCard === 'picture' ? true : null, onToggle: e => { if (e.target.open) ui.openCard = 'picture'; else if (ui.openCard === 'picture') ui.openCard = null; } }, h('summary.st-sum', {}, h('strong', {}, 'Your whole picture'), h('span.st-soft', {}, head)), body)
+    : h('div.st-card', {}, h('div.st-eyebrow', {}, 'Your whole picture'), h('h2', { style: { margin: '0 0 8px' } }, head), body);
+}
+// ---------- Line by line: everything on file, sorted by kind, each with its own Add button ----------
+function books(p, pl) {
+  const m = pl.m.inputs, per = v => (v == null ? 'Needs an answer' : `${money(Math.round(v))} a month`);
+  const card = (id, book, right, lead, opts = {}) => {
+    const tag = h('span.st-soft', {}, right(bookOf(store.doc, book)));
+    return h(`details.st-card${ui.flash === id ? '.flash' : ''}`, { id: `book-${id}`, open: ui.flash === id || ui.openCard === `book-${id}` ? true : null, onToggle: e => { if (e.target.open) ui.openCard = `book-${id}`; else if (ui.openCard === `book-${id}`) ui.openCard = null; } },
+      h('summary.st-sum', {}, h('strong', {}, book.title), tag), lead,
+      bookUI({ store, book, btn, chip, ...opts, onState: () => { tag.textContent = right(bookOf(store.doc, book)); } }));
+  };
+  const lines = bookOf(store.doc, OUT_BOOK), usingLines = (store.doc.spending?.source ?? 'gut') === 'lines';
+  const outLead = h('div', {}, h('p.st-small', { style: { margin: '6px 0' } }, usingLines ? 'Your plan runs on these lines.' : `Your plan runs on your rough number, ${per(m.spending)}. These lines sit beside it until you say to use them.`),
+    lines.count ? h('div.st-row', {}, btn(usingLines ? 'Go back to my rough number' : `Use my lines (${money(Math.round(m.lineTotal ?? lines.total))} a month)`, () => { store.setDoc('spending', { source: usingLines ? 'gut' : 'lines' }); render(); }, 'slim')) : null);
+  return [
+    h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Line by line'), h('h1', {}, 'Everything on file, one line at a time'),
+      h('p', { style: { marginBottom: 0 } }, 'Nothing here is required. Each list opens with a tap, each kind has its own Add button, and anything you add sharpens the plan.')),
+    pictureCard(),
+    card('in', IN_BOOK, B => `${B.count} on file`, h('p.st-small', { style: { margin: '6px 0' } }, `Together, after taxes: ${per(m.takeHome)}.`)),
+    card('out', OUT_BOOK, B => (B.count ? `${money(Math.round(B.total))} a month in ${B.count} ${B.count === 1 ? 'line' : 'lines'}` : 'No lines yet'), outLead),
+    card('have', HAVE_BOOK, B => money(Math.round(B.total)), null),
+    card('owe', DEBT_BOOK, B => (B.count ? money(Math.round(B.total)) : 'Nothing owed'), null),
+    h('div.st-row', {}, btn('See my plan', () => go('plan'), 'primary'), btn('All your numbers', () => go('all'))),
+  ];
+}
 const foldCard = (id, title, right, body) => h(`details.st-card${ui.flash === id ? '.flash' : ''}`, { open: ui.flash === id || ui.openCard === id ? true : null, onToggle: e => { if (e.target.open) ui.openCard = id; else if (ui.openCard === id) ui.openCard = null; } }, h('summary.st-sum', {}, h('strong', {}, title), h('span.st-soft', {}, right)), body);
 const chipRow = (label, list, on, words, onPick) => h('div.st-field', {}, h('div.st-flabel', {}, label), h('div.st-chips', {}, list.map(v => chip(words(v), on === v, () => onPick(v)))));
 function spendCard(p, pl) {
@@ -1109,7 +1148,7 @@ function moneyDate(p, pl) {
   ];
 }
 
-const SCREENS = { map: mapScreen, design, decide, date: moneyDate, meet, summary, you, numbers, plan: yourPlan, see, life, drills, sharpen, tune, all: allNumbers, credits };
+const SCREENS = { books, map: mapScreen, design, decide, date: moneyDate, meet, summary, you, numbers, plan: yourPlan, see, life, drills, sharpen, tune, all: allNumbers, credits };
 function render() {
   const p = P();
   if (!p.hasAge && STAGES.find(s => s.id === ui.stage)?.needs === 'age') ui.stage = 'you';
@@ -1129,7 +1168,7 @@ function render() {
 // Come back where you left off: the plan when the picture is done, the next question when it is not.
 const start = P();
 const [, linked, linkedQ] = location.hash.split('/'); // a link to a screen (#/tune) opens there
-ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'summary', 'meet', 'date', 'design', 'decide', 'map', 'credits'].includes(here().stage) ? here().stage : 'plan') : 'numbers';
+ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : start.done ? (['plan', 'see', 'life', 'drills', 'sharpen', 'tune', 'all', 'books', 'summary', 'meet', 'date', 'design', 'decide', 'map', 'credits'].includes(here().stage) ? here().stage : 'plan') : 'numbers';
 ui.q = QUESTIONS.some(x => x.key === linkedQ) ? linkedQ : start.next;
 if (start.hasAge && start.done) {
   const pl0 = plan(), nw = numbersOf(pl0, store.doc, ref).find(n => n.id === 'netWorth');

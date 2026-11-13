@@ -90,3 +90,80 @@ test('other debts: the kind is a tap, and it stays in the section', () => {
   assert.equal(s.get(o.id).type, 'Medical'); assert.equal(sec(s, 'other').rows[0].main, 900);
   removeRow(s, o.id); assert.equal(bookOf(s.doc, DEBT_BOOK, { now }).count, 0);
 });
+
+// ---------- what you have, what comes in, what goes out ----------
+import { HAVE_BOOK, IN_BOOK, OUT_BOOK, BOOKS } from '../js/book.js';
+import { metrics } from '../js/math/metrics.js';
+const five = () => { const s = fresh(); for (const [k, v] of [['income', { takeHome: 4200 }], ['spending', { gut: 3100 }], ['cash', { checking: 2500, savings: 4000 }], ['invested', { invested: 18000 }], ['card', { 'Credit card': 3200 }]]) answer(s, k, v); return s; };
+const G = (book, secId, id) => { const x = book.sections.find(z => z.id === secId); return [...x.front, ...x.more].find(f => f.id === id); };
+const S = (s, book, id) => bookOf(s.doc, book, { now }).sections.find(x => x.id === id);
+
+test('every book writes only fields the coach app keeps, on types it knows', () => {
+  const area = { account: 'assets', income: 'income', bill: 'spending', debt: 'debt' };
+  for (const book of Object.values(BOOKS)) {
+    const a = FIELDS.find(g => g.id === area[book.kind]), keys = new Set(a.fields.map(f => f.key)), types = a.types?.[book.kind] ?? [];
+    for (const sec of book.sections) {
+      for (const f of [...sec.front, ...sec.more]) { if (f.id === 'promo' || f.id === 'type') continue; assert.ok(keys.has(f.id), `${book.id}.${sec.id}.${f.id}`); assert.ok(f.type !== 'pick' || f.options.length >= 2, `${book.id}.${f.id} options`); }
+      for (const t of sec.types) assert.ok(types.includes(t), `${book.id}: ${t}`);
+      assert.ok(sec.front.length <= 4 && sec.add && sec.title, `${book.id}.${sec.id}`);
+    }
+  }
+});
+
+test('what you have: the accounts from the five questions show in their sections', () => {
+  const s = five();
+  assert.deepEqual(S(s, HAVE_BOOK, 'cash').rows.map(r => [r.type, r.main]), [['Checking', 2500], ['Savings', 4000]]);
+  assert.deepEqual(S(s, HAVE_BOOK, 'open').rows.map(r => [r.type, r.main]), [['All investments', 18000]]);
+  assert.deepEqual(S(s, HAVE_BOOK, 'open').rows[0].todo, ['type']); // it still wants to know what kind it is
+  assert.equal(bookOf(s.doc, HAVE_BOOK, { now }).total, 24500);
+});
+
+test('listing accounts never counts money twice: the earlier total shrinks, then goes', () => {
+  const s = five(), before = metrics(s.doc, ref, { now }).inputs.invested;
+  const k = addRow(s, HAVE_BOOK, 'work'); setField(s, k.id, G(HAVE_BOOK, 'work', 'balance'), 9000, { now });
+  assert.equal(s.get(k.id).values.group, 'investment'); assert.equal(s.get(k.id).type, '401(k)');
+  assert.equal(s.doc.records.find(r => r.type === 'All investments').values.balance, 9000);
+  assert.equal(metrics(s.doc, ref, { now }).inputs.invested, before);
+  const r = addRow(s, HAVE_BOOK, 'ira'); setField(s, r.id, G(HAVE_BOOK, 'ira', 'balance'), 6000, { now });
+  setField(s, k.id, G(HAVE_BOOK, 'work', 'balance'), 10000, { now }); // a correction moves the rest too
+  assert.equal(s.doc.records.find(r2 => r2.type === 'All investments').values.balance, 2000);
+  const b = addRow(s, HAVE_BOOK, 'open'); setField(s, b.id, G(HAVE_BOOK, 'open', 'balance'), 3000, { now });
+  assert.equal(s.doc.records.some(r2 => r2.type === 'All investments'), false);
+  assert.equal(metrics(s.doc, ref, { now }).inputs.invested, 19000);
+  assert.equal(levelsOf(s.doc).find(l => l.id === 'accounts').state, 'done');
+});
+
+test('an account: the kind is a tap, and the extras are the coach app\'s own', () => {
+  const s = fresh(); const a = addRow(s, HAVE_BOOK, 'cash');
+  setField(s, a.id, G(HAVE_BOOK, 'cash', 'type'), 'High-yield savings (often online)', { now }); setField(s, a.id, G(HAVE_BOOK, 'cash', 'balance'), 8000, { now });
+  setField(s, a.id, G(HAVE_BOOK, 'cash', 'apy'), 0.04, { now }); setField(s, a.id, G(HAVE_BOOK, 'cash', 'purpose'), 'Emergency', { now });
+  const r = s.get(a.id); assert.equal(r.type, 'High-yield savings (often online)'); assert.equal(r.name, 'High-yield savings (often online)'); assert.equal(r.values.group, 'cash'); assert.equal(r.values.apy, 0.04);
+  assert.equal(progressOf(s.doc, ref, { now }).answered.cash, true);
+  const i = addRow(s, HAVE_BOOK, 'ira'); setField(s, i.id, G(HAVE_BOOK, 'ira', 'contribution'), 583, { now });
+  assert.equal(s.get(i.id).values.contributionPer, 'Month');
+});
+
+test('what comes in: a second income adds to take-home', () => {
+  const s = five(), before = metrics(s.doc, ref, { now }).inputs.takeHome;
+  assert.deepEqual(S(s, IN_BOOK, 'jobs').rows.map(r => [r.main, r.per]), [[4200, 'a month']]);
+  const side = addRow(s, IN_BOOK, 'side'); setField(s, side.id, G(IN_BOOK, 'side', 'amount'), 500, { now });
+  assert.equal(s.get(side.id).type, 'Side hustle'); assert.equal(s.get(side.id).values.basis, 'Take-home'); assert.equal(s.get(side.id).per, 'month');
+  assert.equal(Math.round(metrics(s.doc, ref, { now }).inputs.takeHome), Math.round(before + 500));
+  setField(s, S(s, IN_BOOK, 'jobs').rows[0].id, G(IN_BOOK, 'jobs', 'contributionPct'), 0.06, { now });
+  assert.equal(s.doc.records.find(r => r.kind === 'income').values.contributionPct, 0.06);
+});
+
+test('what goes out: lines sit beside the rough number until the person says to use them', () => {
+  const s = five(), gut = metrics(s.doc, ref, { now }).inputs.spending;
+  const rent = addRow(s, OUT_BOOK, 'housing'); renameRow(s, rent.id, 'Rent'); setField(s, rent.id, G(OUT_BOOK, 'housing', 'amount'), 1500, { now });
+  const food = addRow(s, OUT_BOOK, 'food'); renameRow(s, food.id, 'Groceries'); setField(s, food.id, G(OUT_BOOK, 'food', 'amount'), 600, { now });
+  const r = s.get(rent.id); assert.equal(r.kind, 'bill'); assert.equal(r.values.draftt, 'Accommodation'); assert.equal(r.values.category, 'Rent'); assert.equal(r.amount, 1500);
+  assert.equal(S(s, OUT_BOOK, 'housing').total, 1500); assert.equal(bookOf(s.doc, OUT_BOOK, { now }).total, 2100);
+  assert.equal(metrics(s.doc, ref, { now }).inputs.spending, gut); // still the rough number
+  s.setDoc('spending', { source: 'lines' });
+  const m2 = metrics(s.doc, ref, { now }).inputs; // the lines, plus the card's payment the engine adds as its own line
+  assert.equal(m2.spending, m2.lineTotal); assert.ok(m2.spending >= 2100 && m2.spending < 2100 + 200, String(m2.spending));
+  assert.equal(levelsOf(s.doc).find(l => l.id === 'where').state, 'open'); // getting around is still to come
+  const t = addRow(s, OUT_BOOK, 'transport'); renameRow(s, t.id, 'Transit'); setField(s, t.id, G(OUT_BOOK, 'transport', 'amount'), 130, { now });
+  assert.equal(levelsOf(s.doc).find(l => l.id === 'where').state, 'done');
+});
