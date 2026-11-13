@@ -143,4 +143,9 @@ test('you are here: one next thing, in order, and what is already done', () => {
   const end = guideOf({ ...allDone, checkup: { answered: 11, of: 11 }, lastDate: '2026-11-03', dates: 2, drills: 1, receipts: 1, statement: true });
   assert.ok(end.next.caughtUp); assert.equal(end.done.length, 8); assert.ok(end.done.includes('2 money dates'));
   assert.equal(guideOf({ ...allDone, checkup: { answered: 11, of: 11 }, lastDate: '2026-10-03' }).next.stage, 'date');
+  // The counter: 1 birth year + 5 questions + a statement + 3 levels + the checkup + this month's date = 12 steps.
+  assert.deepEqual([guideOf({ hasAge: false, answered: 0, total: 5 }).step, guideOf({ hasAge: false, answered: 0, total: 5 }).of], [1, 9]);
+  const g3 = guideOf({ ...base, answered: 2 }); assert.equal(g3.of, 12); assert.equal(g3.step, 4); assert.equal(g3.behind, 3);
+  assert.equal(guideOf({ ...base, statement: true }).step, 8); assert.equal(guideOf({ ...base, worry: { label: 'x', ticked: 0, steps: 4 } }).of, 13);
+  assert.equal(end.step, 12); assert.equal(end.behind, 12);
 });

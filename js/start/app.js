@@ -113,13 +113,14 @@ const MORE_GROUPS = [['You', [['map', 'Your map'], ['you', 'About you'], ['numbe
 const MORE = MORE_GROUPS.flatMap(g => g[1]);
 function top() {
   const p = P();
-  const tab = (id, label) => h('button.st-stage', { type: 'button', disabled: !p.hasAge, title: p.hasAge ? null : 'Pick the year you were born first', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label);
+  const G = p.hasAge && !mine().guideOff ? guideNow(p) : null, nx = G && !G.next.caughtUp ? G.next.stage : null, nextTab = nx ? TAB_OF[nx] ?? 'more' : null;
+  const tab = (id, label) => h(`button.st-stage${nextTab === id && ui.stage !== nx ? '.next' : ''}`, { type: 'button', disabled: !p.hasAge, title: p.hasAge ? null : 'Pick the year you were born first', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label);
   const inMore = MORE.some(([id]) => id === ui.stage);
   clear($('top'),
     h('a.st-brand', { href: '#', onClick: e => { e.preventDefault(); ui.more = false; go('you'); } }, 'Stress Less About Money'),
     h('nav.st-stages', { 'aria-label': 'Sections' }, TABS.map(([id, label]) => tab(id, label)),
-      h('button.st-stage', { type: 'button', 'aria-expanded': ui.more ? 'true' : 'false', 'aria-current': inMore ? 'page' : null, onClick: () => { ui.more = !ui.more; top(); } }, 'More')),
-    ui.more ? h('div.st-more', {}, MORE_GROUPS.map(([title, items]) => [h('div.st-more-h', {}, title), items.map(([id, label]) => h('button.st-btn', { type: 'button', disabled: !p.hasAge && STAGES.find(x => x.id === id)?.needs === 'age', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label))]),
+      h(`button.st-stage${nextTab === 'more' && ui.stage !== nx ? '.next' : ''}`, { type: 'button', 'aria-expanded': ui.more ? 'true' : 'false', 'aria-current': inMore ? 'page' : null, onClick: () => { ui.more = !ui.more; top(); } }, 'More')),
+    ui.more ? h('div.st-more', {}, MORE_GROUPS.map(([title, items]) => [h('div.st-more-h', {}, title), items.map(([id, label]) => h(`button.st-btn${nextTab === 'more' && nx === id ? '.st-pulse' : ''}`, { type: 'button', disabled: !p.hasAge && STAGES.find(x => x.id === id)?.needs === 'age', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label))]),
       h('button.st-btn.text', { type: 'button', onClick: () => { ui.more = false; remember({ guideOff: !mine().guideOff }); render(); } }, mine().guideOff ? 'Show my next step' : 'Hide my next step'),
       h('button.st-btn.text', { type: 'button', onClick: () => { ui.more = false; top(); tour(0); } }, 'How this works')) : null);
 }
@@ -128,10 +129,10 @@ function top() {
 function track(p, pl) {
   if (!p.hasAge) return clear($('track'));
   const sh = p.done ? sharpnessOf(store.doc, true) : null;
-  const line = p.done ? `Level ${sh.done} of ${sh.total}. ${pl.wins} ${pl.wins === 1 ? 'win' : 'wins'}.` : `${p.count} of ${p.total} answered.`;
+  const G = guideNow(p), line = G.next.caughtUp ? `All ${G.of} steps done. ${pl.wins} ${pl.wins === 1 ? 'win' : 'wins'}.` : `Step ${G.step} of ${G.of}`;
   clear($('track'),
-    h('span.st-pips', { role: 'img', 'aria-label': line }, p.done ? Array.from({ length: sh.total }, (_, i) => h(`i${i < sh.done ? '.on' : ''}`)) : QUESTIONS.map(q => h(`i${p.answered[q.key] ? '.on' : ''}`))),
-    h('span.st-trackline', {}, line),
+    h('span.st-pips.st-steps-pips', { role: 'img', 'aria-label': line }, Array.from({ length: G.of }, (_, i) => h(`i${i < G.behind ? '.on' : i === G.behind ? '.now' : ''}`))),
+    h(`span.st-trackline.st-count${G.step > (ui.lastStep ?? G.step) ? '.st-bump' : ''}`, {}, line),
     !p.done && ui.stage !== 'numbers' ? btn(p.count ? 'Keep going' : 'Start', () => go('numbers', { q: p.next }), 'slim primary') : null);
 }
 
@@ -144,15 +145,16 @@ function mapScreen(p, pl) {
     statement: !!m.audit, levels: L.length > 0 && L.every(l => l.state !== 'open'), checkup: checkupOf(m.checkup || {}).answered === CHECKUP.length,
     spendTools: ['price', 'afford', 'values', 'overlap', 'spendMore'].some(solid), earnTools: ['raise', 'uneven', 'moves'].some(solid), home: solid('home'), fees: solid('fees') || solid('next'),
     design: m.design?.age != null, decide: (m.receipts || []).length > 0, life: seen.life, stress: seen.life, drills: Object.keys(d).some(k => d[k] && /^(drill|skill):/.test(k)), date: (m.dates || []).length > 0, summary: seen.summary } });
+  const G = p.hasAge ? guideNow(p) : null, nextId = !p.hasAge ? 'age' : G.next.caughtUp || m.guideOff ? null : nodeOfNext(G.next), nextNode = M.nodes.find(n => n.id === nextId) ?? null;
   const sel = M.nodes.find(n => n.id === ui.mapSel) ?? null, name = id => M.nodes.find(n => n.id === id).name;
   const WORD = { done: 'Done', ready: 'Ready', waiting: 'Waiting' };
   const open = n => (n.go.stage === 'numbers' ? go('numbers', { q: n.go.q }) : go(n.go.stage, { flash: n.go.flash }));
-  const node = n => h(`button.st-node.${n.state}${sel?.id === n.id ? '.sel' : ''}${sel && (sel.needs.includes(n.id) || sel.feeds.includes(n.id)) ? '.near' : ''}`, { type: 'button', 'data-node': n.id, 'aria-pressed': sel?.id === n.id ? 'true' : 'false', onClick: () => { ui.mapSel = sel?.id === n.id ? null : n.id; render(); } },
-    h('span.st-nodemark', {}, n.state === 'done' ? '✓' : n.state === 'ready' ? '›' : ''), h('span.st-nodename', {}, n.name), h('span.st-nodeword', {}, WORD[n.state]));
+  const node = n => h(`button.st-node.${n.state}${n.id === nextId ? '.st-pulse.is-next' : ''}${sel?.id === n.id ? '.sel' : ''}${sel && (sel.needs.includes(n.id) || sel.feeds.includes(n.id)) ? '.near' : ''}`, { type: 'button', 'data-node': n.id, 'aria-pressed': sel?.id === n.id ? 'true' : 'false', onClick: () => { ui.mapSel = sel?.id === n.id ? null : n.id; render(); } },
+    h('span.st-nodemark', {}, n.state === 'done' ? '✓' : n.state === 'ready' ? '›' : ''), h('span.st-nodename', {}, n.name), h('span.st-nodeword', {}, n.id === nextId ? 'Do this next' : WORD[n.state]));
   return [
     h('div.st-card.hero', {}, h('h1', {}, 'Your map'), h('p', { style: { marginBottom: '8px' } }, 'Everything you tell the app feeds what it can show you next. Tap any point to see what goes into it and what it leads to.'),
       h('div.st-donebar', { role: 'status' }, h('span', {}, `${M.done} done, ${M.ready} ready, ${M.waiting} waiting on an answer`)),
-      M.next ? h('div.st-row', {}, btn(`Next on the map: ${M.next.name}`, () => open(M.next), 'primary')) : null),
+      nextNode ? h('div.st-row', {}, btn(`Next on the map: ${nextNode.name}`, () => (G && nextNode.id !== 'age' ? (G.next.stage === 'numbers' ? go('numbers', { q: G.next.q }) : go(G.next.stage, { flash: G.next.flash })) : open(nextNode)), 'primary st-pulse'), G ? h('span.st-small', {}, `Step ${G.step} of ${G.of}`) : null) : null),
     sel ? h('div.st-card.st-mapsel', { role: 'region', 'aria-label': sel.name },
       h('div.st-row.end', {}, h('div', {}, h('div.st-eyebrow', {}, WORD[sel.state]), h('h2', { style: { margin: 0 } }, sel.name)), btn('Close', () => { ui.mapSel = null; render(); }, 'slim text')),
       h('p', { style: { margin: '6px 0' } }, sel.gives),
@@ -193,21 +195,37 @@ function solidWrap(id, el, pl) {
 const solidCount = (ids, pl) => ids.filter(id => solidState(id, pl) === 'solid').length;
 
 // ---------- You are here: one thing to do next, and what is already done ----------
-function guideCard(p, slim = false) {
-  const off = !!mine().guideOff, hide = v => { remember({ guideOff: v }); render(); };
-  if (off) return slim ? null : h('div.st-row', {}, btn('Show my next step', () => hide(false), 'slim'));
-  const m = mine(), W = worryOf(m.worry), d = m.done || {}, L = p.done ? levelsOf(store.doc, ref) : [];
+// The one next step, worked out once for the card, the strip, the tabs, the counter and the map.
+function guideNow(p) {
+  const m = mine(), W = worryOf(m.worry), d = m.done || {}, L = p.hasAge ? levelsOf(store.doc, ref) : [];
   const G = guideOf({ hasAge: p.hasAge, answered: p.count, total: p.total, nextQ: p.next,
     worry: W ? { label: W.label, steps: W.steps.length, ticked: W.steps.filter((_, i) => d[`worry:${W.id}:${i}`]).length } : null,
     levels: L.map(l => ({ id: l.id, n: l.n, title: l.title, state: l.state })), statement: !!m.audit, checkup: checkupOf(m.checkup || {}),
     dates: (m.dates || []).length, lastDate: datesOf(m.dates || []).last?.at ?? null, today: localDay(),
     drills: Object.keys(d).filter(k => d[k] && /^(drill|skill):/.test(k)).length, receipts: (m.receipts || []).length });
+  return G;
+}
+// Where the pulse lands: the tab that leads to the next step, and the thing to tap once you are there.
+const TAB_OF = { plan: 'plan', see: 'see', drills: 'drills', sharpen: 'sharpen' };
+const nodeOfNext = n => (n.stage === 'you' ? 'age' : n.stage === 'numbers' ? n.q : n.stage === 'plan' ? 'plan' : n.stage === 'date' ? 'date' : n.flash === 'statement' ? 'statement' : n.flash === 'checkup' ? 'checkup' : 'levels');
+function pulseHere(p) {
+  if (mine().guideOff || !p.hasAge) return;
+  const n = guideNow(p).next; if (n.caughtUp || n.stage !== ui.stage) return;
+  const sel = n.stage === 'numbers' ? (ui.q === n.q ? 'main .st-btn.primary.big' : null) : n.stage === 'plan' ? '.st-tick[aria-pressed="false"]' : n.flash === 'statement' ? '#stmt label.st-btn, #stmt > summary' : n.flash === 'checkup' ? 'details.st-card > summary' : n.stage === 'sharpen' ? `#level-${n.flash} .st-levelhead .st-btn` : n.stage === 'date' ? 'main .st-field .st-chips' : null;
+  if (!sel) return;
+  const el = n.flash === 'checkup' ? [...document.querySelectorAll(sel)].find(x => /The checkup/.test(x.textContent)) : document.querySelector(sel);
+  el?.classList.add('st-pulse');
+}
+function guideCard(p, slim = false) {
+  const off = !!mine().guideOff, hide = v => { remember({ guideOff: v }); render(); };
+  if (off) return slim ? null : h('div.st-row', {}, btn('Show my next step', () => hide(false), 'slim'));
+  const G = guideNow(p);
   const n = G.next, act = () => (n.stage === 'numbers' ? go('numbers', { q: n.q }) : n.stage === 'plan' && n.flash ? (ui.stepsOpen = true, ui.stage === 'plan' ? (ui.flash = n.flash, render()) : go('plan', { flash: n.flash })) : go(n.stage, { flash: n.flash }));
-  if (slim) return n.caughtUp ? null : h('div.st-nextbar', { role: 'region', 'aria-label': 'Your next step' }, h('strong', {}, 'Next'), btn(n.label, act, 'slim primary'), btn('Hide', () => hide(true), 'slim text'));
+  if (slim) return n.caughtUp ? null : h('div.st-nextbar', { role: 'region', 'aria-label': 'Your next step' }, h(`strong.st-count${G.step > (ui.lastStep ?? G.step) ? '.st-bump' : ''}`, {}, `Step ${G.step} of ${G.of}`), btn(n.label, act, 'slim primary st-pulse'), btn('Hide', () => hide(true), 'slim text'));
   return h('div.st-card.st-guide', {},
-    h('div.st-row.end', {}, h('div', {}, h('div.st-eyebrow', {}, 'You are here'), h('h2', { style: { margin: '0 0 8px' } }, n.here)), btn('Hide', () => hide(true), 'slim text')),
+    h('div.st-row.end', {}, h('div', {}, h(`div.st-eyebrow.st-count${G.step > (ui.lastStep ?? G.step) ? '.st-bump' : ''}`, {}, `You are here: step ${G.step} of ${G.of}`), h('h2', { style: { margin: '0 0 8px' } }, n.here)), btn('Hide', () => hide(true), 'slim text')),
     n.caughtUp ? h('p', { style: { margin: 0 } }, 'Nothing is waiting on you. Come back next month for your money date, or explore anything you like.')
-      : h('div.st-row', {}, btn(`Do this next: ${n.label}`, act, 'primary big'), n.minutes ? h('span.st-small.st-soft', {}, `About ${n.minutes} ${n.minutes === 1 ? 'minute' : 'minutes'}`) : null),
+      : h('div.st-row', {}, btn(`Do this next: ${n.label}`, act, 'primary big st-pulse'), n.minutes ? h('span.st-small.st-soft', {}, `About ${n.minutes} ${n.minutes === 1 ? 'minute' : 'minutes'}`) : null),
     h('div.st-row', { style: { marginTop: '8px' } }, btn('See the whole map', () => go('map'), 'slim')),
     G.done.length ? h('details.st-fold', {}, h('summary', {}, `What you have done (${G.done.length})`), h('ul.st-list', {}, G.done.map(t => h('li.done', {}, h('span.dot', {}, '✓'), h('span', {}, t))))) : null);
 }
@@ -1061,6 +1079,8 @@ function render() {
   top(); track(p, pl);
   clear($('main'), backBar(), p.hasAge && !['plan', 'you', 'numbers', 'map'].includes(ui.stage) ? guideCard(p, true) : null, SCREENS[ui.stage](p, pl));
   if (ui.stage === 'map') requestAnimationFrame(drawMapLines);
+  pulseHere(p);
+  if (p.hasAge) ui.lastStep = guideNow(p).step;
   if (p.done && ['life', 'summary'].includes(ui.stage)) markSeen(ui.stage);
   foot();
   const lit = $('main').querySelector('.flash');

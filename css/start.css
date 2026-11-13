@@ -316,3 +316,13 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-edge { opacity: .22; } .st-edge.on { opacity: .3; } .st-edge.dim { opacity: .07; } .st-edge.hot { opacity: 1; }
 .st-node.waiting { background: var(--card); }
 @media (max-width: 640px) { .st-mapsel { position: fixed; left: 8px; right: 8px; bottom: 8px; top: auto; margin: 0; max-height: 46vh; overflow-y: auto; box-shadow: var(--shadow-lift); } .st-map:has(.sel) { padding-bottom: 48vh; } }
+@keyframes st-pulse { 0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, .65), 0 0 0 0 rgba(37, 99, 235, .35); } 70% { box-shadow: 0 0 0 12px rgba(37, 99, 235, 0), 0 0 0 22px rgba(37, 99, 235, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0), 0 0 0 0 rgba(37, 99, 235, 0); } }
+.st-pulse { animation: st-pulse 1.5s ease-out infinite; position: relative; z-index: 1; }
+.st-node.is-next { border-width: 3px; border-color: var(--primary); background: var(--card); } .st-node.is-next .st-nodeword { color: var(--primary); font-weight: 800; }
+.st-stage.next { position: relative; } .st-stage.next::after { content: ""; position: absolute; top: 4px; right: 4px; width: 10px; height: 10px; border-radius: 50%; background: #fff; animation: st-pulse-dot 1.5s ease-out infinite; }
+@keyframes st-pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, .8); } 70% { box-shadow: 0 0 0 9px rgba(255, 255, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
+.st-steps-pips i.now { background: var(--card); border: 2px solid var(--primary); box-sizing: border-box; animation: st-pulse 1.5s ease-out infinite; }
+.st-steps-pips { flex-wrap: nowrap; overflow: hidden; }
+@keyframes st-bump { 0% { transform: translateY(8px); opacity: 0; } 60% { transform: translateY(-2px); opacity: 1; } 100% { transform: none; } }
+.st-count.st-bump { animation: st-bump .5s ease-out 1; display: inline-block; }
+@media (prefers-reduced-motion: reduce) { .st-pulse, .st-steps-pips i.now { animation: none; outline: 4px solid var(--primary); outline-offset: 3px; } .st-stage.next::after { animation: none; } .st-count.st-bump { animation: none; } }

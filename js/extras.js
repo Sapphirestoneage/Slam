@@ -305,5 +305,10 @@ export function guideOf(f) {
     : (f.checkup?.answered ?? 0) < (f.checkup?.of ?? 0) ? { here: 'Every level is done', label: 'Do the checkup: what a planner would ask', stage: 'sharpen', flash: 'checkup', minutes: 3 }
     : !thisMonth ? { here: 'Your plan is sharp', label: 'Do this month\'s money date', stage: 'date', minutes: 5 }
     : { here: 'You are all caught up', label: 'See your plan', stage: 'plan', minutes: 0, caughtUp: true };
-  return { next, done };
+  // The counter: every step on the path, in the same order, and how many are behind you.
+  const whereDone = (f.levels || []).length > 0 && !f.levels.some(l => l.id === 'where' && l.state === 'open');
+  const path = [!!f.hasAge, ...Array.from({ length: f.total ?? 0 }, (_, i) => (f.answered ?? 0) > i), ...(f.worry ? [f.worry.ticked > 0] : []), !!f.statement || whereDone,
+    ...(f.levels || []).map(l => l.state !== 'open'), (f.checkup?.of ?? 0) > 0 && f.checkup.answered >= f.checkup.of, !!thisMonth];
+  const behind = path.filter(Boolean).length;
+  return { next, done, step: Math.min(path.length, behind + 1), of: path.length, behind };
 }
