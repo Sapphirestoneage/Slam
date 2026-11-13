@@ -221,12 +221,12 @@ function pulseHere(p) {
   if (!p.hasAge) return add(main.querySelector('.st-years') ?? main.querySelector('.st-card:not(.hero) .st-chips'));
   const n = guideNow(p).next;
   if (!n.caughtUp && n.stage === ui.stage) {
-    const sel = n.stage === 'numbers' ? null : n.stage === 'plan' ? '.st-tick[aria-pressed="false"]' : n.flash === 'statement' ? '#stmt label.st-btn, #stmt > summary' : n.flash === 'checkup' ? null : n.stage === 'sharpen' ? `#level-${n.flash} .st-levelhead .st-btn` : n.stage === 'date' ? 'main .st-field .st-chips' : null;
+    const sel = n.stage === 'numbers' ? null : n.stage === 'plan' ? '.st-tick[aria-pressed="false"]' : n.flash === 'statement' ? (document.querySelector('#stmt[open] label.st-btn') ? '#stmt[open] label.st-btn' : '#stmt > summary') : n.flash === 'checkup' ? null : n.stage === 'sharpen' ? `#level-${n.flash} .st-levelhead .st-btn` : n.stage === 'date' ? 'main .st-field .st-chips' : null;
     add(n.flash === 'checkup' ? [...document.querySelectorAll('details.st-card > summary')].find(x => /The checkup/.test(x.textContent)) : sel ? document.querySelector(sel) : null);
   }
   const here = on(); if (here && ui.arrived) { const r = here.getBoundingClientRect(); if (r.top < 60 || r.bottom > innerHeight - 20) setTimeout(() => here.scrollIntoView({ block: 'center' }), 0); }
   ui.arrived = false;
-  add(main.querySelector('.st-nextbar .st-btn.primary'));
+  add(main.querySelector('.st-nextbar .st-btn.primary')); add(main.querySelector('.st-guide .st-btn.primary'));
   if (ui.stage === 'numbers') { const box = main.querySelector('.st-boxes .st-box .in'), empty = box && !box.querySelector('input')?.value; add(empty ? box : main.querySelector('.st-btn.primary.big')); }
   add(main.querySelector('.st-btn.primary.big') ?? main.querySelector('.st-btn.primary'));
 }
@@ -239,7 +239,7 @@ function guideCard(p, slim = false) {
   return h('div.st-card.st-guide', {},
     h('div.st-row.end', {}, h('div', {}, h(`div.st-eyebrow.st-count${G.step > (ui.lastStep ?? G.step) ? '.st-bump' : ''}`, {}, `You are here: step ${G.step} of ${G.of}`), h('h2', { style: { margin: '0 0 8px' } }, n.here)), btn('Hide', () => hide(true), 'slim text')),
     n.caughtUp ? h('p', { style: { margin: 0 } }, 'Nothing is waiting on you. Come back next month for your money date, or explore anything you like.')
-      : h('div.st-row', {}, btn(`Do this next: ${n.label}`, act, 'primary big st-pulse'), n.minutes ? h('span.st-small.st-soft', {}, `About ${n.minutes} ${n.minutes === 1 ? 'minute' : 'minutes'}`) : null),
+      : h('div.st-row', {}, btn(`Do this next: ${n.label}`, act, 'primary big'), n.minutes ? h('span.st-small.st-soft', {}, `About ${n.minutes} ${n.minutes === 1 ? 'minute' : 'minutes'}`) : null),
     h('div.st-row', { style: { marginTop: '8px' } }, btn('See the whole map', () => go('map'), 'slim')),
     G.done.length ? h('details.st-fold', {}, h('summary', {}, `What you have done (${G.done.length})`), h('ul.st-list', {}, G.done.map(t => h('li.done', {}, h('span.dot', {}, '✓'), h('span', {}, t))))) : null);
 }
@@ -446,13 +446,16 @@ function yourPlan(p, pl) {
   const ring = v => { const r = 20, c = 2 * Math.PI * r, el = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); el.setAttribute('viewBox', '0 0 48 48'); el.setAttribute('width', '48'); el.setAttribute('height', '48');
     el.innerHTML = `<circle cx="24" cy="24" r="${r}" fill="none" stroke-width="6" class="st-ring-bg"/><circle cx="24" cy="24" r="${r}" fill="none" stroke-width="6" class="st-ring-on" stroke-dasharray="${Math.max(1.5, v * c)} ${c}" transform="rotate(-90 24 24)" stroke-linecap="round"/>`; return el; };
   const N2 = id => N(id)?.value ?? 'Needs an answer';
+  // Someone carrying debt with a far-off date sees the nearer win first: the month the debt is gone.
+  const dfm = pl.milestones.find(x => x.id === 'consumerFree' && !x.done && x.date), debtFirst = !B && dfm && (off || pl.fi.far || (pl.fi.age ?? 0) >= 70) ? dfm : null;
   const cards = {
     hero: h('div.st-card.hero', {},
       h('div.st-eyebrow', {}, B ? 'After that' : 'Your plan'),
-      pct != null && !(B && !B.job) ? progressViews(pct, 'of the way there') : null,
-      h('div.st-soft', {}, 'Work becomes optional'),
-      h('div.st-big', {}, B && !B.job ? 'Shows with the job ahead' : fiLine ?? 'Not yet known'),
-      B && !B.job ? h('p', {}, 'Benefits alone do not get there. Add when you expect to start and about what it pays, and this fills in.') : off ? h('p', {}, 'Right now little or nothing is left over to invest, so there is no date to show. Your next step is the way in.') : pl.basis === 'yours' && pl.fi.age && !pl.fi.far ? h('p', {}, `You would be ${pl.fi.age}. The likely range is ${pl.words.fi}.`) : null,
+      pct != null && pct >= 0.005 && !(B && !B.job) ? progressViews(pct, 'of the way there') : null,
+      debtFirst ? [h('div.st-soft', {}, 'You are debt free by'), h('div.st-big', {}, debtFirst.date), h('p', { style: { fontWeight: 700 } }, off ? 'After that, the money that went to debt starts building your freedom.' : `Then work becomes optional ${fiLine}. Every extra dollar on the debt pulls both dates closer.`)] : null,
+      debtFirst ? null : h('div.st-soft', {}, 'Work becomes optional'),
+      debtFirst ? null : h('div.st-big', {}, B && !B.job ? 'Shows with the job ahead' : fiLine ?? 'Not yet known'),
+      B && !B.job ? h('p', {}, 'Benefits alone do not get there. Add when you expect to start and about what it pays, and this fills in.') : debtFirst ? null : off ? h('p', {}, 'Right now little or nothing is left over to invest, so there is no date to show. Your next step is the way in.') : pl.basis === 'yours' && pl.fi.age && !pl.fi.far ? h('p', {}, `You would be ${pl.fi.age}. The likely range is ${pl.words.fi}.`) : null,
       h('div.st-row', {}, basisTag(pl), !p.done ? btn(`Answer ${p.total - p.count} more to make it yours`, () => go('numbers', { q: p.next }), 'slim primary') : null)),
     step: s ? h(`div.st-card${ui.flash === 'next' ? '.flash' : ''}`, {},
       h('div.st-eyebrow', {}, 'Your next step'),
@@ -484,12 +487,14 @@ function yourPlan(p, pl) {
       h('p', {}, 'See what you love spending on and what you only put up with, and what any monthly cost takes from your date.'),
       h('div.st-row', {}, btn('What do I love spending on?', () => go('tune', { flash: 'values' }), 'primary'), btn('Price a monthly cost', () => go('tune', { flash: 'price' })))),
   };
+  // The answer first: the slim Next strip sits on top, the plan right under it, and the fuller "you are here" card after the first card.
+  const order = mirrorOf(mine().mirror).order.map(k => cards[k]);
   return [
-    guideCard(p),
+    guideCard(p, true),
     ui.since ? h('div.st-note', { role: 'status' }, ui.since) : null,
     worry,
     gap,
-    mirrorOf(mine().mirror).order.map(k => cards[k]),
+    order[0], guideCard(p), order.slice(1),
     h('div.st-row', {}, btn('See it in pictures', () => go('see'), 'primary big')),
   ];
 }
@@ -550,7 +555,7 @@ function statementCard(p, pl) {
     a ? [h('p', { style: { fontWeight: 700 } }, auditWords(a, ui.audit ? gut : null)),
       h('div.st-rows', {}, a.rows.slice(0, 6).map(r => h('div.st-srow', {}, h('span', {}, r.name), h('span.v', {}, money(r.monthly)))), a.rows.length > 6 ? h('details.st-fold', {}, h('summary', {}, `Show all ${a.rows.length}`), a.rows.slice(6).map(r => h('div.st-srow', {}, h('span', {}, r.name), h('span.v', {}, money(r.monthly))))) : null),
       ui.audit ? h('div.st-row', { style: { marginTop: '12px' } }, btn(`Use ${money(a.monthly)} a month`, use, 'primary big'), btn('Keep my number', () => { ui.audit = null; render(); }, 'text')) : null]
-      : h('p', {}, 'Export your transactions from Rocket Money or Monarch as a .csv file and pick it here. It is read on this device and is not sent anywhere. Transfers and card payments are left out so nothing counts twice.'),
+      : h('p', {}, 'Export your transactions from Rocket Money or Monarch as a .csv file and pick it here. It is read on this device and is not sent anywhere. No export handy? Level 2 below gets close in three taps. Transfers and card payments are left out so nothing counts twice.'),
     ui.audit ? h('p.st-small.st-soft', {}, 'Use it only if the file covers every account you spend from. One card alone will read low.') : null,
     ui.auditNote ? h('p.st-note', { role: 'status' }, ui.auditNote) : null,
     h('div.st-row', { style: { marginTop: '10px' } }, h('label.st-btn', { for: 'stmt-file', class: a ? '' : 'primary' }, a ? 'Pick a different file' : 'Pick a file'), pickFile));
@@ -1024,8 +1029,7 @@ function drills(p, pl) {
   return [
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Fire drills'), h('h1', {}, 'Practice it before it happens'),
       h('p', {}, 'A money fear, run on your own numbers. Then one small rep in real life.'),
-    (() => { const ids = [...D.map(d => `drill:${d.id}`), ...S.map(k => `skill:${k.id}`)], n = ids.filter(id => done[id]).length; return h('div.st-donebar', { role: 'status' }, h('span.st-pips', {}, ids.map(id => h(`i${done[id] ? '.on' : ''}`))), h('span', {}, `${n} of ${ids.length} done`)); })(),
-      h('span.st-meter', {}, `${n} of ${all.length} done`, h('span.st-bar', {}, h('b', { style: { width: `${all.length ? Math.max(2, n / all.length * 100) : 0}%` } })))),
+    (() => { const ids = [...D.map(d => `drill:${d.id}`), ...S.map(k => `skill:${k.id}`)], n = ids.filter(id => done[id]).length; return h('div.st-donebar', { role: 'status' }, h('span.st-pips', {}, ids.map(id => h(`i${done[id] ? '.on' : ''}`))), h('span', {}, `${n} of ${ids.length} done`)); })()),
     D.map(drill),
     h('h2', { style: { marginTop: '8px' } }, 'What actually happens'),
     h('p.st-soft.st-small', {}, 'The real order of events, so the fear has edges.'),

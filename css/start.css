@@ -38,6 +38,7 @@ a { color: var(--primary); text-underline-offset: 2px; }
 .st-stage { flex: 1 1 0; max-width: 130px; min-width: 0; min-height: 44px; padding: 0 4px; border-radius: 10px; border: 2px solid rgba(255, 255, 255, .55); background: transparent; color: #fff; font: inherit; font-weight: 700; font-size: .875rem; cursor: pointer; }
 .st-stage:hover:not([disabled]) { background: rgba(255, 255, 255, .14); }
 .st-stage[aria-current="page"] { background: #fff; color: var(--primary-dark); border-color: #fff; }
+.st-stage[aria-current="page"]:hover:not([disabled]) { background: #fff; }
 .st-stage[disabled] { opacity: .5; cursor: not-allowed; }
 .st-more { position: absolute; top: 100%; right: 8px; z-index: 6; display: grid; gap: 6px; min-width: 230px; padding: 10px; background: var(--card); border: 2px solid var(--primary); border-radius: 14px; box-shadow: var(--shadow-lift); }
 .st-more .st-btn { justify-content: flex-start; box-shadow: none; }

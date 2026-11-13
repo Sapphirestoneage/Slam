@@ -300,7 +300,7 @@ export function guideOf(f) {
   const next = !f.hasAge ? { here: 'The very start', label: 'Pick the year you were born', stage: 'you', minutes: 1 }
     : f.answered < f.total ? { here: `Question ${f.answered + 1} of ${f.total}`, label: `Answer question ${f.answered + 1}`, stage: 'numbers', q: f.nextQ, minutes: 1 }
     : f.worry && f.worry.ticked === 0 ? { here: 'Your plan is yours. Now the thing you came for', label: `Do the first step on "${f.worry.label}"`, stage: 'plan', flash: 'worry', minutes: 5 }
-    : !f.statement && open.some(l => l.id === 'where') ? { here: 'Your plan runs on a spending number from memory', label: 'Use a statement, so it runs on the real one', stage: 'sharpen', flash: 'statement', minutes: 5 }
+    : !f.statement && open.some(l => l.id === 'where') ? { here: 'Your plan runs on a spending number from memory', label: 'Firm up your spending number', stage: 'sharpen', flash: 'statement', minutes: 5 }
     : open.length ? { here: `Level ${open[0].n} of ${f.levels.length + 1} is next`, label: `Level ${open[0].n}: ${open[0].title}`, stage: 'sharpen', flash: open[0].id, minutes: 3 }
     : (f.checkup?.answered ?? 0) < (f.checkup?.of ?? 0) ? { here: 'Every level is done', label: 'Do the checkup: what a planner would ask', stage: 'sharpen', flash: 'checkup', minutes: 3 }
     : !thisMonth ? { here: 'Your plan is sharp', label: 'Do this month\'s money date', stage: 'date', minutes: 5 }
