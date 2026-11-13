@@ -90,6 +90,41 @@ export const HAPPENS = [
     'The IRS sends letters by mail first. It does not open with a phone call, a text, or a demand for gift cards.',
     'You can set up a monthly payment plan on the IRS website, most of the time without talking to anyone.',
     'What to do first: file, pay what you can with the return, and set up the plan for the rest.'] },
+  { id: 'lostJob', title: 'My job ends', steps: [
+    'Day 1: ask HR, in writing, for the date of your last paycheck, whether unused vacation is paid out, any severance terms, and the day your health cover ends (often the last day of that month).',
+    'The first week: file for unemployment. In most states the clock starts the week you file, not the day the job ended, so waiting costs weeks.',
+    'Health cover: losing a job plan opens a 60-day window to pick a Marketplace plan. COBRA keeps your same plan, usually for up to 18 months, at the full price plus a small fee. You have 60 days to choose COBRA and it reaches back to the day cover ended.',
+    'Your 401(k) stays yours (the vested part). It can sit where it is or roll into an IRA. A loan from the plan can come due: what is not repaid by your tax filing deadline is taxed as a withdrawal.',
+    'Severance is taxed like pay. Unemployment benefits are taxed by the federal government too, and nothing is held back unless you ask.',
+    'What to do first: file for unemployment today, then write down the day your health cover ends.'] },
+  { id: 'medicalBill', title: 'A medical bill I cannot pay arrives', steps: [
+    'Before paying anything, ask for an itemized bill and set it beside the statement from your insurer. Billing errors are common.',
+    'Ask the billing office for its financial assistance form. Nonprofit hospitals are required to have a written policy for it, and many forgive part or all of a bill by income.',
+    'Ask for a payment plan with no interest. Most hospitals offer one when asked.',
+    'Credit reports: the three bureaus wait a year before an unpaid medical collection can show, leave out ones under $500, and take a medical collection off once it is paid.',
+    'A medical bill on a credit card becomes ordinary card debt, at the card\'s rate, and loses these protections.',
+    'What to do first: call the billing office and ask for the itemized bill and the financial assistance form.'] },
+  { id: 'overdraft', title: 'My checking account goes below zero', steps: [
+    'The bank can pay the charge and add an overdraft fee, often around $35, or decline it.',
+    'For debit card swipes and ATM withdrawals, a bank can only charge an overdraft fee if you opted in. Opted out, the card is declined at no cost.',
+    'Checks and automatic payments are different: the bank can charge a fee either way.',
+    'Left negative for weeks, the bank can close the account and report it to ChexSystems. That record can make it hard to open an account elsewhere for up to five years.',
+    'Many banks refund a first fee when asked, and several large banks have dropped the fee or give a one-day grace period.',
+    'What to do first: bring the balance back to zero, call and ask for the fee back, and turn off overdraft cover for your debit card.'] },
+  { id: 'studentLate', title: 'I miss a federal student loan payment', steps: [
+    'Day 1: the loan is past due. Late fees are rare on federal loans.',
+    'Day 90: the servicer reports it to the credit bureaus.',
+    'Day 270: the loan is in default. The whole balance comes due, and you lose access to payment plans, pauses and new federal aid.',
+    'In default, the government can take up to 15% of your take-home pay and hold back tax refunds, with no court order.',
+    'Two ways back: rehabilitation (nine agreed payments in ten months, which also removes the default from your credit reports) or consolidating into a new loan.',
+    'What to do first: call your servicer before day 90 and ask for a payment tied to your income, or a pause.'] },
+  { id: 'fraud', title: 'Someone uses my card or my name', steps: [
+    'A credit card: by law you owe at most $50 of charges you did not make, and in practice $0. Call the number on the card.',
+    'A debit card: report it within 2 business days and the most you can lose is $50. Within 60 days of the statement, up to $500. After that, the bank does not have to give any of it back.',
+    'Freeze your credit at Equifax, Experian and TransUnion. It is free, takes minutes online, and stops new accounts in your name. You can lift it when you apply for something.',
+    'Report it at identitytheft.gov. It builds a recovery plan and the report you may need for banks and lenders.',
+    'Change the password on your email first, then your bank. Email is how the other passwords get reset.',
+    'What to do first: call the card or bank now. The clock on what you can lose starts when you find out.'] },
 ];
 
 // ---------- A money meeting for two: each answers alone, then the answers sit side by side. ----------

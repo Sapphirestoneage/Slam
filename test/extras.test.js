@@ -50,7 +50,7 @@ test('a money meeting: answers travel in a link and sit side by side', () => {
 test('the words: plain, no em dashes, no verdict words', () => {
   const words = [...CHECKUP.flatMap(c => [c.q, c.next]), ...HAPPENS.flatMap(h => [h.title, ...h.steps]), ...MEET.flatMap(m => [m.q, ...m.a]), ...MOVES.map(m => m.name)].join(' ');
   assert.doesNotMatch(words, new RegExp(String.fromCharCode(8212))); assert.doesNotMatch(words, /\b(should|must|bad|wrong|fail|warning|risky|danger)\b/i);
-  assert.equal(HAPPENS.length, 3); for (const h of HAPPENS) assert.ok(h.steps.length >= 5 && /^What to do first/.test(h.steps.at(-1)));
+  assert.equal(HAPPENS.length, 8); assert.equal(new Set(HAPPENS.map(h => h.id)).size, 8); for (const h of HAPPENS) assert.ok(h.steps.length >= 5 && /^What to do first/.test(h.steps.at(-1)));
 });
 
 import { nextDollarOf, NEXT_ASKS, climbOf, raiseOf, startedOf, creepOf, datesOf, PARENT_ASKS, RAISE_SCRIPT } from '../js/extras.js';
