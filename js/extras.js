@@ -312,3 +312,40 @@ export function guideOf(f) {
   const behind = path.filter(Boolean).length;
   return { next, done, step: Math.min(path.length, behind + 1), of: path.length, behind };
 }
+
+// ---------- When can I stop? Every finish line on the way, soonest first ----------
+// The plan's own rungs (js/math/ladder.js), in the words of someone asking "when can I quit?".
+export const QUIT_WORDS = {
+  qq: ['Ease off', 'Save only the yearly minimum from here and you still get there. Room to take a calmer job.'],
+  coast: ['Stop saving for later', 'What is invested grows into enough on its own. Your pay only has to cover today, so part-time or lower-paid work is on the table.'],
+  lean: ['Stop, on needs only', 'Investments cover food, housing and getting around, and nothing else.'],
+  fi: ['Stop for good', 'Investments cover everything you spend today. Work is a choice.'],
+  fat: ['Stop, with room to spare', 'Everything you spend today and half again as much.'],
+};
+export function quitOf(milestones = []) {
+  const rows = Object.keys(QUIT_WORDS).map(id => { const m = milestones.find(x => x.id === id); return m ? { id, name: QUIT_WORDS[id][0], means: QUIT_WORDS[id][1], done: !!m.done, date: m.date ?? null, months: m.done ? 0 : m.months ?? null, target: m.target ?? null } : null; }).filter(Boolean);
+  rows.sort((a, b) => (a.months ?? Infinity) - (b.months ?? Infinity));
+  return { rows, next: rows.find(r => !r.done && r.months != null) ?? null, done: rows.filter(r => r.done).length };
+}
+
+// ---------- Before the year ends: the moves with a deadline, and what each is worth ----------
+// A dollar put in before tax saves about your marginal rate on it. limits: ref.limits (2026). k401Year: what goes into
+// the work plan in a year now. Deadlines: paycheck plans close with the last paycheck of the year; an IRA and an HSA
+// stay open until the tax filing day the next April (IRS Publication 590-A; Publication 969).
+export function yearEndOf({ marginal = null, age = null, limits, k401Year = 0, hasWorkPlan = true, payFrequency = '2 weeks', now = new Date() } = {}) {
+  const year = now.getFullYear(), end = new Date(year, 11, 31), daysLeft = Math.max(0, Math.round((end - new Date(year, now.getMonth(), now.getDate())) / 86400000));
+  const perYear = { week: 52, '2 weeks': 26, 'twice a month': 24, month: 12 }[payFrequency] ?? 26, paychecksLeft = Math.max(0, Math.floor(daysLeft / (365 / perYear)));
+  const saves = amount => (marginal == null ? null : Math.round(amount * marginal));
+  const k401Limit = limits['401k'].base + (age >= 60 && age <= 63 ? limits['401k'].catchUp60to63 : age >= 50 ? limits['401k'].catchUp50 : 0);
+  const iraLimit = limits.ira.base + (age >= 50 ? limits.ira.catchUp50 : 0), hsaLimit = limits.hsa.self + (age >= 55 ? limits.hsa.catchUp55 : 0);
+  const room = Math.max(0, k401Limit - (k401Year ?? 0));
+  const moves = [
+    hasWorkPlan ? { id: 'k401', name: 'Raise your 401(k) for the last paychecks', by: `Dec 31, ${year}`, limit: k401Limit, room, perThousand: saves(1000), perPaycheck: paychecksLeft ? Math.round(room / paychecksLeft) : null,
+      text: room > 0 ? `You have room for $${Math.round(room).toLocaleString('en-US')} more this year.` : 'You are already at the limit for the year.' } : null,
+    { id: 'hsa', name: 'Fill a health savings account, if your plan allows one', by: `Apr 15, ${year + 1}`, limit: hsaLimit, room: hsaLimit, perThousand: saves(1000), text: 'Only with a high-deductible health plan. It is the one account that is never taxed, going in or coming out for health costs.' },
+    { id: 'ira', name: 'Put this year\'s money in an IRA', by: `Apr 15, ${year + 1}`, limit: iraLimit, room: iraLimit, perThousand: null, text: 'A Roth IRA saves no tax now and is never taxed again. A traditional IRA may lower this year\'s tax, but with a plan at work that break fades out as income rises.' },
+    { id: 'fsa', name: 'Spend what is left in a flexible spending account', by: `Dec 31, ${year}`, limit: null, room: null, perThousand: null, text: 'Most plans take back what is not used. Check the balance and the plan\'s own last day.' },
+    { id: 'give', name: 'Giving and selling at a loss count this year only if done this year', by: `Dec 31, ${year}`, limit: null, room: null, perThousand: null, text: 'A gift to a charity, or selling an investment that is down in a regular brokerage account, has to settle by the last day.' },
+  ].filter(Boolean);
+  return { year, daysLeft, paychecksLeft, marginal, moves, best: marginal != null && room > 0 && hasWorkPlan ? { id: 'k401', saves: saves(Math.min(room, 1000)) } : null };
+}

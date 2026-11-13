@@ -142,7 +142,7 @@ test('a 0% offer charges no interest while it runs, then the card\'s own rate (Q
 
 import { TOOL_GROUPS, WORRY_TOOLS, MIRROR_TOOLS } from '../js/worries.js';
 test('the What if screen is sorted: every worry and every mirror leads with three real tools', () => {
-  const ids = TOOL_GROUPS.flatMap(g => g[1]); assert.equal(new Set(ids).size, ids.length); assert.equal(ids.length, 13);
+  const ids = TOOL_GROUPS.flatMap(g => g[1]); assert.equal(new Set(ids).size, ids.length); assert.equal(ids.length, 15);
   for (const w of WORRIES) { const t = WORRY_TOOLS[w.id]; assert.ok(t && t.length === 3 && new Set(t).size === 3, w.id); for (const id of t) assert.ok(ids.includes(id), `${w.id}: ${id}`); }
   for (const m of MIRRORS) { const t = MIRROR_TOOLS[m.id]; assert.ok(t && t.length === 3); for (const id of t) assert.ok(ids.includes(id)); }
   assert.deepEqual(Object.keys(WORRY_TOOLS).sort(), WORRIES.map(w => w.id).sort());

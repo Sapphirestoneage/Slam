@@ -92,7 +92,7 @@ export const worryOf = id => WORRIES.find(w => w.id === id) ?? null;
 
 // The tools on the What if screen, in groups, and which three lead for each worry (or, with no worry picked, for
 // what matters most). Ids are the cards in js/start/app.js.
-export const TOOL_GROUPS = [['Spending', ['price', 'afford', 'values', 'overlap', 'spendMore']], ['Earning', ['raise', 'uneven', 'moves']], ['Big choices', ['home', 'next', 'fees', 'started']], ['People', ['parents']]];
+export const TOOL_GROUPS = [['Spending', ['price', 'afford', 'values', 'overlap', 'spendMore']], ['Earning', ['raise', 'uneven', 'moves']], ['Big choices', ['home', 'next', 'fees', 'started', 'quit', 'yearEnd']], ['People', ['parents']]];
 export const WORRY_TOOLS = {
   lostJob: ['afford', 'uneven', 'overlap'], mightLose: ['afford', 'overlap', 'moves'], quit: ['moves', 'spendMore', 'raise'], raise: ['raise', 'next', 'spendMore'], uneven: ['uneven', 'afford', 'next'],
   movingIn: ['values', 'overlap', 'next'], marrying: ['home', 'next', 'values'], fights: ['values', 'spendMore', 'price'], split: ['afford', 'overlap', 'next'], baby: ['afford', 'home', 'parents'],

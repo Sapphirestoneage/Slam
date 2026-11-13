@@ -22,6 +22,7 @@ import { MAP_TIERS, mapOf } from '../map.js';
 import { DEBT_BOOK, HAVE_BOOK, IN_BOOK, OUT_BOOK, OWN_BOOK, COVER_BOOK, bookOf, whereOf } from '../book.js';
 import { bookUI, openRow } from './book-ui.js';
 import { pictureOf, nextSmallThings } from '../math/picture.js';
+import { quitOf, yearEndOf } from '../extras.js';
 import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP, flowTimeOf, designOf, LIFE_AGES, LIFE_PLACE, LIFE_WORK, LIFE_TRAVEL, LIFE_GIVE, receiptOf, CHOICES, PAY_STEPS, COST_STEPS, FEELS, FEEL_SIDES, guideOf, LINES, seriesOf, PRICES, affordOnce, PAY_PICKS, unevenOf, OVERLAPS, SUB_PRICES, overlapOf } from '../extras.js';
 import { dedupe, importTransactions } from '../import/csv.js';
 
@@ -808,6 +809,22 @@ function nextCard() {
       h('ol.st-list', {}, N.steps.map((x, i) => h(`li${x.done ? '.done' : x === N.here ? '.here' : ''}`, {}, h('span.dot', {}, x.done ? '✓' : i + 1), h('span', {}, x.name, h('small', {}, x.why)), h('span.when', {}, x.done ? 'Done' : x === N.here ? 'You are here' : ''))))] : h('p.st-soft', {}, 'Answer all five and the order shows.'),
     credit('foo')]);
 }
+function quitCard(pl) {
+  const Q = quitOf(pl.milestones);
+  return foldCard('quit', 'When can I stop?', Q.next ? `Next: ${Q.next.name.toLowerCase()}, ${Q.next.date}` : Q.rows.length ? 'Every one reached' : '', [
+    h('p.st-small', { style: { margin: '6px 0' } }, 'Stopping is not one day. These are the finish lines on your path, soonest first.'),
+    h('ul.st-list', {}, Q.rows.map(r => h(`li${r.done ? '.done' : ''}`, {}, h('span.dot', {}, r.done ? '✓' : ''), h('span', {}, r.name, h('small', {}, r.means)), h('span.when', {}, r.done ? 'Reached' : r.date ?? 'Needs money left over')))),
+    h('div.st-row', {}, btn('Test it against history', () => go('life'), 'slim primary'), btn('Move the dates', () => go('see'), 'slim')),
+    credit('milestones')]);
+}
+function yearEndCard(pl) {
+  const job = store.doc.records.find(r => r.kind === 'income'), m = pl.m.inputs;
+  const Y = yearEndOf({ marginal: numbersOf(pl, store.doc, ref).find(n => n.id === 'marginal')?.incomeTax ?? null, age: pl.age, limits: ref.limits, k401Year: (pl.m.pretaxSaving ?? 0) * 12, hasWorkPlan: situationOf(store.doc) !== 'between', payFrequency: job?.values?.payFrequency ?? m.payFrequency ?? '2 weeks' });
+  return foldCard('yearEnd', 'What should I do before the year ends?', `${Y.daysLeft} days left in ${Y.year}`, [
+    h('p.st-small', { style: { margin: '6px 0' } }, Y.marginal != null ? `Income tax takes about ${fmt.pct(Y.marginal)} of your next dollar, so each $1,000 put in before tax keeps about ${money(Math.round(1000 * Y.marginal))} in your pocket. (Social Security and Medicare tax still apply to 401(k) money.)` : 'Answer the Taxes level in Sharpen it and each move shows what it is worth to you.'),
+    h('ul.st-list', {}, Y.moves.map(x => h('li', {}, h('span.dot', {}, ''), h('span', {}, x.name, h('small', {}, `${x.text}${x.limit ? ` The ${Y.year} limit is ${money(x.limit)}.` : ''}${x.id === 'k401' && x.room > 0 && Y.paychecksLeft ? ` ${Y.paychecksLeft} ${Y.paychecksLeft === 1 ? 'paycheck is' : 'paychecks are'} left this year, and any part of it counts.` : ''}`)), h('span.when', {}, `By ${x.by}`)))),
+    h('p.st-small.st-soft', {}, 'Limits are the 2026 IRS limits. This is education, not tax advice: a tax preparer can confirm what fits you.')]);
+}
 function raiseCard(pl) {
   const raise = mine().raise ?? 5000, R = raiseOf(store.doc, ref, priors, { raise });
   return foldCard('raise', 'What is a raise worth to me?', R.moved > 0 ? `${spanWords(R.moved)} sooner` : '', [
@@ -891,7 +908,7 @@ function tune(p, pl) {
         h('details.st-fold', {}, h('summary', {}, 'The loan, year by year'),
           h('div.st-rows', {}, h('div.st-srow4.head', {}, h('span', {}, 'Year'), h('span', {}, 'Interest'), h('span', {}, 'Paid down'), h('span', {}, 'Still owed')),
             scheduleOf(H.loan, { rate: H.rate }).filter(r => r.year <= 5 || r.year % 5 === 0).map(r => h('div.st-srow4', {}, h('span', {}, String(r.year)), h('span', {}, money(Math.round(r.interest))), h('span', {}, money(Math.round(r.paid))), h('span', {}, money(Math.round(r.balance)))))))); })(),
-    values: valueCard(pl), spendMore: spendCard(p, pl), fees: feesCard(pl), moves: movesCard(pl), next: nextCard(), raise: raiseCard(pl), started: startedCard(pl), parents: parentsCard(), afford: affordCard(pl), overlap: overlapCard(), uneven: unevenCard(pl),
+    values: valueCard(pl), spendMore: spendCard(p, pl), fees: feesCard(pl), moves: movesCard(pl), next: nextCard(), raise: raiseCard(pl), started: startedCard(pl), quit: quitCard(pl), yearEnd: yearEndCard(pl), parents: parentsCard(), afford: affordCard(pl), overlap: overlapCard(), uneven: unevenCard(pl),
   };
   for (const id of Object.keys(C)) C[id] = solidWrap(id, C[id], pl);
   const allIds = Object.keys(C), nSolid = solidCount(allIds, pl), nChanged = allIds.filter(id => solidState(id, pl) === 'changed').length;

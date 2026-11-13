@@ -149,3 +149,25 @@ test('you are here: one next thing, in order, and what is already done', () => {
   assert.equal(guideOf({ ...base, statement: true }).step, 8); assert.equal(guideOf({ ...base, worry: { label: 'x', ticked: 0, steps: 4 } }).of, 13);
   assert.equal(end.step, 12); assert.equal(end.behind, 12);
 });
+
+import { quitOf, QUIT_WORDS, yearEndOf } from '../js/extras.js';
+test('when can I stop: the finish lines in order, soonest first, with the next one named', () => {
+  const ms = [{ id: 'fi', done: false, date: 'Apr 2039', months: 149, target: 1230000 }, { id: 'coast', done: true, date: 'Done', months: 0 }, { id: 'fat', done: false, date: 'Jun 2043', months: 199 }, { id: 'nwZero', done: true, months: 0 }, { id: 'lean', done: false, date: 'Jan 2033', months: 74 }];
+  const Q = quitOf(ms);
+  assert.deepEqual(Q.rows.map(r => r.id), ['coast', 'lean', 'fi', 'fat']); // net worth above zero is not a way to stop
+  assert.equal(Q.next.id, 'lean'); assert.equal(Q.done, 1);
+  for (const r of Q.rows) assert.ok(r.name === QUIT_WORDS[r.id][0] && r.means.length > 20);
+  assert.equal(quitOf([]).next, null);
+});
+test('before the year ends: room, deadlines and what $1,000 is worth, by hand', () => {
+  const limits = { '401k': { base: 24500, catchUp50: 8000, catchUp60to63: 11250 }, ira: { base: 7500, catchUp50: 1100 }, hsa: { self: 4400, family: 8750, catchUp55: 1000 } };
+  const Y = yearEndOf({ marginal: 0.22, age: 34, limits, k401Year: 6000, payFrequency: '2 weeks', now: new Date(2026, 10, 13) });
+  assert.equal(Y.daysLeft, 48); assert.equal(Y.paychecksLeft, 3); // Nov 13 to Dec 31; 48 / (365 / 26) = 3.4
+  const k = Y.moves.find(x => x.id === 'k401');
+  assert.equal(k.room, 18500); assert.equal(k.perThousand, 220); assert.equal(k.perPaycheck, 6167); assert.equal(k.by, 'Dec 31, 2026');
+  assert.equal(Y.moves.find(x => x.id === 'ira').by, 'Apr 15, 2027'); assert.equal(Y.moves.find(x => x.id === 'ira').limit, 7500);
+  assert.equal(yearEndOf({ marginal: 0.24, age: 52, limits, k401Year: 40000, now: new Date(2026, 10, 13) }).moves.find(x => x.id === 'k401').room, 0); // 24,500 + 8,000 at 52
+  assert.equal(yearEndOf({ marginal: 0.24, age: 61, limits, now: new Date(2026, 10, 13) }).moves.find(x => x.id === 'k401').limit, 35750);
+  assert.equal(yearEndOf({ marginal: 0.24, age: 56, limits, now: new Date(2026, 10, 13) }).moves.find(x => x.id === 'hsa').limit, 5400);
+  assert.equal(yearEndOf({ age: 30, limits, hasWorkPlan: false, now: new Date(2026, 10, 13) }).moves.some(x => x.id === 'k401'), false);
+});
