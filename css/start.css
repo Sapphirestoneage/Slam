@@ -292,3 +292,8 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-guide .st-btn.big { white-space: normal; text-align: left; height: auto; padding-top: 10px; padding-bottom: 10px; }
 .st-nextbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 10px; margin-bottom: 12px; border: 2px solid var(--primary); border-radius: 12px; background: var(--card); }
 .st-nextbar .st-btn.primary { flex: 1 1 160px; white-space: normal; text-align: left; height: auto; padding: 6px 12px; justify-content: flex-start; }
+.st-solid { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: transparent; box-shadow: none; border-style: dashed; color: var(--text-2); margin-bottom: 8px; }
+.st-solid .st-solidmark { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; border: 2px solid var(--text-2); flex: none; }
+.st-solid .st-solidtitle { flex: 1; min-width: 0; display: grid; } .st-solid .st-solidtitle strong { font-weight: 600; } .st-solid small { font-size: .875rem; }
+.st-changed { border: 3px solid var(--primary); }
+.st-donebar { display: flex; align-items: center; gap: 10px; font-size: .875rem; font-weight: 700; margin: 4px 0 4px; }

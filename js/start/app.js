@@ -50,6 +50,7 @@ open((here().clientId && loadClient(adapter, here().clientId)) || createClient(a
 for (const ev of ['pagehide', 'visibilitychange']) window.addEventListener(ev, () => saver?.flush());
 
 const $ = id => document.getElementById(id);
+const localDay = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }; // the person's own calendar day
 // A private link: the whole plan, squeezed into the link itself. Nothing is uploaded; whoever has the link has the plan.
 const LINK = '#/open/';
 async function pack(doc) {
@@ -133,6 +134,21 @@ function track(p, pl) {
     !p.done && ui.stage !== 'numbers' ? btn(p.count ? 'Keep going' : 'Start', () => go('numbers', { q: p.next }), 'slim primary') : null);
 }
 
+// ---------- Solid for now: mark a card done, and it goes quiet until your numbers change ----------
+// The mark keeps the numbers it was made on. When pay, spending, cash, investments or debt move, the card wakes up.
+const sigOf = pl => { const x = pl.m.inputs; return [x.takeHome, x.spending, x.cash, x.invested, (x.debts || []).reduce((t, d) => t + (d.balance ?? 0), 0)].map(v => Math.round(v ?? 0)).join('|'); };
+const solidState = (id, pl) => { const m = (mine().solid || {})[id]; return !m ? 'open' : m.sig === sigOf(pl) ? 'solid' : 'changed'; };
+function solidWrap(id, el, pl) {
+  if (!el) return el;
+  const st = solidState(id, pl), title = el.querySelector('summary strong, h2')?.textContent ?? 'This', all = mine().solid || {};
+  const mark = on => { const next = { ...all }; if (on) next[id] = { at: localDay(), sig: sigOf(pl) }; else delete next[id]; remember({ solid: next }); ui.flash = null; if (ui.openCard === id) ui.openCard = null; render(); };
+  if (st === 'solid' && ui.flash !== id) return h('div.st-card.st-solid', { 'data-solid': id }, h('span.st-solidmark', {}, '✓'), h('span.st-solidtitle', {}, h('strong', {}, title), h('small', {}, `Solid for now, since ${all[id].at}`)), btn('Change', () => mark(false), 'slim'));
+  el.append(st === 'changed' ? h('div.st-note', { role: 'status' }, 'Your numbers changed since you marked this solid. Take another look.') : '', h('div.st-row', { style: { marginTop: '10px' } }, btn(st === 'changed' ? 'Still solid' : 'This is solid for now', () => mark(true), 'slim')));
+  if (st === 'changed') el.classList.add('st-changed');
+  return el;
+}
+const solidCount = (ids, pl) => ids.filter(id => solidState(id, pl) === 'solid').length;
+
 // ---------- You are here: one thing to do next, and what is already done ----------
 function guideCard(p, slim = false) {
   const off = !!mine().guideOff, hide = v => { remember({ guideOff: v }); render(); };
@@ -141,7 +157,7 @@ function guideCard(p, slim = false) {
   const G = guideOf({ hasAge: p.hasAge, answered: p.count, total: p.total, nextQ: p.next,
     worry: W ? { label: W.label, steps: W.steps.length, ticked: W.steps.filter((_, i) => d[`worry:${W.id}:${i}`]).length } : null,
     levels: L.map(l => ({ id: l.id, n: l.n, title: l.title, state: l.state })), statement: !!m.audit, checkup: checkupOf(m.checkup || {}),
-    dates: (m.dates || []).length, lastDate: datesOf(m.dates || []).last?.at ?? null, today: new Date().toISOString().slice(0, 10),
+    dates: (m.dates || []).length, lastDate: datesOf(m.dates || []).last?.at ?? null, today: localDay(),
     drills: Object.keys(d).filter(k => d[k] && /^(drill|skill):/.test(k)).length, receipts: (m.receipts || []).length });
   const n = G.next, act = () => (n.stage === 'numbers' ? go('numbers', { q: n.q }) : n.stage === 'plan' && n.flash ? (ui.stepsOpen = true, ui.stage === 'plan' ? (ui.flash = n.flash, render()) : go('plan', { flash: n.flash })) : go(n.stage, { flash: n.flash }));
   if (slim) return n.caughtUp ? null : h('div.st-nextbar', { role: 'region', 'aria-label': 'Your next step' }, h('strong', {}, 'Next'), btn(n.label, act, 'slim primary'), btn('Hide', () => hide(true), 'slim text'));
@@ -549,12 +565,12 @@ function sharpen(p, pl) {
           : open ? h('div.st-row', {}, h('span', {}, `Level ${open.n} fixes it.`), btn('Answer it', () => go('sharpen', { flash: open.id }), 'slim primary')) : null); })(),
     ui.note && !ui.noteAt ? h('div.st-note', { role: 'status' }, ui.note) : null,
     !p.done ? h('div.st-card', {}, h('div.st-levelhead', {}, h('span.st-lvl', {}, 1), h('div', {}, h('h2', { style: { margin: 0 } }, 'Level 1: the five questions'), h('div.st-soft.st-small', {}, `${p.count} of ${p.total} answered.`)), btn('Finish it', () => go('numbers', { q: p.next }), 'slim primary'))) : null,
-    statementCard(p, pl),
+    solidWrap('statement', statementCard(p, pl), pl),
     (() => { const ans = mine().checkup || {}, C = checkupOf(ans);
-      return foldCard('checkup', 'The checkup: what a planner would ask', C.answered ? `${C.have} of ${C.of} covered` : '11 taps', [
+      return solidWrap('checkup', foldCard('checkup', 'The checkup: what a planner would ask', C.answered ? `${C.have} of ${C.of} covered` : '11 taps', [
         CHECKUP.map(c => h('div.st-field', {}, h('div.st-flabel', {}, c.q), h('div.st-chips', {}, CHECK_ANSWERS.map(([k, l]) => chip(l, ans[c.id] === k, () => { remember({ checkup: { ...ans, [c.id]: k } }); ui.flash = null; ui.openCard = 'checkup'; render(); }))),
           ans[c.id] === 'no' || ans[c.id] === 'unsure' ? h('p.st-small', { style: { margin: '6px 0 0' } }, c.next) : null)),
-        C.todo.length ? h('p.st-readout', { role: 'status' }, `${C.todo.length} to look into. Each one shows its first step above.`) : C.answered === CHECKUP.length ? h('p.st-readout', { role: 'status' }, 'Everything here is covered.') : null]); })(),
+        C.todo.length ? h('p.st-readout', { role: 'status' }, `${C.todo.length} to look into. Each one shows its first step above.`) : C.answered === CHECKUP.length ? h('p.st-readout', { role: 'status' }, 'Everything here is covered.') : null]), pl); })(),
     L.filter(x => x.state === 'open' || ui.level === x.id || ui.flash === x.id).map(card),
     (() => { const rest = L.filter(x => x.state !== 'open' && ui.level !== x.id && ui.flash !== x.id); return rest.length ? h('details.st-card', {}, h('summary.st-sum', {}, h('strong', {}, 'Levels you finished'), h('span.st-soft', {}, String(rest.length))), rest.map(card)) : null; })(),
     h('div.st-row', {}, btn('See all your numbers', () => go('all'), 'primary'), btn('See it in pictures', () => go('see'))),
@@ -729,11 +745,14 @@ function tune(p, pl) {
             scheduleOf(H.loan, { rate: H.rate }).filter(r => r.year <= 5 || r.year % 5 === 0).map(r => h('div.st-srow4', {}, h('span', {}, String(r.year)), h('span', {}, money(Math.round(r.interest))), h('span', {}, money(Math.round(r.paid))), h('span', {}, money(Math.round(r.balance)))))))); })(),
     values: valueCard(pl), spendMore: spendCard(p, pl), fees: feesCard(pl), moves: movesCard(pl), next: nextCard(), raise: raiseCard(pl), started: startedCard(pl), parents: parentsCard(), afford: affordCard(pl), overlap: overlapCard(), uneven: unevenCard(pl),
   };
+  for (const id of Object.keys(C)) C[id] = solidWrap(id, C[id], pl);
+  const allIds = Object.keys(C), nSolid = solidCount(allIds, pl), nChanged = allIds.filter(id => solidState(id, pl) === 'changed').length;
   const W = worryOf(mine().worry), first = (W && WORRY_TOOLS[W.id]) || MIRROR_TOOLS[mirrorOf(mine().mirror).id] || [], rest = ids => ids.filter(id => !first.includes(id)).map(id => C[id]);
   const group = (title, ids) => { const cards = rest(ids); return cards.length ? [h('h2.st-group-h', {}, title), cards] : null; };
   return [
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'What if'), h('h1', {}, 'Change one thing, watch the date move'),
       h('p', { style: { marginBottom: 0 } }, 'Each choice shows the date it gives you. Tap one to use it. To try spending less or earning more, use the sliders on See it. ', base != null && !pl.fi.far ? `Right now: ${pl.fi.date}.` : `Right now: ${pl.words.fi}.`)),
+    h('div.st-donebar', { role: 'status' }, h('span.st-pips', {}, allIds.map(id => h(`i${solidState(id, pl) === 'solid' ? '.on' : ''}`))), h('span', {}, `${nSolid} of ${allIds.length} solid for now${nChanged ? `, ${nChanged} to look at again` : ''}`)),
     first.length ? [h('h2.st-group-h', {}, W ? `For you: ${W.label.toLowerCase()}` : 'For you'), first.map(id => C[id])] : null,
     TOOL_GROUPS.map(([title, ids]) => group(title, ids)),
     h('h2.st-group-h', {}, 'The plan\'s assumptions'),
@@ -812,7 +831,7 @@ function tour(i) {
 function foot() {
   const download = () => {
     const blob = new Blob([JSON.stringify(exportFile(store.doc), null, 1)], { type: 'application/json' });
-    const a = h('a', { href: URL.createObjectURL(blob), download: `my-plan-${new Date().toISOString().slice(0, 10)}.json` });
+    const a = h('a', { href: URL.createObjectURL(blob), download: `my-plan-${localDay()}.json` });
     document.body.append(a); a.click(); a.remove();
   };
   const over = () => { open(createClient(adapter, 'My plan', new Date().toISOString())); Object.assign(ui, { q: null, note: null, decade: null, lever: { spendLess: 0, earnMore: 0 } }); go('you'); };
@@ -863,6 +882,7 @@ function drills(p, pl) {
   return [
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Fire drills'), h('h1', {}, 'Practice it before it happens'),
       h('p', {}, 'A money fear, run on your own numbers. Then one small rep in real life.'),
+    (() => { const ids = [...D.map(d => `drill:${d.id}`), ...S.map(k => `skill:${k.id}`)], n = ids.filter(id => done[id]).length; return h('div.st-donebar', { role: 'status' }, h('span.st-pips', {}, ids.map(id => h(`i${done[id] ? '.on' : ''}`))), h('span', {}, `${n} of ${ids.length} done`)); })(),
       h('span.st-meter', {}, `${n} of ${all.length} done`, h('span.st-bar', {}, h('b', { style: { width: `${all.length ? Math.max(2, n / all.length * 100) : 0}%` } })))),
     D.map(drill),
     h('h2', { style: { marginTop: '8px' } }, 'What actually happens'),
@@ -955,7 +975,7 @@ function decide(p, pl) {
       h('div.st-field', {}, h('div.st-flabel', {}, 'Spending a month'), h('div.st-chips', {}, COST_STEPS.map(v => chip(signed(v), (c.cost ?? 0) === v, () => edit(k, { cost: v }))))),
       FEEL_SIDES.map(([f, l]) => h('div.st-field', {}, h('div.st-flabel', {}, l), h('div.st-chips', {}, FEELS.map(([v, w]) => chip(w, (c[f] ?? 0) === v, () => edit(k, { [f]: v })))))),
       r ? h('p.st-readout', { role: 'status' }, r.date ? `Work becomes optional ${r.date}.` : 'No date on these numbers.') : null); };
-  const pickIt = k => { const r = R[k], other = R[k === 'a' ? 'b' : 'a']; remember({ receipts: [...list, { at: new Date().toISOString().slice(0, 10), chose: r.name, over: other.name, date: r.date, otherDate: other.date, life: r.life, otherLife: other.life }].slice(-20) }); ui.decideNote = `Saved. You chose "${r.name}" on purpose, with the numbers in front of you.`; render(); };
+  const pickIt = k => { const r = R[k], other = R[k === 'a' ? 'b' : 'a']; remember({ receipts: [...list, { at: localDay(), chose: r.name, over: other.name, date: r.date, otherDate: other.date, life: r.life, otherLife: other.life }].slice(-20) }); ui.decideNote = `Saved. You chose "${r.name}" on purpose, with the numbers in front of you.`; render(); };
   return [
     h('div.st-card.hero', {}, h('h1', {}, 'Compare two choices'), h('p', { style: { marginBottom: 0 } }, 'Put them side by side: what each does to your date and to your days. Then keep the receipt.')),
     side('a', 'Choice one'), side('b', 'Choice two'),
@@ -970,7 +990,7 @@ function decide(p, pl) {
 
 // ---------- The monthly money date: five taps ----------
 function moneyDate(p, pl) {
-  const list = mine().dates || [], D = datesOf(list), today = new Date().toISOString().slice(0, 10), draft = ui.dateDraft || {};
+  const list = mine().dates || [], D = datesOf(list), today = localDay(), draft = ui.dateDraft || {};
   const feel = (key, label, lo, hi) => h('div.st-field', {}, h('div.st-flabel', {}, label), h('div.st-chips', {}, FEEL.map(v => chip(v === 1 ? `1 ${lo}` : v === 5 ? `5 ${hi}` : String(v), draft[key] === v, () => { ui.dateDraft = { ...draft, [key]: v }; render(); }))));
   const s = pl.step, doneToday = D.last?.at === today;
   const finish = () => { if (!(draft.calm && draft.joy)) return; remember({ dates: [...list.filter(x => x.at !== today), { at: today, calm: draft.calm, joy: draft.joy, did: !!draft.did, fi: pl.fi?.date ?? pl.words.fi ?? null }].slice(-24) }); ui.dateDraft = null; render(); window.scrollTo({ top: 0 }); };
@@ -1007,7 +1027,7 @@ ui.stage = STAGES.some(x => x.id === linked) ? linked : !start.hasAge ? 'you' : 
 ui.q = QUESTIONS.some(x => x.key === linkedQ) ? linkedQ : start.next;
 if (start.hasAge && start.done) {
   const pl0 = plan(), nw = numbersOf(pl0, store.doc, ref).find(n => n.id === 'netWorth');
-  const now = { at: new Date().toISOString().slice(0, 10), fi: pl0.fi?.date ?? pl0.words.fi ?? null, worth: pl0.m.netWorth?.value ?? null, spend: pl0.m.inputs.spending ?? null };
+  const now = { at: localDay(), fi: pl0.fi?.date ?? pl0.words.fi ?? null, worth: pl0.m.netWorth?.value ?? null, spend: pl0.m.inputs.spending ?? null };
   ui.since = sinceWords(mine().last, now);
   if (mine().last?.at !== now.at) remember({ last: now });
 }
