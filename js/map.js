@@ -20,6 +20,7 @@ export const MAP_NODES = [
 
   { id: 'statement', tier: 'sharp', name: 'A statement', needs: ['spending'], gives: 'Real spending in place of a guess', go: { stage: 'sharpen', flash: 'statement' } },
   { id: 'levels', tier: 'sharp', name: 'Levels 2 to 10', needs: ['plan'], gives: 'More numbers unlocked, and a tighter date', go: { stage: 'sharpen' } },
+  { id: 'books', tier: 'sharp', name: 'Line by line', needs: ['plan'], gives: 'Every account, bill, debt and policy on its own line', go: { stage: 'books' } },
   { id: 'checkup', tier: 'sharp', name: 'The checkup', needs: ['plan'], gives: 'What a planner would ask that is not a number', go: { stage: 'sharpen', flash: 'checkup' } },
 
   { id: 'spendTools', tier: 'decide', name: 'Spending choices', needs: ['spending', 'plan'], gives: 'Afford it, cut it, love it, or spend more', go: { stage: 'tune', flash: 'afford' } },

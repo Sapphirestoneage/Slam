@@ -18,7 +18,7 @@ import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOM
 import { MIRRORS, mirrorOf, pctToFi, snapshotOf, auditOf, auditWords, FEELINGS, valuesOf, sinceWords } from '../mirror.js';
 import { readFile } from '../import/apps.js';
 import { MAP_TIERS, mapOf } from '../map.js';
-import { DEBT_BOOK, HAVE_BOOK, IN_BOOK, OUT_BOOK, bookOf, whereOf } from '../book.js';
+import { DEBT_BOOK, HAVE_BOOK, IN_BOOK, OUT_BOOK, OWN_BOOK, COVER_BOOK, bookOf, whereOf } from '../book.js';
 import { bookUI, openRow } from './book-ui.js';
 import { pictureOf, nextSmallThings } from '../math/picture.js';
 import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP, flowTimeOf, designOf, LIFE_AGES, LIFE_PLACE, LIFE_WORK, LIFE_TRAVEL, LIFE_GIVE, receiptOf, CHOICES, PAY_STEPS, COST_STEPS, FEELS, FEEL_SIDES, guideOf, LINES, seriesOf, PRICES, affordOnce, PAY_PICKS, unevenOf, OVERLAPS, SUB_PRICES, overlapOf } from '../extras.js';
@@ -145,7 +145,7 @@ function mapScreen(p, pl) {
   const m = mine(), seen = m.seen || {}, d = m.done || {}, solid = id => !!(m.solid || {})[id], L = p.done ? levelsOf(store.doc) : [];
   const M = mapOf({ answered: { age: p.hasAge, ...p.answered }, done: {
     plan: p.done, growth: seen.growth, flow: seen.flow, lines: seen.lines, road: seen.money, debt: seen.debt,
-    statement: !!m.audit, levels: L.length > 0 && L.every(l => l.state !== 'open'), checkup: checkupOf(m.checkup || {}).answered === CHECKUP.length,
+    statement: !!m.audit, books: pictureOf(store.doc, ref).solid >= 0.95, levels: L.length > 0 && L.every(l => l.state !== 'open'), checkup: checkupOf(m.checkup || {}).answered === CHECKUP.length,
     spendTools: ['price', 'afford', 'values', 'overlap', 'spendMore'].some(solid), earnTools: ['raise', 'uneven', 'moves'].some(solid), home: solid('home'), fees: solid('fees') || solid('next'),
     design: m.design?.age != null, decide: (m.receipts || []).length > 0, life: seen.life, stress: seen.life, drills: Object.keys(d).some(k => d[k] && /^(drill|skill):/.test(k)), date: (m.dates || []).length > 0, summary: seen.summary } });
   const G = p.hasAge ? guideNow(p) : null, nextId = !p.hasAge ? 'age' : G.next.caughtUp || m.guideOff ? null : nodeOfNext(G.next), nextNode = M.nodes.find(n => n.id === nextId) ?? null;
@@ -730,7 +730,9 @@ function books(p, pl) {
     card('in', IN_BOOK, B => `${B.count} on file`, h('p.st-small', { style: { margin: '6px 0' } }, `Together, after taxes: ${per(m.takeHome)}.`)),
     card('out', OUT_BOOK, B => (B.count ? `${money(Math.round(B.total))} a month in ${B.count} ${B.count === 1 ? 'line' : 'lines'}` : 'No lines yet'), outLead),
     card('have', HAVE_BOOK, B => money(Math.round(B.total)), null),
-    card('owe', DEBT_BOOK, B => (B.count ? money(Math.round(B.total)) : 'Nothing owed'), null),
+    card('own', OWN_BOOK, B => (B.count ? money(Math.round(B.total)) : 'Nothing listed'), null),
+    card('debt', DEBT_BOOK, B => (B.count ? money(Math.round(B.total)) : 'Nothing owed'), null),
+    card('cover', COVER_BOOK, B => (B.count ? `${B.count} on file` : 'Not answered yet'), h('p.st-small', { style: { margin: '6px 0' } }, 'What would catch you if something went wrong. A yes or a no on each is enough.')),
     h('div.st-row', {}, btn('See my plan', () => go('plan'), 'primary'), btn('All your numbers', () => go('all'))),
   ];
 }

@@ -39,7 +39,7 @@ export function bookUI({ store, book, front = null, only = null, pulse = false, 
     const rowEl = (sec, row) => {
       const isOpen = open[book.id] === row.id, need = todoOf(sec, row);
       const head = h(`button.st-bookrow${isOpen ? '.open' : ''}`, { type: 'button', 'aria-expanded': isOpen ? 'true' : 'false', 'data-row': row.id, onClick: () => { open[book.id] = isOpen ? null : row.id; paint(); } },
-        h('span.st-bookname', {}, row.name || 'Pick which one'), h('strong', {}, row.main == null ? 'Add the amount' : `${money(row.main)}${row.per && row.per !== 'a month' ? ` ${row.per}` : ''}`),
+        h('span.st-bookname', {}, row.name || 'Pick which one'), h('strong', {}, row.main == null ? (row.words ?? book.noAmount ?? 'Add the amount') : `${money(row.main)}${row.per && row.per !== 'a month' ? ` ${row.per}` : ''}`),
         h(`span.st-booktag${need.length ? '' : '.ok'}`, {}, need.length ? `${need.length} to go` : '✓'), h('span.st-bookchev', { 'aria-hidden': 'true' }, isOpen ? '▾' : '▸'));
       if (!isOpen) return h('div.st-bookitem', {}, head);
       const fronts = sec.front.filter(f => !f.when || f.when(row.rec)), up = fronts.filter(isFront), later = [...fronts.filter(f => !isFront(f)), ...sec.more.filter(f => !f.when || f.when(row.rec))];
@@ -52,7 +52,7 @@ export function bookUI({ store, book, front = null, only = null, pulse = false, 
         h('div.st-row', { style: { marginTop: '8px' } }, btn('Done with this one', () => { open[book.id] = null; paint(); }, 'slim primary'), btn('Take it off', () => { removeRow(store, row.id); open[book.id] = null; paint(); }, 'slim text'))));
     };
     root.replaceChildren(...B.sections.filter(sec => !only || only.includes(sec.id)).map(sec => h('section.st-booksec', { 'data-sec': sec.id },
-      h('div.st-bookhead', {}, h('h3', {}, sec.title), sec.rows.length ? h('span.st-small.st-soft', {}, `${money(sec.total)}${sec.rows.length > 1 ? ` across ${sec.rows.length}` : ''}`) : h('span.st-small.st-soft', {}, 'None'),
+      h('div.st-bookhead', {}, h('h3', {}, sec.title), sec.rows.length ? h('span.st-small.st-soft', {}, sec.total > 0 ? `${money(sec.total)}${sec.rows.length > 1 ? ` across ${sec.rows.length}` : ''}` : `${sec.rows.length} on file`) : h('span.st-small.st-soft', {}, 'None'),
         btn(`+ ${sec.add}`, () => { const made = addRow(store, book, sec.id); open[book.id] = made.id; paint(); root.querySelector(`[data-row="${made.id}"]`)?.scrollIntoView({ block: 'center' }); }, 'slim')),
       sec.rows.map(r => rowEl(sec, r)))));
     soft(B);
@@ -62,7 +62,7 @@ export function bookUI({ store, book, front = null, only = null, pulse = false, 
     for (const sec of B.sections) for (const row of sec.rows) {
       const el = root.querySelector(`[data-row="${row.id}"]`); if (!el) continue;
       const need = needOf(sec, row);
-      el.children[1].textContent = row.main == null ? 'Add the amount' : `${money(row.main)}${row.per && row.per !== 'a month' ? ` ${row.per}` : ''}`;
+      el.children[1].textContent = row.main == null ? (row.words ?? book.noAmount ?? 'Add the amount') : `${money(row.main)}${row.per && row.per !== 'a month' ? ` ${row.per}` : ''}`;
       el.children[2].textContent = need.length ? `${need.length} to go` : '✓'; el.children[2].classList.toggle('ok', !need.length);
     }
     root.querySelectorAll('.st-pulse').forEach(e => e.classList.remove('st-pulse'));

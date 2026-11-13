@@ -99,7 +99,7 @@ const G = (book, secId, id) => { const x = book.sections.find(z => z.id === secI
 const S = (s, book, id) => bookOf(s.doc, book, { now }).sections.find(x => x.id === id);
 
 test('every book writes only fields the coach app keeps, on types it knows', () => {
-  const area = { account: 'assets', income: 'income', bill: 'spending', debt: 'debt' };
+  const area = { account: 'assets', income: 'income', bill: 'spending', debt: 'debt', asset: 'assets', coverage: 'protection' };
   for (const book of Object.values(BOOKS)) {
     const a = FIELDS.find(g => g.id === area[book.kind]), keys = new Set(a.fields.map(f => f.key)), types = a.types?.[book.kind] ?? [];
     for (const sec of book.sections) {
@@ -166,4 +166,40 @@ test('what goes out: lines sit beside the rough number until the person says to 
   assert.equal(levelsOf(s.doc).find(l => l.id === 'where').state, 'open'); // getting around is still to come
   const t = addRow(s, OUT_BOOK, 'transport'); renameRow(s, t.id, 'Transit'); setField(s, t.id, G(OUT_BOOK, 'transport', 'amount'), 130, { now });
   assert.equal(levelsOf(s.doc).find(l => l.id === 'where').state, 'done');
+});
+
+import { OWN_BOOK, COVER_BOOK, whereOf, setSure } from '../js/book.js';
+import { pictureOf } from '../js/math/picture.js';
+
+test('things you own: a home and a car go on file the way level 7 puts them', () => {
+  const s = five(), before = metrics(s.doc, ref, { now }).netWorth?.value;
+  const home = addRow(s, OWN_BOOK, 'homes'); setField(s, home.id, G(OWN_BOOK, 'homes', 'value'), 400000, { now });
+  assert.equal(home.type, 'Home'); assert.equal(s.doc.profile.housing, 'Own');
+  const car = addRow(s, OWN_BOOK, 'cars'); setField(s, car.id, G(OWN_BOOK, 'cars', 'value'), 10000, { now });
+  assert.equal(s.doc.profile.hasCar, true); assert.equal(bookOf(s.doc, OWN_BOOK, { now }).total, 410000);
+  assert.equal(addRow(s, OWN_BOOK, 'homes').type, 'Other property');
+  if (before != null) assert.equal(Math.round(metrics(s.doc, ref, { now }).netWorth.value - before), 410000);
+  const loan = addRow(s, DEBT_BOOK, 'car'); assert.equal(s.get(loan.id).linkedTo, car.id); // a car loan added later lands on the same car
+  removeRow(s, car.id); assert.equal(s.get(loan.id).linkedTo, null);
+});
+
+test('insurance: a yes or a no is an answer, and the cost is asked only on a yes', () => {
+  const s = five(); const h = addRow(s, COVER_BOOK, 'health');
+  assert.equal(h.kind, 'coverage'); assert.equal(h.type, 'Health');
+  const row = () => S(s, COVER_BOOK, 'health').rows[0];
+  assert.deepEqual(row().todo, ['have']);
+  setField(s, h.id, G(COVER_BOOK, 'health', 'have'), "Don't", { now }); assert.equal(row().ready, true);
+  setField(s, h.id, G(COVER_BOOK, 'health', 'have'), 'Have it', { now }); assert.deepEqual(row().todo, ['amount']);
+  setField(s, h.id, G(COVER_BOOK, 'health', 'amount'), 250, { now }); assert.equal(row().main, 250); assert.equal(row().ready, true);
+});
+
+test('how sure: a guess, roughly or known moves the whole picture, and each piece knows where it is answered', () => {
+  const s = five(), solid = () => pictureOf(s.doc, ref, { now }).solid;
+  const a = solid(), inv = s.doc.records.find(r => r.type === 'All investments');
+  setSure(s, inv.id, 'Know it'); assert.ok(solid() > a);
+  setSure(s, inv.id, 'Not sure'); assert.ok(solid() < a + 1e-9);
+  const P = pictureOf(s.doc, ref, { now });
+  for (const it of P.items) { const w = whereOf(s.doc, it); assert.ok(['you', 'numbers', 'books'].includes(w.stage), `${it.id}: ${w.stage}`); if (w.stage === 'books') assert.ok(BOOKS[w.book], it.id); }
+  assert.deepEqual(whereOf(s.doc, P.items.find(i => i.kind === 'gut')), { stage: 'numbers', q: 'spending' });
+  assert.equal(whereOf(s.doc, P.items.find(i => i.recId === inv.id)).book, 'have');
 });

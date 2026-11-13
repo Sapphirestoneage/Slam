@@ -155,7 +155,42 @@ export const OUT_BOOK = {
     outSec('other', 'Other', 'Everything else', ['Therapy', 'Childcare', 'Pets', 'Giving', 'Medical', 'Something else'], [50, 100, 200, 400]),
   ],
 };
-export const BOOKS = { debt: DEBT_BOOK, have: HAVE_BOOK, in: IN_BOOK, out: OUT_BOOK };
+
+// ---------- Things you own ----------
+const worth = picks => ({ id: 'value', label: 'What it is worth today', type: 'money', picks });
+const paid = { id: 'purchasePrice', label: 'What you paid for it', type: 'money', picks: null };
+const THING_TYPES = ['Valuables', 'Business', 'Money owed to you'];
+export const OWN_BOOK = {
+  id: 'own', kind: 'asset', title: 'Things you own', main: 'value',
+  sections: [
+    { id: 'homes', title: 'Homes', one: 'Home', add: 'Add a home', types: ['Home', 'Other property'], names: [], front: [worth([200000, 300000, 400000, 600000, 800000])],
+      more: [paid, { id: 'propertyTax', label: 'Property tax a month', type: 'money', picks: [200, 400, 600, 900] }, { id: 'homeInsurance', label: 'Home insurance a month', type: 'money', picks: [75, 125, 200, 300] }, { id: 'hoa', label: 'HOA or maintenance fee a month', type: 'money', picks: [0, 200, 400, 800] }] },
+    { id: 'cars', title: 'Cars', one: 'Car', add: 'Add a car', types: ['Car'], names: [], front: [worth([5000, 10000, 20000, 30000])], more: [paid] },
+    { id: 'things', title: 'Other things', one: 'Thing', add: 'Add something else', types: THING_TYPES, names: [], front: [kindOf(THING_TYPES), worth([1000, 5000, 10000, 25000])], more: [paid] },
+  ],
+};
+
+// ---------- Insurance ----------
+const haveIt = { id: 'have', label: 'Do you have it?', type: 'pick', options: [['Have it', 'Yes'], ["Don't", 'No'], ['Not sure', 'Not sure']] };
+const premium = picks => ({ ...amount(picks, 'What it costs a month'), when: r => r.values.have === 'Have it' });
+const got = f => ({ ...f, when: r => r.values.have === 'Have it' });
+const fromWork = got({ id: 'employer', label: 'Through your job?', type: 'pick', options: [[true, 'Yes'], [false, 'No']] });
+const paidFrom = got({ id: 'paidFrom', label: 'How it is paid', type: 'pick', options: [['Paycheck', 'Out of my paycheck'], ['Budget', 'I pay the bill']] });
+const cover = { per: 'month', values: {} };
+export const COVER_BOOK = {
+  id: 'cover', kind: 'coverage', title: 'Insurance', main: 'amount', mainTop: true, noAmount: 'Tap to answer', words: r => (r.values.have === "Don't" ? 'No' : r.values.have === 'Not sure' ? 'Not sure' : r.values.have === 'Have it' && r.amount == null ? 'Yes' : null),
+  sections: [
+    { id: 'health', title: 'Health', one: 'Health insurance', add: 'Add health insurance', types: ['Health'], names: [], blank: cover, front: [haveIt, premium([0, 100, 250, 400, 600])],
+      more: [fromWork, paidFrom, got({ id: 'deductible', label: 'Deductible', type: 'money', picks: [500, 1500, 3000, 5000] }), got({ id: 'oopMax', label: 'The most you could pay in a year', type: 'money', picks: [3000, 5000, 7500, 9200] })] },
+    { id: 'life', title: 'Life and disability', one: 'Policy', add: 'Add a policy', types: ['Life', 'Disability'], names: [], blank: cover, front: [kindOf(['Life', 'Disability']), haveIt, premium([0, 25, 50, 100, 200])],
+      more: [fromWork, got({ id: 'coverage', label: 'How much it pays out', type: 'money', picks: [100000, 250000, 500000, 1000000], when: r => r.values.have === 'Have it' && r.type === 'Life' }),
+        { id: 'benefitPct', label: 'Share of your pay it replaces', type: 'pct', options: [0.4, 0.5, 0.6, 0.7], when: r => r.values.have === 'Have it' && r.type === 'Disability' },
+        { id: 'term', label: 'Short-term or long-term', type: 'pick', options: pickOf(['Short-term', 'Long-term']), when: r => r.values.have === 'Have it' && r.type === 'Disability' }] },
+    { id: 'stuff', title: 'Home, car and umbrella', one: 'Policy', add: 'Add a policy', types: ['Renters or home', 'Car', 'Umbrella'], names: [], blank: cover, front: [kindOf(['Renters or home', 'Car', 'Umbrella']), haveIt, premium([0, 15, 50, 100, 200])],
+      more: [got({ id: 'deductible', label: 'Deductible', type: 'money', picks: [250, 500, 1000, 2000] }), got({ id: 'coverage', label: 'How much it covers', type: 'money', picks: [25000, 100000, 300000, 1000000] })] },
+  ],
+};
+export const BOOKS = { debt: DEBT_BOOK, have: HAVE_BOOK, in: IN_BOOK, out: OUT_BOOK, own: OWN_BOOK, cover: COVER_BOOK };
 
 // ---------- reading ----------
 const sectionOf = (book, r) => book.sections.find(s => (s.match ? s.match(r) : s.types.includes(r.type))) ?? (book.kind === 'debt' ? book.sections.find(s => s.id === 'other') : book.kind === 'account' ? book.sections.find(s => s.group === r.values?.group) : null) ?? null;
@@ -167,7 +202,7 @@ const shown = (r, f) => !f.when || f.when(r);
 export function rowOf(r, sec, book, now = new Date()) {
   const front = sec.front.filter(f => shown(r, f)), more = sec.more.filter(f => shown(r, f));
   const todo = front.filter(f => fieldValue(r, f, now) == null && !unsureOn(r, f)).map(f => f.id);
-  return { id: r.id, name: r.name, type: r.type, linked: !!r.linkedTo, main: num(book.mainTop ? r[book.main] : r.values?.[book.main]), per: book.per ? book.per(r) : null, todo, ready: todo.length === 0, guessed: front.filter(f => unsureOn(r, f)).map(f => f.id),
+  return { id: r.id, name: r.name, type: r.type, linked: !!r.linkedTo, main: num(book.mainTop ? r[book.main] : r.values?.[book.main]), per: book.per ? book.per(r) : null, words: book.words ? book.words(r) : null, todo, ready: todo.length === 0, guessed: front.filter(f => unsureOn(r, f)).map(f => f.id),
     extras: more.filter(f => fieldValue(r, f, now) != null).length, of: more.length, rec: r };
 }
 // The whole book: [{ ...section, rows, total }], and totals across it.
@@ -186,12 +221,17 @@ export function addRow(store, book, sectionId, { name = null } = {}) {
   return store.transaction(`Add: ${sec.one}`, () => {
     const rows = rowsIn(store.doc, book, sec);
     const first = rows.find(r => totalName(r.name)); if (first) store.update(first.id, { name: `${sec.one} 1` });
-    const label = name ?? (sec.nameFirst ? null : book.kind === 'account' ? sec.types[0] : `${sec.one}${rows.length || sec.id === 'cards' || sec.id === 'student' ? ` ${rows.length + 1}` : ''}`);
+    const label = name ?? (sec.nameFirst ? null : book.kind === 'account' || book.kind === 'coverage' || book.kind === 'asset' ? sec.types[0] : `${sec.one}${rows.length || sec.id === 'cards' || sec.id === 'student' ? ` ${rows.length + 1}` : ''}`);
     if (book.kind === 'debt' && (sec.id === 'car' || sec.id === 'home') && !rows.some(r => r.linkedTo)) {
       applyFastTrack(store, sec.id === 'car' ? { hasCar: true, carLoanBalance: 0 } : { housing: 'Own', homeLoan: 'Mortgage' });
       const asset = store.doc.records.find(r => r.kind === 'asset' && r.type === (sec.id === 'car' ? 'Car' : 'Home'));
       const made = store.doc.records.find(r => r.kind === 'debt' && r.linkedTo === asset?.id);
       if (made) { store.update(made.id, { balance: null }); return made; }
+    }
+    if (book.kind === 'asset' && (sec.id === 'homes' || sec.id === 'cars')) {
+      const type = sec.id === 'homes' ? 'Home' : 'Car';
+      if (!store.doc.records.some(r => r.kind === 'asset' && r.type === type)) { applyFastTrack(store, type === 'Home' ? { housing: 'Own' } : { hasCar: true }); return store.doc.records.find(r => r.kind === 'asset' && r.type === type); }
+      return store.add('asset', { name: type === 'Home' ? 'Another property' : `Car ${rows.length + 1}`, values: {} }, { type: type === 'Home' ? 'Other property' : 'Car' });
     }
     const blank = sec.blank ?? {};
     const made = store.add(book.kind, { name: label, ...blank, values: { ...(blank.values || {}), ...(sec.group ? { group: sec.group } : {}) } }, { type: sec.types[0] ?? null });
@@ -223,7 +263,11 @@ export function renameRow(store, id, name) { const r = store.doc.records.find(x 
 // Take a row off. A loan on a home or car comes off with the home or car marked paid off.
 export function removeRow(store, id) {
   const r = store.doc.records.find(x => x.id === id); if (!r) return;
-  store.transaction('Deleted', () => { if (r.linkedTo) store.update(r.linkedTo, { financed: 'Paid off' }); store.remove(id); });
+  store.transaction('Deleted', () => {
+    if (r.kind === 'debt' && r.linkedTo) store.update(r.linkedTo, { financed: 'Paid off' });
+    if (r.kind === 'asset') for (const d of store.doc.records.filter(x => x.kind === 'debt' && x.linkedTo === id)) store.update(d.id, { linkedTo: null }); // its loan stays on file, on its own
+    store.remove(id);
+  });
 }
 
 // ---------- How sure, and where a number lives ----------
@@ -231,7 +275,7 @@ export function removeRow(store, id) {
 export const SURE = [['Not sure', 'A guess'], ['Roughly', 'Roughly'], ['Know it', 'I know it']];
 export const sureOf = r => r.status ?? null;
 export function setSure(store, id, status) { store.transaction('How sure', () => { store.setStatus(id, status); if (status === 'Know it') { const r = store.doc.records.find(x => x.id === id); for (const k of Object.keys(r?.fieldStatus || {})) if (r.fieldStatus[k] === 'Not sure' && has(r.values?.[k])) store.setFieldStatus(id, k, null); } }); }
-const BOOK_OF_KIND = { income: 'in', bill: 'out', account: 'have', debt: 'owe' };
+const BOOK_OF_KIND = { income: 'in', bill: 'out', account: 'have', debt: 'debt', asset: 'own', coverage: 'cover' };
 // Where one piece of the whole picture (js/math/picture.js) is answered in the self-serve app:
 // { stage, q } for one of the five questions, { stage: 'books', book, row } for a line, { stage: 'you' } for the age.
 export function whereOf(doc, it) {
@@ -239,6 +283,5 @@ export function whereOf(doc, it) {
   const r = it.recId ? (doc.records || []).find(x => x.id === it.recId) : null;
   if (r?.kind === 'spending' || it.group === 'spending' && !r) return it.kind === 'category' ? { stage: 'books', book: 'out', row: null } : { stage: 'numbers', q: 'spending' };
   if (r && BOOK_OF_KIND[r.kind]) return { stage: 'books', book: BOOK_OF_KIND[r.kind], row: r.id };
-  if (r?.kind === 'asset') return { stage: 'sharpen', flash: 'own' };
   return { stage: 'numbers', q: it.group === 'income' ? 'income' : it.group === 'debt' ? 'card' : it.sub === 'invested' ? 'invested' : it.group === 'account' ? 'cash' : 'spending' };
 }
