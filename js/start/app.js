@@ -118,6 +118,7 @@ function top() {
     h('nav.st-stages', { 'aria-label': 'Sections' }, TABS.map(([id, label]) => tab(id, label)),
       h('button.st-stage', { type: 'button', 'aria-expanded': ui.more ? 'true' : 'false', 'aria-current': inMore ? 'page' : null, onClick: () => { ui.more = !ui.more; top(); } }, 'More')),
     ui.more ? h('div.st-more', {}, MORE_GROUPS.map(([title, items]) => [h('div.st-more-h', {}, title), items.map(([id, label]) => h('button.st-btn', { type: 'button', disabled: !p.hasAge && STAGES.find(x => x.id === id)?.needs === 'age', 'aria-current': ui.stage === id ? 'page' : null, onClick: () => { ui.more = false; go(id); } }, label))]),
+      h('button.st-btn.text', { type: 'button', onClick: () => { ui.more = false; remember({ guideOff: !mine().guideOff }); render(); } }, mine().guideOff ? 'Show my next step' : 'Hide my next step'),
       h('button.st-btn.text', { type: 'button', onClick: () => { ui.more = false; top(); tour(0); } }, 'How this works')) : null);
 }
 
@@ -133,16 +134,19 @@ function track(p, pl) {
 }
 
 // ---------- You are here: one thing to do next, and what is already done ----------
-function guideCard(p) {
+function guideCard(p, slim = false) {
+  const off = !!mine().guideOff, hide = v => { remember({ guideOff: v }); render(); };
+  if (off) return slim ? null : h('div.st-row', {}, btn('Show my next step', () => hide(false), 'slim'));
   const m = mine(), W = worryOf(m.worry), d = m.done || {}, L = p.done ? levelsOf(store.doc, ref) : [];
   const G = guideOf({ hasAge: p.hasAge, answered: p.count, total: p.total, nextQ: p.next,
     worry: W ? { label: W.label, steps: W.steps.length, ticked: W.steps.filter((_, i) => d[`worry:${W.id}:${i}`]).length } : null,
     levels: L.map(l => ({ id: l.id, n: l.n, title: l.title, state: l.state })), statement: !!m.audit, checkup: checkupOf(m.checkup || {}),
     dates: (m.dates || []).length, lastDate: datesOf(m.dates || []).last?.at ?? null, today: new Date().toISOString().slice(0, 10),
     drills: Object.keys(d).filter(k => d[k] && /^(drill|skill):/.test(k)).length, receipts: (m.receipts || []).length });
-  const n = G.next, act = () => (n.stage === 'numbers' ? go('numbers', { q: n.q }) : n.stage === 'plan' && n.flash ? (ui.flash = n.flash, ui.stepsOpen = true, render()) : go(n.stage, { flash: n.flash }));
+  const n = G.next, act = () => (n.stage === 'numbers' ? go('numbers', { q: n.q }) : n.stage === 'plan' && n.flash ? (ui.stepsOpen = true, ui.stage === 'plan' ? (ui.flash = n.flash, render()) : go('plan', { flash: n.flash })) : go(n.stage, { flash: n.flash }));
+  if (slim) return n.caughtUp ? null : h('div.st-nextbar', { role: 'region', 'aria-label': 'Your next step' }, h('strong', {}, 'Next'), btn(n.label, act, 'slim primary'), btn('Hide', () => hide(true), 'slim text'));
   return h('div.st-card.st-guide', {},
-    h('div.st-eyebrow', {}, 'You are here'), h('h2', { style: { margin: '0 0 8px' } }, n.here),
+    h('div.st-row.end', {}, h('div', {}, h('div.st-eyebrow', {}, 'You are here'), h('h2', { style: { margin: '0 0 8px' } }, n.here)), btn('Hide', () => hide(true), 'slim text')),
     n.caughtUp ? h('p', { style: { margin: 0 } }, 'Nothing is waiting on you. Come back next month for your money date, or explore anything you like.')
       : h('div.st-row', {}, btn(`Do this next: ${n.label}`, act, 'primary big'), n.minutes ? h('span.st-small.st-soft', {}, `About ${n.minutes} ${n.minutes === 1 ? 'minute' : 'minutes'}`) : null),
     G.done.length ? h('details.st-fold', {}, h('summary', {}, `What you have done (${G.done.length})`), h('ul.st-list', {}, G.done.map(t => h('li.done', {}, h('span.dot', {}, '✓'), h('span', {}, t))))) : null);
@@ -990,7 +994,7 @@ function render() {
   if (!p.hasAge && STAGES.find(s => s.id === ui.stage)?.needs === 'age') ui.stage = 'you';
   const pl = p.hasAge ? plan() : null;
   top(); track(p, pl);
-  clear($('main'), backBar(), SCREENS[ui.stage](p, pl));
+  clear($('main'), backBar(), p.hasAge && !['plan', 'you', 'numbers'].includes(ui.stage) ? guideCard(p, true) : null, SCREENS[ui.stage](p, pl));
   foot();
   const lit = $('main').querySelector('.flash');
   if (lit) { lit.querySelector('details')?.setAttribute('open', ''); lit.closest('details')?.setAttribute('open', ''); setTimeout(() => lit.scrollIntoView({ block: 'center' }), 0); }
