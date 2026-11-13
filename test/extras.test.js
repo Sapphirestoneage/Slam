@@ -127,3 +127,20 @@ test('can I afford this, uneven pay, and overlapping subscriptions, by hand', ()
   assert.equal(unevenOf({ low: 5000, usual: 4000, high: 8000 }), null);
   const o = overlapOf({ video: true, music: true }, 15, { doc: {}, run: fake }); assert.equal(o.monthly, 30); assert.equal(o.yearly, 360); assert.equal(o.moved, 3); assert.deepEqual(o.groups, ['Streaming video', 'Music']);
 });
+
+import { guideOf } from '../js/extras.js';
+test('you are here: one next thing, in order, and what is already done', () => {
+  const L = (states) => states.map((s, i) => ({ id: ['where', 'owe', 'work'][i], n: i + 2, title: `T${i}`, state: s }));
+  const base = { hasAge: true, answered: 5, total: 5, levels: L(['open', 'open', 'open']), checkup: { answered: 0, of: 11 }, today: '2026-11-12' };
+  assert.equal(guideOf({ hasAge: false, answered: 0, total: 5 }).next.stage, 'you');
+  const q = guideOf({ ...base, answered: 2, nextQ: 'cash' }).next; assert.equal(q.stage, 'numbers'); assert.equal(q.q, 'cash'); assert.equal(q.here, 'Question 3 of 5');
+  assert.equal(guideOf({ ...base, worry: { label: 'A baby is on the way', ticked: 0, steps: 4 } }).next.flash, 'worry');
+  assert.equal(guideOf({ ...base, worry: { label: 'x', ticked: 1, steps: 4 } }).next.flash, 'statement');
+  const lv = guideOf({ ...base, statement: true }).next; assert.equal(lv.flash, 'where'); assert.equal(lv.here, 'Level 2 of 4 is next');
+  assert.equal(guideOf({ ...base, levels: L(['done', 'open', 'done']) }).next.flash, 'owe');
+  const allDone = { ...base, levels: L(['done', 'done', 'done']) };
+  assert.equal(guideOf(allDone).next.flash, 'checkup'); assert.equal(guideOf({ ...allDone, checkup: { answered: 11, of: 11 } }).next.stage, 'date');
+  const end = guideOf({ ...allDone, checkup: { answered: 11, of: 11 }, lastDate: '2026-11-03', dates: 2, drills: 1, receipts: 1, statement: true });
+  assert.ok(end.next.caughtUp); assert.equal(end.done.length, 8); assert.ok(end.done.includes('2 money dates'));
+  assert.equal(guideOf({ ...allDone, checkup: { answered: 11, of: 11 }, lastDate: '2026-10-03' }).next.stage, 'date');
+});

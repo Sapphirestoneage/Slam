@@ -17,7 +17,7 @@ import { WORRIES, WORRY_GROUPS, worryOf, WORRY_TOOLS, MIRROR_TOOLS, TOOL_GROUPS 
 import { homeOf, scheduleOf, rentOrBuy, HOME_PRICES, HOME_DOWNS, HOME_RATES, HOME_NOW, HOME_PMI, HOME_CLOSING, HOME_GUESS, HOME_GROWTHS, HOME_INVEST, HOME_HORIZONS, HOME_RENT_GROWTHS, HOME_SELLING, interestNote } from '../home.js';
 import { MIRRORS, mirrorOf, pctToFi, snapshotOf, auditOf, auditWords, FEELINGS, valuesOf, sinceWords } from '../mirror.js';
 import { readFile } from '../import/apps.js';
-import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP, flowTimeOf, designOf, LIFE_AGES, LIFE_PLACE, LIFE_WORK, LIFE_TRAVEL, LIFE_GIVE, receiptOf, CHOICES, PAY_STEPS, COST_STEPS, FEELS, FEEL_SIDES, LINES, seriesOf, PRICES, affordOnce, PAY_PICKS, unevenOf, OVERLAPS, SUB_PRICES, overlapOf } from '../extras.js';
+import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP, flowTimeOf, designOf, LIFE_AGES, LIFE_PLACE, LIFE_WORK, LIFE_TRAVEL, LIFE_GIVE, receiptOf, CHOICES, PAY_STEPS, COST_STEPS, FEELS, FEEL_SIDES, guideOf, LINES, seriesOf, PRICES, affordOnce, PAY_PICKS, unevenOf, OVERLAPS, SUB_PRICES, overlapOf } from '../extras.js';
 import { dedupe, importTransactions } from '../import/csv.js';
 
 const [ref, priors, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/priors-2026.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
@@ -130,6 +130,22 @@ function track(p, pl) {
     h('span.st-pips', { role: 'img', 'aria-label': line }, p.done ? Array.from({ length: sh.total }, (_, i) => h(`i${i < sh.done ? '.on' : ''}`)) : QUESTIONS.map(q => h(`i${p.answered[q.key] ? '.on' : ''}`))),
     h('span.st-trackline', {}, line),
     !p.done && ui.stage !== 'numbers' ? btn(p.count ? 'Keep going' : 'Start', () => go('numbers', { q: p.next }), 'slim primary') : null);
+}
+
+// ---------- You are here: one thing to do next, and what is already done ----------
+function guideCard(p) {
+  const m = mine(), W = worryOf(m.worry), d = m.done || {}, L = p.done ? levelsOf(store.doc, ref) : [];
+  const G = guideOf({ hasAge: p.hasAge, answered: p.count, total: p.total, nextQ: p.next,
+    worry: W ? { label: W.label, steps: W.steps.length, ticked: W.steps.filter((_, i) => d[`worry:${W.id}:${i}`]).length } : null,
+    levels: L.map(l => ({ id: l.id, n: l.n, title: l.title, state: l.state })), statement: !!m.audit, checkup: checkupOf(m.checkup || {}),
+    dates: (m.dates || []).length, lastDate: datesOf(m.dates || []).last?.at ?? null, today: new Date().toISOString().slice(0, 10),
+    drills: Object.keys(d).filter(k => d[k] && /^(drill|skill):/.test(k)).length, receipts: (m.receipts || []).length });
+  const n = G.next, act = () => (n.stage === 'numbers' ? go('numbers', { q: n.q }) : n.stage === 'plan' && n.flash ? (ui.flash = n.flash, ui.stepsOpen = true, render()) : go(n.stage, { flash: n.flash }));
+  return h('div.st-card.st-guide', {},
+    h('div.st-eyebrow', {}, 'You are here'), h('h2', { style: { margin: '0 0 8px' } }, n.here),
+    n.caughtUp ? h('p', { style: { margin: 0 } }, 'Nothing is waiting on you. Come back next month for your money date, or explore anything you like.')
+      : h('div.st-row', {}, btn(`Do this next: ${n.label}`, act, 'primary big'), n.minutes ? h('span.st-small.st-soft', {}, `About ${n.minutes} ${n.minutes === 1 ? 'minute' : 'minutes'}`) : null),
+    G.done.length ? h('details.st-fold', {}, h('summary', {}, `What you have done (${G.done.length})`), h('ul.st-list', {}, G.done.map(t => h('li.done', {}, h('span.dot', {}, '✓'), h('span', {}, t))))) : null);
 }
 
 // ---------- One number, several pictures: the person picks the one that reads best to them ----------
@@ -320,7 +336,7 @@ function yourPlan(p, pl) {
       : h('div.st-row', {}, h('span', {}, 'Have a start date or an offer in mind?'), btn('Add the job ahead', () => go('sharpen', { flash: 'ahead' }), 'slim primary')),
     B.job ? h('div.st-row', {}, btn('I started this job', () => { startJob(store, ref); ui.note = null; render(); window.scrollTo({ top: 0 }); }), btn('Change the job ahead', () => go('sharpen', { flash: 'ahead' }), 'text')) : null) : null;
   const W = worryOf(mine().worry), done = mine().done || {};
-  const worry = W ? h('div.st-card', {},
+  const worry = W ? h(`div.st-card${ui.flash === 'worry' ? '.flash' : ''}`, {},
     h('div.st-row.end', {}, h('div', {}, h('div.st-eyebrow', {}, 'You came here for'), h('h2', { style: { margin: 0 } }, W.label)), btn('Change', () => go('you'), 'slim')),
     h('div.st-row', { style: { marginTop: '10px' } }, W.see.map(([label, stage, at], i) => btn(label, () => (stage === 'numbers' ? go('numbers', { q: at ?? p.next ?? QUESTIONS[0].key }) : go(stage, { flash: at })), i ? 'slim' : 'primary'))),
     W.why ? h('details.st-fold', {}, h('summary', {}, 'Why many people leave it'), h('ul.st-why', {}, W.why.map(t => h('li', {}, t)))) : null,
@@ -369,6 +385,7 @@ function yourPlan(p, pl) {
       h('div.st-row', {}, btn('What do I love spending on?', () => go('tune', { flash: 'values' }), 'primary'), btn('Price a monthly cost', () => go('tune', { flash: 'price' })))),
   };
   return [
+    guideCard(p),
     ui.since ? h('div.st-note', { role: 'status' }, ui.since) : null,
     worry,
     gap,

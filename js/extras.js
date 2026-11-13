@@ -281,3 +281,29 @@ export function overlapOf(marked = {}, each = 12, { doc, ref, priors, now = new 
   const w = monthly > 0 && doc ? run(doc, ref, priors, { spendLess: monthly }, { now }) : null;
   return { groups: groups.map(g => g[1]), monthly, yearly: monthly * 12, moved: w?.moved ?? null, date: w?.date ?? null };
 }
+
+// ---------- You are here: one next thing to do, and what is already done. ----------
+// facts: { hasAge, answered, total, nextQ, worry: { label, ticked, steps } | null, levels: [{ id, n, title, state }],
+//          statement, checkup: { answered, of }, dates, lastDate, today, drills, receipts }
+export function guideOf(f) {
+  const done = [], open = (f.levels || []).filter(l => l.state === 'open'), finished = (f.levels || []).filter(l => l.state !== 'open');
+  if (f.hasAge) done.push('Picked your birth year: your plan exists');
+  if (f.answered > 0) done.push(`Answered ${f.answered} of ${f.total} questions`);
+  if (f.worry?.ticked > 0) done.push(`${f.worry.ticked} of ${f.worry.steps} first steps on "${f.worry.label}"`);
+  if (f.statement) done.push('Put your real spending in from a statement');
+  if (finished.length) done.push(`Finished ${finished.length} of ${f.levels.length} levels`);
+  if (f.checkup?.answered > 0) done.push(`Checkup: ${f.checkup.answered} of ${f.checkup.of} answered`);
+  if (f.drills > 0) done.push(`Practiced ${f.drills} ${f.drills === 1 ? 'drill or skill' : 'drills and skills'}`);
+  if (f.receipts > 0) done.push(`Made ${f.receipts} ${f.receipts === 1 ? 'choice' : 'choices'} with a receipt`);
+  if (f.dates > 0) done.push(`${f.dates} money ${f.dates === 1 ? 'date' : 'dates'}`);
+  const thisMonth = f.lastDate && f.today && f.lastDate.slice(0, 7) === f.today.slice(0, 7);
+  const next = !f.hasAge ? { here: 'The very start', label: 'Pick the year you were born', stage: 'you', minutes: 1 }
+    : f.answered < f.total ? { here: `Question ${f.answered + 1} of ${f.total}`, label: `Answer question ${f.answered + 1}`, stage: 'numbers', q: f.nextQ, minutes: 1 }
+    : f.worry && f.worry.ticked === 0 ? { here: 'Your plan is yours. Now the thing you came for', label: `Do the first step on "${f.worry.label}"`, stage: 'plan', flash: 'worry', minutes: 5 }
+    : !f.statement && open.some(l => l.id === 'where') ? { here: 'Your plan runs on a spending number from memory', label: 'Use a statement, so it runs on the real one', stage: 'sharpen', flash: 'statement', minutes: 5 }
+    : open.length ? { here: `Level ${open[0].n} of ${f.levels.length + 1} is next`, label: `Level ${open[0].n}: ${open[0].title}`, stage: 'sharpen', flash: open[0].id, minutes: 3 }
+    : (f.checkup?.answered ?? 0) < (f.checkup?.of ?? 0) ? { here: 'Every level is done', label: 'Do the checkup: what a planner would ask', stage: 'sharpen', flash: 'checkup', minutes: 3 }
+    : !thisMonth ? { here: 'Your plan is sharp', label: 'Do this month\'s money date', stage: 'date', minutes: 5 }
+    : { here: 'You are all caught up', label: 'See your plan', stage: 'plan', minutes: 0, caughtUp: true };
+  return { next, done };
+}
