@@ -3,7 +3,8 @@
 // choices about the future, and the stress tests. It only shows what the engine returns. The choices and blocks are
 // this screen's own (kept in the browser beside the plan, not in the household file yet: QUESTIONS.md).
 import { h } from '../ui/dom.js';
-import { fmt } from '../math/result.js';
+import { fmt as fmt0 } from '../math/result.js';
+const fmt = { ...fmt0, pct: v => fmt0.pct(v).replace(/\.0%$/, '%') }; // 22%, not 22.0%: a whole percent reads as one
 import { lifeOf, stressOf, strategiesOf, fillsOf, claimsOf, DEFAULTS } from '../lifetime/inputs.js';
 import { STRATEGIES } from '../math/lifetime.js';
 import { lifeChart } from './charts-ui.js';

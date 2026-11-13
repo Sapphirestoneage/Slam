@@ -297,7 +297,7 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-solid .st-solidmark { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; border: 2px solid var(--text-2); flex: none; }
 .st-solid .st-solidtitle { flex: 1; min-width: 0; display: grid; } .st-solid .st-solidtitle strong { font-weight: 600; } .st-solid small { font-size: .875rem; }
 .st-changed { border: 3px solid var(--primary); }
-.st-donebar { display: flex; align-items: center; gap: 10px; font-size: .875rem; font-weight: 700; margin: 4px 0 4px; }
+.st-donebar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: .875rem; font-weight: 700; margin: 4px 0 4px; }
 .st-map { position: relative; padding: 4px 0 8px; }
 .st-maplines { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
 .st-edge { fill: none; stroke: var(--border-input); stroke-width: 2; opacity: .55; stroke-dasharray: 4 5; }
@@ -345,3 +345,4 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-picbar i.gut, .st-piclegend i.gut { background: repeating-linear-gradient(45deg, var(--guess) 0 4px, var(--card) 4px 8px); } .st-picbar i.missing, .st-piclegend i.missing { background: var(--card); }
 .st-piclegend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: .875rem; } .st-piclegend span { display: inline-flex; align-items: center; gap: 6px; } .st-piclegend i { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border-input); display: inline-block; }
 .st-picnext { display: grid; justify-content: stretch; text-align: left; gap: 2px; height: auto; min-height: 48px; padding: 6px 12px; width: 100%; justify-items: start; white-space: normal; }
+.st-donebar .st-pips { flex: 1 1 100%; } .st-donebar > span:last-child { white-space: nowrap; }

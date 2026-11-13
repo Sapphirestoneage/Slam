@@ -2,7 +2,8 @@
 // The journey's four pictures, drawn as plain SVG from the points js/charts.js returns (no chart library, so they load
 // instantly on a phone and work offline). Every picture has its numbers in words beside it; color is never the only cue.
 import { h } from '../ui/dom.js';
-import { fmt } from '../math/result.js';
+import { fmt as fmt0 } from '../math/result.js';
+const fmt = { ...fmt0, pct: v => fmt0.pct(v).replace(/\.0%$/, '%') }; // 22%, not 22.0%: a whole percent reads as one
 
 const NS = 'http://www.w3.org/2000/svg';
 const s = (tag, attrs = {}, ...kids) => { const el = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) if (v != null) el.setAttribute(k, v); for (const k of kids.flat(Infinity)) if (k != null) el.append(k); return el; };
