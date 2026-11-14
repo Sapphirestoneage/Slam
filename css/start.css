@@ -347,3 +347,8 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-picnext { display: grid; justify-content: stretch; text-align: left; gap: 2px; height: auto; min-height: 48px; padding: 6px 12px; width: 100%; justify-items: start; white-space: normal; }
 .st-donebar .st-pips { flex: 1 1 100%; } .st-donebar > span:last-child { white-space: nowrap; }
 .st-donebar .st-pips { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+/* Done and solid: a finished level or question goes quiet */
+.st-level.done.compact, details.st-level.done:not([open]) { background: transparent; box-shadow: none; border-style: dashed; } .st-level.done.compact h2 { color: var(--text-2); font-weight: 600; }
+.st-donetag { display: inline-flex; align-items: center; gap: 6px; font-size: .875rem; font-weight: 700; color: var(--good); border: 2px solid var(--good); border-radius: 999px; padding: 2px 10px; margin: 0 0 8px; }
+.st-srow3 { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; padding: 5px 0; text-align: right; font-size: .9375rem; } .st-srow3 span:first-child { text-align: left; } .st-srow3.head { font-weight: 700; }
+.st-part { display: grid; grid-template-columns: 20px 1fr auto; gap: 8px; align-items: center; justify-content: stretch; width: 100%; text-align: left; height: auto; min-height: 44px; white-space: normal; } .st-part.done { border-style: dashed; color: var(--text-2); }

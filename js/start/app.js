@@ -22,7 +22,7 @@ import { MAP_TIERS, mapOf } from '../map.js';
 import { DEBT_BOOK, HAVE_BOOK, IN_BOOK, OUT_BOOK, OWN_BOOK, COVER_BOOK, bookOf, whereOf } from '../book.js';
 import { bookUI, openRow } from './book-ui.js';
 import { pictureOf, nextSmallThings } from '../math/picture.js';
-import { quitOf, yearEndOf } from '../extras.js';
+import { quitOf, yearEndOf, twoHomesOf, HOME_COSTS, HOME_SPANS, aprilOf, aprilPicks } from '../extras.js';
 import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP, flowTimeOf, designOf, LIFE_AGES, LIFE_PLACE, LIFE_WORK, LIFE_TRAVEL, LIFE_GIVE, receiptOf, CHOICES, PAY_STEPS, COST_STEPS, FEELS, FEEL_SIDES, guideOf, LINES, seriesOf, PRICES, affordOnce, PAY_PICKS, unevenOf, OVERLAPS, SUB_PRICES, overlapOf } from '../extras.js';
 import { dedupe, importTransactions } from '../import/csv.js';
 
@@ -153,9 +153,15 @@ function mapScreen(p, pl) {
   const G = p.hasAge ? guideNow(p) : null, nextId = !p.hasAge ? 'age' : G.next.caughtUp || m.guideOff ? null : nodeOfNext(G.next), nextNode = M.nodes.find(n => n.id === nextId) ?? null;
   const sel = M.nodes.find(n => n.id === ui.mapSel) ?? null, name = id => M.nodes.find(n => n.id === id).name;
   const WORD = { done: 'Done', ready: 'Ready', waiting: 'Waiting' };
+  // A point that stands for several things opens into them: each one with its own mark and its own tap.
+  const TOOL_NAMES = { price: 'The real price of a thing', afford: 'Can I afford this?', values: 'What I love spending on', overlap: 'Subscriptions that do the same job', spendMore: 'How much more could I spend?', raise: 'What is a raise worth to me?', uneven: 'My pay is uneven', moves: 'Which move fits my life?', fees: 'What are my fees costing me?', next: 'Which account gets my next dollar?' };
+  const tools = ids => ids.map(id => ({ name: TOOL_NAMES[id], done: solid(id), open: () => go('tune', { flash: id }) }));
+  const PARTS = { levels: L.filter(l => l.state !== 'skip').map(l => ({ name: `Level ${l.n}: ${l.title}`, done: l.state !== 'open', open: () => go('sharpen', { flash: l.id }) })),
+    spendTools: tools(['price', 'afford', 'values', 'overlap', 'spendMore']), earnTools: tools(['raise', 'uneven', 'moves']), fees: tools(['fees', 'next']) };
+  const partsOf = n => PARTS[n.id] ?? [], countOf = n => { const ps = partsOf(n); return ps.length ? `${ps.filter(x => x.done).length} of ${ps.length}` : null; };
   const open = n => (n.go.stage === 'numbers' ? go('numbers', { q: n.go.q }) : go(n.go.stage, { flash: n.go.flash }));
   const node = n => h(`button.st-node.${n.state}${n.id === nextId ? '.st-pulse.is-next' : ''}${sel?.id === n.id ? '.sel' : ''}${sel && (sel.needs.includes(n.id) || sel.feeds.includes(n.id)) ? '.near' : ''}`, { type: 'button', 'data-node': n.id, 'aria-pressed': sel?.id === n.id ? 'true' : 'false', onClick: () => { ui.mapSel = sel?.id === n.id ? null : n.id; render(); } },
-    h('span.st-nodemark', {}, n.state === 'done' ? '✓' : n.state === 'ready' ? '›' : ''), h('span.st-nodename', {}, n.name), h('span.st-nodeword', {}, n.id === nextId ? 'Do this next' : WORD[n.state]));
+    h('span.st-nodemark', {}, n.state === 'done' ? '✓' : n.state === 'ready' ? '›' : ''), h('span.st-nodename', {}, n.name), h('span.st-nodeword', {}, n.id === nextId ? 'Do this next' : countOf(n) && n.state !== 'waiting' ? `${countOf(n)} done` : WORD[n.state]));
   return [
     h('div.st-card.hero', {}, h('h1', {}, 'Your map'), h('p', { style: { marginBottom: '8px' } }, 'Everything you tell the app feeds what it can show you next. Tap any point to see what goes into it and what it leads to.'),
       h('div.st-donebar', { role: 'status' }, h('span', {}, `${M.done} done, ${M.ready} ready, ${M.waiting} waiting on an answer`)),
@@ -164,6 +170,7 @@ function mapScreen(p, pl) {
       h('div.st-row.end', {}, h('div', {}, h('div.st-eyebrow', {}, WORD[sel.state]), h('h2', { style: { margin: 0 } }, sel.name)), btn('Close', () => { ui.mapSel = null; render(); }, 'slim text')),
       h('p', { style: { margin: '6px 0' } }, sel.gives),
       h('dl.st-kv', {}, sel.needs.length ? [h('dt', {}, 'Goes into it'), h('dd', {}, sel.needs.map(name).join(', '))] : null, sel.missing.length ? [h('dt', {}, 'Still needs'), h('dd', {}, h('strong', {}, sel.missing.join(', ')))] : null, sel.feeds.length ? [h('dt', {}, 'Leads to'), h('dd', {}, sel.feeds.map(name).join(', '))] : null),
+      partsOf(sel).length && sel.state !== 'waiting' ? h('div.st-ticks', { style: { marginTop: '8px' } }, partsOf(sel).map(x => h(`button.st-btn.slim.st-part${x.done ? '.done' : ''}`, { type: 'button', onClick: x.open }, h('span', { 'aria-hidden': 'true' }, x.done ? '✓' : '›'), h('span', {}, x.name), h('span.st-small', {}, x.done ? 'Done' : 'Open')))) : null,
       h('div.st-row', { style: { marginTop: '8px' } }, btn(sel.state === 'waiting' ? `Answer ${sel.missing[0].toLowerCase()} first` : sel.state === 'done' ? 'Open it' : 'Go', () => (sel.state === 'waiting' ? open(M.nodes.find(n => n.name === sel.missing[0])) : open(sel)), 'primary'))) : null,
     h('div.st-map', { id: 'map' }, MAP_TIERS.map(([k, label]) => h('section.st-tier', {}, h('h2.st-tier-h', {}, label), h('div.st-tier-row', {}, M.nodes.filter(n => n.tier === k).map(node))))),
     h('script', { type: 'application/json', id: 'map-edges' }, JSON.stringify({ edges: M.edges, sel: sel?.id ?? null, state: Object.fromEntries(M.nodes.map(n => [n.id, n.state])) })),
@@ -388,6 +395,7 @@ function numbers(p, pl) {
         h('div.st-qdots', { role: 'tablist', 'aria-label': 'The five questions' }, QS.map((x, i) => h(`button${p.answered[x.key] ? '.done' : ''}`, { type: 'button', 'aria-current': x.key === key ? 'true' : null, title: p.answered[x.key] ? 'Answered. Tap to change it.' : 'Not answered yet', onClick: () => go('numbers', { q: x.key }) }, `${p.answered[x.key] ? '✓ ' : ''}${i + 1}`))),
         h('div.st-eyebrow', {}, `Question ${at + 1} of ${QUESTIONS.length}`),
         h('h1', {}, q.title),
+        p.answered[key] ? h('div.st-donetag', {}, h('span', { 'aria-hidden': 'true' }, '✓'), ' Answered. Solid for now: change it only if something changed.') : null,
         h('p.st-soft', {}, owes ? 'Add each card and loan on its own. What you owe today is enough for now.' : way === 'salary' || way === 'hourly' ? 'We work out the taxes for you.' : parts ? 'Fill in the ones you know. Leave the rest empty.' : q.help),
         addUp,
         owes ? bookUI({ store, book: DEBT_BOOK, front: ['balance'], pulse: guideOn(), btn, chip, onState: st => { ui.bookState = st; requestAnimationFrame(() => { const b = document.querySelector('#main .st-btn.primary.big'), a = document.querySelector('#main .st-booksec .st-bookhead .st-btn'); const inBook = document.querySelector('#main .st-book .st-pulse'); b?.classList.toggle('st-pulse', guideOn() && !inBook && st.count > 0); a?.classList.toggle('st-pulse', guideOn() && !inBook && st.count === 0); }); } }) : h(`div.st-boxes${parts ? '.tight' : ''}`, {}, boxes.map(box)),
@@ -470,7 +478,7 @@ function yourPlan(p, pl) {
         : STEP_DO[s.id] ? h('div.st-do', {}, h('div.st-eyebrow', {}, 'Do this week'), h('div', {}, STEP_DO[s.id])) : null,
       credit('foo'),
       h('details.st-fold', { style: { marginTop: '10px' } }, h('summary', {}, 'See the whole order'),
-        h('ol.st-list', {}, pl.steps.map((x, i) => h(`li${x.status === 'Done' ? '.done' : x.status === 'You are here' ? '.here' : ''}`, {}, h('span.dot', {}, x.status === 'Done' ? '✓' : i + 1), h('span', {}, x.name), h('span.when', {}, x.status)))))) : null,
+        h('ol.st-list', {}, pl.steps.map(x => (String(x.id) === '2' && x.status === 'Done' && levelsOf(store.doc).find(l => l.id === 'work')?.state === 'open' ? { ...x, status: 'Check it in level 4' } : x)).map((x, i) => h(`li${x.status === 'Done' ? '.done' : x.status === 'You are here' ? '.here' : ''}`, {}, h('span.dot', {}, x.status === 'Done' ? '✓' : i + 1), h('span', {}, x.name), h('span.when', {}, x.status)))))) : null,
     tiles: h('div.st-tiles', {}, tile('Left over each month', N('surplus')), tile('Savings rate', N('savingsRate')), tile('How long your cash lasts', N('runway')), tile('Net worth', N('netWorth'))),
     milestones: h(`div.st-card${ui.flash === 'milestones' ? '.flash' : ''}`, {},
       h('div.st-eyebrow', {}, 'Milestones'),
@@ -509,7 +517,7 @@ function see(p, pl) {
     const on = ui.lever.spendLess || ui.lever.earnMore, w = on ? whatIf(store.doc, ref, priors, ui.lever) : null;
     const g = growthOf(w?.m ?? pl.m, { age: pl.age });
     if (g) g.marks = [[100000, 'First $100K'], [leanT, 'Needs only']].filter(([v]) => v > 0 && v < g.target * 0.9);
-    hold.replaceChildren(g ? growthChart(g) : h('p.st-soft', {}, 'This picture shows once there is money left over to invest.'));
+    hold.replaceChildren(g ? views('growth', [['chart', 'Chart', () => growthChart(g)], ['table', 'Numbers', () => h('div.st-rows', {}, h('div.st-srow3.head', {}, h('span', {}, 'Year'), h('span', {}, 'Put in'), h('span', {}, 'Total')), g.rows.filter((r, i) => i === 0 || i === g.rows.length - 1 || r.month % 60 === 0).map(r => h('div.st-srow3', {}, h('span', {}, `${r.year}${r.age != null ? ` (age ${r.age})` : ''}`), h('span', {}, money(Math.round(r.put))), h('strong', {}, money(Math.round(r.total))))))]]) : h('p.st-soft', {}, 'This picture shows once there is money left over to invest.'));
     res.textContent = !on ? 'Drag a slider and the picture redraws. Nothing here is saved.' : w?.moved == null ? `That leaves ${money(Math.round(w?.surplus ?? 0))} a month.` : w.moved > 0 ? `Work becomes optional ${w.date}, ${spanWords(w.moved)} sooner than ${w.beforeDate}.` : `The date stays at ${w.date}.`;
   };
   const lever = (id, label, max, step) => {
@@ -529,15 +537,15 @@ function see(p, pl) {
       h('h3', { style: { marginTop: '14px' } }, 'Try it'), lever('spendLess', 'Spend less', 1500, 50), lever('earnMore', 'Earn more', 3000, 100), res,
       h('details.st-fold', {}, h('summary', {}, 'Change the growth rate'),
         h('div.st-chips', {}, ret.options.map(o => chip(o.label, ret.value === o.value, () => { setTweak(store, ret, o.value); render(); }))))], 'growthChart')
-    : pic === 'flow' ? card('flow', 'Picture 2 of 5', 'Where your money goes each month', f ? flowChart(f) : h('p.st-soft', {}, 'This picture needs your pay and your spending.'), 'sankey')
+    : pic === 'flow' ? card('flow', 'Picture 2 of 5', 'Where your money goes each month', f ? views('flow', [['chart', 'Chart', () => flowChart(f)], ['list', 'List', () => h('div.st-rows', {}, f.parts.filter(x => !x.short && x.amount > 0).map(x => h('div.st-srow', {}, h('span', {}, x.label), h('strong', {}, `${money(Math.round(x.amount))} a month`))))]]) : h('p.st-soft', {}, 'This picture needs your pay and your spending.'), 'sankey')
     : pic === 'lines' ? card('lines', 'Line by line', 'Every part of your money, year by year', linesPicture(pl), null)
     : pic === 'money' ? card('money', 'Over time', 'Where your money goes each month, and when it moves on', !FT ? h('p.st-soft', {}, 'This picture needs money left over each month.') : views('money', [
         ['road', 'Road', () => h('div.st-road', {}, FT.phases.map((ph, i) => h(`div.st-leg.c${i % 4}`, { style: { flexGrow: String(Math.max(1, Math.sqrt(ph.months ?? 60))) } }, h('b', {}, ph.name), h('span', {}, `${when(ph.from)} to ${when(ph.to)}`), h('span', {}, ph.total != null ? `${money(ph.total)} in all` : `${money(ph.monthly)} a month`))))],
         ['buckets', 'Buckets', () => h('div.st-buckets', {}, FT.phases.map((ph, i) => h('div.st-bk', {}, h(`div.st-bucket.big.c${i % 4}`, {}, h('i', { style: { height: i === 0 ? '12%' : '0%' } })), h('b', {}, ph.name), h('span', {}, ph.target != null ? `${money(ph.target)} to fill` : ph.total != null ? `${money(ph.total)} in all` : 'Keeps filling'), h('span', {}, i === 0 ? 'Filling now' : `Starts ${when(ph.from)}`))))],
         ['list', 'List', () => h('ol.st-list', {}, FT.phases.map((ph, i) => h(`li${i === 0 ? '.here' : ''}`, {}, h('span.dot', {}, i + 1), h('span', {}, ph.name, h('small', {}, `${money(ph.monthly)} a month${ph.months != null ? ` for ${spanWords(ph.months)}` : ''}`)), h('span.when', {}, i === 0 ? 'Now' : when(ph.from)))))],
       ]), 'foo')
-    : pic === 'timeline' ? card('timeline', 'Picture 4 of 5', 'Your path, one win at a time', t ? timelineChart(t) : h('p.st-soft', {}, 'Every milestone on your list is done.'), 'milestones')
-    : d ? card('debt', 'Picture 5 of 5', 'Your debt, falling to zero', debtChart(d, monthWords), 'avalanche') : card('debt', 'Picture 5 of 5', 'Your debt', h('p', { style: { marginBottom: 0 } }, pl.m.inputs.debts.length ? 'Add each debt\'s rate and payment in Sharpen to see it fall to zero.' : 'No debt on file. Nothing to draw here.'), null);
+    : pic === 'timeline' ? card('timeline', 'Picture 4 of 5', 'Your path, one win at a time', t ? views('timeline', [['chart', 'Chart', () => timelineChart(t)], ['list', 'List', () => h('ol.st-list', {}, t.points.map((x, i) => h('li', {}, h('span.dot', {}, i + 1), h('span', {}, x.name), h('span.when', {}, x.date))))]]) : h('p.st-soft', {}, 'Every milestone on your list is done.'), 'milestones')
+    : d ? card('debt', 'Picture 5 of 5', 'Your debt, falling to zero', views('debt', [['chart', 'Chart', () => debtChart(d, monthWords)], ['table', 'Numbers', () => h('div.st-rows', {}, d.total.map((v, k) => [k, v]).filter(([k]) => k % (d.months > 36 ? 12 : d.months > 12 ? 6 : 3) === 0 || k === d.months).map(([k, v]) => h('div.st-srow', {}, h('span', {}, k === 0 ? 'Today' : monthWords(k)), h('strong', {}, money(Math.round(v))))))]]), 'avalanche') : card('debt', 'Picture 5 of 5', 'Your debt', h('p', { style: { marginBottom: 0 } }, pl.m.inputs.debts.length ? 'Add each debt\'s rate and payment in Sharpen to see it fall to zero.' : 'No debt on file. Nothing to draw here.'), null);
   return [
     h('h1', {}, 'Your plan in pictures'),
     h('div.st-chips', { style: { marginBottom: '12px' } }, PICS.map(([k, l]) => chip(l, pic === k, () => { ui.pic = k; ui.flash = null; render(); }))),
@@ -739,7 +747,7 @@ function books(p, pl) {
     card('have', HAVE_BOOK, B => money(Math.round(B.total)), null),
     card('own', OWN_BOOK, B => (B.count ? money(Math.round(B.total)) : 'Nothing listed'), null),
     card('debt', DEBT_BOOK, B => (B.count ? money(Math.round(B.total)) : 'Nothing owed'), null),
-    card('cover', COVER_BOOK, B => (B.count ? `${B.count} on file` : 'Not answered yet'), h('p.st-small', { style: { margin: '6px 0' } }, 'What would catch you if something went wrong. A yes or a no on each is enough.')),
+    card('cover', COVER_BOOK, B => (B.count ? `${B.count} on file` : 'Not answered yet'), h('p.st-small', { style: { margin: '6px 0' } }, 'What would catch you if something big happened. A yes or a no on each is enough.')),
     h('div.st-row', {}, btn('See my plan', () => go('plan'), 'primary'), btn('All your numbers', () => go('all'))),
   ];
 }
@@ -820,10 +828,36 @@ function quitCard(pl) {
 function yearEndCard(pl) {
   const job = store.doc.records.find(r => r.kind === 'income'), m = pl.m.inputs;
   const Y = yearEndOf({ marginal: numbersOf(pl, store.doc, ref).find(n => n.id === 'marginal')?.incomeTax ?? null, age: pl.age, limits: ref.limits, k401Year: (pl.m.pretaxSaving ?? 0) * 12, hasWorkPlan: situationOf(store.doc) !== 'between', payFrequency: job?.values?.payFrequency ?? m.payFrequency ?? '2 weeks' });
-  return foldCard('yearEnd', 'What should I do before the year ends?', `${Y.daysLeft} days left in ${Y.year}`, [
+  return foldCard('yearEnd', 'What can I do before the year ends?', `${Y.daysLeft} days left in ${Y.year}`, [
     h('p.st-small', { style: { margin: '6px 0' } }, Y.marginal != null ? `Income tax takes about ${fmt.pct(Y.marginal)} of your next dollar, so each $1,000 put in before tax keeps about ${money(Math.round(1000 * Y.marginal))} in your pocket. (Social Security and Medicare tax still apply to 401(k) money.)` : 'Answer the Taxes level in Sharpen it and each move shows what it is worth to you.'),
     h('ul.st-list', {}, Y.moves.map(x => h('li', {}, h('span.dot', {}, ''), h('span', {}, x.name, h('small', {}, `${x.text}${x.limit ? ` The ${Y.year} limit is ${money(x.limit)}.` : ''}${x.id === 'k401' && x.room > 0 && Y.paychecksLeft ? ` ${Y.paychecksLeft} ${Y.paychecksLeft === 1 ? 'paycheck is' : 'paychecks are'} left this year, and any part of it counts.` : ''}`)), h('span.when', {}, `By ${x.by}`)))),
     h('p.st-small.st-soft', {}, 'Limits are the 2026 IRS limits. This is education, not tax advice: a tax preparer can confirm what fits you.')]);
+}
+function aprilCard(pl) {
+  const T = numbersOf(pl, store.doc, ref).find(n => n.id === 'marginal'), fed = T?.parts?.federal ?? null, held = mine().heldYtd ?? null;
+  const job = store.doc.records.find(r => r.kind === 'income'), Y = yearEndOf({ limits: ref.limits, payFrequency: job?.values?.payFrequency ?? '2 weeks' });
+  const A = fed != null && held != null ? aprilOf({ federalTax: fed, withheldYtd: held, paychecksLeft: Y.paychecksLeft }) : null;
+  const pickIt = v => { remember({ heldYtd: v }); ui.flash = null; ui.openCard = 'april'; render(); };
+  return foldCard('april', 'What will April look like?', A ? (A.back ? `About ${money(Math.round(A.gap / 50) * 50)} back` : `About ${money(Math.round(-A.gap / 50) * 50)} to pay`) : '', fed == null ? [h('p.st-soft', {}, 'This needs your pay first.')] : [
+    h('p.st-small', { style: { margin: '6px 0' } }, `On about ${money(Math.round(T.gross))} of pay this year, federal income tax comes to about ${money(Math.round(fed))}. A refund or a bill in April is the gap between that and what your paychecks hold back.`),
+    chipRow('Federal income tax held back so far this year (on your last pay stub: "Fed tax, year to date")', aprilPicks(fed), held, v => money(v), pickIt),
+    h('div.st-box.narrow', {}, h('div.in', {}, h('span', {}, '$'), h('input', { type: 'text', inputmode: 'numeric', autocomplete: 'off', placeholder: 'or type it', 'aria-label': 'Federal income tax held back so far this year', value: held != null && !aprilPicks(fed).includes(held) ? String(held) : '', onChange: e => { const n = Number(e.target.value.replace(/[^\d.]/g, '')); if (e.target.value !== '') pickIt(n); } }))),
+    A ? h('p.st-readout', { role: 'status' }, `Held back at this pace, the year ends at about ${money(Math.round(A.projected))}. `, A.back ? `That is about ${money(Math.round(A.gap / 50) * 50)} more than the tax, so about that much comes back.` : `That is about ${money(Math.round(-A.gap / 50) * 50)} less than the tax, so about that much is due in April.${A.perPaycheck ? ` Holding back ${money(A.perPaycheck)} more from each of your last ${Y.paychecksLeft} paychecks closes it (a new W-4 with your employer does that).` : ''}`) : h('p.st-soft', {}, 'Tap the closest amount and April shows.'),
+    A && !A.back ? h('p.st-small', {}, A.covered ? 'At least 90% of the tax is being held back, which is the line for no extra charge.' : 'Less than 90% of the tax is being held back. Past that line the IRS can add a charge, unless what is held back covers all of last year\'s tax.') : null,
+    h('p.st-small.st-soft', {}, 'Federal income tax only, with the standard deduction and no credits. Other income, credits and state tax change it. This is education, not tax advice.')]);
+}
+function twoHomesCard(pl) {
+  const t = mine().twoHomes || {}, extra = t.extra ?? 1600, months = t.months === undefined ? 12 : t.months, x = pl.m.inputs;
+  const R = twoHomesOf(store.doc, ref, priors, { extra, months, cash: x.cash ?? 0, surplus: pl.m.surplus?.value ?? 0 });
+  const pickIt = patch => { remember({ twoHomes: { ...t, ...patch } }); ui.flash = null; ui.openCard = 'twoHomes'; render(); };
+  return foldCard('twoHomes', 'What if I run two homes?', months == null ? (R.later != null ? `${spanWords(R.later)} later` : '') : `${money(R.total)} in all`, [
+    h('p.st-small', { style: { margin: '6px 0' } }, 'A separation, a job in another city, or covering a parent\'s rent: a second home on top of the one you have.'),
+    chipRow('The second home costs, a month', HOME_COSTS, extra, v => money(v), v => pickIt({ extra: v })),
+    h('div.st-field', {}, h('div.st-flabel', {}, 'For how long'), h('div.st-chips', {}, HOME_SPANS.map(([v, l]) => chip(l, months === v, () => pickIt({ months: v }))))),
+    h('p.st-readout', { role: 'status' }, months == null
+      ? (R.surplusAfter >= 0 ? `Your left-over money covers it, with ${money(Math.round(R.surplusAfter))} a month still left. ` : `It is ${money(Math.round(-R.surplusAfter))} a month more than you have left over${R.cashLasts != null ? `, and your cash covers that gap for about ${R.cashLasts < 1 ? 'under a month' : `${Math.floor(R.cashLasts)} months`}` : ''}. `) + (R.later != null ? `Work becomes optional ${R.date}, ${spanWords(R.later)} later than ${R.beforeDate}.` : R.surplusAfter < 0 ? 'On these numbers there is no date until something else changes.' : '')
+      : `${money(R.total)} in all. ${R.gap === 0 ? `Your left-over money covers it: ${money(R.notInvested)} that would have been invested goes to the second home.` : `Your left-over money covers ${money(extra - R.gap)} a month, and ${money(R.gap)} a month comes from cash: ${money(R.cashNeeded)} over the stretch. ${R.covered ? `Your cash covers it and leaves ${money(Math.round(R.cashLeft))}.` : `That is ${money(Math.round(-R.cashLeft))} more than your cash, which runs out after about ${Math.floor(R.cashLasts)} months.`}`}`),
+    h('div.st-row', {}, btn('Practice a split', () => go('drills'), 'slim'), btn('See what moves the date', () => go('see'), 'slim'))]);
 }
 function raiseCard(pl) {
   const raise = mine().raise ?? 5000, R = raiseOf(store.doc, ref, priors, { raise });
@@ -908,7 +942,7 @@ function tune(p, pl) {
         h('details.st-fold', {}, h('summary', {}, 'The loan, year by year'),
           h('div.st-rows', {}, h('div.st-srow4.head', {}, h('span', {}, 'Year'), h('span', {}, 'Interest'), h('span', {}, 'Paid down'), h('span', {}, 'Still owed')),
             scheduleOf(H.loan, { rate: H.rate }).filter(r => r.year <= 5 || r.year % 5 === 0).map(r => h('div.st-srow4', {}, h('span', {}, String(r.year)), h('span', {}, money(Math.round(r.interest))), h('span', {}, money(Math.round(r.paid))), h('span', {}, money(Math.round(r.balance)))))))); })(),
-    values: valueCard(pl), spendMore: spendCard(p, pl), fees: feesCard(pl), moves: movesCard(pl), next: nextCard(), raise: raiseCard(pl), started: startedCard(pl), quit: quitCard(pl), yearEnd: yearEndCard(pl), parents: parentsCard(), afford: affordCard(pl), overlap: overlapCard(), uneven: unevenCard(pl),
+    values: valueCard(pl), spendMore: spendCard(p, pl), fees: feesCard(pl), moves: movesCard(pl), next: nextCard(), raise: raiseCard(pl), started: startedCard(pl), quit: quitCard(pl), yearEnd: yearEndCard(pl), april: aprilCard(pl), twoHomes: twoHomesCard(pl), parents: parentsCard(), afford: affordCard(pl), overlap: overlapCard(), uneven: unevenCard(pl),
   };
   for (const id of Object.keys(C)) C[id] = solidWrap(id, C[id], pl);
   const allIds = Object.keys(C), nSolid = solidCount(allIds, pl), nChanged = allIds.filter(id => solidState(id, pl) === 'changed').length;
@@ -1027,7 +1061,10 @@ const lifeRemember = patch => {
   store.setDoc('assumptions', { lifeStrategy: v('strategy'), lifeRate: v('rate'), lifeClaimAge: v('claimAge'), lifeFill: v('fill'), lifeStocks: v('stocks'), lifeHealth: v('health'), lifeEras: v('eras'), lifeRetireAge: v('retireAge') });
   remember({ life: rest });
 };
-const life = (p, pl) => lifeScreen({ pl, store, ref, hist, mine: lifeMine, remember: lifeRemember, render, go, btn, chip, credit, flash: ui.flash });
+// Lifetime's three working cards can be marked solid for now, like the What if cards.
+const LIFE_SOLID = { 'Layer your life on top': 'life-scenarios', 'How the free years work': 'life-choices' };
+const life = (p, pl) => { const out = lifeScreen({ pl, store, ref, hist, mine: lifeMine, remember: lifeRemember, render, go, btn, chip, credit, views, flash: ui.flash });
+  return out.map(el => { const t = el?.querySelector?.(':scope > h2')?.textContent, id = LIFE_SOLID[t] ?? (/^Stopping at/.test(t ?? '') ? 'life-stress' : null); return id ? solidWrap(id, el, pl) : el; }); };
 // ---------- Fire drills and skills ----------
 function drills(p, pl) {
   const done = mine().done || {}, tick = id => { remember({ done: { ...(mine().done || {}), [id]: !done[id] } }); render(); };

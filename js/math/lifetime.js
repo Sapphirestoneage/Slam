@@ -54,7 +54,7 @@ const SEASON = 5;           // years a Roth conversion waits before it can come 
 // tolerate: the lowest share of what life costs a strategy may pay in any year and still count as working.
 export const STRATEGIES = [
   { id: 'fixed', tolerate: 0.999, name: 'Steady spending', plain: 'Spend what your life costs every year, whatever the market does. The classic 4% rule works this way.' },
-  { id: 'guardrails', tolerate: 0.699, name: 'Guardrails', plain: 'Spend what your life costs, trim 10% after a bad stretch, raise 10% after a good one.' },
+  { id: 'guardrails', tolerate: 0.699, name: 'Guardrails', plain: 'Spend what your life costs, trim 10% after a rough stretch, raise 10% after a good one.' },
   { id: 'floor', tolerate: 0.849, name: 'Floor and ceiling', plain: 'Spend a share of the portfolio each year, never less than 85% and never more than 120% of what your life costs.' },
   { id: 'percent', tolerate: 0.75, name: 'A share of the portfolio', plain: 'Spend a fixed share of whatever the portfolio is worth. It never runs out, but spending swings with the market.' },
 ];

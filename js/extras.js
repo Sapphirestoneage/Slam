@@ -384,3 +384,31 @@ export function yearEndOf({ marginal = null, age = null, limits, k401Year = 0, h
   ].filter(Boolean);
   return { year, daysLeft, paychecksLeft, marginal, moves, best: marginal != null && room > 0 && hasWorkPlan ? { id: 'k401', saves: saves(Math.min(room, 1000)) } : null };
 }
+
+// ---------- Running two homes: a second rent for a while, or from now on ----------
+// extra: what the second home costs a month. months: how long (null = from now on). For a stretch, the plan's own
+// left-over money pays first and cash covers the rest; from now on, the date itself moves.
+export const HOME_COSTS = [800, 1200, 1600, 2000, 2500, 3000], HOME_SPANS = [[6, '6 months'], [12, 'A year'], [24, '2 years'], [null, 'From now on']];
+export function twoHomesOf(doc, ref, priors, { extra = 1600, months = 12, cash = 0, surplus = 0, now = new Date(), run = whatIf } = {}) {
+  if (!(extra > 0)) return null;
+  const left = Math.max(0, surplus), fromPlan = Math.min(extra, left), gap = extra - fromPlan;
+  if (months == null) { const w = run(doc, ref, priors, { spendLess: -extra }, { now }); return { extra, months: null, gap, surplusAfter: surplus - extra, date: w?.date ?? null, beforeDate: w?.beforeDate ?? null, later: w?.moved != null ? -w.moved : null, cashLasts: gap > 0 ? cash / gap : null }; }
+  const total = extra * months, cashNeeded = gap * months;
+  return { extra, months, total, gap, notInvested: fromPlan * months, cashNeeded, cashLeft: cash - cashNeeded, covered: cash >= cashNeeded, cashLasts: gap > 0 ? cash / gap : null };
+}
+
+// ---------- April, seen from now: this year's federal income tax against what the paychecks are holding back ----------
+// withheldYtd: "federal tax, year to date" on the last pay stub. Held back evenly, the year ends at withheldYtd divided
+// by the share of the year gone. A charge for paying too little is avoided when at least 90% of this year's tax is
+// held back (IRS Publication 505; the other test, last year's tax, needs last year's return).
+export function aprilOf({ federalTax, withheldYtd, now = new Date(), paychecksLeft = null }) {
+  if (!(federalTax >= 0) || withheldYtd == null) return null;
+  const start = new Date(now.getFullYear(), 0, 1), share = Math.min(1, Math.max(1, Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - start) / 86400000)) / 365);
+  const projected = withheldYtd / share, gap = projected - federalTax;
+  return { share, projected, gap, back: gap >= 0, covered: projected >= 0.9 * federalTax, perPaycheck: gap < 0 && paychecksLeft > 0 ? Math.ceil(-gap / paychecksLeft) : null };
+}
+// The amounts to tap for "held back so far": around what an on-track year would show by today.
+export function aprilPicks(federalTax, now = new Date()) {
+  const share = Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - new Date(now.getFullYear(), 0, 1)) / 86400000) / 365, on = federalTax * share;
+  return [...new Set([0, 0.6, 0.8, 1, 1.2].map(f => Math.round(on * f / 100) * 100))];
+}

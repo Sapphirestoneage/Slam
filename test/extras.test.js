@@ -171,3 +171,24 @@ test('before the year ends: room, deadlines and what $1,000 is worth, by hand', 
   assert.equal(yearEndOf({ marginal: 0.24, age: 56, limits, now: new Date(2026, 10, 13) }).moves.find(x => x.id === 'hsa').limit, 5400);
   assert.equal(yearEndOf({ age: 30, limits, hasWorkPlan: false, now: new Date(2026, 10, 13) }).moves.some(x => x.id === 'k401'), false);
 });
+
+import { twoHomesOf, aprilOf, aprilPicks } from '../js/extras.js';
+test('running two homes: for a stretch the plan pays first and cash covers the rest; from now on the date moves', () => {
+  const T = twoHomesOf(null, null, null, { extra: 1600, months: 12, cash: 9000, surplus: 1100 });
+  assert.equal(T.total, 19200); assert.equal(T.gap, 500); assert.equal(T.notInvested, 13200); assert.equal(T.cashNeeded, 6000); assert.equal(T.cashLeft, 3000); assert.equal(T.covered, true); assert.equal(T.cashLasts, 18);
+  assert.equal(twoHomesOf(null, null, null, { extra: 1600, months: 24, cash: 9000, surplus: 1100 }).covered, false); // 500 x 24 = 12,000
+  assert.equal(twoHomesOf(null, null, null, { extra: 800, months: 6, cash: 0, surplus: 1100 }).gap, 0);
+  const calls = [], F = twoHomesOf('doc', 'ref', 'priors', { extra: 1600, months: null, cash: 9000, surplus: 1100, run: (d, r, p, w) => { calls.push(w); return { date: 'Mar 2060', beforeDate: 'Mar 2052', moved: -96 }; } });
+  assert.deepEqual(calls, [{ spendLess: -1600 }]); assert.equal(F.later, 96); assert.equal(F.surplusAfter, -500); assert.equal(F.date, 'Mar 2060');
+  assert.equal(twoHomesOf(null, null, null, { extra: 0 }), null);
+});
+test('April, seen from now: what is held back, carried to the end of the year, against the year\'s tax', () => {
+  const now = new Date(2026, 9, 1); // Oct 1: 273 of 365 days gone
+  const A = aprilOf({ federalTax: 8000, withheldYtd: 6600, now, paychecksLeft: 6 });
+  assert.ok(Math.abs(A.projected - 6600 / (273 / 365)) < 1e-6); assert.equal(Math.round(A.projected), 8824); assert.equal(Math.round(A.gap), 824); assert.equal(A.back, true); assert.equal(A.covered, true); assert.equal(A.perPaycheck, null);
+  const B = aprilOf({ federalTax: 8000, withheldYtd: 4500, now, paychecksLeft: 6 }); // 6,016 by year end: 1,984 short, under 90%
+  assert.equal(Math.round(B.gap), -1984); assert.equal(B.back, false); assert.equal(B.covered, false); assert.equal(B.perPaycheck, 331);
+  assert.equal(aprilOf({ federalTax: 8000, withheldYtd: 5500, now }).covered, true); // 7,353 is over 90% of 8,000
+  assert.equal(aprilOf({ federalTax: 8000, withheldYtd: null, now }), null);
+  assert.deepEqual(aprilPicks(8000, now), [0, 3600, 4800, 6000, 7200]);
+});

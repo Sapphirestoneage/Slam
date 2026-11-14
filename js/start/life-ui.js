@@ -20,7 +20,7 @@ const TEMPLATES = [
 let cache = { key: null, life: null, extra: {} };
 const openFolds = new Set(); // which choices are unfolded: kept across a change, so a tap inside one does not close it
 
-export function lifeScreen({ pl, store, ref, hist, mine, remember, render, go, btn, chip, credit, flash }) {
+export function lifeScreen({ pl, store, ref, hist, mine, remember, render, go, btn, chip, credit, views, flash }) {
   const s = { ...DEFAULTS, ...(mine().life || {}) };
   const choose = patch => { remember({ life: { ...(mine().life || {}), ...patch } }); render(); };
   const key = JSON.stringify([s, store.doc._rev, store.doc.updatedAt]);
@@ -34,7 +34,8 @@ export function lifeScreen({ pl, store, ref, hist, mine, remember, render, go, b
     h('h1.st-eyebrow', {}, 'Lifetime plan'), h('div.st-soft', {}, own ? 'If you stop work at' : 'Work can become optional at'),
     h('div.st-big', {}, `age ${L.age}`),
     own ? h('p', {}, L.run.ok ? 'On a smooth market the money lasts to 90.' : `On a smooth market the money runs short at ${L.run.ranOutAge}.`, L.safe.age != null ? ` History would have carried age ${L.safe.age}.` : '')
-      : h('p', {}, `Planned one year at a time to age 90, then run through every stretch of market history since ${hist.first}. It held in ${fmt.pct(L.safe.replay.success)} of them. On a perfectly smooth market it would be age ${L.smooth.age}.`),
+      : L.safe?.replay ? h('p', {}, `Planned one year at a time to age 90, then run through every stretch of market history since ${hist.first}. It held in ${fmt.pct(L.safe.replay.success)} of them. On a perfectly smooth market it would be age ${L.smooth.age}.`)
+        : h('p', {}, `This is the age a perfectly smooth market gives. Run through every stretch of market history since ${hist.first}, no stopping age up to 80 held often enough yet on these numbers. More left over each month changes that.`),
     h('p', { style: { fontWeight: 700 } }, `You would need about ${money(L.need)} by then. The 25 times rule says ${money(L.rule25)}.`),
     h('div.st-row', {}, h('span.st-small', { style: { fontWeight: 700 } }, 'Try another age:'), [-2, 2, 5].map(d => chip(`${L.age + d}`, false, () => choose({ retireAge: L.age + d }))), own ? btn('Back to the age history carries', () => choose({ retireAge: null }), 'slim') : null));
 
@@ -81,7 +82,7 @@ export function lifeScreen({ pl, store, ref, hist, mine, remember, render, go, b
 
   return [hero,
     L.notes.length ? h('div.st-card', {}, L.notes.map(nt => h('p.st-small.st-soft', { style: { margin: '0 0 6px' } }, nt))) : null,
-    h('div.st-card', {}, h('div.st-eyebrow', {}, 'Year by year'), h('h2', {}, 'Your money from now to 90'), lifeChart(L.run, L.age),
+    h('div.st-card', {}, h('div.st-eyebrow', {}, 'Year by year'), h('h2', {}, 'Your money from now to 90'), views('life', [['chart', 'Chart', () => lifeChart(L.run, L.age)], ['table', 'Numbers', () => h('div.st-rows', {}, h('div.st-srow3.head', {}, h('span', {}, 'Age'), h('span', {}, 'Spent from it'), h('span', {}, 'Money left')), L.run.years.filter((r, i) => i === 0 || i === L.run.years.length - 1 || r.age % 5 === 0 || r.age === L.age).map(r => h('div.st-srow3', {}, h('span', {}, `${r.age}${r.age === L.age ? ' (work optional)' : ''}`), h('span', {}, r.spend != null ? money(Math.round(r.spend)) : ''), h('strong', {}, money(Math.round(r.total))))))]]),
       h('p.st-small.st-soft', { style: { margin: '8px 0 0' } }, 'This picture is the smooth-market path. If it ends with a lot left over, that margin is what carried the plan through the hard stretches of history below.')),
     scenarios, choices, stressCard,
     h('div.st-row', {}, btn('Sharpen it', () => go('sharpen'), 'primary'), btn('See all your numbers', () => go('all')))];
