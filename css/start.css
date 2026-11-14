@@ -367,3 +367,4 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-bkpick { min-height: 44px; padding: 0 12px; width: auto; }
 .st-bookbody { padding: 4px 0 4px; margin-top: 10px; }
 .st-bksel, .st-bkcell .in { height: 48px; min-height: 48px; box-sizing: border-box; }
+.st-bkcell input { height: 100%; align-self: stretch; }
