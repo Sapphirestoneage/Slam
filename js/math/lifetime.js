@@ -62,6 +62,8 @@ export const FILLS = [
   { id: 'none', name: 'No conversions' },
   { id: 'deduction', name: 'Fill the 0% space', plain: 'Each low-income year, move pretax money to Roth up to the standard deduction: taxed at 0%.' },
   { id: '12', name: 'Fill the 12% bracket', plain: 'Move pretax money to Roth up to the top of the 12% bracket each year.' },
+  { id: '22', name: 'Fill the 22% bracket', plain: 'Move pretax money to Roth up to the top of the 22% bracket each year. More tax in those years, less once required withdrawals start.' },
+  { id: '24', name: 'Fill the 24% bracket', plain: 'Move pretax money to Roth up to the top of the 24% bracket each year. For large taxed-later balances.' },
 ];
 
 const keyOf = fs => (fs === 'Married jointly' ? 'joint' : fs === 'Head of household' ? 'head' : 'single');
@@ -79,11 +81,25 @@ export function yearTax({ ordinary, ss, gains = 0 }, tax, ref) {
   const onGains = gainsTax(Math.max(0, gains - Math.max(0, std - gross)), Math.max(0, gross - std), k);
   return fed + onGains + (st.state ?? 0) + (st.local ?? 0);
 }
-// How much ordinary income fits before the fill line: the standard deduction, or the top of the 12% bracket.
+// The extra Medicare premium a year for one person (Part B and Part D), set by income from two years earlier.
+// Above each line the whole extra applies, so one dollar over costs the full step: a cliff, not a slope.
+export function medicareSurcharge(magi, filingStatus, ref) {
+  const col = keyOf(filingStatus) === 'joint' ? 1 : 0, tier = [...(ref.cliff?.medicare?.tiers ?? [])].reverse().find(t => magi > t[col]);
+  return tier ? (tier[2] + tier[3]) * 12 : 0;
+}
+// Where this year's taxable income sits: the bracket it is in, and how much more fits before the next one.
+// taxable: income after the standard deduction. { rate, room, nextRate, top } (room and nextRate null in the top bracket).
+export function bracketRoom(taxable, filingStatus, ref) {
+  const list = ref.tax.brackets[keyOf(filingStatus)], t = Math.max(0, taxable ?? 0);
+  let i = 0; while (i + 1 < list.length && t >= list[i + 1][0]) i++;
+  const next = list[i + 1] ?? null;
+  return { rate: list[i][1], top: next ? next[0] : null, room: next ? next[0] - t : null, nextRate: next ? next[1] : null };
+}
+// How much ordinary income fits before the fill line: the standard deduction, or the top of the named bracket.
 export function fillRoom(fill, tax, ref) {
   if (!fill || fill === 'none') return 0;
   const k = keyOf(tax.filingStatus), std = ref.tax.standardDeduction[k] ?? 0;
-  return fill === 'deduction' ? std : std + (ref.tax.brackets[k].find(([, rate]) => rate > 0.12)?.[0] ?? 0);
+  return fill === 'deduction' ? std : std + (ref.tax.brackets[k].find(([, rate]) => rate > Number(fill) / 100 + 1e-9)?.[0] ?? 0);
 }
 
 // People in the plan who are under 65 at this age of the first person (health cover is bought until Medicare).
@@ -135,7 +151,8 @@ export function lifetime(x, ref, { returns = null } = {}) {
   const years = [], season = []; // season: [{ at: plan year, amount }] conversions waiting five years
   const tax = x.tax || { filingStatus: 'Single' }, room = fillRoom(tax.fill, tax, ref);
   const ssYearly = typeof x.ss?.yearly === 'function' ? x.ss.yearly(x.retireAge) : x.ss?.yearly ?? 0; // stopping work sooner lowers the benefit
-  let atRetire = null, ranOutAge = null, lifetimeTax = 0, penalties = 0, lowest = 1, adjust = 1, wr0 = null;
+  let atRetire = null, ranOutAge = null, lifetimeTax = 0, penalties = 0, lowest = 1, adjust = 1, wr0 = null, surcharges = 0;
+  const magi = []; // income by plan year, for the Medicare premium two years on (working years are left out: stopping work is a reason Social Security accepts to use the lower income)
   for (let k = 0, age = x.age; age <= lastAge; k++, age++) {
     const r = returns ? returns(k) : x.realReturn;
     const free = age >= x.retireAge;
@@ -173,7 +190,8 @@ export function lifetime(x, ref, { returns = null } = {}) {
       if (room > 0 && b.pretax > 0) { convert = Math.min(b.pretax, Math.max(0, room - earned)); }
       // What must come out: spending less what comes in, plus this year's tax (found by going round a few times).
       // The premium credit depends on this year's income, which depends on what is taken out, so it goes round too.
-      let fromPortfolio = Math.max(0, spend - ss - earned), taxDue = 0, credit = 0, got = null, snap = null;
+      const on65 = (age >= 65 ? 1 : 0) + (P && age - x.age + P.age >= 65 ? 1 : 0), medicare = on65 ? on65 * medicareSurcharge(magi[k - 2] ?? 0, tax.filingStatus, ref) : 0;
+      let fromPortfolio = Math.max(0, spend + medicare - ss - earned), taxDue = 0, credit = 0, got = null, snap = null;
       for (let i = 0; i < 8; i++) {
         snap = { ...b };
         got = draw(snap, Math.max(0, fromPortfolio - credit) + taxDue, age);
@@ -190,7 +208,8 @@ export function lifetime(x, ref, { returns = null } = {}) {
       if (forced > 0) { b.pretax -= forced; b.taxable += forced; b.basis += forced; }
       const conv = Math.min(convert, Math.max(0, b.pretax));
       b.pretax -= conv; b.roth += conv; if (conv > 0) season.push({ at: k, amount: conv });
-      row.rmd = rmd; row.gains = d.gains; row.credit = credit;
+      row.rmd = rmd; row.gains = d.gains; row.credit = credit; row.medicare = medicare; surcharges += medicare;
+      const preOut = d.pretax + forced + conv + earned + d.gains; magi[k] = preOut + taxableSocialSecurity(ss, preOut, tax.filingStatus);
       Object.assign(row, { need, spend: d.short ? Math.max(0, spend - d.short) : spend, tax: taxDue - d.penalty, ss, earned, withdraw: fromPortfolio + taxDue - d.short, convert: conv, penalty: d.penalty, short: d.short });
       lifetimeTax += taxDue - d.penalty; penalties += d.penalty;
       if (need > 0) lowest = Math.min(lowest, row.spend / need);
@@ -200,7 +219,7 @@ export function lifetime(x, ref, { returns = null } = {}) {
     b.rothFree = Math.min(b.rothFree, b.roth); b.basis = Math.min(b.basis, b.taxable);
     years.push({ ...row, taxable: b.taxable, pretax: b.pretax, roth: b.roth, total: total() });
   }
-  return { years, ok: ranOutAge === null, ranOutAge, atRetire: atRetire ?? total(), end: total(), lifetimeTax, penalties, lowestSpend: lowest };
+  return { years, ok: ranOutAge === null, ranOutAge, atRetire: atRetire ?? total(), end: total(), lifetimeTax, penalties, surcharges, lowestSpend: lowest };
 }
 
 // The earliest age work can stop and the money still lasts to the plan's last year, on this strategy: the first age

@@ -8,7 +8,8 @@ import { newAccount, switchTo, removeSpace, deviceAdapter } from '../accounts.js
 import { cloudConfig, cloudOf } from '../cloud.js';
 import { pullAll, stampKey } from '../sync.js';
 import { money, btn } from './shell.js';
-import { cardOf, setCard, addClient, stampCard, rosterOf, practiceOf, summaryOf } from '../pro.js';
+import { cardOf, setCard, addClient, stampCard, rosterOf, practiceOf, summaryOf, markOf, addMark, sinceOf } from '../pro.js';
+import { movedWords } from './moved.js';
 
 const $ = id => document.getElementById(id), device = deviceAdapter();
 const ref = await fetch('data/reference-2026.json').then(r => r.json()), cloud = cloudOf(await cloudConfig());
@@ -30,13 +31,16 @@ async function draw() {
   $('step').textContent = rows.length ? `${rows.length} ${rows.length === 1 ? 'plan' : 'plans'}` : '';
 
   // one page to print
-  if (ui.sheet && docs[ui.sheet]) { const S = summaryOf(docs[ui.sheet], ref), name = rows.find(r => r.id === ui.sheet)?.name ?? S.name;
-    return $('main').replaceChildren(
-      h('div.st-row.st-noprint', {}, btn('Back to the list', () => { ui.sheet = null; draw(); }, 'slim'), btn('Print or save as a PDF', () => window.print(), 'primary')),
+  if (ui.sheet && docs[ui.sheet]) { const S = summaryOf(docs[ui.sheet], ref), M = sinceOf(docs[ui.sheet], ref), start = movedWords(M.sinceStart), last = movedWords(M.sinceLast), name = rows.find(r => r.id === ui.sheet)?.name ?? S.name;
+    return $('main').replaceChildren(...[
+      h('div.st-row.st-noprint', {}, btn('Back to the list', () => { ui.sheet = null; draw(); }, 'slim'), btn('Print or save as a PDF', () => window.print(), 'primary'), btn(M.last === M.today.on ? 'Session marked today' : 'Mark today\'s session', () => put(acct, ui.sheet, addMark(docs[ui.sheet], markOf(docs[ui.sheet], ref))), 'slim')),
+      M.marks ? null : h('p.st-small.st-noprint', {}, 'Mark a session and the page shows what moved since then: debt, the debt free month, cash on hand, steps done. The client sees it too.'),
       h('div.st-card.st-sheet', {}, h('div.st-eyebrow', {}, card ? [card.name, card.firm].filter(Boolean).join(', ') : 'Stress Less About Money'), h('h1', { style: { margin: '0 0 2px' } }, name), h('p.st-small', { style: { margin: 0 } }, `As of ${S.on}. ${S.done} of ${S.of} steps done. ${S.next ? end(`Next: ${S.next}`) : ''}`),
         h('dl.st-sheetlines', {}, S.lines.map(l => [h('dt', {}, l.label), h('dd', {}, l.value == null ? h('span.st-soft', {}, 'Not answered yet') : h('strong', {}, l.money ? money(l.value) : l.value), l.amount != null ? h('span.st-small', {}, ` ${money(l.amount)} ${l.id === 'debt' ? 'owed' : 'on hand'}.`) : null, l.note ? h('div.st-small', {}, l.note) : null)])),
+        M.marks ? h('div.st-moved', {}, h('h2', {}, `Since we started, ${M.start}`), start.length ? h('ul', {}, start.map(t => h('li', {}, t))) : h('p.st-small', { style: { margin: 0 } }, 'Nothing has moved yet.'),
+          M.marks > 1 && last.length ? [h('h3', {}, `Since last session, ${M.last}`), h('ul', {}, last.map(t => h('li', {}, t)))] : null) : null,
         S.open.length ? h('p.st-small', {}, `Still open: ${S.open.join(', ')}.`) : null,
-        h('p.st-small.st-soft', { style: { marginBottom: 0 } }, 'Every number here comes from the answers in the plan, using the same math as the plan\'s own pages. It is a picture for a conversation, not tax, legal or investment advice.'))); }
+        h('p.st-small.st-soft', { style: { marginBottom: 0 } }, 'Every number here comes from the answers in the plan, using the same math as the plan\'s own pages. It is a picture for a conversation, not tax, legal or investment advice.'))].filter(Boolean)); }
 
   const cardCard = !card || ui.edit
     ? h('div.st-card', {}, h('h2', { style: { marginTop: 0 } }, 'Your card'), h('p.st-small', {}, 'Your name goes on each client plan and on the printed page, with a button to book a time with you.'),

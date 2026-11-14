@@ -3,7 +3,7 @@
 // metrics) into the engine's input, runs it, and returns what the Whole life screen shows. The choices that are about
 // the future (strategy, claim age, conversions, stock share, health cost, scenario blocks) are passed in as settings;
 // the screen keeps them. Pure: no DOM, no storage.
-import { lifetime, earliestFreedom, STRATEGIES, FILLS, needAt } from '../math/lifetime.js';
+import { lifetime, earliestFreedom, STRATEGIES, FILLS, needAt, bracketRoom } from '../math/lifetime.js';
 import { replay, shuffle, safeFreedom } from '../math/stress.js';
 import { benefitOf } from '../math/socialsecurity.js';
 import { placeOf } from '../math/metrics.js';
@@ -86,10 +86,39 @@ export function strategiesOf(life, ref, hist) {
     return { id: st.id, name: st.name, plain: st.plain, age: safe.age, need: run?.atRetire ?? null, lasted: safe.replay?.success ?? null, deepestCut: cut };
   });
 }
-// Conversions: the lifetime tax and penalties under each fill choice, at the chosen age.
+// Conversions side by side, at the chosen age. For each choice: lifetime income tax, early penalties, the extra Medicare
+// premium, the three together (cost), what is left at the end, and the age it has paid for itself: the first age where
+// everything paid so far is no more than under "no conversions". payback is null when that never happens in the plan.
+// end is every dollar left in the last year; endTaxedLater is the part of it still to be taxed when it comes out.
 export function fillsOf(life, ref) {
   if (!life?.run) return [];
-  return FILLS.map(f => { const run = lifetime({ ...life.x, tax: { ...life.x.tax, fill: f.id } }, ref); return { id: f.id, name: f.name, plain: f.plain ?? null, tax: run.lifetimeTax, penalties: run.penalties, ok: run.ok, end: run.end }; });
+  const runs = FILLS.map(f => ({ f, run: lifetime({ ...life.x, tax: { ...life.x.tax, fill: f.id } }, ref) }));
+  const paid = run => { let t = 0; return run.years.map(y => (t += (y.tax ?? 0) + (y.penalty ?? 0) + (y.medicare ?? 0))); };
+  const base = paid(runs[0].run);
+  return runs.map(({ f, run }) => { const mine = paid(run), first = run.years.findIndex(y => y.convert > 0);
+    const i = f.id === 'none' || first < 0 ? -1 : mine.findIndex((v, k) => k > first && v <= base[k] + 0.5);
+    return { id: f.id, name: f.name, plain: f.plain ?? null, tax: run.lifetimeTax, penalties: run.penalties, medicare: run.surcharges, cost: run.lifetimeTax + run.penalties + run.surcharges, ok: run.ok, end: run.end, endTaxedLater: run.years.at(-1)?.pretax ?? 0,
+      converted: run.years.reduce((t, y) => t + (y.convert ?? 0), 0), payback: i >= 0 ? run.years[i].age : null, saves: f.id === 'none' ? 0 : base.at(-1) - mine.at(-1) }; });
+}
+// Dates to know on the chosen plan, in age order: each is one year where a rule starts to bite.
+export function cliffsOf(life) {
+  if (!life?.run) return [];
+  const ys = life.run.years.filter(y => y.phase === 'free'), x = life.x, out = [], add = (y, id, amount = null) => y && out.push({ age: y.age, id, amount });
+  const conv = ys.find(y => y.convert > 0);
+  if (conv && conv.age + 5 < 60) out.push({ age: conv.age + 5, id: 'seasoned', amount: conv.convert });
+  add(ys.find(y => x.tax?.aca && x.tax?.health > 0 && y.age < 65 && !(y.credit > 0)), 'credit');
+  if (ys.some(y => y.age === 65)) out.push({ age: 65, id: 'medicare', amount: null });
+  if (x.ss?.claimAge != null && ys.some(y => y.age === x.ss.claimAge)) out.push({ age: x.ss.claimAge, id: 'claim', amount: ys.find(y => y.age === x.ss.claimAge).ss });
+  add(ys.find(y => y.medicare > 0), 'extra', ys.find(y => y.medicare > 0)?.medicare);
+  add(ys.find(y => y.rmd > 0), 'rmd', ys.find(y => y.rmd > 0)?.rmd);
+  return out.sort((a, b) => a.age - b.age);
+}
+// This year, while working: the federal bracket the next dollar lands in, and how many dollars fit before the next one.
+export function taxNowOf(plan, doc, ref) {
+  const m = plan?.m, gross = m?.inputs?.income?.[0]?.gross ?? null; if (gross == null) return null;
+  const fs = doc.taxes?.filingStatus ?? defaultFilingStatus(doc.profile || {}), key = fs === 'Married jointly' ? 'joint' : fs === 'Head of household' ? 'head' : 'single';
+  const taxable = Math.max(0, gross - (m.pretaxSaving ?? 0) * 12 - (ref.tax.standardDeduction[key] ?? 0));
+  return { taxable, filingStatus: fs, ...bracketRoom(taxable, fs, ref) };
 }
 // Social Security: the same plan claiming at 62, 67 and 70.
 export function claimsOf(plan, doc, ref, hist, settings = {}) {

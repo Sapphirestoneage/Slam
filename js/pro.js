@@ -43,3 +43,28 @@ export function summaryOf(doc, ref, { now = new Date() } = {}) {
   ];
   return { name: doc.name ?? 'Plan', on: now.toISOString().slice(0, 10), done: P.done, of: P.of, next: P.next?.title ?? null, lines, open: lines.filter(l => l.value == null).map(l => l.label), card: cardIn(doc) };
 }
+
+// ---- What moved between sessions. A mark is the plan's key numbers on one day, kept inside the plan so the client and
+// the pro see the same history. debtAt is the debt-free month as a count of months (year * 12 + month), so two marks
+// taken on different days compare the same calendar month, not "months from today".
+export function markOf(doc, ref, { now = new Date() } = {}) {
+  const P = soloProgress(doc, ref), D = debtFreeOf(doc, ref, { now }), cash = onFile(doc, 'cash'), spend = onFile(doc, 'spending');
+  const known = cash?.checking != null || cash?.savings != null, have = (cash?.checking ?? 0) + (cash?.savings ?? 0), R = runwayOf({ cash: known ? have : null, spending: spend?.gut ?? null, now });
+  return { on: now.toISOString().slice(0, 10), done: P.done, answers: P.answers, owed: D.ready ? D.total : null, debtAt: D.ready && !D.never ? now.getFullYear() * 12 + now.getMonth() + D.months : null,
+    cash: known ? have : null, runway: R.ready && !R.covered ? R.months : null };
+}
+export const marksIn = doc => (Array.isArray(doc?.settings?.start?.marks) ? doc.settings.start.marks : []);
+// One mark a day (a second on the same day replaces the first); the newest 24 are kept.
+export function addMark(doc, mark) { const marks = [...marksIn(doc).filter(m => m.on !== mark.on), mark].sort((a, b) => a.on.localeCompare(b.on)).slice(-24);
+  return { ...doc, settings: { ...(doc.settings || {}), start: { ...(doc.settings?.start || {}), marks } } }; }
+// What changed from one mark to another: only numbers known at both ends and different. by is "to minus from".
+export function movedOf(from, to) {
+  if (!from || !to) return [];
+  return ['owed', 'debtAt', 'cash', 'runway', 'done'].filter(k => from[k] != null && to[k] != null).map(k => ({ id: k, from: from[k], to: to[k], by: k === 'runway' ? Math.round((to[k] - from[k]) * 10) / 10 : to[k] - from[k] })).filter(l => Math.abs(l.by) >= (l.id === 'owed' || l.id === 'cash' ? 1 : l.id === 'runway' ? 0.1 : 1));
+}
+// The story so far: from the first mark to today, and from the last mark to today.
+export function sinceOf(doc, ref, { now = new Date() } = {}) {
+  const marks = marksIn(doc), today = markOf(doc, ref, { now }); if (!marks.length) return { marks: 0, today, start: null, last: null, sinceStart: [], sinceLast: [] };
+  const start = marks[0], last = marks.at(-1);
+  return { marks: marks.length, today, start: start.on, last: last.on, sinceStart: movedOf(start, today), sinceLast: marks.length > 1 || last.on !== today.on ? movedOf(last, today) : [] };
+}

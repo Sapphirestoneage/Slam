@@ -4,9 +4,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { lifetime, earliestFreedom, taxableSocialSecurity, yearTax, fillRoom, needAt, STRATEGIES } from '../js/math/lifetime.js';
+import { lifetime, earliestFreedom, taxableSocialSecurity, yearTax, fillRoom, needAt, STRATEGIES, FILLS, medicareSurcharge, bracketRoom } from '../js/math/lifetime.js';
 import { replay, shuffle, safeFreedom, mixOf } from '../js/math/stress.js';
-import { lifeOf, strategiesOf, fillsOf, claimsOf, stressOf } from '../js/lifetime/inputs.js';
+import { lifeOf, strategiesOf, fillsOf, claimsOf, stressOf, cliffsOf, taxNowOf } from '../js/lifetime/inputs.js';
 import { federalTax } from '../js/math/income.js';
 import { Store, newHousehold } from '../js/records.js';
 import { QUESTIONS, answer, planOf } from '../js/journey.js';
@@ -195,4 +195,73 @@ test('planning for two: both benefits, joint taxes, cover for each person under 
   assert.equal(under65(66, { ...x, partner: { age: 61 } }), 1); assert.equal(under65(70, { ...x, partner: { age: 61 } }), 0);
   assert.equal(two.years[0].need, 59600); assert.equal(one.years[0].need, 50000); // cover for the one under 65
   assert.equal(two.years[1].ss, 24000); assert.equal(two.years[6].ss, 42000);    // theirs starts when they reach 67
+});
+
+test('the Medicare extra premium: the whole step once income is over the line, per person, by filing status', () => {
+  const single = { filingStatus: 'Single' }.filingStatus;
+  assert.equal(medicareSurcharge(109000, single, ref), 0);
+  near(medicareSurcharge(109001, single, ref), (81.20 + 14.50) * 12, 0.001, 'one dollar over the first line');
+  near(medicareSurcharge(180000, single, ref), (324.60 + 60.40) * 12, 0.001, 'the third step');
+  near(medicareSurcharge(600000, single, ref), (487 + 91) * 12, 0.001, 'the top step');
+  assert.equal(medicareSurcharge(180000, 'Married jointly', ref), 0);
+  near(medicareSurcharge(218001, 'Married jointly', ref), (81.20 + 14.50) * 12, 0.001, 'joint, one dollar over');
+  near(medicareSurcharge(120000, 'Head of household', ref), (81.20 + 14.50) * 12, 0.001, 'head of household uses the single lines');
+});
+
+test('bracket room: where taxable income sits and what fits before the next bracket', () => {
+  const list = ref.tax.brackets.single, twelve = list.find(b => b[1] === 0.12), next = list[list.indexOf(twelve) + 1];
+  const r = bracketRoom(twelve[0] + 1000, 'Single', ref);
+  assert.equal(r.rate, 0.12); assert.equal(r.nextRate, next[1]); assert.equal(r.room, next[0] - twelve[0] - 1000);
+  assert.equal(bracketRoom(0, 'Single', ref).rate, list[0][1]);
+  const top = bracketRoom(list.at(-1)[0] + 5, 'Single', ref);
+  assert.equal(top.rate, list.at(-1)[1]); assert.equal(top.room, null);
+});
+
+test('more conversion choices: each fill line is the standard deduction plus the top of its bracket', () => {
+  const std = ref.tax.standardDeduction.single, startOf = rate => ref.tax.brackets.single.find(b => b[1] > rate)[0];
+  assert.deepEqual(FILLS.map(f => f.id), ['none', 'deduction', '12', '22', '24']);
+  assert.equal(fillRoom('12', { filingStatus: 'Single' }, ref), std + startOf(0.12));
+  assert.equal(fillRoom('22', { filingStatus: 'Single' }, ref), std + startOf(0.22));
+  assert.equal(fillRoom('24', { filingStatus: 'Single' }, ref), std + startOf(0.24));
+  assert.ok(fillRoom('24', { filingStatus: 'Single' }, ref) > fillRoom('22', { filingStatus: 'Single' }, ref));
+});
+
+test('a big conversion at 65 raises the Medicare premium two years later, and it comes out of the money', () => {
+  const x = { ...plain, planAge: 70, start: { taxable: 1000000, pretax: 2000000, roth: 0 }, tax: { filingStatus: 'Single', fill: '24' } };
+  const run = lifetime(x, ref), y = age => run.years.find(r => r.age === age);
+  assert.equal(y(65).medicare, 0); assert.equal(y(66).medicare, 0);
+  const income65 = y(65).convert + y(65).gains; // no pay, no Social Security, nothing else taken from pretax
+  assert.ok(income65 > 109000, 'the 24% fill is past the first line');
+  near(y(67).medicare, medicareSurcharge(income65, 'Single', ref), 0.01, 'age 67 pays on age 65 income');
+  near(run.surcharges, run.years.reduce((t, r) => t + (r.medicare ?? 0), 0), 0.01, 'the total is the sum of the years');
+  const none = lifetime({ ...x, tax: { filingStatus: 'Single', fill: 'none' } }, ref);
+  assert.equal(none.surcharges, 0);
+  near(y(67).withdraw - y(67).tax - (y(67).spend), y(67).medicare, 1, 'the extra premium is taken out on top of spending');
+});
+
+test('conversions side by side: cost adds up, no conversions is the yardstick, payback is an age after the first conversion', () => {
+  const x = { ...plain, age: 60, retireAge: 60, planAge: 90, realReturn: 0.04, start: { taxable: 400000, pretax: 1500000, roth: 0 }, spendingAfter: 50000, ss: { claimAge: 67, yearly: 30000 }, tax: { filingStatus: 'Single', fill: 'none' } };
+  const fills = fillsOf({ run: lifetime(x, ref), x }, ref), by = id => fills.find(f => f.id === id);
+  assert.equal(fills.length, 5);
+  for (const f of fills) near(f.cost, f.tax + f.penalties + f.medicare, 0.01, `${f.id} cost`);
+  assert.equal(by('none').payback, null); assert.equal(by('none').saves, 0); assert.equal(by('none').converted, 0);
+  assert.ok(by('12').converted > by('deduction').converted, 'the 12% line moves more than the 0% line');
+  assert.ok(by('24').endTaxedLater < by('none').endTaxedLater && by('none').endTaxedLater > 0, 'converting leaves less still to be taxed');
+  near(by('12').saves, by('none').cost - by('12').cost, 0.01, 'saves is the difference in everything paid');
+  for (const f of fills.filter(f => f.payback != null)) assert.ok(f.payback > 60 && f.payback <= 90 && f.saves >= -0.5, `${f.id} pays back inside the plan`);
+  for (const f of fills.filter(f => f.id !== 'none' && f.payback == null)) assert.ok(f.saves < 0.5, `${f.id} never catches up, so it saves nothing`);
+  const marks = cliffsOf({ run: lifetime(x, ref), x });
+  assert.deepEqual(marks.slice(0, 3).map(m => [m.id, m.age]), [['medicare', 65], ['claim', 67], ['rmd', 73]]);
+  assert.equal(marks[1].amount, 30000);
+  near(marks[2].amount, lifetime(x, ref).years.find(y => y.age === 72).pretax / 26.5, 1, 'the first required withdrawal is the balance over 26.5');
+  const extra = marks.find(m => m.id === 'extra');
+  if (extra) assert.ok(extra.age >= 67 && extra.amount > 0, 'an extra premium is two years after the income that set it');
+});
+
+test('this year: the bracket and the room come from pay after pretax saving and the standard deduction', () => {
+  const doc = { profile: {}, taxes: { filingStatus: 'Single' } }, plan = { m: { inputs: { income: [{ gross: 70000 }] }, pretaxSaving: 500 } };
+  const t = taxNowOf(plan, doc, ref), taxable = 70000 - 6000 - ref.tax.standardDeduction.single;
+  assert.equal(t.taxable, taxable);
+  assert.deepEqual({ rate: t.rate, room: t.room }, { rate: bracketRoom(taxable, 'Single', ref).rate, room: bracketRoom(taxable, 'Single', ref).room });
+  assert.equal(taxNowOf({ m: { inputs: { income: [] } } }, doc, ref), null);
 });

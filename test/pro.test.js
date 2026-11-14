@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { newAccount } from '../js/accounts.js';
 import { newHousehold } from '../js/records.js';
-import { safeLink, cardOf, setCard, addClient, stampCard, cardIn, rosterOf, practiceOf, summaryOf } from '../js/pro.js';
+import { safeLink, cardOf, setCard, addClient, stampCard, cardIn, rosterOf, practiceOf, summaryOf, markOf, addMark, marksIn, movedOf, sinceOf } from '../js/pro.js';
 import { debtFreeOf } from '../js/solo.js';
 const ref = JSON.parse(fs.readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
 
@@ -47,4 +47,25 @@ test('the summary uses the same debt date as the debt page and names what is sti
   assert.equal(line('debt').amount, 3000);
   assert.deepEqual(S.open, ['First move', 'If the pay stopped', 'Finish line']);
   assert.equal(S.on, now.toISOString().slice(0, 10)); assert.equal(S.card, null);
+});
+
+test('what moved: a mark is the day\'s numbers, and the debt-free month is compared as a calendar month', () => {
+  let doc = newHousehold({ name: 'Jordan' }); const t0 = new Date(2026, 10, 14), t1 = new Date(2027, 1, 14);
+  doc.records.push({ id: 'd1', kind: 'debt', type: 'Credit card', name: 'Card', values: { balance: 3000, apr: 0.24, payment: 200 } });
+  const m0 = markOf(doc, ref, { now: t0 }), D0 = debtFreeOf(doc, ref, { now: t0 });
+  assert.equal(m0.owed, 3000); assert.equal(m0.debtAt, 2026 * 12 + 10 + D0.months); assert.equal(m0.cash, null);
+  doc = addMark(doc, m0); doc = addMark(doc, { ...m0, done: 99 });
+  assert.equal(marksIn(doc).length, 1, 'one mark a day'); assert.equal(marksIn(doc)[0].done, 99);
+  doc = addMark(doc, m0);
+  // three months on: $600 paid down and the payment raised to $400
+  doc.records[0].values = { balance: 2400, apr: 0.24, payment: 400 };
+  const S = sinceOf(doc, ref, { now: t1 }), D1 = debtFreeOf(doc, ref, { now: t1 }), line = id => S.sinceStart.find(l => l.id === id);
+  assert.equal(S.start, '2026-11-14'); assert.equal(line('owed').by, -600);
+  assert.equal(line('debtAt').by, (2027 * 12 + 1 + D1.months) - (2026 * 12 + 10 + D0.months));
+  assert.ok(line('debtAt').by < 0, 'a bigger payment brings the month closer');
+  assert.equal(S.sinceStart.some(l => l.id === 'cash' || l.id === 'runway'), false, 'nothing is said about numbers not known at both ends');
+  assert.deepEqual(movedOf(m0, m0), []); assert.deepEqual(movedOf(null, m0), []);
+  assert.deepEqual(sinceOf(newHousehold({ name: 'x' }), ref, { now: t0 }).sinceStart, []);
+  let many = newHousehold({ name: 'x' }); for (let i = 0; i < 30; i++) many = addMark(many, { ...m0, on: `2026-${String(1 + (i % 12)).padStart(2, '0')}-${String(1 + i % 28).padStart(2, '0')}` });
+  assert.ok(marksIn(many).length <= 24);
 });
