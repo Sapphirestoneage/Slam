@@ -9,6 +9,8 @@ import { benefitOf } from '../math/socialsecurity.js';
 import { placeOf } from '../math/metrics.js';
 import { defaultFilingStatus } from '../math/income.js';
 import { RULES } from '../registry/assumptions.js';
+import { paperGaps } from '../math/taxreturn.js';
+import { onFile } from '../journey.js';
 import { BUCKET_KIND } from '../sharpen.js';
 
 export const DEFAULTS = { strategy: 'fixed', rate: 0.04, claimAge: 67, fill: 'none', stocks: 0.8, health: 0, eras: true, blocks: [], retireAge: null, target: 0.95, aca: true, partnerGap: null, partnerSs: 0 };
@@ -136,4 +138,13 @@ export function taxSheetOf(plan, doc, ref, hist) {
   if (!life.ready || !life.run) return { ready: false, now: taxNowOf(plan, doc, ref) };
   const fills = fillsOf(life, ref), least = fills.filter(f => f.ok).reduce((b, f) => (b == null || f.cost < b.cost - 0.5 ? f : b), null);
   return { ready: true, now: taxNowOf(plan, doc, ref), age: life.age, planAge: life.x.planAge, chosen: String(s.fill), fills, least: least?.id ?? null, marks: cliffsOf(life) };
+}
+
+// The papers kept in a plan (a return, a W-2, a pay stub, a state return) against what the plan itself works from:
+// the gaps worth pointing out. plan is planOf(doc, ...) or null; without it only the paper-to-paper gaps can show.
+export const papersIn = doc => { const st = doc?.settings?.start || {}; return { ret: st.return ?? null, w2: st.w2 ?? null, stub: st.stub ?? null, ny: st.ny ?? null }; };
+export function gapsOf(plan, doc, ref) {
+  const P = papersIn(doc); if (!P.ret && !P.w2 && !P.stub) return [];
+  let takeHome = null; try { takeHome = onFile(doc, 'income', { ref }).takeHome ?? null; } catch { takeHome = null; }
+  return paperGaps({ ret: P.ret?.lines ?? null, w2: P.w2?.lines ?? null, stub: P.stub?.lines ?? null, perYear: P.stub?.perYear ?? null }, { planGross: plan?.m?.inputs?.income?.[0]?.gross ?? null, takeHome });
 }

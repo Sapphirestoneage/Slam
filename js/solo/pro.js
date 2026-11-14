@@ -11,7 +11,8 @@ import { money, btn } from './shell.js';
 import { cardOf, setCard, addClient, stampCard, rosterOf, practiceOf, summaryOf, markOf, addMark, sinceOf } from '../pro.js';
 import { movedWords } from './moved.js';
 import { planOf } from '../journey.js';
-import { taxSheetOf } from '../lifetime/inputs.js';
+import { taxSheetOf, gapsOf } from '../lifetime/inputs.js';
+import { flagCard } from './papers-ui.js';
 const pct = r => `${Math.round(r * 1000) / 10}%`, near = v => money(Math.round(v / 100) * 100); // a whole plan's totals read to the nearest hundred
 
 const $ = id => document.getElementById(id), device = deviceAdapter();
@@ -37,7 +38,7 @@ async function draw() {
   $('step').textContent = rows.length ? `${rows.length} ${rows.length === 1 ? 'plan' : 'plans'}` : '';
 
   // one page to print
-  if (ui.sheet && docs[ui.sheet]) { const [priors, flags, hist] = await deepData(); let T = { ready: false }; try { T = taxSheetOf(planOf(docs[ui.sheet], ref, priors, { flags }), docs[ui.sheet], ref, hist); } catch { /* a plan too empty to plan a life from */ }
+  if (ui.sheet && docs[ui.sheet]) { const [priors, flags, hist] = await deepData(); let T = { ready: false }, gaps = []; try { const pl = planOf(docs[ui.sheet], ref, priors, { flags }); gaps = gapsOf(pl, docs[ui.sheet], ref); T = taxSheetOf(pl, docs[ui.sheet], ref, hist); } catch { /* a plan too empty to plan a life from */ }
     const dueMark = id => docs[id] && sinceOf(docs[id], ref).last !== today() && !skipped(id) && summaryOf(docs[id], ref).done + (docs[id].records?.length ?? 0) > 0;
     const S = summaryOf(docs[ui.sheet], ref), M = sinceOf(docs[ui.sheet], ref), start = movedWords(M.sinceStart), last = movedWords(M.sinceLast), name = rows.find(r => r.id === ui.sheet)?.name ?? S.name;
     return $('main').replaceChildren(...[
@@ -46,6 +47,7 @@ async function draw() {
       M.marks || dueMark(ui.sheet) ? null : h('p.st-small.st-noprint', {}, 'Mark a session and the page shows what moved since then: debt, the debt free month, cash on hand, steps done. The client sees it too.'),
       h('div.st-card.st-sheet', {}, h('div.st-eyebrow', {}, card ? [card.name, card.firm].filter(Boolean).join(', ') : 'Stress Less About Money'), h('h1', { style: { margin: '0 0 2px' } }, name), h('p.st-small', { style: { margin: 0 } }, `As of ${S.on}. ${S.done} of ${S.of} steps done. ${S.next ? end(`Next: ${S.next}`) : ''}`),
         h('dl.st-sheetlines', {}, S.lines.map(l => [h('dt', {}, l.label), h('dd', {}, l.value == null ? h('span.st-soft', {}, 'Not answered yet') : h('strong', {}, l.money ? money(l.value) : l.value), l.amount != null ? h('span.st-small', {}, ` ${money(l.amount)} ${l.id === 'debt' ? 'owed' : 'on hand'}.`) : null, l.note ? h('div.st-small', {}, l.note) : null)])),
+        flagCard(gaps),
         M.marks ? h('div.st-moved', {}, h('h2', {}, `Since we started, ${M.start}`), start.length ? h('ul', {}, start.map(t => h('li', {}, t))) : h('p.st-small', { style: { margin: 0 } }, 'Nothing has moved yet.'),
           M.marks > 1 && last.length ? [h('h3', {}, `Since last session, ${M.last}`), h('ul', {}, last.map(t => h('li', {}, t)))] : null) : null,
         T.now || T.ready || docs[ui.sheet].settings?.start?.return ? h('div.st-moved', {}, h('h2', {}, 'Taxes'),
