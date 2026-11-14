@@ -7,7 +7,11 @@ import { Store, newHousehold } from '../records.js';
 import { pack, unpack } from '../start/link.js';
 import { soloOf, carryUrl, SOLO } from '../solo.js';
 import { deviceAdapter, activeSpace } from '../accounts.js';
+import { cloudConfig, cloudOf } from '../cloud.js';
+import { pusher } from '../sync.js';
 export const device = deviceAdapter();
+// signed in: every save on the device follows to the server a beat later
+let up = null; cloudConfig().then(cfg => { const cloud = cloudOf(cfg); if (cloud?.signedIn()) up = pusher(device, cloud); }).catch(() => {});
 
 export { h };
 export const money = v => fmt.money(v);
@@ -26,7 +30,7 @@ export async function boot(id, draw) {
   const mine = () => store.doc.settings?.start || {}, remember = patch => store.setDoc('settings', { start: { ...mine(), ...patch } });
   let timer = null, packed = null;
   // the address follows the answers, a beat behind the typing
-  const save = () => { clearTimeout(timer); timer = setTimeout(async () => { packed = await pack(store.doc); history.replaceState(null, '', `${location.pathname}${location.search}${HERE}${packed}`); const sp = activeSpace(device.loadAccount()); if (sp) device.saveSpace(sp.id, packed); }, 250); };
+  const save = () => { clearTimeout(timer); timer = setTimeout(async () => { packed = await pack(store.doc); history.replaceState(null, '', `${location.pathname}${location.search}${HERE}${packed}`); const sp = activeSpace(device.loadAccount()); if (sp) { device.saveSpace(sp.id, packed); up?.push(sp.id); } }, 250); };
   const link = async () => { packed = await pack(store.doc); return `${location.origin}${location.pathname}${HERE}${packed}`; };
   const nextUrl = async () => carryUrl(me.next, await pack(store.doc));
   const api = { store, ref, me, mine, remember, save, link, nextUrl, render: () => { draw(api); save(); } };

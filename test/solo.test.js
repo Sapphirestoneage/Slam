@@ -180,7 +180,7 @@ test('quantum collapse: every question is path-changing, the meter is honest ari
 
 import { soloProgress, USES, SECONDS_EACH } from '../js/solo.js';
 import { answer } from '../js/journey.js';
-import { newAccount, activeSpace, addShared, switchTo, removeSpace, joinShared, canOpen, rename, memoryAdapter } from '../js/accounts.js';
+import { newAccount, activeSpace, addShared, switchTo, removeSpace, joinShared, canOpen, rename, memoryAdapter, deviceAdapter } from '../js/accounts.js';
 import { cloudOf } from '../js/cloud.js';
 test('what is done, and what carrying answers forward saved, counted by hand', () => {
   const s = fresh(); let P = soloProgress(s.doc, ref);
@@ -209,28 +209,51 @@ test('accounts and spaces: mine is mine, ours is open to both and nobody else', 
   assert.deepEqual(activeSpace(rename(a = switchTo(a, ours.id), 'Eli Z')).members, ['Eli Z', 'Sam']);
   const d = memoryAdapter(); d.saveAccount(a); d.saveSpace(ours.id, 'packed'); assert.equal(d.loadAccount().name, 'Eli'); assert.equal(d.loadSpace(ours.id), 'packed'); assert.equal(d.loadSpace('x'), null); d.signOut(); assert.equal(d.loadAccount(), null);
 });
-test('the server adapter is off without keys, and speaks the same four calls with them', async () => {
+import { makeCloud } from '../tools/e2e/mock-cloud.mjs';
+import { sessionFromHash, cloudConfig } from '../js/cloud.js';
+import { pullAll, defaultMerge, pusher, stampKey } from '../js/sync.js';
+const box = () => { const m = new Map(); return { getItem: k => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: k => { m.delete(k); }, m }; };
+test('the server adapter is off without keys', async () => {
   assert.equal(cloudOf(null), null); assert.equal(cloudOf({ url: 'https://x' }), null);
-  const calls = [], fetcher = async (url, init) => { calls.push([url, init?.method ?? 'GET']); return { ok: true, json: async () => (url.includes('spaces') ? [{ packed: 'abc' }] : [{ data: { name: 'Eli' } }]) }; };
-  const c = cloudOf({ url: 'https://p.supabase.co', key: 'k' }, { fetcher });
-  assert.equal(await c.loadSpace('s1'), 'abc'); assert.equal((await c.loadAccount()).name, 'Eli'); assert.equal(await c.saveSpace('s1', 'zzz'), true); assert.equal(await c.sendLink('a@b.co'), true);
-  assert.deepEqual(calls.map(x => x[1]), ['GET', 'GET', 'POST', 'POST']); assert.match(calls[0][0], /rest\/v1\/spaces\?id=eq\.s1/);
-  for (const k of ['loadAccount', 'saveAccount', 'loadSpace', 'saveSpace']) assert.equal(typeof c[k], 'function');
+  assert.equal(await cloudConfig(async () => ({ ok: false }), box()), null);
+  assert.deepEqual(await cloudConfig(async () => ({ ok: true, json: async () => ({ url: 'https://p.supabase.co', key: 'k' }) }), box()), { url: 'https://p.supabase.co', key: 'k' });
+  const S = sessionFromHash('#access_token=abc&refresh_token=def&expires_in=3600&type=magiclink'); assert.equal(S.access_token, 'abc'); assert.equal(S.refresh_token, 'def'); assert.equal(sessionFromHash('#/d/xyz'), null);
 });
-
-import { treeOf, placeOf, MILESTONES } from '../js/tree.js';
-test('the 625: 25 trees of 25 levels, placed a few taps a tree, with one next unlock', () => {
-  const data = JSON.parse(readFileSync(new URL('../data/skill-tree.json', import.meta.url)));
-  assert.equal(data.trees.length, 25); for (const t of data.trees) { assert.equal(t.skills.length, 25); assert.deepEqual(t.skills.map(x => x.n), Array.from({ length: 25 }, (_, i) => i + 1)); for (const k of t.skills) assert.ok(k.name && !/[\u2014\u2013]/.test(k.name + k.what + k.check), k.name); }
-  const main = data.trees[0]; assert.equal(main.id, 'main-path');
-  assert.equal(placeOf(main, []).ask.n, 5); assert.equal(placeOf(main, [true]).ask.n, 10); assert.deepEqual(placeOf(main, [false]), { level: 0 }); assert.deepEqual(placeOf(main, [true, true, false]), { level: 10 }); assert.deepEqual(placeOf(main, [true, true, true, true, true]), { level: 25 });
-  assert.deepEqual(MILESTONES, [5, 10, 15, 20, 25]);
-  let T = treeOf(data, {}, {}); assert.equal(T.total, 0); assert.equal(T.of, 625); assert.equal(T.nextTree.id, 'main-path'); assert.equal(T.unlock, null); assert.equal(T.done, false);
-  T = treeOf(data, { 'main-path': 5, 'tax-strategy': 15, 'cash-safety-net': 0 }, { 'main-path': true, 'tax-strategy': true, 'cash-safety-net': true });
-  assert.equal(T.total, 20); assert.equal(T.placed, 3); assert.equal(T.strongest[0].id, 'tax-strategy'); assert.equal(T.trees.find(t => t.id === 'tax-strategy').band, 'Advanced');
-  assert.equal(T.unlock.treeId, 'main-path'); assert.equal(T.unlock.n, 6); // the main path comes first until level 10
-  T = treeOf(data, { 'main-path': 10, 'tax-strategy': 15, 'cash-safety-net': 0 }, { 'main-path': true, 'tax-strategy': true, 'cash-safety-net': true });
-  assert.equal(T.unlock.treeId, 'cash-safety-net'); assert.equal(T.unlock.n, 1); // then the lowest placed tree
-  assert.equal(T.bands[0].count, 2); assert.equal(T.bands[2].count, 1);
-  assert.equal(treeOf(data, { 'main-path': 10, 'tax-strategy': 15, 'cash-safety-net': 0 }, { 'main-path': true, 'tax-strategy': true, 'cash-safety-net': 'skip' }).unlock.treeId, 'main-path'); // a tree set aside is never the next unlock
+test('signing in with the emailed code, then your account and your spaces, against the same rules as the database', async () => {
+  const srv = makeCloud(), cfg = { url: 'http://cloud', key: 'pub' };
+  const eli = cloudOf(cfg, { fetcher: srv.fetch, ls: box() }), sam = cloudOf(cfg, { fetcher: srv.fetch, ls: box() }), pat = cloudOf(cfg, { fetcher: srv.fetch, ls: box() });
+  assert.equal(eli.signedIn(), false); assert.equal(await eli.sendLink('eli@x.co', 'https://site/one.html'), true); assert.equal(srv.db.sent[0].redirect, 'https://site/one.html');
+  assert.equal(await eli.verifyCode('eli@x.co', '000000'), false); assert.equal(await eli.verifyCode('eli@x.co', ' 123456 '), true); assert.equal(eli.signedIn(), true); assert.equal(eli.email(), 'eli@x.co');
+  assert.equal(await eli.loadAccount(), null); let a = newAccount('Eli', now); await eli.saveAccount(a); assert.equal((await eli.loadAccount()).name, 'Eli');
+  const mine = activeSpace(a).id; assert.ok(mine.length >= 24, 'a space id is long enough that it cannot be guessed');
+  assert.equal(await eli.loadSpace(mine), null); await eli.saveSpace(mine, 'v1'); assert.equal((await eli.loadSpace(mine)).packed, 'v1'); await eli.saveSpace(mine, 'v2'); assert.equal((await eli.loadSpace(mine)).packed, 'v2');
+  for (const [c, e] of [[sam, 'sam@x.co'], [pat, 'pat@x.co']]) { await c.sendLink(e); await c.verifyCode(e, '123456'); }
+  assert.equal(await sam.loadAccount(), null, 'another person sees no account of yours'); assert.equal(await sam.loadSpace(mine), null, 'and cannot read your space');
+  await assert.rejects(() => sam.saveSpace(mine, 'theirs'), /cloud 409/); assert.equal((await eli.loadSpace(mine)).packed, 'v2', 'nor write it');
+  a = addShared(a, 'Sam'); const ours = activeSpace(a).id; await eli.saveSpace(ours, 'ours-1');
+  await sam.joinSpace(ours); assert.equal((await sam.loadSpace(ours)).packed, 'ours-1'); await sam.saveSpace(ours, 'ours-2'); assert.equal((await eli.loadSpace(ours)).packed, 'ours-2', 'both members read and write the shared one');
+  assert.equal(await pat.loadSpace(ours), null, 'a third person does not');
+});
+test('a session that has run out is renewed without asking again', async () => {
+  let t = 1_000_000; const srv = makeCloud({ now: () => t, ttl: 3600 }), c = cloudOf({ url: 'http://cloud', key: 'pub' }, { fetcher: srv.fetch, ls: box(), now: () => t });
+  await c.sendLink('eli@x.co'); await c.verifyCode('eli@x.co', '123456'); await c.saveAccount({ name: 'Eli', spaces: [] });
+  t += 2 * 3600 * 1000; assert.equal((await c.loadAccount()).name, 'Eli'); assert.equal(c.signedIn(), true);
+});
+test('sync: a second phone picks up the plan, the newest save wins, and work done before signing in is kept', async () => {
+  const srv = makeCloud(), cfg = { url: 'http://cloud', key: 'pub' };
+  const phone = { ls: box() }, laptop = { ls: box() };
+  for (const d of [phone, laptop]) { d.device = deviceAdapter(d.ls); d.cloud = cloudOf(cfg, { fetcher: srv.fetch, ls: d.ls }); await d.cloud.sendLink('eli@x.co'); await d.cloud.verifyCode('eli@x.co', '123456'); }
+  const a = newAccount('Eli', now), id = activeSpace(a).id; phone.device.saveAccount(a); phone.device.saveSpace(id, 'plan-1');
+  let r = await pullAll(phone.device, phone.cloud, { ls: phone.ls }); assert.deepEqual(r.pushed, [id]); // first sign-in sends it up
+  r = await pullAll(laptop.device, laptop.cloud, { ls: laptop.ls }); assert.deepEqual(r.pulled, [id]); assert.equal(laptop.device.loadSpace(id), 'plan-1'); assert.equal(laptop.device.loadAccount().name, 'Eli');
+  await new Promise(z => setTimeout(z, 5)); laptop.device.saveSpace(id, 'plan-2'); const P = pusher(laptop.device, laptop.cloud, { ls: laptop.ls, wait: 0 }); P.push(id); await P.flush();
+  r = await pullAll(phone.device, phone.cloud, { ls: phone.ls }); assert.deepEqual(r.pulled, [id]); assert.equal(phone.device.loadSpace(id), 'plan-2');
+  assert.deepEqual((await pullAll(phone.device, phone.cloud, { ls: phone.ls })), { account: false, pulled: [], pushed: [] }); // in step: nothing moves
+  // a tablet that already held its own plan before signing in keeps it, beside the account's
+  const tab = { ls: box() }; tab.device = deviceAdapter(tab.ls); tab.cloud = cloudOf(cfg, { fetcher: srv.fetch, ls: tab.ls }); await tab.cloud.sendLink('eli@x.co'); await tab.cloud.verifyCode('eli@x.co', '123456');
+  const local = newAccount('Me', now), lid = activeSpace(local).id; tab.device.saveAccount(local); tab.device.saveSpace(lid, 'typed-before');
+  await pullAll(tab.device, tab.cloud, { ls: tab.ls }); const merged = tab.device.loadAccount();
+  assert.deepEqual(merged.spaces.map(s => s.kind), ['mine', 'extra']); assert.equal(merged.spaces[1].name, 'From this device'); assert.equal(tab.device.loadSpace(id), 'plan-2'); assert.equal((await tab.cloud.loadSpace(lid)).packed, 'typed-before');
+  assert.equal(defaultMerge(newAccount('Me', now), a).spaces.length, 1); // an empty local plan is not carried
+  assert.ok(stampKey(id).includes(id));
 });

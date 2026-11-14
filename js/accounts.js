@@ -3,7 +3,8 @@
 // one person, "shared" is held by two (a couple) and opened by both. This file is the pure model. Where it is kept is an
 // adapter: today the browser (deviceAdapter), later a server (js/cloud.js) with the same four calls, so nothing above
 // this line changes when sign-in arrives.
-const uid = () => Math.random().toString(36).slice(2, 10);
+// long and unguessable: a shared space is joined by knowing its id
+const uid = () => (globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID().replace(/-/g, '') : `${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`);
 export const newAccount = (name = 'Me', now = new Date()) => { const id = uid(); return { id: uid(), name, since: now.toISOString().slice(0, 10), active: id, spaces: [{ id, kind: 'mine', name: 'Mine', members: [name] }] }; };
 export const activeSpace = acct => acct?.spaces.find(s => s.id === acct.active) ?? acct?.spaces[0] ?? null;
 // A shared space for two. `withName` is the other person; they join it from a link (or, with a server, by signing in).
