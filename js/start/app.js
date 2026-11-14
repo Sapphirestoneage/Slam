@@ -277,7 +277,7 @@ function you(p) {
       h('div.st-chips', {}, decades.map(d => chip(`${d}s`, decade === d, () => { ui.decade = d; render(); }))),
       years.length ? h('div.st-years', {}, years.map(y => chip(String(y), prof.birthYear === y, () => setYear(y)))) : h('p.st-soft.st-small', { style: { marginTop: '10px' } }, 'Pick the decade, then the year.')),
     p.hasAge
-      ? h('div.st-row', {}, btn(`I'm ${p.age}. Show my plan`, () => go('numbers', { q: p.next ?? QUESTIONS[0].key }), 'primary big'))
+      ? h('div.st-row', {}, btn(`I'm ${p.age}. Show my plan`, () => (p.done ? go('plan') : go('numbers', { q: p.next ?? QUESTIONS[0].key })), 'primary big'))
       : h('p.st-soft', {}, 'Your plan shows as soon as you pick a year.'),
     h('h2', { style: { marginTop: '8px' } }, 'Make it fit you'),
     h('p.st-soft.st-small', {}, 'All optional. Each one is a tap.'),

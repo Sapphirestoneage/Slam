@@ -713,6 +713,25 @@ async function runStart(browser) {
       for (const [sec, vals] of [['cards', ['5000', '25', '200']], ['student', ['12000', '5.5', '150']]]) { await solo.locator(`[data-sec="${sec}"] .st-bookhead .st-btn`).click(); const ins = solo.locator(`[data-sec="${sec}"] .st-bkcell input`); for (let i = 0; i < vals.length; i++) await ins.nth(i).fill(vals[i]); }
       await solo.locator('h1').click(); await settle(solo, 400);
       await scanHere(solo, { route: 'debt.html', width, theme, client: 'Start' }, [...STILL, 'covered', 'sticky']);
+      // the rest of the path, each filled in by its own Next button so the answers ride along
+      await solo.goto(`${BASE}/first.html`, { waitUntil: 'load' }); await settle(solo, 400);
+      await scanHere(solo, { route: 'first.html', width, theme, client: 'Start' }, STILL);
+      for (const pick of [0, 4, 1, 0, 0]) { const o = solo.locator('.st-collapseopt'); if (await o.count()) { await o.nth(pick).click(); await settle(solo, 120); } }
+      await scanHere(solo, { route: 'first.html', width, theme, client: 'Start', state: 'answered' }, STILL);
+      await solo.goto(`${BASE}/end.html`, { waitUntil: 'load' }); await settle(solo, 400);
+      await solo.locator('[data-step="1"] .st-chip', { hasText: '$4,000' }).click(); await solo.locator('[data-step="2"] .st-chip', { hasText: '20 years' }).click(); await solo.locator('[data-step="3"] .st-chip', { hasText: '$25,000' }).click();
+      await solo.locator('[data-step="4"] .st-chip', { hasText: '$4,500' }).click(); await solo.locator('[data-step="4"] .st-chip', { hasText: '$3,000' }).click(); await settle(solo, 300);
+      await scanHere(solo, { route: 'end.html', width, theme, client: 'Start' }, [...STILL, 'covered', 'sticky']);
+      await solo.locator('#carry .st-btn.primary.big').click(); await solo.waitForSelector('.st-quizq'); await scanHere(solo, { route: 'quiz.html', width, theme, client: 'Start' }, STILL);
+      for (let i = 0; i < 10; i++) { await solo.locator('.st-quizscale .st-chip').nth(i % 5).click(); await settle(solo, 60); }
+      await settle(solo, 200); await scanHere(solo, { route: 'quiz.html', width, theme, client: 'Start', state: 'result' }, STILL);
+      await solo.goto(`${BASE}/runway.html`, { waitUntil: 'load' }); await settle(solo, 400);
+      await solo.locator('.st-chip', { hasText: '$5,000' }).first().click(); await solo.locator('.st-chip', { hasText: '$3,000' }).first().click(); await settle(solo, 300);
+      await scanHere(solo, { route: 'runway.html', width, theme, client: 'Start' }, [...STILL, 'covered', 'sticky']);
+      await solo.goto(`${BASE}/one.html`, { waitUntil: 'load' }); await settle(solo, 400);
+      await solo.locator('.st-btn', { hasText: 'Make my account' }).click().catch(() => {}); await settle(solo, 300);
+      await scanHere(solo, { route: 'one.html', width, theme, client: 'Start' }, [...STILL, 'covered', 'sticky']);
+      await solo.evaluate(() => localStorage.removeItem('slam.account'));
       await solo.close();
     } catch (e) { errors.push(`Solo debt ${width} ${theme}: ${e.message.split('\n')[0]}`); }
   }

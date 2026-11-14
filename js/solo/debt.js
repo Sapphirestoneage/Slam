@@ -43,7 +43,7 @@ function draw(api) {
     result,
     h('div.st-card', {}, h('h2', { style: { marginTop: 0 } }, 'Take it with you'),
       h('p.st-small', {}, 'The next step opens with these numbers already in it. Nothing to type twice.'),
-      h('div.st-row', {}, next), h('div', { style: { marginTop: '10px' } }, copyLink(api))));
+      h('div.st-row', {}, next), h('div.st-row', { style: { marginTop: '10px' } }, copyLink(api), h('a.st-btn.slim', { href: 'one.html' }, 'All the steps'))));
   next.disabled = !B.total; next.classList.toggle('st-pulse', !!B.total && !document.querySelector('#main .st-book .st-pulse'));
   if (!B.count) document.querySelector('#main .st-bookhead .st-btn')?.classList.add('st-pulse');
   $('foot').replaceChildren(h('p.st-small', {}, 'Education, not advice. Your numbers stay in your browser and in the link you choose to share.'));
