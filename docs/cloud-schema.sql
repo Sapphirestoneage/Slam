@@ -7,7 +7,7 @@ alter table accounts enable row level security; alter table spaces enable row le
 -- Your account is yours alone.
 drop policy if exists "own account" on accounts;
 create policy "own account" on accounts for all to authenticated using (owner = auth.uid()) with check (owner = auth.uid());
--- A space opens for its members and nobody else. Anyone signed in can start a new one; joining needs its long id.
+-- A space opens for its members (two, three, any number) and nobody else. Anyone signed in can start a new one; joining needs its long id.
 drop policy if exists "member reads space" on spaces; drop policy if exists "member writes space" on spaces; drop policy if exists "signed in creates a space" on spaces;
 create policy "member reads space" on spaces for select to authenticated using (exists (select 1 from space_members m where m.space_id = id and m.member = auth.uid()));
 create policy "member writes space" on spaces for update to authenticated using (exists (select 1 from space_members m where m.space_id = id and m.member = auth.uid()));

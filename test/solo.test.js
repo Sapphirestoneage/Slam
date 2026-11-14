@@ -83,7 +83,7 @@ test('carried forward: the same file opens in the whole plan with question 5 alr
 test('the choices on the page', () => { assert.deepEqual(EXTRAS, [0, 50, 100, 250, 500]); assert.deepEqual(ORDERS.map(o => o[0]), ['avalanche', 'snowball']); });
 
 import { runwayOf } from '../js/solo.js';
-import { quizOf, pairOf, perceptionOf, itemsFor, BANK, ELEMENTS, SCALE } from '../js/quiz.js';
+import { quizOf, pairOf, perceptionOf, groupOf, itemsFor, BANK, ELEMENTS, SCALE } from '../js/quiz.js';
 import { MIRRORS } from '../js/mirror.js';
 test('how long the money lasts, by hand', () => {
   const R = runwayOf({ cash: 9000, spending: 3000, now }); // 3 months exactly
@@ -134,6 +134,9 @@ test('two people: cover, a doubled habit, an open muscle, and how well one read 
   assert.equal(P.widest.id, 'earth'); assert.equal(P.widest.gap, 100); assert.equal(P.widest.kind, 'cover'); assert.deepEqual(P.covered, ['Earth']); assert.equal(P.closest.gap, 0);
   assert.deepEqual(pairOf(saver, saver).doubled, ['Earth']); assert.deepEqual(pairOf(spender, spender).open, ['Earth']);
   assert.equal(pairOf({}, all(3)), null);
+  // three people: covered when anyone has it, shared when everyone leans, open when nobody does
+  const T = groupOf([saver, spender, all(3)]); assert.equal(T.size, 3); const earth = T.rows.find(r => r.id === 'earth'); assert.deepEqual(earth.scores, [100, 0, 50]); assert.equal(earth.kind, 'cover'); assert.equal(earth.strongest, 0); assert.equal(T.widest.id, 'earth');
+  assert.deepEqual(groupOf([saver, saver, saver]).doubled, ['Earth']); assert.deepEqual(groupOf([spender, spender, spender, spender]).open, ['Earth']); assert.equal(groupOf([saver]), null); assert.equal(groupOf([saver, {}]), null);
   const G = perceptionOf(all(3), saver); // guessed the middle; they are a strong saver
   assert.equal(G.miss.id, 'earth'); assert.equal(G.miss.off, -50); assert.equal(G.close.length, 4); assert.equal(G.average, 10);
 });
@@ -180,7 +183,7 @@ test('quantum collapse: every question is path-changing, the meter is honest ari
 
 import { soloProgress, USES, SECONDS_EACH } from '../js/solo.js';
 import { answer } from '../js/journey.js';
-import { newAccount, activeSpace, addShared, switchTo, removeSpace, joinShared, canOpen, rename, memoryAdapter, deviceAdapter } from '../js/accounts.js';
+import { newAccount, activeSpace, addShared, switchTo, removeSpace, joinShared, canOpen, rename, nameSpace, memoryAdapter, deviceAdapter } from '../js/accounts.js';
 import { cloudOf } from '../js/cloud.js';
 test('what is done, and what carrying answers forward saved, counted by hand', () => {
   const s = fresh(); let P = soloProgress(s.doc, ref);
@@ -199,11 +202,14 @@ test('what is done, and what carrying answers forward saved, counted by hand', (
 });
 test('accounts and spaces: mine is mine, ours is open to both and nobody else', () => {
   let a = newAccount('Eli', now); assert.equal(a.spaces.length, 1); assert.equal(activeSpace(a).kind, 'mine'); assert.equal(a.since, '2026-11-14');
-  const mine = activeSpace(a); a = addShared(a, 'Sam'); const ours = activeSpace(a);
+  const mine = activeSpace(a); a = addShared(a, ['Sam']); const ours = activeSpace(a);
   assert.equal(ours.kind, 'shared'); assert.deepEqual(ours.members, ['Eli', 'Sam']);
   assert.equal(canOpen(mine, 'Eli'), true); assert.equal(canOpen(mine, 'Sam'), false); assert.equal(canOpen(ours, 'Sam'), true); assert.equal(canOpen(ours, 'Pat'), false);
   a = switchTo(a, mine.id); assert.equal(activeSpace(a).id, mine.id); assert.equal(switchTo(a, 'nope').active, mine.id);
   assert.equal(removeSpace(a, mine.id).spaces.length, 2); // your own space cannot be removed
+  // poly friendly: a shared space holds any number of people, and a person can hold several shared spaces
+  const three = addShared(newAccount('Eli', now), ['Sam', 'Pat']), tri = activeSpace(three); assert.deepEqual(tri.members, ['Eli', 'Sam', 'Pat']); for (const who of ['Eli', 'Sam', 'Pat']) assert.equal(canOpen(tri, who), true); assert.equal(canOpen(tri, 'Lee'), false);
+  const two = addShared(three, ['Lee']); assert.deepEqual(two.spaces.map(x => x.name), ['Mine', 'Ours', 'Shared plan 2']); assert.equal(nameSpace(two, activeSpace(two).id, 'Household').spaces[2].name, 'Household'); assert.equal(nameSpace(two, two.spaces[0].id, 'X').spaces[0].name, 'Mine');
   assert.equal(removeSpace(a, ours.id).spaces.length, 1);
   let b = joinShared(newAccount('Sam', now), ours); assert.equal(activeSpace(b).id, ours.id); assert.equal(b.spaces.length, 2); assert.equal(joinShared(b, ours).spaces.length, 2);
   assert.deepEqual(activeSpace(rename(a = switchTo(a, ours.id), 'Eli Z')).members, ['Eli Z', 'Sam']);
@@ -230,9 +236,11 @@ test('signing in with the emailed code, then your account and your spaces, again
   for (const [c, e] of [[sam, 'sam@x.co'], [pat, 'pat@x.co']]) { await c.sendLink(e); await c.verifyCode(e, '123456'); }
   assert.equal(await sam.loadAccount(), null, 'another person sees no account of yours'); assert.equal(await sam.loadSpace(mine), null, 'and cannot read your space');
   await assert.rejects(() => sam.saveSpace(mine, 'theirs'), /cloud 409/); assert.equal((await eli.loadSpace(mine)).packed, 'v2', 'nor write it');
-  a = addShared(a, 'Sam'); const ours = activeSpace(a).id; await eli.saveSpace(ours, 'ours-1');
+  a = addShared(a, ['Sam']); const ours = activeSpace(a).id; await eli.saveSpace(ours, 'ours-1');
   await sam.joinSpace(ours); assert.equal((await sam.loadSpace(ours)).packed, 'ours-1'); await sam.saveSpace(ours, 'ours-2'); assert.equal((await eli.loadSpace(ours)).packed, 'ours-2', 'both members read and write the shared one');
   assert.equal(await pat.loadSpace(ours), null, 'a third person does not');
+  await pat.joinSpace(ours); await pat.saveSpace(ours, 'ours-3'); assert.equal((await eli.loadSpace(ours)).packed, 'ours-3'); assert.equal((await sam.loadSpace(ours)).packed, 'ours-3', 'with the invite, a third person joins and all three share it');
+  const lee = cloudOf(cfg, { fetcher: srv.fetch, ls: box() }); await lee.sendLink('lee@x.co'); await lee.verifyCode('lee@x.co', '123456'); assert.equal(await lee.loadSpace(ours), null, 'and someone without the invite still cannot');
 });
 test('a session that has run out is renewed without asking again', async () => {
   let t = 1_000_000; const srv = makeCloud({ now: () => t, ttl: 3600 }), c = cloudOf({ url: 'http://cloud', key: 'pub' }, { fetcher: srv.fetch, ls: box(), now: () => t });

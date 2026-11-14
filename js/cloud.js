@@ -3,6 +3,7 @@
 // data/cloud.json holds a project address and its public key: with none, cloudConfig returns null and everything stays
 // on the device. Sign-in is by email (a link, or the code in the same email): no passwords. The database rules are in
 // docs/cloud-schema.sql: your account is yours, a shared space opens for its members and nobody else.
+import { browserDemo } from './cloud-demo.js';
 export async function cloudConfig(fetcher = globalThis.fetch, ls = globalThis.localStorage) {
   try { const t = ls?.getItem('slam.cloud'); if (t) { const c = JSON.parse(t); if (c?.url && c?.key) return c; } } catch { /* no override */ }
   try { const r = await fetcher('data/cloud.json', { cache: 'no-store' }); if (!r.ok) return null; const c = await r.json(); return c?.url && c?.key ? c : null; } catch { return null; }
@@ -13,8 +14,9 @@ export function sessionFromHash(hash = '') {
   const q = new URLSearchParams(hash.replace(/^#/, '')), access_token = q.get('access_token'), refresh_token = q.get('refresh_token');
   return access_token ? { access_token, refresh_token, expires_at: Number(q.get('expires_at')) || Math.floor(Date.now() / 1000) + (Number(q.get('expires_in')) || 3600) } : null;
 }
-export function cloudOf(config, { fetcher = globalThis.fetch, ls = globalThis.localStorage, now = () => Date.now() } = {}) {
+export function cloudOf(config, { fetcher = null, ls = globalThis.localStorage, now = () => Date.now() } = {}) {
   if (!config?.url || !config?.key) return null;
+  fetcher = fetcher ?? (config.demo ? browserDemo(ls).fetch : globalThis.fetch); // practice mode talks to a stand-in kept in this browser
   const KEY = 'slam.session';
   let session = (() => { try { return JSON.parse(ls?.getItem(KEY) || 'null'); } catch { return null; } })();
   const keep = s => { session = s; try { if (s) ls?.setItem(KEY, JSON.stringify(s)); else ls?.removeItem(KEY); } catch { /* kept in memory only */ } return s; };
@@ -31,7 +33,7 @@ export function cloudOf(config, { fetcher = globalThis.fetch, ls = globalThis.lo
     return r.status === 204 ? null : r.json().catch(() => null);
   };
   const up = (table, row, conflict) => rest(`${table}${conflict ? `?on_conflict=${conflict}` : ''}`, { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row) });
-  return { kind: 'cloud',
+  return { kind: 'cloud', demo: !!config.demo,
     signedIn: () => !!session?.access_token, email: () => session?.email ?? null,
     // the email holds a link back to `redirect` and (when the template shows it) a six-digit code
     sendLink: async (email, redirect) => (await auth(`otp${redirect ? `?redirect_to=${encodeURIComponent(redirect)}` : ''}`, { email, create_user: true })).ok,

@@ -142,7 +142,7 @@ export function quizOf(answers = {}, depth = 'ten') {
     mirror: top.mirror, practice: even ? null : { element: low.name, why: low.low, stage: low.tool[0], flash: low.tool[1], label: low.tool[2] },
     words: even ? 'Your five are close to even: no one muscle is carrying the rest.' : `${top.name} (${top.word.toLowerCase()}) is the muscle doing the most work right now. ${low.name} (${low.word.toLowerCase()}) has had the least practice.` };
 }
-// Two people: where each muscle sits for both. A gap is cover (one of you has it); both high is a shared habit to watch;
+// Two people (groupOf below handles any number): where each muscle sits for both. A gap is cover (one of you has it); both high is a shared habit to watch;
 // both low is the one to build together.
 export function pairOf(a, b) {
   const A = quizOf(a), B = quizOf(b); if (!A.ready || !B.ready) return null;
@@ -157,4 +157,13 @@ export function perceptionOf(guess, actual) {
   const rows = ELEMENTS.map(e => { const g = G.scores.find(s => s.id === e.id).score, r = R.scores.find(s => s.id === e.id).score; return { id: e.id, name: e.name, guessed: g, actual: r, off: g - r }; });
   const miss = [...rows].sort((p, q) => Math.abs(q.off) - Math.abs(p.off))[0];
   return { rows, miss, close: rows.filter(r => Math.abs(r.off) < 15).map(r => r.name), average: Math.round(rows.reduce((s, r) => s + Math.abs(r.off), 0) / rows.length) };
+}
+// A group of any size (two, three, a household): for each muscle, who leans on it. `people` is a list of answer sets,
+// the first one "you". covered: someone has it; shared: everyone leans hard; open: nobody leans; spread: the widest gap.
+export function groupOf(people = []) {
+  const Q = people.map(a => quizOf(a)); if (Q.length < 2 || Q.some(q => !q.ready)) return null;
+  const rows = ELEMENTS.map(e => { const scores = Q.map(q => q.scores.find(s => s.id === e.id).score), hi = Math.max(...scores), lo = Math.min(...scores);
+    return { id: e.id, name: e.name, word: e.word, scores, gap: hi - lo, kind: hi < 40 ? 'open' : lo >= 65 ? 'doubled' : hi - lo >= 25 ? 'cover' : 'alike', strongest: scores.indexOf(hi) }; });
+  return { size: Q.length, rows, widest: [...rows].sort((p, q) => q.gap - p.gap)[0], closest: [...rows].sort((p, q) => p.gap - q.gap)[0],
+    covered: rows.filter(r => r.kind === 'cover').map(r => r.name), doubled: rows.filter(r => r.kind === 'doubled').map(r => r.name), open: rows.filter(r => r.kind === 'open').map(r => r.name) };
 }

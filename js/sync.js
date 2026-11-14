@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Keeping the device and the server in step. The device is always the working copy; the server is where a second phone
-// (or a second person) finds it. The newest save wins, whole plan at a time: two people typing in the same minute on a
+// (or another person) finds it. The newest save wins, whole plan at a time: people typing in the same minute on a
 // shared plan will see the later one. `device` and `cloud` are the adapters from js/accounts.js and js/cloud.js.
 export const stampKey = id => `slam.space.${id}.at`;
 // After sign-in, and whenever a page opens signed in: take the account and any newer spaces from the server, and send
