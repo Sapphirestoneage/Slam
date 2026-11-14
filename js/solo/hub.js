@@ -81,7 +81,7 @@ async function draw() {
     acct ? accountCard : null,
     h('ol.st-hub', {}, P.steps.map((s, i) => h('li', {}, h(`a.st-hubcard${s.done ? '.done' : ''}${P.next?.id === s.id ? '.st-pulse' : ''}`, { href: href(s) }, h('span.st-hubnum', { 'aria-hidden': 'true' }, s.done ? '✓' : i + 1), h('span', {}, h('strong', {}, s.title), h('small', {}, s.blurb)), h(`span.st-hubword${s.done ? '.ok' : ''}`, {}, word(s)))))),
     acct ? null : accountCard,
-    h('div.st-card', {}, h('h2', { style: { marginTop: 0 } }, 'More to explore'), h('p.st-small', {}, 'Inside the whole plan: fire drills to practice a hard month, a map of everything, a money meeting for two, and twenty what-if tools.'), h('div.st-row', {}, h('a.st-btn.slim', { href: href(SOLO.at(-1)) }, 'Open the whole plan'), h('a.st-btn.slim', { href: 'pro.html' }, 'I work with clients'))));
+    h('div.st-card', {}, h('h2', { style: { marginTop: 0 } }, 'More to explore'), h('p.st-small', {}, 'Inside the whole plan: fire drills to practice a hard month, a map of everything, a money meeting for two, and twenty what-if tools.'), h('div.st-row', {}, h('a.st-btn.slim', { href: href(SOLO.at(-1)) }, 'Open the whole plan'), h('a.st-btn.slim', { href: 'return.html' }, 'Read my tax return'), h('a.st-btn.slim', { href: 'pro.html' }, 'I work with clients'))));
   $('foot').replaceChildren(h('p.st-small', {}, 'Education, not advice. Nothing is uploaded: your answers stay in your browser and in the link you choose to share.'));
 }
 draw();

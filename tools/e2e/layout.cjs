@@ -736,6 +736,8 @@ async function runStart(browser) {
       await solo.goto(`${BASE}/one.html`, { waitUntil: 'load' }); await settle(solo, 400);
       await solo.locator('.st-btn', { hasText: 'Make my account' }).click().catch(() => {}); await settle(solo, 300);
       await scanHere(solo, { route: 'one.html', width, theme, client: 'Start' }, [...STILL, 'covered', 'sticky']);
+      await solo.goto(`${BASE}/return.html`, { waitUntil: 'load' }); await settle(solo, 400);
+      await scanHere(solo, { route: 'return.html', width, theme, client: 'Start' }, STILL);
       await solo.goto(`${BASE}/pro.html`, { waitUntil: 'load' }); await settle(solo, 400);
       await scanHere(solo, { route: 'pro.html', width, theme, client: 'Start', state: 'card' }, STILL);
       await solo.fill('#pname', 'Sam Coach'); await solo.fill('#plink', 'https://cal.example/sam'); await solo.locator('.st-btn', { hasText: 'Save my card' }).click(); await settle(solo, 300);
