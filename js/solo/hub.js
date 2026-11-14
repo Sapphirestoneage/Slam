@@ -10,6 +10,7 @@ import { newAccount, activeSpace, addShared, switchTo, removeSpace, joinShared, 
 import { cloudConfig, cloudOf, sessionFromHash } from '../cloud.js';
 import { pullAll, stampKey } from '../sync.js';
 import { DEMO_CONFIG, DEMO_CODE } from '../cloud-demo.js';
+import { cardIn } from '../pro.js';
 // Practice mode (one.html?practice): sign-in, sync and shared plans, all inside this browser. Nothing leaves the device.
 const wipeDevice = () => { try { for (const k of Object.keys(localStorage)) if (k === 'slam.account' || k.startsWith('slam.space.') || k === 'slam.session' || k === 'slam.join') localStorage.removeItem(k); } catch { /* nothing kept */ } };
 if (new URLSearchParams(location.search).has('practice')) { try { localStorage.setItem('slam.cloud', JSON.stringify(DEMO_CONFIG)); } catch { /* shown as off */ } history.replaceState(null, '', `${location.pathname}${location.hash}`); }
@@ -74,10 +75,11 @@ async function draw() {
   $('main').replaceChildren(
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Stress Less About Money'), h('h1', {}, 'One thing at a time'), h('p', { style: { marginBottom: 0 } }, 'Each module is one question, answered properly, in a few minutes. Your answers ride along to the next one, so nothing is typed twice. Start anywhere.')),
     cloud?.demo ? h('div.st-note', { role: 'status' }, h('strong', {}, 'Practice mode. '), `Nothing leaves this browser. Sign in with any email and the code ${DEMO_CODE}. To be a second person, sign out and sign in with another email: a shared plan shows for everyone invited to it. `, btn('Leave practice mode', () => { wipeDevice(); try { localStorage.removeItem('slam.cloud'); localStorage.removeItem('slam.demo.db'); } catch { /* gone */ } location.href = location.pathname; }, 'slim')) : null,
+    (c => (c ? h('div.st-card', {}, h('div.st-eyebrow', {}, 'You are working with'), h('h2', { style: { margin: '0 0 6px' } }, [c.name, c.firm].filter(Boolean).join(', ')), h('p.st-small', { style: { margin: '0 0 8px' } }, 'They can see this plan and fill it in with you.'), c.link ? h('div.st-row', {}, h('a.st-btn.primary', { href: c.link, target: '_blank', rel: 'noopener noreferrer' }, `Book a time with ${c.name.split(' ')[0]}`)) : null) : null))(cardIn(store.doc)),
     acct ? accountCard : null,
     h('ol.st-hub', {}, P.steps.map((s, i) => h('li', {}, h(`a.st-hubcard${s.done ? '.done' : ''}${P.next?.id === s.id ? '.st-pulse' : ''}`, { href: href(s) }, h('span.st-hubnum', { 'aria-hidden': 'true' }, s.done ? '✓' : i + 1), h('span', {}, h('strong', {}, s.title), h('small', {}, s.blurb)), h(`span.st-hubword${s.done ? '.ok' : ''}`, {}, word(s)))))),
     acct ? null : accountCard,
-    h('div.st-card', {}, h('h2', { style: { marginTop: 0 } }, 'More to explore'), h('p.st-small', {}, 'Inside the whole plan: fire drills to practice a hard month, a map of everything, a money meeting for two, and twenty what-if tools.'), h('div.st-row', {}, h('a.st-btn.slim', { href: href(SOLO.at(-1)) }, 'Open the whole plan'))));
+    h('div.st-card', {}, h('h2', { style: { marginTop: 0 } }, 'More to explore'), h('p.st-small', {}, 'Inside the whole plan: fire drills to practice a hard month, a map of everything, a money meeting for two, and twenty what-if tools.'), h('div.st-row', {}, h('a.st-btn.slim', { href: href(SOLO.at(-1)) }, 'Open the whole plan'), h('a.st-btn.slim', { href: 'pro.html' }, 'I work with clients'))));
   $('foot').replaceChildren(h('p.st-small', {}, 'Education, not advice. Nothing is uploaded: your answers stay in your browser and in the link you choose to share.'));
 }
 draw();

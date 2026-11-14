@@ -736,6 +736,13 @@ async function runStart(browser) {
       await solo.goto(`${BASE}/one.html`, { waitUntil: 'load' }); await settle(solo, 400);
       await solo.locator('.st-btn', { hasText: 'Make my account' }).click().catch(() => {}); await settle(solo, 300);
       await scanHere(solo, { route: 'one.html', width, theme, client: 'Start' }, [...STILL, 'covered', 'sticky']);
+      await solo.goto(`${BASE}/pro.html`, { waitUntil: 'load' }); await settle(solo, 400);
+      await scanHere(solo, { route: 'pro.html', width, theme, client: 'Start', state: 'card' }, STILL);
+      await solo.fill('#pname', 'Sam Coach'); await solo.fill('#plink', 'https://cal.example/sam'); await solo.locator('.st-btn', { hasText: 'Save my card' }).click(); await settle(solo, 300);
+      await solo.fill('#cname', 'Jordan'); await solo.locator('.st-btn', { hasText: 'Add a client plan' }).click(); await settle(solo, 400);
+      await scanHere(solo, { route: 'pro.html', width, theme, client: 'Start', state: 'list' }, STILL);
+      await solo.locator('.st-btn', { hasText: 'One page' }).first().click(); await settle(solo, 300);
+      await scanHere(solo, { route: 'pro.html', width, theme, client: 'Start', state: 'sheet' }, STILL);
       await solo.evaluate(() => localStorage.removeItem('slam.account'));
       await solo.close();
     } catch (e) { errors.push(`Solo debt ${width} ${theme}: ${e.message.split('\n')[0]}`); }
