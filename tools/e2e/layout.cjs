@@ -690,7 +690,7 @@ async function runStart(browser) {
   await page.locator('.st-btn.primary.big').first().click(); await settle(page, 300);
   for (const v of [['4200'], ['3100'], ['500', '1000'], ['18000']]) { for (let i = 0; i < v.length; i++) await page.fill(`#box-${i}`, v[i]); await page.locator('.st-btn.primary.big').first().click(); await settle(page, 250); }
   // question 5: what you owe is a list by kind, each with its own Add button
-  for (const [sec, amount] of [['cards', '3200'], ['student', '20000']]) { await page.locator(`[data-sec="${sec}"] .st-bookhead .st-btn`).click(); await page.fill('.st-bookitem.open input', amount); await page.locator('.st-bookitem.open .st-btn.primary').click(); }
+  for (const [sec, amount] of [['cards', '3200'], ['student', '20000']]) { await page.locator(`[data-sec="${sec}"] .st-bookhead .st-btn`).click(); await page.fill(`[data-sec="${sec}"] .st-bkcell input`, amount); }
   await page.locator('.st-btn.primary.big').first().click(); await settle(page, 250);
   for (const width of WIDTHS) for (const theme of THEMES) {
     console.log(`  Start at ${width} ${theme}...`);

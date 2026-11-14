@@ -14,9 +14,9 @@ const pickOf = list => list.map(x => (Array.isArray(x) ? x : [x, String(x)]));
 
 // A field: { id (the record's own value), label, type: money | pct | pick | count, picks (tap amounts), options
 // ([value, label]), unsure (a "Not sure" tap that lets a typical figure stand in), get/set (when it is not one value) }.
-const balance = (picks = null, label = 'What you owe') => ({ id: 'balance', label, type: 'money', picks });
-const apr = options => ({ id: 'apr', label: 'Interest rate', type: 'pct', options, unsure: true });
-const payment = picks => ({ id: 'payment', label: 'What you pay a month', type: 'money', picks });
+const balance = (picks = null, label = 'What you owe') => ({ id: 'balance', label, short: 'You owe', type: 'money', picks });
+const apr = options => ({ id: 'apr', label: 'Interest rate', short: 'Rate', type: 'pct', options, unsure: true });
+const payment = picks => ({ id: 'payment', label: 'What you pay a month', short: 'Pay a month', type: 'money', picks });
 const promo = { id: 'promo', label: 'A 0% offer on it?', type: 'pick', options: [[0, 'No'], [3, '3 more months'], [6, '6 more months'], [12, '12 more months'], [18, '18 more months']],
   get: (r, now) => (r.values.promoEnd ? Math.max(0, monthsTo(r.values.promoEnd, now)) : has(r.values.apr) ? 0 : null),
   set: (store, r, v, now) => store.update(r.id, num(v) > 0 ? { promoApr: 0, promoEnd: ymAt(Math.round(num(v)), now) } : { promoApr: null, promoEnd: null }) };
@@ -63,13 +63,13 @@ export const DEBT_BOOK = {
     { id: 'home', title: 'Home loans', one: 'Mortgage', add: 'Add a mortgage', types: ['Mortgage'], names: [],
       front: [balance([100000, 200000, 300000, 400000, 600000]), apr([0.03, 0.04, 0.05, 0.06, 0.07]), payment([1200, 1800, 2400, 3000, 4000])], more: TERM_MORE([5, 10, 15, 20, 25, 30]) },
     { id: 'other', title: 'Other debts', one: 'Debt', add: 'Add another debt', types: OTHER_TYPES, names: [],
-      front: [{ id: 'type', label: 'What kind', type: 'pick', options: pickOf(OTHER_TYPES), top: true }, balance([500, 1000, 2500, 5000, 10000]), apr([0, 0.05, 0.1, 0.15, 0.25]), payment([50, 100, 200, 300, 500])], more: OTHER_MORE },
+      front: [{ id: 'type', label: 'What kind', short: 'Kind', type: 'pick', options: pickOf(OTHER_TYPES), top: true }, balance([500, 1000, 2500, 5000, 10000]), apr([0, 0.05, 0.1, 0.15, 0.25]), payment([50, 100, 200, 300, 500])], more: OTHER_MORE },
   ],
 };
 
 // ---------- What you have: accounts by kind ----------
-const bal = picks => ({ id: 'balance', label: 'What is in it', type: 'money', picks });
-const kindOf = types => ({ id: 'type', label: 'What kind', type: 'pick', options: pickOf(types), top: true });
+const bal = picks => ({ id: 'balance', label: 'What is in it', short: 'In it', type: 'money', picks });
+const kindOf = types => ({ id: 'type', label: 'What kind', short: 'Kind', type: 'pick', options: pickOf(types), top: true });
 const BANKS = ['Chase', 'Bank of America', 'Wells Fargo', 'Citi', 'Capital One', 'Ally', 'Marcus', 'SoFi', 'A credit union'];
 const BROKERS = ['Fidelity', 'Vanguard', 'Schwab', 'Empower', 'Robinhood', 'E*Trade', 'Betterment', 'Wealthfront'];
 const where = names => ({ id: 'institution', label: 'Where it is', type: 'pick', options: pickOf(names) });
@@ -157,7 +157,7 @@ export const OUT_BOOK = {
 };
 
 // ---------- Things you own ----------
-const worth = picks => ({ id: 'value', label: 'What it is worth today', type: 'money', picks });
+const worth = picks => ({ id: 'value', label: 'What it is worth today', short: 'Worth today', type: 'money', picks });
 const paid = { id: 'purchasePrice', label: 'What you paid for it', type: 'money', picks: null };
 const THING_TYPES = ['Valuables', 'Business', 'Money owed to you'];
 export const OWN_BOOK = {
@@ -171,8 +171,8 @@ export const OWN_BOOK = {
 };
 
 // ---------- Insurance ----------
-const haveIt = { id: 'have', label: 'Do you have it?', type: 'pick', options: [['Have it', 'Yes'], ["Don't", 'No'], ['Not sure', 'Not sure']] };
-const premium = picks => ({ ...amount(picks, 'What it costs a month'), when: r => r.values.have === 'Have it' });
+const haveIt = { id: 'have', label: 'Do you have it?', short: 'Have it?', type: 'pick', options: [['Have it', 'Yes'], ["Don't", 'No'], ['Not sure', 'Not sure']] };
+const premium = picks => ({ ...amount(picks, 'What it costs a month'), short: 'Cost a month', when: r => r.values.have === 'Have it' });
 const got = f => ({ ...f, when: r => r.values.have === 'Have it' });
 const fromWork = got({ id: 'employer', label: 'Through your job?', type: 'pick', options: [[true, 'Yes'], [false, 'No']] });
 const paidFrom = got({ id: 'paidFrom', label: 'How it is paid', type: 'pick', options: [['Paycheck', 'Out of my paycheck'], ['Budget', 'I pay the bill']] });

@@ -279,15 +279,15 @@ export function blurOf(plan) {
   return { spanMonths: span, top: { label: top.label, share: top.share, spanMonths: own }, fix: BLUR_FIX.find(([re]) => re.test(top.label))?.[1] ?? null, guess: top.known === false };
 }
 
-// The words for how much one answer moved the plan: "Your FI range went from 2049 or later to 2045 to 2058." Null when
+// The words for how much one answer moved the plan: "Your date range was 2049 or later. Now it is 2045 to 2058." Null when
 // nothing a person would notice changed.
 export function movedWords(before, after) {
   if (!before || !after) return null;
   const parts = [];
   const open = /^Past /.test(after.words.fi ?? ''); // one half of the picture (pay with typical spending, or the reverse) can read as never: say what comes next instead
   if (open && after.typical > 0) parts.push('Saved. The next answer fills in the other half of the picture.');
-  else if (before.words.fi !== after.words.fi) parts.push(`Your date range went from ${before.words.fi} to ${after.words.fi}.`);
-  else if (before.words.debtFree !== after.words.debtFree) parts.push(`Debt free went from ${before.words.debtFree} to ${after.words.debtFree}.`);
+  else if (before.words.fi !== after.words.fi) parts.push(`Your date range was ${before.words.fi}. Now it is ${after.words.fi}.`);
+  else if (before.words.debtFree !== after.words.debtFree) parts.push(`Debt free was ${before.words.debtFree}. Now it is ${after.words.debtFree}.`);
   else if (before.words.surplus !== after.words.surplus) parts.push(`What is left each month is now ${after.words.surplus}.`);
   if (after.typical === 0 && before.typical > 0) parts.push('Every number in your plan is now yours.');
   return parts.length ? parts.join(' ') : null;
