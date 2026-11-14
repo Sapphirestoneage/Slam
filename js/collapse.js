@@ -28,11 +28,13 @@ export function collapseOf(answers = {}) {
   const left = done ? 1 : open.reduce((n, q) => n * q.options.length, 1);
   let move = null;
   if (done) {
-    const key = early ?? (a.press === 'cards' ? 'debt' : a.cushion === '0' || a.press === 'thin' ? 'cushion' : a.match === 'some' ? 'match' : 'finish');
+    // the plan's own order of steps: stop going backwards (a first cushion), then the full match, then expensive debt, then the rest
+    const key = early ?? (a.cushion === '0' ? 'cushion' : a.match === 'some' ? 'match' : a.press === 'cards' ? 'debt' : a.press === 'thin' ? 'cushion' : 'finish');
     move = { id: key, ...MOVES[key] };
   }
   const notes = [];
   if (done && a.press === 'forgive') notes.push('Loans on a forgiveness track are the exception to "pay debt fast": extra payments can throw away money that would have been forgiven. Pay what the plan requires and no more.');
+  if (done && a.press === 'cards' && move.id !== 'debt') notes.push(move.id === 'match' ? 'Then the card debt: once the full match is coming in, every spare dollar goes there.' : 'Then the card debt: once one month of bills is set aside, every spare dollar goes there.');
   if (done && a.match === 'unsure') notes.push('Ask HR one question: "Is there a match, and what do I put in to get all of it?" It is often the best return you will ever be offered.');
   if (done && (a.work === 'self' || a.work === 'both')) notes.push('Working for yourself, set tax money aside from every payment before it feels like yours.');
   return { total, left, share: 1 - Math.log(left) / Math.log(total), asked: asked.length, answered: asked.length - open.length, next, done, shortened: done && !!early, move, notes, mirror: a.want ?? (move?.id === 'debt' || move?.id === 'stabilize' ? 'guide' : move?.id === 'cushion' || move?.id === 'bridge' ? 'safe' : null) };

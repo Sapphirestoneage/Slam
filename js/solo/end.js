@@ -30,7 +30,7 @@ function draw(api) {
       !B.onTrack ? h('li', {}, h('span.dot', {}, ''), h('span', {}, 'Close it by spending', h('small', {}, 'Spending less also lowers what you need later')), h('span.when', {}, `${money(Math.round(B.spendToClose))} a month`)) : null,
       !B.onTrack ? h('li', {}, h('span.dot', {}, ''), h('span', {}, 'Or close it by earning', h('small', {}, 'Take-home pay that would cover it')), h('span.when', {}, `${money(Math.round(B.earnToClose))} a month`)) : null,
       !B.onTrack ? h('li', {}, h('span.dot', {}, ''), h('span', {}, 'Or give it more time', h('small', {}, 'Tap a later year in step 2 and watch the number fall')), h('span.when', {}, '')) : null) : null,
-    h('p.st-small.st-soft', {}, `In today's dollars. Growth of ${pct(B.realReturn)} a year after inflation and taking out ${pct(B.withdrawalRate)} a year, the same as the whole plan.`));
+    h('p.st-small.st-soft', {}, `In today's dollars. Growth of ${pct(B.realReturn)} a year after inflation and taking out ${pct(B.withdrawalRate)} a year, the same as the whole plan. Tax on what you take out later is not counted here.`));
   const keep = document.activeElement?.id;
   $('main').replaceChildren(
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, api.me.title), h('p', { style: { marginBottom: 0 } }, 'Begin with the end. Say what you need, then when, and we work backwards to what today has to look like.')),

@@ -136,7 +136,8 @@ test('quantum collapse: every question is path-changing, the meter is honest ari
   const behind = collapseOf({ work: 'job', press: 'behind' }); // being behind settles it: no cushion, match or goal question
   assert.equal(behind.done, true); assert.equal(behind.shortened, true); assert.equal(behind.left, 1); assert.equal(behind.move.id, 'stabilize'); assert.equal(behind.move.page, 'runway'); assert.equal(behind.mirror, 'guide');
   assert.equal(collapseOf({ work: 'job', press: 'cards' }).next.id, 'cushion');
-  const cards = collapseOf({ work: 'job', press: 'cards', cushion: '1', match: 'some' }); assert.equal(cards.move.id, 'debt'); assert.equal(cards.done, true); // card debt outranks the match
+  const cards = collapseOf({ work: 'job', press: 'cards', cushion: '1', match: 'some' }); assert.equal(cards.move.id, 'match'); assert.match(cards.notes[0], /Then the card debt/); // the plan's order: the full match comes before extra debt payments
+  assert.equal(collapseOf({ work: 'job', press: 'cards', cushion: '1', match: 'all' }).move.id, 'debt'); assert.equal(collapseOf({ work: 'job', press: 'cards', cushion: '0', match: 'some' }).move.id, 'cushion');
   assert.equal(collapseOf({ work: 'self', press: 'none', cushion: '3' }).next.id, 'want'); // no match question for the self-employed
   const fin = collapseOf({ work: 'job', press: 'none', cushion: '6', match: 'all', want: 'enjoy' }); assert.equal(fin.move.id, 'finish'); assert.equal(fin.mirror, 'enjoy'); assert.equal(fin.move.page, 'end');
   assert.equal(collapseOf({ work: 'job', press: 'none', cushion: '3', match: 'some', want: 'date' }).move.id, 'match');
