@@ -6,6 +6,7 @@ import { addShared, nameSpace } from './accounts.js';
 import { soloProgress, debtFreeOf, runwayOf, backwardsOf } from './solo.js';
 import { collapseOf } from './collapse.js';
 import { onFile } from './journey.js';
+import { answeredOf } from './math/agestart.js';
 
 const clean = (s, max = 60) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
 // A booking link is kept only when it is a full https address; anything else is dropped.
@@ -35,9 +36,10 @@ export function summaryOf(doc, ref, { now = new Date() } = {}) {
   const cash = onFile(doc, 'cash'), spend = onFile(doc, 'spending'), have = (cash?.checking ?? 0) + (cash?.savings ?? 0);
   const R = runwayOf({ cash: cash?.checking != null || cash?.savings != null ? have : null, spending: spend?.gut ?? null, now });
   const g = st.goal || {}, B = backwardsOf({ need: g.need ?? null, per: g.per ?? 'month', years: g.years ?? null, ref, now });
+  const noDebt = !D.ready && !!answeredOf(doc, ref).card && !doc.records.some(r => r.kind === 'debt'); // said "no debt", so the line is answered
   const lines = [
     { id: 'move', label: 'First move', value: C.done && C.move ? C.move.title : null, note: C.done && C.move ? C.move.why : null },
-    { id: 'debt', label: 'Debt free', value: D.ready ? (D.never ? 'The payments do not cover the interest yet' : D.date) : null, amount: D.ready ? D.total : null, note: D.ready && D.first ? `Pay ${D.first} first.` : null },
+    { id: 'debt', label: 'Debt free', value: D.ready ? (D.never ? 'The payments do not cover the interest yet' : D.date) : noDebt ? 'No debt' : null, amount: D.ready ? D.total : null, note: D.ready && D.first ? `Pay ${D.first} first.` : null },
     { id: 'runway', label: 'If the pay stopped', value: R.ready ? (R.covered ? 'Covered' : `${R.whole} ${R.whole === 1 ? 'month' : 'months'}`) : null, amount: R.ready ? R.cash : null },
     { id: 'finish', label: 'Finish line', value: B.step >= 2 ? B.total : null, money: true, note: B.step >= 3 ? `By ${B.byYear}.` : null },
   ];

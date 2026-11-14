@@ -124,3 +124,16 @@ export function taxNowOf(plan, doc, ref) {
 export function claimsOf(plan, doc, ref, hist, settings = {}) {
   return [62, 67, 70].map(claimAge => { const l = lifeOf(plan, doc, ref, hist, { ...settings, claimAge, retireAge: null }); return { claimAge, yearly: l.ssYearly ?? 0, age: l.age, need: l.need ?? null }; });
 }
+
+// The lifetime choices a plan carries (the Lifetime screen keeps them in the plan): the settings lifeOf takes.
+const KEPT = { strategy: 'lifeStrategy', rate: 'lifeRate', claimAge: 'lifeClaimAge', fill: 'lifeFill', stocks: 'lifeStocks', health: 'lifeHealth', eras: 'lifeEras', retireAge: 'lifeRetireAge' };
+export function lifeSettingsOf(doc) { const a = doc.assumptions || {}, out = { ...(doc.settings?.start?.life || {}) }; for (const [k, f] of Object.entries(KEPT)) if (a[f] !== undefined && a[f] !== null) out[k] = a[f]; return out; }
+// The tax page for one plan: this year's bracket room, the conversion choices side by side with the chosen one named,
+// and the dates to know. plan is planOf(doc, ...). ready is false until the plan has an age and spending.
+export function taxSheetOf(plan, doc, ref, hist) {
+  if (!plan?.m) return { ready: false };
+  const s = { ...DEFAULTS, ...lifeSettingsOf(doc) }, life = lifeOf(plan, doc, ref, hist, s);
+  if (!life.ready || !life.run) return { ready: false, now: taxNowOf(plan, doc, ref) };
+  const fills = fillsOf(life, ref), least = fills.filter(f => f.ok).reduce((b, f) => (b == null || f.cost < b.cost - 0.5 ? f : b), null);
+  return { ready: true, now: taxNowOf(plan, doc, ref), age: life.age, planAge: life.x.planAge, chosen: String(s.fill), fills, least: least?.id ?? null, marks: cliffsOf(life) };
+}

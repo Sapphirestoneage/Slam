@@ -10,10 +10,16 @@ import { pullAll, stampKey } from '../sync.js';
 import { money, btn } from './shell.js';
 import { cardOf, setCard, addClient, stampCard, rosterOf, practiceOf, summaryOf, markOf, addMark, sinceOf } from '../pro.js';
 import { movedWords } from './moved.js';
+import { planOf } from '../journey.js';
+import { taxSheetOf } from '../lifetime/inputs.js';
+const pct = r => `${Math.round(r * 1000) / 10}%`, near = v => money(Math.round(v / 100) * 100); // a whole plan's totals read to the nearest hundred
 
 const $ = id => document.getElementById(id), device = deviceAdapter();
 const ref = await fetch('data/reference-2026.json').then(r => r.json()), cloud = cloudOf(await cloudConfig());
-const ui = { note: null, edit: false, sheet: null }, SEEN = id => `slam.pro.seen.${id}`;
+const ui = { note: null, edit: false, sheet: null, ask: null }, SEEN = id => `slam.pro.seen.${id}`, SKIP = id => `slam.pro.skip.${id}`;
+const today = () => new Date().toISOString().slice(0, 10), skipped = id => { try { return localStorage.getItem(SKIP(id)) === today(); } catch { return false; } };
+// The tax page needs the whole plan, so its data files load the first time a page is opened.
+let deep = null; const deepData = () => (deep ??= Promise.all([fetch('data/priors-2026.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json()), fetch('data/history-returns.json').then(r => r.json())]));
 const num = k => { try { return Number(localStorage.getItem(k) || 0); } catch { return 0; } };
 const box = (id, label, value, help, attrs = {}) => h('div.st-box', {}, h('label', { for: id }, label), h('div.in', {}, h('input', { id, type: 'text', value: value ?? '', autocomplete: 'off', ...attrs })), help ? h('div.st-small.st-soft', { style: { marginTop: '4px' } }, help) : null);
 let pulled = false;
@@ -31,14 +37,24 @@ async function draw() {
   $('step').textContent = rows.length ? `${rows.length} ${rows.length === 1 ? 'plan' : 'plans'}` : '';
 
   // one page to print
-  if (ui.sheet && docs[ui.sheet]) { const S = summaryOf(docs[ui.sheet], ref), M = sinceOf(docs[ui.sheet], ref), start = movedWords(M.sinceStart), last = movedWords(M.sinceLast), name = rows.find(r => r.id === ui.sheet)?.name ?? S.name;
+  if (ui.sheet && docs[ui.sheet]) { const [priors, flags, hist] = await deepData(); let T = { ready: false }; try { T = taxSheetOf(planOf(docs[ui.sheet], ref, priors, { flags }), docs[ui.sheet], ref, hist); } catch { /* a plan too empty to plan a life from */ }
+    const dueMark = id => docs[id] && sinceOf(docs[id], ref).last !== today() && !skipped(id) && summaryOf(docs[id], ref).done + (docs[id].records?.length ?? 0) > 0;
+    const S = summaryOf(docs[ui.sheet], ref), M = sinceOf(docs[ui.sheet], ref), start = movedWords(M.sinceStart), last = movedWords(M.sinceLast), name = rows.find(r => r.id === ui.sheet)?.name ?? S.name;
     return $('main').replaceChildren(...[
-      h('div.st-row.st-noprint', {}, btn('Back to the list', () => { ui.sheet = null; draw(); }, 'slim'), btn('Print or save as a PDF', () => window.print(), 'primary'), btn(M.last === M.today.on ? 'Session marked today' : 'Mark today\'s session', () => put(acct, ui.sheet, addMark(docs[ui.sheet], markOf(docs[ui.sheet], ref))), 'slim')),
-      M.marks ? null : h('p.st-small.st-noprint', {}, 'Mark a session and the page shows what moved since then: debt, the debt free month, cash on hand, steps done. The client sees it too.'),
+      h('div.st-row.st-noprint', {}, btn('Back to the list', () => { ui.sheet = null; draw(); }, 'slim'), btn('Print or save as a PDF', () => window.print(), 'primary'), dueMark(ui.sheet) ? null : btn(M.last === M.today.on ? 'Session marked today' : 'Mark today\'s session', () => put(acct, ui.sheet, addMark(docs[ui.sheet], markOf(docs[ui.sheet], ref))), 'slim')),
+      dueMark(ui.sheet) ? h('div.st-note.st-noprint', { role: 'status' }, h('strong', {}, `Is today a session with ${name}? `), 'Marking it keeps today\'s numbers, so next time the page shows what moved. ', h('span.st-row', { style: { marginTop: '6px' } }, btn('Yes, mark today', () => put(acct, ui.sheet, addMark(docs[ui.sheet], markOf(docs[ui.sheet], ref))), 'primary slim'), btn('Not a session', () => { try { localStorage.setItem(SKIP(ui.sheet), today()); } catch { /* asked again */ } draw(); }, 'slim'))) : null,
+      M.marks || dueMark(ui.sheet) ? null : h('p.st-small.st-noprint', {}, 'Mark a session and the page shows what moved since then: debt, the debt free month, cash on hand, steps done. The client sees it too.'),
       h('div.st-card.st-sheet', {}, h('div.st-eyebrow', {}, card ? [card.name, card.firm].filter(Boolean).join(', ') : 'Stress Less About Money'), h('h1', { style: { margin: '0 0 2px' } }, name), h('p.st-small', { style: { margin: 0 } }, `As of ${S.on}. ${S.done} of ${S.of} steps done. ${S.next ? end(`Next: ${S.next}`) : ''}`),
         h('dl.st-sheetlines', {}, S.lines.map(l => [h('dt', {}, l.label), h('dd', {}, l.value == null ? h('span.st-soft', {}, 'Not answered yet') : h('strong', {}, l.money ? money(l.value) : l.value), l.amount != null ? h('span.st-small', {}, ` ${money(l.amount)} ${l.id === 'debt' ? 'owed' : 'on hand'}.`) : null, l.note ? h('div.st-small', {}, l.note) : null)])),
         M.marks ? h('div.st-moved', {}, h('h2', {}, `Since we started, ${M.start}`), start.length ? h('ul', {}, start.map(t => h('li', {}, t))) : h('p.st-small', { style: { margin: 0 } }, 'Nothing has moved yet.'),
           M.marks > 1 && last.length ? [h('h3', {}, `Since last session, ${M.last}`), h('ul', {}, last.map(t => h('li', {}, t)))] : null) : null,
+        T.now || T.ready ? h('div.st-moved', {}, h('h2', {}, 'Taxes'),
+          T.now ? h('p.st-small', { style: { margin: '0 0 6px' } }, `This year the next dollar of pay lands in the ${pct(T.now.rate)} federal bracket.`, T.now.room != null ? ` ${near(T.now.room)} more fits before the ${pct(T.now.nextRate)} one.` : '') : null,
+          T.ready ? [h('p.st-small', { style: { margin: '0 0 4px' } }, `Moving taxed-later money to Roth in the free years, from age ${T.age} to ${T.planAge}. Each row is the same plan.`),
+            h('div.st-taxtable', { role: 'table' }, h('div.st-taxrow.head', { role: 'row' }, ['Choice', 'Paid over a life', 'Ahead from', `Left at ${T.planAge}`].map(t => h('span', { role: 'columnheader' }, t))),
+              T.fills.map(f => h('div.st-taxrow', { role: 'row', 'data-on': f.id === T.chosen ? '' : null }, h('span', { role: 'cell' }, f.name, f.id === T.chosen ? h('em', {}, ' (in the plan)') : null, f.id === T.least && f.id !== T.chosen ? h('em', {}, ' (least paid)') : null), h('span', { role: 'cell' }, near(f.cost)), h('span', { role: 'cell' }, f.id === 'none' ? 'The yardstick' : f.converted < 0.5 ? 'Nothing to move' : f.payback != null ? `Age ${f.payback}` : 'Not in this plan'), h('span', { role: 'cell' }, near(f.end), f.endTaxedLater > 50 ? h('small', {}, ` (${near(f.endTaxedLater)} still to be taxed)`) : null)))),
+            T.marks.length ? h('p.st-small', { style: { margin: '6px 0 0' } }, 'Dates to know: ', T.marks.map(m => `${{ seasoned: 'first penalty-free Roth money', credit: 'no Marketplace credit', medicare: 'Medicare starts', claim: 'Social Security starts', extra: 'first extra Medicare premium', rmd: 'required withdrawals start' }[m.id]} at ${m.age}`).join(', '), '.') : null,
+            h('p.st-small.st-soft', { style: { margin: '6px 0 0' } }, 'For the person who files the return: federal rules for 2026, no state retirement breaks, the extra Medicare premium on income two years earlier, working-year income not counted toward it.')] : h('p.st-small', { style: { margin: 0 } }, 'The side by side needs an age and a spending number in the plan.')) : null,
         S.open.length ? h('p.st-small', {}, `Still open: ${S.open.join(', ')}.`) : null,
         h('p.st-small.st-soft', { style: { marginBottom: 0 } }, 'Every number here comes from the answers in the plan, using the same math as the plan\'s own pages. It is a picture for a conversation, not tax, legal or investment advice.'))].filter(Boolean)); }
 

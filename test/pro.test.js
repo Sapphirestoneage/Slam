@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { newAccount } from '../js/accounts.js';
-import { newHousehold } from '../js/records.js';
+import { newHousehold, Store } from '../js/records.js';
+import { answer } from '../js/journey.js';
 import { safeLink, cardOf, setCard, addClient, stampCard, cardIn, rosterOf, practiceOf, summaryOf, markOf, addMark, marksIn, movedOf, sinceOf } from '../js/pro.js';
 import { debtFreeOf } from '../js/solo.js';
 const ref = JSON.parse(fs.readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
@@ -68,4 +69,12 @@ test('what moved: a mark is the day\'s numbers, and the debt-free month is compa
   assert.deepEqual(sinceOf(newHousehold({ name: 'x' }), ref, { now: t0 }).sinceStart, []);
   let many = newHousehold({ name: 'x' }); for (let i = 0; i < 30; i++) many = addMark(many, { ...m0, on: `2026-${String(1 + (i % 12)).padStart(2, '0')}-${String(1 + i % 28).padStart(2, '0')}` });
   assert.ok(marksIn(many).length <= 24);
+});
+
+test('someone who said "no debt" has that line answered, not open', () => {
+  const st = new Store(newHousehold({ name: 'Pat' })); st.setDoc('profile', { birthYear: 1962 });
+  answer(st, 'card', {}, { none: true });
+  const S = summaryOf(st.doc, ref);
+  assert.equal(S.lines.find(l => l.id === 'debt').value, 'No debt'); assert.equal(S.open.includes('Debt free'), false);
+  assert.equal(summaryOf(newHousehold({ name: 'x' }), ref).open.includes('Debt free'), true);
 });

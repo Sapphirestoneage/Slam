@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { lifetime, earliestFreedom, taxableSocialSecurity, yearTax, fillRoom, needAt, STRATEGIES, FILLS, medicareSurcharge, bracketRoom } from '../js/math/lifetime.js';
 import { replay, shuffle, safeFreedom, mixOf } from '../js/math/stress.js';
-import { lifeOf, strategiesOf, fillsOf, claimsOf, stressOf, cliffsOf, taxNowOf } from '../js/lifetime/inputs.js';
+import { lifeOf, strategiesOf, fillsOf, claimsOf, stressOf, cliffsOf, taxNowOf, taxSheetOf, lifeSettingsOf } from '../js/lifetime/inputs.js';
 import { federalTax } from '../js/math/income.js';
 import { Store, newHousehold } from '../js/records.js';
 import { QUESTIONS, answer, planOf } from '../js/journey.js';
@@ -264,4 +264,19 @@ test('this year: the bracket and the room come from pay after pretax saving and 
   assert.equal(t.taxable, taxable);
   assert.deepEqual({ rate: t.rate, room: t.room }, { rate: bracketRoom(taxable, 'Single', ref).rate, room: bracketRoom(taxable, 'Single', ref).room });
   assert.equal(taxNowOf({ m: { inputs: { income: [] } } }, doc, ref), null);
+});
+
+test('the tax page for one plan: the same numbers as the Lifetime screen, with the chosen choice and the least paid named', () => {
+  const now = new Date(2026, 10, 12), st = new Store(newHousehold({ name: 'Me' })); st.setDoc('profile', { birthYear: 1962, state: 'NY' });
+  const A = { income: { takeHome: 11000 }, spending: { gut: 7000 }, cash: { checking: 20000, savings: 90000 }, invested: { invested: 1900000 }, card: {} };
+  assert.deepEqual(taxSheetOf(null, st.doc, ref, hist), { ready: false });
+  for (const q of QUESTIONS) q.key === 'card' ? answer(st, 'card', {}, { none: true }) : answer(st, q.key, A[q.key]);
+  st.setDoc('assumptions', { lifeFill: '22' });
+  assert.equal(lifeSettingsOf(st.doc).fill, '22');
+  const plan = planOf(st.doc, ref, priors, { flags, now }), T = taxSheetOf(plan, st.doc, ref, hist), life = lifeOf(plan, st.doc, ref, hist, lifeSettingsOf(st.doc));
+  assert.equal(T.ready, true); assert.equal(T.chosen, '22'); assert.equal(T.age, life.age);
+  assert.deepEqual(T.fills.map(f => Math.round(f.cost)), fillsOf(life, ref).map(f => Math.round(f.cost)));
+  const least = T.fills.filter(f => f.ok).sort((a, b) => a.cost - b.cost)[0];
+  near(T.fills.find(f => f.id === T.least).cost, least.cost, 1, 'least is the smallest paid among the ones where the money lasts');
+  assert.deepEqual(T.marks, cliffsOf(life)); assert.ok(T.now.rate > 0);
 });
