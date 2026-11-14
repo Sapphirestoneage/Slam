@@ -15,7 +15,7 @@ const debt = (s, sec, balance, apr, payment) => { const r = addRow(s, DEBT_BOOK,
 const fresh = () => new Store(newHousehold({ name: 'My plan' }));
 
 test('the path: each standalone names the next, and the last is the whole plan', () => {
-  assert.deepEqual(SOLO.map(x => x.id), ['first', 'end', 'quiz', 'debt', 'runway', 'plan']); assert.equal(SOLO.at(-1).id, 'plan'); assert.equal(SOLO.at(-1).next, null);
+  assert.deepEqual(SOLO.map(x => x.id), ['first', 'end', 'quiz', 'debt', 'runway', 'skills', 'plan']); assert.equal(SOLO.at(-1).id, 'plan'); assert.equal(SOLO.at(-1).next, null);
   for (const s of SOLO.slice(0, -1)) { assert.ok(soloOf(s.next), s.id); assert.ok(s.nextLabel && s.title && s.page.endsWith('.html')); }
   assert.equal(carryUrl('plan', 'abc'), 'start.html#/open/abc'); assert.equal(carryUrl('debt', 'abc'), 'debt.html#/d/abc'); assert.equal(carryUrl('nope', 'abc'), null);
 });
@@ -78,7 +78,7 @@ test('carried forward: the same file opens in the whole plan with question 5 alr
 test('the choices on the page', () => { assert.deepEqual(EXTRAS, [0, 50, 100, 250, 500]); assert.deepEqual(ORDERS.map(o => o[0]), ['avalanche', 'snowball']); });
 
 import { runwayOf } from '../js/solo.js';
-import { quizOf, pairOf, ITEMS, ELEMENTS, SCALE } from '../js/quiz.js';
+import { quizOf, pairOf, perceptionOf, itemsFor, BANK, ELEMENTS, SCALE } from '../js/quiz.js';
 import { MIRRORS } from '../js/mirror.js';
 test('how long the money lasts, by hand', () => {
   const R = runwayOf({ cash: 9000, spending: 3000, now }); // 3 months exactly
@@ -89,25 +89,49 @@ test('how long the money lasts, by hand', () => {
   assert.equal(runwayOf({ cash: 500, spending: 0, now }).ready, false);
   assert.ok(Math.abs(R.perThousand - 1000 / 3000 * 30.44) < 1e-9); // each $1,000 buys about 10 days
 });
-test('the quick ten: five scales from 0 to 100, no fixed type, and it says what the plan shows first', () => {
-  assert.equal(ITEMS.length, 10); for (const e of ELEMENTS) { assert.equal(ITEMS.filter(i => i.el === e.id).length, 2); assert.ok(MIRRORS.some(m => m.id === e.mirror), e.id); }
-  assert.equal(SCALE.length, 5);
-  assert.equal(quizOf({}).ready, false); assert.equal(quizOf({}).next, 'w1'); assert.equal(quizOf({ w1: 3 }).next, 'w2');
-  const all = v => Object.fromEntries(ITEMS.map(i => [i.id, v]));
-  assert.deepEqual(quizOf(all(1)).scores.map(s => s.score), [0, 0, 0, 0, 0]); assert.deepEqual(quizOf(all(5)).scores.map(s => s.score), [100, 100, 100, 100, 100]);
-  assert.equal(quizOf(all(3)).even, true); assert.equal(quizOf(all(3)).practice, null);
-  const Q = quizOf({ ...all(3), e1: 5, e2: 5, f1: 1, f2: 2 }); // earth 100, fire 13, the rest 50
-  assert.equal(Q.top.id, 'earth'); assert.equal(Q.low.id, 'fire'); assert.equal(Q.scores.find(s => s.id === 'fire').score, 13); assert.equal(Q.mirror, 'safe');
-  assert.equal(Q.practice.stage, 'plan'); assert.match(Q.words, /Earth \(security\) is your strongest/);
+test('the money chart: the real bank, 10 inside 25 inside 100, half reverse-keyed', () => {
+  assert.equal(BANK.length, 100); assert.equal(itemsFor('ten').length, 10); assert.equal(itemsFor('std').length, 25); assert.equal(itemsFor('full').length, 100);
+  assert.ok(itemsFor('ten').every(i => i.std), 'the 10 lives inside the 25'); assert.equal(new Set(itemsFor('full').map(i => i.id)).size, 100);
+  for (const e of ELEMENTS) { assert.equal(itemsFor('ten').filter(i => i.el === e.id).length, 2); assert.ok(MIRRORS.some(m => m.id === e.mirror), e.id); }
+  const rev = BANK.filter(i => i.dir < 0).length; assert.ok(rev >= 40 && rev <= 55, String(rev));
+  assert.equal(new Set(BANK.map(i => `${i.el}|${i.trait}`)).size, 25); // 25 scored traits across the five elements
+  assert.equal(itemsFor('ten')[0].text, 'I know exactly what my money is for.'); // a gentle open
+  assert.deepEqual(itemsFor('full').slice(0, 25).map(i => i.id), itemsFor('std').map(i => i.id)); // going deeper starts from what is answered
+  for (const i of BANK) assert.ok(!/[\u2014\u2013]/.test(i.text) && i.text.endsWith('.'), i.text);
 });
-test('two people: the widest gap, the closest match, and what is covered between them', () => {
-  const all = v => Object.fromEntries(ITEMS.map(i => [i.id, v]));
-  const P = pairOf({ ...all(3), e1: 5, e2: 5 }, { ...all(3), e1: 1, e2: 1, f1: 5, f2: 5 });
-  assert.equal(P.widest.id, 'earth'); assert.equal(P.widest.gap, 100); assert.equal(P.closest.gap, 0);
-  assert.deepEqual(P.covered, ['Earth', 'Fire']); assert.deepEqual(P.open, []);
+test('scoring by hand: reverse the minus items, average a trait, average the traits into the element', () => {
+  assert.equal(quizOf({}).ready, false); assert.equal(quizOf({}).next, itemsFor('ten')[0].id);
+  const all = (v, depth = 'ten') => Object.fromEntries(itemsFor(depth).map(i => [i.id, v]));
+  const by = text => BANK.find(i => i.text.startsWith(text)).id;
+  // the 10, all "strongly agree": plus items score 100, minus items score 0
+  const Q = quizOf(all(5));
+  const el = id => Q.scores.find(s => s.id === id).score;
+  assert.equal(el('water'), 100); // Anxiety + and Avoidance +
+  assert.equal(el('earth'), 100); // Holding on + and Cushion +
+  assert.equal(el('air'), 50);    // Risk + (100) and Optimizing - (0)
+  assert.equal(el('fire'), 50);   // Freedom + (100) and Status - (0)
+  assert.equal(el('spirit'), 50); // Purpose + (100) and Enough - (0)
+  assert.equal(quizOf(all(3)).even, true); assert.equal(quizOf(all(3)).scores.every(s => s.score === 50), true);
+  // one trait from two statements: "Checking my balance..." (+) at 5 and "Money is one of the last things..." (-) at 4 -> (5 + 2) / 2 = 3.5 -> 63
+  const two = quizOf({ ...all(3), [by('Checking my balance')]: 5, [by('Money is one of the last things')]: 4 });
+  assert.equal(two.traits.find(t => t.name === 'Anxiety').score, 63); assert.equal(two.traits.find(t => t.name === 'Anxiety').n, 2);
+  const R = quizOf({ ...all(3), [by('I always want a cushion')]: 5, [by('Spending money I can easily afford')]: 5, [by('What I want most from money')]: 1, [by("I'd be just as happy being rich")]: 5 });
+  assert.equal(R.top.id, 'earth'); assert.equal(R.low.id, 'fire'); assert.equal(R.mirror, 'safe'); assert.equal(R.practice.stage, 'plan'); assert.match(R.words, /Earth \(security\)/);
+  assert.equal(R.sun.el, 'earth'); assert.equal(R.complete, true);
+  const S = quizOf(all(4, 'std'), 'std'); assert.ok(S.moon && S.moon.el === 'water'); assert.ok(S.rising); assert.equal(S.of, 25);
+  assert.equal(quizOf(all(4), 'std').done, 10); assert.equal(quizOf(all(4), 'std').complete, false); // a finished 10 is 10 of the 25
+});
+test('two people: cover, a doubled habit, an open muscle, and how well one read the other', () => {
+  const all = v => Object.fromEntries(itemsFor('ten').map(i => [i.id, v]));
+  const by = text => BANK.find(i => i.text.startsWith(text)).id;
+  const saver = { ...all(3), [by('I always want a cushion')]: 5, [by('Spending money I can easily afford')]: 5 }, spender = { ...all(3), [by('I always want a cushion')]: 1, [by('Spending money I can easily afford')]: 1 };
+  const P = pairOf(saver, spender);
+  assert.equal(P.widest.id, 'earth'); assert.equal(P.widest.gap, 100); assert.equal(P.widest.kind, 'cover'); assert.deepEqual(P.covered, ['Earth']); assert.equal(P.closest.gap, 0);
+  assert.deepEqual(pairOf(saver, saver).doubled, ['Earth']); assert.deepEqual(pairOf(spender, spender).open, ['Earth']);
   assert.equal(pairOf({}, all(3)), null);
+  const G = perceptionOf(all(3), saver); // guessed the middle; they are a strong saver
+  assert.equal(G.miss.id, 'earth'); assert.equal(G.miss.off, -50); assert.equal(G.close.length, 4); assert.equal(G.average, 10);
 });
-
 import { backwardsOf } from '../js/solo.js';
 test('start at the finish line: each answer unlocks the next step, backwards to today, by hand', () => {
   const wr = ref.presets.withdrawalRate.default, r = ref.presets.realReturn.default, i = r / 12;
@@ -155,7 +179,7 @@ import { newAccount, activeSpace, addShared, switchTo, removeSpace, joinShared, 
 import { cloudOf } from '../js/cloud.js';
 test('what is done, and what carrying answers forward saved, counted by hand', () => {
   const s = fresh(); let P = soloProgress(s.doc, ref);
-  assert.equal(P.done, 0); assert.equal(P.of, 6); assert.equal(P.next.id, 'first'); assert.equal(P.reused, 0);
+  assert.equal(P.done, 0); assert.equal(P.of, 7); assert.equal(P.next.id, 'first'); assert.equal(P.reused, 0);
   s.setDoc('settings', { start: { collapse: { work: 'job', press: 'behind' }, goal: { need: 4000, per: 'month', years: 20 } } });
   answer(s, 'invested', { invested: 25000 }); answer(s, 'income', { takeHome: 5000 }); answer(s, 'spending', { gut: 3800 });
   P = soloProgress(s.doc, ref);
@@ -165,7 +189,7 @@ test('what is done, and what carrying answers forward saved, counted by hand', (
   assert.equal(P.steps.find(x => x.id === 'runway').ready, 1); assert.equal(P.steps.find(x => x.id === 'runway').started, true);
   debt(s, 'cards', 5000, 0.25, 150); answer(s, 'cash', { checking: 0, savings: 5000 });
   P = soloProgress(s.doc, ref, { planDone: true });
-  assert.deepEqual(P.steps.filter(x => !x.done).map(x => x.id), ['quiz']); assert.equal(P.reused, 4 + 1 + 1);
+  assert.deepEqual(P.steps.filter(x => !x.done).map(x => x.id), ['quiz', 'skills']); assert.equal(P.reused, 4 + 1 + 1);
   for (const id of Object.keys(USES)) assert.ok(SOLO.some(x => x.id === id), id);
 });
 test('accounts and spaces: mine is mine, ours is open to both and nobody else', () => {
@@ -187,4 +211,21 @@ test('the server adapter is off without keys, and speaks the same four calls wit
   assert.equal(await c.loadSpace('s1'), 'abc'); assert.equal((await c.loadAccount()).name, 'Eli'); assert.equal(await c.saveSpace('s1', 'zzz'), true); assert.equal(await c.sendLink('a@b.co'), true);
   assert.deepEqual(calls.map(x => x[1]), ['GET', 'GET', 'POST', 'POST']); assert.match(calls[0][0], /rest\/v1\/spaces\?id=eq\.s1/);
   for (const k of ['loadAccount', 'saveAccount', 'loadSpace', 'saveSpace']) assert.equal(typeof c[k], 'function');
+});
+
+import { treeOf, placeOf, MILESTONES } from '../js/tree.js';
+test('the 625: 25 trees of 25 levels, placed a few taps a tree, with one next unlock', () => {
+  const data = JSON.parse(readFileSync(new URL('../data/skill-tree.json', import.meta.url)));
+  assert.equal(data.trees.length, 25); for (const t of data.trees) { assert.equal(t.skills.length, 25); assert.deepEqual(t.skills.map(x => x.n), Array.from({ length: 25 }, (_, i) => i + 1)); for (const k of t.skills) assert.ok(k.name && !/[\u2014\u2013]/.test(k.name + k.what + k.check), k.name); }
+  const main = data.trees[0]; assert.equal(main.id, 'main-path');
+  assert.equal(placeOf(main, []).ask.n, 5); assert.equal(placeOf(main, [true]).ask.n, 10); assert.deepEqual(placeOf(main, [false]), { level: 0 }); assert.deepEqual(placeOf(main, [true, true, false]), { level: 10 }); assert.deepEqual(placeOf(main, [true, true, true, true, true]), { level: 25 });
+  assert.deepEqual(MILESTONES, [5, 10, 15, 20, 25]);
+  let T = treeOf(data, {}, {}); assert.equal(T.total, 0); assert.equal(T.of, 625); assert.equal(T.nextTree.id, 'main-path'); assert.equal(T.unlock, null); assert.equal(T.done, false);
+  T = treeOf(data, { 'main-path': 5, 'tax-strategy': 15, 'cash-safety-net': 0 }, { 'main-path': true, 'tax-strategy': true, 'cash-safety-net': true });
+  assert.equal(T.total, 20); assert.equal(T.placed, 3); assert.equal(T.strongest[0].id, 'tax-strategy'); assert.equal(T.trees.find(t => t.id === 'tax-strategy').band, 'Advanced');
+  assert.equal(T.unlock.treeId, 'main-path'); assert.equal(T.unlock.n, 6); // the main path comes first until level 10
+  T = treeOf(data, { 'main-path': 10, 'tax-strategy': 15, 'cash-safety-net': 0 }, { 'main-path': true, 'tax-strategy': true, 'cash-safety-net': true });
+  assert.equal(T.unlock.treeId, 'cash-safety-net'); assert.equal(T.unlock.n, 1); // then the lowest placed tree
+  assert.equal(T.bands[0].count, 2); assert.equal(T.bands[2].count, 1);
+  assert.equal(treeOf(data, { 'main-path': 10, 'tax-strategy': 15, 'cash-safety-net': 0 }, { 'main-path': true, 'tax-strategy': true, 'cash-safety-net': 'skip' }).unlock.treeId, 'main-path'); // a tree set aside is never the next unlock
 });

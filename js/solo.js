@@ -13,7 +13,8 @@ export const SOLO = [
   { id: 'end', page: 'end.html', title: 'Start at the finish line', blurb: 'What you need, by when. Then work backwards to today.', next: 'quiz', nextLabel: 'How do I handle money?' },
   { id: 'quiz', page: 'quiz.html', title: 'How do I handle money?', blurb: 'Ten taps. See your five money muscles.', next: 'debt', nextLabel: 'When am I debt free?' },
   { id: 'debt', page: 'debt.html', title: 'When am I debt free?', blurb: 'List what you owe. Get the month it is gone.', next: 'runway', nextLabel: 'How long would my money last?' },
-  { id: 'runway', page: 'runway.html', title: 'How long would my money last?', blurb: 'If the pay stopped tomorrow: your months, and what stretches them.', next: 'plan', nextLabel: 'See when work becomes optional' },
+  { id: 'runway', page: 'runway.html', title: 'How long would my money last?', blurb: 'If the pay stopped tomorrow: your months, and what stretches them.', next: 'skills', nextLabel: 'Where am I on the skill tree?' },
+  { id: 'skills', page: 'skills.html', title: 'Where am I on the skill tree?', blurb: 'The 625 skills in 25 trees. A few taps a tree places you and names your next unlock.', next: 'plan', nextLabel: 'See when work becomes optional' },
   { id: 'plan', page: 'start.html', title: 'Your whole plan', blurb: 'Everything together: your date, your next step, your levels.', next: null },
 ];
 export const soloOf = id => SOLO.find(s => s.id === id) ?? null;
@@ -91,13 +92,13 @@ export function backwardsOf({ need = null, per = 'month', years = null, have = n
 // ---------- What is done, and what carrying answers forward saved ----------
 // Each page uses some of the plan's five answers. An answer given once and used by three pages was typed once, not
 // three times: that is the time saved. SECONDS_EACH is a plain estimate of finding and typing one number.
-export const USES = { first: [], end: ['invested', 'income', 'spending'], quiz: [], debt: ['card'], runway: ['cash', 'spending'], plan: ['income', 'spending', 'cash', 'invested', 'card'] };
+export const USES = { first: [], end: ['invested', 'income', 'spending'], quiz: [], debt: ['card'], runway: ['cash', 'spending'], skills: [], plan: ['income', 'spending', 'cash', 'invested', 'card'] };
 export const SECONDS_EACH = 30;
 export function soloProgress(doc, ref, { planDone = false } = {}) {
   const st = doc.settings?.start || {}, ans = answeredOf(doc, ref), g = st.goal || {};
   const done = { first: collapseOf(st.collapse || {}).done, end: g.need > 0 && g.years > 0 && ans.invested && ans.income && ans.spending,
-    quiz: (() => { const q = quizOf(st.quiz || {}); return q.ready && q.done === q.of; })(), debt: !!ans.card, runway: !!ans.cash && !!ans.spending, plan: !!planDone };
-  const started = { first: Object.keys(st.collapse || {}).length > 0, end: g.need > 0, quiz: Object.keys(st.quiz || {}).length > 0, debt: !!ans.card, runway: !!ans.cash || !!ans.spending, plan: Object.values(ans).some(Boolean) && doc.profile?.birthYear != null };
+    quiz: (() => { const q = quizOf(st.quiz || {}, st.quizDepth || 'ten'); return q.ready && q.done >= 10; })(), skills: Object.keys(st.treeAsked || {}).length >= 25, debt: !!ans.card, runway: !!ans.cash && !!ans.spending, plan: !!planDone };
+  const started = { first: Object.keys(st.collapse || {}).length > 0, end: g.need > 0, quiz: Object.keys(st.quiz || {}).length > 0, skills: Object.keys(st.treeAsked || {}).length > 0, debt: !!ans.card, runway: !!ans.cash || !!ans.spending, plan: Object.values(ans).some(Boolean) && doc.profile?.birthYear != null };
   const keys = ['income', 'spending', 'cash', 'invested', 'card'].filter(k => ans[k]);
   const reused = keys.reduce((n, k) => n + Math.max(0, SOLO.filter(s => USES[s.id].includes(k)).length - 1), 0);
   const steps = SOLO.map(s => ({ ...s, done: !!done[s.id], started: !!started[s.id] && !done[s.id], ready: USES[s.id].filter(k => ans[k]).length, needs: USES[s.id].length }));

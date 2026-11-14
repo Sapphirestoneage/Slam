@@ -389,3 +389,5 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-hubcard { grid-template-columns: 44px 1fr auto; } .st-hubcard.done { border-style: dashed; box-shadow: none; } .st-hubcard.done .st-hubnum { background: var(--good); }
 .st-hubword { font-size: .8125rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 2px solid var(--primary); color: var(--primary); white-space: nowrap; text-align: center; } .st-hubword.ok { border-color: var(--good); color: var(--good); }
 @media (max-width: 480px) { .st-hubcard { grid-template-columns: 40px 1fr; } .st-hubword { grid-column: 2; justify-self: start; } }
+.st-treebar { width: 100%; background: transparent; border: 0; padding: 4px 0; font: inherit; color: var(--text); text-align: left; cursor: pointer; border-radius: 8px; min-height: 44px; } .st-treebar:hover { background: var(--primary-light); } .st-treebar:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; } .st-quizbar.st-treebar { grid-template-columns: minmax(110px, 1.2fr) 1fr 30px; }
+.st-card > .st-pips { flex-wrap: wrap; max-width: 100%; }

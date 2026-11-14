@@ -725,6 +725,11 @@ async function runStart(browser) {
       await solo.locator('#carry .st-btn.primary.big').click(); await solo.waitForSelector('.st-quizq'); await scanHere(solo, { route: 'quiz.html', width, theme, client: 'Start' }, STILL);
       for (let i = 0; i < 10; i++) { await solo.locator('.st-quizscale .st-chip').nth(i % 5).click(); await settle(solo, 60); }
       await settle(solo, 200); await scanHere(solo, { route: 'quiz.html', width, theme, client: 'Start', state: 'result' }, STILL);
+      await solo.goto(`${BASE}/skills.html`, { waitUntil: 'load' }); await settle(solo, 500);
+      await scanHere(solo, { route: 'skills.html', width, theme, client: 'Start' }, STILL);
+      for (const yes of [true, true, false, false, true, false]) { await solo.locator('.st-btn', { hasText: yes ? 'Yes, done' : 'Not yet' }).first().click(); await settle(solo, 80); }
+      await solo.locator('.st-btn', { hasText: 'See where I am so far' }).click(); await settle(solo, 200);
+      await scanHere(solo, { route: 'skills.html', width, theme, client: 'Start', state: 'sheet' }, STILL);
       await solo.goto(`${BASE}/runway.html`, { waitUntil: 'load' }); await settle(solo, 400);
       await solo.locator('.st-chip', { hasText: '$5,000' }).first().click(); await solo.locator('.st-chip', { hasText: '$3,000' }).first().click(); await settle(solo, 300);
       await scanHere(solo, { route: 'runway.html', width, theme, client: 'Start' }, [...STILL, 'covered', 'sticky']);
