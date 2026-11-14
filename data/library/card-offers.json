@@ -1,0 +1,1059 @@
+{
+ "id": "library.cardOffers",
+ "version": "1.0.0",
+ "asOf": "2026-11-14",
+ "source": "Review sites read on 2026-11-14 (each offer lists its own), plus Chase's own Freedom page for the two Freedom offers. No offer here was confirmed on an application page.",
+ "confidence": "secondary",
+ "confidenceNote": "Welcome offers change monthly. Every offer is verified: secondary, and a conflict says where two sites disagree. data/library/cards.json leaves bonuses out on purpose; this file is the separate, dated layer for them.",
+ "note": "cardId is the card's id in data/library/cards.json, or null for a Chase card the library does not hold yet (earnWords carries what it earns until it joins the library). bonus.amount is in bonus.unit; null means the sites disagree and no dollar value is counted. spend is what must be charged within months of opening; 0 means no spending needed.",
+ "units": {
+  "cash": {
+   "name": "dollars",
+   "value": 1,
+   "basis": "face value"
+  },
+  "ur": {
+   "name": "Chase Ultimate Rewards points",
+   "value": 0.01,
+   "transferable": true,
+   "basis": "1 cent each as cash back; worth more only when a Sapphire or Ink Business Preferred card is held, which is what allows transfers"
+  },
+  "united": {
+   "name": "United miles",
+   "value": 0.01,
+   "basis": "SLAM floor assumption, to check"
+  },
+  "southwest": {
+   "name": "Southwest points",
+   "value": 0.012,
+   "basis": "SLAM floor assumption, to check"
+  },
+  "marriott": {
+   "name": "Marriott Bonvoy points",
+   "value": 0.006,
+   "basis": "SLAM floor assumption, to check"
+  },
+  "ihg": {
+   "name": "IHG points",
+   "value": 0.005,
+   "basis": "SLAM floor assumption, to check"
+  },
+  "hyatt": {
+   "name": "World of Hyatt points",
+   "value": 0.015,
+   "basis": "SLAM floor assumption, to check"
+  },
+  "aeroplan": {
+   "name": "Aeroplan points",
+   "value": 0.01,
+   "basis": "SLAM floor assumption, to check"
+  },
+  "avios": {
+   "name": "Avios",
+   "value": 0.01,
+   "basis": "SLAM floor assumption, to check"
+  }
+ },
+ "rules": {
+  "chase524": {
+   "issuer": "Chase",
+   "slots": 5,
+   "months": 24,
+   "words": "Chase usually declines anyone who opened 5 or more cards, at any bank, in the last 24 months",
+   "businessCardsCount": false,
+   "source": "Widely reported by cardholders and review sites; Chase does not publish it",
+   "date": "2026-11-14",
+   "verified": "unverified"
+  }
+ },
+ "unlocksTransfers": [
+  "chase-sapphire-preferred",
+  "chase-sapphire-reserve",
+  "Sapphire Reserve for Business",
+  "Ink Business Preferred"
+ ],
+ "counts": {
+  "offers": 43,
+  "inLibrary": 17,
+  "notInLibrary": 26
+ },
+ "offers": [
+  {
+   "cardId": "chase-sapphire-preferred",
+   "issuer": "Chase",
+   "name": "Sapphire Preferred",
+   "business": false,
+   "annualFee": 95,
+   "bonus": {
+    "amount": 75000,
+    "unit": "ur",
+    "words": null
+   },
+   "spend": 5000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "onemileatatime.com Sapphire comparison",
+    "upgradedpoints.com/credit-cards/chase (Nov 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-sapphire-reserve",
+   "issuer": "Chase",
+   "name": "Sapphire Reserve",
+   "business": false,
+   "annualFee": 795,
+   "bonus": {
+    "amount": 100000,
+    "unit": "ur",
+    "words": null
+   },
+   "spend": 6000,
+   "months": 3,
+   "minScore": "excellent",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "onemileatatime.com Sapphire comparison",
+    "upgradedpoints.com/credit-cards/chase (Nov 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-freedom-unlimited",
+   "issuer": "Chase",
+   "name": "Freedom Unlimited",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 20000,
+    "unit": "ur",
+    "words": "$200 cash back, paid as 20,000 points"
+   },
+   "spend": 500,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "creditcards.chase.com Freedom page"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-freedom-flex",
+   "issuer": "Chase",
+   "name": "Freedom Flex",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 20000,
+    "unit": "ur",
+    "words": "$200 cash back"
+   },
+   "spend": 500,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "One review site shows $250",
+   "earnWords": null,
+   "sources": [
+    "creditcards.chase.com Freedom page"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-freedom-rise",
+   "issuer": "Chase",
+   "name": "Freedom Rise",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 25,
+    "unit": "cash",
+    "words": "$25 statement credit after setting up automatic payments in the first 3 months"
+   },
+   "spend": 0,
+   "months": 3,
+   "minScore": "none",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "upgradedpoints.com/credit-cards/chase (Nov 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-slate-edge",
+   "issuer": "Chase",
+   "name": "Slate Edge",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 0,
+    "unit": "cash",
+    "words": "No bonus. 0% intro rate for 21 months on purchases and balance transfers"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "financebuzz.com/chase-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-prime-visa",
+   "issuer": "Chase",
+   "name": "Prime Visa",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 200,
+    "unit": "cash",
+    "words": "$200 Amazon gift card on approval"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-amazon-visa",
+   "issuer": "Chase",
+   "name": "Amazon Visa",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 50,
+    "unit": "cash",
+    "words": "$50 Amazon gift card on approval"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-united-explorer",
+   "issuer": "Chase",
+   "name": "United Explorer",
+   "business": false,
+   "annualFee": 150,
+   "bonus": {
+    "amount": 70000,
+    "unit": "united",
+    "words": "70,000 miles, plus 10,000 for adding an authorized user. $0 fee the first year"
+   },
+   "spend": 3000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-united-quest",
+   "issuer": "Chase",
+   "name": "United Quest",
+   "business": false,
+   "annualFee": 350,
+   "bonus": {
+    "amount": 80000,
+    "unit": "united",
+    "words": "80,000 miles and 500 PQP, plus 10,000 miles for adding an authorized user"
+   },
+   "spend": 4000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-southwest-plus",
+   "issuer": "Chase",
+   "name": "Southwest Plus",
+   "business": false,
+   "annualFee": 99,
+   "bonus": {
+    "amount": 80000,
+    "unit": "southwest",
+    "words": null
+   },
+   "spend": 1000,
+   "months": 3,
+   "minScore": "good",
+   "ends": "2026-12-02",
+   "conflict": "Another site shows 50,000 points",
+   "earnWords": null,
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-southwest-priority",
+   "issuer": "Chase",
+   "name": "Southwest Priority",
+   "business": false,
+   "annualFee": 229,
+   "bonus": {
+    "amount": 90000,
+    "unit": "southwest",
+    "words": null
+   },
+   "spend": 3000,
+   "months": 3,
+   "minScore": "good",
+   "ends": "2026-12-02",
+   "conflict": "Another site shows 60,000 points",
+   "earnWords": null,
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "financebuzz.com/chase-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-marriott-boundless",
+   "issuer": "Chase",
+   "name": "Marriott Bonvoy Boundless",
+   "business": false,
+   "annualFee": 95,
+   "bonus": {
+    "amount": null,
+    "unit": "marriott",
+    "words": "3 free night awards (two sites) or 200,000 points (one site)"
+   },
+   "spend": 3000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "Sites disagree on the offer, so no dollar value is counted",
+   "earnWords": null,
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase",
+    "financebuzz.com/chase-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-ihg-premier",
+   "issuer": "Chase",
+   "name": "IHG One Rewards Premier",
+   "business": false,
+   "annualFee": 150,
+   "bonus": {
+    "amount": 180000,
+    "unit": "ihg",
+    "words": "180,000 points, limited time"
+   },
+   "spend": 3000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase",
+    "financebuzz.com/chase-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-world-of-hyatt",
+   "issuer": "Chase",
+   "name": "World of Hyatt",
+   "business": false,
+   "annualFee": 95,
+   "bonus": {
+    "amount": null,
+    "unit": "hyatt",
+    "words": "Up to 60,000 points (one site) or 4 free nights after $5,000 (two sites)"
+   },
+   "spend": 3000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "Sites disagree on the offer, so no dollar value is counted",
+   "earnWords": null,
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase",
+    "financebuzz.com/chase-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-disney-visa",
+   "issuer": "Chase",
+   "name": "Disney Visa",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 150,
+    "unit": "cash",
+    "words": "$100 Disney gift card on approval plus a $50 statement credit"
+   },
+   "spend": 500,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": "chase-doordash",
+   "issuer": "Chase",
+   "name": "DoorDash Rewards Mastercard",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 0,
+    "unit": "cash",
+    "words": "A free year of DashPass, not counted in dollars"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Sapphire Reserve for Business",
+   "business": true,
+   "annualFee": 795,
+   "bonus": {
+    "amount": 200000,
+    "unit": "ur",
+    "words": null
+   },
+   "spend": 30000,
+   "months": 6,
+   "minScore": "excellent",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "8x Chase Travel, 4x flights and hotels booked direct, 3x social media and search ads, 1x other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Ink Business Preferred",
+   "business": true,
+   "annualFee": 95,
+   "bonus": {
+    "amount": 100000,
+    "unit": "ur",
+    "words": null
+   },
+   "spend": 8000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "3x on the first $150,000 a year in shipping, ads, internet, cable, phone and travel; 1x other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Ink Business Cash",
+   "business": true,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 75000,
+    "unit": "ur",
+    "words": "$750 cash back"
+   },
+   "spend": 6000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "5% on the first $25,000 a year at office supply stores and on internet, cable and phone; 2% on the first $25,000 at gas stations and restaurants; 1% other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Ink Business Unlimited",
+   "business": true,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 75000,
+    "unit": "ur",
+    "words": "$750 cash back"
+   },
+   "spend": 6000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "1.5% on everything",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Ink Business Premier",
+   "business": true,
+   "annualFee": 195,
+   "bonus": {
+    "amount": 1000,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 10000,
+   "months": 3,
+   "minScore": "excellent",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "2.5% on purchases of $5,000 or more, 2% other, 5% Chase Travel",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "United Gateway",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 40000,
+    "unit": "united",
+    "words": "40,000 miles, plus 10,000 for adding an authorized user"
+   },
+   "spend": 1000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "2x United, gas, local transit; 1x other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "United Club",
+   "business": false,
+   "annualFee": 695,
+   "bonus": {
+    "amount": 90000,
+    "unit": "united",
+    "words": null
+   },
+   "spend": 5000,
+   "months": 3,
+   "minScore": "excellent",
+   "ends": null,
+   "conflict": "Another site shows up to 100,000 miles",
+   "earnWords": "4x United, 2x dining and other travel, 1x other. Includes United Club membership",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "financebuzz.com/chase-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "United Business",
+   "business": true,
+   "annualFee": 150,
+   "bonus": {
+    "amount": 100000,
+    "unit": "united",
+    "words": "100,000 miles and 2,000 PQP, plus 10,000 miles for adding an employee card"
+   },
+   "spend": 5000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "2x United, gas, dining, office supply, local transit; 1x other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "United Club Business",
+   "business": true,
+   "annualFee": 695,
+   "bonus": {
+    "amount": 100000,
+    "unit": "united",
+    "words": "100,000 miles and 2,000 PQP"
+   },
+   "spend": 5000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "2x United, 1.5x other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Southwest Premier",
+   "business": false,
+   "annualFee": 149,
+   "bonus": {
+    "amount": 85000,
+    "unit": "southwest",
+    "words": null
+   },
+   "spend": 2000,
+   "months": 3,
+   "minScore": "good",
+   "ends": "2026-12-02",
+   "conflict": null,
+   "earnWords": "3x Southwest, 2x groceries and restaurants on the first $8,000 a year, 1x other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Southwest Premier Business",
+   "business": true,
+   "annualFee": 149,
+   "bonus": {
+    "amount": 60000,
+    "unit": "southwest",
+    "words": null
+   },
+   "spend": 3000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "3x Southwest, 2x gas and restaurants on the first $8,000 a year, 1x other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Southwest Performance Business",
+   "business": true,
+   "annualFee": 299,
+   "bonus": {
+    "amount": 80000,
+    "unit": "southwest",
+    "words": null
+   },
+   "spend": 5000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "4x Southwest, 2x gas, restaurants, hotels booked direct, local transit; 1x other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Marriott Bonvoy Bold",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 45000,
+    "unit": "marriott",
+    "words": null
+   },
+   "spend": 1000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "2x groceries, rideshare, food delivery, streaming, internet, cable and phone; 1x other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase",
+    "financebuzz.com/chase-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Marriott Bonvoy Bountiful",
+   "business": false,
+   "annualFee": 250,
+   "bonus": {
+    "amount": 85000,
+    "unit": "marriott",
+    "words": null
+   },
+   "spend": 4000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "4x on the first $15,000 a year in groceries and dining, 2x other. Gold Elite status",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "financebuzz.com/chase-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "IHG One Rewards Traveler",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 125000,
+    "unit": "ihg",
+    "words": null
+   },
+   "spend": 2000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "3x dining, gas and groceries; 2x other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "IHG One Rewards Premier Select",
+   "business": false,
+   "annualFee": 350,
+   "bonus": {
+    "amount": 200000,
+    "unit": "ihg",
+    "words": "200,000 points, limited time"
+   },
+   "spend": 5000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "6x dining and other travel, 3x other. Platinum Elite status",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "financebuzz.com/chase-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "IHG One Rewards Business",
+   "business": true,
+   "annualFee": 200,
+   "bonus": {
+    "amount": 190000,
+    "unit": "ihg",
+    "words": null
+   },
+   "spend": 5000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "5x travel, gas, ads, office supply and restaurants; 3x other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "World of Hyatt Business",
+   "business": true,
+   "annualFee": 199,
+   "bonus": {
+    "amount": 70000,
+    "unit": "hyatt",
+    "words": null
+   },
+   "spend": 7000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "Another site shows 60,000 points",
+   "earnWords": "4x Hyatt, 2x in your top three categories each quarter, 1x other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Aeroplan",
+   "business": false,
+   "annualFee": 195,
+   "bonus": {
+    "amount": 75000,
+    "unit": "aeroplan",
+    "words": "75,000 points, plus 40,000 more after $20,000 in the first 12 months"
+   },
+   "spend": 4000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "One site's headline says up to 80,000",
+   "earnWords": "3x travel, 3x groceries and dining through Dec 31, 2026 (2x after), 2x gas, 1x other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "thepointsparty.com/credit-cards/issuer/chase"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "British Airways Visa Signature",
+   "business": false,
+   "annualFee": 95,
+   "bonus": {
+    "amount": 75000,
+    "unit": "avios",
+    "words": null
+   },
+   "spend": 5000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "Another site shows 90,000 Avios",
+   "earnWords": "3 Avios on British Airways, Aer Lingus, Iberia and LEVEL; 2 on hotels booked direct; 1 other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "financebuzz.com/chase-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Iberia Visa Signature",
+   "business": false,
+   "annualFee": 95,
+   "bonus": {
+    "amount": 75000,
+    "unit": "avios",
+    "words": null
+   },
+   "spend": 5000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "3 Avios on Iberia, British Airways, Aer Lingus and LEVEL; 2 on hotels booked direct; 1 other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Aer Lingus Visa Signature",
+   "business": false,
+   "annualFee": 95,
+   "bonus": {
+    "amount": 75000,
+    "unit": "avios",
+    "words": null
+   },
+   "spend": 5000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "3 Avios on Aer Lingus, British Airways, Iberia and LEVEL; 2 on hotels booked direct; 1 other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Disney Premier Visa",
+   "business": false,
+   "annualFee": 49,
+   "bonus": {
+    "amount": 300,
+    "unit": "cash",
+    "words": "$200 Disney gift card plus a $100 statement credit"
+   },
+   "spend": 500,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "5% Disney+, Hulu and ESPN+; 2% gas, groceries, restaurants and Disney; 1% other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Disney Inspire Visa",
+   "business": false,
+   "annualFee": 149,
+   "bonus": {
+    "amount": 500,
+    "unit": "cash",
+    "words": "$300 Disney gift card on approval plus a $200 statement credit"
+   },
+   "spend": 1000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "10% Disney+, Hulu and ESPN+; 3% gas and Disney; 2% groceries and restaurants; 1% other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Instacart Mastercard",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 50,
+    "unit": "cash",
+    "words": "$50 Instacart credit on approval"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": "5% Instacart on the first $6,000 a year, 5% Chase Travel, 2% restaurants, gas and streaming, 1% other",
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
+   ],
+   "verified": "secondary"
+  },
+  {
+   "cardId": null,
+   "issuer": "Chase",
+   "name": "Slate",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 0,
+    "unit": "cash",
+    "words": "No bonus. 0% intro rate for 21 months on purchases and balance transfers"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "financebuzz.com/chase-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary"
+  }
+ ]
+}

@@ -841,6 +841,10 @@ export const MATH = [
 // js/math exports that are not an M formula of their own: how records become formula inputs, account details, and
 // result plumbing. Each says why it has no row of its own.
 export const SUPPORT = {
+  'cardplan.unlocksTransfers': 'whether a held card allows point transfers (data/library/card-offers.json)', 'cardplan.offerValue': 'dollars a welcome offer is worth, from the dated offers layer; not a sheet number yet (no screen stores it)',
+  'cardplan.slotsLeft': 'issuer slots left under the 5/24 rule in card-offers.json', 'cardplan.monthsToEarn': 'months of usual card spending to earn an offer', 'cardplan.firstYearNet': 'offer value less the first-year fee after credits used',
+  'cardplan.cardFit': 'fits, maybe or later for one card, with plain reasons', 'cardplan.nextMoves': 'the moves open from here, two steps deep', 'cardplan.pathNet': 'what a sequence of cards is worth together',
+  'cardplan.costAsFiNumber': 'a yearly cost divided by the withdrawal rate', 'cardplan.investedLater': 'a sum left invested at the real return',
   'result.ok': 'wraps a number with its plain-words math', 'result.needs': 'says what a number still needs', 'result.isBlank': 'a blank check',
   'result.missing': 'lists blank inputs', 'result.joinWords': 'joins words for Needs ...', 'result.fmt': 'number formats for the math text',
   'metrics.inputsOf': 'reads the records into formula inputs (the Inputs tabs)', 'metrics.metrics': 'runs every formula for the screens (the Math tab)',
