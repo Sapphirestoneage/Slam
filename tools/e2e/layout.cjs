@@ -705,6 +705,16 @@ async function runStart(browser) {
         if (n) { await settle(page, 200); await scanHere(page, { ...meta, state: 'every fold open' }, STILL); }
       } catch (e) { errors.push(`Start ${r} ${width} ${theme}: ${e.message.split('\n')[0]}`); }
     }
+    // the standalone pages (js/solo): each is one page, scanned filled in
+    if (!ONLY || ONLY.some(o => 'solo debt'.includes(o))) try {
+      const solo = await ctx.newPage(); solo.on('pageerror', e => errors.push(`Solo: ${String(e).slice(0, 200)}`));
+      await solo.setViewportSize({ width, height: width < 600 ? 844 : 1000 }); await solo.emulateMedia({ colorScheme: theme });
+      await solo.goto(`${BASE}/debt.html`, { waitUntil: 'load' }); await settle(solo, 500);
+      for (const [sec, vals] of [['cards', ['5000', '25', '200']], ['student', ['12000', '5.5', '150']]]) { await solo.locator(`[data-sec="${sec}"] .st-bookhead .st-btn`).click(); const ins = solo.locator(`[data-sec="${sec}"] .st-bkcell input`); for (let i = 0; i < vals.length; i++) await ins.nth(i).fill(vals[i]); }
+      await solo.locator('h1').click(); await settle(solo, 400);
+      await scanHere(solo, { route: 'debt.html', width, theme, client: 'Start' }, [...STILL, 'covered', 'sticky']);
+      await solo.close();
+    } catch (e) { errors.push(`Solo debt ${width} ${theme}: ${e.message.split('\n')[0]}`); }
   }
   await ctx.close();
 }

@@ -368,3 +368,6 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-bookbody { padding: 4px 0 4px; margin-top: 10px; }
 .st-bksel, .st-bkcell .in { height: 48px; min-height: 48px; box-sizing: border-box; }
 .st-bkcell input { height: 100%; align-self: stretch; }
+/* Standalone pages: one thing each, with the step shown in the bar */
+.st-solobrand { display: inline-flex !important; } .st-solostep { color: #fff; font-weight: 700; font-size: .875rem; border: 2px solid rgba(255,255,255,.6); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+.st-btn[disabled] { opacity: .5; cursor: not-allowed; }

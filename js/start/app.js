@@ -57,19 +57,7 @@ for (const ev of ['pagehide', 'visibilitychange']) window.addEventListener(ev, (
 
 const $ = id => document.getElementById(id);
 const localDay = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }; // the person's own calendar day
-// A private link: the whole plan, squeezed into the link itself. Nothing is uploaded; whoever has the link has the plan.
-const LINK = '#/open/';
-async function pack(doc) {
-  const file = exportFile(doc); file.household = { ...file.household, history: [], snapshots: [] };
-  const zipped = new Uint8Array(await new Response(new Blob([JSON.stringify(file)]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
-  let bin = ''; for (const b of zipped) bin += String.fromCharCode(b);
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-async function unpack(text) {
-  const bin = atob(text.replace(/-/g, '+').replace(/_/g, '/'));
-  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
-  return importFile(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text());
-}
+import { LINK, pack, unpack } from './link.js';
 const carried = location.hash.startsWith(LINK) ? location.hash.slice(LINK.length) : null;
 const MEETLINK = '#/meet/', meetIn = location.hash.startsWith(MEETLINK) && location.hash.length > MEETLINK.length ? unpackMeet(location.hash.slice(MEETLINK.length)) : null;
 if (carried) history.replaceState(null, '', location.pathname); // the plan does not stay in the address bar
@@ -282,6 +270,7 @@ function you(p) {
   return [
     h('div.st-card.hero', {},
       h('h1', {}, 'A money plan, starting from one tap'),
+      (store.doc.records || []).some(r => r.kind === 'debt') ? h('div.st-note', { role: 'status' }, 'Your numbers came with you. Pick your birth year and the plan builds on them.') : null,
       h('p', { style: { marginBottom: 0 } }, 'Pick your birth year and a plan shows right away. Five quick questions make it yours.')),
     h('div.st-card', {},
       h('h2', {}, 'When were you born?'),
@@ -1246,7 +1235,10 @@ if (start.hasAge && start.done && (away || !STAGES.some(x => x.id === linked)) &
 if (meetIn) { remember({ meet: { ...(mine().meet || {}), theirs: meetIn } }); ui.stage = 'meet'; }
 history.replaceState({ stage: ui.stage, q: ui.q, depth: 0 }, '', hashOf(ui.stage, ui.q));
 render();
-if (carried) clear($('overlay'), h('div.st-shade', {}, h('div.st-tour', { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Open a plan from a link' },
+// Nothing on this device yet (the usual case coming from a standalone page): the carried numbers simply open, no question asked.
+const emptyHere = !P().hasAge && !(store.doc.records || []).length;
+if (carried && emptyHere) { try { const doc = await unpack(carried); saveClient(adapter, doc); open(doc); const p1 = P(); ui.stage = p1.hasAge ? (p1.done ? 'plan' : 'numbers') : 'you'; ui.note = 'Your numbers came with you. Nothing to type twice.'; render(); } catch { /* falls through to the first screen */ } }
+else if (carried) clear($('overlay'), h('div.st-shade', {}, h('div.st-tour', { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Open a plan from a link' },
   h('h1', {}, 'This link carries a plan'), h('p', {}, 'Open it on this device? It is saved here, in this browser.'),
   h('div.st-row.end', {}, btn('Not now', () => clear($('overlay')), 'text'), btn('Open it', async () => {
     try { const doc = await unpack(carried); saveClient(adapter, doc); open(doc); clear($('overlay')); go('plan'); }
