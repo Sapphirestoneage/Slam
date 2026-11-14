@@ -22,6 +22,11 @@ test('the path: each standalone names the next, and the last is the whole plan',
 
 test('nothing owed yet: no date, and the page can say so', () => {
   assert.deepEqual(debtFreeOf(fresh().doc, ref, { now }), { ready: false, count: 0, total: 0 });
+  // the mortgage is left out unless asked
+  const s = fresh(); debt(s, 'home', 300000, 0.06, 2000); debt(s, 'cards', 1200, 0, 100);
+  const out = debtFreeOf(s.doc, ref, { now }); assert.equal(out.months, 12); assert.equal(out.total, 1200); assert.deepEqual(out.mortgage, { count: 1, total: 300000, counted: false });
+  const withIt = debtFreeOf(s.doc, ref, { withMortgage: true, now }); assert.equal(withIt.total, 301200); assert.ok(withIt.months > 200); assert.equal(withIt.mortgage.counted, true);
+  const only = fresh(); debt(only, 'home', 300000, 0.06, 2000); assert.equal(debtFreeOf(only.doc, ref, { now }).ready, false); assert.equal(debtFreeOf(only.doc, ref, { now }).mortgage.count, 1); assert.equal(debtFreeOf(only.doc, ref, { withMortgage: true, now }).ready, true);
 });
 
 test('one debt at 0%: $1,200 at $100 a month is 12 months, gone Nov 2027, no interest', () => {

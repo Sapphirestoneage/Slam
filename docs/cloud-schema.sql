@@ -11,3 +11,7 @@ create policy "member writes space" on spaces for update using (exists (select 1
 create policy "anyone signed in creates a space" on spaces for insert with check (auth.uid() is not null);
 create policy "see own memberships" on space_members for select using (member = auth.uid());
 create policy "join as yourself" on space_members for insert with check (member = auth.uid());
+-- Projects made after May 30, 2026 expose a table through the Data API only when it is granted. Signed-in people only:
+grant usage on schema public to authenticated;
+grant select, insert, update on accounts, spaces to authenticated;
+grant select, insert on space_members to authenticated;

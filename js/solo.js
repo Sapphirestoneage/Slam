@@ -29,9 +29,11 @@ export const EXTRAS = [0, 50, 100, 250, 500], ORDERS = [['avalanche', 'Highest r
 // Debt free by: every debt on file with something owed, paid in the chosen order with the extra on top.
 // A rate marked "Not sure" (or left blank) takes the typical rate for its kind (ref.typicalRates); a missing payment takes
 // the card minimum, or a ten-year payment on a loan. Both are named in `standIns` so the page can say so.
-export function debtFreeOf(doc, ref, { extra = 0, order = 'avalanche', now = new Date() } = {}) {
-  const rows = (doc.records || []).filter(r => r.kind === 'debt' && (r.values?.balance ?? 0) > 0);
-  if (!rows.length) return { ready: false, count: 0, total: 0 };
+// "Debt free" leaves the mortgage out unless asked (Eli, Nov 14): a home loan is a different kind of debt, paid on its own clock.
+export function debtFreeOf(doc, ref, { extra = 0, order = 'avalanche', withMortgage = false, now = new Date() } = {}) {
+  const owed = (doc.records || []).filter(r => r.kind === 'debt' && (r.values?.balance ?? 0) > 0), home = owed.filter(r => r.type === 'Mortgage');
+  const rows = withMortgage ? owed : owed.filter(r => r.type !== 'Mortgage'), mortgage = { count: home.length, total: home.reduce((t, r) => t + r.values.balance, 0), counted: withMortgage && home.length > 0 };
+  if (!rows.length) return { ready: false, count: 0, total: 0, ...(home.length ? { mortgage } : {}) };
   const standIns = [];
   const debts = rows.map(r => {
     const balance = r.values.balance, known = r.values.apr != null, apr = known ? r.values.apr : ref.typicalRates?.[r.type] ?? 0.1;
@@ -44,7 +46,7 @@ export function debtFreeOf(doc, ref, { extra = 0, order = 'avalanche', now = new
   const plan = run(order, extra), plain = extra > 0 ? run(order, 0) : null, otherId = order === 'avalanche' ? 'snowball' : 'avalanche', alt = debts.length > 1 ? run(otherId, extra) : null;
   const firstWin = p => (p?.months == null ? null : Math.min(...p.debts.map(d => d.paidOffMonth)));
   const list = plan.debts.map((d, i) => ({ name: d.name, month: d.paidOffMonth, date: d.paidOffMonth == null ? null : monthLabel(d.paidOffMonth, now), interest: d.interest, first: i === 0 }));
-  return { ready: true, count: debts.length, total: debts.reduce((s, d) => s + d.balance, 0), payments: debts.reduce((s, d) => s + d.payment, 0), extra, order,
+  return { ready: true, mortgage, count: debts.length, total: debts.reduce((s, d) => s + d.balance, 0), payments: debts.reduce((s, d) => s + d.payment, 0), extra, order,
     never: plan.months == null, months: plan.months, date: plan.months == null ? null : monthLabel(plan.months, now), interest: plan.interest, first: plan.debts[0]?.name ?? null, firstWin: firstWin(plan),
     debts: list.sort((a, b) => (a.month ?? Infinity) - (b.month ?? Infinity)), standIns,
     saved: plain && plain.months != null && plan.months != null ? { months: plain.months - plan.months, interest: plain.interest - plan.interest } : null,

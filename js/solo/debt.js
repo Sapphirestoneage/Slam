@@ -12,9 +12,10 @@ let result = null; // the answer card, redrawn as the numbers change without tou
 
 function answer(api) {
   const m = api.mine(), extra = m.soloExtra ?? 0, order = m.soloOrder ?? 'avalanche';
-  const R = debtFreeOf(api.store.doc, api.ref, { extra, order });
+  const withMortgage = !!m.soloMortgage, R = debtFreeOf(api.store.doc, api.ref, { extra, order, withMortgage });
+  const homeLine = R.mortgage?.count ? h('div.st-field', {}, h('div.st-flabel', {}, `Your mortgage (${money(Math.round(R.mortgage.total))})`), h('div.st-chips', {}, chip('Leave it out', !withMortgage, () => { api.remember({ soloMortgage: false }); api.render(); }), chip('Count it too', withMortgage, () => { api.remember({ soloMortgage: true }); api.render(); })), h('div.st-small.st-soft', { style: { marginTop: '4px' } }, 'Debt free here means everything but the home loan, unless you count it.')) : null;
   const pick = patch => { api.remember(patch); api.render(); };
-  if (!R.ready) return h('div.st-card', { id: 'answer' }, h('h2', { style: { marginTop: 0 } }, 'Your date shows here'), h('p.st-soft', { style: { marginBottom: 0 } }, 'Add one thing you owe and it appears. A rough amount is enough to start.'));
+  if (!R.ready) return h('div.st-card', { id: 'answer' }, h('h2', { style: { marginTop: 0 } }, R.mortgage?.count ? 'Nothing but the mortgage' : 'Your date shows here'), h('p.st-soft', { style: { marginBottom: R.mortgage?.count ? '8px' : 0 } }, R.mortgage?.count ? 'With the home loan left out, you are debt free already.' : 'Add one thing you owe and it appears. A rough amount is enough to start.'), homeLine);
   const O = ORDERS.find(o => o[0] === order);
   return h('div.st-card.hero', { id: 'answer', 'aria-live': 'polite' },
     h('div.st-eyebrow', {}, 'Your answer'),
@@ -26,6 +27,7 @@ function answer(api) {
       h('p.st-small', { style: { margin: '6px 0 0' } }, `${O[2]}. Put everything extra on ${R.first}; keep the others at their usual payment.`,
         R.other && Math.abs(R.other.moreInterest) >= 1 ? ` The other way ${R.other.moreInterest > 0 ? `costs about ${money(Math.round(R.other.moreInterest))} more` : `saves about ${money(Math.round(-R.other.moreInterest))}`} in interest${R.other.firstWin != null && R.firstWin != null && R.other.firstWin !== R.firstWin ? `, and clears its first one ${R.other.firstWin < R.firstWin ? `${R.firstWin - R.other.firstWin} months sooner` : `${R.other.firstWin - R.firstWin} months later`}` : ''}.` : '')) : null,
     !R.never ? h('ol.st-list', { style: { marginTop: '10px' } }, R.debts.map((d, i) => h('li', {}, h('span.dot', {}, i + 1), h('span', {}, d.name, h('small', {}, `About ${money(Math.round(d.interest))} of interest`)), h('span.when', {}, `Gone ${d.date}`)))) : null,
+    homeLine,
     R.standIns.length ? h('p.st-small.st-soft', {}, `Standing in until you add them: ${R.standIns.map(s => `${s.name} ${s.what === 'rate' ? `at a typical ${+(s.value * 100).toFixed(1)}%` : `paying about ${money(Math.round(s.value))} a month`}`).join('; ')}.`) : null);
 }
 
@@ -34,7 +36,7 @@ function draw(api) {
   $('step').textContent = `Step ${at + 1} of ${SOLO.length}`;
   const B = bookOf(api.store.doc, DEBT_BOOK);
   const next = btn(`Next: ${me.nextLabel} ›`, async () => { location.href = await api.nextUrl(); }, 'primary big');
-  const swap = () => { const fresh = answer(api); result.replaceWith(fresh); result = fresh; next.disabled = !fresh.classList.contains('hero'); next.classList.toggle('st-pulse', !next.disabled && !document.querySelector('#main .st-book .st-pulse')); };
+  const swap = () => { const fresh = answer(api); result.replaceWith(fresh); result = fresh; next.disabled = !bookOf(api.store.doc, DEBT_BOOK).total; next.classList.toggle('st-pulse', !next.disabled && !document.querySelector('#main .st-book .st-pulse')); };
   result = answer(api);
   $('main').replaceChildren(
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, me.title),
