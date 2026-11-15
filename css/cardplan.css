@@ -26,8 +26,8 @@
 .cp-dates li { display: grid; grid-template-columns: 6rem minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 2px solid var(--border-row); }
 .cp-dates li:first-child { border-top: 0; }
 .cp-dates b { font-variant-numeric: tabular-nums; }
-.cp-chipx { min-height: 36px; padding: 0 10px; }
-.cp-small .st-chip { min-height: 36px; padding: 0 10px; font-size: .875rem; }
+.cp-chipx { min-height: 40px; padding: 0 10px; }
+.cp-small .st-chip { min-height: 40px; padding: 0 10px; font-size: .875rem; }
 .cp-grow { width: 100%; max-width: 420px; height: auto; display: block; }
 .cp-grow text { fill: var(--text); font: 600 12px var(--font, inherit); }
 .cp-q { display: flex; flex-direction: column; gap: 6px; }

@@ -44,3 +44,12 @@ old parts of this file and of `QUESTIONS.md` moved to `docs/archive/`. Nothing i
   the finish line page, a "null" sentence for people who owe nothing, and a builder's word on the front door.
   `docs/KRUG-2026-11-15.md`.
 
+## Nov 15 2026: Run 4, the trip page and the handoff
+
+- New tool from the template: `trip.html`, What does this trip really cost? Math in `js/solo.js` with a hand-worked
+  test and a second-engine check. Opened in Chrome at 390 and 1280.
+- The handoff walked end to end in practice mode (person, invite, coach, the coach's list). Fixed: a shared plan can
+  start from a copy of the answers already given.
+- Walks at laptop width and of every plan tab: clean. The pulse moves on while typing. Card page chips are 40px.
+- Not done: Read my papers (needs real documents), the FIRE journey map.
+

@@ -268,3 +268,21 @@ test('sync: a second phone picks up the plan, the newest save wins, and work don
   assert.equal(defaultMerge(newAccount('Me', now), a).spaces.length, 1); // an empty local plan is not carried
   assert.ok(stampKey(id).includes(id));
 });
+
+test('what a trip really costs: the price grown to 65, the same trip by age, and how far it moves the date', async () => {
+  const { tripCostOf, TRIP_AGES } = await import('../js/solo.js');
+  const r = ref.presets.realReturn.default, wr = ref.presets.withdrawalRate.default;
+  assert.equal(tripCostOf({ cost: 3000, ref }).ready, false, 'needs an age');
+  assert.equal(tripCostOf({ age: 25, ref }).ready, false, 'needs a price');
+  const a = tripCostOf({ cost: 3000, age: 25, ref });
+  assert.ok(Math.abs(a.grown - 3000 * (1 + r) ** 40) < 1e-6); assert.ok(Math.abs(a.aYear - a.grown * wr) < 1e-9); assert.equal(a.delay, null);
+  assert.deepEqual(a.byAge.map(x => x.age), TRIP_AGES);
+  for (let i = 1; i < a.byAge.length; i++) assert.ok(a.byAge[i].grown < a.byAge[i - 1].grown, 'the same trip costs less the older you are');
+  assert.equal(tripCostOf({ cost: 3000, age: 70, ref }).grown, 3000, 'past 65 the price is the cost');
+  // with the plan's numbers: $20,000 invested, $1,000 a month left over, $3,000 a month of spending
+  const b = tripCostOf({ cost: 3000, age: 25, invested: 20000, monthly: 1000, spending: 3000, ref });
+  const g = (1 + r) ** (1 / 12), months = B => { let n = 0, v = B; while (v < 3000 * 12 / wr) { v = v * g + 1000; n++; } return n; };
+  assert.equal(b.before, months(20000)); assert.equal(b.after, months(17000)); assert.equal(b.delay, b.after - b.before); assert.ok(b.delay >= 1 && b.delay <= 4);
+  assert.ok(Math.abs(b.share - 0.15) < 1e-12); assert.equal(b.monthsOfSaving, 3);
+  assert.equal(tripCostOf({ cost: 3000, age: 25, invested: 20000, monthly: 0, spending: 3000, ref }).delay, null, 'nothing left over: no date to move');
+});

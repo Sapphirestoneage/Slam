@@ -46,6 +46,7 @@ Top to bottom, always in this order:
    `js/solo/<name>.js`. Change the three places marked `CHANGE`.
 2. Write the math function and its test first. Then the page.
 3. Add the tool to `SOLO` in `js/solo.js` (its place in the chain, its `next`), and to `USES` (which of the plan's
-   answers it reads).
+   answers it reads). A tool off the seven steps (like `trip.html`) skips this: it boots with its own id, writes its
+   own closing card (Copy my link, All the steps) and is linked from the front door's More to explore.
 4. Add it to the layout check's screens, to the second engine, and to its run in `ROADMAP.md`.
 5. A Krug walk before it ships: three real tasks, said out loud, on a phone width. Fix what trips.

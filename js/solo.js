@@ -2,6 +2,7 @@
 // The standalone pages (js/solo): one easy thing each, done right, with the answers carried to the next page in a link.
 // This file is the pure part: the order of the pages, and what each one works out from the household file. The payoff
 // itself is the engine's own (js/math/debt.js payoffPlan, M34), so a standalone and the full plan can never disagree.
+import { fiDate } from './math/fi.js';
 import { payoffPlan, cardMinimum } from './math/debt.js';
 import { collapseOf } from './collapse.js';
 import { quizOf } from './quiz.js';
@@ -105,4 +106,24 @@ export function soloProgress(doc, ref, { planDone = false } = {}) {
   const reused = keys.reduce((n, k) => n + Math.max(0, SOLO.filter(s => USES[s.id].includes(k)).length - 1), 0);
   const steps = SOLO.map(s => ({ ...s, done: !!done[s.id], started: !!started[s.id] && !done[s.id], ready: USES[s.id].filter(k => ans[k]).length, needs: USES[s.id].length }));
   return { steps, done: steps.filter(s => s.done).length, of: steps.length, next: steps.find(s => !s.done) ?? null, answers: keys.length, reused, minutesSaved: Math.round(reused * SECONDS_EACH / 60) };
+}
+
+// What a trip really costs (trip.html; Eli, Nov 14 2026: "pays for a FIRE event/retreat", the true cost by age: it matters
+// less for someone older and a great deal for someone young). The price today, what that money would be at 65 if it
+// stayed invested at the plan's own return (today's dollars), the yearly spending that would pay for from then on, the
+// same trip at other ages, and, with the plan's numbers on file, how far it moves the month work becomes optional.
+export const TRIP_COSTS = [500, 1500, 3000, 5000, 8000], TRIP_AGES = [22, 30, 40, 50, 60], TRIP_AGE_PICKS = [22, 25, 30, 35, 40, 50, 60];
+export function tripCostOf({ cost = null, age = null, invested = null, monthly = null, spending = null, toAge = 65, ref } = {}) {
+  if (!(cost > 0) || age == null) return { ready: false };
+  const r = ref.presets.realReturn.default, wr = ref.presets.withdrawalRate.default;
+  const at = a => cost * (1 + r) ** Math.max(0, toAge - a), grown = at(age);
+  const out = { ready: true, cost, age, toAge, years: Math.max(0, toAge - age), grown, multiple: grown / cost, aYear: grown * wr, realReturn: r, withdrawalRate: wr,
+    byAge: TRIP_AGES.map(a => ({ age: a, grown: at(a), multiple: at(a) / cost })),
+    share: invested > 0 ? cost / invested : null, monthsOfSaving: monthly > 0 ? cost / monthly : null, delay: null, before: null, after: null };
+  if (monthly > 0 && spending > 0 && invested != null) {
+    const target = spending * 12 / wr, go = b => fiDate({ invested: b, monthlyInvesting: monthly, realReturn: r, target }).value;
+    out.before = go(invested); out.after = go(invested - cost); // the trip comes out of what is invested, or out of the saving that would have gone in
+    out.delay = out.before == null || out.after == null ? null : out.after - out.before;
+  }
+  return out;
 }

@@ -224,6 +224,8 @@ def months_to(invested, monthly, yearly_return, target, cap=840):
     if value(cap) < target:
         return None
     k = monthly / (g - 1)
+    if invested + k <= 0:
+        return None  # the growth lost each month outruns what goes in
     n = max(0, math.ceil(math.log((target + k) / (invested + k)) / math.log(g)) - 2)
     while value(n) < target:
         n += 1
@@ -526,6 +528,18 @@ def run(cases, ref):
             same_g = ck('what you have, grown', o['grown'], grown); same_n = ck('saving needed a month', o['needed'], needed)
             if o['grown'] and grown:
                 extra['pace'].append((o['grown'] / grown - 1, (o['needed'] or 0) - needed, x))
+        elif fn == 'trip':
+            # a price left to grow to 65 at the plan's return; the FI month before and after by the closed form
+            grow = lambda age: x['cost'] * (1 + rr) ** max(0, 65 - age)
+            ck('grown to 65', o['grown'], grow(x['age'])); ck('a year of spending it pays for', o['aYear'], grow(x['age']) * wr)
+            ck('the same trip at 22', o['at22'], grow(22)); ck('the same trip at 60', o['at60'], grow(60))
+            ck('share of what is invested', o['share'], x['cost'] / x['invested'] if x['invested'] else None, 1e-9)
+            ck('months of saving', o['monthsOfSaving'], x['cost'] / x['monthly'] if x['monthly'] else None, 1e-9)
+            if x['monthly'] and x['invested'] is not None:
+                T = x['spending'] * 12 / wr
+                before, after = months_to(x['invested'], x['monthly'], rr, T), months_to(x['invested'] - x['cost'], x['monthly'], rr, T)
+                ck('FI month before', o['before'], before, 0); ck('FI month after', o['after'], after, 0)
+                ck('months later', o['delay'], None if before is None or after is None else after - before, 0)
         elif fn == 'taxableSS':
             ck('taxed part', o['taxed'], law.taxed_ss(x['ss'], x['other'], x['filingStatus']))
         elif fn == 'gainsTax':

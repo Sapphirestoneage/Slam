@@ -34,6 +34,9 @@ function draw(api) {
   const soft = R => { const big = card.querySelector('.st-big');
     if (big && R.ready) big.textContent = lasts(R);
     else if (!big && R.ready) { card.className = 'st-card hero'; card.replaceChildren(h('div.st-eyebrow', {}, 'Your answer'), h('div.st-soft', {}, R.covered ? 'What still comes in covers what goes out' : 'Your money lasts about'), h('div.st-big', {}, lasts(R))); }
+    // the pulse moves on as soon as a box has a number, without waiting for the box to be left
+    const boxes = [...inputs.querySelectorAll('.st-box .in')], has = boxes.map(x => x.querySelector('input').value !== '');
+    boxes.forEach((x, i) => x.classList.toggle('st-pulse', !has[i] && has.slice(0, i).every(Boolean)));
     carry?.setReady(R.ready); };
   carry = carryCard(api, { ready: cash != null && spending > 0, pulse: cash != null && spending > 0 });
   const inputs = h('div.st-card', { onFocusout: e => { const t = e.relatedTarget, main = document.getElementById('main'); if (!t || t === main || !main.contains(t)) setTimeout(() => api.render(), 0); } }, h('h2', { style: { marginTop: 0 } }, 'Two numbers'),

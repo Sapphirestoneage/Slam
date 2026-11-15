@@ -44,22 +44,22 @@ after Run 1.
 
 | Tool or job | Status | Where it lives | What is left, and what done means | Size |
 |---|---|---|---|---|
-| What is my first move? | Walked | first.html | First-timer walk done on a phone width, fixes in (docs/KRUG-2026-11-15.md). Laptop width still to walk. | S |
-| Start at the finish line (begin with the end in mind) | Walked | end.html | First-timer walk done on a phone width, fixes in (docs/KRUG-2026-11-15.md). Laptop width still to walk. | S |
-| How do I handle money? (quiz, couples pass, share with friends) | Walked | quiz.html | First-timer walk done on a phone width, fixes in (docs/KRUG-2026-11-15.md). Laptop width still to walk. | S |
-| When am I debt free? | Walked | debt.html | First-timer walk done on a phone width, fixes in (docs/KRUG-2026-11-15.md). Laptop width still to walk. | S |
-| How long would my money last? | Walked | runway.html | First-timer walk done on a phone width, fixes in (docs/KRUG-2026-11-15.md). Laptop width still to walk. | S |
-| Where am I on the skill tree? (625 skills) | Walked | skills.html | First-timer walk done on a phone width, fixes in (docs/KRUG-2026-11-15.md). Laptop width still to walk. | S |
-| Your whole plan (levels, what-ifs, lifetime, fire drills) | On main | start.html | The five first questions walked and reordered (docs/COLLAPSE.md). The levels, the what-ifs and the lifetime screens still to walk (Run 4). | M |
+| What is my first move? | Done | first.html | Walked at phone and laptop width, fixes in (docs/KRUG-2026-11-15.md). | S |
+| Start at the finish line (begin with the end in mind) | Done | end.html | Walked at phone and laptop width, fixes in (docs/KRUG-2026-11-15.md). | S |
+| How do I handle money? (quiz, couples pass, share with friends) | Done | quiz.html | Walked at phone and laptop width, fixes in (docs/KRUG-2026-11-15.md). | S |
+| When am I debt free? | Done | debt.html | Walked at phone and laptop width, fixes in (docs/KRUG-2026-11-15.md). | S |
+| How long would my money last? | Done | runway.html | Walked at phone and laptop width, fixes in (docs/KRUG-2026-11-15.md). | S |
+| Where am I on the skill tree? (625 skills) | Done | skills.html | Walked at phone and laptop width, fixes in (docs/KRUG-2026-11-15.md). | S |
+| Your whole plan (levels, what-ifs, lifetime, fire drills) | Walked | start.html | Five questions and every tab walked at both widths. Not walked: each of the 20 levels answered through, each what-if tool, the lifetime screens with every setting. | M |
 
 ### Run 4: Card vault and the FIRE journey
 
 | Tool or job | Status | Where it lives | What is left, and what done means | Size |
 |---|---|---|---|---|
-| Read my papers (1040, W-2, pay stub, NY, NJ, CT) | On main | return.html | Test on real documents you supply, kept out of the repo. | S |
-| Is this card right for me? (the card vault) | On main | cards.html, data/library/cards.json (67 cards), card-offers.json (43 Chase offers) | Pushed to main Nov 14 from the other chat. Left: a Krug pass, a link from the front door, welcome offers for the other 11 banks (only Chase has them), and offers confirmed on application pages instead of review sites. | M |
-| The handoff: a person on their own brings a coach into the same plan | Partly on main | one.html, pro.html | Your Nov 14 answer: self-serve first, then you coach that person from there. Walk it end to end in practice mode: finish alone, invite a coach, coach sees what changed. Fix what breaks. | S |
-| FIRE journey map and the retreat scenario | Not on main | new | The stages of a FIRE person, plus what paying for a FIRE event or retreat really costs by age. | M |
+| Read my papers (1040, W-2, pay stub, NY, NJ, CT) | On main | return.html | Not walked: it needs real documents, which only Eli can supply (kept out of the repo). | S |
+| Is this card right for me? (the card vault) | On main | cards.html, data/library/cards.json (67 cards), card-offers.json (43 Chase offers) | Walked at both widths; chips are 40px. Left: offers confirmed on application pages instead of review sites. | M |
+| The handoff: a person on their own brings a coach into the same plan | Done | one.html, pro.html | Walked end to end in practice mode. A shared plan can now start from the answers a person already gave. Left: the real server (needs keys), and a client plan shows as "Ours" on the coach's list until renamed. | S |
+| FIRE journey map and the retreat scenario | Partly on main | trip.html, js/solo/trip.js | The retreat scenario is built: trip.html, What does this trip really cost? (the price grown to 65, the same trip by age, how far it moves the date). The journey map is not built. | M |
 
 ### Run 5: Canon: replication and the first calculator pack
 

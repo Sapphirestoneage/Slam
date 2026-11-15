@@ -7,7 +7,7 @@ import { federalTax, fica, stateTax, takeHomeFromGross, grossFromTakeHome } from
 import { payoffMonths, totalInterest, payoffPlan, cardMinimum } from '../../js/math/debt.js';
 import { fiNumber, fiDate, coastFi, solveMonthlySaving } from '../../js/math/fi.js';
 import { yearsAtRate } from '../../js/math/simple.js';
-import { runwayOf, backwardsOf } from '../../js/solo.js';
+import { runwayOf, backwardsOf, tripCostOf } from '../../js/solo.js';
 import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom } from '../../js/math/lifetime.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
@@ -39,6 +39,7 @@ for (let i = 0; i < N; i++) {
   { const x = { s: whole(1, 99) / 100, realReturn: pick([0.03, 0.05, 0.07]), withdrawalRate: pick([0.03, 0.04, 0.05]) }; add('yearsAtRate', x, { years: yearsAtRate(x.s, x) }); }
   { const x = { cash: rnd() < 0.05 ? 0 : money(100, 200000), spending: money(900, 15000), stillIn: pick([0, 0, 500, 1000, 1500, 2000]), cut: pick([0, 0.1, 0.2, 0.3]) }; const r = runwayOf({ ...x, now: NOW }); add('runway', x, { covered: !!r.covered, months: r.months ?? null, whole: r.whole ?? null, extraMonths: r.extraMonths ?? null }); }
   { const x = { need: money(1500, 12000), per: 'month', years: pick([5, 10, 15, 20, 25, 30]), have: rnd() < 0.2 ? 0 : money(500, 900000), takeHome: money(2500, 16000), spending: money(1500, 12000) }; const r = backwardsOf({ ...x, ref, now: NOW }); add('backwards', x, { total: r.total, grown: r.grown, needed: r.needed, months: r.months, gap: r.gap }); }
+  { const x = { cost: money(200, 20000), age: whole(18, 70), invested: rnd() < 0.3 ? null : money(500, 900000), monthly: rnd() < 0.2 ? null : money(50, 6000), spending: money(1500, 12000) }; const r = tripCostOf({ ...x, ref }); add('trip', x, { grown: r.grown, aYear: r.aYear, at22: r.byAge[0].grown, at60: r.byAge[4].grown, share: r.share, monthsOfSaving: r.monthsOfSaving, before: r.before, after: r.after, delay: r.delay }); }
   { const x = { ss: money(6000, 70000), other: rnd() < 0.15 ? 0 : money(1000, 200000), filingStatus: pick(STATUS) }; add('taxableSS', x, { taxed: taxableSocialSecurity(x.ss, x.other, x.filingStatus) }); }
   { const x = { gains: money(500, 900000), ordinaryTaxable: rnd() < 0.2 ? 0 : money(1000, 700000), key: pick(['single', 'joint', 'head']) }; add('gainsTax', x, { tax: gainsTax(x.gains, x.ordinaryTaxable, x.key) }); }
   { const x = { age: whole(60, 104), pretax: money(1000, 5000000), startAge: pick([73, 75]) }; add('rmd', x, { out: requiredWithdrawal(x.age, x.pretax, x.startAge) }); }
