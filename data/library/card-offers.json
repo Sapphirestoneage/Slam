@@ -1,11 +1,11 @@
 {
  "id": "library.cardOffers",
- "version": "1.0.0",
- "asOf": "2026-11-14",
- "source": "Review sites read on 2026-11-14 (each offer lists its own), plus Chase's own Freedom page for the two Freedom offers. No offer here was confirmed on an application page.",
+ "version": "2.0.0",
+ "asOf": "2026-11-15",
+ "source": "Review sites read on 2026-11-14 (Chase) and 2026-11-15 (the other banks); each offer lists its own. Chase's own Freedom page and Capital One's own sign-up bonus page are the only issuer pages among them. No offer was confirmed on an application page.",
  "confidence": "secondary",
  "confidenceNote": "Welcome offers change monthly. Every offer is verified: secondary, and a conflict says where two sites disagree. data/library/cards.json leaves bonuses out on purpose; this file is the separate, dated layer for them.",
- "note": "cardId is the card's id in data/library/cards.json, or null for a Chase card the library does not hold yet (earnWords carries what it earns until it joins the library). bonus.amount is in bonus.unit; null means the sites disagree and no dollar value is counted. spend is what must be charged within months of opening; 0 means no spending needed.",
+ "note": "cardId is the card's id in data/library/cards.json, or null for a Chase card the library does not hold yet (earnWords carries what it earns until it joins the library). bonus.amount is in bonus.unit; null means the sites disagree and no dollar value is counted. spend is what must be charged within months of opening; 0 means no spending needed. An offer marked upTo is the most the issuer shows anyone. spendKnown false means today's sources did not say what must be spent. skip says why an offer with no agreed amount is left out. firstYearFee is the fee in the first year when it differs. Units marked cashable can be taken as cash, so they are never held back as a program.",
  "units": {
   "cash": {
    "name": "dollars",
@@ -16,7 +16,8 @@
    "name": "Chase Ultimate Rewards points",
    "value": 0.01,
    "transferable": true,
-   "basis": "1 cent each as cash back; worth more only when a Sapphire or Ink Business Preferred card is held, which is what allows transfers"
+   "basis": "1 cent each as cash back; worth more only when a Sapphire or Ink Business Preferred card is held, which is what allows transfers",
+   "cashable": true
   },
   "united": {
    "name": "United miles",
@@ -57,6 +58,51 @@
    "name": "Disney gift card dollars",
    "value": 1,
    "basis": "face value, only for someone who would spend it at Disney"
+  },
+  "mr": {
+   "name": "Amex Membership Rewards points",
+   "value": 0.006,
+   "cashable": true,
+   "basis": "what a point is worth as a statement credit, the cash way out; SLAM floor, to check"
+  },
+  "c1": {
+   "name": "Capital One miles",
+   "value": 0.01,
+   "cashable": true,
+   "basis": "1 cent against any travel purchase; about half that as plain cash"
+  },
+  "ty": {
+   "name": "Citi ThankYou points",
+   "value": 0.01,
+   "cashable": true,
+   "basis": "1 cent as cash back or gift cards"
+  },
+  "wf": {
+   "name": "Wells Fargo Rewards points",
+   "value": 0.01,
+   "cashable": true,
+   "basis": "1 cent as cash"
+  },
+  "bofa": {
+   "name": "Bank of America points",
+   "value": 0.01,
+   "cashable": true,
+   "basis": "1 cent as a statement credit"
+  },
+  "delta": {
+   "name": "Delta SkyMiles",
+   "value": 0.01,
+   "basis": "SLAM floor assumption, to check"
+  },
+  "aa": {
+   "name": "American AAdvantage miles",
+   "value": 0.01,
+   "basis": "SLAM floor assumption, to check"
+  },
+  "hilton": {
+   "name": "Hilton Honors points",
+   "value": 0.004,
+   "basis": "SLAM floor assumption, to check"
   }
  },
  "rules": {
@@ -69,7 +115,58 @@
    "source": "Widely reported by cardholders and review sites; Chase does not publish it",
    "date": "2026-11-14",
    "verified": "unverified"
-  }
+  },
+  "again": [
+   {
+    "issuer": "Citi",
+    "cards": [
+     "citi-double-cash",
+     "citi-aadvantage-platinum"
+    ],
+    "words": "Not available if you got this card's welcome offer in the past 48 months.",
+    "source": "bonusceiling.com Citi bonus rules, from Citi's own pages read 2026-11-02",
+    "date": "2026-11-15",
+    "verified": "secondary"
+   },
+   {
+    "issuer": "Citi",
+    "cards": [
+     "citi-strata-premier",
+     "citi-strata-elite",
+     "citi-strata"
+    ],
+    "words": "Once only: not available if you have, or ever had, this card.",
+    "source": "bonusceiling.com Citi bonus rules, from Citi's own pages read 2026-11-02; onemileatatime.com Citi Strata offers (Oct 2026)",
+    "date": "2026-11-15",
+    "verified": "secondary"
+   },
+   {
+    "issuer": "Capital One",
+    "cards": [
+     "capone-venture-x",
+     "capone-venture",
+     "capone-ventureone"
+    ],
+    "words": "One welcome offer in the Venture family every 48 months.",
+    "source": "upgradedpoints.com Venture X offer history",
+    "date": "2026-11-15",
+    "verified": "secondary"
+   },
+   {
+    "issuer": "American Express",
+    "cards": [
+     "amex-platinum",
+     "amex-gold",
+     "amex-blue-cash-preferred",
+     "amex-blue-cash-everyday",
+     "amex-delta-gold"
+    ],
+    "words": "The offer varies by person and you may not be eligible. Amex shows your offer before you apply.",
+    "source": "financebuzz.com/american-express-credit-cards (Nov 2026)",
+    "date": "2026-11-15",
+    "verified": "secondary"
+   }
+  ]
  },
  "unlocksTransfers": [
   "chase-sapphire-preferred",
@@ -78,8 +175,8 @@
   "Ink Business Preferred"
  ],
  "counts": {
-  "offers": 43,
-  "inLibrary": 17,
+  "offers": 93,
+  "inLibrary": 67,
   "notInLibrary": 26
  },
  "offers": [
@@ -282,7 +379,8 @@
    "sources": [
     "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
    ],
-   "verified": "secondary"
+   "verified": "secondary",
+   "firstYearFee": 0
   },
   {
    "cardId": "chase-united-quest",
@@ -361,7 +459,7 @@
    "bonus": {
     "amount": null,
     "unit": "marriott",
-    "words": "3 free night awards (two sites) or 200,000 points (one site)"
+    "words": "3 free night awards after $3,000 in 3 months (two sites today; one older page shows 200,000 points)"
    },
    "spend": 3000,
    "months": 3,
@@ -370,11 +468,13 @@
    "conflict": "Sites disagree on the offer, so no dollar value is counted",
    "earnWords": null,
    "sources": [
-    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "financebuzz.com/chase-credit-cards (Nov 2026)",
+    "nerdwallet.com best bonus offers (Nov 2026)",
     "thepointsparty.com/credit-cards/issuer/chase",
-    "financebuzz.com/chase-credit-cards (Nov 2026)"
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
    ],
-   "verified": "secondary"
+   "verified": "secondary",
+   "skip": "Its offer is free nights, which this page does not put a dollar value on."
   },
   {
    "cardId": "chase-ihg-premier",
@@ -409,20 +509,22 @@
    "bonus": {
     "amount": null,
     "unit": "hyatt",
-    "words": "Up to 60,000 points (one site) or 4 free nights after $5,000 (two sites)"
+    "words": "4 free nights after $5,000 in 3 months (three sites; one older page shows up to 60,000 points)"
    },
-   "spend": 3000,
+   "spend": 5000,
    "months": 3,
    "minScore": "good",
    "ends": null,
    "conflict": "Sites disagree on the offer, so no dollar value is counted",
    "earnWords": null,
    "sources": [
-    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)",
+    "financebuzz.com/chase-credit-cards (Nov 2026)",
+    "nerdwallet.com best bonus offers (Nov 2026)",
     "thepointsparty.com/credit-cards/issuer/chase",
-    "financebuzz.com/chase-credit-cards (Nov 2026)"
+    "yourbestcards.com/chase-credit-cards (page dated Oct 2026)"
    ],
-   "verified": "secondary"
+   "verified": "secondary",
+   "skip": "Its offer is free nights, which this page does not put a dollar value on."
   },
   {
    "cardId": "chase-disney-visa",
@@ -1059,6 +1161,1210 @@
     "financebuzz.com/chase-credit-cards (Nov 2026)"
    ],
    "verified": "secondary"
+  },
+  {
+   "cardId": "amex-platinum",
+   "issuer": "American Express",
+   "name": "Platinum Card",
+   "business": false,
+   "annualFee": 895,
+   "bonus": {
+    "amount": 175000,
+    "unit": "mr",
+    "words": "As high as 175,000 Membership Rewards points"
+   },
+   "spend": 12000,
+   "months": 6,
+   "minScore": "excellent",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "financebuzz.com/american-express-credit-cards (Nov 2026)",
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "upTo": true
+  },
+  {
+   "cardId": "amex-gold",
+   "issuer": "American Express",
+   "name": "Gold Card",
+   "business": false,
+   "annualFee": 325,
+   "bonus": {
+    "amount": 100000,
+    "unit": "mr",
+    "words": "As high as 100,000 Membership Rewards points"
+   },
+   "spend": 8000,
+   "months": 6,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "financebuzz.com/american-express-credit-cards (Nov 2026)",
+    "nerdwallet.com best bonus offers (Nov 2026)",
+    "cnn.com/cnn-underscored best Amex cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "upTo": true
+  },
+  {
+   "cardId": "amex-green",
+   "issuer": "American Express",
+   "name": "Green Card",
+   "business": false,
+   "annualFee": 150,
+   "bonus": {
+    "amount": null,
+    "unit": "mr",
+    "words": "40,000 points on one site, which also says the card no longer takes new applications"
+   },
+   "spend": 3000,
+   "months": 6,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "financebuzz.com/american-express-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "One site says it no longer takes new applications, so it is not counted."
+  },
+  {
+   "cardId": "amex-blue-cash-preferred",
+   "issuer": "American Express",
+   "name": "Blue Cash Preferred",
+   "business": false,
+   "annualFee": 95,
+   "bonus": {
+    "amount": 300,
+    "unit": "cash",
+    "words": "As high as $300 cash back. $0 fee the first year"
+   },
+   "spend": 3000,
+   "months": 6,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "Another site shows $250",
+   "earnWords": null,
+   "sources": [
+    "financebuzz.com/american-express-credit-cards (Nov 2026)",
+    "nerdwallet.com best bonus offers (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "firstYearFee": 0,
+   "upTo": true
+  },
+  {
+   "cardId": "amex-blue-cash-everyday",
+   "issuer": "American Express",
+   "name": "Blue Cash Everyday",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 200,
+    "unit": "cash",
+    "words": "As high as $200 cash back"
+   },
+   "spend": 2000,
+   "months": 6,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "Another site shows $250",
+   "earnWords": null,
+   "sources": [
+    "financebuzz.com/american-express-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "upTo": true
+  },
+  {
+   "cardId": "amex-delta-gold",
+   "issuer": "American Express",
+   "name": "Delta SkyMiles Gold",
+   "business": false,
+   "annualFee": 150,
+   "bonus": {
+    "amount": 80000,
+    "unit": "delta",
+    "words": "As high as 80,000 miles. $0 fee the first year"
+   },
+   "spend": 2000,
+   "months": 6,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "awardwallet.com Amex offer history (Nov 2026)",
+    "cnn.com/cnn-underscored best Amex cards (Nov 2026)",
+    "financebuzz.com/american-express-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "firstYearFee": 0,
+   "upTo": true
+  },
+  {
+   "cardId": "amex-hilton-honors",
+   "issuer": "American Express",
+   "name": "Hilton Honors",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "hilton",
+    "words": "None found today (an older page shows 100,000 points)"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "financebuzz.com/american-express-credit-cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "capone-venture-x",
+   "issuer": "Capital One",
+   "name": "Venture X",
+   "business": false,
+   "annualFee": 395,
+   "bonus": {
+    "amount": 75000,
+    "unit": "c1",
+    "words": null
+   },
+   "spend": 4000,
+   "months": 3,
+   "minScore": "excellent",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "capitalone.com sign-up bonus page (Oct 2026)",
+    "upgradedpoints.com Venture X offer history",
+    "nerdwallet.com best bonus offers (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "capone-venture",
+   "issuer": "Capital One",
+   "name": "Venture",
+   "business": false,
+   "annualFee": 95,
+   "bonus": {
+    "amount": 75000,
+    "unit": "c1",
+    "words": "75,000 miles, plus $300 to use at Capital One Travel in the first year (limited time)"
+   },
+   "spend": 4000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "One site shows a $250 credit",
+   "earnWords": null,
+   "sources": [
+    "creditkarma.com sign-up bonus cards (Nov 2026)",
+    "nerdwallet.com best bonus offers (Nov 2026)",
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "capone-ventureone",
+   "issuer": "Capital One",
+   "name": "VentureOne",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 20000,
+    "unit": "c1",
+    "words": null
+   },
+   "spend": 500,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "Another offer shows 40,000 miles after $1,000",
+   "earnWords": null,
+   "sources": [
+    "bestmoney.com Capital One cards",
+    "bankrate.com Capital One cards"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "capone-quicksilver",
+   "issuer": "Capital One",
+   "name": "Quicksilver",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 200,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 500,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "capitalone.com sign-up bonus page (Oct 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "capone-savor",
+   "issuer": "Capital One",
+   "name": "Savor",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 200,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 500,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "Another site shows $250",
+   "earnWords": null,
+   "sources": [
+    "capitalone.com sign-up bonus page (Oct 2026)",
+    "nerdwallet.com best bonus offers (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "capone-quicksilverone",
+   "issuer": "Capital One",
+   "name": "QuicksilverOne",
+   "business": false,
+   "annualFee": 39,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "capitalone.com sign-up bonus page (Oct 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "capone-platinum",
+   "issuer": "Capital One",
+   "name": "Platinum",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "capitalone.com sign-up bonus page (Oct 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "capone-platinum-secured",
+   "issuer": "Capital One",
+   "name": "Platinum Secured",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "capitalone.com sign-up bonus page (Oct 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "capone-quicksilver-secured",
+   "issuer": "Capital One",
+   "name": "Quicksilver Secured",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "capitalone.com sign-up bonus page (Oct 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "capone-kohls",
+   "issuer": "Capital One",
+   "name": "Kohl's Rewards Visa",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "capitalone.com sign-up bonus page (Oct 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "citi-double-cash",
+   "issuer": "Citi",
+   "name": "Double Cash",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 200,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 1500,
+   "months": 6,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "wallethub.com Citi sign-up bonuses (Nov 2026)",
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)",
+    "bonusceiling.com Citi bonus rules, from Citi's own pages read 2026-11-02"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "citi-custom-cash",
+   "issuer": "Citi",
+   "name": "Custom Cash",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 200,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 1500,
+   "months": 6,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "joingerald.com Citi card bonuses (2026)",
+    "thepointsguy.com Citi welcome offers"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "citi-strata",
+   "issuer": "Citi",
+   "name": "Strata",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 20000,
+    "unit": "ty",
+    "words": "20,000 ThankYou points (the source gives no window; the other Strata cards give three months)"
+   },
+   "spend": 1000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "onemileatatime.com Citi Strata offers (Oct 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "citi-strata-premier",
+   "issuer": "Citi",
+   "name": "Strata Premier",
+   "business": false,
+   "annualFee": 95,
+   "bonus": {
+    "amount": 60000,
+    "unit": "ty",
+    "words": null
+   },
+   "spend": 4000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "onemileatatime.com Citi Strata offers (Oct 2026)",
+    "wallethub.com Citi sign-up bonuses (Nov 2026)",
+    "nerdwallet.com best bonus offers (Nov 2026)",
+    "cnbc.com/select best Citi cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "citi-strata-elite",
+   "issuer": "Citi",
+   "name": "Strata Elite",
+   "business": false,
+   "annualFee": 595,
+   "bonus": {
+    "amount": 75000,
+    "unit": "ty",
+    "words": null
+   },
+   "spend": 6000,
+   "months": 3,
+   "minScore": "excellent",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "onemileatatime.com Citi Strata offers (Oct 2026)",
+    "wallethub.com Citi sign-up bonuses (Nov 2026)",
+    "cnbc.com/select best Citi cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "citi-simplicity",
+   "issuer": "Citi",
+   "name": "Simplicity",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 0,
+    "unit": "cash",
+    "words": "No welcome offer. A long 0% period instead"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "cnbc.com/select best Citi cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "citi-diamond-preferred",
+   "issuer": "Citi",
+   "name": "Diamond Preferred",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 0,
+    "unit": "cash",
+    "words": "No welcome offer. A long 0% period instead"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "cnbc.com/select best Citi cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "citi-costco",
+   "issuer": "Citi",
+   "name": "Costco Anywhere Visa",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "cnbc.com/select best Citi cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "citi-best-buy",
+   "issuer": "Citi",
+   "name": "My Best Buy Visa",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "cnbc.com/select best Citi cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "citi-aadvantage-platinum",
+   "issuer": "Citi",
+   "name": "AAdvantage Platinum Select",
+   "business": false,
+   "annualFee": 99,
+   "bonus": {
+    "amount": 50000,
+    "unit": "aa",
+    "words": "50,000 miles (the spending it needs was not in today's sources)"
+   },
+   "spend": null,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "Another site shows 80,000 miles through in-flight or airport links",
+   "earnWords": null,
+   "sources": [
+    "bankbonus.com Citi promotions (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "spendKnown": false
+  },
+  {
+   "cardId": "bofa-customized-cash",
+   "issuer": "Bank of America",
+   "name": "Customized Cash Rewards",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 200,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 1000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "creditkarma.com sign-up bonus cards (Nov 2026)",
+    "nerdwallet.com best bonus offers (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "bofa-unlimited-cash",
+   "issuer": "Bank of America",
+   "name": "Unlimited Cash Rewards",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 200,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 1000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "Another site shows $250",
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "bofa-travel-rewards",
+   "issuer": "Bank of America",
+   "name": "Travel Rewards",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 25000,
+    "unit": "bofa",
+    "words": null
+   },
+   "spend": 1000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "creditkarma.com sign-up bonus cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "bofa-premium-rewards",
+   "issuer": "Bank of America",
+   "name": "Premium Rewards",
+   "business": false,
+   "annualFee": 95,
+   "bonus": {
+    "amount": 60000,
+    "unit": "bofa",
+    "words": "60,000 points, worth $600 as a statement credit (the spending it needs was not in today's sources)"
+   },
+   "spend": null,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "spendKnown": false
+  },
+  {
+   "cardId": "bofa-bankamericard",
+   "issuer": "Bank of America",
+   "name": "BankAmericard",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 0,
+    "unit": "cash",
+    "words": "No welcome offer. A long 0% period instead"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "creditkarma.com sign-up bonus cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "bofa-customized-cash-secured",
+   "issuer": "Bank of America",
+   "name": "Customized Cash Rewards Secured",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "creditkarma.com sign-up bonus cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "wf-active-cash",
+   "issuer": "Wells Fargo",
+   "name": "Active Cash",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 100,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 500,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": "Another site shows $200 after $1,500 in 6 months",
+   "earnWords": null,
+   "sources": [
+    "creditkarma.com sign-up bonus cards (Nov 2026)",
+    "wallethub.com best sign-up bonuses (Nov 2026)",
+    "cardcritics.com best sign-up bonuses"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "wf-autograph",
+   "issuer": "Wells Fargo",
+   "name": "Autograph",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 20000,
+    "unit": "wf",
+    "words": null
+   },
+   "spend": 1000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "creditkarma.com sign-up bonus cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "wf-autograph-journey",
+   "issuer": "Wells Fargo",
+   "name": "Autograph Journey",
+   "business": false,
+   "annualFee": 95,
+   "bonus": {
+    "amount": 60000,
+    "unit": "wf",
+    "words": null
+   },
+   "spend": 4000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "wf-reflect",
+   "issuer": "Wells Fargo",
+   "name": "Reflect",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 0,
+    "unit": "cash",
+    "words": "No welcome offer. A long 0% period instead"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "creditkarma.com sign-up bonus cards (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "usb-cash-plus",
+   "issuer": "US Bank",
+   "name": "Cash+",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 200,
+    "unit": "cash",
+    "words": "$200 (the source gives no window; three months assumed)"
+   },
+   "spend": 1000,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "usb-altitude-go",
+   "issuer": "US Bank",
+   "name": "Altitude Go",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "usb-altitude-connect",
+   "issuer": "US Bank",
+   "name": "Altitude Connect",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "usb-smartly",
+   "issuer": "US Bank",
+   "name": "Smartly Visa Signature",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "usb-secured",
+   "issuer": "US Bank",
+   "name": "Secured Visa",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "discover-it-cash-back",
+   "issuer": "Discover",
+   "name": "Discover it Cash Back",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": 200,
+    "unit": "cash",
+    "words": "$200, and Discover matches all the cash back you earn in the first year"
+   },
+   "spend": 500,
+   "months": 3,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "nerdwallet.com best bonus offers (Nov 2026)",
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15"
+  },
+  {
+   "cardId": "discover-it-miles",
+   "issuer": "Discover",
+   "name": "Discover it Miles",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": "Discover matches the miles you earn in the first year"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "Its offer is a match of the first year's miles, with no set amount to count."
+  },
+  {
+   "cardId": "discover-it-chrome",
+   "issuer": "Discover",
+   "name": "Discover it Chrome",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": "Discover matches the cash back you earn in the first year"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "Its offer is a match of the first year's cash back, with no set amount to count."
+  },
+  {
+   "cardId": "discover-it-secured",
+   "issuer": "Discover",
+   "name": "Discover it Secured",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": "Discover matches the cash back you earn in the first year"
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "Its offer is a match of the first year's cash back, with no set amount to count."
+  },
+  {
+   "cardId": "apple-card",
+   "issuer": "Apple",
+   "name": "Apple Card",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "td-target-circle",
+   "issuer": "TD Bank",
+   "name": "Target Circle Card",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "synchrony-lowes",
+   "issuer": "Synchrony",
+   "name": "Lowe's Advantage Card",
+   "business": false,
+   "annualFee": 0,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
+  },
+  {
+   "cardId": "opensky-secured",
+   "issuer": "Capital Bank",
+   "name": "OpenSky Secured Visa",
+   "business": false,
+   "annualFee": 35,
+   "bonus": {
+    "amount": null,
+    "unit": "cash",
+    "words": null
+   },
+   "spend": 0,
+   "months": 0,
+   "minScore": "good",
+   "ends": null,
+   "conflict": null,
+   "earnWords": null,
+   "sources": [
+    "doctorofcredit.com best current sign-up bonuses (Nov 2026)"
+   ],
+   "verified": "secondary",
+   "read": "2026-11-15",
+   "skip": "No welcome offer was found for it in today's sources."
   }
  ],
  "scoreBands": {

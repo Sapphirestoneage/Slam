@@ -70,7 +70,8 @@ function draw(api) {
         creditTaps(id, 'Credits you would use anyway'),
         yearly > 0 ? h('p.st-small', { style: { margin: 0 } }, `${used > 0 ? 'After those credits it' : 'It'} costs ${money(yearly)} a year. A cost you keep paying adds ${money(Math.round(P.costAsFiNumber(yearly, R.wr)))} to the amount you need to stop working.`) : (o.annualFee > 0 ? h('p.st-small', { style: { margin: 0 } }, 'The credits you would use cover the fee.') : null),
         value > 0 ? (T => [question('Where would it go?', TOWARD.filter(([k]) => T[k]).map(([k, l]) => chip(l, (all().toward ?? 'invest') === k, () => shared({ toward: k })))), h('p.st-small', { style: { margin: 0 } }, T[all().toward ?? 'invest'] ?? T.invest)])(R.toward(value)) : null,
-        h('p.st-small', { style: { margin: 0 } }, `After this: ${m.slotsAfter} ${m.slotsAfter === 1 ? 'slot' : 'slots'} left.`),
+        R.again(id) ? h('p.st-small', { style: { margin: 0 } }, h('strong', {}, 'Getting it twice: '), R.again(id)) : null,
+        h('p.st-small', { style: { margin: 0 } }, `After this: ${m.slotsAfter} Chase ${m.slotsAfter === 1 ? 'slot' : 'slots'} left.`),
         m.then.length ? [h('div.cp-lab', {}, 'Then you could'), h('ul.cp-then', {}, m.then.slice(0, 3).map(t => h('li', {}, h('span', {}, `${t.offer.name}${spendKnown ? `, from month ${t.startsMonth}` : ''}`), h('b.cp-amt', {}, `${money(Math.round(t.both))} for both`))),
           h('li', {}, h('span', {}, 'Or stop here and keep your slots'), h('b.cp-amt', {}, money(Math.round(m.net)))))] : null,
       ], { amt: money(Math.round(m.net)) });
@@ -83,7 +84,7 @@ function draw(api) {
       R.kind === 'debt' ? null : hidden ? h('div.st-row.cp-guide', {}, btn('Show my next step', () => shared({ guideOff: null }), 'slim'))
         : h('div.st-nextbar.cp-guide', { id: 'guide' }, h('span.st-count', {}, G.count), G.next ? btn(`${G.line} ›`, () => goNext(), 'primary') : h('span', {}, G.line), G.next ? btn('Hide', () => shared({ guideOff: true }), 'slim') : null),
       R.kind === 'debt' ? h('div.st-row', { style: { marginTop: '10px' } }, withId('to-debt', btn('See when I am debt free', async () => { location.href = carryUrl('debt', await pack(api.store.doc)); }, 'primary'))) : null,
-      R.kind === 'debt' ? null : h('p.st-small', { style: { marginTop: '10px' } }, `${R.slots.left} of ${rule.slots} Chase slots open${R.slots.frees && R.slots.left < rule.slots ? `. The next one comes back in ${R.slots.frees}` : ''}. Welcome offers are loaded for Chase so far. Amounts are the offer less the first-year fee.`),
+      R.kind === 'debt' ? null : h('p.st-small', { style: { marginTop: '10px' } }, `${R.slots.left} of ${rule.slots} Chase slots open${R.slots.frees && R.slots.left < rule.slots ? `. The next one comes back in ${R.slots.frees}` : ''}. Offers are from review sites, read ${monthSay(off.asOf)}. Amounts are the offer less the first-year fee.`),
       R.changes.length ? h('div.cp-since', { id: 'since' }, h('div.cp-lab', {}, `Since ${said(R.since)}`), h('ul.st-small', { style: { margin: '4px 0 0', paddingLeft: '18px' } }, R.changes.slice(0, 4).map(t => h('li', {}, t)))) : null,
       (more ? R.moves.slice(0, 3) : R.moves).map(row),
       more ? h('div.st-row', { style: { marginTop: '10px' } }, btn(`Show all ${R.moves.length} moves`, () => { UI.all = true; redraw(); }, 'slim')) : null,
@@ -120,6 +121,10 @@ function draw(api) {
     (sh => (sh ? h('p', { id: 'share', style: { fontWeight: 700 } }, sh.line) : null))(R.share()),
     R.held.map(x => fold(`held-${x.row.id}`, x.label, [
       h('p', { style: { margin: 0, fontWeight: 700 } }, x.year.line), x.year.option ? h('p.st-small', { style: { margin: 0 } }, x.year.option) : null,
+      x.row.values.payChoice !== 'In full' ? [
+        question(x.row.values.balance != null ? `You owe about ${money(x.row.values.balance)} on it` : 'About how much do you owe on it?', [0, 500, 1000, 2500, 5000, 10000].map(a => chip(a === 0 ? 'Nothing now' : a === 10000 ? '$10,000 or more' : money(a), x.row.values.balance === a, () => { api.store.update(x.row.id, a === 0 ? { balance: 0, payChoice: 'In full' } : { balance: a }); shared({ carry: null }); }))),
+        question(x.row.values.apr != null ? `Its rate: ${Math.round(x.row.values.apr * 100)}%` : `Its rate (${Math.round(R.typicalApr * 100)}% is used until you say)`, [[null, 'Not sure'], [0.2, '20%'], [0.25, '25%'], [0.3, '30%']].map(([a, l]) => chip(l, (x.row.values.apr ?? null) === a, () => onRow(x.row, { apr: a })))),
+        h('p.st-small.st-soft', { style: { margin: 0 } }, 'These go on the card in your plan, where you can put the exact numbers.')] : null,
       creditTaps(x.card.id, 'Credits you really use'),
       x.check.fee ? h('p.st-small.st-soft', { style: { margin: 0 } }, `Counts ${money(Math.round(x.check.rewards?.value ?? 0))} in rewards on your everyday spending plus the credits tapped. The same taps show on Credit cards in your plan.`) : null,
       h('div.cp-q', {}, h('div.st-flabel', {}, x.opened ? `Opened ${monthSay(x.opened)}` : 'When did you open it? (for the dates and the 5 card limit)'),

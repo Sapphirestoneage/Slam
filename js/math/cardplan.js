@@ -28,14 +28,17 @@ const dayOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0
 export const offerLive = (offer, now = null) => !offer?.ends || !now || offer.ends >= dayOf(now);
 
 // An airline or hotel program's own points: not cash, and not points that can move elsewhere.
-export const isProgram = (offer, units = {}) => { const u = units[offer?.bonus?.unit]; return !!u && offer.bonus.unit !== 'cash' && !u.transferable; };
+export const isProgram = (offer, units = {}) => { const u = units[offer?.bonus?.unit]; return !!u && offer.bonus.unit !== 'cash' && !u.transferable && !u.cashable; };
+
+// The slot rule belongs to one issuer: every new card uses a slot, but only that issuer turns you down at the limit.
+const ruled = (offer, rule) => !rule?.issuer || offer?.issuer === rule.issuer;
 
 // Chase slots left under the 5/24 rule, from cards opened at any bank in the window.
 export const slotsLeft = (openedInWindow = 0, rule = { slots: 5 }) => Math.max(0, rule.slots - Math.max(0, openedInWindow));
 
 // Whole months of normal card spending it takes to earn the offer; null when it cannot be reached in its window.
 export function monthsToEarn(offer, monthlySpend) {
-  if (!offer?.spend) return 1;
+  if (!offer?.spend) return 1; // nothing to spend, or today's sources did not say (cardFit says so)
   if (!(monthlySpend > 0)) return null;
   const need = Math.ceil(offer.spend / monthlySpend);
   return need > offer.months ? null : need;
@@ -45,7 +48,7 @@ export function monthsToEarn(offer, monthlySpend) {
 export function firstYearNet(offer, opts = {}) {
   const v = offerValue(offer, opts);
   if (v == null) return null;
-  const fee = Math.max(0, (offer.annualFee ?? 0) - (opts.creditsUsedOf ? opts.creditsUsedOf(idOf(offer)) : opts.creditsUsed ?? 0));
+  const fee = Math.max(0, (offer.firstYearFee ?? offer.annualFee ?? 0) - (opts.creditsUsedOf ? opts.creditsUsedOf(idOf(offer)) : opts.creditsUsed ?? 0));
   return v - fee;
 }
 
@@ -60,11 +63,14 @@ export function cardFit(offer, me = {}, { rule = { slots: 5, months: 24 }, units
   if (me.heavyDebt) cap(0, 'Interest on the debt costs more than any welcome offer pays. Clear that first.');
   if (offer.business && me.business === false) cap(0, 'A business card: it needs a business or side income.');
   if (me.opened != null) {
-    const left = slotsLeft(me.opened, rule);
-    if (left <= 0) cap(0, `${rule.words ?? 'The issuer usually declines'}.`);
+    const left = slotsLeft(me.opened, rule), who = rule.issuer ?? 'The issuer';
+    if (!ruled(offer, rule)) reasons.push(left <= 0 ? `${who}'s limit does not apply at this bank.` : `Opening it uses one of your ${left} ${who} slots.`);
+    else if (left <= 0) cap(0, `${rule.words ?? 'The issuer usually declines'}.`);
     else if (left === 1) reasons.push('This would use your last slot, so the biggest offer you can reach goes first.');
     else reasons.push(`${left} slots left.`);
   }
+  if (offer.upTo) reasons.push('This is the most anyone is shown. The offer you see when you apply can be lower.');
+  if (offer.spendKnown === false) cap(1, "Today's sources did not say what it needs you to spend.");
   if (me.score != null && offer.minScore != null) {
     const have = SCORE[me.score] ?? 0, want = SCORE[offer.minScore] ?? 0;
     if (have < want) cap(0, `Usually needs ${offer.minScore} credit.`);
@@ -87,10 +93,10 @@ export function nextMoves(offers = [], state = {}, opts = {}, depth = 2) {
   const { held = [], opened = 0, monthlySpend = null, me = {} } = state;
   const rule = opts.rule ?? { slots: 5, months: 24 };
   const slots = slotsLeft(opened, rule);
-  if (slots <= 0 || me.heavyDebt) return { slots, moves: [] };
+  if (me.heavyDebt) return { slots, moves: [] };
   const moves = [];
   for (const o of offers) {
-    if (held.includes(idOf(o)) || !(o.bonus?.amount > 0) || !offerLive(o, opts.now)) continue;
+    if (held.includes(idOf(o)) || !(o.bonus?.amount > 0) || !offerLive(o, opts.now) || (slots <= 0 && ruled(o, rule))) continue;
     // airline and hotel points only count for someone who says they would use that program, and one card per program
     if (isProgram(o, opts.units) && (!(opts.programs || []).includes(o.bonus.unit) || (opts.skipUnits || []).includes(o.bonus.unit))) continue;
     const fit = cardFit(o, { ...me, opened, monthlySpend }, { ...opts, rule, held });
@@ -201,7 +207,7 @@ export function opensAndUses(card, offer, { unlockIds = [], benefitKinds = {}, r
   if (card && card.foreignFee === 0) opens.push('No fee on purchases abroad');
   for (const k of Object.keys(card?.benefits || {})) if (benefitKinds[k]) opens.push(benefitKinds[k]);
   if (card && !(card.annualFee > 0)) opens.push('A no-fee card to keep open for good');
-  uses.push(offer?.business && rule.businessCardsCount === false ? `No slot of the ${rule.slots}, though you must be under the limit to get it` : `One slot of the ${rule.slots}`);
+  uses.push(offer?.business && rule.businessCardsCount === false ? `No slot of the ${rule.slots}, though you must be under the limit to get it` : ruled(offer, rule) ? `One slot of the ${rule.slots}` : `One of your ${rule.slots} ${rule.issuer} slots, as every new card does`);
   const fee = offer?.annualFee ?? card?.annualFee ?? 0;
   if (fee > 0) uses.push(`$${fee} a year`);
   return { opens, uses };
@@ -221,11 +227,11 @@ export function cardPlan({ offers = [], units = {}, rule = { slots: 5, months: 2
   const usd = v => `$${round(v).toLocaleString('en-US')}`;
   let kind, line;
   if (heavyDebt) { kind = 'debt'; line = 'Pay down the debt first. No new card pays more than that interest costs.'; }
-  else if (slots.left <= 0) { kind = 'wait'; line = `Wait. Chase opens up again in ${slots.frees}.`; }
   else if (R.moves.length) { const m = R.moves[0]; kind = 'open'; line = `${debtKnown ? '' : 'If you owe nothing on cards: '}${m.offer.name}, worth ${usd(m.net)} in its first year after the fee${monthlySpend != null ? `, from about ${m.months} ${m.months === 1 ? 'month' : 'months'} of spending you already do` : ''}.`; }
+  else if (slots.left <= 0) { kind = 'wait'; line = `Wait. ${rule.issuer ?? 'The bank'} opens up again in ${slots.frees}.`; }
   else { kind = 'hold'; line = 'Hold. Nothing here beats what you have.'; }
   const why = kind === 'debt' ? 'Card interest runs far above anything a welcome offer pays.'
-    : kind === 'wait' ? `You have opened ${slots.used} cards in two years, and Chase usually turns down anyone at ${rule.slots} or more.`
+    : kind === 'wait' ? `You have opened ${slots.used} cards in two years, and ${rule.issuer ?? 'the bank'} usually turns down anyone at ${rule.slots} or more.`
     : kind === 'open' ? `It is the biggest offer you can reach${monthlySpend != null ? ' on your usual spending' : ''}, after its fee.`
     : 'No offer here clears its fee for you right now.';
   return { kind, line, why, slots, moves: R.moves, opts, me };
@@ -257,7 +263,7 @@ export function whyNot(offers = [], state = {}, opts = {}) {
     let reason;
     if (held.includes(id)) reason = 'You already hold it.';
     else if (!offerLive(o, opts.now)) reason = 'Its offer has ended.';
-    else if (o.bonus?.amount == null) reason = 'Sources disagree on its offer, so it is not counted.';
+    else if (o.bonus?.amount == null) reason = o.skip ?? 'Sources disagree on its offer, so it is not counted.';
     else if (!(o.bonus.amount > 0)) reason = 'It has no welcome offer.';
     else if (isProgram(o, opts.units) && !(opts.programs || []).includes(o.bonus.unit)) reason = `You have not picked ${opts.units[o.bonus.unit].name} as something you would use.`;
     else reason = cardFit(o, { ...me, opened, monthlySpend }, { ...opts, held }).block ?? (monthsToEarn(o, monthlySpend ?? Infinity) == null ? 'Its offer needs more spending than you do.' : 'It does not fit right now.');
@@ -288,12 +294,13 @@ export function cardsShare(have, best, { enough = 0.9, cards = 1 } = {}) {
 }
 
 // ---- Where an offer could go: the same dollars against three things the plan already tracks ----
-export function offerToward(value, { littleE = null, iraLimit = null, realReturn = null, years = 30 } = {}) {
+export function offerToward(value, { littleE = null, iraLimit = null, realReturn = null, years = null, until = null } = {}) {
   if (!(value > 0)) return {};
   const usd = v => `$${round(v).toLocaleString('en-US')}`, pct = v => `${round(Math.min(1, v) * 100)}%`;
   return {
     ...(littleE > 0 ? { cushion: `${usd(value)} is ${pct(value / littleE)} of a ${usd(littleE)} first cushion.` } : {}),
     ...(iraLimit > 0 ? { roth: `${usd(value)} is ${pct(value / iraLimit)} of this year's ${usd(iraLimit)} Roth IRA limit.` } : {}),
-    ...(realReturn != null ? { invest: `${usd(value)} invested and left ${years} years is about ${usd(investedLater(value, years, realReturn))} in today's dollars.` } : {}),
+    // left until retirement: the plan's own age and target age; with no birth year there is nothing honest to show
+    ...(realReturn != null ? { invest: years == null ? 'Add your birth year in your plan and this shows what it grows to by the time you stop working.' : `${usd(value)} invested and left until ${until ?? 'you stop working'}, ${years} ${years === 1 ? 'year' : 'years'} from now, is about ${usd(investedLater(value, years, realReturn))} in today's dollars.` } : {}),
   };
 }

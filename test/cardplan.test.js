@@ -77,8 +77,10 @@ test('next moves rank by net after the fee, look one move further, and stop at t
   const cfu = R.moves.find(m => m.offer.name === 'Freedom Unlimited');
   near(cfu.then.find(t => t.offer.name === 'Sapphire Preferred').both, 300 + 1030, 1e-6);
   const last = P.nextMoves(personal, { opened: 4, monthlySpend: 2000 }, opts);
-  assert.ok(last.moves.every(m => m.then.length === 0 && m.slotsAfter === 0), 'the last slot has no second move');
-  assert.deepEqual(P.nextMoves(personal, { opened: 5, monthlySpend: 2000 }, opts).moves, []);
+  assert.ok(last.moves.length > 0 && last.moves.every(m => m.slotsAfter === 0 && m.then.every(t => t.offer.issuer !== 'Chase')), 'after the last slot, no Chase card is a second move');
+  const full = P.nextMoves(personal, { opened: 5, monthlySpend: 2000 }, opts).moves;
+  assert.ok(full.length > 0 && full.every(m => m.offer.issuer !== 'Chase'), 'at five cards Chase is out and the other banks are not');
+  assert.deepEqual(P.nextMoves(personal.filter(o => o.issuer === 'Chase'), { opened: 5, monthlySpend: 2000 }, opts).moves, []);
   assert.deepEqual(P.nextMoves(personal, { opened: 0, monthlySpend: 2000, me: { heavyDebt: true } }, opts).moves, []);
   assert.ok(!P.nextMoves(personal, { held: ['chase-sapphire-preferred'], opened: 1, monthlySpend: 2000 }, opts).moves.some(m => m.offer.name === 'Sapphire Preferred'), 'a held card is not offered again');
 });
@@ -235,7 +237,7 @@ test('why not the others, what changed, the share your cards give, where an offe
   const why = name => W.find(w => w.offer.name === name)?.reason;
   assert.equal(why('Freedom Flex'), 'You already hold it.');
   assert.match(why('Sapphire Reserve'), /excellent credit/); assert.match(why('Southwest Plus'), /have not picked Southwest points/);
-  assert.match(why('World of Hyatt'), /disagree/); assert.match(why('Ink Business Cash'), /business/); assert.equal(why('Slate'), 'It has no welcome offer.');
+  assert.match(why('World of Hyatt'), /free nights/); assert.match(why('Ink Business Cash'), /business/); assert.equal(why('Slate'), 'It has no welcome offer.');
   assert.equal(why('Freedom Unlimited'), undefined, 'a move is not on the why-not list');
   // an offer past its end date drops out of the moves and says so
   const later = new Date(2026, 11, 20), air = { ...opts, programs: ['southwest'] };
@@ -253,8 +255,9 @@ test('why not the others, what changed, the share your cards give, where an offe
   near(S9.share, 0.92); assert.equal(S9.enough, true); assert.match(S9.line, /getting 92% of what is there\. That is close enough/);
   assert.equal(P.cardsShare(100, 500, { cards: 1 }).enough, false); assert.equal(P.cardsShare(100, 0), null);
   // where it could go
-  const T = P.offerToward(655, { littleE: 1000, iraLimit: 7500, realReturn: 0.07 });
-  assert.equal(T.cushion, '$655 is 66% of a $1,000 first cushion.'); assert.match(T.roth, /9% of this year's \$7,500 Roth IRA limit/); assert.match(T.invest, /left 30 years is about \$4,986/);
+  const T = P.offerToward(655, { littleE: 1000, iraLimit: 7500, realReturn: 0.07, years: 30, until: 'age 65' });
+  assert.match(P.offerToward(655, { realReturn: 0.07 }).invest, /Add your birth year/);
+  assert.equal(T.cushion, '$655 is 66% of a $1,000 first cushion.'); assert.match(T.roth, /9% of this year's \$7,500 Roth IRA limit/); assert.match(T.invest, /left until age 65, 30 years from now, is about \$4,986/);
   assert.deepEqual(P.offerToward(0, { littleE: 1000 }), {});
 });
 
@@ -265,7 +268,8 @@ test('two people, each with their own five; the fee lands on the year view; the 
   addHeldCard(st, lib.cards.find(c => c.id === 'chase-sapphire-preferred'), { inFull: true, owner: 'Partner' });
   assert.deepEqual(cardPeopleOf(st.doc), ['Me', 'Partner']);
   const me = cardPlanOf(st.doc, refDoc, lib, D, { now }), partner = cardPlanOf(st.doc, refDoc, lib, D, { now, person: 'Partner' });
-  assert.equal(me.who, 'Me'); assert.equal(me.slots.left, 0); assert.equal(me.kind, 'wait');
+  assert.equal(me.who, 'Me'); assert.equal(me.slots.left, 0); assert.equal(me.kind, 'open'); assert.ok(me.moves.every(mv => mv.offer.issuer !== 'Chase'), 'at five, the answer is a card at another bank');
+  assert.equal(P.cardPlan({ offers: D.offers.filter(o => o.issuer === 'Chase'), units: D.units, rule: D.rules.chase524, unlockIds: D.unlocksTransfers, openedMonths: ['2025-01', '2025-04', '2025-08', '2026-02', '2026-06'], now }).kind, 'wait');
   assert.equal(partner.slots.left, 5); assert.equal(partner.kind, 'open'); assert.equal(partner.held.length, 1);
   assert.ok(!partner.moves.some(mv => mv.offer.cardId === 'chase-sapphire-preferred') && partner.unpicked.length === 0 && me.unpicked.length === 5);
   // the partner's own taps live beside the first person's
@@ -295,6 +299,40 @@ test('what the think-aloud walk caught: debt is the only step, a costly card is 
   st.setDoc('settings', { start: { cardPlan: { carry: true } } });
   R = cardPlanOf(st.doc, refDoc, lib, D, { now });
   assert.equal(R.guide.next.id, 'debt'); assert.equal(R.guide.total, 1); assert.equal(R.guide.line, 'See when you are debt free');
-  const amex = new Store(newHousehold({ name: 'Other bank' })); addHeldCard(amex, lib.cards.find(c => c.annualFee > 0 && !D.offers.some(f => f.cardId === c.id)), { inFull: true });
+  const amex = new Store(newHousehold({ name: 'Other bank' })); addHeldCard(amex, lib.cards.find(c => c.id === 'amex-gold'), { inFull: true });
   assert.match(cardPlanOf(amex.doc, refDoc, lib, D, { now }).held[0].year.option ?? 'no-fee version', /no-fee version/);
+});
+
+test('the other banks: cash-like points are never held back, the slot rule is Chase only, and an offer says when it may be lower', () => {
+  const now = new Date(2026, 10, 14), o2 = { ...opts, now };
+  assert.equal(D.offers.filter(o => o.cardId).length, lib.cards.length, 'every library card has an offer record');
+  for (const u of ['mr', 'c1', 'ty', 'wf', 'bofa', 'ur']) assert.equal(P.isProgram({ bonus: { unit: u } }, D.units), false, `${u} can be taken as cash`);
+  for (const u of ['delta', 'aa', 'hilton', 'united']) assert.equal(P.isProgram({ bonus: { unit: u } }, D.units), true);
+  near(P.offerValue(by('Platinum Card'), o2), 1050); near(P.firstYearNet(by('Platinum Card'), o2), 155);
+  near(P.firstYearNet(by('Blue Cash Preferred'), o2), 300, 1e-6); near(P.firstYearNet(by('United Explorer'), o2), 700, 1e-6);
+  const plat = P.cardFit(by('Platinum Card'), { opened: 5, score: 'excellent' }, o2);
+  assert.equal(plat.level, 'fits'); assert.match(plat.reasons.join(' '), /Chase's limit does not apply at this bank/); assert.match(plat.reasons.join(' '), /can be lower/);
+  assert.match(P.cardFit(by('Venture'), { opened: 2 }, o2).reasons.join(' '), /uses one of your 3 Chase slots/);
+  assert.equal(P.cardFit(by('Premium Rewards'), {}, o2).level, 'maybe');
+  const W = P.whyNot(D.offers, { monthlySpend: 3000, me: { score: 'excellent' } }, o2), why = n => W.find(w => w.offer.name === n)?.reason;
+  assert.match(why('Green Card'), /no longer takes new applications/); assert.match(why('Discover it Miles'), /match/); assert.match(why('World of Hyatt'), /free nights/);
+  assert.match(why('Delta SkyMiles Gold'), /have not picked Delta SkyMiles/);
+  assert.equal(P.opensAndUses(null, by('Venture'), { rule: D.rules.chase524 }).uses[0], 'One of your 5 Chase slots, as every new card does');
+  for (const r of D.rules.again) for (const id of r.cards) assert.ok(lib.cards.some(c => c.id === id), id);
+});
+
+test('a carried balance gets a rate: the plan assigns its typical card rate until the real one is in', () => {
+  const now = new Date(2026, 10, 14), st = new Store(newHousehold({ name: 'Rate' }));
+  const row = addHeldCard(st, lib.cards.find(c => c.id === 'citi-double-cash'));
+  st.setDoc('settings', { start: { cardPlan: { carry: true } } });
+  let R = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(R.kind, 'debt'); assert.equal(R.inputs.heavyListed, false); near(R.typicalApr, 0.25);
+  st.update(row.id ?? row, { balance: 2500 }); st.setDoc('settings', { start: { cardPlan: {} } });
+  R = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(R.inputs.heavyListed, true, 'a balance with no rate takes the typical 25%, which is heavy'); assert.equal(R.kind, 'debt');
+  st.update(row.id ?? row, { apr: 0.05 });
+  assert.equal(cardPlanOf(st.doc, refDoc, lib, D, { now }).kind, 'open', 'a real rate under 8% is not heavy');
+  // until retirement: the plan's age and target age
+  assert.match(R.toward(655).invest, /Add your birth year/);
+  assert.equal(R.again('capone-venture'), 'One welcome offer in the Venture family every 48 months.'); assert.equal(R.again('chase-freedom-flex'), null);
 });

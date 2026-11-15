@@ -65,7 +65,13 @@ export function cardPlanOf(doc, ref, lib, off, { now = new Date(), person = null
     share: () => { const n = Math.min(3, held.length); if (!n) return null;
       const have = P.bestSetups(held.map(hd => ({ card: hd.card, name: hd.label, fee: (hd.check.fee ?? 0) - creditsUsedOf(hd.card.id) })), byCat, flat, { sizes: [n] })[0], best = setups().list.find(r => r.size === n);
       return have && best ? P.cardsShare(have.value, Math.max(best.value, have.value), { enough: off.enoughShare.value, cards: n }) : null; },
-    toward: value => P.offerToward(value, { littleE: RULES.littleE, iraLimit: ref.limits.ira.base, realReturn: rr }),
+    // left invested until the plan's own target age (the FI age if set, else Retire by, else 65), from the plan's age
+    toward: value => P.offerToward(value, { littleE: RULES.littleE, iraLimit: ref.limits.ira.base, realReturn: rr, years: x.age == null ? null : Math.max(0, Math.round(x.retireAge - x.age)), until: `age ${x.retireAge}` }),
+    // each bank's rule on getting a welcome offer twice, for one card
+    again: id => (off.rules.again || []).find(r => r.cards.includes(id))?.words ?? null,
+    // a card someone carries a balance on, until its balance is on the plan: the page asks for it there (the rate is the
+    // plan's typical card rate until theirs is in)
+    typicalApr: ref.typicalRates['Credit card'],
     rr, wr: x.withdrawalRate ?? ref.presets.withdrawalRate.default,
     inputs: { spend: { byCat, monthly, fromBudget: hasBudget, typicalMonthly: Object.values(typical).reduce((a, b) => a + b, 0) / 12 }, heavyListed, carryTap: mine.carry === true, score: { band, number, fromProfile: number != null }, heavy, business: mine.business ?? null, programs: mine.programs || [], tv: mine.tv ?? null, openedOther: mine.opened || [], spendTap: mine.spend ?? null },
     setups };
