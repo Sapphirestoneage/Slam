@@ -201,3 +201,23 @@ export function opensAndUses(card, offer, { unlockIds = [], benefitKinds = {}, r
   if (fee > 0) uses.push(`$${fee} a year`);
   return { opens, uses };
 }
+
+// ---- The one answer ----
+// A score as a band, from the bands in the offers file. Null when there is no score.
+export const scoreBand = (score, bands = {}) => (score == null || score === '' || !Number.isFinite(Number(score)) ? null : Number(score) >= bands.excellent ? 'excellent' : Number(score) >= bands.good ? 'good' : 'fair');
+
+// The card plan from its inputs: the slots, the moves, and the one sentence every screen shows.
+export function cardPlan({ offers = [], units = {}, rule = { slots: 5, months: 24 }, unlockIds = [], held = [], openedMonths = [], score = null, monthlySpend = null, heavyDebt = false, business = false,
+  programs = [], transferValue = null, creditsUsedOf = null, now = new Date() } = {}) {
+  const slots = slotsFromDates(openedMonths, now, rule);
+  const opts = { units, rule, unlockIds, transferValue, creditsUsedOf, programs };
+  const me = { score, heavyDebt, business };
+  const R = nextMoves(offers, { held, opened: slots.used, monthlySpend, me }, opts);
+  const usd = v => `$${round(v).toLocaleString('en-US')}`;
+  let kind, line;
+  if (heavyDebt) { kind = 'debt'; line = 'Pay down the debt first. No new card pays more than that interest costs.'; }
+  else if (slots.left <= 0) { kind = 'wait'; line = `Wait. Chase opens up again in ${slots.frees}.`; }
+  else if (R.moves.length) { const m = R.moves[0]; kind = 'open'; line = `${m.offer.name}, worth ${usd(m.net)} in its first year after the fee${monthlySpend != null ? `, from about ${m.months} ${m.months === 1 ? 'month' : 'months'} of spending you already do` : ''}.`; }
+  else { kind = 'hold'; line = 'Hold. Nothing here beats what you have.'; }
+  return { kind, line, slots, moves: R.moves, opts, me };
+}

@@ -7,7 +7,9 @@
 import { h, icon } from './dom.js';
 import * as S from './staples.js';
 import { secWrap } from './sections.js';
-import { cardLibrary, loadCardLibrary, libraryCardOf } from '../cardlib.js';
+import { cardLibrary, loadCardLibrary, libraryCardOf, cardOffers, loadCardOffers } from '../cardlib.js';
+import { cardPlanOf } from '../cardplan.js';
+import { pack } from '../start/link.js';
 import { searchCards, issuerName, cardsPicture } from '../math/cards.js';
 import { institutionsOf, addInstitution } from '../institutions.js';
 import { money } from '../format.js';
@@ -123,4 +125,16 @@ export function doubledNotes(ctx) {
   if (!P?.doubled.length) return null;
   return h('div.stack.doubled-notes', { style: { gap: '4px', margin: '4px 0 12px' } }, P.doubled.map(d => h(`p.note-line${unchecked(P.held.find(x => x.id === d.cardId)?.card) ? '.coach-only' : ''}`, { style: { margin: 0 }, title: P.held.find(x => x.id === d.cardId)?.card.benefits[d.kind]?.words ?? P.held.find(x => x.id === d.cardId)?.card.benefits[d.kind] ?? null }, icon('info'), ' ', d.text,
     d.lineId ? h('button.link-btn', { type: 'button', style: { marginLeft: '6px' }, onclick: () => { location.hash = ctx.store.get(d.lineId)?.kind === 'coverage' ? '#/net-worth/protection' : '#/cash-flow/budget'; } }, 'See the line') : null)));
+}
+
+// The card plan's one sentence (js/cardplan.js: the same call cards.html makes, so the two never disagree), with a
+// button that opens the full card plan on this household.
+export function cardPlanNote(ctx) {
+  const lib = ensure(ctx);
+  if (!cardOffers()) loadCardOffers(() => ctx.refresh?.());
+  const off = cardOffers();
+  if (!lib || !off) return null;
+  const R = cardPlanOf(ctx.store.doc, ctx.ref, lib, off);
+  return h('div.stack.doubled-notes.card-plan-note', { style: { gap: '4px', margin: '4px 0 12px' } }, h('p.note-line', { style: { margin: 0 } }, h('strong', {}, 'Next card move: '), R.line, ' ',
+    h('button.link-btn', { type: 'button', onclick: async () => { location.href = `cards.html#/d/${await pack(ctx.store.doc)}`; } }, 'Open the card plan')));
 }

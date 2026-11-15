@@ -20,7 +20,8 @@ export const chip = (label, on, onClick) => h('button.st-chip', { type: 'button'
 const HERE = '#/d/';
 
 export async function boot(id, draw) {
-  const me = soloOf(id), ref = await fetch('data/reference-2026.json').then(r => r.json());
+  // a page off the path (cards.html) boots the same way: the plan in the address, no next step
+  const me = soloOf(id) ?? { id, title: document.title.split(':')[0].trim(), next: null }, ref = await fetch('data/reference-2026.json').then(r => r.json());
   let doc = null;
   if (location.hash.startsWith(HERE)) { try { doc = await unpack(location.hash.slice(HERE.length)); } catch { doc = null; } }
   // with an account, a page opened bare picks up where you left off; without one, the address is the only save

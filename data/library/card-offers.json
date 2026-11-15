@@ -1055,5 +1055,25 @@
    ],
    "verified": "secondary"
   }
- ]
+ ],
+ "scoreBands": {
+  "good": 670,
+  "excellent": 740,
+  "source": "The bands review sites use for these cards (good from 670, excellent from 740); issuers do not publish a cut-off",
+  "date": "2026-11-14",
+  "verified": "secondary"
+ },
+ "typicalSpend": {
+  "note": "Stand-in monthly amounts used only until the Budget has lines in these categories; shown as Typical and never saved as the person's own",
+  "basis": "SLAM stand-in, to check",
+  "monthly": {
+   "dining": 300,
+   "groceries": 500,
+   "gas": 150,
+   "travel": 150,
+   "streaming": 50,
+   "drugstore": 50,
+   "transit": 100
+  }
+ }
 }

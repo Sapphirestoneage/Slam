@@ -148,3 +148,44 @@ test('what a card opens and uses, and credits counted per card', () => {
   assert.match(P.opensAndUses(null, by('Ink Business Cash'), { rule: D.rules.chase524 }).uses[0], /No slot/);
   near(P.firstYearNet(by('Sapphire Reserve'), { ...opts, creditsUsedOf: id => (id === 'chase-sapphire-reserve' ? 300 : 0) }), 505);
 });
+
+// ---- The loop: the card plan read from the household plan (js/cardplan.js) ----
+import { Store, newHousehold } from '../js/records.js';
+import { cardPlanOf, cardRowsOf } from '../js/cardplan.js';
+const refDoc = read('../data/reference-2026.json');
+
+test('one input, one answer: the Budget, the Credit cards list, the debts and the Profile feed the card plan', () => {
+  const now = new Date(2026, 10, 14);
+  const st = new Store(newHousehold({ name: 'Loop' }));
+  const bare = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(bare.inputs.spend.fromBudget, false); assert.equal(bare.inputs.spend.monthly, null);
+  assert.equal(bare.kind, 'open'); assert.match(bare.line, /^Sapphire Preferred, worth \$655/);
+  // the Budget's lines become the spending
+  st.add('bill', { name: 'Dining out', amount: 400, per: 'month', values: { category: 'Dining out' } });
+  st.add('bill', { name: 'Groceries', amount: 1600, per: 'month', values: { category: 'Groceries' } });
+  const fed = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(fed.inputs.spend.fromBudget, true); near(fed.inputs.spend.monthly, 2000); near(fed.inputs.spend.byCat.dining, 4800);
+  assert.match(fed.line, /from about 3 months of spending you already do/);
+  // a card on the Credit cards list is held: it leaves the moves, uses a slot, and gets its yearly check from the row's own taps
+  const row = st.add('debt', { type: 'Credit card', name: 'Reserve', values: { balance: 0, apr: 0.24, payChoice: 'In full', cardId: 'chase-sapphire-reserve', opened: '2026-09', cardUse: { travel: 'Use' } } });
+  const withCard = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(cardRowsOf(st.doc).length, 1); assert.equal(withCard.slots.used, 1);
+  assert.ok(!withCard.moves.some(mv => mv.offer.cardId === 'chase-sapphire-reserve'));
+  assert.equal(withCard.held.length, 1); assert.equal(withCard.held[0].opened, '2026-09');
+  near(withCard.creditsUsedOf('chase-sapphire-reserve'), lib.cards.find(c => c.id === 'chase-sapphire-reserve').credits.find(c => c.id === 'travel').value);
+  assert.ok(withCard.dates.some(d => d.kind === 'offer' && d.when === 'Dec 2026'));
+  // the same row edit changes the same answer everywhere
+  st.update(row.id ?? row, { cardUse: {} });
+  assert.equal(cardPlanOf(st.doc, refDoc, lib, D, { now }).creditsUsedOf('chase-sapphire-reserve'), 0);
+  // the Profile's score outranks a tap; heavy debt on the debts list turns the answer
+  st.setIn('profile', ['credit', 'score'], 700);
+  st.setDoc('settings', { start: { cardPlan: { score: 'excellent', programs: ['southwest'], tv: 0.015 } } });
+  const scored = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(scored.inputs.score.band, 'good'); assert.equal(scored.inputs.score.fromProfile, true);
+  assert.ok(scored.moves.some(mv => mv.offer.bonus.unit === 'southwest'), 'a tapped program brings its cards in');
+  st.add('debt', { type: 'Credit card', name: 'Old card', values: { balance: 4200, apr: 0.27, payment: 120 } });
+  const inDebt = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(inDebt.kind, 'debt'); assert.equal(inDebt.moves.length, 0); assert.equal(inDebt.unpicked.length, 1);
+  const S3 = withCard.setups(); assert.equal(S3.list.length, 3); assert.equal(withCard.setups(), S3, 'worked out once');
+  assert.equal(P.scoreBand(null, D.scoreBands), null); assert.equal(P.scoreBand(760, D.scoreBands), 'excellent'); assert.equal(P.scoreBand(640, D.scoreBands), 'fair');
+});

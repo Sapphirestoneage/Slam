@@ -12,3 +12,14 @@ export function loadCardLibrary(onReady) {
 }
 // A held card's library entry, read from the debt row (values.cardId).
 export const libraryCardOf = r => (LIB && r?.values?.cardId ? LIB.cards.find(c => c.id === r.values.cardId) ?? null : null);
+
+// The dated offers layer (data/library/card-offers.json), loaded once on first use like the library.
+let OFFERS = null, loadingOffers = null;
+export const cardOffers = () => OFFERS;
+export const setCardOffers = o => { OFFERS = o; return OFFERS; };
+export function loadCardOffers(onReady) {
+  if (OFFERS) return Promise.resolve(OFFERS);
+  if (typeof fetch !== 'function') return Promise.resolve(null);
+  loadingOffers ??= fetch('data/library/card-offers.json').then(r => r.json()).then(setCardOffers).catch(() => { loadingOffers = null; return null; });
+  return loadingOffers.then(o => { if (o) onReady?.(o); return o; });
+}

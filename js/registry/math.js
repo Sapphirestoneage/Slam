@@ -848,6 +848,7 @@ export const SUPPORT = {
   'cardplan.yearCheck': 'whether a card gave back its fee this year, with a way out when it did not', 'cardplan.bestSetups': 'the best 1, 2 and 3 card setups against a plain card (M9C rewards per category)',
   'cardplan.opensAndUses': 'short labels for what a card opens and uses, from the library card and its offer',
   'cardplan.isProgram': 'whether an offer pays in an airline or hotel program\'s own points',
+  'cardplan.scoreBand': 'a credit score as a band, from the bands in card-offers.json', 'cardplan.cardPlan': 'the card plan from its inputs: slots, moves and the one sentence every screen shows (read from the plan by js/cardplan.js)',
   'cardplan.costAsFiNumber': 'a yearly cost divided by the withdrawal rate', 'cardplan.investedLater': 'a sum left invested at the real return',
   'result.ok': 'wraps a number with its plain-words math', 'result.needs': 'says what a number still needs', 'result.isBlank': 'a blank check',
   'result.missing': 'lists blank inputs', 'result.joinWords': 'joins words for Needs ...', 'result.fmt': 'number formats for the math text',
