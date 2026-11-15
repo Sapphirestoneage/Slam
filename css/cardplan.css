@@ -1,0 +1,35 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* cards.html: the card plan. Folds, short tags, thin bars. Everything else is css/start.css. */
+.cp-fold { border: 2px solid var(--border-input); border-radius: 12px; background: var(--card); }
+.cp-fold + .cp-fold { margin-top: 8px; }
+.cp-fold > summary { cursor: pointer; list-style: none; padding: 10px 12px; min-height: 44px; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; font-weight: 700; border-radius: 10px; }
+.cp-fold > summary::-webkit-details-marker { display: none; }
+.cp-fold > summary:hover { border-color: var(--primary); box-shadow: var(--shadow-lift); }
+.cp-fold > summary:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.cp-fold > summary .cp-see { color: var(--primary); font-weight: 700; white-space: nowrap; }
+.cp-fold[open] > summary { border-bottom: 2px solid var(--border-row); border-radius: 10px 10px 0 0; }
+.cp-fold[open] > summary .cp-see::after { content: " less"; }
+.cp-fold:not([open]) > summary .cp-see::after { content: " more"; }
+.cp-body { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.cp-amt { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cp-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cp-tags .st-tag { border-color: var(--primary); color: var(--text); font-weight: 600; }
+.cp-tags .st-tag.uses { border-color: var(--guess); }
+.cp-lab { font-weight: 700; color: var(--text-2); margin-right: 4px; }
+.cp-then { list-style: none; margin: 0; padding: 0 0 0 12px; border-left: 2px solid var(--border-row); display: flex; flex-direction: column; gap: 6px; }
+.cp-then li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 6px 10px; border: 2px dashed var(--border-input); border-radius: 10px; }
+.cp-bars { display: flex; flex-direction: column; gap: 8px; }
+.cp-barrow { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.cp-track { height: 12px; border-radius: 4px; background: var(--border-row); overflow: hidden; }
+.cp-track b { display: block; height: 100%; min-width: 2px; background: var(--primary); border-radius: 0 4px 4px 0; }
+.cp-dates { list-style: none; margin: 0; padding: 0; }
+.cp-dates li { display: grid; grid-template-columns: 6rem minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 2px solid var(--border-row); }
+.cp-dates li:first-child { border-top: 0; }
+.cp-dates b { font-variant-numeric: tabular-nums; }
+.cp-chipx { min-height: 36px; padding: 0 10px; }
+.cp-small .st-chip { min-height: 36px; padding: 0 10px; font-size: .875rem; }
+.cp-grow { width: 100%; max-width: 420px; height: auto; display: block; }
+.cp-grow text { fill: var(--text); font: 600 12px var(--font, inherit); }
+.cp-q { display: flex; flex-direction: column; gap: 6px; }
+.cp-q + .cp-q { margin-top: 12px; }
+@media (max-width: 520px) { .cp-barrow { grid-template-columns: minmax(0, 6.5rem) minmax(0, 1fr) auto; } .cp-dates li { grid-template-columns: 5rem minmax(0, 1fr); } }

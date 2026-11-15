@@ -574,7 +574,10 @@ export const REFERENCE_FILES = [
     date: '2026-11-06', readBy: 'Net worth > Credit cards (js/ui/cards-ui.js): Which card is it?, What your cards give you, the fee check (js/math/cards.js, M9C)' },
   { id: 'library.cardOffers', file: 'data/library/card-offers.json', label: 'Welcome offers for 43 Chase cards (amount, spending needed, months), the 5/24 slot rule and a floor value for each kind of point; the dated layer the card library leaves out on purpose',
     source: 'Review sites read 2026-11-14 (each offer names its own) and Chase\'s own Freedom page; no offer was confirmed on an application page, and a conflict line says where two sites disagree',
-    date: '2026-11-14', readBy: 'js/math/cardplan.js (what an offer is worth, whether a card fits, the next two moves); no screen reads it yet' },
+    date: '2026-11-14', readBy: 'cards.html (js/solo/cards.js) through js/math/cardplan.js: what an offer is worth, whether a card fits, the next two moves' },
+  { id: 'library.cardTools', file: 'data/library/card-tools.json', label: 'Tools that pair with the card plan: seven apps for the daily jobs it does not do, each with what it is for and its trade-off',
+    source: 'App comparison pages and store listings read 2026-11-14; most are written by the apps themselves, so no ranking is kept',
+    date: '2026-11-14', readBy: 'cards.html (js/solo/cards.js): Tools that pair with this' },
   // Batch 31 (Phase 4, Track 1): typical at your age, only the rows docs/engines/priors-sources.md marks Primary.
   { id: 'priors', file: 'data/priors-2026.json', label: 'Typical at your age: net worth by age, cash, card balances, student loans and retirement (SCF 2025), spending by age and for one person (CE 2024), rent (ACS 2020 to 2024), place price parities (BEA 2024), emergency savings by age (SHED 2025)',
     source: 'Federal Reserve SCF 2025 report (scf26.pdf, Tables 2 to 4), Federal Reserve SHED data tables (survey of October 2025), BLS Consumer Expenditure Survey 2024 by age on FRED; only the Primary rows of docs/engines/priors-sources.md',

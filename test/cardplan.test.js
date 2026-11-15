@@ -65,7 +65,11 @@ test('next moves rank by net after the fee, look one move further, and stop at t
   const personal = D.offers.filter(o => !o.business);
   const R = P.nextMoves(personal, { opened: 3, monthlySpend: 2000, me: { score: 'excellent' } }, { ...opts, transferValue: 0.015 });
   assert.equal(R.slots, 2);
-  assert.ok(R.moves.length > 5);
+  assert.ok(R.moves.length >= 4 && R.moves.every(m => !P.isProgram(m.offer, D.units)), 'no airline or hotel card until a program is tapped');
+  const air = P.nextMoves(personal, { opened: 0, monthlySpend: 3000 }, { ...opts, programs: ['southwest'] });
+  const sw = air.moves.filter(m => m.offer.bonus.unit === 'southwest');
+  assert.ok(sw.length >= 2 && sw.every(m => m.then.every(t => t.offer.bonus.unit !== 'southwest')), 'one card per program in a path');
+  assert.ok(air.moves.every(m => m.offer.bonus.unit !== 'united'));
   for (let i = 1; i < R.moves.length; i++) assert.ok(R.moves[i - 1].net >= R.moves[i].net, 'best first');
   const csp = R.moves.find(m => m.offer.name === 'Sapphire Preferred');
   near(csp.net, 1030); assert.equal(csp.months, 3); assert.equal(csp.slotsAfter, 1);
@@ -85,4 +89,62 @@ test('a yearly cost as FI number, and a sum left invested', () => {
   near(P.investedLater(750, 35, 0.07), 750 * Math.pow(1.07, 35));
   near(P.investedLater(750, -3, 0.07), 750);
   assert.equal(P.unlocksTransfers(['chase-freedom-flex'], D.unlocksTransfers), false);
+});
+
+test('exact slots from the months cards were opened, and the month the next slot frees', () => {
+  const now = new Date(2026, 10, 14), rule = D.rules.chase524;
+  const S = P.slotsFromDates(['2024-10', '2024-12', '2025-06', '2026-01'], now, rule);
+  assert.equal(S.used, 3, 'Oct 2024 is past 24 months');
+  assert.equal(S.left, 2); assert.equal(S.frees, 'Dec 2026'); assert.equal(S.freesIn, 1);
+  const full = P.slotsFromDates(['2025-01', '2025-03', '2025-06', '2025-09', '2026-01', '2026-05'], now, rule);
+  assert.equal(full.left, 0); assert.equal(full.frees, 'Mar 2027', 'two must pass to get under five');
+  assert.deepEqual(P.slotsFromDates([], now, rule), { used: 0, left: 5, frees: null, freesIn: null });
+  assert.equal(P.monthWords(2026 * 12), 'Jan 2026');
+});
+
+test('dates to know: the offer deadline, the next fee, the slot coming back, soonest first', () => {
+  const now = new Date(2026, 10, 14);
+  const L = P.cardDates([{ name: 'Sapphire Preferred', opened: '2026-09', fee: 95, offerMonths: 3 }, { name: 'Freedom Flex', opened: '2024-12', fee: 0 }], now, D.rules.chase524);
+  assert.deepEqual(L.map(x => [x.kind, x.when]), [['offer', 'Dec 2026'], ['slot', 'Dec 2026'], ['fee', 'Sep 2027'], ['slot', 'Sep 2028']]);
+  assert.deepEqual(P.cardDates([{ name: 'No month', fee: 95 }], now), []);
+});
+
+test('a year with a card: free, even, earns, or costs with a way out', () => {
+  assert.equal(P.yearCheck({ fee: 0 }).kind, 'free');
+  assert.equal(P.yearCheck({ fee: 95, back: 100 }).kind, 'even');
+  assert.equal(P.yearCheck({ fee: 95, back: 400 }).kind, 'earns');
+  const c = P.yearCheck({ fee: 795, back: 300, noFeeSibling: 'Freedom Unlimited' });
+  assert.equal(c.kind, 'costs'); near(c.net, -495); assert.match(c.option, /Freedom Unlimited/);
+  assert.match(P.yearCheck({ fee: 795, back: 300 }).option, /no-fee version/);
+});
+
+test('the best one, two and three card setups against a plain card, with a pick-one rate counted once', () => {
+  const mk = (id, base, rates = [], fee = 0) => ({ card: { id, rewards: { pointValue: 0.01, base, rates } }, name: id, fee });
+  const spend = { dining: 4000, groceries: 6000, other: 12000 };
+  const flat = mk('Flat', 1.5), diner = mk('Diner', 1, [{ cat: 'dining', x: 3 }]), grocer = mk('Grocer', 1, [{ cat: 'groceries', x: 6 }], 95);
+  const R = P.bestSetups([flat, diner, grocer], spend, 440);
+  const of = n => R.find(r => r.size === n);
+  assert.deepEqual(of(1).cards.map(c => c.name), ['Grocer']); near(of(1).value, 40 + 360 + 120 - 95);
+  assert.deepEqual(of(2).cards.map(c => c.name).sort(), ['Flat', 'Grocer']); near(of(2).value, 60 + 360 + 180 - 95); near(of(2).gain, 505 - 440);
+  near(of(3).value, 120 + 360 + 180 - 95);
+  assert.deepEqual(of(3).use, { dining: 'Diner', groceries: 'Grocer', other: 'Flat' });
+  // a card that pays 5x on only its biggest category must not earn 5x on all three
+  const one = mk('PickOne', 1, [{ oneOf: ['dining', 'groceries', 'other'], x: 5 }]);
+  near(P.bestSetups([one], spend, 0)[0].value, 12000 * 0.05 + 10000 * 0.01);
+  const pair = P.bestSetups([one, flat], spend, 0).find(r => r.size === 2);
+  near(pair.value, 12000 * 0.05 + 10000 * 0.015); assert.equal(pair.use.other, 'PickOne');
+  assert.deepEqual(P.bestSetups([], spend, 100), []);
+  const real = P.bestSetups(lib.cards.filter(c => c.rewards && !c.secured).map(c => ({ card: c, name: c.name, fee: c.annualFee ?? 0 })), { dining: 3600, groceries: 6000, gas: 1800, other: 12000 }, 23400 * 0.02);
+  assert.equal(real.length, 3); assert.ok(real[2].value >= real[1].value - 1e-6 && real[1].value >= real[0].value - 1e-6, 'more cards never pay less');
+});
+
+test('what a card opens and uses, and credits counted per card', () => {
+  const csr = lib.cards.find(c => c.id === 'chase-sapphire-reserve'), cfu = lib.cards.find(c => c.id === 'chase-freedom-unlimited');
+  const R = P.opensAndUses(csr, by('Sapphire Reserve'), { unlockIds: D.unlocksTransfers, benefitKinds: lib.benefitKinds, rule: D.rules.chase524 });
+  assert.ok(R.opens.includes('Moving points to airlines and hotels') && R.opens.includes('No fee on purchases abroad'));
+  assert.deepEqual(R.uses, ['One slot of the 5', '$795 a year']);
+  const F = P.opensAndUses(cfu, by('Freedom Unlimited'), { unlockIds: D.unlocksTransfers, benefitKinds: lib.benefitKinds, rule: D.rules.chase524 });
+  assert.ok(F.opens.includes('A no-fee card to keep open for good') && !F.opens.includes('Moving points to airlines and hotels'));
+  assert.match(P.opensAndUses(null, by('Ink Business Cash'), { rule: D.rules.chase524 }).uses[0], /No slot/);
+  near(P.firstYearNet(by('Sapphire Reserve'), { ...opts, creditsUsedOf: id => (id === 'chase-sapphire-reserve' ? 300 : 0) }), 505);
 });

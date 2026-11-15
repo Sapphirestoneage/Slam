@@ -1,0 +1,52 @@
+{
+ "id": "library.cardTools",
+ "version": "1.0.0",
+ "asOf": "2026-11-14",
+ "source": "App comparison pages and store listings read on 2026-11-14. Most comparisons are written by the apps themselves, so nothing here is a ranking.",
+ "confidence": "secondary",
+ "note": "Tools that do the daily jobs this plan does not: one line on what each is for and its main trade-off. No links that pay anyone, and no order of merit. Prices are left out because sources disagree on them.",
+ "tools": [
+  {
+   "job": "Which card to use at the register",
+   "name": "CardPointers",
+   "does": "Names the best card for each purchase, in store and online, from a very large card list.",
+   "tradeoff": "No bank login needed. Most of it sits behind a yearly plan."
+  },
+  {
+   "job": "Which card to use at the register",
+   "name": "Kudos",
+   "does": "A browser add-on that shows your best card as you check out online and fills it in.",
+   "tradeoff": "Built for online shopping more than in-store."
+  },
+  {
+   "job": "Bank offers switched on for you",
+   "name": "MaxRewards",
+   "does": "Turns on the offers your bank attaches to your cards so you do not have to tap each one.",
+   "tradeoff": "It needs your bank login to do it."
+  },
+  {
+   "job": "Credits used before they run out",
+   "name": "MaxWorth",
+   "does": "Lists each card's monthly, quarterly and yearly credits and reminds you before one ends.",
+   "tradeoff": "You mark credits used yourself. No bank login."
+  },
+  {
+   "job": "Credits used before they run out",
+   "name": "CardStack",
+   "does": "Spots credits you have used from your transactions and works out the fee you really pay.",
+   "tradeoff": "The automatic part needs a read-only bank link."
+  },
+  {
+   "job": "Welcome offers and the 5 card limit, day to day",
+   "name": "Travel Freely",
+   "does": "Tracks your cards, offer deadlines, fee dates and when Chase opens up again. Free.",
+   "tradeoff": "It earns from card sign-ups, so read its suggestions with that in mind."
+  },
+  {
+   "job": "Point balances in one place",
+   "name": "AwardWallet",
+   "does": "Keeps the balances of your airline, hotel and card programs together.",
+   "tradeoff": "It tracks balances. It does not plan which card to open."
+  }
+ ]
+}
