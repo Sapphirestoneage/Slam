@@ -61,11 +61,15 @@ export function simulateDebt({ balance, apr, payment }, maxMonths = 1200) {
 export function totalInterest({ balance, apr, payment }) {
   const p = payoffMonths({ balance, apr, payment });
   if (p.value === null) return { ...p, id: 'M32' };
-  // The formula is the source of truth (spec M32). The simulation is kept for payoff order only and can
-  // differ by a dollar or two on the last partial payment, so it is not shown to the client.
+  // What is really paid (Eli, Nov 15 2026, QUESTIONS 548a): every payment in full and a smaller last one. The formula
+  // (months times the payment, less the balance) treats the last payment as a part of a month and runs low: by 95
+  // cents on average, up to about $19 (docs/AUDIT.md). `formula` keeps that number for the audit.
   const sim = simulateDebt({ balance, apr, payment });
-  const v = (p.exact ?? p.value) * payment - balance;
-  return { ...ok('M32', v, `${fmt.number(p.exact ?? p.value, 2)} months of ${fmt.money(payment)} payments (${fmt.money((p.exact ?? p.value) * payment)}) minus the ${fmt.money(balance)} owed = ${fmt.money(v)} of interest.`), simulated: sim.interest };
+  const r = apr / 12, n = p.value, before = n - 1;
+  const leftBefore = r === 0 ? balance - payment * before : balance * (1 + r) ** before - payment * ((1 + r) ** before - 1) / r;
+  const last = Math.max(0, leftBefore * (1 + r)), paid = before * payment + last, v = paid - balance;
+  const how = before > 0 ? `${before} ${before === 1 ? 'payment' : 'payments'} of ${fmt.money(payment)} and a last one of ${fmt.money(last)} come to ${fmt.money(paid)}` : `One payment of ${fmt.money(last)}`;
+  return { ...ok('M32', v, `${how}; minus the ${fmt.money(balance)} owed = ${fmt.money(v)} of interest.`), simulated: sim.interest, formula: (p.exact ?? p.value) * payment - balance, lastPayment: last };
 }
 
 // M33: fee to APR (payday, cash advance).

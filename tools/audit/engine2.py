@@ -13,7 +13,6 @@ import json, math, sys
 from collections import defaultdict
 
 TOL = 1.0  # dollars
-METHOD = 'settled'   # 'first' is the eight-round loop SLAM shipped with until Nov 14 2026, kept to measure what it cost
 TAX_STOP, TAX_ROUNDS, CREDIT_ROUNDS = 0.5, 40, 30
 
 # ---------- the law, typed in a second time ----------
@@ -233,7 +232,7 @@ def months_to(invested, monthly, yearly_return, target, cap=840):
 def take_out(b, amount, age):
     """Take `amount` from the buckets, cheapest first. Returns (pretax taken, penalty, gains, short)."""
     left = amount
-    pretax = penalty = gains = 0.0
+    pretax = penalty = gains = early_growth = 0.0
 
     def take(name, cap=math.inf):
         nonlocal left
@@ -254,11 +253,12 @@ def take_out(b, amount, age):
         p = take('pretax')
         pretax += p
         penalty += 0.10 * p
-        penalty += 0.10 * take('roth')
+        early_growth = take('roth')
+        penalty += 0.10 * early_growth
     else:
         pretax += take('pretax')
         b['rothFree'] = max(0.0, b['rothFree'] - take('roth'))
-    return pretax, penalty, gains, (left if left > 0.5 else 0.0)
+    return pretax, penalty, gains, early_growth, (left if left > 0.5 else 0.0)
 
 
 def whole_life(x, law, audit=None):
@@ -281,7 +281,7 @@ def whole_life(x, law, audit=None):
     eras = x.get('eras') or {}
     strategy = x.get('strategy') or {'id': 'fixed'}
     total = lambda: b['taxable'] + b['pretax'] + b['roth']
-    waiting_conversions, income_by_year, rows = [], {}, []
+    waiting_conversions, income_by_year, rows, held = [], {}, [], []
     at_retire = ran_out = first_rate = None
     life_tax = penalties = surcharges = 0.0
     lowest, trim = 1.0, 1.0
@@ -322,13 +322,28 @@ def whole_life(x, law, audit=None):
                     extra -= cut
             elif extra < 0:
                 put['taxable'] += -extra
-            b['taxable'] += put['taxable']; b['basis'] += put['taxable']
-            b['roth'] += put['roth']; b['rothFree'] += put['roth']
-            b['pretax'] += put['pretax']
+            # a year's saving goes in a twelfth a month: by the year's end it is worth saving/12 * (g^12 - 1)/(g - 1)
+            g = (1 + r) ** (1 / 12)
+            part = 1.0 if r == 0 else ((g ** 12 - 1) / (g - 1) / 12) / (1 + r)
+            b['taxable'] += put['taxable'] * part; b['basis'] += put['taxable']
+            b['roth'] += put['roth'] * part; b['rothFree'] += put['roth']
+            b['pretax'] += put['pretax'] * part
             if extra > 0.5:
-                _, pen, _, short = take_out(b, extra, age)
-                row.update(withdraw=extra - short, penalty=pen, short=short)
+                working = k >= ((w.get('wait') or {}).get('years') or 0)
+                pay = max(0.0, (w.get('income') or 0) - put['pretax']) if working else 0.0
+                on_pay = law.year_tax(pay, 0, 0, tax)
+                due = 0.0
+                for _ in range(TAX_ROUNDS):
+                    got_pre, got_pen, got_gains, got_growth, _s = take_out(dict(b), extra + due, age)
+                    t = law.year_tax(pay + got_pre + got_growth, 0, got_gains, tax) - on_pay + got_pen
+                    if abs(t - due) < TAX_STOP:
+                        due = t
+                        break
+                    due = t
+                _, pen, _, _, short = take_out(b, extra + due, age)
+                row.update(withdraw=extra + due - short, penalty=pen, tax=due - pen, short=short)
                 penalties += pen
+                life_tax += due - pen
         else:
             if at_retire is None:
                 at_retire = total()
@@ -362,45 +377,30 @@ def whole_life(x, law, audit=None):
                 due_now, c, ok = 0.0, 0.0, False
                 for _ in range(rounds):
                     trial = dict(b)
-                    got_pre, got_pen, got_gains, _s = take_out(trial, max(0.0, base - credit_now) + due_now, age)
+                    got_pre, got_pen, got_gains, got_growth, _s = take_out(trial, max(0.0, base - credit_now) + due_now, age)
                     pre = max(got_pre, min(must, b['pretax']))
                     conv = min(convert, max(0.0, b['pretax'] - pre))  # a required withdrawal comes out first; only what is left can move to Roth
-                    t = law.year_tax(pre + conv + earned, ss, got_gains, tax) + got_pen
-                    c = min(benchmark, premium_credit(pre + conv + earned + got_gains + ss, benchmark, people)) if benchmark > 0 else 0.0
+                    t = law.year_tax(pre + conv + earned + got_growth, ss, got_gains, tax) + got_pen
+                    c = min(benchmark, premium_credit(pre + conv + earned + got_growth + got_gains + ss, benchmark, people)) if benchmark > 0 else 0.0
                     if abs(t - due_now) < TAX_STOP:
                         due_now, ok = t, True
                         break
                     due_now = t
                 return due_now, c, ok
-            if METHOD == 'first':
-                # the first version of the loop: eight rounds, tax and credit moving together
-                due = credit = 0.0
-                settled = False
-                for _ in range(8):
-                    trial = dict(b)
-                    got_pre, got_pen, got_gains, _ = take_out(trial, max(0.0, base - credit) + due, age)
-                    pre = max(got_pre, min(must, b['pretax']))
-                    conv = min(convert, max(0.0, trial['pretax']))
-                    t = law.year_tax(pre + conv + earned, ss, got_gains, tax) + got_pen
-                    c = min(benchmark, premium_credit(pre + conv + earned + got_gains + ss, benchmark, people)) if benchmark > 0 else 0.0
-                    if abs(t - due) < 1 and abs(c - credit) < 1:
-                        due, credit, settled = t, c, True
-                        break
-                    due, credit = t, (credit + c) / 2
-            else:
+            credit = 0.0
+            due, implied, settled = settle(0.0, TAX_ROUNDS)
+            for _ in range(CREDIT_ROUNDS):
+                if abs(implied - credit) < 1:
+                    break
+                credit = implied
+                due, implied, settled = settle(credit, TAX_ROUNDS)
+            if abs(implied - credit) >= 1:
+                # at the 400% line no credit settles: taking it lifts income past the line. Plan on none.
                 credit = 0.0
                 due, implied, settled = settle(0.0, TAX_ROUNDS)
-                for _ in range(CREDIT_ROUNDS):
-                    if abs(implied - credit) < 1:
-                        break
-                    credit = implied
-                    due, implied, settled = settle(credit, TAX_ROUNDS)
-                if abs(implied - credit) >= 1:
-                    # at the 400% line no credit settles: taking it lifts income past the line. Plan on none.
-                    credit = 0.0
-                    due, implied, settled = settle(0.0, TAX_ROUNDS)
+                held.append([age, 'bottom' if implied >= 1 else 'top'])
             base = max(0.0, base - credit)
-            pre_out, pen, gains, short = take_out(b, base + due, age)
+            pre_out, pen, gains, growth_out, short = take_out(b, base + due, age)
             forced = min(b['pretax'], max(0.0, must - pre_out))
             if forced > 0:
                 b['pretax'] -= forced; b['taxable'] += forced; b['basis'] += forced
@@ -408,7 +408,7 @@ def whole_life(x, law, audit=None):
             b['pretax'] -= conv; b['roth'] += conv
             if conv > 0:
                 waiting_conversions.append((k, conv))
-            ordinary_out = pre_out + forced + conv + earned
+            ordinary_out = pre_out + forced + conv + earned + growth_out
             income_by_year[k] = ordinary_out + gains + law.taxed_ss(ss, ordinary_out + gains, status)
             if audit is not None:
                 # what this year's income really owes, against what was set aside for it
@@ -430,7 +430,7 @@ def whole_life(x, law, audit=None):
         rows.append([age, total(), row['tax'], row['spend'], row['withdraw'], row['convert'], row['penalty'], row['short'], b['taxable'], b['pretax'], b['roth']])
         k += 1
     return {'ok': ran_out is None, 'ranOutAge': ran_out, 'atRetire': at_retire if at_retire is not None else total(), 'end': total(), 'lifetimeTax': life_tax,
-            'penalties': penalties, 'surcharges': surcharges, 'lowestSpend': lowest, 'years': rows}
+            'penalties': penalties, 'surcharges': surcharges, 'lowestSpend': lowest, 'years': rows, 'creditHeld': held}
 
 
 # ---------- compare ----------
@@ -485,8 +485,9 @@ def run(cases, ref):
         elif fn == 'debtOne':
             m = one_debt(x['balance'], x['apr'], x['payment'])
             ck('never pays off', o['never'], m['never']); ck('months', o['months'], m['months'], 0); ck('payment needed', o['paymentNeeded'], m['paymentNeeded'], 0)
-            ck('interest by the formula', o['interest'], m['formula_interest'])
+            ck('interest really paid', o['interest'], m['true_interest'])
             ck('interest stepped month by month', o['simulated'], m['true_interest'])
+            ck('interest by the formula', o['formula'], m['formula_interest'])
             ck('card minimum', o['minimum'], min(x['balance'], max(25, x['balance'] * 0.01 + x['balance'] * x['apr'] / 12)))
             if not m['never'] and m['formula_interest'] is not None:
                 extra['interest_gap'].append(m['formula_interest'] - m['true_interest'])
@@ -542,6 +543,9 @@ def run(cases, ref):
                 ck(name, o[name], mine[name])
             ck('lowest spend share', o['lowestSpend'], mine['lowestSpend'], 1e-6)
             ck('number of years', len(o['years']), len(mine['years']), 0)
+            ck('years the credit was left out', len(o['creditHeld']), len(mine['creditHeld']), 0)
+            for a, m in zip(o['creditHeld'], mine['creditHeld']):
+                ck('credit left out at', a[0], m[0], 0); ck('which line', a[1] == m[1], True)
             cols = ['age', 'total', 'tax', 'spend', 'withdraw', 'convert', 'penalty', 'short', 'taxable', 'pretax', 'roth']
             for a, m in zip(o['years'], mine['years']):
                 for j in range(1, 11):

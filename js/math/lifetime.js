@@ -7,9 +7,8 @@
 // functions; it is not yet in the spreadsheet registry (QUESTIONS.md).
 //
 // What this version leaves out, said plainly: state rules that exclude retirement income are not applied (state tax
-// is the ordinary rate); Roth growth taken out before 59 and a half pays the 10% penalty but is not also counted as
-// income; money taken from the buckets in a working year (a block that costs more than that year's saving) pays the
-// penalty but no income tax; and health cost before 65 is the person's own guess.
+// is the ordinary rate); spending in a free year comes out at the start of the year (saving in a working year goes in
+// month by month); and health cost before 65 is the person's own guess.
 // tools/audit/engine2.py works every number here out a second time (docs/AUDIT.md).
 import { federalTax, stateTax } from './income.js';
 
@@ -121,7 +120,7 @@ const blockIncome = (age, x) => (x.blocks || []).reduce((s, b) => s + (age >= b.
 // can come out free (what was put in, and conversions that have waited five years), then pretax (10% penalty), then
 // Roth growth (10% penalty). After: taxable, pretax, Roth. Returns { pretax (ordinary income), penalty, short }.
 function draw(b, amount, age) {
-  let left = amount, pretax = 0, penalty = 0, gains = 0;
+  let left = amount, pretax = 0, penalty = 0, gains = 0, rothGrowth = 0;
   const take = (key, cap = Infinity) => { const v = Math.min(left, Math.max(0, Math.min(b[key], cap))); b[key] -= v; left -= v; return v; };
   // Money sold from the taxable account is part what was put in (basis, already taxed) and part gain, in proportion.
   const had = b.taxable, sold = take('taxable');
@@ -129,12 +128,12 @@ function draw(b, amount, age) {
   if (age < PENALTY_AGE) {
     const free = take('roth', b.rothFree); b.rothFree -= free;
     const p = take('pretax'); pretax += p; penalty += p * PENALTY;
-    const g = take('roth'); penalty += g * PENALTY;
+    rothGrowth = take('roth'); penalty += rothGrowth * PENALTY; // growth out early: the penalty, and it counts as income
   } else {
     pretax += take('pretax');
     const r = take('roth'); b.rothFree = Math.max(0, b.rothFree - r);
   }
-  return { pretax, penalty, gains, short: left > 0.5 ? left : 0 };
+  return { pretax, penalty, gains, rothGrowth, short: left > 0.5 ? left : 0 };
 }
 
 // The run. x:
@@ -154,9 +153,11 @@ export function lifetime(x, ref, { returns = null } = {}) {
   const tax = x.tax || { filingStatus: 'Single' }, room = fillRoom(tax.fill, tax, ref);
   const ssYearly = typeof x.ss?.yearly === 'function' ? x.ss.yearly(x.retireAge) : x.ss?.yearly ?? 0; // stopping work sooner lowers the benefit
   let atRetire = null, ranOutAge = null, lifetimeTax = 0, penalties = 0, lowest = 1, adjust = 1, wr0 = null, surcharges = 0;
+  const creditHeld = []; // years the premium credit was left out because nothing settled at a line: { age, line }
   const magi = []; // income by plan year, for the Medicare premium two years on (working years are left out: stopping work is a reason Social Security accepts to use the lower income)
   for (let k = 0, age = x.age; age <= lastAge; k++, age++) {
     const r = returns ? returns(k) : x.realReturn;
+    const through = r === 0 || r <= -1 ? 1 : r / (12 * ((1 + r) ** (1 / 12) - 1)) / (1 + r);
     const free = age >= x.retireAge;
     for (const s of season) if (s.at + SEASON === k) b.rothFree += s.amount; // a conversion from five years ago can now come out
     const row = { k, age, phase: free ? 'free' : 'work', need: 0, spend: 0, tax: 0, ss: 0, earned: 0, withdraw: 0, convert: 0, penalty: 0, short: 0, saved: 0 };
@@ -168,9 +169,27 @@ export function lifetime(x, ref, { returns = null } = {}) {
       let put = { ...s };
       if (extra > 0) for (const key of ['taxable', 'roth']) { const cut = Math.min(put[key], extra); put[key] -= cut; extra -= cut; }
       else if (extra < 0) put.taxable += -extra;
-      b.taxable += put.taxable; b.basis += put.taxable; b.roth += put.roth; b.rothFree += put.roth; b.pretax += put.pretax;
+      // Saving goes in through the year, a twelfth each month, the same as the plan's FI date (M53), so by the year's
+      // end it has grown by part of a year, not all of it (Eli, Nov 15 2026: "the more accurate version"). `through` is
+      // that part, set so the year's growth below lands on the month-by-month total.
+      b.taxable += put.taxable * through; b.basis += put.taxable; b.roth += put.roth * through; b.rothFree += put.roth; b.pretax += put.pretax * through;
       row.saved = put.taxable + put.roth + put.pretax;
-      if (extra > 0.5) { const d = draw(b, extra, age); row.withdraw = extra - d.short; row.penalty = d.penalty; row.short = d.short; penalties += d.penalty; }
+      if (extra > 0.5) {
+        // A cost bigger than the year's saving comes out of the buckets, and that is income on top of the year's pay:
+        // taxed-later money and early Roth growth as pay, gains as gains, plus the 10% where it applies. The tax comes
+        // out of the same buckets, so it goes round until it stops moving.
+        const pay = waiting ? 0 : Math.max(0, (w.income ?? 0) - put.pretax), owedOnPay = yearTax({ ordinary: pay, ss: 0, gains: 0 }, tax, ref);
+        let due = 0;
+        for (let i = 0; i < TAX_ROUNDS; i++) {
+          const got = draw({ ...b }, extra + due, age);
+          const t = yearTax({ ordinary: pay + got.pretax + got.rothGrowth, ss: 0, gains: got.gains }, tax, ref) - owedOnPay + got.penalty;
+          if (Math.abs(t - due) < 0.5) { due = t; break; }
+          due = t;
+        }
+        const d = draw(b, extra + due, age);
+        row.withdraw = extra + due - d.short; row.penalty = d.penalty; row.tax = due - d.penalty; row.short = d.short;
+        penalties += d.penalty; lifetimeTax += due - d.penalty;
+      }
     } else {
       if (atRetire === null) atRetire = total();
       const start = total(), need = needAt(age, x), st = x.strategy || { id: 'fixed' };
@@ -201,8 +220,8 @@ export function lifetime(x, ref, { returns = null } = {}) {
         for (let i = 0; i < TAX_ROUNDS; i++) {
           const snap = { ...b }, got = draw(snap, Math.max(0, fromPortfolio - c0) + due, age);
           const pre = Math.max(got.pretax, Math.min(rmd, b.pretax)), conv = Math.min(convert, Math.max(0, b.pretax - pre));
-          const t = yearTax({ ordinary: pre + conv + earned, ss, gains: got.gains }, tax, ref) + got.penalty;
-          c = benchmark > 0 ? Math.min(benchmark, premiumCredit(pre + conv + earned + got.gains + ss, benchmark, people)) : 0;
+          const t = yearTax({ ordinary: pre + conv + earned + got.rothGrowth, ss, gains: got.gains }, tax, ref) + got.penalty;
+          c = benchmark > 0 ? Math.min(benchmark, premiumCredit(pre + conv + earned + got.rothGrowth + got.gains + ss, benchmark, people)) : 0;
           if (Math.abs(t - due) < 0.5) { due = t; break; }
           due = t;
         }
@@ -213,7 +232,9 @@ export function lifetime(x, ref, { returns = null } = {}) {
       // income across the line, and then nothing settles: the plan counts no credit that year (second engine, Nov 14 2026).
       let credit = 0, at = settle(0);
       for (let i = 0; i < CREDIT_ROUNDS && Math.abs(at.c - credit) >= 1; i++) { credit = at.c; at = settle(credit); }
-      if (Math.abs(at.c - credit) >= 1) { credit = 0; at = settle(0); }
+      // Which line: with no credit counted, a credit still due means income sits just above the bottom line (with the
+      // credit, less comes out and income falls under it); none due means income is past the top line.
+      if (Math.abs(at.c - credit) >= 1) { credit = 0; at = settle(0); row.creditHeld = at.c >= 1 ? 'bottom' : 'top'; creditHeld.push({ age, line: row.creditHeld }); }
       const taxDue = at.due;
       fromPortfolio = Math.max(0, fromPortfolio - credit);
       const d = draw(b, fromPortfolio + taxDue, age);
@@ -223,7 +244,7 @@ export function lifetime(x, ref, { returns = null } = {}) {
       const conv = Math.min(convert, Math.max(0, b.pretax));
       b.pretax -= conv; b.roth += conv; if (conv > 0) season.push({ at: k, amount: conv });
       row.rmd = rmd; row.gains = d.gains; row.credit = credit; row.medicare = medicare; surcharges += medicare;
-      const preOut = d.pretax + forced + conv + earned + d.gains; magi[k] = preOut + taxableSocialSecurity(ss, preOut, tax.filingStatus);
+      const preOut = d.pretax + forced + conv + earned + d.rothGrowth + d.gains; magi[k] = preOut + taxableSocialSecurity(ss, preOut, tax.filingStatus);
       Object.assign(row, { need, spend: d.short ? Math.max(0, spend - d.short) : spend, tax: taxDue - d.penalty, ss, earned, withdraw: fromPortfolio + taxDue - d.short, convert: conv, penalty: d.penalty, short: d.short });
       lifetimeTax += taxDue - d.penalty; penalties += d.penalty;
       if (need > 0) lowest = Math.min(lowest, row.spend / need);
@@ -233,7 +254,7 @@ export function lifetime(x, ref, { returns = null } = {}) {
     b.rothFree = Math.min(b.rothFree, b.roth); b.basis = Math.min(b.basis, b.taxable);
     years.push({ ...row, taxable: b.taxable, pretax: b.pretax, roth: b.roth, total: total() });
   }
-  return { years, ok: ranOutAge === null, ranOutAge, atRetire: atRetire ?? total(), end: total(), lifetimeTax, penalties, surcharges, lowestSpend: lowest };
+  return { years, ok: ranOutAge === null, ranOutAge, atRetire: atRetire ?? total(), end: total(), lifetimeTax, penalties, surcharges, lowestSpend: lowest, creditHeld };
 }
 
 // The earliest age work can stop and the money still lasts to the plan's last year, on this strategy: the first age

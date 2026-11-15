@@ -131,7 +131,9 @@ test('M30 to M37 debt', () => {
   assert.equal(payoffMonths({ balance: 2000, apr: 0, payment: 500 }).value, 4);
   assert.deepEqual(payoffMonths({ balance: 4200, apr: null, payment: 250 }).needs, ['APR']);
   const ti = totalInterest({ balance: 4200, apr: 0.2215, payment: 250 });
-  near(ti.value, 873.92); assert.ok(Math.abs(ti.simulated - ti.value) < 2);
+  // what is really paid: 20 payments of $250 and a smaller last one (QUESTIONS 548a). The formula's 873.92 is kept as `formula`.
+  near(ti.formula, 873.92); near(ti.value, ti.simulated, 0.005); assert.ok(Math.abs(ti.formula - ti.value) < 2);
+  { let left = 4200, paid = 0; while (left > 0.005) { left *= 1 + 0.2215 / 12; const pmt = Math.min(250, left); left -= pmt; paid += pmt; } near(ti.value, paid - 4200, 0.005); }
   near(feeApr({ fee: 15, amount: 100, periodsPerYear: 26 }).value, 3.9);
   const debts = [{ name: 'Card', balance: 4200, apr: 0.2215, payment: 250 }, { name: 'Student', balance: 18000, apr: 0.055, payment: 210 }, { name: 'Car', balance: 7000, apr: 0.0714, payment: 320, stress: 5 }];
   const av = payoffPlan(debts, { extra: 200, order: 'avalanche' });

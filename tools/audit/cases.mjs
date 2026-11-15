@@ -29,7 +29,7 @@ for (let i = 0; i < N; i++) {
   { const x = { gross: money(8000, 600000), pretax: rnd() < 0.5 ? 0 : whole(0, 24500), roth: rnd() < 0.7 ? 0 : whole(0, 7000), filingStatus: pick(STATUS), selfEmployed: rnd() < 0.2, place: pick(PLACES) }; add('takeHome', x, { takeHome: v(takeHomeFromGross(x, ref)) }); }
   { const x = { takeHome: money(8000, 350000), pretax: rnd() < 0.5 ? 0 : whole(0, 20000), filingStatus: pick(STATUS), place: pick(PLACES) }; add('grossFromTakeHome', x, { gross: v(grossFromTakeHome(x, ref)) }); }
   { const balance = money(200, 120000), apr = pick([0, 0.0299, 0.0655, 0.0899, 0.1499, 0.2199, 0.2499, 0.2999, 0.36]), payment = Math.max(15, Math.round(balance * between(0.006, 0.08)));
-    const x = { balance, apr, payment }, m = payoffMonths(x, { from: NOW }), ti = totalInterest(x); add('debtOne', x, { months: m.value, exact: m.exact ?? null, never: !!m.never, paymentNeeded: m.paymentNeeded ?? null, interest: v(ti) ?? null, simulated: ti.simulated ?? null, minimum: v(cardMinimum(x)) }); }
+    const x = { balance, apr, payment }, m = payoffMonths(x, { from: NOW }), ti = totalInterest(x); add('debtOne', x, { months: m.value, exact: m.exact ?? null, never: !!m.never, paymentNeeded: m.paymentNeeded ?? null, interest: v(ti) ?? null, simulated: ti.simulated ?? null, formula: ti.formula ?? null, minimum: v(cardMinimum(x)) }); }
   { const n = whole(2, 6), debts = []; for (let k = 0; k < n; k++) { const balance = money(300, 60000), apr = pick([0, 0.039, 0.0655, 0.0899, 0.1499, 0.2199, 0.2499, 0.2999]); debts.push({ name: `D${k}`, type: 'Credit card', balance, apr, payment: Math.max(25, Math.ceil(balance * (apr / 12 + between(0.004, 0.04)))) }); }
     const x = { debts, extra: pick([0, 0, 50, 100, 250, 500]), order: pick(['avalanche', 'snowball']) }, p = payoffPlan(debts, { extra: x.extra, order: x.order, now: NOW }); add('debtPlan', x, { months: p.months, interest: p.interest, each: Object.fromEntries(p.debts.map(d => [d.name, d.paidOffMonth])) }); }
   { const x = { annualSpending: money(12000, 300000), withdrawalRate: pick([0.03, 0.035, 0.04, 0.047, 0.052]) }; add('fiNumber', x, { fi: v(fiNumber(x)) }); }
@@ -54,7 +54,7 @@ const lifeCase = () => {
   return {
     age, planAge: pick([90, 95]), retireAge: age + whole(0, 35), realReturn: pick([0.03, 0.05, 0.06, 0.07]), rmdAge: pick([73, 75]),
     start: { taxable: rnd() < 0.3 ? 0 : money(500, 1500000), pretax: rnd() < 0.2 ? 0 : money(500, 3000000), roth, rothFree: rnd() < 0.5 ? 0 : Math.round(roth * rnd()) },
-    work: { saving: { pretax: rnd() < 0.2 ? 0 : money(1000, 31000), roth: rnd() < 0.4 ? 0 : whole(500, 7500), taxable: rnd() < 0.4 ? 0 : money(500, 60000) }, wait: { years: pick([0, 0, 1, 2, 4]), pretax: pick([0, 2000, 6000]) } },
+    work: { income: rnd() < 0.2 ? 0 : money(20000, 400000), saving: { pretax: rnd() < 0.2 ? 0 : money(1000, 31000), roth: rnd() < 0.4 ? 0 : whole(500, 7500), taxable: rnd() < 0.4 ? 0 : money(500, 60000) }, wait: { years: pick([0, 0, 1, 2, 4]), pretax: pick([0, 2000, 6000]) } },
     spendingAfter, eras: rnd() < 0.6 ? { slowGoAge: 75, noGoAge: 85, slowGo: 0.85, noGo: 0.75 } : null,
     ss: { claimAge: pick([62, 67, 70]), yearly: rnd() < 0.15 ? 0 : money(8000, 48000) }, partTime: rnd() < 0.25 ? { yearly: money(6000, 40000), untilAge: 64 } : null, blocks,
     strategy: { id: pick(['fixed', 'fixed', 'guardrails', 'floor', 'percent']), rate: pick([0.035, 0.04, 0.05]) },
@@ -62,7 +62,7 @@ const lifeCase = () => {
     partner: two ? { age: age + whole(-8, 8), ss: { claimAge: pick([62, 67, 70]), yearly: money(6000, 40000) } } : null,
   };
 };
-const slim = run => ({ ok: run.ok, ranOutAge: run.ranOutAge, atRetire: run.atRetire, end: run.end, lifetimeTax: run.lifetimeTax, penalties: run.penalties, surcharges: run.surcharges, lowestSpend: run.lowestSpend,
+const slim = run => ({ ok: run.ok, ranOutAge: run.ranOutAge, atRetire: run.atRetire, end: run.end, lifetimeTax: run.lifetimeTax, penalties: run.penalties, surcharges: run.surcharges, lowestSpend: run.lowestSpend, creditHeld: run.creditHeld.map(c => [c.age, c.line]),
   years: run.years.map(y => [y.age, y.total, y.tax, y.spend, y.withdraw, y.convert, y.penalty, y.short, y.taxable, y.pretax, y.roth]) });
 const L = Math.max(20, Math.round(N * 0.6));
 for (let i = 0; i < L; i++) { const x = lifeCase(); add('lifetime', x, slim(lifetime(x, ref))); }

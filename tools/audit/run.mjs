@@ -19,7 +19,7 @@ const r = JSON.parse(readFileSync(report, 'utf8')), L = r.life;
 console.log(`Printed by the source and reproduced: ${r.anchors.length - r.anchorsOff} of ${r.anchors.length}`);
 for (const a of r.anchors.filter(a => !a.ok)) console.log(`  NOT reproduced: ${a.what}: printed ${JSON.stringify(a.printed)}, got ${JSON.stringify(a.got)}`);
 console.log(`Lifetime plan: ${L.years} free years in ${L.runs} runs. Tax set aside differs from tax owed in ${L.tax_gap_years}. No premium credit counted where one was due in ${L.credit_gap_years} (at a line, by rule).`);
-console.log(`Loan interest, formula against stepping every month: largest gap $${r.interestFormulaVsStepped.largest.toFixed(2)}, average $${r.interestFormulaVsStepped.average.toFixed(2)} (QUESTIONS.md).`);
+console.log(`Loan interest shown is what is really paid. The old formula ran lower by $${r.interestFormulaVsStepped.average.toFixed(2)} on average, $${r.interestFormulaVsStepped.largest.toFixed(2)} at most.`);
 for (const [fn, v] of Object.entries(r.byFunction)) if (v.off) console.log(`OFF ${fn}: ${v.off} of ${v.checks}. Example: ${JSON.stringify(v.example).slice(0, 600)}`);
 const bad = r.off > 0 || r.anchorsOff > 0 || L.tax_gap_years > 0;
 console.log(bad ? 'The two engines do not agree.' : `The two engines agree on all ${r.checks.toLocaleString('en-US')} numbers in ${r.cases.toLocaleString('en-US')} cases, to the dollar.`);

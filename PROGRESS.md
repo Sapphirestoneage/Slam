@@ -23,3 +23,10 @@ old parts of this file and of `QUESTIONS.md` moved to `docs/archive/`. Nothing i
 - `node --test`: 1,185 pass, 0 fail. The layout check did not finish in this session (the chart library's address is
   blocked here); no screen changed in this run.
 
+## Nov 15 2026: the four answers to the second engine's questions
+
+- Loan interest shows what is really paid. The health credit at a line is left out and the plan says which years and
+  why. Early Roth growth counts as income. Money taken out in a working year is taxed. Saving goes in month by month
+  in the lifetime plan. Each change was made in both engines and they agree to the dollar; three new tests work the
+  numbers by hand.
+

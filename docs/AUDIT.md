@@ -56,14 +56,18 @@ purpose toward hard cases.
    understated the saving needed by up to $334 a month. Every other tool uses (1 + return) to the power 1/12. Fixed
    in `js/solo.js`, and a test now holds the finish line and the plan to the same month.
 
-Left as they are, with a question for Eli in `QUESTIONS.md`:
+## What Eli decided (Nov 15 2026)
 
-- Loan interest shows the formula's number (months times payment, less the balance). Stepping every month, with a
-  smaller last payment, gives what is really paid: 95 cents less on average, up to $18.80.
-- At a line where the premium credit stops, taking the credit can move income across the line, and nothing settles.
-  The plan counts no credit that year (14 of 10,339 years).
-- Roth growth taken before 59 and a half pays the penalty but is not also counted as income, and money taken from the
-  buckets in a working year pays no income tax.
+- **Loan interest shows what is really paid:** every payment in full and a smaller last one. The formula it replaces
+  (months times the payment, less the balance) ran low, by 95 cents on average and up to $18.80.
+- **The health credit at a line stays the cautious call, and the plan says so.** Where taking the credit would itself
+  move income across a line where the credit stops, nothing settles, so the plan counts no credit that year and adds
+  a note naming the years and the reason (10 of 10,141 made-up years, all at the bottom line).
+- **Early Roth growth counts as income**, on top of its 10% penalty.
+- **Money taken out in a working year is taxed** as income on top of that year's pay, with the 10% where it applies,
+  and the tax comes out of the same accounts. Before, the penalty was tallied but never paid.
+- **Saving goes in month by month** in the lifetime plan, the same as the FI date, so the two name the same month.
+  Before, a whole year's saving went in on the first day of the year, which overstated growth.
 
 ## How independent it is
 

@@ -31,7 +31,7 @@ export function lifeInputOf(plan, doc, ref, settings = {}) {
   const full = Math.max(0, ((inv.monthly ?? 0) + later) * 12), own = Math.max(0, full - fromPay);
   const roth = Math.min(own, ref.limits?.ira?.base ?? 0);
   const waitMonths = Math.max(inv.before?.months ?? 0, lastChange);
-  const work = { saving: { pretax: fromPay, roth, taxable: own - roth }, wait: { years: Math.round(waitMonths / 12), pretax: Math.max(0, (inv.before?.monthly ?? 0) * 12) } };
+  const work = { income: (x.income || []).reduce((a, i) => a + (i.gross ?? 0), 0), saving: { pretax: fromPay, roth, taxable: own - roth }, wait: { years: Math.round(waitMonths / 12), pretax: Math.max(0, (inv.before?.monthly ?? 0) * 12) } };
   const p = doc.profile || {}, gross = x.income?.[0]?.gross ?? null;
   const born = p.birthYear != null ? p.birthYear * 12 + ((p.birthMonth ?? 7) - 1) : null;
   const ssFor = stopAge => (born == null || !gross ? 0 : (benefitOf({ key: 'Me', bornIndex: born, stopAge, gross, ssClaimAge: s.claimAge }, ref.socialSecurity, { wageBase: ref.tax.socialSecurityWageBase, widths: { Gut: RULES.rangeIncomeGut, Estimate: RULES.rangeIncomeEstimate } }).own ?? 0) * 12);
@@ -55,11 +55,23 @@ export function lifeInputOf(plan, doc, ref, settings = {}) {
   } };
 }
 
+// The cautious call, said out loud (Eli, Nov 15 2026): the years the plan left the health insurance credit out, and why.
+// held: lifetime().creditHeld, [{ age, line: 'top' | 'bottom' }]. Returns sentences for the plan's notes.
+export function creditNotes(held = []) {
+  const ages = line => held.filter(c => c.line === line).map(c => c.age);
+  const said = list => (list.length === 1 ? `${list[0]}` : list.length === 2 ? `${list[0]} and ${list[1]}` : list.length === 3 ? `${list[0]}, ${list[1]} and ${list[2]}` : `${list[0]}, ${list[1]} and ${list.length - 2} more years`);
+  const top = ages('top'), bottom = ages('bottom'), out = [];
+  if (top.length) out.push(`At ${said(top)} the plan counts no health insurance credit. Your income ${top.length === 1 ? 'that year' : 'those years'} lands right at the line where the credit stops (four times the poverty line), and taking the credit would itself carry you across it. So the plan pays the full premium ${top.length === 1 ? 'that year' : 'those years'}. That is the cautious way to count it: keep your income under the line and the real cost is lower.`);
+  if (bottom.length) out.push(`At ${said(bottom)} the plan counts no health insurance credit. With the credit, so little would need to come out of your accounts that your income falls under the poverty line, where the credit stops and Medicaid is the route. So the plan pays the full premium ${bottom.length === 1 ? 'that year' : 'those years'}. That is the cautious way to count it: the real cost is the same or lower.`);
+  return out;
+}
+
 // The headline: the earliest age work can stop if markets were smooth, the earliest age history would have carried
 // (the one to plan on), the run at the chosen age (the person's own pick, else the history age), and how much is
 // needed then next to 25 times spending.
 export function lifeOf(plan, doc, ref, hist, settings = {}) {
-  const s = { ...DEFAULTS, ...settings }, { x, notes } = lifeInputOf(plan, doc, ref, s);
+  const s = { ...DEFAULTS, ...settings }, built = lifeInputOf(plan, doc, ref, s), x = built.x;
+  let notes = built.notes;
   if (!(x.spendingAfter > 0)) return { ready: false, notes: ['Needs your spending.'] };
   const smooth = earliestFreedom(x, ref);
   const safe = smooth.age == null ? { age: null, replay: null } : safeFreedom(x, ref, hist, { stocks: s.stocks, target: s.target, from: smooth.age });
@@ -67,6 +79,8 @@ export function lifeOf(plan, doc, ref, hist, settings = {}) {
   if (age == null) return { ready: true, x, notes, smooth, safe, age: null, run: null };
   const at = { ...x, retireAge: age }, run = lifetime(at, ref);
   const first = needAt(age, at);
+  const held = creditNotes(run.creditHeld);
+  if (held.length) notes = [...notes, ...held];
   return { ready: true, x: at, notes, smooth, safe, age, run, need: run.atRetire, rule25: x.spendingAfter * 25, multiple: first > 0 ? run.atRetire / first : null, firstYear: first, ssYearly: x.ss.yearly(age), settings: s };
 }
 

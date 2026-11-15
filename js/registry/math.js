@@ -408,7 +408,7 @@ export const MATH = [
     app: c => { const v = c.m.debts.map(d => d.payoff?.value).filter(x => x != null); return v.length ? Math.max(...v) : null; } },
   { id: 'M32', name: 'Total interest', inputs: 'M31', unit: 'money', fns: ['debt.totalInterest'],
     cols: [{ area: 'debt', key: 'M32', label: 'Interest left (M32)', unit: 'money',
-      f: `IF(OR({@M31}="",{@M31}="Never"),"",IF({payChoice}="In full",0,IF({@balUsed}<=0,-{@balUsed},NPER({@aprUsed}/12,-{@payUsed},{@balUsed})*{@payUsed}-{@balUsed})))` }],
+      f: `IF(OR({@M31}="",{@M31}="Never"),"",IF({payChoice}="In full",0,IF({@balUsed}<=0,-{@balUsed},({@M31}-1)*{@payUsed}+IF({@aprUsed}=0,{@balUsed}-{@payUsed}*({@M31}-1),{@balUsed}*(1+{@aprUsed}/12)^({@M31}-1)-{@payUsed}*((1+{@aprUsed}/12)^({@M31}-1)-1)/({@aprUsed}/12))*(1+{@aprUsed}/12)-{@balUsed})))` }],
     sheet: 'IF(COUNT(Debt_M32)=0,"",SUM(Debt_M32))', label: 'Interest left on every debt at today\'s payments',
     app: c => { const v = c.m.debts.map(d => d.interest?.value).filter(x => x != null); return v.length ? sum(v) : null; } },
   { id: 'M33', name: 'Payday or fee APR', inputs: 'fee, amount, period', unit: 'pct', fns: ['debt.feeApr'],

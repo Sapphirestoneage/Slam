@@ -16,17 +16,19 @@ const ref = read('reference-2026.json'), priors = read('priors-2026.json'), flag
 const near = (a, b, tol, what) => assert.ok(Math.abs(a - b) <= tol, `${what}: engine ${a}, by hand ${b}`);
 const plain = { age: 65, planAge: 94, retireAge: 65, realReturn: 0, start: { taxable: 1000000, pretax: 0, roth: 0 }, work: { saving: { pretax: 0, roth: 0, taxable: 0 } }, spendingAfter: 40000, strategy: { id: 'fixed' }, tax: { filingStatus: 'Single' } };
 
-test('working years: saving goes in at the start of each year and grows', () => {
+test('working years: saving goes in month by month, the same as the FI date, and grows', () => {
   const x = { ...plain, age: 30, retireAge: 40, planAge: 40, realReturn: 0.07, start: { taxable: 10000, pretax: 0, roth: 0 }, work: { saving: { pretax: 6000, roth: 7000, taxable: 5000 } } };
   const run = lifetime(x, ref);
-  let hand = 10000; for (let i = 0; i < 10; i++) hand = (hand + 18000) * 1.07;
-  near(run.atRetire, hand, 0.01, 'ten years of saving');
+  // by hand, a month at a time: grow, then add a twelfth of the year's saving (M53's own steps)
+  const g = 1.07 ** (1 / 12); let hand = 10000; for (let i = 0; i < 120; i++) hand = hand * g + 18000 / 12;
+  near(run.atRetire, hand, 0.01, 'ten years of saving, 120 months');
+  let pre = 0; for (let i = 0; i < 120; i++) pre = pre * g + 6000 / 12;
   const y = run.years[9];
-  near(y.pretax, 6000 * 1.07 * (1.07 ** 10 - 1) / 0.07, 0.01, 'the pretax bucket');
+  near(y.pretax, pre, 0.01, 'the pretax bucket');
   assert.equal(run.years.filter(r => r.phase === 'work').length, 10);
   // a slow start: one year when only the paycheck's own saving goes in
   const slow = lifetime({ ...x, work: { ...x.work, wait: { years: 1, pretax: 6000 } } }, ref);
-  near(run.atRetire - slow.atRetire, 12000 * 1.07 ** 10, 0.01, 'a year without the roth and taxable saving');
+  near(run.atRetire - slow.atRetire, 1000 * (g ** 12 - 1) / (g - 1) * 1.07 ** 9, 0.01, 'a year without the roth and taxable saving');
 });
 
 test('free years with no growth and no tax: $1,000,000 at $40,000 a year lasts exactly 25 years', () => {
@@ -279,4 +281,32 @@ test('the tax page for one plan: the same numbers as the Lifetime screen, with t
   const least = T.fills.filter(f => f.ok).sort((a, b) => a.cost - b.cost)[0];
   near(T.fills.find(f => f.id === T.least).cost, least.cost, 1, 'least is the smallest paid among the ones where the money lasts');
   assert.deepEqual(T.marks, cliffsOf(life)); assert.ok(T.now.rate > 0);
+});
+
+test('the health credit at a line: when nothing settles the plan counts none that year, and says so (QUESTIONS 548b)', async () => {
+  const { creditNotes } = await import('../js/lifetime/inputs.js');
+  const x = { age: 23, planAge: 90, retireAge: 51, realReturn: 0.03, rmdAge: 73, start: { taxable: 960, pretax: 42922, roth: 1233, rothFree: 0 },
+    work: { income: 134199, saving: { pretax: 1986, roth: 0, taxable: 9801 }, wait: { years: 1, pretax: 2000 } }, spendingAfter: 43587,
+    eras: { slowGoAge: 75, noGoAge: 85, slowGo: 0.85, noGo: 0.75 }, ss: { claimAge: 70, yearly: 11233 }, partTime: null, blocks: [],
+    strategy: { id: 'guardrails', rate: 0.05 }, tax: { filingStatus: 'Single', place: { state: 'NY', nyc: true }, fill: 'none', health: 6000, aca: true }, partner: null };
+  const run = lifetime(x, ref);
+  assert.deepEqual(run.creditHeld.map(c => c.age), [51, 56, 58, 59, 60, 61]);
+  assert.ok(run.creditHeld.every(c => c.line === 'bottom'));
+  for (const c of run.creditHeld) { const y = run.years.find(r => r.age === c.age); assert.equal(y.credit, 0, 'no credit counted that year'); assert.equal(y.creditHeld, 'bottom'); }
+  const [note] = creditNotes(run.creditHeld);
+  assert.match(note, /^At 51, 56 and 4 more years the plan counts no health insurance credit\./);
+  assert.match(note, /the cautious way to count it/);
+  assert.deepEqual(creditNotes([]), []);
+  assert.match(creditNotes([{ age: 60, line: 'top' }])[0], /^At 60 .*four times the poverty line.*that year/);
+});
+
+test('money taken out in a working year is taxed as income on top of that year\'s pay (QUESTIONS 548c)', () => {
+  // 40, single, no state tax. $100,000 of pay, nothing saved, a $30,000 cost this year, all of it from taxed-later money.
+  const x = { ...plain, age: 40, retireAge: 41, planAge: 41, realReturn: 0, start: { taxable: 0, pretax: 200000, roth: 0 }, work: { income: 100000, saving: { pretax: 0, roth: 0, taxable: 0 } },
+    blocks: [{ fromAge: 40, toAge: 40, once: 30000 }], tax: { filingStatus: 'Single', fill: 'none' } };
+  const y = lifetime(x, ref).years[0];
+  // by hand: the draw D covers the cost, its 10% penalty and its income tax. $100,000 of pay less the $16,100 deduction
+  // is $83,900 taxable, in the 22% bracket up to $105,700 and 24% past it. D = 30000 + 0.10 D + tax(D).
+  let D = 30000; for (let i = 0; i < 60; i++) { const top = 83900 + D, tax = (Math.min(top, 105700) - 83900) * 0.22 + Math.max(0, top - 105700) * 0.24; D = 30000 + 0.10 * D + tax; }
+  near(y.withdraw, D, 1, 'what comes out'); near(y.penalty, D * 0.10, 1, 'the 10%'); near(y.tax, D - 30000 - D * 0.10, 1, 'the income tax');
 });
