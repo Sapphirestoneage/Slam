@@ -23,6 +23,7 @@ const monthSay = s => P.monthWords(Number(s.slice(0, 4)) * 12 + Number(s.slice(5
 const question = (label, kids, tag = null) => h('div.cp-q', {}, h('div.st-flabel', {}, label, tag ? [' ', h('span.st-tag', {}, tag)] : null), h('div.st-chips', {}, kids));
 const tags = (label, list, cls = '') => h('div.cp-tags', {}, h('span.cp-lab', {}, label), list.map(t => h(`span.st-tag${cls}`, {}, t)));
 const from = words => h('span.st-tag.yours', {}, words);
+const withId = (id, el) => { el.id = id; return el; };
 
 function draw(api) {
   if (!lib || !off || !tools) return;
@@ -35,7 +36,9 @@ function draw(api) {
   const fold = (id, summary, body, { amt = null } = {}) => {
     const d = h('details.cp-fold', { id }, h('summary', {}, h('span', {}, summary), amt ? h('span.cp-amt', {}, amt) : h('span'), h('span.cp-see', {}, 'See')), h('div.cp-body', {}, typeof body === 'function' ? (UI.open[id] ? body() : null) : body));
     d.open = !!UI.open[id];
-    d.addEventListener('toggle', () => { const was = !!UI.open[id]; UI.open[id] = d.open; if (typeof body === 'function' && d.open && !was) redraw(); });
+    d.addEventListener('toggle', () => { const was = !!UI.open[id]; UI.open[id] = d.open; if (!d.open || was) return;
+      const seen = id.startsWith('move-') ? 'move' : id === 'plain-fold' ? 'plain' : null;
+      if (seen && !cp().seen?.[seen]) mine({ seen: { ...cp().seen, [seen]: true } }); else if (typeof body === 'function') redraw(); });
     return d;
   };
   // two taps for a month: the year, then the month
@@ -68,10 +71,12 @@ function draw(api) {
           h('li', {}, h('span', {}, 'Or stop here and keep your slots'), h('b.cp-amt', {}, money(Math.round(m.net)))))] : null,
       ], { amt: money(Math.round(m.net)) });
     };
-    const more = R.moves.length > 6 && !UI.all, rule = off.rules.chase524;
-    return h('div.st-card.hero', { id: 'next', 'aria-live': 'polite' }, h('div.st-eyebrow', {}, 'Your next card move'), h('p', { id: 'answer', style: { fontWeight: 800, fontSize: '1.15rem', margin: '4px 0 6px' } }, R.line),
-      h('p.st-small', {}, `${R.slots.left} of ${rule.slots} Chase slots open${R.slots.frees && R.slots.left < rule.slots ? `. The next one comes back in ${R.slots.frees}` : ''}. Welcome offers are loaded for Chase so far. Amounts are the offer less the first-year fee.`),
-      (more ? R.moves.slice(0, 6) : R.moves).map(row),
+    const more = R.moves.length > 3 && !UI.all, rule = off.rules.chase524, G = R.guide, hidden = cp().guideOff === true;
+    return h('div.st-card.hero', { id: 'next', 'aria-live': 'polite' }, h('div.st-eyebrow', {}, 'Your next card move'), h('p', { id: 'answer', style: { fontWeight: 800, fontSize: '1.15rem', margin: '4px 0 6px' } }, R.line), h('p.cp-why', {}, R.why),
+      hidden ? h('div.st-row.cp-guide', {}, btn('Show my next step', () => mine({ guideOff: null }), 'slim'))
+        : h('div.st-nextbar.cp-guide', { id: 'guide' }, h('span.st-count', {}, G.count), G.next ? btn(`${G.line} ›`, () => goNext(), 'primary') : h('span', {}, G.line), G.next ? btn('Hide', () => mine({ guideOff: true }), 'slim') : null),
+      h('p.st-small', { style: { marginTop: '10px' } }, `${R.slots.left} of ${rule.slots} Chase slots open${R.slots.frees && R.slots.left < rule.slots ? `. The next one comes back in ${R.slots.frees}` : ''}. Welcome offers are loaded for Chase so far. Amounts are the offer less the first-year fee.`),
+      (more ? R.moves.slice(0, 3) : R.moves).map(row),
       more ? h('div.st-row', { style: { marginTop: '10px' } }, btn(`Show all ${R.moves.length} moves`, () => { UI.all = true; redraw(); }, 'slim')) : null);
   };
 
@@ -87,9 +92,9 @@ function draw(api) {
         line('Growth and withdrawal', `${+(R.rr * 100).toFixed(1)}% and ${+(R.wr * 100).toFixed(1)}%`, from('From your plan'))),
       h('div.st-row', { style: { marginTop: '12px' } }, btn('Change these in my plan', async () => { location.href = carryUrl('plan', await pack(api.store.doc)); }, 'slim')),
       I.carryTap ? h('div.st-row', { style: { marginTop: '8px' } }, btn('I no longer carry a card balance', () => mine({ carry: null }), 'slim'), btn('Add the balance to my plan', async () => { location.href = carryUrl('debt', await pack(api.store.doc)); }, 'slim')) : null,
-      I.spend.fromBudget ? null : question('Until the Budget has them: what you put on cards in a month', [500, 1000, 2000, 4000].map(v => chip(v === 4000 ? '$4,000 or more' : `About ${money(v)}`, I.spendTap === v, () => mine({ spend: I.spendTap === v ? null : v })))),
-      I.score.fromProfile ? null : question('Until your score is in the plan', SCORES.map(([v, l]) => chip(l, cp().score === v, () => mine({ score: cp().score === v ? null : v })))),
-      h('h3', { style: { margin: '18px 0 0' } }, 'Only this page asks'),
+      I.spend.fromBudget ? null : withId('q-spend', question('Until the Budget has them: what you put on cards in a month', [500, 1000, 2000, 4000].map(v => chip(v === 4000 ? '$4,000 or more' : `About ${money(v)}`, I.spendTap === v, () => mine({ spend: I.spendTap === v ? null : v }))))),
+      I.score.fromProfile ? null : withId('q-score', question('Until your score is in the plan', SCORES.map(([v, l]) => chip(l, cp().score === v, () => mine({ score: cp().score === v ? null : v }))))),
+      h('div', { style: { marginTop: '14px' } }, fold('tune', 'Fine-tune: business cards, point value, airline and hotel points, other cards', [
       question('A business or side income?', [chip('Yes', I.business === true, () => mine({ business: I.business === true ? null : true })), chip('No', I.business === false, () => mine({ business: I.business === false ? null : false }))]),
       question('What a Chase point is worth to you', [[null, 'Cash, 1 cent'], [0.0125, '1.25 cents'], [0.015, '1.5 cents'], [0.02, '2 cents']].map(([v, l]) => chip(l, I.tv === v, () => mine({ tv: v })))),
       question('Airline and hotel points you would really use', Object.entries(off.units).filter(([k, u]) => k !== 'cash' && !u.transferable).map(([k, u]) => chip(u.name, I.programs.includes(k), () => mine({ programs: I.programs.includes(k) ? I.programs.filter(v => v !== k) : [...I.programs, k] })))),
@@ -97,7 +102,7 @@ function draw(api) {
       h('div.cp-q', {}, h('div.st-flabel', {}, 'Other cards opened in the last two years that are not on your list'),
         I.openedOther.length ? h('div.st-chips', {}, I.openedOther.map((d, i) => h('button.st-chip.cp-chipx', { type: 'button', title: 'Remove this one', 'aria-label': `Remove the card opened ${monthSay(d)}`, onClick: () => mine({ opened: I.openedOther.filter((_, j) => j !== i) }) }, `${monthSay(d)} ×`))) : null,
         h('div.st-small.st-soft', {}, 'A card you closed, or one at a bank you do not track. Tap the year, then the month.'),
-        monthPick('other', d => mine({ opened: [...I.openedOther, d].sort() }))));
+        monthPick('other', d => mine({ opened: [...I.openedOther, d].sort() })))])));
   };
 
   const held = () => h('div.st-card', { id: 'held' }, h('h2', { style: { marginTop: 0 } }, 'Cards you hold'), h('p.st-small.st-soft', {}, 'From your Credit cards list. Each one gets a yearly check: did it earn its fee?'),
@@ -107,11 +112,11 @@ function draw(api) {
       x.check.fee ? h('p.st-small.st-soft', { style: { margin: 0 } }, `Counts ${money(Math.round(x.check.rewards?.value ?? 0))} in rewards on your everyday spending plus the credits tapped. The same taps show on Credit cards in your plan.`) : null,
       h('div.cp-q', {}, h('div.st-flabel', {}, x.opened ? `Opened ${monthSay(x.opened)}` : 'When did you open it? (for the dates and the 5 card limit)'),
         x.opened ? h('div.st-row', {}, btn('Change the month', () => onRow(x.row, { opened: null }), 'slim')) : monthPick(`held-${x.row.id}`, d => onRow(x.row, { opened: d })),
-        x.opened ? null : h('div.st-small.st-soft', {}, 'Older than two years? Leave it blank.')),
+        x.opened ? null : h('div.st-chips.cp-small', { style: { marginTop: '6px' } }, chip('Older than two years', R.monthsOld[x.row.id] === true, () => mine({ old: { ...R.monthsOld, [x.row.id]: R.monthsOld[x.row.id] ? null : true } })))),
       h('div.st-row', {}, btn('Take this card off my plan', () => { api.store.remove([x.row.id]); api.render(); }, 'slim')),
     ], { amt: x.check.fee ? `${money(x.check.fee)} a year` : 'No fee' })),
     R.unpicked.length ? h('p.st-small', { style: { marginBottom: 0 } }, `${R.unpicked.map(r => r.name || 'A card').join(', ')}: on your list but not matched to a card yet. Pick which card it is on Credit cards in your plan and it joins this page.`) : null,
-    !R.held.length && !R.unpicked.length ? h('p.st-small.st-soft', {}, 'No cards on your plan yet. Add the ones you hold below.') : null,
+    !R.held.length && !R.unpicked.length ? h('div.cp-q', {}, h('p.st-small.st-soft', { style: { margin: 0 } }, 'No cards on your plan yet. Add the ones you hold below, or say you have none.'), h('div.st-chips', {}, chip('I hold no cards', cp().noCards === true, () => mine({ noCards: cp().noCards ? null : true })))) : null,
     addCard());
 
   // add a card you hold: a bank, the card, then one question. It becomes a row on your plan's Credit cards list.
@@ -152,6 +157,17 @@ function draw(api) {
         jobs.map(j => h('div', {}, h('div.cp-lab', {}, j), h('ul.st-small', { style: { margin: '4px 0 0', paddingLeft: '18px' } }, tools.tools.filter(t => t.job === j).map(t => h('li', {}, h('strong', {}, t.name), `: ${t.does} ${t.tradeoff}`))))),
       ])); };
 
+  // The next step: where it lives on the page. The thing to tap pulses; while it is out of view the button in the top
+  // bar pulses instead, so there is always exactly one pulse, and it moves on after every tap.
+  const targetOf = () => { const n = R.guide.next?.id; if (!n) return null;
+    if (n === 'cards') return $('add-card')?.querySelector('.st-chips');
+    if (n === 'spend') return $('q-spend')?.querySelector('.st-chips');
+    if (n === 'score') return $('q-score')?.querySelector('.st-chips');
+    if (n === 'months') { const x = R.held.find(hd => !hd.opened && !R.monthsOld[hd.row.id]), d = x ? $(`held-${x.row.id}`) : null; return d ? (d.open ? d.querySelector('.cp-small .st-chips') : d.querySelector('summary')) : null; }
+    if (n === 'move') return $('next')?.querySelector('details.cp-fold > summary');
+    return $('plain-fold')?.querySelector('summary'); };
+  goNext = () => { const t = targetOf(); if (!t) return; t.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); if (t.tagName === 'SUMMARY') t.focus({ preventScroll: true }); };
+
   const y = window.scrollY;
   $('main').replaceChildren(
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Part of your plan'), h('h1', {}, 'Is this card right for me?'), h('p', { style: { marginBottom: 0 } }, 'Your next move, the move after it, and what each card opens and uses, worked out from your own plan. It will also tell you when the answer is no card at all.')),
@@ -160,7 +176,16 @@ function draw(api) {
       h('div.st-row', {}, copyLink(api), btn('All the steps', async () => { location.href = `one.html#/d/${await pack(api.store.doc)}`; }, 'slim'))));
   foot();
   window.scrollTo(0, y);
+  const go = $('go'), target = cp().guideOff === true ? null : targetOf();
+  watch?.disconnect(); watch = null;
+  go.hidden = !target; go.classList.remove('st-pulse');
+  if (target) {
+    go.textContent = `${R.guide.count} ›`; go.title = R.guide.line; go.setAttribute('aria-label', `${R.guide.count}: ${R.guide.line}. Take me there`); go.onclick = () => goNext();
+    target.classList.add('st-pulse');
+    if (typeof IntersectionObserver === 'function') { watch = new IntersectionObserver(([e]) => go.classList.toggle('st-pulse', !e.isIntersecting), { threshold: 0.6 }); watch.observe(target); }
+  }
 }
+let watch = null, goNext = () => {};
 const json = r => r.json();
 let API = null;
 Promise.all([fetch('data/library/cards.json').then(json), fetch('data/library/card-offers.json').then(json), fetch('data/library/card-tools.json').then(json)])

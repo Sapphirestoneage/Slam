@@ -39,8 +39,10 @@ export function cardPlanOf(doc, ref, lib, off, { now = new Date() } = {}) {
     return { row: r, card, label: `${issuerName(card)} ${card.name}`, opened: month(r.values.opened), check, year: P.yearCheck({ fee: check.fee ?? 0, back: check.back ?? 0, small, noFeeSibling: sib?.name ?? null }) };
   });
   const dates = P.cardDates(held.map(hd => ({ name: hd.card.name, opened: hd.opened, fee: hd.check.fee ?? 0, offerMonths: (o => (o?.spend ? o.months : null))(off.offers.find(f => f.cardId === hd.card.id)) })), now, off.rules.chase524);
+  const guide = P.cardSteps({ hasCards: rows.length > 0, noCards: mine.noCards === true, spendKnown: hasBudget || mine.spend != null, scoreKnown: number != null || mine.score != null,
+    monthsLeft: held.filter(hd => !hd.opened && !mine.old?.[hd.row.id]).length, canOpen: plan.kind === 'open', seenMove: mine.seen?.move === true, seenPlain: mine.seen?.plain === true });
   let setups = null;
-  return { ...plan, held, unpicked, dates, small, creditsUsedOf, useOf,
+  return { ...plan, held, unpicked, dates, small, creditsUsedOf, useOf, guide, monthsOld: mine.old || {},
     rr: x.realReturn ?? ref.presets.realReturn.default, wr: x.withdrawalRate ?? ref.presets.withdrawalRate.default,
     inputs: { spend: { byCat, monthly, fromBudget: hasBudget }, heavyListed, carryTap: mine.carry === true, score: { band, number, fromProfile: number != null }, heavy, business: mine.business ?? null, programs: mine.programs || [], tv: mine.tv ?? null, openedOther: mine.opened || [], spendTap: mine.spend ?? null },
     // the best 1, 2 and 3 cards against one plain card on this spending (worked out once, on first ask)

@@ -219,5 +219,23 @@ export function cardPlan({ offers = [], units = {}, rule = { slots: 5, months: 2
   else if (slots.left <= 0) { kind = 'wait'; line = `Wait. Chase opens up again in ${slots.frees}.`; }
   else if (R.moves.length) { const m = R.moves[0]; kind = 'open'; line = `${m.offer.name}, worth ${usd(m.net)} in its first year after the fee${monthlySpend != null ? `, from about ${m.months} ${m.months === 1 ? 'month' : 'months'} of spending you already do` : ''}.`; }
   else { kind = 'hold'; line = 'Hold. Nothing here beats what you have.'; }
-  return { kind, line, slots, moves: R.moves, opts, me };
+  const why = kind === 'debt' ? 'Card interest runs far above anything a welcome offer pays.'
+    : kind === 'wait' ? `You have opened ${slots.used} cards in two years, and Chase usually turns down anyone at ${rule.slots} or more.`
+    : kind === 'open' ? `It is the biggest offer you can reach${monthlySpend != null ? ' on your usual spending' : ''}, after its fee.`
+    : 'No offer here clears its fee for you right now.';
+  return { kind, line, why, slots, moves: R.moves, opts, me };
+}
+
+// The steps that sharpen the answer, in order. One is next at a time; the count ticks up as each is done.
+export function cardSteps({ hasCards = false, noCards = false, spendKnown = false, scoreKnown = false, monthsLeft = 0, canOpen = true, seenMove = false, seenPlain = false } = {}) {
+  const steps = [
+    { id: 'cards', label: 'Add the cards you hold', done: hasCards || noCards },
+    { id: 'spend', label: 'Say what you put on cards in a month', done: spendKnown },
+    { id: 'score', label: 'Tap your credit score', done: scoreKnown },
+    { id: 'months', label: 'Say when you opened each card', done: monthsLeft === 0 },
+    { id: 'move', label: 'Open your next move and see what it opens', done: seenMove || !canOpen },
+    { id: 'plain', label: 'Check it against one plain card', done: seenPlain },
+  ];
+  const done = steps.filter(x => x.done).length, next = steps.find(x => !x.done) ?? null;
+  return { steps, next, done, total: steps.length, count: next ? `Step ${steps.indexOf(next) + 1} of ${steps.length}` : `All ${steps.length} done`, line: next ? next.label : 'Your answer is as sharp as this page can make it.' };
 }

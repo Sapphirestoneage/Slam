@@ -206,3 +206,23 @@ test('adding a card on the card plan makes the same row Credit cards makes, and 
   const C = cardPlanOf(st.doc, refDoc, lib, D, { now });
   assert.equal(C.kind, 'debt'); assert.equal(C.inputs.carryTap, true); assert.equal(C.inputs.heavyListed, false);
 });
+
+test('the steps: one is next at a time, the count ticks up, and the plan answers what it can', () => {
+  const now = new Date(2026, 10, 14), st = new Store(newHousehold({ name: 'Steps' }));
+  let R = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(R.guide.count, 'Step 1 of 6'); assert.equal(R.guide.next.id, 'cards'); assert.match(R.why, /biggest offer/);
+  const row = addHeldCard(st, lib.cards.find(c => c.id === 'chase-freedom-unlimited'), { inFull: true });
+  R = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(R.guide.count, 'Step 2 of 6'); assert.equal(R.guide.next.id, 'spend');
+  st.add('bill', { name: 'Groceries', amount: 900, per: 'month', values: { category: 'Groceries' } }); st.setIn('profile', ['credit', 'score'], 720);
+  R = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(R.guide.next.id, 'months', 'the Budget and the Profile answered two steps'); assert.equal(R.guide.count, 'Step 4 of 6');
+  st.setDoc('settings', { start: { cardPlan: { old: { [row.id ?? row]: true }, seen: { move: true } } } });
+  R = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(R.guide.next.id, 'plain');
+  st.setDoc('settings', { start: { cardPlan: { old: { [row.id ?? row]: true }, seen: { move: true, plain: true } } } });
+  R = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(R.guide.next, null); assert.equal(R.guide.count, 'All 6 done');
+  assert.equal(P.cardSteps({ noCards: true, canOpen: false }).next.id, 'spend');
+  assert.match(P.cardPlan({ offers: D.offers, units: D.units, rule: D.rules.chase524, heavyDebt: true, now }).why, /interest/);
+});

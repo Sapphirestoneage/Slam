@@ -52,6 +52,11 @@
    "name": "Avios",
    "value": 0.01,
    "basis": "SLAM floor assumption, to check"
+  },
+  "disney": {
+   "name": "Disney gift card dollars",
+   "value": 1,
+   "basis": "face value, only for someone who would spend it at Disney"
   }
  },
  "rules": {
@@ -427,7 +432,7 @@
    "annualFee": 0,
    "bonus": {
     "amount": 150,
-    "unit": "cash",
+    "unit": "disney",
     "words": "$100 Disney gift card on approval plus a $50 statement credit"
    },
    "spend": 500,
@@ -974,7 +979,7 @@
    "annualFee": 49,
    "bonus": {
     "amount": 300,
-    "unit": "cash",
+    "unit": "disney",
     "words": "$200 Disney gift card plus a $100 statement credit"
    },
    "spend": 500,
@@ -996,7 +1001,7 @@
    "annualFee": 149,
    "bonus": {
     "amount": 500,
-    "unit": "cash",
+    "unit": "disney",
     "words": "$300 Disney gift card on approval plus a $200 statement credit"
    },
    "spend": 1000,

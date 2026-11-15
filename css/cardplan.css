@@ -33,3 +33,8 @@
 .cp-q { display: flex; flex-direction: column; gap: 6px; }
 .cp-q + .cp-q { margin-top: 12px; }
 @media (max-width: 520px) { .cp-barrow { grid-template-columns: minmax(0, 6.5rem) minmax(0, 1fr) auto; } .cp-dates li { grid-template-columns: 5rem minmax(0, 1fr); } }
+.cp-go { margin-left: auto; white-space: nowrap; }
+.cp-why { margin: 0 0 8px; }
+.cp-guide { margin-top: 10px; }
+.cp-guide .st-count { font-weight: 800; }
+summary.st-pulse { border-radius: 10px; }
