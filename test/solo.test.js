@@ -320,3 +320,21 @@ test('the surprise bill drill says how its interest is counted', async () => {
   const src = (await import('node:fs')).readFileSync(new URL('../js/drills.js', import.meta.url), 'utf8');
   assert.match(src, /Carried for three months before you clear it/); assert.doesNotMatch(src, /Paid back over three months/);
 });
+
+test('if the pay stopped: the ladder in order, on a copy, from the person\'s own answers only', async () => {
+  const { stoppedPayOf } = await import('../js/solo.js');
+  const { answer } = await import('../js/journey.js');
+  const s = new Store(newHousehold({ name: 'Me' })); s.setDoc('profile', { birthYear: 1994, state: 'NY' });
+  assert.equal(stoppedPayOf(s.doc, ref).ready, false, 'nothing on file');
+  answer(s, 'spending', { gut: 3500 }); answer(s, 'income', { takeHome: 4500 });
+  assert.equal(stoppedPayOf(s.doc, ref).ready, false, 'needs cash too');
+  answer(s, 'cash', { checking: 1500, savings: 6000 });
+  const before = JSON.stringify(s.doc), a = stoppedPayOf(s.doc, ref, { now });
+  assert.equal(JSON.stringify(s.doc), before, 'the plan itself is untouched: it still has its pay');
+  assert.ok(Math.abs(a.runway - 7500 / 3500) < 1e-9, '$7,500 at $3,500 a month');
+  assert.deepEqual(a.used.map(r => r.id), ['buffer', 'littleE', 'bigE']); assert.ok(Math.abs(a.used.reduce((t, r) => t + r.amount, 0) - 7500) < 1e-6);
+  assert.ok(!a.used.some(r => r.id === 'invest'), 'no investments on file, so that rung is not used');
+  answer(s, 'invested', { invested: 40000 });
+  const b = stoppedPayOf(s.doc, ref, { now });
+  assert.ok(Math.abs(b.runway - 47500 / 3500) < 1e-9); assert.equal(b.used.at(-1).id, 'invest'); assert.equal(Math.floor(b.used.at(-1).month), 2, 'investments are first reached in the third month');
+});

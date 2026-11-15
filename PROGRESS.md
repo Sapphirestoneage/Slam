@@ -68,3 +68,10 @@ old parts of this file and of `QUESTIONS.md` moved to `docs/archive/`. Nothing i
 - The bill drill's wording now matches how its interest is counted.
 - Not done: the 50-state cliff map (not started), the household true cost of debt as its own page.
 
+## Nov 15 2026: Runs 7 and 8, as far as they could go
+
+- `ladder.html`: If the pay stopped, what would I use first? The Life Transitions ladder as one page, on a copy of the
+  plan. Walked at 390 and 1280; in the second engine.
+- Blocked on data, nothing guessed: the career atlas, the city atlas, Aliyah Math. The files needed are named in
+  `ROADMAP.md`.
+

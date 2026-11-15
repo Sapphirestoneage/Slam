@@ -13,6 +13,7 @@ import json, math, sys
 from collections import defaultdict
 
 TOL = 1.0  # dollars
+LADDER_MAX = 120  # months the Life Transitions dip looks ahead (RULES.transitionMaxMonths)
 TAX_STOP, TAX_ROUNDS, CREDIT_ROUNDS = 0.5, 40, 30
 
 # ---------- the law, typed in a second time ----------
@@ -558,6 +559,12 @@ def run(cases, ref):
             ck('interest in today\'s dollars', o['interestToday'], today)
             ck('the payment invested', o['invested'], sum(pay * (1 + rr) ** (k / 12) for k in range(n)))
             ck('in FI terms', o['fiNumber'], pay * 12 / wr)
+        elif fn == 'ladder':
+            # with no pay, no card and no benefits, everything held is simply spent down: months = what is held / spending
+            held = x['checking'] + x['savings'] + x['invested']
+            ck('held across the rungs', o['held'], held)
+            months = held / x['spending']
+            ck('months it lasts', o['runway'], months if months < LADDER_MAX else None, 1e-6)
         elif fn == 'taxableSS':
             ck('taxed part', o['taxed'], law.taxed_ss(x['ss'], x['other'], x['filingStatus']))
         elif fn == 'gainsTax':

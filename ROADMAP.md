@@ -81,16 +81,16 @@ after Run 1.
 
 | Tool or job | Status | Where it lives | What is left, and what done means | Size |
 |---|---|---|---|---|
-| Career atlas | Not on main | new | Scope to agree before the run: I will propose it in the summary of the run before. | L |
-| City atlas | Not on main | new | Scope to agree before the run. Ties to your Longmont, NYC and aliyah comparisons. | L |
+| Career atlas | Blocked on data | new | Not built: no numbers were guessed. Needs one file from Eli in data/sources/: the BLS OEWS May 2025 national table (national_M2025_dl.xlsx from bls.gov/oes/tables.htm; columns OCC_CODE, OCC_TITLE, TOT_EMP, A_PCT10, A_PCT25, A_MEDIAN, A_PCT75, A_PCT90). It has pay by percentile, not by age, so one decision is also needed: how pay moves over a career (default offered: start at the 25th percentile, reach the median in 10 years, the 75th in 20). | L |
+| City atlas | Blocked on data | new | Not built: no numbers were guessed. Needs three files from Eli in data/sources/: BLS OEWS May 2025 metro table (MSA_M2025_dl.xlsx: AREA, AREA_TITLE, OCC_CODE, A_MEDIAN), HUD Fair Market Rents for the year (FMR by metro: areaname, fmr_0 to fmr_4), and state income tax brackets for 2026 with their source (state, filing status, floor, rate, standard deduction). Only New York and New York City tax are in SLAM today. | L |
 
 ### Run 8: Later layer: planners, transitions, Aliyah Math
 
 | Tool or job | Status | Where it lives | What is left, and what done means | Size |
 |---|---|---|---|---|
-| For coaches and planners (client plans, one page, tax depth) | On main | pro.html | On main. Left: a run with a real planner watching, after the handoff works. | M |
-| Life Transitions (turn panic into a number) | Partly on main | js/math/transitions.js | In the coach app. Left: a standalone page on the template. | M |
-| Aliyah Math (US vs Israel) | Not started | new | Not in this repo yet. Would sit well beside the city atlas. | M |
+| For coaches and planners (client plans, one page, tax depth) | On main | pro.html | Walked in practice mode with the handoff (Run 4). Blocked on a person: a real planner using it while someone watches. | M |
+| Life Transitions (turn panic into a number) | Partly on main | ladder.html, js/math/transitions.js | ladder.html, If the pay stopped, what would I use first? is built: the ladder in order, what each rung costs, the month it runs out. Not on the page yet: unemployment, family help, side income, a card, tripwires and Plan B (they are in the coach app). | M |
+| Aliyah Math (US vs Israel) | Blocked on data | new | Not built: no numbers were guessed. Needs, each with a source and date: Israel's income tax brackets and credit points for the year, National Insurance and health tax rates, the olim tax benefits, and the cost-of-living figures Eli has been given. The spec is in Eli's artifacts ("Aliyah Math: calculator spec"). | M |
 
 ## Decisions on file (Eli, Nov 14 2026)
 

@@ -7,7 +7,9 @@ import { federalTax, fica, stateTax, takeHomeFromGross, grossFromTakeHome } from
 import { payoffMonths, totalInterest, payoffPlan, cardMinimum } from '../../js/math/debt.js';
 import { fiNumber, fiDate, coastFi, solveMonthlySaving } from '../../js/math/fi.js';
 import { yearsAtRate } from '../../js/math/simple.js';
-import { runwayOf, backwardsOf, tripCostOf, habitCostOf, loanCostOf } from '../../js/solo.js';
+import { runwayOf, backwardsOf, tripCostOf, habitCostOf, loanCostOf, stoppedPayOf } from '../../js/solo.js';
+import { Store, newHousehold } from '../../js/records.js';
+import { answer } from '../../js/journey.js';
 import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom } from '../../js/math/lifetime.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
@@ -48,6 +50,14 @@ for (let i = 0; i < N; i++) {
   { const x = { income: money(8000, 160000), benchmark: money(3000, 30000), people: whole(1, 4) }; add('premiumCredit', x, { credit: premiumCredit(x.income, x.benchmark, x.people) }); }
   { const x = { ordinary: rnd() < 0.15 ? 0 : money(1000, 400000), ss: rnd() < 0.5 ? 0 : money(6000, 70000), gains: rnd() < 0.5 ? 0 : money(500, 300000), tax: { filingStatus: pick(STATUS), place: pick(PLACES) } }; add('yearTax', x, { tax: yearTax(x, x.tax, ref) }); }
   { const x = { magi: money(40000, 900000), filingStatus: pick(STATUS) }; add('medicare', x, { extra: medicareSurcharge(x.magi, x.filingStatus, ref) }); }
+}
+// If the pay stopped: the Life Transitions ladder on the plan's own answers (fewer cases: each builds a household).
+for (let i = 0; i < Math.max(10, Math.round(N / 5)); i++) {
+  const x = { spending: money(1200, 12000), checking: money(100, 8000), savings: rnd() < 0.2 ? 0 : money(200, 60000), invested: rnd() < 0.4 ? 0 : money(500, 400000) };
+  const st = new Store(newHousehold({ name: 'Me' })); st.setDoc('profile', { birthYear: 1990, state: 'NY' });
+  answer(st, 'spending', { gut: x.spending }); answer(st, 'income', { takeHome: x.spending + 500 }); answer(st, 'cash', { checking: x.checking, savings: x.savings });
+  if (x.invested) answer(st, 'invested', { invested: x.invested }); else answer(st, 'invested', {}, { none: true });
+  const r = stoppedPayOf(st.doc, ref, { now: NOW }); add('ladder', x, { runway: r.runway, held: r.used.reduce((t, u) => t + (u.amount ?? 0), 0), rungs: r.used.length });
 }
 // The whole-life run: fewer cases (each is 60 or so years), every strategy, conversions, two people, blocks, the credit.
 const lifeCase = () => {

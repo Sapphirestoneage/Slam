@@ -5,6 +5,7 @@
 import { fiDate } from './math/fi.js';
 import { payoffPlan, cardMinimum } from './math/debt.js';
 import { loanPayment, loanSchedule } from './math/truecost.js';
+import { transitionOf } from './math/transitions.js';
 import { collapseOf } from './collapse.js';
 import { quizOf } from './quiz.js';
 import { answeredOf } from './math/agestart.js';
@@ -153,4 +154,18 @@ export function loanCostOf({ amount = null, apr = null, years = null, ref } = {}
   const s = loanSchedule({ amount, apr, payment, n, inflation: infl }), g = (1 + r) ** (1 / 12);
   return { ready: true, amount, apr, years, months: n, payment, paid: s.paid, interest: s.interest, interestToday: s.interestToday, perDollar: s.paid / amount,
     invested: payment * (g ** n - 1) / (g - 1), fiNumber: payment * 12 / wr, inflation: infl, realReturn: r, withdrawalRate: wr };
+}
+
+// If the pay stopped (ladder.html): Life Transitions' own ladder and dip (js/math/transitions.js, M90) run on a copy of
+// the plan with every income row taken out. Nothing is saved: the person's plan still has its pay. Only the person's
+// own answers count (a typical stand-in is never a rung). Returns the words, the months, the month it runs out, and
+// each rung in the order it would be used, with what it holds, what it costs and the month it is first reached.
+export function stoppedPayOf(doc, ref, { now = new Date() } = {}) {
+  const have = answeredOf(doc, ref);
+  if (!have.spending || !have.cash) return { ready: false };
+  const copy = JSON.parse(JSON.stringify(doc)); copy.records = (copy.records || []).filter(r => r.kind !== 'income');
+  const T = transitionOf(copy, ref, { now }), reach = T.dip.reached || {};
+  const rung = r => ({ id: r.id, name: r.plain ?? r.name, amount: r.amount ?? null, cost: r.costText ?? null, note: r.note ?? null, on: !!r.on, month: reach[r.id] ?? null });
+  return { ready: true, text: T.text, runway: T.runway, floorYm: T.floorYm, total: T.total, costs: T.costs, burn: T.levels[0]?.burn ?? null,
+    used: T.ladder.rungs.filter(r => r.on).map(rung), unused: T.ladder.rungs.filter(r => !r.on).map(rung) };
 }
