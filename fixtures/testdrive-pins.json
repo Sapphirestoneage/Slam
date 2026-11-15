@@ -1,0 +1,82 @@
+{
+ "deep-debt": {
+  "level1": {
+   "step": "Stop going backwards",
+   "fiAge": 76
+  },
+  "end": {
+   "step": "Stop going backwards",
+   "fiAge": 69
+  }
+ },
+ "high-earner": {
+  "level1": {
+   "step": "Stop going backwards",
+   "fiAge": 100
+  },
+  "end": {
+   "step": "Stop going backwards",
+   "fiAge": 74
+  }
+ },
+ "freelancer": {
+  "level1": {
+   "step": "Build your job-loss fund",
+   "fiAge": 70
+  },
+  "end": {
+   "step": "Build your job-loss fund",
+   "fiAge": 70
+  }
+ },
+ "between-jobs": {
+  "level1": {
+   "step": "Stop going backwards",
+   "fiAge": null
+  },
+  "end": {
+   "step": "Stop going backwards",
+   "fiAge": 50
+  }
+ },
+ "homeowner": {
+  "level1": {
+   "step": "Pay off high-interest debt",
+   "fiAge": 72
+  },
+  "end": {
+   "step": "Pay off high-interest debt",
+   "fiAge": 63
+  }
+ },
+ "young-roth": {
+  "level1": {
+   "step": "Build your job-loss fund",
+   "fiAge": 50
+  },
+  "end": {
+   "step": "Build your job-loss fund",
+   "fiAge": 49
+  }
+ },
+ "near-coast": {
+  "level1": {
+   "step": "Build your job-loss fund",
+   "fiAge": 50
+  },
+  "end": {
+   "step": "Build your job-loss fund",
+   "fiAge": 45
+  }
+ },
+ "not-sure": {
+  "level1": {
+   "step": "Stop going backwards",
+   "fiAge": 75
+  },
+  "end": {
+   "step": "Stop going backwards",
+   "fiAge": 76
+  }
+ }
+}

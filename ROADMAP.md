@@ -92,6 +92,13 @@ after Run 1.
 | Life Transitions (turn panic into a number) | Partly on main | ladder.html, js/math/transitions.js | ladder.html, If the pay stopped, what would I use first? is built: the ladder in order, what each rung costs, the month it runs out. Not on the page yet: unemployment, family help, side income, a card, tripwires and Plan B (they are in the coach app). | M |
 | Aliyah Math (US vs Israel) | Blocked on data | new | Not built: no numbers were guessed. Needs, each with a source and date: Israel's income tax brackets and credit points for the year, National Insurance and health tax rates, the olim tax benefits, and the cost-of-living figures Eli has been given. The spec is in Eli's artifacts ("Aliyah Math: calculator spec"). | M |
 
+### Alongside the runs: testing
+
+| Tool or job | Status | Where it lives | What is left, and what done means | Size |
+|---|---|---|---|---|
+| Test Drive: made-up people as scripts, the walk, the issue list | Done | js/testdrive.js, js/start/testdrive-ui.js, docs/TESTDRIVE.md | Open start.html?dev=1. Left: scripts for line by line and the statement reader; a person with several people in the plan (waits on QUESTIONS 557, 3). | M |
+| The walk as the client tutorial | Not started | | Waits on Eli (QUESTIONS 557, 4). | M |
+
 ## Decisions on file (Eli, Nov 14 2026)
 
 - The main user is a person on their own. A coach is brought into that person's plan afterwards.

@@ -25,6 +25,8 @@ import { pictureOf, nextSmallThings } from '../math/picture.js';
 import { quitOf, yearEndOf, twoHomesOf, HOME_COSTS, HOME_SPANS, aprilOf, aprilPicks } from '../extras.js';
 import { spendMoreOf, SPEND_AGES, feesOf, FEE_PICKS, FEE_YEARS, movesOf, LIFE_SIDES, CHECKUP, CHECK_ANSWERS, checkupOf, HAPPENS, MEET, meetOf, packMeet, unpackMeet, NEXT_ASKS, nextDollarOf, climbOf, RAISES, KEPT, raiseOf, RAISE_SCRIPT, HABITS, SPANS, startedOf, FEEL, datesOf, PARENT_ASKS, PARENT_HELP, flowTimeOf, designOf, LIFE_AGES, LIFE_PLACE, LIFE_WORK, LIFE_TRAVEL, LIFE_GIVE, receiptOf, CHOICES, PAY_STEPS, COST_STEPS, FEELS, FEEL_SIDES, guideOf, LINES, seriesOf, PRICES, affordOnce, PAY_PICKS, unevenOf, OVERLAPS, SUB_PRICES, overlapOf } from '../extras.js';
 import { dedupe, importTransactions } from '../import/csv.js';
+import { testDrive } from './testdrive-ui.js';
+let TD = null; // Test Drive (behind ?dev=1): made-up people, a step-by-step walk, an issue list
 
 const [ref, priors, flags] = await Promise.all([fetch('data/reference-2026.json').then(r => r.json()), fetch('data/priors-2026.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json())]);
 const hist = await fetch('data/history-returns.json').then(r => r.json());
@@ -1215,6 +1217,7 @@ function render() {
   foot();
   const lit = $('main').querySelector('.flash');
   if (lit) { lit.querySelector('details')?.setAttribute('open', ''); lit.closest('details')?.setAttribute('open', ''); setTimeout(() => lit.scrollIntoView({ block: 'center' }), 0); }
+  TD?.after();
 }
 
 // Come back where you left off: the plan when the picture is done, the next question when it is not.
@@ -1237,6 +1240,8 @@ if (start.hasAge && start.done && (away || !STAGES.some(x => x.id === linked)) &
 if (meetIn) { remember({ meet: { ...(mine().meet || {}), theirs: meetIn } }); ui.stage = 'meet'; }
 history.replaceState({ stage: ui.stage, q: ui.q, depth: 0 }, '', hashOf(ui.stage, ui.q));
 render();
+TD = testDrive({ ref, priors, flags, adapter, ui, here, open, go, store: () => store });
+TD.after();
 // Nothing on this device yet (the usual case coming from a standalone page): the carried numbers simply open, no question asked.
 const emptyHere = !P().hasAge && !(store.doc.records || []).length;
 if (carried && emptyHere) { try { const doc = await unpack(carried); saveClient(adapter, doc); open(doc); const p1 = P(); ui.stage = p1.hasAge ? (p1.done ? 'plan' : 'numbers') : 'you'; ui.note = 'Your numbers came with you. Nothing to type twice.'; render(); } catch { /* falls through to the first screen */ } }

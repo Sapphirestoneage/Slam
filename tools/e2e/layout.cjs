@@ -688,10 +688,13 @@ async function runStart(browser) {
   await page.locator('.st-chip', { hasText: /^2000s$/ }).click(); await page.locator('.st-years .st-chip', { hasText: /^2001$/ }).click();
   await page.locator('.st-chip', { hasText: 'buy a home' }).click({ force: true }).catch(() => {});
   await page.locator('.st-btn.primary.big').first().click(); await settle(page, 300);
-  for (const v of [['4200'], ['3100'], ['500', '1000'], ['18000']]) { for (let i = 0; i < v.length; i++) await page.fill(`#box-${i}`, v[i]); await page.locator('.st-btn.primary.big').first().click(); await settle(page, 250); }
-  // question 5: what you owe is a list by kind, each with its own Add button
+  // The questions in the order they are asked since Run 2 (spending, pay, what you owe, cash, invested). What you owe is
+  // a list by kind, each with its own Add button, so it has no numbered boxes.
+  const boxes = async v => { for (let i = 0; i < v.length; i++) await page.fill(`#box-${i}`, v[i]); await page.locator('.st-btn.primary.big').first().click(); await settle(page, 250); };
+  await boxes(['3100']); await boxes(['4200']);
   for (const [sec, amount] of [['cards', '3200'], ['student', '20000']]) { await page.locator(`[data-sec="${sec}"] .st-bookhead .st-btn`).click(); await page.fill(`[data-sec="${sec}"] .st-bkcell input`, amount); }
   await page.locator('.st-btn.primary.big').first().click(); await settle(page, 250);
+  await boxes(['500', '1000']); await boxes(['18000']);
   for (const width of WIDTHS) for (const theme of THEMES) {
     console.log(`  Start at ${width} ${theme}...`);
     await page.setViewportSize({ width, height: width < 600 ? 844 : 1000 }); await page.emulateMedia({ colorScheme: theme });

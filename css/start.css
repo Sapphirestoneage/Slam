@@ -404,3 +404,45 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 .st-saylist { margin: 0 0 10px; padding-left: 20px; } .st-saylist li { margin: 6px 0; font-weight: 600; }
 .st-flag { border: 2px solid #d69e2e; border-left-width: 8px; border-radius: 10px; padding: 12px 14px; margin: 12px 0; background: color-mix(in srgb, #d69e2e 10%, transparent); } .st-flaghead { font-weight: 800; display: flex; gap: 8px; align-items: center; margin-bottom: 6px; } .st-flagmark { display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; background: #d69e2e; color: #111; font-weight: 800; } .st-flagitem { border-top: 1px solid color-mix(in srgb, #d69e2e 40%, transparent); padding: 8px 0 4px; } .st-flagitem:first-of-type { border-top: 0; } .st-flagitem p { margin: 0 0 4px; }
 .st-paper h2 { margin: 0 0 6px; }
+
+/* Test Drive (behind ?dev=1): a slim bar docked at the bottom. The page gets bottom padding the height of the dock,
+   so nothing on the page sits under it. Amber, never red, for a number that differs. */
+.td { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; background: var(--card); border-top: 3px solid var(--primary); box-shadow: 0 -6px 20px rgba(6, 14, 31, .18); max-height: 52vh; overflow-y: auto; font-size: .92rem; }
+.td > * { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+.td-bar { display: flex; align-items: center; gap: 12px; min-height: 52px; position: sticky; bottom: 0; background: var(--card); }
+.td-toggle { min-height: 44px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--primary); background: var(--primary); color: var(--on-primary); font: inherit; font-weight: 700; cursor: pointer; }
+.td-toggle:disabled { opacity: .55; cursor: default; }
+.td-toggle:focus-visible, .td-note:focus-visible, .td-prompt:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.td-line { font-weight: 600; color: var(--text-2); overflow-wrap: anywhere; }
+.td-status { padding-top: 8px; padding-bottom: 2px; font-weight: 600; }
+.td-card, .td-panel { padding-top: 10px; padding-bottom: 0; display: grid; gap: 8px; }
+.td-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.td-top strong { flex: 1 1 200px; font-size: 1rem; }
+.td-seg { display: inline-flex; gap: 4px; }
+.td .st-chip { min-height: 44px; padding: 0 12px; font-size: .875rem; }
+.td-h { font-size: .75rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); margin-bottom: 2px; }
+.td-sec p { margin: 0; }
+.td-fine { margin: 0; font-size: .82rem; color: var(--text-2); }
+.td-moves { display: grid; gap: 4px; }
+.td-move { display: flex; flex-wrap: wrap; gap: 0 12px; align-items: baseline; padding: 4px 8px; border-radius: 8px; background: var(--computed); }
+.td-move.ok { background: var(--saved); }
+.td-move.off, .td-off { border-left: 5px solid var(--amber); }
+.td-off { padding-left: 8px; font-weight: 700; }
+.td-k { font-weight: 700; flex: 0 0 170px; }
+.td-v { flex: 1 1 200px; }
+.td-was { color: var(--text-2); }
+.td-rule { flex: 0 1 auto; font-size: .78rem; color: var(--text-2); }
+.td-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.td-actions { position: sticky; bottom: 0; background: var(--card); padding-top: 8px; padding-bottom: 8px; border-top: 2px solid var(--border-row); }
+.td-flag { display: grid; gap: 10px; border-top: 2px solid var(--border-row); padding-top: 10px; }
+.td-note, .td-prompt { width: 100%; min-height: 44px; padding: 8px 12px; border-radius: 10px; border: 2px solid var(--border-input); background: var(--card); color: var(--text); font: inherit; }
+.td-prompt { font-family: ui-monospace, monospace; font-size: .8rem; }
+.td-list, .td-issues { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.td-list li { padding-left: 2px; }
+.td-issues li { display: grid; grid-template-columns: 130px 1fr auto auto; gap: 8px; align-items: center; padding: 4px 8px; border-radius: 8px; background: var(--computed); }
+.td-tag { font-weight: 800; font-size: .8rem; }
+.td-what { overflow-wrap: anywhere; }
+.td-foot { border-top: 2px solid var(--border-row); padding-top: 10px; padding-bottom: 6px; }
+.td-target { scroll-margin-top: 76px; }
+@media (max-width: 520px) { .td-k { flex-basis: auto; } .td-issues li { grid-template-columns: 1fr auto; } .td-issues .td-tag { grid-column: 1 / -1; } .td { max-height: 56vh; } }
+@media print { .td { display: none !important; } }

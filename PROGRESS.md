@@ -75,3 +75,18 @@ old parts of this file and of `QUESTIONS.md` moved to `docs/archive/`. Nothing i
 - Blocked on data, nothing guessed: the career atlas, the city atlas, Aliyah Math. The files needed are named in
   `ROADMAP.md`.
 
+## Nov 15 2026: Test Drive (outside the numbered runs)
+
+- `start.html?dev=1`: eight made-up people as answer scripts (`js/testdrive.js`), saved through the journey's own
+  functions. Walk one step at a time (what happened, what changed, why, a check), load instantly, jump to a level,
+  flag a step in two taps, export the issue list as a CSV or one fix prompt, snapshots. How it works:
+  `docs/TESTDRIVE.md`.
+- The same scripts run headless in `node --test` (51 new tests, 2 of them kept as todo for TD-1) and in a browser
+  (`tools/e2e/testdrive.cjs`: all eight walked at 1280 and 390).
+- The layout checker's journey walk was repaired (it had timed out since the question order changed). Journey:
+  column 36 (6 distinct, the home card on What if), every other check 0.
+- QA on the Test Drive bar and card (tester-only): Works 5, Right 5, One answer 5, Looks right 4, Obvious 4,
+  Findable 4 (only by the dev link, on purpose), Easy 5 (no typing), Plain words 4, Tells you 5, Fits everywhere 4
+  (on a phone the card takes half the screen), Fast 5, Coachable not judged. Nothing above cosmetic open.
+- Eight findings and four questions: `QUESTIONS.md` 557.
+
