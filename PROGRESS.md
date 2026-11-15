@@ -53,3 +53,11 @@ old parts of this file and of `QUESTIONS.md` moved to `docs/archive/`. Nothing i
 - Walks at laptop width and of every plan tab: clean. The pulse moves on while typing. Card page chips are 40px.
 - Not done: Read my papers (needs real documents), the FIRE journey map.
 
+## Nov 15 2026: Run 5, the canon replicated
+
+- `docs/CANON.md`: the savings-rate table holds as printed and bends against SLAM's 7%; the 4% rule holds for 30 years
+  (97%) and bends for 50 (84%); $100 a month is $30,000 holds; 752 and 173 bend by 1%; Coast FI holds. SLAM's own
+  lifetime engine reproduces the classic 4% study.
+- New tool from the template: `habit.html`. The answer card now redraws while typing on every templated tool.
+- Not done: eight of the ten calculators, and Can I afford it as its own page.
+

@@ -12,18 +12,18 @@ const TRIMS = [0, 0.1, 0.2];
 function draw(api) {
   stepLine(api); foot();
   const spending = onFile(api.store.doc, 'spending').gut ?? null, trim = api.mine().templateTrim ?? 0;
-  const answerCard = () => {
-    const R = yearOf({ spending, trim });
+  const answerCard = (now = spending) => { // `now`: the number as it stands while it is being typed
+    const R = yearOf({ spending: now, trim });
     if (!R.ready) return h('div.st-card', { id: 'answer' }, h('h2', { style: { marginTop: 0 } }, 'Your answer shows here'), h('p.st-soft', { style: { marginBottom: 0 } }, 'One number above and it appears. Rough is fine.'));
     return h('div.st-card.hero', { id: 'answer', 'aria-live': 'polite' }, h('div.st-eyebrow', {}, 'Your answer'),
       h('div.st-soft', {}, 'A year of it comes to'), h('div.st-big', {}, money(Math.round(R.year))),
-      h('p', { style: { fontWeight: 700 } }, `${money(spending)} a month${trim ? `, trimmed ${Math.round(trim * 100)}%,` : ''} for twelve months.`),
+      h('p', { style: { fontWeight: 700 } }, `${money(now)} a month${trim ? `, trimmed ${Math.round(trim * 100)}%,` : ''} for twelve months.`),
       h('div.st-field', {}, h('div.st-flabel', {}, 'If you trimmed it'), h('div.st-chips', {}, TRIMS.map(v => chip(v ? `${Math.round(v * 100)}% less` : 'No trim', trim === v, () => { api.remember({ templateTrim: v }); api.render(); })))),
       h('details.st-fold', {}, h('summary', {}, 'How this is worked out'), h('p.st-small', {}, 'Your monthly number, less the trim, times twelve. Whose idea the tool is goes here too.')));
   };
-  const card = answerCard(), carry = carryCard(api, { ready: spending > 0 });
-  // while typing only the headline moves; the card redraws when the box is left
-  const set = (v, typing) => { answer(api.store, 'spending', { gut: v }); if (!typing) return api.render(); api.save(); const big = card.querySelector('.st-big'), R = yearOf({ spending: v, trim }); if (big && R.ready) big.textContent = money(Math.round(R.year)); else if (!big && R.ready) { card.className = 'st-card hero'; card.replaceChildren(h('div.st-eyebrow', {}, 'Your answer'), h('div.st-soft', {}, 'A year of it comes to'), h('div.st-big', {}, money(Math.round(R.year)))); } carry.setReady(R.ready); };
+  let card = answerCard(); const carry = carryCard(api, { ready: spending > 0 });
+  // while typing the answer card is redrawn (it is not the box being typed in, so the keyboard stays put)
+  const set = (v, typing) => { answer(api.store, 'spending', { gut: v }); if (!typing) return api.render(); api.save(); const R = yearOf({ spending: v, trim }), fresh = answerCard(v); card.replaceWith(fresh); card = fresh; carry.setReady(R.ready); };
   const inputs = h('div.st-card', { onFocusout: e => { const t = e.relatedTarget, main = document.getElementById('main'); if (!t || t === main || !main.contains(t)) setTimeout(() => api.render(), 0); } }, h('h2', { style: { marginTop: 0 } }, 'One number'),
     numBox('What you spend in a month, all in', spending, [2000, 3000, 4000, 5000, 6500], set, { id: 'spend', help: 'Everything. A rough number is enough.' }));
   document.getElementById('main').replaceChildren(...[

@@ -540,6 +540,12 @@ def run(cases, ref):
                 before, after = months_to(x['invested'], x['monthly'], rr, T), months_to(x['invested'] - x['cost'], x['monthly'], rr, T)
                 ck('FI month before', o['before'], before, 0); ck('FI month after', o['after'], after, 0)
                 ck('months later', o['delay'], None if before is None or after is None else after - before, 0)
+        elif fn == 'habit':
+            # each payment grown on its own to the end, then added up (no annuity formula)
+            n = 52 if x['per'] == 'week' else 12
+            total = sum(x['amount'] * (1 + rr) ** (k / n) for k in range(n * x['years']))
+            ck('grown', o['grown'], total); ck('spent', o['spent'], x['amount'] * n * x['years']); ck('needed to pay for it forever', o['needs'], x['amount'] * n / wr)
+            ck('times the cost', o['times'], total / x['amount'], 1e-6)
         elif fn == 'taxableSS':
             ck('taxed part', o['taxed'], law.taxed_ss(x['ss'], x['other'], x['filingStatus']))
         elif fn == 'gainsTax':

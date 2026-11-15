@@ -286,3 +286,18 @@ test('what a trip really costs: the price grown to 65, the same trip by age, and
   assert.ok(Math.abs(b.share - 0.15) < 1e-12); assert.equal(b.monthsOfSaving, 3);
   assert.equal(tripCostOf({ cost: 3000, age: 25, invested: 20000, monthly: 0, spending: 3000, ref }).delay, null, 'nothing left over: no date to move');
 });
+
+test('what a habit costs: ten years at the plan\'s pace, and what pays for it forever', async () => {
+  const { habitCostOf } = await import('../js/solo.js');
+  const r = ref.presets.realReturn.default, wr = ref.presets.withdrawalRate.default;
+  assert.equal(habitCostOf({ ref }).ready, false);
+  const m = habitCostOf({ amount: 100, per: 'month', ref });
+  // by hand, a month at a time: grow, then add $100, 120 times
+  { const g = (1 + r) ** (1 / 12); let v = 0; for (let i = 0; i < 120; i++) v = v * g + 100; assert.ok(Math.abs(m.grown - v) < 1e-6); }
+  assert.equal(m.spent, 12000); assert.ok(Math.abs(m.needs - 1200 / wr) < 1e-9, '$100 a month needs 25 times its year at 4%');
+  assert.ok(Math.abs(m.growth - (m.grown - 12000)) < 1e-9);
+  const w = habitCostOf({ amount: 1, per: 'week', ref });
+  // Mr. Money Mustache's 752 compounds 7% in weekly pieces; at the plan's pace (a year is 7% and no more) it is about 743
+  if (r === 0.07) { assert.ok(Math.abs(w.times - 742.8) < 0.1); assert.ok(Math.abs(habitCostOf({ amount: 1, per: 'month', ref }).times - 171.1) < 0.1); }
+  assert.deepEqual(m.byYears.map(y => y.years), [5, 10, 20, 30]); assert.ok(Math.abs(m.byYears[1].grown - m.grown) < 1e-9);
+});

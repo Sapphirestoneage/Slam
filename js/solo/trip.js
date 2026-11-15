@@ -17,8 +17,8 @@ function draw(api) {
   const monthly = pay != null && spend != null ? pay - spend : null;
   const of = (c = cost) => tripCostOf({ cost: c, age, invested: inv, monthly, spending: spend, ref: api.ref });
   const headline = R => money(Math.round(R.grown));
-  const answerCard = () => {
-    const R = of();
+  const answerCard = (now = cost) => { // `now`: the number as it stands while it is being typed
+    const R = of(now);
     if (!R.ready) return h('div.st-card', { id: 'answer' }, h('h2', { style: { marginTop: 0 } }, 'Your answer shows here'), h('p.st-soft', { style: { marginBottom: 0 } }, age == null ? 'The price and your age, and it appears.' : 'The price above and it appears.'));
     const pct = v => `${+(v * 100).toFixed(1)}%`;
     return h('div.st-card.hero', { id: 'answer', 'aria-live': 'polite' }, h('div.st-eyebrow', {}, 'Your answer'),
@@ -39,8 +39,7 @@ function draw(api) {
   let card = answerCard();
   const pick = patch => { api.remember(patch); api.render(); };
   // while typing only the headline moves; the full card redraws when the box is left
-  const setCost = (v, typing) => { api.remember({ tripCost: v }); if (!typing) return api.render(); api.save(); const R = of(v), big = card.querySelector('.st-big');
-    if (big && R.ready) big.textContent = headline(R); else if (!big && R.ready) { const fresh = answerCard(); card.replaceWith(fresh); card = fresh; }
+  const setCost = (v, typing) => { api.remember({ tripCost: v }); if (!typing) return api.render(); api.save(); const fresh = answerCard(v); card.replaceWith(fresh); card = fresh; // the whole card, so its sentence never trails the number being typed
     inputs.querySelector('.st-box .in')?.classList.toggle('st-pulse', v == null); $('ages')?.classList.toggle('st-pulse', v != null && age == null); };
   const inputs = h('div.st-card', { onFocusout: e => { const t = e.relatedTarget, main = $('main'); if (!t || t === main || !main.contains(t)) setTimeout(() => api.render(), 0); } }, h('h2', { style: { marginTop: 0 } }, born != null ? 'One number' : 'Two taps'),
     numBox('What the trip costs, all in', cost, TRIP_COSTS, setCost, { id: 'cost', help: 'Ticket, travel, the room, food. A rough number is enough.' }),

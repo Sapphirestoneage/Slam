@@ -33,7 +33,8 @@ Top to bottom, always in this order:
   goes in `api.remember({ ... })`.
 - **The address is the save.** `boot(id, draw)` from `js/solo/shell.js` opens the answers in the link and keeps the
   link up to date. Nothing else stores anything.
-- **While typing, only the headline moves.** Redraw the whole card when the box is left, so the keyboard never jumps.
+- **While typing, the answer card redraws and the inputs do not.** The card is not the box being typed in, so the
+  keyboard never jumps, and its sentence never trails the number. Redraw the whole page only when the box is left.
 - **The next thing to do pulses** (`st-pulse`): the first empty box, then the Next button. One pulse on a page.
 - **Words.** From the person's side. No verdict words, no red, no em dashes. A date beats a number of months; a
   sentence beats a table.

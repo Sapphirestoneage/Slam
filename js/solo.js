@@ -127,3 +127,17 @@ export function tripCostOf({ cost = null, age = null, invested = null, monthly =
   }
   return out;
 }
+
+// What a habit costs (habit.html): two of the FIRE canon's most quoted shortcuts on one page, at the plan's own pace.
+// Mr. Money Mustache's rules of 752 and 173 (ten years of a weekly or monthly cost, left invested instead), and the
+// "$100 a month is $30,000" rule (what has to be invested to pay for it forever, 25 times its year at 4%).
+// The printed 752 and 173 compound 7% a year in weekly and monthly pieces; here a year is the plan's return and no more,
+// so they come out near 743 and 171 at 7% (tools/canon/replicate.mjs, docs/CANON.md).
+export const HABIT_PER = [['week', 'A week', 52], ['month', 'A month', 12]], HABIT_PICKS = { week: [10, 25, 50, 100, 200], month: [15, 50, 100, 250, 500] }, HABIT_YEARS = [5, 10, 20, 30];
+export function habitCostOf({ amount = null, per = 'month', years = 10, ref } = {}) {
+  if (!(amount > 0)) return { ready: false };
+  const r = ref.presets.realReturn.default, wr = ref.presets.withdrawalRate.default, n = (HABIT_PER.find(p => p[0] === per) ?? HABIT_PER[1])[2];
+  const g = (1 + r) ** (1 / n), times = (g ** (n * years) - 1) / (g - 1), aYear = amount * n;
+  return { ready: true, amount, per, years, aYear, spent: aYear * years, times, grown: amount * times, growth: amount * times - aYear * years, needs: aYear / wr, realReturn: r, withdrawalRate: wr,
+    byYears: HABIT_YEARS.map(y => ({ years: y, grown: amount * (g ** (n * y) - 1) / (g - 1) })) };
+}

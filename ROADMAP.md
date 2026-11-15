@@ -65,9 +65,9 @@ after Run 1.
 
 | Tool or job | Status | Where it lives | What is left, and what done means | Size |
 |---|---|---|---|---|
-| FIRE canon replication | Not on main | new | Re-run the famous results (the savings-rate table, the 4% studies, Big ERN) on SLAM's engine and show where they match and where they do not. Doubles as proof for ChooseFI and BiggerPockets. | L |
-| Canon calculators, pack 1 | Not started | BACKLOG.md (77 rows waiting) | The first ten backlog calculators as standalone tools on the template (latte factor, wealth multiplier, crossover point and so on). You pick the ten. | M |
-| Can I afford it? | Partly on main | js/math/afford.js | In the coach app. Left: a standalone page on the template. | S |
+| FIRE canon replication | Done | tools/canon, docs/CANON.md | tools/canon/replicate.mjs and docs/CANON.md: the savings-rate table, the 4% rule over 30 to 60 years, $100 a month, the rules of 752 and 173, Coast FI. Still to replicate: Big ERN's safe withdrawal series, the wealth multiplier, the crossover point. | L |
+| Canon calculators, pack 1 | Partly on main | trip.html, habit.html | Two of ten built from the template: trip.html (Run 4) and habit.html (the rules of 752 and 173 and $100 a month). Eight to go, from BACKLOG.md. | M |
+| Can I afford it? | Partly on main | js/math/afford.js | Not started as a standalone page: the math needs a whole household, not one number, so it is a bigger page than the template. | S |
 
 ### Run 6: Cliff map, fire drills, true cost of debt
 
