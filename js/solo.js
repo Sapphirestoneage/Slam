@@ -71,7 +71,7 @@ export function runwayOf({ cash, spending, stillIn = 0, cut = 0, now = new Date(
 // in `years` (a savings annuity). onPace: the year today's left-over money gets there instead.
 export const NEED_MONTH = [2000, 3000, 4000, 5000, 6500, 8000, 10000], WHEN_YEARS = [5, 10, 15, 20, 25, 30];
 export function backwardsOf({ need = null, per = 'month', years = null, have = null, takeHome = null, spending = null, ref, now = new Date() } = {}) {
-  const wr = ref.presets.withdrawalRate.default, r = ref.presets.realReturn.default, i = r / 12;
+  const wr = ref.presets.withdrawalRate.default, r = ref.presets.realReturn.default, i = (1 + r) ** (1 / 12) - 1; // a month at the plan's own pace (M53): 7% a year is 7% a year, not 7% / 12 compounded
   const out = { step: 1, withdrawalRate: wr, realReturn: r };
   if (!(need > 0)) return out;
   const total = per === 'total' ? need : (per === 'year' ? need : need * 12) / wr;

@@ -26,10 +26,10 @@ after Run 1.
 
 | Tool or job | Status | Where it lives | What is left, and what done means | Size |
 |---|---|---|---|---|
-| Roadmap file in the repo | Not started | ROADMAP.md (stale) | Replace the Nov 6 coach-run roadmap with this one, with a status line per tool that every run updates. | S |
-| Trim the run logs | Not started | PROGRESS.md, QUESTIONS.md | Archive old entries, keep a short current file, so a run starts by reading minutes of notes instead of half a megabyte. | S |
-| Design kit rulebook for standalone tools | Partly on main | js/solo/shell.js, DESIGN.md | The kit exists in code. Write the one-page rulebook (boxes, chips, carry card, level rows) and a blank template tool, so a new calc is mostly content. | S |
-| Second engine that audits the math | Not on main | new | An independent rebuild of the year-by-year math that runs every test household and lists any number that differs from SLAM by more than a dollar. Done: zero unexplained differences. | L |
+| Roadmap file in the repo | Done | ROADMAP.md | This file. | S |
+| Trim the run logs | Done | PROGRESS.md, QUESTIONS.md | Old entries are in docs/archive. | S |
+| Design kit rulebook for standalone tools | Done | js/solo/shell.js, DESIGN.md | docs/KIT.md and tools/template. A new calc starts from the template. | S |
+| Second engine that audits the math | Done | tools/audit, docs/AUDIT.md | tools/audit and docs/AUDIT.md. Found and fixed three errors. Still to add: the coach app projection, 0% offers, household tax, the Child Tax Credit, the cliff (Run 2). A rebuild by someone who never sees the code is the stronger test. | L |
 
 ### Run 2: One engine, measured collapse, the link and sign-in
 

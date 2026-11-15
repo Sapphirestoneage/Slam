@@ -141,8 +141,9 @@ test('two people: cover, a doubled habit, an open muscle, and how well one read 
   assert.equal(G.miss.id, 'earth'); assert.equal(G.miss.off, -50); assert.equal(G.close.length, 4); assert.equal(G.average, 10);
 });
 import { backwardsOf } from '../js/solo.js';
+import { fiDate as fiDateForAudit } from '../js/math/fi.js';
 test('start at the finish line: each answer unlocks the next step, backwards to today, by hand', () => {
-  const wr = ref.presets.withdrawalRate.default, r = ref.presets.realReturn.default, i = r / 12;
+  const wr = ref.presets.withdrawalRate.default, r = ref.presets.realReturn.default, i = (1 + r) ** (1 / 12) - 1; // the plan's own pace a month (M53)
   assert.equal(backwardsOf({ ref, now }).step, 1);
   const a = backwardsOf({ need: 4000, per: 'month', ref, now });
   assert.equal(a.step, 2); assert.ok(Math.abs(a.total - 48000 / wr) < 1e-6); assert.ok(Math.abs(a.aMonth - 4000) < 1e-9);
@@ -157,6 +158,8 @@ test('start at the finish line: each answer unlocks the next step, backwards to 
   assert.equal(d.step, 5); assert.equal(d.left, 1200); assert.ok(Math.abs(d.gap - (c.needed - 1200)) < 1e-9); assert.equal(d.onTrack, d.gap <= 0);
   let w = 50000, m = 0; while (w < a.total && m < 1200) { w = w * (1 + i) + 1200; m++; } assert.ok(Math.abs(d.months - m) <= 1, `${d.months} vs ${m}`);
   if (d.gap > 0) { assert.ok(Math.abs(d.spendToClose - (3800 - d.gap)) < 1e-9); assert.ok(Math.abs(d.earnToClose - (5000 + d.gap)) < 1e-9); }
+  // one answer: the finish line and the whole plan (M53) name the same month for the same money (second engine, Nov 14 2026)
+  assert.ok(Math.abs(d.months - fiDateForAudit({ invested: 50000, monthlyInvesting: 1200, realReturn: r, target: a.total }).value) <= 1);
   assert.equal(backwardsOf({ need: 1000, years: 10, have: 2000000, ref, now }).alreadyThere, true);
   assert.equal(backwardsOf({ need: 4000, years: 20, have: 0, takeHome: 3000, spending: 3000, ref, now }).months, null); // nothing left over, nothing invested: no date
 });

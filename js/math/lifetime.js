@@ -6,10 +6,11 @@
 // what it changes. Pure: no DOM, no storage. It stands beside js/math (the coach app's engine) and reads its tax
 // functions; it is not yet in the spreadsheet registry (QUESTIONS.md).
 //
-// What this version leaves out, said plainly: gains in a taxable account are not taxed when sold (for most early
-// retirees they fall in the 0% band, so the tax shown is a little low for larger incomes); state rules that exclude
-// retirement income are not applied (state tax is the ordinary rate); required minimum distributions; and health cost
-// before 65 is the person's own guess, with no subsidy math.
+// What this version leaves out, said plainly: state rules that exclude retirement income are not applied (state tax
+// is the ordinary rate); Roth growth taken out before 59 and a half pays the 10% penalty but is not also counted as
+// income; money taken from the buckets in a working year (a block that costs more than that year's saving) pays the
+// penalty but no income tax; and health cost before 65 is the person's own guess.
+// tools/audit/engine2.py works every number here out a second time (docs/AUDIT.md).
 import { federalTax, stateTax } from './income.js';
 
 // Social Security counted as income: the provisional-income rule (26 U.S.C. 86). The thresholds are set in the law and
@@ -51,6 +52,7 @@ export function premiumCredit(income, benchmark, people = 1) {
 const PENALTY_AGE = 60;     // 59 and a half, in whole years: pretax money and Roth growth are free of the 10% penalty from here
 const PENALTY = 0.10;
 const SEASON = 5;           // years a Roth conversion waits before it can come out penalty-free
+const TAX_ROUNDS = 40, CREDIT_ROUNDS = 30; // how many times a year's tax, and its premium credit, may go round before the run moves on
 // tolerate: the lowest share of what life costs a strategy may pay in any year and still count as working.
 export const STRATEGIES = [
   { id: 'fixed', tolerate: 0.999, name: 'Steady spending', plain: 'Spend what your life costs every year, whatever the market does. The classic 4% rule works this way.' },
@@ -191,16 +193,28 @@ export function lifetime(x, ref, { returns = null } = {}) {
       // What must come out: spending less what comes in, plus this year's tax (found by going round a few times).
       // The premium credit depends on this year's income, which depends on what is taken out, so it goes round too.
       const on65 = (age >= 65 ? 1 : 0) + (P && age - x.age + P.age >= 65 ? 1 : 0), medicare = on65 ? on65 * medicareSurcharge(magi[k - 2] ?? 0, tax.filingStatus, ref) : 0;
-      let fromPortfolio = Math.max(0, spend + medicare - ss - earned), taxDue = 0, credit = 0, got = null, snap = null;
-      for (let i = 0; i < 8; i++) {
-        snap = { ...b };
-        got = draw(snap, Math.max(0, fromPortfolio - credit) + taxDue, age);
-        const pre = Math.max(got.pretax, Math.min(rmd, b.pretax)), conv = Math.min(convert, Math.max(0, snap.pretax));
-        const t = yearTax({ ordinary: pre + conv + earned, ss, gains: got.gains }, tax, ref) + got.penalty;
-        const c = benchmark > 0 ? Math.min(benchmark, premiumCredit(pre + conv + earned + got.gains + ss, benchmark, people)) : 0;
-        if (Math.abs(t - taxDue) < 1 && Math.abs(c - credit) < 1) { taxDue = t; credit = c; break; }
-        taxDue = t; credit = (credit + c) / 2; // ease toward it: the 400% line is a cliff
-      }
+      let fromPortfolio = Math.max(0, spend + medicare - ss - earned);
+      // This year's tax for a given credit. The tax is paid out of the same buckets, which is itself income, so it goes
+      // round until it stops moving (to 50 cents). A required withdrawal comes out first: only what is left can convert.
+      const settle = c0 => {
+        let due = 0, c = 0;
+        for (let i = 0; i < TAX_ROUNDS; i++) {
+          const snap = { ...b }, got = draw(snap, Math.max(0, fromPortfolio - c0) + due, age);
+          const pre = Math.max(got.pretax, Math.min(rmd, b.pretax)), conv = Math.min(convert, Math.max(0, b.pretax - pre));
+          const t = yearTax({ ordinary: pre + conv + earned, ss, gains: got.gains }, tax, ref) + got.penalty;
+          c = benchmark > 0 ? Math.min(benchmark, premiumCredit(pre + conv + earned + got.gains + ss, benchmark, people)) : 0;
+          if (Math.abs(t - due) < 0.5) { due = t; break; }
+          due = t;
+        }
+        return { due, c };
+      };
+      // The premium credit depends on this year's income, which depends on what is taken out, so it goes round too.
+      // At a line where the credit stops (four times the poverty line, or under it) taking the credit can itself move
+      // income across the line, and then nothing settles: the plan counts no credit that year (second engine, Nov 14 2026).
+      let credit = 0, at = settle(0);
+      for (let i = 0; i < CREDIT_ROUNDS && Math.abs(at.c - credit) >= 1; i++) { credit = at.c; at = settle(credit); }
+      if (Math.abs(at.c - credit) >= 1) { credit = 0; at = settle(0); }
+      const taxDue = at.due;
       fromPortfolio = Math.max(0, fromPortfolio - credit);
       const d = draw(b, fromPortfolio + taxDue, age);
       // A required withdrawal larger than what was needed still comes out: it is taxed and lands in the taxable account.
