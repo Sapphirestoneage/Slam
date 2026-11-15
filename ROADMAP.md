@@ -35,10 +35,10 @@ after Run 1.
 
 | Tool or job | Status | Where it lives | What is left, and what done means | Size |
 |---|---|---|---|---|
-| One engine for every tool | Partly on main | js/math/lifetime.js and js/math/projection.js | Two year-by-year engines exist (coach app and self-serve). Make every tool read one. Done: a test fails if any screen projects another way. | L |
-| The link you carry | On main | js/start/link.js | Works. Left: a version stamp so old links keep opening as tools change. | S |
+| One engine for every tool | Done | js/math/lifetime.js, test/audit.test.js | Every screen already reads the lifetime engine: the coach projection (js/math/projection.js) is math no screen shows. A test now fails if a screen reads it, or if money grows at any pace but the plan's. Still to do if the projection is ever shown: bring it into the second engine first. | L |
+| The link you carry | Done | js/start/link.js | Links already carry the file format number and old ones are migrated on opening (js/records.js importFile). Nothing to build. | S |
 | Sign-in, sync, shared plans for any number of people | Partly on main | js/cloud.js, js/sync.js, docs/CLOUD-SETUP.md | Built and tested against a stand-in server. Waiting on your project keys (decision 3). | S |
-| Quantum Collapse, measured | Partly on main | js/sharpen.js, js/math/ranges.js | Sharpen already names what blurs the plan most. Left: a measured table of how much each question shrinks the range across the test households, and the question order rebuilt from it. | M |
+| Quantum Collapse, measured | Done | tools/collapse, docs/COLLAPSE.md | tools/collapse/measure.mjs and docs/COLLAPSE.md. The five first questions are now asked in the measured order: spending, pay, owed, cash, invested. Not yet measured: the sharpening levels, and people between jobs. | M |
 
 ### Run 3: Audit the seven modules: Krug walks and the panel
 

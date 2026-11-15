@@ -193,7 +193,9 @@ def debt_plan(debts, extra, order):
         for i, d in enumerate(debts):
             if left[i] <= 0.005:
                 continue
-            charge = left[i] * d['apr'] / 12
+            # a 0% (or low) offer: its own rate for its first months, then the card's rate
+            rate = (d.get('promoApr') or 0) if month <= (d.get('promoMonths') or 0) else d['apr']
+            charge = left[i] * rate / 12
             interest += charge
             left[i] += charge
             p = min(left[i], d['payment'])

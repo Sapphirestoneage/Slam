@@ -44,12 +44,15 @@ export const STAGES = [
 
 // The five questions, in Fast Track's order. boxes: what is typed (one box, or a few on one screen). max: the slider's
 // top. none: the one-tap answer for "I have none of this".
+// The order is measured, not guessed (tools/collapse/measure.mjs, docs/COLLAPSE.md, Nov 15 2026): spending moves the FI
+// date most, so it is first and pay follows it; what is owed decides the next step for more people than cash or
+// investments do, so it is third. Before: pay, spending, cash, invested, owed.
 export const QUESTIONS = [
-  { key: 'income', title: 'How much lands in your bank account each month?', help: 'Your pay after taxes. A rough number is fine.', boxes: [{ id: 'takeHome', label: 'Take-home pay a month' }], max: 15000, step: 100, none: 'No pay right now' },
   { key: 'spending', title: 'About how much do you spend in a month?', help: 'Everything: rent, food, fun, debt payments. Your gut number is fine.', boxes: [{ id: 'gut', label: 'Spending a month' }], max: 12000, step: 100, none: null },
+  { key: 'income', title: 'How much lands in your bank account each month?', help: 'Your pay after taxes. A rough number is fine.', boxes: [{ id: 'takeHome', label: 'Take-home pay a month' }], max: 15000, step: 100, none: 'No pay right now' },
+  { key: 'card', title: 'Do you owe anything?', help: 'What you owe today on each. Leave a box empty if you have none of it.', boxes: [{ id: 'Credit card', label: 'Credit cards' }, { id: 'Student loan', label: 'Student loans' }, { id: 'Personal loan', label: 'Other debts' }], max: 60000, step: 500, none: 'No debt' },
   { key: 'cash', title: 'How much is in checking and savings?', help: 'What you could get to this week.', boxes: [{ id: 'checking', label: 'Checking' }, { id: 'savings', label: 'Savings' }], max: 50000, step: 500, none: 'Close to nothing' },
   { key: 'invested', title: 'How much do you have invested?', help: 'Every account together: 401(k), IRA, brokerage.', boxes: [{ id: 'invested', label: 'Invested, all accounts' }], max: 300000, step: 1000, none: 'Nothing yet' },
-  { key: 'card', title: 'Do you owe anything?', help: 'What you owe today on each. Leave a box empty if you have none of it.', boxes: [{ id: 'Credit card', label: 'Credit cards' }, { id: 'Student loan', label: 'Student loans' }, { id: 'Personal loan', label: 'Other debts' }], max: 60000, step: 500, none: 'No debt' },
 ];
 // ---------- Your work right now ----------
 // One tap on the first screen reshapes the journey (a question that does not apply is absent, not hidden). Two
@@ -60,7 +63,10 @@ export const situationSet = doc => doc.profile?.workSituation != null;
 export function setSituation(store, id) { store.setDoc('profile', { workSituation: id === 'between' ? 'Between jobs' : 'Employed (W-2)' }); }
 const BENEFIT_Q = { key: 'income', title: 'What is coming in right now?', help: 'Unemployment benefits, each week. A rough number is fine.', boxes: [{ id: 'benefit', label: 'Unemployment, a week' }], max: 1000, step: 10, none: 'Nothing right now' };
 // The five questions for this person: between jobs, the pay question asks what is coming in now.
-export const questionsFor = doc => (situationOf(doc) === 'between' ? QUESTIONS.map(q => (q.key === 'income' ? BENEFIT_Q : q)) : QUESTIONS);
+// Between jobs the order is its own: what is coming in and how long the money lasts come first (the measured order above
+// is for people with a paycheck; this one has not been measured).
+const BETWEEN_ORDER = ['income', 'spending', 'cash', 'invested', 'card'];
+export const questionsFor = doc => (situationOf(doc) === 'between' ? BETWEEN_ORDER.map(k => (k === 'income' ? BENEFIT_Q : QUESTIONS.find(q => q.key === k))) : QUESTIONS);
 const benefitRow = doc => (doc.records || []).find(r => r.kind === 'income' && r.type === 'Unemployment') ?? null;
 const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const ymAt = (months, now) => { const d = new Date(now.getFullYear(), now.getMonth() + months, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
@@ -129,7 +135,7 @@ export function progressOf(doc, ref, { now = new Date() } = {}) {
   const age = ageOf(doc.profile || {}, now);
   const answered = answeredOf(doc, ref);
   const count = QUESTIONS.filter(q => answered[q.key]).length;
-  return { hasAge: age != null, age, answered, count, total: QUESTIONS.length, next: QUESTIONS.find(q => !answered[q.key])?.key ?? null, done: age != null && count === QUESTIONS.length, situation: situationOf(doc) };
+  return { hasAge: age != null, age, answered, count, total: QUESTIONS.length, next: questionsFor(doc).find(q => !answered[q.key])?.key ?? null, done: age != null && count === QUESTIONS.length, situation: situationOf(doc) };
 }
 
 // What is already on file for a question's boxes, so it is shown, not asked again: { boxId: number or null }.
@@ -287,8 +293,11 @@ export function movedWords(before, after) {
   const open = /^Past /.test(after.words.fi ?? ''); // one half of the picture (pay with typical spending, or the reverse) can read as never: say what comes next instead
   if (open && after.typical > 0) parts.push('Saved. The next answer fills in the other half of the picture.');
   else if (before.words.fi !== after.words.fi) parts.push(`Your date range was ${before.words.fi}. Now it is ${after.words.fi}.`);
-  else if (before.words.debtFree !== after.words.debtFree) parts.push(`Debt free was ${before.words.debtFree}. Now it is ${after.words.debtFree}.`);
+  else if (before.words.debtFree !== after.words.debtFree) parts.push(after.words.debtFree == null ? 'Nothing owed, so every dollar left over can go toward your own future.' : before.words.debtFree == null ? `Debt free: ${after.words.debtFree}.` : `Debt free was ${before.words.debtFree}. Now it is ${after.words.debtFree}.`);
   else if (before.words.surplus !== after.words.surplus) parts.push(`What is left each month is now ${after.words.surplus}.`);
+  else if (before.words.efMonths !== after.words.efMonths) parts.push(`Your cushion now covers ${after.words.efMonths} of spending.`);
+  // what is owed and what is in the bank mostly move the next step, not the date (docs/COLLAPSE.md): say so when it moves
+  if (before.step?.name && after.step?.name && before.step.name !== after.step.name) parts.push(`Your next step is now: ${after.step.name}.`);
   if (after.typical === 0 && before.typical > 0) parts.push('Every number in your plan is now yours.');
   return parts.length ? parts.join(' ') : null;
 }

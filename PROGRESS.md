@@ -30,3 +30,10 @@ old parts of this file and of `QUESTIONS.md` moved to `docs/archive/`. Nothing i
   in the lifetime plan. Each change was made in both engines and they agree to the dollar; three new tests work the
   numbers by hand.
 
+## Nov 15 2026: Run 2, one engine and the measured collapse
+
+- One engine: every screen already reads the lifetime engine; a test now holds that, and holds one growth pace.
+- Quantum Collapse, measured (`docs/COLLAPSE.md`): spending and pay do 87% of the work on the FI date; what is owed and
+  cash decide the next step. The first questions are asked in the measured order, and every answer says what it moved.
+- The second engine also covers 0% offers. Links already carried a format number, so nothing was needed there.
+

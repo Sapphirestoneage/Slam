@@ -161,3 +161,13 @@ test('what blurs the plan most is named, with its share: a gut spending number i
   assert.ok(b.top.share > 0.9 && b.top.spanMonths > 60 && b.guess === true);
   assert.equal(b.fix, 'statement');
 });
+
+test('what an answer moved is always a whole sentence, in the measured order (docs/COLLAPSE.md)', () => {
+  assert.deepEqual(QUESTIONS.map(q => q.key), ['spending', 'income', 'card', 'cash', 'invested'], 'spending first, pay next, what is owed third');
+  const s = person(1994); let p = planOf(s.doc, ref, priors, { flags, now });
+  const said = [];
+  for (const q of QUESTIONS) { q.key === 'card' ? answer(s, 'card', {}, { none: true }) : answer(s, q.key, ANSWERS[q.key]); const a = planOf(s.doc, ref, priors, { flags, now }); said.push(movedWords(p, a)); p = a; }
+  for (const t of said) { assert.ok(t, 'every answer says what it moved'); assert.doesNotMatch(t, /null|undefined|NaN/); }
+  assert.match(said[2], /Nothing owed/);
+  assert.match(said[3], /cushion now covers/);
+});
