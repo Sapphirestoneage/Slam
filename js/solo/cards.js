@@ -190,11 +190,11 @@ function draw(api) {
   goNext = () => { const t = targetOf(); if (!t) return; t.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); if (t.tagName === 'SUMMARY') t.focus({ preventScroll: true }); };
 
   const y = window.scrollY;
-  $('main').replaceChildren(
+  $('main').replaceChildren(...[
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Part of your plan'), h('h1', {}, 'Is this card right for me?'), h('p', { style: { marginBottom: 0 } }, 'Your next move, the move after it, and what each card opens and uses, worked out from your own plan. It will also tell you when the answer is no card at all.')),
     next(), built(), held(), dates(), plain(), practice(), pairs(),
     h('div.st-card', { id: 'carry' }, h('h2', { style: { marginTop: 0 } }, 'Take it with you'), h('p.st-small', {}, 'These answers are saved in your plan, so the link carries them.'),
-      h('div.st-row', {}, copyLink(api), btn('All the steps', async () => { location.href = `one.html#/d/${await pack(api.store.doc)}`; }, 'slim'))));
+      h('div.st-row', {}, copyLink(api), btn('All the steps', async () => { location.href = `one.html#/d/${await pack(api.store.doc)}`; }, 'slim')))].filter(Boolean));
   foot();
   window.scrollTo(0, y);
   if (R.who === 'Me') { const d = new Date(), today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`, last = all().last, cur = { line: R.line, left: R.slots.left, at: today };
@@ -214,5 +214,5 @@ const json = r => r.json();
 let API = null;
 Promise.all([fetch('data/library/cards.json').then(json), fetch('data/library/card-offers.json').then(json), fetch('data/library/card-tools.json').then(json), fetch('data/library/card-drill.json').then(json)])
   .then(([a, b, c, e]) => { lib = a; off = b; tools = c; drill = e; if (API) API.render(); })
-  .catch(() => $('main').replaceChildren(h('div.st-card', {}, h('h1', {}, 'Is this card right for me?'), h('p', {}, 'The card list did not load. Refresh the page to try again.'))));
+  .catch(() => $('main').replaceChildren(...[h('div.st-card', {}, h('h1', {}, 'Is this card right for me?'), h('p', {}, 'The card list did not load. Refresh the page to try again.'))].filter(Boolean)));
 boot('cards', draw).then(api => { API = api; if (lib && off && tools && drill) api.render(); });

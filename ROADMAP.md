@@ -44,13 +44,13 @@ after Run 1.
 
 | Tool or job | Status | Where it lives | What is left, and what done means | Size |
 |---|---|---|---|---|
-| What is my first move? | On main | first.html | Krug pass and panel audit only. | S |
-| Start at the finish line (begin with the end in mind) | On main | end.html | Krug pass and panel audit only. | S |
-| How do I handle money? (quiz, couples pass, share with friends) | On main | quiz.html | Krug pass and panel audit only. | S |
-| When am I debt free? | On main | debt.html | Krug pass and panel audit only. | S |
-| How long would my money last? | On main | runway.html | Krug pass and panel audit only. | S |
-| Where am I on the skill tree? (625 skills) | On main | skills.html | Krug pass and panel audit only. | S |
-| Your whole plan (levels, what-ifs, lifetime, fire drills) | On main | start.html | The biggest screen (1,246 lines in one file). Left: your "is this a real plan" doubt, answered by the second engine and the measured collapse. | M |
+| What is my first move? | Walked | first.html | First-timer walk done on a phone width, fixes in (docs/KRUG-2026-11-15.md). Laptop width still to walk. | S |
+| Start at the finish line (begin with the end in mind) | Walked | end.html | First-timer walk done on a phone width, fixes in (docs/KRUG-2026-11-15.md). Laptop width still to walk. | S |
+| How do I handle money? (quiz, couples pass, share with friends) | Walked | quiz.html | First-timer walk done on a phone width, fixes in (docs/KRUG-2026-11-15.md). Laptop width still to walk. | S |
+| When am I debt free? | Walked | debt.html | First-timer walk done on a phone width, fixes in (docs/KRUG-2026-11-15.md). Laptop width still to walk. | S |
+| How long would my money last? | Walked | runway.html | First-timer walk done on a phone width, fixes in (docs/KRUG-2026-11-15.md). Laptop width still to walk. | S |
+| Where am I on the skill tree? (625 skills) | Walked | skills.html | First-timer walk done on a phone width, fixes in (docs/KRUG-2026-11-15.md). Laptop width still to walk. | S |
+| Your whole plan (levels, what-ifs, lifetime, fire drills) | On main | start.html | The five first questions walked and reordered (docs/COLLAPSE.md). The levels, the what-ifs and the lifetime screens still to walk (Run 4). | M |
 
 ### Run 4: Card vault and the FIRE journey
 

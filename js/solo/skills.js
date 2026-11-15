@@ -26,9 +26,9 @@ function draw(api) {
       h('span.st-quizname', {}, h('strong', {}, t.name), h('small', {}, t.band ?? 'Not started')), h('span.st-quiztrack', {}, h('b', { style: { width: `${Math.max(2, t.level / 25 * 100)}%` } })), h('span.st-quiznum', {}, String(t.level))))),
     h('p.st-small.st-soft', {}, 'Tap a tree to place it again. Levels come in fives here; the full tree fills in the steps between.'),
     T.done ? null : h('div.st-row', {}, btn('Keep going', () => { api.remember({ treePause: false }); api.render(); }, 'primary')));
-  $('main').replaceChildren(
+  $('main').replaceChildren(...[
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, api.me.title), h('p', { style: { marginBottom: 0 } }, `625 skills, 25 trees. For each tree you get up to ${MILESTONES.length} quick "have you done this?" checks, and the first "not yet" places you. Stop any time: what you have placed is kept.`)),
     cur && !paused ? ask() : null, (T.placed && (paused || !cur)) ? result() : null,
-    carryCard(api, { ready: true, pulse: !cur || paused }));
+    carryCard(api, { ready: true, pulse: !cur || paused })].filter(Boolean));
 }
 boot('skills', draw);

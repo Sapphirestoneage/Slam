@@ -38,14 +38,14 @@ function draw(api) {
   const next = btn(`Next: ${me.nextLabel} ›`, async () => { location.href = await api.nextUrl(); }, 'primary big');
   const swap = () => { const fresh = answer(api); result.replaceWith(fresh); result = fresh; next.disabled = !bookOf(api.store.doc, DEBT_BOOK).total; next.classList.toggle('st-pulse', !next.disabled && !document.querySelector('#main .st-book .st-pulse')); };
   result = answer(api);
-  $('main').replaceChildren(
+  $('main').replaceChildren(...[
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, me.title),
       h('p', { style: { marginBottom: 0 } }, 'List what you owe. You get the month it is gone, which one to pay first, and what a little extra does. Nothing is uploaded: your numbers live in this page\'s address.')),
     h('div.st-card', {}, h('h2', { style: { marginTop: 0 } }, 'What you owe'), bookUI({ store: api.store, book: DEBT_BOOK, pulse: true, btn, chip, onState: () => { if (result?.isConnected) { swap(); api.save(); } } })),
     result,
     h('div.st-card', {}, h('h2', { style: { marginTop: 0 } }, 'Take it with you'),
       h('p.st-small', {}, 'The next step opens with these numbers already in it. Nothing to type twice.'),
-      h('div.st-row', {}, next), h('div.st-row', { style: { marginTop: '10px' } }, copyLink(api), h('a.st-btn.slim', { href: 'one.html' }, 'All the steps'))));
+      h('div.st-row', {}, next), h('div.st-row', { style: { marginTop: '10px' } }, copyLink(api), h('a.st-btn.slim', { href: 'one.html' }, 'All the steps')))].filter(Boolean));
   next.disabled = !B.total; next.classList.toggle('st-pulse', !!B.total && !document.querySelector('#main .st-book .st-pulse'));
   if (!B.count) document.querySelector('#main .st-bookhead .st-btn')?.classList.add('st-pulse');
   $('foot').replaceChildren(h('p.st-small', {}, 'Education, not advice. Your numbers stay in your browser and in the link you choose to share.'));

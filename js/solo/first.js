@@ -20,8 +20,8 @@ function draw(api) {
   const result = () => h('div.st-card.hero', { id: 'answer' }, h('div.st-eyebrow', {}, 'Your first move'), h('h2', { style: { margin: '0 0 6px', fontSize: '1.6rem' } }, C.move.title), h('p', { style: { fontWeight: 700 } }, C.move.why),
     C.notes.length ? h('ul.st-steps', {}, C.notes.map(t => h('li', {}, t))) : null,
     h('div.st-row', { style: { marginTop: '10px' } }, go), h('div.st-row', { style: { marginTop: '10px' } }, btn('Change my answers', () => { api.remember({ collapse: {} }); api.render(); }, 'slim'), copyLink(api), h('a.st-btn.slim', { href: 'one.html' }, 'All the steps')));
-  $('main').replaceChildren(
+  $('main').replaceChildren(...[
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, api.me.title), h('p', { style: { marginBottom: 0 } }, 'There are thousands of money plans. A few taps rule out all but yours. No numbers needed yet.')),
-    meter, C.done ? result() : ask(C.next));
+    meter, C.done ? result() : ask(C.next)].filter(Boolean));
 }
 boot('first', draw);

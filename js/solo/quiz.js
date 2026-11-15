@@ -54,9 +54,9 @@ function draw(api) {
         const url = `${location.origin}${location.pathname}#/d/${await pack(theirs)}`; try { await navigator.clipboard.writeText(url); $('sent').textContent = others.length ? 'Link copied. It carries everyone so far, so the next person sees all of you side by side.' : 'Link copied. Send it to one person or several: each sees themselves beside you. To get everyone on one picture, each person passes on their own link.'; } catch { $('sent').replaceChildren(h('input', { readonly: '', value: url, 'aria-label': 'Link for your person', style: { width: '100%' }, onFocus: ev => ev.target.select() })); } }, 'slim')),
       h('p.st-small', { id: 'sent', role: 'status', style: { margin: '6px 0 0' } }, m.quizGuess && Object.keys(m.quizGuess).length >= 10 ? 'Your guess rides along in the link, so whoever opens it sees how well you read them.' : '')),
     h('div.st-row', { style: { marginTop: '10px' } }, btn('Change my answers', () => { api.remember({ quizAt: items[0].id }); api.render(); }, 'slim')));
-  $('main').replaceChildren(
+  $('main').replaceChildren(...[
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, api.me.title), h('p', { style: { marginBottom: 0 } }, guessing ? 'Now the same ten, answered the way you think one of your people would. It is a guess: that is the point.' : other && !Q.ready ? 'Someone sent you this to compare. Ten taps, answered as yourself. Go with your gut.' : 'One statement at a time. Go with your gut: there are no right answers, and nobody sees this but you.')),
     asking ? ask() : null, Q.ready && !asking ? result() : null,
-    carryCard(api, { ready: true, pulse: Q.ready && !asking }));
+    carryCard(api, { ready: true, pulse: Q.ready && !asking })].filter(Boolean));
 }
 boot('quiz', draw);

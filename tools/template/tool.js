@@ -23,12 +23,12 @@ function draw(api) {
   };
   const card = answerCard(), carry = carryCard(api, { ready: spending > 0 });
   // while typing only the headline moves; the card redraws when the box is left
-  const set = (v, typing) => { answer(api.store, 'spending', { gut: v }); if (!typing) return api.render(); api.save(); const big = card.querySelector('.st-big'), R = yearOf({ spending: v, trim }); if (big && R.ready) big.textContent = money(Math.round(R.year)); carry.setReady(R.ready); };
+  const set = (v, typing) => { answer(api.store, 'spending', { gut: v }); if (!typing) return api.render(); api.save(); const big = card.querySelector('.st-big'), R = yearOf({ spending: v, trim }); if (big && R.ready) big.textContent = money(Math.round(R.year)); else if (!big && R.ready) { card.className = 'st-card hero'; card.replaceChildren(h('div.st-eyebrow', {}, 'Your answer'), h('div.st-soft', {}, 'A year of it comes to'), h('div.st-big', {}, money(Math.round(R.year)))); } carry.setReady(R.ready); };
   const inputs = h('div.st-card', { onFocusout: e => { const t = e.relatedTarget, main = document.getElementById('main'); if (!t || t === main || !main.contains(t)) setTimeout(() => api.render(), 0); } }, h('h2', { style: { marginTop: 0 } }, 'One number'),
     numBox('What you spend in a month, all in', spending, [2000, 3000, 4000, 5000, 6500], set, { id: 'spend', help: 'Everything. A rough number is enough.' }));
-  document.getElementById('main').replaceChildren(
+  document.getElementById('main').replaceChildren(...[
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, api.me.title), h('p', { style: { marginBottom: 0 } }, 'One sentence on why looking at this is worth a minute.')),
-    inputs, card, carry);
+    inputs, card, carry].filter(Boolean));
   if (!(spending > 0)) inputs.querySelector('.st-box .in')?.classList.add('st-pulse');
 }
 // CHANGE: this tool's id in SOLO (js/solo.js)

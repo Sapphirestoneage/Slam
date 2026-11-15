@@ -2,7 +2,7 @@
 // Standalone: "Start at the finish line". The end first (what you need), then backwards: by when, what you have, what
 // comes in and goes out. Each answer opens the next, and the picture fills in toward today. What you have, your pay and
 // your spending are the whole plan's own questions, so they carry straight in.
-import { boot, h, chip, money, numBox, stepLine, carryCard, foot } from './shell.js';
+import { boot, h, btn, chip, money, numBox, stepLine, carryCard, foot } from './shell.js';
 import { answer, onFile } from '../journey.js';
 import { backwardsOf, NEED_MONTH, WHEN_YEARS } from '../solo.js';
 
@@ -17,7 +17,10 @@ function draw(api) {
   stepLine(api); foot();
   const { g, B, inv, pay, spend } = read(api), per = g.per ?? 'month';
   const goal = patch => { api.remember({ goal: { ...g, ...patch } }); api.render(); };
-  const typed = (fn) => (v, typing) => { fn(v); if (!typing) api.render(); else { api.save(); const R = read(api).B, big = $('answer')?.querySelector('.st-big'); if (big && R.step >= 4 && !R.growsThere) big.textContent = `${money(Math.round(R.needed))} a month`; } };
+  // A typed number has to say how to go on with the keyboard still up (Krug walk, Nov 15 2026: the next step stayed
+  // shut until a tap somewhere else, and nothing said so). A Go on button shows beside the box being typed in.
+  const goOn = () => { const at = document.activeElement?.closest?.('.st-field, .st-box'); if (at && !at.querySelector('.st-goon')) { const b2 = btn('Go on ›', () => api.render()); b2.classList.add('st-goon'); b2.style.marginTop = '8px'; at.append(b2); } };
+  const typed = (fn) => (v, typing) => { fn(v); if (!typing) api.render(); else { api.save(); if (v != null) goOn(); const R = read(api).B, big = $('answer')?.querySelector('.st-big'); if (big && R.step >= 4 && !R.growsThere) big.textContent = `${money(Math.round(R.needed))} a month`; } };
   const card = (n, title, body, on) => h(`div.st-card${on ? '' : '.st-waiting'}`, { 'data-step': n }, h('div.st-eyebrow', {}, `${n} of 4`), h('h2', { style: { margin: '0 0 6px' } }, title), on ? body : h('p.st-soft', { style: { margin: 0 } }, 'Opens after the step above.'));
   const pct = v => `${+(v * 100).toFixed(1)}%`;
   const answerCard = B.step < 4 ? null : h('div.st-card.hero', { id: 'answer', 'aria-live': 'polite' }, h('div.st-eyebrow', {}, 'Working backwards, here is today'),
@@ -32,7 +35,7 @@ function draw(api) {
       !B.onTrack ? h('li', {}, h('span.dot', {}, ''), h('span', {}, 'Or give it more time', h('small', {}, 'Tap a later year in step 2 and watch the number fall')), h('span.when', {}, '')) : null) : null,
     h('p.st-small.st-soft', {}, `In today's dollars. Growth of ${pct(B.realReturn)} a year after inflation and taking out ${pct(B.withdrawalRate)} a year, the same as the whole plan. Tax on what you take out later is not counted here.`));
   const keep = document.activeElement?.id;
-  $('main').replaceChildren(
+  $('main').replaceChildren(...[
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, api.me.title), h('p', { style: { marginBottom: 0 } }, 'Begin with the end. Say what you need, then when, and we work backwards to what today has to look like.')),
     card(1, 'What do you need to live on, once work is optional?', [
       h('div.st-field', {}, h('div.st-flabel', {}, 'Say it as'), h('div.st-chips', {}, PER.map(([id, l]) => chip(l, per === id, () => goal({ per: id, need: null }))))),
@@ -44,7 +47,7 @@ function draw(api) {
     card(4, 'What comes in and what goes out, each month?', [
       numBox('Take-home pay a month', pay, [2500, 3500, 4500, 6000, 8000], typed(v => answer(api.store, 'income', { takeHome: v ?? 0 })), { id: 'pay' }),
       numBox('What you spend a month, all in', spend, [2000, 3000, 4000, 5000, 6500], typed(v => answer(api.store, 'spending', { gut: v ?? 0 })), { id: 'spend' })], B.step >= 4),
-    answerCard, carryCard(api, { ready: true, pulse: B.step === 5 }));
+    answerCard, carryCard(api, { ready: true, pulse: B.step === 5 })].filter(Boolean));
   // one pulse: the first step still waiting for an answer
   if (B.step < 5) { const at = document.querySelector(`[data-step="${B.step === 4 ? 4 : B.step}"]`), box = B.step === 2 ? at?.querySelector('.st-chips') : at?.querySelectorAll('.st-box .in')[B.step === 4 && pay != null ? 1 : 0]; box?.classList.add('st-pulse'); }
   if (!wired) { wired = true; $('main').addEventListener('focusout', e => { const t = e.relatedTarget, main = $('main'); if (e.target.matches?.('input') && (!t || t === main || !main.contains(t))) setTimeout(() => api.render(), 0); }); } // leaving a box redraws; a tap on a chip redraws on its own

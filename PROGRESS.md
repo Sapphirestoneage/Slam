@@ -37,3 +37,10 @@ old parts of this file and of `QUESTIONS.md` moved to `docs/archive/`. Nothing i
   cash decide the next step. The first questions are asked in the measured order, and every answer says what it moved.
 - The second engine also covers 0% offers. Links already carried a format number, so nothing was needed there.
 
+## Nov 15 2026: Run 3, first-timer walks
+
+- Eight pages walked on a phone width two ways (follow the pulse; type like a person). Five things found and fixed:
+  the word "null" printed on three pages, the runway answer not showing while typing, no way to go on after typing on
+  the finish line page, a "null" sentence for people who owe nothing, and a builder's word on the front door.
+  `docs/KRUG-2026-11-15.md`.
+

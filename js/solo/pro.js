@@ -77,9 +77,9 @@ async function draw() {
     h('div.st-signin', { style: { marginTop: '10px' } }, h('div.st-box', {}, h('div.in', {}, h('input', { id: 'cname', type: 'text', placeholder: 'Client name or initials', 'aria-label': 'Client name or initials', autocomplete: 'off' }))), btn('Add a client plan', async () => { const a = addClient(acct, $('cname').value), sp = a.spaces.find(s => s.id === a.active); put({ ...a, active: acct.active }, sp.id, stampCard(newHousehold({ name: sp.name }), card)); }, rows.length ? '' : 'primary')),
     cloud?.signedIn() ? null : h('p.st-small.st-soft', { style: { margin: '8px 0 0' } }, cloud ? 'Sign in on the front page to send invites and keep these in step across devices.' : 'Inviting a client needs sign-in, which turns on when the server is connected. ', cloud ? null : h('a', { href: 'one.html?practice' }, 'Try it in practice mode'), cloud ? null : '.'));
 
-  $('main').replaceChildren(
+  $('main').replaceChildren(...[
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'For coaches and planners'), h('h1', {}, 'Your clients, one list'), h('p', { style: { marginBottom: 0 } }, 'Each client fills in their own plan on their phone. You see where each one is, what changed, and print one page for the meeting.')),
     ui.note ? h('p.st-note', { role: 'status' }, ui.note) : null, list, cardCard,
-    h('div.st-row', {}, h('a.st-btn.slim', { href: 'one.html' }, 'Back to the front page')));
+    h('div.st-row', {}, h('a.st-btn.slim', { href: 'one.html' }, 'Back to the front page'))].filter(Boolean));
 }
 draw();

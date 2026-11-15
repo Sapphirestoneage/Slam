@@ -28,15 +28,21 @@ function draw(api) {
   const setNum = (key, v, typing) => { if (key === 'cash') { const t = cash || 0, c = cashNow.checking ?? 0; answer(api.store, 'cash', v == null ? { checking: 0, savings: 0 } : t > 0 ? { checking: Math.round(v * c / t), savings: v - Math.round(v * c / t) } : { checking: 0, savings: v }); } else answer(api.store, 'spending', { gut: v ?? 0 });
     if (typing) { const fresh = (() => { const c2 = onFile(api.store.doc, 'cash'), s2 = onFile(api.store.doc, 'spending'); return runwayOf({ cash: (c2.checking ?? 0) + (c2.savings ?? 0), spending: s2.gut ?? null, stillIn, cut }); })(); api.save(); soft(fresh); } else api.render(); };
   // while typing, only the headline moves; the full card redraws when the box is left
-  const soft = R => { const big = card.querySelector('.st-big'); if (big && R.ready && !R.covered) big.textContent = R.whole >= 1 ? `${R.whole} ${R.whole === 1 ? 'month' : 'months'}` : 'Under a month'; carry?.setReady(R.ready); };
+  const lasts = R => (R.covered ? 'It keeps going' : R.whole >= 1 ? `${R.whole} ${R.whole === 1 ? 'month' : 'months'}` : 'Under a month');
+  // The answer has to appear the moment the second number is typed, with the keyboard still up (Krug walk, Nov 15
+  // 2026: it stayed on "Your answer shows here" until a tap elsewhere). The headline goes in now; the rest when the box is left.
+  const soft = R => { const big = card.querySelector('.st-big');
+    if (big && R.ready) big.textContent = lasts(R);
+    else if (!big && R.ready) { card.className = 'st-card hero'; card.replaceChildren(h('div.st-eyebrow', {}, 'Your answer'), h('div.st-soft', {}, R.covered ? 'What still comes in covers what goes out' : 'Your money lasts about'), h('div.st-big', {}, lasts(R))); }
+    carry?.setReady(R.ready); };
   carry = carryCard(api, { ready: cash != null && spending > 0, pulse: cash != null && spending > 0 });
   const inputs = h('div.st-card', { onFocusout: e => { const t = e.relatedTarget, main = document.getElementById('main'); if (!t || t === main || !main.contains(t)) setTimeout(() => api.render(), 0); } }, h('h2', { style: { marginTop: 0 } }, 'Two numbers'),
     numBox('Cash you could reach this week (checking and savings)', cash, [1000, 2500, 5000, 10000, 20000], (v, typing) => setNum('cash', v, typing), { id: 'cash' }),
     numBox('What you spend in a month, all in', spending, [2000, 3000, 4000, 5000, 6500], (v, typing) => setNum('spending', v, typing), { id: 'spend', help: 'Rent, food, bills, fun: everything. A rough number is enough.' }));
   const keep = document.activeElement?.id;
-  $('main').replaceChildren(
+  $('main').replaceChildren(...[
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, api.me.title), h('p', { style: { marginBottom: 0 } }, 'If the pay stopped tomorrow, how many months are covered? Looking at it once, calmly, is the whole exercise.')),
-    inputs, card, carry);
+    inputs, card, carry].filter(Boolean));
   if (cash == null) inputs.querySelector('.st-box .in')?.classList.add('st-pulse'); else if (!(spending > 0)) inputs.querySelectorAll('.st-box .in')[1]?.classList.add('st-pulse');
   if (keep && document.activeElement?.id !== keep) { /* focus left with the redraw: that is fine, the box was left */ }
 }
