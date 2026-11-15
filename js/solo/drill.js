@@ -10,7 +10,7 @@ import { lifeOf } from '../lifetime/inputs.js';
 import { answeredOf } from '../math/agestart.js';
 import { pack } from '../start/link.js';
 
-const [priors, flags, hist] = await Promise.all(['priors-2026', 'flags', 'history-returns'].map(f => fetch(`data/${f}.json`).then(r => r.json())));
+const [priors, flags, hist] = await Promise.all([fetch('data/priors-2026.json').then(r => r.json()), fetch('data/flags.json').then(r => r.json()), fetch('data/history-returns.json').then(r => r.json())]);
 const $ = id => document.getElementById(id), AGES = [22, 25, 30, 35, 40, 50, 60];
 // which answers each drill stands on; a drill shows only when all of them are the person's own
 const NEEDS = { bill: ['cash'], job: ['cash', 'spending', 'income'], gap: ['cash', 'spending'], cut: ['income', 'spending'], crash: ['invested', 'income', 'spending'], miss: ['card'] };
