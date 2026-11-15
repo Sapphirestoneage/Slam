@@ -151,7 +151,7 @@ test('what a card opens and uses, and credits counted per card', () => {
 
 // ---- The loop: the card plan read from the household plan (js/cardplan.js) ----
 import { Store, newHousehold } from '../js/records.js';
-import { cardPlanOf, cardRowsOf } from '../js/cardplan.js';
+import { cardPlanOf, cardRowsOf, addHeldCard } from '../js/cardplan.js';
 const refDoc = read('../data/reference-2026.json');
 
 test('one input, one answer: the Budget, the Credit cards list, the debts and the Profile feed the card plan', () => {
@@ -188,4 +188,21 @@ test('one input, one answer: the Budget, the Credit cards list, the debts and th
   assert.equal(inDebt.kind, 'debt'); assert.equal(inDebt.moves.length, 0); assert.equal(inDebt.unpicked.length, 1);
   const S3 = withCard.setups(); assert.equal(S3.list.length, 3); assert.equal(withCard.setups(), S3, 'worked out once');
   assert.equal(P.scoreBand(null, D.scoreBands), null); assert.equal(P.scoreBand(760, D.scoreBands), 'excellent'); assert.equal(P.scoreBand(640, D.scoreBands), 'fair');
+});
+
+test('adding a card on the card plan makes the same row Credit cards makes, and a carried balance turns the answer', () => {
+  const now = new Date(2026, 10, 14), st = new Store(newHousehold({ name: 'Visitor' }));
+  const cfu = lib.cards.find(c => c.id === 'chase-freedom-unlimited');
+  addHeldCard(st, cfu, { inFull: true });
+  const rows = cardRowsOf(st.doc);
+  assert.equal(rows.length, 1); assert.equal(rows[0].type, 'Credit card'); assert.equal(rows[0].name, 'Freedom Unlimited');
+  assert.equal(rows[0].values.cardId, cfu.id); assert.equal(rows[0].values.payChoice, 'In full'); assert.equal(rows[0].values.balance, undefined, 'no balance invented');
+  assert.ok(rows[0].values.institutionId, 'the issuer became the institution');
+  const R = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(R.held.length, 1); assert.equal(R.kind, 'open'); assert.ok(!R.moves.some(m => m.offer.cardId === cfu.id));
+  addHeldCard(st, lib.cards.find(c => c.id === 'chase-freedom-flex'));
+  assert.equal(st.doc.records.filter(r => r.kind === 'institution' || r.type === 'Bank').length <= 1, true, 'the institution is reused');
+  st.setDoc('settings', { start: { cardPlan: { carry: true } } });
+  const C = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(C.kind, 'debt'); assert.equal(C.inputs.carryTap, true); assert.equal(C.inputs.heavyListed, false);
 });

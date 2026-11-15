@@ -8,14 +8,15 @@
 import { boot, h, money, btn, chip, foot, copyLink } from './shell.js';
 import { pack } from '../start/link.js';
 import { carryUrl } from '../solo.js';
-import { cardPlanOf } from '../cardplan.js';
+import { cardPlanOf, addHeldCard } from '../cardplan.js';
+import { issuerName } from '../math/cards.js';
 import { RULES } from '../registry/assumptions.js';
 import * as P from '../math/cardplan.js';
 
 const $ = id => document.getElementById(id);
 const SCORES = [['fair', 'Under 670'], ['good', '670 to 739'], ['excellent', '740 or more']];
 const LEVEL = { fits: 'Fits', maybe: 'Maybe', later: 'Later' };
-const UI = { open: {}, year: {}, all: false }; // what is unfolded on this visit: not part of the plan
+const UI = { open: {}, year: {}, all: false, bank: null, adding: null }; // what is unfolded on this visit: not part of the plan
 let lib = null, off = null, tools = null;
 
 const monthSay = s => P.monthWords(Number(s.slice(0, 4)) * 12 + Number(s.slice(5, 7)) - 1);
@@ -81,10 +82,11 @@ function draw(api) {
       h('dl.st-kv', {},
         line('Everyday spending', I.spend.fromBudget ? `${money(Math.round(I.spend.monthly))} a month` : 'No everyday lines yet', I.spend.fromBudget ? from('From your Budget') : h('span.st-tag', {}, 'Typical amounts used')),
         line('Cards you hold', heldNames.length ? heldNames.join(', ') : R.unpicked.length ? `${R.unpicked.length} not matched to a card yet` : 'None listed', from('From Credit cards')),
-        line('Debt at 8% or more', I.heavy ? 'Yes' : 'No', from('From your debts')),
+        line('Debt at 8% or more', I.heavy ? 'Yes' : 'No', I.heavyListed || !I.carryTap ? from('From your debts') : h('span.st-tag', {}, 'You said you carry a card balance')),
         line('Credit score', I.score.fromProfile ? String(I.score.number) : I.score.band ? SCORES.find(s => s[0] === I.score.band)?.[1] ?? 'None yet' : 'Not in your plan', I.score.fromProfile ? from('From your Profile') : null),
         line('Growth and withdrawal', `${+(R.rr * 100).toFixed(1)}% and ${+(R.wr * 100).toFixed(1)}%`, from('From your plan'))),
       h('div.st-row', { style: { marginTop: '12px' } }, btn('Change these in my plan', async () => { location.href = carryUrl('plan', await pack(api.store.doc)); }, 'slim')),
+      I.carryTap ? h('div.st-row', { style: { marginTop: '8px' } }, btn('I no longer carry a card balance', () => mine({ carry: null }), 'slim'), btn('Add the balance to my plan', async () => { location.href = carryUrl('debt', await pack(api.store.doc)); }, 'slim')) : null,
       I.spend.fromBudget ? null : question('Until the Budget has them: what you put on cards in a month', [500, 1000, 2000, 4000].map(v => chip(v === 4000 ? '$4,000 or more' : `About ${money(v)}`, I.spendTap === v, () => mine({ spend: I.spendTap === v ? null : v })))),
       I.score.fromProfile ? null : question('Until your score is in the plan', SCORES.map(([v, l]) => chip(l, cp().score === v, () => mine({ score: cp().score === v ? null : v })))),
       h('h3', { style: { margin: '18px 0 0' } }, 'Only this page asks'),
@@ -106,9 +108,23 @@ function draw(api) {
       h('div.cp-q', {}, h('div.st-flabel', {}, x.opened ? `Opened ${monthSay(x.opened)}` : 'When did you open it? (for the dates and the 5 card limit)'),
         x.opened ? h('div.st-row', {}, btn('Change the month', () => onRow(x.row, { opened: null }), 'slim')) : monthPick(`held-${x.row.id}`, d => onRow(x.row, { opened: d })),
         x.opened ? null : h('div.st-small.st-soft', {}, 'Older than two years? Leave it blank.')),
+      h('div.st-row', {}, btn('Take this card off my plan', () => { api.store.remove([x.row.id]); api.render(); }, 'slim')),
     ], { amt: x.check.fee ? `${money(x.check.fee)} a year` : 'No fee' })),
     R.unpicked.length ? h('p.st-small', { style: { marginBottom: 0 } }, `${R.unpicked.map(r => r.name || 'A card').join(', ')}: on your list but not matched to a card yet. Pick which card it is on Credit cards in your plan and it joins this page.`) : null,
-    !R.held.length && !R.unpicked.length ? h('p.st-small.st-soft', { style: { marginBottom: 0 } }, 'No cards on your plan yet. Add them under Credit cards in your plan and each one shows here.') : null);
+    !R.held.length && !R.unpicked.length ? h('p.st-small.st-soft', {}, 'No cards on your plan yet. Add the ones you hold below.') : null,
+    addCard());
+
+  // add a card you hold: a bank, the card, then one question. It becomes a row on your plan's Credit cards list.
+  const addCard = () => {
+    const banks = [...new Set(lib.cards.map(issuerName))].filter(Boolean).sort(), have = new Set(R.held.map(x => x.card.id));
+    const picking = UI.adding ? cardOf(UI.adding) : null;
+    const done = inFull => { addHeldCard(api.store, picking, { inFull }); UI.adding = null; UI.bank = null; if (!inFull) mine({ carry: true }); else api.render(); };
+    return h('div.cp-q', { id: 'add-card', style: { marginTop: '12px' } }, h('div.st-flabel', {}, 'Add a card you hold'),
+      picking ? [h('p', { style: { margin: '0 0 6px', fontWeight: 700 } }, `${issuerName(picking)} ${picking.name}: do you pay it in full each month?`),
+        h('div.st-chips', {}, chip('Yes, in full', false, () => done(true)), chip('No, I carry a balance', false, () => done(false)), chip('Not this card', false, () => { UI.adding = null; redraw(); }))]
+        : [h('div.st-chips.cp-small', {}, banks.map(n => chip(n, UI.bank === n, () => { UI.bank = UI.bank === n ? null : n; redraw(); }))),
+          UI.bank ? h('div.st-chips.cp-small', { style: { marginTop: '8px' } }, (list => (list.length ? list.map(c => chip(c.name, false, () => { UI.adding = c.id; redraw(); })) : h('span.st-small.st-soft', {}, 'Every card listed for this bank is already on your plan.')))(lib.cards.filter(c => issuerName(c) === UI.bank && !have.has(c.id)))) : h('div.st-small.st-soft', {}, 'Tap the bank, then the card. It goes on your plan\'s Credit cards list.')]);
+  };
 
   const dates = () => h('div.st-card', { id: 'dates' }, h('h2', { style: { marginTop: 0 } }, 'Dates to know'),
     R.dates.length ? h('ul.cp-dates', {}, R.dates.slice(0, 8).map(d => h('li', {}, h('b', {}, d.when), h('span', {}, `${d.text}.`))))

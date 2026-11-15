@@ -10,6 +10,7 @@ import { categorySpend, feeCheck, issuerName } from './math/cards.js';
 import { materialityOf } from './math/time.js';
 import { RULES } from './registry/assumptions.js';
 import * as P from './math/cardplan.js';
+import { institutionsOf, addInstitution } from './institutions.js';
 
 const month = v => (v ? String(v).slice(0, 7) : null);
 export const cardRowsOf = doc => (doc?.records || []).filter(r => r.kind === 'debt' && r.type === 'Credit card' && r.status !== 'Not for me');
@@ -24,7 +25,8 @@ export function cardPlanOf(doc, ref, lib, off, { now = new Date() } = {}) {
   const byCat = hasBudget ? fromBudget : typical;
   const monthly = hasBudget ? Object.values(fromBudget).reduce((a, b) => a + b, 0) / 12 : mine.spend ?? null;
   const number = doc.profile?.credit?.score ?? null, band = P.scoreBand(number, off.scoreBands) ?? mine.score ?? null;
-  const heavy = (x.debts || []).some(d => !d.inFull && (d.balance ?? 0) > 0 && d.apr != null && d.apr >= RULES.heavyApr);
+  // heavy debt: the debts list decides; a card someone says they carry a balance on counts until its balance is on the list
+  const heavyListed = (x.debts || []).some(d => !d.inFull && (d.balance ?? 0) > 0 && d.apr != null && d.apr >= RULES.heavyApr), heavy = heavyListed || mine.carry === true;
   const useOf = id => heldRows.find(r => r.values.cardId === id)?.values.cardUse ?? mine.uses?.[id] ?? {};
   const creditsUsedOf = id => (cardOf(id)?.credits || []).reduce((t, c) => t + (useOf(id)[c.id] === 'Use' ? c.value ?? 0 : 0), 0);
   const openedMonths = [...rows.map(r => month(r.values?.opened)), ...(mine.opened || [])].filter(Boolean);
@@ -40,7 +42,7 @@ export function cardPlanOf(doc, ref, lib, off, { now = new Date() } = {}) {
   let setups = null;
   return { ...plan, held, unpicked, dates, small, creditsUsedOf, useOf,
     rr: x.realReturn ?? ref.presets.realReturn.default, wr: x.withdrawalRate ?? ref.presets.withdrawalRate.default,
-    inputs: { spend: { byCat, monthly, fromBudget: hasBudget }, score: { band, number, fromProfile: number != null }, heavy, business: mine.business ?? null, programs: mine.programs || [], tv: mine.tv ?? null, openedOther: mine.opened || [], spendTap: mine.spend ?? null },
+    inputs: { spend: { byCat, monthly, fromBudget: hasBudget }, heavyListed, carryTap: mine.carry === true, score: { band, number, fromProfile: number != null }, heavy, business: mine.business ?? null, programs: mine.programs || [], tv: mine.tv ?? null, openedOther: mine.opened || [], spendTap: mine.spend ?? null },
     // the best 1, 2 and 3 cards against one plain card on this spending (worked out once, on first ask)
     setups: () => {
       if (!setups) {
@@ -50,4 +52,18 @@ export function cardPlanOf(doc, ref, lib, off, { now = new Date() } = {}) {
       }
       return setups;
     } };
+}
+
+// A card someone holds, added from the card plan: the same row Net worth > Credit cards makes when a card is picked
+// (the library card, its fee and rewards kind, the issuer as the institution). "I pay it in full" is recorded on the
+// row; a balance is never invented.
+const KIND = { 'Cash back': 'Cash back', Points: 'Points', Miles: 'Miles', None: 'None' };
+export function addHeldCard(store, card, { inFull = false } = {}) {
+  let row = null;
+  store.transaction(`Card: ${card.name}`, () => {
+    const issuer = issuerName(card);
+    const inst = issuer ? institutionsOf(store.doc).find(i => i.name.toLowerCase() === issuer.toLowerCase()) ?? addInstitution(store, { name: issuer, kind: 'Bank' }) : null;
+    row = store.add('debt', { name: card.name, values: { cardId: card.id, annualFee: card.annualFee ?? 0, rewards: KIND[card.rewards?.kind] ?? null, ...(inst ? { institutionId: inst.id } : {}), ...(inFull ? { payChoice: 'In full' } : {}) } }, { type: 'Credit card' });
+  });
+  return row;
 }
