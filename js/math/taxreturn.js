@@ -30,8 +30,8 @@ export function stubPicture(lines, perYear) {
   return { grossMonth: month(L.gross), netMonth: month(L.net), grossYear: g && n ? g * n : null, taxShare: g && taxes > 0 ? taxes / g : null, savedShare: g && L.k401 > 0 ? L.k401 / g : null, keptShare: g && typeof L.net === 'number' ? L.net / g : null,
     other: g && typeof L.net === 'number' ? Math.max(0, g - L.net - taxes - (L.k401 ?? 0) - (L.health ?? 0) - (L.hsa ?? 0)) : null };
 }
-// A New York return: state and city tax together as a share of New York income, and a refund or balance a month.
-export function nyPicture(lines) {
+// A state return: state (and city) tax together as a share of that state's income, and a refund or balance a month.
+export function statePicture(lines) {
   const L = lines || {}, has = k => typeof L[k] === 'number', tax = has('total') ? L.total : has('stateTax') ? L.stateTax + (L.cityTax ?? 0) : null;
   return { tax, effective: tax != null && has('agi') && L.agi > 0 ? tax / L.agi : null, city: has('cityTax') && L.cityTax > 0 ? L.cityTax : null,
     refund: has('refund') && L.refund > 0 ? { amount: L.refund, perMonth: L.refund / 12 } : null, owe: has('owe') && L.owe > 0 ? { amount: L.owe, perMonth: L.owe / 12 } : null };

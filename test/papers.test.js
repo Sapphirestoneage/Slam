@@ -1,8 +1,8 @@
 // The other papers: a W-2, a pay stub and a New York return, each laid out like the real thing and checked by hand.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readW2, readStub, readNY, readPaper } from '../js/import/papers.js';
-import { w2Picture, stubPicture, nyPicture, paperGaps } from '../js/math/taxreturn.js';
+import { readW2, readStub, readState, readPaper } from '../js/import/papers.js';
+import { w2Picture, stubPicture, statePicture, paperGaps } from '../js/math/taxreturn.js';
 const t = (str, x, y, w = 60) => ({ str, x, y, w });
 // a W-2 with each amount under its label, two boxes to a row
 const w2Under = [t('Form W-2 Wage and Tax Statement 2025', 40, 60, 300), t('1 Wages, tips, other compensation', 300, 700, 130), t('2 Federal income tax withheld', 450, 700, 120), t('85,000.00', 305, 686), t('9,400.00', 455, 686),
@@ -43,14 +43,14 @@ test('a pay stub: this period and the year so far, by the words on each row', ()
 });
 function near(a, b) { assert.ok(Math.abs(a - b) < 0.005, `${a} against ${b}`); }
 test('a New York return: state and city tax, the share of New York income, the refund; an empty line stays blank', () => {
-  const R = readNY([ny]);
-  assert.equal(R.ok, true); assert.equal(R.year, 2025);
+  const R = readState([ny]);
+  assert.equal(R.ok, true); assert.equal(R.year, 2025); assert.equal(R.state, 'NY'); assert.equal(R.kind, 'state');
   assert.deepEqual(R.lines, { agi: 93610, taxable: 85610, stateTax: 4620, cityTax: 2870, total: 7490, withheld: 4900, refund: 310 });
-  const P = nyPicture(R.lines);
+  const P = statePicture(R.lines);
   assert.equal(P.tax, 7490); near(P.effective, 7490 / 93610); assert.equal(P.city, 2870); assert.deepEqual(P.refund, { amount: 310, perMonth: 310 / 12 }); assert.equal(P.owe, null);
 });
 test('which paper is it: the form\'s own name decides, and a stub is whatever has gross and net pay', () => {
-  assert.equal(readPaper([w2Under]).kind, 'w2'); assert.equal(readPaper([ny]).kind, 'ny'); assert.equal(readPaper([stub]).kind, 'stub');
+  assert.equal(readPaper([w2Under]).kind, 'w2'); assert.equal(readPaper([ny]).kind, 'state'); assert.equal(readPaper([stub]).kind, 'stub');
   const ret = readPaper([[t('Form 1040 U.S. Individual Income Tax Return 2025', 40, 760, 300), t('11 This is your adjusted gross income 11 52,300', 40, 500, 500), t('15 This is your taxable income 15 37,700', 40, 480, 500), t('24 This is your total tax 24 4,290', 40, 460, 500)]]);
   assert.equal(ret.kind, 'return'); assert.equal(ret.lines.agi, 52300);
   assert.equal(readPaper([[t('A grocery list', 10, 10)]]).kind, null);
@@ -68,4 +68,30 @@ test('gaps: only the ones wider than their tolerance, each as paper minus plan',
   assert.deepEqual(paperGaps({ stub: stubLines, perYear: 26 }, { takeHome: 4667 }), []);
   assert.deepEqual(paperGaps({}, { planGross: 1, takeHome: 1 }), []);
   assert.deepEqual(paperGaps({ ret: { wages: 85000 }, stub: stubLines, perYear: 26 }, { planGross: 62000, takeHome: 4667 }), [], 'a stub that agrees with the plan settles it');
+});
+
+// a state form row: line number, words, the number again at the right, then the amount
+const srow = (y, no, words, amount) => [t(no, 40, y, 10), t(words, 60, y, 380), t(no, 470, y, 10), ...(amount == null ? [] : [t(amount, 510, y)])];
+const nj = [t('NJ-1040 New Jersey Resident Income Tax Return 2025', 40, 760, 400), ...srow(600, '29', 'New Jersey Gross Income (Subtract line 28c from line 27)', '93,610'), ...srow(580, '41', 'Taxable Income (Subtract line 40 from line 39)', '88,110'),
+  ...srow(560, '43', 'Tax on amount on line 41 (Tax Table or Tax Rate Schedules)', '3,404'), ...srow(540, '54', 'Total Tax Due', '3,404'), ...srow(520, '55', 'Total New Jersey Income Tax Withheld', '3,150'), ...srow(500, '67', 'Refund amount', null), ...srow(480, '77', 'Amount you owe', '254')];
+const ct = [t('Form CT-1040 Connecticut Resident Income Tax Return 2025', 40, 760, 400), ...srow(600, '1', 'Federal adjusted gross income from federal Form 1040, Line 11', '93,610'), ...srow(580, '5', 'Connecticut adjusted gross income: Subtract Line 4 from Line 3', '93,610'),
+  ...srow(560, '6', 'Income tax from tax tables or Tax Calculation Schedule', '4,288'), ...srow(540, '16', 'Total tax: Add Line 14 and Line 15', '4,288'), ...srow(520, '18', 'Connecticut tax withheld', '4,700'), ...srow(500, '25', 'Amount of Line 21 overpaid you want refunded to you', '412'), ...srow(480, '30', 'Total amount due', null)];
+test('a New Jersey return: by the words on NJ-1040, and it is not mistaken for the federal form that shares its number', () => {
+  const R = readPaper([nj]);
+  assert.equal(R.kind, 'state'); assert.equal(R.state, 'NJ'); assert.equal(R.name, 'New Jersey'); assert.equal(R.year, 2025);
+  assert.deepEqual(R.lines, { agi: 93610, taxable: 88110, stateTax: 3404, total: 3404, withheld: 3150, owe: 254 });
+  const P = statePicture(R.lines); assert.equal(P.tax, 3404); near(P.effective, 3404 / 93610); assert.equal(P.city, null); assert.equal(P.refund, null); assert.deepEqual(P.owe, { amount: 254, perMonth: 254 / 12 });
+});
+test('a Connecticut return: by the words on CT-1040; the federal income line on it is not taken as Connecticut income', () => {
+  const R = readPaper([ct]);
+  assert.equal(R.kind, 'state'); assert.equal(R.state, 'CT'); assert.equal(R.year, 2025);
+  assert.deepEqual(R.lines, { agi: 93610, stateTax: 4288, total: 4288, withheld: 4700, refund: 412 });
+  const P = statePicture(R.lines); near(P.effective, 4288 / 93610); assert.deepEqual(P.refund, { amount: 412, perMonth: 412 / 12 }); assert.equal(P.owe, null);
+});
+test('a pay stub in another company\'s words reads the same lines', () => {
+  const R = readStub([[t('Pay Date 11/13/2026', 40, 760, 120), t('Total Gross 2,500.00 55,000.00', 40, 700, 300), t('Fed Withholding 240.00 5,280.00', 40, 680, 300), t('OASDI 155.00 3,410.00', 40, 666, 300), t('Medicare 36.25 797.50', 40, 652, 300),
+    t('CT State Withholding 110.00 2,420.00', 40, 638, 300), t('403(b) 125.00 2,750.00', 40, 624, 300), t('Direct Deposit Total 1,833.75', 40, 590, 300)]]);
+  assert.equal(R.ok, true);
+  assert.deepEqual(R.lines, { gross: 2500, net: 1833.75, fedTax: 240, ssTax: 155, medTax: 36.25, stateTax: 110, k401: 125 });
+  near(2500 - 240 - 155 - 36.25 - 110 - 125, 1833.75);
 });

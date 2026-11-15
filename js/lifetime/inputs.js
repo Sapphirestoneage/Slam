@@ -142,7 +142,7 @@ export function taxSheetOf(plan, doc, ref, hist) {
 
 // The papers kept in a plan (a return, a W-2, a pay stub, a state return) against what the plan itself works from:
 // the gaps worth pointing out. plan is planOf(doc, ...) or null; without it only the paper-to-paper gaps can show.
-export const papersIn = doc => { const st = doc?.settings?.start || {}; return { ret: st.return ?? null, w2: st.w2 ?? null, stub: st.stub ?? null, ny: st.ny ?? null }; };
+export const papersIn = doc => { const st = doc?.settings?.start || {}; return { ret: st.return ?? null, w2: st.w2 ?? null, stub: st.stub ?? null, state: st.state ?? (st.ny ? { ...st.ny, state: 'NY', name: 'New York' } : null) }; }; // a New York return kept before other states were read sits under its old name
 export function gapsOf(plan, doc, ref) {
   const P = papersIn(doc); if (!P.ret && !P.w2 && !P.stub) return [];
   let takeHome = null; try { takeHome = onFile(doc, 'income', { ref }).takeHome ?? null; } catch { takeHome = null; }
