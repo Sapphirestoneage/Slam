@@ -38,3 +38,4 @@
 .cp-guide { margin-top: 10px; }
 .cp-guide .st-count { font-weight: 800; }
 summary.st-pulse { border-radius: 10px; }
+.cp-since { margin: 10px 0; padding: 8px 12px; border: 2px solid var(--border-input); border-radius: 12px; background: var(--card); }

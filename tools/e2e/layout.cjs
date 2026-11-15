@@ -748,6 +748,19 @@ async function runStart(browser) {
       await solo.evaluate(() => localStorage.removeItem('slam.account'));
       await solo.close();
     } catch (e) { errors.push(`Solo debt ${width} ${theme}: ${e.message.split('\n')[0]}`); }
+    // the card plan (cards.html) has its own walk, so a miss on another standalone page never skips it
+    if (!ONLY || ONLY.some(o => 'solo cards'.includes(o))) try {
+      const solo = await ctx.newPage(); solo.on('pageerror', e => errors.push(`Cards: ${String(e).slice(0, 200)}`));
+      await solo.setViewportSize({ width, height: width < 600 ? 844 : 1000 }); await solo.emulateMedia({ colorScheme: theme });
+      // on an empty plan, then with a card held, answers tapped and every fold open
+      await solo.goto(`${BASE}/cards.html`, { waitUntil: 'load' }); await solo.waitForSelector('#answer'); await settle(solo, 400);
+      await scanHere(solo, { route: 'cards.html', width, theme, client: 'Start' }, [...STILL, 'covered', 'sticky']);
+      await solo.locator('#add-card .st-chip', { hasText: 'Chase' }).first().click(); await solo.locator('#add-card .st-chip', { hasText: 'Sapphire Reserve' }).first().click(); await solo.locator('#add-card .st-chip', { hasText: 'Yes, in full' }).click();
+      await solo.locator('#q-spend .st-chip', { hasText: '$2,000' }).click(); await solo.locator('#q-score .st-chip', { hasText: '740' }).click();
+      for (let i = 0; i < 16; i++) { const f = solo.locator('details.cp-fold:not([open]) > summary').first(); if (!(await f.count())) break; await f.click(); await settle(solo, 60); }
+      await settle(solo, 300); await scanHere(solo, { route: 'cards.html', width, theme, client: 'Start', state: 'filled, every fold open' }, [...STILL, 'covered', 'sticky']);
+      await solo.close();
+    } catch (e) { errors.push(`Cards ${width} ${theme}: ${e.message.split('\n')[0]}`); }
   }
   await ctx.close();
 }

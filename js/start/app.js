@@ -1027,6 +1027,7 @@ function foot() {
     h('span.grow', {}, 'Your numbers stay in this browser. Nothing is sent anywhere. This is education, not personal financial advice.'),
     btn('Download a backup', download, 'slim'),
     btn('One thing at a time', async () => { location.href = `one.html#/d/${await pack(store.doc)}`; }),
+    btn('My card plan', async () => { location.href = `cards.html#/d/${await pack(store.doc)}`; }),
     btn('Copy a private link', async () => {
       try { const url = `${location.origin}${location.pathname}${LINK}${await pack(store.doc)}`;
         try { await navigator.clipboard.writeText(url); ui.linkNote = 'Link copied. It carries this whole plan, so send it only to someone you want to see it. Nothing was uploaded.'; foot(); }

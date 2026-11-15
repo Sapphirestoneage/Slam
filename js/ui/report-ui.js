@@ -9,6 +9,7 @@ import { flowWords } from '../math/flow.js';
 import { nextMoves } from '../math/moves.js';
 import { homeworkList } from '../homework.js';
 import * as S from './staples.js';
+import { cardPlanNote } from './cards-ui.js';
 import { sheetButtons } from './sheet-ui.js';
 import { soWhat } from '../sowhat.js';
 import { debtRatios } from './lists.js';
@@ -265,6 +266,7 @@ export function onePagerScreen(app, ctx) {
     doc.records.some(r => r.folded) ? h('p.private-line.muted.small.no-print', { title: 'Rows kept between a person and the coach show here as neutral words (Other income, Other spending). Every total still counts them' }, icon('eye-off'), `${PRIVATE_LINE}: shown as neutral words`) : null,
     identityLine(ctx), // batch 25 (Phase 4): who they are with money, one line, and the wording it leads with
     movesBlock(app, ctx), // batch 12 (item 6): Your next 3 moves, then the tiles
+    cardPlanNote(ctx, { link: false }), // the card plan's one sentence, the same call cards.html makes
     S.summaryStrip(ctx, [
       { label: 'Net worth', result: m.netWorth, key: 'netWorth', home: HOME.netWorth, so: soWhat('netWorth', m) },
       { label: 'Monthly surplus', result: m.surplus, key: 'surplus', home: HOME.surplus, so: soWhat('surplus', m) },

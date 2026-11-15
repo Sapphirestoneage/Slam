@@ -151,7 +151,8 @@ test('what a card opens and uses, and credits counted per card', () => {
 
 // ---- The loop: the card plan read from the household plan (js/cardplan.js) ----
 import { Store, newHousehold } from '../js/records.js';
-import { cardPlanOf, cardRowsOf, addHeldCard } from '../js/cardplan.js';
+import { cardPlanOf, cardRowsOf, addHeldCard, cardPeopleOf } from '../js/cardplan.js';
+import { yearItems } from '../js/year.js';
 const refDoc = read('../data/reference-2026.json');
 
 test('one input, one answer: the Budget, the Credit cards list, the debts and the Profile feed the card plan', () => {
@@ -159,13 +160,14 @@ test('one input, one answer: the Budget, the Credit cards list, the debts and th
   const st = new Store(newHousehold({ name: 'Loop' }));
   const bare = cardPlanOf(st.doc, refDoc, lib, D, { now });
   assert.equal(bare.inputs.spend.fromBudget, false); assert.equal(bare.inputs.spend.monthly, null);
-  assert.equal(bare.kind, 'open'); assert.match(bare.line, /^Sapphire Preferred, worth \$655/);
+  assert.equal(bare.kind, 'open'); assert.match(bare.line, /^If you owe nothing on cards: Sapphire Preferred, worth \$655/, 'an empty plan says what it assumes');
   // the Budget's lines become the spending
   st.add('bill', { name: 'Dining out', amount: 400, per: 'month', values: { category: 'Dining out' } });
   st.add('bill', { name: 'Groceries', amount: 1600, per: 'month', values: { category: 'Groceries' } });
   const fed = cardPlanOf(st.doc, refDoc, lib, D, { now });
   assert.equal(fed.inputs.spend.fromBudget, true); near(fed.inputs.spend.monthly, 2000); near(fed.inputs.spend.byCat.dining, 4800);
   assert.match(fed.line, /from about 3 months of spending you already do/);
+  assert.match(fed.line, /^If you owe nothing on cards/, 'Budget lines alone do not say whether cards are owed on');
   // a card on the Credit cards list is held: it leaves the moves, uses a slot, and gets its yearly check from the row's own taps
   const row = st.add('debt', { type: 'Credit card', name: 'Reserve', values: { balance: 0, apr: 0.24, payChoice: 'In full', cardId: 'chase-sapphire-reserve', opened: '2026-09', cardUse: { travel: 'Use' } } });
   const withCard = cardPlanOf(st.doc, refDoc, lib, D, { now });
@@ -225,4 +227,74 @@ test('the steps: one is next at a time, the count ticks up, and the plan answers
   assert.equal(R.guide.next, null); assert.equal(R.guide.count, 'All 6 done');
   assert.equal(P.cardSteps({ noCards: true, canOpen: false }).next.id, 'spend');
   assert.match(P.cardPlan({ offers: D.offers, units: D.units, rule: D.rules.chase524, heavyDebt: true, now }).why, /interest/);
+});
+
+test('why not the others, what changed, the share your cards give, where an offer could go, and an ended offer', () => {
+  const now = new Date(2026, 10, 14), opts2 = { ...opts, now };
+  const W = P.whyNot(D.offers, { held: ['chase-freedom-flex'], opened: 0, monthlySpend: 1000, me: { score: 'good', business: false } }, opts2);
+  const why = name => W.find(w => w.offer.name === name)?.reason;
+  assert.equal(why('Freedom Flex'), 'You already hold it.');
+  assert.match(why('Sapphire Reserve'), /excellent credit/); assert.match(why('Southwest Plus'), /have not picked Southwest points/);
+  assert.match(why('World of Hyatt'), /disagree/); assert.match(why('Ink Business Cash'), /business/); assert.equal(why('Slate'), 'It has no welcome offer.');
+  assert.equal(why('Freedom Unlimited'), undefined, 'a move is not on the why-not list');
+  // an offer past its end date drops out of the moves and says so
+  const later = new Date(2026, 11, 20), air = { ...opts, programs: ['southwest'] };
+  assert.ok(P.nextMoves(D.offers, { monthlySpend: 3000 }, { ...air, now }).moves.some(m => m.offer.name === 'Southwest Plus'));
+  assert.ok(!P.nextMoves(D.offers, { monthlySpend: 3000 }, { ...air, now: later }).moves.some(m => m.offer.name === 'Southwest Plus'));
+  assert.equal(P.whyNot(D.offers, { monthlySpend: 3000 }, { ...air, now: later }).find(w => w.offer.name === 'Southwest Plus').reason, 'Its offer has ended.');
+  assert.equal(P.offerLive({ ends: '2026-12-02' }, new Date(2026, 11, 2)), true); assert.equal(P.offerLive({ ends: '2026-12-02' }, new Date(2026, 11, 3)), false);
+  // what changed since the last visit
+  assert.deepEqual(P.visitChanges(null, { line: 'A', left: 3 }, D.offers, now), []);
+  const C = P.visitChanges({ line: 'Old move.', left: 2, at: '2026-11-20' }, { line: 'New move.', left: 3 }, D.offers, later);
+  assert.equal(C.length, 5); assert.match(C[0], /Last time it was: Old move\./); assert.match(C[1], /A slot came back: 3 open now, 2 then/); assert.ok(C.includes('The Southwest Premier offer ended.'));
+  assert.deepEqual(P.visitChanges({ line: 'Same.', left: 3, at: '2026-11-13' }, { line: 'Same.', left: 3 }, D.offers, now), []);
+  // the share
+  const S9 = P.cardsShare(460, 500, { enough: 0.9, cards: 2 });
+  near(S9.share, 0.92); assert.equal(S9.enough, true); assert.match(S9.line, /getting 92% of what is there\. That is close enough/);
+  assert.equal(P.cardsShare(100, 500, { cards: 1 }).enough, false); assert.equal(P.cardsShare(100, 0), null);
+  // where it could go
+  const T = P.offerToward(655, { littleE: 1000, iraLimit: 7500, realReturn: 0.07 });
+  assert.equal(T.cushion, '$655 is 66% of a $1,000 first cushion.'); assert.match(T.roth, /9% of this year's \$7,500 Roth IRA limit/); assert.match(T.invest, /left 30 years is about \$4,986/);
+  assert.deepEqual(P.offerToward(0, { littleE: 1000 }), {});
+});
+
+test('two people, each with their own five; the fee lands on the year view; the share reads the plan', () => {
+  const now = new Date(2026, 10, 14), st = new Store(newHousehold({ name: 'Two' }));
+  assert.deepEqual(cardPeopleOf(st.doc), ['Me']);
+  for (const mth of ['2025-01', '2025-04', '2025-08', '2026-02', '2026-06']) st.add('debt', { type: 'Credit card', name: `Mine ${mth}`, values: { payChoice: 'In full', opened: mth } });
+  addHeldCard(st, lib.cards.find(c => c.id === 'chase-sapphire-preferred'), { inFull: true, owner: 'Partner' });
+  assert.deepEqual(cardPeopleOf(st.doc), ['Me', 'Partner']);
+  const me = cardPlanOf(st.doc, refDoc, lib, D, { now }), partner = cardPlanOf(st.doc, refDoc, lib, D, { now, person: 'Partner' });
+  assert.equal(me.who, 'Me'); assert.equal(me.slots.left, 0); assert.equal(me.kind, 'wait');
+  assert.equal(partner.slots.left, 5); assert.equal(partner.kind, 'open'); assert.equal(partner.held.length, 1);
+  assert.ok(!partner.moves.some(mv => mv.offer.cardId === 'chase-sapphire-preferred') && partner.unpicked.length === 0 && me.unpicked.length === 5);
+  // the partner's own taps live beside the first person's
+  st.setDoc('settings', { start: { cardPlan: { score: 'excellent', by: { Partner: { score: 'fair' } }, who: 'Partner' } } });
+  assert.equal(cardPlanOf(st.doc, refDoc, lib, D, { now }).who, 'Partner'); assert.equal(cardPlanOf(st.doc, refDoc, lib, D, { now }).inputs.score.band, 'fair');
+  assert.equal(cardPlanOf(st.doc, refDoc, lib, D, { now, person: 'Me' }).inputs.score.band, 'excellent');
+  // a card added here with a fee and an opening month shows on the year view in that month
+  const solo = new Store(newHousehold({ name: 'Year' })), row = addHeldCard(solo, lib.cards.find(c => c.id === 'chase-sapphire-preferred'), { inFull: true });
+  solo.update(row.id ?? row, { opened: '2026-03' });
+  const fee = yearItems(solo.doc.records, now).all.find(i => i.source === 'Card fee');
+  assert.equal(fee.cost, 95); assert.equal(fee.ym, '2027-03');
+  // the share: one held card against the best one card on the same spending
+  solo.add('bill', { name: 'Groceries', amount: 800, per: 'month', values: { category: 'Groceries' } }); solo.add('bill', { name: 'Dining out', amount: 400, per: 'month', values: { category: 'Dining out' } });
+  const R = cardPlanOf(solo.doc, refDoc, lib, D, { now }), sh = R.share();
+  assert.ok(sh.share > 0 && sh.share <= 1); assert.match(sh.line, /^Your card gives about \$/);
+  assert.equal(R.toward(655).cushion, '$655 is 66% of a $1,000 first cushion.');
+  assert.ok(R.whyNot().some(w => w.reason === 'You already hold it.'));
+});
+
+test('what the think-aloud walk caught: debt is the only step, a costly card is not shown as zero, and the switch is to the same family', () => {
+  const now = new Date(2026, 10, 14), st = new Store(newHousehold({ name: 'Walk' }));
+  addHeldCard(st, lib.cards.find(c => c.id === 'chase-sapphire-reserve'), { inFull: true });
+  let R = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.doesNotMatch(R.line, /^If you owe nothing/, 'a card paid in full answers the debt question');
+  assert.match(R.held[0].year.option, /switch it to Freedom (Unlimited|Flex)/, 'the no-fee card in the same points family, never a store or park card');
+  assert.match(R.share().line, /^On your spending your card costs about \$\d+ a year more than it gives back\. The best one card would give \$\d+\.$/);
+  st.setDoc('settings', { start: { cardPlan: { carry: true } } });
+  R = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(R.guide.next.id, 'debt'); assert.equal(R.guide.total, 1); assert.equal(R.guide.line, 'See when you are debt free');
+  const amex = new Store(newHousehold({ name: 'Other bank' })); addHeldCard(amex, lib.cards.find(c => c.annualFee > 0 && !D.offers.some(f => f.cardId === c.id)), { inFull: true });
+  assert.match(cardPlanOf(amex.doc, refDoc, lib, D, { now }).held[0].year.option ?? 'no-fee version', /no-fee version/);
 });

@@ -850,6 +850,8 @@ export const SUPPORT = {
   'cardplan.isProgram': 'whether an offer pays in an airline or hotel program\'s own points',
   'cardplan.scoreBand': 'a credit score as a band, from the bands in card-offers.json', 'cardplan.cardPlan': 'the card plan from its inputs: slots, moves and the one sentence every screen shows (read from the plan by js/cardplan.js)',
   'cardplan.cardSteps': 'the six steps that sharpen the card plan, with the one that is next',
+  'cardplan.offerLive': 'whether an offer with an end date is still on', 'cardplan.whyNot': 'one plain reason for each card that is not among the moves', 'cardplan.visitChanges': 'what changed in the card plan since the last visit',
+  'cardplan.cardsShare': 'how much of the best cards\' yearly rewards the held cards already give', 'cardplan.offerToward': 'an offer\'s dollars against the first cushion, the Roth IRA limit and time invested',
   'cardplan.costAsFiNumber': 'a yearly cost divided by the withdrawal rate', 'cardplan.investedLater': 'a sum left invested at the real return',
   'result.ok': 'wraps a number with its plain-words math', 'result.needs': 'says what a number still needs', 'result.isBlank': 'a blank check',
   'result.missing': 'lists blank inputs', 'result.joinWords': 'joins words for Needs ...', 'result.fmt': 'number formats for the math text',

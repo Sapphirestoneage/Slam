@@ -16,8 +16,9 @@ import * as P from '../math/cardplan.js';
 const $ = id => document.getElementById(id);
 const SCORES = [['fair', 'Under 670'], ['good', '670 to 739'], ['excellent', '740 or more']];
 const LEVEL = { fits: 'Fits', maybe: 'Maybe', later: 'Later' };
-const UI = { open: {}, year: {}, all: false, bank: null, adding: null }; // what is unfolded on this visit: not part of the plan
-let lib = null, off = null, tools = null;
+const UI = { open: {}, year: {}, all: false, bank: null, adding: null };
+const TOWARD = [['cushion', 'A first cushion'], ['roth', 'A Roth IRA'], ['invest', 'Invest it']]; // what is unfolded on this visit: not part of the plan
+let lib = null, off = null, tools = null, drill = null;
 
 const monthSay = s => P.monthWords(Number(s.slice(0, 4)) * 12 + Number(s.slice(5, 7)) - 1);
 const question = (label, kids, tag = null) => h('div.cp-q', {}, h('div.st-flabel', {}, label, tag ? [' ', h('span.st-tag', {}, tag)] : null), h('div.st-chips', {}, kids));
@@ -26,10 +27,13 @@ const from = words => h('span.st-tag.yours', {}, words);
 const withId = (id, el) => { el.id = id; return el; };
 
 function draw(api) {
-  if (!lib || !off || !tools) return;
+  if (!lib || !off || !tools || !drill) return;
   const doc = api.store.doc, now = new Date(), R = cardPlanOf(doc, api.ref, lib, off, { now });
-  const cp = () => api.mine().cardPlan || {};
-  const mine = patch => { api.remember({ cardPlan: { ...cp(), ...patch } }); api.render(); };
+  // answers the plan has no place for: the household's (what a point is worth, a carried balance, whose plan shows)
+  // sit at the top; each person's own (score stand-in, programs, other cards opened, steps seen) sit under their name
+  const all = () => api.mine().cardPlan || {}, cp = () => R.mine;
+  const shared = patch => { api.remember({ cardPlan: { ...all(), ...patch } }); api.render(); };
+  const mine = patch => (R.who === 'Me' ? shared(patch) : shared({ by: { ...all().by, [R.who]: { ...(all().by?.[R.who] || {}), ...patch } } }));
   const onRow = (row, patch) => { api.store.update(row.id, patch); api.render(); };
   const redraw = () => api.render();
   const cardOf = id => lib.cards.find(c => c.id === id) ?? null;
@@ -65,19 +69,26 @@ function draw(api) {
         h('ul.st-small', { style: { margin: 0, paddingLeft: '18px' } }, fit.reasons.map(t => h('li', {}, t))),
         creditTaps(id, 'Credits you would use anyway'),
         yearly > 0 ? h('p.st-small', { style: { margin: 0 } }, `${used > 0 ? 'After those credits it' : 'It'} costs ${money(yearly)} a year. A cost you keep paying adds ${money(Math.round(P.costAsFiNumber(yearly, R.wr)))} to the amount you need to stop working.`) : (o.annualFee > 0 ? h('p.st-small', { style: { margin: 0 } }, 'The credits you would use cover the fee.') : null),
-        value > 0 ? h('p.st-small', { style: { margin: 0 } }, `Invest the ${money(Math.round(value))} and leave it 30 years: about ${money(Math.round(P.investedLater(value, 30, R.rr)))} in today's dollars.`) : null,
+        value > 0 ? (T => [question('Where would it go?', TOWARD.filter(([k]) => T[k]).map(([k, l]) => chip(l, (all().toward ?? 'invest') === k, () => shared({ toward: k })))), h('p.st-small', { style: { margin: 0 } }, T[all().toward ?? 'invest'] ?? T.invest)])(R.toward(value)) : null,
         h('p.st-small', { style: { margin: 0 } }, `After this: ${m.slotsAfter} ${m.slotsAfter === 1 ? 'slot' : 'slots'} left.`),
         m.then.length ? [h('div.cp-lab', {}, 'Then you could'), h('ul.cp-then', {}, m.then.slice(0, 3).map(t => h('li', {}, h('span', {}, `${t.offer.name}${spendKnown ? `, from month ${t.startsMonth}` : ''}`), h('b.cp-amt', {}, `${money(Math.round(t.both))} for both`))),
           h('li', {}, h('span', {}, 'Or stop here and keep your slots'), h('b.cp-amt', {}, money(Math.round(m.net)))))] : null,
       ], { amt: money(Math.round(m.net)) });
     };
-    const more = R.moves.length > 3 && !UI.all, rule = off.rules.chase524, G = R.guide, hidden = cp().guideOff === true;
-    return h('div.st-card.hero', { id: 'next', 'aria-live': 'polite' }, h('div.st-eyebrow', {}, 'Your next card move'), h('p', { id: 'answer', style: { fontWeight: 800, fontSize: '1.15rem', margin: '4px 0 6px' } }, R.line), h('p.cp-why', {}, R.why),
-      hidden ? h('div.st-row.cp-guide', {}, btn('Show my next step', () => mine({ guideOff: null }), 'slim'))
-        : h('div.st-nextbar.cp-guide', { id: 'guide' }, h('span.st-count', {}, G.count), G.next ? btn(`${G.line} ›`, () => goNext(), 'primary') : h('span', {}, G.line), G.next ? btn('Hide', () => mine({ guideOff: true }), 'slim') : null),
-      h('p.st-small', { style: { marginTop: '10px' } }, `${R.slots.left} of ${rule.slots} Chase slots open${R.slots.frees && R.slots.left < rule.slots ? `. The next one comes back in ${R.slots.frees}` : ''}. Welcome offers are loaded for Chase so far. Amounts are the offer less the first-year fee.`),
+    const more = R.moves.length > 3 && !UI.all, rule = off.rules.chase524, G = R.guide, hidden = all().guideOff === true, partner = R.who !== 'Me';
+    const said = d => new Date(`${d}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return h('div.st-card.hero', { id: 'next', 'aria-live': 'polite' },
+      R.people.length > 1 ? withId('who', question('Whose cards? Each of you has your own five slots.', [chip('Mine', !partner, () => shared({ who: 'Me' })), chip("My partner's", partner, () => shared({ who: 'Partner' }))])) : null,
+      h('div.st-eyebrow', { style: R.people.length > 1 ? { marginTop: '12px' } : {} }, partner ? "Your partner's next card move" : 'Your next card move'), h('p', { id: 'answer', style: { fontWeight: 800, fontSize: '1.15rem', margin: '4px 0 6px' } }, R.line), h('p.cp-why', {}, R.why),
+      R.kind === 'debt' ? null : hidden ? h('div.st-row.cp-guide', {}, btn('Show my next step', () => shared({ guideOff: null }), 'slim'))
+        : h('div.st-nextbar.cp-guide', { id: 'guide' }, h('span.st-count', {}, G.count), G.next ? btn(`${G.line} ›`, () => goNext(), 'primary') : h('span', {}, G.line), G.next ? btn('Hide', () => shared({ guideOff: true }), 'slim') : null),
+      R.kind === 'debt' ? h('div.st-row', { style: { marginTop: '10px' } }, withId('to-debt', btn('See when I am debt free', async () => { location.href = carryUrl('debt', await pack(api.store.doc)); }, 'primary'))) : null,
+      R.kind === 'debt' ? null : h('p.st-small', { style: { marginTop: '10px' } }, `${R.slots.left} of ${rule.slots} Chase slots open${R.slots.frees && R.slots.left < rule.slots ? `. The next one comes back in ${R.slots.frees}` : ''}. Welcome offers are loaded for Chase so far. Amounts are the offer less the first-year fee.`),
+      R.changes.length ? h('div.cp-since', { id: 'since' }, h('div.cp-lab', {}, `Since ${said(R.since)}`), h('ul.st-small', { style: { margin: '4px 0 0', paddingLeft: '18px' } }, R.changes.slice(0, 4).map(t => h('li', {}, t)))) : null,
       (more ? R.moves.slice(0, 3) : R.moves).map(row),
-      more ? h('div.st-row', { style: { marginTop: '10px' } }, btn(`Show all ${R.moves.length} moves`, () => { UI.all = true; redraw(); }, 'slim')) : null);
+      more ? h('div.st-row', { style: { marginTop: '10px' } }, btn(`Show all ${R.moves.length} moves`, () => { UI.all = true; redraw(); }, 'slim')) : null,
+      h('div', { style: { marginTop: '10px' } }, fold('whynot', 'Why not the others?', () => { const W = R.whyNot(), by = new Map(); for (const w of W) by.set(w.reason, [...(by.get(w.reason) || []), w.offer.name]);
+        return [h('p.st-small.st-soft', { style: { margin: 0 } }, 'Every card that is not a move, with the one thing holding it back.'), h('ul.st-small', { style: { margin: 0, paddingLeft: '18px' } }, [...by].map(([reason, names]) => h('li', {}, h('strong', {}, names.join(', ')), `: ${reason}`)))]; })));
   };
 
   const built = () => {
@@ -85,18 +96,18 @@ function draw(api) {
     const line = (label, value, src) => [h('dt', {}, label), h('dd', {}, value, src ? [' ', src] : null)];
     return h('div.st-card', { id: 'built' }, h('h2', { style: { marginTop: 0 } }, 'What this is built on'), h('p.st-small.st-soft', {}, 'These come from your plan. Change them there and this page follows.'),
       h('dl.st-kv', {},
-        line('Everyday spending', I.spend.fromBudget ? `${money(Math.round(I.spend.monthly))} a month` : 'No everyday lines yet', I.spend.fromBudget ? from('From your Budget') : h('span.st-tag', {}, 'Typical amounts used')),
+        line('Everyday spending', I.spend.fromBudget ? `${money(Math.round(I.spend.monthly))} a month` : `${money(Math.round(I.spend.typicalMonthly))} a month`, I.spend.fromBudget ? from('From your Budget') : h('span.st-tag', {}, 'Typical, until your Budget has it')),
         line('Cards you hold', heldNames.length ? heldNames.join(', ') : R.unpicked.length ? `${R.unpicked.length} not matched to a card yet` : 'None listed', from('From Credit cards')),
         line('Debt at 8% or more', I.heavy ? 'Yes' : 'No', I.heavyListed || !I.carryTap ? from('From your debts') : h('span.st-tag', {}, 'You said you carry a card balance')),
         line('Credit score', I.score.fromProfile ? String(I.score.number) : I.score.band ? SCORES.find(s => s[0] === I.score.band)?.[1] ?? 'None yet' : 'Not in your plan', I.score.fromProfile ? from('From your Profile') : null),
         line('Growth and withdrawal', `${+(R.rr * 100).toFixed(1)}% and ${+(R.wr * 100).toFixed(1)}%`, from('From your plan'))),
       h('div.st-row', { style: { marginTop: '12px' } }, btn('Change these in my plan', async () => { location.href = carryUrl('plan', await pack(api.store.doc)); }, 'slim')),
-      I.carryTap ? h('div.st-row', { style: { marginTop: '8px' } }, btn('I no longer carry a card balance', () => mine({ carry: null }), 'slim'), btn('Add the balance to my plan', async () => { location.href = carryUrl('debt', await pack(api.store.doc)); }, 'slim')) : null,
+      I.carryTap ? h('div.st-row', { style: { marginTop: '8px' } }, btn('I no longer carry a card balance', () => shared({ carry: null }), 'slim'), btn('Add the balance to my plan', async () => { location.href = carryUrl('debt', await pack(api.store.doc)); }, 'slim')) : null,
       I.spend.fromBudget ? null : withId('q-spend', question('Until the Budget has them: what you put on cards in a month', [500, 1000, 2000, 4000].map(v => chip(v === 4000 ? '$4,000 or more' : `About ${money(v)}`, I.spendTap === v, () => mine({ spend: I.spendTap === v ? null : v }))))),
       I.score.fromProfile ? null : withId('q-score', question('Until your score is in the plan', SCORES.map(([v, l]) => chip(l, cp().score === v, () => mine({ score: cp().score === v ? null : v }))))),
       h('div', { style: { marginTop: '14px' } }, fold('tune', 'Fine-tune: business cards, point value, airline and hotel points, other cards', [
       question('A business or side income?', [chip('Yes', I.business === true, () => mine({ business: I.business === true ? null : true })), chip('No', I.business === false, () => mine({ business: I.business === false ? null : false }))]),
-      question('What a Chase point is worth to you', [[null, 'Cash, 1 cent'], [0.0125, '1.25 cents'], [0.015, '1.5 cents'], [0.02, '2 cents']].map(([v, l]) => chip(l, I.tv === v, () => mine({ tv: v })))),
+      question('What a Chase point is worth to you', [[null, 'Cash, 1 cent'], [0.0125, '1.25 cents'], [0.015, '1.5 cents'], [0.02, '2 cents']].map(([v, l]) => chip(l, I.tv === v, () => shared({ tv: v })))),
       question('Airline and hotel points you would really use', Object.entries(off.units).filter(([k, u]) => k !== 'cash' && !u.transferable).map(([k, u]) => chip(u.name, I.programs.includes(k), () => mine({ programs: I.programs.includes(k) ? I.programs.filter(v => v !== k) : [...I.programs, k] })))),
       h('div.st-small.st-soft', {}, 'Their cards stay out of your moves until you tap one. Miles you would not use are worth nothing to you.'),
       h('div.cp-q', {}, h('div.st-flabel', {}, 'Other cards opened in the last two years that are not on your list'),
@@ -106,6 +117,7 @@ function draw(api) {
   };
 
   const held = () => h('div.st-card', { id: 'held' }, h('h2', { style: { marginTop: 0 } }, 'Cards you hold'), h('p.st-small.st-soft', {}, 'From your Credit cards list. Each one gets a yearly check: did it earn its fee?'),
+    (sh => (sh ? h('p', { id: 'share', style: { fontWeight: 700 } }, sh.line) : null))(R.share()),
     R.held.map(x => fold(`held-${x.row.id}`, x.label, [
       h('p', { style: { margin: 0, fontWeight: 700 } }, x.year.line), x.year.option ? h('p.st-small', { style: { margin: 0 } }, x.year.option) : null,
       creditTaps(x.card.id, 'Credits you really use'),
@@ -123,7 +135,7 @@ function draw(api) {
   const addCard = () => {
     const banks = [...new Set(lib.cards.map(issuerName))].filter(Boolean).sort(), have = new Set(R.held.map(x => x.card.id));
     const picking = UI.adding ? cardOf(UI.adding) : null;
-    const done = inFull => { addHeldCard(api.store, picking, { inFull }); UI.adding = null; UI.bank = null; if (!inFull) mine({ carry: true }); else api.render(); };
+    const done = inFull => { addHeldCard(api.store, picking, { inFull, owner: R.who }); UI.adding = null; UI.bank = null; if (!inFull) shared({ carry: true }); else api.render(); };
     return h('div.cp-q', { id: 'add-card', style: { marginTop: '12px' } }, h('div.st-flabel', {}, 'Add a card you hold'),
       picking ? [h('p', { style: { margin: '0 0 6px', fontWeight: 700 } }, `${issuerName(picking)} ${picking.name}: do you pay it in full each month?`),
         h('div.st-chips', {}, chip('Yes, in full', false, () => done(true)), chip('No, I carry a balance', false, () => done(false)), chip('Not this card', false, () => { UI.adding = null; redraw(); }))]
@@ -150,6 +162,9 @@ function draw(api) {
     return h('div.st-card', { id: 'plain' }, h('h2', { style: { marginTop: 0 } }, 'Does any setup beat one plain card?'), fold('plain-fold', 'Check it against my spending', body));
   };
 
+  const practice = () => h('div.st-card', { id: 'drill' }, h('h2', { style: { marginTop: 0 } }, 'First card? A practice run'),
+    fold('drill-fold', 'What happens when you apply, step by step', [h('p.st-small.st-soft', { style: { margin: 0 } }, drill.note), h('ol', { style: { margin: 0, paddingLeft: '20px' } }, drill.steps.map(x => h('li', { style: { marginBottom: '8px' } }, h('strong', {}, `${x.title}. `), x.text)))]));
+
   const pairs = () => { const jobs = [...new Set(tools.tools.map(t => t.job))];
     return h('div.st-card', { id: 'pairs' }, h('h2', { style: { marginTop: 0 } }, 'Tools that pair with this'),
       fold('pairs-fold', 'Seven apps for the daily jobs this page does not do', [
@@ -160,6 +175,7 @@ function draw(api) {
   // The next step: where it lives on the page. The thing to tap pulses; while it is out of view the button in the top
   // bar pulses instead, so there is always exactly one pulse, and it moves on after every tap.
   const targetOf = () => { const n = R.guide.next?.id; if (!n) return null;
+    if (n === 'debt') return $('to-debt');
     if (n === 'cards') return $('add-card')?.querySelector('.st-chips');
     if (n === 'spend') return $('q-spend')?.querySelector('.st-chips');
     if (n === 'score') return $('q-score')?.querySelector('.st-chips');
@@ -171,12 +187,15 @@ function draw(api) {
   const y = window.scrollY;
   $('main').replaceChildren(
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Part of your plan'), h('h1', {}, 'Is this card right for me?'), h('p', { style: { marginBottom: 0 } }, 'Your next move, the move after it, and what each card opens and uses, worked out from your own plan. It will also tell you when the answer is no card at all.')),
-    next(), built(), held(), dates(), plain(), pairs(),
+    next(), built(), held(), dates(), plain(), practice(), pairs(),
     h('div.st-card', { id: 'carry' }, h('h2', { style: { marginTop: 0 } }, 'Take it with you'), h('p.st-small', {}, 'These answers are saved in your plan, so the link carries them.'),
       h('div.st-row', {}, copyLink(api), btn('All the steps', async () => { location.href = `one.html#/d/${await pack(api.store.doc)}`; }, 'slim'))));
   foot();
   window.scrollTo(0, y);
-  const go = $('go'), target = cp().guideOff === true ? null : targetOf();
+  if (R.who === 'Me') { const d = new Date(), today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`, last = all().last, cur = { line: R.line, left: R.slots.left, at: today };
+    if (!last || last.at !== today) api.remember({ cardPlan: { ...all(), prev: last ?? null, last: cur } });
+    else if (last.line !== cur.line || last.left !== cur.left) api.remember({ cardPlan: { ...all(), last: cur } }); }
+  const go = $('go'), target = all().guideOff === true ? null : targetOf();
   watch?.disconnect(); watch = null;
   go.hidden = !target; go.classList.remove('st-pulse');
   if (target) {
@@ -188,7 +207,7 @@ function draw(api) {
 let watch = null, goNext = () => {};
 const json = r => r.json();
 let API = null;
-Promise.all([fetch('data/library/cards.json').then(json), fetch('data/library/card-offers.json').then(json), fetch('data/library/card-tools.json').then(json)])
-  .then(([a, b, c]) => { lib = a; off = b; tools = c; if (API) API.render(); })
+Promise.all([fetch('data/library/cards.json').then(json), fetch('data/library/card-offers.json').then(json), fetch('data/library/card-tools.json').then(json), fetch('data/library/card-drill.json').then(json)])
+  .then(([a, b, c, e]) => { lib = a; off = b; tools = c; drill = e; if (API) API.render(); })
   .catch(() => $('main').replaceChildren(h('div.st-card', {}, h('h1', {}, 'Is this card right for me?'), h('p', {}, 'The card list did not load. Refresh the page to try again.'))));
-boot('cards', draw).then(api => { API = api; if (lib && off && tools) api.render(); });
+boot('cards', draw).then(api => { API = api; if (lib && off && tools && drill) api.render(); });

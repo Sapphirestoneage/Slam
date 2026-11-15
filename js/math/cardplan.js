@@ -23,6 +23,10 @@ export function offerValue(offer, { units = {}, held = [], unlockIds = [], trans
   return amt * (lifted ? Math.max(u.value, transferValue) : u.value);
 }
 
+// An offer with an end date stops being a move the day after it.
+const dayOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+export const offerLive = (offer, now = null) => !offer?.ends || !now || offer.ends >= dayOf(now);
+
 // An airline or hotel program's own points: not cash, and not points that can move elsewhere.
 export const isProgram = (offer, units = {}) => { const u = units[offer?.bonus?.unit]; return !!u && offer.bonus.unit !== 'cash' && !u.transferable; };
 
@@ -51,7 +55,8 @@ export function cardFit(offer, me = {}, { rule = { slots: 5, months: 24 }, units
   const order = ['later', 'maybe', 'fits'];
   let level = 2;
   const reasons = [];
-  const cap = (n, text) => { level = Math.min(level, n); reasons.push(text); };
+  let block = null;
+  const cap = (n, text) => { level = Math.min(level, n); reasons.push(text); if (n === 0 && !block) block = text; };
   if (me.heavyDebt) cap(0, 'Interest on the debt costs more than any welcome offer pays. Clear that first.');
   if (offer.business && me.business === false) cap(0, 'A business card: it needs a business or side income.');
   if (me.opened != null) {
@@ -73,7 +78,7 @@ export function cardFit(offer, me = {}, { rule = { slots: 5, months: 24 }, units
   }
   const net = firstYearNet(offer, { units, held, unlockIds, transferValue, creditsUsed });
   if (net == null) cap(1, 'The offer is not settled between sources, so no dollar value is counted.');
-  return { level: order[level], reasons, net };
+  return { level: order[level], reasons, net, block };
 }
 
 // The moves open from here, best first by first-year net, each with the best second move after it.
@@ -85,7 +90,7 @@ export function nextMoves(offers = [], state = {}, opts = {}, depth = 2) {
   if (slots <= 0 || me.heavyDebt) return { slots, moves: [] };
   const moves = [];
   for (const o of offers) {
-    if (held.includes(idOf(o)) || !(o.bonus?.amount > 0)) continue;
+    if (held.includes(idOf(o)) || !(o.bonus?.amount > 0) || !offerLive(o, opts.now)) continue;
     // airline and hotel points only count for someone who says they would use that program, and one card per program
     if (isProgram(o, opts.units) && (!(opts.programs || []).includes(o.bonus.unit) || (opts.skipUnits || []).includes(o.bonus.unit))) continue;
     const fit = cardFit(o, { ...me, opened, monthlySpend }, { ...opts, rule, held });
@@ -208,16 +213,16 @@ export const scoreBand = (score, bands = {}) => (score == null || score === '' |
 
 // The card plan from its inputs: the slots, the moves, and the one sentence every screen shows.
 export function cardPlan({ offers = [], units = {}, rule = { slots: 5, months: 24 }, unlockIds = [], held = [], openedMonths = [], score = null, monthlySpend = null, heavyDebt = false, business = false,
-  programs = [], transferValue = null, creditsUsedOf = null, now = new Date() } = {}) {
+  programs = [], transferValue = null, creditsUsedOf = null, debtKnown = true, now = new Date() } = {}) {
   const slots = slotsFromDates(openedMonths, now, rule);
-  const opts = { units, rule, unlockIds, transferValue, creditsUsedOf, programs };
+  const opts = { units, rule, unlockIds, transferValue, creditsUsedOf, programs, now };
   const me = { score, heavyDebt, business };
   const R = nextMoves(offers, { held, opened: slots.used, monthlySpend, me }, opts);
   const usd = v => `$${round(v).toLocaleString('en-US')}`;
   let kind, line;
   if (heavyDebt) { kind = 'debt'; line = 'Pay down the debt first. No new card pays more than that interest costs.'; }
   else if (slots.left <= 0) { kind = 'wait'; line = `Wait. Chase opens up again in ${slots.frees}.`; }
-  else if (R.moves.length) { const m = R.moves[0]; kind = 'open'; line = `${m.offer.name}, worth ${usd(m.net)} in its first year after the fee${monthlySpend != null ? `, from about ${m.months} ${m.months === 1 ? 'month' : 'months'} of spending you already do` : ''}.`; }
+  else if (R.moves.length) { const m = R.moves[0]; kind = 'open'; line = `${debtKnown ? '' : 'If you owe nothing on cards: '}${m.offer.name}, worth ${usd(m.net)} in its first year after the fee${monthlySpend != null ? `, from about ${m.months} ${m.months === 1 ? 'month' : 'months'} of spending you already do` : ''}.`; }
   else { kind = 'hold'; line = 'Hold. Nothing here beats what you have.'; }
   const why = kind === 'debt' ? 'Card interest runs far above anything a welcome offer pays.'
     : kind === 'wait' ? `You have opened ${slots.used} cards in two years, and Chase usually turns down anyone at ${rule.slots} or more.`
@@ -227,7 +232,9 @@ export function cardPlan({ offers = [], units = {}, rule = { slots: 5, months: 2
 }
 
 // The steps that sharpen the answer, in order. One is next at a time; the count ticks up as each is done.
-export function cardSteps({ hasCards = false, noCards = false, spendKnown = false, scoreKnown = false, monthsLeft = 0, canOpen = true, seenMove = false, seenPlain = false } = {}) {
+export function cardSteps({ hasCards = false, noCards = false, spendKnown = false, scoreKnown = false, monthsLeft = 0, canOpen = true, seenMove = false, seenPlain = false, heavyDebt = false } = {}) {
+  // with debt at a heavy rate there is one step, and it is not on this page: the debt
+  if (heavyDebt) { const one = { id: 'debt', label: 'See when you are debt free', done: false }; return { steps: [one], next: one, done: 0, total: 1, count: 'Next', line: one.label }; }
   const steps = [
     { id: 'cards', label: 'Add the cards you hold', done: hasCards || noCards },
     { id: 'spend', label: 'Say what you put on cards in a month', done: spendKnown },
@@ -238,4 +245,55 @@ export function cardSteps({ hasCards = false, noCards = false, spendKnown = fals
   ];
   const done = steps.filter(x => x.done).length, next = steps.find(x => !x.done) ?? null;
   return { steps, next, done, total: steps.length, count: next ? `Step ${steps.indexOf(next) + 1} of ${steps.length}` : `All ${steps.length} done`, line: next ? next.label : 'Your answer is as sharp as this page can make it.' };
+}
+
+// ---- Why not the others: one plain reason for each card that is not among the moves ----
+export function whyNot(offers = [], state = {}, opts = {}) {
+  const { held = [], opened = 0, monthlySpend = null, me = {} } = state, out = [];
+  const inMoves = new Set(nextMoves(offers, state, opts, 1).moves.map(m => idOf(m.offer)));
+  for (const o of offers) {
+    const id = idOf(o);
+    if (inMoves.has(id)) continue;
+    let reason;
+    if (held.includes(id)) reason = 'You already hold it.';
+    else if (!offerLive(o, opts.now)) reason = 'Its offer has ended.';
+    else if (o.bonus?.amount == null) reason = 'Sources disagree on its offer, so it is not counted.';
+    else if (!(o.bonus.amount > 0)) reason = 'It has no welcome offer.';
+    else if (isProgram(o, opts.units) && !(opts.programs || []).includes(o.bonus.unit)) reason = `You have not picked ${opts.units[o.bonus.unit].name} as something you would use.`;
+    else reason = cardFit(o, { ...me, opened, monthlySpend }, { ...opts, held }).block ?? (monthsToEarn(o, monthlySpend ?? Infinity) == null ? 'Its offer needs more spending than you do.' : 'It does not fit right now.');
+    out.push({ offer: o, reason });
+  }
+  return out;
+}
+
+// ---- What changed since the last visit ----
+// prev and cur: { line, left, at: 'YYYY-MM-DD' }. Sentences, most useful first; none on a first visit.
+export function visitChanges(prev, cur, offers = [], now = new Date()) {
+  if (!prev?.at) return [];
+  const out = [], today = dayOf(now);
+  if (prev.line && cur.line && prev.line !== cur.line) out.push(`Your next move changed. Last time it was: ${prev.line}`);
+  if (prev.left != null && cur.left > prev.left) out.push(`A slot came back: ${cur.left} open now, ${prev.left} then.`);
+  if (prev.left != null && cur.left < prev.left) out.push(`You have used a slot since: ${cur.left} open now, ${prev.left} then.`);
+  for (const o of offers) if (o.ends && o.ends >= prev.at && o.ends < today) out.push(`The ${o.name} offer ended.`);
+  return out;
+}
+
+// ---- How much of what is there your cards already give ----
+export function cardsShare(have, best, { enough = 0.9, cards = 1 } = {}) {
+  if (!(best > 0) || have == null) return null;
+  const share = Math.max(0, Math.min(1, have / best)), usd = v => `$${round(Math.max(0, v)).toLocaleString('en-US')}`, many = cards === 1 ? 'one card' : `${cards} cards`;
+  // a card whose fee outruns what it gives back is said plainly, never shown as zero
+  if (have < 0) return { share: 0, enough: false, line: `On your spending your ${cards === 1 ? 'card costs' : 'cards cost'} about ${usd(-have)} a year more than ${cards === 1 ? 'it gives' : 'they give'} back. The best ${many} would give ${usd(best)}.` };
+  return { share, enough: share >= enough, line: `Your ${cards === 1 ? 'card gives' : 'cards give'} about ${usd(have)} a year on your spending. The best ${cards === 1 ? 'one card' : `${cards} cards`} could give ${usd(best)}. You are getting ${round(share * 100)}% of what is there.${share >= enough ? ' That is close enough to stop here.' : ''}` };
+}
+
+// ---- Where an offer could go: the same dollars against three things the plan already tracks ----
+export function offerToward(value, { littleE = null, iraLimit = null, realReturn = null, years = 30 } = {}) {
+  if (!(value > 0)) return {};
+  const usd = v => `$${round(v).toLocaleString('en-US')}`, pct = v => `${round(Math.min(1, v) * 100)}%`;
+  return {
+    ...(littleE > 0 ? { cushion: `${usd(value)} is ${pct(value / littleE)} of a ${usd(littleE)} first cushion.` } : {}),
+    ...(iraLimit > 0 ? { roth: `${usd(value)} is ${pct(value / iraLimit)} of this year's ${usd(iraLimit)} Roth IRA limit.` } : {}),
+    ...(realReturn != null ? { invest: `${usd(value)} invested and left ${years} years is about ${usd(investedLater(value, years, realReturn))} in today's dollars.` } : {}),
+  };
 }

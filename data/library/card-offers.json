@@ -1080,5 +1080,10 @@
    "drugstore": 50,
    "transit": 100
   }
+ },
+ "enoughShare": {
+  "value": 0.9,
+  "basis": "SLAM stand-in: at nine tenths of what the best cards would give, the rest is not worth more cards",
+  "date": "2026-11-14"
  }
 }

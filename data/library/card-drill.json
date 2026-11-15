@@ -1,0 +1,34 @@
+{
+ "id": "library.cardDrill",
+ "version": "1.0.0",
+ "asOf": "2026-11-14",
+ "source": "Consumer Financial Protection Bureau guidance on credit inquiries and on notices after a credit denial, FICO's published guidance on inquiries, and the CARD Act's rule for applicants under 21. Written from those rules as generally stated; not re-read on the day of writing.",
+ "confidence": "secondary",
+ "note": "A practice run for someone who has never applied for a card: what happens at each step, so none of it is a surprise. No step here costs anything or leaves a mark except the application itself.",
+ "steps": [
+  {
+   "title": "What the form asks",
+   "text": "Your name, address and date of birth, your Social Security or taxpayer number, your yearly income, and what you pay for housing each month. Under 21, the income has to be your own."
+  },
+  {
+   "title": "What applying does to your credit",
+   "text": "The bank looks at your credit report. That look is called a hard inquiry. For most people it takes a few points off the score, it counts in the score for about a year, and it leaves the report after two."
+  },
+  {
+   "title": "How fast you hear back",
+   "text": "Often in under a minute. Sometimes the screen says the bank needs more time, and a letter or email follows within a few weeks. A delay is not a no."
+  },
+  {
+   "title": "If the answer is no",
+   "text": "The bank must send a letter saying why, and you can get a free copy of the credit report it used within 60 days. Nothing else happens: a no does not go on your report, only the inquiry does. You can call the bank and ask it to look again."
+  },
+  {
+   "title": "If the answer is yes",
+   "text": "The card comes in the mail in a week or two. The welcome offer clock usually starts the day you were approved, not the day the card arrives."
+  },
+  {
+   "title": "The one habit that makes it free",
+   "text": "Set the card to pay the full statement balance automatically from your checking account. Paid in full, a card charges no interest at all."
+  }
+ ]
+}

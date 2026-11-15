@@ -129,12 +129,11 @@ export function doubledNotes(ctx) {
 
 // The card plan's one sentence (js/cardplan.js: the same call cards.html makes, so the two never disagree), with a
 // button that opens the full card plan on this household.
-export function cardPlanNote(ctx) {
+export function cardPlanNote(ctx, { link = true } = {}) {
   const lib = ensure(ctx);
   if (!cardOffers()) loadCardOffers(() => ctx.refresh?.());
   const off = cardOffers();
   if (!lib || !off) return null;
   const R = cardPlanOf(ctx.store.doc, ctx.ref, lib, off);
-  return h('div.stack.doubled-notes.card-plan-note', { style: { gap: '4px', margin: '4px 0 12px' } }, h('p.note-line', { style: { margin: 0 } }, h('strong', {}, 'Next card move: '), R.line, ' ',
-    h('button.link-btn', { type: 'button', onclick: async () => { location.href = `cards.html#/d/${await pack(ctx.store.doc)}`; } }, 'Open the card plan')));
+  return h('div.stack.doubled-notes.card-plan-note', { style: { gap: '4px', margin: '4px 0 12px' } }, h('p.note-line', { style: { margin: 0 } }, h('strong', {}, 'Next card move: '), R.line, link ? [' ', h('button.link-btn', { type: 'button', onclick: async () => { location.href = `cards.html#/d/${await pack(ctx.store.doc)}`; } }, 'Open the card plan')] : null));
 }
