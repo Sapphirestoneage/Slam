@@ -546,6 +546,18 @@ def run(cases, ref):
             total = sum(x['amount'] * (1 + rr) ** (k / n) for k in range(n * x['years']))
             ck('grown', o['grown'], total); ck('spent', o['spent'], x['amount'] * n * x['years']); ck('needed to pay for it forever', o['needs'], x['amount'] * n / wr)
             ck('times the cost', o['times'], total / x['amount'], 1e-6)
+        elif fn == 'loan':
+            # the payment by the present-value sum (each payment discounted on its own), then every month stepped
+            n, r = x['years'] * 12, x['apr'] / 12
+            pay = x['amount'] / sum((1 + r) ** -k for k in range(1, n + 1))
+            left, interest, today, infl = x['amount'], 0.0, 0.0, ref['presets']['inflation']['default']
+            for k in range(1, n + 1):
+                i = left * r
+                interest += i; today += i / (1 + infl) ** (k / 12); left += i - pay
+            ck('payment', o['payment'], pay); ck('paid in all', o['paid'], x['amount'] + interest); ck('interest', o['interest'], interest)
+            ck('interest in today\'s dollars', o['interestToday'], today)
+            ck('the payment invested', o['invested'], sum(pay * (1 + rr) ** (k / 12) for k in range(n)))
+            ck('in FI terms', o['fiNumber'], pay * 12 / wr)
         elif fn == 'taxableSS':
             ck('taxed part', o['taxed'], law.taxed_ss(x['ss'], x['other'], x['filingStatus']))
         elif fn == 'gainsTax':

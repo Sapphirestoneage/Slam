@@ -61,3 +61,10 @@ old parts of this file and of `QUESTIONS.md` moved to `docs/archive/`. Nothing i
 - New tool from the template: `habit.html`. The answer card now redraws while typing on every templated tool.
 - Not done: eight of the ten calculators, and Can I afford it as its own page.
 
+## Nov 15 2026: Run 6, fire drills and a loan page
+
+- `drills.html`: Money fire drills on their own page, for the Nov 30 talk. `loan.html`: What does this loan really
+  cost? Both from the template, walked at 390 and 1280 by pulse and by typing, loan math in the second engine.
+- The bill drill's wording now matches how its interest is counted.
+- Not done: the 50-state cliff map (not started), the household true cost of debt as its own page.
+

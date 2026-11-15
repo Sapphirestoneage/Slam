@@ -4,6 +4,7 @@
 // itself is the engine's own (js/math/debt.js payoffPlan, M34), so a standalone and the full plan can never disagree.
 import { fiDate } from './math/fi.js';
 import { payoffPlan, cardMinimum } from './math/debt.js';
+import { loanPayment, loanSchedule } from './math/truecost.js';
 import { collapseOf } from './collapse.js';
 import { quizOf } from './quiz.js';
 import { answeredOf } from './math/agestart.js';
@@ -140,4 +141,16 @@ export function habitCostOf({ amount = null, per = 'month', years = 10, ref } = 
   const g = (1 + r) ** (1 / n), times = (g ** (n * years) - 1) / (g - 1), aYear = amount * n;
   return { ready: true, amount, per, years, aYear, spent: aYear * years, times, grown: amount * times, growth: amount * times - aYear * years, needs: aYear / wr, realReturn: r, withdrawalRate: wr,
     byYears: HABIT_YEARS.map(y => ({ years: y, grown: amount * (g ** (n * y) - 1) / (g - 1) })) };
+}
+
+// What a loan really costs (loan.html): the payment, the interest over its whole life (and in today's dollars), what the
+// same payment would have become invested at the plan's pace, and the FIRE view (a payment is spending, so while it is
+// owed it adds 25 times its year to the FI number). The payment and the schedule are the plan's own (js/math/truecost.js).
+export const LOAN_AMOUNTS = [5000, 15000, 30000, 60000, 300000], LOAN_RATES = [0, 0.04, 0.07, 0.1, 0.15, 0.25], LOAN_YEARS = [2, 3, 5, 7, 10, 30];
+export function loanCostOf({ amount = null, apr = null, years = null, ref } = {}) {
+  if (!(amount > 0) || apr == null || !(years > 0)) return { ready: false };
+  const n = years * 12, payment = loanPayment(amount, apr, n), infl = ref.presets.inflation.default, r = ref.presets.realReturn.default, wr = ref.presets.withdrawalRate.default;
+  const s = loanSchedule({ amount, apr, payment, n, inflation: infl }), g = (1 + r) ** (1 / 12);
+  return { ready: true, amount, apr, years, months: n, payment, paid: s.paid, interest: s.interest, interestToday: s.interestToday, perDollar: s.paid / amount,
+    invested: payment * (g ** n - 1) / (g - 1), fiNumber: payment * 12 / wr, inflation: infl, realReturn: r, withdrawalRate: wr };
 }

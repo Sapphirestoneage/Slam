@@ -54,7 +54,7 @@ export function drillsOf(plan, doc, ref, priors, { life = null, now = new Date()
     const cost = short > 0 ? cardCost(apr, { amount: short, months: 3 }) : null;
     out.push({ id: 'bill', fear: `A ${$(bill)} bill lands this week`, calm: short === 0,
       headline: short === 0 ? `You can pay it in cash and still have ${$(cash - bill)}` : `Your cash covers ${$(cash)} of it`,
-      lines: short === 0 ? ['No card, no loan, no interest. That is what emergency cash is for.'] : [`The other ${$(short)} would go on a card. Paid back over three months, that costs about ${cost?.cost != null ? $(cost.cost) : 'a few percent'} in interest.`, 'That is the whole cost. It is a fee, and you can price it.'],
+      lines: short === 0 ? ['No card, no loan, no interest. That is what emergency cash is for.'] : [`The other ${$(short)} would go on a card. Carried for three months before you clear it, that costs about ${cost?.cost != null ? $(cost.cost) : 'a few percent'} in interest.`, 'That is the whole cost. It is a fee, and you can price it.'],
       happens: ['Most medical and repair bills can be split into payments if you ask before the due date.', 'A bill paid a few weeks late usually costs a late fee, and nothing reaches your credit report until it is 30 days past due.'],
       rep: { text: short === 0 ? 'Rename your savings account "little e" so you know what it is for.' : 'Move $20 into savings today and name the account "little e".', minutes: 5 } }); }
   // 3. The pay cut

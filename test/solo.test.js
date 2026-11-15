@@ -301,3 +301,22 @@ test('what a habit costs: ten years at the plan\'s pace, and what pays for it fo
   if (r === 0.07) { assert.ok(Math.abs(w.times - 742.8) < 0.1); assert.ok(Math.abs(habitCostOf({ amount: 1, per: 'month', ref }).times - 171.1) < 0.1); }
   assert.deepEqual(m.byYears.map(y => y.years), [5, 10, 20, 30]); assert.ok(Math.abs(m.byYears[1].grown - m.grown) < 1e-9);
 });
+
+test('what a loan really costs: the payment, the interest, the same payment invested, and the FI view', async () => {
+  const { loanCostOf } = await import('../js/solo.js');
+  assert.equal(loanCostOf({ amount: 30000, apr: 0.07, ref }).ready, false, 'needs the years');
+  const L = loanCostOf({ amount: 30000, apr: 0.07, years: 5, ref });
+  assert.ok(Math.abs(L.payment - 594.04) < 0.005, 'the standard payment on $30,000 at 7% over 60 months');
+  // by hand: step 60 months
+  { let b = 30000, interest = 0; for (let k = 0; k < 60; k++) { const i = b * 0.07 / 12; interest += i; b += i - L.payment; } assert.ok(Math.abs(b) < 0.01, 'ends at zero'); assert.ok(Math.abs(L.interest - interest) < 0.01); }
+  assert.ok(Math.abs(L.paid - (30000 + L.interest)) < 0.01); assert.ok(L.interestToday < L.interest);
+  assert.ok(Math.abs(L.fiNumber - L.payment * 12 / ref.presets.withdrawalRate.default) < 1e-9);
+  { const g = (1 + ref.presets.realReturn.default) ** (1 / 12); let v = 0; for (let k = 0; k < 60; k++) v = v * g + L.payment; assert.ok(Math.abs(L.invested - v) < 1e-6); }
+  const zero = loanCostOf({ amount: 12000, apr: 0, years: 2, ref });
+  assert.equal(zero.payment, 500); assert.ok(Math.abs(zero.interest) < 1e-9);
+});
+
+test('the surprise bill drill says how its interest is counted', async () => {
+  const src = (await import('node:fs')).readFileSync(new URL('../js/drills.js', import.meta.url), 'utf8');
+  assert.match(src, /Carried for three months before you clear it/); assert.doesNotMatch(src, /Paid back over three months/);
+});

@@ -73,9 +73,9 @@ after Run 1.
 
 | Tool or job | Status | Where it lives | What is left, and what done means | Size |
 |---|---|---|---|---|
-| 50-state benefits cliff map | Partly on main | js/math/cliff.js | The cliff math exists. Left: sourced rules for every state and the map. Mostly data work, each rule with a source and date. | L |
-| Money Fire Drills as its own tool | Partly on main | js/drills.js, js/math/firedrill.js | Drills live inside the plan. Left: the standalone version for your ChooseFI NY talk. | M |
-| True cost of debt and the student loan decision | Partly on main | js/math/truecost.js, studentloan.js | In the coach app. Left: a standalone page on the template. | M |
+| 50-state benefits cliff map | Partly on main | js/math/cliff.js | Not started. The cliff math covers New York and the federal lines. Each other state needs its own SNAP and Medicaid rules found and dated, one at a time; none were guessed. | L |
+| Money Fire Drills as its own tool | Done | drills.html, js/solo/drill.js | drills.html: the plan's own drills, each shown the moment its numbers are in, with a rep to tick. Left: the page is long on a phone before the first drill; the lost-job drill names unemployment pay only for New York. | M |
+| True cost of debt and the student loan decision | Partly on main | loan.html, js/math/truecost.js | loan.html, What does this loan really cost? (payment, interest, the payment invested, the FI view) is built. The household version (every debt you have, the months of FI each costs) and the student loan decision are still only in the coach app. | M |
 
 ### Run 7: The two atlases
 
