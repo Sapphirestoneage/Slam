@@ -1,0 +1,60 @@
+{
+  "what": "Israel tax and social insurance figures for Aliyah Math (ROADMAP Run 8). Researched Nov 19 2026. Not read by any math yet.",
+  "rule": "Every figure names where it came from and how sure it is. 'primary' was read on a government page. 'secondary' was read on other sites that agree with each other and still needs a look at the Tax Authority's own table before it reaches a client.",
+  "currency": "ILS",
+  "taxYear": 2026,
+  "incomeTax": {
+    "note": "On earned income (salary, self-employment). The 10% and 14% bands and the credit point value are frozen at 2025 values through 2027. The 20% and 31% bands were widened by the 2026 budget law, passed March 2026 and applied from Jan 1 2026.",
+    "bracketsMonthly": [
+      { "upTo": 7010, "rate": 0.10 },
+      { "upTo": 10060, "rate": 0.14 },
+      { "upTo": 19000, "rate": 0.20, "was2025": 16150 },
+      { "upTo": 25100, "rate": 0.31, "was2025": 22440 },
+      { "upTo": 46690, "rate": 0.35 },
+      { "upTo": null, "rate": 0.47 }
+    ],
+    "bracketsAnnual": [84120, 120720, 228000, 301200, 560280],
+    "surtax": { "aboveAnnual": 721560, "rate": 0.03, "note": "The extra tax on high incomes; with it the top rate reads as 50%. Sites disagree on whether the 2026 rate is 3% or 5%.", "confidence": "secondary, confirm" },
+    "confidence": { "bands20and31": "secondary, six Israeli tax sites agree, each citing the Tax Authority's 2026 table", "otherBands": "secondary, unchanged from 2025" },
+    "sources": ["https://www.bizportal.co.il/guides/news/article/20038711", "https://wintax.co.il/madregot-mas-hachnasa-2026/", "https://dailymagazine.co.il/income-tax-brackets-2026/"]
+  },
+  "creditPoints": {
+    "valueMonthly": 242,
+    "valueAnnual": 2904,
+    "residentBase": { "man": 2.25, "woman": 2.75, "confidence": "secondary, confirm (one reading of the government leaflet showed 2.5 for men)" },
+    "olim": { "appliesTo": "Aliyah on or after Jan 1 2022", "months": 54, "schedule": [{ "months": 12, "extraPoints": 1 }, { "months": 18, "extraPoints": 3 }, { "months": 12, "extraPoints": 2 }, { "months": 12, "extraPoints": 1 }] },
+    "confidence": "primary",
+    "sources": ["https://www.gov.il/BlobFolder/generalpage/new-immigrants-france-081026/he/IncomeTax_new-immigrants-english-081026.pdf"]
+  },
+  "olimZeroRate": {
+    "what": "A 0% income tax rate on Israeli earned income for new olim and for residents returning after 10 or more years abroad. Passive income (dividends, interest, rent) does not count. It sits on top of the credit points and the foreign income exemption.",
+    "ceilingAnnual": { "2026": 1000000, "2027": 1000000, "2028": 600000, "2029": 350000, "2030": 150000 },
+    "employedByRelativeCapAnnual": 140000,
+    "qualifyingArrival": { "from": "2025-11-05", "to": "2026-12-31", "note": "The government leaflet was read as running to 2027-02-10. Confirm the end date against Tax Authority Circular 07/2026." },
+    "confidence": "secondary, confirm the ceilings and the end date",
+    "sources": ["https://www.cwsisrael.com/israeli-tax-changes-2026-complete-guide/", "https://www.jns.org/news/israel-news/israel-offers-income-tax-break-to-encourage-aliyah", "https://www.gov.il/BlobFolder/generalpage/new-immigrants-france-081026/he/IncomeTax_new-immigrants-english-081026.pdf"]
+  },
+  "foreignIncomeExemption": {
+    "years": 10,
+    "appliesTo": "New olim, and returning residents who lived abroad more than 10 years",
+    "reporting": "Arrivals through Dec 31 2025 are exempt from tax and from reporting foreign income and assets. Arrivals from Jan 1 2026 keep the tax exemption and must report.",
+    "confidence": "primary",
+    "sources": ["https://www.gov.il/BlobFolder/generalpage/new-immigrants-france-081026/he/IncomeTax_new-immigrants-english-081026.pdf"]
+  },
+  "nationalInsurance": {
+    "asOf": "2026-01-01",
+    "appliesTo": "Salaried workers aged 18 to retirement age",
+    "reducedBandUpToMonthly": 7703,
+    "ceilingMonthly": 51910,
+    "employee": { "reduced": { "nationalInsurance": 0.0104, "health": 0.0323, "total": 0.0427 }, "full": { "nationalInsurance": 0.07, "health": 0.0517, "total": 0.1217 } },
+    "employer": { "reduced": 0.0451, "full": 0.076 },
+    "confidence": "primary",
+    "sources": ["https://www.btl.gov.il/English%20Homepage/Insurance/Ratesandamount/Pages/forSalaried.aspx", "https://www.btl.gov.il/English%20Homepage/Insurance/Health%20Insurance/Pages/Healthinsurancerates.aspx"]
+  },
+  "other": {
+    "vat": { "rate": 0.18, "confidence": "secondary", "source": "https://www.nbn.org.il/life-in-israel/finances/taxes/taxation-in-israel-general-information/" },
+    "olimPurchaseTaxSingleHome2026": { "window": "One year before Aliyah to seven years after", "bands": [{ "upTo": 1978745, "rate": 0 }, { "upTo": 6055070, "rate": 0.005 }, { "upTo": 20183565, "rate": 0.08 }], "confidence": "primary", "source": "https://www.gov.il/BlobFolder/generalpage/new-immigrants-france-081026/he/IncomeTax_new-immigrants-english-081026.pdf" },
+    "pensionEmployeeTypical": { "rate": 0.06, "confidence": "secondary", "source": "https://www.sfb.co.il/en-us/gross-net-calculator" }
+  },
+  "notResearchedYet": ["The US side for a citizen living in Israel: the Foreign Earned Income Exclusion against the Foreign Tax Credit, and the US-Israel totalization rules", "Self-employed National Insurance rates", "Arnona (city tax) and health fund add-on costs", "Cost-of-living figures: Eli has real ones from people living there", "An exchange rate rule: which day's rate, and where it is read from"]
+}

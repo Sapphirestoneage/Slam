@@ -90,3 +90,21 @@ old parts of this file and of `QUESTIONS.md` moved to `docs/archive/`. Nothing i
   (on a phone the card takes half the screen), Fast 5, Coachable not judged. Nothing above cosmetic open.
 - Eight findings and four questions: `QUESTIONS.md` 557.
 
+## Nov 19 2026: Runs 5 and 6 finished
+
+- Canon pack: eight small calculators, one page each (`years`, `coast`, `dollar`, `car`, `home`, `worth`, `wage`,
+  `split` `.html`). One renderer (`js/solo/calc.js`), eight specs (`js/solo/canon.js`), math in `js/solo.js` with
+  eight hand-checked tests. Whose idea each one is, is in its fold. Take-home, spending and invested are the plan's
+  own answers, so they are typed once.
+- Three pages that answer from the whole plan (`js/solo/plans.js`): `afford.html` (Can I afford it?), `cost.html`
+  (What is my debt really costing me?), `student.html` (Which student loan plan costs least?). They show what
+  `js/math/afford.js`, `truecost.js` and `studentloan.js` return; no math was added for them.
+- The front door links all eleven: the three plan pages in the row, the eight calculators under one fold.
+- Second engine: the eight new functions re-derived in `tools/audit/engine2.py`. The two engines agree on all
+  204,938 numbers in 15,950 cases.
+- Layout check: a new walk (`LAYOUT_ROUTES=calc`) opens all eleven empty and on a made-up plan with every fold open,
+  at 1440, 1280 and 390 in both themes. Every check 0.
+- `node --test`: 1,222 pass, 0 fail, 43 skipped, 2 todo.
+- Not done: Run 7 (both atlases) and the other 49 states of the cliff map are still waiting on data files. No
+  numbers were guessed. Sign-in still needs the project keys.
+

@@ -38,6 +38,8 @@ const ROUTES = (() => {
 })();
 const WIDTHS = process.env.LAYOUT_WIDTHS ? process.env.LAYOUT_WIDTHS.split(',').map(Number) : QUICK ? [1440] : [1440, 1280, 390];
 const THEMES = process.env.LAYOUT_THEMES ? process.env.LAYOUT_THEMES.split(',') : QUICK ? ['light'] : ['light', 'dark'];
+const CALC_PAGES = ['years', 'coast', 'dollar', 'car', 'worth', 'wage', 'split', 'home', 'afford', 'cost', 'student'];
+const CALC_PLAN = '1Zdtb9s2EMe_inHYixZgCkmxHVvvshQt9tBhWIIOaFEMZ_JkEZZIlg-OlcDffaAsWXbRpunWFMk78cQ7nv4_3x19C2gM5HD5-_kbYFBoW6OHPGVAG6OtJ3HuIYcsyaYnaXqSzq-SszxJ8tPTF_P5_B0wKHVwVOpKQH57HMzxkmpsg0kBOdj6Wp3hhvOkuEkMMOCVJOWjn8KaIIdNNOpgKoK8wMrRloGxupDRcAtoCV184OhKyL0NxECqNTlfk_KuNwla-N3zdssAnQu18VKr6Ltl4Mh7qZZtJC9reivpGnL4CRiYEh2N-zgFOn9lka_aw7-swyzq4IhrJRzkKlRVPNcS1zYa3t8ef79IJ42ZAYOVVNEuFdc1AQPfmKjCr3oBrJfkCld0UuqaRgYbYIC1DlGzSZIkDAxZyKHWypfAQF-ruI4JMHAefXD9qpBUicvOFEUwKMXf0pf9hkqqFYkrvXfXwfKYQI0qYNWCWZPdB1xjFaiVcIFOusNMo47YvLL0MZDiTacIA6U97f2NlWv09If2NGRsye03cEt498_vLMoejPj6ti37FEHGNwIHBM6QElItBwjnVTWSauDwJmpcNaN-Jxthv6NHcjq5JxL4S4dlWUWcD8hFKl4FQe4lLfyf2BxViMEoNLwOHh4ZmFNUaTGAQc5bcfdcLkriqx2pjsyBpSfRfckjKI6l1SG2xLZjMVhghSp6ZkmSPC7laZzVNL1D-Utct11zL_xgeDq6Tx9G99n9dJ99TvfJeCxu7tB914mGIbfX_5fBOHoWu1Hn6p7_FyQ_pin1XIYP-rQqHhueKc6SZMDT3i2GbmRJSD_iaMVBQ0IrRun3KgtAE_1-U_p6JNt2_T1Hdyf87jbRnpS8yCbtAG_hRCTt6qLUsg16EZzX9UOMjXtSmn-GUnG23IyLL1G69EGQ8qNK48FEP7Q-MVxZdsgrmRwBGz9EBc3_B5tZc0Mfv72CsieFZH5UQfMDIOnkh1XQN1D6wKCUzmvbQP7-AwOn0LhSxytiXBq07Z1q966_HXd_n5yTWnWTweqlxbp7w7WllmS7_Hq-03vny6BC539Gvgrm3B9xdm_J7hLKGPxjaQ15Ot1u_wU'; // made-up numbers, packed by js/start/link.js
 const ONLY = process.env.LAYOUT_ROUTES ? process.env.LAYOUT_ROUTES.split(',') : null; // batch 19: a few screens while fixing them
 const CLIENTS = process.env.LAYOUT_CLIENTS ? process.env.LAYOUT_CLIENTS.split(',') : ['Demo', 'New', 'Shift', 'Start']; // batch 51: Shift, a client with shift rows (the dancer persona)
 const CHECKS = ['level', 'clipped', 'overflow', 'covered', 'askable', 'column', 'sticky', 'unlabeled', 'cramped'];
@@ -764,6 +766,22 @@ async function runStart(browser) {
       await settle(solo, 300); await scanHere(solo, { route: 'cards.html', width, theme, client: 'Start', state: 'filled, every fold open' }, [...STILL, 'covered', 'sticky']);
       await solo.close();
     } catch (e) { errors.push(`Cards ${width} ${theme}: ${e.message.split('\n')[0]}`); }
+    // the small calculators (Run 5 canon pack) and the three plan pages (afford, cost, student): empty, then on a plan
+    // carried in the address (made-up numbers: two cards, a student loan), every fold open
+    if (!ONLY || ONLY.some(o => 'solo calc'.includes(o))) try {
+      const solo = await ctx.newPage(); solo.on('pageerror', e => errors.push(`Calc: ${String(e).slice(0, 200)}`));
+      await solo.setViewportSize({ width, height: width < 600 ? 844 : 1000 }); await solo.emulateMedia({ colorScheme: theme });
+      for (const t of CALC_PAGES) {
+        await solo.goto(`${BASE}/${t}.html`, { waitUntil: 'load' }); await solo.waitForSelector('#answer'); await settle(solo, 250);
+        await scanHere(solo, { route: `${t}.html`, width, theme, client: 'Start' }, STILL);
+        await solo.goto(`${BASE}/${t}.html#/d/${CALC_PLAN}`, { waitUntil: 'load' }); await solo.reload({ waitUntil: 'load' }); await solo.waitForSelector('#answer'); await settle(solo, 250);
+        for (const c of await solo.locator('#main .st-field .st-chips').all()) { if (!(await c.locator('.st-chip[aria-pressed="true"]').count())) await c.locator('.st-chip').nth(1).click().catch(() => {}); await settle(solo, 40); }
+        const first = solo.locator('#main .st-box input').first(); if (await first.count() && !(await first.inputValue())) { await solo.locator('#main .st-box + .st-chips .st-chip').nth(2).click().catch(() => {}); await settle(solo, 80); }
+        for (let i = 0; i < 6; i++) { const f = solo.locator('details.st-fold:not([open]) > summary').first(); if (!(await f.count())) break; await f.click(); await settle(solo, 40); }
+        await settle(solo, 200); await scanHere(solo, { route: `${t}.html`, width, theme, client: 'Start', state: 'on a plan, folds open' }, [...STILL, 'covered', 'sticky']);
+      }
+      await solo.close();
+    } catch (e) { errors.push(`Calc ${width} ${theme}: ${e.message.split('\n')[0]}`); }
   }
   await ctx.close();
 }

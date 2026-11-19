@@ -338,3 +338,72 @@ test('if the pay stopped: the ladder in order, on a copy, from the person\'s own
   const b = stoppedPayOf(s.doc, ref, { now });
   assert.ok(Math.abs(b.runway - 47500 / 3500) < 1e-9); assert.equal(b.used.at(-1).id, 'invest'); assert.equal(Math.floor(b.used.at(-1).month), 2, 'investments are first reached in the third month');
 });
+
+// ---------- The canon pack (Run 5): eight small calculators, each checked by hand ----------
+test('working years at a savings rate: the ladder, five more points, and the table as printed', async () => {
+  const { workYearsOf } = await import('../js/solo.js');
+  const { yearsAtRate, MMM } = await import('../js/math/simple.js');
+  assert.equal(workYearsOf({ ref }).ready, false);
+  const a = workYearsOf({ takeHome: 5000, spending: 2500, ref });
+  assert.ok(Math.abs(a.rate - 0.5) < 1e-12); assert.equal(a.kept, 2500);
+  // by hand at the printed assumptions (5% real, 4%): months until 2,500 a month grows to 25 x 30,000 = 750,000
+  const g = 1.05 ** (1 / 12); let b = 0, m = 0; while (b < 750000) { b = b * g + 2500; m += 1; }
+  assert.ok(Math.abs(a.printed - m / 12) <= 1 / 12 + 1e-9, 'within a month of stepping it by hand'); assert.ok(a.printed > 16 && a.printed < 17.5, 'the printed table says 17 at 50%');
+  assert.ok(Math.abs(a.up - 0.55) < 1e-12); assert.ok(a.gain > 0 && Math.abs(a.gain - (a.years - a.yearsUp)) < 1e-12); assert.ok(Math.abs(a.moreAMonth - 250) < 1e-9);
+  assert.equal(a.ladder.length, 7); assert.ok(a.ladder.every((r, i, l) => i === 0 || r.years < l[i - 1].years), 'more saved, fewer years');
+  assert.ok(Math.abs(a.ladder[4].printed - yearsAtRate(0.5, MMM)) < 1e-12);
+  const none = workYearsOf({ takeHome: 3000, spending: 3200, ref }); assert.equal(none.none, true); assert.equal(none.kept, -200);
+});
+test('coast: the amount that grows to the FI number without another dollar', async () => {
+  const { coastOf } = await import('../js/solo.js');
+  assert.equal(coastOf({ invested: 1000, ref }).ready, false);
+  const r = ref.presets.realReturn.default, wr = ref.presets.withdrawalRate.default;
+  const a = coastOf({ invested: 100000, spending: 4000, age: 35, retireAge: 65, ref });
+  assert.ok(Math.abs(a.fi - 48000 / wr) < 1e-6); assert.ok(Math.abs(a.coast - (48000 / wr) / (1 + r) ** 30) < 1e-6);
+  assert.equal(a.there, a.invested >= a.coast); assert.ok(Math.abs(a.grown - 100000 * (1 + r) ** 30) < 1e-6); assert.ok(Math.abs(a.gap - Math.max(0, a.coast - 100000)) < 1e-9);
+  assert.equal(coastOf({ invested: 5000000, spending: 4000, age: 35, ref }).there, true);
+});
+test('a dollar later: the plan\'s return for each year to 65', async () => {
+  const { dollarLaterOf } = await import('../js/solo.js');
+  const r = ref.presets.realReturn.default, a = dollarLaterOf({ age: 25, amount: 100, ref });
+  assert.ok(Math.abs(a.times - (1 + r) ** 40) < 1e-9); assert.ok(Math.abs(a.grown - 100 * (1 + r) ** 40) < 1e-6);
+  assert.equal(dollarLaterOf({ age: 70, ref }).times, 1, 'past 65 a dollar is a dollar'); assert.equal(a.byAge.length, 4); assert.ok(a.byAge[0].times > a.byAge[3].times);
+});
+test('20/3/8: the most car from the pay, and a price checked against it', async () => {
+  const { carFitsOf } = await import('../js/solo.js');
+  const a = carFitsOf({ grossMonthly: 6000, apr: 0 });
+  assert.equal(a.maxPayment, 480); assert.equal(a.maxLoan, 480 * 36); assert.ok(Math.abs(a.maxPrice - 480 * 36 / 0.8) < 1e-9); assert.ok(Math.abs(a.maxDown - a.maxPrice * 0.2) < 1e-9);
+  const b = carFitsOf({ grossMonthly: 6000, apr: 0.07, price: 30000 });
+  let left = 24000; for (let k = 0; k < 36; k++) left = left * (1 + 0.07 / 12) - b.payment; // its payment clears the loan in 36 months
+  assert.ok(Math.abs(left) < 0.01); assert.equal(b.down, 6000); assert.equal(b.fits, b.payment <= 480.005); assert.ok(Math.abs(b.payFor - b.payment / 0.08) < 1e-9);
+  assert.equal(carFitsOf({ grossMonthly: 6000, apr: 0.07, price: 15000 }).fits, true); assert.equal(b.fits, false);
+});
+test('expected net worth: age x pay / 10, and the under-40 version beside it', async () => {
+  const { expectedWorthOf } = await import('../js/solo.js');
+  const a = expectedWorthOf({ age: 41, grossYear: 155000, netWorth: 700000 });
+  assert.equal(a.expected, 635500, 'the book\'s own example'); assert.equal(a.twice, 1271000); assert.equal(a.young, false); assert.equal(a.adjusted, a.expected);
+  const b = expectedWorthOf({ age: 30, grossYear: 80000, netWorth: 60000 });
+  assert.equal(b.expected, 240000); assert.equal(b.adjusted, 30 * 80000 / 20); assert.equal(b.adjustedTwice, 240000); assert.ok(Math.abs(b.ratio - 0.25) < 1e-12); assert.ok(Math.abs(b.adjustedRatio - 0.5) < 1e-12);
+});
+test('real hourly wage: take-home less the job\'s costs, over every hour the job takes', async () => {
+  const { realWageOf } = await import('../js/solo.js');
+  const a = realWageOf({ takeHome: 4000, hoursWeek: 40, commuteWeek: 5, costs: 200 });
+  const paid = 40 * 52 / 12, all = 45 * 52 / 12;
+  assert.ok(Math.abs(a.stated - 4000 / paid) < 1e-9); assert.ok(Math.abs(a.real - 3800 / all) < 1e-9); assert.ok(Math.abs(a.hoursPer100 - 100 / a.real) < 1e-9); assert.ok(a.share < 1);
+  assert.equal(realWageOf({ takeHome: 4000 }).ready, false);
+});
+test('50/30/20: the shares and the marks', async () => {
+  const { splitOf } = await import('../js/solo.js');
+  const a = splitOf({ takeHome: 5000, needs: 3000, wants: 1000 });
+  assert.equal(a.left, 1000); assert.deepEqual(a.shares, { needs: 0.6, wants: 0.2, left: 0.2 }); assert.deepEqual(a.marks, { needs: 2500, wants: 1500, left: 1000 });
+  assert.equal(splitOf({ takeHome: 5000, needs: 3000 }).ready, false);
+});
+test('how much home: the lower of the 28% and 36% lines', async () => {
+  const { homeFitsOf } = await import('../js/solo.js');
+  const { loanFromPayment } = await import('../js/math/lender.js');
+  const a = homeFitsOf({ grossMonthly: 8000, otherDebt: 300 });
+  assert.equal(a.front, 2240); assert.equal(a.back, 2580); assert.equal(a.payment, 2240); assert.equal(a.by, 'front'); assert.ok(Math.abs(a.loan - loanFromPayment(2240)) < 1e-9);
+  const b = homeFitsOf({ grossMonthly: 8000, otherDebt: 1200 });
+  assert.equal(b.back, 1680); assert.equal(b.payment, 1680); assert.equal(b.by, 'back');
+  assert.equal(homeFitsOf({ grossMonthly: 8000, otherDebt: 4000 }).payment, 0);
+});

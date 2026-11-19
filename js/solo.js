@@ -9,6 +9,11 @@ import { transitionOf } from './math/transitions.js';
 import { collapseOf } from './collapse.js';
 import { quizOf } from './quiz.js';
 import { answeredOf } from './math/agestart.js';
+import { coastFi } from './math/fi.js';
+import { yearsAtRate, MMM } from './math/simple.js';
+import { realHourlyWage } from './math/income.js';
+import { maxHomePayment, loanFromPayment } from './math/lender.js';
+import { RULES } from './registry/assumptions.js';
 
 // The path: each page names the next. The last one is the whole plan (start.html), which opens a carried link.
 export const SOLO = [
@@ -168,4 +173,90 @@ export function stoppedPayOf(doc, ref, { now = new Date() } = {}) {
   const rung = r => ({ id: r.id, name: r.plain ?? r.name, amount: r.amount ?? null, cost: r.costText ?? null, note: r.note ?? null, on: !!r.on, month: reach[r.id] ?? null });
   return { ready: true, text: T.text, runway: T.runway, floorYm: T.floorYm, total: T.total, costs: T.costs, burn: T.levels[0]?.burn ?? null,
     used: T.ladder.rungs.filter(r => r.on).map(rung), unused: T.ladder.rungs.filter(r => !r.on).map(rung) };
+}
+
+// ---------- The canon pack (Run 5): eight small calculators, each one rule the FIRE canon repeats, at the plan's pace ----------
+// Each takes plain numbers and returns { ready } until it has what it needs. Pages: js/solo/canon.js.
+const presets = ref => ({ r: ref.presets.realReturn.default, wr: ref.presets.withdrawalRate.default });
+
+// How many working years is my savings rate? (years.html) The Shockingly Simple Math (Mr. Money Mustache, 2012) and
+// the savings-rate ladder (Jacob Lund Fisker, Early Retirement Extreme): years from $0 at this share of take-home kept,
+// what five more points buys, and the table at the plan's return next to the one as printed (5% real, 4%).
+export const RATE_STEP = 0.05, RATE_LADDER = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7];
+export function workYearsOf({ takeHome = null, spending = null, ref } = {}) {
+  if (!(takeHome > 0) || spending == null || spending < 0) return { ready: false };
+  const { r, wr } = presets(ref), A = { realReturn: r, withdrawalRate: wr }, kept = takeHome - spending, rate = kept / takeHome;
+  const ladder = RATE_LADDER.map(s => ({ rate: s, years: yearsAtRate(s, A), printed: yearsAtRate(s, MMM) }));
+  if (!(rate > 0)) return { ready: true, none: true, takeHome, spending, kept, rate, ladder, realReturn: r, withdrawalRate: wr };
+  const up = Math.min(0.95, rate + RATE_STEP), years = yearsAtRate(rate, A), yearsUp = yearsAtRate(up, A);
+  return { ready: true, none: false, takeHome, spending, kept, rate, years, up, yearsUp, gain: years != null && yearsUp != null ? years - yearsUp : null, moreAMonth: (up - rate) * takeHome,
+    printed: yearsAtRate(rate, MMM), ladder, realReturn: r, withdrawalRate: wr };
+}
+
+// Could I stop saving and still get there? (coast.html) Coast FI (M54): the amount that, left alone, grows to the FI
+// number by the age picked. The FI number is a year of spending over the withdrawal rate (M50).
+export const COAST_AGES = [55, 60, 65, 67];
+export function coastOf({ invested = null, spending = null, age = null, retireAge = 65, ref } = {}) {
+  if (invested == null || !(spending > 0) || !(age > 0)) return { ready: false };
+  const { r, wr } = presets(ref), fi = spending * 12 / wr, years = Math.max(0, retireAge - age), coast = coastFi({ fiNumber: fi, realReturn: r, age, retireAge }).value;
+  return { ready: true, invested, spending, age, retireAge, years, fi, coast, there: invested >= coast, share: coast > 0 ? invested / coast : 1, gap: Math.max(0, coast - invested), grown: invested * (1 + r) ** years, realReturn: r, withdrawalRate: wr };
+}
+
+// What is a dollar today worth at 65? (dollar.html) The idea is The Money Guy Show's wealth multiplier; their table
+// uses their own return for each age. Here a year grows by the plan's return and no more.
+export const DOLLAR_AGES = [20, 30, 40, 50];
+export function dollarLaterOf({ age = null, amount = 100, to = 65, ref } = {}) {
+  if (!(age > 0)) return { ready: false };
+  const { r } = presets(ref), at = a => (1 + r) ** Math.max(0, to - a), times = at(age);
+  return { ready: true, age, to, years: Math.max(0, to - age), amount, times, grown: amount * times, realReturn: r, byAge: DOLLAR_AGES.map(a => ({ age: a, times: at(a) })) };
+}
+
+// How much car fits my pay? (car.html) The Money Guy Show's 20/3/8: 20% down, paid off in 3 years, payments at 8% of
+// pay before taxes or less. From the pay alone: the most payment, loan and price. With a price: its own payment.
+export const CAR_RULE = { down: 0.2, years: 3, share: 0.08 }, CAR_RATES = [0, 0.04, 0.07, 0.1, 0.14];
+export function carFitsOf({ grossMonthly = null, price = null, apr = 0.07 } = {}) {
+  if (!(grossMonthly > 0)) return { ready: false };
+  const n = CAR_RULE.years * 12, r = apr / 12, maxPayment = grossMonthly * CAR_RULE.share;
+  const maxLoan = r === 0 ? maxPayment * n : maxPayment * (1 - (1 + r) ** -n) / r, maxPrice = maxLoan / (1 - CAR_RULE.down);
+  const out = { ready: true, grossMonthly, apr, months: n, maxPayment, maxLoan, maxPrice, maxDown: maxPrice * CAR_RULE.down, price: null };
+  if (price > 0) { const loan = price * (1 - CAR_RULE.down), payment = loanPayment(loan, apr, n); Object.assign(out, { price, down: price * CAR_RULE.down, loan, payment, share: payment / grossMonthly, fits: payment <= maxPayment + 0.005, payFor: payment / CAR_RULE.share }); }
+  return out;
+}
+
+// Is my net worth keeping up with my pay? (worth.html) The Millionaire Next Door (Stanley and Danko): expected net
+// worth = age x pay before taxes / 10, and twice that is what the book calls a prodigious accumulator of wealth. Under
+// 40 the formula runs hard on people who have had little time, so The Money Guy Show's version is shown beside it:
+// age x pay / (10 + the years until 40), doubled for the same mark.
+export function expectedWorthOf({ age = null, grossYear = null, netWorth = null } = {}) {
+  if (!(age > 0) || !(grossYear > 0) || netWorth == null) return { ready: false };
+  const expected = age * grossYear / 10, toForty = Math.max(0, 40 - age), adjusted = age * grossYear / (10 + toForty);
+  return { ready: true, age, grossYear, netWorth, expected, twice: expected * 2, ratio: netWorth / expected, young: age < 40, toForty, adjusted, adjustedTwice: adjusted * 2, adjustedRatio: netWorth / adjusted };
+}
+
+// What do I really make an hour? (wage.html) Your Money or Your Life, step 2 (Vicki Robin and Joe Dominguez): take-home
+// less what the job costs, over every hour the job takes (M17). Hours are a week; a month is 52 / 12 weeks.
+export const WEEKS_A_MONTH = 52 / 12;
+export function realWageOf({ takeHome = null, hoursWeek = null, commuteWeek = 0, costs = 0 } = {}) {
+  if (!(takeHome > 0) || !(hoursWeek > 0)) return { ready: false };
+  const paid = hoursWeek * WEEKS_A_MONTH, commute = (commuteWeek ?? 0) * WEEKS_A_MONTH, work = costs ?? 0;
+  const real = realHourlyWage({ takeHome, workCosts: work, paidHours: paid, commuteHours: commute }).value, stated = takeHome / paid;
+  return { ready: true, takeHome, hoursWeek, commuteWeek: commuteWeek ?? 0, costs: work, hours: paid + commute, real, stated, share: real / stated, hoursPer100: real > 0 ? 100 / real : null };
+}
+
+// Where does each dollar go? (split.html) The 50/30/20 rule (Elizabeth Warren and Amelia Warren Tyagi, All Your Worth):
+// of take-home, half to needs, 30% to wants, 20% to saving and paying down debt.
+export const SPLIT_RULE = { needs: 0.5, wants: 0.3, left: 0.2 };
+export function splitOf({ takeHome = null, needs = null, wants = null } = {}) {
+  if (!(takeHome > 0) || needs == null || wants == null) return { ready: false };
+  const left = takeHome - needs - wants, of = v => v / takeHome;
+  return { ready: true, takeHome, needs, wants, left, shares: { needs: of(needs), wants: of(wants), left: of(left) }, marks: { needs: takeHome * SPLIT_RULE.needs, wants: takeHome * SPLIT_RULE.wants, left: takeHome * SPLIT_RULE.left } };
+}
+
+// How much home would a lender say fits? (home.html) The 28/36 lines a conventional lender starts from (RULES.lenderFront
+// and lenderBack): the home payment at 28% of pay before taxes, and it plus every other debt payment at 36%. The lower
+// of the two is the payment; the loan it carries is the plan's own (js/math/lender.js loanFromPayment).
+export function homeFitsOf({ grossMonthly = null, otherDebt = 0 } = {}) {
+  if (!(grossMonthly > 0)) return { ready: false };
+  const other = otherDebt ?? 0, front = RULES.lenderFront * grossMonthly, back = Math.max(0, RULES.lenderBack * grossMonthly - other), payment = maxHomePayment(grossMonthly, other);
+  return { ready: true, grossMonthly, otherDebt: other, front, back, payment, by: back < front ? 'back' : 'front', loan: loanFromPayment(payment), rate: RULES.lenderMortgageRate, years: RULES.lenderMortgageYears, taxIns: RULES.lenderTaxInsShare, frontLine: RULES.lenderFront, backLine: RULES.lenderBack };
 }

@@ -66,8 +66,8 @@ after Run 1.
 | Tool or job | Status | Where it lives | What is left, and what done means | Size |
 |---|---|---|---|---|
 | FIRE canon replication | Done | tools/canon, docs/CANON.md | tools/canon/replicate.mjs and docs/CANON.md: the savings-rate table, the 4% rule over 30 to 60 years, $100 a month, the rules of 752 and 173, Coast FI. Still to replicate: Big ERN's safe withdrawal series, the wealth multiplier, the crossover point. | L |
-| Canon calculators, pack 1 | Partly on main | trip.html, habit.html | Two of ten built from the template: trip.html (Run 4) and habit.html (the rules of 752 and 173 and $100 a month). Eight to go, from BACKLOG.md. | M |
-| Can I afford it? | Partly on main | js/math/afford.js | Not started as a standalone page: the math needs a whole household, not one number, so it is a bigger page than the template. | S |
+| Canon calculators, pack 1 | On main | trip.html, habit.html, years.html, coast.html, dollar.html, car.html, home.html, worth.html, wage.html, split.html | Ten of ten. The eight added Nov 19 are specs in js/solo/canon.js drawn by one renderer (js/solo/calc.js): working years in a savings rate (MMM), Coast FI, a dollar later (the wealth multiplier), 20/3/8 for a car (Money Guy), 28/36 for a home, expected net worth (The Millionaire Next Door), the real hourly wage (Your Money or Your Life), 50/30/20 (All Your Worth). Math in js/solo.js with tests, all eight in the second engine, walked at 1440, 1280 and 390 in both themes. Left: a person using them while someone watches. | M |
+| Can I afford it? | On main | afford.html, js/solo/plans.js, js/math/afford.js | afford.html: pick the thing, what it costs and when; three numbers about your month; the answer is where the money comes from and what it pushes back. No yes or no. In the layout check. Left: "Make it a goal" still happens in the whole plan, and the FOO step names (Tax-Free Growth) are shown without a tap-to-explain. | S |
 
 ### Run 6: Cliff map, fire drills, true cost of debt
 
@@ -75,13 +75,13 @@ after Run 1.
 |---|---|---|---|---|
 | 50-state benefits cliff map | Partly on main | js/math/cliff.js | Not started. The cliff math covers New York and the federal lines. Each other state needs its own SNAP and Medicaid rules found and dated, one at a time; none were guessed. | L |
 | Money Fire Drills as its own tool | Done | drills.html, js/solo/drill.js | drills.html: the plan's own drills, each shown the moment its numbers are in, with a rep to tick. Left: the page is long on a phone before the first drill; the lost-job drill names unemployment pay only for New York. | M |
-| True cost of debt and the student loan decision | Partly on main | loan.html, js/math/truecost.js | loan.html, What does this loan really cost? (payment, interest, the payment invested, the FI view) is built. The household version (every debt you have, the months of FI each costs) and the student loan decision are still only in the coach app. | M |
+| True cost of debt and the student loan decision | On main | loan.html, cost.html, student.html, js/solo/plans.js | Three pages. loan.html prices one loan before you sign. cost.html (Nov 19) prices every debt you have: interest still to come, the after-tax rate, and the months of freedom each holds back. student.html (Nov 19) prices each federal repayment plan on your loan and pay: the payment, the total, what is forgiven. Both read js/math and write nothing new. Left: PSLF and household size are only in the coach app's fields; refinancing is not on the page. | M |
 
 ### Run 7: The two atlases
 
 | Tool or job | Status | Where it lives | What is left, and what done means | Size |
 |---|---|---|---|---|
-| Career atlas | Blocked on data | new | Not built: no numbers were guessed. Needs one file from Eli in data/sources/: the BLS OEWS May 2025 national table (national_M2025_dl.xlsx from bls.gov/oes/tables.htm; columns OCC_CODE, OCC_TITLE, TOT_EMP, A_PCT10, A_PCT25, A_MEDIAN, A_PCT75, A_PCT90). It has pay by percentile, not by age, so one decision is also needed: how pay moves over a career (default offered: start at the 25th percentile, reach the median in 10 years, the 75th in 20). | L |
+| Career atlas | Blocked on data | new | Not built: no numbers were guessed. Nov 19 2026: the build machine cannot reach bls.gov, huduser.gov or taxfoundation.org, so the files have to be dropped in by hand. Needs one file from Eli in data/sources/: the BLS OEWS May 2025 national table (national_M2025_dl.xlsx from bls.gov/oes/tables.htm; columns OCC_CODE, OCC_TITLE, TOT_EMP, A_PCT10, A_PCT25, A_MEDIAN, A_PCT75, A_PCT90). It has pay by percentile, not by age, so one decision is also needed: how pay moves over a career (default offered: start at the 25th percentile, reach the median in 10 years, the 75th in 20). | L |
 | City atlas | Blocked on data | new | Not built: no numbers were guessed. Needs three files from Eli in data/sources/: BLS OEWS May 2025 metro table (MSA_M2025_dl.xlsx: AREA, AREA_TITLE, OCC_CODE, A_MEDIAN), HUD Fair Market Rents for the year (FMR by metro: areaname, fmr_0 to fmr_4), and state income tax brackets for 2026 with their source (state, filing status, floor, rate, standard deduction). Only New York and New York City tax are in SLAM today. | L |
 
 ### Run 8: Later layer: planners, transitions, Aliyah Math
@@ -90,7 +90,7 @@ after Run 1.
 |---|---|---|---|---|
 | For coaches and planners (client plans, one page, tax depth) | On main | pro.html | Walked in practice mode with the handoff (Run 4). Blocked on a person: a real planner using it while someone watches. | M |
 | Life Transitions (turn panic into a number) | Partly on main | ladder.html, js/math/transitions.js | ladder.html, If the pay stopped, what would I use first? is built: the ladder in order, what each rung costs, the month it runs out. Not on the page yet: unemployment, family help, side income, a card, tripwires and Plan B (they are in the coach app). | M |
-| Aliyah Math (US vs Israel) | Blocked on data | new | Not built: no numbers were guessed. Needs, each with a source and date: Israel's income tax brackets and credit points for the year, National Insurance and health tax rates, the olim tax benefits, and the cost-of-living figures Eli has been given. The spec is in Eli's artifacts ("Aliyah Math: calculator spec"). | M |
+| Aliyah Math (US vs Israel) | Data gathered, not built | data/sources/israel-2026.json | Researched Nov 19 2026, each figure with its source and how sure it is: 2026 income tax bands (the 20% and 31% bands widened in March), credit points and the olim schedule, the 0% rate for 2026 arrivals and its yearly ceilings, the 10-year foreign income exemption, National Insurance and health rates. Marked "confirm" where only secondary sites were read: the top band, the surtax rate, the 0% ceilings and end date. Still needed before any math: the US side (exclusion against credit, totalization), Eli's cost-of-living figures, and an exchange rate rule. The spec is in Eli's artifacts ("Aliyah Math: calculator spec"). | M |
 
 ### Alongside the runs: testing
 

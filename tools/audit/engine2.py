@@ -541,6 +541,54 @@ def run(cases, ref):
                 before, after = months_to(x['invested'], x['monthly'], rr, T), months_to(x['invested'] - x['cost'], x['monthly'], rr, T)
                 ck('FI month before', o['before'], before, 0); ck('FI month after', o['after'], after, 0)
                 ck('months later', o['delay'], None if before is None or after is None else after - before, 0)
+        elif fn == 'workYears':
+            # the share kept, then each month stepped until the pile reaches 25x (or 1/wr x) a year of the rest
+            s = (x['takeHome'] - x['spending']) / x['takeHome']
+            ck('share kept', o['rate'], s, 1e-9)
+            if s > 0:
+                yrs = lambda sh, r, w: (lambda n: None if n is None else n / 12)(months_to(0, sh * 1000, r, (1 - sh) * 12000 / w))
+                up = min(0.95, s + 0.05)
+                ck('years', o['years'], yrs(s, rr, wr), 1e-9); ck('five points more', o['up'], up, 1e-9); ck('years at five points more', o['yearsUp'], yrs(up, rr, wr), 1e-9)
+                ck('more a month', o['moreAMonth'], (up - s) * x['takeHome']); ck('at the printed 5% and 4%', o['printed'], yrs(s, 0.05, 0.04), 1e-9)
+        elif fn == 'coast':
+            fi = x['spending'] * 12 / wr; n = max(0, x['retireAge'] - x['age']); coast = fi
+            for _ in range(n): coast /= (1 + rr)   # one year of growth taken off at a time
+            grown = x['invested']
+            for _ in range(n): grown *= (1 + rr)
+            ck('FI number', o['fi'], fi); ck('Coast number', o['coast'], coast); ck('there', o['there'], x['invested'] >= coast); ck('gap', o['gap'], max(0, coast - x['invested'])); ck('left alone', o['grown'], grown, max(1.0, grown * 1e-9))
+        elif fn == 'dollarLater':
+            t = 1.0
+            for _ in range(max(0, 65 - x['age'])): t *= (1 + rr)
+            ck('times', o['times'], t, 1e-9); ck('grown', o['grown'], x['amount'] * t, max(0.01, x['amount'] * t * 1e-9))
+        elif fn == 'carFits':
+            # the most loan: each of 36 payments discounted on its own; the price's payment: bisected until the loan clears
+            pay = x['grossMonthly'] * 0.08; r = x['apr'] / 12
+            loan = sum(pay / (1 + r) ** k for k in range(1, 37))
+            ck('most payment', o['maxPayment'], pay); ck('most loan', o['maxLoan'], loan); ck('most price', o['maxPrice'], loan / 0.8)
+            if x['price']:
+                owed = x['price'] * 0.8; lo, hi = 0.0, owed * 2 + 1
+                for _ in range(200):
+                    mid = (lo + hi) / 2; left = owed
+                    for _k in range(36): left = left * (1 + r) - mid
+                    if left > 0: lo = mid
+                    else: hi = mid
+                ck('this price a month', o['payment'], (lo + hi) / 2, 0.01); ck('inside 8%', o['fits'], (lo + hi) / 2 <= pay + 0.005)
+        elif fn == 'expectedWorth':
+            exp = x['age'] * x['grossYear'] / 10; adj = x['age'] * x['grossYear'] / (10 + max(0, 40 - x['age']))
+            ck('expected', o['expected'], exp); ck('ratio', o['ratio'], x['netWorth'] / exp, 1e-9); ck('adjusted', o['adjusted'], adj); ck('adjusted ratio', o['adjustedRatio'], x['netWorth'] / adj, 1e-9)
+        elif fn == 'realWage':
+            paid = x['hoursWeek'] * 52 / 12; allh = (x['hoursWeek'] + x['commuteWeek']) * 52 / 12
+            real = (x['takeHome'] - x['costs']) / allh
+            ck('real wage', o['real'], real, 1e-9); ck('on paper', o['stated'], x['takeHome'] / paid, 1e-9); ck('hours per $100', o['hoursPer100'], 100 / real if real > 0 else None, 1e-9)
+        elif fn == 'split':
+            t = x['takeHome']; left = t - x['needs'] - x['wants']
+            ck('left', o['left'], left); ck('needs share', o['needs'], x['needs'] / t, 1e-9); ck('wants share', o['wants'], x['wants'] / t, 1e-9); ck('kept share', o['kept'], left / t, 1e-9)
+            ck('50', o['markNeeds'], t / 2); ck('30', o['markWants'], t * 3 / 10); ck('20', o['markLeft'], t / 5)
+        elif fn == 'homeFits':
+            g = x['grossMonthly']; a1 = x['front'] * g; b1 = max(0, x['back'] * g - x['otherDebt']); pay = max(0, min(a1, b1))
+            pi = pay * (1 - x['taxIns']); r = x['rate'] / 12
+            loan = sum(pi / (1 + r) ** k for k in range(1, x['years'] * 12 + 1))   # each payment discounted on its own
+            ck('payment', o['payment'], pay); ck('loan', o['loan'], loan, max(1.0, loan * 1e-9)); ck('the 36% line is the tighter one', o['by'] == 'back', b1 < a1)
         elif fn == 'habit':
             # each payment grown on its own to the end, then added up (no annuity formula)
             n = 52 if x['per'] == 'week' else 12
