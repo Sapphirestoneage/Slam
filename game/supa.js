@@ -45,17 +45,16 @@ function suGate(done){
  #su-gate input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:2px solid var(--line,#3a55a0);background:var(--panel2,#0e1a3a);color:inherit;font-size:16px}
  #su-gate input:focus{outline:none;border-color:var(--a1,#5b8cff)}
  #su-gate .su-go{width:100%;margin-top:16px;padding:14px;border:0;border-radius:12px;background:var(--a1,#5b8cff);color:#fff;font-size:16px;font-weight:700;cursor:pointer}
- #su-gate .su-tabs{display:flex;gap:8px;margin-bottom:14px}#su-gate .su-tabs button{flex:1;padding:10px;border-radius:10px;border:2px solid var(--line,#3a55a0);background:transparent;color:inherit;font-size:14px;cursor:pointer}
- #su-gate .su-tabs button.on{background:var(--a1,#5b8cff);border-color:var(--a1,#5b8cff);color:#fff;font-weight:700}
+ #su-gate .su-other{width:100%;margin-top:10px;padding:12px;border-radius:12px;border:2px solid var(--line,#3a55a0);background:transparent;color:inherit;font-size:15px;font-weight:600;cursor:pointer}
  #su-gate .su-msg{margin-top:12px;font-size:14px;min-height:18px}#su-gate .su-link{background:none;border:0;color:var(--a3,#8fb0ff);text-decoration:underline;font-size:13px;margin-top:10px;cursor:pointer;padding:0}`;
  const el=document.createElement("div");el.id="su-gate";
  let mode="new";
  const draw=(msg="")=>{el.innerHTML=`<style>${css}</style><form class="su-card" novalidate>
-  <h1>SLAM the Game</h1><p>Your game saves to your own account, so it follows you to any phone or laptop. Only you can see it.</p>
-  <div class="su-tabs"><button type="button" data-m="new" class="${mode==="new"?"on":""}">I'm new</button><button type="button" data-m="in" class="${mode==="in"?"on":""}">I have an account</button></div>
+  <h1>${mode==="new"?"Create your account":"Sign in"}</h1><p>SLAM the Game. ${mode==="new"?"Your game saves to your own account, so it follows you to any phone or laptop. Only you can see it.":"Welcome back. Your game is waiting where you left it."}</p>
   <label for="su-e">Email</label><input id="su-e" type="email" autocomplete="email" inputmode="email" required>
   <label for="su-p">Password ${mode==="new"?"(at least 6 letters or numbers)":""}</label><input id="su-p" type="password" autocomplete="${mode==="new"?"new-password":"current-password"}" required>
   <button class="su-go" type="submit">${mode==="new"?"Create my account":"Sign in"}</button>
+  <button type="button" class="su-other" data-m="${mode==="new"?"in":"new"}">${mode==="new"?"I already have an account. Sign in":"I'm new. Create an account"}</button>
   ${mode==="in"?`<button type="button" class="su-link" data-forgot>Forgot my password</button>`:""}
   ${mode==="new"?`<p style="margin:12px 0 0;font-size:13px">Coach mode is on: your coach can see your game to help you. You can turn it off anytime in Menu, then My account.</p>`:""}<div class="su-msg">${msg}</div></form>`;
   el.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mode=b.dataset.m;draw()});
@@ -65,7 +64,7 @@ function suGate(done){
    if(!e||!p){draw("Fill in both boxes.");return}
    const btn=el.querySelector(".su-go");btn.disabled=true;btn.textContent="One moment…";
    const r=mode==="new"?await SUPA.sb.auth.signUp({email:e,password:p,options:{emailRedirectTo:location.origin+location.pathname}}):await SUPA.sb.auth.signInWithPassword({email:e,password:p});
-   if(r.error){const m=r.error.message||"";draw(/already registered/i.test(m)?"That email already has an account. Tap \"I have an account\".":/invalid login/i.test(m)?"That email and password don't match. Try again, or tap Forgot my password.":esc2(m));return}
+   if(r.error){const m=r.error.message||"";draw(/already registered/i.test(m)?"That email already has an account. Tap \"I already have an account\" below.":/invalid login/i.test(m)?"That email and password don't match. Try again, or tap Forgot my password.":esc2(m));return}
    if(r.data&&r.data.session){suSet(r.data.session);done();return}
    mode="in";draw("Almost there: check your email and tap the link to confirm, then sign in here.")}};
  draw();
