@@ -222,6 +222,10 @@ button.profname{flex:1;border:2px solid var(--a3);border-radius:12px;background:
 .smopen{border:2px solid var(--a3);border-radius:14px;padding:12px;background:var(--panel2)}
 button.rowbtn.smans{min-height:44px;padding:6px 12px}
 .smlater{opacity:.45;padding:2px 12px}
+.smdots{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.smdot{width:40px;height:40px;min-height:40px;padding:0;border-radius:50%;border:2px solid var(--line);background:var(--panel2);color:var(--muted);font-weight:800;font-size:15px}
+.smdot.now{border-color:var(--a3);background:var(--a1);color:#fff}.smdot.done{border-color:var(--good);color:var(--good)}
+details.plreveal{display:block}details.plreveal>summary{color:var(--text)}.plnew{display:block;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
 
 /* v20: Rocket Money style nav, the planner */
 .topbar{gap:6px}
@@ -407,12 +411,9 @@ body.welcome .topbar,body.welcome nav.tabs{display:none}
 .nvfrom{margin-top:-4px}
 .overlay.full{background:var(--ink);align-items:stretch}
 .overlay.full .sheet{max-height:100%;height:100%;border-radius:0;border:0;max-width:640px}
-.obtrack{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.obstep{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;opacity:.55}
-.obstep i{font-style:normal;font-weight:800;font-size:12px;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
-.obstep em{font-style:normal;font-size:10.5px;line-height:1.2}
-.obstep.now{opacity:1}.obstep.now i{border-color:var(--a1);background:var(--a1);color:#fff}
-.obstep.done{opacity:.9}.obstep.done i{border-color:var(--good);color:var(--good)}
+.obtrack{display:flex;flex-direction:column;gap:4px}
+.obsegs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.obsegs i{height:5px;border-radius:3px;background:var(--line)}.obsegs i.now{background:var(--a1)}.obsegs i.done{background:var(--good)}
 </style>
 </head>
 <body>

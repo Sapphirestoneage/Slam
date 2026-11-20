@@ -203,9 +203,9 @@ function tabsHTML(){const c=C(),t=todayISO(),open=G.demo?0:plAutoToday(c).length
   const r=_fin();if(isNew&&!w.add){const c=C();plSeedWeek(c);render()}else if(isNew&&w.add){plSeedWeek(C());render()}return r};
  /* speedrun: after "What you owe", you can see your plan now and finish the last two screens later */
  const _ss=setupSheet;setupSheet=function(){const w=W;let h=_ss();const st=w.step;
-  const strip=w.mode==="edit"?"":plReveal(w);h=h.replace(/(<div class="tiny muted">All taps\. No numbers yet\.<\/div>)/,`<div class="row between"><span class="tiny muted">All taps. No numbers yet.</span>${w.mode==="edit"?"":`<span class="pill info" data-fid="su:taps">${w.taps||0} tap${w.taps===1?"":"s"}</span>`}</div>`)+"";
-  h=h.replace(/(<div class="bar[^"]*"><i[^>]*><\/i><\/div><\/div>)/,"$1"+strip);
-  if(w.mode!=="edit"&&st===4)h=h.replace(/<div class="row between">(<button class="ghost" data-a="wback">Back<\/button>)<button class="[^"]*" data-a="wnext">Next<\/button><\/div>$/,`<div class="stack plspeed"><button class="primary wide go" data-a="speedfin">See my first plan</button><div class="row between">$1<button class="ghost" data-a="wnext">Keep going: 2 quick screens</button></div><div class="tiny muted">Skip ahead and the last two screens go on your plan for tomorrow. About 30 seconds either way.</div></div>`);
+  const strip=w.mode==="edit"?"":plReveal(w);h=h.replace(/(<div class="tiny muted">All taps\. No numbers yet\.<\/div>)/,`<div class="row between"><span class="tiny muted">All taps. No numbers yet.</span>${w.mode==="edit"?"":`<span class="pill info" data-fid="su:taps">${(n=>n?n+" question"+(n===1?"":"s")+" left":"All answered")(smLeft(w))}</span>`}</div>`)+"";
+  if(strip){const k=h.lastIndexOf('<div class="row between">',h.lastIndexOf('data-a="wnext"'));if(k>=0)h=h.slice(0,k)+strip+h.slice(k)}
+  if(w.mode!=="edit"&&st===4)h=h.replace(/<div class="row between">(<button class="ghost" data-a="wback">[^<]*<\/button>)<button class="[^"]*" data-a="wnext">[^<]*<\/button><\/div>$/,`<div class="stack plspeed"><button class="primary wide go" data-a="speedfin">See my first plan</button><div class="row between">$1<button class="ghost" data-a="wnext">Keep going: 2 quick screens</button></div><div class="tiny muted">Skip ahead and the last two screens go on your plan for tomorrow. About 30 seconds either way.</div></div>`);
   if(w.mode==="edit"&&w.later)h=h.replace(/Getting started · page \d+ of \d+/,"Finishing setup");
   if(w.mode==="edit"&&w.later==="accts"&&st===5)h=h.replace(/(<div class="small muted">Tap every kind of account)/,`<div class="banner small">The ones already picked are guesses for people like you. Tap any that are wrong.</div>$1`);
   return h};
@@ -219,7 +219,7 @@ function plReveal(w){const o=w.o,ls=[];
  if(o.share)ls.push(o.share==="No one"?"Planning for one person.":"Planning with "+String(o.share).toLowerCase()+".");
  if(w.step>=4&&o.age!=null&&o.work&&o.homeQ){try{const x=clone(o);x.home=HOMEMAP[x.homeQ];applyTypical(x);const d=derive(x);ls.push("A guess for people like you: "+(d.era===0&&d.realm==="Surface"?"Ground Floor":eraN(d.era))+".")}catch(e){}}
  if(!ls.length)return "";const last=ls[ls.length-1];
- return `<div class="tile plreveal"><div class="tiny muted">What the game knows so far</div>${ls.slice(0,-1).map(l=>`<div class="tiny">✓ ${esc(l)}</div>`).join("")}<div class="small pop" data-fid="su:new"><b>✓ ${esc(last)}</b></div></div>`}
+ return `<details class="math plreveal"><summary><span class="plnew pop" data-fid="su:new">✓ ${esc(last)}</span></summary><div class="plk stack" style="gap:3px;padding:8px 10px"><div class="tiny muted">What the game knows so far</div>${ls.map(l=>`<div class="tiny">✓ ${esc(l)}</div>`).join("")}</div></details>`}
 
 /* one switcher only: the name button in the top bar */
 profStrip=function(){return ""};
