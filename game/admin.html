@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>SLAM the Game: admin</title>
+<style>
+:root{--bg:#071030;--panel:#13224a;--panel2:#0e1a3a;--line:#3a55a0;--text:#e8eeff;--muted:#9fb0dd;--a1:#3f6df0;--good:#7fd6b0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:560px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+h1{font-size:22px;margin:0}p{margin:0}.muted{color:var(--muted);font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+input{width:100%;padding:12px;border-radius:10px;border:2px solid var(--line);background:var(--panel2);color:inherit;font-size:16px}
+button{font:inherit;font-weight:700;min-height:44px;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer}
+button.primary{background:var(--a1);border-color:var(--a1);color:#fff}button.wide{width:100%}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden;flex:none}
+.seg button{border:0;border-radius:0;min-width:56px;background:var(--panel2);color:var(--muted)}.seg button.on{background:var(--a1);color:#fff}
+.pill{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:2px 8px;color:var(--muted)}.ok{color:var(--good)}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">Loading…</p></main>
+<script>window.claude={}</script><!-- keeps supa.js to its two public settings on this page -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supa.js"></script>
+<script>
+/* The admin page. Everything here is checked again by the database: a signed-in person who is not the admin gets nothing back and can change nothing, whatever this page shows. */
+const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+const S={session:null,data:null,msg:"",busy:false};
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const seg=(a,id,k,on)=>`<span class="seg"><button class="${on?"on":""}" data-a="${a}" data-id="${id}" data-k="${esc(k)}" data-v="1" aria-pressed="${on}">On</button><button class="${on?"":"on"}" data-a="${a}" data-id="${id}" data-k="${esc(k)}" data-v="0" aria-pressed="${!on}">Off</button></span>`;
+function draw(){const el=document.getElementById("app"),d=S.data,me=S.session&&S.session.user?S.session.user.email:"";
+ if(!S.session){el.innerHTML=`<h1>Admin sign-in</h1><p class="muted">For the person who runs SLAM the Game. Players use the game itself.</p><form class="card" id="f"><div><label for="e">Email</label><input id="e" type="email" autocomplete="email" required></div><div><label for="p">Password</label><input id="p" type="password" autocomplete="current-password" required></div><button class="primary wide" type="submit">Sign in</button>${S.msg?`<p class="muted">${esc(S.msg)}</p>`:""}</form><a href="./" style="color:var(--muted)">Back to the game</a>`;return}
+ if(!d){el.innerHTML=`<p class="muted">Checking…</p>`;return}
+ if(!d.admin){el.innerHTML=`<h1>Not the admin</h1><div class="card"><p>You are signed in as <b>${esc(me)}</b>. This page only works for the admin account.</p><button class="wide" data-a="out">Sign out</button></div><a href="./" style="color:var(--muted)">Back to the game</a>`;return}
+ el.innerHTML=`<div class="row"><h1>Admin</h1><button data-a="out">Sign out</button></div><p class="muted">Signed in as ${esc(me)}. ${d.users.length} ${d.users.length===1?"account":"accounts"}. Changes save the moment you tap.</p>${S.msg?`<p class="ok">${esc(S.msg)}</p>`:""}`+
+  d.users.map(u=>`<div class="card"><div class="row"><b style="word-break:break-all">${esc(u.email)}</b>${u.confirmed?"":`<span class="pill">Email not confirmed</span>`}</div><p class="muted">Joined ${new Date(u.joined).toLocaleDateString()}</p>
+   <div class="row"><span>Coach<br><span class="muted">Can see games people share with their coach</span></span>${seg("coach",u.id,"",u.coach)}</div>
+   ${d.packs.map(p=>{const g=u.packs&&u.packs[p.pack];return `<div class="row"><span>${esc(p.title||"Add-on")}<br><span class="muted">${g?(p.asks?(g.yes?"On. They said yes":"On. Waiting for their one-time yes"):"On for this account"):"Hidden from this account"}</span></span>${seg("pack",u.id,p.pack,!!g)}</div>`}).join("")}</div>`).join("")+
+  `<button class="wide" data-a="reload">Check for new accounts</button><a href="./" style="color:var(--muted)">Back to the game</a>`}
+async function load(){S.data=null;draw();const r=await sb.rpc("admin_overview");S.data=r.error?{admin:false}:r.data;draw()}
+document.addEventListener("submit",async ev=>{ev.preventDefault();const e=document.getElementById("e").value.trim(),p=document.getElementById("p").value;const r=await sb.auth.signInWithPassword({email:e,password:p});if(r.error){S.msg="That email and password don't match.";draw();return}S.msg="";S.session=r.data.session;load()});
+document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-a]");if(!t||S.busy)return;const a=t.dataset.a;
+ if(a==="out"){await sb.auth.signOut();S.session=null;S.data=null;S.msg="";draw();return}
+ if(a==="reload"){S.msg="";load();return}
+ S.busy=true;const on=t.dataset.v==="1";const r=a==="coach"?await sb.rpc("admin_set_coach",{target:t.dataset.id,make:on}):await sb.rpc("admin_set_pack",{target:t.dataset.id,p:t.dataset.k,make:on});S.busy=false;S.msg=r.error?"That did not save. Try again.":"Saved.";load()});
+sb.auth.getSession().then(({data})=>{S.session=data&&data.session;if(S.session)load();else draw()});
+</script>
+</body>
+</html>

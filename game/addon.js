@@ -20,8 +20,8 @@ function adApply(id,meta,code){if(ADX.has[id])return true;const b=adBegin(id,met
 const adMeta=x=>({t:x.t||"Add-on",one:x.one||"",gate:x.gate||null});
 async function adFetch(x){const r=await fetch("./"+x.f);const j=await r.json();return adOpen(j.d,x)}
 const adWeb=()=>typeof SUPA!=="undefined"&&SUPA&&SUPA.on&&SUPA.sb;
-/* on the website: two tables. One says which extras a person has (only the coach can add or remove a row). The other holds each extra's file name and key, and the database only shows a row to someone who has that extra. */
-async function adStartWeb(){const sb=SUPA.sb,uid=SUPA.uid;let n=0;try{let own=false;try{const q=await sb.from("coaches").select("user_id").eq("user_id",uid);own=!!(q.data&&q.data.length)}catch(e){}ADX.own=own;
+/* on the website: two tables. One says which extras a person has (only the admin account can add or remove a row; there is an admin page for that). The other holds each extra's file name and key, and the database only shows a row to someone who has that extra. */
+async function adStartWeb(){const sb=SUPA.sb,uid=SUPA.uid;let n=0;try{let own=false;try{const q=await sb.rpc("is_admin");own=q.data===true}catch(e){}ADX.own=own;
   const q=await sb.from("content_packs").select("pack,payload"),list=(q.data||[]).filter(r=>r.payload&&r.payload.f&&r.payload.k).map(r=>({id:r.pack,x:r.payload}));if(own){ADX.src={};list.forEach(p=>{ADX.src[p.id]=p.x})}
   for(let i=0;i<list.length;i++){const p=list[i];try{const code=await adFetch(p.x);if(code&&adApply(p.id,adMeta(p.x),code))n++}catch(e){}}}catch(e){}
  ADX.st="on";if(n){try{applyLook();render();if(SH)drawSheet()}catch(e){}}adAsk()}
