@@ -76,3 +76,26 @@ create policy "admin grants" on player_entitlements for insert to authenticated 
 create policy "admin revokes" on player_entitlements for delete to authenticated using (is_admin());
 drop policy if exists "read entitled packs" on content_packs;
 create policy "read entitled packs" on content_packs for select to authenticated using (is_admin() or exists (select 1 from player_entitlements e where e.user_id = auth.uid() and e.pack = content_packs.pack));
+
+-- ---------- the admin can open any account's game, and has account tools ----------
+drop policy if exists "admin reads all games" on games;
+drop policy if exists "admin edits all games" on games;
+drop policy if exists "admin adds game rows" on games;
+create policy "admin reads all games" on games for select to authenticated using (is_admin());
+create policy "admin edits all games" on games for update to authenticated using (is_admin()) with check (is_admin());
+create policy "admin adds game rows" on games for insert to authenticated with check (is_admin());
+-- admin_overview() also returns: me, and per account: seen (last sign-in), blocked.
+-- admin_account(target, what): what is 'confirm', 'block', 'unblock' or 'delete'. Admin only, and never on the admin's own account.
+create or replace function admin_account(target uuid, what text) returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin() then raise exception 'admin only'; end if;
+  if target = auth.uid() then raise exception 'not on your own account'; end if;
+  if what = 'confirm' then update auth.users set email_confirmed_at = coalesce(email_confirmed_at, now()) where id = target;
+  elsif what = 'block' then update auth.users set banned_until = 'infinity' where id = target;
+  elsif what = 'unblock' then update auth.users set banned_until = null where id = target;
+  elsif what = 'delete' then
+    delete from games where owner = target; delete from player_entitlements where user_id = target; delete from coaches where user_id = target; delete from auth.users where id = target;
+  else raise exception 'unknown action'; end if;
+end $$;
+revoke all on function admin_account(uuid, text) from public;
+grant execute on function admin_account(uuid, text) to authenticated;

@@ -13,7 +13,11 @@ const SUPA={on:false,sb:null,uid:null,email:"",ready:null,ids:{},share:true};
  SUPA.on=true;
  SUPA.sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  let done;SUPA.ready=new Promise(r=>done=r);
- SUPA.sb.auth.getSession().then(({data})=>{const s=data&&data.session;if(s){suSet(s);done()}else{suGate(done)}});
+ let asq=null;try{const q=new URLSearchParams(location.search).get("as");if(q)sessionStorage.setItem("su_as",q);asq=sessionStorage.getItem("su_as")}catch(e){}
+ SUPA.sb.auth.getSession().then(async({data})=>{const s=data&&data.session;if(!s){suGate(done);return}suSet(s);
+  if(asq){let ok=false;try{const r=await SUPA.sb.rpc("is_admin");ok=r.data===true}catch(e){}
+   if(ok&&asq!==s.user.id){SUPA.me=SUPA.uid;SUPA.as=asq;SUPA.uid=asq;suLocal(asq);suAsBar()}else{try{sessionStorage.removeItem("su_as");sessionStorage.removeItem("su_as_n")}catch(e){}}}
+  done()});
  SUPA.sb.auth.onAuthStateChange((ev,s)=>{if(ev==="SIGNED_OUT"){location.reload()}else if(s&&s.user&&!SUPA.uid){suSet(s)}});
 
  /* one saved piece of the game = one row: name is the piece's key, data is what it holds */
@@ -22,7 +26,7 @@ const SUPA={on:false,sb:null,uid:null,email:"",ready:null,ids:{},share:true};
   if(q.error)throw q.error;const r=q.data&&q.data[0];if(r){SUPA.ids[k]=r.id;if(k==="slam_meta")SUPA.share=!!r.share_with_coach}return r||null}
  async function rowSet(k,obj){const now=new Date().toISOString();let id=SUPA.ids[k];if(!id){const r=await rowGet(k);id=r&&r.id}
   if(id){const u=await tbl().update({data:obj,updated_at:now,share_with_coach:SUPA.share}).eq("id",id);if(u.error)throw u.error}
-  else{const i=await tbl().insert({name:k,data:obj,updated_at:now,share_with_coach:SUPA.share}).select("id").single();if(i.error)throw i.error;SUPA.ids[k]=i.data.id}}
+  else{const i=await tbl().insert({owner:SUPA.uid,name:k,data:obj,updated_at:now,share_with_coach:SUPA.share}).select("id").single();if(i.error)throw i.error;SUPA.ids[k]=i.data.id}}
  function snap(r){return {exists:!!r,data:()=>r?r.data:undefined,metadata:{hasPendingWrites:false}}}
  function docRef(k){return {
   get:async()=>snap(await rowGet(k)),
@@ -34,7 +38,14 @@ const SUPA={on:false,sb:null,uid:null,email:"",ready:null,ids:{},share:true};
  window.claude={use:async name=>{await SUPA.ready;return name==="db"?db:name==="user"?user:null}};
 })();
 
-function suSet(s){SUPA.uid=s.user.id;try{const was=localStorage.getItem("su_uid");if(was&&was!==SUPA.uid){localStorage.removeItem(KEY);if(typeof fresh==="function"){G=fresh();setTimeout(()=>{try{render()}catch(e){}},0)}}localStorage.setItem("su_uid",SUPA.uid)}catch(e){}SUPA.email=s.user.email||"";const g=document.getElementById("su-gate");if(g)g.remove()}
+/* the copy of the game kept on this device belongs to one account at a time: when the account changes, start from that account's saved game */
+function suLocal(uid){try{const was=localStorage.getItem("su_uid");if(was&&was!==uid){localStorage.removeItem(KEY);if(typeof fresh==="function"){G=fresh();setTimeout(()=>{try{render()}catch(e){}},0)}}localStorage.setItem("su_uid",uid)}catch(e){}}
+/* the admin, inside someone else's game: a bar that says so on every screen, and one way out */
+function suAsBar(){const put=()=>{if(document.getElementById("su-as"))return;let n="";try{n=sessionStorage.getItem("su_as_n")||""}catch(e){}const el=document.createElement("div");el.id="su-as";el.style.cssText="position:sticky;top:0;z-index:9999;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 12px;background:#2a1d00;color:#ffe9b0;border-bottom:2px solid #c99a2e;font-size:14px";
+  el.innerHTML=`<span>You are in <b>${esc2(n||"another person")}</b>'s game. What you change here changes their real game.</span><button id="su-as-x" style="flex:none;min-height:40px;padding:6px 12px;border-radius:10px;border:2px solid #c99a2e;background:#c99a2e;color:#1b1200;font-weight:700;cursor:pointer">Leave</button>`;document.body.insertBefore(el,document.body.firstChild);
+  document.getElementById("su-as-x").onclick=async()=>{try{if(typeof clFlush==="function")await clFlush()}catch(e){}try{sessionStorage.removeItem("su_as");sessionStorage.removeItem("su_as_n");localStorage.removeItem(KEY)}catch(e){}location.href="./admin.html"}};
+ document.body?put():document.addEventListener("DOMContentLoaded",put)}
+function suSet(s){SUPA.uid=s.user.id;suLocal(SUPA.uid);SUPA.email=s.user.email||"";const g=document.getElementById("su-gate");if(g)g.remove()}
 
 /* the sign-in screen: two boxes and one button. Create account and Sign in are the same screen. */
 function suGate(done){
@@ -50,7 +61,7 @@ function suGate(done){
  const el=document.createElement("div");el.id="su-gate";
  let mode="new";
  const draw=(msg="")=>{el.innerHTML=`<style>${css}</style><form class="su-card" novalidate>
-  <h1>${mode==="new"?"Create your account":"Sign in"}</h1><p>SLAM the Game. ${mode==="new"?"Your game saves to your own account, so it follows you to any phone or laptop. Only you can see it.":"Welcome back. Your game is waiting where you left it."}</p>
+  <h1>${mode==="new"?"Create your account":"Sign in"}</h1><p>SLAM the Game. ${mode==="new"?"Your game saves to your own account, so it follows you to any phone or laptop. Only you and the person who runs SLAM can see it.":"Welcome back. Your game is waiting where you left it."}</p>
   <label for="su-e">Email</label><input id="su-e" type="email" autocomplete="email" inputmode="email" required>
   <label for="su-p">Password ${mode==="new"?"(at least 6 letters or numbers)":""}</label><input id="su-p" type="password" autocomplete="${mode==="new"?"new-password":"current-password"}" required>
   <button class="su-go" type="submit">${mode==="new"?"Create my account":"Sign in"}</button>
@@ -79,10 +90,13 @@ if(SUPA.on)SUPA.sb.auth.onAuthStateChange(async ev=>{if(ev!=="PASSWORD_RECOVERY"
 if(SUPA.on){
  window.addEventListener("load",()=>{try{
   MENU.splice(1,0,["My account","suacct","act","Who you're signed in as, sharing with your coach, sign out"]);
-  SUPA.ready.then(async()=>{try{const q=await SUPA.sb.from("coaches").select("user_id").eq("user_id",SUPA.uid);if(q.data&&q.data.length){SUPA.coach=true;MENU.splice(2,0,["Shared with me","sucoach","act","For coaches: bring in the games people shared with you"]);setTimeout(suCoachPing,2500)}}catch(e){}});
+  SUPA.ready.then(async()=>{if(SUPA.as)return;try{const q=await SUPA.sb.from("coaches").select("user_id").eq("user_id",SUPA.uid);if(q.data&&q.data.length){SUPA.coach=true;MENU.splice(2,0,["Shared with me","sucoach","act","For coaches: bring in the games people shared with you"]);setTimeout(suCoachPing,2500)}}catch(e){}});
+  {const t0=Date.now(),_sv=save;save=function(){try{if(SUPA.as&&G&&!G.demo&&Date.now()-t0>4000)G.coachEdit={at:Date.now()}}catch(e){}return _sv.apply(this,arguments)};
+   const _hm=home;home=function(){const h=_hm();try{const e=!SUPA.as&&G&&G.coachEdit;if(e&&e.at>(G.coachSeen||0)){const n=`<div class="tile small row between homerow" style="border:2px solid var(--a3)"><span>The person who runs SLAM made a change in your game on ${new Date(e.at).toLocaleDateString()}.</span><button class="ghost slim" data-a="sugot">Got it</button></div>`;return typeof homeRowAdd==="function"?homeRowAdd(h,n):/^<div class="stack[^"]*">/.test(h)?h.replace(/^(<div class="stack[^"]*">)/,m=>m+n):n+h}}catch(x){}return h};setTimeout(()=>{try{if(!SH)render()}catch(e){}},0)}
   Object.assign(ACT,{
+   sugot:()=>{G.coachSeen=Date.now();save();render()},
    suacct:()=>{W={kind:"suacct"};sheet(suAcctSheet)},
-   sushare:async()=>{SUPA.share=!SUPA.share;try{const q=await SUPA.sb.from("games").update({share_with_coach:SUPA.share}).eq("owner",SUPA.uid);if(q.error)throw q.error;W.msg=SUPA.share?"Your coach can now see your game.":"Your game is private again."}catch(e){SUPA.share=!SUPA.share;W.msg="Couldn't change that. Check your internet and try again."}drawSheet()},
+   sushare:async()=>{SUPA.share=!SUPA.share;try{const q=await SUPA.sb.from("games").update({share_with_coach:SUPA.share}).eq("owner",SUPA.uid);if(q.error)throw q.error;W.msg=SUPA.share?"Your coach can now see your game.":"Your coach can no longer see your game."}catch(e){SUPA.share=!SUPA.share;W.msg="Couldn't change that. Check your internet and try again."}drawSheet()},
    suout:async()=>{try{if(typeof clFlush==="function")await clFlush()}catch(e){}try{localStorage.removeItem(KEY)}catch(e){}await SUPA.sb.auth.signOut();location.reload()},
    supwgo:async()=>{const p=(document.getElementById("supw")||{}).value||"";if(p.length<6){W.msg="Use at least 6 letters or numbers.";drawSheet();return}const r=await SUPA.sb.auth.updateUser({password:p});W.msg=r.error?esc2(r.error.message):"Saved. You're signed in.";drawSheet();if(!r.error)setTimeout(closeSheet,900)},
    sucoach:async()=>{W={kind:"sucoach",list:null,msg:""};sheet(suCoachSheet);await suCoachLoad()},
@@ -92,7 +106,7 @@ if(SUPA.on){
 }
 function suAcctSheet(){return head("Your account","My account")+`
  <div class="tile small"><b>Signed in as</b><div>${esc2(SUPA.email)}</div><div class="tiny muted">Your game saves to this account by itself. Sign in with the same email on any device and it's all there.</div></div>
- <div class="tile small row between"><span><b>Share with my coach</b><div class="tiny muted">${SUPA.share?"On: your coach can see your game and help you with it.":"Off: only you can see your game."}</div></span>
+ <div class="tile small row between"><span><b>Share with my coach</b><div class="tiny muted">${SUPA.share?"On: your coach can see your game and help you with it.":"Off: your coach can't see your game. The person who runs SLAM still can."}</div></span>
  <button class="${SUPA.share?"primary":"ghost"}" data-a="sushare" aria-pressed="${SUPA.share}">${SUPA.share?"Sharing":"Share"}</button></div>
  ${W&&W.msg?`<div class="small" style="color:var(--good)">${W.msg}</div>`:""}
  <button class="ghost wide" data-a="suout">Sign out</button>
