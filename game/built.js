@@ -2,6 +2,9 @@
 const WB_HAS=n=>{try{return typeof ACT[n]==="function"}catch(e){return false}},WB_FN=n=>{try{return /^[A-Za-z_$][\w$]*$/.test(n)&&eval("typeof "+n)==="function"}catch(e){return false}};
 const WB_GROUPS=[["in","Getting your numbers in"],["see","Seeing your money"],["plan","Planning ahead"],["feel","Game feel"],["who","People"],["slam","From the Slam web app"],["biz","Beyond the game"]];
 const WB=[
+ ["feel","Put SLAM on your home screen","b",()=>WB_HAS("hsopen")||typeof hsSheet==="function","On the website: one tap where the phone allows it, otherwise 2 or 3 picture-free steps for iPhone, Android or a laptop. Opens full screen and stays signed in.",null],
+ ["feel","Sign in with your fingerprint or face (passkeys)","n",null,"Not built. Waiting for Supabase passkeys to leave beta, so nobody gets locked out while testing.",null],
+ ["feel","App lock: fingerprint or PIN each time the game opens","n",null,"Not built. Opt-in setting for shared phones, since this is money data.",null],
  ["in","Setup by taps, no typing","b",()=>WB_HAS("start")&&WB_FN("finishSetup"),"",null],
  ["in","Make a guess real: Guess, Close, Exact","b",()=>WB_HAS("sharp"),"","sharp"],
  ["feel","Back, Forward, Close and an i on every screen","b",()=>WB_HAS("navback")&&WB_HAS("navfwd")&&WB_HAS("navclose")&&WB_FN("nvRow"),"Back goes back one screen and keeps what you entered. The i says what the screen is and what it is for.",null],
