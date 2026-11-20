@@ -138,8 +138,6 @@ body[data-look="fae"]{--ink:#0c0418;--panel:#190a2d;--panel2:#25103f;--line:#4b2
 body[data-look="coven"]{--ink:#090305;--panel:#16070c;--panel2:#230b13;--line:#5c1628;--hl:#3a0e1a;--text:#fff5f6;--muted:#c99aa6;--gold:#ffeef0;--teal:#a31d3a;--sap:#d42a4e;--a1:#a01a38;--a3:#ff9bb0;--n1:#5e1024;--n2:#28070f;--glow:212,42,78;--good:#9fd8c0;--bad:#ffb3c0;--display:"Cormorant Garamond",Georgia,serif}
 body[data-look="tabletop"]{--ink:#06100b;--panel:#0d1e16;--panel2:#132e23;--line:#2c5a45;--hl:#1a3d2e;--text:#f6f1e1;--muted:#a9c2b2;--gold:#f6f1e1;--teal:#2f8a62;--sap:#3fb37f;--a1:#1f7a54;--a3:#9be5c0;--n1:#1e5a42;--n2:#0e2a1f;--glow:63,179,127;--good:#9be5c0;--bad:#ff9a9a;--display:"IM Fell English",Georgia,serif}
 body[data-look="north"]{--ink:#070b0f;--panel:#101921;--panel2:#172532;--line:#34516b;--hl:#1f3447;--text:#f1f6fa;--muted:#9fb4c6;--gold:#f1f6fa;--teal:#2c6787;--sap:#2f7fa6;--a1:#1d5676;--a3:#9cc8dd;--n1:#1c455e;--n2:#0e2230;--glow:47,127,166;--good:#8fe0c4;--bad:#ff9aa8}
-body[data-look="dungeon"]{--ink:#040404;--panel:#0f0f0f;--panel2:#191919;--line:#3f1820;--hl:#2a0a10;--text:#f7f4f4;--muted:#b3a6a9;--gold:#fff;--teal:#8a1020;--sap:#c2182f;--a1:#8a1020;--a3:#ff7f90;--n1:#3c0a13;--n2:#120405;--glow:194,24,47;--good:#a6d8c4;--bad:#ff9aa8;--display:"Source Sans 3","Segoe UI",system-ui,sans-serif}
-body[data-look="dungeon"] h1,body[data-look="dungeon"] h2,body[data-look="dungeon"] h3{text-transform:uppercase;letter-spacing:.08em}
 body[data-look="fae"] h1,body[data-look="fae"] h2,body[data-look="coven"] h1,body[data-look="coven"] h2{font-size:1.25em}
 .field.miss{border:2px solid var(--bad);border-radius:12px;padding:10px;animation:pulse 1.6s infinite}
 .pathrow button.linkish{min-height:0;padding:0;font:inherit;color:var(--text)}
@@ -395,6 +393,26 @@ body.welcome .topbar,body.welcome nav.tabs{display:none}
 .nvhead{gap:8px;align-items:center}
 .nvsmall{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
 .nvi{font-weight:800;min-width:34px;border-radius:999px;font-style:italic}
+.fld{border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+.fld>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;font-weight:700}
+.fld>summary::-webkit-details-marker{display:none}
+.fld[open]>summary{border-bottom:1px solid var(--line)}
+.fld[open]{border-color:var(--a1)}
+.fld>.field{padding:10px 12px 12px}
+.fldhint{white-space:nowrap;font-weight:600}.fldhint.ok{color:var(--good)}
+.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.clamp::after{content:"more";position:absolute;right:10px;bottom:6px;font-weight:700;color:var(--a1);background:var(--panel2);padding-left:8px}
+.clamp{position:relative}
+.clamp.open{display:block}.clamp.open::after{content:""}
+.nvfrom{margin-top:-4px}
+.overlay.full{background:var(--ink);align-items:stretch}
+.overlay.full .sheet{max-height:100%;height:100%;border-radius:0;border:0;max-width:640px}
+.obtrack{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.obstep{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;opacity:.55}
+.obstep i{font-style:normal;font-weight:800;font-size:12px;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
+.obstep em{font-style:normal;font-size:10.5px;line-height:1.2}
+.obstep.now{opacity:1}.obstep.now i{border-color:var(--a1);background:var(--a1);color:#fff}
+.obstep.done{opacity:.9}.obstep.done i{border-color:var(--good);color:var(--good)}
 </style>
 </head>
 <body>
@@ -408,6 +426,7 @@ body.welcome .topbar,body.welcome nav.tabs{display:none}
 <script src="qr.js"></script>
 <script src="engine.js"></script>
 <script src="engine2.js"></script>
+<script src="gate.js"></script>
 <script src="ui.js"></script>
 <script src="games.js"></script>
 <script src="games2.js"></script>
@@ -446,8 +465,9 @@ body.welcome .topbar,body.welcome nav.tabs{display:none}
 <script src="fold.js"></script>
 <script src="nav.js"></script>
 <script src="home.js"></script>
+<script src="tidy.js"></script>
+<script src="addon.js"></script>
 <script src="testkit.js"></script>
-<script src="aliyah.js"></script>
 <script src="built.js"></script>
 </body>
 </html>

@@ -16,7 +16,7 @@ const KN_ASK={
  pay1:{q:"What you brought home in a month, about a year ago",help:"Close is fine. From here on the game tracks it for you.",rel:[0.5,0.7,0.8,0.9,1,1.1,1.25]},
  fee:{q:"What your investments cost you a year",help:"Fund fees plus any advisor fee. Index funds are often near 0.05%. An advisor often adds about 1%.",pct:true,opts:[0.05,0.2,0.5,1,1.5,2]},
  carPay:{q:"Your car payment each month",help:"Just the loan or lease payment. No car payment is $0.",opts:[0,200,350,500,700,900]},
- give:{q:"What you give away each month",help:"Charity, tzedakah, maaser, tithing, supporting someone.",opts:[0,25,50,100,200,400,800]}};
+ give:{q:"What you give away each month",help:"Charity, tithing, supporting someone.",opts:[0,25,50,100,200,400,800]}};
 function knX(c){c.x=c.x||{};c.x.kn=c.x.kn||{};return c.x.kn}
 function knIn(c){c.x=c.x||{};c.x.kin=c.x.kin||{};return c.x.kin}
 function knGot(c,k){if((k==="debtPay"||k==="limit")&&typeof dbSum==="function"){const s=dbSum(c,k==="debtPay"?"pay":"lim");if(s)return s}if(k==="tax")return c.x&&c.x.taxPct?{v:c.x.taxPct,cf:(c.x.kin&&c.x.kin.taxcf)||2}:null;const r=knIn(c)[k];return r&&r.v!=null?r:null}
@@ -85,7 +85,7 @@ function knMetrics(c,d){d=d||derive(c);const RW=knRows(c),sum=a=>a.reduce((t,r)=
    rule:["The Money Guy Show's 20/3/8 rule for a car loan: 20% down, paid off in 3 years or less, payments at 8% or less of pay before taxes."],math:["Car payment: "+money(v),"Pay before taxes: about "+money(g),g>0?money(v)+" ÷ "+money(g)+" = "+knPct(r||0):null],go:["Open your spending","sharp","spend"]})}
  {const gv=ask("give"),v=gv?gv.v:0,r=take>0?v/take:null;
   add({id:"give",g:"flow",n:"Giving",what:"The share of your take-home pay you give away.",need:["give"],num:r,val:r==null?"?":knPct(r),st:knSt(incs,arow("give")),zone:r==null?null:["You set the target","none"],bar:r==null?null:{p:r/0.25*100,marks:[[40,"10%"]]},
-   rule:["There is no rule here but your own. Maaser and tithing both aim at 10%."],math:["Giving: "+money(v)+" a month",take>0?money(v)+" ÷ "+money(take)+" = "+knPct(v/take):null],go:["Open calendars and giving","cals",""]})}
+   rule:["There is no rule here but your own. Tithing aims at 10%."],math:["Giving: "+money(v)+" a month",take>0?money(v)+" ÷ "+money(take)+" = "+knPct(v/take):null],go:["Open calendars and giving","cals",""]})}
  /* ---------- earning ---------- */
  {const y=knYearAgo(c),r=y&&y.v>0&&take>0?(take-y.v)/y.v:null,since=(c.hist||[])[0];
   add({id:"growth",g:"earn",n:"Income growth",what:"How your take-home pay compares with a year ago.",need:y?[]:["pay1"],num:r,val:r==null?"?":(r>0?"+":"")+knPct(r),st:knSt(incs,y?y.row:null),

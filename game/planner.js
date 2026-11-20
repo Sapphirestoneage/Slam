@@ -182,7 +182,7 @@ const MENU=[
  ["Rearrange Home","dash","act","Move cards up, down or out of the way"],
  ["Flag this screen","flag","act","Tell Eli something's off here"]];
 function menuSheet(){const c=C(),t=todayISO(),due=c.lastDaily!==t||(c.payKnown&&t>=c.payNext);
- return head("Menu","Everything else")+`<div class="stack">${MENU.map(m=>`<button class="rowbtn menurow ${m[2]==="tab"&&tab===m[1]?"sel":""}" data-a="menugo" data-k="${m[2]}" data-v="${m[1]}"><span><b>${m[0]}</b>${m[1]==="play"&&due&&!G.demo?` <span class="pill new">Due</span>`:""}<div class="tiny muted">${m[3]}</div></span><span class="caret">›</span></button>`).join("")}</div>
+ return head("Menu","Everything else")+`<div class="stack">${MENU.filter(m=>!m[4]||adOn(m[4])).map(m=>`<button class="rowbtn menurow ${m[2]==="tab"&&tab===m[1]?"sel":""}" data-a="menugo" data-k="${m[2]}" data-v="${m[1]}"><span><b>${m[0]}</b>${m[1]==="play"&&due&&!G.demo?` <span class="pill new">Due</span>`:""}<div class="tiny muted">${m[3]}</div></span><span class="caret">›</span></button>`).join("")}</div>
  ${!G.demo?`<button class="ghost wide slim" data-a="menugo" data-k="act" data-v="addperson">Add another person</button>`:""}`}
 function whoBtn(){const c=C(),nm=G.demo?"Sample":String(c.name||"You"),ini=nm.split(/\s+/).map(w=>w[0]||"").join("").slice(0,2).toUpperCase(),n=G.demo?0:G.chars.length;
  return `<button class="whobtn" data-a="people" aria-label="Switch person"><span class="ava">${esc(ini)}</span><span class="whonm">${esc(nm)}</span><span class="tiny muted">▾</span></button>`}
@@ -206,7 +206,7 @@ function tabsHTML(){const c=C(),t=todayISO(),open=G.demo?0:plAutoToday(c).length
   const strip=w.mode==="edit"?"":plReveal(w);h=h.replace(/(<div class="tiny muted">All taps\. No numbers yet\.<\/div>)/,`<div class="row between"><span class="tiny muted">All taps. No numbers yet.</span>${w.mode==="edit"?"":`<span class="pill info" data-fid="su:taps">${w.taps||0} tap${w.taps===1?"":"s"}</span>`}</div>`)+"";
   h=h.replace(/(<div class="bar[^"]*"><i[^>]*><\/i><\/div><\/div>)/,"$1"+strip);
   if(w.mode!=="edit"&&st===4)h=h.replace(/<div class="row between">(<button class="ghost" data-a="wback">Back<\/button>)<button class="[^"]*" data-a="wnext">Next<\/button><\/div>$/,`<div class="stack plspeed"><button class="primary wide go" data-a="speedfin">See my first plan</button><div class="row between">$1<button class="ghost" data-a="wnext">Keep going: 2 quick screens</button></div><div class="tiny muted">Skip ahead and the last two screens go on your plan for tomorrow. About 30 seconds either way.</div></div>`);
-  if(w.mode==="edit"&&w.later)h=h.replace(/Getting started · \d+ of \d+/,"Finishing setup");
+  if(w.mode==="edit"&&w.later)h=h.replace(/Getting started · page \d+ of \d+/,"Finishing setup");
   if(w.mode==="edit"&&w.later==="accts"&&st===5)h=h.replace(/(<div class="small muted">Tap every kind of account)/,`<div class="banner small">The ones already picked are guesses for people like you. Tap any that are wrong.</div>$1`);
   return h};
  if(typeof document!=="undefined"&&document.addEventListener)document.addEventListener("click",e=>{const t=e.target&&e.target.closest?e.target.closest("[data-a]"):null;if(!t||!W||W.kind!=="setup")return;const ov=document.getElementById("ov");if(ov&&ov.contains(t)&&t.dataset.a!=="close")W.taps=(W.taps||0)+1},true);

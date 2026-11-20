@@ -40,6 +40,8 @@ const WB=[
  ["plan","Is my money going where I want: your values next to your spending","b",()=>WB_HAS("values")&&WB_FN("vlResult"),"","values"],
  ["plan","Start at the finish line: design the end, work backwards","p",()=>WB_HAS("goal"),"Goals and the bucket list cover part of it. The web app's finish-line walk is not ported.",null],
  ["plan","Which lever matters most: six levers in dollars a year","b",()=>WB_HAS("lever")&&WB_FN("lvLevers")&&WB_FN("lvRank"),"Earn, spend, protect, grow, stretch, keep. No call is made on a guess.","lever"],
+ ["who","Add-ons only the owner can switch on, one person at a time, with no trace for anyone else","b",()=>WB_FN("adApply")&&WB_FN("adOpen")&&WB_HAS("aoset")&&WB_HAS("adplain"),"Under Profiles, for the owner only. Includes Demo mode, a one-time yes where an add-on asks for one, and sharing that always uses the standard look.","people","own"],
+ ["feel","One question open at a time, Back names where it goes, and onboarding as its own full screen with a four-step tracker","b",()=>WB_FN("tdTrack")&&WB_FN("tdFrom")&&WB_HAS("fldgo"),"On every screen with two or more questions. Setup, the three quick games, making numbers real and the first answer share one tracker.",null],
  ["plan","Two paths: the same money into investing or into a skill","b",()=>WB_FN("lvTwo")&&WB_HAS("lvset"),"Inside Which lever.","lever"],
  ["feel","Guess which one wins: five quick guesses at your own age","b",()=>WB_HAS("lvquiz")&&WB_FN("lvRounds"),"Start earlier, more growth, or more money. Then the age flips.","lvquiz"],
  ["plan","The multipliers board: the pegs a dollar can touch","b",()=>WB_HAS("mult")&&WB_FN("muAll")&&WB_FN("muBoard"),"Match, card rewards, bank bonuses, buying ahead, tax accounts. Borrowing shows and never counts.","mult"],
@@ -56,7 +58,6 @@ const WB=[
  ["feel","The mission board: story mission, side missions, heists","b",()=>WB_FN("msBoard")&&WB_FN("msHeists")&&WB_HAS("msgo"),"On Next Steps. Each one shows why, how long, the payout and what it unlocks.",null],
  ["feel","Mini games","b",()=>WB_HAS("games"),"","games"],
  ["feel","Money Chart quiz","b",()=>WB_HAS("mcstart"),"",null],
- ["feel","Grown-up theme, opt-in only","b",()=>WB_HAS("adult"),"",null],
  ["feel","A rival to race","p",()=>WB_HAS("rival"),"A rival exists. Difficulty levels, and the Nepo baby, are not built.",null],
  ["feel","People who did it","p",()=>Array.isArray(MENTORS)&&MENTORS.length>0,"Real people and the moves they are known for. What each one would say about your plan is not built.",null],
  ["feel","Motion that shows what changed","p",()=>WB_FN("celebrate"),"Numbers flash when they change and wins get a card. A full before-and-after replay is not built.",null],
@@ -69,7 +70,6 @@ const WB=[
  ["feel","A welcome-back card: what you did last time and what moved since","b",()=>WB_HAS("since")&&WB_FN("bkData")&&WB_FN("bkRow"),"One slim row on Home on the first look of a new day. It never counts days away.","since"],
  ["feel","Every answer shows what it unlocked","p",()=>WB_FN("cxNews"),"Finishing a skill names the tracks it opens. Answers about your numbers do not show their ripple yet.",null],
  ["feel","Your money type as an element","n",null,"Not built.",null],
- ["feel","The Jewish calendar in the year view","n",null,"Not built.",null],
  ["who","Many people in one game, and a coach view","b",()=>WB_HAS("people")&&WB_HAS("coach"),"","people"],
  ["who","Saved to your account, on every device","b",()=>WB_FN("clPush")&&WB_FN("clPull"),"",null],
  ["who","Hand someone their game with a code","b",()=>WB_HAS("handoff")&&WB_FN("hoRead"),"","handoff"],
@@ -97,7 +97,6 @@ const WB=[
  ["slam","If the pay stopped: what to use first","p",()=>WB_HAS("ladder")&&WB_FN("ldOf"),"Your own money in order, and the rungs that cost extra. Unemployment pay, family help and tripwires are not in it yet.","ladder"],
  ["slam","Student loan plans compared","b",()=>WB_HAS("study")&&WB_FN("slPlans"),"Standard, IBR, RAP and the public service versions, on rules checked Nov 6, 2026. Tax on a forgiven balance is named, not priced.","study"],
  ["biz","Career and city atlases","n",null,"Not built. Waiting on public data files.",null],
- ["plan","Aliyah Math: staying next to going, a friend check, and the whole aliyah track","b",()=>WB_HAS("aliyah")&&WB_FN("alCalc")&&WB_FN("alMonth"),"Both tax systems for 2026 (Israel with the olim points and the 0% window to Feb 10, 2027; the US side with the exclusion). Living costs stay Guesses until a friend checks them.","aliyah"],
  ["biz","A way to pay for it","n",null,"Not built, and not decided.",null],
  ["biz","An app in the app stores","n",null,"Not built. Today it runs as a page.",null],
  ["plan","Catch cards: the risk behind chasing extra return","n",null,"From the multipliers talk.",null],
@@ -152,7 +151,7 @@ const WB=[
  ["biz","A profit engine for a one-person business: leads, capacity, price","n",null,"Built once as its own tool. Not in the game.",null],
  ["biz","A community cost-of-living planner","n",null,"Built once as its own tool. Not in the game.",null],
  ["biz","A city edition, and a stand-alone lever link with a result to share","n",null,"Not built.",null]];
-function btRows(){return WB.map(r=>{let ok=true;if(r[2]!=="n"){try{ok=!!r[3]()}catch(e){ok=false}}const note=typeof r[4]==="function"?(()=>{try{return r[4]()}catch(e){return ""}})():r[4];return {g:r[0],n:r[1],st:r[2]==="n"?"n":ok?r[2]:"x",note:r[2]!=="n"&&!ok?"Missing from this version. Flag it to Eli.":note,a:r[2]!=="n"&&ok?r[5]:null}})}
+function btRows(){return WB.filter(r=>adOk(r)&&(r[6]!=="own"||ADX.own)).map(r=>{let ok=true;if(r[2]!=="n"){try{ok=!!r[3]()}catch(e){ok=false}}const note=typeof r[4]==="function"?(()=>{try{return r[4]()}catch(e){return ""}})():r[4];return {g:r[0],n:r[1],st:r[2]==="n"?"n":ok?r[2]:"x",note:r[2]!=="n"&&!ok?"Missing from this version. Flag it to Eli.":note,a:r[2]!=="n"&&ok?r[5]:null}})}
 function btCount(R){const c={b:0,p:0,n:0,x:0};R.forEach(r=>c[r.st]++);return c}
 const WB_WORD={b:"Built",p:"Partly",n:"Not yet",x:"Missing"};
 function btText(){const R=btRows(),c=btCount(R),L=["SLAM the Game: what's built","Built "+c.b+", partly "+c.p+", not yet "+c.n+(c.x?", missing "+c.x:"")+".",""];WB_GROUPS.forEach(g=>{L.push(g[1]);R.filter(r=>r.g===g[0]).forEach(r=>L.push("  ["+WB_WORD[r.st]+"] "+r.n+(r.note&&r.st!=="b"?": "+r.note:"")));L.push("")});return L.join("\n")}
