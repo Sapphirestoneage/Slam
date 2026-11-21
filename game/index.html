@@ -222,6 +222,10 @@ button.profname{flex:1;border:2px solid var(--a3);border-radius:12px;background:
 .smopen{border:2px solid var(--a3);border-radius:14px;padding:12px;background:var(--panel2)}
 button.rowbtn.smans{min-height:44px;padding:6px 12px}
 .smlater{opacity:.45;padding:2px 12px}
+.fkbar{height:8px;border-radius:5px;background:var(--line);overflow:hidden;margin-top:6px}.fkbar i{display:block;height:100%;border-radius:5px;background:var(--a1)}.fkbar i.hot{background:var(--warn)}.fkbar i.drop{animation:fkdrop .9s ease-out}
+@keyframes fkdrop{from{width:var(--w0)}}
+.fkhot{color:var(--warn);font-weight:700}.fkgo{border:2px solid var(--line);border-radius:8px;padding:4px 10px;font-size:13px;font-weight:700;white-space:nowrap}.fkpull .row{align-items:stretch}.fkpull .row button{font-size:13px;white-space:nowrap;padding-left:4px;padding-right:4px}.fktwo{display:flex;flex-direction:column;gap:6px}.fkopt{min-height:64px}.fkrow{align-items:center}
+body.fkfull .go,body.fkfull .pulse{animation:none!important}
 .smdots{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .smdot{width:40px;height:40px;min-height:40px;padding:0;border-radius:50%;border:2px solid var(--line);background:var(--panel2);color:var(--muted);font-weight:800;font-size:15px}
 .smdot.now{border-color:var(--a3);background:var(--a1);color:#fff}.smdot.done{border-color:var(--good);color:var(--good)}
@@ -468,6 +472,7 @@ body.welcome .topbar,body.welcome nav.tabs{display:none}
 <script src="home.js"></script>
 <script src="tidy.js"></script>
 <script src="addon.js"></script>
+<script src="fork.js"></script>
 <script src="testkit.js"></script>
 <script src="built.js"></script>
 </body>
