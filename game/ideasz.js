@@ -1,0 +1,45 @@
+/* ===== ideasz.js: loads after every ideas file. The glossary for each idea and its terms, which ideas fit the player right now, and the slim door on Next Steps. ===== */
+IG_ORDER.forEach(id=>{const s=IG[id];GLOSS["ig_"+id]=[s.n,s.what+" From: "+s.by+"."]});
+Object.assign(GLOSS,{
+ wrate:["Withdrawal rate","The share of your invested money you take out each year to live on. Taking $40,000 from $1,000,000 is a 4% rate."],
+ seqrisk:["Order of returns","Also called sequence-of-returns risk. Once you are taking money out, a crash in the first few years does far more damage than the same crash later, even if the average return is the same."],
+ cape:["CAPE","A measure of how pricey stocks are: the price of the market divided by ten years of company profits. A high CAPE means stocks cost a lot for what they earn. It was created by Robert Shiller."],
+ guardrails:["Guardrails","Two lines around your spending. Cross the upper one and you cut back a little. Cross the lower one and you spend a little more. Between them you change nothing."],
+ glide:["Glidepath","How your mix of stocks and bonds changes as you age. A rising one starts with fewer stocks at your stop date and adds more over time."],
+ buckets:["Buckets","Splitting your money by when you will need it. Cash for now, bonds for the next several years, stocks for later."],
+ ladder:["Roth conversion ladder","Moving money from a traditional retirement account to a Roth a little each year. Each move can be spent without penalty five tax years later, so the moves line up like rungs."],
+ fiveyr:["The five-year wait","Money you move to a Roth has to sit for five tax years before you can take that amount out early with no penalty. Each year's move has its own clock."],
+ hsa:["HSA","A health savings account. Money goes in before tax, grows untaxed, and comes out untaxed for medical costs. It is the only account that skips tax all three times. You need a high-deductible health plan to have one."],
+ taxrate:["Top tax rate","The rate on your last dollar of income. It is the rate that matters when you decide whether to pay tax now or later."],
+ tvr:["Traditional or Roth","Two kinds of retirement account. Traditional: no tax on the money going in, tax when it comes out. Roth: tax now, none later."],
+ fill:["Bracket filling","Choosing your income each year so it fills the lowest tax brackets and stops there. It works when you control your income, which early retirees do."],
+ stdded:["Standard deduction","The amount of income everyone gets to earn before federal income tax starts."],
+ zerogain:["0% gains band","Profit on investments held over a year is taxed at 0% as long as your taxable income stays under a set line."],
+ acahelp:["Marketplace help","Money the government puts toward a health plan you buy yourself on healthcare.gov or your state's site. How much depends on your income for the year. Also called the premium tax credit."],
+ fpl:["Poverty line","A dollar figure the government sets each year by household size. Many programs measure your income as a percent of it."],
+ magi:["Income, for health insurance","The figure the marketplace uses is close to the income on your tax return: pay, interest, the gain part of sales, and money moved to a Roth. Spending from cash or a Roth does not count."],
+ mctrap:["Middle-class trap","Being wealthy on paper while nearly all of it sits where you cannot spend it before 59½: retirement accounts and your home."],
+ equity:["Home equity","What your home would sell for, minus what you still owe on it."],
+ first25:["The first $25,000","A first pile of money you can actually reach. In Set for Life it is the first milestone, because it buys you choices."],
+ resident:["Live like a resident","Keeping your old, smaller lifestyle for a few years after a big raise, and putting the whole raise toward debt and investing."],
+ freedays:["Days of freedom","What something costs, counted in days you could live on that money instead of working for it."],
+ cushion5:["Cash cushion","Cash set aside to cover the gap between what your investments pay you and what you spend, for a few bad years in a row."],
+ yshield:["Yield shield","Tilting your investments toward ones that pay you regularly, so in a bad market you live on the payouts and do not have to sell."],
+ geoarb:["Geographic arbitrage","Earning or saving in a place with high pay, and living in a place where life costs less."],
+ omy:["One more year","Pushing your stop date back a year at a time for extra safety, even after the numbers say you have enough."],
+ fivepct:["The 5% rule","A quick way to compare renting with owning. Multiply the home's price by 5% and divide by 12. That is roughly what owning costs each month that you never get back."],
+ lifecycle:["Lifecycle investing","Spreading stock market risk across your whole life by holding more stock when you are young, sometimes with borrowed money, and less when you are older."],
+ leverage:["Leverage","Investing with borrowed money. Gains are bigger and so are losses, and you owe the loan either way."],
+ nwmult:["Net worth multiple","Your net worth divided by a year of your pay before taxes. A way to set targets that grow as your pay grows."],
+ tenthcar:["The 1/10th rule","Spend no more than a tenth of a year's pay before taxes on a car."],
+ severance:["Severance","Pay and benefits an employer gives you when a job ends. It is often open to negotiation."],
+ ufm:["Uber Frugal Month","A one-month experiment in spending as little as you can, to learn which spending you actually miss."],
+ tradeoff:["Trade-off","What you give up to get something. Every dollar and every hour can only go one place."]});
+/* which ideas fit this player right now, newest-to-them first */
+function igFits(c,d){d=d||derive(c);const X=(c.x&&c.x.ig)||{},seen=X.seen||{};const L=IG_ORDER.filter(id=>{const s=IG[id];if(typeof rfIdeaOn==="function"&&!rfIdeaOn(s))return false;try{return !!s.fit(c,d)}catch(e){return false}});return L.filter(id=>!seen[id]).concat(L.filter(id=>seen[id]))}
+function igQuestsOn(c){const out=[];IG_ORDER.forEach(id=>{const s=IG[id];if(!s.quest)return;const cx=igCtx(c,id),z=igQs(cx,s.quest);if(z.on&&!z.over)out.push({s,z})});return out}
+function igPlanBlock(c,d){if(!c||(typeof fkFull==="function"&&fkFull(c)))return "";const qs=igQuestsOn(c),fit=igFits(c,d),X=(c.x&&c.x.ig)||{},seen=X.seen||{},nw=fit.filter(id=>!seen[id])[0],s=nw?IG[nw]:null;
+ let h=qs.map(q=>`<button class="rowbtn igplan" data-a="idea" data-v="${q.s.id}"><span style="min-width:0"><span class="tiny muted">Side quest · day ${q.z.day} of ${q.s.quest.days}</span><div><b>${esc(q.z.task(q.z.day))}</b></div></span><span class="fkgo">${q.z.dn[q.z.day]?"Done ✓":"Open"}</span></button>`).join("");
+ if(s)h+=`<button class="rowbtn igplan" data-a="idea" data-v="${s.id}"><span style="min-width:0"><span class="tiny muted">A famous idea that fits where you are</span><div><b>${esc(s.n)}</b></div><div class="tiny muted">From: ${esc(s.by)}</div></span><span class="fkgo">Open</span></button>`;
+ return h}
+(()=>{if(typeof planTab!=="function")return;const _pt=planTab;planTab=function(){const h=_pt();try{const b=igPlanBlock(C(),D||derive(C()));return b?h.replace(/<\/div>\s*$/,()=>b+"</div>"):h}catch(e){return h}}})();
