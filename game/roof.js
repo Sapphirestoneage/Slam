@@ -1,0 +1,28 @@
+/* ===== roof.js: one roof for the best-known ideas in personal finance.
+   A directory, nothing more: each row is an idea a well-known money teacher is known for, already built somewhere in this game and run on the player's own numbers. Tap a row and it opens.
+   Rules: only ideas that are really built get a row (no locked tiles, no "coming soon"). Each one names where it comes from, in plain words. No quotes are put in anyone's mouth. A number built on a guess says so. ===== */
+const RF_LIST=[
+ {n:"Conscious Spending Plan",by:"Ramit Sethi, I Will Teach You To Be Rich",one:"Your month in four buckets, with money you are meant to spend with no guilt.",a:"csp",val:c=>{const S=cspCalc(c),f=S.B[0];return [cspPct(f.pct)+" fixed costs",S.guess]}},
+ {n:"A score out of 10",by:"The idea is Caleb Hammer's, from Financial Audit. The formula is SLAM's own.",one:"One number for how your money is set up, and the move that would raise it most.",a:"audit",val:c=>{const A=audCalc(c);return [A.score!=null?A.score.toFixed(1)+" out of 10":"No score yet",false]}},
+ {n:"The 50/30/20 rule",by:"Elizabeth Warren, All Your Worth",one:"Half to needs, 30% to wants, 20% to saving and paying down debt.",m:"split"},
+ {n:"Save 25% of your pay",by:"The Money Guy Show",one:"Their target for how much to keep, counted on pay before taxes.",m:"save"},
+ {n:"The wealth multiplier",by:"The Money Guy Show",one:"What one dollar invested today could be worth at 65.",m:"dollar"},
+ {n:"The 20/3/8 car rule",by:"The Money Guy Show",one:"20% down, paid off in 3 years, payments at 8% of pay or less.",m:"carpay"},
+ {n:"Savings rate sets your freedom date",by:"Mr. Money Mustache",one:"The more of your pay you keep, the fewer years you have to work.",m:"yearsfi"},
+ {n:"The 4% rule",by:"William Bengen, and the Trinity study after him",one:"About 25 times a year of spending, invested, can cover that spending.",m:"fi"},
+ {n:"Wealth for your age and pay",by:"Thomas Stanley and William Danko, The Millionaire Next Door",one:"Your age times a year of pay, divided by 10. It runs harsh on the young.",m:"paw"},
+ {n:"Salary saved by each age",by:"Fidelity",one:"1x your salary invested by 30, 3x by 40, up to 10x by 67.",m:"invx"},
+ {n:"Your real hourly wage",by:"Vicki Robin and Joe Dominguez, Your Money or Your Life",one:"What an hour of your life really earns once the hidden hours and costs are counted.",a:"hrs"},
+ {n:"The debt snowball",by:"Made famous by Dave Ramsey",one:"Smallest debt first for a quick win. The game shows it next to highest rate first so you can pick.",a:"debtplan",show:c=>(c.debts||[]).some(x=>(+x.amt||0)>0)},
+ {n:"Keep fees low",by:"John Bogle, who started the index fund for everyday investors",one:"A fee comes out every year, up market or down, so a small one adds up to a lot.",m:"fee"},
+ {n:"Fork Theory",by:"A Tumblr post by jenroses, building on Christine Miserandino's Spoon Theory",one:"Not a money idea, but it decides how much money work you can take on today.",a:"fork"}];
+function rfRows(c){const M=typeof knMetrics==="function"?knMetrics(c,derive(c)):[];return RF_LIST.filter(r=>(!r.show||r.show(c))&&(!r.a||typeof ACT[r.a]==="function")&&(!r.m||M.find(x=>x.id===r.m))).map(r=>{let v="",g=false;try{if(r.val){const o=r.val(c);v=o[0];g=o[1]}else if(r.m){const m=M.find(x=>x.id===r.m);if(m.num!=null){v=m.n+": "+m.val;g=m.st==="Guess"}}}catch(e){}return {r,v,g}})}
+function rfSheet(){const c=C(),L=rfRows(c);
+ return head("Famous money ideas","All under one roof "+`<button class="term" data-a="info" data-k="gloss:roof">i</button>`)+`<div class="small muted">The best-known ideas from well-known money teachers, each one run on your numbers. Tap one to open it.</div><div class="stack" style="gap:6px">${L.map(x=>`<button class="rowbtn rfrow" data-a="${x.r.m?"metric":x.r.a}" data-v="${x.r.m||""}"><span style="min-width:0"><b>${esc(x.r.n)}</b><div class="tiny muted">${esc(x.r.one)}</div><div class="tiny muted rfby">From: ${esc(x.r.by)}</div>${x.v?`<div class="tiny rfyou">Yours: ${esc(x.v)}${x.g?" (a guess so far)":""}</div>`:""}</span><span class="fkgo">Open</span></button>`).join("")}</div><div class="tiny muted">These are their ideas, explained in the game's own words. Nobody listed here made or backs this game.</div>`}
+Object.assign(ACT,{roof:()=>{W={kind:"roof"};sheet(rfSheet);if(typeof cspUp==="function")cspUp()}});
+(()=>{const _m=ACT.metric;if(typeof _m!=="function")return;ACT.metric=t=>{const from=W&&W.kind==="roof";const r=_m(t);if(from&&typeof cspUp==="function")cspUp();return r}})();
+Object.assign(GLOSS,{roof:["Famous money ideas","A list of the best-known ideas in personal finance, each with who it comes from. Every one is already part of this game and uses your numbers. They are guides from different teachers, and they do not always agree with each other. That is fine: you pick what fits you."]});
+if(typeof NV_INFO!=="undefined"){NV_INFO.roof=["Famous money ideas","The best-known ideas from well-known money teachers, in one list.","Tap one and it opens on your own numbers."];GLOSS.scr_roof=[NV_INFO.roof[0],NV_INFO.roof[1]+" "+NV_INFO.roof[2]]}
+if(typeof MENU!=="undefined")MENU.push(["Famous money ideas","roof","act","Ramit's plan, the 50/30/20 rule, the 4% rule and more, on your numbers"]);
+/* a third slim door in My Money, under the two it already has */
+if(typeof cspMoneyRows==="function"){const _r=cspMoneyRows;cspMoneyRows=function(c,d){const h=_r(c,d);if(!h)return h;const n=rfRows(c).length,k=h.lastIndexOf("</div>");return h.slice(0,k)+`<button class="rowbtn" data-a="roof"><span style="min-width:0"><b>Famous money ideas</b> <span class="tiny muted">${n} in one list</span></span><span class="fkgo">Open</span></button>`+h.slice(k)}}
