@@ -35,6 +35,19 @@ Object.assign(GLOSS,{
  severance:["Severance","Pay and benefits an employer gives you when a job ends. It is often open to negotiation."],
  ufm:["Uber Frugal Month","A one-month experiment in spending as little as you can, to learn which spending you actually miss."],
  tradeoff:["Trade-off","What you give up to get something. Every dollar and every hour can only go one place."]});
+/* ---------- oxygen mask first: look after your own basics before money goes anywhere else.
+   The mask is on once basic expenses are covered, there is no high-interest debt, retirement is on track, and a home or tuition goal (if there is one) has a date.
+   A plan built on guessed numbers cannot say "on track", so it counts as not yet. ---------- */
+function oxyMask(c,d){d=d||derive(c);const kept=(c.take||0)-(c.spend||0),hi=typeof hiDebt==="function"?hiDebt(c):0,real=!!c.led&&isSharp(c,"take")&&isSharp(c,"spend"),age=c.age||0,ret=c.ret||60,at=d.yrs==null?null:age+d.yrs,track=real&&at!=null&&at<=ret;let sim=null;
+ const gs=(c.goals||[]).filter(g=>!g.done&&/home|house|tuition|college|school|kid/i.test((g.k||"")+" "+(g.n||""))),fitG=g=>{try{sim=sim||goalSim(c);return !!goalFit(c,g,sim)}catch(e){return false}};
+ const parts=[{id:"basics",n:"Basic expenses are covered",ok:kept>=0,why:kept>=0?"More comes in each month than goes out.":"About "+money(Math.round(-kept))+" more goes out each month than comes in.",a:"sharp",v:"spend",go:"Open my spending"},
+  {id:"debt",n:"No high-interest debt",ok:hi<=0,why:hi<=0?"Nothing is charging you a high rate.":money(Math.round(hi))+" is still at a high rate.",a:"debtplan",v:"",go:"Open my debt plan"},
+  {id:"retire",n:"Retirement is on track",ok:track,why:!real?"Your numbers are still a guess, so the game cannot say yet.":at==null?"Your plan does not reach your number yet.":track?"Your plan reaches your number at "+at+", by your stop age of "+ret+".":"Your plan reaches your number at "+at+", after your stop age of "+ret+".",a:real?"metric":"sharp",v:real?"yearsfi":"spend",go:real?"Open years to freedom":"Make my numbers real"}];
+ if(gs.length)gs.forEach(g=>{const ok=fitG(g);parts.push({id:"goal",n:(g.n||g.k)+" has a date",ok,why:ok?"It fits in your plan.":"It does not fit in your plan yet.",a:"tab",v:"goals",go:"Open My Goals"})});
+ else parts.push({id:"goal",n:"A home or tuition goal has a date",ok:true,na:true,why:"There is none on your goals list, so this part holds nothing up.",a:"tab",v:"goals",go:"Open My Goals"});
+ return {on:parts.every(p=>p.ok),parts,next:parts.find(p=>!p.ok)||null}}
+function oxyRows(M){return `<div class="stack oxyrows" style="gap:4px">${M.parts.map(p=>`<div class="row between small" style="gap:8px;align-items:flex-start"><span style="min-width:0"><b>${esc(p.n)}</b><div class="tiny muted">${esc(p.why)}</div></span><span class="${p.ok?"muted":p===M.next?"fkhot":"muted"}" style="white-space:nowrap">${p.na?"No goal":p.ok?"Done ✓":"Not yet"}</span></div>`).join("")}</div>`}
+GLOSS.oxy=["Oxygen mask first","On a plane you put on your own mask before you help anyone else. With money it means: cover your basic expenses, clear high-interest debt, get retirement on track, and give a home or tuition goal a date. After that, money can go to other people."];
 /* which ideas fit this player right now, newest-to-them first */
 function igFits(c,d){d=d||derive(c);const X=(c.x&&c.x.ig)||{},seen=X.seen||{};const L=IG_ORDER.filter(id=>{const s=IG[id];if(typeof rfIdeaOn==="function"&&!rfIdeaOn(s))return false;try{return !!s.fit(c,d)}catch(e){return false}});return L.filter(id=>!seen[id]).concat(L.filter(id=>seen[id]))}
 function igQuestsOn(c){const out=[];IG_ORDER.forEach(id=>{const s=IG[id];if(!s.quest)return;const cx=igCtx(c,id),z=igQs(cx,s.quest);if(z.on&&!z.over)out.push({s,z})});return out}
