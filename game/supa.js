@@ -321,15 +321,8 @@ if (SUPA.on) {
         } catch (e) {}
       });
       {
-        const t0 = Date.now(),
-          _sv = save;
-        save = function () {
-          try {
-            if (SUPA.as && G && !G.demo && Date.now() - t0 > 4000) G.coachEdit = { at: Date.now() };
-          } catch (e) {}
-          return _sv.apply(this, arguments);
-        };
-        SUPA.homeNote = true; /* from now, home() in ui.js adds homeCoachNote() */
+        /* The time of the page load. From now, save() in ui.js runs saveCoachMark(), and home() adds homeCoachNote(). */
+        SUPA.t0 = Date.now();
         setTimeout(() => {
           try {
             if (!SH) render();
@@ -417,10 +410,18 @@ if (SUPA.on) {
     } catch (e) {}
   });
 }
+/* Part of save() in ui.js. When the admin is in the game of a player, each save records the time of the change.
+   The first 4 seconds after the page load do not count. It starts at page load on the website (SUPA.t0). */
+function saveCoachMark() {
+  if (!SUPA.t0) return;
+  try {
+    if (SUPA.as && G && !G.demo && Date.now() - SUPA.t0 > 4000) G.coachEdit = { at: Date.now() };
+  } catch (e) {}
+}
 /* Part of home() in ui.js. Tells the player that the person who runs SLAM made a change in the game.
-   It starts at page load on the website (SUPA.homeNote). */
+   It starts at page load on the website (SUPA.t0). */
 function homeCoachNote(h) {
-  if (!SUPA.homeNote) return h;
+  if (!SUPA.t0) return h;
   try {
     const e = !SUPA.as && G && G.coachEdit;
     if (e && e.at > (G.coachSeen || 0)) {

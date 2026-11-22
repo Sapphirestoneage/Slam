@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,548. Top-level functions: 949. Replaced functions: 58, in 89 places.
+Date: 2026-11-22. Files: 60. Lines: 46,557. Top-level functions: 955. Replaced functions: 57, in 85 places.
 
 ## 1. Files in load order
 
@@ -10,14 +10,14 @@ The browser loads the files in this order. A file can use all names from the fil
 
 | # | File | Lines | Functions | Lines > 300 chars | Hidden errors | Purpose |
 |---|------|------:|----------:|------------------:|--------------:|---------|
-| 1 | `supa.js` | 557 | 14 | 2 | 16 | accounts when the game runs on its own website (GitHub Pages) instead of inside Claude |
+| 1 | `supa.js` | 558 | 15 | 2 | 16 | accounts when the game runs on its own website (GitHub Pages) instead of inside Claude |
 | 2 | `skills.js` | 5,156 | 0 | 0 | 0 | data only |
 | 3 | `skillthemes.js` | 2,712 | 0 | 0 | 0 | data only |
 | 4 | `qr.js` | 5 | 0 | 1 | 0 | a small QR code generator from a third party, kept in one line |
 | 5 | `engine.js` | 3,823 | 121 | 0 | 0 | SLAM the Game: engine |
 | 6 | `engine2.js` | 378 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
-| 8 | `ui.js` | 6,291 | 191 | 138 | 2 | SLAM the Game: screens |
+| 8 | `ui.js` | 6,306 | 193 | 138 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 600 | 20 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,436 | 37 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 758 | 21 | 13 | 0 | the year |
@@ -25,8 +25,8 @@ The browser loads the files in this order. A file can use all names from the fil
 | 13 | `profiles.js` | 103 | 5 | 4 | 1 | flip between people |
 | 14 | `smart.js` | 671 | 13 | 5 | 0 | every answer narrows what comes next |
 | 15 | `planner.js` | 1,234 | 47 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
-| 16 | `cloud.js` | 441 | 15 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
-| 17 | `ux.js` | 778 | 20 | 8 | 7 | walk-up-and-use |
+| 16 | `cloud.js` | 437 | 16 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
+| 17 | `ux.js` | 777 | 21 | 8 | 7 | walk-up-and-use |
 | 18 | `metrics.js` | 1,813 | 24 | 10 | 0 | Key numbers |
 | 19 | `debts.js` | 383 | 14 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
 | 20 | `import.js` | 268 | 6 | 9 | 0 | fill in spending from a bank or card statement file |
@@ -42,7 +42,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 30 | `missions.js` | 322 | 9 | 4 | 0 | The mission board |
 | 31 | `connect.js` | 370 | 17 | 10 | 0 | How it all connects |
 | 32 | `house.js` | 479 | 14 | 9 | 2 | Our household |
-| 33 | `back.js` | 244 | 11 | 3 | 6 | The welcome-back card |
+| 33 | `back.js` | 242 | 12 | 3 | 6 | The welcome-back card |
 | 34 | `lever.js` | 552 | 14 | 7 | 0 | Which lever matters most |
 | 35 | `mult.js` | 411 | 13 | 9 | 0 | The multipliers board |
 | 36 | `ask.js` | 422 | 9 | 4 | 1 | one small question at a time |
@@ -83,7 +83,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `drawSheet` | `ui.js` | `ux.js`, `nav.js`, `tidy.js`, `addon.js` | 4 |
 | `profSheet` | `profiles.js` | `moneylog.js`, `fair.js`, `house.js`, `addon.js` | 4 |
 | `render` | `ui.js` | `planner.js`, `ux.js`, `dep.js`, `testkit.js` | 4 |
-| `save` | `ui.js` | `supa.js`, `cloud.js`, `ux.js`, `back.js` | 4 |
 | `meTab` | `ui.js` | `ux.js`, `reveal.js`, `values.js` | 3 |
 | `nextStep` | `ui.js` | `ux.js`, `fork.js`, `eras.js` | 3 |
 | `campCard` | `games.js` | `games2.js`, `year.js` | 2 |

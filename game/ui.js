@@ -31,7 +31,22 @@ function load() {
     return null;
   }
 }
+/* SAVE THE GAME.
+   save() is the full function. It calls each part by name.
+   saveQuiet() saves and shows no "Saved" mark. ux.js uses it for its own notes.
+   saveBase() writes the game to the browser storage. */
 function save() {
+  if (typeof saveCoachMark === "function") saveCoachMark(); /* supa.js: the admin changed the game of a player */
+  if (typeof saveBackSnap === "function") saveBackSnap(); /* back.js: keep the numbers of today for the card */
+  saveQuiet();
+  if (typeof saveFlash === "function") saveFlash(); /* ux.js: show "Saved" for a moment */
+}
+function saveQuiet() {
+  if (typeof saveStamp === "function") saveStamp(); /* cloud.js: record the time of the save */
+  saveBase();
+  if (typeof clQueue === "function") clQueue(); /* cloud.js: send the game to the account a moment later */
+}
+function saveBase() {
   try {
     localStorage.setItem(KEY, JSON.stringify(G));
   } catch (e) {}

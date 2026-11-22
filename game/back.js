@@ -221,16 +221,14 @@ function homeBackRow(h, c, w) {
   const row = bkRow(c, D || derive(c));
   return row && typeof homeRowAdd === "function" ? homeRowAdd(h, row) : h;
 }
-(() => {
-  const _sv = save;
-  save = function () {
-    try {
-      const c = typeof C === "function" ? C() : null;
-      if (c && c.led && !G.demo && c.x && c.x.wb && c.x.wb.d === todayISO()) c.x.wb.n = bkSnap(c, derive(c));
-    } catch (e) {}
-    return _sv.apply(this, arguments);
-  };
-})();
+/* Part of save() in ui.js. On a day with a welcome-back card, keeps the numbers of now. The card compares them with the numbers of the last visit. */
+function saveBackSnap() {
+  try {
+    const c = typeof C === "function" ? C() : null;
+    if (c && c.led && !G.demo && c.x && c.x.wb && c.x.wb.d === todayISO()) c.x.wb.n = bkSnap(c, derive(c));
+  } catch (e) {}
+}
+
 if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] === "since")) {
   const i = MENU.findIndex(m => m[1] === "know");
   MENU.splice(i >= 0 ? i + 1 : 0, 0, [

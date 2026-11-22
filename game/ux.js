@@ -399,7 +399,7 @@ sheet = function (fn) {
       d: todayISO(),
       open: true,
     };
-    _save0();
+    saveQuiet();
   }
   if (uxHist && !was && !UX_POP) {
     try {
@@ -414,7 +414,7 @@ closeSheet = function () {
   _close0();
   if (was && G.last && G.last.open) {
     G.last.open = false;
-    _save0();
+    saveQuiet();
   }
   if (uxHist && was && !UX_POP && history.state && history.state.sheet) {
     UX_POP = true;
@@ -548,9 +548,8 @@ drawSheet = function () {
       '<button class="ghost wide slim lookup" data-a="glossary">Look up a word</button>'
     );
 };
-const _save0 = save;
-save = function () {
-  _save0();
+/* Part of save() in ui.js. Shows the mark "Saved" for a moment. */
+function saveFlash() {
   if (typeof document !== "undefined" && document.getElementById) {
     const el = document.getElementById("uxsaved");
     if (el) {
@@ -561,7 +560,7 @@ save = function () {
       }, 1200);
     }
   }
-};
+}
 const _cel0 = celebrate;
 celebrate = function (a, b, c2, d2) {
   try {
@@ -718,7 +717,7 @@ Object.assign(ACT, {
     if (!u) return;
     G = JSON.parse(u.snap);
     UX_UNDO = null;
-    _save0();
+    saveQuiet();
     if (SH) _close0();
     render();
   },

@@ -39,20 +39,16 @@ function clStatus() {
         : "Saved on this phone only" + (CLOUD.err ? " (" + CLOUD.err + ")" : "");
 }
 
-/* every save also goes to your account, a moment later, in one write */
-(() => {
-  const _save = save;
-  save = function () {
-    try {
-      if (G) {
-        G.savedAt = Date.now();
-        if (G.gone) G.gone = G.gone.filter(n => !G.chars.some(c => c.name === n));
-      }
-    } catch (e) {}
-    _save();
-    clQueue();
-  };
-})();
+/* Part of saveQuiet() in ui.js. Records the time of the save. Removes a name from the list of removed people when that person is back.
+   After the save, saveQuiet() calls clQueue(): each save also goes to the account, a moment later, in one write. */
+function saveStamp() {
+  try {
+    if (G) {
+      G.savedAt = Date.now();
+      if (G.gone) G.gone = G.gone.filter(n => !G.chars.some(c => c.name === n));
+    }
+  } catch (e) {}
+}
 function clQueue() {
   if (!CLOUD.db || !CLOUD.uid || G.demo) return;
   clearTimeout(CLOUD.timer);
