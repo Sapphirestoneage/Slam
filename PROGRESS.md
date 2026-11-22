@@ -108,3 +108,28 @@ old parts of this file and of `QUESTIONS.md` moved to `docs/archive/`. Nothing i
 - Not done: Run 7 (both atlases) and the other 49 states of the cliff map are still waiting on data files. No
   numbers were guessed. Sign-in still needs the project keys.
 
+## Nov 22 2026: SLAM the Game, the code made ready for review
+
+The goal: two software developers can read and review the code of the game. The player sees no change.
+
+- Layers merged (`game/KNOWN-WEAK.md`, A1). Before: 61 functions were replaced by later files, in 113 places (`home` had
+  12 layers). Now: 0. Each screen function calls its parts by name, and each part is a named function in its feature
+  file. `game/README.md`, section 6, shows the pattern.
+- Hidden errors (A3): 115 empty `catch` places now call `report(e, where)` (`game/core/report.js`). `ERRLOG` in the
+  browser console shows the last 100 records.
+- Code with no caller (D): five functions moved to `game/unused/`. Four stay, each with a written reason.
+- Folders: the 61 scripts are in `game/core`, `data`, `account`, `screens` and `features`. The address
+  `game/index.html` and the load order did not change.
+- Headers: each script starts with PURPOSE, INPUT, OUTPUT and DEPENDS ON, in Simplified Technical English.
+- Version stamps (C2): each script address ends with a stamp from the content of the file (`tools/game_stamp.cjs`).
+- Tests: 32 test files, each with the name of its feature (`game/tests/README.md`). B1 and B2 were defects of the
+  tests, not of the game, and are corrected. `npm run test:game`: 703 checks ok, 0 failed, exit code 0.
+- Proof that the player sees no change: `tools/game_walk` (new) ran 120 walks with random taps in Chromium on the old
+  and the new code, and the records are the same. 337 of 342 screenshots at 390, 1280 and 1440 wide are the same byte
+  for byte; the 5 others are a coin that moves all the time. `node --test`: 1,259 pass, 0 fail, 6 skipped, 2 todo,
+  the same as before.
+- Not proven: the private add-ons (their source is not in the repository) and the real database.
+  `game/KNOWN-WEAK.md`, section E, has the details.
+- Found and not repaired, because the repair changes what the player sees: the menu row "Our household" opens the
+  sheet "Put SLAM on your home screen" (A8), and the sheet "Share" shows the address of the retired copy (C6).
+- Questions for the owner: `QUESTIONS.md`, 561.

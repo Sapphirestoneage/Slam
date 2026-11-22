@@ -8,13 +8,22 @@ This page tells a new developer how the game is made, how to run it, and where i
 
 This folder is the only copy of the game. An older copy inside Claude is retired.
 
-## 1. The five facts you must know first
+| Document | Contents |
+|----------|----------|
+| `README.md` | This page. |
+| `CODE-MAP.md` | A generated map: each file with its purpose and size, and the counts of the weak patterns. |
+| `KNOWN-WEAK.md` | Each known weak point, with the recommended repair. |
+| `tests/README.md` | How the tests work, and the list of test files. |
+| `unused/README.md` | The code that nothing calls. |
 
-1. **The game uses classic scripts.** `index.html` loads 60 script files in a fixed order. All functions and constants are in one global scope. There are no modules.
-2. **A later file can replace a function from an earlier file.** The later file keeps the earlier function, calls it, and adds to its result. 61 functions are replaced, in 113 places. `CODE-MAP.md` lists each one. This is the largest weak point in the code.
+## 1. The six facts you must know first
+
+1. **The game uses classic scripts.** `index.html` loads 61 script files in a fixed order. All functions and constants are in one global scope. There are no modules.
+2. **Each file starts with a header.** The header gives PURPOSE, INPUT, OUTPUT and DEPENDS ON. Read the header before you read the code.
 3. **The screens are HTML text.** Each screen function returns one HTML string. `render()` puts the string in the page. One click handler reads the `data-a` attribute and calls `ACT[name]`.
-4. **All data is one object, `G`.** `G.chars` is the list of player profiles. `save()` writes `G` to the browser storage. On the website, `supa.js` also writes `G` to the Supabase database for the account.
-5. **`derive(c)` does the math.** It takes one profile and returns all computed numbers (net worth, savings rate, era, and more). The screens show these numbers. They do not calculate.
+4. **A screen function calls its parts by name.** A feature file can add a row to a screen of a different file, for example to Home. It does this with a named function (a part), and the screen function calls that part. No file replaces a function of a different file. Section 6 shows the pattern.
+5. **All data is one object, `G`.** `G.chars` is the list of player profiles. `save()` writes `G` to the browser storage. On the website, `account/supa.js` and `account/cloud.js` also write `G` to the Supabase database for the account.
+6. **`derive(c)` does the math.** It takes one profile and returns all computed numbers (net worth, savings rate, era, and more). The screens show these numbers. They do not calculate.
 
 ## 2. Run it
 
@@ -34,7 +43,7 @@ The command runs 32 test files (703 checks) in Node.js. It needs no browser. Eac
 
 All checks pass, and the command ends with exit code 0. One file (`addon-sealed-files.js`) has a part that needs the private add-on source. In this repository that part prints `SKIP`.
 
-The last line of the output shows if the version stamps are correct (section 8).
+The last line of the output shows if the version stamps are correct (section 10).
 
 `node --test` runs the tests of the main SLAM app (1,259 checks). It does not run the game tests.
 
@@ -52,7 +61,7 @@ The scripts are in five folders. The folder shows the role of a file. It does no
 | `unused/` | Code that nothing calls. The game does not load it. | `no-caller.js` |
 | `tests/` | The tests. | `run.cjs`, `harness.cjs`, one file for each feature |
 
-These files stay in `game/` because the browser or the tools look for them there: `index.html`, `admin.html` (the administrator page), `sw.js` (the service worker), `manifest.json`, the two icons, and `x1.json` and `x2.json` (the add-ons, see section 6).
+These files stay in `game/` because the browser or the tools look for them there: `index.html`, `admin.html` (the administrator page), `sw.js` (the service worker), `manifest.json`, the two icons, and `x1.json` and `x2.json` (the add-ons, see section 7).
 
 | Subject | Files |
 |---------|-------|
@@ -71,35 +80,87 @@ These files stay in `game/` because the browser or the tools look for them there
 4. `rfSheet()` returns the HTML for the sheet.
 5. A tap inside the sheet calls a second action. That action changes `W` or the profile, calls `save()`, and draws the sheet again.
 
-## 6. Add-ons (locked content)
+## 6. How a feature adds to a screen of a different file
+
+Example: Fork Theory adds one row to Home.
+
+`features/fork.js` has the part. The comment above it names the function that calls it:
+
+```js
+/* Part of home() in ui.js. Adds the row for the fork check. */
+function homeForkRow(h) {
+  ...
+  return h; // the HTML of Home, with the new row
+}
+```
+
+`screens/ui.js` has the screen function. It calls each part by name, in the load order of the files:
+
+```js
+function home() {
+  let h = homeTop();
+  ...
+  if (typeof homeForkRow === "function") h = homeForkRow(h); /* fork.js: the row for the fork check */
+  ...
+  return h;
+}
+```
+
+The rules of this pattern:
+
+- The screen function is the only place that decides the order of the parts.
+- The call has the test `typeof part === "function"`, because the page draws the first time before all files are loaded. Do not remove the test (`KNOWN-WEAK.md`, A10).
+- Do not write `const old = home; home = function () { ... old() ... };`. Before 2026-11-22 the game had 61 functions with such layers, in 113 places. `CODE-MAP.md`, section 2, counts them. The count must stay 0.
+- The actions (`ACT`) still have layers in 36 places (`KNOWN-WEAK.md`, A9). Do not add more.
+
+## 7. Add-ons (locked content)
 
 Two add-ons contain content for specific players. Only the administrator can turn them on, for each player. Their source code is not in this repository. The files `x1.json` and `x2.json` contain the content in encrypted form. The keys are in the database, and the database rules release a key only to a player with permission. `docs/game-addons.sql` contains the database tables and rules.
 
-## 7. Rules for the code
+The code of an add-on runs in the same global scope as the game, and it can call each function of the game. Thus:
+
+- Do not change the name or the arguments of a function until you know that no add-on uses it.
+- This repository cannot run the add-ons. After a change of the structure, run the private add-on tests (`tests/README.md`, "Private tests").
+- Put no add-on words in this repository.
+
+## 8. Errors
+
+A `catch` block must not drop its error. It calls `report(e, "file.js: function")` (`core/report.js`). `report()` shows nothing to the player. It keeps the last 100 records.
+
+- To read the records, type `ERRLOG` in the browser console.
+- To print each record when it occurs, type `SLAM_DEBUG = true` in the browser console.
+
+## 9. Rules for the code
+
+For the player:
 
 - No red in the interface. Amber means "needs attention".
 - A number that comes from a guess gets no verdict. Each number has one of three states: Guess, Close, Exact.
 - The player taps. The player does not type sentences.
 - Each technical term on a screen has an "i" button with an explanation.
 - No em dashes in text.
+
+For the code:
+
+- No file replaces a function of a different file (section 6).
+- Two functions must not have the same name. `CODE-MAP.md`, section 2, shows each name with two declarations.
+- A new file goes in the folder for its role (section 4), gets a script tag in `index.html`, and starts with the header.
+- A function with no caller needs a comment with the reason, or it goes to `unused/` (`CODE-MAP.md`, section 3).
+- Write new comments and documents in Simplified Technical English: short sentences, active voice, one meaning for each word.
 - Never commit real client data.
 
-## 8. Version stamps
-
-Each script address in `index.html` and `admin.html` ends with a version stamp, for example `core/engine.js?v=1a2b3c4d`. The stamp comes from the content of the file. When a script changes, its address changes, and the browser gets the new file.
-
-After each change of a script, run:
+## 10. After each change of a script
 
 ```
+npx prettier --write "game/**/*.{js,cjs}"
 node tools/game_stamp.cjs
+python3 tools/game_codemap.py
+npm run test:game
 ```
 
-`npm run test:game` examines the stamps. It fails when a stamp is old.
+1. Prettier formats the scripts and the tests. The settings are in `.prettierrc.json`.
+2. `game_stamp.cjs` writes the version stamps. Each script address in `index.html` and `admin.html` ends with a stamp, for example `core/engine.js?v=1a2b3c4d`. The stamp comes from the content of the file. When a script changes, its address changes, and the browser gets the new file. `npm run test:game` fails when a stamp is old.
+3. `game_codemap.py` writes `CODE-MAP.md` again. Make sure that these counts did not go up: replaced functions (0), functions with two declarations (1, see `KNOWN-WEAK.md`, A8), hidden errors (0), functions with no caller and no reason (0).
+4. `npm run test:game` runs the tests.
 
-## 9. Format
-
-Prettier formats the scripts. The settings are in `.prettierrc.json`.
-
-```
-npx prettier --write "game/{core,data,account,screens,features,unused}/*.js"
-```
+For a change of the structure that must not change what the player sees, also compare the old and the new code in a browser: `tools/game_walk/README.md`.

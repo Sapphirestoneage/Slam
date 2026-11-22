@@ -29,3 +29,11 @@
 
 - Never commit real client data. Private fixtures stay in `fixtures/*.local.json` (git-ignored).
 - Questions from a prompt go in `QUESTIONS.md` and in the list at the end of the run.
+
+## SLAM the Game (the folder `game/`)
+
+- Read `game/README.md` before any work on the game. Its sections 6, 9 and 10 are rules.
+- Do not replace a function of a different file (`const old = home; home = function () {...}`). Add a named part to the feature file and call it from the screen function. `game/CODE-MAP.md` must show 0 replaced functions.
+- After each change of a game script: `node tools/game_stamp.cjs`, `python3 tools/game_codemap.py`, `npm run test:game`.
+- A `catch` block calls `report(e, "file.js: function")`.
+- The add-on source is private. Put no add-on words in the repository.
