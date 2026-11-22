@@ -1,4 +1,20 @@
-/* ===== tidy.js: the fixes from the usability audit, applied to every screen at once instead of one screen at a time. (1) One question open at a time: when a screen holds two or more question blocks (setup already asks one at a time in its own way), each block folds to a slim row and only one is open. Tapping a one-answer chip opens the next question by itself; a "tap all that fit" question waits for its "Next" button, which names the block it leads to. A folded row shows the answer already given. Nothing is hidden for good: tap any row to open it. (2) Long text is cut to three lines with "more" to open it. (3) When a tap carries you from one tool into another, a line under the header says where you came from and that Back returns there. (4) Screens that had no header (the save point, the celebration) get Back, the i and the X like every other screen. (5) Onboarding fills the whole screen instead of floating over the page behind it, and carries a four-step tracker so you always know where you are in it. State: TDX (which block is open on each kind of screen, for this visit only). ===== */
+/* ============================================================================
+   SLAM the Game: screens/tidy.js
+   PURPOSE     Repairs from the usability audit, for all screens at one time. (1) One question open at a
+               time: each question block folds to a slim row, and a folded row shows its answer. (2)
+               Long text is cut to three lines, with "more" to open it. (3) When a tap goes from one
+               tool to a different tool, a line below the header says where the player came from. (4)
+               The sheets that had no header (the save point, the celebration) get Back, the "i" and the
+               X. (5) Setup fills the full screen and shows a tracker with four steps.
+   INPUT       The game: G.demo. The taps of the player (the actions in OUTPUT).
+   OUTPUT      10 functions. Parts of functions in other files: qTidy, nvTextTidy, nvRowTidy,
+               drawSheetTidy. Actions (ACT): fldgo.
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/nav.js.
+   RULES       Nothing is hidden permanently: a tap on a row opens it. A chip with one answer opens the
+               next question. A question with many answers waits for its Next button.
+   STATE       TDX (the questions of the open sheet, for this visit only: seq, ans, multi, prev, pans,
+               open, n, on, kind).
+   ========================================================================= */
 var TDX = { seq: [], ans: [], multi: [], prev: {}, pans: {}, open: {}, n: 0, on: false, kind: null };
 const TD_FULL = { setup: 0, find: 0, gwin: 0, l1: 1, sharp: 2, askdone: 2, door: 3, lpans: 3, dump: 2, tour: 3 },
   TD_STEPS = ["About you", "Three quick games", "Make your numbers real", "Your first answer"];

@@ -1,4 +1,13 @@
-/* ===== engine2: game mechanics that ARE the data entry. Pure logic, no screen code. ===== */
+/* ============================================================================
+   SLAM the Game: core/engine2.js
+   PURPOSE     The game mechanics that are also the data entry: the layers, the bonfires, the fog (how
+               much of the picture is clear). This file has no screen code.
+   INPUT       The arguments of its functions.
+   OUTPUT      14 functions.
+   DEPENDS ON  core/engine.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/know.js.
+   ========================================================================= */
 const nice$ = x => {
   const s = x < 200 ? 10 : x < 1000 ? 50 : x < 5000 ? 100 : x < 20000 ? 500 : x < 100000 ? 1000 : 5000;
   return Math.max(0, Math.round(x / s) * s);

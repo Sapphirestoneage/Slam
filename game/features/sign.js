@@ -1,4 +1,16 @@
-/* ===== sign.js: Before you sign. What a new loan really costs, asked one small question at a time (what it is for, how much, the rate, how many years) and then shown in the player's own terms: the monthly payment, the total paid back, the interest as months of living costs, what is left each month after the payment, and how far it moves the day work becomes optional. The freedom date comes from the game's own simulation (freeAt) run twice, once as things are and once with the payment added for as long as the loan lasts, so there is still only one freedom number in the game. Paying cash is shown next to it. Nothing is saved and nothing is a verdict: when a payment does not fit, the screen says what would have to give. All taps. ===== */
+/* ============================================================================
+   SLAM the Game: features/sign.js
+   PURPOSE     Before you sign. The true cost of a new loan, asked one small question at a time, then
+               shown in the terms of the player.
+   INPUT       The open sheet (W.kind): sign. The taps of the player (the actions in OUTPUT).
+   OUTPUT      5 functions. Actions (ACT): sign, sgback, sgset. Menu: "Before you sign a loan".
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/planner.js, features/compare.js,
+               features/ask.js.
+   RULES       Nothing is saved. No verdict: when a payment does not fit, the screen says what must
+               change. The freedom date comes from the simulation of the game (freeAt), run two times:
+               as things are, and with the payment added for the life of the loan. Thus the game has
+               only one freedom number. Taps only.
+   ========================================================================= */
 const SG_FOR = [
   ["car", "A car", 7, 5],
   ["school", "School or training", 6, 10],

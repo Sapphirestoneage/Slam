@@ -1,4 +1,12 @@
-/* ===== ideasz.js: loads after every ideas file. The glossary for each idea and its terms, which ideas fit the player right now, and the slim door on Next Steps. ===== */
+/* ============================================================================
+   SLAM the Game: features/ideasz.js
+   PURPOSE     The last file of the famous money ideas: the glossary of each idea, which ideas fit the
+               player now, and the block on Next Steps.
+   INPUT       The profile: c.x.ig.
+   OUTPUT      7 functions. Parts of functions in other files: planTabIdeas, fdSheetIdeas.
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, core/metrics.js, features/fork.js,
+               features/ideas.js, features/roof.js.
+   ========================================================================= */
 IG_ORDER.forEach(id => {
   const s = IG[id];
   GLOSS["ig_" + id] = [s.n, s.what + " From: " + s.by + "."];

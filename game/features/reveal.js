@@ -1,4 +1,18 @@
-/* ===== reveal.js: Meet your character. A short tap-through that turns the numbers into a person: your chapter, your era, who you are with money today and who you are becoming, your strongest number, and your first quest. Six cards, one tap each, then the whole sheet on one screen with a copy button. The sheet has no dollar amounts in it, so it is safe to send to a friend. Nothing here is a verdict: a number that is still a guess is called a guess and is not ranked. ===== */
+/* ============================================================================
+   SLAM the Game: features/reveal.js
+   PURPOSE     Meet your character. Six cards, one tap each, change the numbers into a person: chapter,
+               era, who the player is with money, the strongest number, and the first quest. Then one
+               sheet with a copy button.
+   INPUT       The game: G.demo, G.tourSeen. The profile: c.x.revSeen. The open sheet (W.kind): reveal.
+               The taps of the player (the actions in OUTPUT).
+   OUTPUT      8 functions. Parts of functions in other files: meTabReveal, homeRevealRow. Actions
+               (ACT): reveal, rvnext, rvagain, rvcopy.
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/ux.js, core/metrics.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/drills.js, account/addon.js.
+   RULES       The sheet has no dollar amounts, thus the player can send it to a friend. A number from a
+               guess is not ranked.
+   ========================================================================= */
 function rvData(c, d) {
   const now = identityNow(c, d),
     met = i => i.crit.every(k => k[1](d, c)),

@@ -1,4 +1,15 @@
-/* ===== fold.js: one list on Next Steps. The mission board and the older "Ready to plan" card both listed steps from your path, so the same step could show twice. The card is gone. Its steps now live inside the mission board, folded shut under "More steps from your path", minus the one that is already the story mission. Each row keeps its two buttons: pick a day, or do it now. State: FDX.more (open or shut, for this visit only). ===== */
+/* ============================================================================
+   SLAM the Game: features/fold.js
+   PURPOSE     One list on Next Steps. The mission board and the older card "Ready to plan" showed the
+               same steps. Now those steps are in the mission board, folded below "More steps from your
+               path", without the step that is the story mission. Each row keeps its two buttons: pick a
+               day, or do it now.
+   INPUT       The game: G.demo. The taps of the player (the actions in OUTPUT).
+   OUTPUT      4 functions. Parts of functions in other files: plReadyHidden, msBoardMore, planTabFold.
+               Actions (ACT): fdmore.
+   DEPENDS ON  core/report.js, screens/ui.js, screens/planner.js, features/missions.js.
+   STATE       FDX.more (open or shut, for this visit only). FDX.hide (true while the plan is made).
+   ========================================================================= */
 var FDX = { hide: false, more: false };
 /* Part of plReady() in planner.js. True while planTabFold() makes the plan with the mission board in it. */
 function plReadyHidden() {

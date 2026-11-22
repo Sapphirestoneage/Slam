@@ -1,4 +1,20 @@
-/* ===== study.js: Student loan plans, side by side. Asked one small question at a time: who the loan is from, how much, the rate, when you first borrowed, whether you are married, who you support, and whether you work in public service. Federal loans then get the plans open in 2026 compared on the same balance: Standard, IBR and RAP, plus the public service versions when they apply. Each shows the payment now, how long, the total paid and what is forgiven. Private loans have none of these plans, and the screen says what can be done instead. The rules are the ones checked and sourced in the SLAM web app on Nov 6, 2026 (SL_REF below); one of them, how RAP lowers the balance on a small payment, is still unconfirmed and is called out on the result. Income is pay before taxes, held where it is today. The game has no tax engine, so tax on a forgiven balance is named, not priced, and no plan is called the winner. State: c.x.sl (the answers). ===== */
+/* ============================================================================
+   SLAM the Game: features/study.js
+   PURPOSE     Student loan plans, side by side. One small question at a time, then the federal plans
+               that are open in 2026 on the same balance: Standard, IBR and RAP, and the public service
+               forms when they apply. A private loan has none of these plans, and the screen says what
+               the player can do.
+   INPUT       The game: G.demo. The profile: c.x.sl, c.x.taxPct. The open sheet (W.kind): study. The
+               taps of the player (the actions in OUTPUT).
+   OUTPUT      13 functions. Actions (ACT): study, slback, slset. Menu: "Student loan plans".
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js, features/debts.js,
+               features/ask.js.
+   RULES       Income is pay before taxes, at the value of today. The game has no tax engine, thus tax
+               on a forgiven balance is named but has no price. No plan is named the winner.
+   STATE       c.x.sl (the answers).
+   SOURCE      The rules are from the main app, examined on 2026-11-06 (SL_REF in the code). One rule
+               (RAP on a small payment) is not confirmed, and the result says so.
+   ========================================================================= */
 const SL_REF = {
   asOf: "2026-11-06",
   poverty: { base: 15960, per: 5680 },

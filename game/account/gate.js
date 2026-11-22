@@ -1,4 +1,19 @@
-/* ===== gate.js: extras, part one. Some parts of the game do not live in these files. They arrive from the signed-in account, and only for an account the game's owner has switched them on for. This file answers one question for the rest of the game: is a given extra on, right now, for the person on screen? No extra is named anywhere in these files. State: ADX (what has arrived this visit), c.x.ao (which extras the owner switched on for this person), c.x.aok (a person's own one-time yes to an extra that asks for one), G.plain (Demo mode: the standard look and no extras, for everyone). ===== */
+/* ============================================================================
+   SLAM the Game: account/gate.js
+   PURPOSE     Add-ons, part 1 of 2. Some parts of the game are not in these files. They come from the
+               account, and only for an account that the owner of the game permits. This file answers
+               one question: is this add-on on, now, for the person on the screen? No add-on has its
+               name in these files.
+   INPUT       The game: G.plain. The profile: c.x.ao, c.x.aok.
+   OUTPUT      7 functions.
+   DEPENDS ON  core/report.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: screens/ui.js. With no typeof test, thus safe only after the page has loaded
+               all files: screens/ui.js (C, SH, THEMES).
+   STATE       ADX (what came in this visit), c.x.ao (the add-ons that the owner permits for this
+               person), c.x.aok (the one-time yes of a person to an add-on), G.plain (demo mode: the
+               standard look and no add-ons).
+   ========================================================================= */
 var ADX = { has: {}, meta: {}, gl: {}, own: false, quiet: 0, test: false, st: "off", err: "", plainSH: null, ro: null };
 function adQuiet() {
   try {

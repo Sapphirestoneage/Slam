@@ -1,4 +1,15 @@
-/* ===== games.js: the screens for the games that are the data entry. Every game has a plain-form twin with the same data. ===== */
+/* ============================================================================
+   SLAM the Game: features/games.js
+   PURPOSE     The screens of the games that are the data entry (layer 1). Each game has a plain form
+               with the same data.
+   INPUT       The profile: c.x.rng. The open sheet (W.kind): bon, fog, gear, hl1, l1, party, rough. The
+               taps of the player (the actions in OUTPUT).
+   OUTPUT      22 functions. Actions (ACT): plain, fog, gear, gearcyc, gearset, geardone, party, pyadd,
+               pyopen, pylink, pyamt, pysplit, pyok, pydel, and 16 more.
+   DEPENDS ON  core/engine.js, core/engine2.js, screens/ui.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/games2.js, features/year.js, features/people.js.
+   ========================================================================= */
 Object.assign(GLOSS, {
   camp: [
     "Your camp",

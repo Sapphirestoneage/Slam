@@ -1,8 +1,20 @@
-/* ===== gig.js: Working for yourself. Three connected things for anyone whose money arrives without taxes taken out (gigs, sessions, shifts paid in cash, a business of one).
- (1) Taxes come off first. Each income source is marked taxed or not. Logging untaxed money asks one question, "set some aside?", and keeps a running tax bucket with the next quarterly date.
- (2) Your unit. Name the thing you sell (a session, a shift, a gig) and what one really leaves you after costs, tax and the unpaid hours around it. From then on a gap anywhere in the game can also be read in your own units: "$150 short, about 2 more sessions".
- (3) Your floor. The price below which the work does not pay for your life, from your own spending.
- They feed each other: the tax rate you pick prices your unit, your unit prices your floor, and the same unit shows up in fire drills, the pay-stopped ladder and Quick math. The engine's totals are not changed by any of this: tax money is an earmark on cash you already have. ===== */
+/* ============================================================================
+   SLAM the Game: features/gig.js
+   PURPOSE     Work for yourself. For income with no tax taken out. (1) Tax comes off first: a tax
+               bucket and the next quarterly date. (2) Your unit: the thing that the player sells, and
+               what one unit leaves. (3) Your floor: the lowest price that pays for the life of the
+               player.
+   INPUT       The game: G.demo. The profile: c.x.gig, c.x.tax, c.x.unit. The open sheet (W.kind): gig,
+               gxcatch. The taps of the player (the actions in OUTPUT).
+   OUTPUT      23 functions. Parts of functions in other files: monthsAheadTax, moneyTabTaxRow. Actions
+               (ACT): gig, gxtab, gxsrc, gxset, gxuse, gxmove, gxpaid, gxcatch, fsave. Menu: "Working
+               for yourself".
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, screens/ux.js, features/compare.js.
+   RULES       The three parts feed each other: the tax rate prices the unit, the unit prices the floor,
+               and the same unit shows in the fire drills, the ladder and Quick math. These tools do not
+               change the totals of the engine. The tax money is a label on cash that the player already
+               has.
+   ========================================================================= */
 const GX_DEF = ["Side gigs", "My own business"],
   GX_PCTS = [15, 20, 25, 30, 35],
   GX_DUE = [

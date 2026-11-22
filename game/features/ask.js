@@ -1,4 +1,20 @@
-/* ===== ask.js: one small question at a time. "Make your numbers real" used to show a whole list and one button that said "That's about right", which left people unsure what they were agreeing to. Here every number is its own screen with the same five parts, in the same order: what the thing is, one question in plain words, the answer buttons written as full sentences, why the game asks, and where to look. Nothing is asked that needs a money word the screen has not explained. When a list is empty the game asks the plain question first ("Do you owe money to anyone?") instead of showing an empty list. After the last question a short screen says what just happened and what it changed. The old all-in-one confirm (sharpdone) still works underneath. State: W.st (step), W.idk (rows left as guesses), c.x.none={debt,inv} for a plain "no, none". ===== */
+/* ============================================================================
+   SLAM the Game: features/ask.js
+   PURPOSE     One small question at a time, for "Make your numbers real". Each number has its own
+               screen with five parts in the same order: what it is, one question, the answer buttons,
+               why the game asks, and where to look.
+   INPUT       The game: G.demo. The profile: c.x.none. The open sheet (W.kind): askdone. The taps of
+               the player (the actions in OUTPUT).
+   OUTPUT      8 functions. Parts of functions in other files: askSheet. Actions (ACT): askyes, askchg,
+               askset, askidk, askrate, asklow, askback, asknone, askmore, rng, shopen.
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, features/know.js.
+   RULES       No question uses a money word that the screen did not explain. When a list is empty, the
+               game asks the plain question first ("Do you owe money to anyone?"). After the last
+               question, a short screen says what changed. The older action sharpdone (confirm all at
+               one time) continues to operate below this file.
+   STATE       W.st (the step), W.idk (the rows that stay a guess), c.x.none = {debt, inv} for a plain
+               "no, none".
+   ========================================================================= */
 const ASK = {
   take: {
     rows: "incs",

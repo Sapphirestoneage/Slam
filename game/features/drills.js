@@ -1,8 +1,24 @@
-/* ===== drills.js: four things for the hard days.
- (1) Money fire drills (Eli's "financial exposure therapy", ported from the Slam web app's js/drills.js). A money fear, run on your own numbers, then one small rep to do in real life. A drill built on a guess says Guess and gets no "covered" tag.
- (2) If the pay stopped: what would I use first (ported from the web app's ladder). Your own money in the order people reach for it, how long each rung lasts, and which rungs cost extra. Expensive rungs are shown and never counted in the months.
- (3) One-way doors. A few What if moves are hard to undo. They get a plain note saying so, next to the move. Not a warning off, just the difference between a door you can walk back through and one you cannot (the framing is Jeff Bezos's, from his 2015 letter to shareholders).
- (4) A three-tap tour of the five tabs. Offered once on Home, skippable. ===== */
+/* ============================================================================
+   SLAM the Game: features/drills.js
+   PURPOSE     Four tools for hard days. (1) Money fire drills: a money fear, calculated on the numbers
+               of the player, then one small action. (2) If the pay stopped: the money of the player in
+               the order of use. (3) One-way doors: a note on the moves that are hard to undo. (4) A
+               tour of the five tabs in three taps.
+   INPUT       The game: G.demo, G.tourSeen. The profile: c.x.drills. The open sheet (W.kind): drills,
+               ladder, tour. The taps of the player (the actions in OUTPUT).
+   OUTPUT      14 functions. Parts of functions in other files: cpMovesDoor, movesSheetDoor,
+               homeTourRow. Actions (ACT): drills, fdopen, fddone, ladder, ldlevel, tour, tournext,
+               tourdone. Menu: "Fire drills".
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, features/reveal.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/gig.js, features/ideasz.js.
+   RULES       A drill on a guess says Guess and gets no "covered" tag. The expensive steps of the
+               ladder are shown, but they are not counted in the months. The tour is offered one time on
+               Home, and the player can skip it.
+   SOURCE      The fire drills ("financial exposure therapy", an idea of the owner) and the ladder are
+               from the main app (js/drills.js). The idea of one-way doors is from Jeff Bezos (letter to
+               shareholders, 2015).
+   ========================================================================= */
 const FD_BILL = 1000,
   FD_NEEDS = ["Home", "Food", "Getting around", "Bills and subscriptions"];
 function fdBase(c, d) {

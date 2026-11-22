@@ -1,4 +1,17 @@
-/* ===== owed.js: What each debt costs you. The debt plan already knows the interest still to come on every debt and the month it will be gone. This screen turns that into two plain prices: dollars of interest, and how long that money would have paid for your life (interest divided by what you spend in a month). For costly debt, the kind the game's freedom date reacts to, it also runs the game's own plan again with that one debt gone and shows how many months sooner work becomes optional. Low-cost debt does not move the game's freedom date, and the screen says so instead of inventing a number. A row built on a guessed rate or payment says Guess, and no debt is named the costliest while any of them is a guess. Nothing is saved. ===== */
+/* ============================================================================
+   SLAM the Game: features/owed.js
+   PURPOSE     What each debt costs you: the interest in dollars, and the same amount as months of
+               living costs.
+   INPUT       The profile: c.x.dplan. The open sheet (W.kind): owed. The taps of the player (the
+               actions in OUTPUT).
+   OUTPUT      4 functions. Parts of functions in other files: dbSheetOwed. Actions (ACT): owed. Menu:
+               "What each debt costs you".
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/planner.js, features/debts.js.
+   RULES       A row from a guess says Guess, and no debt is named the most expensive while one of them
+               is a guess. For expensive debt, the screen runs the plan of the game again with that one
+               debt gone, and shows how many months sooner work becomes optional. Low-cost debt does not
+               move the freedom date, and the screen says so. Nothing is saved.
+   ========================================================================= */
 function owLife(m) {
   if (m == null) return "";
   const w = m * 4.345,

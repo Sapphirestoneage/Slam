@@ -1,4 +1,11 @@
-/* ===== ideas4.js: Part 2. Spending (34 to 40), Deals (41, 42), Real estate (43 to 45). Same frame and rules as ideas.js. ===== */
+/* ============================================================================
+   SLAM the Game: features/ideas4.js
+   PURPOSE     Famous money ideas 34 to 45: spending, deals, real estate. The same frame and rules as
+               ideas.js.
+   INPUT       The taps of the player (the actions in OUTPUT).
+   OUTPUT      2 functions. Actions (ACT): igbuy, igunbuy.
+   DEPENDS ON  core/engine.js, screens/ui.js, core/metrics.js, features/csp.js, features/ideas.js.
+   ========================================================================= */
 function igPmt(loan, rate, yrs) {
   const r = rate / 12,
     n = yrs * 12;

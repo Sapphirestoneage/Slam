@@ -1,4 +1,22 @@
-/* ===== planner.js: Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday check-in, and a speedrun setup that hands the rest to week 1. ===== */
+/* ============================================================================
+   SLAM the Game: screens/planner.js
+   PURPOSE     The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a
+               calendar of money tasks, the tab "Next Steps"), the check-in before and after payday, and
+               the fast setup that moves the last screens to week 1.
+   INPUT       The game: G.active, G.chars, G.demo. The profile: c.x.later, c.x.plan, c.x.weekMins. The
+               open sheet (W.kind): auto, pladd, plpost, plpre, plst, ready, routine. The taps of the
+               player (the actions in OUTPUT).
+   OUTPUT      55 functions. Parts of functions in other files: renderPlan, renderPlanBars,
+               finishSetupPlanStart, finishSetupPlanEnd, setupSheetPlan, goNav, homePlanLine. Actions
+               (ACT): menu, menugo, navback, navfwd, plview, plmon, plpick, plcap, plst, plgo, plset,
+               plmode, plo, plwhen, and 19 more.
+   DEPENDS ON  core/report.js, core/engine.js, account/gate.js, screens/ui.js, features/games.js,
+               screens/profiles.js, screens/smart.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: account/cloud.js, screens/ux.js, features/missions.js, features/fold.js,
+               features/fork.js, features/ideasz.js. With no typeof test, thus safe only after the page
+               has loaded all files: features/missions.js (planTabMissions).
+   ========================================================================= */
 
 /* ---------- small helpers ---------- */
 const PL_DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],

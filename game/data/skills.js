@@ -1,4 +1,11 @@
-/* ===== skills.js: data only. The list of skills for the skill tree: name, group, effort, reward and the text for each skill. No logic. ===== */
+/* ============================================================================
+   SLAM the Game: data/skills.js
+   PURPOSE     Data only. The skills of the skill tree: name, group, effort, reward, and the text of
+               each skill. No logic.
+   INPUT       Nothing.
+   OUTPUT      Constants that the other files read.
+   DEPENDS ON  Nothing.
+   ========================================================================= */
 window.SKILLS = {
   "main-path": {
     name: "Investing step by step",

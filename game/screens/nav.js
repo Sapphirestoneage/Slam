@@ -1,4 +1,20 @@
-/* ===== nav.js: the same four things on every screen. (1) Back goes back one screen. It used to close the whole sheet, so a wrong tap three screens deep sent you to the start. (2) Forward returns to where you were after a Back. (3) The X closes. (4) An "i" says, in two short sentences, what this screen is and what it is for. The game keeps a list of the screens you passed through since you opened a sheet (NVX.st). A screen is told apart by its kind and its place in a flow (step, question, person), so Back inside a flow moves one question and keeps what you already entered. Closing a sheet empties the list. A bare "Done" or "Close" button also gets words that say what it does. NV_INFO holds the two sentences for every screen kind; a kind with no entry shows no "i", and the audit lists it. ===== */
+/* ============================================================================
+   SLAM the Game: screens/nav.js
+   PURPOSE     The same four things on each sheet: Back (one screen back), Forward, Close, and an "i"
+               with two sentences about the screen.
+   INPUT       The taps of the player (the actions in OUTPUT).
+   OUTPUT      13 functions. Parts of functions in other files: drawSheetNav, closeSheetNav. Actions
+               (ACT): navback, navfwd, navclose.
+   DEPENDS ON  screens/ui.js, screens/ux.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: screens/tidy.js.
+   RULES       A screen is identified by its kind and its place in a flow (step, question, person). Thus
+               Back in a flow moves one question and keeps the entered data. When a sheet closes, the
+               list is emptied. A button with only "Done" or "Close" gets words that say what it does. A
+               sheet kind with no entry in NV_INFO shows no "i".
+   STATE       NVX.st (the sheets that the player passed since a sheet opened), NVX.fw (the sheets for
+               Forward). NV_INFO has the two sentences for each sheet kind.
+   ========================================================================= */
 const NV_KEYS = ["q", "v", "i", "st", "sti", "step", "id", "g", "tab", "t", "pass", "who", "r", "n"];
 var NVX = { st: [], fw: [] };
 const NV_INFO = {

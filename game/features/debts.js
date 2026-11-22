@@ -1,4 +1,19 @@
-/* ===== debts.js: finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side. The plan math is ported from the SLAM repo (js/math/debt.js, payoffPlan): every debt gets its own payment, and the extra plus every freed payment rolls to the first debt in the order. Return on Hassle orders by hassle score ÷ balance (Eli, Nov 5 2026). ===== */
+/* ============================================================================
+   SLAM the Game: features/debts.js
+   PURPOSE     The debt picture by taps (rate, monthly payment, card limit, how much the debt troubles
+               the player), then three payoff plans side by side.
+   INPUT       The profile: c.x.dplan. The open sheet (W.kind): dbone, dbplan. The taps of the player
+               (the actions in OUTPUT).
+   OUTPUT      16 functions. Parts of functions in other files: moneyTabDebtPlan. Actions (ACT):
+               debtplan, dbone, dbset, dbextra, dborder, dbpick.
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/ask2.js, features/owed.js.
+   RULES       Each debt gets its own payment. The extra amount and each freed payment go to the first
+               debt in the order. Return on Hassle puts the debts in the order of hassle score divided
+               by balance (the owner, 2026-11-05).
+   SOURCE      The plan math is from the main app (js/math/debt.js, payoffPlan).
+   ========================================================================= */
 const DB_MID = { "Under 8%": 5, "8% to 15%": 11.5, "15% to 25%": 20, "Over 25%": 28, "No interest": 0 };
 const DB_ORD = [
   ["avalanche", "Highest rate first", "Costs the least"],

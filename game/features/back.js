@@ -1,4 +1,21 @@
-/* ===== back.js: The welcome-back card. Coming back should start with what is already done, not with a list of demands. On the first look of a new day the game keeps the picture from the last visit and shows one slim row on Home: what you did last time, what moved while you were away, and the one place to pick up. Opening it once puts it away for the day. It never counts days missed and never asks why you were gone. State: c.x.wb={d,b,n,pb,pn,seen}, where b and n are small pictures of the start and the latest moment of the current visit day, and pb and pn are the same two for the visit before. Pictures hold counts and totals only. ===== */
+/* ============================================================================
+   SLAM the Game: features/back.js
+   PURPOSE     The welcome-back card. On the first look of a new day, one slim row on Home shows what
+               the player did last time, what moved, and where to continue.
+   INPUT       The game: G.demo, G.tourSeen. The profile: c.x.ms, c.x.wb. The open sheet (W.kind):
+               since. The taps of the player (the actions in OUTPUT).
+   OUTPUT      14 functions. Parts of functions in other files: homeBackSync, homeBackRow, saveBackSnap.
+               Actions (ACT): since, bkgo, bkcopy. Menu: "Since last time".
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/planner.js, features/reveal.js,
+               features/drills.js, features/gig.js, features/know.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: account/addon.js, features/fork.js.
+   RULES       The card does not count missed days, and it does not ask why the player was away. After
+               the player opens the card one time, it goes away for that day.
+   STATE       c.x.wb = {d, b, n, pb, pn, seen}. b and n are small pictures of the start and of the
+               latest moment of the present visit day. pb and pn are the same two for the visit before.
+               A picture has counts and totals only.
+   ========================================================================= */
 function bkSnap(c, d) {
   let k = 0,
     kt = 0;

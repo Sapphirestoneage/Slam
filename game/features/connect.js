@@ -1,8 +1,19 @@
-/* ===== connect.js: How it all connects. The 25 skill tracks were 25 separate ladders. This file adds what was missing between them and around them.
- (1) Real links between tracks: what each one works best after, and what it opens up, each with the reason in plain words (strong credit opens card bonuses, points and travel; a cushion comes before paying debt hard; and so on). A link never locks anything. The game says "works best after", and you can still start where you like.
- (2) Links from a skill to the screen in this game that does it: the debt plan, the fee X-ray, a fire drill, the money log, your match, and so on. A skill that the game can help with says so and takes you there.
- (3) A picture: the track you are on in the middle, what feeds it above, what it opens below. Tap any circle to stand on it. A plain list of every track with the same links sits beside it.
- (4) When finishing a skill takes a track to its first level, the tracks it opens are named, once, on Home and on this screen. ===== */
+/* ============================================================================
+   SLAM the Game: features/connect.js
+   PURPOSE     How it all connects. (1) Links between the 25 skill tracks: what a track works best
+               after, and what it opens, each with the reason. (2) Links from a skill to the screen of
+               this game that does it. (3) A picture with the track of the player in the middle, and a
+               plain list of all tracks with the same links. (4) When a completed skill takes a track to
+               its first level, the game names the tracks that it opens, one time.
+   INPUT       The game: G.demo. The profile: c.x.unl. The open sheet (W.kind): connect. The taps of the
+               player (the actions in OUTPUT).
+   OUTPUT      19 functions. Parts of functions in other files: skillSheetConnect, msBoardConnect,
+               homeConnectRow. Actions (ACT): connect, cxfocus, cxview, cxdo, skilldone. Menu: "How it
+               all connects".
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, features/reveal.js.
+   RULES       A link does not lock a track. The game says "works best after", and the player can start
+               at each track.
+   ========================================================================= */
 const CX_E = [
   [
     "cash-safety-net",

@@ -1,5 +1,16 @@
-/* ===== values.js: Is my money going where I want? Three short steps, all taps. (1) Pick up to three things that matter most to you. (2) For each place your money goes, two taps: which of those it mostly serves, and whether you want less of it, more of it, or it feels right. (3) See how much of your month lands on what you said matters, the one line you want less of, and one small move.
- The question in step 2 is from Your Money or Your Life (Vicki Robin and Joe Dominguez): did this spending bring fulfillment in proportion to the life it cost? Spending more on what you love and cutting hard on what you do not is Ramit Sethi's idea of money dials. The game gives no verdict here: rent serving nothing on your list is not a failing, it is information. ===== */
+/* ============================================================================
+   SLAM the Game: features/values.js
+   PURPOSE     Is my money going where I want? Three steps, all taps: the three things that matter most,
+               two taps for each place where the money goes, and the result.
+   INPUT       The profile: c.x.vals. The open sheet (W.kind): values. The taps of the player (the
+               actions in OUTPUT).
+   OUTPUT      6 functions. Parts of functions in other files: meTabValues. Actions (ACT): values,
+               vlstep, vltop, vlserve, vlmark, go. Menu: "Is my money going where I want?".
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/planner.js.
+   RULES       No verdict.
+   SOURCE      The question in step 2 is from Your Money or Your Life (Vicki Robin and Joe Dominguez).
+               The money dials are an idea of Ramit Sethi.
+   ========================================================================= */
 const VL_ALL = [
     "Freedom and time",
     "Security",

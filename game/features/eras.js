@@ -1,9 +1,25 @@
-/* ===== eras.js: real steps for the later eras, and one account line that feeds back into the early ones.
-   1. Future You (era 5) gets steps you can do: open and fill a Roth IRA, open and fill an HSA, set the workplace plan. Its key moment is "Future you gets paid first".
-   2. Eras 6 to 9 each get steps and a starred key moment. The gates still come from the numbers. Steps can be done early. An era cannot be entered without its starred step.
-   3. The retirement chain in "What depends on what" works out which accounts to fill first, shown as one line with Guess / Close / Exact and a why.
-   Rules kept: tap only, an "i" on every term, each step can be done, working on it, already done or doesn't apply, Show the math on numbers, credits on famous ideas.
-   Nobody loses ground: a player's era on the day this arrives is kept, and a key moment once reached stays reached. Yearly steps start fresh each January. ===== */
+/* ============================================================================
+   SLAM the Game: features/eras.js
+   PURPOSE     Steps for the later eras, and the account recommendation. (1) Era 5 (Future You) gets
+               steps: open and fill a Roth IRA, open and fill an HSA, set the workplace plan. Its key
+               moment is "Future you gets paid first". (2) Eras 6 to 9 each get steps and one key moment
+               (a star step). (3) The retirement chain in "What depends on what" calculates which
+               accounts to fill first, and shows one line with Guess / Close / Exact and a reason.
+   INPUT       The game: G.demo. The profile: c.x.es, c.x.taxPct. The open sheet (W.kind): acwhy, estep.
+               The taps of the player (the actions in OUTPUT).
+   OUTPUT      25 functions. Parts of functions in other files: eraStepsMore, esHas, esLastEra,
+               deriveEras, homeAccountLine, paySheetAccount, reviewSheetYear, nextStepStar. Actions
+               (ACT): node, esdone, eswork, esalready, esna, esundo, esans, acwhy. Menu: "Which account
+               first".
+   DEPENDS ON  core/report.js, core/engine.js, account/gate.js, screens/ui.js, screens/planner.js,
+               core/metrics.js, features/reveal.js, screens/nav.js, features/fork.js, features/csp.js,
+               features/ideas.js, features/dep.js.
+   RULES       The gates come from the numbers. A player can do a step early. A player cannot enter an
+               era without its star step. A player keeps the era that they had on the day of this
+               change. A key moment that the player reached stays reached. The yearly steps start again
+               each January. Each step has four states: can be done, working on it, already done, does
+               not apply.
+   ========================================================================= */
 var ES_GIVE_X = [];
 const ES_BR = {
   one: [

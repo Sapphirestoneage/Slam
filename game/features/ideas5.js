@@ -1,4 +1,12 @@
-/* ===== ideas5.js: Part 2. Mindset (46 to 56), Time (57, 58), Family and giving (59, 60, 62, 63). Same frame and rules as ideas.js. Every quiz and worksheet is the game's own wording. ===== */
+/* ============================================================================
+   SLAM the Game: features/ideas5.js
+   PURPOSE     Famous money ideas 46 to 63: mindset, time, family and giving. The same frame and rules
+               as ideas.js.
+   INPUT       The game: G.chars, G.demo. The taps of the player (the actions in OUTPUT).
+   OUTPUT      2 functions. Actions (ACT): ighabit, igduke, igdate.
+   DEPENDS ON  core/engine.js, screens/ui.js, core/metrics.js, features/people.js, features/csp.js,
+               features/ideas.js, features/ideas3.js, features/ideas4.js.
+   ========================================================================= */
 function igBars(rows) {
   return rows
     .map(

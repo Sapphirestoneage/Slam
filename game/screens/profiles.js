@@ -1,4 +1,16 @@
-/* ===== profiles.js: flip between people. A household (money combined) or people you coach (kept apart). All of it lives on this device. ===== */
+/* ============================================================================
+   SLAM the Game: screens/profiles.js
+   PURPOSE     More than one person in one game: a household (the money is combined) or the persons that
+               a coach helps (the money is apart). The sheet "People" is here.
+   INPUT       The game: G.active, G.chars, G.coach, G.demo, G.house. The open sheet (W.kind): people.
+               The taps of the player (the actions in OUTPUT).
+   OUTPUT      6 functions. Parts of functions in other files: profOpen. Actions (ACT): pflip, pmode,
+               profmore, prm, prmno, prmyes.
+   DEPENDS ON  core/report.js, account/supa.js, core/engine.js, core/engine2.js, screens/ui.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: screens/planner.js, features/moneylog.js, features/fair.js,
+               features/house.js, account/addon.js.
+   ========================================================================= */
 /* profStrip() made a strip of buttons to go from one person to the next.
    planner.js has the name button in the top bar. That button is the only switch now, and the strip is empty.
    The lines below it run only while the page loads, before planner.js is there. */

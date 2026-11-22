@@ -1,6 +1,25 @@
-/* ===== metrics.js: Key numbers. Every ratio the personal finance and FIRE crowd talks about that this game can work out, in plain words: where you are, what the rule of thumb says and who says it, what would move it, and whether you want to work on it. Built from the SPARKS ratio registry (79 ratios, Sept 2026): the ones the game has the inputs for are here, a few more unlock with one tap-answer, and the rest are listed in KN_LATER until the game learns those inputs.
-   Rules: a rule of thumb is a guide with its source named, never a grade. A number built on a guess shows as a guess and gets no verdict. A number that is missing an input says what unlocks it and never shows N/A. Nothing shows red.
-   Sources checked Nov 19 2026: 28/36 on pay before taxes (lenders), 25% of pay before taxes and 20/3/8 (The Money Guy Show), 1x to 10x salary by age (Fidelity), 50/30/20 on take-home (Warren, All Your Worth), the savings-rate table at 5% real growth (Mr. Money Mustache), age x pay / 10 (The Millionaire Next Door), card use under 30% and best under 10% (Experian). ===== */
+/* ============================================================================
+   SLAM the Game: core/metrics.js
+   PURPOSE     Key numbers. Each ratio that this game can calculate, in plain words: the value, the rule
+               of thumb and its source, what moves the value, and if the player wants to work on it.
+               Some ratios open after one answer. KN_LATER lists the ratios that the game cannot
+               calculate yet.
+   INPUT       The profile: c.x.kin, c.x.kn, c.x.taxPct. The open sheet (W.kind): keynums, metric. The
+               taps of the player (the actions in OUTPUT).
+   OUTPUT      26 functions. Parts of functions in other files: moneyTabKeyCard. Actions (ACT): keynums,
+               kngroup, metric, knask, knans, knset, kncopy.
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, screens/ux.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/debts.js, features/ask2.js.
+   RULES       A rule of thumb is a guide, and its source is named. It is not a grade. A number from a
+               guess shows as a guess and gets no verdict. A number with a missing input says what input
+               is necessary, and does not show N/A. No red.
+   SOURCE      The SPARKS ratio list (79 ratios, September 2026). Sources examined on 2026-11-19: 28/36
+               on pay before taxes (lenders); 25% of pay before taxes, and 20/3/8 (The Money Guy Show);
+               1x to 10x salary by age (Fidelity); 50/30/20 on take-home pay (Warren, All Your Worth);
+               the savings-rate table at 5% real growth (Mr. Money Mustache); age x pay / 10 (The
+               Millionaire Next Door); card use below 30%, best below 10% (Experian).
+   ========================================================================= */
 const KN_NET = 0.8; /* take-home is treated as about 80% of pay before taxes until the player answers the tax question */
 const KN_FID = [
   [30, 1],

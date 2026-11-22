@@ -1,6 +1,17 @@
-/* ===== roof.js: one roof for the best-known ideas in personal finance.
-   A directory, nothing more: each row is an idea a well-known money teacher is known for, already built somewhere in this game and run on the player's own numbers. Tap a row and it opens.
-   Rules: only ideas that are really built get a row (no locked tiles, no "coming soon"). Each one names where it comes from, in plain words. No quotes are put in anyone's mouth. A number built on a guess says so. ===== */
+/* ============================================================================
+   SLAM the Game: features/roof.js
+   PURPOSE     One list of the famous money ideas that are built in this game. A tap on a row opens the
+               idea.
+   INPUT       The open sheet (W.kind): roof. The taps of the player (the actions in OUTPUT).
+   OUTPUT      7 functions. Parts of functions in other files: cspMoneyRowsRoof. Actions (ACT): roof,
+               rfreg, metric. Menu: "Famous money ideas".
+   DEPENDS ON  core/report.js, core/engine.js, account/gate.js, screens/ui.js, screens/planner.js,
+               core/metrics.js, screens/nav.js, features/csp.js, features/ideas.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/ideasz.js.
+   RULES       Only an idea that is built gets a row. Each row names its source. No invented quotes. A
+               number from a guess says so.
+   ========================================================================= */
 const RF_LIST = [
   {
     g: "spend",

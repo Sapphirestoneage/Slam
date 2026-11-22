@@ -1,4 +1,15 @@
-/* ===== built.js: What's built. One honest list of everything talked about for this game: what is built, what is partly there, and what is not built yet. Each built or partly row carries a probe, a small check run against the game that is actually loaded (does the screen's own code exist?), so the list cannot claim something the code does not have. A row whose probe fails shows as "Missing from this version". Not-yet rows have no probe: they are promises, not features. Loaded last so it can see every other file. ===== */
+/* ============================================================================
+   SLAM the Game: features/built.js
+   PURPOSE     What's built. One list of all features of this game: built, partly built, or not built.
+               Each built row has a probe, a small check that the code of the feature exists. A row with
+               a failed probe shows as "Missing from this version". A row that is not built has no
+               probe.
+   INPUT       The open sheet (W.kind): built. The taps of the player (the actions in OUTPUT).
+   OUTPUT      4 functions. Actions (ACT): built, btf, btcopy. Menu: "What's built".
+   DEPENDS ON  core/report.js, core/engine.js, account/gate.js, screens/ui.js, screens/planner.js,
+               features/drills.js, features/connect.js, features/house.js.
+   RULES       The browser loads this file last, thus it can see all other files.
+   ========================================================================= */
 const WB_HAS = n => {
     try {
       return typeof ACT[n] === "function";

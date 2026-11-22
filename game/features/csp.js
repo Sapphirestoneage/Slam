@@ -1,7 +1,23 @@
-/* ===== csp.js: two ways to see a whole month of money at a glance.
-   1. Conscious Spending Plan: four buckets next to the guide from Ramit Sethi's I Will Teach You To Be Rich. Percents of take-home pay. A guide, never a grade.
-   2. Money audit score: one number out of 10, built only from real numbers. The idea of a single score out of 10 comes from the Hammer Financial Score on Caleb Hammer's show Financial Audit. The formula here is SLAM's own, not his.
-   Rules: tap only. A number built on a guess gets no verdict and earns no points. Nothing shows red, amber only for "needs attention". Every part opens to what it is, why it matters and what a change would do. ===== */
+/* ============================================================================
+   SLAM the Game: features/csp.js
+   PURPOSE     Two views of one month of money. (1) The Conscious Spending Plan: four buckets next to a
+               guide. (2) The money audit score: one number out of 10, from real numbers only.
+   INPUT       The game: G.chars. The profile: c.x.cp. The open sheet (W.kind): audit, csp. The taps of
+               the player (the actions in OUTPUT).
+   OUTPUT      25 functions. Parts of functions in other files: moneyTabPlanRows, coachSheetAudit.
+               Actions (ACT): csp, cspopen, cspinv, cspredo, audit, audmore, metric. Menu: "Conscious
+               Spending Plan", "Money audit score".
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/planner.js, screens/ux.js,
+               core/metrics.js, screens/nav.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/roof.js.
+   RULES       Taps only. The buckets are percents of take-home pay. The guide is not a grade. A number
+               from a guess gets no verdict and no points. No red: amber means "needs attention". Each
+               part opens to show what it is, why it matters, and what a change does.
+   SOURCE      The buckets are from I Will Teach You To Be Rich (Ramit Sethi). The idea of one score out
+               of 10 is from the show Financial Audit (Caleb Hammer). The formula is from SLAM, not from
+               the show.
+   ========================================================================= */
 const CSP_B = [
   {
     id: "fixed",

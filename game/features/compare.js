@@ -1,4 +1,18 @@
-/* ===== compare.js: Side by side. Two screens in one sheet. (1) Your plan as it is next to one or two moves, every column run by the same month-by-month plan the rest of the game uses (goalSim), so the dates match What if. (2) The fee X-ray: the same money at your fee and at a low fee, in dollars and in years of work. The fee screen is its own small sum (growth minus the fee, compounded yearly) and says so. Nothing here changes a number until the person taps to use it. ===== */
+/* ============================================================================
+   SLAM the Game: features/compare.js
+   PURPOSE     Side by side. Screen 1: the plan as it is, next to one or two moves, with the same
+               month-by-month simulation (goalSim) as the other screens. Screen 2: the same money with
+               the fee of the player and with a low fee.
+   INPUT       The profile: c.x.kin, c.x.pins. The open sheet (W.kind): compare. The taps of the player
+               (the actions in OUTPUT).
+   OUTPUT      11 functions. Parts of functions in other files: movesSheetCompare. Actions (ACT):
+               compare, cptab, cppick, cpfee, cpadd, cpusefee.
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/drills.js.
+   RULES       No number changes until the player taps to use it. The fee screen has its own small
+               calculation (growth minus the fee, compounded each year), and the screen says so.
+   ========================================================================= */
 const CP_FEES = [0.05, 0.25, 0.5, 1, 1.5],
   CP_LOW = 0.05,
   CP_ADDS = [0, 100, 250, 500, 1000];

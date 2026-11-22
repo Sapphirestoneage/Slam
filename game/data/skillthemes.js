@@ -1,4 +1,10 @@
-/* ===== skillthemes.js: data only. Alternative names and words for the skills, one set for each visual theme. No logic. ===== */
+/* ============================================================================
+   SLAM the Game: data/skillthemes.js
+   PURPOSE     Data only. Other names and words for the skills, one set for each theme. No logic.
+   INPUT       Nothing.
+   OUTPUT      Constants that the other files read.
+   DEPENDS ON  Nothing.
+   ========================================================================= */
 window.SKILL_T = {
   tabletop: {
     "main-path": [

@@ -1,4 +1,16 @@
-/* ===== games2.js: Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back). Same rules: tap only, a plain form for each, no random rewards, nothing that scolds. ===== */
+/* ============================================================================
+   SLAM the Game: features/games2.js
+   PURPOSE     The games of layer 2 (sort), layer 3 (make exact) and layer 4 (come back).
+   INPUT       The open sheet (W.kind): bins, boss, cal, dq, draft, games, ghost, nwg, subs, swipe,
+               tier. The taps of the player (the actions in OUTPUT).
+   OUTPUT      40 functions. Parts of functions in other files: campCardGames. Actions (ACT): games,
+               tier, tierset, tieredit, tierpick, tierdone, draft, draftdeal, draftpick, draftdone,
+               bins, binset, binsdone, cal, and 29 more.
+   DEPENDS ON  core/report.js, core/engine.js, core/engine2.js, screens/ui.js, features/games.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/year.js, screens/smart.js, features/import.js.
+   RULES       Taps only. Each game has a plain form. No random rewards. No text that blames the player.
+   ========================================================================= */
 /* ---------- pure logic ---------- */
 const TIER = ["S", "A", "B", "C", "D", "F"],
   TIER_N = {

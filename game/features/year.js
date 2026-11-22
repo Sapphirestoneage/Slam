@@ -1,4 +1,17 @@
-/* ===== year.js: the year. Pluggable calendars, true-expense funds, the look-ahead, the Yearly Review, quiet windows, the chance test. Nothing resets except tax-year items. ===== */
+/* ============================================================================
+   SLAM the Game: features/year.js
+   PURPOSE     The year: calendars, funds for true expenses, the months ahead, the Yearly Review, rest
+               windows, and the chance test.
+   INPUT       The game: G.demo. The open sheet (W.kind): ahead, cals, chance, funds, review. The taps
+               of the player (the actions in OUTPUT).
+   OUTPUT      24 functions. Parts of functions in other files: homeQuiet, campCardReview,
+               gamesSheetYear. Actions (ACT): funds, fundtog, fundamt, fundmon, ahead, cals, calon,
+               calcost, chance, yrdone, restopen, gseason, review, revwhen, and 9 more.
+   DEPENDS ON  core/engine.js, core/engine2.js, account/gate.js, screens/ui.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/fork.js, features/eras.js.
+   RULES       Only the tax-year items start again each year.
+   ========================================================================= */
 /* ---------- tax-year facts (checked Nov 2026: IRS IR-2026-136, Rev. Proc. 2026-24 and 2026-35) ---------- */
 const LIMITS = {
   2026: { ira: 7500, k401: 24500, hsa: [4400, 8750], fsa: [3400, 680] },

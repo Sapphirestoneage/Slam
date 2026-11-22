@@ -1,4 +1,16 @@
-/* ===== chart.js: the Money Chart. Statements, traits and scoring are Eli's own (ported from the Slam repo, js/quiz.js). ===== */
+/* ============================================================================
+   SLAM the Game: features/chart.js
+   PURPOSE     The Money Chart: ten statements, five elements, and the result for one person or two
+               persons.
+   INPUT       The game: G.ready, G.scores. The profile: c.x.mc. The open sheet (W.kind): chart, mcq.
+               The taps of the player (the actions in OUTPUT).
+   OUTPUT      13 functions. Actions (ACT): chart, mcstart, mcans, mcback, mcpass, mcgentle.
+   DEPENDS ON  screens/ui.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/together.js.
+   SOURCE      The statements, the traits and the scores are from the owner (js/quiz.js in the main
+               app).
+   ========================================================================= */
 // The Money Chart (Eli's money personality quiz): five elements, twenty traits, one bank of 100 statements with a 10 and
 // a 25 nested inside it, so going deeper never re-asks. Elements are muscles built by what life asked of you, not fixed
 // types: the result is where you sit on each scale. Often the muscle that carried you here is the one in the way next.

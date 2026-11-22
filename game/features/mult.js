@@ -1,4 +1,19 @@
-/* ===== mult.js: The multipliers board. The market's 7% is the floor. Multipliers are the pegs a dollar can touch on the way down: a match at work, card rewards, bank bonuses, buying ahead, a tax-favored account, a health savings account. Each peg is priced in dollars a year on the player's own numbers and counted as extra coins dropped in, never as a higher growth rate. The coin's path is drawn from the pegs that are switched on: nothing bounces at random and nothing is won by chance. Borrowing to invest is on the board as the peg that can pay nothing, and it is never added to the total. Two more views: the crossover (deal pegs are capped by spending, tax pegs grow with your money) and the finish line with and without tax planning. State: c.x.mu={on:{},bank,ahead,any,hsa}. All taps. ===== */
+/* ============================================================================
+   SLAM the Game: features/mult.js
+   PURPOSE     The multipliers board. Each multiplier (a match at work, card rewards, bank bonuses,
+               buying ahead, a tax-favored account, a health savings account) has a price in dollars a
+               year on the numbers of the player. Two more views: the crossover (the spending limits the
+               deal multipliers, and the tax multipliers grow with the money), and the finish line with
+               and without tax planning.
+   INPUT       The game: G.demo. The profile: c.x.mu, c.x.taxPct. The open sheet (W.kind): mult. The
+               taps of the player (the actions in OUTPUT).
+   OUTPUT      13 functions. Actions (ACT): mult, muopen, mutog, muset. Menu: "The multipliers board".
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js, features/compare.js.
+   RULES       A multiplier adds dollars. It does not increase the growth rate. Nothing is random.
+               Borrowing to invest is on the board as the multiplier that can pay nothing, and it is
+               never added to the total. Taps only.
+   STATE       c.x.mu = {on: {}, bank, ahead, any, hsa}.
+   ========================================================================= */
 const MU_TAX_GAIN = 0.15,
   MU_OUT_TAX = 0.12;
 const MU = [

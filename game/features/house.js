@@ -1,8 +1,21 @@
-/* ===== house.js: Our household. For any household that is not "one person or one married couple": three partners, two homes, chosen family, a couple where one person leads on money. Three parts in one sheet, plus one page for a planner.
- (1) The picture: everyone's money added up, who brings what, how long the household's cash lasts, and what happens to the month if any one person's income stops.
- (2) The paperwork: what a marriage certificate gives two people automatically, as a checklist of taps, for everyone the law does not connect. It is a list of questions for a lawyer. It is not legal advice, and it says so.
- (3) A money agreement: who decides what, a spend-without-asking limit, a review date, and five safeguards that have to be true for it to count as agreed. The game records an agreement people made. It never enforces one: nobody is ever locked out of anything, and either person can end it with one tap.
- People come from Sharing costs fairly (profiles in this game, or guests added by tap). A made-up household of three can be loaded to look around; it lives only inside this tool and touches no real profile. ===== */
+/* ============================================================================
+   SLAM the Game: features/house.js
+   PURPOSE     Our household. For a household that is not one person or one married couple. (1) The
+               picture: the money of all persons together. (2) The paperwork: a list of questions for a
+               lawyer. (3) A money agreement with five safeguards. Also one page for a planner.
+   INPUT       The game: G.chars, G.hh. The open sheet (W.kind): house, onepage. The taps of the player
+               (the actions in OUTPUT).
+   OUTPUT      15 functions. Parts of functions in other files: profSheetHouse. Actions (ACT): house,
+               hstab, hssample, hsdoc, hsag, hssafe, hsend, hscopy, onepage, opcopy. Menu: "Our
+               household", "One page for a planner".
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js,
+               features/compare.js, features/gig.js, features/know.js, features/fair.js,
+               features/values.js.
+   RULES       The paperwork is not legal advice, and the screen says so. The game records an agreement.
+               It does not enforce one: no person is locked out, and each person can end the agreement
+               with one tap. The sample household of three stays in this tool and changes no real
+               profile.
+   ========================================================================= */
 const HS_SAMPLE = [
   { n: "Rin", inc: 6200, spend: 3100, cash: 9000, inv: 42000, debt: 0, full: true },
   { n: "Sol", inc: 3400, spend: 2600, cash: 1800, inv: 6000, debt: 7400, full: true },

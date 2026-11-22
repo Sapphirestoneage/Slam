@@ -1,8 +1,22 @@
-/* ===== ideas.js: the workshop behind "Famous money ideas". Each idea a well-known money teacher is known for becomes one small screen, run on the player's own numbers.
-   One frame for all of them: who it is from, one big number, the taps that make it yours, and "Show the math".
-   Rules: tap only. A typical value shows grey until the player taps an answer, and tapping the same answer again takes it back off. A number built on a guess shows grey and gets no verdict. Nothing shows red. Every term has an "i".
-   The made-up market years below are there to show how an idea behaves. They are not history and not a forecast, and each screen says so.
-   Tax and health numbers: 2026 federal standard deduction, 0% long-term gains band and HSA limits, the 2026 poverty guideline and the 2027 marketplace rules, as checked for the SLAM app in Nov 2026. ===== */
+/* ============================================================================
+   SLAM the Game: features/ideas.js
+   PURPOSE     Famous money ideas, the frame and ideas 1 to 8. Each idea of a well-known money teacher
+               is one small screen, calculated on the numbers of the player. One frame for all ideas:
+               the source, one large number, the taps that make it the number of the player, and "Show
+               the math".
+   INPUT       The profile: c.x.ig. The open sheet (W.kind): ig. The taps of the player (the actions in
+               OUTPUT).
+   OUTPUT      20 functions. Actions (ACT): idea, igtab, igpick, igchk, igqz, igqzback, igclear,
+               igstart, igday, igstop, igset.
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/nav.js.
+   RULES       Taps only. A typical value is grey until the player taps an answer, and a second tap on
+               the same answer removes it. No verdict on a guess. No red. Each term has an "i". The
+               market years in this file are invented, to show how an idea behaves. They are not history
+               and not a forecast, and each screen says so.
+   SOURCE      Tax and health numbers: the 2026 federal standard deduction, the 0% band for long-term
+               gains, the HSA limits, the 2026 poverty guideline and the 2027 marketplace rules, as
+               examined for the main app in November 2026.
+   ========================================================================= */
 const IG = {},
   IG_ORDER = [];
 const IG_ROUGH = [

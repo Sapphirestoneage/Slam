@@ -1,4 +1,24 @@
-/* ===== fork.js: Fork Theory. A fork is anything poking you right now: a bill, a call you are dodging, being hungry. Small ones add up, and one more small one can be the one that tips you over. This file: (1) the fork check: tap what is poking you, give each one a size, pick the biggest; (2) the exchange rate game: how many small forks your biggest one is worth to you; (3) a slim meter on Home: your load next to your own limit; (4) quick pulls: one to three things under five minutes that take a fork out; (5) at the limit the game backs off: one thing on Next Steps, nothing pulsing; (6) a line for the coach; (7) a dated history for the year view and "since last time". It also replaces the old "how did today go, 1 to 5" question and sets how many steps the game hands you. State: c.x.fk = {f:[{k,s}], big, rate, rateFor, lim, limOk, pulls:{id:{st,d}}, hist:[{d,l,lim,big}], at}. Nothing here is a score to beat. ===== */
+/* ============================================================================
+   SLAM the Game: features/fork.js
+   PURPOSE     Fork Theory. A fork is a thing that troubles the player now. (1) The fork check. (2) The
+               exchange rate game: how many small forks is the largest fork worth. (3) A slim meter on
+               Home: the load next to the limit of the player. (4) Quick pulls: one to three actions of
+               less than five minutes that remove a fork. (5) At the limit the game gives only one thing
+               on Next Steps, and nothing glows. (6) A line for the coach. (7) A history with dates, for
+               the year view.
+   INPUT       The game: G.chars, G.demo. The profile: c.x.fk, c.x.subs, c.x.wb. The open sheet
+               (W.kind): fork. The taps of the player (the actions in OUTPUT).
+   OUTPUT      20 functions. Parts of functions in other files: homeForkRow, bkSheetForks,
+               reviewSheetForks, qFork, coachSheetForks, nextStepFork, planTabForkFull. Actions (ACT):
+               fork, fkagain, fkmore, fkall, fktog, fknext, fksize, fkbig, fkpick, fkyes, fkredo, fklim,
+               fkopen, fkpull, and 1 more. Menu: "Fork check".
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/planner.js, screens/ux.js,
+               features/reveal.js, screens/nav.js.
+   RULES       This is not a score. This file is in the place of the older question "how did today go, 1
+               to 5", and it sets how many steps the game gives.
+   STATE       c.x.fk = {f: [{k, s}], big, rate, rateFor, lim, limOk, pulls: {id: {st, d}}, hist: [{d,
+               l, lim, big}], at}.
+   ========================================================================= */
 const FK_LIST = [
   ["bill", "A new bill"],
   ["debt", "Debt or collections calls"],

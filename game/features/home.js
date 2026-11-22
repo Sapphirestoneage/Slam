@@ -1,6 +1,14 @@
-/* ===== home.js: put the game on your home screen. On the website only (inside Claude there's no home screen to add to).
- Where the phone or laptop can install it with one tap, the button does that. Where it can't (iPhone, some browsers), it shows the 2 or 3 taps to do it by hand.
- Once the game is opened from the home screen, every mention of this goes away. ===== */
+/* ============================================================================
+   SLAM the Game: features/home.js
+   PURPOSE     Put the game on the home screen of the phone or the laptop (website only). When the
+               device can install the game with one tap, the button does that. When it cannot (iPhone,
+               some browsers), the sheet shows the 2 or 3 taps for the player. After the player opens
+               the game from the home screen, the game does not mention this again.
+   INPUT       The game: G.demo, G.hsDone, G.hsLater. The open sheet (W.kind): hs. The taps of the
+               player (the actions in OUTPUT).
+   OUTPUT      4 functions. Actions (ACT): hsopen, hsgo, hslater. Menu: "Put SLAM on my home screen".
+   DEPENDS ON  core/report.js, account/supa.js, screens/ui.js, screens/planner.js, features/house.js.
+   ========================================================================= */
 const HS = { evt: null };
 function hsInstalled() {
   try {

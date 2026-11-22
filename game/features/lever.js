@@ -1,4 +1,19 @@
-/* ===== lever.js: Which lever matters most. Six levers (Earn, Spend, Protect, Grow, Stretch, Keep), each one priced in the same unit, dollars a year, on the player's own numbers, so they can be put side by side. The headline names a biggest lever only when the numbers under it are not guesses: a lever sitting on a guess shows its number with the word Guess and gets no call. Two Paths puts the same money into investing or into a skill. The guessing game asks which of three changes adds the most at the player's own age, then flips the age and adds twists; nothing is random and nothing is won or lost. State: c.x.lvq={n,of,d} once the game has been played. All taps. ===== */
+/* ============================================================================
+   SLAM the Game: features/lever.js
+   PURPOSE     Which lever matters most. Six levers (Earn, Spend, Protect, Grow, Stretch, Keep), each
+               with a price in dollars a year on the numbers of the player. Also Two Paths (the same
+               money into investing or into a skill), and a guessing game (which of three changes adds
+               the most at the age of the player).
+   INPUT       The game: G.demo. The profile: c.x.kin, c.x.lvq, c.x.taxPct. The open sheet (W.kind):
+               lever, lvq, side. The taps of the player (the actions in OUTPUT).
+   OUTPUT      15 functions. Parts of functions in other files: msSideLever. Actions (ACT): lever,
+               lvopen, lvset, lvgo, lvquiz, lvpick, lvnext. Menu: "Which lever matters most".
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js, features/debts.js,
+               features/compare.js.
+   RULES       A lever on a guess shows the word Guess and is not named the largest. In the guessing
+               game nothing is random, and nothing is won or lost. Taps only.
+   STATE       c.x.lvq = {n, of, d}, after the player did the guessing game.
+   ========================================================================= */
 const LV_BASE = 300,
   LV_END = 65,
   LV_TIE = 0.03;

@@ -35,7 +35,9 @@ def purpose(s):
             return ''
         t = re.sub(r'\s+', ' ', m.group(1)).strip(' =*')
         t = re.sub(r'^[a-z0-9]+\.js:\s*', '', t)
-    t = t.split('. ')[0].strip().rstrip('.')
+    parts = t.split('. ')
+    # A first sentence of less than 30 characters says too little. Add the second sentence.
+    t = (parts[0] if len(parts[0]) >= 30 or len(parts) == 1 else parts[0] + '. ' + parts[1]).strip().rstrip('.')
     return (t[:150] + '...') if len(t) > 150 else t
 
 # 1. A later file puts a new function in the place of a function: "name = function (", "name = (...) =>", "name = otherName;"

@@ -1,5 +1,18 @@
-/* ===== know.js: What you already know. The game asks for a lot, and until now it only ever showed what was missing. This turns it around: five letters, D.A.I.T.E. (Debts, Assets, Income, Taxes, Expenses), each with how much of it you have already nailed down, the facts you know listed first, and the one fact that is next. Tapping a missing fact goes straight to the place where it is filled in.
- A fact scores by how sure it is, in the game's three words: Guess counts 0, Close counts three quarters, Exact counts all of it. A whole area can be 100% with nothing in it: no debts is a known fact. The Home tile "Your picture" and the people list use the same number, so there is one answer everywhere. ===== */
+/* ============================================================================
+   SLAM the Game: features/know.js
+   PURPOSE     What you already know. Five letters, D.A.I.T.E. (Debts, Assets, Income, Taxes, Expenses).
+               Each letter shows how much the player knows, the known facts first, and the next fact.
+               The percent of this file is the number "Your picture" on all screens.
+   INPUT       The game: G.demo. The profile: c.x.dplan, c.x.imp, c.x.none. The open sheet (W.kind):
+               know. The taps of the player (the actions in OUTPUT).
+   OUTPUT      10 functions. Parts of functions in other files: fogPctKnow, homeKnowStrip. Actions
+               (ACT): know, kwopen, kwgo, fog, fogold.
+   DEPENDS ON  core/engine.js, screens/ui.js, core/metrics.js, features/debts.js, features/reveal.js,
+               features/gig.js.
+   RULES       Guess counts 0. Close counts three quarters. Exact counts 1. An area with nothing in it
+               can be 100%: "no debts" is a known fact. The Home tile "Your picture" and the list of
+               persons use the same number.
+   ========================================================================= */
 const KW_AREAS = [
   ["D", "Debts", "What you owe"],
   ["A", "Assets", "What you have"],

@@ -1,10 +1,13 @@
-/*
-PURPOSE     Keep five functions that nothing in the game calls. The game does not load this file.
-SOURCE      Moved out of the game files on 2026-11-22 (KNOWN-WEAK.md, section D).
-RULES       Do not add new code here.
-            Each function has a note with the file that it came from.
-TO RESTORE  Move the function back to the file in its note. Then run "npm run test:game".
-*/
+/* ============================================================================
+   SLAM the Game: unused/no-caller.js
+   PURPOSE     Keep five functions that nothing in the game calls. The game does not load this file.
+   INPUT       Nothing.
+   OUTPUT      Nothing.
+   DEPENDS ON  Nothing.
+   RULES       Do not add new code here. Each function has a note with the file that it came from.
+               To put a function back: move it to the file in its note, then run "npm run test:game".
+   SOURCE      Moved out of the game files on 2026-11-22 (KNOWN-WEAK.md, section D).
+   ========================================================================= */
 
 /* From ask.js. */
 function askNoneOk(c, k) {

@@ -1,4 +1,18 @@
-/* ===== quick.js: Quick math. Three small what-ifs on a thing you are thinking about, each one rule the money world repeats, run on your own pay: does this car fit, how much home fits, and what a dollar becomes. Your real hourly wage and Safe to spend already have their own screens, so this sheet opens those instead of keeping a second answer. All taps, no typing. A rule of thumb is a line someone drew: the screen shows the line and your number next to it and gives no verdict. The same rules measured on what you have today live in Key numbers; this sheet links to them instead of repeating them. Math ported from the Slam repo's canon pack (js/solo.js there has the hand-checked tests). ===== */
+/* ============================================================================
+   SLAM the Game: features/quick.js
+   PURPOSE     Quick math. Three small what-if questions: does this car fit, how much home fits, and
+               what one dollar becomes.
+   INPUT       The open sheet (W.kind): quick. The taps of the player (the actions in OUTPUT).
+   OUTPUT      11 functions. Actions (ACT): quick, qmopen, qmset. Menu: "Quick math".
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js, features/compare.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/gig.js.
+   RULES       Taps only. A rule of thumb shows next to the number of the player. No verdict. The real
+               hourly wage and Safe to spend have their own screens, thus this sheet opens those
+               screens. The same rules on the numbers of today are in Key numbers, and this sheet links
+               to them.
+   SOURCE      The math is from the main app (the canon pack; js/solo.js has the tests).
+   ========================================================================= */
 const QM_CAR = { down: 0.2, months: 36, share: 0.08 },
   QM_HOME = { front: 0.28, back: 0.36, years: 30 };
 const QM = {

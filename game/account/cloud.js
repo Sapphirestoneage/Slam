@@ -1,4 +1,15 @@
-/* ===== cloud.js: the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage. The phone copy stays as a backup for when you're offline. Everything sits in your own private space: nobody else, not even the page's owner, can read it. ===== */
+/* ============================================================================
+   SLAM the Game: account/cloud.js
+   PURPOSE     The game saves itself to the account of the player. Thus the game goes with the player
+               from a phone to a laptop. The copy in the browser stays as a backup for the time with no
+               connection.
+   INPUT       The game: G.active, G.chars, G.coach, G.demo, G.gone, G.savedAt. The taps of the player
+               (the actions in OUTPUT).
+   OUTPUT      18 functions. Parts of functions in other files: saveStamp, closeSheetCloud,
+               menuSheetCloud. Actions (ACT): backup, prmyes, people.
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/profiles.js, screens/planner.js.
+   STATE       CLOUD (st, at, err, db, uid, dev, busy, timer, last, pending).
+   ========================================================================= */
 const CLOUD = {
   st: "connecting",
   at: 0,

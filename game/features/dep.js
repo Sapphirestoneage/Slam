@@ -1,6 +1,16 @@
-/* ===== dep.js: "What depends on what". A few short chains that show how one number in the game feeds the next, so filling one in is seen to move the ones after it.
-   Each time a part fills in, the chain replays from that part to its result in one line, with a quick walk along the path. The replay has an off switch, and the switch can be turned back on.
-   An add-on may give this view a second title. Without one, everybody sees the plain name. ===== */
+/* ============================================================================
+   SLAM the Game: features/dep.js
+   PURPOSE     What depends on what. Some short chains show how one number feeds the next number. When a
+               part fills in, one line shows what the change moved. The replay has an off switch. An
+               add-on can give this view a second title. With no add-on, each player sees the plain
+               name.
+   INPUT       The game: G.demo. The profile: c.x.dep, c.x.taxPct. The open sheet (W.kind): dep. The
+               taps of the player (the actions in OUTPUT).
+   OUTPUT      11 functions. Parts of functions in other files: renderDep. Actions (ACT): dep, depplay,
+               depok, depoff, deptog. Menu: "What depends on what".
+   DEPENDS ON  core/report.js, core/engine.js, account/gate.js, screens/ui.js, screens/planner.js,
+               screens/nav.js.
+   ========================================================================= */
 var DEP_X = null,
   DEPX = { line: null, n: 0, busy: false, play: -1 };
 const DEP_N = {

@@ -1,4 +1,11 @@
-/* ===== ideas3.js: Part 2. Retirement (17 to 23), Investing (24 to 26), Earning (27 to 33). Same frame and rules as ideas.js. All questions and checklists are the game's own wording. ===== */
+/* ============================================================================
+   SLAM the Game: features/ideas3.js
+   PURPOSE     Famous money ideas 17 to 33: retirement, investing, earning. The same frame and rules as
+               ideas.js.
+   INPUT       The game: G.chars, G.demo.
+   OUTPUT      1 function.
+   DEPENDS ON  core/engine.js, screens/ui.js, features/ideas.js, features/ideas2.js.
+   ========================================================================= */
 const IG_Q3 = [
   [0, "Not me"],
   [1, "Sometimes"],

@@ -1,4 +1,16 @@
-/* ===== people.js: Your people, one layer at a time. Round one only picks who is in your money life: tap to add, and every person has a Remove button in plain sight. Round two takes each person in turn and asks one thing per screen: how money moves between you, then an amount for each way that needs one, then which costs you split. Kids and pets get one question about what they cost. A last screen says what was added and what it changed. Every screen has Back one, and the three Layer 1 games (gear, people, numbers) get a Back one between them too. The data is the same c.party list as before, saved by the same partyApply. State: W.pp={r,i,q}. ===== */
+/* ============================================================================
+   SLAM the Game: features/people.js
+   PURPOSE     Your people, one layer at a time. Round 1: who is in the money life of the player. Round
+               2: one question on each screen for each person.
+   INPUT       The taps of the player (the actions in OUTPUT).
+   OUTPUT      7 functions. Parts of functions in other files: l1SheetPeople, l1SheetBack. Actions
+               (ACT): ppadd, pprm, ppgo, pplink, ppamt, ppsplit, ppnext, ppback, ppedit, ppdone, l1back.
+   DEPENDS ON  core/engine.js, core/engine2.js, screens/ui.js, features/ask.js.
+   RULES       Each person has a Remove button. Each screen has "Back one". The three games of layer 1
+               (gear, people, numbers) have "Back one" between them. Children and pets get one question
+               about their cost.
+   STATE       W.pp = {r, i, q}. The data is the list c.party, saved by partyApply.
+   ========================================================================= */
 const PP_AMTS = [50, 100, 250, 500, 1000, 2500, 5000];
 function ppName(c, i) {
   const P = c.party || [],

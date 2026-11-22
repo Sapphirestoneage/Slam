@@ -1,4 +1,28 @@
-/* ===== addon.js: extras, part two. (1) At sign-in the game asks the account one thing: has the owner switched any extras on for me? A new account gets "no" and nothing else happens. A yes names a sealed file and its key; the file is opened on this device and joins the game. (2) The owner sees an Add-ons card under Profiles: one row per person, one clear On or Off button per extra. People with their own sign-in show up in a second list once they have opened the game. (3) An extra can ask the person for a one-time yes before it shows. (4) Demo mode: the standard look and no extras, for every profile. (5) Wrapped, share cards and copied text always use the standard look and carry nothing from an extra. On the website the same two lists are database tables with the same locks. Stores inside Claude: grants/<person> (which extras; only the owner writes it, only that person reads it), kit/<person>/p/<extra> (file name and key, same locks), roster/<person> (a name, so the owner can find them), and the owner's own list, which nobody else can read. ===== */
+/* ============================================================================
+   SLAM the Game: account/addon.js
+   PURPOSE     Add-ons, part 2 of 2. At sign-in the game asks the account which add-ons are on. An
+               add-on comes as a sealed file and a key. This file opens the sealed file in the browser,
+               shows the Add-ons card to the owner, and keeps shared text and share cards free of add-on
+               content.
+   INPUT       The game: G.chars, G.demo, G.plain. The profile: c.x.ao, c.x.aok. The open sheet
+               (W.kind): adask. The taps of the player (the actions in OUTPUT).
+   OUTPUT      31 functions. Parts of functions in other files: homeAddonAsk, adPlainText, adPlainSheet,
+               profSheetAddon, adLook, closeSheetAddon. Actions (ACT): aoset, aofar, aogrant, adplain,
+               adyes, adno.
+   DEPENDS ON  core/report.js, account/supa.js, core/engine.js, account/gate.js, screens/ui.js,
+               features/year.js, screens/profiles.js, screens/planner.js, account/cloud.js,
+               screens/nav.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/ideas.js, features/dep.js, features/built.js. With no typeof test,
+               thus safe only after the page has loaded all files: features/ideas.js (IG).
+   RULES       A new account has no add-ons, and nothing more occurs for it. An add-on can ask the
+               person for a one-time yes before it shows. Demo mode has the standard look and no
+               add-ons, for each profile. Wrapped, the share cards and copied text always use the
+               standard look and contain nothing from an add-on.
+   STATE       On the website, two database tables hold the permissions and the keys
+               (docs/game-addons.sql). The retired copy inside Claude kept the same data in the stores
+               grants/<person>, kit/<person>/p/<add-on> and roster/<person>.
+   ========================================================================= */
 /* ---------- opening a sealed file: ChaCha20, the standard cipher, written out so it needs nothing from the browser ---------- */
 function adHex(h) {
   const o = new Uint8Array(h.length / 2);

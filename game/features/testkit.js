@@ -1,4 +1,16 @@
-/* ===== testkit.js: Test with a friend. A think-aloud usability test, Steve Krug style (Rocket Surgery Made Easy): one person tries five real tasks while the coach watches, says almost nothing, and notes how each one went with a tap. Tasks are picked from that person's own profile, so someone with debt gets a debt task and someone without gets a goal task. Results stay in the game and copy out as plain text. ===== */
+/* ============================================================================
+   SLAM the Game: features/testkit.js
+   PURPOSE     Test with a friend. A think-aloud usability test: one person tries five tasks, and the
+               coach records how each task went with one tap. The tasks come from the profile of that
+               person. The results stay in the game, and the coach can copy them as plain text.
+   INPUT       The game: G.active, G.chars, G.tests, G.tk. The open sheet (W.kind): testkit. The taps of
+               the player (the actions in OUTPUT).
+   OUTPUT      9 functions. Parts of functions in other files: tkChipSafe. Actions (ACT): testkit,
+               tkstart, tkgo, tkback, tkout, tkwhere, tkwhy, tknext, tkquit, tkview, tkcopy. Menu: "Test
+               with a friend".
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/planner.js.
+   SOURCE      The method is from Rocket Surgery Made Easy (Steve Krug).
+   ========================================================================= */
 const TK_WHERE = ["Home", "Next Steps", "My Money", "My Goals", "Me", "The menu", "A pop-up"];
 const TK_WHY = [
   "Didn't see the button",

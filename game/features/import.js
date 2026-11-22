@@ -1,4 +1,15 @@
-/* ===== import.js: fill in spending from a bank or card statement file. The file is read on this device and never sent anywhere (Eli's rule: ask each time). Only the monthly totals the player says yes to are kept; the rows are dropped when the sheet closes. Uses csvRows from games2.js. ===== */
+/* ============================================================================
+   SLAM the Game: features/import.js
+   PURPOSE     Fill in the spending from a bank or card statement file. The browser reads the file. The
+               file goes nowhere. The game keeps only the monthly totals that the player accepts.
+   INPUT       The game: G.demo. The profile: c.x.imp. The open sheet (W.kind): import. The taps of the
+               player (the actions in OUTPUT).
+   OUTPUT      7 functions. Parts of functions in other files: lootTextImport, moneyTabImport. Actions
+               (ACT): import2, imtog, imcat, imapply, imundo.
+   DEPENDS ON  core/engine.js, screens/ui.js, features/games2.js.
+   RULES       The game asks each time before it reads a file (a rule from the owner). The rows of the
+               file are dropped when the sheet closes.
+   ========================================================================= */
 const IM_CATS = [
   ["Home", "Home"],
   ["Food", "Food"],

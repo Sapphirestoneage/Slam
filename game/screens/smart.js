@@ -1,4 +1,14 @@
-/* ===== smart.js: every answer narrows what comes next. Likely options move to the front and pulse, unlikely ones fade, ones that can't both be true tuck away behind "Show more". Nothing is ever locked: every option is one tap away. ===== */
+/* ============================================================================
+   SLAM the Game: screens/smart.js
+   PURPOSE     The setup questions change with each answer. The probable answers come first, the
+               improbable answers fade, and answers that cannot be true together go behind "Show more".
+   INPUT       The profile: c.x.cal, c.x.incFreq. The taps of the player (the actions in OUTPUT).
+   OUTPUT      15 functions. Parts of functions in other files: finishSetupPay, ledRowFreq. Actions
+               (ACT): smage, set, setn, tog, togb, agedec, wback, wnext, smopen, small, smskip, smdone,
+               incfreq.
+   DEPENDS ON  core/engine.js, screens/ui.js.
+   RULES       No answer is locked. Each answer is one tap away.
+   ========================================================================= */
 const SM_EMP = ["First job", "Established", "A few jobs or gigs"],
   SM_SINGLE = ["Single by choice", "Single, seeking"];
 /* each rule looks at the answers so far and returns {first, dim, hide, only, why} */

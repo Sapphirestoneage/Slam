@@ -1,4 +1,21 @@
-/* ===== ux.js: walk-up-and-use. Five plain tabs, one clear title per screen, Guess / Close / Exact, back that works, undo instead of "are you sure". ===== */
+/* ============================================================================
+   SLAM the Game: screens/ux.js
+   PURPOSE     The interface rules for a new player: five plain tabs, one clear title on each screen,
+               Guess / Close / Exact, a Back button that works, and Undo in the place of "are you sure".
+               Many parts of the functions in ui.js are here.
+   INPUT       The game: G.color, G.demo, G.expert, G.last, G.tips. The open sheet (W.kind): months. The
+               taps of the player (the actions in OUTPUT).
+   OUTPUT      35 functions. Parts of functions in other files: nextStepPayday, homeWelcome,
+               homeQuadTop, safeSheetFree, flowSheetLog, playTabHead, moneyTabHead, meTabHead,
+               planTabHead, setupSheetRead, goUxStart, goUxEnd, sheetUx, closeSheetUx, drawSheetUx,
+               saveFlash, celebrateBuzz, renderUxStart, renderUxEnd. Actions (ACT): bigpic, homemore,
+               memore, tipok, expert, whatdo, months, color, clretry, retx, uxresume, pmusnext, uxpaid,
+               uxundo, and 3 more.
+   DEPENDS ON  core/report.js, core/engine.js, core/engine2.js, screens/ui.js, features/games2.js,
+               features/year.js, screens/planner.js, account/cloud.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/gig.js.
+   ========================================================================= */
 const UX_TABS = [
   [
     "home",

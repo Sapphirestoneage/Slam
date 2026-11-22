@@ -1,4 +1,19 @@
-/* ===== together.js: the Money Chart for more than two. The quiz already compares you with one other person by passing the phone. This adds a room for a whole household: you, your person if they answered, up to four more people who answer the same 10 on this phone, and any other player in this game who has a chart and is tapped in. For each of the five elements it shows one bar per person and a plain line: someone carries it, everyone leans on it, nobody does yet, or you are close. It never ranks people and gives no score. Every added person has a Remove button. State: MCX(c).grp (list of {id}), answers in MCX(c)[id], MCX(c).with (other players tapped in, by name). ===== */
+/* ============================================================================
+   SLAM the Game: features/together.js
+   PURPOSE     The Money Chart for more than two persons: the player, their person, up to four more
+               persons who answer the same 10 statements on this phone, and other players of this game
+               who have a chart. One bar for each person and each element, and one plain line.
+   INPUT       The game: G.chars, G.demo. The open sheet (W.kind): mcq, together. The taps of the player
+               (the actions in OUTPUT).
+   OUTPUT      7 functions. Parts of functions in other files: chartSheetTogether. Actions (ACT):
+               together, tgadd, tgcancel, tgstart, tgdel, tgwith, tgcopy, mcans.
+   DEPENDS ON  core/report.js, screens/ui.js, features/chart.js, features/ask.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: account/addon.js.
+   RULES       No rank and no score. Each added person has a Remove button.
+   STATE       MCX(c).grp (a list of {id}), the answers in MCX(c)[id], MCX(c).with (other players, by
+               name).
+   ========================================================================= */
 const TG_MAX = 4;
 var TGX = { back: false };
 function tgPeople(c) {

@@ -1,8 +1,24 @@
-/* ===== supa.js: accounts when the game runs on its own website (GitHub Pages) instead of inside Claude.
- Inside Claude this file does nothing: Claude gives the page its own window.claude.
- On the website it gives the game the same window.claude.use("db") and use("user") that cloud.js already uses,
- backed by Supabase. Each person signs in with an email and password and gets their own private save.
- The keys below are the public ones. They are meant to be in the page. The table rules in Supabase keep each save private. ===== */
+/* ============================================================================
+   SLAM the Game: account/supa.js
+   PURPOSE     Accounts on the website. Each player signs in with an email address and a password, and
+               gets a private saved game in the Supabase database. This file gives cloud.js the two
+               objects that it uses (window.claude.use: db and user). It also has the tools for a coach
+               and for the admin.
+   INPUT       The game: G.active, G.chars, G.coachEdit, G.coachSeen, G.demo, G.suSeen. The open sheet
+               (W.kind): suacct, sucoach, supw. The taps of the player (the actions in OUTPUT).
+   OUTPUT      15 functions. Parts of functions in other files: saveCoachMark, homeCoachNote. Actions
+               (ACT): sugot, suacct, sushare, suout, supwgo, sucoach, suall, subring. Menu: "My
+               account", "Shared with me".
+   DEPENDS ON  core/report.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: screens/ui.js, account/cloud.js, features/reveal.js. With no typeof test,
+               thus safe only after the page has loaded all files: core/engine.js (newChar),
+               screens/ui.js (ACT, G, KEY, SH, W, closeSheet, and 4 more), screens/planner.js (MENU).
+   RULES       The two keys in this file are public keys. They are meant to be in the page. The rules of
+               the database tables keep each saved game private. If the page already has window.claude
+               (the retired copy inside Claude), this file does nothing.
+   STATE       SUPA (on, sb, uid, email, ready, ids, share, as, coach, t0).
+   ========================================================================= */
 const SUPA_URL = "https://twuxggigsfsdczsyvupk.supabase.co";
 const SUPA_KEY = "sb_publishable_tSWobVdlrb-I5pTiGORWHA_z9JD5K-Z";
 const SUPA = { on: false, sb: null, uid: null, email: "", ready: null, ids: {}, share: true };

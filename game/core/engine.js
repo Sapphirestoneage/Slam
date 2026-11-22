@@ -1,4 +1,17 @@
-/* SLAM the Game: engine. Pure logic, no screen code. Shared by the page and the test harness. */
+/* ============================================================================
+   SLAM the Game: core/engine.js
+   PURPOSE     The engine: the data model of one profile and all the math. derive(c) returns all
+               computed numbers of one profile. This file has no screen code.
+   INPUT       The profile: c.x.careYrs, c.x.col, c.x.done, c.x.dry, c.x.ends, c.x.fixed, c.x.forgive,
+               c.x.home, c.x.kids, c.x.limit, and 5 more. The open sheet (W.kind): node, plant, skill.
+   OUTPUT      123 functions.
+   DEPENDS ON  Nothing.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/eras.js. With no typeof test, thus safe only after the page has
+               loaded all files: features/eras.js (esMax, esRank, esTitle).
+   RULES       A screen does not calculate. A screen shows the numbers from derive() and from the math
+               functions.
+   ========================================================================= */
 const R = 0.07,
   SWR = 0.04,
   ROTH = 7500;

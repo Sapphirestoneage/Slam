@@ -1,4 +1,17 @@
-/* ===== ask2.js: the same one-small-question pattern as ask.js, carried to the next three places people get asked things. (1) A debt's details: rate, monthly payment, card limit, how much it bothers you, one per screen, then a screen that says what changed. (2) Key numbers questions: the question in plain words, what counts, why the game asks, where to look. (3) The match and tax-account questions, with a result screen after. Also rewrites the side missions that come from the What you already know list so each one reads as a plain action. Every money word is explained on the screen where it first shows up. Nothing here changes the math: answers are saved by the same actions as before (dbset, knans, set). ===== */
+/* ============================================================================
+   SLAM the Game: features/ask2.js
+   PURPOSE     The same pattern as ask.js for three more places: the details of one debt, the questions
+               of Key numbers, and the questions about the job match and the tax accounts. This file
+               also writes each side mission from the list "What you already know" as a plain action.
+   INPUT       The profile: c.x.dplan. The open sheet (W.kind): askdone. The taps of the player (the
+               actions in OUTPUT).
+   OUTPUT      9 functions. Parts of functions in other files: dbOneBodyAsk, knAskBodyAsk, knOneSaved,
+               afterSharpAsk, sharpSheetAsk2, msSideAsk. Actions (ACT): knans, metric, sharpdone,
+               akskip, akprev, dbset.
+   DEPENDS ON  core/engine.js, screens/ui.js, core/metrics.js, features/debts.js, features/ask.js.
+   RULES       Nothing here changes the math. The same actions as before save the answers (dbset, knans,
+               set). Each money word has an explanation on the screen where it first shows.
+   ========================================================================= */
 const AK_DB = {
   apr: {
     q: "What yearly rate does this debt charge?",

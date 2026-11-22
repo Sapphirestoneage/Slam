@@ -1,6 +1,17 @@
-/* ===== moneylog.js: two small things about people and records.
- (1) The money log. Everything logged with the + button, by month: what came in, what went out, what went to debt, what moved, where the spending went, and every entry. Read-only. It copies out as plain text for a coach or a spreadsheet.
- (2) Hand someone their game. A coach builds a person's profile, then that person needs it on their own phone. One tap copies that one person as a code; they paste it under Add from a code and it lands as a new person in their game, never replacing anyone. The code holds that person's numbers and nothing else: no other people, no account details. ===== */
+/* ============================================================================
+   SLAM the Game: features/moneylog.js
+   PURPOSE     Two tools. (1) The money log: all logged entries by month, read-only, with a copy as
+               plain text. (2) Give a person their game: one tap copies one person as a code, and that
+               person adds the code in their own game.
+   INPUT       The game: G.active, G.chars, G.demo, G.gone. The profile: c.x.plan. The open sheet
+               (W.kind): handoff, mlog. The taps of the player (the actions in OUTPUT).
+   OUTPUT      11 functions. Parts of functions in other files: profSheetHandoff, moneyTabLogLink.
+               Actions (ACT): mlog, lgmonth, lgall, lgcopy, handoff, hopick, hocopy, hoadd.
+   DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/planner.js.
+   RULES       The money log is read-only. The code contains the numbers of that one person only: no
+               other persons and no account details. The code adds a new person. It never replaces a
+               person.
+   ========================================================================= */
 const LG_KIND = {
   in: "in",
   extra: "in",

@@ -1,5 +1,21 @@
-/* ===== missions.js: The mission board. The same next steps the game already works out, dressed as missions: a briefing (why this, why now), a clock, a payout you can see before you start, and what it unlocks. Three kinds. The story mission is the one step the engine says is next. Side missions are optional and short, picked from what this person has not done yet. Heists are the big ones: a chain of small stages with a payout to match, and stages you already cleared before the game existed still count.
- Nothing here invents a reward. A payout is always a real thing: a number becoming known, a fear practiced, a balance moving. Finished missions are kept in a list, so coming back shows what is done as well as what is next. No streaks, no random prizes. ===== */
+/* ============================================================================
+   SLAM the Game: features/missions.js
+   PURPOSE     The mission board. The same next steps, shown as missions: why now, how long, the reward,
+               and what it opens. Three kinds: the story mission, side missions, and heists (a chain of
+               small stages).
+   INPUT       The game: G.chars, G.demo. The profile: c.x.dplan, c.x.drills, c.x.ms. The open sheet
+               (W.kind): side, story. The taps of the player (the actions in OUTPUT).
+   OUTPUT      11 functions. Parts of functions in other files: planTabMissionsSync, planTabMissions.
+               Actions (ACT): msgo, msheist.
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/ux.js, core/metrics.js, features/debts.js,
+               features/drills.js, features/gig.js, features/know.js, features/fair.js,
+               features/values.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/connect.js, features/lever.js, features/ask2.js, features/fold.js.
+   RULES       A reward is always a real thing: a number that becomes known, a fear that the player
+               practiced, a balance that moved. No streaks. No random prizes. A stage that the player
+               completed before the game existed counts. Completed missions stay in a list.
+   ========================================================================= */
 const MS_MIN = { sharp: 2, month: 10, gwin: 1, cross: 3, l1: 2, daily: 1, flow: 1 };
 function msGet(c) {
   const m = (c.x && c.x.ms) || {};

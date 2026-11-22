@@ -1,4 +1,29 @@
-/* SLAM the Game: screens. Plain words first. One pulsing next step. One ledger that every screen reads from. */
+/* ============================================================================
+   SLAM the Game: screens/ui.js
+   PURPOSE     The main screens and the core of the interface: the Home, Check-in, Money and Me tabs,
+               the sheets, render(), save(), and the click handler that calls ACT[name]. Each main
+               function calls its parts from the feature files by name.
+   INPUT       The game: G.active, G.chars, G.coach, G.coachDiary, G.dash, G.demo, G.fire, G.flags,
+               G.gamer, G.house, and 4 more. The profile: c.x.done, c.x.home, c.x.pins, c.x.shape,
+               c.x.skip, c.x.taxPct. The open sheet (W.kind): backup, catch, credit, cross, daily,
+               detail, find, flow, gadd, goal, grow, gwin, and 17 more. The taps of the player (the
+               actions in OUTPUT).
+   OUTPUT      209 functions. Actions (ACT): tab, close, info, start, edit, addperson, nextsample,
+               switch, find, coach, people, share, backup, wrapped, and 169 more.
+   DEPENDS ON  core/report.js, account/supa.js, core/engine.js, account/gate.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/games.js, features/games2.js, features/year.js, features/chart.js,
+               screens/profiles.js, screens/smart.js, screens/planner.js, account/cloud.js,
+               screens/ux.js, core/metrics.js, features/debts.js, features/import.js,
+               features/compare.js, features/reveal.js, features/moneylog.js, features/drills.js,
+               features/gig.js, features/know.js, features/values.js, features/connect.js,
+               features/back.js, features/ask.js, features/ask2.js, screens/nav.js, screens/tidy.js,
+               account/addon.js, features/fork.js, features/csp.js, features/dep.js, features/eras.js,
+               features/testkit.js. With no typeof test, thus safe only after the page has loaded all
+               files: screens/planner.js (finishSetupPlanEnd), screens/ux.js (emptyState, goalsTab,
+               nextTab, uxTabs), features/back.js (homeBackRow).
+   RULES       Plain words first. One next step that glows. One ledger that all screens read.
+   ========================================================================= */
 const KEY = "slamgame4";
 const $ = s => document.querySelector(s);
 const money = n => (n < 0 ? "-" : "") + "$" + Math.round(Math.abs(n)).toLocaleString();

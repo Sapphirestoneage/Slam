@@ -1,6 +1,18 @@
-/* ===== fair.js: Sharing costs fairly. Any number of people, five ways to split what is shared, shown next to each other so the people involved can choose. No method is marked best: fair is something a household decides, not something a formula proves.
- Equal: everyone pays the same. By income (the equity method): each pays the same share of what they bring in. Labor counts: unpaid work at home is priced and counted as paying in. Same left over: everyone ends the month with the same amount after the shared bills. By use: split by nights at home.
- People come from the profiles in this game, or are added by tap as guests with only the three numbers the math needs. Nothing here moves money or changes anyone's profile. ===== */
+/* ============================================================================
+   SLAM the Game: features/fair.js
+   PURPOSE     Share costs fairly. For two or more persons: five ways to divide the shared costs, side
+               by side. The five ways: Equal, By income, Labor counts (unpaid work at home has a price),
+               Same left over, and By use (nights at home).
+   INPUT       The game: G.chars, G.demo, G.fair. The open sheet (W.kind): fair. The taps of the player
+               (the actions in OUTPUT).
+   OUTPUT      11 functions. Parts of functions in other files: profSheetFair. Actions (ACT): fair,
+               fred, frset, fradd, frdel, frtotal, frrate, frpick, frpayer, frcopy. Menu: "Sharing costs
+               fairly".
+   DEPENDS ON  core/report.js, screens/ui.js, screens/planner.js, features/compare.js.
+   RULES       No method is marked as the best. Nothing here moves money or changes a profile. A person
+               comes from a profile of this game, or is a guest with only the three numbers that the
+               math needs.
+   ========================================================================= */
 const FR_METHODS = [
   ["equal", "Equal", "Everyone pays the same."],
   ["income", "By income", "Everyone pays the same share of what they bring in."],
