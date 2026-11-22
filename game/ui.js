@@ -981,7 +981,13 @@ function rowTag(x, sec) {
   else if (sec === "cashes" && x.hy === "Yes") a.push("High-yield");
   return a.length ? `<div class="tiny muted">${a.join(" · ")}</div>` : "";
 }
+/* ledRow(sec, i, x) makes one row of the money lists. ledRowBase() is the part from this file. */
 function ledRow(sec, i, x) {
+  let h = ledRowBase(sec, i, x);
+  if (typeof ledRowFreq === "function") h = ledRowFreq(h, sec, x); /* smart.js: how often an income comes */
+  return h;
+}
+function ledRowBase(sec, i, x) {
   return `<button class="rowbtn" data-a="rowedit" data-k="${sec}" data-v="${i}"><span>${esc(x.k)}${x.s ? rowTag(x, sec) : `<div class="tiny muted">Guess · tap to make it exact</div>`}</span><span class="row"><b class="${x.s ? "" : "guess"}" data-fid="v:${sec}${i}">${money(x.amt)}</b><span class="caret">›</span></span></button>`;
 }
 const LVN = [

@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,747. Top-level functions: 1068. Replaced functions: 12, in 12 places.
+Date: 2026-11-22. Files: 60. Lines: 46,752. Top-level functions: 1070. Replaced functions: 11, in 11 places.
 
 ## 1. Files in load order
 
@@ -17,13 +17,13 @@ The browser loads the files in this order. A file can use all names from the fil
 | 5 | `engine.js` | 3,841 | 123 | 0 | 0 | SLAM the Game: engine |
 | 6 | `engine2.js` | 378 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
-| 8 | `ui.js` | 6,466 | 214 | 136 | 2 | SLAM the Game: screens |
+| 8 | `ui.js` | 6,472 | 215 | 136 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 621 | 22 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,435 | 38 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 765 | 23 | 13 | 0 | the year |
 | 12 | `chart.js` | 1,291 | 13 | 6 | 0 | the Money Chart |
 | 13 | `profiles.js` | 115 | 6 | 4 | 1 | flip between people |
-| 14 | `smart.js` | 670 | 14 | 5 | 0 | every answer narrows what comes next |
+| 14 | `smart.js` | 669 | 15 | 5 | 0 | every answer narrows what comes next |
 | 15 | `planner.js` | 1,247 | 54 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
 | 16 | `cloud.js` | 433 | 17 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
 | 17 | `ux.js` | 773 | 35 | 8 | 7 | walk-up-and-use |
@@ -85,7 +85,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `fdSheet` | `drills.js` | `ideasz.js` | 1 |
 | `fogPct` | `engine2.js` | `know.js` | 1 |
 | `gamesSheet` | `games2.js` | `year.js` | 1 |
-| `ledRow` | `ui.js` | `smart.js` | 1 |
 | `lootText` | `games2.js` | `import.js` | 1 |
 | `menuSheet` | `planner.js` | `cloud.js` | 1 |
 | `monthsAhead` | `ux.js` | `gig.js` | 1 |

@@ -642,17 +642,16 @@ function finishSetupPay() {
   o.x.incFreq = m;
   o.x.payGuess = !!(W.sm && W.sm.pfg);
 }
-const _ledRow = ledRow;
-ledRow = function (sec, i, x) {
-  const h = _ledRow(sec, i, x),
-    f = sec === "incs" ? incFreqOf(C(), x.k) : null;
+/* Part of ledRow() in ui.js. An income row shows how often it comes. */
+function ledRowFreq(h, sec, x) {
+  const f = sec === "incs" ? incFreqOf(C(), x.k) : null;
   return f
     ? h.replace(
         "<span>" + esc(x.k),
         "<span>" + esc(x.k) + ` <span class="pill">${f === "It varies" ? "Varies" : f}</span>`
       )
     : h;
-};
+}
 ACT.incfreq = t => {
   const c = C();
   c.x = c.x || {};
