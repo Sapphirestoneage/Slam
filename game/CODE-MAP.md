@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,659. Top-level functions: 1029. Replaced functions: 36, in 36 places.
+Date: 2026-11-22. Files: 60. Lines: 46,670. Top-level functions: 1039. Replaced functions: 29, in 29 places.
 
 ## 1. Files in load order
 
@@ -14,10 +14,10 @@ The browser loads the files in this order. A file can use all names from the fil
 | 2 | `skills.js` | 5,156 | 0 | 0 | 0 | data only |
 | 3 | `skillthemes.js` | 2,712 | 0 | 0 | 0 | data only |
 | 4 | `qr.js` | 5 | 0 | 1 | 0 | a small QR code generator from a third party, kept in one line |
-| 5 | `engine.js` | 3,823 | 121 | 0 | 0 | SLAM the Game: engine |
+| 5 | `engine.js` | 3,841 | 123 | 0 | 0 | SLAM the Game: engine |
 | 6 | `engine2.js` | 378 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
-| 8 | `ui.js` | 6,432 | 209 | 136 | 2 | SLAM the Game: screens |
+| 8 | `ui.js` | 6,439 | 210 | 136 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 609 | 21 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,435 | 38 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 765 | 23 | 13 | 0 | the year |
@@ -67,7 +67,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 55 | `roof.js` | 263 | 6 | 1 | 1 | one roof for the best-known ideas in personal finance |
 | 56 | `ideasz.js` | 328 | 6 | 3 | 3 | loads after every ideas file |
 | 57 | `dep.js` | 234 | 11 | 2 | 5 | "What depends on what" |
-| 58 | `eras.js` | 1,057 | 18 | 6 | 6 | real steps for the later eras, and one account line that feeds back into the early ones |
+| 58 | `eras.js` | 1,043 | 25 | 6 | 6 | real steps for the later eras, and one account line that feeds back into the early ones |
 | 59 | `testkit.js` | 307 | 9 | 8 | 2 | Test with a friend |
 | 60 | `built.js` | 766 | 4 | 1 | 1 | What's built |
 
@@ -87,8 +87,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `cspMoneyRows` | `csp.js` | `roof.js` | 1 |
 | `dbOneBody` | `debts.js` | `ask2.js` | 1 |
 | `dbSheet` | `debts.js` | `owed.js` | 1 |
-| `derive` | `engine.js` | `eras.js` | 1 |
-| `eraSteps` | `engine.js` | `eras.js` | 1 |
 | `fdSheet` | `drills.js` | `ideasz.js` | 1 |
 | `fogPct` | `engine2.js` | `know.js` | 1 |
 | `gamesSheet` | `games2.js` | `year.js` | 1 |
@@ -99,13 +97,9 @@ Each row shows one function, the file that defines it, and the later files that 
 | `lootText` | `games2.js` | `import.js` | 1 |
 | `menuSheet` | `planner.js` | `cloud.js` | 1 |
 | `monthsAhead` | `ux.js` | `gig.js` | 1 |
-| `nodeMax` | `engine.js` | `eras.js` | 1 |
-| `nodeRankRaw` | `engine.js` | `eras.js` | 1 |
-| `nodeTitle` | `engine.js` | `eras.js` | 1 |
 | `nvRow` | `nav.js` | `tidy.js` | 1 |
 | `nvText` | `nav.js` | `tidy.js` | 1 |
 | `partySheet` | `games.js` | `people.js` | 1 |
-| `paySheet` | `ui.js` | `eras.js` | 1 |
 | `plReady` | `planner.js` | `fold.js` | 1 |
 | `profStrip` | `profiles.js` | `planner.js` | 1 |
 | `rvText` | `reveal.js` | `addon.js` | 1 |
@@ -113,7 +107,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `sharpSheet` | `ui.js` | `ask2.js` | 1 |
 | `skillSheet` | `ui.js` | `connect.js` | 1 |
 | `tgText` | `together.js` | `addon.js` | 1 |
-| `unfinished` | `engine.js` | `eras.js` | 1 |
 | `wrappedSheet` | `ui.js` | `addon.js` | 1 |
 
 ## 3. Functions with no caller

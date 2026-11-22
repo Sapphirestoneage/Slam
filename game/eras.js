@@ -578,50 +578,6 @@ function esHold(c, d) {
   d.pending = e > d.era;
 }
 (() => {
-  const _d = derive;
-  derive = function (c) {
-    const d = _d(c);
-    try {
-      esHold(c, d);
-    } catch (e) {}
-    return d;
-  };
-  const _es = eraSteps;
-  eraSteps = function (c, d, e) {
-    const base = _es(c, d, e) || [];
-    return base.concat(
-      ES.filter(s => s.era === e && esApplies(c, d, s)).map(s => ({
-        id: s.id,
-        title: (s.star ? "★ " : "") + s.n,
-        done: esRank(c, d, s.id) >= s.r,
-        star: !!s.star,
-      }))
-    );
-  };
-  const _nt = nodeTitle;
-  nodeTitle = function (id) {
-    return ES_BY[id] ? ES_BY[id].n : _nt(id);
-  };
-  const _nm = nodeMax;
-  nodeMax = function (id) {
-    return ES_BY[id] ? ES_BY[id].r : _nm(id);
-  };
-  const _nr = nodeRankRaw;
-  nodeRankRaw = function (c, d, id) {
-    return ES_BY[id] ? esRank(c, d, id) : _nr(c, d, id);
-  };
-  unfinished = function (c, d) {
-    const out = [];
-    let weak = false;
-    for (let e = 1; e <= Math.min(d.era, 9); e++) {
-      const s = eraSteps(c, d, e);
-      if (!s.length) continue;
-      const dn = s.filter(x => x.done).length;
-      if (dn / s.length < 0.85) weak = true;
-      s.filter(x => !x.done).forEach(x => out.push({ era: e, id: x.id, title: x.title }));
-    }
-    return { list: out, weak };
-  };
   const _node = ACT.node;
   ACT.node = t => {
     if (ES_BY[t.dataset.v]) {
@@ -634,6 +590,40 @@ function esHold(c, d) {
     } else _node(t);
   };
 })();
+/* Part of eraSteps() in engine.js. Adds the steps of this file for era e. A key moment has a star in its title. */
+function eraStepsMore(steps, c, d, e) {
+  const base = steps || [];
+  return base.concat(
+    ES.filter(s => s.era === e && esApplies(c, d, s)).map(s => ({
+      id: s.id,
+      title: (s.star ? "★ " : "") + s.n,
+      done: esRank(c, d, s.id) >= s.r,
+      star: !!s.star,
+    }))
+  );
+}
+
+/* Parts of nodeTitle(), nodeMax() and nodeRankRaw() in engine.js. A step of this file has its own title, its own highest rank, and its own rank (esRank). */
+function esHas(id) {
+  return !!ES_BY[id];
+}
+function esTitle(id) {
+  return ES_BY[id].n;
+}
+function esMax(id) {
+  return ES_BY[id].r;
+}
+/* Part of unfinished() in engine.js. With this file, the list of unfinished steps covers eras 1 to 9. */
+function esLastEra() {
+  return 9;
+}
+/* Part of derive() in engine.js. d is the result so far. Holds a later era until the player does its key moment (esHold changes d). */
+function deriveEras(c, d) {
+  try {
+    esHold(c, d);
+  } catch (e) {}
+}
+
 /* ---------- one step ---------- */
 function esSheet() {
   const c = C(),
@@ -936,19 +926,15 @@ function homeAccountLine(h) {
   } catch (e) {}
   return h;
 }
-(() => {
-  if (typeof paySheet === "function") {
-    const _p = paySheet;
-    paySheet = function () {
-      const h = _p();
-      try {
-        return h + acLine(C(), derive(C()));
-      } catch (e) {
-        return h;
-      }
-    };
+/* Part of paySheet() in ui.js. Adds the account line ("which account first") at the bottom of the payday split. */
+function paySheetAccount(h) {
+  try {
+    return h + acLine(C(), derive(C()));
+  } catch (e) {
+    return h;
   }
-})();
+}
+
 /* Part of reviewSheet() in year.js. Adds a note: the yearly steps (Roth IRA, HSA) start again each year. */
 function reviewSheetYear(h) {
   try {

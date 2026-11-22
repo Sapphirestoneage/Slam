@@ -1434,6 +1434,7 @@ function newChar(over) {
 }
 
 function nodeRankRaw(c, d, id) {
+  if (typeof esHas === "function" && esHas(id)) return esRank(c, d, id); /* eras.js: a step of that file */
   if (id[0] === "m") return c.muscles[id.slice(1)] ? 1 : 0;
   const nd = NODES.find(x => x.id === id);
   let v = c.nodes[id] || 0;
@@ -1449,13 +1450,21 @@ function nodeRankRaw(c, d, id) {
   return Math.min(v, nd.r);
 }
 function nodeMax(id) {
+  if (typeof esHas === "function" && esHas(id)) return esMax(id); /* eras.js: a step of that file */
   return id[0] === "m" ? 1 : NODES.find(x => x.id === id).r;
 }
 function nodeTitle(id) {
+  if (typeof esHas === "function" && esHas(id)) return esTitle(id); /* eras.js: a step of that file */
   return id[0] === "m" ? MUSCLES[+id.slice(1)] : NODES.find(x => x.id === id).n;
 }
 
+/* derive(c) returns all computed numbers of one profile. deriveBase(c) is the part from this file. */
 function derive(c) {
+  const d = deriveBase(c);
+  if (typeof deriveEras === "function") deriveEras(c, d); /* eras.js: hold a later era until its key moment is done */
+  return d;
+}
+function deriveBase(c) {
   const d = {};
   d.cash = c.led ? rsum(c.cashes.filter(x => !x.hold)) : c.months * c.spend;
   d.nw = d.cash + c.inv - c.debt;
@@ -1537,7 +1546,14 @@ function derive(c) {
   return d;
 }
 
+/* eraSteps(c, d, e) returns the steps of era e. eraStepsBase() is the part from this file (eras 1 to 5). */
 function eraSteps(c, d, e) {
+  const steps = eraStepsBase(c, d, e);
+  return typeof eraStepsMore === "function"
+    ? eraStepsMore(steps, c, d, e)
+    : steps; /* eras.js: the steps of this file */
+}
+function eraStepsBase(c, d, e) {
   const ids = (ERA_NODES[e] || []).filter(
     id =>
       (id[0] === "m" ||
@@ -1553,7 +1569,9 @@ function eraSteps(c, d, e) {
 function unfinished(c, d) {
   const out = [];
   let weak = false;
-  for (let e = 1; e <= Math.min(d.era, 5); e++) {
+  /* This file has steps for eras 1 to 5. eras.js has steps for eras 6 to 9. */
+  const last = typeof esLastEra === "function" ? esLastEra() : 5;
+  for (let e = 1; e <= Math.min(d.era, last); e++) {
     const s = eraSteps(c, d, e);
     if (!s.length) continue;
     const dn = s.filter(x => x.done).length;

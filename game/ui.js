@@ -2081,7 +2081,14 @@ function payTargets(c, o) {
   if (iv > 0 && c.invs.length) out.push({ t: "saved", amt: iv, row: "inv:0", k: c.invs[0].k });
   return out;
 }
+/* THE PAYDAY SHEET.
+   paySheet() makes the full sheet. paySheetBase() is the part from this file. */
 function paySheet() {
+  let h = paySheetBase();
+  if (typeof paySheetAccount === "function") h = paySheetAccount(h); /* eras.js: the account recommendation */
+  return h;
+}
+function paySheetBase() {
   const w = W,
     o = w.o,
     c = C(),
