@@ -667,25 +667,21 @@ if (typeof MENU !== "undefined") {
   MENU.push(["Conscious Spending Plan", "csp", "act", "Your month in four buckets, next to Ramit Sethi's guide"]);
   MENU.push(["Money audit score", "audit", "act", "One score out of 10, built only from your real numbers"]);
 }
-/* My Money: two slim doors, right under the key numbers */
-(() => {
-  if (typeof moneyTab !== "function") return;
-  const _m = moneyTab;
-  moneyTab = function () {
-    const h = _m();
-    try {
-      const c = C();
-      if (!c) return h;
-      const rows = cspMoneyRows(c, D),
-        card = typeof knCard === "function" ? knCard(c, D) : "";
-      if (card && h.indexOf(card) >= 0) return h.replace(card, () => card + rows);
-      const th = typeof tabHead === "function" ? tabHead() : "";
-      return th && h.indexOf(th) >= 0 ? h.replace(th, () => th + rows) : h;
-    } catch (e) {
-      return h;
-    }
-  };
-})();
+/* Part of moneyTab() in ui.js. Adds the rows for the spending plan and the money audit, below the card "Key numbers". */
+function moneyTabPlanRows(h) {
+  try {
+    const c = C();
+    if (!c) return h;
+    const rows = cspMoneyRows(c, D),
+      card = typeof knCard === "function" ? knCard(c, D) : "";
+    if (card && h.indexOf(card) >= 0) return h.replace(card, () => card + rows);
+    const th = typeof tabHead === "function" ? tabHead() : "";
+    return th && h.indexOf(th) >= 0 ? h.replace(th, () => th + rows) : h;
+  } catch (e) {
+    return h;
+  }
+}
+
 /* coach view: each person's score, only when it is a real one */
 (() => {
   if (typeof coachSheet !== "function") return;

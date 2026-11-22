@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,526. Top-level functions: 933. Replaced functions: 60, in 101 places.
+Date: 2026-11-22. Files: 60. Lines: 46,527. Top-level functions: 941. Replaced functions: 59, in 94 places.
 
 ## 1. Files in load order
 
@@ -17,7 +17,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 5 | `engine.js` | 3,823 | 121 | 0 | 0 | SLAM the Game: engine |
 | 6 | `engine2.js` | 378 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
-| 8 | `ui.js` | 6,276 | 190 | 138 | 2 | SLAM the Game: screens |
+| 8 | `ui.js` | 6,291 | 191 | 138 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 600 | 20 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,436 | 37 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 758 | 21 | 13 | 0 | the year |
@@ -26,16 +26,16 @@ The browser loads the files in this order. A file can use all names from the fil
 | 14 | `smart.js` | 671 | 13 | 5 | 0 | every answer narrows what comes next |
 | 15 | `planner.js` | 1,215 | 45 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
 | 16 | `cloud.js` | 441 | 15 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
-| 17 | `ux.js` | 778 | 18 | 8 | 7 | walk-up-and-use |
-| 18 | `metrics.js` | 1,816 | 23 | 10 | 0 | Key numbers |
-| 19 | `debts.js` | 386 | 13 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
-| 20 | `import.js` | 271 | 5 | 9 | 0 | fill in spending from a bank or card statement file |
+| 17 | `ux.js` | 778 | 19 | 8 | 7 | walk-up-and-use |
+| 18 | `metrics.js` | 1,813 | 24 | 10 | 0 | Key numbers |
+| 19 | `debts.js` | 383 | 14 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
+| 20 | `import.js` | 268 | 6 | 9 | 0 | fill in spending from a bank or card statement file |
 | 21 | `compare.js` | 186 | 10 | 5 | 0 | Side by side |
 | 22 | `quick.js` | 256 | 11 | 2 | 0 | Quick math |
 | 23 | `reveal.js` | 232 | 6 | 2 | 2 | Meet your character |
-| 24 | `moneylog.js` | 240 | 9 | 5 | 3 | two small things about people and records |
+| 24 | `moneylog.js` | 240 | 10 | 5 | 3 | two small things about people and records |
 | 25 | `drills.js` | 445 | 11 | 8 | 0 | four things for the hard days |
-| 26 | `gig.js` | 380 | 21 | 9 | 0 | Working for yourself |
+| 26 | `gig.js` | 379 | 22 | 9 | 0 | Working for yourself |
 | 27 | `know.js` | 193 | 9 | 6 | 0 | What you already know |
 | 28 | `fair.js` | 257 | 10 | 6 | 1 | Sharing costs fairly |
 | 29 | `values.js` | 202 | 5 | 8 | 1 | Is my money going where I want? Three short steps, all taps |
@@ -58,7 +58,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 46 | `tidy.js` | 162 | 6 | 3 | 0 | the fixes from the usability audit, applied to every screen at once instead of one screen at a time |
 | 47 | `addon.js` | 608 | 26 | 6 | 15 | extras, part two |
 | 48 | `fork.js` | 576 | 14 | 13 | 5 | Fork Theory |
-| 49 | `csp.js` | 716 | 22 | 12 | 1 | two ways to see a whole month of money at a glance |
+| 49 | `csp.js` | 712 | 23 | 12 | 1 | two ways to see a whole month of money at a glance |
 | 50 | `ideas.js` | 1,094 | 20 | 5 | 1 | the workshop behind "Famous money ideas" |
 | 51 | `ideas2.js` | 771 | 2 | 2 | 0 | Part 1, ideas 9 to 16 |
 | 52 | `ideas3.js` | 1,095 | 1 | 1 | 0 | Part 2 |
@@ -79,7 +79,6 @@ Each row shows one function, the file that defines it, and the later files that 
 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
-| `moneyTab` | `ui.js` | `ux.js`, `metrics.js`, `debts.js`, `import.js`, `moneylog.js`, `gig.js`, `csp.js` | 7 |
 | `closeSheet` | `ui.js` | `cloud.js`, `ux.js`, `nav.js`, `addon.js`, `testkit.js` | 5 |
 | `planTab` | `planner.js` | `ux.js`, `missions.js`, `fold.js`, `fork.js`, `ideasz.js` | 5 |
 | `drawSheet` | `ui.js` | `ux.js`, `nav.js`, `tidy.js`, `addon.js` | 4 |

@@ -311,20 +311,6 @@ Object.assign(ACT, {
     W = { kind: "gxcatch", amt: m.amt, src: m.src };
     sheet(gxCatchSheet);
   };
-  /* a slim card on My Money, only for people with untaxed income */
-  const _m = moneyTab;
-  moneyTab = function () {
-    const h = _m(),
-      c = C();
-    if (!gxOn(c)) return h;
-    const S = gxState(c),
-      u = gxUnit(c),
-      row = `<button class="rowbtn" data-a="gig"><span style="min-width:0"><b>Tax money</b><div class="tiny muted">${money(Math.round(S.T.set))} set aside · next date around ${S.nx.txt}${u ? " · 1 " + esc(u.n) + " = " + money(u.v) : ""}</div></span>${S.behind > 0 ? `<span class="pill warn" style="flex:none">${money(S.behind)} to catch up</span>` : `<span class="caret">›</span>`}</button>`,
-      th = typeof tabHead === "function" ? tabHead() : "";
-    return th && h.indexOf(th) >= 0
-      ? h.replace(th, () => th + row)
-      : h.replace('<div class="stack">', () => '<div class="stack">' + row);
-  };
   /* the quarterly date shows up in the next few months */
   if (typeof monthsAhead === "function") {
     const _ma = monthsAhead;
@@ -353,6 +339,19 @@ Object.assign(ACT, {
     };
   }
 })();
+/* Part of moneyTab() in ui.js. Adds a slim row "Tax money". Only a player with income that has no tax taken out sees it. */
+function moneyTabTaxRow(h) {
+  const c = C();
+  if (!gxOn(c)) return h;
+  const S = gxState(c),
+    u = gxUnit(c),
+    row = `<button class="rowbtn" data-a="gig"><span style="min-width:0"><b>Tax money</b><div class="tiny muted">${money(Math.round(S.T.set))} set aside · next date around ${S.nx.txt}${u ? " · 1 " + esc(u.n) + " = " + money(u.v) : ""}</div></span>${S.behind > 0 ? `<span class="pill warn" style="flex:none">${money(S.behind)} to catch up</span>` : `<span class="caret">›</span>`}</button>`,
+    th = typeof tabHead === "function" ? tabHead() : "";
+  return th && h.indexOf(th) >= 0
+    ? h.replace(th, () => th + row)
+    : h.replace('<div class="stack">', () => '<div class="stack">' + row);
+}
+
 Object.assign(GLOSS, {
   setaside: [
     "Why set aside so much",

@@ -160,12 +160,12 @@ const _play0 = playTab;
 playTab = function () {
   return withHead(_play0()).replace(/\s*Streak: <b>0<\/b> days/, "");
 };
-const _money0 = moneyTab;
-moneyTab = function () {
-  return withHead(_money0())
+/* Part of moneyTab() in ui.js. Puts the tab title at the top. Removes the old title and the old first line. */
+function moneyTabHead(h) {
+  return withHead(h)
     .replace("<h1>Money</h1>", "")
     .replace(/<div class="small muted">Every number the game uses lives here[^<]*<\/div>/, "");
-};
+}
 const _me0 = meTab;
 meTab = function () {
   const c = C(),

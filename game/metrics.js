@@ -1776,19 +1776,16 @@ Object.assign(ACT, {
     }
   },
 });
-/* My Money opens with the four that matter most right now */
-(() => {
-  const _m = moneyTab;
-  moneyTab = function () {
-    const h = _m(),
-      card = knCard(C(), D);
-    if (!card) return h;
-    const th = typeof tabHead === "function" ? tabHead() : "";
-    return th && h.indexOf(th) >= 0
-      ? h.replace(th, () => th + card)
-      : h.replace('<div class="stack">', () => '<div class="stack">' + card);
-  };
-})();
+/* Part of moneyTab() in ui.js. Adds the card "Key numbers" below the tab title. */
+function moneyTabKeyCard(h) {
+  const card = knCard(C(), D);
+  if (!card) return h;
+  const th = typeof tabHead === "function" ? tabHead() : "";
+  return th && h.indexOf(th) >= 0
+    ? h.replace(th, () => th + card)
+    : h.replace('<div class="stack">', () => '<div class="stack">' + card);
+}
+
 Object.assign(GLOSS, {
   keynums: [
     "Key numbers",

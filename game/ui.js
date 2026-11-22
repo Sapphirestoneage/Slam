@@ -592,10 +592,11 @@ function home() {
 }
 /* The top of Home: the welcome screen, or the quiet screen, or the full screen with its first lines. */
 function homeTop() {
-  const wel =
-    typeof homeWelcome === "function" ? homeWelcome() : null; /* ux.js: a new player sees the welcome screen */
+  /* ux.js: a new player sees the welcome screen */
+  const wel = typeof homeWelcome === "function" ? homeWelcome() : null;
   if (wel !== null) return wel;
-  const quiet = typeof homeQuiet === "function" ? homeQuiet() : null; /* year.js: a rest window makes Home quiet */
+  /* year.js: a rest window makes Home quiet */
+  const quiet = typeof homeQuiet === "function" ? homeQuiet() : null;
   let h = quiet !== null ? quiet : homeBase();
   if (typeof homePlanLine === "function") h = homePlanLine(h); /* planner.js: the line "Today's plan" */
   if (typeof homeQuadTop === "function") h = homeQuadTop(h); /* ux.js: the tab title and the four tiles */
@@ -1033,7 +1034,21 @@ function detailSheet() {
     `<div class="tiny muted">One tap and it moves on.</div>`
   );
 }
+/* MONEY TAB.
+   moneyTab() makes the full tab. It calls each part by name, in the load order of the files.
+   moneyTabBase() is the part from this file. */
 function moneyTab() {
+  let h = moneyTabBase();
+  if (typeof moneyTabHead === "function") h = moneyTabHead(h); /* ux.js: the tab title replaces the old title */
+  if (typeof moneyTabKeyCard === "function") h = moneyTabKeyCard(h); /* metrics.js: the card "Key numbers" */
+  if (typeof moneyTabDebtPlan === "function") h = moneyTabDebtPlan(h); /* debts.js: the button for the debt plan */
+  if (typeof moneyTabImport === "function") h = moneyTabImport(h); /* import.js: the button to read a statement file */
+  if (typeof moneyTabLogLink === "function") h = moneyTabLogLink(h); /* moneylog.js: the button for the money log */
+  if (typeof moneyTabTaxRow === "function") h = moneyTabTaxRow(h); /* gig.js: the row "Tax money" */
+  if (typeof moneyTabPlanRows === "function") h = moneyTabPlanRows(h); /* csp.js: the spending plan, the audit */
+  return h;
+}
+function moneyTabBase() {
   const c = C(),
     d = D,
     cash = rsum(c.cashes),

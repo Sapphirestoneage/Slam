@@ -352,22 +352,19 @@ Object.assign(ACT, {
     );
   },
 });
-/* My Money: the plan sits next to logging a payment */
-(() => {
-  const _m = moneyTab;
-  moneyTab = function () {
-    const h = _m(),
-      c = C(),
-      btn = '<button class="ghost wide" data-a="flow" data-v="pay">Log a debt payment</button>';
-    if (!dbLive(c).length || h.indexOf(btn) < 0) return h;
-    const P = c.x && c.x.dplan;
-    return h.replace(
-      btn,
-      () =>
-        `<div class="row" style="gap:8px"><button class="${P ? "ghost" : "primary"} slim" style="flex:1" data-a="debtplan">${P ? "Debt plan ✓" : "Make a debt plan"}</button><button class="ghost slim" style="flex:1" data-a="flow" data-v="pay">Log a payment</button></div>`
-    );
-  };
-})();
+/* Part of moneyTab() in ui.js. When there is a debt, the button "Log a debt payment" becomes two buttons: the debt plan, and the payment. */
+function moneyTabDebtPlan(h) {
+  const c = C(),
+    btn = '<button class="ghost wide" data-a="flow" data-v="pay">Log a debt payment</button>';
+  if (!dbLive(c).length || h.indexOf(btn) < 0) return h;
+  const P = c.x && c.x.dplan;
+  return h.replace(
+    btn,
+    () =>
+      `<div class="row" style="gap:8px"><button class="${P ? "ghost" : "primary"} slim" style="flex:1" data-a="debtplan">${P ? "Debt plan ✓" : "Make a debt plan"}</button><button class="ghost slim" style="flex:1" data-a="flow" data-v="pay">Log a payment</button></div>`
+  );
+}
+
 Object.assign(GLOSS, {
   avalanche: [
     "Highest rate first",

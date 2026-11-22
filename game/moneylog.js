@@ -216,14 +216,6 @@ Object.assign(ACT, {
   },
 });
 (() => {
-  const _m = moneyTab;
-  moneyTab = function () {
-    const h = _m(),
-      a = "<details><summary>Cash flow history (";
-    return h.indexOf(a) < 0
-      ? h
-      : h.replace(a, () => `<button class="ghost wide slim" data-a="mlog">Open the money log</button>` + a);
-  };
   const _p = profSheet;
   profSheet = function () {
     const h = _p(),
@@ -236,4 +228,12 @@ Object.assign(ACT, {
         );
   };
 })();
+/* Part of moneyTab() in ui.js. Adds the button that opens the money log. */
+function moneyTabLogLink(h) {
+  const a = "<details><summary>Cash flow history (";
+  return h.indexOf(a) < 0
+    ? h
+    : h.replace(a, () => `<button class="ghost wide slim" data-a="mlog">Open the money log</button>` + a);
+}
+
 if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();

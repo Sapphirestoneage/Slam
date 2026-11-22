@@ -254,17 +254,14 @@ Object.assign(ACT, {
     closeSheet();
   },
 });
-/* My Money: one button above the spending list */
-(() => {
-  const _m = moneyTab;
-  moneyTab = function () {
-    const h = _m(),
-      a = '<div class="card"><div class="row between"><h3>Money going out each month</h3>';
-    if (G.demo || h.indexOf(a) < 0) return h;
-    return h.replace(
-      a,
-      () => `<button class="ghost wide slim" data-a="import2">Fill in your spending from a statement</button>` + a
-    );
-  };
-})();
+/* Part of moneyTab() in ui.js. Adds the button that fills in the spending from a statement file. */
+function moneyTabImport(h) {
+  const a = '<div class="card"><div class="row between"><h3>Money going out each month</h3>';
+  if (G.demo || h.indexOf(a) < 0) return h;
+  return h.replace(
+    a,
+    () => `<button class="ghost wide slim" data-a="import2">Fill in your spending from a statement</button>` + a
+  );
+}
+
 if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();
