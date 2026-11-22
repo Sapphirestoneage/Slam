@@ -21,14 +21,14 @@
              exports a function. The function returns the add-on start-up code.
              Tests that need add-ons check "typeof PKSET" and skip when absent.
    ========================================================================= */
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
-const GAME_DIR = process.env.GD || path.join(__dirname, '..') + path.sep;
+const fs = require("fs");
+const path = require("path");
+const vm = require("vm");
+const GAME_DIR = process.env.GD || path.join(__dirname, "..") + path.sep;
 
 // A minimal browser stand-in. Each selector gets one element with innerHTML.
 const els = {};
-const makeEl = () => ({ innerHTML: '', querySelector: () => null });
+const makeEl = () => ({ innerHTML: "", querySelector: () => null });
 global.els = els;
 global.document = {
   querySelector: s => (els[s] = els[s] || makeEl()),
@@ -43,15 +43,15 @@ global.require = require; // A private test can read files.
 
 // The script list comes from index.html, so the tests always use the real load order.
 const order = fs
-  .readFileSync(GAME_DIR + 'index.html', 'utf8')
+  .readFileSync(GAME_DIR + "index.html", "utf8")
   .match(/<script src="([a-z0-9\/]+\.js)(\?v=[0-9a-f]*)?"/g)
   .map(s => s.match(/"([^"?]+)/)[1]);
 
 // Run one text as a classic script. Its top-level names stay in the global scope for the next script.
 const run = (code, name) => vm.runInThisContext(code, { filename: name });
 
-for (const f of order) run(fs.readFileSync(GAME_DIR + f, 'utf8'), GAME_DIR + f);
-if (process.env.SLAM_PACKS_BOOT) run(require(process.env.SLAM_PACKS_BOOT)(fs), 'add-on start-up code');
+for (const f of order) run(fs.readFileSync(GAME_DIR + f, "utf8"), GAME_DIR + f);
+if (process.env.SLAM_PACKS_BOOT) run(require(process.env.SLAM_PACKS_BOOT)(fs), "add-on start-up code");
 
 run(
   `
@@ -63,7 +63,7 @@ const junk=h=>(h.replace(/data-v="[^"]*"/g,'').match(/.{40}(undefined|NaN|\\bnul
 BIG=true;HOME_MORE=true;ME_MORE=true;UX_NOSAMPLE=false;
 const crawl=()=>0;
 `,
-  'test helpers'
+  "test helpers"
 );
-for (const f of process.argv.slice(2)) run(fs.readFileSync(f, 'utf8'), f);
-run(`console.log(oks+' ok, '+fails+' failed');`, 'totals');
+for (const f of process.argv.slice(2)) run(fs.readFileSync(f, "utf8"), f);
+run(`console.log(oks+' ok, '+fails+' failed');`, "totals");
