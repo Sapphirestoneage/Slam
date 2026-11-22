@@ -1,91 +1,773 @@
 /* ===== ux.js: walk-up-and-use. Five plain tabs, one clear title per screen, Guess / Close / Exact, back that works, undo instead of "are you sure". ===== */
-const UX_TABS=[["home","Home","Your money at a glance and the one thing to do next",'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'],["plan","Next Steps","Your to-do list in order: today, this week, this month, this year",'<path d="M4 6h3M4 12h3M4 18h3M10 6h10M10 12h10M10 18h10"/>'],["money","My Money","Everything you have and everything you owe, in one place",'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/>'],["goals","My Goals","Your bucket list and how long until each one",'<path d="M5 21V4M5 4h12l-2 4 2 4H5"/>'],["me","Me","Your profile, yearly review, glossary and look",'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>']];
-const uxTabOf=t=>t==="play"?"home":t==="map"?"plan":t,uxT=t=>UX_TABS.find(x=>x[0]===uxTabOf(t))||UX_TABS[0];
-let BIG=false,HOME_MORE=false,ME_MORE=false,UX_HINT="",UX_RET=null,UX_UNDO=null,UX_SCR={};
-function uxTabs(dot){const cur=uxTabOf(tab);return UX_TABS.map(x=>`<button class="${cur===x[0]?"on":""}" data-a="tab" data-v="${x[0]}"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${x[3]}</svg><span>${typeof VT==="function"&&x[0]==="map"?x[1]:x[1]}</span>${x[0]==="home"&&dot?`<span class="dot"></span>`:""}${x[0]==="plan"&&uxOpen()?`<span class="dot plbadge">${uxOpen()}</span>`:""}</button>`).join("")+`<button class="logfab" data-a="flow" data-v="" aria-label="Log money">+ Log</button>`}
-function uxOpen(){try{const c=C();return G.demo?0:plAutoToday(c).length+plTasksOn(c,todayISO()).filter(plOpen).length}catch(e){return 0}}
-const COACH={plan:"Soonest first. Do the top one and the list reorders itself.",home:"The glowing card is always the one thing to do next.",map:"Soonest first. Do the top one and the list reorders itself.",money:"Tap any line to change it. Faded numbers are guesses.",goals:"Every goal gets a date. Tap one to see what moves it.",me:"Your look, your chart, your year and your profiles live here."};
-function tabHead(){const x=uxT(tab),k=x[0],tips=G.tips||{};return `<div class="tabhead"><div class="row between"><b class="tabtitle">${tab==="play"?`<button class="crumb" data-a="tab" data-v="home">Home</button> › Check in`:tab==="map"?`<button class="crumb" data-a="tab" data-v="plan">Next Steps</button> › The big picture`:x[1]}</b><button class="ghost slim whatdo" data-a="whatdo" aria-label="What do I do here?" title="What do I do here?">?</button></div><div class="tabdesc">${tab==="play"?"Payday and your one-minute check":tab==="map"?"The map, the eras and the skill trees. Optional.":x[2]}</div>${UX_HINT?`<div class="tile small hint">${esc(UX_HINT)}</div>`:""}</div>`}
-const uxLess=(h,more,n,act)=>more?h:h.replace('<div class="stack">','<div class="stack less'+n+'">').replace(/<\/div>\s*$/,`<button class="ghost wide morebtn" data-a="${act}">Show more</button></div>`);
-const withHead=h=>{const th=tabHead();return h.replace('<div class="stack">',()=>'<div class="stack">'+th)};
+const UX_TABS = [
+  [
+    "home",
+    "Home",
+    "Your money at a glance and the one thing to do next",
+    '<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  ],
+  [
+    "plan",
+    "Next Steps",
+    "Your to-do list in order: today, this week, this month, this year",
+    '<path d="M4 6h3M4 12h3M4 18h3M10 6h10M10 12h10M10 18h10"/>',
+  ],
+  [
+    "money",
+    "My Money",
+    "Everything you have and everything you owe, in one place",
+    '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/>',
+  ],
+  ["goals", "My Goals", "Your bucket list and how long until each one", '<path d="M5 21V4M5 4h12l-2 4 2 4H5"/>'],
+  [
+    "me",
+    "Me",
+    "Your profile, yearly review, glossary and look",
+    '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+  ],
+];
+const uxTabOf = t => (t === "play" ? "home" : t === "map" ? "plan" : t),
+  uxT = t => UX_TABS.find(x => x[0] === uxTabOf(t)) || UX_TABS[0];
+let BIG = false,
+  HOME_MORE = false,
+  ME_MORE = false,
+  UX_HINT = "",
+  UX_RET = null,
+  UX_UNDO = null,
+  UX_SCR = {};
+function uxTabs(dot) {
+  const cur = uxTabOf(tab);
+  return (
+    UX_TABS.map(
+      x =>
+        `<button class="${cur === x[0] ? "on" : ""}" data-a="tab" data-v="${x[0]}"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${x[3]}</svg><span>${typeof VT === "function" && x[0] === "map" ? x[1] : x[1]}</span>${x[0] === "home" && dot ? `<span class="dot"></span>` : ""}${x[0] === "plan" && uxOpen() ? `<span class="dot plbadge">${uxOpen()}</span>` : ""}</button>`
+    ).join("") + `<button class="logfab" data-a="flow" data-v="" aria-label="Log money">+ Log</button>`
+  );
+}
+function uxOpen() {
+  try {
+    const c = C();
+    return G.demo ? 0 : plAutoToday(c).length + plTasksOn(c, todayISO()).filter(plOpen).length;
+  } catch (e) {
+    return 0;
+  }
+}
+const COACH = {
+  plan: "Soonest first. Do the top one and the list reorders itself.",
+  home: "The glowing card is always the one thing to do next.",
+  map: "Soonest first. Do the top one and the list reorders itself.",
+  money: "Tap any line to change it. Faded numbers are guesses.",
+  goals: "Every goal gets a date. Tap one to see what moves it.",
+  me: "Your look, your chart, your year and your profiles live here.",
+};
+function tabHead() {
+  const x = uxT(tab),
+    k = x[0],
+    tips = G.tips || {};
+  return `<div class="tabhead"><div class="row between"><b class="tabtitle">${tab === "play" ? `<button class="crumb" data-a="tab" data-v="home">Home</button> › Check in` : tab === "map" ? `<button class="crumb" data-a="tab" data-v="plan">Next Steps</button> › The big picture` : x[1]}</b><button class="ghost slim whatdo" data-a="whatdo" aria-label="What do I do here?" title="What do I do here?">?</button></div><div class="tabdesc">${tab === "play" ? "Payday and your one-minute check" : tab === "map" ? "The map, the eras and the skill trees. Optional." : x[2]}</div>${UX_HINT ? `<div class="tile small hint">${esc(UX_HINT)}</div>` : ""}</div>`;
+}
+const uxLess = (h, more, n, act) =>
+  more
+    ? h
+    : h
+        .replace('<div class="stack">', '<div class="stack less' + n + '">')
+        .replace(/<\/div>\s*$/, `<button class="ghost wide morebtn" data-a="${act}">Show more</button></div>`);
+const withHead = h => {
+  const th = tabHead();
+  return h.replace('<div class="stack">', () => '<div class="stack">' + th);
+};
 /* Home: the glance and the one thing. Payday comes first when it's payday. */
-const _nextStep0=nextStep;nextStep=function(c,d){if(!G.demo&&c.placed&&c.payKnown&&todayISO()>=c.payNext&&!(c.gentle&&!c.gwin))return {t:"It's payday",s:"Split it in a few taps.",a:"payday",l:"Split my paycheck"};return _nextStep0(c,d)};
-var UX_NOSAMPLE=true;
-function homeQuad(c,d){const ns=nextStep(c,d),f=freeToSpend(c,d),open=uxOpen(),fp=typeof fogPct==="function"?fogPct(c,d):0,tight=f.free<=0||f.short>0;
- return `<div class="quad"><div class="q q1"><span class="qn">1</span><div class="eyebrow">Do this</div><b class="qt">${esc(ns.t)}</b><button class="primary go" data-a="${ns.a}" data-v="${ns.v==null?"":ns.v}">${esc(ns.l||"Start")}</button></div>
- <button class="q q2" data-a="safe"><span class="qn">2</span><span class="eyebrow">Free to spend</span><b class="qt" data-fid="v:freewk">${tight?"$0":money(f.week)}</b><span class="tiny muted">${tight?"tight right now":"a week · "+(f.real?"Close":"Guess")}</span></button>
- <button class="q q3" data-a="tab" data-v="plan"><span class="qn">3</span><span class="eyebrow">Next steps</span><b class="qt">${open?open+" to do":"All clear"}</b><span class="tiny muted">today</span></button>
- <button class="q q4" data-a="fog"><span class="qn">4</span><span class="eyebrow">Your picture</span><b class="qt">${fp}%</b><span class="tiny muted">clear</span></button></div>`}
-function welcome(){const st=typeof CLOUD!=="undefined"?CLOUD.st:"off",err=typeof CLOUD!=="undefined"?CLOUD.err:"";
- return `<div class="stack welcomebox"><h1>SLAM the Game</h1><div class="small muted">Your money, one small step at a time.</div><div class="card stack" style="gap:10px">${st==="connecting"?`<div class="small"><b>Looking for your saved game…</b></div><div class="tiny muted">If you've played on another device, it will show up here in a moment.</div><button class="ghost wide" data-a="start">Start a new game instead</button>`:`<div class="small">${st==="on"?"No saved game on your account yet.":"Couldn't check your account"+(err?" ("+esc(err)+")":"")+". A new game will save on this device."}</div><button class="primary go wide" data-a="start">Start my game</button>${st==="on"?"":`<button class="ghost wide slim" data-a="clretry">Check my account again</button>`}`}<div class="tiny muted">About 15 taps. No numbers, no typing. Free, and not personal financial advice.</div></div></div>`}
-const _home0=home;home=function(){if(G.demo&&UX_NOSAMPLE)return welcome();const h=_home0();if(h.indexOf('class="stack"')<0||/Nothing here needs you/.test(h))return h;const top=tabHead()+homeQuad(C(),D);return h.replace('<div class="stack">',()=>'<div class="stack hq'+(HOME_MORE?'':' less2')+'">'+top).replace(/<\/div>\s*$/,()=>(HOME_MORE?'':'<button class="ghost wide morebtn" data-a="homemore">Show more</button>')+'</div>')};
-function freeLine(c,d){if(G.demo)return "";const f=freeToSpend(c,d),tight=f.free<=0||f.short>0;return `<button class="rowbtn keep freeline" data-a="safe"><span><span class="tiny muted">Free to spend</span><div><b data-fid="v:freewk">${tight?"Nothing free right now":money(f.week)+" a week"}</b> <span class="pill ${tight?"warn":""}">${tight?"Tight":f.real?"Close":"Guess"}</span></div><div class="tiny muted">${tight?"Tap to see what a spend would move.":money(f.free)+" a month after bills and goals. Tap to check a purchase."}</div></span><span>›</span></button>`}
-const _safe0=safeSheet;safeSheet=function(){const c=C(),f=freeToSpend(c,D),h=_safe0();const tile=`<div class="tile small">Free to spend: <b>${f.free>0?money(f.week)+" a week":"nothing right now"}</b>${f.free>0?" ("+money(f.free)+" a month)":""} <span class="pill">${f.real?"Close":"Guess"}</span></div>`;return h.replace(/<h2[^>]*>[\s\S]*?<\/h2>/,m=>m+tile)};
+const _nextStep0 = nextStep;
+nextStep = function (c, d) {
+  if (!G.demo && c.placed && c.payKnown && todayISO() >= c.payNext && !(c.gentle && !c.gwin))
+    return { t: "It's payday", s: "Split it in a few taps.", a: "payday", l: "Split my paycheck" };
+  return _nextStep0(c, d);
+};
+var UX_NOSAMPLE = true;
+function homeQuad(c, d) {
+  const ns = nextStep(c, d),
+    f = freeToSpend(c, d),
+    open = uxOpen(),
+    fp = typeof fogPct === "function" ? fogPct(c, d) : 0,
+    tight = f.free <= 0 || f.short > 0;
+  return `<div class="quad"><div class="q q1"><span class="qn">1</span><div class="eyebrow">Do this</div><b class="qt">${esc(ns.t)}</b><button class="primary go" data-a="${ns.a}" data-v="${ns.v == null ? "" : ns.v}">${esc(ns.l || "Start")}</button></div>
+ <button class="q q2" data-a="safe"><span class="qn">2</span><span class="eyebrow">Free to spend</span><b class="qt" data-fid="v:freewk">${tight ? "$0" : money(f.week)}</b><span class="tiny muted">${tight ? "tight right now" : "a week · " + (f.real ? "Close" : "Guess")}</span></button>
+ <button class="q q3" data-a="tab" data-v="plan"><span class="qn">3</span><span class="eyebrow">Next steps</span><b class="qt">${open ? open + " to do" : "All clear"}</b><span class="tiny muted">today</span></button>
+ <button class="q q4" data-a="fog"><span class="qn">4</span><span class="eyebrow">Your picture</span><b class="qt">${fp}%</b><span class="tiny muted">clear</span></button></div>`;
+}
+function welcome() {
+  const st = typeof CLOUD !== "undefined" ? CLOUD.st : "off",
+    err = typeof CLOUD !== "undefined" ? CLOUD.err : "";
+  return `<div class="stack welcomebox"><h1>SLAM the Game</h1><div class="small muted">Your money, one small step at a time.</div><div class="card stack" style="gap:10px">${st === "connecting" ? `<div class="small"><b>Looking for your saved game…</b></div><div class="tiny muted">If you've played on another device, it will show up here in a moment.</div><button class="ghost wide" data-a="start">Start a new game instead</button>` : `<div class="small">${st === "on" ? "No saved game on your account yet." : "Couldn't check your account" + (err ? " (" + esc(err) + ")" : "") + ". A new game will save on this device."}</div><button class="primary go wide" data-a="start">Start my game</button>${st === "on" ? "" : `<button class="ghost wide slim" data-a="clretry">Check my account again</button>`}`}<div class="tiny muted">About 15 taps. No numbers, no typing. Free, and not personal financial advice.</div></div></div>`;
+}
+const _home0 = home;
+home = function () {
+  if (G.demo && UX_NOSAMPLE) return welcome();
+  const h = _home0();
+  if (h.indexOf('class="stack"') < 0 || /Nothing here needs you/.test(h)) return h;
+  const top = tabHead() + homeQuad(C(), D);
+  return h
+    .replace('<div class="stack">', () => '<div class="stack hq' + (HOME_MORE ? "" : " less2") + '">' + top)
+    .replace(
+      /<\/div>\s*$/,
+      () => (HOME_MORE ? "" : '<button class="ghost wide morebtn" data-a="homemore">Show more</button>') + "</div>"
+    );
+};
+function freeLine(c, d) {
+  if (G.demo) return "";
+  const f = freeToSpend(c, d),
+    tight = f.free <= 0 || f.short > 0;
+  return `<button class="rowbtn keep freeline" data-a="safe"><span><span class="tiny muted">Free to spend</span><div><b data-fid="v:freewk">${tight ? "Nothing free right now" : money(f.week) + " a week"}</b> <span class="pill ${tight ? "warn" : ""}">${tight ? "Tight" : f.real ? "Close" : "Guess"}</span></div><div class="tiny muted">${tight ? "Tap to see what a spend would move." : money(f.free) + " a month after bills and goals. Tap to check a purchase."}</div></span><span>›</span></button>`;
+}
+const _safe0 = safeSheet;
+safeSheet = function () {
+  const c = C(),
+    f = freeToSpend(c, D),
+    h = _safe0();
+  const tile = `<div class="tile small">Free to spend: <b>${f.free > 0 ? money(f.week) + " a week" : "nothing right now"}</b>${f.free > 0 ? " (" + money(f.free) + " a month)" : ""} <span class="pill">${f.real ? "Close" : "Guess"}</span></div>`;
+  return h.replace(/<h2[^>]*>[\s\S]*?<\/h2>/, m => m + tile);
+};
 /* the log card: plain title, and "I got paid" first */
-const _flow0=flowSheet;flowSheet=function(){let h=_flow0().replace(">Cash flow<",">Log money<");h=h.split('<div class="field">').map((seg,i)=>i&&seg.indexOf('data-a="fset"')>=0&&seg.split("</div></div>")[0].indexOf('class="chip on"')<0?'<div class="field need">'+seg:(i?'<div class="field">':"")+seg).join("");if(W&&W.o&&!W.o.t&&!G.demo)h=h.replace(/(<button class="rowbtn)/,`<button class="rowbtn" data-a="uxpaid"><span><b>I got paid</b><div class="tiny muted">Split this paycheck in a few taps</div></span><span class="caret">›</span></button>$1`);return h};
-const UX_COLORS=[["midnight","Midnight"],["ocean","Ocean"],["forest","Forest"],["violet","Violet"],["wine","Wine"],["","Theme's own"]];
-const _play0=playTab;playTab=function(){return withHead(_play0()).replace(/\s*Streak: <b>0<\/b> days/,"")};
-const _money0=moneyTab;moneyTab=function(){return withHead(_money0()).replace("<h1>Money</h1>","").replace(/<div class="small muted">Every number the game uses lives here[^<]*<\/div>/,"")};
-const _me0=meTab;meTab=function(){const c=C(),h=withHead(_me0()).replace(/(<h1>[^<]*<\/h1>)/,`$1<div class="card row between"><span><b>Beginner or Expert</b><div class="tiny muted">Expert hides the helper lines and hints.</div></span><div class="seg" style="flex:none"><button class="${G.expert?"":"on"}" data-a="expert" data-v="0">Beginner</button><button class="${G.expert?"on":""}" data-a="expert" data-v="1">Expert</button></div></div><div class="card stack" style="gap:6px"><div class="row between"><b>Color</b><span class="tiny muted">Changes the look only. Your theme's words stay.</span></div><div class="swatches">${UX_COLORS.map(x=>`<button class="sw sw-${x[0]} ${(G.color==null?"midnight":G.color)===x[0]?"on":""}" data-a="color" data-v="${x[0]}"><i></i><span>${x[1]}</span></button>`).join("")}</div></div><button class="card rowbtn" data-a="glossary"><span><b>Glossary</b><div class="tiny muted">Every word the game uses, in plain English</div></span><span>›</span></button>`);return uxLess(h,ME_MORE,9,"memore")};
-function nextTab(){return withHead(mapTab())}
-const _plan0=planTab;planTab=function(){return withHead(_plan0().replace(/(<div class="seg plseg">[\s\S]*?<\/div>)/,m=>m+`<button class="ghost slim wide" data-a="months">The next few months ›</button>`)).replace(/<\/div>\s*$/,`<button class="ghost wide" data-a="tab" data-v="map">See the big picture</button><div class="tiny muted" style="text-align:center">The map, the eras and the skill trees. Optional.</div></div>`)};
-function goalsTab(){const c=C(),d=D,gs=(c.goals||[]).filter(g=>!g.done);
- return `<div class="stack">${tabHead()}${gs.length?goalsCard(c,d,"open"):`<div class="card stack"><h3>Nothing on your list yet</h3><div class="small muted"><b>What goes here:</b> the things you want, big or small. <b>Why:</b> each one gets a date, so "someday" turns into a month and a year. <b>How long:</b> about a minute.</div><button class="primary go wide" data-a="draft">Pick my first goals</button></div>`}
- ${gs.length?`<div class="row" style="gap:6px"><button class="ghost" style="flex:1" data-a="gadd">Add a goal</button><button class="ghost" style="flex:1" data-a="draft">Deal me ideas</button></div>`:`<button class="ghost wide" data-a="gadd">Or add one of my own</button>`}</div>`}
-const MUS_HINT=["In your card's app, look for Lock or Freeze card. Finding the switch counts.","Know the number on the back of the card, and that you can ask for a no-fee version instead of cancelling.","Each of the three credit bureaus (Equifax, Experian, TransUnion) has a free freeze on its own website. Knowing where counts.","In your card or bank app, tap any charge and look for Dispute or Report a problem. You don't need a bad charge. Finding the button counts.","In your investing account, find Trade or Buy and see what it asks for. You don't have to place an order.","In your investing account, find Sell and see what it asks for. You don't have to place an order.","Find Transfer in your bank app and check that your other bank is linked.","Could you get into every money account today? A password manager, or a written list somewhere safe, counts.","Find your latest pay stub and spot three things: pay before tax, what was taken out, and what landed.","The official free site is AnnualCreditReport.com. Pulling one report counts.","Pick one bill, call or chat, and ask if there's a lower rate or a promotion. Asking once counts.","In any bill's account, find Autopay. Turning it on for at least the minimum counts.","Which company holds it, and can you log in? If you don't have one, tap Show me a different one.","Software, a preparer, or a free filing program? Knowing which, and where last year's return is, counts.","Routing and account numbers are in your bank app, usually under account details.","Open your bank app and look. That's the whole thing."];
+const _flow0 = flowSheet;
+flowSheet = function () {
+  let h = _flow0().replace(">Cash flow<", ">Log money<");
+  h = h
+    .split('<div class="field">')
+    .map((seg, i) =>
+      i && seg.indexOf('data-a="fset"') >= 0 && seg.split("</div></div>")[0].indexOf('class="chip on"') < 0
+        ? '<div class="field need">' + seg
+        : (i ? '<div class="field">' : "") + seg
+    )
+    .join("");
+  if (W && W.o && !W.o.t && !G.demo)
+    h = h.replace(
+      /(<button class="rowbtn)/,
+      `<button class="rowbtn" data-a="uxpaid"><span><b>I got paid</b><div class="tiny muted">Split this paycheck in a few taps</div></span><span class="caret">›</span></button>$1`
+    );
+  return h;
+};
+const UX_COLORS = [
+  ["midnight", "Midnight"],
+  ["ocean", "Ocean"],
+  ["forest", "Forest"],
+  ["violet", "Violet"],
+  ["wine", "Wine"],
+  ["", "Theme's own"],
+];
+const _play0 = playTab;
+playTab = function () {
+  return withHead(_play0()).replace(/\s*Streak: <b>0<\/b> days/, "");
+};
+const _money0 = moneyTab;
+moneyTab = function () {
+  return withHead(_money0())
+    .replace("<h1>Money</h1>", "")
+    .replace(/<div class="small muted">Every number the game uses lives here[^<]*<\/div>/, "");
+};
+const _me0 = meTab;
+meTab = function () {
+  const c = C(),
+    h = withHead(_me0()).replace(
+      /(<h1>[^<]*<\/h1>)/,
+      `$1<div class="card row between"><span><b>Beginner or Expert</b><div class="tiny muted">Expert hides the helper lines and hints.</div></span><div class="seg" style="flex:none"><button class="${G.expert ? "" : "on"}" data-a="expert" data-v="0">Beginner</button><button class="${G.expert ? "on" : ""}" data-a="expert" data-v="1">Expert</button></div></div><div class="card stack" style="gap:6px"><div class="row between"><b>Color</b><span class="tiny muted">Changes the look only. Your theme's words stay.</span></div><div class="swatches">${UX_COLORS.map(x => `<button class="sw sw-${x[0]} ${(G.color == null ? "midnight" : G.color) === x[0] ? "on" : ""}" data-a="color" data-v="${x[0]}"><i></i><span>${x[1]}</span></button>`).join("")}</div></div><button class="card rowbtn" data-a="glossary"><span><b>Glossary</b><div class="tiny muted">Every word the game uses, in plain English</div></span><span>›</span></button>`
+    );
+  return uxLess(h, ME_MORE, 9, "memore");
+};
+function nextTab() {
+  return withHead(mapTab());
+}
+const _plan0 = planTab;
+planTab = function () {
+  return withHead(
+    _plan0().replace(
+      /(<div class="seg plseg">[\s\S]*?<\/div>)/,
+      m => m + `<button class="ghost slim wide" data-a="months">The next few months ›</button>`
+    )
+  ).replace(
+    /<\/div>\s*$/,
+    `<button class="ghost wide" data-a="tab" data-v="map">See the big picture</button><div class="tiny muted" style="text-align:center">The map, the eras and the skill trees. Optional.</div></div>`
+  );
+};
+function goalsTab() {
+  const c = C(),
+    d = D,
+    gs = (c.goals || []).filter(g => !g.done);
+  return `<div class="stack">${tabHead()}${gs.length ? goalsCard(c, d, "open") : `<div class="card stack"><h3>Nothing on your list yet</h3><div class="small muted"><b>What goes here:</b> the things you want, big or small. <b>Why:</b> each one gets a date, so "someday" turns into a month and a year. <b>How long:</b> about a minute.</div><button class="primary go wide" data-a="draft">Pick my first goals</button></div>`}
+ ${gs.length ? `<div class="row" style="gap:6px"><button class="ghost" style="flex:1" data-a="gadd">Add a goal</button><button class="ghost" style="flex:1" data-a="draft">Deal me ideas</button></div>` : `<button class="ghost wide" data-a="gadd">Or add one of my own</button>`}</div>`;
+}
+const MUS_HINT = [
+  "In your card's app, look for Lock or Freeze card. Finding the switch counts.",
+  "Know the number on the back of the card, and that you can ask for a no-fee version instead of cancelling.",
+  "Each of the three credit bureaus (Equifax, Experian, TransUnion) has a free freeze on its own website. Knowing where counts.",
+  "In your card or bank app, tap any charge and look for Dispute or Report a problem. You don't need a bad charge. Finding the button counts.",
+  "In your investing account, find Trade or Buy and see what it asks for. You don't have to place an order.",
+  "In your investing account, find Sell and see what it asks for. You don't have to place an order.",
+  "Find Transfer in your bank app and check that your other bank is linked.",
+  "Could you get into every money account today? A password manager, or a written list somewhere safe, counts.",
+  "Find your latest pay stub and spot three things: pay before tax, what was taken out, and what landed.",
+  "The official free site is AnnualCreditReport.com. Pulling one report counts.",
+  "Pick one bill, call or chat, and ask if there's a lower rate or a promotion. Asking once counts.",
+  "In any bill's account, find Autopay. Turning it on for at least the minimum counts.",
+  "Which company holds it, and can you log in? If you don't have one, tap Show me a different one.",
+  "Software, a preparer, or a free filing program? Knowing which, and where last year's return is, counts.",
+  "Routing and account numbers are in your bank app, usually under account details.",
+  "Open your bank app and look. That's the whole thing.",
+];
 /* the next few months: what's coming, in order, so nothing is a surprise */
-function monthsAhead(c,d,today,n){today=today||todayISO();n=n||6;const a=parseISO(today),ya=typeof yearAhead==="function"?yearAhead(c,d,today):null,cal=typeof calOf==="function"?calOf(c):null,plan=((c.x||{}).plan||[]).filter(p=>p.st!=="done"&&p.when),rv0=typeof revDate==="function"?revDate(c,today):null,rv=rv0&&rv0.next?rv0.next:null,out=[];
- for(let i=0;i<n;i++){const dt=new Date(a.getFullYear(),a.getMonth()+i,1),ym=iso(dt).slice(0,7),items=[];
-  plan.filter(p=>p.when.slice(0,7)===ym&&(i>0||p.when>=today)).forEach(p=>items.push({t:p.t,k:"todo"}));
-  (c.goals||[]).filter(g=>!g.done&&g.byDate&&g.byDate.slice(0,7)===ym).forEach(g=>items.push({t:"Goal date: "+g.n+(g.cost?" ("+money(g.cost)+")":""),k:"goal"}));
-  if(ya&&ya.M[i]){ya.M[i].extra.forEach(e=>items.push({t:e.n+": about "+money(e.amt)+(e.real?"":" (guess)"),k:"cost"}));ya.M[i].dip.forEach(e=>items.push({t:e.n+": about "+money(e.amt)+" less pay",k:"cost"}));ya.M[i].note.forEach(x=>items.push({t:x,k:"note"}))}
-  if(rv&&rv.slice(0,7)===ym)items.push({t:"Your yearly look back",k:"goal"});
-  out.push({ym,n:["January","February","March","April","May","June","July","August","September","October","November","December"][dt.getMonth()]+" "+dt.getFullYear(),now:i===0,items})}
- out.every=[cal&&cal.pay.length?"Money lands about "+cal.pay.length+" time"+(cal.pay.length===1?"":"s")+(cal.s?"":" (a guess until you paint your month)"):null,"One 10-minute check-in"].filter(Boolean);return out}
-function monthsSheet(){const c=C(),ms=monthsAhead(c,D);return head("Next Steps","The next few months")+`<div class="tile stack" style="gap:4px"><b>Every month</b>${ms.every.map(x=>`<div class="small mrow k-note">${esc(x)}</div>`).join("")}</div>`+ms.map(m=>`<div class="tile stack" style="gap:4px"><div class="row between"><b>${m.n}</b>${m.now?`<span class="pill">Now</span>`:""}</div>${m.items.length?m.items.map(x=>`<div class="small mrow k-${x.k}">${esc(x.t)}</div>`).join(""):`<div class="tiny muted">Just the usual.</div>`}</div>`).join("")+`<div class="tiny muted">It fills in as you add goals, calendars and true expenses.</div><div class="row" style="gap:6px"><button class="ghost slim" style="flex:1" data-a="gadd">Add a goal</button><button class="ghost slim" style="flex:1" data-a="cals">Calendars</button><button class="ghost slim" style="flex:1" data-a="funds">True expenses</button></div>`}
-const EMPTY={cashes:["your checking, savings and cash","it shows how long you could last without a paycheck"],invs:["retirement and investing accounts","it's the money that works while you sleep"],debts:["cards, loans and anything you owe","every debt gets a payoff date"],incs:["each way money comes in","it's what everything else is measured against"],spends:["where your money goes each month","it sets what's free to spend"]};
-function emptyState(k){const e=EMPTY[k];return e?`<div class="small muted"><b>What goes here:</b> ${e[0]}. <b>Why:</b> ${e[1]}. <b>How long:</b> under a minute.</div>`:`<div class="small muted">Nothing here yet.</div>`}
+function monthsAhead(c, d, today, n) {
+  today = today || todayISO();
+  n = n || 6;
+  const a = parseISO(today),
+    ya = typeof yearAhead === "function" ? yearAhead(c, d, today) : null,
+    cal = typeof calOf === "function" ? calOf(c) : null,
+    plan = ((c.x || {}).plan || []).filter(p => p.st !== "done" && p.when),
+    rv0 = typeof revDate === "function" ? revDate(c, today) : null,
+    rv = rv0 && rv0.next ? rv0.next : null,
+    out = [];
+  for (let i = 0; i < n; i++) {
+    const dt = new Date(a.getFullYear(), a.getMonth() + i, 1),
+      ym = iso(dt).slice(0, 7),
+      items = [];
+    plan
+      .filter(p => p.when.slice(0, 7) === ym && (i > 0 || p.when >= today))
+      .forEach(p => items.push({ t: p.t, k: "todo" }));
+    (c.goals || [])
+      .filter(g => !g.done && g.byDate && g.byDate.slice(0, 7) === ym)
+      .forEach(g => items.push({ t: "Goal date: " + g.n + (g.cost ? " (" + money(g.cost) + ")" : ""), k: "goal" }));
+    if (ya && ya.M[i]) {
+      ya.M[i].extra.forEach(e =>
+        items.push({ t: e.n + ": about " + money(e.amt) + (e.real ? "" : " (guess)"), k: "cost" })
+      );
+      ya.M[i].dip.forEach(e => items.push({ t: e.n + ": about " + money(e.amt) + " less pay", k: "cost" }));
+      ya.M[i].note.forEach(x => items.push({ t: x, k: "note" }));
+    }
+    if (rv && rv.slice(0, 7) === ym) items.push({ t: "Your yearly look back", k: "goal" });
+    out.push({
+      ym,
+      n:
+        [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ][dt.getMonth()] +
+        " " +
+        dt.getFullYear(),
+      now: i === 0,
+      items,
+    });
+  }
+  out.every = [
+    cal && cal.pay.length
+      ? "Money lands about " +
+        cal.pay.length +
+        " time" +
+        (cal.pay.length === 1 ? "" : "s") +
+        (cal.s ? "" : " (a guess until you paint your month)")
+      : null,
+    "One 10-minute check-in",
+  ].filter(Boolean);
+  return out;
+}
+function monthsSheet() {
+  const c = C(),
+    ms = monthsAhead(c, D);
+  return (
+    head("Next Steps", "The next few months") +
+    `<div class="tile stack" style="gap:4px"><b>Every month</b>${ms.every.map(x => `<div class="small mrow k-note">${esc(x)}</div>`).join("")}</div>` +
+    ms
+      .map(
+        m =>
+          `<div class="tile stack" style="gap:4px"><div class="row between"><b>${m.n}</b>${m.now ? `<span class="pill">Now</span>` : ""}</div>${m.items.length ? m.items.map(x => `<div class="small mrow k-${x.k}">${esc(x.t)}</div>`).join("") : `<div class="tiny muted">Just the usual.</div>`}</div>`
+      )
+      .join("") +
+    `<div class="tiny muted">It fills in as you add goals, calendars and true expenses.</div><div class="row" style="gap:6px"><button class="ghost slim" style="flex:1" data-a="gadd">Add a goal</button><button class="ghost slim" style="flex:1" data-a="cals">Calendars</button><button class="ghost slim" style="flex:1" data-a="funds">True expenses</button></div>`
+  );
+}
+const EMPTY = {
+  cashes: ["your checking, savings and cash", "it shows how long you could last without a paycheck"],
+  invs: ["retirement and investing accounts", "it's the money that works while you sleep"],
+  debts: ["cards, loans and anything you owe", "every debt gets a payoff date"],
+  incs: ["each way money comes in", "it's what everything else is measured against"],
+  spends: ["where your money goes each month", "it sets what's free to spend"],
+};
+function emptyState(k) {
+  const e = EMPTY[k];
+  return e
+    ? `<div class="small muted"><b>What goes here:</b> ${e[0]}. <b>Why:</b> ${e[1]}. <b>How long:</b> under a minute.</div>`
+    : `<div class="small muted">Nothing here yet.</div>`;
+}
 /* first read: a real answer about you inside the first minute of setup */
-function firstRead(o){try{const p=clone(o);if(p.age==null)return null;if(!p.work)p.work="First job";if(!p.incKinds||!p.incKinds.length)p.incKinds=["A main job"];p.payFreq=p.payFreq||"Every 2 weeks";p.steady=p.steady||"Steady";p.home=HOMEMAP[p.homeQ]||"Renting";if(!p.live||!p.live.length)p.live=["On my own"];p.rel=p.rel||"Single, seeking";p.deps=p.deps||"None";p.share=p.share||"No one";if(!p.accts||!p.accts.length)p.accts=["Checking"];p.can1k=p.can1k||"No";p.cover=p.cover||"Less than a month";p.invest=p.invest||"No";p.placed=false;applyTypical(p);const d=derive(p);return {era:eraN(d.rawEra),left:Math.round(p.take-p.spend),known:["can1k","cover","invest"].every(k=>o[k])}}catch(e){return null}}
-const _setup0=setupSheet;setupSheet=function(){const w=W,h=_setup0(),fr=w.mode!=="edit"&&w.step>=1&&w.step<4?firstRead(w.o):null;return fr&&fr.known?h.replace('<div class="plk stack" style="gap:3px;padding:8px 10px">',()=>`<div class="plk stack" style="gap:3px;padding:8px 10px"><div class="firstread"><div class="row between"><span class="small">Your first read: <b>${esc(fr.era)}</b></span><span class="pill">Guess</span></div><div class="tiny muted">For someone your age with those three answers. Each tap from here makes it closer.</div></div>`):h};
+function firstRead(o) {
+  try {
+    const p = clone(o);
+    if (p.age == null) return null;
+    if (!p.work) p.work = "First job";
+    if (!p.incKinds || !p.incKinds.length) p.incKinds = ["A main job"];
+    p.payFreq = p.payFreq || "Every 2 weeks";
+    p.steady = p.steady || "Steady";
+    p.home = HOMEMAP[p.homeQ] || "Renting";
+    if (!p.live || !p.live.length) p.live = ["On my own"];
+    p.rel = p.rel || "Single, seeking";
+    p.deps = p.deps || "None";
+    p.share = p.share || "No one";
+    if (!p.accts || !p.accts.length) p.accts = ["Checking"];
+    p.can1k = p.can1k || "No";
+    p.cover = p.cover || "Less than a month";
+    p.invest = p.invest || "No";
+    p.placed = false;
+    applyTypical(p);
+    const d = derive(p);
+    return {
+      era: eraN(d.rawEra),
+      left: Math.round(p.take - p.spend),
+      known: ["can1k", "cover", "invest"].every(k => o[k]),
+    };
+  } catch (e) {
+    return null;
+  }
+}
+const _setup0 = setupSheet;
+setupSheet = function () {
+  const w = W,
+    h = _setup0(),
+    fr = w.mode !== "edit" && w.step >= 1 && w.step < 4 ? firstRead(w.o) : null;
+  return fr && fr.known
+    ? h.replace(
+        '<div class="plk stack" style="gap:3px;padding:8px 10px">',
+        () =>
+          `<div class="plk stack" style="gap:3px;padding:8px 10px"><div class="firstread"><div class="row between"><span class="small">Your first read: <b>${esc(fr.era)}</b></span><span class="pill">Guess</span></div><div class="tiny muted">For someone your age with those three answers. Each tap from here makes it closer.</div></div>`
+      )
+    : h;
+};
 /* back that works: tabs and sheets go through the browser history */
-const uxHist=typeof history!=="undefined"&&typeof history.pushState==="function"&&typeof addEventListener==="function";let UX_POP=false;
-const _go0=go;go=function(t){const prev=tab;if(typeof scrollY==="number")UX_SCR[prev]=scrollY;if(SH&&W&&W.kind&&t!==prev&&!UX_POP)uxKeep(prev);UX_HINT="";_go0(t);if(uxHist&&!UX_POP&&t!==prev){try{history.pushState({tab:t},"","#/"+t)}catch(e){}}if(UX_SCR[t]&&typeof scrollTo==="function")scrollTo(0,UX_SCR[t])};
-let UX_LAST=null,UX_RESUME=null;const UX_NORES=["start","addperson","edit","reset","uxundo","retgo","uxresume","close","tab","glossary","info","menu","people"];
-const _sheet0=sheet;sheet=function(fn){const was=!!SH;_sheet0(fn);if(!was&&UX_LAST&&!G.demo&&!UX_NORES.includes(UX_LAST.a)&&ACT[UX_LAST.a]){G.last={tab,a:UX_LAST.a,v:UX_LAST.v,k:UX_LAST.k,title:uxTitle(fn)||"what you were doing",d:todayISO(),open:true};_save0()}if(uxHist&&!was&&!UX_POP){try{history.pushState({tab,sheet:1},"","#/"+tab+"/open")}catch(e){}}uxChip()};
-const _close0=closeSheet;closeSheet=function(){const was=!!SH;_close0();if(was&&G.last&&G.last.open){G.last.open=false;_save0()}if(uxHist&&was&&!UX_POP&&history.state&&history.state.sheet){UX_POP=true;try{history.back()}catch(e){}setTimeout(()=>{UX_POP=false},60)}uxChip()};
-if(uxHist){addEventListener("popstate",e=>{UX_POP=true;try{if(SH){_close0();render()}else{const t=(e.state&&e.state.tab)||(location.hash.match(/^#\/([a-z]+)/)||[])[1]||"home";if(UX_TABS.some(x=>x[0]===t)||t==="play"||t==="map"){tab=t;render()}}}finally{UX_POP=false}uxChip()});
- try{const t=(location.hash.match(/^#\/([a-z]+)/)||[])[1];if(t&&(UX_TABS.some(x=>x[0]===t)||t==="play"||t==="map"))tab=t;history.replaceState({tab},"","#/"+tab)}catch(e){}}
+const uxHist =
+  typeof history !== "undefined" && typeof history.pushState === "function" && typeof addEventListener === "function";
+let UX_POP = false;
+const _go0 = go;
+go = function (t) {
+  const prev = tab;
+  if (typeof scrollY === "number") UX_SCR[prev] = scrollY;
+  if (SH && W && W.kind && t !== prev && !UX_POP) uxKeep(prev);
+  UX_HINT = "";
+  _go0(t);
+  if (uxHist && !UX_POP && t !== prev) {
+    try {
+      history.pushState({ tab: t }, "", "#/" + t);
+    } catch (e) {}
+  }
+  if (UX_SCR[t] && typeof scrollTo === "function") scrollTo(0, UX_SCR[t]);
+};
+let UX_LAST = null,
+  UX_RESUME = null;
+const UX_NORES = [
+  "start",
+  "addperson",
+  "edit",
+  "reset",
+  "uxundo",
+  "retgo",
+  "uxresume",
+  "close",
+  "tab",
+  "glossary",
+  "info",
+  "menu",
+  "people",
+];
+const _sheet0 = sheet;
+sheet = function (fn) {
+  const was = !!SH;
+  _sheet0(fn);
+  if (!was && UX_LAST && !G.demo && !UX_NORES.includes(UX_LAST.a) && ACT[UX_LAST.a]) {
+    G.last = {
+      tab,
+      a: UX_LAST.a,
+      v: UX_LAST.v,
+      k: UX_LAST.k,
+      title: uxTitle(fn) || "what you were doing",
+      d: todayISO(),
+      open: true,
+    };
+    _save0();
+  }
+  if (uxHist && !was && !UX_POP) {
+    try {
+      history.pushState({ tab, sheet: 1 }, "", "#/" + tab + "/open");
+    } catch (e) {}
+  }
+  uxChip();
+};
+const _close0 = closeSheet;
+closeSheet = function () {
+  const was = !!SH;
+  _close0();
+  if (was && G.last && G.last.open) {
+    G.last.open = false;
+    _save0();
+  }
+  if (uxHist && was && !UX_POP && history.state && history.state.sheet) {
+    UX_POP = true;
+    try {
+      history.back();
+    } catch (e) {}
+    setTimeout(() => {
+      UX_POP = false;
+    }, 60);
+  }
+  uxChip();
+};
+if (uxHist) {
+  addEventListener("popstate", e => {
+    UX_POP = true;
+    try {
+      if (SH) {
+        _close0();
+        render();
+      } else {
+        const t = (e.state && e.state.tab) || (location.hash.match(/^#\/([a-z]+)/) || [])[1] || "home";
+        if (UX_TABS.some(x => x[0] === t) || t === "play" || t === "map") {
+          tab = t;
+          render();
+        }
+      }
+    } finally {
+      UX_POP = false;
+    }
+    uxChip();
+  });
+  try {
+    const t = (location.hash.match(/^#\/([a-z]+)/) || [])[1];
+    if (t && (UX_TABS.some(x => x[0] === t) || t === "play" || t === "map")) tab = t;
+    history.replaceState({ tab }, "", "#/" + tab);
+  } catch (e) {}
+}
 /* back to where you were */
-function uxTitle(fn){try{const m=String(fn()).match(/<h2[^>]*>([\s\S]*?)<\/h2>/);return m?m[1].replace(/<[^>]+>/g,"").trim().slice(0,28):""}catch(e){return ""}}
-function uxKeep(fromTab){const el=typeof document!=="undefined"&&document.querySelector?document.querySelector(".sheet"):null;const keepW=W,keepSH=SH;UX_RET={SH:keepSH,W:keepW,tab:fromTab,sc:el&&el.scrollTop||0,title:""};const cur=W;W=keepW;UX_RET.title=uxTitle(keepSH)||"what you were doing";W=cur}
-function uxChip(){if(typeof document==="undefined"||!document.body||!document.createElement)return;let el=document.getElementById("uxchip");if(!el){el=document.createElement("div");el.id="uxchip";document.body.appendChild(el)}const r=UX_RET,u=UX_UNDO;const z=UX_RESUME;el.innerHTML=(z&&!SH?`<div class="retwrap"><button class="retchip" data-a="uxresume">← Pick up where you left off: ${esc(z.title)}</button><button class="retx" data-a="retx" aria-label="Dismiss">✕</button></div>`:"")+(u?`<div class="toast"><span>${esc(u.msg)}</span><button data-a="uxundo">Undo</button></div>`:"")+(r&&SH!==r.SH?`<div class="retwrap"><button class="retchip" data-a="retgo">← Back to ${esc(r.title)}</button><button class="retx" data-a="retx" aria-label="Dismiss">✕</button></div>`:"")}
+function uxTitle(fn) {
+  try {
+    const m = String(fn()).match(/<h2[^>]*>([\s\S]*?)<\/h2>/);
+    return m
+      ? m[1]
+          .replace(/<[^>]+>/g, "")
+          .trim()
+          .slice(0, 28)
+      : "";
+  } catch (e) {
+    return "";
+  }
+}
+function uxKeep(fromTab) {
+  const el = typeof document !== "undefined" && document.querySelector ? document.querySelector(".sheet") : null;
+  const keepW = W,
+    keepSH = SH;
+  UX_RET = { SH: keepSH, W: keepW, tab: fromTab, sc: (el && el.scrollTop) || 0, title: "" };
+  const cur = W;
+  W = keepW;
+  UX_RET.title = uxTitle(keepSH) || "what you were doing";
+  W = cur;
+}
+function uxChip() {
+  if (typeof document === "undefined" || !document.body || !document.createElement) return;
+  let el = document.getElementById("uxchip");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "uxchip";
+    document.body.appendChild(el);
+  }
+  const r = UX_RET,
+    u = UX_UNDO;
+  const z = UX_RESUME;
+  el.innerHTML =
+    (z && !SH
+      ? `<div class="retwrap"><button class="retchip" data-a="uxresume">← Pick up where you left off: ${esc(z.title)}</button><button class="retx" data-a="retx" aria-label="Dismiss">✕</button></div>`
+      : "") +
+    (u ? `<div class="toast"><span>${esc(u.msg)}</span><button data-a="uxundo">Undo</button></div>` : "") +
+    (r && SH !== r.SH
+      ? `<div class="retwrap"><button class="retchip" data-a="retgo">← Back to ${esc(r.title)}</button><button class="retx" data-a="retx" aria-label="Dismiss">✕</button></div>`
+      : "");
+}
 /* undo instead of "are you sure" */
-function uxUndoable(name,msg){const f=ACT[name];if(!f)return;ACT[name]=t=>{const snap=JSON.stringify(G),m=msg(t);f(t);if(JSON.stringify(G)!==snap){UX_UNDO={snap,msg:m,at:Date.now()};uxChip();if(typeof setTimeout==="function")setTimeout(()=>{if(UX_UNDO&&Date.now()-UX_UNDO.at>=5900){UX_UNDO=null;uxChip()}},6000)}}}
-uxUndoable("fsave",()=>"Logged "+money((W&&W.o&&W.o.amt)||0));uxUndoable("rowdel",()=>"Removed");uxUndoable("gdel",()=>"Goal removed");uxUndoable("rdel",()=>"Removed");uxUndoable("swcut",()=>"Taken off your bills");
-const _draw0=drawSheet;drawSheet=function(){_draw0();if(typeof document==="undefined"||!document.querySelector)return;const sh=document.querySelector("#ov .sheet");if(sh){const cb=sh.querySelector('.row.between>[data-a="close"]');if(cb&&cb.textContent.trim()==="Close"){cb.textContent="‹ Back";cb.classList.add("backbtn");cb.parentNode.classList.add("backrow")}}
- if(sh&&SH&&sh.insertAdjacentHTML&&!(UX_RET&&SH!==UX_RET.SH)&&!sh.querySelector(".lookup")&&!/^\s*(Glossary|What it means)/.test(sh.innerText||""))sh.insertAdjacentHTML("beforeend",'<button class="ghost wide slim lookup" data-a="glossary">Look up a word</button>')};
-const _save0=save;save=function(){_save0();if(typeof document!=="undefined"&&document.getElementById){const el=document.getElementById("uxsaved");if(el){el.className="show";clearTimeout(save.t);save.t=setTimeout(()=>{el.className=""},1200)}}};
-const _cel0=celebrate;celebrate=function(a,b,c2,d2){try{if(typeof navigator!=="undefined"&&navigator.vibrate)navigator.vibrate(12)}catch(e){}return _cel0(a,b,c2,d2)};
-const _render0=render;render=function(){const wel=G.demo&&UX_NOSAMPLE;if(wel&&tab!=="home")tab="home";_render0();if(typeof document!=="undefined"&&document.body&&document.body.classList){document.body.classList.toggle("welcome",!!wel);if(document.body.dataset)document.body.dataset.color=G.color==null?"midnight":G.color}try{const c=C(),t=todayISO(),tb=$("#tabs");if(tb)tb.innerHTML=uxTabs(!G.demo&&(c.lastDaily!==t||(c.payKnown&&t>=c.payNext)))}catch(e){}if(typeof document!=="undefined"&&document.body&&document.body.classList){document.body.classList.toggle("expert",!!G.expert);if(!document.getElementById("uxsaved")){const s=document.createElement("div");s.id="uxsaved";s.textContent="Saved ✓";document.body.appendChild(s)}}uxChip()};
-Object.assign(GLOSS,{bige:["Big E","A big emergency: losing a job, a medical emergency, replacing the car. Well over $1,000, and it can run for months. Your full cushion, the months of spending you set aside, is what covers a Big E."],littlee:["Little e","A small emergency, under about $1,000: a flat tire, a vet visit, a broken phone. Your first $1,000 is there so a little e never has to go on a card."],gce:["Guess, Close, Exact","Every number is one of three things. A Guess is the game's starting point for someone like you. Close is what you told it by tapping. Exact is a number you typed or one from a statement."],bigpic:["The big picture","The map of eras, regions and skill trees. It's the same list as Next Steps, drawn as a journey. You never need it to play."]});
-Object.assign(ACT,{
- bigpic:()=>{go(tab==="map"?"plan":"map")},homemore:()=>{HOME_MORE=true;render()},memore:()=>{ME_MORE=true;render()},
- tipok:t=>{G.tips=G.tips||{};G.tips[t.dataset.v]=1;save();render()},
- expert:t=>{G.expert=t.dataset.v==="1";save();render()},
- whatdo:()=>{const c=C(),ns=nextStep(c,D);UX_HINT=SH?"Tap the bright button at the bottom of this card.":tab==="plan"?"Do the first thing on the list. Tap it to open it.":tab==="map"?"Nothing you have to do here. Tap a place to look around.":tab==="home"?"Tap the glowing button: "+(ns.l||ns.t)+".":tab==="money"?"Tap any line to change it. Start with a faded one.":tab==="goals"?"Tap a goal to see its date, or add one.":tab==="play"?"If you got paid, tap the payday card. If not, do the one-minute check.":"Nothing you have to do here. This is where your look and your profile live.";render();if(typeof document!=="undefined"&&document.querySelector){const el=document.querySelector("#app .primary, #app .go");if(el&&el.classList){el.classList.remove("hey");void el.offsetWidth;el.classList.add("hey");if(el.scrollIntoView)el.scrollIntoView({block:"center",behavior:"smooth"})}}},
- months:()=>{W={kind:"months"};sheet(monthsSheet)},
- color:t=>{G.color=t.dataset.v;save();render()},
- clretry:()=>{if(typeof clStart==="function"){CLOUD.st="connecting";render();clStart()}},
- retx:()=>{UX_RET=null;UX_RESUME=null;uxChip()},
- uxresume:()=>{const z=UX_RESUME;UX_RESUME=null;if(!z||!ACT[z.a])return;if(z.tab&&z.tab!==tab)go(z.tab);ACT[z.a]({dataset:{a:z.a,v:z.v,k:z.k}});uxChip()},
- pmusnext:()=>{const c=C(),o=W&&W.o;if(!o)return;const un=MUSCLES.map((m,i)=>i).filter(i=>!c.muscles[i]);if(un.length){o.muscle=un[(un.indexOf(o.muscle)+1)%un.length];o.mdone=false}drawSheet()},
- uxpaid:()=>{const c=C();_close0();if(c.payKnown&&todayISO()>=c.payNext)ACT.payday({dataset:{v:""}});else ACT.paidtoday({dataset:{}})},
- uxundo:()=>{const u=UX_UNDO;if(!u)return;G=JSON.parse(u.snap);UX_UNDO=null;_save0();if(SH)_close0();render()},
- retgo:()=>{const r=UX_RET;if(!r)return;UX_RET=null;UX_POP=true;try{tab=r.tab;W=r.W;_sheet0(r.SH);render()}finally{UX_POP=false}if(typeof document!=="undefined"&&document.querySelector){const el=document.querySelector(".sheet");if(el)el.scrollTop=r.sc}uxChip()}});
-(()=>{const _info=ACT.info,_gl=ACT.glossary,keep=f=>t=>{if(SH&&!(W&&W.kind==="info")&&!(UX_RET&&SH!==UX_RET.SH))uxKeep(tab);return f(t)};if(_info)ACT.info=keep(_info);if(_gl)ACT.glossary=keep(_gl)})();
-if(typeof document!=="undefined"&&document.addEventListener)document.addEventListener("click",e=>{const t=e.target&&e.target.closest?e.target.closest("[data-a]"):null;if(t&&!SH)UX_LAST={a:t.dataset.a,v:t.dataset.v,k:t.dataset.k}},true);
-try{const L=G.last;if(L&&L.open&&!G.demo&&ACT[L.a]&&daysBetween(L.d,todayISO())<=2)UX_RESUME=L}catch(e){}
-if(typeof setInterval==="function"&&typeof document!=="undefined"&&document.body&&document.body.classList){let lastSt=null;setInterval(()=>{if(typeof CLOUD==="undefined"||CLOUD.st===lastSt)return;lastSt=CLOUD.st;if(G.demo&&UX_NOSAMPLE&&!SH)render()},400)}
-var UX_ON=true;
-if(typeof document!=="undefined"&&document.getElementById&&document.getElementById("app"))render();
+function uxUndoable(name, msg) {
+  const f = ACT[name];
+  if (!f) return;
+  ACT[name] = t => {
+    const snap = JSON.stringify(G),
+      m = msg(t);
+    f(t);
+    if (JSON.stringify(G) !== snap) {
+      UX_UNDO = { snap, msg: m, at: Date.now() };
+      uxChip();
+      if (typeof setTimeout === "function")
+        setTimeout(() => {
+          if (UX_UNDO && Date.now() - UX_UNDO.at >= 5900) {
+            UX_UNDO = null;
+            uxChip();
+          }
+        }, 6000);
+    }
+  };
+}
+uxUndoable("fsave", () => "Logged " + money((W && W.o && W.o.amt) || 0));
+uxUndoable("rowdel", () => "Removed");
+uxUndoable("gdel", () => "Goal removed");
+uxUndoable("rdel", () => "Removed");
+uxUndoable("swcut", () => "Taken off your bills");
+const _draw0 = drawSheet;
+drawSheet = function () {
+  _draw0();
+  if (typeof document === "undefined" || !document.querySelector) return;
+  const sh = document.querySelector("#ov .sheet");
+  if (sh) {
+    const cb = sh.querySelector('.row.between>[data-a="close"]');
+    if (cb && cb.textContent.trim() === "Close") {
+      cb.textContent = "‹ Back";
+      cb.classList.add("backbtn");
+      cb.parentNode.classList.add("backrow");
+    }
+  }
+  if (
+    sh &&
+    SH &&
+    sh.insertAdjacentHTML &&
+    !(UX_RET && SH !== UX_RET.SH) &&
+    !sh.querySelector(".lookup") &&
+    !/^\s*(Glossary|What it means)/.test(sh.innerText || "")
+  )
+    sh.insertAdjacentHTML(
+      "beforeend",
+      '<button class="ghost wide slim lookup" data-a="glossary">Look up a word</button>'
+    );
+};
+const _save0 = save;
+save = function () {
+  _save0();
+  if (typeof document !== "undefined" && document.getElementById) {
+    const el = document.getElementById("uxsaved");
+    if (el) {
+      el.className = "show";
+      clearTimeout(save.t);
+      save.t = setTimeout(() => {
+        el.className = "";
+      }, 1200);
+    }
+  }
+};
+const _cel0 = celebrate;
+celebrate = function (a, b, c2, d2) {
+  try {
+    if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(12);
+  } catch (e) {}
+  return _cel0(a, b, c2, d2);
+};
+const _render0 = render;
+render = function () {
+  const wel = G.demo && UX_NOSAMPLE;
+  if (wel && tab !== "home") tab = "home";
+  _render0();
+  if (typeof document !== "undefined" && document.body && document.body.classList) {
+    document.body.classList.toggle("welcome", !!wel);
+    if (document.body.dataset) document.body.dataset.color = G.color == null ? "midnight" : G.color;
+  }
+  try {
+    const c = C(),
+      t = todayISO(),
+      tb = $("#tabs");
+    if (tb) tb.innerHTML = uxTabs(!G.demo && (c.lastDaily !== t || (c.payKnown && t >= c.payNext)));
+  } catch (e) {}
+  if (typeof document !== "undefined" && document.body && document.body.classList) {
+    document.body.classList.toggle("expert", !!G.expert);
+    if (!document.getElementById("uxsaved")) {
+      const s = document.createElement("div");
+      s.id = "uxsaved";
+      s.textContent = "Saved ✓";
+      document.body.appendChild(s);
+    }
+  }
+  uxChip();
+};
+Object.assign(GLOSS, {
+  bige: [
+    "Big E",
+    "A big emergency: losing a job, a medical emergency, replacing the car. Well over $1,000, and it can run for months. Your full cushion, the months of spending you set aside, is what covers a Big E.",
+  ],
+  littlee: [
+    "Little e",
+    "A small emergency, under about $1,000: a flat tire, a vet visit, a broken phone. Your first $1,000 is there so a little e never has to go on a card.",
+  ],
+  gce: [
+    "Guess, Close, Exact",
+    "Every number is one of three things. A Guess is the game's starting point for someone like you. Close is what you told it by tapping. Exact is a number you typed or one from a statement.",
+  ],
+  bigpic: [
+    "The big picture",
+    "The map of eras, regions and skill trees. It's the same list as Next Steps, drawn as a journey. You never need it to play.",
+  ],
+});
+Object.assign(ACT, {
+  bigpic: () => {
+    go(tab === "map" ? "plan" : "map");
+  },
+  homemore: () => {
+    HOME_MORE = true;
+    render();
+  },
+  memore: () => {
+    ME_MORE = true;
+    render();
+  },
+  tipok: t => {
+    G.tips = G.tips || {};
+    G.tips[t.dataset.v] = 1;
+    save();
+    render();
+  },
+  expert: t => {
+    G.expert = t.dataset.v === "1";
+    save();
+    render();
+  },
+  whatdo: () => {
+    const c = C(),
+      ns = nextStep(c, D);
+    UX_HINT = SH
+      ? "Tap the bright button at the bottom of this card."
+      : tab === "plan"
+        ? "Do the first thing on the list. Tap it to open it."
+        : tab === "map"
+          ? "Nothing you have to do here. Tap a place to look around."
+          : tab === "home"
+            ? "Tap the glowing button: " + (ns.l || ns.t) + "."
+            : tab === "money"
+              ? "Tap any line to change it. Start with a faded one."
+              : tab === "goals"
+                ? "Tap a goal to see its date, or add one."
+                : tab === "play"
+                  ? "If you got paid, tap the payday card. If not, do the one-minute check."
+                  : "Nothing you have to do here. This is where your look and your profile live.";
+    render();
+    if (typeof document !== "undefined" && document.querySelector) {
+      const el = document.querySelector("#app .primary, #app .go");
+      if (el && el.classList) {
+        el.classList.remove("hey");
+        void el.offsetWidth;
+        el.classList.add("hey");
+        if (el.scrollIntoView) el.scrollIntoView({ block: "center", behavior: "smooth" });
+      }
+    }
+  },
+  months: () => {
+    W = { kind: "months" };
+    sheet(monthsSheet);
+  },
+  color: t => {
+    G.color = t.dataset.v;
+    save();
+    render();
+  },
+  clretry: () => {
+    if (typeof clStart === "function") {
+      CLOUD.st = "connecting";
+      render();
+      clStart();
+    }
+  },
+  retx: () => {
+    UX_RET = null;
+    UX_RESUME = null;
+    uxChip();
+  },
+  uxresume: () => {
+    const z = UX_RESUME;
+    UX_RESUME = null;
+    if (!z || !ACT[z.a]) return;
+    if (z.tab && z.tab !== tab) go(z.tab);
+    ACT[z.a]({ dataset: { a: z.a, v: z.v, k: z.k } });
+    uxChip();
+  },
+  pmusnext: () => {
+    const c = C(),
+      o = W && W.o;
+    if (!o) return;
+    const un = MUSCLES.map((m, i) => i).filter(i => !c.muscles[i]);
+    if (un.length) {
+      o.muscle = un[(un.indexOf(o.muscle) + 1) % un.length];
+      o.mdone = false;
+    }
+    drawSheet();
+  },
+  uxpaid: () => {
+    const c = C();
+    _close0();
+    if (c.payKnown && todayISO() >= c.payNext) ACT.payday({ dataset: { v: "" } });
+    else ACT.paidtoday({ dataset: {} });
+  },
+  uxundo: () => {
+    const u = UX_UNDO;
+    if (!u) return;
+    G = JSON.parse(u.snap);
+    UX_UNDO = null;
+    _save0();
+    if (SH) _close0();
+    render();
+  },
+  retgo: () => {
+    const r = UX_RET;
+    if (!r) return;
+    UX_RET = null;
+    UX_POP = true;
+    try {
+      tab = r.tab;
+      W = r.W;
+      _sheet0(r.SH);
+      render();
+    } finally {
+      UX_POP = false;
+    }
+    if (typeof document !== "undefined" && document.querySelector) {
+      const el = document.querySelector(".sheet");
+      if (el) el.scrollTop = r.sc;
+    }
+    uxChip();
+  },
+});
+(() => {
+  const _info = ACT.info,
+    _gl = ACT.glossary,
+    keep = f => t => {
+      if (SH && !(W && W.kind === "info") && !(UX_RET && SH !== UX_RET.SH)) uxKeep(tab);
+      return f(t);
+    };
+  if (_info) ACT.info = keep(_info);
+  if (_gl) ACT.glossary = keep(_gl);
+})();
+if (typeof document !== "undefined" && document.addEventListener)
+  document.addEventListener(
+    "click",
+    e => {
+      const t = e.target && e.target.closest ? e.target.closest("[data-a]") : null;
+      if (t && !SH) UX_LAST = { a: t.dataset.a, v: t.dataset.v, k: t.dataset.k };
+    },
+    true
+  );
+try {
+  const L = G.last;
+  if (L && L.open && !G.demo && ACT[L.a] && daysBetween(L.d, todayISO()) <= 2) UX_RESUME = L;
+} catch (e) {}
+if (typeof setInterval === "function" && typeof document !== "undefined" && document.body && document.body.classList) {
+  let lastSt = null;
+  setInterval(() => {
+    if (typeof CLOUD === "undefined" || CLOUD.st === lastSt) return;
+    lastSt = CLOUD.st;
+    if (G.demo && UX_NOSAMPLE && !SH) render();
+  }, 400);
+}
+var UX_ON = true;
+if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();

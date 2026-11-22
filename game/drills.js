@@ -3,80 +3,443 @@
  (2) If the pay stopped: what would I use first (ported from the web app's ladder). Your own money in the order people reach for it, how long each rung lasts, and which rungs cost extra. Expensive rungs are shown and never counted in the months.
  (3) One-way doors. A few What if moves are hard to undo. They get a plain note saying so, next to the move. Not a warning off, just the difference between a door you can walk back through and one you cannot (the framing is Jeff Bezos's, from his 2015 letter to shareholders).
  (4) A three-tap tour of the five tabs. Offered once on Home, skippable. ===== */
-const FD_BILL=1000,FD_NEEDS=["Home","Food","Getting around","Bills and subscriptions"];
-function fdBase(c,d){const rows=c.led?(c.spends||[]):[],needs=rows.length?rows.filter(r=>FD_NEEDS.includes(r.k)).reduce((a,r)=>a+(r.amt||0),0):null,cash=d.cash||0,g=a=>(a||[]).length&&a.every(r=>r.s);
- const real={cash:c.led&&g(c.cashes),spend:c.led&&g(c.spends),take:c.led&&g(c.incs),inv:c.led&&((c.invs||[]).length?g(c.invs):!(c.inv>0)),debt:c.led&&g(c.debts)};return {cash,needs,spend:c.spend||0,take:c.take||0,inv:c.inv||0,real}}
-function fdCard(c){return (c.debts||[]).filter(x=>x.amt>0&&/card/i.test(x.k)).reduce((a,x)=>a+x.amt,0)}
-function fdList(c,d){const B=fdBase(c,d),out=[],mo=n=>n>=24?(n/12).toFixed(1)+" years":n<1?"under a month":(n<10?n.toFixed(1):Math.round(n))+" months",add=o=>{if(!o.real)o.calm=null;out.push(o)};
- {const short=Math.max(0,FD_BILL-B.cash),left=B.cash-FD_BILL;add({id:"bill",fear:"A "+money(FD_BILL)+" bill lands this week",real:B.real.cash,calm:short===0,
-   big:short===0?"Covered":money(short)+" short",line:short===0?"Your cash covers it and leaves "+money(left)+".":"Your cash covers "+money(B.cash)+" of it. The other "+money(short)+(typeof unitTxt==="function"&&unitTxt(c,short)?" ("+unitTxt(c,short)+")":"")+" would likely land on a card. At 25% a year that is about "+money(Math.max(1,Math.round(short*0.25/12)))+" a month in interest until it is cleared.",
-   math:["Cash on hand: "+money(B.cash)+".","The bill: "+money(FD_BILL)+", a common size for a car repair or a medical bill."],
-   rep:short===0?"Rename your savings account so its name says what it is for.":"Move $20 into savings today and give the account a name.",mins:5})}
- if(c.work!=="Retired"&&B.spend>0){const full=B.cash/B.spend,lean=B.needs>0?B.cash/B.needs:null;add({id:"job",fear:"Your pay stops tomorrow",real:B.real.cash&&B.real.spend,calm:(lean!=null?lean:full)>=6,
-   big:mo(lean!=null?lean:full),line:lean!=null&&mo(lean)===mo(full)?"Even cut to the basics (home, food, getting around, bills), your cash lasts "+mo(full)+".":"Spending as you do now, your cash lasts "+mo(full)+"."+(lean!=null?" Cut to the basics (home, food, getting around, bills) and it lasts "+mo(lean)+".":""),
-   math:["Cash "+money(B.cash)+" divided by "+money(B.spend)+" a month of spending.",lean!=null?"The basics come to "+money(B.needs)+" a month.":"Fill in where your money goes and the basics show up here too.","Unemployment pay, a partner's pay and side income are not counted, so the real number is often longer."],
-   rep:"Find your state's unemployment site and save the link. Then find where your last pay stub lives. That is the whole rep.",mins:10,go:["See what you would use first","ladder"]})}
- if(c.work!=="Retired"&&B.take>0){const t=B.take*0.8,left=t-B.spend,cover=left<0&&B.cash>0?B.cash/-left:null;add({id:"cut",fear:"Your pay drops by a fifth",real:B.real.take&&B.real.spend,calm:left>=0,
-   big:left>=0?money(Math.round(left))+" left":money(Math.round(-left))+" short",line:left>=0?"You would still have "+money(Math.round(left))+" left each month after everything you spend now.":"Each month would run "+money(Math.round(-left))+" short"+(typeof unitTxt==="function"&&unitTxt(c,-left)?", "+unitTxt(c,-left)+" a month":"")+"."+(cover!=null?" Your cash could carry that gap for "+mo(cover)+".":""),
-   math:[money(B.take)+" coming in, minus a fifth, is "+money(Math.round(t))+".","Minus "+money(B.spend)+" going out."],
-   rep:"For one week, spend as if the cut had happened. Notice the first thing you reach for and cannot have.",mins:0})}
- if(B.inv>0){const x=JSON.parse(JSON.stringify(c));x.inv=Math.round(c.inv*2/3);(x.invs||[]).forEach(r=>{r.amt=Math.round((r.amt||0)*2/3)});const a=goalSim(c).eraAt[8],b=goalSim(x).eraAt[8],shift=d.era>=8?null:a!=null&&b!=null?b-a:null,down=B.inv-B.inv*2/3;
-  add({id:"crash",fear:"The market falls by a third this year",real:B.real.inv,calm:shift!=null&&shift<=12,
-   big:"Down "+money(Math.round(down)),line:"On paper, "+money(B.inv)+" becomes "+money(Math.round(B.inv*2/3))+"."+(shift!=null?" If it never bounced back, work would become optional about "+fmtDur(Math.max(0,shift))+" later.":"")+" Nothing is lost unless you sell, and what you add from here buys at lower prices.",
-   math:["A third off "+money(B.inv)+".",shift!=null?"The same month-by-month plan, run again from the lower number with no rebound at all.":null,"Drops this size have happened before. This one assumes the worst case, that it stays down."].filter(Boolean),
-   rep:"Next time the market is down for the day, open your account, look at the number, and close it without doing anything.",mins:2})}
- {const card=fdCard(c);if(card>0)add({id:"miss",fear:"You miss a card payment",real:B.real.debt,calm:null,
-   big:"A fee, then a clock",line:"Day 1: a late fee, often around $30 to $40. Pay within 30 days and it usually ends there. At 30 days late the card can report it, and that mark stays on a credit report for seven years.",
-   math:["You have "+money(card)+" on cards.","The fee and the 30-day rule are how card companies and credit bureaus work in the US. Your card's own terms have the exact fee."],
-   rep:"Turn on autopay for the minimum on every card. It makes day 30 close to impossible, and you can still pay more by hand.",mins:5})}
- return out}
-function fdDone(c){return (c.x&&c.x.drills)||{}}
-function fdSheet(){const c=C(),d=D||derive(c),w=W,L=fdList(c,d),done=fdDone(c);
- if(w.id){const x=L.find(o=>o.id===w.id);if(!x){w.id=null;return fdSheet()}const n=(done[x.id]||{}).n||0;
-  return head("Fire drills",esc(x.fear))+`<div class="tile stack" style="gap:4px;text-align:center"><div class="tiny muted">On your numbers${x.real?"":" · <b>Guess</b>"}</div><div class="bignum" data-fid="fd:big">${esc(x.big)}</div></div><div class="small">${esc(x.line)}</div>${mathBox(x.math)}
-  <div class="tile stack" style="gap:6px"><div class="row between"><b class="small">Your rep</b><span class="pill">${x.mins?x.mins+" min":"A week"}</span></div><div class="small">${esc(x.rep)}</div><button class="primary wide" data-a="fddone" data-v="${x.id}">I did the rep</button>${n?`<div class="tiny muted" style="text-align:center">Practiced ${n} time${n===1?"":"s"}. Last: ${nice(done[x.id].d)}.</div>`:""}</div>
-  ${x.go?`<button class="ghost wide slim" data-a="${x.go[1]}">${x.go[0]}</button>`:""}<button class="ghost wide slim" data-a="drills">All the drills</button>`}
- return head("Menu","Fire drills")+`<div class="small muted">Pick a money fear. See it run on your own numbers, then do one small thing in real life. Practicing the scary thing while it is calm is how it gets smaller.</div><div class="stack" style="gap:6px">${L.map(x=>{const n=(done[x.id]||{}).n||0;return `<button class="rowbtn" data-a="fdopen" data-v="${x.id}"><span style="min-width:0"><b>${esc(x.fear)}</b><div class="tiny muted">${esc(x.big)}${x.real?"":" · guess"}${n?" · practiced "+n+"x":""}</div></span>${x.calm?`<span class="pill okp" style="flex:none">Covered</span>`:n?`<span class="pill info" style="flex:none">Practiced ✓</span>`:`<span class="caret">›</span>`}</button>`}).join("")}</div>
- <button class="ghost wide slim" data-a="ladder">If the pay stopped: what would I use first?</button>`}
+const FD_BILL = 1000,
+  FD_NEEDS = ["Home", "Food", "Getting around", "Bills and subscriptions"];
+function fdBase(c, d) {
+  const rows = c.led ? c.spends || [] : [],
+    needs = rows.length ? rows.filter(r => FD_NEEDS.includes(r.k)).reduce((a, r) => a + (r.amt || 0), 0) : null,
+    cash = d.cash || 0,
+    g = a => (a || []).length && a.every(r => r.s);
+  const real = {
+    cash: c.led && g(c.cashes),
+    spend: c.led && g(c.spends),
+    take: c.led && g(c.incs),
+    inv: c.led && ((c.invs || []).length ? g(c.invs) : !(c.inv > 0)),
+    debt: c.led && g(c.debts),
+  };
+  return { cash, needs, spend: c.spend || 0, take: c.take || 0, inv: c.inv || 0, real };
+}
+function fdCard(c) {
+  return (c.debts || []).filter(x => x.amt > 0 && /card/i.test(x.k)).reduce((a, x) => a + x.amt, 0);
+}
+function fdList(c, d) {
+  const B = fdBase(c, d),
+    out = [],
+    mo = n =>
+      n >= 24
+        ? (n / 12).toFixed(1) + " years"
+        : n < 1
+          ? "under a month"
+          : (n < 10 ? n.toFixed(1) : Math.round(n)) + " months",
+    add = o => {
+      if (!o.real) o.calm = null;
+      out.push(o);
+    };
+  {
+    const short = Math.max(0, FD_BILL - B.cash),
+      left = B.cash - FD_BILL;
+    add({
+      id: "bill",
+      fear: "A " + money(FD_BILL) + " bill lands this week",
+      real: B.real.cash,
+      calm: short === 0,
+      big: short === 0 ? "Covered" : money(short) + " short",
+      line:
+        short === 0
+          ? "Your cash covers it and leaves " + money(left) + "."
+          : "Your cash covers " +
+            money(B.cash) +
+            " of it. The other " +
+            money(short) +
+            (typeof unitTxt === "function" && unitTxt(c, short) ? " (" + unitTxt(c, short) + ")" : "") +
+            " would likely land on a card. At 25% a year that is about " +
+            money(Math.max(1, Math.round((short * 0.25) / 12))) +
+            " a month in interest until it is cleared.",
+      math: [
+        "Cash on hand: " + money(B.cash) + ".",
+        "The bill: " + money(FD_BILL) + ", a common size for a car repair or a medical bill.",
+      ],
+      rep:
+        short === 0
+          ? "Rename your savings account so its name says what it is for."
+          : "Move $20 into savings today and give the account a name.",
+      mins: 5,
+    });
+  }
+  if (c.work !== "Retired" && B.spend > 0) {
+    const full = B.cash / B.spend,
+      lean = B.needs > 0 ? B.cash / B.needs : null;
+    add({
+      id: "job",
+      fear: "Your pay stops tomorrow",
+      real: B.real.cash && B.real.spend,
+      calm: (lean != null ? lean : full) >= 6,
+      big: mo(lean != null ? lean : full),
+      line:
+        lean != null && mo(lean) === mo(full)
+          ? "Even cut to the basics (home, food, getting around, bills), your cash lasts " + mo(full) + "."
+          : "Spending as you do now, your cash lasts " +
+            mo(full) +
+            "." +
+            (lean != null
+              ? " Cut to the basics (home, food, getting around, bills) and it lasts " + mo(lean) + "."
+              : ""),
+      math: [
+        "Cash " + money(B.cash) + " divided by " + money(B.spend) + " a month of spending.",
+        lean != null
+          ? "The basics come to " + money(B.needs) + " a month."
+          : "Fill in where your money goes and the basics show up here too.",
+        "Unemployment pay, a partner's pay and side income are not counted, so the real number is often longer.",
+      ],
+      rep: "Find your state's unemployment site and save the link. Then find where your last pay stub lives. That is the whole rep.",
+      mins: 10,
+      go: ["See what you would use first", "ladder"],
+    });
+  }
+  if (c.work !== "Retired" && B.take > 0) {
+    const t = B.take * 0.8,
+      left = t - B.spend,
+      cover = left < 0 && B.cash > 0 ? B.cash / -left : null;
+    add({
+      id: "cut",
+      fear: "Your pay drops by a fifth",
+      real: B.real.take && B.real.spend,
+      calm: left >= 0,
+      big: left >= 0 ? money(Math.round(left)) + " left" : money(Math.round(-left)) + " short",
+      line:
+        left >= 0
+          ? "You would still have " + money(Math.round(left)) + " left each month after everything you spend now."
+          : "Each month would run " +
+            money(Math.round(-left)) +
+            " short" +
+            (typeof unitTxt === "function" && unitTxt(c, -left) ? ", " + unitTxt(c, -left) + " a month" : "") +
+            "." +
+            (cover != null ? " Your cash could carry that gap for " + mo(cover) + "." : ""),
+      math: [
+        money(B.take) + " coming in, minus a fifth, is " + money(Math.round(t)) + ".",
+        "Minus " + money(B.spend) + " going out.",
+      ],
+      rep: "For one week, spend as if the cut had happened. Notice the first thing you reach for and cannot have.",
+      mins: 0,
+    });
+  }
+  if (B.inv > 0) {
+    const x = JSON.parse(JSON.stringify(c));
+    x.inv = Math.round((c.inv * 2) / 3);
+    (x.invs || []).forEach(r => {
+      r.amt = Math.round(((r.amt || 0) * 2) / 3);
+    });
+    const a = goalSim(c).eraAt[8],
+      b = goalSim(x).eraAt[8],
+      shift = d.era >= 8 ? null : a != null && b != null ? b - a : null,
+      down = B.inv - (B.inv * 2) / 3;
+    add({
+      id: "crash",
+      fear: "The market falls by a third this year",
+      real: B.real.inv,
+      calm: shift != null && shift <= 12,
+      big: "Down " + money(Math.round(down)),
+      line:
+        "On paper, " +
+        money(B.inv) +
+        " becomes " +
+        money(Math.round((B.inv * 2) / 3)) +
+        "." +
+        (shift != null
+          ? " If it never bounced back, work would become optional about " + fmtDur(Math.max(0, shift)) + " later."
+          : "") +
+        " Nothing is lost unless you sell, and what you add from here buys at lower prices.",
+      math: [
+        "A third off " + money(B.inv) + ".",
+        shift != null ? "The same month-by-month plan, run again from the lower number with no rebound at all." : null,
+        "Drops this size have happened before. This one assumes the worst case, that it stays down.",
+      ].filter(Boolean),
+      rep: "Next time the market is down for the day, open your account, look at the number, and close it without doing anything.",
+      mins: 2,
+    });
+  }
+  {
+    const card = fdCard(c);
+    if (card > 0)
+      add({
+        id: "miss",
+        fear: "You miss a card payment",
+        real: B.real.debt,
+        calm: null,
+        big: "A fee, then a clock",
+        line: "Day 1: a late fee, often around $30 to $40. Pay within 30 days and it usually ends there. At 30 days late the card can report it, and that mark stays on a credit report for seven years.",
+        math: [
+          "You have " + money(card) + " on cards.",
+          "The fee and the 30-day rule are how card companies and credit bureaus work in the US. Your card's own terms have the exact fee.",
+        ],
+        rep: "Turn on autopay for the minimum on every card. It makes day 30 close to impossible, and you can still pay more by hand.",
+        mins: 5,
+      });
+  }
+  return out;
+}
+function fdDone(c) {
+  return (c.x && c.x.drills) || {};
+}
+function fdSheet() {
+  const c = C(),
+    d = D || derive(c),
+    w = W,
+    L = fdList(c, d),
+    done = fdDone(c);
+  if (w.id) {
+    const x = L.find(o => o.id === w.id);
+    if (!x) {
+      w.id = null;
+      return fdSheet();
+    }
+    const n = (done[x.id] || {}).n || 0;
+    return (
+      head("Fire drills", esc(x.fear)) +
+      `<div class="tile stack" style="gap:4px;text-align:center"><div class="tiny muted">On your numbers${x.real ? "" : " · <b>Guess</b>"}</div><div class="bignum" data-fid="fd:big">${esc(x.big)}</div></div><div class="small">${esc(x.line)}</div>${mathBox(x.math)}
+  <div class="tile stack" style="gap:6px"><div class="row between"><b class="small">Your rep</b><span class="pill">${x.mins ? x.mins + " min" : "A week"}</span></div><div class="small">${esc(x.rep)}</div><button class="primary wide" data-a="fddone" data-v="${x.id}">I did the rep</button>${n ? `<div class="tiny muted" style="text-align:center">Practiced ${n} time${n === 1 ? "" : "s"}. Last: ${nice(done[x.id].d)}.</div>` : ""}</div>
+  ${x.go ? `<button class="ghost wide slim" data-a="${x.go[1]}">${x.go[0]}</button>` : ""}<button class="ghost wide slim" data-a="drills">All the drills</button>`
+    );
+  }
+  return (
+    head("Menu", "Fire drills") +
+    `<div class="small muted">Pick a money fear. See it run on your own numbers, then do one small thing in real life. Practicing the scary thing while it is calm is how it gets smaller.</div><div class="stack" style="gap:6px">${L.map(
+      x => {
+        const n = (done[x.id] || {}).n || 0;
+        return `<button class="rowbtn" data-a="fdopen" data-v="${x.id}"><span style="min-width:0"><b>${esc(x.fear)}</b><div class="tiny muted">${esc(x.big)}${x.real ? "" : " · guess"}${n ? " · practiced " + n + "x" : ""}</div></span>${x.calm ? `<span class="pill okp" style="flex:none">Covered</span>` : n ? `<span class="pill info" style="flex:none">Practiced ✓</span>` : `<span class="caret">›</span>`}</button>`;
+      }
+    ).join("")}</div>
+ <button class="ghost wide slim" data-a="ladder">If the pay stopped: what would I use first?</button>`
+  );
+}
 /* the ladder */
-const LD_RET=["Retirement plan at work","IRA or Roth IRA","HSA"];
-function ldOf(c,d,level){const B=fdBase(c,d),amt=(a,f)=>(a||[]).filter(f).reduce((s,r)=>s+(r.amt||0),0),led=c.led&&(c.cashes||[]).length;
- const checking=led?amt(c.cashes,r=>r.k==="Checking"):Math.round(B.cash*0.3),savings=led?amt(c.cashes,r=>r.k!=="Checking"):B.cash-Math.round(B.cash*0.3);
- const hasInv=c.led&&(c.invs||[]).length,taxable=hasInv?amt(c.invs,r=>!LD_RET.includes(r.k)):0,retire=hasInv?amt(c.invs,r=>LD_RET.includes(r.k)):B.inv;
- const main=(c.incs||[]).slice().sort((a,b)=>(b.amt||0)-(a.amt||0))[0],other=c.led&&(c.incs||[]).length>1?(c.incs||[]).filter(r=>r!==main).reduce((s,r)=>s+(r.amt||0),0):0;
- const canLean=B.needs!=null&&B.needs>0,out=level==="lean"&&canLean?B.needs:B.spend,need=Math.max(0,out-other);
- let at=0;const rung=(id,n,v,note)=>{const mo=need>0?v/need:null,o={id,n,amt:v,mo,from:at,to:mo==null?null:at+mo,note};if(mo!=null)at+=mo;return o};
- const rungs=[rung("checking","Checking",checking,"The first place it comes from"),rung("savings","Savings and cash set aside",savings,"What it was saved for"),rung("taxable","Investments outside retirement",taxable,"Selling can mean tax on the gain, and you sell at that day's price")].filter(r=>r.amt>0);
- const costly=[{id:"card",n:"A credit card",note:"Borrowing at 20% or more to pay for groceries. Every month on it makes the climb back longer."},retire>0?{id:"retire",n:"Retirement money",amt:retire,note:"Before 59 and a half, most withdrawals cost a 10% penalty plus income tax. Money put into a Roth IRA yourself can come out without either."}:null].filter(Boolean);
- const real=B.real.cash&&B.real.spend&&(taxable>0?B.real.inv:true);
- return {level:level==="lean"&&canLean?"lean":"full",canLean,out,other,need,rungs,costly,months:need>0?at:null,cashMo:need>0?(checking+savings)/need:null,real,needs:B.needs,spend:B.spend}}
-function ldMo(n){return n==null?"as long as you need":n>=24?(n/12).toFixed(1)+" years":n<1?"under a month":(n<10?n.toFixed(1):Math.round(n))+" months"}
-function ldSheet(){const c=C(),d=D||derive(c),w=W,L=ldOf(c,d,w.level||"full");
- return head("Fire drills","If the pay stopped")+`<div class="small muted">Your own money, in the order people reach for it, and how long each part lasts. A plan made on a calm day.</div>
- ${L.canLean?`<div class="seg" style="align-self:flex-start"><button class="${L.level==="full"?"on":""}" data-a="ldlevel" data-v="full">Spending as now</button><button class="${L.level==="lean"?"on":""}" data-a="ldlevel" data-v="lean">Just the basics</button></div>`:`<div class="tiny muted">Fill in where your money goes in My Money and a "just the basics" view shows up here.</div>`}
- <div class="tile stack" style="gap:4px;text-align:center"><div class="tiny muted">Before anything that costs extra${L.real?"":" · <b>Guess</b>"}</div><div class="bignum" data-fid="ld:big">${L.need>0?ldMo(L.months):"Covered"}</div><div class="small">${L.need>0?"You would need "+money(Math.round(L.need))+" a month"+(L.other>0?" after the "+money(Math.round(L.other))+" that keeps coming in":"")+(typeof unitTxt==="function"&&unitTxt(c,L.need)?", "+unitTxt(c,L.need):"")+".":"What keeps coming in already covers "+(L.level==="lean"?"the basics":"your spending")+"."}</div></div>
- <b class="small">In this order</b><div class="stack" style="gap:6px">${L.rungs.length?L.rungs.map((r,i)=>`<div class="tile row between" style="gap:10px;align-items:flex-start"><span style="min-width:0"><b class="small">${i+1}. ${esc(r.n)} · ${money(Math.round(r.amt))}</b><div class="tiny muted">${esc(r.note)}</div></span><b class="small" style="flex:none;text-align:right">${r.mo==null?"":ldMo(r.mo)}${r.to!=null?`<div class="tiny muted">gone by month ${Math.max(1,Math.ceil(r.to))}</div>`:""}</b></div>`).join(""):`<div class="tile small">Nothing set aside yet. The first $1,000 is the rung that changes this page the most.</div>`}</div>
- <b class="small">After that, the ones that cost extra</b><div class="stack" style="gap:6px">${L.costly.map(r=>`<div class="tile" style="border-left:4px solid var(--a3)"><b class="small">${esc(r.n)}${r.amt?" · "+money(Math.round(r.amt)):""}</b><div class="tiny muted">${esc(r.note)}</div></div>`).join("")}</div>
- ${mathBox([(L.level==="lean"?"The basics (home, food, getting around, bills): ":"Everything you spend: ")+money(Math.round(L.out))+" a month.",L.other>0?"Income besides your biggest one, "+money(Math.round(L.other))+" a month, is assumed to keep coming.":"No other income is counted.","Each rung's dollars divided by what you would need a month.","Unemployment pay and help from family are not counted, so the real number is often longer.","The expensive rungs are listed and never added to the months."])}
- <button class="ghost wide slim" data-a="drills">Practice it: the fire drills</button>`}
+const LD_RET = ["Retirement plan at work", "IRA or Roth IRA", "HSA"];
+function ldOf(c, d, level) {
+  const B = fdBase(c, d),
+    amt = (a, f) => (a || []).filter(f).reduce((s, r) => s + (r.amt || 0), 0),
+    led = c.led && (c.cashes || []).length;
+  const checking = led ? amt(c.cashes, r => r.k === "Checking") : Math.round(B.cash * 0.3),
+    savings = led ? amt(c.cashes, r => r.k !== "Checking") : B.cash - Math.round(B.cash * 0.3);
+  const hasInv = c.led && (c.invs || []).length,
+    taxable = hasInv ? amt(c.invs, r => !LD_RET.includes(r.k)) : 0,
+    retire = hasInv ? amt(c.invs, r => LD_RET.includes(r.k)) : B.inv;
+  const main = (c.incs || []).slice().sort((a, b) => (b.amt || 0) - (a.amt || 0))[0],
+    other =
+      c.led && (c.incs || []).length > 1
+        ? (c.incs || []).filter(r => r !== main).reduce((s, r) => s + (r.amt || 0), 0)
+        : 0;
+  const canLean = B.needs != null && B.needs > 0,
+    out = level === "lean" && canLean ? B.needs : B.spend,
+    need = Math.max(0, out - other);
+  let at = 0;
+  const rung = (id, n, v, note) => {
+    const mo = need > 0 ? v / need : null,
+      o = { id, n, amt: v, mo, from: at, to: mo == null ? null : at + mo, note };
+    if (mo != null) at += mo;
+    return o;
+  };
+  const rungs = [
+    rung("checking", "Checking", checking, "The first place it comes from"),
+    rung("savings", "Savings and cash set aside", savings, "What it was saved for"),
+    rung(
+      "taxable",
+      "Investments outside retirement",
+      taxable,
+      "Selling can mean tax on the gain, and you sell at that day's price"
+    ),
+  ].filter(r => r.amt > 0);
+  const costly = [
+    {
+      id: "card",
+      n: "A credit card",
+      note: "Borrowing at 20% or more to pay for groceries. Every month on it makes the climb back longer.",
+    },
+    retire > 0
+      ? {
+          id: "retire",
+          n: "Retirement money",
+          amt: retire,
+          note: "Before 59 and a half, most withdrawals cost a 10% penalty plus income tax. Money put into a Roth IRA yourself can come out without either.",
+        }
+      : null,
+  ].filter(Boolean);
+  const real = B.real.cash && B.real.spend && (taxable > 0 ? B.real.inv : true);
+  return {
+    level: level === "lean" && canLean ? "lean" : "full",
+    canLean,
+    out,
+    other,
+    need,
+    rungs,
+    costly,
+    months: need > 0 ? at : null,
+    cashMo: need > 0 ? (checking + savings) / need : null,
+    real,
+    needs: B.needs,
+    spend: B.spend,
+  };
+}
+function ldMo(n) {
+  return n == null
+    ? "as long as you need"
+    : n >= 24
+      ? (n / 12).toFixed(1) + " years"
+      : n < 1
+        ? "under a month"
+        : (n < 10 ? n.toFixed(1) : Math.round(n)) + " months";
+}
+function ldSheet() {
+  const c = C(),
+    d = D || derive(c),
+    w = W,
+    L = ldOf(c, d, w.level || "full");
+  return (
+    head("Fire drills", "If the pay stopped") +
+    `<div class="small muted">Your own money, in the order people reach for it, and how long each part lasts. A plan made on a calm day.</div>
+ ${L.canLean ? `<div class="seg" style="align-self:flex-start"><button class="${L.level === "full" ? "on" : ""}" data-a="ldlevel" data-v="full">Spending as now</button><button class="${L.level === "lean" ? "on" : ""}" data-a="ldlevel" data-v="lean">Just the basics</button></div>` : `<div class="tiny muted">Fill in where your money goes in My Money and a "just the basics" view shows up here.</div>`}
+ <div class="tile stack" style="gap:4px;text-align:center"><div class="tiny muted">Before anything that costs extra${L.real ? "" : " · <b>Guess</b>"}</div><div class="bignum" data-fid="ld:big">${L.need > 0 ? ldMo(L.months) : "Covered"}</div><div class="small">${L.need > 0 ? "You would need " + money(Math.round(L.need)) + " a month" + (L.other > 0 ? " after the " + money(Math.round(L.other)) + " that keeps coming in" : "") + (typeof unitTxt === "function" && unitTxt(c, L.need) ? ", " + unitTxt(c, L.need) : "") + "." : "What keeps coming in already covers " + (L.level === "lean" ? "the basics" : "your spending") + "."}</div></div>
+ <b class="small">In this order</b><div class="stack" style="gap:6px">${L.rungs.length ? L.rungs.map((r, i) => `<div class="tile row between" style="gap:10px;align-items:flex-start"><span style="min-width:0"><b class="small">${i + 1}. ${esc(r.n)} · ${money(Math.round(r.amt))}</b><div class="tiny muted">${esc(r.note)}</div></span><b class="small" style="flex:none;text-align:right">${r.mo == null ? "" : ldMo(r.mo)}${r.to != null ? `<div class="tiny muted">gone by month ${Math.max(1, Math.ceil(r.to))}</div>` : ""}</b></div>`).join("") : `<div class="tile small">Nothing set aside yet. The first $1,000 is the rung that changes this page the most.</div>`}</div>
+ <b class="small">After that, the ones that cost extra</b><div class="stack" style="gap:6px">${L.costly.map(r => `<div class="tile" style="border-left:4px solid var(--a3)"><b class="small">${esc(r.n)}${r.amt ? " · " + money(Math.round(r.amt)) : ""}</b><div class="tiny muted">${esc(r.note)}</div></div>`).join("")}</div>
+ ${mathBox([(L.level === "lean" ? "The basics (home, food, getting around, bills): " : "Everything you spend: ") + money(Math.round(L.out)) + " a month.", L.other > 0 ? "Income besides your biggest one, " + money(Math.round(L.other)) + " a month, is assumed to keep coming." : "No other income is counted.", "Each rung's dollars divided by what you would need a month.", "Unemployment pay and help from family are not counted, so the real number is often longer.", "The expensive rungs are listed and never added to the months."])}
+ <button class="ghost wide slim" data-a="drills">Practice it: the fire drills</button>`
+  );
+}
 /* one-way doors */
-const DOORS={cheaper:"Moving is hard to undo: a lease or a sale, a job, the people nearby. Worth a visit that lasts longer than a vacation first.",switch:"Leaving a job is mostly a one-way door. The new offer in writing before the old one is given up.",househack:"Buying a place to rent part of is a one-way door for years: a mortgage, a tenant, repairs. Run the numbers with a room sitting empty.",parttime:"Going part-time can be hard to reverse: benefits, the match, and the way back to full pay. Ask what comes back and what does not before you ask for it."};
-function doorNote(id){return DOORS[id]?`<div class="banner small" data-door="${id}"><b>One-way door.</b> ${esc(DOORS[id])}</div>`:""}
+const DOORS = {
+  cheaper:
+    "Moving is hard to undo: a lease or a sale, a job, the people nearby. Worth a visit that lasts longer than a vacation first.",
+  switch: "Leaving a job is mostly a one-way door. The new offer in writing before the old one is given up.",
+  househack:
+    "Buying a place to rent part of is a one-way door for years: a mortgage, a tenant, repairs. Run the numbers with a room sitting empty.",
+  parttime:
+    "Going part-time can be hard to reverse: benefits, the match, and the way back to full pay. Ask what comes back and what does not before you ask for it.",
+};
+function doorNote(id) {
+  return DOORS[id] ? `<div class="banner small" data-door="${id}"><b>One-way door.</b> ${esc(DOORS[id])}</div>` : "";
+}
 /* the tour */
-const TOUR=[["Home","One thing to do next, always at the top. If you only ever open this tab, the game still works.","home"],["My Money","Every number the game uses lives here. The + Log button at the bottom records money as it moves.","money"],["Next Steps, My Goals, Me","Your week, the things you are saving for, and who you are becoming. The ? on each tab says what it is for, and the menu holds everything else.","plan"]];
-function tourSheet(){const w=W,i=Math.min(w.i||0,TOUR.length-1),t=TOUR[i],last=i===TOUR.length-1;
- return head("Welcome",(i+1)+" of "+TOUR.length)+`<div class="levelup pop" style="padding:10px 0"><div class="eyebrow">${t[0]}</div><div class="small" style="margin:10px 8px 0;font-size:16px;line-height:1.45">${t[1]}</div></div><div class="row" style="justify-content:center;gap:6px;margin:4px 0">${TOUR.map((_,k)=>`<span class="rvdot ${k<=i?"on":""}"></span>`).join("")}</div>
- <button class="primary wide go" data-a="${last?"tourdone":"tournext"}">${last?"Got it, close the tour":"Next screen"}</button>${last?"":`<button class="ghost wide slim" data-a="tourdone">Skip the tour</button>`}`}
-Object.assign(ACT,{
- drills:()=>{W={kind:"drills",id:null};sheet(fdSheet)},fdopen:t=>{W={kind:"drills",id:t.dataset.v};sheet(fdSheet)},
- fddone:t=>{const c=C(),id=t.dataset.v;if(G.demo)return drawSheet();c.x=c.x||{};c.x.drills=c.x.drills||{};const r=c.x.drills[id]||{n:0};r.n++;r.d=todayISO();c.x.drills[id]=r;save();drawSheet()},
- ladder:()=>{W={kind:"ladder",level:"full"};sheet(ldSheet)},ldlevel:t=>{W.level=t.dataset.v;drawSheet()},
- tour:()=>{W={kind:"tour",i:0};sheet(tourSheet)},tournext:()=>{W.i=(W.i||0)+1;drawSheet()},tourdone:()=>{G.tourSeen=todayISO();save();closeSheet();render()}});
-(()=>{/* the door note sits inside the open move, and under a picked move in Side by side */
- const _ms=movesSheet;movesSheet=function(){let h=_ms();const id=W&&W.open;if(!id||!DOORS[id])return h;const re=new RegExp('(<button class="(?:ghost|primary) wide slim" data-a="mvpin" data-v="'+id+'">)');return h.replace(re,(m)=>doorNote(id)+m)};
- if(typeof cpMoves==="function"){const _cm=cpMoves;cpMoves=function(c){let h=_cm(c);(W&&W.picks||[]).forEach(id=>{if(!DOORS[id])return;const mv=MOVES.find(m=>m.id===id);if(!mv)return;const a=`<div class="tile small"><b>${esc(mv.n)}.</b> ${esc(mv.d)}</div>`;if(h.indexOf(a)>=0)h=h.replace(a,()=>a+doorNote(id))});return h}}
- /* the tour is offered once on Home, under the main tiles. The character row waits until the tour is seen or skipped, so Home never grows two new rows at once. */
- const _h=home;home=function(){const h=_h(),c=C();if(G.demo||G.tourSeen||!c.led)return h;return homeRowAdd(h,`<button class="rowbtn homerow" data-a="tour"><span><b>New here? Take the 3-tap tour</b><div class="tiny muted">What each tab is for. Skip it any time.</div></span><span class="pill new">New</span></button>`)}})();
-Object.assign(GLOSS,{oneway:["One-way door","A choice that is hard or costly to undo, like selling a home or leaving a job. A two-way door is one you can walk back through, like trying a cheaper phone plan. One-way doors deserve more time. The idea is from Jeff Bezos."],firedrill:["Fire drill","Practicing a scary money moment on a calm day, on your own numbers, so it is smaller if it ever comes."]});
-if(typeof MENU!=="undefined"&&Array.isArray(MENU)&&!MENU.some(m=>m[1]==="drills")){const i=MENU.findIndex(m=>m[1]==="quick");MENU.splice(i>=0?i+1:MENU.length,0,["Fire drills","drills","act","Practice a hard month on your own numbers"])}
-if(typeof document!=="undefined"&&document.getElementById&&document.getElementById("app"))render();
+const TOUR = [
+  ["Home", "One thing to do next, always at the top. If you only ever open this tab, the game still works.", "home"],
+  [
+    "My Money",
+    "Every number the game uses lives here. The + Log button at the bottom records money as it moves.",
+    "money",
+  ],
+  [
+    "Next Steps, My Goals, Me",
+    "Your week, the things you are saving for, and who you are becoming. The ? on each tab says what it is for, and the menu holds everything else.",
+    "plan",
+  ],
+];
+function tourSheet() {
+  const w = W,
+    i = Math.min(w.i || 0, TOUR.length - 1),
+    t = TOUR[i],
+    last = i === TOUR.length - 1;
+  return (
+    head("Welcome", i + 1 + " of " + TOUR.length) +
+    `<div class="levelup pop" style="padding:10px 0"><div class="eyebrow">${t[0]}</div><div class="small" style="margin:10px 8px 0;font-size:16px;line-height:1.45">${t[1]}</div></div><div class="row" style="justify-content:center;gap:6px;margin:4px 0">${TOUR.map((_, k) => `<span class="rvdot ${k <= i ? "on" : ""}"></span>`).join("")}</div>
+ <button class="primary wide go" data-a="${last ? "tourdone" : "tournext"}">${last ? "Got it, close the tour" : "Next screen"}</button>${last ? "" : `<button class="ghost wide slim" data-a="tourdone">Skip the tour</button>`}`
+  );
+}
+Object.assign(ACT, {
+  drills: () => {
+    W = { kind: "drills", id: null };
+    sheet(fdSheet);
+  },
+  fdopen: t => {
+    W = { kind: "drills", id: t.dataset.v };
+    sheet(fdSheet);
+  },
+  fddone: t => {
+    const c = C(),
+      id = t.dataset.v;
+    if (G.demo) return drawSheet();
+    c.x = c.x || {};
+    c.x.drills = c.x.drills || {};
+    const r = c.x.drills[id] || { n: 0 };
+    r.n++;
+    r.d = todayISO();
+    c.x.drills[id] = r;
+    save();
+    drawSheet();
+  },
+  ladder: () => {
+    W = { kind: "ladder", level: "full" };
+    sheet(ldSheet);
+  },
+  ldlevel: t => {
+    W.level = t.dataset.v;
+    drawSheet();
+  },
+  tour: () => {
+    W = { kind: "tour", i: 0 };
+    sheet(tourSheet);
+  },
+  tournext: () => {
+    W.i = (W.i || 0) + 1;
+    drawSheet();
+  },
+  tourdone: () => {
+    G.tourSeen = todayISO();
+    save();
+    closeSheet();
+    render();
+  },
+});
+(() => {
+  /* the door note sits inside the open move, and under a picked move in Side by side */
+  const _ms = movesSheet;
+  movesSheet = function () {
+    let h = _ms();
+    const id = W && W.open;
+    if (!id || !DOORS[id]) return h;
+    const re = new RegExp('(<button class="(?:ghost|primary) wide slim" data-a="mvpin" data-v="' + id + '">)');
+    return h.replace(re, m => doorNote(id) + m);
+  };
+  if (typeof cpMoves === "function") {
+    const _cm = cpMoves;
+    cpMoves = function (c) {
+      let h = _cm(c);
+      ((W && W.picks) || []).forEach(id => {
+        if (!DOORS[id]) return;
+        const mv = MOVES.find(m => m.id === id);
+        if (!mv) return;
+        const a = `<div class="tile small"><b>${esc(mv.n)}.</b> ${esc(mv.d)}</div>`;
+        if (h.indexOf(a) >= 0) h = h.replace(a, () => a + doorNote(id));
+      });
+      return h;
+    };
+  }
+  /* the tour is offered once on Home, under the main tiles. The character row waits until the tour is seen or skipped, so Home never grows two new rows at once. */
+  const _h = home;
+  home = function () {
+    const h = _h(),
+      c = C();
+    if (G.demo || G.tourSeen || !c.led) return h;
+    return homeRowAdd(
+      h,
+      `<button class="rowbtn homerow" data-a="tour"><span><b>New here? Take the 3-tap tour</b><div class="tiny muted">What each tab is for. Skip it any time.</div></span><span class="pill new">New</span></button>`
+    );
+  };
+})();
+Object.assign(GLOSS, {
+  oneway: [
+    "One-way door",
+    "A choice that is hard or costly to undo, like selling a home or leaving a job. A two-way door is one you can walk back through, like trying a cheaper phone plan. One-way doors deserve more time. The idea is from Jeff Bezos.",
+  ],
+  firedrill: [
+    "Fire drill",
+    "Practicing a scary money moment on a calm day, on your own numbers, so it is smaller if it ever comes.",
+  ],
+});
+if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] === "drills")) {
+  const i = MENU.findIndex(m => m[1] === "quick");
+  MENU.splice(i >= 0 ? i + 1 : MENU.length, 0, [
+    "Fire drills",
+    "drills",
+    "act",
+    "Practice a hard month on your own numbers",
+  ]);
+}
+if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();

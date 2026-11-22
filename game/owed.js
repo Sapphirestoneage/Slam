@@ -1,19 +1,112 @@
 /* ===== owed.js: What each debt costs you. The debt plan already knows the interest still to come on every debt and the month it will be gone. This screen turns that into two plain prices: dollars of interest, and how long that money would have paid for your life (interest divided by what you spend in a month). For costly debt, the kind the game's freedom date reacts to, it also runs the game's own plan again with that one debt gone and shows how many months sooner work becomes optional. Low-cost debt does not move the game's freedom date, and the screen says so instead of inventing a number. A row built on a guessed rate or payment says Guess, and no debt is named the costliest while any of them is a guess. Nothing is saved. ===== */
-function owLife(m){if(m==null)return "";const w=m*4.345,n=Math.max(1,Math.round(w));return w<0.75?"less than a week":m<1?"about "+n+(n===1?" week":" weeks"):m<1.5?"about 1 month":"about "+Math.round(m)+" months"}
-function owRows(c){const P=(c.x&&c.x.dplan)||{},pl=dbPlan(c,P.order||"avalanche",P.extra||0);let base=null;try{base=freeAt(c)}catch(e){}
- const rows=pl.debts.map(d=>{const x=c.debts[d.i],r=dbRate(x),p=dbPay(x),gs=r.cf===0||p.cf===0;let free=null;
-  if(x.high&&base!=null){try{const k=mvClone(c);k.debts[d.i].amt=0;syncAll(k);const f=freeAt(k);free=f==null?null:Math.max(0,base-f)}catch(e){}}
-  return {i:d.i,name:d.name,amt:x.amt,interest:d.interest,off:d.off,life:c.spend>0?d.interest/c.spend:null,free,gs,high:!!x.high,rate:r.v}});
- const any=rows.some(r=>r.gs),top=!any&&rows.length>1?rows.slice().sort((a,b)=>b.interest-a.interest)[0]:null,total=rows.reduce((s,r)=>s+r.interest,0);
- return {pl,base,rows,guess:any,top:top&&top.interest>0?top:null,total,life:c.spend>0?total/c.spend:null,clears:pl.months!=null}}
-function owSheet(){const c=C(),O=owRows(c);
- if(!O.rows.length)return head("My Money","What each debt costs you")+`<div class="tile stack" style="text-align:center"><div class="bignum">$0</div><div class="small">You don't owe anything the game knows about, so there is nothing to price.</div></div><button class="ghost wide" data-a="rowadd" data-v="debts">Add a debt</button>`;
- return head("My Money","What each debt costs you")+`<div class="small muted">A debt has two prices. One is the interest still to come. The other is how long that same money would have paid for your life.</div>`+
-  `<div class="tile stack" style="gap:4px;text-align:center"><div class="tiny muted">Interest still to come on everything you owe</div><div class="bignum ${O.guess?"guess":""}">${O.clears?money(Math.round(O.total)):"No end date yet"}</div><div class="small">${O.clears?(O.life!=null?"That would pay for "+owLife(O.life)+" of your life.":""):"At today's payments at least one debt never clears. A bigger payment gives it an end."}${O.guess?" Some of this rests on a guess.":""}</div></div>`+
-  `<div class="stack" style="gap:6px">${O.rows.map(r=>`<div class="tile stack owrow ${O.top&&O.top.i===r.i?"best":""}" style="gap:4px"><div class="row between" style="gap:8px"><b>${esc(r.name)}</b><span class="pill">${r.gs?"Guess":"Close"}</span></div><div class="tiny muted">You owe ${money(r.amt)} at about ${r.rate}% a year</div><div class="small">Interest still to come: <b>${money(Math.round(r.interest))}</b>${r.off!=null?", gone by "+dbMonth(r.off):""}.</div>${r.life!=null&&r.interest>=1?`<div class="small">That would pay for <b>${owLife(r.life)}</b> of your life.</div>`:""}<div class="small">${r.high?(r.free==null?"The game cannot show a freedom date yet, so it cannot say what this one moves.":r.free>=1?"Without it, the day work becomes optional comes about <b>"+Math.round(r.free)+(Math.round(r.free)===1?" month":" months")+"</b> sooner.":"It does not move the day work becomes optional by a full month."):"This is low-cost debt. The game's freedom date does not react to it."}</div>${O.top&&O.top.i===r.i?`<div class="tiny">The most interest still to come is on this one.</div>`:""}${r.gs?`<button class="ghost slim" data-a="dbone" data-v="${r.i}">Answer two questions to make this real</button>`:""}</div>`).join("")}</div>`+
-  mathBox(["Interest still to come is from your debt plan: each month, the balance times the yearly rate divided by 12, until the debt is gone.","Months of your life: that interest divided by what you spend in a month, "+money(Math.round(c.spend||0))+".","Sooner by: the game's own freedom plan, run once as it is and once with that one debt gone today.","Only debt marked 8% a year or more moves the game's freedom date."])+
-  `<div class="row" style="gap:8px"><button class="primary" style="flex:1" data-a="debtplan">Open my debt plan</button><button class="ghost" style="flex:1" data-a="sign">Price a new loan</button></div>`}
-Object.assign(ACT,{owed:()=>{W={kind:"owed"};sheet(owSheet)}});
-(()=>{const _d=dbSheet;dbSheet=function(){const h=_d(),c=C();return dbLive(c).length?h+`<button class="ghost wide slim" data-a="owed">What each debt costs you, in months of your life</button>`:h}})();
-if(typeof MENU!=="undefined"&&Array.isArray(MENU)&&!MENU.some(m=>m[1]==="owed")){const i=MENU.findIndex(m=>m[1]==="sign");MENU.splice(i>=0?i+1:MENU.length,0,["What each debt costs you","owed","act","The interest still to come, as months of your life"])}
-if(typeof document!=="undefined"&&document.getElementById&&document.getElementById("app"))render();
+function owLife(m) {
+  if (m == null) return "";
+  const w = m * 4.345,
+    n = Math.max(1, Math.round(w));
+  return w < 0.75
+    ? "less than a week"
+    : m < 1
+      ? "about " + n + (n === 1 ? " week" : " weeks")
+      : m < 1.5
+        ? "about 1 month"
+        : "about " + Math.round(m) + " months";
+}
+function owRows(c) {
+  const P = (c.x && c.x.dplan) || {},
+    pl = dbPlan(c, P.order || "avalanche", P.extra || 0);
+  let base = null;
+  try {
+    base = freeAt(c);
+  } catch (e) {}
+  const rows = pl.debts.map(d => {
+    const x = c.debts[d.i],
+      r = dbRate(x),
+      p = dbPay(x),
+      gs = r.cf === 0 || p.cf === 0;
+    let free = null;
+    if (x.high && base != null) {
+      try {
+        const k = mvClone(c);
+        k.debts[d.i].amt = 0;
+        syncAll(k);
+        const f = freeAt(k);
+        free = f == null ? null : Math.max(0, base - f);
+      } catch (e) {}
+    }
+    return {
+      i: d.i,
+      name: d.name,
+      amt: x.amt,
+      interest: d.interest,
+      off: d.off,
+      life: c.spend > 0 ? d.interest / c.spend : null,
+      free,
+      gs,
+      high: !!x.high,
+      rate: r.v,
+    };
+  });
+  const any = rows.some(r => r.gs),
+    top = !any && rows.length > 1 ? rows.slice().sort((a, b) => b.interest - a.interest)[0] : null,
+    total = rows.reduce((s, r) => s + r.interest, 0);
+  return {
+    pl,
+    base,
+    rows,
+    guess: any,
+    top: top && top.interest > 0 ? top : null,
+    total,
+    life: c.spend > 0 ? total / c.spend : null,
+    clears: pl.months != null,
+  };
+}
+function owSheet() {
+  const c = C(),
+    O = owRows(c);
+  if (!O.rows.length)
+    return (
+      head("My Money", "What each debt costs you") +
+      `<div class="tile stack" style="text-align:center"><div class="bignum">$0</div><div class="small">You don't owe anything the game knows about, so there is nothing to price.</div></div><button class="ghost wide" data-a="rowadd" data-v="debts">Add a debt</button>`
+    );
+  return (
+    head("My Money", "What each debt costs you") +
+    `<div class="small muted">A debt has two prices. One is the interest still to come. The other is how long that same money would have paid for your life.</div>` +
+    `<div class="tile stack" style="gap:4px;text-align:center"><div class="tiny muted">Interest still to come on everything you owe</div><div class="bignum ${O.guess ? "guess" : ""}">${O.clears ? money(Math.round(O.total)) : "No end date yet"}</div><div class="small">${O.clears ? (O.life != null ? "That would pay for " + owLife(O.life) + " of your life." : "") : "At today's payments at least one debt never clears. A bigger payment gives it an end."}${O.guess ? " Some of this rests on a guess." : ""}</div></div>` +
+    `<div class="stack" style="gap:6px">${O.rows.map(r => `<div class="tile stack owrow ${O.top && O.top.i === r.i ? "best" : ""}" style="gap:4px"><div class="row between" style="gap:8px"><b>${esc(r.name)}</b><span class="pill">${r.gs ? "Guess" : "Close"}</span></div><div class="tiny muted">You owe ${money(r.amt)} at about ${r.rate}% a year</div><div class="small">Interest still to come: <b>${money(Math.round(r.interest))}</b>${r.off != null ? ", gone by " + dbMonth(r.off) : ""}.</div>${r.life != null && r.interest >= 1 ? `<div class="small">That would pay for <b>${owLife(r.life)}</b> of your life.</div>` : ""}<div class="small">${r.high ? (r.free == null ? "The game cannot show a freedom date yet, so it cannot say what this one moves." : r.free >= 1 ? "Without it, the day work becomes optional comes about <b>" + Math.round(r.free) + (Math.round(r.free) === 1 ? " month" : " months") + "</b> sooner." : "It does not move the day work becomes optional by a full month.") : "This is low-cost debt. The game's freedom date does not react to it."}</div>${O.top && O.top.i === r.i ? `<div class="tiny">The most interest still to come is on this one.</div>` : ""}${r.gs ? `<button class="ghost slim" data-a="dbone" data-v="${r.i}">Answer two questions to make this real</button>` : ""}</div>`).join("")}</div>` +
+    mathBox([
+      "Interest still to come is from your debt plan: each month, the balance times the yearly rate divided by 12, until the debt is gone.",
+      "Months of your life: that interest divided by what you spend in a month, " +
+        money(Math.round(c.spend || 0)) +
+        ".",
+      "Sooner by: the game's own freedom plan, run once as it is and once with that one debt gone today.",
+      "Only debt marked 8% a year or more moves the game's freedom date.",
+    ]) +
+    `<div class="row" style="gap:8px"><button class="primary" style="flex:1" data-a="debtplan">Open my debt plan</button><button class="ghost" style="flex:1" data-a="sign">Price a new loan</button></div>`
+  );
+}
+Object.assign(ACT, {
+  owed: () => {
+    W = { kind: "owed" };
+    sheet(owSheet);
+  },
+});
+(() => {
+  const _d = dbSheet;
+  dbSheet = function () {
+    const h = _d(),
+      c = C();
+    return dbLive(c).length
+      ? h + `<button class="ghost wide slim" data-a="owed">What each debt costs you, in months of your life</button>`
+      : h;
+  };
+})();
+if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] === "owed")) {
+  const i = MENU.findIndex(m => m[1] === "sign");
+  MENU.splice(i >= 0 ? i + 1 : MENU.length, 0, [
+    "What each debt costs you",
+    "owed",
+    "act",
+    "The interest still to come, as months of your life",
+  ]);
+}
+if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();

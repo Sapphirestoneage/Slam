@@ -1,42 +1,270 @@
 /* ===== import.js: fill in spending from a bank or card statement file. The file is read on this device and never sent anywhere (Eli's rule: ask each time). Only the monthly totals the player says yes to are kept; the rows are dropped when the sheet closes. Uses csvRows from games2.js. ===== */
-const IM_CATS=[["Home","Home"],["Food","Food"],["Getting around","Getting around"],["Bills and subscriptions","Bills"],["Fun and everything else","Fun"]];
-const IM_MOVE=/(credit ?card|card) ?(pay|pmt)|payment[ -]*thank you|online payment|autopay|auto pay|payment received|transfer (to|from)|\bxfer\b|\btfr\b|to savings|from savings|to checking|from checking|venmo cashout|brokerage|vanguard|fidelity|schwab|robinhood|acorns|betterment|wealthfront/i;
-const IM_DEBT=/navient|nelnet|mohela|aidvantage|sallie mae|student loan|great lakes|auto loan|car loan|loan pmt|loan payment|affirm|klarna|afterpay|upstart|sofi loan|lendingclub/i;
-const IM_RULES=[
- ["Food",/uber ?eats|doordash|grubhub|seamless|postmates|instacart/i],
- ["Home",/\brent\b|mortgage|landlord|property|\bhoa\b|apartment|leasing|realty|home depot|lowe'?s|ikea|furniture|con ?ed|pseg|national grid|orange ?(and|&)? ?rockland|electric|water (bill|dept|util)|sewer|utilit/i],
- ["Getting around",/\buber\b|lyft|\bshell\b|exxon|mobil|\bbp\b|sunoco|chevron|citgo|speedway|wawa|gulf oil|\bgas\b|fuel|parking|\btoll|e-?z ?pass|\bmta\b|transit|metrocard|omny|amtrak|geico|progressive|state farm|allstate|\bdmv\b|car wash|jiffy|tire|auto (parts|zone|service|repair)|autozone|valvoline/i],
- ["Bills and subscriptions",/netflix|spotify|hulu|disney|hbo|\bmax\b|peacock|paramount|apple\.com|apple com|itunes|icloud|google|youtube|prime video|amazon prime|audible|verizon|t-?mobile|at&t|\batt\b|sprint|mint mobile|comcast|xfinity|optimum|spectrum|internet|wireless|insurance|gym|planet fitness|equinox|membership|subscription|patreon|microsoft|adobe|openai|anthropic|dropbox|nytimes|new york times/i],
- ["Food",/grocer|supermarket|\bmarket\b|whole foods|trader joe|shoprite|stop ?(and|&)? ?shop|kroger|safeway|aldi|costco|wegmans|publix|walmart|\btarget\b|bj'?s|restaurant|cafe|coffee|starbucks|dunkin|mcdonald|chipotle|pizza|grill|kitchen|\bdeli\b|bagel|diner|sushi|burger|taco|bakery|\bbar\b|\bpub\b|wendy|chick-?fil|subway|panera|shake shack|falafel/i]];
-function imKey(n){return String(n||"").toUpperCase().replace(/[^A-Z ]/g," ").replace(/\b(COM|WWW|INC|LLC|POS|DEBIT|PURCHASE|CARD|CHECKCARD|RECURRING|PAYPAL|SQ|TST)\b/g," ").replace(/\s+/g," ").trim().split(" ").slice(0,2).join(" ")}
-function imCat(n,over){const k=imKey(n);if(over&&over[k])return over[k];if(IM_MOVE.test(n))return "_move";if(IM_DEBT.test(n))return "_debt";for(const r of IM_RULES)if(r[1].test(n))return r[0];return "Fun and everything else"}
+const IM_CATS = [
+  ["Home", "Home"],
+  ["Food", "Food"],
+  ["Getting around", "Getting around"],
+  ["Bills and subscriptions", "Bills"],
+  ["Fun and everything else", "Fun"],
+];
+const IM_MOVE =
+  /(credit ?card|card) ?(pay|pmt)|payment[ -]*thank you|online payment|autopay|auto pay|payment received|transfer (to|from)|\bxfer\b|\btfr\b|to savings|from savings|to checking|from checking|venmo cashout|brokerage|vanguard|fidelity|schwab|robinhood|acorns|betterment|wealthfront/i;
+const IM_DEBT =
+  /navient|nelnet|mohela|aidvantage|sallie mae|student loan|great lakes|auto loan|car loan|loan pmt|loan payment|affirm|klarna|afterpay|upstart|sofi loan|lendingclub/i;
+const IM_RULES = [
+  ["Food", /uber ?eats|doordash|grubhub|seamless|postmates|instacart/i],
+  [
+    "Home",
+    /\brent\b|mortgage|landlord|property|\bhoa\b|apartment|leasing|realty|home depot|lowe'?s|ikea|furniture|con ?ed|pseg|national grid|orange ?(and|&)? ?rockland|electric|water (bill|dept|util)|sewer|utilit/i,
+  ],
+  [
+    "Getting around",
+    /\buber\b|lyft|\bshell\b|exxon|mobil|\bbp\b|sunoco|chevron|citgo|speedway|wawa|gulf oil|\bgas\b|fuel|parking|\btoll|e-?z ?pass|\bmta\b|transit|metrocard|omny|amtrak|geico|progressive|state farm|allstate|\bdmv\b|car wash|jiffy|tire|auto (parts|zone|service|repair)|autozone|valvoline/i,
+  ],
+  [
+    "Bills and subscriptions",
+    /netflix|spotify|hulu|disney|hbo|\bmax\b|peacock|paramount|apple\.com|apple com|itunes|icloud|google|youtube|prime video|amazon prime|audible|verizon|t-?mobile|at&t|\batt\b|sprint|mint mobile|comcast|xfinity|optimum|spectrum|internet|wireless|insurance|gym|planet fitness|equinox|membership|subscription|patreon|microsoft|adobe|openai|anthropic|dropbox|nytimes|new york times/i,
+  ],
+  [
+    "Food",
+    /grocer|supermarket|\bmarket\b|whole foods|trader joe|shoprite|stop ?(and|&)? ?shop|kroger|safeway|aldi|costco|wegmans|publix|walmart|\btarget\b|bj'?s|restaurant|cafe|coffee|starbucks|dunkin|mcdonald|chipotle|pizza|grill|kitchen|\bdeli\b|bagel|diner|sushi|burger|taco|bakery|\bbar\b|\bpub\b|wendy|chick-?fil|subway|panera|shake shack|falafel/i,
+  ],
+];
+function imKey(n) {
+  return String(n || "")
+    .toUpperCase()
+    .replace(/[^A-Z ]/g, " ")
+    .replace(/\b(COM|WWW|INC|LLC|POS|DEBIT|PURCHASE|CARD|CHECKCARD|RECURRING|PAYPAL|SQ|TST)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .slice(0, 2)
+    .join(" ");
+}
+function imCat(n, over) {
+  const k = imKey(n);
+  if (over && over[k]) return over[k];
+  if (IM_MOVE.test(n)) return "_move";
+  if (IM_DEBT.test(n)) return "_debt";
+  for (const r of IM_RULES) if (r[1].test(n)) return r[0];
+  return "Fun and everything else";
+}
 /* rows -> monthly averages per category, income, and the biggest things the game filed under Fun without being sure */
-function imRead(rows,over){if(!rows||!rows.length)return null;const neg=rows.filter(r=>r.a<0).length,sign=neg>=rows.length-neg?-1:1,ms=[...new Set(rows.map(r=>r.m))].sort((a,b)=>a-b),months=Math.max(1,ms.length),tot={},unsure={};let move=0,debt=0,inc=0,nOut=0;IM_CATS.forEach(c=>tot[c[0]]=0);
- rows.forEach(r=>{const out=r.a*sign>0,a=Math.abs(r.a),cat=imCat(r.n,over);if(cat==="_move"){move+=a;return}if(!out){inc+=a;return}nOut++;if(cat==="_debt"){debt+=a;return}tot[cat]+=a;if(cat==="Fun and everything else"&&!(over&&over[imKey(r.n)])){const k=imKey(r.n);if(k.length>=3){unsure[k]=unsure[k]||{k,n:k.charAt(0)+k.slice(1).toLowerCase(),a:0,c:0};unsure[k].a+=a;unsure[k].c++}}});
- const spendTot=IM_CATS.reduce((t,c)=>t+tot[c[0]],0),avg={};IM_CATS.forEach(c=>avg[c[0]]=Math.round(tot[c[0]]/months/10)*10);
- return {n:rows.length,nOut,months,first:ms[0],last:ms[ms.length-1],avg,spend:IM_CATS.reduce((t,c)=>t+avg[c[0]],0),move:Math.round(move/months),debt:Math.round(debt/months),income:Math.round(inc/months/10)*10,card:inc<spendTot*0.2,unsure:Object.values(unsure).sort((a,b)=>b.a-a.a).slice(0,5).map(u=>Object.assign(u,{mo:Math.round(u.a/months)}))}}
-function imMonthName(m){return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m%12]+" "+Math.floor(m/12)}
-function imSheet(){const c=C(),w=W,consent=`<div class="tiny muted">The file is read on this phone and never sent anywhere. Only the monthly totals you say yes to are kept.</div>`,pick=lab=>`<label class="filebtn">${lab}<input type="file" accept=".csv,text/csv,text/plain" data-loot="1"></label>`;
- if(w.done)return head("My Money","Filled in")+`<div class="tile stack" style="gap:4px">${w.done.map(x=>`<div class="row between small"><span>${esc(x[0])}</span><span><span class="tiny muted">${money(x[1])} → </span><b>${money(x[2])}</b></span></div>`).join("")}</div><div class="small muted">These now read Close everywhere in the game. Cash spending isn't in a statement, so add to any line that runs on cash.</div><button class="primary wide" data-a="close">Done</button><button class="ghost wide slim" data-a="imundo">Undo, put my old numbers back</button>`;
- if(!w.rows||!w.rows.length)return head("My Money","Fill it in from a statement")+`<div class="small muted">Download a file from your bank or card and the game adds up your spending for you.</div><div class="tile stack" style="gap:6px"><b class="small">How to get the file</b><div class="small mrow k-note">Open your bank or card's website or app.</div><div class="small mrow k-note">Find Download or Export on your list of transactions.</div><div class="small mrow k-note">Pick CSV and the last 3 months.</div></div>${pick("Choose a statement file")}${consent}${w.err?`<div class="banner small">${esc(w.err)}</div>`:""}`;
- const R=imRead(w.rows,w.over),use=w.use,cur=k=>{const r=(c.spends||[]).find(x=>x.k===k);return r?r.amt:null},rows=IM_CATS.filter(x=>cur(x[0])!=null),oneInc=(c.incs||[]).length===1;
- return head("My Money","What the file showed")+`<div class="small muted">${R.n} lines over ${R.months} month${R.months===1?"":"s"} (${imMonthName(R.first)}${R.last!==R.first?" to "+imMonthName(R.last):""})${w.files>1?", from "+w.files+" files":""}. Tap a line to switch it.</div><div class="tiny muted">One card or account rarely shows everything, so lines you already made real stay as they are unless you switch them.</div>`+
- `<div class="stack" style="gap:6px">${rows.map(x=>{const on=use[x[0]]!==false,a=R.avg[x[0]],v=cur(x[0]);return `<button class="rowbtn imrow ${on?"on":""}" data-a="imtog" data-v="${esc(x[0])}"><span class="pn"><b>${x[0]}</b><div class="tiny muted">You had ${money(v)} · the file says ${money(a)} a month</div></span><span class="pill ${on?"okp":""}">${on?"Use "+money(a):"Keep "+money(v)}</span></button>`}).join("")}</div>`+
- (R.unsure.length?`<div class="tile stack" style="gap:8px"><b class="small">Help the game sort these</b><div class="tiny muted">The biggest ones it filed under Fun without being sure. Tap where each belongs.</div>${R.unsure.map(u=>`<div class="stack" style="gap:4px"><div class="small"><b>${esc(u.n)}</b> <span class="tiny muted">${money(u.mo)} a month</span></div><div class="chips imch">${IM_CATS.map(x=>`<button class="chip ${x[0]==="Fun and everything else"?"":""}" data-a="imcat" data-k="${esc(u.k)}" data-v="${esc(x[0])}">${x[1]}</button>`).join("")}</div></div>`).join("")}</div>`:"")+
- `<div class="tile stack" style="gap:4px">${R.card?`<div class="small">This looks like a card statement, so it has no pay in it.</div>`:`<div class="row between small"><span>Coming in, on average</span><b>${money(R.income)}</b></div><div class="tiny muted">${oneInc?"You had "+money(c.incs[0].amt)+".":"You have "+(c.incs||[]).length+" sources, so update each one in My Money."}</div>`}${R.debt?`<div class="row between small"><span>Loan payments it saw</span><b>${money(R.debt)} a month</b></div>`:""}${R.move?`<div class="row between small"><span>Left out: card payments and moves between accounts</span><b>${money(R.move)} a month</b></div>`:""}</div>`+
- (!R.card&&oneInc?`<button class="rowbtn imrow ${use._inc?"on":""}" data-a="imtog" data-v="_inc"><span class="pn"><b>Also update what comes in</b><div class="tiny muted">${esc(c.incs[0].k)}: ${money(c.incs[0].amt)} → ${money(R.income)}</div></span><span class="pill ${use._inc?"okp":""}">${use._inc?"Yes":"No"}</span></button>`:"")+
- `<button class="primary wide" data-a="imapply">Use these numbers</button>${pick("Add another file (a second card or account)")}${consent}${w.err?`<div class="banner small">${esc(w.err)}</div>`:""}`}
+function imRead(rows, over) {
+  if (!rows || !rows.length) return null;
+  const neg = rows.filter(r => r.a < 0).length,
+    sign = neg >= rows.length - neg ? -1 : 1,
+    ms = [...new Set(rows.map(r => r.m))].sort((a, b) => a - b),
+    months = Math.max(1, ms.length),
+    tot = {},
+    unsure = {};
+  let move = 0,
+    debt = 0,
+    inc = 0,
+    nOut = 0;
+  IM_CATS.forEach(c => (tot[c[0]] = 0));
+  rows.forEach(r => {
+    const out = r.a * sign > 0,
+      a = Math.abs(r.a),
+      cat = imCat(r.n, over);
+    if (cat === "_move") {
+      move += a;
+      return;
+    }
+    if (!out) {
+      inc += a;
+      return;
+    }
+    nOut++;
+    if (cat === "_debt") {
+      debt += a;
+      return;
+    }
+    tot[cat] += a;
+    if (cat === "Fun and everything else" && !(over && over[imKey(r.n)])) {
+      const k = imKey(r.n);
+      if (k.length >= 3) {
+        unsure[k] = unsure[k] || { k, n: k.charAt(0) + k.slice(1).toLowerCase(), a: 0, c: 0 };
+        unsure[k].a += a;
+        unsure[k].c++;
+      }
+    }
+  });
+  const spendTot = IM_CATS.reduce((t, c) => t + tot[c[0]], 0),
+    avg = {};
+  IM_CATS.forEach(c => (avg[c[0]] = Math.round(tot[c[0]] / months / 10) * 10));
+  return {
+    n: rows.length,
+    nOut,
+    months,
+    first: ms[0],
+    last: ms[ms.length - 1],
+    avg,
+    spend: IM_CATS.reduce((t, c) => t + avg[c[0]], 0),
+    move: Math.round(move / months),
+    debt: Math.round(debt / months),
+    income: Math.round(inc / months / 10) * 10,
+    card: inc < spendTot * 0.2,
+    unsure: Object.values(unsure)
+      .sort((a, b) => b.a - a.a)
+      .slice(0, 5)
+      .map(u => Object.assign(u, { mo: Math.round(u.a / months) })),
+  };
+}
+function imMonthName(m) {
+  return (
+    ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m % 12] +
+    " " +
+    Math.floor(m / 12)
+  );
+}
+function imSheet() {
+  const c = C(),
+    w = W,
+    consent = `<div class="tiny muted">The file is read on this phone and never sent anywhere. Only the monthly totals you say yes to are kept.</div>`,
+    pick = lab =>
+      `<label class="filebtn">${lab}<input type="file" accept=".csv,text/csv,text/plain" data-loot="1"></label>`;
+  if (w.done)
+    return (
+      head("My Money", "Filled in") +
+      `<div class="tile stack" style="gap:4px">${w.done.map(x => `<div class="row between small"><span>${esc(x[0])}</span><span><span class="tiny muted">${money(x[1])} → </span><b>${money(x[2])}</b></span></div>`).join("")}</div><div class="small muted">These now read Close everywhere in the game. Cash spending isn't in a statement, so add to any line that runs on cash.</div><button class="primary wide" data-a="close">Done</button><button class="ghost wide slim" data-a="imundo">Undo, put my old numbers back</button>`
+    );
+  if (!w.rows || !w.rows.length)
+    return (
+      head("My Money", "Fill it in from a statement") +
+      `<div class="small muted">Download a file from your bank or card and the game adds up your spending for you.</div><div class="tile stack" style="gap:6px"><b class="small">How to get the file</b><div class="small mrow k-note">Open your bank or card's website or app.</div><div class="small mrow k-note">Find Download or Export on your list of transactions.</div><div class="small mrow k-note">Pick CSV and the last 3 months.</div></div>${pick("Choose a statement file")}${consent}${w.err ? `<div class="banner small">${esc(w.err)}</div>` : ""}`
+    );
+  const R = imRead(w.rows, w.over),
+    use = w.use,
+    cur = k => {
+      const r = (c.spends || []).find(x => x.k === k);
+      return r ? r.amt : null;
+    },
+    rows = IM_CATS.filter(x => cur(x[0]) != null),
+    oneInc = (c.incs || []).length === 1;
+  return (
+    head("My Money", "What the file showed") +
+    `<div class="small muted">${R.n} lines over ${R.months} month${R.months === 1 ? "" : "s"} (${imMonthName(R.first)}${R.last !== R.first ? " to " + imMonthName(R.last) : ""})${w.files > 1 ? ", from " + w.files + " files" : ""}. Tap a line to switch it.</div><div class="tiny muted">One card or account rarely shows everything, so lines you already made real stay as they are unless you switch them.</div>` +
+    `<div class="stack" style="gap:6px">${rows
+      .map(x => {
+        const on = use[x[0]] !== false,
+          a = R.avg[x[0]],
+          v = cur(x[0]);
+        return `<button class="rowbtn imrow ${on ? "on" : ""}" data-a="imtog" data-v="${esc(x[0])}"><span class="pn"><b>${x[0]}</b><div class="tiny muted">You had ${money(v)} · the file says ${money(a)} a month</div></span><span class="pill ${on ? "okp" : ""}">${on ? "Use " + money(a) : "Keep " + money(v)}</span></button>`;
+      })
+      .join("")}</div>` +
+    (R.unsure.length
+      ? `<div class="tile stack" style="gap:8px"><b class="small">Help the game sort these</b><div class="tiny muted">The biggest ones it filed under Fun without being sure. Tap where each belongs.</div>${R.unsure.map(u => `<div class="stack" style="gap:4px"><div class="small"><b>${esc(u.n)}</b> <span class="tiny muted">${money(u.mo)} a month</span></div><div class="chips imch">${IM_CATS.map(x => `<button class="chip ${x[0] === "Fun and everything else" ? "" : ""}" data-a="imcat" data-k="${esc(u.k)}" data-v="${esc(x[0])}">${x[1]}</button>`).join("")}</div></div>`).join("")}</div>`
+      : "") +
+    `<div class="tile stack" style="gap:4px">${R.card ? `<div class="small">This looks like a card statement, so it has no pay in it.</div>` : `<div class="row between small"><span>Coming in, on average</span><b>${money(R.income)}</b></div><div class="tiny muted">${oneInc ? "You had " + money(c.incs[0].amt) + "." : "You have " + (c.incs || []).length + " sources, so update each one in My Money."}</div>`}${R.debt ? `<div class="row between small"><span>Loan payments it saw</span><b>${money(R.debt)} a month</b></div>` : ""}${R.move ? `<div class="row between small"><span>Left out: card payments and moves between accounts</span><b>${money(R.move)} a month</b></div>` : ""}</div>` +
+    (!R.card && oneInc
+      ? `<button class="rowbtn imrow ${use._inc ? "on" : ""}" data-a="imtog" data-v="_inc"><span class="pn"><b>Also update what comes in</b><div class="tiny muted">${esc(c.incs[0].k)}: ${money(c.incs[0].amt)} → ${money(R.income)}</div></span><span class="pill ${use._inc ? "okp" : ""}">${use._inc ? "Yes" : "No"}</span></button>`
+      : "") +
+    `<button class="primary wide" data-a="imapply">Use these numbers</button>${pick("Add another file (a second card or account)")}${consent}${w.err ? `<div class="banner small">${esc(w.err)}</div>` : ""}`
+  );
+}
 /* the file picker hands text to lootText; route it here when the import sheet is open */
-(()=>{const _l=typeof lootText==="function"?lootText:null;lootText=function(text){if(!W||W.kind!=="import"){if(_l)_l(text);return}const rows=csvRows(text);if(!rows.length){W.err="That file didn't look like a statement. It needs columns for date, description and amount.";drawSheet();return}W.err=null;W.rows=(W.rows||[]).concat(rows);W.files=(W.files||0)+1;if(W.files===1){const c=C();IM_CATS.forEach(x=>{const r=(c.spends||[]).find(s=>s.k===x[0]);if(r&&r.s)W.use[x[0]]=false})}drawSheet()}})();
-Object.assign(ACT,{
- import2:()=>{W={kind:"import",rows:[],files:0,over:{},use:{}};sheet(imSheet)},
- imtog:t=>{if(!W||W.kind!=="import")return;const k=t.dataset.v;if(k==="_inc")W.use._inc=!W.use._inc;else W.use[k]=W.use[k]===false;drawSheet()},
- imcat:t=>{if(!W||W.kind!=="import")return;W.over[t.dataset.k]=t.dataset.v;drawSheet()},
- imapply:()=>{const c=C(),w=W;if(!w||w.kind!=="import"||!w.rows.length)return;const R=imRead(w.rows,w.over),pr=D.realm,prev={spends:JSON.parse(JSON.stringify(c.spends)),incs:JSON.parse(JSON.stringify(c.incs))},done=[];
-  IM_CATS.forEach(x=>{if(w.use[x[0]]===false)return;const r=(c.spends||[]).find(s=>s.k===x[0]);if(!r)return;done.push([x[0],r.amt,R.avg[x[0]]]);r.amt=R.avg[x[0]];r.s=true;r.cf=2});
-  if(w.use._inc&&!R.card&&c.incs.length===1){done.push([c.incs[0].k,c.incs[0].amt,R.income]);c.incs[0].amt=R.income;c.incs[0].s=true;c.incs[0].cf=2}
-  if(!done.length){closeSheet();return}c.x.imp={d:todayISO(),months:R.months,n:R.n};afterMoney(c,pr,false);save();render();W={kind:"import",rows:[],files:0,over:{},use:{},done,prev};drawSheet()},
- imundo:()=>{const c=C(),w=W;if(!w||!w.prev)return;const pr=D.realm;c.spends=w.prev.spends;c.incs=w.prev.incs;delete c.x.imp;afterMoney(c,pr,false);save();render();closeSheet()}});
+(() => {
+  const _l = typeof lootText === "function" ? lootText : null;
+  lootText = function (text) {
+    if (!W || W.kind !== "import") {
+      if (_l) _l(text);
+      return;
+    }
+    const rows = csvRows(text);
+    if (!rows.length) {
+      W.err = "That file didn't look like a statement. It needs columns for date, description and amount.";
+      drawSheet();
+      return;
+    }
+    W.err = null;
+    W.rows = (W.rows || []).concat(rows);
+    W.files = (W.files || 0) + 1;
+    if (W.files === 1) {
+      const c = C();
+      IM_CATS.forEach(x => {
+        const r = (c.spends || []).find(s => s.k === x[0]);
+        if (r && r.s) W.use[x[0]] = false;
+      });
+    }
+    drawSheet();
+  };
+})();
+Object.assign(ACT, {
+  import2: () => {
+    W = { kind: "import", rows: [], files: 0, over: {}, use: {} };
+    sheet(imSheet);
+  },
+  imtog: t => {
+    if (!W || W.kind !== "import") return;
+    const k = t.dataset.v;
+    if (k === "_inc") W.use._inc = !W.use._inc;
+    else W.use[k] = W.use[k] === false;
+    drawSheet();
+  },
+  imcat: t => {
+    if (!W || W.kind !== "import") return;
+    W.over[t.dataset.k] = t.dataset.v;
+    drawSheet();
+  },
+  imapply: () => {
+    const c = C(),
+      w = W;
+    if (!w || w.kind !== "import" || !w.rows.length) return;
+    const R = imRead(w.rows, w.over),
+      pr = D.realm,
+      prev = { spends: JSON.parse(JSON.stringify(c.spends)), incs: JSON.parse(JSON.stringify(c.incs)) },
+      done = [];
+    IM_CATS.forEach(x => {
+      if (w.use[x[0]] === false) return;
+      const r = (c.spends || []).find(s => s.k === x[0]);
+      if (!r) return;
+      done.push([x[0], r.amt, R.avg[x[0]]]);
+      r.amt = R.avg[x[0]];
+      r.s = true;
+      r.cf = 2;
+    });
+    if (w.use._inc && !R.card && c.incs.length === 1) {
+      done.push([c.incs[0].k, c.incs[0].amt, R.income]);
+      c.incs[0].amt = R.income;
+      c.incs[0].s = true;
+      c.incs[0].cf = 2;
+    }
+    if (!done.length) {
+      closeSheet();
+      return;
+    }
+    c.x.imp = { d: todayISO(), months: R.months, n: R.n };
+    afterMoney(c, pr, false);
+    save();
+    render();
+    W = { kind: "import", rows: [], files: 0, over: {}, use: {}, done, prev };
+    drawSheet();
+  },
+  imundo: () => {
+    const c = C(),
+      w = W;
+    if (!w || !w.prev) return;
+    const pr = D.realm;
+    c.spends = w.prev.spends;
+    c.incs = w.prev.incs;
+    delete c.x.imp;
+    afterMoney(c, pr, false);
+    save();
+    render();
+    closeSheet();
+  },
+});
 /* My Money: one button above the spending list */
-(()=>{const _m=moneyTab;moneyTab=function(){const h=_m(),a='<div class="card"><div class="row between"><h3>Money going out each month</h3>';if(G.demo||h.indexOf(a)<0)return h;return h.replace(a,()=>`<button class="ghost wide slim" data-a="import2">Fill in your spending from a statement</button>`+a)}})();
-if(typeof document!=="undefined"&&document.getElementById&&document.getElementById("app"))render();
+(() => {
+  const _m = moneyTab;
+  moneyTab = function () {
+    const h = _m(),
+      a = '<div class="card"><div class="row between"><h3>Money going out each month</h3>';
+    if (G.demo || h.indexOf(a) < 0) return h;
+    return h.replace(
+      a,
+      () => `<button class="ghost wide slim" data-a="import2">Fill in your spending from a statement</button>` + a
+    );
+  };
+})();
+if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();
