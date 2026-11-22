@@ -1225,7 +1225,24 @@ function drawSheet() {
   if (nw) nw.scrollTop = sc;
   if (D) refreshDup(C(), D);
 }
+/* CLOSE THE SHEET.
+   closeSheet() is the full function. It calls each part by name.
+   closeSheetQuiet() closes the sheet and makes no step in the browser history. ux.js uses it when the browser goes back.
+   closeSheetBase() is the part from this file. */
 function closeSheet() {
+  if (typeof closeSheetNav === "function") closeSheetNav(); /* nav.js: forget the trail of sheets */
+  const was = !!SH;
+  closeSheetQuiet();
+  if (typeof closeSheetUx === "function")
+    closeSheetUx(was); /* ux.js: the resume note, the browser history, the chips */
+  if (typeof closeSheetAddon === "function") closeSheetAddon(); /* addon.js: go back to the look of the player */
+  if (typeof tkChipSafe === "function") tkChipSafe(); /* testkit.js: the chip of a test task */
+}
+function closeSheetQuiet() {
+  closeSheetBase();
+  if (typeof closeSheetCloud === "function") closeSheetCloud(); /* cloud.js: draw a change that waited */
+}
+function closeSheetBase() {
   SH = null;
   W = null;
   drawSheet();

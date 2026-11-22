@@ -290,19 +290,16 @@ Object.assign(ACT, {
     }
   },
 });
-/* the chip that lets the tester say "done or stuck" follows every screen while a task is running */
+/* Part of render(), closeSheet() and sheet() in ui.js. While a test task runs, the chip "done or stuck" stays on each screen. */
+function tkChipSafe() {
+  try {
+    tkChip();
+  } catch (e) {}
+}
 (() => {
   const _r = render;
   render = function () {
     const r = _r.apply(this, arguments);
-    try {
-      tkChip();
-    } catch (e) {}
-    return r;
-  };
-  const _c = closeSheet;
-  closeSheet = function () {
-    const r = _c.apply(this, arguments);
     try {
       tkChip();
     } catch (e) {}

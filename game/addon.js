@@ -488,15 +488,6 @@ function homeAddonAsk() {
     } catch (e) {}
     return r;
   };
-  const _c = closeSheet;
-  closeSheet = function () {
-    const r = _c.apply(this, arguments);
-    ADX.plainSH = null;
-    try {
-      applyLook();
-    } catch (e) {}
-    return r;
-  };
   /* sharing is always the standard look with nothing from an extra in it */
   const _w = wrappedSheet;
   wrappedSheet = function () {
@@ -534,6 +525,14 @@ function homeAddonAsk() {
     };
   }
 })();
+/* Part of closeSheet() in ui.js. Goes back to the look of the player after a sheet with the standard look. */
+function closeSheetAddon() {
+  ADX.plainSH = null;
+  try {
+    applyLook();
+  } catch (e) {}
+}
+
 Object.assign(ACT, {
   aoset: t => {
     const c = G.chars[+t.dataset.k],

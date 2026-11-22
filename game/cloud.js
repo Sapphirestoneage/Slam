@@ -348,17 +348,13 @@ async function clStart() {
   }
 }
 
-/* a change from another device waits until you close what's open, so nothing jumps under your finger */
-(() => {
-  const _close = closeSheet;
-  closeSheet = function () {
-    _close();
-    if (CLOUD.pending) {
-      CLOUD.pending = false;
-      setTimeout(render, 0);
-    }
-  };
-})();
+/* Part of closeSheetQuiet() in ui.js. A change from another device waits while a sheet is open. Thus nothing moves below the finger. Draw it now. */
+function closeSheetCloud() {
+  if (CLOUD.pending) {
+    CLOUD.pending = false;
+    setTimeout(render, 0);
+  }
+}
 
 /* the menu says where your game is saved, and the backup sheet explains it */
 (() => {

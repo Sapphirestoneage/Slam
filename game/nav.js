@@ -367,13 +367,13 @@ function nvText(h) {
     nvPaint();
     return r;
   };
-  const _c = closeSheet;
-  closeSheet = function () {
-    NVX.st = [];
-    NVX.fw = [];
-    return _c.apply(this, arguments);
-  };
 })();
+/* Part of closeSheet() in ui.js. Forgets the trail of sheets (Back and Forward). */
+function closeSheetNav() {
+  NVX.st = [];
+  NVX.fw = [];
+}
+
 function nvPaint() {
   if (!SH || typeof document === "undefined" || !document.querySelector) return;
   const el = document.querySelector("#ov");

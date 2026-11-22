@@ -408,10 +408,9 @@ sheet = function (fn) {
   }
   uxChip();
 };
-const _close0 = closeSheet;
-closeSheet = function () {
-  const was = !!SH;
-  _close0();
+/* Part of closeSheet() in ui.js. "was" is true when a sheet was open.
+   Clears the note "pick up where you left off", goes one step back in the browser history, and draws the chips again. */
+function closeSheetUx(was) {
   if (was && G.last && G.last.open) {
     G.last.open = false;
     saveQuiet();
@@ -426,13 +425,13 @@ closeSheet = function () {
     }, 60);
   }
   uxChip();
-};
+}
 if (uxHist) {
   addEventListener("popstate", e => {
     UX_POP = true;
     try {
       if (SH) {
-        _close0();
+        closeSheetQuiet();
         render();
       } else {
         const t = (e.state && e.state.tab) || (location.hash.match(/^#\/([a-z]+)/) || [])[1] || "home";
@@ -708,7 +707,7 @@ Object.assign(ACT, {
   },
   uxpaid: () => {
     const c = C();
-    _close0();
+    closeSheetQuiet();
     if (c.payKnown && todayISO() >= c.payNext) ACT.payday({ dataset: { v: "" } });
     else ACT.paidtoday({ dataset: {} });
   },
@@ -718,7 +717,7 @@ Object.assign(ACT, {
     G = JSON.parse(u.snap);
     UX_UNDO = null;
     saveQuiet();
-    if (SH) _close0();
+    if (SH) closeSheetQuiet();
     render();
   },
   retgo: () => {
