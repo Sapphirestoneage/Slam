@@ -805,24 +805,29 @@ function tabsHTML() {
 }
 
 /* ---------- wiring into the existing game ---------- */
+/* Part of render() in ui.js, step 1 of 2. Tidies the plan, and saves when it changed.
+   On the tab "plan", it also draws the screen and returns true. On all other tabs it returns false. */
+function renderPlan() {
+  const c = C();
+  if (!G.demo && c && c.x && Array.isArray(c.x.plan) && plTidy(c)) save();
+  if (tab !== "plan") return false;
+  applyLook();
+  D = derive(c);
+  if (typeof refreshDup === "function") refreshDup(c, D);
+  const el = $("#app");
+  el.innerHTML = `<div class="topbar"></div>` + (typeof profStrip === "function" ? profStrip() : "") + planTab();
+  return true;
+}
+/* Part of render() in ui.js, step 2 of 2. Fills the top bar and the tab bar. */
+function renderPlanBars() {
+  const tb = document.querySelector("#app .topbar");
+  if (tb) tb.innerHTML = topbarHTML();
+  const tabs = $("#tabs");
+  if (tabs) tabs.innerHTML = tabsHTML();
+}
 (() => {
-  const _render = render,
-    _go = go;
-  render = function () {
-    const c = C();
-    if (!G.demo && c && c.x && Array.isArray(c.x.plan) && plTidy(c)) save();
-    if (tab === "plan") {
-      applyLook();
-      D = derive(c);
-      if (typeof refreshDup === "function") refreshDup(c, D);
-      const el = $("#app");
-      el.innerHTML = `<div class="topbar"></div>` + (typeof profStrip === "function" ? profStrip() : "") + planTab();
-    } else _render();
-    const tb = document.querySelector("#app .topbar");
-    if (tb) tb.innerHTML = topbarHTML();
-    const tabs = $("#tabs");
-    if (tabs) tabs.innerHTML = tabsHTML();
-  };
+  const _go = go;
+
   go = function (t) {
     if (t !== tab) {
       NAV.back.push(tab);

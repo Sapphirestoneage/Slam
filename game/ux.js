@@ -565,11 +565,14 @@ celebrate = function (a, b, c2, d2) {
   } catch (e) {}
   return _cel0(a, b, c2, d2);
 };
-const _render0 = render;
-render = function () {
+/* Part of render() in ui.js, step 1 of 2. A new player (the sample game) stays on Home. Returns true for a new player. */
+function renderUxStart() {
   const wel = G.demo && UX_NOSAMPLE;
   if (wel && tab !== "home") tab = "home";
-  _render0();
+  return wel;
+}
+/* Part of render() in ui.js, step 2 of 2. Sets the page marks (welcome, color, expert), fills the tab bar, makes the mark "Saved", and draws the chips. */
+function renderUxEnd(wel) {
   if (typeof document !== "undefined" && document.body && document.body.classList) {
     document.body.classList.toggle("welcome", !!wel);
     if (document.body.dataset) document.body.dataset.color = G.color == null ? "midnight" : G.color;
@@ -592,7 +595,7 @@ render = function () {
     if (sv) sv.textContent = G.demo ? "Sample · not saved" : "Saved ✓";
   }
   uxChip();
-};
+}
 Object.assign(GLOSS, {
   bige: [
     "Big E",

@@ -296,16 +296,6 @@ function tkChipSafe() {
     tkChip();
   } catch (e) {}
 }
-(() => {
-  const _r = render;
-  render = function () {
-    const r = _r.apply(this, arguments);
-    try {
-      tkChip();
-    } catch (e) {}
-    return r;
-  };
-})();
 if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] === "testkit"))
   MENU.splice(Math.max(0, MENU.length - 1), 0, [
     "Test with a friend",

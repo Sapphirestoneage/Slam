@@ -169,24 +169,20 @@ function depCheck() {
     DEPX.busy = false;
   }
 }
-(() => {
-  if (typeof render !== "function") return;
-  const _r = render;
-  render = function () {
-    const r = _r.apply(this, arguments);
-    try {
-      depCheck();
-      if (DEPX.line) {
-        if (++DEPX.n > 4) DEPX.line = null;
-        else {
-          const el = $("#app");
-          if (el && String(el.innerHTML).indexOf('class="depline"') < 0) el.innerHTML = el.innerHTML + depBanner();
-        }
+/* Part of render() in ui.js. After a change, shows one line that says what else the change moved. The line goes away after four draws. */
+function renderDep() {
+  try {
+    depCheck();
+    if (DEPX.line) {
+      if (++DEPX.n > 4) DEPX.line = null;
+      else {
+        const el = $("#app");
+        if (el && String(el.innerHTML).indexOf('class="depline"') < 0) el.innerHTML = el.innerHTML + depBanner();
       }
-    } catch (e) {}
-    return r;
-  };
-})();
+    }
+  } catch (e) {}
+}
+
 Object.assign(ACT, {
   dep: () => {
     DEPX.line = null;

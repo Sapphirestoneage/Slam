@@ -2463,7 +2463,20 @@ function rowAdd(sec) {
 /* ---------- render ---------- */
 let SEEN = {},
   SEENKEY = "";
+/* DRAW THE SCREEN.
+   render() is the full function. It calls each part by name.
+   renderBase() is the part from this file: the top bar, the open tab, and the tab bar. */
 function render() {
+  const wel = typeof renderUxStart === "function" ? renderUxStart() : false; /* ux.js: a new player stays on Home */
+  /* planner.js: tidy the plan. On the tab "plan", it also draws the screen and returns true. */
+  const drawn = typeof renderPlan === "function" ? renderPlan() : false;
+  if (!drawn) renderBase();
+  if (typeof renderPlanBars === "function") renderPlanBars(); /* planner.js: the top bar and the tab bar */
+  if (typeof renderUxEnd === "function") renderUxEnd(wel); /* ux.js: the page marks, the tab bar, the mark "Saved" */
+  if (typeof renderDep === "function") renderDep(); /* dep.js: the line "this changed that" */
+  if (typeof tkChipSafe === "function") tkChipSafe(); /* testkit.js: the chip of a test task */
+}
+function renderBase() {
   applyLook();
   const c = C();
   D = derive(c);
