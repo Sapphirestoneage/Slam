@@ -543,7 +543,13 @@ function audSheet() {
     `<div class="tiny muted">The idea of one score out of 10 comes from the Hammer Financial Score on Caleb Hammer's show Financial Audit. This formula is SLAM's own, not his.</div><button class="ghost wide slim" data-a="csp">See my Conscious Spending Plan</button>`
   );
 }
+/* cspMoneyRows(c, d) makes the rows that moneyTabPlanRows() adds to the Money tab. cspMoneyRowsBase() is the part from this file. */
 function cspMoneyRows(c, d) {
+  let h = cspMoneyRowsBase(c, d);
+  if (typeof cspMoneyRowsRoof === "function") h = cspMoneyRowsRoof(h, c); /* roof.js: the row "Famous money ideas" */
+  return h;
+}
+function cspMoneyRowsBase(c, d) {
   if (!c) return "";
   const S = cspCalc(c),
     A = audCalc(c),

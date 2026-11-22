@@ -246,17 +246,14 @@ if (typeof MENU !== "undefined")
     "Ramit's plan, the 50/30/20 rule, the 4% rule and more, on your numbers",
   ]);
 /* a third slim door in My Money, under the two it already has */
-if (typeof cspMoneyRows === "function") {
-  const _r = cspMoneyRows;
-  cspMoneyRows = function (c, d) {
-    const h = _r(c, d);
-    if (!h) return h;
-    const n = rfAll(c).length,
-      k = h.lastIndexOf("</div>");
-    return (
-      h.slice(0, k) +
-      `<button class="rowbtn" data-a="roof"><span style="min-width:0"><b>Famous money ideas</b> <span class="tiny muted">${n} in one list</span></span><span class="fkgo">Open</span></button>` +
-      h.slice(k)
-    );
-  };
+/* Part of cspMoneyRows() in csp.js. Adds the row "Famous money ideas". */
+function cspMoneyRowsRoof(h, c) {
+  if (!h) return h;
+  const n = rfAll(c).length,
+    k = h.lastIndexOf("</div>");
+  return (
+    h.slice(0, k) +
+    `<button class="rowbtn" data-a="roof"><span style="min-width:0"><b>Famous money ideas</b> <span class="tiny muted">${n} in one list</span></span><span class="fkgo">Open</span></button>` +
+    h.slice(k)
+  );
 }

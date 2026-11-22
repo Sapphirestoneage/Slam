@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,777. Top-level functions: 1083. Replaced functions: 3, in 3 places.
+Date: 2026-11-22. Files: 60. Lines: 46,780. Top-level functions: 1085. Replaced functions: 2, in 2 places.
 
 ## 1. Files in load order
 
@@ -58,13 +58,13 @@ The browser loads the files in this order. A file can use all names from the fil
 | 46 | `tidy.js` | 163 | 10 | 3 | 0 | the fixes from the usability audit, applied to every screen at once instead of one screen at a time |
 | 47 | `addon.js` | 578 | 31 | 6 | 15 | extras, part two |
 | 48 | `fork.js` | 573 | 20 | 13 | 5 | Fork Theory |
-| 49 | `csp.js` | 707 | 24 | 12 | 1 | two ways to see a whole month of money at a glance |
+| 49 | `csp.js` | 713 | 25 | 12 | 1 | two ways to see a whole month of money at a glance |
 | 50 | `ideas.js` | 1,094 | 20 | 5 | 1 | the workshop behind "Famous money ideas" |
 | 51 | `ideas2.js` | 771 | 2 | 2 | 0 | Part 1, ideas 9 to 16 |
 | 52 | `ideas3.js` | 1,095 | 1 | 1 | 0 | Part 2 |
 | 53 | `ideas4.js` | 967 | 2 | 3 | 0 | Part 2 |
 | 54 | `ideas5.js` | 1,297 | 2 | 0 | 0 | Part 2 |
-| 55 | `roof.js` | 263 | 6 | 1 | 1 | one roof for the best-known ideas in personal finance |
+| 55 | `roof.js` | 260 | 7 | 1 | 1 | one roof for the best-known ideas in personal finance |
 | 56 | `ideasz.js` | 328 | 6 | 3 | 3 | loads after every ideas file |
 | 57 | `dep.js` | 234 | 11 | 2 | 5 | "What depends on what" |
 | 58 | `eras.js` | 1,043 | 25 | 6 | 6 | real steps for the later eras, and one account line that feeds back into the early ones |
@@ -80,7 +80,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
 | `cpMoves` | `compare.js` | `drills.js` | 1 |
-| `cspMoneyRows` | `csp.js` | `roof.js` | 1 |
 | `fdSheet` | `drills.js` | `ideasz.js` | 1 |
 
 ## 3. Functions with no caller
