@@ -304,21 +304,6 @@ function pips(n, on) {
   return `<div class="pips">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? "on" : ""}"></i>`).join("")}</div>`;
 }
 const rank = id => nodeRankRaw(C(), D, id);
-function eraOne(d) {
-  return d.era === 0 && d.realm === "Surface"
-    ? "You own more than you owe, but there's no cushion yet."
-    : ERAS[d.era].one;
-}
-function eraName(d) {
-  return d.era === 0 && d.realm === "Surface" ? "Ground Floor" : eraN(d.era);
-}
-function eraHead(d) {
-  return d.era === 0 && d.realm === "Surface"
-    ? "Ground Floor"
-    : VO().eras
-      ? `${eraT(d.era)}<div class="tiny muted" style="font-family:var(--body);text-transform:none;letter-spacing:0">${ERAS[d.era].n}</div>`
-      : ERAS[d.era].n;
-}
 const mo = x => (Math.round(x * 10) / 10).toFixed(1);
 
 /* number entry: tap a range, or tap out the exact number. No sliders. */
@@ -600,11 +585,6 @@ function sharpVal(c, k, ok) {
               ? c.inv
               : null;
   return v === null ? "" : `<span class="${ok ? "" : "guess"}">${money(v)}</span>`;
-}
-function freeCard(c, d, sec) {
-  const fs = freeToSpend(c, d);
-  return `<div class="card" ${sec || ""}><div class="row between"><span class="tiny muted">Free to spend</span>${ib("term:free")}</div><div class="row between"><div><div class="big ${fs.real ? "" : "guess"}" data-fid="v:free">${money(fs.week)} a week</div><div class="tiny muted">for food, fun and everything else${fs.real ? "" : " · guess"}</div></div>${fs.real ? "" : `<button class="ghost slim" data-a="sharp" data-v="${isSharp(c, "take") ? "spend" : "take"}">Make it real</button>`}</div>
- <div class="tiny muted" style="margin-top:6px">${money(fs.in)} in, minus ${money(fs.bills)} for bills, minus ${money(fs.goal)} for your goals, leaves ${money(fs.free)} a month.${fs.short ? " Right now about " + money(fs.short) + " more goes out than comes in." : ""}</div></div>`;
 }
 /* HOME SCREEN.
    home() makes the full screen. It calls each part by name, in the load order of the files.
@@ -1916,15 +1896,6 @@ function moveRows(c, t) {
       : t === "saved"
         ? R("cash", c.cashes).concat(R("inv", c.invs))
         : R("cash", c.cashes).concat(R("debt", c.debts).map(x => Object.assign(x, { k: "Put it on: " + x.k })));
-}
-function openMove(t) {
-  const c = C();
-  W = { kind: "move", pad: "amt", fresh: true, o: { t: t || null, row: null, amt: 0 } };
-  if (t) {
-    const rs = moveRows(c, t);
-    if (rs.length === 1) W.o.row = rs[0].key;
-  }
-  sheet(moveSheet);
 }
 function moveSheet() {
   const w = W,
