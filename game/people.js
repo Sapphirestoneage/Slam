@@ -156,21 +156,6 @@ function ppAdvance() {
   }
   pp.r = 3;
 }
-(() => {
-  const _l = l1Sheet;
-  l1Sheet = function () {
-    const w = W;
-    if (w && w.step === "party") return ppBody("l1");
-    const h = _l();
-    return w && ["gear", "hl", "last"].includes(w.step)
-      ? h + `<button class="ghost wide slim" data-a="l1back">Back one</button>`
-      : h;
-  };
-  const _p = partySheet;
-  partySheet = function () {
-    return ppBody("solo");
-  };
-})();
 Object.assign(ACT, {
   ppadd: t => {
     const c = C();
@@ -306,4 +291,16 @@ Object.assign(ACT, {
     drawSheet();
   },
 });
+/* Part of l1Sheet() in games.js, 1 of 2. In the step "your people", the sheet is the people form of this file. Returns null in all other steps. */
+function l1SheetPeople() {
+  const w = W;
+  return w && w.step === "party" ? ppBody("l1") : null;
+}
+/* Part of l1Sheet() in games.js, 2 of 2. Adds the button "Back one" in the three last steps. */
+function l1SheetBack(h) {
+  const w = W;
+  return w && ["gear", "hl", "last"].includes(w.step)
+    ? h + `<button class="ghost wide slim" data-a="l1back">Back one</button>`
+    : h;
+}
 if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();

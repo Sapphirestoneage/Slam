@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,720. Top-level functions: 1059. Replaced functions: 17, in 17 places.
+Date: 2026-11-22. Files: 60. Lines: 46,729. Top-level functions: 1062. Replaced functions: 15, in 15 places.
 
 ## 1. Files in load order
 
@@ -18,7 +18,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 6 | `engine2.js` | 378 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
 | 8 | `ui.js` | 6,466 | 214 | 136 | 2 | SLAM the Game: screens |
-| 9 | `games.js` | 609 | 21 | 12 | 0 | the screens for the games that are the data entry |
+| 9 | `games.js` | 621 | 22 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,435 | 38 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 765 | 23 | 13 | 0 | the year |
 | 12 | `chart.js` | 1,291 | 13 | 6 | 0 | the Money Chart |
@@ -51,7 +51,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 39 | `owed.js` | 113 | 3 | 3 | 2 | What each debt costs you |
 | 40 | `study.js` | 492 | 13 | 5 | 0 | Student loan plans, side by side |
 | 41 | `together.js` | 198 | 7 | 4 | 1 | the Money Chart for more than two |
-| 42 | `people.js` | 310 | 5 | 4 | 0 | Your people, one layer at a time |
+| 42 | `people.js` | 307 | 7 | 4 | 0 | Your people, one layer at a time |
 | 43 | `fold.js` | 52 | 3 | 2 | 1 | one list on Next Steps |
 | 44 | `nav.js` | 457 | 11 | 2 | 0 | the same four things on every screen |
 | 45 | `home.js` | 119 | 4 | 0 | 5 | put the game on your home screen |
@@ -85,14 +85,12 @@ Each row shows one function, the file that defines it, and the later files that 
 | `fdSheet` | `drills.js` | `ideasz.js` | 1 |
 | `fogPct` | `engine2.js` | `know.js` | 1 |
 | `gamesSheet` | `games2.js` | `year.js` | 1 |
-| `l1Sheet` | `games.js` | `people.js` | 1 |
 | `ledRow` | `ui.js` | `smart.js` | 1 |
 | `lootText` | `games2.js` | `import.js` | 1 |
 | `menuSheet` | `planner.js` | `cloud.js` | 1 |
 | `monthsAhead` | `ux.js` | `gig.js` | 1 |
 | `nvRow` | `nav.js` | `tidy.js` | 1 |
 | `nvText` | `nav.js` | `tidy.js` | 1 |
-| `partySheet` | `games.js` | `people.js` | 1 |
 | `plReady` | `planner.js` | `fold.js` | 1 |
 | `profStrip` | `profiles.js` | `planner.js` | 1 |
 | `skillSheet` | `ui.js` | `connect.js` | 1 |

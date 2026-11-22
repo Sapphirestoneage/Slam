@@ -142,7 +142,10 @@ function partyBody(c) {
     })()}`
   );
 }
+/* partySheet() makes the sheet "Your people".
+   people.js has the present form: one layer at a time (ppBody). The lines below it run only while the page loads, before people.js is there. */
 function partySheet() {
+  if (typeof ppBody === "function") return ppBody("solo");
   const c = C();
   return (
     head("Party", "Your people") +
@@ -202,7 +205,16 @@ function openL1() {
   W.step = l1Where(C());
   sheet(l1Sheet);
 }
+/* l1Sheet() makes the full sheet of the first game. l1SheetBase() is the part from this file. */
 function l1Sheet() {
+  /* people.js: the step "your people" has its own form. */
+  const pp = typeof l1SheetPeople === "function" ? l1SheetPeople() : null;
+  if (pp !== null) return pp;
+  let h = l1SheetBase();
+  if (typeof l1SheetBack === "function") h = l1SheetBack(h); /* people.js: the button "Back one" */
+  return h;
+}
+function l1SheetBase() {
   const c = C(),
     d = D,
     w = W,
