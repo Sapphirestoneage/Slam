@@ -69,55 +69,57 @@ function tdFrom() {
     if (W && TD_FULL[W.kind] !== undefined) o = o.replace('<div class="overlay">', '<div class="overlay full">');
     return o;
   };
-  const _d = drawSheet;
-  drawSheet = function () {
-    const k = tdKey(),
-      go = () => {
-        TDX.n = 0;
-        TDX.seq = [];
-        TDX.ans = [];
-        TDX.multi = [];
-        return _d.apply(this, arguments);
-      };
-    if (W !== TDX.w) {
-      TDX.w = W;
-      TDX.open = {};
-      TDX.pans = {};
-    }
-    TDX.kind = k;
-    TDX.on = !!k && W.kind !== "setup" && (TDX.prev[k] || []).length >= 2;
-    let r = go();
-    if (k) {
-      const was = TDX.on,
-        pa = TDX.pans[k],
-        n = TDX.seq.length,
-        want = n >= 2 && W.kind !== "setup";
-      let again = want !== was;
-      TDX.prev[k] = TDX.seq.slice();
-      if (want) {
-        const oi = Math.max(0, Math.min(TDX.open[k] || 0, n - 1));
-        if (pa && pa.length > oi && !pa[oi] && TDX.ans[oi] && !TDX.multi[oi] && oi < n - 1) {
-          TDX.open[k] = oi + 1;
+})();
+/* Part of drawSheet() in ui.js. draw() draws the sheet one time.
+   In a sheet with two or more questions, only one question is open. When the open question must change, this draws the sheet a second time. */
+function drawSheetTidy(draw) {
+  const k = tdKey(),
+    go = () => {
+      TDX.n = 0;
+      TDX.seq = [];
+      TDX.ans = [];
+      TDX.multi = [];
+      return draw();
+    };
+  if (W !== TDX.w) {
+    TDX.w = W;
+    TDX.open = {};
+    TDX.pans = {};
+  }
+  TDX.kind = k;
+  TDX.on = !!k && W.kind !== "setup" && (TDX.prev[k] || []).length >= 2;
+  let r = go();
+  if (k) {
+    const was = TDX.on,
+      pa = TDX.pans[k],
+      n = TDX.seq.length,
+      want = n >= 2 && W.kind !== "setup";
+    let again = want !== was;
+    TDX.prev[k] = TDX.seq.slice();
+    if (want) {
+      const oi = Math.max(0, Math.min(TDX.open[k] || 0, n - 1));
+      if (pa && pa.length > oi && !pa[oi] && TDX.ans[oi] && !TDX.multi[oi] && oi < n - 1) {
+        TDX.open[k] = oi + 1;
+        again = true;
+      } else if (W.err && TDX.ans[oi]) {
+        const f = TDX.ans.indexOf(false);
+        if (f >= 0 && f !== oi) {
+          TDX.open[k] = f;
           again = true;
-        } else if (W.err && TDX.ans[oi]) {
-          const f = TDX.ans.indexOf(false);
-          if (f >= 0 && f !== oi) {
-            TDX.open[k] = f;
-            again = true;
-          }
         }
       }
-      TDX.pans[k] = TDX.ans.slice();
-      if (again) {
-        TDX.on = want;
-        r = go();
-      }
     }
-    TDX.on = false;
-    tdPaint();
-    return r;
-  };
-})();
+    TDX.pans[k] = TDX.ans.slice();
+    if (again) {
+      TDX.on = want;
+      r = go();
+    }
+  }
+  TDX.on = false;
+  tdPaint();
+  return r;
+}
+
 function tdPaint() {
   if (!SH || typeof document === "undefined" || !document.querySelector) return;
   const el = document.querySelector("#ov"),

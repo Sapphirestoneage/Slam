@@ -359,15 +359,12 @@ function nvText(h) {
     .replace(/(<button[^>]*data-a="close"[^>]*>)Done(<\/button>)/g, "$1Done, close this$2")
     .replace(/(<button[^>]*data-a="close"[^>]*>)Close(<\/button>)/g, "$1Close this$2");
 }
-(() => {
-  const _d = drawSheet;
-  drawSheet = function () {
-    const r = _d.apply(this, arguments);
-    nvTrack();
-    nvPaint();
-    return r;
-  };
-})();
+/* Part of drawSheetOnce() in ui.js. Records the sheet in the trail. Then draws the row Back / Forward / Close. */
+function drawSheetNav() {
+  nvTrack();
+  nvPaint();
+}
+
 /* Part of closeSheet() in ui.js. Forgets the trail of sheets (Back and Forward). */
 function closeSheetNav() {
   NVX.st = [];

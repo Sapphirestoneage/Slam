@@ -480,14 +480,6 @@ function homeAddonAsk() {
       ].find(x => h.indexOf(x) >= 0);
     return card && a ? h.replace(a, () => card + a) : h + card;
   };
-  const _d = drawSheet;
-  drawSheet = function () {
-    const r = _d.apply(this, arguments);
-    try {
-      applyLook();
-    } catch (e) {}
-    return r;
-  };
   /* sharing is always the standard look with nothing from an extra in it */
   const _w = wrappedSheet;
   wrappedSheet = function () {
@@ -525,6 +517,13 @@ function homeAddonAsk() {
     };
   }
 })();
+/* Part of drawSheet() in ui.js. Sets the look again after each draw. A sheet for sharing uses the standard look. */
+function adLook() {
+  try {
+    applyLook();
+  } catch (e) {}
+}
+
 /* Part of closeSheet() in ui.js. Goes back to the look of the player after a sheet with the standard look. */
 function closeSheetAddon() {
   ADX.plainSH = null;

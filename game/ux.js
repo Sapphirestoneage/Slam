@@ -520,9 +520,8 @@ uxUndoable("rowdel", () => "Removed");
 uxUndoable("gdel", () => "Goal removed");
 uxUndoable("rdel", () => "Removed");
 uxUndoable("swcut", () => "Taken off your bills");
-const _draw0 = drawSheet;
-drawSheet = function () {
-  _draw0();
+/* Part of drawSheetOnce() in ui.js. The button "Close" at the top becomes "Back". Adds the button "Look up a word" at the bottom. */
+function drawSheetUx() {
   if (typeof document === "undefined" || !document.querySelector) return;
   const sh = document.querySelector("#ov .sheet");
   if (sh) {
@@ -545,7 +544,7 @@ drawSheet = function () {
       "beforeend",
       '<button class="ghost wide slim lookup" data-a="glossary">Look up a word</button>'
     );
-};
+}
 /* Part of save() in ui.js. Shows the mark "Saved" for a moment. */
 function saveFlash() {
   if (typeof document !== "undefined" && document.getElementById) {

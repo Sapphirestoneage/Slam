@@ -1221,18 +1221,19 @@ function sheetBase(fn) {
   SH = fn;
   drawSheet();
 }
+/* DRAW THE OPEN SHEET.
+   drawSheet() is the full function. It calls each part by name.
+   tidy.js can draw the sheet two times. The second time, the question that the player must answer next is open.
+   drawSheetOnce() draws the sheet one time. drawSheetBase() is the part from this file. It is farther down. */
 function drawSheet() {
-  const el = $("#ov");
-  if (!SH) {
-    el.innerHTML = "";
-    return;
-  }
-  const old = el.querySelector ? el.querySelector(".sheet") : null,
-    sc = old ? old.scrollTop : 0;
-  el.innerHTML = `<div class="overlay"><div class="sheet stack">${SH()}</div></div>`;
-  const nw = el.querySelector ? el.querySelector(".sheet") : null;
-  if (nw) nw.scrollTop = sc;
-  if (D) refreshDup(C(), D);
+  if (typeof drawSheetTidy === "function") drawSheetTidy(drawSheetOnce); /* tidy.js: one question open at a time */
+  else drawSheetOnce();
+  if (typeof adLook === "function") adLook(); /* addon.js: set the look again */
+}
+function drawSheetOnce() {
+  drawSheetBase();
+  if (typeof drawSheetUx === "function") drawSheetUx(); /* ux.js: the button "Back", the button "Look up a word" */
+  if (typeof drawSheetNav === "function") drawSheetNav(); /* nav.js: the trail, and the row Back / Forward / Close */
 }
 /* CLOSE THE SHEET.
    closeSheet() is the full function. It calls each part by name.
@@ -5078,7 +5079,7 @@ function eraHead(d) {
 /* sheets redraw with motion: any number that changed lights up */
 let SSEEN = {},
   SFN = null;
-function drawSheet() {
+function drawSheetBase() {
   const el = $("#ov");
   if (!SH) {
     el.innerHTML = "";
