@@ -1,4 +1,11 @@
-// ---------- What depends on what: the chains, the one-line replay, the off switch, and the add-on title ----------
+/* ============================================================================
+   SLAM the Game, test: tests/what-depends-on-what.js
+   PURPOSE     Examine What depends on what: the chains, the one-line replay, the off switch, and the
+               second title from an add-on.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/dep.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

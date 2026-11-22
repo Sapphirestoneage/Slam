@@ -1,4 +1,10 @@
-// ---------- what you already know (D.A.I.T.E.) ----------
+/* ============================================================================
+   SLAM the Game, test: tests/what-you-already-know.js
+   PURPOSE     Examine What you already know (D.A.I.T.E.).
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/know.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

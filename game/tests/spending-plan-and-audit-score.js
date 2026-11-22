@@ -1,4 +1,10 @@
-// ---------- Conscious Spending Plan and the money audit score ----------
+/* ============================================================================
+   SLAM the Game, test: tests/spending-plan-and-audit-score.js
+   PURPOSE     Examine the Conscious Spending Plan and the money audit score.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/csp.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

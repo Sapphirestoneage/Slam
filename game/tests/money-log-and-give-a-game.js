@@ -1,4 +1,10 @@
-// ---------- the money log, and handing someone their game ----------
+/* ============================================================================
+   SLAM the Game, test: tests/money-log-and-give-a-game.js
+   PURPOSE     Examine the money log, and the tool that gives a person their game as a code.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/moneylog.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

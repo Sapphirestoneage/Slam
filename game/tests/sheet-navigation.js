@@ -1,4 +1,10 @@
-// ---------- back, forward, close and an explanation on every screen ----------
+/* ============================================================================
+   SLAM the Game, test: tests/sheet-navigation.js
+   PURPOSE     Examine Back, Forward, Close and the "i" on each sheet.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: screens/nav.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

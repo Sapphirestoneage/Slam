@@ -1,4 +1,11 @@
-// ---------- one small question at a time, pass 2 ----------
+/* ============================================================================
+   SLAM the Game, test: tests/one-question-debts-and-key-numbers.js
+   PURPOSE     Examine the one-question screens for the details of one debt, for Key numbers, and for
+               the job match and the tax accounts.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/ask2.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

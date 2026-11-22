@@ -1,4 +1,12 @@
-// ---------- Famous money ideas: every idea opens on real numbers, every tap works, every term has an entry ----------
+/* ============================================================================
+   SLAM the Game, test: tests/famous-money-ideas.js
+   PURPOSE     Examine the famous money ideas: each idea opens on real numbers, each tap works, and each
+               term has an entry in the glossary.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/ideas.js to features/ideas5.js, features/ideasz.js,
+               features/roof.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

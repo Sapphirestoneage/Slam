@@ -1,4 +1,11 @@
-// ---------- the audit fixes: one question open, where you came from, headers everywhere, onboarding as its own screen ----------
+/* ============================================================================
+   SLAM the Game, test: tests/usability-repairs.js
+   PURPOSE     Examine the repairs from the usability audit: one question open at a time, the line that
+               says where the player came from, a header on each sheet, and setup as a full screen.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: screens/tidy.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

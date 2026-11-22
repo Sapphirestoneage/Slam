@@ -1,4 +1,11 @@
-// ---------- real steps for Future You and eras 6 to 9, key moments, and the account line ----------
+/* ============================================================================
+   SLAM the Game, test: tests/later-eras-and-account-line.js
+   PURPOSE     Examine the steps for Future You and for eras 6 to 9, the key moments, and the account
+               line.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/eras.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

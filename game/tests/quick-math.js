@@ -1,4 +1,10 @@
-// ---------- quick math ----------
+/* ============================================================================
+   SLAM the Game, test: tests/quick-math.js
+   PURPOSE     Examine Quick math.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/quick.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

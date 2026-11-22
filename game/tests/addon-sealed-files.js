@@ -1,3 +1,11 @@
+/* ============================================================================
+   SLAM the Game, test: tests/addon-sealed-files.js
+   PURPOSE     Examine that each sealed add-on file opens to its exact source.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html. Private files: see
+               RULES.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: account/addon.js, x1.json, x2.json.
+   ========================================================================= */
 {
   const fs = require("fs"),
     V = JSON.parse(fs.readFileSync("/home/claude/packs/vault.json", "utf8"));

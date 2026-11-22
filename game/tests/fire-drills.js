@@ -1,4 +1,11 @@
-// ---------- fire drills, the ladder, one-way doors, the tour ----------
+/* ============================================================================
+   SLAM the Game, test: tests/fire-drills.js
+   PURPOSE     Examine the money fire drills, the ladder (if the pay stopped), the one-way doors, and
+               the tour.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/drills.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

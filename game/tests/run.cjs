@@ -1,14 +1,17 @@
 /* ============================================================================
-   SLAM the Game: test runner
-   PURPOSE   Run each test file in its own process and print one summary.
-   USAGE     npm run test:game          (or: node game/tests/run.cjs)
-             node game/tests/run.cjs t_fork.js     Run one file.
-   OUTPUT    One line for each file, then the totals.
-   EXIT      0 when all checks pass, or when the only failures are in
-             known-failures.json. 1 for a new failure, or for an old version stamp.
-   STAMPS    The last line shows if the version stamps in index.html and admin.html
-             agree with the script files (tools/game_stamp.cjs).
-   RULE      A failure that is in known-failures.json is shown, not hidden.
+   SLAM the Game: tests/run.cjs (the test runner)
+   PURPOSE     Run each test file in its own process and print one summary.
+   USAGE       npm run test:game                          Run all test files.
+               node game/tests/run.cjs fork-theory.js     Run one file.
+   INPUT       Each .js file in this folder: one file for each feature (README.md has the list).
+               known-failures.json: the failures that are known, with the reason for each one.
+   OUTPUT      One line for each file, then the totals, then the result of the version stamps.
+   DEPENDS ON  harness.cjs, tools/game_stamp.cjs.
+   EXIT        0 when all checks pass, or when the only failures are in known-failures.json.
+               1 for a new failure, or for an old version stamp.
+   RULES       A failure that is in known-failures.json is shown, not hidden.
+               A test file that cannot run here prints a line that starts with SKIP. The runner
+               shows that line.
    ========================================================================= */
 const { spawnSync } = require("child_process");
 const fs = require("fs");
@@ -17,9 +20,10 @@ const path = require("path");
 const dir = __dirname;
 const known = JSON.parse(fs.readFileSync(path.join(dir, "known-failures.json"), "utf8"));
 const only = process.argv.slice(2);
+// Each .js file in this folder is one test file. The runner does not read the folder "retired".
 const files = fs
   .readdirSync(dir)
-  .filter(f => /^t_.*\.js$/.test(f) && (!only.length || only.includes(f)))
+  .filter(f => /\.js$/.test(f) && (!only.length || only.includes(f)))
   .sort();
 
 let ok = 0,
@@ -45,8 +49,10 @@ for (const f of files) {
   failed += x;
   const tag = x === 0 ? "ok    " : x <= allowed ? "KNOWN " : "FAIL  ";
   if (x > allowed) fresh++;
+  const skip = out.match(/^SKIP (.*)$/m);
+  const note = x && x <= allowed ? "   (" + known[f].why + ")" : skip ? "   (skipped: " + skip[1] + ")" : "";
   console.log(
-    `${tag} ${f.padEnd(22)} ${String(o).padStart(5)} ok ${String(x).padStart(3)} failed${x && x <= allowed ? "   (" + known[f].why + ")" : ""}`
+    `${skip && !x ? "skip  " : tag} ${f.padEnd(40)} ${String(o).padStart(4)} ok ${String(x).padStart(3)} failed${note}`
   );
   if (x > allowed)
     console.log(

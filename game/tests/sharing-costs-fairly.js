@@ -1,4 +1,10 @@
-// ---------- sharing costs fairly, and values ----------
+/* ============================================================================
+   SLAM the Game, test: tests/sharing-costs-fairly.js
+   PURPOSE     Examine Sharing costs fairly: the five methods by hand, and the sheet.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/fair.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,
@@ -156,81 +162,6 @@
   X("frdel", String(n1 - 1));
   chk("a guest can be taken out, never below two", frPpl().length === n1 - 1);
   X("close");
-  // values
-  go("me");
-  chk("Me has the way in", app().includes("Is my money going where I want?") && MENU.some(m => m[1] === "values"));
-  X("values");
-  chk(
-    "step 1: pick what matters, next is locked until one is picked",
-    W.kind === "values" && ov().includes("Pick up to three") && ov().includes("disabled") && clean(ov())
-  );
-  X("vltop", "Freedom and time");
-  X("vltop", "Health");
-  X("vltop", "Family");
-  X("vltop", "Fun");
-  chk("three at most", vlGet(C()).top.length === 3 && !vlGet(C()).top.includes("Fun"));
-  X("vltop", "Family");
-  X("vltop", "Fun");
-  chk("tap one to swap it out", vlGet(C()).top.join() === "Freedom and time,Health,Fun");
-  X("vlstep", "2");
-  chk(
-    "step 2: every place the money goes, two taps each",
-    ov().includes("Home") &&
-      ov().includes("None of these") &&
-      ov().includes("Want less") &&
-      ov().includes("Feels right") &&
-      clean(ov()),
-    junk(ov())
-  );
-  X("vlserve", "", "Home");
-  X("vlmark", "ok", "Home");
-  X("vlserve", "Health", "Food");
-  X("vlmark", "more", "Food");
-  X("vlserve", "", "Bills and subscriptions");
-  X("vlmark", "less", "Bills and subscriptions");
-  X("vlserve", "Fun", "Fun and everything else");
-  X("vlmark", "ok", "Fun and everything else");
-  const VR = vlResult(C());
-  chk(
-    "result by hand: 600 on health and 400 on fun out of 3,000",
-    VR.complete &&
-      VR.on === 1000 &&
-      VR.pct === 33 &&
-      VR.by.Health === 600 &&
-      VR.by.Fun === 400 &&
-      VR.okPct === 73 &&
-      VR.less[0].k === "Bills and subscriptions" &&
-      VR.more[0].k === "Food" &&
-      VR.starved.join() === "Freedom and time",
-    JSON.stringify([VR.on, VR.pct, VR.okPct, VR.starved])
-  );
-  X("vlstep", "3");
-  chk(
-    "step 3: the number, each value, less, more, and what gets nothing yet",
-    ov().includes("33%") &&
-      ov().includes("You want less of: Bills and subscriptions") &&
-      ov().includes("You want more of: Food") &&
-      ov().includes("Freedom and time") &&
-      ov().includes("none of your spending serves it yet") &&
-      clean(ov()),
-    junk(ov())
-  );
-  chk("no grade words", !/bad|wasted|wrong|failing grade|should not/i.test(ov().replace(/<[^>]+>/g, " ")));
-  X("vltop", "Health");
-  chk(
-    "dropping a value clears what pointed at it",
-    vlGet(C()).serves.Food === undefined && vlGet(C()).top.length === 2
-  );
-  X("close");
-  go("me");
-  chk("Me shows a prompt until it is complete again", app().includes("Three things that matter"));
-  chk(
-    "the checklist rows exist and every probe passes",
-    btRows().some(r => r.n.startsWith("Sharing costs fairly") && r.st === "b") &&
-      btRows().some(r => r.n.startsWith("Is my money going where I want") && r.st === "b") &&
-      btCount(btRows()).x === 0
-  );
-  chk("no client names in the menu", !MENU.some(m => /Jacob|Brandon/.test(m.join(" "))));
   X("close");
   G.chars.length = n0;
   G.active = act0;

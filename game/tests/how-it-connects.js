@@ -1,4 +1,11 @@
-// ---------- how it all connects ----------
+/* ============================================================================
+   SLAM the Game, test: tests/how-it-connects.js
+   PURPOSE     Examine How it all connects: the links between the skill tracks, and the links from a
+               skill to a screen.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/connect.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

@@ -1,4 +1,11 @@
-// ---------- our household: picture, paperwork, agreement, one page ----------
+/* ============================================================================
+   SLAM the Game, test: tests/retired/our-household.js
+   PURPOSE     Examine Our household: the picture, the paperwork, the agreement and the one page.
+               RETIRED: the runner does not run this file (see tests/README.md).
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/house.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

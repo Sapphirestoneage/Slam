@@ -1,4 +1,11 @@
-// ---------- what's built ----------
+/* ============================================================================
+   SLAM the Game, test: tests/whats-built.js
+   PURPOSE     Examine the list "What's built": each built row passes its probe, the counts agree, and
+               the sheet opens.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/built.js.
+   ========================================================================= */
 {
   const R = btRows(),
     c = btCount(R);
@@ -71,4 +78,23 @@
   X("btcopy");
   chk("copy confirms", W.copied);
   X("close");
+  // These checks came from the older files for a group of features. They examine rows of the list "What's built".
+  chk(
+    "built list: the new screens pass their probes",
+    [
+      "Before you sign",
+      "What each debt costs",
+      "Student loan plans",
+      "The Money Chart for more than two",
+      "Your people, one layer at a time",
+    ].every(n => btRows().some(r => r.n.startsWith(n) && r.st === "b")) && btCount(btRows()).x === 0,
+    JSON.stringify(btCount(btRows()))
+  );
+  chk(
+    "the checklist rows exist and every probe passes",
+    btRows().some(r => r.n.startsWith("Sharing costs fairly") && r.st === "b") &&
+      btRows().some(r => r.n.startsWith("Is my money going where I want") && r.st === "b") &&
+      btCount(btRows()).x === 0
+  );
+  chk("no client names in the menu", !MENU.some(m => /Jacob|Brandon/.test(m.join(" "))));
 }

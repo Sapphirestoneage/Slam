@@ -1,4 +1,10 @@
-// ---------- Save status: the sample game must never claim it is saved ----------
+/* ============================================================================
+   SLAM the Game, test: tests/save-status.js
+   PURPOSE     Examine the save status: the sample game must never say that it is saved.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: account/cloud.js.
+   ========================================================================= */
 {
   const db0 = CLOUD.db,
     demo0 = G.demo;

@@ -1,4 +1,10 @@
-// ---------- working for yourself: taxes first, your unit, your floor ----------
+/* ============================================================================
+   SLAM the Game, test: tests/working-for-yourself.js
+   PURPOSE     Examine Working for yourself: tax first, your unit, your floor.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/gig.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,

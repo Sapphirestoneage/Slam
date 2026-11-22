@@ -1,4 +1,10 @@
-// ---------- the multipliers board ----------
+/* ============================================================================
+   SLAM the Game, test: tests/multipliers-board.js
+   PURPOSE     Examine the multipliers board.
+   INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
+   OUTPUT      One result for each chk() call. The harness prints each failed check.
+   DEPENDS ON  tests/harness.cjs. Examines: features/mult.js.
+   ========================================================================= */
 {
   const n0 = G.chars.length,
     act0 = G.active,
