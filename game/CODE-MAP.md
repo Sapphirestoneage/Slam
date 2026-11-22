@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,757. Top-level functions: 1074. Replaced functions: 9, in 9 places.
+Date: 2026-11-22. Files: 60. Lines: 46,761. Top-level functions: 1076. Replaced functions: 8, in 8 places.
 
 ## 1. Files in load order
 
@@ -26,7 +26,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 14 | `smart.js` | 669 | 15 | 5 | 0 | every answer narrows what comes next |
 | 15 | `planner.js` | 1,253 | 55 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
 | 16 | `cloud.js` | 431 | 18 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
-| 17 | `ux.js` | 773 | 35 | 8 | 7 | walk-up-and-use |
+| 17 | `ux.js` | 779 | 36 | 8 | 7 | walk-up-and-use |
 | 18 | `metrics.js` | 1,825 | 26 | 10 | 0 | Key numbers |
 | 19 | `debts.js` | 389 | 15 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
 | 20 | `import.js` | 263 | 7 | 9 | 0 | fill in spending from a bank or card statement file |
@@ -35,7 +35,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 23 | `reveal.js` | 236 | 8 | 2 | 2 | Meet your character |
 | 24 | `moneylog.js` | 238 | 11 | 5 | 3 | two small things about people and records |
 | 25 | `drills.js` | 444 | 12 | 8 | 0 | four things for the hard days |
-| 26 | `gig.js` | 379 | 22 | 9 | 0 | Working for yourself |
+| 26 | `gig.js` | 377 | 23 | 9 | 0 | Working for yourself |
 | 27 | `know.js` | 193 | 9 | 6 | 0 | What you already know |
 | 28 | `fair.js` | 255 | 11 | 6 | 1 | Sharing costs fairly |
 | 29 | `values.js` | 200 | 6 | 8 | 1 | Is my money going where I want? Three short steps, all taps |
@@ -85,7 +85,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `fdSheet` | `drills.js` | `ideasz.js` | 1 |
 | `fogPct` | `engine2.js` | `know.js` | 1 |
 | `gamesSheet` | `games2.js` | `year.js` | 1 |
-| `monthsAhead` | `ux.js` | `gig.js` | 1 |
 | `profStrip` | `profiles.js` | `planner.js` | 1 |
 | `skillSheet` | `ui.js` | `connect.js` | 1 |
 

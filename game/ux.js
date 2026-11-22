@@ -213,7 +213,13 @@ const MUS_HINT = [
   "Open your bank app and look. That's the whole thing.",
 ];
 /* the next few months: what's coming, in order, so nothing is a surprise */
+/* monthsAhead(c, d, today, n) returns the list of the next months with what comes in each one. monthsAheadBase() is the part from this file. */
 function monthsAhead(c, d, today, n) {
+  let out = monthsAheadBase(c, d, today, n);
+  if (typeof monthsAheadTax === "function") out = monthsAheadTax(out, c, today); /* gig.js: the quarterly tax dates */
+  return out;
+}
+function monthsAheadBase(c, d, today, n) {
   today = today || todayISO();
   n = n || 6;
   const a = parseISO(today),

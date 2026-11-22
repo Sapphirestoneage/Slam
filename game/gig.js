@@ -312,33 +312,31 @@ Object.assign(ACT, {
     sheet(gxCatchSheet);
   };
   /* the quarterly date shows up in the next few months */
-  if (typeof monthsAhead === "function") {
-    const _ma = monthsAhead;
-    monthsAhead = function (c, d, today, n) {
-      const out = _ma(c, d, today, n);
-      if (!gxOn(c)) return out;
-      const S = gxState(c),
-        a = parseISO(today || todayISO());
-      [a.getFullYear(), a.getFullYear() + 1].forEach(y =>
-        GX_DUE.forEach(x => {
-          const dt = new Date(y, x[0], x[1]),
-            ym = dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0"),
-            mo = out.find(o => o.ym === ym);
-          if (mo && dt >= new Date(a.getFullYear(), a.getMonth(), a.getDate()))
-            mo.items.push({
-              t:
-                "Tax date around the 15th: about " +
-                money(S.perQ) +
-                " for three months like now" +
-                (S.known ? "" : " (guess)"),
-              k: "cost",
-            });
-        })
-      );
-      return out;
-    };
-  }
 })();
+/* Part of monthsAhead() in ux.js. For a player with income that has no tax taken out, adds the quarterly tax dates to the months. */
+function monthsAheadTax(out, c, today) {
+  if (!gxOn(c)) return out;
+  const S = gxState(c),
+    a = parseISO(today || todayISO());
+  [a.getFullYear(), a.getFullYear() + 1].forEach(y =>
+    GX_DUE.forEach(x => {
+      const dt = new Date(y, x[0], x[1]),
+        ym = dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0"),
+        mo = out.find(o => o.ym === ym);
+      if (mo && dt >= new Date(a.getFullYear(), a.getMonth(), a.getDate()))
+        mo.items.push({
+          t:
+            "Tax date around the 15th: about " +
+            money(S.perQ) +
+            " for three months like now" +
+            (S.known ? "" : " (guess)"),
+          k: "cost",
+        });
+    })
+  );
+  return out;
+}
+
 /* Part of moneyTab() in ui.js. Adds a slim row "Tax money". Only a player with income that has no tax taken out sees it. */
 function moneyTabTaxRow(h) {
   const c = C();
