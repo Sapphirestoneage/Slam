@@ -240,7 +240,16 @@ function msSync(c, d) {
 function msPills(m) {
   return `<div class="row" style="gap:6px;flex-wrap:wrap"><span class="pill">About ${m.mins} min</span><span class="pill okp">Payout: ${esc(m.pay)}</span><span class="pill info">Unlocks: ${esc(m.unl)}</span></div>`;
 }
+/* THE MISSION BOARD.
+   msBoard(c, d) makes the full board. It calls each part by name. msBoardBase(c, d) is the part from this file. */
 function msBoard(c, d) {
+  let h = msBoardBase(c, d);
+  if (typeof msBoardConnect === "function")
+    h = msBoardConnect(h); /* connect.js: the button "See how it all connects" */
+  if (typeof msBoardMore === "function") h = msBoardMore(h, c, d); /* fold.js: the list "More steps from your path" */
+  return h;
+}
+function msBoardBase(c, d) {
   const S = msStory(c, d),
     side = msSide(c, d).slice(0, 3),
     H = msHeists(c, d),

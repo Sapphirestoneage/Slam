@@ -323,20 +323,16 @@ Object.assign(ACT, {
       drawSheet();
     }
   };
-  if (typeof msBoard === "function") {
-    const _mb = msBoard;
-    msBoard = function (c, d) {
-      const h = _mb(c, d),
-        a = "</div>";
-      const i = h.lastIndexOf(a);
-      return i < 0
-        ? h
-        : h.slice(0, i) +
-            `<button class="ghost wide slim" data-a="connect">See how it all connects</button>` +
-            h.slice(i);
-    };
-  }
 })();
+/* Part of msBoard() in missions.js. Adds the button "See how it all connects" at the bottom of the board. */
+function msBoardConnect(h) {
+  const a = "</div>";
+  const i = h.lastIndexOf(a);
+  return i < 0
+    ? h
+    : h.slice(0, i) + `<button class="ghost wide slim" data-a="connect">See how it all connects</button>` + h.slice(i);
+}
+
 /* Part of home() in ui.js. Adds the row "Just opened" one time, after a first skill level opens new tracks. */
 function homeConnectRow(h) {
   const c = C(),

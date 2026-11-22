@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,623. Top-level functions: 1006. Replaced functions: 45, in 50 places.
+Date: 2026-11-22. Files: 60. Lines: 46,626. Top-level functions: 1009. Replaced functions: 44, in 48 places.
 
 ## 1. Files in load order
 
@@ -39,8 +39,8 @@ The browser loads the files in this order. A file can use all names from the fil
 | 27 | `know.js` | 193 | 9 | 6 | 0 | What you already know |
 | 28 | `fair.js` | 255 | 11 | 6 | 1 | Sharing costs fairly |
 | 29 | `values.js` | 200 | 6 | 8 | 1 | Is my money going where I want? Three short steps, all taps |
-| 30 | `missions.js` | 322 | 9 | 4 | 0 | The mission board |
-| 31 | `connect.js` | 370 | 17 | 10 | 0 | How it all connects |
+| 30 | `missions.js` | 331 | 10 | 4 | 0 | The mission board |
+| 31 | `connect.js` | 366 | 18 | 10 | 0 | How it all connects |
 | 32 | `house.js` | 477 | 15 | 9 | 2 | Our household |
 | 33 | `back.js` | 242 | 12 | 3 | 6 | The welcome-back card |
 | 34 | `lever.js` | 552 | 14 | 7 | 0 | Which lever matters most |
@@ -52,7 +52,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 40 | `study.js` | 492 | 13 | 5 | 0 | Student loan plans, side by side |
 | 41 | `together.js` | 192 | 5 | 4 | 1 | the Money Chart for more than two |
 | 42 | `people.js` | 310 | 5 | 4 | 0 | Your people, one layer at a time |
-| 43 | `fold.js` | 54 | 2 | 2 | 1 | one list on Next Steps |
+| 43 | `fold.js` | 52 | 3 | 2 | 1 | one list on Next Steps |
 | 44 | `nav.js` | 457 | 11 | 2 | 0 | the same four things on every screen |
 | 45 | `home.js` | 119 | 4 | 0 | 5 | put the game on your home screen |
 | 46 | `tidy.js` | 164 | 7 | 3 | 0 | the fixes from the usability audit, applied to every screen at once instead of one screen at a time |
@@ -79,7 +79,6 @@ Each row shows one function, the file that defines it, and the later files that 
 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
-| `msBoard` | `missions.js` | `connect.js`, `fold.js` | 2 |
 | `msSide` | `missions.js` | `lever.js`, `ask2.js` | 2 |
 | `q` | `ui.js` | `tidy.js`, `fork.js` | 2 |
 | `reviewSheet` | `year.js` | `fork.js`, `eras.js` | 2 |

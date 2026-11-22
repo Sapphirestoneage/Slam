@@ -11,28 +11,26 @@ function fdRest(c, d) {
   } catch (e) {}
   return FD_READY(c).filter(p => !(S && (p.t === S.t || (p.a === S.a && String(p.v) === String(S.v)))));
 }
-(() => {
-  const _mb = msBoard;
-  msBoard = function (c, d) {
-    const h = _mb(c, d),
-      rest = G.demo || !c.led ? [] : fdRest(c, d);
-    if (!rest.length) return h;
-    const i = h.lastIndexOf("</div>");
-    if (i < 0) return h;
-    return (
-      h.slice(0, i) +
-      `<div class="tile stack fdmore" style="gap:6px"><button class="kwhead" data-a="fdmore" aria-expanded="${FDX.more}"><span style="flex:1;min-width:0;text-align:left"><b class="small">More steps from your path</b><span class="tiny muted" style="display:block">For when you want one. Pick a day, or do it now.</span></span><span class="caret">${FDX.more ? "⌃" : "›"}</span></button>${
-        FDX.more
-          ? rest
-              .slice(0, 5)
-              .map(p => plReadyRow(p, false))
-              .join("")
-          : ""
-      }</div>` +
-      h.slice(i)
-    );
-  };
-})();
+/* Part of msBoard() in missions.js. Adds the folded list "More steps from your path" at the bottom of the board. These are the steps that the card "Ready to plan" showed before. */
+function msBoardMore(h, c, d) {
+  const rest = G.demo || !c.led ? [] : fdRest(c, d);
+  if (!rest.length) return h;
+  const i = h.lastIndexOf("</div>");
+  if (i < 0) return h;
+  return (
+    h.slice(0, i) +
+    `<div class="tile stack fdmore" style="gap:6px"><button class="kwhead" data-a="fdmore" aria-expanded="${FDX.more}"><span style="flex:1;min-width:0;text-align:left"><b class="small">More steps from your path</b><span class="tiny muted" style="display:block">For when you want one. Pick a day, or do it now.</span></span><span class="caret">${FDX.more ? "⌃" : "›"}</span></button>${
+      FDX.more
+        ? rest
+            .slice(0, 5)
+            .map(p => plReadyRow(p, false))
+            .join("")
+        : ""
+    }</div>` +
+    h.slice(i)
+  );
+}
+
 /* Part of planTab() in planner.js. Runs make() with the list "ready to plan" hidden, when the mission board shows the same steps. */
 function planTabFold(make) {
   const c = C();
