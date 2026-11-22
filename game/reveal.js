@@ -32,7 +32,13 @@ function rvData(c, d) {
     real: M.length,
   };
 }
+/* rvText() returns the text of the character sheet, for copy. rvTextBase() is the part from this file. */
 function rvText(c, d) {
+  /* addon.js: a text for sharing has the standard look, with nothing from an add-on. */
+  if (typeof adPlainText === "function") return adPlainText(() => rvTextBase(c, d));
+  return rvTextBase(c, d);
+}
+function rvTextBase(c, d) {
   const R = rvData(c, d),
     L = [
       R.name + ", in SLAM the Game",

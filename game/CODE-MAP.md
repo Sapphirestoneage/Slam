@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,670. Top-level functions: 1039. Replaced functions: 29, in 29 places.
+Date: 2026-11-22. Files: 60. Lines: 46,672. Top-level functions: 1045. Replaced functions: 24, in 24 places.
 
 ## 1. Files in load order
 
@@ -17,7 +17,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 5 | `engine.js` | 3,841 | 123 | 0 | 0 | SLAM the Game: engine |
 | 6 | `engine2.js` | 378 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
-| 8 | `ui.js` | 6,439 | 210 | 136 | 2 | SLAM the Game: screens |
+| 8 | `ui.js` | 6,451 | 212 | 136 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 609 | 21 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,435 | 38 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 765 | 23 | 13 | 0 | the year |
@@ -32,7 +32,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 20 | `import.js` | 268 | 6 | 9 | 0 | fill in spending from a bank or card statement file |
 | 21 | `compare.js` | 183 | 11 | 5 | 0 | Side by side |
 | 22 | `quick.js` | 256 | 11 | 2 | 0 | Quick math |
-| 23 | `reveal.js` | 230 | 7 | 2 | 2 | Meet your character |
+| 23 | `reveal.js` | 236 | 8 | 2 | 2 | Meet your character |
 | 24 | `moneylog.js` | 238 | 11 | 5 | 3 | two small things about people and records |
 | 25 | `drills.js` | 444 | 12 | 8 | 0 | four things for the hard days |
 | 26 | `gig.js` | 379 | 22 | 9 | 0 | Working for yourself |
@@ -42,7 +42,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 30 | `missions.js` | 339 | 11 | 4 | 0 | The mission board |
 | 31 | `connect.js` | 366 | 18 | 10 | 0 | How it all connects |
 | 32 | `house.js` | 477 | 15 | 9 | 2 | Our household |
-| 33 | `back.js` | 242 | 12 | 3 | 6 | The welcome-back card |
+| 33 | `back.js` | 248 | 13 | 3 | 6 | The welcome-back card |
 | 34 | `lever.js` | 550 | 15 | 7 | 0 | Which lever matters most |
 | 35 | `mult.js` | 411 | 13 | 9 | 0 | The multipliers board |
 | 36 | `ask.js` | 422 | 9 | 4 | 1 | one small question at a time |
@@ -50,13 +50,13 @@ The browser loads the files in this order. A file can use all names from the fil
 | 38 | `sign.js` | 234 | 5 | 3 | 2 | Before you sign |
 | 39 | `owed.js` | 113 | 3 | 3 | 2 | What each debt costs you |
 | 40 | `study.js` | 492 | 13 | 5 | 0 | Student loan plans, side by side |
-| 41 | `together.js` | 192 | 5 | 4 | 1 | the Money Chart for more than two |
+| 41 | `together.js` | 198 | 6 | 4 | 1 | the Money Chart for more than two |
 | 42 | `people.js` | 310 | 5 | 4 | 0 | Your people, one layer at a time |
 | 43 | `fold.js` | 52 | 3 | 2 | 1 | one list on Next Steps |
 | 44 | `nav.js` | 457 | 11 | 2 | 0 | the same four things on every screen |
 | 45 | `home.js` | 119 | 4 | 0 | 5 | put the game on your home screen |
 | 46 | `tidy.js` | 164 | 8 | 3 | 0 | the fixes from the usability audit, applied to every screen at once instead of one screen at a time |
-| 47 | `addon.js` | 606 | 29 | 6 | 15 | extras, part two |
+| 47 | `addon.js` | 578 | 31 | 6 | 15 | extras, part two |
 | 48 | `fork.js` | 574 | 19 | 13 | 5 | Fork Theory |
 | 49 | `csp.js` | 707 | 24 | 12 | 1 | two ways to see a whole month of money at a glance |
 | 50 | `ideas.js` | 1,094 | 20 | 5 | 1 | the workshop behind "Famous money ideas" |
@@ -81,7 +81,6 @@ Each row shows one function, the file that defines it, and the later files that 
 |----------|------------|--------------------------|-------:|
 | `afterSharp` | `ui.js` | `ask2.js` | 1 |
 | `bkSheet` | `back.js` | `fork.js` | 1 |
-| `bkText` | `back.js` | `addon.js` | 1 |
 | `chartSheet` | `chart.js` | `together.js` | 1 |
 | `cpMoves` | `compare.js` | `drills.js` | 1 |
 | `cspMoneyRows` | `csp.js` | `roof.js` | 1 |
@@ -102,12 +101,8 @@ Each row shows one function, the file that defines it, and the later files that 
 | `partySheet` | `games.js` | `people.js` | 1 |
 | `plReady` | `planner.js` | `fold.js` | 1 |
 | `profStrip` | `profiles.js` | `planner.js` | 1 |
-| `rvText` | `reveal.js` | `addon.js` | 1 |
-| `shareCard` | `ui.js` | `addon.js` | 1 |
 | `sharpSheet` | `ui.js` | `ask2.js` | 1 |
 | `skillSheet` | `ui.js` | `connect.js` | 1 |
-| `tgText` | `together.js` | `addon.js` | 1 |
-| `wrappedSheet` | `ui.js` | `addon.js` | 1 |
 
 ## 3. Functions with no caller
 

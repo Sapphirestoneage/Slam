@@ -146,7 +146,13 @@ function bkRow(c, d) {
   if (!B) return "";
   return `<button class="rowbtn homerow bkrow" data-a="since" aria-label="Welcome back"><span style="min-width:0;flex:1"><b class="small">Welcome back${c.name && c.name !== "You" ? ", " + esc(c.name) : ""}</b><div class="tiny muted">${esc(bkLine(B))}</div></span><span class="pill new">New</span></button>`;
 }
+/* bkText() returns the text of the welcome-back card, for copy. bkTextBase() is the part from this file. */
 function bkText(c, B) {
+  /* addon.js: a text for sharing has the standard look, with nothing from an add-on. */
+  if (typeof adPlainText === "function") return adPlainText(() => bkTextBase(c, B));
+  return bkTextBase(c, B);
+}
+function bkTextBase(c, B) {
   return ["Since last time (" + nice(B.day) + ")"]
     .concat(
       B.did.length ? ["Last time:"].concat(B.did.map(x => "- " + x)) : ["Last time: looked things over."],

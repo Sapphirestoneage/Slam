@@ -2309,7 +2309,13 @@ function findSheet() {
   });
 }
 
+/* wrappedSheet() opens the full sheet "Your year". wrappedSheetBase() is the part from this file. */
 function wrappedSheet() {
+  const r = wrappedSheetBase();
+  if (typeof adPlainSheet === "function") adPlainSheet(); /* addon.js: a sheet for sharing has the standard look */
+  return r;
+}
+function wrappedSheetBase() {
   const c = C(),
     w = wrapped(c, todayISO()),
     yr = todayISO().slice(0, 4),
@@ -5223,7 +5229,13 @@ function celebrateBase(title, lines, sub, medal) {
     })()}</div>${note ? `<div class="banner small" style="text-align:left;margin-bottom:10px">${esc(note)}</div>` : ""}<div class="tile" style="text-align:left;margin-bottom:10px"><div class="tiny muted">${V("upnext", "Up next")}</div><b>${esc(ns.t)}</b>${bm && !ns.best && bm.title ? `<div class="tiny muted" style="margin-top:6px">Now number 1 on your path</div><b>${esc(bm.title)}</b>` : ""}</div><button class="primary wide go" data-a="close">${V("go", "Keep going")}</button><button class="ghost wide slim" style="margin-top:8px" data-a="sharewin">Make a share card</button></div>`;
   });
 }
+/* shareCard() opens the full share card. shareCardBase() is the part from this file. */
 function shareCard(title, lines) {
+  const r = shareCardBase(title, lines);
+  if (typeof adPlainSheet === "function") adPlainSheet(); /* addon.js: a sheet for sharing has the standard look */
+  return r;
+}
+function shareCardBase(title, lines) {
   const safe = (lines || []).filter(l => l && !/\$/.test(l)).slice(0, 4),
     txt =
       [title]

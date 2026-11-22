@@ -468,44 +468,16 @@ function homeAddonAsk() {
     if (!SH && adPending(C()) && typeof setTimeout === "function") setTimeout(adAsk, 0);
   } catch (e) {}
 }
-(() => {
-  /* sharing is always the standard look with nothing from an extra in it */
-  const _w = wrappedSheet;
-  wrappedSheet = function () {
-    const r = _w.apply(this, arguments);
-    ADX.plainSH = SH;
-    drawSheet();
-    return r;
-  };
-  const _s = shareCard;
-  shareCard = function () {
-    const r = _s.apply(this, arguments);
-    ADX.plainSH = SH;
-    drawSheet();
-    return r;
-  };
-  if (typeof rvText === "function") {
-    const f = rvText;
-    rvText = function () {
-      const a = arguments;
-      return adPlain(() => f.apply(null, a));
-    };
-  }
-  if (typeof tgText === "function") {
-    const f = tgText;
-    tgText = function () {
-      const a = arguments;
-      return adPlain(() => f.apply(null, a));
-    };
-  }
-  if (typeof bkText === "function") {
-    const f = bkText;
-    bkText = function () {
-      const a = arguments;
-      return adPlain(() => f.apply(null, a));
-    };
-  }
-})();
+/* Part of rvText() in reveal.js, tgText() in together.js and bkText() in back.js. Runs fn with the add-ons quiet. Thus a text for sharing has nothing from an add-on. */
+function adPlainText(fn) {
+  return adPlain(fn);
+}
+/* Part of wrappedSheet() and shareCard() in ui.js. A sheet for sharing always has the standard look, with nothing from an add-on. Marks the open sheet, and draws it again. */
+function adPlainSheet() {
+  ADX.plainSH = SH;
+  drawSheet();
+}
+
 /* Part of profSheet() in profiles.js. Adds the card for the add-ons. The card is not there while the sheet asks to remove a person. */
 function profSheetAddon(h) {
   if (W && W.rm != null) return h;

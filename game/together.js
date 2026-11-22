@@ -38,7 +38,13 @@ function tgLine(r, names) {
         ? "Nobody leans on this yet. It is the one to build together."
         : "You are all close on this one.";
 }
+/* tgText() returns the text of the chart for more than two people, for copy. tgTextBase() is the part from this file. */
 function tgText(c) {
+  /* addon.js: a text for sharing has the standard look, with nothing from an add-on. */
+  if (typeof adPlainText === "function") return adPlainText(() => tgTextBase(c));
+  return tgTextBase(c);
+}
+function tgTextBase(c) {
   const In = tgIn(c),
     Gp = mcGroup(In.map(p => p.ans));
   if (!Gp) return "";
