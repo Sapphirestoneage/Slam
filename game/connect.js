@@ -311,19 +311,18 @@ Object.assign(ACT, {
       render();
     }
   };
-  /* the skill sheet gains its way into the game and its place in the picture */
-  const _ss = skillSheet;
-  skillSheet = function (id) {
-    _ss(id);
-    const f = SH;
-    if (typeof f === "function" && !f.cx) {
-      const g = () => f() + cxSkillExtra(id);
-      g.cx = 1;
-      SH = g;
-      drawSheet();
-    }
-  };
 })();
+/* Part of skillSheet() in ui.js. Adds the block "how this skill connects" at the bottom of the open sheet, one time. */
+function skillSheetConnect(id) {
+  const f = SH;
+  if (typeof f === "function" && !f.cx) {
+    const g = () => f() + cxSkillExtra(id);
+    g.cx = 1;
+    SH = g;
+    drawSheet();
+  }
+}
+
 /* Part of msBoard() in missions.js. Adds the button "See how it all connects" at the bottom of the board. */
 function msBoardConnect(h) {
   const a = "</div>";

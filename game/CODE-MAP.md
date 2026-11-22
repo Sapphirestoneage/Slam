@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,768. Top-level functions: 1079. Replaced functions: 5, in 5 places.
+Date: 2026-11-22. Files: 60. Lines: 46,773. Top-level functions: 1081. Replaced functions: 4, in 4 places.
 
 ## 1. Files in load order
 
@@ -17,7 +17,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 5 | `engine.js` | 3,841 | 123 | 0 | 0 | SLAM the Game: engine |
 | 6 | `engine2.js` | 381 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
-| 8 | `ui.js` | 6,472 | 215 | 136 | 2 | SLAM the Game: screens |
+| 8 | `ui.js` | 6,478 | 216 | 136 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 621 | 22 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,447 | 40 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 765 | 24 | 13 | 0 | the year |
@@ -40,7 +40,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 28 | `fair.js` | 255 | 11 | 6 | 1 | Sharing costs fairly |
 | 29 | `values.js` | 200 | 6 | 8 | 1 | Is my money going where I want? Three short steps, all taps |
 | 30 | `missions.js` | 339 | 11 | 4 | 0 | The mission board |
-| 31 | `connect.js` | 366 | 18 | 10 | 0 | How it all connects |
+| 31 | `connect.js` | 365 | 19 | 10 | 0 | How it all connects |
 | 32 | `house.js` | 477 | 15 | 9 | 2 | Our household |
 | 33 | `back.js` | 254 | 14 | 3 | 6 | The welcome-back card |
 | 34 | `lever.js` | 550 | 15 | 7 | 0 | Which lever matters most |
@@ -83,7 +83,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `cspMoneyRows` | `csp.js` | `roof.js` | 1 |
 | `dbSheet` | `debts.js` | `owed.js` | 1 |
 | `fdSheet` | `drills.js` | `ideasz.js` | 1 |
-| `skillSheet` | `ui.js` | `connect.js` | 1 |
 
 ## 3. Functions with no caller
 

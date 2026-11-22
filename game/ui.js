@@ -1373,7 +1373,13 @@ function nodeSheet(id) {
   });
 }
 
+/* skillSheet(id) opens the full sheet of one skill. skillSheetBase(id) is the part from this file. */
 function skillSheet(id) {
+  skillSheetBase(id);
+  if (typeof skillSheetConnect === "function")
+    skillSheetConnect(id); /* connect.js: the place of the skill in the picture */
+}
+function skillSheetBase(id) {
   const p = id.split(":"),
     t = p[0],
     i = +p[1],
