@@ -926,19 +926,15 @@ function plReveal(w) {
 profStrip = function () {
   return "";
 };
-/* home gets one slim line pointing at today's plan */
-(() => {
-  const _home = home;
-  home = function () {
-    const h = _home(),
-      c = C();
-    if (G.demo) return h;
-    const t = todayISO(),
-      open = plAutoToday(c).concat(plTasksOn(c, t).filter(plOpen));
-    const line = `<button class="rowbtn plhomeline" data-a="tab" data-v="plan"><span><span class="tiny muted">Today's plan</span><div><b>${open.length ? open.length + " thing" + (open.length === 1 ? "" : "s") + ", about " + plMins(open) + " min" : "All done for today ✓"}</b></div></span><span class="caret">›</span></button>`;
-    return h.replace(/(<div class="card[^"]*"><div class="row between"><div class="eyebrow">)/, line + "$1");
-  };
-})();
+/* Part of home() in ui.js. Adds one slim line that goes to the plan for today. */
+function homePlanLine(h) {
+  const c = C();
+  if (G.demo) return h;
+  const t = todayISO(),
+    open = plAutoToday(c).concat(plTasksOn(c, t).filter(plOpen));
+  const line = `<button class="rowbtn plhomeline" data-a="tab" data-v="plan"><span><span class="tiny muted">Today's plan</span><div><b>${open.length ? open.length + " thing" + (open.length === 1 ? "" : "s") + ", about " + plMins(open) + " min" : "All done for today ✓"}</b></div></span><span class="caret">›</span></button>`;
+  return h.replace(/(<div class="card[^"]*"><div class="row between"><div class="eyebrow">)/, line + "$1");
+}
 
 Object.assign(ACT, {
   menu: () => {

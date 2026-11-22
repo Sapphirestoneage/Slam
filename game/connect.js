@@ -323,17 +323,6 @@ Object.assign(ACT, {
       drawSheet();
     }
   };
-  const _h = home;
-  home = function () {
-    const h = _h(),
-      c = C(),
-      nw = G.demo ? null : cxNews(c);
-    if (!nw || typeof homeRowAdd !== "function") return h;
-    return homeRowAdd(
-      h,
-      `<button class="rowbtn homerow" data-a="connect" data-v="${nw.from}"><span style="min-width:0"><b>Just opened: ${nw.list.map(x => esc(cxShort(x))).join(", ")}</b><div class="tiny muted">Level 1 in ${esc(cxShort(nw.from))} did that. See how it connects.</div></span><span class="pill new">New</span></button>`
-    );
-  };
   if (typeof msBoard === "function") {
     const _mb = msBoard;
     msBoard = function (c, d) {
@@ -348,6 +337,16 @@ Object.assign(ACT, {
     };
   }
 })();
+/* Part of home() in ui.js. Adds the row "Just opened" one time, after a first skill level opens new tracks. */
+function homeConnectRow(h) {
+  const c = C(),
+    nw = G.demo ? null : cxNews(c);
+  if (!nw || typeof homeRowAdd !== "function") return h;
+  return homeRowAdd(
+    h,
+    `<button class="rowbtn homerow" data-a="connect" data-v="${nw.from}"><span style="min-width:0"><b>Just opened: ${nw.list.map(x => esc(cxShort(x))).join(", ")}</b><div class="tiny muted">Level 1 in ${esc(cxShort(nw.from))} did that. See how it connects.</div></span><span class="pill new">New</span></button>`
+  );
+}
 Object.assign(GLOSS, {
   track: [
     "Track",

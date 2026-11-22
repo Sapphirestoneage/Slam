@@ -564,13 +564,13 @@ function reviewSheet() {
 }
 /* quiet windows on Home: a calendar can ask the game to go quiet for a while */
 let REST_OPEN = 0;
-const _home1 = home;
-home = function () {
+/* Part of home() in ui.js. In a rest window, this quiet screen replaces Home. Returns null when there is no rest window. */
+function homeQuiet() {
   const c = C(),
     rw = G.demo || Date.now() < REST_OPEN ? null : restWindow(c);
-  if (!rw) return _home1();
+  if (!rw) return null;
   return `<div class="stack"><h1>${esc(c.name)}</h1><div class="card stack" style="gap:8px"><div class="eyebrow">${rw.n} mode</div><h2>Nothing here needs you right now.</h2><div class="small muted">The game is quiet until about ${new Date(rw.to).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}${new Date(rw.to).getDate() !== new Date(Date.now()).getDate() ? " tomorrow" : ""}. Your place is saved.</div><button class="ghost wide slim" data-a="restopen">Open the game anyway</button></div></div>`;
-};
+}
 const _camp2 = campCard;
 campCard = function (c, d) {
   const h = _camp2(c, d),

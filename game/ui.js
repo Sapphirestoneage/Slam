@@ -571,7 +571,37 @@ function freeCard(c, d, sec) {
   return `<div class="card" ${sec || ""}><div class="row between"><span class="tiny muted">Free to spend</span>${ib("term:free")}</div><div class="row between"><div><div class="big ${fs.real ? "" : "guess"}" data-fid="v:free">${money(fs.week)} a week</div><div class="tiny muted">for food, fun and everything else${fs.real ? "" : " · guess"}</div></div>${fs.real ? "" : `<button class="ghost slim" data-a="sharp" data-v="${isSharp(c, "take") ? "spend" : "take"}">Make it real</button>`}</div>
  <div class="tiny muted" style="margin-top:6px">${money(fs.in)} in, minus ${money(fs.bills)} for bills, minus ${money(fs.goal)} for your goals, leaves ${money(fs.free)} a month.${fs.short ? " Right now about " + money(fs.short) + " more goes out than comes in." : ""}</div></div>`;
 }
+/* HOME SCREEN.
+   home() makes the full screen. It calls each part by name, in the load order of the files.
+   A part from a later file can be absent while the page loads. Thus each call has a typeof test.
+   homeBase() is the part from this file. */
 function home() {
+  /* back.js: compare with the last visit. Do this before the screen is made. */
+  const back = typeof homeBackSync === "function" ? homeBackSync() : null;
+  let h = homeTop();
+  if (typeof homeRevealRow === "function") h = homeRevealRow(h); /* reveal.js: the row "Meet your character" */
+  if (typeof homeTourRow === "function") h = homeTourRow(h); /* drills.js: the row for the 3-tap tour */
+  if (typeof homeKnowStrip === "function") h = homeKnowStrip(h); /* know.js: the strip "What you already know" */
+  if (typeof homeConnectRow === "function") h = homeConnectRow(h); /* connect.js: the row "Just opened" */
+  if (back) h = homeBackRow(h, back.c, back.w); /* back.js: the welcome-back row */
+  if (typeof homeAddonAsk === "function") homeAddonAsk(); /* addon.js: ask about an add-on that waits */
+  if (typeof homeForkRow === "function") h = homeForkRow(h); /* fork.js: the row for the fork check */
+  if (typeof homeAccountLine === "function") h = homeAccountLine(h); /* eras.js: the account recommendation */
+  if (typeof homeCoachNote === "function") h = homeCoachNote(h); /* supa.js: the note "the coach made a change" */
+  return h;
+}
+/* The top of Home: the welcome screen, or the quiet screen, or the full screen with its first lines. */
+function homeTop() {
+  const wel =
+    typeof homeWelcome === "function" ? homeWelcome() : null; /* ux.js: a new player sees the welcome screen */
+  if (wel !== null) return wel;
+  const quiet = typeof homeQuiet === "function" ? homeQuiet() : null; /* year.js: a rest window makes Home quiet */
+  let h = quiet !== null ? quiet : homeBase();
+  if (typeof homePlanLine === "function") h = homePlanLine(h); /* planner.js: the line "Today's plan" */
+  if (typeof homeQuadTop === "function") h = homeQuadTop(h); /* ux.js: the tab title and the four tiles */
+  return h;
+}
+function homeBase() {
   const c = C(),
     d = D,
     nb = newbie(c),

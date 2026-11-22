@@ -211,23 +211,21 @@ function homeRowAdd(h, row) {
   const th = typeof tabHead === "function" ? tabHead() : "";
   return th && h.indexOf(th) >= 0 ? h.replace(th, () => th + row) : h;
 }
+/* The row that opens the character sheet. It is on Me, and one time on Home. */
+const rvRow = (seen, cls) =>
+  `<button class="rowbtn${cls ? " " + cls : ""}" data-a="reveal"><span><b>${seen ? "My character sheet" : "Meet your character"}</b><div class="tiny muted">${seen ? "Chapter, era, who you are becoming, your quest" : "Thirty seconds. Who you are in this game right now."}</div></span>${seen ? `<span class="caret">›</span>` : `<span class="pill new">New</span>`}</button>`;
 (() => {
-  const row = (seen, cls) =>
-    `<button class="rowbtn${cls ? " " + cls : ""}" data-a="reveal"><span><b>${seen ? "My character sheet" : "Meet your character"}</b><div class="tiny muted">${seen ? "Chapter, era, who you are becoming, your quest" : "Thirty seconds. Who you are in this game right now."}</div></span>${seen ? `<span class="caret">›</span>` : `<span class="pill new">New</span>`}</button>`;
   const _me = meTab;
   meTab = function () {
     const h = _me(),
       c = C();
-    return h.replace(/(<h1>[^<]*<\/h1>)/, m => m + row(!!(c.x && c.x.revSeen)));
+    return h.replace(/(<h1>[^<]*<\/h1>)/, m => m + rvRow(!!(c.x && c.x.revSeen)));
   };
-  if (typeof home === "function") {
-    const _h = home;
-    home = function () {
-      const h = _h(),
-        c = C();
-      if (G.demo || !c.led || (c.x && c.x.revSeen) || (typeof TOUR !== "undefined" && !G.tourSeen)) return h;
-      return homeRowAdd(h, row(false, "homerow"));
-    };
-  }
 })();
+/* Part of home() in ui.js. Adds the row "Meet your character" until the player opens it one time. It waits for the tour. */
+function homeRevealRow(h) {
+  const c = C();
+  if (G.demo || !c.led || (c.x && c.x.revSeen) || (typeof TOUR !== "undefined" && !G.tourSeen)) return h;
+  return homeRowAdd(h, rvRow(false, "homerow"));
+}
 if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();

@@ -462,6 +462,12 @@ async function adGrant(uid, id, on) {
   }
   if (SH === profSheet) drawSheet();
 }
+/* Part of home() in ui.js. Home has no change here. When an add-on waits for an answer, the question opens after Home is drawn. */
+function homeAddonAsk() {
+  try {
+    if (!SH && adPending(C()) && typeof setTimeout === "function") setTimeout(adAsk, 0);
+  } catch (e) {}
+}
 (() => {
   const _p = profSheet;
   profSheet = function () {
@@ -473,14 +479,6 @@ async function adGrant(uid, id, on) {
         '<button class="primary wide" data-a="addperson">',
       ].find(x => h.indexOf(x) >= 0);
     return card && a ? h.replace(a, () => card + a) : h + card;
-  };
-  const _h = home;
-  home = function () {
-    const h = _h();
-    try {
-      if (!SH && adPending(C()) && typeof setTimeout === "function") setTimeout(adAsk, 0);
-    } catch (e) {}
-    return h;
   };
   const _d = drawSheet;
   drawSheet = function () {

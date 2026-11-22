@@ -411,18 +411,17 @@ Object.assign(ACT, {
       return h;
     };
   }
-  /* the tour is offered once on Home, under the main tiles. The character row waits until the tour is seen or skipped, so Home never grows two new rows at once. */
-  const _h = home;
-  home = function () {
-    const h = _h(),
-      c = C();
-    if (G.demo || G.tourSeen || !c.led) return h;
-    return homeRowAdd(
-      h,
-      `<button class="rowbtn homerow" data-a="tour"><span><b>New here? Take the 3-tap tour</b><div class="tiny muted">What each tab is for. Skip it any time.</div></span><span class="pill new">New</span></button>`
-    );
-  };
 })();
+/* Part of home() in ui.js. Offers the tour one time, below the main tiles.
+   The character row waits until the player sees or skips the tour. Thus Home gets only one new row at a time. */
+function homeTourRow(h) {
+  const c = C();
+  if (G.demo || G.tourSeen || !c.led) return h;
+  return homeRowAdd(
+    h,
+    `<button class="rowbtn homerow" data-a="tour"><span><b>New here? Take the 3-tap tour</b><div class="tiny muted">What each tab is for. Skip it any time.</div></span><span class="pill new">New</span></button>`
+  );
+}
 Object.assign(GLOSS, {
   oneway: [
     "One-way door",

@@ -919,28 +919,24 @@ Object.assign(ACT, {
     } catch (e) {}
   },
 });
-/* the line shows on Home while Free Money or Future You is next, and on the payday split */
+/* Part of home() in ui.js. Adds the account line while Free Money or Future You is the next era. The payday split shows the same line. */
+function homeAccountLine(h) {
+  try {
+    const c = C(),
+      d = D || derive(c),
+      nx = d.era + 1;
+    if (
+      c &&
+      (c.placed || G.demo) &&
+      (nx === 2 || nx === 5) &&
+      typeof homeRowAdd === "function" &&
+      !(typeof fkFull === "function" && fkFull(c))
+    )
+      return homeRowAdd(h, `<div class="homerow">${acLine(c, d)}</div>`);
+  } catch (e) {}
+  return h;
+}
 (() => {
-  if (typeof home === "function") {
-    const _h = home;
-    home = function () {
-      const h = _h();
-      try {
-        const c = C(),
-          d = D || derive(c),
-          nx = d.era + 1;
-        if (
-          c &&
-          (c.placed || G.demo) &&
-          (nx === 2 || nx === 5) &&
-          typeof homeRowAdd === "function" &&
-          !(typeof fkFull === "function" && fkFull(c))
-        )
-          return homeRowAdd(h, `<div class="homerow">${acLine(c, d)}</div>`);
-      } catch (e) {}
-      return h;
-    };
-  }
   if (typeof paySheet === "function") {
     const _p = paySheet;
     paySheet = function () {

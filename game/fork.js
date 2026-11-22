@@ -413,19 +413,18 @@ Object.assign(ACT, {
   },
 });
 /* ---------- where it shows up ---------- */
+/* Part of home() in ui.js. Adds the row for the fork check. It also sets the page mark "fkfull" when the player is at the limit. */
+function homeForkRow(h) {
+  try {
+    const c = C();
+    if (typeof document !== "undefined" && document.body && document.body.classList)
+      document.body.classList.toggle("fkfull", !!(c && !G.demo && fkFull(c)));
+    const row = fkHomeRow(c);
+    if (row && !/Nothing here needs you/.test(h)) h = homeRowAdd(h, row);
+  } catch (e) {}
+  return h;
+}
 (() => {
-  const _h = home;
-  home = function () {
-    let h = _h();
-    try {
-      const c = C();
-      if (typeof document !== "undefined" && document.body && document.body.classList)
-        document.body.classList.toggle("fkfull", !!(c && !G.demo && fkFull(c)));
-      const row = fkHomeRow(c);
-      if (row && !/Nothing here needs you/.test(h)) h = homeRowAdd(h, row);
-    } catch (e) {}
-    return h;
-  };
   /* at the limit the game backs off: one thing, and a plain line */
   const _ns = nextStep;
   nextStep = function (c, d) {

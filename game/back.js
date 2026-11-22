@@ -205,21 +205,23 @@ Object.assign(ACT, {
     drawSheet();
   },
 });
+/* Part of home() in ui.js, step 1 of 2. Compares the game with the last visit, before Home is made.
+   Returns the profile (c) and the result (w). homeBackRow() uses the two values. */
+function homeBackSync() {
+  const c = C();
+  let w = null;
+  try {
+    w = bkSync(c, D || derive(c));
+  } catch (e) {}
+  return { c, w };
+}
+/* Part of home() in ui.js, step 2 of 2. Adds the welcome-back row when there is something to show. */
+function homeBackRow(h, c, w) {
+  if (!w || G.demo || !c.led || (typeof TOUR !== "undefined" && !G.tourSeen)) return h;
+  const row = bkRow(c, D || derive(c));
+  return row && typeof homeRowAdd === "function" ? homeRowAdd(h, row) : h;
+}
 (() => {
-  if (typeof home === "function") {
-    const _h = home;
-    home = function () {
-      const c = C();
-      let w = null;
-      try {
-        w = bkSync(c, D || derive(c));
-      } catch (e) {}
-      const h = _h();
-      if (!w || G.demo || !c.led || (typeof TOUR !== "undefined" && !G.tourSeen)) return h;
-      const row = bkRow(c, D || derive(c));
-      return row && typeof homeRowAdd === "function" ? homeRowAdd(h, row) : h;
-    };
-  }
   const _sv = save;
   save = function () {
     try {

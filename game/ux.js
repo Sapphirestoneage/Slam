@@ -100,10 +100,12 @@ function welcome() {
     err = typeof CLOUD !== "undefined" ? CLOUD.err : "";
   return `<div class="stack welcomebox"><h1>SLAM the Game</h1><div class="small muted">Your money, one small step at a time.</div><div class="card stack" style="gap:10px">${st === "connecting" ? `<div class="small"><b>Looking for your saved game…</b></div><div class="tiny muted">If you've played on another device, it will show up here in a moment.</div><button class="ghost wide" data-a="start">Start a new game instead</button>` : `<div class="small">${st === "on" ? "No saved game on your account yet." : "Couldn't check your account" + (err ? " (" + esc(err) + ")" : "") + ". A new game will save on this device."}</div><button class="primary go wide" data-a="start">Start my game</button>${st === "on" ? "" : `<button class="ghost wide slim" data-a="clretry">Check my account again</button>`}`}<div class="tiny muted">About 15 taps. No numbers, no typing. Free, and not personal financial advice.</div></div></div>`;
 }
-const _home0 = home;
-home = function () {
-  if (G.demo && UX_NOSAMPLE) return welcome();
-  const h = _home0();
+/* Part of home() in ui.js. A new player (the sample game) sees the welcome screen. Returns null for all other players. */
+function homeWelcome() {
+  return G.demo && UX_NOSAMPLE ? welcome() : null;
+}
+/* Part of home() in ui.js. Adds the tab title and the four tiles at the top, and the button "Show more" at the bottom. */
+function homeQuadTop(h) {
   if (h.indexOf('class="stack"') < 0 || /Nothing here needs you/.test(h)) return h;
   const top = tabHead() + homeQuad(C(), D);
   return h
@@ -112,7 +114,7 @@ home = function () {
       /<\/div>\s*$/,
       () => (HOME_MORE ? "" : '<button class="ghost wide morebtn" data-a="homemore">Show more</button>') + "</div>"
     );
-};
+}
 function freeLine(c, d) {
   if (G.demo) return "";
   const f = freeToSpend(c, d),

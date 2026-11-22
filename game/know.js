@@ -176,15 +176,13 @@ Object.assign(ACT, {
     return ACT.know(t);
   };
   ACT.fogold = _fog;
-  /* the strip sits under the four tiles on Home, always, so coming back starts with what is already done */
-  const _h = home;
-  home = function () {
-    const h = _h(),
-      c = C();
-    if (G.demo || !c.led) return h;
-    return typeof homeRowAdd === "function" ? homeRowAdd(h, kwStrip(c, D || derive(c))) : h;
-  };
 })();
+/* Part of home() in ui.js. Adds the strip "What you already know" below the four tiles. */
+function homeKnowStrip(h) {
+  const c = C();
+  if (G.demo || !c.led) return h;
+  return typeof homeRowAdd === "function" ? homeRowAdd(h, kwStrip(c, D || derive(c))) : h;
+}
 Object.assign(GLOSS, {
   daite: [
     "D.A.I.T.E.",

@@ -329,22 +329,7 @@ if (SUPA.on) {
           } catch (e) {}
           return _sv.apply(this, arguments);
         };
-        const _hm = home;
-        home = function () {
-          const h = _hm();
-          try {
-            const e = !SUPA.as && G && G.coachEdit;
-            if (e && e.at > (G.coachSeen || 0)) {
-              const n = `<div class="tile small row between homerow" style="border:2px solid var(--a3)"><span>The person who runs SLAM made a change in your game on ${new Date(e.at).toLocaleDateString()}.</span><button class="ghost slim" data-a="sugot">Got it</button></div>`;
-              return typeof homeRowAdd === "function"
-                ? homeRowAdd(h, n)
-                : /^<div class="stack[^"]*">/.test(h)
-                  ? h.replace(/^(<div class="stack[^"]*">)/, m => m + n)
-                  : n + h;
-            }
-          } catch (x) {}
-          return h;
-        };
+        SUPA.homeNote = true; /* from now, home() in ui.js adds homeCoachNote() */
         setTimeout(() => {
           try {
             if (!SH) render();
@@ -431,6 +416,23 @@ if (SUPA.on) {
       });
     } catch (e) {}
   });
+}
+/* Part of home() in ui.js. Tells the player that the person who runs SLAM made a change in the game.
+   It starts at page load on the website (SUPA.homeNote). */
+function homeCoachNote(h) {
+  if (!SUPA.homeNote) return h;
+  try {
+    const e = !SUPA.as && G && G.coachEdit;
+    if (e && e.at > (G.coachSeen || 0)) {
+      const n = `<div class="tile small row between homerow" style="border:2px solid var(--a3)"><span>The person who runs SLAM made a change in your game on ${new Date(e.at).toLocaleDateString()}.</span><button class="ghost slim" data-a="sugot">Got it</button></div>`;
+      return typeof homeRowAdd === "function"
+        ? homeRowAdd(h, n)
+        : /^<div class="stack[^"]*">/.test(h)
+          ? h.replace(/^(<div class="stack[^"]*">)/, m => m + n)
+          : n + h;
+    }
+  } catch (x) {}
+  return h;
 }
 function suAcctSheet() {
   return (
