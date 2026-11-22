@@ -90,9 +90,6 @@ function askFind(k, x) {
   }
   return ASK[k].find;
 }
-function askNoneOk(c, k) {
-  return !!(c.x && c.x.none && c.x.none[k]);
-}
 function askKey(k, i) {
   return ASK[k].p + ":" + i;
 }

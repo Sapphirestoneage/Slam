@@ -78,6 +78,13 @@ actmulti = {k: v for k, v in acts.items() if len(v) > 1}
 
 unused = sorted(k for k in decl if len(re.findall(r'(?<![\w$])' + re.escape(k) + r'(?![\w$])', allsrc)) == 1)
 
+# A function with no caller can stay when a comment directly above it starts with "NO CALLER IN THIS REPOSITORY" and gives the reason.
+def kept_note(n):
+    m = re.search(r'(?m)^/\* NO CALLER IN THIS REPOSITORY\. (.*?) \*/\n(?:async )?function ' + re.escape(n) + r'\b', src[decl[n]])
+    return m.group(1) if m else ''
+unused_notes = {n: kept_note(n) for n in unused}
+no_note = [n for n in unused if not unused_notes[n]]
+
 o = []
 o.append('# SLAM the Game: code map\n')
 o.append('This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.\n')
@@ -121,8 +128,17 @@ o.append('|--------|---------------------|-------:|')
 for n, fs in sorted(actmulti.items(), key=lambda kv: (-len(kv[1]), kv[0])):
     o.append(f'| `{n}` | {", ".join("`" + x + "`" for x in fs)} | {len(fs)} |')
 o.append('\n## 3. Functions with no caller\n')
-o.append('These names occur one time in the game source. Some are used only by the tests or by the private add-ons. Examine each one before removal.\n')
-o.append((', '.join('`' + u + '`' for u in unused) or 'None.') + '\n')
+o.append('These names occur one time in the game source. A function can stay only when a comment above it starts with '
+         '`NO CALLER IN THIS REPOSITORY` and gives the reason. Functions without that comment go to `game/unused/`. '
+         'The target is: no function without a reason.\n')
+if unused:
+    o.append('| Function | File | Reason to keep it |')
+    o.append('|----------|------|-------------------|')
+    for n in unused:
+        o.append(f'| `{n}` | `{decl[n]}` | {unused_notes[n] or "NO REASON GIVEN. Examine this function."} |')
+    o.append('')
+else:
+    o.append('None.\n')
 open(os.path.join(G, 'CODE-MAP.md'), 'w', encoding='utf8').write('\n'.join(o))
-print('files', len(order), 'wraps', len(wraps), sum(len(v) for v in wraps.values()), 'twice', len(twice), 'act', len(actmulti), 'unused', len(unused),
+print('files', len(order), 'wraps', len(wraps), sum(len(v) for v in wraps.values()), 'twice', len(twice), 'act', len(actmulti), 'no caller', len(unused), 'with no reason', len(no_note),
       'hidden errors', sum(r[4] for r in rows), 'no header', sum(1 for r in rows if not r[5]))

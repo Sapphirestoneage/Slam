@@ -2,9 +2,6 @@
 const CP_FEES = [0.05, 0.25, 0.5, 1, 1.5],
   CP_LOW = 0.05,
   CP_ADDS = [0, 100, 250, 500, 1000];
-function cpAge(c, mo) {
-  return mo == null ? null : Math.round((c.age + mo / 12) * 10) / 10;
-}
 function cpCol(c, r) {
   const x = r ? r.mv.ap(c) : c,
     sim = goalSim(x, r ? r.mv.opt : undefined),

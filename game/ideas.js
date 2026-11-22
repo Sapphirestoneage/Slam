@@ -127,6 +127,7 @@ function igGlide(P, W, share) {
   }
   return p;
 }
+/* NO CALLER IN THIS REPOSITORY. Keep this function until the owner confirms that no add-on calls it. */
 function igYears(inv, save, goal) {
   const y = yearsTo(inv, save, goal);
   return y == null ? null : y;

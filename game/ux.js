@@ -114,12 +114,6 @@ function homeQuadTop(h) {
       () => (HOME_MORE ? "" : '<button class="ghost wide morebtn" data-a="homemore">Show more</button>') + "</div>"
     );
 }
-function freeLine(c, d) {
-  if (G.demo) return "";
-  const f = freeToSpend(c, d),
-    tight = f.free <= 0 || f.short > 0;
-  return `<button class="rowbtn keep freeline" data-a="safe"><span><span class="tiny muted">Free to spend</span><div><b data-fid="v:freewk">${tight ? "Nothing free right now" : money(f.week) + " a week"}</b> <span class="pill ${tight ? "warn" : ""}">${tight ? "Tight" : f.real ? "Close" : "Guess"}</span></div><div class="tiny muted">${tight ? "Tap to see what a spend would move." : money(f.free) + " a month after bills and goals. Tap to check a purchase."}</div></span><span>›</span></button>`;
-}
 /* Part of safeSheet() in ui.js. Adds the tile "Free to spend" below the title. */
 function safeSheetFree(h) {
   const c = C(),

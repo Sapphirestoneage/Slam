@@ -58,6 +58,7 @@ const calOn = (c, id) => !!(CALS[id] && adOk(CALS[id]) && YX(c).cals[id] && YX(c
     Object.keys(CALS)
       .filter(id => adOk(CALS[id]))
       .sort((a, b) => (CALS[a].ord || 5) - (CALS[b].ord || 5));
+/* NO CALLER IN THIS REPOSITORY. Keep this function: it reads the off days from each calendar, and an add-on can call it. */
 function offDays(c, from, days) {
   let o = [];
   Object.keys(CALS).forEach(id => {

@@ -241,6 +241,7 @@ function oxyMask(c, d) {
     });
   return { on: parts.every(p => p.ok), parts, next: parts.find(p => !p.ok) || null };
 }
+/* NO CALLER IN THIS REPOSITORY. Keep this function: tests/t_ideas.js examines it, and an add-on can call it. */
 function oxyRows(M) {
   return `<div class="stack oxyrows" style="gap:4px">${M.parts.map(p => `<div class="row between small" style="gap:8px;align-items:flex-start"><span style="min-width:0"><b>${esc(p.n)}</b><div class="tiny muted">${esc(p.why)}</div></span><span class="${p.ok ? "muted" : p === M.next ? "fkhot" : "muted"}" style="white-space:nowrap">${p.na ? "No goal" : p.ok ? "Done ✓" : "Not yet"}</span></div>`).join("")}</div>`;
 }

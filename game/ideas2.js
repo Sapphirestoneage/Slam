@@ -1,4 +1,5 @@
 /* ===== ideas2.js: Part 1, ideas 9 to 16. Same frame and rules as ideas.js. ===== */
+/* NO CALLER IN THIS REPOSITORY. Keep this function until the owner confirms that no add-on calls it. */
 function igFree(c, d, extraSave, extraInv, goal) {
   const y = yearsTo((c.inv || 0) + (extraInv || 0), Math.max(0, d.save + (extraSave || 0)), goal || d.fi);
   return y;

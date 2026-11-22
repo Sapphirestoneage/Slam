@@ -1899,43 +1899,6 @@ function moveRows(c, t) {
         ? R("cash", c.cashes).concat(R("inv", c.invs))
         : R("cash", c.cashes).concat(R("debt", c.debts).map(x => Object.assign(x, { k: "Put it on: " + x.k })));
 }
-function moveSheet() {
-  const w = W,
-    o = w.o,
-    c = C();
-  if (!o.t)
-    return (
-      head("Log a money move", "What happened?") +
-      `<div class="stack">${Object.keys(MOVE_T)
-        .map(
-          k =>
-            `<button class="rowbtn" data-a="mvtype" data-v="${k}"><span>${MOVE_T[k]}</span><span class="caret">›</span></button>`
-        )
-        .join("")}</div>`
-    );
-  const rs = moveRows(c, o.t),
-    lab = {
-      paid: "Which debt?",
-      extra: "Where did it land?",
-      saved: "Where did you put it?",
-      cost: "Where did it come from?",
-    }[o.t];
-  if (!rs.length)
-    return (
-      head("Log a money move", MOVE_T[o.t]) +
-      `<div class="small">${o.t === "paid" ? "You have no debts listed. Add one under Money first." : "Add an account under Money first."}</div><button class="primary wide" data-a="tab" data-v="money">Open Money</button>`
-    );
-  return (
-    head("Log a money move" + (MQ.length ? " · " + MQ.length + " more after this" : ""), MOVE_T[o.t]) +
-    q(
-      lab,
-      `<div class="stack">${rs.map(r => `<button class="rowbtn ${o.row === r.key ? "sel" : ""}" data-a="set" data-k="row" data-v="${r.key}"><span>${esc(r.k)}</span><b>${money(r.amt)}</b></button>`).join("")}</div>`
-    ) +
-    numq("amt", "How much?", "") +
-    (w.err ? `<div class="err">${w.err}</div>` : "") +
-    `<button class="primary wide go" data-a="mvsave">Log it</button>`
-  );
-}
 function moveSummary() {
   const c = C(),
     tot = MSUM.reduce((a, m) => a + m.delta, 0),
@@ -2021,9 +1984,6 @@ function payPlan(o) {
     if (!o.locked && !Object.keys(o.alloc).length) o.open = o.ord[0];
   }
   return o.plan;
-}
-function payOrder(c, d) {
-  return W && W.o && W.o.ord ? W.o.ord : BUCKETS;
 }
 function planAmounts(o) {
   const m = payMath(o),
