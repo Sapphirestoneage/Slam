@@ -921,7 +921,14 @@ function moveLine(m) {
                 ? "Put " + money(m.amt) + " into " + m.k
                 : money(m.amt) + " surprise cost";
 }
+/* CHECK-IN TAB.
+   playTab() makes the full tab. playTabBase() is the part from this file. */
 function playTab() {
+  let h = playTabBase();
+  if (typeof playTabHead === "function") h = playTabHead(h); /* ux.js: the tab title; no line for a streak of 0 days */
+  return h;
+}
+function playTabBase() {
   const c = C(),
     d = D,
     t = todayISO(),
@@ -1289,23 +1296,6 @@ function closeSheetBase() {
 }
 const head = (small, title) =>
   `<div class="row between"><span class="tiny muted">${small}</span><button class="ghost slim" data-a="close">Close</button></div>${title ? `<h2>${title}</h2>` : ""}`;
-function celebrate(title, lines, sub, medal) {
-  W = null;
-  sheet(() => {
-    const ns = nextStep(C(), D),
-      bm = C().placed || G.demo ? bestMove(C(), D, todayISO()) : null;
-    return `<div class="levelup pop"><div class="eyebrow">${V("done", "Done")}</div><div class="medal">${medal || "✓"}</div><h2>${esc(title)}</h2>${VO().praise ? `<div class="small" style="margin:6px 0"><i>${pick(VO().praise, title.length + lines.length)}</i></div>` : ""}${sub ? `<div class="small muted" style="margin:6px 0">${esc(sub)}</div>` : ""}<div class="stack" style="margin:10px 0;align-items:center">${(() => {
-      const ls = lines.filter(Boolean),
-        sh = ls.slice(0, 4);
-      return (
-        sh.map(l => `<span class="pill buff" style="white-space:normal">${esc(l)}</span>`).join("") +
-        (ls.length > 4
-          ? `<span class="tiny muted">and ${ls.length - 4} more badge${ls.length - 4 === 1 ? "" : "s"}, saved under Me</span>`
-          : "")
-      );
-    })()}</div><div class="tile" style="text-align:left;margin-bottom:10px"><div class="tiny muted">${V("upnext", "Up next")}</div><b>${esc(ns.t)}</b>${bm && !ns.best && bm.title ? `<div class="tiny muted" style="margin-top:6px">Now number 1 on your path</div><b>${esc(bm.title)}</b>` : ""}</div><button class="primary wide go" data-a="close">${V("go", "Keep going")}</button></div>`;
-  });
-}
 
 function infoSheet(k) {
   const p = k.split(":"),
@@ -3775,7 +3765,15 @@ function flowDefaults() {
     o.to = o.to || one(flowOpts(c, ["debt"]).filter(x => flowRow(c, x[0]).amt > 0));
   }
 }
+/* THE SHEET "LOG MONEY".
+   flowSheet() makes the full sheet. flowSheetBase() is the part from this file. */
 function flowSheet() {
+  let h = flowSheetBase();
+  if (typeof flowSheetLog === "function")
+    h = flowSheetLog(h); /* ux.js: a plain title, the mark on a question with no answer, "I got paid" */
+  return h;
+}
+function flowSheetBase() {
   const w = W,
     o = w.o,
     c = C(),
@@ -5193,7 +5191,12 @@ function drawSheetBase() {
 /* celebrate, now with a tough-love note when asked for, and a share card */
 let CEL_NOTE = null,
   LASTWIN = null;
+/* celebrate() opens the full sheet "Done". celebrateBase() is the part from this file. */
 function celebrate(title, lines, sub, medal) {
+  if (typeof celebrateBuzz === "function") celebrateBuzz(); /* ux.js: a short vibration on a phone */
+  return celebrateBase(title, lines, sub, medal);
+}
+function celebrateBase(title, lines, sub, medal) {
   W = null;
   const note = CEL_NOTE;
   CEL_NOTE = null;
@@ -5518,7 +5521,14 @@ function openSafe(pre) {
   W = { kind: "safe", pad: null, o: { amt: pre || 0, mode: "once" } };
   sheet(safeSheet);
 }
+/* THE SHEET "IS IT SAFE TO SPEND THIS?".
+   safeSheet() makes the full sheet. safeSheetBase() is the part from this file. */
 function safeSheet() {
+  let h = safeSheetBase();
+  if (typeof safeSheetFree === "function") h = safeSheetFree(h); /* ux.js: the tile "Free to spend" */
+  return h;
+}
+function safeSheetBase() {
   const w = W,
     o = w.o,
     c = C(),

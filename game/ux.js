@@ -120,18 +120,16 @@ function freeLine(c, d) {
     tight = f.free <= 0 || f.short > 0;
   return `<button class="rowbtn keep freeline" data-a="safe"><span><span class="tiny muted">Free to spend</span><div><b data-fid="v:freewk">${tight ? "Nothing free right now" : money(f.week) + " a week"}</b> <span class="pill ${tight ? "warn" : ""}">${tight ? "Tight" : f.real ? "Close" : "Guess"}</span></div><div class="tiny muted">${tight ? "Tap to see what a spend would move." : money(f.free) + " a month after bills and goals. Tap to check a purchase."}</div></span><span>›</span></button>`;
 }
-const _safe0 = safeSheet;
-safeSheet = function () {
+/* Part of safeSheet() in ui.js. Adds the tile "Free to spend" below the title. */
+function safeSheetFree(h) {
   const c = C(),
-    f = freeToSpend(c, D),
-    h = _safe0();
+    f = freeToSpend(c, D);
   const tile = `<div class="tile small">Free to spend: <b>${f.free > 0 ? money(f.week) + " a week" : "nothing right now"}</b>${f.free > 0 ? " (" + money(f.free) + " a month)" : ""} <span class="pill">${f.real ? "Close" : "Guess"}</span></div>`;
   return h.replace(/<h2[^>]*>[\s\S]*?<\/h2>/, m => m + tile);
-};
-/* the log card: plain title, and "I got paid" first */
-const _flow0 = flowSheet;
-flowSheet = function () {
-  let h = _flow0().replace(">Cash flow<", ">Log money<");
+}
+/* Part of flowSheet() in ui.js. The title becomes "Log money". Each question with no answer gets a mark. The row "I got paid" comes first. */
+function flowSheetLog(h) {
+  h = h.replace(">Cash flow<", ">Log money<");
   h = h
     .split('<div class="field">')
     .map((seg, i) =>
@@ -146,7 +144,7 @@ flowSheet = function () {
       `<button class="rowbtn" data-a="uxpaid"><span><b>I got paid</b><div class="tiny muted">Split this paycheck in a few taps</div></span><span class="caret">›</span></button>$1`
     );
   return h;
-};
+}
 const UX_COLORS = [
   ["midnight", "Midnight"],
   ["ocean", "Ocean"],
@@ -155,10 +153,10 @@ const UX_COLORS = [
   ["wine", "Wine"],
   ["", "Theme's own"],
 ];
-const _play0 = playTab;
-playTab = function () {
-  return withHead(_play0()).replace(/\s*Streak: <b>0<\/b> days/, "");
-};
+/* Part of playTab() in ui.js. Adds the tab title. Removes the line for a streak of 0 days. */
+function playTabHead(h) {
+  return withHead(h).replace(/\s*Streak: <b>0<\/b> days/, "");
+}
 /* Part of moneyTab() in ui.js. Puts the tab title at the top. Removes the old title and the old first line. */
 function moneyTabHead(h) {
   return withHead(h)
@@ -557,13 +555,12 @@ function saveFlash() {
     }
   }
 }
-const _cel0 = celebrate;
-celebrate = function (a, b, c2, d2) {
+/* Part of celebrate() in ui.js. Makes a short vibration on a phone. */
+function celebrateBuzz() {
   try {
     if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(12);
   } catch (e) {}
-  return _cel0(a, b, c2, d2);
-};
+}
 /* Part of render() in ui.js, step 1 of 2. A new player (the sample game) stays on Home. Returns true for a new player. */
 function renderUxStart() {
   const wel = G.demo && UX_NOSAMPLE;

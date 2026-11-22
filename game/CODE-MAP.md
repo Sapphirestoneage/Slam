@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,652. Top-level functions: 1021. Replaced functions: 40, in 40 places.
+Date: 2026-11-22. Files: 60. Lines: 46,659. Top-level functions: 1029. Replaced functions: 36, in 36 places.
 
 ## 1. Files in load order
 
@@ -17,7 +17,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 5 | `engine.js` | 3,823 | 121 | 0 | 0 | SLAM the Game: engine |
 | 6 | `engine2.js` | 378 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
-| 8 | `ui.js` | 6,422 | 206 | 138 | 2 | SLAM the Game: screens |
+| 8 | `ui.js` | 6,432 | 209 | 136 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 609 | 21 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,435 | 38 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 765 | 23 | 13 | 0 | the year |
@@ -26,7 +26,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 14 | `smart.js` | 670 | 14 | 5 | 0 | every answer narrows what comes next |
 | 15 | `planner.js` | 1,241 | 53 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
 | 16 | `cloud.js` | 433 | 17 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
-| 17 | `ux.js` | 776 | 31 | 8 | 7 | walk-up-and-use |
+| 17 | `ux.js` | 773 | 35 | 8 | 7 | walk-up-and-use |
 | 18 | `metrics.js` | 1,813 | 24 | 10 | 0 | Key numbers |
 | 19 | `debts.js` | 383 | 14 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
 | 20 | `import.js` | 268 | 6 | 9 | 0 | fill in spending from a bank or card statement file |
@@ -82,7 +82,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `afterSharp` | `ui.js` | `ask2.js` | 1 |
 | `bkSheet` | `back.js` | `fork.js` | 1 |
 | `bkText` | `back.js` | `addon.js` | 1 |
-| `celebrate` | `ui.js` | `ux.js` | 1 |
 | `chartSheet` | `chart.js` | `together.js` | 1 |
 | `cpMoves` | `compare.js` | `drills.js` | 1 |
 | `cspMoneyRows` | `csp.js` | `roof.js` | 1 |
@@ -91,7 +90,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `derive` | `engine.js` | `eras.js` | 1 |
 | `eraSteps` | `engine.js` | `eras.js` | 1 |
 | `fdSheet` | `drills.js` | `ideasz.js` | 1 |
-| `flowSheet` | `ui.js` | `ux.js` | 1 |
 | `fogPct` | `engine2.js` | `know.js` | 1 |
 | `gamesSheet` | `games2.js` | `year.js` | 1 |
 | `knAskBody` | `metrics.js` | `ask2.js` | 1 |
@@ -109,10 +107,8 @@ Each row shows one function, the file that defines it, and the later files that 
 | `partySheet` | `games.js` | `people.js` | 1 |
 | `paySheet` | `ui.js` | `eras.js` | 1 |
 | `plReady` | `planner.js` | `fold.js` | 1 |
-| `playTab` | `ui.js` | `ux.js` | 1 |
 | `profStrip` | `profiles.js` | `planner.js` | 1 |
 | `rvText` | `reveal.js` | `addon.js` | 1 |
-| `safeSheet` | `ui.js` | `ux.js` | 1 |
 | `shareCard` | `ui.js` | `addon.js` | 1 |
 | `sharpSheet` | `ui.js` | `ask2.js` | 1 |
 | `skillSheet` | `ui.js` | `connect.js` | 1 |
