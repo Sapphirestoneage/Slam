@@ -2898,6 +2898,11 @@ const ACT = {
     padSet(k, +t.dataset.v);
     W.t = W.t || {};
     W.t[k] = true;
+    /* ask.js: in the one-question-at-a-time flow, one tap on an amount answers the question and moves on */
+    if (W.kind === "sharp" && W.ask && typeof ASK !== "undefined" && ASK[W.q]) {
+      ACT.askyes();
+      return;
+    }
     if (W.kind === "sharp" && W.q === "spend") {
       ACT.sharpdone();
       return;

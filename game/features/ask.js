@@ -181,7 +181,8 @@ function askSheet() {
     key = askKey(k, i),
     st = w.sti === i ? w.st || "amt" : "amt",
     v = x.amt || 0,
-    top = (typeof allocBar === "function" ? allocBar(c, k, rows) : "") +
+    top =
+      (typeof allocBar === "function" ? allocBar(c, k, rows) : "") +
       `<div class="tiny muted">Question ${i + 1} of ${rows.length}</div><div class="tile"><div class="eyebrow">${esc(x.k)}</div><h2 style="margin:4px 0 0">${st === "rate" ? "Does this one charge 8% or more a year?" : A.q(x)}</h2></div>`,
     back = i > 0 || st !== "amt" ? askBtn("askback", "Back one", "ghost slim") : "";
   w.sti = i;
@@ -230,13 +231,23 @@ function askSheet() {
       body:
         `<div class="tile stack" style="gap:2px;text-align:center"><div class="tiny muted">${x.s ? "You told us" : "Our guess, from people like you"}</div><div class="bignum ${x.s ? "" : "guess"}">${money(v)}</div></div>` +
         askBtn("askyes", "Yes, about " + money(v), "primary go") +
-        askBtn("askchg", "No, it's a different amount", "ghost") +
+        askChips(key, A.rk, v) +
+        askBtn("askchg", "Type the exact amount", "ghost slim") +
         askBtn("askidk", "I don't know yet", "ghost") +
         back,
       why: A.why,
       find: askFind(k, x),
     })
   );
+}
+/* One tap answers the question: the closest amount moves on at once. The keypad stays one tap away. */
+function askChips(key, rk, v) {
+  const rs = (typeof RANGES !== "undefined" && RANGES[rk]) || [];
+  if (!rs.length) return "";
+  return `<div class="small muted" style="margin-top:4px">Or tap the closest amount</div><div class="chips">${rs
+    .filter(r => r[0] !== v)
+    .map(r => `<button class="chip" data-a="rng" data-k="${key}" data-v="${r[0]}">${r[1]}</button>`)
+    .join("")}</div>`;
 }
 function askNext() {
   const w = W,

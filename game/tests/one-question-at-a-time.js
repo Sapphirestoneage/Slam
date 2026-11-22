@@ -100,7 +100,9 @@
       o.includes("How much do you still owe on this?") &&
       o.includes("Our guess, from people like you") &&
       o.includes("Yes, about $2,500") &&
-      o.includes("No, it's a different amount") &&
+      o.includes("Or tap the closest amount") &&
+      o.includes('data-a="rng" data-k="d:0"') &&
+      o.includes("Type the exact amount") &&
       o.includes("I don't know yet") &&
       o.indexOf("How much do you still owe") < o.indexOf("Yes, about") &&
       o.indexOf("Yes, about") < o.indexOf("Why we ask") &&
@@ -136,6 +138,19 @@
       ov().includes("Car loan") &&
       ov().includes("Yes, about $9,000")
   );
+  {
+    const r1 = RANGES.debt.find(r => r[0] !== 9000)[0];
+    X("rng", String(r1), "d:1");
+    chk(
+      "one tap on an amount right under the guess answers it and moves on",
+      W.o.debts[1].amt === r1 && W.o.debts[1].s === true && (r1 > 0 ? W.st === "rate" : true)
+    );
+    X("askback");
+    if (W.st === "rate") X("askback");
+    W.o.debts[1].amt = 9000;
+    W.o.debts[1].s = false;
+    delete W.t["d:1"];
+  }
   X("askback");
   chk("back one goes to the debt before", W.i === 0 && ov().includes("Credit card balance"));
   X("askyes");
