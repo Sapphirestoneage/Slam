@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,618. Top-level functions: 1003. Replaced functions: 46, in 52 places.
+Date: 2026-11-22. Files: 60. Lines: 46,623. Top-level functions: 1006. Replaced functions: 45, in 50 places.
 
 ## 1. Files in load order
 
@@ -17,7 +17,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 5 | `engine.js` | 3,823 | 121 | 0 | 0 | SLAM the Game: engine |
 | 6 | `engine2.js` | 378 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
-| 8 | `ui.js` | 6,393 | 203 | 138 | 2 | SLAM the Game: screens |
+| 8 | `ui.js` | 6,402 | 204 | 138 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 609 | 21 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,435 | 38 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 757 | 22 | 13 | 0 | the year |
@@ -30,11 +30,11 @@ The browser loads the files in this order. A file can use all names from the fil
 | 18 | `metrics.js` | 1,813 | 24 | 10 | 0 | Key numbers |
 | 19 | `debts.js` | 383 | 14 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
 | 20 | `import.js` | 268 | 6 | 9 | 0 | fill in spending from a bank or card statement file |
-| 21 | `compare.js` | 186 | 10 | 5 | 0 | Side by side |
+| 21 | `compare.js` | 183 | 11 | 5 | 0 | Side by side |
 | 22 | `quick.js` | 256 | 11 | 2 | 0 | Quick math |
 | 23 | `reveal.js` | 230 | 7 | 2 | 2 | Meet your character |
 | 24 | `moneylog.js` | 238 | 11 | 5 | 3 | two small things about people and records |
-| 25 | `drills.js` | 445 | 11 | 8 | 0 | four things for the hard days |
+| 25 | `drills.js` | 444 | 12 | 8 | 0 | four things for the hard days |
 | 26 | `gig.js` | 379 | 22 | 9 | 0 | Working for yourself |
 | 27 | `know.js` | 193 | 9 | 6 | 0 | What you already know |
 | 28 | `fair.js` | 255 | 11 | 6 | 1 | Sharing costs fairly |
@@ -79,7 +79,6 @@ Each row shows one function, the file that defines it, and the later files that 
 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
-| `movesSheet` | `ui.js` | `compare.js`, `drills.js` | 2 |
 | `msBoard` | `missions.js` | `connect.js`, `fold.js` | 2 |
 | `msSide` | `missions.js` | `lever.js`, `ask2.js` | 2 |
 | `q` | `ui.js` | `tidy.js`, `fork.js` | 2 |

@@ -6081,7 +6081,16 @@ function movesCard(c, d) {
   return `<button class="rowbtn" data-a="moves"><span><b>${pm ? "Your move: " + esc(r.mv.n) : "Try a move"}</b><div class="tiny muted">${pm ? "" : esc(r.mv.n) + ": "}${moveShort(r).toLowerCase()}${sh ? " · your shape: " + esc((SHAPE_N[sh] || sh).toLowerCase()) : ""}</div></span><span class="caret">›</span></button>`;
 }
 const SHAPE_N = { steady: "Steady", sprint: "Sprint, then ease off", seasons: "Seasons", flex: "Flexible work" };
+/* THE SHEET "MOVES".
+   movesSheet() makes the full sheet. It calls each part by name. movesSheetBase() is the part from this file. */
 function movesSheet() {
+  let h = movesSheetBase();
+  if (typeof movesSheetCompare === "function") h = movesSheetCompare(h); /* compare.js: the button "side by side" */
+  if (typeof movesSheetDoor === "function")
+    h = movesSheetDoor(h); /* drills.js: the note "one-way door" in the open move */
+  return h;
+}
+function movesSheetBase() {
   const c = C(),
     d = D,
     w = W,

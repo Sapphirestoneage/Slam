@@ -388,15 +388,6 @@ Object.assign(ACT, {
   },
 });
 (() => {
-  /* the door note sits inside the open move, and under a picked move in Side by side */
-  const _ms = movesSheet;
-  movesSheet = function () {
-    let h = _ms();
-    const id = W && W.open;
-    if (!id || !DOORS[id]) return h;
-    const re = new RegExp('(<button class="(?:ghost|primary) wide slim" data-a="mvpin" data-v="' + id + '">)');
-    return h.replace(re, m => doorNote(id) + m);
-  };
   if (typeof cpMoves === "function") {
     const _cm = cpMoves;
     cpMoves = function (c) {
@@ -412,6 +403,14 @@ Object.assign(ACT, {
     };
   }
 })();
+/* Part of movesSheet() in ui.js. When the open move is a one-way door, the note goes above its button. */
+function movesSheetDoor(h) {
+  const id = W && W.open;
+  if (!id || !DOORS[id]) return h;
+  const re = new RegExp('(<button class="(?:ghost|primary) wide slim" data-a="mvpin" data-v="' + id + '">)');
+  return h.replace(re, m => doorNote(id) + m);
+}
+
 /* Part of home() in ui.js. Offers the tour one time, below the main tiles.
    The character row waits until the player sees or skips the tour. Thus Home gets only one new row at a time. */
 function homeTourRow(h) {

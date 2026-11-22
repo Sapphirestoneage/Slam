@@ -156,18 +156,15 @@ Object.assign(ACT, {
     drawSheet();
   },
 });
-/* a way in from What if, and from the fee number in Key numbers */
-(() => {
-  const _ms = movesSheet;
-  movesSheet = function () {
-    const h = _ms();
-    if (W && W.tab && W.tab !== "moves") return h;
-    const a = '<div class="small muted">Each one is run on your numbers';
-    return h.indexOf(a) < 0
-      ? h
-      : h.replace(a, () => `<button class="ghost wide slim" data-a="compare">Put two moves side by side</button>` + a);
-  };
-})();
+/* Part of movesSheet() in ui.js. On the list of moves, adds the button "Put two moves side by side". */
+function movesSheetCompare(h) {
+  if (W && W.tab && W.tab !== "moves") return h;
+  const a = '<div class="small muted">Each one is run on your numbers';
+  return h.indexOf(a) < 0
+    ? h
+    : h.replace(a, () => `<button class="ghost wide slim" data-a="compare">Put two moves side by side</button>` + a);
+}
+
 Object.assign(GLOSS, {
   feexray: [
     "Where to find your fee",
