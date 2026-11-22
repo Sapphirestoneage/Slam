@@ -44,8 +44,8 @@ global.require = require; // A private test can read files.
 // The script list comes from index.html, so the tests always use the real load order.
 const order = fs
   .readFileSync(GAME_DIR + 'index.html', 'utf8')
-  .match(/<script src="([a-z0-9]+\.js)"/g)
-  .map(s => s.match(/"(.+)"/)[1]);
+  .match(/<script src="([a-z0-9\/]+\.js)(\?v=[0-9a-f]*)?"/g)
+  .map(s => s.match(/"([^"?]+)/)[1]);
 
 // Run one text as a classic script. Its top-level names stay in the global scope for the next script.
 const run = (code, name) => vm.runInThisContext(code, { filename: name });

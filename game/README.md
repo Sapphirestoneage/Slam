@@ -36,23 +36,28 @@ The command runs 25 test files (701 checks) in Node.js. It needs no browser. Two
 
 ## 4. Where things are
 
+The scripts are in five folders. The folder shows the role of a file. It does not change the load order: `index.html` is the only place that sets the load order.
+
+| Folder | Role | Files |
+|--------|------|-------|
+| `core/` | The math, the data model and the error record. Each screen depends on these files. | `report.js`, `engine.js`, `engine2.js`, `metrics.js` |
+| `data/` | Data only. No functions. | `skills.js`, `skillthemes.js` (the skill tree), `qr.js` (one QR code picture) |
+| `account/` | Sign-in, the database, the save to the cloud, and the add-on system. | `supa.js`, `cloud.js`, `gate.js`, `addon.js` |
+| `screens/` | The main screens, the click actions, the navigation and the setup questions. | `ui.js`, `ux.js`, `planner.js`, `nav.js`, `tidy.js`, `smart.js`, `profiles.js` |
+| `features/` | One file for each feature. Each file adds its sheets and its actions. | 43 files. `CODE-MAP.md` gives the purpose of each one. |
+| `unused/` | Code that nothing calls. The game does not load it. | `no-caller.js` |
+| `tests/` | The tests. | `run.cjs`, `harness.cjs`, one file for each feature |
+
+These files stay in `game/` because the browser or the tools look for them there: `index.html`, `admin.html` (the administrator page), `sw.js` (the service worker), `manifest.json`, the two icons, and `x1.json` and `x2.json` (the add-ons, see section 6).
+
 | Subject | Files |
 |---------|-------|
-| Math and data model | `engine.js`, `engine2.js`, `metrics.js` |
-| Main screens and click actions | `ui.js`, `ux.js`, `home.js`, `nav.js`, `planner.js` |
-| Setup questions | `smart.js`, `tidy.js` |
-| Account, sign-in and database | `supa.js`, `admin.html` |
-| Add-on system (locked content) | `gate.js`, `addon.js`, `x1.json`, `x2.json` |
-| Famous money ideas | `roof.js`, `ideas.js` to `ideas5.js`, `ideasz.js` |
-| Later eras and the account recommendation | `eras.js`, `dep.js` |
-| Fork Theory, spending plan, audit score | `fork.js`, `csp.js` |
-| Skill tree data | `skills.js`, `skillthemes.js` |
-| List of built features, shown in the game | `built.js` |
-| Tests | `tests/` |
-| Generated map of all files and layers | `CODE-MAP.md` |
+| Famous money ideas | `features/roof.js`, `features/ideas.js` to `features/ideas5.js`, `features/ideasz.js` |
+| Later eras and the account recommendation | `features/eras.js`, `features/dep.js` |
+| Fork Theory, spending plan, audit score | `features/fork.js`, `features/csp.js` |
+| List of built features, shown in the game | `features/built.js` |
+| Generated map of all files | `CODE-MAP.md` |
 | Known weak code | `KNOWN-WEAK.md` |
-
-`sw.js` is the service worker. The browser loads it separately.
 
 ## 5. How one screen is drawn
 
@@ -80,5 +85,5 @@ Two add-ons contain content for specific players. Only the administrator can tur
 Prettier formats the scripts. The settings are in `.prettierrc.json`.
 
 ```
-npx prettier --write "game/*.js"
+npx prettier --write "game/{core,data,account,screens,features,unused}/*.js"
 ```

@@ -1,6 +1,6 @@
 # SLAM the Game: the journey, era by era
 
-Written from the code on Nov 21 2026 (game/engine.js ERAS, ERA_NODES and NODES, plus game/eras.js). When the steps change, this file should change with them.
+Written from the code on Nov 21 2026 (game/core/engine.js ERAS, ERA_NODES and NODES, plus game/features/eras.js). When the steps change, this file should change with them.
 
 **How an era opens.** The gate is worked out from the player's numbers. From Future You on, the era also needs its starred key moment. Steps can be done early. A key moment, once reached, stays reached. 85% of an era's steps is the mark for calling it solid.
 
