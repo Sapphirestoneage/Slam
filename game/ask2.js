@@ -356,17 +356,16 @@ const AK_MS = {
   "Which of your accounts are tax-friendly": "Answer one question about your accounts",
   "Your tax rate": "Enter how much of your pay goes to taxes",
 };
-if (typeof msSide === "function") {
-  const _ms = msSide;
-  msSide = function (c, d) {
-    return _ms(c, d).map(m => {
-      if (String(m.id).indexOf("know:") !== 0) return m;
-      const f = String(m.id).split(":").slice(2).join(":"),
-        t = AK_MS[f];
-      const g = /^(.*) goes from (\d+)% to (\d+)% known$/.exec(String(m.pay || "")),
-        pay = g ? "What you know about " + g[1].toLowerCase() + ": " + g[2] + "% to " + g[3] + "%" : m.pay;
-      return t ? Object.assign({}, m, { t, pay, why: "One more thing you know for sure, instead of a guess." }) : m;
-    });
-  };
+/* Part of msSide() in missions.js. Gives each mission "know" a plain title, a plain reward line and a plain reason. */
+function msSideAsk(out) {
+  return out.map(m => {
+    if (String(m.id).indexOf("know:") !== 0) return m;
+    const f = String(m.id).split(":").slice(2).join(":"),
+      t = AK_MS[f];
+    const g = /^(.*) goes from (\d+)% to (\d+)% known$/.exec(String(m.pay || "")),
+      pay = g ? "What you know about " + g[1].toLowerCase() + ": " + g[2] + "% to " + g[3] + "%" : m.pay;
+    return t ? Object.assign({}, m, { t, pay, why: "One more thing you know for sure, instead of a guess." }) : m;
+  });
 }
+
 if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();

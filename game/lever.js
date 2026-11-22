@@ -529,23 +529,21 @@ if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] =
     "Earn, spend, debt, growth, deals, taxes: each in dollars a year",
   ]);
 }
-if (typeof msSide === "function") {
-  const _ms = msSide;
-  msSide = function (c, d) {
-    const out = _ms(c, d);
-    if (c.led && !(c.x && c.x.lvq))
-      out.push({
-        kind: "side",
-        id: "lever:quiz",
-        t: "Guess which lever wins",
-        why: "Five quick guesses at your own age. Most people miss the first.",
-        mins: 2,
-        pay: "You will know which change is worth the most to you",
-        unl: "Your own six levers, in dollars a year",
-        a: "lvquiz",
-        v: "",
-      });
-    return out;
-  };
+/* Part of msSide() in missions.js. Adds the mission "Guess which lever wins" until the player does the quiz. */
+function msSideLever(out, c) {
+  if (c.led && !(c.x && c.x.lvq))
+    out.push({
+      kind: "side",
+      id: "lever:quiz",
+      t: "Guess which lever wins",
+      why: "Five quick guesses at your own age. Most people miss the first.",
+      mins: 2,
+      pay: "You will know which change is worth the most to you",
+      unl: "Your own six levers, in dollars a year",
+      a: "lvquiz",
+      v: "",
+    });
+  return out;
 }
+
 if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();

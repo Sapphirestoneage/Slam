@@ -22,7 +22,15 @@ function msStory(c, d) {
     unl: "The next story mission",
   };
 }
+/* THE SIDE MISSIONS.
+   msSide(c, d) returns the full list. It calls each part by name. msSideBase(c, d) is the part from this file. */
 function msSide(c, d) {
+  let out = msSideBase(c, d);
+  if (typeof msSideLever === "function") out = msSideLever(out, c); /* lever.js: the mission "Guess which lever wins" */
+  if (typeof msSideAsk === "function") out = msSideAsk(out); /* ask2.js: plain titles for the missions "know" */
+  return out;
+}
+function msSideBase(c, d) {
   const out = [],
     add = o => out.push(Object.assign({ kind: "side" }, o)),
     has = n => typeof ACT[n] === "function";
