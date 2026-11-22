@@ -354,20 +354,22 @@ setupSheet = function () {
 const uxHist =
   typeof history !== "undefined" && typeof history.pushState === "function" && typeof addEventListener === "function";
 let UX_POP = false;
-const _go0 = go;
-go = function (t) {
-  const prev = tab;
+/* Part of go() in ui.js, step 1 of 2. "prev" is the tab that the player leaves.
+   Keeps the scroll position of that tab. Keeps the open sheet, so the chip "Back to ..." can open it again. */
+function goUxStart(t, prev) {
   if (typeof scrollY === "number") UX_SCR[prev] = scrollY;
   if (SH && W && W.kind && t !== prev && !UX_POP) uxKeep(prev);
   UX_HINT = "";
-  _go0(t);
+}
+/* Part of go() in ui.js, step 2 of 2. Adds one step to the browser history. Goes to the scroll position that the new tab had. */
+function goUxEnd(t, prev) {
   if (uxHist && !UX_POP && t !== prev) {
     try {
       history.pushState({ tab: t }, "", "#/" + t);
     } catch (e) {}
   }
   if (UX_SCR[t] && typeof scrollTo === "function") scrollTo(0, UX_SCR[t]);
-};
+}
 let UX_LAST = null,
   UX_RESUME = null;
 const UX_NORES = [

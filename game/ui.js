@@ -2546,7 +2546,16 @@ function renderBase() {
     .join("");
   if (typeof UX_ON !== "undefined" && UX_ON) $("#tabs").innerHTML = uxTabs(dot);
 }
+/* GO TO A TAB.
+   go(t) is the full function. It calls each part by name. goBase(t) is the part from this file. */
 function go(t) {
+  const prev = tab;
+  if (typeof goUxStart === "function") goUxStart(t, prev); /* ux.js: keep the scroll position and the open sheet */
+  if (typeof goNav === "function") goNav(t); /* planner.js: record the tab for the button Back */
+  goBase(t);
+  if (typeof goUxEnd === "function") goUxEnd(t, prev); /* ux.js: the browser history, the scroll position */
+}
+function goBase(t) {
   tab = t;
   closeSheet();
   render();

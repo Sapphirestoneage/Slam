@@ -826,16 +826,6 @@ function renderPlanBars() {
   if (tabs) tabs.innerHTML = tabsHTML();
 }
 (() => {
-  const _go = go;
-
-  go = function (t) {
-    if (t !== tab) {
-      NAV.back.push(tab);
-      if (NAV.back.length > 30) NAV.back.shift();
-      NAV.fwd = [];
-    }
-    return _go(t);
-  };
   const _fin = finishSetup;
   finishSetup = function () {
     const w = W,
@@ -906,6 +896,15 @@ function renderPlanBars() {
       true
     );
 })();
+/* Part of go() in ui.js. Records the tab that the player leaves, for the button Back. */
+function goNav(t) {
+  if (t !== tab) {
+    NAV.back.push(tab);
+    if (NAV.back.length > 30) NAV.back.shift();
+    NAV.fwd = [];
+  }
+}
+
 /* what the game has figured out so far, so every few taps something visibly changes */
 function plReveal(w) {
   const o = w.o,
