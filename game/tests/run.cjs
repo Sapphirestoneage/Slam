@@ -5,7 +5,9 @@
              node game/tests/run.cjs t_fork.js     Run one file.
    OUTPUT    One line for each file, then the totals.
    EXIT      0 when all checks pass, or when the only failures are in
-             known-failures.json. 1 for a new failure.
+             known-failures.json. 1 for a new failure, or for an old version stamp.
+   STAMPS    The last line shows if the version stamps in index.html and admin.html
+             agree with the script files (tools/game_stamp.cjs).
    RULE      A failure that is in known-failures.json is shown, not hidden.
    ========================================================================= */
 const { spawnSync } = require('child_process');
@@ -31,4 +33,8 @@ for (const f of files) {
   if (x > allowed) console.log(out.split('\n').filter(l => /^FAIL/.test(l)).slice(0, 8).join('\n'));
 }
 console.log(`\n${files.length} files, ${ok} checks ok, ${failed} failed, ${fresh} files with a new failure.`);
-process.exit(fresh ? 1 : 0);
+
+// Each script address has a version stamp that comes from the content of the script. An old stamp is a failure.
+const oldStamps = require(path.join(dir, '..', '..', 'tools', 'game_stamp.cjs')).check();
+console.log(oldStamps.length ? `Version stamps: OLD in ${oldStamps.join(', ')}. Run: node tools/game_stamp.cjs` : 'Version stamps: correct.');
+process.exit(fresh || oldStamps.length ? 1 : 0);

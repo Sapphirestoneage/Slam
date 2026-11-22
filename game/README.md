@@ -80,7 +80,19 @@ Two add-ons contain content for specific players. Only the administrator can tur
 - No em dashes in text.
 - Never commit real client data.
 
-## 8. Format
+## 8. Version stamps
+
+Each script address in `index.html` and `admin.html` ends with a version stamp, for example `core/engine.js?v=1a2b3c4d`. The stamp comes from the content of the file. When a script changes, its address changes, and the browser gets the new file.
+
+After each change of a script, run:
+
+```
+node tools/game_stamp.cjs
+```
+
+`npm run test:game` examines the stamps. It fails when a stamp is old.
+
+## 9. Format
 
 Prettier formats the scripts. The settings are in `.prettierrc.json`.
 
