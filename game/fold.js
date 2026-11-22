@@ -1,15 +1,15 @@
 /* ===== fold.js: one list on Next Steps. The mission board and the older "Ready to plan" card both listed steps from your path, so the same step could show twice. The card is gone. Its steps now live inside the mission board, folded shut under "More steps from your path", minus the one that is already the story mission. Each row keeps its two buttons: pick a day, or do it now. State: FDX.more (open or shut, for this visit only). ===== */
-const FD_READY = plReady;
 var FDX = { hide: false, more: false };
-plReady = function (c) {
-  return FDX.hide ? [] : FD_READY(c);
-};
+/* Part of plReady() in planner.js. True while planTabFold() makes the plan with the mission board in it. */
+function plReadyHidden() {
+  return FDX.hide;
+}
 function fdRest(c, d) {
   let S = null;
   try {
     S = msStory(c, d);
   } catch (e) {}
-  return FD_READY(c).filter(p => !(S && (p.t === S.t || (p.a === S.a && String(p.v) === String(S.v)))));
+  return plReadyBase(c).filter(p => !(S && (p.t === S.t || (p.a === S.a && String(p.v) === String(S.v)))));
 }
 /* Part of msBoard() in missions.js. Adds the folded list "More steps from your path" at the bottom of the board. These are the steps that the card "Ready to plan" showed before. */
 function msBoardMore(h, c, d) {

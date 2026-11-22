@@ -178,7 +178,13 @@ function plAutoToday(c) {
 }
 
 /* what's ready to go on the plan but isn't on it yet */
+/* plReady(c) returns the steps that are ready to plan. plReadyBase(c) is the part from this file. */
 function plReady(c) {
+  /* fold.js: the list is empty while the mission board shows the same steps. */
+  if (typeof plReadyHidden === "function" && plReadyHidden()) return [];
+  return plReadyBase(c);
+}
+function plReadyBase(c) {
   const x = plX(c),
     t = todayISO(),
     have = new Set(x.plan.filter(plOpen).map(p => p.v));
