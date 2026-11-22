@@ -1555,7 +1555,17 @@ function setupSheet() {
     `<div><div class="tiny muted">All taps. No numbers yet.</div>${bar((w.step / SETUP.length) * 100)}</div>${st.b(w)}${w.err && !ok ? `<div class="err">One question still needs an answer. It's outlined above.</div>` : ""}<div class="row between">${w.step > 0 ? `<button class="ghost" data-a="wback">Back one</button>` : "<span></span>"}<button class="${ok ? "primary go" : "ghost"}" data-a="wnext">${w.step === last ? "See where I stand" : "Next: page " + (w.step + 2) + " of " + SETUP.length}</button></div>`
   );
 }
+/* FINISH THE SETUP: make the profile from the answers, or change it.
+   finishSetup() is the full function. It calls each part by name. finishSetupBase() is the part from this file. */
 function finishSetup() {
+  /* planner.js, step 1 of 2: clear a question that waited, and make the note for the celebration. */
+  const pl = typeof finishSetupPlanStart === "function" ? finishSetupPlanStart() : null;
+  if (typeof finishSetupPay === "function") finishSetupPay(); /* smart.js: keep how often each income comes */
+  const r = finishSetupBase();
+  if (pl) finishSetupPlanEnd(pl.w, pl.isNew); /* planner.js, step 2 of 2: lay out the first week */
+  return r;
+}
+function finishSetupBase() {
   const w = W,
     o = w.o,
     edit = w.mode === "edit";

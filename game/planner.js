@@ -825,36 +825,40 @@ function renderPlanBars() {
   const tabs = $("#tabs");
   if (tabs) tabs.innerHTML = tabsHTML();
 }
+/* Part of finishSetup() in ui.js, step 1 of 2. Runs before the profile is made.
+   In an edit that finishes a screen from "later", it removes that screen from the list. For a new profile, it makes the note for the celebration.
+   Returns the setup state (w) and isNew. finishSetupPlanEnd() uses the two values. */
+function finishSetupPlanStart() {
+  const w = W,
+    isNew = w && w.mode !== "edit",
+    taps = (w && w.taps) || 0,
+    later = w && w.later,
+    speed = w && w.speed;
+  if (w && w.o && w.mode === "edit" && later) {
+    w.o.x = w.o.x || {};
+    w.o.x.later = (w.o.x.later || []).filter(k => (later === "accts" ? false : k !== later));
+  }
+  if (isNew && taps)
+    CEL_NOTE =
+      "You got here in " +
+      taps +
+      " taps." +
+      (speed ? " The last two screens are on your plan for tomorrow, so nothing's lost." : "") +
+      " Your first week is laid out under Plan, a few minutes a day.";
+  return { w, isNew };
+}
+/* Part of finishSetup() in ui.js, step 2 of 2. For a new profile, lays out the first week of the plan and draws the screen. */
+function finishSetupPlanEnd(w, isNew) {
+  if (isNew && !w.add) {
+    const c = C();
+    plSeedWeek(c);
+    render();
+  } else if (isNew && w.add) {
+    plSeedWeek(C());
+    render();
+  }
+}
 (() => {
-  const _fin = finishSetup;
-  finishSetup = function () {
-    const w = W,
-      isNew = w && w.mode !== "edit",
-      taps = (w && w.taps) || 0,
-      later = w && w.later,
-      speed = w && w.speed;
-    if (w && w.o && w.mode === "edit" && later) {
-      w.o.x = w.o.x || {};
-      w.o.x.later = (w.o.x.later || []).filter(k => (later === "accts" ? false : k !== later));
-    }
-    if (isNew && taps)
-      CEL_NOTE =
-        "You got here in " +
-        taps +
-        " taps." +
-        (speed ? " The last two screens are on your plan for tomorrow, so nothing's lost." : "") +
-        " Your first week is laid out under Plan, a few minutes a day.";
-    const r = _fin();
-    if (isNew && !w.add) {
-      const c = C();
-      plSeedWeek(c);
-      render();
-    } else if (isNew && w.add) {
-      plSeedWeek(C());
-      render();
-    }
-    return r;
-  };
   /* speedrun: after "What you owe", you can see your plan now and finish the last two screens later */
   const _ss = setupSheet;
   setupSheet = function () {

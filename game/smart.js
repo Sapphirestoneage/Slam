@@ -626,8 +626,8 @@ Object.assign(ACT, {
     smAfter(w, k, was);
   },
 });
-const _finSetup = finishSetup;
-finishSetup = function () {
+/* Part of finishSetup() in ui.js. Keeps the pay frequency of each income kind that the player still has. Removes the work keys of the setup sheet. */
+function finishSetupPay() {
   const o = W.o,
     m = {},
     ks = o.incKinds || [],
@@ -641,8 +641,7 @@ finishSetup = function () {
   o.x = o.x || {};
   o.x.incFreq = m;
   o.x.payGuess = !!(W.sm && W.sm.pfg);
-  return _finSetup();
-};
+}
 const _ledRow = ledRow;
 ledRow = function (sec, i, x) {
   const h = _ledRow(sec, i, x),
