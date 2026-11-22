@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,780. Top-level functions: 1085. Replaced functions: 2, in 2 places.
+Date: 2026-11-22. Files: 60. Lines: 46,781. Top-level functions: 1087. Replaced functions: 1, in 1 places.
 
 ## 1. Files in load order
 
@@ -34,7 +34,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 22 | `quick.js` | 256 | 11 | 2 | 0 | Quick math |
 | 23 | `reveal.js` | 236 | 8 | 2 | 2 | Meet your character |
 | 24 | `moneylog.js` | 238 | 11 | 5 | 3 | two small things about people and records |
-| 25 | `drills.js` | 444 | 12 | 8 | 0 | four things for the hard days |
+| 25 | `drills.js` | 450 | 13 | 8 | 0 | four things for the hard days |
 | 26 | `gig.js` | 377 | 23 | 9 | 0 | Working for yourself |
 | 27 | `know.js` | 191 | 10 | 6 | 0 | What you already know |
 | 28 | `fair.js` | 255 | 11 | 6 | 1 | Sharing costs fairly |
@@ -65,7 +65,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 53 | `ideas4.js` | 967 | 2 | 3 | 0 | Part 2 |
 | 54 | `ideas5.js` | 1,297 | 2 | 0 | 0 | Part 2 |
 | 55 | `roof.js` | 260 | 7 | 1 | 1 | one roof for the best-known ideas in personal finance |
-| 56 | `ideasz.js` | 328 | 6 | 3 | 3 | loads after every ideas file |
+| 56 | `ideasz.js` | 323 | 7 | 3 | 3 | loads after every ideas file |
 | 57 | `dep.js` | 234 | 11 | 2 | 5 | "What depends on what" |
 | 58 | `eras.js` | 1,043 | 25 | 6 | 6 | real steps for the later eras, and one account line that feeds back into the early ones |
 | 59 | `testkit.js` | 307 | 9 | 8 | 2 | Test with a friend |
@@ -80,7 +80,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
 | `cpMoves` | `compare.js` | `drills.js` | 1 |
-| `fdSheet` | `drills.js` | `ideasz.js` | 1 |
 
 ## 3. Functions with no caller
 

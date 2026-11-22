@@ -309,19 +309,14 @@ function planTabIdeas(h) {
   }
 }
 
-/* the two drill formats on the list are one tap from the fire drills */
-(() => {
-  if (typeof fdSheet !== "function") return;
-  const _fd = fdSheet;
-  fdSheet = function () {
-    const h = _fd();
-    try {
-      if (W && W.kind === "drills" && !W.id && IG.munger && IG.fearset)
-        return (
-          h +
-          `<div class="small"><b>Two more drill formats</b></div><button class="rowbtn" data-a="idea" data-v="munger"><span style="min-width:0"><b>How would I ruin myself?</b><div class="tiny muted">Inversion, from Charlie Munger</div></span><span class="fkgo">Open</span></button><button class="rowbtn" data-a="idea" data-v="fearset"><span style="min-width:0"><b>Fear-setting</b><div class="tiny muted">Define, prevent, repair, from Tim Ferriss</div></span><span class="fkgo">Open</span></button>`
-        );
-    } catch (e) {}
-    return h;
-  };
-})();
+/* Part of fdSheet() in drills.js. On the list of drills, adds two drill forms from the famous money ideas. */
+function fdSheetIdeas(h) {
+  try {
+    if (W && W.kind === "drills" && !W.id && IG.munger && IG.fearset)
+      return (
+        h +
+        `<div class="small"><b>Two more drill formats</b></div><button class="rowbtn" data-a="idea" data-v="munger"><span style="min-width:0"><b>How would I ruin myself?</b><div class="tiny muted">Inversion, from Charlie Munger</div></span><span class="fkgo">Open</span></button><button class="rowbtn" data-a="idea" data-v="fearset"><span style="min-width:0"><b>Fear-setting</b><div class="tiny muted">Define, prevent, repair, from Tim Ferriss</div></span><span class="fkgo">Open</span></button>`
+      );
+  } catch (e) {}
+  return h;
+}

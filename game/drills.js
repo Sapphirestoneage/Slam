@@ -181,7 +181,13 @@ function fdList(c, d) {
 function fdDone(c) {
   return (c.x && c.x.drills) || {};
 }
+/* fdSheet() makes the full sheet of the fire drills. fdSheetBase() is the part from this file. */
 function fdSheet() {
+  let h = fdSheetBase();
+  if (typeof fdSheetIdeas === "function") h = fdSheetIdeas(h); /* ideasz.js: two more drill forms */
+  return h;
+}
+function fdSheetBase() {
   const c = C(),
     d = D || derive(c),
     w = W,
