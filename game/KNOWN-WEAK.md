@@ -31,7 +31,7 @@ This list is for reviewers. It shows each weak point, why it is weak, and the re
 |---|-----------|--------------------|
 | C1 | No game is saved in the database (2 accounts, 0 saved games on 2026-11-22). The save path is not proven on the live site. | Sign in, change one value, and examine the `games` table. |
 | C2 | The script files have no version in their address. A browser can show an old file for 10 minutes. | Add a version number to each script address in `index.html`. |
-| C3 | The game has two copies: this folder, and an older copy inside Claude. The older copy does not have the newest features. | Use this folder as the only copy. Remove the other copy when the owner agrees. |
+| C3 | Repaired on 2026-11-22. An older copy of the game is inside Claude. It is retired. It shows a notice with the address of the live site, and it gets no new features. | This folder is the only copy. No more work is necessary. |
 | C4 | Some features use invented market data to show an idea (guardrails, the bond tent, the order of returns). | Use the real return history from the main app (`data/`). |
 | C5 | The account recommendation uses federal tax only. | Add state and city tax from `data/reference-2026.json`. |
 

@@ -6,6 +6,8 @@ Live site: https://sapphirestoneage.github.io/Slam/game/
 
 This page tells a new developer how the game is made, how to run it, and where its weak points are.
 
+This folder is the only copy of the game. An older copy inside Claude is retired.
+
 ## 1. The five facts you must know first
 
 1. **The game uses classic scripts.** `index.html` loads 60 script files in a fixed order. All functions and constants are in one global scope. There are no modules.
