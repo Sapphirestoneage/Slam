@@ -1,0 +1,15 @@
+vendor/
+spec/
+data/
+fixtures/
+docs/
+audits/
+*.md
+*.html
+*.json
+css/
+js/
+test/
+tools/
+game/x1.json
+game/x2.json
