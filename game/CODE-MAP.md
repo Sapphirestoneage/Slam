@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,758. Top-level functions: 1090. Replaced functions: 0, in 0 places.
+Date: 2026-11-22. Files: 60. Lines: 46,764. Top-level functions: 1091. Replaced functions: 0, in 0 places. Functions with two declarations: 1. Hidden errors: 115.
 
 ## 1. Files in load order
 
@@ -10,7 +10,7 @@ The browser loads the files in this order. A file can use all names from the fil
 
 | # | File | Lines | Functions | Lines > 300 chars | Hidden errors | Purpose |
 |---|------|------:|----------:|------------------:|--------------:|---------|
-| 1 | `supa.js` | 558 | 15 | 2 | 16 | accounts when the game runs on its own website (GitHub Pages) instead of inside Claude |
+| 1 | `supa.js` | 558 | 15 | 2 | 17 | accounts when the game runs on its own website (GitHub Pages) instead of inside Claude |
 | 2 | `skills.js` | 5,156 | 0 | 0 | 0 | data only |
 | 3 | `skillthemes.js` | 2,712 | 0 | 0 | 0 | data only |
 | 4 | `qr.js` | 5 | 0 | 1 | 0 | a small QR code generator from a third party, kept in one line |
@@ -41,7 +41,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 29 | `values.js` | 200 | 6 | 8 | 1 | Is my money going where I want? Three short steps, all taps |
 | 30 | `missions.js` | 339 | 11 | 4 | 0 | The mission board |
 | 31 | `connect.js` | 365 | 19 | 10 | 0 | How it all connects |
-| 32 | `house.js` | 477 | 15 | 9 | 2 | Our household |
+| 32 | `house.js` | 481 | 15 | 9 | 2 | Our household |
 | 33 | `back.js` | 254 | 14 | 3 | 6 | The welcome-back card |
 | 34 | `lever.js` | 550 | 15 | 7 | 0 | Which lever matters most |
 | 35 | `mult.js` | 411 | 13 | 9 | 0 | The multipliers board |
@@ -54,9 +54,9 @@ The browser loads the files in this order. A file can use all names from the fil
 | 42 | `people.js` | 307 | 7 | 4 | 0 | Your people, one layer at a time |
 | 43 | `fold.js` | 52 | 4 | 2 | 1 | one list on Next Steps |
 | 44 | `nav.js` | 470 | 13 | 2 | 0 | the same four things on every screen |
-| 45 | `home.js` | 119 | 4 | 0 | 5 | put the game on your home screen |
+| 45 | `home.js` | 121 | 4 | 0 | 6 | put the game on your home screen |
 | 46 | `tidy.js` | 163 | 10 | 3 | 0 | the fixes from the usability audit, applied to every screen at once instead of one screen at a time |
-| 47 | `addon.js` | 578 | 31 | 6 | 15 | extras, part two |
+| 47 | `addon.js` | 578 | 31 | 6 | 17 | extras, part two |
 | 48 | `fork.js` | 573 | 20 | 13 | 5 | Fork Theory |
 | 49 | `csp.js` | 713 | 25 | 12 | 1 | two ways to see a whole month of money at a glance |
 | 50 | `ideas.js` | 1,094 | 20 | 5 | 1 | the workshop behind "Famous money ideas" |
@@ -71,14 +71,64 @@ The browser loads the files in this order. A file can use all names from the fil
 | 59 | `testkit.js` | 307 | 9 | 8 | 2 | Test with a friend |
 | 60 | `built.js` | 766 | 4 | 1 | 1 | What's built |
 
-"Hidden errors" is the number of `catch (e) {}` blocks that drop an error with no message.
+"Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
 ## 2. Replaced functions
 
-Each row shows one function, the file that defines it, and the later files that replace it. Each later file keeps the earlier function and adds to its result. To read one screen, read all files in its row, in order.
+A replaced function is a function that a later file puts a new function in the place of. Before 2026-11-22 the game had 61 of these, in 113 places. Now each base function calls its parts by name. The target for this table is: no rows.
 
-| Function | Defined in | Replaced in (load order) | Layers |
-|----------|------------|--------------------------|-------:|
+No rows: no function is replaced.
+
+### Functions with two declarations
+
+When two top-level functions have the same name, the one that the browser loads last wins, and the other one never runs. This is a defect each time. The target is: no rows.
+
+| Function | Declared in |
+|----------|-------------|
+| `hsSheet` | `house.js`, `home.js` |
+
+### Actions (ACT) that are set in more than one place
+
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 569 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+
+| Action | Set in (load order) | Places |
+|--------|---------------------|-------:|
+| `fsave` | `ui.js`, `ui.js`, `ui.js`, `gig.js` | 4 |
+| `metric` | `metrics.js`, `ask2.js`, `csp.js`, `roof.js` | 4 |
+| `set` | `ui.js`, `ui.js`, `ui.js`, `smart.js` | 4 |
+| `plock` | `ui.js`, `ui.js`, `ui.js` | 3 |
+| `pmoved` | `ui.js`, `ui.js`, `ui.js` | 3 |
+| `skilldone` | `ui.js`, `ui.js`, `connect.js` | 3 |
+| `agedec` | `ui.js`, `smart.js` | 2 |
+| `backup` | `ui.js`, `cloud.js` | 2 |
+| `creditsave` | `ui.js`, `ui.js` | 2 |
+| `dbset` | `debts.js`, `ask2.js` | 2 |
+| `dreveal` | `ui.js`, `ui.js` | 2 |
+| `dsave` | `ui.js`, `fork.js` | 2 |
+| `flow` | `ui.js`, `ui.js` | 2 |
+| `fog` | `games.js`, `know.js` | 2 |
+| `fset` | `ui.js`, `ui.js` | 2 |
+| `gplace` | `ui.js`, `ui.js` | 2 |
+| `knans` | `metrics.js`, `ask2.js` | 2 |
+| `mcans` | `chart.js`, `together.js` | 2 |
+| `move` | `ui.js`, `ui.js` | 2 |
+| `navback` | `planner.js`, `nav.js` | 2 |
+| `navfwd` | `planner.js`, `nav.js` | 2 |
+| `node` | `ui.js`, `eras.js` | 2 |
+| `pclear` | `ui.js`, `ui.js` | 2 |
+| `people` | `ui.js`, `cloud.js` | 2 |
+| `prmyes` | `profiles.js`, `cloud.js` | 2 |
+| `rankup` | `ui.js`, `ui.js` | 2 |
+| `rng` | `ui.js`, `ask.js` | 2 |
+| `rowsave` | `ui.js`, `ui.js` | 2 |
+| `setn` | `ui.js`, `smart.js` | 2 |
+| `sharpdone` | `ui.js`, `ask2.js` | 2 |
+| `shopen` | `ui.js`, `ask.js` | 2 |
+| `switch` | `ui.js`, `planner.js` | 2 |
+| `tog` | `ui.js`, `smart.js` | 2 |
+| `togb` | `ui.js`, `smart.js` | 2 |
+| `wback` | `ui.js`, `smart.js` | 2 |
+| `wnext` | `ui.js`, `smart.js` | 2 |
 
 ## 3. Functions with no caller
 

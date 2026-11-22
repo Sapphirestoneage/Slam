@@ -101,6 +101,8 @@ function hsSteps() {
     ],
   ];
 }
+/* DEFECT (KNOWN-WEAK.md, A8). house.js has a function with the same name, hsSheet ("Our household").
+   This file is loaded later, so this function wins, and "Our household" opens this sheet. See the note in house.js. */
 function hsSheet() {
   const steps = hsSteps(),
     one = !!HS.evt && !W.manual;

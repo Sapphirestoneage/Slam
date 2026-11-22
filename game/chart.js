@@ -1139,8 +1139,8 @@ function chartCard(c) {
 /* chartSheet() makes the full sheet of the Money Chart. chartSheetBase() is the part from this file. */
 function chartSheet() {
   let h = chartSheetBase();
-  if (typeof chartSheetTogether === "function")
-    h = chartSheetTogether(h); /* together.js: the button for more than two people */
+  /* together.js: the button for more than two people */
+  if (typeof chartSheetTogether === "function") h = chartSheetTogether(h);
   return h;
 }
 function chartSheetBase() {

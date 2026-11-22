@@ -29,8 +29,8 @@ const PLAINBTN = () =>
    campCard(c, d) makes the full card. It calls each part by name. campCardBase(c, d) is the part from this file. */
 function campCard(c, d) {
   let h = campCardBase(c, d);
-  if (typeof campCardGames === "function")
-    h = campCardGames(h, c); /* games2.js: the buttons "All games" and "Daily question" */
+  /* games2.js: the buttons "All games" and "Daily question" */
+  if (typeof campCardGames === "function") h = campCardGames(h, c);
   if (typeof campCardReview === "function") h = campCardReview(h, c); /* year.js: the button for the Yearly Review */
   return h;
 }

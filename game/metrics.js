@@ -1607,8 +1607,8 @@ function knBar(m) {
 }
 /* knAskBody(c, k) makes the question for one key number. knAskBodyBase() is the part from this file. */
 function knAskBody(c, k) {
-  const ask =
-    typeof knAskBodyAsk === "function" ? knAskBodyAsk(c, k) : null; /* ask2.js: one small question at a time */
+  /* ask2.js: one small question at a time */
+  const ask = typeof knAskBodyAsk === "function" ? knAskBodyAsk(c, k) : null;
   return ask !== null ? ask : knAskBodyBase(c, k);
 }
 function knAskBodyBase(c, k) {

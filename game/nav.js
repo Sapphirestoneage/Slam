@@ -359,8 +359,8 @@ const NV_HEAD =
 /* nvText(h) puts the top row and plain button words in the HTML of a sheet. nvTextBase() is the part from this file. */
 function nvText(h) {
   let o = nvTextBase(h);
-  if (typeof nvTextTidy === "function")
-    o = nvTextTidy(o); /* tidy.js: a top row on each sheet, full height for some sheets */
+  /* tidy.js: a top row on each sheet, full height for some sheets */
+  if (typeof nvTextTidy === "function") o = nvTextTidy(o);
   return o;
 }
 function nvTextBase(h) {

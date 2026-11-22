@@ -252,8 +252,8 @@ function msPills(m) {
    msBoard(c, d) makes the full board. It calls each part by name. msBoardBase(c, d) is the part from this file. */
 function msBoard(c, d) {
   let h = msBoardBase(c, d);
-  if (typeof msBoardConnect === "function")
-    h = msBoardConnect(h); /* connect.js: the button "See how it all connects" */
+  /* connect.js: the button "See how it all connects" */
+  if (typeof msBoardConnect === "function") h = msBoardConnect(h);
   if (typeof msBoardMore === "function") h = msBoardMore(h, c, d); /* fold.js: the list "More steps from your path" */
   return h;
 }

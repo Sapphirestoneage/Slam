@@ -1266,8 +1266,8 @@ function closeSheet() {
   if (typeof closeSheetNav === "function") closeSheetNav(); /* nav.js: forget the trail of sheets */
   const was = !!SH;
   closeSheetQuiet();
-  if (typeof closeSheetUx === "function")
-    closeSheetUx(was); /* ux.js: the resume note, the browser history, the chips */
+  /* ux.js: the resume note, the browser history, the chips */
+  if (typeof closeSheetUx === "function") closeSheetUx(was);
   if (typeof closeSheetAddon === "function") closeSheetAddon(); /* addon.js: go back to the look of the player */
   if (typeof tkChipSafe === "function") tkChipSafe(); /* testkit.js: the chip of a test task */
 }
@@ -1356,8 +1356,8 @@ function nodeSheet(id) {
 /* skillSheet(id) opens the full sheet of one skill. skillSheetBase(id) is the part from this file. */
 function skillSheet(id) {
   skillSheetBase(id);
-  if (typeof skillSheetConnect === "function")
-    skillSheetConnect(id); /* connect.js: the place of the skill in the picture */
+  /* connect.js: the place of the skill in the picture */
+  if (typeof skillSheetConnect === "function") skillSheetConnect(id);
 }
 function skillSheetBase(id) {
   const p = id.split(":"),
@@ -1542,8 +1542,8 @@ function openSetup(mode) {
 function setupSheet() {
   const w = W;
   let h = setupSheetBase();
-  if (typeof setupSheetPlan === "function")
-    h = setupSheetPlan(h, w); /* planner.js: questions left, what the game knows, the fast finish */
+  /* planner.js: questions left, what the game knows, the fast finish */
+  if (typeof setupSheetPlan === "function") h = setupSheetPlan(h, w);
   if (typeof setupSheetRead === "function") h = setupSheetRead(h, w); /* ux.js: the line "Your first read" */
   return h;
 }
@@ -2632,8 +2632,8 @@ function openBest() {
 }
 /* afterSharp(c) runs after the player makes one number real. afterSharpBase(c) is the part from this file. */
 function afterSharp(c) {
-  if (typeof afterSharpAsk === "function" && afterSharpAsk(c))
-    return; /* ask2.js: the sheet "Done" after one small question */
+  /* ask2.js: the sheet "Done" after one small question */
+  if (typeof afterSharpAsk === "function" && afterSharpAsk(c)) return;
   return afterSharpBase(c);
 }
 function afterSharpBase(c) {
@@ -3783,8 +3783,8 @@ function flowDefaults() {
    flowSheet() makes the full sheet. flowSheetBase() is the part from this file. */
 function flowSheet() {
   let h = flowSheetBase();
-  if (typeof flowSheetLog === "function")
-    h = flowSheetLog(h); /* ux.js: a plain title, the mark on a question with no answer, "I got paid" */
+  /* ux.js: a plain title, the mark on a question with no answer, "I got paid" */
+  if (typeof flowSheetLog === "function") h = flowSheetLog(h);
   return h;
 }
 function flowSheetBase() {
@@ -6136,8 +6136,8 @@ const SHAPE_N = { steady: "Steady", sprint: "Sprint, then ease off", seasons: "S
 function movesSheet() {
   let h = movesSheetBase();
   if (typeof movesSheetCompare === "function") h = movesSheetCompare(h); /* compare.js: the button "side by side" */
-  if (typeof movesSheetDoor === "function")
-    h = movesSheetDoor(h); /* drills.js: the note "one-way door" in the open move */
+  /* drills.js: the note "one-way door" in the open move */
+  if (typeof movesSheetDoor === "function") h = movesSheetDoor(h);
   return h;
 }
 function movesSheetBase() {

@@ -30,8 +30,8 @@ function profInfo(c) {
    profSheetBase() is the part from this file. */
 function profSheet() {
   let h = profSheetBase();
-  if (typeof profSheetHandoff === "function")
-    h = profSheetHandoff(h); /* moneylog.js: send or add a person with a code */
+  /* moneylog.js: send or add a person with a code */
+  if (typeof profSheetHandoff === "function") h = profSheetHandoff(h);
   if (typeof profSheetFair === "function") h = profSheetFair(h); /* fair.js: the row "Sharing costs fairly" */
   if (typeof profSheetHouse === "function") h = profSheetHouse(h); /* house.js: the row "Our household" */
   if (typeof profSheetAddon === "function") h = profSheetAddon(h); /* addon.js: the card for the add-ons */

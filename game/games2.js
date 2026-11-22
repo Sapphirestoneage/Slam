@@ -856,8 +856,8 @@ function subsSheet() {
 }
 /* lootText(text) receives the text of a file that the player gave. lootTextBase(text) is the part from this file. */
 function lootText(text) {
-  if (typeof lootTextImport === "function" && lootTextImport(text))
-    return; /* import.js: in the import sheet, the file is a statement */
+  /* import.js: in the import sheet, the file is a statement */
+  if (typeof lootTextImport === "function" && lootTextImport(text)) return;
   lootTextBase(text);
 }
 function lootTextBase(text) {

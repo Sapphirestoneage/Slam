@@ -147,8 +147,8 @@ function dbNice(v) {
 }
 /* dbOneBody(c, i) makes the sheet for one debt. dbOneBodyBase() is the part from this file. */
 function dbOneBody(c, i) {
-  const ask =
-    typeof dbOneBodyAsk === "function" ? dbOneBodyAsk(c, i) : null; /* ask2.js: one small question at a time */
+  /* ask2.js: one small question at a time */
+  const ask = typeof dbOneBodyAsk === "function" ? dbOneBodyAsk(c, i) : null;
   return ask !== null ? ask : dbOneBodyBase(c, i);
 }
 function dbOneBodyBase(c, i) {
