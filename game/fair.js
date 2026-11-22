@@ -233,17 +233,15 @@ Object.assign(ACT, {
     drawSheet();
   },
 });
-(() => {
-  const _p = profSheet;
-  profSheet = function () {
-    const h = _p(),
-      a = '<button class="ghost wide slim" data-a="coach">';
-    const row = `<button class="rowbtn" data-a="fair"><span><b>Sharing costs fairly</b><div class="tiny muted">Two people or six: five ways to split what you share</div></span><span class="caret">›</span></button>`;
-    return h.indexOf(a) >= 0
-      ? h.replace(a, () => row + a)
-      : h.replace(/(<button class="ghost wide slim" data-a="profmore">)/, m => row + m);
-  };
-})();
+/* Part of profSheet() in profiles.js. Adds the row "Sharing costs fairly". */
+function profSheetFair(h) {
+  const a = '<button class="ghost wide slim" data-a="coach">';
+  const row = `<button class="rowbtn" data-a="fair"><span><b>Sharing costs fairly</b><div class="tiny muted">Two people or six: five ways to split what you share</div></span><span class="caret">›</span></button>`;
+  return h.indexOf(a) >= 0
+    ? h.replace(a, () => row + a)
+    : h.replace(/(<button class="ghost wide slim" data-a="profmore">)/, m => row + m);
+}
+
 if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] === "fair")) {
   const i = MENU.findIndex(m => m[1] === "people");
   MENU.splice(i >= 0 ? i + 1 : MENU.length, 0, [

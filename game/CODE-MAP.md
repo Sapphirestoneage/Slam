@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,580. Top-level functions: 980. Replaced functions: 52, in 68 places.
+Date: 2026-11-22. Files: 60. Lines: 46,586. Top-level functions: 985. Replaced functions: 51, in 64 places.
 
 ## 1. Files in load order
 
@@ -22,7 +22,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 10 | `games2.js` | 1,436 | 37 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 758 | 21 | 13 | 0 | the year |
 | 12 | `chart.js` | 1,284 | 12 | 6 | 0 | the Money Chart |
-| 13 | `profiles.js` | 103 | 5 | 4 | 1 | flip between people |
+| 13 | `profiles.js` | 115 | 6 | 4 | 1 | flip between people |
 | 14 | `smart.js` | 671 | 13 | 5 | 0 | every answer narrows what comes next |
 | 15 | `planner.js` | 1,238 | 50 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
 | 16 | `cloud.js` | 433 | 17 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
@@ -33,15 +33,15 @@ The browser loads the files in this order. A file can use all names from the fil
 | 21 | `compare.js` | 186 | 10 | 5 | 0 | Side by side |
 | 22 | `quick.js` | 256 | 11 | 2 | 0 | Quick math |
 | 23 | `reveal.js` | 232 | 6 | 2 | 2 | Meet your character |
-| 24 | `moneylog.js` | 240 | 10 | 5 | 3 | two small things about people and records |
+| 24 | `moneylog.js` | 238 | 11 | 5 | 3 | two small things about people and records |
 | 25 | `drills.js` | 445 | 11 | 8 | 0 | four things for the hard days |
 | 26 | `gig.js` | 379 | 22 | 9 | 0 | Working for yourself |
 | 27 | `know.js` | 193 | 9 | 6 | 0 | What you already know |
-| 28 | `fair.js` | 257 | 10 | 6 | 1 | Sharing costs fairly |
+| 28 | `fair.js` | 255 | 11 | 6 | 1 | Sharing costs fairly |
 | 29 | `values.js` | 202 | 5 | 8 | 1 | Is my money going where I want? Three short steps, all taps |
 | 30 | `missions.js` | 322 | 9 | 4 | 0 | The mission board |
 | 31 | `connect.js` | 370 | 17 | 10 | 0 | How it all connects |
-| 32 | `house.js` | 479 | 14 | 9 | 2 | Our household |
+| 32 | `house.js` | 477 | 15 | 9 | 2 | Our household |
 | 33 | `back.js` | 242 | 12 | 3 | 6 | The welcome-back card |
 | 34 | `lever.js` | 552 | 14 | 7 | 0 | Which lever matters most |
 | 35 | `mult.js` | 411 | 13 | 9 | 0 | The multipliers board |
@@ -56,7 +56,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 44 | `nav.js` | 457 | 11 | 2 | 0 | the same four things on every screen |
 | 45 | `home.js` | 119 | 4 | 0 | 5 | put the game on your home screen |
 | 46 | `tidy.js` | 164 | 7 | 3 | 0 | the fixes from the usability audit, applied to every screen at once instead of one screen at a time |
-| 47 | `addon.js` | 606 | 28 | 6 | 15 | extras, part two |
+| 47 | `addon.js` | 606 | 29 | 6 | 15 | extras, part two |
 | 48 | `fork.js` | 577 | 15 | 13 | 5 | Fork Theory |
 | 49 | `csp.js` | 712 | 23 | 12 | 1 | two ways to see a whole month of money at a glance |
 | 50 | `ideas.js` | 1,094 | 20 | 5 | 1 | the workshop behind "Famous money ideas" |
@@ -79,7 +79,6 @@ Each row shows one function, the file that defines it, and the later files that 
 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
-| `profSheet` | `profiles.js` | `moneylog.js`, `fair.js`, `house.js`, `addon.js` | 4 |
 | `meTab` | `ui.js` | `ux.js`, `reveal.js`, `values.js` | 3 |
 | `nextStep` | `ui.js` | `ux.js`, `fork.js`, `eras.js` | 3 |
 | `campCard` | `games.js` | `games2.js`, `year.js` | 2 |

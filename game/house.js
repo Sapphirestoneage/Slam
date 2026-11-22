@@ -446,15 +446,13 @@ Object.assign(ACT, {
     drawSheet();
   },
 });
-(() => {
-  const _p = profSheet;
-  profSheet = function () {
-    const h = _p(),
-      a = '<button class="rowbtn" data-a="fair">';
-    const row = `<button class="rowbtn" data-a="house"><span><b>Our household</b><div class="tiny muted">Everyone's money together, the paperwork, a money agreement</div></span><span class="caret">›</span></button>`;
-    return h.indexOf(a) >= 0 ? h.replace(a, () => row + a) : h;
-  };
-})();
+/* Part of profSheet() in profiles.js. Adds the row "Our household" above the row "Sharing costs fairly". */
+function profSheetHouse(h) {
+  const a = '<button class="rowbtn" data-a="fair">';
+  const row = `<button class="rowbtn" data-a="house"><span><b>Our household</b><div class="tiny muted">Everyone's money together, the paperwork, a money agreement</div></span><span class="caret">›</span></button>`;
+  return h.indexOf(a) >= 0 ? h.replace(a, () => row + a) : h;
+}
+
 if (typeof MENU !== "undefined" && Array.isArray(MENU)) {
   if (!MENU.some(m => m[1] === "house")) {
     const i = MENU.findIndex(m => m[1] === "fair");

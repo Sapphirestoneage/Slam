@@ -469,17 +469,6 @@ function homeAddonAsk() {
   } catch (e) {}
 }
 (() => {
-  const _p = profSheet;
-  profSheet = function () {
-    const h = _p();
-    if (W && W.rm != null) return h;
-    const card = adCard(),
-      a = [
-        '<div class="row" style="gap:8px"><button class="primary" style="flex:1" data-a="addperson">',
-        '<button class="primary wide" data-a="addperson">',
-      ].find(x => h.indexOf(x) >= 0);
-    return card && a ? h.replace(a, () => card + a) : h + card;
-  };
   /* sharing is always the standard look with nothing from an extra in it */
   const _w = wrappedSheet;
   wrappedSheet = function () {
@@ -517,6 +506,17 @@ function homeAddonAsk() {
     };
   }
 })();
+/* Part of profSheet() in profiles.js. Adds the card for the add-ons. The card is not there while the sheet asks to remove a person. */
+function profSheetAddon(h) {
+  if (W && W.rm != null) return h;
+  const card = adCard(),
+    a = [
+      '<div class="row" style="gap:8px"><button class="primary" style="flex:1" data-a="addperson">',
+      '<button class="primary wide" data-a="addperson">',
+    ].find(x => h.indexOf(x) >= 0);
+  return card && a ? h.replace(a, () => card + a) : h + card;
+}
+
 /* Part of drawSheet() in ui.js. Sets the look again after each draw. A sheet for sharing uses the standard look. */
 function adLook() {
   try {

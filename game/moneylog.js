@@ -215,19 +215,17 @@ Object.assign(ACT, {
     celebrate(nm + " is here", ["Added from a code"], "Tap the name at the top any time to switch between people.");
   },
 });
-(() => {
-  const _p = profSheet;
-  profSheet = function () {
-    const h = _p(),
-      a = '<button class="ghost wide slim" data-a="profmore">Fewer options</button>';
-    return h.indexOf(a) < 0
-      ? h
-      : h.replace(
-          a,
-          () => `<button class="ghost wide slim" data-a="handoff">Send or add a person with a code</button>` + a
-        );
-  };
-})();
+/* Part of profSheet() in profiles.js. Adds the button "Send or add a person with a code" in the longer list of options. */
+function profSheetHandoff(h) {
+  const a = '<button class="ghost wide slim" data-a="profmore">Fewer options</button>';
+  return h.indexOf(a) < 0
+    ? h
+    : h.replace(
+        a,
+        () => `<button class="ghost wide slim" data-a="handoff">Send or add a person with a code</button>` + a
+      );
+}
+
 /* Part of moneyTab() in ui.js. Adds the button that opens the money log. */
 function moneyTabLogLink(h) {
   const a = "<details><summary>Cash flow history (";

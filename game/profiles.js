@@ -21,7 +21,19 @@ function profInfo(c) {
     placed: !!c.placed,
   };
 }
+/* THE SHEET "PEOPLE".
+   profSheet() makes the full sheet. It calls each part by name, in the load order of the files.
+   profSheetBase() is the part from this file. */
 function profSheet() {
+  let h = profSheetBase();
+  if (typeof profSheetHandoff === "function")
+    h = profSheetHandoff(h); /* moneylog.js: send or add a person with a code */
+  if (typeof profSheetFair === "function") h = profSheetFair(h); /* fair.js: the row "Sharing costs fairly" */
+  if (typeof profSheetHouse === "function") h = profSheetHouse(h); /* house.js: the row "Our household" */
+  if (typeof profSheetAddon === "function") h = profSheetAddon(h); /* addon.js: the card for the add-ons */
+  return h;
+}
+function profSheetBase() {
   const w = W,
     n = G.chars.length;
   if (w.rm != null && G.chars[w.rm])
