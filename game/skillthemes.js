@@ -1,3 +1,4 @@
+/* ===== skillthemes.js: data only. Alternative names and words for the skills, one set for each visual theme. No logic. ===== */
 window.SKILL_T = {
   tabletop: {
     "main-path": [

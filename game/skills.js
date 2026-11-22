@@ -1,3 +1,4 @@
+/* ===== skills.js: data only. The list of skills for the skill tree: name, group, effort, reward and the text for each skill. No logic. ===== */
 window.SKILLS = {
   "main-path": {
     name: "Investing step by step",
