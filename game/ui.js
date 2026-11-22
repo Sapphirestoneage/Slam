@@ -2420,7 +2420,10 @@ function coachSheetBase() {
   );
 }
 
+/* peopleSheet() opens the sheet "People".
+   profiles.js has the present sheet (profOpen). The lines below it run only while the page loads, before profiles.js is there. */
 function peopleSheet() {
+  if (typeof profOpen === "function") return profOpen();
   sheet(
     () =>
       head("People in this game", G.demo ? "Sample characters" : "Your household") +

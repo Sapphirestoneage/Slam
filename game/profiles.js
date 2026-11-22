@@ -69,7 +69,8 @@ function profRow(c, i) {
       .toUpperCase()
   )}</span><span class="pn"><b>${esc(c.name)}</b><div class="tiny muted">${p.fog != null ? p.fog + "% clear · " : ""}${p.placed ? "Next: " + esc(p.step || "nothing waiting") : "Not started yet"}</div></span><span class="pill ${on ? "okp" : ""}">${on ? "Here now" : "Open ›"}</span></button>`;
 }
-function peopleSheet() {
+/* Part of peopleSheet() in ui.js. Opens the sheet "People" of this file. */
+function profOpen() {
   W = { kind: "people", rm: null };
   sheet(profSheet);
 }
