@@ -185,13 +185,13 @@ Object.assign(ACT, {
       ACT.together();
     }
   };
-  const _c = chartSheet;
-  chartSheet = function () {
-    const h = _c(),
-      c = C();
-    return mcOf(MCX(c).ans).ready
-      ? h + `<button class="ghost wide slim" data-a="together">See it with more than two people</button>`
-      : h;
-  };
 })();
+/* Part of chartSheet() in chart.js. When the chart is ready, adds the button "See it with more than two people". */
+function chartSheetTogether(h) {
+  const c = C();
+  return mcOf(MCX(c).ans).ready
+    ? h + `<button class="ghost wide slim" data-a="together">See it with more than two people</button>`
+    : h;
+}
+
 if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();

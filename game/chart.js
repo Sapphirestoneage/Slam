@@ -1136,7 +1136,14 @@ function chartCard(c) {
     dp = mcDepth(m.ans);
   return `<div class="card stack" style="gap:6px"><div class="row between"><h3>Your Money Chart</h3>${ib("term:mchart")}</div>${r.ready && dp ? `<div class="small">${esc(r.words)}</div><div class="tiny muted">Sun: ${esc(r.sun.name)}${r.moon ? " · Moon: " + esc(r.moon.name) : ""}${r.rising ? " · Rising: " + esc(r.rising.name) : ""}</div><button class="ghost wide slim" data-a="chart">Open your chart</button>` : `<div class="small muted">Five elements, 25 traits. Start with 10 statements, about 2 minutes. Go deeper to 25 or the full 100 any time, and nothing is ever asked twice.</div><button class="primary wide" data-a="mcstart" data-v="ten" data-k="ans">${Object.keys(m.ans).length ? "Keep going" : "Start the quick 10"}</button>`}</div>`;
 }
+/* chartSheet() makes the full sheet of the Money Chart. chartSheetBase() is the part from this file. */
 function chartSheet() {
+  let h = chartSheetBase();
+  if (typeof chartSheetTogether === "function")
+    h = chartSheetTogether(h); /* together.js: the button for more than two people */
+  return h;
+}
+function chartSheetBase() {
   const c = C(),
     m = MCX(c),
     r = mcOf(m.ans),

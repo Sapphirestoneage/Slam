@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,713. Top-level functions: 1057. Replaced functions: 18, in 18 places.
+Date: 2026-11-22. Files: 60. Lines: 46,720. Top-level functions: 1059. Replaced functions: 17, in 17 places.
 
 ## 1. Files in load order
 
@@ -21,7 +21,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 9 | `games.js` | 609 | 21 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,435 | 38 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 765 | 23 | 13 | 0 | the year |
-| 12 | `chart.js` | 1,284 | 12 | 6 | 0 | the Money Chart |
+| 12 | `chart.js` | 1,291 | 13 | 6 | 0 | the Money Chart |
 | 13 | `profiles.js` | 115 | 6 | 4 | 1 | flip between people |
 | 14 | `smart.js` | 670 | 14 | 5 | 0 | every answer narrows what comes next |
 | 15 | `planner.js` | 1,241 | 53 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
@@ -50,7 +50,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 38 | `sign.js` | 234 | 5 | 3 | 2 | Before you sign |
 | 39 | `owed.js` | 113 | 3 | 3 | 2 | What each debt costs you |
 | 40 | `study.js` | 492 | 13 | 5 | 0 | Student loan plans, side by side |
-| 41 | `together.js` | 198 | 6 | 4 | 1 | the Money Chart for more than two |
+| 41 | `together.js` | 198 | 7 | 4 | 1 | the Money Chart for more than two |
 | 42 | `people.js` | 310 | 5 | 4 | 0 | Your people, one layer at a time |
 | 43 | `fold.js` | 52 | 3 | 2 | 1 | one list on Next Steps |
 | 44 | `nav.js` | 457 | 11 | 2 | 0 | the same four things on every screen |
@@ -79,7 +79,6 @@ Each row shows one function, the file that defines it, and the later files that 
 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
-| `chartSheet` | `chart.js` | `together.js` | 1 |
 | `cpMoves` | `compare.js` | `drills.js` | 1 |
 | `cspMoneyRows` | `csp.js` | `roof.js` | 1 |
 | `dbSheet` | `debts.js` | `owed.js` | 1 |
