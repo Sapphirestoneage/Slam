@@ -166,15 +166,15 @@ function moneyTabHead(h) {
     .replace("<h1>Money</h1>", "")
     .replace(/<div class="small muted">Every number the game uses lives here[^<]*<\/div>/, "");
 }
-const _me0 = meTab;
-meTab = function () {
-  const c = C(),
-    h = withHead(_me0()).replace(
-      /(<h1>[^<]*<\/h1>)/,
-      `$1<div class="card row between"><span><b>Beginner or Expert</b><div class="tiny muted">Expert hides the helper lines and hints.</div></span><div class="seg" style="flex:none"><button class="${G.expert ? "" : "on"}" data-a="expert" data-v="0">Beginner</button><button class="${G.expert ? "on" : ""}" data-a="expert" data-v="1">Expert</button></div></div><div class="card stack" style="gap:6px"><div class="row between"><b>Color</b><span class="tiny muted">Changes the look only. Your theme's words stay.</span></div><div class="swatches">${UX_COLORS.map(x => `<button class="sw sw-${x[0]} ${(G.color == null ? "midnight" : G.color) === x[0] ? "on" : ""}" data-a="color" data-v="${x[0]}"><i></i><span>${x[1]}</span></button>`).join("")}</div></div><button class="card rowbtn" data-a="glossary"><span><b>Glossary</b><div class="tiny muted">Every word the game uses, in plain English</div></span><span>›</span></button>`
-    );
+/* Part of meTab() in ui.js. Adds the tab title, the switch Beginner / Expert, the colors and the glossary row. Then it hides the lower cards behind "Show more". */
+function meTabHead(h) {
+  const c = C();
+  h = withHead(h).replace(
+    /(<h1>[^<]*<\/h1>)/,
+    `$1<div class="card row between"><span><b>Beginner or Expert</b><div class="tiny muted">Expert hides the helper lines and hints.</div></span><div class="seg" style="flex:none"><button class="${G.expert ? "" : "on"}" data-a="expert" data-v="0">Beginner</button><button class="${G.expert ? "on" : ""}" data-a="expert" data-v="1">Expert</button></div></div><div class="card stack" style="gap:6px"><div class="row between"><b>Color</b><span class="tiny muted">Changes the look only. Your theme's words stay.</span></div><div class="swatches">${UX_COLORS.map(x => `<button class="sw sw-${x[0]} ${(G.color == null ? "midnight" : G.color) === x[0] ? "on" : ""}" data-a="color" data-v="${x[0]}"><i></i><span>${x[1]}</span></button>`).join("")}</div></div><button class="card rowbtn" data-a="glossary"><span><b>Glossary</b><div class="tiny muted">Every word the game uses, in plain English</div></span><span>›</span></button>`
+  );
   return uxLess(h, ME_MORE, 9, "memore");
-};
+}
 function nextTab() {
   return withHead(mapTab());
 }

@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,586. Top-level functions: 985. Replaced functions: 51, in 64 places.
+Date: 2026-11-22. Files: 60. Lines: 46,592. Top-level functions: 989. Replaced functions: 50, in 61 places.
 
 ## 1. Files in load order
 
@@ -17,7 +17,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 5 | `engine.js` | 3,823 | 121 | 0 | 0 | SLAM the Game: engine |
 | 6 | `engine2.js` | 378 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
-| 8 | `ui.js` | 6,355 | 199 | 138 | 2 | SLAM the Game: screens |
+| 8 | `ui.js` | 6,365 | 200 | 138 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 600 | 20 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,436 | 37 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 758 | 21 | 13 | 0 | the year |
@@ -26,19 +26,19 @@ The browser loads the files in this order. A file can use all names from the fil
 | 14 | `smart.js` | 671 | 13 | 5 | 0 | every answer narrows what comes next |
 | 15 | `planner.js` | 1,238 | 50 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
 | 16 | `cloud.js` | 433 | 17 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
-| 17 | `ux.js` | 779 | 28 | 8 | 7 | walk-up-and-use |
+| 17 | `ux.js` | 779 | 29 | 8 | 7 | walk-up-and-use |
 | 18 | `metrics.js` | 1,813 | 24 | 10 | 0 | Key numbers |
 | 19 | `debts.js` | 383 | 14 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
 | 20 | `import.js` | 268 | 6 | 9 | 0 | fill in spending from a bank or card statement file |
 | 21 | `compare.js` | 186 | 10 | 5 | 0 | Side by side |
 | 22 | `quick.js` | 256 | 11 | 2 | 0 | Quick math |
-| 23 | `reveal.js` | 232 | 6 | 2 | 2 | Meet your character |
+| 23 | `reveal.js` | 230 | 7 | 2 | 2 | Meet your character |
 | 24 | `moneylog.js` | 238 | 11 | 5 | 3 | two small things about people and records |
 | 25 | `drills.js` | 445 | 11 | 8 | 0 | four things for the hard days |
 | 26 | `gig.js` | 379 | 22 | 9 | 0 | Working for yourself |
 | 27 | `know.js` | 193 | 9 | 6 | 0 | What you already know |
 | 28 | `fair.js` | 255 | 11 | 6 | 1 | Sharing costs fairly |
-| 29 | `values.js` | 202 | 5 | 8 | 1 | Is my money going where I want? Three short steps, all taps |
+| 29 | `values.js` | 200 | 6 | 8 | 1 | Is my money going where I want? Three short steps, all taps |
 | 30 | `missions.js` | 322 | 9 | 4 | 0 | The mission board |
 | 31 | `connect.js` | 370 | 17 | 10 | 0 | How it all connects |
 | 32 | `house.js` | 477 | 15 | 9 | 2 | Our household |
@@ -79,7 +79,6 @@ Each row shows one function, the file that defines it, and the later files that 
 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
-| `meTab` | `ui.js` | `ux.js`, `reveal.js`, `values.js` | 3 |
 | `nextStep` | `ui.js` | `ux.js`, `fork.js`, `eras.js` | 3 |
 | `campCard` | `games.js` | `games2.js`, `year.js` | 2 |
 | `coachSheet` | `ui.js` | `fork.js`, `csp.js` | 2 |

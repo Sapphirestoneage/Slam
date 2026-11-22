@@ -178,17 +178,15 @@ Object.assign(ACT, {
     }, 140);
   },
 });
-(() => {
-  const _me = meTab;
-  meTab = function () {
-    const h = _me(),
-      c = C(),
-      R = vlResult(c),
-      row = `<button class="rowbtn" data-a="values"><span><b>Is my money going where I want?</b><div class="tiny muted">${R.complete ? R.pct + "% lands on what you said matters" : "Three things that matter, then two taps on each place it goes"}</div></span><span class="caret">›</span></button>`,
-      a = '<button class="rowbtn" data-a="reveal">';
-    return h.indexOf(a) >= 0 ? h.replace(a, () => row + a) : h.replace(/(<h1>[^<]*<\/h1>)/, m => m + row);
-  };
-})();
+/* Part of meTab() in ui.js. Adds the row "Is my money going where I want?" above the row for the character sheet. */
+function meTabValues(h) {
+  const c = C(),
+    R = vlResult(c),
+    row = `<button class="rowbtn" data-a="values"><span><b>Is my money going where I want?</b><div class="tiny muted">${R.complete ? R.pct + "% lands on what you said matters" : "Three things that matter, then two taps on each place it goes"}</div></span><span class="caret">›</span></button>`,
+    a = '<button class="rowbtn" data-a="reveal">';
+  return h.indexOf(a) >= 0 ? h.replace(a, () => row + a) : h.replace(/(<h1>[^<]*<\/h1>)/, m => m + row);
+}
+
 if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] === "values")) {
   const i = MENU.findIndex(m => m[1] === "safe");
   MENU.splice(i >= 0 ? i + 1 : MENU.length, 0, [

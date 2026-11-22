@@ -1137,7 +1137,17 @@ const SOON = [
   ["Routes", "Different lifts up the mountain: index funds, real estate, a business. Speed, seats and risk."],
   ["Practice raids", "Rehearse money emergencies before they happen."],
 ];
+/* ME TAB.
+   meTab() makes the full tab. It calls each part by name, in the load order of the files.
+   meTabBase() is the part from this file. */
 function meTab() {
+  let h = meTabBase();
+  if (typeof meTabHead === "function") h = meTabHead(h); /* ux.js: the tab title, Beginner or Expert, the color */
+  if (typeof meTabReveal === "function") h = meTabReveal(h); /* reveal.js: the row for the character sheet */
+  if (typeof meTabValues === "function") h = meTabValues(h); /* values.js: the row "Is my money going where I want?" */
+  return h;
+}
+function meTabBase() {
   const c = C(),
     d = D,
     now = identityNow(c, d),

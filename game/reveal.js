@@ -214,14 +214,12 @@ function homeRowAdd(h, row) {
 /* The row that opens the character sheet. It is on Me, and one time on Home. */
 const rvRow = (seen, cls) =>
   `<button class="rowbtn${cls ? " " + cls : ""}" data-a="reveal"><span><b>${seen ? "My character sheet" : "Meet your character"}</b><div class="tiny muted">${seen ? "Chapter, era, who you are becoming, your quest" : "Thirty seconds. Who you are in this game right now."}</div></span>${seen ? `<span class="caret">›</span>` : `<span class="pill new">New</span>`}</button>`;
-(() => {
-  const _me = meTab;
-  meTab = function () {
-    const h = _me(),
-      c = C();
-    return h.replace(/(<h1>[^<]*<\/h1>)/, m => m + rvRow(!!(c.x && c.x.revSeen)));
-  };
-})();
+/* Part of meTab() in ui.js. Adds the row for the character sheet below the title. */
+function meTabReveal(h) {
+  const c = C();
+  return h.replace(/(<h1>[^<]*<\/h1>)/, m => m + rvRow(!!(c.x && c.x.revSeen)));
+}
+
 /* Part of home() in ui.js. Adds the row "Meet your character" until the player opens it one time. It waits for the tour. */
 function homeRevealRow(h) {
   const c = C();
