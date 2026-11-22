@@ -69,7 +69,7 @@
       o.includes('data-a="sscopy"') &&
       clean(o)
   );
-  chk("the message is plain and has every item", SS_BRING.every(b => ssMsg().includes(b[1])) && !/—/.test(ssMsg()));
+  chk("the message is plain and has every item", SS_BRING.every(b => ssMsg().includes(b[1])) && !/\u2014/.test(ssMsg()));
   chk(
     "the menu has it",
     MENU.some(m => m[1] === "session")
