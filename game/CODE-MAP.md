@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,735. Top-level functions: 1064. Replaced functions: 14, in 14 places.
+Date: 2026-11-22. Files: 60. Lines: 46,747. Top-level functions: 1068. Replaced functions: 12, in 12 places.
 
 ## 1. Files in load order
 
@@ -53,9 +53,9 @@ The browser loads the files in this order. A file can use all names from the fil
 | 41 | `together.js` | 198 | 7 | 4 | 1 | the Money Chart for more than two |
 | 42 | `people.js` | 307 | 7 | 4 | 0 | Your people, one layer at a time |
 | 43 | `fold.js` | 52 | 4 | 2 | 1 | one list on Next Steps |
-| 44 | `nav.js` | 457 | 11 | 2 | 0 | the same four things on every screen |
+| 44 | `nav.js` | 470 | 13 | 2 | 0 | the same four things on every screen |
 | 45 | `home.js` | 119 | 4 | 0 | 5 | put the game on your home screen |
-| 46 | `tidy.js` | 164 | 8 | 3 | 0 | the fixes from the usability audit, applied to every screen at once instead of one screen at a time |
+| 46 | `tidy.js` | 163 | 10 | 3 | 0 | the fixes from the usability audit, applied to every screen at once instead of one screen at a time |
 | 47 | `addon.js` | 578 | 31 | 6 | 15 | extras, part two |
 | 48 | `fork.js` | 573 | 20 | 13 | 5 | Fork Theory |
 | 49 | `csp.js` | 707 | 24 | 12 | 1 | two ways to see a whole month of money at a glance |
@@ -89,8 +89,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `lootText` | `games2.js` | `import.js` | 1 |
 | `menuSheet` | `planner.js` | `cloud.js` | 1 |
 | `monthsAhead` | `ux.js` | `gig.js` | 1 |
-| `nvRow` | `nav.js` | `tidy.js` | 1 |
-| `nvText` | `nav.js` | `tidy.js` | 1 |
 | `profStrip` | `profiles.js` | `planner.js` | 1 |
 | `skillSheet` | `ui.js` | `connect.js` | 1 |
 

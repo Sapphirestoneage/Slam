@@ -57,19 +57,18 @@ function tdFrom() {
   const x = NV_INFO[prev.W.kind];
   return x ? `<div class="tiny muted nvfrom">You came here from ${x[0]}. Back takes you there.</div>` : "";
 }
-(() => {
-  const _r = nvRow;
-  nvRow = function (small) {
-    return _r(small) + tdFrom() + tdTrack();
-  };
-  const _t = nvText;
-  nvText = function (h) {
-    let o = _t(h);
-    if (!/nvhead/.test(o)) o = o.replace('<div class="sheet stack">', () => '<div class="sheet stack">' + nvRow(""));
-    if (W && TD_FULL[W.kind] !== undefined) o = o.replace('<div class="overlay">', '<div class="overlay full">');
-    return o;
-  };
-})();
+/* Part of nvText() in nav.js. A sheet with no top row gets one. Some sheets use the full height of the screen. */
+function nvTextTidy(o) {
+  if (!/nvhead/.test(o)) o = o.replace('<div class="sheet stack">', () => '<div class="sheet stack">' + nvRow(""));
+  if (W && TD_FULL[W.kind] !== undefined) o = o.replace('<div class="overlay">', '<div class="overlay full">');
+  return o;
+}
+
+/* Part of nvRow() in nav.js. Adds the line "You came here from ..." and the progress track below the row. */
+function nvRowTidy(h) {
+  return h + tdFrom() + tdTrack();
+}
+
 /* Part of drawSheet() in ui.js. draw() draws the sheet one time.
    In a sheet with two or more questions, only one question is open. When the open question must change, this draws the sheet a second time. */
 function drawSheetTidy(draw) {

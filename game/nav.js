@@ -339,7 +339,13 @@ function nvApply(t) {
   W.pad = null;
   SH = t.SH;
 }
+/* nvRow(small) makes the top row of a sheet: Back, Forward, Close. nvRowBase() is the part from this file. */
 function nvRow(small) {
+  let h = nvRowBase(small);
+  if (typeof nvRowTidy === "function") h = nvRowTidy(h); /* tidy.js: where you came from, the progress track */
+  return h;
+}
+function nvRowBase(small) {
   const k = W && W.kind,
     info =
       k &&
@@ -350,7 +356,14 @@ function nvRow(small) {
 }
 const NV_HEAD =
   /<div class="row between"><span class="tiny muted">([\s\S]*?)<\/span><button class="ghost slim" data-a="close">Close<\/button><\/div>/;
+/* nvText(h) puts the top row and plain button words in the HTML of a sheet. nvTextBase() is the part from this file. */
 function nvText(h) {
+  let o = nvTextBase(h);
+  if (typeof nvTextTidy === "function")
+    o = nvTextTidy(o); /* tidy.js: a top row on each sheet, full height for some sheets */
+  return o;
+}
+function nvTextBase(h) {
   return h
     .replace(NV_HEAD, (m, small) => nvRow(small))
     .replace(/(<button[^>]*data-a=")close("[^>]*>)Got it(<\/button>)/g, (m, x, y, z) =>
