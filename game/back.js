@@ -161,7 +161,13 @@ function bkTextBase(c, B) {
     )
     .join("\n");
 }
+/* bkSheet() makes the full welcome-back sheet. bkSheetBase() is the part from this file. */
 function bkSheet() {
+  let h = bkSheetBase();
+  if (typeof bkSheetForks === "function") h = bkSheetForks(h); /* fork.js: the fork load then and now */
+  return h;
+}
+function bkSheetBase() {
   const c = C(),
     d = D || derive(c),
     B = bkData(c, d);

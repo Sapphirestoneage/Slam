@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,708. Top-level functions: 1055. Replaced functions: 19, in 19 places.
+Date: 2026-11-22. Files: 60. Lines: 46,713. Top-level functions: 1057. Replaced functions: 18, in 18 places.
 
 ## 1. Files in load order
 
@@ -42,7 +42,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 30 | `missions.js` | 339 | 11 | 4 | 0 | The mission board |
 | 31 | `connect.js` | 366 | 18 | 10 | 0 | How it all connects |
 | 32 | `house.js` | 477 | 15 | 9 | 2 | Our household |
-| 33 | `back.js` | 248 | 13 | 3 | 6 | The welcome-back card |
+| 33 | `back.js` | 254 | 14 | 3 | 6 | The welcome-back card |
 | 34 | `lever.js` | 550 | 15 | 7 | 0 | Which lever matters most |
 | 35 | `mult.js` | 411 | 13 | 9 | 0 | The multipliers board |
 | 36 | `ask.js` | 421 | 9 | 4 | 1 | one small question at a time |
@@ -57,7 +57,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 45 | `home.js` | 119 | 4 | 0 | 5 | put the game on your home screen |
 | 46 | `tidy.js` | 164 | 8 | 3 | 0 | the fixes from the usability audit, applied to every screen at once instead of one screen at a time |
 | 47 | `addon.js` | 578 | 31 | 6 | 15 | extras, part two |
-| 48 | `fork.js` | 574 | 19 | 13 | 5 | Fork Theory |
+| 48 | `fork.js` | 573 | 20 | 13 | 5 | Fork Theory |
 | 49 | `csp.js` | 707 | 24 | 12 | 1 | two ways to see a whole month of money at a glance |
 | 50 | `ideas.js` | 1,094 | 20 | 5 | 1 | the workshop behind "Famous money ideas" |
 | 51 | `ideas2.js` | 771 | 2 | 2 | 0 | Part 1, ideas 9 to 16 |
@@ -79,7 +79,6 @@ Each row shows one function, the file that defines it, and the later files that 
 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
-| `bkSheet` | `back.js` | `fork.js` | 1 |
 | `chartSheet` | `chart.js` | `together.js` | 1 |
 | `cpMoves` | `compare.js` | `drills.js` | 1 |
 | `cspMoneyRows` | `csp.js` | `roof.js` | 1 |

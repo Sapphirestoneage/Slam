@@ -424,6 +424,11 @@ function homeForkRow(h) {
   } catch (e) {}
   return h;
 }
+/* The fork load on day d, or on the last day before it that has a record. */
+const fkThen = (c, d) => {
+  const hs = fkX(c).hist.filter(h => h.d <= d);
+  return hs.length ? hs[hs.length - 1] : null;
+};
 (() => {
   const _ds = ACT.dsave;
   ACT.dsave = t => {
@@ -433,29 +438,23 @@ function homeForkRow(h) {
     return _ds(t);
   };
   /* since last time, and the year view */
-  const fkThen = (c, d) => {
-    const hs = fkX(c).hist.filter(h => h.d <= d);
-    return hs.length ? hs[hs.length - 1] : null;
-  };
-  if (typeof bkSheet === "function") {
-    const _bk = bkSheet;
-    bkSheet = function () {
-      let h = _bk();
-      try {
-        const c = C(),
-          w = c.x && c.x.wb,
-          then = w && w.pb && w.pb.d ? fkThen(c, w.pb.d) : null;
-        if (then && fkHas(c)) {
-          const now = fkLoad(c),
-            line = `<div class="tile small"><b>Forks:</b> ${then.l} of ${then.lim} then, ${now} of ${fkX(c).lim} now. ${now < then.l ? "Lighter." : now > then.l ? "Heavier right now, so the game is handing you less." : "About the same."}</div>`,
-            k = h.lastIndexOf("<button");
-          h = k >= 0 ? h.slice(0, k) + line + h.slice(k) : h + line;
-        }
-      } catch (e) {}
-      return h;
-    };
-  }
 })();
+/* Part of bkSheet() in back.js. Adds one line that compares the fork load of the last visit with the fork load of now. */
+function bkSheetForks(h) {
+  try {
+    const c = C(),
+      w = c.x && c.x.wb,
+      then = w && w.pb && w.pb.d ? fkThen(c, w.pb.d) : null;
+    if (then && fkHas(c)) {
+      const now = fkLoad(c),
+        line = `<div class="tile small"><b>Forks:</b> ${then.l} of ${then.lim} then, ${now} of ${fkX(c).lim} now. ${now < then.l ? "Lighter." : now > then.l ? "Heavier right now, so the game is handing you less." : "About the same."}</div>`,
+        k = h.lastIndexOf("<button");
+      h = k >= 0 ? h.slice(0, k) + line + h.slice(k) : h + line;
+    }
+  } catch (e) {}
+  return h;
+}
+
 /* Part of reviewSheet() in year.js. On the first page, adds one line with the lightest, the heaviest and the present fork load of the year. */
 function reviewSheetForks(h) {
   try {
