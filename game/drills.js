@@ -393,22 +393,18 @@ Object.assign(ACT, {
     render();
   },
 });
-(() => {
-  if (typeof cpMoves === "function") {
-    const _cm = cpMoves;
-    cpMoves = function (c) {
-      let h = _cm(c);
-      ((W && W.picks) || []).forEach(id => {
-        if (!DOORS[id]) return;
-        const mv = MOVES.find(m => m.id === id);
-        if (!mv) return;
-        const a = `<div class="tile small"><b>${esc(mv.n)}.</b> ${esc(mv.d)}</div>`;
-        if (h.indexOf(a) >= 0) h = h.replace(a, () => a + doorNote(id));
-      });
-      return h;
-    };
-  }
-})();
+/* Part of cpMoves() in compare.js. A picked move that is a one-way door gets its note. */
+function cpMovesDoor(h) {
+  ((W && W.picks) || []).forEach(id => {
+    if (!DOORS[id]) return;
+    const mv = MOVES.find(m => m.id === id);
+    if (!mv) return;
+    const a = `<div class="tile small"><b>${esc(mv.n)}.</b> ${esc(mv.d)}</div>`;
+    if (h.indexOf(a) >= 0) h = h.replace(a, () => a + doorNote(id));
+  });
+  return h;
+}
+
 /* Part of movesSheet() in ui.js. When the open move is a one-way door, the note goes above its button. */
 function movesSheetDoor(h) {
   const id = W && W.open;

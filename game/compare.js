@@ -29,7 +29,13 @@ function cpWhen(c, mo) {
 function cpCell(v, sub, best) {
   return `<div class="cpcell ${best ? "best" : ""}"><b>${v}</b>${sub ? `<div class="tiny muted">${sub}</div>` : ""}</div>`;
 }
+/* cpMoves(c) makes the list of moves in "Side by side". cpMovesBase(c) is the part from this file. */
 function cpMoves(c) {
+  let h = cpMovesBase(c);
+  if (typeof cpMovesDoor === "function") h = cpMovesDoor(h); /* drills.js: the note "one-way door" */
+  return h;
+}
+function cpMovesBase(c) {
   const ms = movesFor(c),
     ps = cpPicks(c, ms),
     cols = [cpCol(c, null)].concat(ps.map(r => cpCol(c, r))),

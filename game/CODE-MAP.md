@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,781. Top-level functions: 1087. Replaced functions: 1, in 1 places.
+Date: 2026-11-22. Files: 60. Lines: 46,783. Top-level functions: 1089. Replaced functions: 0, in 0 places.
 
 ## 1. Files in load order
 
@@ -30,11 +30,11 @@ The browser loads the files in this order. A file can use all names from the fil
 | 18 | `metrics.js` | 1,825 | 26 | 10 | 0 | Key numbers |
 | 19 | `debts.js` | 395 | 16 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
 | 20 | `import.js` | 263 | 7 | 9 | 0 | fill in spending from a bank or card statement file |
-| 21 | `compare.js` | 183 | 11 | 5 | 0 | Side by side |
+| 21 | `compare.js` | 189 | 12 | 5 | 0 | Side by side |
 | 22 | `quick.js` | 256 | 11 | 2 | 0 | Quick math |
 | 23 | `reveal.js` | 236 | 8 | 2 | 2 | Meet your character |
 | 24 | `moneylog.js` | 238 | 11 | 5 | 3 | two small things about people and records |
-| 25 | `drills.js` | 450 | 13 | 8 | 0 | four things for the hard days |
+| 25 | `drills.js` | 446 | 14 | 8 | 0 | four things for the hard days |
 | 26 | `gig.js` | 377 | 23 | 9 | 0 | Working for yourself |
 | 27 | `know.js` | 191 | 10 | 6 | 0 | What you already know |
 | 28 | `fair.js` | 255 | 11 | 6 | 1 | Sharing costs fairly |
@@ -79,7 +79,6 @@ Each row shows one function, the file that defines it, and the later files that 
 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
-| `cpMoves` | `compare.js` | `drills.js` | 1 |
 
 ## 3. Functions with no caller
 
