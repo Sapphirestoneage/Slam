@@ -45,6 +45,8 @@ All checks pass, and the command ends with exit code 0. One file (`addon-sealed-
 
 The last line of the output shows if the version stamps are correct (section 10).
 
+GitHub runs `node --test` and `npm run test:game` on each push (`.github/workflows/test.yml`). A failure shows as a red X next to the commit.
+
 `node --test` runs the tests of the main SLAM app (1,259 checks). It does not run the game tests.
 
 ## 4. Where things are

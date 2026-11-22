@@ -2,7 +2,7 @@
 
 This list is for reviewers. It shows each weak point, why it is weak, and the recommended repair. The numbers are from 2026-11-22. `CODE-MAP.md` has the full tables.
 
-Repaired on 2026-11-22 and removed from this list: A1 (replaced functions), A3 (hidden errors), B1 and B2 (two test checks), B6 (test file names), C2 (version stamps), C3 (the older copy), D (code with no caller). The last section tells what the repair of A1 did not prove.
+Repaired on 2026-11-22 and removed from this list: A1 (replaced functions), A3 (hidden errors), B1 and B2 (two test checks), B6 (test file names), C2 (version stamps), C3 (the older copy), D (code with no caller). Also new on that day: GitHub runs `npm run test:game` on each push (`.github/workflows/test.yml`). The last section tells what the repair of A1 did not prove.
 
 ## A. Structure
 
@@ -28,7 +28,6 @@ Repaired on 2026-11-22 and removed from this list: A1 (replaced functions), A3 (
 | B4 | The tests of the add-on content and one large older suite are not in the repository, because they contain add-on text. | Keep them private. Divide the older suite and move the parts without add-on text into `tests/`. |
 | B5 | The tests in `tests/` examine HTML text. They do not run in a browser. | `tools/game_walk` runs the game in a browser, but it only compares two copies. Add a small set of browser tests with fixed expected results for sign-in, save and one full flow. |
 | B7 | 19 scripts have no test file of their own, for example `core/engine.js`, `core/metrics.js`, `screens/ui.js` and `features/debts.js`. `tests/README.md` has the list. | Add a test file for the math first: `core/engine.js` (`derive`) and `core/metrics.js`. |
-| B8 | The automatic test on GitHub (`.github/workflows/test.yml`) runs `node --test` only. It does not run `npm run test:game`. | Add one step to the workflow. All game checks pass now, so the step starts green. |
 
 ## C. Product and operation
 
