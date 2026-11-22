@@ -29,12 +29,16 @@ function sgCost(c, o) {
     k.x = k.x || {};
     k.x.ends = (k.x.ends || []).concat([{ k: "New loan", amt: pay, yrs: o.yrs }]);
     withLoan = freeAt(k);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "sign.js: sgCost (1)");
+  }
   const cash = d.cash || 0,
     canCash = cash >= o.amt;
   try {
     if (canCash) cashFree = freeAt(c, { once: o.amt });
-  } catch (e) {}
+  } catch (e) {
+    report(e, "sign.js: sgCost (2)");
+  }
   return {
     pay,
     n,

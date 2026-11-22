@@ -102,7 +102,9 @@ function askKnown(c) {
       const K = kwAll(c, derive(c));
       return { k: K.known, t: K.total };
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "ask.js: askKnown");
+  }
   return null;
 }
 function askParts(o) {

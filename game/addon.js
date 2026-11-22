@@ -139,11 +139,15 @@ function adRun(code) {
       if (window[k]) {
         try {
           delete window[k];
-        } catch (e) {}
+        } catch (e) {
+          report(e, "addon.js: adRun (1)");
+        }
         return true;
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "addon.js: adRun (2)");
+  }
   try {
     (0, eval)(code);
     return true;
@@ -181,7 +185,9 @@ async function adStartWeb() {
     try {
       const q = await sb.rpc("is_admin");
       own = q.data === true;
-    } catch (e) {}
+    } catch (e) {
+      report(e, "addon.js: adStartWeb (1)");
+    }
     ADX.own = own;
     const q = await sb.from("content_packs").select("pack,payload"),
       list = (q.data || [])
@@ -198,16 +204,22 @@ async function adStartWeb() {
       try {
         const code = await adFetch(p.x);
         if (code && adApply(p.id, adMeta(p.x), code)) n++;
-      } catch (e) {}
+      } catch (e) {
+        report(e, "addon.js: adStartWeb (2)");
+      }
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "addon.js: adStartWeb (3)");
+  }
   ADX.st = "on";
   if (n) {
     try {
       applyLook();
       render();
       if (SH) drawSheet();
-    } catch (e) {}
+    } catch (e) {
+      report(e, "addon.js: adStartWeb (4)");
+    }
   }
   adAsk();
 }
@@ -227,7 +239,9 @@ async function adStart() {
         own = !!(await u.isOwner());
         ask = own;
       }
-    } catch (e) {}
+    } catch (e) {
+      report(e, "addon.js: adStart (1)");
+    }
     const list = [];
     if (ask) {
       const q = await db.collection("vault").get();
@@ -257,7 +271,9 @@ async function adStart() {
       try {
         const code = await adFetch(p.x);
         if (code && adApply(p.id, adMeta(p.x), code)) n++;
-      } catch (e) {}
+      } catch (e) {
+        report(e, "addon.js: adStart (2)");
+      }
     }
     ADX.st = "on";
   } catch (e) {
@@ -268,7 +284,9 @@ async function adStart() {
       applyLook();
       render();
       if (SH) drawSheet();
-    } catch (e) {}
+    } catch (e) {
+      report(e, "addon.js: adStart (3)");
+    }
   }
   adAsk();
 }
@@ -281,8 +299,10 @@ function adHello(db, uid) {
     ADX.hi = n;
     db.doc("roster/" + uid)
       .set({ n, at: Date.now() })
-      .catch(() => {});
-  } catch (e) {}
+      .catch(e => report(e, "addon.js: adHello (1)"));
+  } catch (e) {
+    report(e, "addon.js: adHello (2)");
+  }
 }
 (() => {
   if (
@@ -326,7 +346,9 @@ function adAsk() {
     if (!id) return;
     W = { kind: "adask", id };
     sheet(adAskSheet);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "addon.js: adAsk");
+  }
 }
 /* ---------- the owner's switches ---------- */
 function adIds() {
@@ -390,7 +412,9 @@ async function adRosterWeb() {
       let nm = "";
       try {
         nm = await suPeek(r.owner);
-      } catch (x) {}
+      } catch (x) {
+        report(x, "addon.js: adRosterWeb");
+      }
       const g = {};
       (e.data || [])
         .filter(x => x.user_id === r.owner)
@@ -466,7 +490,9 @@ async function adGrant(uid, id, on) {
 function homeAddonAsk() {
   try {
     if (!SH && adPending(C()) && typeof setTimeout === "function") setTimeout(adAsk, 0);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "addon.js: homeAddonAsk");
+  }
 }
 /* Part of rvText() in reveal.js, tgText() in together.js and bkText() in back.js. Runs fn with the add-ons quiet. Thus a text for sharing has nothing from an add-on. */
 function adPlainText(fn) {
@@ -493,7 +519,9 @@ function profSheetAddon(h) {
 function adLook() {
   try {
     applyLook();
-  } catch (e) {}
+  } catch (e) {
+    report(e, "addon.js: adLook");
+  }
 }
 
 /* Part of closeSheet() in ui.js. Goes back to the look of the player after a sheet with the standard look. */
@@ -501,7 +529,9 @@ function closeSheetAddon() {
   ADX.plainSH = null;
   try {
     applyLook();
-  } catch (e) {}
+  } catch (e) {
+    report(e, "addon.js: closeSheetAddon");
+  }
 }
 
 Object.assign(ACT, {
@@ -551,7 +581,9 @@ Object.assign(ACT, {
           () => {},
           () => {}
         );
-    } catch (e) {}
+    } catch (e) {
+      report(e, "addon.js: adyes");
+    }
     save();
     closeSheet();
     render();

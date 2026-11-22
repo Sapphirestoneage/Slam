@@ -146,7 +146,9 @@ function oxyMask(c, d) {
   try {
     const m = typeof knMetrics === "function" ? knMetrics(c, d).find(q => q.id === "invx") : null;
     fid = !!m && m.num != null && m.st !== "Guess" && m.zone && m.zone[1] === "good";
-  } catch (e) {}
+  } catch (e) {
+    report(e, "ideasz.js: oxyMask");
+  }
   const track = plan || fid;
   const gs = (c.goals || []).filter(
       g => !g.done && /home|house|tuition|college|school|kid/i.test((g.k || "") + " " + (g.n || ""))
@@ -293,7 +295,9 @@ function igPlanBlock(c, d) {
     try {
       if (q.due(c, X[id] || {}))
         h += `<button class="rowbtn igplan" data-a="idea" data-v="${id}"><span style="min-width:0"><span class="tiny muted">Due now</span><div><b>${esc(q.n)}</b></div></span><span class="fkgo">Open</span></button>`;
-    } catch (e) {}
+    } catch (e) {
+      report(e, "ideasz.js: igPlanBlock");
+    }
   });
   if (s)
     h += `<button class="rowbtn igplan" data-a="idea" data-v="${s.id}"><span style="min-width:0"><span class="tiny muted">A famous idea that fits where you are</span><div><b>${esc(s.n)}</b></div><div class="tiny muted">From: ${esc(s.by)}</div></span><span class="fkgo">Open</span></button>`;
@@ -317,6 +321,8 @@ function fdSheetIdeas(h) {
         h +
         `<div class="small"><b>Two more drill formats</b></div><button class="rowbtn" data-a="idea" data-v="munger"><span style="min-width:0"><b>How would I ruin myself?</b><div class="tiny muted">Inversion, from Charlie Munger</div></span><span class="fkgo">Open</span></button><button class="rowbtn" data-a="idea" data-v="fearset"><span style="min-width:0"><b>Fear-setting</b><div class="tiny muted">Define, prevent, repair, from Tim Ferriss</div></span><span class="fkgo">Open</span></button>`
       );
-  } catch (e) {}
+  } catch (e) {
+    report(e, "ideasz.js: fdSheetIdeas");
+  }
   return h;
 }

@@ -17,7 +17,9 @@ function owRows(c) {
   let base = null;
   try {
     base = freeAt(c);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "owed.js: owRows (1)");
+  }
   const rows = pl.debts.map(d => {
     const x = c.debts[d.i],
       r = dbRate(x),
@@ -31,7 +33,9 @@ function owRows(c) {
         syncAll(k);
         const f = freeAt(k);
         free = f == null ? null : Math.max(0, base - f);
-      } catch (e) {}
+      } catch (e) {
+        report(e, "owed.js: owRows (2)");
+      }
     }
     return {
       i: d.i,

@@ -257,7 +257,9 @@ function igUp() {
   try {
     const s = document.querySelector("#ov .sheet");
     if (s) s.scrollTop = 0;
-  } catch (e) {}
+  } catch (e) {
+    report(e, "ideas.js: igUp");
+  }
 }
 Object.assign(ACT, {
   idea: t => {

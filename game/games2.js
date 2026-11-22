@@ -1372,7 +1372,9 @@ Object.assign(ACT, {
   dailyshare: () => {
     try {
       navigator.clipboard.writeText(dailyText());
-    } catch (e) {}
+    } catch (e) {
+      report(e, "games2.js: dailyshare");
+    }
     W.shared = true;
     drawSheet();
   },

@@ -8,7 +8,9 @@ function bkSnap(c, d) {
       k = K.known;
       kt = K.total;
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "back.js: bkSnap");
+  }
   return {
     d: todayISO(),
     k,
@@ -120,11 +122,15 @@ function bkData(c, d) {
       if (n && n.days >= 0 && n.days <= 45)
         since.push("The next tax date for money you earn on your own is " + nice(iso(n.date)) + ".");
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "back.js: bkData (1)");
+  }
   let ns = null;
   try {
     ns = nextStep(c, d);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "back.js: bkData (2)");
+  }
   return { day, days, did, since, ns, known: now.k, total: now.kt };
 }
 function bkLine(B) {
@@ -212,7 +218,9 @@ Object.assign(ACT, {
     if (!B) return;
     try {
       navigator.clipboard.writeText(bkText(c, B));
-    } catch (e) {}
+    } catch (e) {
+      report(e, "back.js: bkcopy");
+    }
     W.copied = true;
     drawSheet();
   },
@@ -224,7 +232,9 @@ function homeBackSync() {
   let w = null;
   try {
     w = bkSync(c, D || derive(c));
-  } catch (e) {}
+  } catch (e) {
+    report(e, "back.js: homeBackSync");
+  }
   return { c, w };
 }
 /* Part of home() in ui.js, step 2 of 2. Adds the welcome-back row when there is something to show. */
@@ -238,7 +248,9 @@ function saveBackSnap() {
   try {
     const c = typeof C === "function" ? C() : null;
     if (c && c.led && !G.demo && c.x && c.x.wb && c.x.wb.d === todayISO()) c.x.wb.n = bkSnap(c, derive(c));
-  } catch (e) {}
+  } catch (e) {
+    report(e, "back.js: saveBackSnap");
+  }
 }
 
 if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] === "since")) {

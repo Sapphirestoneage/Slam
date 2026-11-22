@@ -748,7 +748,9 @@ Object.assign(ACT, {
   btcopy: () => {
     try {
       navigator.clipboard.writeText(btText());
-    } catch (e) {}
+    } catch (e) {
+      report(e, "built.js: btcopy");
+    }
     W.copied = true;
     drawSheet();
   },

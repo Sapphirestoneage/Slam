@@ -63,7 +63,9 @@ function plResolved(c, p) {
       const n = NODES.find(x => x.id === p.v);
       return n && nodeRankRaw(c, derive(c), p.v) >= n.r ? "done" : null;
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "planner.js: plResolved");
+  }
   return null;
 }
 /* anything not finished rolls forward to today, so nothing ever falls off the plan */
@@ -191,7 +193,9 @@ function plReadyBase(c) {
   let all = [];
   try {
     all = candidates(c, derive(c), t);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "planner.js: plReadyBase");
+  }
   return all
     .filter(p => !have.has(p.id) && !(c.na && c.na[p.id]))
     .map(p => ({
@@ -953,7 +957,9 @@ function plReveal(w) {
       ls.push(
         "A guess for people like you: " + (d.era === 0 && d.realm === "Surface" ? "Ground Floor" : eraN(d.era)) + "."
       );
-    } catch (e) {}
+    } catch (e) {
+      report(e, "planner.js: plReveal");
+    }
   }
   if (!ls.length) return "";
   const last = ls[ls.length - 1];

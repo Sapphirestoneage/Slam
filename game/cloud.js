@@ -47,7 +47,9 @@ function saveStamp() {
       G.savedAt = Date.now();
       if (G.gone) G.gone = G.gone.filter(n => !G.chars.some(c => c.name === n));
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "cloud.js: saveStamp");
+  }
 }
 function clQueue() {
   if (!CLOUD.db || !CLOUD.uid || G.demo) return;
@@ -77,7 +79,9 @@ async function clPush() {
           }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      report(e, "cloud.js: clPush");
+    }
     const at = G.savedAt || Date.now(),
       s = JSON.stringify(G),
       n = Math.max(1, Math.ceil(s.length / CL_PART));
@@ -124,7 +128,9 @@ async function clPull(meta) {
   if (!(g && g.chars && g.chars.length)) return false;
   try {
     localStorage.setItem(KEY, JSON.stringify(g));
-  } catch (e) {}
+  } catch (e) {
+    report(e, "cloud.js: clPull (1)");
+  }
   const fresh = load();
   if (!fresh) return false;
   G = fresh;
@@ -134,12 +140,16 @@ async function clPull(meta) {
   const kept = clMergeChars(G, { chars: mine });
   try {
     localStorage.setItem(KEY, JSON.stringify(G));
-  } catch (e) {}
+  } catch (e) {
+    report(e, "cloud.js: clPull (2)");
+  }
   if (kept)
     setTimeout(() => {
       try {
         save();
-      } catch (e) {}
+      } catch (e) {
+        report(e, "cloud.js: clPull (3)");
+      }
     }, 0);
   return true;
 }
@@ -180,7 +190,9 @@ async function clMergeRemote(meta) {
     if (n) {
       try {
         localStorage.setItem(KEY, JSON.stringify(G));
-      } catch (e) {}
+      } catch (e) {
+        report(e, "cloud.js: clMergeRemote");
+      }
     }
     return n;
   } catch (e) {
@@ -231,7 +243,9 @@ async function clCheck() {
         }
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "cloud.js: clCheck");
+  }
   CLOUD.checking = false;
 }
 function clPaint() {
@@ -301,7 +315,9 @@ async function clStart() {
           let g = null;
           try {
             g = JSON.parse(dd.s);
-          } catch (e) {}
+          } catch (e) {
+            report(e, "cloud.js: clStart (1)");
+          }
           if (g && g.chars && g.chars.length) {
             if (G.demo) {
               G.chars = [];
@@ -317,7 +333,9 @@ async function clStart() {
                   if (!(p.x && p.x.plan && p.x.plan.length)) {
                     try {
                       plSeedWeek(p);
-                    } catch (e) {}
+                    } catch (e) {
+                      report(e, "cloud.js: clStart (2)");
+                    }
                   }
                 });
               save();
@@ -328,7 +346,9 @@ async function clStart() {
           if (CLOUD.st === "on") await ibRef.set({ done: true, at: Date.now() });
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      report(e, "cloud.js: clStart (3)");
+    }
     /* changes made on your other device show up here live */
     r.meta.onSnapshot(
       async s => {
@@ -409,7 +429,9 @@ if (typeof window !== "undefined" && document && document.getElementById && docu
     });
     window.addEventListener("focus", () => clCheck());
     window.addEventListener("pageshow", () => clCheck());
-  } catch (e) {}
+  } catch (e) {
+    report(e, "cloud.js: page load");
+  }
 }
 
 /* A new account opens on the three sample people, and the sample game never saves.
@@ -424,7 +446,11 @@ function clFirstGame() {
     setTimeout(() => {
       try {
         if (G.demo && !SH && typeof openSetup === "function") openSetup("new");
-      } catch (e) {}
+      } catch (e) {
+        report(e, "cloud.js: clFirstGame (1)");
+      }
     }, 300);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "cloud.js: clFirstGame (2)");
+  }
 }

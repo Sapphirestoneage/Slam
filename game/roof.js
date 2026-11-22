@@ -161,7 +161,9 @@ function rfVal(c, x, M) {
         g = m.st === "Guess";
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "roof.js: rfVal");
+  }
   return { v, g };
 }
 function rfRows(c) {

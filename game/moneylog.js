@@ -133,7 +133,9 @@ function hoAdd(c) {
   if (typeof plSeedWeek === "function" && !(c.x.plan && c.x.plan.length))
     try {
       plSeedWeek(c);
-    } catch (e) {}
+    } catch (e) {
+      report(e, "moneylog.js: hoAdd");
+    }
   save();
   return nm;
 }
@@ -182,7 +184,9 @@ Object.assign(ACT, {
   lgcopy: t => {
     try {
       navigator.clipboard.writeText(lgText(C(), t.dataset.v));
-    } catch (e) {}
+    } catch (e) {
+      report(e, "moneylog.js: lgcopy");
+    }
     W.copied = t.dataset.v;
     drawSheet();
   },
@@ -200,7 +204,9 @@ Object.assign(ACT, {
     if (!c) return;
     try {
       navigator.clipboard.writeText(hoCode(c));
-    } catch (e) {}
+    } catch (e) {
+      report(e, "moneylog.js: hocopy");
+    }
     W.copied = true;
     drawSheet();
   },

@@ -174,7 +174,9 @@ Object.assign(ACT, {
     setTimeout(() => {
       try {
         go(v || "home");
-      } catch (e) {}
+      } catch (e) {
+        report(e, "values.js: go");
+      }
     }, 140);
   },
 });

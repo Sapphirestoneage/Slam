@@ -14,7 +14,9 @@ function profInfo(c) {
   let step = "";
   try {
     step = (nextStep(c, d) || {}).t || "";
-  } catch (e) {}
+  } catch (e) {
+    report(e, "profiles.js: profInfo");
+  }
   const last = c.hist && c.hist.length ? c.hist[c.hist.length - 1].d : null;
   return {
     era: eraN(d.era),

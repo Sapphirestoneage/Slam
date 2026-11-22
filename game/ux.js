@@ -367,7 +367,9 @@ function goUxEnd(t, prev) {
   if (uxHist && !UX_POP && t !== prev) {
     try {
       history.pushState({ tab: t }, "", "#/" + t);
-    } catch (e) {}
+    } catch (e) {
+      report(e, "ux.js: goUxEnd");
+    }
   }
   if (UX_SCR[t] && typeof scrollTo === "function") scrollTo(0, UX_SCR[t]);
 }
@@ -406,7 +408,9 @@ function sheetUx(fn, was) {
   if (uxHist && !was && !UX_POP) {
     try {
       history.pushState({ tab, sheet: 1 }, "", "#/" + tab + "/open");
-    } catch (e) {}
+    } catch (e) {
+      report(e, "ux.js: sheetUx");
+    }
   }
   uxChip();
 }
@@ -421,7 +425,9 @@ function closeSheetUx(was) {
     UX_POP = true;
     try {
       history.back();
-    } catch (e) {}
+    } catch (e) {
+      report(e, "ux.js: closeSheetUx");
+    }
     setTimeout(() => {
       UX_POP = false;
     }, 60);
@@ -451,7 +457,9 @@ if (uxHist) {
     const t = (location.hash.match(/^#\/([a-z]+)/) || [])[1];
     if (t && (UX_TABS.some(x => x[0] === t) || t === "play" || t === "map")) tab = t;
     history.replaceState({ tab }, "", "#/" + tab);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "ux.js: page load (1)");
+  }
 }
 /* back to where you were */
 function uxTitle(fn) {
@@ -565,7 +573,9 @@ function saveFlash() {
 function celebrateBuzz() {
   try {
     if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(12);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "ux.js: celebrateBuzz");
+  }
 }
 /* Part of render() in ui.js, step 1 of 2. A new player (the sample game) stays on Home. Returns true for a new player. */
 function renderUxStart() {
@@ -584,7 +594,9 @@ function renderUxEnd(wel) {
       t = todayISO(),
       tb = $("#tabs");
     if (tb) tb.innerHTML = uxTabs(!G.demo && (c.lastDaily !== t || (c.payKnown && t >= c.payNext)));
-  } catch (e) {}
+  } catch (e) {
+    report(e, "ux.js: renderUxEnd");
+  }
   if (typeof document !== "undefined" && document.body && document.body.classList) {
     document.body.classList.toggle("expert", !!G.expert);
     if (!document.getElementById("uxsaved")) {
@@ -765,7 +777,9 @@ if (typeof document !== "undefined" && document.addEventListener)
 try {
   const L = G.last;
   if (L && L.open && !G.demo && ACT[L.a] && daysBetween(L.d, todayISO()) <= 2) UX_RESUME = L;
-} catch (e) {}
+} catch (e) {
+  report(e, "ux.js: page load (2)");
+}
 if (typeof setInterval === "function" && typeof document !== "undefined" && document.body && document.body.classList) {
   let lastSt = null;
   setInterval(() => {

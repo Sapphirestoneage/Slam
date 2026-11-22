@@ -15,8 +15,11 @@ function hsDevice() {
 }
 if (typeof SUPA !== "undefined" && SUPA.on) {
   try {
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
-  } catch (e) {}
+    if ("serviceWorker" in navigator)
+      navigator.serviceWorker.register("sw.js").catch(e => report(e, "home.js: page load (1)"));
+  } catch (e) {
+    report(e, "home.js: page load (2)");
+  }
   window.addEventListener("beforeinstallprompt", e => {
     e.preventDefault();
     HS.evt = e;
@@ -26,7 +29,9 @@ if (typeof SUPA !== "undefined" && SUPA.on) {
     G.hsDone = true;
     try {
       save();
-    } catch (e) {}
+    } catch (e) {
+      report(e, "home.js: on appinstalled");
+    }
   });
   window.addEventListener("load", () => {
     try {
@@ -57,14 +62,18 @@ if (typeof SUPA !== "undefined" && SUPA.on) {
               W.msg = "Done. Look for the SLAM icon on your home screen.";
               HS.evt = null;
             }
-          } catch (e) {}
+          } catch (e) {
+            report(e, "home.js: hsgo");
+          }
           drawSheet();
         },
         hslater: () => {
           G.hsLater = Date.now();
           try {
             save();
-          } catch (e) {}
+          } catch (e) {
+            report(e, "home.js: hslater");
+          }
           closeSheet();
         },
       });
@@ -76,7 +85,9 @@ if (typeof SUPA !== "undefined" && SUPA.on) {
             sheet(hsSheet);
           }
         }, 6000);
-    } catch (e) {}
+    } catch (e) {
+      report(e, "home.js: on load");
+    }
   });
 }
 function hsSteps() {

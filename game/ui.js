@@ -49,7 +49,9 @@ function saveQuiet() {
 function saveBase() {
   try {
     localStorage.setItem(KEY, JSON.stringify(G));
-  } catch (e) {}
+  } catch (e) {
+    report(e, "ui.js: saveBase");
+  }
 }
 let G = load() || fresh(),
   tab = "home",
@@ -5948,7 +5950,9 @@ OPT_DESC["No, leave it out"] = "Your dates will look later. Many early-retiremen
       const txt = W.o.txt;
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt);
-      } catch (e) {}
+      } catch (e) {
+        report(e, "ui.js: copyshare");
+      }
       W.copied = true;
       drawSheet();
     },

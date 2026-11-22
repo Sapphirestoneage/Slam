@@ -202,7 +202,9 @@ Object.assign(ACT, {
           if (typeof scrollTo === "function") scrollTo(0, 0);
           tkChip();
         }
-      } catch (e) {}
+      } catch (e) {
+        report(e, "testkit.js: tkgo");
+      }
     }, 140);
   },
   tkback: () => {
@@ -294,7 +296,9 @@ Object.assign(ACT, {
 function tkChipSafe() {
   try {
     tkChip();
-  } catch (e) {}
+  } catch (e) {
+    report(e, "testkit.js: tkChipSafe");
+  }
 }
 if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] === "testkit"))
   MENU.splice(Math.max(0, MENU.length - 1), 0, [

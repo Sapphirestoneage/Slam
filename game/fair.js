@@ -228,7 +228,9 @@ Object.assign(ACT, {
   frcopy: () => {
     try {
       navigator.clipboard.writeText(frText());
-    } catch (e) {}
+    } catch (e) {
+      report(e, "fair.js: frcopy");
+    }
     W.copied = true;
     drawSheet();
   },

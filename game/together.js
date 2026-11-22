@@ -170,7 +170,9 @@ Object.assign(ACT, {
   tgcopy: () => {
     try {
       navigator.clipboard.writeText(tgText(C()));
-    } catch (e) {}
+    } catch (e) {
+      report(e, "together.js: tgcopy");
+    }
     W.copied = true;
     drawSheet();
   },

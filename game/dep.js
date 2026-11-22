@@ -84,7 +84,9 @@ function depVal(c, d, k) {
     if (k === "keep") return m(Math.round(c.take - c.spend)) + " a month";
     if (k === "rspend") return m(Math.round(d.fiSpend / 12)) + " a month";
     if (k === "cushion") return c.spend > 0 ? Math.round((d.cash / c.spend) * 10) / 10 + " months" : "";
-  } catch (e) {}
+  } catch (e) {
+    report(e, "dep.js: depVal");
+  }
   return "";
 }
 function depSheet() {
@@ -135,7 +137,9 @@ function depCheck() {
   let c = null;
   try {
     c = C();
-  } catch (e) {}
+  } catch (e) {
+    report(e, "dep.js: depCheck (1)");
+  }
   if (!c || G.demo) return;
   const X = depX(c),
     f = depFilled(c),
@@ -165,7 +169,9 @@ function depCheck() {
     DEPX.busy = true;
     try {
       save();
-    } catch (e) {}
+    } catch (e) {
+      report(e, "dep.js: depCheck (2)");
+    }
     DEPX.busy = false;
   }
 }
@@ -180,7 +186,9 @@ function renderDep() {
         if (el && String(el.innerHTML).indexOf('class="depline"') < 0) el.innerHTML = el.innerHTML + depBanner();
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "dep.js: renderDep");
+  }
 }
 
 Object.assign(ACT, {
@@ -192,7 +200,9 @@ Object.assign(ACT, {
     try {
       const s = document.querySelector("#ov .sheet");
       if (s) s.scrollTop = 0;
-    } catch (e) {}
+    } catch (e) {
+      report(e, "dep.js: dep");
+    }
   },
   depplay: t => {
     DEPX.play = +t.dataset.v;

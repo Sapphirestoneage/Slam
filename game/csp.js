@@ -562,7 +562,9 @@ function cspUp() {
   try {
     const s = document.querySelector("#ov .sheet");
     if (s) s.scrollTop = 0;
-  } catch (e) {}
+  } catch (e) {
+    report(e, "csp.js: cspUp");
+  }
 }
 Object.assign(ACT, {
   csp: () => {

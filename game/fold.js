@@ -8,7 +8,9 @@ function fdRest(c, d) {
   let S = null;
   try {
     S = msStory(c, d);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "fold.js: fdRest");
+  }
   return plReadyBase(c).filter(p => !(S && (p.t === S.t || (p.a === S.a && String(p.v) === String(S.v)))));
 }
 /* Part of msBoard() in missions.js. Adds the folded list "More steps from your path" at the bottom of the board. These are the steps that the card "Ready to plan" showed before. */

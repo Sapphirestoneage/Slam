@@ -421,7 +421,9 @@ function homeForkRow(h) {
       document.body.classList.toggle("fkfull", !!(c && !G.demo && fkFull(c)));
     const row = fkHomeRow(c);
     if (row && !/Nothing here needs you/.test(h)) h = homeRowAdd(h, row);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "fork.js: homeForkRow");
+  }
   return h;
 }
 /* The fork load on day d, or on the last day before it that has a record. */
@@ -434,7 +436,9 @@ const fkThen = (c, d) => {
   ACT.dsave = t => {
     try {
       if (W && W.o && fkHas(C())) W.o.spoons = fkSpoons(C());
-    } catch (e) {}
+    } catch (e) {
+      report(e, "fork.js: ACT.dsave");
+    }
     return _ds(t);
   };
   /* since last time, and the year view */
@@ -451,7 +455,9 @@ function bkSheetForks(h) {
         k = h.lastIndexOf("<button");
       h = k >= 0 ? h.slice(0, k) + line + h.slice(k) : h + line;
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "fork.js: bkSheetForks");
+  }
   return h;
 }
 
@@ -466,7 +472,9 @@ function reviewSheetForks(h) {
         k = h.lastIndexOf("<button");
       h = k >= 0 ? h.slice(0, k) + line + h.slice(k) : h + line;
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "fork.js: reviewSheetForks");
+  }
   return h;
 }
 
@@ -514,7 +522,9 @@ function nextStepFork(c) {
         l: "Open my forks",
       };
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "fork.js: nextStepFork");
+  }
   return null;
 }
 

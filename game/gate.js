@@ -20,7 +20,9 @@ function adOn(id) {
   let c = null;
   try {
     c = C();
-  } catch (e) {}
+  } catch (e) {
+    report(e, "gate.js: adOn");
+  }
   if (!c) return false;
   if (!adMine(id, c)) return false;
   if ((ADX.meta[id] || {}).gate && !((c.x || {}).aok || {})[id]) return false;

@@ -23,7 +23,9 @@ const SUPA = { on: false, sb: null, uid: null, email: "", ready: null, ids: {}, 
     const q = new URLSearchParams(location.search).get("as");
     if (q) sessionStorage.setItem("su_as", q);
     asq = sessionStorage.getItem("su_as");
-  } catch (e) {}
+  } catch (e) {
+    report(e, "supa.js: page load (1)");
+  }
   SUPA.sb.auth.getSession().then(async ({ data }) => {
     const s = data && data.session;
     if (!s) {
@@ -36,7 +38,9 @@ const SUPA = { on: false, sb: null, uid: null, email: "", ready: null, ids: {}, 
       try {
         const r = await SUPA.sb.rpc("is_admin");
         ok = r.data === true;
-      } catch (e) {}
+      } catch (e) {
+        report(e, "supa.js: page load (2)");
+      }
       if (ok && asq !== s.user.id) {
         SUPA.me = SUPA.uid;
         SUPA.as = asq;
@@ -47,7 +51,9 @@ const SUPA = { on: false, sb: null, uid: null, email: "", ready: null, ids: {}, 
         try {
           sessionStorage.removeItem("su_as");
           sessionStorage.removeItem("su_as_n");
-        } catch (e) {}
+        } catch (e) {
+          report(e, "supa.js: page load (3)");
+        }
       }
     }
     done();
@@ -152,12 +158,16 @@ function suLocal(uid) {
         setTimeout(() => {
           try {
             render();
-          } catch (e) {}
+          } catch (e) {
+            report(e, "supa.js: suLocal (1)");
+          }
         }, 0);
       }
     }
     localStorage.setItem("su_uid", uid);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "supa.js: suLocal (2)");
+  }
 }
 /* the admin, inside someone else's game: a bar that says so on every screen, and one way out */
 function suAsBar() {
@@ -166,7 +176,9 @@ function suAsBar() {
     let n = "";
     try {
       n = sessionStorage.getItem("su_as_n") || "";
-    } catch (e) {}
+    } catch (e) {
+      report(e, "supa.js: put");
+    }
     const el = document.createElement("div");
     el.id = "su-as";
     el.style.cssText =
@@ -176,12 +188,16 @@ function suAsBar() {
     document.getElementById("su-as-x").onclick = async () => {
       try {
         if (typeof clFlush === "function") await clFlush();
-      } catch (e) {}
+      } catch (e) {
+        report(e, "supa.js: document.getElementById(su-as-x).onclick (1)");
+      }
       try {
         sessionStorage.removeItem("su_as");
         sessionStorage.removeItem("su_as_n");
         localStorage.removeItem(KEY);
-      } catch (e) {}
+      } catch (e) {
+        report(e, "supa.js: document.getElementById(su-as-x).onclick (2)");
+      }
       location.href = "./admin.html";
     };
   };
@@ -318,7 +334,9 @@ if (SUPA.on) {
             ]);
             setTimeout(suCoachPing, 2500);
           }
-        } catch (e) {}
+        } catch (e) {
+          report(e, "supa.js: on load (1)");
+        }
       });
       {
         /* The time of the page load. From now, save() in ui.js runs saveCoachMark(), and home() adds homeCoachNote(). */
@@ -326,7 +344,9 @@ if (SUPA.on) {
         setTimeout(() => {
           try {
             if (!SH) render();
-          } catch (e) {}
+          } catch (e) {
+            report(e, "supa.js: on load (2)");
+          }
         }, 0);
       }
       Object.assign(ACT, {
@@ -354,10 +374,14 @@ if (SUPA.on) {
         suout: async () => {
           try {
             if (typeof clFlush === "function") await clFlush();
-          } catch (e) {}
+          } catch (e) {
+            report(e, "supa.js: suout (1)");
+          }
           try {
             localStorage.removeItem(KEY);
-          } catch (e) {}
+          } catch (e) {
+            report(e, "supa.js: suout (2)");
+          }
           await SUPA.sb.auth.signOut();
           location.reload();
         },
@@ -386,7 +410,9 @@ if (SUPA.on) {
           for (const o of L) {
             try {
               n += await suBring(o.owner, o.at);
-            } catch (e) {}
+            } catch (e) {
+              report(e, "supa.js: suall");
+            }
           }
           W.list.forEach(o => (o.fresh = false));
           W.msg = n ? "Done. Tap the name at the top to switch between people." : "Already up to date.";
@@ -407,7 +433,9 @@ if (SUPA.on) {
           drawSheet();
         },
       });
-    } catch (e) {}
+    } catch (e) {
+      report(e, "supa.js: on load (3)");
+    }
   });
 }
 /* Part of save() in ui.js. When the admin is in the game of a player, each save records the time of the change.
@@ -416,7 +444,9 @@ function saveCoachMark() {
   if (!SUPA.t0) return;
   try {
     if (SUPA.as && G && !G.demo && Date.now() - SUPA.t0 > 4000) G.coachEdit = { at: Date.now() };
-  } catch (e) {}
+  } catch (e) {
+    report(e, "supa.js: saveCoachMark");
+  }
 }
 /* Part of home() in ui.js. Tells the player that the person who runs SLAM made a change in the game.
    It starts at page load on the website (SUPA.t0). */
@@ -432,7 +462,9 @@ function homeCoachNote(h) {
           ? h.replace(/^(<div class="stack[^"]*">)/, m => m + n)
           : n + h;
     }
-  } catch (x) {}
+  } catch (x) {
+    report(x, "supa.js: homeCoachNote");
+  }
   return h;
 }
 function suAcctSheet() {
@@ -461,7 +493,9 @@ async function suCoachLoad() {
       let nm = "";
       try {
         nm = await suPeek(r.owner);
-      } catch (e) {}
+      } catch (e) {
+        report(e, "supa.js: suCoachLoad");
+      }
       W.list.push({ owner: r.owner, at: r.updated_at, names: nm, fresh: suSeen()[r.owner] !== r.updated_at });
     }
   } catch (e) {

@@ -202,7 +202,9 @@ Object.assign(ACT, {
   rvcopy: () => {
     try {
       navigator.clipboard.writeText(rvText(C(), D || derive(C())));
-    } catch (e) {}
+    } catch (e) {
+      report(e, "reveal.js: rvcopy");
+    }
     W.copied = true;
     drawSheet();
   },
@@ -212,7 +214,9 @@ function homeRowAdd(h, row) {
   let qd = "";
   try {
     qd = typeof homeQuad === "function" ? homeQuad(C(), D) : "";
-  } catch (e) {}
+  } catch (e) {
+    report(e, "reveal.js: homeRowAdd");
+  }
   if (qd && h.indexOf(qd) >= 0) return h.replace(qd, () => qd + row);
   const th = typeof tabHead === "function" ? tabHead() : "";
   return th && h.indexOf(th) >= 0 ? h.replace(th, () => th + row) : h;

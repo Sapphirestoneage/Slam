@@ -434,7 +434,9 @@ Object.assign(ACT, {
   hscopy: t => {
     try {
       navigator.clipboard.writeText(hsText(t.dataset.v));
-    } catch (e) {}
+    } catch (e) {
+      report(e, "house.js: hscopy");
+    }
     W.copied = t.dataset.v;
     drawSheet();
   },
@@ -445,7 +447,9 @@ Object.assign(ACT, {
   opcopy: () => {
     try {
       navigator.clipboard.writeText(onePage(C(), D || derive(C())));
-    } catch (e) {}
+    } catch (e) {
+      report(e, "house.js: opcopy");
+    }
     W.copied = true;
     drawSheet();
   },

@@ -586,7 +586,9 @@ function esHold(c, d) {
       try {
         const s = document.querySelector("#ov .sheet");
         if (s) s.scrollTop = 0;
-      } catch (e) {}
+      } catch (e) {
+        report(e, "eras.js: ACT.node");
+      }
     } else _node(t);
   };
 })();
@@ -621,7 +623,9 @@ function esLastEra() {
 function deriveEras(c, d) {
   try {
     esHold(c, d);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "eras.js: deriveEras");
+  }
 }
 
 /* ---------- one step ---------- */
@@ -658,7 +662,9 @@ function esSheet() {
     let L = [];
     try {
       L = s.calc(c, d);
-    } catch (e) {}
+    } catch (e) {
+      report(e, "eras.js: esSheet");
+    }
     const st = c.led && isSharp(c, "take") && isSharp(c, "spend") ? (isSharp(c, "inv") ? "Exact" : "Close") : "Guess";
     if (L.length)
       h +=
@@ -906,7 +912,9 @@ Object.assign(ACT, {
     try {
       const s = document.querySelector("#ov .sheet");
       if (s) s.scrollTop = 0;
-    } catch (e) {}
+    } catch (e) {
+      report(e, "eras.js: acwhy");
+    }
   },
 });
 /* Part of home() in ui.js. Adds the account line while Free Money or Future You is the next era. The payday split shows the same line. */
@@ -923,7 +931,9 @@ function homeAccountLine(h) {
       !(typeof fkFull === "function" && fkFull(c))
     )
       return homeRowAdd(h, `<div class="homerow">${acLine(c, d)}</div>`);
-  } catch (e) {}
+  } catch (e) {
+    report(e, "eras.js: homeAccountLine");
+  }
   return h;
 }
 /* Part of paySheet() in ui.js. Adds the account line ("which account first") at the bottom of the payday split. */
@@ -1037,6 +1047,8 @@ function nextStepStar(c, d, r) {
           l: "Open it",
         };
     }
-  } catch (e) {}
+  } catch (e) {
+    report(e, "eras.js: nextStepStar");
+  }
   return r;
 }
