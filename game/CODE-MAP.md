@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,761. Top-level functions: 1076. Replaced functions: 8, in 8 places.
+Date: 2026-11-22. Files: 60. Lines: 46,762. Top-level functions: 1077. Replaced functions: 7, in 7 places.
 
 ## 1. Files in load order
 
@@ -15,7 +15,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 3 | `skillthemes.js` | 2,712 | 0 | 0 | 0 | data only |
 | 4 | `qr.js` | 5 | 0 | 1 | 0 | a small QR code generator from a third party, kept in one line |
 | 5 | `engine.js` | 3,841 | 123 | 0 | 0 | SLAM the Game: engine |
-| 6 | `engine2.js` | 378 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
+| 6 | `engine2.js` | 381 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
 | 8 | `ui.js` | 6,472 | 215 | 136 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 621 | 22 | 12 | 0 | the screens for the games that are the data entry |
@@ -36,7 +36,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 24 | `moneylog.js` | 238 | 11 | 5 | 3 | two small things about people and records |
 | 25 | `drills.js` | 444 | 12 | 8 | 0 | four things for the hard days |
 | 26 | `gig.js` | 377 | 23 | 9 | 0 | Working for yourself |
-| 27 | `know.js` | 193 | 9 | 6 | 0 | What you already know |
+| 27 | `know.js` | 191 | 10 | 6 | 0 | What you already know |
 | 28 | `fair.js` | 255 | 11 | 6 | 1 | Sharing costs fairly |
 | 29 | `values.js` | 200 | 6 | 8 | 1 | Is my money going where I want? Three short steps, all taps |
 | 30 | `missions.js` | 339 | 11 | 4 | 0 | The mission board |
@@ -83,7 +83,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `cspMoneyRows` | `csp.js` | `roof.js` | 1 |
 | `dbSheet` | `debts.js` | `owed.js` | 1 |
 | `fdSheet` | `drills.js` | `ideasz.js` | 1 |
-| `fogPct` | `engine2.js` | `know.js` | 1 |
 | `gamesSheet` | `games2.js` | `year.js` | 1 |
 | `profStrip` | `profiles.js` | `planner.js` | 1 |
 | `skillSheet` | `ui.js` | `connect.js` | 1 |

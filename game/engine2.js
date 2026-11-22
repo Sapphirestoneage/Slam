@@ -328,7 +328,10 @@ function fogPatches(c, d) {
   add("solid", "Close numbers made exact", Object.keys(X.rng || {}).length > 0 && roughOnes(c).length === 0, "rough");
   return P;
 }
+/* fogPct(c, d) returns the percent of the picture that is clear.
+   know.js has the present number: the same number on all screens. The lines below it run only while the page loads, before know.js is there. */
 function fogPct(c, d) {
+  if (typeof fogPctKnow === "function") return fogPctKnow(c, d);
   const p = fogPatches(c, d);
   return Math.round((p.filter(x => x.ok).length / p.length) * 100);
 }

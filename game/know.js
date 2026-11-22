@@ -165,18 +165,16 @@ Object.assign(ACT, {
   },
 });
 (() => {
-  /* one number everywhere: the Home tile and the people list read this */
-  if (typeof fogPct === "function") {
-    fogPct = function (c, d) {
-      return kwAll(c, d || derive(c)).pct;
-    };
-  }
   const _fog = ACT.fog;
   ACT.fog = function (t) {
     return ACT.know(t);
   };
   ACT.fogold = _fog;
 })();
+/* Part of fogPct() in engine2.js. One number on all screens: the Home tile and the list of people show this percent. */
+function fogPctKnow(c, d) {
+  return kwAll(c, d || derive(c)).pct;
+}
 /* Part of home() in ui.js. Adds the strip "What you already know" below the four tiles. */
 function homeKnowStrip(h) {
   const c = C();
