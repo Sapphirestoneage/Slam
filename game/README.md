@@ -30,9 +30,11 @@ Open http://localhost:8000/game/. Without an internet connection the game runs i
 npm run test:game
 ```
 
-The command runs 32 test files (701 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
+The command runs 32 test files (703 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
 
-Two failures are known. They are listed in `tests/known-failures.json`, and the runner shows them on each run. One more file (`addon-sealed-files.js`) needs private files and stops with an error in this repository.
+All checks pass, and the command ends with exit code 0. One file (`addon-sealed-files.js`) has a part that needs the private add-on source. In this repository that part prints `SKIP`.
+
+The last line of the output shows if the version stamps are correct (section 8).
 
 `node --test` runs the tests of the main SLAM app (1,259 checks). It does not run the game tests.
 

@@ -63,7 +63,13 @@
     side.map(m => m.id).join()
   );
   const kn = side.find(m => m.id.startsWith("know:"));
-  chk("the payout of a know mission is the real change in that letter", /goes from \d+% to \d+% known/.test(kn.pay));
+  // features/missions.js writes "Debts goes from 0% to 25% known". features/ask2.js (msSideAsk) then writes the same
+  // two numbers as a plain line. The player sees the plain line.
+  chk(
+    "the payout of a know mission is the real change in that letter",
+    /^What you know about [a-z ]+: \d+% to \d+%$/.test(kn.pay),
+    kn.pay
+  );
   const H = msHeists(c, D),
     h1 = H.find(h => h.id === "h1000"),
     hc = H.find(h => h.id === "hcard"),

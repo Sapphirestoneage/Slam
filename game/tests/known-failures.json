@@ -1,10 +1,1 @@
-{
- "whats-built.js": {
-  "count": 1,
-  "why": "the count of built rows was written for the Claude copy of the game; see KNOWN-WEAK.md"
- },
- "mission-board.js": {
-  "count": 1,
-  "why": "the payout of one mission type does not match its letter score; see KNOWN-WEAK.md"
- }
-}
+{}

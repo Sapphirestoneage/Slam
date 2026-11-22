@@ -7,7 +7,7 @@ This repository contains two products. They share no code at run time.
 | Product | Folder | Read first | Tests |
 |---------|--------|-----------|-------|
 | **SLAM**, the planning tool for a coach and one household | `js/`, `css/`, `data/`, the `.html` files at the top | This file, then `DESIGN.md` and `MATH.md` | `node --test` (1,259 checks) |
-| **SLAM the Game**, a money game for one household | `game/` | `game/README.md`, then `game/KNOWN-WEAK.md` | `npm run test:game` (701 checks) |
+| **SLAM the Game**, a money game for one household | `game/` | `game/README.md`, then `game/KNOWN-WEAK.md` | `npm run test:game` (703 checks) |
 
 SLAM uses JavaScript modules. Its math is in `js/math/` and each formula has a test. SLAM the Game uses classic scripts with one global scope, and its structure is weaker. `game/KNOWN-WEAK.md` lists each weak point and the recommended repair.
 

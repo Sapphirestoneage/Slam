@@ -16,10 +16,12 @@
       .map(r => r.n)
       .join(" | ")
   );
+  // btRows() gives the rows that this player can see. A row for the owner only is not in it for other players.
+  // Thus the counts add up to R.length. They add up to WB.length (the full list) only for the owner.
   chk(
     "the three counts add up and none is empty",
-    c.b + c.p + c.n === WB.length && c.b > 20 && c.p > 3 && c.n > 10,
-    JSON.stringify(c)
+    c.b + c.p + c.n === R.length && R.length <= WB.length && c.b > 20 && c.p > 3 && c.n > 10,
+    JSON.stringify(c) + " rows " + R.length + " of " + WB.length
   );
   chk(
     "every built row that opens a screen names a real action",

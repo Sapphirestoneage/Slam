@@ -50,10 +50,8 @@ for (const f of files) {
   const tag = x === 0 ? "ok    " : x <= allowed ? "KNOWN " : "FAIL  ";
   if (x > allowed) fresh++;
   const skip = out.match(/^SKIP (.*)$/m);
-  const note = x && x <= allowed ? "   (" + known[f].why + ")" : skip ? "   (skipped: " + skip[1] + ")" : "";
-  console.log(
-    `${skip && !x ? "skip  " : tag} ${f.padEnd(40)} ${String(o).padStart(4)} ok ${String(x).padStart(3)} failed${note}`
-  );
+  const note = x && x <= allowed ? "   (" + known[f].why + ")" : skip ? "   (SKIP: " + skip[1] + ")" : "";
+  console.log(`${tag} ${f.padEnd(40)} ${String(o).padStart(4)} ok ${String(x).padStart(3)} failed${note}`);
   if (x > allowed)
     console.log(
       out

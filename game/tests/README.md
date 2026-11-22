@@ -78,6 +78,12 @@ These scripts have no test file of their own: `core/engine.js`, `core/engine2.js
 
 `known-failures.json` lists each failure that is known, with the reason. The runner shows these failures on each run, and they do not make the run fail. A new failure makes the run fail.
 
+On 2026-11-22 the list is empty: all checks pass. Add a failure to the list only when it cannot be repaired now, and write the reason. The format of one entry is:
+
+```
+"mission-board.js": { "count": 1, "why": "one sentence with the reason" }
+```
+
 ## The folder `retired`
 
 The runner does not read this folder.
@@ -88,5 +94,5 @@ The runner does not read this folder.
 
 The add-on source is not in this repository. Thus the tests of the add-on content are not here.
 
-- `addon-sealed-files.js` needs the private folder with the add-on source. With no such folder, the file prints `SKIP` and does nothing.
+- `addon-sealed-files.js` has two parts. Part 1 runs in each copy: a sealed file shows no readable word. Part 2 needs the private folder with the add-on source (the environment variable `SLAM_PACKS_DIR` gives its path). With no such folder, part 2 prints `SKIP`.
 - To load the add-ons for the other tests, set the environment variable `SLAM_PACKS_BOOT` (see the header of `harness.cjs`).
