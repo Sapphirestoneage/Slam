@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,762. Top-level functions: 1077. Replaced functions: 7, in 7 places.
+Date: 2026-11-22. Files: 60. Lines: 46,768. Top-level functions: 1079. Replaced functions: 6, in 6 places.
 
 ## 1. Files in load order
 
@@ -19,8 +19,8 @@ The browser loads the files in this order. A file can use all names from the fil
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
 | 8 | `ui.js` | 6,472 | 215 | 136 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 621 | 22 | 12 | 0 | the screens for the games that are the data entry |
-| 10 | `games2.js` | 1,441 | 39 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
-| 11 | `year.js` | 765 | 23 | 13 | 0 | the year |
+| 10 | `games2.js` | 1,447 | 40 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
+| 11 | `year.js` | 765 | 24 | 13 | 0 | the year |
 | 12 | `chart.js` | 1,291 | 13 | 6 | 0 | the Money Chart |
 | 13 | `profiles.js` | 115 | 6 | 4 | 1 | flip between people |
 | 14 | `smart.js` | 669 | 15 | 5 | 0 | every answer narrows what comes next |
@@ -83,7 +83,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `cspMoneyRows` | `csp.js` | `roof.js` | 1 |
 | `dbSheet` | `debts.js` | `owed.js` | 1 |
 | `fdSheet` | `drills.js` | `ideasz.js` | 1 |
-| `gamesSheet` | `games2.js` | `year.js` | 1 |
 | `profStrip` | `profiles.js` | `planner.js` | 1 |
 | `skillSheet` | `ui.js` | `connect.js` | 1 |
 

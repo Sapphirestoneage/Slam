@@ -589,9 +589,9 @@ function campCardReview(h, c) {
       )
     : h;
 }
-const _games1 = gamesSheet;
-gamesSheet = function () {
-  return _games1().replace(
+/* Part of gamesSheet() in games2.js. Adds the group "The year" above the button Close. */
+function gamesSheetYear(h) {
+  return h.replace(
     /<button class="ghost wide" data-a="close">Close<\/button>$/,
     `<div class="stack" style="gap:4px"><div class="small"><b>The year</b></div>${[
       ["review", "Yearly Review"],
@@ -603,7 +603,7 @@ gamesSheet = function () {
       .map(r => `<button class="rowbtn" data-a="${r[0]}"><span>${r[1]}</span><span>Open</span></button>`)
       .join("")}</div><button class="ghost wide" data-a="close">Close</button>`
   );
-};
+}
 FOG_X.push((c, d, add) => {
   add("year", "Your year ahead", YX(c).funds.length > 0 || Object.keys(CALS).some(id => calOn(c, id)), "ahead");
 });

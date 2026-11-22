@@ -1035,7 +1035,13 @@ function nwgSheet() {
   );
 }
 /* all games, one list */
+/* gamesSheet() makes the full sheet "All games". gamesSheetBase() is the part from this file. */
 function gamesSheet() {
+  let h = gamesSheetBase();
+  if (typeof gamesSheetYear === "function") h = gamesSheetYear(h); /* year.js: the group "The year" */
+  return h;
+}
+function gamesSheetBase() {
   const c = C(),
     d = D,
     ls = layers(c, d),
