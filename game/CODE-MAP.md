@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,773. Top-level functions: 1081. Replaced functions: 4, in 4 places.
+Date: 2026-11-22. Files: 60. Lines: 46,777. Top-level functions: 1083. Replaced functions: 3, in 3 places.
 
 ## 1. Files in load order
 
@@ -28,7 +28,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 16 | `cloud.js` | 431 | 18 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
 | 17 | `ux.js` | 779 | 36 | 8 | 7 | walk-up-and-use |
 | 18 | `metrics.js` | 1,825 | 26 | 10 | 0 | Key numbers |
-| 19 | `debts.js` | 389 | 15 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
+| 19 | `debts.js` | 395 | 16 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
 | 20 | `import.js` | 263 | 7 | 9 | 0 | fill in spending from a bank or card statement file |
 | 21 | `compare.js` | 183 | 11 | 5 | 0 | Side by side |
 | 22 | `quick.js` | 256 | 11 | 2 | 0 | Quick math |
@@ -48,7 +48,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 36 | `ask.js` | 421 | 9 | 4 | 1 | one small question at a time |
 | 37 | `ask2.js` | 376 | 9 | 5 | 0 | the same one-small-question pattern as ask.js, carried to the next three places people get asked things |
 | 38 | `sign.js` | 234 | 5 | 3 | 2 | Before you sign |
-| 39 | `owed.js` | 113 | 3 | 3 | 2 | What each debt costs you |
+| 39 | `owed.js` | 111 | 4 | 3 | 2 | What each debt costs you |
 | 40 | `study.js` | 492 | 13 | 5 | 0 | Student loan plans, side by side |
 | 41 | `together.js` | 198 | 7 | 4 | 1 | the Money Chart for more than two |
 | 42 | `people.js` | 307 | 7 | 4 | 0 | Your people, one layer at a time |
@@ -81,7 +81,6 @@ Each row shows one function, the file that defines it, and the later files that 
 |----------|------------|--------------------------|-------:|
 | `cpMoves` | `compare.js` | `drills.js` | 1 |
 | `cspMoneyRows` | `csp.js` | `roof.js` | 1 |
-| `dbSheet` | `debts.js` | `owed.js` | 1 |
 | `fdSheet` | `drills.js` | `ideasz.js` | 1 |
 
 ## 3. Functions with no caller

@@ -90,16 +90,14 @@ Object.assign(ACT, {
     sheet(owSheet);
   },
 });
-(() => {
-  const _d = dbSheet;
-  dbSheet = function () {
-    const h = _d(),
-      c = C();
-    return dbLive(c).length
-      ? h + `<button class="ghost wide slim" data-a="owed">What each debt costs you, in months of your life</button>`
-      : h;
-  };
-})();
+/* Part of dbSheet() in debts.js. With one or more debts, adds the button "What each debt costs you". */
+function dbSheetOwed(h) {
+  const c = C();
+  return dbLive(c).length
+    ? h + `<button class="ghost wide slim" data-a="owed">What each debt costs you, in months of your life</button>`
+    : h;
+}
+
 if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] === "owed")) {
   const i = MENU.findIndex(m => m[1] === "sign");
   MENU.splice(i >= 0 ? i + 1 : MENU.length, 0, [

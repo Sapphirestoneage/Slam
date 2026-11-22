@@ -200,7 +200,13 @@ function dbOneBodyBase(c, i) {
     `<button class="primary wide" data-a="debtplan">${dbMissing(x).length ? "Back to the plan" : "Done"}</button>`
   );
 }
+/* dbSheet() makes the full sheet of the debt plan. dbSheetBase() is the part from this file. */
 function dbSheet() {
+  let h = dbSheetBase();
+  if (typeof dbSheetOwed === "function") h = dbSheetOwed(h); /* owed.js: the button "What each debt costs you" */
+  return h;
+}
+function dbSheetBase() {
   const c = C(),
     w = W,
     L = dbLive(c),
