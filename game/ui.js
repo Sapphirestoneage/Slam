@@ -1555,7 +1555,17 @@ function openSetup(mode) {
   W = { kind: "setup", mode, add: mode === "add", step: 0, o: base };
   sheet(setupSheet);
 }
+/* THE SETUP SHEET.
+   setupSheet() makes the full sheet. It calls each part by name. setupSheetBase() is the part from this file. */
 function setupSheet() {
+  const w = W;
+  let h = setupSheetBase();
+  if (typeof setupSheetPlan === "function")
+    h = setupSheetPlan(h, w); /* planner.js: questions left, what the game knows, the fast finish */
+  if (typeof setupSheetRead === "function") h = setupSheetRead(h, w); /* ux.js: the line "Your first read" */
+  return h;
+}
+function setupSheetBase() {
   const w = W,
     st = SETUP[w.step],
     last = SETUP.length - 1,

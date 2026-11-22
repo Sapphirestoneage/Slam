@@ -859,35 +859,6 @@ function finishSetupPlanEnd(w, isNew) {
   }
 }
 (() => {
-  /* speedrun: after "What you owe", you can see your plan now and finish the last two screens later */
-  const _ss = setupSheet;
-  setupSheet = function () {
-    const w = W;
-    let h = _ss();
-    const st = w.step;
-    const strip = w.mode === "edit" ? "" : plReveal(w);
-    h =
-      h.replace(
-        /(<div class="tiny muted">All taps\. No numbers yet\.<\/div>)/,
-        `<div class="row between"><span class="tiny muted">All taps. No numbers yet.</span>${w.mode === "edit" ? "" : `<span class="pill info" data-fid="su:taps">${(n => (n ? n + " question" + (n === 1 ? "" : "s") + " left" : "All answered"))(smLeft(w))}</span>`}</div>`
-      ) + "";
-    if (strip) {
-      const k = h.lastIndexOf('<div class="row between">', h.lastIndexOf('data-a="wnext"'));
-      if (k >= 0) h = h.slice(0, k) + strip + h.slice(k);
-    }
-    if (w.mode !== "edit" && st === 4)
-      h = h.replace(
-        /<div class="row between">(<button class="ghost" data-a="wback">[^<]*<\/button>)<button class="[^"]*" data-a="wnext">[^<]*<\/button><\/div>$/,
-        `<div class="stack plspeed"><button class="primary wide go" data-a="speedfin">See my first plan</button><div class="row between">$1<button class="ghost" data-a="wnext">Keep going: 2 quick screens</button></div><div class="tiny muted">Skip ahead and the last two screens go on your plan for tomorrow. About 30 seconds either way.</div></div>`
-      );
-    if (w.mode === "edit" && w.later) h = h.replace(/Getting started · page \d+ of \d+/, "Finishing setup");
-    if (w.mode === "edit" && w.later === "accts" && st === 5)
-      h = h.replace(
-        /(<div class="small muted">Tap every kind of account)/,
-        `<div class="banner small">The ones already picked are guesses for people like you. Tap any that are wrong.</div>$1`
-      );
-    return h;
-  };
   if (typeof document !== "undefined" && document.addEventListener)
     document.addEventListener(
       "click",
@@ -900,6 +871,34 @@ function finishSetupPlanEnd(w, isNew) {
       true
     );
 })();
+/* Part of setupSheet() in ui.js. w is the setup state.
+   Adds the count of questions left and the strip "what the game knows so far". After "What you owe", it offers the fast finish: see the plan now, do the last two screens later. */
+function setupSheetPlan(h, w) {
+  const st = w.step;
+  const strip = w.mode === "edit" ? "" : plReveal(w);
+  h =
+    h.replace(
+      /(<div class="tiny muted">All taps\. No numbers yet\.<\/div>)/,
+      `<div class="row between"><span class="tiny muted">All taps. No numbers yet.</span>${w.mode === "edit" ? "" : `<span class="pill info" data-fid="su:taps">${(n => (n ? n + " question" + (n === 1 ? "" : "s") + " left" : "All answered"))(smLeft(w))}</span>`}</div>`
+    ) + "";
+  if (strip) {
+    const k = h.lastIndexOf('<div class="row between">', h.lastIndexOf('data-a="wnext"'));
+    if (k >= 0) h = h.slice(0, k) + strip + h.slice(k);
+  }
+  if (w.mode !== "edit" && st === 4)
+    h = h.replace(
+      /<div class="row between">(<button class="ghost" data-a="wback">[^<]*<\/button>)<button class="[^"]*" data-a="wnext">[^<]*<\/button><\/div>$/,
+      `<div class="stack plspeed"><button class="primary wide go" data-a="speedfin">See my first plan</button><div class="row between">$1<button class="ghost" data-a="wnext">Keep going: 2 quick screens</button></div><div class="tiny muted">Skip ahead and the last two screens go on your plan for tomorrow. About 30 seconds either way.</div></div>`
+    );
+  if (w.mode === "edit" && w.later) h = h.replace(/Getting started · page \d+ of \d+/, "Finishing setup");
+  if (w.mode === "edit" && w.later === "accts" && st === 5)
+    h = h.replace(
+      /(<div class="small muted">Tap every kind of account)/,
+      `<div class="banner small">The ones already picked are guesses for people like you. Tap any that are wrong.</div>$1`
+    );
+  return h;
+}
+
 /* Part of go() in ui.js. Records the tab that the player leaves, for the button Back. */
 function goNav(t) {
   if (t !== tab) {

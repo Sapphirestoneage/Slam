@@ -336,11 +336,9 @@ function firstRead(o) {
     return null;
   }
 }
-const _setup0 = setupSheet;
-setupSheet = function () {
-  const w = W,
-    h = _setup0(),
-    fr = w.mode !== "edit" && w.step >= 1 && w.step < 4 ? firstRead(w.o) : null;
+/* Part of setupSheet() in ui.js. w is the setup state. After the first three answers, it adds the line "Your first read" with the era for a person like the player. */
+function setupSheetRead(h, w) {
+  const fr = w.mode !== "edit" && w.step >= 1 && w.step < 4 ? firstRead(w.o) : null;
   return fr && fr.known
     ? h.replace(
         '<div class="plk stack" style="gap:3px;padding:8px 10px">',
@@ -348,7 +346,7 @@ setupSheet = function () {
           `<div class="plk stack" style="gap:3px;padding:8px 10px"><div class="firstread"><div class="row between"><span class="small">Your first read: <b>${esc(fr.era)}</b></span><span class="pill">Guess</span></div><div class="tiny muted">For someone your age with those three answers. Each tap from here makes it closer.</div></div>`
       )
     : h;
-};
+}
 /* back that works: tabs and sheets go through the browser history */
 const uxHist =
   typeof history !== "undefined" && typeof history.pushState === "function" && typeof addEventListener === "function";
