@@ -41,11 +41,11 @@ function akPad(w, k, i) {
     ? `<div class="val">${money((w.o || {})[key] || 0)}</div>${keypad(key)}<button class="primary wide" data-a="dbset" data-k="${k}" data-l="${i}" data-v="typed">Use ${money((w.o || {})[key] || 0)}</button>`
     : `<button class="ghost slim" data-a="padopen" data-k="${key}">Type the exact number</button>`;
 }
-const AK_DBOLD = dbOneBody;
-dbOneBody = function (c, i) {
+/* Part of dbOneBody() in debts.js. In the sheet for one debt (W.kind "dbone"), asks one small question at a time: the rate, the payment, the limit, how much it bugs you. Returns null in all other sheets. */
+function dbOneBodyAsk(c, i) {
   const x = c.debts[i],
     w = W;
-  if (!x || !w || w.kind !== "dbone") return AK_DBOLD(c, i);
+  if (!x || !w || w.kind !== "dbone") return null;
   const S = akSteps(x);
   w.ak = true;
   if (w.step == null) {
@@ -105,7 +105,7 @@ dbOneBody = function (c, i) {
       find: A.find,
     })
   );
-};
+}
 const AK_KN = {
   tax: {
     q: "Out of every $100 you earn, about how many dollars are taken out before you get paid?",
@@ -163,11 +163,11 @@ const AK_KN = {
     find: "Your bank app, or your best memory.",
   },
 };
-const AK_KNOLD = knAskBody;
-knAskBody = function (c, k) {
+/* Part of knAskBody() in metrics.js. For a key number in AK_KN, asks one small question with a why and a where-to-look. Returns null for all other numbers. */
+function knAskBodyAsk(c, k) {
   const a = KN_ASK[k],
     A = AK_KN[k];
-  if (!a || !A) return AK_KNOLD(c, k);
+  if (!a || !A) return null;
   const cur = knGot(c, k),
     o = W.o || {},
     opts = a.rel
@@ -185,7 +185,7 @@ knAskBody = function (c, k) {
       find: A.find,
     })
   );
-};
+}
 (() => {
   const _a = ACT.knans;
   ACT.knans = t => {
@@ -196,23 +196,23 @@ knAskBody = function (c, k) {
       drawSheet();
     }
   };
-  const _o = knOne;
-  knOne = function () {
-    const h = _o();
-    if (!W || !W.just) return h;
-    const i = h.indexOf('<div class="tile');
-    return i < 0
-      ? h
-      : h.slice(0, i) +
-          `<div class="tile small askwhy"><b>Saved.</b> This number now runs on your answer, not on a guess. You can change it any time.</div>` +
-          h.slice(i);
-  };
   const _m = ACT.metric;
   ACT.metric = t => {
     _m(t);
     if (W) W.just = null;
   };
 })();
+/* Part of knOne() in metrics.js. Directly after an answer, adds the line "Saved. This number now runs on your answer". */
+function knOneSaved(h) {
+  if (!W || !W.just) return h;
+  const i = h.indexOf('<div class="tile');
+  return i < 0
+    ? h
+    : h.slice(0, i) +
+        `<div class="tile small askwhy"><b>Saved.</b> This number now runs on your answer, not on a guess. You can change it any time.</div>` +
+        h.slice(i);
+}
+
 const AK_SH = {
   match: {
     thing: "Your job",
@@ -252,26 +252,6 @@ const AK_SH = {
 };
 var AKX = { pend: null };
 (() => {
-  const _s = sharpSheet;
-  sharpSheet = function () {
-    const w = W,
-      k = w && w.q,
-      A = AK_SH[k];
-    if (!A || !w.o) return _s();
-    const cur = w.o[k];
-    return (
-      head("Make your numbers real", SHARP_Q[k]) +
-      `<div class="tile"><div class="eyebrow">${A.thing}</div><h2 style="margin:4px 0 0">${A.q}</h2></div>` +
-      askParts({
-        what: A.what,
-        body:
-          `<div class="stack" style="gap:6px">${A.opts.map(o => `<button class="rowbtn ${cur === o[0] ? "sel" : ""}" data-a="set" data-k="${k}" data-v="${o[0]}"><span>${o[1]}</span><span class="caret">›</span></button>`).join("")}</div>` +
-          (k === "tax" ? askBtn("sharpskip", "I'm not sure", "ghost") : ""),
-        why: A.why,
-        find: SHARP_FIND[k],
-      })
-    );
-  };
   const _d = ACT.sharpdone;
   ACT.sharpdone = () => {
     const k = W && W.kind === "sharp" ? W.q : null;
@@ -282,25 +262,49 @@ var AKX = { pend: null };
       AKX.pend = null;
     }
   };
-  const _a = afterSharp;
-  afterSharp = function (c) {
-    const k = AKX.pend;
-    AKX.pend = null;
-    if (!k || (!c.placed && sharpPct(c) >= 100)) return _a(c);
-    const nx = sharpNext(c, todayISO());
-    W = { kind: "askdone", q: k };
-    sheet(
-      () =>
-        head("Done", SHARP_Q[k]) +
-        `<div class="tile stack" style="gap:6px"><b>What you just did</b><div class="small bkdid"><span class="bktick">✓</span><span>You answered one question about ${k === "match" ? "your job" : "your accounts"}.</span></div></div><div class="tile stack" style="gap:6px"><b>What that changed</b><div class="small">${AK_SH[k].res(c)}</div></div>` +
-        (nx
-          ? `<div class="tile small"><b>What comes next:</b> ${SHARP_Q[nx]}. One small question at a time.</div>` +
-            askBtn("askmore", "Keep going", "primary go") +
-            askBtn("close", "Stop here for now", "ghost")
-          : askBtn("askmore", "Done", "primary go"))
-    );
-  };
 })();
+/* Part of afterSharp() in ui.js. After one small question from sharpSheetAsk2(), opens the sheet "Done": what the player did, what that changed, what comes next.
+   Returns true when it opened the sheet. Returns false when afterSharpBase() must run. */
+function afterSharpAsk(c) {
+  const k = AKX.pend;
+  AKX.pend = null;
+  if (!k || (!c.placed && sharpPct(c) >= 100)) return false;
+  const nx = sharpNext(c, todayISO());
+  W = { kind: "askdone", q: k };
+  sheet(
+    () =>
+      head("Done", SHARP_Q[k]) +
+      `<div class="tile stack" style="gap:6px"><b>What you just did</b><div class="small bkdid"><span class="bktick">✓</span><span>You answered one question about ${k === "match" ? "your job" : "your accounts"}.</span></div></div><div class="tile stack" style="gap:6px"><b>What that changed</b><div class="small">${AK_SH[k].res(c)}</div></div>` +
+      (nx
+        ? `<div class="tile small"><b>What comes next:</b> ${SHARP_Q[nx]}. One small question at a time.</div>` +
+          askBtn("askmore", "Keep going", "primary go") +
+          askBtn("close", "Stop here for now", "ghost")
+        : askBtn("askmore", "Done", "primary go"))
+  );
+  return true;
+}
+
+/* Part of sharpSheet() in ui.js. The questions in AK_SH (the job match, the accounts) have their own form. Returns null for all other questions. */
+function sharpSheetAsk2() {
+  const w = W,
+    k = w && w.q,
+    A = AK_SH[k];
+  if (!A || !w.o) return null;
+  const cur = w.o[k];
+  return (
+    head("Make your numbers real", SHARP_Q[k]) +
+    `<div class="tile"><div class="eyebrow">${A.thing}</div><h2 style="margin:4px 0 0">${A.q}</h2></div>` +
+    askParts({
+      what: A.what,
+      body:
+        `<div class="stack" style="gap:6px">${A.opts.map(o => `<button class="rowbtn ${cur === o[0] ? "sel" : ""}" data-a="set" data-k="${k}" data-v="${o[0]}"><span>${o[1]}</span><span class="caret">›</span></button>`).join("")}</div>` +
+        (k === "tax" ? askBtn("sharpskip", "I'm not sure", "ghost") : ""),
+      why: A.why,
+      find: SHARP_FIND[k],
+    })
+  );
+}
+
 Object.assign(ACT, {
   akskip: () => {
     const w = W;

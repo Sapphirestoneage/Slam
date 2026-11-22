@@ -145,7 +145,13 @@ function dbNice(v) {
   const s = v < 100 ? 5 : v < 500 ? 25 : v < 2000 ? 50 : 250;
   return Math.max(s, Math.round(v / s) * s);
 }
+/* dbOneBody(c, i) makes the sheet for one debt. dbOneBodyBase() is the part from this file. */
 function dbOneBody(c, i) {
+  const ask =
+    typeof dbOneBodyAsk === "function" ? dbOneBodyAsk(c, i) : null; /* ask2.js: one small question at a time */
+  return ask !== null ? ask : dbOneBodyBase(c, i);
+}
+function dbOneBodyBase(c, i) {
   const x = c.debts[i],
     w = W,
     est = dbEst(x),

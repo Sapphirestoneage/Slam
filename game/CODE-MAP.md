@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,672. Top-level functions: 1045. Replaced functions: 24, in 24 places.
+Date: 2026-11-22. Files: 60. Lines: 46,708. Top-level functions: 1055. Replaced functions: 19, in 19 places.
 
 ## 1. Files in load order
 
@@ -17,7 +17,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 5 | `engine.js` | 3,841 | 123 | 0 | 0 | SLAM the Game: engine |
 | 6 | `engine2.js` | 378 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
-| 8 | `ui.js` | 6,451 | 212 | 136 | 2 | SLAM the Game: screens |
+| 8 | `ui.js` | 6,466 | 214 | 136 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 609 | 21 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,435 | 38 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 765 | 23 | 13 | 0 | the year |
@@ -27,8 +27,8 @@ The browser loads the files in this order. A file can use all names from the fil
 | 15 | `planner.js` | 1,241 | 53 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
 | 16 | `cloud.js` | 433 | 17 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
 | 17 | `ux.js` | 773 | 35 | 8 | 7 | walk-up-and-use |
-| 18 | `metrics.js` | 1,813 | 24 | 10 | 0 | Key numbers |
-| 19 | `debts.js` | 383 | 14 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
+| 18 | `metrics.js` | 1,825 | 26 | 10 | 0 | Key numbers |
+| 19 | `debts.js` | 389 | 15 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
 | 20 | `import.js` | 268 | 6 | 9 | 0 | fill in spending from a bank or card statement file |
 | 21 | `compare.js` | 183 | 11 | 5 | 0 | Side by side |
 | 22 | `quick.js` | 256 | 11 | 2 | 0 | Quick math |
@@ -45,8 +45,8 @@ The browser loads the files in this order. A file can use all names from the fil
 | 33 | `back.js` | 248 | 13 | 3 | 6 | The welcome-back card |
 | 34 | `lever.js` | 550 | 15 | 7 | 0 | Which lever matters most |
 | 35 | `mult.js` | 411 | 13 | 9 | 0 | The multipliers board |
-| 36 | `ask.js` | 422 | 9 | 4 | 1 | one small question at a time |
-| 37 | `ask2.js` | 372 | 4 | 5 | 0 | the same one-small-question pattern as ask.js, carried to the next three places people get asked things |
+| 36 | `ask.js` | 421 | 9 | 4 | 1 | one small question at a time |
+| 37 | `ask2.js` | 376 | 9 | 5 | 0 | the same one-small-question pattern as ask.js, carried to the next three places people get asked things |
 | 38 | `sign.js` | 234 | 5 | 3 | 2 | Before you sign |
 | 39 | `owed.js` | 113 | 3 | 3 | 2 | What each debt costs you |
 | 40 | `study.js` | 492 | 13 | 5 | 0 | Student loan plans, side by side |
@@ -79,18 +79,14 @@ Each row shows one function, the file that defines it, and the later files that 
 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
-| `afterSharp` | `ui.js` | `ask2.js` | 1 |
 | `bkSheet` | `back.js` | `fork.js` | 1 |
 | `chartSheet` | `chart.js` | `together.js` | 1 |
 | `cpMoves` | `compare.js` | `drills.js` | 1 |
 | `cspMoneyRows` | `csp.js` | `roof.js` | 1 |
-| `dbOneBody` | `debts.js` | `ask2.js` | 1 |
 | `dbSheet` | `debts.js` | `owed.js` | 1 |
 | `fdSheet` | `drills.js` | `ideasz.js` | 1 |
 | `fogPct` | `engine2.js` | `know.js` | 1 |
 | `gamesSheet` | `games2.js` | `year.js` | 1 |
-| `knAskBody` | `metrics.js` | `ask2.js` | 1 |
-| `knOne` | `metrics.js` | `ask2.js` | 1 |
 | `l1Sheet` | `games.js` | `people.js` | 1 |
 | `ledRow` | `ui.js` | `smart.js` | 1 |
 | `lootText` | `games2.js` | `import.js` | 1 |
@@ -101,7 +97,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `partySheet` | `games.js` | `people.js` | 1 |
 | `plReady` | `planner.js` | `fold.js` | 1 |
 | `profStrip` | `profiles.js` | `planner.js` | 1 |
-| `sharpSheet` | `ui.js` | `ask2.js` | 1 |
 | `skillSheet` | `ui.js` | `connect.js` | 1 |
 
 ## 3. Functions with no caller

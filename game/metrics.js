@@ -1605,7 +1605,13 @@ function knBar(m) {
   const p = Math.max(0, Math.min(100, m.bar.p));
   return `<div class="kbar t-${knTone(m)}"><i style="width:${p}%"></i>${m.bar.marks.map(k => `<b style="left:${Math.min(100, k[0])}%"><u>${k[1]}</u></b>`).join("")}</div>`;
 }
+/* knAskBody(c, k) makes the question for one key number. knAskBodyBase() is the part from this file. */
 function knAskBody(c, k) {
+  const ask =
+    typeof knAskBodyAsk === "function" ? knAskBodyAsk(c, k) : null; /* ask2.js: one small question at a time */
+  return ask !== null ? ask : knAskBodyBase(c, k);
+}
+function knAskBodyBase(c, k) {
   const a = KN_ASK[k],
     cur = knGot(c, k),
     o = W.o || {},
@@ -1615,7 +1621,13 @@ function knAskBody(c, k) {
     lab = v => (a.pct ? v + "%" : money(v));
   return `<div class="tile stack ask" style="gap:8px"><b class="small">${esc(a.q)}</b><div class="tiny muted">${esc(a.help)}</div><div class="chips">${opts.map(v => `<button class="chip ${cur && cur.v === v ? "on" : ""}" data-a="knans" data-k="${k}" data-v="${v}">${lab(v)}</button>`).join("")}</div>${a.pct ? "" : W.pad === "ask_" + k ? `<div class="val">${money(o["ask_" + k] || 0)}</div>${keypad("ask_" + k)}<button class="primary wide" data-a="knans" data-k="${k}" data-v="typed">Use ${money(o["ask_" + k] || 0)}</button>` : `<button class="ghost slim" data-a="padopen" data-k="ask_${k}">Type the exact number</button>`}${(k === "debtPay" || k === "limit") && typeof dbSheet === "function" && (c.debts || []).some(x => x.amt > 0) ? `<button class="ghost slim" data-a="debtplan">Or fill in each debt, one at a time</button>` : ""}</div>`;
 }
+/* knOne() makes the sheet for one key number. knOneBase() is the part from this file. */
 function knOne() {
+  let h = knOneBase();
+  if (typeof knOneSaved === "function") h = knOneSaved(h); /* ask2.js: the line "Saved" after an answer */
+  return h;
+}
+function knOneBase() {
   const c = C(),
     M = knMetrics(c, D),
     m = M.find(x => x.id === W.id) || M[0],

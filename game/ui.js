@@ -1659,7 +1659,16 @@ function openSharp(qk) {
   W = { kind: "sharp", q: qk, i: 0, t: {}, pad: null, o: moneyO(C()) };
   sheet(sharpSheet);
 }
+/* THE SHEET "MAKE YOUR NUMBERS REAL".
+   sharpSheet() makes the full sheet. It calls each part by name. sharpSheetBase() is the part from this file. */
 function sharpSheet() {
+  /* ask2.js: the questions about the job and the accounts have their own form. */
+  const own = typeof sharpSheetAsk2 === "function" ? sharpSheetAsk2() : null;
+  if (own !== null) return own;
+  /* ask.js: one small question at a time. It uses sharpSheetBase() for the questions that it does not have. */
+  return typeof askSheet === "function" ? askSheet() : sharpSheetBase();
+}
+function sharpSheetBase() {
   const w = W,
     c = C(),
     k = w.q,
@@ -2635,7 +2644,13 @@ function openBest() {
     go("map");
   }
 }
+/* afterSharp(c) runs after the player makes one number real. afterSharpBase(c) is the part from this file. */
 function afterSharp(c) {
+  if (typeof afterSharpAsk === "function" && afterSharpAsk(c))
+    return; /* ask2.js: the sheet "Done" after one small question */
+  return afterSharpBase(c);
+}
+function afterSharpBase(c) {
   const n = sharpNext(c, todayISO());
   if (!c.placed && sharpPct(c) >= 100) {
     c.placed = true;

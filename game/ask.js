@@ -115,20 +115,20 @@ function askParts(o) {
 function askBtn(a, label, cls, v) {
   return `<button class="${cls || "ghost"} wide" data-a="${a}"${v != null ? ` data-v="${v}"` : ""}>${label}</button>`;
 }
-const ASK_OLD = sharpSheet;
+/* Part of sharpSheet() in ui.js. One small question at a time, for the questions in ASK. For all other questions, it returns sharpSheetBase(). */
 function askSheet() {
   const w = W,
     c = C(),
     k = w.q,
     A = ASK[k];
-  if (!A || !w.o) return ASK_OLD();
+  if (!A || !w.o) return sharpSheetBase();
   const rows = w.o[A.rows] || [],
     N = ASK_NONE[k];
   w.ask = true;
   w.idk = w.idk || {};
   if (w.kn0 === undefined) w.kn0 = askKnown(c);
   if (!rows.length) {
-    if (!N) return ASK_OLD();
+    if (!N) return sharpSheetBase();
     if (w.st === "look")
       return (
         head("Make your numbers real", SHARP_Q[k]) +
@@ -222,7 +222,6 @@ function askSheet() {
     })
   );
 }
-sharpSheet = askSheet;
 function askNext() {
   const w = W,
     c = C(),
