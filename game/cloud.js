@@ -356,16 +356,14 @@ function closeSheetCloud() {
   }
 }
 
-/* the menu says where your game is saved, and the backup sheet explains it */
-(() => {
-  const _menu = menuSheet;
-  menuSheet = function () {
-    return _menu().replace(
-      /(<div class="stack">)/,
-      `<div class="tile small row between"><span><span class="lamp ${CLOUD.st === "on" ? "green" : CLOUD.st === "off" ? "yellow" : "yellow"}" style="width:10px;height:10px;margin-right:6px"></span><span data-cloud>${esc(clStatus())}</span></span></div>$1`
-    );
-  };
-})();
+/* Part of menuSheet() in planner.js. Adds one line at the top that says where the game is saved. */
+function menuSheetCloud(h) {
+  return h.replace(
+    /(<div class="stack">)/,
+    `<div class="tile small row between"><span><span class="lamp ${CLOUD.st === "on" ? "green" : CLOUD.st === "off" ? "yellow" : "yellow"}" style="width:10px;height:10px;margin-right:6px"></span><span data-cloud>${esc(clStatus())}</span></span></div>$1`
+  );
+}
+
 function backupSheetCl() {
   return `<div class="banner small"><b>Your game saves itself to your account</b>, every time you tap. Open this page on another device while signed in and everyone is there. <span class="tiny muted" data-cloud>${esc(clStatus())}</span></div>`;
 }

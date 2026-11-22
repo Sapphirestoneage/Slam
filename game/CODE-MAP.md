@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,753. Top-level functions: 1072. Replaced functions: 10, in 10 places.
+Date: 2026-11-22. Files: 60. Lines: 46,757. Top-level functions: 1074. Replaced functions: 9, in 9 places.
 
 ## 1. Files in load order
 
@@ -24,8 +24,8 @@ The browser loads the files in this order. A file can use all names from the fil
 | 12 | `chart.js` | 1,291 | 13 | 6 | 0 | the Money Chart |
 | 13 | `profiles.js` | 115 | 6 | 4 | 1 | flip between people |
 | 14 | `smart.js` | 669 | 15 | 5 | 0 | every answer narrows what comes next |
-| 15 | `planner.js` | 1,247 | 54 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
-| 16 | `cloud.js` | 433 | 17 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
+| 15 | `planner.js` | 1,253 | 55 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
+| 16 | `cloud.js` | 431 | 18 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
 | 17 | `ux.js` | 773 | 35 | 8 | 7 | walk-up-and-use |
 | 18 | `metrics.js` | 1,825 | 26 | 10 | 0 | Key numbers |
 | 19 | `debts.js` | 389 | 15 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
@@ -85,7 +85,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `fdSheet` | `drills.js` | `ideasz.js` | 1 |
 | `fogPct` | `engine2.js` | `know.js` | 1 |
 | `gamesSheet` | `games2.js` | `year.js` | 1 |
-| `menuSheet` | `planner.js` | `cloud.js` | 1 |
 | `monthsAhead` | `ux.js` | `gig.js` | 1 |
 | `profStrip` | `profiles.js` | `planner.js` | 1 |
 | `skillSheet` | `ui.js` | `connect.js` | 1 |

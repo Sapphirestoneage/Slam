@@ -763,7 +763,13 @@ const MENU = [
   ["Rearrange Home", "dash", "act", "Move cards up, down or out of the way"],
   ["Flag this screen", "flag", "act", "Tell Eli something's off here"],
 ];
+/* menuSheet() makes the full menu. menuSheetBase() is the part from this file. */
 function menuSheet() {
+  let h = menuSheetBase();
+  if (typeof menuSheetCloud === "function") h = menuSheetCloud(h); /* cloud.js: where the game is saved */
+  return h;
+}
+function menuSheetBase() {
   const c = C(),
     t = todayISO(),
     due = c.lastDaily !== t || (c.payKnown && t >= c.payNext);
