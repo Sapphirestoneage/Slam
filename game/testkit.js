@@ -305,14 +305,6 @@ function tkChipSafe() {
     } catch (e) {}
     return r;
   };
-  const _s = sheet;
-  sheet = function () {
-    const r = _s.apply(this, arguments);
-    try {
-      tkChip();
-    } catch (e) {}
-    return r;
-  };
 })();
 if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] === "testkit"))
   MENU.splice(Math.max(0, MENU.length - 1), 0, [

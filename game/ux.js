@@ -385,10 +385,9 @@ const UX_NORES = [
   "menu",
   "people",
 ];
-const _sheet0 = sheet;
-sheet = function (fn) {
-  const was = !!SH;
-  _sheet0(fn);
+/* Part of sheet() in ui.js. "was" is true when a sheet was open before.
+   Records the action for "pick up where you left off", adds one step to the browser history, and draws the chips again. */
+function sheetUx(fn, was) {
   if (!was && UX_LAST && !G.demo && !UX_NORES.includes(UX_LAST.a) && ACT[UX_LAST.a]) {
     G.last = {
       tab,
@@ -407,7 +406,7 @@ sheet = function (fn) {
     } catch (e) {}
   }
   uxChip();
-};
+}
 /* Part of closeSheet() in ui.js. "was" is true when a sheet was open.
    Clears the note "pick up where you left off", goes one step back in the browser history, and draws the chips again. */
 function closeSheetUx(was) {
@@ -728,7 +727,7 @@ Object.assign(ACT, {
     try {
       tab = r.tab;
       W = r.W;
-      _sheet0(r.SH);
+      sheetBase(r.SH);
       render();
     } finally {
       UX_POP = false;

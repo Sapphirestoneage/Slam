@@ -1208,7 +1208,16 @@ function meTab() {
 }
 
 /* ---------- sheets ---------- */
+/* OPEN A SHEET.
+   sheet(fn) is the full function. fn returns the HTML of the sheet.
+   sheetBase(fn) opens the sheet and records nothing. ux.js uses it to go back to a sheet. */
 function sheet(fn) {
+  const was = !!SH;
+  sheetBase(fn);
+  if (typeof sheetUx === "function") sheetUx(fn, was); /* ux.js: the resume note, the browser history, the chips */
+  if (typeof tkChipSafe === "function") tkChipSafe(); /* testkit.js: the chip of a test task */
+}
+function sheetBase(fn) {
   SH = fn;
   drawSheet();
 }
