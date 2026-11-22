@@ -162,33 +162,6 @@ function imSheet() {
     `<button class="primary wide" data-a="imapply">Use these numbers</button>${pick("Add another file (a second card or account)")}${consent}${w.err ? `<div class="banner small">${esc(w.err)}</div>` : ""}`
   );
 }
-/* the file picker hands text to lootText; route it here when the import sheet is open */
-(() => {
-  const _l = typeof lootText === "function" ? lootText : null;
-  lootText = function (text) {
-    if (!W || W.kind !== "import") {
-      if (_l) _l(text);
-      return;
-    }
-    const rows = csvRows(text);
-    if (!rows.length) {
-      W.err = "That file didn't look like a statement. It needs columns for date, description and amount.";
-      drawSheet();
-      return;
-    }
-    W.err = null;
-    W.rows = (W.rows || []).concat(rows);
-    W.files = (W.files || 0) + 1;
-    if (W.files === 1) {
-      const c = C();
-      IM_CATS.forEach(x => {
-        const r = (c.spends || []).find(s => s.k === x[0]);
-        if (r && r.s) W.use[x[0]] = false;
-      });
-    }
-    drawSheet();
-  };
-})();
 Object.assign(ACT, {
   import2: () => {
     W = { kind: "import", rows: [], files: 0, over: {}, use: {} };
@@ -254,6 +227,28 @@ Object.assign(ACT, {
     closeSheet();
   },
 });
+/* Part of lootText() in games2.js. In the import sheet, reads the file as a bank or card statement. Returns true when it used the file. Returns false in all other sheets. */
+function lootTextImport(text) {
+  if (!W || W.kind !== "import") return false;
+  const rows = csvRows(text);
+  if (!rows.length) {
+    W.err = "That file didn't look like a statement. It needs columns for date, description and amount.";
+    drawSheet();
+    return true;
+  }
+  W.err = null;
+  W.rows = (W.rows || []).concat(rows);
+  W.files = (W.files || 0) + 1;
+  if (W.files === 1) {
+    const c = C();
+    IM_CATS.forEach(x => {
+      const r = (c.spends || []).find(s => s.k === x[0]);
+      if (r && r.s) W.use[x[0]] = false;
+    });
+  }
+  drawSheet();
+  return true;
+}
 /* Part of moneyTab() in ui.js. Adds the button that fills in the spending from a statement file. */
 function moneyTabImport(h) {
   const a = '<div class="card"><div class="row between"><h3>Money going out each month</h3>';

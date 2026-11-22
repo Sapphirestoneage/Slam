@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,752. Top-level functions: 1070. Replaced functions: 11, in 11 places.
+Date: 2026-11-22. Files: 60. Lines: 46,753. Top-level functions: 1072. Replaced functions: 10, in 10 places.
 
 ## 1. Files in load order
 
@@ -19,7 +19,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
 | 8 | `ui.js` | 6,472 | 215 | 136 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 621 | 22 | 12 | 0 | the screens for the games that are the data entry |
-| 10 | `games2.js` | 1,435 | 38 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
+| 10 | `games2.js` | 1,441 | 39 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 765 | 23 | 13 | 0 | the year |
 | 12 | `chart.js` | 1,291 | 13 | 6 | 0 | the Money Chart |
 | 13 | `profiles.js` | 115 | 6 | 4 | 1 | flip between people |
@@ -29,7 +29,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 17 | `ux.js` | 773 | 35 | 8 | 7 | walk-up-and-use |
 | 18 | `metrics.js` | 1,825 | 26 | 10 | 0 | Key numbers |
 | 19 | `debts.js` | 389 | 15 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
-| 20 | `import.js` | 268 | 6 | 9 | 0 | fill in spending from a bank or card statement file |
+| 20 | `import.js` | 263 | 7 | 9 | 0 | fill in spending from a bank or card statement file |
 | 21 | `compare.js` | 183 | 11 | 5 | 0 | Side by side |
 | 22 | `quick.js` | 256 | 11 | 2 | 0 | Quick math |
 | 23 | `reveal.js` | 236 | 8 | 2 | 2 | Meet your character |
@@ -85,7 +85,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | `fdSheet` | `drills.js` | `ideasz.js` | 1 |
 | `fogPct` | `engine2.js` | `know.js` | 1 |
 | `gamesSheet` | `games2.js` | `year.js` | 1 |
-| `lootText` | `games2.js` | `import.js` | 1 |
 | `menuSheet` | `planner.js` | `cloud.js` | 1 |
 | `monthsAhead` | `ux.js` | `gig.js` | 1 |
 | `profStrip` | `profiles.js` | `planner.js` | 1 |

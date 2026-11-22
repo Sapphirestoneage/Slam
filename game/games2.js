@@ -854,7 +854,13 @@ function subsSheet() {
     G2B("subsdone", S.length ? "Save these" : "I don't have any")
   );
 }
+/* lootText(text) receives the text of a file that the player gave. lootTextBase(text) is the part from this file. */
 function lootText(text) {
+  if (typeof lootTextImport === "function" && lootTextImport(text))
+    return; /* import.js: in the import sheet, the file is a statement */
+  lootTextBase(text);
+}
+function lootTextBase(text) {
   const cl = csvClues(text);
   if (!W || W.kind !== "subs") return;
   if (!cl) {
