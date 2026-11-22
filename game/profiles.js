@@ -1,5 +1,9 @@
 /* ===== profiles.js: flip between people. A household (money combined) or people you coach (kept apart). All of it lives on this device. ===== */
+/* profStrip() made a strip of buttons to go from one person to the next.
+   planner.js has the name button in the top bar. That button is the only switch now, and the strip is empty.
+   The lines below it run only while the page loads, before planner.js is there. */
 function profStrip() {
+  if (typeof topbarHTML === "function") return "";
   if (G.demo || G.chars.length < 2) return "";
   const c = C(),
     n = G.chars.length;

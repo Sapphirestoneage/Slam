@@ -960,10 +960,6 @@ function plReveal(w) {
   return `<details class="math plreveal"><summary><span class="plnew pop" data-fid="su:new">✓ ${esc(last)}</span></summary><div class="plk stack" style="gap:3px;padding:8px 10px"><div class="tiny muted">What the game knows so far</div>${ls.map(l => `<div class="tiny">✓ ${esc(l)}</div>`).join("")}</div></details>`;
 }
 
-/* one switcher only: the name button in the top bar */
-profStrip = function () {
-  return "";
-};
 /* Part of home() in ui.js. Adds one slim line that goes to the plan for today. */
 function homePlanLine(h) {
   const c = C();
