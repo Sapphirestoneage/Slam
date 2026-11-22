@@ -181,7 +181,8 @@ function askSheet() {
     key = askKey(k, i),
     st = w.sti === i ? w.st || "amt" : "amt",
     v = x.amt || 0,
-    top = `<div class="tiny muted">Question ${i + 1} of ${rows.length}</div><div class="tile"><div class="eyebrow">${esc(x.k)}</div><h2 style="margin:4px 0 0">${st === "rate" ? "Does this one charge 8% or more a year?" : A.q(x)}</h2></div>`,
+    top = (typeof allocBar === "function" ? allocBar(c, k, rows) : "") +
+      `<div class="tiny muted">Question ${i + 1} of ${rows.length}</div><div class="tile"><div class="eyebrow">${esc(x.k)}</div><h2 style="margin:4px 0 0">${st === "rate" ? "Does this one charge 8% or more a year?" : A.q(x)}</h2></div>`,
     back = i > 0 || st !== "amt" ? askBtn("askback", "Back one", "ghost slim") : "";
   w.sti = i;
   w.st = st;
@@ -288,6 +289,7 @@ function askFinish() {
     () =>
       head("Done", SHARP_Q[k]) +
       `<div class="tile stack" style="gap:6px"><b>What you just did</b><div class="small bkdid"><span class="bktick">✓</span><span>${real} of ${rows.length} ${rows.length === 1 ? "number" : "numbers"} here ${real === 1 ? "is" : "are"} real now, not a guess.</span></div>${left.length ? `<div class="small">Still a guess: ${left.map(x => esc(x.k)).join(", ")}. That is fine. Come back when you have it.</div>` : ""}</div>` +
+      (typeof allocBar === "function" ? allocBar(C(), k, null, { end: true }) : "") +
       `<div class="tile stack" style="gap:6px"><b>What that changed</b>${kn0 && kn1 && kn1.t === kn0.t && kn1.k !== kn0.k ? `<div class="small">You now know ${kn1.k} of ${kn1.t} things about your money. Before, it was ${kn0.k}.</div>` : ""}<div class="small">Every screen that uses ${SHARP_Q[k].toLowerCase()} now runs on your real ${real === 1 ? "number" : "numbers"}.</div></div>` +
       (nx
         ? `<div class="tile small"><b>What comes next:</b> ${SHARP_Q[nx]}. One small question at a time, same as this.</div>` +

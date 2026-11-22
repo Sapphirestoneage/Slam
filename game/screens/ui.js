@@ -479,7 +479,9 @@ function replaceSnap(c, ver) {
 }
 /* every change to the ledger goes through here, so the era, badges and history stay in step */
 function afterMoney(c, prevRealm, verified) {
-  syncAll(c);
+  /* alloc.js: the guessed lines fill the gap to the first guess, then the totals are summed */
+  if (typeof allocFillAll === "function") allocFillAll(c);
+  else syncAll(c);
   const raw = derive(Object.assign({}, c, { confEra: null })).rawEra;
   if (!c.placed) {
     c.confEra = raw;
@@ -1113,7 +1115,7 @@ function moneyTabBase() {
     dk = detailKeys(c);
   const tot = (v, rows) => `<b class="${rows.every(x => x.s) ? "" : "guess"}">${money(v)}</b>`;
   const sec = (title, key, rows, total, addLabel) =>
-    `<div class="card"><div class="row between"><h3>${title}</h3>${tot(total, rows)}</div><div class="stack" style="margin-top:8px">${rows.map((x, i) => ledRow(key, i, x)).join("") || (typeof UX_ON !== "undefined" && UX_ON ? emptyState(key) : `<div class="small muted">Nothing here.</div>`)}${addLabel ? `<button class="ghost slim" data-a="rowadd" data-v="${key}">${addLabel}</button>` : ""}</div></div>`;
+    `<div class="card"><div class="row between"><h3>${title}</h3>${tot(total, rows)}</div>${typeof allocBar === "function" ? allocBar(c, ALLOC_BY_ROWS[key], null, { slim: true, end: true }) : ""}<div class="stack" style="margin-top:8px">${rows.map((x, i) => ledRow(key, i, x)).join("") || (typeof UX_ON !== "undefined" && UX_ON ? emptyState(key) : `<div class="small muted">Nothing here.</div>`)}${addLabel ? `<button class="ghost slim" data-a="rowadd" data-v="${key}">${addLabel}</button>` : ""}</div></div>`;
   const prow = (label, val, key) =>
     `<button class="rowbtn" data-a="detail" data-v="${key}"><span>${label}</span><span class="row"><b class="${val ? "" : "guess"}">${val || "Tap to answer"}</b><span class="caret">›</span></span></button>`;
   return `<div class="stack"><h1>Money</h1><div class="small muted">Every number the game uses lives here. Tap any line to change it. It updates everywhere at once. Faded numbers are guesses that don't count yet.</div>
@@ -1124,7 +1126,7 @@ function moneyTabBase() {
  ${c.debt > 0 ? `<button class="ghost wide" data-a="flow" data-v="pay">Log a debt payment</button>` : ""}
  ${sec("Money coming in each month", "incs", c.incs, c.take, "Add another source")}
  ${c.steady !== "Steady" ? `<button class="rowbtn" data-a="rowedit" data-k="low" data-v="0"><span>In a low month${c.sharp.low ? "" : `<div class="tiny muted">Guess · tap to make it exact</div>`}</span><span class="row"><b class="${c.sharp.low ? "" : "guess"}">${money(c.low)}</b><span class="caret">›</span></span></button>` : ""}
- <div class="card"><div class="row between"><h3>Money going out each month</h3>${tot(c.spend, c.spends)}</div><div class="stack" style="margin-top:8px">${(() => {
+ <div class="card"><div class="row between"><h3>Money going out each month</h3>${tot(c.spend, c.spends)}</div>${typeof allocBar === "function" ? allocBar(c, "spend", null, { slim: true, end: true }) : ""}<div class="stack" style="margin-top:8px">${(() => {
    const ms = monthSpent(c, todayISO().slice(0, 7));
    return c.spends
      .map(
