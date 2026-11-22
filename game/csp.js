@@ -682,30 +682,25 @@ function moneyTabPlanRows(h) {
   }
 }
 
-/* coach view: each person's score, only when it is a real one */
-(() => {
-  if (typeof coachSheet !== "function") return;
-  const _cs = coachSheet;
-  coachSheet = function () {
-    _cs();
-    const f = SH;
-    if (typeof f !== "function") return;
-    const hd = head("Coach view", "Session prep");
-    sheet(() => {
-      const h = f(),
-        rows = G.chars
-          .map(c => {
-            const A = audCalc(c);
-            return A.score == null
-              ? ""
-              : `<div class="row between small"><span><b>${esc(c.name)}</b>${A.low ? ": lowest part is " + esc(A.low.n.toLowerCase()) : ""}</span><span class="muted">${A.score.toFixed(1)} of 10</span></div>`;
-          })
-          .join("");
-      return rows && h.indexOf(hd) === 0
-        ? hd +
-            `<div class="tile stack cpcoach" style="gap:4px"><div class="small"><b>Money audit score</b></div>${rows}</div>` +
-            h.slice(hd.length)
-        : h;
-    });
-  };
-})();
+/* Part of coachSheet() in ui.js. Opens the coach view again, with the money audit score of each person below the title. Only real scores show. */
+function coachSheetAudit() {
+  const f = SH;
+  if (typeof f !== "function") return;
+  const hd = head("Coach view", "Session prep");
+  sheet(() => {
+    const h = f(),
+      rows = G.chars
+        .map(c => {
+          const A = audCalc(c);
+          return A.score == null
+            ? ""
+            : `<div class="row between small"><span><b>${esc(c.name)}</b>${A.low ? ": lowest part is " + esc(A.low.n.toLowerCase()) : ""}</span><span class="muted">${A.score.toFixed(1)} of 10</span></div>`;
+        })
+        .join("");
+    return rows && h.indexOf(hd) === 0
+      ? hd +
+          `<div class="tile stack cpcoach" style="gap:4px"><div class="small"><b>Money audit score</b></div>${rows}</div>` +
+          h.slice(hd.length)
+      : h;
+  });
+}

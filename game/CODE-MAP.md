@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,603. Top-level functions: 996. Replaced functions: 48, in 56 places.
+Date: 2026-11-22. Files: 60. Lines: 46,605. Top-level functions: 999. Replaced functions: 47, in 54 places.
 
 ## 1. Files in load order
 
@@ -17,7 +17,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 5 | `engine.js` | 3,823 | 121 | 0 | 0 | SLAM the Game: engine |
 | 6 | `engine2.js` | 378 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
-| 8 | `ui.js` | 6,375 | 201 | 138 | 2 | SLAM the Game: screens |
+| 8 | `ui.js` | 6,383 | 202 | 138 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 609 | 21 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,435 | 38 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
 | 11 | `year.js` | 757 | 22 | 13 | 0 | the year |
@@ -57,8 +57,8 @@ The browser loads the files in this order. A file can use all names from the fil
 | 45 | `home.js` | 119 | 4 | 0 | 5 | put the game on your home screen |
 | 46 | `tidy.js` | 164 | 7 | 3 | 0 | the fixes from the usability audit, applied to every screen at once instead of one screen at a time |
 | 47 | `addon.js` | 606 | 29 | 6 | 15 | extras, part two |
-| 48 | `fork.js` | 577 | 16 | 13 | 5 | Fork Theory |
-| 49 | `csp.js` | 712 | 23 | 12 | 1 | two ways to see a whole month of money at a glance |
+| 48 | `fork.js` | 576 | 17 | 13 | 5 | Fork Theory |
+| 49 | `csp.js` | 707 | 24 | 12 | 1 | two ways to see a whole month of money at a glance |
 | 50 | `ideas.js` | 1,094 | 20 | 5 | 1 | the workshop behind "Famous money ideas" |
 | 51 | `ideas2.js` | 771 | 2 | 2 | 0 | Part 1, ideas 9 to 16 |
 | 52 | `ideas3.js` | 1,095 | 1 | 1 | 0 | Part 2 |
@@ -79,7 +79,6 @@ Each row shows one function, the file that defines it, and the later files that 
 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
-| `coachSheet` | `ui.js` | `fork.js`, `csp.js` | 2 |
 | `finishSetup` | `ui.js` | `smart.js`, `planner.js` | 2 |
 | `movesSheet` | `ui.js` | `compare.js`, `drills.js` | 2 |
 | `msBoard` | `missions.js` | `connect.js`, `fold.js` | 2 |

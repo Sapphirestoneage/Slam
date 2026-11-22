@@ -442,29 +442,6 @@ function homeForkRow(h) {
     } catch (e) {}
     return _ds(t);
   };
-  /* coach view: each person's load and biggest fork */
-  const _cs = coachSheet;
-  coachSheet = function () {
-    _cs();
-    const f = SH;
-    if (typeof f !== "function") return;
-    const hd = head("Coach view", "Session prep");
-    sheet(() => {
-      const h = f(),
-        rows = G.chars
-          .filter(c => fkHas(c))
-          .map(c => {
-            const x = fkX(c);
-            return `<div class="row between small"><span><b>${esc(c.name)}</b>${x.big ? ": biggest is " + esc(fkName(x.big)) : ""}</span><span class="${fkRatio(c) >= 0.7 ? "fkhot" : "muted"}">${fkLoad(c)} of ${x.lim}</span></div>`;
-          })
-          .join("");
-      return rows && h.indexOf(hd) === 0
-        ? hd +
-            `<div class="tile stack" style="gap:4px"><div class="tiny muted">Fork load, from each person's last fork check</div>${rows}</div>` +
-            h.slice(hd.length)
-        : h;
-    });
-  };
   /* since last time, and the year view */
   const fkThen = (c, d) => {
     const hs = fkX(c).hist.filter(h => h.d <= d);
@@ -506,6 +483,28 @@ function homeForkRow(h) {
     };
   }
 })();
+/* Part of coachSheet() in ui.js. Opens the coach view again, with the fork load and the largest fork of each person below the title. */
+function coachSheetForks() {
+  const f = SH;
+  if (typeof f !== "function") return;
+  const hd = head("Coach view", "Session prep");
+  sheet(() => {
+    const h = f(),
+      rows = G.chars
+        .filter(c => fkHas(c))
+        .map(c => {
+          const x = fkX(c);
+          return `<div class="row between small"><span><b>${esc(c.name)}</b>${x.big ? ": biggest is " + esc(fkName(x.big)) : ""}</span><span class="${fkRatio(c) >= 0.7 ? "fkhot" : "muted"}">${fkLoad(c)} of ${x.lim}</span></div>`;
+        })
+        .join("");
+    return rows && h.indexOf(hd) === 0
+      ? hd +
+          `<div class="tile stack" style="gap:4px"><div class="tiny muted">Fork load, from each person's last fork check</div>${rows}</div>` +
+          h.slice(hd.length)
+      : h;
+  });
+}
+
 /* Part of nextStep() in ui.js. At the fork limit the game gives only one thing, and one plain line. Returns null below the limit. */
 function nextStepFork(c) {
   try {

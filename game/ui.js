@@ -2302,7 +2302,15 @@ function wrappedSheet() {
   );
 }
 
+/* THE COACH VIEW.
+   coachSheet() opens the full sheet. It calls each part by name. Each part opens the sheet again with one more block at the top.
+   coachSheetBase() is the part from this file. */
 function coachSheet() {
+  coachSheetBase();
+  if (typeof coachSheetForks === "function") coachSheetForks(); /* fork.js: the fork load of each person */
+  if (typeof coachSheetAudit === "function") coachSheetAudit(); /* csp.js: the money audit score of each person */
+}
+function coachSheetBase() {
   const t = todayISO();
   sheet(
     () =>
