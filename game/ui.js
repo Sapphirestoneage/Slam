@@ -475,7 +475,17 @@ function markDay(c) {
   c.streak = c.lastDaily === addDays(t, -1) ? c.streak + 1 : 1;
   c.lastDaily = t;
 }
+/* THE NEXT STEP: the one thing that the game tells the player to do now.
+   nextStep(c, d) is the full function. It calls each part by name.
+   nextStepBase(c, d) is the part from this file. */
 function nextStep(c, d) {
+  let r = typeof nextStepFork === "function" ? nextStepFork(c) : null; /* fork.js: at the fork limit, only one thing */
+  if (r === null && typeof nextStepPayday === "function") r = nextStepPayday(c); /* ux.js: on payday, payday is first */
+  if (r === null) r = nextStepBase(c, d);
+  if (typeof nextStepStar === "function") r = nextStepStar(c, d, r); /* eras.js: a key moment that the player reached */
+  return r;
+}
+function nextStepBase(c, d) {
   const t = todayISO(),
     bm = bestMove(c, d, t);
   if (c.gentle && !c.gwin && !G.demo)

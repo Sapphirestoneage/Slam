@@ -425,22 +425,6 @@ function homeForkRow(h) {
   return h;
 }
 (() => {
-  /* at the limit the game backs off: one thing, and a plain line */
-  const _ns = nextStep;
-  nextStep = function (c, d) {
-    try {
-      if (c && !G.demo && fkFull(c)) {
-        const p = fkPullList(c)[0];
-        return {
-          t: p ? p.t : "Rest. Nothing is due from you here",
-          s: "Everything else can wait. You're full right now.",
-          a: "fkopen",
-          l: "Open my forks",
-        };
-      }
-    } catch (e) {}
-    return _ns(c, d);
-  };
   /* the daily check-in asks about forks instead of a 1-to-5 score */
   const FK_Q = q;
   q = function (label, inner, help) {
@@ -522,6 +506,22 @@ function homeForkRow(h) {
     };
   }
 })();
+/* Part of nextStep() in ui.js. At the fork limit the game gives only one thing, and one plain line. Returns null below the limit. */
+function nextStepFork(c) {
+  try {
+    if (c && !G.demo && fkFull(c)) {
+      const p = fkPullList(c)[0];
+      return {
+        t: p ? p.t : "Rest. Nothing is due from you here",
+        s: "Everything else can wait. You're full right now.",
+        a: "fkopen",
+        l: "Open my forks",
+      };
+    }
+  } catch (e) {}
+  return null;
+}
+
 /* Part of planTab() in planner.js. At the fork limit, this short screen replaces the plan. Returns null below the limit. */
 function planTabForkFull() {
   const c = C();

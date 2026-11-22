@@ -1039,25 +1039,20 @@ if (typeof NV_INFO !== "undefined") {
 }
 if (typeof MENU !== "undefined")
   MENU.push(["Which account first", "acwhy", "act", "Roth, traditional, HSA or a regular account, and why"]);
-/* when the numbers for the next era are there and only its key moment is missing, that is the one thing to do */
-(() => {
-  if (typeof nextStep !== "function") return;
-  const _ns = nextStep;
-  nextStep = function (c, d) {
-    const r = _ns(c, d);
-    try {
-      if (d && d.starWait >= 6 && !(typeof fkFull === "function" && fkFull(c))) {
-        const s = ES.find(q => q.era === d.starWait && q.star);
-        if (s)
-          return {
-            t: "★ " + s.n,
-            s: "Your numbers are there. This key moment opens " + ERAS[s.era].n + ".",
-            a: "node",
-            v: s.auto ? (s.era === 8 ? (esX(c).a.wm ? "f_pay" : "f_method") : s.id) : s.id,
-            l: "Open it",
-          };
-      }
-    } catch (e) {}
-    return r;
-  };
-})();
+/* Part of nextStep() in ui.js. r is the next step so far. When the numbers reach a key moment (a star step) of era 6 or later, that key moment becomes the next step. */
+function nextStepStar(c, d, r) {
+  try {
+    if (d && d.starWait >= 6 && !(typeof fkFull === "function" && fkFull(c))) {
+      const s = ES.find(q => q.era === d.starWait && q.star);
+      if (s)
+        return {
+          t: "★ " + s.n,
+          s: "Your numbers are there. This key moment opens " + ERAS[s.era].n + ".",
+          a: "node",
+          v: s.auto ? (s.era === 8 ? (esX(c).a.wm ? "f_pay" : "f_method") : s.id) : s.id,
+          l: "Open it",
+        };
+    }
+  } catch (e) {}
+  return r;
+}

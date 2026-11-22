@@ -76,13 +76,12 @@ const withHead = h => {
   const th = tabHead();
   return h.replace('<div class="stack">', () => '<div class="stack">' + th);
 };
-/* Home: the glance and the one thing. Payday comes first when it's payday. */
-const _nextStep0 = nextStep;
-nextStep = function (c, d) {
+/* Part of nextStep() in ui.js. On payday, the next step is the paycheck split. Returns null on all other days. */
+function nextStepPayday(c) {
   if (!G.demo && c.placed && c.payKnown && todayISO() >= c.payNext && !(c.gentle && !c.gwin))
     return { t: "It's payday", s: "Split it in a few taps.", a: "payday", l: "Split my paycheck" };
-  return _nextStep0(c, d);
-};
+  return null;
+}
 var UX_NOSAMPLE = true;
 function homeQuad(c, d) {
   const ns = nextStep(c, d),
