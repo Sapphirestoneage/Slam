@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,484. Top-level functions: 916. Replaced functions: 61, in 113 places.
+Date: 2026-11-22. Files: 60. Lines: 46,507. Top-level functions: 917. Replaced functions: 61, in 113 places.
 
 ## 1. Files in load order
 
@@ -25,8 +25,8 @@ The browser loads the files in this order. A file can use all names from the fil
 | 13 | `profiles.js` | 103 | 5 | 4 | 1 | flip between people |
 | 14 | `smart.js` | 671 | 13 | 5 | 0 | every answer narrows what comes next |
 | 15 | `planner.js` | 1,219 | 44 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
-| 16 | `cloud.js` | 420 | 14 | 1 | 11 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
-| 17 | `ux.js` | 774 | 16 | 8 | 7 | walk-up-and-use |
+| 16 | `cloud.js` | 441 | 15 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
+| 17 | `ux.js` | 776 | 16 | 8 | 7 | walk-up-and-use |
 | 18 | `metrics.js` | 1,816 | 23 | 10 | 0 | Key numbers |
 | 19 | `debts.js` | 386 | 13 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
 | 20 | `import.js` | 271 | 5 | 9 | 0 | fill in spending from a bank or card statement file |

@@ -587,9 +587,11 @@ render = function () {
     if (!document.getElementById("uxsaved")) {
       const s = document.createElement("div");
       s.id = "uxsaved";
-      s.textContent = "Saved ✓";
       document.body.appendChild(s);
     }
+    /* the sample game is not saved, so the chip must not say "Saved" */
+    const sv = document.getElementById("uxsaved");
+    if (sv) sv.textContent = G.demo ? "Sample · not saved" : "Saved ✓";
   }
   uxChip();
 };

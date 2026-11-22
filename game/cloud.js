@@ -28,6 +28,8 @@ function clAgo(ms) {
         : Math.round(s / 3600) + " hr ago";
 }
 function clStatus() {
+  /* the sample game is never saved, so the status must not say "Saved" while it is open */
+  if (G && G.demo && CLOUD.db) return "Sample game · not saved. Make your own character to save it to your account";
   return CLOUD.st === "on"
     ? "Saved to your account" + (CLOUD.at ? " · " + clAgo(CLOUD.at) : "")
     : CLOUD.st === "connecting"
@@ -291,6 +293,8 @@ async function clStart() {
     } else {
       CLOUD.st = "on";
       if (!G.demo) clPush();
+      /* signed in, nothing saved yet, and only the sample game on this device: start the player's own game, one time per account */
+      else clFirstGame();
     }
     try {
       const ibRef = CLOUD.db.collection("data/users/" + CLOUD.uid).doc("slam_inbox"),
@@ -415,5 +419,22 @@ if (typeof window !== "undefined" && document && document.getElementById && docu
     });
     window.addEventListener("focus", () => clCheck());
     window.addEventListener("pageshow", () => clCheck());
+  } catch (e) {}
+}
+
+/* A new account opens on the three sample people, and the sample game never saves.
+   So the first time an account has no saved game, open setup for the player's own game.
+   One time per account: if the player closes setup, the sample stays and Home still offers "Make your own character". */
+function clFirstGame() {
+  try {
+    const k = "slam_first_" + CLOUD.uid;
+    if (localStorage.getItem(k)) return;
+    localStorage.setItem(k, "1");
+    clPaint();
+    setTimeout(() => {
+      try {
+        if (G.demo && !SH && typeof openSetup === "function") openSetup("new");
+      } catch (e) {}
+    }, 300);
   } catch (e) {}
 }
