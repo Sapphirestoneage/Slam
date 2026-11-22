@@ -441,16 +441,6 @@ function homeForkRow(h) {
     } catch (e) {}
     return _ns(c, d);
   };
-  const _pt = planTab;
-  planTab = function () {
-    const c = C();
-    if (G.demo || !fkFull(c)) return _pt();
-    const p = fkPullList(c)[0];
-    return (
-      (typeof tabHead === "function" ? tabHead() : "") +
-      `<div class="stack"><div class="tile stack" style="gap:6px"><div class="row between small"><b>Forks</b><span class="fkhot">You're full right now</span></div>${fkBar(c)}</div>${p ? fkPullCard(c, p) : `<div class="tile small">Nothing to do here today.</div>`}<div class="tile small"><b>Everything else can wait.</b> You're full right now. Your other steps are safe and come back when your load drops.</div><button class="ghost wide slim" data-a="fork">Check my forks again</button></div>`
-    );
-  };
   /* the daily check-in asks about forks instead of a 1-to-5 score */
   const FK_Q = q;
   q = function (label, inner, help) {
@@ -532,6 +522,17 @@ function homeForkRow(h) {
     };
   }
 })();
+/* Part of planTab() in planner.js. At the fork limit, this short screen replaces the plan. Returns null below the limit. */
+function planTabForkFull() {
+  const c = C();
+  if (G.demo || !fkFull(c)) return null;
+  const p = fkPullList(c)[0];
+  return (
+    (typeof tabHead === "function" ? tabHead() : "") +
+    `<div class="stack"><div class="tile stack" style="gap:6px"><div class="row between small"><b>Forks</b><span class="fkhot">You're full right now</span></div>${fkBar(c)}</div>${p ? fkPullCard(c, p) : `<div class="tile small">Nothing to do here today.</div>`}<div class="tile small"><b>Everything else can wait.</b> You're full right now. Your other steps are safe and come back when your load drops.</div><button class="ghost wide slim" data-a="fork">Check my forks again</button></div>`
+  );
+}
+
 Object.assign(GLOSS, {
   forks: [
     "Forks",

@@ -178,10 +178,10 @@ meTab = function () {
 function nextTab() {
   return withHead(mapTab());
 }
-const _plan0 = planTab;
-planTab = function () {
+/* Part of planTab() in planner.js. Adds the tab title, the button "The next few months" and the button "See the big picture". */
+function planTabHead(h) {
   return withHead(
-    _plan0().replace(
+    h.replace(
       /(<div class="seg plseg">[\s\S]*?<\/div>)/,
       m => m + `<button class="ghost slim wide" data-a="months">The next few months ›</button>`
     )
@@ -189,7 +189,7 @@ planTab = function () {
     /<\/div>\s*$/,
     `<button class="ghost wide" data-a="tab" data-v="map">See the big picture</button><div class="tiny muted" style="text-align:center">The map, the eras and the skill trees. Optional.</div></div>`
   );
-};
+}
 function goalsTab() {
   const c = C(),
     d = D,

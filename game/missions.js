@@ -291,20 +291,23 @@ Object.assign(ACT, {
     render();
   },
 });
-(() => {
-  const _pt = planTab;
-  planTab = function () {
-    const c = C(),
-      d = D || derive(c);
-    if (msSync(c, d)) save();
-    const h = _pt();
-    if (G.demo || !c.led) return h;
-    const th = typeof tabHead === "function" ? tabHead() : "",
-      b = msBoard(c, d);
-    if (th && h.indexOf(th) >= 0) return h.replace(th, () => th + b);
-    return h.replace('<div class="stack">', () => '<div class="stack">' + b);
-  };
-})();
+/* Part of planTab() in planner.js, step 1 of 2. Brings the missions up to date, and saves when something changed.
+   Returns the profile (c) and its numbers (d). planTabMissions() uses the two values. */
+function planTabMissionsSync() {
+  const c = C(),
+    d = D || derive(c);
+  if (msSync(c, d)) save();
+  return { c, d };
+}
+/* Part of planTab() in planner.js, step 2 of 2. Adds the mission board below the tab title. */
+function planTabMissions(h, c, d) {
+  if (G.demo || !c.led) return h;
+  const th = typeof tabHead === "function" ? tabHead() : "",
+    b = msBoard(c, d);
+  if (th && h.indexOf(th) >= 0) return h.replace(th, () => th + b);
+  return h.replace('<div class="stack">', () => '<div class="stack">' + b);
+}
+
 Object.assign(GLOSS, {
   mission: [
     "Mission",

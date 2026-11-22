@@ -299,19 +299,16 @@ function igPlanBlock(c, d) {
     h += `<button class="rowbtn igplan" data-a="idea" data-v="${s.id}"><span style="min-width:0"><span class="tiny muted">A famous idea that fits where you are</span><div><b>${esc(s.n)}</b></div><div class="tiny muted">From: ${esc(s.by)}</div></span><span class="fkgo">Open</span></button>`;
   return h;
 }
-(() => {
-  if (typeof planTab !== "function") return;
-  const _pt = planTab;
-  planTab = function () {
-    const h = _pt();
-    try {
-      const b = igPlanBlock(C(), D || derive(C()));
-      return b ? h.replace(/<\/div>\s*$/, () => b + "</div>") : h;
-    } catch (e) {
-      return h;
-    }
-  };
-})();
+/* Part of planTab() in planner.js. Adds the block for the famous money ideas at the bottom. */
+function planTabIdeas(h) {
+  try {
+    const b = igPlanBlock(C(), D || derive(C()));
+    return b ? h.replace(/<\/div>\s*$/, () => b + "</div>") : h;
+  } catch (e) {
+    return h;
+  }
+}
+
 /* the two drill formats on the list are one tap from the fire drills */
 (() => {
   if (typeof fdSheet !== "function") return;

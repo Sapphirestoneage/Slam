@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,527. Top-level functions: 941. Replaced functions: 59, in 94 places.
+Date: 2026-11-22. Files: 60. Lines: 46,548. Top-level functions: 949. Replaced functions: 58, in 89 places.
 
 ## 1. Files in load order
 
@@ -24,9 +24,9 @@ The browser loads the files in this order. A file can use all names from the fil
 | 12 | `chart.js` | 1,284 | 12 | 6 | 0 | the Money Chart |
 | 13 | `profiles.js` | 103 | 5 | 4 | 1 | flip between people |
 | 14 | `smart.js` | 671 | 13 | 5 | 0 | every answer narrows what comes next |
-| 15 | `planner.js` | 1,215 | 45 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
+| 15 | `planner.js` | 1,234 | 47 | 18 | 3 | Rocket Money style navigation (a bottom bar plus a menu for everything else), a study-planner calendar for money tasks, a before and after payday chec... |
 | 16 | `cloud.js` | 441 | 15 | 1 | 13 | the game saves to your Claude account by itself, so it follows you from phone to laptop and survives the app clearing its storage |
-| 17 | `ux.js` | 778 | 19 | 8 | 7 | walk-up-and-use |
+| 17 | `ux.js` | 778 | 20 | 8 | 7 | walk-up-and-use |
 | 18 | `metrics.js` | 1,813 | 24 | 10 | 0 | Key numbers |
 | 19 | `debts.js` | 383 | 14 | 4 | 0 | finish the debt picture by tap (rate, monthly payment, card limit, how much it bugs you), then three payoff plans side by side |
 | 20 | `import.js` | 268 | 6 | 9 | 0 | fill in spending from a bank or card statement file |
@@ -39,7 +39,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 27 | `know.js` | 193 | 9 | 6 | 0 | What you already know |
 | 28 | `fair.js` | 257 | 10 | 6 | 1 | Sharing costs fairly |
 | 29 | `values.js` | 202 | 5 | 8 | 1 | Is my money going where I want? Three short steps, all taps |
-| 30 | `missions.js` | 319 | 7 | 4 | 0 | The mission board |
+| 30 | `missions.js` | 322 | 9 | 4 | 0 | The mission board |
 | 31 | `connect.js` | 370 | 17 | 10 | 0 | How it all connects |
 | 32 | `house.js` | 479 | 14 | 9 | 2 | Our household |
 | 33 | `back.js` | 244 | 11 | 3 | 6 | The welcome-back card |
@@ -52,12 +52,12 @@ The browser loads the files in this order. A file can use all names from the fil
 | 40 | `study.js` | 492 | 13 | 5 | 0 | Student loan plans, side by side |
 | 41 | `together.js` | 192 | 5 | 4 | 1 | the Money Chart for more than two |
 | 42 | `people.js` | 310 | 5 | 4 | 0 | Your people, one layer at a time |
-| 43 | `fold.js` | 53 | 1 | 2 | 1 | one list on Next Steps |
+| 43 | `fold.js` | 54 | 2 | 2 | 1 | one list on Next Steps |
 | 44 | `nav.js` | 460 | 9 | 2 | 0 | the same four things on every screen |
 | 45 | `home.js` | 119 | 4 | 0 | 5 | put the game on your home screen |
 | 46 | `tidy.js` | 162 | 6 | 3 | 0 | the fixes from the usability audit, applied to every screen at once instead of one screen at a time |
 | 47 | `addon.js` | 608 | 26 | 6 | 15 | extras, part two |
-| 48 | `fork.js` | 576 | 14 | 13 | 5 | Fork Theory |
+| 48 | `fork.js` | 577 | 15 | 13 | 5 | Fork Theory |
 | 49 | `csp.js` | 712 | 23 | 12 | 1 | two ways to see a whole month of money at a glance |
 | 50 | `ideas.js` | 1,094 | 20 | 5 | 1 | the workshop behind "Famous money ideas" |
 | 51 | `ideas2.js` | 771 | 2 | 2 | 0 | Part 1, ideas 9 to 16 |
@@ -65,7 +65,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 53 | `ideas4.js` | 967 | 2 | 3 | 0 | Part 2 |
 | 54 | `ideas5.js` | 1,297 | 2 | 0 | 0 | Part 2 |
 | 55 | `roof.js` | 263 | 6 | 1 | 1 | one roof for the best-known ideas in personal finance |
-| 56 | `ideasz.js` | 331 | 5 | 3 | 3 | loads after every ideas file |
+| 56 | `ideasz.js` | 328 | 6 | 3 | 3 | loads after every ideas file |
 | 57 | `dep.js` | 238 | 10 | 2 | 5 | "What depends on what" |
 | 58 | `eras.js` | 1,064 | 16 | 6 | 6 | real steps for the later eras, and one account line that feeds back into the early ones |
 | 59 | `testkit.js` | 328 | 8 | 8 | 4 | Test with a friend |
@@ -80,7 +80,6 @@ Each row shows one function, the file that defines it, and the later files that 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
 | `closeSheet` | `ui.js` | `cloud.js`, `ux.js`, `nav.js`, `addon.js`, `testkit.js` | 5 |
-| `planTab` | `planner.js` | `ux.js`, `missions.js`, `fold.js`, `fork.js`, `ideasz.js` | 5 |
 | `drawSheet` | `ui.js` | `ux.js`, `nav.js`, `tidy.js`, `addon.js` | 4 |
 | `profSheet` | `profiles.js` | `moneylog.js`, `fair.js`, `house.js`, `addon.js` | 4 |
 | `render` | `ui.js` | `planner.js`, `ux.js`, `dep.js`, `testkit.js` | 4 |

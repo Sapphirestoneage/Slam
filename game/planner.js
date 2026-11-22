@@ -427,7 +427,26 @@ function plPayStrip(c) {
     dd = daysBetween(t, pd.pay);
   return `<button class="rowbtn plpaystrip" data-a="${pp ? "plpre" : "plpre"}"><span><span class="tiny muted">Next payday · ${dd <= 0 ? "today" : dd === 1 ? "tomorrow" : "in " + dd + " days"}</span><div><b>${pp ? "Planned: " + pp.jobs.map(j => j.k.toLowerCase()).join(", ") : "What's this paycheck for?"}</b></div></span><span class="tiny">${pp ? "Change" : "Plan it ›"}</span></button>`;
 }
+/* NEXT STEPS TAB (the plan).
+   planTab() makes the full tab. It calls each part by name, in the load order of the files.
+   planTabBase() is the part from this file. */
 function planTab() {
+  /* fork.js: at the fork limit, one short screen replaces the plan. */
+  let h = typeof planTabForkFull === "function" ? planTabForkFull() : null;
+  /* fold.js: while the plan is made, the list "ready to plan" is hidden when the mission board shows the same steps. */
+  if (h === null) h = typeof planTabFold === "function" ? planTabFold(planTabMain) : planTabMain();
+  if (typeof planTabIdeas === "function") h = planTabIdeas(h); /* ideasz.js: the block for the famous money ideas */
+  return h;
+}
+function planTabMain() {
+  /* missions.js, step 1 of 2: bring the missions up to date before the plan is made. */
+  const ms = typeof planTabMissionsSync === "function" ? planTabMissionsSync() : null;
+  let h = planTabBase();
+  if (typeof planTabHead === "function") h = planTabHead(h); /* ux.js: the tab title, two more buttons */
+  if (ms) h = planTabMissions(h, ms.c, ms.d); /* missions.js, step 2 of 2: the mission board */
+  return h;
+}
+function planTabBase() {
   const c = C();
   if (G.demo) plDemoSeed(c);
   if (plTidy(c)) save();

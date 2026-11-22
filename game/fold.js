@@ -12,16 +12,6 @@ function fdRest(c, d) {
   return FD_READY(c).filter(p => !(S && (p.t === S.t || (p.a === S.a && String(p.v) === String(S.v)))));
 }
 (() => {
-  const _pt = planTab;
-  planTab = function () {
-    const c = C();
-    FDX.hide = !G.demo && !!c.led && typeof msBoard === "function";
-    try {
-      return _pt();
-    } finally {
-      FDX.hide = false;
-    }
-  };
   const _mb = msBoard;
   msBoard = function (c, d) {
     const h = _mb(c, d),
@@ -43,6 +33,17 @@ function fdRest(c, d) {
     );
   };
 })();
+/* Part of planTab() in planner.js. Runs make() with the list "ready to plan" hidden, when the mission board shows the same steps. */
+function planTabFold(make) {
+  const c = C();
+  FDX.hide = !G.demo && !!c.led && typeof msBoard === "function";
+  try {
+    return make();
+  } finally {
+    FDX.hide = false;
+  }
+}
+
 Object.assign(ACT, {
   fdmore: () => {
     FDX.more = !FDX.more;
