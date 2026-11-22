@@ -284,7 +284,17 @@ function chipsRow(k, opts, val, a) {
 function multiRow(k, opts, arr) {
   return `<div class="chips">${opts.map(o => `<button class="chip ${arr.includes(o) ? "on" : ""}" data-a="tog" data-k="${k}" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>`;
 }
+/* ONE QUESTION IN A SHEET: a label, the answer buttons (inner), and a help line.
+   q() is the full function. It calls each part by name. qBase() is the part from this file. */
 function q(label, inner, help) {
+  /* fork.js: the daily question "How well did you do with money today" becomes the fork check. */
+  const fk = typeof qFork === "function" ? qFork(label) : null;
+  if (fk !== null) return fk;
+  /* tidy.js: records the question. In a sheet with two or more questions, it returns a folded question. */
+  const td = typeof qTidy === "function" ? qTidy(label, inner, help) : null;
+  return td !== null ? td : qBase(label, inner, help);
+}
+function qBase(label, inner, help) {
   return `<div class="field"><div class="small">${label}</div>${inner}${help ? `<div class="tiny muted">${help}</div>` : ""}</div>`;
 }
 function bar(p, cls) {

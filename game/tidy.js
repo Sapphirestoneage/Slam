@@ -2,7 +2,6 @@
 var TDX = { seq: [], ans: [], multi: [], prev: {}, pans: {}, open: {}, n: 0, on: false, kind: null };
 const TD_FULL = { setup: 0, find: 0, gwin: 0, l1: 1, sharp: 2, askdone: 2, door: 3, lpans: 3, dump: 2, tour: 3 },
   TD_STEPS = ["About you", "Three quick games", "Make your numbers real", "Your first answer"];
-const TD_Q = q;
 function tdPlain(s) {
   return String(s)
     .replace(/<[^>]+>/g, "")
@@ -19,13 +18,14 @@ function tdOn(inner) {
   while ((m = re.exec(inner))) o.push(m[1]);
   return o;
 }
-q = function (label, inner, help) {
+/* Part of q() in ui.js. Records the label and the state of the answer, for drawSheetTidy(). In a sheet with two or more questions, it returns the folded form of the question. Else it returns null. */
+function qTidy(label, inner, help) {
   const i = TDX.n++,
     on = tdOn(inner);
   TDX.seq.push(tdPlain(label));
   TDX.ans.push(on.length > 0);
   TDX.multi.push(/data-a="tog"/.test(inner));
-  if (!TDX.on) return TD_Q(label, inner, help);
+  if (!TDX.on) return null;
   const k = TDX.kind,
     P = TDX.prev[k] || [],
     oi = Math.max(0, Math.min(TDX.open[k] || 0, P.length - 1)),
@@ -33,7 +33,7 @@ q = function (label, inner, help) {
     nx = P[i + 1],
     said = on.join(", ");
   return `<details class="fld" name="fld" data-i="${i}"${open ? " open" : ""}><summary><span class="small">${label}</span><span class="tiny fldhint ${on.length ? "ok" : "muted"}">${on.length ? esc(said.length > 26 ? said.slice(0, 24) + "…" : said) + " ✓" : i + 1 + " of " + P.length}</span></summary><div class="field">${inner}${help ? `<div class="tiny muted">${help}</div>` : ""}${nx && (on.length || TDX.multi[i] || !/class="chip/.test(inner)) ? `<button class="ghost slim wide" data-a="fldgo" data-v="${i + 1}">Next: ${esc(nx.length > 44 ? nx.slice(0, 42) + "…" : nx)}</button>` : ""}</div></details>`;
-};
+}
 function tdTrack() {
   const k = W && W.kind;
   if (k == null || TD_FULL[k] === undefined) return "";

@@ -425,16 +425,6 @@ function homeForkRow(h) {
   return h;
 }
 (() => {
-  /* the daily check-in asks about forks instead of a 1-to-5 score */
-  const FK_Q = q;
-  q = function (label, inner, help) {
-    if (typeof label === "string" && label.indexOf("How well did you do with money today") === 0) {
-      const c = C(),
-        has = fkHas(c) && fkX(c).at === todayISO();
-      return `<div class="tile stack" style="gap:6px"><div class="row between small"><b>What is poking you today?</b><span class="muted">${has ? fkLoad(c) + " of " + fkX(c).lim + " points" : "Not checked today"}</span></div>${has ? fkBar(c) : ""}<button class="${has ? "ghost" : "primary"} wide slim" data-a="fork">${has ? "Change my forks" : "Do the 30-second fork check"}</button><div class="tiny muted">This sets how big a step the game hands you next.</div></div>`;
-    }
-    return FK_Q(label, inner, help);
-  };
   const _ds = ACT.dsave;
   ACT.dsave = t => {
     try {
@@ -483,6 +473,16 @@ function homeForkRow(h) {
     };
   }
 })();
+/* Part of q() in ui.js. In the daily check-in, the fork check replaces the question with a score from 1 to 5. Returns null for all other questions. */
+function qFork(label) {
+  if (typeof label === "string" && label.indexOf("How well did you do with money today") === 0) {
+    const c = C(),
+      has = fkHas(c) && fkX(c).at === todayISO();
+    return `<div class="tile stack" style="gap:6px"><div class="row between small"><b>What is poking you today?</b><span class="muted">${has ? fkLoad(c) + " of " + fkX(c).lim + " points" : "Not checked today"}</span></div>${has ? fkBar(c) : ""}<button class="${has ? "ghost" : "primary"} wide slim" data-a="fork">${has ? "Change my forks" : "Do the 30-second fork check"}</button><div class="tiny muted">This sets how big a step the game hands you next.</div></div>`;
+  }
+  return null;
+}
+
 /* Part of coachSheet() in ui.js. Opens the coach view again, with the fork load and the largest fork of each person below the title. */
 function coachSheetForks() {
   const f = SH;
