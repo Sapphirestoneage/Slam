@@ -25,7 +25,16 @@ Object.assign(GLOSS, {
 });
 const PLAINBTN = () =>
   `<button class="ghost wide slim" data-a="plain">${C().plain ? "Back to the game version" : "Skip the game. Use a plain form"}</button>`;
+/* THE CARD "GAMES" ON HOME.
+   campCard(c, d) makes the full card. It calls each part by name. campCardBase(c, d) is the part from this file. */
 function campCard(c, d) {
+  let h = campCardBase(c, d);
+  if (typeof campCardGames === "function")
+    h = campCardGames(h, c); /* games2.js: the buttons "All games" and "Daily question" */
+  if (typeof campCardReview === "function") h = campCardReview(h, c); /* year.js: the button for the Yearly Review */
+  return h;
+}
+function campCardBase(c, d) {
   const ls = layers(c, d),
     ps = fogPatches(c, d),
     pct = Math.round((ps.filter(p => p.ok).length / ps.length) * 100),

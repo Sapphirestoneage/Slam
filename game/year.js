@@ -571,17 +571,16 @@ function homeQuiet() {
   if (!rw) return null;
   return `<div class="stack"><h1>${esc(c.name)}</h1><div class="card stack" style="gap:8px"><div class="eyebrow">${rw.n} mode</div><h2>Nothing here needs you right now.</h2><div class="small muted">The game is quiet until about ${new Date(rw.to).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}${new Date(rw.to).getDate() !== new Date(Date.now()).getDate() ? " tomorrow" : ""}. Your place is saved.</div><button class="ghost wide slim" data-a="restopen">Open the game anyway</button></div></div>`;
 }
-const _camp2 = campCard;
-campCard = function (c, d) {
-  const h = _camp2(c, d),
-    rd = revDate(c);
+/* Part of campCard() in games.js. Adds one button when the Yearly Review is ready. */
+function campCardReview(h, c) {
+  const rd = revDate(c);
   return rd && rd.due
     ? h.replace(
         /<\/div>$/,
         `<button class="ghost wide slim" style="margin-top:6px" data-a="review">Your Yearly Review is ready</button></div>`
       )
     : h;
-};
+}
 const _games1 = gamesSheet;
 gamesSheet = function () {
   return _games1().replace(

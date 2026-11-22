@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,596. Top-level functions: 993. Replaced functions: 49, in 58 places.
+Date: 2026-11-22. Files: 60. Lines: 46,603. Top-level functions: 996. Replaced functions: 48, in 56 places.
 
 ## 1. Files in load order
 
@@ -18,9 +18,9 @@ The browser loads the files in this order. A file can use all names from the fil
 | 6 | `engine2.js` | 378 | 14 | 0 | 0 | engine2: game mechanics that ARE the data entry |
 | 7 | `gate.js` | 50 | 7 | 1 | 1 | extras, part one |
 | 8 | `ui.js` | 6,375 | 201 | 138 | 2 | SLAM the Game: screens |
-| 9 | `games.js` | 600 | 20 | 12 | 0 | the screens for the games that are the data entry |
-| 10 | `games2.js` | 1,436 | 37 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
-| 11 | `year.js` | 758 | 21 | 13 | 0 | the year |
+| 9 | `games.js` | 609 | 21 | 12 | 0 | the screens for the games that are the data entry |
+| 10 | `games2.js` | 1,435 | 38 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
+| 11 | `year.js` | 757 | 22 | 13 | 0 | the year |
 | 12 | `chart.js` | 1,284 | 12 | 6 | 0 | the Money Chart |
 | 13 | `profiles.js` | 115 | 6 | 4 | 1 | flip between people |
 | 14 | `smart.js` | 671 | 13 | 5 | 0 | every answer narrows what comes next |
@@ -79,7 +79,6 @@ Each row shows one function, the file that defines it, and the later files that 
 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
-| `campCard` | `games.js` | `games2.js`, `year.js` | 2 |
 | `coachSheet` | `ui.js` | `fork.js`, `csp.js` | 2 |
 | `finishSetup` | `ui.js` | `smart.js`, `planner.js` | 2 |
 | `movesSheet` | `ui.js` | `compare.js`, `drills.js` | 2 |

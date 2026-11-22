@@ -1047,15 +1047,14 @@ function gamesSheet() {
     `<button class="ghost wide" data-a="close">Close</button>`
   );
 }
-const _camp1 = campCard;
-campCard = function (c, d) {
-  const h = _camp1(c, d),
-    dq = GX(c).daily && GX(c).daily.d === todayISO();
+/* Part of campCard() in games.js. Adds the button "All games". Adds the button "Daily question" when that game is open. */
+function campCardGames(h, c) {
+  const dq = GX(c).daily && GX(c).daily.d === todayISO();
   return h.replace(
     /<\/div>$/,
     `<div class="row" style="gap:6px;margin-top:6px"><button class="ghost slim" style="flex:1" data-a="games">All games</button>${GX(c).l4.open || (c.bon && c.bon[3]) ? `<button class="ghost slim" style="flex:1" data-a="dq">${dq ? "Daily ✓" : "Daily question"}</button>` : ""}</div></div>`
   );
-};
+}
 Object.assign(ACT, {
   games: () => {
     W = { kind: "games" };
