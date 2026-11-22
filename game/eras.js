@@ -948,21 +948,19 @@ function homeAccountLine(h) {
       }
     };
   }
-  if (typeof reviewSheet === "function") {
-    const _r = reviewSheet;
-    reviewSheet = function () {
-      const h = _r();
-      try {
-        return (
-          h +
-          `<div class="tile tiny esyear">A new year starts the yearly steps fresh: fill your Roth IRA (${money(ROTH)} for ${esYear()}) and your HSA (${money(IG_TAX.hsa.one)}, or ${money(IG_TAX.hsa.fam)} for a family). Key moments you have reached stay reached.</div>`
-        );
-      } catch (e) {
-        return h;
-      }
-    };
-  }
 })();
+/* Part of reviewSheet() in year.js. Adds a note: the yearly steps (Roth IRA, HSA) start again each year. */
+function reviewSheetYear(h) {
+  try {
+    return (
+      h +
+      `<div class="tile tiny esyear">A new year starts the yearly steps fresh: fill your Roth IRA (${money(ROTH)} for ${esYear()}) and your HSA (${money(IG_TAX.hsa.one)}, or ${money(IG_TAX.hsa.fam)} for a family). Key moments you have reached stay reached.</div>`
+    );
+  } catch (e) {
+    return h;
+  }
+}
+
 Object.assign(GLOSS, {
   es_roth: [
     "Roth IRA",

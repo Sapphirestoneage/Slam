@@ -452,7 +452,15 @@ function seasonBlock(c, g, sim) {
 }
 /* the Yearly Review */
 const REV_S = ["Pick your date", "Look back", "Still true?", "Past you and now", "What resets", "Look ahead"];
+/* THE YEARLY REVIEW.
+   reviewSheet() makes the full sheet. It calls each part by name. reviewSheetBase() is the part from this file. */
 function reviewSheet() {
+  let h = reviewSheetBase();
+  if (typeof reviewSheetForks === "function") h = reviewSheetForks(h); /* fork.js: the fork load of the year */
+  if (typeof reviewSheetYear === "function") h = reviewSheetYear(h); /* eras.js: the steps that start again each year */
+  return h;
+}
+function reviewSheetBase() {
   const c = C(),
     d = D,
     X = YX(c),

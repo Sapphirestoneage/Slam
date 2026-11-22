@@ -455,24 +455,22 @@ function homeForkRow(h) {
       return h;
     };
   }
-  if (typeof reviewSheet === "function") {
-    const _rv = reviewSheet;
-    reviewSheet = function () {
-      let h = _rv();
-      try {
-        const c = C(),
-          hs = fkX(c).hist.filter(x => daysBetween(x.d, todayISO()) <= 366);
-        if (hs.length >= 2 && !(W && W.step)) {
-          const ls = hs.map(x => x.l),
-            line = `<div class="tile small"><b>Your forks this year:</b> lightest ${Math.min.apply(null, ls)}, heaviest ${Math.max.apply(null, ls)}, now ${fkLoad(c)}. ${hs.length} fork checks.</div>`,
-            k = h.lastIndexOf("<button");
-          h = k >= 0 ? h.slice(0, k) + line + h.slice(k) : h + line;
-        }
-      } catch (e) {}
-      return h;
-    };
-  }
 })();
+/* Part of reviewSheet() in year.js. On the first page, adds one line with the lightest, the heaviest and the present fork load of the year. */
+function reviewSheetForks(h) {
+  try {
+    const c = C(),
+      hs = fkX(c).hist.filter(x => daysBetween(x.d, todayISO()) <= 366);
+    if (hs.length >= 2 && !(W && W.step)) {
+      const ls = hs.map(x => x.l),
+        line = `<div class="tile small"><b>Your forks this year:</b> lightest ${Math.min.apply(null, ls)}, heaviest ${Math.max.apply(null, ls)}, now ${fkLoad(c)}. ${hs.length} fork checks.</div>`,
+        k = h.lastIndexOf("<button");
+      h = k >= 0 ? h.slice(0, k) + line + h.slice(k) : h + line;
+    }
+  } catch (e) {}
+  return h;
+}
+
 /* Part of q() in ui.js. In the daily check-in, the fork check replaces the question with a score from 1 to 5. Returns null for all other questions. */
 function qFork(label) {
   if (typeof label === "string" && label.indexOf("How well did you do with money today") === 0) {

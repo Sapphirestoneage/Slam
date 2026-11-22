@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 60. Lines: 46,641. Top-level functions: 1015. Replaced functions: 42, in 44 places.
+Date: 2026-11-22. Files: 60. Lines: 46,645. Top-level functions: 1018. Replaced functions: 41, in 42 places.
 
 ## 1. Files in load order
 
@@ -20,7 +20,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 8 | `ui.js` | 6,412 | 205 | 138 | 2 | SLAM the Game: screens |
 | 9 | `games.js` | 609 | 21 | 12 | 0 | the screens for the games that are the data entry |
 | 10 | `games2.js` | 1,435 | 38 | 19 | 1 | Layer 2 (sorting), Layer 3 (sharpening), Layer 4 (coming back) |
-| 11 | `year.js` | 757 | 22 | 13 | 0 | the year |
+| 11 | `year.js` | 765 | 23 | 13 | 0 | the year |
 | 12 | `chart.js` | 1,284 | 12 | 6 | 0 | the Money Chart |
 | 13 | `profiles.js` | 115 | 6 | 4 | 1 | flip between people |
 | 14 | `smart.js` | 670 | 14 | 5 | 0 | every answer narrows what comes next |
@@ -57,7 +57,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 45 | `home.js` | 119 | 4 | 0 | 5 | put the game on your home screen |
 | 46 | `tidy.js` | 164 | 8 | 3 | 0 | the fixes from the usability audit, applied to every screen at once instead of one screen at a time |
 | 47 | `addon.js` | 606 | 29 | 6 | 15 | extras, part two |
-| 48 | `fork.js` | 576 | 18 | 13 | 5 | Fork Theory |
+| 48 | `fork.js` | 574 | 19 | 13 | 5 | Fork Theory |
 | 49 | `csp.js` | 707 | 24 | 12 | 1 | two ways to see a whole month of money at a glance |
 | 50 | `ideas.js` | 1,094 | 20 | 5 | 1 | the workshop behind "Famous money ideas" |
 | 51 | `ideas2.js` | 771 | 2 | 2 | 0 | Part 1, ideas 9 to 16 |
@@ -67,7 +67,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 55 | `roof.js` | 263 | 6 | 1 | 1 | one roof for the best-known ideas in personal finance |
 | 56 | `ideasz.js` | 328 | 6 | 3 | 3 | loads after every ideas file |
 | 57 | `dep.js` | 234 | 11 | 2 | 5 | "What depends on what" |
-| 58 | `eras.js` | 1,059 | 17 | 6 | 6 | real steps for the later eras, and one account line that feeds back into the early ones |
+| 58 | `eras.js` | 1,057 | 18 | 6 | 6 | real steps for the later eras, and one account line that feeds back into the early ones |
 | 59 | `testkit.js` | 307 | 9 | 8 | 2 | Test with a friend |
 | 60 | `built.js` | 766 | 4 | 1 | 1 | What's built |
 
@@ -79,7 +79,6 @@ Each row shows one function, the file that defines it, and the later files that 
 
 | Function | Defined in | Replaced in (load order) | Layers |
 |----------|------------|--------------------------|-------:|
-| `reviewSheet` | `year.js` | `fork.js`, `eras.js` | 2 |
 | `setupSheet` | `ui.js` | `planner.js`, `ux.js` | 2 |
 | `afterSharp` | `ui.js` | `ask2.js` | 1 |
 | `bkSheet` | `back.js` | `fork.js` | 1 |
