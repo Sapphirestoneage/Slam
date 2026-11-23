@@ -14,7 +14,7 @@
                screens/profiles.js, screens/smart.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
                page loads: account/cloud.js, screens/ux.js, features/missions.js, features/fold.js,
-               features/fork.js, features/ideasz.js. With no typeof test, thus safe only after the page
+               features/fork.js, features/ideasz.js, features/paths.js. With no typeof test, thus safe only after the page
                has loaded all files: features/missions.js (planTabMissions).
    ========================================================================= */
 
@@ -464,6 +464,7 @@ function planTab() {
   /* fold.js: while the plan is made, the list "ready to plan" is hidden when the mission board shows the same steps. */
   if (h === null) h = typeof planTabFold === "function" ? planTabFold(planTabMain) : planTabMain();
   if (typeof planTabIdeas === "function") h = planTabIdeas(h); /* ideasz.js: the block for the famous money ideas */
+  if (typeof planTabPath === "function") h = planTabPath(h); /* paths.js: the path that the player picked */
   return h;
 }
 function planTabMain() {
