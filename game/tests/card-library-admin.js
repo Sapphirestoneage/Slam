@@ -221,6 +221,44 @@
       caFormHTML(d).includes('data-f="brand.hotel"') &&
       !caFormHTML(d).includes('data-f="brand.airline"')
   );
+  /* a shared limit: 5% on two categories, on the first $25,000 a year together */
+  const sh = cardClean({
+      earn: {
+        base: 1,
+        rates: [
+          { cat: "phone", x: 5, cap: 25000, per: "year", share: "a" },
+          { cat: "online", x: 5, cap: 25000, per: "year", share: "a" },
+          { cat: "gas", x: 2 },
+        ],
+      },
+    }),
+    alone = cardClean({
+      earn: {
+        base: 1,
+        rates: [
+          { cat: "phone", x: 5, cap: 25000 },
+          { cat: "online", x: 5, cap: 25000 },
+        ],
+      },
+    }),
+    big = { phone: 20000 / 12, online: 20000 / 12, gas: 100 },
+    near = (a, b) => Math.abs(a - b) < 1e-6;
+  chk("the letter of a shared limit is kept", sh.earn.rates[0].share === "A" && !("share" in sh.earn.rates[2]));
+  chk(
+    "a shared limit counts one time for the rates together",
+    near(cardEarnYear(sh, big, 0).sum, 25000 * 5 + 15000 * 1 + 1200 * 2) &&
+      near(cardEarnYear(alone, big, 0).sum, 40000 * 5 + 1200 * 1)
+  );
+  chk(
+    "under the shared limit, nothing changes",
+    near(cardEarnYear(sh, { phone: 500, online: 500 }, 0).sum, cardEarnYear(alone, { phone: 500, online: 500 }, 0).sum)
+  );
+  caSet(d, "share.dining", "b");
+  chk(
+    "the form has the box for a shared limit, and it reaches the card",
+    caFormHTML(d).includes('data-f="share.dining"') &&
+      cardClean(d).earn.rates.find(r => r.cat === "dining").share === "B"
+  );
   const form2 = caFormHTML(d);
   chk(
     "the form shows the limit of a category that has a rate, and the pick with its list",

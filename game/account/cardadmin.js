@@ -25,7 +25,7 @@ const CA = { rows: [], edit: null, was: null, msg: "", ask: null, ready: false, 
 function caSet(d, path, v) {
   const p = String(path).split(".");
   if (p[0] === "rate") return caRate(d, p[1], v);
-  if (p[0] === "cap" || p[0] === "per" || p[0] === "then") {
+  if (p[0] === "cap" || p[0] === "per" || p[0] === "then" || p[0] === "share") {
     /* the limit of the rate of one category */
     const r = ((d.earn && d.earn.rates) || []).find(x => x.cat === p[1]);
     if (r) r[p[0]] = v;
@@ -179,7 +179,7 @@ function caFormHTML(d) {
     rate = cat => (rrow(cat) || {}).x,
     /* the limit of one rate: shown when the category has a rate */
     lim = (pre, suf, r) =>
-      `<div class="who">${caField(pre + "cap" + suf, "Only on the first dollars (optional)", r.cap, { num: 1, ph: "6000", hint: "Leave empty when the rate has no limit." })}${caField(pre + "per" + suf, "The limit counts", r.per || "year", { opts: T.pers })}${caField(pre + "then" + suf, "The rate after the limit", r.then, { num: 1, ph: "Empty: the same as everything else" })}</div>`,
+      `<div class="who">${caField(pre + "cap" + suf, "Only on the first dollars (optional)", r.cap, { num: 1, ph: "6000", hint: "Leave empty when the rate has no limit." })}${caField(pre + "per" + suf, "The limit counts", r.per || "year", { opts: T.pers })}${caField(pre + "then" + suf, "The rate after the limit", r.then, { num: 1, ph: "Empty: the same as everything else" })}${caField(pre + "share" + suf, "Shares this limit with other rates? Give them the same letter", r.share, { ph: "A", hint: "Leave empty when the limit is for this rate only." })}</div>`,
     units = Object.keys(F.units).map(k => [k, F.units[k].n || k]);
   return (
     `<div class="card"><div class="row"><b>${CA.was ? "Change a card" : "Add a card"}</b><button data-a="cacancel">Cancel</button></div>` +

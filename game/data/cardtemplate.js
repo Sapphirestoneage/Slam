@@ -11,6 +11,7 @@
    SHAPE       { id, bank, n, network, fee, fee1, amt, unit, spend, months, min, ends, biz, upTo,
                  has: { key: true }, hasWords: { key: "the detail" },
                  earn: { base, rates: [{ cat, x, cap, per, then }], picks: [{ x, count, from, cap, per, then }], words },
+                 A limit can be shared: rows with the same letter in "share" use one limit together.
                  A rate can have a limit: x on the first "cap" dollars of each "per" (year, quarter or
                  month), then the rate "then" (the base when it is not given). A pick is a rate on
                  "count" categories that the player picks from the list "from".
@@ -180,6 +181,8 @@ function cardClean(raw) {
         row.cap = cap;
         row.per = T.pers.some(q => q[0] === r.per) ? r.per : "year";
         if (cardNum(r.then) !== null) row.then = cardNum(r.then);
+        /* rows with the same letter share one limit */
+        if (txt(r.share)) row.share = txt(r.share).toUpperCase().slice(0, 4);
       }
       return row;
     };
@@ -271,26 +274,33 @@ function cardEarnYear(card, spend, other) {
       .slice(0, p.count)
       .forEach(k => (picked[k] = p));
   });
-  /* the dollars that a shared limit of a pick has left */
-  const left = new Map();
-  cats.forEach(k => {
-    const r = picked[k] || fixed[k] || null,
-      year = spend[k] * 12;
-    let earned = year * base,
-      x = base,
-      capped = false;
-    if (r) {
-      x = r.x;
-      const key = picked[k] || r,
-        room = r.cap ? (left.has(key) ? left.get(key) : r.cap * times[r.per || "year"]) : Infinity,
-        at = Math.min(year, room),
-        after = r.then === undefined || r.then === null ? base : r.then;
-      if (r.cap) left.set(key, room - at);
-      capped = at < year;
-      earned = at * r.x + (year - at) * after;
-    }
-    rows.push({ cat: k, year, x, capped, earned });
-  });
+  /* The dollars that a limit has left. Rows with the same letter in "share" use one limit together, and
+     so do the categories of one pick. The category with the highest rate uses the limit first. */
+  const left = new Map(),
+    rule = k => picked[k] || fixed[k] || null,
+    done = {};
+  cats
+    .slice()
+    .sort((a, b) => ((rule(b) || {}).x || 0) - ((rule(a) || {}).x || 0))
+    .forEach(k => {
+      const r = rule(k),
+        year = spend[k] * 12;
+      let earned = year * base,
+        x = base,
+        capped = false;
+      if (r) {
+        x = r.x;
+        const key = r.cap && r.share ? "share:" + r.share : r,
+          room = r.cap ? (left.has(key) ? left.get(key) : r.cap * times[r.per || "year"]) : Infinity,
+          at = Math.min(year, room),
+          after = r.then === undefined || r.then === null ? base : r.then;
+        if (r.cap) left.set(key, room - at);
+        capped = at < year;
+        earned = at * r.x + (year - at) * after;
+      }
+      done[k] = { cat: k, year, x, capped, earned };
+    });
+  cats.forEach(k => rows.push(done[k]));
   if (other > 0) rows.push({ cat: "", year: other * 12, x: base, capped: false, earned: other * 12 * base });
   return { sum: rows.reduce((t, r) => t + r.earned, 0), rows };
 }
