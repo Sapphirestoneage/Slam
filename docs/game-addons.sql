@@ -99,3 +99,23 @@ begin
 end $$;
 revoke all on function admin_account(uuid, text) from public;
 grant execute on function admin_account(uuid, text) to authenticated;
+
+-- The card library of the card vault: the cards that the admin adds or changes on admin.html ("Add a card").
+-- data is one card in the shape of game/data/cardtemplate.js. Everyone can read it (card offers are public).
+-- Only the admin can add, change or remove a card. Run this block one time.
+create table if not exists card_library (
+  id text primary key,
+  data jsonb not null,
+  updated_at timestamptz not null default now(),
+  updated_by uuid default auth.uid()
+);
+alter table card_library enable row level security;
+drop policy if exists "everyone reads cards" on card_library;
+create policy "everyone reads cards" on card_library for select to anon, authenticated using (true);
+drop policy if exists "admin adds cards" on card_library;
+create policy "admin adds cards" on card_library for insert to authenticated with check (is_admin());
+drop policy if exists "admin changes cards" on card_library;
+create policy "admin changes cards" on card_library for update to authenticated using (is_admin()) with check (is_admin());
+drop policy if exists "admin removes cards" on card_library;
+create policy "admin removes cards" on card_library for delete to authenticated using (is_admin());
+

@@ -13,13 +13,14 @@ h1{font-size:22px;margin:0}p{margin:0}.muted{color:var(--muted);font-size:14px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
 label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
-input{width:100%;padding:12px;border-radius:10px;border:2px solid var(--line);background:var(--panel2);color:inherit;font-size:16px}
+input,select{width:100%;padding:12px;border-radius:10px;border:2px solid var(--line);background:var(--panel2);color:inherit;font-size:16px}
 button{font:inherit;font-weight:700;min-height:44px;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer}
 button.primary{background:var(--a1);border-color:var(--a1);color:#fff}button.wide{width:100%}
 .seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden;flex:none}
 .seg button{border:0;border-radius:0;min-width:56px;background:var(--panel2);color:var(--muted)}.seg button.on{background:var(--a1);color:#fff}
 details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{cursor:pointer;font-weight:700;padding:12px 0;min-height:44px}.tools{display:flex;flex-direction:column;gap:8px;padding-bottom:12px}
 .who{border-top:1px solid var(--line);padding-top:8px}.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 12px;font-size:14px;color:var(--muted);margin-top:4px}.nums b{color:var(--text)}
+ul{margin:4px 0 0;padding-left:20px}.who .row{flex-wrap:wrap;justify-content:flex-start;margin-top:6px}
 .pill{font-size:12px;margin-left:4px;border:1px solid var(--line);border-radius:99px;padding:2px 8px;color:var(--muted)}.ok{color:var(--good)}
 </style>
 </head>
@@ -29,6 +30,9 @@ details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{c
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="core/report.js?v=e950ffe0"></script>
 <script src="account/supa.js?v=6e71f50e"></script>
+<script src="data/cardtemplate.js?v=3e4b9f29"></script>
+<script src="data/cards2026.js?v=541d6e45"></script>
+<script src="account/cardadmin.js"></script>
 <script>
 /* The admin page. Everything here is checked again by the database: a signed-in person who is not the admin gets nothing back and can change nothing, whatever this page shows. */
 const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
@@ -58,11 +62,14 @@ function draw(){const el=document.getElementById("app"),d=S.data,me=S.session&&S
    <div class="row"><span>Coach<br><span class="muted">Can see games people share with their coach</span></span>${seg("coach",u.id,"",u.coach)}</div>
    ${d.packs.map(p=>{const g=u.packs&&u.packs[p.pack];return `<div class="row"><span>${esc(p.title||"Add-on")}<br><span class="muted">${g?(p.asks?(g.yes?"On. They said yes":"On. Waiting for their one-time yes"):"On for this account"):"Hidden from this account"}</span></span>${seg("pack",u.id,p.pack,!!g)}</div>`}).join("")}
    <details${S.ask&&S.ask.id===u.id?" open":""}><summary>Account tools</summary><div class="tools">${tools(u,mine)}</div></details></div>`}).join("")+
+  (typeof caHTML==="function"?caHTML():"")+ /* cardadmin.js: the section "Card library" */
   `<button class="wide" data-a="reload">Check for new accounts</button><a href="./" style="color:var(--muted)">Back to the game</a>`}
 async function load(){if(!S.data)draw();const r=await sb.rpc("admin_overview");S.data=r.error?{admin:false}:r.data;S.games={};
- if(S.data.admin){const q=await sb.from("games").select("owner,name,data,updated_at,share_with_coach");const by={};(q.data||[]).forEach(x=>{(by[x.owner]=by[x.owner]||[]).push(x)});Object.keys(by).forEach(o=>{const g=gameOf(by[o]);if(g)S.games[o]=g})}draw()}
+ if(S.data.admin){const q=await sb.from("games").select("owner,name,data,updated_at,share_with_coach");const by={};(q.data||[]).forEach(x=>{(by[x.owner]=by[x.owner]||[]).push(x)});Object.keys(by).forEach(o=>{const g=gameOf(by[o]);if(g)S.games[o]=g});if(typeof caLoad==="function")await caLoad() /* cardadmin.js: the cards the admin added */}draw()}
 document.addEventListener("submit",async ev=>{ev.preventDefault();const e=document.getElementById("e").value.trim(),p=document.getElementById("p").value;const r=await sb.auth.signInWithPassword({email:e,password:p});if(r.error){S.msg="That email and password don't match.";draw();return}S.msg="";S.session=r.data.session;S.data=null;load()});
-document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-a]");if(!t||S.busy)return;const a=t.dataset.a,id=t.dataset.id,u=S.data&&S.data.users?S.data.users.find(x=>x.id===id):null;
+document.addEventListener("input",ev=>{if(typeof caInput==="function")caInput(ev.target)}); /* cardadmin.js: typing in the card form */
+document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-a]");if(!t||S.busy)return;if(/^ca/.test(t.dataset.a)&&typeof caClick==="function"){S.busy=true;try{await caClick(t)}finally{S.busy=false}return} /* cardadmin.js */
+ const a=t.dataset.a,id=t.dataset.id,u=S.data&&S.data.users?S.data.users.find(x=>x.id===id):null;
  if(a==="out"){await sb.auth.signOut();S.session=null;S.data=null;S.msg="";draw();return}
  if(a==="reload"){S.msg="";load();return}
  if(a==="ask"){S.ask={id,what:t.dataset.k};draw();return}
