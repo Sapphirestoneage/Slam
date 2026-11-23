@@ -174,6 +174,57 @@
   );
   caSet(d, "has.lounge", "0");
   chk("a switch can go off again", !cardClean(d).has.lounge);
+  /* limits and picks */
+  caSet(d, "cap.dining", "6000");
+  caSet(d, "per.dining", "year");
+  caSet(d, "then.dining", "1");
+  caSet(d, "rate.dining", "6");
+  d.earn.picks.push({ from: [] });
+  caSet(d, "picks.0.x", "5");
+  caSet(d, "picks.0.count", "1");
+  caSet(d, "pickfrom.0.gas", "1");
+  caSet(d, "pickfrom.0.travel", "1");
+  caSet(d, "pickfrom.0.travel", "0");
+  caSet(d, "pickfrom.0.groceries", "1");
+  caSet(d, "picks.0.cap", "500");
+  caSet(d, "picks.0.per", "month");
+  const D2 = cardClean(d),
+    r0 = D2.earn.rates[0],
+    k0 = D2.earn.picks[0];
+  chk(
+    "a limit on a rate is kept as numbers, and a new rate keeps the limit",
+    r0.cat === "dining" && r0.x === 6 && r0.cap === 6000 && r0.per === "year" && r0.then === 1
+  );
+  chk(
+    "a pick: the rate, how many, the list, and its limit",
+    k0.x === 5 && k0.count === 1 && k0.from.join() === "gas,groceries" && k0.cap === 500 && k0.per === "month"
+  );
+  const E1 = cardEarnYear(D2, { dining: 800, gas: 600, groceries: 100 }, 1000);
+  chk(
+    "what the card earns in a year: the limit, the pick on the bigger category, the base on the rest",
+    E1.rows.find(r => r.cat === "dining").earned === 6000 * 6 + 3600 * 1 &&
+      E1.rows.find(r => r.cat === "gas").earned === 6000 * 5 + 1200 * 1.5 &&
+      E1.rows.find(r => r.cat === "groceries").earned === 1200 * 1.5 &&
+      E1.rows.find(r => r.cat === "").earned === 12000 * 1.5 &&
+      E1.sum === E1.rows.reduce((t, r) => t + r.earned, 0),
+    JSON.stringify(E1)
+  );
+  chk(
+    "a rate with no limit has no limit keys",
+    !("cap" in cardClean({ earn: { rates: [{ cat: "gas", x: 2, cap: "" }] } }).earn.rates[0])
+  );
+  const form2 = caFormHTML(d);
+  chk(
+    "the form shows the limit of a category that has a rate, and the pick with its list",
+    form2.includes('data-f="cap.dining"') &&
+      form2.includes('data-f="per.dining"') &&
+      !form2.includes('data-f="cap.transit"') &&
+      form2.includes('data-f="picks.0.x"') &&
+      form2.includes('data-a="capick" data-k="0" data-c="gas" data-v="0"') &&
+      form2.includes('data-a="capick" data-k="0" data-c="travel" data-v="1"') &&
+      clean(form2),
+    junk(form2)
+  );
   const form = caFormHTML(d);
   chk(
     "the form: each switch, each category, the unique list, and where it comes from",

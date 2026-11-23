@@ -68,6 +68,7 @@ async function load(){if(!S.data)draw();const r=await sb.rpc("admin_overview");S
  if(S.data.admin){const q=await sb.from("games").select("owner,name,data,updated_at,share_with_coach");const by={};(q.data||[]).forEach(x=>{(by[x.owner]=by[x.owner]||[]).push(x)});Object.keys(by).forEach(o=>{const g=gameOf(by[o]);if(g)S.games[o]=g});if(typeof caLoad==="function")await caLoad() /* cardadmin.js: the cards the admin added */}draw()}
 document.addEventListener("submit",async ev=>{ev.preventDefault();const e=document.getElementById("e").value.trim(),p=document.getElementById("p").value;const r=await sb.auth.signInWithPassword({email:e,password:p});if(r.error){S.msg="That email and password don't match.";draw();return}S.msg="";S.session=r.data.session;S.data=null;load()});
 document.addEventListener("input",ev=>{if(typeof caInput==="function")caInput(ev.target)}); /* cardadmin.js: typing in the card form */
+document.addEventListener("change",ev=>{if(typeof caChange==="function")caChange(ev.target)}); /* cardadmin.js: a rate was typed, show its limit */
 document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-a]");if(!t||S.busy)return;if(/^ca/.test(t.dataset.a)&&typeof caClick==="function"){S.busy=true;try{await caClick(t)}finally{S.busy=false}return} /* cardadmin.js */
  const a=t.dataset.a,id=t.dataset.id,u=S.data&&S.data.users?S.data.users.find(x=>x.id===id):null;
  if(a==="out"){await sb.auth.signOut();S.session=null;S.data=null;S.msg="";draw();return}

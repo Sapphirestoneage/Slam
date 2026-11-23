@@ -5,12 +5,15 @@
                (features/vault.js) and the admin page (admin.html, "Add a card") both read it, so a
                card that the admin adds has the same shape as a card of data/cards2026.js.
    INPUT       Nothing.
-   OUTPUT      window.CARD_TEMPLATE, and the functions cardBlank, cardSlug, cardClean, cardCheck,
-               cardToggles, cardMerge.
+   OUTPUT      window.CARD_TEMPLATE, and the functions cardBlank, cardSlug, cardNum, cardClean, cardCheck,
+               cardToggles, cardMerge, cardEarnYear.
    DEPENDS ON  Nothing. The file has no game code, because admin.html loads it without the game.
    SHAPE       { id, bank, n, network, fee, fee1, amt, unit, spend, months, min, ends, biz, upTo,
                  has: { key: true }, hasWords: { key: "the detail" },
-                 earn: { base, rates: [{ cat, x }], words },
+                 earn: { base, rates: [{ cat, x, cap, per, then }], picks: [{ x, count, from, cap, per, then }], words },
+                 A rate can have a limit: x on the first "cap" dollars of each "per" (year, quarter or
+                 month), then the rate "then" (the base when it is not given). A pick is a rate on
+                 "count" categories that the player picks from the list "from".
                  credits: [{ name, value, words }], unique: [{ label, words, value }],
                  source, checked, hidden }
                id, bank, n, fee, amt, unit, spend, months, min, biz and upTo are the keys of
@@ -57,6 +60,12 @@ window.CARD_TEMPLATE = {
     { k: "purchase", g: "Cover", l: "Purchase protection", help: "" },
     { k: "warranty", g: "Cover", l: "Extended warranty", help: "" },
   ],
+  /* A limit on a rate counts for each of these. */
+  pers: [
+    ["year", "each year"],
+    ["quarter", "each quarter"],
+    ["month", "each month"],
+  ],
   /* The spending categories of the earn rates. */
   cats: [
     ["dining", "Dining and takeout"],
@@ -98,7 +107,7 @@ function cardBlank() {
     ends: "",
     has: {},
     hasWords: {},
-    earn: { base: 1, rates: [], words: "" },
+    earn: { base: 1, rates: [], picks: [], words: "" },
     credits: [],
     unique: [],
     source: "",
@@ -162,9 +171,27 @@ function cardClean(raw) {
   const e = c.earn || {};
   out.earn.base = cardNum(e.base) === null ? 1 : cardNum(e.base);
   out.earn.words = txt(e.words);
+  const isCat = k => T.cats.some(c => c[0] === k),
+    /* the limit of a rate: only on the first "cap" dollars of each "per", then the rate "then" */
+    limit = (row, r) => {
+      const cap = cardNum(r.cap);
+      if (cap !== null && cap > 0) {
+        row.cap = cap;
+        row.per = T.pers.some(q => q[0] === r.per) ? r.per : "year";
+        if (cardNum(r.then) !== null) row.then = cardNum(r.then);
+      }
+      return row;
+    };
   (e.rates || []).forEach(r => {
     const x = cardNum(r && r.x);
-    if (r && T.cats.some(k => k[0] === r.cat) && x !== null && x > 0) out.earn.rates.push({ cat: r.cat, x });
+    if (r && isCat(r.cat) && x !== null && x > 0) out.earn.rates.push(limit({ cat: r.cat, x }, r));
+  });
+  out.earn.picks = [];
+  (e.picks || []).forEach(r => {
+    const x = cardNum(r && r.x),
+      from = ((r && r.from) || []).filter(isCat);
+    if (x !== null && x > 0 && from.length)
+      out.earn.picks.push(limit({ x, count: Math.max(1, Math.min(from.length, cardNum(r.count) || 1)), from }, r));
   });
   (c.credits || []).forEach(r => {
     if (r && txt(r.name)) out.credits.push({ name: txt(r.name), value: cardNum(r.value) || 0, words: txt(r.words) });
@@ -216,4 +243,48 @@ function cardMerge(base, extra) {
     by[c.id] = c;
   });
   return order.map(id => by[id]).filter(c => !c.hidden);
+}
+/* WHAT A CARD EARNS IN A YEAR. spend is { category: dollars a month }, and other is the dollars a month
+   in no category. Returns { sum, rows: [{ cat, year, x, capped, earned }] }. "earned" is dollars times the
+   rate: for a cash card it is cents (3 means 3%), for a points card it is points. A limit counts: the rate
+   x on the first dollars, then the rate after it. A pick goes to the categories of its list where the
+   player spends most and the card has no better rate. */
+function cardEarnYear(card, spend, other) {
+  const e = (card && card.earn) || {},
+    base = cardNum(e.base) === null ? 1 : cardNum(e.base),
+    times = { year: 1, quarter: 4, month: 12 },
+    fixed = {},
+    rows = [];
+  (e.rates || []).forEach(r => (fixed[r.cat] = r));
+  const cats = Object.keys(spend || {}).filter(k => (spend[k] || 0) > 0),
+    picked = {};
+  (e.picks || []).forEach(p => {
+    cats
+      .filter(k => p.from.includes(k) && !picked[k] && !(fixed[k] && fixed[k].x >= p.x))
+      .sort((a, b) => spend[b] - spend[a])
+      .slice(0, p.count)
+      .forEach(k => (picked[k] = p));
+  });
+  /* the dollars that a shared limit of a pick has left */
+  const left = new Map();
+  cats.forEach(k => {
+    const r = picked[k] || fixed[k] || null,
+      year = spend[k] * 12;
+    let earned = year * base,
+      x = base,
+      capped = false;
+    if (r) {
+      x = r.x;
+      const key = picked[k] || r,
+        room = r.cap ? (left.has(key) ? left.get(key) : r.cap * times[r.per || "year"]) : Infinity,
+        at = Math.min(year, room),
+        after = r.then === undefined || r.then === null ? base : r.then;
+      if (r.cap) left.set(key, room - at);
+      capped = at < year;
+      earned = at * r.x + (year - at) * after;
+    }
+    rows.push({ cat: k, year, x, capped, earned });
+  });
+  if (other > 0) rows.push({ cat: "", year: other * 12, x: base, capped: false, earned: other * 12 * base });
+  return { sum: rows.reduce((t, r) => t + r.earned, 0), rows };
 }

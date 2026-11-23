@@ -1,7 +1,8 @@
 /* ============================================================================
    SLAM the Game: account/cardadmin.js
    PURPOSE     "Add a card" on the admin page. The admin fills in one template (data/cardtemplate.js):
-               the basics, the welcome offer, the yes / no switches, the earn rates, the yearly
+               the basics, the welcome offer, the yes / no switches, the earn rates (with limits, and rates on categories a
+               cardholder picks), the yearly
                credits, and the free list "What is unique". The card is saved in the database table
                card_library. Each player gets it in the card vault (features/vault.js) the next time
                the game starts. A saved card with the id of a card of data/cards2026.js takes its place.
@@ -9,7 +10,7 @@
                template and its functions (data/cardtemplate.js). The cards of the file
                (data/cards2026.js).
    OUTPUT      Functions: caSet, caRate, caDraft, caRows, caNeeds, caLoad, caSave, caRemove, caField,
-               caFormHTML, caHTML, caClick, caInput. State: CA.
+               caFormHTML, caHTML, caClick, caInput, caChange. State: CA.
    DEPENDS ON  data/cardtemplate.js, data/cards2026.js. admin.html loads this file. The game
                (index.html) does not load it.
    RULES       The database checks each write again: only the admin can add, change or remove a card.
@@ -24,6 +25,28 @@ const CA = { rows: [], edit: null, was: null, msg: "", ask: null, ready: false, 
 function caSet(d, path, v) {
   const p = String(path).split(".");
   if (p[0] === "rate") return caRate(d, p[1], v);
+  if (p[0] === "cap" || p[0] === "per" || p[0] === "then") {
+    /* the limit of the rate of one category */
+    const r = ((d.earn && d.earn.rates) || []).find(x => x.cat === p[1]);
+    if (r) r[p[0]] = v;
+    return d;
+  }
+  if (p[0] === "picks") {
+    d.earn = d.earn || { base: 1, rates: [], picks: [], words: "" };
+    d.earn.picks = d.earn.picks || [];
+    const i = +p[1];
+    d.earn.picks[i] = d.earn.picks[i] || { from: [] };
+    d.earn.picks[i][p[2]] = v;
+    return d;
+  }
+  if (p[0] === "pickfrom") {
+    /* one category in, or out of, the list of a pick */
+    const k = d.earn.picks[+p[1]];
+    if (!k) return d;
+    k.from = (k.from || []).filter(c => c !== p[2]);
+    if (v === true || v === "1") k.from.push(p[2]);
+    return d;
+  }
   if (p[0] === "has") {
     d.has = d.has || {};
     if (v === true || v === "1") d.has[p[1]] = true;
@@ -53,8 +76,9 @@ function caSet(d, path, v) {
 /* The earn rate of one category: a number sets it, an empty field takes it away. */
 function caRate(d, cat, v) {
   d.earn = d.earn || { base: 1, rates: [], words: "" };
+  const old = (d.earn.rates || []).find(r => r.cat === cat);
   d.earn.rates = (d.earn.rates || []).filter(r => r.cat !== cat);
-  if (String(v == null ? "" : v).trim() !== "") d.earn.rates.push({ cat, x: v });
+  if (String(v == null ? "" : v).trim() !== "") d.earn.rates.push(Object.assign({}, old || {}, { cat, x: v }));
   return d;
 }
 /* A draft to edit: a new card, or a copy of a card of the library. */
@@ -64,7 +88,8 @@ function caDraft(card) {
   if (d.biz) d.has.biz = true;
   if (d.upTo) d.has.upTo = true;
   d.hasWords = d.hasWords || {};
-  d.earn = Object.assign({ base: 1, rates: [], words: "" }, d.earn || {});
+  d.earn = Object.assign({ base: 1, rates: [], picks: [], words: "" }, d.earn || {});
+  d.earn.picks = d.earn.picks || [];
   d.credits = d.credits || [];
   d.unique = d.unique || [];
   return d;
@@ -144,7 +169,11 @@ function caFormHTML(d) {
   T.toggles.forEach(t => {
     if (!groups.includes(t.g)) groups.push(t.g);
   });
-  const rate = cat => ((d.earn.rates || []).find(r => r.cat === cat) || {}).x,
+  const rrow = cat => (d.earn.rates || []).find(r => r.cat === cat),
+    rate = cat => (rrow(cat) || {}).x,
+    /* the limit of one rate: shown when the category has a rate */
+    lim = (pre, suf, r) =>
+      `<div class="who">${caField(pre + "cap" + suf, "Only on the first dollars (optional)", r.cap, { num: 1, ph: "6000", hint: "Leave empty when the rate has no limit." })}${caField(pre + "per" + suf, "The limit counts", r.per || "year", { opts: T.pers })}${caField(pre + "then" + suf, "The rate after the limit", r.then, { num: 1, ph: "Empty: the same as everything else" })}</div>`,
     units = Object.keys(F.units).map(k => [k, F.units[k].n || k]);
   return (
     `<div class="card"><div class="row"><b>${CA.was ? "Change a card" : "Add a card"}</b><button data-a="cacancel">Cancel</button></div>` +
@@ -178,8 +207,27 @@ function caFormHTML(d) {
     `<details${(d.earn.rates || []).length ? " open" : ""}><summary>What it earns</summary><div class="tools">` +
     caField("earn.base", "On everything else (1 means 1x or 1%)", d.earn.base, { num: 1, ph: "1" }) +
     T.cats
-      .map(c => caField("rate." + c[0], c[1], rate(c[0]), { num: 1, ph: "Empty: the same as everything else" }))
+      .map(
+        c =>
+          caField("rate." + c[0], c[1], rate(c[0]), { num: 1, ph: "Empty: the same as everything else" }) +
+          (rrow(c[0]) ? lim("", "." + c[0], rrow(c[0])) : "")
+      )
       .join("") +
+    `<p class="muted">A limit shows under a category after you type its rate and leave the box.</p>` +
+    (d.earn.picks || [])
+      .map(
+        (k, i) =>
+          `<div class="who"><b>Pick ${i + 1}: a rate on categories that the cardholder picks</b>${caField("picks." + i + ".x", "The rate", k.x, { num: 1, ph: "5" })}${caField("picks." + i + ".count", "How many categories they pick", k.count, { num: 1, ph: "1" })}<p class="muted">They pick from (tap each one that is on the list):</p><div class="row">${T.cats
+            .map(c => {
+              const on = (k.from || []).includes(c[0]);
+              return `<button class="${on ? "primary" : ""}" data-a="capick" data-k="${i}" data-c="${c[0]}" data-v="${on ? 0 : 1}" aria-pressed="${on}">${esc(c[1])}${on ? " ✓" : ""}</button>`;
+            })
+            .join(
+              ""
+            )}</div>${lim("picks." + i + ".", "", k)}<button data-a="carowdel" data-k="picks" data-v="${i}">Take this pick out</button></div>`
+      )
+      .join("") +
+    `<button class="wide" data-a="carowadd" data-k="picks">Add a rate on categories they pick</button>` +
     caField("earn.words", "In one line (optional)", d.earn.words, { ph: "3x dining, 2x travel, 1x everything else" }) +
     `</div></details>` +
     `<details${d.credits.length ? " open" : ""}><summary>Yearly credits</summary><div class="tools">${d.credits
@@ -241,8 +289,10 @@ async function caClick(t) {
     CA.edit = null;
     CA.was = null;
   } else if (a === "catog" && CA.edit) caSet(CA.edit, "has." + k, t.dataset.v);
-  else if (a === "carowadd" && CA.edit) CA.edit[k].push({});
-  else if (a === "carowdel" && CA.edit) CA.edit[k].splice(+t.dataset.v, 1);
+  else if (a === "carowadd" && CA.edit)
+    (k === "picks" ? CA.edit.earn.picks : CA.edit[k]).push(k === "picks" ? { from: [] } : {});
+  else if (a === "carowdel" && CA.edit) (k === "picks" ? CA.edit.earn.picks : CA.edit[k]).splice(+t.dataset.v, 1);
+  else if (a === "capick" && CA.edit) caSet(CA.edit, "pickfrom." + k + "." + t.dataset.c, t.dataset.v);
   else if (a === "casave" && CA.edit) {
     if (caNeeds(CA.edit).length) {
       const el = document.getElementById("caneed");
@@ -281,4 +331,9 @@ function caInput(el) {
   caSet(CA.edit, f, el.value);
   const need = document.getElementById("caneed");
   if (need) need.innerHTML = caNeedsHTML(CA.edit);
+}
+/* Leaving the rate box of a category: draw the form again, so the limit of that rate shows or goes. */
+function caChange(el) {
+  const f = el && el.dataset && el.dataset.f;
+  if (CA.edit && f && f.indexOf("rate.") === 0) draw();
 }
