@@ -45,8 +45,8 @@
     s1 = Math.max(0, Math.round(B.starter - cash));
   chk(
     "the steps are the order of the two paths, with tax first",
-    S.steps.map(s => s.id).join() === "tax,cushion1,match,debt,cushion2,roth,hsa,k401,taxable" &&
-      S.steps.slice(1).every(s => s.label === PATHS_LINE[s.id][0])
+    S.steps.map(s => s.id).join() === "tax,fun,cushion1,match,debt,cushion2,roth,hsa,k401,taxable" &&
+      S.steps.slice(2).every(s => s.label === PATHS_LINE[s.id][0])
   );
   chk("each dollar has one place", S.steps.reduce((x, s) => x + s.amt, 0) === 2000);
   chk(
@@ -120,7 +120,7 @@
   );
   chk(
     "each label has an i",
-    ["wd_windfall", "wd_taxed", "wd_order", "wd_split", "wd_saved", "wd_grows", "wd_match"]
+    ["wd_windfall", "wd_taxed", "wd_fun", "wd_order", "wd_split", "wd_saved", "wd_grows", "wd_match"]
       .concat(now.steps.map(s => "wd_" + s.id))
       .every(k => GLOSS[k] && ov().includes("term:" + k))
   );
@@ -141,6 +141,83 @@
   chk(
     "real skills (plan a windfall, an insurance payout) open it",
     L && L.a === "windfall" && L2 && L2.a === "windfall"
+  );
+  /* ---------- fun money, and two IRAs ---------- */
+  const base = windCalc(c, { amt: 10000, taxed: "yes", today: T }),
+    wait = windCalc(c, { amt: 10000, taxed: "yes", fun: 10, today: T });
+  chk(
+    "with no fun share picked, the result is the same as before",
+    base.got.fun === 0 && base.funShare === 0 && base.steps.reduce((x, s) => x + s.amt, 0) === 10000
+  );
+  chk(
+    "the oxygen mask rule: with high-interest debt, the fun share waits and the split does not change",
+    !windOxygen(B) &&
+      wait.oxy === false &&
+      wait.got.fun === 0 &&
+      wait.funShare === 0 &&
+      JSON.stringify(wait.got) === JSON.stringify(base.got) &&
+      wait.steps.find(s => s.id === "fun").why.includes("waits")
+  );
+  X("kitset", "10", "wind|fun", { t: "n" });
+  chk(
+    "the screen says it gently, with an i, and no verdict words",
+    ov().includes("A share for fun") &&
+      ov().includes("The fun share waits for now") &&
+      ov().includes("term:wd_fun") &&
+      !/\b(bad|wrong|fail|should not|irresponsible)\b/i.test(ov()) &&
+      clean(ov()),
+    junk(ov())
+  );
+  c.debts = [];
+  c.cashes[0].amt = 60000;
+  syncAll(c);
+  const B2 = pathsBase(c, pathsAssume(c)),
+    fun = windCalc(c, { amt: 10000, taxed: "yes", fun: 10, today: T }),
+    funTax = windCalc(c, { amt: 10000, taxed: "no", fun: 20, today: T });
+  chk(
+    "with the cushion full and no high-interest debt, 10% of $10,000 is fun money, and the rest follows the order",
+    windOxygen(B2) &&
+      fun.oxy &&
+      fun.got.fun === 1000 &&
+      fun.toFun === 1000 &&
+      fun.steps.reduce((x, s) => x + s.amt, 0) === 10000 &&
+      fun.got.cushion1 + fun.got.debt + fun.got.cushion2 === 0
+  );
+  chk(
+    "the fun share comes out after tax",
+    funTax.got.fun === Math.round((10000 - funTax.got.tax) * 0.2) &&
+      funTax.steps[0].id === "tax" &&
+      funTax.steps[1].id === "fun"
+  );
+  chk(
+    "a single filer has one IRA",
+    windIras(c) === 1 && windCalc(c, { amt: 100000, today: T }).got.roth === LIMITS_2026.ira
+  );
+  kitStore(c, "taxv").filing = { v: "joint", cf: 2 };
+  const pair = windCalc(c, { amt: 100000, taxed: "yes", today: T });
+  chk(
+    "married filing jointly (the test of retireFiling): the Roth step counts two IRAs",
+    retireFiling(c) === "married_filing_jointly" &&
+      windIras(c) === 2 &&
+      pair.iras === 2 &&
+      pair.got.roth === 2 * LIMITS_2026.ira
+  );
+  X("windfall");
+  chk(
+    "the math box says two IRAs, and the fun money line",
+    ov().includes("two IRAs, one for each of you") &&
+      ov().includes("Fun money: 10% of the money after tax") &&
+      clean(ov()),
+    junk(ov())
+  );
+  const Bk2 = windBook(c),
+    v2 = id => Bk2.rows.find(r => r.id === id).v;
+  chk(
+    "the spreadsheet: the fun share and its formula, and the note on two IRAs",
+    v2("wd_funshare") === 0.1 &&
+      Bk2.rows.find(r => r.id === "wd_fun").f === "=ROUND(({wd_amt}-{wd_tax})*{wd_funshare},0)" &&
+      v2("wd_fun") === Math.round((v2("wd_amt") - v2("wd_tax")) * v2("wd_funshare")) &&
+      Bk2.rows.find(r => r.id === "wd_roth").note.includes("Two IRAs")
   );
   X("close");
   G.chars.length = n0;

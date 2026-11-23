@@ -119,7 +119,9 @@ function stressBook(c) {
         id: "st_randof100",
         label: "Random markets that work, out of 100",
         v: S.random ? S.random.of100 : S.real.of100,
-        note: S.random ? "From the retirement engine" : "The engine did not answer yet: the real history number stands in",
+        note: S.random
+          ? "From the retirement engine"
+          : "The engine did not answer yet: the real history number stands in",
       },
       {
         id: "st_hard",

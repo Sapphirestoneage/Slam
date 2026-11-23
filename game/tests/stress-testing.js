@@ -98,6 +98,45 @@
       B0.rows.find(r => r.id === "st_y1929").v === Math.round(n29.end) &&
       BOOK_PARTS.includes(stressBook)
   );
+  /* ---------- the toggle on the headline ---------- */
+  chk(
+    "the default headline is All together, and before the engine the harder test is real history",
+    S0.view === "all" &&
+      S0.hard.which === "real" &&
+      S0.hard.of100 === O.of100 &&
+      ov().includes('data-a="stressview"') &&
+      ov().includes("term:stressview") &&
+      !!GLOSS.stressview
+  );
+  X("stressview", "hard");
+  const Sh = stressCalc(c);
+  chk(
+    "a tap on The harder test is kept in the profile, and the headline names the test",
+    c.x.stress.view.v === "hard" &&
+      Sh.view === "hard" &&
+      ov().includes(Sh.hard.of100 + " out of 100") &&
+      ov().includes("in the harder of the two tests, real history") &&
+      clean(ov()),
+    junk(ov())
+  );
+  chk(
+    "both views show the two separate counts under the headline",
+    ov().includes("Real history") && ov().includes("Random markets") && ov().includes(S0.real.ok + " of " + S0.real.n)
+  );
+  const Bh = stressBook(c),
+    bv = id => Bh.rows.find(r => r.id === id);
+  chk(
+    "the spreadsheet: each test out of 100, the harder test as MIN, and the picked headline",
+    bv("st_realof100").v === O.of100 &&
+      bv("st_hard").f === "=MIN({st_realof100},{st_randof100})" &&
+      bv("st_hard").v === Math.min(bv("st_realof100").v, bv("st_randof100").v) &&
+      bv("st_view").v === "The harder test"
+  );
+  X("stressview", "all");
+  chk(
+    "a tap on All together goes back to the one count",
+    stressCalc(c).view === "all" && ov().includes("market histories")
+  );
   const row = btRows().find(r => r.n.startsWith("Stress test"));
   chk("the built list has it as built, with its screen", row && row.st === "b" && row.a === "stress");
   const L = cxLink("storms-windfalls", 1);
@@ -130,6 +169,22 @@
           clean(ov()),
         junk(ov())
       );
+      chk(
+        "with the engine: the harder test is the lower of the two counts out of 100, and names its test",
+        S.hard.of100 === Math.min(S.real.of100, S.random.of100) &&
+          S.hard.which === (S.random.of100 < S.real.of100 ? "random" : "real") &&
+          stressBook(c).rows.find(r => r.id === "st_hard").v === S.hard.of100
+      );
+      X("stressview", "hard");
+      chk(
+        "the harder test on the screen, with both counts under it",
+        ov().includes(S.hard.of100 + " out of 100") &&
+          ov().includes(S.hard.name) &&
+          ov().includes("of 1,000") &&
+          clean(ov()),
+        junk(ov())
+      );
+      X("stressview", "all");
       const H2 = stressHelp(c, S);
       chk("what helps most is one change, or none is needed", H2 === null || H2.n === null || typeof H2.n === "string");
       X("close");

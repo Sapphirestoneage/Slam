@@ -63,7 +63,11 @@ function windIras(c) {
 /* THE SPLIT. over: { amt, taxed, fun, today }. Returns the steps { id, label, need, amt, why } and the totals. */
 function windCalc(c, over) {
   over = over || {};
-  const I = { amt: kitValue(c, "wind", "amt", 5000), taxed: kitValue(c, "wind", "taxed", "yes"), fun: kitValue(c, "wind", "fun", 0) },
+  const I = {
+      amt: kitValue(c, "wind", "amt", 5000),
+      taxed: kitValue(c, "wind", "taxed", "yes"),
+      fun: kitValue(c, "wind", "fun", 0),
+    },
     amount = over.amt != null ? over.amt : I.amt.v,
     taxed = (over.taxed || I.taxed.v) !== "no",
     A = pathsAssume(c),
