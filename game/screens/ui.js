@@ -19,7 +19,7 @@
                features/gig.js, features/know.js, features/values.js, features/connect.js,
                features/back.js, features/ask.js, features/ask2.js, screens/nav.js, screens/tidy.js,
                account/addon.js, features/fork.js, features/csp.js, features/dep.js, features/eras.js,
-               features/testkit.js. With no typeof test, thus safe only after the page has loaded all
+               features/testkit.js, features/slept.js, features/ask3.js, features/cover.js, features/quota.js, features/sim.js. With no typeof test, thus safe only after the page has loaded all
                files: screens/planner.js (finishSetupPlanEnd), screens/ux.js (emptyState, goalsTab,
                nextTab, uxTabs), features/back.js (homeBackRow).
    RULES       Plain words first. One next step that glows. One ledger that all screens read.
@@ -632,6 +632,9 @@ function home() {
   if (typeof homeForkRow === "function") h = homeForkRow(h); /* fork.js: the row for the fork check */
   if (typeof homeAccountLine === "function") h = homeAccountLine(h); /* eras.js: the account recommendation */
   if (typeof homeCoachNote === "function") h = homeCoachNote(h); /* supa.js: the note "the coach made a change" */
+  if (typeof homeSleptRow === "function")
+    h = homeSleptRow(h); /* slept.js: the line "Your money earned $X while you slept" */
+  if (typeof homeFrontRow === "function") h = homeFrontRow(h); /* ask3.js: the four questions, under the top numbers */
   return h;
 }
 /* The top of Home: the welcome screen, or the quiet screen, or the full screen with its first lines. */
@@ -935,6 +938,7 @@ function moveLine(m) {
 function playTab() {
   let h = playTabBase();
   if (typeof playTabHead === "function") h = playTabHead(h); /* ux.js: the tab title; no line for a streak of 0 days */
+  if (typeof playTabQuota === "function") h = playTabQuota(h); /* quota.js: the quotas of this month */
   return h;
 }
 function playTabBase() {
@@ -1143,11 +1147,14 @@ function moneyTabBase() {
  ${statementsCard()}
  ${schedCard(c)}
  <div class="card"><div class="row between"><h3>How complete is your picture</h3><b>${lv === 0 ? "Working on Level 1" : "Level " + lv + " of 5"}</b></div><div class="lvls">${LVN.map((x, i) => `<div class="lvl ${i < lv ? "on" : i === lv ? "cur" : ""}"><b>${i < lv ? "✓" : i + 1}</b><span>${x[0]}</span></div>`).join("")}</div>${nl ? `<div class="small" style="margin-top:8px"><b>Level ${nl}: ${LVN[nl - 1][0]}.</b> ${LVN[nl - 1][1]}.</div><button class="primary go wide" style="margin-top:8px" data-a="${lv === 0 ? "sharp" : "detail"}" data-v="${lv === 0 ? sharpList(c).find(k => !isSharp(c, k)) || "take" : ""}">${lv === 0 ? "Make my numbers real" : dk.length ? "Fill in Level " + nl + " · all taps" : "Level " + nl + " is waiting on answers you said you'd find"}</button>` : `<div class="small muted" style="margin-top:8px">Levels 1 to 3 are done. Levels 4 and 5 are coming later.</div>`}</div>
- <div class="card"><div class="row between"><h3>Work benefits and protection</h3><span class="tiny muted">Levels 2 and 3</span></div><div class="stack" style="margin-top:8px">${isEmployee(c) ? `<button class="rowbtn" data-a="sharp" data-v="match"><span>Retirement match at work</span><span class="row"><b class="${c.sharp.match ? "" : "guess"}">${c.sharp.match ? (c.match === "yes" ? "Yes, getting all of it" : c.match === "no" ? "Yes, not getting all of it" : "No match offered") : "Tap to answer"}</b><span class="caret">›</span></span></button>` : ""}${Object.keys(
-   PROT_Q
- )
-   .map(k => prow(PROT_Q[k][0], c.prot[k], "prot:" + k))
-   .join("")}</div></div>
+ <div class="card"><div class="row between"><h3>Work benefits and protection</h3><span class="tiny muted">Levels 2 and 3</span></div><div class="stack" style="margin-top:8px">${isEmployee(c) ? `<button class="rowbtn" data-a="sharp" data-v="match"><span>Retirement match at work</span><span class="row"><b class="${c.sharp.match ? "" : "guess"}">${c.sharp.match ? (c.match === "yes" ? "Yes, getting all of it" : c.match === "no" ? "Yes, not getting all of it" : "No match offered") : "Tap to answer"}</b><span class="caret">›</span></span></button>` : ""}${
+   /* cover.js: the insurance needs, with the gap in dollars, in place of the yes / no rows */
+   typeof coverRows === "function"
+     ? coverRows(c, prow)
+     : Object.keys(PROT_Q)
+         .map(k => prow(PROT_Q[k][0], c.prot[k], "prot:" + k))
+         .join("")
+ }</div></div>
  <details><summary>Cash flow history (${c.moves.length})</summary><div class="inner stack">${
    c.moves.length
      ? c.moves
@@ -5382,7 +5389,13 @@ function goalSheet(id) {
   W = { kind: "goal", id, pad: null, ed: null, o: { cost: 0 } };
   sheet(goalView);
 }
+/* goalView() makes the full sheet of one goal. goalViewBase() is the part from this file. */
 function goalView() {
+  let h = goalViewBase();
+  if (typeof goalViewSim === "function") h = goalViewSim(h); /* sim.js: the simulators that fit this goal */
+  return h;
+}
+function goalViewBase() {
   const w = W,
     c = C(),
     d = D,
