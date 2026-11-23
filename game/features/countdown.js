@@ -8,10 +8,10 @@
    INPUT       The profile: c.goals (the name, the price and the money saved of each goal), c.take,
                c.spend, c.x.countdown (the answers, with the key "<goal id>:<question>"). The open sheet
                (W.kind): cdn.
-   OUTPUT      Functions: cdnMonthsTo, cdnMonthlyNeeded, cdnKind, cdnInputs, cdnTarget, cdnCalc, cdnLine,
+   OUTPUT      Functions: cdnCover, cdnMonthsTo, cdnMonthlyNeeded, cdnKind, cdnInputs, cdnTarget, cdnCalc, cdnLine,
                cdnList, cdnSheet, cdnBook, goalViewCountdown, goalsTabCountdown. Actions (ACT): cdn. Parts of functions in
                other files: goalViewCountdown (goalView in ui.js), goalsTabCountdown (goalsTab in ux.js). Menu: "Countdowns".
-   DEPENDS ON  core/engine.js, screens/ui.js, features/sim.js (simLoanPayment), features/kit.js.
+   DEPENDS ON  data/health2026.js, core/engine.js, screens/ui.js, features/sim.js (simLoanPayment), features/kit.js.
    RULES       The math is the one countdown of the older tool (engines/countdown.js): the money grows
                each month at the twelfth root of the yearly rate, then the monthly amount goes in. Cash
                for a goal earns 0% unless the player picks a rate. All amounts are in today's dollars.
@@ -27,6 +27,15 @@ const CDN_KINDS = [
 ];
 /* The down payment rules of the older tool (data/down_payment.json, data/housing_conventions.json). */
 const CDN_HOME = { closing: 0.03, tax: 0.011, ins: 0.005, pmi: 0.0075, fha: 0.0055, reserves: 2, years: 30 };
+/* Health cover a month with no job, from data/health2026.js. COBRA is the premium of the plan at work plus 2%. */
+function cdnCover() {
+  const H = HEALTH_2026;
+  return {
+    market: H.marketplace40Month,
+    one: Math.round((H.employerSingleYear * H.cobraFactor) / 12),
+    family: Math.round((H.employerFamilyYear * H.cobraFactor) / 12),
+  };
+}
 const CDN_DOWN = [
   [0.035, "3.5% (FHA)"],
   [0.05, "5%"],
@@ -194,6 +203,7 @@ function cdnSheet() {
       `<button class="${L.length ? "ghost" : "primary"} wide" data-a="gadd">Add a goal</button>`
     );
   }
+  const HC = cdnCover();
   const K = cdnCalc(c, g),
     I = K.I,
     A = (k, label, opts, o) => kitAsk(c, "countdown", g.id + ":" + k, label, opts, I[k].v, o),
@@ -261,14 +271,19 @@ function cdnSheet() {
       "Health cover a month while you are away from work",
       [
         [0, "Covered already"],
-        [475, "$475 (a marketplace plan)"],
-        [760, "$760 (COBRA, one person)"],
-        [2175, "$2,175 (COBRA, a family)"],
+        [HC.market, money(HC.market) + " (a marketplace plan)"],
+        [HC.one, money(HC.one) + " (COBRA, one person)"],
+        [HC.family, money(HC.family) + " (COBRA, a family)"],
       ],
       {
         term: "cdncover",
         typed: true,
-        help: "Your spending comes from your numbers: " + money(c.spend || 0) + " a month.",
+        help:
+          "National averages for " +
+          HEALTH_2026.year +
+          ". Your price can be far from these. Your spending comes from your numbers: " +
+          money(c.spend || 0) +
+          " a month.",
       }
     );
   } else
@@ -320,6 +335,25 @@ function cdnSheet() {
       ? "Down payment: the amount down, plus closing costs of 3% of the price, plus 2 months of payments. The payment is a 30-year loan, property tax of 1.1% and insurance of 0.5% of the price a year, and mortgage insurance of 0.75% of the loan a year under 20% down (0.55% for FHA)."
       : null,
     K.kind === "quit" ? "Quit fund: (your spending + health cover) × the months you want covered." : null,
+    K.kind === "quit"
+      ? "Health cover, " +
+        HEALTH_2026.year +
+        " national averages: a marketplace plan " +
+        money(HC.market) +
+        " a month (the benchmark silver plan for a 40-year-old, before any tax credit). COBRA " +
+        money(HC.one) +
+        " for one person and " +
+        money(HC.family) +
+        " for a family: the average premium of a plan at work (" +
+        money(HEALTH_2026.employerSingleYear) +
+        " and " +
+        money(HEALTH_2026.employerFamilyYear) +
+        " a year) plus 2%, divided by 12. Source: " +
+        HEALTH_2026.source +
+        ", checked " +
+        HEALTH_2026.checked +
+        "."
+      : null,
     "All amounts are in today's dollars. A date is an estimate, not a promise.",
   ]);
   h += `<div class="row" style="gap:8px"><button class="ghost" style="flex:1" data-a="cdn" data-v="">All countdowns</button><button class="ghost" style="flex:1" data-a="goal" data-v="${g.id}">Open the goal</button></div>`;

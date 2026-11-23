@@ -1,6 +1,6 @@
 /* ============================================================================
    SLAM the Game: features/stars.js
-   PURPOSE     The Galaxy. A second view of the 25 skill tracks: 25 constellations around a center "FI",
+   PURPOSE     The Galaxy. A second view of the 25 skill tracks: 25 spiral arms (constellations) from "You" in the middle out to the FI ring,
                625 stars, one star for each skill. A star is bright (done), dim (not yet), pulsing (the
                next one, the same pick as Continue) or greyed (does not apply). A gateway star (its
                lanes reach 2 or more other tracks) has a ring. Lanes are the links of connect.js plus
@@ -18,7 +18,8 @@
                USES LATER, behind a typeof test: features/questlog.js (questContinue).
    RULES       One canvas, not 625 elements: the stars of one state are one path. The still picture is
                kept, and only the ring of the next star moves. No red. A lane does not lock a track.
-               Distance from the center is the level: level 1 is at the rim, level 5 is next to FI.
+               Distance from the middle is the level: level 1 is next to "You", and level 5 ends at the FI ring.
+               The player moves outward.
    ========================================================================= */
 const STARS = {
   v: { x: 0, y: 0, z: 1 },
@@ -36,6 +37,8 @@ const STARS = {
 };
 const STARS_OUT = 10;
 const STARS_IN = 2.2;
+/* How far one arm turns from the middle to the rim, in radians. */
+const STARS_TWIST = 1.9;
 const STARS_ZMIN = 0.8;
 const STARS_ZMAX = 9;
 const STARS_ZIG = [-0.6, 0.5, -0.15, 0.7, 0.05];
@@ -55,7 +58,7 @@ const STARS_WORDS = {
   "alternatives-speculation": /crypto|\boptions\b|angel invest|collectible/i,
   "insurance-protection": /insurance|deductible|umbrella policy|beneficiar/i,
   "geo-arbitrage-location": /cost of living|relocat|abroad|cheaper (city|country)/i,
-  "health-longevity": /checkup|exercise|\bsleep\b|your doctor|your health\b/i,
+  "health-longevity": /checkup|exercise|\bsleep\b|your doctor|your health(?! savings)\b/i,
   "family-generational-wealth": /\ba will\b|estate plan|\b529\b|\bheirs?\b|living trust|inherit/i,
   "withdrawal-decumulation": /withdraw|4% rule|required minimum|roth conversion|social security/i,
   knowledge: /\b(book|course|podcast)\b/i,
@@ -76,7 +79,9 @@ function starsHash(s) {
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 9973;
   return h / 9973;
 }
-/* THE PLACES. Each star: { id, t, i, k (the number of its track), band (0 to 4), x, y, r (distance from FI) }. */
+/* THE PLACES. Each star: { id, t, i, k (the number of its track), band (0 to 4), x, y, r (distance from the
+   middle) }. Each track is one arm of a spiral: level 1 starts next to the middle ("You"), and the arm turns
+   as it goes out to the FI ring at the rim. */
 function starsLayout() {
   if (STARS.lay) return STARS.lay;
   const T = starsTrees(),
@@ -84,12 +89,14 @@ function starsLayout() {
     list = [],
     by = {};
   T.forEach((t, k) => {
-    const ang = -Math.PI / 2 + (2 * Math.PI * k) / n,
+    const base = -Math.PI / 2 + (2 * Math.PI * k) / n,
       z = treeSize(t),
       per = z / 5;
     for (let i = 0; i < z; i++) {
-      const r = STARS_OUT - (i / (z - 1)) * (STARS_OUT - STARS_IN),
-        off = r * (Math.PI / n) * 0.62 * (STARS_ZIG[i % 5] + (starsHash(t + i) - 0.5) * 0.35),
+      const f = i / (z - 1),
+        r = STARS_IN + f * (STARS_OUT - STARS_IN),
+        ang = base + STARS_TWIST * f,
+        off = r * (Math.PI / n) * 0.5 * (STARS_ZIG[i % 5] + (starsHash(t + i) - 0.5) * 0.35),
         s = {
           id: t + ":" + i,
           t,
@@ -104,7 +111,7 @@ function starsLayout() {
       by[s.id] = s;
     }
   });
-  STARS.lay = { list, by, trees: T, ang: T.map((t, k) => -Math.PI / 2 + (2 * Math.PI * k) / n) };
+  STARS.lay = { list, by, trees: T, ang: T.map((t, k) => -Math.PI / 2 + (2 * Math.PI * k) / n + STARS_TWIST) };
   return STARS.lay;
 }
 /* The links found in the text of the skills: a skill names a subject of a different track. */
@@ -225,7 +232,7 @@ function starsDo(id) {
 }
 /* ---------- the view: world to screen ---------- */
 function starsScale(w, h) {
-  return (Math.min(w, h) / 2 / (STARS_OUT + 1.2)) * STARS.v.z;
+  return (Math.min(w, h) / 2 / (STARS_OUT + 2)) * STARS.v.z;
 }
 function starsToScreen(s, w, h) {
   const k = starsScale(w, h);
@@ -256,13 +263,18 @@ function starsPick(px, py, w, h) {
   });
   return best;
 }
-/* The track at an angle of the galaxy (for a double tap). */
+/* The track of the star nearest to a point of the galaxy (for a double tap). */
 function starsTreeAt(wx, wy) {
-  const L = starsLayout(),
-    n = L.trees.length,
-    a = Math.atan2(wy, wx) + Math.PI / 2,
-    k = ((Math.round((a / (2 * Math.PI)) * n) % n) + n) % n;
-  return L.trees[k];
+  let best = null,
+    bd = Infinity;
+  starsLayout().list.forEach(s => {
+    const dd = (s.x - wx) * (s.x - wx) + (s.y - wy) * (s.y - wy);
+    if (dd < bd) {
+      bd = dd;
+      best = s;
+    }
+  });
+  return best ? best.t : null;
 }
 /* Put one constellation, or one star, in the middle. */
 function starsCenter(t, z) {
@@ -313,11 +325,34 @@ function starsStill(g, w, h, c, next) {
   g.strokeStyle = "rgba(140,160,255,.08)";
   g.lineWidth = 1;
   for (let b = 0; b <= 5; b++) {
-    const r = STARS_OUT - (b / 5) * (STARS_OUT - STARS_IN),
+    const r = STARS_IN + (b / 5) * (STARS_OUT - STARS_IN),
       o = starsToScreen({ x: 0, y: 0 }, w, h);
     g.beginPath();
     g.arc(o[0], o[1], r * k, 0, Math.PI * 2);
     g.stroke();
+  }
+  /* the FI ring at the rim: where each arm ends */
+  {
+    const o = starsToScreen({ x: 0, y: 0 }, w, h),
+      r = (STARS_OUT + 0.55) * k;
+    g.strokeStyle = "rgba(255,214,102,.55)";
+    g.lineWidth = 2;
+    g.beginPath();
+    g.arc(o[0], o[1], r, 0, Math.PI * 2);
+    g.stroke();
+    g.lineWidth = 1;
+    g.fillStyle = "#ffd666";
+    g.font = "800 12px system-ui,sans-serif";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    [-Math.PI / 2, 0, Math.PI / 2, Math.PI].forEach(a => {
+      const x = o[0] + r * Math.cos(a),
+        y = o[1] + r * Math.sin(a);
+      g.fillStyle = "#070b1c";
+      g.fillRect(x - 11, y - 8, 22, 16);
+      g.fillStyle = "#ffd666";
+      g.fillText("FI", x, y);
+    });
   }
   /* the lanes: faint */
   g.strokeStyle = "rgba(150,170,255,.07)";
@@ -394,24 +429,24 @@ function starsStill(g, w, h, c, next) {
     g.stroke();
     g.lineWidth = 1;
   }
-  /* FI in the middle, and the names when the view is near enough */
+  /* "You" in the middle, and the names when the view is near enough */
   const o = starsToScreen({ x: 0, y: 0 }, w, h);
   g.fillStyle = "#ffd666";
   g.beginPath();
-  g.arc(o[0], o[1], Math.max(8, k * 0.9), 0, Math.PI * 2);
+  g.arc(o[0], o[1], Math.max(11, k * 1.1), 0, Math.PI * 2);
   g.fill();
   g.fillStyle = "#070b1c";
-  g.font = "800 " + Math.max(10, Math.round(k * 0.8)) + "px system-ui,sans-serif";
+  g.font = "800 " + Math.max(9, Math.round(k * 0.75)) + "px system-ui,sans-serif";
   g.textAlign = "center";
   g.textBaseline = "middle";
-  g.fillText("FI", o[0], o[1]);
+  g.fillText("You", o[0], o[1]);
   const names = STARS.v.z >= 1.7,
     selT = sel ? sel.split(":")[0] : null;
   g.font = "600 11px system-ui,sans-serif";
   L.trees.forEach((t, i) => {
     if (!names && t !== selT) return;
     const a = L.ang[i],
-      p = starsToScreen({ x: (STARS_OUT + 0.9) * Math.cos(a), y: (STARS_OUT + 0.9) * Math.sin(a) }, w, h);
+      p = starsToScreen({ x: (STARS_OUT + 1.5) * Math.cos(a), y: (STARS_OUT + 1.5) * Math.sin(a) }, w, h);
     g.fillStyle = "rgba(225,232,255,.92)";
     g.fillText(cxShort(t), Math.max(40, Math.min(w - 40, p[0])), Math.max(10, Math.min(h - 10, p[1])));
   });
@@ -620,7 +655,7 @@ function starsSheet() {
     head("Skills", "Galaxy") +
     `<div class="tile stack" style="gap:2px;text-align:center"><div class="bignum">${N.pct}% of the galaxy lit ${kitInfo("galaxy")}</div><div class="small muted">${N.lit} of ${N.of} stars${N.na ? " · " + N.na + " do not apply to you" : ""}</div></div>` +
     `<div class="row wrap" style="gap:6px"><button class="ghost slim" data-a="starzoom" data-v="in" aria-label="Zoom in">Zoom in +</button><button class="ghost slim" data-a="starzoom" data-v="out" aria-label="Zoom out">Zoom out −</button><button class="ghost slim" data-a="starzoom" data-v="reset">Whole galaxy</button>${next ? `<button class="ghost slim" data-a="starnext">Find my next star</button>` : ""}</div>` +
-    `<canvas id="galaxy" class="galaxy" role="img" aria-label="The galaxy: 25 constellations around FI. ${N.lit} of ${N.of} stars are lit. The list under the picture has the same counts."></canvas>` +
+    `<canvas id="galaxy" class="galaxy" role="img" aria-label="The galaxy: 25 spiral arms from you in the middle out to FI at the rim. ${N.lit} of ${N.of} stars are lit. The list under the picture has the same counts."></canvas>` +
     `<div class="tiny muted">Tap a star. Drag to move. Pinch to zoom. Tap a constellation two times to center it.</div>` +
     (sel ? starsPanel(c, sel, next) : "") +
     `<div class="row wrap tiny muted starkey" style="gap:10px"><span><i class="sk done"></i>Done</span><span><i class="sk dim"></i>Not yet</span><span><i class="sk next"></i>Next</span><span><i class="sk na"></i>Does not apply</span><span><i class="sk gate"></i>Gateway ${kitInfo("gateway")}</span></div>` +
@@ -639,7 +674,7 @@ function mapTabStars(h) {
     /<h1>Skills<\/h1>/,
     m =>
       m +
-      `<button class="ghost wide galaxybtn" data-a="galaxy">See it as a galaxy ›</button><div class="tiny muted" style="text-align:center">The same 625 skills as stars around FI.</div>`
+      `<button class="ghost wide galaxybtn" data-a="galaxy">See it as a galaxy ›</button><div class="tiny muted" style="text-align:center">The same 625 skills as stars that spiral out to FI.</div>`
   );
 }
 /* Part of questSheet() in questlog.js. Adds the button "Galaxy" to the Quest Log. */
@@ -649,7 +684,7 @@ function questSheetStars(h) {
 kitTerms({
   galaxy: [
     "The galaxy",
-    "All 625 skills as stars: 25 constellations around FI (financial independence). A star lights up when you finish its skill. Level 1 is at the rim, and level 5 is next to FI.",
+    "All 625 skills as stars: 25 constellations that spiral out from you in the middle to the FI ring (financial independence) at the rim. A star lights up when you finish its skill. Level 1 is next to you, and level 5 ends at the ring.",
   ],
   gateway: [
     "Gateway star",
@@ -659,7 +694,7 @@ kitTerms({
 kitScreen(
   "galaxy",
   "Galaxy",
-  "Your 625 skills as stars in 25 constellations around FI.",
+  "Your 625 skills as stars in 25 spiral arms, from you out to FI.",
   "Tap a star to see what it is, when it is done, and the screen that does it."
 );
 Object.assign(ACT, {
@@ -716,4 +751,4 @@ Object.assign(ACT, {
     drawSheet();
   },
 });
-kitMenu("Galaxy", "galaxy", "Your skills as 625 stars around FI", "connect");
+kitMenu("Galaxy", "galaxy", "Your skills as 625 stars that spiral out to FI", "connect");

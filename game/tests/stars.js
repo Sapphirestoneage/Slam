@@ -44,15 +44,24 @@
     L.list.every(s => skillOf(s.id) && L.by[s.id] === s) && new Set(L.list.map(s => s.id)).size === 625
   );
   chk(
-    "distance from FI follows the level: each next skill of a track is nearer",
+    "the player moves outward: each next skill of a track is farther from the middle",
     T.every(t => {
-      for (let i = 1; i < treeSize(t); i++) if (!(L.by[t + ":" + i].r < L.by[t + ":" + (i - 1)].r)) return false;
+      for (let i = 1; i < treeSize(t); i++) if (!(L.by[t + ":" + i].r > L.by[t + ":" + (i - 1)].r)) return false;
       return true;
     })
   );
   chk(
     "the band of a star is its level, 5 stars for each level",
     L.list.every(s => s.band === Math.floor(s.i / 5)) && L.by["main-path:24"].band === 4
+  );
+  chk(
+    "each track is a spiral arm: it turns as it goes out",
+    T.every(t => {
+      const a = L.by[t + ":0"],
+        b = L.by[t + ":24"],
+        turn = Math.atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
+      return Math.abs(Math.abs(turn) - STARS_TWIST) < 0.35;
+    })
   );
   chk(
     "no two stars are in the same place",

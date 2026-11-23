@@ -480,7 +480,7 @@ const WB = [
     "Galaxy: the skills as a star map",
     "b",
     () => WB_HAS("galaxy") && WB_FN("starsLayout") && WB_FN("starsLanes") && WB_FN("drawSheetStars"),
-    "25 constellations around FI, 625 stars on one canvas. Bright is done, the next one pulses, gateway stars have a ring, and a tap on a star gives a button that opens its screen. The list stays the default.",
+    "25 constellations that spiral out from you to the FI ring, 625 stars on one canvas. Bright is done, the next one pulses, gateway stars have a ring, and a tap on a star gives a button that opens its screen. The list stays the default.",
     "galaxy",
   ],
   [

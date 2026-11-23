@@ -104,6 +104,32 @@
   );
   S["g3:kind"] = { v: "goal", cf: 2 };
   chk("the player can change the kind", cdnCalc(c, g(2)).target === 10000);
+  /* ---------- health cover from data/health2026.js ---------- */
+  const HC = cdnCover();
+  chk(
+    "health cover: the 2026 marketplace benchmark, and COBRA as the premium at work plus 2%",
+    HC.market === HEALTH_2026.marketplace40Month &&
+      HC.one === Math.round((HEALTH_2026.employerSingleYear * 1.02) / 12) &&
+      HC.family === Math.round((HEALTH_2026.employerFamilyYear * 1.02) / 12) &&
+      HEALTH_2026.year === 2026 &&
+      /KFF/.test(HEALTH_2026.source),
+    JSON.stringify(HC)
+  );
+  X("cdn", "g3");
+  S["g3:kind"] = { v: "quit", cf: 2 };
+  X("cdn", "g3");
+  chk(
+    "the quit fund sheet offers those numbers and names the source and the year",
+    ov().includes('data-v="' + HC.market + '"') &&
+      ov().includes('data-v="' + HC.one + '"') &&
+      ov().includes('data-v="' + HC.family + '"') &&
+      ov().includes("National averages for 2026") &&
+      ov().includes("KFF 2026 Employer Health Benefits Survey") &&
+      !ov().includes("$475") &&
+      clean(ov()),
+    junk(ov())
+  );
+  S["g3:kind"] = { v: "goal", cf: 2 };
   /* ---------- the screens ---------- */
   X("goal", "g1");
   chk(

@@ -9,7 +9,7 @@
    INPUT       The profile, through pathsBase() of features/paths.js (cash, the cushion targets, the
                match, high-interest debt, the account limits) and taxvCalc() of features/taxview.js (the
                tax rate). The answers: c.x.wind (amt, taxed). The open sheet (W.kind): windfall.
-   OUTPUT      Functions: windMonthsLeft, windRate, windCalc, windBook, windSheet. Actions (ACT):
+   OUTPUT      Functions: windMonthsLeft, windRate, windOxygen, windIras, windCalc, windBook, windSheet. Actions (ACT):
                windfall. Menu: "Got extra money?".
    DEPENDS ON  core/engine.js, screens/ui.js, data/limits2026.js, features/taxview.js, features/paths.js
                (pathsAssume, pathsBase, PATHS_LINE), features/kit.js.
@@ -19,14 +19,22 @@
                screen says to raise the contribution and live on the windfall. The game does not know
                what the player already put in each account this year, so the room is the full 2026 limit
                and the result says Guess for those steps. All amounts are in today's dollars. The words
-               are "If these assumptions hold". No verdict words.
+               are "If these assumptions hold". No verdict words. A fun share (0% unless the player picks
+               one) comes out after tax and before the order, and only when the oxygen mask rule of
+               paths.js holds. A household that files jointly has two IRAs.
    ========================================================================= */
 const WIND_AMT = [500, 1000, 2500, 5000, 10000, 25000, 50000];
 const WIND_TAXED = [
   ["yes", "Tax already came out, or none is owed"],
   ["no", "No tax came out yet"],
 ];
-const WIND_STEPS = ["tax", "cushion1", "match", "debt", "cushion2", "roth", "hsa", "k401", "taxable"];
+const WIND_FUN = [
+  [0, "None"],
+  [5, "5%"],
+  [10, "10%"],
+  [20, "20%"],
+];
+const WIND_STEPS = ["tax", "fun", "cushion1", "match", "debt", "cushion2", "roth", "hsa", "k401", "taxable"];
 /* The months left in this year, with this month. */
 function windMonthsLeft(today) {
   return 13 - +String(today || todayISO()).slice(5, 7);
@@ -42,10 +50,20 @@ function windRate(c) {
   }
   return c.x && c.x.taxPct ? { v: c.x.taxPct / 100, cf: 2 } : { v: 0.22, cf: 1 };
 }
-/* THE SPLIT. over: { amt, taxed, today }. Returns the steps { id, label, need, amt, why } and the totals. */
+/* The oxygen mask rule of paths.js: the full cushion is in place and no high-interest debt is left. Fun
+   money waits for it. */
+function windOxygen(B) {
+  return B.d.cash >= B.target - 0.5 && B.hi <= 0;
+}
+/* Two IRAs for a married household: the same test as retireFiling() in retire.js (the filing status of
+   the tax view). */
+function windIras(c) {
+  return retireFiling(c) === "married_filing_jointly" ? 2 : 1;
+}
+/* THE SPLIT. over: { amt, taxed, fun, today }. Returns the steps { id, label, need, amt, why } and the totals. */
 function windCalc(c, over) {
   over = over || {};
-  const I = { amt: kitValue(c, "wind", "amt", 5000), taxed: kitValue(c, "wind", "taxed", "yes") },
+  const I = { amt: kitValue(c, "wind", "amt", 5000), taxed: kitValue(c, "wind", "taxed", "yes"), fun: kitValue(c, "wind", "fun", 0) },
     amount = over.amt != null ? over.amt : I.amt.v,
     taxed = (over.taxed || I.taxed.v) !== "no",
     A = pathsAssume(c),
@@ -54,16 +72,21 @@ function windCalc(c, over) {
     left12 = windMonthsLeft(over.today),
     rate = windRate(c),
     two = c.rel === "Married",
+    oxy = windOxygen(B),
+    funAsk = over.fun != null ? over.fun : I.fun.v,
+    funShare = oxy ? funAsk / 100 : 0,
+    iras = windIras(c),
     got = {},
     steps = [];
   let rest = amount;
   const need = {
       tax: () => (taxed ? 0 : amount * rate.v),
+      fun: () => (amount - (got.tax || 0)) * funShare,
       cushion1: () => B.starter - cash,
       match: () => B.matchNeed * left12,
       debt: () => B.hi,
       cushion2: () => B.target - cash - (got.cushion1 || 0),
-      roth: () => LIMITS_2026.ira,
+      roth: () => LIMITS_2026.ira * iras,
       hsa: () => B.hsa * 12,
       k401: () => B.k401 * left12,
       taxable: () => rest,
@@ -87,6 +110,12 @@ function windCalc(c, over) {
             left12 +
             " months left this year, and live on this money. Your job adds the same amount."
           : "No job match is left on the table.",
+      fun: n =>
+        funAsk > 0 && !oxy
+          ? "The fun share waits for now. Your plan puts the full cushion and high-interest debt first, and this opens when both are done."
+          : n > 0
+            ? funAsk + "% of what is yours, to enjoy. No strings."
+            : "You picked no fun share.",
       debt: n =>
         n > 0
           ? "High-interest debt of " + money(B.hi) + " at about " + Math.round(B.hiRate) + "% a year."
@@ -95,7 +124,11 @@ function windCalc(c, over) {
         n > 0
           ? "The full cushion is " + money(Math.round(B.target)) + " (" + B.d.target + " months of spending)."
           : "Your cash already covers the full cushion.",
-      roth: n => "The 2026 limit is " + money(LIMITS_2026.ira) + ". The game does not know what you put in this year.",
+      roth: n =>
+        "The 2026 limit is " +
+        money(LIMITS_2026.ira) +
+        (iras === 2 ? " for each of you, " + money(LIMITS_2026.ira * 2) + " for two." : ".") +
+        " The game does not know what you put in this year.",
       hsa: n =>
         n > 0
           ? "The 2026 limit is " + money(two ? LIMITS_2026.hsaFamily : LIMITS_2026.hsaOne) + " for your health plan."
@@ -117,7 +150,7 @@ function windCalc(c, over) {
     rest -= a;
     steps.push({
       id,
-      label: id === "tax" ? "Tax on this money" : PATHS_LINE[id][0],
+      label: id === "tax" ? "Tax on this money" : id === "fun" ? "Fun money" : PATHS_LINE[id][0],
       need: n,
       amt: a,
       why: why[id](n),
@@ -133,6 +166,11 @@ function windCalc(c, over) {
     steps,
     got,
     toTax: got.tax,
+    toFun: got.fun,
+    funAsk,
+    funShare,
+    oxy,
+    iras,
     toCash: got.cushion1 + got.cushion2,
     toDebt: got.debt,
     invested,
@@ -158,14 +196,32 @@ function windBook(c) {
     rows = [
       { id: "wd_amt", label: "The extra money", v: S.amount, note: "Your answer" },
       { id: "wd_rate", label: "Share held back for tax", v: S.taxed ? 0 : S.rate, note: "From your tax view" },
+      {
+        id: "wd_funshare",
+        label: "Fun share",
+        v: S.funShare,
+        note: S.funAsk > 0 && !S.oxy ? "Waits for the full cushion and no high-interest debt" : "Your answer",
+      },
     ];
   S.steps.forEach(s =>
     rows.push({
       id: "wd_" + s.id,
       label: s.label,
       v: s.amt,
-      f: s.id === "tax" ? "=ROUND({wd_amt}*{wd_rate},0)" : undefined,
-      note: s.id === "tax" ? "" : "The order of the two paths: each step takes what it needs",
+      f:
+        s.id === "tax"
+          ? "=ROUND({wd_amt}*{wd_rate},0)"
+          : s.id === "fun"
+            ? "=ROUND(({wd_amt}-{wd_tax})*{wd_funshare},0)"
+            : undefined,
+      note:
+        s.id === "tax"
+          ? ""
+          : s.id === "fun"
+            ? "After tax, before the order starts"
+            : s.id === "roth" && S.iras === 2
+              ? "Two IRAs: a married household"
+              : "The order of the two paths: each step takes what it needs",
     })
   );
   rows.push(
@@ -209,6 +265,13 @@ function windSheet() {
     kitAsk(c, "wind", "taxed", "Did tax come out of it?", WIND_TAXED, "yes", {
       term: "wd_taxed",
       help: "A bonus on a paycheck: tax came out. A gift: none is owed by you. Freelance pay or a sale: no tax came out yet.",
+    }) +
+    kitAsk(c, "wind", "fun", "A share for fun, before the order starts?", WIND_FUN, 0, {
+      term: "wd_fun",
+      help:
+        S.funAsk > 0 && !S.oxy
+          ? "The fun share waits for now: your plan puts the full cushion and high-interest debt first. It opens when both are done."
+          : "A share to enjoy makes the rest of the plan easier to keep.",
     }) +
     kitTile(
       "Start here",
@@ -267,6 +330,17 @@ function windSheet() {
       ", tax year " +
       LIMITS_2026.year +
       ". The game does not know what you already put in this year, so the room is the full limit.",
+    S.iras === 2
+      ? "Roth IRA: two IRAs, one for each of you, because your tax view says married filing jointly. " +
+        money(LIMITS_2026.ira) +
+        " times 2 = " +
+        money(LIMITS_2026.ira * 2) +
+        "."
+      : "Roth IRA: one IRA. A married household that files jointly gets two.",
+    "Fun money: " +
+      (S.funAsk > 0 && !S.oxy
+        ? "it waits. The oxygen mask rule of your two paths comes first: the full cushion and no high-interest debt."
+        : Math.round(S.funShare * 100) + "% of the money after tax = " + money(S.toFun) + ", before the order starts."),
     "By your stop age: (" +
       money(S.invested) +
       " invested + " +
@@ -285,6 +359,10 @@ function windSheet() {
 }
 kitTerms({
   wd_windfall: ["Windfall", "Money outside your normal pay: a bonus, a gift, a tax refund, an inheritance, a sale."],
+  wd_fun: [
+    "Fun money",
+    "A share of extra money to enjoy with no strings. It comes out after tax and before the order starts. It opens when your full cushion is in place and no high-interest debt is left.",
+  ],
   wd_taxed: [
     "Tax on extra money",
     "A bonus on a paycheck already had tax taken out. A gift is not taxed to the person who gets it. Freelance pay and most sales have no tax taken out, so part of the money is not yours yet.",

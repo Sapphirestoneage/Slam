@@ -156,7 +156,10 @@ function offerSheet() {
       hot: K.gap > 0 && K.top === P.id,
       rows: [
         ["Take-home pay", money(Math.round(P.net))],
-        ["The match", "+" + money(Math.round(P.match))],
+        [
+          `The match<div class="tiny muted">Counted in full. It can vest over some years.</div>`,
+          "+" + money(Math.round(P.match)),
+        ],
         ["Stock", "+" + money(Math.round(P.stock))],
         ["Health premiums", "-" + money(Math.round(P.health))],
         ["Commute", "-" + money(Math.round(P.commute))],
@@ -181,6 +184,7 @@ function offerSheet() {
     head("Plan", "Two job offers") +
     `<div class="row between small" style="gap:8px"><span>What one year of each offer is worth ${kitInfo("offvalue")}</span>${kitPill(K.st)}</div>` +
     kitColumns([col(K.A), col(K.B)]);
+  h += `<div class="small offvest">The match counts in full here. A match often vests ${kitInfo("offvest")} over some years. If you leave before it vests, you keep less of it.</div>`;
   h +=
     K.gap >= 1
       ? `<div class="tile small">If these assumptions hold, ${name(K.top)} is ahead by <b>${money(Math.round(K.gap))}</b> a year.${K.decider ? " The largest difference is " + esc(K.decider.n) + ": " + money(Math.round(K.decider.diff)) + " a year." : ""} By the hour ${kitInfo("offhour")}, ${name(K.topHour)} is ahead by ${cents(K.gapHour)}${K.topHour !== K.top ? ", because it takes fewer hours" : ""}.</div>`
@@ -201,6 +205,7 @@ function offerSheet() {
     "Take-home pay: pay before taxes plus the bonus, less federal tax, payroll tax and state tax, from the 2026 tables of the tax view, with your filing status, your state and your pre-tax contributions.",
     "What a year is worth: take-home pay + the match + stock - 12 × the health premium - 12 × the commute cost.",
     "The match: the percent × pay before taxes. It counts in full, on the assumption that you put in enough to get all of it.",
+    "Vesting: the match counts in full. A match often vests over some years. If you leave before it vests, you keep less of it. Check the vesting schedule of each offer.",
     "Hours a year: (52 weeks - days off ÷ 5) × (40 hours + the commute on the days you go in).",
     "What an hour is worth: what a year is worth ÷ the hours a year.",
     "Not counted: the deductible of the health plan, how sure the stock is, and how you would like the work. Those are yours to weigh.",
@@ -222,6 +227,10 @@ kitTerms({
   offmatch: [
     "The match",
     "Money the job adds to your retirement plan when you put money in. 4% means the job adds up to 4% of your pay.",
+  ],
+  offvest: [
+    "Vesting",
+    "The wait before money your job gave you is fully yours. A match can vest a part each year, or all at one time after some years. Your own contributions are always yours.",
   ],
   offstock: [
     "Stock",

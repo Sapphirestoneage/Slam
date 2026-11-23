@@ -103,6 +103,15 @@
       clean(ov()),
     junk(ov())
   );
+  chk(
+    "the match counts in full, with the vesting line, its i, and the line in the math",
+    ov().includes("offvest") &&
+      ov().includes("The match counts in full here") &&
+      ov().includes("If you leave before it vests, you keep less of it") &&
+      ov().includes("term:offvest") &&
+      ov().includes("Vesting: the match counts in full") &&
+      !!GLOSS.offvest
+  );
   chk("no verdict words", !/\b(best|better|worse|wrong|bad)\b/i.test(ov().replace(/<[^>]+>/g, " ")));
   chk(
     "each question has an i",

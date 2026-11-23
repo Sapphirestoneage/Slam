@@ -126,8 +126,8 @@
   chk(
     "the sheet: the next dollar, the rows with limits and room, the extra question, the math",
     W.kind === "nxa" &&
-      ov().includes("Where your next dollar goes") &&
-      ov().includes("Next dollar") &&
+      ov().includes("After this month's money is placed, your next extra dollar goes to") &&
+      ov().includes("Next extra dollar") &&
       ov().includes("of $24,500 a year") &&
       ov().includes("Room left this year") &&
       ov().includes("Try extra dollars a month") &&

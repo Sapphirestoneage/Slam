@@ -148,7 +148,12 @@ function nxaBook(c) {
         { id: p + "room", label: r.n + ": room left this year", v: r.roomY, f: "=MAX(0,{" + p + "lim}-{" + p + "now})" }
       );
     });
-  rows.push({ id: "nx_next", label: "Where the next dollar goes", v: K.next.n, note: "The first row with room" });
+  rows.push({
+    id: "nx_next",
+    label: "Where the next extra dollar goes, after this month's money is placed",
+    v: K.next.n,
+    note: "The first row with room",
+  });
   return { title: "Which account next", rows };
 }
 function nxaSheet() {
@@ -165,12 +170,12 @@ function nxaSheet() {
             : r.limit == null
               ? money(Math.round(r.put)) + " a month · no limit"
               : money(Math.round(r.k === "match" ? r.put * 12 : r.nowY)) + " of " + money(r.limit) + " a year";
-      return `<div class="tile stack nxarow ${isNext ? "kithot" : ""}" style="gap:2px"><div class="row between" style="gap:8px"><b class="small">${esc(r.n)} ${kitInfo(r.term)}</b>${isNext ? `<span class="pill kitst">Next dollar</span>` : r.full && !(r.step && r.need > 0.5) ? `<span class="tiny muted">${r.step ? "Done" : "Full"} ✓</span>` : ""}</div><div class="small">${right}</div>${!r.step && r.limit != null && !r.off ? `<div class="tiny muted">Room left this year: ${money(Math.round(r.roomY))}${r.put > 0 ? " · " + money(Math.round(r.put)) + " a month from what you keep" : ""}</div>` : ""}</div>`;
+      return `<div class="tile stack nxarow ${isNext ? "kithot" : ""}" style="gap:2px"><div class="row between" style="gap:8px"><b class="small">${esc(r.n)} ${kitInfo(r.term)}</b>${isNext ? `<span class="pill kitst">Next extra dollar</span>` : r.full && !(r.step && r.need > 0.5) ? `<span class="tiny muted">${r.step ? "Done" : "Full"} ✓</span>` : ""}</div><div class="small">${right}</div>${!r.step && r.limit != null && !r.off ? `<div class="tiny muted">Room left this year: ${money(Math.round(r.roomY))}${r.put > 0 ? " · " + money(Math.round(r.put)) + " a month from what you keep" : ""}</div>` : ""}</div>`;
     };
   let h =
     head("Plan", "Which account next") +
     kitTile(
-      "Where your next dollar goes",
+      "After this month's money is placed, your next extra dollar goes to",
       esc(K.next.n),
       "You place " +
         money(Math.round(K.money)) +
@@ -228,8 +233,8 @@ function nxaSheet() {
 }
 kitTerms({
   nxanext: [
-    "The next dollar",
-    "The first step or account in the order that still has room. One more dollar a month goes there.",
+    "The next extra dollar",
+    "First the game places the money you keep this month, row by row. Then it looks for the first step or account that still has room. One more dollar a month, on top of what you keep now, goes there.",
   ],
   nxalimit: [
     "Limit",
@@ -263,7 +268,7 @@ kitScreen(
   "nxa",
   "Which account next",
   "Your steps and accounts in order, each with its 2026 limit, what goes in now, and the room left.",
-  "One line shows where your next dollar goes."
+  "One line shows where one more dollar a month goes, after this month's money is placed."
 );
 Object.assign(ACT, {
   nxa: () => {
@@ -271,4 +276,4 @@ Object.assign(ACT, {
     sheet(nxaSheet);
   },
 });
-kitMenu("Which account next", "nxa", "Each account up to its 2026 limit, and where the next dollar goes", "acwhy");
+kitMenu("Which account next", "nxa", "Each account up to its 2026 limit, and where one more dollar goes", "acwhy");
