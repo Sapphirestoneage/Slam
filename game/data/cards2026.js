@@ -170,6 +170,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "5x Chase Travel, 3x dining, gas and EV charging, online groceries, top streaming, 2x other travel, 1x everything else"
    },
    "credits": [
@@ -215,7 +216,7 @@ window.CARDS2026 = {
    "unique": [
     {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "About the points",
@@ -262,6 +263,7 @@ window.CARDS2026 = {
       "x": 3
      }
     ],
+    "picks": [],
     "words": "8x Chase Travel, 4x flights and hotels booked direct, 3x dining, 1x everything else"
    },
    "credits": [
@@ -339,7 +341,7 @@ window.CARDS2026 = {
    "unique": [
     {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "About the points",
@@ -382,6 +384,7 @@ window.CARDS2026 = {
       "x": 3
      }
     ],
+    "picks": [],
     "words": "5% Chase Travel, 3% dining and drugstores, 1.5% everything else"
    },
    "credits": [],
@@ -408,7 +411,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Foreign transaction fee",
@@ -452,9 +455,13 @@ window.CARDS2026 = {
      },
      {
       "cat": "rotating",
-      "x": 5
+      "x": 5,
+      "cap": 1500,
+      "per": "quarter",
+      "then": 1
      }
     ],
+    "picks": [],
     "words": "5% on rotating quarterly categories (up to $1,500 a quarter, activate each quarter), 5% Chase Travel, 3% dining and drugstores, 1% everything else"
    },
    "credits": [],
@@ -485,12 +492,8 @@ window.CARDS2026 = {
      "words": "One review site shows $250"
     },
     {
-     "label": "A limit on the 5x rate",
-     "words": "on up to $6,000 a year"
-    },
-    {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -520,6 +523,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1.5,
     "rates": [],
+    "picks": [],
     "words": "1.5% on everything"
    },
    "credits": [],
@@ -539,7 +543,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Foreign transaction fee",
@@ -573,6 +577,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 0,
     "rates": [],
+    "picks": [],
     "words": "No rewards"
    },
    "credits": [],
@@ -587,7 +592,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "None, counted at 1 cent each"
+     "words": "None"
     },
     {
      "label": "Foreign transaction fee",
@@ -642,6 +647,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "5% at Amazon, Whole Foods and Chase Travel (with Prime), 2% gas, restaurants, transit and rideshare, 1% everything else"
    },
    "credits": [],
@@ -667,7 +673,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -718,6 +724,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "3% at Amazon, Whole Foods and Chase Travel, 2% gas, restaurants, transit and rideshare, 1% everything else"
    },
    "credits": [],
@@ -741,7 +748,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -781,6 +788,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "2x United, dining and hotels booked direct, 1x everything else"
    },
    "credits": [
@@ -828,7 +836,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Miles, counted at 1.2 cents each"
+     "words": "Miles"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -875,6 +883,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "3x United, 2x dining, streaming and other travel, 1x everything else"
    },
    "credits": [
@@ -922,7 +931,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Miles, counted at 1.2 cents each"
+     "words": "Miles"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -954,6 +963,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "2x Southwest, 1x everything else"
    },
    "credits": [
@@ -989,7 +999,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Points, counted at 1.3 cents each"
+     "words": "Points"
     },
     {
      "label": "Foreign transaction fee",
@@ -1033,6 +1043,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "4x Southwest, 2x gas and restaurants, 1x everything else"
    },
    "credits": [
@@ -1071,7 +1082,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Points, counted at 1.3 cents each"
+     "words": "Points"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -1100,18 +1111,20 @@ window.CARDS2026 = {
      {
       "cat": "hotel",
       "x": 6
-     },
+     }
+    ],
+    "picks": [
      {
-      "cat": "groceries",
-      "x": 3
-     },
-     {
-      "cat": "gas",
-      "x": 3
-     },
-     {
-      "cat": "dining",
-      "x": 3
+      "x": 3,
+      "count": 3,
+      "from": [
+       "groceries",
+       "gas",
+       "dining"
+      ],
+      "cap": 6000,
+      "per": "year",
+      "then": 2
      }
     ],
     "words": "Up to 17x at Marriott, 3x on groceries, gas and dining (first $6,000 a year), 2x everything else"
@@ -1159,20 +1172,8 @@ window.CARDS2026 = {
      "words": "Its offer is free nights, which this page does not put a dollar value on."
     },
     {
-     "label": "A limit on the 3x rate",
-     "words": "on up to $6,000 a year"
-    },
-    {
-     "label": "A limit on the 3x rate",
-     "words": "on up to $6,000 a year"
-    },
-    {
-     "label": "A limit on the 3x rate",
-     "words": "on up to $6,000 a year"
-    },
-    {
      "label": "What it earns",
-     "words": "Points, counted at 0.7 cents each"
+     "words": "Points"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -1215,6 +1216,7 @@ window.CARDS2026 = {
       "x": 5
      }
     ],
+    "picks": [],
     "words": "Up to 26x at IHG, 5x travel, dining and gas, 3x everything else"
    },
    "credits": [
@@ -1255,7 +1257,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Points, counted at 0.5 cents each"
+     "words": "Points"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -1298,6 +1300,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "Up to 9x at Hyatt, 2x dining, airlines, transit, gym, 1x everything else"
    },
    "credits": [
@@ -1341,7 +1344,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Points, counted at 1.5 cents each"
+     "words": "Points"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -1367,6 +1370,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "1% in Disney Rewards Dollars on everything"
    },
    "credits": [],
@@ -1381,7 +1385,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Foreign transaction fee",
@@ -1424,6 +1428,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "4% DoorDash and Caviar, 3% dining direct, 2% groceries, 1% everything else"
    },
    "credits": [
@@ -1446,7 +1451,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -1473,6 +1478,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "8x Chase Travel, 4x flights and hotels booked direct, 3x social media and search ads, 1x other"
    },
    "credits": [],
@@ -1501,6 +1507,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "3x on the first $150,000 a year in shipping, ads, internet, cable, phone and travel; 1x other"
    },
    "credits": [],
@@ -1529,6 +1536,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "5% on the first $25,000 a year at office supply stores and on internet, cable and phone; 2% on the first $25,000 at gas stations and restaurants; 1% other"
    },
    "credits": [],
@@ -1558,6 +1566,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "1.5% on everything"
    },
    "credits": [],
@@ -1587,6 +1596,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "2.5% on purchases of $5,000 or more, 2% other, 5% Chase Travel"
    },
    "credits": [],
@@ -1610,6 +1620,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "2x United, gas, local transit; 1x other"
    },
    "credits": [],
@@ -1638,6 +1649,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "4x United, 2x dining and other travel, 1x other. Includes United Club membership"
    },
    "credits": [],
@@ -1667,6 +1679,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "2x United, gas, dining, office supply, local transit; 1x other"
    },
    "credits": [],
@@ -1696,6 +1709,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "2x United, 1.5x other"
    },
    "credits": [],
@@ -1725,6 +1739,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "3x Southwest, 2x groceries and restaurants on the first $8,000 a year, 1x other"
    },
    "credits": [],
@@ -1749,6 +1764,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "3x Southwest, 2x gas and restaurants on the first $8,000 a year, 1x other"
    },
    "credits": [],
@@ -1773,6 +1789,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "4x Southwest, 2x gas, restaurants, hotels booked direct, local transit; 1x other"
    },
    "credits": [],
@@ -1796,6 +1813,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "2x groceries, rideshare, food delivery, streaming, internet, cable and phone; 1x other"
    },
    "credits": [],
@@ -1819,6 +1837,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "4x on the first $15,000 a year in groceries and dining, 2x other. Gold Elite status"
    },
    "credits": [],
@@ -1842,6 +1861,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "3x dining, gas and groceries; 2x other"
    },
    "credits": [],
@@ -1865,6 +1885,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "6x dining and other travel, 3x other. Platinum Elite status"
    },
    "credits": [],
@@ -1894,6 +1915,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "5x travel, gas, ads, office supply and restaurants; 3x other"
    },
    "credits": [],
@@ -1918,6 +1940,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "4x Hyatt, 2x in your top three categories each quarter, 1x other"
    },
    "credits": [],
@@ -1946,6 +1969,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "3x travel, 3x groceries and dining through Dec 31, 2026 (2x after), 2x gas, 1x other"
    },
    "credits": [],
@@ -1978,6 +2002,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "3 Avios on British Airways, Aer Lingus, Iberia and LEVEL; 2 on hotels booked direct; 1 other"
    },
    "credits": [],
@@ -2006,6 +2031,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "3 Avios on Iberia, British Airways, Aer Lingus and LEVEL; 2 on hotels booked direct; 1 other"
    },
    "credits": [],
@@ -2029,6 +2055,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "3 Avios on Aer Lingus, British Airways, Iberia and LEVEL; 2 on hotels booked direct; 1 other"
    },
    "credits": [],
@@ -2052,6 +2079,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "5% Disney+, Hulu and ESPN+; 2% gas, groceries, restaurants and Disney; 1% other"
    },
    "credits": [],
@@ -2080,6 +2108,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "10% Disney+, Hulu and ESPN+; 3% gas and Disney; 2% groceries and restaurants; 1% other"
    },
    "credits": [],
@@ -2108,6 +2137,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "5% Instacart on the first $6,000 a year, 5% Chase Travel, 2% restaurants, gas and streaming, 1% other"
    },
    "credits": [],
@@ -2136,6 +2166,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": ""
    },
    "credits": [],
@@ -2167,13 +2198,17 @@ window.CARDS2026 = {
     "rates": [
      {
       "cat": "airline",
-      "x": 5
+      "x": 5,
+      "cap": 500000,
+      "per": "year",
+      "then": 1
      },
      {
       "cat": "hotelPortal",
       "x": 5
      }
     ],
+    "picks": [],
     "words": "5x flights booked direct or with Amex Travel (up to $500,000 a year), 5x prepaid hotels on Amex Travel, 1x everything else"
    },
    "credits": [
@@ -2268,7 +2303,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Paying it off",
@@ -2301,11 +2336,17 @@ window.CARDS2026 = {
     "rates": [
      {
       "cat": "dining",
-      "x": 4
+      "x": 4,
+      "cap": 50000,
+      "per": "year",
+      "then": 1
      },
      {
       "cat": "groceries",
-      "x": 4
+      "x": 4,
+      "cap": 25000,
+      "per": "year",
+      "then": 1
      },
      {
       "cat": "airline",
@@ -2316,6 +2357,7 @@ window.CARDS2026 = {
       "x": 5
      }
     ],
+    "picks": [],
     "words": "4x restaurants and US takeout (up to $50,000 a year), 4x US supermarkets (up to $25,000 a year), 5x prepaid hotels and 3x flights on Amex Travel or direct, 1x everything else"
    },
    "credits": [
@@ -2368,16 +2410,8 @@ window.CARDS2026 = {
      "words": "As high as 100,000 Membership Rewards points"
     },
     {
-     "label": "A limit on the 4x rate",
-     "words": "on up to $50,000 a year"
-    },
-    {
-     "label": "A limit on the 4x rate",
-     "words": "on up to $25,000 a year"
-    },
-    {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Paying it off",
@@ -2416,6 +2450,7 @@ window.CARDS2026 = {
       "x": 3
      }
     ],
+    "picks": [],
     "words": "3x travel, transit and restaurants, 1x everything else"
    },
    "credits": [
@@ -2453,7 +2488,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Paying it off",
@@ -2483,7 +2518,10 @@ window.CARDS2026 = {
     "rates": [
      {
       "cat": "groceries",
-      "x": 6
+      "x": 6,
+      "cap": 6000,
+      "per": "year",
+      "then": 1
      },
      {
       "cat": "streaming",
@@ -2498,6 +2536,7 @@ window.CARDS2026 = {
       "x": 3
      }
     ],
+    "picks": [],
     "words": "6% US supermarkets (up to $6,000 a year), 6% select US streaming, 3% US gas and transit, 1% everything else"
    },
    "credits": [
@@ -2531,12 +2570,8 @@ window.CARDS2026 = {
      "words": "Another site shows $250"
     },
     {
-     "label": "A limit on the 6x rate",
-     "words": "on up to $6,000 a year"
-    },
-    {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Foreign transaction fee",
@@ -2573,17 +2608,27 @@ window.CARDS2026 = {
     "rates": [
      {
       "cat": "groceries",
-      "x": 3
+      "x": 3,
+      "cap": 6000,
+      "per": "year",
+      "then": 1
      },
      {
       "cat": "gas",
-      "x": 3
+      "x": 3,
+      "cap": 6000,
+      "per": "year",
+      "then": 1
      },
      {
       "cat": "online",
-      "x": 3
+      "x": 3,
+      "cap": 6000,
+      "per": "year",
+      "then": 1
      }
     ],
+    "picks": [],
     "words": "3% US supermarkets, US online retail and US gas (each up to $6,000 a year), 1% everything else"
    },
    "credits": [
@@ -2622,20 +2667,8 @@ window.CARDS2026 = {
      "words": "Another site shows $250"
     },
     {
-     "label": "A limit on the 3x rate",
-     "words": "on up to $6,000 a year"
-    },
-    {
-     "label": "A limit on the 3x rate",
-     "words": "on up to $6,000 a year"
-    },
-    {
-     "label": "A limit on the 3x rate",
-     "words": "on up to $6,000 a year"
-    },
-    {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Foreign transaction fee",
@@ -2680,6 +2713,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "2x Delta, restaurants and US supermarkets, 1x everything else"
    },
    "credits": [
@@ -2723,7 +2757,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Miles, counted at 1.1 cents each"
+     "words": "Miles"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -2770,6 +2804,7 @@ window.CARDS2026 = {
       "x": 5
      }
     ],
+    "picks": [],
     "words": "7x Hilton, 5x restaurants, US supermarkets and US gas, 3x everything else"
    },
    "credits": [],
@@ -2797,7 +2832,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Points, counted at 0.5 cents each"
+     "words": "Points"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -2828,6 +2863,7 @@ window.CARDS2026 = {
       "x": 10
      }
     ],
+    "picks": [],
     "words": "10x hotels and rental cars and 5x flights on Capital One Travel, 2x everything else"
    },
    "credits": [
@@ -2877,7 +2913,7 @@ window.CARDS2026 = {
    "unique": [
     {
      "label": "What it earns",
-     "words": "Miles, counted at 1 cent each"
+     "words": "Miles"
     },
     {
      "label": "About the points",
@@ -2912,6 +2948,7 @@ window.CARDS2026 = {
       "x": 5
      }
     ],
+    "picks": [],
     "words": "5x hotels and rental cars on Capital One Travel, 2x everything else"
    },
    "credits": [
@@ -2947,7 +2984,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Miles, counted at 1 cent each"
+     "words": "Miles"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -2978,6 +3015,7 @@ window.CARDS2026 = {
       "x": 5
      }
     ],
+    "picks": [],
     "words": "5x hotels and rental cars on Capital One Travel, 1.25x everything else"
    },
    "credits": [],
@@ -3001,7 +3039,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Miles, counted at 1 cent each"
+     "words": "Miles"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -3032,6 +3070,7 @@ window.CARDS2026 = {
       "x": 5
      }
     ],
+    "picks": [],
     "words": "1.5% on everything, 5% hotels and rental cars on Capital One Travel"
    },
    "credits": [],
@@ -3049,7 +3088,7 @@ window.CARDS2026 = {
    "unique": [
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -3092,6 +3131,7 @@ window.CARDS2026 = {
       "x": 3
      }
     ],
+    "picks": [],
     "words": "3% groceries (not superstores), dining, entertainment and popular streaming, 1% everything else"
    },
    "credits": [],
@@ -3113,7 +3153,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -3143,6 +3183,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1.5,
     "rates": [],
+    "picks": [],
     "words": "1.5% on everything"
    },
    "credits": [],
@@ -3160,7 +3201,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -3190,6 +3231,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 0,
     "rates": [],
+    "picks": [],
     "words": "No rewards"
    },
    "credits": [],
@@ -3207,7 +3249,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "None, counted at 1 cent each"
+     "words": "None"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -3233,6 +3275,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 0,
     "rates": [],
+    "picks": [],
     "words": "No rewards"
    },
    "credits": [],
@@ -3252,7 +3295,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "None, counted at 1 cent each"
+     "words": "None"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -3278,6 +3321,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1.5,
     "rates": [],
+    "picks": [],
     "words": "1.5% on everything"
    },
    "credits": [],
@@ -3297,7 +3341,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -3336,6 +3380,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "7.5% at Kohl's, 3% gas, 2% groceries, 1% everything else"
    },
    "credits": [],
@@ -3354,7 +3399,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Paying it off",
@@ -3385,6 +3430,7 @@ window.CARDS2026 = {
       "x": 5
      }
     ],
+    "picks": [],
     "words": "2% on everything (1% when you buy, 1% when you pay), 5% hotels, car rentals and attractions on Citi Travel"
    },
    "credits": [],
@@ -3399,7 +3445,7 @@ window.CARDS2026 = {
    "unique": [
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Foreign transaction fee",
@@ -3432,10 +3478,25 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [
+    "rates": [],
+    "picks": [
      {
-      "cat": "pick",
-      "x": 5
+      "x": 5,
+      "count": 1,
+      "from": [
+       "dining",
+       "groceries",
+       "gas",
+       "transit",
+       "travel",
+       "streaming",
+       "drugstore",
+       "home",
+       "entertainment"
+      ],
+      "cap": 500,
+      "per": "month",
+      "then": 1
      }
     ],
     "words": "5% in your top spending category each billing cycle (up to $500), 1% everything else"
@@ -3451,12 +3512,8 @@ window.CARDS2026 = {
    },
    "unique": [
     {
-     "label": "A limit on the 5x rate",
-     "words": "(one of: dining, groceries, gas, transit, travel, streaming, drugstore, home, entertainment), on up to $6,000 a year"
-    },
-    {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Foreign transaction fee",
@@ -3511,6 +3568,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "5x hotels, car rentals and attractions on Citi Travel, 3x supermarkets, select transit, gas and EV charging, 3x one category you pick (streaming by default), 2x restaurants, 1x everything else"
    },
    "credits": [],
@@ -3528,8 +3586,12 @@ window.CARDS2026 = {
      "words": "20,000 ThankYou points (the source gives no window; the other Strata cards give three months)"
     },
     {
+     "label": "A category you pick",
+     "words": "3x in one category you pick (streaming by default). The list of choices is on the page of the bank."
+    },
+    {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Foreign transaction fee",
@@ -3584,6 +3646,7 @@ window.CARDS2026 = {
       "x": 3
      }
     ],
+    "picks": [],
     "words": "10x hotels, car rentals and attractions on Citi Travel, 3x air travel, other hotels, restaurants, supermarkets, gas and EV charging, 1x everything else"
    },
    "credits": [
@@ -3611,7 +3674,7 @@ window.CARDS2026 = {
    "unique": [
     {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -3642,6 +3705,7 @@ window.CARDS2026 = {
       "x": 3
      }
     ],
+    "picks": [],
     "words": "12x hotels, car rentals and attractions and 6x air on Citi Travel, 6x restaurants Friday and Saturday 6 PM to 6 AM ET (3x other times), 1.5x everything else"
    },
    "credits": [
@@ -3679,7 +3743,7 @@ window.CARDS2026 = {
    "unique": [
     {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -3705,6 +3769,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 0,
     "rates": [],
+    "picks": [],
     "words": "No rewards; no late fees and no penalty APR"
    },
    "credits": [],
@@ -3723,7 +3788,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "None, counted at 1 cent each"
+     "words": "None"
     },
     {
      "label": "Foreign transaction fee",
@@ -3753,6 +3818,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 0,
     "rates": [],
+    "picks": [],
     "words": "No rewards"
    },
    "credits": [],
@@ -3771,7 +3837,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "None, counted at 1 cent each"
+     "words": "None"
     },
     {
      "label": "Foreign transaction fee",
@@ -3803,7 +3869,10 @@ window.CARDS2026 = {
     "rates": [
      {
       "cat": "gas",
-      "x": 4
+      "x": 4,
+      "cap": 7000,
+      "per": "year",
+      "then": 1
      },
      {
       "cat": "dining",
@@ -3818,6 +3887,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "5% gas at Costco and 4% other gas and EV charging (up to $7,000 a year), 3% restaurants and travel, 2% Costco, 1% everything else; paid once a year as a reward certificate"
    },
    "credits": [],
@@ -3842,12 +3912,8 @@ window.CARDS2026 = {
      "words": "No welcome offer was found for it in today's sources."
     },
     {
-     "label": "A limit on the 4x rate",
-     "words": "on up to $7,000 a year"
-    },
-    {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -3894,6 +3960,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "5% back at Best Buy (6% for members), 3% gas, 2% dining and groceries, 1% everything else"
    },
    "credits": [],
@@ -3912,7 +3979,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Foreign transaction fee",
@@ -3956,6 +4023,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "2x American Airlines, restaurants and gas, 1x everything else"
    },
    "credits": [
@@ -3985,7 +4053,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Miles, counted at 1.2 cents each"
+     "words": "Miles"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -4016,12 +4084,28 @@ window.CARDS2026 = {
     "base": 1,
     "rates": [
      {
-      "cat": "pick",
-      "x": 3
-     },
-     {
       "cat": "groceries",
-      "x": 2
+      "x": 2,
+      "cap": 2500,
+      "per": "quarter",
+      "then": 1
+     }
+    ],
+    "picks": [
+     {
+      "x": 3,
+      "count": 1,
+      "from": [
+       "gas",
+       "online",
+       "dining",
+       "travel",
+       "drugstore",
+       "home"
+      ],
+      "cap": 2500,
+      "per": "quarter",
+      "then": 1
      }
     ],
     "words": "3% in one category you pick (gas, online shopping, dining, travel, drugstores or home improvement), 2% groceries and wholesale clubs (the 3% and 2% share $2,500 a quarter), 1% everything else"
@@ -4037,16 +4121,12 @@ window.CARDS2026 = {
    },
    "unique": [
     {
-     "label": "A limit on the 3x rate",
-     "words": "(one of: gas, online, dining, travel, drugstore, home), on up to $10,000 a year"
-    },
-    {
-     "label": "A limit on the 2x rate",
-     "words": "on up to $10,000 a year"
+     "label": "One limit for two rates",
+     "words": "The 3% and the 2% share one limit of $2,500 a quarter. The game counts a limit for each rate, so it can count a little too much."
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Foreign transaction fee",
@@ -4080,6 +4160,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1.5,
     "rates": [],
+    "picks": [],
     "words": "1.5% on everything"
    },
    "credits": [],
@@ -4098,7 +4179,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Foreign transaction fee",
@@ -4137,6 +4218,7 @@ window.CARDS2026 = {
       "x": 3
      }
     ],
+    "picks": [],
     "words": "1.5x on everything, 3x on travel booked with Bank of America Travel"
    },
    "credits": [],
@@ -4152,7 +4234,7 @@ window.CARDS2026 = {
    "unique": [
     {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -4184,6 +4266,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "2x travel and dining, 1.5x everything else"
    },
    "credits": [
@@ -4219,7 +4302,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -4245,6 +4328,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 0,
     "rates": [],
+    "picks": [],
     "words": "No rewards; no penalty APR"
    },
    "credits": [],
@@ -4263,7 +4347,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "None, counted at 1 cent each"
+     "words": "None"
     },
     {
      "label": "Foreign transaction fee",
@@ -4294,12 +4378,28 @@ window.CARDS2026 = {
     "base": 1,
     "rates": [
      {
-      "cat": "pick",
-      "x": 3
-     },
-     {
       "cat": "groceries",
-      "x": 2
+      "x": 2,
+      "cap": 2500,
+      "per": "quarter",
+      "then": 1
+     }
+    ],
+    "picks": [
+     {
+      "x": 3,
+      "count": 1,
+      "from": [
+       "gas",
+       "online",
+       "dining",
+       "travel",
+       "drugstore",
+       "home"
+      ],
+      "cap": 2500,
+      "per": "quarter",
+      "then": 1
      }
     ],
     "words": "3% in one category you pick, 2% groceries and wholesale clubs (sharing $2,500 a quarter), 1% everything else"
@@ -4319,16 +4419,12 @@ window.CARDS2026 = {
      "words": "No welcome offer was found for it in today's sources."
     },
     {
-     "label": "A limit on the 3x rate",
-     "words": "(one of: gas, online, dining, travel, drugstore, home), on up to $10,000 a year"
-    },
-    {
-     "label": "A limit on the 2x rate",
-     "words": "on up to $10,000 a year"
+     "label": "One limit for two rates",
+     "words": "The 3% and the 2% share one limit of $2,500 a quarter. The game counts a limit for each rate, so it can count a little too much."
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Foreign transaction fee",
@@ -4358,6 +4454,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 2,
     "rates": [],
+    "picks": [],
     "words": "2% on everything"
    },
    "credits": [],
@@ -4380,7 +4477,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Foreign transaction fee",
@@ -4435,6 +4532,7 @@ window.CARDS2026 = {
       "x": 3
      }
     ],
+    "picks": [],
     "words": "3x restaurants, travel, gas, transit, popular streaming and phone plans, 1x everything else"
    },
    "credits": [],
@@ -4454,7 +4552,7 @@ window.CARDS2026 = {
    "unique": [
     {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -4497,6 +4595,7 @@ window.CARDS2026 = {
       "x": 3
      }
     ],
+    "picks": [],
     "words": "5x hotels, 4x airlines, 3x other travel and restaurants, 1x everything else"
    },
    "credits": [
@@ -4524,7 +4623,7 @@ window.CARDS2026 = {
    "unique": [
     {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -4550,6 +4649,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 0,
     "rates": [],
+    "picks": [],
     "words": "No rewards"
    },
    "credits": [],
@@ -4570,7 +4670,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "None, counted at 1 cent each"
+     "words": "None"
     },
     {
      "label": "Foreign transaction fee",
@@ -4599,10 +4699,31 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [
+    "rates": [],
+    "picks": [
      {
-      "cat": "pick",
-      "x": 5
+      "x": 5,
+      "count": 2,
+      "from": [
+       "phone",
+       "streaming",
+       "home",
+       "entertainment",
+       "online",
+       "transit"
+      ],
+      "cap": 2000,
+      "per": "quarter",
+      "then": 1
+     },
+     {
+      "x": 2,
+      "count": 1,
+      "from": [
+       "gas",
+       "groceries",
+       "dining"
+      ]
      }
     ],
     "words": "5% on two categories you pick each quarter (first $2,000 combined, enroll), 2% on one everyday category (gas, groceries or restaurants), 1% everything else"
@@ -4622,17 +4743,8 @@ window.CARDS2026 = {
      "words": "$200 (the source gives no window; three months assumed)"
     },
     {
-     "label": "A limit on the 5x rate",
-     "words": "(one of: phone, streaming, home, entertainment, online, transit), on up to $8,000 a year"
-    },
-    {
-     "label": "2x in a second category you pick",
-     "words": "(one of: gas, groceries, dining)",
-     "value": 2
-    },
-    {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Foreign transaction fee",
@@ -4664,7 +4776,10 @@ window.CARDS2026 = {
     "rates": [
      {
       "cat": "dining",
-      "x": 4
+      "x": 4,
+      "cap": 2000,
+      "per": "quarter",
+      "then": 1
      },
      {
       "cat": "groceries",
@@ -4679,6 +4794,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "4x dining, takeout and delivery (first $2,000 a quarter), 2x groceries, gas, EV charging and streaming, 1x everything else"
    },
    "credits": [
@@ -4703,12 +4819,8 @@ window.CARDS2026 = {
      "words": "No welcome offer was found for it in today's sources."
     },
     {
-     "label": "A limit on the 4x rate",
-     "words": "on up to $8,000 a year"
-    },
-    {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -4740,7 +4852,10 @@ window.CARDS2026 = {
      },
      {
       "cat": "gas",
-      "x": 4
+      "x": 4,
+      "cap": 1000,
+      "per": "quarter",
+      "then": 1
      },
      {
       "cat": "dining",
@@ -4755,6 +4870,7 @@ window.CARDS2026 = {
       "x": 2
      }
     ],
+    "picks": [],
     "words": "4x travel and gas and EV charging (gas on the first $1,000 a quarter), 2x dining, streaming and groceries, 1x everything else"
    },
    "credits": [],
@@ -4773,12 +4889,8 @@ window.CARDS2026 = {
      "words": "No welcome offer was found for it in today's sources."
     },
     {
-     "label": "A limit on the 4x rate",
-     "words": "on up to $4,000 a year"
-    },
-    {
      "label": "What it earns",
-     "words": "Points, counted at 1 cent each"
+     "words": "Points"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -4804,6 +4916,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 2,
     "rates": [],
+    "picks": [],
     "words": "2% on everything, up to 4% with qualifying US Bank savings balances (first $10,000 a billing cycle)"
    },
    "credits": [],
@@ -4821,8 +4934,12 @@ window.CARDS2026 = {
      "words": "No welcome offer was found for it in today's sources."
     },
     {
+     "label": "A higher rate with savings",
+     "words": "Up to 4% with qualifying US Bank savings balances, on the first $10,000 of a billing cycle. The game counts 2%."
+    },
+    {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Foreign transaction fee",
@@ -4852,6 +4969,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 0,
     "rates": [],
+    "picks": [],
     "words": "No rewards"
    },
    "credits": [],
@@ -4870,7 +4988,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "None, counted at 1 cent each"
+     "words": "None"
     },
     {
      "label": "Foreign transaction fee",
@@ -4902,9 +5020,13 @@ window.CARDS2026 = {
     "rates": [
      {
       "cat": "rotating",
-      "x": 5
+      "x": 5,
+      "cap": 1500,
+      "per": "quarter",
+      "then": 1
      }
     ],
+    "picks": [],
     "words": "5% on rotating quarterly categories (up to $1,500 a quarter, activate), 1% everything else; the first year is matched"
    },
    "credits": [],
@@ -4923,12 +5045,8 @@ window.CARDS2026 = {
      "words": "$200, and Discover matches all the cash back you earn in the first year"
     },
     {
-     "label": "A limit on the 5x rate",
-     "words": "on up to $6,000 a year"
-    },
-    {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -4963,6 +5081,7 @@ window.CARDS2026 = {
       "x": 5
      }
     ],
+    "picks": [],
     "words": "1.5x on everything, 5% hotels, vacation rentals and rental cars on Capital One Travel; the first year is matched"
    },
    "credits": [],
@@ -4986,7 +5105,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Miles, counted at 1 cent each"
+     "words": "Miles"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -5011,14 +5130,18 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [
+    "rates": [],
+    "picks": [
      {
-      "cat": "gas",
-      "x": 2
-     },
-     {
-      "cat": "dining",
-      "x": 2
+      "x": 2,
+      "count": 2,
+      "from": [
+       "gas",
+       "dining"
+      ],
+      "cap": 1000,
+      "per": "quarter",
+      "then": 1
      }
     ],
     "words": "2% gas and restaurants (up to $1,000 a quarter combined), 1% everything else"
@@ -5043,16 +5166,8 @@ window.CARDS2026 = {
      "words": "Its offer is a match of the first year's cash back, with no set amount to count."
     },
     {
-     "label": "A limit on the 2x rate",
-     "words": "on up to $4,000 a year"
-    },
-    {
-     "label": "A limit on the 2x rate",
-     "words": "on up to $4,000 a year"
-    },
-    {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -5077,14 +5192,18 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [
+    "rates": [],
+    "picks": [
      {
-      "cat": "gas",
-      "x": 2
-     },
-     {
-      "cat": "dining",
-      "x": 2
+      "x": 2,
+      "count": 2,
+      "from": [
+       "gas",
+       "dining"
+      ],
+      "cap": 1000,
+      "per": "quarter",
+      "then": 1
      }
     ],
     "words": "2% gas and restaurants (up to $1,000 a quarter combined), 1% everything else"
@@ -5109,16 +5228,8 @@ window.CARDS2026 = {
      "words": "Its offer is a match of the first year's cash back, with no set amount to count."
     },
     {
-     "label": "A limit on the 2x rate",
-     "words": "on up to $4,000 a year"
-    },
-    {
-     "label": "A limit on the 2x rate",
-     "words": "on up to $4,000 a year"
-    },
-    {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -5144,6 +5255,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 1,
     "rates": [],
+    "picks": [],
     "words": "3% at Apple and select merchants with Apple Pay, 2% with Apple Pay, 1% with the physical card"
    },
    "credits": [],
@@ -5165,7 +5277,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Usual interest rate (APR)",
@@ -5200,6 +5312,7 @@ window.CARDS2026 = {
       "x": 5
      }
     ],
+    "picks": [],
     "words": "5% off at Target and Target.com"
    },
    "credits": [],
@@ -5218,7 +5331,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Where it works",
@@ -5253,6 +5366,7 @@ window.CARDS2026 = {
       "x": 5
      }
     ],
+    "picks": [],
     "words": "5% off at Lowe's (or special financing instead)"
    },
    "credits": [],
@@ -5271,7 +5385,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "Cash back, counted at 1 cent each"
+     "words": "Cash back"
     },
     {
      "label": "Where it works",
@@ -5301,6 +5415,7 @@ window.CARDS2026 = {
    "earn": {
     "base": 0,
     "rates": [],
+    "picks": [],
     "words": "No rewards"
    },
    "credits": [],
@@ -5319,7 +5434,7 @@ window.CARDS2026 = {
     },
     {
      "label": "What it earns",
-     "words": "None, counted at 1 cent each"
+     "words": "None"
     },
     {
      "label": "Foreign transaction fee",

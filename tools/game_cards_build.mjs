@@ -4,7 +4,9 @@
                template record (game/data/cardtemplate.js) for each card.
    USAGE       node tools/game_cards_build.mjs
                npx prettier --write game/data/cards2026.js
-   INPUT       data/library/card-offers.json (the dated offers of the Slam web app: 93 cards) and
+   INPUT       tools/game_cards_more.json, when it is there (the researched fields of the cards that
+               have the offer only, keyed by the id of the card).
+               data/library/card-offers.json (the dated offers of the Slam web app: 93 cards) and
                data/library/cards.json (its rewards layer: fees, earn rates, credits, benefits of 67
                of those cards).
    OUTPUT      game/data/cards2026.js (window.CARDS2026).
@@ -28,16 +30,43 @@ const CATS = [
   "dining", "groceries", "gas", "transit", "travel", "travelPortal", "hotelPortal", "airline", "hotel", "streaming",
   "drugstore", "phone", "entertainment", "home", "online", "amazon", "delivery", "rotating", "pick", "store",
 ];
-const CAT_WORDS = { applePay: "paid with Apple Pay", pick2: "in a second category you pick" };
+const CAT_WORDS = { applePay: "paid with Apple Pay" };
+/* THE LIMITS AND THE PICKS OF ONE CARD, where the rewards layer has them as words only, or as a yearly number
+   that is a limit for each quarter or month. Each number comes from the words of the card in the rewards layer.
+     limit: { category: [dollars, "year" | "quarter" | "month"] }   the limit of a rate, or of a pick ("pick")
+     count: { pick: n }                                             how many categories the player picks
+     share: { x, from, cap, per }                                   categories with one limit together
+     add:   [{ cat, cap, per }]                                     a limit that the words give and the data does not
+     words: [label, words]                                          a thing that still fits no field */
+const RULES = {
+  "chase-freedom-flex": { limit: { rotating: [1500, "quarter"] } },
+  "discover-it-cash-back": { limit: { rotating: [1500, "quarter"] } },
+  "chase-marriott-boundless": { share: { x: 3, from: ["groceries", "gas", "dining"], cap: 6000, per: "year" } },
+  "discover-it-chrome": { share: { x: 2, from: ["gas", "dining"], cap: 1000, per: "quarter" } },
+  "discover-it-secured": { share: { x: 2, from: ["gas", "dining"], cap: 1000, per: "quarter" } },
+  "citi-custom-cash": { limit: { pick: [500, "month"] } },
+  "bofa-customized-cash": {
+    limit: { pick: [2500, "quarter"], groceries: [2500, "quarter"] },
+    words: ["One limit for two rates", "The 3% and the 2% share one limit of $2,500 a quarter. The game counts a limit for each rate, so it can count a little too much."],
+  },
+  "bofa-customized-cash-secured": {
+    limit: { pick: [2500, "quarter"], groceries: [2500, "quarter"] },
+    words: ["One limit for two rates", "The 3% and the 2% share one limit of $2,500 a quarter. The game counts a limit for each rate, so it can count a little too much."],
+  },
+  "usb-cash-plus": { limit: { pick: [2000, "quarter"] }, count: { pick: 2 } },
+  "usb-altitude-go": { limit: { dining: [2000, "quarter"] } },
+  "usb-altitude-connect": { limit: { gas: [1000, "quarter"] } },
+  "amex-platinum": { add: [{ cat: "airline", cap: 500000, per: "year" }] },
+  "citi-strata": { words: ["A category you pick", "3x in one category you pick (streaming by default). The list of choices is on the page of the bank."] },
+  "usb-smartly": { words: ["A higher rate with savings", "Up to 4% with qualifying US Bank savings balances, on the first $10,000 of a billing cycle. The game counts 2%."] },
+};
+const MORE_FILE = "tools/game_cards_more.json";
+const MORE = fs.existsSync(path.join(root, MORE_FILE)) ? read(MORE_FILE) : {};
 const NETWORK = { Amex: "American Express", Store: "" };
 const BENEFITS = ["rental", "tripCancel", "tripDelay", "baggage", "cellPhone", "purchase", "warranty", "lounge"];
 const CREDIT_SWITCH = { trusted: "trusted", bag: "bag", bags: "bag", night: "night" };
 const CHASE_READ = "2026-11-14"; /* the offers layer: "Review sites read on 2026-11-14 (Chase)" */
 const dollars = n => "$" + Number(n).toLocaleString("en-US");
-const cents = v => {
-  const n = Math.round(v * 10000) / 100;
-  return n + (n === 1 ? " cent" : " cents");
-};
 
 function record(x) {
   const b = x.bonus || {},
@@ -66,7 +95,7 @@ function record(x) {
       has[k] = true;
       if (w) words[k] = w;
     };
-  d.earn = { base: 1, rates: [], words: x.earnWords || "" };
+  d.earn = { base: 1, rates: [], picks: [], words: x.earnWords || "" };
   d.credits = [];
   if (b.words) unique.push({ label: "The welcome offer in words", words: b.words });
   if (x.conflict) unique.push({ label: "Where the sources differ", words: x.conflict });
@@ -76,20 +105,28 @@ function record(x) {
     const r = lib.rewards || {};
     d.earn.base = r.base == null ? 1 : r.base;
     d.earn.words = r.words || "";
+    const rule = RULES[d.id] || {},
+      base = d.earn.base,
+      shared = rule.share || null;
     (r.rates || []).forEach(t => {
-      const cap = t.capYear ? ", on up to " + dollars(t.capYear) + " a year" : "",
-        list = t.oneOf ? " (one of: " + t.oneOf.join(", ") + ")" : "";
-      if (CATS.includes(t.cat)) d.earn.rates.push({ cat: t.cat, x: t.x });
-      else unique.push({ label: t.x + "x " + (CAT_WORDS[t.cat] || t.cat), words: (list + cap).replace(/^[, ]+/, ""), value: t.x });
-      if (CATS.includes(t.cat) && (cap || list))
-        unique.push({ label: "A limit on the " + t.x + "x rate", words: (list + cap).replace(/^[, ]+/, "").trim() });
+      const lim = (rule.limit && rule.limit[t.cat]) || (t.capYear ? [t.capYear, "year"] : null), /* t.cat is "pick" or "pick2" for a pick */
+        cap = lim ? { cap: lim[0], per: lim[1], then: base } : {};
+      if (shared && shared.from.includes(t.cat)) return; /* these categories share one limit: one pick below */
+      if (t.oneOf) d.earn.picks.push(Object.assign({ x: t.x, count: (rule.count && rule.count[t.cat]) || 1, from: t.oneOf.filter(k => CATS.includes(k)) }, cap));
+      else if (CATS.includes(t.cat)) d.earn.rates.push(Object.assign({ cat: t.cat, x: t.x }, cap));
+      else unique.push({ label: t.x + "x " + (CAT_WORDS[t.cat] || t.cat), words: "", value: t.x });
     });
+    if (shared) d.earn.picks.push({ x: shared.x, count: shared.from.length, from: shared.from, cap: shared.cap, per: shared.per, then: base });
     if (r.rotating) {
-      d.earn.rates.push({ cat: "rotating", x: r.rotating.x });
-      if (r.rotating.capYear)
-        unique.push({ label: "A limit on the " + r.rotating.x + "x rate", words: "on up to " + dollars(r.rotating.capYear) + " a year" });
+      const lim = (rule.limit && rule.limit.rotating) || [r.rotating.capYear, "year"];
+      d.earn.rates.push({ cat: "rotating", x: r.rotating.x, cap: lim[0], per: lim[1], then: base });
     }
-    if (r.kind) unique.push({ label: "What it earns", words: r.kind + (r.pointValue != null ? ", counted at " + cents(r.pointValue) + " each" : "") });
+    (rule.add || []).forEach(a => {
+      const row = d.earn.rates.find(q => q.cat === a.cat);
+      if (row) Object.assign(row, { cap: a.cap, per: a.per, then: base });
+    });
+    if (rule.words) unique.push({ label: rule.words[0], words: rule.words[1] });
+    if (r.kind) unique.push({ label: "What it earns", words: r.kind });
     if (r.note) unique.push({ label: "About the points", words: r.note });
     if (/transfer partners/i.test(r.note || "")) on("transfer", words.transfer || "Transfer partners can be worth more than the floor value");
     BENEFITS.forEach(k => {
@@ -130,6 +167,18 @@ function record(x) {
   d.has = has;
   d.hasWords = words;
   d.unique = unique;
+  /* the cards with the offer only: the researched fields of tools/game_cards_more.json, when the file is there */
+  const m = MORE[d.id];
+  if (m) {
+    if (m.network != null) d.network = m.network;
+    if (m.has) d.has = Object.assign({}, d.has, m.has);
+    if (m.hasWords) d.hasWords = Object.assign({}, d.hasWords, m.hasWords);
+    if (m.earn) d.earn = Object.assign({ base: 1, rates: [], picks: [], words: d.earn.words }, m.earn);
+    if (m.credits) d.credits = m.credits;
+    if (m.unique) d.unique = d.unique.concat(m.unique);
+    if (m.source) d.source = "The card: " + m.source + ". " + d.source;
+    if (m.checked) d.checked = m.checked;
+  }
   return d;
 }
 
@@ -177,4 +226,5 @@ const header = `/* =============================================================
    ========================================================================= */
 window.CARDS2026 = `;
 fs.writeFileSync(path.join(root, "game/data/cards2026.js"), header + JSON.stringify(data, null, 1) + ";\n");
+console.log(Object.keys(MORE).length ? MORE_FILE + ": " + Object.keys(MORE).filter(k => ids.includes(k)).length + " cards merged." : MORE_FILE + ": not there, nothing merged.");
 console.log(offers.length + " cards, " + offers.filter(o => byId[o.id]).length + " with the rewards layer.");
