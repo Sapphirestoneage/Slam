@@ -2,7 +2,7 @@
 
 This list is for reviewers. It shows each weak point, why it is weak, and the recommended repair. The numbers are from 2026-11-22. `CODE-MAP.md` has the full tables.
 
-Repaired on 2026-11-22 and removed from this list: A1 (replaced functions), A3 (hidden errors), B1 and B2 (two test checks), B6 (test file names), C2 (version stamps), C3 (the older copy), D (code with no caller). Repaired on 2026-11-23: A8 (two functions with the name `hsSheet`) and B3 (the test file of "Our household" is back in `tests/`). Added on 2026-11-23 with the Plan batch: C9 to C12. Also new on 2026-11-22: GitHub runs `npm run test:game` on each push (`.github/workflows/test.yml`). The last section tells what the repair of A1 did not prove.
+Repaired on 2026-11-22 and removed from this list: A1 (replaced functions), A3 (hidden errors), B1 and B2 (two test checks), B6 (test file names), C2 (version stamps), C3 (the older copy), D (code with no caller). Repaired on 2026-11-23: A8 (two functions with the name `hsSheet`) and B3 (the test file of "Our household" is back in `tests/`). Added on 2026-11-23 with the Plan batch: C9 to C14. Also new on 2026-11-22: GitHub runs `npm run test:game` on each push (`.github/workflows/test.yml`). The last section tells what the repair of A1 did not prove.
 
 ## A. Structure
 
@@ -42,6 +42,9 @@ Repaired on 2026-11-22 and removed from this list: A1 (replaced functions), A3 (
 | C10 | The old sheet "Is it safe to spend this?" (ui.js) still has a red lamp (`.lamp.red`, `#ff4d6a`) for its third state. The new Ask sheet (ask3.js) uses only green and yellow. | Change the third state to amber. This changes what the player sees. |
 | C11 | Some numbers in the spreadsheet of the plan are not formulas: the replay of market history, the month-by-month runs of the two paths and the simulators. Each of these rows says "Worked out by the game". | A spreadsheet cannot replay 150 years of history in one cell. A second sheet with the yearly data could make the replay a formula too. |
 | C12 | The simulator "Move to a cheaper or pricier city" uses the guesses of the player. The game has no city data ("Career and city atlases" is not built). | Add the city data, then fill the two changes from it. |
+
+| C13 | `vendor/retire-engine.js` is a bundle of code from outside the game (Zack Williams' RetirementPlanner, MIT license, 394 KB, minified). Nobody in this repository edits it, and `CODE-MAP.md` does not examine it. Its capital market assumptions (for example 5.5% a year after inflation for large US stocks) differ from the 7% that the rest of the game uses, and the screens say which one each number uses. | To update it: `node tools/retire_engine_build.mjs` clones his repository into a temp folder, changes his YAML tax data to `data/retire-*.json`, bundles `src/engine/` with esbuild into one IIFE (the global `RetireEngine`), writes `vendor/retire-worker.js` and the license file. Then run `node tools/game_stamp.cjs`, `python3 tools/game_codemap.py` and `npm run test:game`. `tests/retirement-engine.js` fails when the adapter no longer matches his types. |
+| C14 | The adapter gives his engine one person: a married player files jointly, but the spouse's own pay, accounts and Social Security are not in his Scenario yet. | Add the partner as his `spouse` profile from the household of the game. |
 
 ## D. Code with no caller
 

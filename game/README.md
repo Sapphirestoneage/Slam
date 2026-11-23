@@ -4,6 +4,8 @@ SLAM the Game is a money game for one household. It runs in a browser. It has no
 
 Live site: https://sapphirestoneage.github.io/Slam/game/
 
+Retirement engine by Zack, MIT license (section 11).
+
 This page tells a new developer how the game is made, how to run it, and where its weak points are.
 
 This folder is the only copy of the game. An older copy inside Claude is retired.
@@ -18,7 +20,7 @@ This folder is the only copy of the game. An older copy inside Claude is retired
 
 ## 1. The six facts you must know first
 
-1. **The game uses classic scripts.** `index.html` loads 89 script files in a fixed order. All functions and constants are in one global scope. There are no modules.
+1. **The game uses classic scripts.** `index.html` loads 91 script files in a fixed order (90 of the game and one bundle from outside, in `vendor/`). All functions and constants are in one global scope. There are no modules.
 2. **Each file starts with a header.** The header gives PURPOSE, INPUT, OUTPUT and DEPENDS ON. Read the header before you read the code.
 3. **The screens are HTML text.** Each screen function returns one HTML string. `render()` puts the string in the page. One click handler reads the `data-a` attribute and calls `ACT[name]`.
 4. **A screen function calls its parts by name.** A feature file can add a row to a screen of a different file, for example to Home. It does this with a named function (a part), and the screen function calls that part. No file replaces a function of a different file. Section 6 shows the pattern.
@@ -39,7 +41,7 @@ Open http://localhost:8000/game/. Without an internet connection the game runs i
 npm run test:game
 ```
 
-The command runs 46 test files (908 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
+The command runs 47 test files (939 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
 
 All checks pass, and the command ends with exit code 0. One file (`addon-sealed-files.js`) has a part that needs the private add-on source. In this repository that part prints `SKIP`.
 
@@ -56,10 +58,11 @@ The scripts are in five folders. The folder shows the role of a file. It does no
 | Folder | Role | Files |
 |--------|------|-------|
 | `core/` | The math, the data model and the error record. Each screen depends on these files. | `report.js`, `engine.js`, `engine2.js`, `metrics.js` |
-| `data/` | Data only. No functions. | `skills.js`, `skillthemes.js` (the skill tree), `qr.js` (one QR code picture), `market.js` (US market history by year, from Shiller), `tax2026.js` (the 2026 federal tax numbers, from the IRS) |
+| `data/` | Data only. No functions. | `skills.js`, `skillthemes.js` (the skill tree), `qr.js` (one QR code picture), `market.js` (US market history by year, from Shiller), `limits2026.js` (the 2026 account limits, from the IRS), `retire-*.json` (the tax tables of the retirement engine, changed from YAML) |
 | `account/` | Sign-in, the database, the save to the cloud, and the add-on system. | `supa.js`, `cloud.js`, `gate.js`, `addon.js` |
 | `screens/` | The main screens, the click actions, the navigation and the setup questions. | `ui.js`, `ux.js`, `planner.js`, `nav.js`, `tidy.js`, `smart.js`, `profiles.js` |
 | `features/` | One file for each feature. Each file adds its sheets and its actions. | 57 files, and 12 simulators in `features/sims/`. `CODE-MAP.md` gives the purpose of each one. |
+| `vendor/` | Code from outside the game. Do not edit it. The game loads `retire-engine.js` before `core/engine.js`. | `retire-engine.js` (the retirement engine, one bundle), `retire-worker.js` (its Web Worker), `RETIRE-ENGINE-LICENSE.txt` |
 | `unused/` | Code that nothing calls. The game does not load it. | `no-caller.js` |
 | `tests/` | The tests. | `run.cjs`, `harness.cjs`, one file for each feature |
 
@@ -174,3 +177,11 @@ npm run test:game
 4. `npm run test:game` runs the tests.
 
 For a change of the structure that must not change what the player sees, also compare the old and the new code in a browser: `tools/game_walk/README.md`.
+
+## 11. The retirement engine
+
+Retirement engine by Zack, MIT license. The random markets of the retirement odds, the solver ("When can I stop at 90 out of 100?"), the spending smile, the Social Security claiming ages, the withdrawal methods, the glide path and the 2026 tax tables come from Zack Williams' RetirementPlanner (https://github.com/boatbomber/RetirementPlanner). Only its `src/engine/` folder is in the bundle. Its license and copyright line are at the top of `vendor/retire-engine.js` and in `vendor/RETIRE-ENGINE-LICENSE.txt`.
+
+- `features/retire.js` is the one adapter. It turns a profile into his Scenario type and his results into SLAM numbers in today's dollars. No other file calls `RetireEngine`. `tests/retirement-engine.js` checks this.
+- On the website the engine runs in a Web Worker (`vendor/retire-worker.js`), so the screen does not stop. With no Worker (Node.js, or a page opened from a file) it runs on the page.
+- To get a new version of his engine: `node tools/retire_engine_build.mjs` (or give it the path of a clone). Then run the steps of section 10.

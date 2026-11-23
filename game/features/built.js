@@ -129,7 +129,7 @@ const WB = [
     "Copy your numbers out, and the plan as a spreadsheet",
     "p",
     () => WB_HAS("kncopy") && WB_HAS("lgcopy") && WB_HAS("bookcopy"),
-    "The plan copies out as a spreadsheet with live formulas, or saves as a CSV file. A direct link to Google Sheets is not built.",
+    "The plan copies out as a spreadsheet with live formulas, or saves as a CSV file. The engine's percentile, cash flow and withdrawal tables are their own tabs. A direct link to Google Sheets is not built.",
     "book",
   ],
   [
@@ -324,6 +324,14 @@ const WB = [
   ],
   [
     "plan",
+    "Retirement engine by Zack (MIT license), through one adapter",
+    "b",
+    () => typeof RetireEngine === "object" && WB_FN("retireScenario") && WB_FN("retireSummary"),
+    "His Monte Carlo, solver, spending smile, Social Security, glide path, withdrawal methods and 2026 tax tables. Runs in a Web Worker on the website. Rebuild: node tools/retire_engine_build.mjs.",
+    "odds",
+  ],
+  [
+    "plan",
     "Two paths: Most money, Best life, and a blend",
     "b",
     () => WB_HAS("paths") && WB_HAS("pathspick") && WB_FN("pathsAll"),
@@ -332,10 +340,10 @@ const WB = [
   ],
   [
     "plan",
-    "Retirement odds from real market history",
+    "Retirement odds: random markets and real history",
     "b",
-    () => WB_HAS("odds") && WB_FN("oddsCalc") && typeof MARKET_HISTORY === "object",
-    "Each stretch of US market years since 1871, and 1,000 seeded random runs from the same years.",
+    () => WB_HAS("odds") && WB_FN("oddsCalc") && WB_FN("oddsRandom") && typeof MARKET_HISTORY === "object",
+    "1,000 seeded random markets from the retirement engine, each real start year since 1871, the worst start year, and the one change from the engine's solver. Guardrails by default, seven other ways behind one row.",
     "odds",
   ],
   [
@@ -366,16 +374,16 @@ const WB = [
     "plan",
     "Tax view: your bracket, your rates, pre-tax or Roth",
     "b",
-    () => WB_HAS("taxv") && WB_FN("taxvCalc") && typeof TAX_2026 === "object",
-    "Federal only, from the 2026 IRS numbers. State tax is your guess. It feeds the key numbers.",
+    () => WB_HAS("taxv") && WB_FN("taxvCalc") && WB_FN("retireTax"),
+    "Federal, payroll and state tax from the engine's 2026 tables. The state is one tap list. It feeds the key numbers.",
     "taxv",
   ],
   [
     "plan",
-    "State and city income tax in the tax view",
+    "City income tax in the tax view",
     "n",
     null,
-    "Not built. The tax view uses your own guess for state tax.",
+    "Not built. State tax is in. City tax (for example New York City) is not.",
     null,
   ],
   [
@@ -383,7 +391,7 @@ const WB = [
     "Simulators with a flip point: 12 money decisions",
     "b",
     () => WB_HAS("sims") && WB_FN("simFlip") && typeof SIM_ORDER !== "undefined" && SIM_ORDER.length === 12,
-    "Rent or buy, the mortgage, debt, the car, pre-tax or Roth, a new job, a break, side income, a kid, a new city, a big spend, the stop age.",
+    "Rent or buy, the mortgage, debt, the car, pre-tax or Roth, a new job, a break, side income, a kid, a new city (with state tax), a big spend, the stop age and when to claim Social Security.",
     "sims",
   ],
   [

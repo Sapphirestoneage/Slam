@@ -10,7 +10,7 @@ The tests need Node.js only. They need no browser and no package from npm.
 ## How a test file works
 
 1. `run.cjs` runs each `.js` file of this folder in its own process.
-2. `harness.cjs` makes a small stand-in for the browser. Then it loads all game scripts in the order of `index.html`.
+2. `harness.cjs` makes a small stand-in for the browser. Then it loads all game scripts in the order of `index.html`. The line with the totals prints when nothing is left to run, so a check inside a promise (the retirement engine) counts too. Such a test puts its last steps, and the reset of the profile, inside its last callback.
 3. The test file runs in the same global scope as the game. It makes a sample profile, sends taps, and reads the HTML of the screen.
 4. At its end, the test file puts the game state back.
 
@@ -36,10 +36,11 @@ Each file has the name of its feature.
 | `investment-mix-and-fees.js` | Investment mix and fees, and the key number Stock share | `features/mix.js` |
 | `plan-spreadsheet.js` | The spreadsheet of the plan: each formula worked out and compared with the game | `features/book.js` |
 | `plan-summary.js` | My plan on one page | `features/plan.js` |
-| `retirement-odds.js` | Retirement odds | `features/odds.js`, `data/market.js` |
+| `retirement-engine.js` | The retirement engine and its adapter: same seed, same result | `vendor/retire-engine.js`, `features/retire.js` |
+| `retirement-odds.js` | Retirement odds | `features/odds.js`, `data/market.js` (some checks wait for the engine) |
 | `simulators.js` | The simulator engine and the 12 simulators, with each flip point | `features/sim.js`, `features/sims/*.js` |
 | `spreadsheet-extras.js` | The savings rate by month, the quotas, next year's budget | `features/quota.js` |
-| `tax-view.js` | The tax view | `features/taxview.js`, `data/tax2026.js` |
+| `tax-view.js` | The tax view | `features/taxview.js`, `features/retire.js` (retireTax) |
 | `two-paths.js` | The two paths | `features/paths.js` |
 | `while-you-slept.js` | While you slept | `features/slept.js` |
 | `before-you-sign.js` | Before you sign | `features/sign.js` |
