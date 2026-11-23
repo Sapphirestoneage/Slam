@@ -57,8 +57,8 @@
     Object.keys(M.steady).join(",") === "roth,k401,taxable" || Object.keys(M.steady).join(",") === "roth,k401"
   );
   chk(
-    "Best life aims for the freedom number plus the margin, no more",
-    !L.short && L.inv >= P.B.need * 1.1 - 1 && L.inv < M.inv
+    "Best life aims for the freedom number with the spending smile, plus the margin, no more",
+    !L.short && P.B.smile < 1 && L.inv >= P.B.need * P.B.smile * 1.1 - 1 && L.inv < M.inv
   );
   chk("Best life does bucket list items, Most money does none", L.count === 3 && M.count === 0);
   chk("the blend sits between the two", B.inv <= M.inv + 1 && B.inv >= L.inv - 1 && B.cost > 0 && B.days > 0);
@@ -115,7 +115,37 @@
   );
   go("plan");
   chk("Next Steps shows the picked path at the top", app().includes("Your path: Most money"));
-  G.chars.length = n0;
-  G.active = 0;
-  save();
+  const wait = (fn, done, n) => {
+    const v = fn();
+    if (v || (n || 0) > 600) done(v);
+    else setTimeout(() => wait(fn, done, (n || 0) + 1), 25);
+  };
+  const Pl = pathsAll(c).list.life;
+  wait(
+    () => pathsSolve(c, Pl),
+    sv => {
+      chk(
+        "his solver answers for a path: the stop age at 90 out of 100, and the money more a month",
+        sv && !sv.error && (sv.age == null || sv.age >= c.age) && (sv.more == null || sv.more >= 0)
+      );
+      wait(
+        () => pathsRandom(c, Pl),
+        rnd => {
+          chk("each path has its random markets from the engine", typeof rnd === "number" && rnd >= 0 && rnd <= 100);
+          X("paths");
+          chk(
+            "the path columns show both odds and the solver answers",
+            ov().includes("Random markets that work") &&
+              ov().includes("Stop at 90 out of 100") &&
+              ov().includes("more a month") &&
+              clean(ov()),
+            junk(ov())
+          );
+          G.chars.length = n0;
+          G.active = 0;
+          save();
+        }
+      );
+    }
+  );
 }

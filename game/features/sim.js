@@ -161,11 +161,13 @@ function simWith(x, k, v) {
 }
 /* THE FLIP POINT of one input: the value where the better option changes. Null when there is none in range. */
 function simFlip(c, def, x, F, a, b) {
-  const steps = F.steps || 40,
+  /* F.score(c, x), when given, is the number of this flip point (above 0: the first option is better) */
+  const sc = xx => (F.score ? F.score(c, xx) : simScore(c, def, xx, a, b)),
+    steps = F.steps || 40,
     pts = [];
   for (let i = 0; i <= steps; i++) {
     const v = F.lo + ((F.hi - F.lo) * i) / steps;
-    pts.push([v, simScore(c, def, simWith(x, F.k, v), a, b)]);
+    pts.push([v, sc(simWith(x, F.k, v))]);
   }
   let at = null;
   for (let i = 1; i < pts.length && at == null; i++) {
@@ -178,7 +180,7 @@ function simFlip(c, def, x, F, a, b) {
         flo = p[1];
       for (let k = 0; k < 40; k++) {
         const mid = (lo + hi) / 2,
-          fm = simScore(c, def, simWith(x, F.k, mid), a, b);
+          fm = sc(simWith(x, F.k, mid));
         if (fm < 0 === flo < 0) {
           lo = mid;
           flo = fm;
@@ -187,7 +189,7 @@ function simFlip(c, def, x, F, a, b) {
       at = (lo + hi) / 2;
     }
   }
-  const above = at == null ? null : simScore(c, def, simWith(x, F.k, Math.min(F.hi, at + (F.hi - F.lo) / 200)), a, b);
+  const above = at == null ? null : sc(simWith(x, F.k, Math.min(F.hi, at + (F.hi - F.lo) / 200)));
   return { k: F.k, at, pts, aAbove: above == null ? null : above >= 0, F };
 }
 /* The 2 inputs that move the answer most: each input one chip up and one chip down. */

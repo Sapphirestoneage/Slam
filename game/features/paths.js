@@ -12,7 +12,8 @@
    OUTPUT      Functions: pathsAssume, pathsBase, pathsSim, pathsLife, pathsAll, pathsLines, pathsPlan,
                pathsSheet, pathsBook, planTabPath. Actions (ACT): paths, pathstab, pathskeep, pathspick.
                Parts of functions in other files: planTabPath (planTab in planner.js). Menu: "Two paths".
-   DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js, data/tax2026.js,
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js, data/limits2026.js,
+               features/retire.js (the engine adapter: the spending smile, the solver), features/odds.js,
                data/market.js, features/odds.js, features/cover.js, features/eras.js, features/kit.js.
    RULES       The order (the Money Guy Show's Financial Order of Operations): the deductibles (the small
                cushion), the full match at work, high-interest debt, the full cushion, Roth and HSA, the
@@ -36,6 +37,7 @@ function pathsAssume(c) {
     margin: kitValue(c, "paths", "margin", 0.1),
     split: kitValue(c, "paths", "split", 50),
     blend: kitValue(c, "paths", "blend", "split"),
+    smile: kitValue(c, "paths", "smile", "on"),
   };
 }
 /* The fixed numbers of the profile that each path starts from. */
@@ -48,7 +50,7 @@ function pathsBase(c, A) {
     preGot = typeof knGot === "function" ? knGot(c, "pre") : null,
     es = c.x && c.x.es && c.x.es.a,
     hsa = !!(es && es.hsa === "yes"),
-    lim = TAX_2026.limits;
+    lim = LIMITS_2026;
   let ded = 1000;
   try {
     if (typeof coverCalc === "function") ded = Math.max(1000, coverCalc(c).ded);
@@ -70,6 +72,8 @@ function pathsBase(c, A) {
     roth: lim.ira / 12,
     k401: Math.max(0, lim.k401 / 12 - pre - matchNeed),
     need: fiNeed(c, Math.max(c.age, c.ret)) * (SWR / A.swr.v),
+    /* retire.js: the spending smile of the engine (Blanchett 2014) lowers the number Best life aims for */
+    smile: A.smile.v === "on" && typeof retireSmileFactor === "function" ? retireSmileFactor(c, A.ret.v) : 1,
   };
 }
 /* ONE PATH, MONTH BY MONTH. o.cap: the most to invest each month after the oxygen mask steps (null is no
@@ -166,7 +170,7 @@ function pathsSim(c, A, B, o) {
 }
 /* Best life: the least to invest each month that still reaches the freedom number plus the margin. */
 function pathsLife(c, A, B, extra) {
-  const goal = B.need * (1 + A.margin.v),
+  const goal = B.need * B.smile * (1 + A.margin.v),
     full = pathsSim(c, A, B, Object.assign({}, extra));
   if (full.inv < goal)
     return Object.assign(pathsSim(c, A, B, Object.assign({ cap: null, split: 0 }, extra)), {
@@ -184,6 +188,43 @@ function pathsLife(c, A, B, extra) {
   return Object.assign(pathsSim(c, A, B, Object.assign({ cap: hi }, extra)), { goal, cap: hi, short: false });
 }
 /* ALL THREE PATHS, with the odds of each from market history. */
+/* The random markets of one path (the engine, through odds.js). Null until ready. */
+function pathsRandom(c, p) {
+  try {
+    const r = oddsRandom(c, p.over);
+    return r && !r.error ? r.of100 : r && r.error ? "error" : null;
+  } catch (e) {
+    report(e, "paths.js: pathsRandom");
+    return "error";
+  }
+}
+/* His solver for one path: the stop age at 90 out of 100, and the money a month more to stop at the target
+   age. Null until ready. */
+function pathsSolve(c, p) {
+  try {
+    const P = oddsInputs(c, p.over),
+      scn = retireScenario(c, {
+        plan: true,
+        runs: 500,
+        monthly: P.monthly,
+        ret: P.ret,
+        spend: P.spend,
+        smile: p.over.smile,
+      }),
+      t = { retirementAge: P.ret, annualSpend: P.spend, successRate: ODDS_TARGET },
+      a = retireGet(retireKey("path-age", scn), () => retireCall(retireSolveJob(scn, "earliest_retirement_age", t))),
+      m = a && retireGet(retireKey("path-save", scn), () => retireCall(retireSolveJob(scn, "required_savings", t)));
+    if (!a || !m) return null;
+    if (a.error || m.error) return { error: true };
+    return {
+      age: a.converged ? Math.round(a.solvedValue) : null,
+      more: m.converged ? Math.max(0, m.solvedValue / 12 - P.monthly) : null,
+    };
+  } catch (e) {
+    report(e, "paths.js: pathsSolve");
+    return { error: true };
+  }
+}
 function pathsAll(c, o) {
   o = o || {};
   const A = pathsAssume(c),
@@ -210,13 +251,17 @@ function pathsAll(c, o) {
     );
     p.count = p.done.length;
     p.lastAge = p.done.length ? p.done[p.done.length - 1].age : null;
+    p.over = {
+      monthly: Math.min(B.kept, p.monthlyInvest),
+      ret: Math.max(c.age, c.ret),
+      smile: k !== "money" && B.smile < 1,
+    };
     if (!o.fast) {
       try {
-        p.odds = oddsCalc(
-          c,
-          { monthly: Math.min(B.kept, p.monthlyInvest), ret: Math.max(c.age, c.ret) },
-          { runs: 0 }
-        ).of100;
+        const H = oddsCalc(c, p.over);
+        p.odds = H.of100;
+        p.oddsOk = H.ok;
+        p.oddsN = H.n;
       } catch (e) {
         report(e, "paths.js: pathsAll");
         p.odds = null;
@@ -366,7 +411,29 @@ function pathsCol(c, P, k) {
         : `<div class="tiny muted">Each month:</div>`) +
       igRows(lines.map(r => [esc(r[0]), r[1]])) +
       igRows([
-        ["Market histories that work", p.odds == null ? "Not worked out" : p.odds + " out of 100"],
+        ["Real start years that work", p.odds == null ? "Not worked out" : p.oddsOk + " of " + p.oddsN],
+        [
+          "Random markets that work",
+          (rnd => (rnd == null ? "Running…" : rnd === "error" ? "Not worked out" : rnd + " out of 100"))(
+            pathsRandom(c, p)
+          ),
+        ],
+        ...(sv => [
+          [
+            "Stop at 90 out of 100",
+            sv == null ? "Working…" : sv.error || sv.age == null ? "Out of range" : "age " + sv.age,
+          ],
+          [
+            "To stop at " + Math.max(c.age, c.ret) + ": more a month",
+            sv == null
+              ? "Working…"
+              : sv.error || sv.more == null
+                ? "Out of range"
+                : sv.more < 1
+                  ? "Nothing more"
+                  : money(Math.round(sv.more)),
+          ],
+        ])(pathsSolve(c, p)),
         ["Bucket list items done", p.count + (p.lastAge ? " by age " + Math.ceil(p.lastAge) : "")],
         k === "money"
           ? null
@@ -440,7 +507,22 @@ function pathsSheet() {
         A.margin.v,
         { term: "margin" }
       ) +
-      `<div class="tile tiny stack" style="gap:3px"><div>Tax year: ${TAX_2026.year}, from ${esc(TAX_2026.source)}.</div><div>Market history: ${MARKET_HISTORY.first} to ${MARKET_HISTORY.last}, ${esc(MARKET_HISTORY.source)}, fetched ${MARKET_HISTORY.fetched}.</div><div>All amounts are in today's dollars unless they say future dollars.</div></div>`;
+      kitAsk(
+        c,
+        "paths",
+        "smile",
+        "Spending smile in retirement",
+        [
+          ["on", "On"],
+          ["off", "Off"],
+        ],
+        A.smile.v,
+        {
+          term: "smile",
+          help: "On: real spending falls about 1% a year from 65 to 75, about 2% a year from 75 to 85, then rises a little (Blanchett 2014).",
+        }
+      ) +
+      `<div class="tile tiny stack" style="gap:3px"><div>Tax year: ${retireTax(0, 0, "single", "", c.age).year}, from the IRS and Tax Foundation tables of the retirement engine. Account limits: ${esc(LIMITS_2026.source)}.</div><div>Market history: ${MARKET_HISTORY.first} to ${MARKET_HISTORY.last}, ${esc(MARKET_HISTORY.source)}, fetched ${MARKET_HISTORY.fetched}.</div><div>All amounts are in today's dollars unless they say future dollars.</div></div>`;
   else if (tab === "both")
     h +=
       kitAsk(
@@ -491,6 +573,15 @@ function pathsSheet() {
       " plus a margin of " +
       Math.round(A.margin.v * 100) +
       "%, and the rest goes to your bucket list in order.",
+    "Spending smile: " +
+      (P.B.smile < 1
+        ? "on. Best life's number × " +
+          Math.round(P.B.smile * 1000) / 1000 +
+          ": real spending falls about 1% a year from 65 to 75 and about 2% a year from 75 to 85 (Blanchett 2014, the multiplier of the retirement engine)."
+        : "off. Spending stays flat in retirement."),
+    "Stop at 90 out of 100, and more a month to stop at your age: the solver of the retirement engine, on each path's monthly investing. " +
+      RETIRE_CREDIT +
+      ".",
     "Growth: " +
       kitPct(A.ret.v) +
       " a year after inflation. Future dollars: × (1 + " +

@@ -58,8 +58,9 @@
         return;
       }
       const e = (F.hi - F.lo) / 400,
-        lo = simScore(c, def, simWith(x, F.k, f.at - e), A, B),
-        hi = simScore(c, def, simWith(x, F.k, f.at + e), A, B);
+        sc = xx => (F.score ? F.score(c, xx) : simScore(c, def, xx, A, B)),
+        lo = sc(simWith(x, F.k, f.at - e)),
+        hi = sc(simWith(x, F.k, f.at + e));
       chk(
         id + " " + F.k + ": the better option changes at the flip point (" + Math.round(f.at * 100) / 100 + ")",
         f.at > F.lo && f.at < F.hi && lo < 0 !== hi < 0,
@@ -98,6 +99,16 @@
       "pre-tax or Roth: the flip later rate is the rate now, less the tax on the invested savings",
       Math.abs(flips["roth.later"] - want) < 0.01,
       [flips["roth.later"], want]
+    );
+  }
+  {
+    const a70 = stopClaim(c, 70),
+      a62 = stopClaim(c, 62),
+      want = (70 * a70 - 62 * a62) / (a70 - a62);
+    chk(
+      "claiming at 70 or 62: the flip age is where the two totals meet",
+      a70 > a62 && Math.abs(flips["stop.life"] - want) < 0.01,
+      [flips["stop.life"], want]
     );
   }
   chk("a new job with no other change flips at a pay change of $0", Math.abs(flips["job.pay"]) < 1);
@@ -155,6 +166,20 @@
     "an input tap changes the answer and keeps it",
     c.x.sim_rentbuy.stay.v === 3 && ov().includes("If these assumptions hold")
   );
+  {
+    kitStore(c, "taxv").gross = { v: 90000, cf: 2 };
+    kitStore(c, "taxv").state = { v: "CA", cf: 2 };
+    const x = simInputs(c, SIMS.city),
+      same = cityRun(c, simWith(x, "state", "CA")),
+      tx = cityRun(c, simWith(x, "state", "TX"));
+    chk(
+      "moving city: the state tax change comes from the tax view (CA to TX saves the CA tax)",
+      Math.abs(tx.T.change - taxvCalc(c).stateTax) < 1e-6 &&
+        tx.T.change > 0 &&
+        same.T.change === 0 &&
+        tx.gain > same.gain
+    );
+  }
   G.chars.length = n0;
   G.active = 0;
   save();
