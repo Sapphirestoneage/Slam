@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-23. Files: 104. Lines: 61,088. Top-level functions: 1426. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-23. Files: 104. Lines: 61,083. Top-level functions: 1426. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -115,7 +115,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 101 | `features/stars.js` | 720 | 35 | 3 | 0 | The Galaxy. A second view of the 25 skill tracks: 25 constellations around a center "FI", 625 stars, one star for each skill |
 | 102 | `features/book.js` | 213 | 7 | 2 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 103 | `features/questlog.js` | 426 | 23 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
-| 104 | `features/built.js` | 960 | 4 | 0 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 104 | `features/built.js` | 955 | 4 | 0 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
