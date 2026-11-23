@@ -118,7 +118,11 @@ function cdnTarget(c, g, I) {
       list: [kitSharp(c, "spend"), I.off, I.cover],
     };
   }
-  return { target: Math.round(g.cost || 0), lines: [["The price of the goal", g.cost || 0]], list: [{ cf: g.s ? 2 : 1 }] };
+  return {
+    target: Math.round(g.cost || 0),
+    lines: [["The price of the goal", g.cost || 0]],
+    list: [{ cf: g.s ? 2 : 1 }],
+  };
 }
 /* ONE COUNTDOWN: months to go at the monthly amount, and the monthly amount that makes the date. */
 function cdnCalc(c, g) {
@@ -223,7 +227,11 @@ function cdnSheet() {
       K.st,
       "cdnneed"
     );
-  h += igRows(K.T.lines.map(l => [esc(l[0]), money(Math.round(l[1]))]).concat([["<b>The target</b>", "<b>" + money(K.target) + "</b>"]]));
+  h += igRows(
+    K.T.lines
+      .map(l => [esc(l[0]), money(Math.round(l[1]))])
+      .concat([["<b>The target</b>", "<b>" + money(K.target) + "</b>"]])
+  );
   h += A("kind", "What kind of countdown is this?", CDN_KINDS, { term: "cdnkind" });
   if (K.kind === "home") {
     h += A("price", "The price of the home", $([200000, 300000, 400000, 500000, 650000, 800000]), {
@@ -257,7 +265,11 @@ function cdnSheet() {
         [760, "$760 (COBRA, one person)"],
         [2175, "$2,175 (COBRA, a family)"],
       ],
-      { term: "cdncover", typed: true, help: "Your spending comes from your numbers: " + money(c.spend || 0) + " a month." }
+      {
+        term: "cdncover",
+        typed: true,
+        help: "Your spending comes from your numbers: " + money(c.spend || 0) + " a month.",
+      }
     );
   } else
     h += `<div class="row between small"><span>The price comes from the goal ${kitInfo("cdntarget")}</span><button class="ghost slim" data-a="goal" data-v="${g.id}">Open the goal</button></div>`;
@@ -289,8 +301,18 @@ function cdnSheet() {
     { term: "cdnrate", help: "After inflation, cash earns about 0%. That is the careful choice." }
   );
   h += mathBox([
-    "Target: " + money(K.target) + ". Saved for it: " + money(K.saved) + " (from the goal). Still to save: " + money(K.left) + ".",
-    "Each month: the pot grows at the twelfth root of " + kitPct(I.rate.v) + " a year, then " + money(K.monthly) + " goes in. The game counts the months until the pot reaches the target.",
+    "Target: " +
+      money(K.target) +
+      ". Saved for it: " +
+      money(K.saved) +
+      " (from the goal). Still to save: " +
+      money(K.left) +
+      ".",
+    "Each month: the pot grows at the twelfth root of " +
+      kitPct(I.rate.v) +
+      " a year, then " +
+      money(K.monthly) +
+      " goes in. The game counts the months until the pot reaches the target.",
     K.need != null
       ? "To make the date: (target minus the grown pot) divided by the months, or by the growth of the months when the rate is above 0%. Rounded up to a whole dollar."
       : null,
@@ -323,7 +345,10 @@ kitTerms({
     "Countdown",
     "How many months until a goal has its money: the target, less what is saved, at the amount you save each month. It is an estimate.",
   ],
-  cdnneed: ["A date for the goal", "With a date, the game works out the monthly amount that reaches the target by then."],
+  cdnneed: [
+    "A date for the goal",
+    "With a date, the game works out the monthly amount that reaches the target by then.",
+  ],
   cdnkind: [
     "Kind of countdown",
     "Any goal and a wedding count down to the price of the goal. A down payment and a quit fund work out their own target.",

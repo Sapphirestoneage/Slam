@@ -154,7 +154,7 @@ function ledgBook(c) {
 }
 /* A line that opens: a title, a total, and the rows inside. rows: [[label, value, isGuess]]. */
 function ledgGroup(title, total, rows, term, open, guess) {
-  return `<details class="ledg" ${open ? "open" : ""}><summary><span class="row between" style="gap:8px;width:100%"><span>${esc(title)} <span class="tiny muted">(${rows.length})</span></span><b class="${guess ? "guess" : ""}">${total}</b></span></summary><div class="inner stack" style="gap:4px">${term ? `<div class="row between tiny muted"><span>What this line means</span>${kitInfo(term)}</div>` : ""}${
+  return `<details class="ledg" ${open ? "open" : ""}><summary><span class="row between" style="gap:8px;flex:1;min-width:0"><span>${esc(title)} <span class="tiny muted">(${rows.length})</span></span><b class="${guess ? "guess" : ""}">${total}</b></span></summary><div class="inner stack" style="gap:4px">${term ? `<div class="row between tiny muted"><span>What this line means</span>${kitInfo(term)}</div>` : ""}${
     rows.length
       ? igRows(rows.map(r => [esc(r[0]) + (r[2] ? ` <span class="tiny muted">· guess</span>` : ""), r[1]]))
       : `<div class="small muted">Nothing here yet.</div>`
@@ -187,9 +187,7 @@ function ledgSheet() {
         "lg_networth"
       ) +
       ledgGroup("Cash you can reach", money(N.cash), N.reach.map(row), "lg_reach", true, N.st === "Guess") +
-      (N.held.length
-        ? ledgGroup("Cash set aside", money(N.heldSum), N.held.map(row), "lg_held", false, false)
-        : "") +
+      (N.held.length ? ledgGroup("Cash set aside", money(N.heldSum), N.held.map(row), "lg_held", false, false) : "") +
       ledgGroup("Investments", money(N.inv), N.invs.map(row), "lg_invest", false, !isSharp(c, "inv")) +
       ledgGroup(
         "What you owe",
@@ -219,7 +217,14 @@ function ledgSheet() {
         "lg_left"
       ) +
       ledgGroup("Money coming in", money(F.in) + " a month", F.incs.map(row), "lg_in", true, !isSharp(c, "take")) +
-      ledgGroup("Money going out", money(F.out) + " a month", F.spends.map(row), "lg_out", false, !isSharp(c, "spend")) +
+      ledgGroup(
+        "Money going out",
+        money(F.out) + " a month",
+        F.spends.map(row),
+        "lg_out",
+        false,
+        !isSharp(c, "spend")
+      ) +
       (F.topShare != null && F.incs.length > 1
         ? `<div class="small">Your biggest source, ${esc(F.topName)}, is <b>${kitPct(F.topShare, 0)}</b> of the money coming in ${kitInfo("lg_conc")}.</div>`
         : "") +
@@ -327,7 +332,10 @@ kitTerms({
     "Money in accounts that own funds, stocks or bonds: a plan at work, an IRA, an HSA, or a regular investing account.",
   ],
   lg_owe: ["What you owe", "Each balance you must pay back, with the yearly rate the game uses for it."],
-  lg_high: ["High-interest debt", "Debt with a rate of about 8% a year or more. It grows faster than most investments."],
+  lg_high: [
+    "High-interest debt",
+    "Debt with a rate of about 8% a year or more. It grows faster than most investments.",
+  ],
   lg_left: [
     "Left over",
     "The money coming in each month minus the money going out. It is what you can save, invest or put on debt.",

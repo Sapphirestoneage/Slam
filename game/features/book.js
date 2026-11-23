@@ -26,9 +26,19 @@ const BOOK_PARTS = [
   sleptBook,
   pathsBook,
   simBook,
+  tkoBook,
+  agesBook,
+  stressBook,
+  blocksBook,
+  windBook,
+  cdnBook,
+  offerBook,
+  nxaBook,
   frontBook,
   quotaBook,
   summaryBook,
+  ledgBook,
+  vaultBook,
 ];
 /* The sections of the spreadsheet: { title, rows: [{ id, label, v, f, note }] }. */
 function bookSections(c) {

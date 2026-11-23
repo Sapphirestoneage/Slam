@@ -80,6 +80,19 @@ function cxShort(t) {
 }
 /* a skill, and the screen in this game that does it */
 const CX_ROUTES = [
+  [/offer is worth|job offer/i, "offers", "", "Put two offers side by side", 1],
+  [/which account gets money first/i, "nxa", "", "See which account is next", 1],
+  [/before you quit|cash cushion before you retire|time your biggest purchases/i, "cdn", "", "Start a countdown"],
+  [/usual order for spending|sell by a rule|first year of withdrawals/i, "takeout", "order", "See which account to spend first"],
+  [/flexible spending rules|spend a bit less after bad/i, "takeout", "guard", "See your guardrails"],
+  [/conversion ladder/i, "takeout", "bridge", "Run your Roth ladder"],
+  [/health insurance until 65|between quitting and 65/i, "takeout", "aca", "Price health cover until 65"],
+  [/stages of freedom|"am I done\?"|pick your date/i, "ages", "", "See your two ages"],
+  [/windfall|lump sum|insurance payout|inheritance/i, "windfall", "", "Split extra money"],
+  [/market crash|crash plan|bear market|rules for a crash/i, "stress", "", "Stress test your plan"],
+  [/as life changes|real life changes/i, "blocks", "", "Stack your life events"],
+  [/list every account|every account on one page/i, "ledger", "worth", "Open your ledger"],
+  [/sign-?up bonus|how many new cards|new cards a year|each earn the bonus/i, "vault", "", "Open the card vault"],
   [/job's (free )?(retirement )?match|employer (offers|match)|full match/i, "sharp", "match", "Check your job's match"],
   [/expense ratio|fund fee|fees? you pay|cost of (your|each) fund/i, "compare", "fee", "X-ray your fee"],
   [

@@ -36,12 +36,18 @@ Each file has the name of its feature.
 | `investment-mix-and-fees.js` | Investment mix and fees, and the key number Stock share | `features/mix.js` |
 | `plan-spreadsheet.js` | The spreadsheet of the plan: each formula worked out and compared with the game | `features/book.js` |
 | `plan-summary.js` | My plan on one page | `features/plan.js` |
+| `ledger-and-statements.js` | The giant ledger and the three statements: each total against derive() | `features/ledger.js` |
+| `card-vault.js` | The card vault: the 5/24 count, the credit band, offers against the budget | `features/vault.js`, `data/cards2026.js` |
 | `retirement-engine.js` | The retirement engine and its adapter: same seed, same result | `vendor/retire-engine.js`, `features/retire.js` |
 | `retirement-odds.js` | Retirement odds | `features/odds.js`, `data/market.js` (some checks wait for the engine) |
+| `life-event-blocks.js` | Life event blocks: the stack on top of the simulators | `features/blocks.js` |
 | `simulators.js` | The simulator engine and the 12 simulators, with each flip point | `features/sim.js`, `features/sims/*.js` |
 | `spreadsheet-extras.js` | The savings rate by month, the quotas, next year's budget | `features/quota.js` |
 | `tax-view.js` | The tax view | `features/taxview.js`, `features/retire.js` (retireTax) |
 | `two-paths.js` | The two paths | `features/paths.js` |
+| `windfall.js` | The windfall: extra money down the order of the two paths | `features/windfall.js` |
+| `taking-money-out.js` | Taking money out: the order, guardrails, the years before 59 and a half, health cover | `features/takeout.js`, `data/takeout2026.js` |
+| `two-ages.js` | Two ages: work optional and money reachable, for each person | `features/ages.js` |
 | `while-you-slept.js` | While you slept | `features/slept.js` |
 | `before-you-sign.js` | Before you sign | `features/sign.js` |
 | `famous-money-ideas.js` | Famous money ideas | `features/ideas.js` to `ideas5.js`, `ideasz.js`, `roof.js` |
@@ -60,6 +66,9 @@ Each file has the name of its feature.
 | `one-question-at-a-time.js` | Make your numbers real, one question on each screen | `features/ask.js` |
 | `one-question-debts-and-key-numbers.js` | The same pattern for debts, Key numbers, the match and the tax accounts | `features/ask2.js` |
 | `questlog.js` | Where am I (the Quest Log), with a walk for three players | `features/questlog.js` |
+| `countdowns.js` | Countdowns on My Goals: any goal, a down payment, a quit fund, a wedding | `features/countdown.js` |
+| `two-job-offers.js` | Two job offers side by side | `features/offers.js` |
+| `which-account-next.js` | Which account next, up to each limit | `features/nextacct.js` |
 | `quick-math.js` | Quick math | `features/quick.js` |
 | `save-status.js` | The save status | `account/cloud.js` |
 | `sharing-costs-fairly.js` | Sharing costs fairly | `features/fair.js` |
@@ -67,6 +76,7 @@ Each file has the name of its feature.
 | `side-by-side.js` | Side by side, and the fee screen | `features/compare.js` |
 | `spending-plan-and-audit-score.js` | The Conscious Spending Plan and the money audit score | `features/csp.js` |
 | `stars.js` | The Galaxy: star states, lanes from real links, gateway stars, Do this | `features/stars.js` |
+| `stress-test.js` | The stress test: real history and random markets as one result (one check waits for the engine) | `features/stress.js` |
 | `student-loan-plans.js` | Student loan plans | `features/study.js` |
 | `usability-repairs.js` | The repairs from the usability audit | `screens/tidy.js` |
 | `welcome-back-card.js` | The welcome-back card | `features/back.js` |

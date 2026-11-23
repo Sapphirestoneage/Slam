@@ -18,7 +18,7 @@
                when. The words are "If these assumptions hold". No stack is called wrong.
    ========================================================================= */
 /* A block: [id, name, the simulator, the option of the simulator, one line]. */
-const BLOCKS = [
+const LIFE_BLOCKS = [
   ["home", "Buy a home", "rentbuy", "buy", "Buy in place of renting"],
   ["car", "A different car", "car", "used", "A used car, a new car or a lease, in place of the car you have"],
   ["kid", "A child", "kid", "kid", "A child or a new dependent"],
@@ -26,13 +26,13 @@ const BLOCKS = [
   ["break", "A sabbatical", "break", "break", "Time away from work"],
   ["move", "A move", "city", "move", "A cheaper or a pricier city"],
 ];
-const BLOCKS_YEARS = [
+const LIFE_BLOCKS_YEARS = [
   [5, "5 years"],
   [10, "10 years"],
   [20, "20 years"],
   [30, "30 years"],
 ];
-const BLOCKS_CAR = [
+const LIFE_BLOCKS_CAR = [
   ["used", "Buy used"],
   ["new", "Buy new"],
   ["lease", "Lease"],
@@ -41,11 +41,11 @@ const BLOCKS_CAR = [
 function blocksStack(c) {
   const s = kitStore(c, "blocks").stack,
     list = s && Array.isArray(s.v) ? s.v : [];
-  return list.filter(id => BLOCKS.some(b => b[0] === id));
+  return list.filter(id => LIFE_BLOCKS.some(b => b[0] === id));
 }
 /* ONE BLOCK: its simulator, the answers of the player there, and the option that the block stands for. */
 function blocksOne(c, id) {
-  const b = BLOCKS.find(z => z[0] === id),
+  const b = LIFE_BLOCKS.find(z => z[0] === id),
     def = b && SIMS[b[2]];
   if (!def) return null;
   const x = simInputs(c, def),
@@ -125,7 +125,12 @@ function blocksCalc(c, o) {
     fi0,
     fi,
     st: kitState(
-      [kitSharp(c, "take"), kitSharp(c, "spend"), kitSharp(c, "inv")].concat([].concat.apply([], rows.map(r => r.st)))
+      [kitSharp(c, "take"), kitSharp(c, "spend"), kitSharp(c, "inv")].concat(
+        [].concat.apply(
+          [],
+          rows.map(r => r.st)
+        )
+      )
     ),
   };
 }
@@ -177,7 +182,7 @@ function blocksSheet() {
   let h =
     head("Plan", "Life event blocks") +
     `<div class="small muted">Stack the life events you see coming. Each block uses your answers from its simulator ${kitInfo("bl_block")}.</div><div class="stack" style="gap:6px">`;
-  BLOCKS.forEach(b => {
+  LIFE_BLOCKS.forEach(b => {
     const r = S.rows.find(z => z.id === b[0]) || blocksOne(c, b[0]),
       isOn = on.indexOf(b[0]) >= 0;
     if (!r) return;
@@ -186,7 +191,7 @@ function blocksSheet() {
   });
   h += `</div>`;
   if (on.indexOf("car") >= 0)
-    h += kitAsk(c, "blocks", "car", "Which car block?", BLOCKS_CAR, "used", { term: "bl_block" });
+    h += kitAsk(c, "blocks", "car", "Which car block?", LIFE_BLOCKS_CAR, "used", { term: "bl_block" });
   const col = (title, end, free, cushion, fi, hot) => ({
     title,
     big: big(Math.round(end)),
@@ -232,7 +237,7 @@ function blocksSheet() {
         caption: "Across: years from now. Up: net worth in today's dollars.",
       });
   else h += `<div class="tile small">Add a block to see the plan with it next to the plan as today.</div>`;
-  h += kitAsk(c, "blocks", "years", "How far ahead?", BLOCKS_YEARS, 10, { term: "bl_years" });
+  h += kitAsk(c, "blocks", "years", "How far ahead?", LIFE_BLOCKS_YEARS, 10, { term: "bl_years" });
   h += mathBox(
     [
       "Plan as today: your net worth month by month with no change, at " +
@@ -305,7 +310,7 @@ Object.assign(ACT, {
       id = t.dataset.v,
       S = kitStore(c, "blocks"),
       list = blocksStack(c);
-    if (!BLOCKS.some(b => b[0] === id)) return;
+    if (!LIFE_BLOCKS.some(b => b[0] === id)) return;
     S.stack = { v: list.indexOf(id) >= 0 ? list.filter(x => x !== id) : list.concat([id]), cf: 3 };
     kitRedraw();
   },

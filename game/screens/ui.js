@@ -5413,6 +5413,7 @@ function goalSheet(id) {
 function goalView() {
   let h = goalViewBase();
   if (typeof goalViewSim === "function") h = goalViewSim(h); /* sim.js: the simulators that fit this goal */
+  if (typeof goalViewCountdown === "function") h = goalViewCountdown(h); /* countdown.js: the countdown of this goal */
   return h;
 }
 function goalViewBase() {
