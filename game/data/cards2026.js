@@ -1467,7 +1467,7 @@ window.CARDS2026 = {
    "id": "Sapphire Reserve for Business",
    "bank": "Chase",
    "n": "Sapphire Reserve for Business",
-   "network": "",
+   "network": "Visa",
    "fee": 795,
    "amt": 200000,
    "unit": "ur",
@@ -1477,26 +1477,87 @@ window.CARDS2026 = {
    "biz": 1,
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 8
+     },
+     {
+      "cat": "airline",
+      "x": 4
+     },
+     {
+      "cat": "hotel",
+      "x": 4
+     }
+    ],
     "picks": [],
-    "words": "8x Chase Travel, 4x flights and hotels booked direct, 3x social media and search ads, 1x other"
+    "words": "8x Chase Travel, 4x flights and hotels booked direct, 3x social media and search ads (first $1 million a year), 1x other"
    },
-   "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
-   "checked": "2026-11-14",
+   "credits": [
+    {
+     "name": "Travel credit",
+     "value": 300,
+     "words": "Up to $300 a year on travel purchases, applied by itself"
+    },
+    {
+     "name": "The Edit hotel credit",
+     "value": 500,
+     "words": "Up to $500 a year for stays booked with The Edit on Chase Travel"
+    },
+    {
+     "name": "Google Workspace credit",
+     "value": 200,
+     "words": "Up to $200 a year"
+    },
+    {
+     "name": "ZipRecruiter credit",
+     "value": 400,
+     "words": "Up to $400 a year on purchases made with ZipRecruiter"
+    },
+    {
+     "name": "Giftcards.com credit",
+     "value": 100,
+     "words": "Up to $100 a year, $50 each half year"
+    },
+    {
+     "name": "Global Entry or TSA PreCheck",
+     "value": 30,
+     "words": "Up to $120 every 4 years ($30 a year spread)"
+    }
+   ],
+   "source": "The card: Search results that quote chase.com/sapphire-cards/business/reserve and creditcards.chase.com/business-credit-cards/sapphire/reserve (issuer), cnbc.com/select and bankrate.com reviews. The network and the transfer partners are general knowledge, not quoted by the search. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
+   "checked": "2026-11-23",
    "has": {
-    "transfer": true
+    "transfer": true,
+    "noForeignFee": true,
+    "lounge": true,
+    "status": true,
+    "trusted": true
    },
    "hasWords": {
-    "transfer": "Holding this card lets Chase points move to airlines and hotels"
+    "transfer": "Chase points move to airline and hotel partners",
+    "noForeignFee": "No foreign transaction fee",
+    "lounge": "Chase Sapphire Lounges and Priority Pass lounges, with up to two guests",
+    "status": "IHG One Rewards Platinum Elite through Dec 31, 2027 (link your IHG account first)",
+    "trusted": "Up to $120 every 4 years ($30 a year spread)"
    },
-   "unique": []
+   "unique": [
+    {
+     "label": "Lyft",
+     "words": "5x on Lyft rides through Sep 30, 2027"
+    },
+    {
+     "label": "Note",
+     "words": "Chase says The Edit credit grows to up to $1,000 a year from Jan 1, 2027. Rental car and trip covers were not shown by the search, so they are left out"
+    }
+   ]
   },
   {
    "id": "Ink Business Preferred",
    "bank": "Chase",
    "n": "Ink Business Preferred",
-   "network": "",
+   "network": "Visa",
    "fee": 95,
    "amt": 100000,
    "unit": "ur",
@@ -1506,26 +1567,68 @@ window.CARDS2026 = {
    "biz": 1,
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "travel",
+      "x": 3,
+      "cap": 150000,
+      "per": "year",
+      "then": 1
+     },
+     {
+      "cat": "phone",
+      "x": 3,
+      "cap": 150000,
+      "per": "year",
+      "then": 1
+     }
+    ],
     "picks": [],
-    "words": "3x on the first $150,000 a year in shipping, ads, internet, cable, phone and travel; 1x other"
+    "words": "3x on the first $150,000 a year (combined) in shipping, social media and search ads, internet, cable, phone and travel; 1x other"
    },
-   "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
-   "checked": "2026-11-14",
+   "credits": [
+    {
+     "name": "DashPass membership",
+     "value": 0,
+     "words": "A free year of DashPass when you activate by Dec 31, 2027; not counted in dollars"
+    }
+   ],
+   "source": "The card: Search results that quote creditcards.chase.com/business-credit-cards/ink/business-preferred (issuer) and bankrate.com, financebuzz.com reviews. The network is general knowledge, not quoted by the search. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
+   "checked": "2026-11-23",
    "has": {
-    "transfer": true
+    "transfer": true,
+    "noForeignFee": true,
+    "rental": true,
+    "tripCancel": true,
+    "cellPhone": true,
+    "purchase": true,
+    "warranty": true
    },
    "hasWords": {
-    "transfer": "Holding this card lets Chase points move to airlines and hotels"
+    "transfer": "Chase points move to airline and hotel partners",
+    "noForeignFee": "No foreign transaction fee",
+    "rental": "Primary when you rent for business",
+    "tripCancel": "Up to $5,000 a person and $10,000 a trip",
+    "cellPhone": "Up to $1,000 a claim, $100 deductible, 3 claims a year, when the phone bill is paid with the card",
+    "purchase": "120 days, up to $10,000 a claim",
+    "warranty": "Extended warranty protection"
    },
-   "unique": []
+   "unique": [
+    {
+     "label": "Lyft",
+     "words": "5x on Lyft rides through Sep 30, 2027"
+    },
+    {
+     "label": "Note",
+     "words": "The $150,000 limit is one limit for all 3x categories together"
+    }
+   ]
   },
   {
    "id": "Ink Business Cash",
    "bank": "Chase",
    "n": "Ink Business Cash",
-   "network": "",
+   "network": "Visa",
    "fee": 0,
    "amt": 75000,
    "unit": "ur",
@@ -1535,19 +1638,57 @@ window.CARDS2026 = {
    "biz": 1,
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "phone",
+      "x": 5,
+      "cap": 25000,
+      "per": "year",
+      "then": 1
+     },
+     {
+      "cat": "gas",
+      "x": 2,
+      "cap": 25000,
+      "per": "year",
+      "then": 1
+     },
+     {
+      "cat": "dining",
+      "x": 2,
+      "cap": 25000,
+      "per": "year",
+      "then": 1
+     }
+    ],
     "picks": [],
-    "words": "5% on the first $25,000 a year at office supply stores and on internet, cable and phone; 2% on the first $25,000 at gas stations and restaurants; 1% other"
+    "words": "5% on the first $25,000 a year (combined) at office supply stores and on internet, cable and phone; 2% on the first $25,000 a year (combined) at gas stations and restaurants; 1% other"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
+   "source": "The card: Search results that quote creditcards.chase.com/business-credit-cards/ink/cash and the Chase business compare page (issuer) and financebuzz.com. The network is general knowledge, not quoted by the search. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "intro0": true,
+    "purchase": true,
+    "warranty": true
+   },
+   "hasWords": {
+    "intro0": "0% for 12 months on purchases",
+    "purchase": "120 days, up to $10,000 a claim",
+    "warranty": "Extended warranty protection"
+   },
    "unique": [
     {
      "label": "The welcome offer in words",
      "words": "$750 cash back"
+    },
+    {
+     "label": "Foreign transaction fee",
+     "words": "3% of each purchase made outside the US"
+    },
+    {
+     "label": "Lyft",
+     "words": "5% on Lyft rides through Sep 30, 2027"
     }
    ]
   },
@@ -1555,7 +1696,7 @@ window.CARDS2026 = {
    "id": "Ink Business Unlimited",
    "bank": "Chase",
    "n": "Ink Business Unlimited",
-   "network": "",
+   "network": "Visa",
    "fee": 0,
    "amt": 75000,
    "unit": "ur",
@@ -1564,20 +1705,38 @@ window.CARDS2026 = {
    "min": "good",
    "biz": 1,
    "earn": {
-    "base": 1,
+    "base": 1.5,
     "rates": [],
     "picks": [],
     "words": "1.5% on everything"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
+   "source": "The card: Search results that quote creditcards.chase.com/business-credit-cards/ink/unlimited and the Chase business compare page (issuer) and cnbc.com/select/chase-ink-business-cards. The network is general knowledge, not quoted by the search. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "intro0": true,
+    "pool": true,
+    "purchase": true,
+    "warranty": true
+   },
+   "hasWords": {
+    "intro0": "0% for 12 months on purchases",
+    "pool": "Rewards can move to airlines and hotels only when you also hold another Chase points card",
+    "purchase": "120 days, up to $10,000 a claim",
+    "warranty": "Extended warranty protection"
+   },
    "unique": [
     {
      "label": "The welcome offer in words",
      "words": "$750 cash back"
+    },
+    {
+     "label": "Foreign transaction fee",
+     "words": "3% of each purchase made outside the US"
+    },
+    {
+     "label": "Lyft",
+     "words": "5% on Lyft rides through Sep 30, 2027"
     }
    ]
   },
@@ -1585,7 +1744,7 @@ window.CARDS2026 = {
    "id": "Ink Business Premier",
    "bank": "Chase",
    "n": "Ink Business Premier",
-   "network": "",
+   "network": "Visa",
    "fee": 195,
    "amt": 1000,
    "unit": "cash",
@@ -1594,23 +1753,55 @@ window.CARDS2026 = {
    "min": "excellent",
    "biz": 1,
    "earn": {
-    "base": 1,
-    "rates": [],
+    "base": 2,
+    "rates": [
+     {
+      "cat": "travelPortal",
+      "x": 5
+     }
+    ],
     "picks": [],
-    "words": "2.5% on purchases of $5,000 or more, 2% other, 5% Chase Travel"
+    "words": "2.5% on each purchase of $5,000 or more, 2% other, 5% Chase Travel"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
-   "unique": []
+   "source": "The card: Search results that quote creditcards.chase.com/business-credit-cards/ink/premier and chase.com ink-business-premier-credit-card-benefits (issuer), bankrate.com and cnbc.com reviews. The network is general knowledge, not quoted by the search. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true,
+    "rental": true,
+    "tripCancel": true,
+    "cellPhone": true,
+    "purchase": true,
+    "warranty": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee",
+    "rental": "Primary when you rent for business or outside the US",
+    "tripCancel": "Trip cancellation and interruption cover",
+    "cellPhone": "Cell phone protection",
+    "purchase": "120 days, up to $10,000 a claim",
+    "warranty": "Extended warranty protection"
+   },
+   "unique": [
+    {
+     "label": "Large purchases",
+     "words": "2.5% on each single purchase of $5,000 or more"
+    },
+    {
+     "label": "Pay in full",
+     "words": "The balance is due in full each month. Flex for Business lets some purchases be paid over time, with interest"
+    },
+    {
+     "label": "About the rewards",
+     "words": "Rewards do not move to other Chase cards or to airlines and hotels"
+    }
+   ]
   },
   {
    "id": "United Gateway",
    "bank": "Chase",
    "n": "United Gateway",
-   "network": "",
+   "network": "Visa",
    "fee": 0,
    "amt": 40000,
    "unit": "united",
@@ -1619,19 +1810,42 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 2
+     },
+     {
+      "cat": "gas",
+      "x": 2
+     },
+     {
+      "cat": "transit",
+      "x": 2
+     }
+    ],
     "picks": [],
-    "words": "2x United, gas, local transit; 1x other"
+    "words": "2x United, gas, local transit and commuting; 1x other"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
+   "source": "The card: Search results that quote creditcards.chase.com/travel-credit-cards/united/united-gateway (issuer) and nerdwallet.com, onemileatatime.com reviews. The network is general knowledge, not quoted by the search. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "intro0": true,
+    "noForeignFee": true
+   },
+   "hasWords": {
+    "intro0": "0% for 12 months on purchases",
+    "noForeignFee": "No foreign transaction fee"
+   },
    "unique": [
     {
      "label": "The welcome offer in words",
      "words": "40,000 miles, plus 10,000 for adding an authorized user"
+    },
+    {
+     "label": "On the plane",
+     "words": "25% back on food, drinks and Wi-Fi on United flights"
     }
    ]
   },
@@ -1639,7 +1853,7 @@ window.CARDS2026 = {
    "id": "United Club",
    "bank": "Chase",
    "n": "United Club",
-   "network": "",
+   "network": "Visa",
    "fee": 695,
    "amt": 90000,
    "unit": "united",
@@ -1648,19 +1862,54 @@ window.CARDS2026 = {
    "min": "excellent",
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 5
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "travel",
+      "x": 2
+     }
+    ],
     "picks": [],
-    "words": "4x United, 2x dining and other travel, 1x other. Includes United Club membership"
+    "words": "5x United (4x before April 2, 2026), 2x dining and other travel, 1x other"
    },
-   "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); financebuzz.com/chase-credit-cards (Nov 2026) (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
+   "credits": [
+    {
+     "name": "JSX credit",
+     "value": 200,
+     "words": "Up to $200 each card year on flights booked with JSX"
+    }
+   ],
+   "source": "The card: Search results that quote creditcards.chase.com/travel-credit-cards/united/club-infinite (issuer), awardwallet.com mileage-earning-changes-2026, thepointsguy.com and nerdwallet.com reviews. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); financebuzz.com/chase-credit-cards (Nov 2026) (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "lounge": true,
+    "bag": true,
+    "trusted": true
+   },
+   "hasWords": {
+    "lounge": "United Club membership for you and eligible companions",
+    "bag": "First and second checked bag free for you and one companion",
+    "trusted": "Credit for Global Entry, TSA PreCheck or NEXUS"
+   },
    "unique": [
     {
      "label": "Where the sources differ",
      "words": "Another site shows up to 100,000 miles"
+    },
+    {
+     "label": "At the airport",
+     "words": "Premier Access for you and companions on the same booking"
+    },
+    {
+     "label": "Note",
+     "words": "The library line says 4x United. Chase and AwardWallet show 5x since April 2, 2026. The foreign fee and the other partner credits were not shown by the search"
     }
    ]
   },
@@ -1668,7 +1917,7 @@ window.CARDS2026 = {
    "id": "United Business",
    "bank": "Chase",
    "n": "United Business",
-   "network": "",
+   "network": "Visa",
    "fee": 150,
    "amt": 100000,
    "unit": "united",
@@ -1678,19 +1927,64 @@ window.CARDS2026 = {
    "biz": 1,
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 2
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "gas",
+      "x": 2
+     },
+     {
+      "cat": "transit",
+      "x": 2
+     }
+    ],
     "picks": [],
-    "words": "2x United, gas, dining, office supply, local transit; 1x other"
+    "words": "2x United, dining, gas, office supply stores, local transit and commuting; 1x other"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
+   "source": "The card: Search results that quote creditcards.chase.com/business-credit-cards/united/united-business-card and chase.com/business/credit-cards/united-business-cards/united-business-card (issuer), creditcards.com review. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true,
+    "bag": true,
+    "rental": true,
+    "tripCancel": true,
+    "baggage": true,
+    "purchase": true,
+    "warranty": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee",
+    "bag": "First checked bag free for you and one companion",
+    "rental": "Primary, up to $60,000 for theft and collision damage (decline the counter coverage)",
+    "tripCancel": "Up to $1,500 a person and $6,000 a trip",
+    "baggage": "Bag late by more than 6 hours: up to $100 a day for 3 days",
+    "purchase": "Purchase protection",
+    "warranty": "Extended warranty protection"
+   },
    "unique": [
     {
      "label": "The welcome offer in words",
      "words": "100,000 miles and 2,000 PQP, plus 10,000 miles for adding an employee card"
+    },
+    {
+     "label": "Lounge passes",
+     "words": "2 United Club one-time passes each year"
+    },
+    {
+     "label": "On the plane",
+     "words": "25% back on food, drinks and Wi-Fi on United flights"
+    },
+    {
+     "label": "Note",
+     "words": "Chase names more than $600 a year in partner credits; the search did not show each amount, so none is listed"
     }
    ]
   },
@@ -1698,7 +1992,7 @@ window.CARDS2026 = {
    "id": "United Club Business",
    "bank": "Chase",
    "n": "United Club Business",
-   "network": "",
+   "network": "Visa",
    "fee": 695,
    "amt": 100000,
    "unit": "united",
@@ -1707,16 +2001,58 @@ window.CARDS2026 = {
    "min": "good",
    "biz": 1,
    "earn": {
-    "base": 1,
-    "rates": [],
+    "base": 1.5,
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 2
+     }
+    ],
     "picks": [],
-    "words": "2x United, 1.5x other"
+    "words": "2x United, 5x prepaid stays with Renowned Hotels and Resorts, 1.5x other"
    },
-   "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
+   "credits": [
+    {
+     "name": "Renowned Hotels and Resorts credit",
+     "value": 200,
+     "words": "Up to $200 a year on prepaid stays"
+    },
+    {
+     "name": "Rideshare credit",
+     "value": 150,
+     "words": "Up to $150 a calendar year, paid monthly, after you enroll"
+    },
+    {
+     "name": "Instacart credit",
+     "value": 240,
+     "words": "Two $10 credits a month, up to $240 a calendar year, through Dec 31, 2027"
+    },
+    {
+     "name": "JSX credit",
+     "value": 200,
+     "words": "Up to $200 each card year on flights booked with JSX"
+    },
+    {
+     "name": "Avis or Budget travel credit",
+     "value": 100,
+     "words": "Up to $100 each card year in United TravelBank cash for car rentals"
+    },
+    {
+     "name": "FareLock credit",
+     "value": 50,
+     "words": "Up to $50 each card year on United FareLock"
+    }
+   ],
+   "source": "The card: Search results that quote creditcards.chase.com/business-credit-cards/united/united-club-business and chase.com/business/credit-cards/united-business-cards/united-club-card (issuer). The network is general knowledge, not quoted by the search. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "lounge": true,
+    "bag": true
+   },
+   "hasWords": {
+    "lounge": "United Club membership for you and eligible companions",
+    "bag": "First and second checked bag free for you and one companion"
+   },
    "unique": [
     {
      "label": "The welcome offer in words",
@@ -1728,7 +2064,7 @@ window.CARDS2026 = {
    "id": "Southwest Premier",
    "bank": "Chase",
    "n": "Southwest Premier",
-   "network": "",
+   "network": "Visa",
    "fee": 149,
    "amt": 85000,
    "unit": "southwest",
@@ -1738,22 +2074,60 @@ window.CARDS2026 = {
    "ends": "2026-12-02",
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 3
+     },
+     {
+      "cat": "groceries",
+      "x": 2,
+      "cap": 8000,
+      "per": "year",
+      "then": 1
+     },
+     {
+      "cat": "dining",
+      "x": 2,
+      "cap": 8000,
+      "per": "year",
+      "then": 1
+     }
+    ],
     "picks": [],
-    "words": "3x Southwest, 2x groceries and restaurants on the first $8,000 a year, 1x other"
+    "words": "3x Southwest, 2x groceries and restaurants on the first $8,000 a year (combined), 1x other"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
-   "unique": []
+   "source": "The card: Search results that quote southwest.com/cardmember-benefits and creditcards.chase.com/travel-credit-cards/southwest/premier (issuer), nerdwallet.com review. The network is general knowledge, not quoted by the search. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true,
+    "bag": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee",
+    "bag": "First checked bag free for you and up to 8 people on the same booking"
+   },
+   "unique": [
+    {
+     "label": "Each card year",
+     "words": "6,000 points on the card anniversary"
+    },
+    {
+     "label": "Seats and boarding",
+     "words": "Boarding with Group 5 and a seat pick within 48 hours of the flight, when seats are open"
+    },
+    {
+     "label": "Flight discount",
+     "words": "One 15% promotion code each card year"
+    }
+   ]
   },
   {
    "id": "Southwest Premier Business",
    "bank": "Chase",
    "n": "Southwest Premier Business",
-   "network": "",
+   "network": "Visa",
    "fee": 149,
    "amt": 60000,
    "unit": "southwest",
@@ -1763,22 +2137,64 @@ window.CARDS2026 = {
    "biz": 1,
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 3
+     },
+     {
+      "cat": "gas",
+      "x": 2,
+      "cap": 8000,
+      "per": "year",
+      "then": 1
+     },
+     {
+      "cat": "dining",
+      "x": 2,
+      "cap": 8000,
+      "per": "year",
+      "then": 1
+     }
+    ],
     "picks": [],
-    "words": "3x Southwest, 2x gas and restaurants on the first $8,000 a year, 1x other"
+    "words": "3x Southwest, 2x gas and restaurants on the first $8,000 a year (combined), 1x other"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
-   "unique": []
+   "source": "The card: Search results that quote southwest.com business cards page and creditcards.chase.com/business-credit-cards/southwest/premier-business (issuer), awardwallet.com and thepointsguy.com. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true,
+    "bag": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee",
+    "bag": "First checked bag free for you and up to 8 people on the same booking"
+   },
+   "unique": [
+    {
+     "label": "Each card year",
+     "words": "6,000 points on the card anniversary"
+    },
+    {
+     "label": "Seats and boarding",
+     "words": "Boarding with Group 5 and a seat pick within 48 hours of the flight, when seats are open"
+    },
+    {
+     "label": "Flight discount",
+     "words": "One 15% promotion code each card year"
+    },
+    {
+     "label": "Employee cards",
+     "words": "Free"
+    }
+   ]
   },
   {
    "id": "Southwest Performance Business",
    "bank": "Chase",
    "n": "Southwest Performance Business",
-   "network": "",
+   "network": "Visa",
    "fee": 299,
    "amt": 80000,
    "unit": "southwest",
@@ -1788,22 +2204,82 @@ window.CARDS2026 = {
    "biz": 1,
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 4
+     },
+     {
+      "cat": "gas",
+      "x": 2
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "hotel",
+      "x": 2
+     },
+     {
+      "cat": "transit",
+      "x": 2
+     }
+    ],
     "picks": [],
-    "words": "4x Southwest, 2x gas, restaurants, hotels booked direct, local transit; 1x other"
+    "words": "4x Southwest, 2x gas, restaurants, hotels booked direct, local transit and rideshare; 1x other"
    },
-   "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
-   "unique": []
+   "credits": [
+    {
+     "name": "Global Entry or TSA PreCheck",
+     "value": 30,
+     "words": "Up to $120 every 4 years ($30 a year spread)"
+    }
+   ],
+   "source": "The card: Search results that quote creditcards.chase.com/business-credit-cards/southwest/performance-business and southwest.com cardmember benefits (issuer), financebuzz.com and cnbc.com reviews. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true,
+    "bag": true,
+    "trusted": true,
+    "rental": true,
+    "baggage": true,
+    "purchase": true,
+    "warranty": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee",
+    "bag": "First checked bag free for you and up to 8 people on the same booking",
+    "trusted": "Up to $120 every 4 years for Global Entry, TSA PreCheck or NEXUS",
+    "rental": "Rental car collision cover",
+    "baggage": "Lost and delayed baggage",
+    "purchase": "Purchase protection",
+    "warranty": "Extended warranty protection"
+   },
+   "unique": [
+    {
+     "label": "Each card year",
+     "words": "9,000 points after the card anniversary"
+    },
+    {
+     "label": "On the plane",
+     "words": "25% back on drinks and Wi-Fi"
+    },
+    {
+     "label": "Seats",
+     "words": "A preferred seat at booking and an extra legroom seat within 48 hours of the flight, when seats are open"
+    },
+    {
+     "label": "Employee cards",
+     "words": "Free"
+    }
+   ]
   },
   {
    "id": "Marriott Bonvoy Bold",
    "bank": "Chase",
    "n": "Marriott Bonvoy Bold",
-   "network": "",
+   "network": "Visa",
    "fee": 0,
    "amt": 45000,
    "unit": "marriott",
@@ -1812,22 +2288,56 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "hotel",
+      "x": 3
+     },
+     {
+      "cat": "groceries",
+      "x": 2
+     },
+     {
+      "cat": "delivery",
+      "x": 2
+     },
+     {
+      "cat": "streaming",
+      "x": 2
+     },
+     {
+      "cat": "phone",
+      "x": 2
+     }
+    ],
     "picks": [],
-    "words": "2x groceries, rideshare, food delivery, streaming, internet, cable and phone; 1x other"
+    "words": "3x Marriott hotels; 2x groceries, rideshare, select food delivery, select streaming, internet, cable and phone; 1x other"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase; financebuzz.com/chase-credit-cards (Nov 2026) (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
-   "unique": []
+   "source": "The card: Search results that quote creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bold and marriott.com/credit-cards/chase-credit-cards.mi (issuer and hotel). The network is general knowledge, not quoted by the search. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase; financebuzz.com/chase-credit-cards (Nov 2026) (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true,
+    "status": true,
+    "baggage": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee",
+    "status": "Marriott Bonvoy Silver Elite each calendar year",
+    "baggage": "Lost luggage, up to $3,000 a traveler"
+   },
+   "unique": [
+    {
+     "label": "Toward status",
+     "words": "5 Elite Night Credits each calendar year"
+    }
+   ]
   },
   {
    "id": "Marriott Bonvoy Bountiful",
    "bank": "Chase",
    "n": "Marriott Bonvoy Bountiful",
-   "network": "",
+   "network": "Visa",
    "fee": 250,
    "amt": 85000,
    "unit": "marriott",
@@ -1835,23 +2345,61 @@ window.CARDS2026 = {
    "months": 3,
    "min": "good",
    "earn": {
-    "base": 1,
-    "rates": [],
+    "base": 2,
+    "rates": [
+     {
+      "cat": "hotel",
+      "x": 6
+     },
+     {
+      "cat": "groceries",
+      "x": 4,
+      "cap": 15000,
+      "per": "year",
+      "then": 2
+     },
+     {
+      "cat": "dining",
+      "x": 4,
+      "cap": 15000,
+      "per": "year",
+      "then": 2
+     }
+    ],
     "picks": [],
-    "words": "4x on the first $15,000 a year in groceries and dining, 2x other. Gold Elite status"
+    "words": "6x Marriott hotels, 4x on the first $15,000 a year (combined) in groceries and dining, 2x other"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); financebuzz.com/chase-credit-cards (Nov 2026) (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
-   "unique": []
+   "source": "The card: Search results that quote creditcards.chase.com/travel-credit-cards/marriott-bonvoy/bountiful and marriott.chase.com/bountiful (issuer), awardwallet.com. The network is general knowledge, not quoted by the search. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); financebuzz.com/chase-credit-cards (Nov 2026) (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true,
+    "status": true,
+    "tripDelay": true,
+    "baggage": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee",
+    "status": "Marriott Bonvoy Gold Elite each calendar year",
+    "tripDelay": "Trip delay cover (the sources do not agree on the amount)",
+    "baggage": "Bag late by more than 6 hours: up to $100 a day for 5 days"
+   },
+   "unique": [
+    {
+     "label": "Free night after spending",
+     "words": "One free night (up to 50,000 points) after $15,000 in purchases in a calendar year"
+    },
+    {
+     "label": "Toward status",
+     "words": "15 Elite Night Credits each year"
+    }
+   ]
   },
   {
    "id": "IHG One Rewards Traveler",
    "bank": "Chase",
    "n": "IHG One Rewards Traveler",
-   "network": "",
+   "network": "Mastercard",
    "fee": 0,
    "amt": 125000,
    "unit": "ihg",
@@ -1859,23 +2407,65 @@ window.CARDS2026 = {
    "months": 3,
    "min": "good",
    "earn": {
-    "base": 1,
-    "rates": [],
+    "base": 2,
+    "rates": [
+     {
+      "cat": "hotel",
+      "x": 5
+     },
+     {
+      "cat": "dining",
+      "x": 3
+     },
+     {
+      "cat": "gas",
+      "x": 3
+     },
+     {
+      "cat": "streaming",
+      "x": 3
+     },
+     {
+      "cat": "phone",
+      "x": 3
+     }
+    ],
     "picks": [],
-    "words": "3x dining, gas and groceries; 2x other"
+    "words": "5x IHG hotels; 3x dining, gas, select streaming and utilities (internet, cable and phone count); 2x other"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
-   "unique": []
+   "source": "The card: Search results that quote creditcards.chase.com/travel-credit-cards/ihg-rewards-club/traveler and chase.com/personal/credit-cards/ihg/traveler/earn-rewards (issuer), media.chase.com IHG portfolio news. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "status": true
+   },
+   "hasWords": {
+    "status": "IHG One Rewards Silver Elite. Gold Elite after $20,000 in purchases in a year"
+   },
+   "unique": [
+    {
+     "label": "Fourth night",
+     "words": "Book 4 nights in a row with points and the fourth night costs no points"
+    },
+    {
+     "label": "After spending",
+     "words": "10,000 points after $10,000 in purchases in a year"
+    },
+    {
+     "label": "Buying points",
+     "words": "20% off when you buy IHG points with the card"
+    },
+    {
+     "label": "Note",
+     "words": "The library line names groceries at 3x. Chase names utilities and streaming, not groceries. The foreign fee was not shown for this card by the search"
+    }
+   ]
   },
   {
    "id": "IHG One Rewards Premier Select",
    "bank": "Chase",
    "n": "IHG One Rewards Premier Select",
-   "network": "",
+   "network": "Mastercard",
    "fee": 350,
    "amt": 200000,
    "unit": "ihg",
@@ -1883,20 +2473,70 @@ window.CARDS2026 = {
    "months": 3,
    "min": "good",
    "earn": {
-    "base": 1,
-    "rates": [],
+    "base": 3,
+    "rates": [
+     {
+      "cat": "hotel",
+      "x": 12
+     },
+     {
+      "cat": "dining",
+      "x": 6
+     },
+     {
+      "cat": "travel",
+      "x": 6
+     }
+    ],
     "picks": [],
-    "words": "6x dining and other travel, 3x other. Platinum Elite status"
+    "words": "12x IHG hotels, 6x dining and other travel (rideshare counts), 3x other"
    },
-   "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); financebuzz.com/chase-credit-cards (Nov 2026) (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
+   "credits": [
+    {
+     "name": "IHG food and drink rewards",
+     "value": 300,
+     "words": "Up to $300 a year at IHG hotels"
+    },
+    {
+     "name": "Airline credit",
+     "value": 200,
+     "words": "Up to $200 a year"
+    },
+    {
+     "name": "United TravelBank cash",
+     "value": 50,
+     "words": "Up to $50"
+    },
+    {
+     "name": "Global Entry or TSA PreCheck",
+     "value": 30,
+     "words": "Up to $120 every 4 years ($30 a year spread)"
+    }
+   ],
+   "source": "The card: Search results that quote creditcards.chase.com/travel-credit-cards/ihg-rewards-club/premier-select, ihg.com/onerewards card page and media.chase.com/news/ihg-premier-select-card-portfolio-updates (issuer and hotel), nerdwallet.com and upgradedpoints.com reviews. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); financebuzz.com/chase-credit-cards (Nov 2026) (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "status": true,
+    "night": true,
+    "trusted": true
+   },
+   "hasWords": {
+    "status": "IHG One Rewards Platinum Elite",
+    "night": "One free night each card year, up to 60,000 points (you can add points)",
+    "trusted": "Up to $120 every 4 years for Global Entry, TSA PreCheck or NEXUS"
+   },
    "unique": [
     {
      "label": "The welcome offer in words",
      "words": "200,000 points, limited time"
+    },
+    {
+     "label": "Second free night",
+     "words": "After $40,000 in purchases in a calendar year"
+    },
+    {
+     "label": "Toward status",
+     "words": "20 Elite Night Credits at the start of each year, and more with spending"
     }
    ]
   },
@@ -1904,7 +2544,7 @@ window.CARDS2026 = {
    "id": "IHG One Rewards Business",
    "bank": "Chase",
    "n": "IHG One Rewards Business",
-   "network": "",
+   "network": "Mastercard",
    "fee": 200,
    "amt": 190000,
    "unit": "ihg",
@@ -1913,23 +2553,66 @@ window.CARDS2026 = {
    "min": "good",
    "biz": 1,
    "earn": {
-    "base": 1,
-    "rates": [],
+    "base": 3,
+    "rates": [
+     {
+      "cat": "hotel",
+      "x": 10
+     },
+     {
+      "cat": "dining",
+      "x": 5
+     },
+     {
+      "cat": "gas",
+      "x": 5
+     }
+    ],
     "picks": [],
-    "words": "5x travel, gas, ads, office supply and restaurants; 3x other"
+    "words": "10x IHG hotels; 5x gas, restaurants, social media and search ads; 5x travel and office supply stores through Dec 31, 2026 (then 5x only on flights booked direct and car rentals); 3x other"
    },
-   "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
-   "unique": []
+   "credits": [
+    {
+     "name": "Instacart credit",
+     "value": 120,
+     "words": "Up to $120 a calendar year, through Dec 31, 2027"
+    },
+    {
+     "name": "Global Entry or TSA PreCheck",
+     "value": 30,
+     "words": "Up to $120 every 4 years ($30 a year spread)"
+    }
+   ],
+   "source": "The card: Search results that quote creditcards.chase.com/business-credit-cards/IHG/business-premier and chase.com/business/credit-cards/ihg/business (issuer), awardwallet.com review. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true,
+    "status": true,
+    "night": true,
+    "trusted": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee",
+    "status": "IHG One Rewards Platinum Elite",
+    "night": "One free night each card year",
+    "trusted": "Up to $120 every 4 years for Global Entry, TSA PreCheck or NEXUS"
+   },
+   "unique": [
+    {
+     "label": "Flight credit",
+     "words": "$100 back on a flight of $250 or more booked with the airline, through Dec 31, 2027"
+    },
+    {
+     "label": "Note",
+     "words": "Travel is left out of the rates because 5x on all travel ends Dec 31, 2026. This card was the IHG One Rewards Premier Business card before"
+    }
+   ]
   },
   {
    "id": "World of Hyatt Business",
    "bank": "Chase",
    "n": "World of Hyatt Business",
-   "network": "",
+   "network": "Visa",
    "fee": 199,
    "amt": 70000,
    "unit": "hyatt",
@@ -1939,19 +2622,64 @@ window.CARDS2026 = {
    "biz": 1,
    "earn": {
     "base": 1,
-    "rates": [],
-    "picks": [],
-    "words": "4x Hyatt, 2x in your top three categories each quarter, 1x other"
+    "rates": [
+     {
+      "cat": "hotel",
+      "x": 4
+     }
+    ],
+    "picks": [
+     {
+      "x": 2,
+      "count": 3,
+      "from": [
+       "dining",
+       "airline",
+       "transit",
+       "gas",
+       "phone"
+      ]
+     }
+    ],
+    "words": "4x Hyatt, 2x in your top three categories each quarter, 2x fitness clubs and gyms, 1x other"
    },
-   "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
+   "credits": [
+    {
+     "name": "Hyatt credit",
+     "value": 100,
+     "words": "$50 back on a Hyatt purchase of $50 or more, up to 2 times each card year"
+    }
+   ],
+   "source": "The card: Search results that quote creditcards.chase.com/business-credit-cards/world-of-hyatt/hyatt-business-card and chase.com world-hyatt-business pages (issuer), nerdwallet.com and upgradedpoints.com reviews. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true,
+    "status": true,
+    "rental": true,
+    "tripCancel": true,
+    "purchase": true,
+    "warranty": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee",
+    "status": "World of Hyatt Discoverist, and you can give it to up to 5 employees",
+    "rental": "Primary when you rent for business",
+    "tripCancel": "Up to $1,500 a person and $6,000 a trip",
+    "purchase": "Purchase protection",
+    "warranty": "Extended warranty protection"
+   },
    "unique": [
     {
      "label": "Where the sources differ",
      "words": "Another site shows 60,000 points"
+    },
+    {
+     "label": "Points back",
+     "words": "10% of redeemed points back after $50,000 in purchases in a calendar year"
+    },
+    {
+     "label": "Note",
+     "words": "The card picks the top three for you from eight categories. Car rentals, shipping and ads are also on that list but have no category here. The list of eight is general knowledge, not quoted by the search"
     }
    ]
   },
@@ -1959,7 +2687,7 @@ window.CARDS2026 = {
    "id": "Aeroplan",
    "bank": "Chase",
    "n": "Aeroplan",
-   "network": "",
+   "network": "Mastercard",
    "fee": 195,
    "amt": 75000,
    "unit": "aeroplan",
@@ -1968,15 +2696,57 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 3
+     },
+     {
+      "cat": "travel",
+      "x": 3
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "groceries",
+      "x": 2
+     },
+     {
+      "cat": "gas",
+      "x": 2
+     }
+    ],
     "picks": [],
-    "words": "3x travel, 3x groceries and dining through Dec 31, 2026 (2x after), 2x gas, 1x other"
+    "words": "3x Air Canada and travel; 2x dining, groceries and gas (dining and groceries earn 3x through Dec 31, 2026); 1x other"
    },
-   "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
+   "credits": [
+    {
+     "name": "Air Canada credit",
+     "value": 100,
+     "words": "Up to $100 a year, as two $50 credits (January and July)"
+    },
+    {
+     "name": "Global Entry or TSA PreCheck",
+     "value": 30,
+     "words": "Up to $120 every 4 years ($30 a year spread)"
+    }
+   ],
+   "source": "The card: Search results that quote media.chase.com/news/the-chase-air-canada-aeroplan-credit-card-refresh, creditcards.chase.com/travel-credit-cards/aircanada/aeroplan and aircanada.com (issuer and airline), thepointsguy.com and awardwallet.com. The network is general knowledge, not quoted by the search. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); thepointsparty.com/credit-cards/issuer/chase (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true,
+    "status": true,
+    "bag": true,
+    "trusted": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee",
+    "status": "Aeroplan 25K status while you hold the card",
+    "bag": "A free checked bag on Air Canada comes with the 25K status",
+    "trusted": "Up to $120 every 4 years for Global Entry, TSA PreCheck or NEXUS"
+   },
    "unique": [
     {
      "label": "The welcome offer in words",
@@ -1985,6 +2755,14 @@ window.CARDS2026 = {
     {
      "label": "Where the sources differ",
      "words": "One site's headline says up to 80,000"
+    },
+    {
+     "label": "Flight rewards",
+     "words": "At least 15% fewer points on Air Canada flight rewards"
+    },
+    {
+     "label": "Note",
+     "words": "Changed Sep 10, 2026: now named Chase Air Canada Aeroplan Credit Card. Dining and groceries are set at the 2x rate that starts Jan 1, 2027. One Chase paper says Air Canada purchases also go to 2x after 2026; the news page says 3x"
     }
    ]
   },
@@ -1992,7 +2770,7 @@ window.CARDS2026 = {
    "id": "British Airways Visa Signature",
    "bank": "Chase",
    "n": "British Airways Visa Signature",
-   "network": "",
+   "network": "Visa",
    "fee": 95,
    "amt": 75000,
    "unit": "avios",
@@ -2001,19 +2779,40 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 3
+     },
+     {
+      "cat": "hotel",
+      "x": 2
+     }
+    ],
     "picks": [],
     "words": "3 Avios on British Airways, Aer Lingus, Iberia and LEVEL; 2 on hotels booked direct; 1 other"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); financebuzz.com/chase-credit-cards (Nov 2026) (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
+   "source": "The card: Search results that quote creditcards.chase.com/travel-credit-cards/avios/british-airways and britishairways.com credit card page (issuer and airline). The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); financebuzz.com/chase-credit-cards (Nov 2026) (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee"
+   },
    "unique": [
     {
      "label": "Where the sources differ",
      "words": "Another site shows 90,000 Avios"
+    },
+    {
+     "label": "Travel Together Ticket",
+     "words": "After $30,000 in purchases in a calendar year: a companion on a reward flight for no more Avios, or half the Avios when you fly alone. Good for two years"
+    },
+    {
+     "label": "Flight discount",
+     "words": "10% off British Airways flights booked through the card link on ba.com"
     }
    ]
   },
@@ -2021,7 +2820,7 @@ window.CARDS2026 = {
    "id": "Iberia Visa Signature",
    "bank": "Chase",
    "n": "Iberia Visa Signature",
-   "network": "",
+   "network": "Visa",
    "fee": 95,
    "amt": 75000,
    "unit": "avios",
@@ -2030,22 +2829,44 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 3
+     },
+     {
+      "cat": "hotel",
+      "x": 2
+     }
+    ],
     "picks": [],
     "words": "3 Avios on Iberia, British Airways, Aer Lingus and LEVEL; 2 on hotels booked direct; 1 other"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
-   "unique": []
+   "source": "The card: Search results that quote creditcards.chase.com/travel-credit-cards/avios/iberia (issuer). The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee"
+   },
+   "unique": [
+    {
+     "label": "Discount voucher",
+     "words": "After $30,000 in purchases in a calendar year: $1,000 off two tickets on the same Iberia flight"
+    },
+    {
+     "label": "Flight discount",
+     "words": "10% off Iberia flights"
+    }
+   ]
   },
   {
    "id": "Aer Lingus Visa Signature",
    "bank": "Chase",
    "n": "Aer Lingus Visa Signature",
-   "network": "",
+   "network": "Visa",
    "fee": 95,
    "amt": 75000,
    "unit": "avios",
@@ -2054,22 +2875,44 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "airline",
+      "x": 3
+     },
+     {
+      "cat": "hotel",
+      "x": 2
+     }
+    ],
     "picks": [],
     "words": "3 Avios on Aer Lingus, British Airways, Iberia and LEVEL; 2 on hotels booked direct; 1 other"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
-   "unique": []
+   "source": "The card: Search results that quote creditcards.chase.com/travel-credit-cards/avios/aer-lingus (issuer). The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee"
+   },
+   "unique": [
+    {
+     "label": "Companion Ticket",
+     "words": "After $30,000 in purchases in a calendar year: one economy companion ticket"
+    },
+    {
+     "label": "Boarding",
+     "words": "Priority boarding on Aer Lingus flights between the US and Ireland"
+    }
+   ]
   },
   {
    "id": "Disney Premier Visa",
    "bank": "Chase",
    "n": "Disney Premier Visa",
-   "network": "",
+   "network": "Visa",
    "fee": 49,
    "amt": 300,
    "unit": "disney",
@@ -2078,19 +2921,52 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "gas",
+      "x": 2
+     },
+     {
+      "cat": "groceries",
+      "x": 2
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "store",
+      "x": 2
+     }
+    ],
     "picks": [],
-    "words": "5% Disney+, Hulu and ESPN+; 2% gas, groceries, restaurants and Disney; 1% other"
+    "words": "5% Disney+, Hulu and ESPN streaming paid direct; 2% gas, groceries, restaurants and most US Disney locations; 1% other"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
-   "checked": "2026-11-14",
+   "source": "The card: Search results that quote creditcards.chase.com/rewards-credit-cards/disney/premier and disneyrewards.com (issuer and brand). The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
+   "checked": "2026-11-23",
    "has": {},
    "hasWords": {},
    "unique": [
     {
      "label": "The welcome offer in words",
      "words": "$200 Disney gift card plus a $100 statement credit"
+    },
+    {
+     "label": "What it earns",
+     "words": "Disney Rewards Dollars, to use at Disney or as a credit toward airline tickets"
+    },
+    {
+     "label": "Streaming",
+     "words": "5% only on DisneyPlus.com, Hulu.com and Stream.ESPN.com, so it is not set as a streaming rate"
+    },
+    {
+     "label": "Disney trips",
+     "words": "0% promotional rate for 6 months on select Disney vacation packages"
+    },
+    {
+     "label": "Disney discounts",
+     "words": "10% off select merchandise and dining at Disneyland and Walt Disney World; 15% off select guided tours"
     }
    ]
   },
@@ -2098,7 +2974,7 @@ window.CARDS2026 = {
    "id": "Disney Inspire Visa",
    "bank": "Chase",
    "n": "Disney Inspire Visa",
-   "network": "",
+   "network": "Visa",
    "fee": 149,
    "amt": 500,
    "unit": "disney",
@@ -2107,19 +2983,59 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "gas",
+      "x": 3
+     },
+     {
+      "cat": "store",
+      "x": 3
+     },
+     {
+      "cat": "groceries",
+      "x": 2
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     }
+    ],
     "picks": [],
-    "words": "10% Disney+, Hulu and ESPN+; 3% gas and Disney; 2% groceries and restaurants; 1% other"
+    "words": "10% Disney+, Hulu and ESPN streaming paid direct; 3% gas and most US Disney locations; 2% groceries and restaurants; 1% other"
    },
-   "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
-   "checked": "2026-11-14",
+   "credits": [
+    {
+     "name": "Streaming credit",
+     "value": 120,
+     "words": "$10 a month on Disney streaming charges after you enroll each year"
+    },
+    {
+     "name": "Theme park ticket credit",
+     "value": 100,
+     "words": "$100 back after $200 on US Disney theme park tickets in a card year"
+    }
+   ],
+   "source": "The card: Search results that quote creditcards.chase.com/rewards-credit-cards/disney/inspire, media.chase.com launch news and disneyrewards.com (issuer and brand). The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
+   "checked": "2026-11-23",
    "has": {},
    "hasWords": {},
    "unique": [
     {
      "label": "The welcome offer in words",
      "words": "$300 Disney gift card on approval plus a $200 statement credit"
+    },
+    {
+     "label": "What it earns",
+     "words": "Disney Rewards Dollars, to use at Disney"
+    },
+    {
+     "label": "Streaming",
+     "words": "10% only on DisneyPlus.com, Hulu.com and Stream.ESPN.com, so it is not set as a streaming rate"
+    },
+    {
+     "label": "Resort bonus",
+     "words": "200 Disney Rewards Dollars after $2,000 on US Disney resort stays and Disney Cruise Line in a card year"
     }
    ]
   },
@@ -2127,7 +3043,7 @@ window.CARDS2026 = {
    "id": "Instacart Mastercard",
    "bank": "Chase",
    "n": "Instacart Mastercard",
-   "network": "",
+   "network": "Mastercard",
    "fee": 0,
    "amt": 50,
    "unit": "cash",
@@ -2136,19 +3052,51 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [],
+    "rates": [
+     {
+      "cat": "store",
+      "x": 5,
+      "cap": 6000,
+      "per": "year",
+      "then": 1
+     },
+     {
+      "cat": "travelPortal",
+      "x": 5
+     },
+     {
+      "cat": "dining",
+      "x": 2
+     },
+     {
+      "cat": "gas",
+      "x": 2
+     },
+     {
+      "cat": "streaming",
+      "x": 2
+     }
+    ],
     "picks": [],
-    "words": "5% Instacart on the first $6,000 a year, 5% Chase Travel, 2% restaurants, gas and streaming, 1% other"
+    "words": "5% Instacart on the first $6,000 a year, 5% Chase Travel, 2% restaurants, gas and select streaming, 1% other"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
+   "source": "The card: Search results that quote instacart.com/InstacartMastercard, creditcards.chase.com/cash-back-credit-cards/instacart and chase.com/instacart/rewardsagreement (issuer and brand). The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026) (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "noForeignFee": true
+   },
+   "hasWords": {
+    "noForeignFee": "No foreign transaction fee"
+   },
    "unique": [
     {
      "label": "The welcome offer in words",
      "words": "$50 Instacart credit on approval"
+    },
+    {
+     "label": "Card level",
+     "words": "World Elite Mastercard"
     }
    ]
   },
@@ -2156,7 +3104,7 @@ window.CARDS2026 = {
    "id": "Slate",
    "bank": "Chase",
    "n": "Slate",
-   "network": "",
+   "network": "Visa",
    "fee": 0,
    "amt": 0,
    "unit": "cash",
@@ -2164,20 +3112,32 @@ window.CARDS2026 = {
    "months": 3,
    "min": "good",
    "earn": {
-    "base": 1,
+    "base": 0,
     "rates": [],
     "picks": [],
-    "words": ""
+    "words": "No rewards"
    },
    "credits": [],
-   "source": "The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); financebuzz.com/chase-credit-cards (Nov 2026) (secondary)",
-   "checked": "2026-11-14",
-   "has": {},
-   "hasWords": {},
+   "source": "The card: Search results that quote creditcards.chase.com/balance-transfer-credit-cards/slate (issuer), cnbc.com/select and creditkarma.com. The network is general knowledge, not quoted by the search. The offer: yourbestcards.com/chase-credit-cards (page dated Oct 2026); financebuzz.com/chase-credit-cards (Nov 2026) (secondary)",
+   "checked": "2026-11-23",
+   "has": {
+    "intro0": true,
+    "purchase": true,
+    "warranty": true
+   },
+   "hasWords": {
+    "intro0": "0% for 21 months on purchases and balance transfers",
+    "purchase": "Purchase protection",
+    "warranty": "Extended warranty protection"
+   },
    "unique": [
     {
      "label": "The welcome offer in words",
      "words": "No bonus. 0% intro rate for 21 months on purchases and balance transfers"
+    },
+    {
+     "label": "Balance transfer fee",
+     "words": "$5 or 5% of each transfer, the larger one"
     }
    ]
   },

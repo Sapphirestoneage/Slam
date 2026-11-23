@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-23. Files: 106. Lines: 66,128. Top-level functions: 1447. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-23. Files: 106. Lines: 67,589. Top-level functions: 1460. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -111,9 +111,9 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 97 | `features/offers.js` | 264 | 5 | 1 | 0 | Two job offers side by side. For each offer: the take-home pay from the tax tables, the match, the stock, less the health premiums and the commute |
 | 98 | `features/nextacct.js` | 280 | 4 | 1 | 0 | Which account next, up to each limit |
 | 99 | `features/ledger.js` | 377 | 8 | 1 | 0 | The giant ledger and the three statements |
-| 100 | `data/cardtemplate.js` | 220 | 7 | 0 | 0 | The template of one card of the card library |
-| 101 | `data/cards2026.js` | 5,340 | 0 | 3 | 0 | Data only. The card library of the card vault (features/vault.js): 93 cards at 12 US banks |
-| 102 | `features/vault.js` | 839 | 27 | 3 | 0 | The card vault ("Is this card right for me?" of the Slam web app, in the game) |
+| 100 | `data/cardtemplate.js` | 291 | 8 | 0 | 0 | The template of one card of the card library |
+| 101 | `data/cards2026.js` | 6,415 | 0 | 24 | 0 | Data only. The card library of the card vault (features/vault.js): 93 cards at 12 US banks |
+| 102 | `features/vault.js` | 1,154 | 39 | 9 | 0 | The card vault ("Is this card right for me?" of the Slam web app, in the game) |
 | 103 | `features/stars.js` | 755 | 35 | 3 | 0 | The Galaxy. A second view of the 25 skill tracks: 25 spiral arms (constellations) from "You" in the middle out to the FI ring, 625 stars, one star for... |
 | 104 | `features/book.js` | 213 | 7 | 2 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 105 | `features/questlog.js` | 426 | 23 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
@@ -135,7 +135,7 @@ No rows.
 
 ### Actions (ACT) that are set in more than one place
 
-`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 644 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 647 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
 
 | Action | Set in (load order) | Places |
 |--------|---------------------|-------:|
