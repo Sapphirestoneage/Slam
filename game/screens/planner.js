@@ -14,7 +14,7 @@
                screens/profiles.js, screens/smart.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
                page loads: account/cloud.js, screens/ux.js, features/missions.js, features/fold.js,
-               features/fork.js, features/ideasz.js, features/paths.js. With no typeof test, thus safe only after the page
+               features/fork.js, features/ideasz.js, features/paths.js, features/questlog.js. With no typeof test, thus safe only after the page
                has loaded all files: features/missions.js (planTabMissions).
    ========================================================================= */
 
@@ -775,12 +775,12 @@ const ICO = {
   menu: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`,
 };
 const MENU = [
+  ["Where am I", "quest", "act", "Where you are, where you left off, and every place you can go"],
   ["Switch person", "people", "act", "Flip between the people in this game, or add one"],
   ["Save my game", "backup", "act", "Copy your game as text so you never lose it. Paste it back to load"],
   ["Check in", "play", "tab", "Daily check, payday round, monthly session"],
   ["Safe to spend?", "safe", "act", "Ask before you buy. Always a trade-off, never a flat no"],
   ["What if", "moves", "act", "Try a move and see what changes"],
-  ["Me", "me", "tab", "Who you are, who you want to be, your badges"],
   ["Glossary", "glossary", "act", "Every money word in plain English"],
   ["Theme", "themes", "act", "Change the look and the voice"],
   ["Rearrange Home", "dash", "act", "Move cards up, down or out of the way"],
@@ -822,7 +822,7 @@ function whoBtn() {
 function topbarHTML() {
   const nb = NAV.back.length,
     nf = NAV.fwd.length;
-  return `<span class="grp"><button class="iconbtn" data-a="menu" aria-label="Menu">${ICO.menu}</button><button class="iconbtn sm" data-a="navback" aria-label="Back" ${nb ? "" : "disabled"}>‹</button><button class="iconbtn sm" data-a="navfwd" aria-label="Forward" ${nf ? "" : "disabled"}>›</button></span>${whoBtn()}<button class="ghost slim safebtn" data-a="safe">Safe to spend?</button>`;
+  return `<span class="grp"><button class="iconbtn" data-a="menu" aria-label="Menu">${ICO.menu}</button><button class="iconbtn sm" data-a="navback" aria-label="Back" ${nb ? "" : "disabled"}>‹</button><button class="iconbtn sm" data-a="navfwd" aria-label="Forward" ${nf ? "" : "disabled"}>›</button></span>${whoBtn()}<button class="ghost slim safebtn" data-a="safe">Safe to spend?</button>${typeof topbarQuest === "function" ? topbarQuest() : ""}`; /* questlog.js: the button "Where am I" */
 }
 function tabsHTML() {
   const c = C(),

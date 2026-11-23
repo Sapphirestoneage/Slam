@@ -19,7 +19,7 @@
                features/gig.js, features/know.js, features/values.js, features/connect.js,
                features/back.js, features/ask.js, features/ask2.js, screens/nav.js, screens/tidy.js,
                account/addon.js, features/fork.js, features/csp.js, features/dep.js, features/eras.js,
-               features/testkit.js, features/slept.js, features/ask3.js, features/cover.js, features/quota.js, features/sim.js. With no typeof test, thus safe only after the page has loaded all
+               features/testkit.js, features/slept.js, features/ask3.js, features/cover.js, features/quota.js, features/sim.js, features/questlog.js. With no typeof test, thus safe only after the page has loaded all
                files: screens/planner.js (finishSetupPlanEnd), screens/ux.js (emptyState, goalsTab,
                nextTab, uxTabs), features/back.js (homeBackRow).
    RULES       Plain words first. One next step that glows. One ledger that all screens read.
@@ -634,7 +634,9 @@ function home() {
   if (typeof homeCoachNote === "function") h = homeCoachNote(h); /* supa.js: the note "the coach made a change" */
   if (typeof homeSleptRow === "function")
     h = homeSleptRow(h); /* slept.js: the line "Your money earned $X while you slept" */
-  if (typeof homeFrontRow === "function") h = homeFrontRow(h); /* ask3.js: the four questions, under the top numbers */
+  if (typeof homeFrontRow === "function") h = homeFrontRow(h); /* ask3.js: the four questions (hidden by default) */
+  if (typeof homeQuestRow === "function")
+    h = homeQuestRow(h); /* questlog.js: Continue and "Where am I", under the top numbers */
   return h;
 }
 /* The top of Home: the welcome screen, or the quiet screen, or the full screen with its first lines. */
@@ -695,7 +697,7 @@ function homeBase() {
      : `<button class="primary wide" style="margin-top:10px" data-a="${ns.a}" data-v="${ns.v || ""}">${ns.l}</button>`
  }${G.demo ? "" : `<div class="tiny muted" style="margin-top:6px">${VO().whisper ? "<i>" + pick(VO().whisper, c.streak + c.hist.length + Object.keys(c.nodes).length) + "</i>" : "The glowing card is always the one thing to do next."}</div>`}</div>
  ${survivalCard(c, d) || leverCard(c, d)}
- ${typeof campCard === "function" ? campCard(c, d) : ""}
+ ${typeof campCard === "function" ? `<div ${ds("camp")}>${campCard(c, d)}</div>` : ""}
  ${lifeCard(c)}
  ${movesCard(c, d)}
  ${showPath ? pathCard(c, d, t, ns, real, ds("path")) : `<div class="card dim" ${ds("path")}><h3>Your path</h3><div class="small muted">Your step-by-step path shows up once your numbers are close. ${sl.length - sdn} to go.</div></div>`}
@@ -1275,6 +1277,7 @@ function sheet(fn) {
   sheetBase(fn);
   if (typeof sheetUx === "function") sheetUx(fn, was); /* ux.js: the resume note, the browser history, the chips */
   if (typeof tkChipSafe === "function") tkChipSafe(); /* testkit.js: the chip of a test task */
+  if (typeof sheetQuest === "function") sheetQuest(fn); /* questlog.js: the trail of the last screens */
 }
 function sheetBase(fn) {
   SH = fn;
@@ -4697,7 +4700,16 @@ const DASH = [
   ["levels", "Levels by area"],
   ["house", "Your household"],
   ["unfinished", "Unfinished business"],
+  ["camp", "Your camp (the layer strip)"],
+  ["ask", "The four Ask buttons"],
 ];
+/* Parts of Home that start hidden. They live in the Quest Log (questlog.js); Rearrange Home can show them. */
+const DASH_HIDE = { path: 1, camp: 1, ask: 1 };
+/* Is a part of Home hidden? The choice of the player, else the default. */
+function dashOff(id) {
+  const o = G.dash && G.dash.off && G.dash.off[id];
+  return o != null ? !!o : !!DASH_HIDE[id];
+}
 function dashOrder() {
   const o = ((G.dash && G.dash.order) || []).filter(k => DASH.some(x => x[0] === k));
   DASH.forEach(x => {
@@ -4707,12 +4719,13 @@ function dashOrder() {
 }
 function ds(id, hide) {
   const i = dashOrder().indexOf(id),
-    off = hide || (G.dash && G.dash.off && G.dash.off[id]);
+    off = hide || dashOff(id);
   return `data-sec="${id}" style="order:${10 + i}${off ? ";display:none" : ""}"`;
 }
 function dashSheet() {
   const o = dashOrder(),
-    off = (G.dash && G.dash.off) || {};
+    off = {};
+  o.forEach(k => (off[k] = dashOff(k)));
   return (
     head("Home", "Rearrange this screen") +
     `<div class="small muted">Move things up or down, or hide what you don't use. Your next step always stays on top.</div><div class="stack">${o.map((k, i) => `<div class="tile row between" style="${off[k] ? "opacity:.5" : ""}"><b class="small">${DASH.find(x => x[0] === k)[1]}</b><span class="row"><button class="ghost slim" data-a="dashmv" data-k="${k}" data-v="-1" ${i === 0 ? "disabled" : ""}>Up</button><button class="ghost slim" data-a="dashmv" data-k="${k}" data-v="1" ${i === o.length - 1 ? "disabled" : ""}>Down</button><button class="ghost slim" data-a="dashtog" data-k="${k}">${off[k] ? "Show" : "Hide"}</button></span></div>`).join("")}</div><button class="ghost wide" data-a="dashreset">Put it back the way it was</button>`
@@ -4892,7 +4905,7 @@ Object.assign(ACT, {
   dashtog: t => {
     G.dash = Object.assign({ order: dashOrder(), off: {} }, G.dash);
     G.dash.off = Object.assign({}, G.dash.off);
-    G.dash.off[t.dataset.k] = !G.dash.off[t.dataset.k];
+    G.dash.off[t.dataset.k] = !dashOff(t.dataset.k);
     save();
     render();
     drawSheet();

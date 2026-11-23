@@ -323,6 +323,14 @@ const WB = [
     "paths",
   ],
   [
+    "feel",
+    "Where am I: the Quest Log",
+    "b",
+    () => WB_HAS("quest") && WB_FN("questSheet") && WB_FN("questContinue") && WB_FN("topbarQuest"),
+    "One button on every tab and sheet: Continue, one pinned focus, one nudge, Journey, Areas, Questions and Time, and the last places you went. Home shows one Continue card.",
+    "quest",
+  ],
+  [
     "plan",
     "Retirement engine by Zack (MIT license), through one adapter",
     "b",

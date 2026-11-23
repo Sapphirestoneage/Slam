@@ -59,6 +59,7 @@ Each file has the name of its feature.
 | `our-household.js` | Our household | `features/house.js` |
 | `one-question-at-a-time.js` | Make your numbers real, one question on each screen | `features/ask.js` |
 | `one-question-debts-and-key-numbers.js` | The same pattern for debts, Key numbers, the match and the tax accounts | `features/ask2.js` |
+| `questlog.js` | Where am I (the Quest Log), with a walk for three players | `features/questlog.js` |
 | `quick-math.js` | Quick math | `features/quick.js` |
 | `save-status.js` | The save status | `account/cloud.js` |
 | `sharing-costs-fairly.js` | Sharing costs fairly | `features/fair.js` |

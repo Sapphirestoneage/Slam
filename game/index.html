@@ -431,6 +431,23 @@ body.welcome .topbar,body.welcome nav.tabs{display:none}
 .frontgrid{gap:8px}
 button.frontbtn{min-height:64px;text-align:left;font-size:15px;line-height:1.25;border:2px solid var(--teal);background:var(--panel2);border-radius:12px;padding:10px 12px}
 @media print{nav.tabs,.topbar,.nvhead,.overlay>.sheet>.row:first-child,button{display:none!important}.overlay{position:static;background:none}.sheet{max-height:none;border:0}body{background:#fff;color:#000}.summarypage .card,.summarypage .tile{border:1px solid #888;background:#fff;color:#000}}
+/* the Quest Log (features/questlog.js): the button "Where am I", the Continue card, the rows of the journey */
+.questbtn{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--a3);background:var(--panel2);color:var(--text);border-radius:10px;padding:6px 10px;min-height:40px;font-weight:700;white-space:nowrap}
+.questbtn.slim{min-height:32px;padding:3px 8px;font-size:13px}
+.questbtn.wide{width:100%;justify-content:center;margin-top:8px}
+.topbar .questbtn{flex:none}
+@media (max-width:520px){.topbar{flex-wrap:wrap}.topbar .questbtn{order:5;flex:1 1 100%;justify-content:center;min-height:38px}}
+.homerow.qhome,.less2>.homerow.qhome{flex-direction:column;align-items:stretch;gap:6px}
+.questbtn .qpin{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;flex:none}
+button.qcont{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;text-align:left;color:var(--text)}
+.qcont.qsmall{padding:10px}
+.qrow summary{font-weight:600}
+.qrow.qlocked{border-style:dashed;opacity:.8}
+.qpart{border-top:1px solid var(--line);padding-top:6px}
+.qseg button{min-height:30px;font-size:12.5px;padding:2px 8px}
+button.qstar{min-height:32px;width:32px;padding:0;border:2px solid var(--line);background:none;border-radius:8px;color:var(--muted)}
+button.qstar.on{border-color:var(--a3);color:#fff}
+.qtab .rowbtn,.qrecent .rowbtn{min-height:44px}
 </style>
 </head>
 <body>
@@ -449,14 +466,14 @@ button.frontbtn{min-height:64px;text-align:left;font-size:15px;line-height:1.25;
 <script src="core/engine.js?v=ba43c790"></script>
 <script src="core/engine2.js?v=a7e72441"></script>
 <script src="account/gate.js?v=5e37daf9"></script>
-<script src="screens/ui.js?v=dd11c635"></script>
-<script src="features/games.js?v=8ccd8f95"></script>
+<script src="screens/ui.js?v=99d7b63f"></script>
+<script src="features/games.js?v=07ee01ee"></script>
 <script src="features/games2.js?v=62008455"></script>
 <script src="features/year.js?v=94146087"></script>
 <script src="features/chart.js?v=bab4800c"></script>
 <script src="screens/profiles.js?v=cf91fa65"></script>
 <script src="screens/smart.js?v=2e800c77"></script>
-<script src="screens/planner.js?v=bdca9b5e"></script>
+<script src="screens/planner.js?v=3506f1bb"></script>
 <script src="account/cloud.js?v=a29b593c"></script>
 <script src="screens/ux.js?v=7d1b8890"></script>
 <script src="core/metrics.js?v=4727d1a9"></script>
@@ -487,7 +504,7 @@ button.frontbtn{min-height:64px;text-align:left;font-size:15px;line-height:1.25;
 <script src="features/together.js?v=24e8dfb2"></script>
 <script src="features/people.js?v=f590e4e5"></script>
 <script src="features/fold.js?v=8028f031"></script>
-<script src="screens/nav.js?v=b7ca8b36"></script>
+<script src="screens/nav.js?v=a89559bf"></script>
 <script src="features/home.js?v=6abaee87"></script>
 <script src="screens/tidy.js?v=a27fb2bd"></script>
 <script src="account/addon.js?v=3c9c00fb"></script>
@@ -525,9 +542,10 @@ button.frontbtn{min-height:64px;text-align:left;font-size:15px;line-height:1.25;
 <script src="features/sims/stop.js?v=fb5751f6"></script>
 <script src="features/paths.js?v=377914eb"></script>
 <script src="features/plan.js?v=593a2507"></script>
-<script src="features/ask3.js?v=c0f08e96"></script>
+<script src="features/ask3.js?v=d3d2d516"></script>
 <script src="features/quota.js?v=8912307a"></script>
 <script src="features/book.js?v=9c2948bd"></script>
-<script src="features/built.js?v=97698c4d"></script>
+<script src="features/questlog.js?v=b99ccef0"></script>
+<script src="features/built.js?v=8ece0a93"></script>
 </body>
 </html>

@@ -143,6 +143,8 @@ function homeFrontRow(h) {
   try {
     const c = C();
     if (!c || !(c.placed || G.demo) || typeof homeRowAdd !== "function") return h;
+    /* ui.js: hidden by default since the Quest Log; Rearrange Home can show it again */
+    if (typeof dashOff === "function" && dashOff("ask")) return h;
     return homeRowAdd(
       h,
       `<div class="homerow frontrow"><div class="eyebrow" style="margin-bottom:6px">Ask</div><div class="grid2 frontgrid">${FRONT_BTN.map(b => `<button class="frontbtn" data-a="front" data-v="${b[0]}">${esc(b[1])}</button>`).join("")}</div></div>`

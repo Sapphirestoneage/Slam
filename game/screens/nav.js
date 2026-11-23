@@ -7,7 +7,7 @@
                (ACT): navback, navfwd, navclose.
    DEPENDS ON  screens/ui.js, screens/ux.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
-               page loads: screens/tidy.js.
+               page loads: screens/tidy.js, features/questlog.js.
    RULES       A screen is identified by its kind and its place in a flow (step, question, person). Thus
                Back in a flow moves one question and keeps the entered data. When a sheet closes, the
                list is emptied. A button with only "Done" or "Close" gets words that say what it does. A
@@ -368,7 +368,7 @@ function nvRowBase(small) {
       NV_INFO[k] &&
       !/data-a="info"/.test(small) &&
       !/^(In plain words|Glossary|What it means)/.test(String(small).trim());
-  return `<div class="row between nvhead"><span class="row" style="gap:6px;flex:none"><button class="ghost slim backbtn" data-a="navback">‹ Back</button>${NVX.fw.length ? `<button class="ghost slim" data-a="navfwd" aria-label="Forward to where you were">›</button>` : ""}</span><span class="tiny muted nvsmall">${small}</span><span class="row" style="gap:6px;flex:none">${info ? `<button class="ghost slim nvi" data-a="info" data-k="gloss:scr_${k}" aria-label="What is this screen?">i</button>` : ""}<button class="ghost slim" data-a="navclose" aria-label="Close">✕</button></span></div>`;
+  return `<div class="row between nvhead"><span class="row" style="gap:6px;flex:none"><button class="ghost slim backbtn" data-a="navback">‹ Back</button>${NVX.fw.length ? `<button class="ghost slim" data-a="navfwd" aria-label="Forward to where you were">›</button>` : ""}</span><span class="tiny muted nvsmall">${small}</span><span class="row" style="gap:6px;flex:none">${typeof nvRowQuest === "function" ? nvRowQuest() : ""}${info ? `<button class="ghost slim nvi" data-a="info" data-k="gloss:scr_${k}" aria-label="What is this screen?">i</button>` : ""}<button class="ghost slim" data-a="navclose" aria-label="Close">✕</button></span></div>`;
 }
 const NV_HEAD =
   /<div class="row between"><span class="tiny muted">([\s\S]*?)<\/span><button class="ghost slim" data-a="close">Close<\/button><\/div>/;

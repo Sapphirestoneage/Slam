@@ -39,10 +39,15 @@
   syncAll(a);
   save();
   go("home");
+  chk("since the Quest Log, the row is hidden on Home by default", !app().includes("frontrow"));
+  X("dash");
+  X("dashtog", "", "ask");
+  X("close");
+  go("home");
   const c = C(),
     h = app();
   chk(
-    "one row on Home right under the top numbers, with four big buttons",
+    "shown again through Rearrange Home: one row under the top numbers, with four big buttons",
     h.includes("frontrow") &&
       (h.match(/class="frontbtn"/g) || []).length === 4 &&
       h.indexOf("frontrow") > h.indexOf('class="quad"')

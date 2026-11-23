@@ -8,7 +8,7 @@
                pyopen, pylink, pyamt, pysplit, pyok, pydel, and 16 more.
    DEPENDS ON  core/engine.js, core/engine2.js, screens/ui.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
-               page loads: features/games2.js, features/year.js, features/people.js.
+               page loads: features/games2.js, features/year.js, features/people.js, features/questlog.js.
    ========================================================================= */
 Object.assign(GLOSS, {
   camp: [
@@ -304,7 +304,14 @@ function roughSheet() {
   );
 }
 /* bonfires */
+/* bonBody(c, n) makes the save point of layer n. It calls each part by name. bonBodyBase() is the part from this file. */
 function bonBody(c, n) {
+  let h = bonBodyBase(c, n);
+  if (typeof bonBodyQuest === "function")
+    h = bonBodyQuest(h, n); /* questlog.js: at Layer 3, "Your full plan is ready" */
+  return h;
+}
+function bonBodyBase(c, n) {
   const pct = fogPct(c, D);
   return `<div class="levelup pop"><div class="eyebrow">Save point</div><div class="medal">✦</div><h2>Layer ${n} done: ${LAYER_N[n]}</h2><div class="small muted" style="margin:6px 0">Your place is saved on this phone. ${pct}% of your picture is clear.</div><div class="tile" style="text-align:left;margin:10px 0"><div class="tiny muted">Here's what you unlocked</div>${UNLOCK[n].map(u => `<div class="small">✓ ${u}</div>`).join("")}</div><button class="primary wide go" data-a="bonok" data-v="${n}">Keep going</button></div>`;
 }
