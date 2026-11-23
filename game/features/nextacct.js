@@ -165,7 +165,7 @@ function nxaSheet() {
             : r.limit == null
               ? money(Math.round(r.put)) + " a month · no limit"
               : money(Math.round(r.k === "match" ? r.put * 12 : r.nowY)) + " of " + money(r.limit) + " a year";
-      return `<div class="tile stack nxarow ${isNext ? "kithot" : ""}" style="gap:2px"><div class="row between" style="gap:8px"><b class="small">${esc(r.n)} ${kitInfo(r.term)}</b>${isNext ? `<span class="pill kitst">Next dollar</span>` : r.full ? `<span class="tiny muted">Full ✓</span>` : ""}</div><div class="small">${right}</div>${!r.step && r.limit != null && !r.off ? `<div class="tiny muted">Room left this year: ${money(Math.round(r.roomY))}${r.put > 0 ? " · " + money(Math.round(r.put)) + " a month from what you keep" : ""}</div>` : ""}</div>`;
+      return `<div class="tile stack nxarow ${isNext ? "kithot" : ""}" style="gap:2px"><div class="row between" style="gap:8px"><b class="small">${esc(r.n)} ${kitInfo(r.term)}</b>${isNext ? `<span class="pill kitst">Next dollar</span>` : r.full && !(r.step && r.need > 0.5) ? `<span class="tiny muted">${r.step ? "Done" : "Full"} ✓</span>` : ""}</div><div class="small">${right}</div>${!r.step && r.limit != null && !r.off ? `<div class="tiny muted">Room left this year: ${money(Math.round(r.roomY))}${r.put > 0 ? " · " + money(Math.round(r.put)) + " a month from what you keep" : ""}</div>` : ""}</div>`;
     };
   let h =
     head("Plan", "Which account next") +
