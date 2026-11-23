@@ -10,7 +10,8 @@
                kngroup, metric, knask, knans, knset, kncopy.
    DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, screens/ux.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
-               page loads: features/debts.js, features/ask2.js.
+               page loads: features/debts.js, features/ask2.js, features/taxview.js (taxvNetShare),
+               features/mix.js (knMetricsMix).
    RULES       A rule of thumb is a guide, and its source is named. It is not a grade. A number from a
                guess shows as a guess and gets no verdict. A number with a missing input says what input
                is necessary, and does not show N/A. No red.
@@ -54,8 +55,8 @@ const KN_LATER = [
     "Tax bucket mix, Roth share, how full each account is this year",
     "needs each account's type and what went in this year",
   ],
-  ["Stock share and employer stock share", "needs what is inside your investments"],
-  ["Effective tax rate, withholding accuracy, 0% gains room", "needs a tax return or pay stub"],
+  ["Employer stock share", "needs how much of your investments is stock of the company you work for"],
+  ["Withholding accuracy", "needs a pay stub. Your bracket, average rate and 0% gains room are in Your tax view"],
   ["Home share of net worth, loan-to-value, price to income", "needs a home value and mortgage"],
   ["Rental numbers: cap rate, cash-on-cash, the 1% rule, DSCR", "needs a rental property"],
   ["Raise capture and lifestyle creep", "needs a year of the game tracking your spending"],
@@ -131,6 +132,9 @@ function knGot(c, k) {
   return r && r.v != null ? r : null;
 }
 function knNet(c) {
+  /* taxview.js: with pay before taxes from the tax view, the share of pay that lands comes from the brackets */
+  const tv = !(c.x && c.x.taxPct) && typeof taxvNetShare === "function" ? taxvNetShare(c) : null;
+  if (tv) return { f: tv.f, known: true, gross: (c.take || 0) / tv.f, row: { s: true, cf: tv.cf }, from: "taxview" };
   const t = c.x && c.x.taxPct ? 1 - Math.min(0.6, c.x.taxPct / 100) : KN_NET,
     known = !!(c.x && c.x.taxPct);
   return {
@@ -1549,6 +1553,8 @@ function knMetrics(c, d) {
       go: ["Open what you have invested", "sharp", "inv"],
     });
   }
+  /* mix.js: the stock share, from what is inside each investment account */
+  if (typeof knMetricsMix === "function") knMetricsMix(c, add);
   return M;
 }
 const KN_BASE = ["save", "cushion", "growth", "home", "highdebt", "split", "nw", "fi"];
@@ -1586,7 +1592,13 @@ function knCard(c, d) {
   if (!top.length) return "";
   return `<div class="card stack kncard" style="gap:8px"><div class="row between"><h3>Key numbers</h3><button class="ghost slim" data-a="keynums">See all ${M.length} ›</button></div><div class="kgrid">${top.map(knTile).join("")}</div></div>`;
 }
+/* knSheet() makes the full sheet "Key numbers". knSheetBase() is the part from this file. */
 function knSheet() {
+  let h = knSheetBase();
+  if (typeof knSheetBook === "function") h = knSheetBook(h); /* book.js: the spreadsheet of the plan */
+  return h;
+}
+function knSheetBase() {
   const c = C(),
     M = knMetrics(c, D),
     g = W.g || "main",
