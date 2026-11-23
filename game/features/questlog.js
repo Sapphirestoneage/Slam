@@ -301,6 +301,7 @@ function questSheet() {
   if (recent.length)
     h += `<div class="stack qrecent" style="gap:2px"><div class="tiny muted">Recent ${kitInfo("q_recent")}</div>${recent.map(e => `<button class="rowbtn bare" data-a="questgo" data-k="${esc(e.kind === "setup" ? "start" : e.kind)}" data-v="${esc(e.v)}"><span class="small">${esc(e.label)}</span><span class="caret">›</span></button>`).join("")}</div>`;
   h += `<button class="linkish" data-a="tab" data-v="map">See the big picture</button>`;
+  if (typeof questSheetStars === "function") h = questSheetStars(h); /* stars.js: the button "See the galaxy" */
   return h;
 }
 /* Part of topbarHTML() in planner.js. The button "Where am I" in the top bar, on each tab. */

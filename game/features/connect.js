@@ -330,6 +330,8 @@ function skillSheetConnect(id) {
     const g = () => f() + cxSkillExtra(id);
     g.cx = 1;
     SH = g;
+    /* nav.js recorded the sheet before this part was added. Drop that record, so Back needs one tap. */
+    if (typeof NVX !== "undefined" && NVX.st.length && NVX.st[NVX.st.length - 1].SH === f) NVX.st.pop();
     drawSheet();
   }
 }

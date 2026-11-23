@@ -66,6 +66,7 @@ Each file has the name of its feature.
 | `sheet-navigation.js` | Back, Forward, Close and "i" on each sheet | `screens/nav.js` |
 | `side-by-side.js` | Side by side, and the fee screen | `features/compare.js` |
 | `spending-plan-and-audit-score.js` | The Conscious Spending Plan and the money audit score | `features/csp.js` |
+| `stars.js` | The Galaxy: star states, lanes from real links, gateway stars, Do this | `features/stars.js` |
 | `student-loan-plans.js` | Student loan plans | `features/study.js` |
 | `usability-repairs.js` | The repairs from the usability audit | `screens/tidy.js` |
 | `welcome-back-card.js` | The welcome-back card | `features/back.js` |

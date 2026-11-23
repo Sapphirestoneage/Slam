@@ -431,6 +431,10 @@ body.welcome .topbar,body.welcome nav.tabs{display:none}
 .frontgrid{gap:8px}
 button.frontbtn{min-height:64px;text-align:left;font-size:15px;line-height:1.25;border:2px solid var(--teal);background:var(--panel2);border-radius:12px;padding:10px 12px}
 @media print{nav.tabs,.topbar,.nvhead,.overlay>.sheet>.row:first-child,button{display:none!important}.overlay{position:static;background:none}.sheet{max-height:none;border:0}body{background:#fff;color:#000}.summarypage .card,.summarypage .tile{border:1px solid #888;background:#fff;color:#000}}
+/* the Galaxy (features/stars.js): one canvas, a slim panel, the key */
+.galaxy{display:block;width:100%;height:min(92vw,62vh,560px);border-radius:14px;border:1px solid var(--line);background:#070b1c;touch-action:none;cursor:grab}
+.starkey .sk{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle;background:#fff6d6}
+.starkey .sk.dim{background:#6f7bb0}.starkey .sk.next{background:#ffd666;box-shadow:0 0 0 3px rgba(255,214,102,.35)}.starkey .sk.na{background:transparent;border:1px solid #8a8f9c}.starkey .sk.gate{background:transparent;border:2px solid #a0c8ff}
 /* the Quest Log (features/questlog.js): the button "Where am I", the Continue card, the rows of the journey */
 .questbtn{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--a3);background:var(--panel2);color:var(--text);border-radius:10px;padding:6px 10px;min-height:40px;font-weight:700;white-space:nowrap}
 .questbtn.slim{min-height:32px;padding:3px 8px;font-size:13px}
@@ -544,6 +548,18 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <script src="features/plan.js?v=593a2507"></script>
 <script src="features/ask3.js?v=d3d2d516"></script>
 <script src="features/quota.js?v=8912307a"></script>
+<script src="features/takeout.js"></script>
+<script src="features/ages.js"></script>
+<script src="features/stress.js"></script>
+<script src="features/blocks.js"></script>
+<script src="features/windfall.js"></script>
+<script src="features/countdown.js"></script>
+<script src="features/offers.js"></script>
+<script src="features/nextacct.js"></script>
+<script src="features/ledger.js"></script>
+<script src="data/cards2026.js"></script>
+<script src="features/vault.js"></script>
+<script src="features/stars.js"></script>
 <script src="features/book.js?v=9c2948bd"></script>
 <script src="features/questlog.js?v=b99ccef0"></script>
 <script src="features/built.js?v=8ece0a93"></script>

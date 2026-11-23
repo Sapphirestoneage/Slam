@@ -80,6 +80,7 @@ These files stay in `game/` because the browser or the tools look for them there
 | My plan on one page, the Ask front door, quotas and the savings rate by month | `features/plan.js`, `features/ask3.js`, `features/quota.js` |
 | The spreadsheet of the plan (each number with its formula) | `features/book.js` |
 | Where am I (the Quest Log): Continue, the trail, Journey, Areas, Questions, Time | `features/questlog.js` |
+| The Galaxy: the 625 skills as stars on one canvas, with lanes and gateway stars | `features/stars.js` |
 | List of built features, shown in the game | `features/built.js` |
 | Generated map of all files | `CODE-MAP.md` |
 | Known weak code | `KNOWN-WEAK.md` |

@@ -880,7 +880,13 @@ function treeView() {
   }
   return h;
 }
+/* mapTab() is the full Skills screen. It calls each part by name. mapTabBase() is the part from this file. */
 function mapTab() {
+  let h = mapTabBase();
+  if (typeof mapTabStars === "function") h = mapTabStars(h); /* stars.js: the button "See it as a galaxy" */
+  return h;
+}
+function mapTabBase() {
   const c = C(),
     d = D,
     reg = MP.r ? REGIONS.find(r => r.id === MP.r) : null;
@@ -1296,6 +1302,7 @@ function drawSheetOnce() {
   drawSheetBase();
   if (typeof drawSheetUx === "function") drawSheetUx(); /* ux.js: the button "Back", the button "Look up a word" */
   if (typeof drawSheetNav === "function") drawSheetNav(); /* nav.js: the trail, and the row Back / Forward / Close */
+  if (typeof drawSheetStars === "function") drawSheetStars(); /* stars.js: paint the canvas of the galaxy */
 }
 /* CLOSE THE SHEET.
    closeSheet() is the full function. It calls each part by name.

@@ -445,6 +445,14 @@ const WB = [
   ["feel", "Ten eras, from Digging Out to Legacy", "b", () => Array.isArray(ERAS) && ERAS.length === 10, "", null],
   [
     "feel",
+    "Galaxy: the skills as a star map",
+    "b",
+    () => WB_HAS("galaxy") && WB_FN("starsLayout") && WB_FN("starsLanes") && WB_FN("drawSheetStars"),
+    "25 constellations around FI, 625 stars on one canvas. Bright is done, the next one pulses, gateway stars have a ring, and a tap on a star gives a button that opens its screen. The list stays the default.",
+    "galaxy",
+  ],
+  [
+    "feel",
     "Skill trees",
     "p",
     () => !!window.SKILLS && Object.keys(window.SKILLS).length > 0,
