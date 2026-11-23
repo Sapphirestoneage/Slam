@@ -18,7 +18,7 @@ This folder is the only copy of the game. An older copy inside Claude is retired
 
 ## 1. The six facts you must know first
 
-1. **The game uses classic scripts.** `index.html` loads 61 script files in a fixed order. All functions and constants are in one global scope. There are no modules.
+1. **The game uses classic scripts.** `index.html` loads 89 script files in a fixed order. All functions and constants are in one global scope. There are no modules.
 2. **Each file starts with a header.** The header gives PURPOSE, INPUT, OUTPUT and DEPENDS ON. Read the header before you read the code.
 3. **The screens are HTML text.** Each screen function returns one HTML string. `render()` puts the string in the page. One click handler reads the `data-a` attribute and calls `ACT[name]`.
 4. **A screen function calls its parts by name.** A feature file can add a row to a screen of a different file, for example to Home. It does this with a named function (a part), and the screen function calls that part. No file replaces a function of a different file. Section 6 shows the pattern.
@@ -39,7 +39,7 @@ Open http://localhost:8000/game/. Without an internet connection the game runs i
 npm run test:game
 ```
 
-The command runs 32 test files (703 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
+The command runs 46 test files (908 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
 
 All checks pass, and the command ends with exit code 0. One file (`addon-sealed-files.js`) has a part that needs the private add-on source. In this repository that part prints `SKIP`.
 
@@ -47,7 +47,7 @@ The last line of the output shows if the version stamps are correct (section 10)
 
 GitHub runs `node --test` and `npm run test:game` on each push (`.github/workflows/test.yml`). A failure shows as a red X next to the commit.
 
-`node --test` runs the tests of the main SLAM app (1,259 checks). It does not run the game tests.
+`node --test` runs the tests of the main SLAM app (about 1,260 checks). It does not run the game tests.
 
 ## 4. Where things are
 
@@ -56,10 +56,10 @@ The scripts are in five folders. The folder shows the role of a file. It does no
 | Folder | Role | Files |
 |--------|------|-------|
 | `core/` | The math, the data model and the error record. Each screen depends on these files. | `report.js`, `engine.js`, `engine2.js`, `metrics.js` |
-| `data/` | Data only. No functions. | `skills.js`, `skillthemes.js` (the skill tree), `qr.js` (one QR code picture) |
+| `data/` | Data only. No functions. | `skills.js`, `skillthemes.js` (the skill tree), `qr.js` (one QR code picture), `market.js` (US market history by year, from Shiller), `tax2026.js` (the 2026 federal tax numbers, from the IRS) |
 | `account/` | Sign-in, the database, the save to the cloud, and the add-on system. | `supa.js`, `cloud.js`, `gate.js`, `addon.js` |
 | `screens/` | The main screens, the click actions, the navigation and the setup questions. | `ui.js`, `ux.js`, `planner.js`, `nav.js`, `tidy.js`, `smart.js`, `profiles.js` |
-| `features/` | One file for each feature. Each file adds its sheets and its actions. | 43 files. `CODE-MAP.md` gives the purpose of each one. |
+| `features/` | One file for each feature. Each file adds its sheets and its actions. | 57 files, and 12 simulators in `features/sims/`. `CODE-MAP.md` gives the purpose of each one. |
 | `unused/` | Code that nothing calls. The game does not load it. | `no-caller.js` |
 | `tests/` | The tests. | `run.cjs`, `harness.cjs`, one file for each feature |
 
@@ -70,6 +70,12 @@ These files stay in `game/` because the browser or the tools look for them there
 | Famous money ideas | `features/roof.js`, `features/ideas.js` to `features/ideas5.js`, `features/ideasz.js` |
 | Later eras and the account recommendation | `features/eras.js`, `features/dep.js` |
 | Fork Theory, spending plan, audit score | `features/fork.js`, `features/csp.js` |
+| The Plan batch: shared parts (chips, Guess / Close / Exact, columns, the flip chart) | `features/kit.js` |
+| The two paths, retirement odds, the tax view | `features/paths.js`, `features/odds.js`, `features/taxview.js` |
+| Insurance needs, investment mix and fees, while you slept | `features/cover.js`, `features/mix.js`, `features/slept.js` |
+| The simulators: the engine, and one file for each | `features/sim.js`, `features/sims/*.js` |
+| My plan on one page, the Ask front door, quotas and the savings rate by month | `features/plan.js`, `features/ask3.js`, `features/quota.js` |
+| The spreadsheet of the plan (each number with its formula) | `features/book.js` |
 | List of built features, shown in the game | `features/built.js` |
 | Generated map of all files | `CODE-MAP.md` |
 | Known weak code | `KNOWN-WEAK.md` |
@@ -144,6 +150,8 @@ For the player:
 
 For the code:
 
+- The math is in the math functions of a feature, or in `derive()`. A screen function only shows what they return (`KNOWN-WEAK.md`, A7).
+- Each new number and each new formula also goes into the spreadsheet of the plan: a `...Book(c)` function in the feature file, listed in `BOOK_PARTS` in `features/book.js`. `tests/plan-spreadsheet.js` works out each formula and compares it with the game.
 - No file replaces a function of a different file (section 6).
 - Two functions must not have the same name. `CODE-MAP.md`, section 2, shows each name with two declarations.
 - A new file goes in the folder for its role (section 4), gets a script tag in `index.html`, and starts with the header.

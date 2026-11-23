@@ -31,6 +31,17 @@ Each file has the name of its feature.
 | Test file | Feature | Script that it examines |
 |-----------|---------|-------------------------|
 | `addon-sealed-files.js` | The sealed add-on files (needs private files) | `account/addon.js`, `x1.json`, `x2.json` |
+| `ask-front-door.js` | The Ask front door on Home | `features/ask3.js` |
+| `insurance-needs.js` | Insurance needs | `features/cover.js` |
+| `investment-mix-and-fees.js` | Investment mix and fees, and the key number Stock share | `features/mix.js` |
+| `plan-spreadsheet.js` | The spreadsheet of the plan: each formula worked out and compared with the game | `features/book.js` |
+| `plan-summary.js` | My plan on one page | `features/plan.js` |
+| `retirement-odds.js` | Retirement odds | `features/odds.js`, `data/market.js` |
+| `simulators.js` | The simulator engine and the 12 simulators, with each flip point | `features/sim.js`, `features/sims/*.js` |
+| `spreadsheet-extras.js` | The savings rate by month, the quotas, next year's budget | `features/quota.js` |
+| `tax-view.js` | The tax view | `features/taxview.js`, `data/tax2026.js` |
+| `two-paths.js` | The two paths | `features/paths.js` |
+| `while-you-slept.js` | While you slept | `features/slept.js` |
 | `before-you-sign.js` | Before you sign | `features/sign.js` |
 | `famous-money-ideas.js` | Famous money ideas | `features/ideas.js` to `ideas5.js`, `ideasz.js`, `roof.js` |
 | `fire-drills.js` | Money fire drills, the ladder, one-way doors, the tour | `features/drills.js` |
