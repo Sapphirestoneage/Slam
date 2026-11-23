@@ -35,7 +35,8 @@ const CAT_WORDS = { applePay: "paid with Apple Pay" };
    that is a limit for each quarter or month. Each number comes from the words of the card in the rewards layer.
      limit: { category: [dollars, "year" | "quarter" | "month"] }   the limit of a rate, or of a pick ("pick")
      count: { pick: n }                                             how many categories the player picks
-     share: { x, from, cap, per }                                   categories with one limit together
+     share: { x, from, cap, per }                                   categories with one limit together (rates with the letter A)
+     letter: "A"                                                    each limit of the card is one limit together
      add:   [{ cat, cap, per }]                                     a limit that the words give and the data does not
      words: [label, words]                                          a thing that still fits no field */
 const RULES = {
@@ -47,11 +48,11 @@ const RULES = {
   "citi-custom-cash": { limit: { pick: [500, "month"] } },
   "bofa-customized-cash": {
     limit: { pick: [2500, "quarter"], groceries: [2500, "quarter"] },
-    words: ["One limit for two rates", "The 3% and the 2% share one limit of $2,500 a quarter. The game counts a limit for each rate, so it can count a little too much."],
+    letter: "A",
   },
   "bofa-customized-cash-secured": {
     limit: { pick: [2500, "quarter"], groceries: [2500, "quarter"] },
-    words: ["One limit for two rates", "The 3% and the 2% share one limit of $2,500 a quarter. The game counts a limit for each rate, so it can count a little too much."],
+    letter: "A",
   },
   "usb-cash-plus": { limit: { pick: [2000, "quarter"] }, count: { pick: 2 } },
   "usb-altitude-go": { limit: { dining: [2000, "quarter"] } },
@@ -86,6 +87,15 @@ const BRAND_LIST = {
     Target: ["td-target-circle"],
     "Lowe's": ["synchrony-lowes"],
   },
+};
+/* ONE LIMIT FOR SEVERAL CATEGORIES, for the cards of tools/game_cards_more.json. The words of each card say
+   "combined": the categories here get the same letter, and cardEarnYear (cardtemplate.js) counts one limit. */
+const SHARE_MORE = {
+  "Ink Business Preferred": ["travel", "phone"],
+  "Ink Business Cash": ["gas", "dining"],
+  "Southwest Premier": ["groceries", "dining"],
+  "Southwest Premier Business": ["gas", "dining"],
+  "Marriott Bonvoy Bountiful": ["groceries", "dining"],
 };
 const MORE_FILE = "tools/game_cards_more.json";
 const MORE = fs.existsSync(path.join(root, MORE_FILE)) ? read(MORE_FILE) : {};
@@ -138,12 +148,14 @@ function record(x) {
     (r.rates || []).forEach(t => {
       const lim = (rule.limit && rule.limit[t.cat]) || (t.capYear ? [t.capYear, "year"] : null), /* t.cat is "pick" or "pick2" for a pick */
         cap = lim ? { cap: lim[0], per: lim[1], then: base } : {};
-      if (shared && shared.from.includes(t.cat)) return; /* these categories share one limit: one pick below */
+      if (shared && shared.from.includes(t.cat)) return; /* these categories share one limit: the rates below */
       if (t.oneOf) d.earn.picks.push(Object.assign({ x: t.x, count: (rule.count && rule.count[t.cat]) || 1, from: t.oneOf.filter(k => CATS.includes(k)) }, cap));
       else if (CATS.includes(t.cat)) d.earn.rates.push(Object.assign({ cat: t.cat, x: t.x }, cap));
       else unique.push({ label: t.x + "x " + (CAT_WORDS[t.cat] || t.cat), words: "", value: t.x });
     });
-    if (shared) d.earn.picks.push({ x: shared.x, count: shared.from.length, from: shared.from, cap: shared.cap, per: shared.per, then: base });
+    if (shared) shared.from.forEach(cat => d.earn.rates.push({ cat, x: shared.x, cap: shared.cap, per: shared.per, then: base, share: "A" }));
+    /* a pick and a rate with one limit together (rule.letter): the same letter on each */
+    if (rule.letter) d.earn.rates.concat(d.earn.picks).forEach(q => { if (q.cap) q.share = rule.letter; });
     if (r.rotating) {
       const lim = (rule.limit && rule.limit.rotating) || [r.rotating.capYear, "year"];
       d.earn.rates.push({ cat: "rotating", x: r.rotating.x, cap: lim[0], per: lim[1], then: base });
@@ -206,6 +218,10 @@ function record(x) {
     if (m.source) d.source = "The card: " + m.source + ". " + d.source;
     if (m.checked) d.checked = m.checked;
   }
+  (SHARE_MORE[d.id] || []).forEach(cat => {
+    const q = d.earn.rates.find(r => r.cat === cat);
+    if (q && q.cap) q.share = "A";
+  });
   /* the brand of the rates "airline", "hotel" and "store", where the rate is for one brand */
   const brand = {};
   Object.keys(BRAND_LIST).forEach(kind =>

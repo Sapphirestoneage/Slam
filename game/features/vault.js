@@ -15,7 +15,7 @@
                vaultCalc, vaultBook, vaultAddHtml, vaultSheet, vaultLib, vaultExtraSet, vaultLoadExtra,
                vaultCredits, vaultCred, vaultCreditsUsed, vaultFee1, vaultCatName, vaultCardParts,
                vaultCardSheet, vaultCatLabel, vaultCatStart, vaultCats, vaultPct, vaultPointValue,
-               vaultBrands, vaultSpendFor, vaultMoreHtml, vaultEarn, vaultBest, vaultBestHtml, vaultRateWords, vaultPickWords. Actions (ACT):
+               vaultBrands, vaultSpendFor, vaultShareWords, vaultMoreHtml, vaultEarn, vaultBest, vaultBestHtml, vaultRateWords, vaultPickWords. Actions (ACT):
                vault, vaultadd, vaultpick, vaultdel, vaultundo, vaultmore, vaultcard, vaulthave,
                vaultcred, vaultcredall, vaultcats.
                Menu: "Card vault".
@@ -426,10 +426,7 @@ function vaultBook(c) {
       id: "vt_x_" + m.k,
       label: "Card spending a month: " + m.label + (m.brand ? " (" + m.brand + ")" : ""),
       v: m.v,
-      note:
-        "Part of " +
-        (VAULT_MORE.find(x => x.k === m.k).pool === "travel" ? "Travel" : "Everything else") +
-        ", not added to the sum",
+      note: "Part of " + VAULT_POOL[VAULT_MORE.find(x => x.k === m.k).pool] + ", not added to the sum",
     })
   );
   rows.push(
@@ -628,6 +625,8 @@ function vaultSheet() {
     "Offers: " + L.source,
     "Fees, earn rates, credits and cover: " + (L.cardsSource || "each card names its source") + ".",
     "Best card for each line: a year of your spending in each category times the rate of the card, with its limits and its picks. One point counts at its floor value, and 1% is 1 cent for each dollar. Your cards: each line goes on your card that earns most there, less the yearly fees. One card you do not hold: all lines on that card, less its yearly fee. Rates for one airline, one hotel brand, one store or the travel site of a bank are not counted, because your lines do not say where you buy.",
+    "Amazon and Whole Foods comes out of Online shopping, and delivery apps out of Dining (then out of Everything else). Entertainment and home improvement come out of Everything else. A card with no rate for such a line earns its rate for the line it came from.",
+    "One limit for several categories: when a card says a limit is combined, the game counts one limit for those categories together. The category with the highest rate uses the limit first.",
     "Travel brands, stores and bonus categories: each amount is part of a line you already have, so the total does not change. Flights with one airline, stays with one hotel brand and travel booked with the bank come out of Travel (and out of Everything else when Travel is not enough). One store and the bonus categories come out of Everything else. The rate of an airline card, a hotel card or a store card counts only for the brand you picked. On each other card that spending earns the travel rate of the card, or its rate for everything else.",
     "Bonus categories of a quarter: a card with such a rate earns it on your amount, up to its limit for each quarter. The categories change each quarter and you must turn them on with the bank, so this number is a guess of how much of your spending fits.",
     "Where the categories start: your card spending, split by your own lines. Food is 60% groceries and 40% dining. Getting around, less car loan payments, is 50% gas and 15% transit. Bills is 25% phone and 10% streaming. Fun is 25% online shopping, 15% travel and 5% drugstores. The rest is Everything else. These shares are guesses until you tap your own numbers.",
@@ -688,6 +687,12 @@ function vaultCatStart(c) {
 /* THE SECOND GROUP OF LINES: travel brands, stores and bonus categories. Each line is part of one line of
    the first group (pool), so the total does not change: flights, hotels and travel booked with the bank
    come out of Travel, and a store and the bonus categories of a quarter come out of Everything else. */
+const VAULT_POOL = {
+  travel: "Travel",
+  online: "Online shopping",
+  dining: "Dining and takeout",
+  other: "Everything else",
+};
 const VAULT_MORE = [
   {
     k: "airline",
@@ -713,6 +718,10 @@ const VAULT_MORE = [
     chips: [0, 50, 100, 200, 400, 800],
   },
   { k: "rotating", pool: "other", label: "The bonus categories of a quarter", chips: [0, 100, 250, 500] },
+  { k: "amazon", pool: "online", label: "Amazon and Whole Foods", chips: [0, 50, 100, 200, 400, 800] },
+  { k: "delivery", pool: "dining", label: "Delivery apps", chips: [0, 50, 100, 200, 400, 800] },
+  { k: "entertainment", pool: "other", label: "Entertainment", chips: [0, 50, 100, 200, 400, 800] },
+  { k: "home", pool: "other", label: "Home improvement", chips: [0, 50, 100, 200, 400, 800] },
 ];
 /* The brands that the cards of the library have a rate for: kind is airline, hotel or store. */
 function vaultBrands(kind) {
@@ -735,7 +744,8 @@ function vaultCats(c) {
     }),
     sum = rows.reduce((t, r) => t + r.v, 0),
     spend = {},
-    pool = { travel: rows.find(r => r.k === "travel").v, other: rows[rows.length - 1].v };
+    pool = {};
+  Object.keys(VAULT_POOL).forEach(k => (pool[k] = rows.find(r => r.k === k).v));
   /* a line takes its dollars from its pool. What Travel cannot give comes from Everything else. A line
      cannot take more than the two hold. */
   const more = VAULT_MORE.map(m => {
@@ -743,7 +753,7 @@ function vaultCats(c) {
       want = Math.max(0, +a.v || 0),
       first = Math.min(want, pool[m.pool]);
     pool[m.pool] -= first;
-    const second = m.pool === "travel" ? Math.min(want - first, pool.other) : 0;
+    const second = m.pool !== "other" ? Math.min(want - first, pool.other) : 0;
     pool.other -= second;
     return {
       k: m.k,
@@ -756,11 +766,11 @@ function vaultCats(c) {
     };
   });
   rows.forEach(r => {
-    const v = r.k === "travel" ? pool.travel : r.v;
+    const v = r.k in pool ? pool[r.k] : r.v;
     if (r.k !== "other" && v > 0) spend[r.k] = v;
   });
   const lines = rows
-    .map(r => ({ k: r.k, label: r.label, v: r.k === "travel" ? pool.travel : r.k === "other" ? pool.other : r.v }))
+    .map(r => ({ k: r.k, label: r.label, v: r.k in pool ? pool[r.k] : r.v }))
     .concat(more.filter(m => m.v > 0).map(m => ({ k: m.k, label: m.label + (m.brand ? ": " + m.brand : ""), v: m.v })));
   return {
     rows,
@@ -791,12 +801,18 @@ function vaultSpendFor(o, K) {
   const spend = Object.assign({}, K.spend),
     fold = {},
     has = cat => ((o.earn && o.earn.rates) || []).some(r => r.cat === cat),
+    /* a rate for the category, or a pick that has the category in its list */
+    any = cat => has(cat) || ((o.earn && o.earn.picks) || []).some(q => q.from.includes(cat)),
+    plain = { amazon: "online", delivery: "dining", entertainment: "other", home: "other" },
     mine = (k, brand) => has(k) && (!(o.brand && o.brand[k]) || o.brand[k] === brand);
   let other = K.other;
   (K.more || []).forEach(m => {
     if (!(m.v > 0)) return;
-    const to =
-      m.k === "airline" || m.k === "hotel"
+    const to = plain[m.k]
+      ? any(m.k)
+        ? m.k
+        : plain[m.k]
+      : m.k === "airline" || m.k === "hotel"
         ? mine(m.k, m.brand)
           ? m.k
           : "travel"
@@ -959,8 +975,12 @@ function vaultMoreHtml(c, K) {
     hotelPortal: "Hotels you book on the travel site of your bank, each month",
     store: "What you spend at one store that has its own card, each month",
     rotating: "How much of your spending lands in the bonus categories of a quarter?",
+    amazon: "What you spend at Amazon and Whole Foods, each month",
+    delivery: "What you spend in food delivery apps, each month",
+    entertainment: "Entertainment (tickets, movies, events), each month",
+    home: "Home improvement stores, each month",
   };
-  return `<div class="stack vaultmore" style="gap:8px"><div class="small"><b>Travel brands, stores and bonus categories</b></div><div class="tiny muted">Each amount here is part of a line above: travel lines come out of Travel, a store and the bonus categories come out of Everything else. Your total stays the same.</div>${VAULT_MORE.map(
+  return `<div class="stack vaultmore" style="gap:8px"><div class="small"><b>Travel brands, stores and bonus categories</b></div><div class="tiny muted">Each amount here is part of a line above: travel lines come out of Travel, Amazon out of Online shopping, delivery apps out of Dining, and the others out of Everything else. Your total stays the same.</div>${VAULT_MORE.map(
     m => {
       const row = K.more.find(x => x.k === m.k),
         brands = m.brand ? vaultBrands(m.k) : [];
@@ -980,7 +1000,7 @@ function vaultMoreHtml(c, K) {
                 ? "Only " +
                   money(row.v) +
                   " fits: " +
-                  (m.pool === "travel" ? "Travel and Everything else" : "Everything else") +
+                  (m.pool === "other" ? "Everything else" : VAULT_POOL[m.pool] + " and Everything else") +
                   " hold no more."
                 : m.k === "rotating"
                   ? "The categories change each quarter, and you must turn them on with the bank."
@@ -1024,6 +1044,63 @@ function vaultRateWords(o, r) {
       : "")
   );
 }
+/* THE LIMITS THAT SEVERAL RATES SHARE, each group one time in plain words: "3x on Groceries, Gas and EV
+   charging, Dining and takeout together, on the first $6,000 each year, then 2x". A group with a pick:
+   "3% on the 1 category you pick from: ..., and 2% on Groceries: together on the first $2,500 each quarter,
+   then 1%". */
+function vaultShareWords(o) {
+  const e = o.earn || {},
+    sym = vaultPct(o) ? "%" : "x",
+    base = e.base != null ? e.base : 1,
+    groups = {};
+  (e.rates || []).forEach(r => {
+    if (r.cap && r.share) (groups[r.share] = groups[r.share] || { rates: [], picks: [] }).rates.push(r);
+  });
+  (e.picks || []).forEach(q => {
+    if (q.cap && q.share) (groups[q.share] = groups[q.share] || { rates: [], picks: [] }).picks.push(q);
+  });
+  return Object.keys(groups)
+    .sort()
+    .map(k => {
+      const g = groups[k],
+        f = g.rates[0] || g.picks[0],
+        lim =
+          "on the first " +
+          money(f.cap) +
+          " each " +
+          (f.per || "year") +
+          ", then " +
+          (f.then != null ? f.then : base) +
+          sym;
+      if (!g.picks.length && g.rates.every(r => r.x === f.x))
+        return (
+          f.x +
+          sym +
+          " on " +
+          g.rates.map(r => vaultCatName(r.cat)).join(", ") +
+          (g.rates.length > 1 ? " together" : "") +
+          ", " +
+          lim
+        );
+      return (
+        g.picks
+          .map(
+            q =>
+              q.x +
+              sym +
+              " on the " +
+              q.count +
+              (q.count === 1 ? " category" : " categories") +
+              " you pick from: " +
+              q.from.map(vaultCatName).join(", ")
+          )
+          .concat(g.rates.map(r => r.x + sym + " on " + vaultCatName(r.cat)))
+          .join(", and ") +
+        ": together " +
+        lim
+      );
+    });
+}
 /* A pick in plain words: "5% on the 2 categories you pick from: ...". Categories that share one limit:
    "3x on Groceries, Gas and Dining together, on the first $6,000 each year, then 2x". */
 function vaultPickWords(o, q) {
@@ -1059,6 +1136,7 @@ function vaultCardParts(o) {
     toggles: tg,
     rates: (e.rates || []).slice().sort((a, b) => b.x - a.x),
     picks: e.picks || [],
+    shares: vaultShareWords(o),
     sym: vaultPct(o) ? "%" : "x",
     base: e.base == null ? 1 : e.base,
     earnWords: e.words || "",
@@ -1112,10 +1190,15 @@ function vaultCardSheet() {
   h +=
     igRows(
       P.rates
+        .filter(r => !(r.cap && r.share))
         .map(r => [esc(vaultCatName(r.cat)), esc(vaultRateWords(o, r))])
         .concat([[P.rates.length || P.picks.length ? "Everything else" : "Each purchase", P.base + P.sym]])
     ) +
-    P.picks.map(q => `<div class="small vaultpickrow">${esc(vaultPickWords(o, q))}</div>`).join("") +
+    P.shares.map(w => `<div class="small vaultsharerow">${esc(w)} ${kitInfo("vt_share")}</div>`).join("") +
+    P.picks
+      .filter(q => !(q.cap && q.share))
+      .map(q => `<div class="small vaultpickrow">${esc(vaultPickWords(o, q))}</div>`)
+      .join("") +
     (P.earnWords ? `<div class="tiny muted">${esc(P.earnWords)}</div>` : "");
   h += sec("Yearly credits", "vt_credit");
   const mine = vaultCred(c)[o.id] || {},
@@ -1226,6 +1309,22 @@ kitTerms({
     "Bonus categories",
     "Some cards pay 5% on a few kinds of purchase that change each quarter, up to a limit. You must turn them on with the bank each quarter.",
   ],
+  vt_amazon: [
+    "Amazon and Whole Foods",
+    "What you buy at Amazon and at Whole Foods. Some cards pay a higher rate only there.",
+  ],
+  vt_delivery: [
+    "Delivery apps",
+    "Food and grocery delivery that you order in an app. A few cards pay more for it than for dining.",
+  ],
+  vt_entertainment: [
+    "Entertainment",
+    "Tickets for movies, concerts, sports and events. A few cards have a rate for it.",
+  ],
+  vt_home: [
+    "Home improvement",
+    "Hardware and home improvement stores. A few cards have a rate for it, or let you pick it.",
+  ],
   vt_brand: [
     "Brand",
     "The one airline, hotel company or store that you use most. The list comes from the cards in the library.",
@@ -1233,6 +1332,10 @@ kitTerms({
   vt_cats: [
     "Card categories",
     "Banks pay different rates for different kinds of purchase: dining, groceries, gas and more. Your amounts here start as a guess from your budget. Tap a number to make it yours.",
+  ],
+  vt_share: [
+    "One limit together",
+    "The bank counts the spending of these categories in one total. When the total passes the limit, each of them earns the lower rate.",
   ],
   vt_fee: [
     "Yearly fee",

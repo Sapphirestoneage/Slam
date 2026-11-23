@@ -614,9 +614,9 @@
   const withLimit = L0.offers.filter(o => o.earn.rates.some(r => r.cap > 0)),
     withPick = L0.offers.filter(o => (o.earn.picks || []).length);
   chk(
-    "limits and picks are numbers: 11 cards or more with a limit, 7 or more with a pick, each with its period",
+    "limits and picks are numbers: 11 cards or more with a limit, 5 or more with a pick, each with its period",
     withLimit.length >= 11 &&
-      withPick.length >= 7 &&
+      withPick.length >= 5 &&
       L0.offers.every(o =>
         o.earn.rates
           .concat(o.earn.picks || [])
@@ -642,8 +642,8 @@
       cc.earn.picks[0].per === "month" &&
       go4.earn.rates.find(r => r.cat === "dining").cap === 2000 &&
       go4.earn.rates.find(r => r.cat === "dining").per === "quarter" &&
-      marr.earn.picks[0].count === 3 &&
-      marr.earn.picks[0].then === 2
+      marr.earn.picks.length === 0 &&
+      marr.earn.rates.filter(r => r.share === "A" && r.x === 3 && r.cap === 6000 && r.then === 2).length === 3
   );
   chk(
     "a limit in plain words",
@@ -664,9 +664,9 @@
     ) &&
       vaultPickWords(cash, cash.earn.picks[0]).endsWith("(on the first $2,000 each quarter, then 1%)") &&
       vaultPickWords(cc, cc.earn.picks[0]).startsWith("5% on the 1 category you pick from: ") &&
-      vaultPickWords(marr, marr.earn.picks[0]) ===
+      vaultShareWords(marr)[0] ===
         "3x on Groceries, Gas and EV charging, Dining and takeout together, on the first $6,000 each year, then 2x",
-    vaultPickWords(cash, cash.earn.picks[0]) + " | " + vaultPickWords(marr, marr.earn.picks[0])
+    vaultPickWords(cash, cash.earn.picks[0]) + " | " + vaultShareWords(marr)[0]
   );
   X("vaultcard", "amex-blue-cash-preferred");
   chk(
@@ -993,7 +993,7 @@
     h0 = vaultEarn(hil, K0, 0).dollars;
   chk(
     "at the start each new line is $0 with no brand",
-    K0.more.length === 6 &&
+    K0.more.length === 10 &&
       K0.more.every(m => m.v === 0 && m.want === 0 && m.brand === "") &&
       K0.lines.length === 10 &&
       K0.other === 810 &&
@@ -1245,6 +1245,272 @@
     cardClean({ bank: "B", n: "N", brand: { airline: " Delta ", hotel: "" } }).brand.airline === "Delta" &&
       !("brand" in cardClean({ bank: "B", n: "N" }))
   );
+  G.chars.length = n0;
+  G.active = 0;
+  save();
+}
+{
+  /* Limits that several categories share, and four more lines: Amazon, delivery apps, entertainment, home
+     improvement. The same budget: 3,000 a month on a card, Dining 600, Online 380, the rest 810. */
+  const n0 = G.chars.length,
+    R0 = r => Object.assign({ s: true }, r),
+    T = "2026-11-23",
+    L0 = CARDS2026,
+    near = (a, b) => Math.abs(a - b) < 0.005,
+    a = Object.assign(newChar(), {
+      name: "Vault four",
+      led: true,
+      placed: true,
+      age: 31,
+      incs: [R0({ k: "A main job", amt: 7000 })],
+      spends: [
+        R0({ k: "Home", amt: 2000 }),
+        R0({ k: "Food", amt: 1500 }),
+        R0({ k: "Fun and everything else", amt: 1500 }),
+      ],
+      cashes: [R0({ k: "Checking", amt: 8000 })],
+      invs: [],
+      debts: [],
+      caught: { score: "740 to 799" },
+    });
+  G.chars.push(a);
+  G.active = n0;
+  syncAll(a);
+  save();
+  const c = C(),
+    V = kitStore(c, "vault"),
+    ink = vaultOffer("Ink Business Cash"),
+    cc = vaultOffer("bofa-customized-cash"),
+    bcp = vaultOffer("amex-blue-cash-preferred"),
+    bce = vaultOffer("amex-blue-cash-everyday"),
+    prime = vaultOffer("chase-prime-visa"),
+    letters = L0.offers.filter(o => o.earn.rates.concat(o.earn.picks || []).some(r => r.share)).map(o => o.id);
+  chk(
+    "each of the 93 records still passes cardCheck",
+    L0.offers.length === 93 && L0.offers.every(o => cardCheck(o, L0.units).length === 0)
+  );
+  chk(
+    "the cards with one limit for several categories have the same letter on those rates",
+    [
+      "Ink Business Preferred",
+      "Ink Business Cash",
+      "Southwest Premier",
+      "Southwest Premier Business",
+      "Marriott Bonvoy Bountiful",
+      "chase-marriott-boundless",
+      "bofa-customized-cash",
+      "bofa-customized-cash-secured",
+      "discover-it-chrome",
+      "discover-it-secured",
+    ].every(id => letters.includes(id)) &&
+      L0.offers.every(o =>
+        o.earn.rates.concat(o.earn.picks || []).every(
+          r =>
+            !r.share ||
+            (r.cap > 0 &&
+              cardClean(o)
+                .earn.rates.concat(cardClean(o).earn.picks)
+                .some(q => q.share === r.share))
+        )
+      ),
+    letters.join()
+  );
+  chk(
+    "no card says that the game can count too much",
+    L0.offers.every(o => o.unique.every(u => !/too much/.test(u.words)))
+  );
+  /* Ink Cash by hand: gas 18,000 and dining 18,000 a year at 2x, one limit of 25,000 for the two:
+     18,000 at 2x = 36,000. Then 7,000 at 2x = 14,000 and 11,000 at 1x = 11,000. 61,000 points at 1 cent. */
+  const eI = vaultEarn(ink, { spend: { gas: 1500, dining: 1500 }, other: 0 }, 0);
+  chk(
+    "Ink Cash with two categories over the shared limit: the limit counts one time",
+    near(eI.dollars, 610) && near(eI.by.gas + eI.by.dining, 610),
+    JSON.stringify(eI.by)
+  );
+  chk(
+    "under the limit the two categories earn the full rate",
+    near(vaultEarn(ink, { spend: { gas: 500, dining: 500 }, other: 0 }, 0).dollars, 240)
+  );
+  /* Customized Cash by hand: one limit of 2,500 a quarter (10,000 a year) for the 3% pick and the 2% groceries.
+     Dining 7,200 at 3% = 216 (the higher rate first). Groceries 10,800: 2,800 at 2% = 56 and 8,000 at 1% = 80. */
+  const eC = vaultEarn(cc, { spend: { dining: 600, groceries: 900 }, other: 0 }, 0);
+  chk(
+    "Customized Cash: the pick and groceries over 2,500 a quarter together",
+    near(eC.dollars, 352) && near(eC.by.dining, 216) && near(eC.by.groceries, 136),
+    JSON.stringify(eC.by)
+  );
+  chk(
+    "a shared limit in plain words, one time for the group",
+    vaultShareWords(ink).length === 1 &&
+      vaultShareWords(ink)[0] ===
+        "2x on Gas and EV charging, Dining and takeout together, on the first $25,000 each year, then 1x" &&
+      vaultShareWords(cc)[0].startsWith("3% on the 1 category you pick from: Gas and EV charging, Online shopping") &&
+      vaultShareWords(cc)[0].endsWith(", and 2% on Groceries: together on the first $2,500 each quarter, then 1%") &&
+      vaultShareWords(bcp).length === 0,
+    vaultShareWords(ink)[0] + " | " + vaultShareWords(cc)[0]
+  );
+  X("vaultcard", "chase-marriott-boundless");
+  chk(
+    "the sheet of a card shows the shared limit one time, and not as a choice of the player",
+    (ov().match(/vaultsharerow/g) || []).length === 1 &&
+      ov().includes(
+        "3x on Groceries, Gas and EV charging, Dining and takeout together, on the first $6,000 each year, then 2x"
+      ) &&
+      !ov().includes("you pick from") &&
+      ov().includes("term:vt_share") &&
+      GLOSS.vt_share &&
+      clean(ov()),
+    junk(ov())
+  );
+  X("vaultcard", "bofa-customized-cash");
+  chk(
+    "the sheet of Customized Cash: the pick and groceries in one line",
+    (ov().match(/vaultsharerow/g) || []).length === 1 &&
+      !ov().includes("vaultpickrow") &&
+      ov().includes("together on the first $2,500 each quarter, then 1%") &&
+      clean(ov()),
+    junk(ov())
+  );
+  X("close");
+  /* the four more lines */
+  const snap = () => {
+      const B = vaultBest(c, T);
+      return JSON.stringify([
+        B.K.spend,
+        B.K.other,
+        B.K.sum,
+        B.rows.map(r => [r.k, r.month, r.lib && r.lib.o.id, r.lib && r.lib.year]),
+        B.single.o.id,
+        B.single.net,
+      ]);
+    },
+    before = snap(),
+    four = ["amazon", "delivery", "entertainment", "home"];
+  chk(
+    "the four lines are in the optional group, each at $0",
+    four.every(k => VAULT_MORE.some(m => m.k === k) && vaultCats(c).more.find(m => m.k === k).v === 0)
+  );
+  four.forEach(k => (V["cat_" + k] = { v: 0, cf: 2 }));
+  chk(
+    "with the new answers at $0, each earlier number is the same",
+    snap() === before && near(vaultEarn(bcp, vaultCats(c), 0).dollars, 660)
+  );
+  four.forEach(k => delete V["cat_" + k]);
+  /* Amazon: 300 a month comes out of Online shopping (380 to 80) */
+  V.cat_amazon = { v: 300, cf: 2 };
+  const K1 = vaultCats(c);
+  chk(
+    "Amazon comes out of Online shopping, and the total stays",
+    K1.spend.online === 80 &&
+      K1.other === 810 &&
+      K1.sum === 3000 &&
+      K1.lines.reduce((t, r) => t + r.v, 0) === 3000 &&
+      K1.lines.some(r => r.k === "amazon" && r.v === 300)
+  );
+  /* by hand: 3,600 a year at Amazon at 5% = 180. Dining 7,200 at 2% = 144. The other 25,200 at 1% = 252. */
+  const eP = vaultEarn(prime, K1, 0);
+  chk(
+    "an Amazon card on Amazon spending by hand: 180 + 144 + 252",
+    near(eP.by.amazon, 180) && near(eP.by.dining, 144) && near(eP.dollars, 576),
+    JSON.stringify(eP.by)
+  );
+  /* a card with a rate for online shopping and none for Amazon: the Amazon line earns the online rate, 3% */
+  chk(
+    "a card with no Amazon rate sees it as online shopping",
+    near(vaultEarn(bce, K1, 0).by.amazon, 108) &&
+      near(vaultEarn(bce, K1, 0).by.online, 28.8) &&
+      near(vaultEarn(bcp, K1, 0).dollars, 660) &&
+      near(vaultEarn(bcp, K1, 0).by.amazon, 36)
+  );
+  V.cat_amazon = { v: 500, cf: 2 };
+  chk(
+    "more Amazon than Online shopping takes the rest from Everything else",
+    !("online" in vaultCats(c).spend) &&
+      vaultCats(c).other === 690 &&
+      vaultCats(c).lines.reduce((t, r) => t + r.v, 0) === 3000
+  );
+  delete V.cat_amazon;
+  /* delivery apps out of Dining: Marriott Bonvoy Bold has 2x for delivery and 1x for dining */
+  V.cat_delivery = { v: 100, cf: 2 };
+  const K2 = vaultCats(c),
+    bold = vaultOffer("Marriott Bonvoy Bold"),
+    mv = L0.units.marriott.v,
+    sp = vaultOffer("chase-sapphire-preferred");
+  chk("delivery apps come out of Dining", K2.spend.dining === 500 && K2.other === 810 && K2.sum === 3000);
+  chk(
+    "a card with a delivery rate earns it: 1,200 a year at 2x",
+    near(vaultEarn(bold, K2, 0).by.delivery, 2400 * mv) && near(vaultEarn(bold, K2, 0).by.dining, 6000 * mv)
+  );
+  chk(
+    "a card with no delivery rate sees it as dining: 3x on the Sapphire",
+    near(vaultEarn(sp, K2, 0).by.delivery, 36) &&
+      near(vaultEarn(sp, K2, 0).by.dining, 180) &&
+      near(vaultEarn(sp, K2, 0).dollars, 531.6)
+  );
+  delete V.cat_delivery;
+  /* entertainment and home improvement out of Everything else. A pick with the category in its list can take it. */
+  V.cat_home = { v: 400, cf: 2 };
+  V.cat_entertainment = { v: 100, cf: 2 };
+  const K3 = vaultCats(c),
+    pick = {
+      id: "ph",
+      bank: "P",
+      n: "Home pick",
+      unit: "cash",
+      fee: 0,
+      earn: { base: 1, rates: [], picks: [{ x: 5, count: 1, from: ["home", "entertainment"] }] },
+    };
+  chk(
+    "entertainment and home improvement come out of Everything else",
+    K3.other === 310 && K3.sum === 3000 && K3.lines.reduce((t, r) => t + r.v, 0) === 3000
+  );
+  /* by hand: the pick goes to home improvement, the bigger line: 4,800 at 5% = 240. Entertainment 1,200 at 1% = 12. */
+  chk(
+    "a pick with the category in its list earns on the line",
+    near(vaultEarn(pick, K3, 0).by.home, 240) &&
+      near(vaultEarn(pick, K3, 0).by.entertainment, 12) &&
+      near(vaultEarn(pick, K3, 0).dollars, 240 + 312)
+  );
+  chk(
+    "a card with no such rate: the same total",
+    near(vaultEarn(bcp, K3, 0).dollars, 660) && near(vaultEarn(bcp, K3, 0).by.home, 48)
+  );
+  /* the screen and the spreadsheet */
+  X("vault");
+  X("vaultcats", "1", "2");
+  chk(
+    "the fold asks the four lines by chips with the typed option, each with an i",
+    four.every(
+      k =>
+        ov().includes('data-a="kitset" data-k="vault|cat_' + k + '"') &&
+        ov().includes('data-a="kitpad" data-k="vault|cat_' + k + '"') &&
+        ov().includes("term:vt_" + k) &&
+        GLOSS["vt_" + k]
+    ) &&
+      ov().includes("Home improvement") &&
+      ov().includes("$400 a month") &&
+      ov().includes("Your categories add up to <b>$3,000</b> a month") &&
+      ov().includes("They match.") &&
+      clean(ov()),
+    junk(ov())
+  );
+  chk(
+    "the math box says where the lines come from, and the rule of a shared limit",
+    ov().includes("Amazon and Whole Foods comes out of Online shopping") &&
+      ov().includes("the game counts one limit for those categories together")
+  );
+  const B = vaultBook(c),
+    val = id => (B.rows.find(r => r.id === id) || {}).v;
+  chk(
+    "the spreadsheet rows of the four lines, and the sum does not change",
+    val("vt_x_home") === 400 &&
+      val("vt_x_entertainment") === 100 &&
+      val("vt_x_amazon") === 0 &&
+      val("vt_x_delivery") === 0 &&
+      val("vt_csum") === 3000 &&
+      B.rows.find(r => r.id === "vt_x_amazon").note.includes("Online shopping")
+  );
+  X("close");
   G.chars.length = n0;
   G.active = 0;
   save();

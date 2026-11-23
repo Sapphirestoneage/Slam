@@ -1123,22 +1123,33 @@ window.CARDS2026 = {
      {
       "cat": "hotel",
       "x": 6
-     }
-    ],
-    "picks": [
+     },
      {
+      "cat": "groceries",
       "x": 3,
-      "count": 3,
-      "from": [
-       "groceries",
-       "gas",
-       "dining"
-      ],
       "cap": 6000,
       "per": "year",
-      "then": 2
+      "then": 2,
+      "share": "A"
+     },
+     {
+      "cat": "gas",
+      "x": 3,
+      "cap": 6000,
+      "per": "year",
+      "then": 2,
+      "share": "A"
+     },
+     {
+      "cat": "dining",
+      "x": 3,
+      "cap": 6000,
+      "per": "year",
+      "then": 2,
+      "share": "A"
      }
     ],
+    "picks": [],
     "words": "Up to 17x at Marriott, 3x on groceries, gas and dining (first $6,000 a year), 2x everything else"
    },
    "credits": [
@@ -1594,14 +1605,16 @@ window.CARDS2026 = {
       "x": 3,
       "cap": 150000,
       "per": "year",
-      "then": 1
+      "then": 1,
+      "share": "A"
      },
      {
       "cat": "phone",
       "x": 3,
       "cap": 150000,
       "per": "year",
-      "then": 1
+      "then": 1,
+      "share": "A"
      }
     ],
     "picks": [],
@@ -1672,14 +1685,16 @@ window.CARDS2026 = {
       "x": 2,
       "cap": 25000,
       "per": "year",
-      "then": 1
+      "then": 1,
+      "share": "A"
      },
      {
       "cat": "dining",
       "x": 2,
       "cap": 25000,
       "per": "year",
-      "then": 1
+      "then": 1,
+      "share": "A"
      }
     ],
     "picks": [],
@@ -2117,14 +2132,16 @@ window.CARDS2026 = {
       "x": 2,
       "cap": 8000,
       "per": "year",
-      "then": 1
+      "then": 1,
+      "share": "A"
      },
      {
       "cat": "dining",
       "x": 2,
       "cap": 8000,
       "per": "year",
-      "then": 1
+      "then": 1,
+      "share": "A"
      }
     ],
     "picks": [],
@@ -2183,14 +2200,16 @@ window.CARDS2026 = {
       "x": 2,
       "cap": 8000,
       "per": "year",
-      "then": 1
+      "then": 1,
+      "share": "A"
      },
      {
       "cat": "dining",
       "x": 2,
       "cap": 8000,
       "per": "year",
-      "then": 1
+      "then": 1,
+      "share": "A"
      }
     ],
     "picks": [],
@@ -2401,14 +2420,16 @@ window.CARDS2026 = {
       "x": 4,
       "cap": 15000,
       "per": "year",
-      "then": 2
+      "then": 2,
+      "share": "A"
      },
      {
       "cat": "dining",
       "x": 4,
       "cap": 15000,
       "per": "year",
-      "then": 2
+      "then": 2,
+      "share": "A"
      }
     ],
     "picks": [],
@@ -5147,7 +5168,8 @@ window.CARDS2026 = {
       "x": 2,
       "cap": 2500,
       "per": "quarter",
-      "then": 1
+      "then": 1,
+      "share": "A"
      }
     ],
     "picks": [
@@ -5164,7 +5186,8 @@ window.CARDS2026 = {
       ],
       "cap": 2500,
       "per": "quarter",
-      "then": 1
+      "then": 1,
+      "share": "A"
      }
     ],
     "words": "3% in one category you pick (gas, online shopping, dining, travel, drugstores or home improvement), 2% groceries and wholesale clubs (the 3% and 2% share $2,500 a quarter), 1% everything else"
@@ -5179,10 +5202,6 @@ window.CARDS2026 = {
     "intro0": "15 months on purchases, 15 months on balance transfers"
    },
    "unique": [
-    {
-     "label": "One limit for two rates",
-     "words": "The 3% and the 2% share one limit of $2,500 a quarter. The game counts a limit for each rate, so it can count a little too much."
-    },
     {
      "label": "What it earns",
      "words": "Cash back"
@@ -5441,7 +5460,8 @@ window.CARDS2026 = {
       "x": 2,
       "cap": 2500,
       "per": "quarter",
-      "then": 1
+      "then": 1,
+      "share": "A"
      }
     ],
     "picks": [
@@ -5458,7 +5478,8 @@ window.CARDS2026 = {
       ],
       "cap": 2500,
       "per": "quarter",
-      "then": 1
+      "then": 1,
+      "share": "A"
      }
     ],
     "words": "3% in one category you pick, 2% groceries and wholesale clubs (sharing $2,500 a quarter), 1% everything else"
@@ -5476,10 +5497,6 @@ window.CARDS2026 = {
     {
      "label": "Why no dollar value",
      "words": "No welcome offer was found for it in today's sources."
-    },
-    {
-     "label": "One limit for two rates",
-     "words": "The 3% and the 2% share one limit of $2,500 a quarter. The game counts a limit for each rate, so it can count a little too much."
     },
     {
      "label": "What it earns",
@@ -6189,20 +6206,25 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [],
-    "picks": [
+    "rates": [
      {
+      "cat": "gas",
       "x": 2,
-      "count": 2,
-      "from": [
-       "gas",
-       "dining"
-      ],
       "cap": 1000,
       "per": "quarter",
-      "then": 1
+      "then": 1,
+      "share": "A"
+     },
+     {
+      "cat": "dining",
+      "x": 2,
+      "cap": 1000,
+      "per": "quarter",
+      "then": 1,
+      "share": "A"
      }
     ],
+    "picks": [],
     "words": "2% gas and restaurants (up to $1,000 a quarter combined), 1% everything else"
    },
    "credits": [],
@@ -6251,20 +6273,25 @@ window.CARDS2026 = {
    "min": "good",
    "earn": {
     "base": 1,
-    "rates": [],
-    "picks": [
+    "rates": [
      {
+      "cat": "gas",
       "x": 2,
-      "count": 2,
-      "from": [
-       "gas",
-       "dining"
-      ],
       "cap": 1000,
       "per": "quarter",
-      "then": 1
+      "then": 1,
+      "share": "A"
+     },
+     {
+      "cat": "dining",
+      "x": 2,
+      "cap": 1000,
+      "per": "quarter",
+      "then": 1,
+      "share": "A"
      }
     ],
+    "picks": [],
     "words": "2% gas and restaurants (up to $1,000 a quarter combined), 1% everything else"
    },
    "credits": [],
