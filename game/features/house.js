@@ -247,10 +247,7 @@ function hsText(kind) {
     .filter(Boolean)
     .join("\n");
 }
-/* DEFECT (KNOWN-WEAK.md, A8). home.js has a second function with the name hsSheet. The browser loads home.js later.
-   Thus this function never runs: the actions "house" and "hssample" open the sheet "Put SLAM on your home screen"
-   from home.js, not this sheet ("Our household"). The repair is a different name for one of the two functions.
-   The repair changes what the player sees, so it waits for the owner. */
+/* The sheet "Our household". */
 function hsSheet() {
   const w = W,
     t = w.tab || "pic";

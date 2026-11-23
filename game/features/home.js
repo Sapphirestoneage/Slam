@@ -53,7 +53,7 @@ if (typeof SUPA !== "undefined" && SUPA.on) {
       Object.assign(ACT, {
         hsopen: () => {
           W = { kind: "hs", msg: "" };
-          sheet(hsSheet);
+          sheet(hsInstallSheet);
         },
         hsgo: async () => {
           if (!HS.evt) {
@@ -90,7 +90,7 @@ if (typeof SUPA !== "undefined" && SUPA.on) {
         setTimeout(() => {
           if (!SH && !hsInstalled() && !G.demo) {
             W = { kind: "hs", msg: "", offer: true };
-            sheet(hsSheet);
+            sheet(hsInstallSheet);
           }
         }, 6000);
     } catch (e) {
@@ -120,9 +120,9 @@ function hsSteps() {
     ],
   ];
 }
-/* DEFECT (KNOWN-WEAK.md, A8). house.js has a function with the same name, hsSheet ("Our household").
-   This file is loaded later, so this function wins, and "Our household" opens this sheet. See the note in house.js. */
-function hsSheet() {
+/* The sheet "Put SLAM on your home screen". Before 2026-11-23 this function had the name hsSheet, the same
+   name as the sheet "Our household" in house.js (KNOWN-WEAK.md, A8, repaired). */
+function hsInstallSheet() {
   const steps = hsSteps(),
     one = !!HS.evt && !W.manual;
   return (

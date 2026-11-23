@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-22. Files: 63. Lines: 48,109. Top-level functions: 1097. Replaced functions: 0, in 0 places. Functions with two declarations: 1. Hidden errors: 0.
+Date: 2026-11-23. Files: 63. Lines: 48,106. Top-level functions: 1098. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -42,7 +42,7 @@ The browser loads the files in this order. A file can use all names from the fil
 | 30 | `features/values.js` | 213 | 6 | 6 | 0 | Is my money going where I want? Three steps, all taps: the three things that matter most, two taps for each place where the money goes, and the result |
 | 31 | `features/missions.js` | 355 | 11 | 3 | 0 | The mission board. The same next steps, shown as missions: why now, how long, the reward, and what it opens |
 | 32 | `features/connect.js` | 376 | 19 | 9 | 0 | How it all connects. (1) Links between the 25 skill tracks: what a track works best after, and what it opens, each with the reason |
-| 33 | `features/house.js` | 498 | 15 | 8 | 0 | Our household. For a household that is not one person or one married couple |
+| 33 | `features/house.js` | 495 | 15 | 8 | 0 | Our household. For a household that is not one person or one married couple |
 | 34 | `features/back.js` | 283 | 14 | 2 | 0 | The welcome-back card. On the first look of a new day, one slim row on Home shows what the player did last time, what moved, and where to continue |
 | 35 | `features/lever.js` | 565 | 15 | 6 | 0 | Which lever matters most. Six levers (Earn, Spend, Protect, Grow, Stretch, Keep), each with a price in dollars a year on the numbers of the player |
 | 36 | `features/mult.js` | 426 | 13 | 8 | 0 | The multipliers board. Each multiplier (a match at work, card rewards, bank bonuses, buying ahead, a tax-favored account, a health savings account) ha... |
@@ -86,9 +86,7 @@ No rows: no function is replaced.
 
 When two top-level functions have the same name, the one that the browser loads last wins, and the other one never runs. This is a defect each time. The target is: no rows.
 
-| Function | Declared in |
-|----------|-------------|
-| `hsSheet` | `features/house.js`, `features/home.js` |
+No rows.
 
 ### Actions (ACT) that are set in more than one place
 

@@ -162,7 +162,7 @@ npm run test:game
 
 1. Prettier formats the scripts and the tests. The settings are in `.prettierrc.json`.
 2. `game_stamp.cjs` writes the version stamps. Each script address in `index.html` and `admin.html` ends with a stamp, for example `core/engine.js?v=1a2b3c4d`. The stamp comes from the content of the file. When a script changes, its address changes, and the browser gets the new file. `npm run test:game` fails when a stamp is old.
-3. `game_codemap.py` writes `CODE-MAP.md` again. Make sure that these counts did not go up: replaced functions (0), functions with two declarations (1, see `KNOWN-WEAK.md`, A8), hidden errors (0), functions with no caller and no reason (0).
+3. `game_codemap.py` writes `CODE-MAP.md` again. Make sure that these counts did not go up: replaced functions (0), functions with two declarations (0), hidden errors (0), functions with no caller and no reason (0).
 4. `npm run test:game` runs the tests.
 
 For a change of the structure that must not change what the player sees, also compare the old and the new code in a browser: `tools/game_walk/README.md`.

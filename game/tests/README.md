@@ -44,6 +44,7 @@ Each file has the name of its feature.
 | `money-log-and-give-a-game.js` | The money log, and "give a person their game" | `features/moneylog.js` |
 | `multipliers-board.js` | The multipliers board | `features/mult.js` |
 | `next-steps-one-list.js` | One list on Next Steps | `features/fold.js` |
+| `our-household.js` | Our household | `features/house.js` |
 | `one-question-at-a-time.js` | Make your numbers real, one question on each screen | `features/ask.js` |
 | `one-question-debts-and-key-numbers.js` | The same pattern for debts, Key numbers, the match and the tax accounts | `features/ask2.js` |
 | `quick-math.js` | Quick math | `features/quick.js` |
@@ -83,12 +84,6 @@ On 2026-11-22 the list is empty: all checks pass. Add a failure to the list only
 ```
 "mission-board.js": { "count": 1, "why": "one sentence with the reason" }
 ```
-
-## The folder `retired`
-
-The runner does not read this folder.
-
-`our-household.js` examines the sheet "Our household" (`features/house.js`). 11 of its 23 checks fail, because of a defect in the game: `features/house.js` and `features/home.js` each declare a function with the name `hsSheet`, and the one in `home.js` wins. `KNOWN-WEAK.md`, A8, describes the defect. When the defect is repaired, move this file back to `game/tests/`.
 
 ## Private tests
 

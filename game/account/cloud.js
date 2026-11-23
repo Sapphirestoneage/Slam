@@ -314,8 +314,8 @@ async function clStart() {
     } else {
       CLOUD.st = "on";
       if (!G.demo) clPush();
-      /* signed in, nothing saved yet, and only the sample game on this device: start the player's own game, one time per account */
-      else clFirstGame();
+      /* signed in, nothing saved yet, and only the sample game on this device: start the player's own game, one time per account */ else
+        clFirstGame();
     }
     try {
       const ibRef = CLOUD.db.collection("data/users/" + CLOUD.uid).doc("slam_inbox"),

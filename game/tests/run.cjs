@@ -20,7 +20,7 @@ const path = require("path");
 const dir = __dirname;
 const known = JSON.parse(fs.readFileSync(path.join(dir, "known-failures.json"), "utf8"));
 const only = process.argv.slice(2);
-// Each .js file in this folder is one test file. The runner does not read the folder "retired".
+// Each .js file in this folder is one test file.
 const files = fs
   .readdirSync(dir)
   .filter(f => /\.js$/.test(f) && (!only.length || only.includes(f)))

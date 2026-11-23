@@ -38,7 +38,7 @@ const WB = [
     "feel",
     "Put SLAM on your home screen",
     "b",
-    () => WB_HAS("hsopen") || typeof hsSheet === "function",
+    () => WB_HAS("hsopen") || typeof hsInstallSheet === "function",
     "On the website: one tap where the phone allows it, otherwise 2 or 3 picture-free steps for iPhone, Android or a laptop. Opens full screen and stays signed in.",
     null,
   ],
