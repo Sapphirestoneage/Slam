@@ -99,7 +99,13 @@ function frontSpendCalc(c) {
     guilt,
     near,
     swr,
-    safeYear: (c.inv || 0) * swr + (c.age >= 67 ? ss : 0),
+    method: typeof oddsInputs === "function" ? oddsInputs(c).method : "guyton_klinger",
+    safe: retireSafeSpend(
+      c.inv || 0,
+      typeof oddsInputs === "function" ? oddsInputs(c).method : "guyton_klinger",
+      c.age
+    ),
+    ss: c.age >= 67 ? ss : 0,
     st: f.real ? "Close" : "Guess",
   };
 }
@@ -202,7 +208,7 @@ function frontSpendBody(c) {
       ? `<div class="tile small">Your guilt-free number in the Conscious Spending Plan: <b>${money(Math.round(S.guilt))} a month</b>. ${kitPill(st)} ${kitInfo("guiltfree")}</div>`
       : "") +
     (S.near
-      ? `<div class="tile small">Near or in retirement, a safe yearly spend from your investments is about <b>${money(Math.round(S.safeYear))} a year</b> (${kitPct(S.swr)} of ${money(c.inv || 0)}${c.age >= 67 ? ", plus Social Security" : ""}).</div>`
+      ? `<div class="tile small">Near or in retirement, a safe yearly spend from your investments is about <b>${money(Math.round(S.safe.year + S.ss))} a year</b>: ${esc((RETIRE_METHODS.find(m => m[0] === S.method) || RETIRE_METHODS[0])[1].toLowerCase())} starts at ${kitPct(S.safe.rate)} of ${money(c.inv || 0)}${S.ss ? ", plus Social Security" : ""}, the way your retirement odds take money out.</div>`
       : "") +
     mathBox([
       "Free to spend: what comes in, minus bills, minus what goes to your goals, " +
@@ -210,7 +216,11 @@ function frontSpendBody(c) {
         " a month.",
       "Today: ÷ 30.44. A week: × 12 ÷ 52. A year: × 12.",
       S.guilt != null ? "The guilt-free number is the fun part of the Conscious Spending Plan (Ramit Sethi)." : null,
-      S.near ? "Safe yearly spend: invested money × the withdrawal rate of your plan." : null,
+      S.near
+        ? "Safe yearly spend: the first year of your way to take money out (Retirement odds), from the method code of the retirement engine. " +
+          RETIRE_CREDIT +
+          "."
+        : null,
     ]) +
     `<button class="ghost wide slim" data-a="csp">Open the Conscious Spending Plan</button>`
   );
@@ -297,9 +307,14 @@ function frontBook(c) {
       { id: "fr_month", label: "Free to spend a month", v: S.month, note: "From the game: in minus bills minus goals" },
       { id: "fr_today", label: "Free to spend today", v: S.today, f: "={fr_month}/30.44" },
       { id: "fr_year", label: "Free to spend a year", v: S.year, f: "={fr_month}*12" },
-      { id: "fr_swr", label: "Withdrawal rate", v: S.swr },
+      { id: "fr_swr", label: "Starting rate of your way to take money out", v: S.safe.rate },
       { id: "fr_inv", label: "Invested", v: c.inv || 0 },
-      { id: "fr_safe", label: "Safe yearly spend from investments", v: (c.inv || 0) * S.swr, f: "={fr_inv}*{fr_swr}" },
+      {
+        id: "fr_safe",
+        label: "Safe yearly spend from investments, the first year",
+        v: S.safe.year,
+        f: "={fr_inv}*{fr_swr}",
+      },
     ],
   };
 }

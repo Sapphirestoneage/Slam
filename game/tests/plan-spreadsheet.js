@@ -72,8 +72,13 @@
       .replace(/\^/g, "**")
       .replace(/\bMIN\(/g, "Math.min(")
       .replace(/\bMAX\(/g, "Math.max(")
+      .replace(/\bROUND\(/g, "RND(")
       .replace(/\bFV\(/g, "FV(");
-    return Function("FV", "return " + js)(FV);
+    return Function(
+      "FV",
+      "RND",
+      "return " + js
+    )(FV, (v, d) => Math.round(v * Math.pow(10, d || 0)) / Math.pow(10, d || 0));
   };
   const evalCell = k => {
     const v = cellVal[k];
@@ -133,7 +138,8 @@
       "features/quota.js",
       "features/book.js",
       "data/market.js",
-      "data/tax2026.js",
+      "data/limits2026.js",
+      "features/retire.js",
     ].concat(fs.readdirSync(GAME_DIR + "features/sims").map(f => "features/sims/" + f)),
     texts = files.map(f => fs.readFileSync(GAME_DIR + f, "utf8"));
   chk(
@@ -142,9 +148,34 @@
   );
   chk(
     "no red and no word probability in the new files",
-    texts.every(t => !/#ff4d6a|var\(--bad\)|probabilit/i.test(t))
+    texts.every(t => !/#ff4d6a|var\(--bad\)|probabilit/i.test(t.replace(/adjustmentProbability/g, "")))
   );
-  G.chars.length = n0;
-  G.active = 0;
-  save();
+  const waitTabs = (n, done) => {
+    const t = oddsTabs(c);
+    if (t || n > 400) done(t);
+    else setTimeout(() => waitTabs(n + 1, done), 25);
+  };
+  waitTabs(0, T => {
+    chk(
+      "the engine's percentile table, cash flow table and withdrawal schedule are their own tabs",
+      T && T.length === 3 && T.every(t => t.table.length > 0 && t.cols.length === t.table[0].length)
+    );
+    const tsv = bookTabText(c, 0, false),
+      csv = bookTabText(c, 2, true);
+    chk(
+      "each tab copies as its own table",
+      tsv.split("\n")[0].split("\t")[0] === "Age" &&
+        tsv.split("\n").length === T[0].table.length + 1 &&
+        csv.split("\n")[0].indexOf("Age,") === 0
+    );
+    X("book");
+    chk(
+      "the spreadsheet screen offers each tab with its own copy and file",
+      ov().includes('data-a="bookcopy" data-v="0"') && ov().includes('data-a="bookfile" data-v="2"') && clean(ov()),
+      junk(ov())
+    );
+    G.chars.length = n0;
+    G.active = 0;
+    save();
+  });
 }

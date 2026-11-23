@@ -11,7 +11,8 @@
                Actions (ACT): mix. Parts of functions in other files: knMetricsMix (knMetrics in
                metrics.js). Menu: "Investment mix and fees".
    DEPENDS ON  core/engine.js, screens/ui.js, core/metrics.js, features/compare.js (cpFv),
-               features/kit.js.
+               features/kit.js, features/retire.js (retireGlideStock: the glide-path code of the retirement
+               engine). Each account's mix goes into the engine through retireAccounts in retire.js.
    RULES       The age guide is the glide path of the Vanguard Target Retirement funds, as Vanguard
                publishes it: 90% stocks until 25 years before the stop age, then less each year to 50% at
                the stop age, and 30% seven years after. Growth is 7% a year after inflation, minus the
@@ -47,11 +48,17 @@ const MIX_YEARS = 30;
 /* THE AGE GUIDE: the Vanguard Target Retirement glide path, set to the stop age of the player. */
 function mixGuide(age, ret) {
   ret = ret || 65;
-  const lead = ret - age;
-  let stock;
-  if (lead >= 25) stock = 0.9;
-  else if (lead >= 0) stock = 0.5 + 0.4 * (lead / 25);
-  else stock = Math.max(0.3, 0.5 - 0.2 * Math.min(1, -lead / 7));
+  /* retire.js: the glide-path code of the retirement engine, on the Vanguard points */
+  const g = typeof retireGlideStock === "function" ? retireGlideStock(age, ret) : null,
+    lead = ret - age,
+    stock =
+      g != null
+        ? g
+        : lead >= 25
+          ? 0.9
+          : lead >= 0
+            ? 0.5 + 0.4 * (lead / 25)
+            : Math.max(0.3, 0.5 - 0.2 * Math.min(1, -lead / 7));
   return { stock, bond: 1 - stock, source: "Vanguard Target Retirement glide path" };
 }
 /* The investment accounts, each with its answers. */

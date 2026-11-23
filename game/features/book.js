@@ -8,12 +8,14 @@
                says so in its note.
    INPUT       The profile. The rows of each feature (taxvBook, oddsBook, coverBook, mixBook, sleptBook,
                pathsBook, simBook, frontBook, quotaBook, summaryBook). The open sheet (W.kind): book.
-   OUTPUT      Functions: bookSections, bookTable, bookText, bookButtons, knSheetBook, bookSheet. Actions
+   OUTPUT      Functions: bookSections, bookTable, bookText, bookTabText, bookButtons, knSheetBook, bookSheet. Actions
                (ACT): book, bookcopy, bookfile. Parts of functions in other files: knSheetBook (knSheet in
                metrics.js). Menu: "My plan as a spreadsheet".
    DEPENDS ON  screens/ui.js, core/metrics.js, the feature files above, features/kit.js.
+   TABS        The percentile table, the cash flow table and the withdrawal schedule of the retirement
+               engine are three more tabs, each with its own copy and CSV file (oddsTabs in odds.js).
    RULES       Columns: A the section, B the name, C the value, D the formula in words, E a note. A formula
-               uses only + - * / ^, MIN, MAX and FV, so it works in Google Sheets, Excel and LibreOffice.
+               uses only + - * / ^, MIN, MAX, ROUND and FV, so it works in Google Sheets, Excel and LibreOffice.
                The copy is text with tabs. The file is CSV. Nothing is sent anywhere.
    ========================================================================= */
 const BOOK_PARTS = [
@@ -102,6 +104,20 @@ function knSheetBook(h) {
     return h;
   }
 }
+/* One tab of the engine tables (odds.js: oddsTabs) as text: tabs for the copy, or CSV for the file. */
+function bookTabText(c, i, csv) {
+  const T = (typeof oddsTabs === "function" ? oddsTabs(c) : null) || [],
+    t = T[i];
+  if (!t) return "";
+  const q = v => {
+    const x = String(v);
+    return csv && /[",]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x;
+  };
+  return [t.cols]
+    .concat(t.table)
+    .map(r => r.map(q).join(csv ? "," : "\t"))
+    .join("\n");
+}
 function bookSheet() {
   const c = C(),
     B = bookTable(c),
@@ -111,6 +127,12 @@ function bookSheet() {
     `<div class="small muted">Every number of your plan, with its formula. Paste it into Google Sheets or Excel, change any value, and the formulas follow. ${kitInfo("book")}</div>` +
     `<div class="row wrap" style="gap:8px">${bookButtons()}<button class="ghost slim" data-a="bookfile">Save as a CSV file</button></div>` +
     `<div class="tiny muted">${n} rows in ${B.S.length} sections.</div>` +
+    (tabs =>
+      tabs == null
+        ? `<div class="tile small kitwait">The retirement engine is making its three tables…</div>`
+        : tabs.length
+          ? `<div class="stack booktabs" style="gap:6px"><div class="small"><b>Tables of the retirement engine</b>, each its own tab, in today's dollars:</div>${tabs.map((t, i) => `<div class="tile row wrap between" style="gap:6px"><span class="small">${esc(t.title)} (${t.table.length} rows)</span><span class="row" style="gap:6px"><button class="ghost slim" data-a="bookcopy" data-v="${i}">Copy</button><button class="ghost slim" data-a="bookfile" data-v="${i}">CSV file</button></span></div>`).join("")}</div>`
+          : "")(typeof oddsTabs === "function" ? oddsTabs(c) : []) +
     B.S.map(
       s =>
         `<details><summary>${esc(s.title)} (${s.rows.length})</summary><div class="inner stack" style="gap:4px">${s.rows.map(x => `<div class="small bookrow"><div class="row between" style="gap:8px"><span>${esc(x.label)}</span><b>${esc(typeof x.v === "number" ? (Math.abs(x.v) < 1 && x.v !== 0 ? String(Math.round(x.v * 10000) / 10000) : money(x.v)) : String(x.v == null ? "" : x.v))}</b></div>${x.f ? `<div class="tiny muted">${esc(x.f.replace(/^=/, "= ").replace(/\{(\w+)\}/g, "$1"))}</div>` : ""}${x.note ? `<div class="tiny muted">${esc(x.note)}</div>` : ""}</div>`).join("")}</div></details>`
@@ -134,8 +156,9 @@ Object.assign(ACT, {
     W = { kind: "book", o: {} };
     sheet(bookSheet);
   },
-  bookcopy: () => {
-    const txt = bookText(C(), false),
+  bookcopy: t => {
+    const v = t && t.dataset && t.dataset.v,
+      txt = v != null && v !== "" ? bookTabText(C(), +v, false) : bookText(C(), false),
       done = () => {
         if (W) {
           W.bookCopied = true;
@@ -150,14 +173,18 @@ Object.assign(ACT, {
       done();
     }
   },
-  bookfile: () => {
+  bookfile: t => {
     try {
       if (typeof Blob === "undefined" || typeof URL === "undefined" || typeof document.createElement !== "function")
         return;
-      const url = URL.createObjectURL(new Blob([bookText(C(), true)], { type: "text/csv" })),
+      const v = t && t.dataset && t.dataset.v,
+        tab = v != null && v !== "",
+        url = URL.createObjectURL(
+          new Blob([tab ? bookTabText(C(), +v, true) : bookText(C(), true)], { type: "text/csv" })
+        ),
         a = document.createElement("a");
       a.href = url;
-      a.download = "slam-plan-" + todayISO() + ".csv";
+      a.download = "slam-plan-" + (tab ? "table" + (+v + 1) + "-" : "") + todayISO() + ".csv";
       document.body.appendChild(a);
       a.click();
       a.remove();

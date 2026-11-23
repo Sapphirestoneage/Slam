@@ -1,10 +1,11 @@
 /* ============================================================================
    SLAM the Game, test: tests/retirement-odds.js
-   PURPOSE     Examine the retirement odds: the replay of real market history, the 1,000 seeded random
-               runs, the worst start year, the one change, and the plain words.
-   INPUT       The game scripts, loaded by harness.cjs. Two sample profiles.
-   OUTPUT      One result for each chk() call.
-   DEPENDS ON  tests/harness.cjs. Examines: features/odds.js, data/market.js.
+   PURPOSE     Examine the retirement odds: the replay of real market history through the method code of
+               the engine, the random markets of the engine (through the adapter), the worst start year, the
+               one change from his solver, the other ways to take money out, and the plain words.
+   INPUT       The game scripts, loaded by harness.cjs. One sample profile.
+   OUTPUT      One result for each chk() call. Some checks wait for the engine (a promise).
+   DEPENDS ON  tests/harness.cjs. Examines: features/odds.js, data/market.js, features/retire.js.
    ========================================================================= */
 {
   const n0 = G.chars.length,
@@ -39,18 +40,28 @@
       MARKET_HISTORY.years.length === 152 &&
       MARKET_HISTORY.years[0][0] === 1871
   );
-  const O = oddsCalc(c);
-  const H = a.death - a.age;
-  chk("each start year with enough years after it is one history", O.n === 152 - H + 1 && O.hist[0].year === 1871);
+  const O = oddsCalc(c),
+    H = a.death - a.age;
   chk(
-    "the count is out of 100 and the random runs use 1,000 runs",
-    O.of100 >= 0 && O.of100 <= 100 && O.runs === 1000 && O.of100Random >= 0 && O.of100Random <= 100
+    "each start year with enough years after it is one real history",
+    O.n === 152 - H + 1 && O.hist[0].year === 1871 && O.ok <= O.n
   );
-  chk("the random runs repeat: the same seed gives the same answer", oddsCalc(c).okRandom === O.okRandom);
-  /* one history by hand: no money, no saving, any spending runs out in the first year of retirement */
-  const P0 = Object.assign({}, O.P, { inv: 0, monthly: 0, ret: a.age, spend: 50000, ss: 0, now: 0, pen: null });
   chk(
-    "a run with nothing invested runs out at once",
+    "the default way to take money out is guardrails (his Guyton-Klinger)",
+    O.P.method === "guyton_klinger" && RETIRE_METHODS[0][0] === "guyton_klinger"
+  );
+  const P0 = Object.assign({}, O.P, {
+    inv: 0,
+    monthly: 0,
+    ret: a.age,
+    spend: 50000,
+    ss: 0,
+    now: 0,
+    pen: null,
+    method: "fixed_real",
+  });
+  chk(
+    "a run with nothing invested and the same amount each year runs out",
     oddsRun(
       P0,
       MARKET_HISTORY.years.map(y => [y[1], y[2]])
@@ -65,33 +76,83 @@
     ).ok === true
   );
   chk(
-    "the worst start year is a real year with the least left",
+    "the worst start year is a real year with the earliest end",
     O.worst && O.hist.every(h2 => (h2.out == null ? 999 : h2.out) >= (O.worst.out == null ? 999 : O.worst.out))
   );
-  const more = oddsCalc(c, { spend: O.P.spend * 1.6 }, { runs: 0 }),
-    less = oddsCalc(c, { spend: O.P.spend * 0.5 }, { runs: 0 });
-  chk("spending more never gives more histories that work", more.of100 <= O.of100 && less.of100 >= O.of100);
-  const ch = oddsChanges(c, { spend: O.P.spend * 1.6 });
-  chk("the one change is the one with the largest gain", !ch.best || ch.rows.every(r => r.gain <= ch.best.gain));
+  const more = oddsCalc(c, { spend: O.P.spend * 1.6 }),
+    less = oddsCalc(c, { spend: O.P.spend * 0.5 });
+  chk("spending more never gives more real start years that work", more.ok <= O.ok && less.ok >= O.ok);
+  const fixed = oddsCalc(c, { method: "fixed_real", spend: O.P.spend * 1.6 }),
+    gk = oddsCalc(c, { method: "guyton_klinger", spend: O.P.spend * 1.6 });
+  chk("guardrails cut in bad years, so they last in at least as many years as the same amount", gk.ok >= fixed.ok);
   chk(
-    "guardrails use the same rule as the Guardrails idea",
-    typeof igGuardStep === "function" && igGuardStep(100, 1000, 0.05, 0.1).w === 90
+    "each way to take money out has a plain one-line explanation",
+    RETIRE_METHODS.length === 8 && RETIRE_METHODS.every(m => m[2].length > 20 && m[2].length < 130)
   );
   X("odds");
   chk(
-    "the screen says it in plain words, with the worst year, the math and the data source",
-    ov().includes("out of 100") &&
-      ov().includes("market histories work") &&
-      ov().includes("worst start year") &&
-      ov().includes("Show the math") &&
-      ov().includes("Shiller") &&
-      clean(ov()),
+    "before the engine answers, the screen says it is running",
+    ov().includes("Running 1,000 random markets") && ov().includes("Finding the one change") && clean(ov()),
     junk(ov())
   );
-  chk("never the word probability", !/probabilit/i.test(ov()));
-  X("oddstab", "random");
-  chk("the random tab says random market histories", ov().includes("random market histories work") && clean(ov()));
-  G.chars.length = n0;
-  G.active = 0;
-  save();
+  const wait = (fn, done, n) => {
+    const v = fn();
+    if (v || (n || 0) > 400) done(v);
+    else setTimeout(() => wait(fn, done, (n || 0) + 1), 25);
+  };
+  wait(
+    () => oddsRandom(c),
+    Rr => {
+      chk(
+        "the random markets: X out of 100, from the engine's 1,000 seeded runs",
+        Rr &&
+          Rr.of100 >= 0 &&
+          Rr.of100 <= 100 &&
+          Rr.scn.simulationConfig.iterations === 1000 &&
+          Rr.scn.simulationConfig.seed === RETIRE_SEED
+      );
+      wait(
+        () => oddsSolve(c),
+        S => {
+          chk(
+            "his solver answers the three questions",
+            S && S.age && S.save && S.spend && typeof S.age.solvedValue === "number"
+          );
+          const K = oddsPick(c, S);
+          chk(
+            "the one change is the smallest step next to its lever",
+            !K.best || K.rows.filter(r => r.ok && r.size > 0).every(r => r.size >= K.best.size)
+          );
+          X("odds");
+          const o = ov();
+          chk(
+            "the screen: random markets and real years in plain words, the worst year, the one change, the credit, the math",
+            o.includes("out of 100") &&
+              o.includes("random markets work") &&
+              o.includes("The worst start year") &&
+              (o.includes("The one change that moves it most") || o.includes("already reaches")) &&
+              o.includes("Retirement engine by Zack, MIT license") &&
+              o.includes("Show the math") &&
+              clean(o),
+            junk(o)
+          );
+          chk("never the word probability", !/probabilit/i.test(o));
+          chk(
+            "the other ways to take money out sit behind one row",
+            o.includes("Try another way to take money out") && RETIRE_METHODS.every(m => o.includes(esc(m[1])))
+          );
+          X("oddstab", "hist");
+          chk(
+            "the real history tab says X of Y real start years work",
+            ov().includes(O.ok + " of " + O.n) && ov().includes("real start years work") && clean(ov())
+          );
+          X("kitset", "fixed_real", "odds|method", { t: "s" });
+          chk("another way to take money out is kept and used", oddsInputs(c).method === "fixed_real");
+          G.chars.length = n0;
+          G.active = 0;
+          save();
+        }
+      );
+    }
+  );
 }
