@@ -9,7 +9,7 @@
                calcost, chance, yrdone, restopen, gseason, review, revwhen, and 9 more.
    DEPENDS ON  core/engine.js, core/engine2.js, account/gate.js, screens/ui.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
-               page loads: features/fork.js, features/eras.js.
+               page loads: features/fork.js, features/eras.js, features/quota.js.
    RULES       Only the tax-year items start again each year.
    ========================================================================= */
 /* ---------- tax-year facts (checked Nov 2026: IRS IR-2026-136, Rev. Proc. 2026-24 and 2026-35) ---------- */
@@ -472,6 +472,8 @@ function reviewSheet() {
   let h = reviewSheetBase();
   if (typeof reviewSheetForks === "function") h = reviewSheetForks(h); /* fork.js: the fork load of the year */
   if (typeof reviewSheetYear === "function") h = reviewSheetYear(h); /* eras.js: the steps that start again each year */
+  if (typeof reviewSheetQuota === "function")
+    h = reviewSheetQuota(h); /* quota.js: savings rate by month, next year's budget */
   return h;
 }
 function reviewSheetBase() {
