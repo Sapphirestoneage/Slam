@@ -13,8 +13,11 @@
    OUTPUT      Functions: vaultStore, vaultOffer, vaultYm, vaultMonthWords, vaultSlots, vaultCarPay, vaultSpend,
                vaultScore, vaultMe, vaultValue, vaultNet, vaultMonths, vaultFit, vaultMoves, vaultDates,
                vaultCalc, vaultBook, vaultAddHtml, vaultSheet, vaultLib, vaultExtraSet, vaultLoadExtra,
-               vaultCredits, vaultFee1, vaultCatName, vaultCardParts, vaultCardSheet. Actions (ACT):
-               vault, vaultadd, vaultpick, vaultdel, vaultundo, vaultmore, vaultcard, vaulthave.
+               vaultCredits, vaultCred, vaultCreditsUsed, vaultFee1, vaultCatName, vaultCardParts,
+               vaultCardSheet, vaultCatLabel, vaultCatStart, vaultCats, vaultPct, vaultPointValue,
+               vaultEarn, vaultBest, vaultBestHtml, vaultRateWords, vaultPickWords. Actions (ACT):
+               vault, vaultadd, vaultpick, vaultdel, vaultundo, vaultmore, vaultcard, vaulthave,
+               vaultcred, vaultcredall, vaultcats.
                Menu: "Card vault".
    DEPENDS ON  data/cardtemplate.js, data/cards2026.js, core/engine.js, screens/ui.js, features/kit.js,
                account/supa.js (SUPA.sb, only to read the table).
@@ -24,7 +27,8 @@
                high-interest debt, the offers wait (the same rule as treeGate in engine.js): interest
                costs more than an offer pays. The offers are dated, and the screen shows the date and
                says to look at the page of the bank. No card is called good or bad. The player taps.
-               The yearly credits of a card count only when the player says so. A missing table or an
+               A yearly credit of a card counts only when the player marked it Yes (c.x.vault.cred).
+               The best card for each line uses cardEarnYear of cardtemplate.js and no welcome offer. A missing table or an
                error of the database leaves the library of the file in place.
    ========================================================================= */
 const VAULT_SCORE = { none: 0, fair: 1, good: 2, excellent: 3 };
@@ -182,7 +186,7 @@ function vaultMe(c, today) {
       c.work === "Self-employed" || (c.incs || []).some(r => /side gigs|my own business/i.test(r.k || "") && r.amt > 0),
     held: S.cards.map(x => x.id),
     programs: kitValue(c, "vault", "programs", "no").v === "yes",
-    credits: kitValue(c, "vault", "credits", "no").v === "yes",
+    cred: vaultCred(c),
   };
 }
 /* Dollars an offer is worth, at the floor value of its points. Null when the sources do not agree. */
@@ -194,14 +198,27 @@ function vaultValue(o) {
 function vaultCredits(o) {
   return ((o && o.credits) || []).reduce((t, k) => t + (+k.value || 0), 0);
 }
-/* The fee of the first year. With useCredits, the credits come off it, and it does not go under 0. */
-function vaultFee1(o, useCredits) {
-  return Math.max(0, (o.fee1 != null ? o.fee1 : o.fee || 0) - (useCredits ? vaultCredits(o) : 0));
+/* The credits that the player would use: c.x.vault.cred[card id][number of the credit] is true. */
+function vaultCred(c) {
+  const S = vaultStore(c);
+  if (!S.cred || typeof S.cred !== "object") S.cred = {};
+  return S.cred;
 }
-/* The value of the offer less the fee of the first year. Credits count only when the player says so. */
-function vaultNet(o, useCredits) {
+/* The dollars a year of the credits of one card that the player marked "Yes". cred is vaultCred(c). */
+function vaultCreditsUsed(cred, o) {
+  const m = (cred && o && cred[o.id]) || {};
+  return ((o && o.credits) || []).reduce((t, k, i) => t + (m[i] ? +k.value || 0 : 0), 0);
+}
+/* The fee of the first year. used is the dollars of credits that come off it (true: all the credits). The
+   fee does not go under 0. */
+function vaultFee1(o, used) {
+  const off = used === true ? vaultCredits(o) : +used || 0;
+  return Math.max(0, (o.fee1 != null ? o.fee1 : o.fee || 0) - off);
+}
+/* The value of the offer less the fee of the first year. Credits count only when the player marked them. */
+function vaultNet(o, used) {
   const v = vaultValue(o);
-  return v == null ? null : v - vaultFee1(o, useCredits);
+  return v == null ? null : v - vaultFee1(o, used);
 }
 /* Whole months of usual card spending to earn the offer. Null when it cannot be reached in its window. */
 function vaultMonths(o, monthly) {
@@ -269,7 +286,7 @@ function vaultFit(o, me, rule) {
     else reasons.push("Your usual spending covers the offer.");
   }
   if (vaultNet(o) == null) cap(1, "The offer is not settled between sources, so no dollar value is counted.");
-  return { level: order[level], reasons, net: vaultNet(o, me.credits) };
+  return { level: order[level], reasons, net: vaultNet(o, vaultCreditsUsed(me.cred, o)) };
 }
 /* THE OFFERS OPEN FROM HERE, the biggest first-year value first. Empty while high-interest debt is there. */
 function vaultMoves(c, today) {
@@ -289,7 +306,7 @@ function vaultMoves(c, today) {
       o,
       fit: vaultFit(o, me),
       months: vaultMonths(o, me.monthlySpend),
-      net: vaultNet(o, me.credits),
+      net: vaultNet(o, vaultCreditsUsed(me.cred, o)),
     }))
     .filter(m => m.fit.level !== "later" && m.months != null)
     .sort((a, b) => b.net - a.net);
@@ -378,8 +395,8 @@ function vaultBook(c) {
       {
         id: "vt_credit",
         label: "Its yearly credits that you count",
-        v: V.me.credits ? vaultCredits(b.o) : 0,
-        note: "0 until you say on the screen that you would use the credits",
+        v: vaultCreditsUsed(V.me.cred, b.o),
+        note: "0 until you mark a credit of the card with Yes",
       },
       {
         id: "vt_net",
@@ -395,6 +412,43 @@ function vaultBook(c) {
         f: "=ROUND({vt_need}/" + b.o.months + ",0)",
       }
     );
+  const B = vaultBest(c);
+  B.K.rows.forEach(r =>
+    rows.push({
+      id: "vt_c_" + r.k,
+      label: "Card spending a month: " + r.label,
+      v: r.v,
+      note: r.given ? "Your answer" : "A guess from your budget",
+    })
+  );
+  rows.push(
+    {
+      id: "vt_csum",
+      label: "Card spending a month in all categories",
+      v: B.K.sum,
+      f: "=" + B.K.rows.map(r => "{vt_c_" + r.k + "}").join("+"),
+    },
+    {
+      id: "vt_gross",
+      label: "What your cards earn a year on this spending",
+      v: Math.round(B.gross * 100) / 100,
+      note: "Worked out by the game: each category on your card that earns most there, with its limits",
+    },
+    { id: "vt_heldfees", label: "Yearly fees of those cards, less the credits you count", v: B.fees },
+    {
+      id: "vt_yours",
+      label: "What your cards earn a year after fees",
+      v: Math.round(B.gross * 100) / 100 - B.fees,
+      f: "={vt_gross}-{vt_heldfees}",
+    }
+  );
+  if (B.single)
+    rows.push({
+      id: "vt_single",
+      label: "The best single card you do not hold: a year after its fee",
+      v: Math.round(B.single.net * 100) / 100,
+      note: B.single.o.bank + " " + B.single.o.n + ". Worked out by the game",
+    });
   return { title: "Card vault", rows };
 }
 /* The steps to add a card, all taps: the bank, the card, the year, the month. */
@@ -492,8 +546,8 @@ function vaultSheet() {
                 ["Fee in the first year", money(vaultFee1(m.o, false))],
                 vaultCredits(m.o) > 0
                   ? [
-                      "Credits worth " + money(vaultCredits(m.o)) + " a year " + kitInfo("vt_credit"),
-                      V.me.credits ? "counted" : "not counted",
+                      "Yearly credits you count " + kitInfo("vt_credit"),
+                      money(vaultCreditsUsed(V.me.cred, m.o)) + " of " + money(vaultCredits(m.o)),
                     ]
                   : null,
                 ["First-year value after the fee " + kitInfo("vt_net"), money(m.net)],
@@ -506,6 +560,7 @@ function vaultSheet() {
         ? `<button class="ghost wide slim" data-a="vaultmore">Show all ${V.moves.length} offers</button>`
         : "");
   h += `<div class="tiny muted">Offers as of ${esc(L.asOf)}, from review sites. Offers change each month: look at the page of the bank before you apply.</div>`;
+  h += vaultBestHtml(c);
   /* the answers, all taps */
   h += kitAsk(c, "vault", "score", "Your credit score", VAULT_SCORE_OPTS, scoreAns.v, {
     term: "vt_score",
@@ -536,18 +591,6 @@ function vaultSheet() {
     "no",
     { term: "vt_program" }
   );
-  h += kitAsk(
-    c,
-    "vault",
-    "credits",
-    "Count the yearly credits of a card?",
-    [
-      ["no", "No, fee in full"],
-      ["yes", "Yes, I would use them"],
-    ],
-    "no",
-    { term: "vt_credit", help: "A credit gives money back only for the thing it names, for example one hotel site." }
-  );
   h += mathBox([
     "5/24: " + R.words + ". Source: " + R.source + " (" + R.date + ").",
     "You opened " +
@@ -560,10 +603,7 @@ function vaultSheet() {
       R.slots +
       " slots are left.",
     "The value of an offer = the points times the floor value of one point (1 cent for cash and for most bank points). The lift from moving points to an airline is not counted.",
-    "First-year value = the value of the offer - the fee of the first year." +
-      (V.me.credits
-        ? " You count the yearly credits: they come off the fee, and the fee does not go under $0."
-        : " The yearly credits of a card are not counted."),
+    "First-year value = the value of the offer - the fee of the first year. A yearly credit comes off the fee only when you marked it Yes on the sheet of the card, and the fee does not go under $0.",
     "An offer fits your budget when its spending divides into your monthly card spending within its months: " +
       money(V.spend.v) +
       " a month.",
@@ -576,11 +616,241 @@ function vaultSheet() {
       ".",
     "Offers: " + L.source,
     "Fees, earn rates, credits and cover: " + (L.cardsSource || "each card names its source") + ".",
-    "Not on this screen: the best card for each spending line. Your spending lines (Food, Getting around) mix card categories (groceries and dining, gas and transit), so the game would have to guess.",
+    "Best card for each line: a year of your spending in each category times the rate of the card, with its limits and its picks. One point counts at its floor value, and 1% is 1 cent for each dollar. Your cards: each line goes on your card that earns most there, less the yearly fees. One card you do not hold: all lines on that card, less its yearly fee. Rates for one airline, one hotel brand, one store or the travel site of a bank are not counted, because your lines do not say where you buy.",
+    "Where the categories start: your card spending, split by your own lines. Food is 60% groceries and 40% dining. Getting around, less car loan payments, is 50% gas and 15% transit. Bills is 25% phone and 10% streaming. Fun is 25% online shopping, 15% travel and 5% drugstores. The rest is Everything else. These shares are guesses until you tap your own numbers.",
   ]);
   return h;
 }
+/* ---------- the best card for each spending line ---------- */
+const VAULT_CATS = [
+  "dining",
+  "groceries",
+  "gas",
+  "transit",
+  "travel",
+  "streaming",
+  "online",
+  "drugstore",
+  "phone",
+  "other",
+];
+const VAULT_CAT_CHIPS = [0, 50, 100, 200, 300, 500, 800, 1200];
+/* The shares of each line of the profile that go to a card category. The rest of a line is "other". */
+const VAULT_SHARE = {
+  food: { groceries: 0.6, dining: 0.4 },
+  around: { gas: 0.5, transit: 0.15 },
+  bills: { phone: 0.25, streaming: 0.1 },
+  fun: { online: 0.25, travel: 0.15, drugstore: 0.05 },
+};
+function vaultCatLabel(k) {
+  return k === "other" ? "Everything else" : vaultCatName(k);
+}
+/* WHERE THE CATEGORIES START: the card spending of a month (vaultSpend), split by the lines of the profile.
+   Each amount is rounded to $10, and "other" takes the rest, so the start adds up to the card spending. */
+function vaultCatStart(c) {
+  const sp = vaultSpend(c),
+    rows = c.led && (c.spends || []).length ? c.spends : null,
+    line = (re, i) => (rows ? rsum(rows.filter(r => re.test(r.k || ""))) : (c.spend || 0) * SPLIT[i]),
+    L = {
+      food: line(/^food$/i, 1),
+      around: Math.max(0, line(/^getting around$/i, 2) - sp.car),
+      bills: line(/^bills/i, 3),
+      fun: line(/^fun/i, 4),
+    },
+    all = rows
+      ? Math.max(0, rsum(rows.filter(r => !/^home$|rent|mortgage/i.test(r.k || ""))) - sp.car)
+      : L.food + L.around + L.bills + L.fun,
+    k = all > 0 ? sp.v / all : 0,
+    out = {};
+  let named = 0;
+  Object.keys(VAULT_SHARE).forEach(g =>
+    Object.keys(VAULT_SHARE[g]).forEach(cat => {
+      out[cat] = Math.round((L[g] * VAULT_SHARE[g][cat] * k) / 10) * 10;
+      named += out[cat];
+    })
+  );
+  out.other = Math.max(0, Math.round(sp.v - named));
+  return out;
+}
+/* The card spending by category: the answers of the player, or the start as a Guess. sum is shown next to
+   the card spending of the budget. spend is { category: dollars a month } for cardEarnYear. */
+function vaultCats(c) {
+  const start = vaultCatStart(c),
+    sp = vaultSpend(c),
+    rows = VAULT_CATS.map(k => {
+      const a = kitValue(c, "vault", "cat_" + k, start[k] || 0);
+      return { k, label: vaultCatLabel(k), v: +a.v || 0, cf: a.given ? a.cf : 1, given: a.given, start: start[k] || 0 };
+    }),
+    sum = rows.reduce((t, r) => t + r.v, 0),
+    spend = {};
+  rows.forEach(r => {
+    if (r.k !== "other" && r.v > 0) spend[r.k] = r.v;
+  });
+  return { rows, sum, budget: sp.v, diff: sum - sp.v, spend, other: rows[rows.length - 1].v, st: kitState(rows) };
+}
+/* Does the card earn a percent (cash back), or points? A unit worth $1 or more is dollars: a percent. */
+function vaultPct(o) {
+  const u = o && vaultLib().units[o.unit];
+  return !u || o.unit === "cash" || u.v >= 1;
+}
+/* The dollars of one earned unit: 1 cent for 1% of a dollar, or the floor value of one point. */
+function vaultPointValue(o) {
+  return vaultPct(o) ? 0.01 : vaultLib().units[o.unit].v;
+}
+/* WHAT ONE CARD EARNS IN A YEAR on the categories K (vaultCats), in dollars: cardEarnYear (cardtemplate.js)
+   times the value of one unit. fee is the yearly fee less the credits the player counts. net = dollars - fee. */
+function vaultEarn(o, K, used) {
+  const E = cardEarnYear(o, K.spend, K.other),
+    pv = vaultPointValue(o),
+    by = {};
+  E.rows.forEach(r => (by[r.cat || "other"] = r.earned * pv));
+  const dollars = E.sum * pv,
+    fee = Math.max(0, (o.fee || 0) - (+used || 0));
+  return { o, dollars, by, fee, net: dollars - fee };
+}
+/* THE BEST CARD FOR EACH LINE. For each category: the card of the player that earns most, and the card of
+   the library that earns most. yours: each line on the best card of the player, less the fees of those
+   cards. single: the one card the player does not hold that earns most on all lines, less its fee. With
+   high-interest debt, no card of the library is named. */
+function vaultBest(c, today) {
+  const K = vaultCats(c),
+    L = vaultLib(),
+    me = vaultMe(c, today),
+    cred = me.cred,
+    heldIds = me.held.filter((id, i, a) => a.indexOf(id) === i),
+    held = heldIds.map(id => vaultOffer(id)).filter(Boolean),
+    suggest = !me.heavyDebt,
+    open = suggest
+      ? L.offers.filter(o => {
+          const u = L.units[o.unit];
+          if (heldIds.includes(o.id) || (o.biz && !me.business) || !u || !(u.cash || me.programs)) return false;
+          return me.score == null || !o.min || (VAULT_SCORE[me.score] || 0) >= (VAULT_SCORE[o.min] || 0);
+        })
+      : [],
+    mine = held.map(o => vaultEarn(o, K, vaultCreditsUsed(cred, o))),
+    lib = open.map(o => vaultEarn(o, K, vaultCreditsUsed(cred, o))),
+    top = (list, cat) => list.reduce((b, e) => (!b || (e.by[cat] || 0) > (b.by[cat] || 0) ? e : b), null),
+    rows = K.rows
+      .filter(r => r.v > 0)
+      .map(r => {
+        const a = top(mine, r.k),
+          b = top(lib, r.k);
+        return {
+          k: r.k,
+          label: r.label,
+          month: r.v,
+          mine: a ? { o: a.o, year: a.by[r.k] || 0 } : null,
+          lib: b ? { o: b.o, year: b.by[r.k] || 0 } : null,
+        };
+      }),
+    gross = rows.reduce((t, r) => t + (r.mine ? r.mine.year : 0), 0),
+    fees = mine.reduce((t, e) => t + e.fee, 0),
+    single = lib.reduce((b, e) => (!b || e.net > b.net ? e : b), null);
+  return {
+    K,
+    rows,
+    held,
+    gross,
+    fees,
+    yours: held.length ? gross - fees : null,
+    single,
+    suggest,
+    st: kitState(K.rows.concat([vaultSpend(c)])),
+  };
+}
+/* The block on the vault: the tile, one row for each category, the meter, and the questions when open. */
+function vaultBestHtml(c) {
+  const B = vaultBest(c),
+    K = B.K,
+    o = W.o || {},
+    g = B.st === "Guess" ? "guess" : "",
+    name = x => esc(x.bank + " " + x.n);
+  let h = `<div class="row between small" style="margin-top:4px"><b>Best card for each spending line</b><span class="row" style="gap:6px">${kitPill(B.st)}${kitInfo("vt_best")}</span></div>`;
+  h += `<div class="tile stack vaultbest" style="gap:4px"><div class="small">${
+    B.yours == null
+      ? "Add the cards you have, and this shows what they earn on your spending."
+      : `Your cards earn about <b class="${g}">${money(B.yours)}</b> a year on this spending${B.fees > 0 ? ", after " + money(B.fees) + " of yearly fees" : ""}.`
+  }</div>${
+    !B.suggest
+      ? `<div class="small muted">New cards wait while you have high-interest debt, so no other card is named here.</div>`
+      : B.single
+        ? `<div class="small">The best single card you do not hold, ${name(B.single.o)}, would earn about <b class="${g}">${money(B.single.net)}</b> a year${B.single.fee > 0 ? ", after its " + money(B.single.fee) + " yearly fee" : ""}.</div><button class="ghost slim" data-a="vaultcard" data-v="${esc(B.single.o.id)}">See the whole card ›</button>`
+        : ""
+  }</div>`;
+  h += `<div class="stack vaultlines" style="gap:6px">${B.rows
+    .map(
+      r =>
+        `<div class="small"><div class="row between" style="gap:8px"><b>${esc(r.label)}</b><span class="muted" style="white-space:nowrap">${money(r.month)} a month</span></div><div class="tiny muted">${r.mine ? "Yours: " + name(r.mine.o) + ", " + money(r.mine.year) + " a year" : "Yours: no card yet"}${r.lib ? " · In the library: " + name(r.lib.o) + ", " + money(r.lib.year) + " a year" : ""}</div></div>`
+    )
+    .join("")}</div>`;
+  h += `<div class="tile stack" style="gap:4px"><div class="row between small" style="gap:8px"><span>Your categories add up to <b>${money(K.sum)}</b> a month. Your card spending is ${money(K.budget)}.</span>${kitInfo("vt_cats")}</div>${bar(K.budget > 0 ? Math.min(100, (K.sum / K.budget) * 100) : 0)}<div class="tiny muted">${
+    Math.abs(K.diff) < 1
+      ? "They match."
+      : K.diff > 0
+        ? money(K.diff) + " more than your card spending."
+        : money(-K.diff) + " of your card spending is in no category yet."
+  }</div></div>`;
+  h += o.cats
+    ? `<div class="stack vaultcats" style="gap:8px">${K.rows
+        .map(r =>
+          kitAsk(
+            c,
+            "vault",
+            "cat_" + r.k,
+            r.label + " each month",
+            VAULT_CAT_CHIPS.map(v => [v, money(v)]),
+            r.start,
+            {
+              term: "vt_cats",
+              typed: true,
+              help: r.given ? "" : "The game starts at " + money(r.start) + ", a guess from your budget.",
+            }
+          )
+        )
+        .join("")}<button class="ghost wide slim" data-a="vaultcats" data-v="0">Hide the categories</button></div>`
+    : `<button class="ghost wide" data-a="vaultcats" data-v="1">Set my spending by category</button>`;
+  return h;
+}
 /* ---------- the sheet of one card ---------- */
+/* A rate in plain words: "6% on the first $6,000 each year, then 1%". */
+function vaultRateWords(o, r) {
+  const sym = vaultPct(o) ? "%" : "x",
+    base = o.earn && o.earn.base != null ? o.earn.base : 1;
+  return (
+    r.x +
+    sym +
+    (r.cap
+      ? " on the first " +
+        money(r.cap) +
+        " each " +
+        (r.per || "year") +
+        ", then " +
+        (r.then != null ? r.then : base) +
+        sym
+      : "")
+  );
+}
+/* A pick in plain words: "5% on the 2 categories you pick from: ...". Categories that share one limit:
+   "3x on Groceries, Gas and Dining together, on the first $6,000 each year, then 2x". */
+function vaultPickWords(o, q) {
+  const list = q.from.map(vaultCatName).join(", "),
+    sym = vaultPct(o) ? "%" : "x",
+    lim = q.cap
+      ? "on the first " + money(q.cap) + " each " + (q.per || "year") + ", then " + (q.then != null ? q.then : 1) + sym
+      : "";
+  if (q.count >= q.from.length) return q.x + sym + " on " + list + " together" + (lim ? ", " + lim : "");
+  return (
+    q.x +
+    sym +
+    " on the " +
+    q.count +
+    (q.count === 1 ? " category" : " categories") +
+    " you pick from: " +
+    list +
+    (lim ? " (" + lim + ")" : "")
+  );
+}
+
 function vaultCatName(k) {
   const r = CARD_TEMPLATE.cats.find(x => x[0] === k);
   return r ? r[1] : k;
@@ -594,6 +864,8 @@ function vaultCardParts(o) {
   return {
     toggles: tg,
     rates: (e.rates || []).slice().sort((a, b) => b.x - a.x),
+    picks: e.picks || [],
+    sym: vaultPct(o) ? "%" : "x",
     base: e.base == null ? 1 : e.base,
     earnWords: e.words || "",
     credits: o.credits || [],
@@ -646,19 +918,27 @@ function vaultCardSheet() {
   h +=
     igRows(
       P.rates
-        .map(r => [esc(vaultCatName(r.cat)), r.x + "x"])
-        .concat([[P.rates.length ? "Everything else" : "Each purchase", P.base + "x"]])
-    ) + (P.earnWords ? `<div class="tiny muted">${esc(P.earnWords)}</div>` : "");
+        .map(r => [esc(vaultCatName(r.cat)), esc(vaultRateWords(o, r))])
+        .concat([[P.rates.length || P.picks.length ? "Everything else" : "Each purchase", P.base + P.sym]])
+    ) +
+    P.picks.map(q => `<div class="small vaultpickrow">${esc(vaultPickWords(o, q))}</div>`).join("") +
+    (P.earnWords ? `<div class="tiny muted">${esc(P.earnWords)}</div>` : "");
   h += sec("Yearly credits", "vt_credit");
+  const mine = vaultCred(c)[o.id] || {},
+    used = vaultCreditsUsed(vaultCred(c), o);
   h += P.credits.length
-    ? `<div class="stack" style="gap:4px">${P.credits
+    ? `<div class="stack vaultcreds" style="gap:8px">${P.credits
         .map(
-          k =>
-            `<div class="small"><div class="row between" style="gap:8px"><span style="min-width:0">${esc(k.name)}</span><span class="muted" style="white-space:nowrap">${k.value > 0 ? money(k.value) : "no dollar value"}</span></div>${k.words ? `<div class="tiny muted">${esc(k.words)}</div>` : ""}</div>`
+          (k, i) =>
+            `<div class="small"><div class="row between" style="gap:8px"><span style="min-width:0">${esc(k.name)}</span><span class="muted" style="white-space:nowrap">${k.value > 0 ? money(k.value) : "no dollar value"}</span></div>${k.words ? `<div class="tiny muted">${esc(k.words)}</div>` : ""}${
+              k.value > 0
+                ? `<div class="row between" style="gap:8px;margin-top:2px"><span class="tiny muted">Would you use this?</span><div class="seg" role="group" aria-label="Would you use this credit"><button class="${mine[i] ? "on" : ""}" data-a="vaultcred" data-v="${esc(o.id)}" data-k="${i}" data-t="1">Yes</button><button class="${mine[i] ? "" : "on"}" data-a="vaultcred" data-v="${esc(o.id)}" data-k="${i}" data-t="0">No</button></div></div>`
+                : ""
+            }</div>`
         )
         .join(
           ""
-        )}</div><div class="small">Credits worth <b>${money(P.creditSum)}</b> a year, when you use each one.${o.fee ? " The yearly fee is " + money(o.fee) + "." : ""}</div>`
+        )}</div><div class="small">You count <b>${money(used)}</b> of ${money(P.creditSum)} a year.${o.fee ? " The yearly fee is " + money(o.fee) + "." : ""}</div><div class="row" style="gap:8px"><button class="ghost slim" style="flex:1" data-a="vaultcredall" data-v="${esc(o.id)}" data-k="1">Count all</button><button class="ghost slim" style="flex:1" data-a="vaultcredall" data-v="${esc(o.id)}" data-k="0">Count none</button></div>`
     : `<div class="tile small muted">No yearly credits in the library for this card.</div>`;
   if (P.unique.length) {
     h += sec("What is unique", "vt_unique");
@@ -724,6 +1004,14 @@ kitTerms({
     "Yearly credits",
     "Money a card gives back each year for one named thing, for example a hotel site or a membership. A credit is worth its dollars only when you would buy that thing anyway.",
   ],
+  vt_best: [
+    "Best card for each line",
+    "For each kind of spending, the card that gives most back in a year: among your cards, and among all cards of the library. It counts rates, limits and yearly fees. It does not count a welcome offer.",
+  ],
+  vt_cats: [
+    "Card categories",
+    "Banks pay different rates for different kinds of purchase: dining, groceries, gas and more. Your amounts here start as a guess from your budget. Tap a number to make it yours.",
+  ],
   vt_fee: [
     "Yearly fee",
     "What the bank charges each year to keep the card open. It posts in the month you opened the card.",
@@ -771,6 +1059,33 @@ Object.assign(ACT, {
   vaultcard: t => {
     W = { kind: "vaultcard", id: t.dataset.v, o: {} };
     sheet(vaultCardSheet);
+  },
+  /* One yearly credit of one card: would the player use it? */
+  vaultcred: t => {
+    const m = vaultCred(C()),
+      id = t.dataset.v;
+    m[id] = m[id] || {};
+    if (t.dataset.t === "1") m[id][t.dataset.k] = true;
+    else delete m[id][t.dataset.k];
+    kitRedraw();
+  },
+  /* Count all the credits of one card, or none. */
+  vaultcredall: t => {
+    const m = vaultCred(C()),
+      o = vaultOffer(t.dataset.v);
+    if (!o) return;
+    m[o.id] = {};
+    if (t.dataset.k === "1")
+      (o.credits || []).forEach((k, i) => {
+        if (k.value > 0) m[o.id][i] = true;
+      });
+    kitRedraw();
+  },
+  /* Show or hide the questions of the categories. */
+  vaultcats: t => {
+    if (!W || W.kind !== "vault") return;
+    W.o.cats = t.dataset.v === "1";
+    drawSheet();
   },
   /* "I have this card": the vault opens at the step that asks the year. */
   vaulthave: t => {
