@@ -457,7 +457,7 @@
       ov().includes("4x") &&
       ov().includes("Everything else") &&
       ov().includes("Streaming credit") &&
-      ov().includes("Credits worth <b>$60</b> a year") &&
+      ov().includes("You count <b>$0</b> of $60 a year") &&
       ov().includes("Free museum day") &&
       ov().includes("The page of the bank (a test record)") &&
       ov().includes("2026-11-23") &&
@@ -494,7 +494,7 @@
     ov().includes("Rental car cover") &&
       ov().includes("Primary rental car coverage") &&
       ov().includes("Dining and takeout") &&
-      ov().includes("Credits worth <b>$130</b> a year") &&
+      ov().includes("You count <b>$0</b> of $130 a year") &&
       ov().includes("What is unique") &&
       ov().includes("2026-11-06") &&
       ov().includes('data-a="vaulthave"') &&
@@ -554,23 +554,46 @@
     "with no extra cards the library is the file again",
     vaultLib().offers.length === 93 && vaultOffer("chase-sapphire-preferred").fee === 95
   );
-  /* the yearly credits: not counted until the player says so */
+  /* the yearly credits: one choice for each credit of each card, default No */
   vaultStore(c).cards.length = 0;
-  const m0 = vaultMoves(c, T).find(m => m.o.id === "chase-sapphire-preferred");
+  const near = (a, b) => Math.abs(a - b) < 0.005,
+    m0 = vaultMoves(c, T).find(m => m.o.id === "chase-sapphire-preferred");
   chk(
     "credits are not counted by default",
-    m0 && m0.net === 750 - 95 && vaultFee1(sp, false) === 95 && vaultFee1(sp, true) === 0
+    m0 &&
+      m0.net === 750 - 95 &&
+      vaultFee1(sp, 0) === 95 &&
+      vaultFee1(sp, true) === 0 &&
+      vaultCreditsUsed(vaultCred(c), sp) === 0
   );
-  X("vault");
+  X("vaultcard", "chase-sapphire-preferred");
   chk(
-    "the offer row shows the credits as not counted, and the chip asks",
-    ov().includes("Count the yearly credits of a card?") && ov().includes('data-k="vault|credits"')
+    "the sheet of the card asks Would you use this? for each credit with a dollar value, and has Count all and Count none",
+    (ov().match(/Would you use this\?/g) || []).length === 2 &&
+      (ov().match(/data-a="vaultcred"/g) || []).length === 4 &&
+      ov().includes('data-a="vaultcredall" data-v="chase-sapphire-preferred" data-k="1"') &&
+      ov().includes('data-k="0">Count none')
   );
-  X("kitset", "yes", "vault|credits", { t: "s" });
-  const m1 = vaultMoves(c, T).find(m => m.o.id === "chase-sapphire-preferred");
+  X("vaultcred", "chase-sapphire-preferred", "1", { t: "1" });
   chk(
-    "with the chip on, the credits come off the fee, and the fee does not go under 0",
-    m1.net === 750 && vaultNet(sp, true) === 750
+    "Yes on the $30 credit: stored in c.x.vault.cred, and only that credit comes off the fee",
+    c.x.vault.cred["chase-sapphire-preferred"][1] === true &&
+      vaultCreditsUsed(vaultCred(c), sp) === 30 &&
+      vaultMoves(c, T).find(m => m.o.id === "chase-sapphire-preferred").net === 750 - 65 &&
+      ov().includes("You count <b>$30</b> of $130 a year") &&
+      clean(ov()),
+    junk(ov())
+  );
+  X("vaultcredall", "chase-sapphire-preferred", "1");
+  chk(
+    "Count all: $130 counted, and the fee does not go under 0",
+    vaultCreditsUsed(vaultCred(c), sp) === 130 &&
+      vaultMoves(c, T).find(m => m.o.id === "chase-sapphire-preferred").net === 750 &&
+      !c.x.vault.cred["chase-sapphire-preferred"][2]
+  );
+  chk(
+    "the choice is for that card only",
+    vaultMoves(c, T).every(m => m.o.id === "chase-sapphire-preferred" || m.net === vaultNet(m.o, 0))
   );
   const B = vaultBook(c),
     val = id => (B.rows.find(r => r.id === id) || {}).v;
@@ -579,7 +602,320 @@
     val("vt_net") === val("vt_value") - Math.max(0, val("vt_fee1") - val("vt_credit")),
     JSON.stringify(B.rows.map(r => [r.id, r.v]))
   );
-  delete kitStore(c, "vault").credits;
+  X("vaultcred", "chase-sapphire-preferred", "1", { t: "0" });
+  chk("No takes one credit out", vaultCreditsUsed(vaultCred(c), sp) === 100);
+  X("vaultcredall", "chase-sapphire-preferred", "0");
+  chk(
+    "Count none: back to the fee in full",
+    vaultCreditsUsed(vaultCred(c), sp) === 0 && vaultNet(sp, vaultCreditsUsed(vaultCred(c), sp)) === 655
+  );
+  X("close");
+  /* limits and picks as numbers */
+  const withLimit = L0.offers.filter(o => o.earn.rates.some(r => r.cap > 0)),
+    withPick = L0.offers.filter(o => (o.earn.picks || []).length);
+  chk(
+    "limits and picks are numbers: 11 cards or more with a limit, 7 or more with a pick, each with its period",
+    withLimit.length >= 11 &&
+      withPick.length >= 7 &&
+      L0.offers.every(o =>
+        o.earn.rates
+          .concat(o.earn.picks || [])
+          .every(r => !r.cap || (r.cap > 0 && CARD_TEMPLATE.pers.some(q => q[0] === r.per)))
+      ) &&
+      L0.offers.every(o => (o.earn.picks || []).every(q => q.x > 0 && q.count >= 1 && q.from.length >= q.count)),
+    withLimit.length + " " + withPick.length
+  );
+  const bcp = vaultOffer("amex-blue-cash-preferred"),
+    cash = vaultOffer("usb-cash-plus"),
+    marr = vaultOffer("chase-marriott-boundless"),
+    cc = vaultOffer("citi-custom-cash"),
+    go4 = vaultOffer("usb-altitude-go");
+  chk(
+    "the numbers of the limits by hand",
+    bcp.earn.rates.find(r => r.cat === "groceries").cap === 6000 &&
+      bcp.earn.rates.find(r => r.cat === "groceries").per === "year" &&
+      cash.earn.picks[0].count === 2 &&
+      cash.earn.picks[0].cap === 2000 &&
+      cash.earn.picks[0].per === "quarter" &&
+      cash.earn.picks[1].x === 2 &&
+      cc.earn.picks[0].cap === 500 &&
+      cc.earn.picks[0].per === "month" &&
+      go4.earn.rates.find(r => r.cat === "dining").cap === 2000 &&
+      go4.earn.rates.find(r => r.cat === "dining").per === "quarter" &&
+      marr.earn.picks[0].count === 3 &&
+      marr.earn.picks[0].then === 2
+  );
+  chk(
+    "a limit in plain words",
+    vaultRateWords(
+      bcp,
+      bcp.earn.rates.find(r => r.cat === "groceries")
+    ) === "6% on the first $6,000 each year, then 1%" &&
+      vaultRateWords(
+        sp,
+        sp.earn.rates.find(r => r.cat === "dining")
+      ) === "3x",
+    vaultRateWords(bcp, bcp.earn.rates[0])
+  );
+  chk(
+    "a pick in plain words, and categories with one limit together",
+    vaultPickWords(cash, cash.earn.picks[0]).startsWith(
+      "5% on the 2 categories you pick from: Phone plan, Streaming"
+    ) &&
+      vaultPickWords(cash, cash.earn.picks[0]).endsWith("(on the first $2,000 each quarter, then 1%)") &&
+      vaultPickWords(cc, cc.earn.picks[0]).startsWith("5% on the 1 category you pick from: ") &&
+      vaultPickWords(marr, marr.earn.picks[0]) ===
+        "3x on Groceries, Gas and EV charging, Dining and takeout together, on the first $6,000 each year, then 2x",
+    vaultPickWords(cash, cash.earn.picks[0]) + " | " + vaultPickWords(marr, marr.earn.picks[0])
+  );
+  X("vaultcard", "amex-blue-cash-preferred");
+  chk(
+    "the sheet of a card shows the limit",
+    ov().includes("6% on the first $6,000 each year, then 1%") && clean(ov()),
+    junk(ov())
+  );
+  X("vaultcard", "usb-cash-plus");
+  chk(
+    "the sheet of a card shows the pick",
+    ov().includes("5% on the 2 categories you pick from:") && ov().includes("vaultpickrow") && clean(ov()),
+    junk(ov())
+  );
+  X("close");
+  /* the best card for each spending line. The budget: Food 1,500 and Fun 1,500, so 3,000 a month on a card. */
+  const st0 = vaultCatStart(c);
+  chk(
+    "the categories start from the lines of the budget: Food 60 / 40, Fun 25 / 15 / 5, and the rest",
+    st0.groceries === 900 &&
+      st0.dining === 600 &&
+      st0.online === 380 &&
+      st0.travel === 230 &&
+      st0.drugstore === 80 &&
+      st0.gas === 0 &&
+      st0.phone === 0 &&
+      st0.other === 810,
+    JSON.stringify(st0)
+  );
+  const K0 = vaultCats(c);
+  chk(
+    "the start adds up to the card spending, and it is a Guess",
+    K0.sum === 3000 &&
+      K0.budget === 3000 &&
+      K0.diff === 0 &&
+      K0.st === "Guess" &&
+      K0.other === 810 &&
+      K0.spend.groceries === 900 &&
+      !("gas" in K0.spend)
+  );
+  /* by hand: groceries 10,800 a year: 6,000 at 6% and 4,800 at 1% = 408. All other lines 25,200 at 1% = 252. */
+  const eB = vaultEarn(bcp, K0, 0);
+  chk(
+    "one cash card by hand, with its limit: $660 a year, $565 after the $95 fee",
+    near(eB.dollars, 660) && near(eB.by.groceries, 408) && near(eB.by.dining, 72) && eB.fee === 95 && near(eB.net, 565),
+    JSON.stringify(eB.by)
+  );
+  /* by hand: dining 7,200 at 3x = 21,600 points, travel 2,760 at 2x = 5,520, the rest 26,040 at 1x. 53,160 points at 1 cent. */
+  const eS = vaultEarn(sp, K0, 0);
+  chk(
+    "one points card by hand: 53,160 points at the floor of 1 cent",
+    near(eS.dollars, 531.6) &&
+      near(eS.by.dining, 216) &&
+      near(eS.by.travel, 55.2) &&
+      near(eS.by.groceries, 108) &&
+      near(eS.net, 436.6),
+    JSON.stringify(eS.by)
+  );
+  chk(
+    "a credit that the player counts comes off the yearly fee of the card",
+    near(vaultEarn(sp, K0, 30).net, 531.6 - 65) && near(vaultEarn(sp, K0, 130).net, 531.6)
+  );
+  const qCard = {
+    id: "q",
+    bank: "Q",
+    n: "Quarter",
+    unit: "cash",
+    fee: 0,
+    earn: { base: 1, rates: [{ cat: "dining", x: 4, cap: 2000, per: "quarter", then: 1 }], picks: [] },
+  };
+  chk(
+    "a limit for each quarter by hand: 7,200 of dining is under 8,000, so 4% on all of it",
+    near(vaultEarn(qCard, K0, 0).by.dining, 288)
+  );
+  chk(
+    "over the limit: 12,000 of dining is 8,000 at 4% and 4,000 at 1%",
+    near(vaultEarn(qCard, { spend: { dining: 1000 }, other: 0 }, 0).dollars, 360)
+  );
+  const pCard = {
+    id: "p",
+    bank: "P",
+    n: "Pick",
+    unit: "cash",
+    fee: 0,
+    earn: {
+      base: 1,
+      rates: [],
+      picks: [{ x: 5, count: 1, from: ["dining", "groceries"], cap: 500, per: "month", then: 1 }],
+    },
+  };
+  chk(
+    "a pick by hand: it goes to groceries, the bigger line: 6,000 at 5% and 4,800 at 1%",
+    near(vaultEarn(pCard, K0, 0).by.groceries, 348) && near(vaultEarn(pCard, K0, 0).by.dining, 72)
+  );
+  const B0 = vaultBest(c, T);
+  chk(
+    "with no card in the vault: no number for your cards, and a best single card from the library",
+    B0.yours === null &&
+      B0.held.length === 0 &&
+      B0.suggest &&
+      B0.single &&
+      B0.rows.every(r => r.mine === null && r.lib && r.lib.year > 0) &&
+      B0.st === "Guess"
+  );
+  chk(
+    "the best single card is the one with the most a year after its fee",
+    L0.offers.every(
+      o => o.biz || !L0.units[o.unit].cash || VAULT_SCORE[o.min] > 3 || vaultEarn(o, K0, 0).net <= B0.single.net + 1e-9
+    ),
+    B0.single.o.id
+  );
+  vaultStore(c).cards.push({
+    id: "chase-sapphire-preferred",
+    n: "Sapphire Preferred",
+    bank: "Chase",
+    ym: "2026-01",
+    fee: 95,
+    months: 3,
+  });
+  const B1 = vaultBest(c, T);
+  chk(
+    "one card held: your cards earn 531.60 less the 95 fee",
+    near(B1.gross, 531.6) && B1.fees === 95 && near(B1.yours, 436.6) && B1.single.o.id !== "chase-sapphire-preferred"
+  );
+  vaultStore(c).cards.push({
+    id: "amex-blue-cash-preferred",
+    n: "Blue Cash Preferred",
+    bank: "American Express",
+    ym: "2026-02",
+    fee: 95,
+    months: 6,
+  });
+  const B2 = vaultBest(c, T),
+    rowOf = k => B2.rows.find(r => r.k === k);
+  /* dining 216 (Sapphire), groceries 408 (Blue Cash), online 45.60, travel 55.20 (Sapphire), drugstore 9.60, other 97.20 */
+  chk(
+    "two cards held: each line goes on the card that earns most there",
+    rowOf("dining").mine.o.id === "chase-sapphire-preferred" &&
+      near(rowOf("dining").mine.year, 216) &&
+      rowOf("groceries").mine.o.id === "amex-blue-cash-preferred" &&
+      near(rowOf("groceries").mine.year, 408) &&
+      rowOf("travel").mine.o.id === "chase-sapphire-preferred" &&
+      near(B2.gross, 831.6) &&
+      B2.fees === 190 &&
+      near(B2.yours, 641.6),
+    B2.gross + " " + B2.fees
+  );
+  chk(
+    "a held card is not the card of the library for a line",
+    B2.rows.every(r => !r.lib || !["chase-sapphire-preferred", "amex-blue-cash-preferred"].includes(r.lib.o.id))
+  );
+  X("vault");
+  chk(
+    "the vault shows the block: the tile, a row for each line, the meter",
+    ov().includes("Best card for each spending line") &&
+      ov().includes("Your cards earn about") &&
+      ov().includes("$642") &&
+      ov().includes("after $190 of yearly fees") &&
+      ov().includes("The best single card you do not hold") &&
+      ov().includes("Yours: Chase Sapphire Preferred, $216 a year") &&
+      ov().includes("Yours: American Express Blue Cash Preferred, $408 a year") &&
+      ov().includes("Your categories add up to <b>$3,000</b> a month") &&
+      ov().includes("They match.") &&
+      ov().includes("term:vt_best") &&
+      ov().includes("term:vt_cats") &&
+      clean(ov()),
+    junk(ov())
+  );
+  chk(
+    "the questions of the categories are closed at first",
+    !ov().includes('data-k="vault|cat_dining"') && ov().includes('data-a="vaultcats" data-v="1"')
+  );
+  X("vaultcats", "1");
+  chk(
+    "open: one row of chips for each of the 10 categories, with Guess / Close / Exact and the typed option",
+    VAULT_CATS.length === 10 &&
+      VAULT_CATS.every(
+        k =>
+          ov().includes('data-a="kitset" data-k="vault|cat_' + k + '"') &&
+          ov().includes('data-a="kitpad" data-k="vault|cat_' + k + '"')
+      ) &&
+      ov().includes("kitsure") &&
+      !ov().includes("<input") &&
+      clean(ov()),
+    junk(ov())
+  );
+  X("kitset", "300", "vault|cat_dining", { t: "n" });
+  const K1 = vaultCats(c);
+  chk(
+    "a tap on a chip is the answer of the player, stored as { v, cf }",
+    c.x.vault.cat_dining.v === 300 &&
+      c.x.vault.cat_dining.cf === 2 &&
+      K1.rows[0].given &&
+      K1.sum === 2700 &&
+      K1.diff === -300
+  );
+  chk(
+    "the meter says what is in no category, with no verdict",
+    ov().includes("$300 of your card spending is in no category yet.") &&
+      !/\b(bad|wrong|too (much|little)|overspen)/i.test(ov())
+  );
+  chk(
+    "the row of dining follows: 3,600 a year at 3x",
+    near(vaultBest(c, T).rows.find(r => r.k === "dining").mine.year, 108)
+  );
+  X("kitset", "1200", "vault|cat_dining", { t: "n" });
+  chk(
+    "more than the budget shows as more, also with no verdict",
+    vaultCats(c).diff === 600 && ov().includes("$600 more than your card spending.")
+  );
+  VAULT_CATS.forEach(k => {
+    kitStore(c, "vault")["cat_" + k] = { v: vaultCats(c).rows.find(r => r.k === k).v, cf: 3 };
+  });
+  kitStore(c, "vault").spend = { v: 3000, cf: 3 };
+  chk("Guess, Close, Exact follow the inputs", vaultBest(c, T).st === "Exact");
+  VAULT_CATS.forEach(k => delete kitStore(c, "vault")["cat_" + k]);
+  delete kitStore(c, "vault").spend;
+  const B3 = vaultBook(c),
+    v3 = id => (B3.rows.find(r => r.id === id) || {}).v;
+  chk(
+    "the spreadsheet rows: the 10 categories, their sum, your cards after fees, the best single card",
+    VAULT_CATS.every(k => v3("vt_c_" + k) === vaultCats(c).rows.find(r => r.k === k).v) &&
+      v3("vt_csum") === 3000 &&
+      v3("vt_gross") === 831.6 &&
+      v3("vt_heldfees") === 190 &&
+      near(v3("vt_yours"), 641.6) &&
+      v3("vt_single") === Math.round(B2.single.net * 100) / 100,
+    JSON.stringify(B3.rows.slice(-6).map(r => [r.id, r.v]))
+  );
+  /* high-interest debt: your cards still show, and no card of the library is named */
+  c.debts.push(R0({ k: "Credit card balance", amt: 4000, high: true, apr: "15% to 25%", rate: 22, pay: 120 }));
+  syncAll(c);
+  const B4 = vaultBest(c, T);
+  X("vault");
+  chk(
+    "with high-interest debt: no new card is named in the block",
+    c.high === "yes" &&
+      !B4.suggest &&
+      B4.single === null &&
+      B4.rows.every(r => r.lib === null && r.mine) &&
+      near(B4.yours, 641.6) &&
+      ov().includes("New cards wait while you have high-interest debt") &&
+      !ov().includes("The best single card you do not hold") &&
+      !ov().includes("In the library:") &&
+      clean(ov()),
+    junk(ov())
+  );
+  c.debts.length = 0;
+  syncAll(c);
+  vaultStore(c).cards.length = 0;
   X("close");
   const src =
     require("fs").readFileSync(GAME_DIR + "features/vault.js", "utf8") +
