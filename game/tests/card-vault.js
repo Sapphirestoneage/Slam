@@ -271,3 +271,20 @@
   G.active = 0;
   save();
 }
+{
+  /* A car loan payment is not card spending. The rest of "Getting around" stays in. */
+  const R0 = r => Object.assign({ s: true }, r),
+    a = Object.assign(newChar(), {
+      name: "Car",
+      led: true,
+      placed: true,
+      take: 5000,
+      spend: 3600,
+      spends: [R0({ k: "Home", amt: 1500 }), R0({ k: "Getting around", amt: 900 }), R0({ k: "Food", amt: 1200 })],
+      debts: [R0({ k: "Car loan", amt: 12000, pay: 400 }), R0({ k: "Credit card balance", amt: 500, pay: 50 })],
+    });
+  chk("the car loan payment of a month", vaultCarPay(a) === 400);
+  chk("card spending leaves out the home line and the car loan payment", vaultSpend(a).budget === 900 + 1200 - 400);
+  a.debts[0].amt = 0;
+  chk("a car loan that is paid off takes nothing away", vaultSpend(a).budget === 2100);
+}

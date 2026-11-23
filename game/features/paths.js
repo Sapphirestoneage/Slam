@@ -45,7 +45,7 @@ function pathsBase(c, A) {
   const d = derive(c),
     N = knNet(c),
     grossM = N.gross,
-    two = c.rel === "Married",
+    two = retireFiling(c) === "married_filing_jointly" /* one test of "married" for the HSA and the IRAs */,
     matchGot = typeof knGot === "function" ? knGot(c, "matchAmt") : null,
     preGot = typeof knGot === "function" ? knGot(c, "pre") : null,
     es = c.x && c.x.es && c.x.es.a,

@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-23. Files: 105. Lines: 61,464. Top-level functions: 1432. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-23. Files: 105. Lines: 61,473. Top-level functions: 1433. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -112,7 +112,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 98 | `features/nextacct.js` | 280 | 4 | 1 | 0 | Which account next, up to each limit |
 | 99 | `features/ledger.js` | 377 | 8 | 1 | 0 | The giant ledger and the three statements |
 | 100 | `data/cards2026.js` | 1,180 | 0 | 0 | 0 | Data only. The card library of the card vault (features/vault.js): the welcome offers of 93 cards at 12 US banks (the yearly fee, the offer, the spend... |
-| 101 | `features/vault.js` | 555 | 19 | 2 | 0 | The card vault ("Is this card right for me?" of the Slam web app, in the game) |
+| 101 | `features/vault.js` | 564 | 20 | 2 | 0 | The card vault ("Is this card right for me?" of the Slam web app, in the game) |
 | 102 | `features/stars.js` | 755 | 35 | 3 | 0 | The Galaxy. A second view of the 25 skill tracks: 25 spiral arms (constellations) from "You" in the middle out to the FI ring, 625 stars, one star for... |
 | 103 | `features/book.js` | 213 | 7 | 2 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 104 | `features/questlog.js` | 426 | 23 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |

@@ -8,7 +8,7 @@
    INPUT       data/cards2026.js (window.CARDS2026: the offers, the point values, the 5/24 rule). The
                profile: c.spends, c.spend, c.high, c.caught.score, c.incs, c.work, c.x.vault (the cards
                and the answers). The open sheet (W.kind): vault.
-   OUTPUT      Functions: vaultStore, vaultOffer, vaultYm, vaultMonthWords, vaultSlots, vaultSpend,
+   OUTPUT      Functions: vaultStore, vaultOffer, vaultYm, vaultMonthWords, vaultSlots, vaultCarPay, vaultSpend,
                vaultScore, vaultMe, vaultValue, vaultNet, vaultMonths, vaultFit, vaultMoves, vaultDates,
                vaultCalc, vaultBook, vaultAddHtml, vaultSheet. Actions (ACT): vault, vaultadd,
                vaultpick, vaultdel, vaultundo, vaultmore. Menu: "Card vault".
@@ -80,13 +80,22 @@ function vaultSlots(cards, today, rule) {
 }
 /* The spending of one month that can go on a card: each line of the budget but the home (rent or a
    mortgage is seldom paid by card). Before the player has lines, the usual share of the total. */
+/* The car loan payments of a month. A card cannot pay a loan, so they are not card spending. The rest of
+   "Getting around" (gas, insurance, transit, rides) stays in. */
+function vaultCarPay(c) {
+  return (c.debts || [])
+    .filter(d => d.amt > 0 && /\b(car|auto|truck|vehicle)\b/i.test(d.k || ""))
+    .reduce((t, d) => t + (+d.pay || 0), 0);
+}
 function vaultSpend(c) {
   const rows = c.led && (c.spends || []).length ? c.spends : null,
-    budget = rows
+    all = rows
       ? rsum(rows.filter(r => !/^home$|rent|mortgage/i.test(r.k || "")))
       : Math.round((c.spend || 0) * (1 - SPLIT[0])),
+    car = vaultCarPay(c),
+    budget = Math.max(0, all - car),
     a = kitValue(c, "vault", "spend", budget);
-  return { v: a.v, cf: a.given ? a.cf : rows && isSharp(c, "spend") ? 2 : 1, budget, given: a.given };
+  return { v: a.v, cf: a.given ? a.cf : rows && isSharp(c, "spend") ? 2 : 1, budget, car, given: a.given };
 }
 /* The credit band: the answer the game has (c.caught.score), or the answer on this screen. Null: not known. */
 function vaultScore(c) {
@@ -259,7 +268,7 @@ function vaultBook(c) {
         id: "vt_spend",
         label: "Spending a month that can go on a card",
         v: V.spend.v,
-        note: "Your budget without the home line, or your answer",
+        note: "Your budget without the home line and car loan payments, or your answer",
       },
       {
         id: "vt_used",
@@ -352,7 +361,7 @@ function vaultSheet() {
       big: money(V.spend.v) + " a month",
       guess: V.spend.cf <= 1,
       rows: [["From your budget " + kitInfo("vt_spend"), money(V.spend.budget)]],
-      foot: "Your budget without the home line.",
+      foot: "Your budget without the home line and car loan payments. Gas, insurance and rides stay in.",
     },
   ]);
   /* the cards in hand */

@@ -75,7 +75,7 @@ function windCalc(c, over) {
     cash = B.d.cash,
     left12 = windMonthsLeft(over.today),
     rate = windRate(c),
-    two = c.rel === "Married",
+    two = retireFiling(c) === "married_filing_jointly" /* one test of "married" for the HSA and the IRAs */,
     oxy = windOxygen(B),
     funAsk = over.fun != null ? over.fun : I.fun.v,
     funShare = oxy ? funAsk / 100 : 0,
