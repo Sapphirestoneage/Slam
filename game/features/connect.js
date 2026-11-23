@@ -83,7 +83,12 @@ const CX_ROUTES = [
   [/offer is worth|job offer/i, "offers", "", "Put two offers side by side", 1],
   [/which account gets money first/i, "nxa", "", "See which account is next", 1],
   [/before you quit|cash cushion before you retire|time your biggest purchases/i, "cdn", "", "Start a countdown"],
-  [/usual order for spending|sell by a rule|first year of withdrawals/i, "takeout", "order", "See which account to spend first"],
+  [
+    /usual order for spending|sell by a rule|first year of withdrawals/i,
+    "takeout",
+    "order",
+    "See which account to spend first",
+  ],
   [/flexible spending rules|spend a bit less after bad/i, "takeout", "guard", "See your guardrails"],
   [/conversion ladder/i, "takeout", "bridge", "Run your Roth ladder"],
   [/health insurance until 65|between quitting and 65/i, "takeout", "aca", "Price health cover until 65"],

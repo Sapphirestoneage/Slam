@@ -106,8 +106,11 @@
   syncAll(c);
   const C0 = nxaCalc(c);
   chk(
-    "with no cash the next dollar goes to the small cushion",
-    C0.next.k === "cushion1" && by(C0, "cushion1").put === 1000 && by(C0, "match").put === 0
+    "with no cash this month's money goes to the small cushion first, and the dollar after it to the match",
+    by(C0, "cushion1").put === 1000 &&
+      by(C0, "match").put === 0 &&
+      C0.next.k === "match" &&
+      nxaCalc(c, { extra: -500 }).next.k === "cushion1"
   );
   c.cashes[0].amt = 30000;
   c.match = "yes";
