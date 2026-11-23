@@ -8,7 +8,7 @@
                debtplan, dbone, dbset, dbextra, dborder, dbpick.
    DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
-               page loads: features/ask2.js, features/owed.js.
+               page loads: features/ask2.js, features/owed.js, features/sim.js.
    RULES       Each debt gets its own payment. The extra amount and each freed payment go to the first
                debt in the order. Return on Hassle puts the debts in the order of hassle score divided
                by balance (the owner, 2026-11-05).
@@ -219,6 +219,7 @@ function dbOneBodyBase(c, i) {
 function dbSheet() {
   let h = dbSheetBase();
   if (typeof dbSheetOwed === "function") h = dbSheetOwed(h); /* owed.js: the button "What each debt costs you" */
+  if (typeof dbSheetSim === "function") h = dbSheetSim(h); /* sim.js: the simulators about debt */
   return h;
 }
 function dbSheetBase() {

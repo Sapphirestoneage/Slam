@@ -1,0 +1,102 @@
+/* ============================================================================
+   SLAM the Game: features/sims/city.js
+   PURPOSE     Simulator 10: move to a cheaper or a pricier city. The change in the cost of living and
+               in pay, and the cost to move. Flip point: the change in pay where moving pulls ahead.
+   INPUT       The profile (take-home pay and spending). The answers: c.x.sim_city.
+   OUTPUT      One simulator (simAdd), with the function cityRun.
+   DEPENDS ON  features/sim.js, features/kit.js.
+   RULES       The change in the cost of living applies to all spending. The change in pay applies to
+               take-home pay. The game has no city data yet ("Career and city atlases" is not built), so
+               the changes are the guesses of the player.
+   ========================================================================= */
+function cityRun(c, x) {
+  const months = Math.round(x.years * 12),
+    gain = ((c.take || 0) * x.pay) / 100 - ((c.spend || 0) * x.col) / 100,
+    rr = R / 12,
+    A = [-x.move],
+    B = [0];
+  let v = -x.move;
+  for (let m = 1; m <= months; m++) {
+    v = v * (1 + rr) + gain;
+    A.push(v);
+    B.push(0);
+  }
+  return {
+    years: x.years,
+    options: [
+      { id: "move", n: "Move", delta: A, extra: -gain, once: x.move, cash: x.move },
+      { id: "stay", n: "Stay", delta: B, extra: 0, once: 0 },
+    ],
+    ref: "stay",
+    gain,
+  };
+}
+simAdd({
+  id: "city",
+  n: "Move to a cheaper or pricier city",
+  ask: "With the new cost of living and the new pay, does moving leave you ahead?",
+  links: ["city", "housing"],
+  inputs: [
+    {
+      k: "col",
+      label: "Change in the cost of living",
+      opts: [-30, -20, -10, 0, 10, 20, 30].map(v => [v, (v > 0 ? "+" : "") + v + "%"]),
+      def: -10,
+      fmt: v => Math.round(v * 10) / 10 + "%",
+    },
+    {
+      k: "pay",
+      label: "Change in take-home pay",
+      opts: [-20, -10, 0, 10, 20, 30].map(v => [v, (v > 0 ? "+" : "") + v + "%"]),
+      def: 0,
+      fmt: v => Math.round(v * 10) / 10 + "%",
+    },
+    {
+      k: "move",
+      label: "Cost to move",
+      opts: [2000, 5000, 10000, 20000].map(v => [v, money(v)]),
+      def: 5000,
+      typed: true,
+      fmt: v => money(Math.round(v)),
+    },
+    {
+      k: "years",
+      label: "Years to look ahead",
+      opts: [3, 5, 10].map(v => [v, v + " years"]),
+      def: 5,
+      fmt: v => v + " years",
+    },
+  ],
+  run: cityRun,
+  flips: [
+    {
+      k: "pay",
+      lo: -50,
+      hi: 50,
+      steps: 50,
+      axis: "Across: the change in take-home pay. Up: how far moving is ahead.",
+      say: (v, aAbove) =>
+        (aAbove ? "Moving wins if your pay changes by more than " : "Staying wins if your pay changes by more than ") +
+        Math.round(v * 10) / 10 +
+        "%.",
+      none: () => "A change in pay between -50% and +50% does not flip the answer.",
+    },
+  ],
+  math: (c, x, r) => [
+    "Each month: take-home of " +
+      money(c.take) +
+      " × " +
+      x.pay +
+      "%, minus spending of " +
+      money(c.spend) +
+      " × " +
+      x.col +
+      "% = " +
+      money(Math.round(r.raw.gain)) +
+      ".",
+    "The cost to move, " +
+      money(x.move) +
+      ", comes first. The monthly change is invested at 7% a year after inflation.",
+    "The game has no city data yet, so both changes are your guesses.",
+  ],
+});

@@ -6,7 +6,7 @@
    OUTPUT      11 functions. Actions (ACT): quick, qmopen, qmset. Menu: "Quick math".
    DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js, features/compare.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
-               page loads: features/gig.js.
+               page loads: features/gig.js, features/sim.js.
    RULES       Taps only. A rule of thumb shows next to the number of the player. No verdict. The real
                hourly wage and Safe to spend have their own screens, thus this sheet opens those
                screens. The same rules on the numbers of today are in Key numbers, and this sheet links
@@ -202,7 +202,13 @@ function qmBody(c, id, o) {
     ])
   );
 }
+/* qmSheet() makes the full sheet "Quick math". qmSheetBase() is the part from this file. */
 function qmSheet() {
+  let h = qmSheetBase();
+  if (typeof qmSheetSim === "function") h = qmSheetSim(h); /* sim.js: rent or buy, and the car */
+  return h;
+}
+function qmSheetBase() {
   const c = C(),
     w = W;
   if (!w.id)

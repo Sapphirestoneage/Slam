@@ -10,6 +10,8 @@
                (ACT): gig, gxtab, gxsrc, gxset, gxuse, gxmove, gxpaid, gxcatch, fsave. Menu: "Working
                for yourself".
    DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, screens/ux.js, features/compare.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/sim.js (gxSheetSim).
    RULES       The three parts feed each other: the tax rate prices the unit, the unit prices the floor,
                and the same unit shows in the fire drills, the ladder and Quick math. These tools do not
                change the totals of the engine. The tax money is a label on cash that the player already
@@ -193,7 +195,13 @@ function gxFloorBody(c) {
  ${mathBox(["You spend " + money(c.spend || 0) + " a month." + (F.taxed > 0 ? " Income that is already taxed covers " + money(F.taxed) + " of it." : ""), "That leaves " + money(Math.round(F.need)) + " for this work to cover, across " + g.per + " a month.", "Each one has to clear that share after " + pct + "% tax and " + money(g.cost) + " in costs. Rounded up to the next $5.", "A floor is not a price. It is the line you price above."])}
  <button class="ghost wide slim" data-a="gxtab" data-v="pay">Change what one ${esc(g.n)} costs or takes</button>`;
 }
+/* gxSheet() makes the full sheet "Working for yourself". gxSheetBase() is the part from this file. */
 function gxSheet() {
+  let h = gxSheetBase();
+  if (typeof gxSheetSim === "function") h = gxSheetSim(h); /* sim.js: the simulator "Side income" */
+  return h;
+}
+function gxSheetBase() {
   const c = C(),
     w = W,
     t = w.tab || "tax";
