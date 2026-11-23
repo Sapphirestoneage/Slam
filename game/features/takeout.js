@@ -9,10 +9,10 @@
                Roth conversion adds to it.
    INPUT       The profile: c.age, c.ret, c.take, c.spend, c.inv, c.invs (with the tax kind of each
                account), c.cashes, c.x.taxv (filing status, pay, state), c.x.tko (the answers of this
-               sheet). data/takeout2026.js. The open sheet (W.kind): takeout.
-   OUTPUT      Functions: tkoInputs, tkoOrdTax, tkoGainsTax, tkoOrder, tkoGrow, tkoSepp, tkoPath,
-               tkoBridge, tkoGuard, tkoPremium, tkoAcaRun, tkoAca, tkoBook, tkoSheet. Actions (ACT):
-               takeout, tkotab. Menu: "Taking money out".
+               sheet), c.x.takeout (the typed deposits of each Roth account, dep_<number>). data/takeout2026.js. The open sheet (W.kind): takeout.
+   OUTPUT      Functions: tkoInputs, tkoRoths, tkoChecked, tkoRothAsk, tkoOrdTax, tkoGainsTax, tkoOrder,
+               tkoGrow, tkoSepp, tkoPath, tkoBridge, tkoGuard, tkoPremium, tkoAcaRun, tkoAca, tkoBook, tkoSheet. Actions (ACT):
+               takeout, tkotab, tkodepclear. Menu: "Taking money out".
    DEPENDS ON  data/takeout2026.js, core/engine.js (derive, txSplit, passives), screens/ui.js,
                features/retire.js (retireTax, retireSafeSpend, RETIRE_METHODS), features/taxview.js
                (taxvInputs), features/slept.js (sleptRate), features/kit.js.
@@ -70,7 +70,10 @@ function tkoInputs(c) {
     I = taxvInputs(c),
     s = c.led && (c.invs || []).length ? txSplit(c) : { pre: c.inv || 0, roth: 0, tax: 0, hsa: 0 },
     share = kitValue(c, "tko", "roth", 0.5),
-    E = TAKEOUT_2026.early;
+    E = TAKEOUT_2026.early,
+    roths = tkoRoths(c, share.v),
+    dep = roths.reduce((a, r) => a + r.dep, 0),
+    allTyped = roths.length > 0 && roths.every(r => r.typed);
   return {
     age: c.age,
     stop: Math.max(c.age, c.ret),
@@ -82,16 +85,82 @@ function tkoInputs(c) {
     gross: I.gross.v,
     pre: I.pre.v * 12,
     share,
+    roths,
     piles: {
       cash: d.cash || 0,
       tax: s.tax,
       taxBasis: s.tax * E.basisShare,
-      rothBasis: s.roth * share.v,
-      rothEarn: s.roth * (1 - share.v),
+      rothBasis: dep,
+      rothEarn: Math.max(0, s.roth - dep),
       pre: s.pre + s.hsa,
     },
-    st: kitState([kitSharp(c, "inv"), kitSharp(c, "spend"), share]),
+    st: kitState([kitSharp(c, "inv"), kitSharp(c, "spend"), allTyped ? { cf: 3 } : share]),
   };
+}
+/* The Roth accounts, each with its deposits: the amount the player typed (Exact, never more than the
+   balance), or else the share of the balance from the chips. The typed amounts are in c.x.takeout. */
+function tkoRoths(c, share) {
+  if (!c.led) return [];
+  const T = kitStore(c, "takeout");
+  return (c.invs || [])
+    .map((r, i) => ({ r, i }))
+    .filter(x => txOf(x.r) === "roth" && x.r.amt > 0)
+    .map(x => {
+      const t = T["dep_" + x.i],
+        typed = !!(t && t.v != null);
+      return {
+        i: x.i,
+        k: x.r.k,
+        amt: x.r.amt,
+        typed,
+        dep: typed ? Math.min(Math.max(0, +t.v), x.r.amt) : x.r.amt * share,
+      };
+    });
+}
+/* The check of the reference tables, in words for the screen (data/takeout2026.js has the full record). */
+function tkoChecked(part) {
+  const X = TAKEOUT_2026,
+    L = X.checks[part],
+    q = L.filter(r => r[2] === "quoted"),
+    a = L.filter(r => r[2] !== "quoted"),
+    say = list => list.map(r => r[0].charAt(0).toLowerCase() + r[0].slice(1) + " (" + r[1] + ")").join("; ");
+  return (
+    "Checked on " +
+    X.checked +
+    ": " +
+    say(q) +
+    "." +
+    (a.length
+      ? " Checked against copies that agree, because the official page could not be opened that day: " + say(a) + "."
+      : "") +
+    " Arithmetic on your numbers, not advice."
+  );
+}
+/* THE QUESTION ABOUT ROTH DEPOSITS: the share by chips, and for each Roth account the exact amount by the
+   keypad. A typed amount wins and is Exact. */
+function tkoRothAsk(c, P) {
+  if (!P.roths.length) return "";
+  let h = P.roths.every(r => r.typed)
+    ? ""
+    : kitAsk(c, "tko", "roth", "How much of your Roth is money you put in?", TKO_ROTH, 0.5, {
+        term: "tko_basis",
+        help: "The rest is growth. Form 5498 of each year shows what you put in.",
+      });
+  P.roths.forEach(r => {
+    const k = "takeout|dep_" + r.i,
+      pk = kitPadKey("takeout", "dep_" + r.i),
+      open = W && W.pad === pk;
+    h +=
+      `<div class="field kitask tkodep"><div class="row between" style="gap:8px"><span class="small">Exact deposits in ${esc(r.k)} (${money(r.amt)})</span><span class="row" style="gap:6px">${r.typed ? kitPill("Exact") : ""}${kitInfo("tko_basis")}</span></div>` +
+      (r.typed
+        ? `<div class="small">You put in <b>${money(r.dep)}</b>. This number is used, not the share.</div>`
+        : "") +
+      (open
+        ? `<div class="val">${money((W.o && W.o[pk]) || 0)}</div>${keypad(pk)}<div class="row" style="gap:8px"><button class="primary slim" data-a="kittyped" data-k="${k}">Use this number</button><button class="ghost slim" data-a="padclose">Cancel</button></div>`
+        : `<div class="row wrap" style="gap:6px"><button class="ghost slim" data-a="kitpad" data-k="${k}">${r.typed ? "Change the number" : "Type the exact number"}</button>${r.typed ? `<button class="ghost slim" data-a="tkodepclear" data-v="${r.i}">Use the share again</button>` : ""}</div>`) +
+      `</div>`;
+  });
+  return h;
 }
 /* The federal and state tax on one year of ordinary income, with no pay from work. */
 function tkoOrdTax(P, income) {
@@ -368,12 +437,14 @@ function tkoPremium(magi, size, full, cliff) {
   const A = TAKEOUT_2026.aca,
     fpl = A.fplBase + A.fplPerPerson * (Math.max(1, size) - 1),
     mult = magi / fpl,
-    row = A.percent.find(r => mult <= r[0]),
     over = mult > A.cliffMultiple,
-    expected = !over ? (row ? magi * row[1] : full) : cliff ? full : magi * A.capNoCliff;
+    row = A.percent.find(r => mult < r[1]) || A.percent[A.percent.length - 1],
+    share = row[2] + (row[3] - row[2]) * Math.min(1, Math.max(0, (mult - row[0]) / (row[1] - row[0]))),
+    expected = !over ? magi * share : cliff ? full : magi * A.capNoCliff;
   return {
     pay: Math.min(full, Math.max(0, expected)),
     over,
+    share: over ? null : share,
     mult,
     fpl,
     line: fpl * A.cliffMultiple,
@@ -482,6 +553,34 @@ function tkoBook(c) {
         f: "=MAX(0,{tk_bneed}-{tk_have})",
       },
       {
+        id: "tk_roth",
+        label: "In Roth accounts now",
+        v: G0.P.piles.rothBasis + G0.P.piles.rothEarn,
+        note: "Your accounts",
+      },
+      G0.P.roths.some(r => r.typed)
+        ? {
+            id: "tk_rothdep",
+            label: "Roth deposits (what you put in)",
+            v: G0.P.piles.rothBasis,
+            note: G0.P.roths.every(r => r.typed)
+              ? "Exact: the amounts you typed for each Roth account"
+              : "The amounts you typed, and your share answer for the other Roth accounts",
+          }
+        : {
+            id: "tk_rothdep",
+            label: "Roth deposits (what you put in)",
+            v: G0.P.piles.rothBasis,
+            f: "={tk_roth}*" + G0.P.share.v,
+            note: "Your share answer. Type the exact amount in the game to replace it.",
+          },
+      {
+        id: "tk_rothgrow",
+        label: "Roth growth (waits until 59 and a half)",
+        v: G0.P.piles.rothEarn,
+        f: "=MAX(0,{tk_roth}-{tk_rothdep})",
+      },
+      {
         id: "tk_order",
         label: "Tax cost of one year of spending taken today, cheapest order",
         v: Math.round(O.pullCost),
@@ -511,8 +610,7 @@ function tkoBook(c) {
 /* ---------- the sheet ---------- */
 function tkoOrderTab(c) {
   const O = tkoOrder(c, tkoInputs(c).spend),
-    P = O.P,
-    hasRoth = P.piles.rothBasis + P.piles.rothEarn > 0;
+    P = O.P;
   let h =
     kitTile(
       "Reachable today, after tax",
@@ -533,11 +631,7 @@ function tkoOrderTab(c) {
       `<div class="tile stack" style="gap:4px"><div class="small"><b>One year of spending, ${money(O.amount)}, taken today</b> ${kitInfo("tko_pull")}</div>` +
       igRows(O.pulls.map(p => [esc(p.n), money(p.amt) + (p.cost > 0 ? ", tax " + money(p.cost) : "")])) +
       `<div class="small">Tax cost: <b>${money(O.pullCost)}</b>.${O.short > 0 ? " " + money(O.short) + " is not covered." : ""}</div></div>`;
-  if (hasRoth)
-    h += kitAsk(c, "tko", "roth", "How much of your Roth is money you put in?", TKO_ROTH, 0.5, {
-      term: "tko_basis",
-      help: "The rest is growth. Form 5498 of each year shows what you put in.",
-    });
+  h += tkoRothAsk(c, P);
   return (
     h +
     mathBox([
@@ -664,8 +758,7 @@ function tkoBridgeTab(c) {
   const lad = B.paths.find(p => p.id === "ladder");
   if (lad && lad.ok)
     h += `<details class="math"><summary>The Roth ladder, year by year</summary><div class="inner">${igRows(lad.rows.map(r => ["Age " + r.age + ": convert " + money(r.conv), "tax " + money(r.tax) + (r.short > 0 ? ", short " + money(r.short) : "")]))}</div></details>`;
-  if (P.piles.rothBasis + P.piles.rothEarn > 0)
-    h += kitAsk(c, "tko", "roth", "How much of your Roth is money you put in?", TKO_ROTH, 0.5, { term: "tko_basis" });
+  h += tkoRothAsk(c, P);
   return (
     h +
     `<div class="row" style="gap:8px"><button class="ghost" style="flex:1" data-a="ages">See your two ages</button><button class="ghost" style="flex:1" data-a="simopen" data-v="stop">Stop earlier or later</button></div>` +
@@ -681,9 +774,7 @@ function tkoBridgeTab(c) {
         " a year after inflation. Cash does not grow. What you save until " +
         B.stop +
         " goes to a regular account.",
-      "Rules: version " +
-        TAKEOUT_2026.version +
-        ", written from the tax code and not yet compared line by line with the IRS text. Arithmetic on your numbers, not advice.",
+      tkoChecked("early"),
     ])
   );
 }
@@ -708,7 +799,7 @@ function tkoAcaTab(c) {
     ) +
     kitColumns([
       {
-        title: "If the credit stops at the line",
+        title: "The 2026 rule: the credit stops at the line",
         big: money(A.w.totalOn),
         rows: [
           ["Premiums " + kitInfo("tko_credit"), money(A.w.on)],
@@ -720,14 +811,14 @@ function tkoAcaTab(c) {
           : "No year is above the line.",
       },
       {
-        title: "If the credit has no line",
+        title: "If Congress renews the larger credit",
         big: money(A.w.totalOff),
         rows: [
           ["Premiums " + kitInfo("tko_credit"), money(A.w.off)],
           ["Tax", money(A.w.tax)],
           ["Converting adds", money(A.extraOff)],
         ],
-        foot: "Above the line, the plan costs no more than 8.5% of income.",
+        foot: "Above the line, the plan would cost no more than 8.5% of income. This is not the law now.",
       },
     ]) +
     `<div class="small">The line for ${A.I.size.v} ${A.I.size.v === 1 ? "person" : "people"} is <b>${money(A.line)}</b> of income a year ${kitInfo("tko_cliff")}. Room under it in year one: <b>${money(A.room)}</b>.</div>` +
@@ -764,8 +855,8 @@ function tkoAcaTab(c) {
     }) +
     mathBox([
       "Each year to 65: income is the other income plus the conversion. The tax is the federal and state tax on it.",
-      "Below the line, the household pays a set share of income (2.07% to 8.66%, by income) and never more than the full price.",
-      "Above the line: the full price under the first rule, or 8.5% of income under the second rule.",
+      "Below the line, the household pays a share of income that rises with income, from 2.10% to 9.96% (the 2026 table), and never more than the full price.",
+      "Above the line in 2026: the full price. The larger credit of 2021 to 2025 ended on December 31, 2025. The second column shows a renewal of its limit of 8.5% of income above the line. Below the line it uses the same 2026 table, so it understates what a full renewal would save.",
       "Pre-tax money at " +
         A.start +
         ": about " +
@@ -775,9 +866,8 @@ function tkoAcaTab(c) {
         money(TAKEOUT_2026.aca.fplBase) +
         " for one person plus " +
         money(TAKEOUT_2026.aca.fplPerPerson) +
-        " for each more (48 states). Version " +
-        TAKEOUT_2026.version +
-        ", not yet compared with the official notice.",
+        " for each more (48 states and DC, the 2025 guidelines, which 2026 cover uses).",
+      tkoChecked("aca"),
     ])
   );
 }
@@ -860,7 +950,7 @@ kitTerms({
   ],
   tko_cliff: [
     "The line (the subsidy cliff)",
-    "4 times the poverty line. Under one rule, one dollar of income above it ends the whole credit. The law on this has changed before, so the game shows both rules.",
+    "4 times the poverty line. In 2026, one dollar of income above it ends the whole credit. From 2021 to 2025 a larger credit had no such line. It ended on December 31, 2025. The game shows the 2026 rule, and next to it what a renewal would change.",
   ],
   tko_bench: [
     "Benchmark plan",
@@ -889,6 +979,13 @@ Object.assign(ACT, {
     W.tab = t.dataset.v;
     W.pad = null;
     drawSheet();
+  },
+  /* Remove the typed deposits of one Roth account. The share from the chips counts again. */
+  tkodepclear: t => {
+    const c = C();
+    delete kitStore(c, "takeout")["dep_" + t.dataset.v];
+    if (W) W.pad = null;
+    kitRedraw();
   },
 });
 kitMenu("Taking money out", "takeout", "The order, guardrails, the years before 59½, health cover", "odds");

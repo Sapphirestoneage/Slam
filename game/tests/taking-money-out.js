@@ -212,7 +212,11 @@
   const one = tkoPremium(30000, 1, 7200, true);
   chk(
     "the premium after the credit: a share of income below the line",
-    near(one.fpl, 15650) && near(one.line, 62600) && near(one.pay, 30000 * 0.0493) && !one.over && near(one.room, 32600)
+    near(one.fpl, 15650) &&
+      near(one.line, 62600) &&
+      near(one.pay, 30000 * (0.0419 + ((0.066 - 0.0419) * (30000 / 15650 - 1.5)) / 0.5)) &&
+      !one.over &&
+      near(one.room, 32600)
   );
   chk(
     "above the line: the full price with the rule, 8.5% of income without it, never more than the full price",
@@ -221,11 +225,36 @@
       tkoPremium(200000, 1, 7200, false).pay === 7200 &&
       near(tkoPremium(70000, 2, 7200, true).fpl, 21150)
   );
+  const shareAt = m => tkoPremium(15650 * m, 1, 1e9, true).share;
+  chk(
+    "the 2026 table (Rev. Proc. 2025-25): 2.10% under 133%, a step to 3.14%, then a straight rise to 9.96% at 300%",
+    near(shareAt(1), 0.021) &&
+      near(shareAt(1.32), 0.021) &&
+      near(shareAt(1.33), 0.0314) &&
+      near(shareAt(1.5), 0.0419) &&
+      near(shareAt(1.75), (0.0419 + 0.066) / 2) &&
+      near(shareAt(2), 0.066) &&
+      near(shareAt(2.5), 0.0844) &&
+      near(shareAt(3), 0.0996) &&
+      near(shareAt(4), 0.0996) &&
+      shareAt(4.01) === null,
+    [1, 1.33, 1.5, 2, 2.5, 3, 4].map(shareAt).join()
+  );
+  chk(
+    "the data file says what was checked, and the screen repeats it",
+    TAKEOUT_2026.checked === "2026-11-23" &&
+      tkoChecked("early").includes("Checked on 2026-11-23") &&
+      tkoChecked("early").includes("IRS Notice 2022-6") &&
+      tkoChecked("aca").includes("IRS Rev. Proc. 2025-25") &&
+      tkoChecked("aca").includes("could not be opened") &&
+      Object.keys(TAKEOUT_2026.early.life).length === 26
+  );
   kitStore(c, "tko").conv = { v: 40000, cf: 2 };
   kitStore(c, "tko").other = { v: 40000, cf: 2 };
   const A = tkoAca(c),
     t80 = tkoOrdTax(P, 80000).tax,
-    t40 = tkoOrdTax(P, 40000).tax;
+    t40 = tkoOrdTax(P, 40000).tax,
+    s40 = 0.0844 + ((0.0996 - 0.0844) * (40000 / 15650 - 2.5)) / 0.5;
   chk(
     "15 years from 50 to 65: tax and premiums with a conversion, next to none, under both rules",
     A.years === 15 &&
@@ -234,8 +263,8 @@
       near(A.w.tax, 15 * t80, 1e-3) &&
       near(A.w.on, 15 * 7200) &&
       near(A.w.off, 15 * 80000 * 0.085) &&
-      near(A.base.on, 15 * 40000 * 0.0824, 1e-3) &&
-      near(A.extraOn, 15 * (t80 - t40) + 15 * 7200 - 15 * 40000 * 0.0824, 1e-2) &&
+      near(A.base.on, 15 * 40000 * s40, 1e-3) &&
+      near(A.extraOn, 15 * (t80 - t40) + 15 * 7200 - 15 * 40000 * s40, 1e-2) &&
       A.low === Math.min(A.w.totalOn, A.w.totalOff) &&
       A.high === Math.max(A.w.totalOn, A.w.totalOff) &&
       A.overYears === 15 &&
@@ -247,7 +276,7 @@
     order: "Cheapest dollar first",
     guard: "Lower guardrail",
     bridge: "Four ways to cover those years",
-    aca: "If the credit stops at the line",
+    aca: "The 2026 rule: the credit stops at the line",
   };
   Object.keys(tabs).forEach(t => {
     X("takeout", t);
@@ -281,6 +310,75 @@
   );
   X("kitsure", "3", "tko|roth", { t: "n", f: "0.5" });
   chk("Guess, Close, Exact is kept", c.x.tko.roth.cf === 3);
+  /* ---------- the exact deposits of each Roth account, by the keypad ---------- */
+  X("kitset", "0.5", "tko|roth", { t: "n" });
+  chk(
+    "each Roth account has its own exact question, next to the share chips",
+    tkoInputs(c).roths.length === 1 &&
+      tkoInputs(c).roths[0].i === 1 &&
+      ov().includes("Exact deposits in IRA or Roth IRA") &&
+      ov().includes('data-a="kitpad" data-k="takeout|dep_1"') &&
+      ov().includes("How much of your Roth is money you put in?")
+  );
+  X("kitpad", "", "takeout|dep_1");
+  chk(
+    "the keypad opens by a tap, with no typing field",
+    W.pad === kitPadKey("takeout", "dep_1") && ov().includes('data-a="kittyped"') && !/<input|<textarea/.test(ov())
+  );
+  W.o[kitPadKey("takeout", "dep_1")] = 62000;
+  X("kittyped", "", "takeout|dep_1");
+  const PT = tkoInputs(c);
+  chk(
+    "the typed amount is kept in c.x.takeout, wins over the share, and is Exact",
+    c.x.takeout.dep_1.v === 62000 &&
+      c.x.takeout.dep_1.cf === 3 &&
+      PT.piles.rothBasis === 62000 &&
+      PT.piles.rothEarn === 38000 &&
+      PT.roths[0].typed &&
+      c.x.tko.roth.v === 0.5 &&
+      ov().includes("You put in <b>$62,000</b>") &&
+      !ov().includes("How much of your Roth is money you put in?") &&
+      clean(ov()),
+    JSON.stringify(PT.piles)
+  );
+  chk(
+    "with each Roth account typed, that input counts as Exact",
+    (() => {
+      const was = c.x.tko.roth;
+      c.x.tko.roth = { v: 0.5, cf: 1 };
+      const sharp = kitState([kitSharp(c, "inv"), kitSharp(c, "spend")]),
+        ok =
+          tkoInputs(c).st ===
+          (sharp === "Guess" ? "Guess" : kitState([kitSharp(c, "inv"), kitSharp(c, "spend"), { cf: 3 }]));
+      c.x.tko.roth = was;
+      return ok && kitState([{ cf: 3 }, { cf: 3 }]) === "Exact";
+    })()
+  );
+  chk("the order uses the typed deposits", tkoOrder(c, 1000).tiers.find(t => t.id === "rothBasis").amt === 62000);
+  c.x.takeout.dep_1.v = 500000;
+  chk(
+    "a typed amount is never more than the balance",
+    tkoInputs(c).piles.rothBasis === 100000 && tkoInputs(c).piles.rothEarn === 0
+  );
+  c.x.takeout.dep_1.v = 62000;
+  const bk = tkoBook(c).rows,
+    bv = id => bk.find(r => r.id === id);
+  chk(
+    "the spreadsheet: typed deposits are a plain value, and the growth is a formula on it",
+    bv("tk_roth").v === 100000 &&
+      bv("tk_rothdep").v === 62000 &&
+      !bv("tk_rothdep").f &&
+      bv("tk_rothdep").note.includes("Exact") &&
+      bv("tk_rothgrow").v === 38000
+  );
+  X("tkodepclear", "1");
+  chk(
+    "one tap removes the typed amount, and the share counts again",
+    !c.x.takeout.dep_1 &&
+      tkoInputs(c).piles.rothBasis === 50000 &&
+      ov().includes("How much of your Roth is money you put in?") &&
+      tkoBook(c).rows.find(r => r.id === "tk_rothdep").f === "={tk_roth}*0.5"
+  );
   X("ages");
   chk("the bridge tab links to the two ages", W.kind === "ages");
   /* ---------- the spreadsheet, the built list, the skills ---------- */

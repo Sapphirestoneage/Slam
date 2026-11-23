@@ -2,23 +2,67 @@
    SLAM the Game: data/takeout2026.js
    PURPOSE     Data only. The reference numbers for "Taking money out" (features/takeout.js): the rules for
                reaching retirement money before age 59 and a half, and the health-plan credit of the
-               marketplace (ACA) for 2026 cover.
+               marketplace (ACA) for plan year 2026.
    INPUT       Nothing.
    OUTPUT      One constant: window.TAKEOUT_2026.
    DEPENDS ON  Nothing.
-   SOURCE      Copied on 2026-11-23 from the SPARKS reference files data/early_access_rules_2026.json and
-               data/aca_2026.json (version 2026.0, as of 2026-01-01). Early access: IRC 72(t), IRS Notice
-               2022-6, IRC 408A(d)(3)(F), IRS Publication 590-B Table I. Health plan: the HHS 2025 poverty
-               guidelines (they govern 2026 cover) and the applicable-percentage table.
-   RULES       The two source files say "unverified": the numbers were written from memory and not
-               compared line by line with the official documents. The screen says so. The rule that the
-               credit stops above 4 times the poverty line can change with new law, so the screen shows
-               the cost with that rule and without it.
+   SOURCES     Each table, its source, and the result of the check on 2026-11-23. The build machine could
+               not open irs.gov, hhs.gov or kff.org directly (the network refused them). Each check was
+               made through web search results that quote the document. "Quoted" means a search result
+               showed the number from that document. "Agrees" means more than one independent copy of
+               the table shows the same numbers.
+               1. The 10% extra tax before 59 and a half (IRC 72(t)(1)): IRS, "Retirement topics:
+                  Exceptions to tax on early distributions" and Tax Topic 558. Quoted. Correct.
+               2. The Rule of 55 (IRC 72(t)(2)(A)(v)): the same IRS page. Separation in or after the
+                  year of age 55, plans at work only, not an IRA. Quoted. Correct.
+               3. 72(t) payments (IRS Notice 2022-6): the rate limit is the greater of 5% and 120% of the
+                  federal mid-term rate, and the payments go on for 5 years or to 59 and a half, the
+                  longer of the two. Agrees (Kitces, Stifel, and others that cite the Notice). The IRS
+                  page itself was not quoted in a search result.
+               4. The single life expectancy table (26 CFR 1.401(a)(9)-9(b), also IRS Publication 590-B
+                  Table I), ages 40 to 65. Ages 40 to 57 quoted from the eCFR. Ages 59, 60 and 65 quoted
+                  from Publication 590-B. Ages 58 and 61 to 64 agree in the copies of Fidelity, Morgan
+                  Stanley and FindLaw. All 26 values were correct. No value changed.
+               5. The 5-year wait for a Roth conversion (IRC 408A(d)(3)(F), 26 CFR 1.408A-6, Publication
+                  590-B): each conversion has its own 5 years. Quoted. Correct.
+               6. The poverty line: HHS 2025 poverty guidelines, Federal Register of 2025-01-17 (document
+                  2025-01377), 48 states and DC: $15,650 for one person, $5,500 for each more. Quoted.
+                  Correct. Marketplace cover for 2026 uses the guidelines of the year before (2025).
+               7. The share of income that a household pays (the applicable percentage table for 2026):
+                  IRS Rev. Proc. 2025-25. CHANGED on 2026-11-23. The earlier numbers (2.07% to 8.66%, one
+                  number for each band) were not the 2026 table. The 2026 table goes from 2.10% to 9.96%
+                  and rises inside each band. The numbers agree in a CMS table for 2026 and in other
+                  copies. The top value, 9.96%, was quoted from the IRS text. The IRS PDF table itself
+                  was not quoted in a search result.
+               8. The credit stops above 4 times the poverty line in 2026: the larger credits of 2021 to
+                  2025 ended on 2025-12-31 and Congress did not renew them (KFF, 2026). Quoted. Correct.
+                  The 8.5% of income limit (capNoCliff) is the 2021 to 2025 rule. The game keeps it only
+                  to show what a renewal would change.
+   RULES       basisShare (60% of a regular account is what the player put in) and thinYears are
+               assumptions of the game, not law. Alaska and Hawaii have higher poverty lines, and the
+               game does not use them.
    ========================================================================= */
 window.TAKEOUT_2026 = {
-  version: "2026.0",
+  version: "2026.1",
   asOf: "2026-01-01",
-  verified: false,
+  checked: "2026-11-23",
+  /* What the screen says about the checks. how: "quoted" or "agrees" (see SOURCES above). */
+  checks: {
+    early: [
+      [
+        "The 10% extra tax, the Rule of 55 and the 5-year wait for a conversion",
+        "the IRS pages and Publication 590-B",
+        "quoted",
+      ],
+      ["The 72(t) payment rule", "IRS Notice 2022-6", "agrees"],
+      ["The life expectancy table", "the IRS regulation and Publication 590-B", "quoted"],
+    ],
+    aca: [
+      ["The poverty line", "the HHS 2025 guidelines", "quoted"],
+      ["The share of income you pay", "IRS Rev. Proc. 2025-25", "agrees"],
+      ["The credit stops above the line in 2026", "KFF", "quoted"],
+    ],
+  },
   early: {
     accessAge: 59.5,
     penaltyRate: 0.1,
@@ -27,7 +71,7 @@ window.TAKEOUT_2026 = {
     rule55Age: 55,
     thinYears: 1,
     basisShare: 0.6,
-    /* IRS Publication 590-B Table I (single life expectancy), ages 40 to 65 */
+    /* The single life expectancy table, ages 40 to 65 */
     life: {
       40: 45.7,
       41: 44.8,
@@ -62,14 +106,15 @@ window.TAKEOUT_2026 = {
     fplBase: 15650,
     fplPerPerson: 5500,
     cliffMultiple: 4,
-    /* [up to this multiple of the poverty line, the share of income that the household pays] */
+    /* [from this multiple of the poverty line, to this multiple, the share of income at the start of the
+       band, the share at the end]. Inside a band the share rises in a straight line. */
     percent: [
-      [1.33, 0.0207],
-      [1.5, 0.0311],
-      [2, 0.0493],
-      [2.5, 0.0654],
-      [3, 0.0824],
-      [4, 0.0866],
+      [0, 1.33, 0.021, 0.021],
+      [1.33, 1.5, 0.0314, 0.0419],
+      [1.5, 2, 0.0419, 0.066],
+      [2, 2.5, 0.066, 0.0844],
+      [2.5, 3, 0.0844, 0.0996],
+      [3, 4, 0.0996, 0.0996],
     ],
     capNoCliff: 0.085,
   },

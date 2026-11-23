@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-23. Files: 104. Lines: 61,083. Top-level functions: 1426. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-23. Files: 105. Lines: 61,464. Top-level functions: 1432. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -100,22 +100,23 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 86 | `features/plan.js` | 341 | 6 | 4 | 0 | The plan summary. One screen with the 7 steps of the CFP Board's financial planning process as rows (your situation, your goals, where you are headed,... |
 | 87 | `features/ask3.js` | 357 | 12 | 3 | 0 | The Ask front door. One row on Home under the top numbers with four big buttons |
 | 88 | `features/quota.js` | 234 | 11 | 4 | 0 | Extras for people who love spreadsheets |
-| 89 | `data/takeout2026.js` | 77 | 0 | 0 | 0 | Data only. The reference numbers for "Taking money out" (features/takeout.js): the rules for reaching retirement money before age 59 and a half, and t... |
-| 90 | `features/takeout.js` | 895 | 18 | 0 | 0 | Taking money out. Four answers on one sheet, each from the numbers the game already has |
+| 89 | `data/takeout2026.js` | 122 | 0 | 0 | 0 | Data only. The reference numbers for "Taking money out" (features/takeout.js): the rules for reaching retirement money before age 59 and a half, and t... |
+| 90 | `features/takeout.js` | 992 | 21 | 0 | 0 | Taking money out. Four answers on one sheet, each from the numbers the game already has |
 | 91 | `features/ages.js` | 187 | 7 | 0 | 0 | Two ages, for each person. (1) Work optional: the age when the invested money is enough to live on (the freedom date of the plan) |
-| 92 | `features/stress.js` | 233 | 6 | 2 | 0 | The stress test. One result from two tests of the same plan: the replay of each real start year of US market history, and the 1,000 random markets of ... |
+| 92 | `features/stress.js` | 282 | 6 | 1 | 0 | The stress test. One result from two tests of the same plan: the replay of each real start year of US market history, and the 1,000 random markets of ... |
 | 93 | `features/blocks.js` | 319 | 7 | 1 | 0 | Life event blocks that the player stacks: a home, a car, a child, a job change, a sabbatical, a move |
-| 94 | `features/windfall.js` | 349 | 5 | 2 | 0 | The windfall. What to do with a bonus, a gift, a tax refund or other extra money |
-| 95 | `features/countdown.js` | 399 | 12 | 1 | 0 | Countdowns. One countdown type for each goal on My Goals: a target amount, what is saved for it, and a monthly amount or a date |
-| 96 | `features/offers.js` | 255 | 5 | 1 | 0 | Two job offers side by side. For each offer: the take-home pay from the tax tables, the match, the stock, less the health premiums and the commute |
-| 97 | `features/nextacct.js` | 275 | 4 | 1 | 0 | Which account next, up to each limit |
-| 98 | `features/ledger.js` | 377 | 8 | 1 | 0 | The giant ledger and the three statements |
-| 99 | `data/cards2026.js` | 1,180 | 0 | 0 | 0 | Data only. The card library of the card vault (features/vault.js): the welcome offers of 93 cards at 12 US banks (the yearly fee, the offer, the spend... |
-| 100 | `features/vault.js` | 555 | 19 | 2 | 0 | The card vault ("Is this card right for me?" of the Slam web app, in the game) |
-| 101 | `features/stars.js` | 720 | 35 | 3 | 0 | The Galaxy. A second view of the 25 skill tracks: 25 constellations around a center "FI", 625 stars, one star for each skill |
-| 102 | `features/book.js` | 213 | 7 | 2 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
-| 103 | `features/questlog.js` | 426 | 23 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
-| 104 | `features/built.js` | 955 | 4 | 0 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 94 | `features/windfall.js` | 431 | 7 | 2 | 0 | The windfall. What to do with a bonus, a gift, a tax refund or other extra money |
+| 95 | `data/health2026.js` | 25 | 0 | 0 | 0 | Data only. What health cover costs in 2026 with no job, for the quit fund countdown (features/countdown.js) |
+| 96 | `features/countdown.js` | 433 | 13 | 1 | 0 | Countdowns. One countdown type for each goal on My Goals: a target amount, what is saved for it, and a monthly amount or a date |
+| 97 | `features/offers.js` | 264 | 5 | 1 | 0 | Two job offers side by side. For each offer: the take-home pay from the tax tables, the match, the stock, less the health premiums and the commute |
+| 98 | `features/nextacct.js` | 280 | 4 | 1 | 0 | Which account next, up to each limit |
+| 99 | `features/ledger.js` | 377 | 8 | 1 | 0 | The giant ledger and the three statements |
+| 100 | `data/cards2026.js` | 1,180 | 0 | 0 | 0 | Data only. The card library of the card vault (features/vault.js): the welcome offers of 93 cards at 12 US banks (the yearly fee, the offer, the spend... |
+| 101 | `features/vault.js` | 555 | 19 | 2 | 0 | The card vault ("Is this card right for me?" of the Slam web app, in the game) |
+| 102 | `features/stars.js` | 755 | 35 | 3 | 0 | The Galaxy. A second view of the 25 skill tracks: 25 spiral arms (constellations) from "You" in the middle out to the FI ring, 625 stars, one star for... |
+| 103 | `features/book.js` | 213 | 7 | 2 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
+| 104 | `features/questlog.js` | 426 | 23 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
+| 105 | `features/built.js` | 955 | 4 | 0 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
@@ -133,7 +134,7 @@ No rows.
 
 ### Actions (ACT) that are set in more than one place
 
-`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 640 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 642 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
 
 | Action | Set in (load order) | Places |
 |--------|---------------------|-------:|
