@@ -263,7 +263,7 @@
     );
     chk(
       "the tab " + t + " has an i on its labels and no em dash",
-      (ov().match(/data-k="term:tko_/g) || []).length >= 2 && !ov().includes("—")
+      (ov().match(/data-k="term:tko_/g) || []).length >= 2 && !ov().includes("\u2014")
     );
   });
   chk(

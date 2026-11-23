@@ -9,8 +9,8 @@
                c.spend, c.x.countdown (the answers, with the key "<goal id>:<question>"). The open sheet
                (W.kind): cdn.
    OUTPUT      Functions: cdnMonthsTo, cdnMonthlyNeeded, cdnKind, cdnInputs, cdnTarget, cdnCalc, cdnLine,
-               cdnList, cdnSheet, cdnBook, goalViewCountdown. Actions (ACT): cdn. Parts of functions in
-               other files: goalViewCountdown (goalView in ui.js). Menu: "Countdowns".
+               cdnList, cdnSheet, cdnBook, goalViewCountdown, goalsTabCountdown. Actions (ACT): cdn. Parts of functions in
+               other files: goalViewCountdown (goalView in ui.js), goalsTabCountdown (goalsTab in ux.js). Menu: "Countdowns".
    DEPENDS ON  core/engine.js, screens/ui.js, features/sim.js (simLoanPayment), features/kit.js.
    RULES       The math is the one countdown of the older tool (engines/countdown.js): the money grows
                each month at the twelfth root of the yearly rate, then the monthly amount goes in. Cash
@@ -324,6 +324,15 @@ function cdnSheet() {
   ]);
   h += `<div class="row" style="gap:8px"><button class="ghost" style="flex:1" data-a="cdn" data-v="">All countdowns</button><button class="ghost" style="flex:1" data-a="goal" data-v="${g.id}">Open the goal</button></div>`;
   return h;
+}
+/* Part of goalsTab() in ux.js. With one goal or more, adds the button "Countdowns" at the end of the tab. */
+function goalsTabCountdown(h) {
+  const c = C();
+  if (!c || !(c.goals || []).some(g => !g.done)) return h;
+  return h.replace(
+    /<\/div>\s*$/,
+    `<button class="ghost wide cdnbtn" data-a="cdn" data-v="">Countdowns: how long to each goal ›</button></div>`
+  );
 }
 /* Part of goalView() in ui.js. Adds one button with the countdown of this goal. */
 function goalViewCountdown(h) {

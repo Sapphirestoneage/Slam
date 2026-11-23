@@ -226,7 +226,7 @@
     "the menu and the i of the screen",
     MENU.some(m => m[1] === "galaxy") && NV_INFO.galaxy && GLOSS.gateway && GLOSS.galaxy
   );
-  chk("no em dash in the text of the sheet", !/—/.test(ov()));
+  chk("no em dash in the text of the sheet", !/\u2014/.test(ov()));
   X("close");
   G.chars.length = n0;
   G.active = 0;

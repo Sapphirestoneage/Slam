@@ -76,7 +76,7 @@ Each file has the name of its feature.
 | `side-by-side.js` | Side by side, and the fee screen | `features/compare.js` |
 | `spending-plan-and-audit-score.js` | The Conscious Spending Plan and the money audit score | `features/csp.js` |
 | `stars.js` | The Galaxy: star states, lanes from real links, gateway stars, Do this | `features/stars.js` |
-| `stress-test.js` | The stress test: real history and random markets as one result (one check waits for the engine) | `features/stress.js` |
+| `stress-testing.js` | The stress test: real history and random markets as one result (one check waits for the engine) | `features/stress.js` |
 | `student-loan-plans.js` | Student loan plans | `features/study.js` |
 | `usability-repairs.js` | The repairs from the usability audit | `screens/tidy.js` |
 | `welcome-back-card.js` | The welcome-back card | `features/back.js` |

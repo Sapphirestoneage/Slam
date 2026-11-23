@@ -123,7 +123,7 @@
       ov().includes('data-k="term:ag_reach"') &&
       ov().includes("Show the math") &&
       !/<input|<textarea|<select/.test(ov()) &&
-      !ov().includes("—") &&
+      !ov().includes("\u2014") &&
       clean(ov()),
     junk(ov())
   );

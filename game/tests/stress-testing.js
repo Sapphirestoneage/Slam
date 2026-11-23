@@ -1,5 +1,5 @@
 /* ============================================================================
-   SLAM the Game, test: tests/stress-test.js
+   SLAM the Game, test: tests/stress-testing.js
    PURPOSE     Examine the stress test: the one result is the sum of the replay of real history and the
                1,000 random markets, the named hard stretches come from the same replay, the screen, the
                rows of the spreadsheet, the built row and the link from a skill.

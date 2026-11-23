@@ -182,3 +182,26 @@
   G.active = 0;
   save();
 }
+{
+  /* The door on My Goals: the tab has the button when a goal is open. */
+  const n0 = G.chars.length,
+    a = Object.assign(newChar(), { name: "Door", led: true, placed: true, take: 4000, spend: 3000 });
+  a.goals = [{ id: "g_door", n: "A trip", cost: 3000, saved: 500 }];
+  G.demo = false;
+  G.tourSeen = true;
+  G.chars.push(a);
+  G.active = n0;
+  syncAll(a);
+  save();
+  go("goals");
+  chk(
+    "My Goals has the button Countdowns when a goal is open",
+    app().includes('class="ghost wide cdnbtn" data-a="cdn"')
+  );
+  C().goals = [];
+  go("goals");
+  chk("with no goal, My Goals has no such button", !app().includes("cdnbtn"));
+  G.chars.length = n0;
+  G.active = 0;
+  save();
+}

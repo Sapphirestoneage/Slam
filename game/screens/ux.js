@@ -198,7 +198,13 @@ function planTabHead(h) {
     `<button class="ghost wide" data-a="tab" data-v="map">See the big picture</button><div class="tiny muted" style="text-align:center">The map, the eras and the skill trees. Optional.</div></div>`
   );
 }
+/* goalsTab() is the full tab My Goals. It calls each part by name. goalsTabBase() is the part from this file. */
 function goalsTab() {
+  let h = goalsTabBase();
+  if (typeof goalsTabCountdown === "function") h = goalsTabCountdown(h); /* countdown.js: the button "Countdowns" */
+  return h;
+}
+function goalsTabBase() {
   const c = C(),
     d = D,
     gs = (c.goals || []).filter(g => !g.done);

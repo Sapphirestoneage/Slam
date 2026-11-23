@@ -266,7 +266,7 @@
   const src =
     require("fs").readFileSync(GAME_DIR + "features/vault.js", "utf8") +
     require("fs").readFileSync(GAME_DIR + "data/cards2026.js", "utf8");
-  chk("style: no em dash, no red", !/—/.test(src) && !/var\(--(bad|red)\)|#f00|color:\s*red/i.test(src));
+  chk("style: no em dash, no red", !/\u2014/.test(src) && !/var\(--(bad|red)\)|#f00|color:\s*red/i.test(src));
   G.chars.length = n0;
   G.active = 0;
   save();

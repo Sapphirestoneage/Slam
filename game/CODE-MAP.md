@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-23. Files: 91. Lines: 55,160. Top-level functions: 1298. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-23. Files: 104. Lines: 61,088. Top-level functions: 1426. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -22,7 +22,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 8 | `core/engine.js` | 3,854 | 123 | 0 | 0 | The engine: the data model of one profile and all the math |
 | 9 | `core/engine2.js` | 390 | 14 | 0 | 0 | The game mechanics that are also the data entry: the layers, the bonfires, the fog (how much of the picture is clear) |
 | 10 | `account/gate.js` | 67 | 7 | 0 | 0 | Add-ons, part 1 of 2. Some parts of the game are not in these files |
-| 11 | `screens/ui.js` | 6,474 | 211 | 135 | 0 | The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ... |
+| 11 | `screens/ui.js` | 6,482 | 212 | 135 | 0 | The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ... |
 | 12 | `features/games.js` | 639 | 23 | 12 | 0 | The screens of the games that are the data entry (layer 1) |
 | 13 | `features/games2.js` | 1,461 | 40 | 19 | 0 | The games of layer 2 (sort), layer 3 (make exact) and layer 4 (come back) |
 | 14 | `features/year.js` | 781 | 24 | 13 | 0 | The year: calendars, funds for true expenses, the months ahead, the Yearly Review, rest windows, and the chance test |
@@ -31,7 +31,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 17 | `screens/smart.js` | 679 | 15 | 5 | 0 | The setup questions change with each answer |
 | 18 | `screens/planner.js` | 1,274 | 55 | 18 | 0 | The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a calendar of money tasks, the tab "Next Steps"), the check-in b... |
 | 19 | `account/cloud.js` | 468 | 18 | 0 | 0 | The game saves itself to the account of the player |
-| 20 | `screens/ux.js` | 804 | 35 | 7 | 0 | The interface rules for a new player: five plain tabs, one clear title on each screen, Guess / Close / Exact, a Back button that works, and Undo in th... |
+| 20 | `screens/ux.js` | 810 | 36 | 7 | 0 | The interface rules for a new player: five plain tabs, one clear title on each screen, Guess / Close / Exact, a Back button that works, and Undo in th... |
 | 21 | `core/metrics.js` | 1,856 | 27 | 8 | 0 | Key numbers. Each ratio that this game can calculate, in plain words: the value, the rule of thumb and its source, what moves the value, and if the pl... |
 | 22 | `features/debts.js` | 411 | 16 | 3 | 0 | The debt picture by taps (rate, monthly payment, card limit, how much the debt troubles the player), then three payoff plans side by side |
 | 23 | `features/import.js` | 274 | 7 | 9 | 0 | Fill in the spending from a bank or card statement file |
@@ -45,7 +45,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 31 | `features/fair.js` | 269 | 11 | 6 | 0 | Share costs fairly. For two or more persons: five ways to divide the shared costs, side by side |
 | 32 | `features/values.js` | 213 | 6 | 6 | 0 | Is my money going where I want? Three steps, all taps: the three things that matter most, two taps for each place where the money goes, and the result |
 | 33 | `features/missions.js` | 355 | 11 | 3 | 0 | The mission board. The same next steps, shown as missions: why now, how long, the reward, and what it opens |
-| 34 | `features/connect.js` | 376 | 19 | 9 | 0 | How it all connects. (1) Links between the 25 skill tracks: what a track works best after, and what it opens, each with the reason |
+| 34 | `features/connect.js` | 396 | 19 | 9 | 0 | How it all connects. (1) Links between the 25 skill tracks: what a track works best after, and what it opens, each with the reason |
 | 35 | `features/house.js` | 495 | 15 | 8 | 0 | Our household. For a household that is not one person or one married couple |
 | 36 | `features/back.js` | 283 | 14 | 2 | 0 | The welcome-back card. On the first look of a new day, one slim row on Home shows what the player did last time, what moved, and where to continue |
 | 37 | `features/lever.js` | 565 | 15 | 6 | 0 | Which lever matters most. Six levers (Earn, Spend, Protect, Grow, Stretch, Keep), each with a price in dollars a year on the numbers of the player |
@@ -100,9 +100,22 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 86 | `features/plan.js` | 341 | 6 | 4 | 0 | The plan summary. One screen with the 7 steps of the CFP Board's financial planning process as rows (your situation, your goals, where you are headed,... |
 | 87 | `features/ask3.js` | 357 | 12 | 3 | 0 | The Ask front door. One row on Home under the top numbers with four big buttons |
 | 88 | `features/quota.js` | 234 | 11 | 4 | 0 | Extras for people who love spreadsheets |
-| 89 | `features/book.js` | 203 | 7 | 2 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
-| 90 | `features/questlog.js` | 425 | 23 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
-| 91 | `features/built.js` | 898 | 4 | 0 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 89 | `data/takeout2026.js` | 77 | 0 | 0 | 0 | Data only. The reference numbers for "Taking money out" (features/takeout.js): the rules for reaching retirement money before age 59 and a half, and t... |
+| 90 | `features/takeout.js` | 895 | 18 | 0 | 0 | Taking money out. Four answers on one sheet, each from the numbers the game already has |
+| 91 | `features/ages.js` | 187 | 7 | 0 | 0 | Two ages, for each person. (1) Work optional: the age when the invested money is enough to live on (the freedom date of the plan) |
+| 92 | `features/stress.js` | 233 | 6 | 2 | 0 | The stress test. One result from two tests of the same plan: the replay of each real start year of US market history, and the 1,000 random markets of ... |
+| 93 | `features/blocks.js` | 319 | 7 | 1 | 0 | Life event blocks that the player stacks: a home, a car, a child, a job change, a sabbatical, a move |
+| 94 | `features/windfall.js` | 349 | 5 | 2 | 0 | The windfall. What to do with a bonus, a gift, a tax refund or other extra money |
+| 95 | `features/countdown.js` | 399 | 12 | 1 | 0 | Countdowns. One countdown type for each goal on My Goals: a target amount, what is saved for it, and a monthly amount or a date |
+| 96 | `features/offers.js` | 255 | 5 | 1 | 0 | Two job offers side by side. For each offer: the take-home pay from the tax tables, the match, the stock, less the health premiums and the commute |
+| 97 | `features/nextacct.js` | 275 | 4 | 1 | 0 | Which account next, up to each limit |
+| 98 | `features/ledger.js` | 377 | 8 | 1 | 0 | The giant ledger and the three statements |
+| 99 | `data/cards2026.js` | 1,180 | 0 | 0 | 0 | Data only. The card library of the card vault (features/vault.js): the welcome offers of 93 cards at 12 US banks (the yearly fee, the offer, the spend... |
+| 100 | `features/vault.js` | 555 | 19 | 2 | 0 | The card vault ("Is this card right for me?" of the Slam web app, in the game) |
+| 101 | `features/stars.js` | 720 | 35 | 3 | 0 | The Galaxy. A second view of the 25 skill tracks: 25 constellations around a center "FI", 625 stars, one star for each skill |
+| 102 | `features/book.js` | 213 | 7 | 2 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
+| 103 | `features/questlog.js` | 426 | 23 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
+| 104 | `features/built.js` | 960 | 4 | 0 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
@@ -120,7 +133,7 @@ No rows.
 
 ### Actions (ACT) that are set in more than one place
 
-`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 614 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 640 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
 
 | Action | Set in (load order) | Places |
 |--------|---------------------|-------:|

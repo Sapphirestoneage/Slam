@@ -178,7 +178,7 @@
   const row = btRows().find(r => r.n.startsWith("Giant ledger"));
   chk("the built list: built, with the action", row && row.st === "b" && row.a === "ledger");
   const src = require("fs").readFileSync(GAME_DIR + "features/ledger.js", "utf8");
-  chk("style: no em dash, no red", !/—/.test(src) && !/var\(--(bad|red)\)|#f00|color:\s*red/i.test(src));
+  chk("style: no em dash, no red", !/\u2014/.test(src) && !/var\(--(bad|red)\)|#f00|color:\s*red/i.test(src));
   G.chars.length = n0;
   G.active = 0;
   save();
