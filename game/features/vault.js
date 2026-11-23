@@ -5,20 +5,27 @@
                24 months), the dates worth knowing (an offer deadline, the next yearly fee, a slot
                that comes back), and the welcome offers that fit: the credit band, and the spending an
                offer needs next to the monthly spending of the budget that can go on a card.
-   INPUT       data/cards2026.js (window.CARDS2026: the offers, the point values, the 5/24 rule). The
+   INPUT       data/cardtemplate.js (the shape of one card). data/cards2026.js (window.CARDS2026: the
+               cards, the point values, the 5/24 rule). window.CARDS_EXTRA (the cards that the admin
+               added: the database table card_library, with a copy in the browser). The
                profile: c.spends, c.spend, c.high, c.caught.score, c.incs, c.work, c.x.vault (the cards
-               and the answers). The open sheet (W.kind): vault.
+               and the answers). The open sheet (W.kind): vault, vaultcard.
    OUTPUT      Functions: vaultStore, vaultOffer, vaultYm, vaultMonthWords, vaultSlots, vaultCarPay, vaultSpend,
                vaultScore, vaultMe, vaultValue, vaultNet, vaultMonths, vaultFit, vaultMoves, vaultDates,
-               vaultCalc, vaultBook, vaultAddHtml, vaultSheet. Actions (ACT): vault, vaultadd,
-               vaultpick, vaultdel, vaultundo, vaultmore. Menu: "Card vault".
-   DEPENDS ON  data/cards2026.js, core/engine.js, screens/ui.js, features/kit.js.
+               vaultCalc, vaultBook, vaultAddHtml, vaultSheet, vaultLib, vaultExtraSet, vaultLoadExtra,
+               vaultCredits, vaultFee1, vaultCatName, vaultCardParts, vaultCardSheet. Actions (ACT):
+               vault, vaultadd, vaultpick, vaultdel, vaultundo, vaultmore, vaultcard, vaulthave.
+               Menu: "Card vault".
+   DEPENDS ON  data/cardtemplate.js, data/cards2026.js, core/engine.js, screens/ui.js, features/kit.js,
+               account/supa.js (SUPA.sb, only to read the table).
    RULES       The math is the card plan of the Slam web app (js/math/cardplan.js), with the same words.
                A point is worth its floor value: the lift from moving points to airlines is not counted.
                Airline and hotel points count only when the player says so. While the player has
                high-interest debt, the offers wait (the same rule as treeGate in engine.js): interest
                costs more than an offer pays. The offers are dated, and the screen shows the date and
                says to look at the page of the bank. No card is called good or bad. The player taps.
+               The yearly credits of a card count only when the player says so. A missing table or an
+               error of the database leaves the library of the file in place.
    ========================================================================= */
 const VAULT_SCORE = { none: 0, fair: 1, good: 2, excellent: 3 };
 const VAULT_SCORE_OPTS = [
@@ -43,10 +50,70 @@ function vaultStore(c) {
   if (!Array.isArray(S.cards)) S.cards = [];
   return S;
 }
+/* The cards that the admin added (the table card_library). vaultLoadExtra() fills it. */
+window.CARDS_EXTRA = window.CARDS_EXTRA || { cards: [], at: null };
+const VAULT = { lib: null, src: null, n: -1, at: null, asked: false };
+const VAULT_TABLE = "card_library";
+const VAULT_CACHE = "slam_cards_extra";
+/* THE LIBRARY: the cards of the file, with the cards of the admin on top (cardMerge in cardtemplate.js: the
+   same id takes the place of the file card, and a hidden card is left out). */
 function vaultLib() {
-  return typeof CARDS2026 !== "undefined" && CARDS2026
-    ? CARDS2026
-    : { offers: [], units: {}, rule: { slots: 5, months: 24 } };
+  const base =
+      typeof CARDS2026 !== "undefined" && CARDS2026
+        ? CARDS2026
+        : { offers: [], units: {}, rule: { slots: 5, months: 24 }, scoreBands: {} },
+    X = window.CARDS_EXTRA || { cards: [] },
+    ex = X.cards || [];
+  if (!ex.length || typeof cardMerge !== "function") return base;
+  if (VAULT.lib && VAULT.src === ex && VAULT.n === ex.length && VAULT.at === X.at) return VAULT.lib;
+  VAULT.src = ex;
+  VAULT.n = ex.length;
+  VAULT.at = X.at;
+  VAULT.lib = Object.assign({}, base, { offers: cardMerge(base.offers, ex) });
+  return VAULT.lib;
+}
+/* Keep the rows of the table ({ id, data }) as clean cards. */
+function vaultExtraSet(rows, at) {
+  window.CARDS_EXTRA.cards = (rows || [])
+    .filter(r => r && r.id && r.data && typeof r.data === "object")
+    .map(r => cardClean(Object.assign({}, r.data, { id: r.id })));
+  window.CARDS_EXTRA.at = at || null;
+  VAULT.lib = null;
+}
+/* READ THE CARDS OF THE ADMIN. First the copy in the browser (it works with no connection), then the table.
+   A missing table or an error changes nothing: the game keeps the library of the file. With no database
+   client (the tests, the demo) this function reads the copy only. */
+function vaultLoadExtra() {
+  try {
+    const raw = typeof localStorage !== "undefined" && localStorage.getItem ? localStorage.getItem(VAULT_CACHE) : null,
+      old = raw ? JSON.parse(raw) : null;
+    if (old && Array.isArray(old.rows) && !window.CARDS_EXTRA.at) vaultExtraSet(old.rows, old.at);
+  } catch (e) {
+    report(e, "vault.js: vaultLoadExtra (the copy)");
+  }
+  if (typeof SUPA === "undefined" || !SUPA || !SUPA.sb || typeof SUPA.sb.from !== "function") return null;
+  VAULT.asked = true;
+  try {
+    return Promise.resolve(SUPA.sb.from(VAULT_TABLE).select("id,data"))
+      .then(r => {
+        if (!r || r.error || !Array.isArray(r.data)) {
+          if (r && r.error) report(r.error, "vault.js: vaultLoadExtra (the table)");
+          return;
+        }
+        const at = new Date().toISOString();
+        vaultExtraSet(r.data, at);
+        try {
+          localStorage.setItem(VAULT_CACHE, JSON.stringify({ at, rows: r.data }));
+        } catch (e) {
+          report(e, "vault.js: vaultLoadExtra (keep the copy)");
+        }
+        if (W && (W.kind === "vault" || W.kind === "vaultcard")) drawSheet();
+      })
+      .catch(e => report(e, "vault.js: vaultLoadExtra (the table)"));
+  } catch (e) {
+    report(e, "vault.js: vaultLoadExtra");
+    return null;
+  }
 }
 function vaultOffer(id) {
   return vaultLib().offers.find(o => o.id === id) || null;
@@ -115,6 +182,7 @@ function vaultMe(c, today) {
       c.work === "Self-employed" || (c.incs || []).some(r => /side gigs|my own business/i.test(r.k || "") && r.amt > 0),
     held: S.cards.map(x => x.id),
     programs: kitValue(c, "vault", "programs", "no").v === "yes",
+    credits: kitValue(c, "vault", "credits", "no").v === "yes",
   };
 }
 /* Dollars an offer is worth, at the floor value of its points. Null when the sources do not agree. */
@@ -122,10 +190,18 @@ function vaultValue(o) {
   const u = o && vaultLib().units[o.unit];
   return o && o.amt != null && u ? o.amt * u.v : null;
 }
-/* The value of the offer less the fee of the first year. */
-function vaultNet(o) {
+/* The yearly credits of a card, in dollars, when the player uses each one. */
+function vaultCredits(o) {
+  return ((o && o.credits) || []).reduce((t, k) => t + (+k.value || 0), 0);
+}
+/* The fee of the first year. With useCredits, the credits come off it, and it does not go under 0. */
+function vaultFee1(o, useCredits) {
+  return Math.max(0, (o.fee1 != null ? o.fee1 : o.fee || 0) - (useCredits ? vaultCredits(o) : 0));
+}
+/* The value of the offer less the fee of the first year. Credits count only when the player says so. */
+function vaultNet(o, useCredits) {
   const v = vaultValue(o);
-  return v == null ? null : v - Math.max(0, o.fee1 != null ? o.fee1 : o.fee || 0);
+  return v == null ? null : v - vaultFee1(o, useCredits);
 }
 /* Whole months of usual card spending to earn the offer. Null when it cannot be reached in its window. */
 function vaultMonths(o, monthly) {
@@ -161,7 +237,7 @@ function vaultFit(o, me, rule) {
     else reasons.push(left + " slots left.");
   }
   if (o.upTo) reasons.push("This is the most anyone is shown. The offer you see when you apply can be lower.");
-  if (o.spendKnown === 0) cap(1, "Today's sources did not say what it needs you to spend.");
+  if (o.spendKnown === 0 || o.spendKnown === false) cap(1, "Today's sources did not say what it needs you to spend.");
   if (me.score != null && o.min != null) {
     const have = VAULT_SCORE[me.score] || 0,
       want = VAULT_SCORE[o.min] || 0;
@@ -193,7 +269,7 @@ function vaultFit(o, me, rule) {
     else reasons.push("Your usual spending covers the offer.");
   }
   if (vaultNet(o) == null) cap(1, "The offer is not settled between sources, so no dollar value is counted.");
-  return { level: order[level], reasons, net: vaultNet(o) };
+  return { level: order[level], reasons, net: vaultNet(o, me.credits) };
 }
 /* THE OFFERS OPEN FROM HERE, the biggest first-year value first. Empty while high-interest debt is there. */
 function vaultMoves(c, today) {
@@ -209,7 +285,12 @@ function vaultMoves(c, today) {
       if (slots <= 0 && o.bank === L.rule.issuer) return false;
       return !!u && (u.cash || me.programs);
     })
-    .map(o => ({ o, fit: vaultFit(o, me), months: vaultMonths(o, me.monthlySpend), net: vaultNet(o) }))
+    .map(o => ({
+      o,
+      fit: vaultFit(o, me),
+      months: vaultMonths(o, me.monthlySpend),
+      net: vaultNet(o, me.credits),
+    }))
     .filter(m => m.fit.level !== "later" && m.months != null)
     .sort((a, b) => b.net - a.net);
 }
@@ -293,8 +374,19 @@ function vaultBook(c) {
         v: vaultValue(b.o),
         note: b.o.bank + " " + b.o.n + ", as of " + L.asOf + ". Points at their floor value",
       },
-      { id: "vt_fee1", label: "Its fee in the first year", v: b.o.fee1 != null ? b.o.fee1 : b.o.fee || 0 },
-      { id: "vt_net", label: "Its first-year value after the fee", v: b.net, f: "={vt_value}-{vt_fee1}" },
+      { id: "vt_fee1", label: "Its fee in the first year", v: vaultFee1(b.o, false) },
+      {
+        id: "vt_credit",
+        label: "Its yearly credits that you count",
+        v: V.me.credits ? vaultCredits(b.o) : 0,
+        note: "0 until you say on the screen that you would use the credits",
+      },
+      {
+        id: "vt_net",
+        label: "Its first-year value after the fee",
+        v: b.net,
+        f: "={vt_value}-MAX(0,{vt_fee1}-{vt_credit})",
+      },
       { id: "vt_need", label: "Spending the offer needs", v: b.o.spend },
       {
         id: "vt_per",
@@ -370,7 +462,7 @@ function vaultSheet() {
     ? `<div class="stack" style="gap:6px">${V.cards
         .map(
           (x, i) =>
-            `<div class="tile row between" style="gap:8px"><span style="min-width:0"><b class="small">${esc(x.bank + " " + x.n)}</b><div class="tiny muted">${x.ym ? "Opened " + vaultMonthWords(vaultYm(x.ym)) : "Opened more than 2 years ago"}${x.fee ? " · " + money(x.fee) + " a year" : " · no yearly fee"}</div></span><button class="ghost slim" data-a="vaultdel" data-v="${i}">Remove</button></div>`
+            `<div class="tile row between" style="gap:8px"><span style="min-width:0"><b class="small">${esc(x.bank + " " + x.n)}</b><div class="tiny muted">${x.ym ? "Opened " + vaultMonthWords(vaultYm(x.ym)) : "Opened more than 2 years ago"}${x.fee ? " · " + money(x.fee) + " a year" : " · no yearly fee"}</div></span><span class="row" style="gap:6px;flex:none">${vaultOffer(x.id) ? `<button class="ghost slim" data-a="vaultcard" data-v="${esc(x.id)}">Details ›</button>` : ""}<button class="ghost slim" data-a="vaultdel" data-v="${i}">Remove</button></span></div>`
         )
         .join("")}</div>`
     : `<div class="tile small muted">No cards here yet. Add the cards you have, so the count and the dates are yours.</div>`;
@@ -397,11 +489,17 @@ function vaultSheet() {
               [
                 ["The offer " + kitInfo("vt_offer"), esc(m.o.amt.toLocaleString() + " " + L.units[m.o.unit].n)],
                 ["Its value " + kitInfo("vt_floor"), money(vaultValue(m.o))],
-                ["Fee in the first year", money(m.o.fee1 != null ? m.o.fee1 : m.o.fee || 0)],
+                ["Fee in the first year", money(vaultFee1(m.o, false))],
+                vaultCredits(m.o) > 0
+                  ? [
+                      "Credits worth " + money(vaultCredits(m.o)) + " a year " + kitInfo("vt_credit"),
+                      V.me.credits ? "counted" : "not counted",
+                    ]
+                  : null,
                 ["First-year value after the fee " + kitInfo("vt_net"), money(m.net)],
                 ["Months of your usual spending", String(m.months)],
               ]
-            )}${m.fit.reasons.map(r => `<div class="tiny muted">${esc(r)}</div>`).join("")}</div></details>`
+            )}${m.fit.reasons.map(r => `<div class="tiny muted">${esc(r)}</div>`).join("")}<button class="ghost slim" data-a="vaultcard" data-v="${esc(m.o.id)}">See the whole card ›</button></div></details>`
         )
         .join("")}</div>` +
       (V.moves.length > VAULT_SHOW && !o.more
@@ -438,6 +536,18 @@ function vaultSheet() {
     "no",
     { term: "vt_program" }
   );
+  h += kitAsk(
+    c,
+    "vault",
+    "credits",
+    "Count the yearly credits of a card?",
+    [
+      ["no", "No, fee in full"],
+      ["yes", "Yes, I would use them"],
+    ],
+    "no",
+    { term: "vt_credit", help: "A credit gives money back only for the thing it names, for example one hotel site." }
+  );
   h += mathBox([
     "5/24: " + R.words + ". Source: " + R.source + " (" + R.date + ").",
     "You opened " +
@@ -450,7 +560,10 @@ function vaultSheet() {
       R.slots +
       " slots are left.",
     "The value of an offer = the points times the floor value of one point (1 cent for cash and for most bank points). The lift from moving points to an airline is not counted.",
-    "First-year value = the value of the offer - the fee of the first year.",
+    "First-year value = the value of the offer - the fee of the first year." +
+      (V.me.credits
+        ? " You count the yearly credits: they come off the fee, and the fee does not go under $0."
+        : " The yearly credits of a card are not counted."),
     "An offer fits your budget when its spending divides into your monthly card spending within its months: " +
       money(V.spend.v) +
       " a month.",
@@ -462,7 +575,105 @@ function vaultSheet() {
       L.scoreBands.source +
       ".",
     "Offers: " + L.source,
+    "Fees, earn rates, credits and cover: " + (L.cardsSource || "each card names its source") + ".",
+    "Not on this screen: the best card for each spending line. Your spending lines (Food, Getting around) mix card categories (groceries and dining, gas and transit), so the game would have to guess.",
   ]);
+  return h;
+}
+/* ---------- the sheet of one card ---------- */
+function vaultCatName(k) {
+  const r = CARD_TEMPLATE.cats.find(x => x[0] === k);
+  return r ? r[1] : k;
+}
+/* The parts of one card, ready to show: the switches by group, the earn rows, the credits and their total. */
+function vaultCardParts(o) {
+  const tg = typeof cardToggles === "function" ? cardToggles(o) : [],
+    e = o.earn || { base: 1, rates: [], words: "" },
+    band = CARD_TEMPLATE.bands.find(b => b[0] === o.min),
+    X = window.CARDS_EXTRA || { cards: [] };
+  return {
+    toggles: tg,
+    rates: (e.rates || []).slice().sort((a, b) => b.x - a.x),
+    base: e.base == null ? 1 : e.base,
+    earnWords: e.words || "",
+    credits: o.credits || [],
+    creditSum: vaultCredits(o),
+    unique: o.unique || [],
+    band: band ? band[1] : "",
+    fromAdmin: (X.cards || []).some(x => x.id === o.id),
+  };
+}
+function vaultCardSheet() {
+  const c = C(),
+    L = vaultLib(),
+    o = vaultOffer(W.id);
+  if (!o)
+    return (
+      head("Card vault", "This card") +
+      `<div class="tile small">This card is not in the library now.</div><button class="ghost wide" data-a="vault">Open the card vault</button>`
+    );
+  const P = vaultCardParts(o),
+    u = L.units[o.unit],
+    v = vaultValue(o),
+    held = vaultStore(c).cards.some(x => x.id === o.id),
+    sec = (title, term) =>
+      `<div class="row between small" style="margin-top:4px"><b>${esc(title)}</b>${kitInfo(term)}</div>`;
+  let h =
+    head("Card vault", esc(o.bank + " " + o.n)) +
+    igRows([
+      ["Yearly fee " + kitInfo("vt_fee"), o.fee ? money(o.fee) : "No yearly fee"],
+      o.fee1 != null ? ["Fee in the first year", money(o.fee1)] : null,
+      o.network ? ["Network " + kitInfo("vt_network"), esc(o.network)] : null,
+      P.band ? ["Credit it usually needs " + kitInfo("vt_score"), esc(P.band)] : null,
+      [
+        "Welcome offer " + kitInfo("vt_offer"),
+        o.amt > 0 && u ? esc(o.amt.toLocaleString() + " " + u.n) : "No dollar value counted",
+      ],
+      v != null && o.amt > 0 ? ["Its value at the floor " + kitInfo("vt_floor"), money(v)] : null,
+      o.amt > 0 ? ["Spending it needs", money(o.spend || 0) + " in " + (o.months || 3) + " months"] : null,
+      o.ends ? ["The offer ends", esc(o.ends)] : null,
+    ]);
+  h += sec("What this card has", "vt_has");
+  h += P.toggles.length
+    ? `<div class="stack vaulthas" style="gap:6px">${P.toggles
+        .map(
+          t =>
+            `<div class="tile stack" style="gap:2px"><div class="row between" style="gap:8px"><span class="pill kitst">${esc(t.l)}</span>${kitInfo("vtsw_" + t.k)}</div>${t.words ? `<div class="tiny muted">${esc(t.words)}</div>` : ""}</div>`
+        )
+        .join("")}</div>`
+    : `<div class="tile small muted">No switch is on for this card in the library.</div>`;
+  h += sec("What it earns", "vt_earn");
+  h +=
+    igRows(
+      P.rates
+        .map(r => [esc(vaultCatName(r.cat)), r.x + "x"])
+        .concat([[P.rates.length ? "Everything else" : "Each purchase", P.base + "x"]])
+    ) + (P.earnWords ? `<div class="tiny muted">${esc(P.earnWords)}</div>` : "");
+  h += sec("Yearly credits", "vt_credit");
+  h += P.credits.length
+    ? `<div class="stack" style="gap:4px">${P.credits
+        .map(
+          k =>
+            `<div class="small"><div class="row between" style="gap:8px"><span style="min-width:0">${esc(k.name)}</span><span class="muted" style="white-space:nowrap">${k.value > 0 ? money(k.value) : "no dollar value"}</span></div>${k.words ? `<div class="tiny muted">${esc(k.words)}</div>` : ""}</div>`
+        )
+        .join(
+          ""
+        )}</div><div class="small">Credits worth <b>${money(P.creditSum)}</b> a year, when you use each one.${o.fee ? " The yearly fee is " + money(o.fee) + "." : ""}</div>`
+    : `<div class="tile small muted">No yearly credits in the library for this card.</div>`;
+  if (P.unique.length) {
+    h += sec("What is unique", "vt_unique");
+    h += `<div class="stack vaultuniq" style="gap:4px">${P.unique
+      .map(
+        r =>
+          `<div class="small"><b>${esc(r.label)}</b>${r.words ? `<div class="tiny muted">${esc(r.words)}</div>` : ""}</div>`
+      )
+      .join("")}</div>`;
+  }
+  h += sec("Where this comes from", "vt_source");
+  h += `<div class="tiny muted vaultsrc">${esc(o.source || "No source named.")}</div><div class="small">Looked at on <b>${esc(o.checked || "no date")}</b>${P.fromAdmin ? " · added by the SLAM team" : ""}. Cards change: look at the page of the bank before you apply.</div>`;
+  h += held
+    ? `<div class="tile small">This card is in your vault.</div>`
+    : `<button class="ghost wide" data-a="vaulthave" data-v="${esc(o.id)}">I have this card: add it to my vault</button>`;
   return h;
 }
 kitTerms({
@@ -497,6 +708,53 @@ kitTerms({
     "Points that only one airline or hotel takes. They are worth something only when you would fly or stay with that company.",
   ],
 });
+/* An "i" for each switch of the template, and for each part of the sheet of one card. */
+if (typeof CARD_TEMPLATE !== "undefined") {
+  const terms = {};
+  CARD_TEMPLATE.toggles.forEach(t => {
+    terms["vtsw_" + t.k] = [
+      t.l,
+      (t.help ? t.help + " " : "") + "The line under the label says what this card gives, when the library has it.",
+    ];
+  });
+  kitTerms(terms);
+}
+kitTerms({
+  vt_credit: [
+    "Yearly credits",
+    "Money a card gives back each year for one named thing, for example a hotel site or a membership. A credit is worth its dollars only when you would buy that thing anyway.",
+  ],
+  vt_fee: [
+    "Yearly fee",
+    "What the bank charges each year to keep the card open. It posts in the month you opened the card.",
+  ],
+  vt_network: [
+    "Network",
+    "The company that carries the payment: Visa, Mastercard, American Express or Discover. A store takes a card only when it takes its network.",
+  ],
+  vt_has: [
+    "What this card has",
+    "The yes / no features of the card: cover for travel and purchases, fees it does not charge, and what its points can do.",
+  ],
+  vt_earn: [
+    "Earn rate",
+    "The points or the percent you get for each dollar. 3x means 3 points, or 3% back, for each dollar in that category.",
+  ],
+  vt_unique: [
+    "What is unique",
+    "Things about this card that fit no switch: a limit on a rate, a note, the usual interest rate.",
+  ],
+  vt_source: [
+    "Source",
+    "The page where a person read these facts, and the date they looked. Banks change cards often.",
+  ],
+});
+kitScreen(
+  "vaultcard",
+  "One card",
+  "All that the library knows about one card: what it has, what it earns, its credits, and what is unique.",
+  "Each fact has a source and a date. Look at the page of the bank before you apply."
+);
 kitScreen(
   "vault",
   "Card vault",
@@ -505,7 +763,20 @@ kitScreen(
 );
 Object.assign(ACT, {
   vault: () => {
+    if (!VAULT.asked) vaultLoadExtra();
     W = { kind: "vault", o: {} };
+    sheet(vaultSheet);
+  },
+  /* The sheet of one card. It opens on top of the vault, so Back returns to the vault. */
+  vaultcard: t => {
+    W = { kind: "vaultcard", id: t.dataset.v, o: {} };
+    sheet(vaultCardSheet);
+  },
+  /* "I have this card": the vault opens at the step that asks the year. */
+  vaulthave: t => {
+    const o = vaultOffer(t.dataset.v);
+    if (!o) return;
+    W = { kind: "vault", o: { add: { bank: o.bank, id: o.id } } };
     sheet(vaultSheet);
   },
   vaultadd: t => {
@@ -561,3 +832,7 @@ Object.assign(ACT, {
   },
 });
 kitMenu("Card vault", "vault", "Your cards, your 5/24 count, and the offers that fit your budget", "ledger");
+/* Read the cards of the admin one time, after the account is ready. With no account system it reads the copy only. */
+if (typeof SUPA !== "undefined" && SUPA && SUPA.ready && typeof SUPA.ready.then === "function")
+  SUPA.ready.then(vaultLoadExtra).catch(e => report(e, "vault.js: the first read of the cards"));
+else vaultLoadExtra();

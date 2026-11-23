@@ -288,3 +288,304 @@
   a.debts[0].amt = 0;
   chk("a car loan that is paid off takes nothing away", vaultSpend(a).budget === 2100);
 }
+{
+  /* The full card records, the cards of the admin (CARDS_EXTRA), the sheet of one card, the credits, the loader. */
+  const n0 = G.chars.length,
+    R0 = r => Object.assign({ s: true }, r),
+    T = "2026-11-23",
+    L0 = CARDS2026,
+    a = Object.assign(newChar(), {
+      name: "Vault two",
+      led: true,
+      placed: true,
+      age: 31,
+      incs: [R0({ k: "A main job", amt: 7000 })],
+      spends: [
+        R0({ k: "Home", amt: 2000 }),
+        R0({ k: "Food", amt: 1500 }),
+        R0({ k: "Fun and everything else", amt: 1500 }),
+      ],
+      cashes: [R0({ k: "Checking", amt: 8000 })],
+      invs: [],
+      debts: [],
+      caught: { score: "740 to 799" },
+    });
+  G.chars.push(a);
+  G.active = n0;
+  syncAll(a);
+  save();
+  const c = C();
+  const bad = L0.offers.map(o => [o.id, cardCheck(o, L0.units)]).filter(x => x[1].length);
+  chk(
+    "each of the 93 cards is a full template record: cardCheck finds nothing",
+    L0.offers.length === 93 && bad.length === 0,
+    JSON.stringify(bad.slice(0, 3))
+  );
+  chk(
+    "each card names its source and a date, and cardClean keeps its switches, rates, credits and unique rows",
+    L0.offers.every(o => {
+      const k = cardClean(o);
+      return (
+        o.source.length > 10 &&
+        /^\d{4}-\d\d-\d\d$/.test(o.checked) &&
+        k.earn.rates.length === o.earn.rates.length &&
+        k.credits.length === o.credits.length &&
+        k.unique.length === o.unique.length &&
+        Object.keys(o.has).every(h => k.has[h]) &&
+        Object.values(o.hasWords).every(w => typeof w === "string")
+      );
+    })
+  );
+  chk(
+    "the rewards layer is in: 67 cards have earn words, and each rate names a category of the template",
+    L0.offers.filter(
+      o =>
+        o.earn.words &&
+        o.network !== undefined &&
+        (o.earn.rates.length || o.credits.length || Object.keys(o.has).length)
+    ).length >= 60 &&
+      L0.offers.every(o => o.earn.rates.every(r => CARD_TEMPLATE.cats.some(k => k[0] === r.cat) && r.x > 0))
+  );
+  const sp = L0.offers.find(o => o.id === "chase-sapphire-preferred");
+  chk(
+    "one card by hand: Sapphire Preferred has its switches, its rates and its credits",
+    sp.has.noForeignFee &&
+      sp.has.rental &&
+      sp.has.transfer &&
+      sp.has.trusted &&
+      sp.hasWords.rental.includes("Primary") &&
+      sp.earn.rates.some(r => r.cat === "dining" && r.x === 3) &&
+      sp.credits.length === 3 &&
+      vaultCredits(sp) === 130 &&
+      sp.network === "Visa",
+    JSON.stringify(sp.has)
+  );
+  /* the loader: nothing harmful with no database client */
+  const before = vaultLib();
+  let threw = false,
+    out;
+  try {
+    out = vaultLoadExtra();
+  } catch (e) {
+    threw = true;
+  }
+  chk(
+    "the loader with no client: no error, no promise, and the file library stays",
+    !threw && out === null && CARDS_EXTRA.cards.length === 0 && vaultLib() === before && vaultLib().offers.length === 93
+  );
+  /* a table that is missing: the error is recorded, and the library stays */
+  const keepSb = SUPA.sb,
+    errs0 = ERRLOG.length;
+  SUPA.sb = {
+    from: () => ({
+      select: () => Promise.resolve({ data: null, error: new Error("relation card_library does not exist") }),
+    }),
+  };
+  const pr = vaultLoadExtra();
+  SUPA.sb = keepSb;
+  chk("the loader with a missing table returns a promise that does not reject", pr && typeof pr.then === "function");
+  pr.then(() =>
+    chk(
+      "a missing table leaves the file library, with one error record",
+      vaultLib().offers.length >= 93 && ERRLOG.length === errs0 + 1,
+      ERRLOG.length - errs0
+    )
+  );
+  /* a card of the admin */
+  const extra = cardClean({
+    bank: "Test Bank",
+    n: "Everyday Plus",
+    network: "Visa",
+    fee: 99,
+    amt: 500,
+    unit: "cash",
+    spend: 1500,
+    months: 3,
+    min: "good",
+    has: { noForeignFee: true, cellPhone: true },
+    hasWords: { cellPhone: "Up to $600 a claim when the phone bill is on the card" },
+    earn: {
+      base: 1,
+      rates: [
+        { cat: "groceries", x: 4 },
+        { cat: "gas", x: 3 },
+      ],
+      words: "4x groceries, 3x gas, 1x other",
+    },
+    credits: [{ name: "Streaming credit", value: 60, words: "$5 a month" }],
+    unique: [{ label: "Free museum day", words: "One Saturday a month" }],
+    source: "The page of the bank (a test record)",
+    checked: "2026-11-23",
+  });
+  chk(
+    "the new card is ready by the template",
+    extra.id === "test-bank-everyday-plus" && cardCheck(extra, L0.units).length === 0
+  );
+  CARDS_EXTRA.cards = [extra];
+  CARDS_EXTRA.at = "t1";
+  chk(
+    "a card in CARDS_EXTRA shows in the library",
+    vaultLib().offers.length === 94 &&
+      vaultOffer("test-bank-everyday-plus") &&
+      vaultOffer("test-bank-everyday-plus").fee === 99
+  );
+  chk(
+    "it is in the offers that fit, with its first-year value",
+    vaultMoves(c, T).some(m => m.o.id === extra.id && m.net === 500 - 99)
+  );
+  X("vault");
+  X("vaultadd", "go");
+  chk("its bank is in the steps to add a card", ov().includes('data-v="Test Bank"'));
+  X("vaultpick", "Test Bank", "bank");
+  chk("and its name", ov().includes("Everyday Plus"));
+  X("vaultpick", extra.id, "id");
+  X("vaultpick", "old", "y");
+  chk(
+    "the card of the admin can be added to the vault",
+    vaultStore(c).cards.length === 1 && vaultStore(c).cards[0].id === extra.id && vaultStore(c).cards[0].fee === 99
+  );
+  chk("the vault row has the button Details", ov().includes('data-a="vaultcard" data-v="' + extra.id + '"'));
+  /* the sheet of one card */
+  X("vaultcard", extra.id);
+  chk(
+    "the sheet of one card: switches with their detail, earn rates, credits with the total, unique rows, source and date",
+    W.kind === "vaultcard" &&
+      ov().includes("No foreign transaction fee") &&
+      ov().includes("Cell phone protection") &&
+      ov().includes("Up to $600 a claim") &&
+      ov().includes("Groceries") &&
+      ov().includes("4x") &&
+      ov().includes("Everything else") &&
+      ov().includes("Streaming credit") &&
+      ov().includes("Credits worth <b>$60</b> a year") &&
+      ov().includes("Free museum day") &&
+      ov().includes("The page of the bank (a test record)") &&
+      ov().includes("2026-11-23") &&
+      ov().includes("added by the SLAM team") &&
+      ov().includes("This card is in your vault") &&
+      clean(ov()),
+    junk(ov())
+  );
+  chk(
+    "each technical label of that sheet has an i",
+    [
+      "vt_fee",
+      "vt_network",
+      "vt_has",
+      "vt_earn",
+      "vt_credit",
+      "vt_unique",
+      "vt_source",
+      "vtsw_noForeignFee",
+      "vtsw_cellPhone",
+    ].every(k => ov().includes("term:" + k) && GLOSS[k]),
+    ov().length
+  );
+  chk(
+    "each switch of the template has its i",
+    CARD_TEMPLATE.toggles.every(t => GLOSS["vtsw_" + t.k]) && !!NV_INFO.vaultcard
+  );
+  X("navback");
+  chk("Back returns to the vault", W && W.kind === "vault");
+  /* the sheet of a file card, and "I have this card" */
+  X("vaultcard", "chase-sapphire-preferred");
+  chk(
+    "the sheet of a file card is clean and has its parts",
+    ov().includes("Rental car cover") &&
+      ov().includes("Primary rental car coverage") &&
+      ov().includes("Dining and takeout") &&
+      ov().includes("Credits worth <b>$130</b> a year") &&
+      ov().includes("What is unique") &&
+      ov().includes("2026-11-06") &&
+      ov().includes('data-a="vaulthave"') &&
+      clean(ov()),
+    junk(ov())
+  );
+  const all = vaultLib().offers.map(o => {
+    X("vaultcard", o.id);
+    return clean(ov()) ? "" : o.id;
+  });
+  chk(
+    "the sheet of each card of the library is clean",
+    all.every(x => !x),
+    all.filter(Boolean).slice(0, 4).join()
+  );
+  X("vaulthave", "chase-sapphire-preferred");
+  chk(
+    "I have this card opens the vault at the year",
+    W.kind === "vault" && W.o.add.id === "chase-sapphire-preferred" && ov().includes("Which year did you open it?")
+  );
+  X("close");
+  /* the same id takes the place of the file card, and hidden removes it */
+  CARDS_EXTRA.cards = [cardClean(Object.assign({}, sp, { fee: 150 }))];
+  CARDS_EXTRA.at = "t2";
+  chk(
+    "an extra card with the id of a file card takes its place",
+    vaultLib().offers.length === 93 &&
+      vaultOffer("chase-sapphire-preferred").fee === 150 &&
+      vaultNet(vaultOffer("chase-sapphire-preferred")) === 750 - 150
+  );
+  CARDS_EXTRA.cards = [cardClean(Object.assign({}, sp, { hidden: true }))];
+  CARDS_EXTRA.at = "t3";
+  chk(
+    "hidden: true removes the card",
+    vaultLib().offers.length === 92 &&
+      vaultOffer("chase-sapphire-preferred") === null &&
+      !vaultMoves(c, T).some(m => m.o.id === "chase-sapphire-preferred")
+  );
+  vaultExtraSet(
+    [
+      { id: "x-one", data: { bank: "X", n: "One", fee: "0", source: "s", checked: "2026-11-23" } },
+      { id: "", data: {} },
+      null,
+    ],
+    "t4"
+  );
+  chk(
+    "rows of the table go through cardClean, and a row with no id is dropped",
+    CARDS_EXTRA.cards.length === 1 &&
+      CARDS_EXTRA.cards[0].id === "x-one" &&
+      CARDS_EXTRA.cards[0].fee === 0 &&
+      vaultLib().offers.length === 94
+  );
+  CARDS_EXTRA.cards = [];
+  CARDS_EXTRA.at = null;
+  chk(
+    "with no extra cards the library is the file again",
+    vaultLib().offers.length === 93 && vaultOffer("chase-sapphire-preferred").fee === 95
+  );
+  /* the yearly credits: not counted until the player says so */
+  vaultStore(c).cards.length = 0;
+  const m0 = vaultMoves(c, T).find(m => m.o.id === "chase-sapphire-preferred");
+  chk(
+    "credits are not counted by default",
+    m0 && m0.net === 750 - 95 && vaultFee1(sp, false) === 95 && vaultFee1(sp, true) === 0
+  );
+  X("vault");
+  chk(
+    "the offer row shows the credits as not counted, and the chip asks",
+    ov().includes("Count the yearly credits of a card?") && ov().includes('data-k="vault|credits"')
+  );
+  X("kitset", "yes", "vault|credits", { t: "s" });
+  const m1 = vaultMoves(c, T).find(m => m.o.id === "chase-sapphire-preferred");
+  chk(
+    "with the chip on, the credits come off the fee, and the fee does not go under 0",
+    m1.net === 750 && vaultNet(sp, true) === 750
+  );
+  const B = vaultBook(c),
+    val = id => (B.rows.find(r => r.id === id) || {}).v;
+  chk(
+    "the spreadsheet row follows: value - MAX(0, fee - credits)",
+    val("vt_net") === val("vt_value") - Math.max(0, val("vt_fee1") - val("vt_credit")),
+    JSON.stringify(B.rows.map(r => [r.id, r.v]))
+  );
+  delete kitStore(c, "vault").credits;
+  X("close");
+  const src =
+    require("fs").readFileSync(GAME_DIR + "features/vault.js", "utf8") +
+    require("fs").readFileSync(GAME_DIR + "data/cards2026.js", "utf8");
+  chk("style: no em dash in the vault or the library", !src.includes(String.fromCharCode(8212)));
+  G.chars.length = n0;
+  G.active = 0;
+  save();
+}

@@ -37,6 +37,7 @@ Each file has the name of its feature.
 | `plan-spreadsheet.js` | The spreadsheet of the plan: each formula worked out and compared with the game | `features/book.js` |
 | `plan-summary.js` | My plan on one page | `features/plan.js` |
 | `ledger-and-statements.js` | The giant ledger and the three statements: each total against derive() | `features/ledger.js` |
+| `card-library-admin.js` | The card template, and Add a card on the admin page | `data/cardtemplate.js`, `account/cardadmin.js` |
 | `card-vault.js` | The card vault: the 5/24 count, the credit band, offers against the budget | `features/vault.js`, `data/cards2026.js` |
 | `retirement-engine.js` | The retirement engine and its adapter: same seed, same result | `vendor/retire-engine.js`, `features/retire.js` |
 | `retirement-odds.js` | Retirement odds | `features/odds.js`, `data/market.js` (some checks wait for the engine) |

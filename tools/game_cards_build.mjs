@@ -93,7 +93,9 @@ function record(x) {
     if (r.note) unique.push({ label: "About the points", words: r.note });
     if (/transfer partners/i.test(r.note || "")) on("transfer", words.transfer || "Transfer partners can be worth more than the floor value");
     BENEFITS.forEach(k => {
-      if (lib.benefits && lib.benefits[k]) on(k, lib.benefits[k]);
+      const v = lib.benefits && lib.benefits[k];
+      /* a benefit is one line of words, or an object with its words and its limits */
+      if (v) on(k, typeof v === "string" ? v : v.words || "");
     });
     if (lib.foreignFee === 0) on("noForeignFee");
     else if (lib.foreignFee > 0) unique.push({ label: "Foreign transaction fee", words: Math.round(lib.foreignFee * 1000) / 10 + "% of each purchase abroad" });
@@ -175,4 +177,4 @@ const header = `/* =============================================================
    ========================================================================= */
 window.CARDS2026 = `;
 fs.writeFileSync(path.join(root, "game/data/cards2026.js"), header + JSON.stringify(data, null, 1) + ";\n");
-console.log(offers.length + " cards, " + offers.filter(o => o.network).length + " with the rewards layer.");
+console.log(offers.length + " cards, " + offers.filter(o => byId[o.id]).length + " with the rewards layer.");

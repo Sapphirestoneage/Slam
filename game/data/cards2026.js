@@ -2255,11 +2255,7 @@ window.CARDS2026 = {
     "rental": "Car rental loss and damage insurance, secondary, when the rental is paid with the card",
     "tripCancel": "Trip cancellation and interruption, up to $10,000 a trip",
     "tripDelay": "Trip delay over 6 hours, up to $500",
-    "cellPhone": {
-     "words": "Cell phone protection: up to $800 a claim, $50 deductible, 2 claims a year, when the phone bill is paid with the card",
-     "perClaim": 800,
-     "deductible": 50
-    },
+    "cellPhone": "Cell phone protection: up to $800 a claim, $50 deductible, 2 claims a year, when the phone bill is paid with the card",
     "purchase": "Purchase protection: theft or accidental damage within 90 days, up to $1,000 an item",
     "warranty": "Extended warranty: one more year on US manufacturer warranties of 5 years or less",
     "lounge": "Centurion Lounges, Priority Pass, Delta Sky Club when flying Delta (10 visits a year) and more",
@@ -2872,11 +2868,7 @@ window.CARDS2026 = {
     "tripCancel": "Trip cancellation and interruption",
     "tripDelay": "Trip delay",
     "baggage": "Lost luggage",
-    "cellPhone": {
-     "words": "Cell phone protection: up to $800 a claim, $50 deductible, 2 claims a year, when the phone bill is paid with the card",
-     "perClaim": 800,
-     "deductible": 50
-    },
+    "cellPhone": "Cell phone protection: up to $800 a claim, $50 deductible, 2 claims a year, when the phone bill is paid with the card",
     "purchase": "Purchase protection: 90 days, up to $10,000 a claim",
     "warranty": "Extended warranty: one more year on warranties of 3 years or less",
     "lounge": "Priority Pass and Capital One Lounges (authorized users pay $125 a year since Feb 1, 2026)",
@@ -4378,11 +4370,7 @@ window.CARDS2026 = {
    },
    "hasWords": {
     "rental": "Secondary collision damage waiver on rentals paid with the card (decline the counter coverage)",
-    "cellPhone": {
-     "words": "Cell phone protection: up to $600 a claim, $25 deductible, 2 claims a year, when the monthly phone bill is paid with the card. Not for a lost phone",
-     "perClaim": 600,
-     "deductible": 25
-    },
+    "cellPhone": "Cell phone protection: up to $600 a claim, $25 deductible, 2 claims a year, when the monthly phone bill is paid with the card. Not for a lost phone",
     "intro0": "12 months on purchases, 12 months on balance transfers"
    },
    "unique": [
@@ -4460,11 +4448,7 @@ window.CARDS2026 = {
    },
    "hasWords": {
     "rental": "Secondary collision damage waiver on rentals paid with the card (decline the counter coverage)",
-    "cellPhone": {
-     "words": "Cell phone protection: up to $600 a claim, $25 deductible, 2 claims a year, when the monthly phone bill is paid with the card. Not for a lost phone",
-     "perClaim": 600,
-     "deductible": 25
-    },
+    "cellPhone": "Cell phone protection: up to $600 a claim, $25 deductible, 2 claims a year, when the monthly phone bill is paid with the card. Not for a lost phone",
     "intro0": "12 months on purchases"
    },
    "unique": [
@@ -4535,11 +4519,7 @@ window.CARDS2026 = {
     "rental": "Rental car coverage",
     "tripCancel": "Trip cancellation and interruption",
     "baggage": "Lost luggage",
-    "cellPhone": {
-     "words": "Cell phone protection: up to $1,000 a claim, $25 deductible, 2 claims a year, when the phone bill is paid with the card",
-     "perClaim": 1000,
-     "deductible": 25
-    }
+    "cellPhone": "Cell phone protection: up to $1,000 a claim, $25 deductible, 2 claims a year, when the phone bill is paid with the card"
    },
    "unique": [
     {
@@ -4580,11 +4560,7 @@ window.CARDS2026 = {
     "intro0": true
    },
    "hasWords": {
-    "cellPhone": {
-     "words": "Cell phone protection: up to $600 a claim, $25 deductible, 2 claims a year, when the monthly phone bill is paid with the card. Not for a lost phone",
-     "perClaim": 600,
-     "deductible": 25
-    },
+    "cellPhone": "Cell phone protection: up to $600 a claim, $25 deductible, 2 claims a year, when the monthly phone bill is paid with the card. Not for a lost phone",
     "intro0": "21 months on purchases, 21 months on balance transfers"
    },
    "unique": [
