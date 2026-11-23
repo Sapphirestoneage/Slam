@@ -925,3 +925,327 @@
   G.active = 0;
   save();
 }
+{
+  /* The second group of lines: one airline, one hotel brand, travel booked with the bank, one store, and the
+     bonus categories of a quarter. The same budget as above: 3,000 a month on a card, Travel 230, the rest 810. */
+  const n0 = G.chars.length,
+    R0 = r => Object.assign({ s: true }, r),
+    T = "2026-11-23",
+    L0 = CARDS2026,
+    near = (a, b) => Math.abs(a - b) < 0.005,
+    a = Object.assign(newChar(), {
+      name: "Vault three",
+      led: true,
+      placed: true,
+      age: 31,
+      incs: [R0({ k: "A main job", amt: 7000 })],
+      spends: [
+        R0({ k: "Home", amt: 2000 }),
+        R0({ k: "Food", amt: 1500 }),
+        R0({ k: "Fun and everything else", amt: 1500 }),
+      ],
+      cashes: [R0({ k: "Checking", amt: 8000 })],
+      invs: [],
+      debts: [],
+      caught: { score: "740 to 799" },
+    });
+  G.chars.push(a);
+  G.active = n0;
+  syncAll(a);
+  save();
+  const c = C(),
+    V = kitStore(c, "vault"),
+    hil = vaultOffer("amex-hilton-honors"),
+    disc = vaultOffer("discover-it-cash-back"),
+    bcp = vaultOffer("amex-blue-cash-preferred"),
+    tgt = vaultOffer("td-target-circle"),
+    hv = L0.units.hilton.v,
+    snap = () => {
+      const B = vaultBest(c, T);
+      return JSON.stringify([
+        B.K.spend,
+        B.K.other,
+        B.K.sum,
+        B.rows.map(r => [r.k, r.month, r.lib && r.lib.o.id, r.lib && r.lib.year]),
+        B.single.o.id,
+        B.single.net,
+      ]);
+    };
+  chk(
+    "the brands come from the cards of the library",
+    vaultBrands("hotel").join() === "Hilton,Hyatt,IHG,Marriott" &&
+      vaultBrands("airline").includes("United") &&
+      vaultBrands("airline").includes("Delta") &&
+      vaultBrands("store").includes("Target") &&
+      vaultBrands("store").includes("Costco"),
+    vaultBrands("airline").join() + " | " + vaultBrands("store").join()
+  );
+  chk(
+    "each brand card names its brand, and a card for each airline has none",
+    hil.brand.hotel === "Hilton" &&
+      tgt.brand.store === "Target" &&
+      !vaultOffer("wf-autograph-journey").brand &&
+      vaultOffer("chase-united-explorer").brand.airline === "United" &&
+      !vaultOffer("chase-united-explorer").brand.hotel
+  );
+  const K0 = vaultCats(c),
+    before = snap(),
+    h0 = vaultEarn(hil, K0, 0).dollars;
+  chk(
+    "at the start each new line is $0 with no brand",
+    K0.more.length === 6 &&
+      K0.more.every(m => m.v === 0 && m.want === 0 && m.brand === "") &&
+      K0.lines.length === 10 &&
+      K0.other === 810 &&
+      K0.spend.travel === 230
+  );
+  VAULT_MORE.forEach(m => (V["cat_" + m.k] = { v: 0, cf: 2 }));
+  chk(
+    "with each new answer at $0, each earlier number is the same",
+    snap() === before && near(vaultEarn(bcp, vaultCats(c), 0).dollars, 660) && vaultCats(c).st === "Guess"
+  );
+  VAULT_MORE.forEach(m => delete V["cat_" + m.k]);
+  /* a hotel card on its own brand: 200 a month at Hilton comes out of Travel (230 to 30) */
+  V.cat_hotel = { v: 200, cf: 2 };
+  V.brand_hotel = { v: "Hilton", cf: 2 };
+  const K1 = vaultCats(c),
+    e1 = vaultEarn(hil, K1, 0);
+  chk(
+    "the hotel line comes out of Travel, and the total stays",
+    K1.more.find(m => m.k === "hotel").v === 200 &&
+      K1.spend.travel === 30 &&
+      K1.other === 810 &&
+      K1.sum === 3000 &&
+      K1.lines.reduce((t, r) => t + r.v, 0) === 3000 &&
+      K1.lines.some(r => r.k === "hotel" && r.label === "One hotel brand, booked direct: Hilton")
+  );
+  /* by hand: hotel 2,400 at 7x, dining 7,200 and groceries 10,800 at 5x, the other 15,600 at 3x: 153,600 points */
+  chk(
+    "a hotel card on its own brand by hand: 153,600 points",
+    near(e1.dollars, 153600 * hv) && near(e1.by.hotel, 16800 * hv) && near(e1.by.travel, 1080 * hv),
+    e1.dollars + " " + JSON.stringify(e1.by)
+  );
+  V.brand_hotel = { v: "Marriott", cf: 2 };
+  const e2 = vaultEarn(hil, vaultCats(c), 0);
+  /* the same card on a different brand: the 2,400 earn the base 3x: 144,000 points, the same as with no hotel line */
+  chk(
+    "the same card on a different brand: the base rate only",
+    near(e2.dollars, 144000 * hv) &&
+      near(e2.by.hotel, 7200 * hv) &&
+      near(e2.by.travel, 1080 * hv) &&
+      near(e2.dollars, h0),
+    e2.dollars + " " + h0
+  );
+  delete V.brand_hotel;
+  chk(
+    "with no brand picked, a brand card earns its base rate there",
+    near(vaultEarn(hil, vaultCats(c), 0).dollars, 144000 * hv)
+  );
+  const wf = vaultOffer("wf-autograph-journey"),
+    wr = wf.earn.rates.find(r => r.cat === "hotel").x;
+  chk(
+    "a card with a hotel rate for each brand earns it with no brand picked",
+    near(vaultEarn(wf, vaultCats(c), 0).by.hotel, 2400 * wr * L0.units[wf.unit].v)
+  );
+  V.brand_hotel = { v: "Marriott", cf: 2 };
+  const mar = vaultOffer("chase-marriott-boundless");
+  chk(
+    "the Marriott card earns its 6x on the Marriott line",
+    near(vaultEarn(mar, vaultCats(c), 0).by.hotel, 2400 * 6 * L0.units.marriott.v)
+  );
+  /* a card with no travel rate sees the hotel line as plain spending: the total of a cash card does not move */
+  chk(
+    "a card with no hotel rate: its total is the same, and the line has its share",
+    near(vaultEarn(bcp, vaultCats(c), 0).dollars, 660) &&
+      near(vaultEarn(bcp, vaultCats(c), 0).by.hotel, 24) &&
+      near(vaultEarn(bcp, vaultCats(c), 0).by.travel, 3.6)
+  );
+  /* the best-card rows use the line */
+  V.brand_hotel = { v: "Hilton", cf: 2 };
+  V.programs = { v: "yes", cf: 2 };
+  vaultStore(c).cards.push({
+    id: "amex-hilton-honors",
+    n: "Hilton Honors",
+    bank: "American Express",
+    ym: "2026-01",
+    fee: 0,
+    months: 6,
+  });
+  const B1 = vaultBest(c, T),
+    hr = B1.rows.find(r => r.k === "hotel");
+  chk(
+    "the best-card rows have the hotel line: yours and the library",
+    hr &&
+      hr.month === 200 &&
+      hr.mine.o.id === "amex-hilton-honors" &&
+      near(hr.mine.year, 16800 * hv) &&
+      hr.lib &&
+      hr.lib.year > 0 &&
+      B1.rows.find(r => r.k === "travel").month === 30 &&
+      near(B1.gross, 153600 * hv),
+    JSON.stringify(hr && [hr.month, hr.mine.year])
+  );
+  vaultStore(c).cards.length = 0;
+  delete V.programs;
+  delete V.cat_hotel;
+  delete V.brand_hotel;
+  /* the bonus categories of a quarter: 5% up to 1,500 a quarter, out of Everything else */
+  V.cat_rotating = { v: 250, cf: 2 };
+  const K3 = vaultCats(c),
+    e3 = vaultEarn(disc, K3, 0);
+  /* by hand: 3,000 a year at 5% = 150. The other 33,000 at 1% = 330. */
+  chk(
+    "a rotating card under its limit by hand: 150 + 330",
+    K3.other === 560 && K3.sum === 3000 && near(e3.by.rotating, 150) && near(e3.dollars, 480),
+    JSON.stringify(e3.by)
+  );
+  chk(
+    "a card with no such rate: the same total, and nothing is counted twice",
+    near(vaultEarn(bcp, K3, 0).dollars, 660) &&
+      near(vaultEarn(bcp, K3, 0).by.rotating, 30) &&
+      near(vaultEarn(bcp, K3, 0).by.other, 67.2)
+  );
+  V.cat_rotating = { v: 800, cf: 3 };
+  const K4 = vaultCats(c),
+    e4 = vaultEarn(disc, K4, 0);
+  /* by hand: 9,600 a year, the limit is 6,000: 6,000 at 5% = 300 and 3,600 at 1% = 36. The other 26,400 at 1% = 264. */
+  chk(
+    "a rotating card over its limit by hand: 300 + 36 + 264",
+    K4.other === 10 && near(e4.by.rotating, 336) && near(e4.dollars, 600),
+    JSON.stringify(e4.by)
+  );
+  V.cat_rotating = { v: 2000, cf: 3 };
+  const K5 = vaultCats(c);
+  chk(
+    "a line cannot take more than Everything else holds",
+    K5.more.find(m => m.k === "rotating").v === 810 &&
+      K5.more.find(m => m.k === "rotating").want === 2000 &&
+      K5.other === 0 &&
+      K5.lines.reduce((t, r) => t + r.v, 0) === 3000
+  );
+  delete V.cat_rotating;
+  /* a store card at its store, and at a different store */
+  V.cat_store = { v: 300, cf: 2 };
+  V.brand_store = { v: "Target", cf: 2 };
+  const sx = tgt.earn.rates.find(r => r.cat === "store").x,
+    e5 = vaultEarn(tgt, vaultCats(c), 0);
+  chk(
+    "a store card at its store: 3,600 a year at its rate",
+    vaultCats(c).other === 510 && near(e5.by.store, 36 * sx) && near(e5.by.other, 6120 * tgt.earn.base * 0.01),
+    JSON.stringify(e5.by)
+  );
+  V.brand_store = { v: "Costco", cf: 2 };
+  chk(
+    "the same card with a different store picked: the base rate",
+    near(vaultEarn(tgt, vaultCats(c), 0).by.store, 36 * tgt.earn.base)
+  );
+  delete V.cat_store;
+  delete V.brand_store;
+  /* a flight line bigger than Travel takes the rest from Everything else */
+  V.cat_airline = { v: 500, cf: 2 };
+  V.brand_airline = { v: "United", cf: 2 };
+  const K6 = vaultCats(c),
+    ue = vaultOffer("chase-united-explorer");
+  chk(
+    "a travel line bigger than Travel takes the rest from Everything else",
+    K6.more[0].v === 500 &&
+      !("travel" in K6.spend) &&
+      K6.other === 540 &&
+      K6.lines.reduce((t, r) => t + r.v, 0) === 3000
+  );
+  chk(
+    "the United card earns its rate on United, and the Delta card earns its base",
+    near(vaultEarn(ue, K6, 0).by.airline, 6000 * 2 * L0.units.united.v) &&
+      near(vaultEarn(vaultOffer("amex-delta-gold"), K6, 0).by.airline, 6000 * 1 * L0.units.delta.v)
+  );
+  V.cat_travelPortal = { v: 100, cf: 2 };
+  const sr = vaultOffer("chase-sapphire-preferred"),
+    K7 = vaultCats(c);
+  chk(
+    "travel booked with the bank earns the bank-travel rate of a card that has one",
+    K7.other === 440 &&
+      near(vaultEarn(sr, K7, 0).by.travelPortal, 1200 * 5 * 0.01) &&
+      near(vaultEarn(bcp, K7, 0).dollars, 660)
+  );
+  delete V.cat_travelPortal;
+  /* the screen */
+  X("vault");
+  chk(
+    "the fold is closed at first, and the earlier questions do not change",
+    ov().includes("Travel brands, stores and bonus categories") &&
+      ov().includes('data-a="vaultcats" data-k="2" data-v="1"') &&
+      !ov().includes('data-k="vault|cat_airline"')
+  );
+  X("vaultcats", "1", "2");
+  chk(
+    "open: six amounts by chips with the typed option, and a brand by tap for the airline, the hotel and the store",
+    W.o.cats2 === true &&
+      VAULT_MORE.every(
+        m =>
+          ov().includes('data-a="kitset" data-k="vault|cat_' + m.k + '"') &&
+          ov().includes('data-a="kitpad" data-k="vault|cat_' + m.k + '"') &&
+          ov().includes("term:vt_" + m.k) &&
+          GLOSS["vt_" + m.k]
+      ) &&
+      ov().includes("Which airline?") &&
+      ov().includes("Which hotel brand?") &&
+      ov().includes("Which store?") &&
+      ov().includes('data-k="vault|brand_airline" data-v="United"') &&
+      ov().includes("How much of your spending lands in the bonus categories of a quarter?") &&
+      ov().includes("term:vt_brand") &&
+      !ov().includes("<input") &&
+      clean(ov()),
+    junk(ov())
+  );
+  chk(
+    "the row of the line shows, and the meter still adds up",
+    ov().includes("One airline, booked direct: United") &&
+      ov().includes("$500 a month") &&
+      ov().includes("Your categories add up to <b>$3,000</b> a month") &&
+      ov().includes("They match.")
+  );
+  X("kitset", "250", "vault|cat_rotating", { t: "n" });
+  X("kitset", "Delta", "vault|brand_airline", { t: "s" });
+  chk(
+    "a tap keeps the amount and the brand in c.x.vault",
+    c.x.vault.cat_rotating.v === 250 &&
+      c.x.vault.brand_airline.v === "Delta" &&
+      vaultCats(c).more[0].brand === "Delta" &&
+      vaultCats(c).other === 290 &&
+      clean(ov()),
+    junk(ov())
+  );
+  V.cat_airline = { v: 5000, cf: 2 };
+  X("vault");
+  X("vaultcats", "1", "2");
+  chk(
+    "an amount that does not fit says how much fits, with no verdict",
+    ov().includes("Only $1,040 fits") && vaultCats(c).lines.reduce((t, r) => t + r.v, 0) === 3000
+  );
+  V.cat_airline = { v: 500, cf: 2 };
+  const B = vaultBook(c),
+    val = id => (B.rows.find(r => r.id === id) || {}).v;
+  chk(
+    "the spreadsheet rows of the new answers, and the sum does not change",
+    val("vt_x_airline") === 500 &&
+      val("vt_x_rotating") === 250 &&
+      val("vt_x_hotel") === 0 &&
+      val("vt_csum") === 3000 &&
+      B.rows.find(r => r.id === "vt_x_airline").label.includes("Delta")
+  );
+  chk(
+    "the math box says the rules",
+    ov().includes("come out of Travel") &&
+      ov().includes("come out of Everything else") &&
+      ov().includes("change each quarter and you must turn them on")
+  );
+  X("close");
+  chk(
+    "the brand of a card of the admin survives cardClean",
+    cardClean({ bank: "B", n: "N", brand: { airline: " Delta ", hotel: "" } }).brand.airline === "Delta" &&
+      !("brand" in cardClean({ bank: "B", n: "N" }))
+  );
+  G.chars.length = n0;
+  G.active = 0;
+  save();
+}

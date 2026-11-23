@@ -213,6 +213,14 @@
     "a rate with no limit has no limit keys",
     !("cap" in cardClean({ earn: { rates: [{ cat: "gas", x: 2, cap: "" }] } }).earn.rates[0])
   );
+  caSet(d, "rate.hotel", "7");
+  caSet(d, "brand.hotel", " Hilton ");
+  chk(
+    "the brand of a hotel rate is kept",
+    cardClean(d).brand.hotel === "Hilton" &&
+      caFormHTML(d).includes('data-f="brand.hotel"') &&
+      !caFormHTML(d).includes('data-f="brand.airline"')
+  );
   const form2 = caFormHTML(d);
   chk(
     "the form shows the limit of a category that has a rate, and the pick with its list",

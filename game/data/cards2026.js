@@ -850,7 +850,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "earn rates and protections (not on the all-cards page)"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "United"
+   }
   },
   {
    "id": "chase-united-quest",
@@ -941,7 +944,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "earn rates and protections"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "United"
+   }
   },
   {
    "id": "chase-southwest-plus",
@@ -1013,7 +1019,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "protections and foreign fee"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "Southwest"
+   }
   },
   {
    "id": "chase-southwest-priority",
@@ -1092,7 +1101,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "protections"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "Southwest"
+   }
   },
   {
    "id": "chase-marriott-boundless",
@@ -1183,7 +1195,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "groceries, gas and dining 3x (from mid 2026); protections"
     }
-   ]
+   ],
+   "brand": {
+    "hotel": "Marriott"
+   }
   },
   {
    "id": "chase-ihg-premier",
@@ -1267,7 +1282,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "category rates beyond IHG; protections"
     }
-   ]
+   ],
+   "brand": {
+    "hotel": "IHG"
+   }
   },
   {
    "id": "chase-world-of-hyatt",
@@ -1354,7 +1372,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "2x categories; protections"
     }
-   ]
+   ],
+   "brand": {
+    "hotel": "Hyatt"
+   }
   },
   {
    "id": "chase-disney-visa",
@@ -1847,7 +1868,10 @@ window.CARDS2026 = {
      "label": "On the plane",
      "words": "25% back on food, drinks and Wi-Fi on United flights"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "United"
+   }
   },
   {
    "id": "United Club",
@@ -1911,7 +1935,10 @@ window.CARDS2026 = {
      "label": "Note",
      "words": "The library line says 4x United. Chase and AwardWallet show 5x since April 2, 2026. The foreign fee and the other partner credits were not shown by the search"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "United"
+   }
   },
   {
    "id": "United Business",
@@ -1986,7 +2013,10 @@ window.CARDS2026 = {
      "label": "Note",
      "words": "Chase names more than $600 a year in partner credits; the search did not show each amount, so none is listed"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "United"
+   }
   },
   {
    "id": "United Club Business",
@@ -2058,7 +2088,10 @@ window.CARDS2026 = {
      "label": "The welcome offer in words",
      "words": "100,000 miles and 2,000 PQP"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "United"
+   }
   },
   {
    "id": "Southwest Premier",
@@ -2121,7 +2154,10 @@ window.CARDS2026 = {
      "label": "Flight discount",
      "words": "One 15% promotion code each card year"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "Southwest"
+   }
   },
   {
    "id": "Southwest Premier Business",
@@ -2188,7 +2224,10 @@ window.CARDS2026 = {
      "label": "Employee cards",
      "words": "Free"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "Southwest"
+   }
   },
   {
    "id": "Southwest Performance Business",
@@ -2273,7 +2312,10 @@ window.CARDS2026 = {
      "label": "Employee cards",
      "words": "Free"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "Southwest"
+   }
   },
   {
    "id": "Marriott Bonvoy Bold",
@@ -2331,7 +2373,10 @@ window.CARDS2026 = {
      "label": "Toward status",
      "words": "5 Elite Night Credits each calendar year"
     }
-   ]
+   ],
+   "brand": {
+    "hotel": "Marriott"
+   }
   },
   {
    "id": "Marriott Bonvoy Bountiful",
@@ -2393,7 +2438,10 @@ window.CARDS2026 = {
      "label": "Toward status",
      "words": "15 Elite Night Credits each year"
     }
-   ]
+   ],
+   "brand": {
+    "hotel": "Marriott"
+   }
   },
   {
    "id": "IHG One Rewards Traveler",
@@ -2459,7 +2507,10 @@ window.CARDS2026 = {
      "label": "Note",
      "words": "The library line names groceries at 3x. Chase names utilities and streaming, not groceries. The foreign fee was not shown for this card by the search"
     }
-   ]
+   ],
+   "brand": {
+    "hotel": "IHG"
+   }
   },
   {
    "id": "IHG One Rewards Premier Select",
@@ -2538,7 +2589,10 @@ window.CARDS2026 = {
      "label": "Toward status",
      "words": "20 Elite Night Credits at the start of each year, and more with spending"
     }
-   ]
+   ],
+   "brand": {
+    "hotel": "IHG"
+   }
   },
   {
    "id": "IHG One Rewards Business",
@@ -2606,7 +2660,10 @@ window.CARDS2026 = {
      "label": "Note",
      "words": "Travel is left out of the rates because 5x on all travel ends Dec 31, 2026. This card was the IHG One Rewards Premier Business card before"
     }
-   ]
+   ],
+   "brand": {
+    "hotel": "IHG"
+   }
   },
   {
    "id": "World of Hyatt Business",
@@ -2681,7 +2738,10 @@ window.CARDS2026 = {
      "label": "Note",
      "words": "The card picks the top three for you from eight categories. Car rentals, shipping and ads are also on that list but have no category here. The list of eight is general knowledge, not quoted by the search"
     }
-   ]
+   ],
+   "brand": {
+    "hotel": "Hyatt"
+   }
   },
   {
    "id": "Aeroplan",
@@ -2764,7 +2824,10 @@ window.CARDS2026 = {
      "label": "Note",
      "words": "Changed Sep 10, 2026: now named Chase Air Canada Aeroplan Credit Card. Dining and groceries are set at the 2x rate that starts Jan 1, 2027. One Chase paper says Air Canada purchases also go to 2x after 2026; the news page says 3x"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "Air Canada"
+   }
   },
   {
    "id": "British Airways Visa Signature",
@@ -2814,7 +2877,10 @@ window.CARDS2026 = {
      "label": "Flight discount",
      "words": "10% off British Airways flights booked through the card link on ba.com"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "British Airways, Iberia or Aer Lingus"
+   }
   },
   {
    "id": "Iberia Visa Signature",
@@ -2860,7 +2926,10 @@ window.CARDS2026 = {
      "label": "Flight discount",
      "words": "10% off Iberia flights"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "British Airways, Iberia or Aer Lingus"
+   }
   },
   {
    "id": "Aer Lingus Visa Signature",
@@ -2906,7 +2975,10 @@ window.CARDS2026 = {
      "label": "Boarding",
      "words": "Priority boarding on Aer Lingus flights between the US and Ireland"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "British Airways, Iberia or Aer Lingus"
+   }
   },
   {
    "id": "Disney Premier Visa",
@@ -2968,7 +3040,10 @@ window.CARDS2026 = {
      "label": "Disney discounts",
      "words": "10% off select merchandise and dining at Disneyland and Walt Disney World; 15% off select guided tours"
     }
-   ]
+   ],
+   "brand": {
+    "store": "Disney"
+   }
   },
   {
    "id": "Disney Inspire Visa",
@@ -3037,7 +3112,10 @@ window.CARDS2026 = {
      "label": "Resort bonus",
      "words": "200 Disney Rewards Dollars after $2,000 on US Disney resort stays and Disney Cruise Line in a card year"
     }
-   ]
+   ],
+   "brand": {
+    "store": "Disney"
+   }
   },
   {
    "id": "Instacart Mastercard",
@@ -3098,7 +3176,10 @@ window.CARDS2026 = {
      "label": "Card level",
      "words": "World Elite Mastercard"
     }
-   ]
+   ],
+   "brand": {
+    "store": "Instacart"
+   }
   },
   {
    "id": "Slate",
@@ -3731,7 +3812,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "all of it, as known in mid 2026"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "Delta"
+   }
   },
   {
    "id": "amex-hilton-honors",
@@ -3802,7 +3886,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "all of it, as known in mid 2026"
     }
-   ]
+   ],
+   "brand": {
+    "hotel": "Hilton"
+   }
   },
   {
    "id": "capone-venture-x",
@@ -4369,7 +4456,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "APR"
     }
-   ]
+   ],
+   "brand": {
+    "store": "Kohl's"
+   }
   },
   {
    "id": "citi-double-cash",
@@ -4887,7 +4977,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "all of it, as known in mid 2026"
     }
-   ]
+   ],
+   "brand": {
+    "store": "Costco"
+   }
   },
   {
    "id": "citi-best-buy",
@@ -4953,7 +5046,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "all of it, as known in mid 2026"
     }
-   ]
+   ],
+   "brand": {
+    "store": "Best Buy"
+   }
   },
   {
    "id": "citi-aadvantage-platinum",
@@ -5027,7 +5123,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "all of it, as known in mid 2026"
     }
-   ]
+   ],
+   "brand": {
+    "airline": "American Airlines"
+   }
   },
   {
    "id": "bofa-customized-cash",
@@ -6305,7 +6404,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "APR, as known in mid 2026"
     }
-   ]
+   ],
+   "brand": {
+    "store": "Target"
+   }
   },
   {
    "id": "synchrony-lowes",
@@ -6359,7 +6461,10 @@ window.CARDS2026 = {
      "label": "Not read again on the bank's page",
      "words": "all of it, as known in mid 2026"
     }
-   ]
+   ],
+   "brand": {
+    "store": "Lowe's"
+   }
   },
   {
    "id": "opensky-secured",

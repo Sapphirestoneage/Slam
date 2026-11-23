@@ -31,6 +31,12 @@ function caSet(d, path, v) {
     if (r) r[p[0]] = v;
     return d;
   }
+  if (p[0] === "brand") {
+    /* the one airline, hotel brand or store that the rate of that name is for */
+    d.brand = d.brand || {};
+    d.brand[p[1]] = v;
+    return d;
+  }
   if (p[0] === "picks") {
     d.earn = d.earn || { base: 1, rates: [], picks: [], words: "" };
     d.earn.picks = d.earn.picks || [];
@@ -214,6 +220,24 @@ function caFormHTML(d) {
       )
       .join("") +
     `<p class="muted">A limit shows under a category after you type its rate and leave the box.</p>` +
+    ["airline", "hotel", "store"]
+      .filter(k => rrow(k))
+      .map(k =>
+        caField(
+          "brand." + k,
+          {
+            airline: "Which airline is that rate for?",
+            hotel: "Which hotel brand is that rate for?",
+            store: "Which store is that rate for?",
+          }[k],
+          (d.brand || {})[k],
+          {
+            ph: { airline: "United", hotel: "Hilton", store: "Target" }[k],
+            hint: "Leave empty when the rate counts at each one.",
+          }
+        )
+      )
+      .join("") +
     (d.earn.picks || [])
       .map(
         (k, i) =>

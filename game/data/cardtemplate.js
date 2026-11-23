@@ -15,6 +15,7 @@
                  month), then the rate "then" (the base when it is not given). A pick is a rate on
                  "count" categories that the player picks from the list "from".
                  credits: [{ name, value, words }], unique: [{ label, words, value }],
+                 brand: { airline, hotel, store } (the one brand that the rate of that name is for),
                  source, checked, hidden }
                id, bank, n, fee, amt, unit, spend, months, min, biz and upTo are the keys of
                data/cards2026.js. Do not change them: saved games name a card by its id.
@@ -192,6 +193,11 @@ function cardClean(raw) {
       from = ((r && r.from) || []).filter(isCat);
     if (x !== null && x > 0 && from.length)
       out.earn.picks.push(limit({ x, count: Math.max(1, Math.min(from.length, cardNum(r.count) || 1)), from }, r));
+  });
+  /* the brand of the rates "airline", "hotel" and "store", when the rate is for one brand only */
+  ["airline", "hotel", "store"].forEach(k => {
+    const b = txt((c.brand || {})[k]);
+    if (b) (out.brand = out.brand || {})[k] = b;
   });
   (c.credits || []).forEach(r => {
     if (r && txt(r.name)) out.credits.push({ name: txt(r.name), value: cardNum(r.value) || 0, words: txt(r.words) });

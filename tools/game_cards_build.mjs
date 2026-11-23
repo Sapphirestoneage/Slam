@@ -60,6 +60,33 @@ const RULES = {
   "citi-strata": { words: ["A category you pick", "3x in one category you pick (streaming by default). The list of choices is on the page of the bank."] },
   "usb-smartly": { words: ["A higher rate with savings", "Up to 4% with qualifying US Bank savings balances, on the first $10,000 of a billing cycle. The game counts 2%."] },
 };
+/* THE BRAND OF A RATE. The rate "airline", "hotel" or "store" of these cards is for one brand only. A card
+   with such a rate and no brand here earns it at each airline or hotel (for example "flights booked direct"). */
+const BRAND_LIST = {
+  airline: {
+    United: ["chase-united-explorer", "chase-united-quest", "United Gateway", "United Club", "United Business", "United Club Business"],
+    Southwest: ["chase-southwest-plus", "chase-southwest-priority", "Southwest Premier", "Southwest Premier Business", "Southwest Performance Business"],
+    "Air Canada": ["Aeroplan"],
+    "British Airways, Iberia or Aer Lingus": ["British Airways Visa Signature", "Iberia Visa Signature", "Aer Lingus Visa Signature"],
+    Delta: ["amex-delta-gold"],
+    "American Airlines": ["citi-aadvantage-platinum"],
+  },
+  hotel: {
+    Marriott: ["chase-marriott-boundless", "Marriott Bonvoy Bold", "Marriott Bonvoy Bountiful"],
+    IHG: ["chase-ihg-premier", "IHG One Rewards Traveler", "IHG One Rewards Premier Select", "IHG One Rewards Business"],
+    Hyatt: ["chase-world-of-hyatt", "World of Hyatt Business"],
+    Hilton: ["amex-hilton-honors"],
+  },
+  store: {
+    Disney: ["Disney Premier Visa", "Disney Inspire Visa"],
+    Instacart: ["Instacart Mastercard"],
+    "Kohl's": ["capone-kohls"],
+    Costco: ["citi-costco"],
+    "Best Buy": ["citi-best-buy"],
+    Target: ["td-target-circle"],
+    "Lowe's": ["synchrony-lowes"],
+  },
+};
 const MORE_FILE = "tools/game_cards_more.json";
 const MORE = fs.existsSync(path.join(root, MORE_FILE)) ? read(MORE_FILE) : {};
 const NETWORK = { Amex: "American Express", Store: "" };
@@ -179,6 +206,14 @@ function record(x) {
     if (m.source) d.source = "The card: " + m.source + ". " + d.source;
     if (m.checked) d.checked = m.checked;
   }
+  /* the brand of the rates "airline", "hotel" and "store", where the rate is for one brand */
+  const brand = {};
+  Object.keys(BRAND_LIST).forEach(kind =>
+    Object.keys(BRAND_LIST[kind]).forEach(name => {
+      if (BRAND_LIST[kind][name].includes(d.id) && d.earn.rates.some(q => q.cat === kind)) brand[kind] = name;
+    })
+  );
+  if (Object.keys(brand).length) d.brand = brand;
   return d;
 }
 
