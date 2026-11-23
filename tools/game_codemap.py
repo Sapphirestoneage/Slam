@@ -13,7 +13,10 @@ import re, os, datetime
 
 G = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'game')
 html = open(os.path.join(G, 'index.html'), encoding='utf8').read()
-order = re.findall(r'<script src="([a-z0-9/]+\.js)(?:\?v=[0-9a-z]+)?"', html)
+order = re.findall(r'<script src="([a-z0-9/-]+\.js)(?:\?v=[0-9a-z]+)?"', html)
+# A bundle from outside (game/vendor/) is listed, but not examined: it is not the code of the game.
+vendor = [f for f in order if f.startswith('vendor/')]
+order = [f for f in order if not f.startswith('vendor/')]
 src = {f: open(os.path.join(G, f), encoding='utf8').read() for f in order}
 allsrc = '\n'.join(src.values())
 short = lambda f: f
@@ -95,6 +98,8 @@ o.append(f'Date: {datetime.date.today().isoformat()}. Files: {len(order)}. Lines
          f'Functions with two declarations: {len(twice)}. Hidden errors: {sum(r[4] for r in rows)}.\n')
 o.append('## 1. Files in load order\n')
 o.append('The browser loads the files in this order. A file can use all names from the files above it.\n')
+if vendor:
+    o.append('Bundles from outside the game, loaded first and not examined here: ' + ', '.join('`' + v + '`' for v in vendor) + '. `KNOWN-WEAK.md` tells how to rebuild them.\n')
 o.append('| # | File | Lines | Functions | Lines > 300 chars | Hidden errors | Purpose |')
 o.append('|---|------|------:|----------:|------------------:|--------------:|---------|')
 for i, r in enumerate(rows, 1):

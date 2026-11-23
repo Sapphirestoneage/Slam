@@ -16,7 +16,7 @@
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const GAME = path.join(__dirname, '..', 'game');
 const PAGES = ['index.html', 'admin.html'];
-const TAG = /(<script src=")([a-z0-9/]+\.js)(?:\?v=[0-9a-f]*)?(")/g;
+const TAG = /(<script src=")([a-z0-9/-]+\.js)(?:\?v=[0-9a-f]*)?(")/g;
 
 /* stampOf(file): 8 characters from the SHA-1 of the file content. The line ends are made the same first,
    thus a computer that stores CRLF line ends gets the same stamp. */

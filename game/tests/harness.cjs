@@ -46,7 +46,7 @@ global.require = require; // A private test can read files.
 // The script list comes from index.html, so the tests always use the real load order.
 const order = fs
   .readFileSync(GAME_DIR + "index.html", "utf8")
-  .match(/<script src="([a-z0-9\/]+\.js)(\?v=[0-9a-f]*)?"/g)
+  .match(/<script src="([a-z0-9\/-]+\.js)(\?v=[0-9a-f]*)?"/g)
   .map(s => s.match(/"([^"?]+)/)[1]);
 
 // Run one text as a classic script. Its top-level names stay in the global scope for the next script.
@@ -99,4 +99,5 @@ const crawl = () => 0;
   "test helpers"
 );
 for (const f of process.argv.slice(2)) run(fs.readFileSync(f, "utf8"), f);
-run(`console.log(oks+' ok, '+fails+' failed');`, "totals");
+/* The totals print when nothing is left to run, so a check inside a promise (the solver of the retirement engine) counts too. */
+run(`process.once('beforeExit', () => console.log(oks+' ok, '+fails+' failed'));`, "totals");
