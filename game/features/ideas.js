@@ -103,6 +103,23 @@ function igRun(P, W, rets) {
   }
   return { out, dead, end: p };
 }
+/* The guardrails rule for one year (Guyton and Klinger): w is the yearly spending, p the portfolio, rate the
+   starting rate, last the return of the year before. features/odds.js uses the same rule. */
+function igGuardStep(w, p, rate, last) {
+  let note = "";
+  if (last < 0 && w / p > rate) {
+    w = w / 1.03;
+    note = "No raise this year";
+  }
+  if (w / p > rate * 1.2) {
+    w *= 0.9;
+    note = "Cut back 10%";
+  } else if (w / p < rate * 0.8) {
+    w *= 1.1;
+    note = "Spend 10% more";
+  }
+  return { w, note };
+}
 function igGK(P, rate, rets) {
   let p = P,
     w = P * rate;
@@ -114,17 +131,9 @@ function igGK(P, rate, rets) {
       continue;
     }
     if (i > 0) {
-      if (rets[i - 1] < 0 && w / p > rate) {
-        w = w / 1.03;
-        note = "No raise this year";
-      }
-      if (w / p > rate * 1.2) {
-        w *= 0.9;
-        note = "Cut back 10%";
-      } else if (w / p < rate * 0.8) {
-        w *= 1.1;
-        note = "Spend 10% more";
-      }
+      const g = igGuardStep(w, p, rate, rets[i - 1]);
+      w = g.w;
+      note = g.note;
     }
     w = Math.min(w, p);
     rows.push({ y: i + 1, w, p, note });
