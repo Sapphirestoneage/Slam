@@ -584,6 +584,14 @@ const WB = [
     null,
   ],
   [
+    "plan",
+    "Product X-ray: the path you are on next to the alternative",
+    "b",
+    () => WB_HAS("xray") && WB_FN("xrCalc"),
+    "Insurance that also saves next to term cover and investing the rest, or an investment with fees next to a low-cost index fund. In dollars and in days of your spending.",
+    "xray",
+  ],
+  [
     "feel",
     "Your money type as an element, with what it is strong against and weak to",
     "b",
