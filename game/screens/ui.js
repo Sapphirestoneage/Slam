@@ -1667,6 +1667,8 @@ function finishSetupBase() {
   save();
   tab = "home";
   render();
+  /* element.js: a new profile gets the character reveal in place of the card "Your character is ready". */
+  if (!edit && typeof finishSetupReveal === "function" && finishSetupReveal(o)) return;
   celebrate(
     edit ? "Answers updated" : "Your character is ready",
     [edit ? null : "A guess for people like you: " + eraName(D)].concat(got.slice(0, 2)),

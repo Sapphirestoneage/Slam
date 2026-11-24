@@ -39,6 +39,7 @@ const BOOK_PARTS = [
   summaryBook,
   ledgBook,
   vaultBook,
+  elBook,
 ];
 /* The sections of the spreadsheet: { title, rows: [{ id, label, v, f, note }] }. */
 function bookSections(c) {

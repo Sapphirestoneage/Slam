@@ -165,7 +165,7 @@ function rvSheet() {
       dots +
       nextBtn("See my whole sheet")
     );
-  return (
+  const sheetH =
     head("Me", "Your character sheet") +
     `<div class="tile stack" style="gap:8px"><div class="row between"><b style="font-size:18px">${esc(R.name)}</b><span class="pill info">Era ${R.era} of 9</span></div>
   ${[
@@ -184,8 +184,9 @@ function rvSheet() {
     )
     .join("")}</div>
   <div class="tiny muted">No dollar amounts on this sheet, so it is safe to send to a friend.</div>
-  <button class="primary wide" data-a="rvcopy">${w.copied ? "Copied ✓" : "Copy my character sheet"}</button><button class="ghost wide slim" data-a="rvagain">Play the reveal again</button><button class="ghost wide slim" data-a="close">Done</button>`
-  );
+  <button class="primary wide" data-a="rvcopy">${w.copied ? "Copied ✓" : "Copy my character sheet"}</button><button class="ghost wide slim" data-a="rvagain">Play the reveal again</button><button class="ghost wide slim" data-a="close">Done</button>`;
+  /* element.js: the row "Strengths and your element" */
+  return typeof rvSheetElement === "function" ? rvSheetElement(sheetH) : sheetH;
 }
 Object.assign(ACT, {
   reveal: () => {
