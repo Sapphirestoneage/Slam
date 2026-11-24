@@ -336,3 +336,81 @@ test('a carried balance gets a rate: the plan assigns its typical card rate unti
   assert.match(R.toward(655).invest, /Add your birth year/);
   assert.equal(R.again('capone-venture'), 'One welcome offer in the Venture family every 48 months.'); assert.equal(R.again('chase-freedom-flex'), null);
 });
+
+test('spending that can go on a card: rent, loan payments and transfers stay out unless the line is paid with a card', () => {
+  const N = D.notOnCard;
+  assert.ok(N.categories.includes('Rent or mortgage') && N.groups.includes('Debt') && N.source && N.date, 'the rule says where it came from');
+  const lines = [
+    { name: 'Rent', amount: 2000, per: 'month', category: 'Rent or mortgage', draftt: 'Accommodation' },
+    { name: 'Groceries', amount: 600, per: 'month', category: 'Groceries', draftt: 'Food' },
+    { name: 'Electric', amount: 150, per: 'month', category: 'Electric, gas, water', draftt: 'Accommodation' },
+    { name: 'Car insurance', amount: 1200, per: 'year', category: 'Car insurance', draftt: 'Transportation' },
+    { name: 'Car loan payment', amount: 350, per: 'month', category: 'Debt payments', draftt: 'Debt', auto: { from: 'Debt' } },
+    { name: 'Roth', amount: 500, per: 'month', category: 'Other', draftt: 'Retirement' },
+    { name: 'Mom', amount: 200, per: 'month', category: 'Family support', draftt: 'Other' },
+    { name: 'Gym', amount: 70, per: 'month', category: 'Gym or fitness', draftt: 'Therapy', status: 'Not for me' },
+    { name: 'Travel', amount: null, per: 'month', category: 'Travel', draftt: 'Wants' },
+  ];
+  // by hand: 600 + 150 + 1,200 / 12 = 850 can go on a card; 2,000 + 350 + 500 + 200 = 3,050 cannot
+  const S = P.cardSpend(lines, { notOnCard: N });
+  near(S.monthly, 850); near(S.left, 3050); assert.deepEqual(S.can.map(c => c.name), ['Groceries', 'Electric', 'Car insurance']); assert.equal(S.cannot.length, 4);
+  // the plan says so: rent paid with a card on the plan counts, 850 + 2,000 = 2,850
+  lines[0].paidWith = 'card1';
+  const T = P.cardSpend(lines, { notOnCard: N, cardIds: ['card1'] });
+  near(T.monthly, 2850); near(T.left, 1050); assert.equal(T.can.find(c => c.name === 'Rent').said, true);
+  near(P.cardSpend(lines, { notOnCard: N, cardIds: [] }).monthly, 850); // paid with something that is not a card on the plan changes nothing
+  assert.equal(P.cardSpend([], { notOnCard: N }).monthly, 0);
+});
+
+test('how much to move onto a new card to earn its offer inside the window', () => {
+  const csp = by('Sapphire Preferred'); // $5,000 in 3 months
+  // by hand: 5,000 / 3 = 1,666.67 a month; at 2,400 a month, ceil(5,000 / 2,400) = 3 months, inside the window
+  const A = P.shiftToEarn(csp, 2400);
+  near(A.perMonth, 5000 / 3); near(A.move, 5000 / 3); assert.equal(A.months, 3); assert.equal(A.reach, true); assert.equal(A.short, 0);
+  assert.equal(A.line, 'Move about $1,667 a month of the $2,400 you can put on a card and the offer is earned inside its 3 months.');
+  // at 1,000 a month: ceil(5,000 / 1,000) = 5 months, past the window; 1,666.67 - 1,000 = 666.67 a month short
+  const B = P.shiftToEarn(csp, 1000);
+  assert.equal(B.reach, false); assert.equal(B.months, 5); near(B.short, 2000 / 3); near(B.move, 1000);
+  assert.match(B.line, /needs about \$1,667 a month for 3 months\. You have about \$1,000 a month that can go on a card, \$667 a month short\./);
+  assert.equal(P.shiftToEarn(csp, null).line, null); assert.equal(P.shiftToEarn(by('Slate'), 500).reach, true, 'nothing to spend');
+});
+
+test('what is on each card, and a carried balance against the biggest welcome offer', () => {
+  const cards = [{ label: 'A', balance: 4200, apr: 0.27 }, { label: 'B', balance: 1000, apr: 0.25, aprGuess: true }, { label: 'C', balance: 800, apr: 0.24, inFull: true }, { label: 'D', balance: null }];
+  // by hand: 4,200 x 27% = 1,134; 1,000 at the assigned 25% = 250; paid in full and blank cost nothing. 5,200 carried, 1,384 a year
+  const C = P.carryCost(cards, { typicalApr: 0.25, bonus: 1000 });
+  near(C.owed, 5200); near(C.interest, 1384); assert.equal(C.outweighs, true);
+  assert.deepEqual(C.parts.map(x => [x.carried, x.assigned, Math.round(x.interest)]), [[true, false, 1134], [true, true, 250], [false, false, 0], [false, false, 0]]);
+  assert.equal(C.line, 'The interest outweighs the bonus: about $1,384 a year on the $5,200 you carry, against $1,000 for the biggest welcome offer here.');
+  // a small balance: 400 x 25% = 100 a year, under the offer; the line does not claim otherwise
+  const S = P.carryCost([{ label: 'A', balance: 400, apr: null }], { typicalApr: 0.25, bonus: 1000 });
+  near(S.interest, 100); assert.equal(S.outweighs, false); assert.match(S.line, /^About \$100 a year in interest on the \$400 you carry\. Clearing it comes first/);
+  // a balance said but not yet on the plan: 1,000 / 25% = 4,000 is where a year of interest passes the offer
+  assert.match(P.carryCost([], { typicalApr: 0.25, bonus: 1000, tapped: true }).line, /^At 25% a year, the rate used until yours is in, a carried balance over \$4,000 costs more/);
+  assert.equal(P.carryCost([{ label: 'A', balance: 0 }], { typicalApr: 0.25, bonus: 1000 }).line, null);
+});
+
+test('the card plan reads them from the plan: the Budget for what can move, the cards list for what is on each card', () => {
+  const now = new Date(2026, 10, 14), st = new Store(newHousehold({ name: 'Shift' }));
+  st.add('bill', { name: 'Rent', amount: 2000, per: 'month', values: { category: 'Rent or mortgage', draftt: 'Accommodation' } });
+  st.add('bill', { name: 'Groceries', amount: 900, per: 'month', values: { category: 'Groceries', draftt: 'Food' } });
+  st.add('bill', { name: 'Electric', amount: 300, per: 'month', values: { category: 'Electric, gas, water', draftt: 'Accommodation' } });
+  let R = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  // 900 + 300 can go on a card; rent stays off. Sapphire Preferred needs 5,000 / 3 = 1,667 a month: 467 a month short
+  near(R.inputs.spend.monthly, 1200); near(R.inputs.spend.shift.left, 2000); assert.equal(R.inputs.spend.canCharge, true); assert.equal(R.guide.steps.find(x => x.id === 'spend').done, true);
+  const short = R.shiftOf(by('Sapphire Preferred')); assert.equal(short.reach, false); near(short.short, 5000 / 3 - 1200);
+  assert.equal(R.shiftOf(by('Freedom Unlimited')).reach, true);
+  // a card with a balance and no rate: 3,000 at the plan's typical 25% is 750 a year
+  const row = addHeldCard(st, lib.cards.find(c => c.id === 'citi-double-cash'));
+  st.update(row.id ?? row, { balance: 3000 });
+  addHeldCard(st, lib.cards.find(c => c.id === 'chase-freedom-flex'), { inFull: true });
+  R = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  assert.equal(R.kind, 'debt'); assert.equal(R.carry.parts.length, 2);
+  const [a, b] = R.carry.parts; assert.equal(a.label, 'Citi Double Cash'); near(a.balance, 3000); near(a.apr, 0.25); assert.equal(a.assigned, true); near(a.interest, 750); assert.equal(b.inFull, true);
+  near(R.carry.owed, 3000); near(R.carry.interest, 750);
+  // the biggest offer at cash value with no program or business tapped: Amex Platinum, 175,000 points at 0.6 cents = 1,050
+  near(R.carry.bonus, 1050); assert.equal(R.carry.outweighs, false); assert.match(R.carry.line, /^About \$750 a year in interest on the \$3,000 you carry/);
+  st.update(row.id ?? row, { balance: 6000, apr: 0.28 });
+  R = cardPlanOf(st.doc, refDoc, lib, D, { now });
+  near(R.carry.interest, 1680); assert.equal(R.carry.parts[0].assigned, false); assert.match(R.carry.line, /^The interest outweighs the bonus: about \$1,680 a year on the \$6,000 you carry, against \$1,050/);
+});

@@ -2391,5 +2391,24 @@
   "value": 0.9,
   "basis": "SLAM stand-in: at nine tenths of what the best cards would give, the rest is not worth more cards",
   "date": "2026-11-14"
+ },
+ "notOnCard": {
+  "note": "Budget lines that do not count as spending a new card could take. A line counts anyway when its Paid with is one of the cards on the plan.",
+  "categories": [
+   "Rent or mortgage",
+   "Debt payments",
+   "Family support",
+   "Fees",
+   "Buffer"
+  ],
+  "groups": [
+   "Debt",
+   "Retirement",
+   "Taxes"
+  ],
+  "basis": "SLAM rule: rent and mortgage, loan and card payments, money moved to savings, investments or family, bank fees and taxes are usually paid from a bank account; a card either is not taken or adds a fee of about 3% that costs more than the rewards",
+  "source": "SLAM rule (owner, Nov 24 2026); the fee is what rent and tax payment services commonly charge for a credit card, to check",
+  "date": "2026-11-24",
+  "verified": "unverified"
  }
 }

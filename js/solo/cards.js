@@ -67,6 +67,7 @@ function draw(api) {
         h('p', { style: { margin: 0 } }, `${offerWords}${o.spend ? `, after ${money(o.spend)} on the card in ${o.months} months` : ''}. `, h('span.st-small.st-soft', {}, `From review sites, read ${monthSay(off.asOf)}.${o.conflict ? ` ${o.conflict}.` : ''}${o.ends ? ` Listed as ending ${monthSay(o.ends)}.` : ''}`)),
         OU.opens.length ? tags('Opens', OU.opens) : null, tags('Uses', OU.uses, '.uses'),
         h('ul.st-small', { style: { margin: 0, paddingLeft: '18px' } }, fit.reasons.map(t => h('li', {}, t))),
+        (S => (S.line ? h('p.st-small.cp-shift', { style: { margin: 0, fontWeight: 700 } }, S.line) : null))(R.shiftOf(o)),
         creditTaps(id, 'Credits you would use anyway'),
         yearly > 0 ? h('p.st-small', { style: { margin: 0 } }, `${used > 0 ? 'After those credits it' : 'It'} costs ${money(yearly)} a year. A cost you keep paying adds ${money(Math.round(P.costAsFiNumber(yearly, R.wr)))} to the amount you need to stop working.`) : (o.annualFee > 0 ? h('p.st-small', { style: { margin: 0 } }, 'The credits you would use cover the fee.') : null),
         value > 0 ? (T => [question('Where would it go?', TOWARD.filter(([k]) => T[k]).map(([k, l]) => chip(l, (all().toward ?? 'invest') === k, () => shared({ toward: k })))), h('p.st-small', { style: { margin: 0 } }, T[all().toward ?? 'invest'] ?? T.invest)])(R.toward(value)) : null,
@@ -80,7 +81,7 @@ function draw(api) {
     const said = d => new Date(`${d}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     return h('div.st-card.hero', { id: 'next', 'aria-live': 'polite' },
       R.people.length > 1 ? withId('who', question('Whose cards? Each of you has your own five slots.', [chip('Mine', !partner, () => shared({ who: 'Me' })), chip("My partner's", partner, () => shared({ who: 'Partner' }))])) : null,
-      h('div.st-eyebrow', { style: R.people.length > 1 ? { marginTop: '12px' } : {} }, partner ? "Your partner's next card move" : 'Your next card move'), h('p', { id: 'answer', style: { fontWeight: 800, fontSize: '1.15rem', margin: '4px 0 6px' } }, R.line), h('p.cp-why', {}, R.why),
+      h('div.st-eyebrow', { style: R.people.length > 1 ? { marginTop: '12px' } : {} }, partner ? "Your partner's next card move" : 'Your next card move'), h('p', { id: 'answer', style: { fontWeight: 800, fontSize: '1.15rem', margin: '4px 0 6px' } }, R.line), h('p.cp-why', {}, R.why), R.kind === 'debt' && R.carry.line ? h('p', { id: 'carry-line', style: { margin: '0 0 8px' } }, R.carry.line) : null,
       R.kind === 'debt' ? null : hidden ? h('div.st-row.cp-guide', {}, btn('Show my next step', () => shared({ guideOff: null }), 'slim'))
         : h('div.st-nextbar.cp-guide', { id: 'guide' }, h('span.st-count', {}, G.count), G.next ? btn(`${G.line} ›`, () => goNext(), 'primary') : h('span', {}, G.line), G.next ? btn('Hide', () => shared({ guideOff: true }), 'slim') : null),
       R.kind === 'debt' ? h('div.st-row', { style: { marginTop: '10px' } }, withId('to-debt', btn('See when I am debt free', async () => { location.href = carryUrl('debt', await pack(api.store.doc)); }, 'primary'))) : null,
@@ -97,14 +98,16 @@ function draw(api) {
     const line = (label, value, src) => [h('dt', {}, label), h('dd', {}, value, src ? [' ', src] : null)];
     return h('div.st-card', { id: 'built' }, h('h2', { style: { marginTop: 0 } }, 'What this is built on'), h('p.st-small.st-soft', {}, 'These come from your plan. Change them there and this page follows.'),
       h('dl.st-kv', {},
-        line('Everyday spending', I.spend.fromBudget ? `${money(Math.round(I.spend.monthly))} a month` : `${money(Math.round(I.spend.typicalMonthly))} a month`, I.spend.fromBudget ? from('From your Budget') : h('span.st-tag', {}, 'Typical, until your Budget has it')),
+        I.spend.canCharge ? line('Can go on a card', `${money(Math.round(I.spend.monthly))} a month`, h('span.st-tag.yours', { id: 'can-charge', title: I.spend.shift.cannot.length ? `Left out: ${I.spend.shift.cannot.map(c => `${c.name} ${money(Math.round(c.monthly))}`).join(', ')}. A line counts once its Paid with is a card.` : 'Every Budget line with an amount.' }, 'From your Budget'))
+          : line('Everyday spending', I.spend.fromBudget ? `${money(Math.round(I.spend.monthly))} a month` : `${money(Math.round(I.spend.typicalMonthly))} a month`, I.spend.fromBudget ? from('From your Budget') : h('span.st-tag', {}, 'Typical, until your Budget has it')),
+        I.spend.canCharge && I.spend.shift.left > 0 ? line('Stays off a card', `${money(Math.round(I.spend.shift.left))} a month`, h('span.st-tag', { title: I.spend.shift.cannot.map(c => `${c.name} ${money(Math.round(c.monthly))}`).join(', ') }, 'Rent, loans, transfers')) : null,
         line('Cards you hold', heldNames.length ? heldNames.join(', ') : R.unpicked.length ? `${R.unpicked.length} not matched to a card yet` : 'None listed', from('From Credit cards')),
         line('Debt at 8% or more', I.heavy ? 'Yes' : 'No', I.heavyListed || !I.carryTap ? from('From your debts') : h('span.st-tag', {}, 'You said you carry a card balance')),
         line('Credit score', I.score.fromProfile ? String(I.score.number) : I.score.band ? SCORES.find(s => s[0] === I.score.band)?.[1] ?? 'None yet' : 'Not in your plan', I.score.fromProfile ? from('From your Profile') : null),
         line('Growth and withdrawal', `${+(R.rr * 100).toFixed(1)}% and ${+(R.wr * 100).toFixed(1)}%`, from('From your plan'))),
       h('div.st-row', { style: { marginTop: '12px' } }, btn('Change these in my plan', async () => { location.href = carryUrl('plan', await pack(api.store.doc)); }, 'slim')),
       I.carryTap ? h('div.st-row', { style: { marginTop: '8px' } }, btn('I no longer carry a card balance', () => shared({ carry: null }), 'slim'), btn('Add the balance to my plan', async () => { location.href = carryUrl('debt', await pack(api.store.doc)); }, 'slim')) : null,
-      I.spend.fromBudget ? null : withId('q-spend', question('Until the Budget has them: what you put on cards in a month', [500, 1000, 2000, 4000].map(v => chip(v === 4000 ? '$4,000 or more' : `About ${money(v)}`, I.spendTap === v, () => mine({ spend: I.spendTap === v ? null : v }))))),
+      I.spend.fromBudget || I.spend.canCharge ? null : withId('q-spend', question('Until the Budget has them: what you put on cards in a month', [500, 1000, 2000, 4000].map(v => chip(v === 4000 ? '$4,000 or more' : `About ${money(v)}`, I.spendTap === v, () => mine({ spend: I.spendTap === v ? null : v }))))),
       I.score.fromProfile ? null : withId('q-score', question('Until your score is in the plan', SCORES.map(([v, l]) => chip(l, cp().score === v, () => mine({ score: cp().score === v ? null : v }))))),
       h('div', { style: { marginTop: '14px' } }, fold('tune', 'Fine-tune: business cards, point value, airline and hotel points, other cards', [
       question('A business or side income?', [chip('Yes', I.business === true, () => mine({ business: I.business === true ? null : true })), chip('No', I.business === false, () => mine({ business: I.business === false ? null : false }))]),
@@ -119,6 +122,10 @@ function draw(api) {
 
   const held = () => h('div.st-card', { id: 'held' }, h('h2', { style: { marginTop: 0 } }, 'Cards you hold'), h('p.st-small.st-soft', {}, 'From your Credit cards list. Each one gets a yearly check: did it earn its fee?'),
     (sh => (sh ? h('p', { id: 'share', style: { fontWeight: 700 } }, sh.line) : null))(R.share()),
+    // what is on each card: the balance and the rate the plan uses for it, then what carrying it costs a year
+    R.carry.parts.length ? h('div', { id: 'on-cards' }, h('div.cp-lab', {}, 'On each card'),
+      h('dl.st-kv', { style: { marginTop: '4px', marginBottom: '12px' } }, R.carry.parts.map(c => [h('dt', {}, c.label), h('dd', {}, c.inFull ? 'Paid in full each month' : c.balance == null ? 'Not said yet' : c.carried ? `${money(Math.round(c.balance))} at ${+(c.apr * 100).toFixed(1)}%${c.assigned ? ' (typical rate)' : ''}` : money(0))]),
+        R.carry.owed > 0 ? [h('dt', {}, 'Carried in all'), h('dd', {}, `${money(Math.round(R.carry.owed))}, about ${money(Math.round(R.carry.interest))} a year in interest`)] : null)) : null,
     R.held.map(x => fold(`held-${x.row.id}`, x.label, [
       h('p', { style: { margin: 0, fontWeight: 700 } }, x.year.line), x.year.option ? h('p.st-small', { style: { margin: 0 } }, x.year.option) : null,
       x.row.values.payChoice !== 'In full' ? [

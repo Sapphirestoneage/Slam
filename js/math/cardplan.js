@@ -4,6 +4,8 @@
 // Every function takes the offers, units and rules as arguments: the math never loads a file and holds no rates.
 
 import { cardRewards } from './cards.js';
+import { isBlank } from './result.js';
+import { monthlyFrom } from './income.js';
 
 const round = v => Math.round(v);
 const idOf = o => o.cardId ?? o.name;
@@ -303,4 +305,59 @@ export function offerToward(value, { littleE = null, iraLimit = null, realReturn
     // left until retirement: the plan's own age and target age; with no birth year there is nothing honest to show
     ...(realReturn != null ? { invest: years == null ? 'Add your birth year in your plan and this shows what it grows to by the time you stop working.' : `${usd(value)} invested and left until ${until ?? 'you stop working'}, ${years} ${years === 1 ? 'year' : 'years'} from now, is about ${usd(investedLater(value, years, realReturn))} in today's dollars.` } : {}),
   };
+}
+
+// ---- Spending a new card could take ----
+// The Budget's lines that can go on a card, a month. A line is left out when it is a debt payment made from the debts
+// list, or its category or group is in notOnCard (data/library/card-offers.json: rent, loan payments, transfers,
+// taxes), unless the plan says so: its Paid with is one of the cards on the plan (cardIds). Blank and Not for me lines
+// count nowhere.
+export function cardSpend(lines = [], { notOnCard = {}, cardIds = [], freq = null } = {}) {
+  const cats = new Set(notOnCard.categories || []), groups = new Set(notOnCard.groups || []), cards = new Set(cardIds);
+  const can = [], cannot = [];
+  for (const l of lines) {
+    if (l.status === 'Not for me' || isBlank(l.amount)) continue;
+    const monthly = monthlyFrom(Number(l.amount), l.per ?? 'month', freq).value ?? 0;
+    if (!(monthly > 0)) continue;
+    const category = l.category ?? l.values?.category ?? null, group = l.draftt ?? l.values?.draftt ?? null;
+    const said = l.paidWith != null && cards.has(l.paidWith);
+    const out = !said && (!!l.auto || cats.has(category) || groups.has(group));
+    (out ? cannot : can).push({ name: l.name || category || 'A line', category, monthly, ...(said ? { said: true } : {}) });
+  }
+  const sum = a => a.reduce((t, x) => t + x.monthly, 0);
+  return { monthly: sum(can), can, cannot, left: sum(cannot) };
+}
+
+// How much of that spending has to move onto a new card to earn its welcome offer inside the offer's window.
+// perMonth is the offer's spending spread over its months; move is the part of the spending that has to go on the new
+// card each month; short is what is missing a month when the spending cannot reach it.
+export function shiftToEarn(offer, monthly) {
+  const usd = v => `$${round(v).toLocaleString('en-US')}`;
+  if (!offer?.spend || !offer.months) return { perMonth: 0, move: 0, months: 0, reach: true, short: 0, line: null };
+  const perMonth = offer.spend / offer.months;
+  if (!(monthly > 0)) return { perMonth, move: null, months: null, reach: null, short: null, line: null };
+  const months = Math.ceil(offer.spend / monthly), reach = months <= offer.months, short = reach ? 0 : perMonth - monthly;
+  return { perMonth, move: Math.min(monthly, perMonth), months, reach, short,
+    line: reach ? `Move about ${usd(perMonth)} a month of the ${usd(monthly)} you can put on a card and the offer is earned inside its ${offer.months} months.`
+      : `The offer needs about ${usd(perMonth)} a month for ${offer.months} months. You have about ${usd(monthly)} a month that can go on a card, ${usd(short)} a month short.` };
+}
+
+// ---- What is on each card, and a carried balance against the biggest welcome offer ----
+// cards: [{ label, balance, apr, aprGuess, inFull }]. A balance that is not paid in full is carried; with no rate of
+// its own it takes typicalApr (the plan's typical card rate) and says so. Interest is a year at that rate on the
+// balance as it stands (balance x rate). bonus is the biggest welcome offer in dollars; tapped is "I carry a balance"
+// said before any balance is on the plan.
+export function carryCost(cards = [], { typicalApr = null, bonus = null, tapped = false } = {}) {
+  const usd = v => `$${round(v).toLocaleString('en-US')}`, pct = v => `${+(v * 100).toFixed(1)}%`;
+  const parts = cards.map(c => {
+    const carried = !c.inFull && c.balance > 0, own = c.apr != null && !c.aprGuess, apr = own ? c.apr : typicalApr;
+    return { label: c.label, balance: c.balance ?? null, inFull: !!c.inFull, carried, apr: carried ? apr : own ? c.apr : null, assigned: carried && !own, interest: carried && apr != null ? c.balance * apr : 0 };
+  });
+  const owed = parts.reduce((t, x) => t + (x.carried ? x.balance : 0), 0), interest = parts.reduce((t, x) => t + x.interest, 0);
+  const outweighs = owed > 0 && bonus != null && interest >= bonus;
+  const line = owed > 0 ? (outweighs ? `The interest outweighs the bonus: about ${usd(interest)} a year on the ${usd(owed)} you carry, against ${usd(bonus)} for the biggest welcome offer here.`
+    : `About ${usd(interest)} a year in interest on the ${usd(owed)} you carry. Clearing it comes first: that saving comes back every year, and a welcome offer pays once.`)
+    : tapped && typicalApr > 0 && bonus > 0 ? `At ${pct(typicalApr)} a year, the rate used until yours is in, a carried balance over ${usd(bonus / typicalApr)} costs more in a year than the biggest welcome offer here pays (${usd(bonus)}). Add what you owe and this uses your own numbers.`
+    : null;
+  return { parts, owed, interest, bonus, outweighs, line };
 }

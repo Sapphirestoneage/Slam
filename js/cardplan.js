@@ -30,7 +30,10 @@ export function cardPlanOf(doc, ref, lib, off, { now = new Date(), person = null
   const fromBudget = categorySpend(x.lines || [], lib.categories, x.payFrequency), hasBudget = Object.keys(fromBudget).length > 0;
   const typical = Object.fromEntries(Object.entries(off.typicalSpend.monthly).map(([k, v]) => [k, v * 12]));
   const byCat = hasBudget ? fromBudget : typical;
-  const monthly = hasBudget ? Object.values(fromBudget).reduce((a, b) => a + b, 0) / 12 : mine.spend ?? null;
+  // what can go on a new card: every Budget line a card can take (rent, loan payments and transfers stay out unless the
+  // line's Paid with is a card), not only the lines in a rewards category
+  const shift = P.cardSpend(x.lines || [], { notOnCard: off.notOnCard, cardIds: cardRowsOf(doc).map(r => r.id), freq: x.payFrequency });
+  const monthly = shift.monthly > 0 ? shift.monthly : hasBudget ? Object.values(fromBudget).reduce((a, b) => a + b, 0) / 12 : mine.spend ?? null;
   const number = who === 'Me' ? doc.profile?.credit?.score ?? null : null, band = P.scoreBand(number, off.scoreBands) ?? mine.score ?? null;
   // heavy debt: the debts list decides; a card someone says they carry a balance on counts until its balance is on the list
   const heavyListed = (x.debts || []).some(d => !d.inFull && (d.balance ?? 0) > 0 && d.apr != null && d.apr >= RULES.heavyApr), heavy = heavyListed || mine.carry === true;
@@ -50,8 +53,14 @@ export function cardPlanOf(doc, ref, lib, off, { now = new Date(), person = null
     return { row: r, card, label: `${issuerName(card)} ${card.name}`, opened: month(r.values.opened), check, year: P.yearCheck({ fee: check.fee ?? 0, back: check.back ?? 0, small, noFeeSibling: sib?.name ?? null }) };
   });
   const dates = P.cardDates(held.map(hd => ({ name: hd.card.name, opened: hd.opened, fee: hd.check.fee ?? 0, offerMonths: (o => (o?.spend ? o.months : null))(off.offers.find(f => f.cardId === hd.card.id)) })), now, off.rules.chase524);
-  const guide = P.cardSteps({ hasCards: rows.length > 0, noCards: mine.noCards === true, spendKnown: hasBudget || mine.spend != null, scoreKnown: number != null || mine.score != null,
+  const guide = P.cardSteps({ hasCards: rows.length > 0, noCards: mine.noCards === true, spendKnown: hasBudget || shift.monthly > 0 || mine.spend != null, scoreKnown: number != null || mine.score != null,
     monthsLeft: held.filter(hd => !hd.opened && !mine.old?.[hd.row.id]).length, canOpen: plan.kind === 'open', heavyDebt: plan.kind === 'debt', seenMove: mine.seen?.move === true, seenPlain: mine.seen?.plain === true });
+  // what is on each card (this person's rows, at the rate the plan uses for each), and a carried balance against the
+  // biggest welcome offer on the list (points at their cash value; airline and hotel points and business cards only when tapped)
+  const bonus = Math.max(0, ...off.offers.filter(o => P.offerLive(o, now) && (!o.business || mine.business === true) && (!P.isProgram(o, off.units) || (mine.programs || []).includes(o.bonus.unit))).map(o => P.offerValue(o, { units: off.units }) ?? 0));
+  const carry = P.carryCost(rows.map(r => { const d = (x.debts || []).find(q => q.id === r.id) ?? {}, c = cardOf(r.values?.cardId);
+    return { label: c ? `${issuerName(c)} ${c.name}` : r.name || 'A card', balance: d.balance ?? r.values?.balance ?? null, apr: d.apr ?? null, aprGuess: d.aprGuess ?? r.values?.apr == null, inFull: d.inFull ?? r.values?.payChoice === 'In full' }; }),
+    { typicalApr: ref.typicalRates['Credit card'], bonus, tapped: mine.carry === true });
   const rr = x.realReturn ?? ref.presets.realReturn.default;
   const total = Object.values(byCat).reduce((a, b) => a + b, 0), flat = total * RULES.plainCardRate;
   // the best 1, 2 and 3 cards against one plain card on this spending: worked out once, kept while nothing it reads changes
@@ -72,8 +81,9 @@ export function cardPlanOf(doc, ref, lib, off, { now = new Date(), person = null
     // a card someone carries a balance on, until its balance is on the plan: the page asks for it there (the rate is the
     // plan's typical card rate until theirs is in)
     typicalApr: ref.typicalRates['Credit card'],
+    carry, shiftOf: offer => P.shiftToEarn(offer, monthly),
     rr, wr: x.withdrawalRate ?? ref.presets.withdrawalRate.default,
-    inputs: { spend: { byCat, monthly, fromBudget: hasBudget, typicalMonthly: Object.values(typical).reduce((a, b) => a + b, 0) / 12 }, heavyListed, carryTap: mine.carry === true, score: { band, number, fromProfile: number != null }, heavy, business: mine.business ?? null, programs: mine.programs || [], tv: mine.tv ?? null, openedOther: mine.opened || [], spendTap: mine.spend ?? null },
+    inputs: { spend: { byCat, monthly, fromBudget: hasBudget, shift, canCharge: shift.monthly > 0, typicalMonthly: Object.values(typical).reduce((a, b) => a + b, 0) / 12 }, heavyListed, carryTap: mine.carry === true, score: { band, number, fromProfile: number != null }, heavy, business: mine.business ?? null, programs: mine.programs || [], tv: mine.tv ?? null, openedOther: mine.opened || [], spendTap: mine.spend ?? null },
     setups };
 }
 
