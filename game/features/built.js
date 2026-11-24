@@ -600,6 +600,14 @@ const WB = [
     "transit",
   ],
   [
+    "who",
+    "Kids mode: short daily money lessons for a kid",
+    "b",
+    () => WB_HAS("kids") && WB_FN("kidRunNext"),
+    "A separate kid profile with 20 short lessons, one a day. It holds no money numbers. Under People and in the menu.",
+    "kids",
+  ],
+  [
     "feel",
     "Your money type as an element, with what it is strong against and weak to",
     "b",

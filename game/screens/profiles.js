@@ -48,6 +48,7 @@ function profSheet() {
   if (typeof profSheetHandoff === "function") h = profSheetHandoff(h);
   if (typeof profSheetFair === "function") h = profSheetFair(h); /* fair.js: the row "Sharing costs fairly" */
   if (typeof profSheetHouse === "function") h = profSheetHouse(h); /* house.js: the row "Our household" */
+  if (typeof profSheetKids === "function") h = profSheetKids(h); /* kids.js: the row "Kids mode" */
   if (typeof profSheetAddon === "function") h = profSheetAddon(h); /* addon.js: the card for the add-ons */
   return h;
 }
