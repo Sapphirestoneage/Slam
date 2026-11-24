@@ -43,4 +43,82 @@ Baseline before any change: `node --test` 1,222 pass, 0 fail. `npm run test:game
 
 ## What the run did
 
-(Filled in at the end of the run.)
+### Done
+
+| # | Item | What was added | Where |
+|---|------|----------------|-------|
+| 1, 11 | Next Steps | Opens on Today / This week / Month / Year. The board under it uses plain words ("Do this first", "Also worth doing", "Bigger projects"). The game words show only with the gamer switch. | `screens/planner.js`, `features/missions.js` |
+| 3 | Character reveal | Replaces "Your character is ready": strengths and weak spots as literal numbers, the money element (Earth, Water, Fire, Air, Spirit) with strong against and weak to, "Does this feel accurate?", "Which do you want to improve most?". | `features/element.js` |
+| 4 | Gear slots | An explanation of a slot, and the states want it, need it, not interested, can't have it, inactive (a plan at work while between jobs). | `core/engine2.js`, `features/games.js` |
+| 6 | Click counter | `node tools/game_clicks.cjs`. See the counts below. | `tools/game_clicks.cjs` |
+| 20 | Product X-ray | The path you are on next to the alternative: insurance that also saves next to term cover and investing the rest, or an investment with fees next to a low-cost index fund. Dollars and days. | `features/xray.js` |
+| 22 | Card plan | The balance and rate on each card, what a carried balance costs next to the biggest welcome offer, and the spending that can move to a new card inside the offer's window. | `js/math/cardplan.js`, `js/solo/cards.js` |
+| 24 | Life Transitions | "Break in case of emergency" on My Goals: the dip of a layoff, tripwires, family help counted at its risk, quick income by time to the first dollar, four slots with one card each, advantages. | `features/transit.js` |
+| 25 | Kids mode | A separate kid profile (not a player, no money numbers) with 20 short daily lessons. Under People and in the menu. | `features/kids.js`, `data/kidlessons.js` |
+| 26 | Spreadsheet round trip | The plan's sheet has a section "Your numbers". Change values, bring the CSV file or the pasted rows back, see each change, then use them. One list of fields feeds the export and the import. | `features/book.js` |
+| 27 | Fire drills | Each drill says how long it lasts and offers a small real dose. New drill: card interest. | `features/drills.js` |
+| 28 | US vs Israel | `aliyah.html`, a page of the web app, linked from the front door. Every default is a Guess. | `js/math/aliyah.js`, `js/solo/aliyah.js` |
+| 31 | Think-aloud test | Three personas, three tasks, two rounds. Three defects found and fixed. | `USABILITY.md` |
+| 32 | Tests and math audit | FI number, Coast FI, debt payoff and runway each worked out a second way: 14 checks, all agree. | `game/tests/math-audit-core-numbers.js` |
+
+### Already built before the run (checked, not changed)
+
+Items 1 (bar, menu, back and forward), 2, 5, 7, 8, 9, 10, 12, 13, 15, 16, 17, 18, 19, 21 (93 welcome offers at 12 banks,
+with the extra Chase cards) and 23 (the card plan is already one input, one answer, one pulsing step in the main plan).
+These were checked by reading the code and by the walks. They were not tested again one by one.
+
+### Partly done
+
+- Item 2: nothing was moved out of setup. Roommates and parents are one multi-tap question, and subscription splits
+  are not in setup. Setup has no question that can be answered "I don't know".
+- Item 7: no migration was needed. The whole game, with each person, already saves to the account. Not tested against
+  the real database here.
+- Item 14: the yearly review and the limit resets are built. Extra calendars in the game come from an add-on that
+  this repository cannot open, so that part was not checked. The web app's own calendar tests pass.
+- Item 21: 23 cards have no welcome offer in the sources. They are blank, not guessed (the list is in `QUESTIONS.md`).
+- Item 24: the first transition (a layoff) is built. Other transitions are not.
+- Item 28: the US tax of a citizen who lives in Israel, National Insurance for the self-employed, and typical Israeli
+  costs are not priced, because the data file has no figure for them. The page lists each one.
+
+### Skipped, and why
+
+- Items 29 and 30 (Tier 7): built, tested, and handed over as a zip file in the chat. Not in this repository:
+  `CLAUDE.md` forbids add-on words here, the repository is public, and a push cannot be taken back. See question 1.
+- The NYC FIRE event: not touched, as asked.
+- No Supabase migration was written, because nothing new needs a table.
+- `node tools/e2e/layout.cjs` as a full run needs a standing local server, which this session could not start. The
+  two workers ran its scan on `cards.html` and `aliyah.html` from a short-lived server: 0 findings.
+
+### Click counts (`node tools/game_clicks.cjs`, phone width)
+
+| Persona | Clicks to the end of setup | Clicks to the first plan |
+|---------|---------------------------:|-------------------------:|
+| Speedrun (the simplest answers) | 17 | 22 |
+| Most complex (four kinds of income, a household of four, five debts) | 28 | 33 |
+
+The five clicks after setup are the character reveal.
+
+### Tests at the end of the run
+
+- `npm run test:game`: 67 files, 1,566 checks ok, 0 failed. Version stamps correct. `CODE-MAP.md`: 0 replaced
+  functions, 0 functions with two declarations, 0 hidden errors.
+- `node --test`: 1,240 pass, 0 fail, 43 skipped, 2 todo.
+- New game screens opened at 390, 1280 and 1440 wide: no sideways scroll, no page errors, no error records.
+
+### QA.md scores of the screens the run touched
+
+Scale 1 to 5. Nothing above "minor" is open.
+
+| Screen | Works | Right | One answer | Looks right | Obvious | Findable | Easy | Plain words | Tells you | Fits everywhere | Fast | Coachable |
+|--------|------:|------:|-----------:|------------:|--------:|---------:|-----:|------------:|----------:|----------------:|-----:|----------:|
+| Character reveal | 5 | 4 | 5 | 4 | 5 | 4 | 5 | 5 | 4 | 5 | 5 | 4 |
+| Next Steps | 5 | 5 | 4 | 4 | 4 | 5 | 5 | 5 | 4 | 5 | 5 | 4 |
+| Log money | 5 | 5 | 5 | 4 | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 4 |
+| Safe to spend | 5 | 5 | 5 | 4 | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 4 |
+| Product X-ray | 5 | 4 | 5 | 4 | 4 | 3 | 4 | 4 | 4 | 5 | 5 | 4 |
+| Break in case of emergency | 5 | 4 | 5 | 4 | 4 | 4 | 4 | 4 | 4 | 5 | 5 | 4 |
+| Kids mode | 5 | 5 | 5 | 4 | 5 | 3 | 5 | 5 | 5 | 5 | 5 | 3 |
+| Spreadsheet, the way back | 5 | 4 | 5 | 3 | 4 | 3 | 3 | 4 | 5 | 5 | 5 | 4 |
+
+Minor, open: the reveal's strengths are an order of guesses until the numbers are real (it says so); the X-ray and
+Kids mode are found in the menu and under People only; the way back needs one paste or one file, which is not a tap.

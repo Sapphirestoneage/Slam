@@ -61,7 +61,7 @@ Krug's rule: fix the few worst things, with the smallest change that works.
 
 | Task | Brandon | Jacob | FIRE user |
 |------|---------|-------|-----------|
-| 1. Setup to a plan | 22 clicks, no stop | 25 clicks, no stop | 23 clicks, no stop |
+| 1. Setup to a plan | 23 clicks, no stop | 25 clicks, no stop | 23 clicks, no stop |
 | 2. Log a debt payment | 5 taps (+ Log, I paid a debt, Checking, $100, Log it), no stop. "It showed me 'Paid from' with Checking glowing. Then the amount. Then it said I owe $100 less and my cash is $100 lower. And an Undo." | The same 5 taps | The same 5 taps |
 | 3. Safe to spend $200 | 2 taps. "Yes." | 2 taps. "You can, but it would go on a card or a loan. Or keep it to $140 and it's a yes today." No red. | 2 taps. "Yes." |
 

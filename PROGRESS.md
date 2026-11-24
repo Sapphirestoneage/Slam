@@ -133,3 +133,15 @@ The goal: two software developers can read and review the code of the game. The 
 - Found and not repaired, because the repair changes what the player sees: the menu row "Our household" opens the
   sheet "Put SLAM on your home screen" (A8), and the sheet "Share" shows the address of the retired copy (C6).
 - Questions for the owner: `QUESTIONS.md`, 561.
+
+## Nov 24 2026: the overnight build
+
+- `STATUS.md` has the list: what was there, what the run added, what was skipped and why, and the click counts.
+- Game, new: the character reveal with the money element, five gear slot states, the product X-ray, Break in case of
+  emergency (a layoff), Kids mode, the spreadsheet's way back, how long each fire drill lasts with a small real dose.
+- Game, changed: Next Steps opens on Today, plain words on the board, the log opens on the first open question, one
+  list of amounts, no red in Safe to spend.
+- Web app: `aliyah.html` (US vs Israel), and the card plan's balance on each card and spending that can move.
+- `USABILITY.md` (three personas, two rounds), a math audit of four core numbers, `tools/game_clicks.cjs`.
+- `npm run test:game`: 1,566 checks ok. `node --test`: 1,240 pass, 0 fail.
+- Questions: `QUESTIONS.md` 572 and 573. Decisions: `DECISIONS.md`. What to try first: `MORNING.md`.
