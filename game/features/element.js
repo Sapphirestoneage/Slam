@@ -108,7 +108,7 @@ function elStats(c, d) {
       v: d.acDone,
       txt: d.acDone + " of " + d.acMax + " protections in place",
       score: d.acMax ? d.acDone / d.acMax : 1,
-      st: "Close",
+      st,
       act: "cover",
     },
   ];
@@ -249,10 +249,11 @@ function elSheet() {
     head("Me", "Strengths and your element") +
     `<div class="tile stack" style="gap:6px"><div class="row between"><b>${esc(E.el)}</b>${kitPill(E.st)}</div><div class="small">${esc(ELEMENTS[E.el])}</div><div class="tiny muted">Strong against: ${esc(EL_SIDES[E.el].strong.join(", "))}. Weak to: ${esc(EL_SIDES[E.el].weak.join(", "))}.</div></div>` +
     S.all.map(s => elStatRow(s, s.id === X.focus ? "your focus" : "")).join("") +
+    (w.first ? `<button class="primary wide go" data-a="close">See my first plan</button>` : "") +
     (f
-      ? `<button class="primary wide go" data-a="${f.act}" ${f.av ? `data-v="${f.av}"` : ""}>Work on ${esc(f.n.toLowerCase())}</button>`
+      ? `<button class="${w.first ? "ghost wide slim" : "primary wide go"}" data-a="${f.act}" ${f.av ? `data-v="${f.av}"` : ""}>Work on ${esc(f.n.toLowerCase())}</button>`
       : "") +
-    `<button class="ghost wide slim" data-a="elem" data-v="again">Go through it again</button><button class="ghost wide slim" data-a="close">Done</button>`
+    `<button class="ghost wide slim" data-a="elem" data-v="again">Go through it again</button>${w.first ? "" : `<button class="ghost wide slim" data-a="close">Done</button>`}`
   );
 }
 /* Part of finishSetup() in ui.js. For a new profile, opens the reveal in place of the card "Your
