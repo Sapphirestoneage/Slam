@@ -202,6 +202,8 @@ function planTabHead(h) {
 function goalsTab() {
   let h = goalsTabBase();
   if (typeof goalsTabCountdown === "function") h = goalsTabCountdown(h); /* countdown.js: the button "Countdowns" */
+  if (typeof goalsTabTransit === "function")
+    h = goalsTabTransit(h); /* transit.js: the row "Break in case of emergency" */
   return h;
 }
 function goalsTabBase() {
