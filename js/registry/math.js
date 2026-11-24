@@ -841,6 +841,11 @@ export const MATH = [
 // js/math exports that are not an M formula of their own: how records become formula inputs, account details, and
 // result plumbing. Each says why it has no row of its own.
 export const SUPPORT = {
+  // Aliyah Math (aliyah.html, Run 8): a standalone comparison on data/sources/israel-2026.json; nothing of it is stored in the plan, so the workbook has no column for it.
+  'aliyah.ils': 'a shekel amount as words (aliyah.html)', 'aliyah.ALIYAH_SCENARIOS': 'the five ways to earn in Israel the page offers', 'aliyah.ALIYAH_LINES': 'the expense groups, Food, Accommodation, Transportation first',
+  'aliyah.aliyahGuesses': 'the faded US starting costs, added up from spendingPresets by group', 'aliyah.aliyahStart': 'what aliyah.html opens with, every one a Guess', 'aliyah.olimPointsOf': 'a new immigrant\'s extra credit points averaged over one year in Israel',
+  'aliyah.ilIncomeTaxOf': 'Israeli income tax on a year of earned income: bands, the 0% ceiling, credit points, the extra tax', 'aliyah.ilNationalInsuranceOf': 'National Insurance and health tax at the salaried rates',
+  'aliyah.aliyahOf': 'US vs Israel: one month in both, row by row in D.A.I.T.E. order, with what is not priced',
   'cardplan.unlocksTransfers': 'whether a held card allows point transfers (data/library/card-offers.json)', 'cardplan.offerValue': 'dollars a welcome offer is worth, from the dated offers layer; not a sheet number yet (no screen stores it)',
   'cardplan.slotsLeft': 'issuer slots left under the 5/24 rule in card-offers.json', 'cardplan.monthsToEarn': 'months of usual card spending to earn an offer', 'cardplan.firstYearNet': 'offer value less the first-year fee after credits used',
   'cardplan.cardFit': 'fits, maybe or later for one card, with plain reasons', 'cardplan.nextMoves': 'the moves open from here, two steps deep', 'cardplan.pathNet': 'what a sequence of cards is worth together',
@@ -852,6 +857,9 @@ export const SUPPORT = {
   'cardplan.cardSteps': 'the six steps that sharpen the card plan, with the one that is next',
   'cardplan.offerLive': 'whether an offer with an end date is still on', 'cardplan.whyNot': 'one plain reason for each card that is not among the moves', 'cardplan.visitChanges': 'what changed in the card plan since the last visit',
   'cardplan.cardsShare': 'how much of the best cards\' yearly rewards the held cards already give', 'cardplan.offerToward': 'an offer\'s dollars against the first cushion, the Roth IRA limit and time invested',
+  'cardplan.cardSpend': 'the Budget lines a card can take, a month (rent, loan payments and transfers stay out unless a line is paid with a card; the list is notOnCard in card-offers.json)',
+  'cardplan.shiftToEarn': 'how much of that spending has to move onto a new card each month to earn its welcome offer inside the window; a sentence on cards.html, no screen stores it',
+  'cardplan.carryCost': 'what is on each card and a year of interest on a carried balance (balance x its rate, the typical card rate when none is entered) against the biggest welcome offer; a sentence on cards.html',
   'cardplan.costAsFiNumber': 'a yearly cost divided by the withdrawal rate', 'cardplan.investedLater': 'a sum left invested at the real return',
   'result.ok': 'wraps a number with its plain-words math', 'result.needs': 'says what a number still needs', 'result.isBlank': 'a blank check',
   'result.missing': 'lists blank inputs', 'result.joinWords': 'joins words for Needs ...', 'result.fmt': 'number formats for the math text',

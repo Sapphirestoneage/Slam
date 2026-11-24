@@ -1,5 +1,5 @@
 {
-  "what": "Israel tax and social insurance figures for Aliyah Math (ROADMAP Run 8). Researched Nov 19 2026. Not read by any math yet.",
+  "what": "Israel tax and social insurance figures for Aliyah Math (ROADMAP Run 8). Researched Nov 19 2026. Read by js/math/aliyah.js (aliyah.html) since Nov 24 2026; the purchase tax bands and the employer rates are not used by it.",
   "rule": "Every figure names where it came from and how sure it is. 'primary' was read on a government page. 'secondary' was read on other sites that agree with each other and still needs a look at the Tax Authority's own table before it reaches a client.",
   "currency": "ILS",
   "taxYear": 2026,

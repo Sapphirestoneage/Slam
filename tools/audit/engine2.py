@@ -9,7 +9,7 @@ SLAM keeps in code (not in data/reference-2026.json) are typed in again here fro
 
 Usage: python3 tools/audit/engine2.py <cases.json> <reference-2026.json> [report.json]
 """
-import json, math, sys
+import json, math, os, sys
 from collections import defaultdict
 
 TOL = 1.0  # dollars
@@ -464,7 +464,35 @@ class Report:
         return same
 
 
-def run(cases, ref):
+def il_tax(il, monthly, points, ceiling):
+    # the marginal rate walked shekel band by shekel band over the part of the year that is taxed (no "tax on the
+    # whole less tax on the exempt part"), on bands built from the yearly list, not the monthly one
+    edges = il['incomeTax']['bracketsAnnual'] + [float('inf')]
+    rates = [b['rate'] for b in il['incomeTax']['bracketsMonthly']]
+    annual = monthly * 12; start = min(annual, ceiling) if ceiling is not None else 0.0
+    tax, floor = 0.0, 0.0
+    for edge, rate in zip(edges, rates):
+        lo, hi = max(floor, start), min(edge, annual)
+        if hi > lo: tax += (hi - lo) * rate
+        floor = edge
+    tax = max(0.0, tax - points * il['creditPoints']['valueMonthly'] * 12)
+    return tax + max(0.0, annual - il['incomeTax']['surtax']['aboveAnnual']) * il['incomeTax']['surtax']['rate']
+
+
+def il_ni(il, monthly):
+    # the full rate on everything up to the ceiling, less the discount on the reduced band
+    N = il['nationalInsurance']; e = N['employee']; capped = min(monthly, N['ceilingMonthly']); low = min(monthly, N['reducedBandUpToMonthly'])
+    part = lambda k: e['full'][k] * capped - (e['full'][k] - e['reduced'][k]) * low
+    return part('nationalInsurance') + part('health'), part('health')
+
+
+def il_points(il, resident, year):
+    # month by month through the schedule
+    per = [s['extraPoints'] for s in il['creditPoints']['olim']['schedule'] for _ in range(s['months'])]
+    return resident + sum(per[(year - 1) * 12:year * 12]) / 12
+
+
+def run(cases, ref, il=None):
     law, R = Law(ref), Report()
     extra = {'interest_gap': [], 'pace': [], 'life': {'runs': 0, 'years': 0, 'unsettled_years': 0, 'tax_gap_years': 0, 'worst_tax_gap': 0.0, 'worst_tax_case': None, 'credit_gap_years': 0, 'worst_credit_gap': 0.0, 'runs_touched': 0}}
     wr, rr = ref['presets']['withdrawalRate']['default'], ref['presets']['realReturn']['default']
@@ -529,6 +557,20 @@ def run(cases, ref):
             same_g = ck('what you have, grown', o['grown'], grown); same_n = ck('saving needed a month', o['needed'], needed)
             if o['grown'] and grown:
                 extra['pace'].append((o['grown'] / grown - 1, (o['needed'] or 0) - needed, x))
+        elif fn == 'ilTax':
+            pts = il_points(il, x['resident'], x['year']); ni, health = il_ni(il, x['monthly'])
+            ck('credit points', o['points'], pts, 1e-9); ck('income tax a year', o['tax'], il_tax(il, x['monthly'], pts, x['ceiling'])); ck('National Insurance and health', o['ni'], ni); ck('health part', o['health'], health)
+        elif fn == 'aliyah':
+            # one month each side, in dollars: pay less tax less costs less debt
+            fed, _, _ = law.federal(x['usGross'], 0, x['filing']); pay, _, _, _ = law.payroll(x['usGross'], x['filing'], False)
+            us = (x['usGross'] - fed - pay) / 12 - x['usSpend'] - x['debt']
+            pts = il_points(il, il['creditPoints']['residentBase']['man'], x['year'])
+            net = x['salary'] - il_tax(il, x['salary'], pts, None) / 12 - il_ni(il, x['salary'])[0] - x['ilSpend']
+            isr = net / x['rate'] - (x['usTaxAbroad'] or 0) / 12 - x['debt']
+            ck('left in the US', o['usLeft'], us); ck('left in Israel', o['ilLeft'], isr); ck('the gap', o['diff'], isr - us)
+            after = max(0, x['savings'] - x['moveCost']); out_us, out_il = x['usSpend'] + x['debt'], x['ilSpend'] / x['rate'] + x['debt']
+            ck('months covered, US', o['monthsUs'], x['savings'] / out_us, 1e-6); ck('months covered, Israel', o['monthsIl'], after / out_il, 1e-6)
+            ck('months the savings last', o['lasts'], after / -isr if isr < 0 else None, 1e-6)
         elif fn == 'trip':
             # a price left to grow to 65 at the plan's return; the FI month before and after by the closed form
             grow = lambda age: x['cost'] * (1 + rr) ** max(0, 65 - age)
@@ -692,7 +734,8 @@ def anchors(ref):
 def main():
     cases_path, ref_path = sys.argv[1], sys.argv[2]
     data, ref = json.load(open(cases_path)), json.load(open(ref_path))
-    R, extra = run(data['cases'], ref)
+    il_path = os.path.join(os.path.dirname(os.path.abspath(ref_path)), 'sources', 'israel-2026.json')  # Aliyah Math reads its own dated file
+    R, extra = run(data['cases'], ref, json.load(open(il_path)) if os.path.exists(il_path) else None)
     A = anchors(ref)
     ig = extra['interest_gap']; pace = extra['pace']
     summary = {

@@ -8,6 +8,7 @@ import { payoffMonths, totalInterest, payoffPlan, cardMinimum } from '../../js/m
 import { fiNumber, fiDate, coastFi, solveMonthlySaving } from '../../js/math/fi.js';
 import { yearsAtRate } from '../../js/math/simple.js';
 import { runwayOf, backwardsOf, tripCostOf, habitCostOf, loanCostOf, stoppedPayOf, workYearsOf, coastOf, dollarLaterOf, carFitsOf, expectedWorthOf, realWageOf, splitOf, homeFitsOf } from '../../js/solo.js';
+import { ilIncomeTaxOf, ilNationalInsuranceOf, olimPointsOf, aliyahOf } from '../../js/math/aliyah.js';
 import { RULES } from '../../js/registry/assumptions.js';
 import { Store, newHousehold } from '../../js/records.js';
 import { answer } from '../../js/journey.js';
@@ -15,6 +16,7 @@ import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yea
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
 const N = Number(nArg), ref = JSON.parse(readFileSync(new URL('../../data/reference-2026.json', import.meta.url)));
+const il = JSON.parse(readFileSync(new URL('../../data/sources/israel-2026.json', import.meta.url)));
 let s = Number(seedArg) >>> 0;
 const rnd = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 const pick = a => a[Math.floor(rnd() * a.length)], between = (lo, hi) => lo + rnd() * (hi - lo), whole = (lo, hi) => Math.floor(between(lo, hi + 1));
@@ -43,6 +45,12 @@ for (let i = 0; i < N; i++) {
   { const x = { cash: rnd() < 0.05 ? 0 : money(100, 200000), spending: money(900, 15000), stillIn: pick([0, 0, 500, 1000, 1500, 2000]), cut: pick([0, 0.1, 0.2, 0.3]) }; const r = runwayOf({ ...x, now: NOW }); add('runway', x, { covered: !!r.covered, months: r.months ?? null, whole: r.whole ?? null, extraMonths: r.extraMonths ?? null }); }
   { const x = { need: money(1500, 12000), per: 'month', years: pick([5, 10, 15, 20, 25, 30]), have: rnd() < 0.2 ? 0 : money(500, 900000), takeHome: money(2500, 16000), spending: money(1500, 12000) }; const r = backwardsOf({ ...x, ref, now: NOW }); add('backwards', x, { total: r.total, grown: r.grown, needed: r.needed, months: r.months, gap: r.gap }); }
   { const x = { cost: money(200, 20000), age: whole(18, 70), invested: rnd() < 0.3 ? null : money(500, 900000), monthly: rnd() < 0.2 ? null : money(50, 6000), spending: money(1500, 12000) }; const r = tripCostOf({ ...x, ref }); add('trip', x, { grown: r.grown, aYear: r.aYear, at22: r.byAge[0].grown, at60: r.byAge[4].grown, share: r.share, monthsOfSaving: r.monthsOfSaving, before: r.before, after: r.after, delay: r.delay }); }
+  // Aliyah Math (Run 8): Israeli income tax and National Insurance, then one whole month on an Israeli salary
+  { const x = { monthly: money(2000, 120000), year: whole(1, 6), resident: pick([il.creditPoints.residentBase.man, il.creditPoints.residentBase.woman]), ceiling: rnd() < 0.5 ? null : pick(Object.values(il.olimZeroRate.ceilingAnnual)) };
+    const pts = x.resident + olimPointsOf(x.year, il), t = ilIncomeTaxOf({ monthly: x.monthly, points: pts, zeroCeiling: x.ceiling }, il), n = ilNationalInsuranceOf({ monthly: x.monthly }, il); add('ilTax', x, { points: pts, tax: t.tax, ni: n.total, health: n.health }); }
+  { const x = { rate: pick([3, 3.4, 3.65, 4.1]), usGross: money(20000, 400000), salary: money(4000, 60000), filing: pick(['Single', 'Married jointly']), year: whole(1, 6), debt: pick([0, 300, 900]), savings: money(1000, 200000), moveCost: pick([0, 8000]), usSpend: money(1500, 9000), ilSpend: money(3000, 30000), usTaxAbroad: pick([null, 2400]) };
+    const r = aliyahOf({ ...x, scenario: 'salary', spend: { food: { us: x.usSpend, il: x.ilSpend }, home: { us: 0, il: 0 }, move: { us: 0, il: 0 }, health: { us: 0, il: 0 }, rest: { us: 0, il: 0 } } }, ref, il);
+    add('aliyah', x, { usLeft: r.us.left, ilLeft: r.il.left, diff: r.diff, monthsUs: r.cushion.monthsUs, monthsIl: r.cushion.monthsIl, lasts: r.cushion.lasts }); }
   // the canon pack (Run 5)
   { const x = { takeHome: money(1500, 20000) }; x.spending = Math.round(x.takeHome * between(0.2, 0.97)); const r = workYearsOf({ ...x, ref }); add('workYears', x, { rate: r.rate, years: r.years, yearsUp: r.yearsUp, up: r.up, moreAMonth: r.moreAMonth, printed: r.printed }); }
   { const x = { invested: rnd() < 0.15 ? 0 : money(500, 2000000), spending: money(1200, 12000), age: whole(18, 62), retireAge: pick([55, 60, 65, 67]) }; const r = coastOf({ ...x, ref }); add('coast', x, { fi: r.fi, coast: r.coast, there: r.there, gap: r.gap, grown: r.grown }); }
