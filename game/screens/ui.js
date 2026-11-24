@@ -5532,7 +5532,13 @@ function ledgerCard(c, d) {
  ${mathBox(["Your money: " + money(c.inv) + " invested × 7% a year ÷ 8,760 hours in a year = " + cents(tl.mw) + " an hour.", tl.wage > 0 ? "You: " + money(c.take) + " a month take-home × 12 ÷ 52 weeks ÷ " + tl.wk + " hours (" + tl.h.w + " working + " + tl.h.cm + " getting there) = " + cents(tl.wage) + " an hour." : null, tl.crossInv ? "The crossover needs about " + money(tl.crossInv) + " invested: your hourly wage × 8,760 ÷ 7%." : null, tl.dc > 0 ? "Debt: each balance × its yearly rate, added up (" + money(tl.dy) + " a year) ÷ 8,760 hours = " + cents(tl.dc) + " an hour." : null, "7% a year is a long-run average after inflation, not a promise."])}
  ${tpBlock(c, tl)}</div>`;
 }
+/* hrsSheet() makes the full sheet of the real hourly wage. hrsSheetBase() is the part from this file. */
 function hrsSheet() {
+  let h = hrsSheetBase();
+  if (typeof hrsSheetStrat === "function") h = hrsSheetStrat(h); /* strat.js: the hours of the moves in the plan */
+  return h;
+}
+function hrsSheetBase() {
   const c = C(),
     h = c.hrs || {},
     tl = timeLedger(c, D),

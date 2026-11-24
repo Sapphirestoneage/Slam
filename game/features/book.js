@@ -41,6 +41,7 @@ const BOOK_PARTS = [
   vaultBook,
   elBook,
   fieldsBook,
+  stgBook,
   trBook,
   xrBook,
 ];

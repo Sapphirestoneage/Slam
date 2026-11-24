@@ -123,3 +123,4 @@ The add-on source is not in this repository. Thus the tests of the add-on conten
 | `kids-mode.js` | Kids mode: a kid profile, 20 lessons, the run that forgives one missed day | `features/kids.js`, `data/kidlessons.js` |
 | `spreadsheet-round-trip.js` | The spreadsheet comes back in: one list of fields for the export and the import | `features/book.js` |
 | `math-audit-core-numbers.js` | The math audit: the FI number, Coast FI, debt payoff and runway, each worked out a second way | `core/engine.js`, `features/debts.js`, `features/drills.js` |
+| `strategy-engine.js` | The Strategy Engine ("Moves to try"): the template, the loop of each strategy, the house hack and the balance transfer by hand, the ranking | `features/strat.js`, `data/strategies.js`, `data/metros.js` |

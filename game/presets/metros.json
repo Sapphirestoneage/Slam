@@ -1,0 +1,315 @@
+{
+ "note": "Rough, as of 2026. Each value is a Guess: a round figure for a first look, not a quote. A real listing replaces it.",
+ "status": "Guess",
+ "asOf": 2026,
+ "fields": {
+  "price": "Typical price of a building with 2 to 4 units",
+  "rentUnit": "Typical rent a month for one unit of such a building",
+  "taxPct": "Property tax a year, as a percent of the price",
+  "ins": "Home insurance a month",
+  "br1": "Typical rent a month for a 1-bedroom",
+  "room": "Typical rent a month for one room"
+ },
+ "metros": [
+  {
+   "id": "us",
+   "name": "A typical US metro",
+   "price": 500000,
+   "rentUnit": 1600,
+   "taxPct": 1.1,
+   "ins": 230,
+   "br1": 1600,
+   "room": 800
+  },
+  {
+   "id": "manhattan",
+   "name": "Manhattan, NYC",
+   "price": 3500000,
+   "rentUnit": 4200,
+   "taxPct": 0.9,
+   "ins": 450,
+   "br1": 4300,
+   "room": 1800
+  },
+  {
+   "id": "brooklyn",
+   "name": "Brooklyn, NYC",
+   "price": 1600000,
+   "rentUnit": 3200,
+   "taxPct": 0.7,
+   "ins": 350,
+   "br1": 3300,
+   "room": 1500
+  },
+  {
+   "id": "queens",
+   "name": "Queens, NYC",
+   "price": 1250000,
+   "rentUnit": 2700,
+   "taxPct": 0.8,
+   "ins": 320,
+   "br1": 2700,
+   "room": 1250
+  },
+  {
+   "id": "bronx",
+   "name": "The Bronx, NYC",
+   "price": 850000,
+   "rentUnit": 2200,
+   "taxPct": 0.9,
+   "ins": 300,
+   "br1": 2100,
+   "room": 1000
+  },
+  {
+   "id": "statenisland",
+   "name": "Staten Island, NYC",
+   "price": 900000,
+   "rentUnit": 2100,
+   "taxPct": 0.9,
+   "ins": 280,
+   "br1": 1900,
+   "room": 950
+  },
+  {
+   "id": "rockland",
+   "name": "Rockland County, NY",
+   "price": 700000,
+   "rentUnit": 2300,
+   "taxPct": 2.4,
+   "ins": 260,
+   "br1": 2100,
+   "room": 1000
+  },
+  {
+   "id": "longmont",
+   "name": "Longmont, CO",
+   "price": 650000,
+   "rentUnit": 1700,
+   "taxPct": 0.55,
+   "ins": 220,
+   "br1": 1600,
+   "room": 800
+  },
+  {
+   "id": "denver",
+   "name": "Denver, CO",
+   "price": 750000,
+   "rentUnit": 1800,
+   "taxPct": 0.55,
+   "ins": 240,
+   "br1": 1750,
+   "room": 900
+  },
+  {
+   "id": "losangeles",
+   "name": "Los Angeles, CA",
+   "price": 1250000,
+   "rentUnit": 2600,
+   "taxPct": 1.2,
+   "ins": 300,
+   "br1": 2400,
+   "room": 1200
+  },
+  {
+   "id": "sfbay",
+   "name": "San Francisco Bay Area, CA",
+   "price": 1500000,
+   "rentUnit": 3000,
+   "taxPct": 1.2,
+   "ins": 300,
+   "br1": 2900,
+   "room": 1400
+  },
+  {
+   "id": "sandiego",
+   "name": "San Diego, CA",
+   "price": 1200000,
+   "rentUnit": 2500,
+   "taxPct": 1.15,
+   "ins": 260,
+   "br1": 2500,
+   "room": 1200
+  },
+  {
+   "id": "seattle",
+   "name": "Seattle, WA",
+   "price": 950000,
+   "rentUnit": 2100,
+   "taxPct": 0.95,
+   "ins": 230,
+   "br1": 2100,
+   "room": 1050
+  },
+  {
+   "id": "portland",
+   "name": "Portland, OR",
+   "price": 700000,
+   "rentUnit": 1600,
+   "taxPct": 1.1,
+   "ins": 200,
+   "br1": 1550,
+   "room": 800
+  },
+  {
+   "id": "phoenix",
+   "name": "Phoenix, AZ",
+   "price": 550000,
+   "rentUnit": 1500,
+   "taxPct": 0.6,
+   "ins": 200,
+   "br1": 1400,
+   "room": 750
+  },
+  {
+   "id": "lasvegas",
+   "name": "Las Vegas, NV",
+   "price": 500000,
+   "rentUnit": 1350,
+   "taxPct": 0.65,
+   "ins": 180,
+   "br1": 1350,
+   "room": 700
+  },
+  {
+   "id": "dallas",
+   "name": "Dallas, TX",
+   "price": 480000,
+   "rentUnit": 1500,
+   "taxPct": 2.0,
+   "ins": 300,
+   "br1": 1450,
+   "room": 750
+  },
+  {
+   "id": "houston",
+   "name": "Houston, TX",
+   "price": 400000,
+   "rentUnit": 1350,
+   "taxPct": 2.1,
+   "ins": 330,
+   "br1": 1300,
+   "room": 700
+  },
+  {
+   "id": "austin",
+   "name": "Austin, TX",
+   "price": 600000,
+   "rentUnit": 1550,
+   "taxPct": 1.9,
+   "ins": 280,
+   "br1": 1500,
+   "room": 800
+  },
+  {
+   "id": "chicago",
+   "name": "Chicago, IL",
+   "price": 520000,
+   "rentUnit": 1700,
+   "taxPct": 2.0,
+   "ins": 250,
+   "br1": 1800,
+   "room": 850
+  },
+  {
+   "id": "minneapolis",
+   "name": "Minneapolis, MN",
+   "price": 420000,
+   "rentUnit": 1400,
+   "taxPct": 1.25,
+   "ins": 220,
+   "br1": 1350,
+   "room": 700
+  },
+  {
+   "id": "detroit",
+   "name": "Detroit, MI",
+   "price": 220000,
+   "rentUnit": 1100,
+   "taxPct": 1.9,
+   "ins": 220,
+   "br1": 1100,
+   "room": 600
+  },
+  {
+   "id": "atlanta",
+   "name": "Atlanta, GA",
+   "price": 480000,
+   "rentUnit": 1600,
+   "taxPct": 1.0,
+   "ins": 240,
+   "br1": 1600,
+   "room": 800
+  },
+  {
+   "id": "miami",
+   "name": "Miami, FL",
+   "price": 800000,
+   "rentUnit": 2300,
+   "taxPct": 1.0,
+   "ins": 500,
+   "br1": 2400,
+   "room": 1200
+  },
+  {
+   "id": "tampa",
+   "name": "Tampa, FL",
+   "price": 500000,
+   "rentUnit": 1650,
+   "taxPct": 1.0,
+   "ins": 400,
+   "br1": 1650,
+   "room": 850
+  },
+  {
+   "id": "charlotte",
+   "name": "Charlotte, NC",
+   "price": 450000,
+   "rentUnit": 1500,
+   "taxPct": 0.85,
+   "ins": 200,
+   "br1": 1500,
+   "room": 750
+  },
+  {
+   "id": "nashville",
+   "name": "Nashville, TN",
+   "price": 600000,
+   "rentUnit": 1700,
+   "taxPct": 0.7,
+   "ins": 220,
+   "br1": 1650,
+   "room": 850
+  },
+  {
+   "id": "washington",
+   "name": "Washington, DC",
+   "price": 900000,
+   "rentUnit": 2200,
+   "taxPct": 0.85,
+   "ins": 240,
+   "br1": 2300,
+   "room": 1150
+  },
+  {
+   "id": "philadelphia",
+   "name": "Philadelphia, PA",
+   "price": 380000,
+   "rentUnit": 1450,
+   "taxPct": 1.4,
+   "ins": 220,
+   "br1": 1550,
+   "room": 800
+  },
+  {
+   "id": "boston",
+   "name": "Boston, MA",
+   "price": 1100000,
+   "rentUnit": 2800,
+   "taxPct": 1.1,
+   "ins": 280,
+   "br1": 2800,
+   "room": 1300
+  }
+ ]
+}

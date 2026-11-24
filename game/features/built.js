@@ -608,6 +608,14 @@ const WB = [
     "kids",
   ],
   [
+    "plan",
+    "Moves to try: the Strategy Engine, with a library of 13 moves",
+    "b",
+    () => WB_HAS("strat") && WB_FN("stgRank"),
+    "On Next Steps (the top 3) and in the menu (the library). Each move: a fit check, the rough impact on your FI date, an area or a real listing, a dial, a break-even line and a verdict.",
+    "stratlib",
+  ],
+  [
     "feel",
     "Your money type as an element, with what it is strong against and weak to",
     "b",
