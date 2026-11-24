@@ -211,11 +211,11 @@ function trSheet() {
     `<div class="grid2">${kitTile("Your cash lasts", T.runway == null ? "The whole time" : trMo(T.runway), T.runway == null ? "money in covers the costs" : "at a gap of " + M(T.gap) + " a month", T.st, "tr_gap")}${kitTile(T.covered ? "Left after " + T.months + " months" : "Short after " + T.months + " months", M(T.covered ? Math.max(0, T.left) : T.short), "the dip costs " + M(T.dip), T.st, "tr_dip")}</div>` +
     (gs ? `<div class="tiny muted">Some numbers are typical values, so this is a Guess. Tap yours below.</div>` : "") +
     kitTabs("trtab", tab, [
-      ["dip", "The dip"],
+      ["dip", "Dip"],
       ["trip", "Tripwires"],
       ["fam", "Family"],
-      ["quick", "Quick income"],
-      ["slots", "My plan"],
+      ["quick", "Income"],
+      ["slots", "Plan"],
     ]);
   let body = "";
   if (tab === "dip")

@@ -116,3 +116,10 @@ The add-on source is not in this repository. Thus the tests of the add-on conten
 
 - `addon-sealed-files.js` has two parts. Part 1 runs in each copy: a sealed file shows no readable word. Part 2 needs the private folder with the add-on source (the environment variable `SLAM_PACKS_DIR` gives its path). With no such folder, part 2 prints `SKIP`.
 - To load the add-ons for the other tests, set the environment variable `SLAM_PACKS_BOOT` (see the header of `harness.cjs`).
+| `character-reveal-and-element.js` | The character reveal after setup: strengths, weak spots, the money element, two questions | `features/element.js` |
+| `gear-slots.js` | The states of a gear slot: want, need, not interested, can't have, inactive | `core/engine2.js`, `features/games.js` |
+| `product-xray.js` | The product X-ray: the path you are on next to the alternative | `features/xray.js` |
+| `life-transitions.js` | Break in case of emergency: a layoff as a number, tripwires, family help, quick income, slots | `features/transit.js` |
+| `kids-mode.js` | Kids mode: a kid profile, 20 lessons, the run that forgives one missed day | `features/kids.js`, `data/kidlessons.js` |
+| `spreadsheet-round-trip.js` | The spreadsheet comes back in: one list of fields for the export and the import | `features/book.js` |
+| `math-audit-core-numbers.js` | The math audit: the FI number, Coast FI, debt payoff and runway, each worked out a second way | `core/engine.js`, `features/debts.js`, `features/drills.js` |

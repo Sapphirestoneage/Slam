@@ -20,7 +20,7 @@ This folder is the only copy of the game. An older copy inside Claude is retired
 
 ## 1. The six facts you must know first
 
-1. **The game uses classic scripts.** `index.html` loads 108 script files in a fixed order (107 of the game and one bundle from outside, in `vendor/`). All functions and constants are in one global scope. There are no modules.
+1. **The game uses classic scripts.** `index.html` loads 113 script files in a fixed order (112 of the game and one bundle from outside, in `vendor/`). All functions and constants are in one global scope. There are no modules.
 2. **Each file starts with a header.** The header gives PURPOSE, INPUT, OUTPUT and DEPENDS ON. Read the header before you read the code.
 3. **The screens are HTML text.** Each screen function returns one HTML string. `render()` puts the string in the page. One click handler reads the `data-a` attribute and calls `ACT[name]`.
 4. **A screen function calls its parts by name.** A feature file can add a row to a screen of a different file, for example to Home. It does this with a named function (a part), and the screen function calls that part. No file replaces a function of a different file. Section 6 shows the pattern.
@@ -41,7 +41,7 @@ Open http://localhost:8000/game/. Without an internet connection the game runs i
 npm run test:game
 ```
 
-The command runs 60 test files (1,454 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
+The command runs 67 test files (1,566 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
 
 All checks pass, and the command ends with exit code 0. One file (`addon-sealed-files.js`) has a part that needs the private add-on source. In this repository that part prints `SKIP`.
 

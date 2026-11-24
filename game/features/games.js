@@ -103,7 +103,15 @@ const GEAR_WHAT = `<details class="math"><summary>What is a gear slot?</summary>
 function gearBody(c, d) {
   const s = gearState(c, d),
     sc = gearScore(c, d);
-  return gearBodyMain(c, s, sc) + gearWishRows(c, s) + GEAR_WHAT;
+  const wants = gearWants(c, d);
+  return (
+    gearBodyMain(c, s, sc) +
+    gearWishRows(c, s) +
+    (wants.length
+      ? `<div class="tile small"><b>On your list, needs first:</b> ${esc(wants.map(x => x.g.n).join(", "))}</div>`
+      : "") +
+    GEAR_WHAT
+  );
 }
 function gearBodyMain(c, s, sc) {
   return (

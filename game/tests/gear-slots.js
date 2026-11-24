@@ -35,6 +35,11 @@
   );
   const w = gearWants(c, derive(c)).map(x => x.g.id);
   chk("needs come first, then wants, and not interested stays out", w.join() === "savings,will", w.join());
+  chk(
+    "the sheet lists them, needs first",
+    ov().includes("On your list, needs first:") && ov().indexOf("Savings account, A will") > 0,
+    ""
+  );
   X("gearwish", "want", "will");
   chk("a second tap on the same answer clears it", gearWish(c, "will") === null);
   c.work = "Between jobs";
