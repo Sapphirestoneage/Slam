@@ -155,6 +155,10 @@ function msSideBase(c, d) {
     });
   return out;
 }
+/* Plain words for all players. The game words show only with the gamer switch (Me, "Show game terms"). */
+function msW(plain, game) {
+  return typeof G !== "undefined" && G && G.gamer ? game : plain;
+}
 function msHeists(c, d) {
   const H = [],
     st = (t, ok, a, v) => ({ t, ok: !!ok, a, v: v == null ? "" : v }),
@@ -262,7 +266,7 @@ function msSync(c, d) {
   return ch;
 }
 function msPills(m) {
-  return `<div class="row" style="gap:6px;flex-wrap:wrap"><span class="pill">About ${m.mins} min</span><span class="pill okp">Payout: ${esc(m.pay)}</span><span class="pill info">Unlocks: ${esc(m.unl)}</span></div>`;
+  return `<div class="row" style="gap:6px;flex-wrap:wrap"><span class="pill">About ${m.mins} min</span><span class="pill okp">${msW("You get", "Payout")}: ${esc(m.pay)}</span><span class="pill info">${msW("Opens", "Unlocks")}: ${esc(m.unl)}</span></div>`;
 }
 /* THE MISSION BOARD.
    msBoard(c, d) makes the full board. It calls each part by name. msBoardBase(c, d) is the part from this file. */
@@ -282,14 +286,14 @@ function msBoardBase(c, d) {
     doneH = H.filter(h => h.done),
     w = typeof MSX !== "undefined" ? MSX : {};
   return `<div class="stack msboard" style="gap:8px">
- ${S ? `<div class="tile stack mscard" style="gap:8px"><div class="row between"><span class="eyebrow">Story mission</span><span class="tiny muted">${M.done.length} done so far</span></div><b style="font-size:18px" data-fid="ms:story">${esc(S.t)}</b>${S.why ? `<div class="small">${esc(S.why)}</div>` : ""}${msPills(S)}<button class="primary wide go" data-a="${S.a}" data-v="${esc(String(S.v))}">${esc(S.l)}</button></div>` : ""}
- ${side.length ? `<b class="small">Side missions <span class="tiny muted">optional, any order</span></b><div class="stack" style="gap:6px">${side.map(m => `<button class="rowbtn" data-a="msgo" data-k="${m.a}" data-v="${esc(String(m.v))}" data-l="${m.k || ""}" style="gap:8px"><span style="min-width:0"><b>${esc(m.t)}</b><div class="tiny muted">${m.mins} min · ${esc(m.pay)}</div></span><span class="caret">›</span></button>`).join("")}</div>` : ""}
+ ${S ? `<div class="tile stack mscard" style="gap:8px"><div class="row between"><span class="eyebrow">${msW("Do this first", "Story mission")}</span><span class="tiny muted">${M.done.length} done so far</span></div><b style="font-size:18px" data-fid="ms:story">${esc(S.t)}</b>${S.why ? `<div class="small">${esc(S.why)}</div>` : ""}${msPills(S)}<button class="primary wide go" data-a="${S.a}" data-v="${esc(String(S.v))}">${esc(S.l)}</button></div>` : ""}
+ ${side.length ? `<b class="small">${msW("Also worth doing", "Side missions")} <span class="tiny muted">optional, any order</span></b><div class="stack" style="gap:6px">${side.map(m => `<button class="rowbtn" data-a="msgo" data-k="${m.a}" data-v="${esc(String(m.v))}" data-l="${m.k || ""}" style="gap:8px"><span style="min-width:0"><b>${esc(m.t)}</b><div class="tiny muted">${m.mins} min · ${esc(m.pay)}</div></span><span class="caret">›</span></button>`).join("")}</div>` : ""}
  ${
    openH.length
-     ? `<b class="small">Heists <span class="tiny muted">the big ones, a stage at a time</span></b><div class="stack" style="gap:6px">${openH
+     ? `<b class="small">${msW("Bigger projects", "Heists")} <span class="tiny muted">a stage at a time</span></b><div class="stack" style="gap:6px">${openH
          .map(h => {
            const on = w.h === h.id;
-           return `<div class="tile stack" style="gap:6px"><button class="kwhead" data-a="msheist" data-v="${h.id}" aria-expanded="${on}"><span style="flex:1;min-width:0;text-align:left"><b>${esc(h.n)}</b><span class="tiny muted" style="display:block">Payout: ${esc(h.pay)}</span><span class="row" style="gap:4px;margin-top:5px">${h.stages.map(s => `<span class="msdot ${s.ok ? "on" : ""}"></span>`).join("")}</span></span><b style="flex:none">${h.n1} of ${h.total}</b></button>${on ? `<div class="small muted">${esc(h.why)}</div><div class="stack" style="gap:4px">${h.stages.map(s => `<div class="small ${s.ok ? "" : s === h.next ? "" : "muted"}">${s.ok ? "✓" : s === h.next ? "➤" : "○"} ${esc(s.t)}</div>`).join("")}</div><button class="primary wide slim" data-a="msgo" data-k="${h.next.a}" data-v="${esc(String(h.next.v))}" data-l="">Next stage: ${esc(h.next.t)}</button>` : ""}</div>`;
+           return `<div class="tile stack" style="gap:6px"><button class="kwhead" data-a="msheist" data-v="${h.id}" aria-expanded="${on}"><span style="flex:1;min-width:0;text-align:left"><b>${esc(h.n)}</b><span class="tiny muted" style="display:block">${msW("You get", "Payout")}: ${esc(h.pay)}</span><span class="row" style="gap:4px;margin-top:5px">${h.stages.map(s => `<span class="msdot ${s.ok ? "on" : ""}"></span>`).join("")}</span></span><b style="flex:none">${h.n1} of ${h.total}</b></button>${on ? `<div class="small muted">${esc(h.why)}</div><div class="stack" style="gap:4px">${h.stages.map(s => `<div class="small ${s.ok ? "" : s === h.next ? "" : "muted"}">${s.ok ? "✓" : s === h.next ? "➤" : "○"} ${esc(s.t)}</div>`).join("")}</div><button class="primary wide slim" data-a="msgo" data-k="${h.next.a}" data-v="${esc(String(h.next.v))}" data-l="">Next stage: ${esc(h.next.t)}</button>` : ""}</div>`;
          })
          .join("")}</div>`
      : ""
@@ -337,6 +341,8 @@ function planTabMissions(h, c, d) {
   if (G.demo || !c.led) return h;
   const th = typeof tabHead === "function" ? tabHead() : "",
     b = msBoard(c, d);
+  /* The plan by time (Today, This week, Month, Year) comes first. The board sits under it. */
+  if (h.indexOf("<!--boardhere-->") >= 0) return h.replace("<!--boardhere-->", () => b);
   if (th && h.indexOf(th) >= 0) return h.replace(th, () => th + b);
   return h.replace('<div class="stack">', () => '<div class="stack">' + b);
 }

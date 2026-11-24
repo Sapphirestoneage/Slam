@@ -499,6 +499,7 @@ function planTabBase() {
  ${plPayStrip(c)}
  ${PLV === "today" ? plTodayView(c) : PLV === "week" ? plWeekView(c) : PLV === "month" ? plMonthView(c) : plYearView(c)}
  ${PLV !== "year" && rl.length ? `<div class="card"><div class="row between"><h3>Ready to plan</h3><span class="tiny muted">From your path</span></div><div class="tiny muted">Pick a day and a time, or say it's done or doesn't apply.</div><div class="stack" style="margin-top:8px">${rl.map((p, i) => plReadyRow(p, PLV === "today" && !todayOpen && i === 0)).join("")}</div></div>` : ""}
+ <!--boardhere-->
  ${plBudget(c)}
  <div class="tiny muted" style="text-align:center">Not done? It rolls to the next day by itself. Nothing falls off.</div>
  ${flagBtn()}</div>`;

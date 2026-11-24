@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-23. Files: 106. Lines: 68,062. Top-level functions: 1464. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-24. Files: 106. Lines: 68,069. Top-level functions: 1465. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -29,7 +29,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 15 | `features/chart.js` | 1,303 | 13 | 6 | 0 | The Money Chart: ten statements, five elements, and the result for one person or two persons |
 | 16 | `screens/profiles.js` | 134 | 6 | 4 | 0 | More than one person in one game: a household (the money is combined) or the persons that a coach helps (the money is apart) |
 | 17 | `screens/smart.js` | 679 | 15 | 5 | 0 | The setup questions change with each answer |
-| 18 | `screens/planner.js` | 1,274 | 55 | 18 | 0 | The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a calendar of money tasks, the tab "Next Steps"), the check-in b... |
+| 18 | `screens/planner.js` | 1,275 | 55 | 18 | 0 | The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a calendar of money tasks, the tab "Next Steps"), the check-in b... |
 | 19 | `account/cloud.js` | 468 | 18 | 0 | 0 | The game saves itself to the account of the player |
 | 20 | `screens/ux.js` | 810 | 36 | 7 | 0 | The interface rules for a new player: five plain tabs, one clear title on each screen, Guess / Close / Exact, a Back button that works, and Undo in th... |
 | 21 | `core/metrics.js` | 1,856 | 27 | 8 | 0 | Key numbers. Each ratio that this game can calculate, in plain words: the value, the rule of thumb and its source, what moves the value, and if the pl... |
@@ -44,7 +44,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 30 | `features/know.js` | 204 | 10 | 4 | 0 | What you already know. Five letters, D.A.I.T.E |
 | 31 | `features/fair.js` | 269 | 11 | 6 | 0 | Share costs fairly. For two or more persons: five ways to divide the shared costs, side by side |
 | 32 | `features/values.js` | 213 | 6 | 6 | 0 | Is my money going where I want? Three steps, all taps: the three things that matter most, two taps for each place where the money goes, and the result |
-| 33 | `features/missions.js` | 355 | 11 | 3 | 0 | The mission board. The same next steps, shown as missions: why now, how long, the reward, and what it opens |
+| 33 | `features/missions.js` | 361 | 12 | 3 | 0 | The mission board. The same next steps, shown as missions: why now, how long, the reward, and what it opens |
 | 34 | `features/connect.js` | 396 | 19 | 9 | 0 | How it all connects. (1) Links between the 25 skill tracks: what a track works best after, and what it opens, each with the reason |
 | 35 | `features/house.js` | 495 | 15 | 8 | 0 | Our household. For a household that is not one person or one married couple |
 | 36 | `features/back.js` | 283 | 14 | 2 | 0 | The welcome-back card. On the first look of a new day, one slim row on Home shows what the player did last time, what moved, and where to continue |

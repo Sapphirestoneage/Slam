@@ -41,17 +41,27 @@
     JSON.stringify(S)
   );
   chk(
-    "Next Steps opens with the board: story, side missions, heists",
-    app().includes("Story mission") &&
-      app().includes("Payout:") &&
-      app().includes("Unlocks:") &&
+    "Next Steps: the plan by time comes first, then the board, in plain words",
+    app().includes("Do this first") &&
+      app().includes("You get:") &&
+      app().includes("Opens:") &&
       app().includes("About ") &&
-      app().includes("Side missions") &&
-      app().includes("Heists") &&
-      app().indexOf("msboard") < app().indexOf("plseg") &&
+      app().includes("Also worth doing") &&
+      app().includes("Bigger projects") &&
+      !app().includes("Story mission") &&
+      !app().includes("Heists") &&
+      app().indexOf("plseg") < app().indexOf("msboard") &&
       clean(app()),
     junk(app())
   );
+  G.gamer = true;
+  go("plan");
+  chk(
+    "with the gamer switch, the game words show",
+    app().includes("Story mission") && app().includes("Side missions") && app().includes("Heists")
+  );
+  G.gamer = false;
+  go("plan");
   const side = msSide(c, D);
   chk(
     "side missions are real, undone things, each with a payout and a working action",
