@@ -110,6 +110,8 @@ create table if not exists card_library (
   updated_by uuid default auth.uid()
 );
 alter table card_library enable row level security;
+grant select on card_library to anon, authenticated;
+grant insert, update, delete on card_library to authenticated;
 drop policy if exists "everyone reads cards" on card_library;
 create policy "everyone reads cards" on card_library for select to anon, authenticated using (true);
 drop policy if exists "admin adds cards" on card_library;
@@ -119,3 +121,11 @@ create policy "admin changes cards" on card_library for update to authenticated 
 drop policy if exists "admin removes cards" on card_library;
 create policy "admin removes cards" on card_library for delete to authenticated using (is_admin());
 
+-- TABLE RIGHTS. Run this block one time on a new database. Without it each read and save of a signed-in
+-- player is refused ("permission denied for table games"), the game says "couldn't reach your account", and
+-- no game is saved. The row rules above (the policies) still decide who sees and changes which row. A new
+-- Supabase project does not give these rights by itself. Found and run on the live database on 2026-11-24.
+grant select, insert, update, delete on games to authenticated;
+grant select on content_packs to authenticated;
+grant select, insert, delete on player_entitlements to authenticated;
+grant select on coaches to authenticated;
