@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-24. Files: 107. Lines: 68,405. Top-level functions: 1474. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-24. Files: 107. Lines: 68,461. Top-level functions: 1480. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -20,10 +20,10 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 6 | `data/market.js` | 173 | 0 | 0 | 0 | Data only. US market history by calendar year, for the retirement odds (features/odds.js) |
 | 7 | `data/limits2026.js` | 19 | 0 | 0 | 0 | Data only. The 2026 limits of the tax-favored accounts, for the two paths (features/paths.js) |
 | 8 | `core/engine.js` | 3,854 | 123 | 0 | 0 | The engine: the data model of one profile and all the math |
-| 9 | `core/engine2.js` | 390 | 14 | 0 | 0 | The game mechanics that are also the data entry: the layers, the bonfires, the fog (how much of the picture is clear) |
+| 9 | `core/engine2.js` | 420 | 18 | 0 | 0 | The game mechanics that are also the data entry: the layers, the bonfires, the fog (how much of the picture is clear) |
 | 10 | `account/gate.js` | 67 | 7 | 0 | 0 | Add-ons, part 1 of 2. Some parts of the game are not in these files |
 | 11 | `screens/ui.js` | 6,484 | 212 | 135 | 0 | The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ... |
-| 12 | `features/games.js` | 639 | 23 | 12 | 0 | The screens of the games that are the data entry (layer 1) |
+| 12 | `features/games.js` | 665 | 25 | 13 | 0 | The screens of the games that are the data entry (layer 1) |
 | 13 | `features/games2.js` | 1,461 | 40 | 19 | 0 | The games of layer 2 (sort), layer 3 (make exact) and layer 4 (come back) |
 | 14 | `features/year.js` | 781 | 24 | 13 | 0 | The year: calendars, funds for true expenses, the months ahead, the Yearly Review, rest windows, and the chance test |
 | 15 | `features/chart.js` | 1,303 | 13 | 6 | 0 | The Money Chart: ten statements, five elements, and the result for one person or two persons |
@@ -136,7 +136,7 @@ No rows.
 
 ### Actions (ACT) that are set in more than one place
 
-`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 652 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 653 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
 
 | Action | Set in (load order) | Places |
 |--------|---------------------|-------:|
@@ -183,6 +183,7 @@ These names occur one time in the game source. A function can stay only when a c
 
 | Function | File | Reason to keep it |
 |----------|------|-------------------|
+| `gearWants` | `core/engine2.js` | NO REASON GIVEN. Examine this function. |
 | `igFree` | `features/ideas2.js` | Keep this function until the owner confirms that no add-on calls it. |
 | `igYears` | `features/ideas.js` | Keep this function until the owner confirms that no add-on calls it. |
 | `offDays` | `features/year.js` | Keep this function: it reads the off days from each calendar, and an add-on can call it. |

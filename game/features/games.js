@@ -82,9 +82,30 @@ function fogSheet() {
 }
 /* gear */
 const GEAR_L = { have: "Have it", none: "Don't have it", "?": "Not sure" };
+/* The second answer for each slot that the player does not have, and the note of an inactive slot. */
+function gearWishRows(c, s) {
+  const rows = s.filter(x => x.v === "none" || gearInactive(c, x.g));
+  if (!rows.length) return "";
+  return (
+    `<b class="small">The slots you do not have</b><div class="tiny muted">One tap each. It decides what shows up on your path.</div>` +
+    rows
+      .map(x => {
+        const off = gearInactive(c, x.g),
+          w = gearWish(c, x.g.id);
+        return off
+          ? `<div class="tile stack" style="gap:4px"><div class="row between"><b class="small">${x.g.n}</b><span class="pill">Inactive</span></div><div class="tiny muted">${esc(off)}</div></div>`
+          : `<div class="tile stack" style="gap:6px"><b class="small">${x.g.n}</b><div class="chips">${GEAR_WISH.map(o => `<button class="chip ${w === o[0] ? "on" : ""}" data-a="gearwish" data-k="${x.g.id}" data-v="${o[0]}">${o[1]}</button>`).join("")}</div></div>`;
+      })
+      .join("")
+  );
+}
+const GEAR_WHAT = `<details class="math"><summary>What is a gear slot?</summary><div class="inner small stack" style="gap:4px"><div>A slot is one basic money tool: an account, a kind of cover, or a paper. A full set is what most households end up with.</div><div>An empty slot is not a mistake. Say if you want it, need it, are not interested, or can't have it, and the game plans around that.</div><div>A slot is inactive when it cannot be used now, like a retirement plan at work while you are between jobs. It comes back by itself.</div></div></details>`;
 function gearBody(c, d) {
   const s = gearState(c, d),
     sc = gearScore(c, d);
+  return gearBodyMain(c, s, sc) + gearWishRows(c, s) + GEAR_WHAT;
+}
+function gearBodyMain(c, s, sc) {
   return (
     `<div class="row between small"><span>Your setup</span><b data-fid="v:gear">${sc.have} of ${sc.total} slots filled</b></div>` +
     (c.plain
@@ -361,6 +382,11 @@ Object.assign(ACT, {
     gearSet(c, id, nx);
     save();
     render();
+    drawSheet();
+  },
+  gearwish: t => {
+    gearWishSet(C(), t.dataset.k, t.dataset.v);
+    save();
     drawSheet();
   },
   gearset: t => {

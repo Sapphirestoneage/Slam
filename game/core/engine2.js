@@ -251,6 +251,36 @@ function gearSet(c, id, v) {
   if (g && g.p && v !== "?") c.prot[g.p] = v === "have" ? "Yes" : "No";
   if (id === "health" && v === "none") c.prot.health = "None right now";
 }
+/* A slot the player does not have gets one more answer: want it, need it, not interested, or can't have it. */
+const GEAR_WISH = [
+  ["want", "Want it"],
+  ["need", "Need it"],
+  ["no", "Not interested"],
+  ["cant", "Can't have it"],
+];
+function gearWish(c, id) {
+  return (c.gearw || {})[id] || null;
+}
+function gearWishSet(c, id, v) {
+  c.gearw = c.gearw || {};
+  if (c.gearw[id] === v) delete c.gearw[id];
+  else c.gearw[id] = v;
+}
+/* A slot that cannot be used now, with the reason. It comes back by itself when the reason ends. */
+function gearInactive(c, g) {
+  const off = c.work === "Between jobs" ? "between jobs" : c.work === "Student" ? "a student" : null;
+  if (!off) return null;
+  if (g.id === "retire" && !(c.invs || []).some(r => /work/i.test(r.k)))
+    return "Inactive while you are " + off + ": a plan at work waits for the next job. An IRA still works.";
+  if (g.id === "disab") return "Inactive while you are " + off + ": this cover replaces pay from a job.";
+  return null;
+}
+/* The slots as a to-do list: needs first, then wants. Slots marked not interested, can't have or inactive stay out. */
+function gearWants(c, d) {
+  return gearState(c, d)
+    .filter(x => x.v === "none" && !gearInactive(c, x.g) && ["need", "want"].includes(gearWish(c, x.g.id)))
+    .sort((x, y) => (gearWish(c, x.g.id) === "need" ? 0 : 1) - (gearWish(c, y.g.id) === "need" ? 0 : 1));
+}
 /* Party: the people in your money world, and how money moves between you */
 const PARTY_K = ["Partner", "Roommate", "Parent", "Kid", "Sibling", "Friend", "Pet", "Someone else"],
   PARTY_DEP = { Kid: 1, Pet: 1 };
