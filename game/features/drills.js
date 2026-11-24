@@ -191,8 +191,69 @@ function fdList(c, d) {
         rep: "Turn on autopay for the minimum on every card. It makes day 30 close to impossible, and you can still pay more by hand.",
         mins: 5,
       });
+    if (card > 0) {
+      /* the cost of a carried balance, at the real rate of each card when the player gave one */
+      const rows = c.led ? (c.debts || []).filter(x => /card/i.test(x.k) && x.amt > 0) : [],
+        year = rows.length ? rows.reduce((a, x) => a + (x.amt * debtRate(x).r) / 100, 0) : card * 0.25,
+        mo = year / 12;
+      add({
+        id: "interest",
+        fear: "Your card balance stays for a year",
+        real: B.real.debt,
+        calm: null,
+        big: money(Math.round(mo)) + " a month",
+        line:
+          "Carrying " +
+          money(card) +
+          " costs about " +
+          money(Math.round(mo)) +
+          " a month in interest, or " +
+          money(Math.round(year)) +
+          " over a year. It is a cost, not a mark against you, and it stops the month the balance is gone.",
+        math: [
+          "Each card balance × its yearly rate, added up: " + money(Math.round(year)) + " a year.",
+          "A month: ÷ 12. A card with no rate entered uses 25% a year.",
+        ],
+        rep: 'Find the line "Interest charged" on your last card statement. Read the number one time, out loud.',
+        mins: 3,
+      });
+    }
   }
-  return out;
+  return out.map(fdMore);
+}
+/* HOW LONG EACH FEAR LASTS, AND A SMALL REAL DOSE.
+   lasts: one plain line about the time. dose: a small real action that is safe to do one time and
+   leaves no lasting mark. A dose never asks the player to miss a payment or to borrow more. */
+const FD_MORE = {
+  bill: {
+    lasts: "The bill is one day. The catch-up is the part that takes time, and the number above shows how much.",
+    dose: "Pay one small bill by hand today, a few days early. Watch the money leave on purpose, then look at what is left.",
+  },
+  job: {
+    lasts: "It lasts until the next paycheck. The number above is how many months your cash gives you to find it.",
+    dose: "For one weekend, spend on the basics only. On Monday, write down the one thing you missed most.",
+  },
+  cut: {
+    lasts: "A pay cut lasts until the next raise or the next job. Your spending can follow it in about one month.",
+    dose: "On your next payday, move a fifth of the paycheck to savings and live on the rest until the next one. Move it back if you need it.",
+  },
+  crash: {
+    lasts:
+      "A fall like this has ended each time in US market history, but it took years, not months. The stress test shows each one.",
+    dose: "Put $10 into a stock index fund. Look at it one time a week for a month and do nothing else.",
+  },
+  miss: {
+    lasts:
+      "A late fee lasts one statement. A mark for 30 days late stays on a credit report for seven years, and it counts for less each year.",
+    dose: "Do not practice this one for real. The safe dose is to set a phone reminder 5 days before each due date, then pay one card by hand on that day.",
+  },
+  interest: {
+    lasts: "Interest lasts as long as the balance does. It ends the month the balance reaches $0.",
+    dose: "Carry about $500 for one month on purpose, with autopay for the minimum turned on. The interest is about $10. Then pay it all, and you have seen the whole thing.",
+  },
+};
+function fdMore(o) {
+  return Object.assign(o, FD_MORE[o.id] || {});
 }
 function fdDone(c) {
   return (c.x && c.x.drills) || {};
@@ -220,6 +281,7 @@ function fdSheetBase() {
       head("Fire drills", esc(x.fear)) +
       `<div class="tile stack" style="gap:4px;text-align:center"><div class="tiny muted">On your numbers${x.real ? "" : " · <b>Guess</b>"}</div><div class="bignum" data-fid="fd:big">${esc(x.big)}</div></div><div class="small">${esc(x.line)}</div>${mathBox(x.math)}
   <div class="tile stack" style="gap:6px"><div class="row between"><b class="small">Your rep</b><span class="pill">${x.mins ? x.mins + " min" : "A week"}</span></div><div class="small">${esc(x.rep)}</div><button class="primary wide" data-a="fddone" data-v="${x.id}">I did the rep</button>${n ? `<div class="tiny muted" style="text-align:center">Practiced ${n} time${n === 1 ? "" : "s"}. Last: ${nice(done[x.id].d)}.</div>` : ""}</div>
+  ${x.lasts ? `<div class="tile stack" style="gap:4px"><b class="small">How long it lasts</b><div class="small">${esc(x.lasts)}</div></div>` : ""}${x.dose ? `<details class="math"><summary>A small real dose, if you want one</summary><div class="inner small stack" style="gap:6px"><div>${esc(x.dose)}</div><div class="tiny muted">A dose is small on purpose. It leaves no lasting mark, and it is always optional.</div></div></details>` : ""}<div class="small" style="text-align:center"><b>You have now seen it on your own numbers. You are going to be okay.</b></div>
   ${x.go ? `<button class="ghost wide slim" data-a="${x.go[1]}">${x.go[0]}</button>` : ""}<button class="ghost wide slim" data-a="drills">All the drills</button>`
     );
   }

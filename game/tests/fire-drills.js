@@ -69,8 +69,8 @@
   const L = fdList(c, D),
     by = id => L.find(x => x.id === id);
   chk(
-    "five drills for someone working with cash, investments and a card",
-    L.map(x => x.id).join() === "bill,job,cut,crash,miss",
+    "six drills for someone working with cash, investments and a card",
+    L.map(x => x.id).join() === "bill,job,cut,crash,miss,interest",
     L.map(x => x.id).join()
   );
   chk(
@@ -84,6 +84,14 @@
   );
   chk("cut: 3,200 in against 3,000 out leaves 200", by("cut").big === "$200 left" && by("cut").calm === true);
   chk("crash: a third off 30,000", by("crash").big === "Down $10,000" && by("crash").line.includes("$20,000"));
+  chk(
+    "each drill says how long it lasts and has a small real dose",
+    L.every(o => o.lasts && o.dose) && !/skip a payment|miss a payment on purpose/i.test(JSON.stringify(FD_MORE))
+  );
+  chk(
+    "interest: the balance times the rate, by month",
+    !!by("interest") && by("interest").calm === null && by("interest").big.includes("a month")
+  );
   chk("miss: facts, no verdict", by("miss").calm === null && by("miss").line.includes("30 days"));
   c.cashes[1].amt = 300;
   D = derive(c);
