@@ -126,8 +126,8 @@ const WB = [
   ["see", "The next few months", "b", () => WB_HAS("months") && WB_FN("monthsAhead"), "", "months"],
   [
     "see",
-    "Copy your numbers out, and the plan as a spreadsheet",
-    "p",
+    "Copy your numbers out, and the plan as a spreadsheet that comes back in",
+    "b",
     () => WB_HAS("kncopy") && WB_HAS("lgcopy") && WB_HAS("bookcopy"),
     "The plan copies out as a spreadsheet with live formulas, or saves as a CSV file. The engine's percentile, cash flow and withdrawal tables are their own tabs. A direct link to Google Sheets is not built.",
     "book",

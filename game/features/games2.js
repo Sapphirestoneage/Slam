@@ -870,6 +870,8 @@ function subsSheet() {
 function lootText(text) {
   /* import.js: in the import sheet, the file is a statement */
   if (typeof lootTextImport === "function" && lootTextImport(text)) return;
+  /* book.js: in the spreadsheet sheet, the file is an edited copy of the plan */
+  if (typeof lootTextBook === "function" && lootTextBook(text)) return;
   lootTextBase(text);
 }
 function lootTextBase(text) {

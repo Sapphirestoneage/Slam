@@ -40,6 +40,7 @@ const BOOK_PARTS = [
   ledgBook,
   vaultBook,
   elBook,
+  fieldsBook,
   trBook,
   xrBook,
 ];
@@ -131,6 +132,154 @@ function bookTabText(c, i, csv) {
     .map(r => r.map(q).join(csv ? "," : "\t"))
     .join("\n");
 }
+/* THE WAY BACK: an edited sheet comes back into the game.
+   bookFields(c) is the one list of the numbers that the player can change in the sheet. The export
+   (fieldsBook) and the import (bookRead, bookApply) both use this list, so a new field is in both. */
+function bookFields(c) {
+  const F = [],
+    seen = {},
+    add = (label, v, set) => {
+      seen[label] = (seen[label] || 0) + 1;
+      F.push({ label: seen[label] > 1 ? label + " (" + seen[label] + ")" : label, v: +v || 0, set });
+    },
+    num = (o, k) => v => {
+      o[k] = v;
+    },
+    rows = (pre, list) =>
+      (list || []).forEach(r =>
+        add(pre + ": " + r.k, r.amt, v => {
+          r.amt = v;
+          r.s = true;
+        })
+      );
+  add("Age", c.age, num(c, "age"));
+  add("Age to stop work", c.ret, num(c, "ret"));
+  if (c.led) {
+    rows("Money in a month", c.incs);
+    rows("Spending a month", c.spends);
+    rows("Cash", c.cashes);
+    rows("Invested", c.invs);
+    (c.debts || []).forEach(r => {
+      add("Owed: " + r.k, r.amt, v => {
+        r.amt = v;
+        r.s = true;
+      });
+      add("Owed: " + r.k + ", rate % a year", r.rate != null ? r.rate : debtRate(r).r, num(r, "rate"));
+      add("Owed: " + r.k + ", payment a month", r.pay || 0, num(r, "pay"));
+    });
+  } else {
+    add("Take-home pay a month", c.take, num(c, "take"));
+    add("Spending a month", c.spend, num(c, "spend"));
+    add("Invested", c.inv, num(c, "inv"));
+    add("Owed", c.debt, num(c, "debt"));
+  }
+  return F;
+}
+const BOOK_IN_TITLE = "Your numbers";
+function fieldsBook(c) {
+  return {
+    title: BOOK_IN_TITLE + " (change these, then bring the sheet back)",
+    rows: bookFields(c).map((f, i) => ({
+      id: "in_" + i,
+      label: f.label,
+      v: f.v,
+      note: "The game reads this row when the sheet comes back",
+    })),
+  };
+}
+/* One line of CSV or of tab text, as cells. */
+function bookCells(line) {
+  if (line.indexOf("\t") >= 0) return line.split("\t");
+  const out = [];
+  let cur = "",
+    q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (q) {
+      if (ch === '"' && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else if (ch === '"') q = false;
+      else cur += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === ",") {
+      out.push(cur);
+      cur = "";
+    } else cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+/* Read an edited sheet. Returns { found, changes: [{ label, from, to, i }] }: the rows of "Your numbers"
+   with a new value. A row with no number, or with a formula, is left out. */
+function bookRead(c, text) {
+  const F = bookFields(c),
+    by = {},
+    changes = [];
+  let found = 0;
+  F.forEach((f, i) => (by[f.label] = i));
+  String(text || "")
+    .split(/\r?\n/)
+    .forEach(line => {
+      const cells = bookCells(line),
+        label = String(cells[1] || "").trim(),
+        raw = String(cells[2] == null ? "" : cells[2]).trim();
+      if (!(label in by) || raw === "" || raw[0] === "=") return;
+      const v = Number(raw.replace(/[$,\s]/g, "").replace(/%$/, ""));
+      if (!isFinite(v) || v < 0) return;
+      found++;
+      const f = F[by[label]];
+      if (Math.abs(v - f.v) > 0.0049) changes.push({ label, from: f.v, to: v, i: by[label] });
+      delete by[label];
+    });
+  return { found, changes };
+}
+/* Put the changes into the profile. Returns the number of changes. */
+function bookApply(c, changes) {
+  const F = bookFields(c);
+  let n = 0;
+  (changes || []).forEach(x => {
+    if (F[x.i] && F[x.i].label === x.label) {
+      F[x.i].set(x.to);
+      n++;
+    }
+  });
+  if (n) {
+    if (typeof syncAll === "function") syncAll(c);
+    save();
+    render();
+  }
+  return n;
+}
+/* Part of lootText() in games2.js. In the spreadsheet sheet, the file is an edited copy of the plan. */
+function lootTextBook(text) {
+  if (!W || W.kind !== "book") return false;
+  W.inn = bookRead(C(), text);
+  W.inDone = null;
+  drawSheet();
+  return true;
+}
+/* The part of the sheet for the way back. */
+function bookSheetIn() {
+  const w = W || {},
+    R = w.inn,
+    num = v => (Math.abs(v) < 100 && v % 1 ? String(Math.round(v * 100) / 100) : Math.round(v).toLocaleString());
+  return (
+    `<details class="math bookin"${R || w.inDone ? " open" : ""}><summary>Bring an edited sheet back</summary><div class="inner stack" style="gap:8px"><div class="small">Change values in the section "${BOOK_IN_TITLE}" of your sheet. Then save the sheet as a CSV file and choose it here, or copy the rows and paste them.</div>` +
+    `<label class="filebtn">Choose the CSV file<input type="file" accept=".csv,text/csv,text/plain" data-loot="1"></label>` +
+    `<div class="field"><label class="small" for="bookpaste">Or paste the rows here</label><textarea id="bookpaste" rows="3" style="border:1px solid var(--line);border-radius:10px;width:100%"></textarea></div><button class="ghost slim" data-a="bookpaste">Read what I pasted</button>` +
+    (w.inDone != null
+      ? `<div class="tile small"><b>${w.inDone} ${w.inDone === 1 ? "number" : "numbers"} changed.</b> Each screen of the game now uses the new values. Undo is in the menu, under Save my game, when you made a backup first.</div>`
+      : R
+        ? R.found === 0
+          ? `<div class="tile small">No row of "${BOOK_IN_TITLE}" was found in that text. Copy the rows with their names in the second column, the way the sheet came out.</div>`
+          : R.changes.length === 0
+            ? `<div class="tile small">${R.found} rows read. No value is different from the game.</div>`
+            : `<div class="tile stack" style="gap:4px"><b class="small">${R.changes.length} ${R.changes.length === 1 ? "value is" : "values are"} different</b>${R.changes.map(x => `<div class="row between small" style="gap:8px"><span>${esc(x.label)}</span><span><span class="tiny muted">${num(x.from)} → </span><b>${num(x.to)}</b></span></div>`).join("")}</div><div class="row" style="gap:8px"><button class="ghost slim" data-a="backup">Make a backup first</button><button class="primary slim go" data-a="bookuse">Use these ${R.changes.length === 1 ? "" : R.changes.length + " "}${R.changes.length === 1 ? "change" : "changes"}</button></div>`
+        : "") +
+    `</div></details>`
+  );
+}
 function bookSheet() {
   const c = C(),
     B = bookTable(c),
@@ -140,6 +289,7 @@ function bookSheet() {
     `<div class="small muted">Every number of your plan, with its formula. Paste it into Google Sheets or Excel, change any value, and the formulas follow. ${kitInfo("book")}</div>` +
     `<div class="row wrap" style="gap:8px">${bookButtons()}<button class="ghost slim" data-a="bookfile">Save as a CSV file</button></div>` +
     `<div class="tiny muted">${n} rows in ${B.S.length} sections.</div>` +
+    bookSheetIn() +
     (tabs =>
       tabs == null
         ? `<div class="tile small kitwait">The retirement engine is making its three tables…</div>`
@@ -168,6 +318,19 @@ Object.assign(ACT, {
   book: () => {
     W = { kind: "book", o: {} };
     sheet(bookSheet);
+  },
+  bookpaste: () => {
+    const el = typeof document !== "undefined" && document.getElementById ? document.getElementById("bookpaste") : null;
+    if (!W) return;
+    W.inn = bookRead(C(), (el && el.value) || W.pasted || "");
+    W.inDone = null;
+    drawSheet();
+  },
+  bookuse: () => {
+    if (!W || !W.inn) return;
+    W.inDone = bookApply(C(), W.inn.changes);
+    W.inn = null;
+    drawSheet();
   },
   bookcopy: t => {
     const v = t && t.dataset && t.dataset.v,
