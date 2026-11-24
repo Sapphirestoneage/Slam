@@ -129,3 +129,8 @@ grant select, insert, update, delete on games to authenticated;
 grant select on content_packs to authenticated;
 grant select, insert, delete on player_entitlements to authenticated;
 grant select on coaches to authenticated;
+
+-- ROLES, THE AUDIT LOG, THE COACH PAGE (2026-11-24). The next block is its own file:
+-- supabase/migrations/20261124170000_roles_audit_coach.sql. Run it one time, after this file. It sets coach mode
+-- on by default, closes is_admin() and is_coach() to accounts that are not signed in, adds the audit log, the
+-- coach notes, the failed saves, the health view and the backup, and makes each admin action write a log line.

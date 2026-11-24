@@ -110,6 +110,7 @@ async function clPush() {
   } catch (e) {
     CLOUD.st = "off";
     CLOUD.err = e && e.code === "quota_exceeded" ? "your account storage is full" : "couldn't reach your account";
+    if (typeof roSaveFail === "function") roSaveFail(e); /* roles.js: one line for the admin's health view */
   }
   CLOUD.busy = false;
   clPaint();

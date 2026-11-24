@@ -794,6 +794,7 @@ const MENU = [
 function menuSheet() {
   let h = menuSheetBase();
   if (typeof menuSheetCloud === "function") h = menuSheetCloud(h); /* cloud.js: where the game is saved */
+  if (typeof menuSheetHats === "function") h = menuSheetHats(h); /* roles.js: the control "switch hat" */
   return h;
 }
 function menuSheetBase() {

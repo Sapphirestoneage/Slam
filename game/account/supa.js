@@ -57,7 +57,36 @@ const SUPA = { on: false, sb: null, uid: null, email: "", ready: null, ids: {}, 
       } catch (e) {
         report(e, "supa.js: page load (2)");
       }
+      /* A coach can open a game that is shared with the coach. The database rules allow nothing more. */
+      let role = ok ? "admin" : "";
+      if (!ok && asq !== s.user.id) {
+        try {
+          const c = await SUPA.sb.rpc("is_coach"),
+            q =
+              c.data === true
+                ? await SUPA.sb
+                    .from("games")
+                    .select("id")
+                    .eq("owner", asq)
+                    .eq("name", "slam_meta")
+                    .eq("share_with_coach", true)
+                    .limit(1)
+                : null;
+          if (q && !q.error && q.data && q.data.length) {
+            ok = true;
+            role = "coach";
+          }
+        } catch (e) {
+          report(e, "supa.js: page load (4)");
+        }
+      }
       if (ok && asq !== s.user.id) {
+        SUPA.asRole = role;
+        /* one line in the audit log: who opened the game of whom */
+        SUPA.sb.rpc("audit_write", { act: "open_game", tgt: asq, nt: null }).then(
+          () => {},
+          () => {}
+        );
         SUPA.me = SUPA.uid;
         SUPA.as = asq;
         SUPA.uid = asq;
@@ -214,7 +243,7 @@ function suAsBar() {
       } catch (e) {
         report(e, "supa.js: document.getElementById(su-as-x).onclick (2)");
       }
-      location.href = "./admin.html";
+      location.href = SUPA.asRole === "coach" ? "./coach.html" : "./admin.html";
     };
   };
   document.body ? put() : document.addEventListener("DOMContentLoaded", put);
@@ -249,7 +278,7 @@ function suGate(done) {
   <button class="su-go" type="submit">${mode === "new" ? "Create my account" : "Sign in"}</button>
   <button type="button" class="su-other" data-m="${mode === "new" ? "in" : "new"}">${mode === "new" ? "I already have an account. Sign in" : "I'm new. Create an account"}</button>
   ${mode === "in" ? `<button type="button" class="su-link" data-forgot>Forgot my password</button>` : ""}
-  ${mode === "new" ? `<p style="margin:12px 0 0;font-size:13px">Coach mode is on: your coach can see your game to help you. You can turn it off anytime in Menu, then My account.</p>` : ""}<div class="su-msg">${msg}</div></form>`;
+  ${mode === "new" ? `<p style="margin:12px 0 0;font-size:13px">Coach mode is on: your coach can see your game to help you. You can turn it off anytime in Menu, then My account.</p><p style="margin:8px 0 0;font-size:13px">The owner of this app can view accounts for safety and support.</p>` : ""}<div class="su-msg">${msg}</div></form>`;
     el.querySelectorAll("[data-m]").forEach(
       b =>
         (b.onclick = () => {
@@ -459,7 +488,8 @@ if (SUPA.on) {
 function saveCoachMark() {
   if (!SUPA.t0) return;
   try {
-    if (SUPA.as && G && !G.demo && Date.now() - SUPA.t0 > 4000) G.coachEdit = { at: Date.now() };
+    if (SUPA.as && G && !G.demo && Date.now() - SUPA.t0 > 4000)
+      G.coachEdit = { at: Date.now(), by: SUPA.asRole || "admin" };
   } catch (e) {
     report(e, "supa.js: saveCoachMark");
   }
@@ -471,7 +501,7 @@ function homeCoachNote(h) {
   try {
     const e = !SUPA.as && G && G.coachEdit;
     if (e && e.at > (G.coachSeen || 0)) {
-      const n = `<div class="tile small row between homerow" style="border:2px solid var(--a3)"><span>The person who runs SLAM made a change in your game on ${new Date(e.at).toLocaleDateString()}.</span><button class="ghost slim" data-a="sugot">Got it</button></div>`;
+      const n = `<div class="tile small row between homerow" style="border:2px solid var(--a3)"><span>${e.by === "coach" ? "Your coach" : "The person who runs SLAM"} made a change in your game on ${new Date(e.at).toLocaleDateString()}.</span><button class="ghost slim" data-a="sugot">Got it</button></div>`;
       return typeof homeRowAdd === "function"
         ? homeRowAdd(h, n)
         : /^<div class="stack[^"]*">/.test(h)

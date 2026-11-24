@@ -21,6 +21,7 @@ button.primary{background:var(--a1);border-color:var(--a1);color:#fff}button.wid
 details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{cursor:pointer;font-weight:700;padding:12px 0;min-height:44px}.tools{display:flex;flex-direction:column;gap:8px;padding-bottom:12px}
 .who{border-top:1px solid var(--line);padding-top:8px}.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 12px;font-size:14px;color:var(--muted);margin-top:4px}.nums b{color:var(--text)}
 ul{margin:4px 0 0;padding-left:20px}.who .row{flex-wrap:wrap;justify-content:flex-start;margin-top:6px}
+.hats{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.seg a.hat{padding:10px 16px;min-height:44px;display:inline-flex;align-items:center;font-weight:700;color:var(--muted);background:var(--panel2);text-decoration:none}.seg a.hat.on{background:var(--a1);color:#fff}a.btn{font-weight:700;min-height:44px;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--text);text-decoration:none;display:inline-flex;align-items:center}
 .pill{font-size:12px;margin-left:4px;border:1px solid var(--line);border-radius:99px;padding:2px 8px;color:var(--muted)}.ok{color:var(--good)}
 </style>
 </head>
@@ -29,9 +30,11 @@ ul{margin:4px 0 0;padding-left:20px}.who .row{flex-wrap:wrap;justify-content:fle
 <script>window.claude={}</script><!-- keeps supa.js to its two public settings on this page -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="core/report.js?v=e950ffe0"></script>
-<script src="account/supa.js?v=6e71f50e"></script>
+<script src="account/supa.js?v=c44df491"></script>
 <script src="data/cardtemplate.js?v=43e535a3"></script>
 <script src="data/cards2026.js?v=bd65802c"></script>
+<script src="account/roles.js?v=04de2e61"></script>
+<script src="account/adminmore.js?v=470e3b46"></script>
 <script src="account/cardadmin.js?v=ab16003f"></script>
 <script>
 /* The admin page. Everything here is checked again by the database: a signed-in person who is not the admin gets nothing back and can change nothing, whatever this page shows. */
@@ -56,20 +59,22 @@ function draw(){const el=document.getElementById("app"),d=S.data,me=S.session&&S
  if(!S.session){el.innerHTML=`<h1>Admin sign-in</h1><p class="muted">For the person who runs SLAM the Game. Players use the game itself.</p><form class="card" id="f"><div><label for="e">Email</label><input id="e" type="email" autocomplete="email" required></div><div><label for="p">Password</label><input id="p" type="password" autocomplete="current-password" required></div><button class="primary wide" type="submit">Sign in</button>${S.msg?`<p class="muted">${esc(S.msg)}</p>`:""}</form><a href="./" style="color:var(--muted)">Back to the game</a>`;return}
  if(!d){el.innerHTML=`<p class="muted">Checking…</p>`;return}
  if(!d.admin){el.innerHTML=`<h1>Not the admin</h1><div class="card"><p>You are signed in as <b>${esc(me)}</b>. This page only works for the admin account.</p><button class="wide" data-a="out">Sign out</button></div><a href="./" style="color:var(--muted)">Back to the game</a>`;return}
- el.innerHTML=`<div class="row"><h1>Admin</h1><button data-a="out">Sign out</button></div><p class="muted">Signed in as ${esc(me)}. ${d.users.length} ${d.users.length===1?"account":"accounts"}. Switches save the moment you tap.</p>${S.msg?`<p class="ok">${esc(S.msg)}</p>`:""}`+
+ el.innerHTML=`<div class="row"><a class="btn" href="./">‹ Back to the game</a><button data-a="out">Sign out</button></div>${roHatsHTML("admin",{admin:true,coach:true},true)}<h1>Admin</h1><p class="muted">Signed in as ${esc(me)}. ${d.users.length} ${d.users.length===1?"account":"accounts"}. Switches save the moment you tap.</p>${S.msg?`<p class="ok">${esc(S.msg)}</p>`:""}`+
   d.users.map(u=>{const mine=u.id===d.me;return `<div class="card"><div class="row"><b style="word-break:break-all">${esc(u.email)}</b><span>${mine?`<span class="pill">You</span>`:""}${u.blocked?`<span class="pill">Blocked</span>`:""}${u.confirmed?"":`<span class="pill">Email not confirmed</span>`}</span></div><p class="muted">Joined ${day(u.joined)}. Last signed in ${day(u.seen)}.</p>
    ${summary(u)}${mine?"":`<button class="primary wide" data-a="open" data-id="${u.id}" data-k="${esc(u.email)}">Open their game</button>`}
    <div class="row"><span>Coach<br><span class="muted">Can see games people share with their coach</span></span>${seg("coach",u.id,"",u.coach)}</div>
    ${d.packs.map(p=>{const g=u.packs&&u.packs[p.pack];return `<div class="row"><span>${esc(p.title||"Add-on")}<br><span class="muted">${g?(p.asks?(g.yes?"On. They said yes":"On. Waiting for their one-time yes"):"On for this account"):"Hidden from this account"}</span></span>${seg("pack",u.id,p.pack,!!g)}</div>`}).join("")}
    <details${S.ask&&S.ask.id===u.id?" open":""}><summary>Account tools</summary><div class="tools">${tools(u,mine)}</div></details></div>`}).join("")+
   (typeof caHTML==="function"?caHTML():"")+ /* cardadmin.js: the section "Card library" */
+  (typeof amHTML==="function"?amHTML():"")+ /* adminmore.js: Health, Audit log, Backup */
   `<button class="wide" data-a="reload">Check for new accounts</button><a href="./" style="color:var(--muted)">Back to the game</a>`}
 async function load(){if(!S.data)draw();const r=await sb.rpc("admin_overview");S.data=r.error?{admin:false}:r.data;S.games={};
- if(S.data.admin){const q=await sb.from("games").select("owner,name,data,updated_at,share_with_coach");const by={};(q.data||[]).forEach(x=>{(by[x.owner]=by[x.owner]||[]).push(x)});Object.keys(by).forEach(o=>{const g=gameOf(by[o]);if(g)S.games[o]=g});if(typeof caLoad==="function")await caLoad() /* cardadmin.js: the cards the admin added */}draw()}
+ if(S.data.admin){if(typeof amLoad==="function")await amLoad(sb); /* adminmore.js */const q=await sb.from("games").select("owner,name,data,updated_at,share_with_coach");const by={};(q.data||[]).forEach(x=>{(by[x.owner]=by[x.owner]||[]).push(x)});Object.keys(by).forEach(o=>{const g=gameOf(by[o]);if(g)S.games[o]=g});if(typeof caLoad==="function")await caLoad() /* cardadmin.js: the cards the admin added */}draw()}
 document.addEventListener("submit",async ev=>{ev.preventDefault();const e=document.getElementById("e").value.trim(),p=document.getElementById("p").value;const r=await sb.auth.signInWithPassword({email:e,password:p});if(r.error){S.msg="That email and password don't match.";draw();return}S.msg="";S.session=r.data.session;S.data=null;load()});
 document.addEventListener("input",ev=>{if(typeof caInput==="function")caInput(ev.target)}); /* cardadmin.js: typing in the card form */
 document.addEventListener("change",ev=>{if(typeof caChange==="function")caChange(ev.target)}); /* cardadmin.js: a rate was typed, show its limit */
 document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-a]");if(!t||S.busy)return;if(/^ca/.test(t.dataset.a)&&typeof caClick==="function"){S.busy=true;try{await caClick(t)}finally{S.busy=false}return} /* cardadmin.js */
+ if(/^am/.test(t.dataset.a)&&typeof amClick==="function"){S.busy=true;try{await amClick(t,sb)}finally{S.busy=false}draw();return} /* adminmore.js */
  const a=t.dataset.a,id=t.dataset.id,u=S.data&&S.data.users?S.data.users.find(x=>x.id===id):null;
  if(a==="out"){await sb.auth.signOut();S.session=null;S.data=null;S.msg="";draw();return}
  if(a==="reload"){S.msg="";load();return}
@@ -77,7 +82,7 @@ document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-a]
  if(a==="askno"){S.ask=null;draw();return}
  if(a==="open"){try{sessionStorage.setItem("su_as",id);sessionStorage.setItem("su_as_n",t.dataset.k||"")}catch(e){}location.href="./?as="+encodeURIComponent(id);return}
  S.busy=true;let r;
- if(a==="reset"){r=await sb.auth.resetPasswordForEmail(u.email,{redirectTo:location.origin+location.pathname.replace(/admin\.html$/,"")});S.msg=r.error?"That email did not send. Check the email settings in Supabase.":"Sent. They will get a link at "+u.email+"."}
+ if(a==="reset"){if(typeof roAudit==="function")roAudit(sb,"reset_password",id,null);r=await sb.auth.resetPasswordForEmail(u.email,{redirectTo:location.origin+location.pathname.replace(/admin\.html$/,"")});S.msg=r.error?"That email did not send. Check the email settings in Supabase.":"Sent. They will get a link at "+u.email+"."}
  else{const on=t.dataset.v==="1";r=a==="coach"?await sb.rpc("admin_set_coach",{target:id,make:on}):a==="pack"?await sb.rpc("admin_set_pack",{target:id,p:t.dataset.k,make:on}):await sb.rpc("admin_account",{target:id,what:t.dataset.k});S.msg=r.error?"That did not save. Try again.":a==="acct"?({delete:"Deleted.",block:"Blocked. They can't sign in.",unblock:"They can sign in again.",confirm:"Email confirmed."})[t.dataset.k]:"Saved."}
  S.busy=false;S.ask=null;load()});
 sb.auth.getSession().then(({data})=>{S.session=data&&data.session;if(S.session)load();else draw()});

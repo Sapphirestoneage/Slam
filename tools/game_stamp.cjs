@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* ============================================================================
    tools/game_stamp.cjs
-   PURPOSE   Put a version stamp on each local script address in game/index.html and game/admin.html.
+   PURPOSE   Put a version stamp on each local script address in game/index.html, game/admin.html and game/coach.html.
    USAGE     node tools/game_stamp.cjs            Write the stamps.
              node tools/game_stamp.cjs --check    Change nothing. Exit 1 when a stamp is old or absent.
    INPUT     The two pages, and the script files that they load.
@@ -15,7 +15,7 @@
    ========================================================================= */
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const GAME = path.join(__dirname, '..', 'game');
-const PAGES = ['index.html', 'admin.html'];
+const PAGES = ['index.html', 'admin.html', 'coach.html'];
 const TAG = /(<script src=")([a-z0-9/-]+\.js)(?:\?v=[0-9a-f]*)?(")/g;
 
 /* stampOf(file): 8 characters from the SHA-1 of the file content. The line ends are made the same first,

@@ -301,7 +301,7 @@
       W.sec = n;
       drawSheet();
       if (!clean(ov())) bad.push(n + ":" + junk(ov()));
-      if (/[—–]/.test(ov())) bad.push(n + ":dash");
+      if (new RegExp("[" + String.fromCharCode(0x2014, 0x2013) + "]").test(ov())) bad.push(n + ":dash");
     }
     W.sec = 2;
     drawSheet();
@@ -484,7 +484,10 @@
   const src = ["features/strat.js", "data/strategies.js", "presets/metros.json"]
     .map(f => fs.readFileSync(GAME_DIR + f, "utf8"))
     .join("");
-  chk("no em dash and no en dash in the new files", !/[—–]/.test(src));
+  chk(
+    "no em dash and no en dash in the new files",
+    !new RegExp("[" + String.fromCharCode(0x2014, 0x2013) + "]").test(src)
+  );
   G.chars.length = n0;
   G.active = 0;
   save();
