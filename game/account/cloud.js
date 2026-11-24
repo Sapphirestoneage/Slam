@@ -5,10 +5,11 @@
                connection.
    INPUT       The game: G.active, G.chars, G.coach, G.demo, G.gone, G.savedAt. The taps of the player
                (the actions in OUTPUT).
-   OUTPUT      18 functions. Parts of functions in other files: saveStamp, closeSheetCloud,
+   OUTPUT      24 functions. Parts of functions in other files: saveStamp, closeSheetCloud,
                menuSheetCloud. Actions (ACT): backup, prmyes, people.
    DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/profiles.js, screens/planner.js.
-   STATE       CLOUD (st, at, err, db, uid, dev, busy, timer, last, pending).
+   STATE       CLOUD (st, at, err, db, uid, dev, busy, timer, retry, last, pending, sig). Each person has
+               c.mod: the time of the last real change to that person.
    ========================================================================= */
 const CLOUD = {
   st: "connecting",
@@ -56,16 +57,76 @@ function saveStamp() {
   try {
     if (G) {
       G.savedAt = Date.now();
+      clStampPeople(G.savedAt);
       if (G.gone) G.gone = G.gone.filter(n => !G.chars.some(c => c.name === n));
     }
   } catch (e) {
     report(e, "cloud.js: saveStamp");
   }
 }
+/* THE STAMP OF EACH PERSON.
+   c.mod is the time of the last real change to one person. A save with no change to a person does not move
+   the stamp of that person. The game finds a change when the text of the person is different from the text at
+   the last look (CLOUD.sig). The merge of two devices uses the stamps: for each person, the later one wins. */
+function clSig(c) {
+  const m = c.mod;
+  delete c.mod;
+  let s = "";
+  try {
+    s = JSON.stringify(c);
+  } catch (e) {
+    report(e, "cloud.js: clSig");
+  }
+  if (m != null) c.mod = m;
+  /* a short hash of the text: enough to see a change */
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return s.length + ":" + h;
+}
+/* Take the people as they are now as "seen", with no change of a stamp. After a load or a merge. */
+function clSigAll() {
+  CLOUD.sig = {};
+  try {
+    if (G && G.chars && !G.demo) G.chars.forEach(c => (CLOUD.sig[c.name] = clSig(c)));
+  } catch (e) {
+    report(e, "cloud.js: clSigAll");
+  }
+}
+function clStampPeople(now) {
+  if (!G || !G.chars || G.demo) return;
+  if (!CLOUD.sig) return clSigAll();
+  G.chars.forEach(c => {
+    const g = clSig(c);
+    if (CLOUD.sig[c.name] !== g) {
+      c.mod = now;
+      CLOUD.sig[c.name] = g;
+    }
+  });
+}
+/* Two copies of one person: the copy with the later stamp wins. The open tasks of the other copy that the
+   winner does not have are added, so a task from a coach or from a second device is never lost. */
+function clMergePerson(lc, rc) {
+  const win = (rc.mod || 0) > (lc.mod || 0) ? rc : lc,
+    other = win === rc ? lc : rc,
+    has = new Set(((win.x && win.x.plan) || []).map(p => p.id)),
+    add = ((other.x && other.x.plan) || []).filter(
+      p => p && p.id && !has.has(p.id) && p.st !== "done" && p.st !== "na"
+    );
+  if (win === lc && !add.length) return null;
+  const out = win === lc ? lc : Object.assign(newChar(), rc);
+  if (add.length) {
+    out.x = out.x || {};
+    out.x.plan = (out.x.plan || []).concat(add.map(p => Object.assign({}, p)));
+  }
+  return out;
+}
 function clQueue() {
   if (!CLOUD.db || !CLOUD.uid || G.demo) return;
   clearTimeout(CLOUD.timer);
-  CLOUD.timer = setTimeout(clPush, 1200);
+  CLOUD.timer = setTimeout(() => {
+    CLOUD.timer = null;
+    clPush();
+  }, 1200);
 }
 async function clPush() {
   if (!CLOUD.db || G.demo) return;
@@ -111,6 +172,9 @@ async function clPush() {
     CLOUD.st = "off";
     CLOUD.err = e && e.code === "quota_exceeded" ? "your account storage is full" : "couldn't reach your account";
     if (typeof roSaveFail === "function") roSaveFail(e); /* roles.js: one line for the admin's health view */
+    /* no save is dropped: try again in 15 seconds, and again when the internet is back */
+    clearTimeout(CLOUD.retry);
+    CLOUD.retry = setTimeout(clPush, 15000);
   }
   CLOUD.busy = false;
   clPaint();
@@ -150,6 +214,7 @@ async function clPull(meta) {
   CLOUD.at = meta.at;
   CLOUD.seen = meta.at;
   const kept = clMergeChars(G, { chars: mine });
+  clSigAll();
   try {
     localStorage.setItem(KEY, JSON.stringify(G));
   } catch (e) {
@@ -165,13 +230,23 @@ async function clPull(meta) {
     }, 0);
   return true;
 }
-/* two devices, two games: never let one replace the other. People the account has and this device doesn't are added, not lost. */
+/* two devices, two games: never let one replace the other. People the account has and this device doesn't are added, not lost.
+   A person on both sides is merged by clMergePerson(). */
 function clMergeChars(local, remote) {
   let n = 0;
   if (!remote || !remote.chars) return 0;
   remote.chars.forEach(rc => {
-    if (rc && !rc.demo && !(local.gone || []).includes(rc.name) && !local.chars.some(lc => lc.name === rc.name)) {
+    if (!rc || rc.demo || (local.gone || []).includes(rc.name)) return;
+    const i = local.chars.findIndex(lc => lc.name === rc.name);
+    if (i < 0) {
       local.chars.push(Object.assign(newChar(), rc));
+      n++;
+      return;
+    }
+    /* the same person on both sides: the later change wins, and no open task is lost */
+    const m = clMergePerson(local.chars[i], rc);
+    if (m) {
+      local.chars[i] = m;
       n++;
     }
   });
@@ -200,6 +275,7 @@ async function clMergeRemote(meta) {
     const g = JSON.parse(s),
       n = clMergeChars(G, g);
     if (n) {
+      clSigAll();
       try {
         localStorage.setItem(KEY, JSON.stringify(G));
       } catch (e) {
@@ -233,6 +309,14 @@ async function clFlush() {
   await idle();
   if (!G.demo) await clPush();
   await idle();
+}
+/* Send a waiting save now, with no delay: when the page goes to the background or closes, and when the internet is back. */
+function clSendNow() {
+  if (!CLOUD.db || !CLOUD.uid || !G || G.demo) return;
+  if (!CLOUD.timer && CLOUD.st === "on") return;
+  clearTimeout(CLOUD.timer);
+  CLOUD.timer = null;
+  clPush();
 }
 /* look at the account again: when you come back to the page, and when you open the list of people */
 async function clCheck() {
@@ -438,6 +522,12 @@ if (typeof window !== "undefined" && document && document.getElementById && docu
   try {
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) clCheck();
+      else clSendNow();
+    });
+    window.addEventListener("pagehide", () => clSendNow());
+    window.addEventListener("online", () => {
+      clCheck();
+      clSendNow();
     });
     window.addEventListener("focus", () => clCheck());
     window.addEventListener("pageshow", () => clCheck());
@@ -466,3 +556,4 @@ function clFirstGame() {
     report(e, "cloud.js: clFirstGame (2)");
   }
 }
+clSigAll();

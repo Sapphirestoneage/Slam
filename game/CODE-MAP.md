@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-24. Files: 115. Lines: 72,011. Top-level functions: 1546. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-24. Files: 115. Lines: 72,102. Top-level functions: 1551. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -30,7 +30,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 16 | `screens/profiles.js` | 135 | 6 | 4 | 0 | More than one person in one game: a household (the money is combined) or the persons that a coach helps (the money is apart) |
 | 17 | `screens/smart.js` | 679 | 15 | 5 | 0 | The setup questions change with each answer |
 | 18 | `screens/planner.js` | 1,279 | 55 | 18 | 0 | The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a calendar of money tasks, the tab "Next Steps"), the check-in b... |
-| 19 | `account/cloud.js` | 469 | 18 | 0 | 0 | The game saves itself to the account of the player |
+| 19 | `account/cloud.js` | 560 | 23 | 0 | 0 | The game saves itself to the account of the player |
 | 20 | `screens/ux.js` | 812 | 36 | 7 | 0 | The interface rules for a new player: five plain tabs, one clear title on each screen, Guess / Close / Exact, a Back button that works, and Undo in th... |
 | 21 | `core/metrics.js` | 1,856 | 27 | 8 | 0 | Key numbers. Each ratio that this game can calculate, in plain words: the value, the rule of thumb and its source, what moves the value, and if the pl... |
 | 22 | `features/debts.js` | 411 | 16 | 3 | 0 | The debt picture by taps (rate, monthly payment, card limit, how much the debt troubles the player), then three payoff plans side by side |
