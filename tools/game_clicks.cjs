@@ -6,7 +6,7 @@
    USAGE       node tools/game_clicks.cjs [--trace]
    INPUT       The folder game/. No saved game.
    OUTPUT      One line for each persona: clicks to the end of setup, and clicks to the first plan
-               (the Home tab with no open sheet). With --trace, each click.
+               (the Home tab with no open sheet: the one thing to do, and the count of next steps). With --trace, each click.
    DEPENDS ON  tools/game_walk/walk.cjs (the local server), the package "playwright".
    RULES       The walk taps what a person would tap: the answer of the persona when it is on the
                screen, else the button that pulses, else the main button. The count has no clicks on
@@ -63,7 +63,7 @@ async function walk(browser, base, pref) {
       [pref, used]
     );
     if (clicks > 0 && setupEnd === null && s.kind !== "setup") setupEnd = clicks;
-    if (clicks > 1 && !s.open && s.tab === "home") break;
+    if (clicks > 1 && !s.open && (s.tab === "home" || s.tab === "plan")) break;
     if (!s.text) break;
     if (s.pf) used[s.pf] = 1;
     await page.click("[data-pick]");

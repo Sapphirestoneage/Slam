@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-24. Files: 111. Lines: 69,814. Top-level functions: 1506. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-24. Files: 111. Lines: 69,825. Top-level functions: 1506. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -22,7 +22,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 8 | `core/engine.js` | 3,854 | 123 | 0 | 0 | The engine: the data model of one profile and all the math |
 | 9 | `core/engine2.js` | 420 | 18 | 0 | 0 | The game mechanics that are also the data entry: the layers, the bonfires, the fog (how much of the picture is clear) |
 | 10 | `account/gate.js` | 67 | 7 | 0 | 0 | Add-ons, part 1 of 2. Some parts of the game are not in these files |
-| 11 | `screens/ui.js` | 6,484 | 212 | 135 | 0 | The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ... |
+| 11 | `screens/ui.js` | 6,489 | 212 | 135 | 0 | The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ... |
 | 12 | `features/games.js` | 665 | 25 | 13 | 0 | The screens of the games that are the data entry (layer 1) |
 | 13 | `features/games2.js` | 1,463 | 40 | 19 | 0 | The games of layer 2 (sort), layer 3 (make exact) and layer 4 (come back) |
 | 14 | `features/year.js` | 781 | 24 | 13 | 0 | The year: calendars, funds for true expenses, the months ahead, the Yearly Review, rest windows, and the chance test |
@@ -62,7 +62,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 48 | `features/fold.js` | 65 | 4 | 1 | 0 | One list on Next Steps. The mission board and the older card "Ready to plan" showed the same steps |
 | 49 | `screens/nav.js` | 486 | 13 | 1 | 0 | The same four things on each sheet: Back (one screen back), Forward, Close, and an "i" with two sentences about the screen |
 | 50 | `features/home.js` | 140 | 4 | 0 | 0 | Put the game on the home screen of the phone or the laptop (website only) |
-| 51 | `screens/tidy.js` | 179 | 10 | 2 | 0 | Repairs from the usability audit, for all screens at one time |
+| 51 | `screens/tidy.js` | 185 | 10 | 2 | 0 | Repairs from the usability audit, for all screens at one time |
 | 52 | `account/addon.js` | 634 | 31 | 5 | 0 | Add-ons, part 2 of 2. At sign-in the game asks the account which add-ons are on |
 | 53 | `features/fork.js` | 603 | 20 | 12 | 0 | Fork Theory. A fork is a thing that troubles the player now |
 | 54 | `features/csp.js` | 731 | 25 | 12 | 0 | Two views of one month of money |

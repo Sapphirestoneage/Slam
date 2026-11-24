@@ -112,6 +112,12 @@ function drawSheetTidy(draw) {
     let again = want !== was;
     TDX.prev[k] = TDX.seq.slice();
     if (want) {
+      /* The first time, open the first question with no answer, not a question that a default answered. */
+      if (TDX.open[k] == null) {
+        const f0 = TDX.ans.indexOf(false);
+        TDX.open[k] = f0 > 0 ? f0 : 0;
+        if (f0 > 0) again = true;
+      }
       const oi = Math.max(0, Math.min(TDX.open[k] || 0, n - 1));
       if (pa && pa.length > oi && !pa[oi] && TDX.ans[oi] && !TDX.multi[oi] && oi < n - 1) {
         TDX.open[k] = oi + 1;

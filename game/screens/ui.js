@@ -3804,8 +3804,13 @@ function flowSheetBase() {
   const w = W,
     o = w.o,
     c = C(),
-    pk = (k, opts) =>
-      `<div class="chips">${opts.map(x => `<button class="chip ${o[k] === x[0] ? "on" : ""}" data-a="fset" data-k="${k}" data-v="${x[0]}">${esc(x[1])}</button>`).join("")}</div>`;
+    /* The first chip of the first row with no answer pulses. "Log it" pulses when each row has an answer. */
+    pk = (k, opts) => {
+      const hot = !o[k] && !pkHot;
+      if (hot) pkHot = true;
+      return `<div class="chips">${opts.map((x, i) => `<button class="chip ${o[k] === x[0] ? "on" : hot && i === 0 ? "likely" : ""}" data-a="fset" data-k="${k}" data-v="${x[0]}">${esc(x[1])}</button>`).join("")}</div>`;
+    };
+  let pkHot = false;
   if (!o.t)
     return (
       head("Cash flow", "What happened?") +
@@ -3862,7 +3867,7 @@ function flowSheetBase() {
     b +
     numq("amt", "How much?", "flow") +
     (w.err ? `<div class="err">${w.err}</div>` : "") +
-    `<button class="primary wide go" data-a="fsave">Log it</button><button class="ghost wide" data-a="ftype" data-v="">Back one</button>`
+    `<button class="primary wide${pkHot ? "" : " go"}" data-a="fsave">Log it</button><button class="ghost wide" data-a="ftype" data-v="">Back one</button>`
   );
 }
 function unna() {
@@ -5586,7 +5591,7 @@ function safeSheetBase() {
     r = o.amt > 0 ? safeSpend(c, d, o.amt, o.mode === "month", todayISO()) : null;
   return (
     head("Before you spend", "Is it safe to spend this?") +
-    `<div class="chips">${[20, 50, 100, 250, 500, 1000].map(v => `<button class="chip ${o.amt === v && w.pad !== "amt" ? "on" : ""}" data-a="safeamt" data-v="${v}">${money(v)}</button>`).join("")}<button class="chip ${w.pad === "amt" ? "on" : ""}" data-a="padopen" data-k="amt">Type an amount</button></div>${w.pad === "amt" ? `<div class="val">${money(o.amt)}</div>` + keypad("amt") + `<button class="ghost slim" data-a="padclose">Done typing</button>` : ""}
+    `<div class="chips">${[20, 50, 100, 200, 500, 1000].map(v => `<button class="chip ${o.amt === v && w.pad !== "amt" ? "on" : ""}" data-a="safeamt" data-v="${v}">${money(v)}</button>`).join("")}<button class="chip ${w.pad === "amt" ? "on" : ""}" data-a="padopen" data-k="amt">Type an amount</button></div>${w.pad === "amt" ? `<div class="val">${money(o.amt)}</div>` + keypad("amt") + `<button class="ghost slim" data-a="padclose">Done typing</button>` : ""}
  <div class="seg" style="align-self:flex-start"><button class="${o.mode === "once" ? "on" : ""}" data-a="safemode" data-v="once">One time</button><button class="${o.mode === "month" ? "on" : ""}" data-a="safemode" data-v="month">Every month</button></div>
  ${r ? `<div class="verdict ${r.light} pop"><div class="row"><span class="lamp ${r.light}"></span><b class="tiny">${LAMP[r.light]}</b></div><h2 style="margin:6px 0">${esc(r.head)}</h2>${r.lines.map(l => `<div class="small" style="margin-top:4px">${esc(l)}</div>`).join("")}${r.alt ? `<div class="banner small" style="margin-top:8px">${esc(r.alt)}</div>` : ""}${r.real ? "" : `<div class="tiny muted" style="margin-top:8px">This leans on guesses. <button class="linkish" data-a="sharp" data-v="${isSharp(c, "take") ? "spend" : "take"}">Make your numbers real</button> and it gets exact.</div>`}</div>${mathBox(r.math)}${o.mode === "once" ? `<button class="primary wide" data-a="safelog">I'm spending it · log it</button>` : ""}` : `<div class="small muted">Tap an amount. The answer is never just no. It tells you what the spend would move.</div>`}
  <button class="ghost wide" data-a="close">Close</button>`
