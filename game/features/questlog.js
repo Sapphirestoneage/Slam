@@ -10,10 +10,11 @@
                (layers() in core/engine2.js), the setup questions (sharpList), D.A.I.T.E. (know.js), the due
                list (plAutoToday in planner.js), the four questions (FRONT_BTN in ask3.js). The open sheet
                (W.kind): quest.
-   OUTPUT      Functions: questX, questIcon, questButton, questLabel, questRecord, questJourney, questFinished,
+   OUTPUT      Functions: questSnap, questSpotKind, questSpotKeep, questSpotUse, questX, questIcon, questButton, questLabel, questRecord, questJourney, questFinished,
                questIsWork, questProgress, questNext, questContinue, questNudge, questContinueCard,
                questJourneyTab, questAreasTab, questQuestionsTab, questTimeTab, questSheet. Parts of
-               functions in other files: sheetQuest (sheet in ui.js), topbarQuest (topbarHTML in
+               functions in other files: drawSheetQuest (drawSheetOnce in ui.js), openSetupQuest (openSetup in
+               ui.js), sheetQuest (sheet in ui.js), topbarQuest (topbarHTML in
                planner.js), nvRowQuest (nvRowBase in nav.js), homeQuestRow (home in ui.js), bonBodyQuest
                (bonBody in games.js). Actions (ACT): quest, questtab, questgo, questpin, questst,
                questnudge, questbon, questplan. Menu: "Where am I" (planner.js).
@@ -28,6 +29,16 @@
 const QUEST = { snap: {} };
 const QUEST_TRAIL = 10;
 const QUEST_SKIP = { quest: 1, info: 1, menu: 1, dash: 1, glossary: 1, built: 1 };
+/* The letter of D.A.I.T.E. (know.js) that each area of "Make your numbers real" feeds. */
+const QUEST_LETTER = {
+  debt: "Debts",
+  cash: "Assets",
+  inv: "Assets",
+  take: "Income",
+  match: "Income",
+  tax: "Taxes",
+  spend: "Expenses",
+};
 const QUEST_TABS = [
   ["journey", "Journey"],
   ["areas", "Areas"],
@@ -53,7 +64,8 @@ function questButton(cls) {
 /* The name of a screen: the "i" registry of nav.js, a part of the journey, or the kind. */
 function questLabel(c, kind, v) {
   if (kind === "setup") return "Setup";
-  if (kind === "sharp" && v && typeof SHARP_Q !== "undefined" && SHARP_Q[v]) return SHARP_Q[v];
+  if (kind === "sharp" && v && typeof SHARP_Q !== "undefined" && SHARP_Q[v])
+    return (QUEST_LETTER[v] ? QUEST_LETTER[v] + ": " : "") + SHARP_Q[v];
   const part = questJourney(c)
     .reduce((a, r) => a.concat(r.parts), [])
     .find(p => p.a === kind);
@@ -81,9 +93,13 @@ function questJourney(c, d) {
     rows = [
       {
         id: "setup",
-        n: "Setup",
-        parts: [part("Make your character", c.placed, "start")].concat(
-          (typeof sharpList === "function" ? sharpList(c) : []).map(k => part(SHARP_Q[k], isSharp(c, k), "sharp", k))
+        /* Setup is done once the first taps made the character (c.led). Then the row is the five letters:
+           each area to put in your own numbers, named by its letter of D.A.I.T.E. */
+        n: c.led || c.placed ? "Your numbers (D.A.I.T.E.)" : "Setup",
+        parts: [part("Make your character", c.led || c.placed, "start")].concat(
+          (typeof sharpList === "function" ? sharpList(c) : []).map(k =>
+            part((QUEST_LETTER[k] ? QUEST_LETTER[k] + ": " : "") + SHARP_Q[k], isSharp(c, k), "sharp", k)
+          )
         ),
       },
     ];
@@ -166,6 +182,91 @@ function questRecord(c, kind, v, fn, w) {
   c.x.trail = tr.slice(0, QUEST_TRAIL);
   if (questIsWork(c, kind) && !questFinished(c, kind, vv)) c.x.lastOpen = e;
   save();
+}
+/* THE EXACT SPOT (UX pass, phase 2). While a round draws, QUEST.live keeps a copy of its state. When the
+   player leaves it (a tab, the menu, Close, another screen), the copy is saved: c.x.spot for a player, the
+   device storage for a new player in setup (no profile yet). "Pick up where you left off" opens it again. */
+const QUEST_SPOT_KEY = "slam_setup_spot";
+const QUEST_WORK = {};
+function questSnap(w) {
+  try {
+    const s = JSON.stringify(w);
+    return s && s.length < 80000 ? JSON.parse(s) : null;
+  } catch (e) {
+    report(e, "questlog.js: questSnap");
+    return null;
+  }
+}
+const questV = w => (w.v != null ? w.v : w.q != null ? w.q : w.id != null ? w.id : "");
+/* Is the open sheet a round that the spot keeps? Setup always; else a part of the journey. */
+function questSpotKind(c, kind) {
+  if (!kind || QUEST_SKIP[kind]) return false;
+  if (kind === "setup") return true;
+  if (G.demo || !c) return false;
+  if (QUEST_WORK[kind] == null) QUEST_WORK[kind] = questIsWork(c, kind);
+  return QUEST_WORK[kind];
+}
+/* Save the copy of the round that the player just left. */
+function questSpotKeep(L) {
+  if (G.demo) {
+    if (L.kind === "setup" && typeof localStorage !== "undefined")
+      localStorage.setItem(QUEST_SPOT_KEY, JSON.stringify({ w: L.w, d: todayISO() }));
+    return;
+  }
+  if (typeof localStorage !== "undefined" && localStorage.removeItem) localStorage.removeItem(QUEST_SPOT_KEY);
+  const c = C();
+  if (!c) return;
+  questX(c);
+  c.x.spot = { kind: L.kind, v: String(L.v), w: L.w, d: todayISO() };
+  saveQuiet();
+}
+/* Part of drawSheetOnce() in ui.js. Keeps the copy of the open round, and saves the copy of a round that
+   is no longer open. */
+function drawSheetQuest() {
+  try {
+    const k = SH && W ? W.kind : null,
+      L = QUEST.live;
+    if (L && L.kind !== k) {
+      QUEST.live = null;
+      questSpotKeep(L);
+    }
+    if (!k || !questSpotKind(C(), k)) return;
+    const w = questSnap(W);
+    if (w) QUEST.live = { kind: k, v: questV(W), w };
+  } catch (e) {
+    report(e, "questlog.js: drawSheetQuest");
+  }
+}
+/* After the round opened again (ACT of kind a): put back the saved state. Returns true when it did. */
+function questSpotUse(a, v) {
+  const c = C(),
+    S = c && c.x && c.x.spot,
+    kind = a === "start" ? "setup" : a;
+  if (G.demo || !S || S.kind !== kind || !W || W.kind !== kind) return false;
+  if (S.v && v && String(S.v) !== String(v)) return false;
+  if (kind !== "setup" && questFinished(c, kind, S.v)) return false;
+  if (kind === "setup" && W.mode !== "edit") return false;
+  Object.assign(W, questSnap(S.w) || {});
+  drawSheet();
+  return true;
+}
+/* Part of openSetup() in ui.js. A new player who left setup starts again at the same question. */
+function openSetupQuest(mode) {
+  try {
+    if (mode !== "new" || typeof localStorage === "undefined") return false;
+    if (!G.demo) {
+      if (localStorage.removeItem) localStorage.removeItem(QUEST_SPOT_KEY);
+      return false;
+    }
+    const S = JSON.parse(localStorage.getItem(QUEST_SPOT_KEY) || "null");
+    if (!S || !S.w || S.w.kind !== "setup" || !S.d || daysBetween(S.d, todayISO()) > 7) return false;
+    W = S.w;
+    sheet(setupSheet);
+    return true;
+  } catch (e) {
+    report(e, "questlog.js: openSetupQuest");
+    return false;
+  }
 }
 /* The next part to do: the first open part (or one in progress) in the first row that is not locked. */
 function questNext(c) {
@@ -379,8 +480,10 @@ Object.assign(ACT, {
     const a = t.dataset.k,
       v = t.dataset.v || "",
       snap = QUEST.snap[a + "|" + v];
-    if (typeof ACT[a] === "function") ACT[a]({ dataset: { a, v, k: v } });
-    else if (snap) {
+    if (typeof ACT[a] === "function") {
+      ACT[a]({ dataset: { a, v, k: v } });
+      questSpotUse(a, v); /* the exact spot of the round, when the player left it */
+    } else if (snap) {
       W = Object.assign({}, snap.W);
       sheet(snap.SH);
     } else go("home");

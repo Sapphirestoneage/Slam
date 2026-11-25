@@ -41,7 +41,7 @@ export const GIG_SPECS = {
       { key: 'hoursWeek', label: 'Hours you work in a normal week', options: opt([20, 30, 40, 45, 50]) },
       { key: 'billable', label: 'How much of that time someone pays for', options: opt([0.5, 0.6, 0.7, 0.8, 0.9, 1], v => pct(v)), help: 'The rest is downtime: finding work, admin, messages, travel between jobs.' },
       { key: 'weeksOff', label: 'Weeks a year with no paid work', options: opt([0, 2, 4, 6, 8, 12]), help: 'Time off, holidays, sick days and slow weeks. A job pays for these; here they come out of the paid weeks.' },
-      { key: 'unitHours', label: 'Paid hours in one job, session or project', unit: 'hours', picks: [1, 2, 4, 8, 20], optional: true, help: 'For a floor a job as well as an hour.' },
+      { key: 'unitHours', label: 'Paid hours in one job, session or project', options: opt([1, 2, 4, 8, 20], v => `${v} ${v === 1 ? 'hour' : 'hours'}`), optional: true, help: 'For a floor a job as well as an hour.' },
       FILING, PLACE],
     run: (v, ref) => gigRate({ ...v, takeHome: v.spending }, ref),
     answer: R => ({ lead: 'Your floor, for each hour someone pays for', big: cents(R.hourly), line: `That pays ${big(R.need.life / 12)} a month of life${R.need.health ? `, ${big(R.need.health / 12)} of health cover` : ''}${R.need.retire ? `, ${big(R.need.retire)} a year for later` : ''}${R.costsYear ? `, ${big(R.costsYear / 12)} a month of costs` : ''} and ${big(R.tax)} a year of tax, over ${hrs(R.hours.year)} of paid work (${R.hours.weeks} weeks of ${+R.hours.billableWeek.toFixed(1)} hours).`,

@@ -31,11 +31,11 @@ function draw(api) {
   const R = gigInvoicesOf(list(), today());
   let undo = api.mine().invoices_undo || null;
 
-  const box = (label, input, help) => h('div.st-field', {}, h('div.st-flabel', {}, label), h('div.st-box', {}, h('div.in', {}, input)), help ? h('div.st-small.st-soft', { style: { marginTop: '4px' } }, help) : null);
+  const box = (label, input, help) => h('div.st-field', {}, h('div.st-flabel', {}, label), h('div.st-box.narrow', {}, h('div.in', {}, input)), help ? h('div.st-small.st-soft', { style: { marginTop: '4px' } }, help) : null);
   const add = h('div.st-card', {}, h('h2', { style: { marginTop: 0 } }, 'Add an invoice'),
-    box('Who it is for', h('input', { type: 'text', id: 'f_client', autocomplete: 'off', placeholder: 'A client or a name you know them by', 'aria-label': 'Who it is for', value: draft.client, onInput: e => setDraft({ client: e.target.value }) })),
+    box('Who it is for', h('input', { type: 'text', id: 'f_client', autocomplete: 'off', placeholder: 'A short name', 'aria-label': 'Who it is for', value: draft.client, onInput: e => setDraft({ client: e.target.value }) })),
     numBox('The amount', draft.amount, [100, 250, 500, 1000, 2500], (v, typing) => setDraft({ amount: v }, !typing), { id: 'f_amount' }),
-    box('The day you sent it', h('input', { type: 'date', id: 'f_sent', 'aria-label': 'The day you sent it', value: draft.sent, onChange: e => setDraft({ sent: e.target.value }) })),
+    box('The day you sent it', h('input', { type: 'date', id: 'f_sent', style: 'width:100%;flex:1', 'aria-label': 'The day you sent it', value: draft.sent, onChange: e => setDraft({ sent: e.target.value }) })),
     h('div.st-field', {}, h('div.st-flabel', {}, 'When it is due'), h('div.st-chips', {}, GIG_TERMS.map(t => chip(termWords(t), draft.terms === t, () => setDraft({ terms: t }, true))))),
     h('div.st-row', { style: { marginTop: '10px' } }, btn('Add it', () => {
       const d = fresh();

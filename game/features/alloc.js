@@ -7,7 +7,8 @@
                1. While the real lines add up to less than the guess, the total stays the guess.
                   The rest is "not placed yet" and it is still a guess.
                2. When the real lines add up to more than the guess, the lines are the total.
-                  The extra shows as "over your guess" (amber for spending and debt).
+                  The player sees a plain choice: "Your categories add up to $X. Your first guess was
+                  $Y. Which is closer?" (allocPickBox). The guess shrinks the lines to the guess.
                3. The guess is one number.
                4. "That's all of it" removes the part that is not placed yet.
                An area is "done" when no guessed line is left. After that, the lines alone are the
@@ -19,8 +20,8 @@
                amount: the fill does not change it and does not remove it.
    STATE       c.al[area] = { g: the guess, done: true or false, over: amount, at: date }.
    INPUT       The profile c and its rows: c.incs, c.spends, c.debts, c.cashes, c.invs.
-   OUTPUT      allocArea, allocSplit, allocFill, allocFillAll, allocBar.
-               Action (ACT): allocall.
+   OUTPUT      allocArea, allocSplit, allocFill, allocFillAll, allocBar, allocPickBox, allocPick.
+               Actions (ACT): allocall, alpick.
    CALLED BY   screens/ui.js afterMoney (allocFillAll), moneyTabBase (allocBar);
                features/ask.js askSheet and askFinish (allocBar, allocFill).
    DEPENDS ON  core/engine.js (rsum, syncAll, todayISO), screens/ui.js (money, esc, ib).
@@ -122,11 +123,10 @@ function allocBar(c, k, rows, opt) {
     info = typeof ib === "function" ? ib("gloss:alloc") : "";
   if (s.done) {
     const fresh = s.over > 0 && (c.al[k].at || "") >= addDaysISO(todayISO(), -ALLOC_OVER_DAYS);
-    return fresh
-      ? `<div class="small alloc ${A.warn ? "fkhot" : "muted"}">${money(s.over)} ${A.over} of ${money(s.guess)}. ${info}</div>`
-      : "";
+    return fresh && !c.al[k].picked ? allocPickBox(k, s.guess + s.over, s.guess) : "";
   }
   if (!(s.guess > 0) && !s.placed) return "";
+  if (s.over > 0) return allocPickBox(k, s.placed, s.guess);
   /* My Money: no bar until something is placed, so an untouched area stays one quiet line */
   if (opt.slim && !(s.placed > 0)) return "";
   const pw = Math.min(100, (s.placed / Math.max(s.guess, s.placed, 1)) * 100),
@@ -142,6 +142,51 @@ function allocBar(c, k, rows, opt) {
         : "";
   return `<div class="alloc stack" style="gap:4px"><div class="tiny">Your ${A.n} guess: <b>${money(s.guess)}</b> ${info}</div><div class="allocbar"><i class="on ${s.over > 0 && A.warn ? "hot" : ""}" style="width:${pw}%"></i></div><div class="row between tiny"><span>${left}</span><span class="muted">${right}</span></div>${end ? `<div class="row" style="justify-content:flex-end">${end}</div>` : ""}</div>`;
 }
+/* The lines add up to more than the first guess: a plain choice, no warning. */
+function allocPickBox(k, lines, guess) {
+  const A = ALLOC[k],
+    lab = A.n === "spending" ? "categories" : "lines";
+  return `<div class="alloc stack allocpick" style="gap:6px"><div class="small">Your ${lab} add up to <b>${money(lines)}</b>. Your first guess was <b>${money(guess)}</b>. Which is closer?</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="ghost slim grow" data-a="alpick" data-k="${k}" data-v="lines">${money(lines)}, my ${lab}</button><button class="ghost slim grow" data-a="alpick" data-k="${k}" data-v="guess">${money(guess)}, my first guess</button></div></div>`;
+}
+/* The pick. "lines": the lines are the total. "guess": the lines shrink, in the same shares, to the guess. */
+function allocPick(c, k, which) {
+  const A = ALLOC[k],
+    a = allocArea(c, k),
+    rows = c[A.rows] || [],
+    sum = rsum(rows);
+  if (which === "guess" && sum > 0 && a.g > 0) {
+    let left = a.g;
+    rows.forEach((x, i) => {
+      x.amt = i === rows.length - 1 ? Math.max(0, left) : Math.round((x.amt * a.g) / sum / 10) * 10;
+      left -= x.amt;
+    });
+  } else a.g = sum;
+  a.done = true;
+  a.over = 0;
+  a.picked = true;
+  a.at = todayISO();
+}
+/* THE CHECK FOR INFLATED TOTALS (UX pass, item 1). A fast double tap answered the next question with the same
+   chip, so two or more lines in a row hold the same amount and the lines pass the first guess by half or more.
+   Returns the areas that look so, with the numbers, for the report. It changes nothing. */
+/* NO CALLER IN THIS REPOSITORY. tests/bugs-and-trust.js examines it, and the owner runs it on saved games. */
+function allocInflated(c) {
+  const out = [];
+  Object.keys(ALLOC).forEach(k => {
+    const rows = (c && c[ALLOC[k].rows]) || [],
+      a = c && c.al && c.al[k],
+      g = a && a.g > 0 ? a.g : 0,
+      placed = rows.filter(x => x.s).reduce((t, x) => t + (+x.amt || 0), 0);
+    let run = 1,
+      best = 1;
+    for (let i = 1; i < rows.length; i++) {
+      run = rows[i].s && rows[i - 1].s && rows[i].amt > 0 && rows[i].amt === rows[i - 1].amt ? run + 1 : 1;
+      best = Math.max(best, run);
+    }
+    if (g > 0 && placed >= g * 1.5 && best >= 2) out.push({ k, guess: g, lines: placed, same: best });
+  });
+  return out;
+}
 function addDaysISO(iso, n) {
   return new Date(Date.parse(iso) + n * 864e5).toISOString().slice(0, 10);
 }
@@ -149,6 +194,18 @@ function addDaysISO(iso, n) {
 /* session.html loads this file with no game screens (no ACT, GLOSS): only the fill (allocFillAll) runs there */
 if (typeof ACT !== "undefined")
   Object.assign(ACT, {
+    /* "Which is closer?": the lines, or the first guess (allocPick). */
+    alpick: t => {
+      const k = t.dataset.k,
+        c = C();
+      if (!ALLOC[k]) return;
+      allocPick(c, k, t.dataset.v);
+      const pr = D && D.realm;
+      if (typeof afterMoney === "function") afterMoney(c, pr, false);
+      else syncAll(c);
+      render();
+      if (SH) drawSheet();
+    },
     /* "That's all of it": the part that is not placed yet goes away, and the guess becomes the real total. */
     allocall: t => {
       const k = t.dataset.v,

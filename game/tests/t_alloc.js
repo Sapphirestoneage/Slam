@@ -86,8 +86,10 @@
   go("money");
   h = app();
   chk(
-    "spending over the guess shows in amber, with no red",
-    h.includes("$600 over your guess of $3,000") && /fkhot[^>]*>\$600 over your guess/.test(h)
+    "spending over the guess: a plain choice, no warning and no red",
+    h.includes("Your categories add up to <b>$3,600</b>. Your first guess was <b>$3,000</b>. Which is closer?") &&
+      h.includes('data-a="alpick"') &&
+      !/over your guess/.test(h)
   );
   // debt: a guessed line is not hidden when the real lines pass the guess
   const d = mk();
