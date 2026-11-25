@@ -10,6 +10,7 @@ import { categoriesOf, categoryJoyOf, rateCategoryJoy } from '../capture.js';
 import { maaserOf, KOSHER_NOTE } from '../community.js';
 import { drafttName } from '../math/spending.js';
 import { recalcParts } from './recalc-ui.js';
+import { creepCard, creepSection, paretoSection } from './enough-ui.js'; // run Not built, groups 1 to 5, Part 3
 import * as S from './staples.js';
 import { ownLineHidden } from '../privacy.js';
 import { ownPlanPerson } from '../registry/couples.js';
@@ -87,8 +88,9 @@ export function budgetScreen(app, ctx) {
   // Batch 10: the one-time note for a file whose untouched starter amounts turned faded.
   const fadedNote = doc.settings?.fadedNote ? h('div.slim-note', { role: 'status' }, h('span', {}, 'Starter amounts you never changed are now shown faded. Use them with one click, or type the real number.'),
     h('button.icon-btn.tiny', { type: 'button', 'aria-label': 'Close this note', 'data-tip': 'Close', onclick: () => ctx.store.setDoc('settings', { fadedNote: null }) }, icon('x'))) : null;
-  return [head('Budget', 'Every spending line, planned and actual', S.live(ctx, () => fillCounter(app, budgetCompletion(ctx), { core: true }) ?? h('span'))), fadedNote, passBar, strip, recalcParts(app, ctx, 'budget'), doc.session?.community ? S.sec('budget:community', { title: 'Community presets' }, () => S.live(ctx, () => communityCard(ctx))) : null, ...body, // batch 14: X of Y filled in the head
+  return [head('Budget', 'Every spending line, planned and actual', S.live(ctx, () => fillCounter(app, budgetCompletion(ctx), { core: true }) ?? h('span'))), fadedNote, passBar, strip, recalcParts(app, ctx, 'budget'), S.live(ctx, () => creepCard(app, ctx) ?? h('span')), doc.session?.community ? S.sec('budget:community', { title: 'Community presets' }, () => S.live(ctx, () => communityCard(ctx))) : null, ...body, // batch 14: X of Y filled in the head
     S.recordList(ctx, { ...irregularList(ctx.ref, { onWalk: a => walkIrregular(ctx, a) }), open: false }), // batch 13: secondary sections start closed
+    creepSection(ctx), paretoSection(ctx), // Lifestyle creep and the Pareto of spending (run Not built, groups 1 to 5, Part 3)
     S.sec('budget:joy', { title: 'Joy by category', summary: 'How much joy each category brings, for a later Wrapped' }, () => S.live(ctx, () => categoryJoyBlock(ctx)))]; // F6: captured for a later Wrapped
 }
 

@@ -8,6 +8,7 @@ import { goalsCompletion } from '../completion.js';
 import { h, clear, icon } from './dom.js';
 import { simpleMath } from '../math/simple.js';
 import * as S from './staples.js';
+import { enoughSection } from './enough-ui.js';
 import { recalcParts } from './recalc-ui.js';
 import { goalSuggestions } from '../whynow.js';
 import { futureDollars } from '../math/fi.js';
@@ -182,7 +183,8 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
   const fiLadder = S.secCard(ladderCard(ctx, m, gate), 'goals:fi-ladder', { summary: 'Lean, Coast, Barista, Regular, Chubby and Fat FI' });
   const lens = outsourceLens(ctx, m);
   const dests = destinationSections(ctx, m, gate); // run of Nov 25 2026: the destination views, the stress table, the pod
-  return reveal ? [revealCard(app, ctx, m), deals, fiSec, fiLadder, ...dests, lens] : [fiSec, deals, fiLadder, ...dests, lens];
+  const enough = enoughSection(ctx); // run Not built, groups 1 to 5, Part 3: Enough and room for error (Housel)
+  return reveal ? [revealCard(app, ctx, m), deals, fiSec, fiLadder, enough, ...dests, lens] : [fiSec, deals, fiLadder, enough, ...dests, lens];
 }
 
 // Batch 15, items 6 and 13: the known changes ahead, one line each ("Benefits end Jan 2027: your month changes by

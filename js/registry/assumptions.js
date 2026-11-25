@@ -139,6 +139,8 @@ export const ASSUMPTIONS = [
   { id: 'presets.realReturn.default', name: 'RealReturn', label: 'Return a year, after inflation', unit: 'pct', get: r => r.presets.realReturn.default, client: 'realReturn', source: 'Your Oct 28 answers (presets 6%, 7%, 8%, 12%)', date: '2026-10-28' },
   { id: 'presets.withdrawalRate.default', name: 'WithdrawalRate', label: 'Withdrawal rate', unit: 'pct', get: r => r.presets.withdrawalRate.default, client: 'withdrawalRate', source: 'Your Oct 28 defaults (3%, 4%, 4.7%, 5.2%)', date: '2026-10-28' },
   { id: 'presets.inflation.default', name: 'Inflation', label: 'Inflation (for the nominal view only)', unit: 'pct', get: r => r.presets.inflation.default, client: 'inflation', source: 'Your Oct 28 defaults (2%, 3%)', date: '2026-10-28' },
+  // Run Not built, groups 1 to 5, Part 3 (Nov 25 2026): the line a mutant expense crosses on Lifestyle creep (js/math/enough.js). A dated official figure, one tap among the person's own rates.
+  { id: 'cpi.value', name: 'CpiLastYear', label: 'Prices: CPI-U, December 2024 to December 2025', unit: 'pct', get: r => r.cpi.value, source: 'U.S. Bureau of Labor Statistics, CPI news release for December 2025 (Jan 13 2026), read through a web search Nov 25 2026', date: '2026-01-13' },
   { id: 'defaults.retireAge', name: 'RetireAge', label: 'Retire by (age)', unit: 'number', get: r => r.defaults.retireAge, client: 'retireAge', source: SPEC, date: '2026-11-03' },
   { id: 'client.investSurplus', name: 'InvestSurplus', label: 'Invest my surplus: 1 or blank yes, 0 no (the surplus sits in checking)', unit: 'number', get: () => 1, client: 'investSurplus', source: 'Plan › Goals (Nov 5 answer to 123; it was off by default on Nov 3)', date: '2026-11-05' },
   { id: 'client.debtFirst', name: 'DebtFirst', label: 'Heavy debt first: 1 or blank yes, 0 no (the surplus is invested or stays, as Invest my surplus says)', unit: 'number', get: () => 1, client: 'debtFirst', source: 'Plan › Goals (Batch 11 item 1)', date: '2026-11-05' },
@@ -556,6 +558,7 @@ export const REFERENCE_LISTS = {
   'presets.realReturn': 'the preset choices; the default is RealReturn',
   'presets.withdrawalRate': 'the preset choices; the default is WithdrawalRate',
   'presets.inflation': 'the preset choices; the default is Inflation',
+  cpi: 'the dated CPI figure of Lifestyle creep (its value is CpiLastYear): the period, the series, the source and the date of the release',
   'limits.401k.appliesTo': 'which account types the 401(k) limit covers',
   'limits.ira.appliesTo': 'which account types the IRA limit covers',
   'limits.commuterNote': 'a note on the commuter limit',

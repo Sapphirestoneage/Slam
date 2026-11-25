@@ -194,6 +194,7 @@ export const AREAS = [
       pick('settings.dollars', "Plan shows today's or future dollars", ['real', 'nominal'], { part: 'settings', key: 'dollars' }),
       f('settings.debtExtra', 'Extra to debt a month (Make it the plan on Home)', 'money', { part: 'settings', key: 'debtExtra' }), // batch 11 (item 3)
       f('settings.phase4', 'Phase 4 previews on (Life Transitions on Plan)', 'yesno', { part: 'settings', key: 'phase4' }), // batch 21: Coach tools › Session; on for new households in this build
+      f('settings.enough', 'Lifestyle creep and enough: the choices tapped', 'text', { part: 'settings', key: 'enough', sheet: { skip: 'screen choices on Budget and Goals (the rate prices grew, an income guess, the life called enough, the room for error), not money inputs of the plan' } }), // run Not built, groups 1 to 5, Part 3
       f('client.couple', 'Couple (from Solo or couple)', 'yesno', { part: 'client', key: 'couple', sheet: { skip: 'set by Solo or couple' } }),
     ],
   },

@@ -281,6 +281,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-25",
+    t: "Lifestyle creep, the few lines, and your enough number",
+    l: [
+      "See each kind of spending this year next to last year, and next to your income. Lines that grow faster than prices get a small tag. Tap the rate of prices: the official CPI figure, or your own.",
+      "When spending grows faster than income, one quiet card says Recalculating and shows the one line to hold.",
+      "The few lines that make 80% of your spending, biggest first.",
+      "Your enough number, with room for error on top, and about when you get there.",
+      "Rough numbers: one switch shows a range in place of each exact amount, for a screen someone else can see. Your numbers stay as they are.",
+    ],
+  },
+  {
+    d: "2026-11-25",
     t: "Student loans: PSLF, refinancing and each year's rate",
     l: [
       "Student loan plans now shows your household size, and you can tap the size on your loan papers.",

@@ -7,6 +7,7 @@
 import { profileCompletion } from './profile-completion.js';
 import { listCompletion, budgetCompletion, paidInFull, protectionCompletion } from './completion.js';
 import { statusOf } from './records.js';
+import { money } from './format.js';
 import { isCategoryRecord, categoryKeyOf, categoryTypicalOf } from './math/spending.js';
 import { whyAnswered } from './whynow.js';
 import { defaultFilingStatus } from './math/income.js';
@@ -19,7 +20,7 @@ import { typicalCardLimit } from './math/proposed.js';
 export const SESSION1_COVERAGE = ['Health', 'Life'];
 export const inSessionOne = doc => (doc.session?.count || 0) === 0;
 // The money words for a typical choice ("Use typical $2,480").
-const dollars = v => `$${Math.round(v).toLocaleString('en-US')}`;
+const dollars = v => money(v); // the one formatter: Rough numbers applies
 
 // Each About you core answer: its box and its key in profile.later (Will get it).
 const PROFILE_BOX = {

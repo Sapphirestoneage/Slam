@@ -1187,6 +1187,23 @@ const WB = [
   ["biz", "A city edition, and a stand-alone lever link with a result to share", "n", null, "Not built.", null],
   [
     "see",
+    "Lifestyle creep and enough: spending next to income over the years, the few lines, your enough number, Rough numbers",
+    "b",
+    () =>
+      WB_HAS("enough") &&
+      WB_HAS("enpick") &&
+      WB_HAS("roughset") &&
+      WB_FN("enCreep") &&
+      WB_FN("enPareto") &&
+      WB_FN("enEnough") &&
+      WB_FN("enRough") &&
+      WB_FN("roughRow") &&
+      typeof EN_CPI === "object",
+    "Each category of your money log, this year next to last year and next to your income, with the lines that grow faster than prices (the CPI figure or your own rate) and one quiet Recalculating card. The few lines that make 80% of your spending. Your enough number with room for error. Rough numbers shows ranges in place of exact amounts, one switch on Me.",
+    "enough",
+  ],
+  [
+    "see",
     "Your unpaid jobs: the six jobs of running your money, admin hours, and the four ways out",
     "b",
     () =>

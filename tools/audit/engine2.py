@@ -1361,6 +1361,65 @@ def run(cases, ref, il=None):
             better = max(1, int(math.floor(pct + 0.5))) if living > 0 else 0
             ck('total', o['total'], total, 0); ck('state', o['st'] == st, True); ck('living', o['living'], living, 1e-9); ck('running', o['running'], max(0, total - living), 1e-9); ck('better', o['better'], better, 0)
             for k, t in enumerate(x['tasks']): ck('monthly ' + t['id'], o['monthly'][k], t['per'] * t['times'] / 12, 1e-9)
+        elif fn == 'enCreep':
+            # by months first: each month's total, then each year is the months that hold spending
+            out_m, inc_y, cat_y = defaultdict(float), defaultdict(float), defaultdict(lambda: defaultdict(float))
+            months_y, has_inc = defaultdict(set), set()
+            for r in x['rows']:
+                y, ym = r['d'][:4], r['d'][:7]
+                if r['kind'] == 'in': inc_y[y] += r['amt']; has_inc.add(y); continue
+                out_m[ym] += r['amt']; months_y[y].add(ym); cat_y[y][r['cat']] += r['amt']
+            years = sorted(y for y in months_y if len(months_y[y]) >= 3)
+            if len(years) < 2:
+                ck('not ready', o['ready'], False)
+            else:
+                p_, n_ = years[-2], years[-1]
+                mp, mn = len(months_y[p_]), len(months_y[n_])
+                sp, sn = sum(v for k, v in out_m.items() if k[:4] == p_) / mp, sum(v for k, v in out_m.items() if k[:4] == n_) / mn
+                ck('years', o['prev'] * 10000 + o['now'], int(p_) * 10000 + int(n_), 0)
+                g = sn / sp - 1 if sp > 0 else None
+                ck('spending growth', o['spendGrowth'], g, 1e-6)
+                ip = inc_y[p_] / mp if p_ in has_inc else None; inn = inc_y[n_] / mn if n_ in has_inc else None
+                ig = inn / ip - 1 if ip and inn is not None and ip > 0 else x['incomeGrowth']
+                ck('income growth', o['income'], ig, 1e-6)
+                alert = g is not None and ig is not None and g > 0 and g > ig
+                ck('the alert', o['alert'], alert)
+                if alert: ck('the gap a month', o['gap'], sn - sp * (1 + ig), 0.02)
+                infl = x['inflation']
+                for c in o['cats']:
+                    was = cat_y[p_].get(c['cat'], 0) / mp if c['cat'] in cat_y[p_] else 0
+                    is_ = cat_y[n_].get(c['cat'], 0) / mn if c['cat'] in cat_y[n_] else 0
+                    ck('a category last year', c['was'], was, 0.011); ck('a category this year', c['is'], is_, 0.011)
+                    over = None if infl is None or not was > 0 else is_ - was * (1 + infl)
+                    ck('past inflation', c['over'], over, 0.02)
+                    mut = over is not None and is_ / was - 1 > infl and over >= 10 - 0.005
+                    ck('faster than prices', c['mutant'], mut)
+        elif fn == 'enPareto':
+            L = sorted([l['amt'] for l in x['lines'] if l['amt'] > 0], reverse=True)
+            if len(L) < 3: ck('not ready', o['ready'], False)
+            else:
+                tot = sum(L); k = 0; run_ = 0
+                while run_ < 0.8 * tot - 1e-9: run_ += L[k]; k += 1
+                ck('the few lines', o['count'], k, 0); ck('total', o['total'], tot, 0.02); ck('their total', o['topTotal'], run_, 0.02)
+        elif fn == 'enEnough':
+            if x['fi'] is None: ck('no number', o['value'], None)
+            else:
+                val = x['fi'] * x['share']; room = val * (1 + x['room']) if x['room'] is not None else None
+                ck('enough number', o['value'], val, 0.02); ck('with room', o['withRoom'], room, 0.02)
+                if x['have'] is not None: ck('left', o['left'], max(0, (room if room is not None else val) - x['have']), 0.02); ck('past', o['past'], x['have'] >= val - 0.005)
+        elif fn == 'enRough':
+            v = x['v']; a = abs(v)
+            def short(n): return f"${n // 1000000}M" if n >= 1000000 and n % 1000000 == 0 else (f"${n / 1000000:g}M" if n >= 1000000 else (f"${n // 1000}k" if n % 1000 == 0 and n >= 1000 else (f"${n / 1000:g}k" if n >= 1000 else f"${n}")))
+            if a < 0.5: want = '$0'
+            else:
+                if a < 100: lo, hi = 0, 100
+                else:
+                    p10 = 10 ** (len(str(int(a))) - 1); lo = (int(a) // p10) * p10; hi = lo + p10
+                want = f"{short(lo)} to {short(hi)}" if v >= 0 else f"-{short(lo)} to -{short(hi)}"
+            ck('the range', o['text'] == want, True)
+        elif fn == 'enStepCreep':
+            a, b = x['a'], x['b']; sg = b['spend'] / a['spend'] - 1; tg = b['take'] / a['take'] - 1 if a['take'] > 0 else None
+            ck('creep between two looks', o['up'], sg >= 0.05 and (tg is None or tg < sg))
         elif fn == 'jobCarry':
             # by people, not by jobs: each person gathers their part of each job and of each task handed to them
             ids = ['cfo', 'accountant', 'planner', 'insurance', 'health', 'deals']
