@@ -1,9 +1,10 @@
 /* ============================================================================
    SLAM the Game, test: tests/working-for-yourself.js
-   PURPOSE     Examine Working for yourself: tax first, your unit, your floor.
+   PURPOSE     Examine Working for yourself: tax first, your unit, your floor (with weeks off), and More:
+               the invoice tracker and Profit First (run Not built, groups 1 to 5, Part 5).
    INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
    OUTPUT      One result for each chk() call. The harness prints each failed check.
-   DEPENDS ON  tests/harness.cjs. Examines: features/gig.js.
+   DEPENDS ON  tests/harness.cjs. Examines: features/gig.js, core/gigcore.js.
    ========================================================================= */
 {
   const n0 = G.chars.length,
@@ -209,6 +210,101 @@
   );
   X("gxset", "4", "per");
   chk("fewer a month raises the floor", gxFloor(C(), gxGig(C()), 30).floor === 500);
+  // run Not built, groups 1 to 5, Part 5: weeks off, one formula with the web app's floor (core/gigcore.js)
+  X("gxset", "4", "off");
+  {
+    const g = gxGig(C()),
+      F2 = gxFloor(C(), g, 30),
+      byHand = 1400 / 0.7 / ((4 * 48) / 52) + g.cost;
+    chk(
+      "four weeks off: the other 48 weeks carry the year (by hand)",
+      g.off === 4 && F2.floor === Math.ceil((byHand - 1e-6) / 5) * 5 && F2.weeks === 48 && F2.floor > 500,
+      JSON.stringify(F2)
+    );
+    X("gig", "floor");
+    chk(
+      "the floor tab asks for weeks off and says so in the math",
+      ov().includes("Weeks a year with no work") && ov().includes("48 weeks")
+    );
+    X("gxset", "0", "off");
+    chk("no weeks off gives the old floor again", gxFloor(C(), gxGig(C()), 30).floor === 500);
+  }
+  // the invoice tracker (More)
+  X("gig", "more");
+  chk(
+    "More opens on the invoices, with a box to add one",
+    W.tab === "more" && ov().includes("Add an invoice") && ov().includes("Tap an amount first") && clean(ov()),
+    junk(ov())
+  );
+  X("gxinv", "500", "amt");
+  X("gxinv", "15", "terms");
+  W.o.gxinvn = "Acme";
+  X("gxinvadd");
+  const iv = C().x.invoices;
+  chk(
+    "an invoice is kept on the profile: the name, the amount, today, 15 days",
+    iv.length === 1 &&
+      iv[0].client === "Acme" &&
+      iv[0].amount === 500 &&
+      iv[0].sent === todayISO() &&
+      iv[0].terms === 15 &&
+      iv[0].paid === null &&
+      W.o.gxinvn === ""
+  );
+  C().x.invoices.push({ id: "old", client: "Bee", amount: 300, sent: "2020-01-01", terms: 30, paid: null });
+  X("gxmore", "inv");
+  chk(
+    "one past its date: the tiles, the pill, a calm next step and no blame words",
+    ov().includes("Still coming") &&
+      ov().includes("$800") &&
+      ov().includes("Past its date") &&
+      ov().includes("A calm next step") &&
+      ov().includes("a payment plan") &&
+      !/overdue|delinquent|failed|deadbeat|behind/i.test(ov()) &&
+      clean(ov()),
+    junk(ov())
+  );
+  X("gxinvpaid", "old");
+  chk(
+    "Mark paid keeps the day",
+    C().x.invoices.find(i => i.id === "old").paid === todayISO() && gxInvState(C()).past === 0
+  );
+  X("gxinvdel", iv[0].id);
+  chk("Remove takes it off and offers Undo", C().x.invoices.length === 1 && ov().includes("Undo: put back Acme"));
+  X("gxinvundo");
+  chk("Undo puts it back", C().x.invoices.length === 2 && !ov().includes("Undo: put back"));
+  // Profit First on the side income
+  X("gxmore", "pf");
+  chk(
+    "Profit First: the book's sample on the $2,000 of side income",
+    ov().includes("The book's sample") &&
+      ov().includes("$1,000") &&
+      ov().includes("$100") &&
+      ov().includes("$300") &&
+      ov().includes("$600") &&
+      clean(ov()),
+    junk(ov())
+  );
+  X("gxpf", "mine", "mode");
+  X("gxpf", String(gxPct(C()) / 100), "tax");
+  chk(
+    "my own split: the tax share can be my set-aside, and what has no place shows",
+    C().x.pf.mode === "mine" && C().x.pf.tax === gxPct(C()) / 100 && ov().includes("My set-aside") && clean(ov()),
+    junk(ov())
+  );
+  X("gxpf", "sample", "mode");
+  const gcp = require("child_process").spawnSync(
+    process.execPath,
+    [GAME_DIR + "../tools/game_gig_build.mjs", "--check"],
+    { encoding: "utf8" }
+  );
+  chk("core/gigcore.js is the same code as js/math/gig.js of the main app", gcp.status === 0, gcp.stdout);
+  chk(
+    "the shared math by hand: invoices and the split",
+    gigInvoicesOf([{ id: 1, amount: 100, sent: "2026-01-01", terms: 30 }], "2026-03-02").rows[0].daysPast === 30 &&
+      gigNudgeOf(30).id === "call" &&
+      gigProfitFirstOf({ income: 1000 }).of.owner === 500
+  );
   chk(
     "the checklist has the three rows, all passing",
     btRows().filter(r => /Working for yourself|Your unit|What one gig/.test(r.n)).length === 3 &&

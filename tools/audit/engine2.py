@@ -694,6 +694,82 @@ def il_points(il, resident, year):
     return resident + sum(per[(year - 1) * 12:year * 12]) / 12
 
 
+def gig_check(fn, x, o, ck, law):
+    """Gig and self-employed (M8G), worked out again: the floor's profit as a check that it leaves the need, the stacked
+    set-aside by hand, the retirement limits from their definitions, invoice dates with the date library, apps and the split."""
+    import datetime
+    places = {'ny': {'state': 'NY', 'nyc': False}, 'nyc': {'state': 'NY', 'nyc': True}}
+    if fn == 'gigRate':
+        pl = places.get(x['place'])
+        need = x['takeHome'] * 12 + x['health'] * 12 + x['retire']
+        ck('need', o['need'], need)
+        ck('the profit leaves the need after tax', need, law.take_home(o['profit'], 0, 0, x['filingStatus'], True, pl), 1.5)
+        hours = x['hoursWeek'] * min(1, x['billable']) * (52 - x['weeksOff'])
+        ck('floor an hour', o['hourly'], (o['profit'] + x['costs'] * 12) / hours, 1e-6)
+        ck('floor a job', o['unit'], (o['profit'] + x['costs'] * 12) / hours * x['unitHours'] if x['unitHours'] else None, 1e-6)
+    elif fn == 'gigSetAside':
+        t, k = law.t, key_of(x['filingStatus'])
+        w, se = x['wages'], x['profit'] * 0.9235
+        cap, over = t['socialSecurityWageBase'], t['additionalMedicareOver'][k]
+        ss = (min(w + se, cap) - min(w, cap)) * 0.124
+        med = se * 0.029
+        extra = (max(0.0, w + se - over) - max(0.0, w - over)) * 0.009
+        half = (ss + med) / 2
+        std, br = t['standardDeduction'][k], t['brackets'][k]
+        job_in = max(0.0, w - x['pretax']) if w > 0 else 0.0
+        fed = stepped(max(0.0, job_in + x['profit'] - half - std), br)[0] - stepped(max(0.0, job_in - std), br)[0]
+        st = 0.0
+        if x['place']:
+            S = t['state']['NY']
+            s_in = lambda g: max(0.0, g - S['standardDeduction'][k])
+            st = stepped(s_in(job_in + x['profit']), S['brackets'][k])[0] - stepped(s_in(job_in), S['brackets'][k])[0]
+            if x['place'] == 'nyc':
+                C = t['local']['NYC']['brackets'][k]
+                st += stepped(s_in(job_in + x['profit']), C)[0] - stepped(s_in(job_in), C)[0]
+        total = fed + ss + med + extra + st
+        ck('self-employment tax', o['se'], ss + med + extra); ck('the year', o['yearly'], total); ck('a share of each dollar', o['rate'], total / x['profit'], 1e-9)
+        ck('to move so far', o['toMove'], max(0.0, x['earned'] * total / x['profit'] - x['set']) if x['earned'] is not None else None, 0.01)
+    elif fn == 'gigRetire':
+        L, p = x['limits'], x['profit']
+        net = p * 0.9235
+        half = (min(net, law.t['socialSecurityWageBase']) * 0.124 + net * 0.029) / 2
+        base = max(0.0, p - half); comp = min(base, L['compCap'])
+        employer = comp * 0.25 / 1.25
+        a = x['age']; cu = L['catchUp60to63'] if 60 <= a <= 63 else L['catchUp50'] if a >= 50 else 0
+        defer = min(max(0.0, L['deferral'] - x['deferredAtJob']), base)
+        main = min(defer + employer, L['total'], base)
+        solo = main + min(cu, max(0.0, base - main)); sep = min(employer, L['total']); ira = min(L['ira'] + (L['iraCatchUp50'] if a >= 50 else 0), base)
+        ck('half the self-employment tax', o['seHalf'], half); ck('Solo 401(k)', o['solo'], solo); ck('SEP', o['sep'], sep); ck('IRA', o['ira'], ira)
+        wnt = x['want']
+        first = None if base <= 0 else ('solo' if solo > sep else 'sep') if wnt is None else 'ira' if wnt <= ira else 'sep' if wnt <= sep else 'solo'
+        ck('which first', o['first'] == first, True)
+    elif fn == 'gigInvoices':
+        D = lambda s: datetime.date.fromisoformat(s)
+        today = D(x['today']); waiting = past = got = 0.0; ages = [0.0] * 4; days = {}; paid_days = []
+        for i in x['list']:
+            due = D(i['due']) if i.get('due') else D(i['sent']) + datetime.timedelta(days=i['terms'])
+            if i.get('paid'):
+                got += i['amount']; paid_days.append((D(i['paid']) - D(i['sent'])).days); days[str(i['id'])] = 0
+            elif today > due:
+                n = (today - due).days; days[str(i['id'])] = n; waiting += i['amount']; past += i['amount']
+                ages[0 if n <= 30 else 1 if n <= 60 else 2 if n <= 90 else 3] += i['amount']
+            else:
+                days[str(i['id'])] = 0; waiting += i['amount']
+        ck('still coming', o['waiting'], waiting); ck('past its date', o['past'], past); ck('paid', o['got'], got)
+        for b in range(4):
+            ck(f'age band {b + 1}', o['ages'][b], ages[b])
+        for key, n in days.items():
+            ck(f'days past, invoice {key}', o['days'][key], n, 0)
+        ck('days to get paid', o['avg'], sum(paid_days) / len(paid_days) if paid_days else None, 1e-9)
+    elif fn == 'gigApps':
+        apps = x['apps']; earned = sum(a['earned'] for a in apps)
+        ck('all of it', o['all'], earned + x['cash']); ck('tips', o['tips'], sum(min(a['earned'], a['tips']) for a in apps) + x['cash'])
+        landed = [a for a in apps if a['landed'] is not None]
+        ck('gap to the bank', o['gap'], sum(max(0, a['earned'] - a['fee']) - a['landed'] for a in landed) if landed else None)
+        P = x['pcts']; tot = sum(P.values())
+        ck('pay to you', o['owner'], x['income'] * P['owner'] if tot <= 1 + 1e-9 else None); ck('no place yet', o['left'], x['income'] * (1 - tot) if tot <= 1 + 1e-9 else None)
+
+
 def quick_check(fn, x, o, ck, law):
     """The quick calculators (M8Q), worked out again: closed forms where SLAM steps, and the other way round."""
     def fv(start, monthly, rate, n):
@@ -1153,6 +1229,8 @@ def run(cases, ref, il=None):
             if not edge:
                 ck('breakeven year', o['year'], first_year, 0); ck('renting cheaper the whole time', o['never'], first_year is None)
             ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
+        elif fn in ('gigRate', 'gigSetAside', 'gigRetire', 'gigInvoices', 'gigApps'):
+            gig_check(fn, x, o, ck, law)
         elif fn in ('qcHysa', 'qcDca', 'qcSmall', 'qcInflation', 'qcStart', 'qcAdd', 'qcJobless', 'qcConsolidate', 'qcLeave', 'qcRoommates', 'qcW4', 'qcGlance'):
             quick_check(fn, x, o, ck, law)
         elif fn == 'careerRoi':
