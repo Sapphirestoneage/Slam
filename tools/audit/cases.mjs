@@ -13,6 +13,7 @@ import { ilIncomeTaxOf, ilNationalInsuranceOf, olimPointsOf, aliyahOf } from '..
 import { RULES } from '../../js/registry/assumptions.js';
 import { hbRun, hbBreakeven, hbPriceToRent, hbFivePercent } from '../../js/math/homebuy.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
+import { tpCost, tpPoints, tpSplit, tpJourney } from '../../js/math/trip.js';
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
 import { snOutside, snFixCheck, SN_RULES } from '../../js/math/sins.js';
 import { Store, newHousehold } from '../../js/records.js';
@@ -99,6 +100,16 @@ for (let i = 0; i < N; i++) {
       rent: money(500, 7000), rentIns: pick([0, 12, 25]), rentGrowthPct: pick([0, 2, 3, 3.5, 4, 6]), homeGrowthPct: pick([-1, 0, 2, 3, 5]), closingPct: pick([0, 2, 3, 5]), sellingPct: pick([0, 5, 6, 8]), retPct: pick([0, 4, 6, 7, 9]) };
     const r = hbRun({ ...x, stay: 30 }), b = hbBreakeven(x);
     add('homeBuy', x, { pmt: r.pmt, first: r.first, rent1: r.firstRent.total, pmiMonths: r.pmiMonths, ahead: r.byYear.map(y => y.ahead), ownOut: r.byYear.map(y => y.ownOut), rentOut: r.byYear.map(y => y.rentOut), year: b.year, never: b.never, ratio: hbPriceToRent(x.price, x.rent), five: hbFivePercent(x.price, x.rent).line, rentLess: hbFivePercent(x.price, x.rent).rentLess }); }
+  // Travel (js/math/trip.js, M8T): a trip line by line, points, a group split by share and by item, the journey map
+  { const opt = v => (rnd() < 0.15 ? null : v), x = { flights: opt(money(0, 4000)), lodging: opt(money(0, 500)), days: opt(whole(1, 21)), nights: rnd() < 0.3 ? whole(0, 20) : null, food: opt(money(0, 200)), visa: opt(pick([0, 25, 160])), insurance: opt(money(0, 500)), other: opt(money(0, 1500)),
+      fxPct: opt(pick([0, 1, 2.5, 3])), fxOn: pick([undefined, [], ['flights'], ['lodging', 'food'], ['lodging', 'food', 'other']]), pointsOff: rnd() < 0.3 ? money(0, 3000) : null }, T = tpCost(x);
+    add('tripLines', x, { lines: T.lines.map(l => l.amount), fx: T.fx.amount, gross: T.gross, pointsOff: T.pointsOff, total: T.total, open: T.open.length, ready: T.ready }); }
+  { const x = { cash: money(50, 3000), points: whole(1000, 150000), fees: pick([0, 5.6, 50, 200]), cpp: pick([0.5, 1, 1.25, 1.5, 2]) }, P = tpPoints(x); add('tripPoints', x, { got: P.got, worth: P.worth, spend: P.spend, keep: P.keep, lead: P.lead }); }
+  { const n = whole(2, 6), people = Array.from({ length: n }, (_, i) => ({ id: `p${i}`, name: `P${i}`, shares: pick([null, 1, 1, 2, 3]) })), how = pick(['share', 'item']),
+      items = Array.from({ length: whole(1, 6) }, (_, i) => ({ id: `i${i}`, name: `L${i}`, amount: Math.round(rnd() * 300000) / 100, among: rnd() < 0.4 ? null : people.filter(() => rnd() < 0.6).map(p => p.id) })), total = how === 'share' && rnd() < 0.5 ? Math.round(rnd() * 900000) / 100 : null, S = tpSplit({ people, how, items, total });
+    add('tripSplit', { people, how, items, total }, { parts: S.parts.map(p => p.amount), total: S.total }); }
+  { const kn = v => (rnd() < 0.1 ? null : v), x = { cash: kn(money(0, 30000)), debt: kn(pick([0, 0, money(100, 40000)])), invested: kn(money(0, 1500000)), coast: kn(money(10000, 600000)), fi: kn(money(200000, 2500000)), monthly: pick([null, 0, money(50, 6000)]), trip: pick([null, money(100, 15000)]) }, J = tpJourney(x);
+    add('tripJourney', x, { done: J.stages.map(s => s.done), months: J.stages.map(s => s.months), after: J.stages.map(s => (s.after ? [s.after.done, s.after.months] : null)), here: J.here, fromCash: J.fromCash, shift: J.monthsOfSaving }); }
   // Career and education (js/math/career.js, M9Z): one path priced, the stack's overlaps, the match left behind, the launch window
   { const x = { cost: money(200, 150000), help: pick([0, 0, 1000, 5000]), months: pick([0, 3, 6, 12, 18, 48]), keepPct: pick([0, 50, 100]), payBefore: money(15000, 200000), payAfter: money(15000, 260000), taxPct: pick([0, 10, 12, 22, 24, 32, 35]),
       loan: pick([0, 0, 5000, 30000]), loanRatePct: pick([0, 4, 6.5, 9]), loanYears: pick([5, 10, 20]), age: whole(18, 55), endAge: pick([55, 60, 65, 70]) }, r = crRoi(x);

@@ -207,6 +207,17 @@ const PATCH_NOTES = [
       "The launch window: a job hop, Roth or traditional now, and a house hack, each as days on your freedom date.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Trips and the journey",
+    l: [
+      "Menu has Trips and the journey: add up a trip line by line, with flights, lodging, food a day, your card's fee on other currencies, visa fees and travel insurance.",
+      "Points or cash: see the cents a point a redemption gets next to what a point is worth to you, and take the points off the trip in one tap.",
+      "Going with others? Split the trip by share or by item, in one currency, and see each person's part.",
+      "The FIRE journey map: digging out, the first thousand saved, debt free, a hundred thousand, Coast and FI, where you are, and how the trip moves you, in days on your freedom date.",
+      "The web page What does this trip really cost? has all of it too.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */
