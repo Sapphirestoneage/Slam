@@ -102,3 +102,23 @@ export function lifeChart(run, retireAge) {
   read(Math.max(0, at));
   return h('div', {}, chart, legend([['taxable', 'Reachable any time'], ['pretax', 'Taxed later'], ['roth', 'Never taxed again']]), h('label.st-small.st-soft', {}, 'Drag to any age'), slider, out);
 }
+
+// ---------- compare the ways: spending each year from one real start year, one line for each way ----------
+// lines: [{ name, pts: [[age, spend a year]] }], at most three. Each line has its own color and its own stroke (solid,
+// dashed, dotted), so color is never the only cue, and the lowest and highest month of each line is said in words.
+const WAY_STROKES = [['n1', ''], ['n2', '9 6'], ['n3', '2 5']];
+export function waysChart(lines, year) {
+  const W = 360, H = 230, L = 48, R = 10, T = 14, B = 28, all = lines.flatMap(l => l.pts);
+  if (!all.length) return null;
+  const a0 = Math.min(...all.map(p => p[0])), a1 = Math.max(...all.map(p => p[0])), top = Math.max(...all.map(p => p[1] / 12), 1) * 1.08;
+  const X = a => L + (W - L - R) * (a1 > a0 ? (a - a0) / (a1 - a0) : 0), Y = v => T + (H - T - B) * (1 - v / top);
+  const ages = [a0, Math.round((a0 + a1) / 2), a1];
+  const chart = svg(W, H, `Spending each month if work had stopped in ${year}, for ${lines.map(l => l.name).join(', ')}`,
+    [0.25, 0.5, 0.75, 1].map(t => top / 1.08 * t).map(t => [s('line', { x1: L, x2: W - R, y1: Y(t), y2: Y(t), class: 'st-c-grid' }), s('text', { x: L - 6, y: Y(t) + 4, class: 'st-c-axis', 'text-anchor': 'end' }, short(t))]),
+    lines.map((l, i) => s('path', { d: l.pts.map((p, k) => `${k ? 'L' : 'M'}${X(p[0]).toFixed(1)},${Y(p[1] / 12).toFixed(1)}`).join(' '), class: `st-c-debtline ${WAY_STROKES[i % 3][0]}`, 'stroke-dasharray': WAY_STROKES[i % 3][1] || null })),
+    ages.map((a, i) => s('text', { x: X(a), y: H - 8, class: 'st-c-axis', 'text-anchor': i === 2 ? 'end' : i ? 'middle' : 'start' }, `Age ${a}`)));
+  const key = h('div.st-legend', {}, lines.map((l, i) => h('span', {}, h('span.st-waykey', {}, s('svg', { viewBox: '0 0 28 8', width: 28, height: 8, 'aria-hidden': 'true' }, s('line', { x1: 0, x2: 28, y1: 4, y2: 4, class: `st-c-debtline ${WAY_STROKES[i % 3][0]}`, 'stroke-dasharray': WAY_STROKES[i % 3][1] || null }))), l.name)));
+  const words = h('ul.st-small', { style: { margin: '0', paddingLeft: '18px' } }, lines.map(l => { const v = l.pts.map(p => p[1] / 12), lo = Math.min(...v), hi = Math.max(...v);
+    return h('li', {}, h('b', {}, `${l.name}: `), hi - lo < 1 ? `${money(hi)} a month, every year.` : `from ${money(v[0])} a month in year one, as low as ${money(lo)} and as high as ${money(hi)}.`); }));
+  return h('div', {}, chart, key, words);
+}

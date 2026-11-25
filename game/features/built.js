@@ -58,6 +58,14 @@ const WB = [
     "Not built. Opt-in setting for shared phones, since this is money data.",
     null,
   ],
+  [
+    "feel",
+    "Coming soon: a part that is not ready never shows as a broken screen",
+    "b",
+    () => WB_FN("soonTap") && WB_FN("soonDraw") && WB_FN("soonRun") && WB_FN("soonHTML"),
+    "A tap that has no action yet, or a screen that cannot draw, shows one calm card and a way back. The error is still recorded for Eli.",
+    null,
+  ],
   ["in", "Setup by taps, no typing", "b", () => WB_HAS("start") && WB_FN("finishSetup"), "", null],
   ["in", "Make a guess real: Guess, Close, Exact", "b", () => WB_HAS("sharp"), "", "sharp"],
   [
@@ -805,6 +813,21 @@ const WB = [
     () => WB_HAS("windfall") && WB_FN("windCalc") && WB_FN("windBook"),
     "The extra money goes down the same order as your two paths, with the dollars for each step.",
     "windfall",
+  ],
+  [
+    "plan",
+    "Compare the ways: the 4% rule, guardrails and each other way to take money out, side by side",
+    "b",
+    () =>
+      WB_HAS("takeout") &&
+      WB_FN("cmpTab") &&
+      WB_FN("cmpRow") &&
+      WB_FN("waySpend") &&
+      WB_FN("cmpBook") &&
+      typeof WAYS === "object" &&
+      WAYS.length > 30,
+    "The same plan through each way to take money out, in families with variants. Each row has the spending of year one, the random markets and real start years that work, the hardest start year, the cuts, the money left and the age work can stop. Sort, filter, pin 3 rows, and one chart from the start year 1966.",
+    "takeout",
   ],
   [
     "plan",

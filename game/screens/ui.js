@@ -2534,7 +2534,12 @@ let SEEN = {},
 /* DRAW THE SCREEN.
    render() is the full function. It calls each part by name.
    renderBase() is the part from this file: the top bar, the open tab, and the tab bar. */
+/* render() draws the main screen. renderAll() is the full draw. If a part of it throws, soon.js puts the card
+   "Coming soon" in the place of the screen, and the error is recorded. */
 function render() {
+  soonRun(renderAll, "ui.js: render", "#app");
+}
+function renderAll() {
   const wel = typeof renderUxStart === "function" ? renderUxStart() : false; /* ux.js: a new player stays on Home */
   /* planner.js: tidy the plan. On the tab "plan", it also draws the screen and returns true. */
   const drawn = typeof renderPlan === "function" ? renderPlan() : false;
@@ -5219,7 +5224,7 @@ function drawSheetBase() {
     (W && (W.kind === "skill" || W.kind === "node")) || SH === glossarySheet
       ? `<div class="tiny muted">${EDU}</div>`
       : "";
-  el.innerHTML = `<div class="overlay"><div class="sheet stack">${SH()}${foot}</div></div>`;
+  el.innerHTML = `<div class="overlay"><div class="sheet stack">${soonDraw(SH, "ui.js: drawSheetBase")}${foot}</div></div>`;
   const nw = el.querySelector ? el.querySelector(".sheet") : null;
   if (nw) nw.scrollTop = sc;
   if (nw && nw.querySelectorAll) {
@@ -6487,13 +6492,13 @@ if (typeof document !== "undefined") {
   document.addEventListener("click", e => {
     const t = e.target.closest("[data-a]");
     if (!t || t.disabled) return;
-    const f = ACT[t.dataset.a];
-    if (f) f(t);
+    /* soon.js: runs ACT[name]. A tap with no action, or an action that throws, shows "Coming soon". */
+    soonTap(t.dataset.a, t);
   });
   document.addEventListener("keydown", e => {
     if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("g[data-a]")) {
       e.preventDefault();
-      ACT[e.target.dataset.a](e.target);
+      soonTap(e.target.dataset.a, e.target);
     }
   });
   render();

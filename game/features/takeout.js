@@ -1,6 +1,7 @@
 /* ============================================================================
    SLAM the Game: features/takeout.js
-   PURPOSE     Taking money out. Four answers on one sheet, each from the numbers the game already has.
+   PURPOSE     Taking money out. Four answers on one sheet, each from the numbers the game already has,
+               and a fifth tab, "Compare the ways" (features/ways.js).
                (1) The order: which account to take from first, by the cost of one dollar. (2) Guardrails:
                the rate at the stop age, and the two lines where spending moves down or up by 10%.
                (3) Before 59 and a half: four ways to cover the years from the stop age to 59 and a half
@@ -29,6 +30,7 @@ const TKO_TABS = [
   ["guard", "Guardrails"],
   ["bridge", "Before 59½"],
   ["aca", "Health cover"],
+  ["compare", "Compare the ways"],
 ];
 const TKO_ROTH = [
   [0.25, "About a quarter"],
@@ -883,7 +885,9 @@ function tkoSheet() {
         ? tkoBridgeTab(c)
         : tab === "aca"
           ? tkoAcaTab(c)
-          : tkoOrderTab(c)) +
+          : tab === "compare" && typeof cmpTab === "function"
+            ? cmpTab(c) /* ways.js: the same plan through each way to take money out */
+            : tkoOrderTab(c)) +
     `<div class="tiny muted">If these assumptions hold. All amounts are in today's dollars.</div>`
   );
 }
@@ -988,4 +992,9 @@ Object.assign(ACT, {
     kitRedraw();
   },
 });
-kitMenu("Taking money out", "takeout", "The order, guardrails, the years before 59½, health cover", "odds");
+kitMenu(
+  "Taking money out",
+  "takeout",
+  "The order, guardrails, the years before 59½, health cover, compare the ways",
+  "odds"
+);

@@ -429,6 +429,14 @@ body.welcome .topbar,body.welcome nav.tabs{display:none}
 .kitchart text{fill:var(--muted);font-size:10px;font-family:var(--body)}
 .kitkey{display:inline-block;width:18px;height:0;border-top:3px solid var(--sap);vertical-align:middle;margin-right:4px}
 .kitkey.dash{border-top:3px dashed var(--a3)}
+/* Compare the ways (features/ways.js): one card for each way, its numbers in two columns */
+.cmpgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
+.cmpcell{min-width:0}.cmpnum{font-weight:700;font-size:15px;overflow-wrap:anywhere}
+.cmppins{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px}
+.cmpfam{margin-top:6px;align-items:center}.cmprow.cmpoff{border:1px dashed var(--line);background:none}
+.cmpslide{width:100%;height:44px;accent-color:var(--sap)}
+.cmptype{width:110px;min-height:40px;padding:4px 10px;border:2px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text);font:inherit}
+.kittabs{flex-wrap:wrap}
 .kitsure button{min-height:32px;padding:3px 10px;font-size:13px}
 .frontgrid{gap:8px}
 button.frontbtn{min-height:64px;text-align:left;font-size:15px;line-height:1.25;border:2px solid var(--teal);background:var(--panel2);border-radius:12px;padding:10px 12px}
@@ -462,28 +470,30 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <div id="ov"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="core/report.js?v=e950ffe0"></script>
+<script src="core/soon.js?v=6c003dea"></script>
 <script src="account/trust.js?v=19cd652f"></script>
 <script src="account/supa.js?v=c1b3f527"></script>
 <script src="data/skills.js?v=aa53a193"></script>
 <script src="data/skillthemes.js?v=1db0fcfa"></script>
 <script src="data/qr.js?v=bfe2796b"></script>
-<script src="data/market.js?v=5b578df3"></script>
+<script src="data/market.js?v=cd121024"></script>
+<script src="core/withdraw.js?v=0d5888cd"></script>
 <script src="data/limits2026.js?v=504f72bd"></script>
 <script src="vendor/retire-engine.js?v=bcb147a3"></script>
 <script src="core/engine.js?v=ba43c790"></script>
 <script src="core/engine2.js?v=0f916c85"></script>
 <script src="core/recalc.js?v=a7b2d897"></script>
 <script src="account/gate.js?v=5e37daf9"></script>
-<script src="screens/ui.js?v=aa26106f"></script>
+<script src="screens/ui.js?v=f6c44157"></script>
 <script src="features/games.js?v=f3991fbd"></script>
 <script src="features/games2.js?v=63ba8d13"></script>
 <script src="features/year.js?v=0c383449"></script>
 <script src="features/chart.js?v=bab4800c"></script>
 <script src="screens/profiles.js?v=29e118cc"></script>
 <script src="screens/smart.js?v=2e800c77"></script>
-<script src="screens/planner.js?v=5363d20d"></script>
+<script src="screens/planner.js?v=7830ad26"></script>
 <script src="account/cloud.js?v=af28d1d2"></script>
-<script src="screens/ux.js?v=9090c6c6"></script>
+<script src="screens/ux.js?v=1c222ac9"></script>
 <script src="core/metrics.js?v=f430ed43"></script>
 <script src="features/debts.js?v=47c93dbf"></script>
 <script src="features/import.js?v=b3dfd30e"></script>
@@ -528,10 +538,10 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <script src="features/dep.js?v=0b4ba57c"></script>
 <script src="features/eras.js?v=d11b7a9c"></script>
 <script src="features/testkit.js?v=f98fc556"></script>
-<script src="features/kit.js?v=e9fea4d3"></script>
+<script src="features/kit.js?v=597b08dc"></script>
 <script src="features/retire.js?v=b4f690b2"></script>
 <script src="features/taxview.js?v=68d4fe00"></script>
-<script src="features/odds.js?v=d049bfa6"></script>
+<script src="features/odds.js?v=a633f157"></script>
 <script src="features/cover.js?v=63f66f9b"></script>
 <script src="features/mix.js?v=95d73748"></script>
 <script src="features/slept.js?v=fcbe5bcb"></script>
@@ -554,7 +564,8 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <script src="features/ask3.js?v=d3d2d516"></script>
 <script src="features/quota.js?v=8912307a"></script>
 <script src="data/takeout2026.js?v=e0194656"></script>
-<script src="features/takeout.js?v=def5e624"></script>
+<script src="features/takeout.js?v=f3ba7825"></script>
+<script src="features/ways.js?v=3d6eecb8"></script>
 <script src="features/ages.js?v=55ba697d"></script>
 <script src="features/stress.js?v=bd43333c"></script>
 <script src="features/blocks.js?v=ab04836e"></script>
@@ -580,8 +591,8 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <script src="features/exletter.js?v=95c473d8"></script>
 <script src="features/recalc.js?v=24a3a588"></script>
 <script src="features/audit.js?v=cd62b3a3"></script>
-<script src="features/book.js?v=3f93005e"></script>
+<script src="features/book.js?v=4b237793"></script>
 <script src="features/questlog.js?v=6c4208d8"></script>
-<script src="features/built.js?v=cb650250"></script>
+<script src="features/built.js?v=11b15694"></script>
 </body>
 </html>

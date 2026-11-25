@@ -175,10 +175,10 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | A stable public site | Not started | |
+| 1 | A stable public site | Done | The branch `release` and `bash tools/promote.sh` (both suites on the exact `main` commit, fast-forward only). "Coming soon" card in the game and the web app. Eli: switch GitHub Pages to `release` (`docs/RELEASE.md`). **Promote at the end of every run and say so in the summary.** |
 | 2 | Report a bug or idea | Not started | |
 | 3 | Founding Testers and sharing | Not started | |
-| 4 | Trust | Done, 2 steps wait for Eli | `game/privacy.html` (sign-up, Menu, My account, each footer). Delete my account: removes the saved game and the device copy now; the sign-in too after Eli runs `supabase/migrations/20261125200000_delete_my_account.sql` (NOT APPLIED). "Education and tools, not financial advice." on sign-up and in every footer. Sharing starts off for a public link, on for a coach's invite (`?coach=1`). Calm words for each sign-up email answer; `EMAIL_READY = false` in `game/account/supa.js` until email works. Add-ons checked (code, live database rules read only, browser with a stand-in database); the by-hand steps with a fresh account are in QUESTIONS 583 (h). |
+| 4 | Trust | Done, 2 steps wait for Eli | `game/privacy.html` (sign-up, Menu, My account, each footer). Delete my account: removes the saved game and the device copy now; the sign-in too after Eli runs `supabase/migrations/20261125200000_delete_my_account.sql` (NOT APPLIED). "Education and tools, not financial advice." on sign-up and in every footer. Sharing starts off for a public link, on for a coach's invite (`?coach=1`). Calm words for each sign-up email answer; `EMAIL_READY = false` in `game/account/supa.js` until email works. Add-ons checked (code, live database rules read only, browser with a stand-in database); the by-hand steps with a fresh account are in QUESTIONS 585 (h). |
 | 5 | Email | Done | `docs/EMAIL-SETUP.md`. Confirmed from Resend's and Supabase's pages (through search, read 2026-11-25): host, port, username, the key as password, the free plan limits, the Supabase links. Not confirmed, so the doc says to read them on the screen: Resend's sign-up labels, the exact labels of the Supabase fields and of "Confirm email", the starting hourly limit (30 or 25). Eli has to do the steps; question 582 in QUESTIONS.md. |
 | 6 | The front door | Not started | |
 
@@ -186,7 +186,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | Compare the ways: one screen in the game and in the web app lifetime plan | Not started | |
+| 1 | Compare the ways: one screen in the game and in the web app lifetime plan | Done, with 2 ways switched off and 1 in the game only | Game: Taking money out, the tab "Compare the ways". Web app: Lifetime plan, the card "Compare the ways". 34 ways in 8 families, one file of rules for both (`js/math/withdraw.js`; the game gets a generated copy). Monthly and year-end timing are real steps in both engines and in the second engine. CAPE is on: the CAPE and the yields were added to the market history from the same Shiller source (fetched Nov 25 2026). Switched off with a note: VPW (the Bogleheads page could not be opened to check its numbers) and the RMD method for a stop before 73 (the IRS table starts at 73). "Keep the odds in a band" runs in the game only (it is the retirement engine's rule). The random markets are the real years in a random order, not the engine's Monte Carlo. The game's rows have no tax; the web app's have. QUESTIONS 584. |
 
 ## RUN: Export for the FIRE spreadsheet crowd (Nov 25 2026)
 

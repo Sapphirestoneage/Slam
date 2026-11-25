@@ -13,7 +13,8 @@ import { RULES } from '../../js/registry/assumptions.js';
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, RC_ORDER } from '../../js/math/recalc.js';
 import { Store, newHousehold } from '../../js/records.js';
 import { answer } from '../../js/journey.js';
-import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom } from '../../js/math/lifetime.js';
+import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom, worked } from '../../js/math/lifetime.js';
+import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
 const N = Number(nArg), ref = JSON.parse(readFileSync(new URL('../../data/reference-2026.json', import.meta.url)));
@@ -115,6 +116,35 @@ const slim = run => ({ ok: run.ok, ranOutAge: run.ranOutAge, atRetire: run.atRet
 const L = Math.max(20, Math.round(N * 0.6));
 for (let i = 0; i < L; i++) { const x = lifeCase(); add('lifetime', x, slim(lifetime(x, ref))); }
 for (let i = 0; i < Math.round(L / 6); i++) { const x = lifeCase(); x.strategy = { id: 'fixed' }; add('earliest', x, { age: earliestFreedom(x, ref).age }); }
+// The ways to take money out (js/math/withdraw.js): every way in the list, the ones that are switched off on screen
+// too, each with a made-up market: stocks and bonds that swing, inflation, a CAPE and the two yields.
+const custom = () => wayCustom({ kind: pick(['steady', 'guardrails', 'floor', 'share', 'market']), rate: pick([0.03, 0.0375, 0.045, 0.06]), timing: pick(['start', 'monthly', 'end']), horizon: pick([null, 30, 40]) });
+const anyWay = () => { const w = rnd() < 0.15 ? custom() : pick(WAYS.filter(x => x.rule !== 'risk' && !x.custom)); const o = { ...w };
+  if (rnd() < 0.3) o.timing = pick(['start', 'monthly', 'end']); if (o.rule === 'dwz' && rnd() < 0.6) { o.target = pick([0, 50000, 250000]); o.targetAge = pick([null, 80, 85, 95]); } return o; };
+const market = n => Array.from({ length: n }, () => { const s = between(-0.42, 0.5), b = between(-0.15, 0.25); return { s, b, i: between(-0.06, 0.16), cape: rnd() < 0.05 ? null : between(5, 44), dy: between(0.011, 0.08), by: between(0.006, 0.15) }; });
+const W = Math.max(40, N * 2);
+for (let i = 0; i < W; i++) {
+  { const x = { age: whole(40, 105), stock: whole(0, 100) / 100 }; add('vpwShare', x, { share: vpwShare(x.age, x.stock) }); }
+  { const x = { start: money(1000, 5000000), target: pick([0, 0, 10000, 250000]), n: whole(-2, 60), g: pick([0, 0.02, 0.05, 0.07]) }; add('spendDown', x, { payment: spendDownPayment(x.start, x.target, x.n, x.g) }); }
+  // one pile of money, the way the game's replay runs it
+  { const way = anyWay(), age = whole(40, 75), n = whole(5, 55), x = { way, age, start: money(50000, 6000000), need: money(15000, 200000), income: rnd() < 0.3 ? 0 : money(6000, 60000), incomeAge: pick([62, 67, 70]), stock: pick([0.4, 0.6, 0.8, 1]), growth: pick([0.03, 0.05, 0.07]), seq: market(n) };
+    let p = x.start, last = null, lastI = null; const mem = {}, rows = [];
+    for (let k = 0; k < n; k++) { const y = x.seq[k], a = age + k;
+      const rule = waySpend(way, { need: x.need, start: p, k, age: a, endAge: age + n - 1, last, infl: lastI, cape: y.cape, stock: x.stock, growth: x.growth }, mem), w = way.gross ? rule.spend : Math.max(0, rule.spend - (a >= x.incomeAge ? x.income : 0));
+      let r = x.stock * y.s + (1 - x.stock) * y.b; if (way.hold) r = wayReturn(way, { r, s: y.s, b: y.b, dy: y.dy, by: y.by }, { stock: x.stock, k, last, start: p, w }, mem);
+      const step = wayPay(p, w, r, way.timing ?? 'start'); p = step.p; rows.push([rule.spend, rule.aim, step.short, p]); last = r; lastI = y.i; }
+    add('wayPath', x, { rows }); }
+  { const n = whole(1, 40), cycles = Array.from({ length: n }, (_, k) => { const lasted = rnd() < 0.8; return { start: 1900 + k, lasted, ranOutAge: lasted ? null : whole(60, 95), end: lasted ? money(1000, 9000000) : 0, lowest: pick([1, 1, between(0.2, 1)]), cuts: whole(0, 30) }; });
+    const x = { cycles, tolerate: pick([0.999, 0.849, 0.75, 0.699]) }, H = wayHistory(cycles, x.tolerate); add('wayHistory', x, { n: H.n, ok: H.ok, worst: H.worst.start, deepest: H.deepest, cutsWorst: H.cutsWorst, medianEnd: H.medianEnd }); }
+}
+// The whole-life plan on each way, with taxes, through a made-up market in the free years.
+for (let i = 0; i < Math.max(30, Math.round(N * 0.8)); i++) {
+  const x = lifeCase(), way = anyWay(); x.strategy = way; x.stocks = pick([0.6, 0.8, 1]); x.cape = between(8, 40);
+  if (way.horizon) x.planAge = x.retireAge + way.horizon - 1;
+  x.seq = market(x.planAge - x.retireAge + 1 + 10).map(y => ({ ...y, r: x.stocks * y.s + (1 - x.stocks) * y.b, stock: x.stocks }));
+  const lead = x.retireAge - x.age, run = lifetime(x, ref, { returns: k => (k < lead ? x.realReturn : x.seq[k - lead] ?? x.realReturn) });
+  add('wayLife', x, { ...slim(run), lowestPaid: run.lowestPaid, cutYears: run.cutYears, firstSpend: run.firstSpend, worked: worked(run, x) });
+}
 writeFileSync(out, JSON.stringify({ seed: Number(seedArg), perFunction: N, made: new Date().toISOString().slice(0, 10), cases }));
 const count = {}; for (const c of cases) count[c.fn] = (count[c.fn] || 0) + 1;
 console.log(`${cases.length} cases written to ${out}`, JSON.stringify(count));
