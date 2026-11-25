@@ -15,6 +15,9 @@ import { ASSUMPTIONS, TABLES, sourceOf } from '../registry/assumptions.js';
 import { REPORTS } from '../registry/reports.js';
 import { sheetContext } from './context.js';
 import { FORMAT_VERSION, APP_VERSION, shapeOf, fingerprint } from './format.js';
+import { fireSheet } from './fire.js';
+import { fireInputOf } from '../lifetime/fire-input.js';
+import { FMT } from './fmt.js'; // the number formats, in a file of their own so the writer (excel.js) loads without the registries
 
 export const BLANK_ROWS = 20; // the old layout's blank rows (format 49 and before); each section now ends with its own
 export const LIST_TAB = '_lists'; // hidden: the long dropdown lists (Excel keeps a list typed into a rule under 255 characters)
@@ -28,7 +31,6 @@ export const STATUS_WORDS = { 'Know it': 'Know it', Roughly: 'Roughly', 'Not sur
 export const STATUS_LIST = ['Know it', 'Roughly', 'Guess', 'Will get it', 'Not now', 'Not for me'];
 // What column A of a screen tab says (hidden): the import reads each row by it.
 export const KEY = { night: '#night:', field: 'field:', col: 'col:', math: 'math:', keys: '#keys:', head: '#head:', sec: '#sec:', blank: '#new', end: '#end:', gap: '#gap', block: '#block:' };
-const FMT = { money: '"$"#,##0', cents: '"$"#,##0.00', pct: '0.0#%', months: '0', number: 'General', years: '0.0', day: '0', date: 'yyyy-mm-dd', month: 'yyyy-mm', text: '@', choice: '@', yesno: '@', list: '@' };
 const TOL = { money: 1, cents: 0.01, pct: 0.0005, months: 1, number: 0.01, years: 0.05 }; // within $1 or 1 month; a cent where the app shows cents (cents: true)
 const BUILTIN = { Kind: 'Kind', Type: 'Type', Status: 'Status', InMath: 'In the math' };
 
@@ -62,7 +64,7 @@ export function formulaCols() {
   return [...MATH.flatMap(e => (e.cols || []).map(col => ({ ...col, entry: e.id }))), ...REPORTS.flatMap(r => (r.cols || []).map(col => ({ ...col, entry: r.tab })))];
 }
 
-export function buildWorkbook(doc, ref, { now = new Date(), coach = false, shared = false, flags = [] } = {}) {
+export function buildWorkbook(doc, ref, { now = new Date(), coach = false, shared = false, flags = [], hist = null } = {}) {
   const c = sheetContext(doc, ref, { now, flags });
   c.coach = coach; // F6: the Captured tab keeps coach-only changes out of the client copy
   const names = new Map(); // name -> absolute reference
@@ -455,6 +457,12 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
   for (const s of inputTabs) for (const row of s.rows.slice(1)) for (const cell of row || []) if (cell?.f) pending.push({ f: cell.f, where: s.name });
   for (const p of pending) checkNames(p.f, names, p.where);
   markDated(sheets, names, now);
+  // The FIRE sheet (Nov 25 2026): the first tab, one row a year, live on its own inputs (js/sheet/fire.js). Its numbers
+  // come from the lifetime plan's input (js/lifetime/fire-input.js). A sandbox: the import does not read it back.
+  let fireIn; try { fireIn = fireInputOf(c, { hist }); } catch { fireIn = { needs: ['your age, your spending and what you have invested'] }; }
+  const fire = fireSheet(fireIn);
+  sheets.unshift(fire.sheet);
+  for (const n of fire.names) names.set(n.name, n.ref);
   return { sheets, names: [...names].map(([name, refr]) => ({ name, ref: refr })), baseline, context: c, client, at: now };
 }
 

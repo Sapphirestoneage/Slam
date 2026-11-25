@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Writes a workbook plan (js/sheet/workbook.js) with ExcelJS, and reads an .xlsx back into plain rows for the import.
 // ExcelJS is passed in: the browser loads it from jsDelivr (js/sheet/load.js), Node tests import it when installed.
-import { FMT } from './workbook.js';
+import { FMT } from './fmt.js';
 
 export const EXCELJS_URL = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
 
@@ -68,6 +68,8 @@ export async function writeWorkbook(ExcelJS, plan, { cache = true } = {}) {
       });
     });
     for (const r of s.headRows || []) ws.getRow(r).height = 46; // a header wraps to three lines
+    // A rule that marks rows by a formula (the FIRE sheet's stop age): a soft fill and bold, never a color that warns.
+    for (const cf of s.conditional || []) ws.addConditionalFormatting({ ref: cf.ref, rules: [{ type: 'expression', priority: 1, formulae: [cf.formula], style: { font: { bold: !!cf.bold }, fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: cf.fill } } } }] });
     for (const v of s.validations || []) {
       // A list in the rule (short, no commas) or a named range on the hidden _lists tab. Another word still goes in
       // (no error box): the import says when a word is not one of the choices.

@@ -165,7 +165,7 @@ test('the Demo client\'s workbook has every tab, column and row the registries c
   const plan = buildWorkbook(demoDoc(), ref, { now: NOW });
   const tabs = Object.fromEntries(plan.sheets.map(s => [s.name, s]));
   const rest = REPORTS.filter(r => !SCREEN_TABS.some(t => t.blocks.some(b => b.report === r.tab))).map(r => r.tab);
-  const want = ['Start here', ...SCREEN_TABS.map(t => t.name), 'Assumptions', 'Math', ...rest, LIST_TAB, DATA_TAB];
+  const want = ['FIRE sheet', 'Start here', ...SCREEN_TABS.map(t => t.name), 'Assumptions', 'Math', ...rest, LIST_TAB, DATA_TAB];
   assert.deepEqual(plan.sheets.map(s => s.name), want, 'the tabs, in order');
   const missing = [];
   for (const a of AREAS) {
