@@ -96,6 +96,71 @@
     "a known tax rate drops the Guess tag",
     !ov().includes(">Guess<") && ov().includes("worked out from your tax rate")
   );
+  /* run Not built, Part 2: six more cards, each number from core/quick.js (the web app's js/math/quick.js) */
+  const qcp = require("child_process").spawnSync(
+    process.execPath,
+    [GAME_DIR + "../tools/game_quick_build.mjs", "--check"],
+    {
+      encoding: "utf8",
+    }
+  );
+  chk("core/quick.js is the same code as js/math/quick.js of the main app", qcp.status === 0, qcp.stdout);
+  X("quick");
+  chk(
+    "the list has the six new cards",
+    [
+      "A high-yield savings account?",
+      "All at once, or a little each month?",
+      "What does each use cost?",
+      "Is it worth the hassle?",
+      "What does waiting to start cost?",
+      "Is this warranty worth it?",
+    ].every(t => ov().includes(t))
+  );
+  const hy = qcHysa({ balance: 10000, fromRate: 0.0001, toRate: 0.04 });
+  X("qmopen", "hysa");
+  chk(
+    "HYSA: a year and five years more, in the stat row",
+    ov().includes(money(Math.round(hy.yearGain))) &&
+      ov().includes(money(Math.round(hy.gain))) &&
+      ov().includes("dkstats") &&
+      clean(ov()),
+    junk(ov())
+  );
+  X("qmset", "50000", "bal");
+  chk(
+    "HYSA: a tap redraws",
+    ov().includes(money(Math.round(qcHysa({ balance: 50000, fromRate: 0.0001, toRate: 0.04 }).yearGain)))
+  );
+  const dc = qcDca({ amount: 25000, months: 12, ret: qcNominal(0.07, 0.02), cashRate: 0.04 });
+  X("qmopen", "dca");
+  chk(
+    "all at once or spread",
+    ov().includes(money(Math.round(dc.lump))) && ov().includes(money(Math.round(dc.spread))) && clean(ov()),
+    junk(ov())
+  );
+  X("qmopen", "peruse");
+  chk("cost per use: $400 over 50 uses is $8.00", ov().includes("$8.00") && clean(ov()), junk(ov()));
+  X("qmopen", "hassle");
+  chk(
+    "the hassle: $100 over 2 hours is $50.00 an hour, next to the hourly wage",
+    ov().includes("$50.00") && ov().includes("Your work, an hour") && clean(ov()),
+    junk(ov())
+  );
+  const wt = qcStart({ monthly: 250, ageA: 30, ageB: 31, to: 60, ret: 0.07 });
+  X("qmopen", "wait");
+  chk(
+    "waiting a year, to the age you stop",
+    ov().includes(money(Math.round(wt.gap))) && ov().includes("to 60") && clean(ov()),
+    junk(ov())
+  );
+  X("qmopen", "warranty");
+  chk(
+    "warranty: 20% of $600 is $120, they meet at 25%",
+    ov().includes(money(120)) && ov().includes("25%") && clean(ov()),
+    junk(ov())
+  );
+  chk("no verdict words on the new cards", !/\b(bad|wrong|mistake|failed|behind)\b/i.test(ov()));
   X("close");
   G.chars.length = n0;
   G.active = act0;

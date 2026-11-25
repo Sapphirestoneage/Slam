@@ -48,11 +48,13 @@ export function copyLink(api, label = 'Copy my link') {
 }
 
 // One number: a box, and amounts to tap under it. onSet(value or null) on every change; picks are plain numbers.
-export function numBox(label, value, picks, onSet, { id = null, help = null } = {}) {
+// unit: a box for a count, not money (hours, uses, square feet): no $ in front, the unit after, picks as plain numbers.
+export function numBox(label, value, picks, onSet, { id = null, help = null, unit = null } = {}) {
+  const show = v => (unit ? `${Number(v).toLocaleString('en-US')} ${v === 1 ? unit.replace(/s$/, '') : unit}` : money(v));
   const input = h('input', { type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: '0', id, 'aria-label': label, value: value == null ? '' : Number(value).toLocaleString('en-US'),
     onInput: e => { const n = e.target.value.replace(/[^\d.]/g, ''); onSet(n === '' ? null : Number(n), true); }, onKeydown: e => { if (e.key === 'Enter') e.target.blur(); } });
-  return h('div.st-field', {}, h('div.st-flabel', {}, label), h('div.st-box.narrow', {}, h('div.in', {}, h('span', {}, '$'), input)),
-    h('div.st-chips', { style: { marginTop: '8px' } }, picks.map(v => chip(money(v), value === v, () => onSet(v, false)))), help ? h('div.st-small.st-soft', { style: { marginTop: '4px' } }, help) : null);
+  return h('div.st-field', {}, h('div.st-flabel', {}, label), h('div.st-box.narrow', {}, h('div.in', {}, unit ? null : h('span', {}, '$'), input, unit ? h('span', { style: { whiteSpace: 'nowrap', flexShrink: 0, fontSize: '15px' } }, unit) : null)),
+    h('div.st-chips', { style: { marginTop: '8px' } }, picks.map(v => chip(show(v), value === v, () => onSet(v, false)))), help ? h('div.st-small.st-soft', { style: { marginTop: '4px' } }, help) : null);
 }
 export function stepLine(api) { const at = SOLO.findIndex(s => s.id === api.me.id), el = document.getElementById('step'); if (el) el.textContent = `Step ${at + 1} of ${SOLO.length}`; }
 // The last card on every page: one button to the next page with the answers in it, and the page's own link.

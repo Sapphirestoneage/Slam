@@ -501,3 +501,72 @@ export function snGradStory(def, sn = {}) {
   if (tried) out.push(`${tried} ${tried === 1 ? 'defense' : 'defenses'} tested for a month, ${dropped} of them with the pattern dropping.`);
   return out;
 }
+
+
+// =====================================================================================================================
+// Part 3: the Rings theme (run "Money sins", Nov 25 2026). The words are in the skin (def.rings); these functions only
+// put them together with the read. No function here makes a money number, and none changes one. voice: an add-on's
+// second voice ({ words: { key: text }, rulers: { sinId: { roast, taunt, beat } } }); with none, the default words.
+// =====================================================================================================================
+const snRg = def => (def && def.rings) || {};
+const snFill = (s, v) => String(s || '').replace(/\{(\w+)\}/g, (m, k) => (v[k] == null ? '' : String(v[k])));
+// The themed words, with an add-on's words over them when one is given.
+export function snRingWords(def, voice = null) {
+  return { ...(snRg(def).words || {}), ...((voice && voice.words) || {}) };
+}
+// The ruler of one sin's ring: the name, the ring, the roast, the taunt, how it is beaten and the ward (the defense
+// of that sin, from the read's own list).
+export function snRuler(def, sinId, voice = null) {
+  const R = (snRg(def).rulers || {})[sinId];
+  if (!R) return null;
+  const alt = (voice && voice.rulers && voice.rulers[sinId]) || {}, F = ((def.read || {}).fix || {})[sinId];
+  const sinName = ((def.traits || []).find(t => t.id === sinId) || {}).name || sinId;
+  return { sin: sinId, sinName, name: R.name, ring: R.ring, roast: alt.roast || R.roast, taunt: alt.taunt || R.taunt, beat: alt.beat || R.beat, ward: F ? F.name : null };
+}
+// All seven rulers, for the tests and the list Eli reads.
+export function snRulers(def, voice = null) {
+  return Object.keys(snRg(def).rulers || {}).map(id => snRuler(def, id, voice));
+}
+// The steps climbed. One step for each retake on which the first take's main pull held a smaller share of the pull
+// than at the take before, and one for each month of a defense (a ward) in which the pattern dropped. hist: the
+// history of takes (snHistAdd); fixes: the months of defenses (snFixEnd); sinIds: the ids of the seven sins.
+export function snClimb(hist = [], fixes = [], sinIds = []) {
+  const share = (sc, id) => { const sum = sinIds.reduce((s, x) => s + Math.max(0, (sc || {})[x] || 0), 0); return sum > 0 ? Math.max(0, (sc || {})[id] || 0) / sum : null; };
+  const steps = [], first = hist.length && hist[0].sin ? hist[0].sin.top : null;
+  if (first) for (let i = 1; i < hist.length; i++) {
+    const a = share(hist[i - 1].scores, first), z = share(hist[i].scores, first);
+    if (a != null && z != null && Math.round(z * 100) < Math.round(a * 100)) steps.push({ kind: 'take', d: hist[i].at, trait: first, a: Math.round(a * 100), z: Math.round(z * 100) });
+  }
+  for (const f of fixes) if (f && f.dropped === true) steps.push({ kind: 'ward', d: f.end, trait: f.trait });
+  return steps.sort((x, y) => String(x.d).localeCompare(String(y.d)));
+}
+// The rings of one person. The bottom ring is the ring of the main pull now; the rings above it follow the person's
+// own order of the sins, the weakest pull at the top, next to the way out. Each step climbed moves the person up one
+// ring; past the top ring the person is out. null before the quiz has given the sins a top.
+export function snRings(def, read, sn = {}, voice = null) {
+  const S = snFam(read, 'sin');
+  if (!S || !S.top || !(S.top.score > 0)) return null;
+  const ids = (def.traits || []).filter(t => t.group === 'sin').map(t => t.id);
+  const order = [...(S.order || []).filter(id => ids.includes(id)), ...ids.filter(id => !(S.order || []).includes(id))];
+  const N = order.length, W = snRingWords(def, voice), V = id => snVirtue(def, id);
+  const rings = order.map((id, i) => ({ n: N - i, sin: id, ruler: snRuler(def, id, voice) }));
+  const steps = snClimb(sn.hist || [], sn.fixes || [], ids).map(s => {
+    const T = snRuler(def, s.trait, voice) || {}, tn = ((def.traits || []).find(t => t.id === s.trait) || {}).name || s.trait, F = ((def.read || {}).fix || {})[s.trait];
+    return { ...s, line: snFill(s.kind === 'take' ? W.stepTake : W.stepWard, { sin: tn, a: s.a, z: s.z, virtue: (V(s.trait) || {}).name, ward: F ? F.name : T.ward }) };
+  });
+  const climbed = Math.min(N, steps.length), out = climbed >= N, on = out ? null : rings[climbed];
+  const bottom = rings[0].ruler;
+  const head = snFill(W.start, { ring: bottom.ring, sin: bottom.sinName, ruler: bottom.name });
+  const now = out ? W.out : climbed ? snFill(W.on, { ring: on.ruler.ring, left: on.n === 1 ? 'One ring' : `${on.n} rings` }) : snFill(W.none, { sin: bottom.sinName });
+  return { rings, steps, climbed, of: N, out, on, ringNow: on ? on.n : 0, head, now, level: S.level || 'Guess', word: S.word || 'Early read' };
+}
+// The boss of the boss fights in the Rings theme: the ruler of the main pull, and how much of the pull it holds now
+// (the main pull's share of the seven sins' points). null before the quiz has given the sins a top.
+export function snBoss(def, read, voice = null) {
+  const S = snFam(read, 'sin');
+  if (!S || !S.top || !(S.top.score > 0)) return null;
+  const R = snRuler(def, S.top.id, voice);
+  if (!R) return null;
+  const share = snShare(def, (read.engine && read.engine.scores) || {}, S.top.id), hold = share == null ? null : Math.round(share * 100), W = snRingWords(def, voice);
+  return { ...R, hold, holdLine: hold == null ? null : snFill(W.hold, { ruler: R.name, hold }), line: snFill(W.bossLine, { ruler: R.name }), level: S.level || 'Guess', word: S.word || 'Early read' };
+}

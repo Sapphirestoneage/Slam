@@ -146,6 +146,9 @@ body[data-look="fae"]{--ink:#0c0418;--panel:#190a2d;--panel2:#25103f;--line:#4b2
 body[data-look="coven"]{--ink:#090305;--panel:#16070c;--panel2:#230b13;--line:#5c1628;--hl:#3a0e1a;--text:#fff5f6;--muted:#c99aa6;--gold:#ffeef0;--teal:#a31d3a;--sap:#d42a4e;--a1:#a01a38;--a3:#ff9bb0;--n1:#5e1024;--n2:#28070f;--glow:212,42,78;--good:#9fd8c0;--bad:#ffb3c0;--display:"Cormorant Garamond",Georgia,serif}
 body[data-look="tabletop"]{--ink:#06100b;--panel:#0d1e16;--panel2:#132e23;--line:#2c5a45;--hl:#1a3d2e;--text:#f6f1e1;--muted:#a9c2b2;--gold:#f6f1e1;--teal:#2f8a62;--sap:#3fb37f;--a1:#1f7a54;--a3:#9be5c0;--n1:#1e5a42;--n2:#0e2a1f;--glow:63,179,127;--good:#9be5c0;--bad:#ff9a9a;--display:"IM Fell English",Georgia,serif}
 body[data-look="north"]{--ink:#070b0f;--panel:#101921;--panel2:#172532;--line:#34516b;--hl:#1f3447;--text:#f1f6fa;--muted:#9fb4c6;--gold:#f1f6fa;--teal:#2c6787;--sap:#2f7fa6;--a1:#1d5676;--a3:#9cc8dd;--n1:#1c455e;--n2:#0e2230;--glow:47,127,166;--good:#8fe0c4;--bad:#ff9aa8}
+/* the Rings: its look wins over the default color (midnight); a color the player picked still wins over it */
+body[data-look="rings"]{--ink:#0d0806;--panel:#1a100b;--panel2:#24170f;--line:#4a2e1e;--hl:#33201a;--text:#fbf1e8;--muted:#c9a892;--gold:#ffe9d2;--teal:#9a4a1a;--sap:#b9581e;--a1:#9a4a1a;--a3:#ffb98a;--n1:#5a3018;--n2:#1c0f0a;--glow:185,88,30;--good:#8fdcc0;--bad:#ffb648}
+body[data-look="rings"][data-color="midnight"]{--ink:#0d0806;--panel:#1a100b;--panel2:#24170f;--line:#4a2e1e;--hl:#33201a;--text:#fbf1e8;--muted:#c9a892;--gold:#ffe9d2;--teal:#9a4a1a;--sap:#b9581e;--a1:#9a4a1a;--a3:#ffb98a;--n1:#5a3018;--n2:#1c0f0a;--glow:185,88,30;--good:#8fdcc0;--bad:#ffb648}
 body[data-look="fae"] h1,body[data-look="fae"] h2,body[data-look="coven"] h1,body[data-look="coven"] h2{font-size:1.25em}
 .field.miss{border:2px solid var(--bad);border-radius:12px;padding:10px;animation:pulse 1.6s infinite}
 .pathrow button.linkish{min-height:0;padding:0;font:inherit;color:var(--text)}
@@ -534,19 +537,21 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="core/engine2.js?v=0f916c85"></script>
 <script src="core/homebuy.js?v=9fefc7d2"></script>
 <script src="core/career.js?v=2164a1a6"></script>
+<script src="core/trip.js?v=0152603f"></script>
+<script src="core/quick.js?v=914d9a44"></script>
 <script src="core/recalc.js?v=9ee7e7ea"></script>
 <script src="core/jobs.js?v=db70fca4"></script>
 <script src="core/enough.js?v=869b33d0"></script>
 <script src="data/roles.js?v=d90d4899"></script>
 <script src="core/reportcore.js?v=6a3377b4"></script>
 <script src="core/quizcore.js?v=fb301cab"></script>
-<script src="core/sins.js?v=7cce3ddd"></script>
-<script src="data/quizskins.js?v=ff2c00aa"></script>
-<script src="account/gate.js?v=5e37daf9"></script>
-<script src="screens/ui.js?v=04520126"></script>
+<script src="core/sins.js?v=aea4807a"></script>
+<script src="data/quizskins.js?v=26830ea5"></script>
+<script src="account/gate.js?v=66e0ebe3"></script>
+<script src="screens/ui.js?v=2abce5ca"></script>
 <script src="screens/dash.js?v=46243f0e"></script>
 <script src="features/games.js?v=f3991fbd"></script>
-<script src="features/games2.js?v=63ba8d13"></script>
+<script src="features/games2.js?v=9ea0315f"></script>
 <script src="features/year.js?v=db3aac5f"></script>
 <script src="features/chart.js?v=843c18bc"></script>
 <script src="screens/profiles.js?v=442b6691"></script>
@@ -558,7 +563,7 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="features/debts.js?v=1018cceb"></script>
 <script src="features/import.js?v=b3dfd30e"></script>
 <script src="features/compare.js?v=abf08001"></script>
-<script src="features/quick.js?v=152cbc32"></script>
+<script src="features/quick.js?v=b4b761ff"></script>
 <script src="features/reveal.js?v=829bd360"></script>
 <script src="features/moneylog.js?v=889f9b8b"></script>
 <script src="features/drills.js?v=d9bf675b"></script>
@@ -636,6 +641,7 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="features/countdown.js?v=7b159a1f"></script>
 <script src="features/offers.js?v=7dfb9a2c"></script>
 <script src="features/career.js?v=e016b343"></script>
+<script src="features/trip.js?v=50f6617e"></script>
 <script src="features/nextacct.js?v=34d838ed"></script>
 <script src="features/ledger.js?v=e80edc0b"></script>
 <script src="data/cardtemplate.js?v=43e535a3"></script>
@@ -652,11 +658,12 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="account/roles.js?v=04de2e61"></script>
 <script src="features/stars.js?v=0735ed6f"></script>
 <script src="features/exletter.js?v=95c473d8"></script>
-<script src="features/recalc.js?v=5b6ec8be"></script>
+<script src="features/recalc.js?v=86b5c421"></script>
 <script src="features/audit.js?v=d893fdb8"></script>
 <script src="features/quizzes.js?v=6b4cff5a"></script>
-<script src="features/sins.js?v=00c5aaf4"></script>
-<script src="data/patchnotes.js?v=bc4c70f9"></script>
+<script src="features/sins.js?v=1353b0fc"></script>
+<script src="features/rings.js?v=7012818f"></script>
+<script src="data/patchnotes.js?v=74d14cce"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
 <script src="features/look.js?v=6983472b"></script>
@@ -665,9 +672,9 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="features/careq.js?v=03516e5a"></script>
 <script src="features/rolemap.js?v=5e50a14d"></script>
 <script src="features/enough.js?v=67d96e2d"></script>
-<script src="features/book.js?v=0369a492"></script>
+<script src="features/book.js?v=ae21889e"></script>
 <script src="features/questlog.js?v=ad01fa49"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=c5292de5"></script>
+<script src="features/built.js?v=307c2568"></script>
 </body>
 </html>

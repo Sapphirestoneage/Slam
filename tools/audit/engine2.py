@@ -694,6 +694,116 @@ def il_points(il, resident, year):
     return resident + sum(per[(year - 1) * 12:year * 12]) / 12
 
 
+def quick_check(fn, x, o, ck, law):
+    """The quick calculators (M8Q), worked out again: closed forms where SLAM steps, and the other way round."""
+    def fv(start, monthly, rate, n):
+        b = start
+        for _ in range(n):   # month by month, where SLAM uses the closed form
+            b = b * (1 + rate / 12) + monthly
+        return b
+    if fn == 'qcHysa':
+        m, n = x['monthly'], x['years'] * 12
+        y_from, y_to = fv(x['balance'], m, x['fromRate'], 12), fv(x['balance'], m, x['toRate'], 12)
+        ck('a year more', o['yearGain'], y_to - y_from); ck('where it is', o['endFrom'], fv(x['balance'], m, x['fromRate'], n)); ck('the other account', o['endTo'], fv(x['balance'], m, x['toRate'], n))
+    elif fn == 'qcDca':
+        n, g, c = x['months'], (1 + x['ret']) ** (1 / 12) - 1, x['cashRate'] / 12
+        piece = x['amount'] / n
+        # each piece grows from the month it goes in; the money still waiting grows at the cash rate until then
+        # the money waiting after the k-th piece goes in: what was there, grown, less every piece so far, each grown since
+        left = lambda k: x['amount'] * (1 + c) ** k - sum(piece * (1 + c) ** (k - j) for j in range(k + 1))
+        spread = sum(piece * (1 + g) ** (n - k) for k in range(n)) + left(n - 1) * (1 + c)
+        waiting = sum(left(k) for k in range(n)) / n
+        ck('all at once', o['lump'], x['amount'] * (1 + x['ret']) ** (n / 12)); ck('spread', o['spread'], spread); ck('waiting on an average month', o['waiting'], waiting)
+    elif fn == 'qcSmall':
+        ck('chance x repair', o['expected'], x['repair'] * x['chance']); ck('where they meet', o['even'], x['price'] / x['repair'], 1e-9)
+        ck('a use', o['perUse'], (x['price'] - min(x['price'], x['resale'])) / x['uses'], 1e-9)
+        ck('an hour of the task', o['perHour'], x['saved'] / x['hours'], 1e-9); ck('times the wage', o['times'], x['saved'] / x['hours'] / x['wage'] if x['wage'] else None, 1e-9)
+    elif fn == 'qcInflation':
+        ps = [q for q in x['parts'] if q['amount']]
+        tot = sum(q['amount'] for q in ps); rate = sum(q['amount'] * q['change'] for q in ps) / tot
+        ck('own inflation', o['rate'], rate, 1e-12); ck('a year more than the plan', o['yearMore'], tot * 12 * rate)
+    elif fn == 'qcStart':
+        g = (1 + x['ret']) ** (1 / 12) - 1
+        def grow(age):
+            b = 0.0
+            for _ in range(max(0, (x['to'] - age) * 12)):
+                b = b * (1 + g) + x['monthly']
+            return b
+        lo, hi = min(x['ageA'], x['ageB']), max(x['ageA'], x['ageB'])
+        if x['ageA'] >= x['to']:
+            return
+        a, b = grow(lo), grow(hi)
+        ck('from the early age', o['a'], a, max(1.0, a * 1e-9)); ck('from the late age', o['b'], b, max(1.0, b * 1e-9))
+        ck('catch-up a month', o['catchUp'], x['monthly'] * a / b if b > 0 else None, 0.01)
+    elif fn == 'qcAdd':
+        stage = lambda a: x['little'] if a <= 4 else x['school'] if a <= 12 else x['teen']
+        ck('kids to 18', o['kids'], sum(stage(a) for a in range(x['age'], 18)))
+        year = x['monthly'] * 12 + x['vet']
+        ck('pet, all the years', o['pet'], x['upfront'] + year * x['years']); ck('pet, the first year', o['petFirst'], x['upfront'] + year)
+        ck('the keys', o['keys'], x['rent'] * (1 + x['depositMonths'] + x['lastMonth'] + x['brokerMonths']) + x['moving'] + x['setup']); ck('a month after', o['month'], x['rent'] + x['monthlyOther'])
+    elif fn == 'qcJobless':
+        N, hq = x['rules'], x['highQuarter']
+        if hq > N['lowLine']:
+            wk = max(N['minWeekly'], hq / N['divisorHigh'])
+        else:
+            wk = max(N['minWeeklyLow'], hq / N['divisorLow'])
+        wk = min(N['maxWeekly'], wk)
+        ck('a week', o['weekly'], wk, 1e-9)
+        # day by day instead of by pieces: cash runs down by the gap while the benefit lasts, then by the whole month
+        cash, inm, bm, out = x['cash'], wk * x['keep'] * 52 / 12, N['weeks'] * 12 / 52, x['spending']
+        gap = out - inm
+        if gap > 0 and cash / gap <= bm:
+            months = cash / gap
+        else:
+            months = bm + (cash - gap * bm) / out
+        ck('months the cash lasts', o['months'], months, 1e-6)
+    elif fn == 'qcConsolidate':
+        m = one_debt(x['balance'], x['apr'], x['payment'])
+        ck('never pays off', o['never'], m['never'])
+        if not m['never']:
+            ck('months now', o['nowMonths'], m['months'], 0); ck('interest now', o['nowInterest'], m['true_interest'])
+        P, r, n = x['balance'] / (1 - x['feePct']), x['loanApr'] / 12, x['loanYears'] * 12
+        pay = P / n if r == 0 else P / sum((1 + r) ** -k for k in range(1, n + 1))   # the annuity as a sum of discounted payments
+        ck('loan a month', o['loanPay'], pay, 0.01); ck('loan interest and fee', o['loanCost'], pay * n - x['balance'])
+    elif fn == 'qcLeave':
+        need = x['spending'] + x['health']
+        if x['profit'] > 0:
+            g = x['profit'] * 12
+            pay, _, _, half = law.payroll(g, 'Single', True)
+            tax = (law.federal(g, 0, 'Single', half)[0] + pay) / 12
+        else:
+            tax = 0.0
+        ck('tax a month', o['tax'], tax); gap = need - (x['profit'] - tax)
+        ck('months', o['months'], x['cash'] / gap if gap > 0 else None, 1e-6)
+    elif fn == 'qcRoommates':
+        ps = x['people']; n = len(ps)
+        def share(way, p):
+            if way == 'size':
+                return p['size'] / sum(q['size'] for q in ps)
+            if way == 'income':
+                return p['income'] / sum(q['income'] for q in ps)
+            return 1 / n
+        bway = x['how'] if x['billsHow'] == 'same' else 'equal'
+        for i, p in enumerate(ps):
+            ck(f'person {i + 1} total', o['totals'][i], x['rent'] * share(x['how'], p) + x['bills'] * share(bway, p), 1e-6)
+    elif fn == 'qcW4':
+        tax, _, top = law.federal(x['gross'], x['pretax'], x['filingStatus'])
+        C = law.t['ctc']; joint = x['filingStatus'] == 'Married jointly'
+        most = x['kids'] * C['perChild']; magi = x['gross'] - x['pretax']
+        cut = math.ceil(max(0, magi - (C['phaseOutJoint'] if joint else C['phaseOutSingle'])) / 1000) * C['phaseOutPer1000']
+        credit = max(0, most - cut); non = min(credit, tax)
+        refundable = max(0, min(credit - non, x['kids'] * C['refundableMax'], C['refundableRate'] * max(0, x['gross'] - C['earnedFloor'])))
+        owe = max(0, tax - non) - refundable
+        diff = x['withheld'] + x['perCheck'] * x['checksLeft'] - owe
+        left = max(1, x['checksLeft'])
+        ck('the year\'s tax', o['owe'], owe); ck('refund or owed', o['diff'], diff)
+        ck('Step 4(c) a paycheck', o['extra'], -diff / left if diff < 0 else 0)
+        ck('Step 4(b) deductions', o['deductions'], diff * x['checksYear'] / (left * top) if diff > 0 and top > 0 else 0, 0.05)
+    elif fn == 'qcGlance':
+        left = x['takeHome'] - x['spending'] - x['debtOutside']
+        ck('left', o['left'], left); ck('kept', o['rate'], left / x['takeHome'], 1e-12)
+
+
 def run(cases, ref, il=None):
     law, R = Law(ref), Report()
     extra = {'interest_gap': [], 'pace': [], 'life': {'runs': 0, 'years': 0, 'unsettled_years': 0, 'tax_gap_years': 0, 'worst_tax_gap': 0.0, 'worst_tax_case': None, 'credit_gap_years': 0, 'worst_credit_gap': 0.0, 'runs_touched': 0}}
@@ -945,6 +1055,21 @@ def run(cases, ref, il=None):
                 return sum(max(0, p['add'].get(t, 0)) for p in x['ev'] if p['source'] in ('ledger', 'checkin', 'app') and p['d'] and a <= day(p['d']) < b)
             ck('before', o['before'], pat(st - _dt.timedelta(days=n), st), 1e-9); ck('during', o['during'], pat(st, st + _dt.timedelta(days=n)), 1e-9)
             ck('done', o['done'], (now - st).days >= n); ck('days left', o['daysLeft'], max(0, n - (now - st).days), 0)
+        elif fn == 'snClimb':
+            # one step for each take on which the first take's top held a smaller whole-percent share of the seven
+            # sins' points than at the take before, and one for each ward month whose pattern dropped
+            ids, H = x['sinIds'], x['hist']
+            def share(sc, i):
+                tot = sum(max(0, sc.get(k, 0)) for k in ids)
+                return None if tot <= 0 else max(0, sc.get(i, 0)) / tot
+            n = 0
+            if H and H[0]['sin'] and H[0]['sin']['top']:
+                t0 = H[0]['sin']['top']
+                for k in range(1, len(H)):
+                    a, z = share(H[k - 1]['scores'], t0), share(H[k]['scores'], t0)
+                    if a is not None and z is not None and int(z * 100 + 0.5) < int(a * 100 + 0.5): n += 1   # Math.round, half up
+            n += sum(1 for f in x['fixes'] if f['dropped'] is True)
+            ck('steps', o['n'], n, 0)
         elif fn == 'rcRefill':
             gap = max(0, x['target'] - x['balance'])
             ck('gap', o['gap'], gap); ck('full', o['full'], gap == 0)
@@ -1028,6 +1153,8 @@ def run(cases, ref, il=None):
             if not edge:
                 ck('breakeven year', o['year'], first_year, 0); ck('renting cheaper the whole time', o['never'], first_year is None)
             ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
+        elif fn in ('qcHysa', 'qcDca', 'qcSmall', 'qcInflation', 'qcStart', 'qcAdd', 'qcJobless', 'qcConsolidate', 'qcLeave', 'qcRoommates', 'qcW4', 'qcGlance'):
+            quick_check(fn, x, o, ck, law)
         elif fn == 'careerRoi':
             # Career and education: the price, the raise, the payback and the lifetime value from the definitions; the
             # loan's interest as the level payment whose discounted sum is the loan.
@@ -1043,6 +1170,64 @@ def run(cases, ref, il=None):
             at = lambda k: sum(c['monthly'] for c in o['changes'] if c['at'] <= k)
             if x['months'] > 0: ck('a month while learning', at(0), -lost / x['months'])
             ck('a month after', at(x['months']), gain / 12 - pay); ck('a month after the loan', at(x['months'] + n), gain / 12)
+        elif fn == 'tripLines':
+            # Travel: each line from its definition, the card fee on the lines paid in another currency, points off at most the lines
+            d = x['days']; nts = x['nights'] if x['nights'] is not None else (max(0, d - 1) if d is not None else None)
+            L = {'flights': x['flights'], 'lodging': x['lodging'] * nts if x['lodging'] is not None and nts is not None else None, 'food': x['food'] * d if x['food'] is not None and d is not None else None,
+                 'visa': x['visa'], 'insurance': x['insurance'], 'other': x['other']}
+            on = x['fxOn'] if x.get('fxOn') is not None else ['lodging', 'food', 'other']
+            fx = 0 if not on else (None if x['fxPct'] is None else round(sum(L[k] or 0 for k in on) * x['fxPct'] / 100 + 1e-9, 2))
+            vals = [L[k] for k in ('flights', 'lodging', 'food', 'visa', 'insurance', 'other')] + [fx]
+            for i, v in enumerate(vals): ck(f'line {i}', o['lines'][i], v, 0.011)
+            gross = sum(v for v in vals if v is not None); off = min(x['pointsOff'] or 0, gross)
+            ck('gross', o['gross'], gross, 0.011); ck('points off', o['pointsOff'], off, 0.011); ck('total', o['total'], gross - off, 0.02)
+            ck('lines open', o['open'], sum(1 for v in vals if v is None), 0); ck('ready', o['ready'], any(L[k] is not None for k in L))
+        elif fn == 'tripPoints':
+            got = (x['cash'] - x['fees']) / x['points'] * 100; worth = x['points'] * x['cpp'] / 100; spend = worth + x['fees']; keep = x['cash'] - spend
+            ck('cents a point', o['got'], got, 1e-9); ck('worth', o['worth'], worth); ck('redeeming spends', o['spend'], spend); ck('kept', o['keep'], keep)
+            ck('which leads', o['lead'] == ('same' if abs(keep) < 0.01 else 'points' if keep > 0 else 'cash'), True)
+        elif fn == 'tripSplit':
+            # every part in cents; each part is its exact share to within a cent, and the parts add up to the whole
+            P = x['people']; ids = [p['id'] for p in P]; sh = [p['shares'] if p['shares'] else 1 for p in P]
+            if x['how'] == 'item':
+                exact = [0.0] * len(P); whole_c = 0
+                for it in x['items']:
+                    am = [i for i in (it['among'] or []) if i in ids] or ids
+                    c = round(it['amount'] * 100); whole_c += c
+                    for k, pid in enumerate(ids):
+                        if pid in am: exact[k] += c / len(am)
+                tol = len(x['items']) + 0.001
+            else:
+                T = x['total'] if x['total'] is not None else sum(i['amount'] for i in x['items'])
+                whole_c = round(T * 100); exact = [whole_c * s / sum(sh) for s in sh]; tol = 1.001
+            for k in range(len(P)): ck(f'part {k} in cents', round(o['parts'][k] * 100), exact[k], tol)
+            ck('the parts add up', round(sum(o['parts']) * 100), whole_c, 0); ck('total', round(o['total'] * 100), whole_c, 0)
+        elif fn == 'tripJourney':
+            # the six stages from their definitions; the trip from cash first, then investments; refill months = trip / monthly
+            c, db, inv = x['cash'], x['debt'], x['invested']
+            w = None if None in (c, db, inv) else c + inv - db
+            tr = x['trip']; mo = x['monthly'] if x['monthly'] else None
+            fc = None if tr is None or c is None else min(max(0, c), tr)
+            aft = None if tr is None else {'cash': None if c is None else c - fc, 'inv': None if inv is None or fc is None else inv - (tr - fc), 'debt': db, 'worth': None if w is None else w - tr}
+            def st(i, v):
+                have = [v['worth'], v['cash'], v['debt'], v['worth'], v['inv'], v['inv']][i]; tg = [0, 1000, 0, 100000, x['coast'], x['fi']][i]
+                if have is None or tg is None: return None, None
+                if i == 2: return have <= 0, None
+                return have >= tg, max(0, tg - have)
+            now = {'cash': c, 'inv': inv, 'debt': db, 'worth': w}; shift = tr / mo if tr is not None and mo else None
+            first = None
+            for i in range(6):
+                done, left = st(i, now)
+                ck(f'stage {i} reached', o['done'][i], done)
+                m = 0 if done else (math.ceil(left / mo) if left is not None and mo and i in (0, 1, 3) else None)
+                ck(f'stage {i} months', o['months'][i], m, 0)
+                if first is None and done is False: first = i
+                if aft is not None:
+                    ad, _ = st(i, aft); ma = 0 if ad else (m + shift if m is not None and shift is not None else None)
+                    ck(f'stage {i} after the trip', o['after'][i][0], ad); ck(f'stage {i} months after', o['after'][i][1], ma, 1e-6)
+            unknown = any(st(i, now)[0] is None for i in range(6))
+            ck('where you are', o['here'], first if first is not None else (None if unknown else 6), 0)
+            ck('from cash', o['fromCash'], fc); ck('months of saving', o['shift'], shift, 1e-9)
         elif fn == 'careerStack':
             L = x['list']; months = lambda s: int(s[:4]) * 12 + int(s[5:7])
             sets = [set(range(months(c['from']), months(c['to']) + 1)) for c in L]

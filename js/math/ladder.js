@@ -7,7 +7,7 @@ import { metrics } from './metrics.js';
 import { foo } from './foo.js';
 import { layersOf } from './layers.js';
 import { isHeavyDebt } from './debt.js';
-import { fiDate } from './fi.js';
+import { fiDate, fiMoveOf } from './fi.js';
 import { fiTargets, monthsTo } from '../plan.js';
 import { addMonths, ymOf } from '../month.js';
 import { STEPS, MARKERS, LADDER } from '../registry/ladder.js';
@@ -81,4 +81,27 @@ export function ladderOf(doc, ref, { now = new Date(), flags = [] } = {}) {
   const nextMarker = sortedMarkers.find(k => !k.reached) ?? null;
   const wins = steps.filter(s => s.done).length + markers.filter(k => k.reached).length;
   return { steps, markers: sortedMarkers, rungs, lastDone, next, nextMarker, wins, day0: day0 ? { at: day0.at, netWorth: day0.metrics?.netWorth ?? null } : null, heavy: { start: heavyStart, left: heavyLeft, months: heavyPlan?.months ?? null, date: at(heavyPlan?.months ?? null) } };
+}
+
+// M8T (run of Nov 25 2026, Part 4): what the FIRE journey map (tpJourney of js/math/trip.js) reads from the plan: cash,
+// the costly debt left (consumer debt: cards, personal, BNPL, payday, medical and family loans), what is invested, the
+// Coast and FI numbers, what goes in a month (as the ladder counts it), and the months of the ladder's own markers for
+// debt free, Coast and FI. With a trip, the FI date is run again with its cost off what is invested (fiMoveOf, M9Z).
+// debtKnown: the debt question was answered (no debt rows is then $0; unanswered is null: empty is not zero).
+export function journeyInputs(doc, ref, { now = new Date(), debtKnown = false, trip = null } = {}) {
+  let m = null, L = null;
+  try { m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }); } catch { m = null; }
+  if (!m) return {};
+  try { L = ladderOf(doc, ref, { now }); } catch { L = null; }
+  const x = m.inputs, mk = id => L?.markers.find(k => k.id === id) ?? null;
+  const consumer = x.debts.filter(d => CONSUMER.has(d.type));
+  const debt = consumer.some(d => d.balance == null) ? null : consumer.length ? sum(consumer, d => d.balance) : debtKnown || x.debts.length ? 0 : null;
+  const surplus = m.investing?.monthly ?? m.surplus.value ?? null;
+  const F = trip > 0 ? fiMoveOf(m, { once: trip }, { from: now }) : null;
+  return {
+    cash: x.cash ?? null, debt, invested: x.investedKnown ? x.invested : null, coast: mk('coast')?.target ?? m.coastFi.value ?? null, fi: m.fiNumber.value ?? null,
+    monthly: surplus == null ? null : Math.max(0, surplus), trip: trip > 0 ? trip : null,
+    when: { debt: mk('consumerFree')?.months ?? null, coast: mk('coast')?.months ?? null, fi: mk('fi')?.months ?? null },
+    whenAfter: F?.after != null ? { fi: F.after } : {}, fiDays: F?.days ?? null,
+  };
 }
