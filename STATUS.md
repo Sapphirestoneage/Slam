@@ -187,3 +187,9 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | Part | What | State | Notes |
 |------|------|-------|-------|
 | 1 | Compare the ways: one screen in the game and in the web app lifetime plan | Not started | |
+
+## RUN: Export for the FIRE spreadsheet crowd (Nov 25 2026)
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | The .xlsx export in the game, the FIRE sheet tab, Google Sheets, the Export entry, the blank FIRE sheet button | Not started | |

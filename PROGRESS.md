@@ -179,3 +179,12 @@ of taking money out, as families with variants. It is built in its own working c
 
 - Started.
 
+## Nov 25 2026: RUN: Export for the FIRE spreadsheet crowd (Nov 25 2026)
+
+Run name: **Export for the FIRE spreadsheet crowd (Nov 25 2026)**. An .xlsx download in the game with live formulas
+and the round trip back in, a "FIRE sheet" tab first in the workbook, a clean open in Google Sheets, one "Export"
+entry in the menu of both apps, and a button to Eli's blank FIRE sheet. It is built in its own working copy, next
+to the other runs.
+
+- Started.
+
