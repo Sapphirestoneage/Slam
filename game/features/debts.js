@@ -21,7 +21,8 @@ const DB_ORD = [
   ["hassle", "Most annoying first", "Clears your head"],
 ];
 function dbRate(x) {
-  if (x.rate != null && isFinite(+x.rate)) return { v: +x.rate, cf: 3 };
+  /* x.ratecf: only a live session sets it (account/liveland.js). 0: a rate that was heard, a Guess. 2: confirmed out loud, Close. */
+  if (x.rate != null && isFinite(+x.rate)) return { v: +x.rate, cf: x.ratecf != null ? +x.ratecf : 3 };
   if (x.apr && DB_MID[x.apr] != null) return { v: DB_MID[x.apr], cf: x.apr === "No interest" ? 3 : 2 };
   return { v: x.high ? 20 : 5, cf: 0 };
 }
@@ -313,7 +314,9 @@ Object.assign(ACT, {
         pr = D.realm;
       x.apr = v;
       x.high = !(v === "Under 8%" || v === "No interest");
-      if (x.rate != null && (typeof bandOf !== "function" || bandOf(x.rate) !== v)) delete x.rate;
+      /* a rate that a live session heard gives way to the band that the player taps */
+      if (x.rate != null && (x.ratecf != null || typeof bandOf !== "function" || bandOf(x.rate) !== v)) delete x.rate;
+      delete x.ratecf;
       if (v === "No interest") x.rate = 0;
       afterMoney(c, pr, false);
     } else {

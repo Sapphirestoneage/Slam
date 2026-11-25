@@ -3424,6 +3424,11 @@ Object.assign(ACT, {
         x.apr = "?";
         c.skip[key] = todayISO();
       } else {
+        /* a rate that a live session heard (x.ratecf) gives way to the band that the player taps */
+        if (x.ratecf != null) {
+          delete x.rate;
+          delete x.ratecf;
+        }
         x.apr = v;
         x.high = !(v === "Under 8%" || v === "No interest");
       }
@@ -4511,6 +4516,7 @@ Object.assign(ACT, {
       w.rp = false;
       if (p[0] === "apr") {
         c.debts[i].rate = r;
+        delete c.debts[i].ratecf; /* typed by hand: not a rate that a live session heard */
         ACT.dans({ dataset: { v: bandOf(r) } });
       } else {
         c.cashes[i].apy = r;
@@ -4521,6 +4527,7 @@ Object.assign(ACT, {
     const x = w.o[w.sec][w.i];
     if (w.sec === "debts") {
       x.rate = r;
+      delete x.ratecf;
       x.apr = bandOf(r);
       x.high = r >= 8;
     } else {

@@ -705,7 +705,7 @@ const WB = [
     "Live Session Mode: a coaching call that fills in your profile while you talk",
     "p",
     () => typeof liveOn === "function" && typeof liveTokenClean === "function",
-    "Partly built, and switched off until it is whole. Built so far: the invite link that is the sign-up, and the session room (both tap OK, one Start, Pause and End, text only, no audio saved). Not yet: the profile filling in, the spoken confirmation, the review after the call.",
+    "Partly built, and switched off until it is whole. Built so far: the invite link that is the sign-up, the session room (both tap OK, one Start, Pause and End, text only, no audio saved), and the rules that turn the words of the call into numbers (a heard number lands as a Guess, a number you entered is never changed, Confirming plus your yes makes it Close, a what-if is kept apart). Not yet: those rules joined to your saved game, the two screens of the call, the review after the call.",
     null,
   ],
   ["who", "Saved to your account, on every device", "b", () => WB_FN("clPush") && WB_FN("clPull"), "", null],
