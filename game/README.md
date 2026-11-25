@@ -41,7 +41,7 @@ Open http://localhost:8000/game/. Without an internet connection the game runs i
 npm run test:game
 ```
 
-The command runs 70 test files (1,725 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
+The command runs 71 test files (1,764 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
 
 All checks pass, and the command ends with exit code 0. One file (`addon-sealed-files.js`) has a part that needs the private add-on source. In this repository that part prints `SKIP`.
 
@@ -59,7 +59,7 @@ The scripts are in five folders. The folder shows the role of a file. It does no
 |--------|------|-------|
 | `core/` | The math, the data model and the error record. Each screen depends on these files. | `report.js`, `engine.js`, `engine2.js`, `metrics.js` |
 | `data/` | Data only. No functions. | `skills.js`, `skillthemes.js` (the skill tree), `qr.js` (one QR code picture), `market.js` (US market history by year, from Shiller), `limits2026.js` (the 2026 account limits, from the IRS), `takeout2026.js` (the early-access rules and the health-plan credit table), `cardtemplate.js` (the template of one card: fields, switches, categories; the admin page loads it too), `cards2026.js` (93 cards as full template records; `tools/game_cards_build.mjs` makes it), `health2026.js` (average 2026 health premiums, from KFF), `retire-*.json` (the tax tables of the retirement engine, changed from YAML) |
-| `account/` | Sign-in, the database, the save to the cloud, the roles, and the add-on system. | `supa.js`, `cloud.js`, `gate.js`, `addon.js`, `roles.js` (the hats Player, Coach and Admin, and the audit lines; all three pages load it), `cardadmin.js` and `adminmore.js` (only `admin.html` loads them), `coachpage.js` (only `coach.html` loads it) |
+| `account/` | Sign-in, the database, the save to the cloud, the roles, and the add-on system. | `supa.js`, `cloud.js`, `gate.js`, `addon.js`, `coachplus.js` (the demo with made-up clients, results, the pipeline; only `coach.html` loads it), `roles.js` (the hats Player, Coach and Admin, and the audit lines; all three pages load it), `cardadmin.js` and `adminmore.js` (only `admin.html` loads them), `coachpage.js` (only `coach.html` loads it) |
 | `screens/` | The main screens, the click actions, the navigation and the setup questions. | `ui.js`, `ux.js`, `planner.js`, `nav.js`, `tidy.js`, `smart.js`, `profiles.js` |
 | `features/` | One file for each feature. Each file adds its sheets and its actions. | 70 files, and 12 simulators in `features/sims/`. `CODE-MAP.md` gives the purpose of each one. |
 | `vendor/` | Code from outside the game. Do not edit it. The game loads `retire-engine.js` before `core/engine.js`. | `retire-engine.js` (the retirement engine, one bundle), `retire-worker.js` (its Web Worker), `RETIRE-ENGINE-LICENSE.txt` |

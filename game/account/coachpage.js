@@ -154,6 +154,7 @@ function cpClient(owner, G0) {
     .map((c, i) => ({
       i: (G0.g.chars || []).indexOf(c),
       name: c.name || "Someone",
+      c /* the saved profile itself: coachplus.js reads its history for the milestones */,
       placed: !!c.placed,
       n: cpNums(c),
       done: ((c.x && c.x.plan) || []).filter(p => p.st === "done").length,
@@ -279,6 +280,8 @@ async function cpNote(kind, client, body) {
   return true;
 }
 async function cpLoad() {
+  /* coachplus.js: in the demo the roster is made-up clients, and nothing is read from the database */
+  if (typeof cpxDemoLoad === "function" && cpxDemoLoad()) return cpDraw();
   cpDraw();
   CP.roles = await roLoad(CP.sb);
   if (!CP.roles.coach && !CP.roles.admin) {
@@ -322,7 +325,9 @@ function cpClientCard(cl) {
   const now = Date.now(),
     prev = cpLastSeen(cl.owner),
     flags = cpFlags(cl, now, prev),
-    notes = CP.notes.filter(x => x.kind === "note" && x.client === cl.owner).sort((a, b) => (a.at < b.at ? 1 : -1)),
+    notes = CP.notes
+      .filter(x => x.kind === "note" && x.client === cl.owner && String(x.body).indexOf("#stage:") !== 0)
+      .sort((a, b) => (a.at < b.at ? 1 : -1)),
     quests = CP.notes.filter(x => x.kind === "quest" && x.client === cl.owner),
     first = cl.people[0],
     who = CP.who && CP.who[cl.owner] != null ? CP.who[cl.owner] : first ? first.i : 0;
@@ -340,6 +345,7 @@ function cpClientCard(cl) {
   )
     .map(l => `<li>${cpEsc(l)}</li>`)
     .join("")}</ul><button data-a="seen" data-o="${cl.owner}">Mark as seen</button></div>
+  ${typeof cpxCard === "function" ? cpxCard(cl) : "" /* coachplus.js: the stage, the milestones, before and after */}
   <button class="primary wide" data-a="open" data-o="${cl.owner}" data-k="${cpEsc(cl.names)}">Open game</button><p class="muted">What you change there saves to their game, and they see a note that their coach made a change.</p>
   <div class="who"><b>Assign a quest</b><p class="muted">One tap puts it in their Next Steps, marked "From your coach".</p>${
     cl.people.length > 1
@@ -352,8 +358,9 @@ function cpClientCard(cl) {
 function cpDraw() {
   const el = document.getElementById("app"),
     me = CP.session && CP.session.user ? CP.session.user.email : "";
-  if (!CP.session) {
+  if (!CP.session && !(typeof CPX !== "undefined" && CPX.demo)) {
     el.innerHTML = `<h1>Coach sign-in</h1><p class="muted">For coaches of SLAM the Game. It is the same login as the game.</p><form class="card" id="f"><div><label for="e">Email</label><input id="e" type="email" autocomplete="email" required></div><div><label for="p">Password</label><input id="p" type="password" autocomplete="current-password" required></div><button class="primary wide" type="submit">Sign in</button>${CP.msg ? `<p class="muted">${cpEsc(CP.msg)}</p>` : ""}</form><a class="back" href="./">Back to the game</a>`;
+    if (typeof cpxSignIn === "function") el.innerHTML += cpxSignIn(); /* coachplus.js: the door to the demo */
     return;
   }
   if (!CP.list || !CP.roles) {
@@ -370,13 +377,16 @@ function cpDraw() {
   const flagged = CP.list.filter(cl => cpFlags(cl, Date.now(), cpLastSeen(cl.owner)).length).length;
   el.innerHTML =
     top +
-    `<h1>Coach</h1><p class="muted">Signed in as ${cpEsc(me)}. ${CP.list.length} ${CP.list.length === 1 ? "client shares" : "clients share"} a game with you${flagged ? `, ${flagged} with a flag` : ""}.</p>` +
+    `<h1>Coach</h1><p class="muted">${me ? "Signed in as " + cpEsc(me) + ". " : ""}${CP.list.length} ${CP.list.length === 1 ? "client shares" : "clients share"} a game with you${flagged ? `, ${flagged} with a flag` : ""}.</p>` +
     (CP.msg ? `<p class="ok">${cpEsc(CP.msg)}</p>` : "") +
     (CP.notesOk
       ? ""
       : `<p class="flag">Notes, quests and "seen" marks stay on this device for now. They move to your account when the app owner runs the database file of 2026-11-24.</p>`) +
+    (typeof cpxBar === "function" ? cpxBar() : "") /* coachplus.js: the demo line, totals, pipeline, search */ +
     (CP.list.length
-      ? CP.list.map(cpClientCard).join("")
+      ? typeof cpxList === "function"
+        ? cpxList() /* coachplus.js: the roster after the search, the stage and the sort */
+        : CP.list.map(cpClientCard).join("")
       : `<div class="card"><p>No one shares a game with you yet. A client shows up here when they sign in with "Share with my coach" on, which is the default.</p></div>`) +
     `<details class="card"><summary>Invite a client by email</summary><div class="inner"><label for="inv">Their email address</label><input id="inv" type="email" autocomplete="off"><button class="wide" data-a="invite">Write the invite in my mail app</button><p class="muted">It opens an email, ready to send, with the link and three steps. Nothing is sent until you send it.</p></div></details>` +
     `<details class="card"><summary>Export to a sheet</summary><div class="inner"><button class="wide" data-a="csv">Save the roster as a CSV file</button><p class="muted">One row for each person: last active, era, the four numbers, open steps, flags. Open it in Google Sheets or Excel.</p></div></details>` +
@@ -409,6 +419,8 @@ async function cpClick(t) {
     cl = CP.list ? CP.list.find(x => x.owner === o) : null;
   if (o) CP.open = o;
   CP.msg = "";
+  /* coachplus.js: the demo, the stages, the report. In the demo no tap writes to the database. */
+  if (typeof cpxClick === "function" && (await cpxClick(t, cl))) return;
   if (a === "out") {
     await CP.sb.auth.signOut();
     CP.session = null;

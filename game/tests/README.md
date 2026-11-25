@@ -124,5 +124,6 @@ The add-on source is not in this repository. Thus the tests of the add-on conten
 | `spreadsheet-round-trip.js` | The spreadsheet comes back in: one list of fields for the export and the import | `features/book.js` |
 | `math-audit-core-numbers.js` | The math audit: the FI number, Coast FI, debt payoff and runway, each worked out a second way | `core/engine.js`, `features/debts.js`, `features/drills.js` |
 | `strategy-engine.js` | The Strategy Engine ("Moves to try"): the template, the loop of each strategy, the house hack and the balance transfer by hand, the ranking | `features/strat.js`, `data/strategies.js`, `data/metros.js` |
+| `coach-demo-and-results.js` | The coach page: the demo with made-up clients, milestones and days to a first win, before and after, the pipeline, search and sort | `account/coachplus.js` |
 | `roles-coach-admin.js` | The hats (Player, Coach, Admin), the coach page, the admin sections, the sign-up line, and the database file read as text | `account/roles.js`, `account/coachpage.js`, `account/adminmore.js`, `coach.html`, `admin.html` |
 | `sync-no-change-lost.js` | The sync of two devices and a coach: a stamp for each person, the later copy wins, no open task is lost, a failed save is sent again | `account/cloud.js`, `account/coachpage.js` |

@@ -28,6 +28,10 @@ ul{margin:0;padding-left:20px}li{margin:2px 0}
 .pill{font-size:12px;margin-left:4px;border:1px solid var(--line);border-radius:99px;padding:2px 8px;color:var(--muted);white-space:nowrap;align-self:flex-start}.clsum .pill{margin-left:0}
 .pill.amber{border-color:var(--amber);color:var(--amber)}.flag{border-left:4px solid var(--amber);padding:6px 10px;color:var(--amber);font-size:14px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}.chip{min-height:40px;padding:8px 12px;border-radius:99px;font-weight:600;font-size:14px;text-align:left}.chip.on{background:var(--a1);border-color:var(--a1);color:#fff}
+table.ba{width:100%;border-collapse:collapse;font-size:14px}table.ba th,table.ba td{text-align:left;padding:4px 6px;border-top:1px solid var(--line)}table.ba th{color:var(--muted);font-weight:600}table.ba td{white-space:nowrap}
+.flag.demo{font-size:15px}.flag.demo button{margin-top:8px}
+#cpxprint{display:none}
+@media print{body{background:#fff;color:#000}main{display:none}#cpxprint{display:block;padding:24px;font:14px/1.5 system-ui,sans-serif}#cpxprint pre{white-space:pre-wrap;font:inherit}}
 </style>
 </head>
 <body>
@@ -38,12 +42,14 @@ ul{margin:0;padding-left:20px}li{margin:2px 0}
 <script src="account/supa.js?v=c44df491"></script>
 <script src="core/engine.js?v=ba43c790"></script>
 <script src="account/roles.js?v=04de2e61"></script>
-<script src="account/coachpage.js?v=c86b057a"></script>
+<script src="account/coachpage.js?v=dafb0e43"></script>
+<script src="account/coachplus.js?v=cb375456"></script>
 <script>
 /* The coach page. The database checks everything again: an account with no coach role gets no client back, whatever this page shows. */
 CP.sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 document.addEventListener("submit",async ev=>{ev.preventDefault();const e=document.getElementById("e").value.trim(),p=document.getElementById("p").value;const r=await CP.sb.auth.signInWithPassword({email:e,password:p});if(r.error){CP.msg="That email and password do not match.";cpDraw();return}CP.session=r.data.session;CP.msg="";cpLoad()});
 document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-a]");if(!t||CP.busy)return;CP.busy=true;try{await cpClick(t)}catch(e){report(e,"coach.html: click");CP.msg="That did not work. Try again.";cpDraw()}finally{CP.busy=false}});
+document.addEventListener("input",ev=>{if(typeof cpxInput==="function")cpxInput(ev.target)}); /* coachplus.js: the search box and the order */
 document.addEventListener("toggle",ev=>{const d=ev.target;if(d&&d.classList&&d.classList.contains("cl"))CP.open=d.open?d.dataset.o:CP.open===d.dataset.o?null:CP.open},true);
 CP.sb.auth.getSession().then(({data})=>{CP.session=data&&data.session;if(CP.session)cpLoad();else cpDraw()});
 </script>
