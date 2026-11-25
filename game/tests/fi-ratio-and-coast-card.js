@@ -18,11 +18,11 @@
       ret: 65,
       take: 5000,
       spend: 3000,
-      inv: 60000,
+      inv: 30000,
       incs: [R0({ k: "A main job", amt: 5000 })],
       spends: [R0({ k: "Home", amt: 1500 }), R0({ k: "Food", amt: 1500 })],
       cashes: [R0({ k: "Checking", amt: 9000 })],
-      invs: [R0({ k: "IRA or Roth IRA", amt: 60000 })],
+      invs: [R0({ k: "IRA or Roth IRA", amt: 30000 })],
       debts: [],
     });
   G.demo = false;
@@ -32,10 +32,10 @@
   syncAll(a);
   save();
   const c = C();
-  /* the FI ratio: 60,000 x 4% / 12 = 200 a month; 200 / 3,000 = 6.67% */
+  /* the FI ratio: 30,000 x 4% / 12 = 100 a month; 100 / 3,000 = 3.33% */
   const F = firCalc(c);
-  chk("investment income a month is invested x 4% / 12", Math.abs(F.income - 200) < 1e-9, F.income);
-  chk("the FI ratio is that income / spending", Math.abs(F.ratio - 200 / 3000) < 1e-9, F.ratio);
+  chk("investment income a month is invested x 4% / 12", Math.abs(F.income - 100) < 1e-9, F.income);
+  chk("the FI ratio is that income / spending", Math.abs(F.ratio - 100 / 3000) < 1e-9, F.ratio);
   const M = knMetrics(c, derive(c)),
     m = M.find(x => x.id === "firatio");
   chk("the FI ratio is a key number in the group Freedom", !!m && m.g === "free" && m.n === "FI ratio");
@@ -44,7 +44,7 @@
     m.math.length === 4 && /÷/.test(m.math[3]) && /4%/.test(m.math[1])
   );
   chk("a ratio under 100% gets no verdict word", m.zone[1] === "none" && !/bad|poor|behind|fail/i.test(m.zone[0]));
-  chk("the value is a percent", m.val === knPct(200 / 3000), m.val);
+  chk("the value is a percent", m.val === knPct(100 / 3000), m.val);
   X("keynums");
   X("kngroup", "free");
   chk("the sheet Key numbers shows the FI ratio", ov().includes("FI ratio"));

@@ -91,7 +91,7 @@ function homeCoastCard(h) {
     if (!K.show) return h;
     return homeRowAdd(
       h,
-      `<div class="card stack coastcard" style="gap:8px"><div class="row between"><b>You can stop sprinting</b>${kitPill(K.st)}</div><div class="small">What you have invested can grow to your freedom number by age ${esc(String(K.ret))} with nothing more added. From here, saving is a choice about how soon, not a race.</div><details class="math"><summary>Show the math</summary><div class="inner tiny stack" style="gap:4px"><div>Invested: ${money(K.inv)}</div><div>Your Coast number for age ${esc(String(K.ret))}: ${money(Math.round(K.coast))}</div><div>${money(K.inv)} is at or over ${money(Math.round(K.coast))}.</div><div>This holds while your invested money stays at or over the Coast number.</div></div></details><button class="primary slim" data-a="coastok">Got it</button></div>`
+      `<div class="card stack homerow coastcard" style="gap:8px"><div class="row between"><b>You can stop sprinting</b>${kitPill(K.st)}</div><div class="small">What you have invested can grow to your freedom number by age ${esc(String(K.ret))} with nothing more added. From here, saving is a choice about how soon, not a race.</div><details class="math"><summary>Show the math</summary><div class="inner tiny stack" style="gap:4px"><div>Invested: ${money(K.inv)}</div><div>Your Coast number for age ${esc(String(K.ret))}: ${money(Math.round(K.coast))}</div><div>${money(K.inv)} is at or over ${money(Math.round(K.coast))}.</div><div>This holds while your invested money stays at or over the Coast number.</div></div></details><button class="primary slim" data-a="coastok">Got it</button></div>`
     );
   } catch (e) {
     report(e, "coast.js: homeCoastCard");
