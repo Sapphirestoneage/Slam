@@ -80,6 +80,14 @@ button.rvtap{width:100%;justify-content:space-between;text-align:left;border:0;b
 button.rvtap .caret{color:var(--muted);font-size:20px}
 .rvfix{display:flex;flex-direction:column;gap:10px;padding:0 12px 12px}
 .rvtype .row{flex-wrap:nowrap}.rvtype input{flex:1 1 auto;min-width:0}.rvtype button{flex:none}
+/* Live Session Mode, Parts 8 and 9 (account/liveai.js, account/liveforget.js) */
+textarea{width:100%;padding:10px 12px;border-radius:10px;border:2px solid var(--line);background:var(--panel2);color:inherit;font:inherit;font-size:16px;resize:vertical}
+textarea:focus{outline:none;border-color:var(--a3)}
+label.btn{font:inherit;font-weight:700;min-height:44px;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 2px 0 rgba(0,0,0,.3);margin:0;align-self:flex-start}
+.laidrop{display:flex;flex-direction:column;gap:6px;border:2px dashed var(--line);border-radius:12px;padding:12px}
+.laidrop.over{border-color:var(--a3);background:var(--hl)}
+.laifile{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.laifile:focus-visible+.hint,.laidrop:focus-within label.btn{outline:3px solid var(--a3);outline-offset:2px}
 select{width:100%;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--panel2);color:inherit;font:inherit;min-height:44px;margin-bottom:8px}
 </style>
 </head>
@@ -98,21 +106,28 @@ select{width:100%;padding:10px;border-radius:10px;border:2px solid var(--line);b
 <script src="screens/dash.js?v=46243f0e"></script>
 <script src="account/cloud.js?v=dcb3a34e"></script>
 <script src="account/coachpage.js?v=f808ced0"></script>
-<script src="account/liveflag.js?v=e0e37994"></script>
-<script src="account/live.js?v=95bdda0f"></script>
-<script src="account/liveio.js?v=4792f52b"></script>
+<script src="account/liveflag.js?v=d591421f"></script>
+<script src="account/live.js?v=3db94988"></script>
+<script src="account/liveio.js?v=7e40296e"></script>
 <script src="account/livefill.js?v=5043282d"></script>
-<script src="account/liveland.js?v=9b4f211e"></script>
-<script src="account/livesim.js?v=e4fc0069"></script>
-<script src="account/livegame.js?v=13d6efda"></script>
+<script src="account/liveland.js?v=8cb44dc6"></script>
+<script src="account/livesim.js?v=1865f2e3"></script>
+<script src="account/livegame.js?v=0fd29e91"></script>
 <script src="account/livescreen.js?v=e18b2c6d"></script>
-<script src="account/livereview.js?v=d4179849"></script>
-<script src="account/liveroom.js?v=c6dda93e"></script>
+<script src="account/livereview.js?v=ab667b8d"></script>
+<script src="account/liveai.js?v=ba0df293"></script>
+<script src="account/liveforget.js?v=b3bf0bfb"></script>
+<script src="account/liveroom.js?v=140df5e8"></script>
 <script>
 /* The session page of Live Session Mode. With the switch off (account/liveflag.js) it shows "Coming soon" and does nothing else. The database checks each step again. */
 document.addEventListener("submit",ev=>{ev.preventDefault();if(liveOn())lrSubmit(ev.target).catch(e=>{report(e,"session.html: submit");lrSay("That did not go through. Wait a minute, then try again.")})});
 document.addEventListener("click",ev=>{const t=ev.target.closest("[data-a]");if(!t||t.disabled||!liveOn())return;lrClick(t).catch(e=>{report(e,"session.html: click");lrDraw()})});
 document.addEventListener("toggle",ev=>{if(typeof lsToggle==="function"&&LR.R)lsToggle(ev.target,LR.R)},true); /* livescreen.js: a group stays open or closed through each redraw */
+document.addEventListener("change",ev=>{if(ev.target&&ev.target.id==="laifile"&&LR.R&&liveOn())laiFileTake(LR.R,ev.target.files&&ev.target.files[0]).then(lrDraw,e=>{report(e,"session.html: file");lrDraw()})}); /* liveai.js: the recorder's text file, read on this device */
+document.addEventListener("input",ev=>{if(ev.target&&ev.target.dataset&&ev.target.dataset.lai&&LR.R)laiInput(ev.target,LR.R)}); /* liveai.js: the draft notes keep each word through a redraw */
+document.addEventListener("dragover",ev=>{const z=ev.target.closest&&ev.target.closest("#laidrop");if(z){ev.preventDefault();z.classList.add("over")}});
+document.addEventListener("dragleave",ev=>{const z=ev.target.closest&&ev.target.closest("#laidrop");if(z)z.classList.remove("over")});
+document.addEventListener("drop",ev=>{const z=ev.target.closest&&ev.target.closest("#laidrop");if(!z||!LR.R||!liveOn())return;ev.preventDefault();laiFileTake(LR.R,ev.dataTransfer&&ev.dataTransfer.files&&ev.dataTransfer.files[0]).then(lrDraw,e=>{report(e,"session.html: drop");lrDraw()})});
 addEventListener("pagehide",()=>{if(LR.R&&LR.R.game&&LR.R.game.flush)LR.R.game.flush()}); /* livegame.js: a change that waits goes to the account */
 lrBoot().catch(e=>{report(e,"session.html: boot");document.getElementById("app").innerHTML=lrSoon()});
 </script>

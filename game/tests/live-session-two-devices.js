@@ -15,7 +15,7 @@
 (async () => {
   const fs = require("fs"),
     vm = require("vm");
-  ["account/live.js", "account/liveio.js", "account/livesim.js"].forEach(f =>
+  ["account/live.js", "account/liveio.js", "account/livesim.js", "account/liveroom.js"].forEach(f =>
     vm.runInThisContext(fs.readFileSync(GAME_DIR + f, "utf8"), { filename: f })
   );
   /* One coach, one new client, one invite, one session. */
@@ -78,6 +78,24 @@
     P.coach.speech.say("words said during the check");
     P.coach.speech.running = false;
     chk("no word is kept before Start", P.coach.R.lines.length === 0 && db.lines.length === 0);
+    chk(
+      "Start waits for the client's microphone step: the coach's screen says so and offers their side only",
+      lvCanStart(P.coach.R.room, "coach") === false &&
+        (await P.coach.R.act("start")) === false &&
+        P.coach.R.room.state === "waiting" &&
+        lrStartHTML(P.coach.R, true, false).includes("Waiting for them to allow the microphone.") &&
+        lrStartHTML(P.coach.R, true, false).includes('data-a="lrstartsolo"') &&
+        lrClientReadyHTML(P.client.R).includes("Tap Allow the microphone above.")
+    );
+    P.client.R.micCheck();
+    await clock.run(200);
+    chk(
+      "the client allowed the microphone: both devices know it, and Start works",
+      P.coach.R.room.client_mic === true &&
+        P.client.R.room.client_mic === true &&
+        lvCanStart(P.coach.R.room, "coach") &&
+        !lrStartHTML(P.coach.R, true, true).includes("lrstartsolo")
+    );
     const t0 = clock.now();
     await P.coach.R.act("start");
     await clock.run(200);
@@ -271,6 +289,7 @@
     await P.client.R.act("ok");
     await P.coach.R.act("headphones", true);
     await P.client.R.act("headphones", true);
+    await simReady(P);
     await P.coach.R.act("start");
     await clock.run(300);
     /* the client's speakers play the coach's voice: the client's device hears the same sentence 600 ms later */
@@ -356,6 +375,7 @@
     await P.client.R.join();
     await P.coach.R.act("ok");
     await P.client.R.act("ok");
+    await simReady(P);
     await P.coach.R.act("start");
     await clock.run(300);
     P.client.speech.say("I get paid every two weeks.");
@@ -433,6 +453,7 @@
     chk("with the live link off each screen knows it", P.coach.R.link === false && P.client.R.link === false);
     await P.coach.R.act("ok");
     await P.client.R.act("ok");
+    await simReady(P);
     await P.coach.R.act("start");
     chk("the client's device has not heard of Start yet", P.client.R.room.state === "waiting");
     await clock.run(31000);
@@ -470,6 +491,7 @@
     await P.client.R.act("ok");
     await P.coach.R.act("ok");
     await P.coach.R.act("headphones", false);
+    await simReady(P);
     await P.coach.R.act("start");
     await clock.run(300);
     chk(

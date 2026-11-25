@@ -81,10 +81,16 @@ create table if not exists public.live_sessions (
   client_headphones boolean,
   coach_listens boolean,
   client_listens boolean,
+  coach_mic boolean,
+  client_mic boolean,
   coach_seen_at timestamptz,
   client_seen_at timestamptz,
   check (coach <> client)
 );
+-- Added in Part 8 and 9 of the build (Nov 25 2026), for a project where an older copy of this file ran: the answer
+-- of each side to the microphone step. Start waits for the client's answer (or the coach goes on alone).
+alter table public.live_sessions add column if not exists coach_mic boolean;
+alter table public.live_sessions add column if not exists client_mic boolean;
 create index if not exists live_sessions_coach on public.live_sessions (coach, made_at desc);
 create index if not exists live_sessions_client on public.live_sessions (client, made_at desc);
 alter table public.live_sessions enable row level security;
@@ -108,8 +114,8 @@ create table if not exists public.live_lines (
 create index if not exists live_lines_session on public.live_lines (session, at);
 alter table public.live_lines enable row level security;
 revoke all on public.live_lines from public, anon, authenticated;
--- Read and add. No change and no removal from the app (Part 9 of the build adds "Delete this transcript").
-grant select, insert on public.live_lines to authenticated;
+-- Read, add, and remove ("Delete this transcript", Part 9). No change of a line from the app.
+grant select, insert, delete on public.live_lines to authenticated;
 
 -- True when the signed-in account may add a line to this session as this side: it is that member, and the
 -- session has started. After End, a line that waited on a device can still arrive for one hour.
@@ -127,10 +133,16 @@ grant execute on function public.live_member(uuid) to authenticated;
 
 drop policy if exists "the two members and the admin read the lines" on public.live_lines;
 drop policy if exists "a member adds own lines" on public.live_lines;
+drop policy if exists "the two members delete the lines" on public.live_lines;
 create policy "the two members and the admin read the lines" on public.live_lines for select to authenticated
   using (live_member(session));
 create policy "a member adds own lines" on public.live_lines for insert to authenticated
   with check (by = auth.uid() and live_can_write(session, side));
+-- "Delete this transcript": the coach or the client of the session removes all of its lines, after End. Not the
+-- admin, and not another coach. (Delete my account and the removal of a sign-in also remove them: section 7.)
+create policy "the two members delete the lines" on public.live_lines for delete to authenticated
+  using (exists (select 1 from live_sessions s where s.id = session and s.state = 'ended'
+                 and (s.coach = auth.uid() or s.client = auth.uid())));
 
 -- ---------- 5. the functions of the invite ----------
 -- Make one link. For a coach or the admin. The token is 64 random characters (two random uuids): it cannot
@@ -218,7 +230,10 @@ grant execute on function public.live_session_open(uuid) to authenticated;
 --   'ok'          I tapped OK on the consent screen (kept with the time; it cannot be taken back)
 --   'headphones'  my answer to "Using headphones?" (flag: true or false)
 --   'listens'     my browser can listen (flag: true or false)
---   'start'       the coach only, one time, and only when both tapped OK
+--   'mic'         my answer to the microphone step (flag: true = allowed, false = refused)
+--   'start'       the coach only, one time, and only when both tapped OK and the client finished the microphone
+--                 and headphones steps. flag true: the coach goes on with their side only (the client's steps
+--                 are not done).
 --   'pause', 'resume', 'end'   each member
 -- It gives the row back. A step that the rules do not allow changes nothing and gives the row back as it is.
 create or replace function public.live_session_set(sid uuid, what text, flag boolean default null) returns jsonb language plpgsql security definer set search_path = public as $$
@@ -227,7 +242,7 @@ begin
   select * into s from live_sessions where id = sid for update;
   if not found then raise exception 'no such session'; end if;
   if s.coach = auth.uid() then me := 'coach'; elsif s.client = auth.uid() then me := 'client'; else raise exception 'not a member'; end if;
-  if what not in ('seen', 'ok', 'headphones', 'listens', 'start', 'pause', 'resume', 'end') then raise exception 'unknown step'; end if;
+  if what not in ('seen', 'ok', 'headphones', 'listens', 'mic', 'start', 'pause', 'resume', 'end') then raise exception 'unknown step'; end if;
   if what = 'seen' then
     if me = 'coach' then update live_sessions set coach_seen_at = now() where id = sid;
     else
@@ -245,8 +260,12 @@ begin
   elsif what = 'listens' then
     if me = 'coach' then update live_sessions set coach_listens = flag where id = sid;
     else update live_sessions set client_listens = flag where id = sid; end if;
+  elsif what = 'mic' then
+    if me = 'coach' then update live_sessions set coach_mic = flag where id = sid;
+    else update live_sessions set client_mic = flag where id = sid; end if;
   elsif what = 'start' then
-    if me = 'coach' and s.state = 'waiting' and s.coach_ok_at is not null and s.client_ok_at is not null then
+    if me = 'coach' and s.state = 'waiting' and s.coach_ok_at is not null and s.client_ok_at is not null
+       and (flag is true or (s.client_headphones is not null and (s.client_mic is not null or s.client_listens is false))) then
       update live_sessions set state = 'live', started_at = coalesce(started_at, now()) where id = sid;
     end if;
   elsif what = 'pause' then

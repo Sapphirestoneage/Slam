@@ -220,13 +220,50 @@ function lgClient(o) {
   };
   /* Send what waits, with no delay: when the session ends, and when the page goes to the background. */
   A.flush = async () => (A.dirty ? A.push() : true);
+  /* One change of the client's own, after the call ("Delete this transcript", account/liveforget.js): send
+     what waits, read the saved game again (the coach may have changed it in the review), change the person of
+     the call with fn(c, g), and save. The same shape as act() of the coach. Gives what fn gave, or null. */
+  A.act = async fn => {
+    await A.flush();
+    A.err = "";
+    let out = null,
+      g1 = null,
+      c1 = null;
+    try {
+      CP.sb = o.sb;
+      out = await cpSaveGame(o.uid, g => {
+        const c = lgPerson(g);
+        if (!c) return null;
+        const r = fn(c, g);
+        if (r === null || r === undefined || r === false) return null;
+        c.mod = Date.now();
+        g.savedAt = c.mod;
+        g1 = g;
+        c1 = c;
+        return r;
+      });
+      if (out !== null && g1) {
+        A.g = g1;
+        A.c = c1;
+        A.sig = clSig(c1);
+        A.dirty = false;
+        if (o.store) o.store.del(key); /* the copy of the profile on this device had the old words */
+      }
+    } catch (e) {
+      report(e, "livegame.js: lgClient act");
+      A.err = "That did not save. Check your internet, then tap it again.";
+      out = null;
+    }
+    tell();
+    return out;
+  };
   return A;
 }
 
 /* THE COACH'S DEVICE. o: { sb, owner (the id of the client's account), clock, change }. The coach reads
    the game that the client shares, and changes it only in the review after the call (act). */
 function lgCoach(o) {
-  const A = { side: "coach", g: null, c: null, st: "load", owner: o.owner, busy: false, err: "" };
+  const A = { side: "coach", g: null, c: null, st: "load", owner: o.owner, busy: false, err: "", sb: o.sb };
   const tell = () => {
     if (typeof o.change === "function") o.change(A);
   };
