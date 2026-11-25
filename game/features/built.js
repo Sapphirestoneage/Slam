@@ -371,6 +371,20 @@ const WB = [
     "quest",
   ],
   [
+    "feel",
+    "Report a bug or idea, from any screen",
+    "p",
+    () =>
+      WB_HAS("flag") &&
+      WB_FN("fbOpen") &&
+      WB_FN("topbarReport") &&
+      WB_FN("sheetReportRow") &&
+      WB_FN("rpMake") &&
+      WB_FN("homeReportFixed"),
+    'One Report button on every tab, sheet, the welcome screen and the sign-in screen: tap Bug, Idea or Confusing, add a note or a picture if you want. The screen, your last 3 taps, the device and the app version go with it, and no money numbers. It replaces Flag this screen. Until the owner runs the database file of 2026-11-25, a report stays saved on this device and sends itself after; the admin inbox and the note "You reported this. It\'s fixed." start then.',
+    null,
+  ],
+  [
     "plan",
     "Countdowns: a down payment, a quit fund, a wedding, or any goal",
     "b",

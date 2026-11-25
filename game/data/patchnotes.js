@@ -89,10 +89,11 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-25",
-    t: "Founding Testers, your own link, and this page",
+    t: "Founding Testers, your own link, Report, and this page",
     l: [
       "The first 50 people who finish setup become Founding Testers, with a mark on Me and on the character sheet.",
       "Share SLAM, in the Menu, gives you your own link to send to a friend. It carries no money numbers. There are no rewards yet.",
+      "The Report button, on every screen, tells Eli what is off or what you wish it did, in a few taps. Where you were goes with it.",
       "What's new, in the Menu, is this page. Each update adds a few lines here.",
     ],
   },
