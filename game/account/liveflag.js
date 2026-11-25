@@ -8,7 +8,7 @@
                email (the same way as ?coach=1 and ?ref= in supa.js).
    INPUT       The address of the page (?invite=token). The browser storage: slam_live_invite.
    OUTPUT      The switch LIVE_SESSION_READY. Functions: liveOn, liveTokenClean, liveTokenKeep, liveToken,
-               liveTokenDone, liveBack.
+               liveTokenDone, liveBack, liveOurs, liveRowMark. Part of ledRow() in ui.js: ledRowHeard.
    DEPENDS ON  core/report.js. index.html, coach.html and session.html load this file.
    RULES       Set the switch to true only when the tests of the last part of the build pass and the
                owner ran supabase/migrations/20261125210000_live_sessions.sql. The tests set it on by
@@ -71,5 +71,33 @@ function liveBack(loc, store) {
   const to = String(loc.pathname || "").replace(/[^/]*$/, "") + "session.html" + (loc.search || "") + (loc.hash || "");
   if (typeof loc.replace === "function") loc.replace(to);
   return to;
+}
+/* IS THIS AMOUNT THE ONE THAT A LIVE SESSION WROTE? x: a row of the game. rr: the record of that row
+   (c.x.live.rows[section + ":" + name]). True while the row has the mark h and still holds the amount of
+   the call. An amount that the person changed by hand after the call gives false. account/liveland.js
+   (lfOpen) and the row of the game below use this one rule. */
+function liveOurs(x, rr) {
+  return !!x && !!x.h && !!rr && rr.sum === x.amt;
+}
+/* The small tag of one money row of a profile: "heard" (a Guess that a live session set), "confirmed out
+   loud" (Close, by "Confirming" and the client's yes), or "" (no call set this amount). */
+function liveRowMark(c, sec, x) {
+  const L = c && c.x && c.x.live,
+    rr = L && L.rows ? L.rows[sec + ":" + (x && x.k)] : null;
+  if (!liveOurs(x, rr)) return "";
+  if ((x.cf || 0) >= 3) return "";
+  return x.s ? (rr.voice ? "confirmed out loud" : "") : "heard";
+}
+/* Part of ledRow() in ui.js. A row that a live session set says so, next to Guess or Close. The tag shows
+   with the switch off too: it says what is true about a number that is already on the profile. */
+function ledRowHeard(h, sec, x) {
+  const m = liveRowMark(typeof C === "function" ? C() : null, sec, x);
+  if (!m) return h;
+  return m === "heard"
+    ? h.replace("Guess · tap", () => 'Guess · <span class="lf-heard">heard in your session</span> · tap')
+    : h.replace(
+        '</span><span class="row">',
+        () => '<div class="tiny muted"><span class="lf-heard">confirmed out loud in your session</span></div></span><span class="row">'
+      );
 }
 if (typeof location !== "undefined" && typeof localStorage !== "undefined") liveBack(location, localStorage);

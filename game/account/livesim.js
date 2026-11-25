@@ -8,7 +8,7 @@
                client" (session.html?sim=coach or ?sim=client), so the room can be seen on one device.
    INPUT       Values only.
    OUTPUT      Functions: simClock, simStore, simWake, simId, simSpeech, simHub, simDb, simPair,
-               simScript, simGame, simScriptFill.
+               simScript, simGame, simScriptFill, simSb.
    DEPENDS ON  account/live.js, account/liveio.js (simPair makes two lioRoom controllers). With o.game,
                simPair also needs account/livefill.js and account/liveland.js (lfAttach).
                session.html loads this file. The tests load it by themselves.
@@ -335,6 +335,56 @@ function simPair(o) {
     lfAttach(P.coach.R, { clock: o.clock });
   }
   return P;
+}
+/* A stand-in for the table games of the database, with the calls that account/coachpage.js (cpSaveGame) and
+   account/livegame.js make: from("games").select().eq(), .update().eq(), .insert(), and rpc(). T.as(uid)
+   gives the client of one signed-in account. The rules of the real table: an account reads and writes its
+   own rows; a coach (T.coaches[uid]) reads and writes the rows that are shared with a coach; nobody else
+   sees a row. T.down = true: the server cannot be reached. T.writes counts the rows written. */
+function simSb(clock) {
+  const T = { rows: [], coaches: {}, down: false, writes: 0, n: 0, audits: [] },
+    copy = x => JSON.parse(JSON.stringify(x));
+  T.as = uid => ({
+    from: () => {
+      const q = { op: "select", f: [], patch: null },
+        can = r => r.owner === uid || (!!T.coaches[uid] && r.share_with_coach === true),
+        run = () => {
+          if (T.down) return { data: null, error: { message: "Failed to fetch" } };
+          if (q.op === "insert") {
+            if (q.patch.owner !== uid && !(T.coaches[uid] && q.patch.share_with_coach === true))
+              return { data: null, error: { message: "new row violates row-level security policy" } };
+            const r = Object.assign({ id: "g" + ++T.n }, copy(q.patch));
+            T.rows.push(r);
+            T.writes++;
+            return { data: { id: r.id }, error: null };
+          }
+          const hit = T.rows.filter(r => can(r) && q.f.every(c => (c[2] ? r[c[0]] !== c[1] : r[c[0]] === c[1])));
+          if (q.op === "update") {
+            hit.forEach(r => Object.assign(r, copy(q.patch)));
+            T.writes += hit.length;
+            return { data: null, error: null };
+          }
+          return { data: copy(hit), error: null };
+        },
+        B = {
+          select: () => B,
+          order: () => B,
+          limit: () => B,
+          single: () => B,
+          eq: (k, v) => (q.f.push([k, v, false]), B),
+          neq: (k, v) => (q.f.push([k, v, true]), B),
+          update: p => ((q.op = "update"), (q.patch = p), B),
+          insert: p => ((q.op = "insert"), (q.patch = p), B),
+          then: (a, b) => Promise.resolve().then(run).then(a, b),
+        };
+      return B;
+    },
+    rpc: async (name, args) => {
+      T.audits.push({ by: uid, name, args: copy(args || {}) });
+      return { data: null, error: null };
+    },
+  });
+  return T;
 }
 /* A stand-in for the device that holds the client's game: one profile, and a count of the saves. */
 function simGame(c) {
