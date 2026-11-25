@@ -45,7 +45,7 @@ export function addressFacts(doc, m) {
     heavyDebt: heavy.reduce((s, d) => s + d.balance, 0), hasHeavy: heavy.length > 0, anyDebtKnown: debts.length > 0,
     work: p.workSituation ?? null, selfEmployed: (x.income || []).some(i => i.r?.type === 'Self-employed'),
     fiNamed: said.some(c => c === 'Want FI or to retire early' || c === 'FI or retire early') || (doc?.records || []).some(r => r.kind === 'milestone' && /FI/.test(r.type || '')),
-    investGoal: said.some(c => c === 'Start investing' || c === 'Behind on saving or retirement'),
+    investGoal: said.some(c => c === 'Start investing' || c === 'Want to catch up on saving or retirement'),
     equity: p.equityPay === true,
   };
 }

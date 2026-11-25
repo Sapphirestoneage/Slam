@@ -850,6 +850,14 @@ export const MATH = [
 // js/math exports that are not an M formula of their own: how records become formula inputs, account details, and
 // result plumbing. Each says why it has no row of its own.
 export const SUPPORT = {
+  // Recalculating (Nov 25 2026): the route, the triage, the refill, the safe-to-fail line and the opt-in audit. Each compares or re-orders numbers the plan already has (the debt-free month is M34, months to FI is M53), and the audit's events stay in the app (settings.recalc), so the workbook has no column for them.
+  'metrics.debtRerunOf': 'the one debt plan run again with more a month (M34 with an extra payment), for Home\'s what-ifs and Recalculating',
+  'recalc.rcYm': 'a date as a month (YYYY-MM)', 'recalc.rcAddMonths': 'a month plus a count of months', 'recalc.rcMonthsBetween': 'whole months from one month to another', 'recalc.rcMonthName': 'a month as words (Mar 2029)', 'recalc.rcSpan': 'a count of months as words (1 year and 2 months)',
+  'recalc.rcRoute': 'the date the kept plan said next to the date today\'s numbers give, and the months between them', 'recalc.rcHoldExtra': 'the smallest extra a month that brings the old date back, by running the one debt plan again',
+  'recalc.rcWords': 'the words of the Recalculating card (old date, new date, the next turn)', 'recalc.RC_ORDER': 'the order to pay in when bills are more than income (Eli, 2026-11-25)', 'recalc.rcClassOf': 'a Budget category to its place in that order',
+  'recalc.rcTriage': 'income paid down the order, bill by bill, with what is left unpaid', 'recalc.RC_SCRIPTS': 'what to say on the phone to each kind of creditor', 'recalc.rcScript': 'one script with the amounts filled in',
+  'recalc.rcRefill': 'the emergency fund gap divided by what goes back in a month, and the month it is whole', 'recalc.rcSafeLine': 'a fun line: what is left of its cap, and that the plan counts the cap either way',
+  'recalc.rcMonthState': 'whether anything needs attention this month, and whether it is a hard month', 'recalc.rcAudit': 'the opt-in audit: each past event\'s cost then, grown at the plan\'s return, as days of saving and hours of work, with repeats', 'recalc.RC_KINDS': 'the kinds of money event the audit offers by tap',
   // Aliyah Math (aliyah.html, Run 8): a standalone comparison on data/sources/israel-2026.json; nothing of it is stored in the plan, so the workbook has no column for it.
   'aliyah.ils': 'a shekel amount as words (aliyah.html)', 'aliyah.ALIYAH_SCENARIOS': 'the five ways to earn in Israel the page offers', 'aliyah.ALIYAH_LINES': 'the expense groups, Food, Accommodation, Transportation first',
   'aliyah.aliyahGuesses': 'the faded US starting costs, added up from spendingPresets by group', 'aliyah.aliyahStart': 'what aliyah.html opens with, every one a Guess', 'aliyah.olimPointsOf': 'a new immigrant\'s extra credit points averaged over one year in Israel',

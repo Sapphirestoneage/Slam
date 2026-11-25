@@ -450,7 +450,7 @@ const ES = [
     n: "Review who inherits each account",
     r: 1,
     g: "benef",
-    why: "The name on the account form beats what your will says. Old forms are the most common mistake.",
+    why: "The name on the account form beats what your will says. Old forms are the most common surprise.",
     how: ["Log in to each retirement account and insurance policy.", "Check the name listed, and a backup name."],
   },
   {

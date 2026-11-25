@@ -75,6 +75,7 @@ Each file has the name of its feature.
 | `two-job-offers.js` | Two job offers side by side | `features/offers.js` |
 | `which-account-next.js` | Which account next, up to each limit | `features/nextacct.js` |
 | `quick-math.js` | Quick math | `features/quick.js` |
+| `recalculating.js` | Recalculating: the kept plan and the new date, the short month, the cushion refill, the safe-to-fail line, the letter exercise, the optional Mistake audit | `core/recalc.js`, `features/recalc.js`, `features/exletter.js`, `features/audit.js` |
 | `save-status.js` | The save status | `account/cloud.js` |
 | `sharing-costs-fairly.js` | Sharing costs fairly | `features/fair.js` |
 | `sheet-navigation.js` | Back, Forward, Close and "i" on each sheet | `screens/nav.js` |

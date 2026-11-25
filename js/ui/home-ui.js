@@ -6,6 +6,7 @@
 import { coastCard } from './destinations-ui.js';
 import { h, clear, icon } from './dom.js';
 import { paydayOf } from '../payday.js';
+import { recalcParts } from './recalc-ui.js';
 import * as S from './staples.js';
 import { firstLowDay } from './spending-ui.js';
 import { homeworkItems, sendSummary, fiCard, netWorthChart, fiGate } from './report-ui.js';
@@ -61,6 +62,7 @@ export function homeScreen(app, ctx) {
   const payday = paydayCard(app, ctx);
   const items = openItems(app, ctx);
   return [sessionStrip(app, ctx, P),
+    recalcParts(app, ctx, 'home', { inSession: P.inSession }), // Nov 25 2026: Recalculating (the old date, the new date, the next turn), the triage, the refill, the letter, Done for this month
     coastCard(ctx, P.m, fiGate(ctx)), // run of Nov 25 2026: the day the Coast number is reached, one calm card, one time
     gapOf(doc, P.m) ? gapCard(app, ctx, P.m) : debtHero(app, ctx, P.m), // batch 12 (item 5): a short month owns Home; else (batch 11) the debt-free date leads
     askNextCard(app, ctx), // batch 43 (M9Q): the one question that narrows the plan most, one tap to its box

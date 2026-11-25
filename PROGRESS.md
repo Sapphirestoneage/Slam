@@ -162,6 +162,7 @@ Run name: **Not built, groups 1 to 5 (Nov 25 2026)**. 11 parts, in the order of 
 it is done. The state of each part is in `STATUS.md` (the section of this run). A line is added here for each part.
 
 - Started. The tone rule of this run is for the whole app: "Recalculating", not mistakes.
+- Part 1, Recalculating and the audit: done. One math file, `js/math/recalc.js`, with no imports; `node tools/game_recalc_build.mjs` copies it to `game/core/recalc.js`, so the web app and the game work every number out with the same function (a test fails when the copy is old). (1) The route: the plan as it was last kept (web: the last snapshot; game: kept on the first look, then by a tap) next to today's numbers, one card with the old date, the new date and the one next turn, on Home, Budget, Debt and Debt payoff, and in the game on Home, the Money tab and the debt plan. The next turn is the smallest extra a month that brings the old date back, from the app's own debt plan. (2) From where you are: the new date always starts from today's balances. (3) When it won't all get paid: the income goes down the order (housing, utilities, food, transport, minimums, the rest) on the same total The gap shows, with what to say on the phone to each kind of creditor (no phone numbers). (4) Emergency fund refill: after a recorded dip (web) or a drop in cash (game), what to put back, the months and the month it is whole. (5) Done for this month: one card, and it stops. (6) Safe-to-fail line: one fun line that can run out; the plan counts it either way. (7) Letter from your calm self: built as one self-contained exercise (`js/exercises/calm-letter.js`, `js/ui/exercise-letter-ui.js`, `game/features/exletter.js`), taps, typing or voice-to-text, "Who sees this: Me only", shown in a hard month. (8) Mistake audit: opt-in and closed, under Year in review (web) and at the end of the Yearly Review and in the menu (game): tag past events mistake or unavoidable, the cost then and over time, FI days, hours of work, repeats, the mistake tax. The blame-word sweep changed 37 strings; `test/tone.test.js` fails when mistake, failed, behind or off track comes back in copy outside the audit. Second engine: five new functions. QA on the touched screens: Works 5, Right 5, One answer 4 (the triage and The gap now share one total; the web app compares to the last snapshot while the game keeps its own kept plan), Looks right 4, Obvious 4, Findable 4 (the audit is closed on purpose), Easy 4, Plain words 5, Tells you 4, Fits everywhere 4, Fast 5, Coachable 4. No blocker, no major.
 
 ## Nov 25 2026: RUN: Launch ready for the Nov 30 soft launch (Nov 25 2026)
 
@@ -171,7 +172,11 @@ It starts when each of the two other runs has finished the part it is on. The tw
 A line is added here for each part.
 
 - Logged. Waiting for Part 1 of each of the two other runs to land.
+<<<<<<< HEAD
 - **Part 1, a stable public site: done.** The branch `release` exists (made at `41441f3`, the last `main` commit where both suites pass, tested on that exact commit). `tools/promote.sh` (one command: `bash tools/promote.sh`) tests the exact `main` commit of GitHub in a temporary folder and fast-forwards `release` only when `node --test` and `npm run test:game` both pass; it never forces or merges (`test/promote.test.js`, 8 tests with a local remote). `docs/RELEASE.md` has the clicks for GitHub Pages and the rule "promote at the end of every run"; `CONTRIBUTING.md` has the short form. "Coming soon": one shared piece in each app (`game/core/soon.js`, `js/ui/soon.js`). A tap with no action, an action or a screen that throws, a Menu row with no action and a route with no screen all show one calm card; the error is still recorded and still reaches the console (`game/tests/coming-soon.js`, 40 checks; `test/soon.test.js`, 6 tests). Found and repaired on the way: in a browser, each Menu row of the game closed again at once, and a Menu row that goes to a tab went back (`uxPop` in `game/screens/ux.js`). Not done here: the switch of GitHub Pages (Eli), the stand-alone calculator pages, `admin.html` and `coach.html`.
+=======
+- Part 5, Email: done. `docs/EMAIL-SETUP.md` has the click-by-click steps for Eli: a free Resend account, proving a domain, one key that goes straight into Supabase (Authentication, Emails, SMTP Settings) and nowhere else, the email limit to raise, "Confirm email", a test, and where to look when an email does not arrive. It ends with a five-line checklist, a "Check on the screen" list of what could not be read from an official page, and the sources with the date. No key is in the repository. One line in `docs/CLOUD-SETUP.md` points to it. Nothing in the app changed.
+>>>>>>> origin/main
 
 ## Nov 25 2026: RUN: 4% rule vs guardrails and every way to take money out, side by side (Nov 25 2026)
 
@@ -189,4 +194,13 @@ entry in the menu of both apps, and a button to Eli's blank FIRE sheet. It is bu
 to the other runs.
 
 - Started.
+
+## Nov 25 2026: RUN: Money sins system and the Rings theme (Nov 25 2026)
+
+Run name: **Money sins system and the Rings theme (Nov 25 2026)**. 3 parts: the read (a main pull from the 7 sins and
+a main way of refusing change from 12, from four sources of evidence), results and growth, and the Rings theme. It
+reuses the quiz engine of Part 11 of the run "Not built, groups 1 to 5", so that part is built first, right after the
+launch run. A line is added here for each part.
+
+- Logged. It starts when the launch run is done and the quiz engine is on main.
 

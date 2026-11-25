@@ -83,7 +83,7 @@ function lvRounds(c) {
     },
     {
       t: "Two of you, one home.",
-      ask: "You are " + age + " again, and two people can each add $100. Is $200 a month still behind, or ahead?",
+      ask: "You are " + age + " again, and two people can each add $100. Is $200 a month still short of it, or ahead?",
       opts: three({ o: T, add: 200 }),
       ok: [T.win].concat(T.tie ? [T.tie] : []),
       why: "More hands on the money lever makes it bigger. The other two do not change.",

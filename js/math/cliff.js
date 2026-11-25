@@ -355,7 +355,7 @@ export function cliffOf(doc, ref, { now = new Date(), m, raise = null } = {}) {
   const crossed = R ? live.filter(p => !p.over && p.distance > 0 && p.distance <= raise) : [];
   const might = crossed.filter(p => p.status === 'Might qualify');
   const say = !R ? null
-    : R.net < -0.5 ? `A ${fmt.money(raise)} raise leaves you ${fmt.money(-R.net)} a year behind${even ? `, until it is ${fmt.money(even)}` : ', even at $150,000 more'}.`
+    : R.net < -0.5 ? `A ${fmt.money(raise)} raise leaves you with ${fmt.money(-R.net)} less a year${even ? `, until it is ${fmt.money(even)}` : ', even at $150,000 more'}.`
       : R.lost.length ? `A ${fmt.money(raise)} raise leaves you ${fmt.money(R.net)} a year ahead after tax and the benefits it changes.`
         : `A ${fmt.money(raise)} raise leaves you ${fmt.money(R.net)} a year ahead after tax; it changes no benefit you get.`;
   const basisWords = { gross: 'before tax', magi: 'before tax, less pre-tax money (MAGI)', earned: 'earned' };
@@ -363,7 +363,7 @@ export function cliffOf(doc, ref, { now = new Date(), m, raise = null } = {}) {
     id: 'M9B', has: H.has, near, household: H, fpl: fplOf(ref, H.size), programs, live, counted: [...counted], next, base,
     nextText: next ? `${cap(short(next.id))} ${next.id === 'kids' ? 'changes' : next.id === 'eitc' ? 'runs out' : 'ends'} at ${k(next.line)} a year, ${k(next.distance)} above what you make now.` : null,
     nextBasis: next ? `${k(next.line)} ${basisWords[next.basis]}` : null,
-    zones, zonesText: zones.length ? `${zones.map(z => z.from === z.to ? `A raise of ${fmt.money(z.from)}` : `Raises from ${fmt.money(z.from)} to ${fmt.money(z.to)}`).join(', and ')} a year leave you behind${zones.length === 1 ? ` (at worst ${fmt.money(-zones[0].worst)} a year)` : ''}.` : counted.size ? `No raise up to ${fmt.money(ZONE_TO)} a year leaves you behind.` : null,
+    zones, zonesText: zones.length ? `${zones.map(z => z.from === z.to ? `A raise of ${fmt.money(z.from)}` : `Raises from ${fmt.money(z.from)} to ${fmt.money(z.to)}`).join(', and ')} a year leave you with less${zones.length === 1 ? ` (at worst ${fmt.money(-zones[0].worst)} a year)` : ''}.` : counted.size ? `No raise up to ${fmt.money(ZONE_TO)} a year leaves you with less.` : null,
     past: past.map(p => p.id),
     pastText: past.length ? `Your income is already over the line for ${past.map(p => `${short(p.id)} (${k(p.line)} a year)`).join(' and ')}: it may end at the next renewal, whatever the raise.` : null,
     nowhere: !near ? `Nowhere near a benefit line: at ${k(H.gross)} a year before tax${['Employer', "Parent's plan", 'Other'].includes(H.coverage) ? ', with health coverage through work or family,' : ''} no line a raise could cross applies.` : null,

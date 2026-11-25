@@ -6,9 +6,9 @@
 // Pure: no DOM.
 export const WHY_CHIPS = {
   whyNow: ['Debt feels out of control', 'Job change or layoff', 'Big life change (engaged, married, baby, divorce, move)', 'Big purchase coming (home, car, wedding)',
-    'Behind on saving or retirement', 'Want FI or to retire early', 'Windfall or raise', 'Someone nudged me (partner, family, friend)', 'Just want to get organized', 'Other'],
+    'Want to catch up on saving or retirement', 'Want FI or to retire early', 'Windfall or raise', 'Someone nudged me (partner, family, friend)', 'Just want to get organized', 'Other'],
   worry: ['Not enough if something goes wrong', 'Debt', 'Never being able to retire', 'No idea where the money goes', 'Money tension with partner or family', 'Job security',
-    'Making a wrong big decision', 'Feeling behind', 'Other'],
+    'Making a wrong big decision', 'Wanting to catch up', 'Other'],
   goalWords: ['Debt free', 'Emergency fund', 'Buy a home', 'FI or retire early', 'Save for a big event', 'Stop living paycheck to paycheck', 'Feel in control, less stress', 'Start investing', 'Other'],
 };
 export const WHY_LABELS = { whyNow: 'What prompted this call', worry: 'Biggest worry', goalWords: 'Goal in their words' };
@@ -25,7 +25,10 @@ export const GOAL_MAP = {
   'Start investing': { kind: 'foo', fooStep: '5', name: 'Tax-Free Growth', step: 'FOO step 5: Max out tax-free accounts (Roth IRA and HSA)' },
 };
 const blank = v => v === null || v === undefined || String(v).trim() === '';
-export const chipsOf = (p, key) => (Array.isArray(p?.chips?.[key]) ? p.chips[key] : []);
+// Two chips had other words before Nov 25 2026 (Eli's tone rule: the app never calls a person behind). A file or an
+// intake form saved with the old words reads as the new ones; the old words are never shown.
+export const OLD_CHIPS = { 'Behind on saving or retirement': 'Want to catch up on saving or retirement', 'Feeling behind': 'Wanting to catch up' };
+export const chipsOf = (p, key) => (Array.isArray(p?.chips?.[key]) ? p.chips[key].map(c => OLD_CHIPS[c] ?? c) : []);
 // Answered: any chip (Other counts once its words are typed, or on its own), or the words box.
 export const whyAnswered = (p, key) => chipsOf(p, key).length > 0 || !blank(p?.[key]);
 // The one value to show for a question: the starred chip, else the first chip, else the words (Other shows its words).

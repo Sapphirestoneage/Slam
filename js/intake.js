@@ -8,6 +8,7 @@
 // "I'm not sure" lands nowhere and goes into one parking-lot note, to ask on the call. Pure: no DOM.
 import { parseCsv, money as moneyOf } from './import/csv.js';
 import { SECTIONS, QUESTIONS, WHY, STATUS_IN_SLAM, ACCOUNT_COLUMNS } from './registry/intake.js';
+import { OLD_CHIPS } from './whynow.js';
 import { applyFastTrack, fastTrackAnswers, FT_DEBTS, firstWord } from './fasttrack.js';
 import { setHouseholdMode } from './couples.js';
 import { syncCount, LOAN_FOR } from './gates.js';
@@ -169,7 +170,7 @@ export const keptLines = plan => plan.lines.filter(l => l.decision === 'keep' &&
 // goalWords), kept with anything already typed there. Chips already on stay on.
 export function whyPatch(p, key, chips = [], other = null, words = null) {
   const had = Array.isArray(p?.chips?.[key]) ? p.chips[key] : [];
-  const add = [...chips.filter(c => WHY[key].includes(c)), ...(other ? ['Other'] : [])];
+  const add = [...chips.map(c => OLD_CHIPS[c] ?? c).filter(c => WHY[key].includes(c)), ...(other ? ['Other'] : [])]; // a form made before Nov 25 2026 still sends two chips in their old words
   const patch = {};
   if (add.length) patch.chips = { ...(p?.chips || {}), [key]: [...had, ...add.filter(c => !had.includes(c))] };
   if (other) { const was = p?.chipOther?.[key]; patch.chipOther = { ...(p?.chipOther || {}), [key]: was && !was.includes(other) ? `${was}; ${other}` : was || other }; }

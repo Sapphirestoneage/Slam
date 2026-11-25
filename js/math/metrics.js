@@ -463,6 +463,14 @@ export function debtRuleOf(doc, debts) {
   const wanted = own == null ? !!RULES.debtFirst : !(own === false || own === 0);
   return { heavy: heavy.length > 0, heavyDebts: heavy.map(d => d.id), wanted, on: wanted && heavy.length > 0, chosen: own != null };
 }
+// The one debt plan run again with `extra` more a month (the Home what-ifs, and Recalculating's "what brings the old
+// date back"). With no heavy-debt plan it is the plain payoff plan of keyNumbers, so the months always match the
+// debt-free month the screens show.
+export function debtRerunOf(m) {
+  const x = m.inputs;
+  if (m.debtPlan) return extra => debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: m.debtRule?.first ?? [], surplus: m.debtRule?.toDebt, extra: (x.debtExtra ?? 0) + extra, surplusFrom: m.debtPlan?.surplusFrom ?? 0, changes: m.debtRule?.changes ?? null });
+  return extra => payoffPlan(x.debts.filter(d => !d.inFull && d.balance > 0 && d.apr != null && d.payment != null), { order: x.debtOrder, extra });
+}
 // The debt-free card for Home (batch 11, item 3): the one plan, Day 0's debt total as the start, and the what-ifs
 // (+$50, +$100, +$250 a month) run on the same plan. A what-if is never saved.
 export function debtHeroOf(doc, m) {
@@ -470,7 +478,7 @@ export function debtHeroOf(doc, m) {
   if (!m.debtRule?.heavy || !m.debtPlan?.debts.length) return null;
   const day0 = (doc.snapshots || []).find(s => s.day0) ?? null;
   const start = day0 ? (day0.records || []).filter(r => r.kind === 'debt' && r.values?.payChoice !== 'In full').reduce((s, r) => s + (r.values?.balance ?? 0), 0) : null;
-  const rerun = extra => debtFirstPlan(x.debts, { order: x.debtOrder, ids: x.debtCustomOrder, first: m.debtRule.first ?? [], surplus: m.debtRule.toDebt, extra: (x.debtExtra ?? 0) + extra, surplusFrom: m.debtPlan?.surplusFrom ?? 0, changes: m.debtRule.changes ?? null });
+  const rerun = debtRerunOf(m);
   const card = debtFreeCard(m.debtPlan, { start, rerun, extras: heroExtras(m.debtPlan) });
   return card && { ...card, short: m.debtPlan.months != null && m.debtPlan.months <= RULES.shortPlanMonths, then: m.fooFlow?.bigEMonths ? { monthly: m.fooFlow.monthly, months: m.fooFlow.bigEEnd, taxFree: m.fooFlow.taxFreeEnd } : null }; // batch 12: what the money does next (M79)
 }
