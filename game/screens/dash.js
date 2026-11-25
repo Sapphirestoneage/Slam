@@ -359,19 +359,21 @@ function tmdDrag(el) {
   const again = box.querySelector(`.tmdr[data-t="${keep}"]`);
   if (again && again.focus) again.focus();
 }
-Object.assign(ACT, {
-  tmdmark: t => {
-    const id = t.dataset.k,
-      p = String(t.dataset.v).split(":");
-    const st = tmdSet(id, p[0], +p[1]);
-    if (id === "debt" && W && st) {
-      W.extra = st.reach ? st.extra : W.extra;
-      W.tmdWant = st.reach ? null : st.want;
-    }
-    if (typeof drawSheet === "function" && typeof SH !== "undefined" && SH) drawSheet();
-    else if (typeof render === "function") render();
-  },
-});
+/* session.html loads this file with no game screens (no ACT): the kit works there, the dial taps do not */
+if (typeof ACT !== "undefined")
+  Object.assign(ACT, {
+    tmdmark: t => {
+      const id = t.dataset.k,
+        p = String(t.dataset.v).split(":");
+      const st = tmdSet(id, p[0], +p[1]);
+      if (id === "debt" && W && st) {
+        W.extra = st.reach ? st.extra : W.extra;
+        W.tmdWant = st.reach ? null : st.want;
+      }
+      if (typeof drawSheet === "function" && typeof SH !== "undefined" && SH) drawSheet();
+      else if (typeof render === "function") render();
+    },
+  });
 if (typeof document !== "undefined" && document.addEventListener)
   document.addEventListener("input", e => {
     const el = e.target;

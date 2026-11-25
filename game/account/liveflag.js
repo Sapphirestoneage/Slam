@@ -97,7 +97,8 @@ function ledRowHeard(h, sec, x) {
     ? h.replace("Guess · tap", () => 'Guess · <span class="lf-heard">heard in your session</span> · tap')
     : h.replace(
         '</span><span class="row">',
-        () => '<div class="tiny muted"><span class="lf-heard">confirmed out loud in your session</span></div></span><span class="row">'
+        () =>
+          '<div class="tiny muted"><span class="lf-heard">confirmed out loud in your session</span></div></span><span class="row">'
       );
 }
 if (typeof location !== "undefined" && typeof localStorage !== "undefined") liveBack(location, localStorage);

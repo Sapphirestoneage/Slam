@@ -284,14 +284,34 @@ async function lrRoom(sid) {
     change: lrDraw,
   });
   LR.R.now = () => Date.now();
-  /* liveland.js: this device shows what the device with the client's game heard (R.fill). The page holds no
-     game yet. Part 6 gives lfAttach the adapter of the client's game ({ game }) on the client's device. */
-  if (typeof lfAttach === "function") lfAttach(LR.R, { clock: lioClock() });
+  /* livegame.js: the client's device loads the client's own saved game, fills it and saves it; the coach's
+     device reads the client's shared game (and saves the review into it). Then the screens of livescreen.js. */
+  if (typeof lgAttach === "function")
+    lgAttach(LR.R, {
+      sb: LR.sb,
+      uid: LR.user.id,
+      name: lrName(),
+      owner: r.data.client,
+      store: lioStore(localStorage),
+      clock: lioClock(),
+      change: lrDraw,
+    });
+  else if (typeof lfAttach === "function") lfAttach(LR.R, { clock: lioClock() });
   LR.mode = "room";
   LR.ending = false;
   await LR.R.join();
   lrDraw();
   if (!LR.tick) LR.tick = setInterval(lrTick, 1000);
+}
+/* The first name of the client: typed on the invite screen (on this device, and in the account). */
+function lrName() {
+  let n = "";
+  try {
+    n = localStorage.getItem("slam_live_name") || "";
+  } catch (e) {
+    report(e, "liveroom.js: lrName");
+  }
+  return n || (LR.user && LR.user.user_metadata && LR.user.user_metadata.name) || "";
 }
 /* Look for the open session of the signed-in person. */
 async function lrMine() {
@@ -472,7 +492,9 @@ async function lrClick(t) {
 async function lrSim(side) {
   const clock = lioClock(),
     db = simDb(clock),
-    hub = simHub(clock, 150);
+    hub = simHub(clock, 150),
+    sb = typeof simSb === "function" && typeof lgAttach === "function" ? simSb(clock) : null;
+  if (sb) sb.coaches.c1 = true;
   db.coaches.c1 = true;
   const made = await db.as("c1").inviteMake("Sam (sample)", "Coach (sample)"),
     used = await db.as("u1").inviteUse(made.data.token),
@@ -485,7 +507,10 @@ async function lrSim(side) {
     sid: used.data.session.id,
     coach: "c1",
     client: "u1",
+    sb,
+    name: "Sam (sample)",
     change: R => {
+      if (!R || typeof R.act !== "function") return lrDraw(); /* a change of the game of either device */
       if (R.side === side) return lrDraw();
       /* the script of the other side: Start (when it is the coach), then the lines */
       if (R.side === "coach" && lvCanStart(R.room, "coach")) R.act("start");
@@ -500,7 +525,7 @@ async function lrSim(side) {
     if (room.state !== "live" || played) return;
     played = true;
     let at = 0;
-    simScript().forEach(l => {
+    (sb && typeof simScriptFill === "function" ? simScriptFill() : simScript()).forEach(l => {
       at += l[0];
       clock.set(() => P[l[1]].speech.say(l[2]), at);
     });

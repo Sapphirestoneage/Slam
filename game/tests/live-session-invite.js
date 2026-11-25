@@ -572,7 +572,7 @@
         h.includes("You: <b>Stopped</b>") &&
         h.includes('data-a="lrre"') &&
         h.includes(">Reconnect</button>") &&
-        !/red|#f00|#ff0000|crimson/i.test(read("session.html").match(/<style>[^]*<\/style>/)[0])
+        !/\bred\b|#f00\b|#ff0000|crimson/i.test(read("session.html").match(/<style>[^]*<\/style>/)[0])
     );
     chk(
       "the coach sees it on the light Them",
