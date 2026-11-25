@@ -124,7 +124,7 @@ test('every quick calculator is a page drawn by the one renderer, on the hub she
   const { QUICK_SPECS, QUICK_SHELF } = await import('../js/solo/quick.js');
   assert.deepEqual([...QUICK_SHELF].sort(), Object.keys(QUICK_SPECS).sort());
   const canon = read('js/solo/canon.js'), hub = read('js/solo/hub.js'), layout = read('tools/e2e/layout.cjs');
-  assert.match(canon, /ALL = \{ \.\.\.SPECS, \.\.\.QUICK_SPECS \}/);
+  assert.match(canon, /ALL = \{ \.\.\.SPECS, \.\.\.QUICK_SPECS(, \.\.\.\w+)* \}/);
   for (const id of QUICK_SHELF) {
     assert.ok(existsSync(new URL(`${id}.html`, root)), `${id}.html`);
     const page = read(`${id}.html`); assert.match(page, new RegExp(`data-tool="${id}"`)); assert.match(page, /src="js\/solo\/canon\.js"/);
