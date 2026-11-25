@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-25. Files: 150. Lines: 91,764. Top-level functions: 2088. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-25. Files: 150. Lines: 91,772. Top-level functions: 2089. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -16,7 +16,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 2 | `core/soon.js` | 130 | 10 | 1 | 0 | A part of the game that is not ready must never show as a broken or blank screen |
 | 3 | `features/firelink.js` | 35 | 1 | 0 | 0 | The button "Start from a blank FIRE sheet": one small function for each place that shows it (the Export entry of the game, the Export entry of the web... |
 | 4 | `account/trust.js` | 375 | 15 | 2 | 0 | Trust. Three things: (1) the one line "Education and tools, not financial advice." and the link to the privacy page; (2) calm words for each answer of... |
-| 5 | `account/liveflag.js` | 105 | 9 | 0 | 0 | The ONE switch of Live Session Mode (a coaching call that fills the client's profile while the two talk) |
+| 5 | `account/liveflag.js` | 113 | 10 | 0 | 0 | The ONE switch of Live Session Mode (a coaching call that fills the client's profile while the two talk) |
 | 6 | `account/door.js` | 228 | 19 | 0 | 0 | The front door. A person who arrives from the QR code or a link, with no account on this device, sees one landing screen: one line, one big Start butt... |
 | 7 | `account/supa.js` | 737 | 22 | 6 | 0 | Accounts on the website. Each player signs in with an email address and a password, and gets a private saved game in the Supabase database |
 | 8 | `data/skills.js` | 5,163 | 0 | 0 | 0 | Data only. The skills of the skill tree: name, group, effort, reward, and the text of each skill |

@@ -7,15 +7,23 @@
                of an invite link on the device, so the token is not lost when the person confirms the
                email (the same way as ?coach=1 and ?ref= in supa.js).
    INPUT       The address of the page (?invite=token). The browser storage: slam_live_invite.
-   OUTPUT      The switch LIVE_SESSION_READY. Functions: liveOn, liveTokenClean, liveTokenKeep, liveToken,
+   OUTPUT      The switches LIVE_SESSION_READY and AI_PASS_READY. Functions: liveOn, aiOn, liveTokenClean, liveTokenKeep, liveToken,
                liveTokenDone, liveBack, liveOurs, liveRowMark. Part of ledRow() in ui.js: ledRowHeard.
    DEPENDS ON  core/report.js. index.html, coach.html and session.html load this file.
    RULES       Set the switch to true only when the tests of the last part of the build pass and the
                owner ran supabase/migrations/20261125210000_live_sessions.sql. The tests set it on by
                themselves. A token is letters and digits only, thus a link cannot carry anything else.
-   STATE       LIVE_SESSION_READY. The browser storage: slam_live_invite.
+   STATE       LIVE_SESSION_READY, AI_PASS_READY. The browser storage: slam_live_invite.
    ========================================================================= */
 let LIVE_SESSION_READY = false;
+/* The second switch: the AI pass after the call (Part 8: account/liveai.js and the Edge Function
+   supabase/functions/live-ai-pass). While it is false the review has no AI button, and everything else of Live
+   Session Mode works. Set it to true only when the owner did each step of docs/AI-PASS-SETUP.md. */
+let AI_PASS_READY = false;
+/* True when the AI pass is switched on (and Live Session Mode too). */
+function aiOn() {
+  return liveOn() && AI_PASS_READY === true;
+}
 const LIVE_KEY = "slam_live_invite";
 /* True when Live Session Mode is switched on. Each way into the feature asks this first. */
 function liveOn() {

@@ -19,6 +19,11 @@
 /* ---------- the words of the brief, in one place ---------- */
 const LV_CONSENT =
   "This session is transcribed. Text only, no audio is saved. After the call it is processed by AI to fill in your profile.";
+/* One plain line under the consent words of the brief (Part 9), so the screen says the whole truth: the
+   browser's speech recognition sends the sound to Google, and the AI step after the call sends the words to
+   Anthropic. game/privacy.html says the same in more words. */
+const LV_CONSENT_MORE =
+  "To turn speech into words, Chrome sends the sound to Google while you talk; SLAM keeps the words only. The AI step after the call sends the words to Anthropic, and only when your coach runs it.";
 const LV_JOIN_LINE = "Join the call from a laptop with Chrome, and use headphones if you can.";
 const LV_BEST_LINE = "Sending the link before the call is best.";
 const LV_INVITE_DAYS = 7;
@@ -150,6 +155,8 @@ function lvRoomNew(id, coach, client, now) {
     client_headphones: null,
     coach_listens: null,
     client_listens: null,
+    coach_mic: null,
+    client_mic: null,
     coach_seen_at: null,
     client_seen_at: null,
   };
@@ -167,9 +174,32 @@ function lvStage(room) {
   if (room.state === "waiting") return lvBothOk(room) ? "ready" : "consent";
   return room.state;
 }
-/* Only the coach starts, one time, and only when both tapped OK. */
-function lvCanStart(room, side) {
-  return !!room && side === "coach" && room.state === "waiting" && lvBothOk(room);
+/* One side finished the steps before Start: OK, the microphone (allowed, refused, or a browser that cannot
+   listen) and "Using headphones?". */
+function lvSetDone(room, side) {
+  return (
+    lvOk(room, side) &&
+    room[side + "_headphones"] != null &&
+    (room[side + "_mic"] != null || room[side + "_listens"] === false)
+  );
+}
+/* What the client still has to do before Start, as the coach reads it: "" when nothing. */
+function lvClientWait(room) {
+  if (!room || !lvOk(room, "client")) return "";
+  if (room.client_mic == null && room.client_listens !== false) return "Waiting for them to allow the microphone.";
+  if (room.client_headphones == null) return "Waiting for them to answer Using headphones?";
+  return "";
+}
+/* Only the coach starts, one time, and only when both tapped OK and the client finished the microphone and
+   headphones steps. solo: the coach goes on with their side only, while the client's steps are not done. */
+function lvCanStart(room, side, solo) {
+  return (
+    !!room &&
+    side === "coach" &&
+    room.state === "waiting" &&
+    lvBothOk(room) &&
+    (solo === true || lvSetDone(room, "client"))
+  );
 }
 /* True when this side said "I am in the room" in the last 90 seconds. */
 function lvHere(room, side, now) {
@@ -177,7 +207,8 @@ function lvHere(room, side, now) {
   return t != null && now - t <= LV_HERE_MS;
 }
 /* One step of one side. The same rules as live_session_set() in the database file.
-   what: "seen", "ok", "headphones", "listens", "start", "pause", "resume", "end".
+   what: "seen", "ok", "headphones", "listens", "mic", "start", "pause", "resume", "end". For "start", flag
+   true is "go on with my side only" (the client's microphone and headphones steps are not done).
    Gives { room, changed }. A step that the rules do not allow changes nothing. */
 function lvRoomDo(room, side, what, now, flag) {
   const r = Object.assign({}, room),
@@ -191,12 +222,12 @@ function lvRoomDo(room, side, what, now, flag) {
   if (what === "ok") {
     if (room[side + "_ok_at"]) return same;
     r[side + "_ok_at"] = now;
-  } else if (what === "headphones" || what === "listens") {
+  } else if (what === "headphones" || what === "listens" || what === "mic") {
     const k = side + "_" + what;
     if (room[k] === !!flag) return same;
     r[k] = !!flag;
   } else if (what === "start") {
-    if (!lvCanStart(room, side)) return same;
+    if (!lvCanStart(room, side, flag === true)) return same;
     r.state = "live";
     r.started_at = room.started_at || now;
   } else if (what === "pause") {
@@ -226,7 +257,9 @@ function lvWaitLine(room, me) {
     them = me === "coach" ? "your client" : "your coach";
   if (mine && theirs)
     return me === "coach"
-      ? "Both of you tapped OK. Press Start when you are ready."
+      ? lvClientWait(room)
+        ? "Both of you tapped OK. " + lvClientWait(room)
+        : "Both of you tapped OK. Press Start when you are ready."
       : "Both of you tapped OK. Your coach presses Start.";
   if (!mine && !theirs) return "Still to tap OK: you and " + them + ".";
   if (!mine) return "Still to tap OK: you. " + (me === "coach" ? "Your client" : "Your coach") + " tapped already.";

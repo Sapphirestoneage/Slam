@@ -81,6 +81,13 @@ function lioDb(sb) {
       run("lines", () =>
         sb.from("live_lines").select("id,side,body,at").eq("session", sid).order("at", { ascending: true }).limit(5000)
       ),
+    /* "Delete this transcript" (Part 9): remove each line of one ended session. Only its coach and its client
+       may (the rule "the two members delete the lines" of the database file). Gives the ids removed. */
+    forget: sid =>
+      run("forget", async () => {
+        const q = await sb.from("live_lines").delete().eq("session", sid).select("id");
+        return q.error ? q : { data: (q.data || []).map(r => r.id) };
+      }),
     /* Add lines. An id that the database has already is skipped, not added again. */
     addLines: rows =>
       run("addLines", async () => {
@@ -268,7 +275,9 @@ function lioId() {
                 stays, of both sides; drop(id) when the echo filter takes a line back; room(room) after
                 each change of the room; fill(p) for a signal of the live fill from the other device
                 (account/liveland.js); hello(side) when the other device joined the channel.
-   Functions: join, act (ok, headphones, start, pause, resume, end), micCheck, reconnect, flush, leave. */
+   Functions: join, act (ok, headphones, mic, start, pause, resume, end), micCheck, reconnect, flush, leave.
+   The end of the microphone check goes to the room as the step "mic" (true: allowed), so the coach's Start
+   waits until the client's microphone step is done (lvCanStart in live.js). */
 function lioRoom(d) {
   const R = {
     sid: d.sid,
@@ -362,6 +371,8 @@ function lioRoom(d) {
         checking = false;
         if (!R.ready) R.ready = "no";
         draw();
+        /* the other device sees that this side's microphone step is done */
+        if (R.room && R.room.state === "waiting") R.act("mic", R.ready === "yes", true);
         return;
       }
       R.interim = "";
@@ -598,6 +609,25 @@ function lioRoom(d) {
     if (R.room && R.room.state === "live") listen();
   };
   R.flush = flush;
+  /* "Delete this transcript" (account/liveforget.js): the lines of this session go from the database (the coach
+     or the client of an ended session), from this device's store and from this page. Then the database is read
+     again: left is the number of lines that are still there. Gives { ok, gone, left } or { ok: false, why }. */
+  R.forget = async () => {
+    if (!R.room || R.room.state !== "ended") return { ok: false, why: "The transcript can be deleted after End." };
+    const r = await d.db.forget(R.sid);
+    if (!r.ok)
+      return {
+        ok: false,
+        why: r.net ? "Could not reach the server. Check your internet, then try again." : "That did not go through.",
+      };
+    const L = await d.db.lines(R.sid);
+    ["coach", "client"].forEach(sd => d.store.del(lvBufKey(R.sid, sd)));
+    R.buf = lvBufNew(R.sid, R.side);
+    R.lines = [];
+    R.interim = "";
+    draw();
+    return { ok: true, gone: (r.data || []).length, left: L.ok ? (L.data || []).length : null };
+  };
   /* For account/liveland.js. R.tell(p): send one signal to the other device. R.fire(k, v): run the hooks k. */
   R.tell = p => d.chan.send(Object.assign({ side: R.side }, p));
   R.fire = hook;

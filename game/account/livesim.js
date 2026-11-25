@@ -285,6 +285,14 @@ function simDb(clock, opt) {
         if (!member(s, uid) && !(s && S.admins[uid])) return ok([]);
         return ok(S.lines.filter(l => l.session === sid).sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0)));
       }),
+      /* the rule of the database file: the coach or the client of an ended session removes its lines */
+      forget: gate(sid => {
+        const s = S.sessions.find(x => x.id === sid);
+        if (!s || !(s.coach === uid || s.client === uid) || s.state !== "ended") return ok([]);
+        const gone = S.lines.filter(l => l.session === sid).map(l => l.id);
+        S.lines = S.lines.filter(l => l.session !== sid);
+        return ok(gone);
+      }),
       addLines: gate(rows => {
         for (const r of rows) {
           const s = S.sessions.find(x => x.id === r.session),
@@ -351,6 +359,13 @@ function simPair(o) {
   }
   return P;
 }
+/* The client's steps before Start, in a test that is not about them: the microphone step (allowed) and
+   "Using headphones?" (Yes), each only when it is not answered yet. */
+async function simReady(P) {
+  const R = P.client.R;
+  if (R.room && R.room.client_mic == null && R.room.client_listens !== false) await R.act("mic", true);
+  if (R.room && R.room.client_headphones == null) await R.act("headphones", true);
+}
 /* A stand-in for the table games of the database, with the calls that account/coachpage.js (cpSaveGame) and
    account/livegame.js make: from("games").select().eq(), .update().eq(), .insert(), and rpc(). T.as(uid)
    gives the client of one signed-in account. The rules of the real table: an account reads and writes its
@@ -409,6 +424,86 @@ function simGame(c) {
     g.saves++;
   };
   return g;
+}
+/* A stand-in for the Edge Function of the AI pass (supabase/functions/live-ai-pass). A test never calls the real
+   one. reply: the answer, or a function of the request that gives it. G.calls counts the requests, G.last is the
+   last request. */
+function simAi(reply) {
+  const G = { calls: 0, last: null };
+  G.fn = async body => {
+    G.calls++;
+    G.last = JSON.parse(JSON.stringify(body));
+    const r = typeof reply === "function" ? reply(body) : reply;
+    return r == null ? r : JSON.parse(JSON.stringify(r));
+  };
+  return G;
+}
+/* The answer of the stand-in for the made-up call of simScriptFill(): what an AI pass could propose. The what-ifs
+   of the request get a type in the order they came (a scenario, a scenario, a goal). */
+function simAiReply(body) {
+  const kinds = ["scenario", "scenario", "goal", "life"];
+  return {
+    ok: true,
+    model: "stand-in",
+    usage: { input_tokens: 15840, output_tokens: 2310 },
+    result: {
+      fields: [
+        {
+          field: "spend:Home/rent",
+          value: "1850",
+          rough: false,
+          per: "month",
+          quote: "Rent is eighteen fifty a month.",
+          speaker: "client",
+          source: "app",
+        },
+        {
+          field: "debt:Credit card balance",
+          value: "3400",
+          rough: false,
+          per: "none",
+          quote: "No wait, 3,400.",
+          speaker: "client",
+          source: "app",
+        },
+        {
+          field: "cash:Checking",
+          value: "1200",
+          rough: true,
+          per: "none",
+          quote: "Checking has about twelve hundred.",
+          speaker: "client",
+          source: "file",
+        },
+        {
+          field: "spend:Getting around/car insurance",
+          value: "140",
+          rough: false,
+          per: "month",
+          quote: "Car insurance is 140 a month.",
+          speaker: "client",
+          source: "file",
+        },
+        {
+          field: "spend:Bills and subscriptions/phone",
+          value: "85",
+          rough: false,
+          per: "month",
+          quote: "Is your phone about 85?",
+          speaker: "coach",
+          source: "app",
+        },
+      ],
+      whatif_types: ((body && body.whatifs) || []).map((w, i) => ({ id: w.id, type: kinds[i % kinds.length] })),
+      notes:
+        "Sam gets paid every two weeks and rent is 1,850. One card has about 3,400 on it at 24.99%. Groceries are a rough 450. They want a trip to Japan someday.",
+      agenda: {
+        changed: ["First call: the first numbers are in, most of them a Guess."],
+        problems: ["A card balance at 24.99%.", "No cushion number yet.", "Groceries are only a rough number."],
+        ask_next: ["What is the minimum payment on the card?", "How much is in savings, to the dollar?"],
+      },
+    },
+  };
 }
 /* A short made-up call: [milliseconds after the line before, side, words]. */
 function simScript() {

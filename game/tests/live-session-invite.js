@@ -519,6 +519,15 @@
     await clock.run(50);
     h = lrRoomHTML(P.coach.R, now, false);
     chk(
+      "both tapped, the client has not allowed the microphone: Start waits, and the coach may go on alone",
+      /data-a="lrstart" disabled/.test(h) &&
+        h.includes("Waiting for them to allow the microphone.") &&
+        h.includes('data-a="lrstartsolo"')
+    );
+    await simReady(P);
+    await clock.run(50);
+    h = lrRoomHTML(P.coach.R, now, false);
+    chk(
       "both tapped: Start is on, and it is the one primary button",
       /data-a="lrstart">Start/.test(h) &&
         !/data-a="lrstart" disabled/.test(h) &&
@@ -530,6 +539,7 @@
       "the microphone step says when it is ready",
       lrRoomHTML(P.coach.R, now, false).includes("The microphone is ready.")
     );
+    await simReady(P);
     await P.coach.R.act("start");
     await clock.run(50);
     P.client.speech.say("Rent is fourteen hundred a month.");
@@ -908,7 +918,7 @@
     !/create table (?!if not exists)/.test(code) &&
       !/create index (?!if not exists)/.test(code) &&
       !/create function/.test(code) &&
-      policies.length === 5 &&
+      policies.length === 6 &&
       policies.every(p =>
         code.includes(
           'drop policy if exists "' + p.match(/"([^"]+)"/)[1] + '" on public.' + p.match(/on public\.(\w+)/)[1] + ";"
@@ -925,22 +935,38 @@
   );
   const grants = code.match(/grant [^;]+ on public\.\w+ to [^;]+;/g) || [];
   chk(
-    "the explicit grants to the signed-in role: read only, and read plus add for the lines",
+    "the explicit grants to the signed-in role: read only, and read, add and delete for the lines",
     grants.sort().join("|") ===
       [
         "grant select on public.coach_clients to authenticated;",
         "grant select on public.live_invites to authenticated;",
         "grant select on public.live_sessions to authenticated;",
-        "grant select, insert on public.live_lines to authenticated;",
+        "grant select, insert, delete on public.live_lines to authenticated;",
       ]
         .sort()
         .join("|"),
     grants.join("|")
   );
   chk(
-    "no table right for a visitor, and no update or delete right for anyone",
+    "no table right for a visitor, no update right for anyone, and delete only on the lines",
     !/grant [^;]*on public\.\w+ to [^;]*anon/.test(code) &&
-      !/grant [^;]*(update|delete|all)[^;]* on public\./.test(code)
+      !/grant [^;]*(update|all)[^;]* on public\./.test(code) &&
+      grants.filter(g => /delete/.test(g)).length === 1 &&
+      grants.some(g => /delete on public\.live_lines/.test(g))
+  );
+  chk(
+    "Delete this transcript (Part 9): only the coach or the client of an ended session removes its lines",
+    /create policy "the two members delete the lines" on public\.live_lines for delete to authenticated\s+using \(exists \(select 1 from live_sessions s where s\.id = session and s\.state = 'ended'\s+and \(s\.coach = auth\.uid\(\) or s\.client = auth\.uid\(\)\)\)\);/.test(
+      code
+    )
+  );
+  chk(
+    "Start in the database waits for the client's microphone and headphones steps, or the coach's side only",
+    /'mic'/.test(body("live_session_set")) &&
+      /flag is true or \(s\.client_headphones is not null and \(s\.client_mic is not null or s\.client_listens is false\)\)/.test(
+        body("live_session_set")
+      ) &&
+      /add column if not exists client_mic boolean/.test(code)
   );
   chk(
     "each policy is for the signed-in role",
@@ -1108,7 +1134,7 @@
   );
   chk(
     "Start: the coach only, from waiting, and only when both tapped OK; the first start time stays",
-    /if me = 'coach' and s\.state = 'waiting' and s\.coach_ok_at is not null and s\.client_ok_at is not null then\s+update live_sessions set state = 'live', started_at = coalesce\(started_at, now\(\)\)/.test(
+    /if me = 'coach' and s\.state = 'waiting' and s\.coach_ok_at is not null and s\.client_ok_at is not null\s+and \(flag is true or [^\n]+\) then\s+update live_sessions set state = 'live', started_at = coalesce\(started_at, now\(\)\)/.test(
       setb
     )
   );

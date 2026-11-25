@@ -41,6 +41,7 @@
     await P.coach.R.act("headphones", !(o && o.speakers));
     await P.client.R.act("headphones", !(o && o.speakers));
     await clock.run(300);
+    await simReady(P);
     await P.coach.R.act("start");
     await clock.run(300);
     return { clock, db, hub, sid, P, game, c: game.c, seen };
