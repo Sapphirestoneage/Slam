@@ -12,6 +12,7 @@ import { gapCard } from './gap-ui.js';
 import { libraryFor, learnBlock } from './library-ui.js';
 import { fooRangeLine } from './range-ui.js';
 import { fooDestinationSection } from './destinations-ui.js';
+import { babyStepsCard, translatorSection } from './canon-ui.js';
 
 export const FUI = { original: false };
 export const LAUNCH_MOVES = ['Quit and take time off', 'Go part-time', 'Take a sabbatical', 'Start something of my own', 'Move somewhere cheaper'];
@@ -74,13 +75,15 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
       { note: 'Asked once: it feeds Quiet Quitting FI (a kept job adds its match) and Barista FI' }),
     S.checkbox('Quiet Quitting FI opens the launch window', !!set.qqOpensLaunch, v => ctx.store.setDoc('settings', { qqOpensLaunch: v }), { key: 'foo:qq-opens' })))); // batch 13: a caret section, closed by default
   return [head('FOO', 'Your order of operations: what to fund next, and when',
-      S.toggle([[false, 'SLAM path'], [true, "With the Money Guy's original"]], FUI.original, v => { FUI.original = v; app.render(); }, { label: 'Show the original nine' })),
+      S.toggle([[false, 'SLAM path'], [true, "With the Money Guy's original"], ['baby', 'With the Baby Steps']], FUI.original, v => { FUI.original = v; app.render(); }, { label: 'Show another order next to it' })),
     f.gap ? gapCard(app, ctx, undefined, { where: 'foo' }) : null, // batch 12 (item 5): the gap on top
     S.sec('foo:path-sec', { title: 'Your path', open: true, summary: f.here ? `You are at step ${f.here}` : null }, path), fooDestinationSection(ctx, f), settings, // batch 13: the path and the steps are the core (open)
     S.sec('foo:steps', { title: 'Every step', open: true, summary: `${f.steps.filter(s => s.status === 'Done').length} of ${f.steps.length} done` }, h(`div.foo-cols${FUI.original ? '.two' : ''}`, {},
       h('div.foo-steps', {}, doneLine(f), f.steps.filter(s => s.status !== 'Done' || FUI.showDone).map(stepRow)), // item 32: done steps fold into one slim line
-      FUI.original ? h('div.card.foo-original', {}, h('h2', {}, "The Money Guy's original"), h('ol', {}, ORIGINAL.map(o => h('li', {}, o))),
-        h('p.muted.small', {}, 'For comparison. SLAM adds joy up front, giving at the tax-free step, income gaps, the three big e layers, Quiet Quitting FI and a launch window.')) : null))];
+      FUI.original === 'baby' ? babyStepsCard(ctx, f) // run Not built, groups 1 to 5, Part 4: the Baby Steps next to the SLAM FOO
+        : FUI.original ? h('div.card.foo-original', {}, h('h2', {}, "The Money Guy's original"), h('ol', {}, ORIGINAL.map(o => h('li', {}, o))),
+        h('p.muted.small', {}, 'For comparison. SLAM adds joy up front, giving at the tax-free step, income gaps, the three big e layers, Quiet Quitting FI and a launch window.')) : null)),
+    translatorSection(app, ctx, f)]; // the Advice translator: the unlearn list read at your step
 }
 
 // Item 32: the done steps as one slim line, opened on request.

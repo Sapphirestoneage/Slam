@@ -292,6 +292,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-25",
+    t: "Frameworks, and your next dollar",
+    l: [
+      "Home starts with one line: where your next dollar goes, with the match at work included.",
+      "Famous money ideas has eight more: SWAN, Second Mouse, Trust, the Advice translator, the Baby Steps, the wealth stages, Die With Zero, and when your net worth should peak.",
+      "Menu has Your Money or Your Life: the book's nine steps in order, as one path, each on your numbers.",
+      "Menu has Quick wins: small fixes to tick, and what each saved adds up.",
+      "On the web: five small pages (sleep-at-night cash, trust this advice, the net worth peak, 0% tax, every dollar earned), and the Baby Steps and the Advice translator on the FOO.",
+    ],
+  },
+  {
+    d: "2026-11-25",
     t: "Student loans: PSLF, refinancing and each year's rate",
     l: [
       "Student loan plans now shows your household size, and you can tap the size on your loan papers.",
