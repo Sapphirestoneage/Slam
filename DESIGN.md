@@ -13,6 +13,45 @@ listed in the batch report.
 - Never like a bank website.
 - Before a design call, check docs/BENCHMARK.md for how these apps do it.
 
+## Reference: Tally (the north star for the look)
+
+Eli picked the Tally personal finance app (tallyfi.app) on 2026-11-25 as the look SLAM heads toward, in SLAM's own
+colors. Tally is a tracker; SLAM keeps its own brain (eras, next steps, the X-Ray) under this skin. These are rules:
+
+- Surfaces: deep navy page, slightly lighter navy cards, thin low-contrast borders, rounded corners (about 12px), even
+  padding. No gradients and no glow, except the pulse that says "tap here".
+- One accent: SLAM sapphire (`--sap`) for things you can tap. Mint (`--good`) for progress and "good". Amber
+  (`--warn`) for "needs attention". No red anywhere. Everything else is navy and muted text.
+- Type: labels small, muted, uppercase, with letter spacing. The number is the hero: large, bold, tabular. One short
+  caption under every screen title ("See where it goes", "A debt payoff plan", "Goals with progress").
+- Page pattern: (1) title and caption, (2) a row of stat tiles (4 across at 1280 and wider, 2 by 2 at 390): a label,
+  a big number, a small line under it, sometimes a tiny sparkline, (3) one hero card with the main chart, (4) the
+  other cards in a priority grid (1 top left and biggest, 2 top right, 3 bottom left, 4 bottom right). Each card
+  answers one question.
+- Charts: grouped bars (income and spending by month), area or line (net worth or a balance over time), a donut with
+  a legend list (where it goes, the mix), progress bars on goal cards, a day strip for the pay period, list rows with
+  small due-date pills. All of them come from the kit in `game/screens/dash.js`. No chart library.
+- Goal card: an icon, the name, the target date, a progress bar with the percent, the amount saved of the target, one
+  line "Strategy: $X a month", and the Time-Money dial when it is open.
+- Pay period: a day strip across the top, "Bills left this period" with due pills and amounts, "Money coming in".
+- Sliders only for exploring a what-if, never to enter a real number. Every what-if slider is a Time-Money dial.
+
+### The Time-Money dial
+
+Time and money are the two linked sides of every what-if. The dial has two tracks, one over the other: "Done in"
+(time) and "Extra each month" (money). Move one and the other moves: more money brings the date closer, a closer date
+asks for more money. The chart and the interest (or the goal progress) change while you drag.
+
+- Snap marks on both tracks, each one also a button: time (Current pace, 3 mo, 6 mo, 1 yr, 2 yr, 3 yr, and the
+  player's own goal date if set); money (+$25, +$50, +$100, +$250, +$500, All my free-to-spend). Dragging between
+  marks works; within a few pixels of a mark it snaps. At 390 wide no mark label overlaps or is cut off.
+- A mark that is out of reach stays, faded, with the trade-off in one line ("needs $640 a month, $210 more than your
+  free-to-spend"). Never a flat no.
+- One sentence under the dial: "Pay $X more a month and you're done in [month year], N months sooner, saving $Y in
+  interest."
+- The math is in the math layer (the payoff run forward, and the reverse: a date to the extra a month it needs). The
+  dial only shows what the math returns. It is built once, `timeMoneyDial()`, and used on Debt payoff and on goals.
+
 ## Rule zero (Eli's brief)
 
 The rule is easy; the flexibility is depth. Every screen opens at the simplest useful level (a gut number, a category
