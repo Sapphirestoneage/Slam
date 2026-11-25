@@ -154,3 +154,11 @@ committed and pushed to main when it is done, so a stop midway keeps the finishe
 
 - Started. Baseline: `node --test` 1,240 pass, 0 fail. `npm run test:game` 71 files, 1,764 checks ok, 0 failed.
 
+## Nov 25 2026: RUN: Not built, groups 1 to 5 (Nov 25 2026)
+
+Run name: **Not built, groups 1 to 5 (Nov 25 2026)**. 11 parts, in the order of the prompt. It runs next to the run
+"Finish everything partly built" (above), in its own working copy, and each part is committed and pushed to main when
+it is done. The state of each part is in `STATUS.md` (the section of this run). A line is added here for each part.
+
+- Started. The tone rule of this run is for the whole app: "Recalculating", not mistakes.
+
