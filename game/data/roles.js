@@ -5,10 +5,15 @@
                each time, the times a year, the screen of Do it, the skill of Automate it, the tools of
                Hand it off, and the seasonal items that are the same task). No logic.
    INPUT       Nothing.
-   OUTPUT      Constants that the other files read: JOB_ROLES, JOB_TASKS, JOB_SEASON_ROLE, JOB_TOOLS.
+   OUTPUT      Constants that the other files read: JOB_ROLES, JOB_TASKS, JOB_SEASON_ROLE, JOB_TOOLS, CARE_QUESTS
+               (the health and insurance quests, feature 5), WIRE_OPTIONS (the kinds of account of "I need
+               one", feature 4).
    DEPENDS ON  Nothing. core/jobs.js has the ids (JOB_IDS) and the math.
    RULES       The minutes of a task are SLAM's own guess for a typical person, not from a source. The
                screens show them as a guess ("saves you ~X min/month", with Show the math).
+               No rule date of a plan is here: an FSA deadline or an open enrollment window differs by
+               employer and plan, so the person taps their own. No fee of a company is here: the fee pages
+               could not be reached from this repository (QUESTIONS.md, run JOE-1, Features 4 and 5).
    ========================================================================= */
 /* The six jobs. trees: the skill trees of the job, the first one with a next skill is the next step. */
 const JOB_ROLES = {
@@ -152,8 +157,20 @@ const JOB_TASKS = [
     n: "Renew policies and compare prices",
     per: 120,
     times: 1,
-    a: "cover",
+    a: "care",
+    v: "renew",
     auto: "Set each policy to renew by itself, and SLAM reminds you to compare.",
+  },
+  {
+    id: "in_review",
+    role: "insurance",
+    n: "Is my coverage still right?",
+    per: 30,
+    times: 1,
+    a: "care",
+    v: "review",
+    auto: "SLAM puts it on your plan once a year, in November.",
+    season: ["oe:cover"],
   },
   {
     id: "in_premium",
@@ -177,6 +194,8 @@ const JOB_TASKS = [
     n: "Check medical bills before you pay",
     per: 20,
     times: 4,
+    a: "care",
+    v: "eob",
     auto: "Turn on online statements from your health plan.",
   },
   {
@@ -185,7 +204,10 @@ const JOB_TASKS = [
     n: "Save health receipts",
     per: 10,
     times: 6,
+    a: "care",
+    v: "hsa",
     auto: "Snap each receipt into your HSA or FSA app.",
+    season: ["tax:hsa"],
   },
   {
     id: "hl_fsa",
@@ -193,6 +215,8 @@ const JOB_TASKS = [
     n: "Use up your health spending account",
     per: 30,
     times: 1,
+    a: "care",
+    v: "fsa",
     auto: "Set money for regular costs to go in each payday.",
     season: ["ye:fsa"],
   },
@@ -202,7 +226,10 @@ const JOB_TASKS = [
     n: "Pick your health plan at open enrollment",
     per: 90,
     times: 1,
+    a: "care",
+    v: "oe",
     auto: "Keep last year's plan unless something changed. SLAM asks you what changed.",
+    season: ["oe:enroll"],
   },
   {
     id: "dl_subs",
@@ -234,6 +261,145 @@ const JOB_TASKS = [
 /* A seasonal item (SEASONS in core/engine.js) that is not in a task above is its own task, in this job. An item can
    also name its job as its fourth value: ["id", "name", "line", "health"]. */
 const JOB_SEASON_ROLE = { tax: "accountant", ye: "cfo" };
+/* The health and insurance quests (feature 5). task: the task of JOB_TASKS that is this quest (its four exits and
+   its minutes). date: the key of the date the person taps (c.x.care), with ask and lead (the days before the date
+   that the reminder shows). visit: the quest starts when the person taps "I saw a doctor". policies: one date each.
+   terms: the glossary words of the quest (GLOSS keys). go: a screen that the quest opens. */
+const CARE_QUESTS = [
+  {
+    id: "oe",
+    role: "health",
+    n: "Open enrollment check",
+    task: "hl_enroll",
+    date: "oe",
+    ask: "When does your open enrollment window close?",
+    lead: 21,
+    steps: [
+      "Find your window on your benefits page, or in the letter from your plan.",
+      "Put next year's premium, deductible and out-of-pocket max next to this year's.",
+      "Keep your plan, or pick a new one, before the window closes.",
+    ],
+    terms: ["openenroll", "premium", "deductible", "oopmax"],
+  },
+  {
+    id: "hsa",
+    role: "health",
+    n: "Save your HSA receipts",
+    task: "hl_receipts",
+    steps: [
+      "After you pay for care, keep the receipt and the EOB.",
+      "Put them in one folder, or snap them into your HSA app.",
+      "With the receipt saved, your HSA can pay you back later, even years later.",
+    ],
+    terms: ["hsa", "eob"],
+  },
+  {
+    id: "fsa",
+    role: "health",
+    n: "FSA use-it-or-lose-it deadline",
+    task: "hl_fsa",
+    date: "fsa",
+    ask: "When does this year's FSA money run out?",
+    lead: 45,
+    steps: [
+      "Find your plan's last day on your benefits page. Some plans give extra weeks or let a little roll over.",
+      "Check what is left in your FSA.",
+      "Book care you need, or buy what the plan allows, before that day.",
+    ],
+    terms: ["fsa"],
+  },
+  {
+    id: "eob",
+    role: "health",
+    n: "Check the bill against the EOB",
+    task: "hl_bills",
+    visit: true,
+    steps: [
+      "After a visit, your plan sends an EOB. It is not a bill.",
+      "When the bill comes, check that it matches what the EOB says you owe.",
+      "If they differ, call the doctor's office first, then your plan.",
+    ],
+    terms: ["eob", "deductible", "oopmax"],
+  },
+  {
+    id: "renew",
+    role: "insurance",
+    n: "Policy renewal dates",
+    task: "in_renew",
+    lead: 30,
+    policies: [
+      ["renters", "Renters"],
+      ["auto", "Auto"],
+      ["life", "Life"],
+      ["disab", "Disability"],
+    ],
+    steps: [
+      "Tap the day each policy renews. It is on the policy's first page.",
+      "A month before, SLAM puts a reminder on Today.",
+      "Then check the new premium, and compare one or two other prices.",
+    ],
+    terms: ["renewal", "premium", "deductible"],
+  },
+  {
+    id: "review",
+    role: "insurance",
+    n: "Is my coverage still right?",
+    task: "in_review",
+    go: "cover",
+    steps: [
+      "Did your home, your work or your people change this year?",
+      "Open Insurance needs and look at the gap for each kind of cover.",
+      "Check who is named as the beneficiary on each life policy and account.",
+    ],
+    terms: ["premium", "deductible", "beneficiary"],
+  },
+];
+/* The kinds of account of "I need one" (feature 4). The order is fixed: by kind (savings, then a brokerage, then a
+   robo-advisor), then A to Z in each kind. No pick is a default. No fee is shown: SLAM could not reach the fee
+   pages from here, so each one says "Check the fee on their page" (checked 2026-11-25). */
+const WIRE_OPTIONS_ORDER = "By kind (savings, then brokerage, then robo-advisor), then A to Z. Nothing here is picked for you.";
+const WIRE_OPTIONS = [
+  {
+    id: "hysa",
+    n: "A high-yield savings account",
+    kind: "Savings (a kind, at many banks)",
+    good: "Money you need in the next few years, like a trip or a cushion.",
+    trade: "Safe and easy to reach, but it grows slowly. The rate can change.",
+    term: "hysa",
+  },
+  {
+    id: "fidelity",
+    n: "Fidelity",
+    kind: "Brokerage",
+    good: "Long goals, where you pick the funds yourself.",
+    trade: "You choose and check the funds. The value goes up and down.",
+    term: "brokerage",
+  },
+  {
+    id: "schwab",
+    n: "Schwab",
+    kind: "Brokerage",
+    good: "Long goals, where you pick the funds yourself.",
+    trade: "You choose and check the funds. The value goes up and down.",
+    term: "brokerage",
+  },
+  {
+    id: "vanguard",
+    n: "Vanguard",
+    kind: "Brokerage",
+    good: "Long goals, where you pick the funds yourself.",
+    trade: "You choose and check the funds. The value goes up and down.",
+    term: "brokerage",
+  },
+  {
+    id: "betterment",
+    n: "Betterment",
+    kind: "Robo-advisor",
+    good: "Long goals, when you want the picking done for you.",
+    trade: "It picks and rebalances for you, for a yearly fee on top of the funds. The value goes up and down.",
+    term: "robo",
+  },
+];
 /* The tools of Hand it off, by job. Kinds of tool, never one brand. */
 const JOB_TOOLS = {
   cfo: ["A budgeting app", "A bookkeeper"],

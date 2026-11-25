@@ -207,6 +207,17 @@ const PATCH_NOTES = [
       "The launch window: a job hop, Roth or traditional now, and a house hack, each as days on your freedom date.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Wire up a goal, and the health and insurance quests",
+    l: [
+      "Open a goal and tap Wire it up: where the money lives, how much a month, and the day it moves (payday first). Three taps.",
+      "No account for it yet? Tap I need one to see some kinds side by side. Nothing is picked for you.",
+      "Then the goal says Set once. Check in: quarterly. You set the transfer at your bank, and SLAM reminds you to check in.",
+      "New quests for the Health Care Admin and the Insurance Coordinator: open enrollment, HSA receipts, the FSA deadline, the EOB after a visit, renewal dates, and a yearly cover check.",
+      "Tap your own dates once. A reminder lands on Today before each one.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

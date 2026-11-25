@@ -9,7 +9,7 @@
                calcost, chance, yrdone, restopen, gseason, review, revwhen, and 9 more.
    DEPENDS ON  core/engine.js, core/engine2.js, account/gate.js, screens/ui.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
-               page loads: features/fork.js, features/eras.js, features/quota.js.
+               page loads: features/fork.js, features/eras.js, features/quota.js, features/careq.js.
    RULES       Only the tax-year items start again each year.
    ========================================================================= */
 /* ---------- tax-year facts (checked Nov 2026: IRS IR-2026-136, Rev. Proc. 2026-24 and 2026-35) ---------- */
@@ -234,6 +234,7 @@ function resets(c, today) {
     })
     .filter(k => k.live)
     .sort((p, q) => (p.drop < q.drop ? -1 : 1));
+  if (typeof resetsCare === "function") resetsCare(c, today, o); /* careq.js: the dates of the person */
   return { y, rows: o, cards, n524: cards.length, next524: cards[0] || null, janNew: parseISO(today).getMonth() === 0 };
 }
 /* ---------- the reflection clock: January, a birthday, or a date a calendar brings ---------- */

@@ -66,8 +66,8 @@ function jobOf(c) {
   J.exits = J.exits || {};
   return J;
 }
-/* Every recurring task: the tasks of data/roles.js, the player's own schedules, and each seasonal item that is not
-   already one of those tasks. */
+/* Every recurring task: the tasks of data/roles.js, the player's own schedules, each seasonal item that is not
+   already one of those tasks, the two tasks of each wired goal (goalwire.js) and each policy date (careq.js). */
 function jobTasks(c) {
   const out = JOB_TASKS.map(t => Object.assign({ src: "task" }, t)),
     inTask = {};
@@ -93,6 +93,8 @@ function jobTasks(c) {
       out.push({ id: "s:" + key, role, n: it[1], per: 30, times: 1, src: "season", line: it[2] });
     })
   );
+  if (typeof wireTasks === "function") wireTasks(c).forEach(t => out.push(t)); /* goalwire.js: each wired goal */
+  if (typeof careTasks === "function") careTasks(c).forEach(t => out.push(t)); /* careq.js: each policy date */
   return out;
 }
 /* The exit of one task: the player's choice, or what the game already knows (a schedule set to automatic, or the
@@ -317,7 +319,8 @@ function jobTaskRow(c, t, w) {
     const s = t.skill.split(":");
     h += `<button class="ghost slim" data-a="skill" data-v="${esc(t.skill)}">Set it up: ${esc(SKILLS[s[0]].skills[+s[1]][0])}</button>`;
   } else if (x.e === "auto" && x.from === "you" && t.auto) h += `<div class="tiny muted">${esc(t.auto)}</div>`;
-  if (t.a && !hand && (x.e === "do" || !x.e)) h += `<button class="ghost slim" data-a="${t.a}">Open it now</button>`;
+  if (t.a && !hand && (x.e === "do" || !x.e) && !(w.kind === t.a && w.here === t.v))
+    h += `<button class="ghost slim" data-a="${t.a}"${t.v ? ` data-v="${esc(t.v)}"` : ""}>Open it now</button>`;
   return h + `</div>`;
 }
 /* The sheet of one job. */

@@ -4808,7 +4808,11 @@ function todayExtras(c, t) {
       a: "invupd",
       l: "Update now",
     });
-  return out;
+  let o = out;
+  if (typeof todayExtrasCare === "function")
+    o = todayExtrasCare(c, t, o); /* careq.js: the health and insurance quests */
+  if (typeof todayExtrasWire === "function") o = todayExtrasWire(c, t, o); /* goalwire.js: a check-in that is due */
+  return o;
 }
 /* statements */
 function stRow(a, b, cls) {
@@ -5479,6 +5483,7 @@ function goalView() {
   if (typeof goalViewLook === "function") h = goalViewLook(h); /* look.js: the Time-Money dial of this goal */
   if (typeof goalViewSim === "function") h = goalViewSim(h); /* sim.js: the simulators that fit this goal */
   if (typeof goalViewCountdown === "function") h = goalViewCountdown(h); /* countdown.js: the countdown of this goal */
+  if (typeof goalViewWire === "function") h = goalViewWire(h); /* goalwire.js: the account and the automatic deposit */
   return h;
 }
 function goalViewBase() {

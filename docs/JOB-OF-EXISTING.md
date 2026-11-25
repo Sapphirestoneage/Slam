@@ -29,8 +29,8 @@ makes a second copy of a part.
 | 1. Your unpaid jobs | The reveal (`reveal.js`: a part on the character sheet), the Me tab (a part of `meTab`), the trees (`TREES`, `nextSkill`, the action `skill`) | `game/data/roles.js` (the six roles and their tasks), `game/features/jobs.js` (the screens), `js/math/jobs.js` (the math; the game copy is `game/core/jobs.js`) |
 | 2. Admin hours | The time ledger (`ledgerCard`: a part), Home (`home()`: a part, built from `dash.js`), the spreadsheet (`BOOK_PARTS` in `book.js`) | The same files |
 | 3. The four exits | The schedules (`c.routines`, `auto`), the seasonal list (`SEASONS`), the automation skills and `celebrate()`, the people (`c.party`) | The same files |
-| 4. Goal to account to auto-deposit | Goals (`goalView`), the schedules (`c.routines`), the fee X-Ray | Worker 2 |
-| 5. Health and insurance quests | `SEASONS`, `resets()`, the glossary | Worker 2 |
+| 4. Goal to account to auto-deposit | Goals (`goalView`: the part `goalViewWire`; the goal card: `goalCardWire` in `goalCardLook`), the reverse of the Time-Money dial (`goalExtraFor`), the countdown's monthly answer, the four exits (`jobTasks`: two tasks for each wired goal), Today (`todayExtras`: the part `todayExtrasWire`), the Fee X-ray (`compare.js`, one tap from I need one) | `game/features/goalwire.js`; the kinds of account `WIRE_OPTIONS` in `game/data/roles.js`; the math `jobWireTimes`, `jobWirePer`, `jobCheckNext`, `jobAddMonths` in `js/math/jobs.js` |
+| 5. Health and insurance quests | `SEASONS` (a new season `oe`, Nov 1 to 30; the item `tax:hsa`), the tasks of `roles.js` (each quest is one task; the new task `in_review`), `resets()` (the part `resetsCare`), Today (`todayExtras`: the part `todayExtrasCare`), Insurance needs (`cover.js`), the glossary (`kitTerms`) | `game/features/careq.js`; `CARE_QUESTS` in `game/data/roles.js`; the math `jobDateNext` in `js/math/jobs.js` |
 | 6. Household role map | The hand-off record of feature 3 (`c.x.roleMap`), `fair.js` (the labor method), the time prices `c.tp` | Worker 3 |
 
 ## Merges and notes
@@ -42,3 +42,16 @@ makes a second copy of a part.
   other task it opens the automation skill of the task, which has the level-up.
 - A task with an exit counts as "off your plate". The minutes of that task are "Living it". The minutes that are
   left are "Running it".
+
+## Features 4 and 5 (worker 2)
+
+- A wired goal keeps its wire on the goal: `g.wire = { v: 1, acct: { n, key, need }, amt, from, m, by, day, d, chk }`.
+  The account is kept by name. "I need one" keeps the id of a kind of account (`need`), not an account.
+- The amount has one way to be worked out: `goalExtraFor(what is left, 0, months)`, the reverse of the Time-Money
+  dial. Each deposit: the amount a month x 12 / the deposits a year, rounded up (`jobWirePer`).
+- SLAM moves no money. "I set it up" is the exit Automate it of the task "w:<goal id>". The check-in is the task
+  "q:<goal id>", 4 times a year. Both are Financial Planner tasks, so they count in "N of M tasks off your plate".
+- Unwire removes the wire, its two exits and any hand-off record, and keeps an Undo on the sheet.
+- The health and insurance quests are tasks of `JOB_TASKS`. A quest that is in a season is the same task as its
+  seasonal item (the `season` list of the task). A date of a plan (an open enrollment window, an FSA deadline, a
+  renewal) is the person's tap, kept as "MM-DD" in `c.x.care.dates`. SLAM shows no general date.
