@@ -170,3 +170,14 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 9 | Ratios on Key numbers | Not started | |
 | 10 | The game | Not started | |
 | 11 | Quiz frameworks: one engine, many skins | Not started | |
+
+## RUN: Launch ready for the Nov 30 soft launch (Nov 25 2026)
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | A stable public site | Not started | |
+| 2 | Report a bug or idea | Not started | |
+| 3 | Founding Testers and sharing | Not started | |
+| 4 | Trust | Not started | |
+| 5 | Email | Not started | |
+| 6 | The front door | Not started | |

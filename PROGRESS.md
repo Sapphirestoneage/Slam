@@ -162,3 +162,12 @@ it is done. The state of each part is in `STATUS.md` (the section of this run). 
 
 - Started. The tone rule of this run is for the whole app: "Recalculating", not mistakes.
 
+## Nov 25 2026: RUN: Launch ready for the Nov 30 soft launch (Nov 25 2026)
+
+Run name: **Launch ready for the Nov 30 soft launch (Nov 25 2026)**. 6 parts: a stable public site (the branch
+`release` and `tools/promote.sh`), Report a bug or idea, Founding Testers and sharing, Trust, Email, the front door.
+It starts when each of the two other runs has finished the part it is on. The two runs wait until this one is done.
+A line is added here for each part.
+
+- Logged. Waiting for Part 1 of each of the two other runs to land.
+
