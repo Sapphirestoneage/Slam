@@ -270,6 +270,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-25",
+    t: "Working for yourself",
+    l: [
+      "The least you can charge: your floor an hour, a day and a job, with taxes, health cover, retirement, costs, downtime and weeks off in.",
+      "The tax in each payment: the share to set aside, stacked on any job's pay, and what is spoken for so far.",
+      "Solo 401(k), SEP or IRA: what each one holds on your profit, and which to open first.",
+      "Do my apps add up: each app's earnings, tips and fee next to what reached the bank, with cash tips on top.",
+      "Who still owes me: invoices with a calm next step. Profit First, with the book's sample or your own shares. In the game: Working for yourself > More, and the floor counts weeks off.",
+    ],
+  },
+  {
+    d: "2026-11-25",
     t: "Student loans: PSLF, refinancing and each year's rate",
     l: [
       "Student loan plans now shows your household size, and you can tap the size on your loan papers.",
