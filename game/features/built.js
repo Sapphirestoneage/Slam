@@ -198,6 +198,14 @@ const WB = [
   ["plan", "Two moves side by side", "b", () => WB_HAS("compare") && WB_FN("cpCol"), "", "compare"],
   ["plan", "Fee X-ray: a fee in dollars and years", "b", () => WB_FN("cpFee"), "", "compare"],
   ["plan", "Quick math: a car, a home, a dollar later", "b", () => WB_HAS("quick") && WB_FN("qmCar"), "", "quick"],
+  [
+    "plan",
+    "Quick math: a HYSA switch, all at once or a little each month, cost per use, worth the hassle, what waiting costs, a warranty",
+    "b",
+    () => WB_HAS("quick") && WB_FN("qcHysa") && WB_FN("qcDca") && WB_FN("qcGameBody"),
+    "One engine with the web app's quick calculators (js/math/quick.js). The rest of that shelf (debt consolidation, the W-4 check, unemployment, leaving a job, a first apartment, roommates, kids, a pet, personal inflation, worth it, the month at a glance) is on the web app's small pages.",
+    "quick",
+  ],
   ["plan", "Your real hourly wage", "b", () => WB_HAS("hrs") && WB_FN("timeLedger"), "", "hrs"],
   [
     "in",
@@ -665,6 +673,21 @@ const WB = [
   ],
   [
     "feel",
+    "The Rings theme: seven rings, a ruler for each money sin, and you escaping",
+    "b",
+    () =>
+      typeof THEMES !== "undefined" &&
+      !!THEMES.rings &&
+      WB_FN("snRings") &&
+      WB_FN("snBoss") &&
+      WB_FN("rgBossPart") &&
+      WB_HAS("rgleave") &&
+      snRulers(qzSkin("sins")).length === 7,
+    "A theme to pick under Theme (off until you pick it): a dark, warm look and a cheeky voice. Each money sin is a ring with its own ruler; the ruler of your main pull is your boss in the boss fights. Check-ins read as the fine print, defenses as wards, Recalculating as the escape route, always with the plain word next to it. A month of a ward that works, or a retake that shows your pull getting quieter, climbs you up a ring. It roasts the sin, never you.",
+    "sins",
+  ],
+  [
+    "feel",
     "A rival to race",
     "p",
     () => WB_HAS("rival"),
@@ -869,13 +892,25 @@ const WB = [
   [
     "slam",
     "What a habit or a trip really costs",
-    "p",
-    () => WB_FN("qmDollar"),
-    "A dollar later in Quick math covers a monthly habit. The trip page is not ported.",
-    "quick",
+    "b",
+    () => WB_FN("qmDollar") && WB_FN("tpgLines") && WB_FN("tpCost"),
+    "A dollar later in Quick math covers a monthly habit. A trip is on Trips and the journey: line by line, points or cash, and a group split, on the one engine with the web page.",
+    "trips",
   ],
   ["slam", "Benefits cliff map", "n", null, "Not ported. New York and federal only in the web app.", null],
-  ["slam", "The FIRE journey map and the retreat scenario", "n", null, "Not ported.", null],
+  [
+    "slam",
+    "The FIRE journey map and the retreat scenario",
+    "b",
+    () =>
+      WB_HAS("trips") &&
+      WB_FN("tpgJourney") &&
+      WB_FN("tpJourney") &&
+      Array.isArray(TP_STAGES) &&
+      TP_STAGES.length === 6,
+    "Trips and the journey, tab Journey: digging out, the first $1k, debt free, $100k, Coast, FI; where you are; how the trip moves you, with the stage dates and the freedom date from the game's own run.",
+    "trips",
+  ],
   [
     "slam",
     "One page for a planner",

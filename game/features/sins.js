@@ -141,9 +141,13 @@ function sngFix(read, mine) {
     body +=
       `<div class="tile small">${F.dropped === true ? "The pattern dropped. The read firms up." : F.dropped === false ? "The pattern held, so the read moves to the next most likely one." : "Nothing showed in the month before, so there is nothing to compare yet."}</div>` +
       (mine ? `<button class="primary wide go" data-a="snfixend">Keep the result</button>` : "");
-  return dkCard("Test the fix", `<div class="stack" style="gap:6px">${body}</div>`, {
-    cap: "One defense for a month.",
-  });
+  return dkCard(
+    typeof rgT === "function" ? rgT("ward", "Test the fix") : "Test the fix",
+    `<div class="stack" style="gap:6px">${body}</div>`,
+    {
+      cap: "One defense for a month.",
+    }
+  );
 }
 /* The read. */
 function snSheet() {
@@ -159,6 +163,8 @@ function snSheet() {
     dkCaption("A game lens on your habits, from four sources. Not a diagnosis.") +
     sngRetakePart(c, st, mine) +
     sngCardPart(c, { def, st, read }, mine) +
+    (typeof rgReadPart === "function" ? rgReadPart(c, mine) : "") /* rings.js: the climb out, with the Rings on */ +
+    (typeof rgTryRow === "function" ? rgTryRow(mine) : "") /* rings.js: the theme exists */ +
     dkStatRow([
       dkTile("Days of your money", read.enough ? String(read.days) : read.days + " of " + SN_RULES.labelDays, {
         sub: read.enough ? "enough for a label" : "before a label shows",
@@ -196,7 +202,7 @@ function snSheet() {
 function snCheckSheet() {
   const w = W;
   return (
-    head("One quick thing", "What was this?") +
+    head("One quick thing", esc(typeof rgT === "function" ? rgT("checkin", "What was this?") : "What was this?")) +
     `<div class="tile small">${esc(w.why)}</div>` +
     `<div class="stack" style="gap:6px">${SN_TAGS.map(t => `<button class="rowbtn" data-a="sncheck" data-v="${t.id}"><span>${esc(t.label)}</span><span class="caret">›</span></button>`).join("")}</div>` +
     `<button class="ghost wide" data-a="snskip">Skip this</button><div class="tiny muted">One tap. It stays with you and helps your money read. Never more than ${SN_RULES.perWeek} a week.</div>`

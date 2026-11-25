@@ -129,7 +129,7 @@ function rcgCard(X) {
   const lead = X.cards.find(k => !k.words.win) || X.cards[0],
     wins = X.cards.every(k => k.words.win);
   return (
-    `<div class="tile stack rccard${wins ? " rcwin" : ""}" style="gap:8px;border-left:4px solid var(--sapphire, #4a78d6)"><div class="eyebrow">${wins ? "New route" : "Recalculating"}</div>${wins ? `<h2 class="glow" style="margin:0">${esc(X.cards[0].words.head.replace(/^New route: /, ""))}</h2>` : ""}` +
+    `<div class="tile stack rccard${wins ? " rcwin" : ""}" style="gap:8px;border-left:4px solid var(--sapphire, #4a78d6)"><div class="eyebrow">${wins ? "New route" : esc(typeof rgT === "function" ? rgT("escape", "Recalculating") : "Recalculating")}</div>${wins ? `<h2 class="glow" style="margin:0">${esc(X.cards[0].words.head.replace(/^New route: /, ""))}</h2>` : ""}` +
     X.cards
       .map(
         k =>
@@ -162,7 +162,7 @@ function rcgRow(c, d) {
       : X.triage
         ? "This month is " + money(X.triage.short) + " short. See the order to pay in"
         : "Cushion refill: " + money(X.refill.gap) + " to put back";
-  return `<button class="rowbtn bare homerow rcrow" data-a="rc"><span class="small"><b>${k && k.words.win ? esc(k.words.head) : "Recalculating"}</b> · ${esc(say)}</span><span class="caret">›</span></button>`;
+  return `<button class="rowbtn bare homerow rcrow" data-a="rc"><span class="small"><b>${k && k.words.win ? esc(k.words.head) : esc(typeof rgT === "function" ? rgT("escape", "Recalculating") : "Recalculating")}</b> · ${esc(say)}</span><span class="caret">›</span></button>`;
 }
 /* Part of home() in ui.js. One calm row under the top numbers. */
 function homeRcRow(h) {
