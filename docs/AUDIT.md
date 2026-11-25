@@ -39,6 +39,12 @@ insurance added, and the months back to the Coast number in closed form, where S
 buying and renting, `js/math/homebuy.js`: the payment as the level amount whose discounted sum is the loan, the loan
 left in closed form, each year's position with every payment carried to the end by itself, and the breakeven year).
 
+Since Nov 25 2026 (run JOE-1) it also covers the Job of Existing (`js/math/jobs.js`): which of the six unpaid jobs
+a person holds, worked out a second time from each answer that counts, and the order; the hours a month of running
+the money (each job at its tap or its default, the total, Guess / Close / Exact); each task's minutes a month; and
+Running it and Living it (the minutes of the tasks off the plate, at most each job's own time, and the percent
+better, at least 1 once a minute is back).
+
 Since Nov 25 2026 it also covers the ways to take money out (`js/math/withdraw.js`, the rules behind "Compare the
 ways" in the web app and in the game): every way in the list, the ones that are switched off on screen too, each
 through a made-up market that swings (stocks, bonds, inflation, a CAPE, the two yields). Four kinds of case: the VPW

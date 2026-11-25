@@ -637,6 +637,7 @@ function home() {
   if (typeof homeSleptRow === "function")
     h = homeSleptRow(h); /* slept.js: the line "Your money earned $X while you slept" */
   if (typeof homeCoastCard === "function") h = homeCoastCard(h); /* coast.js: the card "You can stop sprinting" */
+  if (typeof homeJobsRow === "function") h = homeJobsRow(h); /* jobs.js: the card Running it and Living it */
   if (typeof homeFrontRow === "function") h = homeFrontRow(h); /* ask3.js: the four questions (hidden by default) */
   if (typeof homeQuestRow === "function")
     h = homeQuestRow(h); /* questlog.js: Continue and "Where am I", under the top numbers */
@@ -1219,6 +1220,7 @@ function meTab() {
   let h = meTabBase();
   if (typeof meTabHead === "function") h = meTabHead(h); /* ux.js: the tab title, Beginner or Expert, the color */
   if (typeof meTabReveal === "function") h = meTabReveal(h); /* reveal.js: the row for the character sheet */
+  if (typeof meTabJobs === "function") h = meTabJobs(h); /* jobs.js: the block "Your unpaid jobs" */
   if (typeof meTabQuiz === "function") h = meTabQuiz(h); /* quizzes.js: the row "Quizzes" */
   if (typeof meTabValues === "function") h = meTabValues(h); /* values.js: the row "Is my money going where I want?" */
   if (typeof meTabFounding === "function") h = meTabFounding(h); /* founding.js: the mark "Founding Tester" */
@@ -5582,6 +5584,7 @@ function ledgerCard(c, d) {
  ${tl.cross ? `<div class="banner small" style="margin-top:8px"><b>Crossover.</b> Your money now earns more in an hour than you do.</div>` : job ? `<div class="small" style="margin-top:8px">Right now your money does <b data-fid="v:mins">${job}</b> of your job for you, every day.${tl.covers >= 0.01 ? " That's " + Math.round(tl.covers * 100) + "% of a paycheck earned without you." : ""}</div>${bar(Math.min(100, (tl.mw / tl.wage) * 100))}<div class="tiny muted">The bar fills when your money out-earns you, hour for hour. That's the crossover.</div>` : tl.wage > 0 ? `<div class="small muted" style="margin-top:8px">Nothing invested yet, so this meter hasn't started. The first dollar starts it.</div>` : ""}
  ${tl.dc > 0 ? (c.gentle ? `<details style="margin-top:8px"><summary>What your debt costs, when you're ready</summary><div class="inner">` : "") + `<div class="tile" style="margin-top:8px"><div class="tiny muted">What your debt costs</div><div class="big ${tl.rd ? "" : "guess"}" data-fid="v:dc">${cents(tl.dc)} an hour</div><div class="tiny muted">Even while you sleep${tl.rd ? "" : " · a guess until your rates are exact"}. It's a meter, not a verdict. Every extra payment slows it down.</div></div>` + (c.gentle ? `</div></details>` : "") : ""}
  ${mathBox(["Your money: " + money(c.inv) + " invested × 7% a year ÷ 8,760 hours in a year = " + cents(tl.mw) + " an hour.", tl.wage > 0 ? "You: " + money(c.take) + " a month take-home × 12 ÷ 52 weeks ÷ " + tl.wk + " hours (" + tl.h.w + " working + " + tl.h.cm + " getting there) = " + cents(tl.wage) + " an hour." : null, tl.crossInv ? "The crossover needs about " + money(tl.crossInv) + " invested: your hourly wage × 8,760 ÷ 7%." : null, tl.dc > 0 ? "Debt: each balance × its yearly rate, added up (" + money(tl.dy) + " a year) ÷ 8,760 hours = " + cents(tl.dc) + " an hour." : null, "7% a year is a long-run average after inflation, not a promise."])}
+ ${typeof ledgerCardJobs === "function" ? ledgerCardJobs(c) : ""}
  ${tpBlock(c, tl)}</div>`;
 }
 /* hrsSheet() makes the full sheet of the real hourly wage. hrsSheetBase() is the part from this file. */

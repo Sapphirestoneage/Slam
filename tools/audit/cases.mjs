@@ -16,6 +16,7 @@ import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } f
 import { Store, newHousehold } from '../../js/records.js';
 import { answer } from '../../js/journey.js';
 import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom, worked } from '../../js/math/lifetime.js';
+import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly } from '../../js/math/jobs.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
@@ -99,6 +100,21 @@ for (let i = 0; i < N; i++) {
   { const x = { income: money(8000, 160000), benchmark: money(3000, 30000), people: whole(1, 4) }; add('premiumCredit', x, { credit: premiumCredit(x.income, x.benchmark, x.people) }); }
   { const x = { ordinary: rnd() < 0.15 ? 0 : money(1000, 400000), ss: rnd() < 0.5 ? 0 : money(6000, 70000), gains: rnd() < 0.5 ? 0 : money(500, 300000), tax: { filingStatus: pick(STATUS), place: pick(PLACES) } }; add('yearTax', x, { tax: yearTax(x, x.tax, ref) }); }
   { const x = { magi: money(40000, 900000), filingStatus: pick(STATUS) }; add('medicare', x, { extra: medicareSurcharge(x.magi, x.filingStatus, ref) }); }
+}
+// The Job of Existing (js/math/jobs.js, run JOE-1): the jobs from the answers, the admin hours, Running it and Living it.
+for (let i = 0; i < N; i++) {
+  const a = { work: pick(['Student', 'First job', 'A few jobs or gigs', 'Established', 'Self-employed']), incKinds: ['A main job', 'Side gigs', 'My own business'].filter(() => rnd() < 0.4),
+    steady: pick(['Steady', 'Changes month to month']), home: pick(['Renting', 'Owning', 'With family']), live: ['Roommates', 'A partner', 'Kids', 'Parents or family'].filter(() => rnd() < 0.3),
+    deps: pick(['None', 'Planning', 'Kids', 'Supporting a parent', 'Pets']), share: pick(['No one', 'A partner', 'More than one partner', 'Family']), invest: pick(['No', 'Sometimes', 'Every month']),
+    accts: ['Checking', 'Savings', 'Retirement plan at work', 'IRA or Roth IRA', 'HSA'].filter(() => rnd() < 0.5), debtKinds: ['Credit card balance', 'Car loan', 'Medical bills'].filter(() => rnd() < 0.3),
+    prot: { renters: pick(['Yes', 'No', undefined]), life: pick(['Yes', 'No', undefined]), disab: pick(['Yes', 'No', undefined]), health: pick(['Through my job', 'On my own', 'None right now', undefined]) },
+    debts: whole(0, 3), goals: whole(0, 3), kids: whole(0, 2), cards: whole(0, 3), banks: whole(0, 3), age: whole(18, 80) };
+  add('jobRoles', a, { order: jobRoles(a).map(r => r.id), scores: Object.fromEntries(jobRoles(a).map(r => [r.id, r.score])) });
+  const mins = {}; for (const id of JOB_IDS) if (rnd() < 0.6) mins[id] = { v: pick([0, 15, 60, 180, 300]), cf: whole(1, 3) };
+  const tasks = Array.from({ length: whole(0, 14) }, (_, k) => ({ id: `t${k}`, role: pick(JOB_IDS), per: pick([1, 5, 10, 15, 20, 30, 45, 90, 120, 240]), times: pick([1, 2, 4, 6, 12, 24, 26, 52]) }));
+  const exits = Object.fromEntries(tasks.filter(() => rnd() < 0.7).map(t => [t.id, pick(['do', 'auto', 'hand', 'drop'])]));
+  const ad = jobAdmin(mins), L = jobLiving(ad, tasks, exits);
+  add('jobLiving', { mins, tasks, exits }, { total: ad.total, st: ad.st, living: L.living, running: L.running, better: L.better, monthly: tasks.map(jobTaskMonthly) });
 }
 // If the pay stopped: the Life Transitions ladder on the plan's own answers (fewer cases: each builds a household).
 for (let i = 0; i < Math.max(10, Math.round(N / 5)); i++) {
