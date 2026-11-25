@@ -130,7 +130,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | FI number variants | Done | Web app: Plan › Goals has "FI destinations" (Lean, Barista, Regular, Chubby, Fat, each with its number, date and what it assumes; the Fat list; the Barista gap and health insurance), "FI date stress test" and "Pod FI number" (two or more adults); Plan › FOO has "Your order by destination"; Home has the card "You can stop sprinting". Game: "FI ratio" on Key numbers (Freedom), and the same card on Home. Waiting for Eli: the Chubby midpoint, the three orders of the FOO, what counts as investment income (QUESTIONS 580). |
+| 1 | FI number variants | Done | Follow-up to Eli's answers (QUESTIONS 580) applied: the FOO by destination moves only the late steps, the Barista number adds health insurance, living apart on the pod view, the quiet Recalculating card under Coast, the "i" on the FI ratio. Web app: Plan › Goals has "FI destinations" (Lean, Barista, Regular, Chubby, Fat, each with its number, date and what it assumes; the Fat list; the Barista gap and health insurance), "FI date stress test" and "Pod FI number" (two or more adults); Plan › FOO has "Your order by destination"; Home has the card "You can stop sprinting". Game: "FI ratio" on Key numbers (Freedom), and the same card on Home. Waiting for Eli: the Chubby midpoint, the three orders of the FOO, what counts as investment income (QUESTIONS 580). |
 | 2 | Home buying and renting | Not started | |
 | 3 | Career and education | Not started | |
 | 4 | Travel | Not started | |

@@ -752,6 +752,7 @@ tr.row-note .part-line { margin-right: 12px; }
   .rc-order .rc-paid { margin-left: 0; display: block; }
   .audit .audit-row { grid-template-columns: 1fr auto; }
   .audit .audit-row .seg, .audit .audit-later { grid-column: 1 / -1; }
+}
 /* The FI destinations (run of Nov 25 2026): the views on Plan › Goals, the stress table, the pod, the FOO by
    destination, and the Coast card on Home. */
 .dest-card { display: flex; flex-direction: column; gap: var(--s3); }
