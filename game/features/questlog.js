@@ -28,6 +28,16 @@
 const QUEST = { snap: {} };
 const QUEST_TRAIL = 10;
 const QUEST_SKIP = { quest: 1, info: 1, menu: 1, dash: 1, glossary: 1, built: 1 };
+/* The letter of D.A.I.T.E. (know.js) that each area of "Make your numbers real" feeds. */
+const QUEST_LETTER = {
+  debt: "Debts",
+  cash: "Assets",
+  inv: "Assets",
+  take: "Income",
+  match: "Income",
+  tax: "Taxes",
+  spend: "Expenses",
+};
 const QUEST_TABS = [
   ["journey", "Journey"],
   ["areas", "Areas"],
@@ -53,7 +63,8 @@ function questButton(cls) {
 /* The name of a screen: the "i" registry of nav.js, a part of the journey, or the kind. */
 function questLabel(c, kind, v) {
   if (kind === "setup") return "Setup";
-  if (kind === "sharp" && v && typeof SHARP_Q !== "undefined" && SHARP_Q[v]) return SHARP_Q[v];
+  if (kind === "sharp" && v && typeof SHARP_Q !== "undefined" && SHARP_Q[v])
+    return (QUEST_LETTER[v] ? QUEST_LETTER[v] + ": " : "") + SHARP_Q[v];
   const part = questJourney(c)
     .reduce((a, r) => a.concat(r.parts), [])
     .find(p => p.a === kind);
@@ -81,9 +92,13 @@ function questJourney(c, d) {
     rows = [
       {
         id: "setup",
-        n: "Setup",
-        parts: [part("Make your character", c.placed, "start")].concat(
-          (typeof sharpList === "function" ? sharpList(c) : []).map(k => part(SHARP_Q[k], isSharp(c, k), "sharp", k))
+        /* Setup is done once the first taps made the character (c.led). Then the row is the five letters:
+           each area to put in your own numbers, named by its letter of D.A.I.T.E. */
+        n: c.led || c.placed ? "Your numbers (D.A.I.T.E.)" : "Setup",
+        parts: [part("Make your character", c.led || c.placed, "start")].concat(
+          (typeof sharpList === "function" ? sharpList(c) : []).map(k =>
+            part((QUEST_LETTER[k] ? QUEST_LETTER[k] + ": " : "") + SHARP_Q[k], isSharp(c, k), "sharp", k)
+          )
         ),
       },
     ];

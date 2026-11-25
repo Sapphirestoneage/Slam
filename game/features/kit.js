@@ -36,6 +36,57 @@ function kitState(list) {
   if (!rows.length || rows.some(r => (r.cf || 1) <= 1)) return "Guess";
   return rows.every(r => r.cf >= 3) ? "Exact" : "Close";
 }
+/* "WHERE'S THIS FROM?" (UX pass, item 3). The one line under a Guess: what the stock number is, from which
+   answer, and the tap to put in your own. keys: the areas that feed the number (take, spend, cash, debt, inv). */
+const KIT_WHO = {
+  Student: "a student",
+  "First job": "someone in a first job",
+  "A few jobs or gigs": "someone with a few jobs or gigs",
+  Established: "someone a few years into work",
+  "Between jobs": "someone between jobs",
+  "Self-employed": "someone self-employed",
+  Retired: "someone retired",
+};
+function whereFromText(c, keys) {
+  const t = TYP[c.work] || TYP["First job"],
+    who = KIT_WHO[c.work] || "someone like you",
+    has = k => keys.indexOf(k) >= 0,
+    out = [];
+  if (has("take") && has("spend"))
+    out.push("Typical for " + who + ": about " + money(t[0]) + " coming in, " + money(t[1]) + " going out.");
+  else if (has("take")) out.push("Typical for " + who + ": about " + money(t[0]) + " coming in a month.");
+  else if (has("spend")) out.push("Typical for " + who + ": about " + money(t[1]) + " going out a month.");
+  if (has("cash"))
+    out.push(
+      c.cover ? 'From your answer "' + c.cover + '" to how long you could cover your bills.' : "A typical cushion."
+    );
+  if (has("inv"))
+    out.push(
+      c.invest ? 'From your answer "' + c.invest + '" to investing, and your age.' : "A typical amount invested."
+    );
+  if (has("debt")) {
+    const ks = (c.debts || []).filter(x => !x.s && x.amt > 0).map(x => x.k);
+    out.push(
+      ks.length
+        ? "A typical balance for each kind you tapped: " +
+            ks
+              .map(k => {
+                const d = DEBT_KINDS.find(z => z[0] === k);
+                return k.toLowerCase() + " about " + money(d ? d[1] : 0);
+              })
+              .join(", ") +
+            "."
+        : "A typical balance for the kinds of debt you tapped."
+    );
+  }
+  return out.join(" ");
+}
+/* The collapsed line. a: the area that the button "Put in yours" opens. */
+function whereFrom(c, keys, a) {
+  const t = whereFromText(c, keys);
+  if (!t) return "";
+  return `<details class="wfrom"><summary class="tiny">Where's this from?</summary><div class="tiny muted" style="margin-top:4px">${esc(t)}</div><button class="ghost slim" style="margin-top:6px" data-a="sharp" data-v="${esc(a || keys[0])}">Put in yours</button></details>`;
+}
 /* The state of a profile number: Close when the player made it real, else Guess. */
 function kitSharp(c, k) {
   return { cf: c.led && isSharp(c, k) ? 2 : 1 };

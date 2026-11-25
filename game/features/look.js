@@ -7,11 +7,12 @@
                dial of one goal; the pay period of Next Steps (a day strip, the bills left, the money
                coming in).
    INPUT       The profile c and the derived numbers d. The calendar (calOf, games2.js). The open sheet.
-   OUTPUT      Math: lkHome, lkMoney, lkPeriod, lkGoal, lkOrder. Parts of functions in other files:
+   OUTPUT      Math: lkHome, lkMoney, lkPeriod, lkGoal, lkOrder, lkNwRange, lkNwText (net worth as a range).
+               The breakdown sheet of each top tile: lkBreakSheet (action lkbrk). Parts of functions in other files:
                homeStatRow (Home, ux.js), dbSheetLook (dbSheet, debts.js), moneyTabLook (moneyTab, ui.js),
                ledOrder and ledSortChips (moneyTabBase, ui.js), goalCardLook (goalsCard, ui.js),
                goalViewLook (goalView, ui.js), planTabPeriod (planTab, planner.js).
-               Actions (ACT): ledsort. A listener for the end of a drag on a dial (change).
+               Actions (ACT): lkbrk, ledsort. A listener for the end of a drag on a dial (change).
    DEPENDS ON  screens/dash.js, screens/ui.js, core/engine.js (freeToSpend, derive), features/debts.js,
                features/games2.js (calOf).
    RULES       The math functions (lk...) return numbers; the parts only show them. No red.
@@ -35,7 +36,10 @@ function lkHome(c, d) {
   }
   return {
     free: { v: Math.max(0, f.free), real: !!f.real },
-    nw: { v: d.nw, real: sharpPct(c) >= 100 },
+    nw: (() => {
+      const N = lkNwText(c, d);
+      return { v: d.nw, real: !N.range && N.st !== "Guess", txt: N.txt, st: N.st };
+    })(),
     goal,
     hi: !c.led
       ? { none: c.high !== "yes", months: null, guess: true }
@@ -48,6 +52,151 @@ function lkHome(c, d) {
           },
   };
 }
+/* NET WORTH, NEVER MISLEADING (UX pass, item 4). Each row gives a low and a high:
+   a typed number (cf 3) is itself; a range chip is its range; a Guess is its range, or half to one and a half.
+   Own (cash and investments) minus owe (debts). One number only when low and high meet. */
+const LK_NW_RK = { cashes: "cash", invs: "inv", debts: "debt" };
+function lkRangeOfLabel(lab, v) {
+  const n = s => {
+    const m = String(s).match(/\$([\d,.]+)\s*(k|million)?/i);
+    if (!m) return null;
+    const x = parseFloat(m[1].replace(/,/g, ""));
+    return m[2] ? x * (/million/i.test(m[2]) ? 1e6 : 1e3) : x;
+  };
+  if (/^nothing|^almost nothing/i.test(lab)) return [0, v > 0 ? v * 2 : 0];
+  if (/few hundred/i.test(lab)) return [100, 1000];
+  if (/^under/i.test(lab)) return [0, n(lab)];
+  if (/^over/i.test(lab)) return [n(lab), n(lab) * 2];
+  const p = lab.split(/\s+to\s+/i);
+  return p.length === 2 && n(p[0]) != null && n(p[1]) != null ? [n(p[0]), n(p[1])] : null;
+}
+function lkRowRange(x, sec) {
+  const v = +x.amt || 0;
+  if (x.s && (x.cf || 0) >= 3) return [v, v];
+  const rs = (typeof RANGES !== "undefined" && RANGES[LK_NW_RK[sec]]) || [],
+    hit = rs.find(r => r[0] === v),
+    r = hit ? lkRangeOfLabel(hit[1], v) : null;
+  if (r) return r;
+  if (x.s) return [v, v]; /* entered by the player, not a range midpoint */
+  return [Math.round(v * 0.5), Math.round(v * 1.5)];
+}
+function lkNwRange(c, d) {
+  d = d || derive(c);
+  if (!c.led) {
+    const nw = d.nw;
+    return {
+      lo: Math.round(nw - Math.abs(nw) * 0.5 - 1000),
+      hi: Math.round(nw + Math.abs(nw) * 0.5 + 1000),
+      mid: nw,
+      st: "Guess",
+    };
+  }
+  const own = [].concat(
+      (c.cashes || []).filter(x => !x.hold).map(x => [x, "cashes"]),
+      (c.invs || []).map(x => [x, "invs"])
+    ),
+    owe = (c.debts || []).filter(x => x.amt > 0).map(x => [x, "debts"]);
+  let lo = 0,
+    hi = 0;
+  own.forEach(([x, k]) => {
+    const r = lkRowRange(x, k);
+    lo += r[0];
+    hi += r[1];
+  });
+  owe.forEach(([x, k]) => {
+    const r = lkRowRange(x, k);
+    lo -= r[1];
+    hi -= r[0];
+  });
+  const rows = own.concat(owe).map(z => z[0]);
+  return { lo, hi, mid: d.nw, st: rows.length ? knSt(rows) : "Guess" };
+}
+/* Short money: $10k, $1.2M. */
+function lkK(v) {
+  if (typeof roughOn === "function" && roughOn()) return money(v); /* Rough numbers: the range of money() */
+  const a = Math.abs(v),
+    sg = v < 0 ? "-" : "";
+  if (a >= 1e6) return sg + "$" + Math.round(a / 1e5) / 10 + "M";
+  if (a >= 1e4) return sg + "$" + Math.round(a / 1e3) + "k";
+  if (a >= 1e3) return sg + "$" + Math.round(a / 100) / 10 + "k";
+  return money(v);
+}
+/* The words: "about $10k to $110k" while it is a range, else the one number. */
+function lkNwText(c, d) {
+  const R = lkNwRange(c, d);
+  return Object.assign(R, {
+    range: R.lo !== R.hi,
+    txt: R.lo !== R.hi ? "about " + lkK(R.lo) + " to " + lkK(R.hi) : money(R.mid),
+  });
+}
+
+/* EVERY TILE OPENS (UX pass, item 7). One breakdown sheet for Net worth, Cash, Invested and You owe: each
+   account or debt, its amount and its state. A tap on a line changes it (rowedit). */
+const LK_RETIRE = /retirement|ira|401|403|457|tsp|pension/i;
+const LK_BRK = {
+  nw: ["Net worth", "What you own, minus what you owe."],
+  cash: ["Cash", "Money you can reach this week."],
+  inv: ["Invested", "Each investment account."],
+  debt: ["You owe", "Each debt, with what is left to pay."],
+};
+function lkBreakRows(c, sec) {
+  return (c[sec] || [])
+    .map((x, i) => ({ x, i }))
+    .filter(o => (sec === "cashes" ? !o.x.hold : true) && (sec !== "debts" || o.x.amt > 0));
+}
+function lkBreakList(c, sec, sign) {
+  const L = lkBreakRows(c, sec);
+  if (!L.length) return `<div class="small muted">None yet.</div>`;
+  const anyRet = sec === "invs" && L.some(o => LK_RETIRE.test(o.x.k));
+  return (
+    L.map(o => {
+      const st = c.led ? knSt([o.x]) : "Guess";
+      return `<button class="rowbtn" data-a="rowedit" data-k="${sec}" data-v="${o.i}"><span>${esc(lkName(o.x, sec))}${LK_RETIRE.test(o.x.k) && sec === "invs" ? `<div class="tiny muted">Before taxes</div>` : ""}</span><span class="row" style="gap:8px"><b class="${st === "Guess" ? "guess" : ""}">${sign}${money(o.x.amt)}</b>${kitPill(st)}<span class="caret">›</span></span></button>`;
+    }).join("") +
+    (anyRet ? `<div class="tiny muted">Before taxes. Some of this goes to taxes when you take it out.</div>` : "")
+  );
+}
+function lkBreakSheet() {
+  const c = C(),
+    d = D || derive(c),
+    k = (W && W.v) || "nw",
+    B = LK_BRK[k] || LK_BRK.nw,
+    N = lkNwText(c, d),
+    sum = rows => rsum(rows.map(o => o.x)),
+    guessAreas = { nw: ["cash", "inv", "debt"], cash: ["cash"], inv: ["inv"], debt: ["debt"] }[k] || ["cash"];
+  let big, body;
+  if (k === "nw") {
+    big = N.txt;
+    body =
+      `<div class="eyebrow" style="margin-top:6px">What you own</div>` +
+      lkBreakList(c, "cashes", "") +
+      lkBreakList(c, "invs", "") +
+      `<div class="eyebrow" style="margin-top:6px">What you owe</div>` +
+      lkBreakList(c, "debts", "-") +
+      `<div class="tiny muted">${money(sum(lkBreakRows(c, "cashes")) + sum(lkBreakRows(c, "invs")))} you own, minus ${money(sum(lkBreakRows(c, "debts")))} you owe.${N.range ? " Each guess is a range, so the total is a range." : ""}</div>`;
+  } else {
+    const sec = { cash: "cashes", inv: "invs", debt: "debts" }[k];
+    big = money(sum(lkBreakRows(c, sec)));
+    body = lkBreakList(c, sec, k === "debt" ? "-" : "");
+  }
+  const st =
+    k === "nw"
+      ? N.st
+      : c.led
+        ? knSt(lkBreakRows(c, { cash: "cashes", inv: "invs", debt: "debts" }[k]).map(o => o.x))
+        : "Guess";
+  return (
+    head(B[1], B[0]) +
+    `<div class="row between"><div class="big ${st === "Guess" ? "guess" : ""}" data-fid="v:brk">${big}</div>${kitPill(st)}</div>` +
+    (st === "Guess" && typeof whereFrom === "function" ? whereFrom(c, guessAreas) : "") +
+    `<div class="stack" style="gap:6px">${body}</div>` +
+    (k === "debt" && (c.debt || 0) > 0
+      ? `<button class="ghost wide" data-a="debtplan">Open the debt plan</button>`
+      : "") +
+    `<button class="ghost wide" data-a="close">Close</button>`
+  );
+}
+
 /* The dashboard of My Money. */
 function lkMoney(c, d, today) {
   today = today || todayISO();
@@ -71,6 +220,7 @@ function lkMoney(c, d, today) {
   }
   return {
     nw: d.nw,
+    nwTxt: lkNwText(c, d).txt,
     cash: rsum((c.cashes || []).filter(x => !x.hold)),
     inv: c.inv || 0,
     debt: c.debt || 0,
@@ -162,11 +312,11 @@ function homeStatRow(c, d) {
       guess: !s.free.real,
       act: "safe",
     }),
-    dkTile("Net worth", money(s.nw.v), {
-      sub: s.nw.real ? "own minus owe" : "own minus owe · Guess",
-      guess: !s.nw.real,
-      act: "tab",
-      v: "money",
+    dkTile("Net worth", s.nw.txt, {
+      sub: "own minus owe · " + s.nw.st,
+      guess: s.nw.st === "Guess",
+      act: "lkbrk",
+      v: "nw",
     }),
     dkTile("Next goal", s.goal ? (s.goal.at <= 0 ? "Ready" : esc(fmtDur(s.goal.at))) : "None yet", {
       sub: s.goal ? s.goal.n : "add one on My Goals",
@@ -226,10 +376,10 @@ function moneyTabLook(h) {
     g = !m.real;
   const look =
     dkStatRow([
-      dkTile("Net worth", money(m.nw), { guess: g, spark: m.hist.length > 2 ? m.hist : null }),
-      dkTile("Cash", money(m.cash), { guess: g }),
-      dkTile("Invested", money(m.inv), { guess: g }),
-      dkTile("You owe", money(m.debt), { guess: g, act: m.debt > 0 ? "debtplan" : "" }),
+      dkTile("Net worth", m.nwTxt, { guess: g, spark: m.hist.length > 2 ? m.hist : null, act: "lkbrk", v: "nw" }),
+      dkTile("Cash", money(m.cash), { guess: g, act: "lkbrk", v: "cash" }),
+      dkTile("Invested", money(m.inv), { guess: g, act: "lkbrk", v: "inv" }),
+      dkTile("You owe", money(m.debt), { guess: g, act: "lkbrk", v: "debt" }),
     ]) +
     `<div class="dkgrid">` +
     (m.hist.length > 2
@@ -348,6 +498,10 @@ function planTabPeriod(h) {
 }
 
 Object.assign(ACT, {
+  lkbrk: t => {
+    W = { kind: "lkbrk", v: (t && t.dataset && t.dataset.v) || "nw" };
+    sheet(lkBreakSheet);
+  },
   ledsort: t => {
     const c = C();
     c.x = c.x || {};

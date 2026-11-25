@@ -2590,11 +2590,19 @@ function hoursOf(c) {
   const h = c.hrs || {};
   return { w: h.w == null ? 40 : h.w, cm: h.cm == null ? 4 : h.cm, s: !!h.s };
 }
+/* Income from work only: a job, a second job, side gigs, a business. Benefits, help from family and retirement
+   income are not pay for hours, so the real hourly wage leaves them out. */
+const WORK_INC = ["A main job", "A second job", "Side gigs", "My own business"];
+function workTake(c) {
+  if (!c.led || !(c.incs || []).length) return ownTake(c);
+  return (c.incs || []).filter(x => !x.partner && WORK_INC.indexOf(x.k) >= 0).reduce((a, x) => a + (x.amt || 0), 0);
+}
 function timeLedger(c, d) {
   const h = hoursOf(c),
     wk = h.w + h.cm,
-    works = c.work !== "Retired" && h.w > 0,
-    wage = works && wk > 0 ? (ownTake(c) * 12) / 52 / wk : 0,
+    pay = workTake(c),
+    works = c.work !== "Retired" && h.w > 0 && pay > 0,
+    wage = works && wk > 0 ? (pay * 12) / 52 / wk : 0,
     mw = (c.inv * R) / 8760;
   let dy = 0,
     dreal = true;
@@ -2614,6 +2622,7 @@ function timeLedger(c, d) {
   return {
     h,
     wk,
+    pay,
     wage,
     mw,
     dc,

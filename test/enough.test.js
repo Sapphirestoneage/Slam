@@ -200,6 +200,8 @@ const KNOWN = {
   'js/solo/canon.js': 1, 'js/solo/return.js': 1, 'js/solo/quick.js': 4, 'game/features/dep.js': 1, 'game/features/ideas5.js': 2,
   // the formatters themselves (each one asks Rough numbers first), and the cents of the game's price tags
   'game/screens/ui.js': 4,
+  // the short money of the game's new look ($10k, $1.2M), which hands over to money() while Rough numbers is on
+  'game/features/look.js': 3,
   // text that leaves the screen: the pre-session intake, the test drive script, the extras' limit sentence
   'js/intake.js': 1, 'js/testdrive.js': 1, 'js/extras.js': 1, 'js/lifetime/compare.js': 1,
 };

@@ -55,7 +55,24 @@ function elStore(c) {
    put the stats in order), st (Guess or Close), act (the action that improves it) }. */
 function elStats(c, d) {
   d = d || derive(c);
-  const st = c.led ? "Close" : "Guess",
+  /* Each stat is Guess until every row that feeds it is entered (knSt in metrics.js). A stock number of setup
+     (applyTypical) is a Guess, never Close. */
+  const S = (...a) =>
+      c.led
+        ? knSt.apply(
+            null,
+            a.map(x => x || [])
+          )
+        : "Guess",
+    debtsOn = (c.debts || []).filter(x => x.amt > 0),
+    nothingOwed = c.placed || !!(c.x && c.x.none && c.x.none.debt),
+    st = {
+      cushion: S(c.cashes, c.spends),
+      left: S(c.incs, c.spends),
+      owed: debtsOn.length ? S(debtsOn, c.incs) : c.led && nothingOwed ? "Close" : "Guess",
+      invested: (c.invs || []).length ? S(c.invs, c.spends) : c.led && c.placed ? "Close" : "Guess",
+      protect: d.acDone > 0 ? "Close" : "Guess",
+    },
     spend = Math.max(1, c.spend || 0),
     take = Math.max(1, c.take || 0),
     cushion = d.cash / spend,
@@ -71,7 +88,8 @@ function elStats(c, d) {
       v: cushion,
       txt: one(cushion, "months of cushion"),
       score: Math.min(1, cushion / 6),
-      st,
+      st: st.cushion,
+      src: ["cash", "spend"],
       act: "sharp",
       av: "cash",
     },
@@ -81,7 +99,8 @@ function elStats(c, d) {
       v: left,
       txt: money(left) + " left each month",
       score: Math.max(0, Math.min(1, left / take / 0.2)),
-      st,
+      st: st.left,
+      src: ["take", "spend"],
       act: "csp",
     },
     {
@@ -90,7 +109,8 @@ function elStats(c, d) {
       v: owed,
       txt: c.debt > 0 ? one(owed, "months of pay owed") : "Nothing owed",
       score: 1 - Math.min(1, owed / 12),
-      st,
+      st: st.owed,
+      src: ["debt"],
       act: "debtplan",
     },
     {
@@ -99,7 +119,8 @@ function elStats(c, d) {
       v: yrs,
       txt: one(yrs, "years of spending invested"),
       score: Math.min(1, yrs / yrsAim),
-      st,
+      st: st.invested,
+      src: ["inv"],
       act: "nxa",
     },
     {
@@ -108,7 +129,7 @@ function elStats(c, d) {
       v: d.acDone,
       txt: d.acDone + " of " + d.acMax + " protections in place",
       score: d.acMax ? d.acDone / d.acMax : 1,
-      st,
+      st: st.protect,
       act: "cover",
     },
   ];
@@ -165,7 +186,7 @@ function elBook(c) {
   };
 }
 function elStatRow(s, tag) {
-  return `<div class="tile row between" style="gap:8px"><span style="min-width:0"><span class="tiny muted">${esc(s.n)}${tag ? " · " + tag : ""}</span><div><b class="${s.st === "Guess" ? "guess" : ""}">${esc(s.txt)}</b></div></span>${kitPill(s.st)}</div>`;
+  return `<div class="tile row between" style="gap:8px"><span style="min-width:0"><span class="tiny muted">${esc(s.n)}${tag ? " · " + tag : ""}</span><div><b class="${s.st === "Guess" ? "guess" : ""}">${esc(s.txt)}</b></div></span>${kitPill(s.st)}</div>${s.st === "Guess" && s.src && typeof whereFrom === "function" ? whereFrom(C(), s.src) : ""}`;
 }
 function elSheet() {
   const c = C(),

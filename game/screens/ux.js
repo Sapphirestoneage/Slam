@@ -842,3 +842,55 @@ if (typeof setInterval === "function" && typeof document !== "undefined" && docu
 }
 var UX_ON = true;
 if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();
+
+/* ONE TAP, ONE ANSWER (UX pass, item 1). A tap on an answer that moves the sheet on (a range chip, "Yes, about")
+   drew the next question under the same finger. A fast second tap then answered the next question with the same
+   amount, so a guess of $3,000 could become $8,000 of categories. Two rules:
+   1. A tap that arrives soon after a tap that moved the screen on is dropped (uxTapDrop).
+   2. A tap that changes the money gets Undo (uxTapUndoStart, uxTapUndoEnd). */
+const UX_TAP_GAP = 450;
+const UX_TAP_UNDO = {
+  sharpdone: "Answer saved",
+  askyes: "Answer saved",
+  askset: "Answer saved",
+  allocall: "Total changed",
+  alpick: "Total changed",
+  rowsave: "Changed",
+};
+let UX_TAP = null;
+/* The place of the open screen: a tap that changes it "moved on". */
+function uxTapSpot() {
+  const w = typeof W !== "undefined" && W ? W : {};
+  return [typeof SH !== "undefined" && SH ? SH.name : "", w.kind, w.q, w.i, w.st, w.step, w.sti].join("|");
+}
+/* Pure rule: drop the tap when the last tap moved the screen on less than gap ms ago. */
+function uxTapDropRule(last, now, gap) {
+  return !!last && last.moved && now - last.at < (gap || UX_TAP_GAP);
+}
+/* Part of the click handler in ui.js. True: drop this tap. */
+function uxTapDrop() {
+  return uxTapDropRule(UX_TAP, Date.now());
+}
+/* Part of the click handler in ui.js, before the action. */
+function uxTapStart(name) {
+  return { name, spot: uxTapSpot(), snap: UX_TAP_UNDO[name] && typeof G !== "undefined" ? JSON.stringify(G) : null };
+}
+/* Part of the click handler in ui.js, after the action: record if the screen moved on, offer Undo. */
+function uxTapEnd(s) {
+  try {
+    UX_TAP = { at: Date.now(), moved: uxTapSpot() !== s.spot };
+    if (s.snap && JSON.stringify(G) !== s.snap) {
+      UX_UNDO = { snap: s.snap, msg: UX_TAP_UNDO[s.name], at: Date.now() };
+      uxChip();
+      if (typeof setTimeout === "function")
+        setTimeout(() => {
+          if (UX_UNDO && Date.now() - UX_UNDO.at >= 5900) {
+            UX_UNDO = null;
+            uxChip();
+          }
+        }, 6000);
+    }
+  } catch (e) {
+    report(e, "ux.js: uxTapEnd");
+  }
+}
