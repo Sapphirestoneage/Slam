@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // One renderer for the small calculators (docs/KIT.md): the question, a few boxes with amounts to tap, the answer card
 // (redrawn while typing; the boxes are not), what changes it, the fold, and the link to take away. A calculator is a
-// spec: { title, why, fields, run(values, ref), answer(result, values) }. The math is in js/solo.js, with tests.
+// spec: { title, why, fields, run(values, ref), answer(result, values), more(api) }. The math is in js/solo.js, with tests.
 // A field with `plan` reads and writes the plan's own answer (take-home, spending, invested), so nothing is typed twice.
 import { boot, h, btn, chip, money, numBox, copyLink, foot } from './shell.js';
 import { answer, onFile } from '../journey.js';
@@ -35,7 +35,7 @@ export function calcPage(id, spec) {
       h('h2', { style: { marginTop: 0 } }, spec.fields.length === 1 ? 'One number' : 'A few numbers'), spec.fields.map(field));
     const carry = h('div.st-card', { id: 'carry' }, h('h2', { style: { marginTop: 0 } }, 'Take it with you'), h('p.st-small', {}, 'Your link keeps this answer.'),
       h('div.st-row', {}, copyLink(api), btn('All the steps', async () => { location.href = `one.html#/d/${await pack(api.store.doc)}`; }, 'slim')));
-    $('main').replaceChildren(h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, spec.title), h('p', { style: { marginBottom: 0 } }, spec.why)), inputs, card, carry);
+    $('main').replaceChildren(h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, spec.title), h('p', { style: { marginBottom: 0 } }, spec.why)), inputs, card, ...(spec.more ? spec.more(api) : []), carry); // more: a page's own cards after the answer (home.html: buying and renting)
     const empty = spec.fields.find(f => !f.options && !f.optional && get(f) == null);
     if (empty) inputs.querySelector(`#f_${empty.key}`)?.closest('.in')?.classList.add('st-pulse');
   }

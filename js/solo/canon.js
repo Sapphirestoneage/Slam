@@ -4,6 +4,7 @@
 // drawn by js/solo/calc.js from the specs below. The math is in js/solo.js with tests; whose idea each one is, is in
 // its fold. No verdict words: a rule of thumb is a line someone drew, shown next to your number.
 import { calcPage } from './calc.js';
+import { homeCostCards } from './homecost.js';
 import { money } from './shell.js';
 import { workYearsOf, coastOf, COAST_AGES, dollarLaterOf, carFitsOf, CAR_RATES, expectedWorthOf, realWageOf, splitOf, homeFitsOf } from '../solo.js';
 
@@ -81,6 +82,7 @@ const SPECS = {
     title: 'How much home would a lender say fits?', why: 'Lenders start from two lines drawn on your pay before taxes. Two numbers show where they land for you, before you ever talk to one.',
     fields: [{ key: 'grossMonthly', label: 'Your pay in a month, before taxes', picks: GROSS_MONTH, help: 'Everyone on the loan, added up. Yearly salary divided by 12.' }, { key: 'otherDebt', label: 'Your other debt payments in a month', picks: [0, 200, 400, 700, 1000, 1500], start: 0, help: 'Car, student loans, card minimums. Not rent.', optional: true }],
     run: v => homeFitsOf(v),
+    more: api => homeCostCards(api), // run of Nov 25 2026, Part 2: the bank's payment, the true cost of owning and renting, the breakeven year
     answer: R => ({ lead: 'The usual lines put your whole home payment at up to', big: `${big(R.payment)} a month`, line: R.payment > 0 ? `${R.by === 'front' ? `That is the 28% line. The 36% line, after your ${money(R.otherDebt)} of other payments, would allow ${big(R.back)}.` : `Your ${money(R.otherDebt)} of other payments make the 36% line the tighter one. With none, the 28% line would allow ${big(R.front)}.`} At ${pct(R.rate, 2)} over ${R.years} years it carries a loan of about ${big(R.loan)}.` : `Your other payments already take the 36% line, so on these lines there is no room for a home payment yet. Clearing ${big(Math.max(1, R.otherDebt - R.backLine * R.grossMonthly))} a month of them opens it.`,
       rows: [['28% of pay before taxes', 'the home payment by itself', `${big(R.front)} a month`], ['36% of pay, less other debts', 'every payment together', `${big(R.back)} a month`], ['The loan that payment carries', `${pct(R.taxIns)} of the payment set aside for taxes and insurance`, big(R.loan)]],
       small: 'The home payment here means the loan, property taxes and insurance together. A down payment comes on top of the loan.',

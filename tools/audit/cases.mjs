@@ -11,6 +11,7 @@ import { fireSheetRows } from '../../js/math/firesheet.js';
 import { runwayOf, backwardsOf, tripCostOf, habitCostOf, loanCostOf, stoppedPayOf, workYearsOf, coastOf, dollarLaterOf, carFitsOf, expectedWorthOf, realWageOf, splitOf, homeFitsOf } from '../../js/solo.js';
 import { ilIncomeTaxOf, ilNationalInsuranceOf, olimPointsOf, aliyahOf } from '../../js/math/aliyah.js';
 import { RULES } from '../../js/registry/assumptions.js';
+import { hbRun, hbBreakeven, hbPriceToRent, hbFivePercent } from '../../js/math/homebuy.js';
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
 import { Store, newHousehold } from '../../js/records.js';
 import { answer } from '../../js/journey.js';
@@ -80,6 +81,11 @@ for (let i = 0; i < N; i++) {
   { const x = { target: money(500, 60000), balance: money(1, 70000), monthly: rnd() < 0.1 ? null : money(10, 3000), nowAt: `2026-${String(whole(1, 12)).padStart(2, '0')}-05` }, r = rcRefill(x); add('rcRefill', x, { gap: r.gap, months: r.months, ym: r.full ? null : r.ym, full: r.full }); }
   { const x = { invested: money(500, 2000000), realReturn: pick([0.03, 0.05, 0.07]), monthly: rnd() < 0.1 ? pick([0, null]) : money(20, 9000), nowAt: `2026-${String(whole(1, 12)).padStart(2, '0')}-05`, maxMonths: pick([120, 360, 840]) }; x.coast = Math.round(x.invested * between(0.8, 1.6));
     const r = rcCoast(x); add('rcCoast', x, { below: r.below, by: r.by, months: r.months, ym: r.below ? r.ym : null }); }
+  // Home buying and renting (js/math/homebuy.js, M9O): the payment, the first month line by line, each year's position, the breakeven year
+  { const x = { price: money(90000, 1500000), downPct: pick([3, 5, 10, 20, 25]), ratePct: pick([0, 3, 4.5, 6, 6.5, 7.25, 9]), years: pick([15, 20, 30]), taxPct: pick([0, 0.5, 1.2, 2.5]), insYear: pick([0, 900, 1800, 4200]), pmiPct: pick([0.3, 0.75, 1.5]), hoa: pick([0, 0, 150, 600]), maintPct: pick([1, 1.5, 2]), repairsYear: pick([0, 1500, 5000]),
+      rent: money(500, 7000), rentIns: pick([0, 12, 25]), rentGrowthPct: pick([0, 2, 3, 3.5, 4, 6]), homeGrowthPct: pick([-1, 0, 2, 3, 5]), closingPct: pick([0, 2, 3, 5]), sellingPct: pick([0, 5, 6, 8]), retPct: pick([0, 4, 6, 7, 9]) };
+    const r = hbRun({ ...x, stay: 30 }), b = hbBreakeven(x);
+    add('homeBuy', x, { pmt: r.pmt, first: r.first, rent1: r.firstRent.total, pmiMonths: r.pmiMonths, ahead: r.byYear.map(y => y.ahead), ownOut: r.byYear.map(y => y.ownOut), rentOut: r.byYear.map(y => y.rentOut), year: b.year, never: b.never, ratio: hbPriceToRent(x.price, x.rent), five: hbFivePercent(x.price, x.rent).line, rentLess: hbFivePercent(x.price, x.rent).rentLess }); }
   { const x = { cap: money(10, 800), spent: rnd() < 0.1 ? null : money(1, 1200) }, r = rcSafeLine(x); add('rcSafeLine', x, { left: r.left, over: r.over, ranOut: r.ranOut, planCost: r.planCost }); }
   { const TAGS = ['mistake', 'unavoidable', null], KS = ['Late fee', 'Overdraft', 'Car repair', 'Other'], events = Array.from({ length: whole(1, 9) }, (_, k) => ({ id: `e${k}`, kind: pick(KS), amount: rnd() < 0.08 ? null : money(5, 9000), tag: pick(TAGS), yearsAgo: Math.round(between(0, 6) * 10) / 10 }));
     const x = { events, realReturn: pick([0.03, 0.04, 0.05, 0.06]), years: whole(1, 40), perDay: rnd() < 0.25 ? pick([0, -5, -40, null]) : money(2, 300), hourly: money(8, 150), yearIncome: money(15000, 300000) }, r = rcAudit(x);
