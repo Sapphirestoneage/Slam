@@ -263,10 +263,95 @@ const PF_R = {
   "Retirement income": { first: ["Monthly"], dim: ["Daily", "Weekly"], why: "retirement income is usually monthly" },
 };
 const pfSort = ks => ks.slice().sort((a, b) => (INC_W[b] || 0) - (INC_W[a] || 0));
+/* THE ORDER OF THE PAGES: the five rounds D, A, I, T, E (features/spiral.js). About you comes first.
+   D: what you owe (4). A: where your money lives (5), your cushion (7). I: your work (1). T: what comes off
+   the top (8). E: your home (2), your people (3), the last two (6). */
+const SM_ORDER = [0, 4, 5, 7, 1, 8, 2, 3, 6];
+/* T: the taxes round. A question about the match only for a player with a job. */
+SM_Q[8] = [
+  {
+    k: "taxQ",
+    l: "About how much of your pay goes to taxes before it lands?",
+    s: "Taxes off the top",
+    o: ["About 10%", "About 15%", "About 20%", "About 25%", "About 30%", "I don't know"],
+    h: "A pay stub shows pay before taxes at the top and what lands at the bottom. A guess is fine.",
+  },
+  {
+    k: "matchQ",
+    l: "Does your job add money when you save for retirement (a match)?",
+    s: "Match from your job",
+    o: ["Yes, and I get all of it", "Yes, but not all of it", "My job has no match", "I don't know"],
+    h: "A match is money your job adds when you put money in its retirement plan.",
+  },
+  {
+    k: "taxAcctQ",
+    l: "Do you put money into a tax-friendly account, like a 401(k), an IRA or an HSA?",
+    s: "Tax-friendly saving",
+    o: ["Yes, the most I'm allowed", "Yes, some", "Not this year", "I don't know"],
+  },
+];
+const SM_TAXACCT = ["Retirement plan at work", "IRA or Roth IRA", "HSA"];
 function smQs(w, i) {
-  if (i === 0) return w.o.age == null ? [] : SM_Q[0];
-  if (i === 6) return SM_Q[0].filter(q => !w.o[q.k]).concat(SM_Q[6]);
+  if (i === 0) return [];
+  if (i === 7) return SM_Q[0];
+  if (i === 8)
+    return SM_Q[8].filter(
+      q =>
+        (q.k !== "matchQ" || (isEmployee(w.o) && (w.o.incKinds || []).some(k => /job/.test(k)))) &&
+        (q.k !== "taxAcctQ" || (w.o.accts || []).some(a => SM_TAXACCT.includes(a)))
+    );
   return SM_Q[i];
+}
+/* The page after page i, or null after the last page. */
+function smNextPage(i) {
+  const k = SM_ORDER.indexOf(i);
+  return k >= 0 && k < SM_ORDER.length - 1 ? SM_ORDER[k + 1] : null;
+}
+function smPrevPage(i) {
+  const k = SM_ORDER.indexOf(i);
+  return k > 0 ? SM_ORDER[k - 1] : null;
+}
+const smIsLast = w => w.step === SM_ORDER[SM_ORDER.length - 1];
+/* Go to the next page. Between two rounds, spiral.js shows the number of the round first. */
+function smStepOn(w) {
+  if (typeof spRoundEnd === "function" && spRoundEnd(w)) return; /* spiral.js: the round just ended */
+  const n = smNextPage(w.step);
+  if (n != null) w.step = n;
+  if (typeof spUpSoon === "function") spUpSoon(); /* spiral.js: the new page starts at its top */
+}
+function smStepBack(w) {
+  const n = smPrevPage(w.step);
+  if (n != null) w.step = n;
+}
+/* Part of finishSetup() in ui.js. The answers of the taxes round go to the profile, then the work keys go. */
+function finishSetupTax() {
+  smTaxApply(W.o);
+  ["taxQ", "matchQ", "taxAcctQ"].forEach(k => delete W.o[k]);
+}
+/* The answers of the taxes round on a profile (also used on a copy, for the number of a round). */
+function smTaxApply(o) {
+  o.sharp = o.sharp || {};
+  o.x = o.x || {};
+  const p = /^About (\d+)%/.exec(o.taxQ || "");
+  if (p) {
+    o.x.taxPct = +p[1];
+    o.x.kin = o.x.kin || {};
+    o.x.kin.taxcf = 2;
+  }
+  const m = {
+    "Yes, and I get all of it": "yes",
+    "Yes, but not all of it": "no",
+    "My job has no match": "no match offered",
+  }[o.matchQ];
+  if (m) {
+    o.match = m;
+    o.sharp.match = true;
+  }
+  const t = { "Yes, the most I'm allowed": "yes", "Yes, some": "some", "Not this year": "no" }[o.taxAcctQ];
+  if (t) {
+    o.tax = t;
+    o.sharp.tax = true;
+  }
 }
 /* setup only asks what you have. When it lands is set on the calendar, so here the game just holds a guess. */
 function smInc(w) {
@@ -376,7 +461,9 @@ function smBody(w, qs, pre) {
         : "",
     auto = qs.filter(x => s.auto[x.k] && smAns(w, x) && x.k !== open).map(x => x.s);
   return (
-    smDots(w, qs, open, pre) +
+    (typeof spOn === "function" && spOn(w)
+      ? ""
+      : smDots(w, qs, open, pre)) /* spiral.js: the checklist of the round takes its place */ +
     echo +
     (q
       ? `<div class="field smopen ${missing(w, q.k) ? "miss" : ""}"><div class="small"><b>${q.l}</b>${q.m ? " Tap all that fit." : ""}${q.opt ? " (optional)" : ""}</div>${smChips(w, q)}${!q.m && OPT_DESC[o[q.k]] ? `<div class="tile small"><b>${o[q.k]}:</b> ${OPT_DESC[o[q.k]]}</div>` : q.h ? `<div class="tiny muted">${q.h}</div>` : ""}${q.m ? `<button class="${(o[q.k] || []).length ? "primary go" : "ghost"} wide slim" data-a="smdone" data-k="${q.k}">That's all</button>` : ""}</div>`
@@ -389,9 +476,15 @@ function smBody(w, qs, pre) {
 }
 /* how many questions are still ahead, across every page of setup */
 function smLeft(w) {
-  const o = w.o,
-    un = i => SM_Q[i].filter(q => !q.opt && !smAns(w, q)).length;
-  return (o.age == null ? 1 : 0) + un(0) + un(1) + un(2) + un(3) + (w.step <= 4 ? 1 : 0) + (w.step <= 5 ? 1 : 0);
+  const at = Math.max(0, SM_ORDER.indexOf(w.step));
+  return (
+    (w.o.age == null ? 1 : 0) +
+    SM_ORDER.reduce(
+      (n, p, i) =>
+        n + (p === 4 || p === 5 ? (i >= at ? 1 : 0) : (smQs(w, p) || []).filter(q => !q.opt && !smAns(w, q)).length),
+      0
+    )
+  );
 }
 function smList(w, k, opts, help, rowOf) {
   const s = smState(w),
@@ -404,8 +497,8 @@ const smName = w =>
 SETUP[0].b = w => {
   const o = w.o,
     nm = w.add ? smName(w) : "";
-  if (o.age != null) return nm + smBody(w, SM_Q[0], { now: false });
-  const dots = smDots(w, SM_Q[0], null, { now: true });
+  if (o.age != null) return nm + smBody(w, [], { now: false });
+  const dots = typeof spOn === "function" && spOn(w) ? "" : smDots(w, [], null, { now: true });
   if (!o.ageDec) return nm + dots + q("How old are you?", chipsRow("ageDec", Object.keys(DECADES), "", "agedec"));
   const r = DECADES[o.ageDec],
     as = [];
@@ -433,6 +526,11 @@ Object.assign(ACT, {
   SETUP[i].b = w => smBody(w, smQs(w, i));
 });
 SETUP[6].b = w => smBody(w, smQs(w, 6)) + (w.add || smQs(w, 6).some(q => !smAns(w, q)) ? "" : smName(w));
+SETUP[6].t = "A last two";
+SETUP.push(
+  { t: "Your cushion", req: w => !!(w.o.can1k && w.o.cover && w.o.invest), b: w => smBody(w, smQs(w, 7)) },
+  { t: "What comes off the top", req: w => true, b: w => smBody(w, smQs(w, 8)) }
+);
 SETUP[4].b = w =>
   smList(
     w,
@@ -485,7 +583,7 @@ function smCascade(w, k, seen) {
       o[d] = null;
     }
     if (ch) {
-      const q = [].concat(SM_Q[0], SM_Q[1], SM_Q[2], SM_Q[3], SM_Q[6]).find(x => x.k === d);
+      const q = [].concat(SM_Q[0], SM_Q[1], SM_Q[2], SM_Q[3], SM_Q[6], SM_Q[8]).find(x => x.k === d);
       if (!r.only)
         s.note =
           'Your answer changed what fits for "' + (q ? q.s : d) + '", so that one was cleared. Tap it to answer again.';
@@ -504,8 +602,8 @@ function smAfter(w, k, was) {
   const ok = SETUP[w.step].req(w),
     qs = smQs(w, w.step),
     all = !qs || qs.every(q => smAns(w, q) || q.opt);
-  if (!was && ok && all && w.step < SETUP.length - 1 && !(w.add && w.step === 0)) {
-    w.step++;
+  if (!was && ok && all && !smIsLast(w) && !(w.add && w.step === 0)) {
+    smStepOn(w);
     w.err = false;
     s.adv = Date.now();
     s.note = null;
@@ -523,6 +621,7 @@ function smAfter(w, k, was) {
     su = () => W && W.kind === "setup";
   ACT.set = t => {
     if (!su()) return _set(t);
+    if (typeof spBeatOn === "function" && spBeatOn(W)) return; /* spiral.js: the pick shows for a beat */
     const w = W,
       s = smState(w),
       k = t.dataset.k,
@@ -534,6 +633,7 @@ function smAfter(w, k, was) {
     delete s.auto[k];
     delete s.sk[k];
     if (k === "payFreq") s.pfg = false;
+    if (typeof spBeatStart === "function") spBeatStart(w, k); /* spiral.js: show the pick for a beat */
     smAfter(w, k, was);
   };
   ACT.setn = t => {
@@ -547,6 +647,7 @@ function smAfter(w, k, was) {
   };
   ACT.tog = t => {
     if (!su()) return _tog(t);
+    if (typeof spBeatOn === "function" && spBeatOn(W)) return; /* spiral.js: the pick shows for a beat */
     const w = W,
       s = smState(w),
       k = t.dataset.k,
@@ -633,6 +734,7 @@ Object.assign(ACT, {
     }
     const was = SETUP[w.step].req(w) && (smQs(w, w.step) || []).every(q => smAns(w, q) || q.opt);
     s.md[k] = true;
+    if (typeof spBeatStart === "function") spBeatStart(w, k); /* spiral.js: show the picks for a beat */
     smAfter(w, k, was);
   },
 });

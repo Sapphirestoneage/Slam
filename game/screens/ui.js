@@ -749,7 +749,7 @@ function homeBase() {
   }
   const isNew = Date.now() - NEWAT < 15000;
   return `<div class="stack">
- ${G.demo ? `<div class="card next pulse"><div class="eyebrow">Start here</div><h2 class="glow" style="margin:6px 0 4px">Make your own character</h2><div class="small"><b>SLAM the Game: your money, one small step at a time.</b> Free, and your numbers stay on this phone.</div><div class="small" style="margin-top:6px">About 15 taps to your first plan. No numbers and no typing. What you see below is a sample person, so you can look around first.</div><div class="tiny muted" style="margin-top:6px">${TRUST_LINE}</div><button class="primary wide" style="margin-top:10px" data-a="start">Now let's do you</button><button class="ghost wide slim" style="margin-top:8px" data-a="nextsample">Show me a different sample</button></div>` : ""}
+ ${G.demo ? `<div class="card next pulse"><div class="eyebrow">Start here</div><h2 class="glow" style="margin:6px 0 4px">Make your own character</h2><div class="small"><b>SLAM the Game: your money, one small step at a time.</b> Free, and your numbers stay on this phone.</div><div class="small" style="margin-top:6px">Five short rounds of taps to your first plan. No numbers and no typing. What you see below is a sample person, so you can look around first.</div><div class="tiny muted" style="margin-top:6px">${TRUST_LINE}</div><button class="primary wide" style="margin-top:10px" data-a="start">Now let's do you</button><button class="ghost wide slim" style="margin-top:8px" data-a="nextsample">Show me a different sample</button></div>` : ""}
  <div class="row between"><div><h1>${esc(c.name)}</h1><div class="small muted">${esc(chapterOf(c))}</div></div>${real && !gt ? `<span class="row"><span class="pill ${d.realm === "Underground" ? "under" : "surface"}">${realmN(d.realm)}</span>${ib("term:realm")}</span>` : ""}</div>
  <div class="card ${G.demo ? "" : "next pulse"} ${isNew ? "pop" : ""}"><div class="row between"><div class="eyebrow">${G.demo ? esc(c.name) + "'s next step" : V("next", "Your next step")}</div>${isNew ? `<span class="pill new">New</span>` : ""}</div><h2 class="glow" style="margin:6px 0 4px">${ns.best && ns.id ? stepHTML(ns.id, ns.t) : esc(ns.t)}</h2><div class="small">${esc(ns.s)}</div>${
    !real && ns.a === "sharp"
@@ -1669,6 +1669,9 @@ function openSetup(mode) {
    setupSheet() makes the full sheet. It calls each part by name. setupSheetBase() is the part from this file. */
 function setupSheet() {
   const w = W;
+  /* spiral.js: between two rounds, the number of the round and the level change; the pick for a beat */
+  const sp = typeof spSetupSheet === "function" ? spSetupSheet(w) : null;
+  if (sp) return sp;
   let h = setupSheetBase();
   /* planner.js: questions left, what the game knows, the fast finish */
   if (typeof setupSheetPlan === "function") h = setupSheetPlan(h, w);
@@ -1679,11 +1682,15 @@ function setupSheet() {
 function setupSheetBase() {
   const w = W,
     st = SETUP[w.step],
-    last = SETUP.length - 1,
+    at = SM_ORDER.indexOf(w.step),
+    n = SM_ORDER.length,
+    sp = typeof spHead === "function" ? spHead(w) : null /* spiral.js: the meter and the round */,
     ok = st.req(w);
   return (
-    head("Getting started · page " + (w.step + 1) + " of " + SETUP.length, st.t) +
-    `<div><div class="tiny muted">All taps. No numbers yet.</div>${bar((w.step / SETUP.length) * 100)}</div>${st.b(w)}${w.err && !ok ? `<div class="err">One question still needs an answer. It's outlined above.</div>` : ""}<div class="row between">${w.step > 0 ? `<button class="ghost" data-a="wback">Back one</button>` : "<span></span>"}<button class="${ok ? "primary go" : "ghost"}" data-a="wnext">${w.step === last ? "See where I stand" : "Next: page " + (w.step + 2) + " of " + SETUP.length}</button></div>`
+    (sp ||
+      head("Getting started · page " + (at + 1) + " of " + n, st.t) +
+        `<div><div class="tiny muted">All taps. No numbers yet.</div>${bar((at / n) * 100)}</div>`) +
+    `${st.b(w)}${w.err && !ok ? `<div class="err">One question still needs an answer. It's outlined above.</div>` : ""}<div class="row between">${at > 0 ? `<button class="ghost" data-a="wback">Back one</button>` : "<span></span>"}<button class="${ok ? "primary go" : "ghost"}" data-a="wnext">${(typeof spNextLabel === "function" && spNextLabel(w)) || (smIsLast(w) ? "See where I stand" : "Next: page " + (at + 2) + " of " + n)}</button></div>`
   );
 }
 /* FINISH THE SETUP: make the profile from the answers, or change it.
@@ -1693,6 +1700,7 @@ function finishSetup() {
   const pl = typeof finishSetupPlanStart === "function" ? finishSetupPlanStart() : null;
   const door = !!(W && W.door); /* okay.js: the setup came from the front door */
   if (typeof finishSetupPay === "function") finishSetupPay(); /* smart.js: keep how often each income comes */
+  if (typeof finishSetupTax === "function") finishSetupTax(); /* smart.js: the answers of the taxes round */
   const r = finishSetupBase();
   if (pl) finishSetupPlanEnd(pl.w, pl.isNew); /* planner.js, step 2 of 2: lay out the first week */
   if (door && typeof finishSetupOkay === "function") finishSetupOkay(); /* okay.js: the answer to "Am I okay?" */
@@ -3124,7 +3132,8 @@ const ACT = {
     );
   },
   wback: () => {
-    W.step--;
+    if (W.kind === "setup") smStepBack(W);
+    else W.step--;
     drawSheet();
   },
   wnext: () => {
@@ -3136,9 +3145,9 @@ const ACT = {
         return;
       }
       w.err = false;
-      if (w.step === SETUP.length - 1) finishSetup();
+      if (smIsLast(w) && !(typeof spRoundEnd === "function" && spRoundEnd(w))) finishSetup();
       else {
-        w.step++;
+        if (!smIsLast(w)) smStepOn(w);
         drawSheet();
       }
     } else if (w.kind === "month") {

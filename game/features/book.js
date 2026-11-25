@@ -28,6 +28,7 @@
                The copy is text with tabs. The file is CSV. Nothing is sent anywhere.
    ========================================================================= */
 const BOOK_PARTS = [
+  spiralBook,
   taxvBook,
   oddsBook,
   coverBook,

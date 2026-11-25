@@ -246,7 +246,7 @@ function elSheet() {
   }
   if (i === 2)
     return (
-      head("Meet your character", "3 of " + N) +
+      head(w.plan ? "Your first plan · tap 1 of 2" : "Meet your character", w.plan ? "" : "3 of " + N) +
       `<h2 data-fid="el:big">Does this feel accurate?</h2><div class="small muted">One tap. There is no wrong answer, and you can change it later.</div>` +
       `<div class="stack" style="gap:8px">${EL_ACC.map((a, k) => `<button class="rowbtn ${X.acc === a ? "sel" : !X.acc && k === 0 ? "pulse" : ""}" data-a="elacc" data-v="${a}"><b>${a}</b><span class="caret">›</span></button>`).join("")}</div>` +
       (X.acc === "Not really"
@@ -257,7 +257,7 @@ function elSheet() {
     );
   if (i === 3)
     return (
-      head("Meet your character", "4 of " + N) +
+      head(w.plan ? "Your first plan · tap 2 of 2" : "Meet your character", w.plan ? "" : "4 of " + N) +
       `<h2 data-fid="el:big">Which do you want to improve most?</h2><div class="small muted">Pick one. The game keeps it as your focus.</div>` +
       `<div class="stack" style="gap:8px">${S.all
         .slice()
@@ -285,6 +285,8 @@ function elSheet() {
    character is ready". Returns true when it opened. */
 function finishSetupReveal(c) {
   try {
+    /* spiral.js: the first plan, written as a route; its last step opens the accuracy and focus taps here */
+    if (typeof spPlanOpen === "function" && spPlanOpen(c)) return true;
     W = { kind: "elem", i: 0, first: true };
     sheet(elSheet);
     return true;
