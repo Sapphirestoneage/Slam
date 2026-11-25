@@ -20,7 +20,7 @@ This folder is the only copy of the game. An older copy inside Claude is retired
 
 ## 1. The six facts you must know first
 
-1. **The game uses classic scripts.** `index.html` loads 151 script files in a fixed order (150 of the game and one bundle from outside, in `vendor/`). All functions and constants are in one global scope. There are no modules.
+1. **The game uses classic scripts.** `index.html` loads 156 script files in a fixed order (155 of the game and one bundle from outside, in `vendor/`). All functions and constants are in one global scope. There are no modules.
 2. **Each file starts with a header.** The header gives PURPOSE, INPUT, OUTPUT and DEPENDS ON. Read the header before you read the code.
 3. **The screens are HTML text.** Each screen function returns one HTML string. `render()` puts the string in the page. One click handler reads the `data-a` attribute and calls `ACT[name]`.
 4. **A screen function calls its parts by name.** A feature file can add a row to a screen of a different file, for example to Home. It does this with a named function (a part), and the screen function calls that part. No file replaces a function of a different file. Section 6 shows the pattern.
@@ -98,6 +98,7 @@ These files stay in `game/` because the browser or the tools look for them there
 | A goal wired to an account and its automatic deposit, in three taps; the health and insurance quests (run JOE-1, features 4 and 5) | `features/goalwire.js`, `features/careq.js`, `data/roles.js` (`WIRE_OPTIONS`, `CARE_QUESTS`) |
 | Trips and the journey: a trip line by line, points or cash, a group split by share or by item, the FIRE journey map | `features/trip.js`, `core/trip.js` (the one engine with `trip.html` of the web app) |
 | Your unpaid jobs (the six jobs of running your money), admin hours (Running it and Living it), the four ways out of each task (run JOE-1) | `features/jobs.js`, `data/roles.js`, `core/jobs.js` (a copy of `js/math/jobs.js` of the main app, made by `tools/game_jobs_build.mjs`; do not edit it), `docs/JOB-OF-EXISTING.md` |
+| Setup as a spiral: five rounds in the order D, A, I, T, E, one number for each round with its chain and route strip, the level change, and "Your first plan" written as a route (UX pass, phase 3) | `features/spiral.js`, `screens/smart.js` (the order of the pages, the taxes round) |
 | List of built features, shown in the game | `features/built.js` |
 | Generated map of all files | `CODE-MAP.md` |
 | Known weak code | `KNOWN-WEAK.md` |

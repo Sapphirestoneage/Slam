@@ -146,26 +146,47 @@
   chk("Start: the visitor plays with no account", doorGuest() && store.slam_guest === "1");
   chk("Start opens the setup by taps", W && W.kind === "setup" && W.door === true);
   let h = ov();
-  chk("the first question is Am I okay?", /<h2>Am I okay\?<\/h2>/.test(h) && /Am I okay\? · page 1 of 7/.test(h));
+  chk("the first question is Am I okay?", /<h2>Am I okay\?<\/h2>/.test(h) && /Am I okay\? · page 1 of 9/.test(h));
   chk("page 1 has no typing that is required", /How old are you\?/.test(h));
-  /* the taps of a person: 21 taps to the answer */
+  /* the taps of a person, through the five rounds (spiral.js) to the answer */
   let taps = 0;
   const T = (a, v, k) => {
     taps++;
+    if (W && W.sm) W.sm.adv = 0;
     X(a, v, k);
   };
-  /* A page that is full goes to the next page by itself. P(n) taps Next only when page n is still open. */
+  /* A page that is full goes on by itself. P(n) taps Next only when page n is still open. R() taps through
+     the number of a round and its level change. */
   const P = n => {
-    if (W && W.kind === "setup" && W.step === n) T("wnext");
-  };
+      if (W && W.kind === "setup" && W.step === n && !W.sp) T("wnext");
+    },
+    R = () => {
+      if (W && W.sp && W.sp.at === "reveal") T("spnext");
+      if (W && W.sp && W.sp.at === "level") T("spgo");
+    };
   T("agedec", "30s", "ageDec");
   T("setn", "34", "age");
   P(0);
+  chk("page 5 from the door has no fast finish", W.step === 4 && !/speedfin/.test(ov()), W.step);
+  T("tog", "Credit card balance", "debtKinds");
+  P(4);
+  R();
+  P(5);
+  chk("the gut checks are in round 2 (Assets)", W.step === 7 && /A \$1,000 surprise bill/.test(ov()));
+  T("set", "No", "can1k");
+  T("set", "Less than a month", "cover");
+  T("set", "No", "invest");
+  R();
   T("set", "Established", "work");
   T("tog", "A main job", "incKinds");
-  T("set", "Every 2 weeks", "payFreq");
+  P(1);
   T("set", "Steady", "steady");
   P(1);
+  R();
+  T("set", "I don't know", "taxQ");
+  T("set", "I don't know", "matchQ");
+  P(8);
+  R();
   T("set", Object.keys(HOMEMAP)[0], "homeQ");
   T("tog", "On my own", "live");
   P(2);
@@ -173,22 +194,11 @@
   T("set", "None", "deps");
   T("set", "No one", "share");
   P(3);
-  chk(
-    "page 5 from the door has no fast finish (the answer needs the last page)",
-    W.step === 4 && !/speedfin/.test(ov()),
-    W.step
-  );
-  T("tog", "Credit card balance", "debtKinds");
-  P(4);
-  P(5);
-  chk("the last page is the three gut checks", W.step === 6 && /A \$1,000 surprise bill/.test(ov()));
-  T("set", "No", "can1k");
-  T("set", "Less than a month", "cover");
-  T("set", "No", "invest");
   P(6);
+  R();
   h = ov();
   chk("the path ends on the answer", W && W.kind === "okay" && /<h2>Am I okay\?<\/h2>/.test(h), W && W.kind);
-  chk("the path is short: at most 25 taps", taps <= 25, taps);
+  chk("the path stays short: at most 40 taps, with the five round screens", taps <= 40, taps);
   chk("the game is the visitor's own now", !G.demo && G.chars.length === 1);
   chk("the device remembers the game, so the landing does not come back", store.slam_guest === "2" && doorHasGame());
   const c = C(),
