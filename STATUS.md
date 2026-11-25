@@ -237,3 +237,15 @@ To continue: start from the work branch for the two unfinished parts (merge it w
 order: Live Session Mode Parts 6 to 9; the sins run (it builds on the quiz engine, docs/QUIZ-ENGINE.md); the two long
 runs from where they stopped. Promote with `bash tools/promote.sh` at the end of each run.
 
+
+## RUN: JOE-1, The Job of Existing (Nov 25 2026)
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | Your unpaid jobs (the six roles, on the character reveal and Me) | Not started | |
+| 2 | Admin hours (Running it and Living it) | Not started | |
+| 3 | The four exits (Do it, Automate it, Hand it off, Drop it) | Not started | |
+| 4 | Goal to account to auto-deposit | Not started | |
+| 5 | Health Care Admin and Insurance Coordinator quests | Not started | |
+| 6 | Household role map | Not started | |
+| 7 | Export, glossary, tests and report | Not started | |

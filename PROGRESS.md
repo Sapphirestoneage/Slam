@@ -246,3 +246,12 @@ A usage limit stopped the workers of three parts. Finished parts are on main and
 that had files written (home buying and renting; Live Session Mode Parts 6 and 7) are kept on the branch
 claude/upbeat-hopper-u0amw2. `STATUS.md`, section "Where the runs stopped", has the table and the order to continue.
 
+
+## Nov 25 2026: RUN: JOE-1, The Job of Existing (Nov 25 2026)
+
+Run name: **JOE-1, The Job of Existing (Nov 25 2026)**. Six features for SLAM the Game, from Eli's prompt: your
+real job is the unpaid work of running your money (CFO, Accountant, Financial Planner, Insurance Coordinator, Health
+Care Admin, Deals Manager), and SLAM does that job for you. Three workers, one after the other. A line is added here
+for each part.
+
+- Logged. What exists and what each feature extends: `docs/JOB-OF-EXISTING.md`.
