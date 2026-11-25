@@ -41,7 +41,7 @@ function dkTile(label, value, o) {
     : `<div class="dktile">${inner}</div>`;
 }
 function dkStatRow(tiles) {
-  return `<div class="dkstats">${tiles.join("")}</div>`;
+  return `<div class="dkstatsw"><div class="dkstats">${tiles.join("")}</div></div>`;
 }
 /* A tiny line of a few numbers, no axis. */
 function dkSpark(vals) {
