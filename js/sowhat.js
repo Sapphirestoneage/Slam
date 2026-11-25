@@ -3,8 +3,9 @@
 // link when something is off. Pure: takes the metrics (and a few extras), returns { text, action: { label, href } }.
 
 import { addMonths, ymOf, monthName } from './month.js';
+import { money as fmtMoney } from './format.js';
 
-const money = v => `$${Math.round(Math.abs(v)).toLocaleString('en-US')}`;
+const money = v => fmtMoney(Math.abs(v)); // the one formatter: Rough numbers applies
 const pct = v => `${Math.round(v * 100)}%`;
 const extraValue = e => (e?.value === null || e?.value === undefined ? null : e.value);
 

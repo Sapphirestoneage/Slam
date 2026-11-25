@@ -797,3 +797,18 @@ table.rows.mini.dest-stress td.dest-cur { font-weight: 700; outline: 2px solid v
 .rc-card.rc-win { border-left-color: var(--good); }
 .rc-card .rc-win-head { font-size: 1.15rem; }
 .coming-soon { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; padding: 10px 12px; margin: 4px 0 8px; border: 1.5px dashed var(--border-filled); border-radius: var(--r-input); }
+
+/* Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3): Budget and Goals. */
+.creep-big { font-size: 1.35rem; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.creep-wrap { max-width: 100%; overflow-x: auto; }
+.creep-table { width: 100%; }
+.creep-table td, .creep-table th { padding: 6px 8px; }
+.creep-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.creep-mutant { font-weight: 600; }
+.pareto-row { display: grid; grid-template-columns: minmax(90px, 1.4fr) 2fr auto auto; gap: 4px 12px; align-items: center; }
+.pareto-row .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pareto-name { overflow-wrap: anywhere; }
+.pareto-bar { display: block; height: 8px; border-radius: 4px; background: var(--chip); overflow: hidden; }
+.pareto-bar i { display: block; height: 100%; background: var(--primary); }
+.rough-btn { white-space: nowrap; }
+@media (max-width: 520px) { .pareto-row { grid-template-columns: 1fr auto auto; } .pareto-bar { grid-column: 1 / -1; grid-row: 2; } .creep-table td, .creep-table th { padding: 6px 4px; } .creep-table .creep-mutant { display: flex; width: max-content; margin: 4px 0 0 !important; } }
