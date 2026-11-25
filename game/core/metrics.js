@@ -947,7 +947,7 @@ function knMetrics(c, d) {
       what: "What you owe on cards and anything else charging about 8% or more.",
       num: hi,
       val: money(hi),
-      st: debts.length ? knSt(debts) : c.led ? "Close" : "Guess",
+      st: debts.length ? knSt(debts) : c.placed || (c.x && c.x.none && c.x.none.debt) ? "Close" : "Guess",
       zone: hi <= 0 ? ["None", "good"] : ["Costs you every month", "warn"],
       bar: null,
       rule: [
