@@ -191,3 +191,12 @@ to the other runs.
 
 - Started.
 
+## Nov 25 2026: RUN: Money sins system and the Rings theme (Nov 25 2026)
+
+Run name: **Money sins system and the Rings theme (Nov 25 2026)**. 3 parts: the read (a main pull from the 7 sins and
+a main way of refusing change from 12, from four sources of evidence), results and growth, and the Rings theme. It
+reuses the quiz engine of Part 11 of the run "Not built, groups 1 to 5", so that part is built first, right after the
+launch run. A line is added here for each part.
+
+- Logged. It starts when the launch run is done and the quiz engine is on main.
+

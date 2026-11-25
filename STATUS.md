@@ -193,3 +193,11 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | Part | What | State | Notes |
 |------|------|-------|-------|
 | 1 | The .xlsx export in the game, the FIRE sheet tab, Google Sheets, the Export entry, the blank FIRE sheet button | Not started | |
+
+## RUN: Money sins system and the Rings theme (Nov 25 2026)
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | The read | Not started | Waits for the quiz engine (Not built, groups 1 to 5, Part 11) |
+| 2 | Results and growth | Not started | |
+| 3 | The Rings theme | Not started | |
