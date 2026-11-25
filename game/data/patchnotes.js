@@ -228,6 +228,16 @@ const PATCH_NOTES = [
       "Two people who both turn on sharing get a money date to tap through. A gentle retake comes each quarter.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "A new theme: The Rings",
+    l: [
+      "Pick The Rings under Theme: seven rings, one ruler for each money sin, and you are the one escaping.",
+      "The ruler of your main pull is your boss in the boss fights. It gets roasted, you never do.",
+      "Check-ins read as the fine print, defenses as wards and Recalculating as the escape route. The plain word always sits next to it.",
+      "A month of a ward that works, or a retake that shows your pull getting quieter, climbs you up a ring. Tap Leave the Rings any time.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

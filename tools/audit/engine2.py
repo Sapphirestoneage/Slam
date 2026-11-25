@@ -945,6 +945,21 @@ def run(cases, ref, il=None):
                 return sum(max(0, p['add'].get(t, 0)) for p in x['ev'] if p['source'] in ('ledger', 'checkin', 'app') and p['d'] and a <= day(p['d']) < b)
             ck('before', o['before'], pat(st - _dt.timedelta(days=n), st), 1e-9); ck('during', o['during'], pat(st, st + _dt.timedelta(days=n)), 1e-9)
             ck('done', o['done'], (now - st).days >= n); ck('days left', o['daysLeft'], max(0, n - (now - st).days), 0)
+        elif fn == 'snClimb':
+            # one step for each take on which the first take's top held a smaller whole-percent share of the seven
+            # sins' points than at the take before, and one for each ward month whose pattern dropped
+            ids, H = x['sinIds'], x['hist']
+            def share(sc, i):
+                tot = sum(max(0, sc.get(k, 0)) for k in ids)
+                return None if tot <= 0 else max(0, sc.get(i, 0)) / tot
+            n = 0
+            if H and H[0]['sin'] and H[0]['sin']['top']:
+                t0 = H[0]['sin']['top']
+                for k in range(1, len(H)):
+                    a, z = share(H[k - 1]['scores'], t0), share(H[k]['scores'], t0)
+                    if a is not None and z is not None and int(z * 100 + 0.5) < int(a * 100 + 0.5): n += 1   # Math.round, half up
+            n += sum(1 for f in x['fixes'] if f['dropped'] is True)
+            ck('steps', o['n'], n, 0)
         elif fn == 'rcRefill':
             gap = max(0, x['target'] - x['balance'])
             ck('gap', o['gap'], gap); ck('full', o['full'], gap == 0)

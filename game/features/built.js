@@ -665,6 +665,21 @@ const WB = [
   ],
   [
     "feel",
+    "The Rings theme: seven rings, a ruler for each money sin, and you escaping",
+    "b",
+    () =>
+      typeof THEMES !== "undefined" &&
+      !!THEMES.rings &&
+      WB_FN("snRings") &&
+      WB_FN("snBoss") &&
+      WB_FN("rgBossPart") &&
+      WB_HAS("rgleave") &&
+      snRulers(qzSkin("sins")).length === 7,
+    "A theme to pick under Theme (off until you pick it): a dark, warm look and a cheeky voice. Each money sin is a ring with its own ruler; the ruler of your main pull is your boss in the boss fights. Check-ins read as the fine print, defenses as wards, Recalculating as the escape route, always with the plain word next to it. A month of a ward that works, or a retake that shows your pull getting quieter, climbs you up a ring. It roasts the sin, never you.",
+    "sins",
+  ],
+  [
+    "feel",
     "A rival to race",
     "p",
     () => WB_HAS("rival"),

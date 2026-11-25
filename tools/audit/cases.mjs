@@ -14,7 +14,7 @@ import { RULES } from '../../js/registry/assumptions.js';
 import { hbRun, hbBreakeven, hbPriceToRent, hbFivePercent } from '../../js/math/homebuy.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
-import { snOutside, snFixCheck, SN_RULES } from '../../js/math/sins.js';
+import { snOutside, snFixCheck, snClimb, SN_RULES } from '../../js/math/sins.js';
 import { Store, newHousehold } from '../../js/records.js';
 import { answer } from '../../js/journey.js';
 import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom, worked } from '../../js/math/lifetime.js';
@@ -93,7 +93,12 @@ for (let i = 0; i < N; i++) {
     const x = { ev, now, halfLife: SN_RULES.halfLife }, out = snOutside(ev, now);
     add('snOutside', x, { sources: out.map(o => o.source), scores: Object.fromEntries(out.map(o => [o.source, o.scores])) });
     const fx = { trait: pick(T), group: 'sin', start: day(whole(0, 60)) }, C = snFixCheck(fx, ev, now);
-    add('snFixCheck', { ev, now, fix: fx, days: SN_RULES.fixDays }, { before: C.before, during: C.during, done: C.done, daysLeft: C.daysLeft }); }
+    add('snFixCheck', { ev, now, fix: fx, days: SN_RULES.fixDays }, { before: C.before, during: C.during, done: C.done, daysLeft: C.daysLeft });
+    // the Rings theme (Part 3): the rings climbed, from the history of takes and the months of the wards
+    const SINS7 = ['pride', 'greed', 'envy', 'gluttony', 'lust', 'wrath', 'sloth'], top = pick(SINS7);
+    const hist = Array.from({ length: whole(0, 6) }, (_, k) => ({ at: day(400 - k * 91), sin: { top }, scores: Object.fromEntries(SINS7.map(id => [id, rnd() < 0.1 ? 0 : whole(0, 12)])) }));
+    const fixes = Array.from({ length: whole(0, 5) }, () => ({ trait: pick(SINS7), end: day(whole(0, 300)), dropped: pick([true, false, null]) }));
+    add('snClimb', { hist, fixes, sinIds: SINS7 }, { n: snClimb(hist, fixes, SINS7).length }); }
   // Home buying and renting (js/math/homebuy.js, M9O): the payment, the first month line by line, each year's position, the breakeven year
   { const x = { price: money(90000, 1500000), downPct: pick([3, 5, 10, 20, 25]), ratePct: pick([0, 3, 4.5, 6, 6.5, 7.25, 9]), years: pick([15, 20, 30]), taxPct: pick([0, 0.5, 1.2, 2.5]), insYear: pick([0, 900, 1800, 4200]), pmiPct: pick([0.3, 0.75, 1.5]), hoa: pick([0, 0, 150, 600]), maintPct: pick([1, 1.5, 2]), repairsYear: pick([0, 1500, 5000]),
       rent: money(500, 7000), rentIns: pick([0, 12, 25]), rentGrowthPct: pick([0, 2, 3, 3.5, 4, 6]), homeGrowthPct: pick([-1, 0, 2, 3, 5]), closingPct: pick([0, 2, 3, 5]), sellingPct: pick([0, 5, 6, 8]), retPct: pick([0, 4, 6, 7, 9]) };

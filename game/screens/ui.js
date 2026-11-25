@@ -225,6 +225,42 @@ const THEMES = {
       "A full storehouse is the best armor.",
     ],
   },
+  /* The Rings: dark comedy in a cheeky hell with seven rings, one ruler for each money sin (all original; the
+     rulers and the themed words are in the sins skin, data/quizskins.js, and features/rings.js shows them). It roasts
+     the sin, never the player: the player is always the one escaping. Off until a player picks it. */
+  rings: {
+    n: "The Rings",
+    tag: "Dark comedy in a cheeky hell. Seven rings, seven rulers, and you are the one escaping.",
+    sw: ["#b9581e", "#1c0f0a"],
+    eras: [
+      "The Bottom Ring",
+      "First Foothold",
+      "The Loose Gate",
+      "Chains Off",
+      "The Stone Stair",
+      "Embers Banked",
+      "The Quiet Ledge",
+      "Cool Air",
+      "Out in the Open",
+      "The Story You Tell",
+    ],
+    realm: ["The Rings", "Up Top"],
+    next: "Your next step up",
+    path: "The climb out",
+    done: "Climbed",
+    go: "Up",
+    upnext: "Next step up",
+    daily: "Morning roll call",
+    payday: "Payday in the rings",
+    month: "The monthly fine print",
+    move: "Log a step up",
+    praise: ["A ruler just lost a tenant.", "One ring lighter.", "The fine print did not get you this time."],
+    whisper: [
+      "Every ruler down here runs on one trick. You only need to see it.",
+      "The way out is a staircase, not a jump.",
+      "The rulers hate a plan. Make one anyway.",
+    ],
+  },
 };
 const LK = () => thUse(G.look, "sapphire"),
   VC = () => thUse(G.voice, LK());
@@ -254,9 +290,10 @@ function pick(a, seed) {
 function themeCard() {
   const lk = LK(),
     vc = VC(),
-    ids = Object.keys(THEMES).filter(t => adOk(THEMES[t]));
+    ids = Object.keys(THEMES).filter(t => adOk(THEMES[t]) && !adThemeOff(t)),
+    offIds = Object.keys(THEMES).filter(t => adOk(THEMES[t]) && adThemeOff(t));
   return `<div class="card"><div class="row between"><h3>Theme</h3><span class="tiny muted">${THEMES[lk].n}${vc !== lk ? " look, " + THEMES[vc].n + " voice" : ""}</span></div><div class="small muted">Changes how the game looks and talks. Your numbers and your steps stay exactly the same, and the plain word always sits next to the themed one.</div>
- <div class="stack" style="margin-top:8px">${ids.map(t => `<button class="rowbtn ${lk === t && vc === t ? "sel" : ""}" data-a="theme" data-v="${t}"><span><b>${THEMES[t].n}</b><div class="tiny muted">${THEMES[t].tag}</div></span><span class="swatch" style="background:linear-gradient(135deg,${THEMES[t].sw[0]},${THEMES[t].sw[1]})"></span></button>`).join("")}</div>
+ <div class="stack" style="margin-top:8px">${ids.map(t => `<button class="rowbtn ${lk === t && vc === t ? "sel" : ""}" data-a="theme" data-v="${t}"><span><b>${THEMES[t].n}</b><div class="tiny muted">${THEMES[t].tag}</div></span><span class="swatch" style="background:linear-gradient(135deg,${THEMES[t].sw[0]},${THEMES[t].sw[1]})"></span></button>`).join("")}</div>${offIds.length ? `<details style="margin-top:10px"><summary>More themes</summary><div class="inner stack"><div class="tiny muted">Off by default for you. Tap to add one to your list. You can take it back out any time.</div>${offIds.map(t => `<button class="ghost wide" data-a="thshow" data-v="${t}">Show ${esc(THEMES[t].n)} in my list</button>`).join("")}</div></details>` : ""}
  <details style="margin-top:10px" ${lk !== vc ? "open" : ""}><summary>Blend two themes</summary><div class="inner stack">${q("Looks like", `<div class="chips">${ids.map(t => `<button class="chip ${lk === t ? "on" : ""}" data-a="look" data-v="${t}">${THEMES[t].n}</button>`).join("")}</div>`)}${q("Talks like", `<div class="chips">${ids.map(t => `<button class="chip ${vc === t ? "on" : ""}" data-a="voice" data-v="${t}">${THEMES[t].n}</button>`).join("")}</div>`, "Example: Night Coven colors with Tabletop Quest words.")}</div></details>
  <div class="row between" style="margin-top:10px"><span class="small">Show my freedom date<div class="tiny muted">Retirement math, for the FIRE crowd. Off by default.</div></span><div class="seg"><button class="${G.fire ? "on" : ""}" data-a="fire" data-v="1">On</button><button class="${G.fire ? "" : "on"}" data-a="fire" data-v="0">Off</button></div></div></div>`;
 }
@@ -3404,6 +3441,13 @@ const progLine = (a, b) =>
 Object.assign(ACT, {
   themes: () => {
     go("me");
+  },
+  thshow: t => {
+    const c = C();
+    c.x = c.x || {};
+    c.x.thShow = Object.assign({}, c.x.thShow, { [t.dataset.v]: true });
+    save();
+    render();
   },
   theme: t => {
     G.look = t.dataset.v;
