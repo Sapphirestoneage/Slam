@@ -1179,6 +1179,20 @@ const WB = [
     "In the season lists next to tax season, each naming its job, with the four ways out. Tap your own dates once; a reminder lands on Today before each one. Every term opens the glossary.",
     "care",
   ],
+  [
+    "see",
+    "Who carries what: the household role map of the six unpaid jobs",
+    "b",
+    () =>
+      WB_HAS("rolemap") &&
+      WB_HAS("rmset") &&
+      WB_FN("jobCarry") &&
+      WB_FN("rmBook") &&
+      WB_FN("rmFairHours") &&
+      WB_FN("jobsSheetRoleMap"),
+    "Tap one or more people onto each job: a couple, a poly household, roommates, family, by their own names. The admin time of the home, who carries what, and its value at your time price. Labor counts in Sharing costs fairly adds these hours.",
+    "rolemap",
+  ],
 ];
 function btRows() {
   return WB.filter(r => adOk(r) && (r[6] !== "own" || ADX.own)).map(r => {

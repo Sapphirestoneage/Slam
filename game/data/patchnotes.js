@@ -226,6 +226,15 @@ const PATCH_NOTES = [
       "Each read also gets one move for this month. A share card carries the name and plain words, never a number.",
       "Once your read has a label, Home, the month check and the crash drill add one line that fits you.",
       "Two people who both turn on sharing get a money date to tap through. A gentle retake comes each quarter.",
+      ],
+    },
+    {
+      d: "2026-11-25",
+    t: "Who carries what",
+    l: [
+      "Share your six unpaid jobs with the people in your home. Tap one or more names onto each job.",
+      "See the admin time of your home, who carries which part, and what that time is worth.",
+      "Sharing costs fairly counts these hours in Labor counts. Find it in Your unpaid jobs.",
     ],
   },
   {

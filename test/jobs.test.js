@@ -114,6 +114,68 @@ test('a tapped date: the next one, the days to go, and the reminder window', () 
   assert.equal(jobDateNext(null, '2026-11-25'), null);
 });
 
+// ---------- feature 6: who carries what ----------
+test('the value of an admin hour: the time price first, then the pay per hour, else none', () => {
+  const { jobHourValue } = JB;
+  assert.deepEqual(jobHourValue(25, 40), { rate: 25, from: 'tp' });
+  assert.deepEqual(jobHourValue(null, 40), { rate: 40, from: 'wage' });
+  assert.deepEqual(jobHourValue(0, 0), { rate: null, from: null }, 'empty is not zero');
+});
+test('who carries what, by hand: three people, shared jobs, a hand-off, and the cap', () => {
+  const { jobCarry } = JB;
+  const admin = jobAdmin({ cfo: { v: 60, cf: 2 }, accountant: { v: 60, cf: 2 }, health: { v: 15, cf: 2 } });
+  // planner 15, insurance 15, deals 15 at their defaults: 180 in all
+  const tasks = [
+    { id: 'a', role: 'cfo', per: 10, times: 12 }, // 10 a month, handed to Bo
+    { id: 'b', role: 'cfo', per: 20, times: 12 }, // 20 a month, automated
+    { id: 'h', role: 'health', per: 30, times: 1 }, // 2.5, handed to Cy
+    { id: 'd', role: 'deals', per: 30, times: 12 }, // 30 off, the job is 15: each scaled by 15/40
+    { id: 'e', role: 'deals', per: 10, times: 12 }, // 10, handed to Bo
+  ];
+  const exits = { a: 'hand', b: 'auto', h: 'hand', d: 'drop', e: 'hand' };
+  const hands = { a: 'bo', h: 'cy', e: 'bo' };
+  const people = [{ key: 'me', n: 'Ash' }, { key: 'bo', n: 'Bo' }, { key: 'cy', n: 'Cy' }];
+  const assign = { cfo: ['me', 'bo'], accountant: ['cy'], health: ['me', 'bo', 'cy'], planner: ['nobody'] };
+  const K = jobCarry(admin, tasks, exits, hands, assign, people, 30);
+  const p = k => K.people.find(x => x.key === k);
+  // cfo: 60 - 30 = 30 left, half each; plus 10 handed to Bo
+  assert.equal(p('me').jobs.cfo, 15);
+  assert.equal(p('bo').jobs.cfo, 25);
+  // accountant: all 60 with Cy; health: 15 - 2.5 = 12.5 left, a third each; Cy gets the 2.5
+  assert.equal(p('cy').jobs.accountant, 60);
+  assert.ok(Math.abs(p('cy').jobs.health - (12.5 / 3 + 2.5)) < 1e-9);
+  // planner: a key nobody has falls back to the player; insurance has nobody tapped: the player
+  assert.equal(p('me').jobs.planner, 15);
+  assert.equal(p('me').jobs.insurance, 15);
+  // deals: 40 off a 15-minute job: nothing left, Bo gets 10 × 15/40 = 3.75
+  assert.equal(K.byJob.deals.left, 0);
+  assert.ok(Math.abs(p('bo').jobs.deals - 3.75) < 1e-9);
+  // the people add up to the household, and the household is Running it plus what went to people
+  const L = jobLiving(admin, tasks, exits);
+  const handedToPeople = 10 + 2.5 + 3.75;
+  assert.ok(Math.abs(K.people.reduce((s, x) => s + x.min, 0) - K.total) < 1e-9);
+  assert.ok(Math.abs(K.total - (L.running + handedToPeople)) < 1e-9);
+  // the dollars: hours × the rate, for each person and for all
+  K.people.forEach(x => assert.ok(Math.abs(x.value - (x.min / 60) * 30) < 1e-9));
+  assert.ok(Math.abs(K.people.reduce((s, x) => s + x.value, 0) - K.value) < 1e-9);
+  assert.ok(Math.abs(K.value - (K.total / 60) * 30) < 1e-9);
+  assert.ok(Math.abs(K.people.reduce((s, x) => s + x.share, 0) - 1) < 1e-9);
+});
+test('who carries what: the player alone holds everything; no rate gives no dollars', () => {
+  const { jobCarry } = JB;
+  const admin = jobAdmin({});
+  const K = jobCarry(admin, [], {}, {}, {}, [{ key: 'me', n: 'Me' }], null);
+  assert.equal(K.total, 180);
+  assert.equal(K.people[0].min, 180);
+  assert.equal(K.people[0].share, 1);
+  assert.equal(K.value, null);
+  assert.equal(K.people[0].value, null);
+  // a hand-off to a coach (not a key of the household) leaves the household
+  const T = [{ id: 'x', role: 'cfo', per: 30, times: 12 }];
+  assert.equal(jobCarry(admin, T, { x: 'hand' }, { x: 'coach' }, {}, [{ key: 'me', n: 'Me' }], 20).total, 150);
+  assert.equal(jobCarry(admin, [], {}, {}, {}, [], 20).total, 0, 'no people: nobody to carry it');
+});
+
 // ---------- one function for the web app and the game ----------
 const src = readFileSync(new URL('../js/math/jobs.js', import.meta.url), 'utf8');
 const copy = readFileSync(new URL('../game/core/jobs.js', import.meta.url), 'utf8');
@@ -132,4 +194,6 @@ test('the game\'s copy gives the same answers', () => {
   assert.deepEqual(j(box.out.jobLiving(box.out.jobAdmin(ad), T, { a: 'auto' })), j(jobLiving(jobAdmin(ad), T, { a: 'auto' })));
   assert.equal(box.out.jobWirePer(300, 26), JB.jobWirePer(300, 26));
   assert.deepEqual(j(box.out.jobDateNext('12-15', '2026-11-25')), j(JB.jobDateNext('12-15', '2026-11-25')));
+  const P3 = [{ key: 'me', n: 'A' }, { key: 'b', n: 'B' }, { key: 'c', n: 'C' }];
+  assert.deepEqual(j(box.out.jobCarry(box.out.jobAdmin(ad), T, { a: 'hand' }, { a: 'b' }, { cfo: ['me', 'c'] }, P3, 25)), j(JB.jobCarry(jobAdmin(ad), T, { a: 'hand' }, { a: 'b' }, { cfo: ['me', 'c'] }, P3, 25)));
 });
