@@ -171,3 +171,11 @@ A line is added here for each part.
 
 - Logged. Waiting for Part 1 of each of the two other runs to land.
 
+## Nov 25 2026: RUN: 4% rule vs guardrails and every way to take money out, side by side (Nov 25 2026)
+
+Run name: **4% rule vs guardrails and every way to take money out, side by side (Nov 25 2026)**. One screen,
+"Compare the ways", in the game (Taking money out) and in the web app lifetime plan: the same plan through each way
+of taking money out, as families with variants. It is built in its own working copy, next to the other runs.
+
+- Started.
+

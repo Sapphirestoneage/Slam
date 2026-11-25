@@ -181,3 +181,9 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 4 | Trust | Not started | |
 | 5 | Email | Not started | |
 | 6 | The front door | Not started | |
+
+## RUN: 4% rule vs guardrails and every way to take money out, side by side (Nov 25 2026)
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | Compare the ways: one screen in the game and in the web app lifetime plan | Not started | |
