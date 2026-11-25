@@ -145,3 +145,12 @@ The goal: two software developers can read and review the code of the game. The 
 - `USABILITY.md` (three personas, two rounds), a math audit of four core numbers, `tools/game_clicks.cjs`.
 - `npm run test:game`: 1,566 checks ok. `node --test`: 1,240 pass, 0 fail.
 - Questions: `QUESTIONS.md` 572 and 573. Decisions: `DECISIONS.md`. What to try first: `MORNING.md`.
+
+## Nov 25 2026: RUN: Finish everything partly built (Nov 25 2026)
+
+Run name: **Finish everything partly built (Nov 25 2026)**. 21 parts, in the order of the prompt. Each part is
+committed and pushed to main when it is done, so a stop midway keeps the finished parts. The state of each part is in
+`STATUS.md` (the section of this run). A line is added here for each part as it lands.
+
+- Started. Baseline: `node --test` 1,240 pass, 0 fail. `npm run test:game` 71 files, 1,764 checks ok, 0 failed.
+

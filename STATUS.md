@@ -122,3 +122,32 @@ Scale 1 to 5. Nothing above "minor" is open.
 
 Minor, open: the reveal's strengths are an order of guesses until the numbers are real (it says so); the X-ray and
 Kids mode are found in the menu and under People only; the way back needs one paste or one file, which is not a tap.
+
+## RUN: Finish everything partly built (Nov 25 2026)
+
+One row for each part of the run. "Done" means each item of the part is built, tested and pushed. "Partly" names what
+is missing. The details and the questions of each part are in `PROGRESS.md` and `QUESTIONS.md`.
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | FI number variants | Not started | |
+| 2 | Home buying and renting | Not started | |
+| 3 | Career and education | Not started | |
+| 4 | Travel | Not started | |
+| 5 | Student loans | Not started | |
+| 6 | Quizzes | Not started | |
+| 7 | Money psychology | Not started | |
+| 8 | Joy and enough | Not started | |
+| 9 | Comparing with peers | Not started | |
+| 10 | Benefits and health | Not started | |
+| 11 | Estate and marriage | Not started | |
+| 12 | Households | Not started | |
+| 13 | Investing | Not started | |
+| 14 | Taxes and self-employed | Not started | |
+| 15 | Safety nets | Not started | |
+| 16 | Giving | Not started | |
+| 17 | Asking fewer questions | Not started | |
+| 18 | Coach and reports | Not started | |
+| 19 | Testing and math | Not started | |
+| 20 | Game feel | Not started | |
+| 21 | Spec rows marked Partly | Not started | |
