@@ -459,6 +459,17 @@
       .filter(t => !new RegExp("delete from " + t + " where [^;]*" + mine[t] + " = me").test(body))
       .join()
   );
+  chk(
+    "the reports of the person go too, when that table exists",
+    /if to_regclass\('public\.reports'\) is not null then execute 'delete from public\.reports where owner = \$1' using me;/.test(
+      body
+    ) &&
+      /owner uuid default auth\.uid\(\) references auth\.users/.test(
+        fs.readFileSync(GAME_DIR + "../supabase/migrations/20261125190000_reports.sql", "utf8")
+      )
+  );
+  chk("the privacy page says what a report holds", /If you tap Report:/.test(page) && /No money number/.test(page));
+  chk("a report that waits on the device goes with the copy on the device", TU_GAME_KEYS.test(RP_STORE));
   chk("a coach's notes about the person go too", /delete from coach_notes where coach = me or client = me;/.test(body));
   chk("the sign-in is removed last", /delete from auth\.users where id = me;\s*return/.test(body));
   chk(

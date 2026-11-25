@@ -331,7 +331,7 @@ function tuDeleteSays(res, email) {
       gone: [
         `${pieces}, from the database.`,
         `Your sign-in: ${who} and the password.`,
-        "Your coach permissions, the notes a coach kept about you, and your lines of failed saves.",
+        "Your coach permissions, the notes a coach kept about you, the reports you sent with the Report button, and your lines of failed saves.",
         "The copy of the game on this device.",
       ],
       stays: [
@@ -356,7 +356,7 @@ function tuDeleteSays(res, email) {
     stays.push(`${res.left} saved ${res.left === 1 ? "piece" : "pieces"} of your game could not be removed.`);
   stays.push(
     `Your sign-in (${who} and the password) is still there. Removing it needs one step in the database that is not switched on yet. Write to ${TRUST_MAIL} from that address and Eli removes it by hand.`,
-    "Kept until Eli removes the sign-in: lines in the admin log with your email, notes a coach kept about you, and lines of failed saves.",
+    "Kept until Eli removes the sign-in: lines in the admin log with your email, notes a coach kept about you, reports you sent with the Report button, and lines of failed saves.",
     "A backup file that the admin downloaded before today can still hold your game.",
     "Copies on your other devices stay until you sign in there or clear that browser."
   );

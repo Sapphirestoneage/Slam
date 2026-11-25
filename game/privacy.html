@@ -47,6 +47,7 @@ details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{c
 <li>Your email address, your password in a scrambled form that nobody can read, and the times you signed up and last signed in.</li>
 <li>Your saved game: everything you tap or type in the game. The names of the people in it, income, spending, debts, savings, goals, your answers and your progress. It is saved as one game, cut in pieces.</li>
 <li>Whether "Share with my coach" is on.</li>
+<li>If you tap Report: what you chose (bug, idea or confusing), your note, the name of the screen and of the last 3 buttons you tapped, your device, browser and screen width, the app version, and a picture if you add one. No money number. You can read your own reports. The admin reads all of them. A report waits on your device until the database can take it.</li>
 <li>If a save does not go through: one line with the time, your account and the technical reason, so the admin can repair it.</li>
 <li>If you work with a coach: the notes and tasks your coach writes about your sessions. They are the coach's notes. You cannot read them in the app. The admin can.</li>
 <li>If the admin turned on extra content for your account: which content, and when.</li>
@@ -95,8 +96,8 @@ details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{c
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.claude={}</script><!-- keeps supa.js to its two public settings on this page -->
 <script src="core/report.js?v=e950ffe0"></script>
-<script src="account/trust.js?v=19cd652f"></script>
-<script src="account/supa.js?v=c1b3f527"></script>
+<script src="account/trust.js?v=c62c6ebe"></script>
+<script src="account/supa.js?v=c3ffd784"></script>
 <script>
 /* The privacy page. The words above are fixed text. This script does two things: the delete button and the
    button that clears the web app's answers in this browser. The work is in account/trust.js (tuDelete, tuWipe). */
@@ -115,7 +116,7 @@ function drawDel(){
     $del.innerHTML = `<p>You are not signed in on this device, so there is no account to delete from here.</p><p class="muted">To delete an account: sign in to the game, tap Menu, then My account, then Delete my account.</p><div class="row"><a class="btn" href="./">Open the game to sign in</a></div>`;
     return;
   }
-  const what = `<details><summary>What this removes, and what stays</summary><div><p>Removed: your saved game in the database, and the copy on this device. Then you are signed out.</p><p>Today your sign-in (your email and password) stays until Eli removes it by hand: write to ${TRUST_MAIL} from that address. When one more step is switched on in the database, this button removes the sign-in too. The page tells you which of the two happened.</p><p>Copies on your other devices stay until you sign in there or clear that browser.</p></div></details>`;
+  const what = `<details><summary>What this removes, and what stays</summary><div><p>Removed: your saved game in the database, and the copy on this device. Then you are signed out.</p><p>Today your sign-in (your email and password) and the reports you sent stay until Eli removes them by hand: write to ${TRUST_MAIL} from that address. When one more step is switched on in the database, this button removes the sign-in too. The page tells you which of the two happened.</p><p>Copies on your other devices stay until you sign in there or clear that browser.</p></div></details>`;
   if (S.step === 0) $del.innerHTML = `<p>Signed in as <b>${tuEsc(S.email)}</b>.</p><p>This removes your saved game for good. It cannot be undone, so the page asks two times.</p>${what}<div class="row"><button class="amber" data-d="1">Delete my account</button></div>`;
   else if (S.step === 1) $del.innerHTML = `<p>Signed in as <b>${tuEsc(S.email)}</b>.</p><p><b>First ask.</b> Do you want to delete the saved game of this account? If you only want a rest, you can keep it: nothing is lost by waiting.</p><div class="row"><button class="primary" data-d="back">Keep my account</button><button class="amber" data-d="2">Yes, go on</button></div>`;
   else if (S.step === 2) $del.innerHTML = `<p>Signed in as <b>${tuEsc(S.email)}</b>.</p><p><b>Second ask.</b> This is the last step. After it, the saved game is gone and nobody can bring it back, not you and not Eli. To keep a copy first: open the game, tap Menu, then Save my game.</p><div class="row"><button class="primary" data-d="back">Keep my account</button><button class="amber" data-d="go">Delete it now</button></div>`;

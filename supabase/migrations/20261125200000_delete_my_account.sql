@@ -9,14 +9,16 @@
 --   1. removes the saved game (games), the add-on permissions (player_entitlements), the coach role (coaches),
 --      the notes a coach kept about this person and the notes this person kept as a coach (coach_notes),
 --      and the lines of failed saves (save_failures);
---   2. removes the rows of the web app, if its tables exist (docs/cloud-schema.sql: accounts, space_members);
+--   2. removes the reports this person sent with the button "Report", if that table exists
+--      (20261125190000_reports.sql), and the rows of the web app, if its tables exist (docs/cloud-schema.sql:
+--      accounts, space_members);
 --   3. keeps the lines of the audit log, with the email of this person removed from them, and adds one line
 --      "account_self_delete" with no email;
 --   4. removes the sign-in (auth.users). The database then removes the sessions of that sign-in by itself.
 -- The admin account is refused: the game must never be left with no admin, and an admin email with no account
 -- could be taken by a new sign-up.
--- A table that is added later and holds rows of a player (for example the reports of "Report a bug or idea")
--- needs one more delete line here, or a foreign key to auth.users with "on delete cascade".
+-- A table that is added later and holds rows of a player needs one more delete line here, or a foreign key to
+-- auth.users with "on delete cascade".
 
 create or replace function public.delete_my_account() returns jsonb language plpgsql security definer set search_path = public as $$
 declare
@@ -31,6 +33,7 @@ begin
   delete from coaches where user_id = me;
   delete from coach_notes where coach = me or client = me;
   delete from save_failures where user_id = me;
+  if to_regclass('public.reports') is not null then execute 'delete from public.reports where owner = $1' using me; end if;
   if to_regclass('public.space_members') is not null then execute 'delete from public.space_members where member = $1' using me; end if;
   if to_regclass('public.accounts') is not null then execute 'delete from public.accounts where owner = $1' using me; end if;
   update admin_audit set actor_email = null where actor = me;

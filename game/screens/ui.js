@@ -41,6 +41,7 @@ function fresh() {
     gamer: false,
     coachDiary: true,
     flags: [],
+    rpTold: [],
     demo: true,
   };
 }
@@ -632,6 +633,7 @@ function home() {
   if (typeof homeForkRow === "function") h = homeForkRow(h); /* fork.js: the row for the fork check */
   if (typeof homeAccountLine === "function") h = homeAccountLine(h); /* eras.js: the account recommendation */
   if (typeof homeCoachNote === "function") h = homeCoachNote(h); /* supa.js: the note "the coach made a change" */
+  if (typeof homeReportFixed === "function") h = homeReportFixed(h); /* fbreport.js: "You reported this. It's fixed." */
   if (typeof homeSleptRow === "function")
     h = homeSleptRow(h); /* slept.js: the line "Your money earned $X while you slept" */
   if (typeof homeCoastCard === "function") h = homeCoastCard(h); /* coast.js: the card "You can stop sprinting" */
@@ -771,8 +773,10 @@ function houseCard() {
     .join("");
   return `${rows}<div class="grid2"><div class="tile"><div class="tiny muted">Together: own minus owe</div><b>${money(nw)}</b></div><div class="tile"><div class="tiny muted">Shared runway</div><b>${spend > 0 ? mo(cash / spend) : "0"} months</b></div></div><div class="tiny muted">Combining money with: ${esc(G.house.share)}. Each person keeps their own character.</div>`;
 }
+/* The button "Report" at the end of a tab. With fbreport.js the button is in the top bar of each tab, so this
+   place stays empty. */
 function flagBtn() {
-  return `<button class="ghost slim flag" data-a="flag">Flag this screen</button>`;
+  return typeof topbarReport === "function" ? "" : `<button class="ghost slim flag" data-a="flag">Report</button>`;
 }
 
 /* ---------- MAP ---------- */
@@ -1267,7 +1271,7 @@ function meTabBase() {
  <button class="node" data-a="share"><b>Share the game</b><div class="tiny muted">A code to scan.</div></button>
  <button class="node" data-a="backup"><b>Save or move my game</b><div class="tiny muted">Copy your game as text, or paste one in.</div></button>
  <div class="card"><div class="row between"><div><b>Game words</b><div class="tiny muted">Show the game term next to the plain word, like Runway (HP).</div></div><div class="seg"><button class="${G.gamer ? "" : "on"}" data-a="gamer" data-v="0">Off</button><button class="${G.gamer ? "on" : ""}" data-a="gamer" data-v="1">On</button></div></div></div>
- <details><summary>Screens you flagged (${G.flags.length})</summary><div class="inner stack">${G.flags.length ? G.flags.map(f => `<div class="small">${nice(f.d)} · ${esc(f.where)} · <b>${esc(f.kind)}</b></div>`).join("") + `<div class="tiny muted">These are included when you copy your game.</div>` : `<div class="small muted">Tap "Flag this screen" at the bottom of any screen.</div>`}</div></details>
+ ${typeof meReports === "function" ? meReports() /* fbreport.js: the reports, and the screens flagged before */ : `<details><summary>Screens you flagged (${G.flags.length})</summary><div class="inner stack">${G.flags.length ? G.flags.map(f => `<div class="small">${nice(f.d)} · ${esc(f.where)} · <b>${esc(f.kind)}</b></div>`).join("") + `<div class="tiny muted">These are included when you copy your game.</div>` : `<div class="small muted">Tap "Flag this screen" at the bottom of any screen.</div>`}</div></details>`}
  <details><summary>Coming soon (${SOON.filter(s => s[0] !== "Rivals" && s[0] !== "The Enneagram-style test").length})</summary><div class="inner stack">${SOON.filter(
    s => s[0] !== "Rivals" && s[0] !== "The Enneagram-style test"
  )
@@ -2441,6 +2445,7 @@ function backupSheet() {
   );
 }
 function flagSheet() {
+  if (typeof fbOpen === "function") return fbOpen(); /* fbreport.js: the one sheet "Report a bug or idea" */
   const where = tab + (tab === "map" && MP.r ? " › " + MP.r + (MP.t ? " › " + MP.t : "") : "");
   sheet(
     () =>
@@ -2548,6 +2553,7 @@ function renderAll() {
   if (typeof renderUxEnd === "function") renderUxEnd(wel); /* ux.js: the page marks, the tab bar, the mark "Saved" */
   if (typeof renderDep === "function") renderDep(); /* dep.js: the line "this changed that" */
   if (typeof tkChipSafe === "function") tkChipSafe(); /* testkit.js: the chip of a test task */
+  if (typeof renderReportAt === "function") renderReportAt(); /* fbreport.js: the screen named in a report */
 }
 function renderBase() {
   applyLook();
@@ -5224,7 +5230,9 @@ function drawSheetBase() {
     (W && (W.kind === "skill" || W.kind === "node")) || SH === glossarySheet
       ? `<div class="tiny muted">${EDU}</div>`
       : "";
-  el.innerHTML = `<div class="overlay"><div class="sheet stack">${soonDraw(SH, "ui.js: drawSheetBase")}${foot}</div></div>`;
+  /* fbreport.js: the button "Report" at the end of each sheet */
+  const rep = typeof sheetReportRow === "function" ? sheetReportRow() : "";
+  el.innerHTML = `<div class="overlay"><div class="sheet stack">${soonDraw(SH, "ui.js: drawSheetBase")}${foot}${rep}</div></div>`;
   const nw = el.querySelector ? el.querySelector(".sheet") : null;
   if (nw) nw.scrollTop = sc;
   if (nw && nw.querySelectorAll) {
