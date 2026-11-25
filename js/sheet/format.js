@@ -96,6 +96,7 @@ export const FORMATS = [
   { version: 53, shape: '34f7e9df' }, // Nov 25 2026: the FI destinations (M9G), the FI date stress test (M9X) and the pod FI number (M9Y) registered as app-only
   { version: 54, shape: 'e45983be' }, // Nov 25 2026 (the run Export for the FIRE spreadsheet crowd): M9I the FIRE sheet, the first tab of the workbook (its own inputs; the import does not read it back)
   { version: 55, shape: '12c11ccd' }, // Nov 25 2026 (Eli's answers to QUESTIONS 580): M52 the Barista number adds health insurance (the part Math_M52_health, from the app)
+  { version: 56, shape: '63e6d98e' }, // Nov 25 2026 (run Finish everything partly built, Part 2): M9O home buying and renting, app-only, and its six rules on the assumptions list
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

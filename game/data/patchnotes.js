@@ -145,6 +145,16 @@ const PATCH_NOTES = [
       "In the web app, the order of steps for a Lean, Barista or Fat goal now moves only the late steps. The first five never move.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Rent or buy, with the true cost of owning",
+    l: [
+      "The simulator Rent or buy now starts with the bank's payment, then shows what owning really costs each month: property tax, home insurance, PMI, HOA, maintenance and big repairs.",
+      "It shows the year owning comes out ahead of renting, or says that renting is cheaper the whole time. The price-to-rent ratio and the 5% rule sit beside it.",
+      "Costs that differ from home to home start empty. Tap your own number and it counts.",
+      "The web page How much home fits has the same four answers, from the same math.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

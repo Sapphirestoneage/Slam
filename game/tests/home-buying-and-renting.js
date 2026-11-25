@@ -230,7 +230,7 @@
       Math.abs(row("rb_five").v - (400000 * 0.05) / 12) < 1e-9
   );
   const src = require("fs").readFileSync(GAME_DIR + "features/sims/rentbuy.js", "utf8");
-  chk("no em dash and no en dash in the file", !/[—–]/.test(src));
+  chk("no em dash and no en dash in the file", !/[\u2014\u2013]/.test(src));
   chk("the simulator file has no loan math of its own", !/Math\.pow|simLoanPayment/.test(src));
   X("close");
   G.chars.splice(n0, 1);

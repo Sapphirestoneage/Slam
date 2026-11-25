@@ -979,10 +979,14 @@ def run(cases, ref, il=None):
             ck('PMI, month 1', f['pmi'], loan * x['pmiPct'] / 1200 if under else 0); ck('maintenance, month 1', f['maint'], price * x['maintPct'] / 1200)
             ck('big repairs, month 1', f['repairs'], x['repairsYear'] / 12); ck('owning, month 1', f['total'], own(1)[0]); ck('renting, month 1', o['rent1'], rent(1))
             outs = [own(m) for m in range(1, 361)]
-            ck('months of PMI', o['pmiMonths'], sum(1 for _, pmi in outs if pmi > 0), 0)
+            # PMI stops the month the loan is at 80% of the price. When the loan lands on that line to the cent (a 0% loan
+            # can), which side of it a month falls on is a matter of rounding, so the sums that hold PMI are not compared.
+            tie = under and x['pmiPct'] > 0 and any(abs(left(m) - 0.8 * price) < 1e-6 * price for m in range(0, 360))
+            if not tie: ck('months of PMI', o['pmiMonths'], sum(1 for _, pmi in outs if pmi > 0), 0)
             once = down + price * x['closingPct'] / 100; sell = 1 - x['sellingPct'] / 100
             first_year, edge = None, False
             for y in range(1, 31):
+                if tie: edge = True; break
                 T = 12 * y
                 fv_buy = once * (1 + ret_m) ** T + sum(outs[m - 1][0] * (1 + ret_m) ** (T - m) for m in range(1, T + 1))
                 fv_rent = sum(rent(m) * (1 + ret_m) ** (T - m) for m in range(1, T + 1))

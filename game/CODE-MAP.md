@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-25. Files: 133. Lines: 77,913. Top-level functions: 1788. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-25. Files: 133. Lines: 77,936. Top-level functions: 1788. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -27,7 +27,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 13 | `data/limits2026.js` | 19 | 0 | 0 | 0 | Data only. The 2026 limits of the tax-favored accounts, for the two paths (features/paths.js) |
 | 14 | `core/engine.js` | 3,854 | 123 | 0 | 0 | The engine: the data model of one profile and all the math |
 | 15 | `core/engine2.js` | 420 | 18 | 0 | 0 | The game mechanics that are also the data entry: the layers, the bonfires, the fog (how much of the picture is clear) |
-| 16 | `core/homebuy.js` | 207 | 9 | 0 | 0 | Home buying and renting: the bank's payment (principal and interest), the true cost of owning line by line, the true cost of renting, the year owning ... |
+| 16 | `core/homebuy.js` | 206 | 9 | 0 | 0 | Home buying and renting: the bank's payment (principal and interest), the true cost of owning line by line, the true cost of renting, the year owning ... |
 | 17 | `core/recalc.js` | 480 | 18 | 0 | 0 | The math of Recalculating: the route (old date, new date), the triage when the bills are more than the income, the emergency fund refill, the safe-to-... |
 | 18 | `core/reportcore.js` | 592 | 28 | 2 | 0 | Report a bug or idea: one report with the screen name, the last 3 taps, the device, the width and the app version; the list on the device; the sending... |
 | 19 | `account/gate.js` | 67 | 7 | 0 | 0 | Add-ons, part 1 of 2. Some parts of the game are not in these files |
@@ -139,12 +139,12 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 125 | `features/exletter.js` | 162 | 5 | 0 | 0 | One exercise: Letter from your calm self |
 | 126 | `features/recalc.js` | 390 | 13 | 8 | 0 | Recalculating. When the real numbers move a date of the plan, one calm card shows the old date, the new date and the one next turn |
 | 127 | `features/audit.js` | 257 | 5 | 3 | 0 | The Mistake audit. It is optional |
-| 128 | `data/patchnotes.js` | 152 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 128 | `data/patchnotes.js` | 162 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 129 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
 | 130 | `features/book.js` | 598 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 131 | `features/questlog.js` | 426 | 23 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
 | 132 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 133 | `features/built.js` | 1,166 | 4 | 3 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 133 | `features/built.js` | 1,180 | 4 | 3 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
@@ -209,7 +209,7 @@ These names occur one time in the game source. A function can stay only when a c
 
 | Function | File | Reason to keep it |
 |----------|------|-------------------|
-| `hbLevel` | `core/homebuy.js` | NO REASON GIVEN. Examine this function. |
+| `hbLevel` | `core/homebuy.js` | The game does not call it: home.html of the web app does (js/solo/homecost.js). The game takes the level from the Guess, Close or Exact of each answer (kitState). |
 | `igFree` | `features/ideas2.js` | Keep this function until the owner confirms that no add-on calls it. |
 | `igYears` | `features/ideas.js` | Keep this function until the owner confirms that no add-on calls it. |
 | `offDays` | `features/year.js` | Keep this function: it reads the off days from each calendar, and an add-on can call it. |
