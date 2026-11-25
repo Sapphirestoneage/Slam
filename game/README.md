@@ -20,7 +20,7 @@ This folder is the only copy of the game. An older copy inside Claude is retired
 
 ## 1. The six facts you must know first
 
-1. **The game uses classic scripts.** `index.html` loads 150 script files in a fixed order (149 of the game and one bundle from outside, in `vendor/`). All functions and constants are in one global scope. There are no modules.
+1. **The game uses classic scripts.** `index.html` loads 151 script files in a fixed order (150 of the game and one bundle from outside, in `vendor/`). All functions and constants are in one global scope. There are no modules.
 2. **Each file starts with a header.** The header gives PURPOSE, INPUT, OUTPUT and DEPENDS ON. Read the header before you read the code.
 3. **The screens are HTML text.** Each screen function returns one HTML string. `render()` puts the string in the page. One click handler reads the `data-a` attribute and calls `ACT[name]`.
 4. **A screen function calls its parts by name.** A feature file can add a row to a screen of a different file, for example to Home. It does this with a named function (a part), and the screen function calls that part. No file replaces a function of a different file. Section 6 shows the pattern.
