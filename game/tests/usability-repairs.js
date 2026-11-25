@@ -81,11 +81,13 @@
   X("sharp", "take");
   o = ov();
   chk(
-    "onboarding is its own full screen with a tracker",
+    "onboarding is its own full screen with one meter that fills",
     o.includes('<div class="overlay full">') &&
       o.includes('class="obtrack"') &&
-      o.includes("Step 3 of 4: <b>Make your numbers real</b>. Then: Your first answer") &&
-      (o.match(/<i class="[a-z]*"><\/i>/g) || []).length === 4
+      o.includes('class="spmeter"') &&
+      o.includes("Step 3 of 4: <b>Make your numbers real</b>") &&
+      o.includes("Then: Your first answer") &&
+      !o.includes("obsegs")
   );
   X("navclose");
   X("lever");
@@ -94,20 +96,24 @@
   X("start");
   o = ov();
   chk(
-    "setup is full screen, step 1 of 4",
-    W.kind === "setup" && o.includes("overlay full") && o.includes("Step 1 of 4: <b>About you</b>")
+    "Change my answers is full screen, step 1 of 4, on one meter",
+    W.kind === "setup" &&
+      W.mode === "edit" &&
+      o.includes("overlay full") &&
+      o.includes("Step 1 of 4: <b>About you</b>") &&
+      o.includes('class="spmeter"') &&
+      !o.includes("obsegs")
   );
   closeSheet();
   openSetup();
   o = ov();
   chk(
-    "setup opens on one question, with four numbered circles above it",
+    "setup opens on one question, with no numbered circles",
     o.includes("How old are you?") &&
       !o.includes("Exactly how old?") &&
       !o.includes("field smopen") &&
-      (o.match(/class="smdot /g) || []).length === 4 &&
-      o.includes(">Question 1 of 4<") &&
-      /data-fid="su:taps">\d+ questions left/.test(o)
+      !o.includes('class="smdot ') &&
+      /data-fid="su:taps">\d+ questions left/.test(o) === false
   );
   const left0 = smLeft(W);
   X("agedec", "30s", "ageDec");
@@ -119,47 +125,36 @@
   X("setn", "34", "age");
   o = ov();
   chk(
-    "age becomes a tick, the next question takes the same spot, and the counter drops by one",
-    W.o.age === 34 &&
-      !o.includes('data-a="setn"') &&
-      /class="smdot done" data-a="smage"/.test(o) &&
-      (o.match(/field smopen/g) || []).length === 1 &&
-      o.includes(">Question 2 of 4<") &&
-      smLeft(W) === left0 - 1 &&
-      !o.includes("smans") &&
-      !o.includes("smlater")
+    "age moves on to round 1 (Debts), and the counter drops by one",
+    W.o.age === 34 && W.step === 4 && o.includes("Question 1 of 5") && smLeft(W) === left0 - 1
   );
-  const len1 = o.length;
+  W.step = 7;
+  drawSheet();
+  const len1 = ov().length,
+    l7 = smLeft(W);
   X("set", "Yes", "can1k");
   o = ov();
   chk(
-    "answering does not make the page longer",
-    o.includes(">Question 3 of 4<") &&
-      (o.match(/class="smdot done"/g) || []).length === 2 &&
-      Math.abs(o.length - len1) < 400 &&
-      smLeft(W) === left0 - 2
+    "answering does not make the page much longer: the answer folds into one line",
+    (o.match(/field smopen/g) || []).length === 1 && Math.abs(o.length - len1) < 600 && smLeft(W) === l7 - 1,
+    [o.length - len1, smLeft(W) - l7]
   );
-  X("smopen", null, "can1k");
+  X("spline", "7", "can1k");
   chk(
-    "tapping a ticked circle reopens that question with its answer lit",
-    /class="chip on[^"]*"[^>]*data-v="Yes"/.test(ov()) && ov().includes(">Question 2 of 4<")
+    "tapping the line of an answer reopens that question with its answer lit",
+    /class="chip on[^"]*"[^>]*data-v="Yes"/.test(ov())
   );
+  W.step = 0;
   X("smage");
   o = ov();
-  chk(
-    "tapping the age circle asks it again",
-    W.o.age === null && o.includes('data-a="agedec"') && !o.includes("field smopen")
-  );
+  chk("asking the age again", W.o.age === null && o.includes('data-a="agedec"'));
   X("navclose");
   openSetup();
   X("agedec", "20s", "ageDec");
   X("setn", "25", "age");
   W.step = 4;
   drawSheet();
-  chk(
-    "page 5 offers the short way out again",
-    ov().includes('data-a="speedfin"') && ov().includes("See my first plan")
-  );
+  chk("page 5 has no fast finish now: each round shows its own number", !ov().includes('data-a="speedfin"'));
   closeSheet();
   X("mtype");
   o = ov();

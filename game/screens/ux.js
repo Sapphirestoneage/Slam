@@ -116,7 +116,7 @@ function welcome() {
     err = typeof CLOUD !== "undefined" ? CLOUD.err : "";
   /* okay.js: a visitor with no account (the front door) gets the words for a game on this device */
   if (typeof welcomeDoor === "function" && typeof doorGuest === "function" && doorGuest()) return welcomeDoor();
-  return `<div class="stack welcomebox"><h1>SLAM the Game</h1><div class="small muted">Your money, one small step at a time.</div><div class="card stack" style="gap:10px">${st === "connecting" ? `<div class="small"><b>Looking for your saved game…</b></div><div class="tiny muted">If you've played on another device, it will show up here in a moment.</div><button class="ghost wide" data-a="start">Start a new game instead</button>` : `<div class="small">${st === "on" ? "No saved game on your account yet." : "Couldn't check your account" + (err ? " (" + esc(err) + ")" : "") + ". A new game will save on this device."}</div><button class="primary go wide" data-a="start">Start my game</button>${st === "on" ? "" : `<button class="ghost wide slim" data-a="clretry">Check my account again</button>`}`}<div class="tiny muted">About 15 taps. No numbers, no typing. Free. ${TRUST_LINE}</div></div>${typeof welcomeReport === "function" ? welcomeReport() : "" /* fbreport.js: the button "Report" */}</div>`;
+  return `<div class="stack welcomebox"><h1>SLAM the Game</h1><div class="small muted">Your money, one small step at a time.</div><div class="card stack" style="gap:10px">${st === "connecting" ? `<div class="small"><b>Looking for your saved game…</b></div><div class="tiny muted">If you've played on another device, it will show up here in a moment.</div><button class="ghost wide" data-a="start">Start a new game instead</button>` : `<div class="small">${st === "on" ? "No saved game on your account yet." : "Couldn't check your account" + (err ? " (" + esc(err) + ")" : "") + ". A new game will save on this device."}</div><button class="primary go wide" data-a="start">Start my game</button>${st === "on" ? "" : `<button class="ghost wide slim" data-a="clretry">Check my account again</button>`}`}<div class="tiny muted">Five short rounds of taps. No numbers, no typing. Free. ${TRUST_LINE}</div></div>${typeof welcomeReport === "function" ? welcomeReport() : "" /* fbreport.js: the button "Report" */}</div>`;
 }
 /* Part of home() in ui.js. A new player (the sample game) sees the welcome screen. Returns null for all other players. */
 function homeWelcome() {
@@ -369,7 +369,8 @@ function firstRead(o) {
 }
 /* Part of setupSheet() in ui.js. w is the setup state. After the first three answers, it adds the line "Your first read" with the era for a person like the player. */
 function setupSheetRead(h, w) {
-  const fr = w.mode !== "edit" && w.step >= 1 && w.step < 4 ? firstRead(w.o) : null;
+  const fr =
+    w.mode !== "edit" && w.step >= 1 && w.step < 4 && !(typeof spOn === "function" && spOn(w)) ? firstRead(w.o) : null;
   return fr && fr.known
     ? h.replace(
         '<div class="plk stack" style="gap:3px;padding:8px 10px">',

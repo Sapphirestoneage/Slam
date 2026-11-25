@@ -63,7 +63,10 @@ function tdTrack() {
       real && !!c.placed,
     ],
     at = TD_FULL[k];
-  return `<div class="obtrack" role="img" aria-label="Step ${at + 1} of 4: ${TD_STEPS[at]}"><div class="obsegs">${TD_STEPS.map((t, i) => `<i class="${i === at ? "now" : done[i] ? "done" : ""}"></i>`).join("")}</div><div class="tiny muted">Step ${at + 1} of 4: <b>${TD_STEPS[at]}</b>${at < 3 ? ". Then: " + TD_STEPS[at + 1] : ""}</div></div>`;
+  if (k === "setup" && typeof spOn === "function" && spOn(W)) return ""; /* spiral.js: setup has its own meter */
+  /* One meter that fills: the steps done, and half of the step you are on. */
+  const fill = Math.round(((done.filter(Boolean).length + 0.5) / 4) * 100);
+  return `<div class="obtrack" role="img" aria-label="Step ${at + 1} of 4: ${TD_STEPS[at]}"><div class="spmeter"><i style="width:${Math.min(100, fill)}%"></i></div><div class="small">Step ${at + 1} of 4: <b>${TD_STEPS[at]}</b>${at < 3 ? `<span class="tiny muted">. Then: ${TD_STEPS[at + 1]}</span>` : ""}</div></div>`;
 }
 function tdFrom() {
   const st = NVX.st,

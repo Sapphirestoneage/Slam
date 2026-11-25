@@ -1054,7 +1054,8 @@ function finishSetupPlanEnd(w, isNew) {
    Adds the count of questions left and the strip "what the game knows so far". After "What you owe", it offers the fast finish: see the plan now, do the last two screens later. */
 function setupSheetPlan(h, w) {
   const st = w.step;
-  const strip = w.mode === "edit" ? "" : plReveal(w);
+  const sp = typeof spOn === "function" && spOn(w); /* spiral.js: each round shows its own number */
+  const strip = w.mode === "edit" || sp ? "" : plReveal(w);
   h =
     h.replace(
       /(<div class="tiny muted">All taps\. No numbers yet\.<\/div>)/,
@@ -1065,7 +1066,7 @@ function setupSheetPlan(h, w) {
     if (k >= 0) h = h.slice(0, k) + strip + h.slice(k);
   }
   /* From the front door there is no fast finish: the answer to "Am I okay?" comes from the last screen. */
-  if (w.mode !== "edit" && st === 4 && !w.door)
+  if (w.mode !== "edit" && st === 4 && !w.door && !sp)
     h = h.replace(
       /<div class="row between">(<button class="ghost" data-a="wback">[^<]*<\/button>)<button class="[^"]*" data-a="wnext">[^<]*<\/button><\/div>$/,
       `<div class="stack plspeed"><button class="primary wide go" data-a="speedfin">See my first plan</button><div class="row between">$1<button class="ghost" data-a="wnext">Keep going: 2 quick screens</button></div><div class="tiny muted">Skip ahead and the last two screens go on your plan for tomorrow. About 30 seconds either way.</div></div>`
