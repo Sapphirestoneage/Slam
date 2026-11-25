@@ -198,6 +198,14 @@ const WB = [
   ["plan", "Two moves side by side", "b", () => WB_HAS("compare") && WB_FN("cpCol"), "", "compare"],
   ["plan", "Fee X-ray: a fee in dollars and years", "b", () => WB_FN("cpFee"), "", "compare"],
   ["plan", "Quick math: a car, a home, a dollar later", "b", () => WB_HAS("quick") && WB_FN("qmCar"), "", "quick"],
+  [
+    "plan",
+    "Quick math: a HYSA switch, all at once or a little each month, cost per use, worth the hassle, what waiting costs, a warranty",
+    "b",
+    () => WB_HAS("quick") && WB_FN("qcHysa") && WB_FN("qcDca") && WB_FN("qcGameBody"),
+    "One engine with the web app's quick calculators (js/math/quick.js). The rest of that shelf (debt consolidation, the W-4 check, unemployment, leaving a job, a first apartment, roommates, kids, a pet, personal inflation, worth it, the month at a glance) is on the web app's small pages.",
+    "quick",
+  ],
   ["plan", "Your real hourly wage", "b", () => WB_HAS("hrs") && WB_FN("timeLedger"), "", "hrs"],
   [
     "in",
@@ -661,6 +669,21 @@ const WB = [
       WB_HAS("sndate") &&
       snArchetypes(qzSkin("sins")).length === 84,
     "A name for your read (84 of them, from your main pull and your way of dodging change), the light side and the virtue of each, and one Recalculating move for the month. A share card with no numbers, made only when you tap. Home, the month check and the crash drill add one line for your type once the read has a label. Two people in a household who both turn on sharing see how their reads collide and get a money date to tap through. A gentle retake each quarter, and the sin weakening over the retakes on the character sheet. The graduation story is not built yet.",
+    "sins",
+  ],
+  [
+    "feel",
+    "The Rings theme: seven rings, a ruler for each money sin, and you escaping",
+    "b",
+    () =>
+      typeof THEMES !== "undefined" &&
+      !!THEMES.rings &&
+      WB_FN("snRings") &&
+      WB_FN("snBoss") &&
+      WB_FN("rgBossPart") &&
+      WB_HAS("rgleave") &&
+      snRulers(qzSkin("sins")).length === 7,
+    "A theme to pick under Theme (off until you pick it): a dark, warm look and a cheeky voice. Each money sin is a ring with its own ruler; the ruler of your main pull is your boss in the boss fights. Check-ins read as the fine print, defenses as wards, Recalculating as the escape route, always with the plain word next to it. A month of a ward that works, or a retake that shows your pull getting quieter, climbs you up a ring. It roasts the sin, never you.",
     "sins",
   ],
   [

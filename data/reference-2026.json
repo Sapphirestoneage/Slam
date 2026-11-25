@@ -96,7 +96,12 @@
     "unemployment": {
       "NY": {
         "maxWeekly": 869,
-        "weeks": 26
+        "weeks": 26,
+        "lowLine": 3575,
+        "divisorHigh": 26,
+        "divisorLow": 25,
+        "minWeekly": 143,
+        "minWeeklyLow": 100
       }
     }
   },

@@ -948,6 +948,9 @@ function bossSheet() {
   const c = C();
   return (
     head("Boss fights " + ib("term:boss"), "What you owe") +
+    (typeof rgBossPart === "function"
+      ? rgBossPart(c)
+      : "") /* rings.js: the ruler of the main pull, with the Rings on */ +
     bossBody(c) +
     (c.debts.some(r => r.amt > 0)
       ? `<button class="primary wide" data-a="flow" data-v="pay">Log a payment (deal damage)</button>`

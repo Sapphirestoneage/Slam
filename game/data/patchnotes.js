@@ -250,6 +250,26 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-25",
+    t: "A new theme: The Rings",
+    l: [
+      "Pick The Rings under Theme: seven rings, one ruler for each money sin, and you are the one escaping.",
+      "The ruler of your main pull is your boss in the boss fights. It gets roasted, you never do.",
+      "Check-ins read as the fine print, defenses as wards and Recalculating as the escape route. The plain word always sits next to it.",
+      "A month of a ward that works, or a retake that shows your pull getting quieter, climbs you up a ring. Tap Leave the Rings any time.",
+    ],
+  },
+  {
+    d: "2026-11-25",
+    t: "Eighteen quick calculators",
+    l: [
+      "New small pages, each one question: a high-yield savings account, all at once or a little each month, starting at 22 or 32, what waiting costs, and your month at a glance.",
+      "Debt consolidation with the fee in, the W-4 line to change, unemployment and how long your money lasts (New York first), and leaving a job or starting a business.",
+      "A first apartment, splitting the rent by room size or income, a child year by year, a pet, your own inflation rate, cost per use, worth it, the hassle, and a warranty.",
+      "In the game, Quick math has six of them as cards.",
+    ],
+  },
+  {
+    d: "2026-11-25",
     t: "Student loans: PSLF, refinancing and each year's rate",
     l: [
       "Student loan plans now shows your household size, and you can tap the size on your loan papers.",

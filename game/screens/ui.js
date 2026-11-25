@@ -225,6 +225,42 @@ const THEMES = {
       "A full storehouse is the best armor.",
     ],
   },
+  /* The Rings: dark comedy in a cheeky hell with seven rings, one ruler for each money sin (all original; the
+     rulers and the themed words are in the sins skin, data/quizskins.js, and features/rings.js shows them). It roasts
+     the sin, never the player: the player is always the one escaping. Off until a player picks it. */
+  rings: {
+    n: "The Rings",
+    tag: "Dark comedy in a cheeky hell. Seven rings, seven rulers, and you are the one escaping.",
+    sw: ["#b9581e", "#1c0f0a"],
+    eras: [
+      "The Bottom Ring",
+      "First Foothold",
+      "The Loose Gate",
+      "Chains Off",
+      "The Stone Stair",
+      "Embers Banked",
+      "The Quiet Ledge",
+      "Cool Air",
+      "Out in the Open",
+      "The Story You Tell",
+    ],
+    realm: ["The Rings", "Up Top"],
+    next: "Your next step up",
+    path: "The climb out",
+    done: "Climbed",
+    go: "Up",
+    upnext: "Next step up",
+    daily: "Morning roll call",
+    payday: "Payday in the rings",
+    month: "The monthly fine print",
+    move: "Log a step up",
+    praise: ["A ruler just lost a tenant.", "One ring lighter.", "The fine print did not get you this time."],
+    whisper: [
+      "Every ruler down here runs on one trick. You only need to see it.",
+      "The way out is a staircase, not a jump.",
+      "The rulers hate a plan. Make one anyway.",
+    ],
+  },
 };
 const LK = () => thUse(G.look, "sapphire"),
   VC = () => thUse(G.voice, LK());
@@ -254,11 +290,20 @@ function pick(a, seed) {
 function themeCard() {
   const lk = LK(),
     vc = VC(),
-    ids = Object.keys(THEMES).filter(t => adOk(THEMES[t]));
+    ids = Object.keys(THEMES).filter(t => adOk(THEMES[t]) && !adThemeOff(t)),
+    offIds = Object.keys(THEMES).filter(t => adOk(THEMES[t]) && adThemeOff(t));
   return `<div class="card"><div class="row between"><h3>Theme</h3><span class="tiny muted">${THEMES[lk].n}${vc !== lk ? " look, " + THEMES[vc].n + " voice" : ""}</span></div><div class="small muted">Changes how the game looks and talks. Your numbers and your steps stay exactly the same, and the plain word always sits next to the themed one.</div>
- <div class="stack" style="margin-top:8px">${ids.map(t => `<button class="rowbtn ${lk === t && vc === t ? "sel" : ""}" data-a="theme" data-v="${t}"><span><b>${THEMES[t].n}</b><div class="tiny muted">${THEMES[t].tag}</div></span><span class="swatch" style="background:linear-gradient(135deg,${THEMES[t].sw[0]},${THEMES[t].sw[1]})"></span></button>`).join("")}</div>
+ <div class="stack" style="margin-top:8px">${ids.map(t => `<button class="rowbtn ${lk === t && vc === t ? "sel" : ""}" data-a="theme" data-v="${t}"><span><b>${THEMES[t].n}</b><div class="tiny muted">${THEMES[t].tag}</div></span><span class="swatch" style="background:linear-gradient(135deg,${THEMES[t].sw[0]},${THEMES[t].sw[1]})"></span></button>`).join("")}</div>${offIds.length ? `<details style="margin-top:10px"><summary>More themes</summary><div class="inner stack"><div class="tiny muted">Off by default for you. Tap to add one to your list. You can take it back out any time.</div>${offIds.map(t => `<button class="ghost wide" data-a="thshow" data-v="${t}">Show ${esc(THEMES[t].n)} in my list</button>`).join("")}</div></details>` : ""}
  <details style="margin-top:10px" ${lk !== vc ? "open" : ""}><summary>Blend two themes</summary><div class="inner stack">${q("Looks like", `<div class="chips">${ids.map(t => `<button class="chip ${lk === t ? "on" : ""}" data-a="look" data-v="${t}">${THEMES[t].n}</button>`).join("")}</div>`)}${q("Talks like", `<div class="chips">${ids.map(t => `<button class="chip ${vc === t ? "on" : ""}" data-a="voice" data-v="${t}">${THEMES[t].n}</button>`).join("")}</div>`, "Example: Night Coven colors with Tabletop Quest words.")}</div></details>
  <div class="row between" style="margin-top:10px"><span class="small">Show my freedom date<div class="tiny muted">Retirement math, for the FIRE crowd. Off by default.</div></span><div class="seg"><button class="${G.fire ? "on" : ""}" data-a="fire" data-v="1">On</button><button class="${G.fire ? "" : "on"}" data-a="fire" data-v="0">Off</button></div></div></div>`;
+}
+/* The theme picker as a sheet (the Theme button in the top bar, and the row of the money read). */
+function themeSheet() {
+  return head("Me", "Theme") + themeCard() + `<button class="ghost wide slim" data-a="close">Done</button>`;
+}
+/* After a theme tap: draw the theme sheet again when it is open, so the pick shows at once. */
+function thRedraw() {
+  if (W && W.kind === "themes" && SH === themeSheet) sheet(themeSheet);
 }
 function applyLook() {
   if (typeof document !== "undefined" && document.body && document.body.dataset) document.body.dataset.look = LK();
@@ -410,6 +455,12 @@ function padSet(k, v) {
     W.o.alloc[b] = Math.min(v, m.rem + (W.o.alloc[b] || 0));
   } else if (k[1] === ":") W.o[PFX[k[0]]][+k.slice(2)].amt = v;
   else W.o[k] = v;
+}
+/* How sure a row is: cf 2 for a range chip (Close), cf 3 for a typed number (Exact). knSt() reads it. */
+function padSure(k, cf) {
+  if (!W || !W.o || k[1] !== ":" || !PFX[k[0]]) return;
+  const r = (W.o[PFX[k[0]]] || [])[+k.slice(2)];
+  if (r) r.cf = cf;
 }
 function keypad(k) {
   return `<div class="pad">${["1", "2", "3", "4", "5", "6", "7", "8", "9", "clr", "0", "del"].map(x => `<button class="key" data-a="key" data-k="${k}" data-v="${x}">${x === "del" ? "Delete" : x === "clr" ? "Clear" : x}</button>`).join("")}</div><div class="tiny muted" style="text-align:center;margin-top:4px">Whole dollars. Skip the cents.</div>`;
@@ -1150,7 +1201,7 @@ function moneyTabBase() {
   const prow = (label, val, key) =>
     `<button class="rowbtn" data-a="detail" data-v="${key}"><span>${label}</span><span class="row"><b class="${val ? "" : "guess"}">${val || "Tap to answer"}</b><span class="caret">›</span></span></button>`;
   return `<div class="stack"><h1>Money</h1><div class="small muted">Every number the game uses lives here. Tap any line to change it. It updates everywhere at once. Faded numbers are guesses that don't count yet.</div>
- <div class="card next"><div class="row between"><span class="tiny muted">What you have, minus what you owe ${ib("term:ownowe")}</span>${allReal ? "" : `<span class="pill warn">Has guesses in it</span>`}</div><div class="big ${allReal ? "" : "guess"}" data-fid="v:nw">${money(d.nw)}</div><div class="tiny muted">${money(cash + c.inv)} you have, minus ${money(c.debt)} you owe</div></div>
+ <div class="card next"><div class="row between"><span class="tiny muted">What you have, minus what you owe ${ib("term:ownowe")}</span>${allReal ? "" : `<span class="pill warn">Has guesses in it</span>`}</div><div class="big ${allReal ? "" : "guess"}" data-fid="v:nw">${typeof lkNwText === "function" ? lkNwText(c, d).txt : money(d.nw)}</div><div class="tiny muted">${money(cash + c.inv)} you have, minus ${money(c.debt)} you owe</div><button class="ghost slim" style="margin-top:6px" data-a="lkbrk" data-v="nw">See each account ›</button></div>
  ${sec("Cash", "cashes", c.cashes, cash, "Add an account")}
  ${sec("Investments", "invs", c.invs, c.inv, "Add an account")}
  ${sec("What you owe", "debts", c.debts, c.debt, "Add a debt")}
@@ -2955,6 +3006,7 @@ const ACT = {
   rng: t => {
     const k = t.dataset.k;
     padSet(k, +t.dataset.v);
+    padSure(k, 2); /* a range chip: Close */
     W.t = W.t || {};
     W.t[k] = true;
     /* ask.js: in the one-question-at-a-time flow, one tap on an amount answers the question and moves on */
@@ -2980,6 +3032,7 @@ const ACT = {
       if (n <= 99999999) v = n;
     }
     padSet(k, v);
+    padSure(k, 3); /* typed: Exact */
     W.t = W.t || {};
     W.t[k] = true;
     W.err = false;
@@ -3403,13 +3456,24 @@ const progLine = (a, b) =>
   a.e === b.e && b.total ? "On the way to " + b.n + ": " + a.pct + "% → " + b.pct + "%" : null;
 Object.assign(ACT, {
   themes: () => {
-    go("me");
+    /* A sheet of its own: on Me the theme card can sit under "Show more", so the button opened a hidden card. */
+    W = { kind: "themes" };
+    sheet(themeSheet);
+  },
+  thshow: t => {
+    const c = C();
+    c.x = c.x || {};
+    c.x.thShow = Object.assign({}, c.x.thShow, { [t.dataset.v]: true });
+    save();
+    render();
+    thRedraw();
   },
   theme: t => {
     G.look = t.dataset.v;
     G.voice = t.dataset.v;
     save();
     render();
+    thRedraw();
   },
   look: t => {
     const v = VC();
@@ -3417,6 +3481,7 @@ Object.assign(ACT, {
     G.voice = v;
     save();
     render();
+    thRedraw();
   },
   voice: t => {
     const l = LK();
@@ -3424,6 +3489,7 @@ Object.assign(ACT, {
     G.look = l;
     save();
     render();
+    thRedraw();
   },
   detail: t => openDetail(t.dataset.v || null),
   dans: t => {
@@ -5587,12 +5653,12 @@ function ledgerCard(c, d) {
             : "a few seconds"
         : null;
   return `<div class="card"><div class="row between"><h3>What your money earns you</h3>${ib("term:wage")}</div>
- <div class="grid2" style="margin-top:6px"><div class="tile"><div class="tiny muted">Your money's hourly wage</div><div class="big ${tl.rm ? "" : "guess"}" data-fid="v:mw">${cents(tl.mw)}</div><div class="tiny muted">an hour, even while you sleep</div></div>
- <div class="tile"><div class="tiny muted">Your real hourly wage</div>${tl.wage > 0 ? `<div class="big ${tl.rw ? "" : "guess"}" data-fid="v:wage">${cents(tl.wage)}</div><div class="tiny muted">an hour of take-home, counting travel${tl.rw ? "" : " · guess"}</div>` : `<div class="big">None</div><div class="tiny muted">You're not working for pay right now.</div>`}</div></div>
+ <div class="grid2" style="margin-top:6px"><div class="tile"><div class="tiny muted">Your money's hourly wage</div><div class="big ${tl.rm ? "" : "guess"}" data-fid="v:mw">${cents(tl.mw)}</div><div class="tiny muted">What your ${money(c.inv)} invested earns in an average hour, at 7% a year: about ${money(tl.mw * 730)} a month.</div></div>
+ <div class="tile"><div class="tiny muted">Your real hourly wage</div>${tl.wage > 0 ? `<div class="big ${tl.rw ? "" : "guess"}" data-fid="v:wage">${cents(tl.wage)}</div><div class="tiny muted">What you keep from work for each hour of work and travel: ${money(tl.pay)} a month ÷ ${tl.wk} hours a week${tl.rw ? "" : " · Guess"}</div>` : `<div class="big">None</div><div class="tiny muted">You're not working for pay right now.</div>`}</div></div>
  ${tl.wage > 0 ? `<button class="${tl.h.s ? "ghost" : "primary"} wide slim" style="margin-top:8px" data-a="hrs">${tl.h.s ? "Change my hours" : "Make my wage real · 2 taps"}</button>` : ""}
  ${tl.cross ? `<div class="banner small" style="margin-top:8px"><b>Crossover.</b> Your money now earns more in an hour than you do.</div>` : job ? `<div class="small" style="margin-top:8px">Right now your money does <b data-fid="v:mins">${job}</b> of your job for you, every day.${tl.covers >= 0.01 ? " That's " + Math.round(tl.covers * 100) + "% of a paycheck earned without you." : ""}</div>${bar(Math.min(100, (tl.mw / tl.wage) * 100))}<div class="tiny muted">The bar fills when your money out-earns you, hour for hour. That's the crossover.</div>` : tl.wage > 0 ? `<div class="small muted" style="margin-top:8px">Nothing invested yet, so this meter hasn't started. The first dollar starts it.</div>` : ""}
  ${tl.dc > 0 ? (c.gentle ? `<details style="margin-top:8px"><summary>What your debt costs, when you're ready</summary><div class="inner">` : "") + `<div class="tile" style="margin-top:8px"><div class="tiny muted">What your debt costs</div><div class="big ${tl.rd ? "" : "guess"}" data-fid="v:dc">${cents(tl.dc)} an hour</div><div class="tiny muted">Even while you sleep${tl.rd ? "" : " · a guess until your rates are exact"}. It's a meter, not a verdict. Every extra payment slows it down.</div></div>` + (c.gentle ? `</div></details>` : "") : ""}
- ${mathBox(["Your money: " + money(c.inv) + " invested × 7% a year ÷ 8,760 hours in a year = " + cents(tl.mw) + " an hour.", tl.wage > 0 ? "You: " + money(c.take) + " a month take-home × 12 ÷ 52 weeks ÷ " + tl.wk + " hours (" + tl.h.w + " working + " + tl.h.cm + " getting there) = " + cents(tl.wage) + " an hour." : null, tl.crossInv ? "The crossover needs about " + money(tl.crossInv) + " invested: your hourly wage × 8,760 ÷ 7%." : null, tl.dc > 0 ? "Debt: each balance × its yearly rate, added up (" + money(tl.dy) + " a year) ÷ 8,760 hours = " + cents(tl.dc) + " an hour." : null, "7% a year is a long-run average after inflation, not a promise."])}
+ ${mathBox(["Your money: " + money(c.inv) + " invested × 7% a year ÷ 8,760 hours in a year = " + cents(tl.mw) + " an hour.", tl.wage > 0 ? "You: " + money(tl.pay) + " a month take-home from work × 12 ÷ 52 weeks ÷ " + tl.wk + " hours (" + tl.h.w + " working + " + tl.h.cm + " getting there) = " + cents(tl.wage) + " an hour." : null, tl.crossInv ? "The crossover needs about " + money(tl.crossInv) + " invested: your hourly wage × 8,760 ÷ 7%." : null, tl.dc > 0 ? "Debt: each balance × its yearly rate, added up (" + money(tl.dy) + " a year) ÷ 8,760 hours = " + cents(tl.dc) + " an hour." : null, "7% a year is a long-run average after inflation, not a promise."])}
  ${typeof ledgerCardJobs === "function" ? ledgerCardJobs(c) : ""}
  ${tpBlock(c, tl)}</div>`;
 }
@@ -6545,8 +6611,12 @@ if (typeof document !== "undefined") {
   document.addEventListener("click", e => {
     const t = e.target.closest("[data-a]");
     if (!t || t.disabled) return;
+    /* ux.js: a fast second tap on a screen that just moved on is dropped (it would answer the next question) */
+    if (typeof uxTapDrop === "function" && uxTapDrop()) return;
+    const tp = typeof uxTapStart === "function" ? uxTapStart(t.dataset.a) : null;
     /* soon.js: runs ACT[name]. A tap with no action, or an action that throws, shows "Coming soon". */
     soonTap(t.dataset.a, t);
+    if (tp) uxTapEnd(tp); /* ux.js: Undo after a change of the money */
   });
   document.addEventListener("keydown", e => {
     if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("g[data-a]")) {

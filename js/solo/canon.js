@@ -6,6 +6,7 @@
 import { calcPage } from './calc.js';
 import { homeCostCards } from './homecost.js';
 import { money } from './shell.js';
+import { QUICK_SPECS } from './quick.js'; // the quick calculators (run Not built, groups 1 to 5, Part 2), drawn the same way
 import { workYearsOf, coastOf, COAST_AGES, dollarLaterOf, carFitsOf, CAR_RATES, expectedWorthOf, realWageOf, splitOf, homeFitsOf } from '../solo.js';
 
 const pct = (v, d = 0) => `${+(v * 100).toFixed(d)}%`, yrs = v => (v == null ? 'more than 70 years' : `${v < 10 ? v.toFixed(1) : Math.round(v)} years`), big = v => money(Math.round(v));
@@ -89,6 +90,6 @@ const SPECS = {
       fold: [['Whose rule this is, and what it leaves out', 'The 28/36 rule is the starting point conventional lenders use. Many approve above 36%, and some loan types draw the lines elsewhere, so a lender may offer you more.', 'What a lender will lend and what fits your life are different numbers. This one ignores what you want left over each month. The whole plan answers that one.']] }),
   },
 };
-const id = document.documentElement.dataset.tool;
-if (SPECS[id]) calcPage(id, SPECS[id]);
+const id = document.documentElement.dataset.tool, ALL = { ...SPECS, ...QUICK_SPECS };
+if (ALL[id]) calcPage(id, ALL[id]);
 export { SPECS };
