@@ -1749,12 +1749,13 @@ function conditions(c, d, today) {
   if (h.length >= 2) {
     const a = h[h.length - 2],
       b = h[h.length - 1];
-    if (
-      a.spend > 0 &&
-      b.spend >= a.spend * 1.05 &&
-      (b.take - a.take) / Math.max(1, a.take) < (b.spend - a.spend) / a.spend
-    )
-      add("warn", "Lifestyle creep", "Your spending grew faster than your income since your last session.");
+    if (typeof enStepCreep === "function" && enStepCreep(a, b))
+      add(
+        "info",
+        "Recalculating: spending and income",
+        "Spending grew faster than income since your last session. Lifestyle creep in the Menu shows which line and the one next turn.",
+        { l: "Open Lifestyle creep", a: "enough" }
+      ); /* core/enough.js: the one creep check */
   }
   if (!c.demo) {
     if (c.lastDaily && daysBetween(c.lastDaily, today) > 14)
@@ -2406,7 +2407,10 @@ function flexLeft(c, d, today) {
     real: fs.real,
   };
 }
-const m$ = n => (n < 0 ? "-" : "") + "$" + Math.round(Math.abs(n)).toLocaleString("en-US");
+const m$ = n =>
+  typeof roughOn === "function" && roughOn()
+    ? enRough(n) || "$0" /* Rough numbers: the same range as money() */
+    : (n < 0 ? "-" : "") + "$" + Math.round(Math.abs(n)).toLocaleString("en-US");
 /* "Is it safe to spend this?" Never a flat no. Always the trade. */
 function safeSpend(c, d, amt, monthly, today) {
   const fl = flexLeft(c, d, today),

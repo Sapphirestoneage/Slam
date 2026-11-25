@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Display formats from the Look and feel tab. Empty is a dash, never $0.
+import { enRough } from './math/enough.js';
+
 export const EMPTY = '–'; // en dash
 const MINUS = '−';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -11,9 +13,17 @@ const WHOLE = new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximum
 const CENTS = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const DIGITS = new Map();
 const digitsFmt = d => DIGITS.get(d) ?? DIGITS.set(d, new Intl.NumberFormat('en-US', { maximumFractionDigits: d })).get(d);
+// Rough numbers (run Not built, groups 1 to 5, Part 3): one switch (the More menu, kept with the device's prefs) that
+// shows a range in place of every exact amount this formatter writes ($3k to $4k). Display only: stored numbers and
+// the boxes you type in never change (moneyInput writes its own text). The range is js/math/enough.js enRough, the
+// same function the game's money() calls.
+let ROUGH = false;
+export const setRough = on => { ROUGH = !!on; };
+export const roughOn = () => ROUGH;
 // $1,240 in summaries; $15.99 in entry fields (cents: true); negative as −$240.
-export function money(v, { cents = false } = {}) {
+export function money(v, { cents = false, exact = false } = {}) {
   if (blank(v)) return EMPTY;
+  if (ROUGH && !exact) return enRough(v, { minus: MINUS }) ?? EMPTY;
   const n = cents ? Math.round(v * 100) / 100 : Math.round(v);
   const s = (cents ? CENTS : WHOLE).format(Math.abs(n));
   return `${n < 0 ? MINUS : ''}$${s}`;

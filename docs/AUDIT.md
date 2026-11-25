@@ -73,6 +73,14 @@ after the last one, with the end of a month moved to its last day); and a date t
 days to go, and whether its reminder shows). Feature 6 adds who carries what (`jobCarry`), worked out a second time person by person: each person's part of
 each job they hold and of each task handed to them, the household total, and the value at the value of an hour.
 
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 3) it also covers Lifestyle creep and enough (`js/math/enough.js`,
+the one engine of the web app and the game): a made-up ledger of one to four years with months missing, refunds and
+income in some years only, worked out a second time month by month (each year is the months that hold spending, the
+spending growth, the income growth from the ledger or the tapped guess, the alert, the gap a month, each category last
+year and this year, what it grew past inflation and whether it counts as faster than prices); the Pareto (the fewest
+biggest lines that reach 80%, by a running total); the enough number and the room for error; the Rough numbers range of
+any amount, built as text a second way from the digits; and the game's creep check between two looks.
+
 Since Nov 25 2026 it also covers the ways to take money out (`js/math/withdraw.js`, the rules behind "Compare the
 ways" in the web app and in the game): every way in the list, the ones that are switched off on screen too, each
 through a made-up market that swings (stocks, bonds, inflation, a CAPE, the two yields). Four kinds of case: the VPW

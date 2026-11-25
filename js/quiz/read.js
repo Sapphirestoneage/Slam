@@ -4,12 +4,13 @@
 // opened. Private by default. The cost of a pattern is not here: it lives only in the opt-in Mistake audit.
 // Part 2 builds the result card and the archetypes on this read; this card is the read itself.
 import { h } from '../ui/dom.js';
+import { money as fmtMoney } from '../format.js';
 import { SN_TAGS, SN_RULES, snCheckinDue } from '../math/sins.js';
 
 const btn = (label, onClick, kind = '') => h(`button.st-btn${kind ? '.' + kind.split(' ').join('.') : ''}`, { type: 'button', onClick }, label);
 const chip = (label, on, onClick) => h('button.st-chip', { type: 'button', 'aria-pressed': on ? 'true' : 'false', onClick }, label);
 const fold = (title, ...body) => h('details.st-fold', {}, h('summary', {}, title), ...body);
-const money = v => `$${Math.round(v).toLocaleString('en-US')}`;
+const money = v => fmtMoney(v); // the one formatter: Rough numbers applies
 
 // One family: its top two with the light side, the level, why we think this, and the push-back.
 function familyPart(def, f, on) {

@@ -39,6 +39,13 @@
       "Pessimistic": 0.06
     }
   },
+  "cpi": {
+    "value": 0.027,
+    "period": "December 2024 to December 2025",
+    "series": "CPI-U, all items, not seasonally adjusted, 12-month change",
+    "source": "U.S. Bureau of Labor Statistics, Consumer Price Index news release for December 2025 (published January 13, 2026), and The Economics Daily, Consumer Price Index: 2025 in review. Read through a web search on Nov 25 2026; bls.gov itself does not open from the build machine",
+    "date": "2026-01-13"
+  },
   "fiStress": {
     "withdrawalRates": [
       0.0325,
@@ -1366,6 +1373,9 @@
       {"terms": ["shift p&l", "shift pnl", "what a shift pays", "what a shift really pays", "real hourly", "real hourly rate", "pay per shift", "best night", "which night pays best", "is a shift worth it", "outfit costs", "babysitter for shifts"], "label": "What a shift really pays", "go": ["focus:sec:income:shifts@#/cash-flow/income"], "add": "none", "why": "batch 51: Cash flow › Income, a shift after travel, childcare, outfits and every hour around it (Phase 5)"},
       {"terms": ["certainty", "how sure", "how sure is the plan", "certainty meter", "plan certainty"], "label": "Certainty (how sure the plan is)", "go": ["focus:sec:home:picture@#/home/session"], "add": "none", "why": "batch 43: the certainty meter on Home, where the Picture % stood"},
       {"terms": ["ask next", "ask me next", "what to ask next", "next question", "what should i ask"], "label": "Ask next", "go": ["focus:btn:Open the box@#/home/session"], "add": "none", "why": "batch 43: the one question that narrows the plan most, on Home"},
+      {"terms": ["lifestyle creep", "creep", "spending creep", "spending growth", "spending over the years", "year over year", "mutant expenses", "faster than inflation", "faster than prices", "spending vs income"], "label": "Spending over the years (lifestyle creep)", "go": ["focus:sec:budget:creep@#/cash-flow/budget"], "add": "none", "why": "run Not built, groups 1 to 5, Part 3: Cash flow › Budget, each category this year next to last year and next to income"},
+      {"terms": ["pareto", "80/20", "80 20", "biggest expenses", "biggest lines", "where most of it goes", "the few lines"], "label": "The few lines that make most of it", "go": ["focus:sec:budget:pareto@#/cash-flow/budget"], "add": "none", "why": "run Not built, groups 1 to 5, Part 3: Cash flow › Budget, the Pareto of the Budget lines"},
+      {"terms": ["enough", "enough number", "my enough number", "room for error", "margin of safety", "housel", "how much is enough"], "label": "Enough and room for error", "go": ["focus:sec:goals:enough@#/plan/goals"], "add": "none", "why": "run Not built, groups 1 to 5, Part 3: Plan › Goals, the enough number and the margin of safety (Morgan Housel)"},
       {"terms": ["true cost", "true cost of debt", "cost of debt", "what my debt costs", "interest in today's dollars", "debt fi", "fi months"], "label": "The true cost of each debt", "go": ["focus:sec:payoff:truecost@#/plan/debt-payoff"], "add": "none", "why": "batch 29: one line per debt on Plan › Debt payoff (interest in today's dollars, the FI months it costs, the rate after tax)"},
       {"terms": ["borrow", "borrowing", "new loan", "loan offers", "compare loans", "compare offers", "financing", "finance a car", "pay cash", "refinance", "refinancing"], "label": "Thinking about borrowing?", "go": ["focus:sec:payoff:borrow@#/plan/debt-payoff"], "add": "none", "why": "batch 29: up to three offers side by side and paying cash, on Plan › Debt payoff"},
       {"terms": ["pslf", "public service loan forgiveness", "loan forgiveness", "forgiveness", "income-driven", "income driven repayment", "repayment plan", "save plan", "ibr plan", "rap plan", "repayment assistance plan"], "label": "Student loan decision", "go": ["focus:sec:payoff:student@#/plan/debt-payoff", "debt*[Student loan].balance", "add:debt@#/net-worth/debt"], "add": "none", "why": "batch 29: Standard, IBR, RAP and PSLF compared on Plan › Debt payoff (only with a student loan on file)"},
