@@ -198,6 +198,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-25",
+    t: "Career and education",
+    l: [
+      "Menu has Career and education: what a course or a degree costs with the time it takes, the raise after tax, when it pays back, and what it does to your freedom date.",
+      "Start from a 4-year degree, trade school, a certificate or one skill. Each is a sample of the time it takes; the cost and the pay are yours to tap.",
+      "Put trade school and a 4-year degree side by side, stack several credentials and see which ones overlap.",
+      "Leaving a job early? See the dollars of your match that stay with the job, from your own schedule.",
+      "The launch window: a job hop, Roth or traditional now, and a house hack, each as days on your freedom date.",
+    ],
+  },
+  {
+    d: "2026-11-25",
     t: "Your money read gets a name",
     l: [
       "After the money sins quiz your read gets a name, like The Someday Koala, with the light side and the virtue of each part.",

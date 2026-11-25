@@ -47,6 +47,7 @@ const BOOK_PARTS = [
   windBook,
   cdnBook,
   offerBook,
+  careerBook,
   nxaBook,
   frontBook,
   quotaBook,

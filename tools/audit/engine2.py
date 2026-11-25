@@ -1028,6 +1028,40 @@ def run(cases, ref, il=None):
             if not edge:
                 ck('breakeven year', o['year'], first_year, 0); ck('renting cheaper the whole time', o['never'], first_year is None)
             ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
+        elif fn == 'careerRoi':
+            # Career and education: the price, the raise, the payback and the lifetime value from the definitions; the
+            # loan's interest as the level payment whose discounted sum is the loan.
+            t = x['taxPct'] / 100; keep = 1 if x['months'] == 0 else x['keepPct'] / 100
+            yours = x['cost'] - min(x['help'], x['cost']); loan = min(x['loan'], yours); n = x['loanYears'] * 12; lr = x['loanRatePct'] / 1200
+            pay = 0.0 if loan <= 0 else (loan / n if lr == 0 else loan / sum(1 / (1 + lr) ** k for k in range(1, n + 1)))
+            interest = pay * n - loan
+            lost = x['payBefore'] * x['months'] / 12 * (1 - keep) * (1 - t); total = yours + lost + interest; gain = (x['payAfter'] - x['payBefore']) * (1 - t)
+            ck('the whole price', o['total'], total); ck('the raise after tax', o['gainNet'], gain); ck('loan interest', o['interest'], interest); ck('paid now', o['once'], yours - loan)
+            ck('payback years', o['payback'], total / gain if gain > 0 else None, 1e-6)
+            done = x['age'] + x['months'] / 12; ck('lifetime value', o['lifetime'], gain * max(0, x['endAge'] - done) - total)
+            # the move, month by month: the sum of the changes in each month is what the path does to that month
+            at = lambda k: sum(c['monthly'] for c in o['changes'] if c['at'] <= k)
+            if x['months'] > 0: ck('a month while learning', at(0), -lost / x['months'])
+            ck('a month after', at(x['months']), gain / 12 - pay); ck('a month after the loan', at(x['months'] + n), gain / 12)
+        elif fn == 'careerStack':
+            L = x['list']; months = lambda s: int(s[:4]) * 12 + int(s[5:7])
+            sets = [set(range(months(c['from']), months(c['to']) + 1)) for c in L]
+            ov = sorted([sorted([L[i]['name'], L[j]['name']]) + [len(sets[i] & sets[j])] for i in range(len(L)) for j in range(i + 1, len(L)) if sets[i] & sets[j]])
+            ck('the overlaps', sorted([sorted(p[:2]) + [p[2]] for p in o['overlaps']]) == ov, True)
+            ck('busy months', o['busy'], len(set().union(*sets)), 0); ck('span', o['span'], max(months(c['to']) for c in L) - min(months(c['from']) for c in L) + 1, 0)
+            ck('cost', o['cost'], sum(c['cost'] or 0 for c in L)); ck('raise', o['raise'], sum(c['raise'] or 0 for c in L))
+        elif fn == 'careerVest':
+            y = x['years']
+            pct = {'now': 100, 'cliff3': 100 if y >= 3 else 0, 'graded6': 0 if y < 2 else min(100, 20 * (int(y) - 1))}[x['schedule']]
+            ck('% vested', o['pct'], pct, 0); ck('left behind', o['left'], x['match'] * (100 - pct) / 100)
+            nxt = None if pct >= 100 else (3 if x['schedule'] == 'cliff3' else max(2, int(y) + 1))
+            if nxt is None: ck('no next step', o['more'] is None, True)
+            else:
+                npct = 100 if x['schedule'] == 'cliff3' else 20 * (nxt - 1)
+                ck('more at the next step', o['more'], x['match'] * (npct - pct) / 100); ck('months to it', o['months'], math.ceil((nxt - y) * 12 - 1e-9), 0)
+        elif fn == 'careerLaunch':
+            ck('job hop a month', o['hop'], x['raise'] * (1 - x['taxPct'] / 100) / 12); ck('left behind', o['hopOnce'], x['left'])
+            ck('traditional next to Roth a month', o['roth'], x['yearly'] * (x['nowPct'] - x['laterPct']) / 1200); ck('house hack a month', o['hack'], x['rent'] - x['costs']); ck('house hack months', o['hackMonths'], x['years'] * 12, 0)
         elif fn == 'jobRoles':
             a = x
             def hv(k, v): return v in (a.get(k) or [])

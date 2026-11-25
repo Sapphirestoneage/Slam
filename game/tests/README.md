@@ -48,6 +48,7 @@ Each file has the name of its feature.
 | `retirement-odds.js` | Retirement odds | `features/odds.js`, `data/market.js` (some checks wait for the engine) |
 | `life-event-blocks.js` | Life event blocks: the stack on top of the simulators | `features/blocks.js` |
 | `home-buying-and-renting.js` | Rent or buy on the shared engine: the copy of the rules, the bank's payment, the true cost of owning and renting, lines not counted until tapped, PMI, the breakeven year, the two rules of thumb, the closed group, the terms, the spreadsheet rows | `core/homebuy.js`, `features/sims/rentbuy.js`, `features/sim.js` |
+| `career-and-education.js` | Career and education on the shared engine: the copy of the engine, a course priced (payback, lifetime value, the freedom date), a preset that is a sample, empty answers that wait, two paths side by side, the credential stack with an overlap, the match that stays with the job on each schedule, the launch window in days, the link from Two job offers, the spreadsheet rows | `core/career.js`, `features/career.js`, `core/engine.js` |
 | `simulators.js` | The simulator engine and the 12 simulators, with each flip point | `features/sim.js`, `features/sims/*.js` |
 | `spreadsheet-extras.js` | The savings rate by month, the quotas, next year's budget | `features/quota.js` |
 | `tax-view.js` | The tax view | `features/taxview.js`, `features/retire.js` (retireTax) |
