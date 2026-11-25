@@ -429,6 +429,14 @@ body.welcome .topbar,body.welcome nav.tabs{display:none}
 .kitchart text{fill:var(--muted);font-size:10px;font-family:var(--body)}
 .kitkey{display:inline-block;width:18px;height:0;border-top:3px solid var(--sap);vertical-align:middle;margin-right:4px}
 .kitkey.dash{border-top:3px dashed var(--a3)}
+/* Compare the ways (features/ways.js): one card for each way, its numbers in two columns */
+.cmpgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
+.cmpcell{min-width:0}.cmpnum{font-weight:700;font-size:15px;overflow-wrap:anywhere}
+.cmppins{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px}
+.cmpfam{margin-top:6px;align-items:center}.cmprow.cmpoff{border:1px dashed var(--line);background:none}
+.cmpslide{width:100%;height:44px;accent-color:var(--sap)}
+.cmptype{width:110px;min-height:40px;padding:4px 10px;border:2px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text);font:inherit}
+.kittabs{flex-wrap:wrap}
 .kitsure button{min-height:32px;padding:3px 10px;font-size:13px}
 .frontgrid{gap:8px}
 button.frontbtn{min-height:64px;text-align:left;font-size:15px;line-height:1.25;border:2px solid var(--teal);background:var(--panel2);border-radius:12px;padding:10px 12px}
@@ -467,7 +475,8 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <script src="data/skills.js?v=aa53a193"></script>
 <script src="data/skillthemes.js?v=1db0fcfa"></script>
 <script src="data/qr.js?v=bfe2796b"></script>
-<script src="data/market.js?v=5b578df3"></script>
+<script src="data/market.js?v=cd121024"></script>
+<script src="core/withdraw.js?v=0d5888cd"></script>
 <script src="data/limits2026.js?v=504f72bd"></script>
 <script src="vendor/retire-engine.js?v=bcb147a3"></script>
 <script src="core/engine.js?v=ba43c790"></script>
@@ -528,10 +537,10 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <script src="features/dep.js?v=0b4ba57c"></script>
 <script src="features/eras.js?v=d11b7a9c"></script>
 <script src="features/testkit.js?v=f98fc556"></script>
-<script src="features/kit.js?v=e9fea4d3"></script>
+<script src="features/kit.js?v=597b08dc"></script>
 <script src="features/retire.js?v=b4f690b2"></script>
 <script src="features/taxview.js?v=68d4fe00"></script>
-<script src="features/odds.js?v=d049bfa6"></script>
+<script src="features/odds.js?v=a633f157"></script>
 <script src="features/cover.js?v=63f66f9b"></script>
 <script src="features/mix.js?v=95d73748"></script>
 <script src="features/slept.js?v=fcbe5bcb"></script>
@@ -554,7 +563,8 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <script src="features/ask3.js?v=d3d2d516"></script>
 <script src="features/quota.js?v=8912307a"></script>
 <script src="data/takeout2026.js?v=e0194656"></script>
-<script src="features/takeout.js?v=def5e624"></script>
+<script src="features/takeout.js?v=f3ba7825"></script>
+<script src="features/ways.js?v=3d6eecb8"></script>
 <script src="features/ages.js?v=55ba697d"></script>
 <script src="features/stress.js?v=bd43333c"></script>
 <script src="features/blocks.js?v=ab04836e"></script>
@@ -581,9 +591,9 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <script src="features/recalc.js?v=24a3a588"></script>
 <script src="features/audit.js?v=cd62b3a3"></script>
 <script src="data/patchnotes.js?v=294d0bf7"></script>
-<script src="features/founding.js?v=e34d3843"></script>
-<script src="features/book.js?v=3f93005e"></script>
+<script src="features/founding.js?v=c2cce197"></script>
+<script src="features/book.js?v=4b237793"></script>
 <script src="features/questlog.js?v=6c4208d8"></script>
-<script src="features/built.js?v=999df9ec"></script>
+<script src="features/built.js?v=f72ae109"></script>
 </body>
 </html>

@@ -51,6 +51,7 @@ Each file has the name of its feature.
 | `tax-view.js` | The tax view | `features/taxview.js`, `features/retire.js` (retireTax) |
 | `two-paths.js` | The two paths | `features/paths.js` |
 | `windfall.js` | The windfall: extra money down the order of the two paths | `features/windfall.js` |
+| `compare-the-ways.js` | Compare the ways: the copy of the rules, the run with a way against a calculation by hand, each row, the sort, the filter, the pins, the custom way, the chart, the spreadsheet rows | `features/ways.js`, `core/withdraw.js`, `features/odds.js` |
 | `taking-money-out.js` | Taking money out: the order, guardrails, the years before 59 and a half, health cover | `features/takeout.js`, `data/takeout2026.js` |
 | `two-ages.js` | Two ages: work optional and money reachable, for each person | `features/ages.js` |
 | `while-you-slept.js` | While you slept | `features/slept.js` |

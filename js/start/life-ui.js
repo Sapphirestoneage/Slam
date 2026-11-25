@@ -8,6 +8,7 @@ const fmt = { ...fmt0, pct: v => fmt0.pct(v).replace(/\.0%$/, '%') }; // 22%, no
 import { lifeOf, stressOf, strategiesOf, fillsOf, claimsOf, cliffsOf, taxNowOf, DEFAULTS } from '../lifetime/inputs.js';
 import { STRATEGIES, FILLS } from '../math/lifetime.js';
 import { lifeChart } from './charts-ui.js';
+import { waysCard } from './ways-ui.js';
 
 const money = v => fmt.money(Math.round(v / 100) * 100);
 const TEMPLATES = [
@@ -90,6 +91,6 @@ export function lifeScreen({ pl, store, ref, hist, mine, remember, render, go, b
     L.notes.length ? h('div.st-card', {}, L.notes.map(nt => h('p.st-small.st-soft', { style: { margin: '0 0 6px' } }, nt))) : null,
     h('div.st-card', {}, h('div.st-eyebrow', {}, 'Year by year'), h('h2', {}, 'Your money from now to 90'), views('life', [['chart', 'Chart', () => lifeChart(L.run, L.age)], ['table', 'Numbers', () => h('div.st-rows', {}, h('div.st-srow3.head', {}, h('span', {}, 'Age'), h('span', {}, 'Spent from it'), h('span', {}, 'Money left')), L.run.years.filter((r, i) => i === 0 || i === L.run.years.length - 1 || r.age % 5 === 0 || r.age === L.age).map(r => h('div.st-srow3', {}, h('span', {}, `${r.age}${r.age === L.age ? ' (work optional)' : ''}`), h('span', {}, r.spend != null ? money(Math.round(r.spend)) : ''), h('strong', {}, money(Math.round(r.total))))))]]),
       h('p.st-small.st-soft', { style: { margin: '8px 0 0' } }, 'This picture is the smooth-market path. If it ends with a lot left over, that margin is what carried the plan through the hard stretches of history below.')),
-    scenarios, choices, stressCard,
+    scenarios, choices, waysCard({ L, ref, hist, s, save: compare => remember({ life: { ...(mine().life || {}), compare } }), chip, btn }), stressCard,
     h('div.st-row', {}, btn('Sharpen it', () => go('sharpen'), 'primary'), btn('See all your numbers', () => go('all')))];
 }
