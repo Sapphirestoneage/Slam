@@ -916,6 +916,35 @@ def run(cases, ref, il=None):
             ck('open', o['open'], sum(1 for b in x['bills'] if b['amount'] is None), 0)
             for name, p in paid.items(): ck('paid ' + name, o['paid'][name], p)
             ck('everything paid adds up', sum(v for v in o['paid'].values() if v is not None), min(total, x['income']))
+        elif fn == 'snOutside':
+            # each piece fades by 0.5 ** (age / half-life); the quiz has weight Q / (Q + E), Q its own plus points
+            # and E the faded plus points of every other source; the scores are added up by source and trait
+            import datetime as _dt
+            day = lambda s: _dt.date(int(s[:4]), int(s[5:7]), int(s[8:10]))
+            now = day(x['now'])
+            fade = lambda d: 1.0 if d is None else 0.5 ** (max(0, (now - day(d)).days) / x['halfLife'])
+            plus = lambda a: sum(max(0, v) for v in a.values())
+            Q = sum(plus(p['add']) for p in x['ev'] if p['source'] == 'quiz')
+            E = sum(plus(p['add']) * fade(p['d']) for p in x['ev'] if p['source'] != 'quiz')
+            wq = Q / (Q + E) if Q > 0 else 0.0
+            mine = {}
+            for p in x['ev']:
+                w = wq if p['source'] == 'quiz' else fade(p['d'])
+                S = mine.setdefault(p['source'], {})
+                for t, v in p['add'].items(): S[t] = S.get(t, 0.0) + v * w
+            mine = {k: v for k, v in mine.items() if any(True for p in x['ev'] if p['source'] == k)}
+            ck('sources', sorted(o['sources']) == sorted(mine.keys()), True)
+            for src, S in mine.items():
+                for t, v in S.items(): ck(f'{src} {t}', o['scores'].get(src, {}).get(t), v, 1e-9)
+        elif fn == 'snFixCheck':
+            # the pattern: plus points of the ledger, the check-ins and the app, in the month before the start and the month from it
+            import datetime as _dt
+            day = lambda s: _dt.date(int(s[:4]), int(s[5:7]), int(s[8:10]))
+            st, now, n, t = day(x['fix']['start']), day(x['now']), x['days'], x['fix']['trait']
+            def pat(a, b):
+                return sum(max(0, p['add'].get(t, 0)) for p in x['ev'] if p['source'] in ('ledger', 'checkin', 'app') and p['d'] and a <= day(p['d']) < b)
+            ck('before', o['before'], pat(st - _dt.timedelta(days=n), st), 1e-9); ck('during', o['during'], pat(st, st + _dt.timedelta(days=n)), 1e-9)
+            ck('done', o['done'], (now - st).days >= n); ck('days left', o['daysLeft'], max(0, n - (now - st).days), 0)
         elif fn == 'rcRefill':
             gap = max(0, x['target'] - x['balance'])
             ck('gap', o['gap'], gap); ck('full', o['full'], gap == 0)

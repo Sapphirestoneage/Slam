@@ -17,7 +17,7 @@ import { MODES, modeOf, ownerOf, bothPreviewOn, validPerson, extraAdults, EXTRA_
 import { platformOf } from './math/earnings.js';
 import { CONTROL_KEYS } from './math/control.js';
 import { sharedExercises } from './exercises/calm-letter.js';
-import { sharedLenses } from './quiz/store.js';
+import { sharedLenses, lensesForOthers } from './quiz/store.js';
 
 export const SEEN = LISTS.privacy.seen;
 export const SHARE_NAMES = LISTS.privacy.shareNames;
@@ -129,7 +129,13 @@ export function foldDoc(doc, aud, ref = null) {
     changed = true;
     return { ...r, notes: dropNotes ? null : r.notes, privateNote: coach ? r.privateNote : null };
   });
-  if (aud.who !== 'share') { const out = changed ? { ...doc, records } : doc; return controlSeen(aud) ? out : withoutControl(out); }
+  if (aud.who !== 'share') {
+    let out = changed ? { ...doc, records } : doc;
+    // the money sins read is the client's own: in the coach's screens and a partner's view only when the client turned it on
+    const own = aud.who === 'client' && (!aud.couple || aud.person === 'Me'), start = out.settings?.start, kept = own ? start : lensesForOthers(start);
+    if (kept !== start) out = { ...out, settings: { ...out.settings, start: kept } };
+    return controlSeen(aud) ? out : withoutControl(out);
+  }
   const { privateNotes, feedback, timer, ...session } = doc.session || {};
   const spending = { ...(doc.spending || {}) }; delete spending.transactions;
   const settings = { ...(doc.settings || {}) }; delete settings.csvRules; delete settings.merchantRules;

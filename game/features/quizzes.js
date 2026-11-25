@@ -180,7 +180,12 @@ function qzSheet() {
       head("Quizzes", def.name) +
       (N.card && N.st.show ? qzCardPart(c, N, false) : `<div class="tile small">Kept private by the player.</div>`)
     );
-  if (N.card) return head("Quizzes", def.name) + qzCardPart(c, N, true);
+  if (N.card)
+    return (
+      head("Quizzes", def.name) +
+      (def.id === "sins" && typeof snCardRow === "function" ? snCardRow() : "") /* sins.js: the row to the read */ +
+      qzCardPart(c, N, true)
+    );
   if (!N.st.go && !N.R.answered)
     return (
       head("Quizzes", def.name) +

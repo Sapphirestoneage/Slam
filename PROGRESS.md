@@ -229,6 +229,7 @@ reuses the quiz engine of Part 11 of the run "Not built, groups 1 to 5", so that
 launch run. A line is added here for each part.
 
 - Logged. It starts when the launch run is done and the quiz engine is on main.
+- Part 1, the read: Done. The sins quiz is real (15 taps, 7 sins and 12 ways of refusing change, a top two in each, the light side). `js/math/sins.js` (copied to the game by `tools/game_sins_build.mjs`) reads four sources on the one quiz engine: the quiz, the ledger (after payday, after a stressed tap, how often, over the plan), one-tap check-ins (over the line or a pattern, 3 a week, skippable) and the reactions to the app; evidence fades with a 30 day half-life; a label only when two sources agree over 30 days; Why we think this, Is this really it?, Test the fix. Web: under the sins quiz on quiz.html. Game: Me > Your money read, and a check-in after Money out. Private by default in both. Signals with no data behind them are in QUESTIONS 599.
 
 
 ## Nov 25 2026: RUN: Live Session Mode (Nov 25 2026)
