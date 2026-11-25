@@ -132,7 +132,7 @@
     );
     chk(
       "the formulas use only functions that Google Sheets, Excel and LibreOffice all have",
-      formulas.length > 100 && Object.keys(used).every(n => /^(IF|AND|OR|MIN|MAX|SUM|ROUND|FV)$/.test(n)),
+      formulas.length > 100 && Object.keys(used).every(n => /^(IF|AND|OR|MIN|MAX|SUM|ROUND|FV|PMT)$/.test(n)),
       Object.keys(used)
     );
     chk(

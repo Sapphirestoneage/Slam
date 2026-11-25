@@ -489,3 +489,10 @@ h1.st-eyebrow { font-size: .875rem; line-height: 1.45; margin: 0 0 6px; }
 button.st-hubcard { width: 100%; text-align: left; font: inherit; cursor: pointer; } #answer .st-readout { margin: 8px 0 12px; } #answer .st-fold { margin: 0 0 10px; }
 @media (min-width: 481px) { .st-quizscale.three { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .st-hubcard.soon { border-style: dashed; box-shadow: none; } .st-hubcard.soon .st-hubnum { background: var(--text-2); }
+
+/* Home buying and renting on home.html (run of Nov 25 2026, Part 2): the year-by-year table. */
+.hb-scroll { overflow-x: auto; }
+.hb-years { width: 100%; border-collapse: collapse; font-size: .875rem; font-variant-numeric: tabular-nums; }
+.hb-years th, .hb-years td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--line, rgba(0, 0, 0, .12)); vertical-align: bottom; }
+.hb-years th:first-child { text-align: left; }
+.hb-years thead th { font-weight: 600; white-space: normal; }

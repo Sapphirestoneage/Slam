@@ -138,7 +138,7 @@ function lfOpen(c, L, t) {
     return { open: m.lv === "close" ? "voice" : "yes" };
   }
   const rr = L.rows[t.rowKey],
-    ours = !!x.h && !!rr && rr.sum === x.amt;
+    ours = liveOurs(x, rr); /* liveflag.js: the row still holds the amount of the call */
   if ((x.cf || 0) >= 3) return { open: "no", why: LF_WHY.exact };
   if (x.s)
     return ours && rr.voice ? { open: m && m.lv === "close" ? "voice" : "yes" } : { open: "no", why: LF_WHY.hand };

@@ -13,7 +13,8 @@
    PARTS       account/livecoach.js adds Live Session Mode by four named parts: lcLoad (cpLoad), lcCard
                (cpDraw), lcClientRow (cpClientCard), lcClick (cpClick).
    DEPENDS ON  core/report.js, account/supa.js (the two public settings), account/roles.js. With
-               core/engine.js on the page, the era comes from derive(). Only coach.html loads this file.
+               core/engine.js on the page, the era comes from derive(). coach.html loads this file. session.html
+               loads it too, for cpGame, cpPack and cpSaveGame (account/livegame.js sets CP.sb).
    RULES       The database decides what a coach can read: only games with "Share with my coach" on.
                A coach's notes are the coach's. The client cannot read them. Each open of a game and
                each change writes a line in the audit log. Amber means "needs attention". No red.
@@ -403,10 +404,13 @@ function cpDraw() {
     `<details class="card"><summary>Export to a sheet</summary><div class="inner"><button class="wide" data-a="csv">Save the roster as a CSV file</button><p class="muted">One row for each person: last active, era, the four numbers, open steps, flags. Open it in Google Sheets or Excel.</p></div></details>` +
     `<button class="wide" data-a="reload">Check again</button>`;
 }
-async function cpSaveGame(owner, mutate) {
+/* Read the saved game of one account, change it, and save it: the pieces, then the row that says how many.
+   mutate(g) changes the game; when it gives null, nothing is saved. first (optional): a function that gives
+   the first game of an account that has none yet (account/livegame.js: a new client of a live session). */
+async function cpSaveGame(owner, mutate, first) {
   const q = await CP.sb.from("games").select("id,name,data,updated_at,share_with_coach").eq("owner", owner);
   if (q.error) throw q.error;
-  const G0 = cpGame(q.data);
+  const G0 = cpGame(q.data) || (typeof first === "function" && !(q.data || []).some(r => r.name === "slam_meta") ? { g: first() } : null);
   if (!G0) throw new Error("no saved game");
   const out = mutate(G0.g);
   if (out === null) return null;

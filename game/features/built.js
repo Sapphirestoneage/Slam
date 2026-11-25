@@ -496,6 +496,20 @@ const WB = [
   ],
   [
     "plan",
+    "Rent or buy: the bank's payment, the true cost of owning, the breakeven year",
+    "b",
+    () =>
+      WB_FN("hbRun") &&
+      WB_FN("hbBreakeven") &&
+      WB_FN("rentbuyExtra") &&
+      typeof SIMS !== "undefined" &&
+      !!SIMS.rentbuy &&
+      typeof SIMS.rentbuy.extra === "function",
+    "Property tax, insurance, PMI, HOA, maintenance and big repairs, next to rent. The price-to-rent ratio and the 5% rule. The same math as the web page.",
+    "sims",
+  ],
+  [
+    "plan",
     "My plan on one page: the 7 steps and the top 5 gaps",
     "b",
     () => WB_HAS("summary") && WB_FN("summaryGaps"),

@@ -65,6 +65,7 @@
     if (i > 0) cellVal["C" + (i + 1)] = row[2];
   });
   const FV = (r, n, pmt, pv) => -(pv * Math.pow(1 + r, n) + (r === 0 ? pmt * n : (pmt * (Math.pow(1 + r, n) - 1)) / r));
+  const PMT = (r, n, pv) => (r === 0 ? -pv / n : (-pv * r) / (1 - Math.pow(1 + r, -n)));
   const evalF = f => {
     const js = f
       .slice(1)
@@ -76,9 +77,10 @@
       .replace(/\bFV\(/g, "FV(");
     return Function(
       "FV",
+      "PMT",
       "RND",
       "return " + js
-    )(FV, (v, d) => Math.round(v * Math.pow(10, d || 0)) / Math.pow(10, d || 0));
+    )(FV, PMT, (v, d) => Math.round(v * Math.pow(10, d || 0)) / Math.pow(10, d || 0));
   };
   const evalCell = k => {
     const v = cellVal[k];

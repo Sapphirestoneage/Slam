@@ -30,7 +30,7 @@ const input = (over = {}) => ({ year: 2026, age: 35, stopAge: 50, lastAge: 90, i
 
 // Every function a formula of either workbook may use. Each one is in Google Sheets' function list, in Excel 2010 and
 // in LibreOffice. A formula with a function that is not here fails the run: add it only after checking all three.
-const GOOGLE_SHEETS_OK = new Set(['ABS', 'AND', 'COUNT', 'COUNTIF', 'COUNTIFS', 'DATE', 'FV', 'IF', 'IFERROR', 'INDEX', 'INT', 'ISERROR', 'ISNUMBER', 'LEFT', 'LEN', 'LN', 'MATCH', 'MAX', 'MID', 'MIN', 'MONTH', 'N', 'NOT', 'NPER', 'OR', 'PV',
+const GOOGLE_SHEETS_OK = new Set(['ABS', 'AND', 'COUNT', 'COUNTIF', 'COUNTIFS', 'DATE', 'FV', 'IF', 'IFERROR', 'INDEX', 'INT', 'ISERROR', 'ISNUMBER', 'LEFT', 'LEN', 'LN', 'MATCH', 'MAX', 'MID', 'MIN', 'MONTH', 'N', 'NOT', 'NPER', 'OR', 'PMT', 'PV',
   'REPT', 'ROUND', 'ROUNDDOWN', 'ROUNDUP', 'ROW', 'SEARCH', 'SQRT', 'SUBSTITUTE', 'SUM', 'SUMIFS', 'SUMPRODUCT', 'TEXT', 'TODAY', 'TRIM', 'VALUE', 'YEAR']);
 const functionsOf = plan => { const used = new Set(); for (const s of plan.sheets) for (const r of s.rows) for (const c of r || []) if (c?.f) for (const m of c.f.replace(/"(?:[^"]|"")*"/g, '').matchAll(/([A-Z][A-Z0-9.]*)\(/g)) used.add(m[1]); return used; };
 
@@ -268,7 +268,7 @@ test('the game: its workbook is the FIRE sheet, the plan with live formulas, and
   assert.ok(formulas.every(r => !/^=/.test(r[2].f) && /C\d+/.test(r[2].f)), 'a formula points at cells of the Value column');
   const used = [...functionsOf(plan)];
   assert.deepEqual(used.filter(f => !GOOGLE_SHEETS_OK.has(f)), [], 'functions not checked for Google Sheets');
-  assert.ok(used.every(f => ['IF', 'AND', 'OR', 'MIN', 'MAX', 'SUM', 'ROUND', 'FV'].includes(f)), used.join(' '));
+  assert.ok(used.every(f => ['IF', 'AND', 'OR', 'MIN', 'MAX', 'SUM', 'ROUND', 'FV', 'PMT'].includes(f)), used.join(' '));
   // The FIRE sheet: the game's default way (guardrails) as a live formula, and the game's own random-market values carried.
   assert.equal(plan.fire.model.kind, 'guardrails'); assert.equal(plan.fire.rows.length, 90 - 38 + 1);
   assert.ok(plan.fire.cols.includes('appW') && D.fire.app.years.some(y => y.withdrawal > 0));

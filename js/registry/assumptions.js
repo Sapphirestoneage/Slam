@@ -11,6 +11,7 @@
 
 import { LEVELS, WEIGHTS, PACE, PACE_WORDS, SESSIONS } from './program.js';
 import { WAY_CAPE, WAY_CASH_REAL, WAY_CUT_LINE } from '../math/withdraw.js';
+import { HB_RULES, HB_SOURCE } from '../math/homebuy.js';
 import { THRESHOLDS, PAYOFF, AREAS as SCORE_AREAS } from './scorecard.js';
 import { priorsData } from '../priorslib.js';
 
@@ -203,6 +204,12 @@ export const ASSUMPTIONS = [
   { id: 'rules.wayCapeBase', name: 'WayCapeBase', label: 'CAPE-based spending: the base share of the portfolio a year', unit: 'pct', get: () => WAY_CAPE.a, source: 'Karsten Jeske (Big ERN), Safe Withdrawal Rate series, Part 18 (Aug 30 2017) and Part 54 (Oct 12 2022): intercept 1.75%, slope 0.50; js/math/withdraw.js', date: '2026-11-25' },
   { id: 'rules.wayCapeSlope', name: 'WayCapeSlope', label: 'CAPE-based spending: the share of 1 divided by the CAPE', unit: 'number', get: () => WAY_CAPE.b, source: 'Karsten Jeske (Big ERN), Safe Withdrawal Rate series, Part 18 (Aug 30 2017) and Part 54 (Oct 12 2022); js/math/withdraw.js', date: '2026-11-25' },
   { id: 'rules.wayCashReal', name: 'WayCashReal', label: 'Compare the ways: what a cash bucket earns a year, after inflation', unit: 'pct', get: () => WAY_CASH_REAL, source: RULE('js/math/withdraw.js: cash keeps pace with prices; the market history has no cash series (QUESTIONS.md, RUN Compare the ways)'), date: '2026-11-25' },
+  { id: 'rules.homePmiUntil', name: 'HomePmiUntil', label: 'Home buying: PMI is paid while the loan is over this share of the price paid (under 20% of the home is yours)', unit: 'pct', get: () => HB_RULES.pmiUntil, source: `${HB_SOURCE}: "PMI under 20% down"; js/math/homebuy.js`, date: '2026-11-25' },
+  { id: 'rules.homeFivePct', name: 'HomeFivePct', label: 'Home buying: the 5% rule, the share of the price a year that owning costs and never gives back', unit: 'pct', get: () => HB_RULES.fivePct, source: `${HB_SOURCE} names the 5% rule; it is taught by Ben Felix (PWL Capital); js/math/homebuy.js`, date: '2026-11-25' },
+  { id: 'rules.homeMaintLow', name: 'HomeMaintLow', label: 'Home buying: maintenance, the low end of the typical range, % of the value a year', unit: 'number', get: () => HB_RULES.maintLow, source: `${HB_SOURCE}: "maintenance 1 to 2% a year"`, date: '2026-11-25' },
+  { id: 'rules.homeMaintHigh', name: 'HomeMaintHigh', label: 'Home buying: maintenance, the high end of the typical range, % of the value a year', unit: 'number', get: () => HB_RULES.maintHigh, source: `${HB_SOURCE}: "maintenance 1 to 2% a year"`, date: '2026-11-25' },
+  { id: 'rules.homeRentGrowthLow', name: 'HomeRentGrowthLow', label: 'Renting: rent growth, the low end of the typical range, % a year', unit: 'number', get: () => HB_RULES.rentGrowthLow, source: `${HB_SOURCE}: "rent growing 3 to 4% a year"`, date: '2026-11-25' },
+  { id: 'rules.homeRentGrowthHigh', name: 'HomeRentGrowthHigh', label: 'Renting: rent growth, the high end of the typical range, % a year', unit: 'number', get: () => HB_RULES.rentGrowthHigh, source: `${HB_SOURCE}: "rent growing 3 to 4% a year"`, date: '2026-11-25' },
   { id: 'rules.wayCutLine', name: 'WayCutLine', label: 'Compare the ways: a year counts as a cut when it pays under this share of what the way aims to pay', unit: 'pct', get: () => WAY_CUT_LINE, source: RULE('js/math/withdraw.js'), date: '2026-11-25' },
   { id: 'rules.cardMinimumFloor', name: 'CardMin_floor', label: 'Card minimum: at least', unit: 'money', get: () => RULES.cardMinimumFloor, source: RULE('js/math/debt.js, M30'), date: '2026-10-28' },
   { id: 'rules.cardMinimumPct', name: 'CardMin_pct', label: 'Card minimum: share of the balance, plus a month of interest', unit: 'pct', get: () => RULES.cardMinimumPct, source: RULE('js/math/debt.js, M30'), date: '2026-10-28' },

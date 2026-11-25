@@ -47,6 +47,7 @@ Each file has the name of its feature.
 | `retirement-engine.js` | The retirement engine and its adapter: same seed, same result | `vendor/retire-engine.js`, `features/retire.js` |
 | `retirement-odds.js` | Retirement odds | `features/odds.js`, `data/market.js` (some checks wait for the engine) |
 | `life-event-blocks.js` | Life event blocks: the stack on top of the simulators | `features/blocks.js` |
+| `home-buying-and-renting.js` | Rent or buy on the shared engine: the copy of the rules, the bank's payment, the true cost of owning and renting, lines not counted until tapped, PMI, the breakeven year, the two rules of thumb, the closed group, the terms, the spreadsheet rows | `core/homebuy.js`, `features/sims/rentbuy.js`, `features/sim.js` |
 | `simulators.js` | The simulator engine and the 12 simulators, with each flip point | `features/sim.js`, `features/sims/*.js` |
 | `spreadsheet-extras.js` | The savings rate by month, the quotas, next year's budget | `features/quota.js` |
 | `tax-view.js` | The tax view | `features/taxview.js`, `features/retire.js` (retireTax) |

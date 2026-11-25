@@ -956,6 +956,49 @@ def run(cases, ref, il=None):
                         m += 1
                         if m == 13: y, m = y + 1, 1
                     if o['ym'] is not None: ck('the month', int(o['ym'][:4]) * 100 + int(o['ym'][5:7]), y * 100 + m, 0)
+        elif fn == 'homeBuy':
+            # Home buying and renting, without the month-by-month recursion: the loan left after m payments in closed
+            # form, the home's value as a power, and each side's money out carried to the end one payment at a time.
+            price, n = x['price'], x['years'] * 12
+            down = price * x['downPct'] / 100; loan = price - down; lr = x['ratePct'] / 1200
+            pay = loan / n if lr == 0 else sum([loan]) / sum(1 / (1 + lr) ** k for k in range(1, n + 1))   # the level payment whose discounted sum is the loan
+            def left(m):
+                m = min(m, n)
+                return max(0.0, loan - pay * m if lr == 0 else loan * (1 + lr) ** m - pay * ((1 + lr) ** m - 1) / lr)
+            G = (1 + x['homeGrowthPct'] / 100) ** (1 / 12); Gr = (1 + x['rentGrowthPct'] / 100) ** (1 / 12); ret_m = x['retPct'] / 1200
+            under = x['downPct'] < 20
+            def own(m):   # the owner's money out in month m (1 is the first)
+                v = price * G ** (m - 1)
+                pmi = loan * x['pmiPct'] / 1200 if under and left(m - 1) > 0.8 * price else 0.0
+                pi = pay if m <= n else 0.0
+                return pi + v * (x['taxPct'] + x['maintPct']) / 1200 + (x['insYear'] / 12 + x['hoa'] + x['repairsYear'] / 12) * G ** (m - 1) + pmi, pmi
+            rent = lambda m: (x['rent'] + x['rentIns']) * Gr ** (m - 1)
+            ck('principal and interest', o['pmt'], pay, max(0.01, pay * 1e-9))
+            f = o['first']
+            ck('property tax, month 1', f['tax'], price * x['taxPct'] / 1200); ck('insurance, month 1', f['ins'], x['insYear'] / 12)
+            ck('PMI, month 1', f['pmi'], loan * x['pmiPct'] / 1200 if under else 0); ck('maintenance, month 1', f['maint'], price * x['maintPct'] / 1200)
+            ck('big repairs, month 1', f['repairs'], x['repairsYear'] / 12); ck('owning, month 1', f['total'], own(1)[0]); ck('renting, month 1', o['rent1'], rent(1))
+            outs = [own(m) for m in range(1, 361)]
+            # PMI stops the month the loan is at 80% of the price. When the loan lands on that line to the cent (a 0% loan
+            # can), which side of it a month falls on is a matter of rounding, so the sums that hold PMI are not compared.
+            tie = under and x['pmiPct'] > 0 and any(abs(left(m) - 0.8 * price) < 1e-6 * price for m in range(0, 360))
+            if not tie: ck('months of PMI', o['pmiMonths'], sum(1 for _, pmi in outs if pmi > 0), 0)
+            once = down + price * x['closingPct'] / 100; sell = 1 - x['sellingPct'] / 100
+            first_year, edge = None, False
+            for y in range(1, 31):
+                if tie: edge = True; break
+                T = 12 * y
+                fv_buy = once * (1 + ret_m) ** T + sum(outs[m - 1][0] * (1 + ret_m) ** (T - m) for m in range(1, T + 1))
+                fv_rent = sum(rent(m) * (1 + ret_m) ** (T - m) for m in range(1, T + 1))
+                ahead = (-fv_buy + price * G ** T * sell - left(T)) - (-fv_rent)
+                tol = max(1.0, abs(fv_buy) * 1e-9)
+                ck(f'ahead after year {y}', o['ahead'][y - 1], ahead, tol)
+                ck(f'owning paid by year {y}', o['ownOut'][y - 1], sum(v for v, _ in outs[:T]), tol); ck(f'renting paid by year {y}', o['rentOut'][y - 1], sum(rent(m) for m in range(1, T + 1)), tol)
+                if abs(ahead) < 0.01: edge = True
+                if first_year is None and ahead >= 0: first_year = y
+            if not edge:
+                ck('breakeven year', o['year'], first_year, 0); ck('renting cheaper the whole time', o['never'], first_year is None)
+            ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
         elif fn == 'rcSafeLine':
             sp = x['spent'] or 0
             ck('left', o['left'], max(0, x['cap'] - sp)); ck('over', o['over'], max(0, sp - x['cap'])); ck('ran out', o['ranOut'], x['spent'] is not None and sp >= x['cap']); ck('plan cost', o['planCost'], x['cap'])

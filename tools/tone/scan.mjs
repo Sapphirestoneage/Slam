@@ -22,6 +22,7 @@ export const ALLOWED = [
   [/waiting behind\b/gi, 'an era that waits for the era before it'],
   [/\bfailed (save|saves|to load|to send|to read)\b/gi, 'a technical event (a save that did not reach the server), in admin text'],
   [/\b(save|sign-in|request|upload|download|import|export|check|connection) failed\b/gi, 'a technical event, not the person'],
+  [/Failed to fetch/g, 'the browser\'s own message when the network is down, in a test stand-in of the database'],
   [/Mistake audit/g, 'the name of the opt-in audit, on the button that opens it'],
 ];
 // Folders and files that hold no copy a person reads in the app.

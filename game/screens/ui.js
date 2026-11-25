@@ -1015,6 +1015,7 @@ function rowTag(x, sec) {
 function ledRow(sec, i, x) {
   let h = ledRowBase(sec, i, x);
   if (typeof ledRowFreq === "function") h = ledRowFreq(h, sec, x); /* smart.js: how often an income comes */
+  if (typeof ledRowHeard === "function") h = ledRowHeard(h, sec, x); /* liveflag.js: a live session set this amount */
   return h;
 }
 function ledRowBase(sec, i, x) {

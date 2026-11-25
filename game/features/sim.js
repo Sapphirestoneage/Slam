@@ -21,7 +21,7 @@
    ========================================================================= */
 const SIMS = {};
 const SIM_ORDER = [];
-/* A simulator: { id, n, ask, inputs: [{ k, label, opts, def, typed, term, help }], run(c, x),
+/* A simulator: { id, n, ask, inputs: [{ k, label, opts, def, typed, term, help, more }], run(c, x), extra(c, x, r, st),
    flips: [{ k, lo, hi, say(v) }], math(c, x, r), links: [context words] }.
    run returns { years, options: [{ id, n, delta: [by month], extra, once, cash }], score, ref }.
    ref is the id of the option that is today's plan: the engine makes each delta relative to it. */
@@ -301,6 +301,10 @@ function simSheet() {
       )}</div>`;
     })
     .join("");
+  /* An input with more: true is in a group that is closed until the player opens it (W.o.more). */
+  const ask = q =>
+      kitAsk(c, "sim_" + def.id, q.k, q.label, q.opts, x[q.k], { typed: q.typed, term: q.term, help: q.help }),
+    more = def.inputs.filter(q => q.more);
   const ans = def.answer
     ? def.answer(c, x, R1)
     : "If these assumptions hold, " +
@@ -314,11 +318,15 @@ function simSheet() {
     head("Simulators", esc(def.n)) +
     `<div class="row" style="gap:6px"><div class="small muted">${esc(def.ask)}</div>${kitInfo("sim_" + def.id)}</div>` +
     def.inputs
-      .map(q =>
-        kitAsk(c, "sim_" + def.id, q.k, q.label, q.opts, x[q.k], { typed: q.typed, term: q.term, help: q.help })
-      )
+      .filter(q => !q.more)
+      .map(ask)
       .join("") +
+    (more.length
+      ? `<button class="ghost wide slim simmore" data-a="togb" data-k="more" aria-expanded="${W.o && W.o.more ? "true" : "false"}">${esc(def.moreLabel || "More inputs")} (${more.filter(q => x._st[q.k].given).length} of ${more.length} are yours) ${W.o && W.o.more ? "▴" : "▾"}</button>` +
+        (W.o && W.o.more ? more.map(ask).join("") : "")
+      : "") +
     `<div class="tile small simanswer"><b>${esc(ans)}</b> ${kitPill(st)}</div>` +
+    (def.extra ? def.extra(c, x, R1, st) : "") +
     kitColumns(R1.opts.map(col)) +
     kitChart({
       label: "Net worth over time",
@@ -360,9 +368,11 @@ function simBook(c) {
           note: x._st[q.k].given ? "Your answer" : "Guess",
         })
       );
+      /* An option can share its name with an input (Rent or buy: the input "rent" and the option "rent"):
+         the option's row then gets "end_" so a formula that names the input finds the input. */
       r.opts.forEach(op =>
         rows.push({
-          id: "sm_" + id + "_" + op.id,
+          id: "sm_" + id + "_" + (def.inputs.some(q => q.k === op.id) ? "end_" : "") + op.id,
           label: def.n + ": " + op.n + ", net worth at the end",
           v: Math.round(op.end),
           note: "Worked out by the game: a month-by-month run",
