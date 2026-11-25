@@ -58,6 +58,14 @@ const WB = [
     "Not built. Opt-in setting for shared phones, since this is money data.",
     null,
   ],
+  [
+    "feel",
+    "Coming soon: a part that is not ready never shows as a broken screen",
+    "b",
+    () => WB_FN("soonTap") && WB_FN("soonDraw") && WB_FN("soonRun") && WB_FN("soonHTML"),
+    "A tap that has no action yet, or a screen that cannot draw, shows one calm card and a way back. The error is still recorded for Eli.",
+    null,
+  ],
   ["in", "Setup by taps, no typing", "b", () => WB_HAS("start") && WB_FN("finishSetup"), "", null],
   ["in", "Make a guess real: Guess, Close, Exact", "b", () => WB_HAS("sharp"), "", "sharp"],
   [
