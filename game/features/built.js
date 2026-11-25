@@ -745,8 +745,8 @@ const WB = [
     "who",
     "Live Session Mode: a coaching call that fills in your profile while you talk",
     "p",
-    () => typeof liveOn === "function" && typeof liveTokenClean === "function",
-    "Partly built, and switched off until it is whole. Built so far: the invite link that is the sign-up, the session room (both tap OK, one Start, Pause and End, text only, no audio saved), and the rules that turn the words of the call into numbers (a heard number lands as a Guess, a number you entered is never changed, Confirming plus your yes makes it Close, a what-if is kept apart). Not yet: those rules joined to your saved game, the two screens of the call, the review after the call.",
+    () => typeof liveOn === "function" && typeof liveTokenClean === "function" && typeof ledRowHeard === "function",
+    "Partly built, and switched off until it is whole. Built so far: the invite link that is the sign-up, the session room (both tap OK, one Start, Pause and End, text only, no audio saved), the rules that turn the words of the call into numbers (a heard number lands as a Guess, a number you entered is never changed, Confirming plus your yes makes it Close, a what-if is kept apart), the join to your saved game, the two screens of the call (the coach's profile and next question; your calm four numbers) and the coach's review after the call, with Show plan. Not yet: the AI pass after the call, Delete this transcript, and a real call on two devices.",
     null,
   ],
   ["who", "Saved to your account, on every device", "b", () => WB_FN("clPush") && WB_FN("clPull"), "", null],
@@ -1095,6 +1095,22 @@ const WB = [
   ],
   ["biz", "A community cost-of-living planner", "n", null, "Built once as its own tool. Not in the game.", null],
   ["biz", "A city edition, and a stand-alone lever link with a result to share", "n", null, "Not built.", null],
+  [
+    "see",
+    "Your unpaid jobs: the six jobs of running your money, admin hours, and the four ways out",
+    "b",
+    () =>
+      WB_HAS("jobs") &&
+      WB_HAS("jbexit") &&
+      WB_FN("jobRoles") &&
+      WB_FN("jobLiving") &&
+      WB_FN("rvSheetJobs") &&
+      WB_FN("homeJobsRow") &&
+      WB_FN("ledgerCardJobs") &&
+      typeof JOB_ROLES === "object",
+    "From answers you already gave, on your character sheet and on Me. Hours a month running your money (Guess, Close, Exact) in the time ledger, and Running it and Living it on Home. Each task: Do it, Automate it, Hand it off, Drop it, each undoable.",
+    "jobs",
+  ],
 ];
 function btRows() {
   return WB.filter(r => adOk(r) && (r[6] !== "own" || ADX.own)).map(r => {

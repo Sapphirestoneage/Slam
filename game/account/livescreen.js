@@ -32,11 +32,23 @@ const LS_AREAS = [
   ["accounts", "Accounts"],
   ["bills", "Bills"],
 ];
-/* The order in which the game asks for its numbers (sharpList in core/engine.js, the money areas). */
-const LS_ASK_ORDER = ["take", "spend", "cash", "debt", "inv"];
 const LS_HEARD_SHOW = 3; /* the heard list shows its last 3 items */
+const LS_RECALC_MS = 20000; /* the Recalculating line stays this long after a top number moved */
 const lsEsc = s =>
   String(s == null ? "" : s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[m]);
+/* session.html has no screens/ui.js. The kit of screens/dash.js (dkCard, dkTile) calls esc(): on that page it
+   is this same escape. In the game, ui.js has esc and this line does nothing. */
+if (typeof esc === "undefined" && typeof window !== "undefined") window.esc = lsEsc;
+/* The order in which the game asks for its money numbers: sharpList() of core/engine.js (take, spend, cash,
+   then debt and inv when the profile has such rows; a gentle profile asks about debt last). An area with no
+   rows yet gets the plain first question of ASK_NONE, in the same place. */
+function lsAskOrder(t) {
+  const l = sharpList(t).filter(k => ASK[k]);
+  ["debt", "inv"].forEach(k => {
+    if (l.indexOf(k) < 0) l.push(k);
+  });
+  return t.gentle ? l.filter(k => k !== "debt").concat(["debt"]) : l;
+}
 
 /* ---------- values only ---------- */
 /* The mark of a list of rows of the game: Guess (a row that is not made real, or no row), Exact (each one
@@ -285,14 +297,15 @@ function lsConfirmSay(id, v) {
       .split("|")
       .filter(w => /^[a-z ]+$/.test(w))
       .concat(f.kind === "rate" ? [f.label.replace(": the rate", "").toLowerCase() + " rate"] : []);
-  for (const w of [f.label.toLowerCase()].concat(words)) {
+  /* the short spoken word first ("rent"), then the label of the field ("rent or housing") */
+  for (const w of words.concat([f.label.toLowerCase()])) {
     const say = "Confirming " + w + " " + num + tail,
       a = lfAskOf(say, null);
     if (a && !a.bad && a.id === id && Math.abs(a.v - v) < 0.005) return say;
   }
   return "";
 }
-/* THE NEXT QUESTION TO ASK. The order is the order of the game (LS_ASK_ORDER), and the words are the words
+/* THE NEXT QUESTION TO ASK. The order is the order of the game (lsAskOrder: sharpList), and the words are the words
    of "one small question at a time" (ASK and ASK_NONE in data/askwords.js). A line is skipped when it is
    known (made real, or Exact), when a call set it (heard), or when this call already heard an answer for it
    that waits for the review. On a profile with no rows yet, the rows are the first rows that the game's own
@@ -312,7 +325,7 @@ function lsNext(c, sid) {
     const tg = x.key ? lfTarget(x.key) : null;
     if (tg && tg.rowKey) asked[tg.rowKey] = true;
   });
-  LS_ASK_ORDER.forEach(k => {
+  lsAskOrder(t).forEach(k => {
     const A = ASK[k],
       rows = t[A.rows] || [];
     if (!rows.length && ASK_NONE[k]) {
@@ -424,7 +437,7 @@ function lsProfileHTML(view, S, now) {
       const heard = g.rows.filter(r => r.tag).length,
         open = S.open[g.area] != null ? S.open[g.area] : S.last === g.area;
       return (
-        `<details class="lsgroup" data-g="${g.area}"${open ? " open" : ""}><summary><span>${lsEsc(g.name)}</span><span class="muted tiny">${g.rows.length ? g.rows.length + (g.rows.length === 1 ? " line" : " lines") + (heard ? " · " + heard + " from this call" : "") : "nothing yet"}</span></summary><div class="lsrows">` +
+        `<details class="lsgroup" data-g="${g.area}" data-d="${open ? 1 : 0}"${open ? " open" : ""}><summary><span>${lsEsc(g.name)}</span><span class="muted tiny">${g.rows.length ? g.rows.length + (g.rows.length === 1 ? " line" : " lines") + (heard ? " · " + heard + " from this call" : "") : "nothing yet"}</span></summary><div class="lsrows">` +
         (g.rows.length
           ? g.rows
               .map(r => {
@@ -442,11 +455,14 @@ function lsProfileHTML(view, S, now) {
 /* The slim card "Next question to ask": words to say out loud, and the handshake for a Guess. */
 function lsNextHTML(view) {
   const N = view && view.next;
-  if (!N) return `<div class="card slim"><h2>Next question to ask</h2><p class="muted">It shows here when their profile is open.</p></div>`;
+  if (!N)
+    return dkCard("Next question to ask", `<p class="muted">It shows here when their profile is open.</p>`, {
+      cls: "slim",
+    });
   const q = N.q,
     cf = N.confirm;
-  return (
-    `<div class="card slim"><h2>Next question to ask</h2>` +
+  return dkCard(
+    "Next question to ask",
     (q
       ? `<p class="lssay">${q.row ? `<span class="muted">${lsEsc(q.row)}:</span> ` : ""}“${lsEsc(q.say)}”</p>` +
         (q.what ? `<p class="muted tiny">${lsEsc(q.what)}</p>` : "") +
@@ -455,14 +471,14 @@ function lsNextHTML(view) {
           ? `<p class="muted tiny">Ask for one month, or for one paycheck and how often it comes.</p>`
           : "")
       : `<p class="done">Each line has an answer or waits for the review.</p>`) +
-    (cf
-      ? `<div class="lsconfirm"><b>To lock in a Guess, say:</b>` +
-        (cf.say
-          ? `<p class="lssay">“${lsEsc(cf.say)}”</p><p class="muted tiny">Then wait for their yes. It goes from Guess to Close.</p>`
-          : `<p class="muted tiny">${lsEsc(cf.label)} is a rough ${lsEsc(cf.show)}. Ask for a firm number, then say “Confirming” with it.</p>`) +
-        `</div>`
-      : "") +
-    `</div>`
+      (cf
+        ? `<div class="lsconfirm"><b>To lock in a Guess, say:</b>` +
+          (cf.say
+            ? `<p class="lssay">“${lsEsc(cf.say)}”</p><p class="muted tiny">Then wait for their yes. It goes from Guess to Close.</p>`
+            : `<p class="muted tiny">${lsEsc(cf.label)} is a rough ${lsEsc(cf.show)}. Ask for a firm number, then say “Confirming” with it.</p>`) +
+          `</div>`
+        : ""),
+    { cls: "slim", right: N.left > 1 ? dkPill(N.left + " to ask") : "" }
   );
 }
 const LS_ST = {
@@ -482,58 +498,67 @@ function lsHeardHTML(R, S) {
       `<li class="${x.st === "confirmed" ? "said" : ""}"><span>${lsEsc(x.label || "A line")}${x.show ? ` <b>${lsEsc(x.show)}</b>` : ""}</span><span class="muted tiny">${x.st === "confirmed" ? "✓ " : ""}${lsEsc(LS_ST[x.st] || x.st)}${x.st === "kept" && x.why ? ": " + lsEsc(x.why) : ""}</span></li>`,
     last = all.slice(-LS_HEARD_SHOW).reverse(),
     older = all.slice(0, -LS_HEARD_SHOW).reverse();
-  return (
-    `<div class="card slim"><div class="row"><h2>Heard</h2><span class="pill">${all.length} ${all.length === 1 ? "thing" : "things"}</span></div>` +
+  return dkCard(
+    "Heard",
     (last.length
       ? `<ul class="lsheard">${last.map(one).join("")}</ul>`
       : `<p class="muted">The first number shows here as soon as it is heard.</p>`) +
-    (older.length
-      ? `<details class="lsolder" data-g="older"${S.open.older ? " open" : ""}><summary>Show the ${older.length} before</summary><ul class="lsheard">${older.map(one).join("")}</ul></details>`
-      : "") +
-    `<p class="lswhat">${lsEsc(n.line || lfWhatifLine(n.whatifs || 0))}</p>` +
-    `<p class="soft" id="lrsoft" aria-hidden="true"></p></div>`
+      (older.length
+        ? `<details class="lsolder" data-g="older" data-d="${S.open.older ? 1 : 0}"${S.open.older ? " open" : ""}><summary>Show the ${older.length} before</summary><ul class="lsheard">${older.map(one).join("")}</ul></details>`
+        : "") +
+      `<p class="lswhat">${lsEsc(n.line || lfWhatifLine(n.whatifs || 0))}</p>` +
+      `<p class="soft" id="lrsoft" aria-hidden="true"></p>`,
+    { cls: "slim", right: dkPill(all.length + (all.length === 1 ? " thing" : " things")) }
   );
 }
-/* The four top numbers, and the Recalculating line. */
+/* The four top numbers, as the stat tiles of the dashboard kit (dkStatRow, dkTile), and the Recalculating
+   line. Each tile has its mark; a Guess shows in the guess style of the kit. */
 function lsNumsHTML(view, S, now) {
   if (!view || !view.nums || !view.nums.length)
-    return `<div class="card"><p>Your numbers show here as you talk. There is nothing for you to do.</p></div>`;
-  const rc = S.recalc && now - S.recalc.at <= 20000 ? S.recalc : null,
+    return dkCard("", `<p>Your numbers show here as you talk. There is nothing for you to do.</p>`);
+  const rc = S.recalc && now - S.recalc.at <= LS_RECALC_MS ? S.recalc : null,
     moved = id => !!rc && rc.lines.some(l => l.id === id);
   return (
     `<div class="lsnums">` +
-    view.nums
-      .map(
-        n =>
-          `<div class="lsnum${moved(n.id) ? " " + LF.GLOW : ""}"><span class="muted tiny">${lsEsc(n.label)}</span><b class="lsbig">${lsEsc(n.show)}</b><span class="muted tiny">${lsEsc(n.sub || "")}</span>${lsMark(n.lv)}</div>`
+    dkStatRow(
+      view.nums.map(n =>
+        dkTile(n.label, lsEsc(n.show) + (n.lv ? " " + lsMark(n.lv) : ""), {
+          sub: n.sub || "",
+          guess: n.lv === "Guess",
+        }).replace('class="dktile"', `class="dktile${moved(n.id) ? " " + LF.GLOW : ""}"`)
       )
-      .join("") +
+    ) +
     `</div>` +
     (rc
-      ? `<div class="lsrecalc" role="status"><b>${lsEsc(rc.title)}</b>${rc.lines.map(l => `<p>${lsEsc(l.text)}</p>`).join("")}</div>`
+      ? `<div class="card lsrecalc" role="status"><span class="dklabel">${lsEsc(rc.title)}</span>${rc.lines.map(l => `<p>${lsEsc(l.text)}</p>`).join("")}</div>`
       : "")
   );
 }
-/* The plan on one screen: the era, the top 3 moves, the next payday task. */
+/* The plan on one screen: the era, the top 3 moves, the next payday task. Each line has the Guess mark when
+   it rests on a number that is still a Guess. */
 function lsPlanHTML(plan, me) {
+  const yours = me === "client";
   if (!plan)
-    return `<div class="card"><h2>The plan</h2><p>There is no plan to show yet: no number was filled in. It shows here after the first numbers are on the profile.</p></div>`;
+    return dkCard(
+      yours ? "Your plan" : "The plan",
+      `<p>There is no plan to show yet: no number was filled in. It shows here after the first numbers are on the profile.</p>`
+    );
   const day = s => new Date(s + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-    yours = me === "client",
-    g = plan.lv === "Guess";
-  return (
-    `<div class="card"><div class="row"><h2>${yours ? "Your plan" : lsEsc(plan.name) + "'s plan"}</h2>${lsMark(plan.lv)}</div>` +
+    g = plan.lv === "Guess",
+    to = t => (t === "Extra on debt" ? "extra on debt" : t === "Cushion" ? "the cushion" : "investing");
+  return dkCard(
+    yours ? "Your plan" : plan.name + "'s plan",
     (g
       ? `<p class="muted tiny">Some numbers are still a Guess, so this is a first plan. It gets sharper as each number is made real.</p>`
       : "") +
-    `<div class="lsplan"><span class="muted tiny">${yours ? "Your era" : "Their era"}</span><b>${lsEsc(plan.era)}</b><p class="muted">${lsEsc(plan.eraOne)}</p></div>` +
-    `<div class="lsplan"><span class="muted tiny">Top 3 moves</span>` +
-    (plan.moves.length
-      ? `<ol class="lsmoves">${plan.moves.map(m => `<li><b>${lsEsc(m.title)}</b>${g ? " " + lsMark("Guess") : ""}<div class="muted tiny">${lsEsc(m.why || "")}</div></li>`).join("")}</ol>`
-      : `<p class="muted">Each move on the list is done or parked.</p>`) +
-    `</div>` +
-    `<div class="lsplan"><span class="muted tiny">Next payday${plan.pay.when ? ", " + day(plan.pay.when) : ""}</span><b>${plan.pay.split.map(s => s.pct + "% to " + lsEsc(s.to === "Extra on debt" ? "extra on debt" : s.to === "Cushion" ? "the cushion" : "investing")).join(", ")}</b> ${lsMark(plan.pay.lv)}<p class="muted">Of what is left after the bills. ${lsEsc(plan.pay.why)}</p></div>` +
-    `</div>`
+      `<div class="lsplan"><span class="dklabel">${yours ? "Your era" : "Their era"}</span><b class="lsbig">${lsEsc(plan.era)}</b> ${g ? lsMark("Guess") : ""}<p class="muted">${lsEsc(plan.eraOne)}</p></div>` +
+      `<div class="lsplan"><span class="dklabel">Top 3 moves</span>` +
+      (plan.moves.length
+        ? `<ol class="lsmoves">${plan.moves.map(m => `<li><b>${lsEsc(m.title)}</b>${g ? " " + lsMark("Guess") : ""}<div class="muted tiny">${lsEsc(m.why || "")}</div></li>`).join("")}</ol>`
+        : `<p class="muted">Each move on the list is done or parked.</p>`) +
+      `</div>` +
+      `<div class="lsplan"><span class="dklabel">Next payday${plan.pay.when ? ", " + day(plan.pay.when) : ""}</span><b>${plan.pay.split.map(s => s.pct + "% to " + lsEsc(to(s.to))).join(", ")}</b> ${lsMark(plan.pay.lv)}<p class="muted">Of what is left after the bills. ${lsEsc(plan.pay.why)}</p></div>`,
+    { right: lsMark(plan.lv), cap: yours ? "Something real to start with" : "What they leave the call with" }
   );
 }
 /* Part of lrRoomHTML() in liveroom.js: the coach's screen during the call. */
@@ -542,11 +567,15 @@ function livePartCoach(R) {
     now = S.now(),
     view = lsViewOf(R);
   return (
-    `<div class="lscols"><div class="lscol"><div class="card"><div class="row"><h2>${view ? lsEsc(view.name) + "'s profile" : "Their profile"}</h2></div>` +
-    (view
-      ? lsProfileHTML(view, S, now)
-      : `<p class="muted">Their profile shows here when their device is in the room.</p>`) +
-    `</div></div><div class="lscol">${lsNextHTML(view)}${lsHeardHTML(R, S)}</div></div>`
+    `<div class="lscols"><div class="lscol">` +
+    dkCard(
+      view ? view.name + "'s profile" : "Their profile",
+      view
+        ? lsProfileHTML(view, S, now)
+        : `<p class="muted">Their profile shows here when their device is in the room.</p>`,
+      { cap: "Fills in while you talk. Guess until it is confirmed out loud." }
+    ) +
+    `</div><div class="lscol">${lsNextHTML(view)}${lsHeardHTML(R, S)}</div></div>`
   );
 }
 /* Part of lrRoomHTML() in liveroom.js: the client's calm screen during the call. */
@@ -556,11 +585,11 @@ function livePartClient(R) {
     view = lsViewOf(R),
     n = (R.fill && R.fill.n) || {};
   return (
-    `<div class="card calm"><h2>Just talk. Your numbers fill in by themselves.</h2><p class="muted">There is nothing for you to press. Pause and End are below if you need them.</p></div>` +
+    `<div class="lscalm"><h1>Just talk</h1>${dkCaption("Your numbers fill in by themselves. Pause and End are below if you need them.")}</div>` +
     lsNumsHTML(view, S, now) +
-    `<p class="lswhat">${lsEsc(n.line || lfWhatifLine(n.whatifs || 0))}${R.game && R.game.says ? ` · <span class="muted">${lsEsc(R.game.says())}</span>` : ""}</p>` +
+    `<p class="lswhat">${n.whatifs ? lsEsc(n.line || lfWhatifLine(n.whatifs)) + " · " : ""}${R.game && R.game.says ? `<span class="muted">${lsEsc(R.game.says())}</span>` : ""}</p>` +
     `<button class="wide" data-a="lsdetails" aria-expanded="${S.details ? "true" : "false"}">${S.details ? "Hide details" : "Show details"}</button>` +
-    (S.details ? `<div class="card"><h2>Your profile</h2>${lsProfileHTML(view, S, now)}</div>` : "") +
+    (S.details ? dkCard("Your profile", lsProfileHTML(view, S, now)) : "") +
     `<p class="soft" id="lrsoft" aria-hidden="true"></p>`
   );
 }
@@ -604,7 +633,7 @@ function lsAttach(R, o) {
       const rc = lsRecalc(was, S.view.nums);
       if (rc) {
         S.recalc = Object.assign({ at: S.now() }, rc);
-        if (o && o.clock) o.clock.set(redraw, 20100);
+        if (o && o.clock) o.clock.set(redraw, LS_RECALC_MS + 100);
       }
       R.tell({ k: "fill", view: S.view, recalc: rc });
     };
@@ -613,7 +642,7 @@ function lsAttach(R, o) {
       S.view = p.view;
       if (p.recalc) {
         S.recalc = Object.assign({ at: S.now() }, p.recalc);
-        if (o && o.clock) o.clock.set(redraw, 20100);
+        if (o && o.clock) o.clock.set(redraw, LS_RECALC_MS + 100);
       }
     }
     const it = p.ev && p.ev.item;
@@ -636,7 +665,7 @@ function lsAttach(R, o) {
   });
   return S;
 }
-/* Part of livePartClick() in livereview.js: the taps of the two screens of the call. True: the tap was taken. */
+/* Part of livePartClick() in account/livereview.js: the taps of the two screens of the call. True: the tap was taken. */
 function lsClick(a, t, R) {
   const S = R.ls;
   if (!S) return false;
@@ -650,8 +679,11 @@ function lsClick(a, t, R) {
   }
   return false;
 }
-/* session.html calls this when a group opens or closes: the choice of the person stays through each redraw. */
+/* session.html calls this when a group opens or closes: the choice of the person stays through each redraw.
+   The browser also sends "toggle" when a redraw puts in a group that is open: data-d is how the group was
+   drawn, and only a change against it is the person's choice. */
 function lsToggle(el, R) {
   if (!el || !el.dataset || !el.dataset.g || !R || !R.ls) return;
+  if (el.dataset.d != null && !!el.open === (el.dataset.d === "1")) return;
   R.ls.open[el.dataset.g] = !!el.open;
 }

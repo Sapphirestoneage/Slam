@@ -130,11 +130,14 @@ textarea{font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
 .err{color:#ffd3e2;font-size:14px;font-weight:600}
 .qr{background:#fff;padding:10px;border-radius:10px;max-width:240px;margin:0 auto}
 .qr svg{display:block;width:100%;height:auto}
+/* jobs.js */
+.jbrun .dkprog i{background:var(--sap)}.jbrole .dkprog{width:100%}
 @media (prefers-reduced-motion:no-preference){
  .pulse,button.go{animation:pulse 1.6s ease-in-out infinite}
  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--glow),0),0 0 10px 0 rgba(var(--glow),.35)}50%{box-shadow:0 0 0 7px rgba(var(--glow),.35),0 0 26px 6px rgba(var(--glow),.65)}}
  .flash{animation:flash 1.4s ease-out}@keyframes flash{0%{color:#fff;text-shadow:0 0 16px var(--a3),0 0 4px #fff;transform:scale(1.18)}100%{text-shadow:none;transform:none}}
  .flash{display:inline-block}
+ .jbmoved{animation:jbin .6s ease-out}@keyframes jbin{from{transform:translateY(-8px);opacity:.2}to{transform:none;opacity:1}}
  .pop{animation:pop .35s ease-out}@keyframes pop{from{transform:scale(.92);opacity:.4}to{transform:none;opacity:1}}
 }
 
@@ -470,6 +473,8 @@ button.qcont{display:flex;flex-direction:column;align-items:flex-start;gap:4px;w
 button.qstar{min-height:32px;width:32px;padding:0;border:2px solid var(--line);background:none;border-radius:8px;color:var(--muted)}
 button.qstar.on{border-color:var(--a3);color:#fff}
 .qtab .rowbtn,.qrecent .rowbtn{min-height:44px}
+/* Live Session Mode: the small tag of a money line that a live session set (account/liveflag.js, ledRowHeard) */
+.lf-heard{font-size:12px;border:1px solid var(--a3);color:var(--a3);border-radius:99px;padding:0 7px;white-space:nowrap}
 /* the dashboard kit (screens/dash.js, DESIGN.md "Reference: Tally") */
 .dklabel{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .dkcap{font-size:13.5px;color:var(--muted);margin:-2px 0 4px}
@@ -515,7 +520,7 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="core/soon.js?v=cafe08bf"></script>
 <script src="features/firelink.js?v=fc984112"></script>
 <script src="account/trust.js?v=3d07f04c"></script>
-<script src="account/liveflag.js?v=473c96c9"></script>
+<script src="account/liveflag.js?v=e0e37994"></script>
 <script src="account/door.js?v=29500834"></script>
 <script src="account/supa.js?v=2a963457"></script>
 <script src="data/skills.js?v=aa53a193"></script>
@@ -529,13 +534,15 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="core/engine2.js?v=0f916c85"></script>
 <script src="core/homebuy.js?v=9fefc7d2"></script>
 <script src="core/recalc.js?v=9ee7e7ea"></script>
+<script src="core/jobs.js?v=d2c478be"></script>
+<script src="data/roles.js?v=050ffd11"></script>
 <script src="core/reportcore.js?v=6a3377b4"></script>
 <script src="core/quizcore.js?v=fb301cab"></script>
 <script src="core/sins.js?v=14a2a28b"></script>
 <script src="data/quizskins.js?v=20b55009"></script>
 <script src="account/gate.js?v=5e37daf9"></script>
-<script src="screens/ui.js?v=0d2b9baf"></script>
-<script src="screens/dash.js?v=14f49f8d"></script>
+<script src="screens/ui.js?v=a785396f"></script>
+<script src="screens/dash.js?v=46243f0e"></script>
 <script src="features/games.js?v=f3991fbd"></script>
 <script src="features/games2.js?v=63ba8d13"></script>
 <script src="features/year.js?v=0c383449"></script>
@@ -543,14 +550,14 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="screens/profiles.js?v=442b6691"></script>
 <script src="screens/smart.js?v=2e800c77"></script>
 <script src="screens/planner.js?v=9ab75929"></script>
-<script src="account/cloud.js?v=79bc2c4e"></script>
+<script src="account/cloud.js?v=dcb3a34e"></script>
 <script src="screens/ux.js?v=81be5ef1"></script>
 <script src="core/metrics.js?v=9b0ea529"></script>
 <script src="features/debts.js?v=1018cceb"></script>
 <script src="features/import.js?v=b3dfd30e"></script>
 <script src="features/compare.js?v=abf08001"></script>
 <script src="features/quick.js?v=152cbc32"></script>
-<script src="features/reveal.js?v=f0d6caef"></script>
+<script src="features/reveal.js?v=02bd6cc1"></script>
 <script src="features/moneylog.js?v=889f9b8b"></script>
 <script src="features/drills.js?v=7034ac10"></script>
 <script src="features/gig.js?v=b1de10b2"></script>
@@ -565,7 +572,7 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="features/mult.js?v=5550280a"></script>
 <script src="data/askwords.js?v=4215eaea"></script>
 <script src="features/ask.js?v=1a289b9b"></script>
-<script src="features/alloc.js?v=639cf760"></script>
+<script src="features/alloc.js?v=a08241f1"></script>
 <script src="features/session.js?v=8095e858"></script>
 <script src="features/ask2.js?v=095e9eb5"></script>
 <script src="features/sign.js?v=bea31d44"></script>
@@ -646,13 +653,14 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="features/audit.js?v=d893fdb8"></script>
 <script src="features/quizzes.js?v=6e805325"></script>
 <script src="features/sins.js?v=0d986745"></script>
-<script src="data/patchnotes.js?v=e1d060c1"></script>
+<script src="data/patchnotes.js?v=c3c8e5e5"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
 <script src="features/look.js?v=33f78aeb"></script>
-<script src="features/book.js?v=df4c4956"></script>
+<script src="features/jobs.js?v=32764356"></script>
+<script src="features/book.js?v=a8409577"></script>
 <script src="features/questlog.js?v=6c4208d8"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=a0a516cb"></script>
+<script src="features/built.js?v=50386d35"></script>
 </body>
 </html>
