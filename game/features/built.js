@@ -792,6 +792,21 @@ const WB = [
   ],
   [
     "plan",
+    "Compare the ways: the 4% rule, guardrails and each other way to take money out, side by side",
+    "b",
+    () =>
+      WB_HAS("takeout") &&
+      WB_FN("cmpTab") &&
+      WB_FN("cmpRow") &&
+      WB_FN("waySpend") &&
+      WB_FN("cmpBook") &&
+      typeof WAYS === "object" &&
+      WAYS.length > 30,
+    "The same plan through each way to take money out, in families with variants. Each row has the spending of year one, the random markets and real start years that work, the hardest start year, the cuts, the money left and the age work can stop. Sort, filter, pin 3 rows, and one chart from the start year 1966.",
+    "takeout",
+  ],
+  [
+    "plan",
     "Taking money out: withdrawal plans, guardrails, a Roth ladder, health-plan credits",
     "b",
     () => WB_HAS("takeout") && WB_FN("tkoOrder") && WB_FN("tkoGuard") && WB_FN("tkoBridge") && WB_FN("tkoAca"),

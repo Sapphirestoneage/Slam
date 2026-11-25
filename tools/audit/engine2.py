@@ -266,6 +266,178 @@ def take_out(b, amount, age):
     return pretax, penalty, gains, early_growth, (left if left > 0.5 else 0.0)
 
 
+# ---------- the ways to take money out (js/math/withdraw.js), written again ----------
+# The numbers below are typed in again from their sources, not read from SLAM's file.
+WAY_TOLERATES = {'steady': 0.999, 'guardrails': 0.699, 'floor': 0.849, 'share': 0.75, 'age': 0.75, 'held': 0.999, 'market': 0.75, 'custom': 0.75}
+VPW_STOCKS, VPW_BONDS, VPW_LAST_AGE = 0.05, 0.019, 99      # Bogleheads wiki, Variable percentage withdrawal (not yet checked against the page: QUESTIONS.md)
+CAPE_BASE, CAPE_SLOPE = 0.0175, 0.5                        # Big ERN, Safe Withdrawal Rate series, Part 18 and Part 54
+CUT_LINE, CASH_REAL = 0.995, 0.0
+
+
+def first_set(*values):
+    """The first value that is not None (what ?? does in SLAM's code)."""
+    for v in values:
+        if v is not None:
+            return v
+    return None
+
+
+def pay_first_factor(n, g):
+    """What 1 paid on the first day of each of n years is worth today, growing at g: the sum, term by term."""
+    return sum((1 + g) ** -j for j in range(n))
+
+
+def vpw_share(age, stock):
+    g = stock * VPW_STOCKS + (1 - stock) * VPW_BONDS
+    return min(1.0, 1 / pay_first_factor(max(1, VPW_LAST_AGE + 1 - age), g))
+
+
+def spend_down(start, target, n, g):
+    if n <= 0:
+        return 0.0 if g == 0 else max(0.0, start * g / (1 + g))
+    return max(0.0, (start - target * (1 + g) ** -n) / pay_first_factor(n, g))
+
+
+def way_tolerance(way):
+    return first_set(way.get('tolerate'), WAY_TOLERATES.get(way.get('family')), 0.999)
+
+
+def way_spend(way, s, mem):
+    """One year's spending by a way. Returns (spend, aim)."""
+    rule = way.get('rule') or way.get('id') or 'fixed'
+    need, start = s['need'], s['start']
+    if mem.get('rate0') is None:
+        mem['rate0'] = need / start if start > 0 else None
+    if mem.get('money0') is None and start > 0:
+        mem['money0'] = start
+    spend, aim, own = need, need, False
+    if rule == 'fixed':
+        if way.get('anchor') == 'rate':
+            spend = first_set(way.get('rate'), 0.04) * (mem.get('money0') or 0.0)
+            aim = spend
+        if way.get('skipRaise'):
+            last, infl = s.get('last'), s.get('infl')
+            if last is not None and infl is not None and infl > 0 and (1 + last) * (1 + infl) < 1:
+                mem['real'] = mem.get('real', 1.0) / (1 + infl)   # no raise for prices: the amount buys that much less
+            spend *= mem.get('real', 1.0)
+    elif rule == 'percent':
+        basis = start
+        if (way.get('smooth') or 0) > 1:
+            mem['ends'] = (mem.get('ends', []) + [start])[-way['smooth']:]
+            basis = sum(mem['ends']) / len(mem['ends'])
+        spend, own = basis * first_set(way.get('rate'), 0.04), True
+    elif rule == 'floor':
+        spend = min(need * first_set(way.get('hi'), 1.2), max(need * first_set(way.get('lo'), 0.85), start * first_set(way.get('rate'), mem['rate0'], 0.04)))
+    elif rule == 'guardrails':
+        if mem['rate0']:
+            trim = mem.get('trim', 1.0)
+            now_rate = need * trim / start if start > 0 else math.inf
+            raise_to = first_set(way.get('raiseTo'), 1.1)
+            if now_rate > mem['rate0'] * first_set(way.get('over'), 1.2):
+                trim *= first_set(way.get('cutTo'), 0.9)
+            elif raise_to > 1 and now_rate < mem['rate0'] * first_set(way.get('under'), 0.8) and trim < 1.3:
+                trim *= raise_to
+            trim = max(0.7, trim)
+            mem['trim'] = trim
+            spend = need * trim
+    elif rule == 'vanguard':
+        target = start * first_set(way.get('rate'), mem['rate0'], 0.04)
+        before = mem.get('before')
+        spend = target if before is None else min(before * (1 + first_set(way.get('up'), 0.05)), max(before * (1 - first_set(way.get('down'), 0.015)), target))
+        mem['before'], own = spend, True
+    elif rule == 'vpw':
+        spend, own = start * vpw_share(s['age'], first_set(s.get('stock'), 0.6)), True
+    elif rule == 'rmd':
+        years = UNIFORM.get(min(100, s['age']))
+        spend, own = (start / years if years else 0.0), True
+    elif rule == 'dwz':
+        at = first_set(way.get('targetAge'), s['endAge'] + 1)
+        spend, own = min(start, spend_down(start, first_set(way.get('target'), 0), at - s['age'], first_set(way.get('growth'), s.get('growth'), 0))), True
+    elif rule == 'cape':
+        cape = s.get('cape')
+        spend, own = (start * (first_set(way.get('a'), CAPE_BASE) + first_set(way.get('b'), CAPE_SLOPE) / cape) if cape and cape > 0 else 0.0), True
+    spend = max(0.0, spend)
+    if own:
+        if mem.get('year_one') is None and start > 0:
+            mem['year_one'] = spend
+        aim = first_set(mem.get('year_one'), spend)
+    return spend, aim
+
+
+def way_return(way, yr, s, mem):
+    """The year's return of the whole portfolio, by how the money is held."""
+    hold = way.get('hold')
+    both = yr.get('s') is not None and yr.get('b') is not None
+    mix = lambda share: share * yr['s'] + (1 - share) * yr['b'] if both else yr['r']
+    plain = yr['r'] if yr.get('r') is not None else mix(s['stock'])
+    if not hold:
+        return plain
+    if hold['kind'] == 'tent':
+        return mix(max(0.0, s['stock'] - hold['drop'] * max(0.0, 1 - s['k'] / hold['years'])))
+    left = s['start'] - s['w']
+    if not left > 0:
+        return plain
+    gap = s['w']
+    if hold['kind'] == 'shield':
+        rate = s['stock'] * yr['dy'] + (1 - s['stock']) * yr['by'] if yr.get('dy') is not None and yr.get('by') is not None else 0.0
+        gap = max(0.0, s['w'] - rate * max(0.0, s['start'] - mem.get('cash', 0.0)))
+    target = hold['years'] * gap
+    after_bad_year = s.get('last') is not None and s['last'] < 0
+    cash = min(left, max(0.0, mem.get('cash', target) - gap) if after_bad_year else target)
+    mem['cash'] = cash * (1 + CASH_REAL)
+    return (cash * CASH_REAL + (left - cash) * plain) / left
+
+
+def way_pay(p, w, r, timing):
+    """One year on one pile. Returns (money at the year's end, what could not be paid). Monthly by the annuity formula
+    when the money lasts the year (SLAM steps it), and step by step only in a year it runs short."""
+    if timing == 'end':
+        p = p * (1 + r) - w
+        return (p, 0.0) if p >= 0 else (0.0, -p)
+    if timing == 'monthly':
+        g = (1 + r) ** (1 / 12)
+        end = p * g ** 12 - (w / 12) * (12 if g == 1 else g * (g ** 12 - 1) / (g - 1))
+        if end >= 0:
+            return end, 0.0
+        short = 0.0
+        for _ in range(12):
+            p -= w / 12
+            if p < 0:
+                short, p = short - p, 0.0
+            p *= g
+        return p, short
+    p -= w
+    return (p * (1 + r), 0.0) if p >= 0 else (0.0, -p)
+
+
+def way_history(cycles, tol):
+    works = [c for c in cycles if c['lasted'] and c['lowest'] >= tol]
+    if not cycles:
+        return {'n': 0, 'ok': 0}
+    worst = min(cycles, key=lambda c: (c['ranOutAge'] if c['ranOutAge'] is not None else 999, c['lowest'], c['end']))
+    lasted = [c['lowest'] for c in cycles if c['lasted']]
+    ends = sorted(c['end'] for c in cycles)
+    return {'n': len(cycles), 'ok': len(works), 'worst': worst['start'], 'deepest': min(lasted) if lasted else None, 'cutsWorst': worst['cuts'], 'medianEnd': ends[(len(ends) - 1) // 2]}
+
+
+def take_year(b, amount, age, r, timing):
+    """Take `amount` over one year by the timing. Returns take_out's five numbers and whether the year's growth is in."""
+    if timing == 'end':
+        for name in ('taxable', 'pretax', 'roth'):
+            b[name] *= 1 + r
+        return (*take_out(b, amount, age), True)
+    if timing != 'monthly':
+        return (*take_out(b, amount, age), False)
+    month = (1 + r) ** (1 / 12)
+    total = [0.0] * 5
+    for _ in range(12):
+        got = take_out(b, amount / 12, age)
+        total = [a + g for a, g in zip(total, got)]
+        for name in ('taxable', 'pretax', 'roth'):
+            b[name] *= month
+    return (*total, True)
+
+
 def whole_life(x, law, audit=None):
     s = x['start']
     b = {'taxable': s.get('taxable') or 0.0, 'pretax': s.get('pretax') or 0.0, 'roth': s.get('roth') or 0.0}
@@ -290,6 +462,9 @@ def whole_life(x, law, audit=None):
     at_retire = ran_out = first_rate = None
     life_tax = penalties = surcharges = 0.0
     lowest, trim = 1.0, 1.0
+    timing = strategy.get('timing') or 'start'
+    seq, lead = x.get('seq'), x['retireAge'] - x['age']   # a made-up market for the free years: one row a year
+    mem, last_r, last_i, lowest_paid, cut_years, first_spend = {}, None, None, 1.0, 0, None
 
     def under_65(age):
         return (1 if age < 65 else 0) + (1 if partner and age + gap < 65 else 0)
@@ -306,7 +481,8 @@ def whole_life(x, law, audit=None):
 
     k = 0
     for age in range(x['age'], last_age + 1):
-        r = x['realReturn']
+        yr = seq[k - lead] if seq and 0 <= k - lead < len(seq) else {'r': x['realReturn']}
+        r, grown = yr['r'], False
         for c in waiting_conversions:
             if c[0] + 5 == k:
                 b['rothFree'] += c[1]
@@ -355,8 +531,12 @@ def whole_life(x, law, audit=None):
             start, need = total(), cost_of_life(age)
             if first_rate is None:
                 first_rate = need / start if start > 0 else None
-            spend = need
-            if strategy['id'] == 'percent':
+            spend = aim = need
+            stock = first_set(yr.get('stock'), x.get('stocks'), 0.8)
+            if strategy.get('rule'):
+                spend, aim = way_spend(strategy, {'need': need, 'start': start, 'k': age - x['retireAge'], 'age': age, 'endAge': last_age, 'last': last_r, 'infl': last_i,
+                                                  'cape': first_set(yr.get('cape'), x.get('cape')), 'stock': stock, 'growth': x['realReturn']}, mem)
+            elif strategy['id'] == 'percent':
                 spend = start * (strategy.get('rate') or 0.04)
             elif strategy['id'] == 'floor':
                 spend = min(need * 1.2, max(need * 0.85, start * (strategy.get('rate') or first_rate or 0.04)))
@@ -377,14 +557,23 @@ def whole_life(x, law, audit=None):
             on_medicare = (1 if age >= 65 else 0) + (1 if partner and age + gap >= 65 else 0)
             medicare = on_medicare * law.irmaa(income_by_year.get(k - 2, 0), status) if on_medicare else 0.0
             base = max(0.0, spend + medicare - ss - earned)
+            whole_out = spend if strategy.get('gross') else None   # a way that sets what leaves the accounts, tax and all
+            if whole_out is not None:
+                base = whole_out
+            if strategy.get('hold'):
+                r = way_return(strategy, yr, {'stock': stock, 'k': age - x['retireAge'], 'last': last_r, 'start': start, 'w': base}, mem)
             def settle(credit_now, rounds):
                 """This year's tax for a given credit: the tax is paid from the same buckets, so it goes round until it stops moving."""
                 due_now, c, ok = 0.0, 0.0, False
                 for _ in range(rounds):
                     trial = dict(b)
-                    got_pre, got_pen, got_gains, got_growth, _s = take_out(trial, max(0.0, base - credit_now) + due_now, age)
-                    pre = max(got_pre, min(must, b['pretax']))
-                    conv = min(convert, max(0.0, b['pretax'] - pre))  # a required withdrawal comes out first; only what is left can move to Roth
+                    got_pre, got_pen, got_gains, got_growth, _s, in_already = take_year(trial, max(whole_out, due_now) if whole_out is not None else max(0.0, base - credit_now) + due_now, age, r, timing)
+                    if in_already:   # out monthly or at the end: the required withdrawal and the conversion act on the year-end balance
+                        more = min(trial['pretax'], max(0.0, must - got_pre))
+                        pre, conv = got_pre + more, min(convert, max(0.0, trial['pretax'] - more))
+                    else:
+                        pre = max(got_pre, min(must, b['pretax']))
+                        conv = min(convert, max(0.0, b['pretax'] - pre))  # a required withdrawal comes out first; only what is left can move to Roth
                     t = law.year_tax(pre + conv + earned + got_growth, ss, got_gains, tax) + got_pen
                     c = min(benchmark, premium_credit(pre + conv + earned + got_growth + got_gains + ss, benchmark, people)) if benchmark > 0 else 0.0
                     if abs(t - due_now) < TAX_STOP:
@@ -404,8 +593,12 @@ def whole_life(x, law, audit=None):
                 credit = 0.0
                 due, implied, settled = settle(0.0, TAX_ROUNDS)
                 held.append([age, 'bottom' if implied >= 1 else 'top'])
-            base = max(0.0, base - credit)
-            pre_out, pen, gains, growth_out, short = take_out(b, base + due, age)
+            if whole_out is not None:
+                base = max(0.0, whole_out - due)
+                spend = max(0.0, base + ss + earned + credit - medicare)
+            else:
+                base = max(0.0, base - credit)
+            pre_out, pen, gains, growth_out, short, grown = take_year(b, base + due, age, r, timing)
             forced = min(b['pretax'], max(0.0, must - pre_out))
             if forced > 0:
                 b['pretax'] -= forced; b['taxable'] += forced; b['basis'] += forced
@@ -426,16 +619,25 @@ def whole_life(x, law, audit=None):
             surcharges += medicare
             if need > 0:
                 lowest = min(lowest, row['spend'] / need)
+            if first_spend is None:
+                first_spend = row['spend']
+            if aim > 0:
+                part = max(0.0, whole_out - short) / aim if whole_out is not None else row['spend'] / aim
+                lowest_paid = min(lowest_paid, part)
+                cut_years += 1 if part < CUT_LINE else 0
         if row['short'] > 0.5 and ran_out is None:
             ran_out = age
-        for name in ('taxable', 'pretax', 'roth'):
-            b[name] *= 1 + r
+        if not grown:
+            for name in ('taxable', 'pretax', 'roth'):
+                b[name] *= 1 + r
+        last_r, last_i = r, yr.get('i')
         b['rothFree'] = min(b['rothFree'], b['roth'])
         b['basis'] = min(b['basis'], b['taxable'])
         rows.append([age, total(), row['tax'], row['spend'], row['withdraw'], row['convert'], row['penalty'], row['short'], b['taxable'], b['pretax'], b['roth']])
         k += 1
     return {'ok': ran_out is None, 'ranOutAge': ran_out, 'atRetire': at_retire if at_retire is not None else total(), 'end': total(), 'lifetimeTax': life_tax,
-            'penalties': penalties, 'surcharges': surcharges, 'lowestSpend': lowest, 'years': rows, 'creditHeld': held}
+            'penalties': penalties, 'surcharges': surcharges, 'lowestSpend': lowest, 'years': rows, 'creditHeld': held,
+            'lowestPaid': lowest_paid, 'cutYears': cut_years, 'firstSpend': first_spend}
 
 
 # ---------- compare ----------
@@ -695,6 +897,48 @@ def run(cases, ref, il=None):
                     L['credit_gap_years'] += 1; touched = True
                     L['worst_credit_gap'] = max(L['worst_credit_gap'], abs(y['credit_gap']))
             L['runs_touched'] += 1 if touched else 0
+        elif fn == 'vpwShare':
+            ck('share', o['share'], vpw_share(x['age'], x['stock']), 1e-9)
+        elif fn == 'spendDown':
+            ck('payment', o['payment'], spend_down(x['start'], x['target'], x['n'], x['g']), 0.01)
+        elif fn == 'wayPath':
+            # one pile of money through one way, as the game's replay does it: the rule, how it is held, when it comes out
+            way, p, mem, last, last_i = x['way'], x['start'], {}, None, None
+            for k, (y, theirs) in enumerate(zip(x['seq'], o['rows'])):
+                age = x['age'] + k
+                spend, aim = way_spend(way, {'need': x['need'], 'start': p, 'k': k, 'age': age, 'endAge': x['age'] + len(x['seq']) - 1, 'last': last, 'infl': last_i, 'cape': y.get('cape'), 'stock': x['stock'], 'growth': x['growth']}, mem)
+                w = spend if way.get('gross') else max(0.0, spend - (x['income'] if age >= x['incomeAge'] else 0))
+                r = x['stock'] * y['s'] + (1 - x['stock']) * y['b']
+                if way.get('hold'):
+                    r = way_return(way, {'r': r, 's': y['s'], 'b': y['b'], 'dy': y.get('dy'), 'by': y.get('by')}, {'stock': x['stock'], 'k': k, 'last': last, 'start': p, 'w': w}, mem)
+                p, short = way_pay(p, w, r, way.get('timing') or 'start')
+                if not (ck(f'spend in year {k}', theirs[0], spend, 0.01) and ck(f'aim in year {k}', theirs[1], aim, 0.01) and ck(f'short in year {k}', theirs[2], short, 0.01) and ck(f'money after year {k}', theirs[3], p, 0.01)):
+                    break
+                last, last_i = r, y.get('i')
+        elif fn == 'wayLife':
+            audit = []
+            mine = whole_life(x, law, audit)
+            for name in ('ok', 'ranOutAge', 'atRetire', 'end', 'lifetimeTax', 'penalties'):
+                ck(name, o[name], mine[name])
+            ck('lowest share of the aim', o['lowestPaid'], mine['lowestPaid'], 1e-6); ck('years with a cut', o['cutYears'], mine['cutYears'], 0); ck('year-one spending', o['firstSpend'], mine['firstSpend'])
+            ck('works', o['worked'], mine['ok'] and mine['lowestPaid'] >= way_tolerance(x['strategy']))
+            cols = ['age', 'total', 'tax', 'spend', 'withdraw', 'convert', 'penalty', 'short', 'taxable', 'pretax', 'roth']
+            for a, m in zip(o['years'], mine['years']):
+                for j in range(1, 11):
+                    if not ck(f'{cols[j]} at {a[0]}', a[j], m[j]):
+                        break
+            L = extra['life']; L['runs'] += 1
+            for y in audit:
+                L['years'] += 1
+                if abs(y['tax_gap']) > 1 and not y['short']:
+                    L['tax_gap_years'] += 1
+                    if abs(y['tax_gap']) > abs(L['worst_tax_gap']):
+                        L['worst_tax_gap'] = y['tax_gap']; L['worst_tax_case'] = {'age': y['age'], 'input': x}
+        elif fn == 'wayHistory':
+            mine = way_history(x['cycles'], x['tolerate'])
+            for name in ('n', 'ok', 'worst', 'cutsWorst'):
+                ck(name, o[name], mine[name], 0)
+            ck('deepest', o['deepest'], mine['deepest'], 1e-9); ck('median end', o['medianEnd'], mine['medianEnd'], 0.01)
         elif fn == 'earliest':
             found = None
             for a in range(x['age'], 81):
