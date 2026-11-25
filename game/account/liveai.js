@@ -450,13 +450,14 @@ function laiFileHTML(S) {
         .join(
           ", "
         )} is them${M.byHand ? " (you set this)." : " (" + Math.round(M.conf * 100) + "% of the matched lines agree)."}</p>` +
-      (M.sure && !M.byHand ? "" : `<p class="tiny muted">Tap which one is you.</p>`) +
-      `<div class="chips">${M.labels
-        .map(
-          k =>
-            `<button class="chip${M.byHand && M.map[k] === "coach" ? " on" : ""}" data-a="laime" data-v="${lsEsc(k)}" aria-pressed="${!!(M.byHand && M.map[k] === "coach")}">${lsEsc(k)} is me</button>`
-        )
-        .join("")}</div>`;
+      (M.sure && !M.byHand
+        ? `<button data-a="laime" data-v="${lsEsc(M.labels.find(k => k !== me) || me)}">Not right? ${lsEsc(M.labels.find(k => k !== me) || me)} is me</button>`
+        : `<p class="tiny muted">Tap which one is you.</p><div class="chips">${M.labels
+            .map(
+              k =>
+                `<button class="chip${M.byHand && M.map[k] === "coach" ? " on" : ""}" data-a="laime" data-v="${lsEsc(k)}" aria-pressed="${!!(M.byHand && M.map[k] === "coach")}">${lsEsc(k)} is me</button>`
+            )
+            .join("")}</div>`);
   } else if (M.labeled)
     who +=
       `<p>The file names ${M.labels.map(k => "<b>" + lsEsc(k) + "</b>").join(" and ")}, and none of their lines match the call. Tap which one is you.</p>` +
@@ -506,16 +507,19 @@ function laiNotesHTML(R) {
   if (!d) return "";
   const box = (k, label, hint, rows) =>
     `<div><label for="lai-${k}">${label}</label><textarea id="lai-${k}" data-lai="${k}" rows="${rows}">${lsEsc(d[k] || "")}</textarea><div class="hint">${hint}</div></div>`;
+  const open = !!(R.ls && R.ls.open && R.ls.open["lai:notes"]);
   return dkCard(
     "Session notes and the next call",
-    `<p class="tiny muted">A draft from the AI pass. Change what you like. It goes into your notes on the coach page when you tap Save, and not before. Your client does not see it.</p>` +
+    `<details class="lsgroup" data-g="lai:notes" data-d="${open ? 1 : 0}"${open ? " open" : ""}><summary><span>${S.saved ? "Saved to your notes" : "A draft to read and save"}</span><span class="muted tiny">${S.saved ? "Open to change it" : "Open"}</span></summary><div class="lsrows">` +
+      `<p class="tiny muted">A draft from the AI pass. Change what you like. It goes into your notes on the coach page when you tap Save, and not before. Your client does not see it.</p>` +
       box("notes", "Session notes", "Plain sentences, for you.", 5) +
       box("changed", "What changed", "One thing on each line.", 3) +
       box("problems", "Top 3 problems", "One on each line.", 3) +
       box("ask", "What to ask next", "One question on each line.", 3) +
       (S.saved
         ? `<p class="done">Saved to your notes at ${lsEsc(laiTime(S.saved))}.</p><button class="wide" data-a="laisave">Save again</button>`
-        : `<button class="wide primary" data-a="laisave">Save to my notes</button>`)
+        : `<button class="wide primary" data-a="laisave">Save to my notes</button>`) +
+      `</div></details>`
   );
 }
 

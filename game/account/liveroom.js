@@ -141,7 +141,7 @@ function lrLobbyHTML(R, now) {
     strong = lvEchoSet(R.room) === LV_ECHO.strong;
   return (
     `<div class="card"><p class="muted">${lvWho(other, me)} is ${there ? "in the room" : "not in the room yet"}.</p></div>` +
-    `<div class="card"><h2>1. Before you start</h2><p>${LV_CONSENT}</p><p class="muted">${LV_CONSENT_MORE} <a href="./privacy.html#live">What happens to the words</a></p>` +
+    `<div class="card"><h2>1. Before you start</h2><p>${LV_CONSENT}</p><p class="muted">${LV_CONSENT_MORE} <a href="./privacy.html#live" target="_blank" rel="noopener">What happens to the words</a></p>` +
     (ok ? `<p class="done">You tapped OK.</p>` : `<button class="primary wide" data-a="lrok">OK</button>`) +
     `<p class="muted" id="lrwho">${lvWaitLine(R.room, me)}</p></div>` +
     `<div class="card"><h2>2. Microphone</h2>` +
@@ -223,10 +223,12 @@ function lrControls(R, ending) {
 function lrEndedHTML(R) {
   const n = R.buf.lines.length;
   return (
-    `<div class="card"><h2>The session has ended</h2><p>Heard ${R.lines.length} ${R.lines.length === 1 ? "line" : "lines"}, as text. No audio was saved.</p>` +
-    (n
-      ? `<p class="note">${n} ${n === 1 ? "line waits" : "lines wait"} on this device. Keep this page open: ${n === 1 ? "it goes" : "they go"} to your account as soon as the internet is back.</p>`
-      : `<p class="done">Each line is saved.</p>`) +
+    `<div class="card"><h2>The session has ended</h2><p>${R.forgot ? "The words of this call are deleted. No audio was ever saved." : `Heard ${R.lines.length} ${R.lines.length === 1 ? "line" : "lines"}, as text. No audio was saved.`}</p>` +
+    (R.forgot
+      ? ""
+      : n
+        ? `<p class="note">${n} ${n === 1 ? "line waits" : "lines wait"} on this device. Keep this page open: ${n === 1 ? "it goes" : "they go"} to your account as soon as the internet is back.</p>`
+        : `<p class="done">Each line is saved.</p>`) +
     `</div>` +
     lrBackLink()
   );

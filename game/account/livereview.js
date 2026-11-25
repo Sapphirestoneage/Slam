@@ -476,8 +476,7 @@ function lrvClientEndHTML(R) {
       "What happens next",
       `<p>Your coach goes through each number. Then you see them in your game, each one marked Guess or Close.</p>` +
         (A && A.says ? `<p class="muted tiny">${lsEsc(A.says())}</p>` : "")
-    ) +
-    (typeof lvfCardHTML === "function" ? lvfCardHTML(R, A && A.get ? A.get() : null) : "") /* liveforget.js */
+    )
   );
 }
 /* "Show plan", on both screens after End. */
@@ -495,6 +494,10 @@ function livePartEnded(R) {
   return (
     (R.side === "coach" ? lrvReviewHTML(R) : lrvClientEndHTML(R)) +
     lrvPlanHTML(R) +
+    /* liveforget.js: on the client's calm screen, Delete this transcript comes after the plan */
+    (R.side !== "coach" && typeof lvfCardHTML === "function"
+      ? lvfCardHTML(R, R.game && R.game.get ? R.game.get() : null)
+      : "") +
     (typeof lrEndedHTML === "function" ? lrEndedHTML(R) : "")
   );
 }

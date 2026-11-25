@@ -133,6 +133,7 @@ async function lvfRun(R, now) {
     R.game && R.game.act ? await R.game.act(c => lvfForget(c, R.sid, R.side, at), "transcript deleted") : null;
   F.busy = false;
   F.ask = false;
+  R.forgot = at; /* liveroom.js: the card "The session has ended" says that the words are deleted */
   if (!out) {
     F.msg =
       "The lines are gone from the database. The quotes in the profile did not save yet: tap Delete this transcript again.";

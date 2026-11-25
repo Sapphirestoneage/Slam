@@ -114,10 +114,10 @@ select{width:100%;padding:10px;border-radius:10px;border:2px solid var(--line);b
 <script src="account/livesim.js?v=1865f2e3"></script>
 <script src="account/livegame.js?v=0fd29e91"></script>
 <script src="account/livescreen.js?v=e18b2c6d"></script>
-<script src="account/livereview.js?v=ab667b8d"></script>
-<script src="account/liveai.js?v=ba0df293"></script>
-<script src="account/liveforget.js?v=b3bf0bfb"></script>
-<script src="account/liveroom.js?v=140df5e8"></script>
+<script src="account/livereview.js?v=b1bb54bc"></script>
+<script src="account/liveai.js?v=4ffca922"></script>
+<script src="account/liveforget.js?v=28ef73dc"></script>
+<script src="account/liveroom.js?v=cbe7a646"></script>
 <script>
 /* The session page of Live Session Mode. With the switch off (account/liveflag.js) it shows "Coming soon" and does nothing else. The database checks each step again. */
 document.addEventListener("submit",ev=>{ev.preventDefault();if(liveOn())lrSubmit(ev.target).catch(e=>{report(e,"session.html: submit");lrSay("That did not go through. Wait a minute, then try again.")})});
