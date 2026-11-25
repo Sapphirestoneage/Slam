@@ -58,11 +58,17 @@ you bought it from, such as GoDaddy, Namecheap, Squarespace or Cloudflare). You 
 
 ## Part 2. Add your domain and prove it is yours
 
+**This needs your own domain's DNS. If you cannot sign in to it, stop here and tell Claude.**
+
+Your answers (2026-11-25): the emails come from `hello@mail.stresslessaboutmoney.com`, the sender name is
+`SLAM the Game`, and the domain to prove is `mail.stresslessaboutmoney.com`. This holds only if
+stresslessaboutmoney.com is yours and you can sign in to its DNS. That confirmation is still open.
+
 1. In the Resend menu on the left, click "Domains".
    You should see: a page of domains, empty for now.
 2. Click "Add Domain".
    You should see: a box to type a domain.
-3. Type the domain to send from, for example `mail.stresslessaboutmoney.com`.
+3. Type the domain to send from: `mail.stresslessaboutmoney.com`.
 4. If it asks for a region, keep the one already chosen. Then click the button that adds the domain.
    You should see: a list of DNS records. Each has a type, a name and a long value.
 5. Open a second browser tab and sign in to the place where your domain is managed.
@@ -114,8 +120,8 @@ If you see this instead: you closed the box before copying, or you pasted the ke
 
 | Field | What goes in it |
 |-------|-----------------|
-| Sender email (the From address) | An address on the domain from Part 2, for example `hello@mail.stresslessaboutmoney.com` |
-| Sender name | `SLAM` (or the name players should see in the inbox, for example `Stress Less About Money`) |
+| Sender email (the From address) | `hello@mail.stresslessaboutmoney.com` |
+| Sender name | `SLAM the Game` |
 | Host | `smtp.resend.com` |
 | Port number | `465` |
 | Username | `resend` (the word itself, all small letters, not your email) |
@@ -172,9 +178,20 @@ The full test, after "Confirm email" is on:
 
 5. Open the game in a private browser window.
 6. Sign up with a second email address of yours, one that is not in your Supabase team.
-   You should see: "Almost there: check your email and tap the link to confirm, then sign in here."
+   You should see: "Check your email. We sent a link to" and your address, with what to do if nothing arrives.
 7. Open that inbox and tap the link in the email.
    You should see: the game opens, and you can sign in.
+
+The last step, after both tests worked:
+
+8. Tell Claude: "Email works. Turn on EMAIL_READY." Until then the sign-in screen of the game says "Forgot your
+   password? Contact Eli." and opens an email draft to stresslessaboutmoney@gmail.com, because a reset email would
+   reach nobody. With the switch on (`EMAIL_READY` in `game/account/supa.js`), the sign-in screen shows "Forgot my
+   password" and sends the reset email.
+
+If the domain is not ready by the launch: keep "Confirm email" off and leave the switch off. A new player is signed
+in straight after sign-up, with no email. If the email service answers with an error, the game says in plain words
+that the email could not be sent and what to do.
 
 ### When the email does not arrive
 
@@ -200,6 +217,7 @@ Look in this order.
 - [ ] The key was pasted into Supabase and is saved nowhere else.
 - [ ] Custom SMTP is on in Supabase, the email limit is raised, and "Confirm email" is on.
 - [ ] A test sign-up with a second address got its email, and the link opened the game.
+- [ ] I asked Claude to turn on `EMAIL_READY`, and the sign-in screen shows "Forgot my password".
 
 ## Check on the screen
 

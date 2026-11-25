@@ -116,7 +116,7 @@ On 2026-11-22 the list is empty: all checks pass. Add a failure to the list only
 
 The add-on source is not in this repository. Thus the tests of the add-on content are not here.
 
-- `addon-sealed-files.js` has two parts. Part 1 runs in each copy: a sealed file shows no readable word. Part 2 needs the private folder with the add-on source (the environment variable `SLAM_PACKS_DIR` gives its path). With no such folder, part 2 prints `SKIP`.
+- `addon-sealed-files.js` has two parts. Part 1 runs in each copy: a sealed file shows no readable word and opens to nothing with a made-up key, no file that a new account loads names a sealed file, the database rules (read as text) give a key only to an account with permission or to the admin, and a new account with a stand-in database gets no add-on in the menu, the glossary, the themes or the built list. Part 2 needs the private folder with the add-on source (the environment variable `SLAM_PACKS_DIR` gives its path). With no such folder, part 2 prints `SKIP`.
 - To load the add-ons for the other tests, set the environment variable `SLAM_PACKS_BOOT` (see the header of `harness.cjs`).
 | `character-reveal-and-element.js` | The character reveal after setup: strengths, weak spots, the money element, two questions | `features/element.js` |
 | `gear-slots.js` | The states of a gear slot: want, need, not interested, can't have, inactive | `core/engine2.js`, `features/games.js` |
@@ -128,4 +128,5 @@ The add-on source is not in this repository. Thus the tests of the add-on conten
 | `strategy-engine.js` | The Strategy Engine ("Moves to try"): the template, the loop of each strategy, the house hack and the balance transfer by hand, the ranking | `features/strat.js`, `data/strategies.js`, `data/metros.js` |
 | `coach-demo-and-results.js` | The coach page: the demo with made-up clients, milestones and days to a first win, before and after, the pipeline, search and sort | `account/coachplus.js` |
 | `roles-coach-admin.js` | The hats (Player, Coach, Admin), the coach page, the admin sections, the sign-up line, and the database file read as text | `account/roles.js`, `account/coachpage.js`, `account/adminmore.js`, `coach.html`, `admin.html` |
+| `trust-and-privacy.js` | Trust: the one line, the privacy page and its links, calm words for each answer of the sign-in service (a stand-in), the switch EMAIL_READY, how sharing starts for a public link and for an invite, Delete my account (a stand-in database), and the database file read as text | `account/trust.js`, `account/supa.js`, `account/coachpage.js`, `privacy.html` |
 | `sync-no-change-lost.js` | The sync of two devices and a coach: a stamp for each person, the later copy wins, no open task is lost, a failed save is sent again | `account/cloud.js`, `account/coachpage.js` |

@@ -178,7 +178,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 1 | A stable public site | Not started | |
 | 2 | Report a bug or idea | Not started | |
 | 3 | Founding Testers and sharing | Not started | |
-| 4 | Trust | Not started | |
+| 4 | Trust | Done, 2 steps wait for Eli | `game/privacy.html` (sign-up, Menu, My account, each footer). Delete my account: removes the saved game and the device copy now; the sign-in too after Eli runs `supabase/migrations/20261125200000_delete_my_account.sql` (NOT APPLIED). "Education and tools, not financial advice." on sign-up and in every footer. Sharing starts off for a public link, on for a coach's invite (`?coach=1`). Calm words for each sign-up email answer; `EMAIL_READY = false` in `game/account/supa.js` until email works. Add-ons checked (code, live database rules read only, browser with a stand-in database); the by-hand steps with a fresh account are in QUESTIONS 583 (h). |
 | 5 | Email | Done | `docs/EMAIL-SETUP.md`. Confirmed from Resend's and Supabase's pages (through search, read 2026-11-25): host, port, username, the key as password, the free plan limits, the Supabase links. Not confirmed, so the doc says to read them on the screen: Resend's sign-up labels, the exact labels of the Supabase fields and of "Confirm email", the starting hourly limit (30 or 25). Eli has to do the steps; question 582 in QUESTIONS.md. |
 | 6 | The front door | Not started | |
 

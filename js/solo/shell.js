@@ -2,6 +2,7 @@
 // The shell of a standalone page: it opens the answers carried in the address (or starts empty), keeps the address up to
 // date as answers change (so the address IS the save: refresh it, bookmark it, send it), and hands them to the next page.
 import { h } from '../ui/dom.js';
+import { trustFoot } from '../trust.js';
 import { fmt } from '../math/result.js';
 import { Store, newHousehold } from '../records.js';
 import { pack, unpack } from '../start/link.js';
@@ -63,4 +64,4 @@ export function carryCard(api, { ready = true, pulse = true } = {}) {
   card.setReady = on => { next.disabled = !on; next.classList.toggle('st-pulse', on && pulse); };
   return card;
 }
-export const foot = () => document.getElementById('foot').replaceChildren(h('p.st-small', {}, 'Education, not advice. Your answers stay in your browser and in the link you choose to share.'));
+export const foot = () => document.getElementById('foot').replaceChildren(trustFoot('Your answers stay in your browser and in the link you choose to share.'));

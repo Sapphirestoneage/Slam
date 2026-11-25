@@ -1,7 +1,7 @@
 /* ============================================================================
    SLAM the Game, test: tests/roles-coach-admin.js
    PURPOSE     Examine the hats (Player, Coach, Admin), the coach page, the new sections of the admin
-               page, the sign-up line, coach mode on by default, and the database file: each admin
+               page, the sign-up line, sharing off for an account from a public link, and the database file: each admin
                function checks is_admin(), the two role functions are closed to an account that is not
                signed in, and the audit log cannot be written from the app.
    INPUT       The game scripts, loaded by harness.cjs. account/coachpage.js and account/adminmore.js,
@@ -73,7 +73,10 @@
     "sign-up has the plain line about the app owner",
     supa.includes("The owner of this app can view accounts for safety and support.")
   );
-  chk("coach mode is on by default in the app", SUPA.share === true && /Coach mode is on/.test(supa));
+  chk(
+    "sharing starts off for an account from a public link, and the sign-up screen says so",
+    SUPA.share === false && SUPA.invited === false && /starts off: no coach sees your game/.test(suShareLine(false))
+  );
   chk(
     "a coach can open only a game that is shared, and each open writes a line in the log",
     /eq\("share_with_coach", true\)/.test(supa) && supa.includes('rpc("audit_write", { act: "open_game"')
@@ -244,7 +247,7 @@
     "the invite is an email for the coach's own mail app, with the link and the default",
     inv.startsWith("mailto:a.b%40example.com?subject=") &&
       decodeURIComponent(inv).includes("https://example.org/game/") &&
-      decodeURIComponent(inv).includes("Coach mode is on by default")
+      decodeURIComponent(inv).includes("This link turns on Share with my coach")
   );
   /* the client's own game shows the quest */
   const n0 = G.chars.length;

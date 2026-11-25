@@ -2,6 +2,7 @@
 // Standalone: "When am I debt free?" One easy thing: list what you owe, see the month it is gone and which one to pay
 // first. Then one button carries every answer into the whole plan. It shows what js/solo.js debtFreeOf returns.
 import { boot, h, btn, chip, money, copyLink } from './shell.js';
+import { trustFoot } from '../trust.js';
 import { bookUI } from '../start/book-ui.js';
 import { DEBT_BOOK, bookOf } from '../book.js';
 import { debtFreeOf, EXTRAS, ORDERS, SOLO } from '../solo.js';
@@ -48,6 +49,6 @@ function draw(api) {
       h('div.st-row', {}, next), h('div.st-row', { style: { marginTop: '10px' } }, copyLink(api), h('a.st-btn.slim', { href: 'one.html' }, 'All the steps')))].filter(Boolean));
   next.disabled = !B.total; next.classList.toggle('st-pulse', !!B.total && !document.querySelector('#main .st-book .st-pulse'));
   if (!B.count) document.querySelector('#main .st-bookhead .st-btn')?.classList.add('st-pulse');
-  $('foot').replaceChildren(h('p.st-small', {}, 'Education, not advice. Your numbers stay in your browser and in the link you choose to share.'));
+  $('foot').replaceChildren(trustFoot('Your numbers stay in your browser and in the link you choose to share.'));
 }
 boot('debt', draw);

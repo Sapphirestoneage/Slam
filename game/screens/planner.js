@@ -790,6 +790,7 @@ const MENU = [
   ["Rearrange Home", "dash", "act", "Move cards up, down or out of the way"],
   ["Flag this screen", "flag", "act", "Tell Eli something's off here"],
 ];
+if (typeof tuWire === "function") tuWire(); /* trust.js: the menu line "Privacy" and its action */
 /* menuSheet() makes the full menu. menuSheetBase() is the part from this file. */
 function menuSheet() {
   let h = menuSheetBase();
