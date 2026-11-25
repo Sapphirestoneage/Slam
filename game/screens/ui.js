@@ -1019,7 +1019,10 @@ function ledRow(sec, i, x) {
   return h;
 }
 function ledRowBase(sec, i, x) {
-  const nm = sec === "debts" && typeof debtName === "function" ? debtName(x) : x.k; /* mycards.js: the name of a card */
+  const nm =
+    typeof rowName === "function"
+      ? rowName(x, sec)
+      : x.k; /* mycards.js: the player's own name, or the name of a card */
   return `<button class="rowbtn" data-a="rowedit" data-k="${sec}" data-v="${i}"><span>${esc(nm)}${x.s ? rowTag(x, sec) : `<div class="tiny muted">Guess · tap to make it exact</div>`}</span><span class="row"><b class="${x.s ? "" : "guess"}" data-fid="v:${sec}${i}">${money(x.amt)}</b><span class="caret">›</span></span></button>`;
 }
 const LVN = [
@@ -2532,6 +2535,7 @@ function rowEdit(sec, i) {
             "That's called a high-yield savings account." + (x.apy != null ? " You entered " + x.apy + "%." : "")
           ) + ratePad()
         : "") +
+      (typeof rowNameEd === "function" ? rowNameEd(sec, x) : "") /* mycards.js: a name for this line */ +
       `<button class="primary wide go" data-a="rowsave">${x.s ? "Save" : "Save as a real number"}</button>${sec === "spends" ? "" : `<button class="ghost wide" data-a="rowdel">Remove this from my list</button>`}<div class="tiny muted"><b>Where to find this:</b> ${SHARP_FIND[S[0] === "cat" ? "spend" : S[0]]}</div>`
     );
   });

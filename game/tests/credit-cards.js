@@ -273,6 +273,64 @@
   );
   closeSheet();
 
+  /* ---------- the owner's answers of Nov 25: Not sure is 3 months, over 12 is 12, names and sorting ---------- */
+  c = mk("F", []);
+  X("cards");
+  X("cdadd");
+  X("cdiss", "Discover");
+  if (W.st === "vault") X("cdvault", "");
+  X("cdfull", "No");
+  type("d:" + W.i, "3000");
+  X("cdbaluse");
+  X("cdrate", "0% promo");
+  X("cdend", "ns");
+  X("cdafter", "ns");
+  const f0 = cardMath(c).cards[0];
+  chk(
+    "not sure of the end: 3 months, a Guess, $1,000 a month",
+    f0.promo.left === 3 && f0.promo.pay === 1000 && f0.promo.endGuess && f0.st === "Guess",
+    f0
+  );
+  chk("over 12 months counts as 12", CARD_END.find(r => r[0] === "m12")[2] === 12);
+  const fi = f0.i;
+  X("cdname", String(fi));
+  chk(
+    "name: chips and a short box",
+    W.st === "name" && ov().includes("Balance transfer") && ov().includes('id="cdnick"')
+  );
+  X("cdnamek", "Balance transfer");
+  chk(
+    "name: the card shows its name everywhere",
+    c.debts[fi].nick === "Balance transfer" &&
+      ov().includes("Balance transfer") &&
+      (go("money"), app().includes("Credit card: Balance transfer"))
+  );
+  X("cdadd");
+  X("cdiss", "Citi");
+  if (W.st === "vault") X("cdvault", "");
+  X("cdfull", "No");
+  type("d:" + W.i, "9000");
+  X("cdbaluse");
+  X("cdrate", "8% to 15%");
+  X("cdsort", "bal");
+  const ob = ov();
+  chk(
+    "sort: by biggest balance, the $9,000 card comes first",
+    c.x.cardSort === "bal" && ob.indexOf("$9,000") < ob.indexOf("$3,000")
+  );
+  X("cdsort", "rate");
+  chk("sort: by highest rate, the 0% card comes last", ov().indexOf("$9,000") < ov().indexOf("$3,000"));
+  c = mk("G", [R({ k: "Car loan", amt: 9000, high: false, apr: "Under 8%" })]);
+  go("money");
+  X("rowedit", "0", "debts");
+  W.o.rownick = "The Civic";
+  X("rownick");
+  X("rowsave");
+  chk(
+    "name: any money line can get its own name",
+    c.debts[0].nick === "The Civic" && (go("money"), app().includes("The Civic"))
+  );
+
   G.chars.splice(n0);
   G.active = act0;
   G.demo = demo0;

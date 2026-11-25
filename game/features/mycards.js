@@ -13,12 +13,13 @@
    INPUT       The profile c: c.debts. Today (todayISO). The card vault (window.CARDS2026) for an
                optional match: the yearly fee and the 0% offer of the card.
                The open sheet (W.kind): cards (the list), cardadd (add or change one card).
-   OUTPUT      cardIs, cardSync, cardName, debtName, cardEndOf, cardMath, cardState, cardsBook,
+   OUTPUT      cardIs, cardSync, cardName, rowName, rowNameEd, debtName, cardEndOf, cardMath, cardState, cardsBook,
                cardsSheet, cardAddSheet. Parts of functions in other files: syncDebt (cardSync),
                rowEdit (rowEditCard), rowaddk (rowAddCard), ledRowBase (debtName), dbPlan in
                debts.js (debtName, cardEndOf). Actions (ACT): cards, cdopen, cdadd, cdedit, cddel,
                cdiss, cdvault, cdfull, cdbal, cdbaluse, cdrate, cdrateuse, cdend, cdmonth, cdafter,
-               cdrough, cdroughuse, cdback, cddone.
+               cdrough, cdroughuse, cdback, cddone, cdname, cdnamek, cdnameuse, cdsort, rownick.
+               Every money line can get the player's own name (x.nick); the card list can be sorted.
    DEPENDS ON  core/engine.js (todayISO, parseISO, syncAll), screens/ui.js (money, esc, head, sheet,
                drawSheet, render, keypad, RANGES, bandOf, afterMoney), features/kit.js (kitInfo,
                kitPill, kitTerms).
@@ -57,10 +58,11 @@ const CARD_END = [
   ["u3", "Under 3 months", 2],
   ["m3", "3 to 6 months", 4],
   ["m6", "6 to 12 months", 9],
-  ["m12", "Over 12 months", 15],
-  ["ns", "Not sure", null],
+  ["m12", "Over 12 months", 12],
+  ["ns", "Not sure", 3],
 ];
 const CARD_AFTER_GUESS = 25;
+const CARD_NAMES = ["Everyday", "Groceries", "Gas", "Travel", "Dining", "Backup", "Balance transfer", "Store"];
 const CARD_MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function cardIs(x) {
@@ -81,7 +83,7 @@ function cardMonthName(ym) {
   const p = ym.split("-").map(Number);
   return CARD_MON[p[1] - 1] + " " + p[0];
 }
-/* The month the 0% ends ("2027-03"), or null when the player is not sure. */
+/* The month the 0% ends ("2027-03"). "Not sure" counts as 3 months from the answer, kept as a guess. */
 function cardEndYM(x) {
   const p = x && x.card && x.card.promo;
   if (!p) return null;
@@ -138,16 +140,21 @@ function cardSync(c, today) {
 }
 function cardName(x) {
   const k = x.card || {};
-  if (k.rough) return "All my cards, not split yet";
-  return k.nick || k.vn || k.iss || k.nm || "Card";
+  if (k.rough) return x.nick || "All my cards, not split yet";
+  return x.nick || k.nick || k.vn || k.iss || k.nm || "Card";
+}
+/* The name of any money line: the player's own name for it first. */
+function rowName(x, sec) {
+  if (x.nick) return sec === "debts" && cardIs(x) ? "Credit card: " + x.nick : x.nick;
+  return sec === "debts" ? debtName(x) : x.k;
 }
 /* The name of a debt line on the screens. With one plain card it stays "Credit card balance". */
 function debtName(x, c) {
-  if (!cardIs(x)) return x.k;
+  if (!cardIs(x)) return x.nick || x.k;
   const k = x.card || {},
     rows = (c || (typeof C === "function" ? C() : null) || { debts: [] }).debts.filter(cardIs);
   if (k.rough) return cardName(x);
-  return rows.length > 1 || k.iss || k.nick ? "Credit card: " + cardName(x) : x.k;
+  return rows.length > 1 || k.iss || k.nick || x.nick ? "Credit card: " + cardName(x) : x.k;
 }
 /* The status of one card: Guess, Close or Exact. */
 function cardState(x) {
@@ -156,6 +163,7 @@ function cardState(x) {
   if (!x.s) return "Guess";
   const rateTyped = x.rate != null && k.rt === "typed",
     afterGuess = k.promo && k.promo.afterRate == null;
+  if (k.promo && k.promo.end === "ns") return "Guess";
   if (k.bt === "typed" && (rateTyped || (k.promo && !afterGuess && k.promo.ym))) return "Exact";
   return "Close";
 }
@@ -186,6 +194,7 @@ function cardMath(c, today) {
             pay: ym && x.amt > 0 ? Math.ceil(x.amt / left) : null,
             after: k.promo.afterRate != null ? k.promo.afterRate : CARD_AFTER_GUESS,
             afterGuess: k.promo.afterRate == null,
+            endGuess: k.promo.end === "ns",
           }
         : null,
       st: cardState(x),
@@ -278,7 +287,7 @@ function cardVaultOne(id) {
 function cardTag(o) {
   if (o.full) return "Paid in full";
   if (o.rough) return o.bal > 0 ? "Split it by card to sharpen it" : "Your cards cover it";
-  if (o.promo) return "0% " + (o.promo.ym ? "until " + cardMonthName(o.promo.ym) : "for now, end not known");
+  if (o.promo) return "0% until " + cardMonthName(o.promo.ym) + (o.promo.endGuess ? " (a guess)" : "");
   const x = o.x;
   if (x.apr && x.apr !== "?")
     return x.rate != null && x.card && x.card.rt === "typed" ? x.rate + "% a year" : x.apr + " a year";
@@ -316,7 +325,10 @@ function cardOpenBody(o, c) {
       );
       if (o.promo.pay != null)
         h += `<div class="tile small"><b>Pay ${money(o.promo.pay)} a month to clear it before the 0% ends.</b></div>`;
-      else h += line("Look on your statement for the month the 0% ends. Then the game can work out a monthly amount.");
+      if (o.promo.endGuess)
+        h += line(
+          "The end date is a guess: 3 months from when you answered. The month on your statement makes it exact."
+        );
     } else if (!x.apr || x.apr === "?") h += line("For now the game assumes 8% or more. Tap a rate to change it.");
   }
   if (v) h += line("Matched to " + esc(v.bank + " " + v.n) + ". Yearly fee: " + (v.fee ? money(v.fee) : "none") + ".");
@@ -331,13 +343,22 @@ function cardsSheet() {
     const c = C(),
       M = cardMath(c),
       w = W;
+    const sk = (c.x && c.x.cardSort) || "rate",
+      SORT = {
+        rate: (a, b) => b.rate - a.rate || cardEndOf(a.x) - cardEndOf(b.x),
+        bal: (a, b) => b.bal - a.bal,
+        end: (a, b) => cardEndOf(a.x) - cardEndOf(b.x) || b.rate - a.rate,
+        name: (a, b) => a.name.localeCompare(b.name),
+      };
     const list = M.cards
+      .slice()
+      .sort((a, b) => (a.rough ? 1 : 0) - (b.rough ? 1 : 0) || SORT[sk](a, b))
       .map(o => {
         const on = w.open === o.i;
         return (
           `<div class="tile stack" style="gap:6px"><button class="rowbtn" data-a="cdopen" data-v="${o.i}" aria-expanded="${on}"><span>${esc(o.name)}<div class="tiny muted">${esc(cardTag(o))}</div></span><span class="row">${kitPill(o.st)}<b class="${o.st === "Guess" ? "guess" : ""}">${money(o.bal)}</b><span class="caret">${on ? "⌄" : "›"}</span></span></button>` +
           (on
-            ? `<div class="stack" style="gap:6px">${cardOpenBody(o, c)}<button class="ghost wide" data-a="${o.rough ? "cdrough" : "cdedit"}" data-v="${o.i}">${o.rough ? "Change the total" : "Change this card"}</button><button class="ghost wide" data-a="cddel" data-v="${o.i}">Remove this card</button></div>`
+            ? `<div class="stack" style="gap:6px">${cardOpenBody(o, c)}<button class="ghost wide" data-a="${o.rough ? "cdrough" : "cdedit"}" data-v="${o.i}">${o.rough ? "Change the total" : "Change this card"}</button>${o.rough ? "" : `<button class="ghost wide" data-a="cdname" data-v="${o.i}">${o.x.nick ? "Change the name" : "Name this card"}</button>`}<button class="ghost wide" data-a="cddel" data-v="${o.i}">Remove this card</button></div>`
             : "") +
           `</div>`
         );
@@ -349,6 +370,18 @@ function cardsSheet() {
       (M.cards.length
         ? cardTotals(M)
         : `<div class="small muted">No cards yet. Add each card you have, or tap one total for all of them.</div>`) +
+      (M.cards.length > 1
+        ? `<div class="field"><div class="small">Sort by</div><div class="chips">${[
+            ["rate", "Highest rate"],
+            ["bal", "Biggest balance"],
+            ["end", "Soonest 0% end"],
+            ["name", "Name"],
+          ]
+            .map(
+              s => `<button class="chip ${sk === s[0] ? "on" : ""}" data-a="cdsort" data-v="${s[0]}">${s[1]}</button>`
+            )
+            .join("")}</div></div>`
+        : "") +
       `<div class="stack" style="gap:8px">${list}</div>` +
       `<button class="primary wide go" data-a="cdadd">+ Add a card</button>` +
       (hasRough ? "" : `<button class="ghost wide" data-a="cdrough">Tap one total for all my cards</button>`) +
@@ -447,6 +480,17 @@ function cardAddSheet(i, st) {
         `<div class="tiny muted">Not sure? The game uses 25%, marked as a guess, until you know.</div>` +
         back
       );
+    if (step === "name") {
+      const cur = w.o.cdnick != null ? w.o.cdnick : x.nick || "";
+      return (
+        top("What do you call this card?") +
+        `<div class="chips">${CARD_NAMES.map(n => chip("cdnamek", n, n, cur === n)).join("")}</div>` +
+        `<div class="field"><label class="small" for="cdnick">Or type a short name</label><input type="text" id="cdnick" data-k="cdnick" maxlength="24" value="${esc(cur)}" placeholder="${esc(cardName(Object.assign({}, x, { nick: "" })))}"></div>` +
+        `<button class="primary wide go" data-a="cdnameuse">Save the name</button>` +
+        (x.nick ? `<button class="ghost wide" data-a="cdnamek" data-v="">Remove the name</button>` : "") +
+        `<button class="ghost wide" data-a="cards">Back to my cards</button>`
+      );
+    }
     if (step === "rough") {
       const pk = "d:" + w.i,
         open = w.pad === pk;
@@ -529,6 +573,12 @@ function cardSetRate(x, band, rate, how) {
   delete x.ratecf;
 }
 
+/* Part of rowEdit() in ui.js: every money line can get the player's own name. */
+function rowNameEd(sec, x) {
+  if (sec === "low" || sec === "moveOut") return "";
+  const cur = W.o.rownick != null ? W.o.rownick : x.nick || "";
+  return `<details class="math"${x.nick ? " open" : ""}><summary>${x.nick ? "Name: " + esc(x.nick) : "Give it a name. You can skip this"}</summary><div class="stack" style="gap:8px;padding:8px 10px"><div class="field"><label class="small" for="rownick">A short name</label><input type="text" id="rownick" data-k="rownick" maxlength="24" value="${esc(cur)}" placeholder="${esc(x.k)}"></div><button class="ghost wide" data-a="rownick">Use this name</button></div></details>`;
+}
 /* Part of syncDebt() in engine.js (it calls cardSync). Part of rowEdit() in ui.js: a card line opens the list. */
 function rowEditCard(sec, i) {
   const c = C();
@@ -566,6 +616,42 @@ Object.assign(ACT, {
     cardAddSheet(c.debts.length - 1, "iss");
   },
   cdedit: t => cardAddSheet(+t.dataset.v, "iss"),
+  cdname: t => cardAddSheet(+t.dataset.v, "name"),
+  cdnamek: t => {
+    const c = C(),
+      x = c.debts[W.i];
+    if (t.dataset.v) x.nick = t.dataset.v;
+    else delete x.nick;
+    cardSave(c);
+    cardsSheet();
+    W.open = c.debts.indexOf(x);
+    drawSheet();
+  },
+  cdnameuse: () =>
+    ACT.cdnamek({
+      dataset: {
+        v: String(W.o.cdnick != null ? W.o.cdnick : C().debts[W.i].nick || "")
+          .trim()
+          .slice(0, 24),
+      },
+    }),
+  cdsort: t => {
+    const c = C();
+    c.x = c.x || {};
+    c.x.cardSort = t.dataset.v;
+    save();
+    drawSheet();
+  },
+  rownick: () => {
+    const w = W,
+      x = w.o[w.sec][w.i],
+      v = String(w.o.rownick != null ? w.o.rownick : x.nick || "")
+        .trim()
+        .slice(0, 24);
+    if (v) x.nick = v;
+    else delete x.nick;
+    drawSheet();
+  },
   cddel: t => {
     const c = C(),
       i = +t.dataset.v;
