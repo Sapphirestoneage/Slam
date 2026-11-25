@@ -431,3 +431,7 @@ body.walking { padding-bottom: var(--walk-room, 88px); }
   .imp-accept, .imp-acc-slot { min-width: 0; width: auto; }
   .imp-picker, .imp-rule { margin-left: 0; }
 }
+/* The Export entry (Nov 25 2026): a link that opens another site wears the button look; long labels wrap on a phone. */
+a.btn { text-decoration: none; }
+.export-panel .btn { white-space: normal; text-align: left; padding-top: 6px; padding-bottom: 6px; }
+.fire-blank a.btn::after { content: "\2197"; margin-left: 4px; }

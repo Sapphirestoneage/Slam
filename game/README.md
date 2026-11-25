@@ -79,7 +79,7 @@ These files stay in `game/` because the browser or the tools look for them there
 | The FI ratio on Key numbers, and the card "You can stop sprinting" on Home | `features/coast.js` |
 | The simulators: the engine, and one file for each | `features/sim.js`, `features/sims/*.js` |
 | My plan on one page, the Ask front door, quotas and the savings rate by month | `features/plan.js`, `features/ask3.js`, `features/quota.js` |
-| The spreadsheet of the plan (each number with its formula) | `features/book.js` |
+| The spreadsheet of the plan (each number with its formula), and Export: the .xlsx file, written by `js/sheet/` of the web app | `features/book.js`, `features/firelink.js` |
 | Where am I (the Quest Log): Continue, the trail, Journey, Areas, Questions, Time | `features/questlog.js` |
 | The Galaxy: the 625 skills as stars on one canvas, with lanes and gateway stars | `features/stars.js` |
 | Port batch 1, taking money out and the two ages | `features/takeout.js`, `features/ages.js` |

@@ -374,6 +374,10 @@ function setupSheetRead(h, w) {
 const uxHist =
   typeof history !== "undefined" && typeof history.pushState === "function" && typeof addEventListener === "function";
 let UX_POP = false;
+/* The count of the steps back that closeSheetUx() asked the browser for and that are not done yet. The
+   browser does such a step a moment later. A sheet that opened in that moment (a row of the menu closes
+   the menu, then opens its sheet) must stay open. */
+let UX_OWN = 0;
 /* Part of go() in ui.js, step 1 of 2. "prev" is the tab that the player leaves.
    Keeps the scroll position of that tab. Keeps the open sheet, so the chip "Back to ..." can open it again. */
 function goUxStart(t, prev) {
@@ -443,8 +447,10 @@ function closeSheetUx(was) {
   if (uxHist && was && !UX_POP && history.state && history.state.sheet) {
     UX_POP = true;
     try {
+      UX_OWN++;
       history.back();
     } catch (e) {
+      UX_OWN = Math.max(0, UX_OWN - 1);
       report(e, "ux.js: closeSheetUx");
     }
     setTimeout(() => {
@@ -455,6 +461,20 @@ function closeSheetUx(was) {
 }
 if (uxHist) {
   addEventListener("popstate", e => {
+    if (UX_OWN > 0) {
+      /* the step back of the game itself. A sheet that is open now opened after that step: keep it, and
+         give it its own step in the history, so the button Back of the browser closes it. */
+      UX_OWN--;
+      if (SH) {
+        try {
+          history.pushState({ tab, sheet: 1 }, "", "#/" + tab + "/open");
+        } catch (err) {
+          report(err, "ux.js: popstate");
+        }
+      }
+      uxChip();
+      return;
+    }
     UX_POP = true;
     try {
       if (SH) {

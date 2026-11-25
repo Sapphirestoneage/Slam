@@ -62,6 +62,7 @@ export async function writeWorkbook(ExcelJS, plan, { cache = true } = {}) {
         if (st.unlocked) c.protection = { locked: false };
         if (st.wrap) c.alignment = { wrapText: true, vertical: cell.s === 'head' ? 'middle' : 'top' };
         else if (NUMERIC.has(cell.fmt) || typeof cell.v === 'number') c.alignment = { horizontal: 'right' }; // numbers right-aligned
+        if (s.kind === 'fire' && !st.wrap) c.alignment = { ...(c.alignment || {}), vertical: 'top' }; // the FIRE sheet's input box: a value sits level with its label
         const fmt = cell.fmt === 'number' && (cell.f || cell.s === 'app') ? ((cell.f ? cell.cached : cell.v) == null ? 'General' : Number.isInteger(cell.f ? cell.cached : cell.v) ? '#,##0' : '#,##0.0#') : FMT[cell.fmt === 'money' && hasCents(cell.v) ? 'cents' : cell.fmt]; // a worked-out number reads like the app (0.84, not 0.844907)
         if (fmt && fmt !== '@' && (cell.f || typeof cell.v === 'number' || cell.v instanceof Date || cell.s === 'input' || cell.s === 'app')) c.numFmt = fmt;
         if (cell.s === 'input' && (cell.fmt === 'date' || cell.fmt === 'month')) c.numFmt = FMT[cell.fmt];

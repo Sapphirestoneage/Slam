@@ -7,6 +7,7 @@ import { federalTax, fica, stateTax, takeHomeFromGross, grossFromTakeHome } from
 import { payoffMonths, totalInterest, payoffPlan, cardMinimum } from '../../js/math/debt.js';
 import { fiNumber, fiDate, coastFi, solveMonthlySaving, fatFiNumber, chubbyFiNumber, baristaGap, fiStress } from '../../js/math/fi.js';
 import { yearsAtRate } from '../../js/math/simple.js';
+import { fireSheetRows } from '../../js/math/firesheet.js';
 import { runwayOf, backwardsOf, tripCostOf, habitCostOf, loanCostOf, stoppedPayOf, workYearsOf, coastOf, dollarLaterOf, carFitsOf, expectedWorthOf, realWageOf, splitOf, homeFitsOf } from '../../js/solo.js';
 import { ilIncomeTaxOf, ilNationalInsuranceOf, olimPointsOf, aliyahOf } from '../../js/math/aliyah.js';
 import { RULES } from '../../js/registry/assumptions.js';
@@ -47,6 +48,10 @@ for (let i = 0; i < N; i++) {
     const r = baristaGap(x); add('baristaGap', x, { closes: v(r), covers: r.covers, afterHealth: r.afterHealth, left: r.left }); }
   { const x = { invested: rnd() < 0.2 ? 0 : money(500, 1500000), monthlyInvesting: rnd() < 0.1 ? 0 : money(50, 9000), annualSpending: money(12000, 240000), rates: ref.fiStress.withdrawalRates, returns: ref.fiStress.returns };
     const r = fiStress(x, x, { from: NOW }); add('fiStress', x, { rows: r.rows.map(row => ({ target: row.target, months: row.cells.map(c => c.months) })), soonest: r.soonest, latest: r.latest }); }
+  // The FIRE sheet (M9I): every year row of the tab, for each way to take money out the sheet can write as a formula
+  { const age = whole(18, 70), x = { year: 2026, age, stopAge: age + whole(-2, 35), lastAge: pick([90, 95]), income: rnd() < 0.1 ? 0 : money(20000, 400000), spending: money(12000, 200000), spendingAfter: money(12000, 200000), invested: rnd() < 0.15 ? 0 : money(500, 3000000),
+      contributions: [rnd() < 0.2 ? 0 : money(1000, 31000), rnd() < 0.4 ? 0 : whole(500, 7500), rnd() < 0.4 ? 0 : money(500, 60000)], realReturn: pick([0, 0.03, 0.05, 0.07]), safeRate: pick([0.03, 0.04, 0.05]), other: rnd() < 0.2 ? 0 : money(8000, 48000), otherAge: pick([62, 67, 70]), kind: pick(['steady', 'share', 'floor', 'guardrails', 'guardrails']), rate: pick([0.035, 0.04, 0.05]) };
+    add('fireSheet', x, { rows: fireSheetRows(x).map(r => [r.balance, r.withdrawal, r.spending, r.savingsRate, r.pctToFi]) }); }
   { const x = { invested: rnd() < 0.2 ? 0 : money(500, 800000), realReturn: pick([0.05, 0.06, 0.07, 0.08]), target: money(300000, 4000000), months: whole(24, 480) }; add('solveSaving', x, { monthly: v(solveMonthlySaving(x)) }); }
   { const x = { s: whole(1, 99) / 100, realReturn: pick([0.03, 0.05, 0.07]), withdrawalRate: pick([0.03, 0.04, 0.05]) }; add('yearsAtRate', x, { years: yearsAtRate(x.s, x) }); }
   { const x = { cash: rnd() < 0.05 ? 0 : money(100, 200000), spending: money(900, 15000), stillIn: pick([0, 0, 500, 1000, 1500, 2000]), cut: pick([0, 0.1, 0.2, 0.3]) }; const r = runwayOf({ ...x, now: NOW }); add('runway', x, { covered: !!r.covered, months: r.months ?? null, whole: r.whole ?? null, extraMonths: r.extraMonths ?? null }); }

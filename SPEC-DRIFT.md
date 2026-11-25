@@ -2,9 +2,9 @@
 
 Written by `node --test` (test/coverage.test.js). Every spec row names what it is in code (the SLAM id column on the Fields tab), and every field is on a spec row. Any drift fails the run.
 
-## Drift (1)
+## Drift (0)
 
-- M9I The FIRE sheet: one row for each year (income, spending, savings rate, what goes in, the invested balance, the FI number, % to FI, withdrawals by the way to take money out): not on the spec's Math tab
+None.
 
 ## In the spec, not built yet (5)
 

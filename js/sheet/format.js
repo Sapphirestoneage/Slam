@@ -94,6 +94,7 @@ export const FORMATS = [
   { version: 51, shape: '5b0d406e' }, // batch 59: the tabs follow the session (You, Money in, Money out, Own and owe, The plan, The future, Statements, One-pager; the screen's sections as bands), read back by hidden keys; a shift row's nights as rows under it; files of 50 and before come back by their old tabs
   { version: 52, shape: '93336d55' }, // Nov 12 2026: the lifetime plan (M9U) and its history test (M9V) registered as app-only; home what-if guesses on the assumptions list
   { version: 53, shape: '34f7e9df' }, // Nov 25 2026: the FI destinations (M9G), the FI date stress test (M9X) and the pod FI number (M9Y) registered as app-only
+  { version: 54, shape: 'e45983be' }, // Nov 25 2026 (the run Export for the FIRE spreadsheet crowd): M9I the FIRE sheet, the first tab of the workbook (its own inputs; the import does not read it back)
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

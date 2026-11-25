@@ -9,16 +9,15 @@
 // call fireSheet() with the same kind of input. Pure: no DOM, no storage. Only IF, AND, OR, MIN, MAX and SUM are used,
 // so the tab opens the same in Google Sheets, Excel and LibreOffice (test/firesheet.test.js keeps the list).
 import { fireSheetRows, fireKindOf, fireThrough, FIRE_GUARD, FIRE_FLOOR } from '../math/firesheet.js';
+import '../../game/features/firelink.js';
 
 export const FIRE_TAB = 'FIRE sheet';
-export const FIRE_TEMPLATE_URL = 'https://docs.google.com/spreadsheets/d/1HZBHzEeDgQRmGcqwzaXW1jgd2N3SPSddZkhS7svZhHY/copy';
-// The words both apps show beside their Export buttons (one place, so they never drift apart).
-export const FIRE_WORDS = {
-  xlsx: 'Download for Excel or Google Sheets (.xlsx)',
-  sheetsHelp: 'Open in Google Sheets: go to sheets.google.com, open a blank sheet, then File, Import, Upload, and choose the file. Pick "Replace spreadsheet".',
-  blank: 'Start from a blank FIRE sheet',
-  blankLine: 'A simple sheet that stands alone, in Google Sheets: Google asks you to make your own copy. No SLAM account needed. The export above is your full plan.',
-};
+// The button "Start from a blank FIRE sheet" and the words beside the Export buttons live in one file that the game
+// loads as a classic script and this module loads here (game/features/firelink.js), so both apps show the same thing.
+const LINK = globalThis.SLAM_FIRE_LINK;
+export const FIRE_TEMPLATE_URL = LINK.url;
+export const FIRE_WORDS = LINK.words;
+export const fireBlankButton = opts => LINK.button(opts);
 const letter = n => { let s = ''; for (let i = n; i > 0; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + ((i - 1) % 26)) + s; return s; };
 const abs = (col, r) => `'${FIRE_TAB}'!$${col}$${r}`;
 const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : null);
@@ -49,7 +48,7 @@ export function fireSheet(input) {
   }
   const rows = fireSheetRows(x), through = fireThrough(x.realReturn);
   push([]);
-  push([{ v: 'Inputs', s: 'band' }, { v: 'Blue: yours to change', s: 'band' }, { v: 'Black: worked out', s: 'band' }]);
+  push([{ v: 'Inputs', s: 'band' }, { v: null, s: 'band' }, { v: 'A blue number is yours to change. A black number is worked out from the blue ones.', s: 'band' }]);
   const N = {}, rowOf = {}; // short key -> named range, and its row
   const inputRow = (key, label, v, fmt, note) => { const r = push([{ v: label, s: 'label' }, { v, s: 'input', fmt }, { v: note ?? null, s: 'note' }]); N[key] = `FIRE_${key}`; rowOf[key] = r; names.push({ name: N[key], ref: abs('B', r) }); return r; };
   inputRow('Year', 'Year the sheet starts', x.year, 'day');
@@ -124,7 +123,7 @@ export function fireSheet(input) {
   });
   const last = R.length;
   return {
-    sheet: { name: FIRE_TAB, kind: 'fire', rows: R, widths: [Math.max(44, cols[0].w), 16, ...cols.slice(2).map(c => c.w)], headRows: [headRow],
+    sheet: { name: FIRE_TAB, kind: 'fire', rows: R, widths: [Math.max(48, cols[0].w), 16, ...cols.slice(2).map(c => c.w)], headRows: [headRow],
       // The stop age stands out: its whole row, in a soft band (not a color that warns).
       conditional: [{ ref: `A${first}:${letter(cols.length)}${last}`, formula: `$B${first}=$B$${rowOf.StopAge}`, fill: 'FFDDEBF7', bold: true }] },
     names, model: x, rows, first, cols: cols.map(c => c.key),

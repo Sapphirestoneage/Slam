@@ -35,7 +35,7 @@ Baseline before any change: `node --test` 1,222 pass, 0 fail. `npm run test:game
 | 21 to 23 | Card plan (`cards.html`) | See the end of this page. | `js/cardplan.js`, `data/library/cards.json` |
 | 24 | Life Transitions | Not built in the game. The pay-stopped ladder is the only piece. | `features/drills.js` (ldOf) |
 | 25 | Kids mode | Not built. | |
-| 26 | Google Sheets round trip | Half built. The web app has export and import. The game copies the plan out with formulas from one list (`BOOK_PARTS`). The game has no import. `LICENSE` (AGPL) is there. | `features/book.js`, `js/sheet/` |
+| 26 | Google Sheets round trip | Built as a file, not as a live link. Both apps download an .xlsx with live formulas (one writer, `js/sheet/excel.js`), with a FIRE sheet as the first tab, and both read an edited file back with a review of each change (Nov 25 2026). The file was checked in LibreOffice and against a list of functions Google Sheets has; nobody has opened it in Google Sheets itself yet. `LICENSE` (AGPL) is there. | `features/book.js`, `js/sheet/` |
 | 27 | Money fire drills | Built (the fear on your numbers, one small action). No "how long it lasts" line and no small real doses. | `features/drills.js`, `drills.html` |
 | 28 | US vs Israel calculator | Not built. The researched data is in `data/sources/israel-2026.json`. | |
 | 29, 30 | Tier 7 tools | Not in this repository. See `QUESTIONS.md`, question 1 of this run. | |
@@ -192,4 +192,4 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | The .xlsx export in the game, the FIRE sheet tab, Google Sheets, the Export entry, the blank FIRE sheet button | Not started | |
+| 1 | The .xlsx export in the game, the FIRE sheet tab, Google Sheets, the Export entry, the blank FIRE sheet button | Done, with two things said plainly | All five items are built and tested (`test/firesheet.test.js`, `game/tests/plan-xlsx.js`). Not done: the real import into Google Sheets was not tried (no way to open Google Sheets from the build machine; LibreOffice works every formula out with no error cell, and every function is on a list of ones Google Sheets has). The landing screen's "What is this?" does not exist yet, so the blank FIRE sheet button is in the Export entry of both apps only; the screen can call `fireBlankButton()` (`game/features/firelink.js`). Details and questions: `PROGRESS.md`, `QUESTIONS.md`. |

@@ -75,7 +75,9 @@
   X("book");
   chk(
     "the sheet offers the way back",
-    ov().includes("Bring an edited sheet back") && ov().includes("Choose the CSV file")
+    ov().includes("Bring an edited sheet back") &&
+      ov().includes("Choose the file (.xlsx or CSV)") &&
+      ov().includes('data-bookx="1"')
   );
   lootText(edit(csv));
   chk(
@@ -86,6 +88,15 @@
       clean(ov()),
     junk(ov())
   );
+  /* each change can be left out before it is used */
+  X("bookskip", 0);
+  chk(
+    "a tap on a change leaves it out, and the button counts the rest",
+    ov().includes("Left out") && ov().includes("Use this change") && W.inn.changes[0].skip === true,
+    junk(ov())
+  );
+  X("bookskip", 0);
+  chk("a second tap takes it back in", ov().includes("Use these 2 changes") && !W.inn.changes[0].skip);
   X("bookuse");
   chk(
     "the changes go into the profile",
