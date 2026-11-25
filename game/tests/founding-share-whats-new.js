@@ -288,7 +288,10 @@
           /\.(js|html|sql|md|json)\b|\bbug|broken|failed|mistake|off track|\bbehind\b|Supabase|database|migration|\bAPI\b|commit|refactor/i
         ) || [])[0]
       );
-      chk("no em dash and no money number in the notes", !/—/.test(words) && !/\$\d/.test(words));
+      chk(
+        "no em dash and no money number in the notes",
+        !words.includes(String.fromCharCode(0x2014)) && !/\$\d/.test(words)
+      );
       chk(
         "the first entries cover what landed since Nov 23",
         ["Galaxy", "Ten more tools", "card vault", "coaches", "FI destinations", "Recalculating", "Coming soon"].every(
