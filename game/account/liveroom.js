@@ -141,7 +141,7 @@ function lrLobbyHTML(R, now) {
     strong = lvEchoSet(R.room) === LV_ECHO.strong;
   return (
     `<div class="card"><p class="muted">${lvWho(other, me)} is ${there ? "in the room" : "not in the room yet"}.</p></div>` +
-    `<div class="card"><h2>1. Before you start</h2><p>${LV_CONSENT}</p>` +
+    `<div class="card"><h2>1. Before you start</h2><p>${LV_CONSENT}</p><p class="muted">${LV_CONSENT_MORE} <a href="./privacy.html#live" target="_blank" rel="noopener">What happens to the words</a></p>` +
     (ok ? `<p class="done">You tapped OK.</p>` : `<button class="primary wide" data-a="lrok">OK</button>`) +
     `<p class="muted" id="lrwho">${lvWaitLine(R.room, me)}</p></div>` +
     `<div class="card"><h2>2. Microphone</h2>` +
@@ -154,10 +154,47 @@ function lrLobbyHTML(R, now) {
     `</div>` +
     `<div class="card"><h2>3. Using headphones?</h2><div class="chips"><button class="chip ${hp === true ? "on" : ""}" data-a="lrhp" data-v="1" aria-pressed="${hp === true}">Yes</button><button class="chip ${hp === false ? "on" : ""}" data-a="lrhp" data-v="0" aria-pressed="${hp === false}">No</button></div>` +
     `<p class="muted">${strong ? "A side has no headphones, so the stronger echo filter is on: a sentence that both devices hear is kept one time." : "With headphones, each device hears one voice."}</p></div>` +
-    (me === "coach"
-      ? `<div class="card"><button class="${ok ? "primary " : ""}wide big" data-a="lrstart"${can ? "" : " disabled"}>Start</button><p class="muted">${can ? "One Start for the whole call. Both devices listen until End." : "Start works when both of you tapped OK. " + lvWaitLine(R.room, me)}</p></div>`
-      : `<div class="card"><p>${lvBothOk(R.room) ? "All set. Your coach presses Start, and this screen changes by itself." : "After both of you tap OK, your coach presses Start."}</p></div>`)
+    (me === "coach" ? lrStartHTML(R, ok, can) : lrClientReadyHTML(R))
   );
+}
+/* The coach's Start. It waits until the client finished the microphone and headphones steps, so those steps do
+   not vanish from the client's screen before they answer. While they wait, the coach can go on with their
+   own side only. */
+function lrStartHTML(R, ok, can) {
+  const wait = lvBothOk(R.room) ? lvClientWait(R.room) : "",
+    solo = !!wait && lvCanStart(R.room, "coach", true);
+  return (
+    `<div class="card"><button class="${ok ? "primary " : ""}wide big" data-a="lrstart"${can ? "" : " disabled"}>Start</button>` +
+    `<p class="muted">${
+      can
+        ? "One Start for the whole call. Both devices listen until End."
+        : wait
+          ? wait + " Start works when they are done."
+          : "Start works when both of you tapped OK. " + lvWaitLine(R.room, "coach")
+    }</p>` +
+    (solo
+      ? `<button class="wide" data-a="lrstartsolo">Start with my side only</button><p class="muted tiny">Their screen moves on to the call. If their browser can listen, it asks for the microphone by itself.</p>`
+      : "") +
+    `</div>`
+  );
+}
+/* The client's card under the steps: what is still to do on this side, then that the coach presses Start. */
+function lrClientReadyHTML(R) {
+  const room = R.room,
+    left = !lvOk(room, "client")
+      ? "Tap OK above."
+      : room.client_mic == null && room.client_listens !== false
+        ? "Tap Allow the microphone above."
+        : room.client_headphones == null
+          ? "Answer Using headphones? above."
+          : "";
+  return `<div class="card"><p>${
+    left
+      ? left + " Then your coach presses Start."
+      : lvBothOk(room)
+        ? "All set. Your coach presses Start, and this screen changes by itself."
+        : "All set on your side. After your coach taps OK, they press Start."
+  }</p></div>`;
 }
 /* The plain body during the call: how many lines, and the last three. Part 6 replaces it. */
 function lrPlainBody(R) {
@@ -186,10 +223,12 @@ function lrControls(R, ending) {
 function lrEndedHTML(R) {
   const n = R.buf.lines.length;
   return (
-    `<div class="card"><h2>The session has ended</h2><p>Heard ${R.lines.length} ${R.lines.length === 1 ? "line" : "lines"}, as text. No audio was saved.</p>` +
-    (n
-      ? `<p class="note">${n} ${n === 1 ? "line waits" : "lines wait"} on this device. Keep this page open: ${n === 1 ? "it goes" : "they go"} to your account as soon as the internet is back.</p>`
-      : `<p class="done">Each line is saved.</p>`) +
+    `<div class="card"><h2>The session has ended</h2><p>${R.forgot ? "The words of this call are deleted. No audio was ever saved." : `Heard ${R.lines.length} ${R.lines.length === 1 ? "line" : "lines"}, as text. No audio was saved.`}</p>` +
+    (R.forgot
+      ? ""
+      : n
+        ? `<p class="note">${n} ${n === 1 ? "line waits" : "lines wait"} on this device. Keep this page open: ${n === 1 ? "it goes" : "they go"} to your account as soon as the internet is back.</p>`
+        : `<p class="done">Each line is saved.</p>`) +
     `</div>` +
     lrBackLink()
   );
@@ -476,6 +515,7 @@ async function lrClick(t) {
   else if (a === "lrhp") await R.act("headphones", t.dataset.v === "1");
   else if (a === "lrmic") R.micCheck();
   else if (a === "lrstart") await R.act("start");
+  else if (a === "lrstartsolo") await R.act("start", true);
   else if (a === "lrpause") await R.act("pause");
   else if (a === "lrresume") await R.act("resume");
   else if (a === "lrre") R.reconnect();
@@ -519,6 +559,8 @@ async function lrSim(side) {
   LR.sim = side;
   LR.side = side;
   LR.R = P[side].R;
+  /* the AI pass of a made-up call answers from a stand-in: nothing is sent (livesim.js, simAi) */
+  if (side === "coach" && typeof simAi === "function") LR.R.aiFn = simAi(simAiReply).fn;
   LR.R.now = () => clock.now();
   LR.mode = "room";
   P[side].R.hooks.room.push(room => {
@@ -534,6 +576,7 @@ async function lrSim(side) {
   await P.client.R.join();
   clock.set(() => P[other].R.act("ok"), 1500);
   clock.set(() => P[other].R.act("headphones", true), 2500);
+  clock.set(() => P[other].R.micCheck(), 3500); /* the other side's microphone step (a stand-in microphone) */
   lrDraw();
   if (!LR.tick) LR.tick = setInterval(lrTick, 1000);
 }

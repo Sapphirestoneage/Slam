@@ -13,6 +13,10 @@
                lrvApprove, lrvApproveGroup, lrvFix, lrvOut, lrvWhatif, lrvWhy.
                HTML: lrvItemHTML, lrvGroupHTML, lrvReviewHTML, lrvClientEndHTML, lrvFallbackHTML.
                Named parts of account/liveroom.js: livePartEnded(R), livePartClick(a, t, R).
+   PARTS       Part 8 (account/liveai.js): laiCardHTML and laiNotesHTML in the review, laiClick for its taps. A
+               proposal of the AI pass is a kept item with src "ai" or "file": Approve uses its number, as a
+               Guess, where the call may set it; "Approve all" leaves a proposal marked not sure for its own tap.
+               Part 9 (account/liveforget.js): lvfCardHTML on both ended screens, lvfClick for its taps.
    DEPENDS ON  account/livefill.js (LF_TYPES, lfField, LF_FIELDS), account/liveland.js (lfStore, lfTarget,
                lfRow, lfOpen, lfPut, lfAfter, lfGroups, lfCounts, lfHeard, lfWhatif, lfWhatifSet,
                lfMoneyText, lfStateNew), account/liveflag.js (liveOurs), account/livescreen.js (lsEsc,
@@ -75,8 +79,9 @@ function lrvCounts(c, sid) {
   const n = lfCounts(c, sid),
     B = lrvBook(c),
     list = lrvToCheck(c, sid),
-    done = list.filter(x => B[x.id]).length;
-  return Object.assign({}, n, { done, left: list.length - done });
+    done = list.filter(x => B[x.id]).length,
+    ai = lfHeard(c, sid).filter(x => x.src && x.st !== "corrected").length;
+  return Object.assign({}, n, { done, left: list.length - done, ai });
 }
 /* "Heard 12 things. 1 confirmed out loud. 11 to check." */
 function lrvSummary(n) {
@@ -87,7 +92,8 @@ function lrvSummary(n) {
     n.confirmed +
     " confirmed out loud. " +
     (n.left == null ? n.check : n.left) +
-    " to check."
+    " to check." +
+    (n.ai ? " The AI pass proposed " + n.ai + (n.ai === 1 ? " thing." : " things.") : "")
   );
 }
 /* The groups of the review, in the order of lfGroups (income, housing, debts, accounts, bills, what-ifs,
@@ -100,11 +106,23 @@ function lrvGroups(c, sid) {
   return lfGroups(c, sid).map(g => ({
     area: g.area,
     name: LRV_AREAS[g.area] || g.area,
-    check: g.items.filter(x => todo[x.id] && !B[x.id]),
+    check: lrvUnsureFirst(g.items.filter(x => todo[x.id] && !B[x.id])),
     done: g.items.filter(x => todo[x.id] && B[x.id]),
     said: g.items.filter(x => x.st === "confirmed" && x.skip),
     same: g.items.filter(x => x.st === "same"),
   }));
+}
+/* A proposal of the AI pass or of the Samsung file (Part 8): a kept item with src "ai" or "file". */
+function lrvIsAi(x) {
+  return !!x && (x.src === "ai" || x.src === "file");
+}
+/* The items to check, what is not sure first, then the rest as they came (the order stays the same). */
+function lrvUnsureFirst(list) {
+  const rank = x => (x.unsure ? 0 : x.st === "kept" ? 1 : 2);
+  return list
+    .map((x, i) => ({ x, i }))
+    .sort((a, b) => rank(a.x) - rank(b.x) || a.i - b.i)
+    .map(o => o.x);
 }
 /* Why an item cannot be fixed in the review, or "" when it can: the person entered it, checked it, or it was
    confirmed out loud. */
@@ -127,6 +145,7 @@ function lrvChoices(c, x) {
   ((m && m.all) || [])
     .slice()
     .reverse()
+    .concat(lrvIsAi(x) && x.v != null ? [{ v: x.v }] : [])
     .forEach(a => {
       const k = String(a.v);
       if (seen[k]) return;
@@ -155,6 +174,11 @@ function lrvApprove(c, id, who, now) {
     B[id] = { st: "ok", by: who || "coach", at: now, type: w.type };
     return B[id];
   }
+  /* a proposal of the AI pass: Approve uses its number, as a Guess (lrvFix), where the call may set it */
+  if (lrvIsAi(x) && x.st === "kept" && x.v != null && !lrvWhy(c, x)) {
+    const r = lrvFix(c, x.sid, id, "ai", x.v, who, now);
+    if (r && !r.why) return r;
+  }
   B[id] = { st: "ok", by: who || "coach", at: now };
   return B[id];
 }
@@ -162,7 +186,8 @@ function lrvApprove(c, id, who, now) {
 function lrvApproveGroup(c, sid, area, who, now) {
   const g = lrvGroups(c, sid).find(x => x.area === area);
   if (!g) return 0;
-  return g.check.filter(x => lrvApprove(c, x.id, who, now)).length;
+  /* a proposal of the AI pass that is not sure waits for its own tap */
+  return g.check.filter(x => !(lrvIsAi(x) && x.unsure)).filter(x => lrvApprove(c, x.id, who, now)).length;
 }
 /* FIX ONE ITEM: a value the coach picked from the values heard, or typed. It lands the way a heard value
    lands (lfPut, as a Guess: never Close, never Exact), and only where the call may set it. v: a number (for
@@ -181,7 +206,12 @@ function lrvFix(c, sid, id, how, v, who, now) {
     if (!isFinite(v) || v < 0) return null;
   } else if (!v) return null;
   const was = L.marks[x.key] ? L.marks[x.key].v : null,
-    line = { id: "review-" + id, side: how === "pick" ? x.side || "client" : "coach", text: x.quote, at: now },
+    line = {
+      id: "review-" + id,
+      side: how === "pick" || how === "ai" ? x.side || "client" : "coach",
+      text: x.quote,
+      at: now,
+    },
     r = lfPut(c, L, lfStateNew(sid), line, { id: x.key, v, rough: false, per: "month" }, now, "guess");
   if (!r || (r.st !== "filled" && r.st !== "again" && r.st !== "same")) return r && r.why ? { why: r.why } : null;
   if (L.marks[x.key]) L.marks[x.key].item = x.id;
@@ -284,6 +314,14 @@ function lrvLevel(c, x) {
 /* What the review record says, in one line. */
 function lrvDoneLine(c, x, rec) {
   const at = lrvTime(rec.at);
+  if (rec.st === "fixed" && rec.how === "ai")
+    return (
+      "You used the number of the AI pass, " +
+      (x.key ? lfShow(lfTarget(x.key), rec.v) : rec.v) +
+      " (a Guess), at " +
+      at +
+      "."
+    );
   if (rec.st === "fixed")
     return "You set " + (x.key ? lfShow(lfTarget(x.key), rec.v) : rec.v) + " (a Guess) at " + at + ".";
   if (rec.st === "out")
@@ -301,12 +339,13 @@ function lrvItemHTML(c, x, rv, owner) {
     open = !!rv.open[x.id],
     lv = lrvLevel(c, x),
     w = x.st === "whatif" ? lfWhatif(c, x.ref) : null,
-    title = w ? "“" + w.quote + "”" : x.label || "A line",
+    title = w ? (w.quote ? "“" + w.quote + "”" : "A what-if (its words were deleted)") : x.label || "A line",
     who = lrvSource(x),
     head =
       `<span class="rvname"><b>${lsEsc(title)}</b>` +
       (w ? "" : x.show ? ` <span class="rvv">${lsEsc(x.show)}</span>` : "") +
       (lv ? " " + lsMark(lv) : "") +
+      (x.unsure && !rec ? ` <span class="pill">Not sure</span>` : "") +
       `<span class="muted tiny rvsrc">From ${lsEsc(who)}${!w && x.quote ? ": “" + lsEsc(x.quote) + "”" : ""}</span>` +
       (x.why && !rec ? `<span class="tiny rvwhy">${lsEsc(x.why)}</span>` : "") +
       (w && w.sug && !w.type ? `<span class="tiny rvwhy">Suggested: ${lsEsc(lrvTypeName(w.sug))}</span>` : "") +
@@ -334,7 +373,7 @@ function lrvFixHTML(c, x) {
         (ch.kind !== "rhythm" && ch.fix
           ? `<div class="rvtype"><label for="rvin-${id}">Type the number${ch.per ? ", " + ch.per : ch.kind === "rate" ? ", in percent" : ""}</label><div class="row"><input id="rvin-${id}" type="text" inputmode="decimal" autocomplete="off" placeholder="${ch.kind === "rate" ? "24.99" : "1,850"}"><button data-a="rvtype" data-v="${id}">Use this number</button></div><div class="hint">It stays a Guess until they check it against a statement.</div></div>`
           : "")) +
-    `<div class="ctl"><button class="primary" data-a="rvok" data-v="${id}">This is right</button><button data-a="rvout" data-v="${id}">Leave it out</button></div>` +
+    `<div class="ctl"><button class="primary" data-a="rvok" data-v="${id}">${lrvIsAi(x) && x.v != null && !ch.why ? "Use this number" : "This is right"}</button><button data-a="rvout" data-v="${id}">Leave it out</button></div>` +
     `<p class="muted tiny">Leave it out puts the line back to how it was before the call. The words stay in this review.</p>`
   );
 }
@@ -370,7 +409,7 @@ function lrvGroupHTML(c, g, rv, owner) {
       ? g.check.map(x => lrvItemHTML(c, x, rv, owner)).join("")
       : `<p class="muted tiny">Nothing here waits for you.</p>`) +
     (n && canAll
-      ? `<button class="wide" data-a="rvall" data-v="${g.area}">Approve all in this group</button><p class="muted tiny">Approve marks each one as checked by you. It does not change a number or its level.</p>`
+      ? `<button class="wide" data-a="rvall" data-v="${g.area}">Approve all in this group</button><p class="muted tiny">Approve marks each one as checked by you. It does not change a number or its level.${g.check.some(lrvIsAi) ? " For a proposal of the AI pass it uses that number, as a Guess; one marked Not sure waits for its own tap." : ""}</p>`
       : "") +
     (g.done.length
       ? `<details class="rvsub"><summary>${g.done.length} done</summary>${g.done.map(x => lrvItemHTML(c, x, rv, owner)).join("")}</details>`
@@ -387,7 +426,7 @@ function lrvFallbackHTML(R) {
   const mine = R.lines.filter(l => l.side === "coach");
   return dkCard(
     "Only your side was heard",
-    `<p>Their browser could not listen, so only your lines were heard. Your words never fill in a number by themselves, so nothing filled in.</p><p class="muted tiny">The pass after the call (coming later) can read these lines and propose the numbers here, for you to approve.</p>` +
+    `<p>Their browser could not listen, so only your lines were heard. Your words never fill in a number by themselves, so nothing filled in.</p><p class="muted tiny">${typeof aiOn === "function" && aiOn() ? "The AI pass above can read these lines (and your recording's text) and propose the numbers here, for you to approve." : "The pass after the call (coming later) can read these lines and propose the numbers here, for you to approve."}</p>` +
       (mine.length
         ? `<details class="rvsub"><summary>Your ${mine.length} ${mine.length === 1 ? "line" : "lines"}</summary><ul class="heard">${mine.map(l => `<li>${lsEsc(l.text)}</li>`).join("")}</ul></details>`
         : "")
@@ -412,7 +451,9 @@ function lrvReviewHTML(R) {
     `<div class="rvhead"><h1>Check what was heard</h1>${dkCaption(lrvSummary(n))}</div>` +
     (rv.msg ? `<p class="note">${lsEsc(rv.msg)}</p>` : "") +
     (A.err ? `<p class="note">${lsEsc(A.err)}</p>` : "") +
+    (typeof laiCardHTML === "function" ? laiCardHTML(R, c) : "") /* liveai.js: the AI pass, behind its switch */ +
     lrvFallbackHTML(R) +
+    (typeof laiNotesHTML === "function" ? laiNotesHTML(R) : "") /* liveai.js: the draft notes and agenda */ +
     (groups.length
       ? dkCard("By area", groups.map(g => lrvGroupHTML(c, g, rv, owner)).join(""), {
           cap: n.left
@@ -422,7 +463,8 @@ function lrvReviewHTML(R) {
         })
       : R.room && R.room.client_listens === false
         ? ""
-        : dkCard("By area", `<p class="muted">No number was heard in this call.</p>`))
+        : dkCard("By area", `<p class="muted">No number was heard in this call.</p>`)) +
+    (typeof lvfCardHTML === "function" ? lvfCardHTML(R, c) : "") /* liveforget.js: Delete this transcript */
   );
 }
 /* THE CLIENT'S SCREEN after End: calm, and the plan. */
@@ -452,6 +494,10 @@ function livePartEnded(R) {
   return (
     (R.side === "coach" ? lrvReviewHTML(R) : lrvClientEndHTML(R)) +
     lrvPlanHTML(R) +
+    /* liveforget.js: on the client's calm screen, Delete this transcript comes after the plan */
+    (R.side !== "coach" && typeof lvfCardHTML === "function"
+      ? lvfCardHTML(R, R.game && R.game.get ? R.game.get() : null)
+      : "") +
     (typeof lrEndedHTML === "function" ? lrEndedHTML(R) : "")
   );
 }
@@ -476,6 +522,14 @@ function lrvNum(s) {
 async function livePartClick(a, t, R) {
   if (typeof lsClick === "function" && lsClick(a, t, R)) {
     if (typeof lrDraw === "function") lrDraw();
+    return true;
+  }
+  if (typeof laiClick === "function" && (await laiClick(a, t, R))) {
+    if (typeof lrDraw === "function") lrDraw(); /* liveai.js: the taps of the AI pass */
+    return true;
+  }
+  if (typeof lvfClick === "function" && (await lvfClick(a, t, R))) {
+    if (typeof lrDraw === "function") lrDraw(); /* liveforget.js: Delete this transcript */
     return true;
   }
   if (!/^rv/.test(a) || !R) return false;

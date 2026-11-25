@@ -69,6 +69,7 @@
       await P[s].R.act("headphones", true);
     }
     await clock.run(300);
+    await simReady(P);
     await P.coach.R.act("start");
     await clock.run(300);
     for (const l of o.lines || simScriptFill()) {

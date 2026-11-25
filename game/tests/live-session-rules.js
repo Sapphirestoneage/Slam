@@ -36,6 +36,28 @@
     r.coach_ok_at === T0 + 1000 && !step(r, "coach", "ok", T0 + 9000).changed
   );
   r = step(r, "client", "ok", T0 + 2000).room;
+  chk(
+    "both tapped, but the client's microphone step is not done: Start waits, and the line says why",
+    lvStage(r) === "ready" &&
+      !lvCanStart(r, "coach") &&
+      !step(r, "coach", "start", T0 + 2100).changed &&
+      lvWaitLine(r, "coach") === "Both of you tapped OK. Waiting for them to allow the microphone."
+  );
+  chk(
+    "the coach can go on with their side only",
+    lvCanStart(r, "coach", true) && step(r, "coach", "start", T0 + 2100, true).room.state === "live"
+  );
+  r = step(r, "client", "mic", T0 + 2200, true).room;
+  chk(
+    "the microphone step is in the room; then the headphones question waits",
+    r.client_mic === true && !lvCanStart(r, "coach") && /Using headphones/.test(lvClientWait(r))
+  );
+  r = step(r, "client", "headphones", T0 + 2300, true).room;
+  chk(
+    "a client whose browser cannot listen needs no microphone step",
+    lvSetDone(Object.assign({}, r, { client_mic: null, client_listens: false }), "client") &&
+      !lvSetDone(Object.assign({}, r, { client_mic: null, client_listens: true }), "client")
+  );
   chk("both tapped: the stage is ready and the coach can start", lvStage(r) === "ready" && lvCanStart(r, "coach"));
   chk("the client cannot start", !lvCanStart(r, "client") && !step(r, "client", "start", T0 + 2500).changed);
   chk(
@@ -235,7 +257,12 @@
       lvFallbackLine(lvRoomNew("s", "a", "b"), "coach") === ""
   );
   f = step(
-    step(step(step(f, "coach", "ok", T0).room, "client", "ok", T0).room, "coach", "start", T0).room,
+    step(
+      step(step(step(f, "coach", "ok", T0).room, "client", "ok", T0).room, "client", "headphones", T0, true).room,
+      "coach",
+      "start",
+      T0
+    ).room,
     "coach",
     "pause",
     T0 + 5
