@@ -48,6 +48,7 @@ Each file has the name of its feature.
 | `retirement-odds.js` | Retirement odds | `features/odds.js`, `data/market.js` (some checks wait for the engine) |
 | `life-event-blocks.js` | Life event blocks: the stack on top of the simulators | `features/blocks.js` |
 | `home-buying-and-renting.js` | Rent or buy on the shared engine: the copy of the rules, the bank's payment, the true cost of owning and renting, lines not counted until tapped, PMI, the breakeven year, the two rules of thumb, the closed group, the terms, the spreadsheet rows | `core/homebuy.js`, `features/sims/rentbuy.js`, `features/sim.js` |
+| `career-and-education.js` | Career and education on the shared engine: the copy of the engine, a course priced (payback, lifetime value, the freedom date), a preset that is a sample, empty answers that wait, two paths side by side, the credential stack with an overlap, the match that stays with the job on each schedule, the launch window in days, the link from Two job offers, the spreadsheet rows | `core/career.js`, `features/career.js`, `core/engine.js` |
 | `simulators.js` | The simulator engine and the 12 simulators, with each flip point | `features/sim.js`, `features/sims/*.js` |
 | `spreadsheet-extras.js` | The savings rate by month, the quotas, next year's budget | `features/quota.js` |
 | `tax-view.js` | The tax view | `features/taxview.js`, `features/retire.js` (retireTax) |
@@ -65,6 +66,7 @@ Each file has the name of its feature.
 | `how-it-connects.js` | How it all connects | `features/connect.js` |
 | `later-eras-and-account-line.js` | The later eras and the account line | `features/eras.js` |
 | `meet-your-character.js` | Meet your character | `features/reveal.js` |
+| `your-unpaid-jobs.js` | Your unpaid jobs (run JOE-1, features 1 to 3): the six jobs from the answers of three made-up profiles (a solo renter, a couple with kids, a household of three), the block on the character sheet and on Me, the next step of a job, the admin hours by hand (Guess, Close, Exact), Running it and Living it ("1% better", never 0%), the four ways out and Undo (a schedule, a skill, a hand-off), the household role map record, the Home card, the time ledger tile, the spreadsheet rows, the built list row | `core/jobs.js`, `data/roles.js`, `features/jobs.js` |
 | `mission-board.js` | The mission board | `features/missions.js` |
 | `money-and-values.js` | Is my money going where I want? | `features/values.js` |
 | `money-chart-group.js` | The Money Chart for more than two | `features/together.js` |
@@ -81,6 +83,7 @@ Each file has the name of its feature.
 | `quick-math.js` | Quick math | `features/quick.js` |
 | `recalculating.js` | Recalculating: the kept plan and the new date, the short month, the cushion refill, the safe-to-fail line, the letter exercise, the optional Mistake audit | `core/recalc.js`, `features/recalc.js`, `features/exletter.js`, `features/audit.js` |
 | `quizzes.js` | Quizzes: the copies of the engine and of the skins are current, the Money Chart gives its old results, each skin ends on one card on each path, the routes to real skills, the element changes only by a tap, a result is private until shown, the placeholder Coming soon, the built list row | `core/quizcore.js`, `data/quizskins.js`, `features/quizzes.js`, `features/chart.js`, `features/element.js` |
+| `money-sins-read.js` | The money sins read: the copy of `core/sins.js` is current, the read of a made-up ledger (right after payday, fun buys in a month, fun past its plan), two sources over 40 days give a Close read, the check-in after a logged buy over the line (rent never, 3 a week at most, Skip), the tap kept with its time, Is this really it? kept for the judge, Test the fix, the sheet in the new look with no cost on it, privacy for a coach, the built list row | `core/sins.js`, `features/sins.js`, `features/quizzes.js`, `screens/ui.js` |
 | `save-status.js` | The save status | `account/cloud.js` |
 | `sharing-costs-fairly.js` | Sharing costs fairly | `features/fair.js` |
 | `sheet-navigation.js` | Back, Forward, Close and "i" on each sheet | `screens/nav.js` |

@@ -3,8 +3,8 @@
    PURPOSE     Examine Quizzes: the copy of the one quiz engine and of the skins is current, the Money
                Chart gives the same results as before it moved to the engine, each skin loads and each
                path through it ends on one card, the card routes to real skills, a result changes the
-               element only by a tap, a result is private until the player shows it, the placeholder
-               "Coming soon", and the built list row.
+               element only by a tap, a result is private until the player shows it, the sins quiz opens
+               (no placeholder left), and the built list row.
    INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
    OUTPUT      One result for each chk() call. The harness prints each failed check.
    DEPENDS ON  tests/harness.cjs. Examines: core/quizcore.js, data/quizskins.js, features/quizzes.js,
@@ -66,8 +66,8 @@
   /* ---------- each skin ---------- */
   const real = QZ_SKINS.filter(s => !s.soon);
   chk(
-    "nine skins: eight to play and the placeholder of the sins",
-    QZ_SKINS.length === 9 && real.length === 8 && QZ_SKINS.find(s => s.id === "sins").soon === true
+    "nine skins, all nine to play (the sins quiz is real since the run Money sins, Part 1)",
+    QZ_SKINS.length === 9 && real.length === 9 && !QZ_SKINS.find(s => s.id === "sins").soon
   );
   chk(
     "each skin is sound (qzCheck), and takes 7 to 15 taps",
@@ -135,18 +135,18 @@
   chk("the menu has Quizzes, and Me has the row", MENU.some(m => m[1] === "qz") && meTab().includes('data-a="qz"'));
   X("qz");
   chk(
-    "the list: each skin to play, the Money Chart, and the sins as Coming soon with no button",
+    "the list: each skin to play (the sins too) and the Money Chart",
     W.kind === "qz" &&
       real.every(s => ov().includes('data-a="qzopen" data-v="' + s.id + '"')) &&
       ov().includes('data-a="chart"') &&
-      ov().includes("Coming soon") &&
-      !ov().includes('data-v="sins"') &&
+      !ov().includes("Coming soon") &&
       ov().includes("None is a test or a diagnosis") &&
       clean(ov()),
     junk(ov())
   );
   X("qzopen", "sins");
-  chk("the placeholder does not open", W.kind === "qz");
+  chk("the sins quiz opens on its first screen", W.kind === "qzq" && ov().includes("Start: 15 taps"));
+  X("qz");
   X("qzopen", "stars");
   chk(
     "the playful skin says so on its first screen",

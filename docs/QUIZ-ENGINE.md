@@ -18,6 +18,7 @@ elements. A quiz is a game lens, never a diagnosis.
 | `game/features/quizzes.js` | The one sheet of the game: Me > Quizzes. |
 | `data/quiz/routes.json` | The names of the skills, skill trees and readings the cards route to. Made by the tool. |
 | `test/quizcore.test.js`, `game/tests/quizzes.js` | The tests. Both fail when a copy is old. |
+| `js/math/sins.js`, `tools/game_sins_build.mjs` | The money sins read on the engine, and its copy for the game (`test/sins.test.js`, `game/tests/money-sins-read.js`). |
 
 ## Add a skin in five steps
 
@@ -82,16 +83,18 @@ Every result has one of the three levels SLAM uses for every number, in the word
 in each time. A result can come from outside scores alone, with no answer. `def.confidence.sources` says how many
 sources a skin needs before a result is a Close read.
 
-## For the sins quiz
+## The sins quiz and the read (run Money sins, Part 1)
 
-`js/quiz/skins/sins.js` is a placeholder (`soon: true`): it is in the list as "Coming soon", with no questions. To
-build it, replace that file's content and keep its id. What is ready for it:
+`js/quiz/skins/sins.js` is a real skin now (15 taps, two families: `sin` with 7 traits, `change` with 12; pride is in
+both as `pride` and `proud`). `confidence.sources` is 2, so the quiz alone is always an Early read. Its `read` block
+holds the words of the read: the two kinds of pride and one defense for each trait (`read.fix`).
 
-- Two families of traits: give each trait a `group` and list the groups. `result.byGroup[groupId]` has the `top`, the
-  `second`, the `tie` and the `margin` of each family; `result.topTwo` has the top two overall. No hard label.
-- The level words Early read, Close read and Confirmed by you.
-- Outside scores as an input (above). An `addEvidence` function, its weights and its fading belong in a file of that
-  run; it ends by calling `qzResult(def, answers, outside)`.
+The other three sources and the rules are in `js/math/sins.js` (pure, no import; the game runs a copy made by
+`node tools/game_sins_build.mjs`, `game/core/sins.js`). `snRead({ qzResult, QZ_LEVELS }, def, state, data, today)`
+turns every piece of evidence into faded scores (half-life 30 days; the quiz shares out as the others come in), hands
+them to `qzResult` as scores from outside, and adds what the engine does not decide: a label only when two sources
+agree over about 30 days of data, the top two of each family, Why we think this, the push-back and Test the fix.
+Web app: `js/quiz/sinsdata.js` (the ledger), `js/quiz/read.js` (the card). Game: `game/features/sins.js`.
 
 ## A new question style (for quiz.html)
 

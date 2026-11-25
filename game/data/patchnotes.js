@@ -176,6 +176,37 @@ const PATCH_NOTES = [
       "Not ready to split? One total for all your cards still works. Each card you add sharpens it.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Your unpaid jobs, and the time you get back",
+    l: [
+      "Your character sheet and Me now show the six unpaid jobs of running your money, from CFO to Deals Manager.",
+      "Your top 3 come from answers you already gave. No new questions.",
+      "Tap a job to see its next step, its tasks, and about how long it takes you a month, in one tap.",
+      "Each task has four ways out: Do it, Automate it, Hand it off, or Drop it. Each one can be undone.",
+      "Home shows Running it next to Living it: the hours your money still takes, and the hours you got back.",
+    ],
+  },
+  {
+    d: "2026-11-25",
+    t: "Your money read: the money sins",
+    l: [
+      "The money sins quiz is open: fifteen taps on real money moments. It reads your main pull and your main way of dodging change, always as a top two, each with its light side.",
+      "The quiz is only a first guess. Your logged buys, a one-tap \"what was this?\" on a buy over your line, and how you use the game firm it up. Until two agree, it says Early read.",
+      "Push back with Is this really it?, or try one defense for a month with Test the fix. A game lens, not a diagnosis, and it stays with you unless you show it.",
+    ],
+  },
+  {
+    d: "2026-11-25",
+    t: "Career and education",
+    l: [
+      "Menu has Career and education: what a course or a degree costs with the time it takes, the raise after tax, when it pays back, and what it does to your freedom date.",
+      "Start from a 4-year degree, trade school, a certificate or one skill. Each is a sample of the time it takes; the cost and the pay are yours to tap.",
+      "Put trade school and a 4-year degree side by side, stack several credentials and see which ones overlap.",
+      "Leaving a job early? See the dollars of your match that stay with the job, from your own schedule.",
+      "The launch window: a job hop, Roth or traditional now, and a house hack, each as days on your freedom date.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

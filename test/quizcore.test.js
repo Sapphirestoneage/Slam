@@ -149,7 +149,7 @@ test('what a result changes: the element stays, or the card asks keep or switch;
 });
 
 // ---------- the skins ----------
-test('nine skins: eight to play and the sins placeholder; each is plain data and sound', () => {
+test('nine skins, all nine to play (the sins quiz is real since the run Money sins, Part 1); each is plain data and sound', () => {
   assert.deepEqual(SKINS.map(s => s.id), ['letters', 'address', 'houses', 'avatars', 'sheet', 'pyramid', 'mountain', 'stars', 'sins']);
   for (const s of SKINS) {
     assert.deepEqual(JSON.parse(JSON.stringify(s)), s, `${s.id}: data only, no functions`);
@@ -157,8 +157,13 @@ test('nine skins: eight to play and the sins placeholder; each is plain data and
     assert.ok(s.note && s.blurb && s.core.sheet && s.core.how, s.id);
   }
   for (const s of real) { const t = qzTaps(s); assert.ok(t.max >= 7 && t.max <= 15, `${s.id}: ${t.max} taps`); assert.match(s.note, /game lens|Playful/); assert.match(s.note, /not a (test|diagnosis|forecast)/i); }
+  assert.equal(real.length, 9, 'no placeholder is left');
   const sins = skinOf('sins');
-  assert.equal(sins.soon, true); assert.equal(sins.questions.length, 0); assert.equal(qzResult(sins, {}).ready, false); assert.equal(qzCard(sins, qzResult(sins, {})), null);
+  assert.equal(sins.soon, undefined); assert.equal(sins.questions.length, 15); assert.equal(sins.traits.length, 19);
+  assert.deepEqual(sins.groups.map(g => g.id), ['sin', 'change']);
+  assert.equal(sins.traits.filter(t => t.group === 'sin').length, 7); assert.equal(sins.traits.filter(t => t.group === 'change').length, 12);
+  assert.equal(sins.confidence.sources, 2, 'the quiz alone is an Early read');
+  assert.equal(qzResult(sins, all(sins, 0)).confidence.level, 'Guess');
 });
 
 test('every path through every skin ends on one card', () => {

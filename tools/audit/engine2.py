@@ -916,6 +916,35 @@ def run(cases, ref, il=None):
             ck('open', o['open'], sum(1 for b in x['bills'] if b['amount'] is None), 0)
             for name, p in paid.items(): ck('paid ' + name, o['paid'][name], p)
             ck('everything paid adds up', sum(v for v in o['paid'].values() if v is not None), min(total, x['income']))
+        elif fn == 'snOutside':
+            # each piece fades by 0.5 ** (age / half-life); the quiz has weight Q / (Q + E), Q its own plus points
+            # and E the faded plus points of every other source; the scores are added up by source and trait
+            import datetime as _dt
+            day = lambda s: _dt.date(int(s[:4]), int(s[5:7]), int(s[8:10]))
+            now = day(x['now'])
+            fade = lambda d: 1.0 if d is None else 0.5 ** (max(0, (now - day(d)).days) / x['halfLife'])
+            plus = lambda a: sum(max(0, v) for v in a.values())
+            Q = sum(plus(p['add']) for p in x['ev'] if p['source'] == 'quiz')
+            E = sum(plus(p['add']) * fade(p['d']) for p in x['ev'] if p['source'] != 'quiz')
+            wq = Q / (Q + E) if Q > 0 else 0.0
+            mine = {}
+            for p in x['ev']:
+                w = wq if p['source'] == 'quiz' else fade(p['d'])
+                S = mine.setdefault(p['source'], {})
+                for t, v in p['add'].items(): S[t] = S.get(t, 0.0) + v * w
+            mine = {k: v for k, v in mine.items() if any(True for p in x['ev'] if p['source'] == k)}
+            ck('sources', sorted(o['sources']) == sorted(mine.keys()), True)
+            for src, S in mine.items():
+                for t, v in S.items(): ck(f'{src} {t}', o['scores'].get(src, {}).get(t), v, 1e-9)
+        elif fn == 'snFixCheck':
+            # the pattern: plus points of the ledger, the check-ins and the app, in the month before the start and the month from it
+            import datetime as _dt
+            day = lambda s: _dt.date(int(s[:4]), int(s[5:7]), int(s[8:10]))
+            st, now, n, t = day(x['fix']['start']), day(x['now']), x['days'], x['fix']['trait']
+            def pat(a, b):
+                return sum(max(0, p['add'].get(t, 0)) for p in x['ev'] if p['source'] in ('ledger', 'checkin', 'app') and p['d'] and a <= day(p['d']) < b)
+            ck('before', o['before'], pat(st - _dt.timedelta(days=n), st), 1e-9); ck('during', o['during'], pat(st, st + _dt.timedelta(days=n)), 1e-9)
+            ck('done', o['done'], (now - st).days >= n); ck('days left', o['daysLeft'], max(0, n - (now - st).days), 0)
         elif fn == 'rcRefill':
             gap = max(0, x['target'] - x['balance'])
             ck('gap', o['gap'], gap); ck('full', o['full'], gap == 0)
@@ -999,6 +1028,76 @@ def run(cases, ref, il=None):
             if not edge:
                 ck('breakeven year', o['year'], first_year, 0); ck('renting cheaper the whole time', o['never'], first_year is None)
             ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
+        elif fn == 'careerRoi':
+            # Career and education: the price, the raise, the payback and the lifetime value from the definitions; the
+            # loan's interest as the level payment whose discounted sum is the loan.
+            t = x['taxPct'] / 100; keep = 1 if x['months'] == 0 else x['keepPct'] / 100
+            yours = x['cost'] - min(x['help'], x['cost']); loan = min(x['loan'], yours); n = x['loanYears'] * 12; lr = x['loanRatePct'] / 1200
+            pay = 0.0 if loan <= 0 else (loan / n if lr == 0 else loan / sum(1 / (1 + lr) ** k for k in range(1, n + 1)))
+            interest = pay * n - loan
+            lost = x['payBefore'] * x['months'] / 12 * (1 - keep) * (1 - t); total = yours + lost + interest; gain = (x['payAfter'] - x['payBefore']) * (1 - t)
+            ck('the whole price', o['total'], total); ck('the raise after tax', o['gainNet'], gain); ck('loan interest', o['interest'], interest); ck('paid now', o['once'], yours - loan)
+            ck('payback years', o['payback'], total / gain if gain > 0 else None, 1e-6)
+            done = x['age'] + x['months'] / 12; ck('lifetime value', o['lifetime'], gain * max(0, x['endAge'] - done) - total)
+            # the move, month by month: the sum of the changes in each month is what the path does to that month
+            at = lambda k: sum(c['monthly'] for c in o['changes'] if c['at'] <= k)
+            if x['months'] > 0: ck('a month while learning', at(0), -lost / x['months'])
+            ck('a month after', at(x['months']), gain / 12 - pay); ck('a month after the loan', at(x['months'] + n), gain / 12)
+        elif fn == 'careerStack':
+            L = x['list']; months = lambda s: int(s[:4]) * 12 + int(s[5:7])
+            sets = [set(range(months(c['from']), months(c['to']) + 1)) for c in L]
+            ov = sorted([sorted([L[i]['name'], L[j]['name']]) + [len(sets[i] & sets[j])] for i in range(len(L)) for j in range(i + 1, len(L)) if sets[i] & sets[j]])
+            ck('the overlaps', sorted([sorted(p[:2]) + [p[2]] for p in o['overlaps']]) == ov, True)
+            ck('busy months', o['busy'], len(set().union(*sets)), 0); ck('span', o['span'], max(months(c['to']) for c in L) - min(months(c['from']) for c in L) + 1, 0)
+            ck('cost', o['cost'], sum(c['cost'] or 0 for c in L)); ck('raise', o['raise'], sum(c['raise'] or 0 for c in L))
+        elif fn == 'careerVest':
+            y = x['years']
+            pct = {'now': 100, 'cliff3': 100 if y >= 3 else 0, 'graded6': 0 if y < 2 else min(100, 20 * (int(y) - 1))}[x['schedule']]
+            ck('% vested', o['pct'], pct, 0); ck('left behind', o['left'], x['match'] * (100 - pct) / 100)
+            nxt = None if pct >= 100 else (3 if x['schedule'] == 'cliff3' else max(2, int(y) + 1))
+            if nxt is None: ck('no next step', o['more'] is None, True)
+            else:
+                npct = 100 if x['schedule'] == 'cliff3' else 20 * (nxt - 1)
+                ck('more at the next step', o['more'], x['match'] * (npct - pct) / 100); ck('months to it', o['months'], math.ceil((nxt - y) * 12 - 1e-9), 0)
+        elif fn == 'careerLaunch':
+            ck('job hop a month', o['hop'], x['raise'] * (1 - x['taxPct'] / 100) / 12); ck('left behind', o['hopOnce'], x['left'])
+            ck('traditional next to Roth a month', o['roth'], x['yearly'] * (x['nowPct'] - x['laterPct']) / 1200); ck('house hack a month', o['hack'], x['rent'] - x['costs']); ck('house hack months', o['hackMonths'], x['years'] * 12, 0)
+        elif fn == 'jobRoles':
+            a = x
+            def hv(k, v): return v in (a.get(k) or [])
+            def notn(k, *no): return bool(a.get(k)) and a.get(k) not in no
+            pr = a.get('prot') or {}
+            sig = {
+                'cfo': [a.get('steady') == 'Changes month to month', notn('share', 'No one'), notn('deps', 'None'), a['debts'] > 0, a['goals'] > 0],
+                'accountant': [hv('incKinds', 'Side gigs') or hv('incKinds', 'My own business') or a['work'] in ('Self-employed', 'A few jobs or gigs'), len(a['incKinds']) >= 2, a['home'] == 'Owning', notn('invest', 'No'), len(a['accts']) >= 3],
+                'planner': [notn('invest', 'No'), hv('accts', 'Retirement plan at work') or hv('accts', 'IRA or Roth IRA'), a['goals'] > 0, a['deps'] == 'Kids' or hv('live', 'Kids') or a['kids'] > 0, a['age'] >= 50],
+                'insurance': [a['home'] == 'Owning', a['home'] == 'Renting', hv('debtKinds', 'Car loan'), notn('deps', 'None', 'Pets'), any(pr.get(k) == 'Yes' for k in ('renters', 'life', 'disab'))],
+                'health': [hv('accts', 'HSA'), bool(pr.get('health')) and pr.get('health') != 'None right now', a['deps'] == 'Kids' or hv('live', 'Kids') or a['kids'] > 0, a['deps'] == 'Supporting a parent' or hv('live', 'Parents or family'), hv('debtKinds', 'Medical bills')],
+                'deals': [hv('debtKinds', 'Credit card balance') or a['cards'] > 0, a['banks'] >= 2, hv('live', 'Roommates'), a['home'] in ('Renting', 'Owning')],
+            }
+            ids = ['cfo', 'accountant', 'planner', 'insurance', 'health', 'deals']
+            sc = {i: 1 + sum(1 for v in sig[i] if v) for i in ids}
+            order = sorted(ids, key=lambda i: (-sc[i], ids.index(i)))
+            for i in ids: ck('score ' + i, o['scores'][i], sc[i], 0)
+            ck('the order', o['order'] == order, True)
+        elif fn == 'jobLiving':
+            ids = ['cfo', 'accountant', 'planner', 'insurance', 'health', 'deals']
+            dflt = {'cfo': 60, 'accountant': 60, 'planner': 15, 'insurance': 15, 'health': 15, 'deals': 15}
+            mins, cfs = {}, []
+            for i in ids:
+                m = x['mins'].get(i)
+                if m is not None and m.get('v') is not None: mins[i] = m['v']; cfs.append(m.get('cf') or 2)
+                else: mins[i] = dflt[i]; cfs.append(1)
+            total = sum(mins.values())
+            st = 'Guess' if any(c <= 1 for c in cfs) else ('Exact' if all(c >= 3 for c in cfs) else 'Close')
+            raw = {i: 0.0 for i in ids}
+            for t in x['tasks']:
+                if x['exits'].get(t['id']) in ('auto', 'hand', 'drop'): raw[t['role']] += t['per'] * t['times'] / 12
+            living = sum(min(raw[i], mins[i]) for i in ids)
+            pct = living / total * 100 if total > 0 else 0
+            better = max(1, int(math.floor(pct + 0.5))) if living > 0 else 0
+            ck('total', o['total'], total, 0); ck('state', o['st'] == st, True); ck('living', o['living'], living, 1e-9); ck('running', o['running'], max(0, total - living), 1e-9); ck('better', o['better'], better, 0)
+            for k, t in enumerate(x['tasks']): ck('monthly ' + t['id'], o['monthly'][k], t['per'] * t['times'] / 12, 1e-9)
         elif fn == 'rcSafeLine':
             sp = x['spent'] or 0
             ck('left', o['left'], max(0, x['cap'] - sp)); ck('over', o['over'], max(0, sp - x['cap'])); ck('ran out', o['ranOut'], x['spent'] is not None and sp >= x['cap']); ck('plan cost', o['planCost'], x['cap'])

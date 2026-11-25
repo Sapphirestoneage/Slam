@@ -416,6 +416,14 @@ const WB = [
   ],
   [
     "plan",
+    "Career and education: a course or degree, a credential stack, the match that stays with the job, the launch window",
+    "b",
+    () => WB_HAS("career") && WB_FN("crRoi") && WB_FN("crgPath") && WB_FN("crVestLeft") && WB_FN("crgLaunch"),
+    "One engine with the web page Does this course or degree pay back?: payback years, lifetime value and the freedom date change, with presets as samples; trade school and a 4-year degree side by side; credentials with overlaps; the match that stays with the job from your own schedule; a job hop, Roth or traditional now and a house hack in days.",
+    "career",
+  ],
+  [
+    "plan",
     "Which account next, up to each limit",
     "b",
     () => WB_HAS("nxa") && WB_FN("nxaCalc") && WB_FN("nxaRows"),
@@ -615,7 +623,7 @@ const WB = [
   ["feel", "Money Chart quiz", "b", () => WB_HAS("mcstart"), "", null],
   [
     "feel",
-    "Quizzes: one engine, eight skins (a money code, the FI Address, houses, an avatar, a character sheet, the pyramid, the FI Pathway, a playful money sign)",
+    "Quizzes: one engine, nine skins (a money code, the FI Address, houses, an avatar, a character sheet, the pyramid, the FI Pathway, a playful money sign, the money sins)",
     "b",
     () =>
       WB_HAS("qz") &&
@@ -623,8 +631,22 @@ const WB = [
       WB_FN("qzCardPart") &&
       typeof QZ_SKINS !== "undefined" &&
       QZ_SKINS.length >= 9,
-    "Each ends on one card with its light side and one next step. A result is private until you show it, and never changes your element without a tap. The money sins quiz is a placeholder: Coming soon.",
+    "Each ends on one card with its light side and one next step. A result is private until you show it, and never changes your element without a tap.",
     "qz",
+  ],
+  [
+    "feel",
+    "The money sins read: your main pull and your main way of dodging change, from four sources",
+    "b",
+    () =>
+      WB_HAS("sins") &&
+      WB_HAS("sncheck") &&
+      WB_FN("snRead") &&
+      WB_FN("sngData") &&
+      typeof QZ_SKINS !== "undefined" &&
+      QZ_SKINS.some(s => s.id === "sins" && !s.soon),
+    "The quiz, your logged spending, one-tap check-ins on a buy over your line (at most 3 a week) and how you use the game. A top two in each family with the light side, Why we think this, Is this really it?, and one defense to test for a month. A label shows only when two sources agree over about 30 days. Private unless you show it. Late night buys, the Safe to spend card and fire drills put off are not read yet: the game does not keep them.",
+    "sins",
   ],
   [
     "feel",
@@ -1081,6 +1103,22 @@ const WB = [
   ],
   ["biz", "A community cost-of-living planner", "n", null, "Built once as its own tool. Not in the game.", null],
   ["biz", "A city edition, and a stand-alone lever link with a result to share", "n", null, "Not built.", null],
+  [
+    "see",
+    "Your unpaid jobs: the six jobs of running your money, admin hours, and the four ways out",
+    "b",
+    () =>
+      WB_HAS("jobs") &&
+      WB_HAS("jbexit") &&
+      WB_FN("jobRoles") &&
+      WB_FN("jobLiving") &&
+      WB_FN("rvSheetJobs") &&
+      WB_FN("homeJobsRow") &&
+      WB_FN("ledgerCardJobs") &&
+      typeof JOB_ROLES === "object",
+    "From answers you already gave, on your character sheet and on Me. Hours a month running your money (Guess, Close, Exact) in the time ledger, and Running it and Living it on Home. Each task: Do it, Automate it, Hand it off, Drop it, each undoable.",
+    "jobs",
+  ],
 ];
 function btRows() {
   return WB.filter(r => adOk(r) && (r[6] !== "own" || ADX.own)).map(r => {

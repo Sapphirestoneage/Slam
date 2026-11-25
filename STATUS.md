@@ -132,7 +132,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 |------|------|-------|-------|
 | 1 | FI number variants | Done | Follow-up to Eli's answers (QUESTIONS 580) applied: the FOO by destination moves only the late steps, the Barista number adds health insurance, living apart on the pod view, the quiet Recalculating card under Coast, the "i" on the FI ratio. Web app: Plan › Goals has "FI destinations" (Lean, Barista, Regular, Chubby, Fat, each with its number, date and what it assumes; the Fat list; the Barista gap and health insurance), "FI date stress test" and "Pod FI number" (two or more adults); Plan › FOO has "Your order by destination"; Home has the card "You can stop sprinting". Game: "FI ratio" on Key numbers (Freedom), and the same card on Home. Waiting for Eli: the Chubby midpoint, the three orders of the FOO, what counts as investment income (QUESTIONS 580). |
 | 2 | Home buying and renting | Done | One engine, `js/math/homebuy.js` (copied to `game/core/homebuy.js`; a test fails when the copy is stale). Web app: `home.html`, under the lender's lines: "What the bank shows" (principal and interest) first, "The true cost of owning" (property tax, home insurance, PMI under 20% down, HOA, maintenance, big repairs), "The true cost of renting", "When owning comes out ahead" (the breakeven year or "Renting is cheaper the whole time", the price-to-rent ratio, the 5% rule, year by year, the math). Game: Menu › Simulators › Rent or buy runs on the same functions. Property tax, insurance, PMI, HOA, big repairs and renter's insurance have no typical number (no dated source): the person taps their own (QUESTIONS). Not run: `tools/e2e/layout.cjs` (a local server could not be started in this session); the screens were opened at 390 and 1280 with the files read from disk. |
-| 3 | Career and education | Not started | |
+| 3 | Career and education | Done | One engine, `js/math/career.js` (copied to `game/core/career.js`). Web app: `career.html` "Does this course or degree pay back?" (payback, lifetime value, FI date change, presets as samples, trade school and a 4-year degree side by side, the credential stack, the match that stays with the job, the launch window in days). Game: Menu › Career and education (five tabs, the new look). No BLS pay figures: the presets carry only the time a path takes (QUESTIONS 600). |
 | 4 | Travel | Not started | |
 | 5 | Student loans | Not started | |
 | 6 | Quizzes | Not started | |
@@ -199,7 +199,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | The read | Not started | Waits for the quiz engine (Not built, groups 1 to 5, Part 11) |
+| 1 | The read | Done | `js/math/sins.js` on the quiz engine, the sins skin, quiz.html and the game's "Your money read" with the check-in after Money out. Not built (no data kept): late night, the Safe to spend tap, Recalculating opened, edits after a bad month, drills put off, going back to old numbers; in the web app the app left closed and numbers at Guess. QUESTIONS 599. |
 | 2 | Results and growth | Not started | |
 | 3 | The Rings theme | Not started | |
 
@@ -237,3 +237,15 @@ To continue: start from the work branch for the two unfinished parts (merge it w
 order: Live Session Mode Parts 6 to 9; the sins run (it builds on the quiz engine, docs/QUIZ-ENGINE.md); the two long
 runs from where they stopped. Promote with `bash tools/promote.sh` at the end of each run.
 
+
+## RUN: JOE-1, The Job of Existing (Nov 25 2026)
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | Your unpaid jobs (the six roles, on the character reveal and Me) | Done | The six jobs and their tasks: `game/data/roles.js`. Which jobs a player holds, from answers already given (no new question): `jobRoles` in `js/math/jobs.js` (the game copy `game/core/jobs.js`), each job 1 plus each answer that counts, the reasons in `JOB_SIGNALS`. On the character sheet (the last card of Meet your character) and on Me: "You already work 6 jobs nobody pays you for.", the top 3, See all 6. A tap opens the job: its next step (the next skill of its trees), its tasks, its hours. Each card has its "i" and "N of M tasks off your plate". Screens: `game/features/jobs.js`. QUESTIONS 598. |
+| 2 | Admin hours (Running it and Living it) | Done | "About how long a month does this job take?" with the taps 0, 15 min, 1 hr, 3 hrs, 5+ hrs and Guess / Close / Exact (the kit), stored in `c.x.jobmins`; an untouched job is a Guess at SLAM's default (CFO 1 hr, Accountant 1 hr, the other four 15 min). "Hours a month running your money" in the time ledger (What your money earns you). Home: the card Running it and Living it (two bars, "N% better", never 0%). Every task: "saves you ~X min/month" with Show the math. Math: `jobAdmin`, `jobTaskMonthly`, `jobLiving`, `jobSaveWords` (tests in `test/jobs.test.js`, second engine in `tools/audit`). The spreadsheet: `jobBook` (16 rows). |
+| 3 | The four exits (Do it, Automate it, Hand it off, Drop it) | Done | On each job's sheet, for every recurring task: the tasks of `roles.js`, the player's own schedules (`c.routines`) and the seasonal items (`SEASONS`). Automate it: the schedule's own automatic switch, or the task's automation skill (a done skill counts the task by itself); a money win (badge, buzz, the level-up card). Hand it off writes `c.x.roleMap` (role, task, who, when; any number of people) for feature 6. Drop it and every other choice can be undone. A calm banner and the flash of the changed count show what moved (no motion with reduced motion). Not on each row of Next Steps itself (QUESTIONS 598 h). |
+| 4 | Goal to account to auto-deposit | Not started | |
+| 5 | Health Care Admin and Insurance Coordinator quests | Not started | |
+| 6 | Household role map | Not started | |
+| 7 | Export, glossary, tests and report | Not started | |

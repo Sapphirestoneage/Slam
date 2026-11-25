@@ -2823,8 +2823,11 @@ function goalSim(c, opt) {
   for (let k = era + 1; k <= e0; k++) eraAt[k] = 0;
   era = Math.max(era, e0);
   const lastEnd = ends.reduce((a, e) => Math.max(a, e.yrs * 12), 0);
+  /* opt.flows: a move of core/career.js, [{ at, monthly }]: from month at (0 is this month) on, more (+) or less (-)
+     money is left each month. It does not change spending, so the freedom number stays. */
+  const flowAt = k => (opt.flows || []).reduce((a, f) => a + (f.at <= k ? f.monthly : 0), 0);
   for (let m = 1; m <= 600; m++) {
-    let s = M + ends.reduce((a, e) => a + (m > e.yrs * 12 ? e.amt : 0), 0) * keep;
+    let s = M + ends.reduce((a, e) => a + (m > e.yrs * 12 ? e.amt : 0), 0) * keep + flowAt(m - 1);
     if (hi > 0) hi *= 1 + hr;
     if (s < 0) {
       if (retd) {
