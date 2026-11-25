@@ -60,7 +60,7 @@ export function ladderOf(doc, ref, { now = new Date(), flags = [] } = {}) {
   const consumer = x.debts.filter(d => CONSUMER.has(d.type) && (d.balance ?? 0) > 0);
   const consumerPlan = consumer.length ? (() => { const ms = consumer.map(d => d.planMonths); return { months: ms.every(v => v != null) ? Math.max(...ms) : null }; })() : null; // each debt's month on the one plan
   const qq = F?.qq?.value ?? null, coast = F?.coast ?? m.coastFi.value ?? null;
-  const targetOf = { qq, coast, lean: T['Lean FI']?.value ?? null, fi: m.fiNumber.value, fat: m.fiNumber.value == null ? null : m.fiNumber.value * RULES.fatFactor };
+  const targetOf = { qq, coast, lean: T['Lean FI']?.value ?? null, fi: m.fiNumber.value, fat: T['Fat FI']?.value ?? null };
   const markers = MARKERS.map(k => {
     let reached = false, mo = null, target = null, value = null;
     if (k.kind === 'netWorth') { target = k.target; value = nw; reached = hasNw && nw != null && nw >= k.target; mo = reached ? 0 : nw == null ? null : surplusIn ? months((k.target - nw) / surplusIn) : null; }

@@ -634,6 +634,7 @@ function home() {
   if (typeof homeCoachNote === "function") h = homeCoachNote(h); /* supa.js: the note "the coach made a change" */
   if (typeof homeSleptRow === "function")
     h = homeSleptRow(h); /* slept.js: the line "Your money earned $X while you slept" */
+  if (typeof homeCoastCard === "function") h = homeCoastCard(h); /* coast.js: the card "You can stop sprinting" */
   if (typeof homeFrontRow === "function") h = homeFrontRow(h); /* ask3.js: the four questions (hidden by default) */
   if (typeof homeQuestRow === "function")
     h = homeQuestRow(h); /* questlog.js: Continue and "Where am I", under the top numbers */

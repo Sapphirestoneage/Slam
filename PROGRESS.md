@@ -153,6 +153,7 @@ committed and pushed to main when it is done, so a stop midway keeps the finishe
 `STATUS.md` (the section of this run). A line is added here for each part as it lands.
 
 - Started. Baseline: `node --test` 1,240 pass, 0 fail. `npm run test:game` 71 files, 1,764 checks ok, 0 failed.
+- Part 1, FI number variants: done. Web app: five destination views on Plan › Goals (Lean, Barista, Regular, Chubby, Fat) with the Fat list and the Barista gap, the FI date stress test (4 withdrawal rates x 3 returns), the pod FI number for two or more adults, the FOO order by destination on Plan › FOO, and the one-time card "You can stop sprinting" on Home. Game: the FI ratio on Key numbers and the same card on Home (`features/coast.js`). New math M9G, M9X, M9Y (`js/math/fi.js`, `js/math/destinations.js`), in the second engine too. Questions: `QUESTIONS.md` 580.
 
 ## Nov 25 2026: RUN: Not built, groups 1 to 5 (Nov 25 2026)
 

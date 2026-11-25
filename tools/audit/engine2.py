@@ -536,6 +536,30 @@ def run(cases, ref, il=None):
             ck('never', o['never'], n is None); ck('months', o['months'], n, 0)
         elif fn == 'coastFi':
             ck('Coast FI', o['coast'], x['fiNumber'] / (1 + x['realReturn']) ** max(0, x['retireAge'] - x['age']))
+        elif fn == 'fatFi':
+            # Fat: a year of spending plus the list of extras, over the rate; with no list, the Regular number times the factor
+            extras = x.get('extrasAnnual')
+            listed = extras is not None and extras > 0
+            regular = x['annualSpending'] / x['withdrawalRate']
+            fat = (x['annualSpending'] + extras) / x['withdrawalRate'] if listed else regular * x['factor']
+            ck('Fat FI', o['fat'], fat); ck('from the list', o['fromList'], listed); ck('Chubby FI, the midpoint', o['chubby'], regular + (fat - regular) / 2)
+        elif fn == 'baristaGap':
+            pay, spend, health = x['partTimeIncome'], x['annualSpending'], x.get('healthAnnual')
+            ck('what the pay closes', o['closes'], (spend if pay > spend else pay) / x['withdrawalRate'])
+            ck('still from investments a year', o['left'], spend - pay if spend > pay else 0)
+            ck('after health insurance', o['afterHealth'], None if health is None else pay - health)
+            ck('covers health insurance', o['covers'], None if health is None else pay >= health)
+        elif fn == 'fiStress':
+            soon, late, never = None, None, False
+            for rate, row in zip(x['rates'], o['rows']):
+                target = x['annualSpending'] / rate
+                ck('FI number at the rate', row['target'], target)
+                for ret, theirs in zip(x['returns'], row['months']):
+                    n = months_to(x['invested'], x['monthlyInvesting'], ret, target)
+                    ck('months in the box', theirs, n, 0)
+                    if n is None: never = True
+                    else: soon, late = (n if soon is None else min(soon, n)), (n if late is None else max(late, n))
+            ck('soonest', o['soonest'], soon, 0); ck('latest', o['latest'], None if never else late, 0)
         elif fn == 'solveSaving':
             g = (1 + x['realReturn']) ** (1 / 12); n = x['months']
             need = (x['target'] - x['invested'] * g ** n) * (g - 1) / (g ** n - 1)

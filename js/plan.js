@@ -4,7 +4,7 @@
 import { metrics } from './math/metrics.js';
 import { debtRoute } from './nav.js';
 import { monthlyFrom } from './math/income.js';
-import { fiDate, leanFiNumber, baristaFiNumber, pctToFi, solveMonthlySaving, solveSpending } from './math/fi.js';
+import { fiDate, leanFiNumber, baristaFiNumber, fatFiNumber, chubbyFiNumber, pctToFi, solveMonthlySaving, solveSpending } from './math/fi.js';
 import { payoffPlan } from './math/debt.js';
 import { inFat, myShare, isFaded } from './math/spending.js';
 import { whyAnswered } from './whynow.js';
@@ -17,19 +17,31 @@ import { materialityOf } from './math/time.js';
 export const MILESTONES = ['Lean FI', 'Coast FI', 'Barista FI', 'Regular FI', 'Fat FI', 'Debt free', 'Custom'];
 export const FAT_FACTOR = RULES.fatFactor; // Fat FI: 1.5 times regular spending (QUESTIONS: confirm)
 
+// The Fat list (Plan › Goals): the extras a month tapped on it, added up; null while none is tapped.
+export function fatExtrasOf(doc) {
+  const picks = Object.values(doc.program?.destinations?.fat || {}).filter(v => typeof v === 'number' && v > 0);
+  return picks.length ? picks.reduce((a, b) => a + b, 0) : null;
+}
+// The taps of the destination views, saved on the plan (one undo step each): the view that is open, the Fat list,
+// the destination the FOO is ordered for, the day the Coast card was closed.
+export function setDestinations(store, patch) { store.setIn('program', ['destinations'], { ...(store.doc.program?.destinations || {}), ...patch }, 'FI destinations'); }
 // Every FI number the plan talks about.
 export function fiTargets(m, doc) {
   const x = m.inputs;
   const w = x.withdrawalRate;
   const fat = x.lines.filter(inFat).reduce((s, l) => s + (myShare(l, { roommates: x.roommates }).value ?? 0), 0);
   const partTime = doc.assumptions?.partTimeIncome ?? null; // a month
+  // Fat FI (M9G): today's spending plus the extras tapped on the Fat list; with none tapped, the Fat factor.
+  const extras = fatExtrasOf(doc);
+  const fat$ = m.fiNumber.value === null ? m.fiNumber : fatFiNumber({ annualSpending: x.retirementSpending * 12, extrasAnnual: extras === null ? null : extras * 12, factor: FAT_FACTOR, withdrawalRate: w });
   return {
     'Lean FI': fat ? leanFiNumber({ annualFat: fat * 12, withdrawalRate: w }) : { id: 'M51', value: null, needs: ['food, housing or transportation lines'] },
     'Coast FI': m.coastFi,
     // After launch, will you keep a job? No: Barista FI is not on this path (asked once, on Plan › FOO).
     'Barista FI': doc.profile?.keepJobAfterLaunch === 'No' ? { id: 'M52', value: null, needs: [], never: true, text: 'No job after launch, so Barista FI is not on this path.' } : baristaFiNumber({ annualSpending: x.retirementSpending === null ? null : x.retirementSpending * 12, partTimeIncome: partTime === null ? null : partTime * 12, withdrawalRate: w }),
     'Regular FI': m.fiNumber,
-    'Fat FI': m.fiNumber.value === null ? m.fiNumber : { id: 'M50', value: m.fiNumber.value * FAT_FACTOR, needs: [], unit: 'money', text: `Regular FI ${Math.round(m.fiNumber.value).toLocaleString()} times ${FAT_FACTOR} for a roomier life.` },
+    'Chubby FI': chubbyFiNumber({ regular: m.fiNumber.value, fat: fat$.value }),
+    'Fat FI': fat$,
   };
 }
 

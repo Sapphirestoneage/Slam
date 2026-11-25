@@ -185,3 +185,51 @@ export function moneyAsTime({ amount, hourlyWage, annualSpending }) {
     out.fiDays === null ? null : `${fmt.money(amount)} divided by ${fmt.money(annualSpending / 365, { cents: true })} a day of spending = ${fmt.number(out.fiDays, 1)} FI days.`,
   ].filter(Boolean).join(' ') };
 }
+
+// ---------- The FI destinations (run of Nov 25 2026): Fat, Chubby, the Barista gap, the stress table ----------
+// M9G: Fat FI. With the Fat template filled (extras a year on top of regular spending) the number is regular spending
+// plus the extras; with nothing picked it is regular spending times the Fat factor (RULES.fatFactor).
+export function fatFiNumber({ annualSpending, extrasAnnual = null, factor, withdrawalRate }) {
+  const m = missing({ spending: annualSpending, 'withdrawal rate': withdrawalRate });
+  if (m.length) return needs('M9G', m);
+  if (!isBlank(extrasAnnual) && extrasAnnual > 0) {
+    const v = (annualSpending + extrasAnnual) / withdrawalRate;
+    return { ...ok('M9G', v, `(${fmt.money(annualSpending)} spending a year + ${fmt.money(extrasAnnual)} of extras from your Fat list) divided by ${fmt.pct(withdrawalRate)} = ${fmt.money(v)}.`), spending: annualSpending + extrasAnnual, fromTemplate: true };
+  }
+  if (isBlank(factor)) return needs('M9G', ['the Fat list']);
+  const v = annualSpending / withdrawalRate * factor; // the Regular number times the factor, in that order (one answer with M50)
+  return { ...ok('M9G', v, `${fmt.money(annualSpending)} spending a year times ${factor} for a roomier life, divided by ${fmt.pct(withdrawalRate)} = ${fmt.money(v)}. Pick your own extras in the Fat list to replace the ${factor}.`, { guess: true }), spending: annualSpending * factor, fromTemplate: false };
+}
+// M9G: Chubby FI sits halfway between Regular and Fat, in spending and so in the number.
+export function chubbyFiNumber({ regular, fat }) {
+  const m = missing({ 'Regular FI': regular, 'Fat FI': fat });
+  if (m.length) return needs('M9G', m);
+  const v = (regular + fat) / 2;
+  return ok('M9G', v, `Halfway between Regular FI ${fmt.money(regular)} and Fat FI ${fmt.money(fat)} = ${fmt.money(v)}.`);
+}
+// M9G: what part-time work does. Yearly amounts in. covers: the pay is at least the health insurance; closes: how
+// much smaller the FI number gets (the pay divided by the withdrawal rate, never more than the whole number).
+export function baristaGap({ annualSpending, partTimeIncome, healthAnnual = null, withdrawalRate }) {
+  const m = missing({ spending: annualSpending, 'part-time income': partTimeIncome, 'withdrawal rate': withdrawalRate });
+  if (m.length) return needs('M9G', m);
+  const used = Math.min(partTimeIncome, annualSpending), closes = used / withdrawalRate;
+  const afterHealth = isBlank(healthAnnual) ? null : partTimeIncome - healthAnnual;
+  const health = isBlank(healthAnnual) ? '' : afterHealth >= 0
+    ? ` Health insurance is ${fmt.money(healthAnnual)} a year; the pay covers it and leaves ${fmt.money(afterHealth)} for other bills.`
+    : ` Health insurance is ${fmt.money(healthAnnual)} a year; the pay covers ${fmt.money(partTimeIncome)} of it, and ${fmt.money(-afterHealth)} still comes from investments.`;
+  return { ...ok('M9G', closes, `${fmt.money(used)} a year of part-time pay divided by ${fmt.pct(withdrawalRate)} = ${fmt.money(closes)} you do not have to save.${health}`), covers: afterHealth === null ? null : afterHealth >= 0, afterHealth, left: Math.max(0, annualSpending - partTimeIncome) };
+}
+// M9X: the FI date under stress. One FI date (M53) for each withdrawal rate and each return, on the same path as the
+// plan's own date (the debt-first months and the known changes ahead). The rate moves the FI number; the return moves
+// how fast the money grows. Spending and what goes in each month stay as they are.
+export function fiStress({ invested, monthlyInvesting, annualSpending }, { rates, returns }, { before = null, changes = null, from = new Date() } = {}) {
+  const m = missing({ invested, 'monthly investing': monthlyInvesting, spending: annualSpending });
+  if (m.length) return needs('M9X', m, { unit: 'months' });
+  const rows = rates.map(rate => {
+    const target = annualSpending / rate;
+    return { rate, target, cells: returns.map(realReturn => { const r = fiDate({ invested, monthlyInvesting, realReturn, target }, { from, before, changes }); return { realReturn, months: r.value, never: !!r.never }; }) };
+  });
+  const all = rows.flatMap(r => r.cells), reach = all.filter(c => c.months != null).map(c => c.months);
+  const soonest = reach.length ? Math.min(...reach) : null, latest = all.some(c => c.never) || !reach.length ? null : Math.max(...reach);
+  return { ...ok('M9X', rows, `Each box is the months until investments reach a year of spending (${fmt.money(annualSpending)}) divided by the withdrawal rate of its row, growing at the return of its column, with ${fmt.money(monthlyInvesting)} going in a month.`, { unit: 'months' }), rows, rates, returns, soonest, latest };
+}
