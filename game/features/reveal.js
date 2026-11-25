@@ -186,7 +186,9 @@ function rvSheet() {
   <div class="tiny muted">No dollar amounts on this sheet, so it is safe to send to a friend.</div>
   <button class="primary wide" data-a="rvcopy">${w.copied ? "Copied ✓" : "Copy my character sheet"}</button><button class="ghost wide slim" data-a="rvagain">Play the reveal again</button><button class="ghost wide slim" data-a="close">Done</button>`;
   /* element.js: the row "Strengths and your element" */
-  return typeof rvSheetElement === "function" ? rvSheetElement(sheetH) : sheetH;
+  const withEl = typeof rvSheetElement === "function" ? rvSheetElement(sheetH) : sheetH;
+  /* founding.js: the mark "Founding Tester" */
+  return typeof rvSheetFounding === "function" ? rvSheetFounding(withEl) : withEl;
 }
 Object.assign(ACT, {
   reveal: () => {

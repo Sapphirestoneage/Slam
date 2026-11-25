@@ -4,6 +4,7 @@
 import { h, clear, icon } from './ui/dom.js';
 import { arrive, leftPopover, missingFor, land } from './ui/arrive.js';
 import { layerSnapshot } from './math/layers.js';
+import { whatsNew } from './ui/whatsnew-ui.js'; // the patch notes, in the More menu
 import { openReport } from './report/page.js';
 import { startTips } from './ui/tips.js';
 import { timerAfter } from './timer.js';
@@ -305,6 +306,7 @@ const app = {
       item('Export', 'sheet', () => exportPanel(this)), // Nov 25 2026: one Export entry, easy to find (the spreadsheet, the way back, the blank FIRE sheet)
       this.prefs.clientView ? null : item('Parking lot', 'note', () => this.openParking(anchor), { disabled: !this.hasClient }), // coach only
       item('Report a bug or idea', 'flag', () => openReport()), // the same sheet as the Report button of the top bar (js/report)
+      item("What's new", 'star', () => whatsNew(anchor)), // the patch notes, the same list as the game's Menu
       h('span.muted.small', {}, 'Ctrl+Z undoes, Ctrl+Shift+Z redoes, / finds or adds.')), { width: 300 });
   },
   addAnything(anchor) {

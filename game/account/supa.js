@@ -23,6 +23,36 @@ const SUPA_URL = "https://twuxggigsfsdczsyvupk.supabase.co";
 const SUPA_KEY = "sb_publishable_tSWobVdlrb-I5pTiGORWHA_z9JD5K-Z";
 const SUPA = { on: false, sb: null, uid: null, email: "", ready: null, ids: {}, share: true };
 
+/* A share link has ?ref=code (features/founding.js makes it). The code a person arrives with is kept on this
+   device from the first page load, through the sign-up, until setup is finished. The first code stays.
+   suRefClean() takes only letters and digits, thus the link cannot carry anything else. */
+const SU_REF = "slam_ref";
+function suRefClean(s) {
+  const c = String(s == null ? "" : s)
+    .trim()
+    .toLowerCase();
+  return /^[a-z0-9]{4,32}$/.test(c) ? c : "";
+}
+function suRef() {
+  try {
+    return typeof localStorage === "undefined" ? "" : suRefClean(localStorage.getItem(SU_REF));
+  } catch (e) {
+    report(e, "supa.js: suRef");
+    return "";
+  }
+}
+function suRefKeep(search) {
+  try {
+    const q = suRefClean(new URLSearchParams(search || "").get("ref"));
+    if (q && !suRef()) localStorage.setItem(SU_REF, q);
+    return q;
+  } catch (e) {
+    report(e, "supa.js: suRefKeep");
+    return "";
+  }
+}
+if (typeof location !== "undefined") suRefKeep(location.search);
+
 (function () {
   if (typeof window === "undefined" || window.claude) return; /* inside Claude: use Claude's own saving */
   if (!window.supabase || !window.supabase.createClient) {
@@ -314,7 +344,12 @@ function suGate(done) {
           ? await SUPA.sb.auth.signUp({
               email: e,
               password: p,
-              options: { emailRedirectTo: location.origin + location.pathname },
+              /* data.ref: the code of the share link, kept with the account, thus it is not lost when
+                 the person confirms the email on a different device */
+              options: Object.assign(
+                { emailRedirectTo: location.origin + location.pathname },
+                suRef() ? { data: { ref: suRef() } } : {}
+              ),
             })
           : await SUPA.sb.auth.signInWithPassword({ email: e, password: p });
       if (r.error) {
