@@ -10,6 +10,7 @@ import { buildWorkbook } from '../sheet/workbook.js';
 import { workbookBuffer, readWorkbook } from '../sheet/excel.js';
 import { compare, applyChanges, linesOf, unpicked } from '../import-sheet.js';
 import { loadExcelJS } from '../sheet/load.js';
+import { FIRE_WORDS, fireBlankButton } from '../sheet/fire.js';
 import { keyNumbers } from '../math/metrics.js';
 import { money, pct } from '../format.js';
 import { intakeButton } from './intake-ui.js';
@@ -54,6 +55,33 @@ export function sheetButtons(app, { coachBox = true, choice = true } = {}) {
     intakeButton(app));
 }
 
+// The history of market returns, for the two rows of the FIRE sheet a spreadsheet cannot work out (the replay of
+// history and the random markets). Fetched once; with no connection the file is made without those two rows.
+let histData;
+async function historyData() {
+  if (histData === undefined) { try { const r = await fetch('data/history-returns.json'); histData = r.ok ? await r.json() : null; } catch { histData = null; } }
+  return histData;
+}
+
+// The Export entry (the More menu): one place for the whole plan as a file, the way back, the steps for Google
+// Sheets, and the blank FIRE sheet. The buttons are the same ones as on Coach tools, Data.
+export function exportPanel(app) {
+  let close;
+  const blank = h('div.btn-line.fire-blank', { style: { maxWidth: 'none' } });
+  blank.innerHTML = fireBlankButton({ button: 'btn', line: 'muted small' }); // the one shared button (game/features/firelink.js): fixed words and a fixed link
+  const box = h('div.ft-box.export-panel', { style: { width: 'min(620px, 100%)' } },
+    h('div.ft-head', {}, icon('sheet'), h('h2', { style: { margin: 0 } }, 'Export'), h('span', { style: { flex: 1 } }), button('Close', { onClick: () => close() })),
+    h('p.muted', {}, 'Your full plan as one file: every number and every formula. The first tab is the FIRE sheet, one row for each year, with your inputs in blue at the top.'),
+    h('div.stack', { style: { gap: '16px' } },
+      h('div.btn-line', { style: { maxWidth: 'none' } }, button(FIRE_WORDS.xlsx, { kind: 'primary', iconName: 'sheet', disabled: !app.hasClient, why: 'Open a client first', onClick: e => exportSheet(app, e.currentTarget) }),
+        h('span.muted.small', {}, FIRE_WORDS.sheetsHelp)),
+      h('div.btn-line', { style: { maxWidth: 'none' } }, button(WORDS.back, { iconName: 'upload', disabled: !app.hasClient, why: 'Open a client first', onClick: () => { close(); importSheet(app); } }),
+        h('span.muted.small', {}, `${WORDS.backLine} ${WORDS.backTip}`)),
+      blank));
+  close = overlayOf('Export', box);
+  return box;
+}
+
 export async function exportSheet(app, btn = null) {
   if (!app.hasClient) { toast('Open a client first.'); return; }
   const doc = exportDoc(app); // batch 28: everything, the shared copy, or what the client sees
@@ -63,7 +91,7 @@ export async function exportSheet(app, btn = null) {
   if (btn) btn.disabled = true;
   try {
     const ExcelJS = await loadExcelJS();
-    const plan = buildWorkbook(doc, app.ctx.ref, { now, coach, shared, flags: app.flags || [] });
+    const plan = buildWorkbook(doc, app.ctx.ref, { now, coach, shared, flags: app.flags || [], hist: await historyData() });
     const blob = new Blob([await workbookBuffer(ExcelJS, plan)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const result = await saveFile(blob, `slam-${slug(plan.client)}-${shared ? 'shared-' : ''}${now.toISOString().slice(0, 10)}.xlsx`); // batch 7, item 1: works inside the artifact too
     toast(saveWords(result, 'The spreadsheet') ?? `Spreadsheet downloaded${coach ? ', with coach-only notes' : shared ? ', without private rows' : ''}. Upload it to Google Drive to open it in Google Sheets, or open it in Excel.`);

@@ -41,7 +41,7 @@ Open http://localhost:8000/game/. Without an internet connection the game runs i
 npm run test:game
 ```
 
-The command runs 78 test files (2,210 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
+The command runs 79 test files (2,230 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
 
 All checks pass, and the command ends with exit code 0. One file (`addon-sealed-files.js`) has a part that needs the private add-on source. In this repository that part prints `SKIP`.
 
@@ -79,7 +79,7 @@ These files stay in `game/` because the browser or the tools look for them there
 | The FI ratio on Key numbers, and the card "You can stop sprinting" on Home | `features/coast.js` |
 | The simulators: the engine, and one file for each | `features/sim.js`, `features/sims/*.js` |
 | My plan on one page, the Ask front door, quotas and the savings rate by month | `features/plan.js`, `features/ask3.js`, `features/quota.js` |
-| The spreadsheet of the plan (each number with its formula) | `features/book.js` |
+| The spreadsheet of the plan (each number with its formula), and Export: the .xlsx file, written by `js/sheet/` of the web app | `features/book.js`, `features/firelink.js` |
 | Where am I (the Quest Log): Continue, the trail, Journey, Areas, Questions, Time | `features/questlog.js` |
 | The Galaxy: the 625 skills as stars on one canvas, with lanes and gateway stars | `features/stars.js` |
 | Port batch 1, taking money out and the two ages | `features/takeout.js`, `features/ages.js` |

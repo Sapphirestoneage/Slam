@@ -10,7 +10,7 @@ import { startTips } from './ui/tips.js';
 import { timerAfter } from './timer.js';
 import * as S from './ui/staples.js';
 import { Store, newHousehold, exportFile, importInto, backupDue, statusOf } from './records.js';
-import { UI as EXPORT_UI } from './ui/sheet-ui.js';
+import { UI as EXPORT_UI, exportPanel } from './ui/sheet-ui.js';
 import { sharedBackup } from './privacy.js';
 import { localAdapter, memoryAdapter, listClients, loadClient, saveClient, createClient, removeClient, getPrefs, setPrefs, autosave } from './storage.js';
 import { householdFromInputs } from './demo.js';
@@ -144,7 +144,7 @@ const app = {
     const clientBtn = h('button.client-btn', { type: 'button', 'aria-label': `Client: ${clientName}. Switch client`, title: clientName }, h('span', {}, clientName), icon('down'));
     clientBtn.onclick = () => this.clientMenu(clientBtn);
     // Undo, redo, Add anything and the parking lot sit behind one labeled More button (Phase 3: one calm row).
-    const more = h('button.icon-btn.more-btn', { type: 'button', 'aria-label': 'More: undo, redo, add anything, parking lot', 'aria-haspopup': 'dialog', 'data-focus': 'more' }, 'More', icon('down'));
+    const more = h('button.icon-btn.more-btn', { type: 'button', 'aria-label': 'More: undo, redo, add anything, export, parking lot', 'aria-haspopup': 'dialog', 'data-focus': 'more' }, 'More', icon('down'));
     more.onclick = () => this.moreMenu(more);
     // Batch 19: says what it does in words (a screen picture alone read as nothing; DESIGN.md rule 8).
     const cv = h('button.icon-btn.more-btn.cv-btn', { type: 'button', title: this.prefs.clientView ? 'Client view is on: coach-only items are hidden. Click to turn it off' : 'Client view: hide coach-only items while the client watches', 'data-focus': 'icon:Client view', onclick: () => this.setPref('clientView', !this.prefs.clientView) }, icon('monitor'), this.prefs.clientView ? 'Client view on' : 'Client view');
@@ -303,6 +303,7 @@ const app = {
       item(this.store.canUndo && !this.prefs.clientView ? `Undo: ${this.store.undoStack.at(-1).label}` : 'Undo', 'undo', () => this.undo(), { disabled: !this.store.canUndo }), // the label names the coach's last move: not in Client view
       item('Redo', 'redo', () => this.redo(), { disabled: !this.store.canRedo }),
       item('Add anything', 'plus', () => this.addAnything(anchor), { disabled: !this.hasClient }),
+      item('Export', 'sheet', () => exportPanel(this)), // Nov 25 2026: one Export entry, easy to find (the spreadsheet, the way back, the blank FIRE sheet)
       this.prefs.clientView ? null : item('Parking lot', 'note', () => this.openParking(anchor), { disabled: !this.hasClient }), // coach only
       item('Report a bug or idea', 'flag', () => openReport()), // the same sheet as the Report button of the top bar (js/report)
       item("What's new", 'star', () => whatsNew(anchor)), // the patch notes, the same list as the game's Menu

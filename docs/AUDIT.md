@@ -52,6 +52,11 @@ Added Nov 25 2026 (the FI destinations): Fat FI with and without a list of extra
 part-time pay closes and whether it covers health insurance, and every box of the FI date stress test (the second
 engine uses the closed formula for each box, SLAM steps month by month).
 
+Added Nov 25 2026 (the FIRE sheet, M9I): every year row of the FIRE sheet tab (the balance at year end, the
+withdrawal, spending, the savings rate, % to FI) for each way to take money out that the sheet writes as a formula:
+the same amount each year, a share of the balance, a floor and a ceiling, guardrails. The second engine steps a
+working year month by month; SLAM and the sheet use one factor for the year.
+
 Not covered yet: the coach app's month-by-month projection (`js/math/projection.js`), debts with a 0% offer, the
 household tax across several jobs, the Child Tax Credit, the benefits cliff, Social Security benefit amounts, and the
 history replay. Each is a row to add (ROADMAP.md, Run 2).

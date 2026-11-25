@@ -51,6 +51,10 @@ button.rowbtn.okrow{border-color:var(--good)}
 button{font:inherit;font-weight:700;color:var(--text);background:var(--panel2);border:2px solid var(--teal);border-radius:10px;padding:10px 14px;cursor:pointer;min-height:44px}
 button.primary{background:linear-gradient(180deg,var(--sap),var(--a1));color:#fff;border-color:var(--a3)}
 button.ghost{border-color:var(--line);font-weight:600}
+/* a link that opens a different site, with the look of a button (features/firelink.js) */
+a.linkbtn{display:inline-flex;align-items:center;justify-content:center;align-self:flex-start;min-height:44px;padding:8px 14px;border:2px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text);font-weight:600;text-decoration:none}
+a.linkbtn::after{content:"↗";margin-left:6px}
+a.linkbtn:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 button.gold{border-color:var(--a3);color:var(--text)}
 button.slim{min-height:36px;padding:5px 10px;font-size:14px}
 button.wide{width:100%}
@@ -597,9 +601,10 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <script src="features/audit.js?v=d893fdb8"></script>
 <script src="data/patchnotes.js?v=2d4a6079"></script>
 <script src="features/founding.js?v=c2cce197"></script>
-<script src="features/book.js?v=4b237793"></script>
+<script src="features/firelink.js?v=fc984112"></script>
+<script src="features/book.js?v=dd6c3603"></script>
 <script src="features/questlog.js?v=6c4208d8"></script>
 <script src="features/fbreport.js?v=46a2af17"></script>
-<script src="features/built.js?v=3b76a0a2"></script>
+<script src="features/built.js?v=fbcc6e67"></script>
 </body>
 </html>
