@@ -728,7 +728,7 @@ tr.row-note .part-line { margin-right: 12px; }
 .rc-order { margin: 0 0 8px; padding-left: 22px; display: grid; gap: 6px; }
 .rc-order li { padding-left: 4px; }
 .rc-order li > span { vertical-align: baseline; }
-.rc-order .rc-name { font-weight: 600; display: inline-block; width: 190px; }
+.rc-order .rc-name { font-weight: 600; display: inline-block; width: 300px; }
 .rc-order .muted { display: inline-block; width: 110px; }
 .rc-order .rc-paid { margin-left: 12px; }
 .rc-script ul { margin: 4px 0; padding-left: 20px; }
@@ -787,3 +787,8 @@ table.rows.mini.dest-stress td.dest-cur { font-weight: 700; outline: 2px solid v
   table.rows.mini.dest-stress th:nth-child(2), table.rows.mini.dest-stress td:nth-child(2) { display: none; }
   table.rows.mini.dest-pod th:nth-child(4), table.rows.mini.dest-pod td:nth-child(4) { display: none; }
 }
+
+/* Recalculating, follow-up (Nov 25 2026): a date that moves sooner is a win (green edge), and the calm Coming soon card. */
+.rc-card.rc-win { border-left-color: var(--good); }
+.rc-card .rc-win-head { font-size: 1.15rem; }
+.coming-soon { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; padding: 10px 12px; margin: 4px 0 8px; border: 1.5px dashed var(--border-filled); border-radius: var(--r-input); }

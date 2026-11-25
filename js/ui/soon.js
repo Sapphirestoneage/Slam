@@ -18,6 +18,12 @@ export function soonCard({ home = '#/home/session' } = {}) {
     h('a.btn.primary', { href: home, style: { textDecoration: 'none' } }, 'Go to Home')));
 }
 
+// The same calm words for one part inside a screen that is built but waits (first use: the phone scripts of "When it
+// won't all get paid", until Eli has read them). A tag, what is coming, and what to do until then. No button.
+export function soonPart({ title, line = null, id = null } = {}) {
+  return h('div.coming-soon', { role: 'note', 'data-soon': id ?? '1' }, h('span.tag.plain', {}, 'Coming soon'), h('strong', {}, title), line ? h('span.muted.small', {}, line) : null);
+}
+
 const later = e => setTimeout(() => { throw e; }, 0); // on purpose: the error stays visible
 
 // screen: the function of the route (or nothing, when the route has none). draw: () => what it returns.
