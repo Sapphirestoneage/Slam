@@ -12,7 +12,9 @@ import { runwayOf, backwardsOf, tripCostOf, habitCostOf, loanCostOf, stoppedPayO
 import { ilIncomeTaxOf, ilNationalInsuranceOf, olimPointsOf, aliyahOf } from '../../js/math/aliyah.js';
 import { RULES } from '../../js/registry/assumptions.js';
 import { hbRun, hbBreakeven, hbPriceToRent, hbFivePercent } from '../../js/math/homebuy.js';
+import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
+import { snOutside, snFixCheck, SN_RULES } from '../../js/math/sins.js';
 import { Store, newHousehold } from '../../js/records.js';
 import { answer } from '../../js/journey.js';
 import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom, worked } from '../../js/math/lifetime.js';
@@ -82,11 +84,30 @@ for (let i = 0; i < N; i++) {
   { const x = { target: money(500, 60000), balance: money(1, 70000), monthly: rnd() < 0.1 ? null : money(10, 3000), nowAt: `2026-${String(whole(1, 12)).padStart(2, '0')}-05` }, r = rcRefill(x); add('rcRefill', x, { gap: r.gap, months: r.months, ym: r.full ? null : r.ym, full: r.full }); }
   { const x = { invested: money(500, 2000000), realReturn: pick([0.03, 0.05, 0.07]), monthly: rnd() < 0.1 ? pick([0, null]) : money(20, 9000), nowAt: `2026-${String(whole(1, 12)).padStart(2, '0')}-05`, maxMonths: pick([120, 360, 840]) }; x.coast = Math.round(x.invested * between(0.8, 1.6));
     const r = rcCoast(x); add('rcCoast', x, { below: r.below, by: r.by, months: r.months, ym: r.below ? r.ym : null }); }
+  // The money sins read (js/math/sins.js): the weights, the fading (half-life SN_RULES.halfLife) and the quiz as a
+  // starting guess that shares out as other evidence comes in; and the month of a defense (before and during).
+  { const T = ['lust', 'greed', 'sloth', 'denial', 'fear'], SRC = ['quiz', 'ledger', 'checkin', 'app', 'you', 'fix'], now = '2026-11-25';
+    const day = n => new Date(Date.UTC(2026, 10, 25) - n * 86400000).toISOString().slice(0, 10);
+    const ev = Array.from({ length: whole(1, 25) }, () => { const source = pick(SRC), add = {}; for (const t of T) if (rnd() < 0.4) add[t] = pick([-3, -2, -1, 1, 1, 2, 2, 3]);
+      return { source, add, d: source === 'quiz' && rnd() < 0.5 ? null : day(whole(-3, 240)) }; });
+    const x = { ev, now, halfLife: SN_RULES.halfLife }, out = snOutside(ev, now);
+    add('snOutside', x, { sources: out.map(o => o.source), scores: Object.fromEntries(out.map(o => [o.source, o.scores])) });
+    const fx = { trait: pick(T), group: 'sin', start: day(whole(0, 60)) }, C = snFixCheck(fx, ev, now);
+    add('snFixCheck', { ev, now, fix: fx, days: SN_RULES.fixDays }, { before: C.before, during: C.during, done: C.done, daysLeft: C.daysLeft }); }
   // Home buying and renting (js/math/homebuy.js, M9O): the payment, the first month line by line, each year's position, the breakeven year
   { const x = { price: money(90000, 1500000), downPct: pick([3, 5, 10, 20, 25]), ratePct: pick([0, 3, 4.5, 6, 6.5, 7.25, 9]), years: pick([15, 20, 30]), taxPct: pick([0, 0.5, 1.2, 2.5]), insYear: pick([0, 900, 1800, 4200]), pmiPct: pick([0.3, 0.75, 1.5]), hoa: pick([0, 0, 150, 600]), maintPct: pick([1, 1.5, 2]), repairsYear: pick([0, 1500, 5000]),
       rent: money(500, 7000), rentIns: pick([0, 12, 25]), rentGrowthPct: pick([0, 2, 3, 3.5, 4, 6]), homeGrowthPct: pick([-1, 0, 2, 3, 5]), closingPct: pick([0, 2, 3, 5]), sellingPct: pick([0, 5, 6, 8]), retPct: pick([0, 4, 6, 7, 9]) };
     const r = hbRun({ ...x, stay: 30 }), b = hbBreakeven(x);
     add('homeBuy', x, { pmt: r.pmt, first: r.first, rent1: r.firstRent.total, pmiMonths: r.pmiMonths, ahead: r.byYear.map(y => y.ahead), ownOut: r.byYear.map(y => y.ownOut), rentOut: r.byYear.map(y => y.rentOut), year: b.year, never: b.never, ratio: hbPriceToRent(x.price, x.rent), five: hbFivePercent(x.price, x.rent).line, rentLess: hbFivePercent(x.price, x.rent).rentLess }); }
+  // Career and education (js/math/career.js, M9Z): one path priced, the stack's overlaps, the match left behind, the launch window
+  { const x = { cost: money(200, 150000), help: pick([0, 0, 1000, 5000]), months: pick([0, 3, 6, 12, 18, 48]), keepPct: pick([0, 50, 100]), payBefore: money(15000, 200000), payAfter: money(15000, 260000), taxPct: pick([0, 10, 12, 22, 24, 32, 35]),
+      loan: pick([0, 0, 5000, 30000]), loanRatePct: pick([0, 4, 6.5, 9]), loanYears: pick([5, 10, 20]), age: whole(18, 55), endAge: pick([55, 60, 65, 70]) }, r = crRoi(x);
+    add('careerRoi', x, { total: r.total, gainNet: r.gainNet, payback: r.paybackYears, lifetime: r.lifetime, interest: r.interest, once: r.once, changes: r.changes }); }
+  { const n = whole(1, 5), ym = () => `${whole(2026, 2029)}-${String(whole(1, 12)).padStart(2, '0')}`, list = Array.from({ length: n }, (_, i) => { const a = ym(), b = ym(); return { name: `C${i}`, from: a < b ? a : b, to: a < b ? b : a, cost: rnd() < 0.2 ? null : money(100, 20000), raise: rnd() < 0.2 ? null : money(500, 30000) }; }), S = crStack(list);
+    add('careerStack', { list }, { overlaps: S.overlaps.map(o => [o.a, o.b, o.months]), busy: S.busy, span: S.span, cost: S.cost, raise: S.raise }); }
+  { const x = { match: money(100, 80000), years: pick([0, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 5.9, 6, 8]), schedule: pick(['now', 'cliff3', 'graded6']) }, V = crVestLeft(x); add('careerVest', x, { pct: V.pct, left: V.left, more: V.next ? V.next.more : null, months: V.next ? V.next.months : null }); }
+  { const x = { raise: money(500, 60000), taxPct: pick([0, 12, 22, 32]), left: pick([0, 1500, 8000]), yearly: money(500, 23500), nowPct: pick([10, 12, 22, 24, 32]), laterPct: pick([0, 10, 12, 22, 24]), rent: money(200, 3000), costs: pick([0, 100, 400]), years: pick([1, 2, 5]) };
+    const H = crHop(x), T = crRothTrad({ yearly: x.yearly, nowPct: x.nowPct, laterPct: x.laterPct }), K = crHack(x); add('careerLaunch', x, { hop: H.monthly, hopOnce: H.once, roth: T.monthly, hack: K.monthly, hackMonths: K.months }); }
   { const x = { cap: money(10, 800), spent: rnd() < 0.1 ? null : money(1, 1200) }, r = rcSafeLine(x); add('rcSafeLine', x, { left: r.left, over: r.over, ranOut: r.ranOut, planCost: r.planCost }); }
   { const TAGS = ['mistake', 'unavoidable', null], KS = ['Late fee', 'Overdraft', 'Car repair', 'Other'], events = Array.from({ length: whole(1, 9) }, (_, k) => ({ id: `e${k}`, kind: pick(KS), amount: rnd() < 0.08 ? null : money(5, 9000), tag: pick(TAGS), yearsAgo: Math.round(between(0, 6) * 10) / 10 }));
     const x = { events, realReturn: pick([0.03, 0.04, 0.05, 0.06]), years: whole(1, 40), perDay: rnd() < 0.25 ? pick([0, -5, -40, null]) : money(2, 300), hourly: money(8, 150), yearIncome: money(15000, 300000) }, r = rcAudit(x);

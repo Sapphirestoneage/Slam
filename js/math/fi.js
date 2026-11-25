@@ -3,6 +3,7 @@
 import { ok, needs, missing, fmt, isBlank } from './result.js';
 import { duration } from '../format.js';
 import { RULES } from '../registry/assumptions.js';
+import { crDays } from './career.js';
 
 const MAX_MONTHS = RULES.maxMonths;
 
@@ -238,4 +239,15 @@ export function fiStress({ invested, monthlyInvesting, annualSpending }, { rates
   const all = rows.flatMap(r => r.cells), reach = all.filter(c => c.months != null).map(c => c.months);
   const soonest = reach.length ? Math.min(...reach) : null, latest = all.some(c => c.never) || !reach.length ? null : Math.max(...reach);
   return { ...ok('M9X', rows, `Each box is the months until investments reach a year of spending (${fmt.money(annualSpending)}) divided by the withdrawal rate of its row, growing at the return of its column, with ${fmt.money(monthlyInvesting)} going in a month.`, { unit: 'months' }), rows, rates, returns, soonest, latest };
+}
+// M9Z (run of Nov 25 2026, Part 3): the FI date (M53) with a move in, next to the plan's own date. m is metrics(); a
+// move is { once (paid now, off what is invested), changes ([{ at, monthly }], more or less invested a month from month
+// at) } from js/math/career.js. Returns { before, after (months), days (negative is sooner), never } or null without a date.
+export function fiMoveOf(m, move, { from = new Date() } = {}) {
+  const x = m?.inputs, inv = m?.investing, target = m?.fiNumber?.value;
+  if (!x || !inv || x.invested == null || inv.monthly == null || target == null || !move || move.needs?.length) return null;
+  const run = (once, ch) => fiDate({ invested: x.invested - once, monthlyInvesting: inv.monthly, realReturn: x.realReturn, target }, { from, before: inv.before ?? null, changes: [...(inv.changes ?? []), ...ch] });
+  const a = run(0, []), b = run(move.once ?? 0, move.changes ?? []);
+  if (a.value == null && !a.never) return null;
+  return { before: a.value, after: b.value, never: !!b.never, days: crDays(a.value, b.value) };
 }

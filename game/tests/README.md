@@ -48,6 +48,7 @@ Each file has the name of its feature.
 | `retirement-odds.js` | Retirement odds | `features/odds.js`, `data/market.js` (some checks wait for the engine) |
 | `life-event-blocks.js` | Life event blocks: the stack on top of the simulators | `features/blocks.js` |
 | `home-buying-and-renting.js` | Rent or buy on the shared engine: the copy of the rules, the bank's payment, the true cost of owning and renting, lines not counted until tapped, PMI, the breakeven year, the two rules of thumb, the closed group, the terms, the spreadsheet rows | `core/homebuy.js`, `features/sims/rentbuy.js`, `features/sim.js` |
+| `career-and-education.js` | Career and education on the shared engine: the copy of the engine, a course priced (payback, lifetime value, the freedom date), a preset that is a sample, empty answers that wait, two paths side by side, the credential stack with an overlap, the match that stays with the job on each schedule, the launch window in days, the link from Two job offers, the spreadsheet rows | `core/career.js`, `features/career.js`, `core/engine.js` |
 | `simulators.js` | The simulator engine and the 12 simulators, with each flip point | `features/sim.js`, `features/sims/*.js` |
 | `spreadsheet-extras.js` | The savings rate by month, the quotas, next year's budget | `features/quota.js` |
 | `tax-view.js` | The tax view | `features/taxview.js`, `features/retire.js` (retireTax) |
@@ -83,6 +84,7 @@ Each file has the name of its feature.
 | `quick-math.js` | Quick math | `features/quick.js` |
 | `recalculating.js` | Recalculating: the kept plan and the new date, the short month, the cushion refill, the safe-to-fail line, the letter exercise, the optional Mistake audit | `core/recalc.js`, `features/recalc.js`, `features/exletter.js`, `features/audit.js` |
 | `quizzes.js` | Quizzes: the copies of the engine and of the skins are current, the Money Chart gives its old results, each skin ends on one card on each path, the routes to real skills, the element changes only by a tap, a result is private until shown, the placeholder Coming soon, the built list row | `core/quizcore.js`, `data/quizskins.js`, `features/quizzes.js`, `features/chart.js`, `features/element.js` |
+| `money-sins-read.js` | The money sins read: the copy of `core/sins.js` is current, the read of a made-up ledger (right after payday, fun buys in a month, fun past its plan), two sources over 40 days give a Close read, the check-in after a logged buy over the line (rent never, 3 a week at most, Skip), the tap kept with its time, Is this really it? kept for the judge, Test the fix, the sheet in the new look with no cost on it, privacy for a coach, the built list row | `core/sins.js`, `features/sins.js`, `features/quizzes.js`, `screens/ui.js` |
 | `save-status.js` | The save status | `account/cloud.js` |
 | `sharing-costs-fairly.js` | Sharing costs fairly | `features/fair.js` |
 | `sheet-navigation.js` | Back, Forward, Close and "i" on each sheet | `screens/nav.js` |

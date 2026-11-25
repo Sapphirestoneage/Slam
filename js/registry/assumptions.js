@@ -12,6 +12,7 @@
 import { LEVELS, WEIGHTS, PACE, PACE_WORDS, SESSIONS } from './program.js';
 import { WAY_CAPE, WAY_CASH_REAL, WAY_CUT_LINE } from '../math/withdraw.js';
 import { HB_RULES, HB_SOURCE } from '../math/homebuy.js';
+import { CR_VEST, CR_VEST_SOURCE, CR_RULES } from '../math/career.js';
 import { THRESHOLDS, PAYOFF, AREAS as SCORE_AREAS } from './scorecard.js';
 import { priorsData } from '../priorslib.js';
 
@@ -210,6 +211,9 @@ export const ASSUMPTIONS = [
   { id: 'rules.homeMaintHigh', name: 'HomeMaintHigh', label: 'Home buying: maintenance, the high end of the typical range, % of the value a year', unit: 'number', get: () => HB_RULES.maintHigh, source: `${HB_SOURCE}: "maintenance 1 to 2% a year"`, date: '2026-11-25' },
   { id: 'rules.homeRentGrowthLow', name: 'HomeRentGrowthLow', label: 'Renting: rent growth, the low end of the typical range, % a year', unit: 'number', get: () => HB_RULES.rentGrowthLow, source: `${HB_SOURCE}: "rent growing 3 to 4% a year"`, date: '2026-11-25' },
   { id: 'rules.homeRentGrowthHigh', name: 'HomeRentGrowthHigh', label: 'Renting: rent growth, the high end of the typical range, % a year', unit: 'number', get: () => HB_RULES.rentGrowthHigh, source: `${HB_SOURCE}: "rent growing 3 to 4% a year"`, date: '2026-11-25' },
+  { id: 'rules.careerVestCliff', name: 'CareerVestCliff', label: 'Vesting: a 3-year cliff, the years of service after which all of the match is yours', unit: 'number', get: () => CR_VEST.find(v => v.id === 'cliff3').steps[1][0], source: `${CR_VEST_SOURCE}; js/math/career.js`, date: '2026-11-25' },
+  { id: 'rules.careerVestGraded', name: 'CareerVestGraded', label: 'Vesting: a 6-year graded schedule, the share vested after 2 years (then 20% more each year, all after 6)', unit: 'pct', get: () => CR_VEST.find(v => v.id === 'graded6').steps[1][1] / 100, source: `${CR_VEST_SOURCE}; js/math/career.js`, date: '2026-11-25' },
+  { id: 'rules.careerDaysPerMonth', name: 'CareerDaysPerMonth', label: 'Career and education: days in a month, to say a change of the FI date in days (365.25 / 12)', unit: 'number', get: () => CR_RULES.daysPerMonth, source: RULE('js/math/career.js: a year of 365.25 days over 12 months'), date: '2026-11-25' },
   { id: 'rules.wayCutLine', name: 'WayCutLine', label: 'Compare the ways: a year counts as a cut when it pays under this share of what the way aims to pay', unit: 'pct', get: () => WAY_CUT_LINE, source: RULE('js/math/withdraw.js'), date: '2026-11-25' },
   { id: 'rules.cardMinimumFloor', name: 'CardMin_floor', label: 'Card minimum: at least', unit: 'money', get: () => RULES.cardMinimumFloor, source: RULE('js/math/debt.js, M30'), date: '2026-10-28' },
   { id: 'rules.cardMinimumPct', name: 'CardMin_pct', label: 'Card minimum: share of the balance, plus a month of interest', unit: 'pct', get: () => RULES.cardMinimumPct, source: RULE('js/math/debt.js, M30'), date: '2026-10-28' },
