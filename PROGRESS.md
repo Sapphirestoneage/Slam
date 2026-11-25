@@ -154,3 +154,38 @@ committed and pushed to main when it is done, so a stop midway keeps the finishe
 
 - Started. Baseline: `node --test` 1,240 pass, 0 fail. `npm run test:game` 71 files, 1,764 checks ok, 0 failed.
 - Part 1, FI number variants: done. Web app: five destination views on Plan › Goals (Lean, Barista, Regular, Chubby, Fat) with the Fat list and the Barista gap, the FI date stress test (4 withdrawal rates x 3 returns), the pod FI number for two or more adults, the FOO order by destination on Plan › FOO, and the one-time card "You can stop sprinting" on Home. Game: the FI ratio on Key numbers and the same card on Home (`features/coast.js`). New math M9G, M9X, M9Y (`js/math/fi.js`, `js/math/destinations.js`), in the second engine too. Questions: `QUESTIONS.md` 580.
+
+## Nov 25 2026: RUN: Not built, groups 1 to 5 (Nov 25 2026)
+
+Run name: **Not built, groups 1 to 5 (Nov 25 2026)**. 11 parts, in the order of the prompt. It runs next to the run
+"Finish everything partly built" (above), in its own working copy, and each part is committed and pushed to main when
+it is done. The state of each part is in `STATUS.md` (the section of this run). A line is added here for each part.
+
+- Started. The tone rule of this run is for the whole app: "Recalculating", not mistakes.
+
+## Nov 25 2026: RUN: Launch ready for the Nov 30 soft launch (Nov 25 2026)
+
+Run name: **Launch ready for the Nov 30 soft launch (Nov 25 2026)**. 6 parts: a stable public site (the branch
+`release` and `tools/promote.sh`), Report a bug or idea, Founding Testers and sharing, Trust, Email, the front door.
+It starts when each of the two other runs has finished the part it is on. The two runs wait until this one is done.
+A line is added here for each part.
+
+- Logged. Waiting for Part 1 of each of the two other runs to land.
+
+## Nov 25 2026: RUN: 4% rule vs guardrails and every way to take money out, side by side (Nov 25 2026)
+
+Run name: **4% rule vs guardrails and every way to take money out, side by side (Nov 25 2026)**. One screen,
+"Compare the ways", in the game (Taking money out) and in the web app lifetime plan: the same plan through each way
+of taking money out, as families with variants. It is built in its own working copy, next to the other runs.
+
+- Started.
+
+## Nov 25 2026: RUN: Export for the FIRE spreadsheet crowd (Nov 25 2026)
+
+Run name: **Export for the FIRE spreadsheet crowd (Nov 25 2026)**. An .xlsx download in the game with live formulas
+and the round trip back in, a "FIRE sheet" tab first in the workbook, a clean open in Google Sheets, one "Export"
+entry in the menu of both apps, and a button to Eli's blank FIRE sheet. It is built in its own working copy, next
+to the other runs.
+
+- Started.
+

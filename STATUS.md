@@ -151,3 +151,45 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 19 | Testing and math | Not started | |
 | 20 | Game feel | Not started | |
 | 21 | Spec rows marked Partly | Not started | |
+
+## RUN: Not built, groups 1 to 5 (Nov 25 2026)
+
+One row for each part of the run. "Done" means each item of the part is built, tested and pushed. "Partly" names what
+is missing. The details and the questions of each part are in `PROGRESS.md` and `QUESTIONS.md`.
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | Recalculating and the audit | Not started | |
+| 2 | Quick calculators | Not started | |
+| 3 | Lifestyle creep and enough | Not started | |
+| 4 | Eli's frameworks and the canon | Not started | |
+| 5 | Gig and self-employed | Not started | |
+| 6 | Queer-specific tools | Not started | |
+| 7 | Hard moments | Not started | |
+| 8 | Family | Not started | |
+| 9 | Ratios on Key numbers | Not started | |
+| 10 | The game | Not started | |
+| 11 | Quiz frameworks: one engine, many skins | Not started | |
+
+## RUN: Launch ready for the Nov 30 soft launch (Nov 25 2026)
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | A stable public site | Not started | |
+| 2 | Report a bug or idea | Not started | |
+| 3 | Founding Testers and sharing | Not started | |
+| 4 | Trust | Not started | |
+| 5 | Email | Not started | |
+| 6 | The front door | Not started | |
+
+## RUN: 4% rule vs guardrails and every way to take money out, side by side (Nov 25 2026)
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | Compare the ways: one screen in the game and in the web app lifetime plan | Not started | |
+
+## RUN: Export for the FIRE spreadsheet crowd (Nov 25 2026)
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | The .xlsx export in the game, the FIRE sheet tab, Google Sheets, the Export entry, the blank FIRE sheet button | Not started | |
