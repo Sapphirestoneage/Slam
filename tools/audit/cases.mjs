@@ -12,6 +12,8 @@ import { runwayOf, backwardsOf, tripCostOf, habitCostOf, loanCostOf, stoppedPayO
 import { ilIncomeTaxOf, ilNationalInsuranceOf, olimPointsOf, aliyahOf } from '../../js/math/aliyah.js';
 import { RULES } from '../../js/registry/assumptions.js';
 import { hbRun, hbBreakeven, hbPriceToRent, hbFivePercent } from '../../js/math/homebuy.js';
+import { qcHysa, qcDca, qcWarranty, qcPerUse, qcHassle, qcInflation, qcStart, qcKids, qcPet, qcApartment, qcUiNy, qcBenefitRunway } from '../../js/math/quick.js';
+import { qcConsolidate, qcLeave, qcRoommates, qcW4, qcGlance } from '../../js/math/quickplan.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
 import { tpCost, tpPoints, tpSplit, tpJourney } from '../../js/math/trip.js';
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
@@ -106,6 +108,26 @@ for (let i = 0; i < N; i++) {
       rent: money(500, 7000), rentIns: pick([0, 12, 25]), rentGrowthPct: pick([0, 2, 3, 3.5, 4, 6]), homeGrowthPct: pick([-1, 0, 2, 3, 5]), closingPct: pick([0, 2, 3, 5]), sellingPct: pick([0, 5, 6, 8]), retPct: pick([0, 4, 6, 7, 9]) };
     const r = hbRun({ ...x, stay: 30 }), b = hbBreakeven(x);
     add('homeBuy', x, { pmt: r.pmt, first: r.first, rent1: r.firstRent.total, pmiMonths: r.pmiMonths, ahead: r.byYear.map(y => y.ahead), ownOut: r.byYear.map(y => y.ownOut), rentOut: r.byYear.map(y => y.rentOut), year: b.year, never: b.never, ratio: hbPriceToRent(x.price, x.rent), five: hbFivePercent(x.price, x.rent).line, rentLess: hbFivePercent(x.price, x.rent).rentLess }); }
+  // The quick calculators (js/math/quick.js and quickplan.js, M8Q)
+  { const x = { balance: money(100, 200000), fromRate: pick([0, 0.0001, 0.001, 0.005, 0.01, 0.02]), toRate: pick([0.03, 0.035, 0.04, 0.045, 0.05]), monthly: pick([0, 0, 100, 250, 1000]), years: pick([1, 3, 5, 10]) }, r = qcHysa(x); add('qcHysa', x, { yearGain: r.yearGain, endFrom: r.endFrom, endTo: r.endTo }); }
+  { const x = { amount: money(1000, 500000), months: pick([1, 3, 6, 12, 24]), ret: pick([0.03, 0.06, 0.0914, 0.12]), cashRate: pick([0, 0.02, 0.04, 0.05]) }, r = qcDca(x); add('qcDca', x, { lump: r.lump, spread: r.spread, waiting: r.averageWaiting }); }
+  { const x = { price: money(20, 2000), repair: money(50, 5000), chance: pick([0.05, 0.1, 0.2, 0.3, 0.5]), resale: pick([0, 0, 10, 100, 5000]), uses: pick([1, 5, 10, 50, 365]), saved: money(5, 3000), hours: pick([0.5, 1, 2, 4, 8]), wage: pick([null, 15, 30, 60]) };
+    const w = qcWarranty(x), u = qcPerUse(x), h = qcHassle(x); add('qcSmall', x, { expected: w.expected, even: w.evenChance, perUse: u.perUse, perHour: h.perHour, times: h.times }); }
+  { const parts = ['housing', 'food', 'transport', 'health', 'other'].map(key => ({ key, amount: rnd() < 0.2 ? null : money(50, 4000), change: pick([-0.02, 0, 0.02, 0.03, 0.05, 0.08, 0.12]) })); if (parts.every(q => q.amount == null)) parts[0].amount = 1000;
+    const r = qcInflation({ parts, planRate: 0.02 }); add('qcInflation', { parts }, { rate: r.rate, yearMore: r.yearMore }); }
+  { const x = { monthly: money(25, 3000), ageA: whole(18, 50), ageB: whole(18, 60), to: 65, ret: pick([0, 0.03, 0.05, 0.07]) }, r = qcStart(x); add('qcStart', x, { a: r.a, b: r.b, catchUp: r.catchUp }); }
+  { const x = { age: whole(0, 17), little: money(1000, 40000), school: money(1000, 30000), teen: money(1000, 30000), upfront: pick([0, 150, 2000]), monthly: money(10, 400), vet: pick([0, 300, 1500]), years: pick([5, 10, 15]), rent: money(500, 6000), depositMonths: pick([0, 1, 2]), lastMonth: pick([0, 1]), brokerMonths: pick([0, 1, 1.8]), moving: pick([0, 600]), setup: pick([0, 1500]), monthlyOther: pick([0, 150]) };
+    const k = qcKids(x), p = qcPet(x), a = qcApartment(x); add('qcAdd', x, { kids: k.left, pet: p.lifetime, petFirst: p.firstYear, keys: a.keys, month: a.month }); }
+  { const N = ref.limits.unemployment.NY, x = { highQuarter: money(500, 60000), cash: money(1, 60000), spending: money(800, 12000), keep: pick([1, 0.9]) }, U = qcUiNy({ highQuarter: x.highQuarter, rules: N }), R = qcBenefitRunway({ cash: x.cash, spending: x.spending, weekly: U.weekly, weeks: U.weeks, keep: x.keep });
+    add('qcJobless', { ...x, rules: N }, { weekly: U.weekly, months: R.months }); }
+  { const x = { balance: money(500, 80000), apr: pick([0.12, 0.18, 0.22, 0.25, 0.29]), loanApr: pick([0, 0.07, 0.1, 0.13, 0.2]), loanYears: pick([2, 3, 4, 5]), feePct: pick([0, 0.01, 0.03, 0.05, 0.08]) }; x.payment = Math.max(25, Math.round(x.balance * between(0.005, 0.06)));
+    const r = qcConsolidate(x); add('qcConsolidate', x, { never: r.never, nowMonths: r.nowMonths, nowInterest: r.nowInterest, loanPay: r.loanPay, loanCost: r.loanCost }); }
+  { const x = { cash: money(1, 100000), spending: money(800, 12000), health: pick([0, 200, 700]), profit: pick([0, 0, money(200, 20000)]) }, r = qcLeave({ ...x, ref }); add('qcLeave', x, { tax: r.tax, months: r.months }); }
+  { const n = whole(2, 4), people = Array.from({ length: n }, (_, i) => ({ id: i ? `P${i + 1}` : 'Me', size: money(60, 300), income: money(500, 15000) })), x = { rent: money(800, 8000), bills: pick([0, 150, 400]), how: pick(['size', 'income', 'equal']), billsHow: pick(['equal', 'same']), people };
+    const r = qcRoommates(x); add('qcRoommates', x, { totals: r.rows.map(p => p.total) }); }
+  { const x = { gross: money(15000, 400000), pretax: pick([0, 0, 5000, 23500]), filingStatus: pick(STATUS), kids: pick([0, 0, 1, 3]), withheld: rnd() < 0.1 ? 0 : money(1, 60000), perCheck: rnd() < 0.1 ? 0 : money(1, 4000), checksLeft: whole(0, 26), checksYear: pick([52, 26, 24, 12]) }, r = qcW4({ ...x, ref });
+    add('qcW4', x, { owe: r.owe, diff: r.diff, extra: r.extra, deductions: r.deductions }); }
+  { const x = { takeHome: money(1000, 30000), spending: money(500, 30000), debtOutside: pick([0, 0, 300]) }, r = qcGlance(x); add('qcGlance', x, { left: r.left, rate: r.rate }); }
   // Travel (js/math/trip.js, M8T): a trip line by line, points, a group split by share and by item, the journey map
   { const opt = v => (rnd() < 0.15 ? null : v), x = { flights: opt(money(0, 4000)), lodging: opt(money(0, 500)), days: opt(whole(1, 21)), nights: rnd() < 0.3 ? whole(0, 20) : null, food: opt(money(0, 200)), visa: opt(pick([0, 25, 160])), insurance: opt(money(0, 500)), other: opt(money(0, 1500)),
       fxPct: opt(pick([0, 1, 2.5, 3])), fxOn: pick([undefined, [], ['flights'], ['lodging', 'food'], ['lodging', 'food', 'other']]), pointsOff: rnd() < 0.3 ? money(0, 3000) : null }, T = tpCost(x);

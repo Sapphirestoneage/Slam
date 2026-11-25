@@ -361,7 +361,7 @@ button.whatdo{min-width:36px;min-height:36px;border-radius:50%;padding:0;font-we
 .prow{min-height:52px;padding:6px 10px}.prow .pn{flex:1;min-width:0}.prow .pn .tiny{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ava2{flex:none;width:34px;height:34px;border-radius:50%;background:var(--sap);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
 .mrow{padding-left:14px;position:relative}.mrow::before{content:"";position:absolute;left:2px;top:.55em;width:6px;height:6px;border-radius:50%;background:var(--a3)}.mrow.k-cost::before{background:var(--warn)}.mrow.k-note::before{background:var(--muted)}.mrow.k-goal::before{background:var(--good)}
 /* welcome: no samples */
-body.welcome .topbar,body.welcome nav.tabs{display:none}
+body.welcome .topbar,body.welcome:not(:has(#ov .overlay)) nav.tabs{display:none}
 .welcomebox{padding-top:18vh;text-align:center}.welcomebox .card{text-align:left}
 /* Back sits top left on every card */
 .backrow{flex-direction:row-reverse}button.backbtn{font-weight:700}
@@ -512,6 +512,18 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 .dkgicon{width:32px;height:32px;border-radius:10px;background:var(--hl);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700}
 .dkgname{font-size:17px}
 .hqtop{display:flex;flex-direction:column;gap:10px}.ledsort{margin-top:6px}.ledsort .chip{padding:6px 12px;font-size:13.5px}
+/* UX pass, phase 2: the tab bar and the menu stay on every screen, also over a sheet, and the menu in groups */
+nav.tabs{z-index:30}
+.overlay{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+body:has(#ov .overlay) nav.tabs .logfab{display:none}
+button.nvmenu{font-size:18px;line-height:1;min-width:44px}
+input.mnfind{font:inherit;width:100%;min-height:44px;font-size:16px;border:2px solid var(--muted);background:var(--ink);color:var(--text);border-radius:10px;padding:8px 12px}input.mnfind:focus{border-color:var(--a3);outline:2px solid var(--sap)}
+.mnrecent{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+button.mnrec{min-height:44px;padding:6px 8px;border:2px solid var(--line);background:var(--panel2);border-radius:10px;font-weight:700;font-size:13.5px;line-height:1.2;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+details.mng>summary{min-height:48px;padding:8px 12px}
+details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{content:"Close"}
+.mngh{display:flex;align-items:center;gap:10px;min-width:0}.mnico{font-size:20px;width:26px;text-align:center;flex:none}
+.mnrows{padding:0 10px 10px;gap:8px}
 </style>
 </head>
 <body>
@@ -533,11 +545,12 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="core/withdraw.js?v=0d5888cd"></script>
 <script src="data/limits2026.js?v=504f72bd"></script>
 <script src="vendor/retire-engine.js?v=bcb147a3"></script>
-<script src="core/engine.js?v=d9bc1f68"></script>
+<script src="core/engine.js?v=a526dfeb"></script>
 <script src="core/engine2.js?v=0f916c85"></script>
 <script src="core/homebuy.js?v=9fefc7d2"></script>
 <script src="core/career.js?v=2164a1a6"></script>
 <script src="core/trip.js?v=0152603f"></script>
+<script src="core/quick.js?v=914d9a44"></script>
 <script src="core/recalc.js?v=9ee7e7ea"></script>
 <script src="core/jobs.js?v=db70fca4"></script>
 <script src="data/roles.js?v=d90d4899"></script>
@@ -547,7 +560,7 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="core/frameworks.js?v=95d509ab"></script>
 <script src="data/quizskins.js?v=26830ea5"></script>
 <script src="account/gate.js?v=66e0ebe3"></script>
-<script src="screens/ui.js?v=f297883d"></script>
+<script src="screens/ui.js?v=c280f725"></script>
 <script src="screens/dash.js?v=46243f0e"></script>
 <script src="features/games.js?v=f3991fbd"></script>
 <script src="features/games2.js?v=9ea0315f"></script>
@@ -555,14 +568,14 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="features/chart.js?v=843c18bc"></script>
 <script src="screens/profiles.js?v=442b6691"></script>
 <script src="screens/smart.js?v=2e800c77"></script>
-<script src="screens/planner.js?v=9ab75929"></script>
+<script src="screens/planner.js?v=3d799b56"></script>
 <script src="account/cloud.js?v=dcb3a34e"></script>
-<script src="screens/ux.js?v=81be5ef1"></script>
-<script src="core/metrics.js?v=9b0ea529"></script>
+<script src="screens/ux.js?v=c8ffb4fe"></script>
+<script src="core/metrics.js?v=6308c26d"></script>
 <script src="features/debts.js?v=1018cceb"></script>
 <script src="features/import.js?v=b3dfd30e"></script>
 <script src="features/compare.js?v=abf08001"></script>
-<script src="features/quick.js?v=152cbc32"></script>
+<script src="features/quick.js?v=b4b761ff"></script>
 <script src="features/reveal.js?v=829bd360"></script>
 <script src="features/moneylog.js?v=889f9b8b"></script>
 <script src="features/drills.js?v=d9bf675b"></script>
@@ -578,7 +591,7 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="features/mult.js?v=5550280a"></script>
 <script src="data/askwords.js?v=4215eaea"></script>
 <script src="features/ask.js?v=1a289b9b"></script>
-<script src="features/alloc.js?v=a08241f1"></script>
+<script src="features/alloc.js?v=c3dbe01f"></script>
 <script src="features/session.js?v=8095e858"></script>
 <script src="features/ask2.js?v=095e9eb5"></script>
 <script src="features/sign.js?v=bea31d44"></script>
@@ -587,7 +600,7 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="features/together.js?v=24e8dfb2"></script>
 <script src="features/people.js?v=f590e4e5"></script>
 <script src="features/fold.js?v=8028f031"></script>
-<script src="screens/nav.js?v=a89559bf"></script>
+<script src="screens/nav.js?v=b0e1cb0e"></script>
 <script src="features/home.js?v=6abaee87"></script>
 <script src="screens/tidy.js?v=be7cda36"></script>
 <script src="account/addon.js?v=3c9c00fb"></script>
@@ -603,7 +616,7 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="features/dep.js?v=0b4ba57c"></script>
 <script src="features/eras.js?v=d11b7a9c"></script>
 <script src="features/testkit.js?v=f98fc556"></script>
-<script src="features/kit.js?v=597b08dc"></script>
+<script src="features/kit.js?v=7b0b035e"></script>
 <script src="features/retire.js?v=b4f690b2"></script>
 <script src="features/taxview.js?v=68d4fe00"></script>
 <script src="features/odds.js?v=a633f157"></script>
@@ -646,7 +659,7 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="data/cardtemplate.js?v=43e535a3"></script>
 <script src="data/cards2026.js?v=bd65802c"></script>
 <script src="features/vault.js?v=7909457a"></script>
-<script src="features/element.js?v=770b5c53"></script>
+<script src="features/element.js?v=88e28a20"></script>
 <script src="features/xray.js?v=bf512a9b"></script>
 <script src="features/transit.js?v=224541d8"></script>
 <script src="data/kidlessons.js?v=69134824"></script>
@@ -654,7 +667,7 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="data/metros.js?v=10acde40"></script>
 <script src="data/strategies.js?v=c50b230d"></script>
 <script src="features/strat.js?v=eec13414"></script>
-<script src="account/roles.js?v=04de2e61"></script>
+<script src="account/roles.js?v=347ce1b8"></script>
 <script src="features/stars.js?v=0735ed6f"></script>
 <script src="features/exletter.js?v=95c473d8"></script>
 <script src="features/recalc.js?v=86b5c421"></script>
@@ -662,18 +675,18 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="features/quizzes.js?v=6b4cff5a"></script>
 <script src="features/sins.js?v=1353b0fc"></script>
 <script src="features/rings.js?v=7012818f"></script>
-<script src="data/patchnotes.js?v=f6aae5a3"></script>
+<script src="data/patchnotes.js?v=8243ad84"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
-<script src="features/look.js?v=6983472b"></script>
+<script src="features/look.js?v=e1d8ed1f"></script>
 <script src="features/jobs.js?v=0484b2a7"></script>
 <script src="features/goalwire.js?v=637af823"></script>
 <script src="features/careq.js?v=03516e5a"></script>
 <script src="features/rolemap.js?v=5e50a14d"></script>
 <script src="features/canon.js?v=96c55b47"></script>
 <script src="features/book.js?v=206f4d98"></script>
-<script src="features/questlog.js?v=ad01fa49"></script>
+<script src="features/questlog.js?v=0cdb1fe4"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=db0dd762"></script>
+<script src="features/built.js?v=90bc936f"></script>
 </body>
 </html>

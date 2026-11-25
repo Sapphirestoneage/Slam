@@ -694,6 +694,116 @@ def il_points(il, resident, year):
     return resident + sum(per[(year - 1) * 12:year * 12]) / 12
 
 
+def quick_check(fn, x, o, ck, law):
+    """The quick calculators (M8Q), worked out again: closed forms where SLAM steps, and the other way round."""
+    def fv(start, monthly, rate, n):
+        b = start
+        for _ in range(n):   # month by month, where SLAM uses the closed form
+            b = b * (1 + rate / 12) + monthly
+        return b
+    if fn == 'qcHysa':
+        m, n = x['monthly'], x['years'] * 12
+        y_from, y_to = fv(x['balance'], m, x['fromRate'], 12), fv(x['balance'], m, x['toRate'], 12)
+        ck('a year more', o['yearGain'], y_to - y_from); ck('where it is', o['endFrom'], fv(x['balance'], m, x['fromRate'], n)); ck('the other account', o['endTo'], fv(x['balance'], m, x['toRate'], n))
+    elif fn == 'qcDca':
+        n, g, c = x['months'], (1 + x['ret']) ** (1 / 12) - 1, x['cashRate'] / 12
+        piece = x['amount'] / n
+        # each piece grows from the month it goes in; the money still waiting grows at the cash rate until then
+        # the money waiting after the k-th piece goes in: what was there, grown, less every piece so far, each grown since
+        left = lambda k: x['amount'] * (1 + c) ** k - sum(piece * (1 + c) ** (k - j) for j in range(k + 1))
+        spread = sum(piece * (1 + g) ** (n - k) for k in range(n)) + left(n - 1) * (1 + c)
+        waiting = sum(left(k) for k in range(n)) / n
+        ck('all at once', o['lump'], x['amount'] * (1 + x['ret']) ** (n / 12)); ck('spread', o['spread'], spread); ck('waiting on an average month', o['waiting'], waiting)
+    elif fn == 'qcSmall':
+        ck('chance x repair', o['expected'], x['repair'] * x['chance']); ck('where they meet', o['even'], x['price'] / x['repair'], 1e-9)
+        ck('a use', o['perUse'], (x['price'] - min(x['price'], x['resale'])) / x['uses'], 1e-9)
+        ck('an hour of the task', o['perHour'], x['saved'] / x['hours'], 1e-9); ck('times the wage', o['times'], x['saved'] / x['hours'] / x['wage'] if x['wage'] else None, 1e-9)
+    elif fn == 'qcInflation':
+        ps = [q for q in x['parts'] if q['amount']]
+        tot = sum(q['amount'] for q in ps); rate = sum(q['amount'] * q['change'] for q in ps) / tot
+        ck('own inflation', o['rate'], rate, 1e-12); ck('a year more than the plan', o['yearMore'], tot * 12 * rate)
+    elif fn == 'qcStart':
+        g = (1 + x['ret']) ** (1 / 12) - 1
+        def grow(age):
+            b = 0.0
+            for _ in range(max(0, (x['to'] - age) * 12)):
+                b = b * (1 + g) + x['monthly']
+            return b
+        lo, hi = min(x['ageA'], x['ageB']), max(x['ageA'], x['ageB'])
+        if x['ageA'] >= x['to']:
+            return
+        a, b = grow(lo), grow(hi)
+        ck('from the early age', o['a'], a, max(1.0, a * 1e-9)); ck('from the late age', o['b'], b, max(1.0, b * 1e-9))
+        ck('catch-up a month', o['catchUp'], x['monthly'] * a / b if b > 0 else None, 0.01)
+    elif fn == 'qcAdd':
+        stage = lambda a: x['little'] if a <= 4 else x['school'] if a <= 12 else x['teen']
+        ck('kids to 18', o['kids'], sum(stage(a) for a in range(x['age'], 18)))
+        year = x['monthly'] * 12 + x['vet']
+        ck('pet, all the years', o['pet'], x['upfront'] + year * x['years']); ck('pet, the first year', o['petFirst'], x['upfront'] + year)
+        ck('the keys', o['keys'], x['rent'] * (1 + x['depositMonths'] + x['lastMonth'] + x['brokerMonths']) + x['moving'] + x['setup']); ck('a month after', o['month'], x['rent'] + x['monthlyOther'])
+    elif fn == 'qcJobless':
+        N, hq = x['rules'], x['highQuarter']
+        if hq > N['lowLine']:
+            wk = max(N['minWeekly'], hq / N['divisorHigh'])
+        else:
+            wk = max(N['minWeeklyLow'], hq / N['divisorLow'])
+        wk = min(N['maxWeekly'], wk)
+        ck('a week', o['weekly'], wk, 1e-9)
+        # day by day instead of by pieces: cash runs down by the gap while the benefit lasts, then by the whole month
+        cash, inm, bm, out = x['cash'], wk * x['keep'] * 52 / 12, N['weeks'] * 12 / 52, x['spending']
+        gap = out - inm
+        if gap > 0 and cash / gap <= bm:
+            months = cash / gap
+        else:
+            months = bm + (cash - gap * bm) / out
+        ck('months the cash lasts', o['months'], months, 1e-6)
+    elif fn == 'qcConsolidate':
+        m = one_debt(x['balance'], x['apr'], x['payment'])
+        ck('never pays off', o['never'], m['never'])
+        if not m['never']:
+            ck('months now', o['nowMonths'], m['months'], 0); ck('interest now', o['nowInterest'], m['true_interest'])
+        P, r, n = x['balance'] / (1 - x['feePct']), x['loanApr'] / 12, x['loanYears'] * 12
+        pay = P / n if r == 0 else P / sum((1 + r) ** -k for k in range(1, n + 1))   # the annuity as a sum of discounted payments
+        ck('loan a month', o['loanPay'], pay, 0.01); ck('loan interest and fee', o['loanCost'], pay * n - x['balance'])
+    elif fn == 'qcLeave':
+        need = x['spending'] + x['health']
+        if x['profit'] > 0:
+            g = x['profit'] * 12
+            pay, _, _, half = law.payroll(g, 'Single', True)
+            tax = (law.federal(g, 0, 'Single', half)[0] + pay) / 12
+        else:
+            tax = 0.0
+        ck('tax a month', o['tax'], tax); gap = need - (x['profit'] - tax)
+        ck('months', o['months'], x['cash'] / gap if gap > 0 else None, 1e-6)
+    elif fn == 'qcRoommates':
+        ps = x['people']; n = len(ps)
+        def share(way, p):
+            if way == 'size':
+                return p['size'] / sum(q['size'] for q in ps)
+            if way == 'income':
+                return p['income'] / sum(q['income'] for q in ps)
+            return 1 / n
+        bway = x['how'] if x['billsHow'] == 'same' else 'equal'
+        for i, p in enumerate(ps):
+            ck(f'person {i + 1} total', o['totals'][i], x['rent'] * share(x['how'], p) + x['bills'] * share(bway, p), 1e-6)
+    elif fn == 'qcW4':
+        tax, _, top = law.federal(x['gross'], x['pretax'], x['filingStatus'])
+        C = law.t['ctc']; joint = x['filingStatus'] == 'Married jointly'
+        most = x['kids'] * C['perChild']; magi = x['gross'] - x['pretax']
+        cut = math.ceil(max(0, magi - (C['phaseOutJoint'] if joint else C['phaseOutSingle'])) / 1000) * C['phaseOutPer1000']
+        credit = max(0, most - cut); non = min(credit, tax)
+        refundable = max(0, min(credit - non, x['kids'] * C['refundableMax'], C['refundableRate'] * max(0, x['gross'] - C['earnedFloor'])))
+        owe = max(0, tax - non) - refundable
+        diff = x['withheld'] + x['perCheck'] * x['checksLeft'] - owe
+        left = max(1, x['checksLeft'])
+        ck('the year\'s tax', o['owe'], owe); ck('refund or owed', o['diff'], diff)
+        ck('Step 4(c) a paycheck', o['extra'], -diff / left if diff < 0 else 0)
+        ck('Step 4(b) deductions', o['deductions'], diff * x['checksYear'] / (left * top) if diff > 0 and top > 0 else 0, 0.05)
+    elif fn == 'qcGlance':
+        left = x['takeHome'] - x['spending'] - x['debtOutside']
+        ck('left', o['left'], left); ck('kept', o['rate'], left / x['takeHome'], 1e-12)
+
+
 def run(cases, ref, il=None):
     law, R = Law(ref), Report()
     extra = {'interest_gap': [], 'pace': [], 'life': {'runs': 0, 'years': 0, 'unsettled_years': 0, 'tax_gap_years': 0, 'worst_tax_gap': 0.0, 'worst_tax_case': None, 'credit_gap_years': 0, 'worst_credit_gap': 0.0, 'runs_touched': 0}}
@@ -1043,6 +1153,8 @@ def run(cases, ref, il=None):
             if not edge:
                 ck('breakeven year', o['year'], first_year, 0); ck('renting cheaper the whole time', o['never'], first_year is None)
             ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
+        elif fn in ('qcHysa', 'qcDca', 'qcSmall', 'qcInflation', 'qcStart', 'qcAdd', 'qcJobless', 'qcConsolidate', 'qcLeave', 'qcRoommates', 'qcW4', 'qcGlance'):
+            quick_check(fn, x, o, ck, law)
         elif fn == 'careerRoi':
             # Career and education: the price, the raise, the payback and the lifetime value from the definitions; the
             # loan's interest as the level payment whose discounted sum is the loan.

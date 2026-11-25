@@ -198,6 +198,14 @@ const WB = [
   ["plan", "Two moves side by side", "b", () => WB_HAS("compare") && WB_FN("cpCol"), "", "compare"],
   ["plan", "Fee X-ray: a fee in dollars and years", "b", () => WB_FN("cpFee"), "", "compare"],
   ["plan", "Quick math: a car, a home, a dollar later", "b", () => WB_HAS("quick") && WB_FN("qmCar"), "", "quick"],
+  [
+    "plan",
+    "Quick math: a HYSA switch, all at once or a little each month, cost per use, worth the hassle, what waiting costs, a warranty",
+    "b",
+    () => WB_HAS("quick") && WB_FN("qcHysa") && WB_FN("qcDca") && WB_FN("qcGameBody"),
+    "One engine with the web app's quick calculators (js/math/quick.js). The rest of that shelf (debt consolidation, the W-4 check, unemployment, leaving a job, a first apartment, roommates, kids, a pet, personal inflation, worth it, the month at a glance) is on the web app's small pages.",
+    "quick",
+  ],
   ["plan", "Your real hourly wage", "b", () => WB_HAS("hrs") && WB_FN("timeLedger"), "", "hrs"],
   [
     "in",

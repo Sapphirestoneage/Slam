@@ -16,5 +16,6 @@ game/x2.json
 game/core/withdraw.js
 game/core/homebuy.js
 game/core/career.js
+game/core/quick.js
 game/core/trip.js
 game/core/frameworks.js

@@ -2,6 +2,7 @@
 // One renderer for the small calculators (docs/KIT.md): the question, a few boxes with amounts to tap, the answer card
 // (redrawn while typing; the boxes are not), what changes it, the fold, and the link to take away. A calculator is a
 // spec: { title, why, fields, run(values, ref), answer(result, values), more(api) }. The math is in js/solo.js, with tests.
+// A field with `unit` is a count, not money; one with `when` shows only for some answers.
 // A field with `plan` reads and writes the plan's own answer (take-home, spending, invested), so nothing is typed twice.
 import { boot, h, btn, chip, money, numBox, copyLink, foot } from './shell.js';
 import { answer, onFile } from '../journey.js';
@@ -26,17 +27,18 @@ export function calcPage(id, spec) {
         A.small ? h('p.st-small.st-soft', {}, A.small) : null,
         (A.fold || []).map(([summary, ...paras]) => h('details.st-fold', {}, h('summary', {}, summary), paras.map(p => h('p.st-small', {}, p)))));
     };
+    const shown = () => { const V = values(); return spec.fields.filter(f => !f.when || f.when(V)); }; // when: a field that only shows for some answers (roommates: the third room)
     let card = answerCard();
     const set = f => (v, typing) => { put(f, v); if (!typing) return api.render(); api.save(); const fresh = answerCard({ [f.key]: v }); card.replaceWith(fresh); card = fresh; };
     const field = f => (f.options
       ? h('div.st-field', {}, h('div.st-flabel', {}, f.label), h('div.st-chips', {}, f.options.map(([label, v]) => chip(label, get(f) === v, () => { put(f, v); api.render(); }))), f.help ? h('div.st-small.st-soft', { style: { marginTop: '4px' } }, f.help) : null)
-      : numBox(f.label, get(f), typeof f.picks === 'function' ? f.picks(values()) : f.picks, set(f), { id: `f_${f.key}`, help: f.help }));
+      : numBox(f.label, get(f), typeof f.picks === 'function' ? f.picks(values()) : f.picks, set(f), { id: `f_${f.key}`, help: f.help, unit: f.unit }));
     const inputs = h('div.st-card', { onFocusout: e => { const t = e.relatedTarget, main = $('main'); if (!t || t === main || !main.contains(t)) setTimeout(() => api.render(), 0); } },
-      h('h2', { style: { marginTop: 0 } }, spec.fields.length === 1 ? 'One number' : 'A few numbers'), spec.fields.map(field));
+      h('h2', { style: { marginTop: 0 } }, spec.fields.length === 1 ? 'One number' : 'A few numbers'), shown().map(field));
     const carry = h('div.st-card', { id: 'carry' }, h('h2', { style: { marginTop: 0 } }, 'Take it with you'), h('p.st-small', {}, 'Your link keeps this answer.'),
       h('div.st-row', {}, copyLink(api), btn('All the steps', async () => { location.href = `one.html#/d/${await pack(api.store.doc)}`; }, 'slim')));
     $('main').replaceChildren(h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, spec.title), h('p', { style: { marginBottom: 0 } }, spec.why)), inputs, card, ...(spec.more ? spec.more(api) : []), carry); // more: a page's own cards after the answer (home.html: buying and renting)
-    const empty = spec.fields.find(f => !f.options && !f.optional && get(f) == null);
+    const empty = shown().find(f => !f.options && !f.optional && get(f) == null);
     if (empty) inputs.querySelector(`#f_${empty.key}`)?.closest('.in')?.classList.add('st-pulse');
   }
   return boot(id, draw);

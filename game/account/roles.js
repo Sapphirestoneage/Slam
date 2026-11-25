@@ -7,7 +7,8 @@
    INPUT       SUPA (account/supa.js): on, sb, uid. The database functions my_roles, is_admin,
                is_coach, audit_write and the table save_failures
                (supabase/migrations/20261124170000_roles_audit_coach.sql).
-   OUTPUT      Functions: roRoles, roHatsHTML, roAudit, roSaveFail, roLoad, menuSheetHats. Actions
+   OUTPUT      Functions: roRoles, roHatsHTML, roAudit, roSaveFail, roLoad, menuSheetHats, roCan, roMenuOk,
+               roGuardTo. Actions
                (ACT), in the game only: hat. State: ROLES.
    DEPENDS ON  core/report.js, account/supa.js.
    RULES       The database decides who is a coach or the admin. This file only decides what to show.
@@ -21,6 +22,24 @@ const RO_HATS = [
   ["coach", "Coach", "./coach.html"],
   ["admin", "Admin", "./admin.html"],
 ];
+/* The menu rows that belong to a role. A player never sees them (UX pass, phase 2). */
+const RO_ONLY = { session: "coach", built: "admin", testkit: "admin" };
+/* Can an account with roles r use a part for the role "need"? The admin has each role. */
+function roCan(need, r) {
+  r = r || ROLES;
+  if (!need || need === "player") return true;
+  if (need === "coach") return !!(r.coach || r.admin);
+  return need === "admin" ? !!r.admin : false;
+}
+/* Can the account see the menu row with this action? */
+function roMenuOk(act, r) {
+  return roCan(RO_ONLY[act], r);
+}
+/* The route guard of the coach page and the admin page: null when the account has the role, else the
+   address of Home. The page goes there at once. */
+function roGuardTo(need, r) {
+  return roCan(need, r) ? null : "./";
+}
 /* The hats of an account: Player always, Coach and Admin when the account has the role. */
 function roRoles(r) {
   r = r || ROLES;

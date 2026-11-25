@@ -260,6 +260,16 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-25",
+    t: "Eighteen quick calculators",
+    l: [
+      "New small pages, each one question: a high-yield savings account, all at once or a little each month, starting at 22 or 32, what waiting costs, and your month at a glance.",
+      "Debt consolidation with the fee in, the W-4 line to change, unemployment and how long your money lasts (New York first), and leaving a job or starting a business.",
+      "A first apartment, splitting the rent by room size or income, a child year by year, a pet, your own inflation rate, cost per use, worth it, the hassle, and a warranty.",
+      "In the game, Quick math has six of them as cards.",
+    ],
+  },
+  {
+    d: "2026-11-25",
     t: "Frameworks, and your next dollar",
     l: [
       "Home starts with one line: where your next dollar goes, with the match at work included.",
