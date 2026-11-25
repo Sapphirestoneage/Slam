@@ -138,7 +138,10 @@
     "a coach's notes: the coach's own rows, and the admin can read",
     /coach = auth\.uid\(\) and is_coach\(\)\) or is_admin\(\)/.test(sql)
   );
-  chk("the file says that it is not applied", /NOT APPLIED/.test(sql));
+  chk(
+    "the file says when it was applied to the live database",
+    /APPLIED to the live database on \d{4}-\d{2}-\d{2}/.test(sql)
+  );
 
   /* THE COACH PAGE: values */
   const R0 = r => Object.assign({ s: true }, r),
