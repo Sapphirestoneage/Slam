@@ -33,6 +33,8 @@ export const SN_RULES = {
   halfLife: 30, labelDays: 30, agree: 2, perWeek: 3, line: 50, lines: [25, 50, 100, 200, 500], fixDays: 30,
   afterPay: 2, afterStress: 2, paydayBuys: 3, foodBuys: 12, funBuys: 8, overShare: 0.1, overMin: 25,
   quietDays: 45, awayDays: 21, guessShare: 0.5, rcDays: 30, push: 3, fixUp: 3, fixDown: 2,
+  // Part 2: a retake each quarter (91 days, a quarter of a year); the history keeps the last 12 takes (three years).
+  retakeDays: 91, histMax: 12,
 };
 // The categories a buy can have, the same five as the game's spending (the web app's Budget letters map onto them).
 export const SN_CATS = { home: 'Home', food: 'Food', transport: 'Getting around', bills: 'Bills and subscriptions', fun: 'Fun and everything else' };
@@ -324,4 +326,178 @@ export function snGathering(read, st = {}, data = {}) {
 export function snShared(st) {
   if (!st || !st.sn || !st.sn.show) return null;
   return { ans: st.ans || {}, at: st.at || null, sn: { v: 1, show: true } };
+}
+
+
+// =====================================================================================================================
+// Part 2: results and growth (run "Money sins", Nov 25 2026). The words are in the skin (def.grow); these functions
+// only put them together. No function here makes a money number, and none changes one.
+// =====================================================================================================================
+const snG = def => (def && def.grow) || {};
+const snFam = (read, id) => (read && read.families ? read.families.find(f => f.id === id) : null) || null;
+const snLabeled = f => !!f && (f.level === 'Close' || f.level === 'Exact');
+// The archetype of one pair: a sin and a way of refusing change. Two parts, so every one of the 84 pairs reads well:
+// "The <refusal part> <sin part>", and one plain line. null when a part is missing.
+export function snArchetype(def, sinId, changeId) {
+  const A = snG(def).arch || {}, s = (A.sin || {})[sinId], c = (A.change || {})[changeId];
+  if (!s || !c) return null;
+  return { id: `${sinId}+${changeId}`, sin: sinId, change: changeId, name: `The ${c.adj} ${s.noun}`, line: `${s.does}, ${c.then}.` };
+}
+// Every archetype, for the list Eli reads and for the tests.
+export function snArchetypes(def) {
+  const A = snG(def).arch || {}, out = [];
+  for (const s of Object.keys(A.sin || {})) for (const c of Object.keys(A.change || {})) out.push(snArchetype(def, s, c));
+  return out;
+}
+// The virtue that answers a trait. voice: an add-on's names ({ virtues: { traitId: name } }); with none, the default.
+export function snVirtue(def, id, voice = null) {
+  const V = (snG(def).virtue || {})[id];
+  if (!V) return null;
+  const alt = voice && voice.virtues && voice.virtues[id];
+  return { id, name: alt || V.name, line: V.line, plain: V.name };
+}
+// THE result card: the top sin and the top refusal, the light side of each, the virtue that answers each, the
+// archetype, and one Recalculating move for this month (the read's defense of the month; turn: the next turn of a
+// Recalculating card when one shows). voice: an add-on's virtue names and one extra line (the game's hook). null
+// before the quiz has given both families a top.
+export function snCard(def, read, { turn = null, voice = null } = {}) {
+  const S = snFam(read, 'sin'), C = snFam(read, 'change');
+  if (!S || !C || !S.top || !C.top || !(S.top.score > 0) || !(C.top.score > 0)) return null;
+  const part = (f, t) => ({ id: t.id, name: t.name, light: t.light, money: t.money, virtue: snVirtue(def, t.id, voice), second: f.second && f.second.score > 0 ? f.second.name : null, level: f.level || 'Guess', word: f.word || 'Early read' });
+  const F = read.fix;
+  return { arch: snArchetype(def, S.top.id, C.top.id), sin: part(S, S.top), change: part(C, C.top), early: !snLabeled(S) || !snLabeled(C), firm: [S, C].filter(snLabeled).length,
+    head: snLabeled(S) && snLabeled(C) ? 'Your money read' : snLabeled(S) || snLabeled(C) ? 'Your money read, still firming up' : 'Early read: the quiz so far',
+    move: F && F.name ? { title: 'Your Recalculating move this month', name: F.name, how: F.how, check: F.check, started: !!F.started, trait: F.trait, turn } : null,
+    extra: voice && voice.line ? voice.line : null };
+}
+// The share card. No numbers: no money, no score, no check-in, no push-back, no date. Only the archetype and the
+// plain names. It is made only when the person taps it. Always the default voice (an add-on never rides along).
+export function snShareCard(def, card) {
+  if (!card || !card.arch) return null;
+  const strip = s => String(s || '').replace(/\d/g, '').replace(/\s{2,}/g, ' ').trim();
+  const lines = [card.arch.line, `Main pull: ${card.sin.name}. The light side: ${card.sin.light}`, `Way of refusing change: ${card.change.name}. The light side: ${card.change.light}`,
+    `Growing: ${snVirtue(def, card.sin.id).plain} and ${snVirtue(def, card.change.id).plain}.`].map(strip);
+  const title = strip(card.arch.name), foot = 'The money sins, a game lens in SLAM. Not a diagnosis.';
+  return { title, lines, foot, text: [`I am ${title}.`, ...lines, foot].join('\n') };
+}
+
+// ---------- the app talks to the type ----------
+export const SN_MOMENTS = ['home', 'crash', 'hard'];
+// THE framing line for a type and a moment. The way of refusing change speaks first, then the main pull, and only
+// when that family has a label (Close or Exact). With no read, or an Early read, there is no extra line (line: null):
+// the card says what it always says. It never changes a number and never hides one: the caller only adds this line.
+export function snFrame(def, read, moment) {
+  const out = { moment, line: null, trait: null, name: null, family: null };
+  if (!read || !SN_MOMENTS.includes(moment)) return out;
+  for (const id of ['change', 'sin']) {
+    const f = snFam(read, id), L = f && snLabeled(f) ? ((snG(def).frame || {})[f.top.id] || {})[moment] : null;
+    if (L) return { moment, line: L, trait: f.top.id, name: f.top.name, family: id };
+  }
+  return out;
+}
+
+// ---------- couples ----------
+// How two reads collide: a = { name, sin, change } and b the same (trait ids). Shown only when BOTH turned on
+// sharing their read with each other (the caller checks both opt-ins with snCoupleOk).
+export const snCoupleOk = (a, b) => !!(a && b && a.mate === true && b.mate === true && a.sin && a.change && b.sin && b.change);
+export function snCouple(def, a, b) {
+  if (!snCoupleOk(a, b)) return null;
+  const P = snG(def).pair || {}, name = id => ((def.traits || []).find(t => t.id === id) || {}).name || id;
+  const line = (fam, x, y) => (x === y ? `${name(x)}, twice. ${P.same}` : `One of you ${(P[fam] || {})[x]}, the other ${(P[fam] || {})[y]}. ${(P.close || {})[fam]}`);
+  return { a: { name: a.name, arch: snArchetype(def, a.sin, a.change) }, b: { name: b.name, arch: snArchetype(def, b.sin, b.change) },
+    sin: { a: name(a.sin), b: name(b.sin), same: a.sin === b.sin, line: line('sin', a.sin, b.sin) },
+    change: { a: name(a.change), b: name(b.change), same: a.change === b.change, line: line('change', a.change, b.change) } };
+}
+// The money date script for the pair: the prompts to tap through, in order. A prompt for each person's pull and
+// refusal (one when both have the same), between the opening and the close.
+export function snDate(def, a, b) {
+  if (!snCoupleOk(a, b)) return null;
+  const D = snG(def).date || {}, steps = [];
+  for (const t of D.open || []) steps.push({ who: null, line: t });
+  const add = (p, id, fam) => { if (D[id]) steps.push({ who: p.name, trait: id, family: fam, line: D[id] }); };
+  for (const fam of ['sin', 'change']) {
+    if (a[fam] === b[fam]) { if (D[a[fam]]) steps.push({ who: 'Both', trait: a[fam], family: fam, line: D[a[fam]] }); }
+    else { add(a, a[fam], fam); add(b, b[fam], fam); }
+  }
+  for (const t of D.close || []) steps.push({ who: null, line: t });
+  return steps.map((s, i) => ({ ...s, n: i + 1, of: steps.length }));
+}
+// The part of a read a partner sees, once both opted in: the two names and nothing else (no evidence, no check-in).
+export function snMatePart(read, name, mate) {
+  const S = snFam(read, 'sin'), C = snFam(read, 'change');
+  return S && C && S.top && C.top && S.top.score > 0 && C.top.score > 0 ? { name, mate: !!mate, sin: S.top.id, change: C.top.id } : null;
+}
+
+// ---------- the retake each quarter, and the history of reads ----------
+// One entry of the history: the read on the day of a take (its top two and the scores of all traits).
+export function snHistEntry(read, at) {
+  const fam = id => { const f = snFam(read, id); return f ? { top: f.top.id, second: f.second ? f.second.id : null, level: f.level || null } : null; };
+  const scores = {};
+  for (const [id, v] of Object.entries((read && read.engine && read.engine.scores) || {})) scores[id] = Math.round(v * 100) / 100;
+  return { at: at ? String(at).slice(0, 10) : null, d: read ? read.now : null, sin: fam('sin'), change: fam('change'), scores };
+}
+// Keeps the read of one take. One entry per take (its date); the newest replaces one of the same date; at most histMax.
+// COMPATIBILITY (Part 2): sn.hist is new; a read kept before it has no history, and its first entry is written when
+// the person retakes the quiz (snRetake keeps the old take first) or when the history is first shown.
+export function snHistAdd(sn = {}, read, at) {
+  if (!at || !read) return sn;
+  const e = snHistEntry(read, at), list = (sn.hist || []).filter(x => x.at !== e.at);
+  return { ...sn, hist: [...list, e].sort((x, y) => String(x.at).localeCompare(String(y.at))).slice(-SN_RULES.histMax) };
+}
+// The new state of a retake: the old take kept in the history, the answers cleared, the rest of the read (check-ins,
+// push-backs, defenses, the line, who sees it) kept as it was.
+export function snRetake(st = {}, read) {
+  const sn = st.at && Object.keys(st.ans || {}).length ? snHistAdd(st.sn || {}, read, st.at) : (st.sn || {});
+  return { ...st, ans: {}, go: true, at: null, ok: false, kept: null, sn: { ...sn, retakeSkip: null } };
+}
+// Is a retake due? A quarter (91 days) after the last take, unless the person said "not this quarter".
+export function snRetakeDue(st = {}, today) {
+  const at = st.at ? String(st.at).slice(0, 10) : null, days = at ? snDays(at, today) : null;
+  if (days == null) return { due: false, days: null, q: 0, why: 'No take yet.' };
+  const q = Math.floor(days / SN_RULES.retakeDays), skip = st.sn && st.sn.retakeSkip;
+  if (q < 1) return { due: false, days, q, why: `The next retake is in about ${SN_RULES.retakeDays - days} days.` };
+  if (skip && skip.from === at && skip.q >= q) return { due: false, days, q, why: 'You chose not this quarter.' };
+  return { due: true, days, q, why: `Your last take was ${snAgo(at, today)}. A quarter has passed.` };
+}
+export function snRetakeSkip(sn = {}, st = {}, today) {
+  const R = snRetakeDue(st, today);
+  return R.q < 1 ? sn : { ...sn, retakeSkip: { from: String(st.at).slice(0, 10), q: R.q } };
+}
+// How a trait moved over the takes: its share of its family's points at each take (0 to 1).
+function snShare(def, scores, id) {
+  const t = (def.traits || []).find(x => x.id === id);
+  if (!t) return null;
+  const sum = (def.traits || []).filter(x => x.group === t.group).reduce((s, x) => s + Math.max(0, scores[x.id] || 0), 0);
+  return sum > 0 ? Math.max(0, scores[id] || 0) / sum : null;
+}
+// The sin weakening and the virtue growing, over the takes: for each family, the top of the FIRST take, followed.
+// weaker: true when its share went down from the first take to the last, false when it went up, null when even.
+export function snGrowth(def, hist = []) {
+  if (!hist.length) return [];
+  const name = id => ((def.traits || []).find(t => t.id === id) || {}).name || id;
+  return ['sin', 'change'].map(fam => {
+    const first = hist[0][fam];
+    if (!first || !first.top) return null;
+    const id = first.top, series = hist.map(e => ({ at: e.at, share: snShare(def, e.scores || {}, id), top: e[fam] ? e[fam].top : null })).filter(x => x.share != null);
+    if (!series.length) return null;
+    const a = series[0].share, z = series[series.length - 1].share, pct = x => Math.round(x * 100), V = snVirtue(def, id);
+    const weaker = series.length < 2 || pct(a) === pct(z) ? null : z < a;
+    const line = series.length < 2 ? `${name(id)} is ${pct(a)}% of your ${fam === 'sin' ? 'pull' : 'pushback on change'} at the first take. ${V.name} is the one to grow; the next take shows the trend.`
+      : weaker === true ? `${name(id)} went from ${pct(a)}% to ${pct(z)}% of your ${fam === 'sin' ? 'pull' : 'pushback on change'}. ${V.name} is growing.`
+      : weaker === false ? `${name(id)} is louder this time, ${pct(a)}% to ${pct(z)}%. ${V.name} is the one to practice next.`
+      : `${name(id)} holds steady at ${pct(z)}%. ${V.name} is the one to practice next.`;
+    return { family: fam, trait: id, name: name(id), virtue: V.name, series, from: a, to: z, weaker, takes: series.length, nowTop: series[series.length - 1].top, line };
+  }).filter(Boolean);
+}
+// The part of the graduation story the read gives: where the person started, how the pull moved, and what the
+// defenses did. Empty when there is no take. The graduation story calls this; it shows only what the person shows.
+export function snGradStory(def, sn = {}) {
+  const H = sn.hist || [];
+  if (!H.length) return [];
+  const first = H[0], arch = first.sin && first.change ? snArchetype(def, first.sin.top, first.change.top) : null, out = [];
+  if (arch) out.push(`You started as ${arch.name}.`);
+  for (const g of snGrowth(def, H)) if (g.takes > 1) out.push(g.line);
+  const tried = (sn.fixes || []).length, dropped = (sn.fixes || []).filter(f => f.dropped === true).length;
+  if (tried) out.push(`${tried} ${tried === 1 ? 'defense' : 'defenses'} tested for a month, ${dropped} of them with the pattern dropping.`);
+  return out;
 }

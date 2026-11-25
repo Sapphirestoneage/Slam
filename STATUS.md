@@ -200,7 +200,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | Part | What | State | Notes |
 |------|------|-------|-------|
 | 1 | The read | Done | `js/math/sins.js` on the quiz engine, the sins skin, quiz.html and the game's "Your money read" with the check-in after Money out. Not built (no data kept): late night, the Safe to spend tap, Recalculating opened, edits after a bad month, drills put off, going back to old numbers; in the web app the app left closed and numbers at Guess. QUESTIONS 599. |
-| 2 | Results and growth | Not started | |
+| 2 | Results and growth | Done (graduation story partly: see notes) | The result card with an archetype (84 names from two parts, in the skin's `grow` block), the light sides, the virtues and one Recalculating move; a share card with no numbers (made on a tap); one framing line for a type on Home, the month check and the crash drill (`snFrame`); couples only with both opt-ins, with a money date; a retake each quarter (the Quest Log in the game, the read in the web app) and a history of takes (`sn.hist`, new) on the character sheet; the add-on hook `SNG_VOICE` (no add-on words). Not built: the game's graduation story (it does not exist; `sngGradStory` waits for it; the web graduation card is not changed either), a crash-day line in the web app (it has no crash screen). QUESTIONS 600. |
 | 3 | The Rings theme | Not started | |
 
 ## RUN: Live Session Mode (Nov 25 2026)

@@ -264,7 +264,10 @@ Object.assign(ACT, {
       q = def.questions.find(x => x.id === t.dataset.k);
     if (!q) return;
     st.ans[q.id] = q.options ? t.dataset.v : +t.dataset.v;
-    if (qzFlow(def, st.ans).done) st.at = todayISO();
+    if (qzFlow(def, st.ans).done) {
+      st.at = todayISO();
+      if (W.id === "sins" && typeof snHistKeep === "function") snHistKeep(c); /* sins.js: the take into the history */
+    }
     save();
     drawSheet();
   },
@@ -279,8 +282,10 @@ Object.assign(ACT, {
   qzagain: () => {
     if (!W || W.kind !== "qzq" || !qzMine()) return;
     const c = C(),
-      show = !!qzStore(c, W.id).show;
-    c.x.qz[W.id] = { ans: {}, go: true, show };
+      show = !!qzStore(c, W.id).show,
+      kept =
+        typeof snRetakeKeep === "function" ? snRetakeKeep(c, W.id) : null; /* sins.js: keep the read and its history */
+    c.x.qz[W.id] = kept || { ans: {}, go: true, show };
     save();
     drawSheet();
   },
