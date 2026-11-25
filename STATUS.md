@@ -186,7 +186,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | Compare the ways: one screen in the game and in the web app lifetime plan | Not started | |
+| 1 | Compare the ways: one screen in the game and in the web app lifetime plan | Done, with 2 ways switched off and 1 in the game only | Game: Taking money out, the tab "Compare the ways". Web app: Lifetime plan, the card "Compare the ways". 34 ways in 8 families, one file of rules for both (`js/math/withdraw.js`; the game gets a generated copy). Monthly and year-end timing are real steps in both engines and in the second engine. CAPE is on: the CAPE and the yields were added to the market history from the same Shiller source (fetched Nov 25 2026). Switched off with a note: VPW (the Bogleheads page could not be opened to check its numbers) and the RMD method for a stop before 73 (the IRS table starts at 73). "Keep the odds in a band" runs in the game only (it is the retirement engine's rule). The random markets are the real years in a random order, not the engine's Monte Carlo. The game's rows have no tax; the web app's have. QUESTIONS 584. |
 
 ## RUN: Export for the FIRE spreadsheet crowd (Nov 25 2026)
 

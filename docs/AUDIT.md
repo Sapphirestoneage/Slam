@@ -36,6 +36,18 @@ Nov 25 2026: the old date and the new date counted month by month on a calendar,
 emergency fund refill put back month by month, the safe-to-fail line, and the opt-in audit's totals with the cost over
 time worked out by logarithms).
 
+Since Nov 25 2026 it also covers the ways to take money out (`js/math/withdraw.js`, the rules behind "Compare the
+ways" in the web app and in the game): every way in the list, the ones that are switched off on screen too, each
+through a made-up market that swings (stocks, bonds, inflation, a CAPE, the two yields). Four kinds of case: the VPW
+share, the spend-down payment, one pile of money through one way the way the game's replay runs it (the rule, how the
+money is held, and the money out on the first day, monthly or on the last day), the whole lifetime plan with taxes on
+each way, and the summary of a set of start years. Where SLAM takes twelve monthly steps the second engine uses the
+annuity formula. The year-by-year tax check runs on these too, and it caught one mistake while the work was being
+built: a way that sets what leaves the accounts did not allow for a year whose tax alone is more than that amount.
+One limit, said plainly: a way's own settings (the band, the step, the base share) travel in the case, so the second
+engine checks the rule, not that the setting matches its source. "Keep the odds in a band" is the retirement
+engine's own rule in the game and is not worked out a second time.
+
 Added Nov 25 2026 (the FI destinations): Fat FI with and without a list of extras, Chubby FI (the midpoint), what
 part-time pay closes and whether it covers health insurance, and every box of the FI date stress test (the second
 engine uses the closed formula for each box, SLAM steps month by month).
